@@ -71,18 +71,28 @@ OnAttach(AG_Event *event)
 	AG_Widget *wParent = AG_SENDER();
 	AG_Widget *w = AG_SELF();
 
+	/* Ignore AG_Window attaching to View */
 	if (!AG_OfClass(wParent, "AG_Widget:*"))
-		return;				/* Attaching to agView */
+		return;
+	
+	/* Inherit style from parent widget/window. */
+	if (wParent->style != NULL)
+		SetStyle(w, wParent->style);
 
 	if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
-		SetParentWindow(w, AGWINDOW(wParent));
+		AG_Window *win = AGWINDOW(wParent);
+
+		/* Update the "window" pointer of widget and children. */
+		SetParentWindow(w, win);
+
+		/* Request a geometry update in the parent window. */
+		if (win->visible) {
+			w->flags |= AG_WIDGET_UPDATE_WINDOW;
+			AG_PostEvent(NULL, w, "widget-shown", NULL);
+		}
 	} else {
 		SetParentWindow(w, wParent->window);
 	}
-
-	/* Inherit style from parent widget. */
-	if (wParent->style != NULL)
-		SetStyle(w, wParent->style);
 }
 
 static void
@@ -164,7 +174,7 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 		AG_Display *disp = (AG_Display *)parent;
 		AG_Window *win;
 
-		TAILQ_FOREACH(win, &disp->windows, windows) {
+		VIEW_FOREACH_WINDOW(win, disp) {
 			if (strcmp(AGOBJECT(win)->name, node_name) != 0) {
 				continue;
 			}
@@ -1387,7 +1397,7 @@ AG_WidgetFocus(void *p)
 	}
 
 	/* Remove any existing focus. XXX inefficient */
-	TAILQ_FOREACH(win, &agView->windows, windows) {
+	VIEW_FOREACH_WINDOW(win, agView) {
 		if (win->nFocused > 0)
 			AG_WidgetUnfocus(win);
 	}
@@ -1433,10 +1443,11 @@ OccultedWidget(AG_Widget *wid)
 	AG_Window *w;
 
 	if ((wParent = AG_ObjectFindParent(wid, NULL, "AG_Widget:AG_Window")) == NULL ||
-	    (w = TAILQ_NEXT(wParent, windows)) == NULL) {
+	    (w = OBJECT_NEXT_CHILD(wParent, ag_window)) == NULL) {
 		return (0);
 	}
-	for (; w != TAILQ_END(&agView->windows); w = TAILQ_NEXT(w, windows)) {
+#if 1
+	for (; w != NULL; w = OBJECT_NEXT_CHILD(w, ag_window)) {
 		if (w->visible &&
 		    wid->rView.x1 > WIDGET(w)->x &&
 		    wid->rView.y1 > WIDGET(w)->y &&
@@ -1444,6 +1455,7 @@ OccultedWidget(AG_Widget *wid)
 		    wid->rView.y2 < WIDGET(w)->y+WIDGET(w)->h)
 			return (1);
 	}
+#endif
 	return (0);
 }
 
@@ -2052,7 +2064,7 @@ AG_WidgetFindPoint(const char *type, int x, int y)
 	void *p;
 
 	AG_LockVFS(agView);
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
 		if ((p = FindAtPoint(WIDGET(win), type, x, y)) != NULL) {
 			AG_UnlockVFS(agView);
 			return (p);
@@ -2091,7 +2103,7 @@ AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 	void *p;
 	
 	AG_LockVFS(agView);
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
 		if ((p = FindRectOverlap(WIDGET(win), type, x,y,w,h)) != NULL) {
 			AG_UnlockVFS(agView);
 			return (p);

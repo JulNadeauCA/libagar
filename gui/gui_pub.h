@@ -4,6 +4,8 @@
 #define _AGAR_GUI_H_
 #include <agar/core/core_begin.h>
 
+#include <agar/gui/geometry.h>
+#include <agar/gui/surface.h>
 #include <agar/gui/view.h>
 #include <agar/gui/iconmgr.h>
 #include <agar/gui/icons.h>

@@ -4,9 +4,10 @@
 #define _AGAR_WIDGET_H_
 
 #include <agar/config/have_opengl.h>
-#include <agar/config/have_long_double.h>
 
 #include <agar/gui/colors.h>
+#include <agar/gui/geometry.h>
+#include <agar/gui/surface.h>
 #include <agar/gui/view.h>
 #include <agar/gui/style.h>
 

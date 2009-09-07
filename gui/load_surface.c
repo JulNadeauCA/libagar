@@ -30,6 +30,8 @@
 #include <core/core.h>
 #include <core/load_version.h>
 
+#include "geometry.h"
+#include "surface.h"
 #include "view.h"
 #include "load_surface.h"
 

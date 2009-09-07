@@ -57,7 +57,7 @@ Collapse(AG_FileSelector *fs)
 
 	AG_WindowHide(fs->panel);
 	AG_ObjectDetach(fs->filedlg);
-	AG_ViewDetach(fs->panel);
+	AG_ObjectDetach(fs->panel);
 	fs->panel = NULL;
 
 	AG_SetInt(fs->button, "state", 0);
@@ -215,7 +215,7 @@ Destroy(void *p)
 	if (fs ->panel != NULL) {
 		AG_WindowHide(fs->panel);
 		AG_ObjectDetach(fs->filedlg);
-		AG_ViewDetach(fs->panel);
+		AG_ObjectDetach(fs->panel);
 	}
 	AG_ObjectDestroy(fs->filedlg);
 }

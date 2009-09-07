@@ -29,6 +29,8 @@
 
 #include <core/core.h>
 
+#include "geometry.h"
+#include "surface.h"
 #include "view.h"
 #include "window.h"
 
@@ -54,7 +56,7 @@ AG_SetStyle(void *p, AG_Style *style)
 		AG_Window *win;
 
 		disp->style = style;
-		TAILQ_FOREACH(win, &disp->windows, windows) {
+		VIEW_FOREACH_WINDOW(win, disp) {
 			ApplyStyle(AGWIDGET(win), style);
 		}
 	} else {

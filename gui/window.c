@@ -118,7 +118,7 @@ AG_WindowNew(Uint flags)
 	}
 
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
-	AG_ViewAttach(win);
+	AG_ObjectAttach(agView, win);
 	return (win);
 }
 
@@ -150,15 +150,79 @@ out:
 	return (win);
 }
 
+/*
+ * Window attach function (we don't use the default Object attach function
+ * because AG_WINDOW_KEEPBELOW windows have to be inserted at the head of
+ * the list).
+ */
 static void
-ChildAttached(AG_Event *event)
+Attach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	AG_Widget *wid = AG_PTR(1);
+	AG_Display *view = OBJECT(win)->parent;
 
-	if (win->visible) {
-		AG_WindowUpdate(win);
-		AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	if (win->flags & AG_WINDOW_KEEPBELOW) {
+		TAILQ_INSERT_HEAD(&OBJECT(view)->children, OBJECT(win), cobjs);
+	} else {
+		TAILQ_INSERT_TAIL(&OBJECT(view)->children, OBJECT(win), cobjs);
+	}
+	if (win->flags & AG_WINDOW_FOCUSONATTACH) {
+		AG_WindowFocus(win);
+	}
+
+	/* Inherit the Display's default theme. */
+	AG_SetStyle(win, view->style);
+
+	/* Notify the objects. */
+	AG_PostEvent(view, win, "attached", NULL);
+	AG_PostEvent(win, view, "child-attached", NULL);
+}
+
+/* Window detach function. */
+static void
+Detach(AG_Event *event)
+{
+	AG_Window *win = AG_SELF();
+	AG_Display *view = OBJECT(win)->parent;
+	AG_Window *subwin, *nsubwin;
+	AG_Window *owin;
+
+#ifdef AG_DEBUG
+	if (view == NULL || !AG_ObjectIsClass(view, "AG_Display:*"))
+		AG_FatalError("Window is not attached to a View");
+#endif
+	
+	/* Implicitely queue the sub-windows for detachment as well */
+	for (subwin = TAILQ_FIRST(&win->subwins);
+	     subwin != TAILQ_END(&win->subwins);
+	     subwin = nsubwin) {
+		nsubwin = TAILQ_NEXT(subwin, swins);
+		AG_ObjectDetach(subwin);
+	}
+	TAILQ_INIT(&win->subwins);
+
+	/* Implicitely hide the window. */
+	AG_WindowHide(win);
+
+	/* Propagate `detached' event to child widgets (see Init). */
+	AG_PostEvent(view, win, "detached", NULL);
+
+ 	/*
+	 * For a window detach to be safe in event context, the window list
+	 * cannot be directly altered. We place the window in the view's
+	 * "detach" queue, to be destroyed at the end of the current event
+	 * processing cycle.
+	 */
+	TAILQ_INSERT_TAIL(&view->detach, win, detach);
+
+	/* Remove any reference from another window to this one. */
+	VIEW_FOREACH_WINDOW(owin, view) {
+		TAILQ_FOREACH(subwin, &owin->subwins, swins) {
+			if (subwin == win)
+				break;
+		}
+		if (subwin != NULL)
+			TAILQ_REMOVE(&owin->subwins, subwin, swins);
 	}
 }
 
@@ -196,13 +260,21 @@ Init(void *obj)
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
+
+	/*
+	 * Arrange for propagation of the widget-shown, widget-hidden and
+	 * detached events to attached widgets.
+	 */
 	ev = AG_SetEvent(win, "widget-shown", Shown, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "widget-hidden", Hidden, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	AG_AddEvent(win, "child-attached", ChildAttached, NULL);
+
+	/* Custom attach/detach hooks are needed by the window stack. */
+	AG_ObjectSetAttachFn(win, Attach, NULL);
+	AG_ObjectSetDetachFn(win, Detach, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(win, "flags", &win->flags);
@@ -486,7 +558,7 @@ AG_WindowIsSurrounded(AG_Window *win)
 {
 	AG_Window *owin;
 
-	TAILQ_FOREACH(owin, &agView->windows, windows) {
+	VIEW_FOREACH_WINDOW(owin, agView) {
 		AG_ObjectLock(owin);
 		if (owin->visible &&
 		    AG_WidgetArea(owin, WIDGET(win)->x, WIDGET(win)->y) &&
@@ -744,7 +816,7 @@ AG_WindowFocusNamed(const char *name)
 	int rv = 0;
 
 	AG_LockVFS(agView);
-	TAILQ_FOREACH(owin, &agView->windows, windows) {
+	VIEW_FOREACH_WINDOW(owin, agView) {
 		if (strcmp(OBJECT(owin)->name, name) == 0) {
 			AG_WindowShow(owin);
 			AG_WindowFocus(owin);
@@ -801,7 +873,7 @@ AG_WindowFocusAtPos(int x, int y)
 	AG_Window *win;
 
 	agView->winToFocus = NULL;
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
 		AG_ObjectLock(win);
 		if (!win->visible ||
 		    !AG_WidgetArea(win, x,y) ||
@@ -846,7 +918,7 @@ ProcessWM_MouseMotion(AG_Window *win, int xRel, int yRel)
 static void
 ChangeWindowFocus(void)
 {
-	AG_Window *winLast = TAILQ_LAST(&agView->windows, ag_windowq);
+	AG_Window *winLast = OBJECT_LAST_CHILD(agView,ag_window);
 	AG_Window *winToFocus = agView->winToFocus;
 
 	if (winLast != NULL) {
@@ -869,8 +941,7 @@ ChangeWindowFocus(void)
 			AG_ObjectUnlock(winToFocus);
 			goto out;
 		}
-		TAILQ_REMOVE(&agView->windows, winToFocus, windows);
-		TAILQ_INSERT_TAIL(&agView->windows, winToFocus, windows);
+		AG_ObjectMoveToTail(winToFocus);
 		AG_PostEvent(NULL, winToFocus, "window-gainfocus", NULL);
 		AG_ObjectUnlock(winToFocus);
 	}
@@ -933,7 +1004,7 @@ scan:
 	 * Iterate over the visible windows and deliver the appropriate Agar
 	 * events.
 	 */
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
 		AG_ObjectLock(win);
 
 		/* XXX TODO move invisible windows to different tailq! */
@@ -1424,7 +1495,7 @@ IconButtonDown(AG_Event *event)
 		AG_CancelEvent(icon, "dblclick-expire");
 		AG_WindowUnminimize(win);
 		AG_ObjectDetach(win->icon);
-		AG_ViewDetach(icon->wDND);
+		AG_ObjectDetach(icon->wDND);
 		icon->wDND = NULL;
 		icon->flags &= (AG_ICON_DND|AG_ICON_DBLCLICKED);
 	} else {
@@ -1552,7 +1623,7 @@ AG_WindowDetachGenEv(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 void

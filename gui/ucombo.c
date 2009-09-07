@@ -76,7 +76,7 @@ Collapse(AG_UCombo *com)
 	
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
-	AG_ViewDetach(com->panel);
+	AG_ObjectDetach(com->panel);
 	com->panel = NULL;
 
 	AG_SetInt(com->button, "state", 0);
@@ -214,7 +214,7 @@ Destroy(void *p)
 	if (com->panel != NULL) {
 		AG_WindowHide(com->panel);
 		AG_ObjectDetach(com->list);
-		AG_ViewDetach(com->panel);
+		AG_ObjectDetach(com->panel);
 	}
 	AG_ObjectDestroy(com->list);
 }

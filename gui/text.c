@@ -71,9 +71,6 @@
 #ifdef HAVE_FREETYPE
 #include "ttf.h"
 #endif
-#include "view.h"
-
-#include "load_xcf.h"
 
 #include "window.h"
 #include "vbox.h"
@@ -85,6 +82,8 @@
 #include "numerical.h"
 #include "keymap.h"
 #include "checkbox.h"
+
+#include "load_xcf.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -373,7 +372,7 @@ TextTmsgExpire(void *obj, Uint32 ival, void *arg)
 {
 	AG_Window *win = arg;
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 	return (0);
 }
 
@@ -1456,7 +1455,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 
 	AG_LockTimeouts(NULL);
 	if (AG_TimeoutIsScheduled(NULL, &textMsgTo)) {
-		AG_ViewDetach((AG_Window *)textMsgTo.arg);
+		AG_ObjectDetach((AG_Window *)textMsgTo.arg);
 		AG_DelTimeout(NULL, &textMsgTo);
 	}
 	AG_UnlockTimeouts(NULL);

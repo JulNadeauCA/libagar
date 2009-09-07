@@ -29,15 +29,16 @@
 
 #include <core/core.h>
 #include <core/config.h>
-
 #include <core/load_den.h>
 
-#include <string.h>
-#include <stdarg.h>
-
+#include "geometry.h"
+#include "surface.h"
 #include "view.h"
 #include "iconmgr.h"
 #include "load_xcf.h"
+
+#include <string.h>
+#include <stdarg.h>
 
 /* Compile surfaces/textures for the given static icon. */
 void
