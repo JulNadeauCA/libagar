@@ -76,7 +76,7 @@ CloseWindow(AG_Event *event)
 	AG_Treetbl *tt = AG_PTR(1);
 
 	AG_DelTimeout(tt, &refresher);
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 AG_Window *

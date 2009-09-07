@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -258,7 +258,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		    &agTextBidi);
 		
 		AG_SpacerNewHoriz(tab);
-		
+
 		AG_NumericalNewIntR(tab, 0, "ms", _("Double click delay: "),
 		    &agMouseDblclickDelay, 1, 10000);
 		AG_NumericalNewIntR(tab, 0, "ms", _("Cursor spin delay: "),
@@ -273,27 +273,27 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 	{
-		tbox = AG_TextboxNew(tab, 0, _("Temporary dir: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Temporary dir: "));
 		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
-		tbox = AG_TextboxNew(tab, 0, _("Data save dir: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Data save dir: "));
 		AG_GetString(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
-		tbox = AG_TextboxNew(tab, 0, _("Data load path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Data load path: "));
 		AG_GetString(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
-		tbox = AG_TextboxNew(tab, 0, _("Font path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
 		AG_GetString(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
-		tbox = AG_TextboxNew(tab, 0, _("Den path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
 		AG_GetString(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
@@ -350,17 +350,18 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_SpacerNewHoriz(tab);
 
 		tb = AG_TextboxNew(tab, 0, _("Host: "));
+		AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
 		AG_NumericalNewUint(tab, 0, NULL, _("Port: "), &agRcsPort);
 		AG_SeparatorNewHoriz(tab);
 
 		box = AG_BoxNewHoriz(tab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			tb = AG_TextboxNew(box, 0, _("Username: "));
+			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL, _("Username: "));
 			AG_TextboxBindUTF8(tb, agRcsUsername,
 			    sizeof(agRcsUsername));
 
-			tb = AG_TextboxNew(box, 0, _("Password: "));
+			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL, _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
 			AG_TextboxBindUTF8(tb, agRcsPassword,
 			    sizeof(agRcsPassword));
