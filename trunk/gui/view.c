@@ -1285,6 +1285,20 @@ AG_MouseGetState(int *x, int *y)
 	return (rv);
 }
 
+#ifdef AG_LEGACY
+/* Pre-1.4 */
+void
+AG_ViewAttach(void *pWin)
+{
+	AG_ObjectAttach(agView, pWin);
+}
+void
+AG_ViewDetach(AG_Window *win)
+{
+	AG_ObjectDetach(win);
+}
+#endif /* AG_LEGACY */
+
 AG_ObjectClass agDisplayClass = {
 	"AG_Display",
 	sizeof(AG_Display),
