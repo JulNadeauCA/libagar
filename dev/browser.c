@@ -81,7 +81,7 @@ CreateObject(AG_Event *event)
 		pobj = vfsRoot;
 	}
 	AG_TextboxCopyString(name_tb, name, sizeof(name));
-	AG_ViewDetach(dlg_win);
+	AG_ObjectDetach(dlg_win);
 
 	if (name[0] == '\0')
 		AG_ObjectGenName(vfsRoot, cl, name, sizeof(name));
@@ -124,7 +124,7 @@ CloseGenericDlg(AG_Event *event)
 	AG_Window *win = AG_SELF();
 	struct objent *oent = AG_PTR(1);
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
 	Free(oent);
 }
@@ -158,7 +158,7 @@ SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 {
 	AG_WindowHide(win);
 	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 
 	if (!save) {
@@ -1136,7 +1136,7 @@ DEV_PostLoadDataCallback(AG_Event *event)
 		if (oent->obj == obj) {
 			AG_WindowHide(oent->win);
 			AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
-			AG_ViewDetach(oent->win);
+			AG_ObjectDetach(oent->win);
 
 			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
 			oent->win = obj->cls->edit(obj);
@@ -1177,7 +1177,7 @@ AbortQuit(AG_Event *event)
 	AG_Window *win = AG_PTR(1);
 
 	agTerminating = 0;
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 

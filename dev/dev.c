@@ -36,7 +36,7 @@
 
 #include <gui/window.h>
 #include <gui/menu.h>
-#include <gui/view.h>
+#include <gui/perfmon.h>
 
 #include "dev.h"
 
@@ -49,7 +49,7 @@ static const struct dev_tool_ent {
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
 #if defined(AG_DEBUG)
-	{ N_("Performance Graph"),	AG_EventShowPerfGraph },
+	{ N_("Performance Graph"),	AG_PerfMonShow },
 	{ N_("CPU Information"),	DEV_CPUInfo },
 #endif
 #if defined(AG_NETWORK) && defined(AG_THREADS) && defined(HAVE_JPEG)
