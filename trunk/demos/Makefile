@@ -27,7 +27,8 @@ SUBDIR=	fixedres \
 	chinese \
 	rendertosurface \
 	reinit \
-	modalwindowhandler
+	modalwindowhandler \
+	configsettings
 
 all: all-subdir
 clean: prereq clean-subdir
