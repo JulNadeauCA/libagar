@@ -106,7 +106,7 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 
 	AG_ObjectInit(cfg, &agConfigClass);
 	AG_ObjectSetName(cfg, "config");
-	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
+	OBJECT(cfg)->flags |= AG_OBJECT_RESIDENT;
 	OBJECT(cfg)->save_pfx = NULL;
 
 	AG_SetInt(cfg, "initial-run", 1);

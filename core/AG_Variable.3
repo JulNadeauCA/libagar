@@ -582,10 +582,10 @@ These functions provide an interface to primitive floating-point types.
 .Fn AG_SetStringNODUP "AG_Object *obj" "const char *name" "const char *s"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_SetStringFixed "AG_Object *obj" "const char *name" "char *s" "size_t len"
+.Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
+.Fn AG_SetStringFixed "AG_Object *obj" "const char *name" "char *s" "size_t len"
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "size_t len"
@@ -641,23 +641,33 @@ of size
 .Fa len .
 .Pp
 .Fn AG_SetString
-creates or modifies a named string variable with string
+creates or modifies a named string variable with the value
 .Fa s .
 The
 .Fn AG_SetStringNODUP
-sets the
+variant reuses the
 .Fa s
-pointer without copying the string.
+pointer without copying the string, assuming the pointer will
+remain valid for as long as the variable exists.
+.Fn AG_PrtString
+is a variant of
+.Fn AG_SetString
+which accepts a printf-style format string.
+If any of those three functions are invoked on an existing variable previously
+created with
+.Fn AG_BindString ,
+the string is copied onto the existing string buffer.
+.Pp
 The
 .Fn AG_SetStringFixed
-creates or modifies a variable to use a fixed-size buffer
+function creates or modifies a string variable, tied to a fixed-size
+string buffer
 .Fa s ,
 of size
 .Fa len .
-.Pp
-.Fn AG_PrtString
-sets a string variable from a format string
-.Fa fmt .
+If invoked on an existing variable previously created with
+.Fn AG_BindString ,
+the buffer pointer is simply overwritten.
 .Pp
 .Fn AG_BindString
 creates or modifies a variable referencing a fixed-size string buffer
