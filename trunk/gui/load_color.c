@@ -28,7 +28,9 @@
  */
 
 #include <core/core.h>
-#include "view.h"
+
+#include "geometry.h"
+#include "surface.h"
 #include "load_color.h"
 
 void

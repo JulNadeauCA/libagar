@@ -860,11 +860,8 @@ FreeDetachedWindows(AG_Display *view)
 	     win != TAILQ_END(&view->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
-		printf("free detached window: %p (%s)\n", win, OBJECT(win)->name);
 		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
-		printf("detaching...\n");
 		AG_ObjectDetach(win);
-		printf("destroy\n");
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&view->detach);

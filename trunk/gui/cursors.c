@@ -24,7 +24,10 @@
  */
 
 #include <core/core.h>
-#include <gui/view.h>
+
+#include "geometry.h"
+#include "surface.h"
+#include "view.h"
 
 #include "cursors.h"
 #include "cursors/fill.xpm"

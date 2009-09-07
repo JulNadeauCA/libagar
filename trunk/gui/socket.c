@@ -377,7 +377,7 @@ IconButtonUp(AG_Event *event)
 		AG_ObjectUnlock(sock);
 	}
 	if (detach)
-		AG_ViewDetach(wDND);
+		AG_ObjectDetach(wDND);
 }
 
 static void

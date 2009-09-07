@@ -28,6 +28,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "geometry.h"
+#include "surface.h"
 #include "view.h"
 #include "colors.h"
 #include "load_color.h"

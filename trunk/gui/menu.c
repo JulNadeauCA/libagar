@@ -66,7 +66,7 @@ AG_MenuNewGlobal(Uint flags)
 
 	AG_MutexLock(&agAppMenuLock);
 	if (agAppMenu != NULL) {
-		AG_ViewDetach(agAppMenuWin);
+		AG_ObjectDetach(agAppMenuWin);
 		AG_ObjectDestroy(agAppMenu);
 	}
 	agAppMenu = m;
@@ -131,7 +131,7 @@ AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
 	item->sel_subitem = NULL;
 	if (item->view != NULL &&
 	    item->view->panel != NULL) {
-		AG_ViewDetach(item->view->panel);
+		AG_ObjectDetach(item->view->panel);
 		item->view = NULL;
 	}
 	AG_ObjectUnlock(m);

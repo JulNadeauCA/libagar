@@ -334,7 +334,7 @@ ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 	}
 	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 /*		AG_PostEvent(NULL, pwin, "window-close", NULL); */
-		AG_ViewDetach(pwin);
+		AG_ObjectDetach(pwin);
 	}
 	AG_ObjectUnlock(fd);
 }
@@ -347,7 +347,7 @@ ReplaceFileConfirm(AG_Event *event)
 	AG_Window *pwin = AG_PTR(3);
 
 	ChooseFile(fd, pwin);
-	AG_ViewDetach(qwin);
+	AG_ObjectDetach(qwin);
 }
 
 static void
@@ -605,7 +605,7 @@ CollapseGlobResults(AG_FileDlg *fd)
 	fd->winGlobRect.h = HEIGHT(fd->winGlob);
 	AG_WindowHide(fd->winGlob);
 	AG_ObjectDetach(fd->winGlobList);
-	AG_ViewDetach(fd->winGlob);
+	AG_ObjectDetach(fd->winGlob);
 	fd->winGlob = NULL;
 }
 
@@ -787,7 +787,7 @@ PressedCancel(AG_Event *event)
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 		if ((pwin = AG_WidgetParentWindow(fd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
-			AG_ViewDetach(pwin);
+			AG_ObjectDetach(pwin);
 		}
 	}
 	AG_ObjectUnlock(fd);

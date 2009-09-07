@@ -26,6 +26,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "geometry.h"
+#include "surface.h"
 #include "view.h"
 
 #include <rg/prim.h>					/* XXX depends on rg */

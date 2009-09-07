@@ -124,7 +124,7 @@ PollWidgets(AG_Event *event)
 
 	AG_TlistClear(tl);
 	AG_LockVFS(agView);
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
 		FindWindows(tl, win, 0);
 	}
 	AG_UnlockVFS(agView);

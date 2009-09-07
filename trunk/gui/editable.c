@@ -35,12 +35,11 @@
 
 #include <config/have_freetype.h>
 
-#include "view.h"
-#include "ttf.h"
 #include "editable.h"
 #include "text.h"
 #include "window.h"
 
+#include "ttf.h"
 #include "keymap.h"
 #include "primitive.h"
 #include "cursors.h"

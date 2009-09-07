@@ -178,6 +178,10 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
 
+#ifdef AG_LEGACY
+#define AG_FindWindow(name) AG_ObjectFind(agView,(name))
+#endif /* AG_LEGACY */
+
 /*
  * Render a window to the display (must be enclosed between calls to
  * AG_BeginRendering() and AG_EndRendering()).
@@ -201,7 +205,7 @@ AG_WindowDraw(AG_Window *win)
 static __inline__ AG_Window *
 AG_WindowFindFocused(void)
 {
-	return AG_TAILQ_LAST(&agView->windows,ag_windowq);
+	return AGOBJECT_LAST_CHILD(agView,ag_window);
 }
 
 /*
@@ -211,7 +215,7 @@ AG_WindowFindFocused(void)
 static __inline__ int
 AG_WindowIsFocused(AG_Window *win)
 {
-	return (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (win));
+	return (AGOBJECT_LAST_CHILD(agView,ag_window) == (win));
 }
 
 /*
