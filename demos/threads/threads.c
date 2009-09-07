@@ -40,7 +40,7 @@ SleepingWorker(void *arg)
 
 	for (;;) {
 		if (++value == max) {
-			AG_ViewDetach(win);
+			AG_ObjectDetach(win);
 			AG_ThreadExit(NULL);
 		}
 		AG_LabelPrintf(lbl, "Worker thread progress: %d%%",
@@ -80,7 +80,7 @@ SpinningWorker(void *arg)
 
 	for (;;) {
 		if (++value == max) {
-			AG_ViewDetach(win);
+			AG_ObjectDetach(win);
 			AG_ThreadExit(NULL);
 		}
 		AG_LabelPrintf(lbl, "Worker thread progress: %d%%",

@@ -6,7 +6,6 @@
 #include <agar/core/core_begin.h>
 #include <agar/gui/window.h>
 #include <agar/gui/button.h>
-#include <agar/gui/view.h>
 #include <agar/vg/vg.h>
 #include <agar/vg/vg_tool.h>
 #include <agar/vg/vg_view.h>

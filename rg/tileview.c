@@ -27,7 +27,6 @@
 #include <core/config.h>
 
 #include <gui/widget.h>
-#include <gui/view.h>
 #include <gui/text.h>
 #include <gui/primitive.h>
 #include <gui/text_cache.h>
@@ -1793,7 +1792,7 @@ CloseToolWindow(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	
-	AG_ViewDetach(tv->cur_tool->win);
+	AG_ObjectDetach(tv->cur_tool->win);
 	tv->cur_tool->win = NULL;
 }
 
@@ -1809,7 +1808,7 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 #endif
 
 	if (tv->cur_tool != NULL && tv->cur_tool->win != NULL) {
-		AG_ViewDetach(tv->cur_tool->win);
+		AG_ObjectDetach(tv->cur_tool->win);
 		tv->cur_tool->win = NULL;
 	}
 
@@ -1834,7 +1833,7 @@ RG_TileviewUnselectTool(RG_Tileview *tv)
 {
 	if (tv->cur_tool != NULL) {
 		if (tv->cur_tool->win != NULL) {
-			AG_ViewDetach(tv->cur_tool->win);
+			AG_ObjectDetach(tv->cur_tool->win);
 			tv->cur_tool->win = NULL;
 		}
 		if (tv->cur_tool->ops->unselected != NULL)

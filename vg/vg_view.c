@@ -30,9 +30,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include <stdarg.h>
-#include <string.h>
-
+#include <gui/geometry.h>
+#include <gui/surface.h>
 #include <gui/view.h>
 #include <gui/window.h>
 #include <gui/primitive.h>
@@ -42,6 +41,9 @@
 #include "vg_view.h"
 #include "vg_tools.h"
 #include "tools.h"
+
+#include <stdarg.h>
+#include <string.h>
 
 static const float scaleFactors[] = {
 	1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f,

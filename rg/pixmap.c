@@ -25,10 +25,6 @@
 
 #include <core/core.h>
 
-#include <gui/view.h>
-#include <gui/load_surface.h>
-
-#include <gui/cursors.h>
 #include <gui/window.h>
 #include <gui/numerical.h>
 #include <gui/mspinbutton.h>
@@ -39,6 +35,9 @@
 #include <gui/tlist.h>
 #include <gui/separator.h>
 #include <gui/notebook.h>
+
+#include <gui/cursors.h>
+#include <gui/load_surface.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -312,7 +311,7 @@ CreateBrush(AG_Event *event)
 	if (AG_GetInt(cb_oneshot, "state")) {
 		pbr->flags |= RG_PIXMAP_BRUSH_ONESHOT;
 	}
-	AG_ViewDetach(dlg_win);
+	AG_ObjectDetach(dlg_win);
 }
 
 static void

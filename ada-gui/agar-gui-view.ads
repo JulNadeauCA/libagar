@@ -92,12 +92,6 @@ package agar.gui.view is
   procedure clear_global_keys;
   pragma import (c, clear_global_keys, "AG_ClearGlobalKeys");
 
-  procedure attach (window : agar.gui.window.window_access_t);
-  pragma import (c, attach, "AG_ViewAttach");
-
-  procedure detach (window : agar.gui.window.window_access_t);
-  pragma import (c, detach, "AG_ViewDetach");
-
   function find_window (name : string) return agar.gui.window.window_access_t;
   pragma inline (find_window);
  

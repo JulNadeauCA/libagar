@@ -294,7 +294,7 @@ PREINIT:
 	int i;
 	AG_Window * win;
 CODE:
-	TAILQ_FOREACH(win, &(agView->windows), windows) {
+	VIEW_FOREACH_WINDOW(win, agView) {
 		AG_WindowDraw(win);
 	}
 
