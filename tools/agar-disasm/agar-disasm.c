@@ -71,6 +71,7 @@ main(int argc, char *argv[])
 	Uint32 pos, sLen;
 	size_t len;
 	Uint8 *buf, *p;
+	int asis = 0;
 
 	if (AG_InitCore("agar-disasm", 0) == -1) {
 		return (0);
@@ -123,14 +124,24 @@ main(int argc, char *argv[])
 
 	for (p = buf; ;) {
 		for (i = 0; i < nTypes; i++) {
-			if (AG_SwapBE32(*(Uint32 *)p) == types[i].type)
+			if (AG_SwapBE32(*(Uint32 *)p) == types[i].type) {
+				if (asis) {
+					printf("\n");
+				}
+				asis = 0;
 				break;
+			}
 		}
 		if (i == nTypes) {
-			printf("[%8s] 0x%x\t%d\t'%c'\n", "???",
-			    *(Uint8 *)p,
-			    *(Uint8 *)p,
-			    *(Uint8 *)p);
+			if (!asis) {
+				printf("[%8s] ", "???");
+				asis = 1;
+			}
+			if (isprint(*(Uint8 *)p)) {
+				fputc(*(Uint8 *)p, stdout);
+			} else {
+				printf("\\%x", *(Uint8 *)p);
+			}
 			FORWARD(1);
 			continue;
 		}
