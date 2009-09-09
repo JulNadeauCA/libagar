@@ -43,8 +43,11 @@ etc.)
 These libraries share the same version number and release cycle, but they are
 separate and can be packaged and distributed independently.
 .Pp
-.Sh USING THE AGAR DOCUMENTATION
-The Agar documentation follows the following important conventions:
+.Sh USING THE AGAR API REFERENCE
+Since the Agar API Reference is also intended as a detailed specification
+(defining function prototypes, structures and function behavior in detail),
+the content can become repetitive and difficult to read, so the API Reference
+uses a number of conventions:
 .Bl -enum
 .It
 The return value for functions returning
@@ -54,6 +57,14 @@ unless otherwise documented, represents an error code (where 0 = success,
 On failure, the error message can be retrieved using
 .Xr AG_GetError 3 .
 .It
+Every function prototype described in the documentation has some associated
+text, except for those function "variants" that are trivial and obvious by
+looking at the function prototype (for example,
+.Xr AG_LabelNew 3
+accepts a printf-style format string, and
+.Xr AG_LabelNewS 3
+accepts a plain C string).
+.It
 When Agar is compiled with threads support, functions are thread-safe
 unless documented otherwise (see
 .Dq CONVENTIONS
@@ -62,8 +73,7 @@ section of
 for important details related to thread safety).
 .El
 .Pp
-There is generally one manual page per Agar object class in the Agar API
-documentation.
+There is generally one manual page per Agar object class.
 A number of manual page sections are standard throughout the documentation,
 this includes:
 .Bl -tag -width "INHERITANCE HIERARCHY "
@@ -91,6 +101,11 @@ in some contexts, see
 .Xr AG_Event 3
 for details).
 .El
+.Pp
+Since many developers have the habit of using include files as a form of
+documentation, it is worth noting that only the functions, variables and
+structures that are documented in the API Reference, are guaranteed to
+remain backward-compatible across Agar versions.
 .Sh AGAR-CORE
 Agar's general utility library is named
 .Em ag_core .
