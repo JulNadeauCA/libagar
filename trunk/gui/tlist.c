@@ -585,7 +585,7 @@ restart:							/* XXX */
 	TAILQ_FOREACH(it, &tl->items, items) {
 		TAILQ_FOREACH(it2, &tl->items, items) {
 			if (it != it2 &&
-			    tl->compare_fn(it, it2) == 0) {
+			    tl->compare_fn(it, it2) != 0) {
 				AG_TlistDel(tl, it);
 				goto restart;
 			}
