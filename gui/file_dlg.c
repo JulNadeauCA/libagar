@@ -179,13 +179,13 @@ RefreshListing(AG_FileDlg *fd)
 	AG_TlistClear(fd->tlDirs);
 	AG_TlistClear(fd->tlFiles);
 	for (i = 0; i < ndirs; i++) {
-		it = AG_TlistAdd(fd->tlDirs, agIconDirectory.s, "%s", dirs[i]);
+		it = AG_TlistAddS(fd->tlDirs, agIconDirectory.s, dirs[i]);
 		it->cat = "dir";
 		it->p1 = it;
 		Free(dirs[i]);
 	}
 	for (i = 0; i < nfiles; i++) {
-		it = AG_TlistAdd(fd->tlFiles, agIconDoc.s, "%s", files[i]);
+		it = AG_TlistAddS(fd->tlFiles, agIconDoc.s, files[i]);
 		it->cat = "file";
 		it->p1 = it;
 		Free(files[i]);
@@ -205,7 +205,6 @@ static void
 RefreshLocations(AG_FileDlg *fd, int init)
 {
 	AG_Tlist *tl = fd->comLoc->list;
-	AG_TlistItem *ti, *tiSel = NULL;
 
 	AG_TlistClear(tl);
 #ifdef _WIN32
@@ -214,7 +213,10 @@ RefreshLocations(AG_FileDlg *fd, int init)
 		DWORD d = GetLogicalDrives();
 		int drive;
 
+		/* Add the Windows drives */
 		for (drive = 0; drive < 26; drive++) {
+			AG_TlistItem *ti;
+
 			if (!(d & (1 << drive))) {
 				continue;
 			}
@@ -222,13 +224,13 @@ RefreshLocations(AG_FileDlg *fd, int init)
 			path[1] = ':';
 			path[2] = '\\';
 			path[3] = '\0';
-			ti = AG_TlistAdd(tl, agIconDirectory.s, path);
+			ti = AG_TlistAddS(tl, agIconDirectory.s, path);
 
 			if (init &&
 			    toupper(fd->cwd[0]) == path[0] &&
-			    fd->cwd[1] == ':')
-				tiSel = ti;
-
+			    fd->cwd[1] == ':') {
+				AG_ComboSelect(fd->comLoc, ti);
+			}
 #if 0
 			/* TODO icons, etc */
 			switch (GetDriveType(path)) {
@@ -244,36 +246,41 @@ RefreshLocations(AG_FileDlg *fd, int init)
 #endif
 		}
 	}
-#else /* _WIN32 */
+#else /* !_WIN32 */
 	{
-		char path[AG_PATHNAME_MAX];
-		
-		ti = AG_TlistAdd(tl, agIconDirectory.s, "/");
-		if (strcmp(fd->cwd, "/") == 0)
-			tiSel = ti;
+		char path[AG_PATHNAME_MAX], *pPath = &path[0], *p;
+	
+		/* Add the filesystem root. */
+		AG_TlistAddS(tl, agIconDirectory.s, "/");
 
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 		{
+			/* Add the home directory */
 			struct passwd *pw;
-			if ((pw = getpwuid(getuid())) != NULL) {
-				ti = AG_TlistAdd(tl, agIconDirectory.s,
-				    pw->pw_dir);
-				if (strcmp(fd->cwd, path) == 0)
-					tiSel = ti;
-			}
+			if ((pw = getpwuid(getuid())) != NULL)
+				AG_TlistAddS(tl, agIconDirectory.s, pw->pw_name);
 		}
 #endif
+		/* Add the cwd */
 		if (AG_GetCWD(path, sizeof(path)) == 0) {
-			ti = AG_TlistAdd(tl, agIconDirectory.s, path);
-			if (strcmp(fd->cwd, path) == 0)
-				tiSel = ti;
+			AG_TlistAddS(tl, agIconDirectory.s, path);
 		}
+		
+		/* Add the Agar save-path or load-path */
+		AG_GetString(agConfig,
+		    (fd->flags & AG_FILEDLG_SAVE) ? "save-path" : "load-path",
+		    path, sizeof(path));
+		while ((p = strsep(&pPath, ":")) != NULL) {
+			if (!AG_FileExists(p)) {
+				continue;
+			}
+			AG_TlistAddS(tl, agIconDirectory.s, path);
+		}
+		AG_ComboSelectText(fd->comLoc, fd->cwd);
 	}
+	AG_TlistUniq(tl);
 #endif /* _WIN32 */
-	
-	if (tiSel != NULL) {
-		AG_ComboSelect(fd->comLoc, tiSel);
-	}
+
 	AG_TlistRestore(tl);
 }
 
@@ -712,13 +719,12 @@ GlobExpansion(AG_FileDlg *fd, char *path, size_t path_len)
 					    agIconDirectory.s,
 					    "%s%c", p, AG_PATHSEPCHAR);
 				} else {
-					ti = AG_TlistAdd(fd->winGlobList,
-					    agIconDirectory.s,
-					    "%s", p);
+					ti = AG_TlistAddS(fd->winGlobList,
+					    agIconDirectory.s, p);
 				}
 			} else {
-				ti = AG_TlistAdd(fd->winGlobList,
-				    agIconDoc.s, "%s", p);
+				ti = AG_TlistAddS(fd->winGlobList, agIconDoc.s,
+				    p);
 			}
 			ti->p1 = &gl.gl_pathv[i];
 			AG_TextSize(p, &w, NULL);
@@ -986,7 +992,8 @@ Init(void *obj)
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
 	fd->comLoc = AG_ComboNew(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
-	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXX", 4);
+	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+	AG_TlistSetCompareFn(fd->comLoc->list, AG_TlistCompareStrings);
 
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
 	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
