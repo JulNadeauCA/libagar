@@ -209,6 +209,15 @@ are provided.
 .Fn AG_TlistAdd "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *format" "..."
 .Pp
 .Ft "AG_TlistItem *"
+.Fn AG_TlistAddS "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *text"
+.Pp
+.Ft "AG_TlistItem *"
+.Fn AG_TlistAddHead "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *format" "..."
+.Pp
+.Ft "AG_TlistItem *"
+.Fn AG_TlistAddHeadS "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *text"
+.Pp
+.Ft "AG_TlistItem *"
 .Fn AG_TlistAddPtr "AG_Tlist *tlist, AG_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
 .Ft "AG_TlistItem *"
@@ -216,6 +225,12 @@ are provided.
 .Pp
 .Ft "void"
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
+.Pp
+.Ft "void"
+.Fn AG_TlistUniq "AG_Tlist *tlist"
+.Pp
+.Ft "void"
+.Fn AG_TlistClear "AG_Tlist *tlist"
 .Pp
 .Ft "void"
 .Fn AG_TlistBegin "AG_Tlist *tlist"
@@ -274,24 +289,24 @@ are provided.
 .nr nS 0
 The
 .Fn AG_TlistAdd
-function (and its alternate interface
-.Fn AG_TlistAddPtr )
-are used to insert a new item in the list.
-.Pp
+function inserts a new item into the list.
 The
-.Fa text
-argument defines the text label to display.
-Unless it is NULL,
 .Fa icon
-defines the icon to display at the left of the label.
+argument specifies an optional
+.Xr AG_Surface 3
+to display next to the label.
+Both the icon and the text arguments can be set to NULL.
+.Fn AG_TlistAddHead
+places the item at the head of the list, as opposed to the tail.
 .Pp
-The
-.Fa p1
-argument is a user-defined pointer associated with the item.
-.Pp
-The
+.Fn AG_TlistAddPtr
+is a variant of
+.Fn AG_TlistAdd
+which accepts an extra user-defined pointer
+.Fa p1 ,
+which will be associated with the item.
 .Fn AG_TlistAddPtrHead
-varient inserts the item at the head of the list instead of the tail.
+places the item at the head of the list, as opposed to the tail.
 .Pp
 The
 .Fn AG_TlistDel
@@ -299,6 +314,15 @@ function detaches and frees
 .Fa item
 from its parent
 .Nm tlist .
+.Pp
+.Fn AG_TlistUniq
+scans the list for duplicates (by comparing items using the current comparison
+routine as configured by
+.Fn AG_SetCompareFn ),
+and removes all duplicate items.
+.Pp
+.Fn AG_TlistClear
+removes all items attached to the list.
 .Pp
 The
 .Fn AG_TlistBegin
