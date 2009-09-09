@@ -110,9 +110,13 @@ void      AG_TlistSetRefresh(AG_Tlist *, int);
 
 void	       AG_TlistSetArgs(AG_TlistItem *, const char *, ...);
 void	       AG_TlistDel(AG_Tlist *, AG_TlistItem *);
+void           AG_TlistUniq(AG_Tlist *);
 void	       AG_TlistClear(AG_Tlist *);
 void	       AG_TlistRestore(AG_Tlist *);
 AG_TlistItem  *AG_TlistAdd(AG_Tlist *, AG_Surface *, const char *, ...);
+AG_TlistItem  *AG_TlistAddS(AG_Tlist *, AG_Surface *, const char *);
+AG_TlistItem  *AG_TlistAddHead(AG_Tlist *, AG_Surface *, const char *, ...);
+AG_TlistItem  *AG_TlistAddHeadS(AG_Tlist *, AG_Surface *, const char *);
 AG_TlistItem  *AG_TlistAddPtr(AG_Tlist *, AG_Surface *, const char *, void *);
 AG_TlistItem  *AG_TlistAddPtrHead(AG_Tlist *, AG_Surface *, const char *,
 	                         void *);

@@ -549,6 +549,7 @@ FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 	Free(it);
 }
 
+/* Remove a tlist item. */
 void
 AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 {
@@ -570,6 +571,26 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 		*offset = 0;
 	}
 	AG_UnlockVariable(offsetb);
+	AG_ObjectUnlock(tl);
+}
+
+/* Remove duplicate items from the list. */
+void
+AG_TlistUniq(AG_Tlist *tl)
+{
+	AG_TlistItem *it, *it2;
+
+	AG_ObjectLock(tl);
+restart:							/* XXX */
+	TAILQ_FOREACH(it, &tl->items, items) {
+		TAILQ_FOREACH(it2, &tl->items, items) {
+			if (it != it2 &&
+			    tl->compare_fn(it, it2) == 0) {
+				AG_TlistDel(tl, it);
+				goto restart;
+			}
+		}
+	}
 	AG_ObjectUnlock(tl);
 }
 
@@ -715,7 +736,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 	AG_SetInt(tl->sbar, "max", ++tl->nitems);
 }
 
-/* Add an item to the list. */
+/* Add an item to the tail of the list (user pointer) */
 AG_TlistItem *
 AG_TlistAddPtr(AG_Tlist *tl, AG_Surface *iconsrc, const char *text,
     void *p1)
@@ -731,6 +752,7 @@ AG_TlistAddPtr(AG_Tlist *tl, AG_Surface *iconsrc, const char *text,
 	return (it);
 }
 
+/* Add an item to the tail of the list (format string) */
 AG_TlistItem *
 AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 {
@@ -748,6 +770,55 @@ AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 	return (it);
 }
 
+/* Add an item to the tail of the list (plain string) */
+AG_TlistItem *
+AG_TlistAddS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
+{
+	AG_TlistItem *it;
+
+	AG_ObjectLock(tl);
+	it = AllocItem(tl, iconsrc);
+	it->p1 = NULL;
+	Strlcpy(it->text, text, sizeof(it->text));
+	InsertItem(tl, it, 0);
+	AG_ObjectUnlock(tl);
+	return (it);
+}
+
+/* Add an item to the head of the list (format string) */
+AG_TlistItem *
+AG_TlistAddHead(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
+{
+	AG_TlistItem *it;
+	va_list args;
+	
+	AG_ObjectLock(tl);
+	it = AllocItem(tl, iconsrc);
+	it->p1 = NULL;
+	va_start(args, fmt);
+	Vsnprintf(it->text, sizeof(it->text), fmt, args);
+	va_end(args);
+	InsertItem(tl, it, 1);
+	AG_ObjectUnlock(tl);
+	return (it);
+}
+
+/* Add an item to the head of the list (plain string) */
+AG_TlistItem *
+AG_TlistAddHeadS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
+{
+	AG_TlistItem *it;
+
+	AG_ObjectLock(tl);
+	it = AllocItem(tl, iconsrc);
+	it->p1 = NULL;
+	Strlcpy(it->text, text, sizeof(it->text));
+	InsertItem(tl, it, 1);
+	AG_ObjectUnlock(tl);
+	return (it);
+}
+
+/* Add an item to the head of the list (user pointer) */
 AG_TlistItem *
 AG_TlistAddPtrHead(AG_Tlist *tl, AG_Surface *icon, const char *text,
     void *p1)
