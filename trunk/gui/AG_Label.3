@@ -53,7 +53,7 @@ on rendering.
 .Fn AG_LabelNew "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewString "AG_Widget *parent" "Uint flags" "const char *text"
+.Fn AG_LabelNewS "AG_Widget *parent" "Uint flags" "const char *text"
 .Pp
 .Ft "AG_Label *"
 .Fn AG_LabelNewPolled "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
@@ -86,7 +86,7 @@ function allocates, initializes and attaches a
 .Nm
 widget initially displaying the given text.
 The
-.Fn AG_LabelNewString
+.Fn AG_LabelNewS
 variant accepts a non-formatted string.
 See the
 .Dq STATIC LABELS

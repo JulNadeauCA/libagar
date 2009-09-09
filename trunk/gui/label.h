@@ -77,6 +77,7 @@ AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
 AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
 #define   AG_LabelNew AG_LabelNewStatic
 #define   AG_LabelNewString AG_LabelNewStaticString
+#define   AG_LabelNewS AG_LabelNewStaticString
 
 void	AG_LabelString(AG_Label *, const char *);
 void	AG_LabelText(AG_Label *, const char *, ...)
