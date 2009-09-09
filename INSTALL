@@ -63,8 +63,9 @@ facilitates testing on multiple machines using network filesystems.
     $ mkdir w-agar
     $ cd w-agar
 
-2) Run configure from the source directory with --srcdir.
-    $ ~/agar-sources/configure --srcdir=$HOME/agar-sources [...]
+2) Run configure from the source directory with "--srcdir". If you are going
+   to be editing the header files, "--includes=link" is also recommended.
+    $ ~/agar-sources/configure --includes=link --srcdir=$HOME/agar-sources [...]
 
 3) Now build the libraries and executables as you normally would.
     $ make depend && make
