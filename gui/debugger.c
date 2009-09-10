@@ -220,7 +220,7 @@ WidgetSelected(AG_Event *event)
 		    { 0,				NULL,0 }
 		};
 
-		tb = AG_TextboxNew(nTab, 0, _("Name: "));
+		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
