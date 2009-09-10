@@ -531,18 +531,32 @@ If there is no currently registered class matching the specification,
 returns NULL.
 .Pp
 .Fn AG_LoadClass
-looks for a terminating
-.Sq @mylib
-string in the given class specification (in namespace or expanded format),
-and scans the registered module directories (see
+ensures that the object class specified in
+.Fa classSpec
+(see
+.Fn AG_RegisterClass
+for details on the format) is registered, possibly loading one or more
+dynamic library files if they are specified in the string.
+Dynamic library dependencies are given in the form of a terminating
+.Sq @lib1,lib2,...
+string.
+.Fn AG_LoadClass
+scans the registered module directories (see
 .Fn AG_RegisterModuleDirectory )
-for a
-.Pa mylib
-dynamic library (the actual filename used is platform-dependent).
-If the library is found, it is loaded into the current process's address
-space using the
-.Xr AG_DSO 3
-interface.
+for the libraries specified in the string.
+Bare library names are given (the actual filenames are platform-dependent).
+Libraries that are found (and not already in memory) are loaded via
+.Xr AG_DSO 3 .
+The first library must define a
+.Sq myFooClass
+symbol (where
+.Sq myFoo
+is the name of the class transformed from
+.Sq MY_Foo ) ,
+for an
+.Ft AG_ObjectClass
+structure describing the class (i.e., the same structure that is passed to
+.Fn AG_RegisterClass ) .
 .Pp
 .Fn AG_UnloadClass
 unregisters the specified class and also decrements the reference count of
