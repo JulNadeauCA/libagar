@@ -1,0 +1,156 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 9, 2009
+.Dt AG_TBL 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_Tbl
+.Nd agar hash table structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core/tbl.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure describes a hash table consisting of
+.Xr AG_Variable 3
+elements.
+It is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_tbl_bucket {
+	AG_Variable  *ents;
+	Uint         nEnts;
+} AG_TblBucket;
+ 
+typedef struct ag_tbl {
+	AG_TblBucket *buckets;
+	Uint         nBuckets;
+} AG_Tbl;
+.Ed
+.Sh GENERAL INTERFACE
+.nr nS 1
+.Ft "AG_Tbl *"
+.Fn AG_TblNew "Uint nBuckets"
+.Pp
+.Ft "void"
+.Fn AG_TblInit "AG_Tbl *tbl" "Uint nBuckets"
+.Pp
+.Ft "void"
+.Fn AG_TblDestroy "AG_Tbl *tbl"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_TblLookup "AG_Tbl *tbl" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_TblExists "AG_Tbl *tbl" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_TblInsert "AG_Tbl *tbl" "const AG_Variable *V"
+.Pp
+.Ft "int"
+.Fn AG_TblDelete "AG_Tbl *tbl" "const char *key"
+.nr nS 0
+.Pp
+The
+.Fn AG_TblNew
+function allocates and initializes a new, empty
+.Nm .
+.Fn AG_TblInit
+initializes an existing table structure.
+.Fn AG_TblDestroy
+frees the resources allocated by a table (the table structure itself is not
+freed).
+.Pp
+.Fn AG_TblLookup
+searches the table for an entry of the given name and returns a pointer to it.
+On failure, it returns NULL.
+.Pp
+.Fn AG_TblExists
+returns 1 if there is a table entry matching the giving key.
+.Pp
+.Fn AG_TblInsert
+inserts an entry in the table.
+The
+.Va name
+field of the variable is used as key.
+The contents of the variable are duplicated.
+On failure, the function returns -1 and sets an error message.
+.Pp
+.Fn AG_TblDelete
+removes the specified table entry by name.
+If there is no match, it returns -1 and sets an error message.
+.Sh PRECOMPUTED HASHES
+The following access functions accept a hash argument.
+They are useful in cases where it is inefficient to reevaluate the hash
+function repeatedly (e.g., a lookup followed by an insert).
+.Pp
+.nr nS 1
+.Ft "Uint"
+.Fn AG_TblHash "AG_Tbl *tbl" "const char *key"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_TblLookupHash "AG_Tbl *tbl" "Uint hash" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_TblExistsHash "AG_Tbl *tbl" "Uint hash" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_TblInsertHash "AG_Tbl *tbl" "Uint hash" "const AG_Variable *V"
+.Pp
+.Ft "int"
+.Fn AG_TblDeleteHash "AG_Tbl *tbl" "Uint hash" "const char *key"
+.nr nS 0
+.Pp
+.Fn AG_TblHash
+computes and returns the hash for the specified
+.Fa key .
+.Pp
+.Fn AG_TblLookupHash ,
+.Fn AG_TblExistsHash ,
+.Fn AG_TblInsertHash
+and
+.Fn AG_TblDeleteHash
+are variants of
+.Fn AG_TblLookup ,
+.Fn AG_TblExists ,
+.Fn AG_TblInsert ,
+and
+.Fn AG_TblDelete
+with an additional
+.Fa hash
+argument.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Variable 3 ,
+.Xr AG_List 3 ,
+.Xr AG_Tree 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.4
