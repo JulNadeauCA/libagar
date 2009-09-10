@@ -86,6 +86,7 @@
 #include <core/object.h>
 #include <core/list.h>
 #include <core/tree.h>
+#include <core/tbl.h>
 #include <core/cpuinfo.h>
 #include <core/file.h>
 #include <core/dir.h>

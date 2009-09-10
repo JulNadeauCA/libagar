@@ -2,6 +2,7 @@
 
 #include <agar/core/begin.h>
 
+struct ag_tbl;
 struct ag_object;
 struct ag_object_class_spec;
 
@@ -50,12 +51,13 @@ typedef struct ag_object_class {
 #endif
 
 __BEGIN_DECLS
-extern AG_ObjectClass *agClassTree;		/* Object class tree */
+extern struct ag_tbl  *agClassTbl;		/* Classes in hash table */
+extern AG_ObjectClass *agClassTree;		/* Classes in tree format */
 extern AG_Namespace   *agNamespaceTbl;		/* Registered namespaces */
 extern int             agNamespaceCount;
 extern char           **agModuleDirs;		/* Module search directories */
 extern int              agModuleDirCount;
-extern AG_Mutex	        agClassLock;		/* Lock on class tree */
+extern AG_Mutex	        agClassLock;		/* Lock on class table */
 
 void            AG_InitClassTbl(void);
 void            AG_DestroyClassTbl(void);

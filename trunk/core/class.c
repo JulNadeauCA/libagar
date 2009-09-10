@@ -35,12 +35,13 @@
 
 extern AG_ObjectClass agObjectClass;
 
-AG_ObjectClass *agClassTree = NULL;		/* Root */
-AG_Namespace    *agNamespaceTbl = NULL;
+AG_Tbl          *agClassTbl = NULL;		/* Classes in hash table */
+AG_ObjectClass  *agClassTree = NULL;		/* Classes in tree format */
+AG_Namespace    *agNamespaceTbl = NULL;		/* Registered namespaces */
 int              agNamespaceCount = 0;
-char           **agModuleDirs = NULL;
+char           **agModuleDirs = NULL;		/* Module search directories */
 int              agModuleDirCount = 0;
-AG_Mutex	 agClassLock;
+AG_Mutex	 agClassLock;			/* Lock on class table */
 
 static void
 InitClass(AG_ObjectClass *cl, const char *hier, const char *libs)
@@ -63,15 +64,25 @@ InitClass(AG_ObjectClass *cl, const char *hier, const char *libs)
 void
 AG_InitClassTbl(void)
 {
+	AG_Variable V;
+
+	/* Initialize the namespaces */
 	agNamespaceTbl = Malloc(sizeof(AG_Namespace));
 	agNamespaceCount = 0;
 	agModuleDirs = Malloc(sizeof(char *));
 	agModuleDirCount = 0;
-
 	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+
+	/* Initialize the class tree */
 	InitClass(&agObjectClass, "AG_Object", "");
 	agClassTree = &agObjectClass;
-	
+
+	/* Initialize the class table. */
+	agClassTbl = AG_TblNew(256);
+	AG_InitPointer(&V, &agObjectClass);
+	if (AG_TblInsert(agClassTbl, "AG_Object", &V) == -1)
+		AG_FatalError(NULL);
+
 	AG_MutexInitRecursive(&agClassLock);
 }
 
@@ -79,11 +90,13 @@ AG_InitClassTbl(void)
 void
 AG_DestroyClassTbl(void)
 {
-	agClassTree = NULL;
-
 	Free(agNamespaceTbl);
 	agNamespaceTbl = NULL;
 	agNamespaceCount = 0;
+	
+	AG_TblDestroy(agClassTbl);
+	agClassTbl = NULL;
+	agClassTree = NULL;
 	
 	AG_MutexDestroy(&agClassLock);
 }
@@ -157,6 +170,8 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 			continue;
 		}
 	}
+
+	/* Fill in the "hier" field. */
 	if (i > 0 && cs->hier[i-1] == ':') {
 		cs->hier[i-1] = '\0';		/* Strip last ':' */
 	}
@@ -165,6 +180,8 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	} else {
 		cs->hier[i] = '\0';
 	}
+	if ((c = strrchr(cs->hier, '@')) != NULL)
+		*c = '\0';
 
 	/* Fill in the "name" field. */
 	if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
@@ -172,6 +189,8 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 	} else {
 		Strlcpy(cs->name, cs->hier, sizeof(cs->name));
 	}
+	if ((c = strrchr(cs->name, '@')) != NULL)
+		*c = '\0';
 	
 	/* Fill in the "spec" field. */
 	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
@@ -187,6 +206,7 @@ AG_RegisterClass(void *p)
 {
 	AG_ObjectClass *cl = p;
 	AG_ObjectClassSpec cs;
+	AG_Variable V;
 	char *s;
 	
 	/* Parse the class specification. */
@@ -200,16 +220,23 @@ AG_RegisterClass(void *p)
 	    cs.libs);
 #endif
 
-	/* Lookup the superclass. */
 	AG_MutexLock(&agClassLock);
+
+	/* Insert into the class tree. */
 	if ((s = strrchr(cs.hier, ':')) != NULL) {
 		*s = '\0';
 		if ((cl->super = AG_LookupClass(cs.hier)) == NULL)
-			AG_FatalError("%s: No such superclass", cs.hier);
+			AG_FatalError(NULL);
 	} else {
 		cl->super = agClassTree;			/* Root */
 	}
 	TAILQ_INSERT_TAIL(&cl->super->sub, cl, subclasses);
+
+	/* Insert into the class table. */
+	AG_InitPointer(&V, cl);
+	if (AG_TblInsert(agClassTbl, cl->hier, &V) == -1)
+		AG_FatalError(NULL);
+
 	AG_MutexUnlock(&agClassLock);
 }
 
@@ -224,25 +251,14 @@ AG_UnregisterClass(void *p)
 #ifdef AG_CLASSDEBUG
 	Debug(NULL, "Unregistering class: %s\n", cl->name);
 #endif
+	/* Remove from the class tree. */
 	TAILQ_REMOVE(&clSuper->sub, cl, subclasses);
 	cl->super = NULL;
-	AG_MutexUnlock(&agClassLock);
-}
 
-/* XXX ridiculous */
-static AG_ObjectClass *
-FindClassByName(AG_ObjectClass *cl, const char *spec)
-{
-	AG_ObjectClass *clSub, *rv;
-	
-	TAILQ_FOREACH(clSub, &cl->sub, subclasses) {
-		if (strcmp(clSub->hier, spec) == 0) {
-			return (clSub);
-		}
-		if ((rv = FindClassByName(clSub, spec)) != NULL)
-			return (rv);
-	}
-	return (NULL);
+	/* Remove from the class table. */
+	AG_TblDelete(agClassTbl, cl->hier);
+
+	AG_MutexUnlock(&agClassLock);
 }
 
 /*
@@ -253,7 +269,7 @@ AG_ObjectClass *
 AG_LookupClass(const char *inSpec)
 {
 	AG_ObjectClassSpec cs;
-	AG_ObjectClass *cl;
+	AG_Variable *V;
 
 	if (inSpec[0] == '\0' ||
 	    strcmp(inSpec, "Agar(Object)") == 0 ||
@@ -261,17 +277,51 @@ AG_LookupClass(const char *inSpec)
 		return (agClassTree);				/* Root */
 
 	if (AG_ParseClassSpec(&cs, inSpec) == -1)
-		AG_FatalError(NULL);
+		return (NULL);
 
-	/* Recursively search the class structure. */
+	/* Look up the class table. */
 	AG_MutexLock(&agClassLock);
-	if ((cl = FindClassByName(agClassTree, cs.hier)) != NULL) {
+	if ((V = AG_TblLookup(agClassTbl, cs.hier)) != NULL) {
 		AG_MutexUnlock(&agClassLock);
-		return (cl);
+		return ((AG_ObjectClass *)V->data.p);
 	}
 	AG_MutexUnlock(&agClassLock);
+
 	AG_SetError("No such class: %s", inSpec);
 	return (NULL);
+}
+
+/* Convert "PFX_Foo" to "pfxFooClass". */
+static int
+GetClassSymbol(char *sym, size_t len, const AG_ObjectClassSpec *cs)
+{
+	char *d;
+	const char *c;
+	int inPfx = 1;
+	size_t l = 0;
+
+	for (c = &cs->name[0], d = &sym[0];
+	     *c != '\0';
+	     c++) {
+		if (*c == '_') {
+			inPfx = 0;
+			continue;
+		}
+		if ((l+2) >= len) {
+			goto toolong;
+		}
+		*d = inPfx ? tolower(*c) : *c;
+		d++;
+		l++;
+	}
+	*d = '\0';
+	if (Strlcat(sym, "Class", len) >= len) {
+		goto toolong;
+	}
+	return (0);
+toolong:
+	AG_SetError("Symbol too long");
+	return (-1);
 }
 
 /*
@@ -287,19 +337,28 @@ AG_ObjectClass *
 AG_LoadClass(const char *classSpec)
 {
 	AG_ObjectClassSpec cs;
+	AG_ObjectClass *cl;
 	char *s, *lib;
 	char sym[AG_OBJECT_HIER_MAX];
 	AG_DSO *dso;
 	void *pClass = NULL;
 	int i;
 
-	if (AG_ParseClassSpec(&cs, classSpec) == -1)
-		AG_FatalError(NULL);
-
-	if (cs.libs[0] == '\0')
-		return AG_LookupClass(cs.hier);
-
+	if (AG_ParseClassSpec(&cs, classSpec) == -1) {
+		return (NULL);
+	}
+	
 	AG_MutexLock(&agClassLock);
+
+	if ((cl = AG_LookupClass(cs.hier)) != NULL) {
+		AG_MutexUnlock(&agClassLock);
+		return (cl);
+	}
+	if (cs.libs[0] == '\0') {
+		AG_SetError("Class %s not found (and no modules specified)",
+		    cs.hier);
+		goto fail;
+	}
 
 	/* Load all libraries specified in the string. */
 	for (i = 0, s = cs.libs;
@@ -312,12 +371,10 @@ AG_LoadClass(const char *classSpec)
 		}
 		/* Look up "pfxFooClass" in the first library. */
 		if (i == 0) {
-			Strlcpy(sym, cs.name, sizeof(sym));
-			Strlcat(sym, "Class", sizeof(sym));
-
+			if (GetClassSymbol(sym, sizeof(sym), &cs) == -1) {
+				goto fail;
+			}
 			if (AG_SymDSO(dso, sym, &pClass) == -1) {
-				AG_SetError("Loading <%s>: %s", lib,
-				    AG_GetError());
 				AG_UnloadDSO(dso);
 				/* XXX TODO undo other DSOs we just loaded */
 				goto fail;

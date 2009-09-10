@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,14 @@
  */
 
 /*
- * General-purpose data structure for trees (organizational trees, not to 
- * confuse with binary trees as implemented by btree.h). Compared to direct
- * use of the AG_Queue(3) macros, using this interface to implement a tree
- * involves an extra level of indirection.
+ * General-purpose tree structure (not to confuse with binary trees as in
+ * btree.h).
+ *
+ * Compared to the AG_Queue(3) macro package, using this interface to
+ * implement a tree structure has the advantage of the tree being directly
+ * traversable (e.g., by a GUI widget such as AG_TreeView(3)), in a generic
+ * fashion. However, this comes at the cost of an extra level of indirection
+ * on each element.
  */
 
 #include <core/core.h>
