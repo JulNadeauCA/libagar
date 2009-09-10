@@ -152,10 +152,20 @@ FetchVariableNew(void *pObj, const char *name, int *newFlag)
 	return (V);
 }
 
-void
+/* Duplicate a Variable contents. */
+int
 AG_CopyVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 {
 	memcpy(Vdst, Vsrc, sizeof(AG_Variable));
+
+	if (Vsrc->type == AG_VARIABLE_STRING &&
+	    Vsrc->info.size == 0) {
+		if ((Vdst->data.s = strdup(Vsrc->data.s)) == NULL) {
+			AG_SetError("Out of memory for string copy");
+			return (-1);
+		}
+	}
+	return (0);
 }
 
 /* Evaluate the value of a variable from any associated function. */
@@ -339,13 +349,16 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	AG_PARSE_VARIABLE_ARGS(ap, fmt, vList, argSizes);
 	va_end(ap);
 #ifdef DEBUG
-	if (vList->n != 1) { AG_FatalError("Invalid AG_Set() format"); }
+	if (vList->n != 1)
+		AG_FatalError("Invalid AG_Set() format");
 #endif
 	
 	AG_ObjectLock(obj);
 	V = AG_GetVariableLocked(obj, name);
 	Strlcpy(V->name, name, sizeof(V->name));
-	AG_CopyVariable(V, &vList->v[0]);
+	if (AG_CopyVariable(V, &vList->v[0]) == -1) {
+		AG_FatalError(NULL);
+	}
 	AG_UnlockVariable(V);
 	AG_ObjectUnlock(obj);
 

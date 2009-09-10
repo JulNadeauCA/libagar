@@ -411,7 +411,7 @@ AG_Variable    *AG_GetVariableVFS(void *, const char *)
                     WARN_UNUSED_RESULT_ATTRIBUTE;
 AG_Variable    *AG_GetVariable(void *, const char *, ...)
                     WARN_UNUSED_RESULT_ATTRIBUTE;
-void            AG_CopyVariable(AG_Variable *, const AG_Variable *);
+int             AG_CopyVariable(AG_Variable *, const AG_Variable *);
 AG_Variable    *AG_Set(void *, const char *, const char *, ...);
 void		AG_Unset(void *, const char *);
 void            AG_VariableSubst(void *, const char *, char *, size_t)
