@@ -189,6 +189,15 @@ is in UTF-8 encoding.
 .Pp
 .Fn AG_CloseDir
 closes the given directory.
+.Sh MISCELLANEOUS
+.nr nS 1
+.Ft "const char *"
+.Fn AG_ShortFilename "const char *path"
+.nr nS 0
+.Pp
+.Fn AG_ShortFilename
+returns a pointer to the first character of the last element of a pathname
+.Fa path .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,
