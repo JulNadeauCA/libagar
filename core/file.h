@@ -38,6 +38,7 @@ int AG_GetSystemTempDir(char *, size_t)
         BOUNDED_ATTRIBUTE(__string__, 1, 2);
 int AG_FileExists(const char *);
 int AG_FileDelete(const char *);
+const char *AG_ShortFilename(const char *);
 __END_DECLS
 
 #include <agar/core/close.h>

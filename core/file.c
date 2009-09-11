@@ -200,3 +200,12 @@ AG_FileDelete(const char *path)
 #endif
 }
 
+/* Return the last element in a pathname. */
+const char *
+AG_ShortFilename(const char *p)
+{
+	const char *s;
+
+	s = (const char *)strrchr(p, AG_PATHSEPCHAR);
+	return (s != NULL && s>p) ? s-1 : p;
+}
