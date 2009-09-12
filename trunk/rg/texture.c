@@ -191,7 +191,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	AG_Textbox *tb;
 	
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", tex->name);
+	AG_WindowSetCaptionS(win, tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
 	tb = AG_TextboxNew(win, 0, _("Name: "));
@@ -204,7 +204,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 #endif
 	AG_SetEvent(comTS, "combo-selected", SelectTileset, "%p", tex);
 	AG_ComboSelectText(comTS, tex->tileset);
-	AG_TextboxPrintf(comTS->tbox, "%s", tex->tileset);
+	AG_TextboxSetString(comTS->tbox, tex->tileset);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", PollSourceTiles, "%p,%p", vfsRoot, tex);
@@ -214,17 +214,17 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("S-Wrapping"), AG_BOX_VERT);
 	{
-		AG_LabelNewString(ntab, 0, _("S-coordinate wrapping: "));
+		AG_LabelNewS(ntab, 0, _("S-coordinate wrapping: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, wrapModes, &tex->wrap_s);
 	}
 	ntab = AG_NotebookAddTab(nb, _("T-Wrapping"), AG_BOX_VERT);
 	{
-		AG_LabelNewString(ntab, 0, _("T-coordinate wrapping: "));
+		AG_LabelNewS(ntab, 0, _("T-coordinate wrapping: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, wrapModes, &tex->wrap_t);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
-		AG_LabelNewString(ntab, 0, _("Blending function: "));
+		AG_LabelNewS(ntab, 0, _("Blending function: "));
 		AG_RadioNewInt(ntab, AG_RADIO_HFILL, agBlendFuncNames,
 		    &tex->blend_func);
 	}

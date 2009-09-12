@@ -5,7 +5,7 @@ package body agar.gui.widget.textbox is
       (parent : widget_access_t;
        flags  : flags_t;
        label  : cs.chars_ptr) return textbox_access_t;
-    pragma import (c, allocate, "AG_TextboxNew");
+    pragma import (c, allocate, "AG_TextboxNewS");
 
     procedure set_static
       (textbox : textbox_access_t;
@@ -29,9 +29,8 @@ package body agar.gui.widget.textbox is
 
     procedure set_label
       (textbox : textbox_access_t;
-       fmt     : cs.chars_ptr;
        text    : cs.chars_ptr);
-    pragma import (c, set_label, "AG_TextboxSetLabel");
+    pragma import (c, set_label, "AG_TextboxSetLabelS");
 
     procedure size_hint
       (textbox : textbox_access_t;
@@ -149,11 +148,9 @@ package body agar.gui.widget.textbox is
      text    : string)
   is
     c_text : aliased c.char_array := c.to_c (text);
-    c_fmt  : aliased c.char_array := c.to_c ("%s");
   begin
     cbinds.set_label
       (textbox => textbox,
-       fmt     => cs.to_chars_ptr (c_fmt'unchecked_access),
        text    => cs.to_chars_ptr (c_text'unchecked_access));
   end set_label;
 

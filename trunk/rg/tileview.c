@@ -1817,7 +1817,7 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 	}
 	if (tvt->ops->edit != NULL) {
 		tvt->win = tvt->ops->edit(tvt);
-		AG_WindowSetCaption(tvt->win, _(tvt->ops->name));
+		AG_WindowSetCaptionS(tvt->win, _(tvt->ops->name));
 		AG_WindowSetPosition(tvt->win, AG_WINDOW_LOWER_LEFT, 0);
 		AG_WindowAttach(pwin, tvt->win);
 		AG_WindowShow(tvt->win);

@@ -87,7 +87,7 @@ RG_TilesetNew(void *parent, const char *name, Uint flags)
 
 	ts = Malloc(sizeof(RG_Tileset));
 	AG_ObjectInit(ts, &rgTilesetClass);
-	AG_ObjectSetName(ts, "%s", name);
+	AG_ObjectSetNameS(ts, name);
 	ts->flags |= flags;
 
 	AG_ObjectAttach(parent, ts);
@@ -1170,11 +1170,11 @@ InsertTileDlg(AG_Event *event)
 	AG_MSpinbutton *msb;
 /*	AG_Combo *com; */
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-instiledlg")) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("Create new tile"));
+	AG_WindowSetCaptionS(win, _("Create new tile"));
 	
 	tb = AG_TextboxNew(win, 0, _("Name: "));
 	AG_TextboxBindUTF8(tb, ins_tile_name, sizeof(ins_tile_name));
@@ -1193,7 +1193,7 @@ InsertTileDlg(AG_Event *event)
 	AG_CheckboxNewInt(win, 0, _("Alpha blending"), &ins_alpha);
 	AG_CheckboxNewInt(win, 0, _("Colorkey"), &ins_colorkey);
 	
-	AG_LabelNewString(win, 0, _("Snapping mode: "));
+	AG_LabelNewS(win, 0, _("Snapping mode: "));
 	AG_RadioNewUint(win, AG_RADIO_HFILL, rgTileSnapModes, &ins_snap_mode);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
@@ -1215,11 +1215,11 @@ InsertTextureDlg(AG_Event *event)
 	AG_Box *btnbox;
 	AG_Textbox *tb;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-instexturedlg")) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("Create a new texture"));
+	AG_WindowSetCaptionS(win, _("Create a new texture"));
 	
 	tb = AG_TextboxNew(win, 0, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_texture_name, sizeof(ins_texture_name));
@@ -1249,11 +1249,11 @@ InsertAnimDlg(AG_Event *event)
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-insanimdlg")) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("Create new animation"));
+	AG_WindowSetCaptionS(win, _("Create new animation"));
 	
 	tb = AG_TextboxNew(win, 0, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_anim_name, sizeof(ins_anim_name));
@@ -1728,7 +1728,7 @@ Edit(void *p)
 	AG_Combo *com;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", OBJECT(ts)->name);
+	AG_WindowSetCaptionS(win, OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
@@ -1868,9 +1868,9 @@ Edit(void *p)
 
 		pane = AG_PaneNew(ntab, AG_PANE_HORIZ,
 		    AG_PANE_EXPAND|AG_PANE_DIV|AG_PANE_FORCE_DIV);
-		AG_LabelNewString(pane->div[0], 0, _("Tiles:"));
+		AG_LabelNewS(pane->div[0], 0, _("Tiles:"));
 		AG_ObjectAttach(pane->div[0], tlTileTbl);
-		AG_LabelNewString(pane->div[1], 0, _("Animations:"));
+		AG_LabelNewS(pane->div[1], 0, _("Animations:"));
 		AG_ObjectAttach(pane->div[1], tlAnimTbl);
 	}
 	return (win);

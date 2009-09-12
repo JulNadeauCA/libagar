@@ -37,23 +37,32 @@
 AG_Checkbox *
 AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
+	char s[AG_LABEL_MAX];
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vsnprintf(s, sizeof(s), fmt, ap);
+		va_end(ap);
+		return AG_CheckboxNewS(parent, flags, s);
+	} else {
+		return AG_CheckboxNewS(parent, flags, NULL);
+	}
+}
+
+AG_Checkbox *
+AG_CheckboxNewS(void *parent, Uint flags, const char *label)
+{
 	AG_Checkbox *cb;
-	va_list args;
 
 	cb = Malloc(sizeof(AG_Checkbox));
 	AG_ObjectInit(cb, &agCheckboxClass);
 	cb->flags |= flags;
 
-	if (fmt != NULL) {
-		char text[AG_LABEL_MAX];
-
-		va_start(args, fmt);
-		Vsnprintf(text, sizeof(text), fmt, args);
-		va_end(args);
-		cb->lbl = AG_LabelNewString(cb, 0, text);
+	if (label != NULL) {
+		cb->lbl = AG_LabelNewS(cb, 0, label);
 		AG_LabelValign(cb->lbl, AG_TEXT_MIDDLE);
 	}
-	
 	if (flags & AG_CHECKBOX_SET) {
 		cb->state = 1;
 	}

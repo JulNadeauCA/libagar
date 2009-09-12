@@ -151,17 +151,15 @@ is 0, the number of lines will be based on the contents of the text string.
 .Sh STATIC LABELS
 .nr nS 1
 .Ft void
-.Fn AG_LabelText "AG_Label *label" "const char *fmt" "..."
+.Fn AG_LabelText "AG_Label *label" "const char *format" "..."
 .Pp
 .Ft void
-.Fn AG_LabelString "AG_Label *label" "const char *s"
+.Fn AG_LabelTextS "AG_Label *label" "const char *s"
 .Pp
 .nr nS 0
-The functions
+The
 .Fn AG_LabelText
-and
-.Fn AG_LabelString
-change the text displayed by the label.
+function sets the text displayed by the label.
 .Pp
 .Sh POLLED LABELS
 Polled labels are specified to

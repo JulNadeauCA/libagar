@@ -7,9 +7,8 @@ package body agar.gui.widget.icon is
 
     procedure set_text
       (icon : icon_access_t;
-       fmt  : cs.chars_ptr;
        str  : cs.chars_ptr);
-    pragma import (c, set_text, "AG_IconSetText");
+    pragma import (c, set_text, "AG_IconSetTextS");
 
     procedure set_background_fill
       (icon  : icon_access_t;
@@ -40,11 +39,9 @@ package body agar.gui.widget.icon is
      text : string)
   is
     ca_text : aliased c.char_array := c.to_c (text);
-    ca_fmt  : aliased c.char_array := c.to_c ("%s");
   begin
     cbinds.set_text
       (icon => icon,
-       fmt  => cs.to_chars_ptr (ca_fmt'unchecked_access),
        str  => cs.to_chars_ptr (ca_text'unchecked_access));
   end set_text;
 

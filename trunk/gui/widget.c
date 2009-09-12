@@ -481,7 +481,7 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	size_t rv;
 
 	if ((V = AG_GetVariable(wid, name, &s)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
+		AG_FatalError(NULL);
 	}
 	rv = Strlcpy(dst, s, dst_size);
 	AG_UnlockVariable(V);

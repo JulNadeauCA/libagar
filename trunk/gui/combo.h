@@ -38,7 +38,10 @@ typedef struct ag_combo {
 __BEGIN_DECLS
 extern AG_WidgetClass agComboClass;
 
-AG_Combo *AG_ComboNew(void *, Uint, const char *);
+AG_Combo *AG_ComboNew(void *, Uint, const char *, ...)
+		      FORMAT_ATTRIBUTE(printf, 3, 4);
+AG_Combo *AG_ComboNewS(void *, Uint, const char *);
+
 void AG_ComboSizeHint(AG_Combo *, const char *, int);
 void AG_ComboSizeHintPixels(AG_Combo *, int, int);
 void AG_ComboSelect(AG_Combo *, AG_TlistItem *);

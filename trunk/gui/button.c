@@ -45,20 +45,29 @@ static void keydown(AG_Event *);
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 {
+	va_list ap;
+	char *s;
+	
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vasprintf(&s, fmt, ap);
+		va_end(ap);
+	} else {
+		s = NULL;
+	}
+	return AG_ButtonNewS(parent, flags, s);
+}
+
+AG_Button *
+AG_ButtonNewS(void *parent, Uint flags, const char *label)
+{
 	AG_Button *bu;
-	va_list args;
 	
 	bu = Malloc(sizeof(AG_Button));
 	AG_ObjectInit(bu, &agButtonClass);
 
-	if (fmt != NULL) {
-		char text[AG_LABEL_MAX];
-
-		va_start(args, fmt);
-		Vsnprintf(text, sizeof(text), fmt, args);
-		va_end(args);
-
-		bu->lbl = AG_LabelNewString(bu, 0, text);
+	if (label != NULL) {
+		bu->lbl = AG_LabelNewS(bu, 0, label);
 		AG_LabelJustify(bu->lbl, bu->justify);
 		AG_LabelValign(bu->lbl, bu->valign);
 	}
@@ -547,7 +556,7 @@ AG_ButtonInvertState(AG_Button *bu, int flag)
 }
 
 void
-AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
+AG_ButtonJustify(AG_Button *bu, enum ag_text_justify jus)
 {
 	AG_ObjectLock(bu);
 	bu->justify = jus;
@@ -618,28 +627,35 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 	AG_ObjectUnlock(bu);
 }
 
+/* Set the label text (C string). */
 void
-AG_ButtonText(AG_Button *bu, const char *fmt, ...)
+AG_ButtonTextS(AG_Button *bu, const char *label)
 {
-	va_list args;
-	char text[AG_LABEL_MAX];
-
-	va_start(args, fmt);
-	Vsnprintf(text, sizeof(text), fmt, args);
-	va_end(args);
-
 	AG_ObjectLock(bu);
 	if (bu->surface != -1) {
 		AG_ButtonSurface(bu, NULL);
 	}
-	if (bu->lbl != NULL) {
-		AG_LabelString(bu->lbl, text);
-	} else {
-		bu->lbl = AG_LabelNewString(bu, 0, text);
+	if (bu->lbl == NULL) {
+		bu->lbl = AG_LabelNewS(bu, 0, label);
 		AG_LabelJustify(bu->lbl, bu->justify);
 		AG_LabelValign(bu->lbl, bu->valign);
+	} else {
+		AG_LabelTextS(bu->lbl, label);
 	}
 	AG_ObjectUnlock(bu);
+}
+
+/* Set the label text (format string). */
+void
+AG_ButtonText(AG_Button *bu, const char *fmt, ...)
+{
+	char s[AG_LABEL_MAX];
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vsnprintf(s, sizeof(s), fmt, ap);
+	va_end(ap);
+	return AG_ButtonTextS(bu, s);
 }
 
 AG_WidgetClass agButtonClass = {

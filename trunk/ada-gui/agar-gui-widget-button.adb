@@ -4,16 +4,14 @@ package body agar.gui.widget.button is
     function allocate
       (parent : widget_access_t;
        flags  : flags_t := 0;
-       fmt    : cs.chars_ptr;
        label  : cs.chars_ptr) return button_access_t;
-    pragma import (c, allocate, "AG_ButtonNew");
+    pragma import (c, allocate, "AG_ButtonNewS");
 
     function allocate_function
       (parent   : widget_access_t;
        flags    : flags_t := 0;
        label    : cs.chars_ptr;
-       callback : agar.core.event.callback_t;
-       fmt      : agar.core.types.void_ptr_t) return button_access_t;
+       callback : agar.core.event.callback_t) return button_access_t;
     pragma import (c, allocate_function, "AG_ButtonNewFn");
 
     function allocate_integer
@@ -106,9 +104,8 @@ package body agar.gui.widget.button is
 
     procedure text
       (button : button_access_t;
-       fmt    : cs.chars_ptr;
        text   : cs.chars_ptr);
-    pragma import (c, text, "AG_ButtonText");
+    pragma import (c, text, "AG_ButtonTextS");
   end cbinds;
 
   --
@@ -119,12 +116,10 @@ package body agar.gui.widget.button is
      label  : string) return button_access_t
   is
     c_label : aliased c.char_array := c.to_c (label);
-    c_fmt   : aliased c.char_array := c.to_c ("%s");
   begin
     return cbinds.allocate
       (parent => parent,
        flags  => flags,
-       fmt    => cs.to_chars_ptr (c_fmt'unchecked_access),
        label  => cs.to_chars_ptr (c_label'unchecked_access));
   end allocate;
 
@@ -140,8 +135,7 @@ package body agar.gui.widget.button is
       (parent   => parent,
        callback => callback,
        flags    => flags,
-       label    => cs.to_chars_ptr (c_label'unchecked_access),
-       fmt      => agar.core.types.null_ptr);
+       label    => cs.to_chars_ptr (c_label'unchecked_access));
   end allocate_function;
 
   function allocate_integer
@@ -343,12 +337,10 @@ package body agar.gui.widget.button is
     (button  : button_access_t;
      text    : string)
   is
-    ca_fmt  : aliased c.char_array := c.to_c ("%s");
     ca_text : aliased c.char_array := c.to_c (text);
   begin
     cbinds.text
       (button => button,
-       fmt    => cs.to_chars_ptr (ca_fmt'unchecked_access),
        text   => cs.to_chars_ptr (ca_text'unchecked_access));
   end text;
 

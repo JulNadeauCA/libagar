@@ -103,7 +103,10 @@ function requests an initial widget size in pixels.
 .Fn AG_GraphVertexFind "AG_Graph *graph" "void *userPtr"
 .Pp
 .Ft "void"
-.Fn AG_GraphVertexLabel "AG_GraphVertex *vertex" "const char *fmt" "..."
+.Fn AG_GraphVertexLabel "AG_GraphVertex *vertex" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexLabelS "AG_GraphVertex *vertex" "const char *text"
 .Pp
 .Ft "void"
 .Fn AG_GraphVertexColorLabel "AG_GraphVertex *vertex" "Uint8 r" "Uint8 g" "Uint8 b"
@@ -131,10 +134,8 @@ is an optional user pointer to associate with the vertex.
 returns the vertex matching the specified user pointer, or NULL if no
 match exists.
 .Pp
-The
 .Fn AG_GraphVertexLabel
-function changes the text label of the given vertex using the specified
-format string.
+sets the text label associated with a vertex.
 .Pp
 .Fn AG_GraphVertexColorLabel
 sets the color of the text label.
@@ -159,7 +160,10 @@ on the vertex.
 .Fn AG_GraphEdgeFind "AG_Graph *graph" "void *userPtr"
 .Pp
 .Ft "void"
-.Fn AG_GraphEdgeLabel "AG_GraphEdge *edge" "const char *fmt" "..."
+.Fn AG_GraphEdgeLabel "AG_GraphEdge *edge" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_GraphEdgeLabelS "AG_GraphEdge *edge" "const char *text"
 .Pp
 .Ft "void"
 .Fn AG_GraphEdgeColorLabel "AG_GraphEdge *edge" "Uint8 r" "Uint8 g" "Uint8 b"

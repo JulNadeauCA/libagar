@@ -439,14 +439,15 @@ Quit(AG_Event *event)
 	if (ts == NULL) {
 		ConfirmQuit(NULL);
 	} else {
-		if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
-		    AG_WINDOW_NORESIZE, "QuitCallback")) == NULL) {
+		if ((win = AG_WindowNewNamedS(
+		    AG_WINDOW_MODAL|AG_WINDOW_NOTITLE| AG_WINDOW_NORESIZE,
+		    "QuitCallback")) == NULL) {
 			return;
 		}
 		AG_WindowSetCaption(win, _("Exit application?"));
 		AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 		AG_WindowSetSpacing(win, 8);
-		AG_LabelNewString(win, 0,
+		AG_LabelNewS(win, 0,
 		    _("There is at least one tileset with unsaved changes.  "
 	              "Exit application?"));
 		box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|

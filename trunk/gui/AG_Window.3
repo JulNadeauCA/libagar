@@ -81,10 +81,16 @@ for notebook-style display.
 .Fn AG_WindowNew "Uint flags"
 .Pp
 .Ft "AG_Window *"
-.Fn AG_WindowNewNamed "Uint flags" "const char *name" "..."
+.Fn AG_WindowNewNamed "Uint flags" "const char *format" "..."
+.Pp
+.Ft "AG_Window *"
+.Fn AG_WindowNewNamedS "Uint flags" "const char *name"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetCaption "AG_Window *win" "const char *fmt" "..."
+.Fn AG_WindowSetCaption "AG_Window *win" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_WindowSetCaptionS "AG_Window *win" "const char *text"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetIcon "AG_Window *win" "AG_Surface *surface"
@@ -169,6 +175,8 @@ variant creates a new named window.
 If a window of the same name exists,
 .Fn AG_WindowNewNamed
 only moves the focus to that window, and returns NULL.
+The name may contain any printable character, except
+.Sq / .
 .Pp
 See
 .Dq FLAGS
@@ -179,9 +187,9 @@ options.
 The
 .Fn AG_WindowSetCaption
 function sets the text displayed by the titlebar (if there is one).
-The string is truncated if its length exceeds
+If the string exceeds
 .Dv AG_LABEL_MAX
-- 1 bytes.
+bytes in length, it is truncated.
 .Pp
 The
 .Fn AG_WindowSetIcon

@@ -140,7 +140,7 @@ CreateWindow(void)
 	AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
 	
 	/* Set some default filename. */
-	AG_FileDlgSetFilename(fd, "Meme.bmp");
+	AG_FileDlgSetFilenameS(fd, "Meme.bmp");
 
 	/*
 	 * Register the loader functions. We can assign a set of user

@@ -29,7 +29,23 @@
 #include "primitive.h"
 
 AG_Combo *
-AG_ComboNew(void *parent, Uint flags, const char *label)
+AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)
+{
+	char s[AG_LABEL_MAX];
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vsnprintf(s, sizeof(s), fmt, ap);
+		va_end(ap);
+		return AG_ComboNewS(parent, flags, s);
+	} else {
+		return AG_ComboNewS(parent, flags, NULL);
+	}
+}
+
+AG_Combo *
+AG_ComboNewS(void *parent, Uint flags, const char *label)
 {
 	AG_Combo *com;
 
@@ -38,7 +54,7 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	com->flags |= flags;
 
 	if (label != NULL) {
-		AG_TextboxSetLabel(com->tbox, "%s", label);
+		AG_TextboxSetLabelS(com->tbox, label);
 	}
 	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
 	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
@@ -221,8 +237,8 @@ Init(void *obj)
 	com->wPreList = -1;
 	com->hPreList = -1;
 	
-	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, NULL);
-	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
+	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO, NULL);
+	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
 	AG_WidgetSetFocusable(com->button, 0);
 
@@ -261,7 +277,7 @@ AG_ComboSizeHintPixels(AG_Combo *com, int w, int h)
 void
 AG_ComboSetButtonText(AG_Combo *com, const char *text)
 {
-	AG_ButtonText(com->button, "%s", text);
+	AG_ButtonTextS(com->button, text);
 }
 
 void

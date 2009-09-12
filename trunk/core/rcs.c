@@ -170,7 +170,6 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 	
 	if (NC_Write(&rcs_client, "rcs-info\nobject-path=%s\n\n",
 	    &objdir[1]) == -1) {
-		AG_SetError("%s", AG_GetError());
 		return (AG_RCS_ERROR);
 	}
 	if (NC_Read(&rcs_client, 16) <= 2 ||
@@ -242,7 +241,7 @@ AG_RcsImport(AG_Object *ob)
 	switch ((status = AG_RcsStatus(ob, objdir, digest, NULL, NULL,
 	    &repo_rev, &working_rev))) {
 	case AG_RCS_ERROR:
-		/* AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError()); */
+		/* AG_TextMsgFromError() */
 		break;
 	case AG_RCS_UNKNOWN:
 		break;
@@ -344,7 +343,7 @@ AG_RcsCommit(AG_Object *ob)
 	case AG_RCS_LOCALMOD:
 		break;
 	case AG_RCS_ERROR:
-/*		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError()); */
+		/* AG_TextMsgFromError() */
 		break;
 	case AG_RCS_UNKNOWN:
 		AG_SetError(
@@ -611,7 +610,6 @@ AG_RcsGetLog(const char *objdir, AG_RCSLog *log)
 	res = NC_Query(&rcs_client, "rcs-log\n"
 	                            "object-path=%s\n", &objdir[1]);
 	if (res == NULL) {
-		AG_SetError("%s", AG_GetError());
 		return (-1);
 	}
 	log->ents = NULL;
@@ -670,7 +668,6 @@ AG_RcsGetList(AG_RCSList *list)
 	int i;
 
 	if ((res = NC_Query(&rcs_client, "rcs-list\n")) == NULL) {
-		AG_SetError("%s", AG_GetError());
 		return (-1);
 	}
 	list->ents = NULL;
@@ -727,7 +724,6 @@ AG_RcsDelete(const char *path)
 	res = NC_Query(&rcs_client, "rcs-delete\n"
 	                             "object-path=%s\n", path);
 	if (res == NULL) {
-		AG_SetError("%s", AG_GetError());
 		AG_RcsDisconnect();
 		return (-1);
 	}
@@ -748,7 +744,6 @@ AG_RcsRename(const char *from, const char *to)
 	                             "from-path=%s\n"
 	                             "to-path=%s\n", from, to);
 	if (res == NULL) {
-		AG_SetError("%s", AG_GetError());
 		AG_RcsDisconnect();
 		return (-1);
 	}
@@ -775,7 +770,6 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	/* Fetch the object information from the repository. */
 	if (NC_Write(&rcs_client, "rcs-info\nobject-path=%s\n\n", path)
 	    == -1) {
-		AG_SetError("%s", AG_GetError());
 		goto fail;
 	}
 	if (NC_Read(&rcs_client, 16) <= 2 ||
@@ -822,7 +816,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 #endif
 		obj = Malloc(cls->size);
 		AG_ObjectInit(obj, cls);
-		AG_ObjectSetName(obj, "%s", name);
+		AG_ObjectSetNameS(obj, name);
 		if (AG_ObjectAttachToNamed(vfsRoot, localpath, obj) == -1) {
 			AG_ObjectDestroy(obj);
 			goto fail;

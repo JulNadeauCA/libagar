@@ -84,10 +84,10 @@ DEV_TimerInspector(void)
 {
 	AG_Window *win;
 
-	if ((win = AG_WindowNewNamed(0, "DEV_TimerInspector")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "DEV_TimerInspector")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Timer Inspector"));
+	AG_WindowSetCaptionS(win, _("Timer Inspector"));
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);

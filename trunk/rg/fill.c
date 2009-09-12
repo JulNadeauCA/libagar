@@ -133,7 +133,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 	AG_Box *box;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Fill/gradient"));
+	AG_WindowSetCaptionS(win, _("Fill/gradient"));
 
 	{
 		static const char *modes[] = {

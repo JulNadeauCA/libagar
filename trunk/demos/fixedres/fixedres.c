@@ -21,7 +21,7 @@ CreateGameMenu(void)
 	AG_Pixmap *px;
 
 	/* Create a fixed-size window with no titlebar or decorations. */
-	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
+	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, 640, 128);
 

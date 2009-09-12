@@ -47,7 +47,7 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 	if (  flags & AG_MFSPINBUTTON_VFILL)	{ AG_ExpandVert(fsu); }
 
 	if (label != NULL) {
-		AG_TextboxSetLabel(fsu->input, "%s", label);
+		AG_TextboxSetLabelS(fsu->input, label);
 	}
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
@@ -182,7 +182,7 @@ IncrementX(AG_Event *event)
 static void
 UpdateUnitSelector(AG_MFSpinbutton *fsu)
 {
-	AG_ButtonText(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
+	AG_ButtonTextS(fsu->units->button, AG_UnitAbbr(fsu->unit));
 }
 
 static void
@@ -251,7 +251,7 @@ Init(void *obj)
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = AG_TextboxNew(fsu, 0, NULL);
+	fsu->input = AG_TextboxNewS(fsu, 0, NULL);
 	fsu->writeable = 1;
 	fsu->sep = ",";
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
@@ -260,10 +260,10 @@ Init(void *obj)
 	fsu->unit = AG_FindUnit("identity");
 	fsu->units = NULL;
 
-	fsu->xincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->xdecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
-	fsu->yincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->ydecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
+	fsu->xincbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
+	fsu->xdecbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
+	fsu->yincbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
+	fsu->ydecbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(fsu->xincbu, 1,1,1,1);
 	AG_ButtonSetPadding(fsu->xdecbu, 1,1,1,1);
 	AG_ButtonSetPadding(fsu->yincbu, 1,1,1,1);

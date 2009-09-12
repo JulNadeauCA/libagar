@@ -63,9 +63,8 @@ package body agar.core.object is
 
     procedure set_name
       (object : object_access_t;
-       fmt    : cs.chars_ptr;
        name   : cs.chars_ptr);
-    pragma import (c, set_name, "AG_ObjectSetName");
+    pragma import (c, set_name, "AG_ObjectSetNameS");
 
   end cbinds;
 
@@ -204,12 +203,10 @@ package body agar.core.object is
     (object : object_access_t;
      name   : string)
   is
-    ca_fmt  : aliased c.char_array := c.to_c ("%s");
     ca_name : aliased c.char_array := c.to_c (name);
   begin
     cbinds.set_name
       (object => object,
-       fmt    => cs.to_chars_ptr (ca_fmt'unchecked_access),
        name   => cs.to_chars_ptr (ca_name'unchecked_access));
   end set_name;
 

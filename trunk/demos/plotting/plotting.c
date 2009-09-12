@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 		};
 
 		for (i = 0; i < 7; i++) {
-			num = AG_NumericalNew(box, 0, NULL, param[i].name);
+			num = AG_NumericalNewS(box, 0, NULL, param[i].name);
 			AG_BindDouble(num, "value", param[i].f);
 			AG_NumericalSetIncrement(num, param[i].incr);
 			AG_ExpandHoriz(num);

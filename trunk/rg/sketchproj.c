@@ -111,7 +111,7 @@ PollSketches(AG_Event *event)
 		if (tel->type != RG_TILE_SKETCH) {
 			continue;
 		}
-		it = AG_TlistAdd(tl, NULL, "%s", tel->name);
+		it = AG_TlistAddS(tl, NULL, tel->name);
 		it->p1 = tel;
 		it->cat = "tile-sketch";
 		AG_TlistSetIcon(tl, it, tel->tel_sketch.sk->vg->su);
@@ -138,7 +138,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	AG_Combo *comSK;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Polygon"));
+	AG_WindowSetCaptionS(win, _("Polygon"));
 
 	comSK = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Sketch: "));
 	AG_SetEvent(comSK->list, "tlist-poll",

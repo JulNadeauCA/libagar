@@ -248,6 +248,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	return (ln);
 }
 
+/* Append a message to the console (format string). */
 AG_ConsoleLine *
 AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 {
@@ -256,12 +257,38 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 
 	AG_ObjectLock(cons);
 
-	ln = AG_ConsoleAppendLine(cons, NULL);
-	va_start(args, fmt);
-	Vasprintf(&ln->text, fmt, args);
-	va_end(args);
-	ln->len = strlen(ln->text);
-	
+	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
+		va_start(args, fmt);
+		if (TryVasprintf(&ln->text, fmt, args) == -1) {
+			va_end(args);
+			FreeLines(cons);
+			ln = NULL;
+			goto out;
+		}
+		va_end(args);
+		ln->len = strlen(ln->text);
+	}
+out:
+	AG_ObjectUnlock(cons);
+	return (ln);
+}
+
+/* Append a message to the console (C string). */
+AG_ConsoleLine *
+AG_ConsoleMsgS(AG_Console *cons, const char *s)
+{
+	AG_ConsoleLine *ln;
+
+	AG_ObjectLock(cons);
+	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
+		if ((ln->text = TryStrdup(s)) == NULL) {
+			FreeLines(cons);
+			ln = NULL;
+			goto out;
+		}
+		ln->len = strlen(ln->text);
+	}
+out:
 	AG_ObjectUnlock(cons);
 	return (ln);
 }

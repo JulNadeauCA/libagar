@@ -51,7 +51,7 @@ AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
 	if (  flags & AG_FSPINBUTTON_VFILL) { AG_ExpandVert(fsu); }
 
 	if (label != NULL) {
-		AG_TextboxSetLabel(fsu->input, "%s", label);
+		AG_TextboxSetLabelS(fsu->input, label);
 	}
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
@@ -214,7 +214,7 @@ Decrement(AG_Event *event)
 static __inline__ void
 UpdateUnitButton(AG_FSpinbutton *fsu)
 {
-	AG_ButtonText(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
+	AG_ButtonTextS(fsu->units->button, AG_UnitAbbr(fsu->unit));
 }
 
 static void
@@ -280,7 +280,7 @@ Init(void *obj)
 	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
 	fsu->writeable = 1;
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
 	AG_TextboxSizeHint(fsu->input, "88.88");
@@ -288,11 +288,11 @@ Init(void *obj)
 	fsu->unit = AG_FindUnit("identity");
 	fsu->units = NULL;
 
-	fsu->incbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
+	fsu->incbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(fsu->incbu, 1,1,1,1);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
 	
-	fsu->decbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
+	fsu->decbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(fsu->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
 

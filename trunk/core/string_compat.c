@@ -309,6 +309,21 @@ AG_Strdup(const char *s)
 	return (ns);
 }
 
+/* Duplicate a string or fail. */
+char *
+AG_TryStrdup(const char *s)
+{
+	size_t buflen;
+	char *ns;
+	
+	buflen = strlen(s)+1;
+	if ((ns = TryMalloc(buflen)) == NULL) {
+		return (NULL);
+	}
+	memcpy(ns, s, buflen);
+	return (ns);
+}
+
 /* Duplicate a UCS-4 string. */
 Uint32 *
 AG_StrdupUCS4(const Uint32 *ucs)
@@ -318,6 +333,21 @@ AG_StrdupUCS4(const Uint32 *ucs)
 	
 	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
 	ns = Malloc(buflen);
+	memcpy(ns, ucs, buflen);
+	return (ns);
+}
+
+/* Duplicate a UCS-4 string or fail. */
+Uint32 *
+AG_TryStrdupUCS4(const Uint32 *ucs)
+{
+	size_t buflen;
+	Uint32 *ns;
+	
+	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
+	if ((ns = TryMalloc(buflen)) == NULL) {
+		return (NULL);
+	}
 	memcpy(ns, ucs, buflen);
 	return (ns);
 }

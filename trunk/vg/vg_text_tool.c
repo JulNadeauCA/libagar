@@ -67,7 +67,7 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 			}
 			p2 = VG_PointNew(vg->root, vPos);
 			t->vtIns = VG_TextNew(vg->root, p1, p2);
-			VG_TextPrintf(t->vtIns, "%s", t->text);
+			VG_TextString(t->vtIns, t->text);
 			if (VGTOOL(t)->p != NULL)
 				VG_TextSubstObject(t->vtIns, VGTOOL(t)->p);
 		} else {
@@ -150,7 +150,7 @@ Edit(void *p, VG_View *vv)
 	AG_Textbox *tb;
 
 	AG_LabelNew(box, 0, _("Text: "));
-	tb = AG_TextboxNew(box, AG_TEXTBOX_MULTILINE|AG_TEXTBOX_HFILL, NULL);
+	tb = AG_TextboxNewS(box, AG_TEXTBOX_MULTILINE|AG_TEXTBOX_HFILL, NULL);
 	AG_TextboxBindUTF8(tb, t->text, sizeof(t->text));
 	return (box);
 }

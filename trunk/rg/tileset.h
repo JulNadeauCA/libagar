@@ -114,7 +114,7 @@ RG_GetTile(RG_Tileset *ts, Uint32 id)
 {
 	RG_Tile *t;
 	if (RG_LookupTile(ts, id, &t) == -1) {
-		AG_FatalError("%s", AG_GetError());
+		AG_FatalError(NULL);
 	}
 	return (t);
 }
@@ -123,7 +123,7 @@ RG_GetAnim(RG_Tileset *ts, Uint32 id)
 {
 	RG_Anim *a;
 	if (RG_LookupAnim(ts, id, &a) == -1) {
-		AG_FatalError("%s", AG_GetError());
+		AG_FatalError(NULL);
 	}
 	return (a);
 }

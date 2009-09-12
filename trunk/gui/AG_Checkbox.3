@@ -48,7 +48,10 @@ binding.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNew "AG_Widget *parent" "Uint flags" "const char *label" "..."
+.Fn AG_CheckboxNew "AG_Widget *parent" "Uint flags" "const char *format" "..."
+.Pp
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNewS "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFn "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
@@ -77,9 +80,8 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
-If the
-.Fa label
-argument is given, it sets a default text label.
+.Fn AG_CheckboxNew
+accepts an optional text label argument.
 The
 .Fn AG_CheckboxNewFn
 variant also assigns the specified callback function to the

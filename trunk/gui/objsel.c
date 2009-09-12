@@ -53,9 +53,8 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 		va_start(ap, fmt);
 		Vsnprintf(label, sizeof(label), fmt, ap);
 		va_end(ap);
-		AG_TextboxSetLabel(os->com.tbox, "%s", label);
+		AG_TextboxSetLabelS(os->com.tbox, label);
 	}
-
 	AG_ObjectAttach(parent, os);
 	return (os);
 }
@@ -82,7 +81,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 		}
 	}
 
-	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s", pob->name);
+	it = AG_TlistAddS(tl, AG_ObjectIcon(pob), pob->name);
 	it->depth = depth;
 	it->cat = "object";
 	it->p1 = pob;

@@ -54,19 +54,30 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	return (box);
 }
 
-/* Set the label text. */
+/* Set the label text (format string). */
 void
 AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
+{
+	char *s;
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_BoxSetLabelS(box, s);
+}
+
+/* Set the label text (format string). */
+void
+AG_BoxSetLabelS(AG_Box *box, const char *s)
 {
 	va_list ap;
 
 	AG_ObjectLock(box);
-
-	va_start(ap, fmt);
 	Free(box->caption);
-	Vasprintf(&box->caption, fmt, ap);
+	box->caption = Strdup(s);
 	va_end(ap);
-
 	if (box->sCaption != -1) {
 		AG_WidgetUnmapSurface(box, box->sCaption);
 		box->sCaption = -1;

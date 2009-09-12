@@ -76,10 +76,10 @@ AG_MenuNewGlobal(Uint flags)
 		AG_ExpandVert(m);
 	}
 	AG_ExpandHoriz(m);
-	agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
-					 AG_WINDOW_DENYFOCUS|
-					 AG_WINDOW_HMAXIMIZE,
-					 "_agAppMenu");
+	agAppMenuWin = AG_WindowNewNamedS(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
+					  AG_WINDOW_DENYFOCUS|
+					  AG_WINDOW_HMAXIMIZE,
+					  "_agAppMenu");
 	AG_ObjectAttach(agAppMenuWin, m);
 	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
 	AG_WindowShow(agAppMenuWin);
@@ -100,7 +100,7 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 
 	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
-	AG_WindowSetCaption(win, "win-popup");
+	AG_WindowSetCaptionS(win, "win-popup");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	item->view = Malloc(sizeof(AG_MenuView));
@@ -427,7 +427,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *icon)
 	AG_ObjectUnlock(mi->pmenu);
 }
 
-/* Change menu item text. */
+/* Change menu item text (format string). */
 void
 AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 {
@@ -448,7 +448,26 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 		mi->lblDisabled = -1;
 		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
 	}
-	
+	AG_ObjectUnlock(mi->pmenu);
+}
+
+/* Change menu item text (C string). */
+void
+AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
+{
+	AG_ObjectLock(mi->pmenu);
+
+	Free(mi->text);
+	mi->text = Strdup(s);
+
+	if (mi->lblEnabled != -1) {
+		mi->lblEnabled = -1;
+		AG_WidgetUnmapSurface(mi->pmenu, mi->lblEnabled);
+	}
+	if (mi->lblDisabled != -1) {
+		mi->lblDisabled = -1;
+		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
+	}
 	AG_ObjectUnlock(mi->pmenu);
 }
 
@@ -470,7 +489,7 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 	return (mi);
 }
 
-/* Create a menu section label. */
+/* Create a menu section label (format string). */
 AG_MenuItem *
 AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 {
@@ -484,6 +503,19 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 
 	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, NULL);
+	mi->flags |= AG_MENU_ITEM_NOSELECT;
+	AG_ObjectUnlock(pitem->pmenu);
+	return (mi);
+}
+
+/* Create a menu section label (C string). */
+AG_MenuItem *
+AG_MenuSectionS(AG_MenuItem *pitem, const char *label)
+{
+	AG_MenuItem *mi;
+
+	AG_ObjectLock(pitem->pmenu);
+	mi = CreateItem(pitem, label, NULL);
 	mi->flags |= AG_MENU_ITEM_NOSELECT;
 	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
@@ -555,10 +587,10 @@ CreateToolbarButton(AG_MenuItem *mi, AG_Surface *icon, const char *text)
 	AG_Button *bu;
 
 	if (icon != NULL) {
-		bu = AG_ButtonNew(m->curToolbar->rows[0], 0, NULL);
+		bu = AG_ButtonNewS(m->curToolbar->rows[0], 0, NULL);
 		AG_ButtonSurface(bu, icon);
 	} else {
-		bu = AG_ButtonNew(m->curToolbar->rows[0], 0, text);
+		bu = AG_ButtonNewS(m->curToolbar->rows[0], 0, text);
 	}
 	AG_ButtonSetFocusable(bu, 0);
 	m->curToolbar->nButtons++;
@@ -635,10 +667,10 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 	AG_ObjectLock(tbar);
 
 	if (icon != NULL) {
-		bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
+		bu = AG_ButtonNewS(tbar->rows[0], 0, NULL);
 		AG_ButtonSurface(bu, icon);
 	} else {
-		bu = AG_ButtonNew(tbar->rows[0], 0, text);
+		bu = AG_ButtonNewS(tbar->rows[0], 0, text);
 	}
 	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);

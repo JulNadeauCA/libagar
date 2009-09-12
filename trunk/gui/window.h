@@ -110,12 +110,15 @@ extern int agWindowIconHeight;
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
 AG_Window *AG_WindowNew(Uint);
+AG_Window *AG_WindowNewNamedS(Uint, const char *);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
-			     FORMAT_ATTRIBUTE(printf, 2, 3);
+			     FORMAT_ATTRIBUTE(printf,2,3);
 
+void	 AG_WindowSetCaptionS(AG_Window *, const char *);
 void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
-			     FORMAT_ATTRIBUTE(printf, 2, 3)
+			     FORMAT_ATTRIBUTE(printf,2,3)
 			     NONNULL_ATTRIBUTE(2);
+
 void	 AG_WindowUpdateCaption(AG_Window *);
 #define  AG_WindowSetIcon(win,su) AG_IconSetSurface((win)->icon,(su))
 #define  AG_WindowSetIconNODUP(win,su) AG_IconSetSurfaceNODUP((win)->icon,(su))

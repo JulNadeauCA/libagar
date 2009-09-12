@@ -43,7 +43,7 @@ SleepingWorker(void *arg)
 			AG_ObjectDetach(win);
 			AG_ThreadExit(NULL);
 		}
-		AG_LabelPrintf(lbl, "Worker thread progress: %d%%",
+		AG_LabelText(lbl, "Worker thread progress: %d%%",
 		    AG_ProgressBarPercent(pb));
 #ifdef HAVE_SDL
 		SDL_Delay(1000);

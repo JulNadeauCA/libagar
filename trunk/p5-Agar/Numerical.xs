@@ -49,7 +49,7 @@ CODE:
 	if (items == 4) {
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_NumericalNew(parent, 0, NULL, label);
+	RETVAL = AG_NumericalNewS(parent, 0, NULL, label);
 	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL

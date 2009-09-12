@@ -134,19 +134,27 @@ void	 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **, Uint *);
 AG_Surface *AG_TextRenderf(const char *, ...);
 AG_Surface *AG_TextRenderUCS4(const Uint32 *);
 
-
+void AG_TextMsgS(enum ag_text_msg_title, const char *);
 void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
                 FORMAT_ATTRIBUTE(printf,2,3)
 		NONNULL_ATTRIBUTE(2);
+
+void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	         FORMAT_ATTRIBUTE(printf,3,4)
 		 NONNULL_ATTRIBUTE(3);
+
+void AG_TextInfoS(const char *, const char *);
 void AG_TextInfo(const char *, const char *, ...)
 	         FORMAT_ATTRIBUTE(printf,2,3)
 		 NONNULL_ATTRIBUTE(2);
+
+void AG_TextWarningS(const char *, const char *);
 void AG_TextWarning(const char *, const char *, ...)
 	            FORMAT_ATTRIBUTE(printf,2,3)
 	            NONNULL_ATTRIBUTE(2);
+
+void AG_TextErrorS(const char *);
 void AG_TextError(const char *, ...)
 	          FORMAT_ATTRIBUTE(printf,1,2)
 	          NONNULL_ATTRIBUTE(1);
@@ -173,9 +181,8 @@ void	  AG_ClearGlyphCache(void);
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
 
-#define     AG_TextFormat AG_TextRenderf
 #define AG_TextMsgFromError() \
-	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
+	AG_TextMsgS(AG_MSG_ERROR, AG_GetError())
 
 #define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
 #define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
@@ -364,6 +371,10 @@ AG_TextValign(enum ag_text_valign mode)
 	agTextState->valign = mode;
 	AG_MutexUnlock(&agTextLock);
 }
+
+#ifdef AG_LEGACY
+#define AG_TextFormat AG_TextRenderf
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>

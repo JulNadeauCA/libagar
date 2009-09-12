@@ -206,7 +206,7 @@ section(self, text)
 	Agar::MenuItem self
 	const char * text
 CODE:
-	AG_MenuSection(self, "%s", text);
+	AG_MenuSectionS(self, text);
 
 void
 setIcon(self, surface)
@@ -220,7 +220,7 @@ setLabel(self, text)
 	Agar::MenuItem self
 	const char * text
 CODE:
-	AG_MenuSetLabel(self, text);
+	AG_MenuSetLabelS(self, text);
 
 void
 enable(self)

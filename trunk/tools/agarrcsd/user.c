@@ -287,7 +287,7 @@ user_activate(NS_Command *cmd, void *p)
 
 	u = Malloc(sizeof(User));
 	AG_ObjectInit(u, &UserClass);
-	AG_ObjectSetName(u, "%s", name);
+	AG_ObjectSetNameS(u, name);
 	Strlcpy(u->name, name, sizeof(u->name));
 	if (SetInfosFromCommand(cmd, u) == -1)
 		goto fail;

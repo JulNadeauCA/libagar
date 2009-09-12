@@ -48,6 +48,9 @@ The position and orientation of the label is described by two points.
 .Fn VG_TextNew "VG_Node *parent" "VG_Point *p1" "VG_Point *p2"
 .Pp
 .Ft "void"
+.Fn VG_TextString "VG_Text *vg" "const char *text"
+.Pp
+.Ft "void"
 .Fn VG_TextPrintf "VG_Text *vg" "const char *fmt" "..."
 .Pp
 .Ft "void"
@@ -78,12 +81,16 @@ The text will be aligned with a line described by the points
 and
 .Fa p2 .
 .Pp
-The
+The functions
+.Fn VG_TextString
+and
 .Fn VG_TextPrintf
-function sets the text to display.
+change the text associated with the element.
+A NULL argument will result in no text being displayed.
 .Fn VG_TextPolled
 specifies a polled format string (see
 .Xr AG_Label 3
+.Dq POLLED LABELS
 for details ) .
 .Pp
 .Fn VG_TextAlignment

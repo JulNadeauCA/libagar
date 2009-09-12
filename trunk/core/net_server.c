@@ -151,7 +151,7 @@ NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
 
 	ns = Malloc(sizeof(NS_Server));
 	AG_ObjectInit(ns, &nsServerClass);
-	AG_ObjectSetName(ns, "%s", name);
+	AG_ObjectSetNameS(ns, name);
 	ns->flags |= flags;
 	NS_ServerSetProtocol(ns, proto, protoVer);
 	NS_ServerBind(ns, NULL, port);

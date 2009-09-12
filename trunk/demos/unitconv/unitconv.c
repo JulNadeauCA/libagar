@@ -67,8 +67,8 @@ CreateUI(void)
 
 	AG_SeparatorNewHoriz(win);
 
-	n1 = AG_NumericalNew(win, 0, "in", "Value: ");
-	n2 = AG_NumericalNew(win, 0, "mm", "Value: ");
+	n1 = AG_NumericalNewS(win, 0, "in", "Value: ");
+	n2 = AG_NumericalNewS(win, 0, "mm", "Value: ");
 	AG_ExpandHoriz(n1);
 	AG_ExpandHoriz(n2);
 	AG_BindDouble(n1, "value", &value);

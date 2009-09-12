@@ -61,7 +61,7 @@ package agar.gui.widget.label is
     (parent : widget_access_t;
      flags  : flags_t;
      text   : string) return label_access_t;
-  pragma import (c, allocate, "AG_LabelString");
+  pragma import (c, allocate, "AG_LabelNewS");
 
   function allocate_polled
     (parent : widget_access_t;

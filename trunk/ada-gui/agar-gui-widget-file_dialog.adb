@@ -12,7 +12,7 @@ package body agar.gui.widget.file_dialog is
     function set_directory
       (dialog : file_dialog_access_t;
        path   : cs.chars_ptr) return c.int;
-    pragma import (c, set_directory, "AG_FileDlgSetDirectory");
+    pragma import (c, set_directory, "AG_FileDlgSetDirectoryS");
 
     procedure set_directory_mru
       (dialog : file_dialog_access_t;
@@ -23,7 +23,7 @@ package body agar.gui.widget.file_dialog is
     procedure set_filename
       (dialog : file_dialog_access_t;
        file   : cs.chars_ptr);
-    pragma import (c, set_filename, "AG_FileDlgSetFilename");
+    pragma import (c, set_filename, "AG_FileDlgSetFilenameS");
 
     function add_filetype
       (dialog      : file_dialog_access_t;

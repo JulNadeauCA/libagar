@@ -70,7 +70,10 @@ defined for
 .Sh MESSAGES
 .nr nS 1
 .Ft "AG_ConsoleLine *"
-.Fn AG_ConsoleMsg "AG_Console *cons" "const char *fmt" "..."
+.Fn AG_ConsoleMsg "AG_Console *cons" "const char *format" "..."
+.Pp
+.Ft "AG_ConsoleLine *"
+.Fn AG_ConsoleMsgS "AG_Console *cons" "const char *text"
 .Pp
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleAppendLine "AG_Console *cons" "const char *s"
@@ -87,9 +90,12 @@ defined for
 .nr nS 0
 The
 .Fn AG_ConsoleMsg
-function appends a new message to the log, using a
-.Xr printf 3
-style format string.
+function appends a new message to the console log and returns a pointer to
+the newly created
+.Ft AG_ConsoleLine
+structure.
+.Fn AG_ConsoleMsg
+may fail and return NULL if there is insufficient memory for the new message.
 The
 .Fn AG_ConsoleAppendLine
 variant accepts a bare string.

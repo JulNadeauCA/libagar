@@ -132,7 +132,7 @@ PollLocks(AG_Event *event)
 	
 	AG_TlistClear(tl);
 	for (i = 0; i < ob->nlockinfo; i++) {
-		AG_TlistAdd(tl, NULL, "%s", ob->lockinfo[i]);
+		AG_TlistAddS(tl, NULL, ob->lockinfo[i]);
 	}
 	AG_TlistRestore(tl);
 }
@@ -202,19 +202,19 @@ RefreshSums(AG_Event *event)
 	AG_Textbox *tbRMD160 = AG_PTR(4);
 
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, checksum) > 0) {
-		AG_TextboxPrintf(tbMD5,  "%s", checksum);
+		AG_TextboxSetString(tbMD5, checksum);
 	} else {
-		AG_TextboxPrintf(tbMD5,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbMD5, "(%s)", AG_GetError());
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, checksum) > 0) {
-		AG_TextboxPrintf(tbSHA1,  "%s", checksum);
+		AG_TextboxSetString(tbSHA1, checksum);
 	} else {
-		AG_TextboxPrintf(tbSHA1,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbSHA1, "(%s)", AG_GetError());
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, checksum) > 0) {
-		AG_TextboxPrintf(tbRMD160,  "%s", checksum);
+		AG_TextboxSetString(tbRMD160, checksum);
 	} else {
-		AG_TextboxPrintf(tbRMD160,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbRMD160, "(%s)", AG_GetError());
 	}
 }
 
@@ -291,7 +291,7 @@ DEV_ObjectEdit(void *p)
 	{
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
-		tbox = AG_TextboxNew(ntab, 0, _("Name: "));
+		tbox = AG_TextboxNewS(ntab, 0, _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_WidgetFocus(tbox);
 		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);
@@ -309,11 +309,11 @@ DEV_ObjectEdit(void *p)
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		tbMD5 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "MD5: ");
+		tbMD5 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "MD5: ");
 		AG_WidgetDisable(tbMD5);
-		tbSHA1 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "SHA1: ");
+		tbSHA1 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "SHA1: ");
 		AG_WidgetDisable(tbSHA1);
-		tbRMD160 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "RMD160: ");
+		tbRMD160 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "RMD160: ");
 		AG_WidgetDisable(tbRMD160);
 		AG_TextboxSizeHint(tbMD5, "888888888888888888888888888888888");
 
@@ -333,10 +333,10 @@ DEV_ObjectEdit(void *p)
 		AG_Label *lblStatus;
 		AG_Tlist *tl;
 
-		lblStatus = AG_LabelNewString(ntab, AG_LABEL_HFILL, "...");
+		lblStatus = AG_LabelNewS(ntab, AG_LABEL_HFILL, "...");
 		AG_LabelSizeHint(lblStatus, 3, _("Repository revision: #0000"));
 
-		AG_LabelNewString(ntab, 0, _("Revision history:"));
+		AG_LabelNewS(ntab, 0, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
 		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Refresh status"),

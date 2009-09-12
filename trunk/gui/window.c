@@ -122,32 +122,44 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
-/* Create a named window */
+/* Create a named window (C string). */
 AG_Window *
-AG_WindowNewNamed(Uint flags, const char *fmt, ...)
+AG_WindowNewNamedS(Uint flags, const char *name)
 {
-	char name[AG_OBJECT_NAME_MAX], *c;
 	AG_Window *win;
-	va_list ap;
+
+#ifdef AG_DEBUG
+	const char *p;
+	if ((p = strchr(name, '/')) != NULL)
+		AG_FatalError("Window names cannot contain `/' (near \"%s\")", p);
+#endif
 
 	AG_LockVFS(agView);
-	va_start(ap, fmt);
-	Vsnprintf(name, sizeof(name), fmt, ap);
-	va_end(ap);
-	for (c = &name[0]; *c != '\0'; c++) {
-		if (*c == '/')
-			*c = '_';
-	}
 	if (AG_WindowFocusNamed(name)) {
 		win = NULL;
 		goto out;
 	}
 	win = AG_WindowNew(flags);
-	AG_ObjectSetName(win, "%s", name);
+	AG_ObjectSetNameS(win, name);
 	AG_SetEvent(win, "window-close", AGWINHIDE(win));
 out:
 	AG_UnlockVFS(agView);
 	return (win);
+}
+
+/* Create a named window (format string). */
+AG_Window *
+AG_WindowNewNamed(Uint flags, const char *fmt, ...)
+{
+	char s[AG_OBJECT_NAME_MAX];
+	va_list ap;
+
+	AG_LockVFS(agView);
+	va_start(ap, fmt);
+	Vsnprintf(s, sizeof(s), fmt, ap);
+	va_end(ap);
+
+	return AG_WindowNewNamedS(flags, s);
 }
 
 /*
@@ -1845,22 +1857,30 @@ AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 	AG_ObjectUnlock(win);
 }
 
-/* Set the text to show inside a window's titlebar. */
+/* Set the text to show inside a window's titlebar (C string). */
+void
+AG_WindowSetCaptionS(AG_Window *win, const char *s)
+{
+	AG_ObjectLock(win);
+	if (win->tbar != NULL) {
+		Strlcpy(win->caption, s, sizeof(win->caption));
+		AG_WindowUpdateCaption(win);
+	}
+	AG_ObjectUnlock(win);
+}
+
+/* Set the text to show inside a window's titlebar (format string). */
 void
 AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 {
 	char s[AG_LABEL_MAX];
 	va_list ap;
+	
+	va_start(ap, fmt);
+	Vsnprintf(s, sizeof(s), fmt, ap);
+	va_end(ap);
 
-	AG_ObjectLock(win);
-	if (win->tbar != NULL) {
-		va_start(ap, fmt);
-		Vsnprintf(s, sizeof(s), fmt, ap);
-		va_end(ap);
-		Strlcpy(win->caption, s, sizeof(win->caption));
-		AG_WindowUpdateCaption(win);
-	}
-	AG_ObjectUnlock(win);
+	AG_WindowSetCaptionS(win, s);
 }
 
 void
@@ -1871,7 +1891,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 	AG_ObjectLock(win);
 	if (win->tbar != NULL) {
 		AG_ObjectLock(win->tbar);
-		AG_LabelString(win->tbar->label, (win->caption != NULL) ?
+		AG_LabelTextS(win->tbar->label, (win->caption != NULL) ?
 		                                 win->caption : "");
 		/* XXX */
 		if (Strlcpy(iconCap, win->caption, sizeof(iconCap)) >=
@@ -1882,7 +1902,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 			}
 			AG_IconSetText(win->icon, "%s...", iconCap);
 		} else {
-			AG_IconSetText(win->icon, "%s", iconCap);
+			AG_IconSetTextS(win->icon, iconCap);
 		}
 		AG_ObjectUnlock(win->tbar);
 	}

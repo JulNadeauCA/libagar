@@ -74,10 +74,10 @@ DEV_CPUInfo(void)
 	AG_FlagDescr *fd;
 	AG_Tlist *tl;
 
-	if ((win = AG_WindowNewNamed(0, "DEV_CPUInfo")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "DEV_CPUInfo")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("CPU Information"));
+	AG_WindowSetCaptionS(win, _("CPU Information"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 70);
 
@@ -93,7 +93,7 @@ DEV_CPUInfo(void)
 	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
 	for (fd = &archExtns[0]; fd->bitmask != 0; fd++) {
 		if (agCPU.ext & fd->bitmask)
-			AG_TlistAdd(tl, NULL, "%s", fd->descr);
+			AG_TlistAddS(tl, NULL, fd->descr);
 	}
 	return (win);
 }

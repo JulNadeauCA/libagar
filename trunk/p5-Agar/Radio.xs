@@ -58,7 +58,7 @@ addItem(self, label)
 	Agar::Radio self
 	const char * label
 CODE:
-	RETVAL = AG_RadioAddItem(self, "%s", label);
+	RETVAL = AG_RadioAddItemS(self, label);
 OUTPUT:
 	RETVAL
 

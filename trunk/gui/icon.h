@@ -41,6 +41,7 @@ void	 AG_IconSetSurfaceNODUP(AG_Icon *, AG_Surface *);
 void	 AG_IconSetText(AG_Icon *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
+void	 AG_IconSetTextS(AG_Icon *, const char *);
 void	 AG_IconSetBackgroundFill(AG_Icon *, int, Uint32);
 __END_DECLS
 

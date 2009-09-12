@@ -58,7 +58,10 @@ for choosing between different units
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
+.Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *format" "..."
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewS "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
 .Pp
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewFlt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value"

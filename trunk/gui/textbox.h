@@ -54,13 +54,18 @@ typedef struct ag_textbox {
 __BEGIN_DECLS
 extern AG_WidgetClass agTextboxClass;
 
-AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
+AG_Textbox *AG_TextboxNew(void *, Uint, const char *, ...)
+                          FORMAT_ATTRIBUTE(printf,3,4);
+AG_Textbox *AG_TextboxNewS(void *, Uint, const char *);
 #define     AG_TextboxSizeHint(tb,text) AG_EditableSizeHint((tb)->ed,(text))
 #define     AG_TextboxSizeHintPixels(tb,w,h) \
             AG_EditableSizeHintPixels((tb)->ed,(w),(h))
 #define     AG_TextboxSizeHintLines(tb,l) \
             AG_EditableSizeHintLines((tb)->ed,(l))
-void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
+void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...)
+                               FORMAT_ATTRIBUTE(printf,2,3)
+			       NONNULL_ATTRIBUTE(2);
+void        AG_TextboxSetLabelS(AG_Textbox *, const char *);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))
 #define     AG_TextboxSetStatic(tb,flag) AG_EditableSetStatic((tb)->ed,(flag))

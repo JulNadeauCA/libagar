@@ -140,7 +140,7 @@ setName(self, name)
 	Agar::Object self
 	const char * name
 CODE:
-	AG_ObjectSetName(self, "%s", name);
+	AG_ObjectSetNameS(self, name);
 
 SV *
 getClassName(self)

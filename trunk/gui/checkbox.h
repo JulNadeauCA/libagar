@@ -24,7 +24,9 @@ typedef struct ag_checkbox {
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 
-AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *, ...);
+AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *, ...)
+                            FORMAT_ATTRIBUTE(printf, 3, 4);
+AG_Checkbox *AG_CheckboxNewS(void *, Uint, const char *);
 AG_Checkbox *AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
                               const char *, ...);
 AG_Checkbox *AG_CheckboxNewInt(void *, Uint, const char *, int *);

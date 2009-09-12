@@ -33,7 +33,24 @@
 static void UnitSelected(AG_Event *);
 
 AG_Numerical *
-AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
+AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *fmt,
+    ...)
+{
+	char s[AG_LABEL_MAX];
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vsnprintf(s, sizeof(s), fmt, ap);
+		va_end(ap);
+		return AG_NumericalNewS(parent, flags, unit, s);
+	} else {
+		return AG_NumericalNewS(parent, flags, unit, NULL);
+	}
+}
+
+AG_Numerical *
+AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 {
 	AG_Numerical *num;
 
@@ -44,7 +61,7 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
 	
 	if (label != NULL) {
-		AG_TextboxSetLabel(num->input, "%s", label);
+		AG_TextboxSetLabelS(num->input, label);
 	}
 	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
@@ -467,7 +484,7 @@ DecrementValue(AG_Event *event)
 static void
 UpdateUnitSelector(AG_Numerical *num)
 {
-	AG_ButtonText(num->units->button, "%s", AG_UnitAbbr(num->unit));
+	AG_ButtonTextS(num->units->button, AG_UnitAbbr(num->unit));
 }
 
 static void
@@ -558,7 +575,7 @@ Init(void *obj)
 
 	num->inc = 1.0;
 	num->value = 0.0;
-	num->input = AG_TextboxNew(num, 0, NULL);
+	num->input = AG_TextboxNewS(num, 0, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
@@ -568,10 +585,10 @@ Init(void *obj)
 	num->unit = AG_FindUnit("identity");
 	num->units = NULL;
 	
-	num->incbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("+"));
+	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(num->incbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->incbu, 0);
-	num->decbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("-"));
+	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->decbu, 0);
 

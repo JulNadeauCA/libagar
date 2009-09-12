@@ -40,8 +40,14 @@ AG_Radio *AG_RadioNewFn(void *, Uint, const char **, AG_EventFn,
 AG_Radio *AG_RadioNewInt(void *, Uint, const char **, int *);
 AG_Radio *AG_RadioNewUint(void *, Uint, const char **, Uint *);
 void      AG_RadioItemsFromArray(AG_Radio *, const char **);
-int       AG_RadioAddItem(AG_Radio *, const char *, ...);
-int       AG_RadioAddItemHK(AG_Radio *, SDLKey, const char *, ...);
+int       AG_RadioAddItem(AG_Radio *, const char *, ...)
+                          FORMAT_ATTRIBUTE(printf,2,3)
+			  NONNULL_ATTRIBUTE(2);
+int       AG_RadioAddItemS(AG_Radio *, const char *);
+int       AG_RadioAddItemHK(AG_Radio *, SDLKey, const char *, ...)
+                            FORMAT_ATTRIBUTE(printf,3,4)
+			    NONNULL_ATTRIBUTE(3);
+int       AG_RadioAddItemHKS(AG_Radio *, SDLKey, const char *);
 void      AG_RadioClearItems(AG_Radio *);
 __END_DECLS
 

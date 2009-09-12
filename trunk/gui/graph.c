@@ -219,24 +219,32 @@ AG_GraphEdgeFree(AG_GraphEdge *edge)
 }
 
 void
+AG_GraphEdgeLabelS(AG_GraphEdge *ge, const char *s)
+{
+	AG_ObjectLock(ge->graph);
+	Strlcpy(ge->labelTxt, s, sizeof(ge->labelTxt));
+	if (ge->labelSu >= 0) {
+		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
+	}
+	AG_TextColor32(ge->labelColor);
+	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
+	AG_ObjectUnlock(ge->graph);
+}
+
+void
 AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 {
 	va_list ap;
 	
 	AG_ObjectLock(ge->graph);
-	
 	va_start(ap, fmt);
 	Vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
 	va_end(ap);
-
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
-
 	AG_TextColor32(ge->labelColor);
-	ge->labelSu = AG_WidgetMapSurface(ge->graph,
-	    AG_TextRender(ge->labelTxt));
-	
+	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
 }
 
@@ -734,21 +742,26 @@ AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 void
 AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 {
+	char s[AG_GRAPH_LABEL_MAX];
 	va_list ap;
 	
-	AG_ObjectLock(vtx->graph);
-
 	va_start(ap, fmt);
-	Vsnprintf(vtx->labelTxt, sizeof(vtx->labelTxt), fmt, ap);
+	Vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
 
+	AG_GraphVertexLabelS(vtx, s);
+}
+
+void
+AG_GraphVertexLabelS(AG_GraphVertex *vtx, const char *s)
+{
+	AG_ObjectLock(vtx->graph);
+	Strlcpy(vtx->labelTxt, s, sizeof(vtx->labelTxt));
 	if (vtx->labelSu >= 0) {
 		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
 	}
 	AG_TextColor32(vtx->labelColor);
-	vtx->labelSu = AG_WidgetMapSurface(vtx->graph,
-	    AG_TextRender(vtx->labelTxt));
-	
+	vtx->labelSu = AG_WidgetMapSurface(vtx->graph, AG_TextRender(vtx->labelTxt));
 	AG_ObjectUnlock(vtx->graph);
 }
 

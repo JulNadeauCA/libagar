@@ -142,7 +142,7 @@ SelectedItem(AG_Event *event)
 	AG_ObjectLock(tl);
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
-		AG_ButtonText(com->button, "%s", it->text);
+		AG_ButtonTextS(com->button, it->text);
 		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
 	}
 	Collapse(com);
@@ -165,7 +165,7 @@ Init(void *obj)
 	com->hPreList = 4;
 	AG_TextSize("XXXXXXXX", &com->wPreList, NULL);
 
-	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _("..."));
+	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _("..."));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
 	AG_WidgetSetFocusable(com->button, 0);
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);

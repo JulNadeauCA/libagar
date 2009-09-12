@@ -328,7 +328,7 @@ ServerLoop(void *p)
 	AG_TextTmsg(AG_MSG_INFO, 1000, _("Debug server started"));
 
 	if (NS_ServerLoop(&server) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 	}
 	AG_ThreadExit(NULL);
 	return (NULL);
@@ -389,8 +389,8 @@ DEV_DebugServer(void)
 	AG_Window *win;
 	AG_Tlist *tl;
 	
-	win = AG_WindowNewNamed(0, "DEV_DebugServer");
-	AG_WindowSetCaption(win, _("Debug Server"));
+	win = AG_WindowNewNamedS(0, "DEV_DebugServer");
+	AG_WindowSetCaptionS(win, _("Debug Server"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
 	tl = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
@@ -402,7 +402,7 @@ DEV_DebugServer(void)
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Stop server"),
 	    StopServer, "%p", tl);
 
-	AG_LabelNewString(win, 0, _("Connected clients:"));
+	AG_LabelNewS(win, 0, _("Connected clients:"));
 	AG_ObjectAttach(win, tl);
 	return (win);
 }

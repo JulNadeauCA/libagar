@@ -55,7 +55,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_CheckboxNew(parent, flags, label);
+	RETVAL = AG_CheckboxNewS(parent, flags, label);
 	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL

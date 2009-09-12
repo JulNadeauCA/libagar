@@ -5,7 +5,7 @@ package body agar.gui.widget.combo is
       (parent : widget_access_t;
        flags  : flags_t;
        label  : cs.chars_ptr) return combo_access_t;
-    pragma import (c, allocate, "AG_ComboNew");
+    pragma import (c, allocate, "AG_ComboNewS");
   
     procedure size_hint
       (combo  : combo_access_t;

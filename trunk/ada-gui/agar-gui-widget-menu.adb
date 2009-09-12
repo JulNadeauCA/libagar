@@ -82,7 +82,7 @@ package body agar.gui.widget.menu is
     procedure set_label
       (item  : item_access_t;
        label : cs.chars_ptr);
-    pragma import (c, set_label, "AG_MenuSetLabel");
+    pragma import (c, set_label, "AG_MenuSetLabelS");
 
     procedure set_poll_function
       (item  : item_access_t;
@@ -186,7 +186,7 @@ package body agar.gui.widget.menu is
     procedure section
       (item : item_access_t;
        text : cs.chars_ptr);
-    pragma import (c, section, "AG_MenuSection");
+    pragma import (c, section, "AG_MenuSectionS");
   end cbinds;
 
   procedure expand

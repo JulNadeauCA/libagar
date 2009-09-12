@@ -304,11 +304,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 			NULL
 		};
 	
-		AG_LabelNewString(ntab, 0, _("Line style: "));
+		AG_LabelNewS(ntab, 0, _("Line style: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, line_styles,
 		    &vge->line_st.style);
 		
-		AG_LabelNewString(ntab, 0, _("Endpoint style: "));
+		AG_LabelNewS(ntab, 0, _("Endpoint style: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, endpoint_styles,
 		    &vge->line_st.endpoint_style);
 
@@ -329,11 +329,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 		RG_TextureSelector *texsel;
 
-		AG_LabelNewString(ntab, 0, _("Filling style: "));
+		AG_LabelNewS(ntab, 0, _("Filling style: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, fill_styles,
 		    &vge->fill_st.style);
 			
-		AG_LabelNewString(ntab, 0, _("Texture: "));
+		AG_LabelNewS(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_BindString(texsel, "texture-name", vge->fill_st.texture,

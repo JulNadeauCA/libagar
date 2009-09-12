@@ -280,11 +280,11 @@ DEV_ScreenshotUploader(void)
 	AG_Label *lbl;
 	AG_Numerical *num;
 	
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE,
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_NOVRESIZE,
 	    "DEV_ScreenshotUploader")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Screenshot"));
+	AG_WindowSetCaptionS(win, _("Screenshot"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
@@ -304,7 +304,7 @@ DEV_ScreenshotUploader(void)
 		porttb = AG_TextboxNew(vb, 0, _("Port: "));
 		AG_WidgetFocus(hosttb);
 
-		num = AG_NumericalNew(vb, 0, "ms", _("Refresh rate: "));
+		num = AG_NumericalNewS(vb, 0, "ms", _("Refresh rate: "));
 		AG_BindIntMp(num, "value", &xmit_delay, &xmit_lock);
 		AG_NumericalSetRange(num, 1, 10000);
 
@@ -316,10 +316,10 @@ DEV_ScreenshotUploader(void)
 		AG_Event *ev;
 		AG_Button *bu;
 
-		bu = AG_ButtonNew(hb, 0, _("Connect"));
+		bu = AG_ButtonNewS(hb, 0, _("Connect"));
 		AG_SetEvent(bu, "button-pushed", Connect, NULL);
 		
-		bu = AG_ButtonNew(hb, 0, _("Disconnect"));
+		bu = AG_ButtonNewS(hb, 0, _("Disconnect"));
 		ev = AG_SetEvent(bu, "button-pushed", Disconnect, NULL);
 		//ev->flags |= AG_EVENT_ASYNC;
 	}

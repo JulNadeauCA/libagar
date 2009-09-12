@@ -226,6 +226,21 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 	AG_ObjectUnlock(icon);
 }
 
+void
+AG_IconSetTextS(AG_Icon *icon, const char *s)
+{
+	AG_ObjectLock(icon);
+	if (s == NULL || s[0] == '\0') {
+		AG_WidgetUnmapSurface(icon, icon->labelSurface);
+		icon->labelSurface = -1;
+		icon->labelTxt[0] = '\0';
+	} else {
+		Strlcpy(icon->labelTxt, s, sizeof(icon->labelTxt));
+		icon->flags |= AG_ICON_REGEN_LABEL;
+	}
+	AG_ObjectUnlock(icon);
+}
+
 AG_WidgetClass agIconClass = {
 	{
 		"Agar(Widget:Icon)",

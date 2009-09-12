@@ -87,7 +87,7 @@ CODE:
 	if (items == 3) {
 		AP_MapHashToFlags(SvRV(ST(2)), flagNames, &flags);
 	}
-	if ((RETVAL = AG_WindowNewNamed(flags, "%s", name)) == NULL) {
+	if ((RETVAL = AG_WindowNewNamedS(flags, name)) == NULL) {
 		XSRETURN_UNDEF;
 	}
 OUTPUT:
@@ -98,7 +98,7 @@ caption(win, ...)
 	Agar::Window win
 CODE:
 	if (items > 1) {
-		AG_WindowSetCaption(win, "%s", (char *)SvPV_nolen(ST(1)));
+		AG_WindowSetCaptionS(win, (char *)SvPV_nolen(ST(1)));
 	}
 	RETVAL = newSVpv(win->caption,0);
 OUTPUT:

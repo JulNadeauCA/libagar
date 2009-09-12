@@ -294,8 +294,8 @@ DirSelected(AG_Event *event)
 	AG_ObjectLock(fd);
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		if (AG_FileDlgSetDirectory(fd, ti->text) == -1) {
-			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
+			/* AG_TextMsgFromError() */
 		} else {
 			AG_PostEvent(NULL, fd, "dir-selected", NULL);
 			RefreshListing(fd);
@@ -314,8 +314,8 @@ LocSelected(AG_Event *event)
 	if (ti == NULL) {
 		return;
 	}
-	if (AG_FileDlgSetDirectory(fd, ti->text) == -1) {
-		//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
+		/* AG_TextMsgFromError() */
 	} else {
 		AG_PostEvent(NULL, fd, "dir-selected", NULL);
 		RefreshListing(fd);
@@ -433,7 +433,7 @@ CheckAccessAndChoose(AG_FileDlg *fd)
 
 	if (fd->flags & AG_FILEDLG_LOAD) {
 		if (AG_FileDlgCheckReadAccess(fd) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			AG_TextMsgFromError();
 			return;
 		}
 	} else if (fd->flags & AG_FILEDLG_SAVE) {
@@ -467,7 +467,7 @@ FileSelected(AG_Event *event)
 
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_FileDlgSetFilename(fd, "%s", ti->text);
+		AG_FileDlgSetFilenameS(fd, ti->text);
 		AG_PostEvent(NULL, fd, "file-selected", "%s", fd->cfile);
 	}
 	AG_ObjectUnlock(tl);
@@ -508,7 +508,7 @@ FileDblClicked(AG_Event *event)
 	AG_ObjectLock(fd);
 	AG_ObjectLock(tl);
 	if ((itFile = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_FileDlgSetFilename(fd, "%s", itFile->text);
+		AG_FileDlgSetFilenameS(fd, itFile->text);
 
 		if (fd->okAction != NULL) {
 			AG_PostEvent(NULL, fd, fd->okAction->name, "%s,%p",
@@ -676,14 +676,14 @@ SelectGlobResult(AG_Event *event)
 
 	if (endSep ||
 	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
-		if (AG_FileDlgSetDirectory(fd, file) == 0) {
+		if (AG_FileDlgSetDirectoryS(fd, file) == 0) {
 			RefreshListing(fd);
 		} else {
-			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			/* AG_TextMsgFromError() */
 			goto out;
 		}
 	} else {
-		AG_FileDlgSetFilename(fd, file);
+		AG_FileDlgSetFilenameS(fd, file);
 		CheckAccessAndChoose(fd);
 	}
 out:
@@ -767,14 +767,14 @@ TextboxReturn(AG_Event *event)
 
 	if (endSep ||
 	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
-		if (AG_FileDlgSetDirectory(fd, file) == 0) {
+		if (AG_FileDlgSetDirectoryS(fd, file) == 0) {
 			RefreshListing(fd);
 		} else {
-			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			/* AG_TextMsgFromError() */
 			goto out;
 		}
 	} else {
-		AG_FileDlgSetFilename(fd, file);
+		AG_FileDlgSetFilenameS(fd, file);
 		CheckAccessAndChoose(fd);
 	}
 out:
@@ -824,27 +824,27 @@ SelectedType(AG_Event *event)
 			    &fo->data.i.val);
 			break;
 		case AG_FILEDLG_INT:
-			num = AG_NumericalNew(fd->optsCtr, 0, NULL, fo->descr);
+			num = AG_NumericalNewS(fd->optsCtr, 0, NULL, fo->descr);
 			AG_BindInt(num, "value", &fo->data.i.val);
 			AG_NumericalSetRangeInt(num, fo->data.i.min,
 			    fo->data.i.max);
 			break;
 		case AG_FILEDLG_FLOAT:
-			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
+			num = AG_NumericalNewS(fd->optsCtr, 0, fo->unit,
 			    fo->descr);
 			AG_BindFloat(num, "value", &fo->data.flt.val);
 			AG_NumericalSetRangeDbl(num, fo->data.flt.min,
 			                             fo->data.flt.max);
 			break;
 		case AG_FILEDLG_DOUBLE:
-			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
+			num = AG_NumericalNewS(fd->optsCtr, 0, fo->unit,
 			    fo->descr);
 			AG_BindDouble(num, "value", &fo->data.dbl.val);
 			AG_NumericalSetRange(num, fo->data.dbl.min,
 			                          fo->data.dbl.max);
 			break;
 		case AG_FILEDLG_STRING:
-			tbox = AG_TextboxNew(fd->optsCtr, 0, fo->descr);
+			tbox = AG_TextboxNewS(fd->optsCtr, 0, fo->descr);
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
 			break;
@@ -876,9 +876,23 @@ WidgetShown(AG_Event *event)
 	AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
 }
 
-/* Move to the specified directory. */
+/* Move to the specified directory (format string). */
 int
-AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
+AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *fmt, ...)
+{
+	char path[AG_PATHNAME_MAX];
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vsnprintf(path, sizeof(path), fmt, ap);
+	va_end(ap);
+	
+	return AG_FileDlgSetDirectoryS(fd, path);
+}
+
+/* Move to the specified directory (C string). */
+int
+AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 {
 	AG_FileInfo info;
 	char ncwd[AG_PATHNAME_MAX], *c;
@@ -939,6 +953,7 @@ fail:
 	return (-1);
 }
 
+/* Set the current directory (fetch default from specified MRU). */
 void
 AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 {
@@ -946,19 +961,20 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 
 	AG_ObjectLock(fd);
 	if (AG_Defined(agConfig,key) && (s = AG_GetStringDup(agConfig,key))) {
-		AG_FileDlgSetDirectory(fd, s);
+		AG_FileDlgSetDirectoryS(fd, s);
 		Free(s);
 	} else {
 		AG_SetCfgString(key, "%s", dflt);
 		if (AG_ConfigSave() == -1) {
 			Verbose("Saving MRU: %s\n", AG_GetError());
 		}
-		AG_FileDlgSetDirectory(fd, dflt);
+		AG_FileDlgSetDirectoryS(fd, dflt);
 	}
 	fd->dirMRU = Strdup(key);
 	AG_ObjectUnlock(fd);
 }
 
+/* Set the current filename (format string). */
 void
 AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 {
@@ -972,6 +988,17 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	AG_ObjectLock(fd);
 	SetFilename(fd, file);
 	AG_TextboxSetString(fd->tbFile, file);
+	AG_TextboxSetCursorPos(fd->tbFile, -1);
+	AG_ObjectUnlock(fd);
+}
+
+/* Set the current filename (C string). */
+void
+AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
+{
+	AG_ObjectLock(fd);
+	SetFilename(fd, s);
+	AG_TextboxSetString(fd->tbFile, s);
 	AG_TextboxSetCursorPos(fd->tbFile, -1);
 	AG_ObjectUnlock(fd);
 }
@@ -1002,13 +1029,13 @@ Init(void *obj)
 	AG_LabelSizeHint(fd->lbCwd, 1,
 	    _("Directory: XXXXXXXXXXXXX"));
 
-	fd->tbFile = AG_TextboxNew(fd, 0, _("File: "));
+	fd->tbFile = AG_TextboxNewS(fd, 0, _("File: "));
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 
-	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
-	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
+	fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
+	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
 	fd->okAction = NULL;
 	fd->cancelAction = NULL;
 

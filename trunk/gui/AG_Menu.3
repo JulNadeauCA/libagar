@@ -42,6 +42,16 @@ widget implements a hierarchical menu system which supports text-based menu
 and toolbar displays.
 Individual menu items can bind to boolean values and specific bits in integer
 values.
+.Pp
+Note: Many functions of
+.Nm
+accept
+.Fa fn
+and
+.Fa fnArgs
+arguments; see
+.Xr AG_Event 3
+for details on event handler functions in Agar.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -101,28 +111,31 @@ If a parameter is -1, its current value is preserved.
 .Fn AG_MenuNode "AG_MenuItem *parent" "const char *text" "AG_Surface *icon"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamicItem "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuDynamicItem "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamicItemKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey key" "SDLMod kmod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuDynamicItemKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey key" "SDLMod kmod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "void"
 .Fn AG_MenuSetIcon "AG_MenuItem *item" "AG_Surface *su"
 .Pp
 .Ft "void"
-.Fn AG_MenuSetLabel "AG_MenuItem *item" "const char *label"
+.Fn AG_MenuSetLabel "AG_MenuItem *item" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_MenuSetPollFn "AG_MenuItem *item" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuSetLabelS "AG_MenuItem *item" "const char *label"
+.Pp
+.Ft "void"
+.Fn AG_MenuSetPollFn "AG_MenuItem *item" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "void"
 .Fn AG_MenuItemFree "AG_MenuItem *menu" 
@@ -153,11 +166,8 @@ function inserts a new action item displaying the given
 and
 .Fa icon
 (or NULL if none).
-When selected, the item will invoke the event handler function
-.Fa fn ,
-with the additional arguments specified in
-.Fa fmt
-(unless it is NULL).
+When selected, the item will invoke the specified event handler function
+.Fa fn .
 .Pp
 The
 .Fn AG_MenuActionKb
@@ -174,15 +184,14 @@ The
 function creates a dynamic menu item.
 The specified callback routine
 .Fa fn
-will be invoked repeatedly to update the menu item (see
-.Xr AG_Event 3
-for details), with the
+will be invoked repeatedly to update the menu item.
+The
 .Nm
-itself passed as
-.Xr AG_SELF 3 .
-A pointer to the
+object is passed as
+.Xr AG_SELF 3
+and pointer to the
 .Ft AG_MenuItem
-can be retrieved using
+structure can be retrieved using
 .Xr AG_SENDER 3 .
 The callback routine is allowed to directly modify the
 .Va state
@@ -296,7 +305,10 @@ argument specifying a mutex to acquire prior to reading or writing the data.
 .Fn AG_MenuSeparator "AG_MenuItem *item"
 .Pp
 .Ft "void"
-.Fn AG_MenuSection "AG_MenuItem *item" "const char *text" "..."
+.Fn AG_MenuSection "AG_MenuItem *item" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_MenuSectionS "AG_MenuItem *item" "const char *text"
 .Pp
 .nr nS 0
 The

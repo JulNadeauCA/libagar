@@ -82,8 +82,8 @@ AG_PerfMonInit(void)
 {
 	AG_Label *lbl;
 
-	agPerfWindow = AG_WindowNewNamed(0, "event-fps-counter");
-	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
+	agPerfWindow = AG_WindowNewNamedS(0, "event-fps-counter");
+	AG_WindowSetCaptionS(agPerfWindow, _("Performance counters"));
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
 	    "%dms (nom %dms), %d evnt, %dms idle",

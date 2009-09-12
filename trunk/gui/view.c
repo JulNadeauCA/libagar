@@ -1046,7 +1046,7 @@ AG_ViewCapture(void)
 		AG_TextTmsg(AG_MSG_INFO, 1000, _("Screenshot saved to %s."),
 		    path);
 	} else {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 	}
 }
 

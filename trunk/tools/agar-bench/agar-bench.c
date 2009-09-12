@@ -209,7 +209,7 @@ MainWindow(void)
 	AG_HBox *hbox;
 	int i, j;
 
-	win = AG_WindowNewNamed(0, "agar-benchmarks");
+	win = AG_WindowNewNamedS(0, "agar-benchmarks");
 	AG_WindowSetCaption(win, "Agar Benchmarks");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
@@ -228,15 +228,15 @@ MainWindow(void)
 	
 		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
-			btn = AG_ButtonNew(hbox, 0, "Run tests");
+			btn = AG_ButtonNewS(hbox, 0, "Run tests");
 			AG_SetEvent(btn, "button-pushed", RunTests,
 			    "%p,%p", test, t);
 	
-			btn = AG_ButtonNew(hbox, 0, "Save results");
+			btn = AG_ButtonNewS(hbox, 0, "Save results");
 			AG_SetEvent(btn, "button-pushed", SaveToFileDlg,
 			    "%p,%p", test, t);
 	
-			btn = AG_ButtonNew(hbox, 0, "Quit");
+			btn = AG_ButtonNewS(hbox, 0, "Quit");
 			AG_SetEvent(btn, "button-pushed", QuitApp, NULL);
 		}
 	

@@ -50,8 +50,9 @@ AG_Console     *AG_ConsoleNew(void *, Uint);
 void		AG_ConsoleSetPadding(AG_Console *, int);
 AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
 AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
-			         FORMAT_ATTRIBUTE(printf, 2, 3)
-			         NONNULL_ATTRIBUTE(2);
+                              FORMAT_ATTRIBUTE(printf, 2, 3)
+                              NONNULL_ATTRIBUTE(2);
+AG_ConsoleLine *AG_ConsoleMsgS(AG_Console *, const char *);
 void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
 void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
 void		AG_ConsoleClear(AG_Console *);

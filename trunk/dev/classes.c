@@ -65,10 +65,10 @@ DEV_ClassInfo(void)
 	AG_Window *win;
 	AG_Table *tbl;
 
-	if ((win = AG_WindowNewNamed(0, "DEV_ClassInfo")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "DEV_ClassInfo")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Registered classes"));
+	AG_WindowSetCaptionS(win, _("Registered classes"));
 
 	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND,
 	    PollClasses, NULL);

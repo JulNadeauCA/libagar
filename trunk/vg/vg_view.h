@@ -112,6 +112,7 @@ VG_Tool *VG_ViewFindTool(VG_View *, const char *);
 VG_Tool *VG_ViewFindToolByOps(VG_View *, const VG_ToolOps *);
 VG_Tool	*VG_ViewRegTool(VG_View *, const VG_ToolOps *, void *);
 void     VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
+void     VG_StatusS(VG_View *, const char *);
 void     VG_Status(VG_View *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3);
 Uint     VG_AddEditArea(VG_View *, void *);

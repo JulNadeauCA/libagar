@@ -69,20 +69,17 @@ typedef struct ag_label {
 __BEGIN_DECLS
 extern AG_WidgetClass agLabelClass;
 
+AG_Label *AG_LabelNew(void *, Uint, const char *, ...)
+                      FORMAT_ATTRIBUTE(printf, 3, 4);
+AG_Label *AG_LabelNewS(void *, Uint, const char *);
 AG_Label *AG_LabelNewPolled(void *, Uint, const char *, ...);
 AG_Label *AG_LabelNewPolledMT(void *, Uint, AG_Mutex *, const char *, ...)
-	     NONNULL_ATTRIBUTE(3);
-AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
-	     FORMAT_ATTRIBUTE(printf, 3, 4);
-AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
-#define   AG_LabelNew AG_LabelNewStatic
-#define   AG_LabelNewString AG_LabelNewStaticString
-#define   AG_LabelNewS AG_LabelNewStaticString
+                              NONNULL_ATTRIBUTE(3);
 
-void	AG_LabelString(AG_Label *, const char *);
-void	AG_LabelText(AG_Label *, const char *, ...)
-	    FORMAT_ATTRIBUTE(printf, 2, 3)
-	    NONNULL_ATTRIBUTE(2);
+void      AG_LabelText(AG_Label *, const char *, ...)
+                       FORMAT_ATTRIBUTE(printf, 2, 3)
+                       NONNULL_ATTRIBUTE(2);
+void      AG_LabelTextS(AG_Label *, const char *);
 
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
@@ -92,7 +89,6 @@ void	 AG_LabelValign(AG_Label *, enum ag_text_valign);
 #define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)
 #define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding((lbl),-1,-1,-1,(v))
 void	 AG_LabelSizeHint(AG_Label *, Uint, const char *);
-#define	 AG_LabelPrescale AG_LabelSizeHint
 
 void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, AG_VariableType, Uint32);
 #define	 AG_LabelFlag(lbl,i,s,v) \
@@ -109,9 +105,13 @@ void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);
 void	 AG_RegisterBuiltinLabelFormats(void);
 
 #ifdef AG_LEGACY
-# define AG_LabelPrintf AG_LabelText
+# define AG_LabelNewStatic	AG_LabelNew
+# define AG_LabelNewString	AG_LabelNewS
+# define AG_LabelNewStaticS	AG_LabelNewS
+# define AG_LabelPrintf		AG_LabelText
+# define AG_LabelString(lbl,s)	AG_LabelTextS((lbl),(s))
+# define AG_LabelPrescale	AG_LabelSizeHint
 #endif /* AG_LEGACY */
-
 __END_DECLS
 
 #include <agar/gui/close.h>
