@@ -592,7 +592,7 @@ RG_TilesetResvPixmap(void *vfsRoot, const char *tsname, const char *pxname)
 	RG_Pixmap *px;
 	RG_Tileset *ts;
 
-	if ((ts = AG_ObjectFind(vfsRoot, tsname)) == NULL) {
+	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL) {
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
@@ -617,7 +617,7 @@ RG_TilesetResvTile(void *vfsRoot, const char *tsname, const char *tname)
 	RG_Tileset *ts;
 	RG_Tile *t;
 
-	if ((ts = AG_ObjectFind(vfsRoot, tsname)) == NULL) {
+	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL) {
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}

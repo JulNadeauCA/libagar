@@ -207,5 +207,5 @@ AG_ShortFilename(const char *p)
 	const char *s;
 
 	s = (const char *)strrchr(p, AG_PATHSEPCHAR);
-	return (s != NULL && s>p) ? s-1 : p;
+	return (s != NULL && s>p) ? &s[1] : p;
 }

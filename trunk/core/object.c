@@ -467,7 +467,7 @@ AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 	if (ppath[0] == '\0') {
 		AG_ObjectAttach(vfsRoot, child);
 	} else {
-		if ((parent = AG_ObjectFind(vfsRoot, ppath)) == NULL) {
+		if ((parent = AG_ObjectFindS(vfsRoot, ppath)) == NULL) {
 			AG_SetError(_("%s: Cannot attach to %s (%s)"),
 			    OBJECT(child)->name, ppath, AG_GetError());
 			AG_UnlockVFS(vfsRoot);
@@ -568,17 +568,17 @@ FindObjectByName(const AG_Object *parent, const char *name)
 }
 
 /*
- * Search for the named object (absolute path). Return value is only valid
- * as long as VFS is locked.
+ * Search for the named object (absolute path; C string).
+ * Return value is only valid as long as VFS is locked.
  */
 void *
-AG_ObjectFind(void *vfsRoot, const char *name)
+AG_ObjectFindS(void *vfsRoot, const char *name)
 {
 	void *rv;
 
 #ifdef AG_DEBUG
 	if (name[0] != '/')
-		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", name);
+		AG_FatalError("AG_ObjectFindS: Not an absolute path: %s", name);
 #endif
 	if (name[0] == '/' && name[1] == '\0')
 		return (vfsRoot);
@@ -594,11 +594,11 @@ AG_ObjectFind(void *vfsRoot, const char *name)
 }
 
 /*
- * Search for the named object (absolute path), using format string parameter.
+ * Search for the named object (absolute path; format string).
  * Return value is only valid as long as VFS is locked.
  */
 void *
-AG_ObjectFindF(void *vfsRoot, const char *fmt, ...)
+AG_ObjectFind(void *vfsRoot, const char *fmt, ...)
 {
 	char path[AG_OBJECT_PATH_MAX];
 	void *rv;
@@ -609,7 +609,7 @@ AG_ObjectFindF(void *vfsRoot, const char *fmt, ...)
 	va_end(ap);
 #ifdef AG_DEBUG
 	if (path[0] != '/')
-		AG_FatalError("AG_ObjectFindF: Not an absolute path: %s", path);
+		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", path);
 #endif
 	AG_LockVFS(vfsRoot);
 	rv = FindObjectByName(vfsRoot, &path[1]);
@@ -1048,7 +1048,7 @@ AG_ObjectResolveDeps(void *p)
 		if (dep->obj != NULL) {
 			continue;
 		}
-		if ((dep->obj = AG_ObjectFind(ob->root, dep->path)) == NULL) {
+		if ((dep->obj = AG_ObjectFindS(ob->root, dep->path)) == NULL) {
 			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			goto fail;
@@ -1513,6 +1513,8 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		if (hier[i]->load == NULL)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
+			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds),
+			    AG_GetError());
 			Free(hier);
 			goto fail;
 		}
@@ -1726,6 +1728,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		if (hier[i]->load == NULL)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
+			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds), AG_GetError());
 			Free(hier);
 			goto fail;
 		}
@@ -1854,7 +1857,27 @@ fail_unlock:
 }
 
 /*
- * Change the name of an object.
+ * Change the name of an object (C string).
+ * The parent VFS, if any, must be locked.
+ */
+void
+AG_ObjectSetNameS(void *p, const char *name)
+{
+	AG_Object *ob = p;
+	va_list ap;
+	char *c;
+
+	AG_ObjectLock(ob);
+	Strlcpy(ob->name, name, sizeof(ob->name));
+	for (c = &ob->name[0]; *c != '\0'; c++) {
+		if (*c == '/' || *c == '\\')		/* Pathname separator */
+			*c = '_';
+	}
+	AG_ObjectUnlock(ob);
+}
+
+/*
+ * Change the name of an object (format string).
  * The parent VFS, if any, must be locked.
  */
 void
@@ -1865,7 +1888,6 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 	char *c;
 
 	AG_ObjectLock(ob);
-
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(ob->name, sizeof(ob->name), fmt, ap);
@@ -1873,12 +1895,10 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 	} else {
 		ob->name[0] = '\0';
 	}
-
 	for (c = &ob->name[0]; *c != '\0'; c++) {
 		if (*c == '/' || *c == '\\')		/* Pathname separator */
 			*c = '_';
 	}
-	
 	AG_ObjectUnlock(ob);
 }
 

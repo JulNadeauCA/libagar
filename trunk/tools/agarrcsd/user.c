@@ -58,7 +58,7 @@ UserUnlink(User *u)
 User *
 UserLookup(const char *name)
 {
-	return (AG_ObjectFindF("/%s", name));
+	return AG_ObjectFind(&UserMgr, "/%s", name);
 }
 
 static void

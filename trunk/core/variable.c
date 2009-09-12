@@ -319,7 +319,7 @@ AG_GetVariableVFS(void *vfsRoot, const char *varPath)
 		AG_SetError(_("Invalid variable path: %s"), varPath);
 		return (NULL);
 	}
-	if ((obj = AG_ObjectFind(vfsRoot, objName)) == NULL) {
+	if ((obj = AG_ObjectFindS(vfsRoot, objName)) == NULL) {
 		return (NULL);
 	}
 	if ((V = AG_GetVariableLocked(obj, varName)) == NULL) {
