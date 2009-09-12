@@ -152,11 +152,11 @@ CreateWindow(void)
 		static float myFloat = 1.0;
 		static int myMin = 0, myMax = 10, myInt = 1;
 
-		num = AG_NumericalNew(div1, 0, "cm", "Real: ");
+		num = AG_NumericalNewS(div1, 0, "cm", "Real: ");
 		AG_ExpandHoriz(num);
 		AG_BindFloat(num, "value", &myFloat);
 
-		num = AG_NumericalNew(div1, 0, NULL, "Int: ");
+		num = AG_NumericalNewS(div1, 0, NULL, "Int: ");
 		AG_ExpandHoriz(num);
 		AG_BindInt(num, "value", &myInt);
 	}

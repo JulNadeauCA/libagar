@@ -308,8 +308,8 @@ easily in separate libraries.
 For specialized applications such as CAD systems, the placement of entities
 might be best described through geometrical constraints (e.g., distances and
 angles) as opposed to linear transformations.
-This functionality is implemented in the FreeSG library (see
-.Dq FREESG ) .
+This functionality is implemented, notably, by the FreeSG library
+(see http://freesg.org).
 .Pp
 To use this library, link against
 .Sq agar-vg-config --libs .
@@ -420,20 +420,3 @@ Basic linear algebra routines specific to vectors.
 In addition to vectors in R^n, specialized operations are provided for
 vectors in R^2, R^3 and R^4.
 .El
-.Sh FREESG
-The FreeSG library implements scene-graphs for 2D and 3D applications.
-It is a general-purpose library used in scientific/engineering applications,
-visualization applications and games.
-.Pp
-It differs from most other scene-graph libraries in the way elements are
-related to each other in a scene.
-Instead of explicit matrix transformations, elements can be related to each
-other in terms of geometrical constraints (such as distances, coincidences,
-angles).
-In addition to vector-based scenes, FreeSG also includes a 2D tiling library
-aimed at isometric games, platform games and scrollers.
-.Pp
-FreeSG is not part of the Agar source distribution, but it is built on top
-of the Agar library, and adds a few Agar widgets for visualization and
-edition purposes.
-See: http://freesg.org/ for more details.

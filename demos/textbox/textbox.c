@@ -74,7 +74,7 @@ MultiLineExample(const char *title, int wordwrap)
 	if (wordwrap) { flags |= AG_TEXTBOX_WORDWRAP; }
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, title);
+	AG_WindowSetCaptionS(win, title);
 
 	/*
 	 * Create a multiline textbox.

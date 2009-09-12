@@ -53,16 +53,22 @@ to specific file extensions.
 .Fn AG_FileDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
 .Pp
 .Ft int
-.Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *path"
+.Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *format" "..."
+.Pp
+.Ft int
+.Fn AG_FileDlgSetDirectoryS "AG_FileDlg *file_dlg" "const char *path"
 .Pp
 .Ft void
 .Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *file_dlg" "const char *mruKey" "const char *defaultDir"
 .Pp
 .Ft void
-.Fn AG_FileDlgSetFilename "AG_FileDlg *file_dlg" "const char *fmt" "..."
+.Fn AG_FileDlgSetFilename "AG_FileDlg *file_dlg" "const char *format" "..."
+.Pp
+.Ft void
+.Fn AG_FileDlgSetFilenameS "AG_FileDlg *file_dlg" "const char *filename"
 .Pp
 .Ft "AG_FileType *"
-.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .nr nS 0
 The

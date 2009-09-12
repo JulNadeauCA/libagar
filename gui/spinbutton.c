@@ -45,7 +45,7 @@ AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 	AG_ObjectInit(sbu, &agSpinbuttonClass);
 	
 	if (label != NULL) {
-		AG_TextboxSetLabel(sbu->input, "%s", label);
+		AG_TextboxSetLabelS(sbu->input, label);
 	}
 	if (!(flags & AG_SPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(sbu); }
 	if (  flags & AG_SPINBUTTON_VFILL)	{ AG_ExpandVert(sbu); }
@@ -182,15 +182,15 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
-	sbu->input = AG_TextboxNew(sbu, 0, NULL);
+	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
 	AG_TextboxSizeHint(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", KeyDown, NULL);
 
-	sbu->incbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
+	sbu->incbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(sbu->incbu, 1, 1, 1, 1);
-	sbu->decbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->decbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(sbu->decbu, 1, 1, 1, 1);
 	AG_WidgetSetFocusable(sbu->incbu, 0);
 	AG_WidgetSetFocusable(sbu->decbu, 0);

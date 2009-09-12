@@ -5,7 +5,7 @@ package body agar.gui.widget.checkbox is
       (parent : widget_access_t;
        flags  : flags_t;
        label  : cs.chars_ptr) return checkbox_access_t;
-    pragma import (c, allocate, "AG_CheckboxNew");
+    pragma import (c, allocate, "AG_CheckboxNewS");
   
     function allocate_function
       (parent : widget_access_t;

@@ -220,10 +220,10 @@ DEV_UnicodeBrowser(void)
 	AG_Treetbl *tt;
 	int i, w, wMax = 0;
 
-	if ((win = AG_WindowNewNamed(0, "DEV_UnicodeBrowser")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "DEV_UnicodeBrowser")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Unicode Browser"));
+	AG_WindowSetCaptionS(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	comRange = AG_ComboNew(win, AG_COMBO_HFILL, _("Range: "));

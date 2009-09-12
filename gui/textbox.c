@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@
 #include <core/config.h>
 
 #include "ttf.h"
+#include "label.h"
 #include "textbox.h"
 
 #include "text.h"
@@ -63,7 +64,23 @@ EndScrollbarDrag(AG_Event *event)
 }
 
 AG_Textbox *
-AG_TextboxNew(void *parent, Uint flags, const char *label)
+AG_TextboxNew(void *parent, Uint flags, const char *fmt, ...)
+{
+	char s[AG_LABEL_MAX];
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vsnprintf(s, sizeof(s), fmt, ap);
+		va_end(ap);
+		return AG_TextboxNewS(parent, flags, s);
+	} else {
+		return AG_TextboxNewS(parent, flags, NULL);
+	}
+}
+
+AG_Textbox *
+AG_TextboxNewS(void *parent, Uint flags, const char *label)
 {
 	AG_Textbox *tb;
 
@@ -317,6 +334,7 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	AG_ObjectUnlock(tb->ed);
 }
 
+/* Set the textbox label (format string). */
 void
 AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 {
@@ -328,6 +346,22 @@ AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 	Free(tb->labelText);
 	Vasprintf(&tb->labelText, fmt, ap);
 	va_end(ap);
+
+	if (tb->label != -1) {
+		AG_WidgetUnmapSurface(tb, tb->label);
+		tb->label = -1;
+	}
+	AG_ObjectUnlock(tb);
+}
+
+/* Set the textbox label (C string). */
+void
+AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
+{
+	AG_ObjectLock(tb);
+
+	Free(tb->labelText);
+	tb->labelText = Strdup(s);
 
 	if (tb->label != -1) {
 		AG_WidgetUnmapSurface(tb, tb->label);

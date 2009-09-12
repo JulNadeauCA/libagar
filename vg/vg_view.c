@@ -798,7 +798,20 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 	AG_ObjectUnlock(vv);
 }
 
-/* Set the status line text. */
+/* Set the status line text (C string). */
+void
+VG_StatusS(VG_View *vv, const char *s)
+{
+	AG_ObjectLock(vv);
+	if (s != NULL) {
+		Strlcpy(vv->status, s, sizeof(vv->status));
+	} else {
+		vv->status[0] = '\0';
+	}
+	AG_ObjectUnlock(vv);
+}
+
+/* Set the status line text (format string). */
 void
 VG_Status(VG_View *vv, const char *fmt, ...)
 {

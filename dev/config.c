@@ -144,7 +144,7 @@ LoadColorSchemeFromACS(AG_Event *event)
 		AG_TextTmsg(AG_MSG_INFO, 1000,
 		    _("Color scheme loaded from %s."), file);
 	} else {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 	}
 }
 
@@ -157,7 +157,7 @@ SaveColorSchemeToACS(AG_Event *event)
 		AG_TextTmsg(AG_MSG_INFO, 1000, _("Color scheme saved to %s."),
 		    file);
 	} else {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 	}
 }
 
@@ -168,10 +168,10 @@ LoadColorSchemeDlg(AG_Event *event)
 	AG_FileDlg *fd;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Load color scheme..."));
+	AG_WindowSetCaptionS(win, _("Load color scheme..."));
 	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgSetFilename(fd, "colors.acs");
+	AG_FileDlgSetFilenameS(fd, "colors.acs");
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
 	    LoadColorSchemeFromACS, NULL);
 	AG_WindowShow(win);
@@ -184,7 +184,7 @@ SaveColorSchemeDlg(AG_Event *event)
 	AG_FileDlg *fd;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Load color scheme..."));
+	AG_WindowSetCaptionS(win, _("Load color scheme..."));
 	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
@@ -196,7 +196,7 @@ static void
 SaveConfig(AG_Event *event)
 {
 	if (AG_ObjectSave(agConfig) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 	} else {
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Configuration settings saved successfully."));
@@ -214,8 +214,8 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
 
-	win = AG_WindowNewNamed(0, "config-engine-settings");
-	AG_WindowSetCaption(win, _("Agar settings"));
+	win = AG_WindowNewNamedS(0, "config-engine-settings");
+	AG_WindowSetCaptionS(win, _("Agar settings"));
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
@@ -273,29 +273,29 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 	{
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Temporary dir: "));
+		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Temporary dir: "));
 		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
-		AG_TextboxPrintf(tbox, "%s", path);
+		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Data save dir: "));
+		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Data save dir: "));
 		AG_GetString(agConfig, "save-path", path, sizeof(path));
-		AG_TextboxPrintf(tbox, "%s", path);
+		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Data load path: "));
+		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Data load path: "));
 		AG_GetString(agConfig, "load-path", path, sizeof(path));
-		AG_TextboxPrintf(tbox, "%s", path);
+		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
+		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Font path: "));
 		AG_GetString(agConfig, "font-path", path, sizeof(path));
-		AG_TextboxPrintf(tbox, "%s", path);
+		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
+		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Den path: "));
 		AG_GetString(agConfig, "den-path", path, sizeof(path));
-		AG_TextboxPrintf(tbox, "%s", path);
+		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
 	}
 	
@@ -349,7 +349,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 		AG_SpacerNewHoriz(tab);
 
-		tb = AG_TextboxNew(tab, 0, _("Host: "));
+		tb = AG_TextboxNewS(tab, 0, _("Host: "));
 		AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
 		AG_NumericalNewUint(tab, 0, NULL, _("Port: "), &agRcsPort);
@@ -357,11 +357,11 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 		box = AG_BoxNewHoriz(tab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL, _("Username: "));
+			tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Username: "));
 			AG_TextboxBindUTF8(tb, agRcsUsername,
 			    sizeof(agRcsUsername));
 
-			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL, _("Password: "));
+			tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
 			AG_TextboxBindUTF8(tb, agRcsPassword,
 			    sizeof(agRcsPassword));

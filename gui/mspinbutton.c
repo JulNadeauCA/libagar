@@ -44,7 +44,7 @@ AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 	if (  flags & AG_MSPINBUTTON_VFILL)	{ AG_ExpandVert(sbu); }
 
 	if (label != NULL) {
-		AG_TextboxSetLabel(sbu->input, "%s", label);
+		AG_TextboxSetLabelS(sbu->input, label);
 	}
 	AG_ObjectAttach(parent, sbu);
 	return (sbu);
@@ -229,18 +229,18 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->sep = ",";
 	
-	sbu->input = AG_TextboxNew(sbu, 0, NULL);
+	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "88888");
 
-	sbu->xdecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->xdecbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_SetEvent(sbu->xdecbu, "button-pushed", DecrementX, "%p", sbu);
-	sbu->xincbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
+	sbu->xincbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_SetEvent(sbu->xincbu, "button-pushed", IncrementX, "%p", sbu);
-	sbu->ydecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->ydecbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_SetEvent(sbu->ydecbu, "button-pushed", DecrementY, "%p", sbu);
-	sbu->yincbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
+	sbu->yincbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_SetEvent(sbu->yincbu, "button-pushed", IncrementY, "%p", sbu);
 	
 	AG_ButtonSetPadding(sbu->xdecbu, 1,1,1,1);

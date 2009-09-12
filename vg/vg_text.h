@@ -32,6 +32,7 @@ typedef struct vg_text {
 __BEGIN_DECLS
 extern VG_NodeOps vgTextOps;
 
+void VG_TextString(VG_Text *, const char *);
 void VG_TextPrintf(VG_Text *, const char *, ...);
 void VG_TextPrintfPolled(VG_Text *, const char *, ...);
 

@@ -68,7 +68,7 @@ setDirectory(self, path)
 	Agar::FileDlg self
 	const char * path
 CODE:
-	RETVAL = AG_FileDlgSetDirectory(self, path);
+	RETVAL = AG_FileDlgSetDirectoryS(self, path);
 OUTPUT:
 	RETVAL
 
@@ -77,7 +77,7 @@ setFilename(self, name)
 	Agar::FileDlg self
 	const char * name
 CODE:
-	AG_FileDlgSetFilename(self, name);
+	AG_FileDlgSetFilenameS(self, name);
 
 void
 okAction(self, coderef)

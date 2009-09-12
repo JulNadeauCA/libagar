@@ -84,7 +84,7 @@ setLabel(self, label)
 	Agar::Box self
 	const char * label
 CODE:
-	AG_BoxSetLabel(self, "%s", label);
+	AG_BoxSetLabelS(self, label);
 
 void
 setHomogenous(self, flag)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -134,9 +134,9 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	return (lbl);
 }
 
-/* Create a new static label using the given formatted text. */
+/* Create a static label (format string). */
 AG_Label *
-AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
+AG_LabelNew(void *parent, Uint flags, const char *fmt, ...)
 {
 	AG_Label *lbl;
 	va_list ap;
@@ -160,9 +160,9 @@ AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 	return (lbl);
 }
 
-/* LabelNewStatic() variant without format string. */
+/* Create a static label (C string). */
 AG_Label *
-AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
+AG_LabelNewS(void *parent, Uint flags, const char *text)
 {
 	AG_Label *lbl;
 	
@@ -348,9 +348,9 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 	AG_ObjectUnlock(lbl);
 }
 
-/* Change the text displayed by the label. */
+/* Change the text displayed by the label (C string). */
 void
-AG_LabelString(AG_Label *lbl, const char *s)
+AG_LabelTextS(AG_Label *lbl, const char *s)
 {
 	AG_ObjectLock(lbl);
 	Free(lbl->text);

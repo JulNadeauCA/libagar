@@ -92,9 +92,8 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 
 	Strlcpy(text, win->caption, sizeof(text));
 	if (strcmp(OBJECT(win)->name, "generic") == 0) {
-		it = AG_TlistAdd(tl, NULL, "%s",
-		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
-		    OBJECT(win)->name);
+		it = AG_TlistAddS(tl, NULL,
+		    win->caption[0] != '\0' ? win->caption : _("Untitled"));
 	} else {
 		it = AG_TlistAdd(tl, NULL, "%s (<%s>)",
 		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
@@ -220,7 +219,7 @@ WidgetSelected(AG_Event *event)
 		    { 0,				NULL,0 }
 		};
 
-		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Name: "));
+		tb = AG_TextboxNewS(nTab, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
@@ -306,7 +305,7 @@ AG_GuiDebugger(void)
 	AG_Tlist *tl;
 	AG_MenuItem *mi;
 
-	if ((win = AG_WindowNewNamed(0, "AG_GuiDebugger")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "AG_GuiDebugger")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("GUI Debugger"));

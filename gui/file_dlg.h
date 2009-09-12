@@ -89,9 +89,18 @@ AG_FileDlg *AG_FileDlgNew(void *, Uint);
 AG_FileDlg *AG_FileDlgNewMRU(void *, const char *, Uint);
 
 void AG_FileDlgSetOptionContainer(AG_FileDlg *, void *);
-int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);
+
 void AG_FileDlgSetDirectoryMRU(AG_FileDlg *, const char *, const char *);
-void AG_FileDlgSetFilename(AG_FileDlg *, const char *, ...);
+int  AG_FileDlgSetDirectoryS(AG_FileDlg *, const char *);
+int  AG_FileDlgSetDirectory(AG_FileDlg *, const char *, ...)
+                            FORMAT_ATTRIBUTE(printf,2,3)
+			    NONNULL_ATTRIBUTE(2);
+
+void AG_FileDlgSetFilenameS(AG_FileDlg *, const char *);
+void AG_FileDlgSetFilename(AG_FileDlg *, const char *, ...)
+                           FORMAT_ATTRIBUTE(printf,2,3)
+			   NONNULL_ATTRIBUTE(2);
+
 void AG_FileDlgOkAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 void AG_FileDlgCancelAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 int AG_FileDlgCheckReadAccess(AG_FileDlg *);

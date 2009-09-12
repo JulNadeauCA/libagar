@@ -66,7 +66,10 @@ It is commonly used with
 .Fn AG_IconSetSurfaceNODUP "AG_Icon *icon" "AG_Surface *s"
 .Pp
 .Ft "void"
-.Fn AG_IconSetText "AG_Icon *icon" "const char *fmt" "..."
+.Fn AG_IconSetText "AG_Icon *icon" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_IconSetTextS "AG_Icon *icon" "const char *label"
 .Pp
 .Ft "void"
 .Fn AG_IconSetBackgroundFill "AG_Icon *icon" "int enable" "Uint32 color"
@@ -95,7 +98,7 @@ The
 variant does not create a copy of the surface.
 .Pp
 .Fn AG_IconSetText
-sets the text label to be displayed under the icon.
+arranges for the specified text string to be displayed under the icon.
 .Pp
 .Fn AG_IconSetBackgroundFill
 enables or disables background color fill.

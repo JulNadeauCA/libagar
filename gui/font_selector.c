@@ -173,7 +173,7 @@ UpdateFaces(AG_Event *event)
 			    info.type != AG_FILE_REGULAR) {
 				continue;
 			}
-			ti = AG_TlistAdd(fs->tlFaces, NULL, "%s", file);
+			ti = AG_TlistAddS(fs->tlFaces, NULL, file);
 			if (*pFont != NULL &&
 			    strcmp(file, OBJECT(*pFont)->name) == 0)
 				ti->selected++;

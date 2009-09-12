@@ -83,7 +83,9 @@ size_t  AG_Strlcat(char *, const char *, size_t)
 Uint32 *AG_StrsepUCS4(Uint32 **, const Uint32 *);
 char   *AG_Strsep(char **, const char *);
 char   *AG_Strdup(const char *);
+char   *AG_TryStrdup(const char *);
 Uint32 *AG_StrdupUCS4(const Uint32 *);
+Uint32 *AG_TryStrdupUCS4(const Uint32 *);
 
 Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
@@ -255,6 +257,7 @@ __END_DECLS
 #define Strlcpy AG_Strlcpy
 #define Strsep AG_Strsep
 #define Strdup AG_Strdup
+#define TryStrdup AG_TryStrdup
 #define Strcasecmp AG_Strcasecmp
 #define Strncasecmp AG_Strncasecmp
 #define Strcasestr AG_Strcasestr
@@ -262,6 +265,7 @@ __END_DECLS
 #define StrlcpyUCS4 AG_StrlcpyUCS4
 #define StrsepUCS4 AG_StrsepUCS4
 #define StrdupUCS4 AG_StrdupUCS4
+#define TryStrdupUCS4 AG_TryStrdupUCS4
 #endif
 
 #include <agar/core/close.h>

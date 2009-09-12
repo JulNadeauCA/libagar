@@ -356,54 +356,54 @@ void
 InfoMsg(text)
 	const char * text
 CODE:
-	AG_TextMsg(AG_MSG_INFO, "%s", text);
+	AG_TextMsgS(AG_MSG_INFO, text);
 
 void
 WarningMsg(text)
 	const char * text
 CODE:
-	AG_TextMsg(AG_MSG_WARNING, "%s", text);
+	AG_TextMsgS(AG_MSG_WARNING, text);
 
 void
 ErrorMsg(text)
 	const char * text
 CODE:
-	AG_TextMsg(AG_MSG_ERROR, "%s", text);
+	AG_TextMsgS(AG_MSG_ERROR, text);
 
 void
 InfoMsgTimed(ms, text)
 	Uint32 ms
 	const char * text
 CODE:
-	AG_TextTmsg(AG_MSG_INFO, ms, "%s", text);
+	AG_TextTmsgS(AG_MSG_INFO, ms, text);
 
 void
 WarningMsgTimed(ms, text)
 	Uint32 ms
 	const char * text
 CODE:
-	AG_TextTmsg(AG_MSG_WARNING, ms, "%s", text);
+	AG_TextTmsgS(AG_MSG_WARNING, ms, text);
 
 void
 ErrorMsgTimed(ms, text)
 	Uint32 ms
 	const char * text
 CODE:
-	AG_TextTmsg(AG_MSG_ERROR, ms, "%s", text);
+	AG_TextTmsgS(AG_MSG_ERROR, ms, text);
 
 void
 InfoMsgIgnorable(key, text)
 	const char * key
 	const char * text
 CODE:
-	AG_TextInfo(key, "%s", text);
+	AG_TextInfoS(key, text);
 
 void
 WarningMsgIgnorable(key, text)
 	const char * key
 	const char * text
 CODE:
-	AG_TextWarning(key, "%s", text);
+	AG_TextWarningS(key, text);
 
 void
 PromptMsg(text, coderef)

@@ -55,10 +55,10 @@ The buttons may be arranged in multiple rows.
 .Fn AG_ToolbarRow "AG_Toolbar *toolbar" "int row_name"
 .Pp
 .Ft "AG_Button *"
-.Fn AG_ToolbarButton "AG_Toolbar *toolbar" "const char *text" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_ToolbarButton "AG_Toolbar *toolbar" "const char *text" "int enable_default" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "AG_Button *"
-.Fn AG_ToolbarButtonIcon "AG_Toolbar *toolbar" "AG_Surface *icon" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_ToolbarButtonIcon "AG_Toolbar *toolbar" "AG_Surface *icon" "int enable_default" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "void"
 .Fn AG_ToolbarSeparator "AG_Toolbar *toolbar"
@@ -112,11 +112,11 @@ argument is 1, the button is enabled by default.
 The arguments
 .Fa fn
 and
-.Fa arg
-specify the event handler function and its arguments in standard
+.Fa fnArg
+specify the event handler function (see
 .Xr AG_Event 3
-format.
-It will be invoked whenever the user clicks on the button.
+for details).
+The callback function will be invoked whenever the user clicks on the button.
 .Pp
 The
 .Fn AG_ToolbarButtonIcon

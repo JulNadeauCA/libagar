@@ -33,7 +33,7 @@ package body agar.gui.widget.label is
     procedure text
       (label : label_access_t;
        text  : cs.chars_ptr);
-    pragma import (c, text, "AG_LabelString");
+    pragma import (c, text, "AG_LabelTextS");
 
     procedure flag
       (label : label_access_t;

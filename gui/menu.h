@@ -135,7 +135,10 @@ void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);
 	 AG_MenuSetLabelPadding((m),-1,-1,-1,(v))
 
 void AG_MenuSetIcon(AG_MenuItem *, AG_Surface *);
-void AG_MenuSetLabel(AG_MenuItem *, const char *, ...);
+void AG_MenuSetLabel(AG_MenuItem *, const char *, ...)
+                     FORMAT_ATTRIBUTE(printf,2,3)
+		     NONNULL_ATTRIBUTE(2);
+void AG_MenuSetLabelS(AG_MenuItem *, const char *);
 void AG_MenuSetPollFn(AG_MenuItem *, AG_EventFn, const char *, ...);
 void AG_MenuUpdateItem(AG_MenuItem *);
 
@@ -147,7 +150,10 @@ void	     AG_MenuToolbar(AG_MenuItem *, AG_Toolbar *);
 
 AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, AG_Surface *);
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
-AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...);
+AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...)
+                            FORMAT_ATTRIBUTE(printf,2,3)
+			    NONNULL_ATTRIBUTE(2);
+AG_MenuItem *AG_MenuSectionS(AG_MenuItem *, const char *);
 AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, AG_Surface *,
 			   AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, AG_Surface *,

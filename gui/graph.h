@@ -95,7 +95,10 @@ void		 AG_GraphSizeHint(AG_Graph *, Uint, Uint);
 AG_GraphVertex *AG_GraphVertexNew(AG_Graph *, void *);
 void		AG_GraphVertexFree(AG_GraphVertex *);
 AG_GraphVertex *AG_GraphVertexFind(AG_Graph *, void *);
-void		AG_GraphVertexLabel(AG_GraphVertex *, const char *, ...);
+void		AG_GraphVertexLabel(AG_GraphVertex *, const char *, ...)
+                                    FORMAT_ATTRIBUTE(printf,2,3)
+				    NONNULL_ATTRIBUTE(2);
+void		AG_GraphVertexLabelS(AG_GraphVertex *, const char *);
 void		AG_GraphVertexColorLabel(AG_GraphVertex *, Uint8, Uint8, Uint8);
 void		AG_GraphVertexColorBG(AG_GraphVertex *, Uint8, Uint8, Uint8);
 void		AG_GraphVertexPosition(AG_GraphVertex *, int, int);
@@ -109,7 +112,10 @@ AG_GraphEdge	*AG_GraphEdgeNew(AG_Graph *, AG_GraphVertex *,
 		                 AG_GraphVertex *, void *);
 void		 AG_GraphEdgeFree(AG_GraphEdge *);
 AG_GraphEdge	*AG_GraphEdgeFind(AG_Graph *, void *);
-void		 AG_GraphEdgeLabel(AG_GraphEdge *, const char *, ...);
+void		 AG_GraphEdgeLabel(AG_GraphEdge *, const char *, ...)
+                                   FORMAT_ATTRIBUTE(printf,2,3)
+				   NONNULL_ATTRIBUTE(2);
+void		 AG_GraphEdgeLabelS(AG_GraphEdge *, const char *);
 void		 AG_GraphEdgeColorLabel(AG_GraphEdge *, Uint8, Uint8, Uint8);
 void		 AG_GraphEdgeColor(AG_GraphEdge *, Uint8, Uint8, Uint8);
 void		 AG_GraphEdgePopupMenu(AG_GraphEdge *, struct ag_popup_menu *);

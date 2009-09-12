@@ -78,6 +78,12 @@ editors to be implemented quickly.
 .Fn VG_ClearEditAreas "VG_View *vv"
 .Pp
 .Ft "void"
+.Fn VG_Status "VG_View *vv" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn VG_StatusS "VG_View *vv" "const char *text"
+.Pp
+.Ft "void"
 .Fn VG_EditNode "VG_View *vv" "Uint editArea" "VG_Node *vn"
 .Pp
 .Ft "void"
@@ -200,6 +206,12 @@ array of
 .Fn VG_ClearEditAreas
 destroys all widgets currently attached to the container(s) registered by
 .Fn VG_AddEditArea .
+.Pp
+.Fn VG_Status
+sets the text displayed by any
+.Xr AG_Statusbar 3
+associated with the
+.Nm .
 .Pp
 .Fn VG_EditNode
 populates the specified edit area (index as returned by

@@ -58,7 +58,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_LabelNewString(parent, flags, text);
+	RETVAL = AG_LabelNewS(parent, flags, text);
 	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL
@@ -110,7 +110,7 @@ setText(self, text)
 	Agar::Label self
 	const char * text
 CODE:
-	AG_LabelString(self, text);
+	AG_LabelTextS(self, text);
 
 void
 setFlag(self, name)

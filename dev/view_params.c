@@ -45,11 +45,11 @@ DEV_DisplaySettings(void)
 	AG_VBox *vb;
 	AG_Label *lbl;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "DEV_DisplaySettings"))
-	    == NULL) {
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_NORESIZE,
+	    "DEV_DisplaySettings")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Display Settings"));
+	AG_WindowSetCaptionS(win, _("Display Settings"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	vb = AG_VBoxNew(win, 0);

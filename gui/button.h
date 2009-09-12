@@ -32,7 +32,9 @@ typedef struct ag_button {
 __BEGIN_DECLS
 extern AG_WidgetClass agButtonClass;
 
-AG_Button *AG_ButtonNew(void *, Uint, const char *, ...);
+AG_Button *AG_ButtonNew(void *, Uint, const char *, ...)
+                        FORMAT_ATTRIBUTE(printf, 3, 4);
+AG_Button *AG_ButtonNewS(void *, Uint, const char *);
 AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
 			  const char *, ...);
 AG_Button *AG_ButtonNewInt(void *, Uint, const char *, int *);
@@ -60,8 +62,9 @@ void	   AG_ButtonSurfaceNODUP(AG_Button *, AG_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
 
 void	   AG_ButtonText(AG_Button *, const char *, ...)
-	     FORMAT_ATTRIBUTE(printf, 2, 3)
-	     NONNULL_ATTRIBUTE(2);
+	                 FORMAT_ATTRIBUTE(printf, 2, 3)
+	                 NONNULL_ATTRIBUTE(2);
+void	   AG_ButtonTextS(AG_Button *, const char *);
 
 #ifdef AG_LEGACY
 # define AG_ButtonAct AG_ButtonNewFn

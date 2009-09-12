@@ -486,7 +486,7 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 			AG_ComboSelectPointer(comTile, insn->t);
 		}
 
-		AG_LabelNewString(box, 0, _("Preview:"));
+		AG_LabelNewS(box, 0, _("Preview:"));
 		AG_ObjectAttach(box, tv);
 		AG_SliderNewUintR(box, AG_SLIDER_HORIZ, 0,
 		    &insn->in_tile.alpha, 0, 255);
@@ -511,7 +511,7 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		break;
 	}
 
-	AG_LabelNewString(box, 0, _("Delay (ms): "));
+	AG_LabelNewS(box, 0, _("Delay (ms): "));
 	sl = AG_SliderNewUintR(box, AG_SLIDER_HORIZ, AG_SLIDER_HFILL,
 	    &insn->delay, 0, 10000);
 	AG_SliderSetIntIncrement(sl, 50);
@@ -595,7 +595,7 @@ PreviewAnim(AG_Event *event)
 	    OBJECT(ani->tileset)->name, ani->name)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, "%s", ani->name);
+	AG_WindowSetCaptionS(win, ani->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_CENTER, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WindowAttach(pwin, win);
@@ -627,7 +627,7 @@ RG_AnimEdit(RG_Anim *ani)
 	    ani->name)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, "%s", ani->name);
+	AG_WindowSetCaptionS(win, ani->name);
 	AG_SetEvent(win, "window-close", EditClose, "%p,%p", ts, ani);
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);

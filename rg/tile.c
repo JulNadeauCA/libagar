@@ -1549,8 +1549,9 @@ TileSettingsDlg(AG_Event *event)
 	AG_Numerical *alpha_num;
 	AG_Textbox *tb;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	    AG_WINDOW_NOMINIMIZE, "rg-tileinfo-%s", t->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(
+	    AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOMINIMIZE,
+	    "rg-tileinfo-%s", t->name)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
@@ -1567,7 +1568,7 @@ TileSettingsDlg(AG_Event *event)
 	AG_SetInt(msb, "xvalue", t->su->w);
 	AG_SetInt(msb, "yvalue", t->su->h);
 	
-	alpha_num = AG_NumericalNew(win, 0, NULL, _("Overall alpha: "));
+	alpha_num = AG_NumericalNewS(win, 0, NULL, _("Overall alpha: "));
 	AG_NumericalSetRange(alpha_num, 0, 255);
 	AG_SetInt(alpha_num, "value", t->su->format->alpha);
 	
@@ -1581,7 +1582,7 @@ TileSettingsDlg(AG_Event *event)
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelNewString(win, 0, _("Snapping mode: "));
+	AG_LabelNewS(win, 0, _("Snapping mode: "));
 	AG_RadioNewUint(win, 0, rgTileSnapModes, &t->snap_mode);
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
@@ -1885,8 +1886,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_Button *btn;
 	AG_Pane *pane;
 
-	if ((win = AG_WindowNewNamed(0, "tile-%s:%s", OBJECT(ts)->name,
-	    t->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(0,
+	    "tile-%s:%s", OBJECT(ts)->name, t->name)) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, "%s <%s>", t->name, OBJECT(ts)->name);
@@ -1991,7 +1992,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_ObjectAttach(pane->div[0], tlFeatures);
 		WIDGET(tlFeatures)->flags |= AG_WIDGET_HFILL;
 	
-		btn = AG_ButtonNew(pane->div[0],
+		btn = AG_ButtonNewS(pane->div[0],
 		    AG_BUTTON_STICKY|AG_BUTTON_HFILL,
 		    _("Edit"));
 		WIDGET(btn)->flags |= AG_WIDGET_HFILL;

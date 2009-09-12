@@ -232,7 +232,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 
 	font = Malloc(sizeof(AG_Font));
 	AG_ObjectInit(font, &agFontClass);
-	AG_ObjectSetName(font, "%s", name);
+	AG_ObjectSetNameS(font, name);
 
 	font->size = ptsize;
 	font->flags = flags;
@@ -1400,27 +1400,35 @@ AG_TextParseFontSpec(const char *fontspec)
  * Canned dialogs.
  */
 
-/* Display a message. */
+/* Display a message (format string). */
 void
-AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
+AG_TextMsg(enum ag_text_msg_title title, const char *fmt, ...)
 {
-	char msg[AG_LABEL_MAX];
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	return AG_TextMsgS(title, s);
+}
+
+/* Display a message (C string). */
+void
+AG_TextMsgS(enum ag_text_msg_title title, const char *s)
+{
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Button *btnOK;
-	va_list args;
-
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
-	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
+			   AG_WINDOW_NOBORDERS);
+	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
@@ -1429,28 +1437,34 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_WindowShow(win);
 }
 
-/* Display a message for a given period of time. */
+/* Display a message for a given period of time (format string). */
 void
-AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
-    ...)
+AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
 {
-	char msg[AG_LABEL_MAX];
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	AG_TextTmsgS(title, expire, s);
+}
+
+/* Display a message for a given period of time (C string). */
+void
+AG_TextTmsgS(enum ag_text_msg_title title, Uint32 expire, const char *s)
+{
 	AG_Window *win;
 	AG_VBox *vb;
-	va_list args;
-
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
-	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
+	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
 
 	AG_LockTimeouts(NULL);
@@ -1467,18 +1481,34 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 /*
  * Display an informational message with a "Don't tell me again" option.
  * The user preference is preserved in a persistent table. Unlike warnings,
- * the dialog window is not modal.
+ * the dialog window is not modal (format string).
  */
 void
-AG_TextInfo(const char *key, const char *format, ...)
+AG_TextInfo(const char *key, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_TextInfoS(key, s);
+}
+
+/*
+ * Display an informational message with a "Don't tell me again" option.
+ * The user preference is preserved in a persistent table. Unlike warnings,
+ * the dialog window is not modal (C string).
+ */
+void
+AG_TextInfoS(const char *key, const char *s)
 {
 	char disableSw[64];
-	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
-	va_list args;
 	AG_Variable *Vdisable;
 	
 	Strlcpy(disableSw, "info.", sizeof(disableSw));
@@ -1488,23 +1518,19 @@ AG_TextInfo(const char *key, const char *format, ...)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
-
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
-	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_INFO]));
+	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_INFO]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
-	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
 	Vdisable = AG_SetInt(agConfig,disableSw,0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
 
@@ -1514,18 +1540,35 @@ AG_TextInfo(const char *key, const char *format, ...)
 
 /*
  * Display a warning message with a "Don't tell me again" option.
- * The user preference is preserved in a persistent table.
+ * The user preference is preserved in a persistent table
+ * (format string).
  */
 void
-AG_TextWarning(const char *key, const char *format, ...)
+AG_TextWarning(const char *key, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_TextWarningS(key, s);
+}
+
+/*
+ * Display a warning message with a "Don't tell me again" option.
+ * The user preference is preserved in a persistent table
+ * (C string).
+ */
+void
+AG_TextWarningS(const char *key, const char *s)
 {
 	char disableSw[64];
-	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
-	va_list args;
 	AG_Variable *Vdisable;
 	
 	Strlcpy(disableSw, "warn.", sizeof(disableSw));
@@ -1535,23 +1578,19 @@ AG_TextWarning(const char *key, const char *format, ...)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
-
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
-	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_WARNING]));
+	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
-	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
 	Vdisable = AG_SetInt(agConfig,disableSw,0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
 
@@ -1559,27 +1598,36 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_WindowShow(win);
 }
 
-/* Display an error message. */
+/* Display an error message (format string). */
 void
-AG_TextError(const char *format, ...)
+AG_TextError(const char *fmt, ...)
 {
-	char msg[AG_LABEL_MAX];
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_TextErrorS(s);
+}
+
+/* Display an error message (C string). */
+void
+AG_TextErrorS(const char *s)
+{
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Button *btnOK;
-	va_list args;
-
-	va_start(args, format);
-	Vsnprintf(msg, sizeof(msg), format, args);
-	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
-	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_ERROR]));
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
+			   AG_WINDOW_NOBORDERS);
+	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, s);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
@@ -1603,15 +1651,15 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	va_end(ap);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	    AG_WINDOW_NOTITLE);
+	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
-	AG_LabelNewString(win, 0, text);
+	AG_LabelNewS(win, 0, text);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	for (i = 0; i < nbOpts; i++) {
-		bOpts[i] = AG_ButtonNew(bo, 0, "XXXXXXXXXXX");
+		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
 	}
 	AG_WindowShow(win);
 	return (win);
@@ -1633,11 +1681,11 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
-	AG_WindowSetCaption(win, "%s", _("Enter real number"));
+	AG_WindowSetCaptionS(win, _("Enter real number"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
@@ -1670,14 +1718,14 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
-	AG_WindowSetCaption(win, "%s", _("Edit string"));
+	AG_WindowSetCaptionS(win, _("Edit string"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewString(vb, 0, msg);
+	AG_LabelNewS(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	tb = AG_TextboxNew(vb, 0, NULL);
+	tb = AG_TextboxNewS(vb, 0, NULL);
 	AG_TextboxBindUTF8(tb, sp, len);
 	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 
@@ -1700,16 +1748,16 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	AG_Event *ev;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
-	    AG_WINDOW_NOTITLE);
+	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	AG_LabelNewString(bo, 0, prompt);
+	AG_LabelNewS(bo, 0, prompt);
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		tb = AG_TextboxNew(bo, 0, NULL);
+		tb = AG_TextboxNewS(bo, 0, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
@@ -1719,7 +1767,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		btnOK = AG_ButtonNew(bo, 0, _("Ok"));
+		btnOK = AG_ButtonNewS(bo, 0, _("Ok"));
 		ev = AG_SetEvent(btnOK, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
 		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,

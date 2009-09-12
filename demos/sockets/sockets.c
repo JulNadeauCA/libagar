@@ -80,7 +80,7 @@ CreateGameMenu(void)
 	/*
 	 * Create a fixed-size window with a Fixed container.
 	 */
-	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
+	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, agView->w, 128);
 	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);

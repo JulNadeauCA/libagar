@@ -37,6 +37,7 @@ extern AG_WidgetClass agBoxClass;
 AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
 
 void     AG_BoxSetLabel(AG_Box *, const char *, ...);
+void     AG_BoxSetLabelS(AG_Box *, const char *);
 void	 AG_BoxSetHomogenous(AG_Box *, int);
 void	 AG_BoxSetPadding(AG_Box *, int);
 void	 AG_BoxSetSpacing(AG_Box *, int);

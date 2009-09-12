@@ -141,7 +141,7 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 		return (NULL);
 	}
 	AG_ObjectInit(obj, cl);
-	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
+	AG_ObjectSetNameS(obj, (name != NULL) ? name : nameGen);
 	obj->flags |= AG_OBJECT_RESIDENT;
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, obj);
@@ -1432,7 +1432,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		}
 		chld = Malloc(cl->size);
 		AG_ObjectInit(chld, cl);
-		AG_ObjectSetName(chld, "%s", cname);
+		AG_ObjectSetNameS(chld, cname);
 		AG_ObjectAttach(ob, chld);
 		if (AG_ObjectLoadGeneric(chld) == -1)
 			goto fail;
@@ -1864,7 +1864,6 @@ void
 AG_ObjectSetNameS(void *p, const char *name)
 {
 	AG_Object *ob = p;
-	va_list ap;
 	char *c;
 
 	AG_ObjectLock(ob);
@@ -2198,7 +2197,7 @@ AG_ObjectDuplicate(void *p, const char *newName)
 	dob = Malloc(cl->size);
 	AG_ObjectLock(ob);
 	AG_ObjectInit(dob, cl);
-	AG_ObjectSetName(dob, "%s", newName);
+	AG_ObjectSetNameS(dob, newName);
 	if (AG_ObjectPageIn(ob) == -1) {
 		goto fail;
 	}

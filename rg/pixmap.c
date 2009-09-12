@@ -323,7 +323,7 @@ UpdateBrushOptions(AG_Event *event)
 
 	if (it != NULL) {
 		spx = it->p1;
-		AG_TextboxPrintf(tb_name, "%s", spx->name);
+		AG_TextboxSetString(tb_name, spx->name);
 	}
 }
 
@@ -356,7 +356,7 @@ CreateBrushDlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNewString(bo, 0, _("Source pixmap:"));
+		AG_LabelNewS(bo, 0, _("Source pixmap:"));
 
 		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
@@ -479,7 +479,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 			NULL
 		};
 
-		AG_LabelNewString(ntab, 0, _("Blending method:"));
+		AG_LabelNewS(ntab, 0, _("Blending method:"));
 		AG_RadioNewUint(ntab, 0, blend_modes, &px->blend_mode);
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		AG_CheckboxNewInt(ntab, 0, _("Source pixmap only"),

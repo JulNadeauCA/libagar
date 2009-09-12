@@ -44,7 +44,7 @@ M_EditVector3(void *parent, const char *label, M_Vector3 *pv)
 	AG_Numerical *num;
 
 	box = AG_BoxNew(parent, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_LabelNewString(box, 0, label);
+	AG_LabelNewS(box, 0, label);
 
 	num = M_NumericalNewReal(box, 0, NULL, NULL, &pv->x);
 	AG_NumericalSetIncrement(num, 0.5);
@@ -62,7 +62,7 @@ M_EditVector4(void *parent, const char *label, M_Vector4 *pv)
 	AG_Numerical *num;
 
 	box = AG_BoxNew(parent, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_LabelNewString(box, 0, label);
+	AG_LabelNewS(box, 0, label);
 
 	num = M_NumericalNewReal(box, 0, NULL, NULL, &pv->x);
 	AG_NumericalSetIncrement(num, 0.5);
@@ -84,7 +84,7 @@ M_EditMatrix44(void *parent, const char *label, M_Matrix44 *T)
 
 	vbox = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_EXPAND);
 	if (label != NULL) {
-		AG_LabelNewString(vbox, 0, label);
+		AG_LabelNewS(vbox, 0, label);
 	}
 	for (j = 0; j < 4; j++) {
 		hbox = AG_BoxNew(vbox, AG_BOX_HORIZ,
@@ -107,7 +107,7 @@ M_EditTranslate3(void *parent, const char *label, M_Matrix44 *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewString(box, 0, label);
+		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
 		num = M_NumericalNewReal(box, 0, NULL, NULL, &T->m[i][3]);
@@ -125,7 +125,7 @@ M_EditTranslate4(void *parent, const char *label, M_Matrix44 *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewString(box, 0, label);
+		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
 		num = M_NumericalNewReal(box, 0, NULL, NULL, &T->m[i][3]);
@@ -143,7 +143,7 @@ M_EditScale3(void *parent, const char *label, M_Matrix44 *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewString(box, 0, label);
+		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
 		num = M_NumericalNewReal(box, 0, NULL, NULL, &T->m[i][i]);
@@ -161,7 +161,7 @@ M_EditScale4(void *parent, const char *label, M_Matrix44 *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewString(box, 0, label);
+		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
 		num = M_NumericalNewReal(box, 0, NULL, NULL, &T->m[i][i]);

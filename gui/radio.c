@@ -104,7 +104,29 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 	AG_ObjectUnlock(rad);
 }
 
-/* Create a radio item and return its index. */
+/* Create a radio item and return its index (C string). */
+int
+AG_RadioAddItemS(AG_Radio *rad, const char *s)
+{
+	AG_RadioItem *ri;
+	int w, rv;
+
+	AG_ObjectLock(rad);
+	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
+	ri = &rad->items[rad->nItems];
+	ri->surface = -1;
+	ri->hotkey = SDLK_UNKNOWN;
+	Strlcpy(ri->text, s, sizeof(ri->text));
+
+	AG_TextSize(ri->text, &w, NULL);
+	if (w > rad->max_w) { rad->max_w = w; }
+	rv = rad->nItems++;
+
+	AG_ObjectUnlock(rad);
+	return (rv);
+}
+
+/* Create a radio item and return its index (format string). */
 int
 AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 {
@@ -117,6 +139,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
 	ri->hotkey = SDLK_UNKNOWN;
+
 	va_start(ap, fmt);
 	Vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
 	va_end(ap);
@@ -129,7 +152,29 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	return (rv);
 }
 
-/* Create a radio item and return its index (with hotkey). */
+/* Create a radio item and return its index (with hotkey; C string). */
+int
+AG_RadioAddItemHKS(AG_Radio *rad, SDLKey hotkey, const char *s)
+{
+	AG_RadioItem *ri;
+	int w, rv;
+
+	AG_ObjectLock(rad);
+	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
+	ri = &rad->items[rad->nItems];
+	ri->surface = -1;
+	ri->hotkey = hotkey;
+	Strlcpy(ri->text, s, sizeof(ri->text));
+
+	AG_TextSize(ri->text, &w, NULL);
+	if (w > rad->max_w) { rad->max_w = w; }
+	rv = rad->nItems++;
+
+	AG_ObjectUnlock(rad);
+	return (rv);
+}
+
+/* Create a radio item and return its index (with hotkey; format string). */
 int
 AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
 {

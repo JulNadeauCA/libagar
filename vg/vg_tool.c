@@ -85,7 +85,7 @@ VG_ToolWindow(void *p, const char *name)
 	AG_Window *win;
 
 	win = tool->editWin = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _(tool->ops->desc));
+	AG_WindowSetCaptionS(win, _(tool->ops->desc));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_SetEvent(win, "window-close", ToolWindowClosed, "%p", tool);
 	return (win);

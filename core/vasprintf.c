@@ -38,7 +38,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "vasprintf.h"
+#include "core.h"
 
 int
 AG_Vasprintf(char **ret, const char *fmt, va_list ap)
@@ -49,7 +49,7 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 	size_t buflen;
 
 	buflen = strlen(fmt) + 10240;			/* XXX */
-	if ((buf = malloc(buflen)) == NULL) {
+	if ((buf = TryMalloc(buflen)) == NULL) {
 		return (-1);
 	}
 	size = vsprintf(buf, fmt, ap);
@@ -58,14 +58,18 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 		return (size);
 	}
 
-	if ((buf = realloc(buf, size+1)) == NULL) {
+	if ((buf = AG_TryRealloc(buf, size+1)) == NULL) {
 		free(buf);
 		return (-1);
 	}
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);
-#else
-	return vasprintf(ret, fmt, ap);
-#endif
+#else /* !HAVE_VASPRINTF */
+	if (vasprintf(ret, fmt, ap) == -1) {
+		AG_SetError("Out of memory");
+		return (-1);
+	}
+	return (0);
+#endif /* HAVE_VASPRINTF */
 }

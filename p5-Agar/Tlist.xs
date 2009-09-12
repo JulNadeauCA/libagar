@@ -104,7 +104,7 @@ addItem(self, text)
 	Agar::Tlist self
 	const char * text
 CODE:
-	RETVAL = AG_TlistAdd(self, NULL, "%s", text);
+	RETVAL = AG_TlistAddS(self, NULL, text);
 OUTPUT:
 	RETVAL
 

@@ -121,14 +121,26 @@ out:
 	VG_Unlock(VGNODE(vt)->vg);
 }
 
-/* Specify static text. */
+/* Specify static text (C string). */
+void
+VG_TextString(VG_Text *vt, const char *s)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	if (s != NULL) {
+		Strlcpy(vt->text, s, sizeof(vt->text));
+	} else {
+		vt->text[0] = '\0';
+	}
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+/* Specify static text (format string). */
 void
 VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 {
 	va_list ap;
 
 	VG_Lock(VGNODE(vt)->vg);
-	
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(vt->text, sizeof(vt->text), fmt, ap);
@@ -136,7 +148,6 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 	} else {
 		vt->text[0] = '\0';
 	}
-
 	VG_Unlock(VGNODE(vt)->vg);
 }
 
@@ -297,7 +308,7 @@ SelectFontDlg(AG_Event *event)
 	AG_Box *hBox;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Font selection"));
+	AG_WindowSetCaptionS(win, _("Font selection"));
 
 	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
 
@@ -322,7 +333,7 @@ Edit(void *p, VG_View *vv)
 	vPane = AG_PaneNewVert(box, AG_PANE_EXPAND);
 
 	AG_LabelNew(vPane->div[0], 0, _("Text: "));
-	tb = AG_TextboxNew(vPane->div[0],
+	tb = AG_TextboxNewS(vPane->div[0],
 	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
 	    NULL);
 	AG_TextboxBindUTF8(tb, vt->text, sizeof(vt->text));

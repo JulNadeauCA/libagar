@@ -37,7 +37,7 @@ AG_FileSelectorNew(void *parent, Uint flags, const char *label)
 	fs->flags |= flags;
 
 	if (label != NULL) {
-		AG_TextboxSetLabel(fs->tbox, "%s", label);
+		AG_TextboxSetLabelS(fs->tbox, label);
 	}
 	if (flags & AG_FILE_SELECTOR_HFILL) { AG_ExpandHoriz(fs); }
 	if (flags & AG_FILE_SELECTOR_VFILL) { AG_ExpandVert(fs); }
@@ -118,9 +118,9 @@ SetDirectoryAndFile(AG_FileSelector *fs, const char *pPath)
 	
 	Strlcpy(path, pPath, sizeof(path));
 	if ((file = strrchr(path, AG_PATHSEPCHAR)) != NULL) {
-		AG_FileDlgSetFilename(fs->filedlg, file);
+		AG_FileDlgSetFilenameS(fs->filedlg, file);
 		*file = '\0';
-		AG_FileDlgSetDirectory(fs->filedlg, path);
+		AG_FileDlgSetDirectoryS(fs->filedlg, path);
 	}
 }
 
@@ -130,7 +130,7 @@ SetDirectory(AG_FileSelector *fs, const char *pPath)
 	char path[AG_FILENAME_MAX];
 	
 	Strlcpy(path, pPath, sizeof(path));
-	AG_FileDlgSetDirectory(fs->filedlg, path);
+	AG_FileDlgSetDirectoryS(fs->filedlg, path);
 }
 
 void
@@ -193,8 +193,8 @@ Init(void *obj)
 	fs->wSaved = 0;
 	fs->hSaved = 0;
 	
-	fs->tbox = AG_TextboxNew(fs, AG_TEXTBOX_COMBO, NULL);
-	fs->button = AG_ButtonNew(fs, AG_BUTTON_STICKY, _("Browse..."));
+	fs->tbox = AG_TextboxNewS(fs, AG_TEXTBOX_COMBO, NULL);
+	fs->button = AG_ButtonNewS(fs, AG_BUTTON_STICKY, _("Browse..."));
 	AG_ButtonSetPadding(fs->button, 1,1,1,1);
 	AG_WidgetSetFocusable(fs->button, 0);
 

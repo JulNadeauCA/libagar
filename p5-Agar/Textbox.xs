@@ -64,7 +64,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_TextboxNew(parent, flags, label);
+	RETVAL = AG_TextboxNewS(parent, flags, label);
 	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL

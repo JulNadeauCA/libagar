@@ -88,7 +88,7 @@ CreateObject(AG_Event *event)
 
 	nobj = Malloc(cl->size);
 	AG_ObjectInit(nobj, cl);
-	AG_ObjectSetName(nobj, "%s", name);
+	AG_ObjectSetNameS(nobj, name);
 	AG_ObjectAttach(pobj, nobj);
 	AG_ObjectUnlinkDatafiles(nobj);
 
@@ -533,7 +533,7 @@ ObjectOp(AG_Event *event)
 					    ob->name, AG_GetError());
 				}
 			} else {
-				AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+				AG_TextMsgFromError();
 			}
 			break;
 		case OBJEDIT_RCS_UPDATE_ALL:
@@ -727,7 +727,7 @@ CreateObjectDlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNewString(bo, 0, _("Parent object:"));
+		AG_LabelNewS(bo, 0, _("Parent object:"));
 
 		tlParents = AG_TlistNewPolled(bo,
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
@@ -773,7 +773,7 @@ PollRevisions(AG_Event *event)
 	}
 	if (AG_RcsConnect() == -1 ||
 	    AG_RcsGetList(&list) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 		goto out;
 	}
 
@@ -792,7 +792,7 @@ PollRevisions(AG_Event *event)
 			if (*c == '/')
 				depth++;
 		}
-		it = AG_TlistAdd(tl, NULL, "%s", &lent->name[1]);
+		it = AG_TlistAddS(tl, NULL, &lent->name[1]);
 		it->cat = "object";
 		it->depth = depth;
 	}
@@ -912,8 +912,8 @@ DEV_Browser(void *vfsRoot)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	win = AG_WindowNewNamed(0, "DEV_Browser");
-	AG_WindowSetCaption(win, "%s", OBJECT(vfsRoot)->name);
+	win = AG_WindowNewNamedS(0, "DEV_Browser");
+	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
@@ -1203,15 +1203,15 @@ DEV_QuitCallback(AG_Event *event)
 		return;
 	}
 	
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+	if ((win = AG_WindowNewNamedS(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
 	    AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, _("Exit application?"));
+	AG_WindowSetCaptionS(win, _("Exit application?"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
-	AG_LabelNewString(win, 0, _("Unsaved objects have been modified. "
-	                            "Exit application?"));
+	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
+	                       "Exit application?"));
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);

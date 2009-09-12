@@ -34,7 +34,10 @@ typedef struct ag_numerical {
 __BEGIN_DECLS
 extern AG_WidgetClass agNumericalClass;
 
-AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *);
+AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *, ...)
+                              FORMAT_ATTRIBUTE(printf,4,5);
+AG_Numerical *AG_NumericalNewS(void *, Uint, const char *, const char *);
+
 AG_Numerical *AG_NumericalNewDbl(void *, Uint, const char *, const char *,
                                  double *);
 AG_Numerical *AG_NumericalNewDblR(void *, Uint, const char *, const char *,
