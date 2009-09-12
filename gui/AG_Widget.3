@@ -296,9 +296,6 @@ options).
 .Ft "int"
 .Fn AG_WidgetIsFocusedInWindow "AG_Widget *widget"
 .Pp
-.Ft "AG_Widget *"
-.Fn AG_WidgetFindFocused "AG_Window *win"
-.Pp
 .Ft "void"
 .Fn AG_WidgetForwardFocus "AG_Widget *widget" "AG_Widget *widgetToFocus"
 .Pp
@@ -336,17 +333,6 @@ VFS as well as the
 .Nm
 object must be locked when the call is made.
 .Pp
-.Fn AG_WidgetFindFocused
-recursively searches
-.Fa win
-for a widget holding focus.
-Where multiple widgets may be holding focus, widgets found deepest in the
-tree have priority over their parents.
-.Fn AG_WidgetFindFocused
-returns NULL if no widget is focused.
-The
-.Xr AG_View 3
-VFS must be locked when the call is made.
 .Pp
 .Fn AG_WidgetForwardFocus
 arranges automatic forwarding of the focus to a specified widget.
@@ -867,6 +853,9 @@ data types and effects.
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
 .Pp
 .Ft "AG_Widget *"
+.Fn AG_WidgetFindFocused "AG_Window *win"
+.Pp
+.Ft "AG_Widget *"
 .Fn AG_WidgetFindPoint "const char *classMask" "int x" "int y"
 .Pp
 .Ft "AG_Widget *"
@@ -886,6 +875,15 @@ VFS must be locked when the call is made.
 searches for a given widget by name, given an absolute path,
 and returns a pointer to the widget or NULL.
 .Pp
+.Fn AG_WidgetFindFocused
+recursively searches
+.Fa win
+for a widget holding focus.
+Where multiple widgets may be holding focus, widgets found deepest in the
+tree have priority over their parents.
+.Fn AG_WidgetFindFocused
+returns NULL if no widget is focused.
+.Pp
 .Fn AG_WidgetFindPoint
 searches for a widget matching the given class mask enclosing the point
 specified in display (pixel) coordinates.
@@ -893,14 +891,11 @@ The
 .Fn AG_WidgetFindRect
 variant requires that the widget enclose the specified rectangle.
 .Pp
-With threads, the return value of
-.Fn AG_WidgetFind ,
-.Fn AG_WidgetFindPoint
-and
-.Fn AG_WidgetFindRect
-is only valid as long as the
+Under multithreading, the return value of
+.Fn AG_WidgetFind* ,
+should be considered valid only as long as the
 .Xr AG_View 3
-VFS is locked.
+VFS remains locked.
 .Sh GUI RENDERING
 .nr nS 1
 .Ft "void"
