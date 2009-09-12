@@ -312,7 +312,7 @@ Agar::Object
 FindObject(name)
 	const char * name
 CODE:
-	if ((RETVAL = AG_ObjectFind(AGOBJECT(agView), name)) == NULL) {
+	if ((RETVAL = AG_ObjectFindS(AGOBJECT(agView), name)) == NULL) {
 		XSRETURN_UNDEF;
 	}
 OUTPUT:

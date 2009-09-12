@@ -141,7 +141,7 @@ PollSourceTiles(AG_Event *event)
 
 	AG_TlistClear(tl);
 	if (tex->tileset[0] != '\0' &&
-	    (ts = AG_ObjectFind(vfsRoot, tex->tileset)) != NULL &&
+	    (ts = AG_ObjectFindS(vfsRoot, tex->tileset)) != NULL &&
 	    AG_OfClass(ts, "RG_Tileset:*")) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
 			it = AG_TlistAdd(tl, NULL, t->name);

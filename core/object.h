@@ -189,15 +189,18 @@ int	 AG_ObjectCopyDigest(void *, size_t *, char *);
 int	 AG_ObjectChanged(void *);
 int	 AG_ObjectChangedAll(void *);
 
-#define  AG_ObjectRoot(ob) (AGOBJECT(ob)->root)
-#define  AG_ObjectParent(ob) (AGOBJECT(ob)->parent)
-void	*AG_ObjectFind(void *, const char *);
-void	*AG_ObjectFindF(void *, const char *, ...)
+#define AG_ObjectRoot(ob) (AGOBJECT(ob)->root)
+#define AG_ObjectParent(ob) (AGOBJECT(ob)->parent)
+
+void	*AG_ObjectFindS(void *, const char *);
+void	*AG_ObjectFind(void *, const char *, ...)
 	                FORMAT_ATTRIBUTE(printf, 2, 3);
 void	*AG_ObjectFindParent(void *, const char *, const char *);
+
 int	 AG_ObjectInUse(void *);
 void	 AG_ObjectSetName(void *, const char *, ...)
 	                  FORMAT_ATTRIBUTE(printf, 2, 3);
+void	 AG_ObjectSetNameS(void *, const char *);
 void	 AG_ObjectSetArchivePath(void *, const char *);
 void	 AG_ObjectGetArchivePath(void *, char *, size_t)
 	                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
@@ -287,6 +290,7 @@ void AG_ObjectMove(void *, void *)
 #define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
 #define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
 #define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
+#define AG_ObjectFindF AG_ObjectFind
 #endif /* AG_LEGACY */
 
 /*

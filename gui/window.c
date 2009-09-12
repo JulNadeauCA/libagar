@@ -1894,7 +1894,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 AG_Window *
 AG_FindWindow(const char *name)
 {
-	return AG_ObjectFind(agView, name);
+	return AG_ObjectFindS(agView, name);
 }
 #endif /* AG_LEGACY */
 

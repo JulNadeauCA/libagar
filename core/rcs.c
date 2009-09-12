@@ -814,7 +814,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	localpath[0] = '/';
 	localpath[1] = '\0';
 	Strlcat(localpath, path, sizeof(localpath));
-	if ((obj = AG_ObjectFind(vfsRoot, localpath)) == NULL) {
+	if ((obj = AG_ObjectFindS(vfsRoot, localpath)) == NULL) {
 #if 0
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Creating working copy of %s (%s)."),

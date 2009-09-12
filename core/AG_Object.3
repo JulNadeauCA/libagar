@@ -91,10 +91,10 @@ interface.
 .Fn AG_ObjectParent "AG_Object *obj"
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectFind "AG_Object *vfsRoot" "const char *name"
+.Fn AG_ObjectFind "AG_Object *vfsRoot" "const char *format" "..."
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectFindF "AG_Object *vfsRoot" "const char *fmt" "..."
+.Fn AG_ObjectFindS "AG_Object *vfsRoot" "const char *name"
 .Pp
 .Ft "AG_Object *"
 .Fn AG_ObjectFindParent "AG_Object *obj" "const char *name" "const char *type"
@@ -119,6 +119,9 @@ interface.
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_ObjectSetNameS "AG_Object *obj" "const char *name"
 .Pp
 .Ft "void"
 .Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "size_t len"
@@ -235,37 +238,34 @@ returns a pointer to the root of the VFS which the given object is attached to.
 .Fn AG_ObjectParent
 returns the immediate parent of the given object.
 .Pp
-The
 .Fn AG_ObjectFind
-and
-.Fn AG_ObjectFindF
-functions perform a pathname lookup on the specified VFS and return the object
-if found, NULL otherwise.
+performs a pathname lookup on the specified VFS.
+The function returns a pointer to the target object on success,
+otherwise NULL is returned.
 .Pp
 .Fn AG_ObjectFindParent
-searches all parent objects of the given object for one matching the specified
-.Fa name ,
-or the standard class specification in
-.Fa type .
-Either argument can be NULL.
+performs a reverse lookup, starting from the specified object itself, up to
+the root of the VFS.
+For each element encountered, the object's name is compared against
+.Fa name
+(if not-NULL) and the object class is compared against
+.Fa type
+(if not NULL).
 .Pp
 .Fn AG_ObjectFindChild
-performs a name lookup on the immediate children of the specified object and
-return the matching object if found, otherwise NULL.
+performs a name lookup on the immediate children of the specified object.
+The function returns the matching object if it was found, otherwise NULL.
 .Pp
-The
 .Fn AG_ObjectCopyName
-function copies the absolute pathname of an object instance to a fixed-size
-buffer, returning 0 on success and -1 on failure.
+copies the absolute pathname of an object instance to a fixed-size buffer.
 Under multithreading, the returned pathnames can be considered valid only
 as long as the VFS of the object remains locked.
 .Pp
-The
 .Fn AG_ObjectLock
 and
 .Fn AG_ObjectUnlock
-functions acquire or release the mutex associated with the given object.
-This mutex protects all read/write members of the
+acquire or release the locking device associated with the given object.
+This is a mutex protecting all read/write members of the
 .Nm
 structure, except
 .Fa parent ,
