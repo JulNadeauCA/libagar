@@ -5,6 +5,11 @@ package body agar.gui.widget.box is
       (box        : box_access_t;
        homogenous : c.int);
     pragma import (c, set_homogenous, "AG_BoxSetHomogenous");
+    
+    procedure set_label
+      (box   : box_access_t;
+       label : cs.chars_ptr);
+    pragma import (c, set_label, "AG_BoxSetLabelS");
   
     procedure set_padding
       (box     : box_access_t;
