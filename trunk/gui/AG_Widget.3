@@ -269,12 +269,12 @@ events which are filtered by default.
 The focus state also affects the behavior and appearance of some widgets.
 A widget holding focus (in a currently focused window) will receive mouse
 events
-.Sq window-mousemotion ,
-.Sq window-mousebuttonup ,
+.Fn mouse-motion ,
+.Fn mouse-button-up ,
 as well as keyboard events
-.Sq window-keyup
+.Fn key-up
 and
-.Sq window-keydown
+.Fn key-down
 (note that unfocused widgets can be configured to receive those events
 unfiltered as well using the
 .Dv AG_WIDGET_UNFOCUSED_*
@@ -485,10 +485,13 @@ and
 set to NULL).
 .Sh RENDERING AND PRIMITIVES
 These routines are provided for use in GUI widgets, exclusively in the context
-of the
-.Nm
+of the widget
 .Fa draw
 operation.
+.Pp
+A number of simple primitive drawing routines are also available via the
+.Xr AG_WidgetPrimitives 3
+interface.
 .Pp
 .nr nS 1
 .Ft void
@@ -597,219 +600,6 @@ operations of
 .Xr AG_View 3
 in that the coordinates are relative to the widget's coordinate system.
 These operations are also emulated if the display is not framebuffer-based.
-.Sh GRAPHICS PRIMITIVES
-These primitives are designed specifically for use in GUI widgets.
-They must be called from the
-.Fa draw
-functions of widgets exclusively and may not be used in any other context.
-.Pp
-The coordinates for all of the
-.Fn AG_Draw*
-functions are given in pixels and are relative to the specified widget.
-Unless otherwise noted, the color arguments in
-.Ft Uint32
-format should follow the
-.Va agVideoFmt
-pixel format (see
-.Xr AG_MapRGB 3 ,
-.Xr AG_MapRGBA 3 ) .
-.Pp
-.nr nS 1
-.Ft void
-.Fn AG_DrawPixel "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
-.Pp
-.Ft void
-.Fn AG_DrawPixelBlended "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
-.Pp
-.Ft void
-.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c1" "Uint32 c2"
-.Pp
-.Ft void
-.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "Uint32 c"
-.Pp
-.Ft void
-.Fn AG_DrawRectBlended "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawPlus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawMinus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "Uint32 c1" "Uint32 c2"
-.Pp
-.Ft void
-.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
-.Pp
-.Ft void
-.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
-.Pp
-.Ft void
-.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
-.Pp
-.Ft void
-.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
-.Pp
-.nr nS 0
-.Fn AG_DrawPixel
-draws a single pixel at the specified coordinates.
-The
-.Fn AG_DrawPixelBlended
-variant performs alpha-blending using the specified blending function
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
-The
-.Fn AG_DrawPixelRGB
-variant accepts RGB component arguments.
-.Pp
-.Fn AG_DrawBox
-draws a 3D-style box, where 
-.Fa z
-indicates the
-.Sq depth
-in pixels.
-The
-.Fn AG_DrawBoxDisabled
-variant uses a stipple pattern of 
-.Fa c1
-against
-.Fa c2 ,
-traditionally used to indicate a "disabled" control.
-.Pp
-.Fn AG_DrawBoxRounded
-renders a box with the edges rounded to the given
-.Fa radius .
-The
-.Fn AG_DrawBoxRoundedTop
-variant only rounds the top two corners.
-.Pp
-.Fn AG_DrawFrame
-draws a 3D-style frame.
-.Fn AG_DrawFrameBlended
-draws a frame with alpha-blending, with the color
-.Fa c
-specified as an array of RGBA components, and the given blending mode
-.Fa blendFn
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
-.Pp
-.Fn AG_DrawCircle
-draws a circle with the origin at
-.Fa x ,
-.Fa y
-and a radius of
-.Fa radius
-pixels.
-.Pp
-.Fn AG_DrawLine
-scan-converts a line segment going from point
-.Fa x1 ,
-.Fa y1
-to point
-.Fa x2 ,
-.Fa y2 .
-The variants
-.Fn AG_DrawLineH
-and
-.Fn AG_DrawLineV
-render horizontal and vertical line segments, respectively.
-.Fn AG_DrawLine2
-renders two line segments for a 3D-style effect.
-.Pp
-.Fn AG_DrawLineBlended
-renders an alpha-blended line, where the RGBA components are passed as the
-.Fa c
-array, and the blending function is specified in
-.Fa blendFn
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
-.Pp
-.Fn AG_DrawRectOutline
-draws the outline of a rectangle.
-.Pp
-.Fn AG_DrawRectFilled
-fills a rectangle of pixels
-.Fa r .
-.Fn AG_DrawRectBlended
-draws a blended rectangle of the color
-.Fa c ,
-specified as an array or RGBA components, with the specified blending
-mode
-.Fa blendFn (see
-.Fn AG_WidgetBlendPixelRGBA ) .
-.Pp
-.Fn AG_DrawPlus
-and
-.Fn AG_DrawMinus
-draw plus ("+") or minus ("-") signs spanning
-.Fa r ,
-using the specified color and blending function.
-.Pp
-.Fn AG_DrawTiling
-fills
-.Fa r
-with a two-color tiling pattern.
-.Fa tileSz
-is the size of the tiles in pixels,
-.Fa offset
-is an offset in pixels and
-.Fa c1 ,
-.Fa c2
-specify the colors of the tiles.
-.Pp
-.Fn AG_DrawArrowUp ,
-.Fn AG_DrawArrowDown ,
-.Fn AG_DrawArrowLeft
-and
-.Fn AG_DrawArrowRight
-draw an arrow at the specified coordinates.
-.Fa h
-and
-.Fa w
-specify the height/width of the arrow in pixels.
 .Sh BINDINGS
 Agar widgets can be configured to directly access data of specific types.
 For example,
@@ -871,9 +661,18 @@ The
 .Xr AG_View 3
 VFS must be locked when the call is made.
 .Pp
+The
 .Fn AG_WidgetFind
-searches for a given widget by name, given an absolute path,
-and returns a pointer to the widget or NULL.
+function searches for a given widget by name, given an absolute path,
+and returns a pointer to the widget, or NULL.
+.Fn AG_WidgetFind
+works differently from the generic
+.Xr AG_ObjectFind 3
+function, in that widgets not effectively attached to the
+.Xr AG_View 3
+may be included in the search (for example, widgets attached to
+.Xr AG_Notebook 3
+tabs).
 .Pp
 .Fn AG_WidgetFindFocused
 recursively searches
@@ -963,9 +762,9 @@ See
 for more details, including important conventions used throughout the
 documentation.
 .Sh EVENTS
-The
+The GUI system may send
 .Nm
-layer generates the following events:
+objects the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn widget-shown "void"
@@ -984,13 +783,73 @@ The widget (or one of its parents) has been moved.
 The widget now holds focus inside its parent container.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
-.It Fn widget-bound "AG_WidgetBinding *binding"
-A widget binding has been added or modified.
-NOTE: Do not use this event, use the
-.Xr AG_Object 3
-level
+.It Fn widget-bound "AG_Variable *V"
+A variable binding has been configured.
+NOTE: This event is deprecated; please use the
 .Sq bound
-event instead.
+event instead (see
+.Xr AG_Object 3 ) .
+.El
+.Pp
+The following events are usually generated by input devices:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn mouse-motion "int x" "int y" "int xRel" "int yRel" "int buttons"
+The widget is receiving mouse motion events, and the cursor has been moved.
+.Fa x
+and
+.Fa y
+are the coordinates of the cursor in the widget's local coordinate system
+(these coordinates may be negative or exceed the widget's dimensions if the
+cursor is not in the widget's area).
+.Fa xRel
+and
+.Fa yRel
+represent the displacement relative to the last position of the mouse cursor.
+The
+.Fa buttons
+argument is a bitmask representing the state of mouse buttons (see
+.Xr AG_MouseButton 3 ) .
+.It Fn mouse-button-up "int button" "int x" "int y"
+The widget is receiving mouse button release events, and
+.Fa button
+has been released.
+.Fa x
+and
+.Fa y
+are the cursor coordinates in the widget's local coordinate system.
+.It Fn mouse-button-down "int button" "int x" "int y"
+The widget is receiving mouse button events, and
+.Fa button
+has been pressed.
+.Fa x
+and
+.Fa y
+are the cursor coordinates in the widget's local coordinate system.
+.It Fn key-down "int key" "int mod" "int unicode"
+The widget is receiving keyboard events and
+.Fa key
+has been pressed.
+The
+.Fa mod
+argument is a bitmask representing the state of the current key modifiers and
+.Fa unicode
+is the corresponding Unicode character in UCS-4 encoding.
+See
+.Xr AG_Keysym 3
+for details.
+.It Fn key-up "int key" "int mod" "int unicode"
+The widget is receiving keyboard events and
+.Fa key
+has been released.
+The
+.Fa mod
+argument is a bitmask representing the state of the current key modifiers and
+.Fa unicode
+is the corresponding Unicode character in UCS-4 encoding.
+See
+.Xr AG_Keysym 3
+for details.
 .El
 .Sh STRUCTURE DATA
 For the
@@ -1056,31 +915,31 @@ Note that the widget may still become "focused" if child widgets are attached
 to it and one of them happens to grab focus.
 .It AG_WIDGET_UNFOCUSED_MOTION
 Receive
-.Sq window-mousemotion
+.Sq mouse-motion
 events unconditionally (focus is required by default).
 .It AG_WIDGET_UNFOCUSED_BUTTONUP
 Receive all
-.Sq window-mousebuttonup
+.Fn mouse-button-up
 (mouse button release) events unconditionally.
 .It AG_WIDGET_UNFOCUSED_BUTTONDOWN
 Receive all
-.Sq window-mousebuttonup
+.Fn mouse-button-up
 (mouse button press) events unconditionally.
 .It AG_WIDGET_UNFOCUSED_KEYDOWN
 Receive
-.Sq window-keydown
+.Fn key-down
 (key press) events unconditionally (focus is required by default).
 .It AG_WIDGET_UNFOCUSED_KEYUP
 Receive
-.Sq window-keyup
+.Fn key-up
 (key release) events unconditionally (focus is required by default).
 .It AG_WIDGET_CATCH_TAB
 When the user presses the
 .Dv TAB
 key, generate normal
-.Sq window-keydown
+.Fn key-down
 and
-.Sq window-keyup
+.Fn key-up
 events.
 Without this flag,
 .Dv TAB
@@ -1093,14 +952,11 @@ This flag is used by such widgets as
 and
 .Xr AG_Menu 3 .
 .El
-.Sh EXAMPLES
-See
-.Pa demos/widgets
-in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_View 3 ,
+.Xr AG_WidgetPrimitives 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
 The

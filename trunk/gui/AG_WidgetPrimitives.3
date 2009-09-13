@@ -1,0 +1,284 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 13, 2009
+.Dt AG_WIDGETPRIMITIVES 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_WidgetPrimitives
+.Nd agar widget rendering primitives
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+Agar provides a few primitive rendering routines designed specifically for
+the rendering of GUI elements.
+.Pp
+This interface is not intended for general-purpose graphics.
+For general-purpose vector graphics, see
+.Xr VG 3 .
+For raster graphics manipulation, see
+.Xr RG 3 .
+Both libraries are part of the Agar distribution.
+For 3D graphics, see the FreeSG library (http://freesg.org/).
+.Pp
+It is illegal to invoke the following routines outside of
+.Xr AG_Widget 3
+rendering context (e.g., the widget
+.Fn draw
+operation).
+The coordinates for all
+.Fn AG_Draw*
+functions are given in pixels, in the widget's local coordinate system.
+Unless otherwise noted, the color arguments in
+.Ft Uint32
+format are taken as raw pixel values, in
+.Va agVideoFmt
+pixel format (see
+.Xr AG_MapRGB 3 ) .
+.Sh PRIMITIVES
+.nr nS 1
+.Ft void
+.Fn AG_DrawPixel "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_DrawPixelBlended "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawRectBlended "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.nr nS 0
+.Fn AG_DrawPixel
+draws a single pixel at the specified coordinates.
+The
+.Fn AG_DrawPixelBlended
+variant performs alpha-blending using the specified blending function
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
+The
+.Fn AG_DrawPixelRGB
+variant accepts RGB component arguments.
+.Pp
+.Pp
+.Fn AG_DrawFrame
+draws a 3D-style frame.
+.Fn AG_DrawFrameBlended
+draws a frame with alpha-blending, with the color
+.Fa c
+specified as an array of RGBA components, and the given blending mode
+.Fa blendFn
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
+.Pp
+.Fn AG_DrawCircle
+draws a circle with the origin at
+.Fa x ,
+.Fa y
+and a radius of
+.Fa radius
+pixels.
+.Pp
+.Fn AG_DrawLine
+scan-converts a line segment going from point
+.Fa x1 ,
+.Fa y1
+to point
+.Fa x2 ,
+.Fa y2 .
+The variants
+.Fn AG_DrawLineH
+and
+.Fn AG_DrawLineV
+render horizontal and vertical line segments, respectively.
+.Fn AG_DrawLine2
+renders two line segments for a 3D-style effect.
+.Pp
+.Fn AG_DrawLineBlended
+renders an alpha-blended line, where the RGBA components are passed as the
+.Fa c
+array, and the blending function is specified in
+.Fa blendFn
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
+.Pp
+.Fn AG_DrawRectOutline
+draws the outline of a rectangle.
+.Pp
+.Fn AG_DrawRectFilled
+fills a rectangle of pixels
+.Fa r .
+.Fn AG_DrawRectBlended
+draws a blended rectangle of the color
+.Fa c ,
+specified as an array or RGBA components, with the specified blending
+mode
+.Fa blendFn (see
+.Fn AG_WidgetBlendPixelRGBA ) .
+.Sh SIMPLE GRAPHICAL ELEMENTS
+.nr nS 1
+.Ft void
+.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.nr nS 0
+The
+.Fn AG_DrawBox
+routine draws a simple 3D-style "box".
+.Fa z
+specifies the apparent 3D
+.Sq depth ,
+in pixels.
+.Pp
+The
+.Fn AG_DrawBoxDisabled
+variant uses a stipple pattern of 
+.Fa c1
+against
+.Fa c2 .
+.Fn AG_DrawBoxDisabled
+is traditionally used to indicate a GUI element that is not responsive
+to user input.
+.Pp
+.Fn AG_DrawBoxRounded
+renders a box with the edges rounded to the given
+.Fa radius .
+The
+.Fn AG_DrawBoxRoundedTop
+variant only rounds the top two corners.
+.Pp
+.Fn AG_DrawTiling
+fills the rectangle
+.Fa r
+with a two-color tiling pattern.
+.Fa tileSz
+is the size of the tiles in pixels,
+.Fa offset
+is an offset in pixels and
+.Fa c1 ,
+.Fa c2
+specify the colors of the tiles.
+.Pp
+.Sh SYMBOLS
+.nr nS 1
+.Ft void
+.Fn AG_DrawPlus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawMinus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
+.Pp
+.nr nS 0
+The
+.Fn AG_DrawPlus
+and
+.Fn AG_DrawMinus
+routines render plus ("+") or minus ("-") signs spanning rectangle
+.Fa r
+using the specified color and blending function.
+.Pp
+.Fn AG_DrawArrowUp ,
+.Fn AG_DrawArrowDown ,
+.Fn AG_DrawArrowLeft
+and
+.Fn AG_DrawArrowRight
+draw an arrow at the specified coordinates.
+.Fa h
+and
+.Fa w
+specify the size of the arrow in pixels.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Style 3 ,
+.Xr AG_Widget 3 ,
+.Xr VG 3 ,
+.Xr RG 3
+.Bd -literal
+The FreeSG library - http://freesg.org/
+.Ed
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0.
