@@ -544,7 +544,7 @@ Stay on top of other windows.
 Stay below other windows.
 .It AG_WINDOW_DENYFOCUS
 Don't automatically grab focus in response to a
-.Sq window-mousebuttondown
+.Sq mouse-button-down
 event in the window area.
 .It AG_WINDOW_MODAL
 Place window in foreground and prevent all other windows from catching events.
@@ -607,65 +607,9 @@ Deliver discrete events to widget when modifier keys (CTRL, ALT, SHIFT)
 are pressed.
 .El
 .Sh EVENTS
-The
+The GUI system may send
 .Nm
-widget delivers the following events to its child widgets:
-.Pp
-.\"
-.\" EVENTS AS SENDER
-.\"
-.Bl -tag -width 2n
-.It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel" "int state"
-The mouse cursor has moved to widget-relative coordinates
-.Fa x
-and
-.Fa y
-(which may be negative).
-The
-.Fa xrel
-and
-.Fa yrel
-arguments represent the displacement relative to the last position of the
-mouse cursor.
-.Fa state
-holds the present button state, as returned by
-.Xr SDL_GetMouseState 3 .
-Regardless of the mouse position, this event is posted to widgets that either
-hold focus inside the focused window, or have the
-.Dv AG_WIDGET_UNFOCUSED_MOTION
-flag set.
-.It Fn window-mousebuttonup "int button" "int x" "int y"
-The mouse button indexed by
-.Fa button
-was released at widget-relative
-.Fa x ,
-.Fa y
-coordinates.
-Regardless of the mouse position, this event is posted to the widget that
-holds focus inside the focused window.
-.It Fn window-mousebuttondown "int button" "int x" "int y"
-The mouse button indexed by
-.Fa button
-was pressed at widget-relative
-.Fa x ,
-.Fa y
-coordinates, which must be inside the widget area.
-.It Fn window-keyup "int keysym" "int keymod"
-The key identified by
-.Fa keysym
-was released, and the widget holds the focus.
-.It Fn window-keydown "int keysym" "int keymod" "int unicode"
-The key identified by
-.Fa keysym
-was pressed, and the widget holds the focus.
-.El
-.\"
-.\" EVENTS AS WINDOW RECEIVER
-.\"
-.Pp
-The
-.Nm
-object itself receives the following events:
+objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
 The window's titlebar close button was pressed.
