@@ -12,7 +12,7 @@ LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC} ${VG_LINKS_STATIC}
 
 SRCS=	tileset.c tileview.c tile.c feature.c fill.c pixmap.c prim.c \
 	animation.c texture.c texsel.c transform.c animview.c
-MAN3=	RG_Anim.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG_Tileset.3 RG_Tileview.3
+MAN3=	RG_Anim.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG.3 RG_Tileview.3
 
 #SRCS+= sketch.c sketch_line.c sketch_circle.c sketch_polygon.c sketchproj.c
 
