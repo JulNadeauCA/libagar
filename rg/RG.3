@@ -24,13 +24,13 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd October 21, 2007
-.Dt RG_TILESET 3
+.Dt RG 3
 .Os
 .ds vT Agar-RG API Reference
 .ds oS Agar-RG 1.0
 .Sh NAME
-.Nm RG_Tileset
-.Nd agar-rg graphics package
+.Nm RG
+.Nd agar raster graphics interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,9 +38,10 @@
 #include <agar/rg.h>
 .Ed
 .Sh DESCRIPTION
-The
-.Nm
-object manages a set of graphics resources of the following types:
+The Agar-RG library operates on raster graphics.
+The library implements the
+.Ft RG_Tileset
+object, which acts as a container for graphics resources:
 .Bl -tag -width "Animations "
 .It Tiles
 Transparent graphic surfaces, generated from a set of instructions (or
@@ -81,7 +82,7 @@ members of the
 structure.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
-.Nm .
+.Ft RG_Tileset
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "RG_Tileset *"
@@ -168,4 +169,4 @@ object itself.
 .Sh HISTORY
 The
 .Nm
-object first appeared in Agar-RG 1.0.
+library first appeared in Agar 1.3.
