@@ -1,0 +1,129 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 16, 2009
+.Dt AG_EVENTLOOP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_EventLoop
+.Nd agar GUI event loop
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The event loop of an Agar-GUI application typically waits for events, invokes
+GUI rendering routines and processes timer events.
+Some applications will use a custom event loop routine, but the stock event
+loop (
+.Fn AG_EventLoop )
+is suitable for most applications where it is necessary to strike
+a good balance between real-time accuracy and CPU efficiency.
+.Sh STOCK EVENT LOOP
+.nr nS 1
+.Ft "void"
+.Fn AG_EventLoop "void"
+.nr nS 0
+.Pp
+For a graphical application using Agar-GUI,
+.Fn AG_EventLoop
+tries to update the display and process events in the most efficient way for
+the underlying graphics system.
+Usually, this involves computing delays which will allow a stable refresh
+rate to be maintained (see
+.Xr AG_SetRefreshRate 3 ) ,
+input events to be serviced quickly and timed events (see
+.Xr AG_Timeout 3
+and
+.Fn AG_SchedEvent )
+to be executed at accurate points in time.
+.Sh EXAMPLE - CUSTOM EVENT LOOP
+The following code provides a good starting point for a custom
+event loop routine.
+The Agar GUI elements are rendered by iterating over the windows attached
+to the
+.Xr AG_View 3
+and invoking
+.Xr AG_WindowDraw 3 .
+Calls to
+.Fn AG_WindowDraw
+must be enclosed in
+.Xr AG_BeginRendering 3
+and
+.Xr AG_EndRendering 3 .
+Input events are passed on to
+.Fn AG_ProcessEvents ,
+and
+.Fn AG_ProcessTimeouts
+is invoked when there are outstanding timer events in the queue.
+.Bd -literal
+void
+AG_MyEventLoop(void)
+{
+	SDL_Event ev;
+	AG_Window *win;
+	Uint32 Tr1, Tr2 = 0;
+
+	Tr1 = SDL_GetTicks();
+	for (;;) {
+		Tr2 = SDL_GetTicks();
+		if (Tr2-Tr1 >= agView->rNom) {
+			AG_LockVFS(agView);
+			AG_BeginRendering();
+			VIEW_FOREACH_WINDOW(win, agView) {
+				AG_ObjectLock(win);
+				AG_WindowDraw(win);
+				AG_ObjectUnlock(win);
+			}
+			AG_EndRendering();
+			AG_UnlockVFS(agView);
+
+			/* Recalibrate the effective refresh rate. */
+			Tr1 = SDL_GetTicks();
+			agView->rCur = agView->rNom - (Tr1-Tr2);
+			if (agView->rCur < 1) {
+				agView->rCur = 1;
+			}
+		} else if (SDL_PollEvent(&ev) != 0) {
+			if (AG_ProcessEvent(&ev) == -1)
+				return;
+		} else if (AG_TIMEOUTS_QUEUED()) {
+			AG_ProcessTimeouts(Tr2);
+		} else if (agView->rCur > agIdleThresh) {
+			AG_Delay(agView->rCur - agIdleThresh);
+		}
+	}
+}
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_View 3
+.Sh HISTORY
+The
+.Nm
+routine first appeared in Agar 1.0.
