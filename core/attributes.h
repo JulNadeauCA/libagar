@@ -62,7 +62,7 @@
 #ifdef HAVE_NORETURN_ATTRIBUTE
 # define NORETURN_ATTRIBUTE __attribute__((__noreturn__))
 #else
-# define NORETURN_ATTRIBUTE(a)
+# define NORETURN_ATTRIBUTE
 #endif
 
 #undef PACKED_ATTRIBUTE
