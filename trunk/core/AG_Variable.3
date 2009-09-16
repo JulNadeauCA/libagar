@@ -53,143 +53,6 @@ and
 (where typed pointers are the basis of widget
 .Sq bindings ) .
 .Pp
-The
-.Nm
-structure is defined as follows:
-.Bd -literal
-typedef struct ag_variable {
-	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
-	AG_VariableType type;            /* Variable type */
-	AG_Mutex *mutex;                 /* Lock on data (or NULL) */
-	union {
-		Uint32 bitmask;          /* Bitmask (for P_FLAG_*) */
-		size_t size;             /* Size (for STRING_*) */
-	} info;
-	union ag_variable_fn fn;
-	union ag_variable_data data;
-} AG_Variable;
-
-typedef enum ag_variable_type {
-	AG_VARIABLE_NULL,		/* No data */
-	/* Primitive */
-	AG_VARIABLE_UINT,		/* Unsigned int */
-	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
-	AG_VARIABLE_INT,		/* Natural int */
-	AG_VARIABLE_P_INT,		/* Pointer to int */
-	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
-	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
-	AG_VARIABLE_SINT8,		/* Signed 8-bit */
-	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
-	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
-	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
-	AG_VARIABLE_SINT16,		/* Signed 16-bit */
-	AG_VARIABLE_P_SINT16,		/* Pointer to Sint16 */
-	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
-	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
-	AG_VARIABLE_SINT32,		/* Signed 32-bit */
-	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
-	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (opt.) */
-	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (opt.) */
-	AG_VARIABLE_SINT64,		/* Signed 64-bit (opt.) */
-	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (opt.) */
-	AG_VARIABLE_FLOAT,		/* Single-precision float */
-	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
-	AG_VARIABLE_DOUBLE,		/* Double-precision float */
-	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
-	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (opt.) */
-	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (opt.) */
-	AG_VARIABLE_STRING,		/* C string */
-	AG_VARIABLE_P_STRING,		/* Pointer to C string */
-	AG_VARIABLE_CONST_STRING,	/* C string (const) */
-	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
-	AG_VARIABLE_POINTER,		/* C pointer */
-	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
-	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
-	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
-	/* Bitmask */
-	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
-	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
-	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
-	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
-	/* ... */
-	AG_VARIABLE_TYPE_LAST
-};
-
-union ag_variable_data {
-	void *p;
-	const void *Cp;
-	char *s;
-	const char *Cs;
-	int i;
-	Uint u;
-	float flt;
-	double dbl;
-	Uint8 u8;
-	Sint8 s8;
-	Uint16 u16;
-	Sint16 s16;
-	Uint32 u32;
-	Sint32 s32;
-};
-.Ed
-.Pp
-The
-.Va name
-string identifies the variable when it is part of a set, such as the
-.Xr AG_Object 3
-property table or a list of named
-.Xr AG_Event 3
-arguments.
-The
-.Va type
-field indicates the type of variable.
-.Pp
-The optional
-.Va mutex
-specifies a mutex device that any user of the variable should acquire
-prior to accessing data (only applies to pointer-type variables).
-.Pp
-.Va bitmask
-and
-.Va size
-are extra arguments needed by
-.Dv BITMASK_*
-and
-.Dv STRING_*
-type variables, respectively.
-.Pp
-.Va fn ,
-if not NULL, ties the variable to a function.
-Whenever the variable is accessed, this function will be invoked by
-.Fn AG_EvalVariable
-to return the data in the
-.Nm
-structure itself.
-.Va fn
-is an union of function pointers such as
-.Fn fnVoid ,
-.Fn fnUint ,
-.Fn fnInt ,
-etc.
-The functions are defined as:
-.Pp
-.nr nS 1
-.Ft TYPE
-.Fn fnTYPE "AG_Event *event"
-.nr nS 0
-.Pp
-with the exception of
-.Fn fnString ,
-which expects the string to be copied to a fixed-size buffer, and is defined as:
-.Pp
-.nr nS 1
-.Ft size_t
-.Fn fnString "AG_Event *event" "char *buffer" "size_t length"
-.nr nS 0
-.Pp
-The
-.Va data
-union contains the primitive data itself.
 .Sh INTERFACE
 .nr nS 1
 .Ft int
@@ -756,6 +619,144 @@ These functions provide an interface for binding to specific bits in integers.
 They follow the standard form, with an extra
 .Fa bitmask
 argument.
+.Sh STRUCTURE DATA
+The
+.Nm
+structure is defined as follows:
+.Bd -literal
+typedef struct ag_variable {
+	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
+	AG_VariableType type;            /* Variable type */
+	AG_Mutex *mutex;                 /* Lock on data (or NULL) */
+	union {
+		Uint32 bitmask;          /* Bitmask (for P_FLAG_*) */
+		size_t size;             /* Size (for STRING_*) */
+	} info;
+	union ag_variable_fn fn;
+	union ag_variable_data data;
+} AG_Variable;
+
+typedef enum ag_variable_type {
+	AG_VARIABLE_NULL,		/* No data */
+	/* Primitive */
+	AG_VARIABLE_UINT,		/* Unsigned int */
+	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
+	AG_VARIABLE_INT,		/* Natural int */
+	AG_VARIABLE_P_INT,		/* Pointer to int */
+	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
+	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
+	AG_VARIABLE_SINT8,		/* Signed 8-bit */
+	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
+	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
+	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
+	AG_VARIABLE_SINT16,		/* Signed 16-bit */
+	AG_VARIABLE_P_SINT16,		/* Pointer to Sint16 */
+	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
+	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
+	AG_VARIABLE_SINT32,		/* Signed 32-bit */
+	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
+	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (opt.) */
+	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (opt.) */
+	AG_VARIABLE_SINT64,		/* Signed 64-bit (opt.) */
+	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (opt.) */
+	AG_VARIABLE_FLOAT,		/* Single-precision float */
+	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
+	AG_VARIABLE_DOUBLE,		/* Double-precision float */
+	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
+	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (opt.) */
+	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (opt.) */
+	AG_VARIABLE_STRING,		/* C string */
+	AG_VARIABLE_P_STRING,		/* Pointer to C string */
+	AG_VARIABLE_CONST_STRING,	/* C string (const) */
+	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
+	AG_VARIABLE_POINTER,		/* C pointer */
+	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
+	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
+	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
+	/* Bitmask */
+	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
+	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
+	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
+	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
+	/* ... */
+	AG_VARIABLE_TYPE_LAST
+};
+
+union ag_variable_data {
+	void *p;
+	const void *Cp;
+	char *s;
+	const char *Cs;
+	int i;
+	Uint u;
+	float flt;
+	double dbl;
+	Uint8 u8;
+	Sint8 s8;
+	Uint16 u16;
+	Sint16 s16;
+	Uint32 u32;
+	Sint32 s32;
+};
+.Ed
+.Pp
+The
+.Va name
+string identifies the variable when it is part of a set, such as the
+.Xr AG_Object 3
+property table or a list of named
+.Xr AG_Event 3
+arguments.
+The
+.Va type
+field indicates the type of variable.
+.Pp
+The optional
+.Va mutex
+specifies a mutex device that any user of the variable should acquire
+prior to accessing data (only applies to pointer-type variables).
+.Pp
+.Va bitmask
+and
+.Va size
+are extra arguments needed by
+.Dv BITMASK_*
+and
+.Dv STRING_*
+type variables, respectively.
+.Pp
+.Va fn ,
+if not NULL, ties the variable to a function.
+Whenever the variable is accessed, this function will be invoked by
+.Fn AG_EvalVariable
+to return the data in the
+.Nm
+structure itself.
+.Va fn
+is an union of function pointers such as
+.Fn fnVoid ,
+.Fn fnUint ,
+.Fn fnInt ,
+etc.
+The functions are defined as:
+.Pp
+.nr nS 1
+.Ft TYPE
+.Fn fnTYPE "AG_Event *event"
+.nr nS 0
+.Pp
+with the exception of
+.Fn fnString ,
+which expects the string to be copied to a fixed-size buffer, and is defined as:
+.Pp
+.nr nS 1
+.Ft size_t
+.Fn fnString "AG_Event *event" "char *buffer" "size_t length"
+.nr nS 0
+.Pp
+The
+.Va data
+union contains the primitive data itself.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
