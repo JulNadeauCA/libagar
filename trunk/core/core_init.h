@@ -21,7 +21,7 @@ int	 AG_InitCore(const char *, Uint);
 int	 AG_InitNetwork(Uint);
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_AtExitFuncEv(void (*)(struct ag_event *));
-void	 AG_Quit(void);
+void	 AG_Quit(void) NORETURN_ATTRIBUTE;
 void	 AG_Destroy(void);
 
 #ifdef AG_LEGACY
