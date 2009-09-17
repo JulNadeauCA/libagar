@@ -29,7 +29,7 @@
 .ds oS Agar 1.4
 .Sh NAME
 .Nm AG_Tbl
-.Nd agar hash table structure
+.Nd agar variable hash table structure
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core/tbl.h>
@@ -68,10 +68,16 @@ typedef struct ag_tbl {
 .Fn AG_TblLookup "AG_Tbl *tbl" "const char *key"
 .Pp
 .Ft "int"
+.Fn AG_TblLookupPointer "AG_Tbl *tbl" "const char *key" "void **p"
+.Pp
+.Ft "int"
 .Fn AG_TblExists "AG_Tbl *tbl" "const char *key"
 .Pp
 .Ft "int"
-.Fn AG_TblInsert "AG_Tbl *tbl" "const AG_Variable *V"
+.Fn AG_TblInsert "AG_Tbl *tbl" "const char *key" "const AG_Variable *V"
+.Pp
+.Ft "int"
+.Fn AG_TblInsertPointer "AG_Tbl *tbl" "const char *key" "void *p"
 .Pp
 .Ft "int"
 .Fn AG_TblDelete "AG_Tbl *tbl" "const char *key"
@@ -95,10 +101,7 @@ On failure, it returns NULL.
 returns 1 if there is a table entry matching the giving key.
 .Pp
 .Fn AG_TblInsert
-inserts an entry in the table.
-The
-.Va name
-field of the variable is used as key.
+inserts an entry in the table, using the specified key.
 The contents of the variable are duplicated.
 On failure, the function returns -1 and sets an error message.
 .Pp
@@ -121,7 +124,7 @@ function repeatedly (e.g., a lookup followed by an insert).
 .Fn AG_TblExistsHash "AG_Tbl *tbl" "Uint hash" "const char *key"
 .Pp
 .Ft "int"
-.Fn AG_TblInsertHash "AG_Tbl *tbl" "Uint hash" "const AG_Variable *V"
+.Fn AG_TblInsertHash "AG_Tbl *tbl" "Uint hash" "const char *key" "const AG_Variable *V"
 .Pp
 .Ft "int"
 .Fn AG_TblDeleteHash "AG_Tbl *tbl" "Uint hash" "const char *key"

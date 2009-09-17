@@ -49,6 +49,17 @@ AG_TblLookup(AG_Tbl *tbl, const char *key)
 	return AG_TblLookupHash(tbl, AG_TblHash(tbl,key), key);
 }
 static __inline__ int
+AG_TblLookupPointer(AG_Tbl *tbl, const char *key, void **p)
+{
+	AG_Variable *V;
+	
+	if ((V = AG_TblLookupHash(tbl, AG_TblHash(tbl,key), key)) != NULL) {
+		*p = V->data.p;
+		return (0);
+	}
+	return (-1);
+}
+static __inline__ int
 AG_TblExists(AG_Tbl *tbl, const char *key)
 {
 	return AG_TblExistsHash(tbl, AG_TblHash(tbl,key), key);
@@ -57,6 +68,13 @@ static __inline__ int
 AG_TblInsert(AG_Tbl *tbl, const char *key, const AG_Variable *V)
 {
 	return AG_TblInsertHash(tbl, AG_TblHash(tbl,key), key, V);
+}
+static __inline__ int
+AG_TblInsertPointer(AG_Tbl *tbl, const char *key, void *p)
+{
+	AG_Variable V;
+	AG_InitPointer(&V, p);
+	return AG_TblInsertHash(tbl, AG_TblHash(tbl,key), key, &V);
 }
 static __inline__ int
 AG_TblDelete(AG_Tbl *tbl, const char *key)
