@@ -25,6 +25,7 @@
 #include <agar/core/object.h>
 #include <agar/core/list.h>
 #include <agar/core/tree.h>
+#include <agar/core/tbl.h>
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/file.h>
