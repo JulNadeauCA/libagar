@@ -56,10 +56,10 @@ typedef struct ag_tbl {
 .Sh GENERAL INTERFACE
 .nr nS 1
 .Ft "AG_Tbl *"
-.Fn AG_TblNew "Uint nBuckets"
+.Fn AG_TblNew "Uint nBuckets" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_TblInit "AG_Tbl *tbl" "Uint nBuckets"
+.Fn AG_TblInit "AG_Tbl *tbl" "Uint nBuckets" "Uint flags"
 .Pp
 .Ft "void"
 .Fn AG_TblDestroy "AG_Tbl *tbl"
@@ -81,14 +81,25 @@ typedef struct ag_tbl {
 .Pp
 .Ft "int"
 .Fn AG_TblDelete "AG_Tbl *tbl" "const char *key"
-.nr nS 0
 .Pp
+.Fn AG_TBL_FOREACH "AG_Variable *V" "int i" "int j" "AG_Tbl *tbl"
+.Pp
+.nr nS 0
 The
 .Fn AG_TblNew
 function allocates and initializes a new, empty
 .Nm .
 .Fn AG_TblInit
 initializes an existing table structure.
+The following
+.Fa flags
+options are accepted:
+.Bl -tag -width "AG_TBL_DUPLICATES "
+.It AG_TBL_DUPLICATES
+Allow duplicate keys in the database.
+Insert calls for duplicate keys will if this option is not set.
+.El
+.Pp
 .Fn AG_TblDestroy
 frees the resources allocated by a table (the table structure itself is not
 freed).
@@ -108,6 +119,27 @@ On failure, the function returns -1 and sets an error message.
 .Fn AG_TblDelete
 removes the specified table entry by name.
 If there is no match, it returns -1 and sets an error message.
+.Pp
+The
+.Fn AG_TBL_FOREACH
+macro iterates
+.Fa V
+over every entry of table
+.Fa tbl ,
+using variables
+.Fa i
+and
+.Fa j
+as iterators.
+Example usage:
+.Bd -literal
+AG_Tbl *tbl;
+AG_Variable *V;
+int i, j;
+AG_TBL_FOREACH(V, i,j, tbl) {
+	printf("Item: %s\\n", V->name);
+}
+.Ed
 .Sh PRECOMPUTED HASHES
 The following access functions accept a hash argument.
 They are useful in cases where it is inefficient to reevaluate the hash

@@ -14,18 +14,29 @@ typedef struct ag_tbl_bucket {
 } AG_TblBucket;
 
 typedef struct ag_tbl {
-	AG_TblBucket   *buckets;		/* Hash buckets */
-	Uint           nBuckets;		/* Bucket count */
+	Uint flags;
+#define AG_TBL_DUPLICATES	0x01	/* Allow duplicate entries */
+
+	AG_TblBucket *buckets;		/* Hash buckets */
+	Uint         nBuckets;		/* Bucket count */
 } AG_Tbl;
 
 __BEGIN_DECLS
-AG_Tbl      *AG_TblNew(Uint);
-int          AG_TblInit(AG_Tbl *, Uint);
+AG_Tbl      *AG_TblNew(Uint, Uint);
+int          AG_TblInit(AG_Tbl *, Uint, Uint);
 void         AG_TblDestroy(AG_Tbl *);
 AG_Variable *AG_TblLookupHash(AG_Tbl *, Uint, const char *);
 int          AG_TblExistsHash(AG_Tbl *, Uint, const char *);
 int          AG_TblInsertHash(AG_Tbl *, Uint, const char *, const AG_Variable *);
 int          AG_TblDeleteHash(AG_Tbl *, Uint, const char *);
+
+/* Iterate over each entry. */
+#define AG_TBL_FOREACH(var, i,j, tbl)					\
+	for ((i) = 0; ((i) < (tbl)->nBuckets); (i)++)			\
+		for ((j) = 0;						\
+		    ((j) < (tbl)->buckets[i].nEnts) &&			\
+		     ((var) = &(tbl)->buckets[i].ents[j]);		\
+		     (j)++)
 
 /* General hash function */
 static __inline__ Uint
