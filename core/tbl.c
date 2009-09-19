@@ -31,14 +31,14 @@
 
 /* Allocate and initialize a table. */
 AG_Tbl *
-AG_TblNew(Uint nBuckets)
+AG_TblNew(Uint nBuckets, Uint flags)
 {
 	AG_Tbl *t;
 
 	if ((t = AG_TryMalloc(sizeof(AG_Tbl))) == NULL) {
 		return (NULL);
 	}
-	if (AG_TblInit(t, nBuckets) == -1) {
+	if (AG_TblInit(t, nBuckets, flags) == -1) {
 		Free(t);
 		return (NULL);
 	}
@@ -47,11 +47,12 @@ AG_TblNew(Uint nBuckets)
 
 /* Initialize a table structure. */
 int
-AG_TblInit(AG_Tbl *tbl, Uint nBuckets)
+AG_TblInit(AG_Tbl *tbl, Uint nBuckets, Uint flags)
 {
 	Uint i;
 
 	tbl->nBuckets = nBuckets;
+	tbl->flags = flags;
 	if ((tbl->buckets = AG_TryMalloc(nBuckets*sizeof(AG_TblBucket))) == NULL) {
 		return (-1);
 	}
@@ -132,8 +133,7 @@ AG_TblInsertHash(AG_Tbl *tbl, Uint h, const char *key, const AG_Variable *V)
 		if (strcmp(buck->keys[i], key) == 0)
 			break;
 	}
-	if (i < buck->nEnts) {
-		/* TODO flag to allow duplicates */
+	if (!(tbl->flags & AG_TBL_DUPLICATES) && i < buck->nEnts) {
 		AG_SetError("Existing entry: %s", key);
 		return (-1);
 	}
