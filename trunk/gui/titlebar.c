@@ -151,8 +151,8 @@ Init(void *obj)
 	AG_LabelSizeHint(tbar->label, 1, "X");
 	AG_LabelSetPadding(tbar->label, 5,5,2,2);
 
-	AG_SetEvent(tbar, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(tbar, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(tbar, "flags", &tbar->flags);

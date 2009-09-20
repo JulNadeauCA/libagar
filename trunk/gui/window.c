@@ -1193,11 +1193,20 @@ scan:
 					}
 					AG_PostEvent(NULL, wFoc,
 					    (ev->type == SDL_KEYUP) ?
-					    "window-keyup" : "window-keydown",
-					    "%i, %i, %i",
+					    "key-up" : "key-down",
+					    "%i(key),%i(mod),%i(unicode)",
 					    (int)ev->key.keysym.sym,
 					    (int)ev->key.keysym.mod,
 					    (int)ev->key.keysym.unicode);
+#ifdef AG_LEGACY
+					AG_PostEvent(NULL, wFoc,
+					    (ev->type == SDL_KEYUP) ?
+					    "window-keyup" : "window-keydown",
+					    "%i,%i,%i",
+					    (int)ev->key.keysym.sym,
+					    (int)ev->key.keysym.mod,
+					    (int)ev->key.keysym.unicode);
+#endif
 					/*
 					 * Ensure the keyup event is posted to
 					 * this window when the key is released,
@@ -1553,9 +1562,9 @@ AG_WindowMinimize(AG_Window *win)
 	icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
 
 	AG_SetEvent(icon, "dblclick-expire", DoubleClickTimeout, NULL);
-	AG_SetEvent(icon, "window-mousemotion", IconMotion, NULL);
-	AG_SetEvent(icon, "window-mousebuttonup", IconButtonUp, NULL);
-	AG_SetEvent(icon, "window-mousebuttondown", IconButtonDown, "%p", win);
+	AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
+	AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
+	AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
 
 	if (icon->xSaved != -1) {
 		AG_WindowShow(wDND);

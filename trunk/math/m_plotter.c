@@ -383,10 +383,10 @@ Init(void *obj)
 	AG_SetInt(ptr->hbar, "min", 0);
 	AG_SetInt(ptr->vbar, "min", 0);
 
-	AG_SetEvent(ptr, "window-keydown", keydown, NULL);
-	AG_SetEvent(ptr, "window-mousebuttondown", mousebuttondown, NULL);
-/*	AG_SetEvent(ptr, "window-mousebuttonup", mousebuttonup, NULL); */
-	AG_SetEvent(ptr, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(ptr, "key-down", keydown, NULL);
+	AG_SetEvent(ptr, "mouse-button-down", mousebuttondown, NULL);
+/*	AG_SetEvent(ptr, "mouse-button-up", mousebuttonup, NULL); */
+	AG_SetEvent(ptr, "mouse-motion", mousemotion, NULL);
 }
 
 static void

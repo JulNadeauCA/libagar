@@ -257,7 +257,7 @@ Init(void *obj)
 	AG_WidgetSetFocusable(sbu->ydecbu, 0);
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
-	AG_SetEvent(sbu, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(sbu, "key-down", KeyDown, NULL);
 }
 
 static void

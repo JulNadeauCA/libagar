@@ -440,7 +440,7 @@ Init(void *obj)
 	tb->r = AG_RECT(0,0,0,0);
 	tb->rLbl = AG_RECT(0,0,0,0);
 
-	AG_SetEvent(tb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
 	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);

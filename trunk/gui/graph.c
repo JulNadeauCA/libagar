@@ -463,10 +463,10 @@ Init(void *obj)
 	AG_BindInt(gf->vbar, "visible", &WIDGET(gf)->h);
 #endif
 
-	AG_SetEvent(gf, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(gf, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(gf, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(gf, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(gf, "key-down", KeyDown, NULL);
+	AG_SetEvent(gf, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(gf, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(gf, "mouse-motion", MouseMotion, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(gf, "flags", &gf->flags);

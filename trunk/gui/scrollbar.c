@@ -438,7 +438,7 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
 	        sb->wButton;
-	int pos, posFound;
+	int pos = 0, posFound;
 
 	if (button != SDL_BUTTON_LEFT) {
 		return;
@@ -642,11 +642,11 @@ Init(void *obj)
 	sb->wButton = 16;
 	sb->hArrow = sb->wButton*5/9;
 
-	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(sb, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(sb, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(sb, "key-down", KeyDown, NULL);
+	AG_SetEvent(sb, "key-up", KeyUp, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sb, "bound", BoundValue, NULL);
@@ -741,13 +741,12 @@ static void
 Draw(void *obj)
 {
 	AG_Scrollbar *sb = obj;
-	int x, size;
+	int x = 0, size;
 
 	if (GetPosition(sb, &x) == 0) {
 		size = (sb->wBar == -1) ? sb->extent : sb->wBar;
 		if (size < 0) { size = 0; }
 	} else {
-		x = 0;
 		size = sb->extent + sb->wBar;
 	}
 	

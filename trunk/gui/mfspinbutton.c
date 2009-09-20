@@ -278,7 +278,7 @@ Init(void *obj)
 	AG_WidgetSetFocusable(fsu->ydecbu, 0);
 
 	AG_SetEvent(fsu, "bound", Bound, NULL);
-	AG_SetEvent(fsu, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
 	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);
 }

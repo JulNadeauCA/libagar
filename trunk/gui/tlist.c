@@ -275,9 +275,9 @@ Init(void *obj)
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
 	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
-	AG_SetEvent(tl, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(tl, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(tl, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(tl, "key-down", KeyDown, NULL);
+	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(tl, "widget-hidden", LostFocus, NULL);

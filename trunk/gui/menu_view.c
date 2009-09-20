@@ -258,8 +258,8 @@ Init(void *obj)
 	mview->tPad = 4;
 	mview->bPad = 4;
 
-	AG_SetEvent(mview, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(mview, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 
 	/* XXX wasteful */

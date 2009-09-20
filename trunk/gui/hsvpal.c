@@ -701,9 +701,9 @@ Init(void *obj)
 	pal->menu_win = NULL;
 	AG_WidgetMapSurface(pal, NULL);
 
-	AG_SetEvent(pal, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(pal, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(pal, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(pal, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(pal, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(pal, "mouse-motion", MouseMotion, NULL);
 	
 	AG_BindFloat(pal, "hue", &pal->h);
 	AG_BindFloat(pal, "saturation", &pal->s);

@@ -70,10 +70,10 @@ Init(void *obj)
 	fpl->yrange = 100;
 	TAILQ_INIT(&fpl->items);
 
-	AG_SetEvent(fpl, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(fpl, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(fpl, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(fpl, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(fpl, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(fpl, "key-down", KeyDown, NULL);
+	AG_SetEvent(fpl, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(fpl, "mouse-button-down", MouseButtonDown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(fpl, "type", &fpl->type);

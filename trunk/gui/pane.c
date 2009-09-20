@@ -201,9 +201,9 @@ Init(void *obj)
 		pa->hReq[i] = -1;
 	}
 
-	AG_SetEvent(pa, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(pa, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(pa, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(pa, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(pa, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindInt(pa, "flags", &pa->flags);

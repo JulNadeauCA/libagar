@@ -73,9 +73,9 @@ Init(void *obj)
 	AG_BindInt(cons->vBar, "max", &cons->nLines);
 	AG_BindInt(cons->vBar, "visible", &cons->rVisible);
 
-	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(cons, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(cons, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(cons, "key-up", KeyUp, NULL);
+	AG_SetEvent(cons, "key-down", KeyDown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(cons, "flags", &cons->flags);

@@ -1160,11 +1160,11 @@ Init(void *obj)
 	ed->ucsLen = 0;
 	ed->r = AG_RECT(0,0,0,0);
 
-	AG_SetEvent(ed, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(ed, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(ed, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(ed, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(ed, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(ed, "key-down", KeyDown, NULL);
+	AG_SetEvent(ed, "key-up", KeyUp, NULL);
+	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(ed, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(ed, "widget-hidden", LostFocus, NULL);

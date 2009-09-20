@@ -650,11 +650,11 @@ Init(void *obj)
 	sl->rInc = 1.0;	
 	sl->iInc = 1;
 
-	AG_SetEvent(sl, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(sl, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(sl, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(sl, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(sl, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(sl, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(sl, "key-down", KeyDown, NULL);
+	AG_SetEvent(sl, "key-up", KeyUp, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sl, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sl, "bound", BoundValue, NULL);

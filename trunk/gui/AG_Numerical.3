@@ -255,7 +255,7 @@ The
 .Nm
 widget reacts to the following events:
 .Pp
-.Bl -tag -compact -width "window-mousebuttondown "
+.Bl -tag -compact -width "mouse-button-down "
 .It bound
 A new binding has been configured, so we set the maximum possible range that
 the new binding's data type can accomodate (we set an initial value for the
@@ -263,13 +263,13 @@ the new binding's data type can accomodate (we set an initial value for the
 and
 .Va max
 bindings).
-.It window-keydown
+.It key-down
 Increment or decrement the value if
 .Dv SDLK_UP
 or
 .Dv SDLK_DOWN
 is pressed.
-.It window-mousebuttondown
+.It mouse-button-down
 Increment or decrement the value in response to mouse wheel events.
 .El
 .Pp

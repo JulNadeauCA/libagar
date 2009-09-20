@@ -201,7 +201,7 @@ Init(void *obj)
 	AG_ButtonDisable(av->btns.pause);
 	AG_ButtonDisable(av->btns.stop);
 	
-	AG_SetEvent(av, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(av, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 void
