@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,14 +88,13 @@ MouseMotion(AG_Event *event)
 		vv->y += (float)yRel;
 		return;
 	}
+	if (vv->vg == NULL)
+		return;
 
 	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
 	x = vCt.x;
 	y = vCt.y;
 
-	if (vv->vg == NULL) {
-		return;
-	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
 		if (!(tool->ops->flags & VG_MOUSEMOTION_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
@@ -124,7 +123,11 @@ MouseButtonDown(AG_Event *event)
 	int yCurs = AG_INT(3);
 	float x, y;
 	VG_Vector vCt;
-
+	
+	if (vv->vg == NULL ||
+	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONDOWN, button, xCurs, yCurs) == 1)
+		return;
+	
 	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
 	x = vCt.x;
 	y = vCt.y;
@@ -132,29 +135,7 @@ MouseButtonDown(AG_Event *event)
 	AG_WidgetFocus(vv);
 	vv->mouse.x = x;
 	vv->mouse.y = y;
-	switch (button) {
-	case SDL_BUTTON_MIDDLE:
-		vv->mouse.panning = 1;
-		break;
-	case SDL_BUTTON_WHEELDOWN:
-		if (vv->scaleIdx-1 >= 0) {
-			VG_ViewSetScale(vv, --vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
-		}
-		return;
-	case SDL_BUTTON_WHEELUP:
-		if (vv->scaleIdx+1 < nScaleFactors) {
-			VG_ViewSetScale(vv, ++vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
-		}
-		return;
-	default:
-		break;
-	}
-	
-	if (vv->vg == NULL) {
-		return;
-	}
+
 	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
 		if (!(tool->ops->flags & VG_BUTTONDOWN_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
@@ -178,26 +159,20 @@ MouseButtonUp(AG_Event *event)
 	float x, y;
 	VG_Vector vCt;
 	
-	if (vv->vg == NULL)
+	if (vv->vg == NULL ||
+	    AG_ExecMouseAction(vv, AG_ACTION_ON_BUTTONUP, button, xCurs, yCurs) == 1)
 		return;
 	
 	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
 	x = vCt.x;
 	y = vCt.y;
-
+	
 	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
 		if (!(tool->ops->flags & VG_BUTTONUP_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
 		}
 		if (tool->ops->mousebuttonup(tool, vCt, button) == 1)
 			return;
-	}
-	switch (button) {
-	case SDL_BUTTON_MIDDLE:
-		vv->mouse.panning = 0;
-		return;
-	default:
-		break;
 	}
 	if (vv->btnup_ev != NULL)
 		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f",
@@ -209,26 +184,28 @@ KeyDown(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
 	int unicode = AG_INT(3);
 	VG_ToolCommand *cmd;
 	
-	if (vv->vg == NULL || tool == NULL)
+	if (vv->vg == NULL)
 		return;
-	
+	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYDOWN, sym, mod))
+		return;
+
+	if (tool == NULL) {
+		return;
+	}
 	if (tool->ops->keydown != NULL &&
-	    tool->ops->keydown(tool, keysym, keymod, unicode) == 1) {
+	    tool->ops->keydown(tool, sym, mod, unicode) == 1) {
 		return;
 	}
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
-		if (cmd->kSym == keysym &&
-		    (cmd->kMod == KMOD_NONE || keymod & cmd->kMod)) {
-			Debug(tool->vgv, "%s: KBD: <%s>\n", tool->ops->name, cmd->name);
+		if (cmd->kSym == sym &&
+		    (cmd->kMod == KMOD_NONE || mod & cmd->kMod))
 			AG_PostEvent(NULL, tool->vgv, cmd->fn->name, "%p", tool);
-		}
 	}
-	/* TODO panning, etc... */
 }
 
 static void
@@ -236,18 +213,19 @@ KeyUp(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
 	int unicode = AG_INT(3);
 	
 	if (vv->vg == NULL)
 		return;
+	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYUP, sym, mod))
+		return;
 	
-	if (tool != NULL && tool->ops->keyup != NULL) {
-		if (tool->ops->keyup(tool, keysym, keymod, unicode) == 1)
-			return;
+	if (tool != NULL &&
+	    tool->ops->keyup != NULL) {
+		tool->ops->keyup(tool, sym, mod, unicode);
 	}
-	/* TODO panning, etc... */
 }
 
 static void
@@ -275,6 +253,44 @@ UpdateGridIntervals(VG_View *vv)
 			grid->flags &= ~(VG_GRID_UNDERSIZE);
 		}
 	}
+}
+
+static void
+ZoomInOut(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+	int inc = AG_INT(1);
+		
+	VG_ViewSetScalePreset(vv, (vv->scaleIdx += inc));
+	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+}
+
+static void
+ZoomInMax(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+		
+	VG_ViewSetScalePreset(vv, nScaleFactors-1);
+	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+}
+
+static void
+ZoomOutMax(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+		
+	VG_ViewSetScalePreset(vv, 0);
+	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+}
+
+static void
+SetScale(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+	int n = AG_INT(1);
+		
+	VG_ViewSetScalePreset(vv, n);
+	VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
 }
 
 static void
@@ -318,11 +334,31 @@ Init(void *obj)
 	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
 	VG_ViewSetScale(vv, 0);
 
-	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(vv, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(vv, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(vv, "window-keyup", KeyUp, NULL);
+	AG_ActionSetInt(vv, "Enable panning",	&vv->mouse.panning, 1);
+	AG_ActionSetInt(vv, "Disable panning",	&vv->mouse.panning, 0);
+	AG_ActionFn(vv, "Zoom in",		ZoomInOut, "%i", 1);
+	AG_ActionFn(vv, "Zoom out",		ZoomInOut, "%i", -1);
+	AG_ActionFn(vv, "Zoom in maximum",	ZoomInMax, NULL);
+	AG_ActionFn(vv, "Zoom out maximum",	ZoomOutMax, NULL);
+	AG_ActionFn(vv, "Scale 1:1",		SetScale, "%i", 0);
+	AG_ActionFn(vv, "Scale 1:2",		SetScale, "%i", 1);
+	AG_ActionFn(vv, "Scale 1:3",		SetScale, "%i", 2);
+	AG_ActionFn(vv, "Scale 1:9",		SetScale, "%i", 8);
+
+	AG_ActionOnButtonDown(vv, AG_MOUSE_MIDDLE,		"Enable panning");
+	AG_ActionOnButtonUp(vv,	  AG_MOUSE_MIDDLE,		"Disable panning");
+	AG_ActionOnButton(vv,     AG_MOUSE_WHEELUP,		"Zoom in");
+	AG_ActionOnButton(vv,     AG_MOUSE_WHEELDOWN,		"Zoom out");
+	AG_ActionOnKeyDown(vv,    AG_KEY_1, AG_KEYMOD_ANY,	"Scale 1:1");
+	AG_ActionOnKeyDown(vv,    AG_KEY_2, AG_KEYMOD_ANY,	"Scale 1:2");
+	AG_ActionOnKeyDown(vv,    AG_KEY_3, AG_KEYMOD_ANY,	"Scale 1:3");
+	AG_ActionOnKeyDown(vv,    AG_KEY_9, AG_KEYMOD_ANY,	"Scale 1:9");
+
+	AG_SetEvent(vv, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(vv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(vv, "key-down", KeyDown, NULL);
+	AG_SetEvent(vv, "key-up", KeyUp, NULL);
 	AG_SetEvent(vv, "widget-shown", OnShow, NULL);
 
 #ifdef AG_DEBUG
@@ -437,7 +473,7 @@ void
 VG_ViewKeydownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->keydown_ev = AG_SetEvent(vv, "window-keydown", fn, NULL);
+	vv->keydown_ev = AG_SetEvent(vv, "key-down", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->keydown_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -447,7 +483,7 @@ void
 VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->keyup_ev = AG_SetEvent(vv, "window-keyup", fn, NULL);
+	vv->keyup_ev = AG_SetEvent(vv, "key-up", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->keyup_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -467,7 +503,7 @@ void
 VG_ViewButtonupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->btnup_ev = AG_SetEvent(vv, "window-mousebuttonup", fn, NULL);
+	vv->btnup_ev = AG_SetEvent(vv, "mouse-button-up", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btnup_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -477,7 +513,7 @@ void
 VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->motion_ev = AG_SetEvent(vv, "window-mousemotion", fn, NULL);
+	vv->motion_ev = AG_SetEvent(vv, "mouse-motion", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->motion_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
