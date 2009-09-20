@@ -204,19 +204,19 @@ Widget is allowed to grab the focus.
 
 =item B<unfocusedMotion>
 
-Always receive C<window-mousemotion> events, even when out of focus.
+Always receive C<mouse-motion> events, even when out of focus.
 
 =item B<unfocusedButtonUp>
 
-Always receive C<window-mousebuttonup> events, even when out of focus.
+Always receive C<mouse-button-up> events, even when out of focus.
 
 =item B<unfocusedButtonDown>
 
-Always receive C<window-mousebuttondown> events, even when out of focus.
+Always receive C<mouse-button-down> events, even when out of focus.
 
 =item B<catchTab>
 
-Tab key generates ordinary C<window-keyup> and C<window-keydown> events
+Tab key generates ordinary C<key-up> and C<key-down> events
 instead of moving the focus between child widgets.
 
 =item B<noSpacing>
