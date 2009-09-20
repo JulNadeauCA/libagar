@@ -4,6 +4,8 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_vg
+LIB_MAJOR=	1
+LIB_MINOR=	4
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"6d009edb-c66a-46e8-a1dd-b6f653db6327"
