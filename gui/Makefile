@@ -5,6 +5,8 @@ include ${TOP}/core/Makefile.inc
 SUBDIR=	fonts
 
 LIB=		ag_gui
+LIB_MAJOR=	1
+LIB_MINOR=	4
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
@@ -21,7 +23,7 @@ SRCS=	gui.c view.c widget.c window.c style.c style_default.c iconmgr.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
 	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
-	time_sdl.c debugger.c surface.c perfmon.c
+	time_sdl.c debugger.c surface.c perfmon.c widget_legacy.c
 
 MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \
@@ -33,7 +35,7 @@ MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Separator.3 AG_Numerical.3 AG_Style.3 AG_ProgressBar.3 \
 	AG_Editable.3 AG_Slider.3 AG_Surface.3 AG_Scrollview.3 AG_Rect.3 \
 	AG_Titlebar.3 AG_FontSelector.3 AG_Treetbl.3 AG_GuiDebugger.3 \
-	AG_WidgetPrimitives.3
+	AG_WidgetPrimitives.3 AG_EventLoop.3
 
 CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} \
 	${X11_CFLAGS} ${JPEG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
