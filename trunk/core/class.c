@@ -78,7 +78,7 @@ AG_InitClassTbl(void)
 	agClassTree = &agObjectClass;
 
 	/* Initialize the class table. */
-	agClassTbl = AG_TblNew(256);
+	agClassTbl = AG_TblNew(256, 0);
 	AG_InitPointer(&V, &agObjectClass);
 	if (AG_TblInsert(agClassTbl, "AG_Object", &V) == -1)
 		AG_FatalError(NULL);
