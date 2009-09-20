@@ -592,7 +592,7 @@ Init(void *obj)
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
-	AG_SetEvent(num, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(num, "key-down", KeyDown, NULL);
 	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(num, "bound", Bound, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);

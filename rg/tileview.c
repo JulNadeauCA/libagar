@@ -782,11 +782,11 @@ Init(void *obj)
 
 	AG_SetTimeout(&tv->redraw_to, RedrawTimeout, NULL, 0);
 	
-	AG_SetEvent(tv, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(tv, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(tv, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(tv, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(tv, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(tv, "key-down", KeyDown, NULL);
+	AG_SetEvent(tv, "key-up", KeyUp, NULL);
+	AG_SetEvent(tv, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(tv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(tv, "mouse-motion", MouseMotion, NULL);
 }
 
 #define INSERT_VALUE(vt,memb, type,arg) do {			\

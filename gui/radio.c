@@ -387,9 +387,9 @@ Init(void *obj)
 	rad->nItems = 0;
 	rad->r = AG_RECT(0,0,0,0);
 
-	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(rad, "key-down", KeyDown, NULL);
+	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);
 
 	AG_BindInt(rad, "value", &rad->value);
 #ifdef AG_DEBUG

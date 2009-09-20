@@ -2034,11 +2034,11 @@ Init(void *obj)
 	t->wheelTicks = 0;
 	SLIST_INIT(&t->popups);
 	
-	AG_SetEvent(t, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(t, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(t, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(t, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(t, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(t, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(t, "key-down", KeyDown, NULL);
+	AG_SetEvent(t, "key-up", KeyUp, NULL);
 	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(t, "detached", LostFocus, NULL);

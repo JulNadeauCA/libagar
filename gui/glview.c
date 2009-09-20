@@ -103,7 +103,7 @@ Init(void *obj)
 	glv->motion_ev = NULL;
 
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
-	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(glv, "mouse-button-down", mousebuttondown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(glv, "flags", &glv->flags);
@@ -152,7 +152,7 @@ void
 AG_GLViewKeydownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(glv);
-	glv->keydown_ev = AG_SetEvent(glv, "window-keydown", fn, NULL);
+	glv->keydown_ev = AG_SetEvent(glv, "key-down", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
 	AG_ObjectUnlock(glv);
 }
@@ -161,7 +161,7 @@ void
 AG_GLViewKeyupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(glv);
-	glv->keyup_ev = AG_SetEvent(glv, "window-keyup", fn, NULL);
+	glv->keyup_ev = AG_SetEvent(glv, "key-up", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
 	AG_ObjectUnlock(glv);
 }
@@ -170,7 +170,7 @@ void
 AG_GLViewButtondownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(glv);
-	glv->btndown_ev = AG_SetEvent(glv, "window-mousebuttondown", fn, NULL);
+	glv->btndown_ev = AG_SetEvent(glv, "mouse-button-down", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
 	AG_ObjectUnlock(glv);
 }
@@ -179,7 +179,7 @@ void
 AG_GLViewButtonupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(glv);
-	glv->btnup_ev = AG_SetEvent(glv, "window-mousebuttonup", fn, NULL);
+	glv->btnup_ev = AG_SetEvent(glv, "mouse-button-up", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
 	AG_ObjectUnlock(glv);
 }
@@ -188,7 +188,7 @@ void
 AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(glv);
-	glv->motion_ev = AG_SetEvent(glv, "window-mousemotion", fn, NULL);
+	glv->motion_ev = AG_SetEvent(glv, "mouse-motion", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
 	AG_ObjectUnlock(glv);
 }

@@ -133,8 +133,8 @@ Init(void *obj)
 
 	AG_TextSize("-00", &mv->wEnt, &mv->hEnt);
 
-	AG_SetEvent(mv, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(mv, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(mv, "key-down", KeyDown, NULL);
+	AG_SetEvent(mv, "mouse-button-down", MouseButtonDown, NULL);
 }
 
 static void

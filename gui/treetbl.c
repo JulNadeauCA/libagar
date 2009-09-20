@@ -500,8 +500,8 @@ Init(void *obj)
 	tt->hHint = tt->hCol + (tt->hRow * 4);
 
 	/* private, internal events */
-	AG_SetEvent(tt, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(tt, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 	AG_SetEvent(tt, "dblclick-expire", ExpireDoubleClick, NULL);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);

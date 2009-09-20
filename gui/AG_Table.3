@@ -473,10 +473,10 @@ The
 .Nm
 widget reacts to the following events:
 .Pp
-.Bl -tag -compact -width "window-mousebuttondown"
-.It window-mousemotion
+.Bl -tag -compact -width "mouse-button-down"
+.It mouse-motion
 Process resizing actions in progress.
-.It window-keydown
+.It key-down
 By default,
 .Dv SDLK_UP ,
 .Dv SDLK_DOWN ,
@@ -484,9 +484,9 @@ By default,
 and
 .Dv SDLK_PAGEDOWN
 will move the current single-row selection.
-.It window-mousebuttonup
+.It mouse-button-up
 Stop any resizing action in progress.
-.It window-mousebuttondown
+.It mouse-button-down
 .Dv SDL_BUTTON_LEFT
 selects the overlapping column, row or cell.
 .Dv SDL_BUTTON_RIGHT

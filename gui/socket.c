@@ -105,9 +105,9 @@ Init(void *obj)
 	sock->removeFn = NULL;
 	sock->overlayFn = NULL;
 
-	AG_SetEvent(sock, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(sock, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(sock, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(sock, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(sock, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(sock, "mouse-motion", MouseMotion, NULL);
 	
 	AG_BindInt(sock, "state", &sock->state);
 	AG_BindInt(sock, "count", &sock->count);
@@ -418,8 +418,8 @@ MouseButtonDown(AG_Event *event)
 		AG_ObjectLock(px);
 		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 		                     AG_WIDGET_UNFOCUSED_BUTTONUP;
-		AG_SetEvent(px, "window-mousemotion", IconMotion,"%p",icon);
-		AG_SetEvent(px, "window-mousebuttonup", IconButtonUp,"%p",icon);
+		AG_SetEvent(px, "mouse-motion", IconMotion,"%p",icon);
+		AG_SetEvent(px, "mouse-button-up", IconButtonUp,"%p",icon);
 		AG_ObjectUnlock(px);
 
 		AG_WindowSetGeometry(icon->wDND,

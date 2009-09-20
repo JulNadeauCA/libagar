@@ -202,11 +202,11 @@ Init(void *obj)
 	AG_SetTimeout(&bu->repeat_to, ExpireRepeat, NULL, 0);
 	AG_SetTimeout(&bu->delay_to, ExpireDelay, NULL, 0);
 
-	AG_SetEvent(bu, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(bu, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(bu, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(bu, "window-keyup", keyup, NULL);
-	AG_SetEvent(bu, "window-keydown", keydown, NULL);
+	AG_SetEvent(bu, "mouse-button-up", mousebuttonup, NULL);
+	AG_SetEvent(bu, "mouse-button-down", mousebuttondown, NULL);
+	AG_SetEvent(bu, "mouse-motion", mousemotion, NULL);
+	AG_SetEvent(bu, "key-up", keyup, NULL);
+	AG_SetEvent(bu, "key-down", keydown, NULL);
 
 	AG_BindInt(bu, "state", &bu->state);
 #ifdef AG_DEBUG

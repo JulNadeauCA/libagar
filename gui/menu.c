@@ -385,11 +385,11 @@ Init(void *obj)
 	m->root = CreateItem(NULL, NULL, NULL);
 	m->root->pmenu = m;
 
-	AG_SetEvent(m, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 #if 0
-	AG_SetEvent(m, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(m, "mouse-button-up", MouseButtonUp, NULL);
 #endif
-	AG_SetEvent(m, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(m, "attached", Attached, NULL);
 
 #ifdef AG_DEBUG

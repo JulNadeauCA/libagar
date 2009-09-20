@@ -107,7 +107,7 @@ Init(void *obj)
 	TAILQ_INIT(&nb->tabs);
 	
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
-	AG_SetEvent(nb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(nb, "widget-shown", Shown, NULL);
 
 #ifdef AG_DEBUG

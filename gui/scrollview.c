@@ -203,10 +203,9 @@ AG_ScrollviewNew(void *parent, Uint flags)
 
 	if (flags & AG_SCROLLVIEW_BY_MOUSE) {
 		WIDGET(sv)->flags |= AG_WIDGET_FOCUSABLE;
-		AG_SetEvent(sv, "window-mousebuttondown", MouseButtonDown,
-		    NULL);
-		AG_SetEvent(sv, "window-mousebuttonup", MouseButtonUp, NULL);
-		AG_SetEvent(sv, "window-mousemotion", MouseMotion, NULL);
+		AG_SetEvent(sv, "mouse-button-down", MouseButtonDown, NULL);
+		AG_SetEvent(sv, "mouse-button-up", MouseButtonUp, NULL);
+		AG_SetEvent(sv, "mouse-motion", MouseMotion, NULL);
 	}
 	AG_ScrollviewSetIncrement(sv, 10);
 	AG_ObjectAttach(parent, sv);

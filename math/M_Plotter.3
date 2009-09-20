@@ -329,8 +329,8 @@ The
 .Nm
 widget reacts to the following events:
 .Pp
-.Bl -tag -compact -width "window-mousebuttondown "
-.It window-keydown
+.Bl -tag -compact -width "mouse-button-down "
+.It key-down
 Default hotkeys:
 .Dv SDLK_0
 and
@@ -340,8 +340,8 @@ reset scaling factor to 100%.
 increases and
 .Dv SDLK_MINUS
 decreases the scaling factor.
-.It window-mousebuttondown
-.It window-mousemotion
+.It mouse-button-down
+.It mouse-motion
 Select plots, select/drag labels, trigger contextual menus.
 Mouse wheel controls scaling factor of currently selected plots.
 .El
