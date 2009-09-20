@@ -207,11 +207,11 @@ Init(void *obj)
 	 *
 	 * Here we register handlers for the common AG_Window(3) events.
 	 */
-	AG_SetEvent(my, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(my, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(my, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(my, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(my, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(my, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(my, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(my, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(my, "key-up", KeyUp, NULL);
+	AG_SetEvent(my, "key-down", KeyDown, NULL);
 }
 
 /*

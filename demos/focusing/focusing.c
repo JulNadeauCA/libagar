@@ -93,9 +93,9 @@ TestUnfocusedMouseMotion(void)
 	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 	AG_FixedMove(fx1, fx2, 64, 16);
 	AG_FixedSize(fx1, fx2, 200, 140);
-	AG_SetEvent(fx2, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(fx2, "window-keydown", keydown, NULL);
-	AG_SetEvent(fx2, "window-mousebuttondown", buttondown, NULL);
+	AG_SetEvent(fx2, "mouse-motion", mousemotion, NULL);
+	AG_SetEvent(fx2, "key-down", keydown, NULL);
+	AG_SetEvent(fx2, "mouse-button-down", buttondown, NULL);
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win, 0, 0, 320, 240);

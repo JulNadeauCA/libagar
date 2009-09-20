@@ -41,8 +41,8 @@ CreateWindow(void)
 	 * events of the Window object. Note that we could have used
 	 * any other object derived from the Widget class.
 	 */
-	AG_SetEvent(win, "window-keydown", MyKeyboardHandler, NULL);
-	AG_SetEvent(win, "window-keyup", MyKeyboardHandler, NULL);
+	AG_SetEvent(win, "key-down", MyKeyboardHandler, NULL);
+	AG_SetEvent(win, "key-up", MyKeyboardHandler, NULL);
 	
 	/*
 	 * Enable reception of keydown/keyup events by the window, regardless
