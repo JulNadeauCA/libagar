@@ -21,13 +21,13 @@ begin
   -- attach keydown handler function
   gui_event.set
     (object  => gui_widget.object (gui_window.widget (demo.window)),
-     name    => "window-keydown",
+     name    => "key-down",
      handler => keyevent_callbacks.keydown'access);
 
   -- attach keyup handler function
   gui_event.set
     (object  => gui_widget.object (gui_window.widget (demo.window)),
-     name    => "window-keyup",
+     name    => "key-up",
      handler => keyevent_callbacks.keyup'access);
 
   -- quit when closing window
