@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Implementation of the AG_Widget(3) object.
+ */
+
 #include "opengl.h"
 
 #include <core/core.h>
@@ -108,9 +112,7 @@ OnDetach(AG_Event *event)
 }
 
 #ifdef AG_LEGACY
-/*
- * Forward object-level `bound' event to `widget-bound'.
- */
+/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
 static void
 Bound(AG_Event *event)
 {
@@ -149,12 +151,268 @@ Init(void *obj)
 	wid->textureGC = NULL;
 	wid->nTextureGC = 0;
 #endif
+	AG_TblInit(&wid->actions, 32, 0);
+	wid->mouseActions = NULL;
+	wid->nMouseActions = 0;
+	wid->keyActions = NULL;
+	wid->nKeyActions = 0;
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
 #ifdef AG_LEGACY
+	/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
 	AG_SetEvent(wid, "bound", Bound, NULL);
 #endif
+}
+
+/* Tie an action to a mouse-button-down event. */
+void
+AG_ActionOnButtonDown(void *obj, int button, const char *action)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+
+	wid->mouseActions = Realloc(wid->mouseActions, (wid->nMouseActions+1)*
+	                                               sizeof(AG_ActionTie));
+	at = &wid->mouseActions[wid->nMouseActions++];
+	at->type = AG_ACTION_ON_BUTTONDOWN;
+	at->data.button = (AG_MouseButton)button;
+	Strlcpy(at->action, action, sizeof(at->action));
+}
+
+/* Tie an action to a mouse-button-up event. */
+void
+AG_ActionOnButtonUp(void *obj, int button, const char *action)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+
+	wid->mouseActions = Realloc(wid->mouseActions, (wid->nMouseActions+1)*
+	                                               sizeof(AG_ActionTie));
+	at = &wid->mouseActions[wid->nMouseActions++];
+	at->type = AG_ACTION_ON_BUTTONUP;
+	at->data.button = (AG_MouseButton)button;
+	Strlcpy(at->action, action, sizeof(at->action));
+}
+
+/* Tie an action to a key-down event. */
+void
+AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+
+	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
+	                                           sizeof(AG_ActionTie));
+	at = &wid->keyActions[wid->nKeyActions++];
+	at->type = AG_ACTION_ON_KEYDOWN;
+	at->data.key.sym = sym;
+	at->data.key.mod = mod;
+	Strlcpy(at->action, action, sizeof(at->action));
+}
+
+/* Tie an action to a key-up event. */
+void
+AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+
+	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
+	                                           sizeof(AG_ActionTie));
+	at = &wid->keyActions[wid->nKeyActions++];
+	at->type = AG_ACTION_ON_KEYUP;
+	at->data.key.sym = sym;
+	at->data.key.mod = mod;
+	Strlcpy(at->action, action, sizeof(at->action));
+}
+
+/* Configure a widget action. */
+AG_Action *
+AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
+{
+	AG_Widget *w = obj;
+	AG_Action *a;
+
+	AG_ObjectLock(w);
+	a = Malloc(sizeof(AG_Action));
+	a->type = AG_ACTION_FN;
+	a->widget = w;
+	a->fn = AG_SetEvent(w, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(a->fn, fnArgs);
+	AG_TblInsertPointer(&w->actions, name, a);
+	AG_ObjectUnlock(w);
+	return (a);
+}
+
+/* Configure a widget action for setting an integer flag. */
+AG_Action *
+AG_ActionSetInt(void *obj, const char *name, int *p, int val)
+{
+	AG_Widget *w = obj;
+	AG_Action *a;
+
+	AG_ObjectLock(w);
+	a = Malloc(sizeof(AG_Action));
+	a->type = AG_ACTION_SET_INT;
+	a->p = (void *)p;
+	a->val = val;
+	AG_TblInsertPointer(&w->actions, name, a);
+	AG_ObjectUnlock(w);
+	return (a);
+}
+
+/* Configure a widget action for toggling an integer flag. */
+AG_Action *
+AG_ActionToggleInt(void *obj, const char *name, int *p)
+{
+	AG_Widget *w = obj;
+	AG_Action *a;
+
+	AG_ObjectLock(w);
+	a = Malloc(sizeof(AG_Action));
+	a->type = AG_ACTION_TOGGLE_INT;
+	a->p = (void *)p;
+	AG_TblInsertPointer(&w->actions, name, a);
+	AG_ObjectUnlock(w);
+	return (a);
+}
+
+/* Configure a widget action for setting bitwise flags. */
+AG_Action *
+AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
+{
+	AG_Widget *w = obj;
+	AG_Action *a;
+
+	AG_ObjectLock(w);
+	a = Malloc(sizeof(AG_Action));
+	a->type = AG_ACTION_SET_INT;
+	a->p = (void *)p;
+	a->bitmask = bitmask;
+	a->val = val;
+	AG_TblInsertPointer(&w->actions, name, a);
+	AG_ObjectUnlock(w);
+	return (a);
+}
+
+/* Configure a widget action for toggling bitwise flags. */
+AG_Action *
+AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
+{
+	AG_Widget *w = obj;
+	AG_Action *a;
+
+	AG_ObjectLock(w);
+	a = Malloc(sizeof(AG_Action));
+	a->type = AG_ACTION_TOGGLE_FLAG;
+	a->p = (void *)p;
+	a->bitmask = bitmask;
+	AG_TblInsertPointer(&w->actions, name, a);
+	AG_ObjectUnlock(w);
+	return (a);
+}
+
+/* Execute an action (usually called internally from AG_ExecFooAction()) */
+int
+AG_ExecAction(void *obj, AG_Action *a)
+{
+	switch (a->type) {
+	case AG_ACTION_FN:
+		if (a->fn != NULL) {
+			AG_ExecEventFn(obj, a->fn);
+			return (1);
+		}
+		return (0);
+	case AG_ACTION_SET_INT:
+		*(int *)a->p = a->val;
+		return (1);
+	case AG_ACTION_TOGGLE_INT:
+		*(int *)a->p = !(*(int *)a->p);
+		return (1);
+	case AG_ACTION_SET_FLAG:
+		if (a->val) {
+			*(Uint *)a->p |= a->bitmask;
+		} else {
+			*(Uint *)a->p &= ~(a->bitmask);
+		}
+		return (1);
+	case AG_ACTION_TOGGLE_FLAG:
+		if (*(Uint *)a->p & a->bitmask) {
+			*(Uint *)a->p &= ~(a->bitmask);
+		} else {
+			*(Uint *)a->p |= a->bitmask;
+		}
+		return (1);
+	}
+	return (0);
+}
+
+/* Run any action tied to a mouse-button-down event. */
+int
+AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
+    int xCurs, int yCurs)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+	AG_Action *a;
+	Uint i;
+
+#ifdef AG_DEBUG
+	if (et != AG_ACTION_ON_BUTTONDOWN &&
+	    et != AG_ACTION_ON_BUTTONUP)
+		AG_FatalError("Invalid type arg to AG_ExecMouseAction()");
+#endif
+	for (i = 0; i < wid->nMouseActions; i++) {
+		at = &wid->mouseActions[i];
+		if (at->type == et &&
+		    ((button == at->data.button) ||
+		     (at->data.button == AG_MOUSE_ANY)))
+			break;
+	}
+	if (i == wid->nMouseActions) {
+		return (0);
+	}
+	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	    a == NULL) {
+		return (0);
+	}
+	return AG_ExecAction(wid, a);
+}
+
+/* Run any action tied to a key-down event. */
+int
+AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+	AG_Action *a;
+	Uint i;
+
+#ifdef AG_DEBUG
+	if (et != AG_ACTION_ON_KEYDOWN &&
+	    et != AG_ACTION_ON_KEYUP)
+		AG_FatalError("Invalid type arg to AG_ExecKeyAction()");
+#endif
+	for (i = 0; i < wid->nKeyActions; i++) {
+		at = &wid->keyActions[i];
+		if (at->type != et) {
+			continue;
+		}
+		if ((at->data.key.mod == AG_KEYMOD_ANY ||
+		     at->data.key.mod == mod) &&
+		    (at->data.key.sym == AG_KEY_ANY ||
+		     at->data.key.sym == sym))
+			break;
+	}
+	if (i == wid->nKeyActions) {
+		return (0);
+	}
+	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	    a == NULL) {
+		return (0);
+	}
+	return AG_ExecAction(wid, a);
 }
 
 /* Traverse the widget tree using a pathname. */
@@ -237,6 +495,10 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 /*
  * Find a widget by name. Return value is only valid as long as the
  * View VFS is locked.
+ *
+ * This works differently than the general AG_ObjectFind() routine in
+ * that the search may include widgets not effectively attached to the
+ * View VFS, such as widgets attached to AG_Notebook(3) tabs.
  */
 void *
 AG_WidgetFind(AG_Display *view, const char *name)
@@ -283,430 +545,6 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 	}
 	AG_ObjectUnlock(wid);
 }
-
-#ifdef AG_LEGACY
-/*
- * Duplicate a widget binding.
- * LEGACY Interface.
- */
-int
-AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
-{
-	AG_Variable *Vdst;
-
-	if ((Vdst = AG_GetVariable(wDst, nDst, NULL)) == NULL) {
-		return (-1);
-	}
-	Vdst->type = Vsrc->type;
-	Vdst->mutex = Vsrc->mutex;
-	Vdst->data.p = Vsrc->data.p;
-
-	switch (Vdst->type) {
-	case AG_VARIABLE_P_FLAG:
-	case AG_VARIABLE_P_FLAG8:
-	case AG_VARIABLE_P_FLAG16:
-	case AG_VARIABLE_P_FLAG32:
-		Vdst->info.bitmask = Vsrc->info.bitmask;
-		break;
-	default:
-		break;
-	}
-	if (AG_VARIABLE_TYPE(Vdst) == AG_VARIABLE_STRING) {
-		Vdst->info.size = Vsrc->info.size;
-	}
-
-	AG_PostEvent(NULL, wDst, "bound", "%p", Vdst);
-	AG_UnlockVariable(Vdst);
-	return (0);
-}
-
-/*
- * Bind a mutex-protected variable to a widget.
- * LEGACY Interface: new code should use AG_Variable(3).
- */
-AG_Variable *
-AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
-    enum ag_variable_type type, ...)
-{
-	AG_Widget *wid = obj;
-	AG_Variable *V;
-	va_list ap;
-	void *p = NULL;
-	Uint bitmask = 0;
-	size_t size = 0;
-	
-	AG_ObjectLock(wid);
-
-	va_start(ap, type);
-	switch (type) {
-	case AG_VARIABLE_P_FLAG:
-	case AG_VARIABLE_P_FLAG8:
-	case AG_VARIABLE_P_FLAG16:
-	case AG_VARIABLE_P_FLAG32:
-		p = va_arg(ap, void *);
-		bitmask = va_arg(ap, Uint);
-		break;
-	case AG_VARIABLE_STRING:
-	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_CONST_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
-		p = (void *)va_arg(ap, char *);
-		size = va_arg(ap, size_t);
-		break;
-	default:
-		p = va_arg(ap, void *);
-		break;
-	}
-	va_end(ap);
-	
-	switch (type) {
-	case AG_VARIABLE_P_INT:
-		V = AG_BindInt(wid, name, (int *)p);
-		break;
-	case AG_VARIABLE_P_UINT8:
-		V = AG_BindUint8(wid, name, (Uint8 *)p);
-		break;
-	case AG_VARIABLE_P_SINT8:
-		V = AG_BindSint8(wid, name, (Sint8 *)p);
-		break;
-	case AG_VARIABLE_P_UINT16:
-		V = AG_BindUint16(wid, name, (Uint16 *)p);
-		break;
-	case AG_VARIABLE_P_SINT16:
-		V = AG_BindSint16(wid, name, (Sint16 *)p);
-		break;
-	case AG_VARIABLE_P_UINT32:
-		V = AG_BindUint32(wid, name, (Uint32 *)p);
-		break;
-	case AG_VARIABLE_P_SINT32:
-		V = AG_BindSint32(wid, name, (Sint32 *)p);
-		break;
-	case AG_VARIABLE_P_FLOAT:
-		V = AG_BindFloat(wid, name, (float *)p);
-		break;
-	case AG_VARIABLE_P_DOUBLE:
-		V = AG_BindDouble(wid, name, (double *)p);
-		break;
-	case AG_VARIABLE_P_FLAG:
-		V = AG_BindFlag(wid, name, (Uint *)p, bitmask);
-		break;
-	case AG_VARIABLE_P_FLAG8:
-		V = AG_BindFlag8(wid, name, (Uint8 *)p, (Uint8)bitmask);
-		break;
-	case AG_VARIABLE_P_FLAG16:
-		V = AG_BindFlag16(wid, name, (Uint16 *)p, (Uint16)bitmask);
-		break;
-	case AG_VARIABLE_P_FLAG32:
-		V = AG_BindFlag32(wid, name, (Uint32 *)p, (Uint32)bitmask);
-		break;
-	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
-		V = AG_BindString(wid, name, (char *)p, size);
-		break;
-	default:
-		AG_ObjectUnlock(wid);
-		return (NULL);
-	}
-	V->mutex = mutex;
-
-	AG_ObjectUnlock(wid);
-	return (V);
-}
-
-/*
- * Bind a non mutex-protected variable to a widget.
- * LEGACY Interface: new code should use AG_Variable(3).
- */
-AG_Variable *
-AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V = NULL;	/* make compiler happy */
-	va_list ap;
-	Uint i;
-
-	AG_ObjectLock(obj);
-
-	for (i = 0; i < obj->nVars; i++) {
-		V = &obj->vars[i];
-		if (strcmp(obj->vars[i].name, name) == 0)
-			break;
-	}
-	if (i == obj->nVars) {			/* Create new binding */
-		obj->vars = Realloc(obj->vars,
-		    (obj->nVars+1)*sizeof(AG_Variable));
-		V = &obj->vars[obj->nVars++];
-		Strlcpy(V->name, name, sizeof(V->name));
-	}
-	V->type = type;
-	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
-	
-	va_start(ap, type);
-	switch (type) {
-	case AG_VARIABLE_P_FLAG:
-	case AG_VARIABLE_P_FLAG8:
-	case AG_VARIABLE_P_FLAG16:
-	case AG_VARIABLE_P_FLAG32:
-		V->data.p = va_arg(ap, void *);
-		V->info.bitmask = va_arg(ap, Uint);
-		break;
-	case AG_VARIABLE_STRING:
-	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_CONST_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
-		V->data.p = va_arg(ap, char *);
-		V->info.size = va_arg(ap, size_t);
-		break;
-	default:
-		V->data.p = va_arg(ap, void *);
-		V->info.bitmask = 0;
-		break;
-	}
-	va_end(ap);
-
-	AG_PostEvent(NULL, obj, "bound", "%p", V);
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-/*
- * LEGACY Interfaces: new code should use AG_Variable(3).
- */
-size_t
-AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
-{
-	AG_Variable *V;
-	char *s;
-	size_t rv;
-
-	if ((V = AG_GetVariable(wid, name, &s)) == NULL) {
-		AG_FatalError(NULL);
-	}
-	rv = Strlcpy(dst, s, dst_size);
-	AG_UnlockVariable(V);
-	return (rv);
-}
-int
-AG_WidgetInt(void *wid, const char *name)
-{
-	AG_Variable *b;
-	int *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Uint
-AG_WidgetUint(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Uint *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Uint8
-AG_WidgetUint8(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Uint8 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Sint8
-AG_WidgetSint8(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Sint8 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Uint16
-AG_WidgetUint16(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Uint16 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Sint16
-AG_WidgetSint16(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Sint16 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Uint32
-AG_WidgetUint32(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Uint32 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-Sint32
-AG_WidgetSint32(void *wid, const char *name)
-{
-	AG_Variable *b;
-	Sint32 *i, rv;
-	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	rv = *i;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-float
-AG_WidgetFloat(void *wid, const char *name)
-{
-	AG_Variable *b;
-	float *f, rv;
-	if ((b = AG_GetVariable(wid, name, &f)) == NULL) { AG_FatalError(NULL); }
-	rv = *f;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-double
-AG_WidgetDouble(void *wid, const char *name)
-{
-	AG_Variable *b;
-	double *d, rv;
-	if ((b = AG_GetVariable(wid, name, &d)) == NULL) { AG_FatalError(NULL); }
-	rv = *d;
-	AG_UnlockVariable(b);
-	return (rv);
-}
-char *
-AG_WidgetString(void *wid, const char *name)
-{
-	AG_Variable *b;
-	char *s, *sd;
-	if ((b = AG_GetVariable(wid, name, &s)) == NULL) { AG_FatalError(NULL); }
-	sd = AG_Strdup(s);
-	AG_UnlockVariable(b);
-	return (sd);
-}
-void *
-AG_WidgetPointer(void *wid, const char *name)
-{
-	AG_Variable *b;
-	void **p, *rv;
-	if ((b = AG_GetVariable(wid, name, &p)) == NULL) { AG_FatalError(NULL); }
-	rv = *p;
-	AG_UnlockVariable(b);
-	return (p);
-}
-void
-AG_WidgetSetInt(void *wid, const char *name, int ni)
-{
-	AG_Variable *V;
-	int *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetUint(void *wid, const char *name, Uint ni)
-{
-	AG_Variable *V;
-	Uint *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
-{
-	AG_Variable *V;
-	Uint8 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
-{
-	AG_Variable *V;
-	Sint8 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
-{
-	AG_Variable *V;
-	Uint16 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
-{
-	AG_Variable *V;
-	Sint16 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
-{
-	AG_Variable *V;
-	Uint32 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
-{
-	AG_Variable *V;
-	Sint32 *i;
-	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
-	*i = ni;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetFloat(void *wid, const char *name, float nf)
-{
-	AG_Variable *V;
-	float *f;
-	if ((V = AG_GetVariable(wid, name, &f)) == NULL) { AG_FatalError(NULL); }
-	*f = nf;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetDouble(void *wid, const char *name, double nd)
-{
-	AG_Variable *V;
-	double *d;
-	if ((V = AG_GetVariable(wid, name, &d)) == NULL) { AG_FatalError(NULL); }
-	*d = nd;
-	AG_UnlockVariable(V);
-}
-void
-AG_WidgetSetPointer(void *wid, const char *name, void *np)
-{
-	AG_Variable *V;
-	void **p;
-	if ((V = AG_GetVariable(wid, name, &p)) == NULL) { AG_FatalError(NULL); }
-	*p = np;
-	AG_UnlockVariable(V);
-}
-#endif /* AG_LEGACY */
 
 /*
  * Register a surface with the given widget. In OpenGL mode, a texture will
@@ -836,15 +674,18 @@ DeleteQueuedTextures(AG_Widget *wid)
 
 /*
  * NOTE: Texture operations are involved so this is only safe to invoke
- * in rendering context.
+ * in rendering context. This is safe, since garbage collection of detached
+ * widgets only occurs at the end of the event processing cycle.
  */
 static void
 Destroy(void *obj)
 {
 	AG_Widget *wid = obj;
 	AG_PopupMenu *pm, *pm2;
-	Uint i;
-	
+	AG_Variable *V;
+	Uint i, j;
+
+	/* Destroy any attached popup menu. */
 	for (pm = SLIST_FIRST(&wid->menus);
 	     pm != SLIST_END(&wid->menus);
 	     pm = pm2) {
@@ -852,6 +693,18 @@ Destroy(void *obj)
 		AG_PopupDestroy(NULL, pm);
 	}
 
+	/* Free the action tables. */
+	AG_TBL_FOREACH(V, i,j, &wid->actions) {
+		Free(V->data.p);
+	}
+	AG_TblDestroy(&wid->actions);
+	Free(wid->mouseActions);
+	Free(wid->keyActions);
+
+	/*
+	 * Free the surfaces; delete associated textures if we are running in
+	 * OpenGL mode.
+	 */
 #ifdef HAVE_OPENGL
 	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
@@ -868,10 +721,8 @@ Destroy(void *obj)
 		}
 #endif
 	}
-
 	Free(wid->surfaces);
 	Free(wid->surfaceFlags);
-
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		Free(wid->textures);
@@ -1748,6 +1599,14 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 	AG_ObjectLock(wid);
 	if ((AG_WidgetIsFocusedInWindow(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
+		AG_PostEvent(NULL, wid, "mouse-motion",
+		    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
+		    x - wid->rView.x1,
+		    y - wid->rView.y1,
+		    xrel,
+		    yrel,
+		    state);
+#ifdef AG_LEGACY
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i,%i,%i,%i,%i",
 		    x - wid->rView.x1,
@@ -1755,6 +1614,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 		    xrel,
 		    yrel,
 		    state);
+#endif
 		if (wid->flags & AG_WIDGET_PRIO_MOTION)
 			goto out;
 	}
@@ -1777,10 +1637,18 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 	AG_ObjectLock(wid);
 	if ((AG_WidgetIsFocusedInWindow(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
-		AG_PostEvent(NULL, wid, "window-mousebuttonup", "%i,%i,%i",
+		AG_PostEvent(NULL, wid, "mouse-button-up",
+		    "%i(button),%i(x),%i(y)",
 		    button,
 		    x - wid->rView.x1,
 		    y - wid->rView.y1);
+#ifdef AG_LEGACY
+		AG_PostEvent(NULL, wid, "window-mousebuttonup",
+		    "%i,%i,%i",
+		    button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
+#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetMouseButtonUp(win, cwid, button, x, y);
@@ -1788,7 +1656,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 	AG_ObjectUnlock(wid);
 }
 
-/* Process a mousebuttondown event. View must be locked. */
+/* Process a mouse-button-down event. View must be locked. */
 int
 AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
     int x, int y)
@@ -1807,14 +1675,26 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
 		goto out;
 	}
 	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
+		if (strcmp(ev->name, "mouse-button-down") == 0)
+			break;
+#ifdef AG_LEGACY
 		if (strcmp(ev->name, "window-mousebuttondown") == 0)
 			break;
+#endif
 	}
 	if (ev != NULL) {
-		AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i,%i,%i",
+		AG_PostEvent(NULL, wid, "mouse-button-down",
+		    "%i(button),%i(x),%i(y)",
 		    button,
 		    x - wid->rView.x1,
 		    y - wid->rView.y1);
+#ifdef AG_LEGACY
+		AG_PostEvent(NULL, wid, "window-mousebuttondown",
+		    "%i,%i,%i",
+		    button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
+#endif
 		goto match;
 	}
 out:
@@ -1836,8 +1716,14 @@ AG_WidgetUnfocusedKeyUp(AG_Widget *wid, int ksym, int kmod, int unicode)
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYUP) {
-		AG_PostEvent(NULL, wid,  "window-keyup", "%i, %i, %i",
+		AG_PostEvent(NULL, wid,  "key-up",
+		    "%i(key),%i(mod),%i(unicode)",
 		    ksym, kmod, unicode);
+#ifdef AG_LEGACY
+		AG_PostEvent(NULL, wid,  "window-keyup",
+		    "%i,%i,%i",
+		    ksym, kmod, unicode);
+#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetUnfocusedKeyUp(cwid, ksym, kmod, unicode);
@@ -1856,8 +1742,14 @@ AG_WidgetUnfocusedKeyDown(AG_Widget *wid, int ksym, int kmod, int unicode)
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYDOWN) {
-		AG_PostEvent(NULL, wid,  "window-keydown", "%i, %i, %i",
+		AG_PostEvent(NULL, wid,  "key-down",
+		    "%i(key),%i(mod),%i(unicode)",
 		    ksym, kmod, unicode);
+#ifdef AG_LEGACY
+		AG_PostEvent(NULL, wid,  "window-keydown",
+		    "%i,%i,%i",
+		    ksym, kmod, unicode);
+#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetUnfocusedKeyDown(cwid, ksym, kmod, unicode);

@@ -26,7 +26,7 @@
 .Dt AG_WIDGET 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.4
 .Sh NAME
 .Nm AG_Widget
 .Nd agar widget framework
@@ -695,7 +695,7 @@ Under multithreading, the return value of
 should be considered valid only as long as the
 .Xr AG_View 3
 VFS remains locked.
-.Sh GUI RENDERING
+.Sh WIDGET RENDERING
 .nr nS 1
 .Ft "void"
 .Fn AG_WidgetDraw "AG_Widget *widget"
@@ -714,6 +714,9 @@ VFS remains locked.
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_WidgetSurface "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
 .nr nS 0
 The
@@ -739,28 +742,169 @@ The
 routine renders the widget to a newly-allocated
 .Xr AG_Surface 3 .
 This surface should be freed after use.
-.Sh THEME SELECTION
-.nr nS 1
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
-.nr nS 0
 .Pp
-The
 .Fn AG_SetStyle
-function changes the style/theme associated with a widget.
+changes the style (theme) associated with a widget.
 See
 .Xr AG_Style 3
-for more information about styles.
-Note that child widgets automatically inherit the style associated with
-their parent.
-.Sh THREAD SAFETY
-Agar-GUI is thread-safe on a fine-grained level, so it is safe to make GUI
-calls from different threads (unless documented otherwise in the widget's
-manual page).
+for more information about widget themes.
+Note that child widgets automatically inherit the theme associated with
+their parent object.
+.Sh WIDGET ACTIONS
+Input events such as key presses or mouse button events can be "tied" to
+specific
+.Em actions .
+Possible actions include the execution of a specified routine, or the
+setting/toggling of an boolean variable or flag.
+This interface is preferred over event handlers where the conditions are fixed
+(e.g., a specific mouse button was clicked, or a specific key was pressed).
+Actions are identified by a name string, and are mapped to events by a table
+kept in the
+.Nm
+structure.
+Widget actions allow the end-user to conveniently reconfigure mouse bindings
+and keyboard shortcuts, and preserve the settings.
+The
+.Xr AG_Menu 3
+system also allows menus to be automatically generated from available actions.
+.Pp
+.nr nS 1
+.Ft "AG_Action *"
+.Fn AG_ActionFn "AG_Widget *widget" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Action *"
+.Fn AG_ActionSetInt "AG_Widget *widget" "const char *action" "int *variable" "int value"
+.Pp
+.Ft "AG_Action *"
+.Fn AG_ActionSetFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask" "int value"
+.Pp
+.Ft "AG_Action *"
+.Fn AG_ActionToggleInt "AG_Widget *widget" "const char *action" "int *variable"
+.Pp
+.Ft "AG_Action *"
+.Fn AG_ActionToggleFlag "AG_Widget *widget" "const char *action" "Uint *variable" "Uint bitmask"
+.Pp
+.Ft void
+.Fn AG_ActionOnButtonDown "AG_Widget *widget" "int button" "const char *action"
+.Pp
+.Ft void
+.Fn AG_ActionOnButtonUp "AG_Widget *widget" "int button" "const char *action"
+.Pp
+.Ft void
+.Fn AG_ActionOnKeyDown "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Pp
+.Ft void
+.Fn AG_ActionOnKeyUp "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Pp
+.Ft int
+.Fn AG_ExecMouseAction "AG_Widget *widget" "AG_ActionEventType type" "int button" "int x" "int y"
+.Pp
+.Ft int
+.Fn AG_ExecKeyAction "AG_Widget *widget" "AG_ActionEventType type" "AG_KeySym sym" "AG_KeyMod mod"
+.Pp
+.Ft int
+.Fn AG_ExecAction "AG_Widget *widget" "AG_Action *a"
+.Pp
+.nr nS 0
+.Fn AG_ActionFn
+registers a new widget action which is to invoke a callback function
+.Fa fn ,
+with arguments
+.Fa fnArgs .
 See
-.Xr AG_Threads 3
-for more details, including important conventions used throughout the
-documentation.
+.Xr AG_Event 3
+for a description of the
+.Fa fnArgs
+format.
+.Pp
+.Fn AG_ActionSetInt
+registers a new action which is to set an integer
+.Fa variable
+to a specified
+.Fa value .
+Instead of an integer variable,
+.Fn AG_ActionSetFlag
+sets the bits specified by
+.Fa bitmask
+to the specified
+.Fa value
+(of 1 or 0).
+The
+.Fn AG_ActionToggleInt
+and
+.Fn AG_ActionToggleFlag
+variants do not take an explicit
+.Fa value
+argument, and toggle the current value instead.
+.Pp
+Actions are tied to events (identified by
+.Fa event
+string) with
+.Fn AG_ActionOn* .
+.Pp
+.Fn AG_ActionOnButtonDown
+and
+.Fn AG_ActionOnButtonUp
+tie an action to a button press and a button release event, respectively.
+The
+.Fa button
+argument specifies the button index (see
+.Xr AG_MouseButton 3 ) .
+.Fn AG_ActionOnKeyDown
+and
+.Fn AG_ActionOnKeyUp
+tie an action to a key press and key release event, respectively.
+The
+.Fa sym
+argument specifies the key (see
+.Xr AG_KeySym 3 ) ,
+and
+.Fa mod
+specifies the modifier keys which must be in effect.
+To match any key or any modifier state,
+.Dv AG_KEY_ANY
+or
+.Dv AG_KEYMOD_ANY
+can be used.
+.Pp
+.Fn AG_ExecMouseAction
+executes any action associated with mouse button events.
+Accepted
+.Fa type
+values are
+.Dv AG_ACTION_ON_BUTTONDOWN
+and
+.Dv AG_ACTION_ON_BUTTONUP .
+.Fa button
+is the pressed button index (see
+.Xr AG_MouseButton 3 ) .
+.Fa x
+and
+.Fa y
+is the position of the cursor in the widget's coordinate system.
+.Pp
+.Fn AG_ExecKeyAction
+executes any action associated with keyboard events.
+Accepted
+.Fa type
+values are
+.Dv AG_ACTION_ON_KEYDOWN
+and
+.Dv AG_ACTION_ON_KEYUP .
+.Fa sym
+and
+.Fa mod
+specify the key index and modifier state (see
+.Xr AG_KeySym 3
+and
+.Xr AG_KeyMod 3 ) .
+.Pp
+.Fn AG_ExecAction
+executes the specified action.
+.Fn AG_ExecAction
+is rarely used directly, but it is invoked internally by the
+.Fn AG_ExecFooAction
+functions.
 .Sh EVENTS
 The GUI system may send
 .Nm
@@ -955,6 +1099,7 @@ and
 .Sh SEE ALSO
 .Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
+.Xr AG_Variable 3 ,
 .Xr AG_View 3 ,
 .Xr AG_WidgetPrimitives 3 ,
 .Xr AG_Window 3
@@ -962,3 +1107,7 @@ and
 The
 .Nm
 interface first appeared in Agar 1.0.
+Widget-level variable bindings have been replaced by generic
+.Xr AG_Variable 3
+pointers in Agar 1.3.4.
+The widget "actions" interface first appeared in Agar 1.4.

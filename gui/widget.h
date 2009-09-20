@@ -11,6 +11,9 @@
 #include <agar/gui/view.h>
 #include <agar/gui/style.h>
 
+#include <agar/gui/mouse.h>
+#include <agar/gui/kbd.h>
+
 #include <agar/gui/begin.h>
 
 #define AG_SIZE_SPEC_MAX		256
@@ -32,13 +35,13 @@ typedef struct ag_widget_class {
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetClass;
 
-enum ag_widget_sizespec {
+typedef enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,	/* Parser error */
 	AG_WIDGET_PIXELS,	/* Pixel count */
 	AG_WIDGET_PERCENT,	/* % of available space */
 	AG_WIDGET_STRINGLEN,	/* Width of given string */
 	AG_WIDGET_FILL		/* Fill remaining space */
-};
+} AG_SizeSpec;
 
 enum ag_widget_packing {
 	AG_PACK_HORIZ,
@@ -52,6 +55,44 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 
 struct ag_popup_menu;
+
+typedef enum ag_action_type {
+	AG_ACTION_FN,			/* Execute function */
+	AG_ACTION_SET_INT,		/* Set an integer */
+	AG_ACTION_TOGGLE_INT,		/* Toggle an integer */
+	AG_ACTION_SET_FLAG,		/* Set specified bits in a word */
+	AG_ACTION_TOGGLE_FLAG		/* Toggle specified bits in a word */
+} AG_ActionType;
+
+typedef struct ag_action {
+	AG_ActionType type;
+	struct ag_widget *widget;	/* Back pointer to widget */
+	AG_Event *fn;			/* Callback function */
+	void *p;			/* Target (for SET_*) */
+	int val;			/* Value (for SET_*) */
+	Uint bitmask;			/* Bitmask (for SET_FLAG) */
+} AG_Action;
+
+typedef enum ag_action_event_type {
+	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
+	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
+	AG_ACTION_ON_KEYDOWN,		/* On key-down */
+	AG_ACTION_ON_KEYUP		/* On key-up */
+#define AG_ACTION_ON_BUTTON \
+	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
+} AG_ActionEventType;
+
+typedef struct ag_action_tie {
+	AG_ActionEventType type;		/* Trigger event type */
+	union {
+		AG_MouseButton button;		/* Button index */
+		struct {
+			AG_KeySym sym;		/* Matching symbol */
+			AG_KeyMod mod;		/* Matching modifier */
+		} key;
+	} data;
+	char action[64];			/* Action name */
+} AG_ActionTie;
 
 typedef struct ag_widget {
 	struct ag_object obj;
@@ -99,6 +140,12 @@ typedef struct ag_widget {
 	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 	struct ag_window *window;		/* Back ptr to parent window */
+
+	AG_Tbl        actions;			/* Registered actions */
+	AG_ActionTie *mouseActions;		/* Mouse event ties */
+	Uint         nMouseActions;
+	AG_ActionTie *keyActions;		/* Keyboard event ties */
+	Uint         nKeyActions;
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -137,39 +184,29 @@ struct ag_window;
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
 
-void AG_WidgetDraw(void *);
-void AG_WidgetSizeReq(void *, AG_SizeReq *);
-int  AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
-void AG_WidgetSetFocusable(void *, int);
-void AG_WidgetForwardFocus(void *, void *);
+void       AG_WidgetDraw(void *);
+void       AG_WidgetSizeReq(void *, AG_SizeReq *);
+int        AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
+void       AG_WidgetSetFocusable(void *, int);
+void       AG_WidgetForwardFocus(void *, void *);
 
-int		  AG_WidgetFocus(void *);
-void		  AG_WidgetUnfocus(void *);
-AG_Widget	 *AG_WidgetFindFocused(void *);
-void		 *AG_WidgetFindPoint(const char *, int, int);
-void		 *AG_WidgetFindRect(const char *, int, int, int, int);
-void		  AG_WidgetUpdateCoords(void *, int, int);
+int        AG_WidgetFocus(void *);
+void       AG_WidgetUnfocus(void *);
+AG_Widget *AG_WidgetFindFocused(void *);
+void      *AG_WidgetFindPoint(const char *, int, int);
+void      *AG_WidgetFindRect(const char *, int, int, int, int);
+void       AG_WidgetUpdateCoords(void *, int, int);
 
 int	 AG_WidgetMapSurface(void *, AG_Surface *);
 int	 AG_WidgetMapSurfaceNODUP(void *, AG_Surface *);
 void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
 void	 AG_WidgetReplaceSurfaceNODUP(void *, int, AG_Surface *);
-void	 AG_WidgetUpdateSurface(void *, int);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
-#ifdef HAVE_OPENGL
-# define AG_WidgetUpdateSurface(wid,name) do { \
-	 AGWIDGET(wid)->surfaceFlags[(name)] |= AG_WIDGET_SURFACE_REGEN; \
-} while (0)
-#else
-# define AG_WidgetUpdateSurface(wid,name)
-#endif
-
 void	 AG_WidgetBlit(void *, AG_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, AG_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
-
 #ifdef HAVE_OPENGL
 void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
@@ -179,7 +216,6 @@ void	 AG_WidgetPutPixelRGB_GL(void *, int, int, Uint8, Uint8, Uint8);
 void	 AG_WidgetFreeResourcesGL(AG_Widget *);
 void	 AG_WidgetRegenResourcesGL(AG_Widget *);
 #endif
-
 void	 AG_PushClipRect(void *, AG_Rect);
 void	 AG_PopClipRect(void);
 void	 AG_SetCursor(int);
@@ -188,28 +224,41 @@ void	 AG_UnsetCursor(void);
 #define	 AG_WidgetBlendPixel AG_WidgetBlendPixelRGBA
 void	 AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4], enum ag_blend_func);
 
-int   AG_WidgetSensitive(void *, int, int);
-void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int, int, int);
-void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
-int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
-void  AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
-void  AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
+int      AG_WidgetSensitive(void *, int, int);
+void     AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int, int, int);
+void     AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
+int      AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
+void     AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
+void     AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
 
-enum ag_widget_sizespec AG_WidgetParseSizeSpec(const char *, int *);
-int			AG_WidgetScrollDelta(Uint32 *);
-void			*AG_WidgetFind(AG_Display *, const char *);
+AG_SizeSpec AG_WidgetParseSizeSpec(const char *, int *);
+int         AG_WidgetScrollDelta(Uint32 *);
+void       *AG_WidgetFind(AG_Display *, const char *);
+void        AG_WidgetShownRecursive(void *);
+void        AG_WidgetHiddenRecursive(void *);
 
-void AG_WidgetShownRecursive(void *);
-void AG_WidgetHiddenRecursive(void *);
-
-void AG_WidgetInheritDraw(void *);
-void AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
-int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
+void        AG_WidgetInheritDraw(void *);
+void        AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
+int         AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
 AG_Surface *AG_WidgetSurface(void *);
 
-/*
- * Inlines
- */
+AG_Action  *AG_ActionFn(void *, const char *, AG_EventFn, const char *, ...);
+AG_Action  *AG_ActionSetInt(void *, const char *, int *, int);
+AG_Action  *AG_ActionToggleInt(void *, const char *, int *);
+AG_Action  *AG_ActionSetFlag(void *, const char *, Uint *, Uint, int);
+AG_Action  *AG_ActionToggleFlag(void *, const char *, Uint *, Uint);
+
+void        AG_ActionOnButtonDown(void *, int, const char *);
+void        AG_ActionOnButtonUp(void *, int, const char *);
+#define     AG_ActionOnButton(w,b,a) \
+            AG_ActionOnButtonDown((w),(b),(a))
+
+void        AG_ActionOnKeyDown(void *, AG_KeySym, AG_KeyMod, const char *);
+void        AG_ActionOnKeyUp(void *, AG_KeySym, AG_KeyMod, const char *);
+
+int         AG_ExecMouseAction(void *, AG_ActionEventType, int, int, int);
+int         AG_ExecKeyAction(void *, AG_ActionEventType, AG_KeySym, AG_KeyMod);
+int         AG_ExecAction(void *, AG_Action *);
 
 /* Set the widget state. */
 static __inline__ void
@@ -359,6 +408,15 @@ AG_WidgetShow(void *wid)
 	AGWIDGET(wid)->flags &= ~(AG_WIDGET_HIDE);
 	AG_ObjectUnlock(wid);
 }
+
+/* Signal a change in a widget surface. */
+#ifdef HAVE_OPENGL
+# define AG_WidgetUpdateSurface(wid,name) do { \
+	 AGWIDGET(wid)->surfaceFlags[(name)] |= AG_WIDGET_SURFACE_REGEN; \
+} while (0)
+#else
+# define AG_WidgetUpdateSurface(wid,name)
+#endif
 
 /*
  * Request that all computed widget coordinates and geometries in the widget's
