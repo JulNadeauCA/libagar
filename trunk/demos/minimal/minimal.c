@@ -9,11 +9,11 @@ main(int argc, char *argv[])
 	AG_Window *win;
 
 	if (AG_InitCore("agar-minimal-demo", 0) == -1 ||
-	    AG_InitVideo(320, 240, 32, AG_VIDEO_RESIZABLE) == -1) {
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Minimal!");

@@ -400,7 +400,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 			continue;
 		}
 		if ((at->data.key.mod == AG_KEYMOD_ANY ||
-		     at->data.key.mod == mod) &&
+		     at->data.key.mod & mod) &&
 		    (at->data.key.sym == AG_KEY_ANY ||
 		     at->data.key.sym == sym))
 			break;

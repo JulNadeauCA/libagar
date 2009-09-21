@@ -35,7 +35,7 @@
 
 #include <core/snprintf.h>
 
-static AG_LabelFormatSpec *fmts = NULL;	/* Format specifiers */
+static AG_LabelFormatSpec *fmts = NULL;		/* Extended format specifiers */
 static int nFmts = 0;
 #ifdef AG_THREADS
 static AG_Mutex fmtsLock;
@@ -360,7 +360,7 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
 }
 
 /*
- * Built-in extended format specifiers.
+ * Built-in extended format specifiers (table follows).
  */
 static void PrintU8(AG_Label *lbl, char *s, size_t len, int fPos) {
 	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint8));
@@ -450,25 +450,51 @@ PrintFLAGS32(AG_Label *lbl, char *s, size_t len, int fPos)
 		}
 	}
 }
+static const struct {
+	const char *name;
+	AG_LabelFormatFn fn;
+} builtinFmts[] = {
+	{ "u8",		PrintU8 },
+	{ "s8",		PrintS8 },
+	{ "u16",	PrintU16 },
+	{ "s16",	PrintS16 },
+	{ "u32",	PrintU32 },
+	{ "s32",	PrintS32 },
+	{ "objname",	PrintOBJNAME },
+	{ "objtype",	PrintOBJTYPE },
+	{ "ibool",	PrintIBOOL },
+	{ "flags",	PrintFLAGS },
+	{ "flags8",	PrintFLAGS8 },
+	{ "flags16",	PrintFLAGS16 },
+	{ "flags32",	PrintFLAGS32 }
+};
+static const int nBuiltinFmts = sizeof(builtinFmts) / sizeof(builtinFmts[0]);
 
 /* Register built-in format specifiers. */
 void
-AG_RegisterBuiltinLabelFormats(void)
+AG_LabelInitFormats(void)
 {
+	int i;
+
 	AG_MutexInit(&fmtsLock);
-	AG_RegisterLabelFormat("u8", PrintU8);
-	AG_RegisterLabelFormat("s8", PrintS8);
-	AG_RegisterLabelFormat("u16", PrintU16);
-	AG_RegisterLabelFormat("s16", PrintS16);
-	AG_RegisterLabelFormat("u32", PrintU32);
-	AG_RegisterLabelFormat("s32", PrintS32);
-	AG_RegisterLabelFormat("objname", PrintOBJNAME);
-	AG_RegisterLabelFormat("objtype", PrintOBJTYPE);
-	AG_RegisterLabelFormat("ibool", PrintIBOOL);
-	AG_RegisterLabelFormat("flags", PrintFLAGS);
-	AG_RegisterLabelFormat("flags8", PrintFLAGS8);
-	AG_RegisterLabelFormat("flags16", PrintFLAGS16);
-	AG_RegisterLabelFormat("flags32", PrintFLAGS32);
+	for (i = 0; i < nBuiltinFmts; i++)
+		AG_RegisterLabelFormat(builtinFmts[i].name, builtinFmts[i].fn);
+}
+
+/* Destroy built-in format specifiers. */
+void
+AG_LabelDestroyFormats(void)
+{
+	int i;
+
+	for (i = 0; i < nFmts; i++) {
+		free(fmts[i].fmt);
+	}
+	free(fmts);
+	fmts = NULL;
+	nFmts = 0;
+	
+	AG_MutexDestroy(&fmtsLock);
 }
 
 /* Register a new format specifier. */
@@ -486,6 +512,32 @@ AG_RegisterLabelFormat(const char *fmt, AG_LabelFormatFn fn)
 	fs->fmt = Strdup(fmt);
 	fs->fmtLen = strlen(fmt);
 	fs->fn = fn;
+	AG_MutexUnlock(&fmtsLock);
+}
+
+/* Unregister a format specifier. */
+void
+AG_UnregisterLabelFormat(const char *fmt)
+{
+	int i;
+
+	if (!agGUI)
+		return;
+
+	AG_MutexLock(&fmtsLock);
+
+	for (i = 0; i < nFmts; i++) {
+		if (strcmp(fmts[i].fmt, fmt) == 0)
+			break;
+	}
+	if (i < nFmts) {
+		free(fmts[i].fmt);
+		if (i < nFmts-1) {
+			memmove(&fmts[i], &fmts[i+1],
+			    (nFmts-1)*sizeof(AG_LabelFormatSpec));
+		}
+		nFmts--;
+	}
 	AG_MutexUnlock(&fmtsLock);
 }
 

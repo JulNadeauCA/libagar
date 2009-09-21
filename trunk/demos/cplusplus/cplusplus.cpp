@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 		cerr << AG_GetError() << endl;
 		return (-1);
 	}
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_TextMsg(AG_MSG_INFO, "Hello, C++!");
 	AG_EventLoop();
 	AG_Destroy();

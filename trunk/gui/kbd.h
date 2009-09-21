@@ -2,6 +2,7 @@
 
 #ifndef _AGAR_GUI_KBD_H_
 #define _AGAR_GUI_KBD_H_
+#include <agar/gui/begin.h>
 
 /* Keep symbols equivalent to SDL */
 
@@ -161,6 +162,10 @@ typedef unsigned int AG_KeyMod;
 #define AG_KEYMOD_CAPSLOCK	0x2000
 #define AG_KEYMOD_MODE		0x4000
 #define AG_KEYMOD_ANY		0xffff		/* As argument for matching */
+#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL|AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT|AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT|AG_KEYMOD_RALT)
+#define AG_KEYMOD_META		(AG_KEYMOD_LMETA|AG_KEYMOD_RMETA)
 
 typedef struct ag_key {
 	enum ag_key_sym sym;	/* Translated key */
@@ -168,4 +173,15 @@ typedef struct ag_key {
 	Uint32 uch;		/* Corresponding Unicode character */
 } AG_Key;
 
+__BEGIN_DECLS
+void AG_InitGlobalKeys(void);
+void AG_DestroyGlobalKeys(void);
+void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*)(void));
+void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*)(AG_Event *));
+int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
+void AG_ClearGlobalKeys(void);
+int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
+__END_DECLS
+
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_KBD_H_ */

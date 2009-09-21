@@ -71,18 +71,6 @@ for details).
 .Ft "void"
 .Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h)"
 .Pp
-.Ft void
-.Fn AG_BindGlobalKey "SDLKey key" "SDLMod mod" "void (*fn)(void)"
-.Pp
-.Ft void
-.Fn AG_BindGlobalKeyEv "SDLKey key" "SDLMod mod" "void (*fn)(AG_Event *)"
-.Pp
-.Ft int
-.Fn AG_UnbindGlobalKey "SDLKey key" "SDLMod mod"
-.Pp
-.Ft void
-.Fn AG_ClearGlobalKeys "void"
-.Pp
 .Ft "void"
 .Fn AG_ViewUpdateFB "const AG_Rect2 *r"
 .Pp
@@ -174,21 +162,6 @@ The
 .Fa w ,
 .Fa h
 arguments are the new geometry in pixels.
-.Pp
-.Fn AG_BindGlobalKey
-arranges for the given function to be invoked whenever the user presses the
-given key combination, regardless of widgets.
-The
-.Fn AG_BindGlobalKeyEv
-variant accepts an
-.Xr AG_Event 3
-style function.
-.Fn AG_UnbindGlobalKey
-removes the given key mapping, returning 0 on success and -1 if no such
-mapping exists.
-.Pp
-.Fn AG_ClearGlobalKeys
-removes all existing key mappings.
 .Pp
 The
 .Fn AG_ViewUpdateFB

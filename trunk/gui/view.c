@@ -53,7 +53,6 @@
 AG_Display          *agView = NULL;	/* Main view */
 AG_PixelFormat      *agVideoFmt = NULL;	/* Current format of display */
 AG_PixelFormat      *agSurfaceFmt = NULL; /* Preferred format for surfaces */
-const SDL_VideoInfo *agVideoInfo;	/* Display information */
 
 int agBgPopupMenu = 0;			/* Background popup menu */
 int agRenderingContext = 0;		/* In rendering context (for debug) */
@@ -63,20 +62,6 @@ AG_ClipRect *agClipRects = NULL;	/* Clipping rectangle stack (first
 int          agClipStateGL[4];		/* Saved GL clipping plane states */
 Uint        agClipRectCount = 0;
 
-static int initedGlobals = 0;
-
-struct ag_global_key {
-	SDLKey keysym;
-	SDLMod keymod;
-	void (*fn)(void);
-	void (*fn_ev)(AG_Event *);
-	SLIST_ENTRY(ag_global_key) gkeys;
-};
-static SLIST_HEAD(,ag_global_key) agGlobalKeys =
-    SLIST_HEAD_INITIALIZER(&agGlobalKeys);
-#ifdef AG_THREADS
-static AG_Mutex agGlobalKeysLock;
-#endif
 static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
 
 int agFullscreenMode = 0;
@@ -200,22 +185,6 @@ DestroyView(AG_Display *v)
 	AG_ObjectDestroy(v);
 }
 
-static void
-InitGlobals(void)
-{
-	if (initedGlobals) {
-		return;
-	}
-	initedGlobals = 1;
-
-	AG_MutexInitRecursive(&agGlobalKeysLock);
-	AG_RegisterClass(&agDisplayClass);
-	agVideoInfo = SDL_GetVideoInfo();
-	agGUI = 1;
-
-	AG_RegisterBuiltinLabelFormats();
-}
-
 /* Initialize the clipping rectangle stack. */
 static int
 InitClipRects(int wView, int hView)
@@ -258,6 +227,21 @@ InitClipRects(int wView, int hView)
 }
 
 /*
+ * Initialize Agar's graphics facilities. If no graphics driver is specified,
+ * try to select the "best" option for the current platform.
+ */
+int
+AG_InitGraphics(const char *driver)
+{
+	AG_InitGuiGlobals();
+
+	if (AG_InitGUI(0) == -1)
+		return (-1);
+	
+	return (0);
+}
+
+/*
  * Initialize Agar with an existing SDL/OpenGL display surface. If the
  * surface has SDL_OPENGL or SDL_OPENGLBLIT set, we assume that OpenGL
  * primitives are to be used in rendering.
@@ -265,7 +249,8 @@ InitClipRects(int wView, int hView)
 int
 AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 {
-	InitGlobals();
+	AG_InitGuiGlobals();
+
 	agInitedSDL = 0;
 
 	if (display->w < AG_GetUint16(agConfig,"view.min-w") ||
@@ -340,7 +325,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	Uint32 screenflags = 0;
 	int depth;
 
-	InitGlobals();
+	AG_InitGuiGlobals();
 
 	if (SDL_Init(0) == -1) {
 		AG_SetError("SDL_Init() failed: %s", SDL_GetError());
@@ -515,78 +500,9 @@ AG_DestroyVideo(void)
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
-
 	AG_ClearGlobalKeys();
-	AG_MutexDestroy(&agGlobalKeysLock);
-	
-	initedGlobals = 0;
-}
 
-void
-AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
-{
-	struct ag_global_key *gk;
-
-	gk = Malloc(sizeof(struct ag_global_key));
-	gk->keysym = keysym;
-	gk->keymod = keymod;
-	gk->fn = fn;
-	gk->fn_ev = NULL;
-
-	AG_MutexLock(&agGlobalKeysLock);
-	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
-	AG_MutexUnlock(&agGlobalKeysLock);
-}
-
-void
-AG_BindGlobalKeyEv(SDLKey keysym, SDLMod keymod, void (*fn_ev)(AG_Event *))
-{
-	struct ag_global_key *gk;
-
-	gk = Malloc(sizeof(struct ag_global_key));
-	gk->keysym = keysym;
-	gk->keymod = keymod;
-	gk->fn = NULL;
-	gk->fn_ev = fn_ev;
-	
-	AG_MutexLock(&agGlobalKeysLock);
-	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
-	AG_MutexUnlock(&agGlobalKeysLock);
-}
-
-int
-AG_UnbindGlobalKey(SDLKey keysym, SDLMod keymod)
-{
-	struct ag_global_key *gk;
-
-	AG_MutexLock(&agGlobalKeysLock);
-	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
-		if (gk->keysym == keysym && gk->keymod == keymod) {
-			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
-			AG_MutexUnlock(&agGlobalKeysLock);
-			Free(gk);
-			return (0);
-		}
-	}
-	AG_MutexUnlock(&agGlobalKeysLock);
-	AG_SetError(_("No such key binding"));
-	return (-1);
-}
-
-void
-AG_ClearGlobalKeys(void)
-{
-	struct ag_global_key *gk, *gkNext;
-
-	AG_MutexLock(&agGlobalKeysLock);
-	for (gk = SLIST_FIRST(&agGlobalKeys);
-	     gk != SLIST_END(&agGlobalKeys);
-	     gk = gkNext) {
-		gkNext = SLIST_NEXT(gk, gkeys);
-		Free(gk);
-	}
-	SLIST_INIT(&agGlobalKeys);
-	AG_MutexUnlock(&agGlobalKeysLock);
+	AG_DestroyGuiGlobals();
 }
 
 #ifdef HAVE_OPENGL
@@ -1206,38 +1122,9 @@ AG_ProcessEvent(SDL_Event *ev)
 		}
 		break;
 	case SDL_KEYDOWN:
-#if 0
-		fprintf(stderr, "[DOWN] Key=%d(%c), Mod=%d\n",
-		    (int)ev->key.keysym.sym,
-		    (char)ev->key.keysym.sym,
-		    (int)ev->key.keysym.mod);
-#endif
-		{
-			struct ag_global_key *gk;
-
-			AG_MutexLock(&agGlobalKeysLock);
-			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
-				if (gk->keysym == ev->key.keysym.sym &&
-				    (gk->keymod == KMOD_NONE ||
-				     ev->key.keysym.mod & gk->keymod)) {
-					if (gk->fn != NULL) {
-						gk->fn();
-					} else if (gk->fn_ev != NULL) {
-						gk->fn_ev(NULL);
-					}
-					rv = 1;
-				}
-			}
-			AG_MutexUnlock(&agGlobalKeysLock);
-		}
+		rv = AG_ExecGlobalKeys(ev->key.keysym.sym, ev->key.keysym.mod);
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
-#if 0
-		fprintf(stderr, "[  UP] Key=%d(%c), Mod=%d\n",
-		    (int)ev->key.keysym.sym,
-		    (char)ev->key.keysym.sym,
-		    (int)ev->key.keysym.mod);
-#endif
 		rv = AG_WindowEvent(ev);
 		break;
 	case SDL_JOYAXISMOTION:
@@ -1254,13 +1141,6 @@ AG_ProcessEvent(SDL_Event *ev)
 		rv = 1;
 		break;
 	case SDL_QUIT:
-#if 0
-		if (!agTerminating &&
-		    AG_FindEventHandler(agWorld, "quit") != NULL) {
-			AG_PostEvent(NULL, agWorld, "quit", NULL);
-			break;
-		}
-#endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
 		AG_UnlockVFS(agView);

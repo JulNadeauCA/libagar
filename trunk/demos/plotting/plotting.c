@@ -211,8 +211,8 @@ main(int argc, char *argv[])
 		return (-1);
 	}
 	M_InitSubsystem();
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Create a new window. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);

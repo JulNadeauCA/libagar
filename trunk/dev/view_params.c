@@ -56,31 +56,14 @@ DEV_DisplaySettings(void)
 	{
 		AG_LabelNew(vb, 0, _("OpenGL mode: %s"),
 		    agView->opengl ? _("yes") : _("no"));
-
-		/* XXX thread unsafe */
-		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL, "%dx%d",
+		AG_LabelNewPolled(vb, AG_LABEL_HFILL, "%dx%d",
 		    &agView->w, &agView->h);
 
-#if 0
-		AG_LabelNew(vb, 0, _("Depth: %dbpp"),
-		    (int)agVideoInfo->vfmt->BitsPerPixel);
-		AG_LabelNew(vb, 0, _("Video masks: %08x,%08x,%08x"),
-		    (Uint)agVideoInfo->vfmt->Rmask,
-		    (Uint)agVideoInfo->vfmt->Gmask,
-		    (Uint)agVideoInfo->vfmt->Bmask);
-		AG_LabelNew(vb, 0, _("Color key: 0x%x"),
-		    (Uint)agVideoInfo->vfmt->colorkey);
-		AG_LabelNew(vb, 0, _("Alpha: %d"),
-		    agVideoInfo->vfmt->alpha);
-#endif
-
-		/* XXX thread unsafe */
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
 		    _("Window op: %d (%p)"),
 		    &agView->winop, &agView->winSelected);
 		AG_LabelSizeHint(lbl, 1, _("Window op: 000 (0x00000000)"));
-	
-		/* XXX thread unsafe */
+
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
 		    _("Refresh rate (effective): %d"), &agView->rCur);
 		AG_LabelSizeHint(lbl, 1,

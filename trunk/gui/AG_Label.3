@@ -77,6 +77,9 @@ on rendering.
 .Fn AG_RegisterLabelFormat "const char *fmt" "void (*fn)(AG_Label *label, char *s, size_t len, int fPos)"
 .Pp
 .Ft "void"
+.Fn AG_UnregisterLabelFormat "const char *fmt"
+.Pp
+.Ft "void"
 .Fn AG_LABEL_ARG "AG_Label *label" "TYPE type"
 .Pp
 .nr nS 0
@@ -249,6 +252,9 @@ with a string.
 The argument is retrieved using the
 .Fn AG_LABEL_ARG
 macro.
+.Pp
+.Fn AG_UnregisterLabelFormat
+removes the given format specifier.
 .Pp
 Note that a call to
 .Fn AG_LabelSizeHint
