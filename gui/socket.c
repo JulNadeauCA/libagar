@@ -391,7 +391,7 @@ MouseButtonDown(AG_Event *event)
 	AG_Icon *icon;
 	
 	if (AG_WidgetDisabled(sock) ||
-	    button != SDL_BUTTON_LEFT) {
+	    button != AG_MOUSE_LEFT) {
 		return;
 	}
 	AG_WidgetFocus(sock);
@@ -448,7 +448,7 @@ MouseButtonUp(AG_Event *event)
 	}
 	
 	binding = AG_GetVariable(sock, "state", &pState);
-	if (GetState(binding, pState) && button == SDL_BUTTON_LEFT &&
+	if (GetState(binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);

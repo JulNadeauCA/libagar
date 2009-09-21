@@ -101,8 +101,8 @@ VG_ToolCommandNew(void *obj, const char *name, AG_EventFn fn)
 	tc = Malloc(sizeof(VG_ToolCommand));
 	tc->name = Strdup(name);
 	tc->descr = NULL;
-	tc->kMod = KMOD_NONE;
-	tc->kSym = SDLK_UNKNOWN;
+	tc->kMod = AG_KEYMOD_NONE;
+	tc->kSym = 0;
 	tc->tool = tool;
 	tc->fn = AG_SetEvent(tool->vgv, NULL, fn, NULL);
 
@@ -114,7 +114,7 @@ VG_ToolCommandNew(void *obj, const char *name, AG_EventFn fn)
 
 /* Configure a keyboard shortcut for a command. */
 void
-VG_ToolCommandKey(VG_ToolCommand *tc, SDLMod kMod, SDLKey kSym)
+VG_ToolCommandKey(VG_ToolCommand *tc, AG_KeyMod kMod, AG_KeySym kSym)
 {
 	AG_ObjectLock(tc->tool->vgv);
 	tc->kMod = kMod;

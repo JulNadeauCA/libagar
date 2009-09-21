@@ -157,7 +157,7 @@ MouseButtonDown(AG_Event *event)
 	if (!AG_WidgetEnabled(cb))
 		return;
 
-	if (button == SDL_BUTTON(1)) {
+	if (button == AG_MOUSE_LEFT) {
 		AG_WidgetFocus(cb);
 		AG_CheckboxToggle(cb);
 	}
@@ -167,13 +167,14 @@ static void
 KeyDown(AG_Event *event)
 {
 	AG_Checkbox *cb = AG_SELF();
+	int key = AG_INT(1);
 	
 	if (!AG_WidgetEnabled(cb))
 		return;
 
-	switch (AG_SDLKEY(1)) {
-	case SDLK_RETURN:
-	case SDLK_SPACE:
+	switch (key) {
+	case AG_KEY_RETURN:
+	case AG_KEY_SPACE:
 		AG_CheckboxToggle(cb);
 		break;
 	default:

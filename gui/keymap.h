@@ -5,17 +5,17 @@
 #include <agar/gui/begin.h>
 
 struct ag_keycode_ascii {
-	SDLKey key;
+	AG_KeySym key;
 	int modmask;
-	int (*func)(AG_Editable *, SDLKey ks, int mod, Uint32 ch, char *s,
+	int (*func)(AG_Editable *, AG_KeySym ks, int mod, Uint32 ch, char *s,
 	            int lenCur, int lenMax);
 };
 
 struct ag_keycode_utf8 {
-	SDLKey key;
+	AG_KeySym key;
 	int modmask;
-	int (*func)(AG_Editable *, SDLKey ks, int mod, Uint32 ch, Uint32 *ucs4,
-	            int lenCur, int lenMax);
+	int (*func)(AG_Editable *, AG_KeySym ks, int mod, Uint32 ch,
+	            Uint32 *ucs4, int lenCur, int lenMax);
 };
 
 struct ag_key_composition {
@@ -25,7 +25,7 @@ struct ag_key_composition {
 };
 
 struct ag_key_mapping {
-	SDLKey key;		/* Key */
+	AG_KeySym key;		/* Key */
 	int modmask;		/* Modifier mask */
 	Uint32 unicode;		/* UCS-4 mapping */
 };

@@ -91,16 +91,16 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_LEFT:
+	case AG_KEY_LEFT:
 		AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
 		break;
-	case SDLK_RIGHT:
+	case AG_KEY_RIGHT:
 		AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
 		break;
-	case SDLK_UP:
+	case AG_KEY_UP:
 		AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
 		break;
-	case SDLK_DOWN:
+	case AG_KEY_DOWN:
 		AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
 		break;
 	}

@@ -163,37 +163,37 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
  * be maintained, otherwise it will be cancelled.
  */
 static int
-ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
+ProcessKey(AG_Editable *ed, AG_KeySym keysym, AG_KeyMod keymod, Uint32 unicode)
 {
 	AG_Variable *stringb;
 	char *s;
 	int i, rv = 0, len;
 	Uint32 *ucs;
 
-	if (keysym == SDLK_ESCAPE) {
+	if (keysym == AG_KEY_ESCAPE) {
 		return (0);
 	}
-	if (keysym == SDLK_RETURN &&
+	if (keysym == AG_KEY_RETURN &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
 		return (0);
 
 	if (keymod == KMOD_NONE &&
 	    isascii((int)keysym) && isprint((int)keysym)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY)) {
-			if (keysym != SDLK_MINUS &&
-			    keysym != SDLK_PLUS &&
+			if (keysym != AG_KEY_MINUS &&
+			    keysym != AG_KEY_PLUS &&
 			    !isdigit((int)keysym)) {
 				return (0);
 			}
 		} else if ((ed->flags & AG_EDITABLE_FLT_ONLY)) {
-			if (keysym != SDLK_PLUS &&
-			    keysym != SDLK_MINUS &&
-			    keysym != SDLK_PERIOD &&
-			    keysym != SDLK_e &&
-			    keysym != SDLK_i &&
-			    keysym != SDLK_n &&
-			    keysym != SDLK_f &&
-			    keysym != SDLK_a &&
+			if (keysym != AG_KEY_PLUS &&
+			    keysym != AG_KEY_MINUS &&
+			    keysym != AG_KEY_PERIOD &&
+			    keysym != AG_KEY_E &&
+			    keysym != AG_KEY_I &&
+			    keysym != AG_KEY_N &&
+			    keysym != AG_KEY_F &&
+			    keysym != AG_KEY_A &&
 			    unicode != 0x221e &&	/* Infinity */
 			    !isdigit((int)keysym)) {
 				return (0);
@@ -220,11 +220,11 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	for (i = 0; ; i++) {
 		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
 		
-		if (kc->key != SDLK_LAST &&
+		if (kc->key != AG_KEY_LAST &&
 		   (kc->key != keysym || kc->func == NULL)) {
 			continue;
 		}
-		if (kc->key == SDLK_LAST ||
+		if (kc->key == AG_KEY_LAST ||
 		    kc->modmask == 0 || (keymod & kc->modmask)) {
 			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
 			rv = kc->func(ed, keysym, keymod, unicode, ucs,
@@ -817,21 +817,21 @@ static void
 KeyDown(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
+	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
 	switch (keysym) {
-	case SDLK_LSHIFT:
-	case SDLK_RSHIFT:
-	case SDLK_LALT:
-	case SDLK_RALT:
-	case SDLK_LMETA:
-	case SDLK_RMETA:
-	case SDLK_LCTRL:
-	case SDLK_RCTRL:
+	case AG_KEY_LSHIFT:
+	case AG_KEY_RSHIFT:
+	case AG_KEY_LALT:
+	case AG_KEY_RALT:
+	case AG_KEY_LMETA:
+	case AG_KEY_RMETA:
+	case AG_KEY_LCTRL:
+	case AG_KEY_RCTRL:
 		return;
-	case SDLK_TAB:
+	case AG_KEY_TAB:
 		if (!(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB)) {
 			return;
 		}
@@ -859,7 +859,7 @@ static void
 KeyUp(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
+	int keysym = AG_INT(1);
 	
 	if (ed->repeatKey == keysym) {
 		AG_LockTimeouts(ed);
@@ -868,7 +868,7 @@ KeyUp(AG_Event *event)
 		AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
 		AG_UnlockTimeouts(ed);
 	}
-	if (keysym == SDLK_RETURN &&
+	if (keysym == AG_KEY_RETURN &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
 			AG_WidgetUnfocus(ed);
@@ -888,20 +888,20 @@ MouseButtonDown(AG_Event *event)
 	AG_WidgetFocus(ed);
 
 	switch (btn) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
 		mx += ed->x;
 		AG_EditableMoveCursor(ed, mx, my, 0);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 		break;
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
 			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
 			ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
 			if (ed->y < 0) { ed->y = 0; }
 		}
 		break;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
 			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
 			ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
@@ -920,7 +920,7 @@ MouseButtonUp(AG_Event *event)
 	int btn = AG_INT(1);
 
 	switch (btn) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
 		break;
 	default:

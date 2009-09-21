@@ -17,7 +17,7 @@ AG_Object vfsRoot;
 static Uint32
 MyUint32Fn(AG_Event *event)
 {
-	return (SDL_GetTicks());
+	return AG_GetTicks();
 }
 
 int

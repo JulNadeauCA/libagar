@@ -540,7 +540,7 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 /* Create a dynamically-updated menu item with a keyboard binding. */
 AG_MenuItem *
 AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
-    SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
+    AG_KeySym key, AG_KeyMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -633,7 +633,7 @@ AG_MenuAction(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 
 AG_MenuItem *
 AG_MenuActionKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
-    SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
+    AG_KeySym key, AG_KeyMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_MenuItem *mi;
 
@@ -656,7 +656,7 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 
 AG_MenuItem *
 AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
-    AG_Surface *icon, SDLKey key, SDLMod kmod, void (*fn)(AG_Event *),
+    AG_Surface *icon, AG_KeySym key, AG_KeyMod kmod, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_MenuItem *mi;

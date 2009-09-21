@@ -42,7 +42,7 @@
 #include "perfmon.h"
 
 int agEventAvg = 0;		/* Number of events in last frame */
-int agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
+int agIdleAvg = 0;		/* Measured AG_Delay() granularity */
 AG_Window *agPerfWindow = NULL;
 
 static AG_FixedPlotter *agPerfGraph;

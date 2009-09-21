@@ -22,8 +22,8 @@ typedef struct ag_menu_item {
 	int value;			/* Default bool value binding */
 	int state;			/* Default state flag binding */
 
-	SDLKey key_equiv;		/* Key shortcut */
-	SDLMod key_mod;
+	AG_KeySym key_equiv;		/* Key shortcut */
+	AG_KeyMod key_mod;
 	int x, y;			/* Position in parent view */
 	struct ag_menu_item *subitems;	/* Child items */
 	Uint nsubitems;
@@ -157,14 +157,14 @@ AG_MenuItem *AG_MenuSectionS(AG_MenuItem *, const char *);
 AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, AG_Surface *,
 			   AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, AG_Surface *,
-                             SDLKey, SDLMod, AG_EventFn, const char *, ...);
+                             AG_KeySym, AG_KeyMod, AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *,
-                         AG_Surface *, SDLKey, SDLMod, AG_EventFn,
+                         AG_Surface *, AG_KeySym, AG_KeyMod, AG_EventFn,
 			 const char *, ...);
 AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, AG_Surface *,
                                 AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, AG_Surface *,
-                                  SDLKey, SDLMod, AG_EventFn, const char *,
+                                  AG_KeySym, AG_KeyMod, AG_EventFn, const char *,
 				  ...);
 AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, AG_Surface *,
                               int *, int, AG_Mutex *);

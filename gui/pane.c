@@ -61,7 +61,7 @@ MouseButtonDown(AG_Event *event)
 	AG_Pane *pa = AG_SELF();
 	int button = AG_INT(1);
 
-	if (button == SDL_BUTTON_LEFT &&
+	if (button == AG_MOUSE_LEFT &&
 	    !(pa->flags & AG_PANE_UNMOVABLE)) {
 		pa->dmoving = OverDivControl(pa,
 		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));

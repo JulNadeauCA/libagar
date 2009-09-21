@@ -38,7 +38,7 @@ MyCustomDynamicTextFn(void *p, char *s, size_t len)
 	AG_TableCell *cell = p;
 	
 	AG_Snprintf(s, len, "Ticks: %lu",
-	    (unsigned long)SDL_GetTicks());
+	    (unsigned long)AG_GetTicks());
 }
 
 /* This is a custom cell function which returns a surface to display (Ex.1) */

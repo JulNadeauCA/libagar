@@ -219,7 +219,7 @@ DecrementTimeout(void *obj, Uint32 ival, void *arg)
 	int numkeys;
 
 	ks = SDL_GetKeyState(&numkeys);
-	DecrementSelection(tl, ks[SDLK_PAGEUP] ? agPageIncrement : 1);
+	DecrementSelection(tl, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -231,7 +231,7 @@ IncrementTimeout(void *obj, Uint32 ival, void *arg)
 	int numkeys;
 
 	ks = SDL_GetKeyState(&numkeys);
-	IncrementSelection(tl, ks[SDLK_PAGEDOWN] ? agPageIncrement : 1);
+	IncrementSelection(tl, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -982,7 +982,7 @@ MouseButtonDown(AG_Event *event)
 		return;
 
 	switch (button) {
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		{
 			AG_Variable *offsb;
 			int *offs;
@@ -995,7 +995,7 @@ MouseButtonDown(AG_Event *event)
 			AG_UnlockVariable(offsb);
 		}
 		break;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		{
 			AG_Variable *offsb;
 			int *offs;
@@ -1008,7 +1008,7 @@ MouseButtonDown(AG_Event *event)
 			AG_UnlockVariable(offsb);
 		}
 		break;
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		/* Expand the children if the user clicked on the [+] sign. */
 		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
 			if (x >= ti->depth*tl->icon_w &&
@@ -1030,7 +1030,7 @@ MouseButtonDown(AG_Event *event)
 		 * Handle range selections.
 		 */
 		if ((tl->flags & AG_TLIST_MULTI) &&
-		    (SDL_GetModState() & KMOD_SHIFT)) {
+		    (SDL_GetModState() & AG_KEYMOD_SHIFT)) {
 			AG_TlistItem *oitem;
 			int oind = -1, i = 0, nitems = 0;
 
@@ -1072,7 +1072,7 @@ MouseButtonDown(AG_Event *event)
 		 */
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
-		     (SDL_GetModState() & KMOD_CTRL))) {
+		     (SDL_GetModState() & AG_KEYMOD_CTRL))) {
 			if (ti->selected) {
 				DeselectItem(tl, ti);
 			} else {
@@ -1101,7 +1101,7 @@ MouseButtonDown(AG_Event *event)
 			    "dblclick-expire", NULL);
 		}
 		break;
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_RIGHT:
 		if (ti->flags & AG_TLIST_NO_POPUP) {
 			return;
 		}
@@ -1114,7 +1114,8 @@ MouseButtonDown(AG_Event *event)
 		
 			if (!(tl->flags &
 			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
-			    !(SDL_GetModState() & (KMOD_CTRL|KMOD_SHIFT))) {
+			    !(SDL_GetModState() &
+			      (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
 				AG_TlistDeselectAll(tl);
 				SelectItem(tl, ti);
 			}
@@ -1138,22 +1139,22 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
+	case AG_KEY_UP:
 		DecrementSelection(tl, 1);
 		AG_DelTimeout(tl, &tl->incTo);
 		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
-	case SDLK_DOWN:
+	case AG_KEY_DOWN:
 		IncrementSelection(tl, 1);
 		AG_DelTimeout(tl, &tl->decTo);
 		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
 		break;
-	case SDLK_PAGEUP:
+	case AG_KEY_PAGEUP:
 		DecrementSelection(tl, agPageIncrement);
 		AG_DelTimeout(tl, &tl->incTo);
 		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
-	case SDLK_PAGEDOWN:
+	case AG_KEY_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
 		AG_DelTimeout(tl, &tl->decTo);
 		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
@@ -1168,12 +1169,12 @@ KeyUp(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_PAGEUP:
+	case AG_KEY_UP:
+	case AG_KEY_PAGEUP:
 		AG_DelTimeout(tl, &tl->decTo);
 		break;
-	case SDLK_DOWN:
-	case SDLK_PAGEDOWN:
+	case AG_KEY_DOWN:
+	case AG_KEY_PAGEDOWN:
 		AG_DelTimeout(tl, &tl->incTo);
 		break;
 	}

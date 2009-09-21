@@ -4,7 +4,7 @@
 
 __BEGIN_DECLS
 extern int agEventAvg;			/* Number of events in last frame */
-extern int agIdleAvg;			/* Measured SDL_Delay() granularity */
+extern int agIdleAvg;			/* Measured AG_Delay() granularity */
 extern AG_Window *agPerfWindow;
 
 AG_Window *AG_PerfMonShow(void);

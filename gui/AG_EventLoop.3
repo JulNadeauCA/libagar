@@ -62,8 +62,9 @@ and
 .Fn AG_SchedEvent )
 to be executed at accurate points in time.
 .Sh EXAMPLE - CUSTOM EVENT LOOP
-The following code provides a good starting point for a custom
-event loop routine.
+The following code provides a good starting point for a custom event loop
+routine for an Agar GUI application using SDL.
+In this example, events are retrieved from SDL and forwarded to Agar.
 The Agar GUI elements are rendered by iterating over the windows attached
 to the
 .Xr AG_View 3
@@ -88,9 +89,9 @@ AG_MyEventLoop(void)
 	AG_Window *win;
 	Uint32 Tr1, Tr2 = 0;
 
-	Tr1 = SDL_GetTicks();
+	Tr1 = AG_GetTicks();
 	for (;;) {
-		Tr2 = SDL_GetTicks();
+		Tr2 = AG_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {
 			AG_LockVFS(agView);
 			AG_BeginRendering();
@@ -103,7 +104,7 @@ AG_MyEventLoop(void)
 			AG_UnlockVFS(agView);
 
 			/* Recalibrate the effective refresh rate. */
-			Tr1 = SDL_GetTicks();
+			Tr1 = AG_GetTicks();
 			agView->rCur = agView->rNom - (Tr1-Tr2);
 			if (agView->rCur < 1) {
 				agView->rCur = 1;

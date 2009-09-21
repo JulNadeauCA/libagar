@@ -140,7 +140,7 @@ MouseButtonDown(AG_Event *event)
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 
-	if (button != SDL_BUTTON_LEFT) {
+	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
 	printf("Click at %d,%d\n", x, y);

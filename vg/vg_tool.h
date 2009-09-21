@@ -57,8 +57,8 @@ typedef struct vg_tool_command {
 	char *name;				/* Command string */
 	char *descr;				/* Description string */
 	AG_Event *fn;				/* Callback routine (bound to VG_View) */
-	SDLMod kMod;				/* Bound key modifier */
-	SDLKey kSym;				/* Bound keysym */
+	AG_KeyMod kMod;				/* Bound key modifier */
+	AG_KeySym kSym;				/* Bound keysym */
 	VG_Tool *tool;				/* Back pointer to tool */
 	AG_TAILQ_ENTRY(vg_tool_command) cmds;
 } VG_ToolCommand;
@@ -74,7 +74,7 @@ void       VG_ToolDestroy(VG_Tool *);
 AG_Window *VG_ToolWindow(void *, const char *);
 
 VG_ToolCommand *VG_ToolCommandNew(void *, const char *, AG_EventFn);
-void            VG_ToolCommandKey(VG_ToolCommand *, SDLMod, SDLKey);
+void            VG_ToolCommandKey(VG_ToolCommand *, AG_KeyMod, AG_KeySym);
 void            VG_ToolCommandDescr(VG_ToolCommand *, const char *, ...);
 int             VG_ToolCommandExec(void *, const char *, const char *, ...);
 __END_DECLS

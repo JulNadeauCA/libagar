@@ -42,7 +42,7 @@ MouseButtonDown(void *p, VG_Vector v, int b)
 	VG *vg = vv->vg;
 
 	switch (b) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		VG_Status(vv, _("New point at %.2f,%.2f"), v.x, v.y);
 		VG_PointNew(vg->root, v);
 		return (1);

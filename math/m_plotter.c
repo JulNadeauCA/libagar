@@ -70,14 +70,14 @@ keydown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_0:
-	case SDLK_1:
+	case AG_KEY_0:
+	case AG_KEY_1:
 		ptr->yScale = 1.0;
 		break;
-	case SDLK_EQUALS:
+	case AG_KEY_EQUALS:
 		ptr->yScale += 0.125;
 		break;
-	case SDLK_MINUS:
+	case AG_KEY_MINUS:
 		ptr->yScale -= 0.125;
 		break;
 	}
@@ -110,7 +110,7 @@ mousemotion(AG_Event *event)
 
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
 		if (pl->flags & M_PLOT_SELECTED &&
-		    state & SDL_BUTTON_LEFT) {
+		    state & AG_MOUSE_LEFT) {
 			pl->yOffs += dy;
 		}
 		if (MouseOverPlotItem(ptr, pl, x, y)) {
@@ -132,7 +132,7 @@ mousebuttonup(AG_Event *event)
 	M_Plot *pl;
 
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			pl->flags &= ~M_PLOT_DRAGGING;
 		}
@@ -251,10 +251,10 @@ mousebuttondown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	SDLMod mod = SDL_GetModState();
+	AG_KeyMod mod = (AG_KeyMod)SDL_GetModState();
 
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		AG_WidgetFocus(ptr);
 		if (mod & (KMOD_CTRL|KMOD_SHIFT)) {
 			TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -276,7 +276,7 @@ mousebuttondown(AG_Event *event)
 			}
 		}
 		break;
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_RIGHT:
 		AG_WidgetFocus(ptr);
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			if (MouseOverPlotItem(ptr, pl, x, y)) {
@@ -294,13 +294,13 @@ mousebuttondown(AG_Event *event)
 			}
 		}
 		break;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			if (! (pl->flags & M_PLOT_SELECTED)) { continue; }
 			pl->yScale -= 0.250;
 		}
 		break;
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			if (! (pl->flags & M_PLOT_SELECTED)) { continue; }
 			pl->yScale += 0.250;

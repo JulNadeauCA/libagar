@@ -478,24 +478,24 @@ widget reacts to the following events:
 Process resizing actions in progress.
 .It key-down
 By default,
-.Dv SDLK_UP ,
-.Dv SDLK_DOWN ,
-.Dv SDLK_PAGEUP
+.Dv AG_KEY_UP ,
+.Dv AG_KEY_DOWN ,
+.Dv AG_KEY_PAGEUP
 and
-.Dv SDLK_PAGEDOWN
+.Dv AG_KEY_PAGEDOWN
 will move the current single-row selection.
 .It mouse-button-up
 Stop any resizing action in progress.
 .It mouse-button-down
-.Dv SDL_BUTTON_LEFT
+.Dv AG_MOUSE_LEFT
 selects the overlapping column, row or cell.
-.Dv SDL_BUTTON_RIGHT
+.Dv AG_MOUSE_RIGHT
 works similarly, but displays the popup menu associated with the
 selected column or cell, as configured with
 .Fn AG_TableSetPopup .
-.Dv SDL_BUTTON_WHEELUP
+.Dv AG_MOUSE_WHEELUP
 and
-.Dv SDL_BUTTON_WHEELDOWN
+.Dv AG_MOUSE_WHEELDOWN
 are used to scroll the view of the table.
 .El
 .Pp

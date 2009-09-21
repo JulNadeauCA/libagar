@@ -45,7 +45,7 @@ static Uint32  *killRing = NULL;
 static size_t	killRingLen = 0;
 
 static int
-InsertUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 ch,
+InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
     Uint32 *ucs, int len, int bufSize)
 {
 	int unicodeKbd = SDL_EnableUNICODE(-1);
@@ -64,17 +64,17 @@ InsertUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 ch,
 			const struct ag_key_mapping *km = &agKeymapLATIN1[i];
 
 			if (keysym == km->key) {
-				if (((keymod & KMOD_ALT) &&
-				     (keymod & KMOD_SHIFT) &&
-				     (km->modmask == (KMOD_ALT|KMOD_SHIFT)))) {
+				if (((keymod & AG_KEYMOD_ALT) &&
+				     (keymod & AG_KEYMOD_SHIFT) &&
+				     (km->modmask == (AG_KEYMOD_ALT|AG_KEYMOD_SHIFT)))) {
 					uch = km->unicode;
 					break;
-				} else if (keymod & KMOD_ALT &&
-				    km->modmask == KMOD_ALT) {
+				} else if (keymod & AG_KEYMOD_ALT &&
+				    km->modmask == AG_KEYMOD_ALT) {
 					uch = km->unicode;
 					break;
 				}
-			} else if (km->key == SDLK_LAST) {
+			} else if (km->key == AG_KEY_LAST) {
 				break;
 			}
 		}
@@ -123,7 +123,7 @@ InsertUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 ch,
 }
 
 static int
-DeleteUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
+DeleteUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
     Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
@@ -134,7 +134,7 @@ DeleteUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 		return (0);
 
 	switch (keysym) {
-	case SDLK_BACKSPACE:
+	case AG_KEY_BACKSPACE:
 		if (ed->pos == 0) {
 			return (0);
 		}
@@ -145,7 +145,7 @@ DeleteUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 		}
 		ed->pos--;
 		break;
-	case SDLK_DELETE:
+	case AG_KEY_DELETE:
 		if (ed->pos == len) {
 			ucs[len-1] = '\0';
 			ed->pos--;
@@ -164,7 +164,7 @@ DeleteUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 }
 
 static int
-KillUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+KillUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	size_t lenKill = 0;
@@ -174,7 +174,7 @@ KillUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 		return (0);
 	}
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_k) && (keymod & KMOD_CTRL))
+	    (keysym == AG_KEY_K) && (keymod & AG_KEYMOD_CTRL))
 		return (0);
 
 	for (c = &ucs[ed->pos]; c < &ucs[len]; c++) {
@@ -203,7 +203,7 @@ KillUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-YankUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+YankUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	int i;
@@ -212,7 +212,7 @@ YankUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 		return (0);
 	}
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_y) && (keymod & KMOD_CTRL))
+	    (keysym == AG_KEY_Y) && (keymod & AG_KEYMOD_CTRL))
 		return (0);
 
 	AG_MutexLock(&killRingLock);
@@ -250,7 +250,7 @@ nochange:
 }
 
 static int
-WordBackUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+WordBackUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
@@ -258,7 +258,7 @@ WordBackUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 	if (ed->flags & AG_EDITABLE_NOWORDSEEK)
 		return (0);
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_b) && (keymod & KMOD_ALT))
+	    (keysym == AG_KEY_B) && (keymod & AG_KEYMOD_ALT))
 		return (0);
 
 	if (ed->pos > 1 && ucs[ed->pos-1] == ' ') {
@@ -276,7 +276,7 @@ WordBackUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-WordForwUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+WordForwUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
@@ -284,7 +284,7 @@ WordForwUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 	if (ed->flags & AG_EDITABLE_NOWORDSEEK)
 		return (0);
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_f) && (keymod & KMOD_ALT))
+	    (keysym == AG_KEY_F) && (keymod & AG_KEYMOD_ALT))
 		return (0);
 
 	if (ed->pos == len) {
@@ -302,13 +302,13 @@ WordForwUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorHomeUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorHomeUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
 
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_a) && (keymod & KMOD_CTRL)) {
+	    (keysym == AG_KEY_A) && (keymod & AG_KEYMOD_CTRL)) {
 		return (0);
 	}
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
@@ -329,13 +329,13 @@ CursorHomeUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorEndUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorEndUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
 
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
-	    (keysym == SDLK_e) && (keymod & KMOD_CTRL)) {
+	    (keysym == AG_KEY_E) && (keymod & AG_KEYMOD_CTRL)) {
 		return (0);
 	}
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
@@ -361,7 +361,7 @@ CursorEndUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorLeftUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorLeftUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	if (--ed->pos < 1) {
@@ -372,7 +372,7 @@ CursorLeftUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorRightUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorRightUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	if (ed->pos < len) {
@@ -383,7 +383,7 @@ CursorRightUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	AG_EditableMoveCursor(ed, ed->xCursPref,
@@ -393,7 +393,7 @@ CursorUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorDownUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	AG_EditableMoveCursor(ed, ed->xCursPref,
@@ -403,7 +403,7 @@ CursorDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+PageUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
@@ -413,7 +413,7 @@ PageUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+PageDownUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
@@ -423,21 +423,21 @@ PageDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 const struct ag_keycode_utf8 agKeymapUTF8[] = {
-	{ SDLK_HOME,		0,		CursorHomeUTF8 },
-	{ SDLK_a,		KMOD_CTRL,	CursorHomeUTF8 },
-	{ SDLK_END,		0,		CursorEndUTF8 },
-	{ SDLK_e,		KMOD_CTRL,	CursorEndUTF8 },
-	{ SDLK_LEFT,		0,		CursorLeftUTF8 },
-	{ SDLK_RIGHT,		0,		CursorRightUTF8 },
-	{ SDLK_UP,		0,		CursorUpUTF8 },
-	{ SDLK_DOWN,		0,		CursorDownUTF8 },
-	{ SDLK_PAGEUP,		0,		PageUpUTF8 },
-	{ SDLK_PAGEDOWN,	0,		PageDownUTF8 },
-	{ SDLK_BACKSPACE,	0,		DeleteUTF8 },
-	{ SDLK_DELETE,		0,		DeleteUTF8 },
-	{ SDLK_k,		KMOD_CTRL,	KillUTF8 },
-	{ SDLK_y,		KMOD_CTRL,	YankUTF8 },
-	{ SDLK_b,		KMOD_ALT,	WordBackUTF8 },
-	{ SDLK_f,		KMOD_ALT,	WordForwUTF8 },
-	{ SDLK_LAST,		0,		InsertUTF8 },
+	{ AG_KEY_HOME,		0,		CursorHomeUTF8 },
+	{ AG_KEY_A,		AG_KEYMOD_CTRL,	CursorHomeUTF8 },
+	{ AG_KEY_END,		0,		CursorEndUTF8 },
+	{ AG_KEY_E,		AG_KEYMOD_CTRL,	CursorEndUTF8 },
+	{ AG_KEY_LEFT,		0,		CursorLeftUTF8 },
+	{ AG_KEY_RIGHT,		0,		CursorRightUTF8 },
+	{ AG_KEY_UP,		0,		CursorUpUTF8 },
+	{ AG_KEY_DOWN,		0,		CursorDownUTF8 },
+	{ AG_KEY_PAGEUP,	0,		PageUpUTF8 },
+	{ AG_KEY_PAGEDOWN,	0,		PageDownUTF8 },
+	{ AG_KEY_BACKSPACE,	0,		DeleteUTF8 },
+	{ AG_KEY_DELETE,	0,		DeleteUTF8 },
+	{ AG_KEY_K,		AG_KEYMOD_CTRL,	KillUTF8 },
+	{ AG_KEY_Y,		AG_KEYMOD_CTRL,	YankUTF8 },
+	{ AG_KEY_B,		AG_KEYMOD_ALT,	WordBackUTF8 },
+	{ AG_KEY_F,		AG_KEYMOD_ALT,	WordForwUTF8 },
+	{ AG_KEY_LAST,		0,		InsertUTF8 },
 };

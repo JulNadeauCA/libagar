@@ -440,7 +440,7 @@ MouseButtonDown(AG_Event *event)
 	        sb->wButton;
 	int pos = 0, posFound;
 
-	if (button != SDL_BUTTON_LEFT) {
+	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
 	AG_WidgetFocus(sb);
@@ -533,14 +533,14 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_LEFT:
+	case AG_KEY_UP:
+	case AG_KEY_LEFT:
 		Decrement(sb, 1);
 		AG_DelTimeout(sb, &sb->incTo);
 		AG_ScheduleTimeout(sb, &sb->decTo, agKbdDelay);
 		break;
-	case SDLK_DOWN:
-	case SDLK_RIGHT:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
 		Increment(sb, 1);
 		AG_DelTimeout(sb, &sb->decTo);
 		AG_ScheduleTimeout(sb, &sb->incTo, agKbdDelay);
@@ -555,12 +555,12 @@ KeyUp(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_LEFT:
+	case AG_KEY_UP:
+	case AG_KEY_LEFT:
 		AG_DelTimeout(sb, &sb->decTo);
 		break;
-	case SDLK_DOWN:
-	case SDLK_RIGHT:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
 		AG_DelTimeout(sb, &sb->incTo);
 		break;
 	}

@@ -490,13 +490,13 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 
-	if (button == SDL_BUTTON_MIDDLE) {
+	if (button == AG_MOUSE_MIDDLE) {
 		int x, y;
 
 		AG_MouseGetState(&x, &y);
 		RG_SketchOpenMenu(tv, x, y);
 		return;
-	} else if (button == SDL_BUTTON_RIGHT) {
+	} else if (button == AG_MOUSE_RIGHT) {
 		if (tv->cur_tool == NULL ||
 		   (tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 			tv->scrolling++;
@@ -542,7 +542,8 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 				AG_Window *pwin = AG_WidgetParentWindow(tv);
 				AG_Window *win;
 
-				if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+				if (((AG_KeyMod)SDL_GetModState() &
+				    AG_KEYMOD_CTRL) == 0) {
 					TAILQ_FOREACH(vge, &vg->vges, vges) {
 						if (vge->selected)
 							RG_SketchUnselect(tv,
@@ -653,7 +654,7 @@ RG_SketchKeyDown(RG_Tileview *tv, RG_TileElement *tel, int keysym,
 		}
 	}
 	switch (keysym) {
-	case SDLK_DELETE:
+	case AG_KEY_DELETE:
 		for (vge = TAILQ_FIRST(&vg->vges);
 		     vge != TAILQ_END(&vg->vges);
 		     vge = nvge) {

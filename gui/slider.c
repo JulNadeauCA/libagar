@@ -501,7 +501,7 @@ MouseButtonDown(AG_Event *event)
 	int x = ((sl->type == AG_SLIDER_HORIZ) ? AG_INT(2) : AG_INT(3));
 	int pos;
 
-	if (button != SDL_BUTTON_LEFT) {
+	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
 	if (GetPosition(sl, &pos) == -1)
@@ -548,14 +548,14 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_LEFT:
+	case AG_KEY_UP:
+	case AG_KEY_LEFT:
 		Decrement(sl, 1);
 		AG_DelTimeout(sl, &sl->incTo);
 		AG_ScheduleTimeout(sl, &sl->decTo, agKbdDelay);
 		break;
-	case SDLK_DOWN:
-	case SDLK_RIGHT:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
 		Increment(sl, 1);
 		AG_DelTimeout(sl, &sl->decTo);
 		AG_ScheduleTimeout(sl, &sl->incTo, agKbdDelay);
@@ -570,12 +570,12 @@ KeyUp(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_LEFT:
+	case AG_KEY_UP:
+	case AG_KEY_LEFT:
 		AG_DelTimeout(sl, &sl->decTo);
 		break;
-	case SDLK_DOWN:
-	case SDLK_RIGHT:
+	case AG_KEY_DOWN:
+	case AG_KEY_RIGHT:
 		AG_DelTimeout(sl, &sl->incTo);
 		break;
 	}

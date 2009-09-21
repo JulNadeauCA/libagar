@@ -97,7 +97,7 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		ri = &rad->items[rad->nItems++];
 		Strlcpy(ri->text, s, sizeof(ri->text));
 		ri->surface = -1;
-		ri->hotkey = SDLK_UNKNOWN;
+		ri->hotkey = 0;
 		AG_TextSize(s, &w, NULL);
 		if (w > rad->max_w) { rad->max_w = w; }
 	}
@@ -115,7 +115,7 @@ AG_RadioAddItemS(AG_Radio *rad, const char *s)
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
-	ri->hotkey = SDLK_UNKNOWN;
+	ri->hotkey = 0;
 	Strlcpy(ri->text, s, sizeof(ri->text));
 
 	AG_TextSize(ri->text, &w, NULL);
@@ -138,7 +138,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
-	ri->hotkey = SDLK_UNKNOWN;
+	ri->hotkey = 0;
 
 	va_start(ap, fmt);
 	Vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
@@ -154,7 +154,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 
 /* Create a radio item and return its index (with hotkey; C string). */
 int
-AG_RadioAddItemHKS(AG_Radio *rad, SDLKey hotkey, const char *s)
+AG_RadioAddItemHKS(AG_Radio *rad, AG_KeySym hotkey, const char *s)
 {
 	AG_RadioItem *ri;
 	int w, rv;
@@ -176,7 +176,7 @@ AG_RadioAddItemHKS(AG_Radio *rad, SDLKey hotkey, const char *s)
 
 /* Create a radio item and return its index (with hotkey; format string). */
 int
-AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
+AG_RadioAddItemHK(AG_Radio *rad, AG_KeySym hotkey, const char *fmt, ...)
 {
 	AG_RadioItem *ri;
 	va_list ap;
@@ -309,7 +309,7 @@ MouseButtonDown(AG_Event *event)
 
 	value = AG_GetVariable(rad, "value", &sel);
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		selNew = ((y - rad->yPadding)/(rad->radius*2 + rad->ySpacing));
 		if (selNew >= rad->nItems) {
 			selNew = rad->nItems - 1;
@@ -338,20 +338,20 @@ KeyDown(AG_Event *event)
 	int i;
 
 	value = AG_GetVariable(rad, "value", &sel);
-	switch ((SDLKey)keysym) {
-	case SDLK_DOWN:
+	switch (keysym) {
+	case AG_KEY_DOWN:
 		selNew = *sel;
 		if (++selNew >= rad->nItems)
 			selNew = rad->nItems-1;
 		break;
-	case SDLK_UP:
+	case AG_KEY_UP:
 		selNew = *sel;
 		if (--selNew < 0)
 			selNew = 0;
 		break;
 	default:
 		for (i = 0; i < rad->nItems; i++) {
-			if (rad->items[i].hotkey != SDLK_UNKNOWN &&
+			if (rad->items[i].hotkey != 0 &&
 			    rad->items[i].hotkey == keysym) {
 				selNew = i;
 				break;

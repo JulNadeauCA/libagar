@@ -57,13 +57,13 @@ Most Agar demos also map the "F8" key to
 .Sh INTERFACE
 .nr nS 1
 .Ft void
-.Fn AG_BindGlobalKey "SDLKey key" "SDLMod mod" "void (*fn)(void)"
+.Fn AG_BindGlobalKey "AG_KeySym key" "AG_KeyMod mod" "void (*fn)(void)"
 .Pp
 .Ft void
-.Fn AG_BindGlobalKeyEv "SDLKey key" "SDLMod mod" "void (*fn)(AG_Event *)"
+.Fn AG_BindGlobalKeyEv "AG_KeySym key" "AG_KeyMod mod" "void (*fn)(AG_Event *)"
 .Pp
 .Ft int
-.Fn AG_UnbindGlobalKey "SDLKey key" "SDLMod mod"
+.Fn AG_UnbindGlobalKey "AG_KeySym key" "AG_KeyMod mod"
 .Pp
 .Ft void
 .Fn AG_ClearGlobalKeys "void"

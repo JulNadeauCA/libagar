@@ -408,7 +408,7 @@ static Uint32
 GlyphGC(void *obj, Uint32 ival, void *arg)
 {
 	AG_Glyph *gl;
-	Uint32 t = SDL_GetTicks();
+	Uint32 t = AG_GetTicks();
 	int i;
 
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
@@ -638,7 +638,7 @@ AG_TextRenderGlyph(Uint32 ch)
 	} else {
 		gl->nrefs++;
 	}
-	gl->lastRef = SDL_GetTicks();
+	gl->lastRef = AG_GetTicks();
 	return (gl);
 }
 

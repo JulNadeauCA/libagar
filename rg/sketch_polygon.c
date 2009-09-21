@@ -190,7 +190,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 
 	switch (pt->seq) {
 	case BEGIN_POLYGON:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			pt->polygon = VG_Begin(vg, VG_POLYGON);
 			VG_Vertex2(vg, x, y);
 			pt->vtx = VG_Vertex2(vg, x, y);
@@ -205,7 +205,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 		}
 		break;
 	case CONTINUE_POLYGON:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			pt->vtx = VG_Vertex2(vg, x, y);
 		} else {
 			if (pt->polygon->nvtx < 3) {

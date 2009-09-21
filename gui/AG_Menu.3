@@ -114,16 +114,16 @@ If a parameter is -1, its current value is preserved.
 .Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
+.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "AG_KeySym keysym" "AG_KeyMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_MenuDynamicItem "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamicItemKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey key" "SDLMod kmod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
+.Fn AG_MenuDynamicItemKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "AG_KeySym key" "AG_KeyMod kmod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
+.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "AG_Surface *icon" "AG_KeySym keysym" "AG_KeyMod keymod" "void (*fn)(AG_Event *)" "const char *fnArgs, ..."
 .Pp
 .Ft "void"
 .Fn AG_MenuSetIcon "AG_MenuItem *item" "AG_Surface *su"
@@ -172,7 +172,7 @@ When selected, the item will invoke the specified event handler function
 The
 .Fn AG_MenuActionKb
 variant also associates the action with the given
-.Xr SDLKey 3
+.Xr AG_KeySym 3
 and modifier.
 .Pp
 The
@@ -480,6 +480,7 @@ AG_MenuItem *item = AG_MenuAddItem(menu, "File");
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
+.Xr AG_KeySym 3 ,
 .Xr AG_Button 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Toolbar 3 ,

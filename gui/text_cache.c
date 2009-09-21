@@ -145,7 +145,7 @@ AG_TextCacheGet(AG_TextCache *tc, const char *text)
 		ct->text = Strdup(text);
 		ct->surface = AG_WidgetMapSurface(tc->widget,
 		    AG_TextRender(text));
-		ct->stamp = SDL_GetTicks();
+		ct->stamp = AG_GetTicks();
 		ct->state = *agTextState;
 		tc->curEnts++;
 		SLIST_INSERT_HEAD(&bucket->ents, ct, ents);
@@ -158,7 +158,7 @@ AG_TextCacheGet(AG_TextCache *tc, const char *text)
 			ExpireEntries(tc);
 		}
 	} else {
-		ct->stamp = SDL_GetTicks();
+		ct->stamp = AG_GetTicks();
 #ifdef TEXTCACHE_DEBUG
 		Debug(NULL, "HIT (%u)\n", (unsigned)ct->stamp);
 #endif

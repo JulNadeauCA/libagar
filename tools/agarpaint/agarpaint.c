@@ -463,14 +463,17 @@ FileMenu(AG_Event *event)
 {
 	AG_MenuItem *m = AG_SENDER();
 
-	AG_MenuActionKb(m, _("New"), agIconDoc.s, SDLK_n, KMOD_CTRL,
+	AG_MenuActionKb(m, _("New"), agIconDoc.s,
+	    AG_KEY_N, AG_KEYMOD_CTRL,
 	    NewTileset, NULL);
-	AG_MenuActionKb(m, _("Open..."), agIconLoad.s, SDLK_o, KMOD_CTRL,
+	AG_MenuActionKb(m, _("Open..."), agIconLoad.s,
+	    AG_KEY_O, AG_KEYMOD_CTRL,
 	    OpenTilesetDlg, NULL);
 
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 
-	AG_MenuActionKb(m, _("Save"), agIconSave.s, SDLK_s, KMOD_CTRL,
+	AG_MenuActionKb(m, _("Save"), agIconSave.s,
+	    AG_KEY_S, AG_KEYMOD_CTRL,
 	    SaveTileset, "%p", tsFocused);
 	AG_MenuAction(m, _("Save as..."), agIconSave.s,
 	    SaveTilesetAsDlg, "%p", tsFocused);
@@ -478,13 +481,15 @@ FileMenu(AG_Event *event)
 	AG_MenuSeparator(m);
 
 	AG_MenuActionKb(m, _("Import images..."), agIconDocImport.s,
-	    SDLK_o, KMOD_CTRL,
+	    AG_KEY_O, AG_KEYMOD_CTRL,
 	    ImportImagesDlg, "%p", tsFocused);
 
 	if (tsFocused == NULL) { AG_MenuEnable(m); }
 	
 	AG_MenuSeparator(m);
-	AG_MenuActionKb(m, "Quit", NULL, SDLK_q, KMOD_CTRL, Quit, NULL);
+	AG_MenuActionKb(m, "Quit", NULL,
+	    AG_KEY_Q, AG_KEYMOD_CTRL,
+	    Quit, NULL);
 }
 
 static void
@@ -500,7 +505,8 @@ EditMenu(AG_Event *event)
 	
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 
-	AG_MenuActionKb(m, "Undo", NULL, SDLK_z, KMOD_CTRL,
+	AG_MenuActionKb(m, "Undo", NULL,
+	    AG_KEY_Z, AG_KEYMOD_CTRL,
 	    Undo, "%p", tsFocused);
 
 	if (tsFocused == NULL) { AG_MenuEnable(m); }

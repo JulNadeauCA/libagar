@@ -1170,12 +1170,12 @@ scan:
 			}
 			if (!(win->flags & AG_WINDOW_MODKEYEVENTS)) {
 				switch (ev->key.keysym.sym) {
-				case SDLK_LSHIFT:
-				case SDLK_RSHIFT:
-				case SDLK_LALT:
-				case SDLK_RALT:
-				case SDLK_LCTRL:
-				case SDLK_RCTRL:
+				case AG_KEY_LSHIFT:
+				case AG_KEY_RSHIFT:
+				case AG_KEY_LALT:
+				case AG_KEY_RALT:
+				case AG_KEY_LCTRL:
+				case AG_KEY_RCTRL:
 					AG_ObjectUnlock(win);
 					return (0);
 				default:
@@ -1186,7 +1186,7 @@ scan:
 			if (AG_WindowIsFocused(win) &&
 			   (wFoc = AG_WidgetFindFocused(win)) != NULL) {
 				AG_ObjectLock(wFoc);
-				if (ev->key.keysym.sym != SDLK_TAB ||
+				if (ev->key.keysym.sym != AG_KEY_TAB ||
 			            wFoc->flags & AG_WIDGET_CATCH_TAB) {
 					if (wFoc->flags & AG_WIDGET_CATCH_TAB) {
 						tabCycle = 0;
@@ -1219,7 +1219,7 @@ scan:
 				AG_ObjectUnlock(wFoc);
 			}
 			if (tabCycle &&
-			    ev->key.keysym.sym == SDLK_TAB &&
+			    ev->key.keysym.sym == AG_KEY_TAB &&
 			    ev->type == SDL_KEYUP) {
 				AG_WindowCycleFocus(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));

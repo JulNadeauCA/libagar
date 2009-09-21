@@ -324,7 +324,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	AG_TreetblRow *row = NULL;
 	int depth = 0;
 	int ts = tt->hRow/2 + 1;
-	SDLMod modifiers = SDL_GetModState();
+	AG_KeyMod modifiers = (AG_KeyMod)SDL_GetModState();
 	Uint i, j, row_idx;
 	int px;
 
@@ -492,7 +492,7 @@ Init(void *obj)
 	tt->nExpandedRows = 0;
 
 	tt->visible.redraw_rate = 0;
-	tt->visible.redraw_last = SDL_GetTicks();
+	tt->visible.redraw_last = AG_GetTicks();
 	tt->visible.count = 0;
 	tt->visible.items = NULL;
 
@@ -1356,7 +1356,7 @@ ViewChanged(AG_Treetbl *tt)
 		if (tt->column[i].flags & AG_TREETBL_COL_DYNAMIC)
 			DrawDynamicColumn(tt, i);
 
-	tt->visible.redraw_last = SDL_GetTicks();
+	tt->visible.redraw_last = AG_GetTicks();
 	tt->visible.dirty = 0;
 }
 
@@ -1372,7 +1372,7 @@ Draw(void *obj)
 		ViewChanged(tt);
 	}
 	if (tt->visible.redraw_rate &&
-	    SDL_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
+	    AG_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
 		update = 1;
 	
 	STYLE(tt)->TableBackground(tt, tt->r);
@@ -1397,7 +1397,7 @@ Draw(void *obj)
 	FOREACH_VISIBLE_COLUMN(tt, DrawColumn, &update, NULL);
 
 	if (update)
-		tt->visible.redraw_last = SDL_GetTicks();
+		tt->visible.redraw_last = AG_GetTicks();
 }
 
 /* Return a pointer to the currently selected row or NULL. */
