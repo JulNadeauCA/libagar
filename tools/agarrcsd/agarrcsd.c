@@ -171,7 +171,7 @@ main(int argc, char *argv[])
 		}
 		AG_InitInput(0);
 		AG_SetRefreshRate(-1);
-		AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+		AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 		DEV_InitSubsystem(0);
 		DEV_Browser(&UserMgr);
 	}

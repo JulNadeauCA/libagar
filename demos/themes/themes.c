@@ -286,11 +286,7 @@ CreateWindow(void)
 static void
 Quit(AG_Event *event)
 {
-	SDL_Event nev;
-
-	/* Terminate the application. */
-	nev.type = SDL_USEREVENT;
-	SDL_PushEvent(&nev);
+	AG_QuitGUI();
 }
 
 static void
@@ -457,8 +453,8 @@ main(int argc, char *argv[])
 	AG_SetRefreshRate(fps);
 
 	/* Bind some useful accelerator keys. */
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Initialize the Agar-DEV library. */
 	DEV_InitSubsystem(0);

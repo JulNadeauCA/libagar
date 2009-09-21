@@ -272,10 +272,6 @@ cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 	AG_LockVFS(agView);
 	NS_ListString(ns, "opengl:%d", agView->opengl);
 	NS_ListString(ns, "geom:%u:%u", agView->w, agView->h);
-	NS_ListString(ns, "bpp:%u", agVideoInfo->vfmt->BitsPerPixel);
-	NS_ListString(ns, "rmask:%08x", agVideoInfo->vfmt->Rmask);
-	NS_ListString(ns, "gmask:%08x", agVideoInfo->vfmt->Gmask);
-	NS_ListString(ns, "bmask:%08x", agVideoInfo->vfmt->Bmask);
 	AG_UnlockVFS(agView);
 	NS_EndList(ns);
 	return (0);

@@ -1164,11 +1164,8 @@ DEV_PageOutCallback(AG_Event *event)
 static void
 ConfirmQuit(AG_Event *event)
 {
-	SDL_Event nev;
-
 	agTerminating = 0;
-	nev.type = SDL_USEREVENT;
-	SDL_PushEvent(&nev);
+	AG_QuitGUI();
 }
 
 static void
@@ -1196,10 +1193,7 @@ DEV_QuitCallback(AG_Event *event)
 	agTerminating = 1;
 
 	if (!AG_ObjectChangedAll(vfsRoot)) {
-		SDL_Event nev;
-
-		nev.type = SDL_USEREVENT;
-		SDL_PushEvent(&nev);
+		AG_QuitGUI();
 		return;
 	}
 	

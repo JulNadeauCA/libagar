@@ -178,10 +178,13 @@ extern int agGUI;			/* GUI is initialized */
 extern int agInitedSDL;			/* SDL_Init() was used */
 extern int agInitedSDLVideo;		/* SDL_INIT_VIDEO was used */
 
+int  AG_InitGraphics(const char *);
 int  AG_InitVideo(int, int, int, Uint);
 int  AG_InitVideoSDL(SDL_Surface *, Uint);
 int  AG_InitGUI(Uint);
 void AG_DestroyGUI(void);
+void AG_InitGuiGlobals(void);
+void AG_DestroyGuiGlobals(void);
 void AG_QuitGUI(void);
 void AG_ClearBackground(void);
 int  AG_SetRefreshRate(int);
@@ -193,11 +196,6 @@ void AG_BeginRendering(void);
 void AG_EndRendering(void);
 int  AG_ProcessEvent(SDL_Event *);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
-
-void AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
-void AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
-int  AG_UnbindGlobalKey(SDLKey, SDLMod);
-void AG_ClearGlobalKeys(void);
 
 void        AG_ViewCapture(void);
 #ifdef HAVE_OPENGL

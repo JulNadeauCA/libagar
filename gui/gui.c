@@ -134,8 +134,44 @@ void *agGUIClasses[] = {
 int agGUI = 0;			/* GUI is initialized */
 int agInitedSDL = 0;		/* SDL_Init() was used */
 int agInitedSDLVideo = 0;	/* SDL_INIT_VIDEO was used */
+static int initedGlobals = 0;
 
-/* Initialize Agar-GUI */
+/*
+ * Initialize the Agar-GUI globals and built-in classes. This function
+ * is invoked internally prior to graphics initialization.
+ */
+void
+AG_InitGuiGlobals(void)
+{
+	initedGlobals = 1;
+	agGUI = 1;
+	
+	AG_RegisterClass(&agDisplayClass);
+
+	AG_InitGlobalKeys();
+	AG_LabelInitFormats();
+}
+
+/*
+ * Destroy the Agar-GUI globals and built-in classes. This function
+ * is invoked internally after the graphics subsystem is destroyed.
+ */
+void
+AG_DestroyGuiGlobals(void)
+{
+	AG_LabelDestroyFormats();
+	AG_DestroyGlobalKeys();
+	
+	AG_UnregisterClass(&agDisplayClass);
+
+	agGUI = 0;
+	initedGlobals = 0;
+}
+
+/*
+ * Initialize the Agar-GUI internals. This is invoked after the graphics
+ * subsystem has been initialized.
+ */
 int
 AG_InitGUI(Uint flags)
 {
@@ -191,7 +227,10 @@ AG_InitGUI(Uint flags)
 	return (0);
 }
 
-/* Release resources allocated by Agar-GUI */
+/*
+ * Release all resources allocated by the Agar-GUI library. This is called
+ * directly from the application, or from AG_Destroy().
+ */
 void
 AG_DestroyGUI(void)
 {

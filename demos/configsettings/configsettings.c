@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 		printf("AG_InitVideo(%d): %s\n", i, AG_GetError());
 		exit(1);
 	}
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);

@@ -102,7 +102,9 @@ void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, AG_VariableType, Uint32);
 
 #define AG_LABEL_ARG(lbl,_type) (*(_type *)lbl->poll.ptrs[fPos])
 void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);
-void	 AG_RegisterBuiltinLabelFormats(void);
+void	 AG_UnregisterLabelFormat(const char *);
+void	 AG_LabelInitFormats(void);
+void	 AG_LabelDestroyFormats(void);
 
 #ifdef AG_LEGACY
 # define AG_LabelNewStatic	AG_LabelNew

@@ -405,10 +405,7 @@ SaveTileset(AG_Event *event)
 static void
 ConfirmQuit(AG_Event *event)
 {
-	SDL_Event nev;
-
-	nev.type = SDL_USEREVENT;
-	SDL_PushEvent(&nev);
+	AG_QuitGUI();
 }
 
 static void
@@ -610,8 +607,8 @@ main(int argc, char *argv[])
 	AG_PrtString(agConfig, "load-path", ".:%s", SHAREDIR);
 
 	AG_AtExitFuncEv(Quit);
-	AG_BindGlobalKeyEv(SDLK_ESCAPE, KMOD_NONE, Quit);
-	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
+	AG_BindGlobalKeyEv(AG_KEY_ESCAPE, AG_KEYMOD_ANY, Quit);
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Initialize the subsystems. */
 	RG_InitSubsystem();
