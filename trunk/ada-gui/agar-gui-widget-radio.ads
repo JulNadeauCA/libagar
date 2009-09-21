@@ -1,5 +1,3 @@
-with SDL.keysym;
-
 package agar.gui.widget.radio is
 
   use type c.unsigned;
@@ -35,7 +33,7 @@ package agar.gui.widget.radio is
 
   function add_item_hotkey
     (radio : radio_access_t;
-     key   : SDL.keysym.key_t;
+     key   : c.int;
      text  : string) return boolean;
   pragma inline (add_item_hotkey);
 
@@ -53,7 +51,7 @@ private
   type item_t is record
     text    : text_t;
     surface : c.int;
-    hotkey  : SDL.keysym.key_t; 
+    hotkey  : c.int;
   end record;
   pragma convention (c, item_t);
 

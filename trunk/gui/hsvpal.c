@@ -593,7 +593,7 @@ MouseButtonDown(AG_Event *event)
 	float r;
 
 	switch (btn) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		if (y > pal->rAlpha.y) {
 			UpdateAlpha(pal, x);
 			pal->state = AG_HSVPAL_SEL_A;
@@ -612,8 +612,8 @@ MouseButtonDown(AG_Event *event)
 		}
 		AG_WidgetFocus(pal);
 		break;
-	case SDL_BUTTON_MIDDLE:
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_MIDDLE:
+	case AG_MOUSE_RIGHT:
 		OpenMenu(pal);
 		break;
 	}

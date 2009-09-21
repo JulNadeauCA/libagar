@@ -44,8 +44,8 @@ package body agar.gui.widget.menu is
       (parent : item_access_t;
        text   : cs.chars_ptr;
        icon   : agar.gui.surface.surface_access_t;
-       key    : SDL.keysym.key_t;
-       modkey : SDL.keysym.modkey_t;
+       key    : c.int;
+       modkey : c.int;
        func   : agar.core.event.callback_t;
        fmt    : agar.core.types.void_ptr_t) return item_access_t;
     pragma import (c, action_keyboard, "AG_MenuActionKb"); 
@@ -62,8 +62,8 @@ package body agar.gui.widget.menu is
       (parent : item_access_t;
        text   : cs.chars_ptr;
        icon   : agar.gui.surface.surface_access_t;
-       key    : SDL.keysym.key_t;
-       modkey : SDL.keysym.modkey_t;
+       key    : c.int;
+       modkey : c.int;
        func   : agar.core.event.callback_t;
        fmt    : agar.core.types.void_ptr_t) return item_access_t;
     pragma import (c, dynamic_item_keyboard, "AG_MenuDynamicItemKb");
@@ -73,8 +73,8 @@ package body agar.gui.widget.menu is
        toolbar : agar.gui.widget.toolbar.toolbar_access_t;
        text    : cs.chars_ptr;
        icon    : agar.gui.surface.surface_access_t;
-       key     : SDL.keysym.key_t;
-       modkey  : SDL.keysym.modkey_t;
+       key     : c.int;
+       modkey  : c.int;
        func    : agar.core.event.callback_t;
        fmt     : agar.core.types.void_ptr_t) return item_access_t;
     pragma import (c, toolbar_item, "AG_MenuTool");
@@ -265,8 +265,8 @@ package body agar.gui.widget.menu is
     (parent : item_access_t;
      text   : string;
      icon   : agar.gui.surface.surface_access_t;
-     key    : SDL.keysym.key_t;
-     modkey : SDL.keysym.modkey_t;
+     key    : c.int;
+     modkey : c.int;
      func   : agar.core.event.callback_t) return item_access_t
   is
     ca_text : aliased c.char_array := c.to_c (text);
@@ -301,8 +301,8 @@ package body agar.gui.widget.menu is
     (parent : item_access_t;
      text   : string;
      icon   : agar.gui.surface.surface_access_t;
-     key    : SDL.keysym.key_t;
-     modkey : SDL.keysym.modkey_t;
+     key    : c.int;
+     modkey : c.int;
      func   : agar.core.event.callback_t) return item_access_t
   is
     ca_text : aliased c.char_array := c.to_c (text);
@@ -322,8 +322,8 @@ package body agar.gui.widget.menu is
      toolbar : agar.gui.widget.toolbar.toolbar_access_t;
      text    : string;
      icon    : agar.gui.surface.surface_access_t;
-     key     : SDL.keysym.key_t;
-     modkey  : SDL.keysym.modkey_t;
+     key     : c.int;
+     modkey  : c.int;
      func    : agar.core.event.callback_t) return item_access_t
   is
     ca_text : aliased c.char_array := c.to_c (text);

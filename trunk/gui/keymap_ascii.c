@@ -47,27 +47,27 @@ EmulateShiftUSKBD(Uint32 key)
 		return (toupper(key));
 	} else {
 		switch (key) {
-		case SDLK_1:		return ('!');
-		case SDLK_2:		return ('@');
-		case SDLK_3:		return ('#');
-		case SDLK_4:		return ('$');
-		case SDLK_5:		return ('%');
-		case SDLK_6:		return ('^');
-		case SDLK_7:		return ('&');
-		case SDLK_8:		return ('*');
-		case SDLK_9:		return ('(');
-		case SDLK_0:		return (')');
-		case SDLK_BACKQUOTE:	return ('~');
-		case SDLK_MINUS:	return ('_');
-		case SDLK_EQUALS:	return ('+');
-		case SDLK_LEFTBRACKET:	return ('{');
-		case SDLK_RIGHTBRACKET:	return ('}');
-		case SDLK_BACKSLASH:	return ('|');
-		case SDLK_SEMICOLON:	return (':');
-		case SDLK_QUOTE:	return ('"');
-		case SDLK_COMMA:	return ('<');
-		case SDLK_PERIOD:	return ('>');
-		case SDLK_SLASH:	return ('?');
+		case AG_KEY_1:			return ('!');
+		case AG_KEY_2:			return ('@');
+		case AG_KEY_3:			return ('#');
+		case AG_KEY_4:			return ('$');
+		case AG_KEY_5:			return ('%');
+		case AG_KEY_6:			return ('^');
+		case AG_KEY_7:			return ('&');
+		case AG_KEY_8:			return ('*');
+		case AG_KEY_9:			return ('(');
+		case AG_KEY_0:			return (')');
+		case AG_KEY_BACKQUOTE:		return ('~');
+		case AG_KEY_MINUS:		return ('_');
+		case AG_KEY_EQUALS:		return ('+');
+		case AG_KEY_LEFTBRACKET:	return ('{');
+		case AG_KEY_RIGHTBRACKET:	return ('}');
+		case AG_KEY_BACKSLASH:		return ('|');
+		case AG_KEY_SEMICOLON:		return (':');
+		case AG_KEY_QUOTE:		return ('"');
+		case AG_KEY_COMMA:		return ('<');
+		case AG_KEY_PERIOD:		return ('>');
+		case AG_KEY_SLASH:		return ('?');
 		}
 	}
 	return ('?');
@@ -75,16 +75,16 @@ EmulateShiftUSKBD(Uint32 key)
 
 /* Apply modifiers (when not using Unicode keyboard translation). */
 Uint32
-AG_ApplyModifiersASCII(Uint32 key, int kmod)
+AG_ApplyModifiersASCII(Uint32 key, int mod)
 {
-	if (kmod & KMOD_CAPS) {
-		if (kmod & KMOD_SHIFT) {
+	if (mod & AG_KEYMOD_CAPSLOCK) {
+		if (mod & AG_KEYMOD_SHIFT) {
 			return (Uint32)tolower((int)key);
 		} else {
 			return (EmulateShiftUSKBD(key));
 		}
 	} else {
-		if (kmod & KMOD_SHIFT) {
+		if (mod & AG_KEYMOD_SHIFT) {
 			return (EmulateShiftUSKBD(key));
 		} else {
 			return (key);
@@ -93,7 +93,7 @@ AG_ApplyModifiersASCII(Uint32 key, int kmod)
 }
 
 static int
-InsertASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
+InsertASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
     char *s, int len, int lenMax)
 {
 	Uint32 ins[3];
@@ -148,7 +148,7 @@ InsertASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 }
 
 static int
-DeleteASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
+DeleteASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
     char *s, int len, int lenMax)
 {
 	char *c;
@@ -159,7 +159,7 @@ DeleteASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 		return (0);
 
 	switch (keysym) {
-	case SDLK_BACKSPACE:
+	case AG_KEY_BACKSPACE:
 		if (ed->pos == 0) {
 			return (0);
 		}
@@ -170,7 +170,7 @@ DeleteASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 		}
 		ed->pos--;
 		break;
-	case SDLK_DELETE:
+	case AG_KEY_DELETE:
 		if (ed->pos == len) {
 			s[len-1] = '\0';
 			ed->pos--;
@@ -188,7 +188,7 @@ DeleteASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 }
 
 static int
-KillASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+KillASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	if (AG_WidgetDisabled(ed))
@@ -200,7 +200,7 @@ KillASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-YankASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+YankASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	if (AG_WidgetDisabled(ed))
@@ -211,7 +211,7 @@ YankASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-WordBackASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+WordBackASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	/* TODO */
@@ -220,7 +220,7 @@ WordBackASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-WordForwASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+WordForwASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	/* TODO */
@@ -229,7 +229,7 @@ WordForwASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorHomeASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorHomeASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	ed->pos = 0;
@@ -238,7 +238,7 @@ CursorHomeASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorEndASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorEndASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	ed->pos = len;
@@ -247,7 +247,7 @@ CursorEndASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorLeftASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorLeftASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	if (--ed->pos < 1) {
@@ -258,7 +258,7 @@ CursorLeftASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorRightASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorRightASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	if (ed->pos < len) {
@@ -269,7 +269,7 @@ CursorRightASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorUpASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	char *p;
@@ -281,7 +281,7 @@ CursorUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+CursorDownASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	char *p;
@@ -293,7 +293,7 @@ CursorDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+PageUpASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
@@ -303,7 +303,7 @@ PageUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+PageDownASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
@@ -313,21 +313,21 @@ PageDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 }
 
 const struct ag_keycode_ascii agKeymapASCII[] = {
-	{ SDLK_HOME,		0,		CursorHomeASCII },
-	{ SDLK_a,		KMOD_CTRL,	CursorHomeASCII },
-	{ SDLK_END,		0,		CursorEndASCII },
-	{ SDLK_e,		KMOD_CTRL,	CursorEndASCII },
-	{ SDLK_LEFT,		0,		CursorLeftASCII },
-	{ SDLK_RIGHT,		0,		CursorRightASCII },
-	{ SDLK_UP,		0,		CursorUpASCII },
-	{ SDLK_DOWN,		0,		CursorDownASCII },
-	{ SDLK_PAGEUP,		0,		PageUpASCII },
-	{ SDLK_PAGEDOWN,	0,		PageDownASCII },
-	{ SDLK_BACKSPACE,	0,		DeleteASCII },
-	{ SDLK_DELETE,		0,		DeleteASCII },
-	{ SDLK_k,		KMOD_CTRL,	KillASCII },
-	{ SDLK_y,		KMOD_CTRL,	YankASCII },
-	{ SDLK_b,		KMOD_ALT,	WordBackASCII },
-	{ SDLK_f,		KMOD_ALT,	WordForwASCII },
-	{ SDLK_LAST,		0,		InsertASCII },
+	{ AG_KEY_HOME,		0,		CursorHomeASCII },
+	{ AG_KEY_A,		AG_KEYMOD_CTRL,	CursorHomeASCII },
+	{ AG_KEY_END,		0,		CursorEndASCII },
+	{ AG_KEY_E,		AG_KEYMOD_CTRL,	CursorEndASCII },
+	{ AG_KEY_LEFT,		0,		CursorLeftASCII },
+	{ AG_KEY_RIGHT,		0,		CursorRightASCII },
+	{ AG_KEY_UP,		0,		CursorUpASCII },
+	{ AG_KEY_DOWN,		0,		CursorDownASCII },
+	{ AG_KEY_PAGEUP,	0,		PageUpASCII },
+	{ AG_KEY_PAGEDOWN,	0,		PageDownASCII },
+	{ AG_KEY_BACKSPACE,	0,		DeleteASCII },
+	{ AG_KEY_DELETE,	0,		DeleteASCII },
+	{ AG_KEY_K,		AG_KEYMOD_CTRL,	KillASCII },
+	{ AG_KEY_Y,		AG_KEYMOD_CTRL,	YankASCII },
+	{ AG_KEY_B,		AG_KEYMOD_ALT,	WordBackASCII },
+	{ AG_KEY_F,		AG_KEYMOD_ALT,	WordForwASCII },
+	{ AG_KEY_LAST,		0,		InsertASCII },
 };

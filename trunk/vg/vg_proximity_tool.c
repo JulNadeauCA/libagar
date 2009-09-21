@@ -40,11 +40,11 @@ MouseButtonDown(void *t, VG_Vector v, int button)
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Node *vn;
 
-	if (button == SDL_BUTTON_LEFT) {
+	if (button == AG_MOUSE_LEFT) {
 		if ((vn = VG_Nearest(vv, v)) == NULL) {
 			return (0);
 		}
-		if (SDL_GetModState() & KMOD_CTRL) {
+		if ((AG_KeyMod)SDL_GetModState() & AG_KEYMOD_CTRL) {
 			AG_INVFLAGS(vn->flags, VG_NODE_SELECTED);
 		} else {
 			VG_UnselectAll(vv->vg);

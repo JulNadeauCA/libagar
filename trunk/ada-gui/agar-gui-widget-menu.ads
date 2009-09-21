@@ -1,5 +1,3 @@
-with SDL;
-with SDL.keysym;
 with agar.gui.widget.button;
 with agar.gui.widget.toolbar;
 with agar.gui.window;
@@ -81,8 +79,8 @@ package agar.gui.widget.menu is
     icon_source      : agar.gui.surface.surface_access_t;
     value            : c.int;
     state            : c.int;
-    key_equiv        : SDL.keysym.key_t;
-    key_mod          : SDL.keysym.modkey_t;
+    key_equiv        : c.int;
+    key_mod          : c.int;
     x                : c.int;
     y                : c.int;
     subitems         : item_access_t;
@@ -212,8 +210,8 @@ package agar.gui.widget.menu is
     (parent : item_access_t;
      text   : string;
      icon   : agar.gui.surface.surface_access_t;
-     key    : SDL.keysym.key_t;
-     modkey : SDL.keysym.modkey_t;
+     key    : c.int;
+     modkey : c.int;
      func   : agar.core.event.callback_t) return item_access_t;
   pragma inline (action_keyboard);
 
@@ -228,8 +226,8 @@ package agar.gui.widget.menu is
     (parent : item_access_t;
      text   : string;
      icon   : agar.gui.surface.surface_access_t;
-     key    : SDL.keysym.key_t;
-     modkey : SDL.keysym.modkey_t;
+     key    : c.int;
+     modkey : c.int;
      func   : agar.core.event.callback_t) return item_access_t;
   pragma inline (dynamic_item_keyboard);
 
@@ -238,8 +236,8 @@ package agar.gui.widget.menu is
      toolbar : agar.gui.widget.toolbar.toolbar_access_t;
      text    : string;
      icon    : agar.gui.surface.surface_access_t;
-     key     : SDL.keysym.key_t;
-     modkey  : SDL.keysym.modkey_t;
+     key     : c.int;
+     modkey  : c.int;
      func    : agar.core.event.callback_t) return item_access_t;
   pragma inline (toolbar_item);
 

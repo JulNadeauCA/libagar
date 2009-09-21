@@ -1,4 +1,3 @@
-with SDL.keysym;
 with agar.core.timeout;
 with agar.core.types;
 
@@ -169,8 +168,8 @@ private
     y_max          : c.int;
     y_vis          : c.int;
     wheel_ticks    : agar.core.types.uint32_t;
-    repeat_key     : SDL.keysym.key_t;
-    repeat_mod     : SDL.keysym.modkey_t;
+    repeat_key     : c.int;
+    repeat_mod     : c.int;
     repeat_unicode : agar.core.types.uint32_t;
     ucs_buffer     : access agar.core.types.uint32_t;
     ucs_length     : c.unsigned;

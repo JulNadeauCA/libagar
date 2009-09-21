@@ -150,7 +150,7 @@ MouseButtonUp(AG_Event *event)
 	int button = AG_INT(1);
 
 	switch (button) {
-	case SDL_BUTTON_MIDDLE:
+	case AG_MOUSE_MIDDLE:
 		sv->flags &= ~(AG_SCROLLVIEW_PANNING);
 		break;
 	}
@@ -163,7 +163,7 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 
 	switch (button) {
-	case SDL_BUTTON_MIDDLE:
+	case AG_MOUSE_MIDDLE:
 		sv->flags |= AG_SCROLLVIEW_PANNING;
 		AG_WidgetFocus(sv);
 		break;

@@ -78,16 +78,16 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_g:
+	case AG_KEY_G:
 		M_MatviewSetDisplayMode(mv, M_MATVIEW_GREYSCALE);
 		break;
-	case SDLK_n:
+	case AG_KEY_N:
 		M_MatviewSetDisplayMode(mv, M_MATVIEW_NUMERICAL);
 		break;
-	case SDLK_EQUALS:
+	case AG_KEY_EQUALS:
 		mv->scale++;
 		break;
-	case SDLK_MINUS:
+	case AG_KEY_MINUS:
 		if (mv->scale-1 >= 0) {
 			mv->scale--;
 		}

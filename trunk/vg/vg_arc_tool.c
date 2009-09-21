@@ -62,7 +62,7 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 	VG_Point *pCenter;
 
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		if (t->vaCur == NULL) {
 			if (!(pCenter = VG_NearestPoint(vv, vPos, NULL))) {
 				pCenter = VG_PointNew(vg->root, vPos);
@@ -75,7 +75,7 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 			t->vaCur = NULL;
 		}
 		return (1);
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_RIGHT:
 		if (t->vaCur != NULL) {
 			VG_Delete(t->vaCur);
 			t->vaCur = NULL;

@@ -415,7 +415,7 @@ mousebuttondown(AG_Event *event)
 
 	AG_WidgetFocus(bu);
 
-	if (button != SDL_BUTTON_LEFT)
+	if (button != AG_MOUSE_LEFT)
 		return;
 	
 	binding = AG_GetVariable(bu, "state", &pState);
@@ -456,7 +456,7 @@ mousebuttonup(AG_Event *event)
 	}
 	
 	binding = AG_GetVariable(bu, "state", &pState);
-	if (GetState(bu, binding, pState) && button == SDL_BUTTON_LEFT &&
+	if (GetState(bu, binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
@@ -474,8 +474,8 @@ keydown(AG_Event *event)
 	
 	if (AG_WidgetDisabled(bu))
 		return;
-	if (keysym != SDLK_RETURN &&		/* TODO configurable */
-	    keysym != SDLK_SPACE) {
+	if (keysym != AG_KEY_RETURN &&		/* TODO configurable */
+	    keysym != AG_KEY_SPACE) {
 		return;
 	}
 	binding = AG_GetVariable(bu, "state", &pState);
@@ -504,8 +504,8 @@ keyup(AG_Event *event)
 		AG_DelTimeout(bu, &bu->delay_to);
 		AG_DelTimeout(bu, &bu->repeat_to);
 	}
-	if (keysym != SDLK_RETURN &&		/* TODO configurable */
-	    keysym != SDLK_SPACE) {
+	if (keysym != AG_KEY_RETURN &&		/* TODO configurable */
+	    keysym != AG_KEY_SPACE) {
 		return;
 	}
 	binding = AG_GetVariable(bu, "state", &pState);

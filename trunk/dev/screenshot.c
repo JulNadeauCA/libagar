@@ -166,7 +166,7 @@ XmitLoop(int fd)
 			AG_SurfaceFree(su);
 #endif
 
-		SDL_Delay(xmit_delay);
+		AG_Delay(xmit_delay);
 		nframe++;
 		AG_MutexUnlock(&xmit_lock);
 	}

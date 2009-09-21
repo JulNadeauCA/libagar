@@ -946,7 +946,8 @@ static __inline__ int
 SelectingMultiple(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
-	        ((t->flags & AG_TABLE_MULTI) && SDL_GetModState() & KMOD_CTRL));
+	        ((t->flags & AG_TABLE_MULTI) &&
+		  SDL_GetModState() & AG_KEYMOD_CTRL));
 }
 
 /* Return true if a range of items are being selected. */
@@ -954,7 +955,7 @@ static __inline__ int
 SelectingRange(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
-	        (SDL_GetModState() & KMOD_SHIFT));
+	        (SDL_GetModState() & AG_KEYMOD_SHIFT));
 }
 
 /* Display the popup menu. */
@@ -1353,7 +1354,7 @@ MouseButtonDown(AG_Event *event)
 	int m;
 	
 	switch (button) {
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		{
 			AG_Variable *offsb;
 			int *offs;
@@ -1366,7 +1367,7 @@ MouseButtonDown(AG_Event *event)
 			AG_UnlockVariable(offsb);
 		}
 		break;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		{
 			AG_Variable *offsb;
 			int *offs;
@@ -1379,7 +1380,7 @@ MouseButtonDown(AG_Event *event)
 			AG_UnlockVariable(offsb);
 		}
 		break;
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		if (OverColumnHeader(t, y)) {
 			ColumnLeftClick(t, x);
 			break;
@@ -1390,7 +1391,7 @@ MouseButtonDown(AG_Event *event)
 		m = RowAtY(t, y);
 		CellLeftClick(t, m, x);
 		break;
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_RIGHT:
 		if (OverColumnHeader(t, y)) {
 			ColumnRightClick(t, x);
 			break;
@@ -1415,7 +1416,7 @@ MouseButtonUp(AG_Event *event)
 	int button = AG_INT(1);
 
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		if (t->nResizing >= 0) {
 			t->nResizing = -1;
 		}
@@ -1430,22 +1431,22 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
+	case AG_KEY_UP:
 		DecrementSelection(t, 1);
 		AG_DelTimeout(t, &t->incTo);
 		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
 		break;
-	case SDLK_DOWN:
+	case AG_KEY_DOWN:
 		IncrementSelection(t, 1);
 		AG_DelTimeout(t, &t->decTo);
 		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
 		break;
-	case SDLK_PAGEUP:
+	case AG_KEY_PAGEUP:
 		DecrementSelection(t, agPageIncrement);
 		AG_DelTimeout(t, &t->incTo);
 		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
 		break;
-	case SDLK_PAGEDOWN:
+	case AG_KEY_PAGEDOWN:
 		IncrementSelection(t, agPageIncrement);
 		AG_DelTimeout(t, &t->decTo);
 		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
@@ -1489,12 +1490,12 @@ KeyUp(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
-	case SDLK_PAGEUP:
+	case AG_KEY_UP:
+	case AG_KEY_PAGEUP:
 		AG_DelTimeout(t, &t->decTo);
 		break;
-	case SDLK_DOWN:
-	case SDLK_PAGEDOWN:
+	case AG_KEY_DOWN:
+	case AG_KEY_PAGEDOWN:
 		AG_DelTimeout(t, &t->incTo);
 		break;
 	}
@@ -1967,7 +1968,7 @@ DecrementTimeout(void *obj, Uint32 ival, void *arg)
 	int numkeys;
 
 	ks = SDL_GetKeyState(&numkeys);
-	DecrementSelection(t, ks[SDLK_PAGEUP] ? agPageIncrement : 1);
+	DecrementSelection(t, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -1979,7 +1980,7 @@ IncrementTimeout(void *obj, Uint32 ival, void *arg)
 	int numkeys;
 
 	ks = SDL_GetKeyState(&numkeys);
-	IncrementSelection(t, ks[SDLK_PAGEDOWN] ? agPageIncrement : 1);
+	IncrementSelection(t, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 

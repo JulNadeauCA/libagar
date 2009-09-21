@@ -10,7 +10,7 @@
 typedef struct ag_radio_item {
 	char text[128];
 	int surface;
-	SDLKey hotkey;
+	AG_KeySym hotkey;
 } AG_RadioItem;
 
 typedef struct ag_radio {
@@ -44,10 +44,10 @@ int       AG_RadioAddItem(AG_Radio *, const char *, ...)
                           FORMAT_ATTRIBUTE(printf,2,3)
 			  NONNULL_ATTRIBUTE(2);
 int       AG_RadioAddItemS(AG_Radio *, const char *);
-int       AG_RadioAddItemHK(AG_Radio *, SDLKey, const char *, ...)
+int       AG_RadioAddItemHK(AG_Radio *, AG_KeySym, const char *, ...)
                             FORMAT_ATTRIBUTE(printf,3,4)
 			    NONNULL_ATTRIBUTE(3);
-int       AG_RadioAddItemHKS(AG_Radio *, SDLKey, const char *);
+int       AG_RadioAddItemHKS(AG_Radio *, AG_KeySym, const char *);
 void      AG_RadioClearItems(AG_Radio *);
 __END_DECLS
 

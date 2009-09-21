@@ -59,8 +59,8 @@ typedef struct ag_editable {
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	SDLKey repeatKey;		/* Last keysym */
-	SDLMod repeatMod;		/* Last keymod */
+	AG_KeySym repeatKey;		/* Last keysym */
+	AG_KeyMod repeatMod;		/* Last keymod */
 	Uint32 repeatUnicode;		/* Last unicode translated key */
 	Uint32 *ucsBuf;			/* UCS4 buffer (for STATIC) */
 	Uint    ucsLen;			/* Buffer length (for STATIC) */

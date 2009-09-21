@@ -96,17 +96,17 @@ static void
 KeyDown(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_SELF();
-	SDLKey key = AG_SDLKEY(1);
+	int key = AG_INT(1);
 
 	switch (key) {
-	case SDLK_0:
+	case AG_KEY_0:
 		fpl->xoffs = 0;
 		break;
-	case SDLK_LEFT:
+	case AG_KEY_LEFT:
 		if ((fpl->xoffs -= 10) < 0)
 			fpl->xoffs = 0;
 		break;
-	case SDLK_RIGHT:
+	case AG_KEY_RIGHT:
 		fpl->xoffs += 10;
 		break;
 	default:
@@ -122,7 +122,7 @@ MouseMotion(AG_Event *event)
 	int yrel = AG_INT(4);
 	int state = AG_INT(5);
 
-	if ((state & SDL_BUTTON_LMASK) == 0)
+	if ((state & AG_MOUSE_LMASK) == 0)
 		return;
 
 	if ((fpl->xoffs -= xrel) < 0)
@@ -149,7 +149,7 @@ MouseButtonDown(AG_Event *event)
 	AG_FixedPlotter *fpl = AG_SELF();
 	int button = AG_INT(1);
 	
-	if (button != SDL_BUTTON_LEFT)
+	if (button != AG_MOUSE_LEFT)
 		return;
 
 	fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);

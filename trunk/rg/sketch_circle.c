@@ -65,7 +65,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 
 	switch (ct->seq) {
 	case BEGIN_CIRCLE:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			ct->cur_circle = VG_Begin(vg, VG_CIRCLE);
 			VG_Vertex2(vg, x, y);
 			ct->cur_radius = VG_Vertex2(vg, x, y);
@@ -77,7 +77,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 		}
 		break;
 	case SET_RADIUS:
-		if (button == SDL_BUTTON_RIGHT) {
+		if (button == AG_MOUSE_RIGHT) {
 			VG_DestroyElement(vg, ct->cur_circle);
 		}
 		ct->cur_radius = NULL;

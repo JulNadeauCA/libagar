@@ -687,10 +687,7 @@ SaveObject(AG_Event *event)
 static void
 ExitProgram(AG_Event *event)
 {
-	SDL_Event ev;
-
-	ev.type = SDL_QUIT;
-	SDL_PushEvent(&ev);
+	AG_QuitGUI();
 }
 
 static void
@@ -956,10 +953,10 @@ DEV_Browser(void *vfsRoot)
 		AG_MenuAction(mi, _("Duplicate"), NULL,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT,
+		    AG_KEY_U, AG_KEYMOD_SHIFT,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_MOVE_UP);
 		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT,
+		    AG_KEY_D, AG_KEYMOD_SHIFT,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_MOVE_DOWN);
 
 		AG_MenuSeparator(mi);
@@ -1066,11 +1063,11 @@ DEV_Browser(void *vfsRoot)
 			AG_MenuAction(mi, _("Duplicate"), NULL,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 			AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-			    SDLK_u, KMOD_SHIFT,
+			    AG_KEY_U, AG_KEYMOD_SHIFT,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_MOVE_UP);
 			AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-			    SDLK_d, KMOD_SHIFT,
+			    AG_KEY_D, AG_KEYMOD_SHIFT,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_MOVE_DOWN);
 			

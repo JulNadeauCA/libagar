@@ -163,7 +163,7 @@ MouseButtonDown(AG_Event *event)
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 
-	if (button == SDL_BUTTON_RIGHT &&
+	if (button == AG_MOUSE_RIGHT &&
 	    y < WIDGET(av)->h - WIDGET(av->btns.play)->h)
 		OpenMenu(av, WIDGET(av)->rView.x1 + x,
 		             WIDGET(av)->rView.y1 + y);

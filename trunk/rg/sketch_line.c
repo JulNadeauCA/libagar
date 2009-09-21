@@ -83,7 +83,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 
 	switch (lt->seq) {
 	case BEGIN_LINE:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			lt->cur_line = VG_Begin(vg,
 			    lt->mode == 1 ? VG_LINE_STRIP :
 			    lt->mode == 2 ? VG_LINE_LOOP :
@@ -98,7 +98,7 @@ mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 		}
 		break;
 	case CONTINUE_LINE:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			lt->cur_vtx = VG_Vertex2(vg, x, y);
 		} else {
 			if (lt->cur_line->nvtx <= 2) {

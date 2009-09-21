@@ -57,19 +57,19 @@ KeyDown(AG_Event *event)
 	const int scrollIncr = 10;
 
 	switch (keysym) {
-	case SDLK_LEFT:
+	case AG_KEY_LEFT:
 		gf->xOffs -= scrollIncr;
 		break;
-	case SDLK_RIGHT:
+	case AG_KEY_RIGHT:
 		gf->xOffs += scrollIncr;
 		break;
-	case SDLK_UP:
+	case AG_KEY_UP:
 		gf->yOffs -= scrollIncr;
 		break;
-	case SDLK_DOWN:
+	case AG_KEY_DOWN:
 		gf->yOffs += scrollIncr;
 		break;
-	case SDLK_0:
+	case AG_KEY_0:
 		gf->xOffs = 0;
 		gf->yOffs = 0;
 		break;
@@ -148,10 +148,10 @@ MouseButtonUp(AG_Event *event)
 	int button = AG_INT(1);
 
 	switch (button) {
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		gf->flags &= ~(AG_GRAPH_DRAGGING);
 		break;
-	case SDL_BUTTON_MIDDLE:
+	case AG_MOUSE_MIDDLE:
 		gf->flags &= ~(AG_GRAPH_PANNING);
 		break;
 	}
@@ -316,16 +316,16 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	SDLMod mod = SDL_GetModState();
+	AG_KeyMod mod = (AG_KeyMod)SDL_GetModState();
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;
 
 	switch (button) {
-	case SDL_BUTTON_MIDDLE:
+	case AG_MOUSE_MIDDLE:
 		gf->flags |= AG_GRAPH_PANNING;
 		break;
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		AG_WidgetFocus(gf);
 		if (gf->flags & AG_GRAPH_NO_SELECT) {
 			break;
@@ -377,7 +377,7 @@ MouseButtonDown(AG_Event *event)
 			gf->flags |= AG_GRAPH_DRAGGING;
 		}
 		break;
-	case SDL_BUTTON_RIGHT:
+	case AG_MOUSE_RIGHT:
 		if (gf->flags & AG_GRAPH_NO_MENUS) {
 			break;
 		}

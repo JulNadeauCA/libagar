@@ -67,10 +67,10 @@ widget implements a group of "radio" buttons.
 .Fn AG_RadioAddItemS "AG_Radio *radio" "const char *text"
 .Pp
 .Ft int
-.Fn AG_RadioAddItemHK "AG_Radio *radio" "SDLKey hotkey" "const char *format" "..."
+.Fn AG_RadioAddItemHK "AG_Radio *radio" "AG_KeySym hotkey" "const char *format" "..."
 .Pp
 .Ft int
-.Fn AG_RadioAddItemHKS "AG_Radio *radio" "SDLKey hotkey" "const char *text"
+.Fn AG_RadioAddItemHKS "AG_Radio *radio" "AG_KeySym hotkey" "const char *text"
 .Pp
 .Ft void
 .Fn AG_RadioClearItems "AG_Radio *radio"
@@ -131,9 +131,9 @@ widget reacts to the following events:
 .It mouse-button-down
 Select a radio item.
 .It key-down
-.Dv SDLK_DOWN
+.Dv AG_KEY_DOWN
 moves selection downards.
-.Dv SDLK_UP
+.Dv AG_KEY_UP
 moves selection upwards.
 .El
 .Pp

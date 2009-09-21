@@ -220,10 +220,10 @@ ButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 
 	switch (button) {
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		vz -= 0.1;
 		break;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		vz += 0.1;
 		break;
 	}

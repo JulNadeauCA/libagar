@@ -1795,10 +1795,10 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 		AG_MenuSeparator(mi);
 
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT,
+		    AG_KEY_U, AG_KEYMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
 		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT,
+		    AG_KEY_D, AG_KEYMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 
@@ -1820,10 +1820,10 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 		AG_MenuSeparator(mi);
 		
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT,
+		    AG_KEY_U, AG_KEYMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
 		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT,
+		    AG_KEY_D, AG_KEYMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 #if 0
@@ -1840,10 +1840,10 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		AG_MenuSeparator(mi);
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT,
+		    AG_KEY_U, AG_KEYMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
 		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT,
+		    AG_KEY_D, AG_KEYMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 	mi = AG_TlistSetPopup(tl, "sketch-element");
@@ -1933,15 +1933,17 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_MenuSeparator(mi);
 		
 		AG_MenuActionKb(mi, _("Close tileset"), agIconClose.s,
-		    SDLK_w, KMOD_CTRL,
+		    AG_KEY_W, AG_KEYMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
-		AG_MenuActionKb(mi, _("Undo"), NULL, SDLK_z, KMOD_CTRL,
+		AG_MenuActionKb(mi, _("Undo"), NULL,
+		    AG_KEY_Z, AG_KEYMOD_CTRL,
 		    Undo, "%p", tv);
-		AG_MenuActionKb(mi, _("Redo"), NULL, SDLK_r, KMOD_CTRL,
+		AG_MenuActionKb(mi, _("Redo"), NULL,
+		    AG_KEY_R, AG_KEYMOD_CTRL,
 		    Redo, "%p", tv);
 
 		AG_MenuSeparator(mi);
@@ -1953,11 +1955,11 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	mi = AG_MenuAddItem(me, _("Features"));
 	{
 		AG_MenuTool(mi, tbar, _("Fill"), rgIconFill.s,
-		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
+		    AG_KEY_F, AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT,
 		    AddFillFeature, "%p,%p", tv, tlFeatures);
 #if 0	
 		AG_MenuActionKb(mi, _("Sketch projection"), rgIconSketchProj.s,
-		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
+		    AG_KEY_S, AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT,
 		    AddSketchProjFeature, "%p,%p", tv, tlFeatures);
 #endif
 	}

@@ -117,8 +117,8 @@ KeyDown(AG_Event *event)
 	}
 
 	switch (keysym) {
-	case SDLK_z:
-		if (keymod & KMOD_CTRL) {
+	case AG_KEY_Z:
+		if (keymod & AG_KEYMOD_CTRL) {
 			switch (tv->state) {
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapUndo(tv, tv->tv_pixmap.tel);
@@ -133,8 +133,8 @@ KeyDown(AG_Event *event)
 			}
 		}
 		break;
-	case SDLK_r:
-		if (keymod & KMOD_CTRL) {
+	case AG_KEY_R:
+		if (keymod & AG_KEYMOD_CTRL) {
 			switch (tv->state) {
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapRedo(tv, tv->tv_pixmap.tel);
@@ -151,18 +151,18 @@ KeyDown(AG_Event *event)
 			tv->tile->flags |= RG_TILE_DIRTY;
 		}
 		break;
-	case SDLK_EQUALS:
+	case AG_KEY_EQUALS:
 		AG_SetTimeout(&tv->zoom_to, ZoomInTimeout, NULL, 0);
 		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
 		ZoomInTimeout(tv, 0, NULL);
 		break;
-	case SDLK_MINUS:
+	case AG_KEY_MINUS:
 		AG_SetTimeout(&tv->zoom_to, ZoomOutTimeout, NULL, 0);
 		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
 		ZoomOutTimeout(tv, 0, NULL);
 		break;
-	case SDLK_0:
-	case SDLK_1:
+	case AG_KEY_0:
+	case AG_KEY_1:
 		RG_TileviewSetZoom(tv, 100, 1);
 		break;
 	}
@@ -189,8 +189,8 @@ KeyUp(AG_Event *event)
 	}
 
 	switch (keysym) {
-	case SDLK_EQUALS:
-	case SDLK_MINUS:
+	case AG_KEY_EQUALS:
+	case AG_KEY_MINUS:
 		AG_DelTimeout(tv, &tv->zoom_to);
 		break;
 	}

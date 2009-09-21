@@ -9,17 +9,18 @@
 
 /*
  * This is our keyup/keydown event handler. The arguments are documented in
- * the EVENTS section of the AG_Window(3) manual page.
+ * the EVENTS section of the AG_Window(3) manual page. See AG_KeySym(3) for
+ * a list of available key symbols.
  */
 static void
 MyKeyboardHandler(AG_Event *event)
 {
-	SDLKey sym = AG_SDLKEY(1);
-	SDLMod mod = AG_SDLMOD(2);
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
 	Uint32 unicode = (Uint32)AG_INT(3);
 
-	printf("%s: sym=%u, modifier=0x%x, unicode=0x%x\n",
-	    event->name, (unsigned)sym, (unsigned)mod, unicode);
+	printf("%s: sym=%d, modifier=0x%x, unicode=0x%x\n",
+	    event->name, sym, (unsigned)mod, unicode);
 }
 
 static void

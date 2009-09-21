@@ -1,22 +1,21 @@
 
 Prerequisites
 -------------
-Agar currently requires the SDL (http://www.libsdl.org/). Note: this
-requirement will be dropped Agar-1.4, as SDL code will be moved to a
-specific module.
+Agar has no mandatory dependencies.
 
 Options
 -------
+- The OpenGL rendering driver requires an OpenGL library.
+
+- The SDL rendering driver requires at least SDL 1.2.0
+  (http://www.libsdl.org/).
+
 - The FreeType library (http://www.freetype.org/) is required for high
   quality font rendering. If compiled without FreeType, Agar will revert
-  to a simple bitmap font engine. The bitmap font bundled with Agar only
-  includes the ASCII range.
-
-- The GL rendering mode requires OpenGL. Agar can be compiled with runtime
-  support for both SDL and OpenGL modes.
+  to a simple bitmap font engine (not recommended).
 
 - Threads support (--enable-threads) requires a POSIX threads interface
-  which conforms to SUSv2 (i.e., recursive mutexes are needed).
+  which conforms to SUSv2 (recursive mutexes are needed).
 
 Installation under Unix
 -----------------------

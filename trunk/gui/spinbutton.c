@@ -107,10 +107,10 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
-	case SDLK_UP:
+	case AG_KEY_UP:
 		AG_SpinbuttonAddValue(sbu, sbu->incr);
 		break;
-	case SDLK_DOWN:
+	case AG_KEY_DOWN:
 		AG_SpinbuttonAddValue(sbu, -sbu->incr);
 		break;
 	}

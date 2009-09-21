@@ -15,4 +15,9 @@ typedef enum ag_mouse_button {
 	AG_MOUSE_ANY		= 0xff
 } AG_MouseButton;
 
+#define AG_MOUSE_BUTTON(b)	(1<<((b)-1))
+#define AG_MOUSE_LMASK		AG_MOUSE_BUTTON(1)
+#define AG_MOUSE_MMASK		AG_MOUSE_BUTTON(2)
+#define AG_MOUSE_RMASK		AG_MOUSE_BUTTON(3)
+
 #endif /* _AGAR_GUI_MOUSE_H_ */

@@ -16,7 +16,7 @@ package body agar.gui.widget.radio is
 
     function add_item_hotkey
       (radio : radio_access_t;
-       key   : SDL.keysym.key_t;
+       key   : c.int;
        text  : cs.chars_ptr) return c.int;
     pragma import (c, add_item_hotkey, "AG_RadioAddItemHKS");
   end cbinds;
@@ -44,7 +44,7 @@ package body agar.gui.widget.radio is
 
   function add_item_hotkey
     (radio : radio_access_t;
-     key   : SDL.keysym.key_t;
+     key   : c.int;
      text  : string) return boolean
   is
     c_txt : aliased c.char_array := c.to_c (text);
