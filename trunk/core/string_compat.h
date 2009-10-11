@@ -61,7 +61,6 @@
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#include <ctype.h>
 
 #include <agar/core/begin.h>
 
@@ -86,6 +85,7 @@ char   *AG_Strdup(const char *);
 char   *AG_TryStrdup(const char *);
 Uint32 *AG_StrdupUCS4(const Uint32 *);
 Uint32 *AG_TryStrdupUCS4(const Uint32 *);
+char   *AG_Strcasestr(const char *, const char *);
 
 Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
@@ -226,29 +226,6 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 			break;
 	}
 	return i == n ? 0 : cm[us1[i]] - cm[us2[i]];
-}
-
-/*
- * Locate a substring ignoring case.
- */
-static __inline__ char *
-AG_Strcasestr(const char *s, const char *find)
-{
-	char c, sc;
-	size_t len;
-
-	if ((c = *find++) != 0) {
-		c = (char)tolower((unsigned char)c);
-		len = strlen(find);
-		do {
-			do {
-				if ((sc = *s++) == 0)
-					return (NULL);
-			} while ((char)tolower((unsigned char)sc) != c);
-		} while (AG_Strncasecmp(s, find, len) != 0);
-		s--;
-	}
-	return ((char *)s);
 }
 __END_DECLS
 
