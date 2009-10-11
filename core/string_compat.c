@@ -58,6 +58,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 /*
  * This array is designed for mapping upper and lower case letter
@@ -350,6 +351,29 @@ AG_TryStrdupUCS4(const Uint32 *ucs)
 	}
 	memcpy(ns, ucs, buflen);
 	return (ns);
+}
+
+/*
+ * Locate a substring ignoring case.
+ */
+char *
+AG_Strcasestr(const char *s, const char *find)
+{
+	char c, sc;
+	size_t len;
+
+	if ((c = *find++) != 0) {
+		c = (char)tolower((unsigned char)c);
+		len = strlen(find);
+		do {
+			do {
+				if ((sc = *s++) == 0)
+					return (NULL);
+			} while ((char)tolower((unsigned char)sc) != c);
+		} while (Strncasecmp(s, find, len) != 0);
+		s--;
+	}
+	return ((char *)s);
 }
 
 /*
