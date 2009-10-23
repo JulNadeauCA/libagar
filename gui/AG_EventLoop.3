@@ -95,7 +95,7 @@ AG_MyEventLoop(void)
 		if (Tr2-Tr1 >= agView->rNom) {
 			AG_LockVFS(agView);
 			AG_BeginRendering();
-			VIEW_FOREACH_WINDOW(win, agView) {
+			AG_FOREACH_WINDOW(win, agView) {
 				AG_ObjectLock(win);
 				AG_WindowDraw(win);
 				AG_ObjectUnlock(win);
