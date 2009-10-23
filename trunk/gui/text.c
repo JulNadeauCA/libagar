@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,8 +60,6 @@
  * license with kind permission from Sam Lantinga.
  */
 
-#include "opengl.h"
-
 #include <config/have_freetype.h>
 #include <config/ttfdir.h>
 
@@ -89,9 +87,11 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#include "iconmgr.h"
 #include "icons.h"
 #include "fonts.h"
 #include "fonts_data.h"
+#include "packedpixel.h"
 
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
@@ -116,9 +116,7 @@ static Uint curState = 0;
 AG_TextState *agTextState;
 
 #define GLYPH_NBUCKETS	  1024	/* Buckets for glyph cache table */
-#define GLYPH_GC_INTERVAL 1000	/* Garbage collection interval (ms) */
 /* #define SYMBOLS */		/* Escape $(x) type symbols */
-/* #define GLYPH_GC */
 
 static const char *agTextMsgTitles[] = {
 	N_("Error"),
@@ -135,9 +133,6 @@ static struct {
 } agGlyphCache[GLYPH_NBUCKETS+1];
 
 static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
-#ifdef GLYPH_GC
-static AG_Timeout glyphGcTo = AG_TIMEOUT_INITIALIZER; /* For glyph GC */
-#endif
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -380,8 +375,8 @@ static void
 InitTextState(void)
 {
 	agTextState->font = agDefaultFont;
-	agTextState->color = AG_MapRGB(agSurfaceFmt, 255,255,255);
-	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, 0,0,0,0);
+	agTextState->color = AG_ColorRGB(255,255,255);
+	agTextState->colorBG = AG_ColorRGBA(0,0,0,0);
 	agTextState->justify = AG_TEXT_LEFT;
 	agTextState->valign = AG_TEXT_TOP;
 }
@@ -391,41 +386,12 @@ static void
 FreeGlyph(AG_Glyph *gl)
 {
 	AG_SurfaceFree(gl->su);
-#ifdef HAVE_OPENGL
-	if (agView->opengl)
-		glDeleteTextures(1, (GLuint *)&gl->texture);
+#if 0
+	/* XXX TODO: delete any cached textures */
+	agDriverOps->deleteTexture(gl->texture);
 #endif
 	Free(gl);
 }
-
-#ifdef GLYPH_GC
-
-/*
- * Perform garbage collection of unused glyphs. Must be invoked in rendering
- * context.
- */
-static Uint32
-GlyphGC(void *obj, Uint32 ival, void *arg)
-{
-	AG_Glyph *gl;
-	Uint32 t = AG_GetTicks();
-	int i;
-
-	for (i = 0; i < GLYPH_NBUCKETS; i++) {
-		SLIST_FOREACH(gl, &agGlyphCache[i].glyphs, glyphs) {
-			if (gl->nrefs > 0 ||
-			    (t - gl->lastRef) < GLYPH_GC_INTERVAL) {
-				continue;
-			}
-			SLIST_REMOVE(&agGlyphCache[i].glyphs, gl, ag_glyph,
-			             glyphs);
-			FreeGlyph(gl);
-		}
-	}
-	return (GLYPH_GC_INTERVAL);
-}
-
-#endif /* GLYPH_GC */
 
 /* Initialize the font engine and configure the default font. */
 int
@@ -503,10 +469,6 @@ AG_TextInit(void)
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
-#ifdef GLYPH_GC
-	AG_SetTimeout(&glyphGcTo, GlyphGC, NULL, 0);
-	agGlyphGC = 0;
-#endif
 	return (0);
 fail:
 #ifdef HAVE_FREETYPE
@@ -541,13 +503,6 @@ AG_TextDestroy(void)
 {
 	AG_Font *font, *nextfont;
 
-#ifdef GLYPH_GC
-	AG_LockTimeouts(NULL);
-	if (AG_TimeoutIsScheduled(NULL, &glyphGcTo)) {
-		AG_DelTimeout(NULL, &glyphGcTo);
-	}
-	AG_UnlockTimeouts(NULL);
-#endif
 	AG_ClearGlyphCache();
 	
 	for (font = SLIST_FIRST(&fonts);
@@ -587,7 +542,7 @@ AG_TextRenderGlyph(Uint32 ch)
 
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
 		if (agTextState->font->size == gl->fontsize &&
-		    agTextState->color == gl->color &&
+		    AG_ColorCompare(agTextState->color,gl->color) == 0 &&
 		    (strcmp(OBJECT(agTextState->font)->name, gl->fontname)
 		     == 0) &&
 		    ch == gl->ch)
@@ -629,10 +584,7 @@ AG_TextRenderGlyph(Uint32 ch)
 		default:
 			break;
 		}
-#ifdef HAVE_OPENGL
-		if (agView->opengl)
-			gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
-#endif
+		gl->texture = 0;
 		gl->nrefs = 1;
 		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
 	} else {
@@ -645,15 +597,8 @@ AG_TextRenderGlyph(Uint32 ch)
 void
 AG_TextUnusedGlyph(AG_Glyph *gl)
 {
-	if (gl->nrefs > 0) {
+	if (gl->nrefs > 0)
 		gl->nrefs--;
-	}
-#ifdef GLYPH_GC
-	if (agGlyphGC == 0) {
-		agGlyphGC = 1;
-		AG_ScheduleTimeout(NULL, &glyphGcTo, GLYPH_GC_INTERVAL);
-	}
-#endif
 }
 
 /* Save the current text rendering state. */
@@ -879,7 +824,7 @@ TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
 }
 
 static int
-TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y, Uint32 pixel)
+TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y)
 {
 	AG_Surface *sym;
 	Uint32 alpha;
@@ -889,8 +834,7 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y, Uint32 pixel)
 		return (0);
 	}
 	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*(su->pitch/4) +
-		                                   (x+2);
+		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*(su->pitch/4) + (x+2);
 		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
 		int col;
 
@@ -902,7 +846,7 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y, Uint32 pixel)
 				dst[2] = 0xff;
 			}
 			src += sym->format->BytesPerPixel;
-			dst+=3;
+			dst += 3;
 		}
 	}
 	return (sym->w + 4);
@@ -919,12 +863,12 @@ TextRenderFT_Mono(const Uint32 *ucs)
 	AG_TTFGlyph *glyph;
 	AG_Surface *su;
 	AG_Palette *pal;
+	AG_Color C;
 	const Uint32 *ch;
-	Uint8 *src, *dst, *dstEnd, a;
+	Uint8 *src, *dst, *dstEnd;
 	int row, col;
 	int line;
 	int xStart, yStart;
-	FT_Error error;
 
 	InitMetrics(&tm);
 	TextSizeFT(ucs, &tm, 1);
@@ -937,18 +881,18 @@ TextRenderFT_Mono(const Uint32 *ucs)
 	}
 	pal = su->format->palette;
 
-	AG_GetRGBA(agTextState->colorBG, agSurfaceFmt,
-	    &pal->colors[0].r,
-	    &pal->colors[0].g,
-	    &pal->colors[0].b,
-	    &a);
-	if (a == 0) {
+	C = agTextState->colorBG;
+	pal->colors[0].r = C.r;
+	pal->colors[0].g = C.g;
+	pal->colors[0].b = C.b;
+	if (C.a == 0) {
 		AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
 	}
-	AG_GetRGB(agTextState->color, agSurfaceFmt,
-	    &pal->colors[1].r,
-	    &pal->colors[1].g,
-	    &pal->colors[1].b);
+
+	C = agTextState->color;
+	pal->colors[1].r = C.r;
+	pal->colors[1].g = C.g;
+	pal->colors[1].b = C.b;
 	
 	/* For bounds checking */
 	dstEnd = (Uint8 *)su->pixels + su->w*su->h;
@@ -972,9 +916,8 @@ TextRenderFT_Mono(const Uint32 *ucs)
 			continue;
 		}
 #endif
-		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
-		                                     TTF_CACHED_BITMAP);
-		if (error) {
+		if (AG_TTFFindGlyph(ftFont, *ch,
+		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP)) {
 			AG_SurfaceFree(su);
 			goto empty;
 		}
@@ -992,8 +935,8 @@ TextRenderFT_Mono(const Uint32 *ucs)
 				continue;
 
 			dst = (Uint8 *)su->pixels +
-				(yStart+row+glyph->yoffset)*su->pitch +
-				xStart + glyph->minx;
+			    (yStart+row+glyph->yoffset)*su->pitch +
+			    xStart + glyph->minx;
 			src = glyph->bitmap.buffer + row*glyph->bitmap.pitch;
 
 			for (col = glyph->bitmap.width;
@@ -1025,11 +968,40 @@ empty:
 	return AG_SurfaceEmpty();
 }
 
+/* Underline rendered text. */
+/* XXX does not handle multiline/alignment properly */
+static void
+TextRenderFT_Blended_Underline(AG_TTFFont *ftFont, AG_Surface *su, int nLines)
+{
+	AG_Color C = agTextState->color;
+	Uint32 pixel;
+	Uint8 *pDst;
+	int x, y, line;
+
+	pixel = AG_MapRGBA(su->format, C.r, C.g, C.b, 255);
+	for (line = 0; line < nLines; line++) {
+		y = ftFont->ascent - ftFont->underline_offset - 1;
+		y *= (line+1);
+		if (y >= su->h) {
+			y = (su->h - 1) - ftFont->underline_height;
+		}
+		pDst = (Uint8 *)su->pixels + y*su->pitch;
+		for (y = 0; y < ftFont->underline_height; y++) {
+			for (x = 0; x < su->w; x++) {
+				AG_PACKEDPIXEL_PUT(su->format->BytesPerPixel,
+				    pDst, pixel);
+				pDst += su->format->BytesPerPixel;
+			}
+		}
+	}
+}
+
 static AG_Surface *
 TextRenderFT_Blended(const Uint32 *ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
+	AG_Color C = agTextState->color;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
@@ -1037,12 +1009,9 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	int line;
 	AG_Surface *su;
 	Uint32 pixel;
-	Uint8 *src;
-	Uint32 *dst, *dstEnd;
-	int row, col;
-	FT_Error error;
+	Uint8 *src, *dst;
+	int x, y;
 	FT_UInt prev_index = 0;
-	Uint8 r, g, b;
 	int w;
 
 	InitMetrics(&tm);
@@ -1050,27 +1019,17 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = AG_SurfaceRGBA(tm.w, tm.h, 32, 0,
-	    0x00ff0000,
-	    0x0000ff00,
-	    0x000000ff,
-	    0xff000000);
-	if (su == NULL) {
+	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL) {
 		Verbose("TextRenderFT_Blended: %s\n", AG_GetError());
 		goto empty;
 	}
-
-	/* For bounds checking */
-	dstEnd = (Uint32 *)su->pixels + su->pitch/4 * su->h;
 
 	/* Load and render each character */
  	line = 0;
  	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
  	yStart = 0;
 
-	AG_GetRGB(agTextState->color, agSurfaceFmt, &r,&g,&b);
-	pixel = (r<<16) | (g<<8) | b;
-	AG_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
+	AG_FillRect(su, NULL, agTextState->colorBG);
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
@@ -1082,14 +1041,13 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		if (ch[0] == '$' && agTextSymbols &&
 		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
 			xStart += TextRenderSymbol_Blended(ch[2], su, xStart,
-			    yStart, pixel);
+			    yStart);
 			ch += 3;
 			continue;
 		}
 #endif
-		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
-		                                     TTF_CACHED_PIXMAP);
-		if (error) {
+		if (AG_TTFFindGlyph(ftFont, *ch,
+		    TTF_CACHED_METRICS|TTF_CACHED_PIXMAP)) {
 			AG_SurfaceFree(su);
 			goto empty;
 		}
@@ -1097,6 +1055,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		/*
 		 * Ensure the width of the pixmap is correct. On some cases,
 		 * freetype may report a larger pixmap than possible.
+		 * XXX is this test necessary?
 		 */
 		w = glyph->pixmap.width;
 		if (w > glyph->maxx - glyph->minx) {
@@ -1107,7 +1066,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			FT_Vector delta; 
 
 			FT_Get_Kerning(ftFont->face, prev_index, glyph->index,
-			               ft_kerning_default, &delta); 
+			    ft_kerning_default, &delta); 
 			xStart += delta.x >> 6;
 		}
 		
@@ -1115,23 +1074,26 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		if ((ch == &ucs[0]) && (glyph->minx < 0))
 			xStart -= glyph->minx;
 
-		for (row = 0; row < glyph->pixmap.rows; row++) {
-			if (row+glyph->yoffset < 0 ||
-			    row+glyph->yoffset >= su->h) {
+		for (y = 0; y < glyph->pixmap.rows; y++) {
+			if (y+glyph->yoffset < 0 ||
+			    y+glyph->yoffset >= su->h) {
 				continue;
 			}
-			dst = (Uint32 *)su->pixels +
-			      (yStart+row+glyph->yoffset) * su->pitch/4 +
-			      xStart + glyph->minx;
+			dst = (Uint8 *)su->pixels +
+			    (yStart + y + glyph->yoffset)*su->pitch +
+			    (xStart + glyph->minx)*su->format->BytesPerPixel;
 
 			/* Adjust src for pixmaps to account for pitch. */
-			src = (Uint8 *) (glyph->pixmap.buffer +
-			                 glyph->pixmap.pitch*row);
-			for (col = w;
-			     col > 0 && dst < dstEnd;
-			     col--) {
+			src = (Uint8 *)(glyph->pixmap.buffer +
+			                glyph->pixmap.pitch*y);
+			for (x = 0; x < w; x++) {
 				Uint32 alpha = *src++;
-				*dst++ |= pixel | (alpha << 24);
+
+				pixel = AG_MapRGBA(su->format,
+				    C.r, C.g, C.b, alpha);
+				AG_PACKEDPIXEL_PUT(su->format->BytesPerPixel,
+				    dst, pixel);
+				dst += su->format->BytesPerPixel;
 			}
 		}
 		xStart += glyph->advance;
@@ -1141,18 +1103,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		prev_index = glyph->index;
 	}
 	if (ftFont->style & TTF_STYLE_UNDERLINE) {
-		row = ftFont->ascent - ftFont->underline_offset - 1;
-		if ( row >= su->h) {
-			row = (su->h-1) - ftFont->underline_height;
-		}
-		dst = (Uint32 *)su->pixels + row * su->pitch/4;
-		pixel |= 0xFF000000;  /* Amask */
-		for (row = ftFont->underline_height; row > 0; row--) {
-			for (col = 0; col < su->w; col++) {
-				dst[col] = pixel;
-			}
-			dst += su->pitch/4;
-		}
+		TextRenderFT_Blended_Underline(ftFont, su, tm.nLines);
 	}
 	FreeMetrics(&tm);
 	return (su);
@@ -1244,8 +1195,9 @@ TextRenderBitmap(const Uint32 *ucs)
 		rd.x += sGlyph->w;
 	}
 	AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
-	AG_SetAlpha(su, font->bglyphs[0]->flags & AG_SRCALPHA,
-	                font->bglyphs[0]->format->alpha);
+	AG_SetAlpha(su,
+	    font->bglyphs[0]->flags & AG_SRCALPHA,
+	    font->bglyphs[0]->format->alpha);
 
 	FreeMetrics(&tm);
 	return (su);
