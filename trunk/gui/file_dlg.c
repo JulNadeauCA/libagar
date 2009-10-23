@@ -629,6 +629,7 @@ static void
 ExpandGlobResults(AG_FileDlg *fd, int wMax)
 {
 	AG_SizeReq rList;
+	Uint wView, hView;
 	int x, y, w, h;
 
 	fd->winGlob = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
@@ -647,8 +648,9 @@ ExpandGlobResults(AG_FileDlg *fd, int wMax)
 	x = WIDGET(fd->tbFile)->rView.x2 - w;
 	y = WIDGET(fd->tbFile)->rView.y1;
 
-	if (x+w > agView->w) { w = agView->w - x; }
-	if (y+h > agView->h) { h = agView->h - y; }
+	AG_GetDisplaySize(WIDGET(fd)->drv, &wView, &hView);
+	if (x+w > wView) { w = wView - x; }
+	if (y+h > hView) { h = hView - y; }
 	if (w < 4 || h < 4) {
 		CollapseGlobResults(fd);
 		return;
