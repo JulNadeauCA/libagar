@@ -61,6 +61,16 @@
 #define AG_WidgetParentWindow(w) AG_ParentWindow(w)
 #define AG_WidgetFocused AG_WidgetIsFocused(w)
 
+#define	AG_WidgetPutPixel32		AG_PutPixel32
+#define	AG_WidgetPutPixel		AG_PutPixel32
+#define AG_DrawPixel			AG_PutPixel32
+#define	AG_WidgetPutPixelRGB		AG_PutPixelRGB
+#define	AG_DrawPixelRGB			AG_PutPixelRGB
+#define	AG_WidgetBlendPixel		AG_BlendPixel32
+#define	AG_WidgetBlendPixel32		AG_BlendPixel32
+#define AG_DrawPixelBlended		AG_BlendPixel32
+#define	AG_WidgetBlendPixelRGBA		AG_BlendPixelRGBA
+
 __BEGIN_DECLS
 AG_Variable *AG_WidgetBind(void *, const char *, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;
