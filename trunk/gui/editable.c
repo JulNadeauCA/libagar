@@ -28,8 +28,6 @@
  * used by AG_Textbox(3), editable cells in AG_Table(3), etc.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -177,7 +175,7 @@ ProcessKey(AG_Editable *ed, AG_KeySym keysym, AG_KeyMod keymod, Uint32 unicode)
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
 		return (0);
 
-	if (keymod == KMOD_NONE &&
+	if (keymod == AG_KEYMOD_NONE &&
 	    isascii((int)keysym) && isprint((int)keysym)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY)) {
 			if (keysym != AG_KEY_MINUS &&
@@ -592,31 +590,15 @@ Draw(void *obj)
 	int i, dx, dy, x, y;
 	Uint32 *ucs;
 	size_t len;
-#ifdef HAVE_OPENGL
-	GLboolean blend_sv;
-	GLint blend_sfactor, blend_dfactor;
-	GLfloat texenvmode;
-#endif
 
 	stringb = AG_GetVariable(ed, "string", &s);
 	GetStringUCS4(ed, s, &ucs, &len);
 
-#ifdef HAVE_OPENGL
-	if (agView->opengl)  {
-		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
-		glGetBooleanv(GL_BLEND, &blend_sv);
-		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
-		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
-
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-#endif
+	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, ed->r);
 
 	AG_PushTextState();
-	AG_TextColor(TEXTBOX_TXT_COLOR);
+	AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
 	x = 0;
 	y = -ed->y*agTextFontLineSkip;
 	ed->xMax = 10;
@@ -631,7 +613,7 @@ Draw(void *obj)
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
 				    (y + agTextFontLineSkip - 1),
-				    AG_COLOR(TEXTBOX_CURSOR_COLOR));
+				    agColors[TEXTBOX_CURSOR_COLOR]);
 			}
 			ed->xCurs = x;
 			if (ed->flags & AG_EDITABLE_MARKPREF) {
@@ -673,27 +655,7 @@ Draw(void *obj)
 			AG_TextUnusedGlyph(gl);
 			continue;
 		}
-		if (!agView->opengl) {
-			AG_SurfaceBlit(gl->su, NULL, agView->v, dx,dy);
-		}
-#ifdef HAVE_OPENGL
-		else {
-			glBindTexture(GL_TEXTURE_2D, gl->texture);
-			glBegin(GL_TRIANGLE_STRIP);
-			{
-				glTexCoord2f(gl->texcoord[0], gl->texcoord[1]);
-				glVertex2i(dx, dy);
-				glTexCoord2f(gl->texcoord[2], gl->texcoord[1]);
-				glVertex2i(dx+gl->su->w, dy);
-				glTexCoord2f(gl->texcoord[0], gl->texcoord[3]);
-				glVertex2i(dx, dy+gl->su->h);
-				glTexCoord2f(gl->texcoord[2], gl->texcoord[3]);
-				glVertex2i(dx+gl->su->w, dy+gl->su->h);
-			}
-			glEnd();
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-#endif /* HAVE_OPENGL */
+		agDriverOps->drawGlyph(agDriver, gl, dx,dy);
 		x += gl->advance;
 		AG_TextUnusedGlyph(gl);
 	}
@@ -751,18 +713,9 @@ Draw(void *obj)
 	AG_UnlockVariable(stringb);
 	AG_PopTextState();
 
-	AG_PopClipRect();
+	AG_PopClipRect(ed);
+	AG_PopBlendingMode(ed);
 
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		if (blend_sv) {
-			glEnable(GL_BLEND);
-		} else {
-			glDisable(GL_BLEND);
-		}
-		glBlendFunc(blend_sfactor, blend_dfactor);
-	}
-#endif
 	FreeStringUCS4(ed, ucs);
 }
 
@@ -819,7 +772,7 @@ KeyDown(AG_Event *event)
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
+	Uint32 unicode = (Uint32)AG_ULONG(3);
 
 	switch (keysym) {
 	case AG_KEY_LSHIFT:
@@ -932,11 +885,12 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
+	AG_Driver *drv = WIDGET(ed)->drv;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
 
 	if (mx > 0 && my > 0 && mx < WIDTH(ed) && my < HEIGHT(ed)) {
-		AG_SetCursor(AG_TEXT_CURSOR);
+		AG_PushStockCursor(drv, AG_TEXT_CURSOR);
 	}
 	if (!AG_WidgetIsFocused(ed))
 		return;
@@ -1154,7 +1108,7 @@ Init(void *obj)
 	ed->yVis = 1;
 	ed->wheelTicks = 0;
 	ed->repeatKey = 0;
-	ed->repeatMod = KMOD_NONE;
+	ed->repeatMod = AG_KEYMOD_NONE;
 	ed->repeatUnicode = 0;
 	ed->ucsBuf = NULL;
 	ed->ucsLen = 0;
