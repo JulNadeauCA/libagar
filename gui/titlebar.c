@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,11 +30,20 @@
 #include "primitive.h"
 #include "icons.h"
 
-static void MouseButtonDown(AG_Event *);
-static void MouseButtonUp(AG_Event *);
-static void MaximizeWindow(AG_Event *);
-static void MinimizeWindow(AG_Event *);
-static void CloseWindow(AG_Event *);
+static void
+MaximizeWindow(AG_Event *event)
+{
+	AG_Titlebar *tbar = AG_PTR(1);
+	AG_Window *win = tbar->win;
+
+	AG_ObjectLock(win);
+	if (win->flags & AG_WINDOW_MAXIMIZED) {
+		AG_WindowUnmaximize(win);
+	} else {
+		AG_WindowMaximize(win);
+	}
+	AG_ObjectUnlock(win);
+}
 
 static void
 CreateMaximizeButton(AG_Titlebar *tbar)
@@ -49,6 +58,14 @@ CreateMaximizeButton(AG_Titlebar *tbar)
 }
 
 static void
+MinimizeWindow(AG_Event *event)
+{
+	AG_Titlebar *tbar = AG_PTR(1);
+
+	AG_WindowMinimize(tbar->win);
+}
+
+static void
 CreateMinimizeButton(AG_Titlebar *tbar)
 {
 	tbar->minimize_btn = AG_ButtonNewS(tbar, 0, NULL);
@@ -58,6 +75,14 @@ CreateMinimizeButton(AG_Titlebar *tbar)
 	AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
 	AG_SetEvent(tbar->minimize_btn, "button-pushed",
 	    MinimizeWindow, "%p", tbar);
+}
+
+static void
+CloseWindow(AG_Event *event)
+{
+	AG_Titlebar *tbar = AG_PTR(1);
+
+	AG_PostEvent(NULL, tbar->win, "window-close", NULL);
 }
 
 static void
@@ -81,6 +106,19 @@ AG_TitlebarNew(void *parent, Uint flags)
 	AG_ObjectInit(tbar, &agTitlebarClass);
 	tbar->flags |= flags;
 	
+	AG_ObjectAttach(parent, tbar);
+
+	/*
+	 * Manually update the window/driver pointers since AG_TitlebarNew()
+	 * is called from the Window attach routine.
+	 */
+	AG_ObjectLock(tbar);
+	tbar->win = (AG_Window *)parent;
+	WIDGET(tbar)->window = tbar->win;
+	WIDGET(tbar)->drv = WIDGET(parent)->drv;
+	WIDGET(tbar)->drvOps = AGDRIVER_CLASS(WIDGET(tbar)->drv);
+	AG_ObjectUnlock(tbar);
+	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0)
 		CreateMaximizeButton(tbar);
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0)
@@ -88,42 +126,37 @@ AG_TitlebarNew(void *parent, Uint flags)
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0)
 		CreateCloseButton(tbar);
 
-	AG_ObjectAttach(parent, tbar);
-	AG_ObjectLock(tbar);
-	tbar->win = (AG_Window *)parent;
-	AG_ObjectUnlock(tbar);
 	return (tbar);
 }
 
 static void
-MaximizeWindow(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
-	AG_Titlebar *tbar = AG_PTR(1);
-	AG_Window *win = tbar->win;
+	AG_Titlebar *tbar = AG_SELF();
+	
+	tbar->pressed = 1;
 
-	AG_ObjectLock(win);
-	if (win->flags & AG_WINDOW_MAXIMIZED) {
-		AG_WindowUnmaximize(win);
-	} else {
-		AG_WindowMaximize(win);
+	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv)) {
+		AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(tbar)->drv;
+		dsw->winToFocus = tbar->win;
+		dsw->winSelected = tbar->win;
+		if (!(tbar->win->flags & AG_WINDOW_NOMOVE))
+			dsw->winop = AG_WINOP_MOVE;
 	}
-	AG_ObjectUnlock(win);
 }
 
 static void
-MinimizeWindow(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
-	AG_Titlebar *tbar = AG_PTR(1);
-
-	AG_WindowMinimize(tbar->win);
-}
-
-static void
-CloseWindow(AG_Event *event)
-{
-	AG_Titlebar *tbar = AG_PTR(1);
-
-	AG_PostEvent(NULL, tbar->win, "window-close", NULL);
+	AG_Titlebar *tbar = AG_SELF();
+	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(tbar)->drv;
+	
+	tbar->pressed = 0;
+	
+	if (AGDRIVER_SINGLE(dsw)) {
+		dsw->winop = AG_WINOP_NONE;
+		dsw->winSelected = NULL;
+	}
 }
 
 static void
@@ -168,30 +201,6 @@ Draw(void *obj)
 	STYLE(tbar)->TitlebarBackground(tbar, tbar->pressed,
 	    AG_WindowIsFocused(tbar->win));
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
-}
-
-static void
-MouseButtonDown(AG_Event *event)
-{
-	AG_Titlebar *tbar = AG_SELF();
-	
-	tbar->pressed = 1;
-	agView->winToFocus = tbar->win;
-	agView->winSelected = tbar->win;
-
-	if (!(tbar->win->flags & AG_WINDOW_NOMOVE))
-		agView->winop = AG_WINOP_MOVE;
-}
-
-static void
-MouseButtonUp(AG_Event *event)
-{
-	AG_Titlebar *tbar = AG_SELF();
-	
-	tbar->pressed = 0;
-	
-	agView->winop = AG_WINOP_NONE;
-	agView->winSelected = NULL;
 }
 
 AG_WidgetClass agTitlebarClass = {
