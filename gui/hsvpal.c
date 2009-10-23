@@ -26,9 +26,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
+#include "gui.h"
 
 #include <rg/prim.h>					/* XXX depends on rg */
 
@@ -680,6 +678,16 @@ Bound(AG_Event *event)
 }
 
 static void
+OnAttach(AG_Event *event)
+{
+	AG_HSVPal *pal = AG_SELF();
+	AG_Driver *drv = WIDGET(pal)->drv;
+	
+	pal->pixel = AG_MapRGBA(drv->videoFmt, 0,0,0,255);
+	AG_BindPointer(pal, "pixel-format", (void *)&drv->videoFmt);
+}
+
+static void
 Init(void *obj)
 {
 	AG_HSVPal *pal = obj;
@@ -691,7 +699,7 @@ Init(void *obj)
 	pal->s = 0.0;
 	pal->v = 0.0;
 	pal->a = 1.0;
-	pal->pixel = AG_MapRGBA(agVideoFmt, 0,0,0,255);
+	pal->pixel = 0;
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = AG_HSVPAL_SEL_NONE;
@@ -710,7 +718,7 @@ Init(void *obj)
 	AG_BindFloat(pal, "value", &pal->v);
 	AG_BindFloat(pal, "alpha", &pal->a);
 	AG_BindUint32(pal, "pixel", &pal->pixel);
-	AG_BindPointer(pal, "pixel-format", (void *)&agVideoFmt);
+	AG_BindPointer(pal, "pixel-format", NULL);
 /*	AG_BindFloat(pal, "red", &pal->r); */
 /*	AG_BindFloat(pal, "green", &pal->g); */
 /*	AG_BindFloat(pal, "blue", &pal->b); */
@@ -731,15 +739,16 @@ Init(void *obj)
 	AG_BindInt(pal, "triangle.w", &pal->triangle.w);
 	AG_BindInt(pal, "triangle.h", &pal->triangle.h);
 	AG_BindUint(pal, "state", &pal->state);
-	AG_BindUint32(pal, "cTile", &pal->cTile);
 #endif /* AG_DEBUG */
 	
 	AG_SetEvent(pal, "bound", Bound, NULL);
+	AG_SetEvent(pal, "attach", OnAttach, NULL);
 }
 
 static void
 RenderPalette(AG_HSVPal *pal)
 {
+	AG_Driver *drv = WIDGET(pal)->drv;
 	float h, cur_h, cur_s, cur_v;
 	Uint32 pc;
 	Uint8 r, g, b, a, da;
@@ -755,7 +764,7 @@ RenderPalette(AG_HSVPal *pal)
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*AG_PI; h += pal->circle.dh) {
 		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &r, &g, &b);
-		pc = AG_MapRGB(agVideoFmt, r,g,b);
+		pc = AG_MapRGB(drv->videoFmt, r,g,b);
 
 		for (i = 0; i < pal->circle.width; i++) {
 			x = (pal->circle.rout - i)*Cos(h);
@@ -777,7 +786,7 @@ RenderPalette(AG_HSVPal *pal)
 			AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
-			pc = AG_MapRGB(agVideoFmt, r,g,b);
+			pc = AG_MapRGB(drv->videoFmt, r,g,b);
 			AG_PUT_PIXEL2(pal->surface,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y,
@@ -872,11 +881,11 @@ Draw(void *obj)
 
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
-		pal->surface = AG_SurfaceVideoRGB(WIDTH(pal), HEIGHT(pal));
+		pal->surface = AG_SurfaceStdRGB(WIDTH(pal), HEIGHT(pal));
 		if (pal->surface == NULL) {
 			AG_FatalError(NULL);
 		}
-		pal->cTile = AG_MapRGB(pal->surface->format, 140,140,140);
+		pal->cTile = AG_ColorRGB(140,140,140);
 		RenderPalette(pal);
 		AG_WidgetReplaceSurface(pal, 0, pal->surface);
 	}
@@ -893,7 +902,7 @@ Draw(void *obj)
 	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*Cos(cur_h),
 	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*Sin(cur_h),
 	    pal->selcircle_r,
-	    AG_COLOR(HSVPAL_CIRCLE_COLOR));
+	    agColors[HSVPAL_CIRCLE_COLOR]);
 	
 	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
 	y = (int)((1.0 - cur_s) * (float)pal->triangle.h);
@@ -904,7 +913,7 @@ Draw(void *obj)
 	    pal->triangle.x + x - y/2,
 	    pal->triangle.y + y,
 	    pal->selcircle_r,
-	    AG_COLOR(HSVPAL_CIRCLE_COLOR));
+	    agColors[HSVPAL_CIRCLE_COLOR]);
 
 	x = a*pal->rAlpha.w/255;
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
@@ -914,7 +923,7 @@ Draw(void *obj)
 		AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
 		AG_DrawRectFilled(pal,
 		    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
-		    AG_MapRGB(agVideoFmt, r,g,b));
+		    AG_ColorRGB(r,g,b));
 	}
 	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
 		/* Draw the alpha bar. */
@@ -922,17 +931,17 @@ Draw(void *obj)
 		    pal->rAlpha.x + x,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    AG_COLOR(HSVPAL_BAR1_COLOR));
+		    agColors[HSVPAL_BAR1_COLOR]);
 		AG_DrawLineV(pal,
 		    pal->rAlpha.x + x + 1,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    AG_COLOR(HSVPAL_BAR2_COLOR));
+		    agColors[HSVPAL_BAR2_COLOR]);
 		AG_DrawLineV(pal,
 		    pal->rAlpha.x + x + 2,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    AG_COLOR(HSVPAL_BAR1_COLOR));
+		    agColors[HSVPAL_BAR1_COLOR]);
 	}
 }
 

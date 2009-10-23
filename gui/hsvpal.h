@@ -47,7 +47,7 @@ typedef struct ag_hsvpal {
 	AG_Menu *menu;
 	AG_MenuItem *menu_item;
 	AG_Window *menu_win;
-	Uint32 cTile;
+	AG_Color cTile;
 } AG_HSVPal;
 
 __BEGIN_DECLS
