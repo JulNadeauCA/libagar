@@ -100,7 +100,7 @@ ResizeColumn(AG_Treetbl *tt, int cid, int left)
 	AG_TreetblCol *col = &tt->column[cid];
 	int x;
 
-	AG_MouseGetState(&x, NULL);
+	AG_MouseGetState(agMouse, &x, NULL);
 	x -= WIDGET(tt)->rView.x1;
 	col->w = (x-left) > 16 ? (x-left) : 16;
 }
@@ -153,7 +153,7 @@ MoveColumn(AG_Treetbl *tt, Uint cid, int left)
 
 	col->flags |= AG_TREETBL_COL_MOVING;
 
-	AG_MouseGetState(&x, NULL);
+	AG_MouseGetState(agMouse, &x, NULL);
 	x -= WIDGET(tt)->rView.x1;
 
 	if ((col->w < colLeft->w  && x < left - colLeft->w + col->w) ||
@@ -324,7 +324,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	AG_TreetblRow *row = NULL;
 	int depth = 0;
 	int ts = tt->hRow/2 + 1;
-	AG_KeyMod modifiers = (AG_KeyMod)SDL_GetModState();
+	AG_KeyMod kmod = AG_GetModState(agKeyboard);
 	Uint i, j, row_idx;
 	int px;
 
@@ -378,7 +378,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	}
 	
 	/* Handle command/control clicks and range selections. */
-	if ((modifiers & KMOD_META || modifiers & KMOD_CTRL)) {
+	if ((kmod & AG_KEYMOD_META || kmod & AG_KEYMOD_CTRL)) {
 		if (row->flags & AG_TREETBL_ROW_SELECTED) {
 			row->flags &= ~(AG_TREETBL_ROW_SELECTED);
 			AG_PostEvent(NULL, tt, "treetbl-deselect", "%p", row);
@@ -389,7 +389,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 			row->flags |= AG_TREETBL_ROW_SELECTED;
 			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
 		}
-	} else if (modifiers & KMOD_SHIFT) {
+	} else if (kmod & AG_KEYMOD_SHIFT) {
 		for (j = 0; j < tt->visible.count; j++) {
 			if (VISROW(tt,j) != NULL &&
 			    (VISROW(tt,j)->flags & AG_TREETBL_ROW_SELECTED))
@@ -800,7 +800,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 				             Strdup((char *)data) :
 				             Strdup("(null)");
 
-				AG_TextColor(TABLEVIEW_CTXT_COLOR);
+				AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 				cell->image = AG_TextRender(cell->text);
 				break;
 			}
@@ -1190,7 +1190,7 @@ DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
 			AG_SurfaceFree(cell->image);
 
 		AG_PushTextState();
-		AG_TextColor(TABLEVIEW_CTXT_COLOR);
+		AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 		s = tt->cellDataFn(tt, col->cid, row->rid);
 		cell->image = AG_TextRender((s != NULL) ? s : "");
 		AG_PopTextState();
@@ -1218,7 +1218,7 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 
 			if (col->labelSu == -1) {
 				AG_PushTextState();
-				AG_TextColor(TABLEVIEW_HTXT_COLOR);
+				AG_TextColor(agColors[TABLEVIEW_HTXT_COLOR]);
 				col->labelSu = AG_WidgetMapSurface(tt,
 				    AG_TextRender(col->label));
 			}
@@ -1260,7 +1260,7 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 		}
 		y += tt->hRow;
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(tt);
 
 	/* Fill the Remaining space in column heading */
 	if (tt->hCol > 0 &&
@@ -1435,7 +1435,7 @@ AG_TreetblCellPrintf(AG_Treetbl *tt, AG_TreetblRow *row, int cid,
 	va_end(args);
 
 	AG_PushTextState();
-	AG_TextColor(TABLEVIEW_CTXT_COLOR);
+	AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 	if (cell->image != NULL) { AG_SurfaceFree(cell->image); }
 	cell->image = AG_TextRender(cell->text);
 	AG_PopTextState();
