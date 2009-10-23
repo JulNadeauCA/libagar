@@ -207,9 +207,7 @@ Draw(void *obj)
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:
-				AG_LockView();
-				AG_WidgetPutPixel(fpl, x, y, gi->color);
-				AG_UnlockView();
+				AG_PutPixel(fpl, x, y, gi->color);
 				break;
 			case AG_FIXED_PLOTTER_LINES:
 				AG_DrawLine(fpl, ox, oy, x, y, gi->color);
@@ -227,7 +225,7 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
-	gi->color = AG_MapRGB(agVideoFmt, r,g,b);
+	gi->color = AG_ColorRGB(r,g,b);
 	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
