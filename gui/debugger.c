@@ -25,16 +25,14 @@
 
 /*
  * This tool allows the user to browse through the widget tree and manipulate
- * generic Widget and Window parameters. It is accessed either by calling
- * AG_GuiDebugger(), or selecting "GUI Debugger" in the optional "background"
- * menu (requires the AG_BGPOPUPMENU flag to AG_InitVideo()).
+ * generic Widget and Window parameters.
  */
 
 #include <core/core.h>
 
 #ifdef AG_DEBUG
 
-#include "window.h"
+#include "gui.h"
 #include "box.h"
 #include "textbox.h"
 #include "tlist.h"
@@ -119,14 +117,15 @@ static void
 PollWidgets(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
+	AG_Driver *drv = WIDGET(tl)->drv;
 	AG_Window *win;
 
 	AG_TlistClear(tl);
-	AG_LockVFS(agView);
-	VIEW_FOREACH_WINDOW_REVERSE(win, agView) {
+	AG_LockVFS(drv);
+	AG_FOREACH_WINDOW_REVERSE(win, drv) {
 		FindWindows(tl, win, 0);
 	}
-	AG_UnlockVFS(agView);
+	AG_UnlockVFS(drv);
 	AG_TlistRestore(tl);
 }
 
@@ -223,7 +222,9 @@ WidgetSelected(AG_Event *event)
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
-		AG_LabelNewPolled(nTab, 0, _("Parent window: %p"), &wid->window);
+		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent window: %p"), &wid->window);
+		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver: %p"), &wid->drv);
+		AG_LabelNewPolled(nTab, AG_LABEL_HFILL, _("Parent driver ops: %p"), &wid->drvOps);
 		AG_SeparatorNewHoriz(nTab);
 
 		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_EXPAND);
