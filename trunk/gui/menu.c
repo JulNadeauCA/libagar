@@ -347,11 +347,15 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 	}
 
 	/* If this is the application menu, resize its window. */
-	if (mi->pmenu != NULL && (mi->pmenu->flags & AG_MENU_GLOBAL)) {
+	/* XXX 1.4 */
+	if (mi->pmenu != NULL && (mi->pmenu->flags & AG_MENU_GLOBAL) &&
+	    agDriver != NULL) {
+		Uint wMax, hMax;
 		AG_SizeReq rMenu;
 
+		AG_GetDisplaySize(agDriver, &wMax, &hMax);
 		AG_WidgetSizeReq(mi->pmenu, &rMenu);
-		AG_WindowSetGeometry(agAppMenuWin, 0, 0, agView->w, rMenu.h);
+		AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
 	}
 	return (mi);
 }
@@ -946,7 +950,7 @@ Draw(void *obj)
 
 		if (item->state) {
 			if (item->lblEnabled == -1) {
-				AG_TextColor(MENU_TXT_COLOR);
+				AG_TextColor(agColors[MENU_TXT_COLOR]);
 				item->lblEnabled = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
@@ -954,7 +958,7 @@ Draw(void *obj)
 			lbl = item->lblEnabled;
 		} else {
 			if (item->lblDisabled == -1) {
-				AG_TextColor(MENU_TXT_DISABLED_COLOR);
+				AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
 				item->lblDisabled = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
@@ -975,7 +979,7 @@ Draw(void *obj)
 		    item->y + m->tPadLbl);
 	}
 
-	AG_PopClipRect();
+	AG_PopClipRect(m);
 }
 
 static void
@@ -1007,11 +1011,20 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Menu *m = obj;
 	int i, x, y;
 	int wLbl, hLbl;
+	Uint wMax, hMax;
 
 	x = m->lPad;
 	y = m->tPad;
 	r->h = 0;
 	r->w = x;
+
+	/* XXX 1.4 */
+	if (agDriver != NULL) {
+		AG_GetDisplaySize(WIDGET(m)->drv, &wMax, &hMax);
+	} else {
+		wMax = 0;
+		hMax = 0;
+	}
 
 	if (m->root == NULL) {
 		return;
@@ -1021,13 +1034,13 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		if (r->h == 0) {
 			r->h = m->tPad+hLbl+m->bPad;
 		}
-		if (x+wLbl > agView->w) {			/* Wrap */
+		if (x+wLbl > wMax) {			/* Wrap */
 			x = m->lPad;
 			y += hLbl;
 			r->h += hLbl+m->bPad;
 		}
-		if (r->w < MIN(x+wLbl,agView->w)) {
-			r->w = MIN(x+wLbl,agView->w);
+		if (r->w < MIN(x+wLbl,wMax)) {
+			r->w = MIN(x+wLbl,wMax);
 		}
 		x += wLbl;
 	}
