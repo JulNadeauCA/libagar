@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,11 +25,10 @@
 
 #include <core/core.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
-
+#include "gui.h"
 #include "cursors.h"
+
+/* Built-in cursors */
 #include "cursors/fill.xpm"
 #include "cursors/erase.xpm"
 #include "cursors/pick.xpm"
@@ -39,25 +38,104 @@
 #include "cursors/lrdiag.xpm"
 #include "cursors/text.xpm"
 
-#define CURSOR_MAX_W 32
-#define CURSOR_MAX_H 32
+static struct {
+	char **data;
+	int x, y;
+} builtins[] = {
+	{ NULL,		0,0 },
+	{ fill_xpm,	23,25 },
+	{ erase_xpm,	10,20 },
+	{ pick_xpm,	8,22 },
+	{ hresize_xpm,	16,17 },
+	{ vresize_xpm,	15,16 },
+	{ lldiag_xpm,	16,15 },
+	{ lrdiag_xpm,	16,15 },
+	{ text_xpm,	15,15 }
+};
 
-SDL_Cursor *agCursors[AG_LAST_CURSOR];
-SDL_Cursor *agDefaultCursor = NULL;
-
-static SDL_Cursor *
-GenCursor(char *xpm[], int xHot, int yHot)
+/* Create a new cursor from raw bitmap data and a transparency mask. */
+AG_Cursor *
+AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
+    int xHot, int yHot)
 {
-	int i = -1, row, col;
-	Uint8 data[4*CURSOR_MAX_W];
-	Uint8 mask[4*CURSOR_MAX_H];
+	AG_Driver *drv = obj;
+	AG_Cursor *curs, *cursNew;
+	Uint size = w*h;
+
+	if ((cursNew = AG_TryRealloc(drv->cursors,
+	    (drv->nCursors+1)*sizeof(AG_Cursor))) == NULL) {
+		return (NULL);
+	}
+	drv->cursors = cursNew;
+	curs = &drv->cursors[drv->nCursors++];
+
+	if ((curs->data = AG_TryMalloc(size)) == NULL ||
+	    (curs->mask = AG_TryMalloc(size)) == NULL) {
+		goto fail;
+	}
+	memcpy(curs->data, data, size);
+	memcpy(curs->mask, mask, size);
+	curs->w = w;
+	curs->h = h;
+	curs->xHot = xHot;
+	curs->yHot = yHot;
+
+	if (AGDRIVER_CLASS(drv)->createCursor(drv, curs) == -1) {
+		goto fail;
+	}
+	return (curs);
+fail:
+	Free(curs->data);
+	Free(curs->mask);
+	drv->nCursors--;
+	return (NULL);
+}
+
+static __inline__ void
+FreeCursor(AG_Driver *drv, AG_Cursor *curs)
+{
+	AGDRIVER_CLASS(drv)->freeCursor(drv, curs);
+	Free(curs->data);
+	Free(curs->mask);
+}
+
+/* Delete a registered cursor. */
+void
+AG_CursorFree(void *obj, AG_Cursor *curs)
+{
+	AG_Driver *drv = obj;
+	int i;
+
+	for (i = 0; i < drv->nCursors; i++) {
+		if (&drv->cursors[i] == curs)
+			break;
+	}
+	if (i == drv->nCursors)
+		AG_FatalError("No such cursor");
+
+	FreeCursor(drv, curs);
+
+	if (i < drv->nCursors-1) {
+		memmove(&drv->cursors[i], &drv->cursors[i+1],
+		    (drv->nCursors-1)*sizeof(AG_Cursor));
+	}
+	drv->nCursors--;
+}
+
+/* Create a cursor from the contents of an XPM file. */
+AG_Cursor *
+AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
+{
+	int i = -1, x, y;
+	Uint8 data[4*AG_CURSOR_MAX_W];
+	Uint8 mask[4*AG_CURSOR_MAX_H];
 	int w, h;
 
 	sscanf(xpm[0], "%d %d", &w, &h);
 
-	for (row = 0; row < h; row++) {
-		for (col = 0; col < w; col++) {
-			if (col % 8) {
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			if (x%8) {
 				data[i] <<= 1;
 				mask[i] <<= 1;
 			} else {
@@ -65,7 +143,7 @@ GenCursor(char *xpm[], int xHot, int yHot)
 				data[i] = 0;
 				mask[i] = 0;
 			}
-			switch (xpm[row+4][col]) {
+			switch (xpm[y+4][x]) {
 			case '.':
 				mask[i] |= 0x01;
 				break;
@@ -80,28 +158,50 @@ GenCursor(char *xpm[], int xHot, int yHot)
 			}
 		}
 	}
-	return SDL_CreateCursor(data, mask, w, h, xHot, yHot);
+	return AG_CursorNew(drv, w,h, data, mask, xHot,yHot);
 }
 
-void
-AG_CursorsInit(void)
+/* Initialize Agar's set of built-in cursors. */
+int
+AG_InitStockCursors(AG_Driver *drv)
 {
-	agDefaultCursor = SDL_GetCursor();
-	agCursors[AG_FILL_CURSOR] = GenCursor(fill_xpm, 23, 25);
-	agCursors[AG_ERASE_CURSOR] = GenCursor(erase_xpm, 10, 20);
-	agCursors[AG_PICK_CURSOR] = GenCursor(pick_xpm, 8, 22);
-	agCursors[AG_HRESIZE_CURSOR] = GenCursor(hresize_xpm, 16, 17);
-	agCursors[AG_VRESIZE_CURSOR] = GenCursor(vresize_xpm, 15, 16);
-	agCursors[AG_LLDIAG_CURSOR] = GenCursor(lldiag_xpm, 16, 15);
-	agCursors[AG_LRDIAG_CURSOR] = GenCursor(lrdiag_xpm, 16, 15);
-	agCursors[AG_TEXT_CURSOR] = GenCursor(text_xpm, 15, 15);
+	AG_Cursor *ac;
+	int i;
+
+	for (i = 1; i < AG_LAST_CURSOR; i++) {
+		ac = AG_CursorFromXPM(drv, builtins[i].data,
+		    builtins[i].x, builtins[i].y);
+		if (ac == NULL)
+			goto fail;
+	}
+	return (0);
+fail:
+	AG_FreeCursors(drv);
+	return (-1);
 }
 
+/* Free all cursors allocated by a driver. */
 void
-AG_CursorsDestroy(void)
+AG_FreeCursors(AG_Driver *drv)
 {
 	int i;
 
-	for (i = 0; i < AG_LAST_CURSOR; i++)
-		SDL_FreeCursor(agCursors[i]);
+	for (i = 0; i < drv->nCursors; i++) {
+		FreeCursor(drv, &drv->cursors[i]);
+	}
+	Free(drv->cursors);
+	drv->cursors = NULL;
 }
+
+#ifdef AG_LEGACY
+void
+AG_SetCursor(int builtin)
+{
+	AG_PushStockCursor(agDriver, builtin);
+}
+void
+AG_UnsetCursor(void)
+{
+	AG_PopCursor(agDriver);
+}
+#endif /* AG_LEGACY */
