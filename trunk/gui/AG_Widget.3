@@ -498,26 +498,13 @@ interface.
 .Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
 .Pp
 .Ft void
-.Fn AG_PopClipRect "void"
+.Fn AG_PopClipRect "AG_Widget *widget"
 .Pp
 .Ft void
 .Fn AG_WidgetPushCursor "AG_Widget *widget" "int cursor"
 .Pp
 .Ft void
 .Fn AG_WidgetPopCursor "AG_Widget *widget"
-.Pp
-.Ft void
-.Fn AG_WidgetPutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
-.Pp
-.Ft void
-.Fn AG_WidgetPutPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 red" "Uint8 green" "Uint8 blue"
-.Pp
-.Ft void
-.Fn AG_WidgetBlendPixelRGBA "AG_Widget *widget" "int x" "int y" "Uint8 color[4]" "AG_BlendFn blendFn"
-.Pp
-.Ft void
-.Fn AG_WidgetBlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
-.Pp
 .nr nS 0
 .Pp
 The
@@ -546,60 +533,6 @@ array.
 The
 .Fn AG_WidgetPopCursor
 restores the previously saved cursor.
-.Pp
-.Fn AG_WidgetPutPixel32
-function writes a pixel (given in
-.Va agVideoFmt
-format) to the specified widget coordinates.
-The
-.Fn AG_WidgetPutPixelRGB
-variant accepts 8-bit component values.
-.Pp
-The
-.Fn AG_WidgetBlendPixelRGBA
-and
-.Fn AG_WidgetBlendPixel32
-routines blend the specified color against the current pixel at widget
-coordinates
-.Fa x ,
-.Fa y .
-.Fa color 
-specifies the source 8-bit RGBA components.
-Pixels are blended according to the given function
-.Fn blendFn ,
-which may be one of:
-.Bd -literal
-typedef enum ag_blend_func {
-	AG_ALPHA_OVERLAY,	/* dA = sA+dA (emulated in GL mode) */
-	AG_ALPHA_SRC,		/* dA = sA */
-	AG_ALPHA_DST,		/* dA = dA */
-	AG_ALPHA_ONE_MINUS_DST,	/* dA = 1-dA */
-	AG_ALPHA_ONE_MINUS_SRC	/* dA = 1-sA */
-} AG_BlendFn;
-.Ed
-.Pp
-The display surface must be locked (see
-.Xr AG_LockView 3
-and
-.Xr AG_UnlockView 3 )
-before any of the
-.Fn AG_WidgetPutPixel*
-and
-.Fn AG_WidgetBlendPixel*
-routines are invoked.
-Put-pixel and blend-pixel operations are also subject to the current clipping
-rectangle (as set by
-.Fn AG_PushClipRect ) .
-.Pp
-.Fn AG_WidgetPutPixel*
-and
-.Fn AG_WidgetBlendPixel*
-differ from the low-level 
-.Fn AG_VIEW_PUT_PIXEL*
-operations of
-.Xr AG_View 3
-in that the coordinates are relative to the widget's coordinate system.
-These operations are also emulated if the display is not framebuffer-based.
 .Sh BINDINGS
 Agar widgets can be configured to directly access data of specific types.
 For example,
@@ -970,7 +903,7 @@ has been pressed.
 and
 .Fa y
 are the cursor coordinates in the widget's local coordinate system.
-.It Fn key-down "int key" "int mod" "int unicode"
+.It Fn key-down "int key" "int mod" "Ulong unicode"
 The widget is receiving keyboard events and
 .Fa key
 has been pressed.
@@ -978,11 +911,11 @@ The
 .Fa mod
 argument is a bitmask representing the state of the current key modifiers and
 .Fa unicode
-is the corresponding Unicode character in UCS-4 encoding.
+is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
 See
-.Xr AG_Keysym 3
+.Xr AG_KeySym 3
 for details.
-.It Fn key-up "int key" "int mod" "int unicode"
+.It Fn key-up "int key" "int mod" "Ulong unicode"
 The widget is receiving keyboard events and
 .Fa key
 has been released.
@@ -990,9 +923,9 @@ The
 .Fa mod
 argument is a bitmask representing the state of the current key modifiers and
 .Fa unicode
-is the corresponding Unicode character in UCS-4 encoding.
+is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
 See
-.Xr AG_Keysym 3
+.Xr AG_KeySym 3
 for details.
 .El
 .Sh STRUCTURE DATA
@@ -1097,6 +1030,8 @@ and
 .Xr AG_Menu 3 .
 .El
 .Sh SEE ALSO
+.Xr AG_KeySym 3 ,
+.Xr AG_KeyMod 3 ,
 .Xr AG_GlobalKeys 3 ,
 .Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
