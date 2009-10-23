@@ -20,8 +20,8 @@ typedef struct ag_console_line {
 	int selected;			/* Row is selected */
 	int icon;			/* Icon to display */
 	AG_Font *font;			/* Font */
-	Uint32 cFg;			/* Foreground color (display fmt) */
-	Uint32 cBg;			/* Background color (display fmt) */
+	AG_Color cFg;			/* Foreground color (display fmt) */
+	AG_Color cBg;			/* Background color (display fmt) */
 	void *p;			/* User pointer */
 	struct ag_console *cons;	/* Back pointer to Console */
 } AG_ConsoleLine;
@@ -37,7 +37,7 @@ typedef struct ag_console {
 	AG_ConsoleLine *lines;		/* Lines in buffer */
 	int nLines;			/* Line count */
 	int rOffs;			/* Row display offset */
-	Uint32 cBg;			/* Background color */
+	AG_Color cBg;			/* Background color */
 	AG_Scrollbar *vBar;		/* Scrollbar */
 	AG_Rect r;			/* View area */
 	int rVisible;

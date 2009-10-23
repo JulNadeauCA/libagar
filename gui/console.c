@@ -65,7 +65,7 @@ Init(void *obj)
 	cons->nLines = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
-	cons->cBg = AG_MapRGB(agVideoFmt, 0,0,0);
+	cons->cBg = AG_ColorRGB(0,0,0);
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	cons->r = AG_RECT(0,0,0,0);
 
@@ -151,14 +151,14 @@ Draw(void *p)
 			if (ln->font != NULL) {
 				AG_TextFont(ln->font);
 			}
-			AG_TextColor32(ln->cFg);
+			AG_TextColor(ln->cFg);
 			su = AG_TextRender(ln->text);
 			ln->surface = AG_WidgetMapSurface(cons, su);
 		}
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
 		y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(cons);
 }
 
 static void
@@ -239,8 +239,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->p = NULL;
 	ln->font = NULL;
 	ln->surface = -1;
-	ln->cBg = AG_MapRGBA(agVideoFmt, 0,0,0,0);
-	ln->cFg = AG_MapRGB(agVideoFmt, 250,250,230);
+	ln->cBg = AG_ColorRGBA(0,0,0,0);
+	ln->cFg = AG_ColorRGB(250,250,230);
 
 	cons->rOffs++;
 	UpdateOffset(cons);
