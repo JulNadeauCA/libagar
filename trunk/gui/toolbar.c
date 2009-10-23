@@ -135,7 +135,6 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
 	AG_Button *bu;
 	AG_Event *ev;
 
-	AG_LockVFS(agView);
 	AG_ObjectLock(bar);
 
 	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, NULL);
@@ -153,7 +152,6 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
 	}
 	
 	AG_ObjectUnlock(bar);
-	AG_UnlockVFS(agView);
 	return (bu);
 }
 
@@ -164,7 +162,6 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	AG_Button *bu;
 	AG_Event *ev;
 	
-	AG_LockVFS(agView);
 	AG_ObjectLock(bar);
 
 	bu = AG_ButtonNewS(bar->rows[bar->curRow], 0, text);
@@ -181,20 +178,17 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	}
 	
 	AG_ObjectUnlock(bar);
-	AG_UnlockVFS(agView);
 	return (bu);
 }
 
 void
 AG_ToolbarSeparator(AG_Toolbar *bar)
 {
-	AG_LockVFS(agView);
 	AG_ObjectLock(bar);
 	AG_SeparatorNew(bar->rows[bar->curRow],
 	    (bar->type == AG_TOOLBAR_HORIZ) ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
 	AG_ObjectUnlock(bar);
-	AG_UnlockVFS(agView);
 }
 
 void
