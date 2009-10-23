@@ -1,0 +1,79 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 2, 2009
+.Dt AG_KEYMOD 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_KeyMod
+.Nd agar key modifier definitions
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+type describes a modifier key (or the state of all modifier keys);
+it is defined as:
+.Bd -literal
+typedef unsigned int AG_KeyMod;
+
+#define AG_KEYMOD_NONE		0x0000
+#define AG_KEYMOD_LSHIFT	0x0001
+#define AG_KEYMOD_RSHIFT	0x0002
+#define AG_KEYMOD_LCTRL		0x0040
+#define AG_KEYMOD_RCTRL		0x0080
+#define AG_KEYMOD_LALT		0x0100
+#define AG_KEYMOD_RALT		0x0200
+#define AG_KEYMOD_LMETA		0x0400
+#define AG_KEYMOD_RMETA		0x0800
+#define AG_KEYMOD_NUMLOCK	0x1000
+#define AG_KEYMOD_CAPSLOCK	0x2000
+#define AG_KEYMOD_MODE		0x4000
+#define AG_KEYMOD_ANY		0xffff
+#define AG_KEYMOD_CTRL		(AG_KEYMOD_LCTRL|AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT		(AG_KEYMOD_LSHIFT|AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT		(AG_KEYMOD_LALT|AG_KEYMOD_RALT)
+#define AG_KEYMOD_META		(AG_KEYMOD_LMETA|AG_KEYMOD_RMETA)
+.Ed
+.Pp
+The method of accessing key modifier states (and the related translation from
+native scancodes to
+.Nm )
+is driver-specific.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Keyboard 3 ,
+.Xr AG_KeySym 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+type first appeared in Agar 1.4.
+The bitmasks match those of SDL-1.2 (http://libsdl.org/).

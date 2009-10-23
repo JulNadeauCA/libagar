@@ -1,0 +1,197 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 2, 2009
+.Dt AG_KEYSYM 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_KeySym
+.Nd agar key description
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+type enumerates common keyboard keys.
+The translation from native scancodes to
+.Nm
+is driver-specific.
+.Bd -literal
+typedef enum ag_key_sym {
+	AG_KEY_NONE		= 0x0000,
+	AG_KEY_BACKSPACE	= 0x0008,
+	AG_KEY_TAB		= 0x0009,
+	AG_KEY_CLEAR		= 0x000c,
+	AG_KEY_RETURN		= 0x000d,
+	AG_KEY_PAUSE		= 0x0013,
+	AG_KEY_ESCAPE		= 0x001b,
+	AG_KEY_SPACE		= 0x0020,
+	AG_KEY_EXCLAIM		= 0x0021,
+	AG_KEY_QUOTEDBL		= 0x0022,
+	AG_KEY_HASH		= 0x0023,
+	AG_KEY_DOLLAR		= 0x0024,
+	AG_KEY_AMPERSAND	= 0x0026,
+	AG_KEY_QUOTE		= 0x0027,
+	AG_KEY_LEFTPAREN	= 0x0028,
+	AG_KEY_RIGHTPAREN	= 0x0029,
+	AG_KEY_ASTERISK		= 0x002a,
+	AG_KEY_PLUS		= 0x002b,
+	AG_KEY_COMMA		= 0x002c,
+	AG_KEY_MINUS		= 0x002d,
+	AG_KEY_PERIOD		= 0x002e,
+	AG_KEY_SLASH		= 0x002f,
+	AG_KEY_0		= 0x0030,
+	AG_KEY_1		= 0x0031,
+	AG_KEY_2		= 0x0032,
+	AG_KEY_3		= 0x0033,
+	AG_KEY_4		= 0x0034,
+	AG_KEY_5		= 0x0035,
+	AG_KEY_6		= 0x0036,
+	AG_KEY_7		= 0x0037,
+	AG_KEY_8		= 0x0038,
+	AG_KEY_9		= 0x0039,
+	AG_KEY_COLON		= 0x003a,
+	AG_KEY_SEMICOLON	= 0x003b,
+	AG_KEY_LESS		= 0x003c,
+	AG_KEY_EQUALS		= 0x003d,
+	AG_KEY_GREATER		= 0x003e,
+	AG_KEY_QUESTION		= 0x003f,
+	AG_KEY_AT		= 0x0040,
+	AG_KEY_LEFTBRACKET	= 0x005b,
+	AG_KEY_BACKSLASH	= 0x005c,
+	AG_KEY_RIGHTBRACKET	= 0x005d,
+	AG_KEY_CARET		= 0x005e,
+	AG_KEY_UNDERSCORE	= 0x005f,
+	AG_KEY_BACKQUOTE	= 0x0060,
+	AG_KEY_A		= 0x0061,
+	AG_KEY_B		= 0x0062,
+	AG_KEY_C		= 0x0063,
+	AG_KEY_D		= 0x0064,
+	AG_KEY_E		= 0x0065,
+	AG_KEY_F		= 0x0066,
+	AG_KEY_G		= 0x0067,
+	AG_KEY_H		= 0x0068,
+	AG_KEY_I		= 0x0069,
+	AG_KEY_J		= 0x006a,
+	AG_KEY_K		= 0x006b,
+	AG_KEY_L		= 0x006c,
+	AG_KEY_M		= 0x006d,
+	AG_KEY_N		= 0x006e,
+	AG_KEY_O		= 0x006f,
+	AG_KEY_P		= 0x0070,
+	AG_KEY_Q		= 0x0071,
+	AG_KEY_R		= 0x0072,
+	AG_KEY_S		= 0x0073,
+	AG_KEY_T		= 0x0074,
+	AG_KEY_U		= 0x0075,
+	AG_KEY_V		= 0x0076,
+	AG_KEY_W		= 0x0077,
+	AG_KEY_X		= 0x0078,
+	AG_KEY_Y		= 0x0079,
+	AG_KEY_Z		= 0x007a,
+	AG_KEY_DELETE		= 0x007f,
+	AG_KEY_KP0		= 0x0100,
+	AG_KEY_KP1		= 0x0101,
+	AG_KEY_KP2		= 0x0102,
+	AG_KEY_KP3		= 0x0103,
+	AG_KEY_KP4		= 0x0104,
+	AG_KEY_KP5		= 0x0105,
+	AG_KEY_KP6		= 0x0106,
+	AG_KEY_KP7		= 0x0107,
+	AG_KEY_KP8		= 0x0108,
+	AG_KEY_KP9		= 0x0109,
+	AG_KEY_KP_PERIOD	= 0x010a,
+	AG_KEY_KP_DIVIDE	= 0x010b,
+	AG_KEY_KP_MULTIPLY	= 0x010c,
+	AG_KEY_KP_MINUS		= 0x010d,
+	AG_KEY_KP_PLUS		= 0x010e,
+	AG_KEY_KP_ENTER		= 0x010f,
+	AG_KEY_KP_EQUALS	= 0x0110,
+	AG_KEY_UP		= 0x0111,
+	AG_KEY_DOWN		= 0x0112,
+	AG_KEY_RIGHT		= 0x0113,
+	AG_KEY_LEFT		= 0x0114,
+	AG_KEY_INSERT		= 0x0115,
+	AG_KEY_HOME		= 0x0116,
+	AG_KEY_END		= 0x0117,
+	AG_KEY_PAGEUP		= 0x0118,
+	AG_KEY_PAGEDOWN		= 0x0119,
+	AG_KEY_F1		= 0x011a,
+	AG_KEY_F2		= 0x011b,
+	AG_KEY_F3		= 0x011c,
+	AG_KEY_F4		= 0x011d,
+	AG_KEY_F5		= 0x011e,
+	AG_KEY_F6		= 0x011f,
+	AG_KEY_F7		= 0x0120,
+	AG_KEY_F8		= 0x0121,
+	AG_KEY_F9		= 0x0122,
+	AG_KEY_F10		= 0x0123,
+	AG_KEY_F11		= 0x0124,
+	AG_KEY_F12		= 0x0125,
+	AG_KEY_F13		= 0x0126,
+	AG_KEY_F14		= 0x0127,
+	AG_KEY_F15		= 0x0128,
+	AG_KEY_NUMLOCK		= 0x012c,
+	AG_KEY_CAPSLOCK		= 0x012d,
+	AG_KEY_SCROLLOCK	= 0x012e,
+	AG_KEY_RSHIFT		= 0x012f,
+	AG_KEY_LSHIFT		= 0x0130,
+	AG_KEY_RCTRL		= 0x0131,
+	AG_KEY_LCTRL		= 0x0132,
+	AG_KEY_RALT		= 0x0133,
+	AG_KEY_LALT		= 0x0134,
+	AG_KEY_RMETA		= 0x0135,
+	AG_KEY_LMETA		= 0x0136,
+	AG_KEY_LSUPER		= 0x0137,
+	AG_KEY_RSUPER		= 0x0138,
+	AG_KEY_MODE		= 0x0139,
+	AG_KEY_COMPOSE		= 0x013a,
+	AG_KEY_HELP		= 0x013b,
+	AG_KEY_PRINT		= 0x013c,
+	AG_KEY_SYSREQ		= 0x013d,
+	AG_KEY_BREAK		= 0x013e,
+	AG_KEY_MENU		= 0x013f,
+	AG_KEY_POWER		= 0x0140,
+	AG_KEY_EURO		= 0x0141,
+	AG_KEY_UNDO		= 0x0142,
+	AG_KEY_LAST		= 0x0143,
+	AG_KEY_ANY		= 0xffff
+} AG_KeySym;
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Keyboard 3 ,
+.Xr AG_KeyMod 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+type first appeared in Agar 1.4.
+The numerical codes match those of SDL-1.2 (http://libsdl.org/).
