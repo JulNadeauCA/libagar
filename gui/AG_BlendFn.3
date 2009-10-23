@@ -1,0 +1,84 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 27, 2009
+.Dt AG_BLENDFN 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_BlendFn
+.Nd agar pixel blending function
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+type specifies an arithmetic operation to use when blending two pixels. The
+incoming pixel is referred to as the "source" pixel. The target pixel already
+in the frame buffer is referred to as the "destination" pixel.
+.Nm
+is defined as:
+.Bd -literal
+typedef enum ag_blend_func {
+	AG_ALPHA_OVERLAY,		/* sA+dA */
+	AG_ALPHA_SRC,			/* sA */
+	AG_ALPHA_DST,			/* dA */
+	AG_ALPHA_ONE_MINUS_DST,		/* 1-dA */
+	AG_ALPHA_ONE_MINUS_SRC		/* 1-sA */
+} AG_BlendFn;
+.Ed
+.Pp
+The blending functions differ in how the weight of the destination pixel
+(versus the weight of the source pixel) is selected.
+.Pp
+.Dv AG_PIXEL_SRC
+uses the alpha component of the source pixel (sA).
+This function is what one would normally use to implement transparency.
+.Pp
+.Dv AG_PIXEL_DST
+uses the alpha component of the destination pixel (dA),
+.Pp
+.Dv AG_PIXEL_OVERLAY
+uses the sum of the source and alpha components, clamped to 255.
+Note that this function may be slower than the others depending on the
+graphics driver in use.
+.Pp
+.Dv AG_PIXEL_ONE_MINUS_SRC
+and
+.Dv AG_PIXEL_ONE_MINUS_DST
+use the value 1 minus the source and destination alpha component.
+.Pp
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3 ,
+.Xr glBlendFunc 3
+.Sh HISTORY
+The
+.Nm
+type first appeared in Agar 1.3.

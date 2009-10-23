@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 .Dt AG_CURSOR 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.3
+.ds oS Agar 1.4
 .Sh NAME
 .Nm AG_Cursor
 .Nd agar cursor operations
@@ -39,14 +39,80 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface allows Agar widgets to change the shape of the cursor.
-Since the Agar window system as well as various Agar widgets also need to
-change the cursor, this interface should always be used as opposed to
-platform-specific APIs or
-.Xr SDL_SetCursor 3
-in SDL mode.
+interface provides Agar applications control over the shape of the mouse
+cursor; usually the hardware cursor.
+These operations are specific to a given
+.Xr AG_Driver 3
+instance (usually retrieved from the
+.Va drv
+member of a
+.Xr AG_Widget 3
+structure).
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_Cursor *"
+.Fn AG_CursorNew "AG_Driver *drv" "Uint w" "Uint h" "const Uint8 *data" "const Uint8 *mask" "int xHot" "int yHot"
 .Pp
-The following built-in cursors are currently defined:
+.Ft "AG_Cursor *"
+.Fn AG_CursorFromXPM "AG_Driver *drv" "char *xpmData[]" "int xHot" "int yHot"
+.Pp
+.Ft void
+.Fn AG_CursorFree "AG_Driver *drv" "AG_Cursor *cursor"
+.Pp
+.Ft "AG_Cursor *"
+.Fn AG_GetStockCursor "AG_Driver *drv" "int name"
+.Pp
+.Ft "AG_Cursor *"
+.Fn AG_GetActiveCursor "AG_Driver *drv"
+.Pp
+.Ft int
+.Fn AG_PushCursor "AG_Driver *drv" "AG_Cursor *cursor"
+.Pp
+.Ft int
+.Fn AG_PushStockCursor "AG_Driver *drv" "int name"
+.Pp
+.Ft void
+.Fn AG_PopCursor "AG_Driver *drv"
+.Pp
+.Ft void
+.Fn AG_ShowCursor "AG_Driver *drv"
+.Pp
+.Ft void
+.Fn AG_HideCursor "AG_Driver *drv"
+.Pp
+.Ft int
+.Fn AG_CursorIsVisible "AG_Driver *drv"
+.Pp
+.nr nS 0
+.Fn AG_CursorNew
+registers a new hardware cursor with the underlying graphics driver.
+The cursor's pixels are determined from bytes in
+.Fa data
+(1 = black, 0 = white)
+and
+.Fa mask
+(1 = opaque, 0 = transparent).
+The
+.Fa w
+and
+.Fa h
+arguments specify the dimensions of the surface in pixels.
+The tip of the cursor is located at coordinates
+.Fa xHot
+and
+.Fa yHot .
+.Pp
+.Fn AG_CursorFromXPM
+creates a cursor from the contents of an XPM file.
+.Pp
+.Fn AG_CursorFree
+releases all resources allocated by a cursor.
+.Pp
+.Fn AG_GetStockCursor
+returns a pointer to a built-in cursor.
+Acceptable values for
+.Fa name
+include:
 .Bd -literal
 enum {
 	AG_FILL_CURSOR,
@@ -60,28 +126,34 @@ enum {
 	AG_LAST_CURSOR
 };
 .Ed
-.Sh INTERFACE
-.nr nS 1
-.Ft "void"
-.Fn AG_SetCursor "int CursorID"
 .Pp
-.Ft "void"
-.Fn AG_UnsetCursor "void"
+.Fn AG_GetActiveCursor
+returns a pointer to the currently active cursor.
 .Pp
-.nr nS 0
+.Fn AG_PushCursor
+saves the current cursor on a stack and sets
+.Fa cursor
+as the active cursor.
 The
-.Fn AG_SetCursor
-function changes to the specified cursor shape.
-The change does not take effect until the end of the current event
-processing loop.
+.Fn AG_PushStockCursor
+variant accepts a built-in cursor argument (
+.Fn AG_GetStockCursor ) .
+.Fn AG_PopCursor
+restores the previously saved cursor.
 .Pp
-.Fn AG_UnsetCursor
-changes the cursor shape back to the default.
+.Fn AG_ShowCursor
+and
+.Fn AG_HideCursor
+control the visibility of the active cursor.
+.Fn AG_CursorIsVisible
+returns 1 if the active cursor is visible, 0 otherwise.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Driver 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
-The
+An
 .Nm
 interface first appeared in Agar 1.0.
+A more extensive API was introduced in Agar 1.4.
