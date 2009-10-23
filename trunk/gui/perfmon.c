@@ -61,11 +61,11 @@ AG_PerfMonShow(void)
  * XXX inefficient; remove this once the graph widget implements polling.
  */
 void
-AG_PerfMonUpdate(void)
+AG_PerfMonUpdate(int rCur)
 {
 	static int einc = 0;
 
-	AG_FixedPlotterDatum(agPerfFPS, agView->rCur);
+	AG_FixedPlotterDatum(agPerfFPS, rCur);
 	AG_FixedPlotterDatum(agPerfEvnts, agEventAvg * 30 / 10);
 	AG_FixedPlotterDatum(agPerfIdle, agIdleAvg);
 	AG_FixedPlotterScroll(agPerfGraph, 1);
@@ -86,9 +86,8 @@ AG_PerfMonInit(void)
 	AG_WindowSetCaptionS(agPerfWindow, _("Performance counters"));
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
-	    "%dms (nom %dms), %d evnt, %dms idle",
-	    &agView->rCur, &agView->rNom, &agEventAvg, &agIdleAvg);
-	AG_LabelSizeHint(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
+	    "%d evnt, %dms idle", &agEventAvg, &agIdleAvg);
+	AG_LabelSizeHint(lbl, 1, "00 evnt, 000ms idle");
 	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
 	                                               AG_FIXED_PLOTTER_XAXIS|
 						       AG_FIXED_PLOTTER_EXPAND);
