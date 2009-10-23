@@ -2,6 +2,8 @@
 
 #ifndef _AGAR_GUI_MOUSE_H_
 #define _AGAR_GUI_MOUSE_H_
+#include <agar/gui/input_device.h>
+#include <agar/gui/begin.h>
 
 typedef enum ag_mouse_button {
 	AG_MOUSE_NONE		= 0x00,
@@ -15,9 +17,45 @@ typedef enum ag_mouse_button {
 	AG_MOUSE_ANY		= 0xff
 } AG_MouseButton;
 
+typedef enum ag_mouse_button_action {
+	AG_BUTTON_PRESSED,
+	AG_BUTTON_RELEASED
+} AG_MouseButtonAction;
+
 #define AG_MOUSE_BUTTON(b)	(1<<((b)-1))
 #define AG_MOUSE_LMASK		AG_MOUSE_BUTTON(1)
 #define AG_MOUSE_MMASK		AG_MOUSE_BUTTON(2)
 #define AG_MOUSE_RMASK		AG_MOUSE_BUTTON(3)
 
+struct ag_window;
+
+typedef struct ag_mouse {
+	struct ag_input_device _inherit;
+	Uint nButtons;		/* Button count (0 = unknown) */
+	Uint btnState;		/* Last button state (AG_MouseButton) */
+	int x, y;		/* Last cursor position */
+	int xRel, yRel;		/* Last relative motion */
+} AG_Mouse;
+
+__BEGIN_DECLS
+extern AG_ObjectClass agMouseClass;
+extern AG_Mouse *agMouse;			/* Main mouse */
+
+AG_Mouse *AG_MouseNew(void *, const char *);
+void      AG_MouseMotionUpdate(AG_Mouse *, int, int);
+void      AG_MouseButtonUpdate(AG_Mouse *, AG_MouseButtonAction, int);
+void      AG_ProcessMouseMotion(struct ag_window *, int, int, int, int, Uint);
+void      AG_ProcessMouseButtonUp(struct ag_window *, int, int, AG_MouseButton);
+void      AG_ProcessMouseButtonDown(struct ag_window *, int, int, AG_MouseButton);
+
+static __inline__ Uint8
+AG_MouseGetState(AG_Mouse *ms, int *x, int *y)
+{
+	if (x != NULL) { *x = ms->x; }
+	if (y != NULL) { *y = ms->y; }
+	return (ms->btnState);
+}
+__END_DECLS
+
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_MOUSE_H_ */
