@@ -27,7 +27,7 @@ typedef struct ag_icon {
 	struct ag_socket *sock;		/* Back pointer to socket */
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
-	Uint32 cBackground;		/* Background fill color */
+	AG_Color cBackground;		/* Background fill color */
 } AG_Icon;
 
 __BEGIN_DECLS
@@ -42,7 +42,7 @@ void	 AG_IconSetText(AG_Icon *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
 void	 AG_IconSetTextS(AG_Icon *, const char *);
-void	 AG_IconSetBackgroundFill(AG_Icon *, int, Uint32);
+void	 AG_IconSetBackgroundFill(AG_Icon *, int, AG_Color);
 __END_DECLS
 
 #include <agar/gui/close.h>

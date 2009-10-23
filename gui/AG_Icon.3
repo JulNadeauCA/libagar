@@ -72,7 +72,7 @@ It is commonly used with
 .Fn AG_IconSetTextS "AG_Icon *icon" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_IconSetBackgroundFill "AG_Icon *icon" "int enable" "Uint32 color"
+.Fn AG_IconSetBackgroundFill "AG_Icon *icon" "int enable" "AG_Color C"
 .Pp
 .nr nS 0
 The
@@ -102,10 +102,6 @@ arranges for the specified text string to be displayed under the icon.
 .Pp
 .Fn AG_IconSetBackgroundFill
 enables or disables background color fill.
-.Fa color
-must be specified in
-.Va agVideoFmt
-pixel format.
 .Sh EVENTS
 The
 .Nm

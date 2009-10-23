@@ -88,7 +88,7 @@ Init(void *obj)
 	icon->ySaved = -1;
 	icon->wSaved = -1;
 	icon->hSaved = -1;
-	icon->cBackground = 0;
+	icon->cBackground = AG_ColorRGBA(0,0,0,0);
 #ifdef AG_DEBUG
 	AG_BindUint(icon, "flags", &icon->flags);
 	AG_BindInt(icon, "surface", &icon->surface);
@@ -101,7 +101,6 @@ Init(void *obj)
 	AG_BindInt(icon, "ySaved", &icon->ySaved);
 	AG_BindInt(icon, "wSaved", &icon->wSaved);
 	AG_BindInt(icon, "hSaved", &icon->hSaved);
-	AG_BindUint32(icon, "cBackground", &icon->cBackground);
 #endif /* AG_DEBUG */
 }
 
@@ -175,10 +174,10 @@ Draw(void *obj)
 }
 
 void
-AG_IconSetBackgroundFill(AG_Icon *icon, int enable, Uint32 color)
+AG_IconSetBackgroundFill(AG_Icon *icon, int enable, AG_Color C)
 {
 	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
-	icon->cBackground = color;
+	icon->cBackground = C;
 }
 
 void
@@ -200,9 +199,9 @@ AG_IconSetSurfaceNODUP(AG_Icon *icon, AG_Surface *su)
 {
 	AG_ObjectLock(icon);
 	if (icon->surface != -1) {
-		AG_WidgetReplaceSurface(icon, icon->surface, su);
+		AG_WidgetReplaceSurfaceNODUP(icon, icon->surface, su);
 	} else {
-		icon->surface = AG_WidgetMapSurface(icon, su);
+		icon->surface = AG_WidgetMapSurfaceNODUP(icon, su);
 	}
 	AG_ObjectUnlock(icon);
 }
