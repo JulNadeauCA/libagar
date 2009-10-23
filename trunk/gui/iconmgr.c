@@ -31,10 +31,7 @@
 #include <core/config.h>
 #include <core/load_den.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
-#include "iconmgr.h"
+#include "gui.h"
 #include "load_xcf.h"
 
 #include <string.h>
@@ -58,7 +55,7 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 	dst = icon->s->pixels;
 	for (y = 0; y < icon->h; y++) {
 		for (x = 0; x < icon->w; x++) {
-			AG_PutPixel(icon->s, dst, *src);
+			AG_SurfacePutPixel(icon->s, dst, *src);
 			dst += icon->s->format->BytesPerPixel;
 			src++;
 		}
