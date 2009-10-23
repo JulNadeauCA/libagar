@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,6 @@ Collapse(AG_Combo *com)
 	com->wSaved = WIDTH(com->panel);
 	com->hSaved = HEIGHT(com->panel);
 
-	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ObjectDetach(com->panel);
 	com->panel = NULL;
@@ -99,15 +98,20 @@ static void
 Expand(AG_Event *event)
 {
 	AG_Combo *com = AG_PTR(1);
+	AG_Driver *drv = WIDGET(com)->drv;
 	int expand = AG_INT(2);
 	AG_SizeReq rList;
 	int x, y, w, h;
+	Uint wView, hView;
 
-	if (expand) {						/* Expand */
+	if (expand) {
 		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
-		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
+		AG_WindowSetPadding(com->panel, 0,0,0,0);
+		AG_ObjectSetName(com->panel, "_ComboPopup");
 		AG_ObjectAttach(com->panel, com->list);
-		
+		if (WIDGET(com)->window != NULL)
+			AG_WindowAttach(WIDGET(com)->window, com->panel);
+
 		if (com->wSaved > 0) {
 			w = com->wSaved;
 			h = com->hSaved;
@@ -123,8 +127,19 @@ Expand(AG_Event *event)
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
 
-		if (x+w > agView->w) { w = agView->w - x; }
-		if (y+h > agView->h) { h = agView->h - y; }
+		switch (AGDRIVER_CLASS(drv)->wm) {
+		case AG_WM_SINGLE:
+			AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
+			if (x+w > wView) { w = wView - x; }
+			if (y+h > hView) { h = hView - y; }
+			break;
+		case AG_WM_MULTIPLE:
+			if (WIDGET(com)->window != NULL) {
+				x += WIDGET(WIDGET(com)->window)->x;
+				y += WIDGET(WIDGET(com)->window)->y;
+			}
+			break;
+		}
 		if (w < 4 || h < 4) {
 			Collapse(com);
 			return;
@@ -224,6 +239,18 @@ Return(AG_Event *event)
 }
 
 static void
+OnDetach(AG_Event *event)
+{
+	AG_Combo *com = AG_SELF();
+
+	if (com->panel != NULL) {
+		AG_ObjectDetach(com->list);
+		AG_ObjectDetach(com->panel);
+		com->panel = NULL;
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Combo *com = obj;
@@ -246,6 +273,7 @@ Init(void *obj)
 	AG_ObjectInit(com->list, &agTlistClass);
 	AG_Expand(com->list);
 	
+	AG_SetEvent(com, "detached", OnDetach, NULL);
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
@@ -297,11 +325,6 @@ Destroy(void *p)
 {
 	AG_Combo *com = p;
 
-	if (com->panel != NULL) {
-		AG_WindowHide(com->panel);
-		AG_ObjectDetach(com->list);
-		AG_ObjectDetach(com->panel);
-	}
 	AG_ObjectDestroy(com->list);
 }
 
