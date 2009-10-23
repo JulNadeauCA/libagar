@@ -23,8 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -50,6 +48,8 @@ const char *agBlendFuncNames[] = {
 	"1-src",
 	NULL
 };
+
+AG_PixelFormat *agSurfaceFmt = NULL;		/* Standard surface format */
 
 #define COMPUTE_SHIFTLOSS(mask, shift, loss) \
 	shift = 0; \
@@ -357,45 +357,17 @@ AG_SurfaceFree(AG_Surface *s)
 
 /* Dump a surface to a JPEG image. */
 int
-AG_DumpSurface(AG_Surface *su, char *path_save)
+AG_SurfaceExportJPEG(AG_Surface *su, char *path)
 {
 #ifdef HAVE_JPEG
-	char path[AG_PATHNAME_MAX];
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
 	Uint8 *jcopybuf;
-	FILE *fp;
-	Uint seq = 0;
-	int fd;
+	FILE *f;
 	JSAMPROW row[1];
 	int x;
 
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	Strlcat(path, AG_PATHSEP, sizeof(path));
-	Strlcat(path, "screenshot", sizeof(path));
-	if (AG_MkDir(path) == -1 && errno != EEXIST) {
-		AG_SetError("mkdir %s: %s", path, strerror(errno));
-		return (-1);
-	}
-	for (;;) {
-		char file[AG_PATHNAME_MAX];
-
-		Snprintf(file, sizeof(file), "%s/%s%u.jpg", path, agProgName,
-		    seq++);
-		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
-			if (errno == EEXIST) {
-				continue;
-			} else {
-				AG_SetError("%s: %s", file, strerror(errno));
-				goto out;
-			}
-		}
-		break;
-	}
-	if (path_save != NULL)
-		Strlcpy(path_save, path, AG_PATHNAME_MAX);
-
-	if ((fp = fdopen(fd, "wb")) == NULL) {
+	if ((f = fopen(path, "wb")) == NULL) {
 		AG_SetError("fdopen: %s", strerror(errno));
 		return (-1);
 	}
@@ -411,9 +383,13 @@ AG_DumpSurface(AG_Surface *su, char *path_save)
 
 	jpeg_set_defaults(&jcomp);
 	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
-	jpeg_stdio_dest(&jcomp, fp);
+	jpeg_stdio_dest(&jcomp, f);
 
-	jcopybuf = Malloc(su->w*3);
+	if ((jcopybuf = TryMalloc(su->w*3)) == NULL) {
+		jpeg_destroy_compress(&jcomp);
+		fclose(f);
+		return (-1);
+	}
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {
@@ -435,13 +411,11 @@ AG_DumpSurface(AG_Surface *su, char *path_save)
 	jpeg_finish_compress(&jcomp);
 	jpeg_destroy_compress(&jcomp);
 
-	fclose(fp);
-	close(fd);
+	fclose(f);
 	Free(jcopybuf);
-out:
 	return (0);
 #else
-	AG_SetError(_("Screenshot feature requires libjpeg"));
+	AG_SetError(_("Agar was not compiled with libjpeg support"));
 	return (-1);
 #endif
 }
@@ -474,31 +448,34 @@ AG_FlipSurface(Uint8 *src, int h, int pitch)
  * Clipping is not done; the destination surface must be locked.
  */
 void
-AG_BlendPixelRGBA(AG_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
-    Uint8 sA, AG_BlendFn func)
+AG_SurfaceBlendPixelRGBA(AG_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG,
+    Uint8 sB, Uint8 sA, AG_BlendFn func)
 {
 	Uint32 cDst;
 	Uint8 dR, dG, dB, dA;
-	int alpha = 0;
+	int alpha;
 
 	cDst = AG_GET_PIXEL(s, pDst);
 	if ((s->flags & AG_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
-	 	AG_PUT_PIXEL(s, pDst, AG_MapRGBA(s->format, sR,sG,sB,sA));
+	 	AG_SurfacePutPixel(s, pDst, AG_MapRGBA(s->format, sR,sG,sB,sA));
 	} else {
 		AG_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
 		switch (func) {
-		case AG_ALPHA_OVERLAY:	alpha = dA+sA; break;
-		case AG_ALPHA_SRC:	alpha = sA; break;
-		case AG_ALPHA_DST:	alpha = dA; break;
-		case AG_ALPHA_ONE_MINUS_DST: alpha = 1-dA; break;
-		case AG_ALPHA_ONE_MINUS_SRC: alpha = 1-sA; break;
+		case AG_ALPHA_ZERO:		alpha = 0;	break;
+		case AG_ALPHA_OVERLAY:		alpha = dA+sA;	break;
+		case AG_ALPHA_SRC:		alpha = sA;	break;
+		case AG_ALPHA_DST:		alpha = dA;	break;
+		case AG_ALPHA_ONE_MINUS_DST:	alpha = 1-dA;	break;
+		case AG_ALPHA_ONE_MINUS_SRC:	alpha = 1-sA;	break;
+		default:
+		case AG_ALPHA_ONE:		alpha = 255;	break;
 		}
-		alpha = (alpha < 0) ? 0 : (alpha > 255) ? 255 : alpha;
-		AG_PUT_PIXEL(s, pDst, AG_MapRGBA(s->format,
-		    (((sR - dR) * sA) >> 8) + dR,
-		    (((sG - dG) * sA) >> 8) + dG,
-		    (((sB - dB) * sA) >> 8) + dB,
-		    (Uint8)alpha));
+		AG_SurfacePutPixel(s, pDst,
+		    AG_MapRGBA(s->format,
+		    (((sR - dR)*sA) >> 8) + dR,
+		    (((sG - dG)*sA) >> 8) + dG,
+		    (((sB - dB)*sA) >> 8) + dB,
+		    (Uint8)((alpha<0)?0:(alpha>255)?255:alpha)));
 	}
 }
 
@@ -644,12 +621,10 @@ AG_ScaleSurface(AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
 			if (same_fmt) {
 				cDst = cSrc;
 			} else {
-				AG_GetRGBA(cSrc, ss->format,
-				    &r1, &g1, &b1, &a1);
-				cDst = AG_MapRGBA((*ds)->format,
-				    r1, g1, b1, a1);
+				AG_GetRGBA(cSrc, ss->format, &r1,&g1,&b1,&a1);
+				cDst = AG_MapRGBA((*ds)->format, r1,g1,b1,a1);
 			}
-			AG_PUT_PIXEL((*ds), pDst, cDst);
+			AG_SurfacePutPixel((*ds), pDst, cDst);
 			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
@@ -672,15 +647,14 @@ AG_SetAlphaPixels(AG_Surface *su, Uint8 alpha)
 			    x*su->format->BytesPerPixel;
 			Uint8 r, g, b, a;
 
-			AG_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
+			AG_GetRGBA(*(Uint32 *)dst, su->format, &r,&g,&b,&a);
 
 			if (a != 0)
 				a = alpha;
 
-			AG_PUT_PIXEL(su, dst,
-			    AG_MapRGBA(su->format, r, g, b, a));
+			AG_SurfacePutPixel(su, dst,
+			    AG_MapRGBA(su->format, r,g,b,a));
 		}
 	}
 	AG_SurfaceUnlock(su);
 }
-
