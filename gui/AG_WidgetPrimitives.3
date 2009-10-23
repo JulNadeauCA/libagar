@@ -55,75 +55,112 @@ operation).
 The coordinates for all
 .Fn AG_Draw*
 functions are given in pixels, in the widget's local coordinate system.
-Unless otherwise noted, the color arguments in
-.Ft Uint32
-format are taken as raw pixel values, in
-.Va agVideoFmt
-pixel format (see
-.Xr AG_MapRGB 3 ) .
+See
+.Xr AG_Color 3
+for a description of the
+.Ft AG_Color
+type.
 .Sh PRIMITIVES
 .nr nS 1
 .Ft void
-.Fn AG_DrawPixel "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
+.Fn AG_PutPixel "AG_Widget *widget" "int x" "int y" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawPixelBlended "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
+.Fn AG_PutPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
-.Fn AG_DrawPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Fn AG_PutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c"
 .Pp
 .Ft void
-.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn AG_BlendPixel "AG_Widget *widget" "int x" "int y" "AG_Color c" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn AG_BlendPixelRGBA "AG_Widget *widget" "int x" "int y" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn AG_BlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
+.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_DrawRectBlended "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .nr nS 0
-.Fn AG_DrawPixel
-draws a single pixel at the specified coordinates.
+.Fn AG_PutPixel
+writes a single pixel at the specified coordinates.
 The
-.Fn AG_DrawPixelBlended
-variant performs alpha-blending using the specified blending function
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
-The
-.Fn AG_DrawPixelRGB
-variant accepts RGB component arguments.
+.Fn AG_PutPixelRGB
+variant accepts individual red, green and blue color arguments.
 .Pp
+The
+.Fn AG_PutPixel32
+variant accepts a 32-bit pixel value such that no conversion is necessary
+when writing the pixel to the framebuffer.
+Conversion may be achieved using
+.Xr AG_MapRGB
+with the
+.Va videoFmt
+member of the widget's associated
+.Xr AG_Driver 3
+structure.
+.Pp
+The
+.Fn AG_BlendPixel
+function writes a pixel at the specified coordinates, using alpha blending
+with the specified blending function.
+The
+.Fn AG_BlendPixelRGBA
+variant accepts an array of red, green, blue and alpha arguments.
+.Pp
+The
+.Fn AG_BlendPixel32
+variant accepts a 32-bit packed-pixel value such that minimal conversion is
+necessary when writing to the framebuffer.
+Conversion may be achieved using
+.Xr AG_MapRGB
+with the global
+.Va agSurfaceFmt .
+.Pp
+Note that active clipping rectangles (see
+.Xr AG_Widget 3 )
+apply to
+.Fn AG_PutPixel*
+and
+.Fn AG_BlendPixel* .
+These operations are also safe to use when underlying graphics driver is not
+framebuffer-based.
 .Pp
 .Fn AG_DrawFrame
 draws a 3D-style frame.
 .Fn AG_DrawFrameBlended
 draws a frame with alpha-blending, with the color
 .Fa c
-specified as an array of RGBA components, and the given blending mode
-.Fa blendFn
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
+specified as an array of RGBA components, and the given blending mode.
 .Pp
 .Fn AG_DrawCircle
 draws a circle with the origin at
@@ -152,9 +189,7 @@ renders two line segments for a 3D-style effect.
 renders an alpha-blended line, where the RGBA components are passed as the
 .Fa c
 array, and the blending function is specified in
-.Fa blendFn
-(see
-.Fn AG_WidgetBlendPixelRGBA ) .
+.Fa blendFn .
 .Pp
 .Fn AG_DrawRectOutline
 draws the outline of a rectangle.
@@ -167,27 +202,26 @@ draws a blended rectangle of the color
 .Fa c ,
 specified as an array or RGBA components, with the specified blending
 mode
-.Fa blendFn (see
-.Fn AG_WidgetBlendPixelRGBA ) .
+.Fa blendFn .
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
-.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
+.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
-.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
+.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
+.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
-.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
+.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
@@ -239,16 +273,16 @@ specify the colors of the tiles.
 .Fn AG_DrawMinus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
-.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
+.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "AG_Color c1" "AG_Color c2"
 .Pp
 .nr nS 0
 The
@@ -271,6 +305,8 @@ and
 specify the size of the arrow in pixels.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_BlendFn 3 ,
+.Xr AG_Color 3 ,
 .Xr AG_Style 3 ,
 .Xr AG_Widget 3 ,
 .Xr VG 3 ,
@@ -279,6 +315,5 @@ specify the size of the arrow in pixels.
 The FreeSG library - http://freesg.org/
 .Ed
 .Sh HISTORY
-The
-.Nm
-interface first appeared in Agar 1.0.
+Simple widget primitives first appeared in Agar 1.0.
+The basic rendering system was redesigned in Agar 1.4.
