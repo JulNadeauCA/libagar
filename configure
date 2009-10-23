@@ -338,9 +338,9 @@ echo "    --enable-<type>debug      Debugging (obj|class|event) [none]"
 echo "    --enable-legacy           Deprecated interfaces [yes]"
 echo "    --enable-network          CORE: Network support [check]"
 echo "    --with-db4                CORE: Berkeley DB support [check]"
-echo "    --with-sdl                GUI: SDL rendering support [check]"
 echo "    --with-gl                 GUI: OpenGL rendering support [check]"
-echo "    --enable-<depth>bpp       GUI: Framebuffer depths (8|16|24|32) [all]"
+echo "    --with-glx                GUI: GL rendering via GLX [check]"
+echo "    --with-sdl                GUI: SDL rendering support [check]"
 echo "    --with-jpeg               GUI: JPEG screenshot support [check]"
 echo "    --with-freetype           GUI: Enable FreeType support [check]"
 echo "    --with-sse                M: SSE[123] optimizations [no]"
@@ -4244,6 +4244,8 @@ echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
 SUBDIR_gui="gui agar-config"
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
+	if [ "${with_sdl}" != "no" ]
+ then
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
 if [ "${SYSTEM}" = "Darwin" ]; then
@@ -4748,234 +4750,29 @@ echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
 echo "#undef SDL_LIBS" >config/sdl_libs.h
 echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 fi;
-	if [ "${HAVE_SDL}" != "yes" ]
+		if [ "${HAVE_SDL}" != "yes" ]
  then
-		echo "*"
-		echo "* Agar-GUI requires the SDL library. You can download it "
-		echo "* from: http://www.libsdl.org/"
-		echo "*"
-		exit 1
-	fi
-	if [ "${with_freetype}" != "no" ]
+			if [ "${with_sdl}" = "yes" ]
  then
-$ECHO_N "checking for FreeType (http://www.freetype.org)..."
-$ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_VERSION" ]; then
-		FREETYPE_VERSION=`cat ${cache}/exec-FREETYPE_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_VERSION`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
-				FREETYPE_VERSION=`${path}/freetype-config --version`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_VERSION" > ${cache}/exec-FREETYPE_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_VERSION
-	fi
-fi
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_CFLAGS" ]; then
-		FREETYPE_CFLAGS=`cat ${cache}/exec-FREETYPE_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_CFLAGS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
-				FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_CFLAGS" > ${cache}/exec-FREETYPE_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_CFLAGS
-	fi
-fi
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_LIBS" ]; then
-		FREETYPE_LIBS=`cat ${cache}/exec-FREETYPE_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_LIBS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
-				FREETYPE_LIBS=`${path}/freetype-config --libs`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_LIBS" > ${cache}/exec-FREETYPE_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_LIBS
-	fi
-fi
-if [ -d /usr/freeware/include ]; then
-FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
-fi;
-if [ "${FREETYPE_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-MK_VERSION_MAJOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_MICRO=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
-MK_VERSION_OK="no"
-if [ $MK_VERSION_MAJOR -gt 7 ]; then
-	MK_VERSION_OK="yes";
-elif [ $MK_VERSION_MAJOR -eq 7 ]; then
-	if [ "$MK_VERSION_MINOR" = "" ]; then
-		MK_VERSION_OK="yes"
-	else
-		if [ $MK_VERSION_MINOR -gt 0 ]; then
-			MK_VERSION_OK="yes";
-		elif [ $MK_VERSION_MINOR -eq 0 ]; then
-			if [ "$MK_VERSION_MICRO" = "" ]; then
-				MK_VERSION_OK="yes"
+				echo "*"
+				echo "* --with-sdl was requested, but the SDL "
+				echo "* library was not found."
+				echo "*"
+				exit 1
 			else
-				if [ $MK_VERSION_MICRO -ge 1 ]; then
-					MK_VERSION_OK="yes"
-				fi
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 			fi
 		fi
-	fi
-fi
-if [ "$MK_VERSION_OK" != "yes" ]; then
-	echo "*"
-	echo "* Found FreeType version $MK_VERSION_MAJOR.$MK_VERSION_MINOR.$MK_VERSION_MICRO."
-	echo "* This software requires at least version 7.0.1."
-	echo "* Please upgrade FreeType and try again."
-	echo "*"
-	exit 1
-fi
-$ECHO_N "checking whether FreeType works..."
-$ECHO_N "checking whether FreeType works..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_FREETYPE" ]; then
-		HAVE_FREETYPE=`cat ${cache}/ctest-HAVE_FREETYPE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FREETYPE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-int
-main(int argc, char *argv[])
-{
-	FT_Library library;
-	FT_Face face;
-	FT_Init_FreeType(&library);
-	FT_New_Face(library, "foo", 0, &face);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_FREETYPE="yes"
-echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
-echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
-echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
-echo "#define HAVE_FREETYPE \"$HAVE_FREETYPE\"" >> config/have_freetype.h
-echo "#endif" >> config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_FREETYPE="no"
-echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
-echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
-echo "#undef HAVE_FREETYPE" >config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_FREETYPE" > ${cache}/ctest-HAVE_FREETYPE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FREETYPE
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_FREETYPE}" = "yes" ]; then
-echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
-echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
-echo "#endif" >> config/freetype_cflags.h
-echo "hdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
-echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
-echo "#endif" >> config/freetype_libs.h
-echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-else
-echo "#undef FREETYPE_CFLAGS" >config/freetype_cflags.h
-echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
-echo "#undef FREETYPE_LIBS" >config/freetype_libs.h
-echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
-fi;
-else
-echo "#undef HAVE_FREETYPE" >config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-echo "no"
-echo "no" >> config.log
-fi;
-		if [ "${HAVE_FREETYPE}" != "yes" ]
- then
-			echo "*"
-			echo "* Agar needs FreeType to display vector fonts"
-			echo "* (http://www.freetype.org/)."
-			echo "*"
-			echo "* If you really want to use Agar's built-in"
-			echo "* monospace bitmap font engine (not recommended),"
-			echo "* please use: ./configure --without-freetype"
-			echo "*"
-			exit 1
-		fi
 	else
-echo "#undef HAVE_FREETYPE" >config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""""
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""""
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+SDL_CFLAGS=""""
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+SDL_LIBS=""""
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 	fi
 	if [ "${with_gl}" != "no" ]
  then
@@ -5245,9 +5042,7 @@ echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
  then
 				echo "*"
 				echo "* --with-gl was requested, but no OpenGL"
-				echo "* library was found. Try running the"
-				echo "* configure script again without this"
-				echo "* option."
+				echo "* library was found."
 				echo "*"
 				exit 1
 			else
@@ -5265,6 +5060,484 @@ OPENGL_LIBS=""""
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 	fi
+	
+	if [ "${with_x}" != "no" ]
+ then
+$ECHO_N "checking for the X window system..."
+$ECHO_N "checking for the X window system..." >> config.log
+X11_CFLAGS=""
+X11_LIBS=""
+if [ -d /usr/include/X11/X11 ]; then
+X11_CFLAGS="-I/usr/include/X11"
+fi;
+if [ -d /usr/include/X11R6/X11 ]; then
+X11_CFLAGS="-I/usr/include/X11R6"
+fi;
+if [ -d /usr/local/X11/include/X11 ]; then
+X11_CFLAGS="-I/usr/local/X11/include"
+fi;
+if [ -d /usr/local/X11R6/include/X11 ]; then
+X11_CFLAGS="-I/usr/local/X11R6/include"
+fi;
+if [ -d /usr/local/include/X11/X11 ]; then
+X11_CFLAGS="-I/usr/local/include/X11"
+fi;
+if [ -d /usr/local/include/X11R6/X11 ]; then
+X11_CFLAGS="-I/usr/local/include/X11R6"
+fi;
+if [ -d /usr/X11/include/X11 ]; then
+X11_CFLAGS="-I/usr/X11/include"
+fi;
+if [ -d /usr/X11R6/include/X11 ]; then
+X11_CFLAGS="-I/usr/X11R6/include"
+fi;
+if [ -d /usr/local/X11/lib ]; then
+X11_LIBS="-L/usr/local/X11/lib"
+fi;
+if [ -d /usr/local/X11R6/lib ]; then
+X11_LIBS="-L/usr/local/X11R6/lib"
+fi;
+if [ -d /usr/X11/lib ]; then
+X11_LIBS="-L/usr/X11/lib"
+fi;
+if [ -d /usr/X11R6/lib ]; then
+X11_LIBS="-L/usr/X11R6/lib"
+fi;
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_X11" ]; then
+		HAVE_X11=`cat ${cache}/ctest-HAVE_X11`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_X11`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <X11/Xlib.h>
+int main(int argc, char *argv[])
+{
+	Display *disp;
+	disp = XOpenDisplay(NULL);
+	XCloseDisplay(disp);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_X11="yes"
+echo "HAVE_X11=$HAVE_X11" >>Makefile.config
+echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
+echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11 \"$HAVE_X11\"" >> config/have_x11.h
+echo "#endif" >> config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_X11="no"
+echo "HAVE_X11=$HAVE_X11" >>Makefile.config
+echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
+echo "#undef HAVE_X11" >config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_X11" > ${cache}/ctest-HAVE_X11
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_X11
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_X11}" != "" ]; then
+echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
+echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
+echo "#endif" >> config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "#ifndef X11_LIBS" > config/x11_libs.h
+echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
+echo "#endif" >> config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
+echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "X11_LIBS=$X11_LIBS" >>Makefile.config
+echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+else
+echo "#undef X11_CFLAGS" >config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+echo "#undef X11_LIBS" >config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
+fi;
+		if [ "${HAVE_X11}" != "yes" ]
+ then
+			if [ "${with_x}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-x was requested, but Xlib "
+				echo "* was not found."
+				echo "*"
+				exit 1
+			else
+echo "#undef HAVE_X11" >config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+			fi
+		fi
+	else
+echo "#undef HAVE_X11" >config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+X11_CFLAGS=""""
+echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
+echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+X11_LIBS=""""
+echo "X11_LIBS=$X11_LIBS" >>Makefile.config
+echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+	fi
+	
+	if [ "${with_glx}" != "no" ]
+ then
+$ECHO_N "checking for the GLX interface..."
+$ECHO_N "checking for the GLX interface..." >> config.log
+GLX_CFLAGS="${OPENGL_CFLAGS} ${X11_CFLAGS}"
+GLX_LIBS="${OPENGL_LIBS} ${X11_LIBS}"
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GLX" ]; then
+		HAVE_GLX=`cat ${cache}/ctest-HAVE_GLX`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GLX`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glx.h>
+#else
+#include <GL/gl.h>
+#include <GL/glx.h>
+#endif
+int main(int argc, char *argv[]) {
+	Display *d;
+	XVisualInfo *xvi;
+	int glxAttrs[] = { GLX_RGBA, GLX_RED_SIZE,1, GLX_DEPTH_SIZE,1, None };
+	GLXContext glxCtx;
+	int err, ev, s;
+
+	d = XOpenDisplay(NULL);
+	(void)glXQueryExtension(d, &err, &ev);
+	s = DefaultScreen(d);
+	if ((xvi = glXChooseVisual(d, s, glxAttrs)) == NULL) { return (1); }
+	if ((glxCtx = glXCreateContext(d, xvi, 0, GL_FALSE)) == NULL) { return (1); }
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest conftest.c ${GLX_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${GLX_CFLAGS} -o $testdir/conftest conftest.c ${GLX_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GLX="yes"
+echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
+echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
+echo "#ifndef HAVE_GLX" > config/have_glx.h
+echo "#define HAVE_GLX \"$HAVE_GLX\"" >> config/have_glx.h
+echo "#endif" >> config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GLX="no"
+echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
+echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
+echo "#undef HAVE_GLX" >config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GLX" > ${cache}/ctest-HAVE_GLX
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GLX
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_GLX}" = "yes" ]; then
+echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
+echo "#ifndef GLX_CFLAGS" > config/glx_cflags.h
+echo "#define GLX_CFLAGS \"$GLX_CFLAGS\"" >> config/glx_cflags.h
+echo "#endif" >> config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+echo "#ifndef GLX_LIBS" > config/glx_libs.h
+echo "#define GLX_LIBS \"$GLX_LIBS\"" >> config/glx_libs.h
+echo "#endif" >> config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
+else
+echo "#undef GLX_CFLAGS" >config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GLX_LIBS" >config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
+fi;
+		if [ "${HAVE_GLX}" != "yes" ]
+ then
+			if [ "${with_glx}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-glx was requested, but no"
+				echo "* compatible GLX library was found."
+				echo "*"
+				exit 1
+			else
+echo "#undef HAVE_GLX" >config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+			fi
+		fi
+	else
+echo "#undef HAVE_GLX" >config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+GLX_CFLAGS=""""
+echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+GLX_LIBS=""""
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
+	fi
+	
+	if [ "${with_freetype}" != "no" ]
+ then
+$ECHO_N "checking for FreeType (http://www.freetype.org)..."
+$ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_VERSION" ]; then
+		FREETYPE_VERSION=`cat ${cache}/exec-FREETYPE_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_VERSION=`${path}/freetype-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_VERSION" > ${cache}/exec-FREETYPE_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_VERSION
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_CFLAGS" ]; then
+		FREETYPE_CFLAGS=`cat ${cache}/exec-FREETYPE_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_CFLAGS" > ${cache}/exec-FREETYPE_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_LIBS" ]; then
+		FREETYPE_LIBS=`cat ${cache}/exec-FREETYPE_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_LIBS=`${path}/freetype-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_LIBS" > ${cache}/exec-FREETYPE_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_LIBS
+	fi
+fi
+if [ -d /usr/freeware/include ]; then
+FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
+fi;
+if [ "${FREETYPE_VERSION}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+MK_VERSION_MAJOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 7 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 7 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 0 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 0 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 1 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
+if [ "$MK_VERSION_OK" != "yes" ]; then
+	echo "*"
+	echo "* Found FreeType version $MK_VERSION_MAJOR.$MK_VERSION_MINOR.$MK_VERSION_MICRO."
+	echo "* This software requires at least version 7.0.1."
+	echo "* Please upgrade FreeType and try again."
+	echo "*"
+	exit 1
+fi
+$ECHO_N "checking whether FreeType works..."
+$ECHO_N "checking whether FreeType works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_FREETYPE" ]; then
+		HAVE_FREETYPE=`cat ${cache}/ctest-HAVE_FREETYPE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FREETYPE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
+int
+main(int argc, char *argv[])
+{
+	FT_Library library;
+	FT_Face face;
+	FT_Init_FreeType(&library);
+	FT_New_Face(library, "foo", 0, &face);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_FREETYPE="yes"
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
+echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
+echo "#define HAVE_FREETYPE \"$HAVE_FREETYPE\"" >> config/have_freetype.h
+echo "#endif" >> config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_FREETYPE="no"
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
+echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_FREETYPE" > ${cache}/ctest-HAVE_FREETYPE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FREETYPE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_FREETYPE}" = "yes" ]; then
+echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
+echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
+echo "#endif" >> config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
+echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
+echo "#endif" >> config/freetype_libs.h
+echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+else
+echo "#undef FREETYPE_CFLAGS" >config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FREETYPE_LIBS" >config/freetype_libs.h
+echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
+fi;
+else
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+echo "no"
+echo "no" >> config.log
+fi;
+		if [ "${HAVE_FREETYPE}" != "yes" ]
+ then
+			echo "*"
+			echo "* Agar needs FreeType to display vector fonts"
+			echo "* (http://www.freetype.org/)."
+			echo "*"
+			echo "* If you really want to use Agar's built-in"
+			echo "* monospace bitmap font engine (not recommended),"
+			echo "* please use: ./configure --without-freetype"
+			echo "*"
+			exit 1
+		fi
+	else
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+FREETYPE_CFLAGS=""""
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+FREETYPE_LIBS=""""
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+	fi
+	
 	if [ "${with_jpeg}" != "no" ]
  then
 $ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
@@ -5397,8 +5670,7 @@ fi;
  then
 				echo "*"
 				echo "* --with-jpeg was requested, but libjpeg"
-				echo "* was not found. Try running configure"
-				echo "* again without this option."
+				echo "* was not found."
 				echo "*"
 				exit 1
 			else
@@ -5422,14 +5694,22 @@ echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
 SUBDIR_gui=""""
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
-echo "#undef HAVE_FREETYPE" >config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""""
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""""
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+SDL_CFLAGS=""""
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+SDL_LIBS=""""
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "#undef HAVE_GLX" >config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+GLX_CFLAGS=""""
+echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+GLX_LIBS=""""
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 OPENGL_CFLAGS=""""
@@ -5438,6 +5718,14 @@ echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 OPENGL_LIBS=""""
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+FREETYPE_CFLAGS=""""
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+FREETYPE_LIBS=""""
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 JPEG_CFLAGS=""""
@@ -5522,8 +5810,7 @@ echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
  then
 			echo "*"
 			echo "* --enable-network was requested, but this system"
-			echo "* does not support getaddrinfo(). Try running the"
-			echo "* configure script again without this option."
+			echo "* does not seem to support getaddrinfo()."
 			echo "*"
 			exit 1
 		else
@@ -5719,8 +6006,7 @@ fi;
  then
 			echo "*"
 			echo "* --with-db4 was requested, but Berkeley DB v4"
-			echo "* was not found. Try running configure"
-			echo "* again without this option."
+			echo "* was not found."
 			echo "*"
 			exit 1
 		else
@@ -6372,10 +6658,8 @@ echo "hdefs[\"AG_THREADS\"] = nil" >>configure.lua
  then
 				echo "*"
 				echo "* --enable-threads was given, but your"
-				echo "* pthreads library lacks support for"
-				echo "* recursive mutexes. Try running the"
-				echo "* configure script again without this"
-				echo "* option."
+				echo "* pthreads library seems to lack support"
+				echo "* for recursive mutexes."
 				echo "*"
 				exit 1
 			fi
@@ -6389,8 +6673,7 @@ echo "hdefs[\"AG_THREADS\"] = nil" >>configure.lua
  then
 			echo "*"
 			echo "* --enable-threads was given, but no pthreads"
-			echo "* library was found on your system. Try running"
-			echo "* the configure script again without this option."
+			echo "* library was found on your system."
 			echo "*"
 			exit 1
 		fi
@@ -6431,50 +6714,6 @@ echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS \"$HISTORICAL_UNITS\"" >> config/historical_units.h
 echo "#endif" >> config/historical_units.h
 echo "hdefs[\"HISTORICAL_UNITS\"] = \"$HISTORICAL_UNITS\"" >>configure.lua
-if [ "${enable_8bpp}" != "no" ]
- then
-VIEW_8BPP="yes"
-echo "#ifndef VIEW_8BPP" > config/view_8bpp.h
-echo "#define VIEW_8BPP \"$VIEW_8BPP\"" >> config/view_8bpp.h
-echo "#endif" >> config/view_8bpp.h
-echo "hdefs[\"VIEW_8BPP\"] = \"$VIEW_8BPP\"" >>configure.lua
-else
-echo "#undef VIEW_8BPP" >config/view_8bpp.h
-echo "hdefs[\"VIEW_8BPP\"] = nil" >>configure.lua
-fi
-if [ "${enable_16bpp}" != "no" ]
- then
-VIEW_16BPP="yes"
-echo "#ifndef VIEW_16BPP" > config/view_16bpp.h
-echo "#define VIEW_16BPP \"$VIEW_16BPP\"" >> config/view_16bpp.h
-echo "#endif" >> config/view_16bpp.h
-echo "hdefs[\"VIEW_16BPP\"] = \"$VIEW_16BPP\"" >>configure.lua
-else
-echo "#undef VIEW_16BPP" >config/view_16bpp.h
-echo "hdefs[\"VIEW_16BPP\"] = nil" >>configure.lua
-fi
-if [ "${enable_24bpp}" != "no" ]
- then
-VIEW_24BPP="yes"
-echo "#ifndef VIEW_24BPP" > config/view_24bpp.h
-echo "#define VIEW_24BPP \"$VIEW_24BPP\"" >> config/view_24bpp.h
-echo "#endif" >> config/view_24bpp.h
-echo "hdefs[\"VIEW_24BPP\"] = \"$VIEW_24BPP\"" >>configure.lua
-else
-echo "#undef VIEW_24BPP" >config/view_24bpp.h
-echo "hdefs[\"VIEW_24BPP\"] = nil" >>configure.lua
-fi
-if [ "${enable_32bpp}" != "no" ]
- then
-VIEW_32BPP="yes"
-echo "#ifndef VIEW_32BPP" > config/view_32bpp.h
-echo "#define VIEW_32BPP \"$VIEW_32BPP\"" >> config/view_32bpp.h
-echo "#endif" >> config/view_32bpp.h
-echo "hdefs[\"VIEW_32BPP\"] = \"$VIEW_32BPP\"" >>configure.lua
-else
-echo "#undef VIEW_32BPP" >config/view_32bpp.h
-echo "hdefs[\"VIEW_32BPP\"] = nil" >>configure.lua
-fi
 if [ "${enable_nls}" = "yes" ]
  then
 $ECHO_N "checking for a gettext library..."
@@ -6726,8 +6965,7 @@ fi;
 	if [ "${HAVE_GETTEXT}" != "yes" ]
  then
 		echo "*"
-		echo "* --enable-nls was given but gettext was not found. Try"
-		echo "* running configure again without this option."
+		echo "* --enable-nls was given but gettext was not found."
 		echo "*"
 		exit 1
 	fi
