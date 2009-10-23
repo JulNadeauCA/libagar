@@ -241,6 +241,18 @@ collapse:
 }
 
 static void
+Shown(AG_Event *event)
+{
+	AG_MenuView *mview = AG_SELF();
+
+	/* XXX wasteful */
+	if (mview->arrowRight == -1) {
+		mview->arrowRight = AG_WidgetMapSurface(mview,
+		    AG_DupSurface(agIconSmallArrowRight.s));
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_MenuView *mview = obj;
@@ -257,13 +269,12 @@ Init(void *obj)
 	mview->rPad = 8;
 	mview->tPad = 4;
 	mview->bPad = 4;
+	mview->arrowRight = -1;
 
+	AG_SetEvent(mview, "widget-shown", Shown, NULL);
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
-
-	/* XXX wasteful */
-	AG_WidgetMapSurface(mview, AG_DupSurface(agIconSmallArrowRight.s));
 
 #ifdef AG_DEBUG
 	AG_BindPointer(mview, "panel", (void *)&mview->panel);
@@ -322,7 +333,7 @@ Draw(void *obj)
 
 			if (item->state == 1) {
 				if (item->lblEnabled == -1) {
-					AG_TextColor(MENU_TXT_COLOR);
+					AG_TextColor(agColors[MENU_TXT_COLOR]);
 					item->lblEnabled =
 					    (item->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(m,
@@ -331,7 +342,7 @@ Draw(void *obj)
 				lbl = item->lblEnabled;
 			} else {
 				if (item->lblDisabled == -1) {
-					AG_TextColor(MENU_TXT_DISABLED_COLOR);
+					AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
 					item->lblDisabled =
 					    (item->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(m,
@@ -346,7 +357,7 @@ Draw(void *obj)
 		}
 		if (item->nsubitems > 0) {
 			x += mview->spLblArrow;
-			AG_WidgetBlitSurface(mview, 0,
+			AG_WidgetBlitSurface(mview, mview->arrowRight,
 			    x,
 			    r.y + m->itemh/2 - agIconSmallArrowRight.s->h/2 -1);
 		}
