@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_MENU_H_
-#define _AGAR_WIDGET_MENU_H_
+#ifndef _AGAR_GUI_MENU_H_
+#define _AGAR_GUI_MENU_H_
 
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
@@ -94,6 +94,7 @@ typedef struct ag_menu_view {
 	int spLblArrow;			/* Label and submenu arrow spacing */
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
 	AG_Timeout submenu_to;		/* Timeout for sub-menu popup */
+	int arrowRight;			/* Right arrow surface handle */
 } AG_MenuView;
 
 __BEGIN_DECLS
@@ -221,4 +222,4 @@ void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_MENU_H_ */
+#endif /* _AGAR_GUI_MENU_H_ */
