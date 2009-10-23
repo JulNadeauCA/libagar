@@ -1,18 +1,19 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_H_
-#define _AGAR_WIDGET_H_
+#ifndef _AGAR_GUI_WIDGET_H_
+#define _AGAR_GUI_WIDGET_H_
 
+#include <agar/config/have_sdl.h>
 #include <agar/config/have_opengl.h>
 
-#include <agar/gui/colors.h>
 #include <agar/gui/geometry.h>
+#include <agar/gui/colors.h>
 #include <agar/gui/surface.h>
-#include <agar/gui/view.h>
 #include <agar/gui/style.h>
 
+#include <agar/gui/drv.h>
 #include <agar/gui/mouse.h>
-#include <agar/gui/kbd.h>
+#include <agar/gui/keyboard.h>
 
 #include <agar/gui/begin.h>
 
@@ -116,6 +117,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_DEBUG_RSENS		0x040000 /* Debug sensitivity rect */
 #define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
 #define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
+#define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Backup surfaces as soon as possible */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
@@ -130,22 +132,24 @@ typedef struct ag_widget {
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
 	Uint nsurfaces;
 
-	/* For OpenGL */
+	/* For OpenGL drivers */
 	Uint *textures;			/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
-	Uint *textureGC;		/* Textures queued for deletion */
-	Uint nTextureGC;
 
 	AG_Mutex bindings_lock;		 	/* Lock on bindings */
 	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 	struct ag_window *window;		/* Back ptr to parent window */
+	struct ag_driver *drv;			/* Back ptr to driver */
+	struct ag_driver_class *drvOps;		/* Back ptr to driver class */
 
 	AG_Tbl        actions;			/* Registered actions */
 	AG_ActionTie *mouseActions;		/* Mouse event ties */
 	Uint         nMouseActions;
 	AG_ActionTie *keyActions;		/* Keyboard event ties */
 	Uint         nKeyActions;
+	
+	AG_TAILQ_ENTRY(ag_widget) detach;	/* In agWidgetDetachQ */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -180,6 +184,7 @@ typedef struct ag_widget {
 #endif
 
 struct ag_window;
+AG_TAILQ_HEAD(ag_widgetq, ag_widget);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
@@ -197,43 +202,22 @@ void      *AG_WidgetFindPoint(const char *, int, int);
 void      *AG_WidgetFindRect(const char *, int, int, int, int);
 void       AG_WidgetUpdateCoords(void *, int, int);
 
-int	 AG_WidgetMapSurface(void *, AG_Surface *);
-int	 AG_WidgetMapSurfaceNODUP(void *, AG_Surface *);
-void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
-void	 AG_WidgetReplaceSurfaceNODUP(void *, int, AG_Surface *);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
-void	 AG_WidgetBlit(void *, AG_Surface *, int, int);
-void	 AG_WidgetBlitFrom(void *, void *, int, AG_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 #ifdef HAVE_OPENGL
 void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
 void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
-void	 AG_WidgetPutPixel32_GL(void *, int, int, Uint32);
-void	 AG_WidgetPutPixelRGB_GL(void *, int, int, Uint8, Uint8, Uint8);
 void	 AG_WidgetFreeResourcesGL(AG_Widget *);
 void	 AG_WidgetRegenResourcesGL(AG_Widget *);
 #endif
-void	 AG_PushClipRect(void *, AG_Rect);
-void	 AG_PopClipRect(void);
-void	 AG_SetCursor(int);
-void	 AG_UnsetCursor(void);
-#define	 AG_WidgetPutPixel AG_WidgetPutPixel32
-#define	 AG_WidgetBlendPixel AG_WidgetBlendPixelRGBA
-void	 AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4], enum ag_blend_func);
 
-int      AG_WidgetSensitive(void *, int, int);
-void     AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int, int, int);
-void     AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
-int      AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
-void     AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
-void     AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
-
+int         AG_WidgetSensitive(void *, int, int);
 AG_SizeSpec AG_WidgetParseSizeSpec(const char *, int *);
 int         AG_WidgetScrollDelta(Uint32 *);
-void       *AG_WidgetFind(AG_Display *, const char *);
+void       *AG_WidgetFind(void *, const char *);
 void        AG_WidgetShownRecursive(void *);
 void        AG_WidgetHiddenRecursive(void *);
 
@@ -326,50 +310,6 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 		y < wid->h);
 }
 
-/* Write a single pixel at widget-relative coordinates (32-bit agVideoFmt). */
-static __inline__ void
-AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
-{
-	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->rView.x1 + wx;
-	int vy = wid->rView.y1 + wy;
-
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_WidgetPutPixel32_GL(p, vx,vy, color);
-	} else
-#endif
-	if (!AG_CLIPPED_PIXEL(agView->v, vx,vy))
-		AG_PUT_PIXEL2(agView->v, vx,vy, color);
-}
-
-/* Write a single pixel at widget-relative coordinates (RGB components). */
-static __inline__ void
-AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->rView.x1 + wx;
-	int vy = wid->rView.y1 + wy;
-	
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_WidgetPutPixelRGB_GL(p, vx,vy, r,g,b);
-	} else
-#endif
-	if (!AG_CLIPPED_PIXEL(agView->v, vx, vy))
-		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt,r,g,b));
-}
-
-/* Blend a single pixel at widget-relative coordinates (32-bit agVideoFmt). */
-static __inline__ void
-AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
-{
-	Uint8 c[4];
-
-	AG_GetRGBA(pixel, agSurfaceFmt, &c[0],&c[1],&c[2],&c[3]);
-	AG_WidgetBlendPixelRGBA(p, wx,wy, c, fn);
-}
-
 /* Expand widget to fill available space in parent container. */
 static __inline__ void
 AG_Expand(void *wid)
@@ -432,6 +372,165 @@ AG_WidgetUpdate(void *obj)
 	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(wid);
 }
+
+/*
+ * Push a clipping rectangle onto the stack, by widget-relative coordinates.
+ * Must be invoked from GUI rendering context.
+ */
+static __inline__ void
+AG_PushClipRect(void *obj, AG_Rect pr)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Rect r;
+
+	r.x = wid->rView.x1 + pr.x;
+	r.y = wid->rView.y1 + pr.y;
+	r.w = pr.w;
+	r.h = pr.h;
+	wid->drvOps->pushClipRect(wid->drv, r);
+}
+
+/*
+ * Pop a clipping rectangle off the clipping rectangle stack.
+ * Must be invoked from GUI rendering context.
+ */
+static __inline__ void
+AG_PopClipRect(void *obj)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->popClipRect(wid->drv);
+}
+
+/* Set the blending mode, pushing the current mode on a stack. */
+static __inline__ void
+AG_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->pushBlendingMode(wid->drv, fnSrc, fnDst);
+}
+
+/* Restore the last blending mode. */
+static __inline__ void
+AG_PopBlendingMode(void *obj)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	
+	wid->drvOps->popBlendingMode(wid->drv);
+}
+
+/* Offset the coordinates of an AG_Rect per widget coordinates. */
+static __inline__ void
+AG_WidgetOffsetRect(void *obj, AG_Rect *r)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	r->x += wid->rView.x1;
+	r->y += wid->rView.y1;
+}
+
+/*
+ * Register a surface with the given widget. The surface is not duplicated,
+ * but will be freed by the widget.
+ */
+static __inline__ int
+AG_WidgetMapSurface(void *obj, AG_Surface *su)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	int name;
+		
+	AG_ObjectLock(wid);
+	name = wid->drvOps->mapSurface(wid->drv, wid, su);
+	AG_ObjectUnlock(wid);
+	return (name);
+}
+
+/*
+ * Variant of AG_WidgetMapSurface() that sets the NODUP flag such that
+ * the surface is not freed by the widget.
+ */
+static __inline__ int
+AG_WidgetMapSurfaceNODUP(void *obj, AG_Surface *su)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	int name;
+
+	AG_ObjectLock(wid);
+	if ((name = wid->drvOps->mapSurface(wid->drv, wid, su)) != -1) {
+		wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+	}
+	AG_ObjectUnlock(wid);
+	return (name);
+}
+
+/*
+ * Replace the contents of a mapped surface. Unless NODUP is set, the current
+ * source surface is freed.
+ */
+static __inline__ void
+AG_WidgetReplaceSurface(void *obj, int name, AG_Surface *su)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	AG_ObjectLock(wid);
+#ifdef AG_DEBUG
+	if (name < 0 || name >= wid->nsurfaces)
+		AG_FatalError("Bad surface handle");
+#endif
+	wid->drvOps->replaceSurface(wid->drv, wid, name, su);
+	AG_ObjectUnlock(wid);
+}
+
+/* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
+static __inline__ void
+AG_WidgetReplaceSurfaceNODUP(void *obj, int name, AG_Surface *su)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	AG_ObjectLock(wid);
+#ifdef AG_DEBUG
+	if (name < 0 || name >= wid->nsurfaces)
+		AG_FatalError("Bad surface handle");
+#endif
+	wid->drvOps->replaceSurface(wid->drv, wid, name, su);
+	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Draw an unmapped surface at given coordinates in the widget's coordinate
+ * system. With hardware-accelerated drivers, this operation is slow compared
+ * to drawing of mapped surfaces, since a software->hardware copy is done.
+ */
+static __inline__ void
+AG_WidgetBlit(void *obj, AG_Surface *s, int x, int y)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	wid->drvOps->blitSurface(wid->drv, wid, s,
+	    wid->rView.x1 + x,
+	    wid->rView.y1 + y);
+}
+
+/*
+ * Perform a hardware or software blit from a mapped surface to the display
+ * at coordinates relative to the widget, using clipping.
+ */
+static __inline__ void
+AG_WidgetBlitFrom(void *obj, void *objSrc, int s, AG_Rect *r, int x, int y)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Widget *widSrc = (AG_Widget *)objSrc;
+	
+	if (s == -1 || widSrc->surfaces[s] == NULL)
+		return;
+
+	wid->drvOps->blitSurfaceFrom(wid->drv, wid, widSrc, s, r,
+	    wid->rView.x1 + x,
+	    wid->rView.y1 + y);
+}
+
 __END_DECLS
 
 #ifdef AG_LEGACY
@@ -439,4 +538,4 @@ __END_DECLS
 #endif /* AG_LEGACY */
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_H_ */
+#endif /* _AGAR_GUI_WIDGET_H_ */
