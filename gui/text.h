@@ -1,10 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_TEXT_H_
-#define _AGAR_WIDGET_TEXT_H_
-
-#include <agar/config/have_opengl.h>
-
+#ifndef _AGAR_GUI_TEXT_H_
+#define _AGAR_GUI_TEXT_H_
 #include <agar/gui/begin.h>
 
 #define AG_TEXT_STATES_MAX 32
@@ -37,17 +34,14 @@ enum ag_text_msg_title {
 typedef struct ag_glyph {
 	char fontname[AG_OBJECT_NAME_MAX];
 	int fontsize;			/* Font size in points */
-	Uint32 color;			/* Glyph color */
+	AG_Color color;			/* Glyph color */
 	Uint32 ch;			/* Unicode character */
 	Uint32 nrefs;			/* Reference count */
 	Uint32 lastRef;			/* Ticks since last reference */
 	AG_Surface *su;			/* Rendered surface */
 	int advance;			/* Pixel advance */
-
-	/* For OpenGL */
-	Uint texture;			/* Rendered texture */
+	Uint texture;			/* For OpenGL */
 	float texcoord[4];
-
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
@@ -76,8 +70,8 @@ typedef struct ag_font {
 /* State variables for text rendering. */
 typedef struct ag_text_state {
 	AG_Font *font;			/* Font face */
-	Uint32 color;			/* FG color (surfaceFmt) */
-	Uint32 colorBG;			/* BG color (surfaceFmt) */
+	AG_Color color;			/* Foreground text color */
+	AG_Color colorBG;		/* Background color */
 	enum ag_text_justify justify;	/* Justification mode */
 	enum ag_text_valign valign;	/* Vertical alignment mode */
 } AG_TextState;
@@ -184,17 +178,13 @@ void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
 #define AG_TextMsgFromError() \
 	AG_TextMsgS(AG_MSG_ERROR, AG_GetError())
 
-#define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
-#define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
-
-
 /* Compare two text states. */
 static __inline__ int
 AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 {
 	if (s1->font == s2->font &&
-	    s1->color == s2->color &&
-	    s1->colorBG == s2->colorBG &&
+	    AG_ColorCompare(s1->color,s2->color) == 0 &&
+	    AG_ColorCompare(s1->colorBG,s2->colorBG) == 0 &&
 	    s1->justify == s2->justify) {
 		return (0);
 	}
@@ -247,39 +237,26 @@ AG_TextRender(const char *text)
 	return (su);
 }
 
-/* Set text color from a 32-bit pixel value (agDisplayFormat). */
+/* Set active text color. */
 static __inline__ void
-AG_TextColorVideo32(Uint32 pixel)
+AG_TextColor(AG_Color C)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_SurfacePixel(pixel);
+	agTextState->color = C;
 	AG_MutexUnlock(&agTextLock);
 }
-
-/* Set text color from a 32-bit pixel value (agSurfaceFormat). */
-static __inline__ void
-AG_TextColor32(Uint32 pixel)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->color = pixel;
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Set an opaque text color from RGB components. */
 static __inline__ void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_MapRGB(agSurfaceFmt, r,g,b);
+	agTextState->color = AG_ColorRGB(r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
-
-/* Set text color from RGBA components. */
 static __inline__ void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_MapRGBA(agSurfaceFmt, r, g, b, a);
+	agTextState->color = AG_ColorRGBA(r,g,b,a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -288,47 +265,30 @@ static __inline__ void
 AG_TextColorHex(Uint32 c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_MapRGBA(agSurfaceFmt,
-	    (c&0xff000000) >> 24,
-	    (c&0x00ff0000) >> 16,
-	    (c&0x0000ff00) >> 8,
-	    (c&0x000000ff));
+	agTextState->color = AG_ColorHex(c);
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Set BG color from a 32-bit pixel value (agDisplayFormat). */
+/* Set active text background color. */
 static __inline__ void
-AG_TextBGColorVideo32(Uint32 pixel)
+AG_TextBGColor(AG_Color C)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_SurfacePixel(pixel);
+	agTextState->colorBG = C;
 	AG_MutexUnlock(&agTextLock);
 }
-
-/* Set BG color from a 32-bit pixel value (agSurfaceFormat). */
-static __inline__ void
-AG_TextBGColor32(Uint32 pixel)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = pixel;
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Set text BG color from RGB components. */
 static __inline__ void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_MapRGB(agSurfaceFmt, r,g,b);
+	agTextState->colorBG = AG_ColorRGB(r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
-
-/* Set text BG color from RGBA components. */
 static __inline__ void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, r,g,b,a);
+	agTextState->colorBG = AG_ColorRGBA(r,g,b,a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -337,11 +297,7 @@ static __inline__ void
 AG_TextBGColorHex(Uint32 c)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt,
-	    (c&0xff000000) >> 24,
-	    (c&0x00ff0000) >> 16,
-	    (c&0x0000ff00) >> 8,
-	    (c&0x000000ff));
+	agTextState->colorBG = AG_ColorHex(c);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -374,8 +330,20 @@ AG_TextValign(enum ag_text_valign mode)
 
 #ifdef AG_LEGACY
 #define AG_TextFormat AG_TextRenderf
+
+static __inline__ void
+AG_TextColor32(Uint32 c)
+{
+	AG_Color C;
+
+	AG_GetRGB(c, agSurfaceFmt, &C.r, &C.g, &C.b);
+	AG_MutexLock(&agTextLock);
+	agTextState->color = C;
+	AG_MutexUnlock(&agTextLock);
+}
 #endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif	/* _AGAR_WIDGET_TEXT_H_ */
+#endif	/* _AGAR_GUI_TEXT_H_ */

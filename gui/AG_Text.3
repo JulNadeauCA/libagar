@@ -76,10 +76,7 @@ rendering attributes.
 .Fn AG_TextValign "enum ag_text_valign mode"
 .Pp
 .Ft void
-.Fn AG_TextColorVideo32 "Uint32 pixel"
-.Pp
-.Ft void
-.Fn AG_TextColor32 "Uint32 pixel"
+.Fn AG_TextColor "AG_Color C"
 .Pp
 .Ft void
 .Fn AG_TextColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
@@ -88,10 +85,7 @@ rendering attributes.
 .Fn AG_TextColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft void
-.Fn AG_TextBGColorVideo32 "Uint32 pixel"
-.Pp
-.Ft void
-.Fn AG_TextBGColor32 "Uint32 pixel"
+.Fn AG_TextBGColor "AG_Color C"
 .Pp
 .Ft void
 .Fn AG_TextBGColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
@@ -155,14 +149,9 @@ enum ag_text_valign {
 };
 .Ed
 .Pp
-.Fn AG_TextColorVideo32
-sets the text color using the given pixel in
-.Va agVideoFmt
-format.
-.Fn AG_TextColor32
-accepts a pixel in
-.Va agSurfaceFmt
-format.
+.Fn AG_TextColor
+sets the text color (see
+.Xr AG_Color 3 ) .
 .Fn AG_TextColorRGB
 and
 .Fn AG_TextColorRGBA
