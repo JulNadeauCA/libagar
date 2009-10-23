@@ -71,10 +71,9 @@ Collapse(AG_UCombo *com)
 	if (com->panel == NULL) {
 		return;
 	}
-	com->wSaved = WIDGET(com->panel)->w;
-	com->hSaved = WIDGET(com->panel)->h;
+	com->wSaved = WIDTH(com->panel);
+	com->hSaved = HEIGHT(com->panel);
 	
-	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ObjectDetach(com->panel);
 	com->panel = NULL;
@@ -87,43 +86,64 @@ ModalClose(AG_Event *event)
 {
 	AG_UCombo *com = AG_PTR(1);
 
-	AG_ObjectLock(com);
-	if (com->panel != NULL) {
+	if (com->panel != NULL)
 		Collapse(com);
-	}
-	AG_ObjectUnlock(com);
 }
 
 static void
 Expand(AG_Event *event)
 {
 	AG_UCombo *com = AG_PTR(1);
+	AG_Driver *drv = WIDGET(com)->drv;
 	int expand = AG_INT(2);
 	AG_SizeReq rList;
 	int x, y, w, h;
+	Uint wView, hView;
 
 	AG_ObjectLock(com);
 	if (expand) {
 		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
-		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
+		AG_ObjectSetName(com->panel, "_UComboPopup");
+		AG_WindowSetPadding(com->panel, 0,0,0,0);
 		AG_ObjectAttach(com->panel, com->list);
+		if (WIDGET(com)->window != NULL)
+			AG_WindowAttach(WIDGET(com)->window, com->panel);
 	
 		if (com->wSaved > 0) {
 			w = com->wSaved;
 			h = com->hSaved;
 		} else {
-			AG_TlistSizeHintPixels(com->list,
-			    com->wPreList, com->hPreList);
+			if (com->wPreList != -1 && com->hPreList != -1) {
+				AG_TlistSizeHintPixels(com->list,
+				    com->wPreList, com->hPreList);
+			}
 			AG_WidgetSizeReq(com->list, &rList);
 			w = rList.w + com->panel->wBorderSide*2;
 			h = rList.h + com->panel->wBorderBot;
 		}
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
-
+		
+		switch (AGDRIVER_CLASS(drv)->wm) {
+		case AG_WM_SINGLE:
+			AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
+			if (x+w > wView) { w = wView - x; }
+			if (y+h > hView) { h = hView - y; }
+			break;
+		case AG_WM_MULTIPLE:
+			if (WIDGET(com)->window != NULL) {
+				x += WIDGET(WIDGET(com)->window)->x;
+				y += WIDGET(WIDGET(com)->window)->y;
+			}
+			break;
+		}
+		if (w < 4 || h < 4) {
+			Collapse(com);
+			return;
+		}
 		AG_SetEvent(com->panel, "window-modal-close",
 		    ModalClose, "%p", com);
-		AG_WindowSetGeometry(com->panel, x, y, w, h);
+		AG_WindowSetGeometry(com->panel, x,y, w,h);
 		AG_WindowShow(com->panel);
 	} else {
 		Collapse(com);
@@ -151,6 +171,18 @@ SelectedItem(AG_Event *event)
 }
 
 static void
+OnDetach(AG_Event *event)
+{
+	AG_UCombo *com = AG_SELF();
+
+	if (com->panel != NULL) {
+		AG_ObjectDetach(com->list);
+		AG_ObjectDetach(com->panel);
+		com->panel = NULL;
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_UCombo *com = obj;
@@ -162,20 +194,21 @@ Init(void *obj)
 	com->panel = NULL;
 	com->wSaved = 0;
 	com->hSaved = 0;
-	com->hPreList = 4;
-	AG_TextSize("XXXXXXXX", &com->wPreList, NULL);
+	com->wPreList = -1;
+	com->hPreList = -1;
 
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _("..."));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
 	AG_WidgetSetFocusable(com->button, 0);
-	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(com->list, &agTlistClass);
 	AG_Expand(com->list);
-
-	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_WidgetForwardFocus(com, com->button);
+	
+	AG_SetEvent(com, "detached", OnDetach, NULL);
+	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
+	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 
 #ifdef AG_DEBUG
 	AG_BindUint(com, "flags", &com->flags);
@@ -211,11 +244,6 @@ Destroy(void *p)
 {
 	AG_UCombo *com = p;
 
-	if (com->panel != NULL) {
-		AG_WindowHide(com->panel);
-		AG_ObjectDetach(com->list);
-		AG_ObjectDetach(com->panel);
-	}
 	AG_ObjectDestroy(com->list);
 }
 
