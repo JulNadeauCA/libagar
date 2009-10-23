@@ -215,10 +215,7 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	Uint8 *ks;
-	int numkeys;
-
-	ks = SDL_GetKeyState(&numkeys);
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	DecrementSelection(tl, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
@@ -227,10 +224,7 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	Uint8 *ks;
-	int numkeys;
-
-	ks = SDL_GetKeyState(&numkeys);
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	IncrementSelection(tl, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
@@ -463,7 +457,7 @@ Draw(void *obj)
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
-			AG_TextColor(TLIST_TXT_COLOR);
+			AG_TextColor(agColors[TLIST_TXT_COLOR]);
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
 		}
@@ -474,7 +468,7 @@ Draw(void *obj)
 		y += tl->item_h;
 		if (y < HEIGHT(tl)-1) {
 			AG_DrawLineH(tl, 1, tl->wRow-2, y,
-			    AG_COLOR(TLIST_LINE_COLOR));
+			    agColors[TLIST_LINE_COLOR]);
 		}
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
@@ -491,7 +485,7 @@ Draw(void *obj)
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(tl);
 }
 
 /*
@@ -1030,7 +1024,7 @@ MouseButtonDown(AG_Event *event)
 		 * Handle range selections.
 		 */
 		if ((tl->flags & AG_TLIST_MULTI) &&
-		    (SDL_GetModState() & AG_KEYMOD_SHIFT)) {
+		    (AG_GetModState(agKeyboard)&AG_KEYMOD_SHIFT)) {
 			AG_TlistItem *oitem;
 			int oind = -1, i = 0, nitems = 0;
 
@@ -1072,7 +1066,7 @@ MouseButtonDown(AG_Event *event)
 		 */
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
-		     (SDL_GetModState() & AG_KEYMOD_CTRL))) {
+		     (AG_GetModState(agKeyboard)&AG_KEYMOD_CTRL))) {
 			if (ti->selected) {
 				DeselectItem(tl, ti);
 			} else {
@@ -1114,8 +1108,7 @@ MouseButtonDown(AG_Event *event)
 		
 			if (!(tl->flags &
 			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
-			    !(SDL_GetModState() &
-			      (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
+			    !(AG_GetModState(agKeyboard)&(AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
 				AG_TlistDeselectAll(tl);
 				SelectItem(tl, ti);
 			}
@@ -1449,7 +1442,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 	if (AG_WidgetParentWindow(tl) == NULL)
 		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
 #endif
-	AG_MouseGetState(&x, &y);
+	AG_MouseGetState(agMouse, &x, &y);
 
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(m, tp->item);
