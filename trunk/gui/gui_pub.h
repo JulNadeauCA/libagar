@@ -1,13 +1,12 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_GUI_H_
-#define _AGAR_GUI_H_
+#ifndef _AGAR_GUI_PUBLIC_H_
+#define _AGAR_GUI_PUBLIC_H_
+#define _AGAR_GUI_PUBLIC
 #include <agar/core/core_begin.h>
 
-#include <agar/gui/geometry.h>
-#include <agar/gui/surface.h>
-#include <agar/gui/view.h>
-#include <agar/gui/iconmgr.h>
+#include <agar/gui/gui.h>
+
 #include <agar/gui/icons.h>
 #include <agar/gui/primitive.h>
 
@@ -59,7 +58,8 @@
 #include <agar/gui/units.h>
 #include <agar/gui/vbox.h>
 
+#include <agar/gui/load_surface.h>
 #include <agar/gui/load_color.h>
 
 #include <agar/core/core_close.h>
-#endif /* _AGAR_GUI_H_ */
+#endif /* _AGAR_GUI_PUBLIC_H_ */
