@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -264,6 +264,7 @@ InitUnitSystem(AG_FSpinbutton *fsu, const char *unit_key)
 		if (unit == fsu->unit)
 			it->selected++;
 	}
+	AG_TlistSizeHintLargest(fsu->units->list, 5);
 	AG_ObjectUnlock(fsu->units->list);
 }
 

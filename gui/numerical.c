@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -554,6 +554,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 		nUnits++;
 	}
 	AG_TlistEnd(num->units->list);
+	AG_TlistSizeHintLargest(num->units->list, 5);
 	AG_ObjectUnlock(num->units->list);
 
 	if (num->wPreUnit > 0) { num->wPreUnit += 8; }

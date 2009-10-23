@@ -232,6 +232,7 @@ InitUnitSystem(AG_MFSpinbutton *fsu, const char *unit_key)
 		if (unit == fsu->unit)
 			it->selected++;
 	}
+	AG_TlistSizeHintLargest(fsu->units->list, 5);
 	AG_ObjectUnlock(fsu->units->list);
 }
 
