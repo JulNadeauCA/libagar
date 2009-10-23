@@ -44,16 +44,8 @@ Unlike widget actions or the
 event (see
 .Xr AG_Widget 3 ) ,
 these keyboard shortcuts are effective regardless of current widget focus
-state.
-Note that widgets can still be configured to receive keyboard events
-unfiltered.
-.Pp
-.Nm
-is commonly used to map the "escape" key to
-.Xr AG_Quit 3 .
-Most Agar demos also map the "F8" key to
-.Xr AG_ViewCapture 3
-(screenshot) using this interface.
+state (although Agar widgets can always be configured to receive keyboard
+events unfiltered).
 .Sh INTERFACE
 .nr nS 1
 .Ft void
