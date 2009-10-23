@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.3
 .Sh NAME
 .Nm AG_Surface
-.Nd agar graphic surface
+.Nd agar graphics surface
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,7 +38,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure is a basic raster graphics surface.
+structure describes a raster-based software graphics surface.
 It supports all
 .Em packed
 pixel formats which encode pixels in 32-bit or less and allow components to be
@@ -65,12 +65,6 @@ per-surface alpha.
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceStdRGBA "Uint w" "Uint h"
-.Pp
-.Ft "AG_Surface *"
-.Fn AG_SurfaceVideoRGB "Uint w" "Uint h"
-.Pp
-.Ft "AG_Surface *"
-.Fn AG_SurfaceVideoRGBA "Uint w" "Uint h"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceIndexed "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
@@ -147,14 +141,6 @@ create a surface in the recommended
 format, as determined by Agar on initialization time.
 Usually, this is a packed-pixel format with an alpha component.
 .Pp
-.Fn AG_SurfaceVideoRGB
-and
-.Fn AG_SurfaceVideoRGBA
-create a surface with the same depth and masks as the current video display.
-If the current display mode is not raster-based, the Agar
-.Sq standard
-format is used instead.
-.Pp
 The
 .Fn AG_SurfaceIndexed
 function creates a new surface of
@@ -209,7 +195,7 @@ function releases all resources allocated by the given surface.
 .Sh SURFACE OPERATIONS
 .nr nS 1
 .Ft void
-.Fn AG_FillRect "AG_Surface *s" "const AG_Rect *r" "Uint32 c"
+.Fn AG_FillRect "AG_Surface *s" "const AG_Rect *r" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_SurfaceBlit "AG_Surface *src" "const AG_Rect *rSrc" "AG_Surface *dst" "int x" "int y"
@@ -235,12 +221,6 @@ function releases all resources allocated by the given surface.
 .Ft "int"
 .Fn AG_ScaleSurface "AG_Surface *src" "Uint16 width" "Uint16 height" "AG_Surface **dst"
 .Pp
-.Ft "Uint32"
-.Fn AG_VideoPixel "Uint32 c"
-.Pp
-.Ft "Uint32"
-.Fn AG_SurfacePixel "Uint32 c"
-.Pp
 .Ft "int"
 .Fn AG_SamePixelFmt "AG_Surface *s1" "AG_Surface *s2"
 .Pp
@@ -248,16 +228,16 @@ function releases all resources allocated by the given surface.
 .Fn AG_SetAlphaPixels "AG_Surface *surface" "Uint8 alpha"
 .Pp
 .Ft "int"
-.Fn AG_DumpSurface "AG_Surface *su" "char *path_save"
+.Fn AG_SurfaceExportJPEG "AG_Surface *su" "char *path"
 .Pp
 .nr nS 0
 .Pp
 The
 .Fn AG_FillRect
-routine fills the specified rectangle
+routine fills the rectangle
 .Fa r
-with pixels
-.Fa c .
+with the specified color.
+If the target surface has an alpha channel, the alpha component is copied as-is.
 .Pp
 .Fn AG_SurfaceBlit
 copies the contents of a surface (or a region within a surface if
@@ -285,9 +265,10 @@ The
 .Fn AG_SurfaceCopy
 function copies the contents of surface
 .Fa src
-onto
+onto another, existing surface
 .Fa dst .
 The raw pixel data is copied, so alpha and colorkey parameters are ignored.
+Clipping is done if the surfaces have different sizes.
 .Pp
 .Fn AG_SurfaceLock
 and
@@ -311,15 +292,6 @@ is NULL, a new surface is allocated.
 can fail and return -1 if there is insufficient memory to hold the
 rescaled surface.
 .Pp
-The
-.Fn AG_VideoPixel
-routine converts the given pixel value
-.Fa c
-from reference surface format (agSurfaceFmt) to video display
-format (agVideoFmt).
-.Fn AG_SurfacePixel
-does the opposite.
-.Pp
 .Fn AG_SamePixelFmt
 compares the two surfaces
 .Fa s1
@@ -334,7 +306,7 @@ function changes the alpha component of all pixels with a non-zero alpha
 component.
 .Pp
 The
-.Fn AG_DumpSurface
+.Fn AG_SurfaceExportJPEG
 function encodes a JPEG image file from the contents of a specified surface
 .Fa su
 (or if
@@ -342,11 +314,8 @@ function encodes a JPEG image file from the contents of a specified surface
 is NULL, it uses the contents of the current display).
 The image is saved to the application's data directory, and the resulting
 path is copied to the
-.Fa path_save
-argument (if not NULL),
-which must be at least
-.Dv AG_PATHNAME_MAX
-bytes in size.
+.Fa path
+argument.
 .Sh PIXEL FORMATS
 .nr nS 1
 .Ft "AG_PixelFormat *"
@@ -419,6 +388,12 @@ the second entry to black (0,0,0).
 .Ft Uint32
 .Fn AG_MapRGBA "AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uing8 b" "Uint8 a"
 .Pp
+.Ft Uint32
+.Fn AG_MapColorRGB "AG_PixelFormat *pf" "const AG_Color *color"
+.Pp
+.Ft Uint32
+.Fn AG_MapColorRGBA "AG_PixelFormat *pf" "const AG_Color *color"
+.Pp
 .nr nS 0
 The
 .Fn AG_GET_PIXEL
@@ -444,17 +419,8 @@ and
 variants perform alpha-blending of the destination pixel against the
 specified color, where
 .Fa func
-specifies the blending formula:
-.Pp
-.Bd -literal
-enum ag_blend_func {
-	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
-	AG_ALPHA_SRC,			/* dA = sA */
-	AG_ALPHA_DST,			/* dA = dA */
-	AG_ALPHA_ONE_MINUS_DST,		/* dA = 1-dA */
-	AG_ALPHA_ONE_MINUS_SRC		/* dA = 1-sA */
-};
-.Ed
+specifies the blending formula (see
+.Xr AG_BlendFn 3 ) .
 .Pp
 The
 .Fn AG_PUT_PIXEL2_CLIPPED
@@ -464,6 +430,35 @@ variants of these macros first tests the given coordinates against the
 current clipping rectangle of the surface, as previously set with
 .Xr AG_SetClipRect 3 .
 If the pixel lies outside of the rectangle, the operation is a no-op.
+.Pp
+The
+.Fn AG_GetRGB
+and
+.Fn AG_GetRGBA
+functions extract the RGB / RGBA components of a pixel value
+.Fa pixel ,
+in pixel format
+.Fa pf .
+.Pp
+The
+.Fn AG_MapRGB
+and
+.Fn AG_MapRGBA
+functions perform the inverse operation, returning the pixel value (in pixel
+format
+.Fa pf )
+for the specified RGB / RGBA component values.
+.Pp
+The
+.Fn AG_GetColorRGB[A]
+and
+.Fn AG_MapColorRGB[A]
+functions are equivalent to
+.Fn AG_GetRGB[A]
+and
+.Fn AG_MapRGB[A] ,
+except that they accept values in
+.Xr AG_Color 3 .
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Surface
