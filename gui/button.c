@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,13 +34,8 @@
 
 #include <stdarg.h>
 
-static int GetState(AG_Button *, AG_Variable *, void *);
+static int  GetState(AG_Button *, AG_Variable *, void *);
 static void SetState(AG_Variable *, void *, int);
-static void mousemotion(AG_Event *);
-static void mousebuttonup(AG_Event *);
-static void mousebuttondown(AG_Event *);
-static void keyup(AG_Event *);
-static void keydown(AG_Event *);
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
@@ -178,6 +173,148 @@ ExpireDelay(void *obj, Uint32 ival, void *arg)
 }
 
 static void
+MouseButtonUp(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+	int button = AG_INT(1);
+	AG_Variable *binding;
+	void *pState;
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+		
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_DelTimeout(bu, &bu->delay_to);
+	}
+	
+	if (AG_WidgetDisabled(bu) ||
+	    x < 0 || y < 0 ||
+	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
+		return;
+	}
+	
+	binding = AG_GetVariable(bu, "state", &pState);
+	if (GetState(bu, binding, pState) && button == AG_MOUSE_LEFT &&
+	    !(bu->flags & AG_BUTTON_STICKY)) {
+	    	SetState(binding, pState, 0);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+	}
+	AG_UnlockVariable(binding);
+}
+
+static void
+MouseButtonDown(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+	int button = AG_INT(1);
+	AG_Variable *binding;
+	void *pState;
+	int newState;
+	
+	if (AG_WidgetDisabled(bu))
+		return;
+
+	AG_WidgetFocus(bu);
+
+	if (button != AG_MOUSE_LEFT)
+		return;
+	
+	binding = AG_GetVariable(bu, "state", &pState);
+	if (!(bu->flags & AG_BUTTON_STICKY)) {
+		SetState(binding, pState, 1);
+	} else {
+		newState = !GetState(bu, binding, pState);
+		SetState(binding, pState, newState);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
+	}
+	AG_UnlockVariable(binding);
+
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_ScheduleTimeout(bu, &bu->delay_to, agMouseSpinDelay);
+	}
+}
+
+static void
+MouseMotion(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+	AG_Variable *binding;
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+	void *pState;
+
+	if (AG_WidgetDisabled(bu))
+		return;
+
+	binding = AG_GetVariable(bu, "state", &pState);
+	if (!AG_WidgetRelativeArea(bu, x, y)) {
+		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
+		    GetState(bu, binding, pState) == 1) {
+			SetState(binding, pState, 0);
+		}
+		if (bu->flags & AG_BUTTON_MOUSEOVER) {
+			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
+			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 0);
+		}
+	} else {
+		bu->flags |= AG_BUTTON_MOUSEOVER;
+		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
+	}
+	AG_UnlockVariable(binding);
+}
+
+static void
+KeyUp(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+	AG_Variable *binding;
+	void *pState;
+	int keysym = AG_INT(1);
+	
+	if (AG_WidgetDisabled(bu)) {
+		return;
+	}
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->delay_to);
+		AG_DelTimeout(bu, &bu->repeat_to);
+	}
+	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
+	    keysym != AG_KEY_SPACE) {
+		return;
+	}
+	binding = AG_GetVariable(bu, "state", &pState);
+	SetState(binding, pState, 0);
+	AG_UnlockVariable(binding);
+	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+	AG_Variable *binding;
+	void *pState;
+	int keysym = AG_INT(1);
+	
+	if (AG_WidgetDisabled(bu))
+		return;
+	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
+	    keysym != AG_KEY_SPACE) {
+		return;
+	}
+	binding = AG_GetVariable(bu, "state", &pState);
+	SetState(binding, pState, 1);
+	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_ScheduleTimeout(bu, &bu->delay_to, 800);
+	}
+	AG_UnlockVariable(binding);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Button *bu = obj;
@@ -202,11 +339,11 @@ Init(void *obj)
 	AG_SetTimeout(&bu->repeat_to, ExpireRepeat, NULL, 0);
 	AG_SetTimeout(&bu->delay_to, ExpireDelay, NULL, 0);
 
-	AG_SetEvent(bu, "mouse-button-up", mousebuttonup, NULL);
-	AG_SetEvent(bu, "mouse-button-down", mousebuttondown, NULL);
-	AG_SetEvent(bu, "mouse-motion", mousemotion, NULL);
-	AG_SetEvent(bu, "key-up", keyup, NULL);
-	AG_SetEvent(bu, "key-down", keydown, NULL);
+	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(bu, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(bu, "key-up", KeyUp, NULL);
+	AG_SetEvent(bu, "key-down", KeyDown, NULL);
 
 	AG_BindInt(bu, "state", &bu->state);
 #ifdef AG_DEBUG
@@ -258,46 +395,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		AG_WidgetSizeAlloc(bu->lbl, &aLbl);
 	}
 	return (0);
-}
-
-static void
-Draw(void *p)
-{
-	AG_Button *bu = p;
-	AG_Variable *binding;
-	void *pState;
-	int pressed;
-	
-	binding = AG_GetVariable(bu, "state", &pState);
-	pressed = GetState(bu, binding, pState);
-	AG_UnlockVariable(binding);
-
-	STYLE(bu)->ButtonBackground(bu, pressed);
-
-	if (bu->lbl != NULL) {
-		AG_WidgetDraw(bu->lbl);
-		return;
-	}
-
-	if (bu->surface != -1) {
-		int x = 0, y = 0, w, h;
-		
-		w = WSURFACE(bu,bu->surface)->w;
-		h = WSURFACE(bu,bu->surface)->h;
-
-		switch (bu->justify) {
-		case AG_TEXT_LEFT:	x = bu->lPad;			break;
-		case AG_TEXT_CENTER:	x = WIDTH(bu)/2 - w/2;		break;
-		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
-		}
-		switch (bu->valign) {
-		case AG_TEXT_TOP:	x = bu->tPad;			break;
-		case AG_TEXT_MIDDLE:	x = HEIGHT(bu)/2 - h/2;		break;
-		case AG_TEXT_BOTTOM:	x = HEIGHT(bu) - h - bu->bPad;	break;
-		}
-		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
-		AG_WidgetBlitSurface(bu, bu->surface, x, y);
-	}
 }
 
 static int
@@ -373,145 +470,43 @@ SetState(AG_Variable *binding, void *p, int v)
 }
 
 static void
-mousemotion(AG_Event *event)
+Draw(void *p)
 {
-	AG_Button *bu = AG_SELF();
-	AG_Variable *binding;
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-	void *pState;
-
-	if (AG_WidgetDisabled(bu))
-		return;
-
-	binding = AG_GetVariable(bu, "state", &pState);
-	if (!AG_WidgetRelativeArea(bu, x, y)) {
-		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-		    GetState(bu, binding, pState) == 1) {
-			SetState(binding, pState, 0);
-		}
-		if (bu->flags & AG_BUTTON_MOUSEOVER) {
-			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
-			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 0);
-		}
-	} else {
-		bu->flags |= AG_BUTTON_MOUSEOVER;
-		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
-	}
-	AG_UnlockVariable(binding);
-}
-
-static void
-mousebuttondown(AG_Event *event)
-{
-	AG_Button *bu = AG_SELF();
-	int button = AG_INT(1);
+	AG_Button *bu = p;
 	AG_Variable *binding;
 	void *pState;
-	int newState;
-	
-	if (AG_WidgetDisabled(bu))
-		return;
-
-	AG_WidgetFocus(bu);
-
-	if (button != AG_MOUSE_LEFT)
-		return;
+	int pressed;
 	
 	binding = AG_GetVariable(bu, "state", &pState);
-	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		SetState(binding, pState, 1);
-	} else {
-		newState = !GetState(bu, binding, pState);
-		SetState(binding, pState, newState);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
-	}
+	pressed = GetState(bu, binding, pState);
 	AG_UnlockVariable(binding);
 
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ScheduleTimeout(bu, &bu->delay_to, agMouseSpinDelay);
-	}
-}
+	STYLE(bu)->ButtonBackground(bu, pressed);
 
-static void
-mousebuttonup(AG_Event *event)
-{
-	AG_Button *bu = AG_SELF();
-	int button = AG_INT(1);
-	AG_Variable *binding;
-	void *pState;
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+	if (bu->lbl != NULL) {
+		AG_WidgetDraw(bu->lbl);
+		return;
+	}
+
+	if (bu->surface != -1) {
+		int x = 0, y = 0, w, h;
 		
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_DelTimeout(bu, &bu->delay_to);
-	}
-	
-	if (AG_WidgetDisabled(bu) ||
-	    x < 0 || y < 0 ||
-	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
-		return;
-	}
-	
-	binding = AG_GetVariable(bu, "state", &pState);
-	if (GetState(bu, binding, pState) && button == AG_MOUSE_LEFT &&
-	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	SetState(binding, pState, 0);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
-	}
-	AG_UnlockVariable(binding);
-}
+		w = WSURFACE(bu,bu->surface)->w;
+		h = WSURFACE(bu,bu->surface)->h;
 
-static void
-keydown(AG_Event *event)
-{
-	AG_Button *bu = AG_SELF();
-	AG_Variable *binding;
-	void *pState;
-	int keysym = AG_INT(1);
-	
-	if (AG_WidgetDisabled(bu))
-		return;
-	if (keysym != AG_KEY_RETURN &&		/* TODO configurable */
-	    keysym != AG_KEY_SPACE) {
-		return;
+		switch (bu->justify) {
+		case AG_TEXT_LEFT:	x = bu->lPad;			break;
+		case AG_TEXT_CENTER:	x = WIDTH(bu)/2 - w/2;		break;
+		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
+		}
+		switch (bu->valign) {
+		case AG_TEXT_TOP:	x = bu->tPad;			break;
+		case AG_TEXT_MIDDLE:	x = HEIGHT(bu)/2 - h/2;		break;
+		case AG_TEXT_BOTTOM:	x = HEIGHT(bu) - h - bu->bPad;	break;
+		}
+		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
+		AG_WidgetBlitSurface(bu, bu->surface, x, y);
 	}
-	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(binding, pState, 1);
-	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
-
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ScheduleTimeout(bu, &bu->delay_to, 800);
-	}
-	AG_UnlockVariable(binding);
-}
-
-static void
-keyup(AG_Event *event)
-{
-	AG_Button *bu = AG_SELF();
-	AG_Variable *binding;
-	void *pState;
-	int keysym = AG_INT(1);
-	
-	if (AG_WidgetDisabled(bu)) {
-		return;
-	}
-	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->delay_to);
-		AG_DelTimeout(bu, &bu->repeat_to);
-	}
-	if (keysym != AG_KEY_RETURN &&		/* TODO configurable */
-	    keysym != AG_KEY_SPACE) {
-		return;
-	}
-	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(binding, pState, 0);
-	AG_UnlockVariable(binding);
-	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 }
 
 void
