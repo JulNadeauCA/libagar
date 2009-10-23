@@ -76,9 +76,11 @@ static void
 Expand(AG_Event *event)
 {
 	AG_FileSelector *fs = AG_PTR(1);
+	AG_Driver *drv = WIDGET(fs)->drv;
 	int expand = AG_INT(2);
 	AG_SizeReq rFileDlg;
 	int x, y, w, h;
+	Uint wView, hView;
 
 	if (expand) {						/* Expand */
 		fs->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
@@ -96,8 +98,11 @@ Expand(AG_Event *event)
 		x = WIDGET(fs)->rView.x2 - w;
 		y = WIDGET(fs)->rView.y1;
 
-		if (x+w > agView->w) { w = agView->w - x; }
-		if (y+h > agView->h) { h = agView->h - y; }
+		if (AGDRIVER_SINGLE(drv) &&
+		    AG_GetDisplaySize(drv, &wView, &hView) == 0) {
+			if (x+w > wView) { w = wView - x; }
+			if (y+h > hView) { h = hView - y; }
+		}
 		if (w < 4 || h < 4) {
 			Collapse(fs);
 			return;
