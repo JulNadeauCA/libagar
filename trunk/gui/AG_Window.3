@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -453,7 +453,7 @@ for details.
 .Fn AG_WindowFocusNamed "const char *name"
 .Pp
 .Ft int
-.Fn AG_WindowFocusAtPos "int x" "int y"
+.Fn AG_WindowFocusAtPos "AG_DriverSw *drv" "int x" "int y"
 .Pp
 .Ft "AG_Window *"
 .Fn AG_WindowFindFocused "void"
@@ -476,7 +476,11 @@ sets the focus on the window of the given name and returns 0 on success
 or -1 if the window was not found.
 .Pp
 .Fn AG_WindowFocusAtPos
-looks for a window at the specified coordinates.
+looks for a window at the specified coordinates in pixels, in the video
+display associated with the given single-display driver
+.Fa drv
+(see
+.Xr AG_DriverSw 3 ) .
 If a window is found, it is focused and 1 is returned.
 Otherwise, 0 is returned.
 .Pp
