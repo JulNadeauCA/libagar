@@ -171,8 +171,8 @@ CheckboxButton(void *cbox, int state, int size)
 static void
 ConsoleBackground(void *cons, AG_Color bgColor)
 {
-	AG_DrawBox(cons,
-	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)), -1,
+	AG_DrawRectFilled(cons,
+	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)),
 	    bgColor);
 }
 
