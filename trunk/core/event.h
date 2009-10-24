@@ -57,8 +57,14 @@ typedef struct ag_event {
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 
 	AG_Timeout timeout;			/* Execution timeout */
-	AG_TAILQ_ENTRY(ag_event) events;	/* For Object */
+	AG_TAILQ_ENTRY(ag_event) events;	/* Entry in Object */
 } AG_Event;
+
+/* Queue of events */
+typedef struct ag_event_queue {
+	Uint     nEvents;
+	AG_Event *events;
+} AG_EventQ;
 
 typedef void (*AG_EventFn)(AG_Event *);
 
@@ -198,6 +204,10 @@ AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
 void      AG_UnsetEvent(void *, const char *);
 void      AG_PostEvent(void *, void *, const char *, const char *, ...);
 AG_Event *AG_FindEventHandler(void *, const char *);
+
+void      AG_InitEventQ(AG_EventQ *);
+void      AG_FreeEventQ(AG_EventQ *);
+void      AG_QueueEvent(AG_EventQ *, const char *, const char *, ...);
 
 int       AG_SchedEvent(void *, void *, Uint32, const char *,
                         const char *, ...);
