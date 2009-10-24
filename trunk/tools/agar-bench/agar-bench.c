@@ -257,6 +257,7 @@ MainWindow(void)
 int
 main(int argc, char *argv[])
 {
+	Uint flags = AG_VIDEO_RESIZABLE;
 	int c, i, fps = -1;
 	char *s;
 
@@ -265,7 +266,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFegGw:h:t:r:T:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFegw:h:t:r:T:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -278,10 +279,7 @@ main(int argc, char *argv[])
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
 		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
+			flags |= AG_VIDEO_OPENGL;
 			break;
 		case 'w':
 			AG_SetUint16(agConfig, "view.w", atoi(optarg));
@@ -307,7 +305,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(640, 480, 32, flags) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}

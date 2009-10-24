@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -135,7 +135,7 @@ RG_PixmapLoad(RG_Pixmap *px, AG_DataSource *buf)
 	px->flags = (int)AG_ReadUint32(buf);
 	px->xorig = (int)AG_ReadSint16(buf);
 	px->yorig = (int)AG_ReadSint16(buf);
-	if ((px->su = AG_ReadSurface(buf, agVideoFmt)) == NULL)
+	if ((px->su = AG_ReadSurface(buf, agSurfaceFmt)) == NULL)
 		return (-1);
 
 	nbrushes = AG_ReadUint32(buf);
@@ -702,28 +702,28 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 int
 RG_PixmapWheel(RG_Tileview *tv, RG_TileElement *tel, int nwheel)
 {
-	Uint8 *keystate = SDL_GetKeyState(NULL);
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	RG_Pixmap *px = tel->tel_pixmap.px;
 
-	if (keystate[SDLK_h]) {
+	if (ks[AG_KEY_H]) {
 		px->h += (nwheel == 0) ? -3 : 3;
 		if (px->h < 0.0) { px->h = 359.0; }
 		else if (px->h > 359.0) { px->h = 0.0; }
 		return (1);
 	}
-	if (keystate[SDLK_s]) {
+	if (ks[AG_KEY_S]) {
 		px->s += (nwheel == 0) ? 0.05 : -0.05;
 		if (px->s < 0.0) {  px->s = 0.0; }
 		else if (px->s > 1.0) { px->s = 1.0; }
 		return (1);
 	}
-	if (keystate[SDLK_v]) {
+	if (ks[AG_KEY_V]) {
 		px->v += (nwheel == 0) ? -0.05 : 0.05;
 		if (px->v < 0.0) { px->v = 0.0; }
 		else if (px->v > 1.0) { px->v = 1.0; }
 		return (1);
 	}
-	if (keystate[SDLK_a]) {
+	if (ks[AG_KEY_A]) {
 		px->a += (nwheel == 0) ? 0.1 : -0.1;
 		if (px->a < 0.0) { px->a = 0.0; }
 		else if (px->a > 1.0) { px->a = 1.0; }
@@ -738,14 +738,12 @@ pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b;
 	Uint8 a = (Uint8)(px->a*255);
-	Uint8 *keystate;
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	int erase_mode;
 	enum rg_pixmap_blend_mode bmode_save = 0;
 	enum rg_brush_type btype_save = 0;
 
-	keystate = SDL_GetKeyState(NULL);
-	erase_mode = keystate[SDLK_e];
-
+	erase_mode = ks[AG_KEY_E];
 	if (erase_mode) {
 		r = 0;
 		g = 0;
@@ -892,12 +890,11 @@ pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
-	Uint8 *keystate;
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	Uint32 cOrig, cFill;
 
 	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
-	keystate = SDL_GetKeyState(NULL);
-	if (keystate[SDLK_e]) {
+	if (ks[AG_KEY_E]) {
 		r = 0;
 		g = 0;
 		b = 0;
@@ -915,14 +912,13 @@ pixmap_randfill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
-	Uint8 *keystate;
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 	Uint32 cOrig, cFill;
 	Uint32 rand;
 	Uint32 bit = 0;
 
 	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
-	keystate = SDL_GetKeyState(NULL);
-	if (keystate[SDLK_e]) {
+	if (ks[AG_KEY_E]) {
 		r = 0;
 		g = 0;
 		b = 0;
@@ -947,25 +943,29 @@ pixmap_pick(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 }
 
 void
-RG_PixmapKeydown(int ksym)
+RG_PixmapKeydown(RG_Tileview *tv, int ksym)
 {
+	AG_Driver *drv = WIDGET(tv)->drv;
+
 	switch (ksym) {
-	case SDLK_f:
-		AG_SetCursor(AG_FILL_CURSOR);
+	case AG_KEY_F:
+		AG_PushStockCursor(drv, AG_FILL_CURSOR);
 		break;
-	case SDLK_e:
-		AG_SetCursor(AG_ERASE_CURSOR);
+	case AG_KEY_E:
+		AG_PushStockCursor(drv, AG_ERASE_CURSOR);
 		break;
-	case SDLK_c:
-		AG_SetCursor(AG_PICK_CURSOR);
+	case AG_KEY_C:
+		AG_PushStockCursor(drv, AG_PICK_CURSOR);
 		break;
 	}
 }
 
 void
-RG_PixmapKeyup(void)
+RG_PixmapKeyup(RG_Tileview *tv)
 {
-	AG_UnsetCursor();
+	AG_Driver *drv = WIDGET(tv)->drv;
+
+	AG_PopCursor(drv);
 }
 
 void
@@ -973,12 +973,12 @@ RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
     int x, int y, int button)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	Uint8 *keystate;
+	Uint8 *ks;
 
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
-		AG_MouseGetState(&x, &y);
+		AG_MouseGetState(agMouse, &x, &y);
 		RG_PixmapOpenMenu(tv, x, y);
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {
@@ -988,26 +988,26 @@ RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
 		return;
 	}
 
-	keystate = SDL_GetKeyState(NULL);
-	if (keystate[SDLK_f]) {
+	ks = AG_GetKeyState(agKeyboard, NULL);
+	if (ks[AG_KEY_F]) {
 		enum rg_pixmap_blend_mode bmode_save = px->blend_mode;
 
-		if (keystate[SDLK_r] || keystate[SDLK_e]) {
+		if (ks[AG_KEY_R] || ks[AG_KEY_E]) {
 			px->blend_mode = RG_PIXMAP_NO_BLENDING;
 		}
 		RG_PixmapBeginUndoBlk(px);
-		if (keystate[SDLK_r]) {
+		if (ks[AG_KEY_R]) {
 			pixmap_randfill(tv, tel, x, y);
 		} else {
 			pixmap_fill(tv, tel, x, y);
 		}
 		px->blend_mode = bmode_save;
-	} else if (keystate[SDLK_c]) {
+	} else if (ks[AG_KEY_C]) {
 		pixmap_pick(tv, tel, x, y);
 	} else {
-		if (keystate[SDLK_h]) {
+		if (ks[AG_KEY_H]) {
 			tv->tv_pixmap.state = RG_TVPIXMAP_HORIZONTAL;
-		} else if (keystate[SDLK_v]) {
+		} else if (ks[AG_KEY_V]) {
 			tv->tv_pixmap.state = RG_TVPIXMAP_VERTICAL;
 		} else {
 			tv->tv_pixmap.state = RG_TVPIXMAP_FREEHAND;
@@ -1031,14 +1031,15 @@ void
 RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
+	AG_Driver *drv = WIDGET(tv)->drv;
 	Uint8 *ks = SDL_GetKeyState(NULL);
 
-	if (ks[SDLK_f]) {
-		AG_SetCursor(AG_FILL_CURSOR);
-	} else if (ks[SDLK_e]) {
-		AG_SetCursor(AG_ERASE_CURSOR);
-	} else if (ks[SDLK_c]) {
-		AG_SetCursor(AG_PICK_CURSOR);
+	if (ks[AG_KEY_F]) {
+		AG_PushStockCursor(drv, AG_FILL_CURSOR);
+	} else if (ks[AG_KEY_E]) {
+		AG_PushStockCursor(drv, AG_ERASE_CURSOR);
+	} else if (ks[AG_KEY_C]) {
+		AG_PushStockCursor(drv, AG_PICK_CURSOR);
 	}
 	
 	switch (tv->tv_pixmap.state) {
@@ -1056,7 +1057,7 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	}
 
 	if (state == SDL_BUTTON_LEFT) {
-		if (ks[SDLK_c])
+		if (ks[AG_KEY_C])
 			pixmap_pick(tv, tel, x, y);
 	}
 }

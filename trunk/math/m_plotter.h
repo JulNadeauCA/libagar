@@ -76,7 +76,7 @@ typedef struct m_plot {
 
 	char label_txt[32];		/* Label text */
 	int label;			/* Label surface handle */
-	Uint32 color;			/* Plot color */
+	AG_Color color;			/* Plot color */
 	M_Real xScale, yScale;		/* Scaling factors */
 	int xOffs, yOffs;		/* Offset in display */
 	int xLabel, yLabel;		/* Item position */
@@ -107,7 +107,7 @@ typedef struct m_plotter {
 	int wPre, hPre;			/* SizeHint dimensions */
 	M_Real xScale, yScale;		/* Scaling factors */
 	AG_Font *font;			/* Default font face (or NULL) */
-	Uint32 colors[M_PLOTTER_NDEFCOLORS];	/* Default plot color */
+	AG_Color colors[M_PLOTTER_NDEFCOLORS];	/* Default plot color */
 	int curColor;				/* Current default color */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
 	AG_Rect r;			/* View area */

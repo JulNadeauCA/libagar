@@ -34,8 +34,8 @@ typedef struct vg_tool_ops {
 	int (*mousemotion)(void *, VG_Vector vPos, VG_Vector vRel, int buttons);
 	int (*mousebuttondown)(void *, VG_Vector vPos, int button);
 	int (*mousebuttonup)(void *, VG_Vector vPos, int button);
-	int (*keydown)(void *, int ksym, int kmod, int unicode);
-	int (*keyup)(void *, int ksym, int kmod, int unicode);
+	int (*keydown)(void *, int ksym, int kmod, Uint32 unicode);
+	int (*keyup)(void *, int ksym, int kmod, Uint32 unicode);
 } VG_ToolOps;
 
 /* VG tool instance */

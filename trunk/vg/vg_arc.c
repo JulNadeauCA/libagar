@@ -32,6 +32,7 @@
 #include <gui/widget.h>
 #include <gui/primitive.h>
 #include <gui/numerical.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -77,13 +78,13 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Arc *va = p;
-	Uint32 c32 = VG_MapColorRGB(VGNODE(va)->color);
 	int a1 = (int)va->a1;
 	int a2 = (int)va->a2;
 	long r = (long)va->r;
 	int x, y, xPos, yPos;
 	int xPrev = 0, yPrev = 0;
 	VG_Vector vCenter = VG_Pos(va->p);
+	AG_Color c = VG_MapColorRGB(VGNODE(va)->color);
 	int a;
 
 	VG_GetViewCoords(vv, vCenter, &xPos, &yPos);
@@ -95,7 +96,7 @@ Draw(void *p, VG_View *vv)
 		x = ((long)vg_cos_tbl[a % 360]*(long)r/1024) + xPos;
 		y = ((long)vg_sin_tbl[a % 360]*(long)r/1024) + yPos;
 		if (a != a1) {
-			AG_DrawLine(vv, xPrev, yPrev, x, y, c32);
+			AG_DrawLine(vv, xPrev, yPrev, x, y, c);
 		}
 		xPrev = x;
 		yPrev = y;

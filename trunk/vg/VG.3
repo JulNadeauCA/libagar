@@ -686,8 +686,11 @@ reference does not match the specified class name.
 .Ft "VG_Color"
 .Fn VG_GetColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
-.Ft "Uint32"
+.Ft "AG_Color"
 .Fn VG_MapColorRGB "VG_Color vc"
+.Pp
+.Ft "AG_Color"
+.Fn VG_MapColorRGBA "VG_Color vc"
 .Pp
 .Ft "void"
 .Fn VG_BlendColors "VG_Color *cDst" "VG_Color cSrc"
@@ -711,8 +714,13 @@ The
 .Fn VG_GetColorRGBA
 variant includes the alpha component.
 .Pp
+Functions
 .Fn VG_MapColorRGB
-returns the display-format pixel representation of the given color.
+and
+.Fn VG_MapColorRGBA
+convert the given color to
+.Xr AG_Color 3
+format.
 .Pp
 .Fn VG_BlendColors
 blends the two specified colors, returning the results in

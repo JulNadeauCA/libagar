@@ -103,6 +103,26 @@ package body agar.gui.widget is
        x          => c.int (x),
        y          => c.int (y));
   end blit_surface;
+  
+  procedure put_pixel
+    (widget : widget_access_t;
+     x      : c.int;
+     y      : c.int;
+     color  : agar.core.types.color_t);
+  pragma import (c, put_pixel, "agar_widget_put_pixel");
+
+  procedure put_pixel
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural;
+     color  : agar.core.types.color_t) is
+  begin
+    put_pixel
+      (widget => widget,
+       x      => c.int (x),
+       y      => c.int (y),
+       color  => color);
+  end put_pixel;
 
   procedure put_pixel32
     (widget : widget_access_t;
@@ -149,29 +169,29 @@ package body agar.gui.widget is
        g      => g,
        b      => b);
   end put_pixel_rgb;
-
-  procedure blend_pixel_rgba
+  
+  procedure blend_pixel
     (widget : widget_access_t;
      x      : c.int;
      y      : c.int;
      color  : color_t;
      func   : agar.gui.colors.blend_func_t);
-  pragma import (c, blend_pixel_rgba, "AG_WidgetBlendPixelRGBA");
+  pragma import (c, blend_pixel, "AG_BlendPixel");
 
-  procedure blend_pixel_rgba
+  procedure blend_pixel
     (widget : widget_access_t;
      x      : natural;
      y      : natural;
      color  : color_t;
      func   : agar.gui.colors.blend_func_t) is
   begin
-    blend_pixel_rgba
+    blend_pixel
       (widget => widget,
        x      => c.int (x),
        y      => c.int (y),
        color  => color,
        func   => func);
-  end blend_pixel_rgba;
+  end blend_pixel
 
   procedure blend_pixel_32
     (widget : widget_access_t;

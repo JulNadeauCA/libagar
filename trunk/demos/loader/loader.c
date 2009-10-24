@@ -180,6 +180,8 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
+	Uint flags = AG_VIDEO_RESIZABLE;
+
 	if (AG_InitCore("agar-loader-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -187,14 +189,11 @@ main(int argc, char *argv[])
 	if (argc >= 2) {
 		if (strcmp(argv[1], "-g") == 0) {
 			printf("Forcing GL mode\n");
-			AG_SetBool(agConfig, "view.opengl", 1);
-		} else if (strcmp(argv[1], "-G") == 0) {
-			printf("Forcing SDL mode\n");
-			AG_SetBool(agConfig, "view.opengl", 0);
+			flags |= AG_VIDEO_OPENGL;
 		}
 	}
 	
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(640, 480, 32, flags) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}

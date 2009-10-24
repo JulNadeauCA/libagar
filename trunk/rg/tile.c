@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,10 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include <gui/geometry.h>
-#include <gui/surface.h>
-#include <gui/view.h>
-#include <gui/text.h>
+#include <gui/gui.h>
 #include <gui/load_surface.h>
 #include <gui/load_xcf.h>
 
-#include <gui/window.h>
 #include <gui/box.h>
 #include <gui/tlist.h>
 #include <gui/button.h>
@@ -224,7 +220,7 @@ RG_TileGenerate(RG_Tile *t)
 	AG_SetAlpha(t->su, AG_SRCALPHA, t->ts->fmt->alpha);
 
 	/* TODO check for opaque fill features/pixmaps first */
-	AG_FillRect(t->su, NULL, AG_MapRGBA(t->su->format, 0,0,0,0));
+	AG_FillRect(t->su, NULL, AG_ColorRGBA(0,0,0,0));
 
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		if (!tel->visible) {
@@ -879,8 +875,8 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 				tv->tv_feature.win = win;
 				AG_SetEvent(win, "window-close",
 				    ElementClosedEv, "%p", tv);
-				
-				agView->winToFocus = pWin;
+			
+				AG_WindowFocus(pWin);
 				AG_WidgetFocus(tv);
 			} else {
 				tv->tv_feature.win = NULL;
@@ -918,7 +914,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WindowShow(win);
 			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
-			agView->winToFocus = pWin;
+			AG_WindowFocus(pWin);
 			AG_WidgetFocus(tv);
 			
 			tv->tel_tbar = RG_PixmapToolbar(tv, tel);
@@ -951,7 +947,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WindowShow(win);
 			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
-			agView->winToFocus = pWin;
+			AG_WindowFocus(pWin);
 			AG_WidgetFocus(tv);
 
 			tv->tel_tbar = RG_SketchToolbar(tv, tel);
@@ -2015,9 +2011,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	/* Set the tile edition mode. */
 	CloseElement(tv);
 
-	AG_WindowSetGeometry(win,
-	    agView->w/4, agView->h/4,
-	    agView->w/2, agView->h/2);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 70, 50);
 
 	/* Center the tile. */
 	tv->xoffs = (WIDGET(tv)->w - t->su->w)/2;

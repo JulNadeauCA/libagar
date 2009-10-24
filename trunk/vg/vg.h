@@ -255,11 +255,18 @@ VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	return (vc);
 }
 
-/* Return a VG_Color in display-pixel format. */
-static __inline__ Uint32
+/* Convert a VG_Color to opaque AG_Color */
+static __inline__ AG_Color
 VG_MapColorRGB(VG_Color vc)
 {
-	return AG_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
+	return AG_ColorRGB(vc.r, vc.g, vc.b);
+}
+
+/* Convert a VG_Color to AG_Color */
+static __inline__ AG_Color
+VG_MapColorRGBA(VG_Color vc)
+{
+	return AG_ColorRGBA(vc.r, vc.g, vc.b, vc.a);
 }
 
 /* Alpha-blend colors cDst and cSrc and return in cDst. */

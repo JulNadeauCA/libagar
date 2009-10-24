@@ -77,8 +77,10 @@ static int server_inited = 0;
 static AG_Thread listenTh;
 static int servRunning = 0;
 
+#if 0
 #ifdef HAVE_JPEG
 static int jpegQuality = 75;
+#endif
 #endif
 
 static void
@@ -148,6 +150,8 @@ cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 	return (0);
 }
 
+#if 0
+/* XXX 1.4 single-display */
 #ifdef HAVE_JPEG
 static void
 jpegError(j_common_ptr jcomp)
@@ -167,6 +171,7 @@ static int
 cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
+	AG_Driver *drv = agDriver;		/* XXX 1.4 single-display */
 	char sendbuf[AG_BUFFER_MAX];
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
@@ -179,10 +184,12 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	int fd;
 	size_t rv;
 
-#ifdef HAVE_OPENGL
-	if (agView->opengl && pSu == agView->v)
-		su = AG_CaptureGLView();
-#endif
+	if (!AGDRIVER_SINGLE(drv)) {
+		AG_SetError("Not using a single-display driver");
+		return (-1);
+	}
+	if (AGDRIVER_SW_CLASS(drv)->videoCapture(drv, &su) == -1)
+		return (-1);
 
 	/* Write the JPEG to a temporary file. */
 	jcomp.err = jpeg_std_error(&jerrmgr);
@@ -241,7 +248,8 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	}
 	AG_SurfaceUnlock(su);
 #ifdef HAVE_OPENGL
-	if (agView->opengl && su != pSu)
+	if ((AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) &&
+	    su != pSu)
 		AG_SurfaceFree(su);
 #endif
 
@@ -263,29 +271,17 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	return (-1);
 #endif /* HAVE_JPEG */
 }
+#endif
 
 /* Return information about the display format. */
 static int
 cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	NS_BeginList(ns);
-	AG_LockVFS(agView);
-	NS_ListString(ns, "opengl:%d", agView->opengl);
-	NS_ListString(ns, "geom:%u:%u", agView->w, agView->h);
-	AG_UnlockVFS(agView);
-	NS_EndList(ns);
-	return (0);
-}
+	/* XXX 1.4 single-display */
 
-/* Return the current refresh rate. */
-static int
-cmd_refresh(NS_Server *ns, NS_Command *cmd, void *p)
-{
 	NS_BeginList(ns);
-	AG_LockVFS(agView);
-	NS_ListString(ns, "%d", agView->rCur);
-	NS_ListString(ns, "%d", agView->rNom);
-	AG_UnlockVFS(agView);
+	NS_ListString(ns, "driver:%s",
+	    agDriver != NULL ? AGDRIVER_CLASS(agDriver)->name : "NULL");
 	NS_EndList(ns);
 	return (0);
 }
@@ -347,9 +343,10 @@ DEV_DebugServerStart(void)
 		NS_RegLogoutFn(&server, srv_logout);
 
 		NS_RegCmd(&server, "version", cmd_version, NULL);
+#if 0
 		NS_RegCmd(&server, "screen", cmd_surface, agView->v);
+#endif
 		NS_RegCmd(&server, "view-fmt", cmd_view_fmt, NULL);
-		NS_RegCmd(&server, "refresh", cmd_refresh, NULL);
 #if 0
 		NS_RegCmd(&server, "scan-vfs", cmd_scan_vfs, NULL);
 #endif

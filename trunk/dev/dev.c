@@ -34,6 +34,7 @@
 
 #include <core/core.h>
 
+#include <gui/gui.h>
 #include <gui/window.h>
 #include <gui/menu.h>
 #include <gui/perfmon.h>

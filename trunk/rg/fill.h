@@ -21,11 +21,11 @@ struct rg_fill_feature {
 	Uint8 alpha;
 	union {
 		struct {
-			Uint32 c;
+			AG_Color c;
 		} solid;
 		struct {
-			Uint32 c1;
-			Uint32 c2;
+			AG_Color c1;
+			AG_Color c2;
 		} gradient;
 		struct {
 			int texid;

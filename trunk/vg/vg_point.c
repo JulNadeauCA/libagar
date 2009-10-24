@@ -32,6 +32,7 @@
 #include <gui/widget.h>
 #include <gui/primitive.h>
 #include <gui/numerical.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -57,16 +58,16 @@ Draw(void *p, VG_View *vv)
 		size = pt->size;
 	}
 	if (size > 0.0f) {
-		Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
+		AG_Color c = VG_MapColorRGB(VGNODE(pt)->color);
 		int x, y;
 
 		VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
-		AG_DrawPixel(vv, x, y, c32);
+		AG_PutPixel(vv, x, y, c);
 		for (i = 0; i < size; i += 1.0f) {
-			AG_DrawPixel(vv, x-i, y, c32);
-			AG_DrawPixel(vv, x+i, y, c32);
-			AG_DrawPixel(vv, x, y-i, c32);
-			AG_DrawPixel(vv, x, y+i, c32);
+			AG_PutPixel(vv, x-i, y, c);
+			AG_PutPixel(vv, x+i, y, c);
+			AG_PutPixel(vv, x, y-i, c);
+			AG_PutPixel(vv, x, y+i, c);
 		}
 	}
 }

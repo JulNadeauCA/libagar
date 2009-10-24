@@ -67,23 +67,6 @@ SetPath(AG_Event *event)
 }
 
 static void
-SetFullscreen(AG_Event *event)
-{
-	int enable = AG_INT(1);
-	SDL_Event vexp;
-
-	if (agView == NULL)
-		return;
-
-	if ((enable && (agView->v->flags & SDL_FULLSCREEN) == 0) ||
-	   (!enable && (agView->v->flags & SDL_FULLSCREEN))) {
-		SDL_WM_ToggleFullScreen(agView->v);
-		vexp.type = SDL_VIDEOEXPOSE;
-		SDL_PushEvent(&vexp);
-	}
-}
-
-static void
 WarnRestart(AG_Event *event)
 {
 	char *key = AG_STRING(1);
@@ -98,9 +81,9 @@ BindSelectedColor(AG_Event *event)
 {
 	AG_HSVPal *hsv = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
-	Uint32 *c = it->p1;
+	AG_Color *c = it->p1;
 
-	AG_BindUint32(hsv, "pixel", c);
+	AG_BindUint8(hsv, "RGBAv", (Uint8 *)c);
 }
 
 /* Must be invoked from main event/rendering context. */
@@ -120,7 +103,9 @@ SetColor(AG_Event *event)
 void
 DEV_ConfigShow(void)
 {
-	if (agView->Lmodal->n > 0)	/* Avoid clobbering modal windows */
+	/* Avoid clobbering modal windows */
+	if (AGDRIVER_SINGLE(agDriver) &&
+	    AGDRIVER_SW(agDriver)->Lmodal->n > 0)
 		return;
 
 	if (devConfigWindow != NULL) {
@@ -220,23 +205,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
-		cb = AG_CheckboxNewInt(tab, 0, _("Full screen"),
-		    &agFullscreenMode);
-		AG_SetEvent(cb, "checkbox-changed", SetFullscreen, NULL);
-
-		cb = AG_CheckboxNewInt(tab, 0, _("Asynchronous blits"),
-		    &agAsyncBlits);
-		AG_SetEvent(cb, "checkbox-changed", WarnRestart, "%s",
-		    "config.view.async-blits");
-
-#if 0
-		msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
-		AG_BindUint16(msb,"xvalue", &agView->w);
-		AG_BindUint16(msb,"yvalue", &agView->h);
-		AG_MSpinbuttonSetRange(msb, 320, 4096);
-#endif
-		AG_SpacerNewHoriz(tab);
-
 		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
 		    &agScreenshotQuality, 1, 100);
 		AG_NumericalNewIntR(tab, 0, "ms", _("Idling threshold: "),
@@ -317,7 +285,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 				it->p1 = &agColors[i];
 			}
 			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
-			AG_BindPointer(hsv, "pixel-format", (void *)&agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);
 			AG_SetEvent(hsv, "sv-changed", SetColor, "%p", tl);
 			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,

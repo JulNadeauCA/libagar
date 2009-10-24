@@ -25,6 +25,7 @@
 
 #include <core/core.h>
 
+#include <gui/gui.h>
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/combo.h>

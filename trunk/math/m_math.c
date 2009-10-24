@@ -33,6 +33,7 @@
 #include "m.h"
 
 #ifdef ENABLE_GUI
+# include <gui/gui.h>
 # include <gui/label.h>
 # include <gui/units.h>
 # include "m_plotter.h"

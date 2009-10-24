@@ -294,7 +294,7 @@ PREINIT:
 	int i;
 	AG_Window * win;
 CODE:
-	AGVIEW_FOREACH_WINDOW(win, agView) {
+	AG_FOREACH_WINDOW(win, agDriver) {
 		AG_WindowDraw(win);
 	}
 

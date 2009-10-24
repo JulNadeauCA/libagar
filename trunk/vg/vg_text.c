@@ -30,6 +30,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include <gui/gui.h>
 #include <gui/widget.h>
 #include <gui/primitive.h>
 #include <gui/opengl.h>
@@ -172,7 +173,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	    (agGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
-	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
+	AG_TextColor(VG_MapColorRGB(VGNODE(vt)->color));
 
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);

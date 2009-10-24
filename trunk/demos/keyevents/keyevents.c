@@ -17,9 +17,9 @@ MyKeyboardHandler(AG_Event *event)
 {
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_INT(3);
+	Uint32 unicode = (Uint32)AG_ULONG(3);
 
-	printf("%s: sym=%d, modifier=0x%x, unicode=0x%x\n",
+	printf("%s: sym=%d, modifier=0x%x, unicode=0x%lx\n",
 	    event->name, sym, (unsigned)mod, unicode);
 }
 

@@ -27,6 +27,8 @@
  * Polygon entity.
  */
 
+#include <config/have_opengl.h>
+
 #include <core/core.h>
 
 #include <gui/widget.h>
@@ -36,6 +38,7 @@
 #ifdef HAVE_OPENGL
 #include <gui/opengl.h>
 #endif
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -99,7 +102,7 @@ CompareInts(const void *p1, const void *p2)
 static void
 DrawOutline(VG_Polygon *vp, VG_View *vv)
 {
-	Uint32 c32 = VG_MapColorRGB(VGNODE(vp)->color);
+	AG_Color c = VG_MapColorRGB(VGNODE(vp)->color);
 	int Ax, Ay, Bx, By, Cx, Cy;
 	int i;
 
@@ -111,17 +114,17 @@ DrawOutline(VG_Polygon *vp, VG_View *vv)
 	Cy = Ay;
 	for (i = 1; i < vp->nPts; i++) {
 		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, c);
 		Ax = Bx;
 		Ay = By;
 	}
-	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c32);
+	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c);
 }
 
 static void
 DrawFB(VG_Polygon *vp, VG_View *vv)
 {
-	Uint32 c32 = VG_MapColorRGB(VGNODE(vp)->color);
+	AG_Color c = VG_MapColorRGB(VGNODE(vp)->color);
 	int y, x1, y1, x2, y2;
 	int ign, miny, maxy;
 	int i, i1, i2;
@@ -193,7 +196,7 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 			xa = (xa>>16) + ((xa&0x8000) >> 15);
 			xb = vp->ints[i+1] - 1;
 			xb = (xb>>16) + ((xb&0x8000) >> 15);
-			AG_DrawLineH(vv, xa, xb, y, c32);
+			AG_DrawLineH(vv, xa, xb, y, c);
 		}
 	}
 }
@@ -201,6 +204,7 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 static void
 Draw(void *p, VG_View *vv)
 {
+	AG_Driver *drv = WIDGET(vv)->drv;
 	VG_Polygon *vp = p;
 
 	if (vp->nPts < 3 || vp->outline) {
@@ -208,7 +212,7 @@ Draw(void *p, VG_View *vv)
 		return;
 	}
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
+	if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
 		VG_Color *c = &VGNODE(vp)->color;
 		int x, y, i;
 

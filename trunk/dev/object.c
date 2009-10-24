@@ -41,6 +41,7 @@
 #include <gui/notebook.h>
 #include <gui/separator.h>
 #include <gui/checkbox.h>
+#include <gui/iconmgr.h>
 
 #ifdef AG_NETWORK
 #include <core/rcs.h>

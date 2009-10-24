@@ -83,7 +83,7 @@ CreateGameMenu(void)
 	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, agView->w, 128);
-	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);
+	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
 
 	fx = AG_FixedNew(win, 0);
 	AG_Expand(fx);
@@ -94,8 +94,7 @@ CreateGameMenu(void)
 	}
 	AG_FixedMove(fx, px, 0, 0);
 	
-	lbl = AG_LabelNew(NULL, 0, "Drag & Drop Demo (%s)",
-	    agView->opengl ? "OpenGL" : "SDL");
+	lbl = AG_LabelNew(NULL, 0, "Drag & Drop Demo");
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	/* Load some pixmaps */

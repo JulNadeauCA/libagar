@@ -12,9 +12,9 @@ AG_Surface *surface128;
 void
 InitSurface(void)
 {
-	surface = AG_SurfaceVideoRGB(32,32);
-	surface64 = AG_SurfaceVideoRGB(64,64);
-	surface128 = AG_SurfaceVideoRGB(128,128);
+	surface = AG_SurfaceStdRGB(32,32);
+	surface64 = AG_SurfaceStdRGB(64,64);
+	surface128 = AG_SurfaceStdRGB(128,128);
 }
 
 void

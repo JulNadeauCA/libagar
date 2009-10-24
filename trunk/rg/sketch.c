@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,7 +141,7 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 	VG_Element *vge;
 	AG_Rect rd;
 
-	AG_FillRect(vg->su, NULL, vg->fill_color);
+	AG_FillRect(vg->su, NULL, vg->fillColor);
 	
 	if (vg->flags & VG_VISGRID)
 		VG_DrawGrid(vg);
@@ -457,13 +457,14 @@ void
 RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
     VG_Element *vge)
 {
+	AG_Driver *drv = WIDGET(tv)->drv;
 	char name[AG_OBJECT_NAME_MAX];
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 	RG_TileviewCtrl *ctrl, *nctrl;
 	AG_Window *win;
 
-	VIEW_FOREACH_WINDOW(win, agView) {
+	AG_FOREACH_WINDOW(win, drv) {
 		Snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
 		    vge);
 		if (strcmp(name, OBJECT(win)->name) == 0) {
@@ -493,7 +494,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 	if (button == AG_MOUSE_MIDDLE) {
 		int x, y;
 
-		AG_MouseGetState(&x, &y);
+		AG_MouseGetState(agMouse, &x, &y);
 		RG_SketchOpenMenu(tv, x, y);
 		return;
 	} else if (button == AG_MOUSE_RIGHT) {
@@ -520,7 +521,6 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 		float idx, closest_idx = AG_FLT_MAX;
 		VG_Element *closest_vge = NULL;
 
-		printf("proximity test\n");
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			if (vge->ops->intsect != NULL) {
 				float ix = (float)x;
@@ -533,31 +533,26 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 				}
 			}
 		}
-		printf("closest = %p (%f)\n", closest_vge, closest_idx);
 		if (closest_vge != NULL && closest_idx < AG_FLT_MAX-2) {
 			if (closest_vge->selected) {
-				printf("unselecting %p\n", closest_vge);
 				RG_SketchUnselect(tv, tel, closest_vge);
 			} else {
 				AG_Window *pwin = AG_WidgetParentWindow(tv);
 				AG_Window *win;
 
-				if (((AG_KeyMod)SDL_GetModState() &
-				    AG_KEYMOD_CTRL) == 0) {
+				if (!(AG_GetModState(agKeyboard)&AG_KEYMOD_CTRL)) {
 					TAILQ_FOREACH(vge, &vg->vges, vges) {
 						if (vge->selected)
 							RG_SketchUnselect(tv,
 							    tel, vge);
 					}
 				}
-
-				printf("selecting %p\n", closest_vge);
 				win = RG_SketchSelect(tv, tel, closest_vge);
 				if (win != NULL) {
 					AG_WindowAttach(pwin, win);
 					AG_WindowShow(win);
-					agView->winToFocus = pwin;
 					AG_WidgetFocus(tv);
+					AG_WindowFocus(win);
 				}
 			}
 		}

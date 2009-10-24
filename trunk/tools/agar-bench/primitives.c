@@ -57,10 +57,10 @@ T_Line(void)
 static void
 T_LineBlended(void)
 {
-	Uint8 c[4];
+	AG_Color C;
 
-	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h, c, AG_ALPHA_SRC);
-	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h/2, c, AG_ALPHA_SRC);
+	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h, C, AG_ALPHA_SRC);
+	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h/2, C, AG_ALPHA_SRC);
 }
 
 static void

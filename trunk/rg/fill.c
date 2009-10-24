@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,15 +65,14 @@ RG_FillInit(void *p, RG_Tileset *ts, int flags)
 	AG_FeatureInit(f, ts, flags, &rgFillOps);
 	f->type = FILL_SOLID;
 	f->alpha = 255;
-	f->f_gradient.c1 = AG_MapRGB(ts->fmt, 0,0,0);
-	f->f_gradient.c2 = AG_MapRGB(ts->fmt, 0,0,0);
+	f->f_gradient.c1 = AG_ColorRGB(0,0,0);
+	f->f_gradient.c2 = AG_ColorRGB(0,0,0);
 }
 
 int
 RG_FillLoad(void *p, AG_DataSource *buf)
 {
 	struct rg_fill_feature *f = p;
-	RG_Tileset *ts = RG_FEATURE(f)->ts;
 
 	if (AG_ReadVersion(buf, "RG_Feature:RG_Fill", &rgFillVer, NULL) == -1)
 		return (-1);
@@ -81,13 +80,13 @@ RG_FillLoad(void *p, AG_DataSource *buf)
 	f->type = (enum rg_fill_type)AG_ReadUint8(buf);
 	switch (f->type) {
 	case FILL_SOLID:
-		f->f_solid.c = AG_ReadColor(buf, ts->fmt);
+		f->f_solid.c = AG_ReadColor(buf);
 		break;
 	case FILL_HGRADIENT:
 	case FILL_VGRADIENT:
 	case FILL_CGRADIENT:
-		f->f_gradient.c1 = AG_ReadColor(buf, ts->fmt);
-		f->f_gradient.c2 = AG_ReadColor(buf, ts->fmt);
+		f->f_gradient.c1 = AG_ReadColor(buf);
+		f->f_gradient.c2 = AG_ReadColor(buf);
 		break;
 	case FILL_PATTERN:
 		f->f_pattern.texid = (int)AG_ReadUint32(buf);
@@ -102,20 +101,19 @@ void
 RG_FillSave(void *p, AG_DataSource *buf)
 {
 	struct rg_fill_feature *f = p;
-	RG_Tileset *ts = RG_FEATURE(f)->ts;
 
 	AG_WriteVersion(buf, "RG_Feature:RG_Fill", &rgFillVer);
 
 	AG_WriteUint8(buf, (Uint8)f->type);
 	switch (f->type) {
 	case FILL_SOLID:
-		AG_WriteColor(buf, ts->fmt, f->f_solid.c);
+		AG_WriteColor(buf, f->f_solid.c);
 		break;
 	case FILL_HGRADIENT:
 	case FILL_VGRADIENT:
 	case FILL_CGRADIENT:
-		AG_WriteColor(buf, ts->fmt, f->f_gradient.c1);
-		AG_WriteColor(buf, ts->fmt, f->f_gradient.c2);
+		AG_WriteColor(buf, f->f_gradient.c1);
+		AG_WriteColor(buf, f->f_gradient.c2);
 		break;
 	case FILL_PATTERN:
 		AG_WriteUint32(buf, (Uint32)f->f_pattern.texid);
@@ -158,17 +156,13 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		ntab = AG_NotebookAddTab(nb, _("Color A"), AG_BOX_VERT);
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-			AG_BindPointer(hsv1, "pixel-format",
-			    (void *)&tv->ts->fmt);
-			AG_BindUint32(hsv1, "pixel", &f->f_gradient.c1);
+			AG_BindUint8(hsv1, "RGBAv", (Uint8 *)&f->f_gradient.c1);
 		}
 
 		ntab = AG_NotebookAddTab(nb, _("Color B"), AG_BOX_VERT);
 		{
 			hsv2 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-			AG_BindPointer(hsv1, "pixel-format",
-			    (void *)&tv->ts->fmt);
-			AG_BindUint32(hsv2, "pixel", &f->f_gradient.c2);
+			AG_BindUint8(hsv2, "RGBAv", (Uint8 *)&f->f_gradient.c2);
 		}
 		
 		num = AG_NumericalNewUint8R(box, 0, NULL,
@@ -183,45 +177,40 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 {
 	struct rg_fill_feature *fi = p;
 	AG_Surface *su = t->su;
-	Uint8 r1, g1, b1;
-	Uint8 r2, g2, b2;
 	
-	AG_GetRGB(fi->f_gradient.c1, t->ts->fmt, &r1,&g1,&b1);
-	AG_GetRGB(fi->f_gradient.c2, t->ts->fmt, &r2,&g2,&b2);
-
 	switch (fi->type) {
 	case FILL_SOLID:
-		AG_GetRGB(fi->f_solid.c, t->ts->fmt, &r1, &g1, &b1);
-		AG_FillRect(su, NULL,
-		    AG_MapRGBA(t->ts->fmt, r1,g1,b1, fi->alpha));
+		AG_FillRect(su, NULL, fi->f_solid.c);
 		break;
 	case FILL_HGRADIENT:
 		{
 			int x, y;
-		
+			AG_Color c1 = fi->f_gradient.c1;
+			AG_Color c2 = fi->f_gradient.c2;
+	
 			AG_SurfaceLock(su);
 			for (y = 0; y < su->h; y++) {
 				Uint32 c;
 				Uint8 a = (Uint8)(su->h-y)*255/su->h;
 
 				c = AG_MapRGB(t->ts->fmt,
-				    (((r1 - r2) * a) >> 8) + r2,
-				    (((g1 - g2) * a) >> 8) + g2,
-				    (((b1 - b2) * a) >> 8) + b2);
+				    (((c1.r-c2.r)*a)>>8)+c2.r,
+				    (((c1.g-c2.g)*a)>>8)+c2.g,
+				    (((c1.b-c2.b)*a)>>8)+c2.b);
 
 				for (x = 0; x < su->w; x++) {
 					if (fi->alpha == 255) {
 						RG_PutPixel(t->su, x, y,
 						    AG_MapRGB(t->su->format,
-						    (((r1 - r2)*a) >> 8) + r2,
-						    (((g1 - g2)*a) >> 8) + g2,
-						    (((b1 - b2)*a) >> 8) + b2));
+						    (((c1.r-c2.r)*a)>>8)+c2.r,
+						    (((c1.g-c2.g)*a)>>8)+c2.g,
+						    (((c1.b-c2.b)*a)>>8)+c2.b));
 					} else {
 						RG_BlendRGB(t->su, x, y,
 						    RG_PRIM_OVERLAY_ALPHA,
-						    (((r1 - r2)*a) >> 8) + r2,
-						    (((g1 - g2)*a) >> 8) + g2,
-						    (((b1 - b2)*a) >> 8) + b2,
+						    (((c1.r-c2.r)*a)>>8)+c2.r,
+						    (((c1.g-c2.g)*a)>>8)+c2.g,
+						    (((c1.b-c2.b)*a)>>8)+c2.b,
 						    fi->alpha);
 					}
 				}
@@ -232,17 +221,19 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 	case FILL_VGRADIENT:
 		{
 			int x, y;
+			AG_Color c1 = fi->f_gradient.c1;
+			AG_Color c2 = fi->f_gradient.c2;
+			Uint8 a;
 		
 			AG_SurfaceLock(su);
 			for (y = 0; y < su->h; y++) {
 				for (x = 0; x < su->w; x++) {
-					Uint8 a = (su->h-x)*255/su->h;
-				
+					a = (su->h - x)*255/su->h;
 					RG_BlendRGB(t->su, x, y,
 					    RG_PRIM_OVERLAY_ALPHA,
-					    (((r1 - r2) * a) >> 8) + r2,
-					    (((g1 - g2) * a) >> 8) + g2,
-					    (((b1 - b2) * a) >> 8) + b2,
+					    (((c1.r-c2.r)*a)>>8)+c2.r,
+					    (((c1.g-c2.g)*a)>>8)+c2.g,
+					    (((c1.b-c2.b)*a)>>8)+c2.b,
 					    fi->alpha);
 				}
 			}
@@ -254,16 +245,18 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			int i, r = MAX(su->w,su->h);
 			int x = su->w/2;
 			int y = su->h/2;
+			AG_Color c1 = fi->f_gradient.c1;
+			AG_Color c2 = fi->f_gradient.c2;
 		
 			AG_SurfaceLock(su);
 			for (i = 0; i < r; i++) {
-				Uint8 a = (r-i)*255/r;
+				Uint8 a = (r - i)*255/r;
 				RG_ColorRGBA(t,
-				    (((r1 - r2) * a) >> 8) + r2,
-				    (((g1 - g2) * a) >> 8) + g2,
-				    (((b1 - b2) * a) >> 8) + b2,
+				    (((c1.r-c2.r)*a)>>8)+c2.r,
+				    (((c1.g-c2.g)*a)>>8)+c2.g,
+				    (((c1.b-c2.b)*a)>>8)+c2.b,
 				    fi->alpha);
-				RG_Circle2(t, x, y, i);
+				RG_Circle2(t, x,y, i);
 			}
 			AG_SurfaceUnlock(su);
 		}
@@ -277,30 +270,29 @@ static void
 InvertColors(AG_Event *event)
 {
 	struct rg_fill_feature *fi = AG_PTR(1);
-	RG_Tileset *ts = RG_FEATURE(fi)->ts;
-	Uint8 r, g, b;
+	AG_Color c;
 
 	switch (fi->type) {
 	case FILL_SOLID:
-		AG_GetRGB(fi->f_solid.c, ts->fmt, &r,&g,&b);
-		r = 255 - r;
-		g = 255 - g;
-		b = 255 - b;
-		fi->f_solid.c = AG_MapRGB(ts->fmt, r,g,b);
+		c = fi->f_solid.c;
+		c.r = 255 - c.r;
+		c.g = 255 - c.g;
+		c.b = 255 - c.b;
 		break;
 	case FILL_HGRADIENT:
 	case FILL_VGRADIENT:
 	case FILL_CGRADIENT:
-		AG_GetRGB(fi->f_gradient.c1, ts->fmt, &r,&g,&b);
-		r = 255 - r;
-		g = 255 - g;
-		b = 255 - b;
-		fi->f_gradient.c1 = AG_MapRGB(ts->fmt, r,g,b);
-		AG_GetRGB(fi->f_gradient.c2, ts->fmt, &r,&g,&b);
-		r = 255 - r;
-		g = 255 - g;
-		b = 255 - b;
-		fi->f_gradient.c2 = AG_MapRGB(ts->fmt, r,g,b);
+		c = fi->f_gradient.c1;
+		c.r = 255 - c.r;
+		c.g = 255 - c.g;
+		c.b = 255 - c.b;
+		fi->f_gradient.c1 = c;
+
+		c = fi->f_gradient.c2;
+		c.r = 255 - c.r;
+		c.g = 255 - c.g;
+		c.b = 255 - c.b;
+		fi->f_gradient.c2 = c;
 		break;
 	default:
 		break;
@@ -311,7 +303,7 @@ static void
 SwapGradientColors(AG_Event *event)
 {
 	struct rg_fill_feature *fi = AG_PTR(1);
-	Uint32 cSave;
+	AG_Color cSave;
 
 	switch (fi->type) {
 	case FILL_HGRADIENT:
