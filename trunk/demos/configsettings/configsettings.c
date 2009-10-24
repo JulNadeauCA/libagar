@@ -46,8 +46,8 @@ main(int argc, char *argv[])
 		printf("AG_InitCore(%d): %s\n", i, AG_GetError());
 		exit(1);
 	}
-	if (AG_InitVideo(320, 100, 32, AG_VIDEO_RESIZABLE) == -1) {
-		printf("AG_InitVideo(%d): %s\n", i, AG_GetError());
+	if (AG_InitGraphics(NULL) == -1) {
+		printf("AG_InitGraphics: %s\n", AG_GetError());
 		exit(1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
@@ -73,7 +73,6 @@ main(int argc, char *argv[])
 		AG_ButtonNewFn(box, 0, "Save configuration", SaveConfig, NULL);
 	}
 
-	AG_WindowMaximize(win);
 	AG_WindowShow(win);
 
 	AG_AtExitFunc(SaveOnExit);

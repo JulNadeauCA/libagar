@@ -79,21 +79,17 @@ CreateUI(void)
 	AG_NumericalSetPrecision(n2, "g", 6);
 
 	AG_WindowShow(win);
-	AG_WindowMaximize(win);
 }
 
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("unitconv", 0) == -1) {
+	if (AG_InitCore("unitconv", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
 	AG_TextParseFontSpec("_agFontVera:14");
-	if (AG_InitVideo(400, 180, 32, AG_VIDEO_RESIZABLE) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
-	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 	

@@ -19,9 +19,9 @@ main(int argc, char *argv[])
 			printf("AG_InitCore(%d): %s\n", i, AG_GetError());
 			exit(1);
 		}
-		printf("\tInitVideo()\n");
-		if (AG_InitVideo(320, 240, 32, AG_VIDEO_RESIZABLE) == -1) {
-			printf("AG_InitVideo(%d): %s\n", i, AG_GetError());
+		printf("\tInitGraphics()\n");
+		if (AG_InitGraphics(0) == -1) {
+			printf("AG_InitGraphics(%d): %s\n", i, AG_GetError());
 			exit(1);
 		}
 		printf("\tCreate Window\n");

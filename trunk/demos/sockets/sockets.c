@@ -58,11 +58,10 @@ static void
 CreateGameView(void)
 {
 	AG_Window *win;
+	unsigned int wView, hView;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	AG_WindowSetGeometry(win,
-	    0,		0,
-	    agView->w,	agView->h-128);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 100, 70);
 	AG_WindowShow(win);
 }
 
@@ -82,7 +81,7 @@ CreateGameMenu(void)
 	 */
 	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, agView->w, 128);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_BL, 100, 30);
 	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
 
 	fx = AG_FixedNew(win, 0);
@@ -161,13 +160,10 @@ CreateGameMenu(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("agar-sockets-demo", 0) == -1) {
+	if (AG_InitCore("agar-sockets-demo", 0) == -1 ||
+	    AG_InitGraphics("<SDL>") == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitVideo(640, 480, 32, 0) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);

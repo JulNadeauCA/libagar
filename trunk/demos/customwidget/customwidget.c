@@ -17,7 +17,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(320, 240, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
@@ -32,7 +32,6 @@ main(int argc, char *argv[])
 	my = MyWidgetNew(win, "foo");
 	AG_Expand(my);
 	AG_WindowShow(win);
-	AG_WindowMaximize(win);
 
 	AG_EventLoop();
 	AG_Destroy();

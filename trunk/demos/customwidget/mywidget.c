@@ -2,7 +2,7 @@
 
 /*
  * Implementation of a typical Agar widget which uses surface mappings to
- * efficiently draw surfaces in either framebuffer or GL display mode.
+ * efficiently draw surfaces, regardless of the underlying graphics system.
  *
  * If you are not familiar with the way the Agar object system handles
  * inheritance, see demos/objsystem.

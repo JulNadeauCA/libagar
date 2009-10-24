@@ -9,25 +9,13 @@
 int
 main(int argc, char *argv[])
 {
-	Uint guiFlags = AG_VIDEO_RESIZABLE;
 	AG_Window *win;
 	AG_Scrollview *sv;
 	int x, y;
 	AG_Box *hBox;
 	
-	if (AG_InitCore("agar-scrollview-demo", 0) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-
-	if (argc > 1) {
-		if (strcmp(argv[1], "-g") == 0) {
-			printf("Forcing GL mode\n");
-			guiFlags |= AG_VIDEO_OPENGL;
-		}
-	}
-	
-	if (AG_InitVideo(640, 480, 32, guiFlags) == -1) {
+	if (AG_InitCore("agar-scrollview-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

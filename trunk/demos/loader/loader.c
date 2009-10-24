@@ -180,22 +180,10 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
-	Uint flags = AG_VIDEO_RESIZABLE;
-
-	if (AG_InitCore("agar-loader-demo", 0) == -1) {
+	if (AG_InitCore("agar-loader-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (argc >= 2) {
-		if (strcmp(argv[1], "-g") == 0) {
-			printf("Forcing GL mode\n");
-			flags |= AG_VIDEO_OPENGL;
-		}
-	}
-	
-	if (AG_InitVideo(640, 480, 32, flags) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);

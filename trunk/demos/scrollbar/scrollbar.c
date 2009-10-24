@@ -58,20 +58,17 @@ CreateWindow(void)
 	AG_ExpandHoriz(lbl);
 	AG_ExpandHoriz(sb);
 
-	AG_WindowMaximize(win);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, -1);
 	AG_WindowShow(win);
 }
 
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("agar-scrollbar-demo", 0) == -1) {
+	if (AG_InitCore("agar-scrollbar-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitVideo(400, 300, 32, AG_VIDEO_RESIZABLE) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
