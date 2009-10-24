@@ -103,6 +103,7 @@ Destroy(void *obj)
 static int
 Open(void *obj, const char *spec)
 {
+	extern const AG_TimeOps agTimeOps_SDL;
 	AG_DriverSDLFB *sfb = obj;
 	
 	if (nDrivers != 0) {
@@ -125,6 +126,9 @@ Open(void *obj, const char *spec)
 		}
 		initedSDLVideo = 1;
 	}
+
+	/* We can use SDL's time interface. */
+	AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize the main mouse and keyboard devices. */
 	agMouse = AG_MouseNew(sfb, "X mouse");
