@@ -819,6 +819,13 @@ AG_WidgetDraw(void *p)
 
 	AG_ObjectLock(wid);
 
+#ifdef AG_DEBUG
+	if (wid->drv == NULL)
+		AG_FatalError("AG_WidgetDraw() on unattached widget");
+	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*") && wid->window == NULL)
+		AG_FatalError("Widget is not attached to a window");
+#endif
+
 	if (!(wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) &&
 	    !OccultedWidget(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL) {
