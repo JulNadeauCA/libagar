@@ -727,7 +727,7 @@ int
 AG_WidgetFocus(void *obj)
 {
 	AG_Widget *wid = obj, *wParent = wid;
-	AG_Window *win;
+	AG_Window *win = wid->window;
 
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
@@ -744,12 +744,8 @@ AG_WidgetFocus(void *obj)
 	}
 
 	/* Remove any existing focus. XXX inefficient */
-	if (wid->drv != NULL && AGDRIVER_SINGLE(wid->drv)) {
-		AG_FOREACH_WINDOW(win, wid->drv) {
-			if (win->nFocused > 0)
-				AG_WidgetUnfocus(win);
-		}
-	}
+	if (win != NULL && win->nFocused > 0)
+		AG_WidgetUnfocus(win);
 
 	/*
 	 * Set the focus flag on the widget and its parents, up
