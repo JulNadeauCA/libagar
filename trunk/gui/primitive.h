@@ -14,13 +14,17 @@ __BEGIN_DECLS
 static __inline__ AG_Color
 AG_ColorShift(AG_Color C, Sint8 *shift)
 {
-	Sint8 rSh = shift[0];
-	Sint8 gSh = shift[1];
-	Sint8 bSh = shift[2];
+	int r = C.r + shift[0];
+	int g = C.g + shift[1];
+	int b = C.b + shift[2];
 
-	if (C.r+rSh > 255) { C.r = 255; } else { C.r += rSh; }
-	if (C.g+gSh > 255) { C.g = 255; } else { C.g += rSh; }
-	if (C.b+bSh > 255) { C.b = 255; } else { C.b += rSh; }
+	if (r > 255) { r = 255; } else if (r < 0) { r = 0; }
+	if (g > 255) { g = 255; } else if (g < 0) { g = 0; }
+	if (b > 255) { b = 255; } else if (b < 0) { b = 0; }
+
+	C.r = (Uint8)r;
+	C.g = (Uint8)g;
+	C.b = (Uint8)b;
 	return (C);
 }
 
