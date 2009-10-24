@@ -113,16 +113,6 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	AG_SetInt(cfg, "no-confirm-quit", 0);
 
 	/* XXX XXX move to agar-gui */
-	AG_SetInt(cfg, "view.full-screen", 0);
-	AG_SetInt(cfg, "view.async-blits", 0);
-	AG_SetInt(cfg, "view.opengl", 0);
-	AG_SetUint16(cfg, "view.w", 800);
-	AG_SetUint16(cfg, "view.h", 600);
-	AG_SetUint16(cfg, "view.min-w", 16);
-	AG_SetUint16(cfg, "view.min-h", 16);
-	AG_SetUint8(cfg, "view.depth", 32);
-	AG_SetUint(cfg, "view.nominal-fps", 40);
-	AG_SetInt(cfg, "input.joysticks", 1);
 	AG_SetInt(cfg, "input.composition", 1);
 
 	/* Set the save directory path and create it as needed. */
