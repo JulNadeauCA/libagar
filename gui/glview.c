@@ -72,11 +72,20 @@ WidgetMoved(AG_Event *event)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
 
 	AG_WidgetFocus(glv);
+}
+
+static void
+OnAttach(AG_Event *event)
+{
+	AG_Widget *parent = AG_SENDER();
+
+	if (!(AGDRIVER_CLASS(parent->drv)->flags & AG_DRIVER_OPENGL))
+		AG_FatalError("AG_GLView requires a driver with GL support");
 }
 
 static void
@@ -85,9 +94,6 @@ Init(void *obj)
 	AG_GLView *glv = obj;
 
 	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
-
-	if (!AG_GetBool(agConfig,"view.opengl"))
-		AG_FatalError("AG_GLView requires OpenGL");
 
 	glv->wPre = 64;
 	glv->hPre = 64;
@@ -103,7 +109,8 @@ Init(void *obj)
 	glv->motion_ev = NULL;
 
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
-	AG_SetEvent(glv, "mouse-button-down", mousebuttondown, NULL);
+	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_AddEvent(glv, "attached", OnAttach, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(glv, "flags", &glv->flags);
@@ -241,6 +248,11 @@ void
 AG_GLViewDraw(void *obj)
 {
 	AG_GLView *glv = obj;
+	AG_Driver *drv = WIDGET(glv)->drv;
+	GLint vpSave[4];
+	Uint hView;
+
+	glGetIntegerv(GL_VIEWPORT, vpSave);
 
 	if (glv->flags & AG_GLVIEW_INIT_MATRICES) {
 		glv->flags &= ~(AG_GLVIEW_INIT_MATRICES);
@@ -253,10 +265,14 @@ AG_GLViewDraw(void *obj)
 		AG_GLViewReshape(glv);
 	}
 
+	if (AGDRIVER_SINGLE(drv)) {
+		hView = AGDRIVER_SW(drv)->h;
+	} else {
+		hView = HEIGHT(WIDGET(glv)->window);
+	}
 	glViewport(WIDGET(glv)->rView.x1,
-	           agView->h - WIDGET(glv)->rView.y2,
-	           WIDGET(glv)->w,
-		   WIDGET(glv)->h);
+	           hView - WIDGET(glv)->rView.y2,
+	           WIDTH(glv), HEIGHT(glv));
 
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();
@@ -288,7 +304,7 @@ AG_GLViewDraw(void *obj)
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	
-	glViewport(0, 0, agView->w, agView->h);
+	glViewport(vpSave[0], vpSave[1], vpSave[2], vpSave[3]);
 	
 	if (glv->overlay_ev != NULL)
 		glv->overlay_ev->handler(glv->overlay_ev);
