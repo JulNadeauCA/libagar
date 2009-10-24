@@ -82,6 +82,7 @@ typedef struct ag_glx_driver {
 	Uint          nTextureGC;
 	struct blending_state bs[1];	/* Saved blending states */
 	AG_Cursor     *cursorToSet;	/* Set cursor at end of event cycle */
+	GLubyte        disabledStipple[128]; /* "Disabled" stipple pattern */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -120,6 +121,7 @@ Init(void *obj)
 	glx->textureGC = NULL;
 	glx->nTextureGC = 0;
 	glx->cursorToSet = NULL;
+	memset(glx->disabledStipple, 0xaa, sizeof(glx->disabledStipple));
 }
 
 static void
@@ -593,11 +595,13 @@ GenericEventLoop(void *obj)
 					continue;
 				}
 				win = AGDRIVER_MW(drv)->win;
-				AG_BeginRendering(drv);
-				AG_ObjectLock(win);
-				AG_WindowDraw(win);
-				AG_ObjectUnlock(win);
-				AG_EndRendering(drv);
+				if (win->visible) {
+					AG_BeginRendering(drv);
+					AG_ObjectLock(win);
+					AG_WindowDraw(win);
+					AG_ObjectUnlock(win);
+					AG_EndRendering(drv);
+				}
 			}
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
@@ -1539,13 +1543,13 @@ DrawArrowRight(void *obj, int x, int y, int h, AG_Color C[2])
 static void
 DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 {
-	static GLubyte spat = 0xaa;
+	AG_DriverGLX *glx = obj;
 	int stipplePrev;
 	
 	stipplePrev = glIsEnabled(GL_POLYGON_STIPPLE);
 	glEnable(GL_POLYGON_STIPPLE);
 	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
-	glPolygonStipple(&spat);
+	glPolygonStipple(glx->disabledStipple);
 	DrawRectFilled(obj, r, C);
 	glPopAttrib();
 	if (!stipplePrev) { glDisable(GL_POLYGON_STIPPLE); }
