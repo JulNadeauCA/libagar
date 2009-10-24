@@ -115,37 +115,13 @@ Directory for temporary files.
 The following parameters are registered by the Agar-GUI library:
 .Pp
 .Bl -tag -width "BOOL view.full-screen "
-.It Va BOOL view.full-screen
-Display is in full-screen mode.
-Default = FALSE.
-.It Va BOOL view.opengl
-OpenGL display mode (Agar must have been compiled with OpenGL support).
-Default = FALSE.
-.It Va UINT16 view.w
-Effective display width in pixels (read-only).
-.It Va UINT16 view.h
-Effective display height in pixels (read-only).
-.It Va UINT16 view.min-w
-Minimum display width for application to work.
-Default = 320.
-.It Va UINT16 view.min-h
-Minimum display height for application to work.
-Default = 240.
-.It Va UINT8 view.depth
-Requested color depth in bits per pixel.
-Default = 32.
-.It Va UINT view.nominal-fps
-Target refresh rate (used by
-.Xr AG_EventLoopFixedFPS 3 ,
-but may be ignored by alternate event loop functions).
-Default = 40.
 .It Va BOOL input.composition
 Perform composition of multiple characters (e.g., Latin accents) for
 keyboard input.
 This is not needed with window systems (e.g., X11), which already implement
 international keyboard input, but it can be useful with less sophisticated
 platforms.
-Default = Platform-specific.
+Default is platform-specific.
 .It Va STRING font-path
 Directory containing font files used by the
 .Xr AG_Text 3
@@ -163,6 +139,7 @@ Default font size in points.
 .It Va UINT font.flags
 Default font flags (style, weight).
 .El
+.Pp
 .Sh EXAMPLES
 The following example sets some platform-specific font paths.
 .Bd -literal
@@ -178,6 +155,19 @@ AG_PrtString(agConfig, "font-path", "%s/.fonts:"
                                     getenv("HOME"));
 #endif
 .Ed
+.Sh OBSOLETE PARAMETERS
+The following parameters were used before Agar-1.4 and are now obsolete:
+.Pp
+.Bl -tag -compact
+.It Va BOOL view.full-screen
+.It Va BOOL view.opengl
+.It Va UINT16 view.w
+.It Va UINT16 view.h
+.It Va UINT16 view.min-w
+.It Va UINT16 view.min-h
+.It Va UINT8 view.depth
+.It Va UINT view.nominal-fps
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
