@@ -290,9 +290,10 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f *.core config.log tags
+	rm -f *.core config.log configure.lua tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 	if [ -e "Makefile.config" ]; then echo >Makefile.config; fi
+	if [ -e ".depend" ]; then echo >.depend; fi
 
 install-prog:
 	@if [ ! -e "${BINDIR}" ]; then \
