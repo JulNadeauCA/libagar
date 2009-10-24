@@ -1,5 +1,12 @@
 /*	Public domain	*/
 
+/*
+ * SDL time interface.
+ */
+
+#include <config/have_sdl.h>
+#ifdef HAVE_SDL
+
 #include <core/core.h>
 #include <core/types.h>
 
@@ -24,3 +31,5 @@ const AG_TimeOps agTimeOps_SDL = {
 	GetTicks,
 	Delay
 };
+
+#endif /* HAVE_SDL */
