@@ -272,6 +272,33 @@ EventThread(void *p)
 }
 #endif /* AG_THREADS */
 
+void
+AG_InitEventQ(AG_EventQ *eq)
+{
+	eq->nEvents = 0;
+	eq->events = NULL;
+}
+
+void
+AG_FreeEventQ(AG_EventQ *eq)
+{
+	Free(eq->events);
+	eq->nEvents = 0;
+	eq->events = NULL;
+}
+
+/* Add a new entry to an event queue. */
+void
+AG_QueueEvent(AG_EventQ *eq, const char *evname, const char *fmt, ...)
+{
+	AG_Event *ev;
+
+	eq->events = Realloc(eq->events, (eq->nEvents+1)*sizeof(AG_Event));
+	ev = &eq->events[eq->nEvents++];
+	InitEvent(ev, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+}
+
 /*
  * Execute the event handler routine for the given event. The given arguments
  * are appended to the end of the argument vector.
