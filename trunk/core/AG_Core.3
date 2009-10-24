@@ -48,6 +48,9 @@ and subsystems.
 .Fn AG_InitCore "const char *progname" "Uint flags"
 .Pp
 .Ft "int"
+.Fn AG_InitGraphics "const char *driver"
+.Pp
+.Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
 .Pp
 .Ft "int"
@@ -77,7 +80,7 @@ The
 function initializes the internal data structures of the Agar-Core library.
 It must be invoked before any other
 .Sq AG_
-routine.
+function.
 The
 .Fa progname
 argument is an arbitrary name for the application.
@@ -98,17 +101,54 @@ configuration data on startup.
 .El
 .Pp
 The
-.Fn AG_InitVideo
-function sets the video mode, initializes the font engine and GUI system.
-The graphics backend is auto-selected.
+.Fn AG_InitGraphics
+function initializes the Agar GUI library.
+If the
+.Fa drivers
+argument is non-NULL, it specifies a comma-separated list of driver names,
+in order of preference.
+If
+.Fa drivers
+is NULL, Agar selects the "best" drivers available on the current platform.
+If
+.Fa drivers
+is set to "<OpenGL>" or "<SDL>", Agar selects the "best" drivers with OpenGL
+or SDL support, respectively, and fails if none are found.
+As of this release, available drivers include:
 .Pp
-Assuming Agar was compiled with support for SDL,
+.Bl -tag -width "sdlfb " -compact
+.It glx
+OpenGL rendering (Xlib and GLX).
+Multiple windows supported.
+.It sdlfb
+Framebuffer rendering via SDL.
+Single-window display.
+.It sdlgl
+OpenGL rendering via SDL.
+Single-window display.
+.El
+.Pp
+The
+.Fn AG_InitVideo
+function is an alternative to
+.Fn AG_InitGraphics
+which selects only those drivers with no multiple-window support (e.g.,
+.Sq sdlfb ,
+.Sq sdlgl ) .
+As of Agar-1.4, it is deprecated in favor of
+.Fn AG_InitGraphics .
+.Pp
+The
 .Fn AG_InitVideoSDL
-initializes the GUI system to use an existing SDL display surface.
+is another alternative which reuses an existing SDL display surface.
+This function is only available if Agar has been compiled with SDL support.
 If the specified surface has the
 .Dv SDL_OPENGL
-flag set, it is assumed that Agar should render itself using OpenGL
-primitives, otherwise plain framebuffer mode is used.
+flag set, the
+.Va sdlgl
+driver is selected, otherwise
+.Va sdlfb
+is used.
 .Pp
 .Fn AG_InitVideo
 and

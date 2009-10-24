@@ -300,22 +300,46 @@ AG_InitGraphics(const char *spec)
 		return (-1);
 
 	if (spec != NULL && spec[0] != '\0') {
-		Strlcpy(specBuf, spec, sizeof(specBuf));
-		s = &specBuf[0];
-		while ((ds = strsep(&s, ",;")) != NULL) {
+		if (strcmp(spec, "<OpenGL>") == 0) {
 			for (i = 0; i < agDriverListSize; i++) {
 				dc = agDriverList[i];
-				if (strcmp(dc->name, ds) == 0 &&
-				    (drv = AG_DriverOpen(dc)) != NULL)
+				if (dc->flags & AG_DRIVER_OPENGL &&
+				   (drv = AG_DriverOpen(dc)) != NULL)
 					break;
 			}
-			if (i < agDriverListSize)
-				break;
-		}
-		if (ds == NULL) {
-			AG_SetError(_("Requested drivers (%s) are not "
-			              "available"), spec);
-			goto fail;
+			if (i == agDriverListSize) {
+				AG_SetError(_("No OpenGL drivers are available"));
+				goto fail;
+			}
+		} else if (strcmp(spec, "<SDL>") == 0) {
+			for (i = 0; i < agDriverListSize; i++) {
+				dc = agDriverList[i];
+				if (dc->flags & AG_DRIVER_SDL &&
+				   (drv = AG_DriverOpen(dc)) != NULL)
+					break;
+			}
+			if (i == agDriverListSize) {
+				AG_SetError(_("No SDL drivers are available"));
+				goto fail;
+			}
+		} else {
+			Strlcpy(specBuf, spec, sizeof(specBuf));
+			s = &specBuf[0];
+			while ((ds = strsep(&s, ",;")) != NULL) {
+				for (i = 0; i < agDriverListSize; i++) {
+					dc = agDriverList[i];
+					if (strcmp(dc->name, ds) == 0 &&
+					    (drv = AG_DriverOpen(dc)) != NULL)
+						break;
+				}
+				if (i < agDriverListSize)
+					break;
+			}
+			if (ds == NULL) {
+				AG_SetError(_("Requested drivers (%s) are not "
+				              "available"), spec);
+				goto fail;
+			}
 		}
 	} else {
 		for (i = 0; i < agDriverListSize; i++) {
