@@ -202,6 +202,8 @@ void      *AG_WidgetFindPoint(const char *, int, int);
 void      *AG_WidgetFindRect(const char *, int, int, int, int);
 void       AG_WidgetUpdateCoords(void *, int, int);
 
+int	 AG_WidgetMapSurface(void *, AG_Surface *);
+void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
 #define  AG_WidgetBlitSurface(p,n,x,y) \
@@ -431,22 +433,6 @@ AG_WidgetOffsetRect(void *obj, AG_Rect *r)
 }
 
 /*
- * Register a surface with the given widget. The surface is not duplicated,
- * but will be freed by the widget.
- */
-static __inline__ int
-AG_WidgetMapSurface(void *obj, AG_Surface *su)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	int name;
-		
-	AG_ObjectLock(wid);
-	name = wid->drvOps->mapSurface(wid->drv, wid, su);
-	AG_ObjectUnlock(wid);
-	return (name);
-}
-
-/*
  * Variant of AG_WidgetMapSurface() that sets the NODUP flag such that
  * the surface is not freed by the widget.
  */
@@ -457,29 +443,11 @@ AG_WidgetMapSurfaceNODUP(void *obj, AG_Surface *su)
 	int name;
 
 	AG_ObjectLock(wid);
-	if ((name = wid->drvOps->mapSurface(wid->drv, wid, su)) != -1) {
+	if ((name = AG_WidgetMapSurface(wid, su)) != -1) {
 		wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
 	}
 	AG_ObjectUnlock(wid);
 	return (name);
-}
-
-/*
- * Replace the contents of a mapped surface. Unless NODUP is set, the current
- * source surface is freed.
- */
-static __inline__ void
-AG_WidgetReplaceSurface(void *obj, int name, AG_Surface *su)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	AG_ObjectLock(wid);
-#ifdef AG_DEBUG
-	if (name < 0 || name >= wid->nsurfaces)
-		AG_FatalError("Bad surface handle");
-#endif
-	wid->drvOps->replaceSurface(wid->drv, wid, name, su);
-	AG_ObjectUnlock(wid);
 }
 
 /* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
@@ -493,7 +461,7 @@ AG_WidgetReplaceSurfaceNODUP(void *obj, int name, AG_Surface *su)
 	if (name < 0 || name >= wid->nsurfaces)
 		AG_FatalError("Bad surface handle");
 #endif
-	wid->drvOps->replaceSurface(wid->drv, wid, name, su);
+	AG_WidgetReplaceSurface(wid, name, su);
 	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
 	AG_ObjectUnlock(wid);
 }

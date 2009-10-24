@@ -834,9 +834,13 @@ UpdateTexture(Uint texture, AG_Surface *su)
 }
 
 static void
-DeleteTexture(Uint texture)
+DeleteTexture(void *drv, Uint texture)
 {
-	glDeleteTextures(1, (GLuint *)&texture);
+	AG_DriverGLX *glx = drv;
+
+	glx->textureGC = Realloc(glx->textureGC,
+	    (glx->nTextureGC+1)*sizeof(Uint));
+	glx->textureGC[glx->nTextureGC++] = texture;
 }
 
 static int
@@ -1084,65 +1088,8 @@ SetCursorVisibility(void *obj, int flag)
 }
 
 /*
- * Surface operations (rendering context, except MapSurface/ReplaceSurface)
+ * Surface operations (rendering context)
  */
-
-static int
-MapSurface(void *obj, AG_Widget *wid, AG_Surface *su)
-{
-	int i, s = -1;
-
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
-
-	for (i = 0; i < wid->nsurfaces; i++) {
-		if (wid->surfaces[i] == NULL) {
-			s = i;
-			break;
-		}
-	}
-	if (i == wid->nsurfaces) {
-		wid->surfaces = Realloc(wid->surfaces,
-		    (wid->nsurfaces+1)*sizeof(AG_Surface *));
-		wid->surfaceFlags = Realloc(wid->surfaceFlags,
-		    (wid->nsurfaces+1)*sizeof(Uint));
-		wid->textures = Realloc(wid->textures,
-		    (wid->nsurfaces+1)*sizeof(GLuint));
-		wid->texcoords = Realloc(wid->texcoords,
-		    (wid->nsurfaces+1)*sizeof(GLfloat)*4);
-		s = wid->nsurfaces++;
-	}
-	wid->surfaces[s] = su;
-	wid->surfaceFlags[s] = 0;
-	wid->textures[s] = 0;
-	return (s);
-}
-
-static void
-ReplaceSurface(void *obj, AG_Widget *wid, int s, AG_Surface *su)
-{
-	AG_DriverGLX *glx = obj;
-	
-	AG_ASSERT_CLASS(obj, "AG_Driver:*");
-	AG_ASSERT_CLASS(wid, "AG_Widget:*");
-
-	if (wid->surfaces[s] != NULL) {
-		if (!WSURFACE_NODUP(wid,s))
-			AG_SurfaceFree(wid->surfaces[s]);
-	}
-	wid->surfaces[s] = su;
-	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
-
-	/*
-	 * Queue the previous texture for deletion and set the texture handle
-	 * to 0 so the texture will be regenerated at the next blit.
-	 */
-	if (wid->textures[s] != 0) {
-		glx->textureGC = Realloc(glx->textureGC, (glx->nTextureGC+1)*sizeof(Uint));
-		glx->textureGC[glx->nTextureGC++] = wid->textures[s];
-		wid->textures[s] = 0;
-	}
-}
 
 static __inline__ void
 UpdateWidgetTexture(AG_Widget *wid, int s)
@@ -2208,8 +2155,6 @@ AG_DriverMwClass agDriverGLX = {
 		PopCursor,
 		GetCursorVisibility,
 		SetCursorVisibility,
-		MapSurface,
-		ReplaceSurface,
 		BlitSurface,
 		BlitSurfaceFrom,
 		BlitSurfaceGL,

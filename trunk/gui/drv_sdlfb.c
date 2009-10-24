@@ -767,42 +767,8 @@ SetCursorVisibility(void *obj, int flag)
 }
 
 /*
- * Surface operations (rendering context, except MapSurface/ReplaceSurface)
+ * Surface operations (rendering context)
  */
-
-static int
-MapSurface(void *drv, AG_Widget *wid, AG_Surface *su)
-{
-	int i, s = -1;
-
-	for (i = 0; i < wid->nsurfaces; i++) {
-		if (wid->surfaces[i] == NULL) {
-			s = i;
-			break;
-		}
-	}
-	if (i == wid->nsurfaces) {
-		wid->surfaces = Realloc(wid->surfaces,
-		    (wid->nsurfaces+1)*sizeof(AG_Surface *));
-		wid->surfaceFlags = Realloc(wid->surfaceFlags,
-		    (wid->nsurfaces+1)*sizeof(Uint));
-		s = wid->nsurfaces++;
-	}
-	wid->surfaces[s] = su;
-	wid->surfaceFlags[s] = 0;
-	return (s);
-}
-
-static void
-ReplaceSurface(void *drv, AG_Widget *wid, int s, AG_Surface *su)
-{
-	if (wid->surfaces[s] != NULL) {
-		if (!WSURFACE_NODUP(wid,s))
-			AG_SurfaceFree(wid->surfaces[s]);
-	}
-	wid->surfaces[s] = su;
-	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
-}
 
 static void
 BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
@@ -1994,8 +1960,6 @@ AG_DriverSwClass agDriverSDLFB = {
 		PopCursor,
 		GetCursorVisibility,
 		SetCursorVisibility,
-		MapSurface,
-		ReplaceSurface,
 		BlitSurface,
 		BlitSurfaceFrom,
 		BlitSurfaceGL,

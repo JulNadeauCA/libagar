@@ -744,9 +744,11 @@ AG_WidgetFocus(void *obj)
 	}
 
 	/* Remove any existing focus. XXX inefficient */
-	AG_FOREACH_WINDOW(win, wid->drv) {
-		if (win->nFocused > 0)
-			AG_WidgetUnfocus(win);
+	if (wid->drv != NULL && AGDRIVER_SINGLE(wid->drv)) {
+		AG_FOREACH_WINDOW(win, wid->drv) {
+			if (win->nFocused > 0)
+				AG_WidgetUnfocus(win);
+		}
 	}
 
 	/*
@@ -1209,6 +1211,63 @@ AG_WidgetSurface(void *obj)
 	rv = wid->drvOps->renderToSurface(wid->drv, wid, &su);
 	AG_UnlockVFS(wid);
 	return (rv == 0) ? su : NULL;
+}
+
+int
+AG_WidgetMapSurface(void *obj, AG_Surface *su)
+{
+	AG_Widget *wid = obj;
+	int i, s = -1;
+
+	AG_ObjectLock(wid);
+	for (i = 0; i < wid->nsurfaces; i++) {
+		if (wid->surfaces[i] == NULL) {
+			s = i;
+			break;
+		}
+	}
+	if (i == wid->nsurfaces) {
+		wid->surfaces = Realloc(wid->surfaces,
+		    (wid->nsurfaces+1)*sizeof(AG_Surface *));
+		wid->surfaceFlags = Realloc(wid->surfaceFlags,
+		    (wid->nsurfaces+1)*sizeof(Uint));
+		wid->textures = Realloc(wid->textures,
+		    (wid->nsurfaces+1)*sizeof(GLuint));
+		wid->texcoords = Realloc(wid->texcoords,
+		    (wid->nsurfaces+1)*sizeof(GLfloat)*4);
+		s = wid->nsurfaces++;
+	}
+	wid->surfaces[s] = su;
+	wid->surfaceFlags[s] = 0;
+	wid->textures[s] = 0;
+	AG_ObjectUnlock(wid);
+	return (s);
+}
+
+void
+AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	AG_ObjectLock(wid);
+	if (wid->surfaces[s] != NULL) {
+		if (!WSURFACE_NODUP(wid,s))
+			AG_SurfaceFree(wid->surfaces[s]);
+	}
+	wid->surfaces[s] = su;
+	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
+
+	/*
+	 * Queue the previous texture for deletion and set the texture handle
+	 * to 0 so the texture will be regenerated at the next blit.
+	 */
+	if (wid->textures[s] != 0 &&
+	    wid->drv != NULL &&
+	    wid->drvOps->deleteTexture != NULL) {
+		wid->drvOps->deleteTexture(wid->drv, wid->textures[s]);
+		wid->textures[s] = 0;
+	}
+	AG_ObjectUnlock(wid);
 }
 
 AG_WidgetClass agWidgetClass = {
