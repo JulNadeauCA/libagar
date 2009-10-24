@@ -142,7 +142,7 @@ typedef struct ag_table {
 	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
-	Uint8 selColor[4];		/* Selection color (RGBA) */
+	AG_Color selColor;		/* Selection color */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;

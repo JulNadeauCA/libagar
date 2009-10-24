@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_ICONMGR_H_
-#define _AGAR_ICONMGR_H_
+#ifndef _AGAR_GUI_ICONMGR_H_
+#define _AGAR_GUI_ICONMGR_H_
 #include <agar/gui/begin.h>
 
 /* Description of icon stored in data segment. */
@@ -21,4 +21,4 @@ AG_Surface *AG_ObjectIcon(void *);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif	/* _AGAR_ICONMGR_H_ */
+#endif	/* _AGAR_GUI_ICONMGR_H_ */

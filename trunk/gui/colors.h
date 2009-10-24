@@ -1,7 +1,10 @@
 /*	Public domain	*/
+/*
+ * Standard color palette for GUI elements.
+ */
 
-#ifndef _AGAR_WIDGET_COLORS_H_
-#define _AGAR_WIDGET_COLORS_H_
+#ifndef _AGAR_GUI_COLORS_H_
+#define _AGAR_GUI_COLORS_H_
 #include <agar/gui/begin.h>
 
 enum {
@@ -91,7 +94,7 @@ enum {
 };
 
 __BEGIN_DECLS
-extern Uint32 agColors[LAST_COLOR];
+extern AG_Color    agColors[LAST_COLOR];
 extern const char *agColorNames[];
 
 extern Sint8 agFocusSunkColorShift[3];
@@ -101,18 +104,16 @@ extern Sint8 agNofocusRaisedColorShift[3];
 extern Sint8 agHighColorShift[3];
 extern Sint8 agLowColorShift[3];
 
-#define AG_COLOR(idx) agColors[idx]
-
-void AG_ColorsInit(void);
-void AG_ColorsDestroy(void);
-int AG_ColorsLoad(const char *);
-int AG_ColorsSave(const char *);
-int AG_ColorsSaveDefault(void);
-int AG_ColorsSetRGB(int, Uint8, Uint8, Uint8);
-int AG_ColorsSetRGBA(int, Uint8, Uint8, Uint8, Uint8);
-int AG_ColorsGetRGB(int, Uint8 *, Uint8 *, Uint8 *);
-int AG_ColorsGetRGBA(int, Uint8 *, Uint8 *, Uint8 *, Uint8 *);
+void     AG_ColorsInit(void);
+void     AG_ColorsDestroy(void);
+int      AG_ColorsLoad(const char *);
+int      AG_ColorsSave(const char *);
+int      AG_ColorsSaveDefault(void);
+int      AG_ColorsSetRGB(int, Uint8, Uint8, Uint8);
+int      AG_ColorsSetRGBA(int, Uint8, Uint8, Uint8, Uint8);
+int      AG_ColorsGetRGB(int, Uint8 *, Uint8 *, Uint8 *);
+int      AG_ColorsGetRGBA(int, Uint8 *, Uint8 *, Uint8 *, Uint8 *);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif	/* _AGAR_WIDGET_COLORS_H_ */
+#endif /* _AGAR_GUI_COLORS_H_ */

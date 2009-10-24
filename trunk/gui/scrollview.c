@@ -382,7 +382,7 @@ Draw(void *p)
 	if (sv->flags & AG_SCROLLVIEW_FRAME) {
 		AG_DrawBox(sv,
 		    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
-		    AG_COLOR(FRAME_COLOR));
+		    agColors[FRAME_COLOR]);
 	}
 
 	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
@@ -413,7 +413,7 @@ Draw(void *p)
 		}
 		chld->rSens.y2 = chld->rSens.y1+chld->rSens.h;
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(sv);
 }
 
 AG_WidgetClass agScrollviewClass = {

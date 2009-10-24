@@ -30,12 +30,9 @@
  */
 
 #include <config/have_ieee754.h>
-
 #include <core/core.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
+#include "gui.h"
 #include "load_xcf.h"
 
 #include <string.h>

@@ -23,20 +23,22 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Standard color palette for GUI elements.
+ */
+
 #include "opengl.h"
 
 #include <core/core.h>
 #include <core/config.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
+#include "gui.h"
 #include "colors.h"
 #include "load_color.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
 
-Uint32 agColors[LAST_COLOR];
+AG_Color agColors[LAST_COLOR];
 
 Sint8  agFocusSunkColorShift[3] =	{ -10, -10, -20 };
 Sint8  agFocusRaisedColorShift[3] =	{  30,  30,  20 };
@@ -130,91 +132,92 @@ const char *agColorNames[] = {
 	N_("Window border"),
 };
 
+/* Initialize the standard palette. */
 void
 AG_ColorsInit(void)
 {
-	agColors[BG_COLOR] = AG_MapRGB(agVideoFmt, 0, 0, 0);
-	agColors[FRAME_COLOR] = AG_MapRGB(agVideoFmt, 125, 125, 125);
-	agColors[LINE_COLOR] = AG_MapRGB(agVideoFmt, 55, 55, 55);
-	agColors[TEXT_COLOR] = AG_MapRGB(agVideoFmt, 250, 250, 250);
-	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 82, 82, 82);
-	agColors[WINDOW_HI_COLOR] = AG_MapRGB(agVideoFmt, 90, 90, 85);
-	agColors[WINDOW_LO_COLOR] = AG_MapRGB(agVideoFmt, 36, 36, 36);
-	agColors[TITLEBAR_FOCUSED_COLOR] = AG_MapRGB(agVideoFmt, 40, 50, 60);
-	agColors[TITLEBAR_UNFOCUSED_COLOR] = AG_MapRGB(agVideoFmt, 35, 35, 35);
+	agColors[BG_COLOR] = AG_ColorRGB(0, 0, 0);
+	agColors[FRAME_COLOR] = AG_ColorRGB(125, 125, 125);
+	agColors[LINE_COLOR] = AG_ColorRGB(55, 55, 55);
+	agColors[TEXT_COLOR] = AG_ColorRGB(250, 250, 250);
+	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(82, 82, 82);
+	agColors[WINDOW_HI_COLOR] = AG_ColorRGB(90, 90, 85);
+	agColors[WINDOW_LO_COLOR] = AG_ColorRGB(36, 36, 36);
+	agColors[TITLEBAR_FOCUSED_COLOR] = AG_ColorRGB(40, 50, 60);
+	agColors[TITLEBAR_UNFOCUSED_COLOR] = AG_ColorRGB(35, 35, 35);
 	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
 	agColors[BUTTON_COLOR] = agColors[FRAME_COLOR];
-	agColors[BUTTON_TXT_COLOR] = AG_MapRGB(agVideoFmt, 240, 240, 240);
-	agColors[DISABLED_COLOR] = AG_MapRGB(agVideoFmt, 160, 160, 160);
+	agColors[BUTTON_TXT_COLOR] = AG_ColorRGB(240, 240, 240);
+	agColors[DISABLED_COLOR] = AG_ColorRGB(160, 160, 160);
 	agColors[CHECKBOX_COLOR] = agColors[FRAME_COLOR];
 	agColors[CHECKBOX_TXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[GRAPH_BG_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 50);
-	agColors[GRAPH_XAXIS_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 50);
-	agColors[HSVPAL_CIRCLE_COLOR] = AG_MapRGB(agVideoFmt, 0, 0, 0);
-	agColors[HSVPAL_TILE1_COLOR] = AG_MapRGB(agVideoFmt, 140, 140, 140);
-	agColors[HSVPAL_TILE2_COLOR] = AG_MapRGB(agVideoFmt, 80, 80, 80);
-	agColors[MENU_UNSEL_COLOR] = AG_MapRGB(agVideoFmt, 70, 70, 70);
-	agColors[MENU_SEL_COLOR] = AG_MapRGB(agVideoFmt, 40, 40, 110);
-	agColors[MENU_OPTION_COLOR] = AG_MapRGB(agVideoFmt, 223, 207, 128);
-	agColors[MENU_TXT_COLOR] = AG_MapRGB(agVideoFmt, 230, 230, 230);
-	agColors[MENU_SEP1_COLOR] = AG_MapRGB(agVideoFmt, 60, 60, 60);
-	agColors[MENU_SEP2_COLOR] = AG_MapRGB(agVideoFmt, 120, 120, 120);
-	agColors[NOTEBOOK_BG_COLOR] = AG_MapRGB(agVideoFmt, 63, 63, 63);
-	agColors[NOTEBOOK_SEL_COLOR] = AG_MapRGB(agVideoFmt, 117, 117, 116);
+	agColors[GRAPH_BG_COLOR] = AG_ColorRGB(50, 50, 50);
+	agColors[GRAPH_XAXIS_COLOR] = AG_ColorRGB(50, 50, 50);
+	agColors[HSVPAL_CIRCLE_COLOR] = AG_ColorRGB(0, 0, 0);
+	agColors[HSVPAL_TILE1_COLOR] = AG_ColorRGB(140, 140, 140);
+	agColors[HSVPAL_TILE2_COLOR] = AG_ColorRGB(80, 80, 80);
+	agColors[MENU_UNSEL_COLOR] = AG_ColorRGB(70, 70, 70);
+	agColors[MENU_SEL_COLOR] = AG_ColorRGB(40, 40, 110);
+	agColors[MENU_OPTION_COLOR] = AG_ColorRGB(223, 207, 128);
+	agColors[MENU_TXT_COLOR] = AG_ColorRGB(230, 230, 230);
+	agColors[MENU_SEP1_COLOR] = AG_ColorRGB(60, 60, 60);
+	agColors[MENU_SEP2_COLOR] = AG_ColorRGB(120, 120, 120);
+	agColors[NOTEBOOK_BG_COLOR] = AG_ColorRGB(63, 63, 63);
+	agColors[NOTEBOOK_SEL_COLOR] = AG_ColorRGB(117, 117, 116);
 	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[RADIO_SEL_COLOR] = AG_MapRGB(agVideoFmt, 210, 210, 210);
-	agColors[RADIO_OVER_COLOR] = AG_MapRGB(agVideoFmt, 100, 100, 100);
-	agColors[RADIO_HI_COLOR] = AG_MapRGB(agVideoFmt, 180, 180, 180);
-	agColors[RADIO_LO_COLOR] = AG_MapRGB(agVideoFmt, 80, 80, 80);
+	agColors[RADIO_SEL_COLOR] = AG_ColorRGB(210, 210, 210);
+	agColors[RADIO_OVER_COLOR] = AG_ColorRGB(100, 100, 100);
+	agColors[RADIO_HI_COLOR] = AG_ColorRGB(180, 180, 180);
+	agColors[RADIO_LO_COLOR] = AG_ColorRGB(80, 80, 80);
 	agColors[RADIO_TXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[SCROLLBAR_COLOR] = AG_MapRGB(agVideoFmt, 120, 120, 120);
+	agColors[SCROLLBAR_COLOR] = AG_ColorRGB(120, 120, 120);
 	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];
-	agColors[SCROLLBAR_ARR1_COLOR] = AG_MapRGB(agVideoFmt, 200, 200, 200);
-	agColors[SCROLLBAR_ARR2_COLOR] = AG_MapRGB(agVideoFmt, 158, 158, 158);
-	agColors[SEPARATOR_LINE1_COLOR] = AG_MapRGB(agVideoFmt, 165, 165, 165);
-	agColors[SEPARATOR_LINE2_COLOR] = AG_MapRGB(agVideoFmt, 82, 82, 82);
+	agColors[SCROLLBAR_ARR1_COLOR] = AG_ColorRGB(200, 200, 200);
+	agColors[SCROLLBAR_ARR2_COLOR] = AG_ColorRGB(158, 158, 158);
+	agColors[SEPARATOR_LINE1_COLOR] = AG_ColorRGB(165, 165, 165);
+	agColors[SEPARATOR_LINE2_COLOR] = AG_ColorRGB(82, 82, 82);
 	agColors[TABLEVIEW_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLEVIEW_HEAD_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLEVIEW_HTXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TABLEVIEW_CTXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TABLEVIEW_LINE_COLOR] = agColors[LINE_COLOR];
-	agColors[TABLEVIEW_SEL_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 120);
+	agColors[TABLEVIEW_SEL_COLOR] = AG_ColorRGB(50, 50, 120);
 	agColors[TEXTBOX_COLOR] = agColors[FRAME_COLOR];
 	agColors[TEXTBOX_TXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[TEXTBOX_CURSOR_COLOR] = AG_MapRGB(agVideoFmt, 251, 255, 197);
+	agColors[TEXTBOX_CURSOR_COLOR] = AG_ColorRGB(251, 255, 197);
 	agColors[TLIST_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TLIST_BG_COLOR] = agColors[FRAME_COLOR];
 	agColors[TLIST_LINE_COLOR] = agColors[LINE_COLOR];
-	agColors[TLIST_SEL_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 120);
-	agColors[MAPVIEW_GRID_COLOR] = AG_MapRGB(agVideoFmt, 200, 200, 200);
-	agColors[MAPVIEW_CURSOR_COLOR] = AG_MapRGB(agVideoFmt, 100, 100, 100);
-	agColors[MAPVIEW_TILE1_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 50);
-	agColors[MAPVIEW_TILE2_COLOR] = AG_MapRGB(agVideoFmt, 40, 40, 40);
-	agColors[MAPVIEW_MSEL_COLOR] = AG_MapRGB(agVideoFmt, 150, 150, 150);
-	agColors[MAPVIEW_ESEL_COLOR] = AG_MapRGB(agVideoFmt, 180, 180, 180);
-	agColors[TILEVIEW_TILE1_COLOR] = AG_MapRGB(agVideoFmt, 140, 140, 140);
-	agColors[TILEVIEW_TILE2_COLOR] = AG_MapRGB(agVideoFmt, 80, 80, 80);
-	agColors[TILEVIEW_TEXTBG_COLOR] = AG_MapRGB(agVideoFmt, 0, 0, 0);
-	agColors[TILEVIEW_TEXT_COLOR] = AG_MapRGB(agVideoFmt, 240, 240, 240);
-	agColors[TRANSPARENT_COLOR] = AG_MapRGBA(agVideoFmt, 0, 0, 0, 0);
-	agColors[HSVPAL_BAR1_COLOR] = AG_MapRGBA(agVideoFmt, 0, 0, 0, 0);
-	agColors[HSVPAL_BAR2_COLOR] = AG_MapRGBA(agVideoFmt, 240, 240, 240, 0);
+	agColors[TLIST_SEL_COLOR] = AG_ColorRGB(50, 50, 120);
+	agColors[MAPVIEW_GRID_COLOR] = AG_ColorRGB(200, 200, 200);
+	agColors[MAPVIEW_CURSOR_COLOR] = AG_ColorRGB(100, 100, 100);
+	agColors[MAPVIEW_TILE1_COLOR] = AG_ColorRGB(50, 50, 50);
+	agColors[MAPVIEW_TILE2_COLOR] = AG_ColorRGB(40, 40, 40);
+	agColors[MAPVIEW_MSEL_COLOR] = AG_ColorRGB(150, 150, 150);
+	agColors[MAPVIEW_ESEL_COLOR] = AG_ColorRGB(180, 180, 180);
+	agColors[TILEVIEW_TILE1_COLOR] = AG_ColorRGB(140, 140, 140);
+	agColors[TILEVIEW_TILE2_COLOR] = AG_ColorRGB(80, 80, 80);
+	agColors[TILEVIEW_TEXTBG_COLOR] = AG_ColorRGB(0, 0, 0);
+	agColors[TILEVIEW_TEXT_COLOR] = AG_ColorRGB(240, 240, 240);
+	agColors[TRANSPARENT_COLOR] = AG_ColorRGBA(0, 0, 0, 0);
+	agColors[HSVPAL_BAR1_COLOR] = AG_ColorRGBA(0, 0, 0, 0);
+	agColors[HSVPAL_BAR2_COLOR] = AG_ColorRGBA(240, 240, 240, 0);
 	agColors[PANE_COLOR] = agColors[FRAME_COLOR];
-	agColors[PANE_CIRCLE_COLOR] = AG_MapRGBA(agVideoFmt, 170, 170, 170, 0);
-	agColors[MAPVIEW_RSEL_COLOR] = AG_MapRGB(agVideoFmt, 60, 250, 60);
-	agColors[MAPVIEW_ORIGIN_COLOR] = AG_MapRGB(agVideoFmt, 150, 150, 0);
-	agColors[FOCUS_COLOR] = AG_MapRGB(agVideoFmt, 150, 150, 150);
+	agColors[PANE_CIRCLE_COLOR] = AG_ColorRGBA(170, 170, 170, 0);
+	agColors[MAPVIEW_RSEL_COLOR] = AG_ColorRGB(60, 250, 60);
+	agColors[MAPVIEW_ORIGIN_COLOR] = AG_ColorRGB(150, 150, 0);
+	agColors[FOCUS_COLOR] = AG_ColorRGB(150, 150, 150);
 	agColors[TABLE_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLE_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[FIXED_BG_COLOR] = agColors[FRAME_COLOR];
 	agColors[FIXED_BOX_COLOR] = agColors[FRAME_COLOR];
-	agColors[TEXT_DISABLED_COLOR] = AG_MapRGB(agVideoFmt, 170, 170, 170);
+	agColors[TEXT_DISABLED_COLOR] = AG_ColorRGB(170, 170, 170);
 	agColors[MENU_TXT_DISABLED_COLOR] = agColors[TEXT_DISABLED_COLOR];
 	agColors[SOCKET_COLOR] = agColors[FRAME_COLOR];
 	agColors[SOCKET_LABEL_COLOR] = agColors[TEXT_COLOR];
-	agColors[SOCKET_HIGHLIGHT_COLOR] = AG_MapRGB(agVideoFmt, 200, 0, 0);
-	agColors[PROGRESS_BAR_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 120);
-	agColors[WINDOW_BORDER_COLOR] = AG_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[SOCKET_HIGHLIGHT_COLOR] = AG_ColorRGB(200, 0, 0);
+	agColors[PROGRESS_BAR_COLOR] = AG_ColorRGB(50, 50, 120);
+	agColors[WINDOW_BORDER_COLOR] = AG_ColorRGB(100, 100, 100);
 }
 
 #define AG_WriteRGBShift(ds,v) do {	\
@@ -229,6 +232,7 @@ AG_ColorsInit(void)
 	(v)[2] = AG_ReadSint8(ds);	\
 } while (0)
 
+/* Load the standard palette from file. */
 int
 AG_ColorsLoad(const char *file)
 {
@@ -241,11 +245,11 @@ AG_ColorsLoad(const char *file)
 
 	ncolors = (int)AG_ReadUint16(ds);
 	for (i = 0; i < ncolors; i++)
-		agColors[i] = AG_ReadColor(ds, agVideoFmt);
+		agColors[i] = AG_ReadColor(ds);
 
 	ncolors = (int)AG_ReadUint8(ds);
 	for (i = 0; i < ncolors; i++)
-		(void)AG_ReadColor(ds, agVideoFmt);	/* agColorsBorder */
+		(void)AG_ReadColor(ds);			/* agColorsBorder */
 
 	AG_ReadUint8(ds);
 	AG_ReadRGBShift(ds, agFocusSunkColorShift);
@@ -259,6 +263,7 @@ AG_ColorsLoad(const char *file)
 	return (0);
 }
 
+/* Save the standard palette to file. */
 int
 AG_ColorsSave(const char *file)
 {
@@ -272,7 +277,7 @@ AG_ColorsSave(const char *file)
 
 	AG_WriteUint16(ds, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {
-		AG_WriteColor(ds, agVideoFmt, agColors[i]);
+		AG_WriteColor(ds, agColors[i]);
 	}
 	AG_WriteUint8(ds, 0);				/* agColorsBorder */
 
@@ -288,6 +293,7 @@ AG_ColorsSave(const char *file)
 	return (0);
 }
 
+/* Save the current color scheme to the default file location. */
 int
 AG_ColorsSaveDefault(void)
 {
@@ -316,54 +322,59 @@ AG_ColorsDestroy(void)
 		}; \
 	} while (0)
 
-static void
-UpdatedColor(int color)
+static __inline__ void
+UpdatedColor(int colorIdx)
 {
-	if (color == BG_COLOR) {
-#ifdef HAVE_OPENGL
-		if (agView->opengl) {
-			Uint8 r, g, b;
-			AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r,&g,&b);
-			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-		} else
-#endif
-		{
-			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-			SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
-		}
+	if (colorIdx == BG_COLOR &&
+	    agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
+		AGDRIVER_SW_CLASS(agDriver)->videoClear(agDriver,
+		    agColors[colorIdx]);
 	}
 }
 
+/* Set a color scheme entry from RGB components. */
 int
 AG_ColorsSetRGB(int name, Uint8 r, Uint8 g, Uint8 b)
 {
 	ASSERT_VALID_COLOR(name);
-	agColors[name] = SDL_MapRGB(agVideoFmt, r, g, b);
+	agColors[name] = AG_ColorRGB(r,g,b);
 	UpdatedColor(name);
 	return (0);
 }
 
+/* Set a color scheme entry from RGBA components. */
 int
 AG_ColorsSetRGBA(int name, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	ASSERT_VALID_COLOR(name);
-	agColors[name] = SDL_MapRGBA(agVideoFmt, r, g, b, a);
+	agColors[name] = AG_ColorRGBA(r,g,b,a);
 	UpdatedColor(name);
 	return (0);
 }
 
+/* Extra a color scheme entry's RGB components. */
 int
 AG_ColorsGetRGB(int name, Uint8 *r, Uint8 *g, Uint8 *b)
 {
+	AG_Color *C = &agColors[name];
+
 	ASSERT_VALID_COLOR(name);
-	SDL_GetRGB(agColors[name], agVideoFmt, r, g, b);
+	*r = C->r;
+	*g = C->g;
+	*b = C->b;
 	return (0);
 }
 
+/* Extra a color scheme entry's RGBA components. */
 int
 AG_ColorsGetRGBA(int name, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
 {
+	AG_Color *C = &agColors[name];
+
 	ASSERT_VALID_COLOR(name);
-	SDL_GetRGBA(agColors[name], agVideoFmt, r, g, b, a);
+	*r = C->r;
+	*g = C->g;
+	*b = C->b;
+	*a = C->a;
 	return (0);
 }

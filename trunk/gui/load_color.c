@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,27 +34,24 @@
 #include "load_color.h"
 
 void
-AG_WriteColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt, Uint32 color)
+AG_WriteColor(AG_DataSource *ds, AG_Color C)
 {
-	Uint8 r, g, b, a;
-
 	AG_WriteType(ds, AG_SOURCE_COLOR_RGBA);
-	AG_GetRGBA(color, pixfmt, &r,&g,&b,&a);
-	AG_WriteUint8(ds, r);
-	AG_WriteUint8(ds, g);
-	AG_WriteUint8(ds, b);
-	AG_WriteUint8(ds, a);
+	AG_WriteUint8(ds, C.r);
+	AG_WriteUint8(ds, C.g);
+	AG_WriteUint8(ds, C.b);
+	AG_WriteUint8(ds, C.a);
 }
 
-Uint32
-AG_ReadColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
+AG_Color
+AG_ReadColor(AG_DataSource *ds)
 {
-	Uint8 r, g, b, a;
+	AG_Color C;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_COLOR_RGBA, 0);
-	r = AG_ReadUint8(ds);
-	g = AG_ReadUint8(ds);
-	b = AG_ReadUint8(ds);
-	a = AG_ReadUint8(ds);
-	return AG_MapRGBA(pixfmt, r,g,b,a);
+	AG_CHECK_TYPE(ds, AG_SOURCE_COLOR_RGBA, AG_ColorRGB(255,0,0));
+	C.r = AG_ReadUint8(ds);
+	C.g = AG_ReadUint8(ds);
+	C.b = AG_ReadUint8(ds);
+	C.a = AG_ReadUint8(ds);
+	return (C);
 }

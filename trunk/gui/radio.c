@@ -239,13 +239,13 @@ Draw(void *obj)
 		    (i == val),
 		    (i == rad->oversel));
 		if (ri->surface == -1) {
-			AG_TextColor(RADIO_TXT_COLOR);
+			AG_TextColor(agColors[RADIO_TXT_COLOR]);
 			ri->surface = AG_WidgetMapSurface(rad,
 			    AG_TextRender(ri->text));
 		}
 		AG_WidgetBlitSurface(rad, ri->surface, x, y);
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(rad);
 	AG_PopTextState();
 }
 

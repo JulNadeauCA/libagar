@@ -195,14 +195,14 @@ Draw(void *obj)
 		rd.h = WIDGET(pb)->h - pb->pad*2;
 		break;
 	}
-	AG_DrawRectFilled(pb, rd, AG_COLOR(PROGRESS_BAR_COLOR));
+	AG_DrawRectFilled(pb, rd, agColors[PROGRESS_BAR_COLOR]);
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
 		Snprintf(pctText, sizeof(pctText), "%d%%",
 		    AG_ProgressBarPercent(pb));
 
 		AG_PushTextState();
-		AG_TextColor(TEXT_COLOR);
+		AG_TextColor(agColors[TEXT_COLOR]);
 		if (agTextCache) {
 			int su = AG_TextCacheGet(pb->tCache, pctText);
 			AG_WidgetBlitSurface(pb, su,

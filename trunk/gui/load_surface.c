@@ -30,9 +30,7 @@
 #include <core/core.h>
 #include <core/load_version.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
+#include "gui.h"
 #include "load_surface.h"
 
 const AG_Version agSurfaceVer = { 0, 0 };

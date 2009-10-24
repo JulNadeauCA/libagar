@@ -26,6 +26,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "gui.h"
 #include "label.h"
 #include "primitive.h"
 #include "text_cache.h"
@@ -236,7 +237,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		if (lbl->surfaceCont == -1) {
 			/* TODO share this between all widgets */
 			AG_PushTextState();
-			AG_TextColor(TEXT_COLOR);
+			AG_TextColor(agColors[TEXT_COLOR]);
 			lbl->surfaceCont = AG_WidgetMapSurface(lbl,
 			    AG_TextRender(" ... "));
 			AG_PopTextState();
@@ -713,7 +714,7 @@ Draw(void *obj)
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl,
 		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
-		    AG_COLOR(FRAME_COLOR));
+		    agColors[FRAME_COLOR]);
 	
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
@@ -722,7 +723,7 @@ Draw(void *obj)
 			    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)));
 			AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
 			    0, lbl->tPad);
-			AG_PopClipRect();
+			AG_PopClipRect(lbl);
 			return;
 		}
 		AG_PushClipRect(lbl,
@@ -734,7 +735,7 @@ Draw(void *obj)
 	AG_PushTextState();
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
-	AG_TextColor(TEXT_COLOR);
+	AG_TextColor(agColors[TEXT_COLOR]);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
@@ -765,7 +766,7 @@ Draw(void *obj)
 		break;
 	}
 	
-	AG_PopClipRect();
+	AG_PopClipRect(lbl);
 	
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);

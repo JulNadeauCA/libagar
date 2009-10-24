@@ -14,8 +14,8 @@ struct ag_fixed_plotter;
 
 typedef struct ag_fixed_plotter_item {
 	char name[AG_LABEL_MAX];		/* Description */
-	Uint32 color;				/* Line color */
-	AG_FixedPlotterValue *vals;			/* Value array */
+	AG_Color color;				/* Line color */
+	AG_FixedPlotterValue *vals;		/* Value array */
 	Uint32 nvals;
 	Uint32 maxvals;
 	Uint32 limit;

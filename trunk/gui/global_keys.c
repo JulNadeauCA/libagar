@@ -24,7 +24,7 @@
  */
 
 /*
- * Global hotkey bindings. Commonly used for "escape" key.
+ * Application-wide hotkey bindings.
  */
 
 #include <core/core.h>

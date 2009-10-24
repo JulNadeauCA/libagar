@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_EDITABLE_H_
-#define _AGAR_WIDGET_EDITABLE_H_
+#ifndef _AGAR_GUI_EDITABLE_H_
+#define _AGAR_GUI_EDITABLE_H_
 
 #include <agar/gui/widget.h>
 
@@ -131,4 +131,4 @@ AG_EditableBufferChanged(AG_Editable *ed)
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_EDITABLE_H_ */
+#endif /* _AGAR_GUI_EDITABLE_H_ */

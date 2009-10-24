@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_TEXTBOX_H_
-#define _AGAR_WIDGET_TEXTBOX_H_
+#ifndef _AGAR_GUI_TEXTBOX_H_
+#define _AGAR_GUI_TEXTBOX_H_
 
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
@@ -112,4 +112,4 @@ void    AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_TEXTBOX_H_ */
+#endif /* _AGAR_GUI_TEXTBOX_H_ */

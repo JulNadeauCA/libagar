@@ -110,19 +110,19 @@ Draw(void *obj)
 	if (fx->flags & AG_FIXED_BOX) {
 		AG_DrawBox(fx,
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    AG_COLOR(FRAME_COLOR));
+		    agColors[FRAME_COLOR]);
 	} else if (fx->flags & AG_FIXED_INVBOX) {
 		AG_DrawBox(fx,
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    AG_COLOR(FRAME_COLOR));
+		    agColors[FRAME_COLOR]);
 	} else if (fx->flags & AG_FIXED_FRAME) {
 		AG_DrawFrame(fx,
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    AG_COLOR(FRAME_COLOR));
+		    agColors[FRAME_COLOR]);
 	} else if (fx->flags & AG_FIXED_FILLBG) {
 		AG_DrawRectFilled(fx,
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)),
-		    AG_COLOR(FIXED_BG_COLOR));
+		    agColors[FIXED_BG_COLOR]);
 	}
 
 	WIDGET_FOREACH_CHILD(chld, fx)

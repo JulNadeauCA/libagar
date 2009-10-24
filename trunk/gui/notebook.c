@@ -141,7 +141,7 @@ Draw(void *obj)
 	if (nb->sel_tab != NULL) {
 		AG_PushClipRect(nb, nb->r);
 		AG_WidgetDraw(&nb->sel_tab->box);
-		AG_PopClipRect();
+		AG_PopClipRect(nb);
 	}
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
@@ -151,7 +151,7 @@ Draw(void *obj)
 		if (tab->label == -1) {
 			AG_PushTextState();
 			AG_TextFont(nb->tabFont);
-			AG_TextColor(NOTEBOOK_TXT_COLOR);
+			AG_TextColor(agColors[NOTEBOOK_TXT_COLOR]);
 			tab->label = AG_WidgetMapSurface(nb,
 			    AG_TextRender(tab->labelText));
 			AG_PopTextState();
@@ -169,7 +169,7 @@ Draw(void *obj)
 			if (nb->lblPartial == -1) {
 				AG_PushTextState();
 				AG_TextFont(nb->tabFont);
-				AG_TextColor(NOTEBOOK_TXT_COLOR);
+				AG_TextColor(agColors[NOTEBOOK_TXT_COLOR]);
 				nb->lblPartial = AG_WidgetMapSurface(nb,
 				    AG_TextRender("..."));
 				AG_PopTextState();
@@ -320,7 +320,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_SizeReq rTab;
 	AG_SizeAlloc aTab;
 
-	AG_LockVFS(agView);
+	AG_LockVFS(nb);
 	AG_ObjectLock(nb);
 
 	if (nb->sel_tab != NULL) {
@@ -347,7 +347,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 /* 	AG_WidgetFocus(tab); */
 out:
 	AG_ObjectUnlock(nb);
-	AG_UnlockVFS(agView);
+	AG_UnlockVFS(nb);
 }
 
 void

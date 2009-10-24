@@ -365,7 +365,7 @@ Draw(void *obj)
 	} else {
 		AG_PushClipRect(px, px->rClip);
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
-		AG_PopClipRect();
+		AG_PopClipRect(px);
 	}
 }
 

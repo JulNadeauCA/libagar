@@ -26,11 +26,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include "geometry.h"
-#include "surface.h"
-#include "view.h"
-#include "text.h"
-#include "widget.h"
+#include "gui.h"
 #include "text_cache.h"
 
 /* #define TEXTCACHE_DEBUG */
