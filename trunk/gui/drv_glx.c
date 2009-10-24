@@ -28,6 +28,9 @@
  * driver; one context is created for each Agar window.
  */
 
+#include <config/have_glx.h>
+#ifdef HAVE_GLX
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
@@ -476,8 +479,10 @@ ProcessEvents(void *drvCaller)
 			ka = (xev.type == KeyPress) ? AG_KEY_PRESSED :
 			                              AG_KEY_RELEASED;
 			if (LookupKeyCode(xev.xkey.keycode, &ks)) {
+#if 0
 				printf("KeyPress ks=0x%x (ucs=%c)\n",
 				    (Uint)ks, (char)ucs);
+#endif
 				AG_KeyboardUpdate(agKeyboard, ka, ks, ucs);
 				if ((win = LookupWindowByID(xev.xkey.window))
 				    != NULL) {
@@ -514,12 +519,15 @@ ProcessEvents(void *drvCaller)
 #endif
 		case EnterNotify:
 		case LeaveNotify:
+			/* printf(">{Enter,Leave}Notify\n"); */
 			break;
 		case FocusIn:
 		case FocusOut:
+			/* printf(">Focus{In,Out}\n"); */
 			break;
 		case MapNotify:
 		case UnmapNotify:
+			/* printf(">{Map,Unmap}Notify\n"); */
 			break;
 		case KeymapNotify:
 			UpdateKeyboard(agKeyboard, xev.xkeymap.key_vector);
@@ -540,7 +548,7 @@ ProcessEvents(void *drvCaller)
 			}
 			break;
 		case ReparentNotify:
-			printf("ReparentNotify\n");
+			/* printf("ReparentNotify\n"); */
 			break;
 		case ClientMessage:
 			if ((xev.xclient.format == 32) &&
@@ -791,8 +799,6 @@ UploadTexture(Uint *rv, AG_Surface *suSrc, float *texcoord)
 
 	AG_SurfaceFree(suTex);
 	*rv = texture;
-//	printf("Uploaded %dx%d texture: %d\n", w, h, *rv);
-
 	return (0);
 }
 
@@ -2051,7 +2057,7 @@ MoveWindow(AG_Window *win, int x, int y)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 
-	printf("XMoveWindow(%d,%d)\n", x, y);
+	/* printf("XMoveWindow(%d,%d)\n", x, y); */
 	XMoveWindow(agDisplay, glx->w, x, y);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
 	return (0);
@@ -2097,7 +2103,8 @@ MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 
-	printf("XMoveResizeWindow: %d,%d (%dx%d)\n", a->x, a->y, a->w, a->h);
+	/* printf("XMoveResizeWindow: %d,%d (%dx%d)\n",
+	    a->x, a->y, a->w, a->h); */
 	XMoveResizeWindow(agDisplay, glx->w,
 	    a->x, a->y,
 	    a->w, a->h);
@@ -2203,3 +2210,5 @@ AG_DriverMwClass agDriverGLX = {
 	PostResizeCallback,
 	SetBorderWidth
 };
+
+#endif /* HAVE_GLX */
