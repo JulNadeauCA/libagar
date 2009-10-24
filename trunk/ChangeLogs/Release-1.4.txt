@@ -1,0 +1,37 @@
+
+Release Notes for Agar 1.4 (Landscapes of Frozen Methane)
+---------------------------------------------------------
+
+(Work in progress)
+
+Here are some of the most notable changes since Agar 1.3.4, in no
+particular order. A wikified version of this list is available at:
+http://wiki.libagar.org/wiki/Agar-1.4.
+
+- Added support for multiple native windows; rework of the basic graphics
+  and input device interface. As of this release, the available drivers are:
+  - "glx" (GL rendering via X Window System; multiple windows)
+  - "sdlfb" (framebuffer rendering via SDL; single window)
+  - "sdlgl" (GL rendering via SDL; single window)
+  Backward compatibility is preserved for applications using AG_InitVideo()
+  and AG_InitVideoSDL() - single-window graphics drivers continue to use
+  Agar's built-in window manager.
+- Agar can now be built without the SDL library, where the SDL graphics
+  driver is not needed.
+- Implement widget "actions" as a generic method of handling mouse and
+  keyboard actions per user preferences (see AG_Widget(3)/ACTIONS).
+- Windows are now attached, like widgets, using generic AG_ObjectAttach()
+  and AG_ObjectDetach(), against a parent AG_Driver(3). With multiple-window
+  drivers, there is one Driver instance per Window. AG_ViewDetach() is now
+  marked deprecated.
+- Added AG_Tbl(3), AG_Tree(3) interfaces to ag_core.
+- Fix handling of dynamically-allocated strings in AG_CopyVariable().
+- Implement AG_TlistUniq(), AG_TlistAddHead().
+- Avoid a very inefficient tree traversal in AG_LookupClass() by keeping
+  a separate hash table for class specification strings.
+- Consistently provide plain string variants for every function accepting
+  format string arguments. This allows for more efficient code, and avoids
+  complications with language bindings.
+- As the "window-*" prefixes in events such as "window-mousemotion" is no
+  longer relevant, mark them deprecated in favor of "mouse-*" and "key-*".
+
