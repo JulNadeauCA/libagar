@@ -119,6 +119,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
+	AG_Driver *drv = WIDGET(pa)->drv;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dx = AG_INT(3);
@@ -135,12 +136,14 @@ MouseMotion(AG_Event *event)
 			if (pa->rx < 2) { pa->rx = 2; }
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (OverDivControl(pa, x)) {
-				AG_SetCursor(AG_HRESIZE_CURSOR);
+				AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
 			}
 			break;
 		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
 		    OverDivControl(pa, x)) {
-			AG_SetCursor(AG_HRESIZE_CURSOR);
+			AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
+		} else {
+			AG_PopCursor(drv);
 		}
 		break;
 	case AG_PANE_VERT:
@@ -153,12 +156,14 @@ MouseMotion(AG_Event *event)
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
 			if (OverDivControl(pa, y)) {
-				AG_SetCursor(AG_VRESIZE_CURSOR);
+				AG_PushStockCursor(drv, AG_VRESIZE_CURSOR);
 			}
 			break;
 		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
 		    OverDivControl(pa, y)) {
-			AG_SetCursor(AG_VRESIZE_CURSOR);
+			AG_PushStockCursor(drv, AG_VRESIZE_CURSOR);
+		} else {
+			AG_PopCursor(drv);
 		}
 		break;
 	}
