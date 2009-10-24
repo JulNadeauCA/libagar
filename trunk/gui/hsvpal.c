@@ -681,10 +681,9 @@ static void
 OnAttach(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_SELF();
-	AG_Driver *drv = WIDGET(pal)->drv;
 	
-	pal->pixel = AG_MapRGBA(drv->videoFmt, 0,0,0,255);
-	AG_BindPointer(pal, "pixel-format", (void *)&drv->videoFmt);
+	pal->pixel = AG_MapRGBA(agSurfaceFmt, 0,0,0,255);
+	AG_BindPointer(pal, "pixel-format", (void *)&agSurfaceFmt);
 }
 
 static void
@@ -742,7 +741,7 @@ Init(void *obj)
 #endif /* AG_DEBUG */
 	
 	AG_SetEvent(pal, "bound", Bound, NULL);
-	AG_SetEvent(pal, "attach", OnAttach, NULL);
+	AG_AddEvent(pal, "attached", OnAttach, NULL);
 }
 
 static void
