@@ -92,20 +92,24 @@ typedef struct ag_window {
 	AG_Rect rSaved;				/* Saved geometry */
 	int minPct;				/* For MINSIZEPCT */
 
-	AG_TAILQ_HEAD(,ag_window) subwins;	/* Sub-windows */
-	AG_TAILQ_ENTRY(ag_window) windows;	/* Active window list */
-	AG_TAILQ_ENTRY(ag_window) swins;	/* Sub-window list */
-	AG_TAILQ_ENTRY(ag_window) detach;	/* Zombie window list */
+	struct ag_window *parent;		/* Parent window */
+	AG_TAILQ_HEAD(,ag_window) subwins;	/* For AG_WindowAttach() */
+	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
+	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
 
 	struct ag_icon *icon;			/* Window icon */
 	AG_Rect r;				/* View area */
 	int nFocused;				/* Widgets in focus chain */
 } AG_Window;
 
+AG_TAILQ_HEAD(ag_windowq, ag_window);
+
 __BEGIN_DECLS
 extern AG_WidgetClass agWindowClass;
 extern int agWindowIconWidth;
 extern int agWindowIconHeight;
+extern struct ag_widgetq agWidgetDetachQ;	/* Widget pre-detach queue */
+extern struct ag_windowq agWindowDetachQ;	/* Window detach queue */
 
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
@@ -146,8 +150,6 @@ int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),0)
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
-#define	 AG_WindowSetGeometryMax(win) \
-	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
 
 void	 AG_WindowSaveGeometry(AG_Window *);
 int	 AG_WindowRestoreGeometry(AG_Window *);
@@ -163,28 +165,21 @@ void	 AG_WindowHide(AG_Window *);
 void	 AG_WindowSetVisibility(AG_Window *, int);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
-int	 AG_WindowIsSurrounded(AG_Window *);
 
 void	 AG_WindowFocus(AG_Window *);
-int      AG_WindowFocusAtPos(int, int);
+int      AG_WindowFocusAtPos(AG_DriverSw *, int, int);
 int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
-
-/* Generic event handlers */
 void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
+void	 AG_FreeDetachedWindows(void);
 
 #define AGWINDOW(win)        ((AG_Window *)(win))
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
-
-#ifdef AG_LEGACY
-struct ag_window *AG_FindWindow(const char *)
-                  DEPRECATED_ATTRIBUTE;
-#endif /* AG_LEGACY */
 
 /*
  * Render a window to the display (must be enclosed between calls to
@@ -194,42 +189,52 @@ struct ag_window *AG_FindWindow(const char *)
 static __inline__ void
 AG_WindowDraw(AG_Window *win)
 {
-	if (!win->visible)
-		return;
+	AG_Driver *drv = AGWIDGET(win)->drv;
 
-	AG_WidgetDraw(win);
-	if (!agView->opengl)
-		AG_ViewUpdateFB(&AGWIDGET(win)->rView);
+	if (win->visible)
+		AGDRIVER_CLASS(drv)->renderWindow(win);
 }
 
 /*
  * Return the currently focused window.
- * The View VFS must be locked.
+ * XXX 1.4
  */
 static __inline__ AG_Window *
 AG_WindowFindFocused(void)
 {
-	return AGOBJECT_LAST_CHILD(agView,ag_window);
+	if (agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
+		return AGOBJECT_LAST_CHILD(agDriver,ag_window);
+	} else {
+		return (NULL);
+	}
 }
 
 /*
  * Evaluate whether the given window is holding focus.
- * The View VFS must be locked.
+ * XXX 1.4
  */
 static __inline__ int
 AG_WindowIsFocused(AG_Window *win)
 {
-	return (AGOBJECT_LAST_CHILD(agView,ag_window) == (win));
+	AG_Driver *drv = AGWIDGET(win)->drv;
+
+	if (AGDRIVER_SINGLE(drv)) {
+		return (AGOBJECT_LAST_CHILD(drv,ag_window) == (win));
+	} else {
+		return (1);
+	}
 }
 
 /*
  * Return the effective focus state of a widget.
  * The Widget and View VFS must be locked.
+ * XXX 1.4
  */
 static __inline__ int
 AG_WidgetIsFocused(void *p)
 {
 	AG_Widget *wid = (AG_Widget *)p;
+
 	return ((AGWIDGET(p)->flags & AG_WIDGET_FOCUSED) &&
                 (wid->window == NULL || AG_WindowIsFocused(wid->window)));
 }
@@ -277,7 +282,11 @@ AG_WindowIsVisible(AG_Window *win)
 static __inline__ int
 AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
 {
-	return (agView->winSelected == win && agView->winop == op);
+	AG_Driver *drv = AGWIDGET(win)->drv;
+
+	return (AGDRIVER_SINGLE(drv) &&
+	        AGDRIVER_SW(drv)->winSelected == win &&
+	        AGDRIVER_SW(drv)->winop == op);
 }
 
 /*
@@ -324,6 +333,21 @@ AG_WidgetSetGeometry(void *wid, AG_Rect r)
 	AG_WidgetUpdate(wid);
 	AG_ObjectUnlock(wid);
 }
+
+static __inline__ void
+AG_WindowSetGeometryMax(AG_Window *win)
+{
+	Uint wMax, hMax;
+
+	AG_GetDisplaySize((void *)AGWIDGET(win)->drv, &wMax, &hMax);
+	AG_WindowSetGeometry(win, 0, 0, wMax, hMax);
+}
+
+#ifdef AG_LEGACY
+AG_Window *AG_FindWindow(const char *)	DEPRECATED_ATTRIBUTE;
+void       AG_ViewAttach(AG_Window *)	DEPRECATED_ATTRIBUTE;
+void       AG_ViewDetach(AG_Window *)	DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>
