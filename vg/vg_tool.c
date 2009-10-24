@@ -29,6 +29,7 @@
 
 #include <core/core.h>
 #include <gui/window.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"

@@ -28,8 +28,11 @@
  */
 
 #include <core/core.h>
+
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/iconmgr.h>
+
 #include "vg.h"
 #include "vg_view.h"
 #include "icons.h"
@@ -44,7 +47,7 @@ MouseButtonDown(void *t, VG_Vector v, int button)
 		if ((vn = VG_Nearest(vv, v)) == NULL) {
 			return (0);
 		}
-		if ((AG_KeyMod)SDL_GetModState() & AG_KEYMOD_CTRL) {
+		if (AG_GetModState(agKeyboard) & AG_KEYMOD_CTRL) {
 			AG_INVFLAGS(vn->flags, VG_NODE_SELECTED);
 		} else {
 			VG_UnselectAll(vv->vg);
@@ -91,6 +94,7 @@ PostDraw(void *t, VG_View *vv)
 					c.g = 255 - (Uint8)(prox*255.0f/vRange);
 					c.b = 0;
 				}
+				c.a = 255;
 				AG_DrawRectFilled(vv, r, VG_MapColorRGB(c));
 			}
 		}

@@ -9,7 +9,7 @@
 int
 main(int argc, char *argv[])
 {
-	int guiFlags = AG_VIDEO_RESIZABLE;
+	Uint guiFlags = AG_VIDEO_RESIZABLE;
 	AG_Window *win;
 	AG_Scrollview *sv;
 	int x, y;
@@ -23,11 +23,7 @@ main(int argc, char *argv[])
 	if (argc > 1) {
 		if (strcmp(argv[1], "-g") == 0) {
 			printf("Forcing GL mode\n");
-			AG_SetBool(agConfig, "view.opengl", 1);
 			guiFlags |= AG_VIDEO_OPENGL;
-		} else if (strcmp(argv[1], "-G") == 0) {
-			printf("Forcing FB mode\n");
-			AG_SetBool(agConfig, "view.opengl", 0);
 		}
 	}
 	

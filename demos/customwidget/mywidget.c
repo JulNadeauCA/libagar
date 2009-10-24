@@ -104,7 +104,7 @@ Draw(void *p)
 	 */
 	AG_DrawBox(my,
 	    AG_RECT(0, 0, AGWIDGET(my)->w, AGWIDGET(my)->h), 1,
-	    AG_COLOR(BUTTON_COLOR));
+	    agColors[BUTTON_COLOR]);
 
 	/*
 	 * Render some text into a new surface. In OpenGL mode, the

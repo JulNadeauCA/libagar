@@ -269,7 +269,7 @@ Draw(void *p)
 	if (fr->su != NULL) {
 		AG_PushClipRect(av, AG_RECT(0, 0, WIDTH(av), HEIGHT(av)));
 		AG_WidgetBlit(av, fr->su, av->ranim.x, av->ranim.y);
-		AG_PopClipRect();
+		AG_PopClipRect(av);
 	}
 }
 

@@ -41,9 +41,10 @@
 AG_Window *
 DEV_DisplaySettings(void)
 {
+	AG_Driver *drv = agDriver;		/* XXX 1.4 single-display */
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Label *lbl;
+/*	AG_Label *lbl; */
 
 	if ((win = AG_WindowNewNamedS(AG_WINDOW_NORESIZE,
 	    "DEV_DisplaySettings")) == NULL) {
@@ -54,16 +55,23 @@ DEV_DisplaySettings(void)
 
 	vb = AG_VBoxNew(win, 0);
 	{
-		AG_LabelNew(vb, 0, _("OpenGL mode: %s"),
-		    agView->opengl ? _("yes") : _("no"));
-		AG_LabelNewPolled(vb, AG_LABEL_HFILL, "%dx%d",
-		    &agView->w, &agView->h);
+		AG_LabelNew(vb, 0, _("Driver: %s"),
+		    AGDRIVER_CLASS(drv)->name);
 
-		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Window op: %d (%p)"),
-		    &agView->winop, &agView->winSelected);
-		AG_LabelSizeHint(lbl, 1, _("Window op: 000 (0x00000000)"));
+		AG_LabelNew(vb, 0, _("OpenGL support: %s"),
+		    AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL ?
+		    _("yes") : _("no"));
+		AG_LabelNew(vb, 0, _("SDL support: %s"),
+		    AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL ?
+		    _("yes") : _("no"));
 
+#if 0
+		AG_LabelNewPolled(vb, AG_LABEL_HFILL,
+		    _("Display: %dx%d"),
+		    &drv->w, &drv->h);
+		AG_LabelNewPolled(vb, AG_LABEL_HFILL,
+		    _("Depth: %dbpp"),
+		    &drv->depth);
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
 		    _("Refresh rate (effective): %d"), &agView->rCur);
 		AG_LabelSizeHint(lbl, 1,
@@ -73,6 +81,7 @@ DEV_DisplaySettings(void)
 		    _("Refresh rate (nominal): %d"), &agView->rNom);
 		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (nominal): 000"));
+#endif
 	}
 	return (win);
 }

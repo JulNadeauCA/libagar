@@ -33,6 +33,7 @@
 #include <core/rcs.h>
 #endif
 
+#include <gui/gui.h>
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/vbox.h>
@@ -140,7 +141,7 @@ DEV_BrowserOpenGeneric(AG_Object *ob)
 	}
 	if (oent != NULL) {
 		AG_WindowShow(oent->win);
-		agView->winToFocus = oent->win;
+		AG_WindowFocus(oent->win);
 		return;
 	}
 	
@@ -226,7 +227,7 @@ DEV_BrowserOpenData(void *p)
 	}
 	if (oent != NULL) {
 		AG_WindowShow(oent->win);
-		agView->winToFocus = oent->win;
+		AG_WindowFocus(oent->win);
 		return;
 	}
 	

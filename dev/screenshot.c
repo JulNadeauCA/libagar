@@ -27,6 +27,7 @@
  * Screenshot upload tool. This runs in a separate thread, connects to the
  * given agar screenshot server and periodically uploads the contents of
  * the display in JPEG format.
+ * XXX 1.4 single-display
  */
 
 #include <config/ag_network.h>
@@ -104,8 +105,8 @@ XmitLoop(int fd)
 	
 	jpeg_create_compress(&jcomp);
 
-	jcomp.image_width = agView->w;
-	jcomp.image_height = agView->h;
+	jcomp.image_width = agDriverSw->w;
+	jcomp.image_height = agDriverSw->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
 
@@ -113,7 +114,7 @@ XmitLoop(int fd)
 	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(agView->w*3);
+	jcopybuf = Malloc(agDriverSw->w*3);
 
 	for (;;) {
 		JSAMPROW row[1];
@@ -128,15 +129,17 @@ XmitLoop(int fd)
 
 		Snprintf(status, sizeof(status), _("Transmitting frame %d"),
 		    nframe);
-
-		if (!agView->opengl) {
-			su = agView->v;
-		} else {
-#ifdef HAVE_OPENGL
-			su = AG_CaptureGLView();
-#else
-			su = NULL;
-#endif
+	
+		if (!AGDRIVER_SINGLE(agDriver)) {
+			Verbose("Not using a single-display driver\n");
+			AG_MutexUnlock(&xmit_lock);
+			return;
+		}
+		if (AGDRIVER_SW_CLASS(agDriver)->videoCapture(agDriver, &su)
+		    == -1) {
+			Verbose("Capture failed: %s\n", AG_GetError());
+			AG_MutexUnlock(&xmit_lock);
+			return;
 		}
 
 		jpeg_start_compress(&jcomp, TRUE);
@@ -147,7 +150,7 @@ XmitLoop(int fd)
 			Uint8 *pDst = jcopybuf;
 			Uint8 r, g, b;
 
-			for (x = agView->w; x > 0; x--) {
+			for (x = agDriverSw->w; x > 0; x--) {
 				AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format,
 				    &r,&g,&b);
 				*pDst++ = r;
@@ -162,7 +165,7 @@ XmitLoop(int fd)
 		jpeg_finish_compress(&jcomp);
 
 #ifdef HAVE_OPENGL
-		if (agView->opengl)
+		if (AGDRIVER_CLASS(agDriver)->flags & AG_DRIVER_OPENGL)
 			AG_SurfaceFree(su);
 #endif
 
@@ -257,6 +260,11 @@ out1:
 static void
 Connect(AG_Event *event)
 {
+	if (agDriverOps->wm != AG_WM_SINGLE) {
+		AG_TextMsg(AG_MSG_ERROR,
+		    "This feature requires a single-display graphics driver");
+		return;
+	}
 	if (AG_ThreadCreate(&thread, XmitThread, NULL) != 0) {
 		AG_TextMsg(AG_MSG_ERROR, "Failed to create thread!");
 	}

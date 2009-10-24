@@ -219,11 +219,11 @@ DrawNumerical(void *p)
 	int xOffs = -mv->xOffs*mv->wEnt + 8;
 	int yOffs = -mv->yOffs*mv->hEnt + 8;
 
-	AG_DrawBox(mv, mv->r, -1, AG_COLOR(BG_COLOR));
+	AG_DrawBox(mv, mv->r, -1, agColors[BG_COLOR]);
 	AG_PushClipRect(mv, mv->r);
 	
 	AG_PushTextState();
-	AG_TextColor(TEXT_COLOR);
+	AG_TextColor(agColors[TEXT_COLOR]);
 
 	for (m = 0, y = yOffs;
 	     m < MROWS(M) && y < mv->r.h;
@@ -246,11 +246,11 @@ DrawNumerical(void *p)
 		}
 	}
 	
-	AG_DrawLineV(mv, xMin-2, 2, y, AG_COLOR(TEXT_COLOR));
-	AG_DrawLineV(mv, xMax+4, 2, y, AG_COLOR(TEXT_COLOR));
+	AG_DrawLineV(mv, xMin-2, 2, y, agColors[TEXT_COLOR]);
+	AG_DrawLineV(mv, xMax+4, 2, y, agColors[TEXT_COLOR]);
 
 	AG_PopTextState();
-	AG_PopClipRect();
+	AG_PopClipRect(mv);
 }
 
 static void
@@ -264,7 +264,7 @@ DrawGreyscale(void *p)
 	int xOffs = -mv->xOffs*mv->scale;
 	int yOffs = -mv->yOffs*mv->scale;
 
-	AG_DrawBox(mv, mv->r, -1, AG_COLOR(BG_COLOR));
+	AG_DrawBox(mv, mv->r, -1, agColors[BG_COLOR]);
 	AG_PushClipRect(mv, mv->r);
 
 	for (m = 0; m < MROWS(A); m++) {
@@ -283,21 +283,21 @@ DrawGreyscale(void *p)
 		     n < MCOLS(A) && x < mv->r.w;
 		     n++, x += mv->scale) {
 		     	M_Real dv = M_Get(A,m,n);
-			Uint32 c;
+			AG_Color c;
 			Uint8 v;
 
 			if (dv == 0.0) {
 				continue;
 			}
 			if (dv == HUGE_VAL) {
-				c = AG_MapRGB(agVideoFmt, 200,0,0);
+				c = AG_ColorRGB(200,0,0);
 			} else {
 				if (dv >= 0.0) {
 					v = 127 + (Uint8)(dv*127.0/big);
-					c = AG_MapRGB(agVideoFmt, v,0,0);
+					c = AG_ColorRGB(v,0,0);
 				} else {
 					v = 127 + (Uint8)(Fabs(dv)*127.0/big);
-					c = AG_MapRGB(agVideoFmt, 0,0,v);
+					c = AG_ColorRGB(0,0,v);
 				}
 			}
 			AG_DrawRectFilled(mv,
@@ -305,7 +305,7 @@ DrawGreyscale(void *p)
 			    c);
 		}
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(mv);
 }
 
 static void

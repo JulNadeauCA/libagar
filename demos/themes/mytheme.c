@@ -23,8 +23,8 @@ TitlebarBackground(void *tbar, int isPressed, int windowIsFocused)
 	    AG_RECT(0, 0, WIDTH(tbar), HEIGHT(tbar)),
 	    isPressed ? -1 : 1,
 	    8,
-	    windowIsFocused ? AG_COLOR(TITLEBAR_FOCUSED_COLOR) :
-	                      AG_COLOR(TITLEBAR_UNFOCUSED_COLOR));
+	    windowIsFocused ? agColors[TITLEBAR_FOCUSED_COLOR] :
+	                      agColors[TITLEBAR_UNFOCUSED_COLOR]);
 }
 
 static void
@@ -34,7 +34,7 @@ ButtonBackground(void *btn, int isPressed)
 	    AG_RECT(0, 0, WIDTH(btn), HEIGHT(btn)),
 	    isPressed ? -1 : 1,
 	    6,
-	    AG_COLOR(BUTTON_COLOR));
+	    agColors[BUTTON_COLOR]);
 }
 
 static void
@@ -44,14 +44,14 @@ CheckboxButton(void *cbox, int state, int size)
 	    AG_RECT(0, 0, size, size),
 	    state ? -1 : 1,
 	    6,
-	    AG_COLOR(CHECKBOX_COLOR));
+	    agColors[CHECKBOX_COLOR]);
 }
 
 static void
 TextboxBackground(void *tbox, AG_Rect r, int isCombo)
 {
 	AG_DrawBoxRounded(tbox, r, isCombo?1:-1, 6,
-	    AG_COLOR(TEXTBOX_COLOR));
+	    agColors[TEXTBOX_COLOR]);
 }
 
 /*

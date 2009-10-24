@@ -40,10 +40,11 @@ CreateWindow(void)
 
 	/*
 	 * Create a new window and attach widgets to it. The Window object
-	 * is simply a container widget that packs its children vertically.
+	 * acts as a container widget that packs its children vertically.
 	 */
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Some Agar-GUI widgets");
+	AG_ObjectSetName(win, "MainWindow");
 	
 	/*
 	 * Pane provides two Box containers which can be resized using
@@ -136,6 +137,7 @@ CreateWindow(void)
 	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(div1, 0);
 	AG_ExpandHoriz(ucom);
+	AG_UComboSizeHint(ucom, "Item #1234", 5);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
@@ -165,7 +167,8 @@ CreateWindow(void)
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to a fixed-size buffer and supports UTF-8.
 	 */
-	AG_TextboxNew(div1, 0, "Enter text: ");
+	tbox = AG_TextboxNew(div1, 0, "Enter text: ");
+	AG_ExpandHoriz(tbox);
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
@@ -307,8 +310,10 @@ static void
 SetTheme(AG_Event *event)
 {
 	AG_Style *style = AG_PTR(1);
+	AG_Driver *drv;
 
-	AG_SetStyle(agView, style);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver)
+		AG_SetStyle(drv, style);
 }
 
 static void
@@ -356,11 +361,11 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	int w = 640, h = 480, fps = -1;
 	int useDoubleBuf = 0;
-	int guiFlags = AG_VIDEO_RESIZABLE;
 	char *colorFile = NULL;
+	char *drivers = NULL;
 
 	/* Initialize Agar-Core. */
-	if (AG_InitCore("agar-themes-demo", 0) == -1) {
+	if (AG_InitCore("agar-themes-demo", AG_VERBOSE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
@@ -372,25 +377,19 @@ main(int argc, char *argv[])
 	{
 		int c;
 
-		while ((c = getopt(argc, argv, "?vgsw:h:fbBt:T:r:Rc:")) != -1) {
+		while ((c = getopt(argc, argv, "?d:vw:h:fbBt:T:r:c:")) != -1) {
 			extern char *optarg;
 
 			switch (c) {
+			case 'd':
+				drivers = optarg;
+				break;
 			case 'v':
 				/* Display Agar version information */
 				printf("Agar version: %d.%d.%d\n", ver.major,
 				    ver.minor, ver.patch);
 				printf("Release name: \"%s\"\n", ver.release);
 				exit(0);
-			case 'g':
-				/* Force OpenGL mode */
-				AG_SetBool(agConfig, "view.opengl", 1);
-				guiFlags |= AG_VIDEO_OPENGL;
-				break;
-			case 's':
-				/* Force SDL mode */
-				AG_SetBool(agConfig, "view.opengl", 0);
-				break;
 			case 'w':
 				/* Set display width in pixels */
 				w = atoi(optarg);
@@ -423,10 +422,6 @@ main(int argc, char *argv[])
 				/* Change the default font */
 				AG_TextParseFontSpec(optarg);
 				break;
-			case 'R':
-				/* Disable resizable window. */
-				guiFlags &= ~(AG_VIDEO_RESIZABLE);
-				break;
 			case 'c':
 				/* Load color scheme */
 				colorFile = optarg;
@@ -442,9 +437,9 @@ main(int argc, char *argv[])
 		}
 	}
 #endif
-	
+
 	/* Initialize Agar-GUI. */
-	if (AG_InitVideo(w, h, 32, guiFlags) == -1) {
+	if (AG_InitGraphics(drivers) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
@@ -464,16 +459,17 @@ main(int argc, char *argv[])
 
 	/* Display the version and current graphics driver in use. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	AG_ObjectSetName(win, "PanelWindow");
+	AG_WindowSetCaption(win, "Agar version / driver");
 	{
 		AG_Label *lbl;
 		AG_Box *hBox;
 
 		lbl = AG_LabelNew(win, 0,
 		    "Using Agar version: %d.%d.%d (\"%s\")\n"
-		    "Graphics mode: %s",
+		    "Graphics driver: %s",
 		    ver.major, ver.minor, ver.patch, ver.release,
-		    AG_GetBool(agConfig,"view.opengl") ?
-		    "OpenGL" : "Unaccelerated (framebuffer)");
+		    AGWIDGET(win)->drvOps->name);
 		AG_ExpandHoriz(lbl);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
@@ -499,28 +495,33 @@ main(int argc, char *argv[])
 		AG_WindowShow(win);
 	}
 
-	/* Create an application menu. */
-	appMenu = AG_MenuNewGlobal(0);
-	m = AG_MenuNode(appMenu->root, "File", NULL);
-	{
-		AG_MenuAction(m, "Preferences...", agIconGear.s,
-		    Preferences, NULL);
+	/*
+	 * Create an application menu if we are using a single-display
+	 * driver (e.g., sdlfb, sdlgl).
+	 */
+	if (agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
+		appMenu = AG_MenuNewGlobal(0);
+		m = AG_MenuNode(appMenu->root, "File", NULL);
+		{
+			AG_MenuAction(m, "Preferences...", agIconGear.s,
+			    Preferences, NULL);
 #ifdef AG_DEBUG
-		AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s,
-		    ShowGuiDebugger, NULL);
+			AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s,
+			    ShowGuiDebugger, NULL);
 #endif
-		AG_MenuSeparator(m);
-		AG_MenuAction(m, "Quit", agIconClose.s,
-		    Quit, NULL);
-	}
-	m = AG_MenuNode(appMenu->root, "Test", NULL);
-	{
-		AG_MenuNode(m, "Submenu A", NULL);
-		AG_MenuSeparator(m);
-		m = AG_MenuNode(m, "Submenu B", NULL);
-		AG_MenuNode(m, "Submenu C", NULL);
-		AG_MenuNode(m, "Submenu D", NULL);
-		AG_MenuNode(m, "Submenu E", NULL);
+			AG_MenuSeparator(m);
+			AG_MenuAction(m, "Quit", agIconClose.s,
+			    Quit, NULL);
+		}
+		m = AG_MenuNode(appMenu->root, "Test", NULL);
+		{
+			AG_MenuNode(m, "Submenu A", NULL);
+			AG_MenuSeparator(m);
+			m = AG_MenuNode(m, "Submenu B", NULL);
+			AG_MenuNode(m, "Submenu C", NULL);
+			AG_MenuNode(m, "Submenu D", NULL);
+			AG_MenuNode(m, "Submenu E", NULL);
+		}
 	}
 
 	/* Create our test window. */

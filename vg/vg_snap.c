@@ -34,6 +34,7 @@
 #include <gui/toolbar.h>
 #include <gui/button.h>
 #include <gui/menu.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"

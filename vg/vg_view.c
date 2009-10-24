@@ -30,10 +30,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include <gui/geometry.h>
-#include <gui/surface.h>
-#include <gui/view.h>
-#include <gui/window.h>
+#include <gui/gui.h>
 #include <gui/primitive.h>
 #include <gui/opengl.h>
 
@@ -186,7 +183,7 @@ KeyDown(AG_Event *event)
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
-	int unicode = AG_INT(3);
+	Uint32 unicode = (Uint)AG_ULONG(3);
 	VG_ToolCommand *cmd;
 	
 	if (vv->vg == NULL)
@@ -203,7 +200,7 @@ KeyDown(AG_Event *event)
 	}
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
 		if (cmd->kSym == sym &&
-		    (cmd->kMod == KMOD_NONE || mod & cmd->kMod))
+		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod))
 			AG_PostEvent(NULL, tool->vgv, cmd->fn->name, "%p", tool);
 	}
 }
@@ -215,7 +212,7 @@ KeyUp(AG_Event *event)
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int sym = AG_INT(1);
 	int mod = AG_INT(2);
-	int unicode = AG_INT(3);
+	Uint32 unicode = (Uint32)AG_ULONG(3);
 	
 	if (vv->vg == NULL)
 		return;
@@ -548,7 +545,7 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 
 	ival = grid->ivalView;
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
+	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		x0 = WIDGET(vv)->rView.x1 + (int)(vv->x)%ival;
 		y = WIDGET(vv)->rView.y1 + (int)(vv->y)%ival;
 		glBegin(GL_POINTS);
@@ -561,14 +558,14 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	} else
 #endif
 	{
-		Uint32 c32;
+		AG_Color c;
 
 		x0 = (int)(vv->x)%ival;
 		y = (int)(vv->y)%ival;
-		c32 = VG_MapColorRGB(grid->color);
+		c = VG_MapColorRGB(grid->color);
 		for (; y < WIDGET(vv)->rView.y2; y += ival) {
 			for (x = x0; x < WIDGET(vv)->rView.x2; x += ival)
-				AG_DrawPixel(vv, x, y, c32);
+				AG_PutPixel(vv, x,y, c);
 		}
 	}
 }
@@ -588,7 +585,7 @@ DrawNodeExtent(VG_Node *vn, VG_View *vv)
 	VG_GetViewCoords(vv, a, &rExt.x, &rExt.y);
 	rExt.w = (int)((b.x - a.x)*vv->scale);
 	rExt.h = (int)((b.y - a.y)*vv->scale);
-	AG_DrawRectOutline(vv, rExt, AG_MapRGB(agVideoFmt, 250,0,0));
+	AG_DrawRectOutline(vv, rExt, AG_ColorRGB(250,0,0));
 }
 #endif /* AG_DEBUG */
 
@@ -655,13 +652,13 @@ Draw(void *obj)
 	VG_Unlock(vg);
 
 	if (vv->status[0] != '\0') {
-		AG_TextColor(TEXT_COLOR);
+		AG_TextColor(agColors[TEXT_COLOR]);
 		su = AG_TextCacheGet(vv->tCache, vv->status);
 		AG_WidgetBlitSurface(vv, su,
 		    0,
 		    HEIGHT(vv) - WSURFACE(vv,su)->h);
 	}
-	AG_PopClipRect();
+	AG_PopClipRect(vv);
 }
 
 /* Select a new tool to use. */
@@ -917,7 +914,7 @@ void
 VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
 {
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
+	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		glPushMatrix();
 		glTranslatef((float)(AGWIDGET(vv)->rView.x1 + x),
 		             (float)(AGWIDGET(vv)->rView.y1 + y),

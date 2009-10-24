@@ -318,6 +318,13 @@ package agar.gui.widget is
 
   -- missing: push_cursor - documented but apparently not implemented
   -- missing: pop_cursor
+  
+  procedure put_pixel
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural;
+     color  : agar.core.types.color_t);
+  pragma inline (put_pixel);
 
   procedure put_pixel32
     (widget : widget_access_t;

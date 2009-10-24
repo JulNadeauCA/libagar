@@ -192,7 +192,6 @@ static void
 MyOverlayFunction(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
-	Uint32 myColor = AG_MapRGB(agVideoFmt, 255,255,255);
 	AG_Surface *myText;
 
 	/* Render a text string using the font engine. */
@@ -285,7 +284,6 @@ CreateMainWindow(void)
 	}
 
 	AG_WindowShow(win);
-	AG_WindowMaximize(win);
 }
 
 int
@@ -295,10 +293,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	/* Pass AG_VIDEO_OPENGL flag to require an OpenGL display. */
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE)
-	    == -1) {
+	if (AG_InitGraphics("<OpenGL>") == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
@@ -306,7 +301,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Set a black background. */
-	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);
+	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
 
 	CreateMainWindow();
 	AG_EventLoop();

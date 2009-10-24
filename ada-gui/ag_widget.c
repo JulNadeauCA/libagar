@@ -86,21 +86,33 @@ agar_widget_blit_surface (AG_Widget *widget, int surface_id, int x, int y)
 }
 
 void
+agar_widget_put_pixel (AG_Widget *widget, int x, int y, AG_Color color)
+{
+  AG_PutPixel (widget, x, y, color);
+}
+
+void
 agar_widget_put_pixel32 (AG_Widget *widget, int x, int y, Uint32 color)
 {
-  AG_WidgetPutPixel32 (widget, x, y, color);
+  AG_PutPixel32 (widget, x, y, color);
 }
 
 void
 agar_widget_put_pixel_rgb (AG_Widget *widget, int x, int y, Uint8 red, Uint8 green, Uint8 blue)
 {
-  AG_WidgetPutPixelRGB (widget, x, y, red, green, blue);
+  AG_PutPixelRGB (widget, x, y, red, green, blue);
+}
+
+void
+agar_widget_blend_pixel (AG_Widget *widget, int x, int y, AG_Color color, AG_BlendFn blendFn)
+{
+  AG_BlendPixel (widget, x, y, color, blendFn);
 }
 
 void
 agar_widget_blend_pixel_32 (AG_Widget *widget, int x, int y, Uint32 pixel, AG_BlendFn blendFn)
 {
-  AG_WidgetBlendPixel32 (widget, x, y, pixel, blendFn);
+  AG_BlendPixel32 (widget, x, y, pixel, blendFn);
 }
 
 /* bindings */

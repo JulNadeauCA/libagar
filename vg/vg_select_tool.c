@@ -29,8 +29,10 @@
 
 #include <core/core.h>
 #include <core/limits.h>
+
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -205,7 +207,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 }
 
 static int
-KeyDown(void *p, int ksym, int kmod, int unicode)
+KeyDown(void *p, int ksym, int kmod, Uint32 unicode)
 {
 	VG_SelectTool *t = p;
 	VG_View *vv = VGTOOL(t)->vgv;

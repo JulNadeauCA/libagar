@@ -82,8 +82,8 @@ void RG_PixmapButtonup(struct rg_tileview *, RG_TileElement *, int, int, int);
 void RG_PixmapMotion(struct rg_tileview *, RG_TileElement *, int, int, int, int,
 		     int);
 int  RG_PixmapWheel(struct rg_tileview *, RG_TileElement *, int);
-void RG_PixmapKeydown(int);
-void RG_PixmapKeyup(void);
+void RG_PixmapKeydown(struct rg_tileview *, int);
+void RG_PixmapKeyup(struct rg_tileview *);
 
 void RG_PixmapBeginUndoBlk(RG_Pixmap *);
 void RG_PixmapUndo(struct rg_tileview *, RG_TileElement *);

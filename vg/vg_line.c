@@ -33,6 +33,7 @@
 #include <gui/primitive.h>
 #include <gui/numerical.h>
 #include <gui/radio.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -106,14 +107,14 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Line *vl = p;
-	Uint32 c32 = VG_MapColorRGB(VGNODE(vl)->color);
+	AG_Color c = VG_MapColorRGB(VGNODE(vl)->color);
 	int x1, y1, x2, y2;
 
 	VG_GetViewCoords(vv, VG_Pos(vl->p1), &x1, &y1);
 	VG_GetViewCoords(vv, VG_Pos(vl->p2), &x2, &y2);
 
 	/* XXX TODO: endpoint style */
-	AG_DrawLine(vv, x1,y1, x2,y2, c32);
+	AG_DrawLine(vv, x1,y1, x2,y2, c);
 }
 
 static void

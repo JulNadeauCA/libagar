@@ -8,48 +8,41 @@ What is it?
 -----------
 Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
-microbiological work. Agar is also the name of an open source GUI toolkit
-designed to work in an unobtrusive way, under a great variety of platforms.
+microbiological work. Agar is also the name of an open source GUI toolkit.
 
-Agar is designed to work on any graphics system. Some graphics drivers can
-only provide a single "native" window (e.g., SDL). For those drivers, Agar
-will display multiple windows inside of a single display, using its built-in
-window manager. As of this release, Agar implements the following drivers:
+Agar is designed to work under any graphics system, on any platform. Some
+graphics drivers are single-display (e.g., sdlfb, sdlgl), and other drivers
+can provide multiple "native" windows (e.g., glx). Multiple Agar windows are
+supported regardless of the underlying graphics driver. Under single-display
+drivers, Agar emulates a window manager internally. The Agar application need
+not to be aware of the underlying graphics system.
 
- glx    OpenGL rendering via X Window System (multiple native windows)
- glsdl  OpenGL rendering via SDL (single native window)
- fbsdl  Framebuffer rendering via SDL (single native window)
-
-The OpenGL drivers are preferred when hardware acceleration is available
-as it makes efficient use of it. The framebuffer modes are more efficient
-when hardware acceleration is unavailable. Although the rendering routines
-are different, the appearance of GUI elements remain the same across all
-graphics drivers (as far as the default theme is concerned -- it is possible
-to write an OpenGL-only theme relying on GL features, for example).
+The OpenGL graphics drivers are preferred where hardware acceleration is
+available. Drivers for direct rendering to framebuffers are also provided.
+As far as the default "theme" is concerned, the appearance of GUI elements
+is unchanged across graphics drivers.
 
 A set of standard, common widgets are included in the Agar-GUI library.
-Implementing new widgets as part of a third-party library or application is
-a very simple, straightforward task.
+Agar is designed such that new widgets can be easily implemented as part
+of a separate third-party library or application.
 
-The Agar-Core library provides a simple object system which allows for a
-lightweight, consistent and portable form of object-oriented programming
-under multiple languages. The main features of the object system are
-inheritance, serialization, virtual functions / events and per-object
-management of resources such as timers and threads. A number of utility
-and portability interfaces are also included in Agar-Core.
+The Agar-Core library provides various utility and portability interfaces,
+as well as the "object system" used by Agar and several other libraries.
+The object system implements inheritance, serialization, virtual functions,
+timers, threads and variable bindings.
 
-Agar is entirely thread-safe when built with thread support. See the
-AG_Threads(3) manual page for important threads-related conventions used
-in the API reference.
+Agar is entirely thread-safe when built with thread support. Thread-safety
+considerations are documented in the API reference; see AG_Threads(3) for
+details.
 
 Documentation
 -------------
 - The Agar Manual, available online at:
   http://wiki.libagar.org/Manual/.
-- The API Reference. This is a detailed, systematic description of all
-  public Agar objects, structures and functions. On Unix-like systems, the
-  API reference is installed in standard manual page (mdoc) format. It is
-  also available in offline HTML format, and online at:
+- The API Reference. This is a detailed description of all public Agar
+  structures, objects and functions. On Unix-like systems, it is installed
+  in traditional manual page format (see AG_Intro(3)). The API Reference
+  is also available online at:
   http://libagar.org/man3
 - The Agar Wiki (user-contributed tutorials, code snippets, etc.), at:
   http://wiki.libagar.org/

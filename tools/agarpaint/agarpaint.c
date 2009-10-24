@@ -549,6 +549,7 @@ int
 main(int argc, char *argv[])
 {
 	int i, fps = 25, debug = 0;
+	Uint flags = AG_VIDEO_RESIZABLE;
 	const char *fontSpec = NULL;
 #ifdef HAVE_GETOPT
 	int c;
@@ -564,7 +565,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	AG_SetBool(agConfig, "view.opengl", 1);
 #ifdef HAVE_GETOPT
 	while ((c = getopt(argc, argv, "?dvfFgGr:t:")) != -1) {
 		extern char *optarg;
@@ -579,10 +579,7 @@ main(int argc, char *argv[])
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
 		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
+			flags |= AG_VIDEO_OPENGL;
 			break;
 		case 'r':
 			fps = atoi(optarg);
@@ -605,7 +602,7 @@ main(int argc, char *argv[])
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}
-	if (AG_InitVideo(800, 600, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(800, 600, 32, flags) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}

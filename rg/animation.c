@@ -25,12 +25,9 @@
 
 #include <core/core.h>
 
-#include <gui/geometry.h>
-#include <gui/surface.h>
-#include <gui/view.h>
+#include <gui/gui.h>
 #include <gui/load_surface.h>
 
-#include <gui/window.h>
 #include <gui/box.h>
 #include <gui/numerical.h>
 #include <gui/mspinbutton.h>
@@ -671,10 +668,7 @@ RG_AnimEdit(RG_Anim *ani)
 		    PreviewAnim, "%p,%p", ani, win);
 	}
 	
-	AG_WindowSetGeometry(win,
-	    agView->w/4, agView->h/4,
-	    agView->w/2, agView->h/2);
-
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 70, 50);
 	RG_AnimGenerate(ani);
 	ani->nrefs++;
 	return (win);

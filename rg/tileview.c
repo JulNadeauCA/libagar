@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <gui/primitive.h>
 #include <gui/text_cache.h>
 #include <gui/opengl.h>
+#include <gui/iconmgr.h>
 
 #include "tileview.h"
 #include "icons.h"
@@ -105,7 +106,7 @@ KeyDown(AG_Event *event)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapKeydown(keysym);
+		RG_PixmapKeydown(tv, keysym);
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
@@ -177,7 +178,7 @@ KeyUp(AG_Event *event)
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapKeyup();
+		RG_PixmapKeyup(tv);
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
@@ -491,7 +492,7 @@ ClampOffsets(RG_Tileview *tv)
 	int lim;
 
 	if (tv->xoffs >
-	   (lim = (WIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
+	   (lim = (WIDTH(tv) - RG_TILEVIEW_MIN_W))) {
 		tv->xoffs = lim;
 	} else if (tv->xoffs <
 	   (lim = (-tv->scaled->w + RG_TILEVIEW_MIN_W))) {
@@ -499,7 +500,7 @@ ClampOffsets(RG_Tileview *tv)
 	}
 
 	if (tv->yoffs >
-	    (lim = (WIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
+	    (lim = (HEIGHT(tv) - RG_TILEVIEW_MIN_H))) {
 		tv->yoffs = lim;
 	} else if (tv->yoffs <
 	    (lim = (-tv->scaled->h + RG_TILEVIEW_MIN_H))) {
@@ -1042,29 +1043,29 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 {
+	AG_Driver *drv = WIDGET(tv)->drv;
 	int x1 = RG_TILEVIEW_SCALED_X(tv,x);
 	int y1 = RG_TILEVIEW_SCALED_Y(tv,y);
 	int dx, dy;
 
-	if (!agView->opengl) {
+	if (!(AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)) {
 		for (dy = 0; dy < tv->pxsz; dy++) {
 			for (dx = 0; dx < tv->pxsz; dx++) {
 				int xView = x1+dx;
 				int yView = y1+dy;
 
-				if (xView < WIDGET(tv)->rView.x1 ||
-				    yView < WIDGET(tv)->rView.y1 ||
-				    xView > WIDGET(tv)->rView.x2 ||
-				    yView > WIDGET(tv)->rView.y2)
+				if (xView < 0 || yView < 0 ||
+				    xView > WIDTH(tv) ||
+				    yView > HEIGHT(tv))
 					continue;
 
 				if (tv->c.a < 255) {
-					AG_BLEND_RGBA2_CLIPPED(agView->v,
-					    xView, yView,
-					    tv->c.r, tv->c.g, tv->c.b, tv->c.a,
+					AG_BlendPixelRGBA(tv,
+					    xView, yView, (Uint8 *)&tv->c,
 					    AG_ALPHA_OVERLAY);
 				} else {
-					AG_VIEW_PUT_PIXEL2_CLIPPED(xView, yView,
+					AG_PutPixel32(tv,
+					    xView, yView,
 					    tv->c.pc);
 				}
 			}
@@ -1078,11 +1079,11 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 
 		if (x1 > WIDGET(tv)->rView.x2)	return;
 		if (y1 > WIDGET(tv)->rView.y2)	return;
-		if (x1 < WIDGET(tv)->rView.x1)	x1 = WIDGET(tv)->rView.x1;
-		if (y1 < WIDGET(tv)->rView.y1)	y1 = WIDGET(tv)->rView.y1;
+		if (x1 < 0)			x1 = 0;
+		if (y1 < 0)			y1 = 0;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > WIDGET(tv)->rView.x2)	x2 = WIDGET(tv)->rView.x2;
-		if (y2 > WIDGET(tv)->rView.y2)	y2 = WIDGET(tv)->rView.y2;
+		if (x2 > WIDGET(tv)->rView.x2)	x2 = WIDTH(tv);
+		if (y2 > WIDGET(tv)->rView.y2)	y2 = HEIGHT(tv);
 		
 		if (tv->c.a < 255) {
 			glGetBooleanv(GL_BLEND, &svBlendBit);
@@ -1118,7 +1119,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	int wSu, hSu;
 
 	AG_PushTextState();
-	AG_TextColor(TILEVIEW_TEXT_COLOR);
+	AG_TextColor(agColors[TILEVIEW_TEXT_COLOR]);
 	if (agTextCache) {
 		su = AG_TextCacheGet(tv->tCache, label);
 		wSu = WSURFACE(tv,su)->w;
@@ -1133,7 +1134,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	AG_DrawRectFilled(tv,
 	    AG_RECT((wSu >= WIDTH(tv)) ? 0 : (WIDTH(tv)-wSu-2),
 	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
-	    AG_COLOR(TILEVIEW_TEXTBG_COLOR));
+	    agColors[TILEVIEW_TEXTBG_COLOR]);
 
 	if (agTextCache) {
 		AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
@@ -1149,7 +1150,7 @@ RG_TileviewColor3i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b)
 	tv->c.r = r;
 	tv->c.g = g;
 	tv->c.b = b;
-	tv->c.pc = AG_MapRGB(agVideoFmt, r,g,b);
+	tv->c.pc = AG_MapRGB(WIDGET(tv)->drv->videoFmt, r,g,b);
 }
 
 void
@@ -1159,7 +1160,7 @@ RG_TileviewColor4i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	tv->c.g = g;
 	tv->c.b = b;
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(agVideoFmt, r,g,b,a);
+	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt, r,g,b,a);
 }
 
 void
@@ -1169,21 +1170,25 @@ RG_TileviewSDLColor(RG_Tileview *tv, AG_Color *c, Uint8 a)
 	tv->c.g = c->g;
 	tv->c.b = c->b;
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(agVideoFmt, c->r, c->g, c->b, a);
+	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt,
+	    c->r, c->g, c->b, a);
 }
 
 void
 RG_TileviewAlpha(RG_Tileview *tv, Uint8 a)
 {
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(agVideoFmt, tv->c.r, tv->c.g, tv->c.b, a);
+	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt,
+	    tv->c.r, tv->c.g, tv->c.b, a);
 }
 
 /* Must be called from widget draw context. */
 void
 RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 {
-	if (!agView->opengl) {
+	AG_Driver *drv = WIDGET(tv)->drv;
+
+	if (!(AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)) {
 		int xi, yi;
 		int x2 = x+w;
 		int y2 = y+h;
@@ -1200,13 +1205,13 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 		GLboolean svBlendBit;
 		GLint svBlendSrc, svBlendDst;
 
-		if (x1 > WIDGET(tv)->rView.x2)	return;
-		if (y1 > WIDGET(tv)->rView.y2)	return;
-		if (x1 < WIDGET(tv)->rView.x1)	x1 = WIDGET(tv)->rView.x1;
-		if (y1 < WIDGET(tv)->rView.y1)	y1 = WIDGET(tv)->rView.y1;
+		if (x1 > WIDTH(tv))		return;
+		if (y1 > HEIGHT(tv))		return;
+		if (x1 < 0)			x1 = 0;
+		if (y1 < 0)			y1 = 0;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > WIDGET(tv)->rView.x2)	x2 = WIDGET(tv)->rView.x2;
-		if (y2 > WIDGET(tv)->rView.y2)	y2 = WIDGET(tv)->rView.y2;
+		if (x2 > WIDTH(tv))		x2 = WIDTH(tv);
+		if (y2 > HEIGHT(tv))		y2 = HEIGHT(tv);
 
 		if (tv->c.a < 255) {
 			glGetBooleanv(GL_BLEND, &svBlendBit);
@@ -1296,7 +1301,9 @@ RG_TileviewHLine(RG_Tileview *tv, int x1, int x2, int y)
 void
 RG_TileviewRect2o(RG_Tileview *tv, int x, int y, int w, int h)
 {
-	if (!agView->opengl) {
+	AG_Driver *drv = WIDGET(tv)->drv;
+
+	if (!(AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)) {
 		int xi, yi;
 
 		for (yi = y+1; yi < y+h; yi++) {
@@ -1324,27 +1331,21 @@ RG_TileviewRect2o(RG_Tileview *tv, int x, int y, int w, int h)
 			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
 		}
 
-		if (y1 > WIDGET(tv)->rView.y1 &&
-		    y1 < WIDGET(tv)->rView.y2 &&
-		    x1 < WIDGET(tv)->rView.x2 &&
-		    x2 > WIDGET(tv)->rView.x1) {
-			glVertex2i(MAX(x1, WIDGET(tv)->rView.x1), y1);
-			glVertex2i(MIN(x2, WIDGET(tv)->rView.x2), y1);
+		if (y1 > 0 && y1 < HEIGHT(tv) && x1 < WIDTH(tv) && x2 > 0) {
+			glVertex2i(MAX(x1,0), y1);
+			glVertex2i(MIN(x2,0), y1);
 		}
-		if (x2 < WIDGET(tv)->rView.x2 && x2 > WIDGET(tv)->rView.x1 &&
-		    y1 < WIDGET(tv)->rView.y2 && y2 > WIDGET(tv)->rView.y1) {
-			glVertex2i(x2, MAX(y1, WIDGET(tv)->rView.y1));
-			glVertex2i(x2, MIN(y2, WIDGET(tv)->rView.y2));
+		if (x2 < WIDTH(tv) && x2 > 0 && y1 < HEIGHT(tv) && y2 > 0) {
+			glVertex2i(x2, MAX(y1,0));
+			glVertex2i(x2, MIN(y2,HEIGHT(tv)));
 		}
-		if (y2 > WIDGET(tv)->rView.y1 && y2 < WIDGET(tv)->rView.y2 &&
-		    x1 < WIDGET(tv)->rView.x2 && x2 > WIDGET(tv)->rView.x1) {
-			glVertex2i(MIN(x2, WIDGET(tv)->rView.x2), y2);
-			glVertex2i(MAX(x1, WIDGET(tv)->rView.x1), y2);
+		if (y2 > 0 && y2 < HEIGHT(tv) && x1 < WIDTH(tv) && x2 > 0) {
+			glVertex2i(MIN(x2,WIDTH(tv)), y2);
+			glVertex2i(MAX(x1,0), y2);
 		}
-		if (x1 > WIDGET(tv)->rView.x1 && x1 < WIDGET(tv)->rView.x2 &&
-		    y1 < WIDGET(tv)->rView.y2 && y2 > WIDGET(tv)->rView.y1) {
-			glVertex2i(x1, MIN(y2, WIDGET(tv)->rView.y2));
-			glVertex2i(x1, MAX(y1, WIDGET(tv)->rView.y1));
+		if (x1 > 0 && x1 < WIDTH(tv) && y1 < HEIGHT(tv) && y2 > 0) {
+			glVertex2i(x1, MIN(y2,HEIGHT(tv)));
+			glVertex2i(x1, MAX(y1,0));
 		}
 
 		glEnd();
@@ -1482,59 +1483,35 @@ DrawControl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 }
 
 static void
-RG_AttrColor(Uint flag, int state, Uint8 *c)
+GetAttrColor(Uint flag, int state, AG_Color *c)
 {
 	switch (flag) {
 	case RG_TILE_BLOCK:
 		if (state) {
-			c[0] = 255;
-			c[1] = 0;
-			c[2] = 0;
-			c[3] = 64;
+			*c = AG_ColorRGBA(255,0,0,64);
 		} else {
-			c[0] = 0;
-			c[1] = 255;
-			c[2] = 0;
-			c[3] = 32;
+			*c = AG_ColorRGBA(0,255,0,32);
 		}
 		break;
 	case RG_TILE_CLIMBABLE:
 		if (state) {
-			c[0] = 255;
-			c[1] = 255;
-			c[2] = 0;
-			c[3] = 64;
+			*c = AG_ColorRGBA(255,255,0,64);
 		} else {
-			c[0] = 255;
-			c[1] = 0;
-			c[2] = 0;
-			c[3] = 32;
+			*c = AG_ColorRGBA(255,0,0,32);
 		}
 		break;
 	case RG_TILE_SLIPPERY:
 		if (state) {
-			c[0] = 0;
-			c[1] = 0;
-			c[2] = 255;
-			c[3] = 64;
+			*c = AG_ColorRGBA(0,0,255,64);
 		} else {
-			c[0] = 0;
-			c[1] = 0;
-			c[2] = 0;
-			c[3] = 0;
+			*c = AG_ColorRGBA(0,0,0,0);
 		}
 		break;
 	case RG_TILE_JUMPABLE:
 		if (state) {
-			c[0] = 255;
-			c[1] = 0;
-			c[2] = 255;
-			c[3] = 64;
+			*c = AG_ColorRGBA(255,0,255,64);
 		} else {
-			c[0] = 0;
-			c[1] = 0;
-			c[2] = 0;
-			c[3] = 0;
+			*c = AG_ColorRGBA(0,0,0,0);
 		}
 		break;
 	}
@@ -1544,6 +1521,7 @@ static void
 Draw(void *obj)
 {
 	RG_Tileview *tv = obj;
+	AG_Driver *drv = WIDGET(tv)->drv;
 	RG_Tile *t = tv->tile;
 	char status[64];
 	RG_TileviewCtrl *ctrl;
@@ -1581,8 +1559,8 @@ Draw(void *obj)
 	if ((tv->flags & RG_TILEVIEW_NO_TILING) == 0) {
 		AG_DrawTiling(tv,
 		    AG_RECT(0, 0, WIDTH(tv), HEIGHT(tv)), 9, 0,
-		    AG_COLOR(TILEVIEW_TILE1_COLOR),
-		    AG_COLOR(TILEVIEW_TILE2_COLOR));
+		    agColors[TILEVIEW_TILE1_COLOR],
+		    agColors[TILEVIEW_TILE2_COLOR]);
 	}
 
 	rsrc.x = 0;
@@ -1592,32 +1570,32 @@ Draw(void *obj)
 	rdst.x = tv->xoffs;
 	rdst.y = tv->yoffs;
 
-	if (!agView->opengl) {
+	if (!(AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)) {
 		if (tv->xoffs > 0 &&
-		    tv->xoffs + tv->scaled->w > WIDGET(tv)->w) {
-			rsrc.w = WIDGET(tv)->w - tv->xoffs;
+		    tv->xoffs + tv->scaled->w > WIDTH(tv)) {
+			rsrc.w = WIDTH(tv) - tv->xoffs;
 		} else if (tv->xoffs < 0 && -tv->xoffs < tv->scaled->w) {
 			rdst.x = 0;
 			rsrc.x = -tv->xoffs;
 			rsrc.w = tv->scaled->w - (-tv->xoffs);
-			if (rsrc.w > WIDGET(tv)->w)
-				rsrc.w = WIDGET(tv)->w;
+			if (rsrc.w > WIDTH(tv))
+				rsrc.w = WIDTH(tv);
 		}
 		if (tv->yoffs > 0 &&
-		    tv->yoffs + tv->scaled->h > WIDGET(tv)->h) {
-			rsrc.h = WIDGET(tv)->h - tv->yoffs;
+		    tv->yoffs + tv->scaled->h > HEIGHT(tv)) {
+			rsrc.h = HEIGHT(tv) - tv->yoffs;
 		} else if (tv->yoffs < 0 && -tv->yoffs < tv->scaled->h) {
 			rdst.y = 0;
 			rsrc.y = -tv->yoffs;
 			rsrc.h = tv->scaled->h - (-tv->yoffs);
-			if (rsrc.h > WIDGET(tv)->h)
-				rsrc.h = WIDGET(tv)->h;
+			if (rsrc.h > HEIGHT(tv))
+				rsrc.h = HEIGHT(tv);
 		}
 	}
 	AG_WidgetBlitFrom(tv, tv, 0, &rsrc, rdst.x, rdst.y);
 
 #ifdef HAVE_OPENGL
-	if (agView->opengl)
+	if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)
 		glEnable(GL_BLEND);
 #endif
 	RG_TileviewColor4i(tv, 255, 255, 255, 32);
@@ -1651,14 +1629,14 @@ Draw(void *obj)
 				for (x = 0, nx = 0;
 				     x < tw;
 				     x += tsz, nx++) {
-					Uint8 c[4];
+					AG_Color c = AG_ColorRGBA(0,0,0,0);
 					int w = tsz;
 					int h = tsz;
 					int d;
 
-					RG_AttrColor(tv->edit_attr,
+					GetAttrColor(tv->edit_attr,
 					    (RG_TILE_ATTR2(t,nx,ny) &
-					     tv->edit_attr), c);
+					     tv->edit_attr), &c);
 
 					if ((d = (tsz - (tw - x))) > 0) {
 						w -= d;
@@ -1699,17 +1677,17 @@ Draw(void *obj)
 				     x += tsz, nx++) {
 					AG_Surface *tsu;
 					int l = RG_TILE_LAYER2(t,nx,ny);
-					Uint8 c[4] = { 255, 255, 255, 128 };
 
 					Snprintf(text, sizeof(text), "%s%d",
 					    (l > 0) ? "+" : "", l);
-					AG_TextColorRGB(0, 0, 0);
+					AG_TextColorRGB(0,0,0);
 					tsu = AG_TextRender(text);
 					AG_DrawRectBlended(tv,
 					    AG_RECT(tv->xoffs+x,
 					            tv->yoffs+y,
 					            tsu->w, tsu->h),
-					    c, AG_ALPHA_OVERLAY);
+					    AG_ColorRGBA(255,255,255,128),
+					    AG_ALPHA_OVERLAY);
 					AG_WidgetBlit(tv, tsu,
 					    tv->xoffs+x,
 					    tv->yoffs+y);
@@ -1755,10 +1733,10 @@ Draw(void *obj)
 		DrawControl(tv, ctrl);
 	}
 #ifdef HAVE_OPENGL
-	if (agView->opengl)
+	if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL)
 		glDisable(GL_BLEND);
 #endif
-	AG_PopClipRect();
+	AG_PopClipRect(tv);
 }
 
 static void
