@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_SCROLLBAR_H_
-#define _AGAR_WIDGET_SCROLLBAR_H_
+#ifndef _AGAR_GUI_SCROLLBAR_H_
+#define _AGAR_GUI_SCROLLBAR_H_
 
 #include <agar/gui/widget.h>
 
@@ -138,4 +138,4 @@ AG_ScrollbarGetButtonSize(AG_Scrollbar *sb)
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif	/* _AGAR_WIDGET_SCROLLBAR_H_ */
+#endif /* _AGAR_GUI_SCROLLBAR_H_ */

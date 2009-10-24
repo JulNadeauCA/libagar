@@ -187,8 +187,8 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge = Malloc(sizeof(AG_GraphEdge));
 	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
-	edge->edgeColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
-	edge->labelColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
+	edge->edgeColor = AG_ColorRGB(0,0,0);
+	edge->labelColor = AG_ColorRGB(0,0,0);
 	edge->flags = 0;
 	edge->v1 = v1;
 	edge->v2 = v2;
@@ -198,10 +198,10 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	TAILQ_INSERT_TAIL(&gf->edges, edge, edges);
 	gf->nedges++;
 
-	edge->v1->edges = Realloc(edge->v1->edges, (edge->v1->nedges + 1) *
-	                                           sizeof(AG_GraphEdge *));
-	edge->v2->edges = Realloc(edge->v2->edges, (edge->v2->nedges + 1) *
-	                                           sizeof(AG_GraphEdge *));
+	edge->v1->edges = Realloc(edge->v1->edges,
+	    (edge->v1->nedges + 1)*sizeof(AG_GraphEdge *));
+	edge->v2->edges = Realloc(edge->v2->edges,
+	    (edge->v2->nedges + 1)*sizeof(AG_GraphEdge *));
 	edge->v1->edges[edge->v1->nedges++] = edge;
 	edge->v2->edges[edge->v2->nedges++] = edge;
 
@@ -226,7 +226,7 @@ AG_GraphEdgeLabelS(AG_GraphEdge *ge, const char *s)
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
-	AG_TextColor32(ge->labelColor);
+	AG_TextColor(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
 }
@@ -243,7 +243,7 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
-	AG_TextColor32(ge->labelColor);
+	AG_TextColor(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
 }
@@ -252,7 +252,7 @@ void
 AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->labelColor = AG_MapRGB(agSurfaceFmt, r,g,b);
+	edge->labelColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(edge->graph);
 }
 
@@ -260,7 +260,7 @@ void
 AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->edgeColor = AG_MapRGB(agSurfaceFmt, r,g,b);
+	edge->edgeColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(edge->graph);
 }
 
@@ -316,7 +316,7 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	AG_KeyMod mod = (AG_KeyMod)SDL_GetModState();
+	AG_KeyMod kmod = AG_GetModState(agKeyboard);
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;
@@ -330,7 +330,7 @@ MouseButtonDown(AG_Event *event)
 		if (gf->flags & AG_GRAPH_NO_SELECT) {
 			break;
 		}
-		if (mod & (KMOD_CTRL|KMOD_SHIFT)) {
+		if (kmod & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT)) {
 			TAILQ_FOREACH(edge, &gf->edges, edges) {
 				if (!MouseOverEdge(edge, x, y)) {
 					continue;
@@ -565,7 +565,6 @@ Draw(void *obj)
 	AG_Graph *gf = obj;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
-	Uint8 bg[4];
 
 	AG_PushClipRect(gf, gf->r);
 
@@ -573,7 +572,7 @@ Draw(void *obj)
 	AG_DrawRectOutline(gf,
 	    AG_RECT(gf->pxMin - gf->xOffs, gf->pyMin - gf->yOffs, 
 	            gf->pxMax - gf->pxMin, gf->pyMax - gf->pyMin),
-	    AG_MapRGB(agVideoFmt, 128,128,128)); 
+	    AG_ColorRGB(128,128,128)); 
 
 	/* Draw the edges */
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
@@ -599,21 +598,17 @@ Draw(void *obj)
 				AG_DrawRectOutline(gf,
 				    AG_RECT(lblX-1, lblY-1,
 				            su->w+2, su->h+2),
-				    AG_VideoPixel(edge->labelColor));
+				    edge->labelColor);
 			}
 			if (edge->flags & AG_GRAPH_MOUSEOVER) {
 				AG_DrawRectOutline(gf,
 				    AG_RECT(lblX-2, lblY-2,
 				            su->w+4, su->h+4),
-				    AG_COLOR(TEXT_COLOR));
+				    agColors[TEXT_COLOR]);
 			}
-			bg[0] = 128;
-			bg[1] = 128;
-			bg[2] = 128;
-			bg[3] = 128;
 			AG_DrawRectBlended(gf,
 			    AG_RECT(lblX, lblY, su->w, su->h),
-			    bg, AG_ALPHA_SRC);
+			    AG_ColorRGBA(128,128,128,128), AG_ALPHA_SRC);
 			AG_WidgetBlitSurface(gf, edge->labelSu, lblX, lblY);
 		}
 	}
@@ -625,8 +620,6 @@ Draw(void *obj)
 		if (vtx->flags & AG_GRAPH_HIDDEN) {
 			continue;
 		}
-		AG_GetRGBA(vtx->bgColor, agSurfaceFmt,
-		    &bg[0],&bg[1],&bg[2],&bg[3]);
 		switch (vtx->style) {
 		case AG_GRAPH_RECTANGLE:
 			AG_DrawRectBlended(gf,
@@ -634,14 +627,14 @@ Draw(void *obj)
 			            vtx->y - vtx->h/2 - gf->yOffs,
 				    vtx->w,
 				    vtx->h),
-			    bg, AG_ALPHA_SRC);
+			    vtx->bgColor, AG_ALPHA_SRC);
 			if (vtx->flags & AG_GRAPH_SELECTED) {
 				AG_DrawRectOutline(gf,
 				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 1,
 				            vtx->y - vtx->h/2 - gf->yOffs - 1,
 				            vtx->w + 2,
 				            vtx->h + 2),
-				    AG_MapRGB(agVideoFmt, 0,0,255));
+				    AG_ColorRGB(0,0,255));
 			}
 			if (vtx->flags & AG_GRAPH_MOUSEOVER) {
 				AG_DrawRectOutline(gf,
@@ -649,7 +642,7 @@ Draw(void *obj)
 				            vtx->y - vtx->h/2 - gf->yOffs - 2,
 				            vtx->w + 4,
 				            vtx->h + 4),
-				    AG_MapRGB(agVideoFmt, 255,0,0));
+				    AG_ColorRGB(255,0,0));
 			}
 			break;
 		case AG_GRAPH_CIRCLE:
@@ -667,7 +660,7 @@ Draw(void *obj)
 		}
 	}
 
-	AG_PopClipRect();
+	AG_PopClipRect(gf);
 }
 
 /* Graph must be locked. */
@@ -691,8 +684,8 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
 	vtx->labelSu = -1;
-	vtx->labelColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
-	vtx->bgColor = AG_MapRGBA(agSurfaceFmt, 255,255,255,128);
+	vtx->labelColor = AG_ColorRGB(0,0,0);
+	vtx->bgColor = AG_ColorRGBA(255,255,255,128);
 	vtx->style = AG_GRAPH_RECTANGLE;
 	vtx->flags = 0;
 	vtx->x = 0;
@@ -727,7 +720,7 @@ void
 AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->labelColor = AG_MapRGB(agSurfaceFmt, r,g,b);
+	vtx->labelColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 }
 
@@ -735,7 +728,7 @@ void
 AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->bgColor = AG_MapRGB(agSurfaceFmt, r,g,b);
+	vtx->bgColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 }
 
@@ -760,7 +753,7 @@ AG_GraphVertexLabelS(AG_GraphVertex *vtx, const char *s)
 	if (vtx->labelSu >= 0) {
 		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
 	}
-	AG_TextColor32(vtx->labelColor);
+	AG_TextColor(vtx->labelColor);
 	vtx->labelSu = AG_WidgetMapSurface(vtx->graph, AG_TextRender(vtx->labelTxt));
 	AG_ObjectUnlock(vtx->graph);
 }

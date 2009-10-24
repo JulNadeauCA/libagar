@@ -712,7 +712,7 @@ DrawText(AG_Scrollbar *sb)
 	AG_Rect2 r;
 
 	AG_PushTextState();
-	AG_TextColor(TEXT_COLOR);
+	AG_TextColor(agColors[TEXT_COLOR]);
 	AG_TextBGColorHex(0xccccccff);
 
 	Snprintf(label, sizeof(label), "%d < %d < %d(%d)",
@@ -730,7 +730,7 @@ DrawText(AG_Scrollbar *sb)
 	AG_WidgetBlit(sb, txt, r.x1, r.y1);
 	AG_SurfaceFree(txt);
 
-	AG_DrawRectOutline(sb, AG_Rect2ToRect(r), AG_MapRGB(agVideoFmt, 250, 250, 0));
+	AG_DrawRectOutline(sb, AG_Rect2ToRect(r), AG_ColorRGB(250, 250, 0));
 	AG_RectTranslate2(&r, WIDGET(sb)->rView.x1, WIDGET(sb)->rView.y1);
 	AG_ViewUpdateFB(&r);
 	

@@ -164,7 +164,7 @@ Draw(void *p)
 
 	if (tb->labelText != NULL && tb->label == -1) {
 		AG_PushTextState();
-		AG_TextColor(TEXTBOX_TXT_COLOR);
+		AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
 		tb->label = AG_WidgetMapSurface(tb,
 		    AG_TextRender(tb->labelText));
 		AG_PopTextState();
@@ -177,7 +177,7 @@ Draw(void *p)
 		AG_WidgetBlitSurface(tb, tb->label,
 		    tb->lblPadL,
 		    HEIGHT(tb)/2 - lblSu->h/2);
-		AG_PopClipRect();
+		AG_PopClipRect(tb);
 	}
 
 	AG_PushClipRect(tb, tb->r);
@@ -189,12 +189,12 @@ Draw(void *p)
 			d = WIDTH(tb->vBar);
 			AG_DrawBox(tb,
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    AG_COLOR(TEXTBOX_COLOR));
+			    agColors[TEXTBOX_COLOR]);
 		} else if (tb->hBar != NULL && AG_ScrollbarVisible(tb->hBar)) {
 			d = HEIGHT(tb->hBar);
 			AG_DrawBox(tb,
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    AG_COLOR(TEXTBOX_COLOR));
+			    agColors[TEXTBOX_COLOR]);
 		}
 		AG_WidgetUpdate(tb);
 	}
@@ -202,7 +202,7 @@ Draw(void *p)
 	if (tb->hBar != NULL) { AG_WidgetDraw(tb->hBar); }
 	if (tb->vBar != NULL) { AG_WidgetDraw(tb->vBar); }
 
-	AG_PopClipRect();
+	AG_PopClipRect(tb);
 }
 
 static void

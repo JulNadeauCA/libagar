@@ -29,6 +29,7 @@
 #include "table.h"
 #include "primitive.h"
 #include "cursors.h"
+#include "keyboard.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -88,10 +89,7 @@ void
 AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_ObjectLock(t);
-	t->selColor[0] = r;
-	t->selColor[1] = g;
-	t->selColor[2] = b;
-	t->selColor[3] = a;
+	t->selColor = AG_ColorRGBA(r,g,b,a);
 	AG_ObjectUnlock(t);
 }
 
@@ -490,11 +488,11 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 
 	switch (c->type) {
 	case AG_CELL_STRING:					/* Avoid copy */
-		AG_TextColor(TEXT_COLOR);
+		AG_TextColor(agColors[TEXT_COLOR]);
 		c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->data.s));
 		goto blit;
 	case AG_CELL_PSTRING:					/* Avoid copy */
-		AG_TextColor(TEXT_COLOR);
+		AG_TextColor(agColors[TEXT_COLOR]);
 		c->surface = AG_WidgetMapSurface(t, AG_TextRender((char *)
 		                                                  c->data.p));
 		goto blit;
@@ -510,7 +508,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		return;
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
-			AG_TextColor(TEXT_COLOR);
+			AG_TextColor(agColors[TEXT_COLOR]);
 			c->surface = AG_WidgetMapSurface(t,
 			    AG_TextRender(c->fmt));
 			goto blit;
@@ -522,7 +520,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		PrintCell(t, c, txt, sizeof(txt));
 		break;
 	}
-	AG_TextColor(TEXT_COLOR);
+	AG_TextColor(agColors[TEXT_COLOR]);
 	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
@@ -655,7 +653,7 @@ Draw(void *obj)
 			    rCol.x - 1,
 			    t->hCol - 1,
 			    rCol.h,
-			    AG_COLOR(TABLE_LINE_COLOR));
+			    agColors[TABLE_LINE_COLOR]);
 		}
 		
 		AG_PushClipRect(t, rCol);
@@ -678,7 +676,7 @@ Draw(void *obj)
 			AG_TableCell *c = &t->cells[m][n];
 
 			AG_DrawLineH(t, 0, t->r.w, rCell.y,
-			    AG_COLOR(TABLE_LINE_COLOR));
+			    agColors[TABLE_LINE_COLOR]);
 
 			DrawCell(t, c, &rCell);
 			if (c->selected) {
@@ -689,14 +687,14 @@ Draw(void *obj)
 		}
 
 		AG_DrawLineH(t, 0, t->r.w, rCell.y,
-		    AG_COLOR(TABLE_LINE_COLOR));
+		    agColors[TABLE_LINE_COLOR]);
 
 		/* Indicate column selection. */
 		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
 			STYLE(t)->TableSelectedColumnBackground(t, n, rCol);
 		}
 		
-		AG_PopClipRect();
+		AG_PopClipRect(t);
 		rCell.x += col->w;
 	}
 	if (rCell.x > 0 &&
@@ -705,7 +703,7 @@ Draw(void *obj)
 		    rCell.x - 1,
 		    t->hCol - 1,
 		    rCol.h,
-		    AG_COLOR(TABLE_LINE_COLOR));
+		    agColors[TABLE_LINE_COLOR]);
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
 
@@ -947,7 +945,7 @@ SelectingMultiple(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
 	        ((t->flags & AG_TABLE_MULTI) &&
-		  SDL_GetModState() & AG_KEYMOD_CTRL));
+		  AG_GetModState(agKeyboard) & AG_KEYMOD_CTRL));
 }
 
 /* Return true if a range of items are being selected. */
@@ -955,7 +953,7 @@ static __inline__ int
 SelectingRange(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
-	        (SDL_GetModState() & AG_KEYMOD_SHIFT));
+	        (AG_GetModState(agKeyboard) & AG_KEYMOD_SHIFT));
 }
 
 /* Display the popup menu. */
@@ -964,7 +962,7 @@ ShowPopup(AG_TablePopup *tp)
 {
 	int x, y;
 
-	AG_MouseGetState(&x, &y);
+	AG_MouseGetState(agMouse, &x, &y);
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(tp->menu, tp->item);
 		tp->panel = NULL;
@@ -1458,6 +1456,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
+	AG_Driver *drv = WIDGET(t)->drv;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int xrel = AG_INT(3);
@@ -1475,11 +1474,11 @@ MouseMotion(AG_Event *event)
 		if (t->r.h > 0 && t->r.w > 0) {
 			UpdateScrollbars(t);
 		}
-		AG_SetCursor(AG_HRESIZE_CURSOR);
+		AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
 	} else {
 		if (OverColumnHeader(t, y) &&
 		    OverColumnResizeControl(t, x))
-			AG_SetCursor(AG_HRESIZE_CURSOR);
+			AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
 	}
 }
 
@@ -1665,7 +1664,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->mpool = 0;
 
 	AG_PushTextState();
-	AG_TextColor(TEXT_COLOR);
+	AG_TextColor(agColors[TEXT_COLOR]);
 	tc->surface = (name == NULL) ? -1 :
 	    AG_WidgetMapSurface(t, AG_TextRender(name));
 	AG_PopTextState();
@@ -1964,10 +1963,8 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks;
-	int numkeys;
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 
-	ks = SDL_GetKeyState(&numkeys);
 	DecrementSelection(t, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
@@ -1976,10 +1973,8 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks;
-	int numkeys;
+	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
 
-	ks = SDL_GetKeyState(&numkeys);
 	IncrementSelection(t, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
@@ -2003,10 +1998,7 @@ Init(void *obj)
 	t->hHint = t->hCol + t->hRow*2;
 	t->r = AG_RECT(0,0,0,0);
 	t->selMode = AG_TABLE_SEL_ROWS;
-	t->selColor[0] = 0;
-	t->selColor[1] = 0;
-	t->selColor[2] = 250;
-	t->selColor[3] = 32;
+	t->selColor = AG_ColorRGBA(0,0,250,32);
 	t->wTot = 0;
 
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);

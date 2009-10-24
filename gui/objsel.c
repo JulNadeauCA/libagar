@@ -30,6 +30,7 @@
 #include "window.h"
 #include "primitive.h"
 #include "label.h"
+#include "iconmgr.h"
 
 #include <stdarg.h>
 #include <string.h>

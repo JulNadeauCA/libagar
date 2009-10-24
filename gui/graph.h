@@ -22,8 +22,8 @@ enum ag_graph_vertex_style {	/* Vertex style */
 typedef struct ag_graph_vertex {
 	char labelTxt[AG_GRAPH_LABEL_MAX]; /* Label text */
 	int  labelSu;			/* Text surface handle */
-	Uint32 labelColor;		/* Text color (surfaceFmt) */
-	Uint32 bgColor;			/* Background color (surfaceFmt) */
+	AG_Color labelColor;		/* Text color */
+	AG_Color bgColor;		/* Background color */
 	enum ag_graph_vertex_style style; /* Vertex style */
 	Uint flags;
 #define AG_GRAPH_MOUSEOVER	0x01
@@ -44,8 +44,8 @@ typedef struct ag_graph_vertex {
 typedef struct ag_graph_edge {
 	char labelTxt[AG_GRAPH_LABEL_MAX];	/* Label text */
 	int  labelSu;				/* Text surface handle */
-	Uint32 edgeColor;			/* Edge color (surfaceFmt) */
-	Uint32 labelColor;			/* Label color (surfaceFmt) */
+	AG_Color edgeColor;			/* Edge color */
+	AG_Color labelColor;			/* Label color */
 	Uint flags;
 /*#define AG_GRAPH_MOUSEOVER	0x01 */
 /*#define AG_GRAPH_SELECTED	0x02 */

@@ -294,7 +294,7 @@ Draw(void *obj)
 	WIDGET_FOREACH_CHILD(chld, obj)
 		AG_WidgetDraw(chld);
 	
-	AG_DrawBox(fs, fs->rPreview, -1, AG_COLOR(FIXED_BOX_COLOR));
+	AG_DrawBox(fs, fs->rPreview, -1, agColors[FIXED_BOX_COLOR]);
 	if (fs->sPreview != -1) {
 		AG_Surface *su = WSURFACE(fs,fs->sPreview);
 
