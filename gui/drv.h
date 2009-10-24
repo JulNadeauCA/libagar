@@ -52,7 +52,7 @@ typedef struct ag_driver_class {
 	/* Texture operations (GL driver specific) */
 	int  (*uploadTexture)(Uint *, AG_Surface *, float *);
 	int  (*updateTexture)(Uint, AG_Surface *);
-	void (*deleteTexture)(Uint);
+	void (*deleteTexture)(void *drv, Uint);
 	/* Request a specific refresh rate (driver specific) */
 	int (*setRefreshRate)(void *drv, int fps);
 	/* Clipping and blending control (rendering context) */
@@ -68,8 +68,6 @@ typedef struct ag_driver_class {
 	int  (*getCursorVisibility)(void *drv);
 	void (*setCursorVisibility)(void *drv, int flag);
 	/* Widget surface operations (rendering context) */
-	int  (*mapSurface)(void *drv, struct ag_widget *wid, AG_Surface *su);
-	void (*replaceSurface)(void *drv, struct ag_widget *wid, int s, AG_Surface *su);
 	void (*blitSurface)(void *drv, struct ag_widget *wid, AG_Surface *s, int x, int y);
 	void (*blitSurfaceFrom)(void *drv, struct ag_widget *wid, struct ag_widget *widSrc, int s, AG_Rect *r, int x, int y);
 	void (*blitSurfaceGL)(void *drv, struct ag_widget *wid, AG_Surface *s, float w, float h);
