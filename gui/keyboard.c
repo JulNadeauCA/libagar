@@ -132,11 +132,11 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 	default:
 		return (0);
 	}
+	kbd->modState = ms;
 	if (kbd->keyState[ks] == (Uint8)action) {
 		return (0);
 	}
 	kbd->keyState[ks] = (Uint8)action;
-	kbd->modState = ms;
 	return (1);
 }
 
