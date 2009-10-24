@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 #include <core/core.h>
 
 #include <string.h>
+#include <ctype.h>
 
 #include <config/ag_classdebug.h>
 
