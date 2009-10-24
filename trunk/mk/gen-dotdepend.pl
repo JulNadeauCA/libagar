@@ -1,7 +1,5 @@
 #!/usr/bin/perl
-#
 # Public domain.
-# 
 # Scan Makefiles for "include .depend" and generate empty ".depend" files,
 # such that make can be run prior to an initial "make depend".
 #
@@ -62,15 +60,16 @@ sub Scan ($)
 	my $dir = shift;
 
 	unless (opendir(CWD, $dir)) {
+		print STDERR "$dir: opendir: $!; ignoring\n";
 		return;
 	}
 	%V = ();
-	if (-e $dir.'/Makefile') {
-		if (MakefileIncludesDepend("$dir/Makefile", $dir)) {
-			#print STDERR "Creating: $dir/.depend\n";
-			if (open(OUT, ">$dir/.depend")) {
-				close(OUT);
-			}
+	if (-e $dir.'/Makefile' &&
+	    MakefileIncludesDepend("$dir/Makefile", $dir)) {
+		if (open(OUT, ">$dir/.depend")) {
+			close(OUT);
+		} else {
+			print STDERR "$dir/.depend: $!; ignoring\n";
 		}
 	}
 	foreach my $ent (readdir(CWD)) {
@@ -79,17 +78,15 @@ sub Scan ($)
 		if ($ent =~ /^\./) {
 			next;
 		}
-		if (-d $ent) {
+		if (-d $file) {
 			Scan($file);
 			next;
 		}
 	}
 	closedir(CWD);
 }
-
 if (@ARGV < 1) {
 	print STDERR "Usage: gen-dotdepend.pl [directory]\n";
 	exit(1);
 }
-
 Scan($ARGV[0]);
