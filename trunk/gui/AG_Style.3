@@ -72,19 +72,23 @@ Vector drawing is recommended when resolution independence is a requirement.
 .Pp
 .nr nS 0
 The
-.Fn AG_SetStyle
-function accepts an
-.Xr AG_View 3
-or
-.Xr AG_Widget 3
-as the
 .Fa object
-argument.
-If the argument is a view, all
+argument of
+.Fn AG_SetStyle
+may be a
+.Xr AG_Driver 3 ,
+an
+.Xr AG_Widget 3
+or
+an
+.Xr AG_Window 3 .
+If the argument is a
+.Xr AG_Driver 3 ,
+all
 .Xr AG_Window 3
-objects attached to that view will inherit the style by default.
-If the argument is a widget, any child widget attached to it will also
-inherit its style.
+objects attached to it will inherit the style by default.
+If the argument is a widget or window, any child widget attached to it will
+also inherit the new style setting.
 .Sh STYLE OPERATIONS
 .Bl -tag -width 2n
 .It Fn init "AG_Style *style"
@@ -118,12 +122,8 @@ Draw background for generic box-style containers, where
 is given in pixels.
 .It Fn CheckboxButton "int state"
 Draw a checkbox button.
-.It Fn ConsoleBackground "AG_Widget *widget" "Uint32 bgColor"
+.It Fn ConsoleBackground "AG_Widget *widget" "AG_Color bgColor"
 Draw background for text console display widgets.
-.Fa bgColor
-is a color in
-.Va agVideoFmt
-format.
 .It Fn FixedPlotterBackground "AG_Widget *widget" "int showAxis" "Uint32 yOffs"
 Draw background for single-axis plots.
 .It Fn MenuRootBackground "AG_Widget *widget" "AG_Rect r"
@@ -302,6 +302,8 @@ InitMyStyle(AG_Style *s)
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Color 3 ,
+.Xr AG_Rect 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
