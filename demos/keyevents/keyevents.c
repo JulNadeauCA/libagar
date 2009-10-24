@@ -54,7 +54,6 @@ CreateWindow(void)
 
 	AG_ButtonNewFn(win, 0, "Quit", Quit, NULL);
 
-	AG_WindowMaximize(win);
 	AG_WindowShow(win);
 }
 
@@ -65,7 +64,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(200, 100, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}

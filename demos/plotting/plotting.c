@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -202,20 +202,17 @@ main(int argc, char *argv[])
 	AG_Button *btn;
 	int i;
 
-	if (AG_InitCore("agar-plotting-demo", 0) == -1) {
+	if (AG_InitCore("agar-plotting-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	M_InitSubsystem();
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Create a new window. */
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "M_Plotter example");
 
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
@@ -279,19 +276,18 @@ main(int argc, char *argv[])
 		}
 
 		AG_SeparatorNewHoriz(box);
-		AG_LabelNewPolled(box, 0, "Aref: %lf", &Aref);
-		AG_LabelNewPolled(box, 0, "v1: %lf", &v1);
-		AG_LabelNewPolled(box, 0, "v2: %lf", &v2);
-		AG_LabelNewPolled(box, 0, "v3: %lf", &v3);
-		AG_LabelNewPolled(box, 0, "Ts: %lf", &Ts);
-		AG_LabelNewPolled(box, 0, "Ta: %lf", &Ta);
-		AG_LabelNewPolled(box, 0, "To: %lf", &To);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Aref: %lf", &Aref);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "v1: %lf", &v1);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "v2: %lf", &v2);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "v3: %lf", &v3);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ts: %lf", &Ts);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
+		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
 
 		btn = AG_ButtonAct(box, 0, "Generate", GeneratePlot, "%p", plt);
 		AG_ExpandHoriz(btn);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
-	AG_WindowMaximize(win);
 	AG_WindowShow(win);
 
 	AG_EventLoop();

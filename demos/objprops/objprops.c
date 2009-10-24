@@ -25,11 +25,8 @@ main(int argc, char *argv[])
 {
 	AG_Object *obj;
 
-	if (AG_InitCore("agar-objprops-demo", 0) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitCore("agar-objprops-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

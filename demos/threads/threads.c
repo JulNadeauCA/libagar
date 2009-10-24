@@ -106,13 +106,10 @@ main(int argc, char *argv[])
 {
 	AG_Window *win;
 	
-	if (AG_InitCore("agar-threads-demo", 0) == -1) {
+	if (AG_InitCore("agar-threads-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);

@@ -18,7 +18,6 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Minimal!");
 	AG_WindowShow(win);
-	AG_WindowMaximize(win);
 
 	AG_EventLoop();
 	AG_Destroy();
