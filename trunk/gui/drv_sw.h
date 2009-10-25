@@ -38,7 +38,6 @@ typedef struct ag_driver_sw {
 #define AG_DRIVER_SW_OVERLAY	0x01	/* "Overlay" mode */
 #define AG_DRIVER_SW_BGPOPUP	0x02	/* Enable generic background popup */
 
-	struct ag_window *winToFocus;	/* Request focus */
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
 	struct ag_window *winLastKeydown; /* For keyboard processing */
 	AG_List *Lmodal;		/* Modal window stack */
@@ -56,9 +55,9 @@ extern AG_DriverSw      *agDriverSw;
 struct ag_size_alloc;
 
 void AG_WM_BackgroundPopupMenu(AG_DriverSw *);
+void AG_WM_ChangeWindowFocus(void);
 int  AG_ResizeDisplay(int, int);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
-void AG_ChangeWindowFocus(void);
 void AG_WM_LimitWindowToView(struct ag_window *);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *, struct ag_size_alloc *);
 

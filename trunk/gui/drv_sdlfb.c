@@ -415,8 +415,8 @@ out:
 	 * case winToFocus could be NULL). Use of AG_WindowFocus() from event
 	 * handler routines can also affect winToFocus.
 	 */
-	if (focusChg || dsw->winToFocus != NULL) {
-		AG_ChangeWindowFocus();
+	if (focusChg || agWindowToFocus != NULL) {
+		AG_WM_ChangeWindowFocus();
 	}
 	return (rv);
 }

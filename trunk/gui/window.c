@@ -53,6 +53,8 @@ int agWindowIconWidth = 32;
 int agWindowIconHeight = 32;
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 6;
+AG_Window *agWindowToFocus = NULL;
+AG_Window *agWindowFocused = NULL;
 struct ag_windowq agWindowDetachQ;
 struct ag_widgetq agWidgetDetachQ;
 
@@ -69,6 +71,8 @@ AG_InitWindowSystem(void)
 
 	TAILQ_INIT(&agWindowDetachQ);
 	TAILQ_INIT(&agWidgetDetachQ);
+	agWindowToFocus = NULL;
+	agWindowFocused = NULL;
 }
 
 void
@@ -253,6 +257,10 @@ Detach(AG_Event *event)
 	
 	/* Implicitely hide the window. */
 	AG_WindowHide(win);
+
+	/* Cancel any planned focus change to this window. */
+	if (win == agWindowToFocus)
+		agWindowToFocus = NULL;
 
 	/*
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
@@ -580,13 +588,15 @@ Hidden(AG_Event *event)
 	AG_DriverSw *dsw;
 	int i;
 
+	/* Cancel any planned focus change to this window. */
+	if (win == agWindowToFocus)
+		agWindowToFocus = NULL;
+
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		dsw = (AG_DriverSw *)drv;
-		if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
-			/* Remove the focus. XXX cycle */
-			dsw->winToFocus = NULL;
-		}
+
+		/* Remove from the modal window list if modal. */
 		if (win->flags & AG_WINDOW_MODAL) {
 			for (i = 0; i < dsw->Lmodal->n; i++) {
 				if (dsw->Lmodal->v[i].data.p == win)
@@ -774,7 +784,8 @@ out:
  * Give focus to a window. For single-window drivers, the operation only takes
  * effect at the end of the current event cycle. For multiple-window drivers,
  * the change takes effect immediately. If the window is not attached to a
- * driver, the operation is deferred until the next attach.
+ * driver, the operation is deferred until the next attach. If NULL is given,
+ * cancel any planned focus change.
  */
 void
 AG_WindowFocus(AG_Window *win)
@@ -782,9 +793,7 @@ AG_WindowFocus(AG_Window *win)
 	AG_LockVFS(&agDrivers);
 
 	if (win == NULL) {
-		if (AGDRIVER_SINGLE(agDriver)) {
-			AGDRIVER_SW(agDriver)->winToFocus = NULL;
-		}
+		agWindowToFocus = NULL;
 		goto out;
 	}
 
@@ -793,23 +802,11 @@ AG_WindowFocus(AG_Window *win)
 		AG_ObjectUnlock(win);
 		goto out;
 	}
-	if (OBJECT(win)->parent != NULL) {
-		AG_Driver *drv = OBJECT(win)->parent;
-
-		switch (AGDRIVER_CLASS(drv)->wm) {
-		case AG_WM_SINGLE:
-			AGDRIVER_SW(drv)->winToFocus = win;
-			break;
-		case AG_WM_MULTIPLE:
-			if (win->visible) {
-				AGDRIVER_MW_CLASS(drv)->raiseWindow(win);
-			}
-			/* XXX */
-			break;
-		}
-	} else {
+	if (OBJECT(win)->parent == NULL) {
 		/* Will focus on future attach */
 		win->flags |= AG_WINDOW_FOCUSONATTACH;
+	} else {
+		agWindowToFocus = win;
 	}
 	AG_ObjectUnlock(win);
 out:
@@ -852,7 +849,7 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 	AG_Window *win;
 
 	AG_ASSERT_CLASS(dsw, "AG_Driver:AG_DriverSw:*");
-	dsw->winToFocus = NULL;
+	agWindowToFocus = NULL;
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		AG_ObjectLock(win);
 		if (!win->visible ||
@@ -861,7 +858,7 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 			AG_ObjectUnlock(win);
 			continue;
 		}
-		dsw->winToFocus = win;
+		agWindowToFocus = win;
 		AG_ObjectUnlock(win);
 		return (1);
 	}

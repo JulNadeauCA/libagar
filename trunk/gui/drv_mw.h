@@ -1,8 +1,9 @@
 /*	Public domain	*/
 
 /*
- * Multiple-window graphics driver framework. In this mode, each Agar window
- * has a corresponding "native" window managed by the driver.
+ * Multiple-window graphics driver framework. In this mode, Agar offers an
+ * interface to an existing window manager, as opposed to providing one
+ * internally (i.e., each Agar window corresponds to a "native" window).
  */
 
 struct ag_size_alloc;
@@ -22,6 +23,10 @@ typedef struct ag_driver_mw_class {
 	int (*raiseWindow)(struct ag_window *);
 	int (*lowerWindow)(struct ag_window *);
 	int (*reparentWindow)(struct ag_window *, struct ag_window *, int, int);
+
+	/* Change and query input focus state */
+	int (*getInputFocus)(struct ag_window **);
+	int (*setInputFocus)(struct ag_window *);
 
 	/* Move and resize windows */
 	int  (*moveWindow)(struct ag_window *, int x, int y);

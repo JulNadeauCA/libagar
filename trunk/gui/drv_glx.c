@@ -74,7 +74,7 @@ struct blending_state {
 };
 
 /* Driver instance data */
-typedef struct ag_glx_driver {
+typedef struct ag_driver_glx {
 	struct ag_driver_mw _inherit;
 	Window         w;		/* X window */
 	GLXContext     glxCtx;		/* GLX context */
@@ -108,10 +108,15 @@ struct ag_cursor_glx {
 	int visible;
 };
 
+#define AGDRIVER_IS_GLX(drv) \
+	AG_OfClass((drv),"AG_Driver:AG_DriverMw:AG_DriverGLX")
+
 static void DrawRectFilled(void *, AG_Rect, AG_Color);
 static void PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static void FreeWidgetResources(AG_Widget *);
 static void RegenWidgetResources(AG_Widget *);
+static int  RaiseWindow(AG_Window *);
+static int  SetInputFocus(AG_Window *);
 
 static void
 Init(void *obj)
@@ -522,8 +527,17 @@ ProcessEvents(void *drvCaller)
 			/* printf(">{Enter,Leave}Notify\n"); */
 			break;
 		case FocusIn:
+			if ((win = LookupWindowByID(xev.xfocus.window))) {
+				agWindowFocused = win;
+				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+			}
+			break;
 		case FocusOut:
-			/* printf(">Focus{In,Out}\n"); */
+			if ((win = LookupWindowByID(xev.xfocus.window)) &&
+			    agWindowFocused == win) {
+				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+				agWindowFocused = NULL;
+			}
 			break;
 		case MapNotify:
 		case UnmapNotify:
@@ -576,6 +590,17 @@ next_event:
 		nProcessed++;
 		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
 			AG_FreeDetachedWindows();
+		}
+		if (agWindowToFocus != NULL) {
+			glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
+			if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
+				RaiseWindow(agWindowToFocus);
+				SetInputFocus(agWindowToFocus);
+			}
+			/* XXX TODO window-lostfocus to previous */
+			AG_PostEvent(NULL, agWindowToFocus,
+			    "window-gainfocus", NULL);
+			agWindowToFocus = NULL;
 		}
 		AG_UnlockVFS(&agDrivers);
 	}
@@ -1707,18 +1732,15 @@ DrawGlyph(void *obj, AG_Glyph *gl, int x, int y)
 	AG_Surface *su = gl->su;
 	AG_TexCoord *tc;
 
-	if (gl->nTextures <= drv->id) {
+	if (gl->nTextures < drv->id+1) {
 		gl->textures = Realloc(gl->textures, (drv->id+1)*sizeof(Uint));
 		gl->texcoords = Realloc(gl->texcoords, (drv->id+1)*sizeof(AG_TexCoord));
 		gl->nTextures = drv->id+1;
 		gl->textures[drv->id] = 0;
 	}
 	if (gl->textures[drv->id] == 0) {
-		if (UploadTexture(&gl->textures[drv->id], su,
-		    &gl->texcoords[drv->id]) == -1) {
-			Verbose("Glyph texture upload failed\n");
-			return;
-		}
+		UploadTexture(&gl->textures[drv->id], su,
+		    &gl->texcoords[drv->id]);
 	}
 	glBindTexture(GL_TEXTURE_2D, gl->textures[drv->id]);
 	tc = &gl->texcoords[drv->id];
@@ -1857,8 +1879,9 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 //		valuemask |= CWOverrideRedirect;
 //		xwAttrs.override_redirect = True;
 	}
-	if (win->parent != NULL && (drvParent = WIDGET(win->parent)->drv) &&
-	    AG_OfClass(drvParent, "AG_Driver:AG_DriverMw:AG_DriverGLX") &&
+	if (win->parent != NULL &&
+	    (drvParent = WIDGET(win->parent)->drv) &&
+	    AGDRIVER_IS_GLX(drvParent) &&
 	    (AGDRIVER_MW(drvParent)->flags & AG_DRIVER_MW_OPEN)) {
 		AG_DriverGLX *glxParent = (AG_DriverGLX *)drvParent;
 		wParent = glxParent->w;
@@ -1986,6 +2009,39 @@ ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
 
 	XReparentWindow(agDisplay, glxWin->w, glxParentWin->w, x,y);
 /*	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w); */
+	return (0);
+}
+
+static int
+GetInputFocus(AG_Window **rv)
+{
+	AG_DriverGLX *glx = NULL;
+	Window wRet;
+	int revertToRet;
+
+	XGetInputFocus(agDisplay, &wRet, &revertToRet);
+
+	AGOBJECT_FOREACH_CHILD(glx, &agDriver, ag_driver_glx) {
+		if (!AGDRIVER_IS_GLX(glx)) {
+			continue;
+		}
+		if (glx->w == wRet)
+			break;
+	}
+	if (glx == NULL) {
+		AG_SetError("Input focus is external to this application");
+		return (-1);
+	}
+	*rv = AGDRIVER_MW(glx)->win;
+	return (0);
+}
+
+static int
+SetInputFocus(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	
+	XSetInputFocus(agDisplay, glx->w, RevertToParent, CurrentTime);
 	return (0);
 }
 
@@ -2189,6 +2245,8 @@ AG_DriverMwClass agDriverGLX = {
 	RaiseWindow,
 	LowerWindow,
 	ReparentWindow,
+	GetInputFocus,
+	SetInputFocus,
 	MoveWindow,
 	ResizeWindow,
 	MoveResizeWindow,
