@@ -82,6 +82,11 @@ AG_DriverOpen(AG_DriverClass *dc)
 		AG_ObjectDestroy(drv);
 		return (NULL);
 	}
+	for (drv->id = 1; ; drv->id++) {
+		if (AG_GetDriverByID(drv->id) == NULL)
+			break;
+	}
+	AG_ObjectSetName(drv, "%s%u", dc->name, drv->id);
 	AG_ObjectAttach(&agDrivers, drv);
 	return (drv);
 }
@@ -149,6 +154,7 @@ Init(void *obj)
 {
 	AG_Driver *drv = obj;
 
+	drv->id = 0;
 	drv->flags = 0;
 	drv->sRef = AG_SurfaceRGBA(1,1, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
