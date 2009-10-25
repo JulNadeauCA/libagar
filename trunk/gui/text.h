@@ -4,7 +4,8 @@
 #define _AGAR_GUI_TEXT_H_
 #include <agar/gui/begin.h>
 
-#define AG_TEXT_STATES_MAX 32
+#define AG_GLYPH_NBUCKETS 1024	/* Buckets for glyph cache table */
+#define AG_TEXT_STATES_MAX 32	/* Maximum number of saved text states */
 
 struct ag_window;
 struct ag_button;
@@ -30,18 +31,18 @@ enum ag_text_msg_title {
 	AG_MSG_INFO
 };
 
+struct ag_font;
+
 /* Cached glyph surface/texture information. */
 typedef struct ag_glyph {
-	char fontname[AG_OBJECT_NAME_MAX];
-	int fontsize;			/* Font size in points */
-	AG_Color color;			/* Glyph color */
-	Uint32 ch;			/* Unicode character */
-	Uint32 nrefs;			/* Reference count */
-	Uint32 lastRef;			/* Ticks since last reference */
-	AG_Surface *su;			/* Rendered surface */
-	int advance;			/* Pixel advance */
-	Uint texture;			/* For OpenGL */
-	float texcoord[4];
+	struct ag_font *font;		/* Font face */
+	AG_Color        color;		/* Glyph color */
+	Uint32          ch;		/* Unicode character */
+	AG_Surface     *su;		/* Rendered surface */
+	int             advance;	/* Pixel advance */
+	Uint           *textures;	/* Textures (per driver instance) */
+	AG_TexCoord    *texcoords;	/* Texture coordinates */
+	Uint           nTextures;
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
@@ -92,6 +93,10 @@ typedef struct ag_text_metrics {
 	Uint  nLines;			/* Total line count */
 } AG_TextMetrics;
 
+struct ag_glyph_cache {
+	AG_SLIST_HEAD(, ag_glyph) glyphs;
+};
+
 __BEGIN_DECLS
 extern AG_ObjectClass agFontClass;
 extern AG_Font *agDefaultFont;
@@ -105,6 +110,7 @@ extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
 extern AG_StaticFont *agBuiltinFonts[];
 extern const int agBuiltinFontCount;
+extern struct ag_glyph_cache agGlyphCache[];
 
 int	 AG_TextInit(void);
 void	 AG_TextDestroy(void);
@@ -168,8 +174,7 @@ struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
 void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
 
-AG_Glyph *AG_TextRenderGlyph(Uint32);
-void	  AG_TextUnusedGlyph(AG_Glyph *);
+AG_Glyph *AG_TextRenderGlyphMiss(Uint32);
 void	  AG_ClearGlyphCache(void);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
@@ -236,6 +241,30 @@ AG_TextRender(const char *text)
 	free(ucs);
 	return (su);
 }
+
+/*
+ * Lookup/insert a glyph in the glyph cache.
+ * Must be called from GUI rendering context.
+ */
+static __inline__ AG_Glyph *
+AG_TextRenderGlyph(Uint32 ch)
+{
+	AG_Glyph *gl;
+	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
+
+	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
+		if (ch == gl->ch &&
+		    agTextState->font == gl->font &&
+		    AG_ColorCompare(agTextState->color,gl->color) == 0)
+			break;
+	}
+	if (gl == NULL) {
+		gl = AG_TextRenderGlyphMiss(ch);
+		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
+	}
+	return (gl);
+}
+
 
 /* Set active text color. */
 static __inline__ void

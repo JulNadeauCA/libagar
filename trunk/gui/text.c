@@ -115,7 +115,6 @@ static AG_TextState states[AG_TEXT_STATES_MAX];
 static Uint curState = 0;
 AG_TextState *agTextState;
 
-#define GLYPH_NBUCKETS	  1024	/* Buckets for glyph cache table */
 /* #define SYMBOLS */		/* Escape $(x) type symbols */
 
 static const char *agTextMsgTitles[] = {
@@ -127,10 +126,7 @@ static const char *agTextMsgTitles[] = {
 AG_Mutex agTextLock;
 static SLIST_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
-
-static struct {
-	SLIST_HEAD(, ag_glyph) glyphs;
-} agGlyphCache[GLYPH_NBUCKETS+1];
+struct ag_glyph_cache agGlyphCache[AG_GLYPH_NBUCKETS+1];
 
 static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
 
@@ -388,7 +384,7 @@ FreeGlyph(AG_Glyph *gl)
 	AG_SurfaceFree(gl->su);
 #if 0
 	/* XXX TODO: delete any cached textures */
-	agDriverOps->deleteTexture(gl->texture);
+	drvOps->deleteTexture(drv, gl->texture[drv->id]);
 #endif
 	Free(gl);
 }
@@ -466,7 +462,7 @@ AG_TextInit(void)
 	curState = 0;
 	agTextState = &states[0];
 	InitTextState();
-	for (i = 0; i < GLYPH_NBUCKETS; i++) {
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
 	return (0);
@@ -487,7 +483,7 @@ AG_ClearGlyphCache(void)
 	int i;
 	AG_Glyph *gl, *ngl;
 
-	for (i = 0; i < GLYPH_NBUCKETS; i++) {
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		for (gl = SLIST_FIRST(&agGlyphCache[i].glyphs);
 		     gl != SLIST_END(&agGlyphCache[i].glyphs);
 		     gl = ngl) {
@@ -524,81 +520,47 @@ AG_TextDestroy(void)
 	AG_MutexDestroy(&agTextLock);
 }
 
-static __inline__ Uint
-HashGlyph(Uint32 ch)
-{
-	return (ch % GLYPH_NBUCKETS);
-}
-
-/*
- * Lookup/insert a glyph in the glyph cache.
- * Must be called from GUI rendering context.
- */
+/* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 AG_Glyph *
-AG_TextRenderGlyph(Uint32 ch)
+AG_TextRenderGlyphMiss(Uint32 ch)
 {
 	AG_Glyph *gl;
-	Uint h = HashGlyph(ch);
+	Uint32 ucs[2];
 
-	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
-		if (agTextState->font->size == gl->fontsize &&
-		    AG_ColorCompare(agTextState->color,gl->color) == 0 &&
-		    (strcmp(OBJECT(agTextState->font)->name, gl->fontname)
-		     == 0) &&
-		    ch == gl->ch)
-			break;
-	}
-	if (gl == NULL) {
-		Uint32 ucs[2];
+	gl = Malloc(sizeof(AG_Glyph));
+	gl->font = agTextState->font;
+	gl->color = agTextState->color;
+	gl->ch = ch;
+	ucs[0] = ch;
+	ucs[1] = '\0';
+	gl->su = AG_TextRenderUCS4(ucs);
 
-		gl = Malloc(sizeof(AG_Glyph));
-		Strlcpy(gl->fontname, OBJECT(agTextState->font)->name,
-		    sizeof(gl->fontname));
-		gl->fontsize = agTextState->font->size;
-		gl->color = agTextState->color;
-		gl->ch = ch;
-		ucs[0] = ch;
-		ucs[1] = '\0';
-		gl->su = AG_TextRenderUCS4(ucs);
-
-		switch (agTextState->font->type) {
+	switch (agTextState->font->type) {
 #ifdef HAVE_FREETYPE
-		case AG_FONT_VECTOR:
-			{
-				AG_TTFGlyph *gt;
+	case AG_FONT_VECTOR:
+		{
+			AG_TTFGlyph *gt;
 
-				if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
-				    TTF_CACHED_METRICS|
-				    TTF_CACHED_BITMAP) == 0) {
-					gt = ((AG_TTFFont *)agTextState->font->ttf)->current;
-					gl->advance = gt->advance;
-				} else {
-					gl->advance = gl->su->w;
-				}
+			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) == 0) {
+				gt = ((AG_TTFFont *)agTextState->font->ttf)->current;
+				gl->advance = gt->advance;
+			} else {
+				gl->advance = gl->su->w;
 			}
-			break;
-#endif
-		case AG_FONT_BITMAP:
-			gl->advance = gl->su->w;
-			break;
-		default:
-			break;
 		}
-		gl->texture = 0;
-		gl->nrefs = 1;
-		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
-	} else {
-		gl->nrefs++;
+		break;
+#endif
+	case AG_FONT_BITMAP:
+		gl->advance = gl->su->w;
+		break;
+	default:
+		break;
 	}
-	gl->lastRef = AG_GetTicks();
+	gl->textures = NULL;
+	gl->texcoords = NULL;
+	gl->nTextures = 0;
 	return (gl);
-}
-
-void
-AG_TextUnusedGlyph(AG_Glyph *gl)
-{
-	if (gl->nrefs > 0)
-		gl->nrefs--;
 }
 
 /* Save the current text rendering state. */
