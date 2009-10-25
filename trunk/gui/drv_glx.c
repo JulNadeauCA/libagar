@@ -597,9 +597,6 @@ next_event:
 				RaiseWindow(agWindowToFocus);
 				SetInputFocus(agWindowToFocus);
 			}
-			/* XXX TODO window-lostfocus to previous */
-			AG_PostEvent(NULL, agWindowToFocus,
-			    "window-gainfocus", NULL);
 			agWindowToFocus = NULL;
 		}
 		AG_UnlockVFS(&agDrivers);
