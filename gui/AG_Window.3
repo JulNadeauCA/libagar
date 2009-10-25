@@ -471,9 +471,16 @@ function sets the focus on the given window.
 If the currently focused window has the
 .Dv AG_WINDOW_KEEPABOVE
 flag set, this function becomes a no-op.
+The focus change may not be immediate; typically, it will occur at the end
+of the current event processing cycle depending on the underlying graphics
+driver in use.
+If an argument of NULL is passed, any planned change in focus is cancelled.
+.Pp
 .Fn AG_WindowFocusNamed
-sets the focus on the window of the given name and returns 0 on success
-or -1 if the window was not found.
+calls
+.Fn AG_WindowFocus
+on the window of the given name and returns 0 on success or -1 if the window
+was not found.
 .Pp
 .Fn AG_WindowFocusAtPos
 looks for a window at the specified coordinates in pixels, in the video
@@ -481,7 +488,9 @@ display associated with the given single-display driver
 .Fa drv
 (see
 .Xr AG_DriverSw 3 ) .
-If a window is found, it is focused and 1 is returned.
+If a window is found,
+.Fn AG_WindowFocus
+is called on it and 1 is returned.
 Otherwise, 0 is returned.
 .Pp
 .Fn AG_WindowFindFocused
