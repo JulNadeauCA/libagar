@@ -747,7 +747,7 @@ CopyColorKeySurface(AG_Surface *suTex, AG_Surface *suSrc)
 }
 
 static int
-UploadTexture(Uint *rv, AG_Surface *suSrc, float *texcoord)
+UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 {
 	AG_Surface *suTex;
 	int w = PowOf2i(suSrc->w);
@@ -755,11 +755,11 @@ UploadTexture(Uint *rv, AG_Surface *suSrc, float *texcoord)
 	GLuint texture;
 
 	/* Convert to the GL_RGBA/GL_UNSIGNED_BYTE format. */
-	if (texcoord != NULL) {
-		texcoord[0] = 0.0f;
-		texcoord[1] = 0.0f;
-		texcoord[2] = (GLfloat)suSrc->w / w;
-		texcoord[3] = (GLfloat)suSrc->h / h;
+	if (tc != NULL) {
+		tc->x = 0.0f;
+		tc->y = 0.0f;
+		tc->w = (float)suSrc->w / w;
+		tc->h = (float)suSrc->h / h;
 	}
 	suTex = AG_SurfaceRGBA(w,h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -1106,7 +1106,7 @@ UpdateWidgetTexture(AG_Widget *wid, int s)
 {
 	if (wid->textures[s] == 0) {
 		wid->textures[s] = AG_SurfaceTexture(wid->surfaces[s],
-		    &wid->texcoords[s*4]);
+		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
 		UpdateTexture(wid->textures[s], wid->surfaces[s]);
@@ -1119,12 +1119,12 @@ BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 {
 	AG_Driver *drv = obj;
 	GLuint texture;
-	GLfloat texcoord[4];
+	AG_TexCoord tc;
 	
 	AG_ASSERT_CLASS(obj, "AG_Driver:*");
 	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
-	texture = AG_SurfaceTexture(s, texcoord);
+	texture = AG_SurfaceTexture(s, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -1133,14 +1133,10 @@ BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(texcoord[0], texcoord[1]);
-		glVertex2i(x, y);
-		glTexCoord2f(texcoord[2], texcoord[1]);
-		glVertex2i(x+s->w, y);
-		glTexCoord2f(texcoord[0], texcoord[3]);
-		glVertex2i(x, y+s->h);
-		glTexCoord2f(texcoord[2], texcoord[3]);
-		glVertex2i(x+s->w, y+s->h);
+		glTexCoord2f(tc.x, tc.y);	glVertex2i(x,      y);
+		glTexCoord2f(tc.w, tc.y);	glVertex2i(x+s->w, y);
+		glTexCoord2f(tc.x, tc.h);	glVertex2i(x,      y+s->h);
+		glTexCoord2f(tc.w, tc.h);	glVertex2i(x+s->w, y+s->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1155,8 +1151,7 @@ BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s, AG_Rect *r,
 {
 	AG_Driver *drv = obj;
 	AG_Surface *su = widSrc->surfaces[s];
-	GLfloat tmptexcoord[4];
-	GLfloat *texcoord;
+	AG_TexCoord tcTmp, *tc;
 	
 	AG_ASSERT_CLASS(obj, "AG_Driver:*");
 	AG_ASSERT_CLASS(wid, "AG_Widget:*");
@@ -1165,13 +1160,13 @@ BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s, AG_Rect *r,
 	UpdateWidgetTexture(widSrc, s);
 
 	if (r == NULL) {
-		texcoord = &widSrc->texcoords[s*4];
+		tc = &widSrc->texcoords[s];
 	} else {
-		texcoord = &tmptexcoord[0];
-		texcoord[0] = (GLfloat)r->x/PowOf2i(r->x);
-		texcoord[1] = (GLfloat)r->y/PowOf2i(r->y);
-		texcoord[2] = (GLfloat)r->w/PowOf2i(r->w);
-		texcoord[3] = (GLfloat)r->h/PowOf2i(r->h);
+		tc = &tcTmp;
+		tcTmp.x = (float)r->x/PowOf2i(r->x);
+		tcTmp.y = (float)r->y/PowOf2i(r->y);
+		tcTmp.w = (float)r->w/PowOf2i(r->w);
+		tcTmp.h = (float)r->h/PowOf2i(r->h);
 	}
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
@@ -1181,14 +1176,10 @@ BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s, AG_Rect *r,
 	glBindTexture(GL_TEXTURE_2D, widSrc->textures[s]);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(texcoord[0], texcoord[1]);
-		glVertex2i(x, y);
-		glTexCoord2f(texcoord[2], texcoord[1]);
-		glVertex2i(x+su->w, y);
-		glTexCoord2f(texcoord[0], texcoord[3]);
-		glVertex2i(x, y+su->h);
-		glTexCoord2f(texcoord[2], texcoord[3]);
-		glVertex2i(x+su->w, y+su->h);
+		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
+		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
+		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
+		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1200,11 +1191,11 @@ BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 {
 	AG_Driver *drv = obj;
 	GLuint texture;
-	GLfloat texcoord[4];
+	AG_TexCoord tc;
 	float w2 = w/2.0f;
 	float h2 = h/2.0f;
 
-	texture = AG_SurfaceTexture(s, texcoord);
+	texture = AG_SurfaceTexture(s, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -1213,14 +1204,10 @@ BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(texcoord[0],	texcoord[1]);
-		glVertex2f(w2,			h2);
-		glTexCoord2f(texcoord[2],	texcoord[1]);
-		glVertex2f(-w2,			h2);
-		glTexCoord2f(texcoord[0],	texcoord[3]);
-		glVertex2f(w2,			-h2);
-		glTexCoord2f(texcoord[2],	texcoord[3]);
-		glVertex2f(-w2,			-h2);
+		glTexCoord2f(tc.x, tc.y);	glVertex2f( w2,  h2);
+		glTexCoord2f(tc.w, tc.y);	glVertex2f(-w2,  h2);
+		glTexCoord2f(tc.x, tc.h);	glVertex2f( w2, -h2);
+		glTexCoord2f(tc.w, tc.h);	glVertex2f(-w2, -h2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1233,12 +1220,12 @@ static void
 BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
 {
 	AG_Driver *drv = obj;
-	GLfloat *texcoord;
+	AG_TexCoord *tc;
 	float w2 = w/2.0f;
 	float h2 = h/2.0f;
 	
 	UpdateWidgetTexture(wid, s);
-	texcoord = &wid->texcoords[s*4];
+	tc = &wid->texcoords[s];
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -1247,14 +1234,10 @@ BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, wid->textures[s]);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(texcoord[0],	texcoord[1]);
-		glVertex2f(w2,			h2);
-		glTexCoord2f(texcoord[2],	texcoord[1]);
-		glVertex2f(-w2,			h2);
-		glTexCoord2f(texcoord[0],	texcoord[3]);
-		glVertex2f(w2,			-h2);
-		glTexCoord2f(texcoord[2],	texcoord[3]);
-		glVertex2f(-w2,			-h2);
+		glTexCoord2f(tc->x, tc->y);	glVertex2f( w2,  h2);
+		glTexCoord2f(tc->w, tc->y);	glVertex2f(-w2,  h2);
+		glTexCoord2f(tc->x, tc->h);	glVertex2f( w2, -h2);
+		glTexCoord2f(tc->w, tc->h);	glVertex2f(-w2, -h2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1266,10 +1249,10 @@ static void
 BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
 {
 	AG_Driver *drv = obj;
-	GLfloat *texcoord;
+	AG_TexCoord *tc;
 	
 	UpdateWidgetTexture(wid, s);
-	texcoord = &wid->texcoords[s*4];
+	tc = &wid->texcoords[s];
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -1278,14 +1261,10 @@ BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[s]);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(texcoord[2],	texcoord[1]);
-		glVertex2f(0.0,			0.0);
-		glTexCoord2f(texcoord[0],	texcoord[1]);
-		glVertex2f((GLfloat)w,		0.0);
-		glTexCoord2f(texcoord[2],	texcoord[3]);
-		glVertex2f(0.0,			(GLfloat)h);
-		glTexCoord2f(texcoord[0],	texcoord[3]);
-		glVertex2f((GLfloat)w,		(GLfloat)h);
+		glTexCoord2f(tc->w, tc->y);	glVertex2f(0.0, 0.0);
+		glTexCoord2f(tc->x, tc->y);	glVertex2f(w,   0.0);
+		glTexCoord2f(tc->w, tc->h);	glVertex2f(0.0, h);
+		glTexCoord2f(tc->x, tc->h);	glVertex2f(w,   h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1341,7 +1320,7 @@ RestoreSurfaces(void *obj, AG_Widget *wid)
 	for (i = 0; i < wid->nsurfaces; i++)  {
 		if (wid->surfaces[i] != NULL) {
 			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
-			    &wid->texcoords[i*4]);
+			    &wid->texcoords[i]);
 		} else {
 			wid->textures[i] = 0;
 		}
@@ -1722,26 +1701,33 @@ DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
 }
 
 static void
-DrawGlyph(void *drv, AG_Glyph *gl, int x, int y)
+DrawGlyph(void *obj, AG_Glyph *gl, int x, int y)
 {
-	if (gl->texture == 0) {
-		if (UploadTexture(&gl->texture, gl->su, gl->texcoord) == -1) {
+	AG_Driver *drv = obj;
+	AG_Surface *su = gl->su;
+	AG_TexCoord *tc;
+
+	if (gl->nTextures <= drv->id) {
+		gl->textures = Realloc(gl->textures, (drv->id+1)*sizeof(Uint));
+		gl->texcoords = Realloc(gl->texcoords, (drv->id+1)*sizeof(AG_TexCoord));
+		gl->nTextures = drv->id+1;
+		gl->textures[drv->id] = 0;
+	}
+	if (gl->textures[drv->id] == 0) {
+		if (UploadTexture(&gl->textures[drv->id], su,
+		    &gl->texcoords[drv->id]) == -1) {
 			Verbose("Glyph texture upload failed\n");
 			return;
 		}
 	}
-
-	glBindTexture(GL_TEXTURE_2D, gl->texture);
+	glBindTexture(GL_TEXTURE_2D, gl->textures[drv->id]);
+	tc = &gl->texcoords[drv->id];
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-		glTexCoord2f(gl->texcoord[0], gl->texcoord[1]);
-		glVertex2i(x, y);
-		glTexCoord2f(gl->texcoord[2], gl->texcoord[1]);
-		glVertex2i(x+gl->su->w, y);
-		glTexCoord2f(gl->texcoord[0], gl->texcoord[3]);
-		glVertex2i(x, y+gl->su->h);
-		glTexCoord2f(gl->texcoord[2], gl->texcoord[3]);
-		glVertex2i(x+gl->su->w, y+gl->su->h);
+		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
+		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
+		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
+		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);

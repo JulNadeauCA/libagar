@@ -41,7 +41,6 @@ Init(void *obj)
 {
 	AG_DriverMw *dmw = obj;
 
-	fprintf(stderr, "AG_DriverMw(%p) INIT\n", dmw);
 	dmw->flags = 0;
 	dmw->win = NULL;
 }

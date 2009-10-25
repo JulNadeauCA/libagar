@@ -33,6 +33,11 @@ typedef struct ag_clip_rect {
 	double eqns[4][4];	/* Computed plane equations (GL) */
 } AG_ClipRect;
 
+/* Texture coordinates */
+typedef struct ag_texcoord {
+	float x, y, w, h;
+} AG_TexCoord;
+
 __BEGIN_DECLS
 
 /* Return a Point at x,y. */

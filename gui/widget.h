@@ -132,9 +132,8 @@ typedef struct ag_widget {
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
 	Uint nsurfaces;
 
-	/* For OpenGL drivers */
-	Uint *textures;			/* Cached OpenGL textures */
-	float *texcoords;		/* Cached texture coordinates */
+	Uint *textures;			/* Cached textures (driver-specific) */
+	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
 	AG_Mutex bindings_lock;		 	/* Lock on bindings */
 	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
@@ -158,7 +157,6 @@ typedef struct ag_widget {
 
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
-#define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
 #define AGSTYLE(p)			 AGWIDGET(p)->style
@@ -174,7 +172,6 @@ typedef struct ag_widget {
 #define WIDGET_SUPER_OPS(wi)		AGWIDGET_SUPER_OPS(wi)
 #define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
 #define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
-#define WTEXCOORD(wi,ind)		AGWIDGET_TEXCOORD((wi),(ind))
 #define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
 #define STYLE(p)                        AGSTYLE(p)
 #define WIDTH(p)			AGWIDGET(p)->w

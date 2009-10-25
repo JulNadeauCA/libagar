@@ -175,9 +175,6 @@ rendering functions.
 .Ft "AG_Glyph *"
 .Fn AG_TextRenderGlyph "Uint32 uch"
 .Pp
-.Ft void
-.Fn AG_TextUnusedGlyph "AG_Glyph *glyph"
-.Pp
 .Ft "void"
 .Fn AG_TextSize "const char *text" "int *w" "int *h"
 .Pp
@@ -221,11 +218,6 @@ OpenGL texture coordinates (if OpenGL is in use
 .It int advance
 Amount of translation (in pixels) recommended to follow when rendering text
 .El
-.Pp
-.Fn AG_TextUnusedGlyph
-must be invoked when an
-.Ft AG_Glyph
-object is no longer needed.
 .Pp
 The
 .Fn AG_TextSize
