@@ -110,7 +110,7 @@ extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
 extern AG_StaticFont *agBuiltinFonts[];
 extern const int agBuiltinFontCount;
-extern struct ag_glyph_cache agGlyphCache[];
+extern struct ag_glyph_cache *agGlyphCache;
 
 int	 AG_TextInit(void);
 void	 AG_TextDestroy(void);
@@ -252,7 +252,7 @@ AG_TextRenderGlyph(Uint32 ch)
 	AG_Glyph *gl;
 	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
 
-	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
+	AG_SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
 		if (ch == gl->ch &&
 		    agTextState->font == gl->font &&
 		    AG_ColorCompare(agTextState->color,gl->color) == 0)
@@ -260,7 +260,7 @@ AG_TextRenderGlyph(Uint32 ch)
 	}
 	if (gl == NULL) {
 		gl = AG_TextRenderGlyphMiss(ch);
-		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
+		AG_SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
 	}
 	return (gl);
 }

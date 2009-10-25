@@ -126,7 +126,7 @@ static const char *agTextMsgTitles[] = {
 AG_Mutex agTextLock;
 static SLIST_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
-struct ag_glyph_cache agGlyphCache[AG_GLYPH_NBUCKETS+1];
+struct ag_glyph_cache *agGlyphCache = NULL;
 
 static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
 
@@ -462,6 +462,7 @@ AG_TextInit(void)
 	curState = 0;
 	agTextState = &states[0];
 	InitTextState();
+	agGlyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(struct ag_glyph_cache));
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
@@ -500,6 +501,8 @@ AG_TextDestroy(void)
 	AG_Font *font, *nextfont;
 
 	AG_ClearGlyphCache();
+	Free(agGlyphCache);
+	agGlyphCache = NULL;
 	
 	for (font = SLIST_FIRST(&fonts);
 	     font != SLIST_END(&fonts);
