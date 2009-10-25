@@ -345,7 +345,6 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 	     t++) {
 		gl = AG_TextRenderGlyph(*t);
 		x2 += gl->advance;
-		AG_TextUnusedGlyph(gl);
 		if (isspace((int)*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
@@ -429,7 +428,6 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 			
 				gl = AG_TextRenderGlyph(ch);
 				x += gl->su->w;
-				AG_TextUnusedGlyph(gl);
 				break;
 			}
 			default:
@@ -504,7 +502,6 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 				goto in;
 			}
 			x += gl->su->w;
-			AG_TextUnusedGlyph(gl);
 			break;
 		}
 		default:
@@ -585,6 +582,8 @@ static void
 Draw(void *obj)
 {
 	AG_Editable *ed = obj;
+	AG_Driver *drv = WIDGET(ed)->drv;
+	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_Variable *stringb;
 	char *s;
 	int i, dx, dy, x, y;
@@ -652,12 +651,10 @@ Draw(void *obj)
 		    dx > (WIDGET(ed)->rView.x2 + gl->su->w) ||
 		    dy >  WIDGET(ed)->rView.y2) {
 			x += gl->advance;
-			AG_TextUnusedGlyph(gl);
 			continue;
 		}
-		agDriverOps->drawGlyph(agDriver, gl, dx,dy);
+		drvOps->drawGlyph(drv, gl, dx,dy);
 		x += gl->advance;
-		AG_TextUnusedGlyph(gl);
 	}
 	if (ed->yMax == 1)
 		ed->xMax = x;
@@ -891,6 +888,8 @@ MouseMotion(AG_Event *event)
 
 	if (mx > 0 && my > 0 && mx < WIDTH(ed) && my < HEIGHT(ed)) {
 		AG_PushStockCursor(drv, AG_TEXT_CURSOR);
+	} else {
+		AG_PopCursor(drv);
 	}
 	if (!AG_WidgetIsFocused(ed))
 		return;
