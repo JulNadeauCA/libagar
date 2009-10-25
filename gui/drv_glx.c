@@ -535,7 +535,7 @@ ProcessEvents(void *drvCaller)
 		case FocusOut:
 			if ((win = LookupWindowByID(xev.xfocus.window)) &&
 			    agWindowFocused == win) {
-				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
 				agWindowFocused = NULL;
 			}
 			break;
