@@ -138,7 +138,7 @@ MouseButtonDown(AG_Event *event)
 
 	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv)) {
 		AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(tbar)->drv;
-		dsw->winToFocus = tbar->win;
+		agWindowToFocus = tbar->win;
 		dsw->winSelected = tbar->win;
 		if (!(tbar->win->flags & AG_WINDOW_NOMOVE))
 			dsw->winop = AG_WINOP_MOVE;

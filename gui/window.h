@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_WINDOW_H_
-#define _AGAR_WIDGET_WINDOW_H_
+#ifndef _AGAR_GUI_WINDOW_H_
+#define _AGAR_GUI_WINDOW_H_
 
 #include <agar/gui/widget.h>
 
@@ -110,6 +110,8 @@ extern int agWindowIconWidth;
 extern int agWindowIconHeight;
 extern struct ag_widgetq agWidgetDetachQ;	/* Widget pre-detach queue */
 extern struct ag_windowq agWindowDetachQ;	/* Window detach queue */
+extern AG_Window        *agWindowToFocus;	/* Window to focus next */
+extern AG_Window        *agWindowFocused;	/* Window holding focus */
 
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
@@ -170,6 +172,8 @@ void	 AG_WindowFocus(AG_Window *);
 int      AG_WindowFocusAtPos(AG_DriverSw *, int, int);
 int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
+#define  AG_WindowFindFocused() agWindowFocused
+#define  AG_WindowIsFocused(win) (agWindowFocused == win)
 void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowShowGenEv(AG_Event *);
@@ -196,39 +200,8 @@ AG_WindowDraw(AG_Window *win)
 }
 
 /*
- * Return the currently focused window.
- * XXX 1.4
- */
-static __inline__ AG_Window *
-AG_WindowFindFocused(void)
-{
-	if (agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
-		return AGOBJECT_LAST_CHILD(agDriver,ag_window);
-	} else {
-		return (NULL);
-	}
-}
-
-/*
- * Evaluate whether the given window is holding focus.
- * XXX 1.4
- */
-static __inline__ int
-AG_WindowIsFocused(AG_Window *win)
-{
-	AG_Driver *drv = AGWIDGET(win)->drv;
-
-	if (AGDRIVER_SINGLE(drv)) {
-		return (AGOBJECT_LAST_CHILD(drv,ag_window) == (win));
-	} else {
-		return (1);
-	}
-}
-
-/*
  * Return the effective focus state of a widget.
  * The Widget and View VFS must be locked.
- * XXX 1.4
  */
 static __inline__ int
 AG_WidgetIsFocused(void *p)
@@ -351,4 +324,4 @@ void       AG_ViewDetach(AG_Window *)	DEPRECATED_ATTRIBUTE;
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_WINDOW_H_ */
+#endif /* _AGAR_GUI_WINDOW_H_ */

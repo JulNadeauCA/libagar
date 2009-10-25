@@ -56,7 +56,6 @@ Init(void *obj)
 	dsw->flags = 0;
 	dsw->winop = AG_WINOP_NONE;
 	dsw->winSelected = NULL;
-	dsw->winToFocus = NULL;
 	dsw->winLastKeydown = NULL;
 	dsw->style = &agStyleDefault;
 	
@@ -351,14 +350,13 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
  * a change in focus (single-display drivers only).
  */
 void
-AG_ChangeWindowFocus(void)
+AG_WM_ChangeWindowFocus(void)
 {
 	AG_Window *winLast = OBJECT_LAST_CHILD(agDriver,ag_window);
-	AG_Window *winToFocus = agDriverSw->winToFocus;
 
 	if (winLast != NULL) {
-		if (winToFocus != NULL &&
-		    winToFocus == winLast) {
+		if (agWindowToFocus != NULL &&
+		    agWindowToFocus == winLast) {
 			/* Nothing to do */
 			goto out;
 		}
@@ -370,18 +368,21 @@ AG_ChangeWindowFocus(void)
 		AG_PostEvent(NULL, winLast, "window-lostfocus", NULL);
 		AG_ObjectUnlock(winLast);
 	}
-	if (winToFocus != NULL) {
-		AG_ObjectLock(winToFocus);
-		if (winToFocus->flags & AG_WINDOW_KEEPBELOW) {
-			AG_ObjectUnlock(winToFocus);
+	if (agWindowToFocus != NULL) {
+		AG_ObjectLock(agWindowToFocus);
+		if (agWindowToFocus->flags & AG_WINDOW_KEEPBELOW) {
+			AG_ObjectUnlock(agWindowToFocus);
 			goto out;
 		}
-		AG_ObjectMoveToTail(winToFocus);
-		AG_PostEvent(NULL, winToFocus, "window-gainfocus", NULL);
-		AG_ObjectUnlock(winToFocus);
+		AG_ObjectMoveToTail(agWindowToFocus);
+		agWindowFocused = agWindowToFocus;
+		AG_PostEvent(NULL, agWindowToFocus, "window-gainfocus", NULL);
+		AG_ObjectUnlock(agWindowToFocus);
+	} else {
+		agWindowFocused = NULL;
 	}
 out:
-	agDriverSw->winToFocus = NULL;
+	agWindowToFocus = NULL;
 }
 
 /* Limit window size to display size. */

@@ -38,18 +38,33 @@
 .Sh DESCRIPTION
 The
 .Nm
-object implements a mobile, resizable container for widgets; it is
+object is the basic container for Agar widgets; it is
 itself derived from the
 .Xr AG_Widget 3
-structure and attached to an
-.Xr AG_View 3 .
+structure, and is attached to a parent
+.Xr AG_Driver 3
+which provides an interface to the low-level graphics system in use.
+Where the low-level graphics system actually involves a window manager
+(e.g., when using X Windows), each
+.Nm
+object is attached to a dedicated
+.Ft AG_Driver
+instance.
+Where there are no underlying window managers involved (e.g., when writing
+to a plain framebuffer), Agar provides an internal "window manager" for the
+framebuffer, and multiple
+.Nm
+objects can attach to a single
+.Ft AG_Driver
+instance representing the framebuffer.
+.Pp
 Similarly to
 .Xr AG_Box 3 ,
 .Nm
-is a general-purpose widget container.
-By default, an
+acts like a general-purpose widget container.
+When Agar provides an internal window manager, a
 .Xr AG_Titlebar 3
-widget is attached to the window when it is created.
+widget is attached by default to the window when it is created.
 .Pp
 It not usually necessary to provide explicit dimensions in pixels when
 creating new Agar windows.
@@ -471,10 +486,14 @@ function sets the focus on the given window.
 If the currently focused window has the
 .Dv AG_WINDOW_KEEPABOVE
 flag set, this function becomes a no-op.
-The focus change may not be immediate; typically, it will occur at the end
-of the current event processing cycle depending on the underlying graphics
-driver in use.
-If an argument of NULL is passed, any planned change in focus is cancelled.
+The focus change may not be immediate depending on the underlying graphics
+system.
+A
+.Sq window-gainfocus
+event is posted to the window object after the focus change has occured.
+If an argument of NULL is passed to
+.Fn AG_WindowFocus ,
+any planned change in focus is cancelled.
 .Pp
 .Fn AG_WindowFocusNamed
 calls
@@ -494,13 +513,10 @@ is called on it and 1 is returned.
 Otherwise, 0 is returned.
 .Pp
 .Fn AG_WindowFindFocused
-returns a pointer to the window currently holding focus, or NULL if there
-are no active windows.
+returns a pointer to the window currently holding input focus,
+or NULL if there are none.
 .Fn AG_WindowIsFocused
 returns 1 if the window is currently holding focus, otherwise 0.
-For thread safety, the 
-.Xr AG_View 3
-VFS must be locked for the return value to remain valid.
 .Pp
 .Fn AG_WindowCycleFocus
 places the focus over the widget following (or preceeding if
