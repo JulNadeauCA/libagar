@@ -1547,12 +1547,14 @@ AG_FreeDetachedWindows(void)
 		winNext = TAILQ_NEXT(win, detach);
 		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
 		drv = WIDGET(win)->drv;
+
+		if (AGDRIVER_MULTIPLE(drv) &&
+		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+			AGDRIVER_MW_CLASS(drv)->closeWindow(win);
+		}
 		AG_ObjectDetach(win);
 		AG_ObjectDestroy(win);
-		if (AGDRIVER_MULTIPLE(drv)) {
-			AG_ObjectDetach(drv);
-			AG_ObjectDestroy(drv);
-		}
+		AG_DriverClose(drv);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
 }
