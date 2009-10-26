@@ -32,8 +32,6 @@
 #include <core/config.h>
 #include "window.h"
 
-AG_Mouse *agMouse = NULL;			/* Main mouse */
-
 AG_Mouse *
 AG_MouseNew(void *drv, const char *desc)
 {

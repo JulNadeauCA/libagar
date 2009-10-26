@@ -381,9 +381,6 @@ package agar.gui.widget.menu is
     function allocate (widget : widget_access_t) return popup_menu_access_t;
     pragma import (c, allocate, "AG_PopupNew");
 
-    procedure show (menu : popup_menu_access_t);
-    pragma import (c, show, "AG_PopupShow");
-
     procedure show_at
       (menu : popup_menu_access_t;
        x    : natural;

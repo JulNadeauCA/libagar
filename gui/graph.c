@@ -316,7 +316,7 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	AG_KeyMod kmod = AG_GetModState(agKeyboard);
+	AG_KeyMod kmod = AG_GetModState(WIDGET(gf)->drv->kbd);
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;
@@ -387,7 +387,7 @@ MouseButtonDown(AG_Event *event)
 				continue;
 			}
 			if (vtx->popupMenu != NULL) {
-				AG_PopupShow(vtx->popupMenu);
+				AG_PopupShowAt(vtx->popupMenu, x,y);
 			} else {
 				pm = AG_PopupNew(gf);
 				AG_MenuUintFlags(pm->item, _("Hide vertex"),
@@ -400,7 +400,7 @@ MouseButtonDown(AG_Event *event)
 				AG_MenuAction(pm->item, _("Circular"), NULL,
 				    SetVertexStyle, "%p,%i", vtx,
 				    AG_GRAPH_CIRCLE);
-				AG_PopupShow(pm);
+				AG_PopupShowAt(pm, x,y);
 			}
 			break;
 		}
@@ -409,12 +409,12 @@ MouseButtonDown(AG_Event *event)
 				continue;
 			}
 			if (edge->popupMenu != NULL) {
-				AG_PopupShow(edge->popupMenu);
+				AG_PopupShowAt(edge->popupMenu, x,y);
 			} else {
 				pm = AG_PopupNew(gf);
 				AG_MenuUintFlags(pm->item, _("Hide edge"), NULL,
 				    &edge->flags, AG_GRAPH_HIDDEN, 1);
-				AG_PopupShow(pm);
+				AG_PopupShowAt(pm, x,y);
 			}
 			break;
 		}

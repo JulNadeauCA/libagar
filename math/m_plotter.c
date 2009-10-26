@@ -250,7 +250,7 @@ mousebuttondown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	AG_KeyMod kmod = AG_GetModState(agKeyboard);
+	AG_KeyMod kmod = AG_GetModState(WIDGET(ptr)->drv->kbd);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -288,7 +288,7 @@ mousebuttondown(AG_Event *event)
 				AG_MenuAction(pm->item, _("Plot settings"),
 				    NULL,
 				    ShowPlotSettings, "%p", pl);
-				AG_PopupShow(pm);
+				AG_PopupShowAt(pm, x,y);
 				break;
 			}
 		}

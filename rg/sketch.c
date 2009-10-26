@@ -488,13 +488,14 @@ void
 RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
     int button)
 {
+	AG_Driver *drv = WIDGET(tv)->drv;
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 
 	if (button == AG_MOUSE_MIDDLE) {
 		int x, y;
 
-		AG_MouseGetState(agMouse, &x, &y);
+		AG_MouseGetState(drv->mouse, &x, &y);
 		RG_SketchOpenMenu(tv, x, y);
 		return;
 	} else if (button == AG_MOUSE_RIGHT) {
@@ -540,7 +541,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 				AG_Window *pwin = AG_WidgetParentWindow(tv);
 				AG_Window *win;
 
-				if (!(AG_GetModState(agKeyboard)&AG_KEYMOD_CTRL)) {
+				if (!(AG_GetModState(drv->kbd)&AG_KEYMOD_CTRL)) {
 					TAILQ_FOREACH(vge, &vg->vges, vges) {
 						if (vge->selected)
 							RG_SketchUnselect(tv,
