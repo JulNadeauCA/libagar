@@ -499,12 +499,6 @@ interface.
 .Pp
 .Ft void
 .Fn AG_PopClipRect "AG_Widget *widget"
-.Pp
-.Ft void
-.Fn AG_WidgetPushCursor "AG_Widget *widget" "int cursor"
-.Pp
-.Ft void
-.Fn AG_WidgetPopCursor "AG_Widget *widget"
 .nr nS 0
 .Pp
 The
@@ -516,23 +510,12 @@ The clipping rectangle is given in coordinates relative to the widget.
 .Pp
 These routines must be invoked from GUI rendering context.
 The method of clipping depends on the underlying graphics API.
-For instance, in SDL mode, the temporary rectangle is set by
+For instance, SDL drivers use
 .Xr SDL_SetClipRect 3
-and
-.Xr glClipPlane 3
-is used in OpenGL mode.
+and OpenGL drivers use
+.Xr glClipPlane 3 .
 In either case, the actual clipping rectangle passed to the graphics API
 is the intersection of all clipping rectangles on the stack.
-.Pp
-The
-.Fn AG_WidgetPushCursor
-function changes the active cursor, saving the previous one.
-The argument is an index into the global
-.Va agCursors
-array.
-The
-.Fn AG_WidgetPopCursor
-restores the previously saved cursor.
 .Sh BINDINGS
 Agar widgets can be configured to directly access data of specific types.
 For example,
@@ -1030,6 +1013,7 @@ and
 .Xr AG_Menu 3 .
 .El
 .Sh SEE ALSO
+.Xr AG_Cursor 3 ,
 .Xr AG_KeySym 3 ,
 .Xr AG_KeyMod 3 ,
 .Xr AG_GlobalKeys 3 ,
