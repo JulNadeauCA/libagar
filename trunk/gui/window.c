@@ -1554,7 +1554,8 @@ AG_FreeDetachedWindows(void)
 		}
 		AG_ObjectDetach(win);
 		AG_ObjectDestroy(win);
-		AG_DriverClose(drv);
+		if (AGDRIVER_MULTIPLE(drv))
+			AG_DriverClose(drv);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
 }
