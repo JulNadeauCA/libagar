@@ -15,7 +15,7 @@ main(int argc, char *argv[])
 
 	/* Initialize Agar-GUI. */
 	if (AG_InitCore("agar-chinese-demo", 0) == -1 ||
-	    AG_InitVideo(420, 240, 32, AG_VIDEO_RESIZABLE) == -1) {
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
