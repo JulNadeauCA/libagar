@@ -185,12 +185,11 @@ Open(void *obj, const char *spec)
 			goto fail;
 		}
 		InitGlobals();
-		agMouse = AG_MouseNew(glx, "X mouse");
-		agKeyboard = AG_KeyboardNew(glx, "X keyboard");
-	} else {
-		AGDRIVER(glx)->mouse = agMouse;
-		AGDRIVER(glx)->kbd = agKeyboard;
 	}
+
+	/* Register the core X mouse and keyboard */
+	AGDRIVER(glx)->mouse = AG_MouseNew(glx, "X mouse");
+	AGDRIVER(glx)->kbd = AG_KeyboardNew(glx, "X keyboard");
 
 #ifdef DEBUG_XSYNC
 	XSynchronize(agDisplay, True);
@@ -208,6 +207,8 @@ fail:
 static void
 Close(void *obj)
 {
+	AG_Driver *drv = obj;
+
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
@@ -215,14 +216,14 @@ Close(void *obj)
 		XCloseDisplay(agDisplay);
 		agDisplay = NULL;
 		agScreen = 0;
-
-		AG_ObjectDetach(agMouse);
-		AG_ObjectDestroy(agMouse);
-		agMouse = NULL;
-		AG_ObjectDetach(agKeyboard);
-		AG_ObjectDestroy(agKeyboard);
-		agKeyboard = NULL;
 	}
+	AG_ObjectDetach(drv->mouse);
+	AG_ObjectDestroy(drv->mouse);
+	AG_ObjectDetach(drv->kbd);
+	AG_ObjectDestroy(drv->kbd);
+	
+	drv->mouse = NULL;
+	drv->kbd = NULL;
 }
 
 static int
@@ -289,15 +290,20 @@ PendingEvents(void)
 static __inline__ AG_Window *
 LookupWindowByID(Window xw)
 {
-	AG_Driver *drv;
+	AG_Window *win;
+	AG_DriverGLX *glx;
 
 	/* XXX TODO portable to optimize based on numerical XIDs? */
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if (AGDRIVER_MULTIPLE(drv)) {
-			AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-
-			if (glx->w == xw)
-				return (AGDRIVER_MW(drv)->win);
+	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
+		if (!AGDRIVER_IS_GLX(glx)) {
+			continue;
+		}
+		if (glx->w == xw) {
+			win = AGDRIVER_MW(glx)->win;
+			if (WIDGET(win)->drv == NULL) {	/* Being detached */
+				return (NULL);
+			}
+			return (win);
 		}
 	}
 	return (NULL);
@@ -390,7 +396,7 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	    AG_KEY_PRESSED : AG_KEY_RELEASED;
 
 	/* Set the final modifier state */
-	AG_SetModState(agKeyboard, ms);
+	AG_SetModState(kbd, ms);
 }
 
 static void
@@ -415,6 +421,7 @@ static int
 ProcessEvents(void *drvCaller)
 {
 	AG_DriverGLX *glx;
+	AG_Driver *drv;
 	AG_Window *win;
 	XEvent xev;
 	AG_KeySym ks;
@@ -429,14 +436,15 @@ ProcessEvents(void *drvCaller)
 		switch (xev.type) {
 		case MotionNotify:
 			if ((win = LookupWindowByID(xev.xmotion.window))) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				drv = WIDGET(win)->drv;
+				glx = (AG_DriverGLX *)drv;
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xmotion.y);
-				AG_MouseMotionUpdate(agMouse, x,y);
+				AG_MouseMotionUpdate(drv->mouse, x,y);
 				AG_ProcessMouseMotion(win, x, y,
-				    agMouse->xRel,
-				    agMouse->yRel,
-				    agMouse->btnState);
+				    drv->mouse->xRel,
+				    drv->mouse->yRel,
+				    drv->mouse->btnState);
 				
 				if (glx->cursorToSet != NULL)
 					ChangeCursor(glx);
@@ -446,9 +454,11 @@ ProcessEvents(void *drvCaller)
 			break;
 		case ButtonPress:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
+				drv = WIDGET(win)->drv;
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
-				AG_MouseButtonUpdate(agMouse, AG_BUTTON_PRESSED,
+				AG_MouseButtonUpdate(drv->mouse,
+				    AG_BUTTON_PRESSED,
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonDown(win, x, y,
 				    xev.xbutton.button);
@@ -458,9 +468,11 @@ ProcessEvents(void *drvCaller)
 			break;
 		case ButtonRelease:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
+				drv = WIDGET(win)->drv;
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
-				AG_MouseButtonUpdate(agMouse, AG_BUTTON_RELEASED,
+				AG_MouseButtonUpdate(drv->mouse,
+				    AG_BUTTON_RELEASED,
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonUp(win, x, y,
 				    xev.xbutton.button);
@@ -488,11 +500,11 @@ ProcessEvents(void *drvCaller)
 				printf("KeyPress ks=0x%x (ucs=%c)\n",
 				    (Uint)ks, (char)ucs);
 #endif
-				AG_KeyboardUpdate(agKeyboard, ka, ks, ucs);
 				if ((win = LookupWindowByID(xev.xkey.window))
 				    != NULL) {
-					AG_ProcessKey(agKeyboard, win, ka, ks,
-					    ucs);
+					drv = WIDGET(win)->drv;
+					AG_KeyboardUpdate(drv->kbd, ka, ks, ucs);
+					AG_ProcessKey(drv->kbd, win, ka, ks, ucs);
 				}
 			} else {
 				Verbose("Unknown keycode: %d\n",
@@ -504,7 +516,7 @@ ProcessEvents(void *drvCaller)
 			if ((xev.xcrossing.mode != NotifyGrab) &&
 			    (xev.xcrossing.mode != NotifyUngrab)) {
 				/* TODO: AG_AppFocusEvent() */
-				AG_MouseMotionUpdate(agMouse,
+				AG_MouseMotionUpdate(drv->mouse,
 				    xev->xcrossing.x,
 				    xev->xcrossing.y);
 				InputEvent(&xev);
@@ -515,7 +527,7 @@ ProcessEvents(void *drvCaller)
 			    (xev.xcrossing.mode != NotifyUngrab) &&
 			    (xev.xcrossing.detail != NotifyInferior)) {
 				/* TODO: AG_AppFocusEvent() */
-				AG_MouseMotionUpdate(agMouse,
+				AG_MouseMotionUpdate(drv->mouse,
 				    xev.xcrossing.x,
 				    xev.xcrossing.y);
 				InputEvent(&xev);
@@ -543,8 +555,15 @@ ProcessEvents(void *drvCaller)
 		case UnmapNotify:
 			/* printf(">{Map,Unmap}Notify\n"); */
 			break;
+		case DestroyNotify:
+			break;
 		case KeymapNotify:
-			UpdateKeyboard(agKeyboard, xev.xkeymap.key_vector);
+			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+				if (!AGDRIVER_IS_GLX(drv)) {
+					continue;
+				}
+				UpdateKeyboard(drv->kbd, xev.xkeymap.key_vector);
+			}
 			break;
 		case MappingNotify:
 			XRefreshKeyboardMapping(&xev.xmapping);
@@ -619,9 +638,8 @@ GenericEventLoop(void *obj)
 	for (;;) {
 		t2 = AG_GetTicks();
 		if (t2 - t1 >= rNom) {
-			/* XXX */
 			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-				if (AGDRIVER_CLASS(drv)->wm != AG_WM_MULTIPLE) {
+				if (!AGDRIVER_IS_GLX(drv)) {
 					continue;
 				}
 				win = AGDRIVER_MW(drv)->win;
@@ -768,7 +786,7 @@ CopyColorKeySurface(AG_Surface *suTex, AG_Surface *suSrc)
 	}
 }
 
-static int
+static void
 UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 {
 	AG_Surface *suTex;
@@ -797,7 +815,7 @@ UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 #endif
 	    );
 	if (suTex == NULL) {
-		return (-1);
+		AG_FatalError(NULL);
 	}
 	if (suSrc->flags & AG_SRCCOLORKEY) {
 		CopyColorKeySurface(suTex, suSrc);
@@ -821,7 +839,6 @@ UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 
 	AG_SurfaceFree(suTex);
 	*rv = texture;
-	return (0);
 }
 
 static int
@@ -1944,7 +1961,23 @@ CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
+	AG_Glyph *gl;
+	GLuint tex;
+	int i;
+	
+	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 
+	/* Invalidate cached glyph textures. */
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		SLIST_FOREACH(gl, &agGlyphCache[i].glyphs, glyphs) {
+			if ((tex = (GLuint)gl->textures[drv->id]) != 0) {
+				glDeleteTextures(1, &tex);
+				gl->textures[drv->id] = 0;
+			}
+		}
+	}
+
+	glXDestroyContext(agDisplay, glx->glxCtx);
 	XDestroyWindow(agDisplay, glx->w);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
@@ -2079,7 +2112,7 @@ PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	
 	/* Update the keyboard state. */
 	XQueryKeymap(agDisplay, kv);
-	UpdateKeyboard(agKeyboard, kv);
+	UpdateKeyboard(drv->kbd, kv);
 
 	/* Update GLX context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
