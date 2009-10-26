@@ -110,7 +110,6 @@ void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
 
 AG_PopupMenu	*AG_PopupNew(void *);
-void		 AG_PopupShow(AG_PopupMenu *);
 void		 AG_PopupShowAt(AG_PopupMenu *, int, int);
 void		 AG_PopupHide(AG_PopupMenu *);
 void		 AG_PopupDestroy(void *, AG_PopupMenu *);
@@ -216,9 +215,9 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *, int *, int, AG_Mutex *);
 void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 
 #ifdef AG_LEGACY
+void AG_PopupShow(AG_PopupMenu *) DEPRECATED_ATTRIBUTE;
 # define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 #endif /* AG_LEGACY */
-
 __END_DECLS
 
 #include <agar/gui/close.h>

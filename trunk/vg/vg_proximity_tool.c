@@ -47,7 +47,7 @@ MouseButtonDown(void *t, VG_Vector v, int button)
 		if ((vn = VG_Nearest(vv, v)) == NULL) {
 			return (0);
 		}
-		if (AG_GetModState(agKeyboard) & AG_KEYMOD_CTRL) {
+		if (AG_GetModState(WIDGET(vv)->drv->kbd) & AG_KEYMOD_CTRL) {
 			AG_INVFLAGS(vn->flags, VG_NODE_SELECTED);
 		} else {
 			VG_UnselectAll(vv->vg);

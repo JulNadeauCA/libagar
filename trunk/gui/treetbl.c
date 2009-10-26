@@ -100,7 +100,7 @@ ResizeColumn(AG_Treetbl *tt, int cid, int left)
 	AG_TreetblCol *col = &tt->column[cid];
 	int x;
 
-	AG_MouseGetState(agMouse, &x, NULL);
+	AG_MouseGetState(WIDGET(tt)->drv->mouse, &x, NULL);
 	x -= WIDGET(tt)->rView.x1;
 	col->w = (x-left) > 16 ? (x-left) : 16;
 }
@@ -153,7 +153,7 @@ MoveColumn(AG_Treetbl *tt, Uint cid, int left)
 
 	col->flags |= AG_TREETBL_COL_MOVING;
 
-	AG_MouseGetState(agMouse, &x, NULL);
+	AG_MouseGetState(WIDGET(tt)->drv->mouse, &x, NULL);
 	x -= WIDGET(tt)->rView.x1;
 
 	if ((col->w < colLeft->w  && x < left - colLeft->w + col->w) ||
@@ -324,7 +324,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	AG_TreetblRow *row = NULL;
 	int depth = 0;
 	int ts = tt->hRow/2 + 1;
-	AG_KeyMod kmod = AG_GetModState(agKeyboard);
+	AG_KeyMod kmod = AG_GetModState(WIDGET(tt)->drv->kbd);
 	Uint i, j, row_idx;
 	int px;
 

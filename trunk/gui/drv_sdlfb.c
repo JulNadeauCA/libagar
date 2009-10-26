@@ -104,6 +104,7 @@ static int
 Open(void *obj, const char *spec)
 {
 	extern const AG_TimeOps agTimeOps_SDL;
+	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
 	
 	if (nDrivers != 0) {
@@ -131,8 +132,8 @@ Open(void *obj, const char *spec)
 	AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize the main mouse and keyboard devices. */
-	agMouse = AG_MouseNew(sfb, "X mouse");
-	agKeyboard = AG_KeyboardNew(sfb, "X keyboard");
+	drv->mouse = AG_MouseNew(sfb, "X mouse");
+	drv->kbd = AG_KeyboardNew(sfb, "X keyboard");
 
 	/* Configure the window caption */
 	SDL_WM_SetCaption(agProgName, agProgName);
@@ -144,6 +145,7 @@ Open(void *obj, const char *spec)
 static void
 Close(void *obj)
 {
+	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
 
 #ifdef AG_DEBUG
@@ -155,12 +157,12 @@ Close(void *obj)
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		initedSDLVideo = 0;
 	}
-	AG_ObjectDetach(agMouse);
-	AG_ObjectDestroy(agMouse);
-	agMouse = NULL;
-	AG_ObjectDetach(agKeyboard);
-	AG_ObjectDestroy(agKeyboard);
-	agKeyboard = NULL;
+	AG_ObjectDetach(drv->mouse);
+	AG_ObjectDestroy(drv->mouse);
+	AG_ObjectDetach(drv->kbd);
+	AG_ObjectDestroy(drv->kbd);
+	drv->mouse = NULL;
+	drv->kbd = NULL;
 
 	nDrivers = 0;
 }
@@ -381,20 +383,20 @@ scan:
 				dsw->winLastKeydown = NULL;
 				break;
 			}
-			AG_KeyboardUpdate(agKeyboard, AG_KEY_RELEASED,
+			AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
 			    (AG_KeySym)ev->key.keysym.sym,
 			    (Uint32)ev->key.keysym.unicode);
-			AG_ProcessKey(agKeyboard, win, AG_KEY_RELEASED,
+			AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
 			    (AG_KeySym)ev->key.keysym.sym,
-			    agKeyboard->modState);
+			    drv->kbd->modState);
 			break;
 		case SDL_KEYDOWN:
-			AG_KeyboardUpdate(agKeyboard, AG_KEY_PRESSED,
+			AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
 			    (AG_KeySym)ev->key.keysym.sym,
 			    (Uint32)ev->key.keysym.unicode);
-			AG_ProcessKey(agKeyboard, win, AG_KEY_PRESSED,
+			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 			    (AG_KeySym)ev->key.keysym.sym,
-			    agKeyboard->modState);
+			    drv->kbd->modState);
 			break;
 		}
 		AG_ObjectUnlock(win);
@@ -424,6 +426,7 @@ out:
 static int
 ProcessEvents(void *obj)
 {
+	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Event ev;
@@ -433,16 +436,17 @@ ProcessEvents(void *obj)
 		AG_LockVFS(sfb);
 		switch (ev.type) {
 		case SDL_MOUSEMOTION:
-			AG_MouseMotionUpdate(agMouse, ev.motion.x, ev.motion.y);
+			AG_MouseMotionUpdate(drv->mouse,
+			    ev.motion.x, ev.motion.y);
 			nProcessed += InputEvent(sfb, &ev);
 			break;
 		case SDL_MOUSEBUTTONUP:
-			AG_MouseButtonUpdate(agMouse, AG_BUTTON_RELEASED,
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED,
 			    ev.button.button);
 			nProcessed += InputEvent(sfb, &ev);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			AG_MouseButtonUpdate(agMouse, AG_BUTTON_PRESSED,
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
 			    ev.button.button);
 			if (InputEvent(sfb, &ev) == 0) {
 				if (dsw->flags & AG_DRIVER_SW_BGPOPUP &&
@@ -457,7 +461,7 @@ ProcessEvents(void *obj)
 			}
 			break;
 		case SDL_KEYDOWN:
-			AG_KeyboardUpdate(agKeyboard, AG_KEY_PRESSED,
+			AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
 			    (AG_KeySym)ev.key.keysym.sym,
 			    (Uint32)ev.key.keysym.unicode);
 			if (AG_ExecGlobalKeys(
@@ -469,7 +473,7 @@ ProcessEvents(void *obj)
 			}
 			break;
 		case SDL_KEYUP:
-			AG_KeyboardUpdate(agKeyboard, AG_KEY_RELEASED,
+			AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
 			    (AG_KeySym)ev.key.keysym.sym,
 			    (Uint32)ev.key.keysym.unicode);
 			nProcessed += InputEvent(sfb, &ev);

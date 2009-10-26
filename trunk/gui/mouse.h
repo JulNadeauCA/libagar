@@ -39,7 +39,6 @@ typedef struct ag_mouse {
 
 __BEGIN_DECLS
 extern AG_ObjectClass agMouseClass;
-extern AG_Mouse *agMouse;			/* Main mouse */
 
 AG_Mouse *AG_MouseNew(void *, const char *);
 void      AG_MouseMotionUpdate(AG_Mouse *, int, int);

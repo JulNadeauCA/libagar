@@ -553,8 +553,6 @@ PasteColor(AG_Event *event)
 static void
 OpenMenu(AG_HSVPal *pal)
 {
-	int x, y;
-
 	if (pal->menu != NULL)
 		CloseMenu(pal);
 
@@ -577,8 +575,9 @@ OpenMenu(AG_HSVPal *pal)
 	}
 	pal->menu->itemSel = pal->menu_item;
 	
-	SDL_GetMouseState(&x, &y);
-	pal->menu_win = AG_MenuExpand(pal->menu, pal->menu_item, x, y);
+	pal->menu_win = AG_MenuExpand(pal->menu, pal->menu_item,
+	    WIDGET(pal)->drv->mouse->x,
+	    WIDGET(pal)->drv->mouse->y);
 }
 
 static void

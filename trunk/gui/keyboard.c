@@ -32,8 +32,6 @@
 #include <core/config.h>
 #include "window.h"
 
-AG_Keyboard *agKeyboard = NULL;			/* Main keyboard */
-
 AG_Keyboard *
 AG_KeyboardNew(void *drv, const char *desc)
 {

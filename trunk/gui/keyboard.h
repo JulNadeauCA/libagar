@@ -189,7 +189,6 @@ typedef struct ag_keyboard {
 
 __BEGIN_DECLS
 extern AG_ObjectClass agKeyboardClass;
-extern AG_Keyboard *agKeyboard;			/* Main keyboard */
 
 AG_Keyboard *AG_KeyboardNew(void *, const char *);
 

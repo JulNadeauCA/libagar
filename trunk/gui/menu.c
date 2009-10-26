@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1101,17 +1101,17 @@ AG_PopupNew(void *pwid)
 	return (pm);
 }
 
+#ifdef AG_LEGACY
 void
 AG_PopupShow(AG_PopupMenu *pm)
 {
-	int x, y;
-
 	AG_ObjectLock(pm->menu);
 	AG_PopupHide(pm);
-	SDL_GetMouseState(&x, &y);
-	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
+	/* XXX position */
+	pm->win = AG_MenuExpand(pm->menu, pm->item, 0, 0);
 	AG_ObjectUnlock(pm->menu);
 }
+#endif /* AG_LEGACY */
 
 void
 AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)

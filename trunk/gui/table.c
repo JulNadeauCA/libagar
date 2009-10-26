@@ -945,7 +945,7 @@ SelectingMultiple(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
 	        ((t->flags & AG_TABLE_MULTI) &&
-		  AG_GetModState(agKeyboard) & AG_KEYMOD_CTRL));
+		  AG_GetModState(WIDGET(t)->drv->kbd) & AG_KEYMOD_CTRL));
 }
 
 /* Return true if a range of items are being selected. */
@@ -953,16 +953,16 @@ static __inline__ int
 SelectingRange(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
-	        (AG_GetModState(agKeyboard) & AG_KEYMOD_SHIFT));
+	        (AG_GetModState(WIDGET(t)->drv->kbd) & AG_KEYMOD_SHIFT));
 }
 
 /* Display the popup menu. */
 static void
-ShowPopup(AG_TablePopup *tp)
+ShowPopup(AG_Table *t, AG_TablePopup *tp)
 {
 	int x, y;
 
-	AG_MouseGetState(agMouse, &x, &y);
+	AG_MouseGetState(WIDGET(t)->drv->mouse, &x, &y);
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(tp->menu, tp->item);
 		tp->panel = NULL;
@@ -989,7 +989,7 @@ ColumnRightClick(AG_Table *t, int px)
 		if (x > cx && x < x2) {
 			SLIST_FOREACH(tp, &t->popups, popups) {
 				if (tp->m == -1 && tp->n == n) {
-					ShowPopup(tp);
+					ShowPopup(t, tp);
 					return;
 				}
 			}
@@ -1238,7 +1238,7 @@ CellRightClick(AG_Table *t, int m, int px)
 		SLIST_FOREACH(tp, &t->popups, popups) {
 			if ((tp->m == m || tp->m == -1) &&
 			    (tp->n == n || tp->n == -1)) {
-				ShowPopup(tp);
+				ShowPopup(t, tp);
 				return;
 			}
 		}
@@ -1477,8 +1477,11 @@ MouseMotion(AG_Event *event)
 		AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
 	} else {
 		if (OverColumnHeader(t, y) &&
-		    OverColumnResizeControl(t, x))
+		    OverColumnResizeControl(t, x)) {
 			AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
+		} else {
+			AG_PopCursor(drv);
+		}
 	}
 }
 
@@ -1963,7 +1966,7 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
+	Uint8 *ks = AG_GetKeyState(WIDGET(t)->drv->kbd, NULL);
 
 	DecrementSelection(t, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
@@ -1973,7 +1976,7 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks = AG_GetKeyState(agKeyboard, NULL);
+	Uint8 *ks = AG_GetKeyState(WIDGET(t)->drv->kbd, NULL);
 
 	IncrementSelection(t, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);

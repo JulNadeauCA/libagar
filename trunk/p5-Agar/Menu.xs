@@ -133,10 +133,12 @@ OUTPUT:
 	RETVAL
 
 void
-show(self)
+show(self, x, y)
 	Agar::PopupMenu self
+	int x
+	int y
 CODE:
-	AG_PopupShow(self);
+	AG_PopupShowAt(self, x,y);
 
 void
 hide(self)
