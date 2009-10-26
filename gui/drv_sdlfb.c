@@ -756,10 +756,7 @@ PushCursor(void *obj, AG_Cursor *ac)
 static void
 PopCursor(void *obj)
 {
-	AG_DriverSDLFB *sfb = obj;
-
-	/* XXX TODO stack */
-	sfb->cursorToSet = &AGDRIVER(sfb)->cursors[0];
+	/* Nothing to do */
 }
 
 static int

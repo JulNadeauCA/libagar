@@ -954,9 +954,6 @@ RG_PixmapKeydown(RG_Tileview *tv, int ksym)
 void
 RG_PixmapKeyup(RG_Tileview *tv)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
-
-	AG_PopCursor(drv);
 }
 
 void
