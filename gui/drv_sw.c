@@ -352,21 +352,19 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
 void
 AG_WM_ChangeWindowFocus(void)
 {
-	AG_Window *winLast = OBJECT_LAST_CHILD(agDriver,ag_window);
-
-	if (winLast != NULL) {
+	if (agWindowFocused != NULL) {
 		if (agWindowToFocus != NULL &&
-		    agWindowToFocus == winLast) {
+		    agWindowToFocus == agWindowFocused) {
 			/* Nothing to do */
 			goto out;
 		}
-		AG_ObjectLock(winLast);
-		if (winLast->flags & AG_WINDOW_KEEPABOVE) {
-			AG_ObjectUnlock(winLast);
+		AG_ObjectLock(agWindowFocused);
+		if (agWindowFocused->flags & AG_WINDOW_KEEPABOVE) {
+			AG_ObjectUnlock(agWindowFocused);
 			goto out;
 		}
-		AG_PostEvent(NULL, winLast, "window-lostfocus", NULL);
-		AG_ObjectUnlock(winLast);
+		AG_PostEvent(NULL, agWindowFocused, "window-lostfocus", NULL);
+		AG_ObjectUnlock(agWindowFocused);
 	}
 	if (agWindowToFocus != NULL) {
 		AG_ObjectLock(agWindowToFocus);
