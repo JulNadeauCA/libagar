@@ -388,7 +388,7 @@ scan:
 			    (Uint32)ev->key.keysym.unicode);
 			AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
 			    (AG_KeySym)ev->key.keysym.sym,
-			    drv->kbd->modState);
+			    (Uint32)ev->key.keysym.unicode);
 			break;
 		case SDL_KEYDOWN:
 			AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
@@ -396,7 +396,7 @@ scan:
 			    (Uint32)ev->key.keysym.unicode);
 			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 			    (AG_KeySym)ev->key.keysym.sym,
-			    drv->kbd->modState);
+			    (Uint32)ev->key.keysym.unicode);
 			break;
 		}
 		AG_ObjectUnlock(win);
