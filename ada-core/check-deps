@@ -10,27 +10,38 @@ fatal()
 
 require_fail()
 {
-  echo "check-deps: error: $1 required but not found ($2)"
+  PACKAGE_NAME="$1"
+  PACKAGE_URL="$2"
+  MODULE_NAME="$3"
+  FILE_NAME="$4"
+
+  echo "check-deps: error: ${PACKAGE_NAME} (${PACKAGE_URL}) required but not located" 1>&2
+  echo "check-deps: error: SYSDEPS module ${MODULE_NAME}, file ${FILE_NAME}" 1>&2
+
   EXIT_VALUE=1
 }
 
 required()
 {
-  ./sd-status-is "$1" succeeded
+  MODULE_NAME="$1"
+  FILE_NAME="$2"
+  PACKAGE_NAME="$3"
+
+  ./sd-status-is "${MODULE_NAME}" succeeded
   if [ $? -ne 0 ]
   then
-    package_url=`cat modules/$1/package_url` || package_url="missing URL"
-    require_fail "$1" "${package_url}"
+    package_url=`cat modules/${MODULE_NAME}/package_url` || package_url="missing URL"
+    require_fail "${PACKAGE_NAME}" "${package_url}" "${MODULE_NAME}" "${FILE_NAME}"
   fi
 }
 
 cd SYSDEPS || fatal "could not change directory to SYSDEPS"
 
-required c_string-flags
-required c_string-libs-S
-required sdl-ada-flags
-required sdl-ada-libs-S
-required agar-flags
-required agar-libs
+required c_string-flags  flags-c_string  'C_String'
+required c_string-libs-S libs-c_string-S 'C_String'
+required sdl-ada-flags   flags-sdl-ada   'SDL-Ada'
+required sdl-ada-libs-S  libs-sdl-ada-S  'SDL-Ada'
+required agar-flags      flags-agar      'agar-core'
+required agar-libs       libs-agar       'agar-libs'
 
 exit ${EXIT_VALUE}
