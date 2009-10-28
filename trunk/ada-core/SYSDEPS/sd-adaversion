@@ -1,0 +1,78 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+cleanup()
+{
+  ${SYSDEP_UTIL_RM} -f "${WORKDIR}/ver_gnat.ali" "${WORKDIR}/ver_gnat.o" "${WORKDIR}/ver_gnat"
+}
+
+cleanup_exit()
+{
+  cleanup
+  ${SYSDEP_UTIL_EXIT} 0
+}
+
+output_with_prefix()
+{
+  ${SYSDEP_UTIL_ECHO} "SD_SYSINFO_ADA_TYPE_$1 $2"
+}
+
+unknown()
+{
+  output_with_prefix "UNKNOWN" "0.0.0"
+  cleanup_exit
+}
+
+error()
+{
+  SYSDEP_ERROR "$1"
+  unknown
+}
+
+try_gnat()
+{
+  ${ADA_COMP} \
+    -o "${WORKDIR}/ver_gnat.o" \
+    -c "${WORKDIR}/ver_gnat.adb" ${ADA_CFLAGS} 2>/dev/null
+  if [ $? -eq 0 ]
+  then
+    ${ADA_BIND} "${WORKDIR}/ver_gnat.ali" ${ADA_BFLAGS}
+    if [ $? -eq 0 ]
+    then
+      ${ADA_LINK} \
+        -o "${WORKDIR}/ver_gnat" \
+           "${WORKDIR}/ver_gnat.ali" ${ADA_LDFLAGS}
+      if [ $? -eq 0 ]
+      then
+        output_with_prefix `${WORKDIR}/ver_gnat`
+        cleanup_exit
+      fi
+    fi
+  fi
+  cleanup
+}
+
+#----------------------------------------------------------------------
+# entry
+
+if [ $# -ne 6 ]
+then
+  ${SYSDEP_UTIL_ECHO} "usage: ada-comp ada-cflags ada-binder ada-bflags ada-link ada-ldflags" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+WORKDIR="${SYSDEP_BASE_DIRECTORY}"
+ADA_COMP="$1"
+ADA_CFLAGS="$2"
+ADA_BIND="$3"
+ADA_BFLAGS="$4"
+ADA_LINK="$5"
+ADA_LDFLAGS="$6"
+
+try_gnat
+
+#----------------------------------------------------------------------
+# fallback
+
+unknown

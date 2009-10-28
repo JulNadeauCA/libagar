@@ -1,0 +1,41 @@
+
+-- ./agar-core-config.apk
+pragma source_file_name(Agar.Core.Config, spec_file_name => "agar-core-config.ads");
+pragma source_file_name(Agar.Core.Config, body_file_name => "agar-core-config.adb");
+
+-- ./agar-core-data_source.apk
+pragma source_file_name(Agar.Core.Data_Source, spec_file_name => "agar-core-data_source.ads");
+pragma source_file_name(Agar.Core.Data_Source, body_file_name => "agar-core-data_source.adb");
+
+-- ./agar-core-database.apk
+pragma source_file_name(Agar.Core.Database, spec_file_name => "agar-core-database.ads");
+pragma source_file_name(Agar.Core.Database, body_file_name => "agar-core-database.adb");
+
+-- ./agar-core-dso.apk
+pragma source_file_name(Agar.Core.DSO, spec_file_name => "agar-core-dso.ads");
+pragma source_file_name(Agar.Core.DSO, body_file_name => "agar-core-dso.adb");
+
+-- ./agar-core-error.apk
+pragma source_file_name(Agar.Core.Error, spec_file_name => "agar-core-error.ads");
+pragma source_file_name(Agar.Core.Error, body_file_name => "agar-core-error.adb");
+
+-- ./agar-core-event.apk
+pragma source_file_name(Agar.Core.Event, spec_file_name => "agar-core-event.ads");
+pragma source_file_name(Agar.Core.Event, body_file_name => "agar-core-event.adb");
+
+-- ./agar-core-init.apk
+pragma source_file_name(Agar.Core.Init, spec_file_name => "agar-core-init.ads");
+pragma source_file_name(Agar.Core.Init, body_file_name => "agar-core-init.adb");
+
+-- ./agar-core-object.apk
+pragma source_file_name(Agar.Core.Object, spec_file_name => "agar-core-object.ads");
+pragma source_file_name(Agar.Core.Object, body_file_name => "agar-core-object.adb");
+
+-- ./agar-core-thin.apk
+pragma source_file_name(Agar.Core.Thin, spec_file_name => "agar-core-thin.ads");
+
+-- ./agar-core.apk
+pragma source_file_name(Agar.Core, spec_file_name => "agar-core.ads");
+
+-- ./agar.apk
+pragma source_file_name(Agar, spec_file_name => "agar.ads");

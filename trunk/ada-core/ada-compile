@@ -1,0 +1,95 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "ada-compile: fatal: $1" 1>&2
+  exit 1
+}
+
+if [ $# -lt 1 ]
+then
+  echo "ada-compile: usage: [@dir] source" 1>&2
+  exit 1
+fi
+
+#
+# Check if new base dir was specified.
+#
+
+BASE_DIR="."
+if [ $# -eq 2 ]
+then
+  BASE_DIR=`echo "$1" | sed 's/^@//g'`
+  shift
+fi
+
+#
+# Extract base name of given source file.
+#
+
+out=`echo "$1" | awk -F. '{print $1}'`
+src="$1"
+shift
+
+ADA=`head -n 1 "${BASE_DIR}/conf-adacomp"`
+if [ $? -ne 0 ]
+then
+  fatal "could not read ${BASE_DIR}/conf-adacomp"
+fi
+SYSTYPE=`head -n 1 "${BASE_DIR}/conf-systype"`
+if [ $? -ne 0 ]
+then
+  fatal "could not read ${BASE_DIR}/conf-systype"
+fi
+ADATYPE=`head -n 1 "${BASE_DIR}/conf-adatype"`
+if [ $? -ne 0 ]
+then
+  fatal "could not read ${BASE_DIR}/conf-adatype"
+fi
+
+ADAFLAGS="${ADAFLAGS} `head -n 1 ${BASE_DIR}/conf-adacflags 2>/dev/null`"
+
+#
+# Read global flag file list, if present.
+#
+
+if [ -f "${BASE_DIR}/conf-adafflist" ]
+then
+  for f in `cat "${BASE_DIR}/conf-adafflist"`
+  do
+    FLAGS=`cat $f 2>/dev/null` || fatal "could not read $f"
+    ADAFLAGS="${ADAFLAGS} ${FLAGS}"
+  done
+fi
+
+#
+# Read local flag file list, if present.
+#
+
+if [ -f "${out}.iff" ]
+then
+  for f in `cat "${out}.iff"`
+  do
+    targ="`dirname $out`/`dirname $f`/`basename $f`"
+    FLAGS="`cat $targ 2>/dev/null`" || fatal "could not read $f"
+    ADAFLAGS="${ADAFLAGS} ${FLAGS}"
+  done
+fi
+
+#
+# Read configuration pragma file, if present.
+#
+
+if [ -f conf-adapragma ]
+then
+  case ${ADATYPE} in
+    GCC) ADAFLAGS="${ADAFLAGS} -gnatec=conf-adapragma";;
+    *) ;;
+  esac
+fi
+
+rm -f "${out}.ali"
+${ADA} -o "${out}.o" -c ${src} ${1+"$@"} ${ADAFLAGS}
+ret=$?
+if [ ${ret} -eq 0 ]; then exec touch "${out}.ali"; fi
+exit $ret

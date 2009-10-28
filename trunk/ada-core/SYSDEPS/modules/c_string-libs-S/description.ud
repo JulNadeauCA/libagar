@@ -1,0 +1,2 @@
+(para "This module determines the linker flags required to statically link against "
+  (link-ext "http://coreland.ath.cx/code/c_string" "C_String"))

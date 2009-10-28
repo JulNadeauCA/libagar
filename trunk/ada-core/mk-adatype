@@ -1,0 +1,51 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "mk-adatype: fatal: $1" 1>&2
+  cleanup
+  exit 1
+}
+
+cleanup()
+{
+  rm -f
+}
+
+try_v()
+{
+  data="$1"
+
+  echo "$data" | grep -i 'gcc' >/dev/null
+  if [ $? -eq 0 ]; then echo GCC; return 0; fi
+
+  return 1
+}
+
+#
+# check if base directory was specified
+#
+
+BASE_DIR="."
+echo "$1" | grep '^@' 2>&1 >/dev/null
+if [ $? -eq 0 ]
+then
+  BASE_DIR=`echo $1 | sed 's/^@//g'`
+  shift
+fi
+
+SYS_ADA=`head -n 1 ${BASE_DIR}/conf-adacomp`
+if [ $? -ne 0 ]
+then
+  fatal "could not read ${BASE_DIR}/conf-adacomp"
+fi
+
+# try V output
+out_v=`${SYS_ADA} -v 2>&1`
+if try_v "$out_v"
+then
+  cleanup
+  exit 0
+fi
+
+fatal "could not determine ada compiler type"

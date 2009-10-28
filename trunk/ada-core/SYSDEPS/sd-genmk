@@ -1,0 +1,143 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "sd-genmk: fatal: $1" 1>&2
+  exit 1
+}
+
+#
+# List and sort modules.
+#
+
+MODULES=`ls modules`             || fatal "could not list modules"
+MODULES=`echo ${MODULES} | sort` || fatal "could not sort modules"
+
+#
+# Write Makefile "header".
+#
+
+(
+cat <<EOF
+#----------------------------------------------------------------------
+# SYSDEPS start
+
+EOF
+) || fatal "could not write header"
+
+#
+# Write targets for executing modules.
+#
+
+for module in ${MODULES}
+do
+  if [ -f modules/$module/creates ]
+  then
+    files=`cat modules/$module/creates` ||
+      fatal "could not read modules/$module/creates"
+
+    first_done=0
+    # Flatten files to a string.
+    flat_files=""
+
+    for file in $files; do flat_files="$file ${flat_files}"; done
+    for file in ${files}
+    do
+      if [ $first_done -eq 0 ]
+      then
+        first=$file
+        first_done=1
+        # Note that hard tab characters are embedded here
+        (
+        cat <<EOF
+$file:
+	@echo SYSDEPS $module run create $flat_files
+	@(cd SYSDEPS && ./sd-run modules/$module)
+EOF
+) || fatal "could not write makefile target"
+      else
+(
+cat <<EOF
+$file: $first
+EOF
+) || fatal "could not write makefile target"
+      fi
+    done
+  fi
+done
+
+# This whitespace is significant - it terminates the list of
+# dependencies for the above target.
+
+(
+cat <<EOF
+
+
+EOF
+) || fatal "could not write whitespace"
+
+#
+# Write targets for cleaning modules.
+#
+
+for module in ${MODULES}
+do
+  if [ -f modules/$module/creates ]
+  then
+    files=`cat modules/$module/creates` ||
+      fatal "could not read modules/$module/creates"
+
+    # Flatten files to a string.
+    flat_files=""
+    for file in $files; do flat_files="$file ${flat_files}"; done
+
+    # Note that hard tab characters are embedded here.
+    (
+    cat <<EOF
+${module}_clean:
+	@echo SYSDEPS $module clean $flat_files
+	@(cd SYSDEPS && ./sd-clean modules/$module)
+EOF
+    ) || fatal "could not write makefile target"
+  fi
+done
+
+# This whitespace is significant - it terminates the list of
+# dependencies for the above target.
+
+(
+cat <<EOF
+
+
+EOF
+) || fatal "could not write whitespace"
+
+#
+# Main 'clean' target.
+#
+
+echo "sysdeps_clean:\\" ||
+  fatal "could not write main clean target"
+
+for module in ${MODULES}
+do
+  if [ -f modules/$module/creates ]
+  then
+    echo "${module}_clean \\" ||
+      fatal "could not write ${module}_clean target"
+  fi
+done
+
+#
+# Makefile 'footer'.
+#
+
+(
+cat <<EOF
+
+
+
+# SYSDEPS end
+#----------------------------------------------------------------------
+EOF
+) || fatal "could not write Makefile footer"

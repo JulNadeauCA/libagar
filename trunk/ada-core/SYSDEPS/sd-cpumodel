@@ -1,0 +1,66 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+warn()
+{
+  SYSDEP_DEBUG "sd-cpunum: $1"
+}
+
+if [ $# -ne 1 ]
+then
+  echo "sd-cpumodel: usage: os" 1>&2
+  exit 1
+fi
+
+sys="$1"
+model=""
+
+case "$sys" in
+  SD_SYSINFO_OS_DARWIN)
+    model=`machine`
+    res=$?
+    ;;
+  SD_SYSINFO_OS_VMS)
+    model=""
+    res=$?
+    ;;
+  SD_SYSINFO_OS_SUNOS)
+    model=""
+    res=$?
+    ;;
+  SD_SYSINFO_OS_MINIX)
+    model=""
+    res=$?
+    ;;
+  SD_SYSINFO_OS_HAIKU)
+    # Haiku just doesn't appear to export this information.
+    model=""
+    res=1
+    ;;
+  SD_SYSINFO_OS_LINUX)
+    # Read /proc/cpuinfo or use sd-cpuidx86.
+    model=""
+    res=1
+    ;;
+  SD_SYSINFO_OS_MS_WINDOWS)
+    model=""
+    res=1
+    ;;
+  *)
+    model_raw=`sysctl hw.model`
+    res=$?
+    model="`echo ${model_raw} | tr [A-Z] [a-z]`"
+    ;;
+esac
+
+case "$model" in
+  ppc750)  echo 'SD_SYSINFO_CPU_MODEL_PPC_750' ;;
+  ppc7450) echo 'SD_SYSINFO_CPU_MODEL_PPC_7450' ;;
+  *)       echo 'SD_SYSINFO_CPU_MODEL_UNKNOWN' ;;
+esac
+
+if [ $res -ne 0 ]
+then
+  warn "CPU model detection failed - CPU model defaulted to unknown"
+fi

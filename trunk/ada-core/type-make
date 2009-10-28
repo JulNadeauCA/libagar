@@ -1,0 +1,27 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "types-make: fatal: $1" 1>&2
+  exit 1
+}
+
+if [ $# -ne 2 ]
+then
+  echo "usage: c_name ada_name" 1>&2
+  exit 1
+fi
+
+c_name="$1"
+ada_name="$2"
+
+size=`./types-sizes "${c_name}"` ||
+  fatal "could not get size of type '${c_name}'"
+
+(
+cat <<EOF
+    type ${ada_name} is array (1 .. ${size}) of aliased Interfaces.Unsigned_8;
+    for ${ada_name}'Size use ${size} * System.Storage_Unit;
+    pragma Convention (C, ${ada_name});
+EOF
+) || fatal "could not write type definition"

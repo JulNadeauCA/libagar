@@ -1,0 +1,3 @@
+agar-core-thin.ads: agar-core-thin.ads.sh type-make types-sizes
+	./agar-core-thin.ads.sh > agar-core-thin.ads.tmp
+	mv agar-core-thin.ads.tmp agar-core-thin.ads

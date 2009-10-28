@@ -1,0 +1,6 @@
+install: installer postinstall conf-sosuffix
+	./installer
+	./postinstall
+
+install-dryrun: installer conf-sosuffix
+	./installer dryrun

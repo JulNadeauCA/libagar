@@ -1,0 +1,114 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+PROGRAM_NAME="sd-file"
+
+FILE_PATH_DIRS="
+${SYSDEP_OUTPUT_DIRECTORY}/
+${SYSDEP_BASE_DIRECTORY}/
+"
+
+debug()
+{
+  SYSDEP_DEBUG "${PROGRAM_NAME}: $1"
+}
+
+SUCCESS=0
+FAILURE=1
+
+#
+# Find the file on the search path and print the contents. If the
+# file contains no text, print $ORIGINAL_TEXT.
+#
+
+file_get_by_path()
+{
+  TARGET_FILE="$1"
+  ORIGINAL_TEXT="$2"
+
+  for PATH_ELEMENT in ${FILE_PATH_DIRS}
+  do
+    if [ -f "${PATH_ELEMENT}/${TARGET_FILE}" ]
+    then
+      debug "${PATH_ELEMENT}/${TARGET_FILE} exists"
+
+      TEMP_TEXT=`${SYSDEP_UTIL_HEAD} -n 1 "${PATH_ELEMENT}/${TARGET_FILE}"`
+      if [ ! -z "${TEMP_TEXT}" ]
+      then
+        ${SYSDEP_UTIL_ECHO} "${TEMP_TEXT}"
+        ${SYSDEP_UTIL_EXIT} ${SUCCESS}
+      else
+        debug "no text in ${PATH_ELEMENT}/${TARGET_FILE}"
+      fi
+    else
+      debug "${PATH_ELEMENT}/${TARGET_FILE} unreadable or nonexistent"
+    fi
+  done
+
+  ${SYSDEP_UTIL_ECHO} "${ORIGINAL_TEXT}"
+  ${SYSDEP_UTIL_EXIT} ${FAILURE}
+}
+
+#
+# Check if file exists in the search path.
+#
+
+file_exists_by_path()
+{
+  TARGET_FILE="$1"
+
+  for PATH_ELEMENT in ${FILE_PATH_DIRS}
+  do
+    if [ -f "${PATH_ELEMENT}/${TARGET_FILE}" ]
+    then
+      debug "${PATH_ELEMENT}/${TARGET_FILE} exists"
+      ${SYSDEP_UTIL_EXIT} ${SUCCESS}
+    fi
+  done
+
+  ${SYSDEP_UTIL_EXIT} ${FAILURE}
+}
+
+#
+# Locate file on search path and print location.
+#
+
+file_path_to_by_path()
+{
+  TARGET_FILE="$1"
+
+  for PATH_ELEMENT in ${FILE_PATH_DIRS}
+  do
+    if [ -f "${PATH_ELEMENT}/${TARGET_FILE}" ]
+    then
+      debug "${PATH_ELEMENT}/${TARGET_FILE} exists"
+      ${SYSDEP_UTIL_ECHO} "${PATH_ELEMENT}/${TARGET_FILE}"
+      ${SYSDEP_UTIL_EXIT} ${SUCCESS}
+    else
+      debug "${PATH_ELEMENT}/${TARGET_FILE} unreadable or nonexistent"
+    fi
+  done
+
+  ${SYSDEP_UTIL_EXIT} ${FAILURE}
+}
+
+if [ $# -lt 2 ]
+then
+  ${SYSDEP_UTIL_ECHO} "${PROGRAM_NAME}: usage: command file [...]"
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+SUB_COMMAND=$1
+FILE=$2
+ORIGINAL_TEXT=$3
+
+case "${SUB_COMMAND}" in
+  get)     file_get_by_path     "${FILE}" "${ORIGINAL_TEXT}" ;;
+  exists)  file_exists_by_path  "${FILE}" ;;
+  path_to) file_path_to_by_path "${FILE}" ;;
+  *)
+    ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: fatal: unknown command"
+    ${SYSDEP_UTIL_EXIT} 1
+    ;;
+esac

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-osversion: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+sys="$1"
+
+case "$sys" in
+  SD_SYSINFO_OS_IRIX)
+    ver=`uname -R |
+      ${SYSDEP_UTIL_AWK} '{print $NF}'`
+    ;;
+  SD_SYSINFO_OS_SUNOS)
+    ver=`uname -r`-`uname -v`
+    ;;
+  SD_SYSINFO_OS_VMS)
+    ver=`uname -v`
+    ;;
+  SD_SYSINFO_OS_MS_WINDOWS)
+    ver=`uname -s |
+      ${SYSDEP_UTIL_AWK} -F- '{print $NF}'`
+    ;;
+  SD_SYSINFO_OS_MINIX)
+    ver_r=`uname -r`
+    ver_v=`uname -v |
+      ${SYSDEP_UTIL_TR} -d [a-z]`
+    ver="${ver_r}.${ver_v}"
+    ;;
+  SD_SYSINFO_OS_HAIKU)
+    ver_r=`uname -r`
+    ver_v=`uname -v |
+      ${SYSDEP_UTIL_AWK} '{print $1}'`
+    ver="${ver_r}.${ver_v}"
+    ;;
+  *)
+    ver=`uname -r`
+    if [ $? -ne 0 ]
+    then
+      ver=0.0
+    fi
+    ;;
+esac
+
+${SYSDEP_UTIL_ECHO} ${ver} | ${SYSDEP_UTIL_TR} '/:[A-Z]' '..[a-z]'

@@ -1,0 +1,4 @@
+deinstall: deinstaller conf-sosuffix
+	./deinstaller
+deinstall-dryrun: deinstaller conf-sosuffix
+	./deinstaller dryrun

@@ -1,0 +1,110 @@
+#!/bin/sh
+
+#
+# Tagged POSIX utilities.
+#
+# These variables exist in order to make it possible to audit the
+# subset of the POSIX specification used.
+#
+# These variables are NOT user-serviceable and are NOT intended as
+# any kind of portability abstraction. Anyone caught using them as
+# such will be dealt with severely.
+#
+
+SYSDEP_UTIL_AWK="awk"
+SYSDEP_UTIL_BASENAME="basename"
+SYSDEP_UTIL_CAT="cat"
+SYSDEP_UTIL_CD="cd"
+SYSDEP_UTIL_CP="cp"
+SYSDEP_UTIL_ECHO="echo"
+SYSDEP_UTIL_EXIT="exit"
+SYSDEP_UTIL_GREP="grep"
+SYSDEP_UTIL_HEAD="head"
+SYSDEP_UTIL_MKDIR="mkdir"
+SYSDEP_UTIL_MV="mv"
+SYSDEP_UTIL_PWD="pwd"
+SYSDEP_UTIL_RM="rm"
+SYSDEP_UTIL_SED="sed"
+SYSDEP_UTIL_TOUCH="touch"
+SYSDEP_UTIL_TR="tr"
+SYSDEP_UTIL_WC="wc"
+
+export SYSDEP_UTIL_AWK
+export SYSDEP_UTIL_BASENAME
+export SYSDEP_UTIL_CAT
+export SYSDEP_UTIL_CD
+export SYSDEP_UTIL_CP
+export SYSDEP_UTIL_ECHO
+export SYSDEP_UTIL_EXIT
+export SYSDEP_UTIL_GREP
+export SYSDEP_UTIL_HEAD
+export SYSDEP_UTIL_MKDIR
+export SYSDEP_UTIL_MV
+export SYSDEP_UTIL_PWD
+export SYSDEP_UTIL_RM
+export SYSDEP_UTIL_SED
+export SYSDEP_UTIL_TOUCH
+export SYSDEP_UTIL_TR
+export SYSDEP_UTIL_WC
+
+#
+# Essential subprograms.
+#
+
+SYSDEP_FATAL()
+{
+  if [ ! -z "${SYSDEP_MODULE}" ]
+  then
+    ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: fatal: $1" 1>&2
+  else
+    ${SYSDEP_UTIL_ECHO} "sysdep-main: fatal: $1" 1>&2
+  fi
+  ${SYSDEP_UTIL_EXIT} 1
+}
+
+SYSDEP_ERROR()
+{
+  if [ ! -z "${SYSDEP_MODULE}" ]
+  then
+    ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: error: $1" 1>&2
+  else
+    ${SYSDEP_UTIL_ECHO} "sysdep-main: error: $1" 1>&2
+  fi
+}
+
+SYSDEP_INFO()
+{
+  if [ ! -z "${SYSDEP_MODULE}" ]
+  then
+    ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: info: $1" 1>&2
+  else
+    ${SYSDEP_UTIL_ECHO} "sysdep-main: info: $1" 1>&2
+  fi
+}
+
+SYSDEP_DEBUG()
+{
+  if [ -f "${SYSDEP_BASE_DIRECTORY}/conf-debug" ]
+  then
+    if [ ! -z "${SYSDEP_MODULE}" ]
+    then
+      ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: debug: $$: $1" 1>&2
+    else
+      ${SYSDEP_UTIL_ECHO} "sysdep-main: debug: $$: $1" 1>&2
+    fi
+  fi
+}
+
+SYSDEP_REMOVE()
+{
+  SYSDEP_DEBUG "remove $@"
+  ${SYSDEP_UTIL_RM} -f $@
+  return $?
+}
+
+SYSDEP_MOVE()
+{
+  SYSDEP_DEBUG "move $1 $2"
+  ${SYSDEP_UTIL_MV} -f "$1" "$2"
+  return $?
+}

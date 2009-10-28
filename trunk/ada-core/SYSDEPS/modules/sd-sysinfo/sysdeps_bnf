@@ -1,0 +1,6 @@
+sd-sysinfo             = "sd-sysinfo:" , implementation-defined ;
+sd-sysinfo-cflags      = "sd-sysinfo-cflags:" , implementation-defined ;
+sd-sysinfo-ldflags     = "sd-sysinfo-ldflags:" , implementation-defined ;
+sd-sysinfo-ada-cflags  = "sd-sysinfo-ada-cflags:" , implementation-defined ;
+sd-sysinfo-ada-bflags  = "sd-sysinfo-ada-bflags:" , implementation-defined ;
+sd-sysinfo-ada-ldflags = "sd-sysinfo-ada-ldflags:" , implementation-defined ;

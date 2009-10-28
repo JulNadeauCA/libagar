@@ -1,0 +1,40 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-cpuclinesz: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+cache=0
+sys="$1"
+
+case "$sys" in
+  SD_SYSINFO_OS_DARWIN)
+    cache_raw=`sysctl hw.cachelinesize 2>/dev/null`
+    if [ $? -eq 0 ]
+    then
+      cache=`${SYSDEP_UTIL_ECHO} ${cache_raw} | ${SYSDEP_UTIL_AWK} '{print $NF}'`
+    else
+      cache_raw="`sysctl hw.cacheline 2>/dev/null`"
+      if [ $? -eq 0 ]
+      then
+        cache=`${SYSDEP_UTIL_ECHO} ${cache_raw} | ${SYSDEP_UTIL_AWK} '{print $NF}'`
+      fi
+    fi
+    ;; 
+esac
+
+if [ -f ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 ]
+then
+  cache=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 cacheline 2>/dev/null`
+fi
+
+if [ ! -z "${cache}" ]
+then
+  ${SYSDEP_UTIL_ECHO} "$cache"
+else
+  ${SYSDEP_UTIL_ECHO} 0
+fi

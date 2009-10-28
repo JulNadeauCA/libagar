@@ -1,0 +1,38 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]
+then
+  echo "sd-run: usage: modules/module" 1>&2
+  exit 1
+fi
+
+#
+# Load essential subs.
+#
+
+. ./sysdep-subs "$1" || exit 1
+
+#
+# Load essential subroutines (not passed through shell executions).
+#
+
+. ./sysdep-boot "$1" || exit 1
+
+#
+# Load compiler data.
+#
+
+. ./sysdep-compilers || exit 1
+
+#
+# Load system data.
+#
+
+. ./sysdep-system || exit 1
+
+${SYSDEP_UTIL_CD} "${SYSDEP_MODULE_PATH}" ||
+  SYSDEP_FATAL "could not change directory to '${SYSDEP_MODULE_PATH}'"
+
+SYSDEP_DEBUG "moved to ${SYSDEP_BASE_DIRECTORY}/${SYSDEP_MODULE_PATH}"
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-mod-exec || exit 1

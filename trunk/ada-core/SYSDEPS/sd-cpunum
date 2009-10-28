@@ -1,0 +1,82 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+warn()
+{
+  SYSDEP_DEBUG "sd-cpunum: $1"
+}
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-cpunum: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+sys="$1"
+
+case "$sys" in
+  SD_SYSINFO_OS_LINUX)
+    ncpu="`${SYSDEP_UTIL_GREP} -i '^processor' /proc/cpuinfo |
+      ${SYSDEP_UTIL_WC} -l`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_CRAY_UNICOS)
+    ncpu="`getconf CRAY_NCPU`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_IRIX)
+    ncpu="`getconf NUM_PROCESSORS`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_SUNOS)
+    ncpu="`psrinfo |
+      ${SYSDEP_UTIL_WC} -l |
+      ${SYSDEP_UTIL_TR} -d ' '`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_MS_WINDOWS)
+    ncpu="${NUMBER_OF_PROCESSORS}"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_VMS)
+    ncpu="`SHOW CPU /BRIEF |
+      ${SYSDEP_UTIL_GREP} CPU |
+      ${SYSDEP_UTIL_WC} -l |
+      ${SYSDEP_UTIL_TR} -d ' '`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_MINIX)
+    ncpu=1
+    res=0
+    ;;
+  SD_SYSINFO_OS_OPENBSD)
+    ncpu="`sysctl hw.ncpu |
+      ${SYSDEP_UTIL_AWK} -F= '{print $NF}'`"
+    res=$?
+    ;;
+  SD_SYSINFO_OS_HAIKU)
+    # Haiku just doesn't appear to export this information.
+    ncpu=0
+    res=1
+    ;;
+  *)
+    ncpu=`sysctl hw.ncpu`
+    res=$?
+
+    if [ ${res} -eq 0 ]
+    then
+      ncpu="`${SYSDEP_UTIL_ECHO} ${ncpu} |
+        ${SYSDEP_UTIL_AWK} '{print $NF}'`"
+    else
+      ncpu=0
+    fi
+    ;;
+esac
+
+if [ $res -ne 0 ]
+then
+  warn "CPU enumeration failed - number of CPUs defaulted to 0"
+fi
+
+${SYSDEP_UTIL_ECHO} "${ncpu}"

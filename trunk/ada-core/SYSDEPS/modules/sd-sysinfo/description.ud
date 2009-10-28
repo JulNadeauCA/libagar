@@ -1,0 +1,39 @@
+(para "This module places all of the core information discovered by "
+  (item package "sysdeps") " into a C header file.")
+
+(para "Example (abbreviated) output:")
+
+(para-verbatim example
+"#define SD_SYSINFO_OS SD_SYSINFO_OS_FREEBSD
+#define SD_SYSINFO_OS_VERSION \"7.2-release-p2\"
+#define SD_SYSINFO_ARCH SD_SYSINFO_ARCH_X86_64
+#define SD_SYSINFO_CC_TYPE SD_SYSINFO_CC_TYPE_GCC
+#define SD_SYSINFO_CFLAGS \"-O2 -g -W -Werror -Wall -std=c99 -pedantic-errors -Wno-unused-parameter\"
+#define SD_SYSINFO_LDFLAGS \"\"
+#define SD_SYSINFO_CC_VERSION \"4.3.4\"
+#define SD_SYSINFO_CC_VERSION_MAJOR 4
+#define SD_SYSINFO_CC_VERSION_MINOR 3
+#define SD_SYSINFO_CC_VERSION_PATCH 4
+#define SD_SYSINFO_ADA_CFLAGS \"-O2 -g -fstack-check -gnatwadleG -gnatVa -gnato -gnata -gnatW8 -gnatiw -gnaty2aAbdefhiklprStu\"
+#define SD_SYSINFO_ADA_BFLAGS \"\"
+#define SD_SYSINFO_ADA_LDFLAGS \"\"
+#define SD_SYSINFO_ADA_TYPE UNKNOWN
+#define SD_SYSINFO_ADA_VERSION \"0.0.0\"
+#define SD_SYSINFO_ADA_VERSION_MAJOR 0
+#define SD_SYSINFO_ADA_VERSION_MINOR 0
+#define SD_SYSINFO_ADA_VERSION_PATCH 0
+#define SD_SYSINFO_CPU_NUM 8
+#define SD_SYSINFO_CPU_L1_INST_CACHE_SIZE 32768
+#define SD_SYSINFO_CPU_L1_DATA_CACHE_SIZE 32768
+#define SD_SYSINFO_CPU_L2_CACHE_SIZE 262144
+#define SD_SYSINFO_CPU_L3_CACHE_SIZE 8589934592
+#define SD_SYSINFO_CPU_CACHE_LINE_SIZE 64
+#define SD_SYSINFO_CPU_FREQ 2668
+#define SD_SYSINFO_CPU_EXT (0 | SD_SYSINFO_CPU_EXT_MMX | SD_SYSINFO_CPU_EXT_MMX2 | SD_SYSINFO_CPU_EXT_SSE | SD_SYSINFO_CPU_EXT_SSE2 | SD_SYSINFO_CPU_EXT_SSE3 | SD_SYSINFO_CPU_EXT_SSE4_1 | SD_SYSINFO_CPU_EXT_SSE4_2)
+#define SD_SYSINFO_HAVE_CPU_EXT_MMX 
+#define SD_SYSINFO_HAVE_CPU_EXT_MMX2 
+#define SD_SYSINFO_HAVE_CPU_EXT_SSE 
+#define SD_SYSINFO_HAVE_CPU_EXT_SSE2 
+#define SD_SYSINFO_HAVE_CPU_EXT_SSE3 
+#define SD_SYSINFO_HAVE_CPU_EXT_SSE4_1 
+#define SD_SYSINFO_HAVE_CPU_EXT_SSE4_2") 

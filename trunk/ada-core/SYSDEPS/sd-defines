@@ -1,0 +1,35 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "sd-defines: fatal: $1" 1>&2
+  exit 1
+}
+
+MODULES=`ls modules`             || fatal "could not list modules"
+MODULES=`echo ${MODULES} | sort` || fatal "could not sort modules"
+
+for module in ${MODULES}
+do
+  if [ -f modules/${module}/defines ]
+  then
+    defines=`cat modules/${module}/defines | awk -F: '{print $1}'` ||
+      fatal "could not read modules/${module}/defines"
+
+    for define in ${defines}
+    do
+      echo "${define}" || fatal "could not write define"
+    done
+
+    if [ -d modules/${module}/os_ext ]
+    then
+      for dir in `ls modules/${module}/os_ext/`
+      do
+        if [ -f ${dir}/defines ]
+        then
+          cat ${dir}/defines | awk -F: '{print $1}' || fatal "could not read ${dir}/defines"
+        fi
+      done
+    fi
+  fi
+done
