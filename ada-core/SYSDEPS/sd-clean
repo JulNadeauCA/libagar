@@ -43,6 +43,13 @@ do
 done
 
 #
+# Clean up status file.
+#
+
+STATUS_FILE="${SYSDEP_STATUS_DIRECTORY}/${SYSDEP_MODULE}"
+SYSDEP_REMOVE "${STATUS_FILE}" || SYSDEP_FATAL "could not remove ${STATUS_FILE}"
+
+#
 # Clean up module files.
 #
 

@@ -11,6 +11,36 @@
 #
 
 #
+# Mark module as successful or failed.
+#
+
+SDM_module_succeed()
+{
+  STATUS_FILE="${SYSDEP_STATUS_DIRECTORY}/${SYSDEP_MODULE}"
+  ${SYSDEP_UTIL_ECHO} 'succeeded' > "${STATUS_FILE}" ||
+    SYSDEP_ERROR "could not write ${STATUS_FILE}"
+}
+
+SDM_module_fail()
+{
+  STATUS_FILE="${SYSDEP_STATUS_DIRECTORY}/${SYSDEP_MODULE}"
+  ${SYSDEP_UTIL_ECHO} 'failed' > "${STATUS_FILE}" ||
+    SYSDEP_ERROR "could not write ${STATUS_FILE}"
+}
+
+SDM_module_fatal()
+{
+  SDM_module_fail
+  SYSDEP_FATAL "$1"
+}
+
+SDM_module_exit_success()
+{
+  SDM_module_succeed || SDM_module_fail || ${SYSDEP_UTIL_EXIT} 1
+  ${SYSDEP_UTIL_EXIT} 0
+}
+
+#
 # Move created files out of working directory into output directory.
 #
 
@@ -23,7 +53,7 @@ SDM_files_move()
       ${SYSDEP_UTIL_CAT} "$file" >> "${SYSDEP_OUTPUT_DIRECTORY}/$file"
       SYSDEP_REMOVE "${file}"
     else
-      cp "$file" "${SYSDEP_OUTPUT_DIRECTORY}/$file"
+      ${SYSDEP_UTIL_CP} "$file" "${SYSDEP_OUTPUT_DIRECTORY}/$file"
       SYSDEP_REMOVE "${file}"
     fi
   done
@@ -91,7 +121,7 @@ SDM_os_tolower()
 # Obtain list of files that the current module creates.
 #
 
-SDM_CREATES=`${SYSDEP_UTIL_CAT} creates` || SYSDEP_FATAL "could not read 'creates' file"
+SDM_CREATES=`${SYSDEP_UTIL_CAT} creates` || SDM_module_fatal "could not read 'creates' file"
 SDM_CREATES="${SDM_CREATES} sysdeps.out"
 
 #
@@ -102,8 +132,8 @@ SDM_CREATES="${SDM_CREATES} sysdeps.out"
 # Ensure a clean environment.
 #
 
-SYSDEP_REMOVE ${SDM_CREATES}        || SYSDEP_FATAL "could not clean up created files"
-${SYSDEP_UTIL_TOUCH} ${SDM_CREATES} || SYSDEP_FATAL "could not create empty files"
+SYSDEP_REMOVE ${SDM_CREATES}        || SDM_module_fatal "could not clean up created files"
+${SYSDEP_UTIL_TOUCH} ${SDM_CREATES} || SDM_module_fatal "could not create empty files"
 
 #
 # Execute custom script if present.
@@ -111,13 +141,21 @@ ${SYSDEP_UTIL_TOUCH} ${SDM_CREATES} || SYSDEP_FATAL "could not create empty file
 
 if [ -x "custom" ]
 then
-  ./custom ${SDM_CREATES} || SYSDEP_ERROR "custom program reported failure"
+  ./custom ${SDM_CREATES}
+  if [ $? -eq 0 ]
+  then
+    SDM_module_succeed
+  else
+    SYSDEP_ERROR "custom program reported failure"
+    SDM_module_fail
+  fi
+
   SDM_files_move
-  ${SYSDEP_UTIL_EXIT} 0
+  SDM_module_exit_success
 else
   if [ -f "custom" ]
   then
-    SYSDEP_FATAL "'custom' exists but is not executable"
+    SDM_module_fatal "'custom' exists but is not executable"
   fi
 fi
 
@@ -126,16 +164,16 @@ fi
 #
 
 OUTPUT_FILE="`${SYSDEP_LINE} 1 < creates`" ||
-  SYSDEP_FATAL "could not determine output file"
+  SDM_module_fatal "could not determine output file"
 ${SYSDEP_UTIL_TOUCH} ${OUTPUT_FILE} ||
-  SYSDEP_FATAL "could not create '${OUTPUT_FILE}'"
+  SDM_module_fatal "could not create '${OUTPUT_FILE}'"
 
 if [ -f "defines" ]
 then
   DEFINES="`${SYSDEP_UTIL_CAT} defines |
     ${SYSDEP_UTIL_AWK} -F: '{print $1}' |
     ${SYSDEP_UTIL_TR} -d ' '`" ||
-    SYSDEP_FATAL "could not read 'defines'"
+    SDM_module_fatal "could not read 'defines'"
 fi
 
 #
@@ -143,24 +181,24 @@ fi
 #
 
 OS_LOWER=`SDM_os_tolower` ||
-  SYSDEP_FATAL "could not convert OS string to lowercase"
+  SDM_module_fatal "could not convert OS string to lowercase"
 
 if [ -f "os_ext/${OS_LOWER}/defines" ]
 then
   DEFINES="`${SYSDEP_UTIL_CAT} os_ext/${OS_LOWER}/defines |
     ${SYSDEP_UTIL_AWK} -F: '{print $1}' |
     ${SYSDEP_UTIL_TR} -d ' '`" ||
-    SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/defines'"
+    SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/defines'"
 fi
 if [ -f flags ]
 then
   EXTRA_FLAGS="`${SYSDEP_LINE} 1 < flags`" ||
-    SYSDEP_FATAL "could not read 'flags'"
+    SDM_module_fatal "could not read 'flags'"
 fi
 if [ -f "os_ext/${OS_LOWER}/flags" ]
 then
   EXTRA_FLAGS="${EXTRA_FLAGS} `${SYSDEP_LINE} 1 < os_ext/${OS_LOWER}/flags`" ||
-    SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/flags'"
+    SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/flags'"
 fi
 
 #
@@ -170,9 +208,9 @@ fi
 if [ -f "config_bin" ]
 then
   CONFIG_BINARY="`${SYSDEP_LINE} 1 < config_bin`" ||
-    SYSDEP_FATAL "could not read 'config_bin'"
+    SDM_module_fatal "could not read 'config_bin'"
   CONFIG_BINARY_ARGS="`${SYSDEP_LINE} 1 < config_bin_args`" ||
-    SYSDEP_FATAL "could not read 'config_bin_args'"
+    SDM_module_fatal "could not read 'config_bin_args'"
 
   FLAGS=`${SYSDEP_TRY_CONFIG_BIN} "${CONFIG_BINARY}" "${CONFIG_BINARY_ARGS}"` ||
     SYSDEP_ERROR "config binary '${CONFIG_BINARY}' failed"
@@ -180,16 +218,16 @@ then
   if [ ! -z "${FLAGS}" ]
   then
     FINAL_DEFINES=`SDM_flatten_defines "${DEFINES}"` ||
-      SYSDEP_FATAL "error flattening preprocessor defines"
+      SDM_module_fatal "error flattening preprocessor defines"
     FINAL_OUTPUT="${FLAGS} ${FINAL_DEFINES} ${EXTRA_FLAGS}"
 
     ${SYSDEP_UTIL_ECHO} "${FINAL_OUTPUT}" >> "${OUTPUT_FILE}" ||
-      SYSDEP_FATAL "could not write ${OUTPUT_FILE}"
+      SDM_module_fatal "could not write ${OUTPUT_FILE}"
     ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: ${FINAL_OUTPUT}" >> "sysdeps.out" ||
-      SYSDEP_FATAL "could not write sysdeps.out"
+      SDM_module_fatal "could not write sysdeps.out"
 
-    SDM_files_move || SYSDEP_FATAL "error moving files"
-    ${SYSDEP_UTIL_EXIT} 0
+    SDM_files_move || SDM_module_fatal "error moving files"
+    SDM_module_exit_success
   fi
 fi
 
@@ -200,9 +238,9 @@ fi
 if [ -f "pkg" ]
 then
   PKG_CONFIG_ARGS="`${SYSDEP_LINE} 1 < pkg_config_args`" ||
-    SYSDEP_FATAL "could not read 'pkg_config_args'"
+    SDM_module_fatal "could not read 'pkg_config_args'"
   PACKAGE="`${SYSDEP_LINE} 1 < pkg`" ||
-    SYSDEP_FATAL "could not read 'pkg'"
+    SDM_module_fatal "could not read 'pkg'"
 
   FLAGS=`${SYSDEP_TRY_PKG_CONFIG} "${PACKAGE}" "${PKG_CONFIG_ARGS}"` ||
     SYSDEP_ERROR "pkg-config failed for '${PACKAGE}'"
@@ -210,16 +248,16 @@ then
   if [ ! -z "${FLAGS}" ]
   then
     FINAL_DEFINES=`SDM_flatten_defines "${DEFINES}"` ||
-      SYSDEP_FATAL "error flattening preprocessor defines"
+      SDM_module_fatal "error flattening preprocessor defines"
     FINAL_OUTPUT="${FLAGS} ${FINAL_DEFINES} ${EXTRA_FLAGS}"
 
     ${SYSDEP_UTIL_ECHO} "${FINAL_OUTPUT}" >> "${OUTPUT_FILE}" ||
-      SYSDEP_FATAL "could not write ${OUTPUT_FILE}"
+      SDM_module_fatal "could not write ${OUTPUT_FILE}"
     ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: ${FINAL_OUTPUT}" >> "sysdeps.out" ||
-      SYSDEP_FATAL "could not write sysdeps.out"
+      SDM_module_fatal "could not write sysdeps.out"
 
-    SDM_files_move || SYSDEP_FATAL "error moving files"
-    ${SYSDEP_UTIL_EXIT} 0
+    SDM_files_move || SDM_module_fatal "error moving files"
+    SDM_module_exit_success
   fi
 fi
 
@@ -230,22 +268,22 @@ fi
 if [ -f "path_add" ]
 then
   SDM_paths_add "`${SYSDEP_UTIL_CAT} path_add`" ||
-    SYSDEP_FATAL "could not read 'path_add'"
+    SDM_module_fatal "could not read 'path_add'"
 fi
 if [ -f "os_ext/${OS_LOWER}/path_add" ]
 then
   SDM_paths_add "`${SYSDEP_UTIL_CAT} os_ext/${OS_LOWER}/path_add`" ||
-    SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/path_add'"
+    SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/path_add'"
 fi
 if [ -f "path_ext" ]
 then
   SDM_paths_extend "`${SYSDEP_UTIL_CAT} path_ext`" ||
-    SYSDEP_FATAL "could not read 'path_ext'"
+    SDM_module_fatal "could not read 'path_ext'"
 fi
 if [ -f "os_ext/${OS_LOWER}/path_ext" ]
 then
   SDM_paths_extend "`${SYSDEP_UTIL_CAT} os_ext/${OS_LOWER}/path_ext`" ||
-    SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/path_ext'"
+    SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/path_ext'"
 fi
 
 #
@@ -255,12 +293,12 @@ fi
 if [ -f "header" ]
 then
   HEADER_FILE="`${SYSDEP_LINE} 1 < header`" ||
-    SYSDEP_FATAL "could not read 'header'"
+    SDM_module_fatal "could not read 'header'"
 
   if [ -f "os_ext/${OS_LOWER}/header" ]
   then
     HEADER_FILE="`${SYSDEP_LINE} 1 < os_ext/${OS_LOWER}/header`" ||
-      SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/header'"
+      SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/header'"
   fi
 
   FLAGS=`${SYSDEP_TRY_MANUAL} "${HEADER_FILE}" "${SYSDEP_STDINC}" "-I"` ||
@@ -269,16 +307,16 @@ then
   if [ ! -z "${FLAGS}" ]
   then
     FINAL_DEFINES=`SDM_flatten_defines "${DEFINES}"` ||
-      SYSDEP_FATAL "error flattening preprocessor defines"
+      SDM_module_fatal "error flattening preprocessor defines"
     FINAL_OUTPUT="${FLAGS} ${FINAL_DEFINES} ${EXTRA_FLAGS}"
 
     ${SYSDEP_UTIL_ECHO} "${FINAL_OUTPUT}" >> "${OUTPUT_FILE}" ||
-      SYSDEP_FATAL "could not write ${OUTPUT_FILE}"
+      SDM_module_fatal "could not write ${OUTPUT_FILE}"
     ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: ${FINAL_OUTPUT}" >> "sysdeps.out" ||
-      SYSDEP_FATAL "could not write sysdeps.out"
+      SDM_module_fatal "could not write sysdeps.out"
 
-    SDM_files_move || SYSDEP_FATAL "error moving files"
-    ${SYSDEP_UTIL_EXIT} 0
+    SDM_files_move || SDM_module_fatal "error moving files"
+    SDM_module_exit_success
   fi
 fi
 
@@ -289,12 +327,12 @@ fi
 if [ -f "dynlib" ]
 then
   DYNAMIC_LIB="`${SYSDEP_LINE} 1 < dynlib`" ||
-    SYSDEP_FATAL "could not read 'dynlib'"
+    SDM_module_fatal "could not read 'dynlib'"
 
   if [ -f "os_ext/${OS_LOWER}/dynlib" ]
   then
     DYNAMIC_LIB="`${SYSDEP_LINE} 1 < os_ext/${OS_LOWER}/dynlib`" ||
-      SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/dynlib'"
+      SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/dynlib'"
   fi
 
   LIBRARY_FILE="lib${DYNAMIC_LIB}.${SYSDEP_LIBSUFFIX}"
@@ -306,12 +344,12 @@ then
   then
     FINAL_OUTPUT="${FLAGS} -l${DYNAMIC_LIB} ${EXTRA_FLAGS}"
     ${SYSDEP_UTIL_ECHO} "${FINAL_OUTPUT}" >> "${OUTPUT_FILE}" ||
-      SYSDEP_FATAL "could not write '${OUTPUT_FILE}'"
+      SDM_module_fatal "could not write '${OUTPUT_FILE}'"
     ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: ${FINAL_OUTPUT}" >> "sysdeps.out" ||
-      SYSDEP_FATAL "could not write 'sysdeps.out'"
+      SDM_module_fatal "could not write 'sysdeps.out'"
 
-    SDM_files_move || SYSDEP_FATAL "error moving files"
-    ${SYSDEP_UTIL_EXIT} 0
+    SDM_files_move || SDM_module_fatal "error moving files"
+    SDM_module_exit_success
   fi
 fi
 
@@ -322,12 +360,12 @@ fi
 if [ -f slib ]
 then
   STATIC_LIBRARY="`${SYSDEP_LINE} 1 < slib`" ||
-    SYSDEP_FATAL "could not read 'slib'"
+    SDM_module_fatal "could not read 'slib'"
 
   if [ -f "os_ext/${OS_LOWER}/slib" ]
   then
     STATIC_LIBRARY="`${SYSDEP_LINE} 1 < os_ext/${OS_LOWER}/slib`" ||
-      SYSDEP_FATAL "could not read 'os_ext/${OS_LOWER}/slib'"
+      SDM_module_fatal "could not read 'os_ext/${OS_LOWER}/slib'"
   fi
 
   STATIC_LIBRARY_FILE="lib${STATIC_LIBRARY}.a"
@@ -338,17 +376,18 @@ then
   if [ ! -z "${FLAGS}" ]
   then
     FINAL_OUTPUT=`printf "%s/%s %s" ${FLAGS} "${STATIC_LIBRARY_FILE}" "${EXTRA_FLAGS}"` ||
-      SYSDEP_FATAL "could not assemble output"
+      SDM_module_fatal "could not assemble output"
 
     ${SYSDEP_UTIL_ECHO} "${FINAL_OUTPUT}" >> "${OUTPUT_FILE}" ||
-      SYSDEP_FATAL "could not write to '${OUTPUT_FILE}'"
+      SDM_module_fatal "could not write to '${OUTPUT_FILE}'"
     ${SYSDEP_UTIL_ECHO} "${SYSDEP_MODULE}: ${FINAL_OUTPUT}" >> "sysdeps.out" ||
-      SYSDEP_FATAL "could not write to 'sysdeps.out'"
+      SDM_module_fatal "could not write to 'sysdeps.out'"
 
-    SDM_files_move || SYSDEP_FATAL "error moving files"
-    ${SYSDEP_UTIL_EXIT} 0
+    SDM_files_move || SDM_module_fatal "error moving files"
+    SDM_module_exit_success
   fi
 fi
 
 SYSDEP_INFO "all search types failed"
-SDM_files_move || SYSDEP_FATAL "error moving files"
+SDM_module_fail
+SDM_files_move || SDM_module_fatal "error moving files"

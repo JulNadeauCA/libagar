@@ -1,0 +1,35 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]
+then
+  echo "sd-status-set: usage: module status" 1>&2
+  exit 1
+fi
+
+fatal()
+{
+  echo "sd-status-set: fatal: $1" 1>&2
+  exit 1
+}
+
+module="$1"
+wanted_status="$2"
+
+#
+# Check status.
+#
+
+case ${wanted_status} in
+  succeeded)    ;;
+  failed)       ;;
+  not-executed) ;;
+  *)            fatal "unknown status value '${wanted_status}'"
+esac
+
+if [ ! -d "modules/${module}" ]
+then
+  fatal "module '${module}' does not exist or is inaccessible"
+fi
+
+echo "${wanted_status}" > "status/${module}" ||
+  fatal "could not write status/${module}"

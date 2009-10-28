@@ -1,0 +1,36 @@
+#!/bin/sh
+
+EXIT_VALUE=0
+
+fatal()
+{
+  echo "check-deps: fatal: $1" 1>&2
+  exit 1
+}
+
+require_fail()
+{
+  echo "check-deps: error: $1 required but not found ($2)"
+  EXIT_VALUE=1
+}
+
+required()
+{
+  ./sd-status-is "$1" succeeded
+  if [ $? -ne 0 ]
+  then
+    package_url=`cat modules/$1/package_url` || package_url="missing URL"
+    require_fail "$1" "${package_url}"
+  fi
+}
+
+cd SYSDEPS || fatal "could not change directory to SYSDEPS"
+
+required c_string-flags
+required c_string-libs-S
+required sdl-ada-flags
+required sdl-ada-libs-S
+required agar-flags
+required agar-libs
+
+exit ${EXIT_VALUE}

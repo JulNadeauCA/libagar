@@ -3,17 +3,17 @@
 default: all
 
 all:\
-ag_dso.o ag_event.o agar-core-ada-conf agar-core-ada-conf.o agar-core-ada.a \
-agar-core-config.ali agar-core-config.o agar-core-data_source.ali \
-agar-core-data_source.o agar-core-database.ali agar-core-database.o \
-agar-core-dso.ali agar-core-dso.o agar-core-error.ali agar-core-error.o \
-agar-core-event.ali agar-core-event.o agar-core-init.ali agar-core-init.o \
-agar-core-object.ali agar-core-object.o agar-core-thin.ali agar-core-thin.o \
-agar-core.ali agar-core.o agar.ali agar.o ctxt/bindir.o ctxt/ctxt.a \
-ctxt/dlibdir.o ctxt/fakeroot.o ctxt/incdir.o ctxt/repos.o ctxt/slibdir.o \
-ctxt/version.o deinstaller deinstaller.o install-core.o install-error.o \
-install-posix.o install-win32.o install.a installer installer.o instchk \
-instchk.o insthier.o types-sizes types-sizes.o
+local ag_dso.o ag_event.o agar-core-ada-conf agar-core-ada-conf.o \
+agar-core-ada.a agar-core-config.ali agar-core-config.o \
+agar-core-data_source.ali agar-core-data_source.o agar-core-database.ali \
+agar-core-database.o agar-core-dso.ali agar-core-dso.o agar-core-error.ali \
+agar-core-error.o agar-core-event.ali agar-core-event.o agar-core-init.ali \
+agar-core-init.o agar-core-object.ali agar-core-object.o agar-core-thin.ali \
+agar-core-thin.o agar-core.ali agar-core.o agar.ali agar.o ctxt/bindir.o \
+ctxt/ctxt.a ctxt/dlibdir.o ctxt/fakeroot.o ctxt/incdir.o ctxt/repos.o \
+ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o install-core.o \
+install-error.o install-posix.o install-win32.o install.a installer installer.o \
+instchk instchk.o insthier.o types-sizes types-sizes.o
 
 # Mkf-deinstall
 deinstall: deinstaller conf-sosuffix
@@ -32,6 +32,15 @@ install-dryrun: installer conf-sosuffix
 # Mkf-instchk
 install-check: instchk conf-sosuffix
 	./instchk
+
+# Mkf-local
+local:\
+flags-agar-core libs-agar-core flags-c_string libs-c_string-S \
+flags-sdl-ada libs-sdl-ada-S
+	./check-deps
+
+local_pre:
+local_clean:
 
 #----------------------------------------------------------------------
 # SYSDEPS start
@@ -389,7 +398,7 @@ types-sizes.o:\
 cc-compile types-sizes.c
 	./cc-compile types-sizes.c
 
-clean-all: sysdeps_clean obj_clean ext_clean
+clean-all: sysdeps_clean local_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f ag_dso.o ag_event.o agar-core-ada-conf agar-core-ada-conf.o \
