@@ -1,5 +1,0 @@
--O
-
-The first line of this file is passed to the C compiler as additional flags.
-This file is optional and may be deleted (remember to regenerate the Makefile
-after removal).
