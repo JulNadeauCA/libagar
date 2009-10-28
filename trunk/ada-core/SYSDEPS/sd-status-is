@@ -1,0 +1,36 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]
+then
+  echo "sd-status-is: usage: module status" 1>&2
+  exit 1
+fi
+
+fatal()
+{
+  echo "sd-status-is: fatal: $1" 1>&2
+  exit 1
+}
+
+module="$1"
+wanted_status="$2"
+
+#
+# Check status.
+#
+
+case ${wanted_status} in
+  succeeded)    ;;
+  failed)       ;;
+  not-executed) ;;
+  *)            fatal "unknown status value '${wanted_status}'"
+esac
+
+STATUS=`./sd-status "${module}"` || fatal "could not execute sd-status"
+
+if [ "${STATUS}" = "${wanted_status}" ]
+then
+  exit 0
+else
+  exit 1
+fi
