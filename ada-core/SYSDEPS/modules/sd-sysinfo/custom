@@ -1,0 +1,137 @@
+#!/bin/sh
+
+. "${SYSDEP_SUBS_FILE}" || exit 1
+
+fout="$1"
+sysdeps="$2"
+
+define()
+{
+  ${SYSDEP_UTIL_ECHO} "#define $1 $2" >> "${fout}" ||
+    SYSDEP_FATAL "could not write ${fout}"
+}
+
+(
+${SYSDEP_UTIL_CAT} >> "${fout}" <<EOF
+#ifndef SD_SYSINFO_H
+#define SD_SYSINFO_H
+
+EOF
+) || SYSDEP_FATAL "could not write ${fout}"
+
+${SYSDEP_UTIL_CAT} ${SYSDEP_BASE_DIRECTORY}/sd-sysinfo.h >> "${fout}" ||
+  SYSDEP_FATAL "could not write ${fout}"
+${SYSDEP_UTIL_ECHO} >> "${fout}" ||
+  SYSDEP_FATAL "could not write ${fout}"
+
+#----------------------------------------------------------------------
+# C
+
+define SD_SYSINFO_OS "${SYSDEP_OS}"
+define SD_SYSINFO_OS_VERSION \""${SYSDEP_OS_VERSION}"\"
+define SD_SYSINFO_ARCH "${SYSDEP_ARCH}"
+define SD_SYSINFO_CC_TYPE "${SYSDEP_CC_TYPE}"
+define SD_SYSINFO_CFLAGS \""${SYSDEP_CFLAGS}"\"
+define SD_SYSINFO_LDFLAGS \""${SYSDEP_LDFLAGS}"\"
+define SD_SYSINFO_CC_VERSION \""${SYSDEP_CC_VERSION}"\"
+
+major=`${SYSDEP_UTIL_ECHO} "${SYSDEP_CC_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $1}'` ||
+  SYSDEP_FATAL "could not get C compiler major version"
+minor=`${SYSDEP_UTIL_ECHO} "${SYSDEP_CC_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $2}'` ||
+  SYSDEP_FATAL "could not get C compiler minor version"
+patch=`${SYSDEP_UTIL_ECHO} "${SYSDEP_CC_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $3}'` ||
+  SYSDEP_FATAL "could not get C compiler patch version"
+
+define SD_SYSINFO_CC_VERSION_MAJOR "$major"
+define SD_SYSINFO_CC_VERSION_MINOR "$minor"
+define SD_SYSINFO_CC_VERSION_PATCH "$patch"
+
+#----------------------------------------------------------------------
+# Ada
+
+if [ ! -z "${SYSDEP_ADA_COMP}" ]
+then
+  define SD_SYSINFO_ADA_CFLAGS \""${SYSDEP_ADA_CFLAGS}"\"
+  define SD_SYSINFO_ADA_BFLAGS \""${SYSDEP_ADA_BFLAGS}"\"
+  define SD_SYSINFO_ADA_LDFLAGS \""${SYSDEP_ADA_LDFLAGS}"\"
+
+  major=`${SYSDEP_UTIL_ECHO} "${SYSDEP_ADA_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $1}'` ||
+    SYSDEP_FATAL "could not get Ada compiler major version"
+  minor=`${SYSDEP_UTIL_ECHO} "${SYSDEP_ADA_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $2}'` ||
+    SYSDEP_FATAL "could not get Ada compiler minor version"
+  patch=`${SYSDEP_UTIL_ECHO} "${SYSDEP_ADA_VERSION}" | ${SYSDEP_UTIL_AWK} -F. '{print $3}'` ||
+    SYSDEP_FATAL "could not get Ada compiler patch version"
+
+  define SD_SYSINFO_ADA_TYPE "${SYSDEP_ADA_TYPE}"
+  define SD_SYSINFO_ADA_VERSION \""${SYSDEP_ADA_VERSION}"\"
+  define SD_SYSINFO_ADA_VERSION_MAJOR "$major"
+  define SD_SYSINFO_ADA_VERSION_MINOR "$minor"
+  define SD_SYSINFO_ADA_VERSION_PATCH "$patch"
+fi
+
+#----------------------------------------------------------------------
+# cpu
+
+define SD_SYSINFO_CPU_NUM "${SYSDEP_CPU_NUM}"
+define SD_SYSINFO_CPU_L1_INST_CACHE_SIZE "${SYSDEP_CPU_L1_INST_CACHE_SIZE}"
+define SD_SYSINFO_CPU_L1_DATA_CACHE_SIZE "${SYSDEP_CPU_L1_DATA_CACHE_SIZE}"
+define SD_SYSINFO_CPU_L2_CACHE_SIZE "${SYSDEP_CPU_L2_CACHE_SIZE}"
+define SD_SYSINFO_CPU_L3_CACHE_SIZE "${SYSDEP_CPU_L3_CACHE_SIZE}"
+define SD_SYSINFO_CPU_CACHE_LINE_SIZE "${SYSDEP_CPU_CACHE_LINE_SIZE}"
+define SD_SYSINFO_CPU_FREQ "${SYSDEP_CPU_FREQ}"
+
+ext="(0"
+for f in ${SYSDEP_CPU_EXT}
+do
+  ext="${ext} | $f"
+done
+ext="${ext})"
+define SD_SYSINFO_CPU_EXT "${ext}"
+
+for f in ${SYSDEP_CPU_EXT}
+do
+  have=`${SYSDEP_UTIL_ECHO} "${f}" | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_/SD_SYSINFO_HAVE_/g'` ||
+    SYSDEP_FATAL "could not convert \"$f\" to SYSINFO form"
+  define "${have}"
+done
+
+${SYSDEP_UTIL_CAT} >> "${fout}" <<EOF
+
+#endif /* SD_SYSINFO_H */
+EOF
+
+os=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_OS ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_OS_//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract OS"
+ver=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_OS_VERSION ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_OS_VERSION_//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract OS version"
+cc=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_CC_TYPE ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_CC_TYPE_//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract C compiler type"
+ccver=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_CC_VERSION ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_CC_VERSION//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract C compiler version"
+arch=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_ARCH ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_ARCH_//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract hardware architecture"
+ada=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_ADA_TYPE ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_ADA_TYPE_//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract Ada compiler type"
+adaver=`${SYSDEP_UTIL_GREP} 'SD_SYSINFO_ADA_VERSION ' "${fout}" \
+ | ${SYSDEP_UTIL_SED} -e 's/SD_SYSINFO_ADA_VERSION//g' | ${SYSDEP_UTIL_AWK} '{print $NF}'` ||
+  SYSDEP_FATAL "could not extract Ada compiler version"
+
+${SYSDEP_UTIL_ECHO} "sysinfo: ${os} ${ver} ${cc} ${ccver} ${arch} ${ada} ${adaver}" \
+  | ${SYSDEP_UTIL_TR} [A-Z] [a-z] | ${SYSDEP_UTIL_SED} -e 's/"//g' >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""
+${SYSDEP_UTIL_ECHO} "sysinfo-cflags: ${SYSDEP_CFLAGS}" >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""
+${SYSDEP_UTIL_ECHO} "sysinfo-ldflags: ${SYSDEP_LDFLAGS}" >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""
+${SYSDEP_UTIL_ECHO} "sysinfo-ada-cflags: ${SYSDEP_ADA_CFLAGS}" >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""
+${SYSDEP_UTIL_ECHO} "sysinfo-ada-bflags: ${SYSDEP_ADA_BFLAGS}" >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""
+${SYSDEP_UTIL_ECHO} "sysinfo-ada-ldflags: ${SYSDEP_ADA_LDFLAGS}" >> "${sysdeps}" ||
+  SYSDEP_FATAL "could not write \"${sysdeps}\""

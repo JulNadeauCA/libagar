@@ -1,0 +1,519 @@
+#!/bin/sh
+
+SDM_lock_and_compile_fail()
+{
+  MESSAGE=$1
+  shift
+  SYSDEP_REMOVE $@
+  SYSDEP_FATAL "${MESSAGE}"
+}
+
+SDM_prepare_locker()
+{
+  PROCESS_ID=$$
+  TEMP_OBJECT="${SYSDEP_BASE_DIRECTORY}/sd-locker-${PROCESS_ID}.o"
+  TEMP_RESULT="${SYSDEP_BASE_DIRECTORY}/sd-locker-${PROCESS_ID}"
+
+  if [ ! -x ${SYSDEP_BASE_DIRECTORY}/sd-locker ]
+  then
+    SYSDEP_DEBUG "SDM_lock_and_compile: compiling ${TEMP_RESULT}"
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o "${TEMP_OBJECT}" "${SYSDEP_BASE_DIRECTORY}/sd-locker.c" ||
+      SDM_lock_and_compile_fail "could not compile sd-locker.c - check C compiler configuration" "${TEMP_OBJECT}"
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o "${TEMP_RESULT}" "${TEMP_OBJECT}" ||
+      SDM_lock_and_compile_fail "could not compile sd-locker - check C linker configuration" "${TEMP_RESULT}" "${TEMP_OBJECT}"
+
+    # Specifically do not check if this operation is successful - it may not be on some
+    # operating systems during parallel builds. Check existence before use.
+
+    SYSDEP_MOVE "${TEMP_RESULT}" "${SYSDEP_BASE_DIRECTORY}/sd-locker" 2>/dev/null
+  fi
+}
+
+#
+# Acquire lock on ${LOCK_FILE} and execute program.
+#
+
+SDM_lock_and_exec()
+{
+  LOCK_FILE="$1"
+
+  shift
+
+  SDM_prepare_locker
+
+  if [ ! -x "${SYSDEP_BASE_DIRECTORY}/sd-locker" ]
+  then
+    SYSDEP_FATAL "sd-locker does not exist and could not be created"
+  fi
+
+  ${SYSDEP_BASE_DIRECTORY}/sd-locker \
+    "$$"                             \
+    "${LOCK_FILE}"                   \
+     $@
+}
+
+#
+# Acquire lock on ${LOCK_FILE} and execute compiler.
+#
+
+SDM_lock_and_compile()
+{
+  LOCK_FILE="$1"
+  SOURCE_FILE="$2"
+  OBJECT_FILE="$3"
+  RESULT_FILE="$4"
+
+  SDM_prepare_locker
+
+  if [ ! -x "${SYSDEP_BASE_DIRECTORY}/sd-locker" ]
+  then
+    SYSDEP_FATAL "sd-locker does not exist and could not be created"
+  fi
+
+  ${SYSDEP_BASE_DIRECTORY}/sd-locker      \
+    "$$"                                  \
+    "${LOCK_FILE}"                        \
+    "${SYSDEP_BASE_DIRECTORY}/sd-compile" \
+    "${SOURCE_FILE}"                      \
+    "${OBJECT_FILE}"                      \
+    "${RESULT_FILE}"                      \
+    "${SYSDEP_CC}"                        \
+    "${SYSDEP_CFLAGS}"                    \
+    "${SYSDEP_LD}"                        \
+    "${SYSDEP_LDFLAGS}"
+}
+
+#
+# Compile ${SOURCE_FILE} into ${RESULT_FILE} using ${OBJECT_FILE} as intermediate
+# object.
+#
+
+SDM_protected_C_compilation()
+{
+  SOURCE_FILE="$1"
+  OBJECT_FILE="$2"
+  RESULT_FILE="$3"
+
+  if [ -z "${SOURCE_FILE}" ] || [ -z "${OBJECT_FILE}" ] || [ -z "${RESULT_FILE}" ]
+  then
+    SYSDEP_FATAL "incorrect or missing arguments to SDM_protected_C_compilation"
+  fi
+
+  SYSDEP_DEBUG "SDM_protected_C_compilation: compiling ${RESULT_FILE}"
+  SDM_lock_and_compile "${OBJECT_FILE}.lock" "${SOURCE_FILE}" "${OBJECT_FILE}" "${RESULT_FILE}" ||
+    SYSDEP_FATAL "compilation of ${RESULT_FILE} failed - check C compiler configuration"
+
+  SYSDEP_DEBUG "compiled ${RESULT_FILE}"
+}
+
+#
+# Call sd-adaversion and save output safely.
+#
+
+SDM_fetch_adaversion()
+{
+  PROCESS_ID=$$
+
+  SDM_prepare_locker
+
+  SD_ADA_VERSION_TMP="`${SYSDEP_BASE_DIRECTORY}/sd-locker \
+    "$$"                                          \
+    "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.lock" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-adaversion"      \
+    "${SYSDEP_ADA_COMP}"                          \
+    "${SYSDEP_ADA_CFLAGS}"                        \
+    "${SYSDEP_ADA_BIND}"                          \
+    "${SYSDEP_ADA_BFLAGS}"                        \
+    "${SYSDEP_ADA_LINK}"                          \
+    "${SYSDEP_ADA_LDFLAGS}"`"
+  SYSDEP_ADA_TYPE=`${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" | ${SYSDEP_UTIL_AWK} '{print $1}'`
+  SYSDEP_ADA_VERSION=`${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" | ${SYSDEP_UTIL_AWK} '{print $2}'`
+
+  ${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" > "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out.${PROCESS_ID}" ||
+    SYSDEP_FATAL "could not write sd-adaversion.out"
+  SYSDEP_MOVE \
+    "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out.${PROCESS_ID}" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out" || SYSDEP_FATAL "could not write adaversion.out"
+}
+
+#
+# If the given string does not start with the given prefix,
+# prepend the prefix and return the modified string.
+#
+
+SDM_adjust_prefix()
+{
+  PREFIX="$1"
+  STRING="$2"
+  RETURN_CODE=0
+
+  OUTPUT=`${SYSDEP_UTIL_ECHO} "${STRING}" | ${SYSDEP_UTIL_GREP} "^${PREFIX}"`
+  case $? in
+    0)
+      ${SYSDEP_UTIL_ECHO} "${STRING}"
+      RETURN_CODE=0
+      ;;
+    1)
+      ${SYSDEP_UTIL_ECHO} "${PREFIX}${STRING}"
+      RETURN_CODE=0
+      ;;
+    *)
+      RETURN_CODE=1
+      ;;
+  esac
+
+  return ${RETURN_CODE}
+}
+
+#
+# Read configuration files, compiling support programs if necessary.
+#
+
+if [ ${SYSDEP_CROSS_COMPILE} -eq 0 ]
+then
+
+  #
+  # Acquire locks on and compile support programs. They will not be
+  # compiled if they already exist.
+  #
+  # Each of these programs acquire a lock before use as another process in a
+  # parallel build might attempt to replace them at any moment, resulting in
+  # errors on systems with unusual semantics (win32).
+  #
+
+  SDM_protected_C_compilation            \
+    "${SYSDEP_BASE_DIRECTORY}/sd-arch.c" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-arch.o" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-arch"
+
+  SDM_protected_C_compilation              \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cctype.c" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cctype.o" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cctype"
+
+  SDM_protected_C_compilation          \
+    "${SYSDEP_BASE_DIRECTORY}/sd-os.c" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-os.o" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-os"
+
+  SDM_protected_C_compilation                 \
+    "${SYSDEP_BASE_DIRECTORY}/sd-ccversion.c" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-ccversion.o" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-ccversion"
+
+  # Find system architecture.
+  SYSDEP_ARCH="`SDM_lock_and_exec         \
+    ${SYSDEP_BASE_DIRECTORY}/sd-arch.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-arch`" ||
+      SYSDEP_ERROR "sd-arch failed - architecture will be marked 'unknown'"
+  export SYSDEP_ARCH
+
+  # Find compiler type.
+  SYSDEP_CC_TYPE="`SDM_lock_and_exec        \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cctype.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cctype`" ||
+      SYSDEP_ERROR "sd-cctype failed - compiler type will be marked 'unknown'"
+  export SYSDEP_CC_TYPE
+
+  # Create header for sd-cpuidx86
+  SDM_lock_and_exec                                 \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.h.lock"   \
+    "${SYSDEP_BASE_DIRECTORY}/sd-mk-cpuidx86-h"     \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.h" ||
+      SYSDEP_FATAL "could not create sd-cpuidx86.h"
+
+  SDM_protected_C_compilation                \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.c" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.o" \
+    "${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86"
+
+  # Find system type.
+  SYSDEP_OS="`SDM_lock_and_exec         \
+    ${SYSDEP_BASE_DIRECTORY}/sd-os.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-os`" ||
+      SYSDEP_ERROR "sd-os failed - operating system will be marked 'unknown'"
+  export SYSDEP_OS
+
+  # Find system version.
+  SYSDEP_OS_VERSION="`SDM_lock_and_exec        \
+    ${SYSDEP_BASE_DIRECTORY}/sd-osversion.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-osversion ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-osversion failed - operating system version will be marked '0.0.0'"
+  export SYSDEP_OS_VERSION
+
+  # Find compiler version.
+  SYSDEP_CC_VERSION="`SDM_lock_and_exec        \
+    ${SYSDEP_BASE_DIRECTORY}/sd-ccversion.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-ccversion`" ||
+      SYSDEP_ERROR "sd-ccversion failed - compiler version will be marked '0.0.0'"
+  export SYSDEP_CC_VERSION
+
+  # Find CPU features (Altivec, SSE etc).
+  SYSDEP_CPU_EXT="`SDM_lock_and_exec          \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpufeat ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpufeat failed - CPU will appear to have no features"
+  export SYSDEP_CPU_EXT
+
+  # Find number of CPUs.
+  SYSDEP_CPU_NUM="`SDM_lock_and_exec          \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpunum ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpunum failed - number of CPUs will be zero"
+  export SYSDEP_CPU_NUM
+
+  # Find CPU model.
+  SYSDEP_CPU_MODEL="`SDM_lock_and_exec        \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpumodel ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpumodel failed - CPU model will be marked 'unknown'"
+  export SYSDEP_CPU_MODEL
+
+  # Find CPU frequency.
+  SYSDEP_CPU_FREQ="`SDM_lock_and_exec         \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpufreq ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpufreq failed - CPU frequency will be zero"
+  export SYSDEP_CPU_FREQ
+
+  # Find CPU L1 instruction cache size.
+  SYSDEP_CPU_L1_INST_CACHE_SIZE="`SDM_lock_and_exec \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock       \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpul1icache ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpul1icache failed - L1 instruction cache size will be zero"
+  export SYSDEP_CPU_L1_INST_CACHE_SIZE
+
+  # Find CPU L1 data cache size.
+  SYSDEP_CPU_L1_DATA_CACHE_SIZE="`SDM_lock_and_exec \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock       \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpul1dcache ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpul1dcache failed - L1 data cache size will be zero"
+  export SYSDEP_CPU_L1_DATA_CACHE_SIZE
+
+  # Find CPU L2 cache size.
+  SYSDEP_CPU_L2_CACHE_SIZE="`SDM_lock_and_exec \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock  \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpul2cache ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpul12cache failed - L2 cache size will be zero"
+  export SYSDEP_CPU_L2_CACHE_SIZE
+
+  # Find CPU L3 cache size.
+  SYSDEP_CPU_L3_CACHE_SIZE="`SDM_lock_and_exec \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock  \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpul3cache ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpul13cache failed - L3 cache size will be zero"
+  export SYSDEP_CPU_L3_CACHE_SIZE
+
+  # Find CPU cache line size.
+  SYSDEP_CPU_CACHE_LINE_SIZE="`SDM_lock_and_exec \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86.lock    \
+    ${SYSDEP_BASE_DIRECTORY}/sd-cpuclinesz ${SYSDEP_OS}`" ||
+      SYSDEP_ERROR "sd-cpuclinesz failed - cache line size will be zero"
+  export SYSDEP_CPU_CACHE_LINE_SIZE
+
+  #----------------------------------------------------------------------
+  # optional Ada components
+
+  SYSDEP_ADA_TYPE="SD_SYSINFO_ADA_TYPE_UNKNOWN"
+  SYSDEP_ADA_VERSION="0.0.0"
+
+  if [ "${SYSDEP_ADA_COMP}" ]
+  then
+    if [ ! -f "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out" ]
+    then
+      SDM_prepare_locker
+
+      SD_ADA_VERSION_TMP="`${SYSDEP_BASE_DIRECTORY}/sd-locker \
+        "$$"                                          \
+        "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.lock" \
+        "${SYSDEP_BASE_DIRECTORY}/sd-adaversion"      \
+        "${SYSDEP_ADA_COMP}"                          \
+        "${SYSDEP_ADA_CFLAGS}"                        \
+        "${SYSDEP_ADA_BIND}"                          \
+        "${SYSDEP_ADA_BFLAGS}"                        \
+        "${SYSDEP_ADA_LINK}"                          \
+        "${SYSDEP_ADA_LDFLAGS}"`"
+      SYSDEP_ADA_TYPE=`${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" | ${SYSDEP_UTIL_AWK} '{print $1}'`
+      SYSDEP_ADA_VERSION=`${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" | ${SYSDEP_UTIL_AWK} '{print $2}'`
+      ${SYSDEP_UTIL_ECHO} "${SD_ADA_VERSION_TMP}" > "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out"
+    else
+      SYSDEP_ADA_TYPE=`${SYSDEP_UTIL_CAT} "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out" | ${SYSDEP_UTIL_AWK} '{print $1}'`
+      SYSDEP_ADA_VERSION=`${SYSDEP_UTIL_CAT} "${SYSDEP_BASE_DIRECTORY}/sd-adaversion.out" | ${SYSDEP_UTIL_AWK} '{print $2}'`
+    fi
+  fi
+
+  export SYSDEP_ADA_TYPE
+  export SYSDEP_ADA_VERSION
+
+else
+  #
+  # Some of these variables are compatible with configuration files
+  # used by certain other build systems. The other systems obviously do not
+  # use sysdep-specific prefixes such as SD_SYSINFO_OS_ and therefore the
+  # values are adjusted here, if necessary.
+  #
+
+  # Find system type (adjusting value, if necessary).
+  SYSDEP_OS="SD_SYSINFO_OS_`${SYSDEP_FILE} get "conf-x-systype" "SD_SYSINFO_OS_UNKNOWN"`"
+  SYSDEP_OS=`SDM_adjust_prefix "SD_SYSINFO_OS_" "${SYSDEP_OS}"` ||
+    SYSDEP_FATAL "could not adjust string prefix for SYSDEP_OS"
+  export SYSDEP_OS
+
+  # Find system version.
+  SYSDEP_OS_VERSION=`${SYSDEP_FILE} get "conf-x-sysver" "0.0"`
+  export SYSDEP_OS_VERSION
+
+  # Find system architecture.
+  SYSDEP_ARCH="`${SYSDEP_FILE} get "conf-x-arch" "SD_SYSINFO_ARCH_UNKNOWN"`"
+  export SYSDEP_ARCH
+
+  # Find compiler type (adjusting value if necessary).
+  SYSDEP_CC_TYPE="SD_SYSINFO_CC_TYPE_`${SYSDEP_FILE} get "conf-x-cctype" "SD_SYSINFO_CC_TYPE_UNKNOWN"`"
+  SYSDEP_CC_TYPE=`SDM_adjust_prefix "SD_SYSINFO_CC_TYPE_" "${SYSDEP_CC_TYPE}"` ||
+    SYSDEP_FATAL "could not adjust string prefix for SYSDEP_CC_TYPE"
+  export SYSDEP_CC_TYPE
+
+  # Find compiler version.
+  SYSDEP_CC_VERSION=`${SYSDEP_FILE} get "conf-x-ccver" "0.0.0"`
+  export SYSDEP_CC_VERSION
+
+  # Find CPU features.
+  SYSDEP_CPU_EXT=`${SYSDEP_FILE} get "conf-x-cpufeat" ""`
+  export SYSDEP_CPU_EXT
+
+  # Find number of CPUs.
+  SYSDEP_CPU_NUM=`${SYSDEP_FILE} get "conf-x-cpunum" "0"`
+  export SYSDEP_CPU_NUM
+
+  # Find CPU model.
+  SYSDEP_CPU_MODEL=`${SYSDEP_FILE} get "conf-x-cpumodel" ""`
+  export SYSDEP_CPU_MODEL
+
+  # Find CPU frequency.
+  SYSDEP_CPU_FREQ=`${SYSDEP_FILE} get "conf-x-cpufreq" "0"`
+  export SYSDEP_CPU_FREQ
+
+  # Find CPU L1 instruction cache size.
+  SYSDEP_CPU_L1_INST_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul1ic" "0"`
+  export SYSDEP_CPU_L1_INST_CACHE_SIZE
+
+  # Find CPU L1 data cache size.
+  SYSDEP_CPU_L1_DATA_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul1dc" "0"`
+  export SYSDEP_CPU_L1_DATA_CACHE_SIZE
+
+  # Find CPU L2 cache size.
+  SYSDEP_CPU_L2_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul2c" "0"`
+  export SYSDEP_CPU_L2_CACHE_SIZE
+
+  # Find CPU L3 cache size.
+  SYSDEP_CPU_L3_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul3c" "0"`
+  export SYSDEP_CPU_L3_CACHE_SIZE
+
+  # Find CPU cache line size.
+  SYSDEP_CPU_CACHE_LINE_SIZE=`${SYSDEP_FILE} get "conf-x-cpucline" "0"`
+  export SYSDEP_CPU_CACHE_LINE_SIZE
+
+  #
+  # Optional Ada components.
+  #
+
+  # Find compiler type (adjusting value if necessary).
+  SYSDEP_ADA_TYPE="SD_SYSINFO_ADA_TYPE_`${SYSDEP_FILE} get "conf-x-adatype" "SD_SYSINFO_ADA_TYPE_UNKNOWN"`"
+  SYSDEP_ADA_TYPE=`SDM_adjust_prefix "SD_SYSINFO_ADA_TYPE_" "${SYSDEP_ADA_TYPE}"` ||
+    SYSDEP_FATAL "could not adjust string prefix for SYSDEP_ADA_TYPE"
+  export SYSDEP_ADA_TYPE
+
+  # Find compiler version.
+  SYSDEP_ADA_VERSION=`${SYSDEP_FILE} get "conf-x-adaver" "0.0.0"`
+  export SYSDEP_ADA_VERSION
+fi
+
+#
+# If cross compiling, require an explicit set of paths to search for libraries,
+# headers and configuration executables.
+#
+# If not cross compiling, use a set of paths appropriate to the current system,
+# with an optional config file for specifying extra paths.
+#
+
+if [ ${SYSDEP_CROSS_COMPILE} -eq 1 ]
+then
+  ${SYSDEP_FILE} exists "conf-x-prefix"
+  if [ $? -ne 0 ]
+  then
+    SYSDEP_FATAL "conf-x-prefix is required for cross compilation"
+  fi
+  PREFIX=`${SYSDEP_FILE} get "conf-x-prefix" ""` ||
+    SYSDEP_FATAL "could not read conf-x-prefix"
+
+  for dir in ${PREFIX}
+  do
+    SYSDEP_INFO "using custom x-prefix ${dir}/include"
+    SYSDEP_INFO "using custom x-prefix ${dir}/lib"
+    SYSDEP_INFO "using custom x-prefix ${dir}/bin"
+    STDINC_ADD="${STDINC_ADD} ${dir}/include"
+    STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
+    STDBIN_ADD="${STDBIN_ADD} ${dir}/bin"
+  done
+
+  SYSDEP_STDINC="${STDINC_ADD}"
+  SYSDEP_STDLIB="${STDLIB_ADD}"
+  SYSDEP_STDBIN="${STDBIN_ADD}"
+else
+  # Else, optionally provide a way to add custom paths for searches.
+  PREFIX=`${SYSDEP_FILE} get "conf-prefix" ""`
+  for dir in ${PREFIX}
+  do
+    SYSDEP_INFO "using custom prefix ${dir}/include"
+    SYSDEP_INFO "using custom prefix ${dir}/lib"
+    STDINC_ADD="${STDINC_ADD} ${dir}/include"
+    STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
+  done
+
+  # Split colon-separated $PATH into space-separated $PATH_ELEMENTS.
+  PATH_ELEMENTS=`${SYSDEP_UTIL_ECHO} "${PATH}" | ${SYSDEP_UTIL_TR} ':' ' '` ||
+    SYSDEP_FATAL "could not split PATH"
+
+  # Base $SYSDEP_STDBIN on $PATH.
+  for PATH_ELEMENT in ${PATH_ELEMENTS}
+  do
+    STDBIN_ADD="${STDBIN_ADD} ${PATH_ELEMENT}"
+  done
+  SYSDEP_STDBIN="${STDBIN_ADD} /bin"
+
+  # Standard include path.
+  SYSDEP_STDINC="/usr/include /usr/local/include"
+  case ${SYSDEP_OS} in
+    SD_SYSINFO_OS_DARWIN) SYSDEP_STDINC="/opt/local/include /opt/include /sw/include ${SYSDEP_STDINC}";;
+    SD_SYSINFO_OS_SUNOS)  SYSDEP_STDINC="/opt/csw/include /usr/sfw/include ${SYSDEP_STDINC}";;
+    *)
+  esac
+  SYSDEP_STDINC="${STDINC_ADD} ${SYSDEP_STDINC}"
+
+  # Standard library path.
+  SYSDEP_STDLIB="/usr/lib /usr/local/lib"
+  case ${SYSDEP_OS} in
+    SD_SYSINFO_OS_DARWIN) SYSDEP_STDLIB="/opt/local/lib /opt/lib /sw/lib ${SYSDEP_STDLIB}";;
+    SD_SYSINFO_OS_SUNOS)  SYSDEP_STDLIB="/opt/csw/lib /usr/sfw/lib ${SYSDEP_STDLIB}";;
+    *)
+  esac
+  SYSDEP_STDLIB="${STDLIB_ADD} ${SYSDEP_STDLIB}"
+fi
+
+SYSDEP_DEBUG "SYSDEP_STDINC ${SYSDEP_STDINC}"
+SYSDEP_DEBUG "SYSDEP_STDLIB ${SYSDEP_STDLIB}"
+SYSDEP_DEBUG "SYSDEP_STDBIN ${SYSDEP_STDBIN}"
+
+export SYSDEP_STDBIN
+export SYSDEP_STDLIB
+export SYSDEP_STDINC
+
+# Find system dynamic library suffix.
+SYSDEP_LIBSUFFIX="so"
+case ${SYSDEP_OS} in
+  SD_SYSINFO_OS_DARWIN)     SYSDEP_LIBSUFFIX="dylib" ;;
+  SD_SYSINFO_OS_HPUX)       SYSDEP_LIBSUFFIX="sl";;
+  SD_SYSINFO_OS_MS_WINDOWS) SYSDEP_LIBSUFFIX="dll";;
+  *) ;;
+esac
+export SYSDEP_LIBSUFFIX

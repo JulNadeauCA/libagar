@@ -1,0 +1,48 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+cleanup()
+{
+  ${SYSDEP_UTIL_RM} -f "${OBJECT_FILE}" "${RESULT_FILE}".tmp
+}
+
+fail()
+{
+  ${SYSDEP_UTIL_ECHO} "sd-compile: $1" 1>&2
+  cleanup
+  ${SYSDEP_UTIL_EXIT} 1
+}
+
+#----------------------------------------------------------------------
+# entry
+
+if [ $# -ne 7 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-compile: usage: source object result cc cflags ld ldflags" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+SOURCE_FILE="$1"
+OBJECT_FILE="$2"
+RESULT_FILE="$3"
+
+shift
+shift
+shift
+
+CC="$1"
+CC_FLAGS="$2"
+LD="$3"
+LD_FLAGS="$4"
+
+#----------------------------------------------------------------------
+# compile/link, etc
+
+if [ -x "${RESULT_FILE}" ]
+then
+  ${SYSDEP_UTIL_EXIT} 0
+fi
+
+${CC} ${CC_FLAGS} -c -o "${OBJECT_FILE}" "${SOURCE_FILE}" || fail "could not compile ${SOURCE_FILE}"
+${LD} ${LD_FLAGS}    -o "${RESULT_FILE}" "${OBJECT_FILE}" || fail "could not link ${RESULT_FILE}"

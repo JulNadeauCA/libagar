@@ -1,0 +1,127 @@
+#!/bin/sh
+
+PROGRAM_NAME="cc-link"
+
+warning()
+{
+  echo "${PROGRAM_NAME}: warn: $1" 1>&2
+}
+
+error()
+{
+  echo "${PROGRAM_NAME}: error: $1" 1>&2
+}
+
+fatal()
+{
+  echo "${PROGRAM_NAME}: fatal: $1" 1>&2
+  exit 1
+}
+
+if [ $# -lt 2 ]
+then
+  echo "${PROGRAM_NAME}: usage: [@dir] basename objects ..." 1>&2
+  exit 1
+fi
+
+#
+# check if base directory was specified
+#
+
+BASE_DIR="."
+echo "$1" | grep '^@' 2>&1 >/dev/null
+if [ $? -eq 0 ]
+then
+  BASE_DIR=`echo $1 | sed 's/^@//g'`
+  shift
+fi
+
+#
+# Assume source is being cross linked if there is a cross-linker
+# defined.
+#
+
+if [ -f "${BASE_DIR}/conf-x-ld" ]
+then
+  ok=1
+
+  LD=`head -n 1 "${BASE_DIR}/conf-x-ld"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-ld"
+    ok=0
+  fi
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-x-systype"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-systype"
+    ok=0
+  fi  
+  LD_TYPE=`head -n 1 "${BASE_DIR}/conf-x-ldtype"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-ldtype"
+    ok=0
+  fi
+  LD_FLAGS="${LD_FLAGS} `head -n 1 ${BASE_DIR}/conf-x-ldflags 2>/dev/null`"
+
+  if [ $ok -eq 0 ]
+  then
+    fatal "could not read required configuration files for cross compilation"
+  fi
+else
+  if [ -f "${BASE_DIR}/conf-x-cc" ]
+  then
+    warning "conf-x-cc exists but conf-x-ld does not - native linker used for cross compilation"
+  fi
+
+  LD=`head -n 1 "${BASE_DIR}/conf-ld"`
+  if [ $? -ne 0 ]
+  then
+    fatal "could not read ${BASE_DIR}/conf-ld"
+  fi
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-systype"`
+  if [ $? -ne 0 ]
+  then
+    fatal "could not read ${BASE_DIR}/conf-systype"
+  fi  
+  LD_TYPE=`head -n 1 "${BASE_DIR}/conf-ldtype"`
+  if [ $? -ne 0 ]
+  then
+    fatal "could not read ${BASE_DIR}/conf-ldtype"
+  fi
+fi
+
+LD_FLAGS="${LD_FLAGS} `head -n 1 ${BASE_DIR}/conf-ldflags 2>/dev/null`"
+
+#
+# Read global flag file list, if present.
+#
+
+if [ -f "${BASE_DIR}/conf-ldfflist" ]
+then
+  for f in `cat "${BASE_DIR}/conf-ldfflist"`
+  do
+    FLAGS=`cat $f 2>/dev/null`
+    LD_FLAGS="${LD_FLAGS} ${FLAGS}"
+  done
+fi
+
+out="$1"
+shift
+
+#
+# Read local flag file list, if present.
+#
+
+if [ -f "${out}.lff" ]
+then
+  for f in `cat "${out}.lff"`
+  do
+    targ="`dirname $out`/`dirname $f`/`basename $f`"
+    FLAGS="`cat $targ 2>/dev/null`"
+    LD_FLAGS="${LD_FLAGS} ${FLAGS}"
+  done
+fi
+
+exec ${LD} -o ${out} ${1+"$@"} ${LD_FLAGS}

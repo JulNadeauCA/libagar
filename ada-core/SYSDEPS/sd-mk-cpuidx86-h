@@ -1,0 +1,51 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+cleanup()
+{
+  ${SYSDEP_UTIL_RM} -f "${OUTPUT_FILE_TMP}"
+}
+
+fail()
+{
+  ${SYSDEP_UTIL_ECHO} "sd-mk-cpuid86-h: $1" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+}
+
+#----------------------------------------------------------------------
+# entry
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-mk-cpuidx86-h: usage: output" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+OUTPUT_FILE="$1"
+OUTPUT_FILE_TMP="${OUTPUT_FILE}.tmp"
+
+shift
+
+if [ -z "${SYSDEP_ARCH}" ]; then fail "SYSDEP_ARCH not defined"; fi
+if [ -z "${SYSDEP_CC_TYPE}" ]; then fail "SYSDEP_CC_TYPE not defined"; fi
+
+(
+${SYSDEP_UTIL_CAT} > ${OUTPUT_FILE_TMP} <<EOF
+#ifndef SD_CPUIDX86_H
+#define SD_CPUIDX86_H
+
+#include "sd-sysinfo.h"
+
+#define SD_CPUIDX86_ARCH   ${SYSDEP_ARCH}
+#define SD_CPUIDX86_CC_TYPE ${SYSDEP_CC_TYPE}
+
+#endif
+EOF
+) || fail "could not write ${OUTPUT_FILE_TMP}"
+
+${SYSDEP_UTIL_MV} "${OUTPUT_FILE_TMP}" "${OUTPUT_FILE}" ||
+  fail "could not replace ${OUTPUT_FILE}"
+
+cleanup
+${SYSDEP_UTIL_EXIT} 0

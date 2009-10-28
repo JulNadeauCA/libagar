@@ -1,0 +1,50 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-cpufeat: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+sys="$1"
+feat=""
+
+case "$sys" in
+  SD_SYSINFO_OS_DARWIN)
+    alti_raw=`sysctl hw.optional.altivec 2>/dev/null`
+    if [ $? -eq 0 ]
+    then
+      alti="`${SYSDEP_UTIL_ECHO} ${alti_raw} | ${SYSDEP_UTIL_AWK} '{print $2}'`"
+      if [ "${alti}" = "1" ]
+      then
+        feat="${feat} SD_SYSINFO_CPU_EXT_ALTIVEC";
+      fi
+    fi
+  ;;
+esac
+
+if [ -f ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 ]
+then
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 mmx 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_MMX"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 mmx2 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_MMX2"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 3dnow 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_3DNOW"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 3dnowext 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_3DNOWEXT"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 sse 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_SSE"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 sse2 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_SSE2"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 sse3 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_SSE3"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 sse4.1 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_SSE4_1"; fi
+  f=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 sse4.2 2>/dev/null`
+  if [ $f -eq 1 ]; then feat="${feat} SD_SYSINFO_CPU_EXT_SSE4_2"; fi
+fi
+ 
+${SYSDEP_UTIL_ECHO} "${feat}"

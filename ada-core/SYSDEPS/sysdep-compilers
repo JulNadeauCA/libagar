@@ -1,0 +1,273 @@
+#!/bin/sh
+
+# sysdep-compilers
+#
+# This file is intended to be called by 'sysdeps-main'.
+# It reads various config files and sets up the environment for minimal
+# compilation.
+
+#
+# C compiler and linker
+# sysdeps conf-cc preferred over project conf-cc preferred over 'cc'
+# sysdeps conf-ld preferred over project conf-ld preferred over 'ld'
+#
+
+SYSDEP_CROSS_COMPILE=0
+${SYSDEP_FILE} exists "conf-x-cc"
+if [ $? -eq 0 ]
+then
+  SYSDEP_CROSS_COMPILE=1
+  SYSDEP_INFO "conf-x-cc exists - assuming cross compilation"
+fi
+export SYSDEP_CROSS_COMPILE
+
+if [ $SYSDEP_CROSS_COMPILE -eq 1 ]
+then
+  conf=`${SYSDEP_FILE} path_to "conf-x-cc"` || SYSDEP_FATAL "could not read conf-x-cc"
+  SYSDEP_CC=`${SYSDEP_LINE} 1 < ${conf}` || SYSDEP_FATAL "could not read conf-x-cc"
+
+  conf=`${SYSDEP_FILE} path_to "conf-x-ld"` || SYSDEP_FATAL "could not read conf-x-ld"
+  SYSDEP_LD=`${SYSDEP_LINE} 1 < ${conf}` || SYSDEP_FATAL "could not read conf-x-ld"
+
+  if [ -z "${SYSDEP_CC}" ]
+  then
+    SYSDEP_FATAL "cross compiler is not defined, check 'conf-x-cc'"
+  fi
+  if [ -z "${SYSDEP_LD}" ]
+  then
+    SYSDEP_FATAL "cross linker is not defined, check 'conf-x-ld'"
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-x-cflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_CFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-x-cflags"
+  fi
+  conf=`${SYSDEP_FILE} path_to "conf-x-ldflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_LDFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-x-ldflags"
+  fi
+
+  export SYSDEP_CFLAGS
+  export SYSDEP_LDFLAGS
+else
+  SYSDEP_CC="cc"
+
+  conf=`${SYSDEP_FILE} path_to "conf-cc"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_CC=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-cc"
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-ld"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_LD=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-ld"
+  fi
+
+  if [ -z "${SYSDEP_CC}" ]
+  then
+    SYSDEP_FATAL "C compiler is not defined, check 'conf-cc'"
+  fi
+  if [ -z "${SYSDEP_LD}" ]
+  then
+    SYSDEP_FATAL "linker is not defined, check 'conf-ld'"
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-cflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_CFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-cflags"
+  fi
+  conf=`${SYSDEP_FILE} path_to "conf-ldflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_LDFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-ldflags"
+  fi
+
+  export SYSDEP_CFLAGS
+  export SYSDEP_LDFLAGS
+
+  #
+  # optional Ada components
+  #
+
+  conf=`${SYSDEP_FILE} path_to "conf-adacomp"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_COMP=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adacomp"
+    if [ -z "${SYSDEP_ADA_COMP}" ]
+    then
+      SYSDEP_FATAL "Ada compiler undefined, check conf-adacomp"
+    fi
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-adabind"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_BIND=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adabind"
+    if [ -z "${SYSDEP_ADA_BIND}" ]
+    then
+      SYSDEP_FATAL "Ada binder undefined, check conf-adabind"
+    fi
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-adalink"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_LINK=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adalink"
+    if [ -z "${SYSDEP_ADA_LINK}" ]
+    then
+      SYSDEP_FATAL "Ada linker undefined, check conf-adalink"
+    fi
+  fi
+
+  export SYSDEP_ADA_COMP
+  export SYSDEP_ADA_BIND
+  export SYSDEP_ADA_LINK
+
+  conf=`${SYSDEP_FILE} path_to "conf-adacflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_CFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adacflags"
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-adabflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_BFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adabflags"
+  fi
+
+  conf=`${SYSDEP_FILE} path_to "conf-adaldflags"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_ADA_LDFLAGS=`${SYSDEP_LINE} 1 < ${conf}` ||
+      SYSDEP_FATAL "could not read conf-adaldflags"
+  fi
+
+  export SYSDEP_ADA_CFLAGS
+  export SYSDEP_ADA_BFLAGS
+  export SYSDEP_ADA_LDFLAGS
+fi
+
+SYSDEP_DEBUG "SYSDEP_CC          ${SYSDEP_CC}"
+SYSDEP_DEBUG "SYSDEP_CFLAGS      ${SYSDEP_CFLAGS}"
+SYSDEP_DEBUG "SYSDEP_LD          ${SYSDEP_LD}"
+SYSDEP_DEBUG "SYSDEP_LDFLAGS     ${SYSDEP_LDFLAGS}"
+SYSDEP_DEBUG "SYSDEP_ADA_COMP    ${SYSDEP_ADA_COMP}"
+SYSDEP_DEBUG "SYSDEP_ADA_CFLAGS  ${SYSDEP_ADA_CFLAGS}"
+SYSDEP_DEBUG "SYSDEP_ADA_BIND    ${SYSDEP_ADA_BIND}"
+SYSDEP_DEBUG "SYSDEP_ADA_BFLAGS  ${SYSDEP_ADA_BFLAGS}"
+SYSDEP_DEBUG "SYSDEP_ADA_LINK    ${SYSDEP_ADA_LINK}"
+SYSDEP_DEBUG "SYSDEP_ADA_LDFLAGS ${SYSDEP_ADA_LDFLAGS}"
+
+#
+# Check C compiler and linker are usable.
+#
+
+CC_USABLE=0
+for dir in `${SYSDEP_UTIL_ECHO} ${PATH} | ${SYSDEP_UTIL_TR} ':' ' '`
+do
+  if [ -x "${dir}/${SYSDEP_CC}" ]
+  then
+    CC_USABLE=1
+    SYSDEP_DEBUG "CC ${dir}/${SYSDEP_CC} usable"
+    break
+  else
+    SYSDEP_DEBUG "CC ${dir}/${SYSDEP_CC} not executable"
+  fi
+done
+if [ ${CC_USABLE} -eq 0 ]
+then
+  SYSDEP_FATAL "could not locate usable C compiler, check PATH and conf-cc"
+fi
+export SYSDEP_CC
+
+LD_USABLE=0
+for dir in `${SYSDEP_UTIL_ECHO} ${PATH} | ${SYSDEP_UTIL_TR} ':' ' '`
+do
+  if [ -x "${dir}/${SYSDEP_LD}" ]
+  then
+    LD_USABLE=1
+    SYSDEP_DEBUG "LD ${dir}/${SYSDEP_LD} usable"
+    break
+  else
+    SYSDEP_DEBUG "LD ${dir}/${SYSDEP_LD} not executable"
+  fi
+done
+if [ ${LD_USABLE} -eq 0 ]
+then
+  SYSDEP_FATAL "could not locate usable C linker, check PATH and conf-ld"
+fi
+export SYSDEP_LD
+
+#
+# Check Ada compiler/binder/linker is usable, if defined.
+#
+
+if [ ! -z "${SYSDEP_ADA_COMP}" ]
+then
+  ADA_COMP_USABLE=0
+  for dir in `${SYSDEP_UTIL_ECHO} ${PATH} | ${SYSDEP_UTIL_TR} ':' ' '`
+  do
+    if [ -x "${dir}/${SYSDEP_ADA_COMP}" ]
+    then
+      ADA_COMP_USABLE=1
+      SYSDEP_DEBUG "ADA_COMP ${dir}/${SYSDEP_ADA_COMP} usable"
+      break
+    else
+      SYSDEP_DEBUG "ADA_COMP ${dir}/${SYSDEP_ADA_COMP} not executable"
+    fi
+  done
+  if [ ${ADA_COMP_USABLE} -eq 0 ]
+  then
+    SYSDEP_FATAL "could not locate usable Ada compiler, check PATH and conf-adacomp"
+  fi
+
+  ADA_BIND_USABLE=0
+  for dir in `${SYSDEP_UTIL_ECHO} ${PATH} | ${SYSDEP_UTIL_TR} ':' ' '`
+  do
+    if [ -x "${dir}/${SYSDEP_ADA_BIND}" ]
+    then
+      ADA_BIND_USABLE=1
+      SYSDEP_DEBUG "ADA_BIND ${dir}/${SYSDEP_ADA_BIND} usable"
+      break
+    else
+      SYSDEP_DEBUG "ADA_BIND ${dir}/${SYSDEP_ADA_BIND} not executable"
+    fi
+  done
+  if [ ${ADA_BIND_USABLE} -eq 0 ]
+  then
+    SYSDEP_FATAL "could not locate usable Ada binder, check PATH and conf-adabind"
+  fi
+
+  ADA_LINK_USABLE=0
+  for dir in `${SYSDEP_UTIL_ECHO} ${PATH} | ${SYSDEP_UTIL_TR} ':' ' '`
+  do
+    if [ -x "${dir}/${SYSDEP_ADA_LINK}" ]
+    then
+      ADA_LINK_USABLE=1
+      SYSDEP_DEBUG "ADA_LINK ${dir}/${SYSDEP_ADA_LINK} usable"
+      break
+    else
+      SYSDEP_DEBUG "ADA_LINK ${dir}/${SYSDEP_ADA_LINK} not executable"
+    fi
+  done
+  if [ ${ADA_LINK_USABLE} -eq 0 ]
+  then
+    SYSDEP_FATAL "could not locate usable Ada linker, check PATH and conf-adalink"
+  fi
+fi
+

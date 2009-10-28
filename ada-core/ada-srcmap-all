@@ -1,0 +1,64 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "ada-srcmap-all: fatal: $1" 1>&2
+  exit 1
+}
+
+make_map()
+{
+  echo
+  echo "-- $1"
+  ./ada-srcmap "$1"
+}
+
+#
+# check if base directory was specified
+#
+
+BASE_DIR="."
+echo "$1" | grep '^@' 2>&1 >/dev/null
+if [ $? -eq 0 ]
+then
+  BASE_DIR=`echo $1 | sed 's/^@//g'`
+  shift
+fi
+
+ADA=`head -n 1 ${BASE_DIR}/conf-adacomp` || fatal "could not read ${BASE_DIR}/conf-adacomp"
+SYSTYPE=`head -n 1 ${BASE_DIR}/conf-systype` || fatal "could not read ${BASE_DIR}/conf-systype"
+ADATYPE=`head -n 1 ${BASE_DIR}/conf-adatype` || fatal "could not read ${BASE_DIR}/conf-adatype"
+
+case $ADATYPE in
+  GCC)
+    output_tmp="gnat.adc.tmp"
+    output="gnat.adc"
+    ;;
+  *)
+    fatal "unknown compiler type - cannot determine output file"
+    ;;
+esac
+
+if [ -f ${BASE_DIR}/conf-mkfdirs ]
+then
+  DIRS=`cat ${BASE_DIR}/conf-mkfdirs` || fatal "could not read ${BASE_DIR}/conf-mkfdirs"
+fi
+DIRS=". ${DIRS}"
+
+for dir in ${DIRS}
+do
+  DIR_FILES=`ls "$dir"/*.apk 2>/dev/null` 
+  if [ $? -eq 0 ]
+  then
+    if [ ! -z "${DIR_FILES}" ]
+    then
+      for file in ${DIR_FILES}
+      do
+        make_map "${file}" >> "${output_tmp}" || fatal "error executing ada-srcmap"
+      done
+    fi
+  fi
+done
+
+touch "$output_tmp" "$output"
+mv "${output_tmp}" "${output}" || fatal "could not rename ${output_tmp} to ${output}"

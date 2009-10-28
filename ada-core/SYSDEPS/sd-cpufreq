@@ -1,0 +1,68 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+warn()
+{
+  SYSDEP_DEBUG "sd-cpunum: $1"
+}
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-cpufreq: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+freq=0
+
+sys="$1"
+case "$sys" in
+  SD_SYSINFO_OS_DARWIN)
+    freq="`sysctl hw.cpufrequency |
+      ${SYSDEP_UTIL_AWK} '{print $2}'`"
+    let freq=freq/1000000
+    ;;
+  SD_SYSINFO_OS_DRAGONFLY)
+    freq=`sysctl hw.tsc_frequency |
+      ${SYSDEP_UTIL_AWK} '{print $NF}'`
+    if [ $? -eq 0 ]
+    then
+      freq=`expr ${freq} / 1000000`
+    fi
+    ;;
+  SD_SYSINFO_OS_FREEBSD)
+    freq="`sysctl dev.cpu.0.freq |
+      ${SYSDEP_UTIL_AWK} '{print $2}'`"
+    ;; 
+  SD_SYSINFO_OS_LINUX)
+    freq="`${SYSDEP_UTIL_GREP} -i 'cpu MHz' /proc/cpuinfo |
+      ${SYSDEP_UTIL_AWK} '{print $NF}' |
+      ${SYSDEP_UTIL_AWK} -F. '{print $1}' |
+      ${SYSDEP_UTIL_HEAD} -n 1`"
+    ;;
+  SD_SYSINFO_OS_VMS)
+    freq="`SHOW CPU /FULL |
+      ${SYSDEP_UTIL_GREP} Speed |
+      ${SYSDEP_UTIL_AWK} '{print $2}' |
+      ${SYSDEP_UTIL_HEAD} -1`"
+    ;;
+  SD_SYSINFO_OS_SUNOS)
+    freq="`psrinfo -v 0 |
+      ${SYSDEP_UTIL_GREP} MHz |
+      ${SYSDEP_UTIL_TR} -d 'A-Za-z,' |
+      ${SYSDEP_UTIL_AWK} '{print $NF}'`"
+    ;;
+esac
+
+if [ -z "${freq}" ]
+then
+  freq=0
+fi
+
+if [ $freq -eq 0 ]
+then
+  warn "CPU frequency detection failed - defaulting to 0"
+  freq=0
+fi
+
+${SYSDEP_UTIL_ECHO} "$freq"

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+#
+# check if base directory was specified
+#
+
+BASE_DIR="."
+echo "$1" | grep '^@' 2>&1 >/dev/null
+if [ $? -eq 0 ]
+then
+  BASE_DIR=`echo $1 | sed 's/^@//g'`
+  shift
+fi
+
+if [ -f "${BASE_DIR}/conf-x-cctype" ]
+then
+  CC_TYPE=`head -n 1 "${BASE_DIR}/conf-x-cctype"`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read ${BASE_DIR}/conf-x-cctype" 1>&2
+    exit 1
+  fi
+else
+  CC_TYPE=`head -n 1 "${BASE_DIR}/conf-cctype"`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read ${BASE_DIR}/conf-cctype" 1>&2
+    exit 1
+  fi
+fi
+
+LD_TYPE="${CC_TYPE}"
+exec echo "${LD_TYPE}"

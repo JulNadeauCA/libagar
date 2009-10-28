@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} 'sd-line: usage: line < file'
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+exec ${SYSDEP_UTIL_SED} -e "${1}q;d"

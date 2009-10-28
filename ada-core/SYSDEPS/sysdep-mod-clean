@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#
+# sysdep-mod-exec
+#
+# Clean a module.
+#
+
+#
+# Support subprograms.
+#
+
+#
+# Remove created files from output directory.
+#
+
+SDM_files_clean()
+{
+  for file in *.o *.exe
+  do
+    SYSDEP_REMOVE "${file}"
+  done
+
+  for file in ${SDM_CREATES}
+  do
+    SYSDEP_REMOVE "${file}" "${SYSDEP_OUTPUT_DIRECTORY}/${file}"
+  done
+}
+
+#
+# Obtain list of files that the current module creates.
+#
+
+SDM_CREATES=`${SYSDEP_UTIL_CAT} creates` || SYSDEP_FATAL "could not read 'creates' file"
+SDM_CREATES="${SDM_CREATES} sysdeps.out"
+
+SDM_files_clean || SYSDEP_FATAL "error removing files"

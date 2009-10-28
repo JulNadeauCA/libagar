@@ -1,0 +1,124 @@
+#!/bin/sh
+
+PROGRAM_NAME="cc-slib"
+
+warning()
+{
+  echo "${PROGRAM_NAME}: warn: $1" 1>&2
+}
+
+error()
+{
+  echo "${PROGRAM_NAME}: error: $1" 1>&2
+}
+
+fatal()
+{
+  echo "${PROGRAM_NAME}: fatal: $1" 1>&2
+  exit 1
+}
+
+if [ $# -lt 2 ]
+then
+  echo "${PROGRAM_NAME}: usage: [@dir] basename objects ..." 1>&2
+  exit 1
+fi
+
+#
+# check if base directory was specified
+#
+
+BASE_DIR="."
+echo "$1" | grep '^@' 2>&1 >/dev/null
+if [ $? -eq 0 ]
+then
+  BASE_DIR=`echo $1 | sed 's/^@//g'`
+  shift
+fi
+
+#
+# Assume cross-compilation if cross compilation tools are
+# defined.
+#
+
+if [ -f "${BASE_DIR}/conf-x-ar" ]
+then
+  ok=1
+
+  AR=`head -n 1 "${BASE_DIR}/conf-x-ar"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-ar"
+    ok=0
+  fi
+
+  RANLIB=`head -n 1 "${BASE_DIR}/conf-x-ranlib"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-ranlib"
+    ok=0
+  fi
+
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-x-systype"`
+  if [ $? -ne 0 ]
+  then
+    error "could not read ${BASE_DIR}/conf-x-systype"
+    ok=0
+  fi
+
+  if [ $ok -eq 0 ]
+  then
+    fatal "could not read required configuration files for cross compilation"
+  fi
+else
+  if [ -f "${BASE_DIR}/conf-x-cc" ]
+  then
+    warning "conf-x-cc exists but conf-x-ar does not - native static archiver used for cross compilation"
+  fi
+
+  AR="ar cr"
+  if [ -f "${BASE_DIR}/conf-ar" ]
+  then
+    AR=`head -n 1 "${BASE_DIR}/conf-ar"`
+    if [ $? -ne 0 ]
+    then
+      fatal "could not read ${BASE_DIR}/conf-ar"
+    fi
+  fi
+
+  RANLIB="ranlib"
+  if [ -f ${BASE_DIR}/conf-ranlib ]
+  then
+    RANLIB=`head -n 1 ${BASE_DIR}/conf-ranlib`
+    if [ $? -ne 0 ]
+    then
+      fatal "could not read ${BASE_DIR}/conf-ranlib"
+    fi
+  fi
+
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-systype"`
+  if [ $? -ne 0 ]
+  then
+    fatal "could not read ${BASE_DIR}/conf-systype"
+  fi
+fi
+
+main="$1"
+shift
+
+rm -f "${main}".a
+${AR} "${main}".a ${1+"$@"}
+
+case "${SYS_TYPE}" in
+  SUNOS)          ;;
+  SCO_OPENSERVER) ;;
+  UNIXWARE)       ;;
+  IRIX)           ;;
+  DG_UX)          ;;
+  UNIXWARE)       ;;
+  CRAY_UNICOS)    ;;
+  VMS)            ;;
+  *)
+    ${RANLIB} "$main.a"
+    ;;
+esac

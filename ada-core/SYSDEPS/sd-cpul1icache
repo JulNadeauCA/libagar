@@ -1,0 +1,31 @@
+#!/bin/sh
+
+. ${SYSDEP_BASE_DIRECTORY}/sysdep-subs || exit 1
+
+if [ $# -ne 1 ]
+then
+  ${SYSDEP_UTIL_ECHO} "sd-cpul1icache: usage: os" 1>&2
+  ${SYSDEP_UTIL_EXIT} 1
+fi
+
+sys="$1"
+cache=0
+
+case "$sys" in
+  SD_SYSINFO_OS_DARWIN)
+    cache="`sysctl hw.l1icachesize |
+      ${SYSDEP_UTIL_AWK} '{print $2}'`"
+    ;; 
+esac
+
+if [ -f ${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 ]
+then
+  cache=`${SYSDEP_BASE_DIRECTORY}/sd-cpuidx86 l1icachesize 2>/dev/null`
+fi
+
+if [ ! -z "${cache}" ]
+then
+  ${SYSDEP_UTIL_ECHO} "$cache"
+else
+  ${SYSDEP_UTIL_ECHO} 0
+fi
