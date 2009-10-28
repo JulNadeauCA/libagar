@@ -1,2 +1,0 @@
-agar-core-object.ads: agar-core-object.sh chk-debug chk-lockdebug chk-off_t chk-threads agar-core-object.ads.txt
-  ./agar-core-object.sh > agar-core-object.ads.tmp && mv agar-core-object.ads.tmp agar-core-object.ads

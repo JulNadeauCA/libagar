@@ -1,3 +1,0 @@
-ctxt/slibdir.c: mk-ctxt conf-slibdir
-	rm -f ctxt/slibdir.c
-	./mk-ctxt ctxt_slibdir < conf-slibdir > ctxt/slibdir.c
