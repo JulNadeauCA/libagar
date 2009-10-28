@@ -38,7 +38,7 @@ do
     else
       debug "execution failed"
     fi
-    ${SYSDEP_UTIL_EXIT} $?
+    ${SYSDEP_UTIL_EXIT} ${RETURN_CODE}
   fi
 done
 
