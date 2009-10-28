@@ -152,7 +152,7 @@ then
   else
     SYSDEP_ERROR "custom program reported failure"
     SDM_module_fail
-    ${SYSDEP_EXIT} 0
+    ${SYSDEP_UTIL_EXIT} 0
   fi
 else
   if [ -f "custom" ]
