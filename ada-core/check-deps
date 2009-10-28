@@ -1,11 +1,22 @@
 #!/bin/sh
 
 EXIT_VALUE=0
+PROGRAM_NAME="check-deps"
 
 fatal()
 {
-  echo "check-deps: fatal: $1" 1>&2
+  echo "${PROGRAM_NAME}: fatal: $1" 1>&2
   exit 1
+}
+
+error()
+{
+  echo "${PROGRAM_NAME}: error: $1" 1>&2
+}
+
+info()
+{
+  echo "${PROGRAM_NAME}: info: $1" 1>&2
 }
 
 require_fail()
@@ -15,8 +26,8 @@ require_fail()
   MODULE_NAME="$3"
   FILE_NAME="$4"
 
-  echo "check-deps: error: ${PACKAGE_NAME} (${PACKAGE_URL}) required but not located" 1>&2
-  echo "check-deps: error: SYSDEPS module ${MODULE_NAME}, file ${FILE_NAME}" 1>&2
+  error "${PACKAGE_NAME} (${PACKAGE_URL}) required but not located" 1>&2
+  error "SYSDEPS module ${MODULE_NAME}, file ${FILE_NAME}" 1>&2
 
   EXIT_VALUE=1
 }
@@ -43,5 +54,11 @@ required sdl-ada-flags   flags-sdl-ada   'SDL-Ada'
 required sdl-ada-libs-S  libs-sdl-ada-S  'SDL-Ada'
 required agar-flags      flags-agar      'agar-core'
 required agar-libs       libs-agar       'agar-libs'
+
+if [ ${EXIT_VALUE} -ne 0 ]
+then
+  info "See the documentation on SYSDEPS if you do not understand how to fix this problem"
+  info "http://coreland.ath.cx/code/sysdeps"
+fi
 
 exit ${EXIT_VALUE}
