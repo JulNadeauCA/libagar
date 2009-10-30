@@ -44,7 +44,7 @@ main (int argc, char *argv[])
   if (status.status != INSTALL_STATUS_OK) {
     assert (status.message != NULL);
     (void) fprintf (stderr, "%s: fatal: init: %s - %s\n", progname,
-      status.message, install_error (errno));
+      status.message, status.error_message);
     exit (EXIT_FAILURE);
   }
 
@@ -60,12 +60,12 @@ main (int argc, char *argv[])
       case INSTALL_STATUS_ERROR:
         assert (status.message != NULL);
         (void) fprintf (stderr, "%s: error: %s - %s\n", progname,
-          status.message, install_error (errno));
+          status.message, status.error_message);
         break;
       case INSTALL_STATUS_FATAL:
         assert (status.message != NULL);
         (void) fprintf (stderr, "%s: fatal: %s - %s\n", progname,
-          status.message, install_error (errno));
+          status.message, status.error_message);
         exit (EXIT_FAILURE);
     }
     if (index == 0) break;
