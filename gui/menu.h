@@ -51,7 +51,6 @@ typedef struct ag_menu_item {
 
 	struct ag_menu_view *view;	/* Back pointer to view (subitems) */
 	struct ag_menu *pmenu;		/* Parent menu */
-	struct ag_menu_item *pitem;	/* Parent item (NULL for top items) */
 	struct ag_menu_item *sel_subitem; /* Selected subitem */
 	struct ag_button *tbButton;	/* Associated toolbar button */
 } AG_MenuItem;
@@ -116,8 +115,8 @@ void		 AG_PopupDestroy(void *, AG_PopupMenu *);
 
 void	     AG_MenuItemFree(AG_MenuItem *);
 void	     AG_MenuItemFreeChildren(AG_MenuItem *);
-AG_Window   *AG_MenuExpand(AG_Menu *, AG_MenuItem *, int, int);
-void   	     AG_MenuCollapse(AG_Menu *, AG_MenuItem *);
+AG_Window   *AG_MenuExpand(void *, AG_MenuItem *, int, int);
+void   	     AG_MenuCollapse(void *, AG_MenuItem *);
 
 void	 AG_MenuSetPadding(AG_Menu *, int, int, int, int);
 void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Menu
-.Nd agar menu widget
+.Nd agar menu system
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,10 +38,38 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a hierarchical menu system which supports text-based menu
-and toolbar displays.
-Individual menu items can bind to boolean values and specific bits in integer
-values.
+widget displays a hierarchical menu composed of items of the following types:
+.Bl -tag -width "Dynamic items "
+.It Action items
+Selecting the item causes a specified function to be invoked, with the
+specified arguments.
+See
+.Fn AG_MenuAction .
+.It Boolean items
+A menu item tied to a variable describing a boolean value (either an integer,
+or specific bits in an integer).
+Selecting an active boolean item will toggle the value.
+See
+.Fn AG_MenuBool .
+.It Separators
+A cosmetic separator, displayed as a horizontal or vertical bar depending
+on the display mode.
+See
+.Fn AG_MenuSeparator .
+.It Dynamic items
+A dynamically updated menu item.
+The item itself (possibly including child items) are expected to be generated
+by a specified callback routine.
+An example of a dynamic item would be a submenu displaying the current
+contents of a folder.
+See
+.Fn AG_MenuDynamicItem .
+.El
+.Pp
+Menu elements can be displayed in text format with the
+.Ft AG_MenuView
+widget, or in icon format using
+.Xr AG_Toolbar 3 .
 .Pp
 Note: Many functions of
 .Nm
@@ -65,10 +93,10 @@ for details on event handler functions in Agar.
 .Fn AG_MenuNewGlobal "Uint flags"
 .Pp
 .Ft void
-.Fn AG_MenuExpand "AG_Menu *menu" "AG_MenuItem *item" "int x" "int y"
+.Fn AG_MenuExpand "AG_Widget *menuWidget" "AG_MenuItem *item" "int x" "int y"
 .Pp
 .Ft void
-.Fn AG_MenuCollapse "AG_Menu *menu" "AG_MenuItem *item"
+.Fn AG_MenuCollapse "AG_Widget *menuWidget" "AG_MenuItem *item"
 .Pp
 .Ft void
 .Fn AG_MenuSetPadding "AG_Menu *menu" "int left" "int right" "int top" "int bottom"
@@ -82,23 +110,33 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+.Pp
 The
 .Fn AG_MenuNewGlobal
-variant creates a global application menu.
+constructor creates a global "application menu".
+The manner in which application menus are displayed is entirely dependent on
+the underlying platform and graphics system.
 .Pp
 The
 .Fn AG_MenuExpand
-function creates a new (frameless) window at the coordinates
+function creates a new window containing an
+.Ft AG_MenuView
+widget displaying the menu items under
+.Fa item .
+The window is created at coordinates
 .Fa x ,
 .Fa y .
-The window contains an
-.Ft AGMenuView
-widget which shows the child entries of
-.Fa item .
-If an item is clicked on, the window is automatically destroyed.
 The
+.Fa menuWidget
+argument is a pointer to the parent
+.Ft AG_Menu
+or
+.Ft AG_MenuView
+widget.
 .Fn AG_MenuCollapse
-function manually destroys the popup window.
+properly closes a window created by
+.Fn AG_MenuExpand .
+These two routines are usually invoked from widget code.
 .Pp
 .Fn AG_MenuSetPadding
 sets the global padding around all menu items, in pixels.
