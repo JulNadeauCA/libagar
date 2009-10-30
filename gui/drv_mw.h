@@ -54,5 +54,4 @@ typedef struct ag_driver_mw {
 
 __BEGIN_DECLS
 extern AG_ObjectClass    agDriverMwClass;
-extern AG_DriverMw      *agDriverMw;
 __END_DECLS

@@ -90,22 +90,15 @@ AG_WindowNew(Uint flags)
 
 	win = Malloc(sizeof(AG_Window));
 	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetName(win, "generic");
+	AG_ObjectSetNameS(win, "generic");
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 
 	win->flags |= flags;
 	
-	if (agDriverOps->wm == AG_WM_MULTIPLE) {
-		win->flags |= AG_WINDOW_PLAIN;
-	}
 	if (win->flags & AG_WINDOW_MODAL)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
-	if (win->flags & AG_WINDOW_NOBORDERS) {
-		win->wBorderSide = 0;
-		win->wBorderBot = 0;
-	}
 
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 
@@ -117,6 +110,14 @@ AG_WindowNew(Uint flags)
 		 * XXX todo: WindowNew() variant with parent driver arg.
 		 */
 		AG_ObjectAttach(agDriverSw, win);
+	
+		if (!(win->flags & AG_WINDOW_NOTITLE)) {
+			win->hMin += agTextFontHeight;
+		}
+		if (win->flags & AG_WINDOW_NOBORDERS) {
+			win->wBorderSide = 0;
+			win->wBorderBot = 0;
+		}
 		break;
 	case AG_WM_MULTIPLE:
 		/*
@@ -129,12 +130,11 @@ AG_WindowNew(Uint flags)
 		}
 		AG_ObjectAttach(drv, win);
 		AGDRIVER_MW(drv)->win = win;
+
+		win->wBorderSide = 0;
+		win->wBorderBot = 0;
 		break;
 	}
-
-	if (!(win->flags & AG_WINDOW_NOTITLE))
-		win->hMin += agTextFontHeight;
-
 	return (win);
 }
 
@@ -207,7 +207,7 @@ Attach(AG_Event *event)
 	 * driver. We cannot do this earlier because surface mapping operations
 	 * are involved.
 	 */
-	if (!(win->flags & AG_WINDOW_NOTITLE)) {
+	if (AGDRIVER_SINGLE(drv) && !(win->flags & AG_WINDOW_NOTITLE)) {
 		Uint titlebarFlags = 0;
 
 		if (win->flags & AG_WINDOW_NOCLOSE)
@@ -255,12 +255,15 @@ Detach(AG_Event *event)
 		WIDGET(win->icon)->drvOps = NULL;
 	}
 	
+	/* Cancel any planned focus change to this window. */
+	if (win == agWindowToFocus) {
+		Debug(NULL, "%s has been detached; cancelling focus change\n",
+		    OBJECT(win)->name);
+		agWindowToFocus = NULL;
+	}
+	
 	/* Implicitely hide the window. */
 	AG_WindowHide(win);
-
-	/* Cancel any planned focus change to this window. */
-	if (win == agWindowToFocus)
-		agWindowToFocus = NULL;
 
 	/*
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
@@ -380,9 +383,6 @@ Init(void *obj)
 void
 AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 {
-/*	AG_Driver *winDrv = WIDGET(win)->drv; */
-/*	AG_Driver *subwinDrv = WIDGET(subwin)->drv; */
-
 	if (win == NULL)
 		return;
 
@@ -390,14 +390,6 @@ AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 	AG_ObjectLock(win);
 	subwin->parent = win;
 	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
-#if 0
-	if (AGDRIVER_MULTIPLE(winDrv) && AGDRIVER_MULTIPLE(subwinDrv)) {
-		printf("Reparent: parent=%s, win=%s\n",
-		    win->caption, subwin->caption);
-		AGDRIVER_MW_CLASS(subwinDrv)->reparentWindow(subwin, win,
-		    WIDGET(subwin)->x, WIDGET(subwin)->y);
-	}
-#endif
 
 	AG_ObjectUnlock(win);
 	AG_UnlockVFS(&agDrivers);
@@ -608,11 +600,14 @@ Hidden(AG_Event *event)
 
 		/* Update the background. */
 		/* XXX XXX XXX no need for the fill rect? */
-		if (agDriverOps->type == AG_FRAMEBUFFER) {
+		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
 			AG_DrawRectFilled(win,
 			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)),
 			    agColors[BG_COLOR]);
-			AG_ViewUpdateFB(&WIDGET(win)->rView);
+			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
+				AGDRIVER_CLASS(drv)->updateRegion(drv,
+				    AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
+				            WIDTH(win), HEIGHT(win)));
 		}
 		break;
 	case AG_WM_MULTIPLE:
@@ -796,12 +791,12 @@ AG_WindowFocus(AG_Window *win)
 		agWindowToFocus = NULL;
 		goto out;
 	}
-
+#ifdef AG_DEBUG
+	if (agWindowToFocus != NULL && agWindowToFocus != win)
+		Debug(NULL, "AG_WindowFocus: Cancelling %s\n",
+		    OBJECT(agWindowToFocus)->name);
+#endif
 	AG_ObjectLock(win);
-	if (win->flags & AG_WINDOW_DENYFOCUS) {
-		AG_ObjectUnlock(win);
-		goto out;
-	}
 	if (OBJECT(win)->parent == NULL) {
 		/* Will focus on future attach */
 		win->flags |= AG_WINDOW_FOCUSONATTACH;
@@ -1545,6 +1540,11 @@ AG_FreeDetachedWindows(void)
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, detach);
+
+		/* Cancel any planned focus change to this window. */
+		if (win == agWindowFocused)
+			agWindowFocused = NULL;
+
 		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
 		drv = WIDGET(win)->drv;
 

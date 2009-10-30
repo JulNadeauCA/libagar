@@ -707,9 +707,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 static void
 DrawText(AG_Scrollbar *sb)
 {
+	AG_Driver *drv = WIDGET(sb)->drv;
 	AG_Surface *txt;
 	char label[32];
-	AG_Rect2 r;
+	AG_Rect r;
 
 	AG_PushTextState();
 	AG_TextColor(agColors[TEXT_COLOR]);
@@ -722,18 +723,20 @@ DrawText(AG_Scrollbar *sb)
 	    AG_GetInt(sb,"visible"));
 
 	txt = AG_TextRender(label);		/* XXX inefficient */
-	r = AG_RECT2(
+	r = AG_RECT(
 	    WIDTH(sb)/2 - txt->w/2,
 	    HEIGHT(sb)/2 - txt->h/2,
 	    txt->w,
 	    txt->h);
-	AG_WidgetBlit(sb, txt, r.x1, r.y1);
+	AG_WidgetBlit(sb, txt, r.x, r.y);
 	AG_SurfaceFree(txt);
 
-	AG_DrawRectOutline(sb, AG_Rect2ToRect(r), AG_ColorRGB(250, 250, 0));
-	AG_RectTranslate2(&r, WIDGET(sb)->rView.x1, WIDGET(sb)->rView.y1);
-	AG_ViewUpdateFB(&r);
-	
+	AG_DrawRectOutline(sb, r, AG_ColorRGB(250,250,0));
+	AG_RectTranslate(&r, WIDGET(sb)->rView.x1, WIDGET(sb)->rView.y1);
+
+	if (AGDRIVER_CLASS(drv)->updateRegion != NULL) {
+		AGDRIVER_CLASS(drv)->updateRegion(drv, r);
+	}
 	AG_PopTextState();
 }
 

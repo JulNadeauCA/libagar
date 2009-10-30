@@ -128,12 +128,11 @@ typedef struct ag_driver {
 __BEGIN_DECLS
 extern AG_ObjectClass agDriverClass;
 
-extern AG_Object      agDrivers;	/* Drivers VFS */
-extern AG_DriverClass *agDriverOps;	/* Driver class */
-extern AG_Driver      *agDriver;  	/* Driver instance */
-extern void *agDriverList[];		/* Available drivers (AG_DriverClass) */
-extern Uint  agDriverListSize;
-extern int   agRenderingContext;	/* Running in rendering context? */
+extern AG_Object       agDrivers;	/* Drivers VFS */
+extern AG_DriverClass *agDriverOps;	/* Current driver class */
+extern void           *agDriverList[];	/* Available drivers (AG_DriverClass) */
+extern Uint            agDriverListSize;
+extern int             agRenderingContext;
 
 AG_Driver *AG_DriverOpen(AG_DriverClass *);
 void       AG_DriverClose(AG_Driver *);
@@ -150,18 +149,6 @@ AG_GetDriverByID(Uint id)
 			return (drv);
 	}
 	return (NULL);
-}
-
-/* Update a video region (FB drivers only). */
-static __inline__ void
-AG_ViewUpdateFB(const AG_Rect2 *r2)
-{
-	AG_Rect r;
-	r.x = r2->x1;
-	r.y = r2->y1;
-	r.w = r2->w;
-	r.h = r2->h;
-	agDriverOps->updateRegion(agDriver, r);
 }
 
 /* Enter GUI rendering context. */

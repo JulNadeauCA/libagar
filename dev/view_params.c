@@ -41,7 +41,6 @@
 AG_Window *
 DEV_DisplaySettings(void)
 {
-	AG_Driver *drv = agDriver;		/* XXX 1.4 single-display */
 	AG_Window *win;
 	AG_VBox *vb;
 /*	AG_Label *lbl; */
@@ -53,16 +52,19 @@ DEV_DisplaySettings(void)
 	AG_WindowSetCaptionS(win, _("Display Settings"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
+	if (agDriverOps == NULL) {
+		AG_LabelNew(win, 0, "Graphics not initialized?");
+		return (win);
+	}
+
 	vb = AG_VBoxNew(win, 0);
 	{
-		AG_LabelNew(vb, 0, _("Driver: %s"),
-		    AGDRIVER_CLASS(drv)->name);
-
+		AG_LabelNew(vb, 0, _("Driver: %s"), agDriverOps->name);
 		AG_LabelNew(vb, 0, _("OpenGL support: %s"),
-		    AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL ?
+		    agDriverOps->flags & AG_DRIVER_OPENGL ?
 		    _("yes") : _("no"));
 		AG_LabelNew(vb, 0, _("SDL support: %s"),
-		    AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL ?
+		    agDriverOps->flags & AG_DRIVER_SDL ?
 		    _("yes") : _("no"));
 
 #if 0

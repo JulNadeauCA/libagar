@@ -85,7 +85,7 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 	AG_Widget *wChild;
 	AG_TlistItem *it;
 
-	if (strcmp(win->caption, "win-popup") == 0)
+	if (strncmp(OBJECT(win)->name, "_Popup-", sizeof("_Popup-")) == 0)
 		return;
 
 	Strlcpy(text, win->caption, sizeof(text));

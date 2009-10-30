@@ -141,19 +141,19 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 int
 AG_ResizeDisplay(int w, int h)
 {
-	AG_DriverSw *dsw = AGDRIVER_SW(agDriver);
 	AG_Window *win;
 
-	if (AGDRIVER_SINGLE(agDriver)) {
+	if (agDriverSw == NULL) {
 		AG_SetError("AG_ResizeDisplay() is only applicable to "
 		            "single-window graphics drivers");
 		return (-1);
 	}
-	if (AGDRIVER_SW_CLASS(dsw)->videoResize(dsw, (Uint)w, (Uint)h) == -1)
+	if (AGDRIVER_SW_CLASS(agDriverSw)->videoResize(agDriverSw,
+	    (Uint)w, (Uint)h) == -1)
 		return (-1);
 
 	/* Update the Agar window geometries. */
-	AG_FOREACH_WINDOW(win, agDriver) {
+	AG_FOREACH_WINDOW(win, agDriverSw) {
 		AG_SizeAlloc a;
 
 		a.x = WIDGET(win)->x;
@@ -168,25 +168,25 @@ AG_ResizeDisplay(int w, int h)
 		} else {
 			if (win->flags & AG_WINDOW_HMAXIMIZE) {
 				a.x = 0;
-				a.w = dsw->w;
+				a.w = agDriverSw->w;
 			} else {
-				if (a.x+a.w > dsw->w) {
-					a.x = dsw->w - a.w;
+				if (a.x+a.w > agDriverSw->w) {
+					a.x = agDriverSw->w - a.w;
 					if (a.x < 0) {
 						a.x = 0;
-						a.w = dsw->w;
+						a.w = agDriverSw->w;
 					}
 				}
 			}
 			if (win->flags & AG_WINDOW_VMAXIMIZE) {
 				a.y = 0;
-				a.h = dsw->h;
+				a.h = agDriverSw->h;
 			} else {
-				if (a.y+a.h > dsw->h) {
-					a.y = dsw->h - a.h;
+				if (a.y+a.h > agDriverSw->h) {
+					a.y = agDriverSw->h - a.h;
 					if (a.y < 0) {
 						a.y = 0;
-						a.h = dsw->w;
+						a.h = agDriverSw->w;
 					}
 				}
 			}
@@ -212,6 +212,7 @@ AG_SetVideoResizeCallback(void (*fn)(Uint w, Uint h))
 static void
 WM_Move(AG_Window *win, int xRel, int yRel)
 {
+	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
 	AG_Rect rPrev, rNew;
 	AG_Rect rFill1, rFill2;
 
@@ -258,12 +259,14 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 	}
 
 	if (rFill1.w > 0) {
-		agDriverOps->fillRect(agDriver, rFill1, agColors[BG_COLOR]);
-		agDriverOps->updateRegion(agDriver, rFill1);
+		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, agColors[BG_COLOR]);
+		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
+			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
 	}
 	if (rFill2.w > 0) {
-		agDriverOps->fillRect(agDriver, rFill2, agColors[BG_COLOR]);
-		agDriverOps->updateRegion(agDriver, rFill2);
+		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, agColors[BG_COLOR]);
+		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
+			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
 	}
 
 	AG_PostEvent(NULL, win, "window-user-move", "%d,%d",
@@ -350,37 +353,26 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
  * a change in focus (single-display drivers only).
  */
 void
-AG_WM_ChangeWindowFocus(void)
+AG_WM_CommitWindowFocus(AG_Window *win)
 {
 	if (agWindowFocused != NULL) {
-		if (agWindowToFocus != NULL &&
-		    agWindowToFocus == agWindowFocused) {
-			/* Nothing to do */
-			goto out;
-		}
-		AG_ObjectLock(agWindowFocused);
-		if (agWindowFocused->flags & AG_WINDOW_KEEPABOVE) {
-			AG_ObjectUnlock(agWindowFocused);
-			goto out;
+		if (win != NULL &&
+		    win == agWindowFocused) {		/* Nothing to do */
+			return;
 		}
 		AG_PostEvent(NULL, agWindowFocused, "window-lostfocus", NULL);
-		AG_ObjectUnlock(agWindowFocused);
 	}
-	if (agWindowToFocus != NULL) {
-		AG_ObjectLock(agWindowToFocus);
-		if (agWindowToFocus->flags & AG_WINDOW_KEEPBELOW) {
-			AG_ObjectUnlock(agWindowToFocus);
-			goto out;
+	if (win != NULL) {
+		AG_ObjectLock(win);
+		if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
+			AG_ObjectMoveToTail(win);
 		}
-		AG_ObjectMoveToTail(agWindowToFocus);
-		agWindowFocused = agWindowToFocus;
-		AG_PostEvent(NULL, agWindowToFocus, "window-gainfocus", NULL);
-		AG_ObjectUnlock(agWindowToFocus);
+		agWindowFocused = win;
+		AG_ObjectUnlock(win);
+		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
 	} else {
 		agWindowFocused = NULL;
 	}
-out:
-	agWindowToFocus = NULL;
 }
 
 /* Limit window size to display size. */

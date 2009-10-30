@@ -130,12 +130,12 @@ XmitLoop(int fd)
 		Snprintf(status, sizeof(status), _("Transmitting frame %d"),
 		    nframe);
 	
-		if (!AGDRIVER_SINGLE(agDriver)) {
+		if (agDriverSw == NULL) {
 			Verbose("Not using a single-display driver\n");
 			AG_MutexUnlock(&xmit_lock);
 			return;
 		}
-		if (AGDRIVER_SW_CLASS(agDriver)->videoCapture(agDriver, &su)
+		if (AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw, &su)
 		    == -1) {
 			Verbose("Capture failed: %s\n", AG_GetError());
 			AG_MutexUnlock(&xmit_lock);
@@ -165,7 +165,7 @@ XmitLoop(int fd)
 		jpeg_finish_compress(&jcomp);
 
 #ifdef HAVE_OPENGL
-		if (AGDRIVER_CLASS(agDriver)->flags & AG_DRIVER_OPENGL)
+		if (AGDRIVER_CLASS(agDriverSw)->flags & AG_DRIVER_OPENGL)
 			AG_SurfaceFree(su);
 #endif
 
@@ -260,7 +260,7 @@ out1:
 static void
 Connect(AG_Event *event)
 {
-	if (agDriverOps->wm != AG_WM_SINGLE) {
+	if (agDriverSw == NULL) {
 		AG_TextMsg(AG_MSG_ERROR,
 		    "This feature requires a single-display graphics driver");
 		return;
@@ -308,11 +308,12 @@ DEV_ScreenshotUploader(void)
 		AG_LabelSizeHint(lbl, 1,
 		    _("Status: Transmitting frame XXXXXXXXXX"));
 
-		hosttb = AG_TextboxNew(vb, 0, _("Host: "));
-		porttb = AG_TextboxNew(vb, 0, _("Port: "));
+		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Host: "));
+		porttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Port: "));
 		AG_WidgetFocus(hosttb);
 
-		num = AG_NumericalNewS(vb, 0, "ms", _("Refresh rate: "));
+		num = AG_NumericalNewS(vb, AG_NUMERICAL_HFILL,
+		    "ms", _("Refresh rate: "));
 		AG_BindIntMp(num, "value", &xmit_delay, &xmit_lock);
 		AG_NumericalSetRange(num, 1, 10000);
 

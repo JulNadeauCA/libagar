@@ -13,9 +13,9 @@ http://wiki.libagar.org/wiki/Agar-1.4.
   - "glx" (GL rendering via X Window System; multiple windows)
   - "sdlfb" (framebuffer rendering via SDL; single window)
   - "sdlgl" (GL rendering via SDL; single window)
-  Backward compatibility is preserved for applications using AG_InitVideo()
-  and AG_InitVideoSDL() - single-window graphics drivers continue to use
-  Agar's built-in window manager.
+- Applications should now use AG_InitGraphics() to initialize the graphical
+  interface. Backward compatibility is preserved, but AG_InitVideo() will
+  only select among single-window graphics drivers.
 - Agar can now be built without the SDL library, where the SDL graphics
   driver is not needed.
 - Implement widget "actions" as a generic method of handling mouse and

@@ -70,6 +70,7 @@ static int initedSDL = 0;		/* Used SDL_Init() */
 static int initedSDLVideo = 0;		/* Used SDL_INIT_VIDEO */
 
 static void DrawRectFilled(void *, AG_Rect, AG_Color);
+static void UpdateRegion(void *, AG_Rect);
 
 static void
 Init(void *obj)
@@ -248,8 +249,6 @@ InputEvent(AG_DriverSDLFB *sfb, SDL_Event *ev)
 	AG_Driver *drv = AGDRIVER(sfb);
 	AG_DriverSw *dsw = AGDRIVER_SW(sfb);
 	AG_Window *win;
-	int focusChg = 0;
-	int rv = 0;
 
 	sfb->cursorToSet = NULL;
 	
@@ -271,9 +270,7 @@ InputEvent(AG_DriverSDLFB *sfb, SDL_Event *ev)
 	/* Process WM events */
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:			/* Focus on window */
-		if (AG_WindowFocusAtPos(dsw, ev->button.x, ev->button.y)) {
-			focusChg++;
-		}
+		AG_WindowFocusAtPos(dsw, ev->button.x, ev->button.y);
 		break;
 	case SDL_MOUSEBUTTONUP:				/* Terminate WM op */
 		dsw->winop = AG_WINOP_NONE;
@@ -343,10 +340,9 @@ scan:
 			AG_ProcessMouseButtonUp(win,
 			    ev->button.x, ev->button.y,
 			    (AG_MouseButton)ev->button.button);
-			if (focusChg) {
+			if (agWindowToFocus != NULL) {
 				AG_ObjectUnlock(win);
-				rv = 1;
-				goto out;
+				return (1);
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
@@ -361,16 +357,15 @@ scan:
 				if (dsw->winop != AG_WINOP_NONE) {
 					dsw->winSelected = win;
 					AG_ObjectUnlock(win);
-					goto out;
+					return (1);
 				}
 			}
 			AG_ProcessMouseButtonDown(win,
 			    ev->button.x, ev->button.y,
 			    (AG_MouseButton)ev->button.button);
-			if (focusChg) {
+			if (agWindowToFocus != NULL) {
 				AG_ObjectUnlock(win);
-				rv = 1;
-				goto out;
+				return (1);
 			}
 			break;
 		case SDL_KEYUP:
@@ -403,24 +398,11 @@ scan:
 	}
 	if (sfb->cursorToSet != NULL &&
 	    sfb->cursorToSet != drv->activeCursor) {
-		/* XXX TODO stack */
 		SDL_SetCursor((SDL_Cursor *)sfb->cursorToSet->p);
 		drv->activeCursor = sfb->cursorToSet;
 		sfb->cursorToSet = NULL;
 	}
-out:
-	/*
-	 * Reorder the window list, if needed, to reflect any change
-	 * in the window focus state.
-	 *
-	 * focusChg is set if focus change was requested by the WM (in which
-	 * case winToFocus could be NULL). Use of AG_WindowFocus() from event
-	 * handler routines can also affect winToFocus.
-	 */
-	if (focusChg || agWindowToFocus != NULL) {
-		AG_WM_ChangeWindowFocus();
-	}
-	return (rv);
+	return (0);
 }
 
 static int
@@ -492,6 +474,10 @@ ProcessEvents(void *obj)
 		}
 		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
 			AG_FreeDetachedWindows();
+		}
+		if (agWindowToFocus != NULL) {
+			AG_WM_CommitWindowFocus(agWindowToFocus);
+			agWindowToFocus = NULL;
 		}
 		AG_UnlockVFS(sfb);
 	}
@@ -577,7 +563,9 @@ static void
 RenderWindow(struct ag_window *win)
 {
 	AG_WidgetDraw(win);
-	AG_ViewUpdateFB(&AGWIDGET(win)->rView);
+	UpdateRegion(WIDGET(win)->drv,
+	    AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
+	            WIDTH(win), HEIGHT(win)));
 }
 
 static void
