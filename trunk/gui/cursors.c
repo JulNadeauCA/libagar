@@ -197,11 +197,11 @@ AG_FreeCursors(AG_Driver *drv)
 void
 AG_SetCursor(int builtin)
 {
-	AG_PushStockCursor(agDriver, builtin);
+	AG_PushStockCursor(agDriverSw, builtin);
 }
 void
 AG_UnsetCursor(void)
 {
-	AG_PopCursor(agDriver);
+	AG_PopCursor(agDriverSw);
 }
 #endif /* AG_LEGACY */

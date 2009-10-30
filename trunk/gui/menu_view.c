@@ -30,32 +30,30 @@
 #include "icons.h"
 
 /*
- * Selection has moved over the specified item. If the item is a submenu,
- * the submenu timer is initiated.
+ * Sub-item selection has moved over the specified subitem. If the subitem is
+ * a submenu, the submenu timer is initiated.
  */
 static void
-SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
+SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 {
-	AG_Menu *m = pitem->pmenu;
-	AG_MenuView *mview = pitem->view;
+	AG_Menu *m = mi->pmenu;
+	AG_MenuView *mview = mi->view;
 
-	if (pitem->sel_subitem != NULL &&
-	    pitem->sel_subitem->view != NULL) {
-		AG_MenuCollapse(m, pitem->sel_subitem);
+	if (mi->sel_subitem != NULL &&
+	    mi->sel_subitem->view != NULL) {
+		AG_MenuCollapse(m, mi->sel_subitem);
 	}
-	pitem->sel_subitem = subitem;
-
-	if (subitem == NULL)
-		return;
-
-	AG_LockTimeouts(m);
-	AG_DelTimeout(mview, &mview->submenu_to);
-	if (subitem != NULL &&
-	    subitem->nsubitems > 0) {
-		AG_ScheduleTimeout(mview, &mview->submenu_to, 200);
-		mview->submenu_to.arg = subitem;
+	mi->sel_subitem = subitem;
+	if (subitem != NULL) {
+		AG_LockTimeouts(m);
+		AG_DelTimeout(mview, &mview->submenu_to);
+		if (subitem != NULL &&
+		    subitem->nsubitems > 0) {
+			AG_ScheduleTimeout(mview, &mview->submenu_to, 200);
+			mview->submenu_to.arg = subitem;
+		}
+		AG_UnlockTimeouts(m);
 	}
-	AG_UnlockTimeouts(m);
 }
 
 static Uint32
@@ -63,14 +61,14 @@ SubmenuTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_MenuView *mview = obj;
 	AG_MenuItem *item = arg;
-	AG_Menu *m = mview->pmenu;
 
 #ifdef AG_DEBUG
 	if (item != mview->pitem->sel_subitem)
 		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
 #endif
-	AG_MenuExpand(m, item, WIDGET(mview)->rView.x2, 
-	                       WIDGET(mview)->rView.y1 + item->y);
+	AG_MenuExpand(mview, item,
+	    WIDGET(mview)->rView.x2, 
+	    WIDGET(mview)->rView.y1 + item->y);
 	return (0);
 }
 
@@ -78,7 +76,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *pitem = mview->pitem;
+	AG_MenuItem *mi = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
@@ -89,8 +87,8 @@ MouseMotion(AG_Event *event)
 	if (mx < 0 || mx > WIDGET(mview)->w)
 		goto selnone;
 
-	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *subitem = &pitem->subitems[i];
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *subitem = &mi->subitems[i];
 
 		AG_MenuUpdateItem(subitem);
 
@@ -103,17 +101,17 @@ MouseMotion(AG_Event *event)
 			if (subitem->flags & AG_MENU_ITEM_SEPARATOR) {
 				goto selnone;
 			}
-			if (pitem->sel_subitem != subitem &&
+			if (mi->sel_subitem != subitem &&
 			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
-				SelectItem(pitem, subitem);
+				SelectItem(mi, subitem);
 			}
 			return;
 		}
 	}
 selnone:
-	if (pitem->sel_subitem != NULL &&
-	    pitem->sel_subitem->nsubitems == 0)
-		SelectItem(pitem, NULL);
+	if (mi->sel_subitem != NULL &&
+	    mi->sel_subitem->nsubitems == 0)
+		SelectItem(mi, NULL);
 }
 
 static int
@@ -195,7 +193,7 @@ static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *pitem = mview->pitem;
+	AG_MenuItem *mi = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
@@ -205,8 +203,8 @@ MouseButtonUp(AG_Event *event)
 	if (my < 0 || mx < 0) {
 		goto collapse;
 	}
-	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *item = &pitem->subitems[i];
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *item = &mi->subitems[i];
 
 		AG_MenuUpdateItem(item);
 
@@ -229,13 +227,13 @@ MouseButtonUp(AG_Event *event)
 			goto collapse;
 		}
 	}
-	if (i == pitem->nsubitems) {
+	if (i == mi->nsubitems) {
 		goto collapse;
 	}
 	return;
 collapse:
-	AG_MenuCollapse(m, pitem);
-	SelectItem(pitem, NULL);
+	AG_MenuCollapse(m, mi);
+	SelectItem(mi, NULL);
 	m->itemSel = NULL;
 	m->selecting = 0;
 }
@@ -277,9 +275,6 @@ Init(void *obj)
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 
 #ifdef AG_DEBUG
-	AG_BindPointer(mview, "panel", (void *)&mview->panel);
-	AG_BindPointer(mview, "pmenu", (void *)&mview->pmenu);
-	AG_BindPointer(mview, "pitem", (void *)&mview->pitem);
 	AG_BindInt(mview, "spIconLbl", &mview->spIconLbl);
 	AG_BindInt(mview, "spLblArrow", &mview->spLblArrow);
 	AG_BindInt(mview, "lPad", &mview->lPad);
@@ -293,7 +288,7 @@ static void
 Draw(void *obj)
 {
 	AG_MenuView *mview = obj;
-	AG_MenuItem *pitem = mview->pitem;
+	AG_MenuItem *mi = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	AG_Rect r;
 	int i;
@@ -306,8 +301,8 @@ Draw(void *obj)
 	r.w = WIDGET(mview)->w;
 	r.h = m->itemh;
 
-	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *item = &pitem->subitems[i];
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *item = &mi->subitems[i];
 		int x = mview->lPad;
 		
 		AG_MenuUpdateItem(item);
@@ -316,10 +311,10 @@ Draw(void *obj)
 			item->icon = AG_WidgetMapSurface(m, item->iconSrc);
 		}
 		STYLE(mview)->MenuItemBackground(mview, r, x, m, item->icon,
-		    (item == pitem->sel_subitem && item->state == 1),
+		    (item == mi->sel_subitem && item->state == 1),
 		    (item->value != -1) ? item->value : GetItemBoolValue(item));
 
-		if (pitem->flags & AG_MENU_ITEM_ICONS) {
+		if (mi->flags & AG_MENU_ITEM_ICONS) {
 			x += m->itemh + mview->spIconLbl;
 		}
 		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
@@ -369,15 +364,15 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_MenuView *mview = obj;
-	AG_MenuItem *pitem = mview->pitem;
+	AG_MenuItem *mi = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int i;
 
 	r->w = 0;
 	r->h = mview->tPad + mview->bPad;
 		
-	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *item = &pitem->subitems[i];
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *item = &mi->subitems[i];
 		int wReq = mview->lPad + mview->rPad;
 		int wLbl;
 	
@@ -386,7 +381,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		if (item->icon != -1) {
 			wReq += WSURFACE(m,item->icon)->w;
 		}
-		if (pitem->flags & AG_MENU_ITEM_ICONS)
+		if (mi->flags & AG_MENU_ITEM_ICONS)
 			wReq += m->itemh + mview->spIconLbl;
 	
 		if (item->lblEnabled != -1) {

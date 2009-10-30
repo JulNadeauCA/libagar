@@ -151,7 +151,9 @@ cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 }
 
 #if 0
-/* XXX 1.4 single-display */
+/*
+ * XXX TODO 1.4
+ */
 #ifdef HAVE_JPEG
 static void
 jpegError(j_common_ptr jcomp)
@@ -271,22 +273,17 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	return (-1);
 #endif /* HAVE_JPEG */
 }
-#endif
 
 /* Return information about the display format. */
 static int
 cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	/* XXX 1.4 single-display */
-
 	NS_BeginList(ns);
-	NS_ListString(ns, "driver:%s",
-	    agDriver != NULL ? AGDRIVER_CLASS(agDriver)->name : "NULL");
+	/* XXX TODO 1.4 */
 	NS_EndList(ns);
 	return (0);
 }
 
-#if 0
 static void
 cmd_scan_vfs(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 {
@@ -345,9 +342,7 @@ DEV_DebugServerStart(void)
 		NS_RegCmd(&server, "version", cmd_version, NULL);
 #if 0
 		NS_RegCmd(&server, "screen", cmd_surface, agView->v);
-#endif
 		NS_RegCmd(&server, "view-fmt", cmd_view_fmt, NULL);
-#if 0
 		NS_RegCmd(&server, "scan-vfs", cmd_scan_vfs, NULL);
 #endif
 		server_inited = 1;

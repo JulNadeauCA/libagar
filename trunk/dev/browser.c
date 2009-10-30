@@ -715,7 +715,7 @@ CreateObjectDlg(AG_Event *event)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		AG_LabelNew(bo, 0, _("Class: %s"), cl->hier);
-		tb = AG_TextboxNew(bo, 0, _("Name: "));
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_WidgetFocus(tb);
 	}
 

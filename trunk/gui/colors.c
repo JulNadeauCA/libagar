@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -326,8 +326,8 @@ static __inline__ void
 UpdatedColor(int colorIdx)
 {
 	if (colorIdx == BG_COLOR &&
-	    agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
-		AGDRIVER_SW_CLASS(agDriver)->videoClear(agDriver,
+	    agDriverSw != NULL) {
+		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw,
 		    agColors[colorIdx]);
 	}
 }

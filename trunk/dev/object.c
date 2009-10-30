@@ -292,8 +292,7 @@ DEV_ObjectEdit(void *p)
 	{
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
-		tbox = AG_TextboxNewS(ntab, 0, _("Name: "));
-		AG_ExpandHoriz(tbox);
+		tbox = AG_TextboxNewS(ntab, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_WidgetFocus(tbox);
 		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);

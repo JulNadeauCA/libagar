@@ -50,12 +50,12 @@ typedef struct ag_driver_sw {
 
 __BEGIN_DECLS
 extern AG_ObjectClass    agDriverSwClass;
-extern AG_DriverSw      *agDriverSw;
+extern AG_DriverSw      *agDriverSw;		/* Driver instance (or NULL) */
 
 struct ag_size_alloc;
 
 void AG_WM_BackgroundPopupMenu(AG_DriverSw *);
-void AG_WM_ChangeWindowFocus(void);
+void AG_WM_CommitWindowFocus(struct ag_window *);
 int  AG_ResizeDisplay(int, int);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
 void AG_WM_LimitWindowToView(struct ag_window *);
@@ -67,9 +67,9 @@ void AG_WM_MouseMotion(AG_DriverSw *, struct ag_window *, int, int);
 static __inline__ void
 AG_ClearBackground(void)
 {
-	if (AGDRIVER_SINGLE(agDriver)) {
+	if (agDriverSw != NULL) {
 		AG_Color c = { 0,0,0,0 };
-		AGDRIVER_SW_CLASS(agDriver)->videoClear(agDriver, c);
+		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw, c);
 	}
 }
 
@@ -81,6 +81,21 @@ AG_SetRefreshRate(int fps)
 		AG_SetError("Refresh rate not applicable to graphics driver");
 		return (-1);
 	}
-	return agDriverOps->setRefreshRate(agDriver, fps);
+	return agDriverOps->setRefreshRate(agDriverSw, fps);
 }
+
+#ifdef AG_LEGACY
+/* Update a video region (FB drivers only). */
+static __inline__ void
+AG_ViewUpdateFB(const AG_Rect2 *r2)
+{
+	AG_Rect r;
+	r.x = r2->x1;
+	r.y = r2->y1;
+	r.w = r2->w;
+	r.h = r2->h;
+	if (agDriverOps->updateRegion != NULL)
+		agDriverOps->updateRegion(agDriverSw, r);
+}
+#endif /* AG_LEGACY */
 __END_DECLS

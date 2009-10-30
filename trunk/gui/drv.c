@@ -44,15 +44,11 @@ extern AG_Driver agDriverSDLFB;
 #endif
 
 AG_Object         agDrivers;			/* Drivers VFS */
-AG_DriverClass   *agDriverOps = NULL;
-AG_DriverSwClass *agDriverOpsSw = NULL;
-AG_DriverMwClass *agDriverOpsMw = NULL;
-AG_Driver        *agDriver = NULL;
+AG_DriverClass   *agDriverOps = NULL;		/* Current driver class */
+AG_DriverSw      *agDriverSw = NULL;		/* Driver instance (or NULL) */
 #ifdef AG_LEGACY
 AG_Driver        *agView = NULL;  		/* Pre-1.4 */
 #endif
-AG_DriverSw      *agDriverSw = NULL;
-AG_DriverMw      *agDriverMw = NULL;
 
 void *agDriverList[] = {
 #ifdef HAVE_GLX
@@ -103,6 +99,8 @@ AG_DriverClose(AG_Driver *drv)
 /*
  * Dump the display surface(s) to a jpeg in ~/.appname/screenshot/.
  * Typically called via AG_GlobalKeys(3).
+ * This only works under single-display drivers (use AG_WidgetSurface() to
+ * capture windows instead).
  */
 void
 AG_ViewCapture(void)
@@ -112,19 +110,14 @@ AG_ViewCapture(void)
 	char file[AG_PATHNAME_MAX];
 	Uint seq;
 
-	/* Get a copy of the display. */
-	switch (AGDRIVER_CLASS(agDriver)->wm) {
-	case AG_WM_SINGLE:
-		if (AGDRIVER_SW_CLASS(agDriver)->videoCapture(agDriver, &s)
-		    == -1) {
-			Verbose("Capture failed: %s\n", AG_GetError());
-			return;
-		}
-		break;
-	case AG_WM_MULTIPLE:
-		/* TODO iterate over each window. */
-		Verbose("Capture not implemented (AG_WM_MULTIPLE)\n");
-		break;
+	if (agDriverSw == NULL) {
+		Verbose("AG_ViewCapture() is not implemented under "
+		        "multiple-window drivers\n");
+		return;
+	}
+	if (AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw, &s) == -1) {
+		Verbose("Capture failed: %s\n", AG_GetError());
+		return;
 	}
 
 	/* Save to a new file. */

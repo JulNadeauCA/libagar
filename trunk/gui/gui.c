@@ -384,9 +384,7 @@ AG_InitGraphics(const char *spec)
 		goto fail;
 
 	agDriverOps = dc;
-	agDriver = drv;
 	agDriverSw = (dc->wm == AG_WM_SINGLE) ? AGDRIVER_SW(drv) : NULL;
-	agDriverMw = (dc->wm == AG_WM_MULTIPLE) ? AGDRIVER_MW(drv) : NULL;
 #ifdef AG_LEGACY
 	agView = drv;
 #endif
@@ -497,12 +495,10 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 	}
 
 	agDriverOps = dc;
-	agDriver = drv;
+	agDriverSw = AGDRIVER_SW(drv);
 #ifdef AG_LEGACY
 	agView = drv;
 #endif
-	agDriverSw = AGDRIVER_SW(drv);
-	agDriverMw = NULL;
 	return (0);
 fail:
 	AG_DestroyGUIGlobals();
@@ -572,12 +568,10 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 	}
 
 	agDriverOps = dc;
-	agDriver = drv;
+	agDriverSw = AGDRIVER_SW(drv);
 #ifdef AG_LEGACY
 	agView = drv;
 #endif
-	agDriverSw = AGDRIVER_SW(drv);
-	agDriverMw = NULL;
 	return (0);
 fail:
 	AG_DestroyGUIGlobals();
@@ -599,5 +593,5 @@ AG_DestroyVideo(void)
 void
 AG_EventLoop_FixedFPS(void)
 {
-	agDriverOps->genericEventLoop(agDriver);
+	agDriverOps->genericEventLoop(agDriverSw);
 }

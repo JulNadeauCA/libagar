@@ -578,6 +578,8 @@ ProcessEvents(void *drvCaller)
 				a.w = xev.xconfigure.width;
 				a.h = xev.xconfigure.height;
 				PostResizeCallback(win, &a);
+				WIDGET(win)->x = xev.xconfigure.x;
+				WIDGET(win)->y = xev.xconfigure.y;
 			}
 			break;
 		case ReparentNotify:
@@ -751,12 +753,6 @@ FillRect(void *obj, AG_Rect r, AG_Color c)
 	glVertex2i(x2, y2);
 	glVertex2i(r.x, y2);
 	glEnd();
-}
-
-static void
-UpdateRegion(void *obj, AG_Rect r)
-{
-	/* No-op */
 }
 
 static void
@@ -1846,7 +1842,7 @@ static int
 OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	AG_Driver *drv = WIDGET(win)->drv, *drvParent;
+	AG_Driver *drv = WIDGET(win)->drv; //, *drvParent;
 	XSetWindowAttributes xwAttrs;
 	XVisualInfo *xvi;
 	Window wParent;
@@ -1888,11 +1884,12 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 			     FocusChangeMask;
 	valuemask = CWColormap | CWBackPixmap | CWBorderPixel | CWEventMask;
 
-	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)) {
+	if (win->flags & AG_WINDOW_NOTITLE) {
 		/* XXX */
-//		valuemask |= CWOverrideRedirect;
-//		xwAttrs.override_redirect = True;
+		valuemask |= CWOverrideRedirect;
+		xwAttrs.override_redirect = True;
 	}
+#if 0
 	if (win->parent != NULL &&
 	    (drvParent = WIDGET(win->parent)->drv) &&
 	    AGDRIVER_IS_GLX(drvParent) &&
@@ -1900,8 +1897,9 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 		AG_DriverGLX *glxParent = (AG_DriverGLX *)drvParent;
 		wParent = glxParent->w;
 	} else {
+#endif
 		wParent = RootWindow(agDisplay,agScreen);
-	}
+/*	} */
 
 	/* Create an (initially unmapped) window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
@@ -1918,6 +1916,9 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 		return (-1);
 	}
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
+
+	/* XXX */
+	XMoveWindow(agDisplay, glx->w, r.x, r.y);
 
 	/* Create a GLX context and initialize state. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
@@ -2051,7 +2052,7 @@ GetInputFocus(AG_Window **rv)
 
 	XGetInputFocus(agDisplay, &wRet, &revertToRet);
 
-	AGOBJECT_FOREACH_CHILD(glx, &agDriver, ag_driver_glx) {
+	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
 		if (!AGDRIVER_IS_GLX(glx)) {
 			continue;
 		}
@@ -2223,7 +2224,7 @@ AG_DriverMwClass agDriverGLX = {
 		RenderWindow,
 		EndRendering,
 		FillRect,
-		UpdateRegion,
+		NULL,			/* updateRegion */
 		UploadTexture,
 		UpdateTexture,
 		DeleteTexture,

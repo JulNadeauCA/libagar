@@ -104,8 +104,8 @@ void
 DEV_ConfigShow(void)
 {
 	/* Avoid clobbering modal windows */
-	if (AGDRIVER_SINGLE(agDriver) &&
-	    AGDRIVER_SW(agDriver)->Lmodal->n > 0)
+	if (agDriverSw != NULL &&
+	    agDriverSw->Lmodal->n > 0)
 		return;
 
 	if (devConfigWindow != NULL) {
@@ -316,7 +316,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 		AG_SpacerNewHoriz(tab);
 
-		tb = AG_TextboxNewS(tab, 0, _("Host: "));
+		tb = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Host: "));
 		AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
 		AG_NumericalNewUint(tab, 0, NULL, _("Port: "), &agRcsPort);
