@@ -97,23 +97,34 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 	AG_ObjectClass *cls = (AG_ObjectClass *)pClass;
 	const char *c;
 	int nwild = 0;
+	size_t patSize;
 
 	for (c = &pat[0]; *c != '\0'; c++) {
 		if (*c == '*')
 			nwild++;
 	}
 	if (nwild == 0) {
-		return (strncmp(cls->hier, pat, c - &pat[0]) == 0);
+		return (strcmp(cls->hier, pat) == 0);
 	} else if (nwild == 1) {
-		if (pat[0] == '*') {
-			return (1);
-		}
-		for (c = &pat[0]; *c != '\0'; c++) {
-			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-				if (c == &pat[0] ||
-				    strncmp(cls->hier, pat, c - &pat[0]) == 0)
+		if (pat[strlen(pat)-1] == '*') {
+			for (c = &pat[0]; *c != '\0'; c++) {
+				if (c[0] != ':' || c[1] != '*' || c[2] != '\0')
+					continue;
+			
+				patSize = c - &pat[0];
+				if (c == &pat[0]) {
 					return (1);
+				}
+				if (!strncmp(cls->hier, pat, patSize) &&
+				    (cls->hier[patSize] == ':' ||
+				     cls->hier[patSize] == '\0')) {
+					return (1);
+				}
 			}
+		} else if (pat[0] == '*') {
+			return (1);
+		} else {
+			return AG_ClassIsNamedGeneral(cls, pat);
 		}
 		return (0);
 	}
