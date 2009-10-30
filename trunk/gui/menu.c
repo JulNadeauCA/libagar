@@ -88,10 +88,22 @@ AG_MenuNewGlobal(Uint flags)
 	return (m);
 }
 
+/* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
-AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
+AG_MenuExpand(void *obj, AG_MenuItem *item, int x, int y)
 {
-	AG_Window *win;
+	AG_Window *win, *winParent;
+	AG_MenuView *mv;
+	AG_Menu *m;
+
+	/* XXX AG_Menu and AG_MenuView should share subclasses */
+	if (AG_OfClass(obj, "AG_Widget:AG_MenuView")) {
+		m = ((AG_MenuView *)obj)->pmenu;
+	} else if (AG_OfClass(obj, "AG_Widget:AG_Menu")) {
+		m = obj;
+	} else {
+		AG_FatalError("Invalid argument to AG_MenuExpand()");
+	}
 
 	AG_MenuUpdateItem(item);
 
@@ -100,41 +112,52 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 
 	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
-	AG_WindowSetCaptionS(win, "win-popup");
+	AG_ObjectSetName(win, "_Popup-%s", OBJECT(obj)->name);
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
-	item->view = Malloc(sizeof(AG_MenuView));
-	AG_ObjectInit(item->view, &agMenuViewClass);
-	item->view->panel = win;
-	item->view->pmenu = m;
-	item->view->pitem = item;
-	AG_ObjectAttach(win, item->view);
-
+	mv = Malloc(sizeof(AG_MenuView));
+	AG_ObjectInit(mv, &agMenuViewClass);
+	mv->panel = win;
+	mv->pmenu = m;
+	mv->pitem = item;
+	AG_ObjectAttach(win, mv);
+	item->view = mv;
+	AG_WindowFocus(win);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win, x, y, -1, -1);
+
+	if ((winParent = WIDGET(obj)->window) != NULL) {
+		x += WIDGET(winParent)->x;
+		y += WIDGET(winParent)->y;
+	}
+	AG_WindowSetGeometry(win, x, y, -1,-1);
 	return (win);
 }
 
+/*
+ * Collapse the window displaying the contents of an item. Child windows
+ * displaying subitems are recursively collapsed as well.
+ */
 void
-AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
+AG_MenuCollapse(void *obj, AG_MenuItem *item)
 {
 	int i;
 
 	if (item == NULL)
 		return;
 
-	AG_ObjectLock(m);
+	AG_ObjectLock(obj);
 	for (i = 0; i < item->nsubitems; i++) {
 		if (item->subitems[i].nsubitems > 0)
-			AG_MenuCollapse(m, &item->subitems[i]);
+			AG_MenuCollapse(obj, &item->subitems[i]);
 	}
 	item->sel_subitem = NULL;
-	if (item->view != NULL &&
-	    item->view->panel != NULL) {
-		AG_ObjectDetach(item->view->panel);
+	if (item->view != NULL) {
+		if (item->view->panel != NULL) {
+			AG_ObjectDetach(item->view->panel);
+		}
 		item->view = NULL;
 	}
-	AG_ObjectUnlock(m);
+	AG_ObjectUnlock(obj);
 }
 
 void
@@ -305,13 +328,13 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 		}
 		mi = &pitem->subitems[pitem->nsubitems++];
 		mi->pmenu = pitem->pmenu;
-		mi->pitem = pitem;
+/*		mi->pitem = pitem; */
 		mi->y = pitem->nsubitems*mi->pmenu->itemh - mi->pmenu->itemh;
 		mi->state = mi->pmenu->curState;
 	} else {
 		mi = Malloc(sizeof(AG_MenuItem));
 		mi->pmenu = NULL;
-		mi->pitem = NULL;
+/*		mi->pitem = NULL; */
 		mi->y = 0;
 		mi->state = 1;
 	}
@@ -349,11 +372,11 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 	/* If this is the application menu, resize its window. */
 	/* XXX 1.4 */
 	if (mi->pmenu != NULL && (mi->pmenu->flags & AG_MENU_GLOBAL) &&
-	    agDriver != NULL) {
+	    agDriverSw != NULL) {
 		Uint wMax, hMax;
 		AG_SizeReq rMenu;
 
-		AG_GetDisplaySize(agDriver, &wMax, &hMax);
+		AG_GetDisplaySize(agDriverSw, &wMax, &hMax);
 		AG_WidgetSizeReq(mi->pmenu, &rMenu);
 		AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
 	}
@@ -1009,22 +1032,17 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Menu *m = obj;
+	AG_Driver *drv = WIDGET(m)->drv;
 	int i, x, y;
 	int wLbl, hLbl;
-	Uint wMax, hMax;
+	Uint wView, hView;
 
 	x = m->lPad;
 	y = m->tPad;
 	r->h = 0;
 	r->w = x;
 
-	/* XXX 1.4 */
-	if (agDriver != NULL) {
-		AG_GetDisplaySize(WIDGET(m)->drv, &wMax, &hMax);
-	} else {
-		wMax = 0;
-		hMax = 0;
-	}
+	AG_GetDisplaySize(drv, &wView, &hView);
 
 	if (m->root == NULL) {
 		return;
@@ -1034,13 +1052,13 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		if (r->h == 0) {
 			r->h = m->tPad+hLbl+m->bPad;
 		}
-		if (x+wLbl > wMax) {			/* Wrap */
+		if (x+wLbl > wView) {			/* Wrap */
 			x = m->lPad;
 			y += hLbl;
 			r->h += hLbl+m->bPad;
 		}
-		if (r->w < MIN(x+wLbl,wMax)) {
-			r->w = MIN(x+wLbl,wMax);
+		if (r->w < MIN(x+wLbl,wView)) {
+			r->w = MIN(x+wLbl,wView);
 		}
 		x += wLbl;
 	}
