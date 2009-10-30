@@ -15,227 +15,15 @@ unsigned long install_failed;
 
 void (*install_callback_warn)(const char *, void *);
 void (*install_callback_info)(const char *, void *);
-void *install_callback_data;
+void  *install_callback_data;
 
 /*@null@*/ static const char *inst_fake_root = NULL;
 
-#ifdef INSTALL_HAVE_SYMLINKS
-static int have_symlinks = 1;
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+static const struct install_platform_callbacks_t *platform = &install_platform_win32;
 #else
-static int have_symlinks = 0;
+static const struct install_platform_callbacks_t *platform = &install_platform_posix;
 #endif
-
-/*
- * Credential functions
- */
-
-int
-install_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
-{
-  assert (file != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_set_ownership (file, uid, gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_set_ownership (file, uid, gid);
-#endif
-}
-
-int
-install_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
-{
-  assert (file != NULL);
- 
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_get_ownership (file, uid, gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_get_ownership (file, uid, gid);
-#endif
-}
-
-int
-install_file_get_mode (const char *file, permissions_t *mode)
-{
-  assert (file != NULL);
-  assert (mode != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_get_mode (file, mode);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_get_mode (file, mode);
-#endif
-}
-
-int
-install_file_link (const char *src, const char *dst)
-{
-  assert (src != NULL);
-  assert (dst != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_link (src, dst);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_link (src, dst);
-#endif
-}
-
-int
-install_gid_current (group_id_t *gid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_gid_current (gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_gid_current (gid);
-#endif
-}
-
-int
-install_uid_current (user_id_t *uid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_uid_current (uid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_uid_current (uid);
-#endif
-}
-
-int
-install_gid_lookup (const char *name, group_id_t *gid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_gid_lookup (name, gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_gid_lookup (name, gid);
-#endif
-}
-
-int
-install_uid_lookup (const char *name, user_id_t *uid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_uid_lookup (name, uid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_uid_lookup (name, uid);
-#endif
-}
-
-unsigned int
-install_fmt_gid (char *buffer, group_id_t gid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_fmt_gid (buffer, gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_fmt_gid (buffer, gid);
-#endif
-}
-
-unsigned int
-install_fmt_uid (char *buffer, user_id_t uid)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_fmt_uid (buffer, uid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_fmt_uid (buffer, uid);
-#endif
-}
-
-unsigned int
-install_scan_gid (const char *buffer, group_id_t *gid)
-{
-  assert (buffer != NULL);
-  assert (gid != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_scan_gid (buffer, gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_scan_gid (buffer, gid);
-#endif
-}
-
-unsigned int
-install_scan_uid (const char *buffer, user_id_t *uid)
-{
-  assert (buffer != NULL);
-  assert (uid != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_scan_uid (buffer, uid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_scan_uid (buffer, uid);
-#endif
-}
-
-int
-install_compare_uid (user_id_t a, user_id_t b)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_compare_uid (a, b);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_compare_uid (a, b);
-#endif
-}
-
-int
-install_compare_gid (group_id_t a, group_id_t b)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_compare_gid (a, b);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_compare_gid (a, b);
-#endif
-}
-
-void
-install_gid_free (group_id_t *gid)
-{
-  assert (gid != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  iwin32_gid_free (gid);
-#endif
-}
-
-void
-install_uid_free (user_id_t *uid)
-{
-  assert (uid != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  iwin32_uid_free (uid);
-#endif
-}
-
-int
-install_compare_permissions (permissions_t a, permissions_t b)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return 1;
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return (int) (a.value == b.value);
-#endif
-}
-
-void
-install_perms_assign (permissions_t *perm, unsigned int mode)
-{
-  assert (perm != NULL);
-  perm->value = mode;
-}
 
 void
 install_status_assign (struct install_status_t *status,
@@ -243,8 +31,22 @@ install_status_assign (struct install_status_t *status,
 {
   assert (status != NULL);
 
-  status->status = code;
-  status->message = message;
+  status->status        = code;
+  status->message       = message;
+  status->error_message = platform->error_message_current ();
+}
+
+void
+install_permissions_assign (permissions_t *perm, int mode)
+{
+  assert (perm != NULL);
+  perm->value = mode;
+}
+
+int
+install_permissions_compare (permissions_t a, permissions_t b)
+{
+  return (int) (a.value == b.value);
 }
 
 /* Portability macro */
@@ -285,6 +87,8 @@ static const size_t file_type_lookups_size =
 
 int
 install_file_type (const char *file, enum install_file_type_t *type, int nofollow)
+  /*@globals errno, file_type_lookups_size, file_type_lookups; @*/
+  /*@modifies errno, type; @*/
 {
   struct stat sb;
   unsigned int index;
@@ -344,22 +148,11 @@ install_file_type_name_lookup (enum install_file_type_t type, const char **retur
   return 0;
 }
 
-int
-install_file_set_mode (const char *file, permissions_t mode)
-{
-  assert (file != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_set_mode (file, mode);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_set_mode (file, mode);
-#endif
-}
-
 struct install_status_t
-install_file_copy (const char *src, const char *dst,
-  user_id_t uid, group_id_t gid, permissions_t mode)
+install_file_copy
+  (const char *src, const char *dst, user_id_t uid, group_id_t gid, permissions_t mode)
+  /*@globals errno, platform; @*/
+  /*@modifies errno; @*/
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char copy_buf [65536];
@@ -369,9 +162,19 @@ install_file_copy (const char *src, const char *dst,
   size_t r;
   size_t w;
   struct install_status_t status = INSTALL_STATUS_INIT;
+  user_id_t process_uid          = INSTALL_NULL_UID;
+  int can_change_owner;
+  int want_change_owner;
 
   assert (dst != NULL);
   assert (src != NULL);
+
+  if (platform->uid_current (&process_uid) == 0) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
+    return status;
+  }
+
+  assert (platform->uid_valid (process_uid));
 
   if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format string");
@@ -402,7 +205,7 @@ install_file_copy (const char *src, const char *dst,
     while (r > 0) {
       w = fwrite (copy_ptr, 1, r, fd_dst);
       if (w == 0) {
-        if (feof (fd_dst) != 0) break;
+        if (feof (fd_dst) != 0) /*@innerbreak@*/ break;
         if (ferror (fd_dst) != 0) {
           install_status_assign (&status, INSTALL_STATUS_ERROR, "write error");
           goto ERR;
@@ -417,14 +220,30 @@ install_file_copy (const char *src, const char *dst,
     install_status_assign (&status, INSTALL_STATUS_ERROR, "write error");
     goto ERR;
   }
-  if (install_file_set_mode (dst_tmp, mode) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file permissions");
+
+  if (platform->supports_posix_modes () == 1) {
+    if (platform->file_mode_set (dst_tmp, mode) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file permissions");
+      goto ERR;
+    }
+  }
+
+  /* If the current UID is able to set file ownership... */
+  can_change_owner  = platform->can_set_ownership (process_uid);
+  /* If target UID != current UID ... */
+  want_change_owner = platform->uid_compare (process_uid, uid) == 0;
+
+  if ((can_change_owner == 0) && (want_change_owner == 1)) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "current user ID is restricted from setting file ownership");
     goto ERR;
   }
-  if (install_file_set_ownership (dst_tmp, uid, gid) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file ownership");
-    goto ERR;
+  if ((can_change_owner == 1) && (want_change_owner == 1)) {
+    if (platform->file_ownership_set (dst_tmp, uid, gid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file ownership");
+      goto ERR;
+    }
   }
+
   if (fclose (fd_dst) == -1) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not close destination file");
     goto ERR;
@@ -438,6 +257,8 @@ install_file_copy (const char *src, const char *dst,
     goto ERR;
   }
 
+  platform->uid_free (&process_uid);
+
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
   return status;
 
@@ -445,48 +266,62 @@ install_file_copy (const char *src, const char *dst,
   if (fd_dst != NULL) (void) fclose (fd_dst);
   if (fd_src != NULL) (void) fclose (fd_src);
   (void) unlink (dst_tmp);
+
+  platform->uid_free (&process_uid);
   return status;
-}
-
-int
-install_file_size (const char *file, size_t *size)
-{
-  struct stat sb;
-
-  assert (file != NULL);
-  assert (size != NULL);
-
-  if (stat (file, &sb) == -1) return 0;
-
-  *size = (size_t) sb.st_size;
-  return 1;
 }
 
 static struct install_status_t
 install_uidgid_lookup (const char *user, user_id_t *uid,
   const char *group, group_id_t *gid)
+  /*@globals errno, platform; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (install_uid_lookup (user, uid) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not lookup user ID");
-    return status;
+  assert (uid != NULL);
+  assert (gid != NULL);
+  assert (platform->uid_valid (*uid) == 0);
+  assert (platform->gid_valid (*gid) == 0);
+
+  if (user != NULL) {
+    if (platform->uid_lookup (user, uid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not lookup user ID");
+      return status;
+    }
+  } else {
+    if (platform->uid_current (uid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
+      return status;
+    }
   }
-  if (install_gid_lookup (group, gid) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not lookup group ID");
-    install_uid_free (uid);
-    return status;
+
+  if (group != NULL) {
+    if (platform->gid_lookup (group, gid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not lookup group ID");
+      platform->gid_free (gid);
+      return status;
+    }
+  } else {
+    if (platform->gid_current (gid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current group ID");
+      platform->gid_free (gid);
+      return status;
+    }
   }
+
+  assert (platform->uid_valid (*uid));
+  assert (platform->gid_valid (*gid));
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
   return status;
 }
 
 static struct install_status_t
-install_file_check (const char *file_src, permissions_t mode_want,
-  enum install_file_type_t type_want, user_id_t uid_want, group_id_t gid_want,
-  const char *file_dst)
-  /*@globals errno; @*/
+install_file_check
+  (const char *file_src, permissions_t mode_want, enum install_file_type_t type_want,
+   user_id_t uid_want, group_id_t gid_want, const char *file_dst)
+  /*@globals errno, platform, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_want_str [INSTALL_FMT_UID];
@@ -507,8 +342,7 @@ install_file_check (const char *file_src, permissions_t mode_want,
   assert (file_src != NULL);
   assert (file_dst != NULL);
 
-  /* Reset errno */
-  errno = 0;
+  platform->error_reset ();
 
   /* Get source file types and type names */
   if (type_want == INSTALL_FILE_TYPE_SYMLINK) no_follow = 1;
@@ -519,15 +353,15 @@ install_file_check (const char *file_src, permissions_t mode_want,
 
   /* Get source file size, if necessary */
   if (type_want == INSTALL_FILE_TYPE_FILE) {
-    if (install_file_size (file_src, &size_want) == 0) {
+    if (platform->file_size (file_src, &size_want) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine source file size");
       return status;
     }
   }
 
   /* Format ownership data */
-  uid_want_str [install_fmt_uid (uid_want_str, uid_want)] = (char) 0;
-  gid_want_str [install_fmt_gid (gid_want_str, gid_want)] = (char) 0;
+  uid_want_str [platform->uid_format (uid_want_str, uid_want)] = (char) 0;
+  gid_want_str [platform->gid_format (gid_want_str, gid_want)] = (char) 0;
 
   /* Call info callback if defined */
   if (install_callback_info != NULL) {
@@ -547,7 +381,12 @@ install_file_check (const char *file_src, permissions_t mode_want,
     install_status_assign (&status, INSTALL_STATUS_ERROR, "unknown destination file type");
     return status;
   }
-  if ((have_symlinks == 0) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
+
+  /* Do not check file type if expected type is symlink and the current platform
+   * does not support them.
+   */
+
+  if ((platform->supports_symlinks () == 0) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
     if (type_want != type_got) {
       assert (type_want_name != NULL);
       assert (type_got_name != NULL);
@@ -561,7 +400,7 @@ install_file_check (const char *file_src, permissions_t mode_want,
 
   /* Check file size */
   if (type_want == INSTALL_FILE_TYPE_FILE) {
-    if (install_file_size (file_dst, &size_got) == 0) {
+    if (platform->file_size (file_dst, &size_got) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file size");
       return status;
     }
@@ -575,35 +414,36 @@ install_file_check (const char *file_src, permissions_t mode_want,
   }
 
   /* Check file permissions */
-  if (install_file_get_mode (file_dst, &mode_got) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file mode");
-    return status;
-  }
+  if (platform->supports_posix_modes () == 1) {
+    if (platform->file_mode_get (file_dst, &mode_got) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file mode");
+      return status;
+    }
+    if (install_permissions_compare (mode_got, mode_want) == 0) {
+      (void) snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
+        mode_got.value, mode_want.value);
 
-  if (install_compare_permissions (mode_got, mode_want) == 0) {
-    (void) snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
-      mode_got.value, mode_want.value);
-
-    install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
-    return status;
+      install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
+      return status;
+    }
   }
  
   /* Check file ownership */
-  if (install_file_get_ownership (file_dst, &uid_got, &gid_got) == 0) {
+  if (platform->file_ownership_get (file_dst, &uid_got, &gid_got) == 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file ownership");
     goto END;
   }
-  uid_got_str [install_fmt_uid (uid_got_str, uid_got)] = (char) 0;
-  gid_got_str [install_fmt_gid (gid_got_str, gid_got)] = (char) 0;
+  uid_got_str [platform->uid_format (uid_got_str, uid_got)] = (char) 0;
+  gid_got_str [platform->gid_format (gid_got_str, gid_got)] = (char) 0;
 
-  if (install_compare_uid (uid_want, uid_got) == 0) {
+  if (platform->uid_compare (uid_want, uid_got) == 0) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "uid %s not %s",
       uid_got_str, uid_want_str);
 
     install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
     goto END;
   }
-  if (install_compare_gid (gid_want, gid_got) == 0) {
+  if (platform->gid_compare (gid_want, gid_got) == 0) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "gid %s not %s",
       gid_got_str, gid_want_str);
 
@@ -613,38 +453,21 @@ install_file_check (const char *file_src, permissions_t mode_want,
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
   END:
-  install_uid_free (&uid_got);
-  install_gid_free (&gid_got);
+  platform->uid_free (&uid_got);
+  platform->gid_free (&gid_got);
   return status; 
 }
 
 unsigned int
 install_umask (unsigned int m)
 {
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_umask (m);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_umask (m);
-#endif
-}
-
-int
-install_mkdir (const char *dir, unsigned int mode)
-{
-  assert (dir != NULL);
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_mkdir (dir, mode);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_mkdir (dir, mode);
-#endif
+  return platform->umask (m);
 }
 
 static int
-install_rmkdir (const char *dir, unsigned int perm)
-  /*@globals errno; @*/
+install_rmkdir (const char *dir, permissions_t perm)
+  /*@globals errno, platform; @*/
+  /*@modifies errno; @*/
 {
   char path_buf [INSTALL_MAX_PATHLEN];
   size_t len;
@@ -680,7 +503,7 @@ install_rmkdir (const char *dir, unsigned int perm)
     ++bufpos;
     --buflen;
     path_buf [bufpos] = (char) 0;
-    if (install_mkdir (path_buf, perm) == -1) {
+    if (platform->make_dir (path_buf, perm) == -1) {
       if (end == 0) {
         if (errno != EEXIST && errno != EISDIR) return 0;
       } else return 0;
@@ -768,6 +591,8 @@ str_ends (const char *s, const char *end)
 
 static int
 libname (char *name, char *buf)
+  /*@globals errno; @*/
+  /*@modifies errno, buf; @*/
 {
   static char read_buf [INSTALL_MAX_PATHLEN];
   FILE *fp;
@@ -835,16 +660,16 @@ inst_copy (struct install_item *item, unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
   /* Defer error here (attempting to copy will give actual error) */
-  (void) install_file_size (item->src, &size);
+  (void) platform->file_size (item->src, &size);
 
-  uid_str [install_fmt_uid (uid_str, uid)] = (char) 0;
-  gid_str [install_fmt_gid (gid_str, gid)] = (char) 0;
+  uid_str [platform->uid_format (uid_str, uid)] = (char) 0;
+  gid_str [platform->gid_format (gid_str, gid)] = (char) 0;
 
   /* Call info callback */
   if (install_callback_info != NULL) {
@@ -862,13 +687,15 @@ inst_copy (struct install_item *item, unsigned int flags)
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
 
   END:
-  install_uid_free (&uid);
-  install_gid_free (&gid);
+  platform->uid_free (&uid);
+  platform->gid_free (&gid);
   return status;
 }
 
 static struct install_status_t
 inst_link (struct install_item *item, unsigned int flags)
+  /*@globals errno, platform, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
@@ -892,7 +719,7 @@ inst_link (struct install_item *item, unsigned int flags)
     return status;
   }
   if ((flags & INSTALL_DRYRUN) == INSTALL_NO_FLAGS) {
-    if (install_file_link (item->src, item->dst) == 0) {
+    if (platform->file_link (item->src, item->dst) == 0) {
       if (chdir (path_buf) == -1) {
         install_status_assign (&status, INSTALL_STATUS_ERROR, "could not restore current working directory");
         return status;
@@ -912,6 +739,8 @@ inst_link (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 inst_mkdir (struct install_item *item, unsigned int flags)
+  /*@globals errno, platform, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_str [INSTALL_FMT_UID];
@@ -919,14 +748,16 @@ inst_mkdir (struct install_item *item, unsigned int flags)
   user_id_t uid                  = INSTALL_NULL_UID;
   group_id_t gid                 = INSTALL_NULL_GID;
   struct install_status_t status = INSTALL_STATUS_INIT;
+  user_id_t process_uid          = INSTALL_NULL_UID;
+  permissions_t perms;
 
   assert (item != NULL);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  uid_str [install_fmt_uid (uid_str, uid)] = (char) 0;
-  gid_str [install_fmt_gid (gid_str, gid)] = (char) 0;
+  uid_str [platform->uid_format (uid_str, uid)] = (char) 0;
+  gid_str [platform->gid_format (gid_str, gid)] = (char) 0;
 
   /* Call info callback */
   if (install_callback_info != NULL) {
@@ -935,27 +766,48 @@ inst_mkdir (struct install_item *item, unsigned int flags)
     install_callback_info (msg_buffer, install_callback_data);
   }
 
+  install_permissions_assign (&perms, item->perm);
+
+  if (platform->uid_current (&process_uid) == 0) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
+    goto END;
+  }
+
   /* Create directory if not performing dry run */
   if ((flags & INSTALL_DRYRUN) == INSTALL_NO_FLAGS) {
-    if (install_rmkdir (item->dir, (unsigned int) item->perm) == 0) {
+    if (install_rmkdir (item->dir, perms) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not create directory");
       goto END;
     }
-    if (install_file_set_ownership (item->dir, uid, gid) == 0) {
-      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set ownership on directory");
-      goto END;
+
+    /* If target UID != current UID ... */
+    if (platform->uid_compare (process_uid, uid) == 0) {
+      /* If the current UID is able to set file ownership... */
+      if (platform->can_set_ownership (process_uid) == 1) {
+        if (platform->file_ownership_set (item->dir, uid, gid) == 0) {
+          install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file ownership");
+          goto END;
+        }
+      } else {
+        install_status_assign (&status, INSTALL_STATUS_ERROR, "current user ID is restricted from setting file ownership");
+        goto END;
+      }
     }
   }
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
+
   END:
-  install_uid_free (&uid);
-  install_gid_free (&gid);
+  platform->uid_free (&uid);
+  platform->gid_free (&gid);
+  platform->uid_free (&process_uid);
   return status;
 }
 
 static struct install_status_t
 inst_liblink (struct install_item *item, unsigned int flags)
+  /*@globals errno; @*/
+  /*@modifies errno; @*/
 {
   return inst_link (item, flags);
 }
@@ -966,6 +818,8 @@ inst_liblink (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 ntran_copy (struct install_item *item)
+  /*@globals errno, inst_fake_root; @*/
+  /*@modifies errno, item; @*/
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
@@ -1033,6 +887,8 @@ ntran_copy (struct install_item *item)
 
 static struct install_status_t
 ntran_copy_exec (struct install_item *item)
+  /*@globals errno, inst_exec_suffix; @*/
+  /*@modifies errno, item; @*/
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
@@ -1102,6 +958,8 @@ ntran_link (struct install_item *item)
 
 static struct install_status_t
 ntran_liblink (struct install_item *item)
+  /*@globals errno, inst_fake_root, inst_dlib_suffix; @*/
+  /*@modifies errno, item; @*/
 {
   static char dir_name [INSTALL_MAX_PATHLEN];
   static char dst_tmp [INSTALL_MAX_PATHLEN];
@@ -1214,6 +1072,8 @@ ntran_chk_link (struct install_item *item)
 
 static struct install_status_t
 ntran_chk_liblink (struct install_item *item)
+  /*@globals errno; @*/
+  /*@modifies errno, item; @*/
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1248,7 +1108,7 @@ instchk_copy (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1257,8 +1117,8 @@ instchk_copy (struct install_item *item, /*@unused@*/ unsigned int flags)
     uid, gid, item->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
-  install_uid_free (&uid);
-  install_gid_free (&gid);
+  platform->uid_free (&uid);
+  platform->gid_free (&gid);
   return status;
 }
 
@@ -1272,7 +1132,7 @@ instchk_link (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1281,13 +1141,15 @@ instchk_link (struct install_item *item, /*@unused@*/ unsigned int flags)
     uid, gid, item->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
-  install_uid_free (&uid);
-  install_gid_free (&gid);
+  platform->uid_free (&uid);
+  platform->gid_free (&gid);
   return status;
 }
 
 static struct install_status_t
 instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
+  /*@globals errno, platform, install_failed; @*/
+  /*@modifies errno, install_failed; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t uid                  = INSTALL_NULL_UID;
@@ -1296,7 +1158,7 @@ instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1305,8 +1167,8 @@ instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
     uid, gid, item->dir);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
-  install_uid_free (&uid);
-  install_gid_free (&gid);
+  platform->uid_free (&uid);
+  platform->gid_free (&gid);
   return status;
 }
 
@@ -1322,6 +1184,8 @@ instchk_liblink (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_copy (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1348,6 +1212,8 @@ deinst_copy (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_link (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
@@ -1378,6 +1244,8 @@ deinst_link (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_mkdir (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1403,6 +1271,8 @@ deinst_mkdir (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_liblink (struct install_item *item, unsigned int flags)
+  /*@globals errno; @*/
+  /*@modifies errno; @*/
 {
   assert (item != NULL);
   return deinst_link (item, flags);
@@ -1464,6 +1334,8 @@ install_suffix_sanitize (char *buffer, size_t size)
 
 struct install_status_t
 install_init (const char *suffix_file)
+  /*@globals errno, inst_fake_root, inst_dlib_suffix, inst_exec_suffix, platform; @*/
+  /*@modifies errno, inst_dlib_suffix; @*/
 {
   static char error_buffer [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1528,18 +1400,17 @@ install_init (const char *suffix_file)
     return status;
   }
 
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_install_init ();
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_install_init ();
-#endif
+  return platform->init ();
 }
 
 struct install_status_t
 install (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  platform->error_reset ();
 
   assert (item != NULL);
 
@@ -1554,8 +1425,12 @@ install (struct install_item *item, unsigned int flags)
 
 struct install_status_t
 install_check (struct install_item *item)
+  /*@globals errno, instchk_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  platform->error_reset ();
 
   assert (item != NULL);
 
@@ -1570,8 +1445,12 @@ install_check (struct install_item *item)
 
 struct install_status_t
 deinstall (struct install_item *item, unsigned int flags)
+  /*@globals errno, deinst_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  platform->error_reset ();
 
   assert (item != NULL);
 
@@ -1606,4 +1485,10 @@ void
 install_fake_root (const char *path)
 {
   inst_fake_root = path;
+}
+
+const char *
+install_error (int i)
+{
+  return strerror (i);
 }
