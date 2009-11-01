@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,16 @@ static void
 SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 {
 	AG_Menu *m = mi->pmenu;
-	AG_MenuView *mview = mi->view;
 
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->view != NULL) {
 		AG_MenuCollapse(m, mi->sel_subitem);
 	}
 	mi->sel_subitem = subitem;
+
 	if (subitem != NULL) {
+		AG_MenuView *mview = mi->view;
+
 		AG_LockTimeouts(m);
 		AG_DelTimeout(mview, &mview->submenu_to);
 		if (subitem != NULL &&
@@ -239,7 +241,7 @@ collapse:
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
 
@@ -269,7 +271,7 @@ Init(void *obj)
 	mview->bPad = 4;
 	mview->arrowRight = -1;
 
-	AG_SetEvent(mview, "widget-shown", Shown, NULL);
+	AG_SetEvent(mview, "widget-shown", OnShow, NULL);
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
@@ -304,58 +306,90 @@ Draw(void *obj)
 	for (i = 0; i < mi->nsubitems; i++) {
 		AG_MenuItem *item = &mi->subitems[i];
 		int x = mview->lPad;
-		
+		AG_Color C;
+		int boolState;
+
+		/* Update dynamic item if needed. */
 		AG_MenuUpdateItem(item);
 
-		if (item->icon == -1 && item->iconSrc != NULL) {
-			item->icon = AG_WidgetMapSurface(m, item->iconSrc);
-		}
-		STYLE(mview)->MenuItemBackground(mview, r, x, m, item->icon,
-		    (item == mi->sel_subitem && item->state == 1),
-		    (item->value != -1) ? item->value : GetItemBoolValue(item));
+		/* Indicate active item selection */
+		if (item == mi->sel_subitem && item->state == 1)
+			AG_DrawRectFilled(mview, r, agColors[MENU_SEL_COLOR]);
 
-		if (mi->flags & AG_MENU_ITEM_ICONS) {
-			x += m->itemh + mview->spIconLbl;
+		/* Render the menu item's icon */
+		if (item->icon == -1 &&
+		    item->iconSrc != NULL) {
+			item->icon = AG_WidgetMapSurface(mview,
+			    AG_DupSurface(item->iconSrc));
 		}
+		if (item->icon != -1) {
+			AG_WidgetBlitSurface(mview, item->icon,
+			    x   + (r.h/2 - item->iconSrc->w/2),
+			    r.y + (r.h/2 - item->iconSrc->h/2) + 1);
+
+			/* Indicate boolean state */
+			boolState = (item->value != -1) ? item->value :
+			            GetItemBoolValue(item);
+			if (boolState) {
+				AG_DrawFrame(mview,
+				    AG_RECT(x, r.y+2, r.h, r.h-2),
+				    1, agColors[MENU_OPTION_COLOR]);
+				C = agColors[MENU_OPTION_COLOR];
+				C.a = 64;
+				AG_DrawRectBlended(mview,
+				    AG_RECT(x, r.y+2, r.h, r.h-2),
+				    C, AG_ALPHA_SRC);
+			}
+		}
+
+		/* Keep columns aligned if there are icons. */
+		if (mi->flags & AG_MENU_ITEM_ICONS)
+			x += m->itemh + mview->spIconLbl;
+
 		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
+			/* Render menu separator item */
 			STYLE(mview)->MenuItemSeparator(mview,
 			    mview->lPad,
 			    WIDTH(mview) - mview->rPad - 1,
 			    r.y, m->itemh);
 		} else {
-			int lbl = item->state ? item->lblEnabled :
-			                        item->lblDisabled;
+			int lbl = item->state ? item->lblView[1] :
+			                        item->lblView[0];
 
+			/* Render the menu item's text string */
 			if (item->state == 1) {
-				if (item->lblEnabled == -1) {
+				if (item->lblView[1] == -1) {
 					AG_TextColor(agColors[MENU_TXT_COLOR]);
-					item->lblEnabled =
+					item->lblView[1] =
 					    (item->text == NULL) ? -1 :
-					    AG_WidgetMapSurface(m,
+					    AG_WidgetMapSurface(mview,
 					    AG_TextRender(item->text));
 				}
-				lbl = item->lblEnabled;
+				lbl = item->lblView[1];
 			} else {
-				if (item->lblDisabled == -1) {
+				if (item->lblView[0] == -1) {
 					AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
-					item->lblDisabled =
+					item->lblView[0] =
 					    (item->text == NULL) ? -1 :
-					    AG_WidgetMapSurface(m,
+					    AG_WidgetMapSurface(mview,
 					    AG_TextRender(item->text));
 				}
-				lbl = item->lblDisabled;
+				lbl = item->lblView[0];
 			}
-			AG_WidgetBlitFrom(mview, m, lbl, NULL,
+			AG_WidgetBlitSurface(mview, lbl,
 			    x,
 			    r.y + m->itemh/2 - agTextFontHeight/2 + 1);
-			x += WSURFACE(m,lbl)->w;
+			x += WSURFACE(mview,lbl)->w;
 		}
+
+		/* Render the submenu arrow. */
 		if (item->nsubitems > 0) {
 			x += mview->spLblArrow;
 			AG_WidgetBlitSurface(mview, mview->arrowRight,
 			    x,
 			    r.y + m->itemh/2 - agIconSmallArrowRight.s->h/2 -1);
 		}
+
 		r.y += m->itemh;
 	}
 }
@@ -377,17 +411,17 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		int wLbl;
 	
 		AG_MenuUpdateItem(item);
-
+		
 		if (item->icon != -1) {
-			wReq += WSURFACE(m,item->icon)->w;
+			wReq += item->iconSrc->w;
 		}
 		if (mi->flags & AG_MENU_ITEM_ICONS)
 			wReq += m->itemh + mview->spIconLbl;
 	
-		if (item->lblEnabled != -1) {
-			wLbl = WSURFACE(m,item->lblEnabled)->w;
-		} else if (item->lblDisabled != -1) {
-			wLbl = WSURFACE(m,item->lblDisabled)->w;
+		if (item->lblView[1] != -1) {
+			wLbl = WSURFACE(mview,item->lblView[1])->w;
+		} else if (item->lblView[0] != -1) {
+			wLbl = WSURFACE(mview,item->lblView[0])->w;
 		} else {
 			AG_TextSize(item->text, &wLbl, NULL);
 		}

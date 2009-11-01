@@ -15,8 +15,8 @@ struct ag_button;
 
 typedef struct ag_menu_item {
 	char *text;			/* Label text */
-	int lblEnabled;			/* Label surface (enabled) */
-	int lblDisabled;		/* Label surface (disabled) */
+	int lblMenu[2];			/* Cached surfaces (for AG_Menu) */
+	int lblView[2];			/* Cached surfaces (for AG_MenuView) */
 	int icon;			/* Icon surface mapping */
 	AG_Surface *iconSrc;		/* Icon surface source */
 	int value;			/* Default bool value binding */
@@ -53,6 +53,7 @@ typedef struct ag_menu_item {
 	struct ag_menu *pmenu;		/* Parent menu */
 	struct ag_menu_item *sel_subitem; /* Selected subitem */
 	struct ag_button *tbButton;	/* Associated toolbar button */
+	struct ag_menu_item *parent;	/* Parent MenuItem or NULL */
 } AG_MenuItem;
 
 typedef struct ag_menu {
