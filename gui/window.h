@@ -164,7 +164,6 @@ void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
-void	 AG_WindowSetVisibility(AG_Window *, int);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 
@@ -317,9 +316,10 @@ AG_WindowSetGeometryMax(AG_Window *win)
 }
 
 #ifdef AG_LEGACY
-AG_Window *AG_FindWindow(const char *)	DEPRECATED_ATTRIBUTE;
-void       AG_ViewAttach(AG_Window *)	DEPRECATED_ATTRIBUTE;
-void       AG_ViewDetach(AG_Window *)	DEPRECATED_ATTRIBUTE;
+void	   AG_WindowSetVisibility(AG_Window *, int) DEPRECATED_ATTRIBUTE;
+AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
+void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
+void       AG_ViewDetach(AG_Window *) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 __END_DECLS
 

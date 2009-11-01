@@ -411,46 +411,25 @@ Typically, this happens in an event loop routine (such as the stock
 .Ft int
 .Fn AG_WindowIsVisible "AG_Window *win"
 .Pp
-.Ft int
-.Fn AG_WindowSelectedWM "AG_Window *win" "enum ag_wm_operation op"
-.Pp
-.Ft int
-.Fn AG_WindowSetVisibility "AG_Window *win" "int flag"
-.Pp
 .nr nS 0
+Newly created windows are invisible by default.
 The
 .Fn AG_WindowShow
-and
+function makes the specified window visible.
 .Fn AG_WindowHide
-functions control the visibility of a window.
+makes a window invisible.
+.Pp
+Note that
+.Fn AG_WindowHide
+only hides a window, without destroying its contents.
+To properly detach and free a window, use
+.Xr AG_ObjectDetach 3
+and
+.Xr AG_ObjectDestroy 3 .
 .Pp
 .Fn AG_WindowIsVisible
-returns the current visibility status of a window (0 = invisible, 1 = visible).
-With threads, the return value is only valid as long as the
-.Fa win
-object is locked.
-.Pp
-.Fn AG_WindowSelectedWM
-returns 1 if Agar's internal window manager is currently performing the
-specified operation on the window.
-Accepted values for
-.Fa op
-include:
-.Pp
-.Bl -tag -compact -width "AG_WINOP_LRESIZE "
-.It AG_WINOP_NONE
-No operation
-.It AG_WINOP_LRESIZE
-Being resized via left-side resize control.
-.It AG_WINOP_RRESIZE
-Being resized via right-side resize control.
-.It AG_WINOP_HRESIZE
-Being resized via horizontal resize control.
-.El
-.Pp
-.Fn AG_WindowSetVisibility
-sets the visibility state of
-.Fa win .
+returns the current visibility status of a window.
+A value of 0 means the window is invisible, 1 means it is visible.
 .Sh FOCUS STATE
 The focus state controls the default filtering of events as well as the
 behavior and cosmetic appearance of some widgets.
