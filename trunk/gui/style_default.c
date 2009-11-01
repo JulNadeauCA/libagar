@@ -212,35 +212,6 @@ MenuBackground(void *mv, AG_Rect r)
 	AG_DrawBox(mv, r, 1, agColors[MENU_UNSEL_COLOR]);
 }
 
-/* Background decorations for selected Menu items */
-static void
-MenuItemBackground(void *mv, AG_Rect r, int xIcon, void *iconObj,
-    int icon, int isSelected, int boolState)
-{
-	AG_Color C;
-
-	if (isSelected) {
-		AG_DrawRectFilled(mv, r, agColors[MENU_SEL_COLOR]);
-	}
-	if (icon != -1) {
-		AG_WidgetBlitFrom(mv, iconObj, icon, NULL,
-		    xIcon + (r.h/2 - WSURFACE(iconObj,icon)->w/2),
-		    r.y   + (r.h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
-
-		if (boolState) {
-			AG_DrawFrame(mv,
-			    AG_RECT(xIcon, r.y+2, r.h, r.h-2), 1,
-			    agColors[MENU_OPTION_COLOR]);
-			
-			C = agColors[MENU_OPTION_COLOR];
-			C.a = 64;
-			AG_DrawRectBlended(mv,
-			    AG_RECT(xIcon, r.y+2, r.h, r.h-2),
-			    C, AG_ALPHA_SRC);
-		}
-	}
-}
-
 /* Menu separator item */
 static void
 MenuItemSeparator(void *mv, int x1, int x2, int y, int h)
@@ -751,7 +722,7 @@ AG_Style agStyleDefault = {
 	MenuRootBackground,
 	MenuRootSelectedItemBackground,
 	MenuBackground,
-	MenuItemBackground,
+	NULL,					/* MenuItemBackground (OBSOL) */
 	MenuItemSeparator,
 	NotebookBackground,
 	NotebookTabBackground,

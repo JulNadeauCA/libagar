@@ -90,7 +90,7 @@ AG_MenuNewGlobal(Uint flags)
 
 /* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
-AG_MenuExpand(void *obj, AG_MenuItem *item, int x, int y)
+AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 {
 	AG_Window *win, *winParent;
 	AG_MenuView *mv;
@@ -105,9 +105,9 @@ AG_MenuExpand(void *obj, AG_MenuItem *item, int x, int y)
 		AG_FatalError("Invalid argument to AG_MenuExpand()");
 	}
 
-	AG_MenuUpdateItem(item);
+	AG_MenuUpdateItem(mi);
 
-	if (item->nsubitems == 0)
+	if (mi->nsubitems == 0)
 		return (NULL);
 
 	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
@@ -119,17 +119,20 @@ AG_MenuExpand(void *obj, AG_MenuItem *item, int x, int y)
 	AG_ObjectInit(mv, &agMenuViewClass);
 	mv->panel = win;
 	mv->pmenu = m;
-	mv->pitem = item;
+	mv->pitem = mi;
 	AG_ObjectAttach(win, mv);
-	item->view = mv;
-	AG_WindowFocus(win);
-	AG_WindowShow(win);
 
+	/* Attach the MenuItem to this view. */
+	mi->view = mv;
+
+	AG_WindowFocus(win);
+	
 	if ((winParent = WIDGET(obj)->window) != NULL) {
 		x += WIDGET(winParent)->x;
 		y += WIDGET(winParent)->y;
 	}
 	AG_WindowSetGeometry(win, x, y, -1,-1);
+	AG_WindowShow(win);
 	return (win);
 }
 
@@ -138,24 +141,36 @@ AG_MenuExpand(void *obj, AG_MenuItem *item, int x, int y)
  * displaying subitems are recursively collapsed as well.
  */
 void
-AG_MenuCollapse(void *obj, AG_MenuItem *item)
+AG_MenuCollapse(void *obj, AG_MenuItem *mi)
 {
-	int i;
+	Uint i, j;
 
-	if (item == NULL)
+	if (mi == NULL || mi->view == NULL)
 		return;
 
 	AG_ObjectLock(obj);
-	for (i = 0; i < item->nsubitems; i++) {
-		if (item->subitems[i].nsubitems > 0)
-			AG_MenuCollapse(obj, &item->subitems[i]);
+	
+	/* Collapse any expanded submenus as well. */
+	for (i = 0; i < mi->nsubitems; i++) {
+		if (mi->subitems[i].view != NULL)
+			AG_MenuCollapse(obj, &mi->subitems[i]);
 	}
-	item->sel_subitem = NULL;
-	if (item->view != NULL) {
-		if (item->view->panel != NULL) {
-			AG_ObjectDetach(item->view->panel);
+
+	/* Destroy the MenuView's window. */
+	AG_ObjectDetach(mi->view->panel);
+	mi->view = NULL;
+
+	/* Lose the current selection. */
+	mi->sel_subitem = NULL;
+
+	/* The surface handles are no longer valid. */
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *miSub = &mi->subitems[i];
+
+		for (j = 0; j < 2; j++) {
+			miSub->lblView[j] = -1;
 		}
-		item->view = NULL;
+		miSub->icon = -1;
 	}
 	AG_ObjectUnlock(obj);
 }
@@ -195,8 +210,8 @@ MouseButtonDown(AG_Event *event)
 
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
-		int lbl = (item->lblEnabled!=-1) ? item->lblEnabled :
-			  (item->lblDisabled!=-1) ? item->lblDisabled :
+		int lbl = (item->lblMenu[1] != -1) ? item->lblMenu[1] :
+			  (item->lblMenu[0] != -1) ? item->lblMenu[0] :
 			  -1;
 		int wLbl, hLbl;
 
@@ -267,8 +282,8 @@ MouseMotion(AG_Event *event)
 	}
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
-		int lbl = (item->lblEnabled != -1) ? item->lblEnabled :
-			  (item->lblDisabled != -1) ? item->lblDisabled :
+		int lbl = (item->lblMenu[1] != -1) ? item->lblMenu[1] :
+			  (item->lblMenu[0] != -1) ? item->lblMenu[0] :
 			  -1;
 		int wLbl, hLbl;
 
@@ -328,13 +343,13 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 		}
 		mi = &pitem->subitems[pitem->nsubitems++];
 		mi->pmenu = pitem->pmenu;
-/*		mi->pitem = pitem; */
+		mi->parent = pitem;
 		mi->y = pitem->nsubitems*mi->pmenu->itemh - mi->pmenu->itemh;
 		mi->state = mi->pmenu->curState;
 	} else {
 		mi = Malloc(sizeof(AG_MenuItem));
 		mi->pmenu = NULL;
-/*		mi->pitem = NULL; */
+		mi->parent = NULL;
 		mi->y = 0;
 		mi->state = 1;
 	}
@@ -351,8 +366,10 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 	mi->bind_invert = 0;
 	mi->bind_lock = NULL;
 	mi->text = Strdup((text != NULL) ? text : "");
-	mi->lblEnabled = -1;
-	mi->lblDisabled = -1;
+	mi->lblMenu[0] = -1;
+	mi->lblMenu[1] = -1;
+	mi->lblView[0] = -1;
+	mi->lblView[1] = -1;
 	mi->value = -1;
 	mi->flags = 0;
 	mi->icon = -1;
@@ -441,17 +458,41 @@ Init(void *obj)
 
 /* Change the icon associated with a menu item. */
 void
-AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *icon)
+AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 {
 	AG_ObjectLock(mi->pmenu);
-	if (mi->icon == -1) {
-		mi->icon = (icon != NULL) ?
-		    AG_WidgetMapSurface(mi->pmenu, AG_DupSurface(icon)) : -1;
-	} else {
-		AG_WidgetReplaceSurface(mi->pmenu, mi->icon,
-		    icon != NULL ? AG_DupSurface(icon) : NULL);
+	if (mi->iconSrc != NULL) {
+		AG_SurfaceFree(mi->iconSrc);
+	}
+	mi->iconSrc = AG_DupSurface(iconSrc);
+
+	if (mi->icon != -1 &&
+	    mi->parent != NULL &&
+	    mi->parent ->view != NULL) {
+		AG_WidgetUnmapSurface(mi->parent->view, mi->icon);
+		mi->icon = -1;
 	}
 	AG_ObjectUnlock(mi->pmenu);
+}
+
+/* Unmap cached Menu/MenuView label surfaces for the specified item. */
+static void
+InvalidateLabelSurfaces(AG_MenuItem *mi)
+{
+	int i;
+
+	for (i = 0; i < 2; i++) {
+		if (mi->lblMenu[i] != -1) {
+			mi->lblMenu[i] = -1;
+			AG_WidgetUnmapSurface(mi->pmenu, mi->lblMenu[i]);
+		}
+		if (mi->lblView[i] != -1 &&
+		    mi->parent != NULL &&
+		    mi->parent->view != NULL) {
+			AG_WidgetUnmapSurface(mi->parent->view, mi->lblView[i]);
+			mi->lblView[i] = -1;
+		}
+	}
 }
 
 /* Change menu item text (format string). */
@@ -466,15 +507,7 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 	Free(mi->text);
 	Vasprintf(&mi->text, fmt, ap);
 	va_end(ap);
-
-	if (mi->lblEnabled != -1) {
-		mi->lblEnabled = -1;
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblEnabled);
-	}
-	if (mi->lblDisabled != -1) {
-		mi->lblDisabled = -1;
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
-	}
+	InvalidateLabelSurfaces(mi);
 	AG_ObjectUnlock(mi->pmenu);
 }
 
@@ -486,15 +519,7 @@ AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
 
 	Free(mi->text);
 	mi->text = Strdup(s);
-
-	if (mi->lblEnabled != -1) {
-		mi->lblEnabled = -1;
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblEnabled);
-	}
-	if (mi->lblDisabled != -1) {
-		mi->lblDisabled = -1;
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
-	}
+	InvalidateLabelSurfaces(mi);
 	AG_ObjectUnlock(mi->pmenu);
 }
 
@@ -902,18 +927,7 @@ AG_MenuItemFree(AG_MenuItem *mi)
 {
 	AG_ObjectLock(mi->pmenu);
 	AG_MenuItemFreeChildren(mi);
-	if (mi->lblEnabled != -1) {
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblEnabled);
-		mi->lblEnabled = -1;
-	}
-	if (mi->lblDisabled != -1) {
-		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
-		mi->lblDisabled = -1;
-	}
-	if (mi->icon != -1) {
-		AG_WidgetUnmapSurface(mi->pmenu, mi->icon);
-		mi->icon = -1;
-	}
+	InvalidateLabelSurfaces(mi);
 	Free(mi->text);
 	AG_ObjectUnlock(mi->pmenu);
 }
@@ -972,21 +986,21 @@ Draw(void *obj)
 		AG_MenuItem *item = &m->root->subitems[i];
 
 		if (item->state) {
-			if (item->lblEnabled == -1) {
+			if (item->lblMenu[1] == -1) {
 				AG_TextColor(agColors[MENU_TXT_COLOR]);
-				item->lblEnabled = (item->text == NULL) ? -1 :
+				item->lblMenu[1] = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
 			}
-			lbl = item->lblEnabled;
+			lbl = item->lblMenu[1];
 		} else {
-			if (item->lblDisabled == -1) {
+			if (item->lblMenu[0] == -1) {
 				AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
-				item->lblDisabled = (item->text == NULL) ? -1 :
+				item->lblMenu[0] = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
 			}
-			lbl = item->lblDisabled;
+			lbl = item->lblMenu[0];
 		}
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
@@ -1011,10 +1025,10 @@ GetItemSize(AG_MenuItem *item, int *w, int *h)
 	AG_Menu *m = item->pmenu;
 	int lbl;
 
-	if (item->lblEnabled != -1) {
-		lbl = item->lblEnabled;
-	} else if (item->lblDisabled != -1) {
-		lbl = item->lblDisabled;
+	if (item->lblMenu[1] != -1) {
+		lbl = item->lblMenu[1];
+	} else if (item->lblMenu[0] != -1) {
+		lbl = item->lblMenu[0];
 	} else {
 		lbl = -1;
 	}

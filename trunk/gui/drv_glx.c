@@ -1918,7 +1918,9 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
 
 	/* XXX */
-	XMoveWindow(agDisplay, glx->w, r.x, r.y);
+	if (!(win->flags & AG_WINDOW_NOTITLE)) {
+		XMoveWindow(agDisplay, glx->w, r.x, r.y);
+	}
 
 	/* Create a GLX context and initialize state. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
