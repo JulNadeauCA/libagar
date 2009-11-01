@@ -9,7 +9,6 @@ SUBDIR=	fixedres \
 	textbox \
 	themes \
 	maximized \
-	objprops \
 	unitconv \
 	sockets \
 	glview \
