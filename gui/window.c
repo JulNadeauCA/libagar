@@ -244,6 +244,10 @@ Detach(AG_Event *event)
 	if (drv == NULL || !AG_ObjectIsClass(drv, "AG_Driver:*"))
 		AG_FatalError("Window is not attached to a Driver");
 #endif
+	/* Implicitely hide the window. */
+	if (win->visible)
+		AG_WindowHide(win);
+
 	/* The window's titlebar and icon are no longer safe to use. */
 	if (win->tbar != NULL) {
 		AG_ObjectDetach(win->tbar);
@@ -262,9 +266,6 @@ Detach(AG_Event *event)
 		agWindowToFocus = NULL;
 	}
 	
-	/* Implicitely hide the window. */
-	AG_WindowHide(win);
-
 	/*
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
 	 * pointers of all widgets to be reset to NULL.
