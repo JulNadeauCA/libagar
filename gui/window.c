@@ -44,13 +44,6 @@ static void Hidden(AG_Event *);
 static void GainFocus(AG_Event *);
 static void LostFocus(AG_Event *);
 
-AG_Mutex agWindowLock;
-int agWindowCurX[AG_WINDOW_ALIGNMENT_LAST];
-int agWindowCurY[AG_WINDOW_ALIGNMENT_LAST];
-int agWindowXOutLimit = 32;
-int agWindowBotOutLimit = 32;
-int agWindowIconWidth = 32;
-int agWindowIconHeight = 32;
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 6;
 AG_Window *agWindowToFocus = NULL;
@@ -61,14 +54,6 @@ struct ag_widgetq agWidgetDetachQ;
 void
 AG_InitWindowSystem(void)
 {
-	int i;
-
-	AG_MutexInit(&agWindowLock);
-	for (i = 0; i < AG_WINDOW_ALIGNMENT_LAST; i++) {
-		agWindowCurX[i] = 0;
-		agWindowCurY[i] = 0;
-	}
-
 	TAILQ_INIT(&agWindowDetachQ);
 	TAILQ_INIT(&agWidgetDetachQ);
 	agWindowToFocus = NULL;
@@ -78,7 +63,6 @@ AG_InitWindowSystem(void)
 void
 AG_DestroyWindowSystem(void)
 {
-	AG_MutexDestroy(&agWindowLock);
 }
 
 /* Create a generic window. */
@@ -450,74 +434,6 @@ Draw(void *obj)
 		AG_PopClipRect(win);
 }
 
-/*
- * Set window coordinates from requested alignment settings
- * (for single-display graphics drivers only).
- */
-static void
-SetPrefPosition(AG_Window *win)
-{
-	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
-	int xOffs = 0, yOffs = 0;
-
-	AG_MutexLock(&agWindowLock);
-	
-	if (win->flags & AG_WINDOW_CASCADE) {
-		xOffs = agWindowCurX[win->alignment];
-		yOffs = agWindowCurY[win->alignment];
-		agWindowCurX[win->alignment] += 16;
-		agWindowCurY[win->alignment] += 16;
-		if (agWindowCurX[win->alignment] > dsw->w)
-			agWindowCurX[win->alignment] = 0;
-		if (agWindowCurY[win->alignment] > dsw->h)
-			agWindowCurY[win->alignment] = 0;
-	}
-
-	switch (win->alignment) {
-	case AG_WINDOW_TL:
-		WIDGET(win)->x = xOffs;
-		WIDGET(win)->y = yOffs;
-		break;
-	case AG_WINDOW_TC:
-		WIDGET(win)->x = dsw->w/2 - WIDTH(win)/2 + xOffs;
-		WIDGET(win)->y = 0;
-		break;
-	case AG_WINDOW_TR:
-		WIDGET(win)->x = dsw->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = yOffs;
-		break;
-	case AG_WINDOW_ML:
-		WIDGET(win)->x = xOffs;
-		WIDGET(win)->y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
-		break;
-	case AG_WINDOW_MC:
-		WIDGET(win)->x = dsw->w/2 - WIDTH(win)/2 + xOffs;
-		WIDGET(win)->y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
-		break;
-	case AG_WINDOW_MR:
-		WIDGET(win)->x = dsw->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
-		break;
-	case AG_WINDOW_BL:
-		WIDGET(win)->x = xOffs;
-		WIDGET(win)->y = dsw->h - HEIGHT(win) - yOffs;
-		break;
-	case AG_WINDOW_BC:
-		WIDGET(win)->x = dsw->w/2 - WIDTH(win)/2 + xOffs;
-		WIDGET(win)->y = dsw->h - HEIGHT(win);
-		break;
-	case AG_WINDOW_BR:
-		WIDGET(win)->x = dsw->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = dsw->h - HEIGHT(win) - yOffs;
-		break;
-	default:
-		break;
-	}
-	
-	AG_WM_LimitWindowToView(win);
-	AG_MutexUnlock(&agWindowLock);
-}
-
 static void
 Shown(AG_Event *event)
 {
@@ -525,11 +441,18 @@ Shown(AG_Event *event)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
+	int xPref, yPref;
 
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		AG_WidgetSizeReq(win, &r);
-		a.x = 0;
-		a.y = 0;
+		if (AGDRIVER_SINGLE(drv)) {
+			AG_WM_GetPrefPosition(win, &xPref, &yPref);
+			a.x = xPref;
+			a.y = yPref;
+		} else {
+			a.x = 0;
+			a.y = 0;
+		}
 		a.w = r.w;
 		a.h = r.h;
 	} else {
@@ -542,8 +465,6 @@ Shown(AG_Event *event)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		/* Set window position from requested alignment settings. */
-		SetPrefPosition(win);
 		/* Append to modal window list */
 		if (win->flags & AG_WINDOW_MODAL) {
 			AG_Variable Vmodal;
@@ -792,11 +713,6 @@ AG_WindowFocus(AG_Window *win)
 		agWindowToFocus = NULL;
 		goto out;
 	}
-#ifdef AG_DEBUG
-	if (agWindowToFocus != NULL && agWindowToFocus != win)
-		Debug(NULL, "AG_WindowFocus: Cancelling %s\n",
-		    OBJECT(agWindowToFocus)->name);
-#endif
 	AG_ObjectLock(win);
 	if (OBJECT(win)->parent == NULL) {
 		/* Will focus on future attach */

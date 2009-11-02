@@ -23,6 +23,21 @@ typedef struct ag_driver_sw_class {
 
 struct ag_style;
 
+/* General window alignment in view */
+enum ag_window_alignment {
+	AG_WINDOW_TL,
+	AG_WINDOW_TC,
+	AG_WINDOW_TR,
+	AG_WINDOW_ML,
+	AG_WINDOW_MC,
+	AG_WINDOW_MR,
+	AG_WINDOW_BL,
+	AG_WINDOW_BC,
+	AG_WINDOW_BR,
+	AG_WINDOW_ALIGNMENT_LAST
+};
+
+/* Window manager operation */
 enum ag_wm_operation {
 	AG_WINOP_NONE,		/* No operation */
 	AG_WINOP_MOVE,		/* Move window */
@@ -31,6 +46,7 @@ enum ag_wm_operation {
 	AG_WINOP_HRESIZE	/* Resize (via horizontal control) */
 };
 
+/* Single-window driver instance */
 typedef struct ag_driver_sw {
 	struct ag_driver _inherit;
 	Uint w, h, depth;		/* Video resolution */
@@ -43,6 +59,12 @@ typedef struct ag_driver_sw {
 	AG_List *Lmodal;		/* Modal window stack */
 	enum ag_wm_operation winop;	/* WM operation in progress */
 	struct ag_style *style;		/* Default style for new windows */
+	int windowXOutLimit;		/* Limit past left/right boundary */
+	int windowBotOutLimit;		/* Limit past bottom boundary */
+	int windowIconWidth;		/* Preferred window icon dimensions */
+	int windowIconHeight;
+	int windowCurX[AG_WINDOW_ALIGNMENT_LAST];	/* For cascading */
+	int windowCurY[AG_WINDOW_ALIGNMENT_LAST];
 } AG_DriverSw;
 
 #define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))
@@ -60,6 +82,7 @@ int  AG_ResizeDisplay(int, int);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
 void AG_WM_LimitWindowToView(struct ag_window *);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *, struct ag_size_alloc *);
+void AG_WM_GetPrefPosition(struct ag_window *, int *, int *);
 
 void AG_WM_MouseMotion(AG_DriverSw *, struct ag_window *, int, int);
 

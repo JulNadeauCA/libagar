@@ -211,11 +211,7 @@ The
 function configures an alternate icon for the window.
 This icon will be used by Agar's internal window manager whenever the window
 is minimized.
-The given surface will be duplicated and can be of any size, but the recommended
-default size is given by
-.Va agWindowIconWidth
-and
-.Va agWindowIconHeight .
+The given surface will be duplicated and rescaled if necessary.
 The
 .Fn AG_WindowSetIconNODUP
 variant does not duplicate the provided surface, which must remain valid until
@@ -422,10 +418,9 @@ makes a window invisible.
 Note that
 .Fn AG_WindowHide
 only hides a window, without destroying its contents.
-To properly detach and free a window, use
+To properly detach and free a window,
 .Xr AG_ObjectDetach 3
-and
-.Xr AG_ObjectDestroy 3 .
+should be used.
 .Pp
 .Fn AG_WindowIsVisible
 returns the current visibility status of a window.
