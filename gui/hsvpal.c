@@ -551,7 +551,7 @@ PasteColor(AG_Event *event)
 }
 
 static void
-OpenMenu(AG_HSVPal *pal)
+OpenMenu(AG_HSVPal *pal, int x, int y)
 {
 	if (pal->menu != NULL)
 		CloseMenu(pal);
@@ -576,8 +576,8 @@ OpenMenu(AG_HSVPal *pal)
 	pal->menu->itemSel = pal->menu_item;
 	
 	pal->menu_win = AG_MenuExpand(pal->menu, pal->menu_item,
-	    WIDGET(pal)->drv->mouse->x,
-	    WIDGET(pal)->drv->mouse->y);
+	    WIDGET(pal)->rView.x1 + x,
+	    WIDGET(pal)->rView.y1 + y);
 }
 
 static void
@@ -611,7 +611,7 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case AG_MOUSE_MIDDLE:
 	case AG_MOUSE_RIGHT:
-		OpenMenu(pal);
+		OpenMenu(pal, x,y);
 		break;
 	}
 }

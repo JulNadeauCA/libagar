@@ -2030,7 +2030,9 @@ RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
 	RG_TileviewGenericMenu(tv, tv->menu_item);
 	tv->menu->itemSel = tv->menu_item;
-	tv->menu_win = AG_MenuExpand(tv->menu, tv->menu_item, x, y);
+	tv->menu_win = AG_MenuExpand(tv->menu, tv->menu_item,
+	    WIDGET(tv)->rView.x1 + x,
+	    WIDGET(tv)->rView.y1 + y);
 }
 
 void

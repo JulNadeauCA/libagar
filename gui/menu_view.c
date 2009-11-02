@@ -69,8 +69,8 @@ SubmenuTimeout(void *obj, Uint32 ival, void *arg)
 		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
 #endif
 	AG_MenuExpand(mview, item,
-	    WIDGET(mview)->rView.x2, 
-	    WIDGET(mview)->rView.y1 + item->y);
+	    WIDGET(mview)->x + WIDTH(mview), 
+	    WIDGET(mview)->y + item->y);
 	return (0);
 }
 
@@ -86,7 +86,7 @@ MouseMotion(AG_Event *event)
 
 	if (my < 0)
 		return;
-	if (mx < 0 || mx > WIDGET(mview)->w)
+	if (mx < 0 || mx > WIDTH(mview))
 		goto selnone;
 
 	for (i = 0; i < mi->nsubitems; i++) {
@@ -96,7 +96,7 @@ MouseMotion(AG_Event *event)
 
 		y += m->itemh;
 		if (my < y) {
-			if (mx > WIDGET(mview)->w &&
+			if (mx > WIDTH(mview) &&
 			    subitem->nsubitems == 0) {
 				goto selnone;
 			}
@@ -211,7 +211,7 @@ MouseButtonUp(AG_Event *event)
 		AG_MenuUpdateItem(item);
 
 		y += m->itemh;
-		if (my < y && mx >= 0 && mx <= WIDGET(mview)->w) {
+		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
 			if (item->state == 0) {
 				goto collapse;
 			}
@@ -234,7 +234,7 @@ MouseButtonUp(AG_Event *event)
 	}
 	return;
 collapse:
-	AG_MenuCollapse(m, mi);
+	AG_MenuCollapseAll(m);
 	SelectItem(mi, NULL);
 	m->itemSel = NULL;
 	m->selecting = 0;
@@ -260,7 +260,6 @@ Init(void *obj)
 	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                        AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	mview->panel = NULL;
 	mview->pmenu = NULL;
 	mview->pitem = NULL;
 	mview->spIconLbl = 8;
@@ -300,7 +299,7 @@ Draw(void *obj)
 
 	r.x = 0;
 	r.y = mview->tPad;
-	r.w = WIDGET(mview)->w;
+	r.w = WIDTH(mview);
 	r.h = m->itemh;
 
 	for (i = 0; i < mi->nsubitems; i++) {

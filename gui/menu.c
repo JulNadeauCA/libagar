@@ -117,7 +117,6 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 
 	mv = Malloc(sizeof(AG_MenuView));
 	AG_ObjectInit(mv, &agMenuViewClass);
-	mv->panel = win;
 	mv->pmenu = m;
 	mv->pitem = mi;
 	AG_ObjectAttach(win, mv);
@@ -148,8 +147,6 @@ AG_MenuCollapse(void *obj, AG_MenuItem *mi)
 	if (mi == NULL || mi->view == NULL)
 		return;
 
-	AG_ObjectLock(obj);
-	
 	/* Collapse any expanded submenus as well. */
 	for (i = 0; i < mi->nsubitems; i++) {
 		if (mi->subitems[i].view != NULL)
@@ -157,7 +154,7 @@ AG_MenuCollapse(void *obj, AG_MenuItem *mi)
 	}
 
 	/* Destroy the MenuView's window. */
-	AG_ObjectDetach(mi->view->panel);
+	AG_ObjectDetach(WIDGET(mi->view)->window);
 	mi->view = NULL;
 
 	/* Lose the current selection. */
@@ -172,7 +169,28 @@ AG_MenuCollapse(void *obj, AG_MenuItem *mi)
 		}
 		miSub->icon = -1;
 	}
-	AG_ObjectUnlock(obj);
+}
+
+static void
+CollapseAll(AG_Menu *m, AG_MenuItem *mi)
+{
+	Uint i;
+
+	for (i = 0; i < mi->nsubitems; i++) {
+		CollapseAll(m, &mi->subitems[i]);
+	}
+	if (mi->view != NULL)
+		AG_MenuCollapse(m, mi);
+}
+
+/*
+ * Collapse the window displaying the contents of an item as well as
+ * all expanded MenuView windows, up to the menu root.
+ */
+void
+AG_MenuCollapseAll(AG_Menu *m)
+{
+	CollapseAll(m, m->root);
 }
 
 void
@@ -233,8 +251,8 @@ MouseButtonDown(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->rView.x1+item->x,
-				    WIDGET(m)->rView.y1+item->y+hLbl+m->bPad-1);
+				    WIDGET(m)->x + item->x,
+				    WIDGET(m)->y + item->y + hLbl + m->bPad - 1);
 				m->selecting = 1;
 			}
 			break;
@@ -301,8 +319,8 @@ MouseMotion(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->rView.x1+item->x,
-				    WIDGET(m)->rView.y1+item->y+hLbl+m->bPad-1);
+				    WIDGET(m)->x + item->x,
+				    WIDGET(m)->y + item->y + hLbl + m->bPad - 1);
 			}
 			break;
 		}
@@ -1126,6 +1144,9 @@ AG_PopupNew(void *pwid)
 	pm->item = pm->menu->itemSel = AG_MenuAddItem(pm->menu, NULL);
 	/* XXX redundant */
 	pm->win = NULL;
+	
+	/* AG_MenuExpand() need a window pointer in AG_Menu */
+	WIDGET(pm->menu)->window = wid->window;
 
 	AG_ObjectLock(wid);
 	SLIST_INSERT_HEAD(&wid->menus, pm, menus);

@@ -747,7 +747,9 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_TileviewGenericMenu(tv, mi);
 	}
 	tv->tv_sketch.menu->itemSel = mi;
-	tv->tv_sketch.menu_win = AG_MenuExpand(me, mi, x, y);
+	tv->tv_sketch.menu_win = AG_MenuExpand(me, mi,
+	    WIDGET(tv)->rView.x1 + x,
+	    WIDGET(tv)->rView.y1 + y);
 }
 
 void

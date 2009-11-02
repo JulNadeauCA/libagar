@@ -958,22 +958,21 @@ SelectingRange(AG_Table *t)
 
 /* Display the popup menu. */
 static void
-ShowPopup(AG_Table *t, AG_TablePopup *tp)
+ShowPopup(AG_Table *t, AG_TablePopup *tp, int x, int y)
 {
-	int x, y;
-
-	AG_MouseGetState(WIDGET(t)->drv->mouse, &x, &y);
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(tp->menu, tp->item);
 		tp->panel = NULL;
 	}
 	tp->menu->itemSel = tp->item;
-	tp->panel = AG_MenuExpand(tp->menu, tp->item, x+4, y+4);
+	tp->panel = AG_MenuExpand(tp->menu, tp->item,
+	    WIDGET(t)->rView.x1 + x + 4,
+	    WIDGET(t)->rView.y1 + y + 4);
 }
 
 /* Right click on a column header; display the column's popup menu. */
 static void
-ColumnRightClick(AG_Table *t, int px)
+ColumnRightClick(AG_Table *t, int px, int py)
 {
 	Uint n;
 	int cx;
@@ -989,7 +988,7 @@ ColumnRightClick(AG_Table *t, int px)
 		if (x > cx && x < x2) {
 			SLIST_FOREACH(tp, &t->popups, popups) {
 				if (tp->m == -1 && tp->n == n) {
-					ShowPopup(t, tp);
+					ShowPopup(t, tp, px,py);
 					return;
 				}
 			}
@@ -1220,7 +1219,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 
 /* Right click on cell; show the cell's popup menu. */
 static void
-CellRightClick(AG_Table *t, int m, int px)
+CellRightClick(AG_Table *t, int m, int px, int py)
 {
 	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
 	Uint n;
@@ -1238,7 +1237,7 @@ CellRightClick(AG_Table *t, int m, int px)
 		SLIST_FOREACH(tp, &t->popups, popups) {
 			if ((tp->m == m || tp->m == -1) &&
 			    (tp->n == n || tp->n == -1)) {
-				ShowPopup(t, tp);
+				ShowPopup(t, tp, px,py);
 				return;
 			}
 		}
@@ -1391,14 +1390,14 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case AG_MOUSE_RIGHT:
 		if (OverColumnHeader(t, y)) {
-			ColumnRightClick(t, x);
+			ColumnRightClick(t, x,y);
 			break;
 		}
 		if (t->m == 0 || t->n == 0) {
 			goto out;
 		}
 		m = RowAtY(t, y);
-		CellRightClick(t, m, x);
+		CellRightClick(t, m, x,y);
 		break;
 	default:
 		break;
