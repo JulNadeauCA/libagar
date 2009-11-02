@@ -12,19 +12,6 @@
 struct ag_titlebar;
 struct ag_icon;
 
-enum ag_window_alignment {
-	AG_WINDOW_TL,
-	AG_WINDOW_TC,
-	AG_WINDOW_TR,
-	AG_WINDOW_ML,
-	AG_WINDOW_MC,
-	AG_WINDOW_MR,
-	AG_WINDOW_BL,
-	AG_WINDOW_BC,
-	AG_WINDOW_BR,
-	AG_WINDOW_ALIGNMENT_LAST
-};
-
 #define AG_WINDOW_UPPER_LEFT	AG_WINDOW_TL
 #define AG_WINDOW_UPPER_CENTER	AG_WINDOW_TC
 #define AG_WINDOW_UPPER_RIGHT	AG_WINDOW_TR
@@ -106,8 +93,6 @@ AG_TAILQ_HEAD(ag_windowq, ag_window);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWindowClass;
-extern int agWindowIconWidth;
-extern int agWindowIconHeight;
 extern struct ag_widgetq agWidgetDetachQ;	/* Widget pre-detach queue */
 extern struct ag_windowq agWindowDetachQ;	/* Window detach queue */
 extern AG_Window        *agWindowToFocus;	/* Window to focus next */

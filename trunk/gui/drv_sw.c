@@ -42,13 +42,11 @@
 
 static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
 
-extern int agWindowXOutLimit;
-extern int agWindowBotOutLimit;
-
 static void
 Init(void *obj)
 {
 	AG_DriverSw *dsw = obj;
+	Uint i;
 
 	dsw->w = 0;
 	dsw->h = 0;
@@ -58,7 +56,16 @@ Init(void *obj)
 	dsw->winSelected = NULL;
 	dsw->winLastKeydown = NULL;
 	dsw->style = &agStyleDefault;
-	
+
+	for (i = 0; i < AG_WINDOW_ALIGNMENT_LAST; i++) {
+		dsw->windowCurX[i] = 0;
+		dsw->windowCurY[i] = 0;
+	}
+	dsw->windowXOutLimit = 32;
+	dsw->windowBotOutLimit = 32;
+	dsw->windowIconWidth = 32;
+	dsw->windowIconHeight = 32;
+
 	if ((dsw->Lmodal = AG_ListNew()) == NULL)
 		AG_FatalError(NULL);
 }
@@ -410,15 +417,15 @@ AG_WM_LimitWindowToView(AG_Window *win)
 	AG_DriverSw *dsw = OBJECT(win)->parent;
 	AG_Widget *w = WIDGET(win);
 
-	if (w->x < agWindowXOutLimit - w->w) {
-		w->x = agWindowXOutLimit - w->w;
-	} else if (w->x > dsw->w - agWindowXOutLimit) {
-		w->x = dsw->w - agWindowXOutLimit;
+	if (w->x < dsw->windowXOutLimit - w->w) {
+		w->x = dsw->windowXOutLimit - w->w;
+	} else if (w->x > dsw->w - dsw->windowXOutLimit) {
+		w->x = dsw->w - dsw->windowXOutLimit;
 	}
 	if (w->y < 0) {
 		w->y = 0;
-	} else if (w->y > dsw->h - agWindowBotOutLimit) {
-		w->y = dsw->h - agWindowBotOutLimit;
+	} else if (w->y > dsw->h - dsw->windowBotOutLimit) {
+		w->y = dsw->h - dsw->windowBotOutLimit;
 	}
 	
 #if 0
@@ -436,6 +443,65 @@ AG_WM_LimitWindowToView(AG_Window *win)
 		w->h = dsw->h - 1;
 	}
 #endif
+}
+
+/* Compute default window coordinates from requested alignment settings. */
+void
+AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y)
+{
+	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
+	int xOffs = 0, yOffs = 0;
+
+	if (win->flags & AG_WINDOW_CASCADE) {
+		xOffs = dsw->windowCurX[win->alignment];
+		yOffs = dsw->windowCurY[win->alignment];
+		dsw->windowCurX[win->alignment] += 16;
+		dsw->windowCurY[win->alignment] += 16;
+		if (dsw->windowCurX[win->alignment] > dsw->w)
+			dsw->windowCurX[win->alignment] = 0;
+		if (dsw->windowCurY[win->alignment] > dsw->h)
+			dsw->windowCurY[win->alignment] = 0;
+	}
+	switch (win->alignment) {
+	case AG_WINDOW_TL:
+		*x = xOffs;
+		*y = yOffs;
+		break;
+	case AG_WINDOW_TC:
+		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
+		*y = 0;
+		break;
+	case AG_WINDOW_TR:
+		*x = dsw->w - WIDTH(win) - xOffs;
+		*y = yOffs;
+		break;
+	case AG_WINDOW_ML:
+		*x = xOffs;
+		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_MC:
+		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
+		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_MR:
+		*x = dsw->w - WIDTH(win) - xOffs;
+		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_BL:
+		*x = xOffs;
+		*y = dsw->h - HEIGHT(win) - yOffs;
+		break;
+	case AG_WINDOW_BC:
+		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
+		*y = dsw->h - HEIGHT(win);
+		break;
+	case AG_WINDOW_BR:
+		*x = dsw->w - WIDTH(win) - xOffs;
+		*y = dsw->h - HEIGHT(win) - yOffs;
+		break;
+	default:
+		break;
+	}
 }
 
 AG_ObjectClass agDriverSwClass = {
