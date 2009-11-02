@@ -184,7 +184,9 @@ RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 	ft->ops->menu(ft, tv->tv_feature.menu_item);
 
 	tv->tv_feature.menu_win = AG_MenuExpand(tv->tv_feature.menu,
-	    tv->tv_feature.menu_item, x, y);
+	    tv->tv_feature.menu_item,
+	    WIDGET(tv)->rView.x1 + x,
+	    WIDGET(tv)->rView.y1 + y);
 }
 
 void

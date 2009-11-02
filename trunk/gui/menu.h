@@ -87,7 +87,6 @@ typedef struct ag_popup_menu {
 
 typedef struct ag_menu_view {
 	struct ag_widget wid;
-	AG_Window *panel;
 	AG_Menu *pmenu;
 	AG_MenuItem *pitem;
 	int spIconLbl;			/* Icon and label spacing */
@@ -118,6 +117,7 @@ void	     AG_MenuItemFree(AG_MenuItem *);
 void	     AG_MenuItemFreeChildren(AG_MenuItem *);
 AG_Window   *AG_MenuExpand(void *, AG_MenuItem *, int, int);
 void   	     AG_MenuCollapse(void *, AG_MenuItem *);
+void   	     AG_MenuCollapseAll(AG_Menu *);
 
 void	 AG_MenuSetPadding(AG_Menu *, int, int, int, int);
 void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);

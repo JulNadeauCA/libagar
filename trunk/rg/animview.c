@@ -152,7 +152,9 @@ OpenMenu(RG_Animview *av, int x, int y)
 		}
 	}
 
-	av->menu_win = AG_MenuExpand(av->menu, av->menu_item, x, y);
+	av->menu_win = AG_MenuExpand(av->menu, av->menu_item,
+	    WIDGET(av)->rView.x1 + x,
+	    WIDGET(av)->rView.y1 + y);
 }
 
 static void

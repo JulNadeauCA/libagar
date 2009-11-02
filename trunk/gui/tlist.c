@@ -39,7 +39,7 @@ static void KeyUp(AG_Event *);
 static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
-static void PopupMenu(AG_Tlist *, AG_TlistPopup *);
+static void PopupMenu(AG_Tlist *, AG_TlistPopup *, int x, int y);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 static void UpdateListScrollbar(AG_Tlist *);
 static void ScrollbarChanged(AG_Event *);
@@ -1118,7 +1118,7 @@ MouseButtonDown(AG_Event *event)
 					break;
 			}
 			if (tp != NULL) {
-				PopupMenu(tl, tp);
+				PopupMenu(tl, tp, x,y);
 				return;
 			}
 		}
@@ -1413,6 +1413,9 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	tp->menu = AG_MenuNew(NULL, 0);
 	tp->item = tp->menu->root;		/* XXX redundant */
 
+	/* AG_MenuExpand() need a window pointer in AG_Menu */
+	WIDGET(tp->menu)->window = WIDGET(tl)->window;
+
 	AG_ObjectLock(tl);
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
 	AG_ObjectUnlock(tl);
@@ -1434,17 +1437,13 @@ AG_TlistScrollToEnd(AG_Tlist *tl)
 }
 
 static void
-PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
+PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
 {
 	AG_Menu *m = tp->menu;
-	int x, y;
-
 #if 0
 	if (AG_WidgetParentWindow(tl) == NULL)
 		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
 #endif
-	AG_MouseGetState(WIDGET(tl)->drv->mouse, &x, &y);
-
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(m, tp->item);
 		tp->panel = NULL;
@@ -1455,7 +1454,9 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 	}
 #endif
 	m->itemSel = tp->item;
-	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
+	tp->panel = AG_MenuExpand(m, tp->item,
+	    WIDGET(tl)->rView.x1 + x + 4,
+	    WIDGET(tl)->rView.y1 + y + 4);
 }
 
 AG_WidgetClass agTlistClass = {
