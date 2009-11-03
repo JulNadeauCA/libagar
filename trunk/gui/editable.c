@@ -332,6 +332,7 @@ FreeStringUCS4(AG_Editable *ed, Uint32 *ucs)
 static __inline__ int
 WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 {
+	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Glyph *gl;
 	Uint32 *t;
 	int x2;
@@ -343,7 +344,7 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 	for (t = &s[1], x2 = x;
 	     *t != '\0';
 	     t++) {
-		gl = AG_TextRenderGlyph(*t);
+		gl = AG_TextRenderGlyph(drv, *t);
 		x2 += gl->advance;
 		if (isspace((int)*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
@@ -369,6 +370,7 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 int
 AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 {
+	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Variable *stringb;
 	AG_Font *font;
 	size_t len;
@@ -426,7 +428,7 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 			{
 				AG_Glyph *gl;
 			
-				gl = AG_TextRenderGlyph(ch);
+				gl = AG_TextRenderGlyph(drv, ch);
 				x += gl->su->w;
 				break;
 			}
@@ -496,7 +498,7 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 		{
 			AG_Glyph *gl;
 			
-			gl = AG_TextRenderGlyph(ch);
+			gl = AG_TextRenderGlyph(drv, ch);
 			if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
 				*pos = i;
 				goto in;
@@ -642,7 +644,7 @@ Draw(void *obj)
 		}
 
 		c = (ed->flags & AG_EDITABLE_PASSWORD) ? '*' : c;
-		gl = AG_TextRenderGlyph(c);
+		gl = AG_TextRenderGlyph(drv, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
 		dy = WIDGET(ed)->rView.y1 + y;
 

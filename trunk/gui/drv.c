@@ -35,6 +35,7 @@
 #include <core/config.h>
 
 #include "window.h"
+#include "text.h"
 
 #ifdef HAVE_GLX
 extern AG_Driver agDriverGLX;
@@ -146,6 +147,7 @@ static void
 Init(void *obj)
 {
 	AG_Driver *drv = obj;
+	Uint i;
 
 	drv->id = 0;
 	drv->flags = 0;
@@ -165,17 +167,33 @@ Init(void *obj)
 	drv->cursors = NULL;
 	drv->nCursors = 0;
 	drv->activeCursor = NULL;
+	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++)
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
 }
 
 static void
 Destroy(void *obj)
 {
 	AG_Driver *drv = obj;
-	
+	AG_Glyph *gl, *ngl;
+	Uint i;
+
 	if (drv->sRef != NULL)
 		AG_SurfaceFree(drv->sRef);
 	if (drv->videoFmt != NULL)
 		AG_PixelFormatFree(drv->videoFmt);
+
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		for (gl = SLIST_FIRST(&drv->glyphCache[i].glyphs);
+		     gl != SLIST_END(&drv->glyphCache[i].glyphs);
+		     gl = ngl) {
+			ngl = SLIST_NEXT(gl, glyphs);
+			AG_SurfaceFree(gl->su);
+			Free(gl);
+		}
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
+	}
 }
 
 AG_ObjectClass agDriverClass = {

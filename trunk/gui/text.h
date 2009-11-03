@@ -40,9 +40,8 @@ typedef struct ag_glyph {
 	Uint32          ch;		/* Unicode character */
 	AG_Surface     *su;		/* Rendered surface */
 	int             advance;	/* Pixel advance */
-	Uint           *textures;	/* Textures (per driver instance) */
-	AG_TexCoord    *texcoords;	/* Texture coordinates */
-	Uint           nTextures;
+	Uint            texture;	/* Cached texture (driver-specific) */
+	AG_TexCoord     texcoords;	/* Texture coordinates */
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
@@ -93,9 +92,9 @@ typedef struct ag_text_metrics {
 	Uint  nLines;			/* Total line count */
 } AG_TextMetrics;
 
-struct ag_glyph_cache {
+typedef struct ag_glyph_cache {
 	AG_SLIST_HEAD(, ag_glyph) glyphs;
-};
+} AG_GlyphCache;
 
 __BEGIN_DECLS
 extern AG_ObjectClass agFontClass;
@@ -110,7 +109,6 @@ extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
 extern AG_StaticFont *agBuiltinFonts[];
 extern const int agBuiltinFontCount;
-extern struct ag_glyph_cache *agGlyphCache;
 
 int	 AG_TextInit(void);
 void	 AG_TextDestroy(void);
@@ -174,8 +172,7 @@ struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
 void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
 
-AG_Glyph *AG_TextRenderGlyphMiss(Uint32);
-void	  AG_ClearGlyphCache(void);
+AG_Glyph *AG_TextRenderGlyphMiss(AG_Driver *, Uint32);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
@@ -247,20 +244,20 @@ AG_TextRender(const char *text)
  * Must be called from GUI rendering context.
  */
 static __inline__ AG_Glyph *
-AG_TextRenderGlyph(Uint32 ch)
+AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 {
 	AG_Glyph *gl;
 	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
 
-	AG_SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
+	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
 		if (ch == gl->ch &&
 		    agTextState->font == gl->font &&
 		    AG_ColorCompare(agTextState->color,gl->color) == 0)
 			break;
 	}
 	if (gl == NULL) {
-		gl = AG_TextRenderGlyphMiss(ch);
-		AG_SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
+		gl = AG_TextRenderGlyphMiss(drv, ch);
+		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
 	}
 	return (gl);
 }

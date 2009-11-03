@@ -33,6 +33,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 
 #ifdef __APPLE__
@@ -76,16 +77,16 @@ struct blending_state {
 /* Driver instance data */
 typedef struct ag_driver_glx {
 	struct ag_driver_mw _inherit;
-	Window         w;		/* X window */
-	GLXContext     glxCtx;		/* GLX context */
-	int            clipStates[4];	/* Clipping GL state */
-	AG_ClipRect   *clipRects;	/* Clipping rectangles */
-	Uint          nClipRects;
-	Uint          *textureGC;	/* Textures queued for deletion */
-	Uint          nTextureGC;
-	struct blending_state bs[1];	/* Saved blending states */
-	AG_Cursor     *cursorToSet;	/* Set cursor at end of event cycle */
-	GLubyte        disabledStipple[128]; /* "Disabled" stipple pattern */
+	Window w;				/* X window */
+	GLXContext glxCtx;			/* GLX context */
+	int clipStates[4];			/* Clipping GL state */
+	AG_ClipRect *clipRects;			/* Clipping rectangles */
+	Uint        nClipRects;
+	Uint *textureGC;			/* Textures queued for deletion */
+	Uint nTextureGC;
+	struct blending_state bs[1];		/* Saved blending states */
+	AG_Cursor *cursorToSet;			/* Set cursor at end of event cycle */
+	GLubyte disabledStipple[128];		/* "Disabled" stipple pattern */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -1736,24 +1737,18 @@ DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
 }
 
 static void
+UpdateGlyph(void *obj, AG_Glyph *gl)
+{
+	UploadTexture(&gl->texture, gl->su, &gl->texcoords);
+}
+
+static void
 DrawGlyph(void *obj, AG_Glyph *gl, int x, int y)
 {
-	AG_Driver *drv = obj;
 	AG_Surface *su = gl->su;
-	AG_TexCoord *tc;
+	AG_TexCoord *tc = &gl->texcoords;
 
-	if (gl->nTextures < drv->id+1) {
-		gl->textures = Realloc(gl->textures, (drv->id+1)*sizeof(Uint));
-		gl->texcoords = Realloc(gl->texcoords, (drv->id+1)*sizeof(AG_TexCoord));
-		gl->nTextures = drv->id+1;
-		gl->textures[drv->id] = 0;
-	}
-	if (gl->textures[drv->id] == 0) {
-		UploadTexture(&gl->textures[drv->id], su,
-		    &gl->texcoords[drv->id]);
-	}
-	glBindTexture(GL_TEXTURE_2D, gl->textures[drv->id]);
-	tc = &gl->texcoords[drv->id];
+	glBindTexture(GL_TEXTURE_2D, gl->texture);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
@@ -1965,17 +1960,16 @@ CloseWindow(AG_Window *win)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
 	AG_Glyph *gl;
-	GLuint tex;
 	int i;
-	
+
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 
 	/* Invalidate cached glyph textures. */
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		SLIST_FOREACH(gl, &agGlyphCache[i].glyphs, glyphs) {
-			if ((tex = (GLuint)gl->textures[drv->id]) != 0) {
-				glDeleteTextures(1, &tex);
-				gl->textures[drv->id] = 0;
+		SLIST_FOREACH(gl, &drv->glyphCache[i].glyphs, glyphs) {
+			if (gl->texture != 0) {
+				glDeleteTextures(1, (GLuint *)&gl->texture);
+				gl->texture = 0;
 			}
 		}
 	}
@@ -2198,6 +2192,36 @@ SetBorderWidth(AG_Window *win, Uint width)
 	return (0);
 }
 
+static int
+SetWindowCaption(AG_Window *win, const char *s)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	XTextProperty xtp;
+	Status rv;
+
+	if (s[0] == '\0') {
+		return (0);
+	}
+#ifdef X_HAVE_UTF8_STRING
+	/* XFree86 "utf8" and "UTF8" functions are available */
+	rv = Xutf8TextListToTextProperty(agDisplay,
+	    (char **)&s, 1, XUTF8StringStyle,
+	    &xtp);
+#else
+	rv = XStringListToTextProperty(
+	    (char **)&s, 1,
+	    &xtp);
+#endif
+	if (rv != Success) {
+		AG_SetError("Cannot convert string to X property");
+		return (-1);
+	}
+	XSetTextProperty(agDisplay, glx->w, &xtp, XA_WM_NAME);
+	XFree(xtp.value);
+	XSync(agDisplay, False);
+	return (0);
+}
+
 AG_DriverMwClass agDriverGLX = {
 	{
 		{
@@ -2269,6 +2293,7 @@ AG_DriverMwClass agDriverGLX = {
 		DrawRectBlended,
 		DrawRectDithered,
 		DrawFrame,
+		UpdateGlyph,
 		DrawGlyph
 	},
 	OpenWindow,
@@ -2285,7 +2310,9 @@ AG_DriverMwClass agDriverGLX = {
 	MoveResizeWindow,
 	PreResizeCallback,
 	PostResizeCallback,
-	SetBorderWidth
+	NULL,				/* captureWindow */
+	SetBorderWidth,
+	SetWindowCaption
 };
 
 #endif /* HAVE_GLX */

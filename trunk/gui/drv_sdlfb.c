@@ -1641,6 +1641,12 @@ DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
 }
 
 static void
+UpdateGlyph(void *drv, AG_Glyph *gl)
+{
+	/* Nothing to do */
+}
+
+static void
 DrawGlyph(void *drv, AG_Glyph *gl, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
@@ -1981,6 +1987,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		DrawRectBlended,
 		DrawRectDithered,
 		DrawFrame,
+		UpdateGlyph,
 		DrawGlyph
 	},
 	0,
