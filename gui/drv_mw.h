@@ -35,11 +35,12 @@ typedef struct ag_driver_mw_class {
 	void (*preResizeCallback)(struct ag_window *);
 	void (*postResizeCallback)(struct ag_window *, struct ag_size_alloc *a);
 
-	/* Configure border width in pixels */
-	int (*setBorderWidth)(struct ag_window *, Uint w);
-	
 	/* Capture window framebuffer contents (unlike renderToSurface) */
 	int (*captureWindow)(struct ag_window *, AG_Surface **s);
+	
+	/* Configure window parameters */
+	int (*setBorderWidth)(struct ag_window *, Uint w);
+	int (*setWindowCaption)(struct ag_window *, const char *);
 } AG_DriverMwClass;
 
 typedef struct ag_driver_mw {

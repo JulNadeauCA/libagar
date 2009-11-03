@@ -19,6 +19,7 @@ enum ag_driver_wm_type {
 struct ag_widget;
 struct ag_window;
 struct ag_glyph;
+struct ag_glyph_cache;
 struct ag_cursor;
 
 /* Generic graphics driver class */
@@ -97,6 +98,7 @@ typedef struct ag_driver_class {
 	void (*drawRectBlended)(void *drv, AG_Rect r, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
 	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
 	void (*drawFrame)(void *drv, AG_Rect r, AG_Color C[2]);
+	void (*updateGlyph)(void *drv, struct ag_glyph *);
 	void (*drawGlyph)(void *drv, struct ag_glyph *, int x, int y);
 } AG_DriverClass;
 
@@ -110,10 +112,10 @@ typedef struct ag_driver {
 					   packed-pixel FB modes) */
 	struct ag_keyboard *kbd;	/* Main keyboard device */
 	struct ag_mouse *mouse;		/* Main mouse device */
-
 	struct ag_cursor *activeCursor;	/* Effective cursor */
 	struct ag_cursor *cursors;	/* Registered mouse cursors */
 	Uint             nCursors;
+	struct ag_glyph_cache *glyphCache; /* Cache of rendered glyphs */
 } AG_Driver;
 
 #define AGDRIVER(obj)		((AG_Driver *)(obj))

@@ -126,7 +126,6 @@ static const char *agTextMsgTitles[] = {
 AG_Mutex agTextLock;
 static SLIST_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
-struct ag_glyph_cache *agGlyphCache = NULL;
 
 static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
 
@@ -377,24 +376,11 @@ InitTextState(void)
 	agTextState->valign = AG_TEXT_TOP;
 }
 
-/* Must be invoked in rendering context. */
-static void
-FreeGlyph(AG_Glyph *gl)
-{
-	AG_SurfaceFree(gl->su);
-#if 0
-	/* XXX TODO: delete any cached textures */
-	drvOps->deleteTexture(drv, gl->texture[drv->id]);
-#endif
-	Free(gl);
-}
-
 /* Initialize the font engine and configure the default font. */
 int
 AG_TextInit(void)
 {
 	AG_Font *font;
-	int i;
 	
 	AG_MutexInitRecursive(&agTextLock);
 	SLIST_INIT(&fonts);
@@ -462,10 +448,6 @@ AG_TextInit(void)
 	curState = 0;
 	agTextState = &states[0];
 	InitTextState();
-	agGlyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(struct ag_glyph_cache));
-	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		SLIST_INIT(&agGlyphCache[i].glyphs);
-	}
 	return (0);
 fail:
 #ifdef HAVE_FREETYPE
@@ -477,33 +459,11 @@ fail:
 	return (-1);
 }
 
-/* Clear the glyph cache. Must be invoked in rendering context. */
-void
-AG_ClearGlyphCache(void)
-{
-	int i;
-	AG_Glyph *gl, *ngl;
-
-	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		for (gl = SLIST_FIRST(&agGlyphCache[i].glyphs);
-		     gl != SLIST_END(&agGlyphCache[i].glyphs);
-		     gl = ngl) {
-			ngl = SLIST_NEXT(gl, glyphs);
-			FreeGlyph(gl);
-		}
-		SLIST_INIT(&agGlyphCache[i].glyphs);
-	}
-}
-
 void
 AG_TextDestroy(void)
 {
 	AG_Font *font, *nextfont;
 
-	AG_ClearGlyphCache();
-	Free(agGlyphCache);
-	agGlyphCache = NULL;
-	
 	for (font = SLIST_FIRST(&fonts);
 	     font != SLIST_END(&fonts);
 	     font = nextfont) {
@@ -525,7 +485,7 @@ AG_TextDestroy(void)
 
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 AG_Glyph *
-AG_TextRenderGlyphMiss(Uint32 ch)
+AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
 {
 	AG_Glyph *gl;
 	Uint32 ucs[2];
@@ -560,9 +520,7 @@ AG_TextRenderGlyphMiss(Uint32 ch)
 	default:
 		break;
 	}
-	gl->textures = NULL;
-	gl->texcoords = NULL;
-	gl->nTextures = 0;
+	AGDRIVER_CLASS(drv)->updateGlyph(drv, gl);
 	return (gl);
 }
 
