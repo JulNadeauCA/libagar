@@ -203,7 +203,8 @@ MouseButtonUp(AG_Event *event)
 	int i;
 
 	if (my < 0 || mx < 0) {
-		goto collapse;
+		AG_MenuCollapse(m, mi);
+		goto out;
 	}
 	for (i = 0; i < mi->nsubitems; i++) {
 		AG_MenuItem *item = &mi->subitems[i];
@@ -213,10 +214,12 @@ MouseButtonUp(AG_Event *event)
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
 			if (item->state == 0) {
-				goto collapse;
+				AG_MenuCollapse(m, mi);
+				goto out;
 			}
 			if (item->clickFn != NULL) {
 				AG_ExecEventFn(m, item->clickFn);
+				AG_MenuCollapseAll(m);
 			} else if (item->bind_type != AG_MENU_NO_BINDING) {
 				if (item->bind_lock != NULL)
 					AG_MutexLock(item->bind_lock);
@@ -225,16 +228,18 @@ MouseButtonUp(AG_Event *event)
 
 				if (item->bind_lock != NULL)
 					AG_MutexUnlock(item->bind_lock);
+
+				AG_MenuCollapseAll(m);
 			}
-			goto collapse;
+			return;
 		}
 	}
 	if (i == mi->nsubitems) {
-		goto collapse;
+		AG_MenuCollapse(m, mi);
+		goto out;
 	}
 	return;
-collapse:
-	AG_MenuCollapseAll(m);
+out:
 	SelectItem(mi, NULL);
 	m->itemSel = NULL;
 	m->selecting = 0;
