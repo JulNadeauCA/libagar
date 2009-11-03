@@ -186,30 +186,33 @@ Attach(AG_Event *event)
 	 */
 	AG_PostEvent(drv, win, "attached", NULL);
 	
-	/*
-	 * Initialize the window and titlebars now that we have an attached
-	 * driver. We cannot do this earlier because surface mapping operations
-	 * are involved.
-	 */
-	if (AGDRIVER_SINGLE(drv) && !(win->flags & AG_WINDOW_NOTITLE)) {
-		Uint titlebarFlags = 0;
+	if (AGDRIVER_SINGLE(drv)) {
+		/*
+		 * Initialize the built-in window titlebar and icon now that
+		 * we have an attached driver. We could not do this earlier
+		 * because surface operations are involved.
+		 */
+		if (win->tbar == NULL &&
+		    !(win->flags & AG_WINDOW_NOTITLE)) {
+			Uint titlebarFlags = 0;
 
-		if (win->flags & AG_WINDOW_NOCLOSE)
-			titlebarFlags |= AG_TITLEBAR_NO_CLOSE;
-		if (win->flags & AG_WINDOW_NOMINIMIZE)
-			titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE;
-		if (win->flags & AG_WINDOW_NOMAXIMIZE)
-			titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
+			if (win->flags & AG_WINDOW_NOCLOSE)
+				titlebarFlags |= AG_TITLEBAR_NO_CLOSE;
+			if (win->flags & AG_WINDOW_NOMINIMIZE)
+				titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE;
+			if (win->flags & AG_WINDOW_NOMAXIMIZE)
+				titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
 
-		win->tbar = AG_TitlebarNew(win, titlebarFlags);
+			win->tbar = AG_TitlebarNew(win, titlebarFlags);
+		}
+		if (win->icon == NULL) {
+			win->icon = AG_IconNew(NULL, 0);
+		}
+		WIDGET(win->icon)->drv = drv;
+		WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
+		AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
+		AG_IconSetBackgroundFill(win->icon, 1, agColors[BG_COLOR]);
 	}
-	if (win->icon == NULL) {
-		win->icon = AG_IconNew(NULL, 0);
-	}
-	WIDGET(win->icon)->drv = drv;
-	WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
-	AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
-	AG_IconSetBackgroundFill(win->icon, 1, agColors[BG_COLOR]);
 	
 	if (win->flags & AG_WINDOW_FOCUSONATTACH)
 		AG_WindowFocus(win);
@@ -235,12 +238,13 @@ Detach(AG_Event *event)
 	/* The window's titlebar and icon are no longer safe to use. */
 	if (win->tbar != NULL) {
 		AG_ObjectDetach(win->tbar);
+		AG_ObjectDestroy(win->tbar);
 		win->tbar = NULL;
 	}
 	if (win->icon != NULL) {
-		AG_IconSetSurfaceNODUP(win->icon, NULL);
-		WIDGET(win->icon)->drv = NULL;
-		WIDGET(win->icon)->drvOps = NULL;
+		AG_ObjectDetach(win->icon);
+		AG_ObjectDestroy(win->icon);
+		win->icon = NULL;
 	}
 	
 	/* Cancel any planned focus change to this window. */
@@ -482,6 +486,10 @@ Shown(AG_Event *event)
 		}
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);
+		}
+		if (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL) {
+			AGDRIVER_MW_CLASS(drv)->setWindowCaption(win,
+			    win->caption);
 		}
 		break;
 	}
@@ -1114,8 +1122,7 @@ DoubleClickTimeout(AG_Event *event)
 void
 AG_WindowMinimize(AG_Window *win)
 {
-	AG_Window *wDND;
-	AG_Icon *icon = win->icon;
+	AG_Driver *drv = WIDGET(win)->drv;
 
 	if (win->flags & AG_WINDOW_MINIMIZED) {
 		return;
@@ -1123,29 +1130,35 @@ AG_WindowMinimize(AG_Window *win)
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
 
-	wDND = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
-	                    AG_WINDOW_DENYFOCUS|AG_WINDOW_NOBACKGROUND);
-	AG_ObjectAttach(wDND, icon);
-	icon->wDND = wDND;
-	icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
+	if (AGDRIVER_SINGLE(drv)) {
+		AG_Window *wDND;
+		AG_Icon *icon = win->icon;
 
-	AG_SetEvent(icon, "dblclick-expire", DoubleClickTimeout, NULL);
-	AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
-	AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
-	AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
+		wDND = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
+		                    AG_WINDOW_DENYFOCUS|AG_WINDOW_NOBACKGROUND);
+		AG_ObjectAttach(wDND, icon);
+		icon->wDND = wDND;
+		icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
 
-	if (icon->xSaved != -1) {
-		AG_WindowShow(wDND);
-		AG_WindowSetGeometry(wDND, icon->xSaved, icon->ySaved,
-		                     icon->wSaved, icon->hSaved);
-	} else {
-		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
-		AG_WindowShow(wDND);
-		icon->xSaved = WIDGET(wDND)->x;
-		icon->ySaved = WIDGET(wDND)->y;
-		icon->wSaved = WIDTH(wDND);
-		icon->hSaved = HEIGHT(wDND);
+		AG_SetEvent(icon, "dblclick-expire", DoubleClickTimeout, NULL);
+		AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
+		AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
+		AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
+
+		if (icon->xSaved != -1) {
+			AG_WindowShow(wDND);
+			AG_WindowSetGeometry(wDND, icon->xSaved, icon->ySaved,
+			                     icon->wSaved, icon->hSaved);
+		} else {
+			AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
+			AG_WindowShow(wDND);
+			icon->xSaved = WIDGET(wDND)->x;
+			icon->ySaved = WIDGET(wDND)->y;
+			icon->wSaved = WIDTH(wDND);
+			icon->hSaved = HEIGHT(wDND);
+		}
 	}
+	/* TODO MW: send a WM_CHANGE_STATE */
 }
 
 void
@@ -1157,6 +1170,7 @@ AG_WindowUnminimize(AG_Window *win)
 	} else {
 		AG_WindowFocus(win);
 	}
+	/* TODO MW: send a WM_CHANGE_STATE */
 }
 
 void
@@ -1391,14 +1405,53 @@ AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 	AG_ObjectUnlock(win);
 }
 
+/* Update Agar's built-in titlebar from window caption. */
+static void
+UpdateTitlebar(AG_Window *win)
+{
+	AG_Titlebar *tbar = win->tbar;
+
+	AG_ObjectLock(tbar);
+	AG_LabelTextS(tbar->label, (win->caption != NULL) ? win->caption : "");
+	AG_ObjectUnlock(tbar);
+}
+
+/* Update the window's minimized icon caption. */
+static void
+UpdateIconCaption(AG_Window *win)
+{
+	AG_Icon *icon = win->icon;
+	char s[16], *c;
+
+	if (Strlcpy(s, win->caption, sizeof(s)) >= sizeof(s)) {	/* Truncate */
+		for (c = &s[0]; *c != '\0'; c++) {
+			if (*c == ' ')
+				*c = '\n';
+		}
+		AG_IconSetText(icon, "%s...", s);
+	} else {
+		AG_IconSetTextS(icon, s);
+	}
+}
+
 /* Set the text to show inside a window's titlebar (C string). */
 void
 AG_WindowSetCaptionS(AG_Window *win, const char *s)
 {
+	AG_Driver *drv = WIDGET(win)->drv;
+
 	AG_ObjectLock(win);
-	if (win->tbar != NULL) {
-		Strlcpy(win->caption, s, sizeof(win->caption));
-		AG_WindowUpdateCaption(win);
+	Strlcpy(win->caption, s, sizeof(win->caption));
+
+	if (win->tbar != NULL)
+		UpdateTitlebar(win);
+	if (win->icon != NULL)
+		UpdateIconCaption(win);
+
+	if (AGDRIVER_MULTIPLE(drv) &&
+	    (AGDRIVER_MW(drv)->flags&AG_DRIVER_MW_OPEN) &&
+	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
+		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
 	}
 	AG_ObjectUnlock(win);
 }
@@ -1415,32 +1468,6 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	va_end(ap);
 
 	AG_WindowSetCaptionS(win, s);
-}
-
-void
-AG_WindowUpdateCaption(AG_Window *win)
-{
-	char iconCap[16], *c;
-
-	AG_ObjectLock(win);
-	if (win->tbar != NULL) {
-		AG_ObjectLock(win->tbar);
-		AG_LabelTextS(win->tbar->label, (win->caption != NULL) ?
-		                                 win->caption : "");
-		/* XXX */
-		if (Strlcpy(iconCap, win->caption, sizeof(iconCap)) >=
-		    sizeof(iconCap)) {
-			for (c = &iconCap[0]; *c != '\0'; c++) {
-				if (*c == ' ')
-					*c = '\n';
-			}
-			AG_IconSetText(win->icon, "%s...", iconCap);
-		} else {
-			AG_IconSetTextS(win->icon, iconCap);
-		}
-		AG_ObjectUnlock(win->tbar);
-	}
-	AG_ObjectUnlock(win);
 }
 
 /*
