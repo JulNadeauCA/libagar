@@ -79,18 +79,15 @@ OUTPUT:
 	RETVAL
 
 void
-expandItem(self, item)
+expandItem(self, item, x, y)
 	Agar::Menu self
 	Agar::MenuItem item
+	int x
+	int y
 PREINIT:
 	AG_Widget *parent;
 CODE:
-	if (item->view != NULL) {
-		parent = AGWIDGET(item->view);
-	} else {
-		parent = AGWIDGET(item->pmenu);
-	}
-	AG_MenuExpand(self, item, item->x + parent->rView.x1, item->y + parent->rView.y1);
+	AG_MenuExpand(self, item, x, y);
 
 void
 collapseItem(self, item)

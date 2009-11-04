@@ -1069,8 +1069,8 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 	}
 	tv->tv_pixmap.menu->itemSel = mi;
 	tv->tv_pixmap.menu_win = AG_MenuExpand(me, mi,
-	    WIDGET(me)->rView.x1 + x,
-	    WIDGET(me)->rView.y1 + y);
+	    WIDGET(tv)->rView.x1 + x,
+	    WIDGET(tv)->rView.y1 + y);
 }
 
 void

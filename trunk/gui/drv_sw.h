@@ -82,7 +82,7 @@ int  AG_ResizeDisplay(int, int);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
 void AG_WM_LimitWindowToView(struct ag_window *);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *, struct ag_size_alloc *);
-void AG_WM_GetPrefPosition(struct ag_window *, int *, int *);
+void AG_WM_GetPrefPosition(struct ag_window *, int *, int *, int, int);
 
 void AG_WM_MouseMotion(AG_DriverSw *, struct ag_window *, int, int);
 
