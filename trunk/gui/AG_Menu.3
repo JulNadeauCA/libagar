@@ -125,22 +125,24 @@ widget displaying the menu items under
 .Fa item .
 The window is created at coordinates
 .Fa x ,
-.Fa y .
+.Fa y
+(relative to
+.Fa menuWidget ) .
 The
 .Fa menuWidget
-argument is a pointer to the parent
+argument should point to the parent
 .Ft AG_Menu
 or
 .Ft AG_MenuView
-widget (the
-.Fa x ,
-.Fa y
-coordinates are relative to
-.Fa menuWidget ) .
+widget.
 .Fn AG_MenuCollapse
 properly closes a window created by
 .Fn AG_MenuExpand .
-These two routines are usually invoked from widget code.
+Typically,
+.Fn AG_MenuExpand
+and
+.Fn AG_MenuCollapse
+are invoked from widget code.
 .Pp
 .Fn AG_MenuSetPadding
 sets the global padding around all menu items, in pixels.
