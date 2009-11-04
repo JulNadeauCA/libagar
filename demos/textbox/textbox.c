@@ -26,6 +26,15 @@ SetDisable(AG_Event *event)
 }
 
 static void
+SetWordWrap(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+	int flag = AG_INT(2);
+
+	AG_TextboxSetWordWrap(textbox, flag);
+}
+
+static void
 SingleLineExample(void)
 {
 	AG_Window *win;
@@ -62,7 +71,7 @@ SingleLineExample(void)
 }
 
 static void
-MultiLineExample(const char *title, int wordwrap)
+MultiLineExample(const char *title)
 {
 	AG_Window *win;
 	AG_Textbox *textbox;
@@ -70,8 +79,6 @@ MultiLineExample(const char *title, int wordwrap)
 	FILE *f;
 	size_t size, bufSize;
 	unsigned int flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB;
-
-	if (wordwrap) { flags |= AG_TEXTBOX_WORDWRAP; }
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaptionS(win, title);
@@ -110,6 +117,7 @@ MultiLineExample(const char *title, int wordwrap)
 	AG_TextboxSetCursorPos(textbox, 0);
 
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
 #if 0
 	AG_SeparatorNewHoriz(win);
 	{
@@ -139,8 +147,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
-	MultiLineExample("Multiline Example (no word wrapping)", 0);
-	MultiLineExample("Multiline Example (with word wrapping)", 1);
+	MultiLineExample("Multiline Example");
 	SingleLineExample();
 	AG_EventLoop();
 	AG_Destroy();
