@@ -104,6 +104,7 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 	} else {
 		AG_FatalError("Invalid argument to AG_MenuExpand()");
 	}
+	winParent = WIDGET(obj)->window;
 
 	AG_MenuUpdateItem(mi);
 
@@ -125,8 +126,11 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 	mi->view = mv;
 
 	AG_WindowFocus(win);
-	
-	if ((winParent = WIDGET(obj)->window) != NULL) {
+
+	if (winParent != NULL &&
+	    WIDGET(winParent)->drv != NULL &&
+	    !AGDRIVER_SINGLE(WIDGET(winParent)->drv)) {
+		/* Convert to absolute coordinates */
 		x += WIDGET(winParent)->x;
 		y += WIDGET(winParent)->y;
 	}
@@ -251,8 +255,8 @@ MouseButtonDown(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->x + item->x,
-				    WIDGET(m)->y + item->y + hLbl + m->bPad - 1);
+				    WIDGET(m)->rView.x1 + item->x,
+				    WIDGET(m)->rView.y1 + item->y + hLbl + m->bPad - 1);
 				m->selecting = 1;
 			}
 			break;
@@ -319,8 +323,8 @@ MouseMotion(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->x + item->x,
-				    WIDGET(m)->y + item->y + hLbl + m->bPad - 1);
+				    WIDGET(m)->rView.x1 + item->x,
+				    WIDGET(m)->rView.y1 + item->y + hLbl + m->bPad - 1);
 			}
 			break;
 		}
@@ -1140,39 +1144,46 @@ AG_PopupNew(void *pwid)
 	AG_PopupMenu *pm;
 
 	pm = Malloc(sizeof(AG_PopupMenu));
+	pm->widget = wid;
 	pm->menu = AG_MenuNew(NULL, 0);
-	pm->item = pm->menu->itemSel = AG_MenuAddItem(pm->menu, NULL);
-	/* XXX redundant */
+	WIDGET(pm->menu)->window = wid->window;	/* For AG_MenuExpand() */
+	pm->item = AG_MenuAddItem(pm->menu, NULL);
+	pm->menu->itemSel = pm->item;
 	pm->win = NULL;
 	
-	/* AG_MenuExpand() need a window pointer in AG_Menu */
-	WIDGET(pm->menu)->window = wid->window;
-
 	AG_ObjectLock(wid);
 	SLIST_INSERT_HEAD(&wid->menus, pm, menus);
 	AG_ObjectUnlock(wid);
 	return (pm);
 }
 
-#ifdef AG_LEGACY
 void
 AG_PopupShow(AG_PopupMenu *pm)
 {
-	AG_ObjectLock(pm->menu);
-	AG_PopupHide(pm);
-	/* XXX position */
-	pm->win = AG_MenuExpand(pm->menu, pm->item, 0, 0);
-	AG_ObjectUnlock(pm->menu);
+	AG_Driver *drv;
+
+	AG_LockVFS(pm->widget);
+	if (pm->win != NULL) {
+		AG_PopupHide(pm);
+	}
+	drv = WIDGET(pm->widget)->drv;
+	pm->win = AG_MenuExpand(pm->menu, pm->item,
+	    (drv != NULL) ? drv->mouse->x : 0,
+	    (drv != NULL) ? drv->mouse->y : 0);
+	AG_UnlockVFS(pm->widget);
 }
-#endif /* AG_LEGACY */
 
 void
 AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)
 {
-	AG_ObjectLock(pm->menu);
-	AG_PopupHide(pm);
-	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
-	AG_ObjectUnlock(pm->menu);
+	AG_LockVFS(pm->widget);
+	if (pm->win != NULL) {
+		AG_PopupHide(pm);
+	}
+	pm->win = AG_MenuExpand(pm->menu, pm->item,
+	    pm->widget->rView.x1 + x,
+	    pm->widget->rView.y1 + y);
+	AG_UnlockVFS(pm->widget);
 }
 
 void

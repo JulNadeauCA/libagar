@@ -118,6 +118,7 @@ static void FreeWidgetResources(AG_Widget *);
 static void RegenWidgetResources(AG_Widget *);
 static int  RaiseWindow(AG_Window *);
 static int  SetInputFocus(AG_Window *);
+static void SetTransientFor(AG_Window *, AG_Window *);
 
 static void
 Init(void *obj)
@@ -1833,11 +1834,89 @@ InitDefaultCursor(AG_DriverGLX *glx)
 	return (0);
 }
 
-static int
-OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
+/* Set the WM_NORMAL_HINTS property. */
+static void
+SetWmNormalHints(AG_Window *win, const AG_Rect *r, Uint mwFlags)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	AG_Driver *drv = WIDGET(win)->drv; //, *drvParent;
+	XSizeHints *h;
+
+	if ((h = XAllocSizeHints()) == NULL)  {
+		return;
+	}
+	h->flags = PMinSize|PMaxSize;
+
+	if (!(mwFlags & AG_DRIVER_MW_ANYPOS))
+		h->flags |= PPosition;
+
+	if (!(win->flags & AG_WINDOW_NORESIZE)) {
+		h->min_width = 32;
+		h->min_height = 32;
+		h->max_width = 4096;
+		h->max_height = 4096;
+	} else {
+		h->min_width = h->max_width = r->w;
+		h->min_height = h->max_height = r->h;
+	}
+	XSetWMNormalHints(agDisplay, glx->w, h);
+	XFree(h);
+}
+
+/* Try to disable WM titlebars and decorations. */
+static void
+SetNoDecorationHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	Atom wmHints;
+
+	/* For Motif-compliant window managers. */
+	if ((wmHints = XInternAtom(agDisplay, "_MOTIF_WM_HINTS", True))
+	    != None) {
+		/* Hints used by Motif compliant window managers */
+		struct {
+			unsigned long flags;
+			unsigned long functions;
+			unsigned long decorations;
+			long input_mode;
+			unsigned long status;
+		} MWMHints = { (1L << 1), 0, 0, 0, 0 };
+
+		XChangeProperty(agDisplay, glx->w,
+		    wmHints, wmHints, 32,
+		    PropModeReplace,
+		    (unsigned char *)&MWMHints,
+		    sizeof(MWMHints)/sizeof(long));
+	}
+
+	/* For KWM */
+	if ((wmHints = XInternAtom(agDisplay, "KWM_WIN_DECORATION", True))
+	    != None) {
+		long KWMHints = 0;
+
+		XChangeProperty(agDisplay, glx->w,
+		    wmHints, wmHints, 32,
+		    PropModeReplace,
+		    (unsigned char *)&KWMHints,
+		    sizeof(KWMHints)/sizeof(long));
+	}
+
+	/* For GNOME */
+	if ((wmHints = XInternAtom(agDisplay, "_WIN_HINTS", True)) != None) {
+		long GNOMEHints = 0;
+
+		XChangeProperty(agDisplay, glx->w,
+		    wmHints, wmHints, 32,
+		    PropModeReplace,
+		    (unsigned char *)&GNOMEHints,
+		    sizeof(GNOMEHints)/sizeof(long));
+	}
+}
+
+static int
+OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	AG_Driver *drv = WIDGET(win)->drv;
 	XSetWindowAttributes xwAttrs;
 	XVisualInfo *xvi;
 	Window wParent;
@@ -1879,11 +1958,6 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 			     FocusChangeMask;
 	valuemask = CWColormap | CWBackPixmap | CWBorderPixel | CWEventMask;
 
-	if (win->flags & AG_WINDOW_NOTITLE) {
-		/* XXX */
-		valuemask |= CWOverrideRedirect;
-		xwAttrs.override_redirect = True;
-	}
 #if 0
 	if (win->parent != NULL &&
 	    (drvParent = WIDGET(win->parent)->drv) &&
@@ -1891,12 +1965,11 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 	    (AGDRIVER_MW(drvParent)->flags & AG_DRIVER_MW_OPEN)) {
 		AG_DriverGLX *glxParent = (AG_DriverGLX *)drvParent;
 		wParent = glxParent->w;
-	} else {
+	} else
 #endif
-		wParent = RootWindow(agDisplay,agScreen);
-/*	} */
+	wParent = RootWindow(agDisplay,agScreen);
 
-	/* Create an (initially unmapped) window. */
+	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
 	glx->w = XCreateWindow(agDisplay,
 	    wParent,
@@ -1912,10 +1985,13 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint flags)
 	}
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
 
-	/* XXX */
-	if (!(win->flags & AG_WINDOW_NOTITLE)) {
-		XMoveWindow(agDisplay, glx->w, r.x, r.y);
+	if (win->parent != NULL) {
+		SetTransientFor(win, win->parent);
 	}
+	SetWmNormalHints(win, &r, mwFlags);
+
+	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE))
+		SetNoDecorationHints(win);
 
 	/* Create a GLX context and initialize state. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
@@ -2222,6 +2298,22 @@ SetWindowCaption(AG_Window *win, const char *s)
 	return (0);
 }
 
+static void
+SetTransientFor(AG_Window *win, AG_Window *winParent)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	AG_DriverGLX *glxParent;
+
+	if (winParent != NULL &&
+	    (glxParent = (AG_DriverGLX *)WIDGET(winParent)->drv) != NULL &&
+	    AGDRIVER_IS_GLX(glxParent) &&
+	    (AGDRIVER_MW(glxParent)->flags & AG_DRIVER_MW_OPEN)) {
+		XSetTransientForHint(agDisplay, glx->w, glxParent->w);
+	} else {
+		XSetTransientForHint(agDisplay, glx->w, None);
+	}
+}
+
 AG_DriverMwClass agDriverGLX = {
 	{
 		{
@@ -2312,7 +2404,8 @@ AG_DriverMwClass agDriverGLX = {
 	PostResizeCallback,
 	NULL,				/* captureWindow */
 	SetBorderWidth,
-	SetWindowCaption
+	SetWindowCaption,
+	SetTransientFor
 };
 
 #endif /* HAVE_GLX */

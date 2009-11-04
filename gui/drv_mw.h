@@ -39,8 +39,9 @@ typedef struct ag_driver_mw_class {
 	int (*captureWindow)(struct ag_window *, AG_Surface **s);
 	
 	/* Configure window parameters */
-	int (*setBorderWidth)(struct ag_window *, Uint w);
-	int (*setWindowCaption)(struct ag_window *, const char *);
+	int  (*setBorderWidth)(struct ag_window *, Uint w);
+	int  (*setWindowCaption)(struct ag_window *, const char *);
+	void (*setTransientFor)(struct ag_window *, struct ag_window *);
 } AG_DriverMwClass;
 
 typedef struct ag_driver_mw {
@@ -52,6 +53,9 @@ typedef struct ag_driver_mw {
 
 #define AGDRIVER_MW(obj) ((AG_DriverMw *)(obj))
 #define AGDRIVER_MW_CLASS(obj) ((struct ag_driver_mw_class *)(AGOBJECT(obj)->cls))
+
+/* Flags to openWindow */
+#define AG_DRIVER_MW_ANYPOS	0x01		/* No preferred position */
 
 __BEGIN_DECLS
 extern AG_ObjectClass    agDriverMwClass;

@@ -79,9 +79,10 @@ typedef struct ag_menu {
 } AG_Menu;
 
 typedef struct ag_popup_menu {
-	AG_Menu *menu;
-	AG_MenuItem *item;
-	AG_Window *win;
+	AG_Widget *widget;			/* Parent widget */
+	AG_Menu *menu;				/* Menu (allocated) */
+	AG_MenuItem *item;			/* Root item (allocated) */
+	AG_Window *win;				/* Expanded window */
 	AG_SLIST_ENTRY(ag_popup_menu) menus;
 } AG_PopupMenu;
 
@@ -109,6 +110,7 @@ void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
 
 AG_PopupMenu	*AG_PopupNew(void *);
+void		 AG_PopupShow(AG_PopupMenu *);
 void		 AG_PopupShowAt(AG_PopupMenu *, int, int);
 void		 AG_PopupHide(AG_PopupMenu *);
 void		 AG_PopupDestroy(void *, AG_PopupMenu *);
@@ -215,7 +217,6 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *, int *, int, AG_Mutex *);
 void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 
 #ifdef AG_LEGACY
-void AG_PopupShow(AG_PopupMenu *) DEPRECATED_ATTRIBUTE;
 # define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 #endif /* AG_LEGACY */
 __END_DECLS

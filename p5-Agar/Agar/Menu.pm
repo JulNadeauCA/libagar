@@ -36,7 +36,7 @@ Constructors.
 
 =item B<$widget-E<gt>rootItem()>
 
-=item B<$widget-E<gt>expandItem($item)>
+=item B<$widget-E<gt>expandItem($item, $x, $y)>
 
 =item B<$widget-E<gt>collapseItem($item)>
 

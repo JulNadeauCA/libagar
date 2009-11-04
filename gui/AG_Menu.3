@@ -367,6 +367,9 @@ creates a non-selectable item displaying the given text.
 .Fn AG_PopupNew "AG_Widget *widget"
 .Pp
 .Ft void
+.Fn AG_PopupShow "AG_PopupMenu *pm"
+.Pp
+.Ft void
 .Fn AG_PopupShowAt "AG_PopupMenu *pm" "int x" "int y"
 .Pp
 .Ft void
@@ -388,8 +391,10 @@ member of the
 .Ft AG_PopupMenu
 structure as parent.
 .Pp
+.Fn AG_PopupShow
+displays the popup menu at the current mouse coordinates.
 .Fn AG_PopupShowAt
-displays the popup menu at the specified display coordinates.
+accepts global (view) coordinates.
 .Fn AG_PopupHide
 hides the popup menu from the user.
 .Pp

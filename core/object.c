@@ -492,6 +492,7 @@ AG_ObjectDetach(void *pChld)
 #ifdef AG_THREADS
 	AG_LockVFS(root);
 #endif
+	printf("ObjectDetach: %s from %s (root=%s)\n", chld->name, parent->name, root->name);
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
 

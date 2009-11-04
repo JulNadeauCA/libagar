@@ -236,16 +236,10 @@ Detach(AG_Event *event)
 		AG_WindowHide(win);
 
 	/* The window's titlebar and icon are no longer safe to use. */
-	if (win->tbar != NULL) {
-		AG_ObjectDetach(win->tbar);
-		AG_ObjectDestroy(win->tbar);
+	if (win->tbar != NULL)
 		win->tbar = NULL;
-	}
-	if (win->icon != NULL) {
-		AG_ObjectDetach(win->icon);
-		AG_ObjectDestroy(win->icon);
+	if (win->icon != NULL)
 		win->icon = NULL;
-	}
 	
 	/* Cancel any planned focus change to this window. */
 	if (win == agWindowToFocus) {
@@ -372,6 +366,8 @@ Init(void *obj)
 void
 AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 {
+	AG_Driver *drvWin = WIDGET(win)->drv;
+
 	if (win == NULL)
 		return;
 
@@ -379,6 +375,10 @@ AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 	AG_ObjectLock(win);
 	subwin->parent = win;
 	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
+
+	if (AGDRIVER_MULTIPLE(drvWin) &&
+	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
+		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, subwin);
 
 	AG_ObjectUnlock(win);
 	AG_UnlockVFS(&agDrivers);
@@ -388,11 +388,23 @@ AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 void
 AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 {
+	AG_Driver *drvWin;
+
 	if (win == NULL)
 		return;
 
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
+
+#ifdef AG_DEBUG
+	if (subwin->parent != win)
+		AG_FatalError("Inconsistent AG_WindowDetach()");
+#endif
+	drvWin = WIDGET(win)->drv;
+
+	if (AGDRIVER_MULTIPLE(drvWin) &&
+	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
+		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, NULL);
 
 	TAILQ_REMOVE(&win->subwins, subwin, swins);
 	subwin->parent = NULL;
@@ -446,14 +458,16 @@ Shown(AG_Event *event)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 	int xPref, yPref;
+	Uint mwFlags = 0;
 
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		AG_WidgetSizeReq(win, &r);
 		if (AGDRIVER_SINGLE(drv)) {
-			AG_WM_GetPrefPosition(win, &xPref, &yPref);
+			AG_WM_GetPrefPosition(win, &xPref, &yPref, r.w, r.h);
 			a.x = xPref;
 			a.y = yPref;
 		} else {
+			mwFlags |= AG_DRIVER_MW_ANYPOS;
 			a.x = 0;
 			a.y = 0;
 		}
@@ -481,8 +495,9 @@ Shown(AG_Event *event)
 		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			if (AGDRIVER_MW_CLASS(drv)->openWindow(win,
 			    AG_RECT(a.x, a.y, a.w, a.h), 0,
-			    0) == -1)
+			    mwFlags) == -1) {
 				AG_FatalError(NULL);
+			}
 		}
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);

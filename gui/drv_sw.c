@@ -114,7 +114,6 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_Menu *me;
 	AG_MenuItem *mi;
 	AG_Window *win;
-	int x, y;
 	int nWindows = 0;
 
 	me = AG_MenuNew(NULL, 0);
@@ -140,8 +139,9 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_MenuAction(mi, _("Exit application"), agIconWinClose.s,
 	    ExitApplication, NULL);
 				
-	AG_MouseGetState(AGDRIVER(dsw)->mouse, &x, &y);
-	AG_MenuExpand(me, mi, x+4, y+4);
+	AG_MenuExpand(me, mi,
+	    AGDRIVER(dsw)->mouse->x + 4,
+	    AGDRIVER(dsw)->mouse->y + 4);
 }
 
 /* Resize a video display to the specified dimensions. */
@@ -447,7 +447,7 @@ AG_WM_LimitWindowToView(AG_Window *win)
 
 /* Compute default window coordinates from requested alignment settings. */
 void
-AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y)
+AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 {
 	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
 	int xOffs = 0, yOffs = 0;
@@ -468,36 +468,36 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y)
 		*y = yOffs;
 		break;
 	case AG_WINDOW_TC:
-		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
+		*x = dsw->w/2 - w/2 + xOffs;
 		*y = 0;
 		break;
 	case AG_WINDOW_TR:
-		*x = dsw->w - WIDTH(win) - xOffs;
+		*x = dsw->w - w - xOffs;
 		*y = yOffs;
 		break;
 	case AG_WINDOW_ML:
 		*x = xOffs;
-		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		*y = dsw->h/2 - h/2 + yOffs;
 		break;
 	case AG_WINDOW_MC:
-		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
-		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		*x = dsw->w/2 - w/2 + xOffs;
+		*y = dsw->h/2 - h/2 + yOffs;
 		break;
 	case AG_WINDOW_MR:
-		*x = dsw->w - WIDTH(win) - xOffs;
-		*y = dsw->h/2 - HEIGHT(win)/2 + yOffs;
+		*x = dsw->w - w - xOffs;
+		*y = dsw->h/2 - h/2 + yOffs;
 		break;
 	case AG_WINDOW_BL:
 		*x = xOffs;
-		*y = dsw->h - HEIGHT(win) - yOffs;
+		*y = dsw->h - h - yOffs;
 		break;
 	case AG_WINDOW_BC:
-		*x = dsw->w/2 - WIDTH(win)/2 + xOffs;
-		*y = dsw->h - HEIGHT(win);
+		*x = dsw->w/2 - w/2 + xOffs;
+		*y = dsw->h - h;
 		break;
 	case AG_WINDOW_BR:
-		*x = dsw->w - WIDTH(win) - xOffs;
-		*y = dsw->h - HEIGHT(win) - yOffs;
+		*x = dsw->w - w - xOffs;
+		*y = dsw->h - h - yOffs;
 		break;
 	default:
 		break;
