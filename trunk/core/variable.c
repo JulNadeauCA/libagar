@@ -1180,6 +1180,7 @@ AG_BindStringMp(void *obj, const char *name, char *v, size_t size,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_STRING);
+	V->type = AG_VARIABLE_P_STRING;
 	V->data.p = v;
 	V->info.size = size;
 	V->mutex = mutex;
@@ -1194,6 +1195,7 @@ AG_SetConstString(void *obj, const char *name, const char *v)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_CONST_STRING);
+	V->type = AG_VARIABLE_CONST_STRING;
 	V->data.Cs = v;
 	V->info.size = strlen(v)+1;
 	AG_ObjectUnlock(obj);
@@ -1206,6 +1208,7 @@ AG_BindConstString(void *obj, const char *name, const char **v)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
+	V->type = AG_VARIABLE_P_CONST_STRING;
 	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1220,6 +1223,7 @@ AG_BindConstStringMp(void *obj, const char *name, const char **v,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
+	V->type = AG_VARIABLE_P_CONST_STRING;
 	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
 	V->mutex = mutex;
@@ -1238,6 +1242,7 @@ AG_BindFlag(void *obj, const char *name, Uint *v, Uint bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG);
+	V->type = AG_VARIABLE_P_FLAG;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1252,6 +1257,7 @@ AG_BindFlagMp(void *obj, const char *name, Uint *v, Uint bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG);
+	V->type = AG_VARIABLE_P_FLAG;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	V->mutex = mutex;
@@ -1266,6 +1272,7 @@ AG_BindFlag8(void *obj, const char *name, Uint8 *v, Uint8 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG8);
+	V->type = AG_VARIABLE_P_FLAG8;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1280,6 +1287,7 @@ AG_BindFlag8Mp(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG8);
+	V->type = AG_VARIABLE_P_FLAG8;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	V->mutex = mutex;
@@ -1294,6 +1302,7 @@ AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG16);
+	V->type = AG_VARIABLE_P_FLAG16;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1308,6 +1317,7 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG16);
+	V->type = AG_VARIABLE_P_FLAG16;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	V->mutex = mutex;
@@ -1322,6 +1332,7 @@ AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG32);
+	V->type = AG_VARIABLE_P_FLAG32;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1336,6 +1347,7 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG32);
+	V->type = AG_VARIABLE_P_FLAG32;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	V->mutex = mutex;
