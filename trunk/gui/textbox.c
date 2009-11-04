@@ -115,8 +115,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
 	if (flags & AG_TEXTBOX_NOLATIN1)
 		tb->ed->flags |= AG_EDITABLE_NOLATIN1;
-	if (flags & AG_TEXTBOX_WORDWRAP)
-		tb->ed->flags |= AG_EDITABLE_WORDWRAP;
 	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
@@ -127,8 +125,29 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
-		
-		if (!(flags & AG_TEXTBOX_WORDWRAP)) {
+	}
+	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
+
+	tb->flags |= flags;
+	if (label != NULL) {
+		tb->labelText = Strdup(label);
+	}
+	AG_ObjectAttach(parent, tb);
+	return (tb);
+}
+
+void
+AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
+{
+	AG_EditableSetWordWrap(tb->ed, flag);
+
+	if (tb->ed->flags & AG_EDITABLE_MULTILINE) {
+		if (tb->hBar != NULL) {
+			AG_ObjectDetach(tb->hBar);
+			AG_ObjectDestroy(tb->hBar);
+			tb->hBar = NULL;
+		}
+		if (!flag) {
 			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
 			AG_BindInt(tb->hBar, "value", &tb->ed->x);
 			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
@@ -138,13 +157,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 			AG_TextboxSizeHintLines(tb, 4);
 		}
 	}
-
-	tb->flags |= flags;
-	if (label != NULL) {
-		tb->labelText = Strdup(label);
-	}
-	AG_ObjectAttach(parent, tb);
-	return (tb);
 }
 
 static void

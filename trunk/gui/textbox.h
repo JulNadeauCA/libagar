@@ -69,9 +69,9 @@ void        AG_TextboxSetLabelS(AG_Textbox *, const char *);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))
 #define     AG_TextboxSetStatic(tb,flag) AG_EditableSetStatic((tb)->ed,(flag))
-#define     AG_TextboxSetWordWrap(tb,flag) AG_EditableSetWordWrap((tb)->ed,(flag))
 #define     AG_TextboxSetFltOnly(tb,flag) AG_EditableSetFltOnly((tb)->ed,(flag))
 #define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
+void        AG_TextboxSetWordWrap(AG_Textbox *, int);
 
 #define AG_TextboxBindUTF8(tb,p,sz) AG_EditableBindUTF8((tb)->ed,(p),(sz))
 #define AG_TextboxBindASCII(tb,p,sz) AG_EditableBindASCII((tb)->ed,(p),(sz))
