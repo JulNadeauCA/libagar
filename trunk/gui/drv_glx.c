@@ -64,7 +64,7 @@ static int      rCur = 0;		/* Effective refresh rate (ms) */
 
 static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
-static Atom           wmDeleteWindowAtom; /* WM_DELETE_WINDOW atom */
+static Atom           wmDeleteWindow;	/* WM_DELETE_WINDOW atom */
 
 /* Saved blending state */
 struct blending_state {
@@ -154,7 +154,7 @@ InitGlobals(void)
 	InitKeymaps();
 	memset(xkbBuf, '\0', sizeof(xkbBuf));
 	memset(&xkbCompStatus, 0, sizeof(xkbCompStatus));
-	wmDeleteWindowAtom = XInternAtom(agDisplay, "WM_DELETE_WINDOW", False);
+	wmDeleteWindow = XInternAtom(agDisplay, "WM_DELETE_WINDOW", False);
 }
 
 #ifdef DEBUG_XSYNC
@@ -498,12 +498,7 @@ ProcessEvents(void *drvCaller)
 			ka = (xev.type == KeyPress) ? AG_KEY_PRESSED :
 			                              AG_KEY_RELEASED;
 			if (LookupKeyCode(xev.xkey.keycode, &ks)) {
-#if 0
-				printf("KeyPress ks=0x%x (ucs=%c)\n",
-				    (Uint)ks, (char)ucs);
-#endif
-				if ((win = LookupWindowByID(xev.xkey.window))
-				    != NULL) {
+				if ((win = LookupWindowByID(xev.xkey.window))) {
 					drv = WIDGET(win)->drv;
 					AG_KeyboardUpdate(drv->kbd, ka, ks, ucs);
 					AG_ProcessKey(drv->kbd, win, ka, ks, ucs);
@@ -571,8 +566,7 @@ ProcessEvents(void *drvCaller)
 			XRefreshKeyboardMapping(&xev.xmapping);
 			break;
 		case ConfigureNotify:
-			if ((win = LookupWindowByID(xev.xconfigure.window))
-			    != NULL) {
+			if ((win = LookupWindowByID(xev.xconfigure.window))) {
 				AG_SizeAlloc a;
 
 				a.x = 0;
@@ -589,13 +583,14 @@ ProcessEvents(void *drvCaller)
 			break;
 		case ClientMessage:
 			if ((xev.xclient.format == 32) &&
-			    (xev.xclient.data.l[0] == wmDeleteWindowAtom)) {
-				goto quit;
+			    (xev.xclient.data.l[0] == wmDeleteWindow) &&
+			    (win = LookupWindowByID(xev.xclient.window))) {
+				AG_PostEvent(NULL, win, "window-close", NULL);
 			}
 			break;
 #if 0
 		case Expose:
-			if ((win = LookupWindowByID(xev.xexpose.window)) != NULL) {
+			if ((win = LookupWindowByID(xev.xexpose.window))) {
 				AG_Driver *drv = WIDGET(win)->drv;
 				AG_BeginRendering(drv);
 				AG_ObjectLock(win);
@@ -611,9 +606,16 @@ ProcessEvents(void *drvCaller)
 		}
 next_event:
 		nProcessed++;
+		AG_UnlockVFS(&agDrivers);
+
 		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
 			AG_FreeDetachedWindows();
 		}
+		/* Exit when no more windows exist. XXX */
+		if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children))
+			goto quit;
+
+		AG_LockVFS(&agDrivers);
 		if (agWindowToFocus != NULL) {
 			glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
 			if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
@@ -627,7 +629,6 @@ next_event:
 	return (nProcessed);
 quit:
 	agTerminating = 1;
-	AG_UnlockVFS(&agDrivers);
 	return (-1);
 }
 
@@ -659,10 +660,8 @@ GenericEventLoop(void *obj)
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
 		} else if (PendingEvents() != 0) {
-			if (ProcessEvents(NULL) == -1) {
-				printf("terminating\n");
+			if (ProcessEvents(NULL) == -1)
 				return;
-			}
 #ifdef AG_DEBUG
 			agEventAvg++;
 #endif
@@ -1992,6 +1991,9 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE))
 		SetNoDecorationHints(win);
+
+	if (!(win->flags & AG_WINDOW_NOCLOSE))
+		XSetWMProtocols(agDisplay, glx->w, &wmDeleteWindow, 1);
 
 	/* Create a GLX context and initialize state. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
