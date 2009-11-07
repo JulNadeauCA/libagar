@@ -63,6 +63,7 @@ struct ag_window *AG_GuiDebugger(void);
 #endif
 
 #ifdef AG_LEGACY
+#define AGVIEW_FOREACH_WINDOW AG_FOREACH_WINDOW
 #define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
 #define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
 #endif /* AG_LEGACY */
