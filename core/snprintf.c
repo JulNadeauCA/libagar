@@ -60,11 +60,11 @@
 #include <config/have_long_long.h>
 #ifndef HAVE_SNPRINTF
 
-#include "snprintf.h"
-
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
+
+#include "snprintf.h"
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
