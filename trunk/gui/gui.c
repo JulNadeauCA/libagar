@@ -321,7 +321,7 @@ AG_InitGraphics(const char *spec)
 		} else {
 			Strlcpy(specBuf, spec, sizeof(specBuf));
 			s = &specBuf[0];
-			while ((ds = strsep(&s, ",;")) != NULL) {
+			while ((ds = AG_Strsep(&s, ",;")) != NULL) {
 				for (i = 0; i < agDriverListSize; i++) {
 					dc = agDriverList[i];
 					if (strcmp(dc->name, ds) == 0 &&
