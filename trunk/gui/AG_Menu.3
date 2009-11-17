@@ -114,8 +114,11 @@ widget.
 The
 .Fn AG_MenuNewGlobal
 constructor creates a global "application menu".
-The manner in which application menus are displayed is entirely dependent on
-the underlying platform and graphics system.
+The manner in which application menus are displayed is dependent on the
+underlying platform and graphics system.
+If an application menu is already defined,
+.Fn AG_MenuNewGlobal
+replaces it.
 .Pp
 The
 .Fn AG_MenuExpand
