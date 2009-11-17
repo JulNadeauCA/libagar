@@ -668,21 +668,20 @@ Note that child widgets automatically inherit the theme associated with
 their parent object.
 .Sh WIDGET ACTIONS
 Input events such as key presses or mouse button events can be "tied" to
-specific
-.Em actions .
-Possible actions include the execution of a specified routine, or the
-setting/toggling of an boolean variable or flag.
-This interface is preferred over event handlers where the conditions are fixed
+simple actions, such as executing a specified routine or controlling a flag
+variable.
+Widget actions are preferred over event handlers where the conditions are fixed
 (e.g., a specific mouse button was clicked, or a specific key was pressed).
+Keyboard and mouse bindings may be edited by the user.
 Actions are identified by a name string, and are mapped to events by a table
 kept in the
 .Nm
 structure.
-Widget actions allow the end-user to conveniently reconfigure mouse bindings
-and keyboard shortcuts, and preserve the settings.
 The
+.Xr AG_MenuWidgetActions 3
+function of
 .Xr AG_Menu 3
-system also allows menus to be automatically generated from available actions.
+creates a generic menu item containing a widget's available actions.
 .Pp
 .nr nS 1
 .Ft "AG_Action *"

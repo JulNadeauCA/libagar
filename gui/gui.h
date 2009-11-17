@@ -51,7 +51,6 @@ void AG_DestroyGUI(void);
 void AG_DestroyGUIGlobals(void);
 void AG_QuitGUI(void);
 
-int  AG_SetRefreshRate(int);
 void AG_DestroyVideo(void);
 void AG_ViewCapture(void);
 

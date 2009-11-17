@@ -116,6 +116,7 @@ typedef struct ag_driver {
 	struct ag_cursor *cursors;	/* Registered mouse cursors */
 	Uint             nCursors;
 	struct ag_glyph_cache *glyphCache; /* Cache of rendered glyphs */
+	Uint8 glStipple[128];		/* For GL drivers */
 } AG_Driver;
 
 #define AGDRIVER(obj)		((AG_Driver *)(obj))

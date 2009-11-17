@@ -170,6 +170,8 @@ Init(void *obj)
 	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++)
 		SLIST_INIT(&drv->glyphCache[i].glyphs);
+	
+	memset(drv->glStipple, 0xaa, sizeof(drv->glStipple));
 }
 
 static void
