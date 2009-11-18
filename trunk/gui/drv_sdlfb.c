@@ -340,7 +340,8 @@ scan:
 			AG_ProcessMouseButtonUp(win,
 			    ev->button.x, ev->button.y,
 			    (AG_MouseButton)ev->button.button);
-			if (agWindowToFocus != NULL) {
+			if (agWindowToFocus != NULL ||
+			    !TAILQ_EMPTY(&agWindowDetachQ)) {
 				AG_ObjectUnlock(win);
 				return (1);
 			}
@@ -363,7 +364,8 @@ scan:
 			AG_ProcessMouseButtonDown(win,
 			    ev->button.x, ev->button.y,
 			    (AG_MouseButton)ev->button.button);
-			if (agWindowToFocus != NULL) {
+			if (agWindowToFocus != NULL ||
+			    !TAILQ_EMPTY(&agWindowDetachQ)) {
 				AG_ObjectUnlock(win);
 				return (1);
 			}
