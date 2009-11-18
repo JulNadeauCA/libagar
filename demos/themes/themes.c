@@ -499,7 +499,7 @@ main(int argc, char *argv[])
 	 * Create an application menu if we are using a single-display
 	 * driver (e.g., sdlfb, sdlgl).
 	 */
-	if (agDriver != NULL && AGDRIVER_SINGLE(agDriver)) {
+	if (agDriverSw != NULL) {
 		appMenu = AG_MenuNewGlobal(0);
 		m = AG_MenuNode(appMenu->root, "File", NULL);
 		{
