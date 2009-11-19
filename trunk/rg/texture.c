@@ -101,6 +101,7 @@ RG_TextureFind(RG_Tileset *ts, const char *texname)
 	return (tex);
 }
 
+#if 0
 static void
 find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 {
@@ -116,7 +117,6 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 		find_tilesets(tl, cob, depth+1);
 }
 
-#if 0
 static void
 PollTilesets(AG_Event *event)
 {
