@@ -428,7 +428,7 @@ main(int argc, char *argv[])
 				break;
 			case '?':
 			default:
-				printf("%s [-vgsDdfbBR] [-r fps] [-t fontspec] "
+				printf("%s [-vgsDdfbBR] [-d driver] [-r fps] [-t fontspec] "
 				       "[-w width] [-h height] "
 				       "[-T font-path] [-c colors.acs]\n",
 				       agProgName);
