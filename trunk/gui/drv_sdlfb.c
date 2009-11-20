@@ -36,22 +36,7 @@
 #include "cursors.h"
 #include "perfmon.h"
 
-/* XXX */
-#undef HAVE_SNPRINTF
-#undef HAVE_VSNPRINTF
-#undef HAVE_SYS_TYPES_H
-#undef HAVE_STDIO_H
-#undef HAVE_STDLIB_H
-#undef HAVE_STDARG_H
-#undef Uint8
-#undef Sint8
-#undef Uint16
-#undef Sint16
-#undef Uint32
-#undef Sint32
-#undef Uint64
-#undef Sint64
-#include <SDL.h>
+#include "drv_sdl_common.h"
 
 typedef struct ag_sdlfb_driver {
 	struct ag_driver_sw _inherit;
@@ -133,8 +118,8 @@ Open(void *obj, const char *spec)
 	AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize the main mouse and keyboard devices. */
-	drv->mouse = AG_MouseNew(sfb, "X mouse");
-	drv->kbd = AG_KeyboardNew(sfb, "X keyboard");
+	drv->mouse = AG_MouseNew(sfb, "SDL mouse");
+	drv->kbd = AG_KeyboardNew(sfb, "SDL keyboard");
 
 	/* Configure the window caption */
 	SDL_WM_SetCaption(agProgName, agProgName);
