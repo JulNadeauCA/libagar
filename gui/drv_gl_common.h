@@ -1,7 +1,23 @@
 /*	Public domain	*/
 /*
- * Routines common to all OpenGL drivers.
+ * Code common to all drivers using OpenGL.
  */
+
+#ifdef __APPLE__
+# include <OpenGL/gl.h>
+# include <OpenGL/glx.h>
+#else
+# include <GL/gl.h>
+# include <GL/glx.h>
+#endif
+
+/* Saved blending state */
+typedef struct ag_gl_blending_state {
+	GLboolean enabled;		/* GL_BLEND enable bit */
+	GLint srcFactor;		/* GL_BLEND_SRC mode */
+	GLint dstFactor;		/* GL_BLEND_DST mode */
+	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
+} AG_GL_BlendState;
 
 void AG_GL_InitContext(AG_Rect);
 void AG_GL_FillRect(void *, AG_Rect, AG_Color);
@@ -39,3 +55,18 @@ void AG_GL_DrawFrame(void *, AG_Rect, AG_Color [2]);
 void AG_GL_UpdateGlyph(void *, AG_Glyph *);
 void AG_GL_DrawGlyph(void *, AG_Glyph *, int, int);
 
+/* Get corresponding GL blending function */
+static __inline__ GLenum
+AG_GL_GetBlendingFunc(AG_BlendFn fn)
+{
+	switch (fn) {
+	case AG_ALPHA_ONE:		return (GL_ONE);
+	case AG_ALPHA_ZERO:		return (GL_ZERO);
+	case AG_ALPHA_SRC:		return (GL_SRC_ALPHA);
+	case AG_ALPHA_DST:		return (GL_DST_ALPHA);
+	case AG_ALPHA_ONE_MINUS_DST:	return (GL_ONE_MINUS_DST_ALPHA);
+	case AG_ALPHA_ONE_MINUS_SRC:	return (GL_ONE_MINUS_SRC_ALPHA);
+	case AG_ALPHA_OVERLAY:		return (GL_ONE);	/* XXX */
+	default:			return (GL_ONE);
+	}
+}

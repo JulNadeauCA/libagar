@@ -676,6 +676,7 @@ AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 void
 AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 {
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef((float)r.x, (float)r.y, 0.0);
 
@@ -715,6 +716,7 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 void
 AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 {
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef((float)r.x, (float)r.y, 0.0);
 

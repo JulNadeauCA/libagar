@@ -26,7 +26,7 @@ SRCS=	gui.c widget.c window.c style.c style_default.c iconmgr.c \
 	time_sdl.c debugger.c surface.c perfmon.c widget_legacy.c global_keys.c \
 	input_device.c mouse.c keyboard.c \
 	drv.c drv_sw.c drv_mw.c drv_gl_common.c \
-	drv_glx.c drv_sdlfb.c
+	drv_glx.c drv_sdlfb.c drv_sdlgl.c
 
 MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \

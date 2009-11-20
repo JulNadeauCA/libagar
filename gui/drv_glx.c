@@ -31,21 +31,13 @@
 #include <config/have_glx.h>
 #ifdef HAVE_GLX
 
+#include <core/core.h>
+#include <core/config.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
-
-#ifdef __APPLE__
-# include <OpenGL/gl.h>
-# include <OpenGL/glx.h>
-#else
-# include <GL/gl.h>
-# include <GL/glx.h>
-#endif
-
-#include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
 #include "window.h"
@@ -68,26 +60,18 @@ static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
 static Atom           wmDeleteWindow;	/* WM_DELETE_WINDOW atom */
 
-/* Saved blending state */
-struct blending_state {
-	GLboolean enabled;		/* GL_BLEND enable bit */
-	GLint srcFactor;		/* GL_BLEND_SRC mode */
-	GLint dstFactor;		/* GL_BLEND_DST mode */
-	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
-};
-
 /* Driver instance data */
 typedef struct ag_driver_glx {
 	struct ag_driver_mw _inherit;
-	Window w;				/* X window */
-	GLXContext glxCtx;			/* GLX context */
-	int clipStates[4];			/* Clipping GL state */
-	AG_ClipRect *clipRects;			/* Clipping rectangles */
-	Uint        nClipRects;
-	Uint *textureGC;			/* Textures queued for deletion */
-	Uint nTextureGC;
-	struct blending_state bs[1];		/* Saved blending states */
-	AG_Cursor *cursorToSet;			/* Set cursor at end of event cycle */
+	Window           w;		/* X window */
+	GLXContext       glxCtx;	/* GLX context */
+	int              clipStates[4];	/* Clipping GL state */
+	AG_ClipRect     *clipRects;	/* Clipping rectangles */
+	Uint            nClipRects;
+	Uint            *textureGC;	/* Textures queued for deletion */
+	Uint            nTextureGC;
+	AG_GL_BlendState bs[1];		/* Saved blending states */
+	AG_Cursor       *cursorToSet;	/* Set cursor at end of event cycle */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -119,8 +103,10 @@ AG_DriverMwClass agDriverGLX;
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
 
 static void PostResizeCallback(AG_Window *, AG_SizeAlloc *);
+#if 0
 static void FreeWidgetResources(AG_Widget *);
 static void RegenWidgetResources(AG_Widget *);
+#endif
 static int  RaiseWindow(AG_Window *);
 static int  SetInputFocus(AG_Window *);
 static void SetTransientFor(AG_Window *, AG_Window *);
@@ -275,6 +261,9 @@ PendingEvents(void)
 	struct timeval tv;
 	fd_set fdset;
 	int fd;
+
+	if (agDisplay == NULL)
+		return (0);
 
 	XFlush(agDisplay);
 	if (XEventsQueued(agDisplay, QueuedAlready))
@@ -802,23 +791,8 @@ PopClipRect(void *obj)
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 }
 
-static __inline__ GLenum
-GetBlendingFunc(AG_BlendFn fn)
-{
-	switch (fn) {
-	case AG_ALPHA_ONE:		return (GL_ONE);
-	case AG_ALPHA_ZERO:		return (GL_ZERO);
-	case AG_ALPHA_SRC:		return (GL_SRC_ALPHA);
-	case AG_ALPHA_DST:		return (GL_DST_ALPHA);
-	case AG_ALPHA_ONE_MINUS_DST:	return (GL_ONE_MINUS_DST_ALPHA);
-	case AG_ALPHA_ONE_MINUS_SRC:	return (GL_ONE_MINUS_SRC_ALPHA);
-	case AG_ALPHA_OVERLAY:		return (GL_ONE);	/* XXX */
-	default:			return (GL_ONE);
-	}
-}
-
 static void
-PushBlendingMode(void *obj, AG_BlendFn srcFn, AG_BlendFn dstFn)
+PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	AG_DriverGLX *glx = obj;
 
@@ -831,7 +805,7 @@ PushBlendingMode(void *obj, AG_BlendFn srcFn, AG_BlendFn dstFn)
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glEnable(GL_BLEND);
-	glBlendFunc(GetBlendingFunc(srcFn), GetBlendingFunc(dstFn));
+	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
 }
 
 static void
@@ -1425,6 +1399,7 @@ MoveWindow(AG_Window *win, int x, int y)
 	return (0);
 }
 
+#if 0
 /* Save/restore associated widget GL resources (for GL context changes). */
 static void
 FreeWidgetResources(AG_Widget *wid)
@@ -1446,6 +1421,7 @@ RegenWidgetResources(AG_Widget *wid)
 	}
 	AG_WidgetRegenResourcesGL(wid);
 }
+#endif
 
 static int
 ResizeWindow(AG_Window *win, Uint w, Uint h)

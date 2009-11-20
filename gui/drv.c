@@ -37,11 +37,14 @@
 #include "window.h"
 #include "text.h"
 
-#ifdef HAVE_GLX
+#if defined(HAVE_GLX)
 extern AG_Driver agDriverGLX;
 #endif
-#ifdef HAVE_SDL
+#if defined(HAVE_SDL)
 extern AG_Driver agDriverSDLFB;
+#endif
+#if defined(HAVE_SDL) && defined(HAVE_OPENGL)
+extern AG_Driver agDriverSDLGL;
 #endif
 
 AG_Object         agDrivers;			/* Drivers VFS */
@@ -52,16 +55,14 @@ AG_Driver        *agView = NULL;  		/* Pre-1.4 */
 #endif
 
 void *agDriverList[] = {
-#ifdef HAVE_GLX
+#if defined(HAVE_GLX)
 	&agDriverGLX,
 #endif
-#ifdef HAVE_SDL
+#if defined(HAVE_SDL)
 	&agDriverSDLFB,
-# if 0
-# ifdef HAVE_OPENGL
+#endif
+#if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 	&agDriverSDLGL,
-# endif
-# endif
 #endif
 };
 Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
