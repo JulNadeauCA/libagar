@@ -824,7 +824,8 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 	}
 	if (r.w > 0 && r.h > 0) {
 		AGDRIVER_CLASS(drv)->fillRect(drv, r, agColors[BG_COLOR]);
-		AGDRIVER_CLASS(drv)->updateRegion(drv, r);
+		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
+			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 	}
 	if (HEIGHT(win) < rPrev.h) {				/* H-resize */
 		r.x = rPrev.x;
@@ -833,7 +834,8 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 		r.h = rPrev.h - HEIGHT(win);
 			
 		AGDRIVER_CLASS(drv)->fillRect(drv, r, agColors[BG_COLOR]);
-		AGDRIVER_CLASS(drv)->updateRegion(drv, r);
+		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
+			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 	}
 }
 
@@ -1056,7 +1058,8 @@ AG_WindowUnmaximize(AG_Window *win)
 			r.h = AGDRIVER_SW(drv)->h;
 			AGDRIVER_CLASS(drv)->fillRect(drv, r,
 			    agColors[BG_COLOR]);
-			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
+			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
+				AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 		}
 	}
 }
@@ -1080,7 +1083,8 @@ IconMotion(AG_Event *event)
 			AGDRIVER_CLASS(drv)->fillRect(drv, r,
 			    agColors[BG_COLOR]);
 			r = AG_Rect2ToRect(WIDGET(wDND)->rView);
-			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
+			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
+				AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 		}
 		AG_WindowSetGeometryRect(wDND,
 		    AG_RECT(WIDGET(wDND)->x + xRel,
