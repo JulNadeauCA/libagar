@@ -29,6 +29,7 @@
 
 #include <config/have_sdl.h>
 #include <config/have_opengl.h>
+
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 
 #include <core/core.h>
@@ -718,7 +719,7 @@ PopBlendingMode(void *drv)
  */
 
 static int
-CreateCursor(void *obj, AG_Cursor *ac)
+SDLGL_CreateCursor(void *obj, AG_Cursor *ac)
 {
 	SDL_Cursor *sc;
 
@@ -1096,7 +1097,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		PopClipRect,
 		PushBlendingMode,
 		PopBlendingMode,
-		CreateCursor,
+		SDLGL_CreateCursor, // Name conflicts with wingdi.h!
 		FreeCursor,
 		PushCursor,
 		PopCursor,

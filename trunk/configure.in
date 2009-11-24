@@ -19,6 +19,7 @@ REGISTER("--with-db4",		"CORE: Berkeley DB support [check]")
 
 REGISTER("--with-gl",		"GUI: OpenGL rendering support [check]")
 REGISTER("--with-glx",		"GUI: GL rendering via GLX [check]")
+REGISTER("--with-wgl",		"GUI: GL rendering via WGL [check]")
 REGISTER("--with-sdl",		"GUI: SDL rendering support [check]")
 REGISTER("--with-jpeg",		"GUI: JPEG screenshot support [check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [check]")
@@ -209,6 +210,19 @@ if [ "${enable_gui}" != "no" ]; then
 		MDEFINE(GLX_LIBS, "")
 	fi
 	
+	# Enable WGL support if Windows is found and Opengl will be compiled in
+	if [ "$with_wgl" != "no" ] && [ "${HAVE_OPENGL}" == "yes" ] && echo $OS | grep -Eq '^Windows'; then
+		echo "*"
+		echo "* WGL is used since OpenGL was requested and we're building on a Windows platform"
+		echo "*"
+		
+		HDEFINE(HAVE_WGL, "yes")
+	else
+		HUNDEF(HAVE_WGL)
+		MDEFINE(WGL_CFLAGS, "")
+		MDEFINE(WGL_LIBS, "")
+	fi
+	
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
 	if [ "${with_freetype}" != "no" ]; then
@@ -259,6 +273,9 @@ else
 	HUNDEF(HAVE_GLX)
 	MDEFINE(GLX_CFLAGS, "")
 	MDEFINE(GLX_LIBS, "")
+	HUNDEF(HAVE_WGL)
+	MDEFINE(WGL_CFLAGS, "")
+	MDEFINE(WGL_LIBS, "")
 	HUNDEF(HAVE_OPENGL)
 	MDEFINE(OPENGL_CFLAGS, "")
 	MDEFINE(OPENGL_LIBS, "")

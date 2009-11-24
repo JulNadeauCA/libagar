@@ -30,6 +30,7 @@
 #include <config/have_sdl.h>
 #include <config/have_opengl.h>
 #include <config/have_glx.h>
+#include <config/have_wgl.h>
 
 #include <core/core.h>
 #include <core/config.h>
@@ -45,6 +46,9 @@ extern AG_Driver agDriverSDLFB;
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 extern AG_Driver agDriverSDLGL;
+#endif
+#if defined(HAVE_WGL)
+extern AG_Driver agDriverWGL;
 #endif
 
 AG_Object         agDrivers;			/* Drivers VFS */
@@ -63,6 +67,9 @@ void *agDriverList[] = {
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 	&agDriverSDLGL,
+#endif
+#if defined(HAVE_WGL)
+	&agDriverWGL,
 #endif
 };
 Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
