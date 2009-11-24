@@ -6,6 +6,8 @@
 #ifdef __APPLE__
 # include <OpenGL/gl.h>
 # include <OpenGL/glx.h>
+#elif _MSC_VER
+# include "opengl.h"
 #else
 # include <GL/gl.h>
 # include <GL/glx.h>
