@@ -336,7 +336,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	SetForegroundWindow(wgl->hwnd);
 	SetFocus(wgl->hwnd);
 	
-	WIDGET(win)->drv->flags |= AG_DRIVER_MW_OPEN;
+	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
 
 	// Set the pixel format
 	drv->videoFmt = AG_PixelFormatRGB(16, 0x000000ff, 0x0000ff00, 0x00ff0000);
@@ -351,7 +351,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 fail:
 	wglDeleteContext(wgl->hglrc);
 	DestroyWindow(wgl->hwnd);
-	WIDGET(win)->drv->flags &= (~AG_DRIVER_MW_OPEN);
+	AGDRIVER_MW(wgl)->flags &= (~AG_DRIVER_MW_OPEN);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
@@ -442,7 +442,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					(wParam & MK_RBUTTON) ? AG_MOUSE_RMASK : 0;
 
 				drv = WIDGET(win)->drv;
-				x   = AGDRIVER_BOUNDED_WIDTH(win,  LOWORD(lParam));
+				x   = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
 				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
 				AG_MouseButtonUpdate(drv->mouse,
 				    AG_BUTTON_PRESSED,
@@ -459,12 +459,12 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_RBUTTONUP:
 			if ((win = LookupWindowByID(hWnd))) {
 				int button = 
-					(wParam & MK_LBUTTON) ? AG_MOUSE_LMASK :
-					(wParam & MK_MBUTTON) ? AG_MOUSE_MMASK :
-					(wParam & MK_RBUTTON) ? AG_MOUSE_RMASK : 0;
+					(uMsg == WM_LBUTTONUP) ? AG_MOUSE_LMASK :
+					(uMsg == WM_MBUTTONUP) ? AG_MOUSE_MMASK :
+					(uMsg == WM_RBUTTONUP) ? AG_MOUSE_RMASK : 0;
 
 				drv = WIDGET(win)->drv;
-				x   = AGDRIVER_BOUNDED_WIDTH(win,  LOWORD(lParam));
+				x   = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
 				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
 				AG_MouseButtonUpdate(drv->mouse,
 				    AG_BUTTON_RELEASED,
@@ -1020,6 +1020,19 @@ WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 }
 
+static int
+WGL_SetRefreshRate(void *obj, int fps)
+{
+	if (fps < 1) {
+		AG_SetError("Invalid refresh rate");
+		return (-1);
+	}
+	rNom = 1000/fps;
+	rCur = 0;
+	return (0);
+}
+
+
 AG_DriverMwClass agDriverWGL = {
 	{
 		{
@@ -1052,7 +1065,7 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_UploadTexture,
 		AG_GL_UpdateTexture,
 		WGL_DeleteTexture,
-		NULL, // SetRefreshRate,
+		WGL_SetRefreshRate,
 		WGL_PushClipRect,
 		WGL_PopClipRect,
 		WGL_PushBlendingMode,
