@@ -340,6 +340,7 @@ echo "    --enable-network          CORE: Network support [check]"
 echo "    --with-db4                CORE: Berkeley DB support [check]"
 echo "    --with-gl                 GUI: OpenGL rendering support [check]"
 echo "    --with-glx                GUI: GL rendering via GLX [check]"
+echo "    --with-wgl                GUI: GL rendering via WGL [check]"
 echo "    --with-sdl                GUI: SDL rendering support [check]"
 echo "    --with-jpeg               GUI: JPEG screenshot support [check]"
 echo "    --with-freetype           GUI: Enable FreeType support [check]"
@@ -5316,6 +5317,28 @@ echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 	fi
 	
+	if [ "$with_wgl" != "no" ] && [ "${HAVE_OPENGL}" == "yes" ] && echo $OS | grep -Eq '^Windows'
+ then
+		echo "*"
+		echo "* WGL is used since OpenGL was requested and we're building on a Windows platform"
+		echo "*"
+		
+HAVE_WGL="yes"
+echo "#ifndef HAVE_WGL" > config/have_wgl.h
+echo "#define HAVE_WGL \"$HAVE_WGL\"" >> config/have_wgl.h
+echo "#endif" >> config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
+	else
+echo "#undef HAVE_WGL" >config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
+WGL_CFLAGS=""""
+echo "WGL_CFLAGS=$WGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"WGL_CFLAGS\"] = \"$WGL_CFLAGS\"" >>configure.lua
+WGL_LIBS=""""
+echo "WGL_LIBS=$WGL_LIBS" >>Makefile.config
+echo "mdefs[\"WGL_LIBS\"] = \"$WGL_LIBS\"" >>configure.lua
+	fi
+	
 	if [ "${with_freetype}" != "no" ]
  then
 $ECHO_N "checking for FreeType (http://www.freetype.org)..."
@@ -5710,6 +5733,14 @@ echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
 GLX_LIBS=""""
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
+echo "#undef HAVE_WGL" >config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
+WGL_CFLAGS=""""
+echo "WGL_CFLAGS=$WGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"WGL_CFLAGS\"] = \"$WGL_CFLAGS\"" >>configure.lua
+WGL_LIBS=""""
+echo "WGL_LIBS=$WGL_LIBS" >>Makefile.config
+echo "mdefs[\"WGL_LIBS\"] = \"$WGL_LIBS\"" >>configure.lua
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 OPENGL_CFLAGS=""""
