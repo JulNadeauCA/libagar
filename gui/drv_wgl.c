@@ -90,6 +90,8 @@ struct ag_key_mapping {			/* Keymap translation table entry */
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static int       InitClipRects(AG_DriverWGL *wgl, int w, int h);
+static void      ChangeCursor(AG_DriverWGL *wgl);
+static int       InitDefaultCursor(AG_DriverWGL *wgl);
 static void      WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a);
 
 void
@@ -247,7 +249,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	wndClass.lpfnWndProc   = WndProc; // We handle the messages on our own!
 	wndClass.hInstance     = GetModuleHandle(NULL);
 	wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wndClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
+	wndClass.hCursor       = NULL;
 	wndClass.lpszClassName = wndClassName;
 	if(!RegisterClassEx(&wndClass)) {
 		_SetWindowsError("Cannot register WGL window class", GetLastError());
@@ -347,6 +349,11 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	if (InitClipRects(wgl, r.w, r.h) == -1)
 		goto fail;
 	
+	/* Create the built-in cursors. */
+	if (InitDefaultCursor(wgl) == -1 || AG_InitStockCursors(drv) == -1)
+		goto fail;
+	
+
 	return (0);
 fail:
 	wglDeleteContext(wgl->hglrc);
@@ -409,6 +416,7 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	AG_DriverWGL      *wgl;
 	AG_Driver         *drv;
 	AG_Window         *win;
 	int               x, y;
@@ -418,6 +426,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			if((win = LookupWindowByID(hWnd))) {
 				drv = WIDGET(win)->drv;
+				wgl = (AG_DriverWGL *)drv;
 				x   = AGDRIVER_BOUNDED_WIDTH(win,  LOWORD(lParam));
 				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
 				AG_MouseMotionUpdate(drv->mouse, x, y);
@@ -427,6 +436,11 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					drv->mouse->yRel,
 					drv->mouse->btnState
 				);
+
+				if (wgl->cursorToSet != NULL) {
+					ChangeCursor(wgl);
+				}
+
 				AG_Verbose("WGL_ProcessEvents: MouseMove (%d, %d)\n", x, y);
 			} else {
 				Verbose("WGL_ProcessEvents: WM_MOUSEMOVE on unknown window!\n");
@@ -905,6 +919,48 @@ WGL_SetTransientFor(AG_Window *win, AG_Window *winParent)
  * Cursor operations
  */
 
+/* Initialize the default cursor. */
+static int
+InitDefaultCursor(AG_DriverWGL *wgl)
+{
+	AG_Driver *drv = AGDRIVER(wgl);
+	AG_Cursor *ac;
+	struct ag_cursor_wgl *cg;
+	
+	if ((cg = AG_TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL)
+		return (-1);
+	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		free(cg);
+		return (-1);
+	}
+
+	ac = &drv->cursors[0];
+	drv->nCursors = 1;
+	AG_CursorInit(ac);
+	cg->cursor = LoadCursor(NULL, IDC_ARROW);
+	cg->visible = 1;
+	ac->p = cg;
+	return (0);
+}
+
+static void
+ChangeCursor(AG_DriverWGL *wgl)
+{
+	AG_Cursor *ac = wgl->cursorToSet;
+	struct ag_cursor_wgl *cg = ac->p;
+
+	if (wgl->cursorToSet != AGDRIVER(wgl)->activeCursor) {
+		if (wgl->cursorToSet == &AGDRIVER(wgl)->cursors[0]) {
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+		} else {
+			SetCursor(cg->cursor);
+		}
+		AGDRIVER(wgl)->activeCursor = ac;
+		cg->visible = 1;
+	}
+	wgl->cursorToSet = NULL;
+}
+
 static int
 WGL_CreateCursor(void *obj, AG_Cursor *ac)
 {
@@ -939,12 +995,13 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 
 	// Copy cursor data into buffers for use with CreateCursor
 	for (i = 0; i < size; i++) {
-		andMask[i] = ac->data[i] | ac->mask[i];
-		xorMask[i] = ac->data[i];
+		andMask[i] = ~ac->mask[i];
+		xorMask[i] = ~ac->data[i] ^ ~ac->mask[i];
 	}
 
 	// Create cursor
 	if(cg->cursor = CreateCursor(GetModuleHandle(NULL), ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask)) {
+		cg->visible = 0;
 		ac->p = cg;
 
 		AG_Verbose("WGL_CreateCursor: Created.");
@@ -973,6 +1030,7 @@ WGL_PushCursor(void *obj, AG_Cursor *ac)
 	AG_DriverWGL *wgl = obj;
 
 	wgl->cursorToSet = ac;
+
 	return (0);
 }
 
