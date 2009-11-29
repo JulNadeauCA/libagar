@@ -85,7 +85,7 @@ char   *AG_Strdup(const char *);
 char   *AG_TryStrdup(const char *);
 Uint32 *AG_StrdupUCS4(const Uint32 *);
 Uint32 *AG_TryStrdupUCS4(const Uint32 *);
-char   *AG_Strcasestr(const char *, const char *);
+const char *AG_Strcasestr(const char *, const char *);
 
 Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)

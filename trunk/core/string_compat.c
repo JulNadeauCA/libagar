@@ -356,7 +356,7 @@ AG_TryStrdupUCS4(const Uint32 *ucs)
 /*
  * Locate a substring ignoring case.
  */
-char *
+const char *
 AG_Strcasestr(const char *s, const char *find)
 {
 	char c, sc;
@@ -373,7 +373,7 @@ AG_Strcasestr(const char *s, const char *find)
 		} while (Strncasecmp(s, find, len) != 0);
 		s--;
 	}
-	return ((char *)s);
+	return (s);
 }
 
 /*
