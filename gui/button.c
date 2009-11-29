@@ -500,9 +500,9 @@ Draw(void *p)
 		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
 		}
 		switch (bu->valign) {
-		case AG_TEXT_TOP:	x = bu->tPad;			break;
-		case AG_TEXT_MIDDLE:	x = HEIGHT(bu)/2 - h/2;		break;
-		case AG_TEXT_BOTTOM:	x = HEIGHT(bu) - h - bu->bPad;	break;
+		case AG_TEXT_TOP:	y = bu->tPad;			break;
+		case AG_TEXT_MIDDLE:	y = HEIGHT(bu)/2 - h/2;		break;
+		case AG_TEXT_BOTTOM:	y = HEIGHT(bu) - h - bu->bPad;	break;
 		}
 		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
 		AG_WidgetBlitSurface(bu, bu->surface, x, y);
@@ -575,7 +575,7 @@ AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 void
 AG_ButtonSurface(AG_Button *bu, AG_Surface *su)
 {
-	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
 
 	AG_ObjectLock(bu);
 	if (bu->lbl != NULL) {
