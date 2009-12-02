@@ -513,8 +513,64 @@ all-manlinks:
 		done; \
 	fi
 
+man2wiki: Makefile
+	@if [ "${MAN1}" != "" ]; then \
+		for F in ${MAN1}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN2}" != "" ]; then \
+		for F in ${MAN2}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN3}" != "" ]; then \
+		for F in ${MAN3}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN4}" != "" ]; then \
+		for F in ${MAN4}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN5}" != "" ]; then \
+		for F in ${MAN5}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN6}" != "" ]; then \
+		for F in ${MAN6}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN7}" != "" ]; then \
+		for F in ${MAN7}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN8}" != "" ]; then \
+		for F in ${MAN8}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+	@if [ "${MAN9}" != "" ]; then \
+		for F in ${MAN9}; do \
+			echo "cat $$F |perl ${TOP}/mk/man2wiki.pl $$F"; \
+			cat $$F |perl ${TOP}/mk/man2wiki.pl $$F; \
+		done; \
+	fi
+
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-man install-manlinks clean-man
-.PHONY: man preformat-man install-man-dirs manlinks all-manlinks
+.PHONY: man preformat-man install-man-dirs manlinks all-manlinks man2wiki
 
 include ${TOP}/mk/build.common.mk
