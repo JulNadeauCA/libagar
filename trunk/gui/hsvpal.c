@@ -187,7 +187,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	}
 	
 	bFormat = AG_GetVariable(pal, "pixel-format", &pFormat);
-	AG_SetUint32(pal, "pixel", AG_MapRGBA(*pFormat, r,g,b,a));
+	AG_SetUint32(pal, "pixel", AG_MapPixelRGBA(*pFormat, r,g,b,a));
 	AG_UnlockVariable(bFormat);
 }
 
@@ -200,7 +200,7 @@ UpdateHSVFromPixel(AG_HSVPal *hsv, Uint32 pixel)
 	AG_PixelFormat **pFormat;
 	
 	bFormat = AG_GetVariable(hsv, "pixel-format", &pFormat);
-	AG_GetRGBA(pixel, *pFormat, &r,&g,&b,&a);
+	AG_GetPixelRGBA(pixel, *pFormat, &r,&g,&b,&a);
 	AG_RGB2HSV(r, g, b, &h,&s,&v);
 	AG_SetFloat(hsv, "hue", h);
 	AG_SetFloat(hsv, "saturation", s);
@@ -681,7 +681,7 @@ OnAttach(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_SELF();
 	
-	pal->pixel = AG_MapRGBA(agSurfaceFmt, 0,0,0,255);
+	pal->pixel = AG_MapPixelRGBA(agSurfaceFmt, 0,0,0,255);
 	AG_BindPointer(pal, "pixel-format", (void *)&agSurfaceFmt);
 }
 
@@ -705,7 +705,7 @@ Init(void *obj)
 	pal->menu = NULL;
 	pal->menu_item = NULL;
 	pal->menu_win = NULL;
-	AG_WidgetMapSurface(pal, NULL);
+	pal->cTile = AG_ColorRGB(140,140,140);
 
 	AG_SetEvent(pal, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pal, "mouse-button-down", MouseButtonDown, NULL);
@@ -746,10 +746,10 @@ Init(void *obj)
 static void
 RenderPalette(AG_HSVPal *pal)
 {
-	AG_Driver *drv = WIDGET(pal)->drv;
 	float h, cur_h, cur_s, cur_v;
-	Uint32 pc;
-	Uint8 r, g, b, a, da;
+	AG_Color C;
+	Uint32 px;
+	Uint8 da;
 	int x, y, i;
 	AG_Rect rd;
 
@@ -757,21 +757,21 @@ RenderPalette(AG_HSVPal *pal)
 	cur_s = AG_GetFloat(pal, "saturation");
 	cur_v = AG_GetFloat(pal, "value");
 
-	AG_SurfaceLock(pal->surface);
-
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*AG_PI; h += pal->circle.dh) {
-		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &r, &g, &b);
-		pc = AG_MapRGB(drv->videoFmt, r,g,b);
+		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &C.r, &C.g, &C.b);
+		px = AG_MapColorRGB(pal->surface->format, C);
+		px = AG_MapPixelRGB(pal->surface->format, 100, 100, 0);
 
 		for (i = 0; i < pal->circle.width; i++) {
 			x = (pal->circle.rout - i)*Cos(h);
 			y = (pal->circle.rout - i)*Sin(h);
 
+			printf("pal pixel at %d,%d\n", pal->circle.x+x, pal->circle.y+y);
 			AG_PUT_PIXEL2(pal->surface,
 			    pal->circle.x+x,
 			    pal->circle.y+y,
-			    pc);
+			    px);
 		}
 	}
 
@@ -783,16 +783,16 @@ RenderPalette(AG_HSVPal *pal)
 		for (x = 0; x < y; x++) {
 			AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
-			    &r, &g, &b);
-			pc = AG_MapRGB(drv->videoFmt, r,g,b);
-			AG_PUT_PIXEL2(pal->surface,
+			    &C.r, &C.g, &C.b);
+			px = AG_MapColorRGB(pal->surface->format, C);
+			AG_PUT_PIXEL2_CLIPPED(pal->surface,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y,
-			    pc);
-			AG_PUT_PIXEL2(pal->surface,
+			    px);
+			AG_PUT_PIXEL2_CLIPPED(pal->surface,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y + 1,
-			    pc);
+			    px);
 		}
 	}
 
@@ -816,17 +816,19 @@ RenderPalette(AG_HSVPal *pal)
 				AG_FillRect(pal->surface, &rd, pal->cTile);
 			}
 		}
-		AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v, &r, &g, &b);
+		AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v,
+		    &C.r, &C.g, &C.b);
 		da = MIN(1, pal->surface->w/255);
 		for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
-			for (x = 0, a = 0; x < pal->surface->w; x++) {
+			for (x = 0, C.a = 0;
+			     x < pal->surface->w;
+			     x++) {
 				AG_BLEND_RGBA2_CLIPPED(pal->surface, x, y,
-				    r, g, b, a, AG_ALPHA_SRC);
-				a = x*255/pal->surface->w;
+				    C.r, C.g, C.b, C.a, AG_ALPHA_SRC);
+				C.a = x*255/pal->surface->w;
 			}
 		}
 	}
-	AG_SurfaceUnlock(pal->surface);
 }
 
 static void
@@ -862,6 +864,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
+	if (pal->surface == NULL) {
+		if ((pal->surface = AG_SurfaceStdRGB(a->w, a->h)) == NULL) {
+			AG_FatalError(NULL);
+		}
+		(void)AG_WidgetMapSurface(pal, pal->surface);
+	} else {
+		if (AG_SurfaceResize(pal->surface, a->w, a->h) == -1)
+			AG_FatalError(NULL);
+	}
+
 	pal->flags |= AG_HSVPAL_DIRTY;
 	return (0);
 }
@@ -876,16 +888,10 @@ Draw(void *obj)
 
 	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
 		return;
-
+	
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
-		pal->surface = AG_SurfaceStdRGB(WIDTH(pal), HEIGHT(pal));
-		if (pal->surface == NULL) {
-			AG_FatalError(NULL);
-		}
-		pal->cTile = AG_ColorRGB(140,140,140);
 		RenderPalette(pal);
-		AG_WidgetReplaceSurface(pal, 0, pal->surface);
 	}
 
 	cur_h = (AG_GetFloat(pal, "hue") / 360.0) * 2*AG_PI;

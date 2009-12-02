@@ -30,50 +30,50 @@
 #include "rg_math.h"
 
 void
-RG_ColorRGB(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b)
+RG_ColorRGB(RG_Tile *t, AG_Color C)
 {
-	t->c.r = r;
-	t->c.g = g;
-	t->c.b = b;
-	t->pc = AG_MapRGB(t->su->format, r,g,b);
+	t->c.r = C.r;
+	t->c.g = C.g;
+	t->c.b = C.b;
+	t->pc = AG_MapColorRGB(t->su->format, C);
 }
 
 void
-RG_ColorRGBA(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+RG_ColorRGBA(RG_Tile *t, AG_Color C)
 {
-	t->c.r = r;
-	t->c.g = g;
-	t->c.b = b;
-	t->pc = AG_MapRGBA(t->su->format, r,g,b,a);
+	t->c.r = C.r;
+	t->c.g = C.g;
+	t->c.b = C.b;
+	t->pc = AG_MapColorRGBA(t->su->format, C);
 }
 
 void
 RG_ColorHSV(RG_Tile *t, float h, float s, float v)
 {
 	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
-	t->pc = AG_MapRGB(t->su->format, t->c.r, t->c.g, t->c.b);
+	t->pc = AG_MapPixelRGB(t->su->format, t->c.r, t->c.g, t->c.b);
 }
 
 void
 RG_ColorHSVA(RG_Tile *t, float h, float s, float v, Uint8 a)
 {
 	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
-	t->pc = AG_MapRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
+	t->pc = AG_MapPixelRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
 }
 
 void
 RG_ColorUint32(RG_Tile *t, Uint32 pc)
 {
-	AG_GetRGB(pc, t->su->format, &t->c.r, &t->c.g, &t->c.b);
+	t->c = AG_GetColorRGB(pc, t->su->format);
 	t->pc = pc;
 }
 
 /* Blend the pixel at t:[x,y] with the given RGBA value. */
 void
 RG_BlendRGB(AG_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
-    Uint8 sR, Uint8 sG, Uint8 sB, Uint8 sA)
+    AG_Color C)
 {
-	Uint8 dR, dG, dB, dA;
+	AG_Color Cdst;
 	Uint8 *pDst;
 	int alpha;
 
@@ -82,44 +82,44 @@ RG_BlendRGB(AG_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 	}
 	pDst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
 	if (*(Uint32 *)pDst != su->format->colorkey) {
-		AG_GetRGBA(*(Uint32 *)pDst, su->format, &dR,&dG,&dB,&dA);
+		Cdst = AG_GetColorRGBA(*(Uint32 *)pDst, su->format);
 
 		switch (mode) {
 		case RG_PRIM_OVERLAY_ALPHA:
-			alpha = dA + sA;
+			alpha = Cdst.a + C.a;
 			if (alpha > 255) {
 				alpha = 255;
 			}
-			*(Uint32 *)pDst = AG_MapRGBA(su->format,
-			    (((sR - dR) * sA) >> 8) + dR,
-			    (((sG - dG) * sA) >> 8) + dG,
-			    (((sB - dB) * sA) >> 8) + dB,
+			*(Uint32 *)pDst = AG_MapPixelRGBA(su->format,
+			    (((C.r - Cdst.r) * C.a) >> 8) + Cdst.r,
+			    (((C.g - Cdst.g) * C.a) >> 8) + Cdst.g,
+			    (((C.b - Cdst.b) * C.a) >> 8) + Cdst.b,
 			    (Uint8)alpha);
 			break;
 		case RG_PRIM_AVERAGE_ALPHA:
-			*(Uint32 *)pDst = AG_MapRGBA(su->format,
-			    (((sR - dR) * sA) >> 8) + dR,
-			    (((sG - dG) * sA) >> 8) + dG,
-			    (((sB - dB) * sA) >> 8) + dB,
-			    (Uint8)((dA*sA)/2));
+			*(Uint32 *)pDst = AG_MapPixelRGBA(su->format,
+			    (((C.r - Cdst.r) * C.a) >> 8) + Cdst.r,
+			    (((C.g - Cdst.g) * C.a) >> 8) + Cdst.g,
+			    (((C.b - Cdst.b) * C.a) >> 8) + Cdst.b,
+			    (Uint8)((Cdst.a*C.a)/2));
 			break;
 		case RG_PRIM_SRC_ALPHA:
-			*(Uint32 *)pDst = AG_MapRGBA(su->format,
-			    (((sR - dR) * sA) >> 8) + dR,
-			    (((sG - dG) * sA) >> 8) + dG,
-			    (((sB - dB) * sA) >> 8) + dB,
-			    (Uint8)(sA));
+			*(Uint32 *)pDst = AG_MapPixelRGBA(su->format,
+			    (((C.r - Cdst.r) * C.a) >> 8) + Cdst.r,
+			    (((C.g - Cdst.g) * C.a) >> 8) + Cdst.g,
+			    (((C.b - Cdst.b) * C.a) >> 8) + Cdst.b,
+			    (Uint8)(C.a));
 			break;
 		case RG_PRIM_DST_ALPHA:
-			*(Uint32 *)pDst = AG_MapRGBA(su->format,
-			    (((sR - dR) * sA) >> 8) + dR,
-			    (((sG - dG) * sA) >> 8) + dG,
-			    (((sB - dB) * sA) >> 8) + dB,
-			    dA);
+			*(Uint32 *)pDst = AG_MapPixelRGBA(su->format,
+			    (((C.r - Cdst.r) * C.a) >> 8) + Cdst.r,
+			    (((C.g - Cdst.g) * C.a) >> 8) + Cdst.g,
+			    (((C.b - Cdst.b) * C.a) >> 8) + Cdst.b,
+			    Cdst.a);
 			break;
 		}
 	} else {
-		*(Uint32 *)pDst = AG_MapRGBA(su->format, sR,sG,sB,sA);
+		*(Uint32 *)pDst = AG_MapColorRGBA(su->format, C);
 	}
 }
 
@@ -251,12 +251,12 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 	float x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
 	float grad, xd, yd, xgap, xend, yend, xf, yf, lum1, lum2;
 	int x, y, ix1, ix2, iy1, iy2;
-	Uint8 r, g, b, a;
+	AG_Color C;
 
 	xd = x2 - x1;
 	yd = y2 - y1;
 
-	AG_GetRGBA(t->pc, t->ts->fmt, &r,&g,&b,&a);
+	C = AG_GetColorRGB(t->pc, t->ts->fmt);
 
 	if (Fabs(xd) > Fabs(yd)) {			/* Horizontal */
 		if (x1 > x2) {
@@ -281,10 +281,10 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 
 		lum1 = FracInvf(yend)*xgap;
 		lum2 = Fracf(yend)*xgap;
-		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
-		    (Uint8)(lum1*255));
-		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
-		    (Uint8)(lum2*255));
+		C.a = (Uint8)(lum1*255);
+		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA, C);
+		C.a = (Uint8)(lum2*255);
+		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA, C);
 
 		yf = yend+grad;
 
@@ -299,10 +299,10 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 
 		lum1 = FracInvf(yend)*xgap;
 		lum2 = Fracf(yend)*xgap;
-		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA, r, g, b,
-		    (Uint8)(lum1*255));
-		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
-		    (Uint8)(lum2*255));
+		C.a = (Uint8)(lum1*255);
+		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA, C);
+		C.a = (Uint8)(lum2*255);
+		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA, C);
 
 		/* Main loop */
 		for (x = (ix1+1); x < ix2; x++) {
@@ -314,10 +314,10 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 			lum1 += 0.3*focus;
 			lum2 += 0.3*focus;
 
-			RG_BlendRGB(t->su, x, (int)yf, RG_PRIM_OVERLAY_ALPHA,
-			    r, g, b, (Uint8)(lum1*255));
-			RG_BlendRGB(t->su, x, (int)yf+1, RG_PRIM_OVERLAY_ALPHA,
-			    r, g, b, (Uint8)(lum2*255));
+			C.a = (Uint8)(lum1*255);
+			RG_BlendRGB(t->su, x, (int)yf, RG_PRIM_OVERLAY_ALPHA, C);
+			C.a = (Uint8)(lum2*255);
+			RG_BlendRGB(t->su, x, (int)yf+1, RG_PRIM_OVERLAY_ALPHA, C);
 
 			yf = yf + grad;
 		}
@@ -343,10 +343,11 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 
 		lum1 = FracInvf(yend)*xgap;
 		lum2 = Fracf(yend)*xgap;
-		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA,
-		    r, g, b, (Uint8)(lum1*255));
-		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA,
-		    r, g, b, (Uint8)(lum2*255));
+
+		C.a = (Uint8)(lum1*255);
+		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA, C);
+		C.a = (Uint8)(lum2*255);
+		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA, C);
 		
 		xf = xend + grad;
 
@@ -361,10 +362,10 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 
 		lum1 = FracInvf(yend)*xgap;
 		lum2 = Fracf(yend)*xgap;
-		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA,
-		    r, g, b, (Uint8)(lum1*255));
-		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA,
-		    r, g, b, (Uint8)(lum2*255));
+		C.a = (Uint8)(lum1*255);
+		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA, C);
+		C.a = (Uint8)(lum2*255);
+		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA, C);
 
 		/* Main loop */
 		for (y = (iy1+1); y < iy2; y++) {
@@ -375,10 +376,10 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 			focus = (1.0 - Fabs(lum1-lum2));
 			lum1 += 0.3*focus;
 			lum2 += 0.3*focus;
-			RG_BlendRGB(t->su, (int)xf, y, RG_PRIM_OVERLAY_ALPHA,
-			    r, g, b, (Uint8)(lum1*255));
-			RG_BlendRGB(t->su, (int)xf+1, y, RG_PRIM_OVERLAY_ALPHA,
-			    r, g, b, (Uint8)(lum2*255));
+			C.a = (Uint8)(lum1*255);
+			RG_BlendRGB(t->su, (int)xf, y, RG_PRIM_OVERLAY_ALPHA, C);
+			C.a = (Uint8)(lum2*255);
+			RG_BlendRGB(t->su, (int)xf+1, y, RG_PRIM_OVERLAY_ALPHA, C);
 
 			xf = xf + grad;
 		}

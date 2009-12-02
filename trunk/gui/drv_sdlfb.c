@@ -539,6 +539,14 @@ EndEventProcessing(void *obj)
 }
 
 static void
+Terminate(void)
+{
+	SDL_Event nev;
+	nev.type = SDL_QUIT;
+	SDL_PushEvent(&nev);
+}
+
+static void
 BeginRendering(void *obj)
 {
 //	AG_DriverSDLFB *sfb = obj;
@@ -575,7 +583,6 @@ static void
 FillRect(void *obj, AG_Rect r, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
-	AG_Driver *drv = obj;
 	SDL_Rect sr;
 
 	sr.x = r.x;
@@ -583,7 +590,7 @@ FillRect(void *obj, AG_Rect r, AG_Color c)
 	sr.w = r.w;
 	sr.h = r.h;
 	SDL_FillRect(sfb->s, &sr,
-	    SDL_MapRGB(drv->videoFmt, c.r, c.g, c.b));
+	    SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 }
 
 static void
@@ -754,16 +761,17 @@ static void
 BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
-	AG_SurfaceBlit(s, NULL, sfb->s, x,y);
+
+	AG_SDL_BlitSurface(s, NULL, sfb->s, x,y);
 }
 
 static void
-BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s, AG_Rect *r,
-    int x, int y)
+BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s,
+    AG_Rect *rSrc, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 
-	AG_SurfaceBlit(widSrc->surfaces[s], r, sfb->s, x,y);
+	AG_SDL_BlitSurface(widSrc->surfaces[s], rSrc, sfb->s, x,y);
 }
 
 static void
@@ -789,7 +797,6 @@ RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 {
 	AG_DriverSDLFB *sfb = drv;
 	AG_Surface *su;
-	AG_Rect r;
 	int visiblePrev;
 
 	if ((su = AG_SurfaceStdRGB(wid->w, wid->h)) == NULL)
@@ -803,8 +810,7 @@ RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 	wid->window->visible = visiblePrev;
 	AG_EndRendering(AGDRIVER(sfb));
 
-	r = AG_Rect2ToRect(wid->rView);
-	AG_SurfaceBlit(sfb->s, &r, su, 0, 0);
+	AG_SDL_BlitSurface(su, NULL, sfb->s, wid->rView.x1, wid->rView.y1);
 	return (0);
 }
 
@@ -861,7 +867,7 @@ BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
-	Uint32 cDst, cNew;
+	Uint32 pxDst, pxNew;
 	Uint8 dR, dG, dB, dA;
 	int alpha;
 	Uint8 *pDst = (Uint8 *)s->pixels +
@@ -872,18 +878,18 @@ BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 		return;
 
 	/* Extract the current destination pixel color. */
-	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, cDst, pDst);
+	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, pxDst, pDst);
 
 	/* If the target pixel is colorkey-masked, put the pixel as-is. */
 	if ((s->flags & SDL_SRCCOLORKEY) &&
-	    (cDst == s->format->colorkey)) {
-		cNew = SDL_MapRGBA(s->format, C.r, C.g, C.b, C.a);
-	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, cNew);
+	    (pxDst == s->format->colorkey)) {
+		pxNew = SDL_MapRGBA(s->format, C.r, C.g, C.b, C.a);
+	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 		return;
 	}
 
 	/* Blend the components and write the computed pixel value. */
-	SDL_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
+	SDL_GetRGBA(pxDst, s->format, &dR, &dG, &dB, &dA);
 	switch (fnSrc) {
 	case AG_ALPHA_ZERO:		alpha = 0;		break;
 	case AG_ALPHA_OVERLAY:		alpha = dA+C.a;		break;
@@ -895,13 +901,13 @@ BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 	case AG_ALPHA_ONE:		alpha = 255;		break;
 	}
 	/* XXX fnDst */
-	cNew = AG_MapRGBA(s->format,
+	pxNew = SDL_MapRGBA(s->format,
 	    (((C.r - dR)*C.a) >> 8) + dR,
 	    (((C.g - dG)*C.a) >> 8) + dG,
 	    (((C.b - dB)*C.a) >> 8) + dB,
 	    (Uint8)(alpha<0)?0 : (alpha>255)?255 : alpha);
 
-	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, cNew);
+	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 }
 
 static void
@@ -1634,11 +1640,11 @@ UpdateGlyph(void *drv, AG_Glyph *gl)
 }
 
 static void
-DrawGlyph(void *drv, AG_Glyph *gl, int x, int y)
+DrawGlyph(void *drv, const AG_Glyph *gl, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 	
-	AG_SurfaceBlit(gl->su, NULL, sfb->s, x,y);
+	AG_SDL_BlitSurface(gl->su, NULL, sfb->s, x,y);
 }
 
 /* Initialize the clipping rectangle stack. */
@@ -1687,26 +1693,6 @@ InitDefaultCursor(AG_DriverSDLFB *sfb)
  * Single-display specific operations.
  */
 
-static AG_PixelFormat *
-GetVideoPixelFormat(SDL_Surface *su)
-{
-	switch (su->format->BytesPerPixel) {
-	case 1:
-		return AG_PixelFormatIndexed(su->format->BitsPerPixel);
-	case 2:
-	case 3:
-	case 4:
-		return AG_PixelFormatRGB(su->format->BitsPerPixel,
-		    su->format->Rmask,
-		    su->format->Gmask,
-		    su->format->Bmask);
-	default:
-		AG_SetError("Unsupported pixel depth (%d bpp)",
-		    (int)su->format->BitsPerPixel);
-		return (NULL);
-	}
-}
-
 static int
 OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
@@ -1750,7 +1736,7 @@ OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	}
 	SDL_EnableUNICODE(1);
 
-	if ((drv->videoFmt = GetVideoPixelFormat(sfb->s)) == NULL) {
+	if ((drv->videoFmt = AG_SDL_GetPixelFormat(sfb->s)) == NULL) {
 		goto fail;
 	}
 	dsw->w = sfb->s->w;
@@ -1774,7 +1760,7 @@ OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 
 	/* Fill background */
 	c = agColors[BG_COLOR];
-	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(drv->videoFmt, c.r, c.g, c.b));
+	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 	SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
 	return (0);
 fail:
@@ -1800,7 +1786,7 @@ OpenVideoContext(void *obj, void *ctx, Uint flags)
 
 	/* Use the given display surface. */
 	sfb->s = (SDL_Surface *)ctx;
-	if ((drv->videoFmt = GetVideoPixelFormat(sfb->s)) == NULL) {
+	if ((drv->videoFmt = AG_SDL_GetPixelFormat(sfb->s)) == NULL) {
 		goto fail;
 	}
 	dsw->w = sfb->s->w;
@@ -1843,7 +1829,6 @@ CloseVideo(void *obj)
 static int
 VideoResize(void *obj, Uint w, Uint h)
 {
-	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
 	Uint32 sFlags;
@@ -1874,22 +1859,22 @@ VideoResize(void *obj, Uint w, Uint h)
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
 		c = agColors[BG_COLOR];
 		SDL_FillRect(sfb->s, NULL,
-		    SDL_MapRGB(drv->videoFmt, c.r, c.g, c.b));
+		    SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 		SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
 	}
 	return (0);
 }
 
 static int
-VideoCapture(void *obj, AG_Surface **sp)
+VideoCapture(void *obj, AG_Surface **ds)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Surface *s;
 
-	if ((s = AG_DupSurface(sfb->s)) == NULL) {
+	if ((s = AG_SDL_ImportSurface(sfb->s)) == NULL) {
 		return (-1);
 	}
-	*sp = s;
+	*ds = s;
 	return (0);
 }
 
@@ -1899,7 +1884,7 @@ VideoClear(void *obj, AG_Color c)
 	AG_DriverSDLFB *sfb = obj;
 
 	SDL_FillRect(sfb->s, NULL,
-	    SDL_MapRGB(AGDRIVER(sfb)->videoFmt, c.r, c.g, c.b));
+	    SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 	SDL_UpdateRect(sfb->s, 0, 0, sfb->s->w, sfb->s->h);
 }
 
@@ -1927,6 +1912,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		ProcessEvents,
 		GenericEventLoop,
 		EndEventProcessing,
+		Terminate,
 		BeginRendering,
 		RenderWindow,
 		EndRendering,

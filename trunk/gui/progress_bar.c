@@ -209,7 +209,7 @@ Draw(void *obj)
 			    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
 			    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
 		} else {
-			SDL_Surface *suTmp = AG_TextRender(pctText);
+			AG_Surface *suTmp = AG_TextRender(pctText);
 			AG_WidgetBlit(pb, suTmp,
 			    WIDTH(pb)/2  - suTmp->w/2,
 			    HEIGHT(pb)/2 - suTmp->h/2);

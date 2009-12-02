@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_png.h>
+#include <config/have_jpeg.h>
+#include <config/have_sdl.h>
+
 #include <core/core.h>
 #include <core/config.h>
 
@@ -33,11 +37,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
-#include <config/have_jpeg.h>
+
+#ifdef HAVE_PNG
+# include <png.h>
+#endif
 #ifdef HAVE_JPEG
-#undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
-#include <jpeglib.h>
-#include <errno.h>
+# include <jpeglib.h>
+# include <errno.h>
 #endif
 
 const char *agBlendFuncNames[] = {
@@ -49,7 +55,7 @@ const char *agBlendFuncNames[] = {
 	NULL
 };
 
-AG_PixelFormat *agSurfaceFmt = NULL;		/* Standard surface format */
+AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for new surfaces */
 
 #define COMPUTE_SHIFTLOSS(mask, shift, loss) \
 	shift = 0; \
@@ -71,15 +77,18 @@ AG_PixelFormatRGB(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
 	AG_PixelFormat *pf;
 	Uint32 m;
 
-	pf = Malloc(sizeof(AG_PixelFormat));
-	pf->alpha = AG_ALPHA_OPAQUE;
+	if ((pf = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (NULL);
+	}
 	pf->BitsPerPixel = bpp;
 	pf->BytesPerPixel = (bpp+7)/8;
+	pf->colorkey = 0;
+	pf->alpha = AG_ALPHA_OPAQUE;
 	pf->palette = NULL;
 	pf->Rmask = Rmask;
 	pf->Gmask = Gmask;
 	pf->Bmask = Bmask;
-	pf->Amask = 0x00000000;
+	pf->Amask = 0;
 	COMPUTE_SHIFTLOSS(pf->Rmask, pf->Rshift, pf->Rloss);
 	COMPUTE_SHIFTLOSS(pf->Gmask, pf->Gshift, pf->Gloss);
 	COMPUTE_SHIFTLOSS(pf->Bmask, pf->Bshift, pf->Bloss);
@@ -94,10 +103,13 @@ AG_PixelFormatRGBA(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
 	AG_PixelFormat *pf;
 	Uint32 m;
 
-	pf = Malloc(sizeof(AG_PixelFormat));
-	pf->alpha = AG_ALPHA_OPAQUE;
+	if ((pf = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (NULL);
+	}
 	pf->BitsPerPixel = bpp;
 	pf->BytesPerPixel = (bpp+7)/8;
+	pf->colorkey = 0;
+	pf->alpha = AG_ALPHA_OPAQUE;
 	pf->palette = NULL;
 	pf->Rmask = Rmask;
 	pf->Gmask = Gmask;
@@ -121,14 +133,24 @@ AG_PixelFormatIndexed(int bpp)
 	AG_PixelFormat *pf;
 	AG_Palette *pal;
 
-	pf = Malloc(sizeof(AG_PixelFormat));
-	pf->alpha = AG_ALPHA_OPAQUE;
+	if ((pf = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (NULL);
+	}
 	pf->BitsPerPixel = bpp;
 	pf->BytesPerPixel = (bpp+7)/8;
-	
-	pal = pf->palette = Malloc(sizeof(AG_Palette));
-	pal->ncolors = 1<<bpp;
-	pal->colors = Malloc(pal->ncolors*sizeof(AG_Color));
+	pf->colorkey = 0;
+	pf->alpha = AG_ALPHA_OPAQUE;
+
+	if ((pal = pf->palette = TryMalloc(sizeof(AG_Palette))) == NULL) {
+		free(pf);
+		return (NULL);
+	}
+	pal->nColors = 1<<bpp;
+	if ((pal->colors = TryMalloc(pal->nColors*sizeof(AG_Color))) == NULL) {
+		free(pf->palette);
+		free(pf);
+		return (NULL);
+	}
 	
 	if (bpp == 2) {
 		pal->colors[0].r = 255;
@@ -138,7 +160,7 @@ AG_PixelFormatIndexed(int bpp)
 		pal->colors[1].g = 0;
 		pal->colors[1].b = 0;
 	} else {
-		memset(pal->colors, 0, pal->ncolors*sizeof(AG_Color));
+		memset(pal->colors, 0, pal->nColors*sizeof(AG_Color));
 	}
 
 	pf->Rmask = pf->Gmask = pf->Bmask = pf->Amask = 0;
@@ -147,21 +169,30 @@ AG_PixelFormatIndexed(int bpp)
 	return (pf);
 }
 
+/* Return a newly-allocated duplicate an AG_PixelFormat structure. */
 AG_PixelFormat *
 AG_PixelFormatDup(const AG_PixelFormat *pf)
 {
 	AG_PixelFormat *pfd;
 
-	pfd = Malloc(sizeof(AG_PixelFormat));
+	if ((pfd = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (NULL);
+	}
 	if (pf->palette != NULL) {
-		pfd->palette = Malloc(pf->palette->ncolors*sizeof(AG_Color));
+		pfd->palette = TryMalloc(pf->palette->nColors*sizeof(AG_Color));
+		if (pfd->palette == NULL) {
+			free(pfd);
+			return (NULL);
+		}
 		memcpy(pfd->palette->colors, pf->palette->colors,
-		    pf->palette->ncolors*sizeof(AG_Color));
+		    pf->palette->nColors*sizeof(AG_Color));
 	} else {
 		pfd->palette = NULL;
 	}
 	pfd->BitsPerPixel = pf->BitsPerPixel;
 	pfd->BytesPerPixel = pf->BytesPerPixel;
+	pfd->colorkey = pf->colorkey;
+	pfd->alpha = pf->alpha;
 	pfd->Rloss = pf->Rloss;
 	pfd->Gloss = pf->Gloss;
 	pfd->Bloss = pf->Bloss;
@@ -174,190 +205,373 @@ AG_PixelFormatDup(const AG_PixelFormat *pf)
 	pfd->Gmask = pf->Gmask;
 	pfd->Bmask = pf->Bmask;
 	pfd->Amask = pf->Amask;
-	pfd->colorkey = pf->colorkey;
-	pfd->alpha = pf->alpha;
 	return (pfd);
 }
 
+/* Release an AG_PixelFormat structure. */
 void
-AG_PixelFormatFree(AG_PixelFormat *fmt)
+AG_PixelFormatFree(AG_PixelFormat *pf)
 {
-	Free(fmt->palette);
-	free(fmt);
+	if (pf->palette != NULL) {
+		Free(pf->palette->colors);
+		free(pf->palette);
+	}
+	free(pf);
 }
 
 #undef COMPUTE_SHIFTLOSS
 
-static __inline__ Uint32
-SDLFlags(Uint flags)
-{
-	Uint32 sdlFlags = SDL_SWSURFACE;
-	if (flags & AG_HWSURFACE) { sdlFlags |= SDL_HWSURFACE; }
-	if (flags & AG_SRCCOLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
-	if (flags & AG_SRCALPHA) { sdlFlags |= SDL_SRCALPHA; }
-	return (sdlFlags);
-}
-
 /* Create a new surface of the specified pixel format. */
 AG_Surface *
-AG_SurfaceNew(Uint w, Uint h, AG_PixelFormat *fmt, Uint flags)
+AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
+    const AG_PixelFormat *pf, Uint flags)
 {
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w, h,
-	    fmt->BitsPerPixel,
-	    fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
-	if (s == NULL) {
-		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h,
-		    fmt->BitsPerPixel, SDL_GetError());
+	if ((s = TryMalloc(sizeof(AG_Surface))) == NULL) {
 		return (NULL);
 	}
-	if (fmt->palette != NULL) {
-		SDL_SetPalette((SDL_Surface *)s, SDL_LOGPAL,
-		    (SDL_Color *)fmt->palette, 0, fmt->palette->ncolors);
+	if ((s->format = AG_PixelFormatDup(pf)) == NULL) {
+		free(s);
+		return (NULL);
+	}
+	s->type = type;
+	s->flags = flags;
+	s->w = w;
+	s->h = h;
+	s->pitch = w*pf->BytesPerPixel;
+	s->clipRect = AG_RECT(0,0,w,h);
+
+	if (h*s->pitch > 0) {
+		if ((s->pixels = TryMalloc(h*s->pitch)) == NULL)
+			goto fail;
+	} else {
+		s->pixels = NULL;
 	}
 	return (s);
+fail:
+	AG_PixelFormatFree(s->format);
+	free(s);
+	return (NULL);
 }
 
 /* Create an empty surface. */
 AG_Surface *
 AG_SurfaceEmpty(void)
 {
-	return (AG_Surface *)SDL_CreateRGBSurface(SDL_SWSURFACE, 0,0,8,0,0,0,0);
+	return AG_SurfaceNew(AG_SURFACE_PACKED, 0,0, agSurfaceFmt, 0);
 }
 
-/* Create a new surface of the specified pixel format. */
+/* Create a new color-index surface of given dimensions and depth. */
 AG_Surface *
 AG_SurfaceIndexed(Uint w, Uint h, int bpp, Uint flags)
 {
+	AG_PixelFormat *pf;
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
-	    0,0,0,0);
-	if (s == NULL) {
-		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
-		    SDL_GetError());
+	if ((pf = AG_PixelFormatIndexed(bpp)) == NULL) {
 		return (NULL);
 	}
+	s = AG_SurfaceNew(AG_SURFACE_INDEXED, w,h, pf, 0);
+	AG_PixelFormatFree(pf);
 	return (s);
 }
 
-/* Create a new surface with the specified RGB pixel-packing format. */
+/* Create a new packed-pixel surface with the specified RGB pixel format. */
 AG_Surface *
 AG_SurfaceRGB(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
     Uint32 Bmask)
 {
+	AG_PixelFormat *pf;
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
-	    Rmask,Gmask,Bmask,0);
-	if (s == NULL) {
-		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
-		    SDL_GetError());
+	if ((pf = AG_PixelFormatRGB(bpp, Rmask, Gmask, Bmask)) == NULL) {
 		return (NULL);
 	}
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	AG_PixelFormatFree(pf);
 	return (s);
 }
 
-/* Create a new surface with the specified RGB pixel-packing format. */
+/* Create a new packed-pixel surface with the specified RGBA pixel format. */
 AG_Surface *
 AG_SurfaceRGBA(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
     Uint32 Bmask, Uint32 Amask)
 {
+	AG_PixelFormat *pf;
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
-	    Rmask,Gmask,Bmask,Amask);
-	if (s == NULL) {
-		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
-		    SDL_GetError());
+	if ((pf = AG_PixelFormatRGBA(bpp, Rmask, Gmask, Bmask, Amask)) == NULL) {
 		return (NULL);
 	}
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	AG_PixelFormatFree(pf);
 	return (s);
 }
 
 /* Create a new surface from pixel data in the specified packed RGB format. */
 AG_Surface *
-AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp, int pitch,
+AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp,
     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
 {
+	AG_PixelFormat *pf;
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurfaceFrom(pixels, (int)w, (int)h,
-	    bpp, pitch, Rmask, Gmask, Bmask, 0);
+	if ((pf = AG_PixelFormatRGB(bpp, Rmask, Gmask, Bmask)) == NULL) {
+		return (NULL);
+	}
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	memcpy(s->pixels, pixels, h*s->pitch);
+	AG_PixelFormatFree(pf);
 	return (s);
 }
 
 /* Create a new surface from pixel data in the specified packed RGBA format. */
 AG_Surface *
-AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp, int pitch,
+AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp,
     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask)
 {
+	AG_PixelFormat *pf;
 	AG_Surface *s;
 
-	s = (AG_Surface *)SDL_CreateRGBSurfaceFrom(pixels, (int)w, (int)h,
-	    bpp, pitch, Rmask, Gmask, Bmask, Amask);
+	if ((pf = AG_PixelFormatRGBA(bpp, Rmask, Gmask, Bmask, Amask)) == NULL) {
+		return (NULL);
+	}
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	memcpy(s->pixels, pixels, h*s->pitch);
+	AG_PixelFormatFree(pf);
 	return (s);
 }
 
-/* Create a new surface from a .bmp file. */
+/* Set one or more entries in an indexed surface's palette. */
+int
+AG_SurfaceSetPalette(AG_Surface *su, AG_Color *c, Uint offs, Uint count)
+{
+	Uint i;
+
+	if (su->type != AG_SURFACE_INDEXED) {
+		AG_SetError("Not an indexed surface");
+		return (-1);
+	}
+	if (offs >= su->format->palette->nColors ||
+	    offs+count >= su->format->palette->nColors) {
+		AG_SetError("Bad palette offset/count");
+		return (-1);
+	}
+	for (i = 0; i < count; i++) {
+		su->format->palette->colors[offs+i] = c[i];
+	}
+	return (0);
+}
+
+/* Load the contents of a surface from an image in PNG format. */
+AG_Surface *
+AG_SurfaceFromPNG(const char *path)
+{
+	/* XXX TODO */
+	AG_SetError("No PNG support");
+	return (NULL);
+}
+
+/* Load the contents of a surface from an image in JPEG format. */
+AG_Surface *
+AG_SurfaceFromJPEG(const char *path)
+{
+	/* XXX TODO */
+	AG_SetError("No JPEG support");
+	return (NULL);
+}
+
+/* Load the contents of a surface from an image in BMP format. */
 AG_Surface *
 AG_SurfaceFromBMP(const char *path)
 {
+	/* XXX TODO */
+	AG_SetError("No BMP support");
+	return (NULL);
+}
+
+/* Return a newly-allocated duplicate of a surface. */
+AG_Surface *
+AG_SurfaceDup(const AG_Surface *ss)
+{
 	AG_Surface *s;
 
-	if ((s = (AG_Surface *)SDL_LoadBMP(path)) == NULL) {
-		AG_SetError("SDL_LoadBMP(%s): %s", path, SDL_GetError());
+	s = AG_SurfaceNew(ss->type,
+	    ss->w, ss->h, ss->format,
+	    (ss->flags & AG_SAVED_SURFACE_FLAGS));
+	if (s == NULL) {
 		return (NULL);
 	}
+	memcpy(s->pixels, ss->pixels, ss->h*ss->pitch);
 	return (s);
 }
 
+/* Return a newly-allocated duplicate of a surface, in specified format. */
 AG_Surface *
-AG_SurfaceFromSDL(AG_Surface *su)
+AG_SurfaceConvert(const AG_Surface *ss, const AG_PixelFormat *pf)
 {
-	return AG_DupSurface(su);
+	AG_Surface *ds;
+
+	ds = AG_SurfaceNew(ss->type,
+	    ss->w, ss->h, pf,
+	    (ss->flags & AG_SAVED_SURFACE_FLAGS));
+	AG_SurfaceCopy(ds, ss);
+	return (ds);
 }
 
-SDL_Surface *
-AG_SurfaceToSDL(AG_Surface *su)
-{
-	return (SDL_Surface *)AG_DupSurface(su);
-}
-
-AG_Surface *
-AG_SurfaceFromSurface(AG_Surface *su, AG_PixelFormat *fmt, Uint flags)
-{
-	return (AG_Surface *)SDL_ConvertSurface(su, fmt, SDLFlags(flags));
-}
-
+/*
+ * Copy pixel data from a source to a destination surface. Pixel formats
+ * and surface dimensions of the two surfaces may differ. The destination
+ * surface's clipping rectangle and alpha/colorkey settings are ignored.
+ */
 void
-AG_SurfaceCopy(AG_Surface *ds, AG_Surface *ss)
+AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 {
-	SDL_Surface *dsSDL = (SDL_Surface *)ds;
-	SDL_Surface *ssSDL = (SDL_Surface *)ss;
-	Uint32 aflagsSave = ssSDL->flags & (AG_SRCALPHA|AG_RLEACCEL);
-	Uint8 alphaSave = ssSDL->format->alpha;
-	Uint32 cflagsSave = ssSDL->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-	Uint32 ckeySave = ssSDL->format->colorkey;
+	int w, h, x, y, skipDst, skipSrc;
+	const Uint8 *pSrc = (Uint8 *)ss->pixels;
+	Uint8 *pDst = (Uint8 *)ds->pixels;
 
-	SDL_SetAlpha(ssSDL, 0, 0);
-	SDL_SetColorKey(ssSDL, 0, 0);
-	SDL_BlitSurface(ssSDL, NULL, dsSDL, NULL);
-	SDL_SetAlpha(ssSDL, aflagsSave, alphaSave);
-	SDL_SetColorKey(ssSDL, cflagsSave, ckeySave);
+	if (ds->w > ss->w) {
+		w = ss->w;
+		skipDst = (ds->w - ss->w)*ds->format->BytesPerPixel;
+		skipSrc = 0;
+	} else if (ds->w < ss->w) {
+		w = ds->w;
+		skipDst = 0;
+		skipSrc = (ss->w - ds->w)*ss->format->BytesPerPixel;
+	} else {
+		w = ds->w;
+		skipSrc = 0;
+		skipDst = 0;
+	}
+	h = MIN(ss->h, ds->h);
+
+	if (AG_PixelFormatCompare(ss->format, ds->format) == 0) {
+		for (y = 0; y < h; y++) {
+			memcpy(pDst, pSrc, w*ss->format->BytesPerPixel);
+			pSrc += w*ss->format->BytesPerPixel + skipSrc;
+			pDst += w*ds->format->BytesPerPixel + skipDst;
+		}
+	} else {					/* Format conversion */
+		Uint32 px;
+		AG_Color C;
+			
+		for (y = 0; y < h; y++) {
+			for (x = 0; x < w; x++) {
+				px = AG_GET_PIXEL(ss,pSrc);
+				C = AG_GetColorRGBA(px, ss->format);
+				AG_PUT_PIXEL(ds,pDst,
+				    AG_MapColorRGBA(ds->format, C));
+				pSrc += ss->format->BytesPerPixel;
+				pDst += ds->format->BytesPerPixel;
+			}
+			pDst += skipDst;
+			pSrc += skipSrc;
+		}
+	}
+}
+
+/*
+ * Copy a region of pixels srcRect from source surface ss to destination
+ * surface ds, at destination coordinates xDst,yDst. It is safe to exceed
+ * the dimensions of ds. Unlike AG_SurfaceCopy(), blending and colorkey
+ * tests are done. If srcRect is passed NULL, the entire surface is copied.
+ */
+void
+AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
+    int xDst, int yDst)
+{
+	Uint32 pixel;
+	Uint8 *pSrc, *pDst;
+	AG_Color C;
+	AG_Rect sr, dr;
+	Uint x, y;
+
+	/* Compute the effective source and destination rectangles. */
+	if (srcRect != NULL) {
+		sr = *srcRect;
+		if (sr.x < 0) { sr.x = 0; }
+		if (sr.y < 0) { sr.y = 0; }
+		if (sr.x+sr.w >= ss->w) { sr.w = ss->w - sr.x; }
+		if (sr.y+sr.h >= ss->h) { sr.h = ss->h - sr.y; }
+	} else {
+		sr.x = 0;
+		sr.y = 0;
+		sr.w = ss->w;
+		sr.h = ss->h;
+	}
+	dr.x = xDst;
+	dr.y = yDst;
+	dr.w = (xDst+sr.w >= ds->w) ? (ds->w - dr.x) : sr.w;
+	dr.h = (yDst+sr.h >= ds->h) ? (ds->h - dr.y) : sr.h;
+ 
+	/* XXX TODO optimized cases */
+	/* XXX TODO per-surface alpha */
+
+	for (y = 0; y < dr.h; y++) {
+		pSrc = ss->pixels + (sr.y+y)*ss->pitch;
+		pDst = ds->pixels + (dr.y+y)*ds->pitch;
+		for (x = 0; x < dr.w; x++) {
+			pixel = AG_GET_PIXEL(ss, pSrc);
+			if (((ss->flags & AG_SRCCOLORKEY) &&
+			    (ss->format->colorkey == pixel)) ||
+			    AG_CLIPPED_PIXEL(ds, x,y)) {	/* XXX */
+				continue;
+			}
+			C = AG_GetColorRGBA(pixel, ss->format);
+			if ((ss->flags & AG_SRCALPHA) &&
+			    (ss->format->Amask != 0)) {
+				AG_SurfaceBlendPixel(ds, pDst, C, AG_ALPHA_SRC);
+			} else {
+				AG_PUT_PIXEL(ds, pDst,
+				    AG_MapColorRGB(ds->format, C));
+			}
+		}
+	}
+}
+
+/* Resize a surface; pixels are left uninitialized. */
+int
+AG_SurfaceResize(AG_Surface *s, Uint w, Uint h)
+{
+	Uint8 *pixelsNew;
+	int pitchNew = w*s->format->BytesPerPixel;
+
+	if ((pixelsNew = TryRealloc(s->pixels, h*pitchNew)) == NULL) {
+		return (-1);
+	}
+	s->pixels = pixelsNew;
+	s->pitch = pitchNew;
+	s->w = w;
+	s->h = h;
+	s->clipRect = AG_RECT(0,0,w,h);
+	return (0);
 }
 
 /* Free the specified surface. */
 void
 AG_SurfaceFree(AG_Surface *s)
 {
-	SDL_FreeSurface((SDL_Surface *)s);
+	AG_PixelFormatFree(s->format);
+	Free(s->pixels);
+	Free(s);
 }
 
-/* Dump a surface to a JPEG image. */
+/* Dump a surface to a PNG file. */
 int
-AG_SurfaceExportJPEG(AG_Surface *su, char *path)
+AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
+{
+#ifdef HAVE_PNG
+	/* TODO */
+#endif
+	AG_SetError("Unimplemented");
+	return (-1);
+}
+
+/* Dump a surface to a JPEG file. */
+int
+AG_SurfaceExportJPEG(const AG_Surface *su, const char *path)
 {
 #ifdef HAVE_JPEG
 	struct jpeg_error_mgr jerrmgr;
@@ -396,13 +610,13 @@ AG_SurfaceExportJPEG(AG_Surface *su, char *path)
 		Uint8 *pSrc = (Uint8 *)su->pixels +
 		    jcomp.next_scanline*su->pitch;
 		Uint8 *pDst = jcopybuf;
-		Uint8 r, g, b;
+		AG_Color C;
 
-		for (x = su->w; x > 0; x--) {
-			AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format, &r,&g,&b);
-			*pDst++ = r;
-			*pDst++ = g;
-			*pDst++ = b;
+		for (x = 0; x < su->w; x++) {
+			C = AG_GetColorRGB(AG_GET_PIXEL(su,pSrc), su->format);
+			*pDst++ = C.r;
+			*pDst++ = C.g;
+			*pDst++ = C.b;
 			pSrc += su->format->BytesPerPixel;
 		}
 		row[0] = jcopybuf;
@@ -417,65 +631,57 @@ AG_SurfaceExportJPEG(AG_Surface *su, char *path)
 #else
 	AG_SetError(_("Agar was not compiled with libjpeg support"));
 	return (-1);
-#endif
-}
-
-/* Flip the lines of a surface; this is useful with glReadPixels(). */
-void
-AG_FlipSurface(Uint8 *src, int h, int pitch)
-{
-	Uint8 *tmp = Malloc(pitch);
-	int h2 = h >> 1;
-	Uint8 *p1 = &src[0];
-	Uint8 *p2 = &src[(h-1)*pitch];
-	int i;
-
-	for (i = 0; i < h2; i++) {
-		memcpy(tmp, p1, pitch);
-		memcpy(p1, p2, pitch);
-		memcpy(p2, tmp, pitch);
-
-		p1 += pitch;
-		p2 -= pitch;
-	}
-	Free(tmp);
+#endif /* HAVE_JPEG */
 }
 
 /*
  * Blend the specified components with the pixel at s:[x,y], using the
- * given alpha function.
- *
- * Clipping is not done; the destination surface must be locked.
+ * given alpha function. No clipping is done.
  */
 void
-AG_SurfaceBlendPixelRGBA(AG_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG,
-    Uint8 sB, Uint8 sA, AG_BlendFn func)
+AG_SurfaceBlendPixel(AG_Surface *s, Uint8 *pDst, AG_Color Cnew, AG_BlendFn fn)
 {
-	Uint32 cDst;
-	Uint8 dR, dG, dB, dA;
-	int alpha;
+	Uint32 pxDst;
+	AG_Color Cdst;
+	Uint8 a;
 
-	cDst = AG_GET_PIXEL(s, pDst);
-	if ((s->flags & AG_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
-	 	AG_SurfacePutPixel(s, pDst, AG_MapRGBA(s->format, sR,sG,sB,sA));
+	pxDst = AG_GET_PIXEL(s, pDst);
+	if ((s->flags & AG_SRCCOLORKEY) && (pxDst == s->format->colorkey)) {
+	 	AG_SurfacePutPixel(s, pDst,
+		    AG_MapColorRGBA(s->format, Cnew));
 	} else {
-		AG_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
-		switch (func) {
-		case AG_ALPHA_ZERO:		alpha = 0;	break;
-		case AG_ALPHA_OVERLAY:		alpha = dA+sA;	break;
-		case AG_ALPHA_SRC:		alpha = sA;	break;
-		case AG_ALPHA_DST:		alpha = dA;	break;
-		case AG_ALPHA_ONE_MINUS_DST:	alpha = 1-dA;	break;
-		case AG_ALPHA_ONE_MINUS_SRC:	alpha = 1-sA;	break;
+		Cdst = AG_GetColorRGBA(pxDst, s->format);
+		switch (fn) {
+		case AG_ALPHA_DST:
+			a = Cdst.a;
+			break;
+		case AG_ALPHA_SRC:
+			a = Cnew.a;
+			break;
+		case AG_ALPHA_ZERO:
+			a = 0;
+			break;
+		case AG_ALPHA_OVERLAY:
+			a = (Uint8)((Cdst.a+Cnew.a) > 255) ? 255 :
+			            (Cdst.a+Cnew.a);
+			break;
+		case AG_ALPHA_ONE_MINUS_DST:
+			a = 255-Cdst.a;
+			break;
+		case AG_ALPHA_ONE_MINUS_SRC:
+			a = 255-Cnew.a;
+			break;
+		case AG_ALPHA_ONE:
 		default:
-		case AG_ALPHA_ONE:		alpha = 255;	break;
+			a = 255;
+			break;
 		}
 		AG_SurfacePutPixel(s, pDst,
-		    AG_MapRGBA(s->format,
-		    (((sR - dR)*sA) >> 8) + dR,
-		    (((sG - dG)*sA) >> 8) + dG,
-		    (((sB - dB)*sA) >> 8) + dB,
-		    (Uint8)((alpha<0)?0:(alpha>255)?255:alpha)));
+		    AG_MapPixelRGBA(s->format,
+		    (((Cnew.r - Cdst.r)*Cnew.a) >> 8) + Cdst.r,
+		    (((Cnew.g - Cdst.g)*Cnew.a) >> 8) + Cdst.g,
+		    (((Cnew.b - Cdst.b)*Cnew.a) >> 8) + Cdst.b,
+		    a));
 	}
 }
 
@@ -557,49 +763,31 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	*b = vB*255;
 }
 
-/* Return a newly allocated surface containing a copy of ss. */
-AG_Surface *
-AG_DupSurface(AG_Surface *ss)
-{
-	AG_Surface *rs;
-
-	rs = (AG_Surface *)SDL_ConvertSurface(ss, ss->format, SDL_SWSURFACE |
-	    (ss->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL)));
-	if (rs == NULL) {
-		AG_SetError("SDL_ConvertSurface: %s", SDL_GetError());
-		return (NULL);
-	}
-	rs->format->alpha = ss->format->alpha;
-	rs->format->colorkey = ss->format->colorkey;
-	return (rs);
-}
-
 /*
  * Allocate a new surface containing a pixmap of ss scaled to wxh.
- * The source surface must not be locked by the calling thread.
- *
- * XXX very primitive and inefficient
+ * XXX TODO optimize; filtering
  */
 int
-AG_ScaleSurface(AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
+AG_ScaleSurface(const AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
 {
-	Uint8 r1, g1, b1, a1;
 	Uint8 *pDst;
 	int x, y;
-	int same_fmt;
+	int sameFormat;
 
 	if (*ds == NULL) {
-		*ds = AG_SurfaceNew(w, h, ss->format,
-		    ss->flags & (AG_SWSURFACE|AG_SRCALPHA|AG_SRCCOLORKEY));
+		*ds = AG_SurfaceNew(
+		    AG_SURFACE_PACKED,
+		    w, h, ss->format,
+		    ss->flags & (AG_SRCALPHA|AG_SRCCOLORKEY));
 		if (*ds == NULL) {
 			return (-1);
 		}
 		(*ds)->format->alpha = ss->format->alpha;
 		(*ds)->format->colorkey = ss->format->colorkey;
-		same_fmt = 1;
+		sameFormat = 1;
 	} else {
-		//same_fmt = AG_SamePixelFmt(*ds, ss);
-		same_fmt = 0;
+		//sameFormat = !AG_PixelFormatCompare((*ds)->format, ss->format);
+		sameFormat = 0;
 	}
 
 	if (ss->w == w && ss->h == h) {
@@ -607,29 +795,26 @@ AG_ScaleSurface(AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
 		return (0);
 	}
 
-	AG_SurfaceLock(ss);
-	AG_SurfaceLock(*ds);
 	pDst = (Uint8 *)(*ds)->pixels;
 	for (y = 0; y < (*ds)->h; y++) {
 		for (x = 0; x < (*ds)->w; x++) {
 			Uint8 *pSrc = (Uint8 *)ss->pixels +
 			    (y*ss->h/(*ds)->h)*ss->pitch +
 			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
-			Uint32 cSrc = AG_GET_PIXEL(ss, pSrc);
-			Uint32 cDst;
+			Uint32 pxSrc, pxDst;
+			AG_Color C;
 
-			if (same_fmt) {
-				cDst = cSrc;
+			pxSrc = AG_GET_PIXEL(ss,pSrc);
+			if (sameFormat) {
+				pxDst = pxSrc;
 			} else {
-				AG_GetRGBA(cSrc, ss->format, &r1,&g1,&b1,&a1);
-				cDst = AG_MapRGBA((*ds)->format, r1,g1,b1,a1);
+				C = AG_GetColorRGBA(pxSrc, ss->format);
+				pxDst = AG_MapColorRGBA((*ds)->format, C);
 			}
-			AG_SurfacePutPixel((*ds), pDst, cDst);
+			AG_SurfacePutPixel((*ds), pDst, pxDst);
 			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
-	AG_SurfaceUnlock(*ds);
-	AG_SurfaceUnlock(ss);
 	return (0);
 }
 
@@ -637,24 +822,61 @@ AG_ScaleSurface(AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
 void
 AG_SetAlphaPixels(AG_Surface *su, Uint8 alpha)
 {
+	Uint8 *pDst = (Uint8 *)su->pixels;
 	int x, y;
+	AG_Color C;
 
-	AG_SurfaceLock(su);
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
-			Uint8 *dst = (Uint8 *)su->pixels +
-			    y*su->pitch +
-			    x*su->format->BytesPerPixel;
-			Uint8 r, g, b, a;
-
-			AG_GetRGBA(*(Uint32 *)dst, su->format, &r,&g,&b,&a);
-
-			if (a != 0)
-				a = alpha;
-
-			AG_SurfacePutPixel(su, dst,
-			    AG_MapRGBA(su->format, r,g,b,a));
+			/* XXX unnecessary conversion */
+			C = AG_GetColorRGBA(AG_GET_PIXEL(su,pDst), su->format);
+			if (C.a != 0) { C.a = alpha; }
+			AG_SurfacePutPixel(su, pDst,
+			    AG_MapColorRGBA(su->format, C));
+			pDst += su->format->BytesPerPixel;
 		}
 	}
-	AG_SurfaceUnlock(su);
 }
+
+/* Fill a rectangle with pixels of the specified color. */
+void
+AG_FillRect(AG_Surface *su, const AG_Rect *rDst, AG_Color C)
+{
+	int x, y;
+	Uint32 px;
+	AG_Rect r;
+
+	if (rDst != NULL) {
+		r = *rDst;
+		if (r.x < su->clipRect.x) { r.x = su->clipRect.x; }
+		if (r.y < su->clipRect.y) { r.y = su->clipRect.y; }
+		if (r.x+r.w >= su->clipRect.x+su->clipRect.w)
+			r.w = su->clipRect.x+su->clipRect.w - r.x;
+		if (r.y+r.h >= su->clipRect.y+su->clipRect.h)
+			r.h = su->clipRect.y+su->clipRect.h - r.y;
+	} else {
+		r = su->clipRect;
+	}
+	px = AG_MapColorRGBA(su->format, C);
+
+	/* XXX TODO optimize */
+	for (y = 0; y < r.h; y++) {
+		for (x = 0; x < r.w; x++) {
+			AG_PUT_PIXEL2(su,
+			    r.x + x,
+			    r.y + y,
+			    px);
+		}
+	}
+}
+
+#ifdef AG_LEGACY
+void        AG_SurfaceLock(AG_Surface *su) { /* No-op */ }
+void        AG_SurfaceUnlock(AG_Surface *su) { /* No-op */ }
+Uint32      AG_MapRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b) { return AG_MapPixelRGB(pf, r,g,b); }
+Uint32      AG_MapRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a) { return AG_MapPixelRGBA(pf, r,g,b,a); }
+AG_Surface *AG_DupSurface(AG_Surface *su) { return AG_SurfaceDup((const AG_Surface *)su); }
+void        AG_GetRGB(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b) { return AG_GetPixelRGB(px, pf, r,g,b); }
+void        AG_GetRGBA(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a) { return AG_GetPixelRGBA(px, pf, r,g,b,a); }
+int         AG_SamePixelFmt(const AG_Surface *s1, const AG_Surface *s2) { return (AG_PixelFormatCompare(s1->format, s2->format)) == 0; }
+#endif /* AG_LEGACY */

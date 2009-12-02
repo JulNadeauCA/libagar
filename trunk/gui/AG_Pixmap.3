@@ -233,21 +233,16 @@ AG_Expand(sv);
 px = AG_PixmapFromSurface(sv, 0, mySurface);
 .Ed
 .Pp
-Assuming Agar was compiled with support for the SDL library, the following
-code fragment displays an
-.Xr SDL_Surface 3 .
+The following code fragment displays the contents of an image in bmp format.
 It uses
 .Dv AG_PIXMAP_RESCALE
 to scale the image to fit the widget geometry:
 .Bd -literal
-AG_Pixmap *px;
-SDL_Surface *sSDL;
 AG_Surface *s;
+AG_Pixmap *px;
 
-sSDL = SDL_LoadBMP("foo.bmp");
-s = AG_SurfaceFromSDL(sSDL);
-px = AG_PixmapFromSurface(sv, AG_PIXMAP_RESCALE,
-    AG_SurfaceFromSDL(sSDL));
+s = AG_SurfaceFromBMP("foo.bmp");
+px = AG_PixmapFromSurface(sv, AG_PIXMAP_RESCALE, s);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

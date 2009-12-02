@@ -321,7 +321,7 @@ ImportImageFromBMP(AG_Event *event)
 		return;
 	}
 	px = RG_PixmapNew(ts, "Bitmap", 0);
-	px->su = AG_SurfaceFromSurface(bmp, ts->fmt, 0);
+	px->su = AG_SurfaceDup(bmp, ts->fmt, 0);
 	AG_SurfaceFree(bmp);
 	
 	t = RG_TileNew(ts, "Bitmap", px->su->w, px->su->h, RG_TILE_SRCALPHA);
@@ -337,7 +337,7 @@ LoadTileFromXCF(AG_Surface *xcf, const char *lbl, void *p)
 	RG_Tile *t;
 
 	px = RG_PixmapNew(ts, lbl, 0);
-	px->su = AG_SurfaceFromSurface(xcf, ts->fmt, 0);
+	px->su = AG_SurfaceDup(xcf, ts->fmt);
 
 	t = RG_TileNew(ts, lbl, xcf->w, xcf->h, RG_TILE_SRCALPHA);
 	RG_TileAddPixmap(t, NULL, px, 0, 0);

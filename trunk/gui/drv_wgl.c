@@ -626,6 +626,13 @@ WGL_GenericEventLoop(void *obj)
 }
 
 static void
+WGL_Terminate(void)
+{
+	/* XXX TODO */
+	exit(0);
+}
+
+static void
 WGL_BeginRendering(void *obj)
 {
 	AG_DriverWGL *wgl = obj;
@@ -1115,6 +1122,7 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_ProcessEvents,
 		WGL_GenericEventLoop,
 		NULL,			/* endEventProcessing */
+		WGL_Terminate,
 		WGL_BeginRendering,
 		WGL_RenderWindow,
 		WGL_EndRendering,

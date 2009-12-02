@@ -665,42 +665,41 @@ AG_GetDSOList(Uint *count)
 	for (i = 0; i < agModuleDirCount; i++) {
 		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
 			for (j = 0; j < dir->nents; j++) {
-				char *file = dir->ents[j], *s;
-				char *pStart;
+				char file[AG_FILENAME_MAX];
+				char *pStart, *s;
 
-				if (file[0] == '.') {
+				Strlcpy(file, dir->ents[j], sizeof(file));
+				if (file[0] == '.')
 					continue;
-				}
 #if defined(__AMIGAOS4__)
-				if ((s = Strcasestr(file, ".ixlibrary")) == NULL ||
+				if ((s = (char *)Strcasestr(file, ".ixlibrary")) == NULL ||
 				    s[10] != '\0') {
 					continue;
 				}
 				pStart = s;
 #elif defined(HPUX)
-				if ((s = Strcasestr(file, ".sl")) == NULL ||
+				if ((s = (char *)Strcasestr(file, ".sl")) == NULL ||
 				    s[3] != '\0') {
 					continue;
 				}
 				pStart = s;
 #elif defined(_WIN32) || defined(OS2)
-				if ((s = Strcasestr(file, ".dll")) == NULL ||
+				if ((s = (char *)Strcasestr(file, ".dll")) == NULL ||
 				    s[4] != '\0') {
 					continue;
 				}
 				pStart = s;
 #else
 				if (strncmp(file, "lib", 3) != 0 ||
-				   (s = Strcasestr(file, ".so")) == NULL ||
+				   (s = (char *)Strcasestr(file, ".so")) == NULL ||
 				    s[3] != '\0') {
 					continue;
 				}
 				pStart = &file[3];
 #endif
-
 				*s = '\0';
-				list = Realloc(list, ((*count)+1)*
-				    sizeof(char *));
+
+				list = Realloc(list, ((*count)+1)*sizeof(char *));
 				list[(*count)++] = Strdup(pStart);
 			}
 			AG_CloseDir(dir);

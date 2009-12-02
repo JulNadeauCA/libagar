@@ -38,6 +38,7 @@
 #include "window.h"
 #include "gui_math.h"
 #include "text.h"
+#include "packedpixel.h"
 
 #include "drv_gl_common.h"
 
@@ -97,18 +98,20 @@ CopyColorKeySurface(AG_Surface *suTex, AG_Surface *suSrc)
 	pSrc = suSrc->pixels;
 	for (y = 0; y < suSrc->h; y++) {
 		for (x = 0; x < suSrc->w; x++) {
-			Uint32 c = AG_GET_PIXEL(suSrc,pSrc);
-			Uint8 r,g,b;
+			Uint32 px = AG_GET_PIXEL(suSrc,pSrc);
+			AG_Color C;
 
-			if (c != suSrc->format->colorkey) {
-				AG_GetRGB(c, suSrc->format, &r,&g,&b);
-				AG_PUT_PIXEL2(suTex, x,y, 
-				    AG_MapRGBA(suTex->format,
-				    r,g,b,AG_ALPHA_OPAQUE));
+			if (px != suSrc->format->colorkey) {
+				C = AG_GetColorRGB(px, suSrc->format);
+				AG_PUT_PIXEL2(suTex, x,y,
+				    AG_MapColorRGBA(suTex->format, C));
 			} else {
+				C.r = 0;
+				C.g = 0;
+				C.b = 0;
+				C.a = AG_ALPHA_TRANSPARENT;
 				AG_PUT_PIXEL2(suTex, x,y, 
-				    AG_MapRGBA(suTex->format,
-				    0,0,0,AG_ALPHA_TRANSPARENT));
+				    AG_MapColorRGBA(suTex->format, C));
 			}
 			pSrc += suSrc->format->BytesPerPixel;
 		}
@@ -486,9 +489,9 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	    wid->w,
 	    wid->h,
 	    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	AG_FlipSurface(pixels, wid->h, wid->w*4);
+	AG_PackedPixelFlip(pixels, wid->h, wid->w*4);
 	su = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 32,
-	    (wid->w*4), 0x000000ff, 0x0000ff00, 0x00ff0000, 0);
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
 	if (su == NULL) {
 		free(pixels);
 		return (-1);
@@ -515,7 +518,7 @@ AG_GL_PutPixel32(void *obj, int x, int y, Uint32 c)
 	AG_Driver *drv = obj;
 	Uint8 r, g, b;
 
-	AG_GetRGB(c, drv->videoFmt, &r,&g,&b);
+	AG_GetPixelRGB(c, drv->videoFmt, &r,&g,&b);
 	glBegin(GL_POINTS);
 	glColor3ub(r, g, b);
 	glVertex2i(x, y);
@@ -840,10 +843,10 @@ AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 }
 
 void
-AG_GL_DrawGlyph(void *obj, AG_Glyph *gl, int x, int y)
+AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 {
 	AG_Surface *su = gl->su;
-	AG_TexCoord *tc = &gl->texcoords;
+	const AG_TexCoord *tc = &gl->texcoords;
 
 	glBindTexture(GL_TEXTURE_2D, gl->texture);
 	glBegin(GL_TRIANGLE_STRIP);

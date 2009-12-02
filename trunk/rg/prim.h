@@ -14,14 +14,13 @@ enum rg_prim_blend_mode {
 };
 
 __BEGIN_DECLS
-void RG_ColorRGB(struct rg_tile *, Uint8, Uint8, Uint8);
-void RG_ColorRGBA(struct rg_tile *, Uint8, Uint8, Uint8, Uint8);
+void RG_ColorRGB(struct rg_tile *, AG_Color C);
+void RG_ColorRGBA(struct rg_tile *, AG_Color C);
 void RG_ColorHSV(struct rg_tile *, float, float, float);
 void RG_ColorHSVA(struct rg_tile *, float, float, float, Uint8);
 void RG_ColorUint32(struct rg_tile *, Uint32);
 
-void RG_BlendRGB(AG_Surface *, int, int, enum rg_prim_blend_mode,
-	            Uint8, Uint8, Uint8, Uint8);
+void RG_BlendRGB(AG_Surface *, int, int, enum rg_prim_blend_mode, AG_Color C);
 void RG_Circle2(struct rg_tile *, int, int, int);
 void RG_Line(struct rg_tile *, int, int, int, int);
 void RG_WuLine(struct rg_tile *, float, float, float, float);

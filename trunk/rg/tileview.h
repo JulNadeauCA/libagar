@@ -244,7 +244,7 @@ void RG_TileviewSetAutoRefresh(RG_Tileview *, int, int);
 
 void RG_TileviewColor3i(RG_Tileview *, Uint8, Uint8, Uint8);
 void RG_TileviewColor4i(RG_Tileview *, Uint8, Uint8, Uint8, Uint8);
-void RG_TileviewSDLColor(RG_Tileview *, AG_Color *, Uint8);
+void RG_TileviewColor(RG_Tileview *, AG_Color *, Uint8);
 void RG_TileviewAlpha(RG_Tileview *, Uint8);
 
 void RG_TileviewPixel2i(RG_Tileview *, int, int);
@@ -274,8 +274,7 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 	if (sx < 0 || sy < 0 || sx >= tv->scaled->w || sy >= tv->scaled->h) {
 		return;
 	}
-	pixel = AG_MapRGB(tv->scaled->format, r,g,b);
-	AG_SurfaceLock(tv->scaled);
+	pixel = AG_MapPixelRGB(tv->scaled->format, r,g,b);
 	if (tv->pxsz == 1) {
 		dst = (Uint8 *)tv->scaled->pixels + y*tv->scaled->pitch +
 		    x*tv->scaled->format->BytesPerPixel;
@@ -294,7 +293,6 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 			dst += tv->scaled->pitch - tv->pxlen;
 		}
 	}
-	AG_SurfaceUnlock(tv->scaled);
 	AG_WidgetUpdateSurface(tv, 0);
 }
 

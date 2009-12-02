@@ -93,5 +93,9 @@
 	AG_PACKEDPIXEL_PUT((Bpp),p,(c));			\
 } while (0)
 
+__BEGIN_DECLS
+void AG_PackedPixelFlip(Uint8 *, Uint, int);
+__END_DECLS
+
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_PACKEDPIXEL_H_ */

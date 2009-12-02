@@ -130,7 +130,7 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 
 		for (i = 0; i < ints; i += 2) {
 			int xa, xb, xi;
-			Uint8 r, g, b;
+			AG_Color C;
 
 			xa = vg->ints[i] + 1;
 			xa = (xa>>16) + ((xa&0x8000) >> 15);
@@ -145,12 +145,13 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 				break;
 			case VG_TEXTURED:
 				for (xi = xa; xi < xb; xi++) {
-					AG_GetRGB(AG_GET_PIXEL2(tex->t->su,
+					C = AG_GetColorRGB(
+					    AG_GET_PIXEL2(tex->t->su,
 					    (xi % tex->t->su->w),
 					    (y % tex->t->su->h)),
-					    tex->t->su->format, &r,&g,&b);
+					    tex->t->su->format);
 					AG_PUT_PIXEL2_CLIPPED(vg->su, xi, y,
-					    AG_MapRGB(vg->fmt, r,g,b));
+					    AG_MapColorRGB(vg->fmt, C));
 				}
 				break;
 			}

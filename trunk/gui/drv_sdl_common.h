@@ -3,6 +3,9 @@
  * Code common to all drivers using the SDL library.
  */
 
+#include <agar/config/have_sdl.h>
+#ifdef HAVE_SDL
+
 /* XXX */
 #undef HAVE_SNPRINTF
 #undef HAVE_VSNPRINTF
@@ -20,3 +23,12 @@
 #undef Sint64
 #include <SDL.h>
 
+__BEGIN_DECLS
+int             AG_InitVideoSDL(void *, Uint);
+AG_PixelFormat *AG_SDL_GetPixelFormat(SDL_Surface *);
+void            AG_SDL_BlitSurface(const AG_Surface *, const AG_Rect *,
+                                   SDL_Surface *, int, int);
+AG_Surface     *AG_SDL_ImportSurface(SDL_Surface *);
+__END_DECLS
+
+#endif /* HAVE_SDL */

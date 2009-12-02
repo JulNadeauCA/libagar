@@ -2,29 +2,47 @@
 
 #ifndef _AGAR_GUI_SURFACE_H_
 #define _AGAR_GUI_SURFACE_H_
+
 #include <agar/gui/begin.h>
 
-/* XXX */
-#undef HAVE_SNPRINTF
-#undef HAVE_VSNPRINTF
-#undef HAVE_SYS_TYPES_H
-#undef HAVE_STDIO_H
-#undef HAVE_STDLIB_H
-#undef HAVE_STDARG_H
-#undef Uint8
-#undef Sint8
-#undef Uint16
-#undef Sint16
-#undef Uint32
-#undef Sint32
-#undef Uint64
-#undef Sint64
-#include <SDL.h>
+/* Palette of AG_Color values */
+typedef struct ag_palette {
+	AG_Color *colors;		/* Color array */
+	Uint     nColors;		/* Color count */
+} AG_Palette;
 
-/* For transition to Agar-1.4 */
-typedef SDL_Surface AG_Surface;
-typedef SDL_PixelFormat AG_PixelFormat;
-typedef SDL_Palette AG_Palette;
+/* Pixel storage information */
+typedef struct ag_pixel_format {
+	AG_Palette *palette;			/* For indexed formats */
+	Uint8       BitsPerPixel;		/* Depth (bits/pixel) */
+	Uint8       BytesPerPixel;		/* Depth (bytes/pixel) */
+
+	Uint8       Rloss, Gloss, Bloss, Aloss;		/* Component loss */
+	Uint8       Rshift, Gshift, Bshift, Ashift;	/* Component shift */
+	Uint32      Rmask, Gmask, Bmask, Amask;		/* Component masks */
+
+	Uint32 colorkey;			/* Color key pixel */
+	Uint8 alpha;				/* Per-surface alpha value */
+} AG_PixelFormat;
+
+enum ag_surface_type {
+	AG_SURFACE_PACKED,		/* Packed-pixel format */
+	AG_SURFACE_INDEXED		/* Indexed format */
+};
+
+/* General packed-pixel or indexed surface. */
+typedef struct ag_surface {
+	enum ag_surface_type type;	/* Type of surface */
+	AG_PixelFormat *format;		/* Pixel format */
+	Uint flags;
+#define AG_SRCCOLORKEY	0x01		/* Enable color key for blit as src */
+#define AG_SRCALPHA	0x02		/* Enable alpha for blit as src */
+#define AG_SAVED_SURFACE_FLAGS (AG_SRCCOLORKEY|AG_SRCALPHA)
+	Uint w, h;			/* Size in pixels */
+	Uint pitch;			/* Scanline size in bytes */
+	void *pixels;			/* Raw pixel data */
+	AG_Rect clipRect;		/* Clipping rect for blit as dst */
+} AG_Surface;
 
 typedef enum ag_blend_func {
 	AG_ALPHA_ZERO,
@@ -36,31 +54,18 @@ typedef enum ag_blend_func {
 	AG_ALPHA_OVERLAY
 } AG_BlendFn;
 
-/* Per-surface clipping test */
+/* Clipping test for pixel at ax,ay in surface s (as dst) */
 #define AG_CLIPPED_PIXEL(s, ax, ay)			\
-	((ax) < (s)->clip_rect.x ||			\
-	 (ax) >= (s)->clip_rect.x+(s)->clip_rect.w ||	\
-	 (ay) < (s)->clip_rect.y ||			\
-	 (ay) >= (s)->clip_rect.y+(s)->clip_rect.h)
+	((ax) < (s)->clipRect.x ||			\
+	 (ax) >= (s)->clipRect.x+(s)->clipRect.w ||	\
+	 (ay) < (s)->clipRect.y ||			\
+	 (ay) >= (s)->clipRect.y+(s)->clipRect.h)
 
-
-#define AG_SWSURFACE		SDL_SWSURFACE
-#define AG_HWSURFACE		SDL_HWSURFACE
-#define AG_SRCCOLORKEY		SDL_SRCCOLORKEY
-#define AG_SRCALPHA		SDL_SRCALPHA
-#define AG_RLEACCEL		SDL_RLEACCEL
-#define AG_ALPHA_TRANSPARENT	SDL_ALPHA_TRANSPARENT
-#define AG_ALPHA_OPAQUE		SDL_ALPHA_OPAQUE
-#define AG_LOGPAL		SDL_LOGPAL
-#define AG_PHYSPAL		SDL_PHYSPAL
+#define AG_ALPHA_TRANSPARENT	0		/* Transparent alpha value */
+#define AG_ALPHA_OPAQUE		255		/* Opaque alpha value */
 
 __BEGIN_DECLS
-extern AG_PixelFormat *agSurfaceFmt;		/* Standard surface format */
-
-void AG_SurfaceBlendPixelRGBA(AG_Surface *, Uint8 *, Uint8, Uint8, Uint8, Uint8,
-                              AG_BlendFn);
-void AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
-void AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
+extern AG_PixelFormat *agSurfaceFmt;  /* Recommended format for new surfaces */
 
 AG_PixelFormat *AG_PixelFormatRGB(int, Uint32, Uint32, Uint32);
 AG_PixelFormat *AG_PixelFormatRGBA(int, Uint32, Uint32, Uint32, Uint32);
@@ -68,45 +73,53 @@ AG_PixelFormat *AG_PixelFormatIndexed(int);
 AG_PixelFormat *AG_PixelFormatDup(const AG_PixelFormat *);
 void            AG_PixelFormatFree(AG_PixelFormat *);
 
-AG_Surface     *AG_SurfaceNew(Uint, Uint, AG_PixelFormat *, Uint);
+AG_Surface     *AG_SurfaceNew(enum ag_surface_type, Uint, Uint,
+                              const AG_PixelFormat *, Uint);
 AG_Surface     *AG_SurfaceEmpty(void);
 AG_Surface     *AG_SurfaceIndexed(Uint, Uint, int, Uint);
 AG_Surface     *AG_SurfaceRGB(Uint, Uint, int, Uint, Uint32, Uint32, Uint32);
 AG_Surface     *AG_SurfaceRGBA(Uint, Uint, int, Uint, Uint32, Uint32, Uint32,
                                Uint32);
-AG_Surface     *AG_SurfaceFromPixelsRGB(void *, Uint, Uint, int, int, Uint32,
+AG_Surface     *AG_SurfaceFromPixelsRGB(void *, Uint, Uint, int, Uint32,
                                         Uint32, Uint32);
-AG_Surface     *AG_SurfaceFromPixelsRGBA(void *, Uint, Uint, int, int, Uint32,
+AG_Surface     *AG_SurfaceFromPixelsRGBA(void *, Uint, Uint, int, Uint32,
                                          Uint32, Uint32, Uint32);
-AG_Surface     *AG_SurfaceFromSDL(SDL_Surface *);
-SDL_Surface    *AG_SurfaceToSDL(AG_Surface *);
-AG_Surface     *AG_SurfaceFromSurface(AG_Surface *, AG_PixelFormat *, Uint);
-AG_Surface     *AG_SurfaceFromBMP(const char *);
-void            AG_SurfaceCopy(AG_Surface *, AG_Surface *);
+int             AG_SurfaceSetPalette(AG_Surface *, AG_Color *, Uint, Uint);
+AG_Surface     *AG_SurfaceDup(const AG_Surface *);
+AG_Surface     *AG_SurfaceConvert(const AG_Surface *, const AG_PixelFormat *);
+void            AG_SurfaceCopy(AG_Surface *, const AG_Surface *);
+void            AG_SurfaceBlit(const AG_Surface *, const AG_Rect *,
+                               AG_Surface *, int, int);
+int             AG_SurfaceResize(AG_Surface *, Uint, Uint);
 void            AG_SurfaceFree(AG_Surface *);
 
-#define AG_SurfaceStdRGB(w,h)		AG_SurfaceRGB((w),(h),agSurfaceFmt->BitsPerPixel,0,agSurfaceFmt->Rmask,agSurfaceFmt->Gmask,agSurfaceFmt->Bmask)
-#define AG_SurfaceStdRGBA(w,h)		AG_SurfaceRGBA((w),(h),agSurfaceFmt->BitsPerPixel,0,agSurfaceFmt->Rmask,agSurfaceFmt->Gmask,agSurfaceFmt->Bmask,agSurfaceFmt->Amask)
+AG_Surface     *AG_SurfaceFromPNG(const char *);
+AG_Surface     *AG_SurfaceFromJPEG(const char *);
+AG_Surface     *AG_SurfaceFromBMP(const char *);
+int             AG_SurfaceExportPNG(const AG_Surface *, const char *);
+int             AG_SurfaceExportJPEG(const AG_Surface *, const char *);
+int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
+AG_Surface     *AG_SurfaceFromSDL(void *);
+void           *AG_SurfaceExportSDL(const AG_Surface *);
 
-#define AG_SurfaceLock(su)		SDL_LockSurface(su)
-#define AG_SurfaceUnlock(su)		SDL_UnlockSurface(su)
-#define AG_SetColorKey(su,f,key)	SDL_SetColorKey((SDL_Surface *)(su),(f),(key))
-#define AG_SetAlpha(su,f,a)		SDL_SetAlpha((SDL_Surface *)(su),(f),(a))
-#define AG_SetPalette(su,w,c,s,n)	SDL_SetPalette((SDL_Surface *)(su),(w),(SDL_Color *)(c),(s),(n))
-#define AG_MapRGB(fmt,r,g,b)		SDL_MapRGB((SDL_PixelFormat *)(fmt),(r),(g),(b))
-#define AG_MapRGBA(fmt,r,g,b,a)		SDL_MapRGBA((SDL_PixelFormat *)(fmt),(r),(g),(b),(a))
-#define AG_MapColorRGB(fmt,c)		SDL_MapRGB((SDL_PixelFormat *)(fmt),(c)->r,(c)->g,(c)->b)
-#define AG_MapColorRGBA(fmt,c)		SDL_MapRGBA((SDL_PixelFormat *)(fmt),(c)->r,(c)->g,(c)->b,(c)->a)
-#define AG_GetRGB(pixel,fmt,r,g,b)	SDL_GetRGB((pixel),(SDL_PixelFormat *)(fmt),(r),(g),(b))
-#define AG_GetRGBA(pixel,fmt,r,g,b,a)	SDL_GetRGBA((pixel),(SDL_PixelFormat *)(fmt),(r),(g),(b),(a))
-#define AG_GetColorRGB(pixel,fmt,c)	SDL_GetRGB((pixel),(SDL_PixelFormat *)(fmt),(c)->r,(c)->g,(c)->b)
-#define AG_GetColorRGBA(pixel,fmt,c)	SDL_GetRGBA((pixel),(SDL_PixelFormat *)(fmt),(c)->r,(c)->g,(c)->b,(c)->a)
+void            AG_SurfaceBlendPixel(AG_Surface *, Uint8 *, AG_Color, AG_BlendFn);
+void            AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
+void            AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
+int             AG_ScaleSurface(const AG_Surface *, Uint16, Uint16, AG_Surface **);
+void            AG_SetAlphaPixels(AG_Surface *, Uint8);
+void            AG_FillRect(AG_Surface *, const AG_Rect *, AG_Color);
 
-AG_Surface *AG_DupSurface(AG_Surface *);
-int         AG_ScaleSurface(AG_Surface *, Uint16, Uint16, AG_Surface **);
-void        AG_SetAlphaPixels(AG_Surface *, Uint8);
-int         AG_SurfaceExportJPEG(AG_Surface *, char *);
-void        AG_FlipSurface(Uint8 *, int, int);
+#define AG_SurfaceStdRGB(w,h) \
+	AG_SurfaceRGB((w),(h),agSurfaceFmt->BitsPerPixel,0, \
+	    agSurfaceFmt->Rmask, \
+	    agSurfaceFmt->Gmask, \
+	    agSurfaceFmt->Bmask)
+#define AG_SurfaceStdRGBA(w,h) \
+	AG_SurfaceRGBA((w),(h),agSurfaceFmt->BitsPerPixel,0, \
+	    agSurfaceFmt->Rmask, \
+	    agSurfaceFmt->Gmask, \
+	    agSurfaceFmt->Bmask, \
+	    agSurfaceFmt->Amask)
 
 /*
  * Generic pixel manipulation macros.
@@ -132,26 +145,164 @@ void        AG_FlipSurface(Uint8 *, int, int);
 	}								\
 } while (0)
 
-#define AG_BLEND_RGBA(s, p, r, g, b, a, m) \
-	AG_SurfaceBlendPixelRGBA((s),(p),(r),(g),(b),(a),(m))
-#define AG_BLEND_RGBA2(s, x, y, r, g, b, a, m) do {			\
-	AG_SurfaceBlendPixelRGBA((s),					\
+#define AG_BLEND_RGBA(s, p, r, g, b, a, fn) \
+	AG_SurfaceBlendPixel((s),(p), \
+	    AG_ColorRGBA((r),(g),(b),(a)),(fn))
+#define AG_BLEND_RGBA2(s, x, y, r, g, b, a, fn) do {			\
+	AG_SurfaceBlendPixel((s),					\
 	    (Uint8 *)(s)->pixels + (y)*(s)->pitch +			\
 	    (x)*(s)->format->BytesPerPixel,				\
-	    (r),(g),(b),(a),(m));					\
+	    AG_ColorRGBA((r),(g),(b),(a)),(fn));					\
 } while (0)
-#define AG_BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, m) do {		\
+#define AG_BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, fn) do {		\
 	if (!AG_CLIPPED_PIXEL((s), (x), (y))) {				\
-		AG_SurfaceBlendPixelRGBA((s),				\
+		AG_SurfaceBlendPixel((s),				\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
-		    (r),(g),(b),(a),(m));				\
+		    AG_ColorRGBA((r),(g),(b),(a)),(fn));				\
 	}								\
 } while (0)
 
+/* Compose a pixel value from RGB components. */
+static __inline__ Uint32
+AG_MapPixelRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
+{
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_MapPixelRGB() called on color-index format");
+#endif
+	return (r >> pf->Rloss) << pf->Rshift |
+	       (g >> pf->Gloss) << pf->Gshift |
+	       (b >> pf->Bloss) << pf->Bshift | pf->Amask;
+}
+
+/* Compose a pixel value from RGBA components. */
+static __inline__ Uint32
+AG_MapPixelRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_MapPixelRGBA() called on color-index format");
+#endif
+	return (r >> pf->Rloss) << pf->Rshift |
+	       (g >> pf->Gloss) << pf->Gshift |
+	       (b >> pf->Bloss) << pf->Bshift |
+	      ((a >> pf->Aloss) << pf->Ashift & pf->Amask);
+}
+
+/* Compose a pixel value from an AG_Color (ignore any alpha). */
+static __inline__ Uint32
+AG_MapColorRGB(const AG_PixelFormat *pf, AG_Color C)
+{
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_MapColorRGB() called on color-index format");
+#endif
+	return (C.r >> pf->Rloss) << pf->Rshift |
+	       (C.g >> pf->Gloss) << pf->Gshift |
+	       (C.b >> pf->Bloss) << pf->Bshift | pf->Amask;
+}
+
+/* Compose a pixel value from an AG_Color (honor any alpha). */
+static __inline__ Uint32
+AG_MapColorRGBA(const AG_PixelFormat *pf, AG_Color C)
+{
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_MapColorRGBA() called on color-index format");
+#endif
+	return (C.r >> pf->Rloss) << pf->Rshift |
+	       (C.g >> pf->Gloss) << pf->Gshift |
+	       (C.b >> pf->Bloss) << pf->Bshift |
+	      ((C.a >> pf->Aloss) << pf->Ashift & pf->Amask);
+}
+
+#define GET_PIXEL_COMPONENT(rv, mask, shift, loss)			\
+	tmp = (pc & mask) >> shift;					\
+	(rv) = (tmp << loss) + (tmp >> (8 - (loss << 1)));
+
+/* Decompose a pixel value to RGB components. */
+static __inline__ void
+AG_GetPixelRGB(Uint32 pc, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g,
+    Uint8 *b)
+{
+	Uint tmp;
+
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_GetPixelRGB() called on color-index format");
+#endif
+	GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
+	GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
+	GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
+}
+
+/* Decompose a pixel value to RGBA components. */
+static __inline__ void
+AG_GetPixelRGBA(Uint32 pc, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g,
+    Uint8 *b, Uint8 *a)
+{
+	Uint tmp;
+
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_GetPixelRGBA() called on color-index format");
+#endif
+	GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
+	GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
+	GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
+	if (pf->Amask != 0) {
+		GET_PIXEL_COMPONENT(*a, pf->Amask, pf->Ashift, pf->Aloss);
+	} else {
+		*a = AG_ALPHA_OPAQUE;
+	}
+}
+
+/* Decompose a pixel value to an AG_Color (ignore any alpha, set opaque). */
+static __inline__ AG_Color
+AG_GetColorRGB(Uint32 pc, const AG_PixelFormat *pf)
+{
+	AG_Color C;
+	Uint tmp;
+
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_GetColorRGB() called on color-index format");
+#endif
+	GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
+	GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
+	GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
+	C.a = AG_ALPHA_OPAQUE;
+	return (C);
+}
+
+/* Decompose a pixel value to an AG_Color (honor any alpha). */
+static __inline__ AG_Color
+AG_GetColorRGBA(Uint32 pc, const AG_PixelFormat *pf)
+{
+	AG_Color C;
+	Uint tmp;
+
+#ifdef AG_DEBUG
+	if (pf->palette != NULL)
+		AG_FatalError("AG_GetColorRGBA() called on color-index format");
+#endif
+	GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
+	GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
+	GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
+	if (pf->Amask != 0) {
+		GET_PIXEL_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss);
+	} else {
+		C.a = AG_ALPHA_OPAQUE;
+	}
+	return (C);
+}
+
+#undef GET_PIXEL_COMPONENT
+
 /* Return pixel value at specified position in surface s. */
 static __inline__ Uint32
-AG_GetPixel(AG_Surface *s, Uint8 *pSrc)
+AG_GetPixel(const AG_Surface *s, const Uint8 *pSrc)
 {
 	switch (s->format->BytesPerPixel) {
 	case 4:
@@ -200,110 +351,70 @@ AG_SurfacePutPixel(AG_Surface *s, Uint8 *pDst, Uint32 cDst)
 	}
 }
 
-/* Convert an AG_Rect to an equivalent SDL_Rect. XXX */
-static __inline__ SDL_Rect
-AG_RectToSDL(const AG_Rect *r)
-{
-	SDL_Rect rs;
-	rs.x = (Sint16)r->x;
-	rs.y = (Sint16)r->y;
-	rs.w = (Uint16)r->w;
-	rs.h = (Uint16)r->h;
-	return (rs);
-}
-
-/* Convert a SDL_Rect to an equivalent AG_Rect. XXX */
-static __inline__ AG_Rect
-AG_RectFromSDL(const SDL_Rect *r)
-{
-	AG_Rect rs;
-	rs.x = (int)r->x;
-	rs.y = (int)r->y;
-	rs.w = (int)r->w;
-	rs.h = (int)r->h;
-	return (rs);
-}
-
-
-/* Test whether two surfaces use identical pixel formats. */
+/*
+ * Test whether two pixel formats are identical (for color-index formats,
+ * the palettes may still differ).
+ */
 static __inline__ int
-AG_SamePixelFmt(AG_Surface *s1, AG_Surface *s2)
+AG_PixelFormatCompare(const AG_PixelFormat *pf1, const AG_PixelFormat *pf2)
 {
-	return (s1->format->BytesPerPixel == s2->format->BytesPerPixel &&
-	        s1->format->Rmask == s2->format->Rmask &&
-		s1->format->Gmask == s2->format->Gmask &&
-		s1->format->Bmask == s2->format->Bmask &&
-		s1->format->Amask == s2->format->Amask &&
-		s1->format->colorkey == s2->format->colorkey);
+	/* XXX TODO come up with a hash function to avoid tests here */
+	return (pf1->BytesPerPixel == pf2->BytesPerPixel &&
+	        pf1->Rmask == pf2->Rmask &&
+		pf1->Gmask == pf2->Gmask &&
+		pf1->Bmask == pf2->Bmask &&
+		pf1->Amask == pf2->Amask &&
+		pf1->colorkey == pf2->colorkey);
 }
 
-/*
- * Copy the contents a surface (or a region within a surface) to a given
- * position in another surface.
- */
+/* Set the source alpha flag and per-surface alpha. */
 static __inline__ void
-AG_SurfaceBlit(AG_Surface *src, const AG_Rect *rSrc, AG_Surface *dst,
-    int xDst, int yDst)
+AG_SurfaceSetAlpha(AG_Surface *s, Uint flags, Uint8 alpha)
 {
-	SDL_Rect rs, rd;
-
-	rd.x = (Sint16)xDst;
-	rd.y = (Sint16)yDst;
-
-	if (rSrc != NULL) {
-		rs.x = (Sint16)rSrc->x;
-		rs.y = (Sint16)rSrc->y;
-		rs.w = (Uint16)rSrc->w;
-		rs.h = (Uint16)rSrc->h;
-		SDL_BlitSurface(src, &rs, dst, &rd);
+	if (flags & AG_SRCALPHA) {
+		s->flags |= AG_SRCALPHA;
 	} else {
-		SDL_BlitSurface(src, NULL, dst, &rd);
+		s->flags &= ~(AG_SRCALPHA);
 	}
+	s->format->alpha = alpha;
 }
 
-/*
- * Fill rectangle with the specified color.
- * The alpha component is copied as-is.
- */
+/* Set the source colorkey flag and per-surface colorkey. */
 static __inline__ void
-AG_FillRect(AG_Surface *s, const AG_Rect *r, AG_Color C)
+AG_SurfaceSetColorKey(AG_Surface *s, Uint flags, Uint32 colorkey)
 {
-	Uint32 c;
-	SDL_Rect rSDL;
-
-	c = AG_MapRGBA(s->format, C.r, C.g, C.b, C.a);
-	if (r != NULL) {
-		rSDL = AG_RectToSDL(r);
-		SDL_FillRect(s, &rSDL, c);
+	if (flags & AG_SRCCOLORKEY) {
+		s->flags |= AG_SRCCOLORKEY;
 	} else {
-		SDL_FillRect(s, NULL, c);
+		s->flags &= ~(AG_SRCCOLORKEY);
 	}
+	s->format->colorkey = colorkey;
 }
 
-/*
- * Get/set the clipping rectangle of a Surface. The clipping rectangle applies
- * to AG_SurfaceBlit()s where surface s is the destination of the blit.
- */
+/* Retrieve the surface's clipping rectangle. */
 static __inline__ void
-AG_GetClipRect(AG_Surface *s, AG_Rect *r)
+AG_GetClipRect(const AG_Surface *su, AG_Rect *r)
 {
-	SDL_Rect rSDL;
-	SDL_GetClipRect(s, &rSDL);
-	r->x = (int)rSDL.x;
-	r->y = (int)rSDL.y;
-	r->w = (int)rSDL.w;
-	r->h = (int)rSDL.h;
+	*r = su->clipRect;
 }
+
+/* Set the surface's clipping rectangle. */
 static __inline__ void
-AG_SetClipRect(AG_Surface *s, const AG_Rect *r)
+AG_SetClipRect(AG_Surface *su, const AG_Rect *r)
 {
-	SDL_Rect rSDL;
-	rSDL.x = (Sint16)r->x;
-	rSDL.y = (Sint16)r->y;
-	rSDL.w = (Sint16)r->w;
-	rSDL.h = (Sint16)r->h;
-	SDL_SetClipRect(s, &rSDL);
+	su->clipRect = *r;
 }
+
+#ifdef AG_LEGACY
+void        AG_SurfaceLock(AG_Surface *)							DEPRECATED_ATTRIBUTE;
+void        AG_SurfaceUnlock(AG_Surface *)							DEPRECATED_ATTRIBUTE;
+Uint32      AG_MapRGB(const AG_PixelFormat *, Uint8, Uint8, Uint8)				DEPRECATED_ATTRIBUTE;
+Uint32      AG_MapRGBA(const AG_PixelFormat *, Uint8, Uint8, Uint8, Uint8)			DEPRECATED_ATTRIBUTE;
+void        AG_GetRGB(Uint32, const AG_PixelFormat *, Uint8 *, Uint8 *, Uint8 *)		DEPRECATED_ATTRIBUTE;
+void        AG_GetRGBA(Uint32, const AG_PixelFormat *, Uint8 *, Uint8 *, Uint8 *, Uint8 *)	DEPRECATED_ATTRIBUTE;
+AG_Surface *AG_DupSurface(AG_Surface *)								DEPRECATED_ATTRIBUTE;
+int         AG_SamePixelFmt (const AG_Surface *, const AG_Surface *)				DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>

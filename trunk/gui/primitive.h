@@ -82,12 +82,11 @@ AG_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc)
 
 /* Blend a pixel (32-bit agSurfaceFmt argument) */
 static __inline__ void
-AG_BlendPixel32(void *obj, int x, int y, Uint32 c, AG_BlendFn fnSrc)
+AG_BlendPixel32(void *obj, int x, int y, Uint32 px, AG_BlendFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color C;
+	AG_Color C = AG_GetColorRGBA(px, agSurfaceFmt);
 
-	AG_GetRGBA(c, agSurfaceFmt, &C.r, &C.g, &C.b, &C.a);
 	wid->drvOps->blendPixel(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,

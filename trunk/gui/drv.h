@@ -42,6 +42,7 @@ typedef struct ag_driver_class {
 	int  (*processEvents)(void *drv);
 	void (*genericEventLoop)(void *drv);
 	void (*endEventProcessing)(void *drv);
+	void (*terminate)(void);
 	/* GUI rendering */
 	void (*beginRendering)(void *drv);
 	void (*renderWindow)(struct ag_window *);
@@ -99,7 +100,7 @@ typedef struct ag_driver_class {
 	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
 	void (*drawFrame)(void *drv, AG_Rect r, AG_Color C[2]);
 	void (*updateGlyph)(void *drv, struct ag_glyph *);
-	void (*drawGlyph)(void *drv, struct ag_glyph *, int x, int y);
+	void (*drawGlyph)(void *drv, const struct ag_glyph *, int x, int y);
 } AG_DriverClass;
 
 /* Generic driver instance. */

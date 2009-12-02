@@ -53,12 +53,13 @@ LoadBMP(AG_Event *event)
 		for (i = 0; i < bmp->w*bmp->h; i++) {
 			Uint8 r, g, b;
 
-			AG_GetRGB(AG_GET_PIXEL(bmp,pSrc), bmp->format,
+			AG_GetPixelRGB(AG_GET_PIXEL(bmp,pSrc), bmp->format,
 			    &r,&g,&b);
 			r = 255 - r;
 			g = 255 - g;
 			b = 255 - b;
-			AG_PUT_PIXEL(bmp, pSrc, AG_MapRGB(bmp->format, r,g,b));
+			AG_PUT_PIXEL(bmp, pSrc,
+			    AG_MapPixelRGB(bmp->format, r,g,b));
 			pSrc += bmp->format->BytesPerPixel;
 		}
 	}

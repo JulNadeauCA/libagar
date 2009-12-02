@@ -358,11 +358,11 @@ AG_TextValign(enum ag_text_valign mode)
 #define AG_TextFormat AG_TextRenderf
 
 static __inline__ void
-AG_TextColor32(Uint32 c)
+AG_TextColor32(Uint32 px)
 {
 	AG_Color C;
 
-	AG_GetRGB(c, agSurfaceFmt, &C.r, &C.g, &C.b);
+	C = AG_GetColorRGB(px, agSurfaceFmt);
 	AG_MutexLock(&agTextLock);
 	agTextState->color = C;
 	AG_MutexUnlock(&agTextLock);

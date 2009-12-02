@@ -544,6 +544,14 @@ EndEventProcessing(void *obj)
 }
 
 static void
+Terminate(void)
+{
+	SDL_Event nev;
+	nev.type = SDL_QUIT;
+	SDL_PushEvent(&nev);
+}
+
+static void
 BeginRendering(void *obj)
 {
 	AG_DriverSDLGL *sgl = obj;
@@ -838,26 +846,6 @@ InitDefaultCursor(AG_DriverSDLGL *sgl)
  * Single-display specific operations.
  */
 
-static AG_PixelFormat *
-GetVideoPixelFormat(SDL_Surface *su)
-{
-	switch (su->format->BytesPerPixel) {
-	case 1:
-		return AG_PixelFormatIndexed(su->format->BitsPerPixel);
-	case 2:
-	case 3:
-	case 4:
-		return AG_PixelFormatRGB(su->format->BitsPerPixel,
-		    su->format->Rmask,
-		    su->format->Gmask,
-		    su->format->Bmask);
-	default:
-		AG_SetError("Unsupported pixel depth (%d bpp)",
-		    (int)su->format->BitsPerPixel);
-		return (NULL);
-	}
-}
-
 static void
 ClearBackground(void)
 {
@@ -903,7 +891,7 @@ OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	}
 	SDL_EnableUNICODE(1);
 
-	if ((drv->videoFmt = GetVideoPixelFormat(sgl->s)) == NULL) {
+	if ((drv->videoFmt = AG_SDL_GetPixelFormat(sgl->s)) == NULL) {
 		goto fail;
 	}
 	dsw->w = sgl->s->w;
@@ -959,7 +947,7 @@ OpenVideoContext(void *obj, void *ctx, Uint flags)
 
 	/* Use the given display surface. */
 	sgl->s = (SDL_Surface *)ctx;
-	if ((drv->videoFmt = GetVideoPixelFormat(sgl->s)) == NULL) {
+	if ((drv->videoFmt = AG_SDL_GetPixelFormat(sgl->s)) == NULL) {
 		goto fail;
 	}
 	dsw->w = sgl->s->w;
@@ -1042,7 +1030,7 @@ VideoCapture(void *obj, AG_Surface **sp)
 	AG_DriverSDLGL *sgl = obj;
 	AG_Surface *s;
 
-	if ((s = AG_DupSurface(sgl->s)) == NULL) {
+	if ((s = AG_SurfaceDup(sgl->s)) == NULL) {
 		return (-1);
 	}
 	*sp = s;
@@ -1084,6 +1072,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		ProcessEvents,
 		GenericEventLoop,
 		EndEventProcessing,
+		Terminate,
 		BeginRendering,
 		RenderWindow,
 		EndRendering,

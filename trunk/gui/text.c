@@ -798,7 +798,7 @@ TextRenderFT_Mono(const Uint32 *ucs)
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	if ((su = AG_SurfaceIndexed(tm.w, tm.h, 8, AG_SWSURFACE)) == NULL) {
+	if ((su = AG_SurfaceIndexed(tm.w, tm.h, 8, 0)) == NULL) {
 		Verbose("TextRenderFT_Indexed: %s\n", AG_GetError());
 		goto empty;
 	}
@@ -809,7 +809,7 @@ TextRenderFT_Mono(const Uint32 *ucs)
 	pal->colors[0].g = C.g;
 	pal->colors[0].b = C.b;
 	if (C.a == 0) {
-		AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
+		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, 0);
 	}
 
 	C = agTextState->color;
@@ -901,7 +901,7 @@ TextRenderFT_Blended_Underline(AG_TTFFont *ftFont, AG_Surface *su, int nLines)
 	Uint8 *pDst;
 	int x, y, line;
 
-	pixel = AG_MapRGBA(su->format, C.r, C.g, C.b, 255);
+	pixel = AG_MapPixelRGBA(su->format, C.r, C.g, C.b, 255);
 	for (line = 0; line < nLines; line++) {
 		y = ftFont->ascent - ftFont->underline_offset - 1;
 		y *= (line+1);
@@ -1012,7 +1012,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			for (x = 0; x < w; x++) {
 				Uint32 alpha = *src++;
 
-				pixel = AG_MapRGBA(su->format,
+				pixel = AG_MapPixelRGBA(su->format,
 				    C.r, C.g, C.b, alpha);
 				AG_PACKEDPIXEL_PUT(su->format->BytesPerPixel,
 				    dst, pixel);
@@ -1117,8 +1117,8 @@ TextRenderBitmap(const Uint32 *ucs)
 		AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
 		rd.x += sGlyph->w;
 	}
-	AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
-	AG_SetAlpha(su,
+	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, 0);
+	AG_SurfaceSetAlpha(su,
 	    font->bglyphs[0]->flags & AG_SRCALPHA,
 	    font->bglyphs[0]->format->alpha);
 

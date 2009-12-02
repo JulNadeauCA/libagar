@@ -402,7 +402,7 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 					break;
 				}
 
-				color = AG_MapRGBA(su->format, r,g,b,a);
+				color = AG_MapPixelRGBA(su->format, r,g,b,a);
 				switch (su->format->BytesPerPixel) {
 				case 4:
 					*(Uint32 *)dst = color;
@@ -556,10 +556,10 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
 		Uint8 oldalpha = su->format->alpha;
-		AG_SetAlpha(su, 0, 0);
-		AG_SetColorKey(su, 0, 0);
+		AG_SurfaceSetAlpha(su, 0, 0);
+		AG_SurfaceSetColorKey(su, 0, 0);
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT))
-			AG_SetAlpha(su, AG_SRCALPHA, oldalpha);
+			AG_SurfaceSetAlpha(su, AG_SRCALPHA, oldalpha);
 	}
 	return (su);
 }

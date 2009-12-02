@@ -489,7 +489,7 @@ AG_SocketBgCircle(AG_Socket *sock, Uint r)
 void
 AG_SocketBgPixmap(AG_Socket *sock, AG_Surface *su)
 {
-	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
 
 	AG_ObjectLock(sock);
 	sock->bgType = AG_SOCKET_PIXMAP;

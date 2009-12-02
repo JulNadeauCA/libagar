@@ -89,12 +89,6 @@ over
 .Ft int
 .Fn AG_RectInside2 "const AG_Rect2 *r" "int x" "int y"
 .Pp
-.Ft SDL_Rect
-.Fn AG_RectToSDL "const AG_Rect *r"
-.Pp
-.Ft AG_Rect
-.Fn AG_RectFromSDL "const SDL_Rect *r"
-.Pp
 .Ft int
 .Fn AG_RectCompare "const AG_Rect *a" "const AG_Rect *b"
 .Pp
@@ -139,15 +133,6 @@ routines convert between the
 and
 .Ft AG_Rect2
 formats.
-.Pp
-If Agar is compiled with support for SDL, the
-.Fn AG_RectToSDL
-and
-.Fn AG_RectFromSDL
-routines are available for converting between
-.Ft AG_Rect
-and
-.Ft SDL_Rect .
 .Pp
 .Fn AG_RectIntersect
 and

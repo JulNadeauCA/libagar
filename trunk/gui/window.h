@@ -149,7 +149,6 @@ void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
-int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 
 void	 AG_WindowFocus(AG_Window *);
