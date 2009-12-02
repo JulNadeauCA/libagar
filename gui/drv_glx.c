@@ -667,6 +667,24 @@ GenericEventLoop(void *obj)
 }
 
 static void
+Terminate(void)
+{
+	AG_DriverGLX *glx;
+	XClientMessageEvent xe;
+	
+	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
+		if (!AGDRIVER_IS_GLX(glx)) {
+			continue;
+		}
+		xe.format = 32;
+		xe.data.l[0] = glx->w;
+		XSendEvent(agDisplay, glx->w, False, NoEventMask, (XEvent *)&xe);
+	}
+	XSync(agDisplay, False);
+	exit(0);
+}
+
+static void
 BeginRendering(void *obj)
 {
 	AG_DriverGLX *glx = obj;
@@ -1531,6 +1549,7 @@ AG_DriverMwClass agDriverGLX = {
 		ProcessEvents,
 		GenericEventLoop,
 		NULL,			/* endEventProcessing */
+		Terminate,
 		BeginRendering,
 		RenderWindow,
 		EndRendering,

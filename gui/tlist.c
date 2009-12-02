@@ -1350,7 +1350,7 @@ UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 			AG_SurfaceFree(it->iconsrc);
 		}
 		if (iconsrc != NULL) {
-			it->iconsrc = AG_DupSurface(iconsrc);
+			it->iconsrc = AG_SurfaceDup(iconsrc);
 		} else {
 			it->iconsrc = NULL;
 		}

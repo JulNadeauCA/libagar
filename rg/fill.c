@@ -177,6 +177,8 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 {
 	struct rg_fill_feature *fi = p;
 	AG_Surface *su = t->su;
+	AG_Color C;
+	Uint8 a;
 	
 	switch (fi->type) {
 	case FILL_SOLID:
@@ -188,34 +190,26 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			AG_Color c1 = fi->f_gradient.c1;
 			AG_Color c2 = fi->f_gradient.c2;
 	
-			AG_SurfaceLock(su);
+			C.a = fi->alpha;
 			for (y = 0; y < su->h; y++) {
-				Uint32 c;
-				Uint8 a = (Uint8)(su->h-y)*255/su->h;
+				a = (Uint8)(su->h-y)*255/su->h;
+				C.r = (((c1.r - c2.r)*a)>>8) + c2.r;
+				C.g = (((c1.g - c2.g)*a)>>8) + c2.g;
+				C.b = (((c1.b - c2.b)*a)>>8) + c2.b;
 
-				c = AG_MapRGB(t->ts->fmt,
-				    (((c1.r-c2.r)*a)>>8)+c2.r,
-				    (((c1.g-c2.g)*a)>>8)+c2.g,
-				    (((c1.b-c2.b)*a)>>8)+c2.b);
-
-				for (x = 0; x < su->w; x++) {
-					if (fi->alpha == 255) {
+				if (fi->alpha == 255) {
+					for (x = 0; x < su->w; x++) {
 						RG_PutPixel(t->su, x, y,
-						    AG_MapRGB(t->su->format,
-						    (((c1.r-c2.r)*a)>>8)+c2.r,
-						    (((c1.g-c2.g)*a)>>8)+c2.g,
-						    (((c1.b-c2.b)*a)>>8)+c2.b));
-					} else {
+						    AG_MapColorRGB(t->su->format, C));
+					}
+				} else {
+					for (x = 0; x < su->w; x++) {
 						RG_BlendRGB(t->su, x, y,
 						    RG_PRIM_OVERLAY_ALPHA,
-						    (((c1.r-c2.r)*a)>>8)+c2.r,
-						    (((c1.g-c2.g)*a)>>8)+c2.g,
-						    (((c1.b-c2.b)*a)>>8)+c2.b,
-						    fi->alpha);
+						    C);
 					}
 				}
 			}
-			AG_SurfaceUnlock(su);
 		}
 		break;
 	case FILL_VGRADIENT:
@@ -223,21 +217,19 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			int x, y;
 			AG_Color c1 = fi->f_gradient.c1;
 			AG_Color c2 = fi->f_gradient.c2;
-			Uint8 a;
-		
-			AG_SurfaceLock(su);
+			
+			C.a = fi->alpha;
 			for (y = 0; y < su->h; y++) {
 				for (x = 0; x < su->w; x++) {
 					a = (su->h - x)*255/su->h;
+					C.r = (((c1.r - c2.r)*a)>>8) + c2.r;
+					C.g = (((c1.g - c2.g)*a)>>8) + c2.g;
+					C.b = (((c1.b - c2.b)*a)>>8) + c2.b;
+
 					RG_BlendRGB(t->su, x, y,
-					    RG_PRIM_OVERLAY_ALPHA,
-					    (((c1.r-c2.r)*a)>>8)+c2.r,
-					    (((c1.g-c2.g)*a)>>8)+c2.g,
-					    (((c1.b-c2.b)*a)>>8)+c2.b,
-					    fi->alpha);
+					    RG_PRIM_OVERLAY_ALPHA, C);
 				}
 			}
-			AG_SurfaceUnlock(su);
 		}
 		break;
 	case FILL_CGRADIENT:
@@ -248,17 +240,15 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			AG_Color c1 = fi->f_gradient.c1;
 			AG_Color c2 = fi->f_gradient.c2;
 		
-			AG_SurfaceLock(su);
+			C.a = fi->alpha;
 			for (i = 0; i < r; i++) {
-				Uint8 a = (r - i)*255/r;
-				RG_ColorRGBA(t,
-				    (((c1.r-c2.r)*a)>>8)+c2.r,
-				    (((c1.g-c2.g)*a)>>8)+c2.g,
-				    (((c1.b-c2.b)*a)>>8)+c2.b,
-				    fi->alpha);
+				a = (r - i)*255/r;
+				C.r = (((c1.r - c2.r)*a)>>8) + c2.r;
+				C.g = (((c1.g - c2.g)*a)>>8) + c2.g;
+				C.b = (((c1.b - c2.b)*a)>>8) + c2.b;
+				RG_ColorRGBA(t, C);
 				RG_Circle2(t, x,y, i);
 			}
-			AG_SurfaceUnlock(su);
 		}
 		break;
 	default:

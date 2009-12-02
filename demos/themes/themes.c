@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <agar/core/types.h>
+
 #include "config/have_getopt.h"
 #include <agar/config/ag_debug.h>
 
@@ -458,7 +460,7 @@ main(int argc, char *argv[])
 	InitMyRoundedStyle(&myRoundedStyle);
 
 	/* Display the version and current graphics driver in use. */
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(0);
 	AG_ObjectSetName(win, "PanelWindow");
 	AG_WindowSetCaption(win, "Agar version / driver");
 	{

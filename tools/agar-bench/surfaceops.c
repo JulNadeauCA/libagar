@@ -8,7 +8,7 @@ T_DupSurface(void)
 {
 	AG_Surface *dup;
 
-	dup = AG_DupSurface(surface);
+	dup = AG_SurfaceDup(surface);
 	AG_SurfaceFree(dup);
 }
 
@@ -27,10 +27,6 @@ static void T_Scale32To128(void) {
 static void T_Scale128To32(void) {
 	AG_ScaleSurface(surface128, 32, 32, &surface);
 }
-static void T_Flip128(void) {
-	AG_FlipSurface(surface128->pixels, surface128->h,
-	    surface128->pitch);
-}
 
 static void T_Scale32To64Copy(void) {
 	AG_Surface *s2 = NULL;
@@ -47,7 +43,6 @@ static struct testfn_ops testfns[] = {
  { "Scale(32->64)+Copy", InitSurface, FreeSurface, T_Scale32To64Copy },
  { "Scale(32->128)", InitSurface, FreeSurface, T_Scale32To128 },
  { "Scale(128->32)", InitSurface, FreeSurface, T_Scale128To32 },
- { "Flip(128)", InitSurface, FreeSurface, T_Flip128 },
 };
 
 struct test_ops surfaceops_test = {

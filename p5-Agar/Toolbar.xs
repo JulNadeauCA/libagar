@@ -103,7 +103,7 @@ addIconButton(self, surface)
 	Agar::Toolbar self
 	Agar::Surface surface
 CODE:
-	RETVAL = AG_ToolbarButtonIcon(self, AG_DupSurface(surface), 0, NULL, "");
+	RETVAL = AG_ToolbarButtonIcon(self, AG_SurfaceDup(surface), 0, NULL, "");
 
 void
 select(self, button)

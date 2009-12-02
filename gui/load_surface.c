@@ -52,8 +52,7 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
 	AG_WriteVersion(ds, "AG_Surface", &agSurfaceVer);
 	AG_WriteUint32(ds, RAW_ENCODING);
 
-	AG_WriteUint32(ds, su->flags &
-	    (AG_SRCCOLORKEY|AG_SRCALPHA|AG_RLEACCEL));
+	AG_WriteUint32(ds, su->flags&(AG_SRCCOLORKEY|AG_SRCALPHA));
 	AG_WriteUint16(ds, su->w);
 	AG_WriteUint16(ds, su->h);
 	AG_WriteUint8(ds, su->format->BitsPerPixel);
@@ -77,15 +76,14 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
 	if (su->format->BitsPerPixel == 8) {
 		int i;
 
-		AG_WriteUint32(ds, su->format->palette->ncolors);
-		for (i = 0; i < su->format->palette->ncolors; i++) {
+		AG_WriteUint32(ds, su->format->palette->nColors);
+		for (i = 0; i < su->format->palette->nColors; i++) {
 			AG_WriteUint8(ds, su->format->palette->colors[i].r);
 			AG_WriteUint8(ds, su->format->palette->colors[i].g);
 			AG_WriteUint8(ds, su->format->palette->colors[i].b);
 		}
 	}
 
-	AG_SurfaceLock(su);
 	src = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
@@ -117,7 +115,6 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
 			src += su->format->BytesPerPixel;
 		}
 	}
-	AG_SurfaceUnlock(su);
 }
 
 AG_Surface *
@@ -183,11 +180,13 @@ AG_ReadSurface(AG_DataSource *ds, AG_PixelFormat *pixfmt)
 				colors[i].b = AG_ReadUint8(ds);
 			}
 		}
-		AG_SetPalette(su, AG_LOGPAL|AG_PHYSPAL, colors, 0, ncolors);
+		if (AG_SurfaceSetPalette(su, colors, 0, ncolors) == -1) {
+			/* XXX leak */
+			return (NULL);
+		}
 		Free(colors);
 	}
 	
-	AG_SurfaceLock(su);
 	dst = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
@@ -220,6 +219,5 @@ AG_ReadSurface(AG_DataSource *ds, AG_PixelFormat *pixfmt)
 			dst += su->format->BytesPerPixel;
 		}
 	}
-	AG_SurfaceUnlock(su);
 	return (su);
 }

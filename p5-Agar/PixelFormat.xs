@@ -93,7 +93,7 @@ mapRGB(pf, r, g, b)
 	Uint8 g
 	Uint8 b
 CODE:
-	RETVAL = AG_MapRGB(pf, r, g, b);
+	RETVAL = AG_MapPixelRGB(pf, r, g, b);
 OUTPUT:
 	RETVAL
 
@@ -105,7 +105,7 @@ mapRGBA(pf, r, g, b, a)
 	Uint8 b
 	Uint8 a
 CODE:
-	RETVAL = AG_MapRGBA(pf, r, g, b, a);
+	RETVAL = AG_MapPixelRGBA(pf, r, g, b, a);
 OUTPUT:
 	RETVAL
 
@@ -120,7 +120,7 @@ PPCODE:
 		XPUSHs(newSVpvf("#%02x%02x%02x", r, g, b));
 	} else {
 		EXTEND(SP, 3);
-		AG_GetRGB(pixel, pf, &r, &g, &b);
+		AG_GetPixelRGB(pixel, pf, &r, &g, &b);
 		PUSHs(newSViv(r));
 		PUSHs(newSViv(g));
 		PUSHs(newSViv(b));
@@ -137,7 +137,7 @@ PPCODE:
 		XPUSHs(newSVpvf("#%02x%02x%02x%02x", r, g, b, a));
 	} else {
 		EXTEND(SP, 3);
-		AG_GetRGBA(pixel, pf, &r, &g, &b, &a);
+		AG_GetPixelRGBA(pixel, pf, &r, &g, &b, &a);
 		PUSHs(newSViv(r));
 		PUSHs(newSViv(g));
 		PUSHs(newSViv(b));

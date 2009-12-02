@@ -103,8 +103,8 @@ CreateGameMenu(void)
 	pixmaps[SWORD] = AG_SurfaceFromBMP("Images/sword.bmp");
 	pixmaps[AXE] = AG_SurfaceFromBMP("Images/axe.bmp");
 	for (i = 0; i < 5; i++) {
-		AG_SetColorKey(pixmaps[i], AG_SRCCOLORKEY,
-		    AG_MapRGB(pixmaps[i]->format, 0,255,0));
+		AG_SurfaceSetColorKey(pixmaps[i], AG_SRCCOLORKEY,
+		    AG_MapPixelRGB(pixmaps[i]->format, 0,255,0));
 	}
 
 	/*

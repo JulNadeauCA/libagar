@@ -526,7 +526,7 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 
 	ani->gframe = fr->name;
 
-	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_DupSurface(fr->su));
+	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_SurfaceDup(fr->su));
 
 	num = AG_NumericalNewUintR(box, AG_NUMERICAL_HFILL, "ms", _("Delay: "),
 	    &fr->delay, 0, 10000);

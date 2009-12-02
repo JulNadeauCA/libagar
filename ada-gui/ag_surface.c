@@ -12,15 +12,3 @@ agar_surface_std_rgba (unsigned int w, unsigned int h)
 {
   return AG_SurfaceStdRGBA (w, h);
 }
-
-void
-agar_surface_lock (AG_Surface *surf)
-{
-  AG_SurfaceLock (surf);
-}
-
-void
-agar_surface_unlock (AG_Surface *surf)
-{
-  AG_SurfaceUnlock (surf);
-}

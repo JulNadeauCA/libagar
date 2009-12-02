@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -355,7 +355,7 @@ TransformRotate(AG_Surface *sOrig, int argc, Uint32 *argv)
 	    swapdims ? sOrig->h : sOrig->w,
 	    swapdims ? sOrig->w : sOrig->h,
 	    sOrig->format->BitsPerPixel,
-	    (sOrig->flags & (AG_SRCALPHA|AG_SRCCOLORKEY|AG_RLEACCEL)),
+	    (sOrig->flags & (AG_SRCALPHA|AG_SRCCOLORKEY)),
 	    sOrig->format->Rmask,
 	    sOrig->format->Gmask,
 	    sOrig->format->Bmask,
@@ -401,13 +401,15 @@ TransformInvertRGB(AG_Surface *su, int argc, Uint32 *argv)
 {
 	size_t size = su->w*su->h;
 	Uint8 *p = su->pixels;
-	Uint8 r, g, b, a;
+	AG_Color C;
 	int i;
 
 	for (i = 0; i < size; i++) {
-		AG_GetRGBA(AG_GET_PIXEL(su,p), su->format, &r,&g,&b,&a);
-		AG_PUT_PIXEL(su, p, AG_MapRGBA(su->format, 255-r, 255-g, 255-b,
-		    a));
+		C = AG_GetColorRGBA(AG_GET_PIXEL(su,p), su->format);
+		C.r = 255-C.r;
+		C.g = 255-C.g;
+		C.b = 255-C.b;
+		AG_PUT_PIXEL(su, p, AG_MapColorRGBA(su->format, C));
 		p += su->format->BytesPerPixel;
 	}
 	return (su);

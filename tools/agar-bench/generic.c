@@ -24,15 +24,3 @@ FreeSurface(void)
 	AG_SurfaceFree(surface64);
 	AG_SurfaceFree(surface128);
 }
-
-void
-LockView(void)
-{
-	AG_SurfaceLock(agView->v);
-}
-
-void
-UnlockView(void)
-{
-	AG_SurfaceUnlock(agView->v);
-}

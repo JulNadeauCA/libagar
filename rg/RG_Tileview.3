@@ -114,7 +114,7 @@ milliseconds.
 .Fn RG_TileviewColor4i "RG_Tileview *tv" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft "void"
-.Fn RG_TileviewSDLColor "RG_Tileview *tv" "SDL_Color *color" "Uint8 alpha"
+.Fn RG_TileviewColor "RG_Tileview *tv" "AG_Color *color" "Uint8 alpha"
 .Pp
 .Ft "void"
 .Fn RG_TileviewAlpha "RG_Tileview *tv "Uint8 alpha"
@@ -138,7 +138,7 @@ milliseconds.
 The
 .Fn RG_TileviewColor3i ,
 .Fn RG_TileviewColor4i ,
-.Fn RG_TileviewSDLColor
+.Fn RG_TileviewColor
 and
 .Fn RG_TileviewAlpha
 functions modify the current RGBA value describing the color to use for

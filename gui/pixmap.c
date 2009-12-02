@@ -82,7 +82,7 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, AG_Surface *su)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, AG_DupSurface(su));	/* XXX leak */
+	AG_WidgetMapSurface(px, AG_SurfaceDup(su));	/* XXX leak */
 	return (px);
 }
 
@@ -224,7 +224,7 @@ AG_PixmapAddSurfaceCopy(AG_Pixmap *px, AG_Surface *su)
 	AG_Surface *dup;
 	int name;
 
-	dup = AG_DupSurface(su);
+	dup = AG_SurfaceDup(su);
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurface(px, dup);
 	px->flags |= AG_PIXMAP_UPDATE;

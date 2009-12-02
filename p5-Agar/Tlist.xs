@@ -74,7 +74,7 @@ setIcon(self, item, surface)
 	Agar::TlistItem item
 	Agar::Surface surface
 CODE:
-	AG_TlistSetIcon(self, item, AG_DupSurface(surface));
+	AG_TlistSetIcon(self, item, AG_SurfaceDup(surface));
 
 void
 sizeHint(self, text, numItems)

@@ -39,26 +39,22 @@ extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
 
 extern int agGUI;			/* GUI is initialized */
 
-int  AG_InitGraphics(const char *);
-int  AG_InitVideo(int, int, int, Uint)
-     DEPRECATED_ATTRIBUTE;
+int        AG_InitGraphics(const char *);
+int        AG_InitVideo(int, int, int, Uint)	DEPRECATED_ATTRIBUTE;
 #ifdef HAVE_SDL
-int  AG_InitVideoSDL(void *, Uint);
+int        AG_InitVideoSDL(void *, Uint);
 #endif
-int  AG_InitGUI(Uint);
-int  AG_InitGUIGlobals(void);
-void AG_DestroyGUI(void);
-void AG_DestroyGUIGlobals(void);
-void AG_QuitGUI(void);
-
-void AG_DestroyVideo(void);
-void AG_ViewCapture(void);
-
-void    AG_EventLoop_FixedFPS(void);
-#define AG_EventLoop() AG_EventLoop_FixedFPS()
-
+int        AG_InitGUI(Uint);
+int        AG_InitGUIGlobals(void);
+void       AG_DestroyGUI(void);
+void       AG_DestroyGUIGlobals(void);
+void       AG_QuitGUI(void);
+void       AG_DestroyVideo(void);
+void       AG_ViewCapture(void);
+void       AG_EventLoop_FixedFPS(void);
+#define    AG_EventLoop() AG_EventLoop_FixedFPS()
 #ifdef AG_DEBUG
-struct ag_window *AG_GuiDebugger(void);
+AG_Window *AG_GuiDebugger(void);
 #endif
 
 #ifdef AG_LEGACY

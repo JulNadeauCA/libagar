@@ -277,7 +277,7 @@ MouseButtonDown(AG_Event *event)
 	AG_WidgetFocus(tv);
 
 	switch (button) {
-	case SDL_BUTTON_WHEELUP:
+	case AG_MOUSE_WHEELUP:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
 			if (RG_PixmapWheel(tv, tel, 0) == 1)
 			return;
@@ -291,7 +291,7 @@ MouseButtonDown(AG_Event *event)
 		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
 		MoveCursor(tv, x - tv->xoffs, y - tv->yoffs);
 		return;
-	case SDL_BUTTON_WHEELDOWN:
+	case AG_MOUSE_WHEELDOWN:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
 			if (RG_PixmapWheel(tv, tel, 1) == 1)
 				return;
@@ -309,7 +309,7 @@ MouseButtonDown(AG_Event *event)
 		break;
 	}
 	
-	if (button == SDL_BUTTON_LEFT &&
+	if (button == AG_MOUSE_LEFT &&
 	    (tv->flags & RG_TILEVIEW_HIDE_CONTROLS) == 0) {
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
@@ -343,18 +343,18 @@ MouseButtonDown(AG_Event *event)
 			    tv->tv_pixmap.yorig, button);
 			return;
 		} else {
-			if (button == SDL_BUTTON_RIGHT)
+			if (button == AG_MOUSE_RIGHT)
 				tv->scrolling++;
 		}
 		break;
 #if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
-		if (button == SDL_BUTTON_RIGHT &&
+		if (button == AG_MOUSE_RIGHT &&
 		   (tv->flags & RG_TILEVIEW_NO_SCROLLING) == 0) {
 			tv->scrolling++;
 		}
-		if (button == SDL_BUTTON_MIDDLE || button == SDL_BUTTON_RIGHT ||
-		   (button == SDL_BUTTON_LEFT &&
+		if (button == AG_MOUSE_MIDDLE || button == AG_MOUSE_RIGHT ||
+		   (button == AG_MOUSE_LEFT &&
 		    OverSketch(tel, sx, sy)))
 		{
 			RG_Sketch *sk = tv->tv_sketch.sk;
@@ -368,25 +368,25 @@ MouseButtonDown(AG_Event *event)
 		break;
 #endif
 	case RG_TILEVIEW_FEATURE_EDIT:
-		if (button == SDL_BUTTON_MIDDLE) {
+		if (button == AG_MOUSE_MIDDLE) {
 			if (tv->tv_feature.ft->ops->menu != NULL) {
 				RG_FeatureOpenMenu(tv,
 				    WIDGET(tv)->rView.x1 + x,
 				    WIDGET(tv)->rView.y1 + y);
 			}
-		} else if (button == SDL_BUTTON_RIGHT) {
+		} else if (button == AG_MOUSE_RIGHT) {
 			tv->scrolling++;
 		}
 		break;
 	case RG_TILEVIEW_TILE_EDIT:
-		if (button == SDL_BUTTON_RIGHT) {
+		if (button == AG_MOUSE_RIGHT) {
 			tv->scrolling++;
 		}
 		break;
 	case RG_TILEVIEW_ATTRIB_EDIT:
-		if (button == SDL_BUTTON_RIGHT) {
+		if (button == AG_MOUSE_RIGHT) {
 			tv->scrolling++;
-		} else if (button ==  SDL_BUTTON_LEFT) {
+		} else if (button ==  AG_MOUSE_LEFT) {
 			tv->flags |= RG_TILEVIEW_SET_ATTRIBS;
 			tv->tv_attrs.nx = -1;
 			tv->tv_attrs.ny = -1;
@@ -394,16 +394,16 @@ MouseButtonDown(AG_Event *event)
 		}
 		break;
 	case RG_TILEVIEW_LAYERS_EDIT:
-		if (button == SDL_BUTTON_LEFT) {
+		if (button == AG_MOUSE_LEFT) {
 			IncrementLayer(tv, sx, sy, +1);
-		} else if (button == SDL_BUTTON_RIGHT) {
+		} else if (button == AG_MOUSE_RIGHT) {
 			IncrementLayer(tv, sx, sy, -1);
 			tv->scrolling++;
 		}
 		break;
 	}
 
-	if (button == SDL_BUTTON_MIDDLE &&
+	if (button == AG_MOUSE_MIDDLE &&
 	    tv->state == RG_TILEVIEW_TILE_EDIT) {
 		RG_TileOpenMenu(tv,
 		    WIDGET(tv)->rView.x1 + x,
@@ -419,16 +419,16 @@ MouseButtonUp(AG_Event *event)
 	RG_TileviewCtrl *ctrl;
 	int i;
 
-	if (button == SDL_BUTTON_RIGHT ||
-	    button == SDL_BUTTON_MIDDLE)
+	if (button == AG_MOUSE_RIGHT ||
+	    button == AG_MOUSE_MIDDLE)
 		tv->scrolling = 0;
 
 	switch (button) {
-	case SDL_BUTTON_RIGHT:
-	case SDL_BUTTON_MIDDLE:
+	case AG_MOUSE_RIGHT:
+	case AG_MOUSE_MIDDLE:
 		tv->scrolling = 0;
 		break;
-	case SDL_BUTTON_LEFT:
+	case AG_MOUSE_LEFT:
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
 				RG_TileviewHandle *th = &ctrl->handles[i];
@@ -985,7 +985,7 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	    z2>=100 ? t->su->w*tv->pxsz : t->su->w*z2/100,
 	    z2>=100 ? t->su->h*tv->pxsz : t->su->h*z2/100,
 	    t->su->format->BitsPerPixel,
-	    (t->su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	    (t->su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY)),
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
 	if (tv->scaled == NULL) {
@@ -1114,7 +1114,7 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 static void
 DrawStatusText(RG_Tileview *tv, const char *label)
 {
-	SDL_Surface *suTmp = NULL;		/* Make compiler happy */
+	AG_Surface *suTmp = NULL;		/* Make compiler happy */
 	int su = -1;
 	int wSu, hSu;
 
@@ -1150,7 +1150,7 @@ RG_TileviewColor3i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b)
 	tv->c.r = r;
 	tv->c.g = g;
 	tv->c.b = b;
-	tv->c.pc = AG_MapRGB(WIDGET(tv)->drv->videoFmt, r,g,b);
+	tv->c.pc = AG_MapPixelRGB(WIDGET(tv)->drv->videoFmt, r,g,b);
 }
 
 void
@@ -1160,17 +1160,17 @@ RG_TileviewColor4i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	tv->c.g = g;
 	tv->c.b = b;
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt, r,g,b,a);
+	tv->c.pc = AG_MapPixelRGBA(WIDGET(tv)->drv->videoFmt, r,g,b,a);
 }
 
 void
-RG_TileviewSDLColor(RG_Tileview *tv, AG_Color *c, Uint8 a)
+RG_TileviewColor(RG_Tileview *tv, AG_Color *c, Uint8 a)
 {
 	tv->c.r = c->r;
 	tv->c.g = c->g;
 	tv->c.b = c->b;
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt,
+	tv->c.pc = AG_MapPixelRGBA(WIDGET(tv)->drv->videoFmt,
 	    c->r, c->g, c->b, a);
 }
 
@@ -1178,7 +1178,7 @@ void
 RG_TileviewAlpha(RG_Tileview *tv, Uint8 a)
 {
 	tv->c.a = a;
-	tv->c.pc = AG_MapRGBA(WIDGET(tv)->drv->videoFmt,
+	tv->c.pc = AG_MapPixelRGBA(WIDGET(tv)->drv->videoFmt,
 	    tv->c.r, tv->c.g, tv->c.b, a);
 }
 
@@ -1362,9 +1362,9 @@ DrawHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, RG_TileviewHandle *th)
 	int y = th->y;
 
 	if (th->over && !th->enable) {
-		RG_TileviewSDLColor(tv, &ctrl->cOver, ctrl->aOver);
+		RG_TileviewColor(tv, &ctrl->cOver, ctrl->aOver);
 	} else {
-		RG_TileviewSDLColor(tv,
+		RG_TileviewColor(tv,
 		    th->enable ? &ctrl->cEna : &ctrl->cIna,
 		    th->enable ? ctrl->aEna : ctrl->aIna);
 	}
@@ -1378,7 +1378,7 @@ DrawHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, RG_TileviewHandle *th)
 	RG_TileviewPixel2i(tv, x, y);
 
 	/* Draw the highlights. */
-	RG_TileviewSDLColor(tv,
+	RG_TileviewColor(tv,
 	    th->enable ? &ctrl->cLow : &ctrl->cHigh,
 	    255);
 	RG_TileviewPixel2i(tv, x-2, y+1);		/* Highlight left */
@@ -1388,7 +1388,7 @@ DrawHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, RG_TileviewHandle *th)
 	RG_TileviewPixel2i(tv, x,   y-2);
 	RG_TileviewPixel2i(tv, x+1, y-2);
 	
-	RG_TileviewSDLColor(tv,
+	RG_TileviewColor(tv,
 	    th->enable ? &ctrl->cHigh : &ctrl->cLow,
 	    255);
 	RG_TileviewPixel2i(tv, x-1, y+2);		/* Occlusion bottom */
@@ -1408,7 +1408,7 @@ DrawControl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 	if (tv->flags & RG_TILEVIEW_HIDE_CONTROLS)
 		return;
 
-	RG_TileviewSDLColor(tv, &ctrl->c, ctrl->a);
+	RG_TileviewColor(tv, &ctrl->c, ctrl->a);
 
 	switch (ctrl->type) {
 	case RG_TILEVIEW_RECTANGLE:

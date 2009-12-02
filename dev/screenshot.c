@@ -151,8 +151,8 @@ XmitLoop(int fd)
 			Uint8 r, g, b;
 
 			for (x = agDriverSw->w; x > 0; x--) {
-				AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format,
-				    &r,&g,&b);
+				AG_GetPixelRGB(AG_GET_PIXEL(su,pSrc),
+				    su->format, &r,&g,&b);
 				*pDst++ = r;
 				*pDst++ = g;
 				*pDst++ = b;

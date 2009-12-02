@@ -253,7 +253,7 @@ OnShow(AG_Event *event)
 	/* XXX wasteful */
 	if (mview->arrowRight == -1) {
 		mview->arrowRight = AG_WidgetMapSurface(mview,
-		    AG_DupSurface(agIconSmallArrowRight.s));
+		    AG_SurfaceDup(agIconSmallArrowRight.s));
 	}
 }
 
@@ -324,7 +324,7 @@ Draw(void *obj)
 		if (item->icon == -1 &&
 		    item->iconSrc != NULL) {
 			item->icon = AG_WidgetMapSurface(mview,
-			    AG_DupSurface(item->iconSrc));
+			    AG_SurfaceDup(item->iconSrc));
 		}
 		if (item->icon != -1) {
 			AG_WidgetBlitSurface(mview, item->icon,

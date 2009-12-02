@@ -273,10 +273,12 @@ AG_DestroyGUI(void)
 void
 AG_QuitGUI(void)
 {
-	SDL_Event nev;
-
-	nev.type = SDL_QUIT;
-	SDL_PushEvent(&nev);
+	if (agDriverOps != NULL &&
+	    agDriverOps->terminate != NULL) {
+		agDriverOps->terminate();
+	} else {
+		exit(0);
+	}
 }
 
 /*
@@ -504,80 +506,6 @@ fail:
 	AG_DestroyGUIGlobals();
 	return (-1);
 }
-
-#ifdef HAVE_SDL
-/*
- * Initialize Agar with an existing SDL display. If the display surface has
- * flags SDL_OPENGL / SDL_OPENGLBLIT set, the "sdlgl" driver is selected;
- * otherwise, the "sdlfb" driver is used.
- */
-int
-AG_InitVideoSDL(void *pDisplay, Uint flags)
-{
-	SDL_Surface *display = pDisplay;
-	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
-	Uint dcFlags = AG_DRIVER_SDL;
-	int i;
-
-	if (AG_InitGUIGlobals() == -1)
-		return (-1);
-	
-	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
-	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
-		if (flags & AG_VIDEO_SDL) {
-			AG_SetError("AG_VIDEO_SDL flag requested, but "
-			            "display surface has SDL_OPENGL set");
-			goto fail;
-		}
-		dcFlags |= AG_DRIVER_OPENGL;
-	} else {
-		if (flags & AG_VIDEO_OPENGL) {
-			AG_SetError("AG_VIDEO_OPENGL flag requested, but "
-			            "display surface is missing SDL_OPENGL");
-			goto fail;
-		}
-	}
-	for (i = 0; i < agDriverListSize; i++) {
-		dc = agDriverList[i];
-		if (dc->wm == AG_WM_SINGLE &&
-		    (dc->flags & dcFlags) &&
-		    (drv = AG_DriverOpen(dc)) != NULL)
-			break;
-	}
-	if (i == agDriverListSize) {
-		AG_SetError("No compatible SDL driver is available");
-		goto fail;
-	}
-
-	/* Open a video display. */
-	if (AGDRIVER_SW_CLASS(drv)->openVideoContext(drv, (void *)display,
-	    flags) == -1) {
-		AG_DriverClose(drv);
-		goto fail;
-	}
-#ifdef AG_DEBUG
-	if (drv->videoFmt == NULL)
-		AG_FatalError("Driver did not set video format");
-#endif
-
-	/* Generic Agar-GUI initialization. */
-	if (AG_InitGUI(0) == -1) {
-		AG_DriverClose(drv);
-		goto fail;
-	}
-
-	agDriverOps = dc;
-	agDriverSw = AGDRIVER_SW(drv);
-#ifdef AG_LEGACY
-	agView = drv;
-#endif
-	return (0);
-fail:
-	AG_DestroyGUIGlobals();
-	return (-1);
-}
-#endif /* HAVE_SDL */
 
 void
 AG_DestroyVideo(void)

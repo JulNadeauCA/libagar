@@ -48,7 +48,6 @@ static int
 InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
     Uint32 *ucs, int len, int bufSize)
 {
-	int unicodeKbd = SDL_EnableUNICODE(-1);
 	Uint32 ins[3];
 	int i, nins;
 	Uint32 uch = ch;
@@ -56,9 +55,11 @@ InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
 	if (AG_WidgetDisabled(ed) || keysym == 0)
 		return (0);
 
+#if 0
 	if (!unicodeKbd) {
 		uch = AG_ApplyModifiersASCII((Uint32)keysym, keymod);
 	}
+#endif
 	if (!(ed->flags & AG_EDITABLE_NOLATIN1)) {
 		for (i = 0; ; i++) {
 			const struct ag_key_mapping *km = &agKeymapLATIN1[i];

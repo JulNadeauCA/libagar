@@ -223,7 +223,6 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
 	jcopybuf = Malloc(su->w*3);
-	AG_SurfaceLock(su);
 	for (i = 0; i < nshots; i++) {
 		JSAMPROW row[1];
 		int x;
@@ -236,7 +235,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 			Uint8 r, g, b;
 
 			for (x = agView->w; x > 0; x--) {
-				AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format,
+				AG_GetPixelRGB(AG_GET_PIXEL(su,pSrc), su->format,
 				    &r,&g,&b);
 				*pDst++ = r;
 				*pDst++ = g;
@@ -248,7 +247,6 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 		}
 		jpeg_finish_compress(&jcomp);
 	}
-	AG_SurfaceUnlock(su);
 #ifdef HAVE_OPENGL
 	if ((AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) &&
 	    su != pSu)

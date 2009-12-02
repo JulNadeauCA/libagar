@@ -403,7 +403,7 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 			pitem->flags |= AG_MENU_ITEM_ICONS;
 		}
 		/* TODO: NODUP */
-		mi->iconSrc = AG_DupSurface(icon);
+		mi->iconSrc = AG_SurfaceDup(icon);
 	} else {
 		mi->iconSrc = NULL;
 	}
@@ -486,7 +486,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 	if (mi->iconSrc != NULL) {
 		AG_SurfaceFree(mi->iconSrc);
 	}
-	mi->iconSrc = AG_DupSurface(iconSrc);
+	mi->iconSrc = AG_SurfaceDup(iconSrc);
 
 	if (mi->icon != -1 &&
 	    mi->parent != NULL &&
