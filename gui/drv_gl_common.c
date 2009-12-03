@@ -88,36 +88,6 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
  * Surface operations (rendering context)
  */
 
-/* Copy a colorkey surface as part of a texture conversion. */
-static void
-CopyColorKeySurface(AG_Surface *suTex, AG_Surface *suSrc)
-{
-	Uint8 *pSrc;
-	int x, y;
-
-	pSrc = suSrc->pixels;
-	for (y = 0; y < suSrc->h; y++) {
-		for (x = 0; x < suSrc->w; x++) {
-			Uint32 px = AG_GET_PIXEL(suSrc,pSrc);
-			AG_Color C;
-
-			if (px != suSrc->format->colorkey) {
-				C = AG_GetColorRGB(px, suSrc->format);
-				AG_PUT_PIXEL2(suTex, x,y,
-				    AG_MapColorRGBA(suTex->format, C));
-			} else {
-				C.r = 0;
-				C.g = 0;
-				C.b = 0;
-				C.a = AG_ALPHA_TRANSPARENT;
-				AG_PUT_PIXEL2(suTex, x,y, 
-				    AG_MapColorRGBA(suTex->format, C));
-			}
-			pSrc += suSrc->format->BytesPerPixel;
-		}
-	}
-}
-
 /* Generic UploadTexture() for GL drivers. */
 void
 AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
@@ -150,11 +120,7 @@ AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 	if (suTex == NULL) {
 		AG_FatalError(NULL);
 	}
-	if (suSrc->flags & AG_SRCCOLORKEY) {
-		CopyColorKeySurface(suTex, suSrc);
-	} else {
-		AG_SurfaceCopy(suTex, suSrc);
-	}
+	AG_SurfaceCopy(suTex, suSrc);
 	
 	/* Upload as an OpenGL texture. */
 	glGenTextures(1, &texture);
