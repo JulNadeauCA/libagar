@@ -93,11 +93,12 @@ void
 AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 {
 	AG_Surface *suTex;
-	int w = PowOf2i(suSrc->w);
-	int h = PowOf2i(suSrc->h);
 	GLuint texture;
+	int w, h;
 
 	/* Convert to the GL_RGBA/GL_UNSIGNED_BYTE format. */
+	w = PowOf2i(suSrc->w);
+	h = PowOf2i(suSrc->h);
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
@@ -142,7 +143,7 @@ AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 
 /* Generic UpdateTexture() for GL drivers. */
 int
-AG_GL_UpdateTexture(Uint texture, AG_Surface *su)
+AG_GL_UpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
 {
 	AG_Surface *suTex;
 	int w, h;
@@ -154,6 +155,12 @@ AG_GL_UpdateTexture(Uint texture, AG_Surface *su)
 	 */
 	w = PowOf2i(su->w);
 	h = PowOf2i(su->h);
+	if (tc != NULL) {
+		tc->x = 0.0f;
+		tc->y = 0.0f;
+		tc->w = (float)su->w / w;
+		tc->h = (float)su->h / h;
+	}
 	suTex = AG_SurfaceRGBA(w,h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
@@ -192,7 +199,8 @@ UpdateWidgetTexture(AG_Widget *wid, int s)
 		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(wid->textures[s], wid->surfaces[s]);
+		AG_GL_UpdateTexture(wid->textures[s], wid->surfaces[s],
+		    &wid->texcoords[s]);
 	}
 }
 
