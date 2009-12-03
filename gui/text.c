@@ -808,9 +808,9 @@ TextRenderFT_Mono(const Uint32 *ucs)
 	pal->colors[0].r = C.r;
 	pal->colors[0].g = C.g;
 	pal->colors[0].b = C.b;
-	if (C.a == 0) {
-		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, 0);
-	}
+	if (C.a == AG_ALPHA_TRANSPARENT)
+		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
+		    AG_MapColorRGBA(su->format, agTextState->colorBG));
 
 	C = agTextState->color;
 	pal->colors[1].r = C.r;
@@ -953,6 +953,10 @@ TextRenderFT_Blended(const Uint32 *ucs)
  	yStart = 0;
 
 	AG_FillRect(su, NULL, agTextState->colorBG);
+
+	if (agTextState->colorBG.a == AG_ALPHA_TRANSPARENT)
+		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
+		    AG_MapColorRGBA(su->format, agTextState->colorBG));
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
