@@ -954,9 +954,10 @@ TextRenderFT_Blended(const Uint32 *ucs)
 
 	AG_FillRect(su, NULL, agTextState->colorBG);
 
-	if (agTextState->colorBG.a == AG_ALPHA_TRANSPARENT)
+	if (agTextState->colorBG.a == AG_ALPHA_TRANSPARENT) {
 		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
 		    AG_MapColorRGBA(su->format, agTextState->colorBG));
+	}
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
@@ -1100,11 +1101,14 @@ TextRenderBitmap(const Uint32 *ucs)
 	int line;
 	const Uint32 *c;
 	AG_Surface *sGlyph, *su;
+	int doAlpha = (font->bglyphs[0]->flags & AG_SRCALPHA);
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	if ((su = AG_SurfaceStdRGB(tm.w, tm.h)) == NULL)
+	su = doAlpha ? AG_SurfaceStdRGBA(tm.w, tm.h) :
+	               AG_SurfaceStdRGB(tm.w, tm.h);
+	if (su == NULL)
 		AG_FatalError(NULL);
 
 	line = 0;
@@ -1122,9 +1126,9 @@ TextRenderBitmap(const Uint32 *ucs)
 		rd.x += sGlyph->w;
 	}
 	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, 0);
-	AG_SurfaceSetAlpha(su,
-	    font->bglyphs[0]->flags & AG_SRCALPHA,
-	    font->bglyphs[0]->format->alpha);
+	if (doAlpha)
+		AG_SurfaceSetAlpha(su, AG_SRCALPHA,
+		    font->bglyphs[0]->format->alpha);
 
 	FreeMetrics(&tm);
 	return (su);
