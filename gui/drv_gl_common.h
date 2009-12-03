@@ -24,7 +24,7 @@ typedef struct ag_gl_blending_state {
 void AG_GL_InitContext(AG_Rect);
 void AG_GL_FillRect(void *, AG_Rect, AG_Color);
 void AG_GL_UploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
-int  AG_GL_UpdateTexture(Uint, AG_Surface *);
+int  AG_GL_UpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
 void AG_GL_BlitSurface(void *, AG_Widget *, AG_Surface *, int, int);
 void AG_GL_BlitSurfaceFrom(void *, AG_Widget *, AG_Widget *, int, AG_Rect *, int, int);
 void AG_GL_BlitSurfaceGL(void *, AG_Widget *, AG_Surface *, float, float);
