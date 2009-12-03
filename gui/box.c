@@ -72,12 +72,9 @@ AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
 void
 AG_BoxSetLabelS(AG_Box *box, const char *s)
 {
-	va_list ap;
-
 	AG_ObjectLock(box);
 	Free(box->caption);
 	box->caption = Strdup(s);
-	va_end(ap);
 	if (box->sCaption != -1) {
 		AG_WidgetUnmapSurface(box, box->sCaption);
 		box->sCaption = -1;
