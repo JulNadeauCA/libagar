@@ -1435,26 +1435,26 @@ DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	c[1] = SDL_MapRGB(sfb->s->format, C[1].r, C[1].g, C[1].b);
 	c[2] = SDL_MapRGB(sfb->s->format, C[2].r, C[2].g, C[2].b);
 	
-	rd.x = r.x+rad;						/* Center */
-	rd.y = r.y+rad;
+	rd.x = r.x + rad;					/* Center */
+	rd.y = r.y + rad;
 	rd.w = r.w - rad*2;
 	rd.h = r.h - rad*2;
 	DrawRectFilled(obj, rd, C[0]);
 	rd.y = r.y;						/* Top */
 	rd.h = rad;
 	DrawRectFilled(obj, rd, C[0]);
-	rd.y = r.h-rad;						/* Bottom */
+	rd.y = r.y+r.h - rad;					/* Bottom */
 	rd.h = rad;
 	DrawRectFilled(obj, rd, C[0]);
 	rd.x = r.x;						/* Left */
-	rd.y = r.y+rad;
+	rd.y = r.y + rad;
 	rd.w = rad;
-	rd.h = r.h-rad*2;
+	rd.h = r.h - rad*2;
 	DrawRectFilled(obj, rd, C[0]);
-	rd.x = r.x+r.w-rad;					/* Right */
-	rd.y = r.y+rad;
+	rd.x = r.x + r.w - rad;					/* Right */
+	rd.y = r.y + rad;
 	rd.w = rad;
-	rd.h = r.h-rad*2;
+	rd.h = r.h - rad*2;
 	DrawRectFilled(obj, rd, C[0]);
 
 	/* Rounded edges */
