@@ -647,11 +647,8 @@ Draw(void *obj)
 		gl = AG_TextRenderGlyph(drv, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
 		dy = WIDGET(ed)->rView.y1 + y;
-
-		if (x < (ed->x - gl->su->w*2) ||
-		    y < -(gl->su->h) ||
-		    dx > (WIDGET(ed)->rView.x2 + gl->su->w) ||
-		    dy >  WIDGET(ed)->rView.y2) {
+	
+		if (!AG_RectInside2(&WIDGET(ed)->rView, dx, dy)) {
 			x += gl->advance;
 			continue;
 		}
