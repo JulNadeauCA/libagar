@@ -225,23 +225,27 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 		sr.w = ss->w;
 		sr.h = ss->h;
 	}
-	dr.x = xDst;
-	dr.y = yDst;
-	dr.w = (xDst+sr.w >= ds->w) ? (ds->w - xDst) : sr.w;
-	dr.h = (yDst+sr.h >= ds->h) ? (ds->h - yDst) : sr.h;
- 
+	dr.x = MAX(xDst, ds->clip_rect.x);
+	dr.y = MAX(yDst, ds->clip_rect.y);
+	dr.w = (dr.x+sr.w > ds->clip_rect.x+ds->clip_rect.w) ?
+	        (ds->clip_rect.x+ds->clip_rect.w - dr.x) : sr.w;
+	dr.h = (dr.y+sr.h > ds->clip_rect.y+ds->clip_rect.h) ?
+	        (ds->clip_rect.y+ds->clip_rect.h - dr.y) : sr.h;
+
 	/* XXX TODO optimized cases */
+	/* XXX TODO per-surface alpha */
 	for (y = 0; y < dr.h; y++) {
-		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch +
+		pSrc = ss->pixels + (sr.y+y)*ss->pitch +
 		    sr.x*ss->format->BytesPerPixel;
-		pDst = (Uint8 *)ds->pixels + (dr.y+y)*ds->pitch +
+		pDst = ds->pixels + (dr.y+y)*ds->pitch +
 		    dr.x*ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
 			AG_PACKEDPIXEL_GET(ss->format->BytesPerPixel, px, pSrc);
-			if (((ss->flags & AG_SRCCOLORKEY) &&
-			    (ss->format->colorkey == px)) ||
-			    AG_SDL_CLIPPED_PIXEL(ds, x,y)) { /* XXX optimize */
-				goto next_pixel;
+			if ((ss->flags & AG_SRCCOLORKEY) &&
+			    (ss->format->colorkey == px)) {
+				pSrc += ss->format->BytesPerPixel;
+				pDst += ds->format->BytesPerPixel;
+				continue;
 			}
 			C = AG_GetColorRGBA(px, ss->format);
 			if ((C.a != AG_ALPHA_OPAQUE) &&
@@ -253,7 +257,6 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 				AG_PACKEDPIXEL_PUT(ds->format->BytesPerPixel,
 				    pDst, px);
 			}
-next_pixel:
 			pSrc += ss->format->BytesPerPixel;
 			pDst += ds->format->BytesPerPixel;
 		}
