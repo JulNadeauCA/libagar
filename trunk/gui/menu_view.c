@@ -422,13 +422,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		if (mi->flags & AG_MENU_ITEM_ICONS)
 			wReq += m->itemh + mview->spIconLbl;
 	
-		if (item->lblView[1] != -1) {
-			wLbl = WSURFACE(mview,item->lblView[1])->w;
-		} else if (item->lblView[0] != -1) {
-			wLbl = WSURFACE(mview,item->lblView[0])->w;
-		} else {
-			AG_TextSize(item->text, &wLbl, NULL);
-		}
+		AG_TextSize(item->text, &wLbl, NULL);
 		wReq += wLbl;
 
 		if (item->nsubitems > 0) {
