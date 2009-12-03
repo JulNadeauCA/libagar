@@ -702,6 +702,7 @@ Init(void *obj)
 	pal->circle.width = 20;
 	pal->state = AG_HSVPAL_SEL_NONE;
 	pal->surface = NULL;
+	pal->surfaceId = -1;
 	pal->menu = NULL;
 	pal->menu_item = NULL;
 	pal->menu_win = NULL;
@@ -723,7 +724,6 @@ Init(void *obj)
 /*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
 #ifdef AG_DEBUG
 	AG_BindInt(pal, "flags", &pal->flags);
-	AG_BindPointer(pal, "surface", (void *)&pal->surface);
 	AG_BindInt(pal, "selcircle_r", &pal->selcircle_r);
 	AG_BindInt(pal, "circle.x", &pal->circle.x);
 	AG_BindInt(pal, "circle.y", &pal->circle.y);
@@ -746,12 +746,15 @@ Init(void *obj)
 static void
 RenderPalette(AG_HSVPal *pal)
 {
+	AG_Surface *ds = pal->surface;
 	float h, cur_h, cur_s, cur_v;
 	AG_Color C;
 	Uint32 px;
 	Uint8 da;
 	int x, y, i;
 	AG_Rect rd;
+
+	AG_FillRect(ds, NULL, AG_ColorRGB(0,0,0));
 
 	cur_h = (AG_GetFloat(pal, "hue")/360) * 2*AG_PI;
 	cur_s = AG_GetFloat(pal, "saturation");
@@ -760,15 +763,13 @@ RenderPalette(AG_HSVPal *pal)
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*AG_PI; h += pal->circle.dh) {
 		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &C.r, &C.g, &C.b);
-		px = AG_MapColorRGB(pal->surface->format, C);
-		px = AG_MapPixelRGB(pal->surface->format, 100, 100, 0);
+		px = AG_MapColorRGB(ds->format, C);
 
 		for (i = 0; i < pal->circle.width; i++) {
 			x = (pal->circle.rout - i)*Cos(h);
 			y = (pal->circle.rout - i)*Sin(h);
 
-			printf("pal pixel at %d,%d\n", pal->circle.x+x, pal->circle.y+y);
-			AG_PUT_PIXEL2(pal->surface,
+			AG_PUT_PIXEL2(ds,
 			    pal->circle.x+x,
 			    pal->circle.y+y,
 			    px);
@@ -784,12 +785,12 @@ RenderPalette(AG_HSVPal *pal)
 			AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &C.r, &C.g, &C.b);
-			px = AG_MapColorRGB(pal->surface->format, C);
-			AG_PUT_PIXEL2_CLIPPED(pal->surface,
+			px = AG_MapColorRGB(ds->format, C);
+			AG_PUT_PIXEL2(ds,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y,
 			    px);
-			AG_PUT_PIXEL2_CLIPPED(pal->surface,
+			AG_PUT_PIXEL2(ds,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y + 1,
 			    px);
@@ -805,7 +806,7 @@ RenderPalette(AG_HSVPal *pal)
 				rd.h = 8;
 				rd.x = pal->rAlpha.x+x;
 				rd.y = pal->rAlpha.y+y;
-				AG_FillRect(pal->surface, &rd, pal->cTile);
+				AG_FillRect(ds, &rd, pal->cTile);
 			}
 			y += 8;
 			for (x = 8; x < pal->rAlpha.w; x+=16) {
@@ -813,19 +814,19 @@ RenderPalette(AG_HSVPal *pal)
 				rd.h = 8;
 				rd.x = pal->rAlpha.x+x;
 				rd.y = pal->rAlpha.y+y;
-				AG_FillRect(pal->surface, &rd, pal->cTile);
+				AG_FillRect(ds, &rd, pal->cTile);
 			}
 		}
 		AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v,
 		    &C.r, &C.g, &C.b);
-		da = MIN(1, pal->surface->w/255);
-		for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
+		da = MIN(1, ds->w/255);
+		for (y = pal->rAlpha.y+8; y < ds->h; y++) {
 			for (x = 0, C.a = 0;
-			     x < pal->surface->w;
+			     x < ds->w;
 			     x++) {
-				AG_BLEND_RGBA2_CLIPPED(pal->surface, x, y,
+				AG_BLEND_RGBA2(ds, x, y,
 				    C.r, C.g, C.b, C.a, AG_ALPHA_SRC);
-				C.a = x*255/pal->surface->w;
+				C.a = x*255/ds->w;
 			}
 		}
 	}
@@ -865,15 +866,14 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
 	if (pal->surface == NULL) {
-		if ((pal->surface = AG_SurfaceStdRGB(a->w, a->h)) == NULL) {
+		if ((pal->surface = AG_SurfaceStdRGBA(a->w, a->h)) == NULL) {
 			AG_FatalError(NULL);
 		}
-		(void)AG_WidgetMapSurface(pal, pal->surface);
+		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
 	} else {
 		if (AG_SurfaceResize(pal->surface, a->w, a->h) == -1)
 			AG_FatalError(NULL);
 	}
-
 	pal->flags |= AG_HSVPAL_DIRTY;
 	return (0);
 }
@@ -892,6 +892,7 @@ Draw(void *obj)
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		RenderPalette(pal);
+		AG_WidgetUpdateSurface(pal, pal->surfaceId);
 	}
 
 	cur_h = (AG_GetFloat(pal, "hue") / 360.0) * 2*AG_PI;
@@ -899,7 +900,7 @@ Draw(void *obj)
 	cur_v = AG_GetFloat(pal, "value");
 	a = (Uint8)(AG_GetFloat(pal, "alpha")*255);
 
-	AG_WidgetBlitFrom(pal, pal, 0, NULL, 0, 0);
+	AG_WidgetBlitFrom(pal, pal, pal->surfaceId, NULL, 0, 0);
 
 	/* Indicate the current selection. */
 	AG_DrawCircle(pal,
