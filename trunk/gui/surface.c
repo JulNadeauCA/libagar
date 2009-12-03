@@ -293,7 +293,10 @@ AG_SurfaceRGB(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
 	return (s);
 }
 
-/* Create a new packed-pixel surface with the specified RGBA pixel format. */
+/*
+ * Create a new packed-pixel surface with the specified RGBA pixel format.
+ * The SRCALPHA flag is set implicitely.
+ */
 AG_Surface *
 AG_SurfaceRGBA(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
     Uint32 Bmask, Uint32 Amask)
@@ -304,7 +307,7 @@ AG_SurfaceRGBA(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
 	if ((pf = AG_PixelFormatRGBA(bpp, Rmask, Gmask, Bmask, Amask)) == NULL) {
 		return (NULL);
 	}
-	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, AG_SRCALPHA);
 	AG_PixelFormatFree(pf);
 	return (s);
 }
@@ -326,7 +329,10 @@ AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp,
 	return (s);
 }
 
-/* Create a new surface from pixel data in the specified packed RGBA format. */
+/*
+ * Create a new surface from pixel data in the specified packed RGBA format.
+ * The SRCALPHA flag is set implicitely.
+ */
 AG_Surface *
 AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp,
     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask)
@@ -337,7 +343,7 @@ AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp,
 	if ((pf = AG_PixelFormatRGBA(bpp, Rmask, Gmask, Bmask, Amask)) == NULL) {
 		return (NULL);
 	}
-	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, 0);
+	s = AG_SurfaceNew(AG_SURFACE_PACKED, w,h, pf, AG_SRCALPHA);
 	memcpy(s->pixels, pixels, h*s->pitch);
 	AG_PixelFormatFree(pf);
 	return (s);
@@ -429,8 +435,8 @@ void
 AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 {
 	int w, h, x, y, skipDst, skipSrc;
-	const Uint8 *pSrc = (Uint8 *)ss->pixels;
-	Uint8 *pDst = (Uint8 *)ds->pixels;
+	const Uint8 *pSrc;
+	Uint8 *pDst;
 
 	if (ds->w > ss->w) {
 		w = ss->w;
@@ -447,16 +453,19 @@ AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 	}
 	h = MIN(ss->h, ds->h);
 
+	pSrc = (Uint8 *)ss->pixels;
+	pDst = (Uint8 *)ds->pixels;
+
 	if (AG_PixelFormatCompare(ss->format, ds->format) == 0) {
 		for (y = 0; y < h; y++) {
-			memcpy(pDst, pSrc, w*ss->format->BytesPerPixel);
-			pSrc += w*ss->format->BytesPerPixel + skipSrc;
+			memcpy(pDst, pSrc, w*ds->format->BytesPerPixel);
 			pDst += w*ds->format->BytesPerPixel + skipDst;
+			pSrc += w*ss->format->BytesPerPixel + skipSrc;
 		}
 	} else {					/* Format conversion */
 		Uint32 px;
 		AG_Color C;
-			
+		
 		for (y = 0; y < h; y++) {
 			for (x = 0; x < w; x++) {
 				px = AG_GET_PIXEL(ss,pSrc);
@@ -501,32 +510,36 @@ AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
 		sr.w = ss->w;
 		sr.h = ss->h;
 	}
-	dr.x = xDst;
-	dr.y = yDst;
-	dr.w = (xDst+sr.w >= ds->w) ? (ds->w - dr.x) : sr.w;
-	dr.h = (yDst+sr.h >= ds->h) ? (ds->h - dr.y) : sr.h;
+	dr.x = MAX(xDst, ds->clipRect.x);
+	dr.y = MAX(yDst, ds->clipRect.y);
+	dr.w = (dr.x+sr.w > ds->clipRect.x+ds->clipRect.w) ?
+	        (ds->clipRect.x+ds->clipRect.w - dr.x) : sr.w;
+	dr.h = (dr.y+sr.h > ds->clipRect.y+ds->clipRect.h) ?
+	        (ds->clipRect.y+ds->clipRect.h - dr.y) : sr.h;
  
 	/* XXX TODO optimized cases */
 	/* XXX TODO per-surface alpha */
-
 	for (y = 0; y < dr.h; y++) {
 		pSrc = ss->pixels + (sr.y+y)*ss->pitch;
 		pDst = ds->pixels + (dr.y+y)*ds->pitch;
 		for (x = 0; x < dr.w; x++) {
 			pixel = AG_GET_PIXEL(ss, pSrc);
-			if (((ss->flags & AG_SRCCOLORKEY) &&
-			    (ss->format->colorkey == pixel)) ||
-			    AG_CLIPPED_PIXEL(ds, x,y)) {	/* XXX */
+			if ((ss->flags & AG_SRCCOLORKEY) &&
+			    (ss->format->colorkey == pixel)) {
+				pSrc += ss->format->BytesPerPixel;
+				pDst += ds->format->BytesPerPixel;
 				continue;
 			}
 			C = AG_GetColorRGBA(pixel, ss->format);
-			if ((ss->flags & AG_SRCALPHA) &&
-			    (ss->format->Amask != 0)) {
+			if ((C.a != AG_ALPHA_OPAQUE) &&
+			    (ss->flags & AG_SRCALPHA)) {
 				AG_SurfaceBlendPixel(ds, pDst, C, AG_ALPHA_SRC);
 			} else {
 				AG_PUT_PIXEL(ds, pDst,
 				    AG_MapColorRGB(ds->format, C));
 			}
+			pSrc += ss->format->BytesPerPixel;
+			pDst += ds->format->BytesPerPixel;
 		}
 	}
 }

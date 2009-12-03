@@ -194,12 +194,20 @@ bits, and the bitmasks specified in
 are used to retrieve the individual red, green and blue components.
 The
 .Fn AG_SurfaceRGBA
-variant adds an alpha-channel component.
+variant adds an alpha-channel component and implicitely sets the
+.Dv AG_SRCALPHA
+flag (see
+.Fn AG_SurfaceBlit 3 ) .
 .Pp
 .Fn AG_SurfaceFromPixelsRGB 
 and
 .Fn AG_SurfaceFromPixelsRGBA
 create a new surface from existing pixel data in the specified format.
+The
+.Fn AG_SurfaceFromPixelsRGBA
+function also sets the
+.Dv AG_SRCALPHA
+flag.
 .Pp
 The
 .Fn AG_SurfaceFromPNG ,
