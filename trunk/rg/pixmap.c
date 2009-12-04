@@ -564,7 +564,6 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	RG_PixmapUndoBlk *ublk = &px->ublks[px->nublks-1];
 	RG_PixmapMod *mod;
 	Uint8 *pSrc;
-	Uint8 r, g, b;
 	Uint v = (pixel & px->su->format->Amask) >>
 	          px->su->format->Ashift;
 	Uint8 a = (v << px->su->format->Aloss) +
@@ -606,7 +605,7 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 			RG_TileviewScaledPixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    r, g, b);
+			    C.r, C.g, C.b);
 		} else {
 			tv->tile->flags |= RG_TILE_DIRTY;
 		}
@@ -617,7 +616,7 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 			RG_TileviewScaledPixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    r, g, b);
+			    C.r, C.g, C.b);
 		} else {
 			RG_BlendRGB(px->su, x, y, RG_PRIM_OVERLAY_ALPHA, C);
 			tv->tile->flags |= RG_TILE_DIRTY;
@@ -643,8 +642,9 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 	RG_Brush *br = px->curbrush;
 	AG_Surface *brsu = br->px->su;
 	Uint8 *pBrush = brsu->pixels;
-	Uint8 r, g, b, specA;
+	Uint8 specA;
 	int x, y, dx, dy;
+	AG_Color C;
 	
 	if (brsu->format->Amask != 0) {
 		Uint v = (specPx & brsu->format->Amask) >>
@@ -680,14 +680,14 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 
 			switch (br->type) {
 			case RG_PIXMAP_BRUSH_MONO:
-				AG_GetPixelRGB(specPx, brsu->format, &r,&g,&b);
+				C = AG_GetColorRGB(specPx, brsu->format);
 				break;
 			case RG_PIXMAP_BRUSH_RGB:
-				AG_GetPixelRGB(brPx, brsu->format, &r,&g,&b);
+				C = AG_GetColorRGB(brPx, brsu->format);
 				break;
 			}
-			Px = AG_MapPixelRGBA(brsu->format, r,g,b,
-			    (specA+brA)/2);
+			C.a = (specA + brA)/2;
+			Px = AG_MapColorRGBA(brsu->format, C);
 
 			/* TODO use a specific mod type */
 			if (brA != 0)
