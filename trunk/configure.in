@@ -263,6 +263,26 @@ if [ "${enable_gui}" != "no" ]; then
 		MDEFINE(JPEG_CFLAGS, "")
 		MDEFINE(JPEG_LIBS, "")
 	fi
+	
+	# Enable PNG format support if libpng is found.
+	if [ "${with_png}" != "no" ]; then
+		CHECK(png)
+		if [ "${HAVE_PNG}" != "yes" ]; then
+			if [ "${with_png}" = "yes" ]; then
+				echo "*"
+				echo "* --with-png was requested, but libpng"
+				echo "* was not found."
+				echo "*"
+				exit 1
+			else
+				HUNDEF(HAVE_PNG)
+			fi
+		fi
+	else
+		HUNDEF(HAVE_PNG)
+		MDEFINE(PNG_CFLAGS, "")
+		MDEFINE(PNG_LIBS, "")
+	fi
 else
 	HUNDEF(ENABLE_GUI)
 	MDEFINE(SUBDIR_gui, "")

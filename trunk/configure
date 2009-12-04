@@ -5711,6 +5711,195 @@ JPEG_LIBS=""""
 echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
 echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 	fi
+	
+	if [ "${with_png}" != "no" ]
+ then
+$ECHO_N "checking for libpng (http://www.libpng.org)..."
+$ECHO_N "checking for libpng (http://www.libpng.org)..." >> config.log
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-PNG_VERSION" ]; then
+		PNG_VERSION=`cat ${cache}/exec-PNG_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	PNG_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/libpng-config" ]; then
+			if [ -f "${path}/libpng-config" ]; then
+				PNG_VERSION=`${path}/libpng-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$PNG_VERSION" > ${cache}/exec-PNG_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_VERSION
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-PNG_CFLAGS" ]; then
+		PNG_CFLAGS=`cat ${cache}/exec-PNG_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	PNG_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/libpng-config" ]; then
+			if [ -f "${path}/libpng-config" ]; then
+				PNG_CFLAGS=`${path}/libpng-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$PNG_CFLAGS" > ${cache}/exec-PNG_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-PNG_LIBS" ]; then
+		PNG_LIBS=`cat ${cache}/exec-PNG_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	PNG_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/libpng-config" ]; then
+			if [ -f "${path}/libpng-config" ]; then
+				PNG_LIBS=`${path}/libpng-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$PNG_LIBS" > ${cache}/exec-PNG_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_LIBS
+	fi
+fi
+if [ "${PNG_VERSION}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+$ECHO_N "checking whether libpng works..."
+$ECHO_N "checking whether libpng works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PNG" ]; then
+		HAVE_PNG=`cat ${cache}/ctest-HAVE_PNG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PNG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdio.h>
+#include <png.h>
+
+int main(int argc, char *argv[])
+{
+	char foo[4];
+
+	if (png_sig_cmp((png_bytep)foo, 0, 3)) {
+		return (1);
+	}
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest conftest.c ${PNG_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PNG_CFLAGS} -o $testdir/conftest conftest.c ${PNG_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PNG="yes"
+echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
+echo "mdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
+echo "#ifndef HAVE_PNG" > config/have_png.h
+echo "#define HAVE_PNG \"$HAVE_PNG\"" >> config/have_png.h
+echo "#endif" >> config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PNG="no"
+echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
+echo "mdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
+echo "#undef HAVE_PNG" >config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PNG" > ${cache}/ctest-HAVE_PNG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PNG
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_PNG}" != "no" ]; then
+echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
+echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
+echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+echo "#ifndef PNG_CFLAGS" > config/png_cflags.h
+echo "#define PNG_CFLAGS \"$PNG_CFLAGS\"" >> config/png_cflags.h
+echo "#endif" >> config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+echo "#ifndef PNG_LIBS" > config/png_libs.h
+echo "#define PNG_LIBS \"$PNG_LIBS\"" >> config/png_libs.h
+echo "#endif" >> config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+fi;
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_PNG" >config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+echo "#undef PNG_CFLAGS" >config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef PNG_LIBS" >config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
+fi;
+		if [ "${HAVE_PNG}" != "yes" ]
+ then
+			if [ "${with_png}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-png was requested, but libpng"
+				echo "* was not found."
+				echo "*"
+				exit 1
+			else
+echo "#undef HAVE_PNG" >config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+			fi
+		fi
+	else
+echo "#undef HAVE_PNG" >config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+PNG_CFLAGS=""""
+echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
+echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+PNG_LIBS=""""
+echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
+echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+	fi
 else
 echo "#undef ENABLE_GUI" >config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua

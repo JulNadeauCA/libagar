@@ -42,7 +42,8 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_KeyMod.3 AG_Color.3
 
 CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} \
-	${X11_CFLAGS} ${JPEG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
+	${X11_CFLAGS} ${JPEG_CFLAGS} ${PNG_CFLAGS} ${MATH_CFLAGS} \
+	${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
