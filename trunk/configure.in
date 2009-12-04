@@ -580,10 +580,7 @@ C_INCPREP(include,agar)
 # We use both <foo.h> and <agar/foo.h> in the sources.
 C_INCDIR($BLD/include)
 C_INCDIR($BLD/include/agar)
-
-if [ -e "$BLD/include" ]; then
-	cp -fR config "$BLD/include/agar"
-fi
+C_INCDIR_CONFIG($BLD/include/agar/config)
 
 echo "*"
 echo "* Configuration successful."
