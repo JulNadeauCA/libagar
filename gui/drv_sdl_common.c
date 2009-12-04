@@ -27,9 +27,6 @@
  * Common code for SDL drivers.
  */
 
-#include <config/have_sdl.h>
-#ifdef HAVE_SDL
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -38,6 +35,9 @@
 #include "packedpixel.h"
 #include "cursors.h"
 #include "perfmon.h"
+
+#include <config/have_sdl.h>
+#ifdef HAVE_SDL
 
 #include "drv_sdl_common.h"
 
