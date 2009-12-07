@@ -1216,6 +1216,7 @@ AG_WidgetSurface(void *obj)
 	return (rv == 0) ? su : NULL;
 }
 
+/* Map a new AG_Surface(3) with a widget; return the new surface handle. */
 int
 AG_WidgetMapSurface(void *obj, AG_Surface *su)
 {
@@ -1247,12 +1248,17 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	return (s);
 }
 
+/* replace the contents of a mapped surface. */
 void
 AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
 	AG_ObjectLock(wid);
+#ifdef AG_DEBUG
+	if (s < 0 || s >= wid->nsurfaces)
+		AG_FatalError("Invalid surface handle");
+#endif
 	if (wid->surfaces[s] != NULL) {
 		if (!WSURFACE_NODUP(wid,s))
 			AG_SurfaceFree(wid->surfaces[s]);
