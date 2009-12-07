@@ -103,10 +103,7 @@ AG_DriverMwClass agDriverGLX;
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
 
 static void PostResizeCallback(AG_Window *, AG_SizeAlloc *);
-#if 0
-static void FreeWidgetResources(AG_Widget *);
-static void RegenWidgetResources(AG_Widget *);
-#endif
+static void PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  RaiseWindow(AG_Window *);
 static int  SetInputFocus(AG_Window *);
 static void SetTransientFor(AG_Window *, AG_Window *);
@@ -525,8 +522,14 @@ ProcessEvents(void *drvCaller)
 			break;
 #endif
 		case EnterNotify:
+			if ((win = LookupWindowByID(xev.xcrossing.window))) {
+				AG_PostEvent(NULL, win, "window-enter", NULL);
+			}
+			break;
 		case LeaveNotify:
-			/* printf(">{Enter,Leave}Notify\n"); */
+			if ((win = LookupWindowByID(xev.xcrossing.window))) {
+				AG_PostEvent(NULL, win, "window-leave", NULL);
+			}
 			break;
 		case FocusIn:
 			if ((win = LookupWindowByID(xev.xfocus.window))) {
@@ -542,8 +545,8 @@ ProcessEvents(void *drvCaller)
 			}
 			break;
 		case MapNotify:
+			break;
 		case UnmapNotify:
-			/* printf(">{Map,Unmap}Notify\n"); */
 			break;
 		case DestroyNotify:
 			break;
@@ -561,14 +564,20 @@ ProcessEvents(void *drvCaller)
 		case ConfigureNotify:
 			if ((win = LookupWindowByID(xev.xconfigure.window))) {
 				AG_SizeAlloc a;
-
-				a.x = 0;
-				a.y = 0;
+				Window ignore;
+				XTranslateCoordinates(agDisplay,
+				    xev.xconfigure.window,
+				    DefaultRootWindow(agDisplay),
+				    0, 0,
+				    &a.x, &a.y,
+				    &ignore);
 				a.w = xev.xconfigure.width;
 				a.h = xev.xconfigure.height;
-				PostResizeCallback(win, &a);
-				WIDGET(win)->x = xev.xconfigure.x;
-				WIDGET(win)->y = xev.xconfigure.y;
+				if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
+					PostResizeCallback(win, &a);
+				} else {
+					PostMoveCallback(win, &a);
+				}
 			}
 			break;
 		case ReparentNotify:
@@ -1016,6 +1025,19 @@ InitClipRects(AG_DriverGLX *glx, int w, int h)
 	return (0);
 }
 
+/* Initialize clipping rectangle 0 for the current window geometry. */
+static void
+InitClipRect0(AG_DriverGLX *glx, AG_Window *win)
+{
+	AG_ClipRect *cr;
+
+	cr = &glx->clipRects[0];
+	cr->r.w = WIDTH(win);
+	cr->r.h = HEIGHT(win);
+	cr->eqns[2][3] = (double)WIDTH(win);
+	cr->eqns[3][3] = (double)HEIGHT(win);
+}
+
 /* Initialize the default cursor. */
 static int
 InitDefaultCursor(AG_DriverGLX *glx)
@@ -1125,7 +1147,6 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	AG_Driver *drv = WIDGET(win)->drv;
 	XSetWindowAttributes xwAttrs;
 	XVisualInfo *xvi;
-	Window wParent;
 	int glxAttrs[16];
 	int i = 0;
 	Ulong valuemask;
@@ -1164,21 +1185,10 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 			     FocusChangeMask;
 	valuemask = CWColormap | CWBackPixmap | CWBorderPixel | CWEventMask;
 
-#if 0
-	if (win->parent != NULL &&
-	    (drvParent = WIDGET(win->parent)->drv) &&
-	    AGDRIVER_IS_GLX(drvParent) &&
-	    (AGDRIVER_MW(drvParent)->flags & AG_DRIVER_MW_OPEN)) {
-		AG_DriverGLX *glxParent = (AG_DriverGLX *)drvParent;
-		wParent = glxParent->w;
-	} else
-#endif
-	wParent = RootWindow(agDisplay,agScreen);
-
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
 	glx->w = XCreateWindow(agDisplay,
-	    wParent,
+	    RootWindow(agDisplay,agScreen),
 	    r.x, r.y,
 	    r.w, r.h, 0, depth,
 	    InputOutput,
@@ -1201,11 +1211,10 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	if (!(win->flags & AG_WINDOW_NOCLOSE))
 		XSetWMProtocols(agDisplay, glx->w, &wmDeleteWindow, 1);
-
-	/* Create a GLX context and initialize state. */
+	
+	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
 	/* Set the pixel formats. */
 	drv->videoFmt = AG_PixelFormatRGB(depth,
@@ -1273,9 +1282,15 @@ MapWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
+	AG_SizeAlloc a;
 
 	XMapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitMapNotify, (char *)glx->w);
+	a.x = WIDGET(win)->x;
+	a.y = WIDGET(win)->y;
+	a.w = WIDTH(win);
+	a.h = HEIGHT(win);
+	PostResizeCallback(win, &a);
 	return (0);
 }
 
@@ -1294,10 +1309,8 @@ static int
 RaiseWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-/*	XEvent xev; */
 
 	XRaiseWindow(agDisplay, glx->w);
-/*	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w); */
 	return (0);
 }
 
@@ -1305,10 +1318,8 @@ static int
 LowerWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-/*	XEvent xev; */
 
 	XLowerWindow(agDisplay, glx->w);
-/*	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w); */
 	return (0);
 }
 
@@ -1352,7 +1363,7 @@ static int
 SetInputFocus(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	
+
 	XSetInputFocus(agDisplay, glx->w, RevertToParent, CurrentTime);
 	return (0);
 }
@@ -1379,30 +1390,47 @@ PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	AG_ClipRect *cr;
 	char kv[32];
+	int x = a->x;
+	int y = a->y;
 
+	/* Update per-widget coordinate information. */
+	a->x = 0;
+	a->y = 0;
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
 	/* Update clipping rectangle 0 */
-	cr = &glx->clipRects[0];
-	cr->r.w = WIDTH(win);
-	cr->r.h = HEIGHT(win);
-	cr->eqns[2][3] = (double)WIDTH(win);
-	cr->eqns[3][3] = (double)HEIGHT(win);
+	InitClipRect0(glx, win);
 	
-	/* Update the keyboard state. */
+	/* Update the keyboard state. XXX */
 	XQueryKeymap(agDisplay, kv);
 	UpdateKeyboard(drv->kbd, kv);
 
 	/* Update GLX context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-#if 0
-	/* Restore our saved GL resources and reset GL state. */
-	RegenWidgetResources(WIDGET(win));
-#endif
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+
+	/* Save the new effective window position. */
+	WIDGET(win)->x = a->x = x;
+	WIDGET(win)->y = a->y = y;
+}
+
+static void
+PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
+{
+	int x = a->x;
+	int y = a->y;
+
+	/* Update per-widget coordinate information. */
+	a->x = 0;
+	a->y = 0;
+	(void)AG_WidgetSizeAlloc(win, a);
+	AG_WidgetUpdateCoords(win, 0, 0);
+
+	/* Save the new effective window position. */
+	WIDGET(win)->x = a->x = x;
+	WIDGET(win)->y = a->y = y;
 }
 
 static int
