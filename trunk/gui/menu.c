@@ -88,6 +88,29 @@ AG_MenuNewGlobal(Uint flags)
 	return (m);
 }
 
+#if 0
+static void
+LeaveWindow(AG_Event *event)
+{
+	AG_Window *win = AG_SELF();
+	AG_Menu *m = AG_PTR(1);
+	AG_MenuItem *mi = AG_PTR(2);
+	int expandedChildren = 0;
+	Uint i;
+	
+	if (mi->parent == m->root) {
+		return;
+	}
+	for (i = 0; i < mi->nsubitems; i++) {
+		if (mi->subitems[i].view != NULL)
+			expandedChildren = 1;
+	}
+	if (!expandedChildren) {
+		AG_MenuCollapse(m, mi);
+	}
+}
+#endif
+
 /* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
 AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
@@ -115,7 +138,9 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
 	AG_ObjectSetName(win, "_Popup-%s", OBJECT(obj)->name);
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-
+#if 0
+	AG_SetEvent(win, "window-leave", LeaveWindow, "%p,%p", m, mi);
+#endif
 	mv = Malloc(sizeof(AG_MenuView));
 	AG_ObjectInit(mv, &agMenuViewClass);
 	mv->pmenu = m;
@@ -195,6 +220,8 @@ void
 AG_MenuCollapseAll(AG_Menu *m)
 {
 	CollapseAll(m, m->root);
+	m->itemSel = NULL;
+	m->selecting = 0;
 }
 
 void
@@ -490,7 +517,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 
 	if (mi->icon != -1 &&
 	    mi->parent != NULL &&
-	    mi->parent ->view != NULL) {
+	    mi->parent->view != NULL) {
 		AG_WidgetUnmapSurface(mi->parent->view, mi->icon);
 		mi->icon = -1;
 	}
@@ -505,8 +532,8 @@ InvalidateLabelSurfaces(AG_MenuItem *mi)
 
 	for (i = 0; i < 2; i++) {
 		if (mi->lblMenu[i] != -1) {
-			mi->lblMenu[i] = -1;
 			AG_WidgetUnmapSurface(mi->pmenu, mi->lblMenu[i]);
+			mi->lblMenu[i] = -1;
 		}
 		if (mi->lblView[i] != -1 &&
 		    mi->parent != NULL &&
