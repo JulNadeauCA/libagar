@@ -90,6 +90,7 @@ struct ag_key_mapping {			/* Keymap translation table entry */
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static int       InitClipRects(AG_DriverWGL *wgl, int w, int h);
+static int       InitClipRect0(AG_DriverWGL *wgl, AG_Window *win);
 static void      ChangeCursor(AG_DriverWGL *wgl);
 static int       InitDefaultCursor(AG_DriverWGL *wgl);
 static void      WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a);
@@ -774,6 +775,19 @@ InitClipRects(AG_DriverWGL *wgl, int w, int h)
 	return (0);
 }
 
+/* Initialize clipping rectangle 0 for the current window geometry. */
+static void
+InitClipRect0(AG_DriverWGL *wgl, AG_Window *win)
+{
+	AG_ClipRect *cr;
+
+	cr = &glx->clipRects[0];
+	cr->r.w = WIDTH(win);
+	cr->r.h = HEIGHT(win);
+	cr->eqns[2][3] = (double)WIDTH(win);
+	cr->eqns[3][3] = (double)HEIGHT(win);
+}
+
 static void
 WGL_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
@@ -880,7 +894,14 @@ static int
 WGL_MoveWindow(AG_Window *win, int x, int y)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
-	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);	
+	AG_SizeAlloc a;
+
+	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	a.x = x;
+	a.y = y;
+	a.w = WIDTH(win);
+	a.h = HEIGHT(win);
+	WGL_PostMoveCallback(win, &a);
 	return 0;
 }
 
@@ -888,7 +909,14 @@ static int
 WGL_ResizeWindow(AG_Window *win, Uint w, Uint h)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+	AG_SizeAlloc a;
+
 	SetWindowPos(wgl->hwnd, NULL, 0, 0, w, h, SWP_NOZORDER | SWP_NOMOVE);	
+	a.x = WIDGET(win)->x;
+	a.y = WIDGET(win)->y;
+	a.w = w;
+	a.h = h;
+	WGL_PostResizeCallback(win, &a);
 	return 0;
 }
 
@@ -896,7 +924,10 @@ static int
 WGL_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+	AG_SizeAlloc a;
+
 	SetWindowPos(wgl->hwnd, NULL, a->x, a->y, a->w, a->h, SWP_NOZORDER);	
+	WGL_PostResizeCallback(win, a);
 	return 0;
 }
 
@@ -1067,22 +1098,42 @@ WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver    *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
-	AG_ClipRect *cr;
-
+	int x = a->x;
+	int y = a->y;
+	
+	// Update per-widget coordinate information.
+	a->x = 0;
+	a->y = 0;
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
 	// Update clipping rectangle 0
-	cr = &wgl->clipRects[0];
-	cr->r.w = WIDTH(win);
-	cr->r.h = HEIGHT(win);
-	cr->eqns[2][3] = (double)WIDTH(win);
-	cr->eqns[3][3] = (double)HEIGHT(win);
+	InitClipRect0(wgl, win);
 	
 	// Update WGL context.
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	
+	/* Save the new effective window position. */
+	WIDGET(win)->x = a->x = x;
+	WIDGET(win)->y = a->y = y;
+}
+
+static void
+WGL_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
+{
+	int x = a->x;
+	int y = a->y;
+
+	/* Update per-widget coordinate information. */
+	a->x = 0;
+	a->y = 0;
+	(void)AG_WidgetSizeAlloc(win, a);
+	AG_WidgetUpdateCoords(win, 0, 0);
+
+	/* Save the new effective window position. */
+	WIDGET(win)->x = a->x = x;
+	WIDGET(win)->y = a->y = y;
 }
 
 static int
