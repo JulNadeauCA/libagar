@@ -200,11 +200,11 @@ MouseButtonUp(AG_Event *event)
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
 	int y = mview->tPad;
-	int i;
+	Uint i;
 
-	if (my < 0 || mx < 0) {
-		AG_MenuCollapse(m, mi);
-		goto out;
+	if (mx < 0 || mx >= WIDTH(mview) ||
+	    my < 0 || my >= HEIGHT(mview)) {
+		return;
 	}
 	for (i = 0; i < mi->nsubitems; i++) {
 		AG_MenuItem *item = &mi->subitems[i];
@@ -214,35 +214,23 @@ MouseButtonUp(AG_Event *event)
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
 			if (item->state == 0) {
-				AG_MenuCollapse(m, mi);
-				goto out;
-			}
-			if (item->clickFn != NULL) {
+				/* Nothing to do */
+			} else if (item->clickFn != NULL) {
 				AG_ExecEventFn(m, item->clickFn);
 				AG_MenuCollapseAll(m);
 			} else if (item->bind_type != AG_MENU_NO_BINDING) {
-				if (item->bind_lock != NULL)
+				if (item->bind_lock != NULL) {
 					AG_MutexLock(item->bind_lock);
-
+				}
 				SetItemBoolValue(item);
-
-				if (item->bind_lock != NULL)
+				if (item->bind_lock != NULL) {
 					AG_MutexUnlock(item->bind_lock);
-
+				}
 				AG_MenuCollapseAll(m);
 			}
 			return;
 		}
 	}
-	if (i == mi->nsubitems) {
-		AG_MenuCollapse(m, mi);
-		goto out;
-	}
-	return;
-out:
-	SelectItem(mi, NULL);
-	m->itemSel = NULL;
-	m->selecting = 0;
 }
 
 static void
