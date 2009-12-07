@@ -489,9 +489,13 @@ Shown(AG_Event *event)
 			AG_InitPointer(&Vmodal, win);
 			AG_ListAppend(AGDRIVER_SW(drv)->Lmodal, &Vmodal);
 		}
+		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
-		/* Create/map a native window of requested dimensions. */
+		/*
+		 * Create/map a native window of requested dimensions.
+		 * We expect the driver will call AG_WidgetUpdateCoords().
+		 */
 		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			if (AGDRIVER_MW_CLASS(drv)->openWindow(win,
 			    AG_RECT(a.x, a.y, a.w, a.h), 0,
@@ -508,7 +512,6 @@ Shown(AG_Event *event)
 		}
 		break;
 	}
-	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	if (!(win->flags & AG_WINDOW_DENYFOCUS))
 		AG_WindowFocus(win);
@@ -909,9 +912,6 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 		if (win->visible &&
 		    AGDRIVER_MW_CLASS(drv)->moveResizeWindow(win, &a) == -1) {
 			goto fail;
-		}
-		if (win->visible) {
-			AGDRIVER_MW_CLASS(drv)->postResizeCallback(win, &a);
 		}
 		break;
 	}
