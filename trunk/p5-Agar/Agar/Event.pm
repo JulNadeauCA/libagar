@@ -41,10 +41,6 @@ undef.
 
 =item B<$arg = $event-E<gt>string($index)>
 
-=item B<$arg = $event-E<gt>char($index)>
-
-=item B<$arg = $event-E<gt>Uchar($index)>
-
 =item B<$arg = $event-E<gt>int($index)>
 
 =item B<$arg = $event-E<gt>Uint($index)>
@@ -57,25 +53,30 @@ undef.
 
 =item B<$arg = $event-E<gt>double($index)>
 
-=item B<$arg = $event-E<gt>Uint8($index)>
-
-=item B<$arg = $event-E<gt>Sint8($index)>
-
-=item B<$arg = $event-E<gt>Uint16($index)>
-
-=item B<$arg = $event-E<gt>Sint16($index)>
-
-=item B<$arg = $event-E<gt>Uint32($index)>
-
-=item B<$arg = $event-E<gt>Sint32($index)>
-
-=item B<$arg = $event-E<gt>sdlKey($index)>
-
-=item B<$arg = $event-E<gt>sdlMod($index)>
-
 Each of these methods returns the argument of the specified type at the
-specified index in the event's argument list (counting from 1). Returns undef
-if the index is out of bounds or the type doesn't match.
+specified index in the event's argument list (counting from 1).
+Returns undef if the index is out of bounds or the type doesn't match.
+
+=item B<$arg = $event-E<gt>ptrNamed($name)>
+
+=item B<$arg = $event-E<gt>objectNamed($name)>
+
+=item B<$arg = $event-E<gt>stringNamed($name)>
+
+=item B<$arg = $event-E<gt>intNamed($name)>
+
+=item B<$arg = $event-E<gt>UintNamed($name)>
+
+=item B<$arg = $event-E<gt>longNamed($name)>
+
+=item B<$arg = $event-E<gt>UlongNamed($name)>
+
+=item B<$arg = $event-E<gt>floatNamed($name)>
+
+=item B<$arg = $event-E<gt>doubleNamed($name)>
+
+Each of these methods returns the named argument of the specified type.
+If there are no arguments of the given name, undef is returned.
 
 =over 4
 

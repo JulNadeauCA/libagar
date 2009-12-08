@@ -14,8 +14,6 @@ Uint16 *		T_PTR
 Sint16 *		T_PTR
 Uint32 *		T_PTR
 Sint32 *		T_PTR
-SDL::Surface		T_PTROBJ
-SDL::Event		T_PTROBJ
 Agar::Object		T_PTROBJ
 Agar::Widget		T_PTROBJ
 Agar::Event		T_PTROBJ

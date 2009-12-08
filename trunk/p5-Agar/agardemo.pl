@@ -3,28 +3,24 @@
 # Public domain
 #
 # Demonstrates many of the Agar-GUI widgets available through the Perl
-# bindings, as well as integration with SDL's Perl bindings and a custom
-# event loop implementation (useful if your application already has an event
-# loop so you can't use the standard Agar::EventLoop()).
+# bindings.
 
 use strict;
 use warnings;
-use Agar; # need to "use Agar" before "use SDL" or Bad Things Happen
-use SDL::App;
-use SDL::Event;
-use SDL::Constants;
+use Agar;
+use Getopt::Long;
 
-our $wantToDie;
+my $driver = "";
 
-my $app = new SDL::App (-w => 800, -h => 600, -d => 32, -title => 'Agar Perl demo');
+GetOptions("driver=s" => \$driver);
 
-Agar::InitCore('Agar Perl demo', { verbose=>1 });
-Agar::InitVideoSDL($app);
+Agar::InitCore('Agar Perl demo', { verbose=>1 }) || die Agar::GetError();
+Agar::InitGraphics($driver) || die Agar::GetError();
 
 my $win = Agar::Window->new();
 $win->caption("perl $0");
 $win->setGeometry(80, 60, 640, 480);
-$win->setEvent('window-close', sub { $wantToDie = 1 });
+$win->setEvent('window-close', sub { Agar::Quit() });
 
 ################################
 # Load/save dialogs
@@ -34,13 +30,13 @@ my $loadWin = Agar::Window->new({ keepAbove=>1 });
 $loadWin->caption('Load');
 my $loadDlg = Agar::FileDlg->new($loadWin, { load=>1 });
 $loadWin->setEvent('window-close', sub { $loadWin->hide() });
-$loadDlg->cancelAction(sub { $loadWin->hide() });
+#$loadDlg->cancelAction(sub { $loadWin->hide() });
 
 my $saveWin = Agar::Window->new({ keepAbove=>1 });
 $saveWin->caption('Save');
 my $saveDlg = Agar::FileDlg->new($saveWin, { save=>1 });
 $saveWin->setEvent('window-close', sub { $saveWin->hide() });
-$saveDlg->cancelAction(sub { $saveWin->hide() });
+#$saveDlg->cancelAction(sub { $saveWin->hide() });
 
 ################################
 # Menu
@@ -62,9 +58,12 @@ my $tab1 = $nb->addVertTab('One')->box();
 my $tab2 = $nb->addVertTab('Two')->box();
 my $tab3 = $nb->addVertTab('Three')->box();
 
-my $pane = Agar::Pane->newHoriz($tab1, { hFill=>1, vFill=>1, div=>1 });
+my $pane = Agar::Pane->newHoriz($tab1, { hFill=>1, vFill=>1 });
 my $lbox = $pane->leftPane();
 my $rbox = $pane->rightPane();
+
+print "move divider\n";
+$pane->moveDivider(100);
 
 ################################
 # Console
@@ -91,6 +90,7 @@ Agar::Separator->newHoriz($lbox);
 ################################
 
 my $textbox = Agar::Textbox->new($lbox, 'Edit me');
+$textbox->expandHoriz();
 my $spin = Agar::Numerical->new($lbox, 'Spin spin spin');
 $spin->setRangeInt(0, 100);
 $spin->setPrecision('f', 0);
@@ -161,7 +161,6 @@ $toolbar->addTextButton("Ask me")->setEvent('button-pushed', sub {
 	Agar::PromptMsg("What are you?", sub {
 		my $what = $_[0]->string(1);
 		$con->msg("you are '$what'");
-		ConsoleScrollToEnd($con);
 	});
 });
 
@@ -189,64 +188,52 @@ $list->addItem('Cartman')->setDepth(1);
 
 $button->setEvent('button-pushed', sub {
 	$con->msg("button pressed");
-	ConsoleScrollToEnd($con);
 });
 $checkbox->setEvent('checkbox-changed', sub {
 	my $state = $_[0]->int(1) ? '' : 'un';
 	$con->msg("checkbox ${state}checked");
-	ConsoleScrollToEnd($con);
 });
 $sticky->setEvent('button-pushed', sub {
 	my $state = $_[0]->int(1) ? 'on' : 'off';
 	$con->msg("sticky button pressed $state");
-	ConsoleScrollToEnd($con);
 });
 $radio->setEvent('radio-changed', sub {
 	my $index = $_[0]->int(1);
 	$con->msg("radio button changed to $index");
-	ConsoleScrollToEnd($con);
 });
 $textbox->setEvent('textbox-return', sub {
 	my $text = $_[0]->receiver()->downcast()->getString('string');
 	$con->msg("entered text '$text' pressed return");
-	ConsoleScrollToEnd($con);
 });
 $textbox->setEvent('textbox-postchg', sub {
 	my $text = $_[0]->receiver()->downcast()->getString('string');
 	$con->msg("entered text '$text'");
-	ConsoleScrollToEnd($con);
 });
 $spin->setEvent('numerical-changed', sub {
 	my $value = $_[0]->receiver()->downcast()->getDouble('value');
 	$con->msg("spin control changed to $value");
-	ConsoleScrollToEnd($con);
 });
 $slider->setEvent('slider-changed', sub {
 	my $value = $_[0]->receiver()->downcast()->getInt('value');
 	$con->msg("slider changed to $value");
-	ConsoleScrollToEnd($con);
 });
 $combo->setEvent('combo-selected', sub {
 	my $text = $_[0]->receiver()->downcast()->list()->selectedItem()->getText();
 	$con->msg("combo selected $text");
-	ConsoleScrollToEnd($con);
 });
 $ucombo->setEvent('ucombo-selected', sub {
 	my $text = $_[0]->receiver()->downcast()->list()->selectedItem()->getText();
 	$con->msg("ucombo selected $text");
-	ConsoleScrollToEnd($con);
 });
 $loadDlg->setEvent('file-chosen', sub {
 	my $path = $_[0]->string(1);
 	$loadWin->hide();
 	$con->msg("chose to load '$path'");
-	ConsoleScrollToEnd($con);
 });
 $saveDlg->setEvent('file-chosen', sub {
 	my $path = $_[0]->string(1);
 	$saveWin->hide();
 	$con->msg("chose to save '$path'");
-	ConsoleScrollToEnd($con);
 });
 
 ################################
@@ -256,44 +243,5 @@ $saveDlg->setEvent('file-chosen', sub {
 
 $win->show();
 
-CustomEventLoop();
+Agar::EventLoop();
 
-sub CustomEventLoop
-{
-	while (1)
-	{
-		Agar::GetViewObject()->root()->lock();
-		Agar::BeginRendering();
-		Agar::DrawAll();
-		Agar::EndRendering();
-		Agar::GetViewObject()->root()->unlock();
-
-		my $event = new SDL::Event ();
-		if ($event->poll())
-		{
-			if ($event->type() == SDL_QUIT() ||
-			    ($event->type() == SDL_KEYDOWN() &&
-				$event->key_sym() == SDLK_ESCAPE))
-			{
-				last;
-			}
-			Agar::ProcessEvent($event);
-		}
-		Agar::ProcessTimeouts($app->ticks());
-
-		last if $wantToDie;
-	}
-}
-
-################################
-# Little utility to keep the most recently
-# added text visible in the console widget
-################################
-
-sub ConsoleScrollToEnd
-{
-	my $c = shift;
-	my $pos = $c->scrollBar()->getInt('max')
-		- $c->scrollBar()->getInt('visible') + 5;
-	$c->scrollBar()->setInt('value', $pos < 0 ? 0 : $pos);
-}

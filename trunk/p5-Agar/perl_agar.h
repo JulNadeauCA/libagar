@@ -1,9 +1,5 @@
 /*	Public domain	*/
 
-typedef unsigned char Uchar;
-typedef unsigned int Uint;
-typedef unsigned long Ulong;
-
 typedef struct ap_flag_names {
 	const char *name;
 	Uint bitmask;
@@ -151,5 +147,3 @@ typedef AG_Tlist * Agar__Tlist;
 typedef AG_TlistItem * Agar__TlistItem;
 typedef AG_Toolbar * Agar__Toolbar;
 typedef AG_UCombo * Agar__UCombo;
-typedef SDL_Surface * SDL__Surface;
-typedef SDL_Event * SDL__Event;
