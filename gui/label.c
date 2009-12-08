@@ -267,6 +267,7 @@ Init(void *obj)
 	lbl->justify = AG_TEXT_LEFT;
 	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
+	lbl->rClip = AG_RECT(0,0,0,0);		/* Initialized in SizeAlloc() */
 	SLIST_INIT(&lbl->lflags);
 	
 	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
