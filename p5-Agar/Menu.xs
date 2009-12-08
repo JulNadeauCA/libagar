@@ -247,7 +247,7 @@ Agar::MenuItem
 parentItem(self)
 	Agar::MenuItem self
 CODE:
-	if ((RETVAL = self->pitem) == NULL) {
+	if ((RETVAL = self->parent) == NULL) {
 		XSRETURN_UNDEF;
 	}
 OUTPUT:

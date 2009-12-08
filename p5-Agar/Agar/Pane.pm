@@ -40,11 +40,15 @@ Recognised flags include:
 
 =item C<div1Fill>
 
+=item C<forceDiv1Fill>
+
 =item C<frame>
 
 =item C<div>
 
 =item C<forceDiv>
+
+=item C<unmovable>
 
 Z<>
 
@@ -52,7 +56,7 @@ Z<>
 
 =item B<$widget-E<gt>setDividerWidth($pixels)>
 
-=item B<$widget-E<gt>setDivisionsMin($pixels)>
+=item B<$widget-E<gt>setDivisionMin($pixels)>
 
 =item B<$box_widget = $widget-E<gt>leftPane()>
 
@@ -61,6 +65,10 @@ Z<>
 =item B<$box_widget = $widget-E<gt>topPane()>
 
 =item B<$box_widget = $widget-E<gt>bottomPane()>
+
+=item B<$widget-E<gt>moveDivider($x)>
+
+=item B<$widget-E<gt>moveDividerPct($percent)>
 
 =back
 

@@ -23,7 +23,6 @@ Agar::Surface - Graphical surface object
   my $sIndexed = Agar::Surface->newIndexed(10,10, 32);
   my $sEmpty = Agar::Surface->newEmpty();
   my $sBitmap = Agar::Surface->newFromBMP('foo.bmp');
-  my $sSDL = Agar::Surface->newFromSDL($SDL_Surface);
 
 =head1 DESCRIPTION
 
@@ -77,14 +76,6 @@ Create a new, empty surface. Blitting an empty surface is essentially a no-op.
 =item B<$surface = Agar::Surface-E<gt>newFromBMP($path)>
 
 Create a new surface from the given bmp file. Returns undef on failure.
-
-=item B<$surface = Agar::Surface-E<gt>newFromSDL($surface)>
-
-Create a new surface from the given SDL surface, in cooperation with the
-SDL_perl bindings. Returns undef on failure.
-
-WARNING: when using the Agar Perl bindings with SDL_perl, you must C<use Agar>
-I<before> you C<use> any SDL modules.
 
 =back
 

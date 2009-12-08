@@ -150,3 +150,206 @@ CODE:
 OUTPUT:
 	RETVAL
 
+Uint
+getUint(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetUint(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setUint(self, name, val)
+	Agar::Widget self
+	const char * name
+	Uint val
+CODE:
+	AG_SetUint(self, name, val);
+
+int
+getInt(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetInt(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setInt(self, name, val)
+	Agar::Widget self
+	const char * name
+	int val
+CODE:
+	AG_SetInt(self, name, val);
+
+int
+getBool(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetBool(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setBool(self, name, val)
+	Agar::Widget self
+	const char * name
+	int val
+CODE:
+	AG_SetBool(self, name, val);
+
+Uint8
+getUint8(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetUint8(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setUint8(self, name, val)
+	Agar::Widget self
+	const char * name
+	Uint8 val
+CODE:
+	AG_SetUint8(self, name, val);
+
+Sint8
+getSint8(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetSint8(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setSint8(self, name, val)
+	Agar::Widget self
+	const char * name
+	Sint8 val
+CODE:
+	AG_SetSint8(self, name, val);
+
+Uint16
+getUint16(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetUint16(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setUint16(self, name, val)
+	Agar::Widget self
+	const char * name
+	Uint16 val
+CODE:
+	AG_SetUint16(self, name, val);
+
+Sint16
+getSint16(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetSint16(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setSint16(self, name, val)
+	Agar::Widget self
+	const char * name
+	Sint16 val
+CODE:
+	AG_SetSint16(self, name, val);
+
+Uint32
+getUint32(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetUint32(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setUint32(self, name, val)
+	Agar::Widget self
+	const char * name
+	Uint32 val
+CODE:
+	AG_SetUint32(self, name, val);
+
+Sint32
+getSint32(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetSint32(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setSint32(self, name, val)
+	Agar::Widget self
+	const char * name
+	Sint32 val
+CODE:
+	AG_SetSint32(self, name, val);
+
+float
+getFloat(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetFloat(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setFloat(self, name, val)
+	Agar::Widget self
+	const char * name
+	float val
+CODE:
+	AG_SetFloat(self, name, val);
+
+double
+getDouble(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = AG_GetDouble(self, name);
+OUTPUT:
+	RETVAL
+
+void
+setDouble(self, name, val)
+	Agar::Widget self
+	const char * name
+	double val
+CODE:
+	AG_SetDouble(self, name, val);
+
+SV *
+getString(self, name)
+	Agar::Widget self
+	const char * name
+CODE:
+	RETVAL = newSVpv(AG_GetStringDup(self, name), 0);
+OUTPUT:
+	RETVAL
+
+void
+setString(self, name, val)
+	Agar::Widget self
+	const char * name
+	const char * val
+CODE:
+	AG_SetString(self, name, val);

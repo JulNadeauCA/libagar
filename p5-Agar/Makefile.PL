@@ -23,7 +23,7 @@ my %Makefile = (
 	'LIBS'		=> $libs,
 	'DEFINE'	=> ' ',
 	'INC'		=> $cflags,
-	'CCFLAGS'	=> '-D_USE_AGAR_STD -D_USE_AGAR_QUEUE '.
+	'CCFLAGS'	=> '-D_USE_AGAR_STD -D_USE_AGAR_QUEUE -D_USE_AGAR_TYPES '.
 	                   '-Wall -Wno-unused -Werror',
 	'OBJECT'	=> q/$(O_FILES)/,
 );

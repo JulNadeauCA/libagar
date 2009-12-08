@@ -115,59 +115,20 @@ Sets the named flag to false.
 
 Returns the value of the named flag.
 
-=item B<$value = $widget-E<gt>getBool($name)>
+=item B<$flag = $widget-E<gt>expandHoriz()>
 
-=item B<$value = $widget-E<gt>getInt($name)>
+Expand the widget to fill all available space in the parent container
+widget, horizontally.
 
-=item B<$value = $widget-E<gt>getUint($name)>
+=item B<$flag = $widget-E<gt>expandVert()>
 
-=item B<$value = $widget-E<gt>getSint8($name)>
+Expand the widget to fill all available space in the parent container
+widget, vertically.
 
-=item B<$value = $widget-E<gt>getUint8($name)>
+=item B<$flag = $widget-E<gt>expand()>
 
-=item B<$value = $widget-E<gt>getSint16($name)>
-
-=item B<$value = $widget-E<gt>getUint16($name)>
-
-=item B<$value = $widget-E<gt>getSint32($name)>
-
-=item B<$value = $widget-E<gt>getUint32($name)>
-
-=item B<$value = $widget-E<gt>getFloat($name)>
-
-=item B<$value = $widget-E<gt>getDouble($name)>
-
-=item B<$value = $widget-E<gt>getString($name)>
-
-Each of these methods returns the value of the widget's "binding" (read:
-"property") of the specified name and type.
-
-=item B<$widget-E<gt>setBool($name)>
-
-=item B<$widget-E<gt>setInt($name)>
-
-=item B<$widget-E<gt>setUint($name)>
-
-=item B<$widget-E<gt>setSint8($name)>
-
-=item B<$widget-E<gt>setUint8($name)>
-
-=item B<$widget-E<gt>setSint16($name)>
-
-=item B<$widget-E<gt>setUint16($name)>
-
-=item B<$widget-E<gt>setSint32($name)>
-
-=item B<$widget-E<gt>setUint32($name)>
-
-=item B<$widget-E<gt>setFloat($name)>
-
-=item B<$widget-E<gt>setDouble($name)>
-
-=item B<$widget-E<gt>setString($name)>
-
-Each of these methods sets the value of the widget's "binding" (read:
-"property") of the specified name and type.
+Expand the widget to fill all available space in the parent container,
+both horizontally and vertically.
 
 =back
 

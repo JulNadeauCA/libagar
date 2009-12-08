@@ -33,7 +33,6 @@
 #include "perl_agar.h"
 
 static const AP_FlagNames flagNames[] = {
-	{ "hwSurface",   AG_HWSURFACE },
 	{ "srcColorKey", AG_SRCCOLORKEY },
 	{ "srcAlpha",    AG_SRCALPHA },
 	{ NULL,          0 }
@@ -58,7 +57,11 @@ CODE:
 	if (items == 5) {
 		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
 	}
-	RETVAL = AG_SurfaceNew(w, h, pf, flags);
+	if (pf->palette == NULL) {
+		RETVAL = AG_SurfaceNew(AG_SURFACE_PACKED, w, h, pf, flags);
+	} else {
+		RETVAL = AG_SurfaceNew(AG_SURFACE_INDEXED, w, h, pf, flags);
+	}
 OUTPUT:
 	RETVAL
 
@@ -99,15 +102,6 @@ CODE:
 	if ((RETVAL = AG_SurfaceFromBMP(path)) == NULL) {
 		XSRETURN_UNDEF;
 	}
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newFromSDL(package, surface)
-	const char *package
-	SDL::Surface surface
-CODE:
-	RETVAL = AG_SurfaceFromSDL(surface);
 OUTPUT:
 	RETVAL
 

@@ -136,6 +136,17 @@ CODE:
 OUTPUT:
 	RETVAL
 
+IV
+ptrNamed(event, name)
+	Agar::Event event
+	const char *name
+PREINIT:
+	static const enum ag_variable_type argtype = AG_VARIABLE_POINTER;
+CODE:
+	RETVAL = PTR2IV(AG_PTR_NAMED(name));
+OUTPUT:
+	RETVAL
+
 Agar::Object
 object(event, index, classSpec)
 	Agar::Event event
@@ -201,6 +212,38 @@ CODE:
 OUTPUT:
 	RETVAL
 
+long
+long(event, index)
+	Agar::Event event
+	int index
+PREINIT:
+	static const enum ag_variable_type argtype = AG_VARIABLE_SINT32;
+CODE:
+	index += apNumOurArgs;
+	if (index <= apNumOurArgs || index >= event->argc ||
+	    event->argv[index].type != argtype) {
+		XSRETURN_UNDEF;
+	}
+	RETVAL = AG_LONG(index);
+OUTPUT:
+	RETVAL
+
+Ulong
+Ulong(event, index)
+	Agar::Event event
+	int index
+PREINIT:
+	static const enum ag_variable_type argtype = AG_VARIABLE_UINT32;
+CODE:
+	index += apNumOurArgs;
+	if (index <= apNumOurArgs || index >= event->argc ||
+	    event->argv[index].type != argtype) {
+		XSRETURN_UNDEF;
+	}
+	RETVAL = AG_ULONG(index);
+OUTPUT:
+	RETVAL
+
 float
 float(event, index)
 	Agar::Event event
@@ -230,102 +273,6 @@ CODE:
 		XSRETURN_UNDEF;
 	}
 	RETVAL = AG_DOUBLE(index);
-OUTPUT:
-	RETVAL
-
-Uint8
-Uint8(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_UINT8;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_UINT8(index);
-OUTPUT:
-	RETVAL
-
-Sint8
-Sint8(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_SINT8;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_SINT8(index);
-OUTPUT:
-	RETVAL
-
-Uint16
-Uint16(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_UINT;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_UINT16(index);
-OUTPUT:
-	RETVAL
-
-Sint16
-Sint16(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_INT;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_SINT16(index);
-OUTPUT:
-	RETVAL
-
-Uint32
-Uint32(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_UINT32;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_UINT32(index);
-OUTPUT:
-	RETVAL
-
-Sint32
-Sint32(event, index)
-	Agar::Event event
-	int index
-PREINIT:
-	static const enum ag_variable_type argtype = AG_VARIABLE_SINT32;
-CODE:
-	index += apNumOurArgs;
-	if (index <= apNumOurArgs || index >= event->argc ||
-	    event->argv[index].type != argtype) {
-		XSRETURN_UNDEF;
-	}
-	RETVAL = AG_SINT32(index);
 OUTPUT:
 	RETVAL
 

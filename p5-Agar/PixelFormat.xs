@@ -74,15 +74,7 @@ Agar::PixelFormat
 newStandard(package)
 	const char *package
 CODE:
-	RETVAL = AG_PixelFormatDup(agView->stmpl->format);
-OUTPUT:
-	RETVAL
-
-Agar::PixelFormat
-newVideo(package)
-	const char *package
-CODE:
-	RETVAL = AG_PixelFormatDup(agView->v->format);
+	RETVAL = AG_PixelFormatDup(agSurfaceFmt);
 OUTPUT:
 	RETVAL
 
@@ -116,11 +108,11 @@ getRGB(pf, pixel)
 PREINIT:
 	Uint8 r, g, b;
 PPCODE:
+	AG_GetPixelRGB(pixel, pf, &r, &g, &b);
 	if (GIMME_V == G_SCALAR) {
 		XPUSHs(newSVpvf("#%02x%02x%02x", r, g, b));
 	} else {
 		EXTEND(SP, 3);
-		AG_GetPixelRGB(pixel, pf, &r, &g, &b);
 		PUSHs(newSViv(r));
 		PUSHs(newSViv(g));
 		PUSHs(newSViv(b));
@@ -133,11 +125,11 @@ getRGBA(pf, pixel)
 PREINIT:
 	Uint8 r, g, b, a;
 PPCODE:
+	AG_GetPixelRGBA(pixel, pf, &r, &g, &b, &a);
 	if (GIMME_V == G_SCALAR) {
 		XPUSHs(newSVpvf("#%02x%02x%02x%02x", r, g, b, a));
 	} else {
-		EXTEND(SP, 3);
-		AG_GetPixelRGBA(pixel, pf, &r, &g, &b, &a);
+		EXTEND(SP, 4);
 		PUSHs(newSViv(r));
 		PUSHs(newSViv(g));
 		PUSHs(newSViv(b));

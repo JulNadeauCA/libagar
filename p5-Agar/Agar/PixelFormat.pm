@@ -22,7 +22,6 @@ Agar::PixelFormat - Pixel encoding information
       0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
   my $pfIndexed = Agar::PixelFormat->newIndexed(8);
   my $pfStandard = Agar::PixelFormat->newStandard();
-  my $pfVideo = Agar::PixelFormat->newVideo();
   my $redPixel = $pf->mapRGB(255, 0, 0);
   my $transparentPixel = $pf->mapRGBA(255, 0, 0, 127);
   printf "Hex = %s", $pf->getRGB($pixel);
@@ -61,10 +60,6 @@ given in bits per pixel and the size of the palette is determined by it.
 Duplicate the standard, general-purpose Agar surface format which is
 determined on initialization. Usually this format is packed-pixel with an
 alpha channel.
-
-=item B<$format = Agar::PixelFormat-E<gt>newVideo>
-
-Duplicate the exact format used by the video display.
 
 =item B<$pixel = $pf-E<gt>mapRGB($red,$green,$blue)>
 

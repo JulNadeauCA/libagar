@@ -169,60 +169,16 @@ OUTPUT:
 	RETVAL
 
 int
-InitVideo(w=640, h=480, bitsPerPixel=32, ...)
-	int w
-	int h
-	int bitsPerPixel
+InitGraphics(...)
 PREINIT:
-	const AP_FlagNames flagNames[] = {
-		{ "hwSurface",   AG_VIDEO_HWSURFACE },
-		{ "asyncBlit",   AG_VIDEO_ASYNCBLIT },
-		{ "anyFormat",   AG_VIDEO_ANYFORMAT },
-		{ "hwPalette",   AG_VIDEO_HWPALETTE },
-		{ "doubleBuf",   AG_VIDEO_DOUBLEBUF },
-		{ "fullScreen",  AG_VIDEO_FULLSCREEN },
-		{ "resizable",   AG_VIDEO_RESIZABLE },
-		{ "noFrame",     AG_VIDEO_NOFRAME },
-		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
-		{ "openGL",      AG_VIDEO_OPENGL },
-		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
-		{ "SDL",         AG_VIDEO_SDL },
-		{ "noBgClear",   AG_VIDEO_NOBGCLEAR },
-		{ NULL,          0 }
-	};
-	Uint flags = 0;
+	const char *driverSpec = NULL;
 CODE:
-	if ((items == 4 && SvTYPE(SvRV(ST(3))) != SVt_PVHV) || items > 4) {
-		Perl_croak(aTHX_ "Usage: Agar::InitVideo(w,h,bitsPerPixel,[{opts}])");
+	if (items == 1) {
+		driverSpec = SvPV_nolen(ST(0));
+	} else if (items > 1) {
+		Perl_croak(aTHX_ "Usage: Agar::InitGraphics([driverSpec])");
 	}
-	if (items == 4) {
-		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
-	}
-	RETVAL = (AG_InitVideo(w, h, bitsPerPixel, flags) == 0);
-OUTPUT:
-	RETVAL
-
-int
-InitVideoSDL(sdl_surface, ...)
-	SDL::Surface sdl_surface
-PREINIT:
-	const AP_FlagNames flagNames[] = {
-		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
-		{ "openGL",      AG_VIDEO_OPENGL },
-		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
-		{ "SDL",         AG_VIDEO_SDL },
-		{ "noBgClear",   AG_VIDEO_NOBGCLEAR },
-		{ NULL,          0 }
-	};
-	Uint flags = 0;
-CODE:
-	if ((items == 2 && SvTYPE(SvRV(ST(1))) != SVt_PVHV) || items > 4) {
-		Perl_croak(aTHX_ "Usage: Agar::InitVideoSDL(sdl_surface,[{opts}])");
-	}
-	if (items == 2) {
-		AP_MapHashToFlags(SvRV(ST(1)), flagNames, &flags);
-	}
-	RETVAL = (AG_InitVideoSDL(sdl_surface, flags) == 0);
+	RETVAL = (AG_InitGraphics(driverSpec) == 0);
 OUTPUT:
 	RETVAL
 
@@ -248,55 +204,12 @@ EventLoop()
 CODE:
 	AG_EventLoop();
 
-void
-BeginRendering()
-CODE:
-	AG_BeginRendering();
-
-void
-EndRendering()
-CODE:
-	AG_EndRendering();
-
-int
-ProcessEvent(event)
-	SDL::Event event
-CODE:
-	RETVAL = AG_ProcessEvent(event);
-OUTPUT:
-	RETVAL
-
-void
-ProcessTimeouts(ticks)
-	Uint32 ticks
-CODE:
-	if (AG_TIMEOUTS_QUEUED()) {
-		AG_ProcessTimeouts(ticks);
-	}
-
 Agar::Config
 GetConfig()
 CODE:
 	RETVAL = agConfig;
 OUTPUT:
 	RETVAL
-
-Agar::Object
-GetViewObject()
-CODE:
-	RETVAL = AGOBJECT(agView);
-OUTPUT:
-	RETVAL
-
-void
-DrawAll()
-PREINIT:
-	int i;
-	AG_Window * win;
-CODE:
-	AG_FOREACH_WINDOW(win, agDriver) {
-		AG_WindowDraw(win);
-	}
 
 Agar::Widget
 FindWidget(name)
@@ -421,4 +334,14 @@ void
 DESTROY()
 CODE:
 	AG_Destroy();
+
+void
+Quit()
+CODE:
+	AG_Quit();
+
+void
+QuitGUI()
+CODE:
+	AG_QuitGUI();
 

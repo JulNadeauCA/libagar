@@ -33,9 +33,11 @@
 
 static const AP_FlagNames flagNames[] = {
 	{ "div1Fill",		AG_PANE_DIV1FILL },
+	{ "forceDiv1Fill",	AG_PANE_FORCE_DIV1FILL },
 	{ "frame",		AG_PANE_FRAME },
 	{ "div",		AG_PANE_DIV },
 	{ "forceDiv",		AG_PANE_FORCE_DIV },
+	{ "unmovable",		AG_PANE_UNMOVABLE },
 	{ NULL,			0 }
 };
 
@@ -89,7 +91,7 @@ CODE:
 	AG_PaneSetDividerWidth(self, pixels);
 
 void
-setDivisionsMin(self, pixels)
+setDivisionMin(self, pixels)
 	Agar::Pane self
 	int pixels
 CODE:
@@ -127,6 +129,21 @@ CODE:
 	RETVAL = self->div[1];
 OUTPUT:
 	RETVAL
+
+void
+moveDivider(self, x)
+	Agar::Pane self
+	int x
+CODE:
+	AG_PaneMoveDivider(self, x);
+
+void
+moveDividerPct(self, pct)
+	Agar::Pane self
+	int pct
+CODE:
+	AG_PaneMoveDividerPct(self, pct);
+
 
 void
 setFlag(self, name)

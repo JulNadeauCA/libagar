@@ -1,8 +1,10 @@
 
 This module provides an object-oriented Perl interface to the Agar GUI toolkit
 and its standard widgets. It also allows new widgets to be written in pure
-Perl. Agar is an integration-friendly, extensible and highly portable library
-which works efficiently with different graphics APIs such as SDL and OpenGL.
+Perl. Agar is an integration-friendly and extensible GUI library that has
+been ported to a wide array of platforms. Agar can render itself efficiently
+using OpenGL (e.g., "glx, "wgl", "sdlgl" drivers) or software framebuffers
+(e.g., "sdlfb").
 
 The Agar library must be installed on your system for this module to compile.
 
