@@ -90,7 +90,7 @@ struct ag_key_mapping {			/* Keymap translation table entry */
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static int       InitClipRects(AG_DriverWGL *wgl, int w, int h);
-static int       InitClipRect0(AG_DriverWGL *wgl, AG_Window *win);
+static void      InitClipRect0(AG_DriverWGL *wgl, AG_Window *win);
 static void      ChangeCursor(AG_DriverWGL *wgl);
 static int       InitDefaultCursor(AG_DriverWGL *wgl);
 static void      WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a);
@@ -100,14 +100,13 @@ _SetWindowsError(char* errorMessage, DWORD errorCode)
 {
 	char lpBuffer[65536];
 
-	if(FormatMessage(
+	if (FormatMessage(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
 		errorCode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(char*)&lpBuffer,
-		0, NULL 
-	)) {
+		0, NULL)) {
 		AG_SetError("WGL Driver: %s! (%s)", errorMessage, lpBuffer);
 	} else {
 		AG_SetError("WGL Driver: %s!", errorMessage);
@@ -147,9 +146,8 @@ WGL_Init(void *obj)
 	AG_Verbose("WGL_Init\n");
 #endif
 	
-	if(!inited) {
+	if (!inited) {
 		InitKeymaps();
-
 		inited = 1;
 	}
 
@@ -252,7 +250,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wndClass.hCursor       = NULL;
 	wndClass.lpszClassName = wndClassName;
-	if(!RegisterClassEx(&wndClass)) {
+	if (!RegisterClassEx(&wndClass)) {
 		_SetWindowsError("Cannot register WGL window class", GetLastError());
 		return -1;
 	}
@@ -267,7 +265,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	// Calc window position
 	left = wndRect.left;
 	top  = wndRect.top;
-	if(mwFlags & AG_DRIVER_MW_ANYPOS) {
+	if (mwFlags & AG_DRIVER_MW_ANYPOS) {
 		left = CW_USEDEFAULT;
 		top  = CW_USEDEFAULT;
 	}
@@ -288,7 +286,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		NULL
 	);
 
-	if(!wgl->hwnd) {
+	if (!wgl->hwnd) {
 		_SetWindowsError("Cannot create window", GetLastError());
 		return -1;
 	}
@@ -298,30 +296,30 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 #endif
 
 	// Initialize device & rendering contxt
-	if(!(wgl->hdc = GetDC(wgl->hwnd))) {
+	if (!(wgl->hdc = GetDC(wgl->hwnd))) {
 		DestroyWindow(wgl->hwnd);
 		_SetWindowsError("GetDC failed", GetLastError());
 		return -1;
 	}
-	if(!(pixelFormat = ChoosePixelFormat(wgl->hdc, &pixelFormatDescriptor))) {
+	if (!(pixelFormat = ChoosePixelFormat(wgl->hdc, &pixelFormatDescriptor))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		_SetWindowsError("ChoosePixelFormat failed", GetLastError());
 		return -1;
 	}
-	if(!(SetPixelFormat(wgl->hdc, pixelFormat, &pixelFormatDescriptor))) {
+	if (!(SetPixelFormat(wgl->hdc, pixelFormat, &pixelFormatDescriptor))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		_SetWindowsError("SetPixelFormat failed", GetLastError());
 		return -1;
 	}
-	if(!(wgl->hglrc = wglCreateContext(wgl->hdc))) {
+	if (!(wgl->hglrc = wglCreateContext(wgl->hdc))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		_SetWindowsError("wglCreateContext failed", GetLastError());
 		return -1;
 	}
-	if(!(wglMakeCurrent(wgl->hdc, wgl->hglrc))) {
+	if (!(wglMakeCurrent(wgl->hdc, wgl->hglrc))) {
 		wglDeleteContext(wgl->hglrc);
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
@@ -425,7 +423,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	switch(uMsg) {
 		case WM_MOUSEMOVE:
-			if((win = LookupWindowByID(hWnd))) {
+			if ((win = LookupWindowByID(hWnd))) {
 				drv = WIDGET(win)->drv;
 				wgl = (AG_DriverWGL *)drv;
 				x   = AGDRIVER_BOUNDED_WIDTH(win,  LOWORD(lParam));
@@ -505,7 +503,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				kLayout = GetKeyboardLayout(0);
 				GetKeyboardState(kState);
 				ret = ToAsciiEx(wParam, HIWORD(lParam) & 0xFF, kState, &kResult, 0, kLayout);
-				if(ret == 1) {
+				if (ret == 1) {
 					// @todo Do we have to take notice of ucs here?
 					AG_KeyboardUpdate(drv->kbd, ka, kResult, kResult);
 					AG_ProcessKey(drv->kbd, win, ka, kResult, kResult);
@@ -535,7 +533,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (win = LookupWindowByID(hWnd)) {
 				drv = WIDGET(win)->drv;
 
-				if(drv->flags & AG_DRIVER_MW_OPEN) {
+				if (drv->flags & AG_DRIVER_MW_OPEN) {
 					AG_SizeAlloc a;
 
 					a.x = 0;
@@ -565,8 +563,8 @@ WGL_ProcessEvents(void *drvCaller)
 	AG_LockVFS(&agDrivers);
 
 	// @todo : window handle NULL must be replaced by a real one?
-	if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-		if(LookupWindowByID(msg.hwnd)) {
+	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		if (LookupWindowByID(msg.hwnd)) {
 			// Dispatch message
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -1009,7 +1007,7 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	AG_Verbose("WGL_CreateCursor");
 
 	// Initialize cursor struct
-	if((cg = AG_TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
+	if ((cg = AG_TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
 		return -1;
 	}
 	cg->black = RGB(0, 0, 0);
@@ -1038,7 +1036,7 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	}
 
 	// Create cursor
-	if(cg->cursor = CreateCursor(GetModuleHandle(NULL), ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask)) {
+	if (cg->cursor = CreateCursor(GetModuleHandle(NULL), ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask)) {
 		cg->visible = 0;
 		ac->p = cg;
 
