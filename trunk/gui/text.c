@@ -1124,7 +1124,9 @@ TextRenderBitmap(const Uint32 *ucs)
 			continue;
 		}
 		sGlyph = GetBitmapGlyph(font, *c);
-		AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
+		if (*c != ' ') {
+			AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
+		}
 		rd.x += sGlyph->w;
 	}
 	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
