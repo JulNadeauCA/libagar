@@ -521,7 +521,8 @@ AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
 	/* XXX TODO per-surface alpha */
 	for (y = 0; y < dr.h; y++) {
 		pSrc = ss->pixels + (sr.y+y)*ss->pitch;
-		pDst = ds->pixels + (dr.y+y)*ds->pitch;
+		pDst = ds->pixels + (dr.y+y)*ds->pitch +
+		    dr.x*ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
 			pixel = AG_GET_PIXEL(ss, pSrc);
 			if ((ss->flags & AG_SRCCOLORKEY) &&

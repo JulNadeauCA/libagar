@@ -220,7 +220,10 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (font != NULL)
 		goto out;
 
-	font = Malloc(sizeof(AG_Font));
+	if ((font = TryMalloc(sizeof(AG_Font))) == NULL) {
+		AG_MutexUnlock(&agTextLock);
+		return (NULL);
+	}
 	AG_ObjectInit(font, &agFontClass);
 	AG_ObjectSetNameS(font, name);
 
@@ -338,7 +341,7 @@ out:
 	return (font);
 fail:
 	AG_MutexUnlock(&agTextLock);
-	AG_ObjectDestroy(font);
+/*	AG_ObjectDestroy(font); XXX */
 	return (NULL);
 }
 
@@ -1101,15 +1104,14 @@ TextRenderBitmap(const Uint32 *ucs)
 	int line;
 	const Uint32 *c;
 	AG_Surface *sGlyph, *su;
-	int doAlpha = (font->bglyphs[0]->flags & AG_SRCALPHA);
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	su = doAlpha ? AG_SurfaceStdRGBA(tm.w, tm.h) :
-	               AG_SurfaceStdRGB(tm.w, tm.h);
-	if (su == NULL)
+	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL) {
 		AG_FatalError(NULL);
+	}
+	AG_FillRect(su, NULL, AG_ColorRGBA(0,0,0,0));
 
 	line = 0;
 	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
@@ -1125,10 +1127,9 @@ TextRenderBitmap(const Uint32 *ucs)
 		AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
 		rd.x += sGlyph->w;
 	}
-	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, 0);
-	if (doAlpha)
-		AG_SurfaceSetAlpha(su, AG_SRCALPHA,
-		    font->bglyphs[0]->format->alpha);
+	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
+	    AG_MapPixelRGBA(su->format, 0,0,0,0));
+	AG_SurfaceSetAlpha(su, AG_SRCALPHA, font->bglyphs[0]->format->alpha);
 
 	FreeMetrics(&tm);
 	return (su);
