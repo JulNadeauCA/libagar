@@ -11,6 +11,7 @@ http://wiki.libagar.org/wiki/Agar-1.4.
 - Added support for multiple native windows; rework of the basic graphics
   and input device interface. As of this release, the available drivers are:
   - "glx" (GL rendering via X Window System; multiple windows)
+  - "wgl" (GL rendering under Windows; multiple windows)
   - "sdlfb" (framebuffer rendering via SDL; single window)
   - "sdlgl" (GL rendering via SDL; single window)
 - Applications should now use AG_InitGraphics() to initialize the graphical
