@@ -683,6 +683,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 				C = AG_GetColorRGB(specPx, brsu->format);
 				break;
 			case RG_PIXMAP_BRUSH_RGB:
+			default:
 				C = AG_GetColorRGB(brPx, brsu->format);
 				break;
 			}
