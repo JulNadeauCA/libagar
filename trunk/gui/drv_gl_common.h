@@ -3,13 +3,10 @@
  * Code common to all drivers using OpenGL.
  */
 
-#ifdef __APPLE__
-# include <OpenGL/gl.h>
-# include <OpenGL/glx.h>
-#elif _MSC_VER
-# include "opengl.h"
-#else
-# include <GL/gl.h>
+#include <agar/gui/opengl.h>
+
+#include <agar/config/have_glx.h>
+#ifdef HAVE_GLX
 # include <GL/glx.h>
 #endif
 
