@@ -551,7 +551,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.4-beta"
+VERSION="1.4.0-beta"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
@@ -4126,6 +4126,64 @@ fi;
 if [ "${cache}" != "" ]; then
 	echo "$HAVE_GLOB" > ${cache}/ctest-HAVE_GLOB
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GLOB
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the getopt() function..."
+$ECHO_N "checking for the getopt() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETOPT" ]; then
+		HAVE_GETOPT=`cat ${cache}/ctest-HAVE_GETOPT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETOPT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	int c, x;
+	while ((c = getopt(argc, argv, "foo")) != -1) {
+		extern char *optarg;
+		extern int optind, opterr, optopt;
+		if (optarg != NULL) { x = 1; }
+		if (optind > 0) { x = 2; }
+		if (opterr > 0) { x = 3; }
+		if (optopt > 0) { x = 4; }
+	}
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETOPT="yes"
+echo "#ifndef HAVE_GETOPT" > config/have_getopt.h
+echo "#define HAVE_GETOPT \"$HAVE_GETOPT\"" >> config/have_getopt.h
+echo "#endif" >> config/have_getopt.h
+echo "hdefs[\"HAVE_GETOPT\"] = \"$HAVE_GETOPT\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETOPT="no"
+echo "#undef HAVE_GETOPT" >config/have_getopt.h
+echo "hdefs[\"HAVE_GETOPT\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETOPT" > ${cache}/ctest-HAVE_GETOPT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETOPT
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
@@ -7940,6 +7998,7 @@ else
 		if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 			$ECHO_N "* Preprocessing includes (from ${SRCDIR})..."
 			(cd ${SRCDIR} && ${PERL} mk/gen-includes.pl "${BLDDIR}/include/agar" 1>>${BLDDIR}/config.log 2>&1)
+			echo "cp -fR config include/agar"
 			cp -fR config include/agar
 		else
 			$ECHO_N "* Preprocessing includes (in ${BLDDIR})...";
@@ -7966,8 +8025,11 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-if [ -e "$BLD/include/agar" ]; then
-	cp -fR config "$BLD/include/agar/config"
+if [ "${includes}" != "link" ]; then
+	if [ -e "$BLD/include/agar" ]; then
+		echo "cp -fR config $BLD/include/agar/config"
+		cp -fR config "$BLD/include/agar/config"
+	fi
 fi
 echo "*"
 echo "* Configuration successful."
