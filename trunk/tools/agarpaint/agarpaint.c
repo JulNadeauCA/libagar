@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 #include "config/have_agar_dev.h"
 #include "config/version.h"
 #include "config/release.h"
-#include "config/have_getopt.h"
 #include "config/enable_nls.h"
 #include "config/localedir.h"
 
@@ -42,9 +41,6 @@
 /* #define SPLASH */
 
 #include <string.h>
-#ifdef HAVE_GETOPT
-#include <unistd.h>
-#endif
 
 #include "agarpaint.h"
 
@@ -321,7 +317,7 @@ ImportImageFromBMP(AG_Event *event)
 		return;
 	}
 	px = RG_PixmapNew(ts, "Bitmap", 0);
-	px->su = AG_SurfaceDup(bmp, ts->fmt, 0);
+	px->su = AG_SurfaceConvert(bmp, ts->fmt);
 	AG_SurfaceFree(bmp);
 	
 	t = RG_TileNew(ts, "Bitmap", px->su->w, px->su->h, RG_TILE_SRCALPHA);
@@ -337,7 +333,7 @@ LoadTileFromXCF(AG_Surface *xcf, const char *lbl, void *p)
 	RG_Tile *t;
 
 	px = RG_PixmapNew(ts, lbl, 0);
-	px->su = AG_SurfaceDup(xcf, ts->fmt);
+	px->su = AG_SurfaceConvert(xcf, ts->fmt);
 
 	t = RG_TileNew(ts, lbl, xcf->w, xcf->h, RG_TILE_SRCALPHA);
 	RG_TileAddPixmap(t, NULL, px, 0, 0);
@@ -548,12 +544,13 @@ Splash(void)
 int
 main(int argc, char *argv[])
 {
-	int i, fps = 25, debug = 0;
-	Uint flags = AG_VIDEO_RESIZABLE;
+	int i, debug = 0;
 	const char *fontSpec = NULL;
-#ifdef HAVE_GETOPT
-	int c;
-#endif
+	const char *driverSpec = NULL;
+	char *optArg = NULL;
+	int optInd;
+	RG_Tileset *ts;
+	int c, openedFiles = 0;
 
 #ifdef ENABLE_NLS
 	bindtextdomain("agarpaint", LOCALEDIR);
@@ -565,48 +562,35 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-#ifdef HAVE_GETOPT
-	while ((c = getopt(argc, argv, "?dvfFgGr:t:")) != -1) {
-		extern char *optarg;
-
+	while ((c = AG_Getopt(argc, argv, "?vDd:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'v':
+			printf("agarpaint %s\n", VERSION);
 			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'g':
-			flags |= AG_VIDEO_OPENGL;
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case 't':
-			fontSpec = optarg;
+		case 'D':
+			debug = 1;
 			break;
 		case 'd':
-			debug = 1;
+			driverSpec = optArg;
+			break;
+		case 't':
+			fontSpec = optArg;
 			break;
 		case '?':
 		default:
-			printf("%s [-vfFgGd] [-t font,size,flags] [-r fps]\n",
-			    agProgName);
+			printf("%s [-vD] [-d agar-driver-spec] "
+			       "[-t font,size,flags]\n", agProgName);
 			exit(0);
 		}
 	}
-#endif /* HAVE_GETOPT */
 
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}
-	if (AG_InitVideo(800, 600, 32, flags) == -1) {
+	if (AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_SetRefreshRate(fps);
 	AG_PrtString(agConfig, "load-path", ".:%s", SHAREDIR);
 
 	AG_AtExitFuncEv(Quit);
@@ -620,36 +604,41 @@ main(int argc, char *argv[])
 	AG_ObjectInitStatic(&editor, NULL);
 
 	/* Create the application menu. */ 
-	appMenu = AG_MenuNewGlobal(0);
-	AG_MenuDynamicItem(appMenu->root, _("File"), NULL, FileMenu, NULL);
-	AG_MenuDynamicItem(appMenu->root, _("Edit"), NULL, EditMenu, NULL);
+	if (agDriverSw != NULL) {
+		/*
+		 * MDI-style
+		 */
+		appMenu = AG_MenuNewGlobal(0);
+		AG_MenuDynamicItem(appMenu->root, _("File"), NULL, FileMenu, NULL);
+		AG_MenuDynamicItem(appMenu->root, _("Edit"), NULL, EditMenu, NULL);
 #ifdef HAVE_AGAR_DEV
-	if (debug) {
-		DEV_InitSubsystem(0);
-		DEV_ToolMenu(AG_MenuNode(appMenu->root, _("Debug"), NULL));
-	}
+		if (debug) {
+			DEV_InitSubsystem(0);
+			DEV_ToolMenu(AG_MenuNode(appMenu->root, _("Debug"), NULL));
+		}
 #endif
 #ifdef SPLASH
-	Splash();
+		Splash();
 #endif
+	}
 
-#ifdef HAVE_GETOPT
-	for (i = optind; i < argc; i++) {
-#else
-	for (i = 1; i < argc; i++) {
-#endif
-		RG_Tileset *ts;
-
+	for (i = optInd; i < argc; i++) {
 		ts = AG_ObjectNew(&editor, NULL, &rgTilesetClass);
 		if (AG_ObjectLoadFromFile(ts, argv[i]) == 0) {
 			AG_ObjectSetArchivePath(ts, argv[i]);
 			CreateEditionWindow(ts);
+			openedFiles++;
 		} else {
 			AG_TextMsgFromError();
 			AG_ObjectDetach(ts);
 			AG_ObjectDestroy(ts);
 		}
 	}
+	if (!agDriverSw && !openedFiles) {
+		ts = AG_ObjectNew(&editor, NULL, &rgTilesetClass);
+		CreateEditionWindow(ts);
+	}
+
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
