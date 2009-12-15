@@ -25,6 +25,7 @@ struct ag_style;
 
 /* General window alignment in view */
 enum ag_window_alignment {
+	AG_WINDOW_ALIGNMENT_NONE,
 	AG_WINDOW_TL,
 	AG_WINDOW_TC,
 	AG_WINDOW_TR,

@@ -281,6 +281,11 @@ Acceptable values include:
  AG_WINDOW_BL  AG_WINDOW_BC  AG_WINDOW_BR
 .Ed
 .Pp
+The special value
+.Dv AG_WINDOW_ALIGNMENT_NONE
+leaves the choice of the initial window position up to the underlying
+window manager (possibly Agar itself, or an external window manager).
+.Pp
 If the
 .Fa cascade
 argument is 1, the window position is slightly incremented or decremented at
@@ -314,6 +319,9 @@ for the possible values).
 The parameters of
 .Fn AG_WindowSetGeometryAlignedPct
 are given in percentage of current view area instead of pixels.
+Calling these functions with an argument of
+.Dv AG_WINDOW_ALIGNMENT_NONE
+is a no-op.
 .Pp
 The
 .Fn AG_WindowSetGeometryBounded
