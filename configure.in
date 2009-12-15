@@ -30,7 +30,7 @@ REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
 REGISTER("--with-<mode>-fp",    "M: Precision (single|double|quad) [double]")
 
 # Agar version
-HDEFINE(VERSION, "1.4-beta")
+HDEFINE(VERSION, "1.4.0-beta")
 HDEFINE(RELEASE, "Landscapes of Frozen Methane")
 
 # Installation directories
@@ -73,6 +73,7 @@ CHECK(gettimeofday)
 CHECK(setproctitle)
 CHECK(syslog)
 CHECK(glob)
+CHECK(getopt)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
