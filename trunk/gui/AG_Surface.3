@@ -275,6 +275,9 @@ function releases all resources allocated by the given surface.
 .Ft "AG_Surface *"
 .Fn AG_SurfaceDup "const AG_Surface *src"
 .Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceConvert "const AG_Surface *src" "const AG_PixelFormat *newFmt"
+.Pp
 .Ft "int"
 .Fn AG_ScaleSurface "const AG_Surface *src" "Uint16 width" "Uint16 height" "AG_Surface **dst"
 .Pp
@@ -343,6 +346,12 @@ returns a newly allocated surface containing a copy of
 If there is insufficient memory,
 .Fn AG_SurfaceDup
 will fail returning NULL.
+.Pp
+.Fn AG_SurfaceConvert
+is similar to
+.Fn AG_SurfaceDup ,
+except that the surface is converted to the specified pixel format
+.Fa newFmt .
 .Pp
 .Fn AG_ScaleSurface
 returns a copy of surface
