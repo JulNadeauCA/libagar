@@ -24,7 +24,7 @@ SRCS=	gui.c widget.c window.c style.c style_default.c iconmgr.c \
 	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
 	time_sdl.c debugger.c surface.c perfmon.c widget_legacy.c global_keys.c \
-	input_device.c mouse.c keyboard.c packedpixel.c \
+	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c \
 	drv.c drv_sw.c drv_mw.c drv_gl_common.c drv_sdl_common.c \
 	drv_glx.c drv_sdlfb.c drv_sdlgl.c drv_wgl.c
 

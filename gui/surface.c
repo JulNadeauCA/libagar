@@ -388,15 +388,6 @@ AG_SurfaceFromJPEG(const char *path)
 	return (NULL);
 }
 
-/* Load the contents of a surface from an image in BMP format. */
-AG_Surface *
-AG_SurfaceFromBMP(const char *path)
-{
-	/* XXX TODO */
-	AG_SetError("No BMP support");
-	return (NULL);
-}
-
 /* Return a newly-allocated duplicate of a surface. */
 AG_Surface *
 AG_SurfaceDup(const AG_Surface *ss)
