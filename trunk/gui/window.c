@@ -290,7 +290,7 @@ Init(void *obj)
 
 	win->flags = 0;
 	win->visible = 0;
-	win->alignment = AG_WINDOW_CENTER;
+	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->spacing = 3;
 	win->lPad = 2;
 	win->rPad = 2;
@@ -518,6 +518,13 @@ Shown(AG_Event *event)
 
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+	
+	if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
+		AG_WindowSetGeometryAligned(win,
+		    win->alignment,
+		    WIDTH(win),
+		    HEIGHT(win));
+	}
 }
 
 static void
@@ -963,6 +970,8 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
 	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
 
 	switch (align) {
+	case AG_WINDOW_ALIGNMENT_NONE:
+		return (0);
 	case AG_WINDOW_TL:
 		x = 0;
 		y = 0;
