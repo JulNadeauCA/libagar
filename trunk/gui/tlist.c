@@ -326,11 +326,13 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 	int w;
 
 	AG_ObjectLock(tl);
+	UpdatePolled(tl);
 	tl->wHint = 0;
 	AG_TLIST_FOREACH(it, tl) {
 		AG_TextSize(it->text, &w, NULL);
 		if (w > tl->wHint) { tl->wHint = w; }
 	}
+	tl->wHint += tl->icon_w*4;
 	tl->hHint = (tl->item_h+2)*nitems;
 	AG_ObjectUnlock(tl);
 }
