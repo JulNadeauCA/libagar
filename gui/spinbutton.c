@@ -189,10 +189,13 @@ Init(void *obj)
 	AG_SetEvent(sbu, "key-down", KeyDown, NULL);
 
 	sbu->incbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(sbu->incbu, 1, 1, 1, 1);
-	sbu->decbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(sbu->decbu, 1, 1, 1, 1);
+	AG_ButtonSetPadding(sbu->incbu, 0,0,0,0);
+	AG_LabelSetPadding(sbu->incbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(sbu->incbu, 0);
+
+	sbu->decbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
+	AG_ButtonSetPadding(sbu->decbu, 0,0,0,0);
+	AG_LabelSetPadding(sbu->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(sbu->decbu, 0);
 	
 	AG_SetEvent(sbu->input, "textbox-return", Return, "%p", sbu);

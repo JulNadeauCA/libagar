@@ -290,11 +290,13 @@ Init(void *obj)
 	fsu->units = NULL;
 
 	fsu->incbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->incbu, 1,1,1,1);
+	AG_ButtonSetPadding(fsu->incbu, 0,0,0,0);
+	AG_LabelSetPadding(fsu->incbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
 	
 	fsu->decbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->decbu, 1,1,1,1);
+	AG_ButtonSetPadding(fsu->decbu, 0,0,0,0);
+	AG_LabelSetPadding(fsu->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
 
 	AG_SetEvent(fsu, "bound", Bound, NULL);

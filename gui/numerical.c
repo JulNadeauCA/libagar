@@ -587,10 +587,12 @@ Init(void *obj)
 	num->units = NULL;
 	
 	num->incbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(num->incbu, 1,1,1,1);
+	AG_ButtonSetPadding(num->incbu, 0,0,0,0);
+	AG_LabelSetPadding(num->incbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(num->incbu, 0);
 	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
+	AG_ButtonSetPadding(num->decbu, 0,0,0,0);
+	AG_LabelSetPadding(num->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
@@ -640,6 +642,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_WidgetSizeReq(num->incbu, &rInc);
 	AG_WidgetSizeReq(num->decbu, &rDec);
 	r->w += MAX(rInc.w, rDec.w) + 4;
+	r->h += 4;
 }
 
 static int
