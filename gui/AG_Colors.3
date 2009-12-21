@@ -135,8 +135,14 @@ enum {
 	LAST_COLOR			/* Last index */
 };
 .Ed
+.Sh EXAMPLES
+The following code fragment sets the window background color to black:
+.Bd -literal -offset indent
+AG_ColorSetRGB(WINDOW_BG_COLOR, 0,0,0);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Color 3 ,
 .Xr AG_View 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

@@ -187,6 +187,55 @@ Pointer to the
 .Xr AG_Label 3
 displaying the caption text.
 .El
+.Sh EXAMPLES
+The following code fragment ties an
+.Nm
+to a boolean variable represented by an
+.Ft int :
+.Pp
+.Bd -literal -offset indent
+int someOption = 0;
+
+AG_Window *win = AG_WindowNew(0);
+AG_CheckboxNewInt(win, 0, "Some option", &someOption);
+AG_WindowShow(win);
+.Ed
+.Pp
+The following code fragment uses an
+.Nm
+to trigger a callback function:
+.Bd -literal -offset indent
+static void
+MyCallback(AG_Event *event)
+{
+	AG_TextInfo(NULL, "Callback invoked");
+}
+
+AG_Window *win = AG_WindowNew(0);
+AG_CheckboxNewFn(win, 0, "Execute callback", MyCallback, NULL);
+AG_WindowShow(win);
+.Ed
+.Pp
+The following code fragment creates an array of checkboxes, each tied to
+a specific bit in a word:
+.Bd -literal -offset indent
+#define FLAG_FOO	0x01
+#define FLAG_BAR	0x02
+#define FLAG_BAZ	0x04
+
+int myWord = 0;
+
+AG_FlagDescr myFlagDescr[] = {
+	{ FLAG_FOO,	"foo flag",		1 },
+	{ FLAG_BAR,	"bar flag",		1 },
+	{ FLAG_BAZ,	"baz flag (readonly)",	0 },
+	{ 0,		NULL,			0 }
+};
+
+AG_Window *win = AG_WindowNew(0);
+AG_CheckboxSetFromFlags(win, 0, &myWord, myFlagDescr);
+AG_WindowShow(win);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Button 3 ,
