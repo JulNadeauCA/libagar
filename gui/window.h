@@ -87,6 +87,7 @@ typedef struct ag_window {
 	struct ag_icon *icon;			/* Window icon */
 	AG_Rect r;				/* View area */
 	int nFocused;				/* Widgets in focus chain */
+	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion events */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);

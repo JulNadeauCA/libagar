@@ -311,6 +311,7 @@ Init(void *obj)
 	win->icon = NULL;
 	win->nFocused = 0;
 	win->parent = NULL;
+	win->widExclMotion = NULL;
 	TAILQ_INIT(&win->subwins);
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);

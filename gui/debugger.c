@@ -212,7 +212,6 @@ WidgetSelected(AG_Event *event)
 		    { AG_WIDGET_HIDE,			"HIDE",1 },
 		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },
-		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
 		    { AG_WIDGET_NOSPACING,		"NOSPACING",1 },
 		    { 0,				NULL,0 }
