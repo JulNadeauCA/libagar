@@ -8025,11 +8025,9 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-if [ "${includes}" != "link" ]; then
-	if [ -e "$BLD/include/agar" ]; then
-		echo "cp -fR config $BLD/include/agar/config"
-		cp -fR config "$BLD/include/agar/config"
-	fi
+if [ -e "$BLD/include/agar" ]; then
+	echo "cp -fR config $BLD/include/agar/config"
+	cp -fR config "$BLD/include/agar/config"
 fi
 echo "*"
 echo "* Configuration successful."
