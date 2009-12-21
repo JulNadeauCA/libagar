@@ -215,6 +215,8 @@ static void
 Init(void *obj)
 {
 	AG_MSpinbutton *sbu = obj;
+	AG_Button *b[4];
+	int i;
 
 	AG_BindInt(sbu, "xvalue", &sbu->xvalue);
 	AG_BindInt(sbu, "yvalue", &sbu->yvalue);
@@ -234,27 +236,19 @@ Init(void *obj)
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "88888");
 
-	sbu->xdecbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->xdecbu = b[0] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->xincbu = b[1] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
+	sbu->ydecbu = b[2] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
+	sbu->yincbu = b[3] = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_SetEvent(sbu->xdecbu, "button-pushed", DecrementX, "%p", sbu);
-	sbu->xincbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_SetEvent(sbu->xincbu, "button-pushed", IncrementX, "%p", sbu);
-	sbu->ydecbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_SetEvent(sbu->ydecbu, "button-pushed", DecrementY, "%p", sbu);
-	sbu->yincbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_SetEvent(sbu->yincbu, "button-pushed", IncrementY, "%p", sbu);
-	
-	AG_ButtonSetPadding(sbu->xdecbu, 1,1,1,1);
-	AG_ButtonSetPadding(sbu->xincbu, 1,1,1,1);
-	AG_ButtonSetPadding(sbu->ydecbu, 1,1,1,1);
-	AG_ButtonSetPadding(sbu->yincbu, 1,1,1,1);
-	AG_ButtonSetRepeatMode(sbu->xincbu, 1);
-	AG_ButtonSetRepeatMode(sbu->xdecbu, 1);
-	AG_ButtonSetRepeatMode(sbu->yincbu, 1);
-	AG_ButtonSetRepeatMode(sbu->ydecbu, 1);
-	AG_WidgetSetFocusable(sbu->xincbu, 0);
-	AG_WidgetSetFocusable(sbu->xdecbu, 0);
-	AG_WidgetSetFocusable(sbu->yincbu, 0);
-	AG_WidgetSetFocusable(sbu->ydecbu, 0);
+	for (i = 0; i < 4; i++) {
+		AG_ButtonSetPadding(b[i], 0,0,0,0);
+		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
+		AG_WidgetSetFocusable(b[i], 0);
+	}
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
 	AG_SetEvent(sbu, "key-down", KeyDown, NULL);

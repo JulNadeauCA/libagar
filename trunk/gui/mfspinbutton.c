@@ -240,6 +240,8 @@ static void
 Init(void *obj)
 {
 	AG_MFSpinbutton *fsu = obj;
+	AG_Button *b[4];
+	int i;
 
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
@@ -261,22 +263,19 @@ Init(void *obj)
 	fsu->unit = AG_FindUnit("identity");
 	fsu->units = NULL;
 
-	fsu->xincbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->xdecbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	fsu->yincbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
-	fsu->ydecbu = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->xincbu, 1,1,1,1);
-	AG_ButtonSetPadding(fsu->xdecbu, 1,1,1,1);
-	AG_ButtonSetPadding(fsu->yincbu, 1,1,1,1);
-	AG_ButtonSetPadding(fsu->ydecbu, 1,1,1,1);
+	fsu->xincbu = b[0] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
+	fsu->xdecbu = b[1] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
+	fsu->yincbu = b[2] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("+"));
+	fsu->ydecbu = b[3] = AG_ButtonNewS(fsu, AG_BUTTON_REPEAT, _("-"));
 	AG_SetEvent(fsu->xincbu, "button-pushed", IncrementX, "%p", fsu);
 	AG_SetEvent(fsu->xdecbu, "button-pushed", DecrementX, "%p", fsu);
 	AG_SetEvent(fsu->yincbu, "button-pushed", IncrementY, "%p", fsu);
 	AG_SetEvent(fsu->ydecbu, "button-pushed", DecrementY, "%p", fsu);
-	AG_WidgetSetFocusable(fsu->xincbu, 0);
-	AG_WidgetSetFocusable(fsu->xdecbu, 0);
-	AG_WidgetSetFocusable(fsu->yincbu, 0);
-	AG_WidgetSetFocusable(fsu->ydecbu, 0);
+	for (i = 0; i < 4; i++) {
+		AG_ButtonSetPadding(b[i], 0,0,0,0);
+		AG_LabelSetPadding(b[i]->lbl, 0,0,0,0);
+		AG_WidgetSetFocusable(b[i], 0);
+	}
 
 	AG_SetEvent(fsu, "bound", Bound, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);

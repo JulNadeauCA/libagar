@@ -198,7 +198,8 @@ Init(void *obj)
 	com->hPreList = -1;
 
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _("..."));
-	AG_ButtonSetPadding(com->button, 1,1,1,1);
+	AG_ButtonSetPadding(com->button, 0,0,0,0);
+	AG_LabelSetPadding(com->button->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(com->button, 0);
 	
 	com->list = Malloc(sizeof(AG_Tlist));
