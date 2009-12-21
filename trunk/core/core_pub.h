@@ -34,6 +34,7 @@
 #include <agar/core/time.h>
 #include <agar/core/db.h>
 #include <agar/core/dbobject.h>
+#include <agar/core/getopt.h>
 
 #include <agar/core/core_close.h>
 #endif
