@@ -29,6 +29,18 @@ ComboSelected(AG_Event *event)
 }
 
 static void
+Preferences(AG_Event *event)
+{
+	DEV_ConfigShow();
+}
+
+static void
+Quit(AG_Event *event)
+{
+	AG_QuitGUI();
+}
+
+static void
 CreateWindow(void)
 {
 	AG_Window *win;
@@ -73,7 +85,7 @@ CreateWindow(void)
 		 */
 		AG_LabelNew(div1, 0, "This is a static label");
 
-		lbl = AG_LabelNewPolled(div2, AG_LABEL_FRAME,
+		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME,
 		    "This is a polled label (x=%i)", &pane->dx);
 		AG_LabelSizeHint(lbl, 1,
 		    "This is a polled label (x=1234)");
@@ -206,6 +218,23 @@ CreateWindow(void)
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 		AG_Table *table;
+		AG_Menu *menu;
+		AG_MenuItem *m;
+
+		/* Create a test menu */
+		menu = AG_MenuNew(div2, 0);
+		AG_ExpandHoriz(menu);
+		m = AG_MenuNode(menu->root, "File", NULL);
+		AG_MenuAction(m, "Preferences...", agIconGear.s, Preferences, NULL);
+		AG_MenuSeparator(m);
+		AG_MenuAction(m, "Quit", agIconClose.s, Quit, NULL);
+		m = AG_MenuNode(menu->root, "Test", NULL);
+		AG_MenuNode(m, "Submenu A", NULL);
+		AG_MenuSeparator(m);
+		m = AG_MenuNode(m, "Submenu B", NULL);
+		AG_MenuNode(m, "Submenu C", NULL);
+		AG_MenuNode(m, "Submenu D", NULL);
+		AG_MenuNode(m, "Submenu E", NULL);
 
 		nb = AG_NotebookNew(div2, 0);
 		AG_Expand(nb);
@@ -286,18 +315,6 @@ CreateWindow(void)
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 70);
 	
 	AG_WindowShow(win);
-}
-
-static void
-Quit(AG_Event *event)
-{
-	AG_QuitGUI();
-}
-
-static void
-Preferences(AG_Event *event)
-{
-	DEV_ConfigShow();
 }
 
 #ifdef AG_DEBUG
