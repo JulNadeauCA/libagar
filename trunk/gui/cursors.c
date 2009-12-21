@@ -194,14 +194,6 @@ AG_FreeCursors(AG_Driver *drv)
 }
 
 #ifdef AG_LEGACY
-void
-AG_SetCursor(int builtin)
-{
-	AG_PushStockCursor(agDriverSw, builtin);
-}
-void
-AG_UnsetCursor(void)
-{
-	AG_PopCursor(agDriverSw);
-}
+void AG_SetCursor(int builtin) { }
+void AG_UnsetCursor(void) { }
 #endif /* AG_LEGACY */

@@ -52,7 +52,7 @@ static __inline__ int
 OverDivControl(AG_Pane *pa, int pos)
 {
 	return (pos >= pa->dx &&
-	        pos <= (pa->dx + MIN(pa->wDiv,4)));
+	        pos < (pa->dx+MAX(pa->wDiv,4)));
 }
 
 static void
@@ -121,7 +121,6 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
-	AG_Driver *drv = WIDGET(pa)->drv;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int dx = AG_INT(3);
@@ -137,15 +136,6 @@ MouseMotion(AG_Event *event)
 			pa->rx += dx;
 			if (pa->rx < 2) { pa->rx = 2; }
 			AG_PaneMoveDivider(pa, pa->rx);
-			if (OverDivControl(pa, x)) {
-				AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
-			}
-			break;
-		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
-		    OverDivControl(pa, x)) {
-			AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
-		} else {
-			AG_PopCursor(drv);
 		}
 		break;
 	case AG_PANE_VERT:
@@ -157,15 +147,6 @@ MouseMotion(AG_Event *event)
 			pa->rx += dy;
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
-			if (OverDivControl(pa, y)) {
-				AG_PushStockCursor(drv, AG_VRESIZE_CURSOR);
-			}
-			break;
-		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
-		    OverDivControl(pa, y)) {
-			AG_PushStockCursor(drv, AG_VRESIZE_CURSOR);
-		} else {
-			AG_PopCursor(drv);
 		}
 		break;
 	}
@@ -203,6 +184,7 @@ Init(void *obj)
 	pa->rxPct = -1;
 	pa->dmoving = 0;
 	pa->wDiv = 8;
+	pa->ca = NULL;
 
 	for (i = 0; i < 2; i++) {
 		pa->wMin[i] = 0;
@@ -403,6 +385,23 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.y = 0;
 		a2.w = a->w - pa->dx - pa->wDiv;
 		a2.h = a->h;
+
+		if (WIDGET(pa)->window != NULL) {
+			AG_Rect r;
+
+			r.x = WIDGET(pa)->rView.x1 + pa->dx;
+			r.y = WIDGET(pa)->rView.y1;
+			r.w = pa->wDiv;
+			r.h = a->h;
+			if (pa->ca == NULL) {
+				pa->ca = AG_WindowMapStockCursor(
+				    WIDGET(pa)->window,
+				    r,
+				    AG_HRESIZE_CURSOR);
+			} else {
+				pa->ca->r = r;
+			}
+		}
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
@@ -442,6 +441,23 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.y = pa->dx + pa->wDiv;
 		a2.w = a->w;
 		a2.h = a->h - pa->dx - pa->wDiv;
+		
+		if (WIDGET(pa)->window != NULL) {
+			AG_Rect r;
+			
+			r.x = WIDGET(pa)->rView.x1;
+			r.y = WIDGET(pa)->rView.y1 + pa->dx;
+			r.w = a->w;
+			r.h = pa->wDiv;
+			if (pa->ca == NULL) {
+				pa->ca = AG_WindowMapStockCursor(
+				    WIDGET(pa)->window,
+				    r,
+				    AG_VRESIZE_CURSOR);
+			} else {
+				pa->ca->r = r;
+			}
+		}
 		break;
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);

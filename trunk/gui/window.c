@@ -313,6 +313,7 @@ Init(void *obj)
 	win->parent = NULL;
 	win->widExclMotion = NULL;
 	TAILQ_INIT(&win->subwins);
+	TAILQ_INIT(&win->cursorAreas);
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
@@ -336,7 +337,6 @@ Init(void *obj)
 	AG_BindUint(win, "flags", &win->flags);
 	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
 	AG_BindInt(win, "visible", &win->visible);
-	AG_BindPointer(win, "tbar", (void *)&win->tbar);
 	AG_BindUint(win, "alignment", &win->alignment);
 	AG_BindInt(win, "spacing", &win->spacing);
 	AG_BindInt(win, "tPad", &win->tPad);
@@ -539,7 +539,7 @@ Hidden(AG_Event *event)
 	/* Cancel any planned focus change to this window. */
 	if (win == agWindowToFocus)
 		agWindowToFocus = NULL;
-
+	
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		dsw = (AG_DriverSw *)drv;
@@ -1506,6 +1506,7 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 void
 AG_FreeDetachedWindows(void)
 {
+	AG_CursorArea *ca, *caNext;
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
 
@@ -1521,16 +1522,91 @@ AG_FreeDetachedWindows(void)
 		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
 		drv = WIDGET(win)->drv;
 
+		/* Release the cursor areas and associated cursors. */
+		for (ca = TAILQ_FIRST(&win->cursorAreas);
+		     ca != TAILQ_END(&win->cursorAreas);
+		     ca = caNext) {
+			caNext = TAILQ_NEXT(ca, cursorAreas);
+			if (!ca->stock) {
+				AG_CursorFree(drv, ca->c);
+			}
+			free(ca);
+		}
+		TAILQ_INIT(&win->cursorAreas);
+
+		/* Close the associated window in MW mode. */
 		if (AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			AGDRIVER_MW_CLASS(drv)->closeWindow(win);
 		}
+
+		/* Actually free the window object. */
 		AG_ObjectDetach(win);
 		AG_ObjectDestroy(win);
+
+		/* Free the driver instance as well in MW mode. */
 		if (AGDRIVER_MULTIPLE(drv))
 			AG_DriverClose(drv);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
+}
+
+/*
+ * Configure a new cursor-change area with a specified cursor. The provided
+ * cursor will be freed automatically on window detach.
+ */
+AG_CursorArea *
+AG_WindowMapCursor(AG_Window *win, AG_Rect r, AG_Cursor *c)
+{
+	AG_CursorArea *ca;
+
+	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
+		return (NULL);
+	}
+	ca->stock = 0;
+	ca->r = r;
+	ca->c = c;
+	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+	return (ca);
+}
+
+/* Configure a new cursor-change area with a stock Agar cursor. */
+AG_CursorArea *
+AG_WindowMapStockCursor(AG_Window *win, AG_Rect r, int name)
+{
+	AG_CursorArea *ca;
+
+	if (name < 0 || name >= AG_LAST_CURSOR) {
+		AG_SetError("No such cursor");
+		return (NULL);
+	}
+	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
+		return (NULL);
+	}
+	ca->stock = name;
+	ca->r = r;
+	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+	return (ca);
+}
+
+/*
+ * Remove a cursor-change area and release the associated cursor (unless it
+ * is a stock Agar cursor).
+ */
+void
+AG_WindowUnmapCursor(AG_Window *win, AG_CursorArea *ca)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+
+	if (ca->c == drv->activeCursor) {
+		if (!ca->stock) {
+			/* XXX TODO it would be safer to defer this operation */
+			AGDRIVER_CLASS(drv)->unsetCursor(drv);
+			AG_CursorFree(drv, ca->c);
+		}
+		TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+		free(ca);
+	}
 }
 
 #ifdef AG_LEGACY

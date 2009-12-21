@@ -65,8 +65,7 @@ typedef struct ag_driver_wgl {
 	Uint                nClipRects;
 	Uint                *textureGC;	   // Textures queued for deletion
 	Uint                nTextureGC;
-	AG_GL_BlendState    bs[1];		   // Saved blending states
-	AG_Cursor           *cursorToSet;  // Set cursor at end of event cycle 
+	AG_GL_BlendState    bs[1];	   // Saved blending states
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
@@ -91,7 +90,6 @@ struct ag_key_mapping {			/* Keymap translation table entry */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static int       InitClipRects(AG_DriverWGL *wgl, int w, int h);
 static void      InitClipRect0(AG_DriverWGL *wgl, AG_Window *win);
-static void      ChangeCursor(AG_DriverWGL *wgl);
 static int       InitDefaultCursor(AG_DriverWGL *wgl);
 static void      WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a);
 
@@ -155,7 +153,6 @@ WGL_Init(void *obj)
 	wgl->nClipRects = 0;
 	wgl->textureGC = NULL;
 	wgl->nTextureGC = 0;
-	wgl->cursorToSet = NULL;
 
 	memset(wgl->clipStates, 0, sizeof(wgl->clipStates));
 }
@@ -435,11 +432,6 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					drv->mouse->yRel,
 					drv->mouse->btnState
 				);
-
-				if (wgl->cursorToSet != NULL) {
-					ChangeCursor(wgl);
-				}
-
 				AG_Verbose("WGL_ProcessEvents: MouseMove (%d, %d)\n", x, y);
 			} else {
 				Verbose("WGL_ProcessEvents: WM_MOUSEMOVE on unknown window!\n");
@@ -982,19 +974,6 @@ InitDefaultCursor(AG_DriverWGL *wgl)
 static void
 ChangeCursor(AG_DriverWGL *wgl)
 {
-	AG_Cursor *ac = wgl->cursorToSet;
-	struct ag_cursor_wgl *cg = ac->p;
-
-	if (wgl->cursorToSet != AGDRIVER(wgl)->activeCursor) {
-		if (wgl->cursorToSet == &AGDRIVER(wgl)->cursors[0]) {
-			SetCursor(LoadCursor(NULL, IDC_ARROW));
-		} else {
-			SetCursor(cg->cursor);
-		}
-		AGDRIVER(wgl)->activeCursor = ac;
-		cg->visible = 1;
-	}
-	wgl->cursorToSet = NULL;
 }
 
 static int
@@ -1061,21 +1040,37 @@ WGL_FreeCursor(void *obj, AG_Cursor *ac)
 }
 
 static int
-WGL_PushCursor(void *obj, AG_Cursor *ac)
+WGL_SetCursor(void *obj, AG_Cursor *ac)
 {
+	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = obj;
+	AG_CursorWGL *cg = ac->p;
 
-	wgl->cursorToSet = ac;
-
+	if (drv->activeCursor == ac) {
+		return (0);
+	}
+	if (ac == &drv->cursors[0]) {
+		SetCursor(LoadCursor(NULL, IDC_ARROW));
+	} else {
+		SetCursor(cg->cursor);
+	}
+	drv->activeCursor = ac;
+	cg->visible = 1;
 	return (0);
 }
 
 static void
-WGL_PopCursor(void *obj)
+WGL_UnsetCursor(void *obj)
 {
+	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = obj;
 	
-	wgl->cursorToSet = &AGDRIVER(wgl)->cursors[0];
+	if (drv->activeCursor == &drv->cursors[0]) {
+		return;
+	}
+	SetCursor(LoadCursor(NULL, IDC_ARROW));
+	drv->activeCursor = &drv->cursors[0];
+	cg->visible = 1;
 }
 
 static int
@@ -1187,8 +1182,8 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_PopBlendingMode,
 		WGL_CreateCursor,
 		WGL_FreeCursor,
-		WGL_PushCursor,
-		WGL_PopCursor,
+		WGL_SetCursor,
+		WGL_UnsetCursor,
 		WGL_GetCursorVisibility,
 		WGL_SetCursorVisibility,
 		AG_GL_BlitSurface,

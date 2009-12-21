@@ -29,6 +29,14 @@ AG_PixelFormat *AG_SDL_GetPixelFormat(SDL_Surface *);
 void            AG_SDL_BlitSurface(const AG_Surface *, const AG_Rect *,
                                    SDL_Surface *, int, int);
 AG_Surface     *AG_SDL_ImportSurface(SDL_Surface *);
+
+int             AG_SDL_InitDefaultCursor(void *);
+int             AG_SDL_SetCursor(void *, AG_Cursor *);
+void            AG_SDL_UnsetCursor(void *);
+int             AG_SDL_CreateCursor(void *, AG_Cursor *);
+void            AG_SDL_FreeCursor(void *, AG_Cursor *);
+int             AG_SDL_GetCursorVisibility(void *);
+void            AG_SDL_SetCursorVisibility(void *, int);
 __END_DECLS
 
 #endif /* HAVE_SDL */

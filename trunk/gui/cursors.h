@@ -72,24 +72,6 @@ AG_GetActiveCursor(void *drv)
 	return (AGDRIVER(drv)->activeCursor);
 }
 
-/* Set the active cursor. */
-static __inline__ int
-AG_PushCursor(void *drv, struct ag_cursor *curs)
-{
-	return AGDRIVER_CLASS(drv)->pushCursor(drv, curs);
-}
-static __inline__ int
-AG_PushStockCursor(void *drv, int name)
-{
-	return AGDRIVER_CLASS(drv)->pushCursor(drv,
-	    AG_GetStockCursor(drv,name));
-}
-static __inline__ void
-AG_PopCursor(void *drv)
-{
-	AGDRIVER_CLASS(drv)->popCursor(drv);
-}
-
 /* Show/hide the active cursor. */
 static __inline__ int
 AG_CursorIsVisible(void *drv)

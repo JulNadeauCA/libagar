@@ -11,6 +11,8 @@
 
 struct ag_titlebar;
 struct ag_icon;
+struct ag_widget;
+struct ag_cursor;
 
 #define AG_WINDOW_UPPER_LEFT	AG_WINDOW_TL
 #define AG_WINDOW_UPPER_CENTER	AG_WINDOW_TC
@@ -22,14 +24,22 @@ struct ag_icon;
 #define AG_WINDOW_LOWER_CENTER	AG_WINDOW_BC
 #define AG_WINDOW_LOWER_RIGHT	AG_WINDOW_BR
 
+/* For AG_WindowSetCloseAction() */
 enum ag_window_close_action {
 	AG_WINDOW_HIDE,
 	AG_WINDOW_DETACH,
 	AG_WINDOW_NONE
 };
 
-struct ag_widget;
+/* Cursor-change area */
+typedef struct ag_cursor_area {
+	AG_Rect r;					/* Area in window */
+	struct ag_cursor *c;				/* Associated cursor */
+	int stock;					/* Stock Agar cursor? */
+	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
+} AG_CursorArea;
 
+/* Window instance */
 typedef struct ag_window {
 	struct ag_widget wid;
 
@@ -84,10 +94,11 @@ typedef struct ag_window {
 	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
 	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
 
-	struct ag_icon *icon;			/* Window icon */
+	struct ag_icon *icon;			/* Window icon (for internal WM) */
 	AG_Rect r;				/* View area */
 	int nFocused;				/* Widgets in focus chain */
-	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion events */
+	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
+	AG_TAILQ_HEAD(,ag_cursor_area) cursorAreas; /* Cursor-change areas */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);
@@ -163,6 +174,10 @@ void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 void	 AG_FreeDetachedWindows(void);
+
+AG_CursorArea *AG_WindowMapCursor(AG_Window *, AG_Rect, struct ag_cursor *);
+AG_CursorArea *AG_WindowMapStockCursor(AG_Window *, AG_Rect, int);
+void           AG_WindowUnmapCursor(AG_Window *, AG_CursorArea *);
 
 #define AGWINDOW(win)        ((AG_Window *)(win))
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)

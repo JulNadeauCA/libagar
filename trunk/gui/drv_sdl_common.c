@@ -327,6 +327,98 @@ AG_SurfaceExportSDL(const AG_Surface *ss)
 	return (void *)(ds);
 }
 
+/* Initialize the default cursor. */
+int
+AG_SDL_InitDefaultCursor(void *obj)
+{
+	AG_Driver *drv = AGDRIVER(obj);
+	AG_Cursor *ac;
+	SDL_Cursor *sc;
+	
+	if ((sc = SDL_GetCursor()) == NULL) {
+		AG_SetError("SDL_GetCursor() returned NULL");
+		return (-1);
+	}
+	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		return (-1);
+	}
+	ac = &drv->cursors[0];
+	drv->nCursors = 1;
+	AG_CursorInit(ac);
+	ac->w = (Uint)sc->area.w;
+	ac->h = (Uint)sc->area.h;
+	ac->xHot = (int)sc->hot_x;
+	ac->yHot = (int)sc->hot_y;
+	ac->p = sc;
+	return (0);
+}
+
+/* Change the cursor. */
+int
+AG_SDL_SetCursor(void *obj, AG_Cursor *ac)
+{
+	AG_Driver *drv = obj;
+
+	SDL_SetCursor((SDL_Cursor *)ac->p);
+	drv->activeCursor = ac;
+	return (0);
+}
+
+/* Revert to the default cursor. */
+void
+AG_SDL_UnsetCursor(void *obj)
+{
+	AG_Driver *drv = obj;
+	AG_Cursor *ac0 = &drv->cursors[0];
+
+	SDL_SetCursor((SDL_Cursor *)ac0->p);
+	drv->activeCursor = ac0;
+}
+
+/* Create a cursor. */
+int
+AG_SDL_CreateCursor(void *obj, AG_Cursor *ac)
+{
+	SDL_Cursor *sc;
+
+	sc = SDL_CreateCursor(ac->data, ac->mask,
+	    ac->w, ac->h,
+	    ac->xHot, ac->yHot);
+	if (sc == NULL) {
+		AG_SetError("SDL_CreateCursor failed");
+		return (-1);
+	}
+	ac->p = (void *)sc;
+	return (0);
+}
+
+/* Release a cursor. */
+void
+AG_SDL_FreeCursor(void *obj, AG_Cursor *ac)
+{
+	AG_Driver *drv = obj;
+
+	if (ac == &drv->cursors[0])
+		return;
+
+	SDL_FreeCursor((SDL_Cursor *)(ac->p));
+	ac->p = NULL;
+}
+
+/* Retrieve cursor visibility status. */
+int
+AG_SDL_GetCursorVisibility(void *obj)
+{
+	return (SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE);
+}
+
+/* Set cursor visibility. */
+void
+AG_SDL_SetCursorVisibility(void *obj, int flag)
+{
+	SDL_ShowCursor(flag ? SDL_ENABLE : SDL_DISABLE);
+}
+
 #else /* HAVE_SDL */
 
 AG_Surface *
