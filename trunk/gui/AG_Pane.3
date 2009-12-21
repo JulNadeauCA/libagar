@@ -179,6 +179,27 @@ Divider is currently being moved by the user (read-only).
 .It Ft int dx
 Actual divider position (read-only)
 .El
+.Sh EXAMPLES
+The following code fragment displays two expanded, multi-line
+.Xr AG_Textbox 3
+widgets, separated horizontally by a
+.Nm .
+.Bd -literal -offset indent
+AG_Window *win;
+AG_Pane *pane;
+AG_Textbox *textbox[2];
+
+win = AG_WindowNew(0);
+pane = AG_PaneNewVert(win, AG_PANE_EXPAND);
+textbox[0] = AG_TextboxNew(pane->div[0],
+    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
+    NULL);
+textbox[1] = AG_TextboxNew(pane->div[1],
+    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
+    NULL);
+AG_PaneMoveDividerPct(pane, 50);
+AG_WindowShow(win);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Box 3 ,

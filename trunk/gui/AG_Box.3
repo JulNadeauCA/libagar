@@ -146,6 +146,26 @@ sets the depth of the frame.
 The
 .Nm
 widget neither reacts to nor generates any event.
+.Sh EXAMPLES
+The following code fragment creates two rows of buttons, packed horizontally.
+.Pp
+.Bd -literal -offset indent
+AG_Window *win;
+AG_Box *boxVert, *boxRow[2];
+int i;
+
+win = AG_WindowNew(0);
+boxVert = AG_BoxNewVert(win, AG_BOX_EXPAND);
+boxRow[0] = AG_BoxNewHoriz(boxVert, AG_BOX_EXPAND);
+boxRow[1] = AG_BoxNewHoriz(boxVert, AG_BOX_EXPAND);
+
+for (i = 0; i < 5; i++)
+	AG_ButtonNew(boxRow[0], 0, "foo");
+for (i = 0; i < 5; i++)
+	AG_ButtonNew(boxRow[1], 0, "bar");
+
+AG_WindowShow(win);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
