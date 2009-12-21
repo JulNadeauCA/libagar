@@ -164,6 +164,14 @@ The
 .Fn AG_ButtonSetPadding
 function sets the padding around the label in pixels.
 If a parameter is -1, its current value is preserved.
+Note that when using a text label, this setting is independent from that of
+the label (use
+.Xr AG_LabelSetPadding 3
+on the
+.Va lbl
+member of the
+.Nm
+to configure the text label padding).
 .Pp
 The
 .Fn AG_ButtonSetFocusable
