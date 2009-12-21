@@ -396,10 +396,11 @@ AG_DrawRectOutline(void *obj, AG_Rect r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
-	int x2 = r.x+r.w-1;
-	int y2 = r.y+r.h-1;
+	int x2, y2;
 
 	AG_WidgetOffsetRect(wid, &r);
+	x2 = r.x + r.w - 1;
+	y2 = r.y + r.h - 1;
 	wid->drvOps->drawLineH(drv, r.x, x2, r.y, c);
 	wid->drvOps->drawLineH(drv, r.x, x2, y2, c);
 	wid->drvOps->drawLineV(drv, r.x, r.y, y2, c);
@@ -412,12 +413,16 @@ AG_DrawPlus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
-	int x = wid->rView.x1 + r.x + r.w/2;
-	int y = wid->rView.y1 + r.y + r.h/2;
 
 	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawLineBlended(drv, x, r.y, x, r.y+r.h, C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, r.x, y, r.x+r.w, y, C, fnSrc, AG_ALPHA_ZERO);
+	wid->drvOps->drawLineBlended(drv,
+	    r.x + r.w/2,	r.y,
+	    r.x + r.w/2,	r.y + r.h,
+	    C, fnSrc, AG_ALPHA_ZERO);
+	wid->drvOps->drawLineBlended(drv,
+	    r.x,		r.y + r.h/2,
+	    r.x+r.w,		r.y + r.h/2,
+	    C, fnSrc, AG_ALPHA_ZERO);
 }
 
 /* Render a [-] sign. */
@@ -425,10 +430,11 @@ static __inline__ void
 AG_DrawMinus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	int x = wid->rView.x1 + r.x;
-	int y = wid->rView.y1 + r.y+r.h/2;
+	int x, y;
 
 	AG_WidgetOffsetRect(wid, &r);
+	x = r.x + r.w/2;
+	y = r.y + r.h/2;
 	wid->drvOps->drawLineBlended(wid->drv, x,y, r.x+r.w, y,
 	    C, fnSrc, AG_ALPHA_ZERO);
 }
