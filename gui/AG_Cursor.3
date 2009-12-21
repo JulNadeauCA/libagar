@@ -48,6 +48,17 @@ instance (usually retrieved from the
 member of a
 .Xr AG_Widget 3
 structure).
+.Pp
+To prevent conflicts between widgets trying to set different cursors, Agar
+associates window regions with specific cursors.
+Consequently, Agar widget implementations should always use
+.Fn AG_WindowMapCursor ,
+.Fn AG_WindowMapStockCursor
+and
+.Fn AG_WindowUnmapCursor
+to configure these window regions (see
+.Xr AG_Window 3
+for details).
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_Cursor *"
@@ -64,15 +75,6 @@ structure).
 .Pp
 .Ft "AG_Cursor *"
 .Fn AG_GetActiveCursor "AG_Driver *drv"
-.Pp
-.Ft int
-.Fn AG_PushCursor "AG_Driver *drv" "AG_Cursor *cursor"
-.Pp
-.Ft int
-.Fn AG_PushStockCursor "AG_Driver *drv" "int name"
-.Pp
-.Ft void
-.Fn AG_PopCursor "AG_Driver *drv"
 .Pp
 .Ft void
 .Fn AG_ShowCursor "AG_Driver *drv"
@@ -129,17 +131,6 @@ enum {
 .Pp
 .Fn AG_GetActiveCursor
 returns a pointer to the currently active cursor.
-.Pp
-.Fn AG_PushCursor
-saves the current cursor on a stack and sets
-.Fa cursor
-as the active cursor.
-The
-.Fn AG_PushStockCursor
-variant accepts a built-in cursor argument (
-.Fn AG_GetStockCursor ) .
-.Fn AG_PopCursor
-restores the previously saved cursor.
 .Pp
 .Fn AG_ShowCursor
 and

@@ -71,7 +71,6 @@ typedef struct ag_driver_glx {
 	Uint            *textureGC;	/* Textures queued for deletion */
 	Uint            nTextureGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
-	AG_Cursor       *cursorToSet;	/* Set cursor at end of event cycle */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -87,12 +86,12 @@ struct ag_key_mapping {			/* Keymap translation table entry */
 };
 #include "drv_glx_keymaps.h"
 
-struct ag_cursor_glx {
+typedef struct ag_cursor_glx {
 	XColor black;
 	XColor white;
 	Cursor xc;
 	int visible;
-};
+} AG_CursorGLX;
 
 AG_DriverMwClass agDriverGLX;
 #if 0
@@ -118,7 +117,6 @@ Init(void *obj)
 	memset(glx->clipStates, 0, sizeof(glx->clipStates));
 	glx->textureGC = NULL;
 	glx->nTextureGC = 0;
-	glx->cursorToSet = NULL;
 }
 
 static void
@@ -391,24 +389,6 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	AG_SetModState(kbd, ms);
 }
 
-static void
-ChangeCursor(AG_DriverGLX *glx)
-{
-	AG_Cursor *ac = glx->cursorToSet;
-	struct ag_cursor_glx *cg = ac->p;
-
-	if (glx->cursorToSet != AGDRIVER(glx)->activeCursor) {
-		if (glx->cursorToSet == &AGDRIVER(glx)->cursors[0]) {
-			XUndefineCursor(agDisplay, glx->w);
-		} else {
-			XDefineCursor(agDisplay, glx->w, cg->xc);
-		}
-		AGDRIVER(glx)->activeCursor = ac;
-		cg->visible = 1;
-	}
-	glx->cursorToSet = NULL;
-}
-
 static int
 ProcessEvents(void *drvCaller)
 {
@@ -437,9 +417,6 @@ ProcessEvents(void *drvCaller)
 				    drv->mouse->xRel,
 				    drv->mouse->yRel,
 				    drv->mouse->btnState);
-				
-				if (glx->cursorToSet != NULL)
-					ChangeCursor(glx);
 			} else {
 				Verbose("MotionNotify on unknown window\n");
 			}
@@ -856,7 +833,7 @@ PopBlendingMode(void *obj)
 static int
 CreateCursor(void *obj, AG_Cursor *ac)
 {
-	struct ag_cursor_glx *cg;
+	AG_CursorGLX *cg;
 	int i, size;
 	char *xData, *xMask;
 	XGCValues gcVals;
@@ -864,7 +841,7 @@ CreateCursor(void *obj, AG_Cursor *ac)
 	XImage *dataImg, *maskImg;
 	Pixmap dataPixmap, maskPixmap;
 
-	if ((cg = AG_TryMalloc(sizeof(struct ag_cursor_glx))) == NULL) {
+	if ((cg = AG_TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (-1);
 	}
 	memset(&cg->black, 0, sizeof(cg->black));
@@ -938,7 +915,7 @@ CreateCursor(void *obj, AG_Cursor *ac)
 static void
 FreeCursor(void *obj, AG_Cursor *ac)
 {
-	struct ag_cursor_glx *cg = ac->p;
+	AG_CursorGLX *cg = ac->p;
 	
 	XFreeCursor(agDisplay, cg->xc);
 	XSync(agDisplay, False);
@@ -947,20 +924,36 @@ FreeCursor(void *obj, AG_Cursor *ac)
 }
 
 static int
-PushCursor(void *obj, AG_Cursor *ac)
+SetCursor(void *obj, AG_Cursor *ac)
 {
+	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
+	AG_CursorGLX *cg = ac->p;
 
-	glx->cursorToSet = ac;
+	if (drv->activeCursor == ac) {
+		return (0);
+	}
+	if (ac == &drv->cursors[0]) {
+		XUndefineCursor(agDisplay, glx->w);
+	} else {
+		XDefineCursor(agDisplay, glx->w, cg->xc);
+	}
+	drv->activeCursor = ac;
+	cg->visible = 1;
 	return (0);
 }
 
 static void
-PopCursor(void *obj)
+UnsetCursor(void *obj)
 {
+	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
 	
-	glx->cursorToSet = &AGDRIVER(glx)->cursors[0];
+	if (drv->activeCursor == &drv->cursors[0]) {
+		return;
+	}
+	XUndefineCursor(agDisplay, glx->w);
+	drv->activeCursor = &drv->cursors[0];
 }
 
 static int
@@ -1044,9 +1037,9 @@ InitDefaultCursor(AG_DriverGLX *glx)
 {
 	AG_Driver *drv = AGDRIVER(glx);
 	AG_Cursor *ac;
-	struct ag_cursor_glx *cg;
+	AG_CursorGLX *cg;
 	
-	if ((cg = AG_TryMalloc(sizeof(struct ag_cursor_glx))) == NULL)
+	if ((cg = AG_TryMalloc(sizeof(AG_CursorGLX))) == NULL)
 		return (-1);
 	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
 		free(cg);
@@ -1253,11 +1246,11 @@ CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	AG_Glyph *gl;
-	int i;
+/*	AG_Glyph *gl; */
+/*	int i; */
 
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-
+#if 0
 	/* Invalidate cached glyph textures. */
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
 		SLIST_FOREACH(gl, &drv->glyphCache[i].glyphs, glyphs) {
@@ -1267,7 +1260,7 @@ CloseWindow(AG_Window *win)
 			}
 		}
 	}
-
+#endif
 	glXDestroyContext(agDisplay, glx->glxCtx);
 	XDestroyWindow(agDisplay, glx->w);
 	if (drv->videoFmt) {
@@ -1593,8 +1586,8 @@ AG_DriverMwClass agDriverGLX = {
 		PopBlendingMode,
 		CreateCursor,
 		FreeCursor,
-		PushCursor,
-		PopCursor,
+		SetCursor,
+		UnsetCursor,
 		GetCursorVisibility,
 		SetCursorVisibility,
 		AG_GL_BlitSurface,

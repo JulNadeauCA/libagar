@@ -55,7 +55,6 @@ typedef struct ag_sdlgl_driver {
 	Uint            *textureGC;	/* Textures queued for deletion */
 	Uint            nTextureGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
-	AG_Cursor       *cursorToSet;	/* Set cursor at end of event cycle */
 } AG_DriverSDLGL;
 
 static int nDrivers = 0;		/* Opened driver instances */
@@ -75,7 +74,6 @@ Init(void *obj)
 	memset(sgl->clipStates, 0, sizeof(sgl->clipStates));
 	sgl->textureGC = NULL;
 	sgl->nTextureGC = 0;
-	sgl->cursorToSet = NULL;
 }
 
 static void
@@ -197,27 +195,6 @@ MouseOverCtrl(AG_Window *win, int x, int y)
 	return (AG_WINOP_NONE);
 }
 
-/* Change the cursor if overlapping a resize control. */
-static void
-SetResizeCursor(AG_Window *win, int x, int y)
-{
-	AG_Driver *drv = WIDGET(win)->drv;
-
-	switch (MouseOverCtrl(win, x,y)) {
-	case AG_WINOP_LRESIZE:
-		AG_PushStockCursor(drv, AG_LLDIAG_CURSOR);
-		break;
-	case AG_WINOP_RRESIZE:
-		AG_PushStockCursor(drv, AG_LRDIAG_CURSOR);
-		break;
-	case AG_WINOP_HRESIZE:
-		AG_PushStockCursor(drv, AG_VRESIZE_CURSOR);
-		break;
-	default:
-		break;
-	}
-}
-
 /*
  * If there is a modal window, request its shutdown if a click is
  * detected outside of its area.
@@ -240,8 +217,6 @@ InputEvent(AG_DriverSDLGL *sgl, SDL_Event *ev)
 	AG_DriverSw *dsw = AGDRIVER_SW(sgl);
 	AG_Window *win;
 
-	sgl->cursorToSet = NULL;
-	
 	if (dsw->Lmodal->n > 0) {
 		win = dsw->Lmodal->v[dsw->Lmodal->n-1].data.p;
 		switch (ev->type) {
@@ -301,24 +276,6 @@ scan:
 			    ev->motion.x, ev->motion.y,
 			    ev->motion.xrel, ev->motion.yrel,
 			    ev->motion.state);
-
-			/*
-			 * Change cursor if overlapping a resize control (as
-			 * long as no widget has requested a cursor change).
-			 */
-			if (sgl->cursorToSet == NULL &&
-			    (win->wBorderBot > 0) &&
-			    !(win->flags & AG_WINDOW_NORESIZE) &&
-			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
-				SetResizeCursor(win, ev->motion.x, ev->motion.y);
-			}
-			if (sgl->cursorToSet == NULL) {
-				/*
-				 * Prevent widgets in other windows from
-				 * changing the cursor.
-				 */
-				sgl->cursorToSet = &drv->cursors[0];
-			}
 			break;
 		case SDL_MOUSEBUTTONUP:
 			/* Terminate active window operations. */
@@ -387,12 +344,6 @@ scan:
 			break;
 		}
 		AG_ObjectUnlock(win);
-	}
-	if (sgl->cursorToSet != NULL &&
-	    sgl->cursorToSet != drv->activeCursor) {
-		SDL_SetCursor((SDL_Cursor *)sgl->cursorToSet->p);
-		drv->activeCursor = sgl->cursorToSet;
-		sgl->cursorToSet = NULL;
 	}
 	return (0);
 }
@@ -723,66 +674,6 @@ PopBlendingMode(void *drv)
 }
 
 /*
- * Cursor operations
- */
-
-static int
-SDLGL_CreateCursor(void *obj, AG_Cursor *ac)
-{
-	SDL_Cursor *sc;
-
-	sc = SDL_CreateCursor(ac->data, ac->mask,
-	    ac->w, ac->h,
-	    ac->xHot, ac->yHot);
-	if (sc == NULL) {
-		AG_SetError("SDL_CreateCursor failed");
-		return (-1);
-	}
-	ac->p = (void *)sc;
-	return (0);
-}
-
-static void
-FreeCursor(void *obj, AG_Cursor *ac)
-{
-	AG_Driver *drv = obj;
-
-	if (ac == &drv->cursors[0])
-		return;
-
-	SDL_FreeCursor((SDL_Cursor *)(ac->p));
-	ac->p = NULL;
-}
-
-static int
-PushCursor(void *obj, AG_Cursor *ac)
-{
-	AG_DriverSDLGL *sgl = obj;
-
-	/* XXX TODO stack */
-	sgl->cursorToSet = ac;
-	return (0);
-}
-
-static void
-PopCursor(void *obj)
-{
-	/* Nothing to do */
-}
-
-static int
-GetCursorVisibility(void *obj)
-{
-	return (SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE);
-}
-
-static void
-SetCursorVisibility(void *obj, int flag)
-{
-	SDL_ShowCursor(flag ? SDL_ENABLE : SDL_DISABLE);
-}
-
-/*
  * Rendering operations (rendering context)
  */
 
@@ -813,32 +704,6 @@ InitClipRects(AG_DriverSDLGL *sgl, int wView, int hView)
 	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = (double)hView;
 	
 	sgl->nClipRects = 1;
-	return (0);
-}
-
-/* Initialize the default cursor. */
-static int
-InitDefaultCursor(AG_DriverSDLGL *sgl)
-{
-	AG_Driver *drv = AGDRIVER(sgl);
-	AG_Cursor *ac;
-	SDL_Cursor *sc;
-	
-	if ((sc = SDL_GetCursor()) == NULL) {
-		AG_SetError("SDL_GetCursor() returned NULL");
-		return (-1);
-	}
-	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		return (-1);
-	}
-	ac = &drv->cursors[0];
-	drv->nCursors = 1;
-	AG_CursorInit(ac);
-	ac->w = (Uint)sc->area.w;
-	ac->h = (Uint)sc->area.h;
-	ac->xHot = (int)sc->hot_x;
-	ac->yHot = (int)sc->hot_y;
-	ac->p = sc;
 	return (0);
 }
 
@@ -906,7 +771,7 @@ OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		goto fail;
 	
 	/* Create the cursors. */
-	if (InitDefaultCursor(sgl) == -1 ||
+	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
 
@@ -962,7 +827,7 @@ OpenVideoContext(void *obj, void *ctx, Uint flags)
 		goto fail;
 	
 	/* Create the cursors. */
-	if (InitDefaultCursor(sgl) == -1 ||
+	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
 	
@@ -1086,12 +951,12 @@ AG_DriverSwClass agDriverSDLGL = {
 		PopClipRect,
 		PushBlendingMode,
 		PopBlendingMode,
-		SDLGL_CreateCursor, // Name conflicts with wingdi.h!
-		FreeCursor,
-		PushCursor,
-		PopCursor,
-		GetCursorVisibility,
-		SetCursorVisibility,
+		AG_SDL_CreateCursor,
+		AG_SDL_FreeCursor,
+		AG_SDL_SetCursor,
+		AG_SDL_UnsetCursor,
+		AG_SDL_GetCursorVisibility,
+		AG_SDL_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
 		AG_GL_BlitSurfaceGL,

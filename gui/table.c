@@ -1455,7 +1455,6 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
-	AG_Driver *drv = WIDGET(t)->drv;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int xrel = AG_INT(3);
@@ -1472,14 +1471,6 @@ MouseMotion(AG_Event *event)
 		SizeColumns(t);
 		if (t->r.h > 0 && t->r.w > 0) {
 			UpdateScrollbars(t);
-		}
-		AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
-	} else {
-		if (OverColumnHeader(t, y) &&
-		    OverColumnResizeControl(t, x)) {
-			AG_PushStockCursor(drv, AG_HRESIZE_CURSOR);
-		} else {
-			AG_PopCursor(drv);
 		}
 	}
 }

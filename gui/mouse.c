@@ -30,7 +30,9 @@
 
 #include <core/core.h>
 #include <core/config.h>
+
 #include "window.h"
+#include "cursors.h"
 
 AG_Mouse *
 AG_MouseNew(void *drv, const char *desc)
@@ -214,7 +216,24 @@ void
 AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
     Uint state)
 {
+	AG_Driver *drv = WIDGET(win)->drv;
 	AG_Widget *wid;
+	AG_CursorArea *ca;
+	
+	/* Change the cursor if mouse is in a cursor-change area. */
+	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+		if (ca->stock != 0) {
+			ca->c = &drv->cursors[ca->stock];
+		}
+		if (AG_RectInside(&ca->r, x,y)) {
+			AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
+			break;
+		}
+	}
+	if (ca == NULL &&
+	    drv->activeCursor != &drv->cursors[0]) {
+		AGDRIVER_CLASS(drv)->unsetCursor(drv);
+	}
 
 	/* Allow a widget (e.g., AG_Pane) to absorb all mousemotion events */
 	if ((wid = win->widExclMotion) != NULL) {

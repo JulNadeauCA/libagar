@@ -65,8 +65,8 @@ typedef struct ag_driver_class {
 	/* Hardware cursor operations */
 	int  (*createCursor)(void *drv, struct ag_cursor *curs);
 	void (*freeCursor)(void *drv, struct ag_cursor *curs);
-	int  (*pushCursor)(void *drv, struct ag_cursor *curs);
-	void (*popCursor)(void *drv);
+	int  (*setCursor)(void *drv, struct ag_cursor *curs);
+	void (*unsetCursor)(void *drv);
 	int  (*getCursorVisibility)(void *drv);
 	void (*setCursorVisibility)(void *drv, int flag);
 	/* Widget surface operations (rendering context) */

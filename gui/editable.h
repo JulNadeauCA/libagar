@@ -9,6 +9,8 @@
 
 #define AG_EDITABLE_STRING_MAX 1024
 
+struct ag_cursor_area;
+
 enum ag_editable_encoding {
 	AG_ENCODING_UTF8,
 	AG_ENCODING_ASCII
@@ -65,6 +67,7 @@ typedef struct ag_editable {
 	Uint32 *ucsBuf;			/* UCS4 buffer (for STATIC) */
 	Uint    ucsLen;			/* Buffer length (for STATIC) */
 	AG_Rect r;			/* View area */
+	struct ag_cursor_area *ca;	/* For "text" cursor change */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))

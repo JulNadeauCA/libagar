@@ -1014,16 +1014,9 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	AG_Driver *drv = WIDGET(tv)->drv;
 	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
 
-	if (ks[AG_KEY_F]) {
-		AG_PushStockCursor(drv, AG_FILL_CURSOR);
-	} else if (ks[AG_KEY_E]) {
-		AG_PushStockCursor(drv, AG_ERASE_CURSOR);
-	} else if (ks[AG_KEY_C]) {
-		AG_PushStockCursor(drv, AG_PICK_CURSOR);
-	} else {
-		AG_PopCursor(drv);
-	}
-	
+#if 0
+	TODO: Set AG_FILL_CURSOR, AG_ERASE_CURSOR, AG_PICK_CURSOR
+#endif
 	switch (tv->tv_pixmap.state) {
 	case RG_TVPIXMAP_FREEHAND:
 		pixmap_apply(tv, tel, x, y);

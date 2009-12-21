@@ -754,11 +754,31 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Editable *ed = obj;
 
-	if (a->w < 2 || a->h < 2)
+	if (a->w < 2 || a->h < 2) {
+		if (WIDGET(ed)->window != NULL &&
+		    ed->ca != NULL) {
+			AG_WindowUnmapCursor(WIDGET(ed)->window, ed->ca);
+			ed->ca = NULL;
+		}
 		return (-1);
-
+	}
 	ed->yVis = a->h/agTextFontLineSkip;
 	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
+
+	if (WIDGET(ed)->window != NULL) {
+		AG_Rect r;
+
+		r.x = WIDGET(ed)->rView.x1;
+		r.y = WIDGET(ed)->rView.y1;
+		r.w = WIDTH(ed);
+		r.h = HEIGHT(ed);
+		if (ed->ca == NULL) {
+			ed->ca = AG_WindowMapStockCursor(WIDGET(ed)->window, r,
+			    AG_TEXT_CURSOR);
+		} else {
+			ed->ca->r = r;
+		}
+	}
 	return (0);
 }
 
@@ -881,15 +901,9 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
-	AG_Driver *drv = WIDGET(ed)->drv;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
 
-	if (mx > 0 && my > 0 && mx < WIDTH(ed) && my < HEIGHT(ed)) {
-		AG_PushStockCursor(drv, AG_TEXT_CURSOR);
-	} else {
-		AG_PopCursor(drv);
-	}
 	if (!AG_WidgetIsFocused(ed))
 		return;
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
@@ -1111,6 +1125,7 @@ Init(void *obj)
 	ed->ucsBuf = NULL;
 	ed->ucsLen = 0;
 	ed->r = AG_RECT(0,0,0,0);
+	ed->ca = NULL;
 
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);

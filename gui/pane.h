@@ -1,12 +1,14 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_PANE_H_
-#define _AGAR_WIDGET_PANE_H_
+#ifndef _AGAR_GUI_PANE_H_
+#define _AGAR_GUI_PANE_H_
 
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 
 #include <agar/gui/begin.h>
+
+struct ag_cursor_area;
 
 enum ag_pane_type {
 	AG_PANE_HORIZ,
@@ -36,6 +38,7 @@ typedef struct ag_pane {
 	int	rx;			/* Requested divider position */
 	int     rxPct;			/* Requested position in % */
 	int	wDiv;			/* Divider width */
+	struct ag_cursor_area *ca;	/* Cursor-change area in divider */
 } AG_Pane;
 
 __BEGIN_DECLS
@@ -54,4 +57,4 @@ int	 AG_PaneMoveDividerPct(AG_Pane *, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_PANE_H_ */
+#endif /* _AGAR_GUI_PANE_H_ */
