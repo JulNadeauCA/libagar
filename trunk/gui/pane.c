@@ -65,8 +65,10 @@ MouseButtonDown(AG_Event *event)
 	    !(pa->flags & AG_PANE_UNMOVABLE)) {
 		pa->dmoving = OverDivControl(pa,
 		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));
-		if (pa->dmoving)
-			WIDGET(pa)->flags |= AG_WIDGET_PRIO_MOTION;
+		if (pa->dmoving && WIDGET(pa)->window != NULL) {
+			/* Set up for receiving motion events exclusively. */
+			WIDGET(pa)->window->widExclMotion = WIDGET(pa);
+		}
 	}
 }
 
@@ -175,7 +177,10 @@ MouseButtonUp(AG_Event *event)
 	AG_Pane *pa = AG_SELF();
 
 	if (pa->dmoving) {
-		WIDGET(pa)->flags &= ~(AG_WIDGET_PRIO_MOTION);
+		if (WIDGET(pa)->window != NULL) {
+			/* No longer receiving motion events exclusively. */
+			WIDGET(pa)->window->widExclMotion = NULL;
+		}
 		pa->dmoving = 0;
 	}
 }

@@ -113,8 +113,8 @@ PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
 		    yRel,
 		    (int)state);
 #endif
-		if (wid->flags & AG_WIDGET_PRIO_MOTION)
-			goto out;
+		if (wid == win->widExclMotion)
+			goto out;			/* Skip other widgets */
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		PostMouseMotion(win, chld, x, y, xRel, yRel, state);
@@ -215,25 +215,18 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
     Uint state)
 {
 	AG_Widget *wid;
-	int posted = 0;
 
-	/* Widgets with PRIO_MOTION stop further processing. XXX hack */
-	WIDGET_FOREACH_CHILD(wid, win) {
+	/* Allow a widget (e.g., AG_Pane) to absorb all mousemotion events */
+	if ((wid = win->widExclMotion) != NULL) {
 		AG_ObjectLock(wid);
-		if (wid->flags & AG_WIDGET_PRIO_MOTION) {
-			PostMouseMotion(win, wid, x, y, xRel, yRel, state);
-			AG_ObjectUnlock(wid);
-			posted = 1;		/* Abort further processing */
-			break;
-		}
+		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
 		AG_ObjectUnlock(wid);
+		return;
 	}
 
-	if (posted == 0) {
-		/* Recursively post mouse-motion to all widgets. */
-		WIDGET_FOREACH_CHILD(wid, win)
-			PostMouseMotion(win, wid, x, y, xRel, yRel, state);
-	}
+	/* Recursively post mouse-motion to all widgets. */
+	WIDGET_FOREACH_CHILD(wid, win)
+		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
 }
 
 /*

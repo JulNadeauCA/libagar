@@ -109,7 +109,6 @@ typedef struct ag_widget {
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
 #define AG_WIDGET_CATCH_TAB		0x001000 /* Catch tab key events */
-#define AG_WIDGET_PRIO_MOTION		0x002000 /* Block mousemotion events to any other widget, regardless of focus */
 #define AG_WIDGET_UNDERSIZE		0x004000 /* Size allocation failed */
 #define AG_WIDGET_NOSPACING		0x008000 /* Disable spacings around widget; container-specific */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* All mousebuttondown events */
