@@ -486,7 +486,7 @@ ChildQueryLoop(NS_Server *ns)
 		if (buf[len-1] == '\n') {
 			buf[len-1] = '\0';
 		} else {
-			if ((lbuf = malloc(len+1)) == NULL) {
+			if ((lbuf = TryMalloc(len+1)) == NULL) {
 				NS_Logout(ns, 1, "malloc line");
 			}
 			memcpy(lbuf, buf, len);

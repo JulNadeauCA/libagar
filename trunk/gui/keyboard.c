@@ -36,17 +36,23 @@ AG_Keyboard *
 AG_KeyboardNew(void *drv, const char *desc)
 {
 	AG_Keyboard *kbd;
-
-	kbd = AG_Malloc(sizeof(AG_Keyboard));
-	AG_ObjectInit(kbd, &agKeyboardClass);
 	
 	AG_ASSERT_CLASS(drv, "AG_Driver:*");
-	AGINPUTDEV(kbd)->drv = drv;
-	AGINPUTDEV(kbd)->desc = Strdup(desc);
-	AGDRIVER(drv)->kbd = kbd;
 
+	if ((kbd = TryMalloc(sizeof(AG_Keyboard))) == NULL) {
+		return (NULL);
+	}
+	AG_ObjectInit(kbd, &agKeyboardClass);
+	AGINPUTDEV(kbd)->drv = drv;
+	if ((AGINPUTDEV(kbd)->desc = TryStrdup(desc)) == NULL) {
+		goto fail;
+	}
+	AGDRIVER(drv)->kbd = kbd;
 	AG_ObjectAttach(&agInputDevices, kbd);
 	return (kbd);
+fail:
+	AG_ObjectDestroy(kbd);
+	return (NULL);
 }
 
 static void

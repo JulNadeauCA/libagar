@@ -190,7 +190,8 @@ AG_SHA1End(AG_SHA1_CTX *ctx, char *buf)
 	Uint8 digest[AG_SHA1_DIGEST_LENGTH];
 	static const char hex[] = "0123456789abcdef";
 
-	if (buf == NULL && (buf = malloc(AG_SHA1_DIGEST_STRING_LENGTH)) == NULL)
+	if (buf == NULL &&
+	    (buf = TryMalloc(AG_SHA1_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
 	AG_SHA1Final(digest, ctx);

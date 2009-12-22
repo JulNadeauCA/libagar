@@ -490,9 +490,9 @@ AG_LabelDestroyFormats(void)
 	int i;
 
 	for (i = 0; i < nFmts; i++) {
-		free(fmts[i].fmt);
+		Free(fmts[i].fmt);
 	}
-	free(fmts);
+	Free(fmts);
 	fmts = NULL;
 	nFmts = 0;
 	
@@ -533,7 +533,7 @@ AG_UnregisterLabelFormat(const char *fmt)
 			break;
 	}
 	if (i < nFmts) {
-		free(fmts[i].fmt);
+		Free(fmts[i].fmt);
 		if (i < nFmts-1) {
 			memmove(&fmts[i], &fmts[i+1],
 			    (nFmts-1)*sizeof(AG_LabelFormatSpec));

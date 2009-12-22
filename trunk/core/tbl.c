@@ -35,7 +35,7 @@ AG_TblNew(Uint nBuckets, Uint flags)
 {
 	AG_Tbl *t;
 
-	if ((t = AG_TryMalloc(sizeof(AG_Tbl))) == NULL) {
+	if ((t = TryMalloc(sizeof(AG_Tbl))) == NULL) {
 		return (NULL);
 	}
 	if (AG_TblInit(t, nBuckets, flags) == -1) {
@@ -53,7 +53,7 @@ AG_TblInit(AG_Tbl *tbl, Uint nBuckets, Uint flags)
 
 	tbl->nBuckets = nBuckets;
 	tbl->flags = flags;
-	if ((tbl->buckets = AG_TryMalloc(nBuckets*sizeof(AG_TblBucket))) == NULL) {
+	if ((tbl->buckets = TryMalloc(nBuckets*sizeof(AG_TblBucket))) == NULL) {
 		return (-1);
 	}
 	for (i = 0; i < nBuckets; i++) {
@@ -75,11 +75,11 @@ AG_TblDestroy(AG_Tbl *t)
 		AG_TblBucket *buck = &t->buckets[i];
 
 		for (j = 0; j < buck->nEnts; j++) {
-			free(buck->keys[j]);
+			Free(buck->keys[j]);
 			AG_FreeVariable(&buck->ents[j]);
 		}
-		free(buck->keys);
-		free(buck->ents);
+		Free(buck->keys);
+		Free(buck->ents);
 		buck->keys = NULL;
 		buck->ents = NULL;
 	}
@@ -138,13 +138,13 @@ AG_TblInsertHash(AG_Tbl *tbl, Uint h, const char *key, const AG_Variable *V)
 		return (-1);
 	}
 
-	if ((entsNew = AG_TryRealloc(buck->ents,
+	if ((entsNew = TryRealloc(buck->ents,
 	    (buck->nEnts+1)*sizeof(AG_Variable))) == NULL) {
 		return (-1);
 	}
-	if ((keysNew = AG_TryRealloc(buck->keys,
+	if ((keysNew = TryRealloc(buck->keys,
 	    (buck->nEnts+1)*sizeof(char *))) == NULL) {
-		free(entsNew);
+		Free(entsNew);
 		return (-1);
 	}
 	buck->ents = entsNew;

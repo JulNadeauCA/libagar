@@ -404,9 +404,9 @@ Destroy(void *obj)
 			for (i = 0; i < plot->n; i++) {
 				M_VecFree(plot->data.v[i]);
 			}
-			free(plot->data.v);
+			Free(plot->data.v);
 		} else {
-			free(plot->data.r);
+			Free(plot->data.r);
 		}
 	}
 	

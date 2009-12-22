@@ -39,16 +39,22 @@ AG_MouseNew(void *drv, const char *desc)
 {
 	AG_Mouse *ms;
 	
-	ms = AG_Malloc(sizeof(AG_Mouse));
-	AG_ObjectInit(ms, &agMouseClass);
-
 	AG_ASSERT_CLASS(drv, "AG_Driver:*");
+	
+	if ((ms = TryMalloc(sizeof(AG_Mouse))) == NULL) {
+		return (NULL);
+	}
+	AG_ObjectInit(ms, &agMouseClass);
 	AGINPUTDEV(ms)->drv = drv;
-	AGINPUTDEV(ms)->desc = Strdup(desc);
+	if ((AGINPUTDEV(ms)->desc = TryStrdup(desc)) == NULL) {
+		goto fail;
+	}
 	AGDRIVER(drv)->mouse = ms;
-
 	AG_ObjectAttach(&agInputDevices, ms);
 	return (ms);
+fail:
+	AG_ObjectDestroy(ms);
+	return (NULL);
 }
 
 static void

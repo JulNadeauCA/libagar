@@ -102,12 +102,11 @@ M_RadixSortStable(const Uint8 **a, int n, const Uint8 *tab, Uint endch)
 	if (n < INS_THRESHOLD)
 		InsertionSort(a, n, 0, tr, endch);
 	else {
-		if ((ta = malloc(n * sizeof(a))) == NULL) {
-			AG_SetError("Out of memory");
+		if ((ta = TryMalloc(n * sizeof(a))) == NULL) {
 			return (-1);
 		}
 		RadixSortB(a, ta, n, 0, tr, endch);
-		free((Uint8 *)ta);
+		Free((Uint8 *)ta);
 	}
 	return (0);
 }

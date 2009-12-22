@@ -136,8 +136,7 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 		}
 	}
 	
-	if ((obj = malloc(cl->size)) == NULL) {
-		AG_SetError("Out of memory");
+	if ((obj = TryMalloc(cl->size)) == NULL) {
 		return (NULL);
 	}
 	AG_ObjectInit(obj, cl);
@@ -1132,12 +1131,11 @@ ReadDependencyTable(AG_DataSource *ds, AG_Object *ob)
 
 	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
-		if ((dep = malloc(sizeof(AG_ObjectDep))) == NULL) {
-			AG_SetError("Out of memory for dependency table");
+		if ((dep = TryMalloc(sizeof(AG_ObjectDep))) == NULL) {
 			goto fail;
 		}
 		if ((dep->path = AG_ReadString(ds)) == NULL) {
-			free(dep);
+			Free(dep);
 			goto fail;
 		}
 		dep->obj = NULL;

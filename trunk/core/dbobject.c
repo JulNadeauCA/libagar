@@ -37,7 +37,7 @@ AG_DbObjectNew(void)
 {
 	AG_DbObject *dbo;
 
-	if ((dbo = AG_TryMalloc(sizeof(AG_DbObject))) == NULL) {
+	if ((dbo = TryMalloc(sizeof(AG_DbObject))) == NULL) {
 		return (NULL);
 	}
 	AG_ObjectInit(dbo, &agDbObjectClass);

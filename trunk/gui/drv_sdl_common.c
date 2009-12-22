@@ -339,7 +339,7 @@ AG_SDL_InitDefaultCursor(void *obj)
 		AG_SetError("SDL_GetCursor() returned NULL");
 		return (-1);
 	}
-	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
+	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
 		return (-1);
 	}
 	ac = &drv->cursors[0];

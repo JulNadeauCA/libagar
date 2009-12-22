@@ -1607,7 +1607,7 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 			AG_CursorFree(drv, ca->c);
 		}
 		TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
-		free(ca);
+		Free(ca);
 	}
 }
 
@@ -1626,7 +1626,7 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 			if (!ca->stock) {
 				AG_CursorFree(drv, ca->c);
 			}
-			free(ca);
+			Free(ca);
 		}
 		TAILQ_INIT(&win->cursorAreas);
 	} else {
@@ -1638,7 +1638,7 @@ scan:
 			if (!ca->stock) {
 				AG_CursorFree(drv, ca->c);
 			}
-			free(ca);
+			Free(ca);
 			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
 			goto scan;
 		}

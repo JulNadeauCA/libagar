@@ -142,7 +142,7 @@ LoadDSO_OS390(const char *path)
 	d = Malloc(sizeof(AG_DSO_Generic));
 	if ((d->handle = dllload(path)) == NULL) {
 		AG_SetError("%s: dllload() failed", path);
-		free(d);
+		Free(d);
 		return (NULL);
 	}
 	return (AG_DSO *)d;
@@ -170,7 +170,7 @@ LoadDSO_WIN32(const char *path)
 		d->handle = LoadLibraryEx(path, NULL, 0);
 		if (d->handle == NULL) {
 			AG_SetError("%s: LoadLibraryEx() failed", path);
-			free(d);
+			Free(d);
 			return (NULL);
 		}
 	}
@@ -189,7 +189,7 @@ LoadDSO_SHL(const char *path)
 	d = Malloc(sizeof(AG_DSO_Generic));
 	if ((d->handle = shl_load(path, BIND_IMMEDIATE, 0L)) == NULL) {
 		AG_SetError("%s: shl_load() failed", path);
-		free(d);
+		Free(d);
 		return (NULL);
 	}
 	return (AG_DSO *)d;
@@ -249,7 +249,7 @@ fail:
 	if (rv == NSObjectFileImageSuccess) {
 		NSDestroyObjectFileImage(image);
 	}
-	free(d);
+	Free(d);
 	return (NULL);
 }
 #endif /* HAVE_DYLD */
@@ -270,7 +270,7 @@ LoadDSO_DLOPEN(const char *path)
 # endif
       	if ((d->handle = dlopen(path, flags)) == NULL) {
 		AG_SetError("%s: %s", path, dlerror());
-		free(d);
+		Free(d);
 		return (NULL);
 	}
 	return (AG_DSO *)d;
@@ -448,11 +448,11 @@ AG_UnloadDSO(AG_DSO *dso)
 	     cSym != TAILQ_END(&dso->syms);
 	     cSym = cSymNext) {
 		cSymNext = TAILQ_NEXT(cSym, syms);
-		free(cSym->sym);
-		free(cSym);
+		Free(cSym->sym);
+		Free(cSym);
 	}
 	TAILQ_REMOVE(&agLoadedDSOs, dso, dsos);
-	free(dso);
+	Free(dso);
 	rv = 0;
 out:
 	AG_MutexUnlock(&agDSOLock);
@@ -566,7 +566,7 @@ SymDSO_DYLD(AG_DSO_Generic *d, const char *sym, void **p)
 # else
 	symbol = NSLookupAndBindSymbol(symUnder);
 # endif
-	free(symUnder);
+	Free(symUnder);
 
 	if (symbol == NULL) {
 		AG_SetError("%s: Undefined symbol: %s", AGDSO(d)->name, sym);
@@ -595,7 +595,7 @@ SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
 		symUnder[0] = '_';
 		Strlcpy(&symUnder[1], sym, (symLen+2)-1);
 		*p = dlsym(d->handle, symUnder);
-		free(symUnder);
+		Free(symUnder);
 	}
 # else /* __ELF__ */
 	*p = dlsym(d->handle, sym);
@@ -714,7 +714,7 @@ AG_FreeDSOList(char **list, Uint count)
 	Uint i;
 
 	for (i = 0; i < count; i++) {
-		free(list[i]);
+		Free(list[i]);
 	}
-	free(list);
+	Free(list);
 }

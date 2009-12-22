@@ -61,17 +61,15 @@ M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
 		MCOLS(A) = 0;
 		return (0);
 	}
-	if ((A->v = malloc(m*sizeof(M_Real *))) == NULL) {
-		AG_SetError("Out of memory");
+	if ((A->v = AG_TryMalloc(m*sizeof(M_Real *))) == NULL) {
 		return (-1);
 	}
 	for (i = 0; i < m; i++) {
-		if ((A->v[i] = malloc(n*sizeof(M_Real))) == NULL) {
+		if ((A->v[i] = AG_TryMalloc(n*sizeof(M_Real))) == NULL) {
 #if 0
-			for (; i >= 0; i--) { free(A->v[i]); }
-			free(A->v);
+			for (; i >= 0; i--) { AG_Free(A->v[i]); }
+			AG_Free(A->v);
 #endif
-			AG_SetError("Out of memory");
 			return (-1);
 		}
 	}
@@ -88,9 +86,9 @@ M_MatrixFreeEnts_FPU(void *pA)
 	Uint i;
 
 	for (i = 0; i < MROWS(A); i++) {
-		free(A->v[i]);
+		AG_Free(A->v[i]);
 	}
-	if(A->v != NULL) free(A->v);
+	if(A->v != NULL) AG_Free(A->v);
 	A->v = NULL;
 	MROWS(A) = 0;
 	MCOLS(A) = 0;
@@ -111,7 +109,7 @@ M_MatrixFree_FPU(void *pA)
 {
 	M_MatrixFPU *A=pA;
 	M_MatrixFreeEnts_FPU(A);
-	free(A);
+	AG_Free(A);
 }
 
 /* Create a new m*n matrix. */

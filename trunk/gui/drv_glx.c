@@ -157,6 +157,7 @@ HandleErrorX11(Display *disp, XErrorEvent *xev)
 static int
 Open(void *obj, const char *spec)
 {
+	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
 	int err, ev;
 
@@ -175,8 +176,9 @@ Open(void *obj, const char *spec)
 	}
 
 	/* Register the core X mouse and keyboard */
-	AGDRIVER(glx)->mouse = AG_MouseNew(glx, "X mouse");
-	AGDRIVER(glx)->kbd = AG_KeyboardNew(glx, "X keyboard");
+	if ((drv->mouse = AG_MouseNew(glx, "X mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(glx, "X keyboard")) == NULL)
+		goto fail;
 
 #ifdef DEBUG_XSYNC
 	XSynchronize(agDisplay, True);
@@ -186,6 +188,16 @@ Open(void *obj, const char *spec)
 	nDrivers++;
 	return (0);
 fail:
+	if (drv->kbd != NULL) {
+		AG_ObjectDetach(drv->kbd);
+		AG_ObjectDestroy(drv->kbd);
+		drv->kbd = NULL;
+	}
+	if (drv->mouse != NULL) {
+		AG_ObjectDetach(drv->mouse);
+		AG_ObjectDestroy(drv->mouse);
+		drv->mouse = NULL;
+	}
 	agDisplay = NULL;
 	agScreen = 0;
 	return (-1);
@@ -841,7 +853,7 @@ CreateCursor(void *obj, AG_Cursor *ac)
 	XImage *dataImg, *maskImg;
 	Pixmap dataPixmap, maskPixmap;
 
-	if ((cg = AG_TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
+	if ((cg = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (-1);
 	}
 	memset(&cg->black, 0, sizeof(cg->black));
@@ -851,13 +863,13 @@ CreateCursor(void *obj, AG_Cursor *ac)
 	cg->white.blue = 0xffff;
 
 	size = (ac->w/8)*ac->h;
-	if ((xData = AG_TryMalloc(size)) == NULL) {
-		free(cg);
+	if ((xData = TryMalloc(size)) == NULL) {
+		Free(cg);
 		return (-1);
 	}
-	if ((xMask = AG_TryMalloc(size)) == NULL) {
-		free(xData);
-		free(cg);
+	if ((xMask = TryMalloc(size)) == NULL) {
+		Free(xData);
+		Free(cg);
 		return (-1);
 	}
 	for (i = 0; i < size; i++) {
@@ -919,7 +931,7 @@ FreeCursor(void *obj, AG_Cursor *ac)
 	
 	XFreeCursor(agDisplay, cg->xc);
 	XSync(agDisplay, False);
-	free(cg);
+	Free(cg);
 	ac->p = NULL;
 }
 
@@ -998,7 +1010,7 @@ InitClipRects(AG_DriverGLX *glx, int w, int h)
 		glx->clipStates[i] = 0;
 
 	/* Rectangle 0 always covers the whole view. */
-	if ((glx->clipRects = AG_TryMalloc(sizeof(AG_ClipRect))) == NULL) {
+	if ((glx->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
 		return (-1);
 	}
 	glx->nClipRects = 1;
@@ -1039,10 +1051,10 @@ InitDefaultCursor(AG_DriverGLX *glx)
 	AG_Cursor *ac;
 	AG_CursorGLX *cg;
 	
-	if ((cg = AG_TryMalloc(sizeof(AG_CursorGLX))) == NULL)
+	if ((cg = TryMalloc(sizeof(AG_CursorGLX))) == NULL)
 		return (-1);
-	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		free(cg);
+	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		Free(cg);
 		return (-1);
 	}
 

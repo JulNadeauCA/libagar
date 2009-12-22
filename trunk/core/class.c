@@ -474,7 +474,7 @@ AG_UnregisterModuleDirectory(const char *path)
 	if (i == agModuleDirCount) {
 		return;
 	}
-	free(agModuleDirs[i]);
+	Free(agModuleDirs[i]);
 	if (i < agModuleDirCount-1) {
 		memmove(&agModuleDirs[i], &agModuleDirs[i+1],
 		    (agModuleDirCount-1)*sizeof(char *));

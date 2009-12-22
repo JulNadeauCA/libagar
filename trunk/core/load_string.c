@@ -50,14 +50,14 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = AG_TryMalloc((size_t)len+1)) == NULL) {
+	if ((s = TryMalloc((size_t)len+1)) == NULL) {
 		goto fail;
 	}
 	if (len > 0) {
 	  	if (AG_Read(ds, s, len, 1) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
-			free(s);
+			Free(s);
 			goto fail;
 		}
 	}
@@ -98,7 +98,7 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((sp = AG_TryRealloc(*s, (size_t)len+1)) == NULL) {
+	if ((sp = TryRealloc(*s, (size_t)len+1)) == NULL) {
 		goto fail;
 	}
 	*s = sp;
@@ -141,14 +141,14 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = AG_TryMalloc((size_t)len)) == NULL) {
+	if ((s = TryMalloc((size_t)len)) == NULL) {
 		goto fail;
 	}
 	if (len > 0) {
 		if (AG_Read(ds, s, (size_t)len, 1) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
-			free(s);
+			Free(s);
 			goto fail;
 		}
 	}

@@ -1637,8 +1637,9 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	AG_ObjectLock(t);
 
 	/* Initialize the column information structure. */
-	if ((colsNew = realloc(t->cols, (t->n+1)*sizeof(AG_TableCol))) == NULL) {
-		goto outofmem;
+	if ((colsNew = TryRealloc(t->cols, (t->n+1)*sizeof(AG_TableCol)))
+	    == NULL) {
+		goto fail;
 	}
 	t->cols = colsNew;
 
@@ -1688,9 +1689,9 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	for (m = 0; m < t->m; m++) {
 		AG_TableCell *cellsNew;
 
-		if ((cellsNew = realloc(t->cells[m],
+		if ((cellsNew = TryRealloc(t->cells[m],
 		    (t->n+1)*sizeof(AG_TableCell))) == NULL) {
-			goto outofmem;
+			goto fail;
 		}
 		t->cells[m] = cellsNew;
 		AG_TableInitCell(t, &t->cells[m][t->n]);
@@ -1698,8 +1699,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	n = t->n++;
 	AG_ObjectUnlock(t);
 	return (n);
-outofmem:
-	AG_SetError("Out of memory for column");
+fail:
 	AG_ObjectUnlock(t);
 	return (-1);
 }
@@ -1728,13 +1728,13 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 
 	AG_ObjectLock(t);
 
-	if ((cellsNew = realloc(t->cells, (t->m+1)*sizeof(AG_TableCell)))
+	if ((cellsNew = TryRealloc(t->cells, (t->m+1)*sizeof(AG_TableCell)))
 	    == NULL) {
-		goto outofmem;
+		goto fail;
 	}
-	if ((cellsNew[t->m] = malloc(t->n*sizeof(AG_TableCell))) == NULL) {
-		free(cellsNew);
-		goto outofmem;
+	if ((cellsNew[t->m] = TryMalloc(t->n*sizeof(AG_TableCell))) == NULL) {
+		Free(cellsNew);
+		goto fail;
 	}
 	t->cells = cellsNew;
 
@@ -1915,8 +1915,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	rv = t->m++;
 	AG_ObjectUnlock(t);
 	return (rv);
-outofmem:
-	AG_SetError("Out of memory for new cell");
 fail:
 	AG_ObjectUnlock(t);
 	return (-1);

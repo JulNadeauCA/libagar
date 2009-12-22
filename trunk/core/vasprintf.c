@@ -58,8 +58,8 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 		return (size);
 	}
 
-	if ((buf = AG_TryRealloc(buf, size+1)) == NULL) {
-		free(buf);
+	if ((buf = TryRealloc(buf, size+1)) == NULL) {
+		Free(buf);
 		return (-1);
 	}
 	size = vsprintf(buf, fmt, ap);

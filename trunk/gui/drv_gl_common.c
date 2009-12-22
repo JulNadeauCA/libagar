@@ -467,7 +467,7 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	su = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 32,
 	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
 	if (su == NULL) {
-		free(pixels);
+		Free(pixels);
 		return (-1);
 	}
 	return (0);

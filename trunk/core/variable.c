@@ -160,10 +160,8 @@ AG_CopyVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 
 	if (Vsrc->type == AG_VARIABLE_STRING &&
 	    Vsrc->info.size == 0) {
-		if ((Vdst->data.s = strdup(Vsrc->data.s)) == NULL) {
-			AG_SetError("Out of memory for string copy");
+		if ((Vdst->data.s = TryStrdup(Vsrc->data.s)) == NULL)
 			return (-1);
-		}
 	}
 	return (0);
 }

@@ -160,15 +160,28 @@ WGL_Init(void *obj)
 static int
 WGL_Open(void *obj, const char *spec)
 {
+	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = obj;
 	
 	// Register Mouse and keyboard
-	AGDRIVER(wgl)->mouse = AG_MouseNew(wgl, "Windows mouse");
-	AGDRIVER(wgl)->kbd = AG_KeyboardNew(wgl, "Windows keyboard");
+	if ((drv->mouse = AG_MouseNew(wgl, "Windows mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(wgl, "Windows keyboard")) == NULL)
+		goto fail;
 
 	nDrivers++;
-	
-	return 0;
+	return (0);
+fail:
+	if (drv->kbd != NULL) {
+		AG_ObjectDetach(drv->kbd);
+		AG_ObjectDestroy(drv->kbd);
+		drv->kbd = NULL;
+	}
+	if (drv->mouse != NULL) {
+		AG_ObjectDetach(drv->mouse);
+		AG_ObjectDestroy(drv->mouse);
+		drv->mouse = NULL;
+	}
+	return (-1);
 }
 
 static void
@@ -745,7 +758,7 @@ InitClipRects(AG_DriverWGL *wgl, int w, int h)
 		wgl->clipStates[i] = 0;
 
 	/* Rectangle 0 always covers the whole view. */
-	if ((wgl->clipRects = AG_TryMalloc(sizeof(AG_ClipRect))) == NULL) {
+	if ((wgl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
 		return (-1);
 	}
 	wgl->nClipRects = 1;
@@ -955,10 +968,10 @@ InitDefaultCursor(AG_DriverWGL *wgl)
 	AG_Cursor *ac;
 	struct ag_cursor_wgl *cg;
 	
-	if ((cg = AG_TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL)
+	if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL)
 		return (-1);
-	if ((drv->cursors = AG_TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		free(cg);
+	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		Free(cg);
 		return (-1);
 	}
 
@@ -986,7 +999,7 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	AG_Verbose("WGL_CreateCursor");
 
 	// Initialize cursor struct
-	if ((cg = AG_TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
+	if ((cg = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
 		return -1;
 	}
 	cg->black = RGB(0, 0, 0);
@@ -996,13 +1009,13 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	size = (ac->w / 8) * ac->h;
 
 	// Allocate memory for xorMask (which represents the cursor data)
-	if ((xorMask = AG_TryMalloc(size)) == NULL) {
+	if ((xorMask = TryMalloc(size)) == NULL) {
 		Free(cg);
 		return -1;
 	}
 
 	// Allocate memory for andMask (which represents the transparence)
-	if ((andMask = AG_TryMalloc(size)) == NULL) {
+	if ((andMask = TryMalloc(size)) == NULL) {
 		Free(xorMask);
 		Free(cg);
 		return -1;

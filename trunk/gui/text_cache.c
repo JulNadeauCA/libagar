@@ -65,8 +65,8 @@ DeleteEntry(AG_TextCache *tc, Uint h, AG_CachedText *ct)
 #endif
 	SLIST_REMOVE(&tc->buckets[h].ents, ct, ag_cached_text, ents);
 	AG_WidgetUnmapSurface(tc->widget, ct->surface);
-	free(ct->text);
-	free(ct);
+	Free(ct->text);
+	Free(ct);
 	tc->curEnts--;
 }
 

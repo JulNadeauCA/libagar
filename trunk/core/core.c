@@ -72,7 +72,8 @@ AG_InitCore(const char *progname, Uint flags)
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
 
-	agProgName = Strdup(progname);
+	if ((agProgName = TryStrdup(progname)) == NULL)
+		return (-1);
 
 #ifdef ENABLE_NLS
 	bindtextdomain("agar", LOCALEDIR);
@@ -111,8 +112,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitTimeouts();
 	AG_DataSourceInitSubsystem();
 
-	if ((agConfig = malloc(sizeof(AG_Config))) == NULL) {
-		AG_SetError("Out of memory");
+	if ((agConfig = TryMalloc(sizeof(AG_Config))) == NULL) {
 		return (-1);
 	}
 	if (AG_ConfigInit(agConfig, flags) == -1) {

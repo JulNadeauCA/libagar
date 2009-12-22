@@ -146,10 +146,8 @@ M_HeapSort(void *vbase, size_t nmemb, size_t size,
 		return (-1);
 	}
 
-	if ((k = malloc(size)) == NULL) {
-		AG_SetError("Out of memory");
+	if ((k = TryMalloc(size)) == NULL)
 		return (-1);
-	}
 
 	/*
 	 * Items are numbered from 1 to nmemb, so offset from size bytes
@@ -171,6 +169,6 @@ M_HeapSort(void *vbase, size_t nmemb, size_t size,
 		--nmemb;
 		SELECT(i, j, nmemb, t, p, size, k, cnt, tmp1, tmp2);
 	}
-	free(k);
+	Free(k);
 	return (0);
 }

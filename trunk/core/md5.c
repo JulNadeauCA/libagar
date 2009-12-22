@@ -266,7 +266,8 @@ AG_MD5End(AG_MD5_CTX *ctx, char *buf)
 	Uint8 digest[AG_MD5_DIGEST_LENGTH];
 	static const char hex[] = "0123456789abcdef";
 
-	if (buf == NULL && (buf = malloc(AG_MD5_DIGEST_STRING_LENGTH)) == NULL)
+	if (buf == NULL &&
+	    (buf = TryMalloc(AG_MD5_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
 	AG_MD5Final(digest, ctx);

@@ -40,7 +40,7 @@ AG_DbNew(enum ag_db_type type)
 {
 	AG_Db *db;
 
-	if ((db = AG_TryMalloc(sizeof(AG_Db))) == NULL) {
+	if ((db = TryMalloc(sizeof(AG_Db))) == NULL) {
 		return (NULL);
 	}
 	AG_ObjectInit(db, &agDbClass);

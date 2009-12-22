@@ -235,7 +235,7 @@ AG_TextRender(const char *text)
 	
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 	su = AG_TextRenderUCS4(ucs);
-	free(ucs);
+	AG_Free(ucs);
 	return (su);
 }
 
