@@ -394,9 +394,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			r.w = pa->wDiv;
 			r.h = a->h;
 			if (pa->ca == NULL) {
-				pa->ca = AG_WindowMapStockCursor(
-				    WIDGET(pa)->window,
-				    r,
+				pa->ca = AG_MapStockCursor(pa, r,
 				    AG_HRESIZE_CURSOR);
 			} else {
 				pa->ca->r = r;
@@ -450,9 +448,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			r.w = a->w;
 			r.h = pa->wDiv;
 			if (pa->ca == NULL) {
-				pa->ca = AG_WindowMapStockCursor(
-				    WIDGET(pa)->window,
-				    r,
+				pa->ca = AG_MapStockCursor(pa, r,
 				    AG_VRESIZE_CURSOR);
 			} else {
 				pa->ca->r = r;

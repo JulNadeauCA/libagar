@@ -35,6 +35,7 @@ enum ag_window_close_action {
 typedef struct ag_cursor_area {
 	AG_Rect r;					/* Area in window */
 	struct ag_cursor *c;				/* Associated cursor */
+	struct ag_widget *wid;				/* Associated widget */
 	int stock;					/* Stock Agar cursor? */
 	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
 } AG_CursorArea;
@@ -175,9 +176,10 @@ void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 void	 AG_FreeDetachedWindows(void);
 
-AG_CursorArea *AG_WindowMapCursor(AG_Window *, AG_Rect, struct ag_cursor *);
-AG_CursorArea *AG_WindowMapStockCursor(AG_Window *, AG_Rect, int);
-void           AG_WindowUnmapCursor(AG_Window *, AG_CursorArea *);
+AG_CursorArea *AG_MapCursor(void *, AG_Rect, struct ag_cursor *);
+AG_CursorArea *AG_MapStockCursor(void *, AG_Rect, int);
+void           AG_UnmapCursor(void *, AG_CursorArea *);
+void           AG_UnmapAllCursors(AG_Window *, void *);
 
 #define AGWINDOW(win)        ((AG_Window *)(win))
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
