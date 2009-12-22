@@ -116,9 +116,9 @@ The
 constructor creates a global "application menu".
 The manner in which application menus are displayed is dependent on the
 underlying platform and graphics system.
-If an application menu is already defined,
+If there is insufficient memory, or an application menu is already defined,
 .Fn AG_MenuNewGlobal
-replaces it.
+may fail returning NULL.
 .Pp
 The
 .Fn AG_MenuExpand

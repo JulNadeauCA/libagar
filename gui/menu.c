@@ -38,6 +38,25 @@ AG_Menu *agAppMenu = NULL;
 AG_Window *agAppMenuWin = NULL;
 AG_Mutex agAppMenuLock;
 
+/* Initialize global application menu data; called from AG_InitGUI(). */
+void
+AG_InitAppMenu(void)
+{
+	AG_MutexInitRecursive(&agAppMenuLock);
+	agAppMenu = NULL;
+	agAppMenuWin = NULL;
+}
+
+/* Cleanup global application menu data; called from AG_DestroyGUI(). */
+void
+AG_DestroyAppMenu(void)
+{
+	agAppMenu = NULL;
+	agAppMenuWin = NULL;
+	AG_MutexDestroy(&agAppMenuLock);
+}
+
+/* Create a new Menu widget. */
 AG_Menu *
 AG_MenuNew(void *parent, Uint flags)
 {
@@ -55,37 +74,52 @@ AG_MenuNew(void *parent, Uint flags)
 	return (m);
 }
 
+/* Create a new global application menu. */
 AG_Menu *
 AG_MenuNewGlobal(Uint flags)
 {
 	AG_Menu *m;
-
-	m = Malloc(sizeof(AG_Menu));
-	AG_ObjectInit(m, &agMenuClass);
-	m->flags |= (flags|AG_MENU_GLOBAL);
+	AG_Window *win;
+	Uint wMax, hMax;
+	Uint wFlags = AG_WINDOW_KEEPBELOW|AG_WINDOW_DENYFOCUS;
 
 	AG_MutexLock(&agAppMenuLock);
-	if (agAppMenu != NULL) {
-		AG_ObjectDetach(agAppMenuWin);
-		AG_ObjectDestroy(agAppMenu);
-	}
-	agAppMenu = m;
+	if (agAppMenu != NULL)
+		goto exists;
 
-	AG_MenuSetPadding(m, 4, 4, -1, -1);
-	if (flags & AG_MENU_VFILL) {
-		AG_ExpandVert(m);
+	if (agDriverSw) {
+		wFlags |= AG_WINDOW_PLAIN|AG_WINDOW_HMAXIMIZE;
 	}
+	win = AG_WindowNewNamedS(wFlags, "_agAppMenu");
+	if (win == NULL) {
+		goto exists;
+	}
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_WindowSetCaptionS(win, agProgName);
+
+	m = AG_MenuNew(win, flags);
+	m->flags |= (flags|AG_MENU_GLOBAL);
+	AG_MenuSetPadding(m, 4, 4, -1, -1);
 	AG_ExpandHoriz(m);
-	agAppMenuWin = AG_WindowNewNamedS(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
-					  AG_WINDOW_DENYFOCUS|
-					  AG_WINDOW_HMAXIMIZE,
-					  "_agAppMenu");
-	AG_ObjectAttach(agAppMenuWin, m);
-	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
-	AG_WindowShow(agAppMenuWin);
+
+	agAppMenu = m;
+	agAppMenuWin = win;
+
+	if (agDriverSw) {
+		AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
+		AG_WindowSetGeometryAligned(win, AG_WINDOW_TC, wMax, -1);
+	} else {
+		AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
+		AG_WindowSetGeometryAligned(win, AG_WINDOW_TL, wMax/3, -1);
+	}
+	AG_WindowShow(win);
 
 	AG_MutexUnlock(&agAppMenuLock);
 	return (m);
+exists:
+	AG_SetError("Application menu is already defined");
+	AG_MutexUnlock(&agAppMenuLock);
+	return (NULL);
 }
 
 #if 0
@@ -434,11 +468,10 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 	} else {
 		mi->iconSrc = NULL;
 	}
-
-	/* If this is the application menu, resize its window. */
-	/* XXX 1.4 */
-	if (mi->pmenu != NULL && (mi->pmenu->flags & AG_MENU_GLOBAL) &&
-	    agDriverSw != NULL) {
+	if (mi->pmenu != NULL &&
+	   (mi->pmenu->flags & AG_MENU_GLOBAL) &&
+	    agDriverSw != NULL &&
+	    agAppMenuWin != NULL) {
 		Uint wMax, hMax;
 		AG_SizeReq rMenu;
 

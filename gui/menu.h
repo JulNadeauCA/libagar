@@ -104,6 +104,8 @@ extern AG_Menu *agAppMenu;
 extern AG_Window *agAppMenuWin;
 extern AG_Mutex agAppMenuLock;
 
+void       AG_InitAppMenu(void);
+void       AG_DestroyAppMenu(void);
 AG_Menu	  *AG_MenuNew(void *, Uint);
 AG_Menu	  *AG_MenuNewGlobal(Uint);
 void 	   AG_MenuScale(void *, int, int);
