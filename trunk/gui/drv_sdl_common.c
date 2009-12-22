@@ -370,7 +370,7 @@ AG_SDL_UnsetCursor(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_Cursor *ac0 = &drv->cursors[0];
-
+	
 	SDL_SetCursor((SDL_Cursor *)ac0->p);
 	drv->activeCursor = ac0;
 }

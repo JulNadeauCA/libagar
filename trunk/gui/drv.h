@@ -108,6 +108,7 @@ typedef struct ag_driver {
 	struct ag_object _inherit;
 	Uint id;			/* Numerical instance ID */
 	Uint flags;
+
 	AG_Surface *sRef;		/* "Reference" surface */
 	AG_PixelFormat *videoFmt;	/* Video pixel format (for
 					   packed-pixel FB modes) */

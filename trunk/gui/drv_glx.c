@@ -413,6 +413,7 @@ ProcessEvents(void *drvCaller)
 	Uint32 ucs;
 	int x, y;
 	int nProcessed = 0;
+	AG_CursorArea *ca;
 
 	while (PendingEvents()) {
 		AG_LockVFS(&agDrivers);
@@ -429,6 +430,19 @@ ProcessEvents(void *drvCaller)
 				    drv->mouse->xRel,
 				    drv->mouse->yRel,
 				    drv->mouse->btnState);
+
+				/* Change the cursor if necessary. */
+				TAILQ_FOREACH(ca, &win->cursorAreas,
+				    cursorAreas) {
+					if (AG_RectInside(&ca->r, x,y))
+						break;
+				}
+				if (ca == NULL) {
+					if (drv->activeCursor != &drv->cursors[0])
+						AGDRIVER_CLASS(drv)->unsetCursor(drv);
+				} else if (ca->c != drv->activeCursor) {
+					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
+				}
 			} else {
 				Verbose("MotionNotify on unknown window\n");
 			}
