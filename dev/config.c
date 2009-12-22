@@ -50,8 +50,6 @@
 
 #include "dev.h"
 
-AG_Window *devConfigWindow = NULL;
-
 static AG_Window *DEV_ConfigWindow(AG_Config *);
 
 static void
@@ -103,21 +101,15 @@ SetColor(AG_Event *event)
 void
 DEV_ConfigShow(void)
 {
+	AG_Window *win;
+
 	/* Avoid clobbering modal windows */
 	if (agDriverSw != NULL &&
 	    agDriverSw->Lmodal->n > 0)
 		return;
 
-	if (devConfigWindow != NULL) {
-		if (devConfigWindow->visible) {
-			AG_WindowFocus(devConfigWindow);
-		} else {
-			AG_WindowShow(devConfigWindow);
-		}
-		return;
-	}
-	devConfigWindow = DEV_ConfigWindow(agConfig);
-	AG_WindowShow(devConfigWindow);
+	if ((win = DEV_ConfigWindow(agConfig)) != NULL)
+		AG_WindowShow(win);
 }
 
 static void
@@ -199,8 +191,11 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
 
-	win = AG_WindowNewNamedS(0, "config-engine-settings");
+	if ((win = AG_WindowNewNamedS(0, "DEV_Config")) == NULL) {
+		return (NULL);
+	}
 	AG_WindowSetCaptionS(win, _("Agar settings"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
@@ -346,7 +341,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
-		AG_ButtonNewFn(hb, 0, _("Close"), AGWINHIDE(win));
+		AG_ButtonNewFn(hb, 0, _("Close"), AGWINDETACH(win));
 		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);
 	}
 	return (win);
