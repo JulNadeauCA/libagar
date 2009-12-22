@@ -14,10 +14,7 @@ CHECK(agar-threads)
 CHECK(sdl_image)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
-	echo "*"
-	echo "* The Agar library was not detected."
-	echo "* This demo requires Agar installed on your system."
-	echo "*"
+	echo "This demo requires Agar installed on your system."
 	exit 1
 fi
 if [ "${AGAR_HAVE_THREADS}" != "yes" ]; then
