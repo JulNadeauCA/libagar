@@ -757,7 +757,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (a->w < 2 || a->h < 2) {
 		if (WIDGET(ed)->window != NULL &&
 		    ed->ca != NULL) {
-			AG_WindowUnmapCursor(WIDGET(ed)->window, ed->ca);
+			AG_UnmapCursor(ed, ed->ca);
 			ed->ca = NULL;
 		}
 		return (-1);
@@ -773,8 +773,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.w = WIDTH(ed);
 		r.h = HEIGHT(ed);
 		if (ed->ca == NULL) {
-			ed->ca = AG_WindowMapStockCursor(WIDGET(ed)->window, r,
-			    AG_TEXT_CURSOR);
+			ed->ca = AG_MapStockCursor(ed, r, AG_TEXT_CURSOR);
 		} else {
 			ed->ca->r = r;
 		}

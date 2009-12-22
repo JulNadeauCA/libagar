@@ -1506,7 +1506,6 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 void
 AG_FreeDetachedWindows(void)
 {
-	AG_CursorArea *ca, *caNext;
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
 
@@ -1521,18 +1520,9 @@ AG_FreeDetachedWindows(void)
 
 		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
 		drv = WIDGET(win)->drv;
-
+		
 		/* Release the cursor areas and associated cursors. */
-		for (ca = TAILQ_FIRST(&win->cursorAreas);
-		     ca != TAILQ_END(&win->cursorAreas);
-		     ca = caNext) {
-			caNext = TAILQ_NEXT(ca, cursorAreas);
-			if (!ca->stock) {
-				AG_CursorFree(drv, ca->c);
-			}
-			free(ca);
-		}
-		TAILQ_INIT(&win->cursorAreas);
+		AG_UnmapAllCursors(win, NULL);
 
 		/* Close the associated window in MW mode. */
 		if (AGDRIVER_MULTIPLE(drv) &&
@@ -1556,27 +1546,34 @@ AG_FreeDetachedWindows(void)
  * cursor will be freed automatically on window detach.
  */
 AG_CursorArea *
-AG_WindowMapCursor(AG_Window *win, AG_Rect r, AG_Cursor *c)
+AG_MapCursor(void *obj, AG_Rect r, AG_Cursor *c)
 {
+	AG_Window *win = WIDGET(obj)->window;
 	AG_CursorArea *ca;
 
+	if (win == NULL) {
+		AG_SetError("Unattached widget");
+		return (NULL);
+	}
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
 	}
 	ca->stock = 0;
 	ca->r = r;
 	ca->c = c;
+	ca->wid = WIDGET(obj);
 	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
 	return (ca);
 }
 
 /* Configure a new cursor-change area with a stock Agar cursor. */
 AG_CursorArea *
-AG_WindowMapStockCursor(AG_Window *win, AG_Rect r, int name)
+AG_MapStockCursor(void *obj, AG_Rect r, int name)
 {
+	AG_Window *win = WIDGET(obj)->window;
 	AG_CursorArea *ca;
 
-	if (name < 0 || name >= AG_LAST_CURSOR) {
+	if (win == NULL || name < 0 || name >= AG_LAST_CURSOR) {
 		AG_SetError("No such cursor");
 		return (NULL);
 	}
@@ -1585,6 +1582,7 @@ AG_WindowMapStockCursor(AG_Window *win, AG_Rect r, int name)
 	}
 	ca->stock = name;
 	ca->r = r;
+	ca->wid = WIDGET(obj);
 	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
 	return (ca);
 }
@@ -1594,10 +1592,14 @@ AG_WindowMapStockCursor(AG_Window *win, AG_Rect r, int name)
  * is a stock Agar cursor).
  */
 void
-AG_WindowUnmapCursor(AG_Window *win, AG_CursorArea *ca)
+AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 {
+	AG_Window *win = WIDGET(obj)->window;
 	AG_Driver *drv = WIDGET(win)->drv;
 
+	if (win == NULL) {
+		return;
+	}
 	if (ca->c == drv->activeCursor) {
 		if (!ca->stock) {
 			/* XXX TODO it would be safer to defer this operation */
@@ -1606,6 +1608,40 @@ AG_WindowUnmapCursor(AG_Window *win, AG_CursorArea *ca)
 		}
 		TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
 		free(ca);
+	}
+}
+
+/* Destroy all cursors (or all cursors associated with a given widget). */
+void
+AG_UnmapAllCursors(AG_Window *win, void *wid)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	AG_CursorArea *ca, *caNext;
+
+	if (wid == NULL) {
+		for (ca = TAILQ_FIRST(&win->cursorAreas);
+		     ca != TAILQ_END(&win->cursorAreas);
+		     ca = caNext) {
+			caNext = TAILQ_NEXT(ca, cursorAreas);
+			if (!ca->stock) {
+				AG_CursorFree(drv, ca->c);
+			}
+			free(ca);
+		}
+		TAILQ_INIT(&win->cursorAreas);
+	} else {
+scan:
+		TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+			if (ca->wid != wid) {
+				continue;
+			}
+			if (!ca->stock) {
+				AG_CursorFree(drv, ca->c);
+			}
+			free(ca);
+			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+			goto scan;
+		}
 	}
 }
 

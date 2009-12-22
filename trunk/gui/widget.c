@@ -148,6 +148,9 @@ OnDetach(AG_Event *event)
 	
 	if (AG_OfClass(parent, "AG_Widget:*") &&
 	    AG_OfClass(w, "AG_Widget:*")) {
+		if (w->window != NULL) {
+			AG_UnmapAllCursors(w->window, w);
+		}
 		SetParentWindow(w, NULL);
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {

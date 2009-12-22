@@ -41,24 +41,64 @@ The
 .Nm
 interface provides Agar applications control over the shape of the mouse
 cursor; usually the hardware cursor.
-These operations are specific to a given
-.Xr AG_Driver 3
-instance (usually retrieved from the
-.Va drv
-member of a
-.Xr AG_Widget 3
-structure).
+.Sh WIDGET INTERFACE
+Agar widgets may configure alternate mouse cursors, for those platforms
+where hardware cursors are configurable.
+To prevent conflicts where multiple widgets may try to set different
+cursors,
+.Nm
+associates specific window regions with specific cursors.
+Internally, Agar will change cursors accordingly as the mouse is moved into
+those regions.
 .Pp
-To prevent conflicts between widgets trying to set different cursors, Agar
-associates window regions with specific cursors.
-Consequently, Agar widget implementations should always use
-.Fn AG_WindowMapCursor ,
-.Fn AG_WindowMapStockCursor
+.nr nS 1
+.Ft "AG_CursorArea *"
+.Fn AG_MapCursor "AG_Widget *wid" "AG_Rect r" "AG_Cursor *c"
+.Pp
+.Ft "AG_CursorArea *"
+.Fn AG_MapStockCursor "AG_Widget *wid" "AG_Rect r" "int cursorName"
+.Pp
+.Ft "void"
+.Fn AG_UnmapCursor "AG_Widget *wid" "AG_CursorArea *cursorArea"
+.Pp
+.nr nS 0
+The
+.Fn AG_MapCursor
+function configures a new cursor-change area described by the rectangle
+.Fa r
+(in pixels, relative to the parent window's local coordinate system).
+When the mouse is moved within this rectangle, Agar will set the specified
+cursor
+.Fa c
+(typically obtained through
+.Xr AG_CursorNew 3
+or
+.Xr AG_CursorFromXPM 3 ) .
+Note that this cursor will be freed automatically when the window is
+detached (do not pass a stock cursor as the
+.Fa c
+argument).
+.Pp
+The
+.Fn AG_MapStockCursor
+variant configures a cursor-change area, associated with a stock Agar cursor.
+See
+.Xr AG_Cursor 3
+for the list of acceptable
+.Fa cursorName
+arguments.
+.Pp
+.Fn AG_MapCursor
 and
-.Fn AG_WindowUnmapCursor
-to configure these window regions (see
-.Xr AG_Window 3
-for details).
+.Fn AG_MapStockCursor
+both return a pointer to the
+.Ft AG_CursorArea
+structure describing the cursor-change area, or NULL if an error has occured.
+.Pp
+.Fn AG_UnmapCursor
+removes the specified cursor-change area.
+If the mouse happens to be currently in this area, the cursor will be
+reverted immediately to the default.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_Cursor *"
@@ -138,6 +178,24 @@ and
 control the visibility of the active cursor.
 .Fn AG_CursorIsVisible
 returns 1 if the active cursor is visible, 0 otherwise.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_CursorArea
+structure:
+.Pp
+.Bl -tag -compact -width "AG_Widget *wid "
+.It Ft AG_Rect r
+The
+.Xr AG_Rect 3
+area (relative to the parent window's coordinate system).
+Widgets may modify this rectangle directly.
+.It Ft AG_Cursor *c
+The associated cursor (read-only).
+.It Ft AG_Widget *wid
+The widget responsible for the cursor (read-only).
+.It Ft int stock
+If set, the cursor is a stock Agar cursor (read-only).
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Driver 3 ,

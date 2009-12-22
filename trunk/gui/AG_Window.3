@@ -503,64 +503,6 @@ places the focus over the widget following (or preceeding if
 is 1) the widget currently holding focus inside of
 .Fa win .
 By default, Agar maps the "TAB" key to this function.
-.Sh MOUSE CURSORS
-Agar widgets may configure alternate mouse cursors, for those platforms
-where hardware cursors are configurable.
-To prevent conflicts where multiple widgets may try to set different
-cursors,
-.Nm
-associates specific window regions with specific cursors.
-Internally, Agar will change cursors accordingly as the mouse is moved into
-those regions.
-.Pp
-.nr nS 1
-.Ft "AG_CursorArea *"
-.Fn AG_WindowMapCursor "AG_Window *win" "AG_Rect r" "AG_Cursor *c"
-.Pp
-.Ft "AG_CursorArea *"
-.Fn AG_WindowMapStockCursor "AG_Window *win" "AG_Rect r" "int cursorName"
-.Pp
-.Ft "void"
-.Fn AG_WindowUnmapCursor "AG_Window *win" "AG_CursorArea *cursorArea"
-.Pp
-.nr nS 0
-The
-.Fn AG_WindowMapCursor
-function configures a new cursor-change area described by the rectangle
-.Fa r
-(in pixels, relative to the window's local coordinate system).
-When the mouse is moved within this rectangle, Agar will set the specified
-cursor
-.Fa c
-(typically obtained through
-.Xr AG_CursorNew 3
-or
-.Xr AG_CursorFromXPM 3 ) .
-Note that this cursor will be freed automatically when the window is
-detached (do not pass a stock cursor as the
-.Fa c
-argument).
-.Pp
-The
-.Fn AG_WindowMapStockCursor
-variant configures a cursor-change area, associated with a stock Agar cursor.
-See
-.Xr AG_Cursor 3
-for the list of acceptable
-.Fa cursorName
-arguments.
-.Pp
-.Fn AG_WindowMapCursor
-and
-.Fn AG_WindowMapStockCursor
-both return a pointer to the
-.Ft AG_CursorArea
-structure describing the cursor-change area.
-.Pp
-.Fn AG_WindowUnmapCursor
-removes the specified cursor-change area.
-If the mouse happens to be currently in this area, the cursor will be
-reverted immediately to the default.
 .Sh FLAGS
 For the
 .Ft AG_Window
