@@ -389,8 +389,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		if (WIDGET(pa)->window != NULL) {
 			AG_Rect r;
 
-			r.x = WIDGET(pa)->rView.x1 + pa->dx;
-			r.y = WIDGET(pa)->rView.y1;
+			r.x = pa->dx;
+			r.y = 0;
 			r.w = pa->wDiv;
 			r.h = a->h;
 			if (pa->ca == NULL) {
@@ -443,8 +443,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		if (WIDGET(pa)->window != NULL) {
 			AG_Rect r;
 			
-			r.x = WIDGET(pa)->rView.x1;
-			r.y = WIDGET(pa)->rView.y1 + pa->dx;
+			r.x = 0;
+			r.y = pa->dx;
 			r.w = a->w;
 			r.h = pa->wDiv;
 			if (pa->ca == NULL) {

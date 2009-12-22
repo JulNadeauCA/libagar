@@ -227,6 +227,7 @@ InputEvent(AG_DriverSDLFB *sfb, SDL_Event *ev)
 	AG_Driver *drv = AGDRIVER(sfb);
 	AG_DriverSw *dsw = AGDRIVER_SW(sfb);
 	AG_Window *win;
+	AG_CursorArea *ca;
 
 	if (dsw->Lmodal->n > 0) {
 		win = dsw->Lmodal->v[dsw->Lmodal->n-1].data.p;
@@ -287,6 +288,26 @@ scan:
 			    ev->motion.x, ev->motion.y,
 			    ev->motion.xrel, ev->motion.yrel,
 			    ev->motion.state);
+			
+			/*
+			 * Change the cursor if the mouse is in a cursor-change
+			 * area and this window holds focus.
+			 */
+			if (AG_WindowIsFocused(win)) {
+				int xWin = ev->motion.x - WIDGET(win)->x;
+				int yWin = ev->motion.y - WIDGET(win)->y;
+				TAILQ_FOREACH(ca, &win->cursorAreas,
+				    cursorAreas) {
+					if (AG_RectInside(&ca->r, xWin, yWin))
+						break;
+				}
+				if (ca == NULL) {
+					if (drv->activeCursor != &drv->cursors[0])
+						AGDRIVER_CLASS(drv)->unsetCursor(drv);
+				} else if (ca->c != drv->activeCursor) {
+					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
+				}
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
 			/* Terminate active window operations. */

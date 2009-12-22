@@ -972,9 +972,10 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
-	
+
 	if (wid->drv != NULL && AGDRIVER_MULTIPLE(wid->drv) &&
 	    AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+		/* Multiple-window drivers use window coordinate systems */
 		x = 0;
 		y = 0;
 	}

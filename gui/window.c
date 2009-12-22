@@ -1558,7 +1558,7 @@ AG_MapCursor(void *obj, AG_Rect r, AG_Cursor *c)
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
 	}
-	ca->stock = 0;
+	ca->stock = -1;
 	ca->r = r;
 	ca->c = c;
 	ca->wid = WIDGET(obj);
@@ -1571,10 +1571,16 @@ AG_CursorArea *
 AG_MapStockCursor(void *obj, AG_Rect r, int name)
 {
 	AG_Window *win = WIDGET(obj)->window;
+	AG_Driver *drv = WIDGET(win)->drv;
 	AG_CursorArea *ca;
 
-	if (win == NULL || name < 0 || name >= AG_LAST_CURSOR) {
+	if (win == NULL || drv == NULL) {
+		AG_SetError("Unattached widget");
+		return (NULL);
+	}
+	if (name < 0 || name >= drv->nCursors) {
 		AG_SetError("No such cursor");
+		AG_Verbose("No such cursor: %d in %s\n", name, OBJECT(drv)->name);
 		return (NULL);
 	}
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
@@ -1583,6 +1589,7 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 	ca->stock = name;
 	ca->r = r;
 	ca->wid = WIDGET(obj);
+	ca->c = &drv->cursors[name];
 	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
 	return (ca);
 }
@@ -1601,7 +1608,7 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 		return;
 	}
 	if (ca->c == drv->activeCursor) {
-		if (!ca->stock) {
+		if (ca->stock == -1) {
 			/* XXX TODO it would be safer to defer this operation */
 			AGDRIVER_CLASS(drv)->unsetCursor(drv);
 			AG_CursorFree(drv, ca->c);
@@ -1623,7 +1630,7 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 		     ca != TAILQ_END(&win->cursorAreas);
 		     ca = caNext) {
 			caNext = TAILQ_NEXT(ca, cursorAreas);
-			if (!ca->stock) {
+			if (ca->stock == -1) {
 				AG_CursorFree(drv, ca->c);
 			}
 			Free(ca);
@@ -1635,7 +1642,7 @@ scan:
 			if (ca->wid != wid) {
 				continue;
 			}
-			if (!ca->stock) {
+			if (ca->stock == -1) {
 				AG_CursorFree(drv, ca->c);
 			}
 			Free(ca);
