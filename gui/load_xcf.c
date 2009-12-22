@@ -268,8 +268,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 		AG_SetError("XCF Tile: Read error");
 		return (NULL);
 	}
-	if ((data = malloc(x*y*Bpp)) == NULL) {
-		AG_SetError("XCF Tile: Out of memory");
+	if ((data = TryMalloc(x*y*Bpp)) == NULL) {
 		return (NULL);
 	}
 	for (i = 0; i < Bpp; i++) {

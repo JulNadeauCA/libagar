@@ -579,7 +579,7 @@ register  AllocationListPtr  ListPtr, NextListPtr;
     ListPtr = Matrix->TopOfAllocationList;
     while (ListPtr != NULL)
     {   NextListPtr = ListPtr->NextRecord;
-        free( ListPtr->AllocatedPtr );
+        Free( ListPtr->AllocatedPtr );
         ListPtr = NextListPtr;
     }
     return;

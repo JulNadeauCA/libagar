@@ -62,15 +62,15 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
 	AG_Cursor *curs, *cursNew;
 	Uint size = w*h;
 
-	if ((cursNew = AG_TryRealloc(drv->cursors,
+	if ((cursNew = TryRealloc(drv->cursors,
 	    (drv->nCursors+1)*sizeof(AG_Cursor))) == NULL) {
 		return (NULL);
 	}
 	drv->cursors = cursNew;
 	curs = &drv->cursors[drv->nCursors++];
 
-	if ((curs->data = AG_TryMalloc(size)) == NULL ||
-	    (curs->mask = AG_TryMalloc(size)) == NULL) {
+	if ((curs->data = TryMalloc(size)) == NULL ||
+	    (curs->mask = TryMalloc(size)) == NULL) {
 		goto fail;
 	}
 	memcpy(curs->data, data, size);

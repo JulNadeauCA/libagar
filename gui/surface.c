@@ -142,13 +142,13 @@ AG_PixelFormatIndexed(int bpp)
 	pf->alpha = AG_ALPHA_OPAQUE;
 
 	if ((pal = pf->palette = TryMalloc(sizeof(AG_Palette))) == NULL) {
-		free(pf);
+		Free(pf);
 		return (NULL);
 	}
 	pal->nColors = 1<<bpp;
 	if ((pal->colors = TryMalloc(pal->nColors*sizeof(AG_Color))) == NULL) {
-		free(pf->palette);
-		free(pf);
+		Free(pf->palette);
+		Free(pf);
 		return (NULL);
 	}
 	
@@ -181,7 +181,7 @@ AG_PixelFormatDup(const AG_PixelFormat *pf)
 	if (pf->palette != NULL) {
 		pfd->palette = TryMalloc(pf->palette->nColors*sizeof(AG_Color));
 		if (pfd->palette == NULL) {
-			free(pfd);
+			Free(pfd);
 			return (NULL);
 		}
 		memcpy(pfd->palette->colors, pf->palette->colors,
@@ -214,9 +214,9 @@ AG_PixelFormatFree(AG_PixelFormat *pf)
 {
 	if (pf->palette != NULL) {
 		Free(pf->palette->colors);
-		free(pf->palette);
+		Free(pf->palette);
 	}
-	free(pf);
+	Free(pf);
 }
 
 #undef COMPUTE_SHIFTLOSS
@@ -232,7 +232,7 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
 		return (NULL);
 	}
 	if ((s->format = AG_PixelFormatDup(pf)) == NULL) {
-		free(s);
+		Free(s);
 		return (NULL);
 	}
 	s->type = type;
@@ -251,7 +251,7 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
 	return (s);
 fail:
 	AG_PixelFormatFree(s->format);
-	free(s);
+	Free(s);
 	return (NULL);
 }
 

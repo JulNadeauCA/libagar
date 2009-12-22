@@ -19,7 +19,7 @@ VG_PolygonNew(void *pNode)
 {
 	VG_Polygon *vP;
 
-	vP = AG_Malloc(sizeof(VG_Polygon));
+	vP = Malloc(sizeof(VG_Polygon));
 	VG_NodeInit(vP, &vgPolygonOps);
 	VG_NodeAttach(pNode, vP);
 	return (vP);

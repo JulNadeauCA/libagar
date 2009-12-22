@@ -631,12 +631,12 @@ AG_RcsGetLog(const char *objdir, AG_RCSLog *log)
 		log->ents = Realloc(log->ents, (log->nEnts+1) *
 		                               sizeof(AG_RCSLogEntry));
 		lent = &log->ents[log->nEnts++];
-		lent->rev = AG_Strdup(rev);
-		lent->author = AG_Strdup(author);
-		lent->type = type!=NULL ? AG_Strdup(type) : NULL;
-		lent->name = name!=NULL ? AG_Strdup(name) : NULL;
-		lent->sum = AG_Strdup(sum);
-		lent->msg = msg!=NULL ? AG_Strdup(msg) : NULL;
+		lent->rev = Strdup(rev);
+		lent->author = Strdup(author);
+		lent->type = type!=NULL ? Strdup(type) : NULL;
+		lent->name = name!=NULL ? Strdup(name) : NULL;
+		lent->sum = Strdup(sum);
+		lent->msg = msg!=NULL ? Strdup(msg) : NULL;
 	}
 	NC_FreeResult(res);
 	return (0);

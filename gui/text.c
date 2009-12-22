@@ -624,7 +624,7 @@ AG_TextRenderf(const char *fmt, ...)
 	Vasprintf(&text, fmt, args);
 	va_end(args);
 	su = AG_TextRender(text);
-	free(text);
+	Free(text);
 	return (su);
 }
 #ifdef SYMBOLS
@@ -1228,7 +1228,7 @@ AG_TextSize(const char *text, int *w, int *h)
 	}
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 	AG_TextSizeUCS4(ucs4, w, h);
-	free(ucs4);
+	Free(ucs4);
 }
 
 /*
@@ -1242,7 +1242,7 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 	AG_TextSizeMultiUCS4(ucs4, w, h, wLines, nLines);
-	free(ucs4);
+	Free(ucs4);
 }
 
 /*

@@ -103,10 +103,8 @@ M_MergeSort(void *base, size_t nmemb, size_t size,
 	if (!(size % ISIZE) && !(((char *)base - (char *)0) % ISIZE))
 		iflag = 1;
 
-	if ((list2 = malloc(nmemb * size + PSIZE)) == NULL) {
-		AG_SetError("Out of memory");
+	if ((list2 = TryMalloc(nmemb*size + PSIZE)) == NULL)
 		return (-1);
-	}
 
 	list1 = base;
 	Setup(list1, list2, nmemb, size, cmp);
@@ -211,7 +209,7 @@ COPY:	    			b = t;
 		memmove(list2, list1, nmemb*size);
 		list2 = list1;
 	}
-	free(list2);
+	Free(list2);
 	return (0);
 }
 

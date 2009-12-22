@@ -121,14 +121,27 @@ Open(void *obj, const char *spec)
 	AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize the main mouse and keyboard devices. */
-	drv->mouse = AG_MouseNew(sgl, "SDL mouse");
-	drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard");
+	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL)
+		goto fail;
 
 	/* Configure the window caption */
 	SDL_WM_SetCaption(agProgName, agProgName);
 
 	nDrivers = 1;
 	return (0);
+fail:
+	if (drv->kbd != NULL) {
+		AG_ObjectDetach(drv->kbd);
+		AG_ObjectDestroy(drv->kbd);
+		drv->kbd = NULL;
+	}
+	if (drv->mouse != NULL) {
+		AG_ObjectDetach(drv->mouse);
+		AG_ObjectDestroy(drv->mouse);
+		drv->mouse = NULL;
+	}
+	return (-1);
 }
 
 static void
@@ -688,7 +701,7 @@ InitClipRects(AG_DriverSDLGL *sgl, int wView, int hView)
 		sgl->clipStates[i] = 0;
 
 	/* Rectangle 0 always covers the whole view. */
-	if ((sgl->clipRects = AG_TryMalloc(sizeof(AG_ClipRect))) == NULL)
+	if ((sgl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL)
 		return (-1);
 
 	cr = &sgl->clipRects[0];

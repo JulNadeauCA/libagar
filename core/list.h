@@ -20,8 +20,7 @@ AG_ListNew(void)
 {
 	AG_List *L;
 
-	if ((L = (AG_List *)malloc(sizeof(AG_List))) == NULL) {
-		AG_SetError("Out of memory");
+	if ((L = (AG_List *)AG_TryMalloc(sizeof(AG_List))) == NULL) {
 		return (NULL);
 	}
 	L->n = 0;
@@ -37,13 +36,13 @@ AG_ListDup(const AG_List *L)
 	AG_List *Ldup;
 	int i;
 
-	if ((Ldup = (AG_List *)malloc(sizeof(AG_List))) == NULL) {
-		goto outofmem;
+	if ((Ldup = (AG_List *)AG_TryMalloc(sizeof(AG_List))) == NULL) {
+		return (NULL);
 	}
 	Ldup->n = L->n;
-	if ((Ldup->v = (AG_Variable *)malloc(vLen)) == NULL) {
+	if ((Ldup->v = (AG_Variable *)AG_TryMalloc(vLen)) == NULL) {
 		AG_Free(Ldup);
-		goto outofmem;
+		return (NULL);
 	}
 	memcpy(Ldup->v, L->v, vLen);
 	for (i = 0; i < L->n; i++) {
@@ -54,9 +53,6 @@ AG_ListDup(const AG_List *L)
 			Vdup->data.s = AG_Strdup(V->data.s);
 	}
 	return (Ldup);
-outofmem:
-	AG_SetError("Out of memory");
-	return (NULL);
 }
 
 /* Insert a new variable at the tail of a list. */
@@ -65,9 +61,8 @@ AG_ListAppend(AG_List *L, const AG_Variable *V)
 {
 	AG_Variable *lv;
 
-	if ((lv = (AG_Variable *)realloc(L->v, (L->n+1)*sizeof(AG_Variable)))
-	    == NULL) {
-		AG_SetError("Out of memory");
+	if ((lv = (AG_Variable *)AG_TryRealloc(L->v,
+	    (L->n+1)*sizeof(AG_Variable))) == NULL) {
 		return (-1);
 	}
 	L->v = lv;
@@ -94,8 +89,7 @@ AG_ListInsert(AG_List *L, int pos, const AG_Variable *V)
 		return (-1);
 	}
 	vLen = (L->n+1)*sizeof(AG_Variable);
-	if ((lv = (AG_Variable *)realloc(L->v, vLen)) == NULL) {
-		AG_SetError("Out of memory");
+	if ((lv = (AG_Variable *)AG_TryRealloc(L->v, vLen)) == NULL) {
 		return (-1);
 	}
 	L->v = lv;

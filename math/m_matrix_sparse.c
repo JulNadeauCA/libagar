@@ -98,7 +98,7 @@ M_MatrixFree_SP(void *pA)
 {
 	M_MatrixSP *A=pA;
 	spDestroy(A->d);
-	free(A);
+	Free(A);
 }
 
 void *
@@ -107,7 +107,7 @@ M_MatrixNew_SP(Uint m, Uint n)
 	M_MatrixSP *A;
 	int error;
 
-	A = AG_Malloc(sizeof(M_MatrixSP));
+	A = Malloc(sizeof(M_MatrixSP));
 	MMATRIX(A)->ops = &mMatOps_SP;
 	A->d = spCreate(0, 0, &error);
 	MROWS(A) = m;

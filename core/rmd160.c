@@ -381,7 +381,7 @@ AG_RMD160End(AG_RMD160_CTX *ctx, char *buf)
 	static const char hex[] = "0123456789abcdef";
 
 	if (buf == NULL &&
-	    (buf = malloc(AG_RMD160_DIGEST_STRING_LENGTH)) == NULL)
+	    (buf = TryMalloc(AG_RMD160_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
 	AG_RMD160Final(digest, ctx);

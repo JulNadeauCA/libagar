@@ -333,7 +333,7 @@ AG_WidgetString(void *wid, const char *name)
 	AG_Variable *b;
 	char *s, *sd;
 	if ((b = AG_GetVariable(wid, name, &s)) == NULL) { AG_FatalError(NULL); }
-	sd = AG_Strdup(s);
+	sd = Strdup(s);
 	AG_UnlockVariable(b);
 	return (sd);
 }

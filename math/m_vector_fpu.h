@@ -29,8 +29,7 @@ M_VectorResize_FPU(M_Vector *pv, Uint m)
 	M_Real *vNew;
 
 	if (m > 0) {
-		if ((vNew = realloc(v->v, m*sizeof(M_Real))) == NULL) {
-			AG_SetError("Out of memory");
+		if ((vNew = AG_TryRealloc(v->v, m*sizeof(M_Real))) == NULL) {
 			return (-1);
 		}
 		v->v = vNew;

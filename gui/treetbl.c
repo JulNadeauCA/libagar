@@ -569,9 +569,8 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 	}
 
 	/* Allocate new column */
-	if ((colsNew = realloc(tt->column, (tt->n+1)*sizeof(AG_TreetblCol)))
+	if ((colsNew = TryRealloc(tt->column, (tt->n+1)*sizeof(AG_TreetblCol)))
 	    == NULL) {
-		AG_SetError("Out of memory");
 		goto fail;
 	}
 	tt->column = colsNew;
@@ -760,13 +759,13 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 		goto fail;
 	}
 	
-	if ((row = malloc(sizeof(AG_TreetblRow))) == NULL) {
-		goto outofmem;
+	if ((row = TryMalloc(sizeof(AG_TreetblRow))) == NULL) {
+		goto fail;
 	}
 	row->tbl = tt;
-	if ((row->cell = malloc(sizeof(AG_TreetblCell)*tt->n)) == NULL) {
-		free(row);
-		goto outofmem;
+	if ((row->cell = TryMalloc(sizeof(AG_TreetblCell)*tt->n)) == NULL) {
+		Free(row);
+		goto fail;
 	}
 	row->flags = 0;
 	row->parent = pRow;
@@ -791,7 +790,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 				 * don't leak.
 				 */
 				if (cell->text != NULL) {
-					free(cell->text);
+					Free(cell->text);
 				}
 				if (cell->image != NULL) {
 					AG_SurfaceFree(cell->image);
@@ -825,8 +824,6 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 
 	AG_ObjectUnlock(tt);
 	return (row);
-outofmem:
-	AG_SetError("Out of memory");
 fail:
 	AG_ObjectUnlock(tt);
 	return (NULL);
@@ -841,7 +838,7 @@ DestroyRow(AG_Treetbl *tt, AG_TreetblRow *row)
 		AG_TreetblCell *cell = &row->cell[i];
 
 		AG_SurfaceFree(cell->image);
-		free(cell->text);
+		Free(cell->text);
 	}
 	Free(row->cell);
 	Free(row);
