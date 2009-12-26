@@ -354,7 +354,7 @@ The
 .Fn AG_WindowAttach
 function arranges for
 .Fa pwin
-to be the parent window of
+to be the logical parent window of
 .Fa win ,
 such that
 .Fa win
@@ -362,17 +362,20 @@ is automatically destroyed when
 .Fa pwin
 is detached (through
 .Xr AG_ObjectDetach 3 ) .
+If
+.Fa win
+has been previously attached to another window, it is reparented accordingly.
 .Pp
 The
 .Fn AG_WindowDetach
 function removes
 .Fa win
-from its parent window
+from its logical parent window
 .Fa pwin .
 .Pp
 The
 .Fn AG_WindowUpdate
-function recomputes the coordinates and geometries of all widgets attached to
+function updates the coordinates and geometries of all widgets attached to
 .Fa win .
 .Fn AG_WindowUpdate
 should be called following

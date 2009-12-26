@@ -223,7 +223,7 @@ static void
 Detach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	AG_Driver *drv = OBJECT(win)->parent;
+	AG_Driver *drv = OBJECT(win)->parent, *odrv;
 	AG_Window *subwin, *nsubwin;
 	AG_Window *owin;
 
@@ -231,6 +231,8 @@ Detach(AG_Event *event)
 	if (drv == NULL || !AG_ObjectIsClass(drv, "AG_Driver:*"))
 		AG_FatalError("Window is not attached to a Driver");
 #endif
+	AG_LockVFS(&agDrivers);
+
 	/* Implicitely hide the window. */
 	if (win->visible)
 		AG_WindowHide(win);
@@ -248,21 +250,26 @@ Detach(AG_Event *event)
 		agWindowToFocus = NULL;
 	}
 	
+	/* Remove any reference from another window to this one. */
+	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(owin, odrv) {
+			if (owin == win) {
+				continue;
+			}
+			TAILQ_FOREACH(subwin, &owin->subwins, swins) {
+				if (subwin == win)
+					break;
+			}
+			if (subwin != NULL)
+				TAILQ_REMOVE(&owin->subwins, subwin, swins);
+		}
+	}
+	
 	/*
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
 	 * pointers of all widgets to be reset to NULL.
 	 */
 	AG_PostEvent(drv, win, "detached", NULL);
-
-	/* Remove any reference from another window to this one. */
-	AG_FOREACH_WINDOW(owin, drv) {
-		TAILQ_FOREACH(subwin, &owin->subwins, swins) {
-			if (subwin == win)
-				break;
-		}
-		if (subwin != NULL)
-			TAILQ_REMOVE(&owin->subwins, subwin, swins);
-	}
 
  	/*
 	 * For a window detach to be safe in event context, the window
@@ -280,6 +287,8 @@ Detach(AG_Event *event)
 		AG_ObjectDetach(subwin);
 	}
 	TAILQ_INIT(&win->subwins);
+	
+	AG_UnlockVFS(&agDrivers);
 }
 
 static void
@@ -374,13 +383,23 @@ AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 
 	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
+
+	if (subwin->parent != NULL) {			/* Reparent? */
+		if (subwin->parent == win) {
+			goto out;
+		}
+		AG_WindowDetach(subwin->parent, subwin);
+	}
+
+	/* Update the pointers */
 	subwin->parent = win;
 	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
 
+	/* Pass the "transient for" hint to window managers where supported. */
 	if (AGDRIVER_MULTIPLE(drvWin) &&
 	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
 		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, subwin);
-
+out:
 	AG_ObjectUnlock(win);
 	AG_UnlockVFS(&agDrivers);
 }
@@ -403,10 +422,12 @@ AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 #endif
 	drvWin = WIDGET(win)->drv;
 
+	/* Pass the "transient for" hint to window managers where supported. */
 	if (AGDRIVER_MULTIPLE(drvWin) &&
 	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
 		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, NULL);
 
+	/* Update the pointers */
 	TAILQ_REMOVE(&win->subwins, subwin, swins);
 	subwin->parent = NULL;
 
@@ -1518,19 +1539,17 @@ AG_FreeDetachedWindows(void)
 		if (win == agWindowFocused)
 			agWindowFocused = NULL;
 
-		AG_ObjectSetDetachFn(win, NULL, NULL);	/* Actually detach */
-		drv = WIDGET(win)->drv;
-		
 		/* Release the cursor areas and associated cursors. */
 		AG_UnmapAllCursors(win, NULL);
 
 		/* Close the associated window in MW mode. */
+		drv = WIDGET(win)->drv;
 		if (AGDRIVER_MULTIPLE(drv) &&
-		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)
 			AGDRIVER_MW_CLASS(drv)->closeWindow(win);
-		}
 
-		/* Actually free the window object. */
+		/* Remove the Window detach handler and free the object. */
+		AG_ObjectSetDetachFn(win, NULL, NULL);
 		AG_ObjectDetach(win);
 		AG_ObjectDestroy(win);
 
