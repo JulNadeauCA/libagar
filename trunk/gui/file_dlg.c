@@ -258,7 +258,7 @@ RefreshLocations(AG_FileDlg *fd, int init)
 			/* Add the home directory */
 			struct passwd *pw;
 			if ((pw = getpwuid(getuid())) != NULL)
-				AG_TlistAddS(tl, agIconDirectory.s, pw->pw_name);
+				AG_TlistAddS(tl, agIconDirectory.s, pw->pw_dir);
 		}
 #endif
 		/* Add the cwd */
