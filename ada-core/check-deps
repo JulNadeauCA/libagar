@@ -50,8 +50,6 @@ cd SYSDEPS || fatal "could not change directory to SYSDEPS"
 
 required c_string-flags  flags-c_string  'C_String'
 required c_string-libs-S libs-c_string-S 'C_String'
-required sdl-ada-flags   flags-sdl-ada   'SDL-Ada'
-required sdl-ada-libs-S  libs-sdl-ada-S  'SDL-Ada'
 required agar-flags      flags-agar      'agar-core'
 required agar-libs       libs-agar       'agar-libs'
 
