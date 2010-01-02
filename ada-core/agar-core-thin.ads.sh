@@ -20,7 +20,6 @@ cat <<EOF
 with C_String;
 with Interfaces.C;
 with Interfaces;
-with SDL.Video;
 with System;
 
 package Agar.Core.Thin is
@@ -83,29 +82,6 @@ cat <<EOF
        Flags    : in C.unsigned) return C.int;
     pragma Import (C, Init_Core, "AG_InitCore");
 
-    -- proc_map : AG_InitGraphics
-    function Init_Graphics
-      (Driver : in C_String.String_Not_Null_Ptr_t) return C.int;
-    pragma Import (C, Init_Graphics, "AG_InitGraphics");
-
-    -- proc_map : AG_InitVideo
-    function Init_Video
-      (W     : in C.int;
-       H     : in C.int;
-       Depth : in C.int;
-       Flags : in C.unsigned) return C.int;
-    pragma Import (C, Init_Video, "AG_InitVideo");
-
-    -- proc_map : AG_InitVideoSDL
-    function Init_Video_SDL
-      (Display : in SDL.Video.Surface_Access_t;
-       Flags   : in C.unsigned) return C.int;
-    pragma Import (C, Init_Video_SDL, "AG_InitVideoSDL");
-
-    -- proc_map : AG_InitGUI
-    function Init_GUI (Flags : in C.unsigned) return C.int;
-    pragma Import (C, Init_GUI, "AG_InitGUI");
-
     type Exit_Func_Access_t is not null access procedure;
     pragma Convention (C, Exit_Func_Access_t);
 
@@ -118,17 +94,9 @@ cat <<EOF
     procedure Quit;
     pragma Import (C, Quit, "AG_Quit");
 
-    -- proc_map : AG_QuitGUI
-    procedure Quit_GUI;
-    pragma Import (C, Quit_GUI, "AG_QuitGUI");
-
     -- proc_map : AG_Destroy
     procedure Destroy;
     pragma Import (C, Destroy, "AG_Destroy");
-
-    -- proc_map : AG_DestroyGUI
-    procedure Destroy_GUI;
-    pragma Import (C, Destroy_GUI, "AG_DestroyGUI");
 
   end Core;
 
