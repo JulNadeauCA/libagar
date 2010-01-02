@@ -1,0 +1,5 @@
+sysdeps 3.0.0
+http://coreland.ath.cx/code/sysdeps
+
+These files are not user-serviceable. If you are experiencing
+build failures, please read the documentation at the URL above.
