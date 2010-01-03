@@ -12,8 +12,8 @@ agar-core-init.o agar-core-object.ali agar-core-object.o agar-core-thin.ali \
 agar-core-thin.o agar-core.ali agar-core.o agar.ali agar.o ctxt/bindir.o \
 ctxt/ctxt.a ctxt/dlibdir.o ctxt/fakeroot.o ctxt/incdir.o ctxt/repos.o \
 ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o install-core.o \
-install-error.o install-posix.o install-win32.o install.a installer installer.o \
-instchk instchk.o insthier.o types-sizes types-sizes.o
+install-posix.o install-win32.o install.a installer installer.o instchk \
+instchk.o insthier.o types-sizes types-sizes.o
 
 # Mkf-deinstall
 deinstall: deinstaller conf-sosuffix
@@ -35,8 +35,7 @@ install-check: instchk conf-sosuffix
 
 # Mkf-local
 local:\
-flags-agar-core libs-agar-core flags-c_string libs-c_string-S \
-flags-sdl-ada libs-sdl-ada-S
+flags-agar-core libs-agar-core flags-c_string libs-c_string-S
 	./check-deps
 
 local_pre:
@@ -60,12 +59,6 @@ libs-c_string-S:
 _sd_sysinfo.h:
 	@echo SYSDEPS sd-sysinfo run create _sd_sysinfo.h 
 	@(cd SYSDEPS && ./sd-run modules/sd-sysinfo)
-flags-sdl-ada:
-	@echo SYSDEPS sdl-ada-flags run create flags-sdl-ada 
-	@(cd SYSDEPS && ./sd-run modules/sdl-ada-flags)
-libs-sdl-ada-S:
-	@echo SYSDEPS sdl-ada-libs-S run create libs-sdl-ada-S 
-	@(cd SYSDEPS && ./sd-run modules/sdl-ada-libs-S)
 
 
 agar-flags_clean:
@@ -83,12 +76,6 @@ c_string-libs-S_clean:
 sd-sysinfo_clean:
 	@echo SYSDEPS sd-sysinfo clean _sd_sysinfo.h 
 	@(cd SYSDEPS && ./sd-clean modules/sd-sysinfo)
-sdl-ada-flags_clean:
-	@echo SYSDEPS sdl-ada-flags clean flags-sdl-ada 
-	@(cd SYSDEPS && ./sd-clean modules/sdl-ada-flags)
-sdl-ada-libs-S_clean:
-	@echo SYSDEPS sdl-ada-libs-S clean libs-sdl-ada-S 
-	@(cd SYSDEPS && ./sd-clean modules/sdl-ada-libs-S)
 
 
 sysdeps_clean:\
@@ -97,8 +84,6 @@ agar-libs_clean \
 c_string-flags_clean \
 c_string-libs-S_clean \
 sd-sysinfo_clean \
-sdl-ada-flags_clean \
-sdl-ada-libs-S_clean \
 
 
 
@@ -107,15 +92,15 @@ sdl-ada-libs-S_clean \
 
 ada-bind:\
 conf-adabind conf-systype conf-adatype conf-adabflags conf-adafflist \
-	flags-c_string flags-sdl-ada
+	flags-c_string
 
 ada-compile:\
 conf-adacomp conf-adatype conf-systype conf-adacflags conf-adafflist \
-	flags-c_string flags-sdl-ada
+	flags-c_string
 
 ada-link:\
 conf-adalink conf-adatype conf-systype conf-adaldflags conf-aldfflist \
-	libs-c_string-S libs-sdl-ada-S
+	libs-c_string-S
 
 ada-srcmap:\
 conf-adacomp conf-adatype conf-systype
@@ -330,10 +315,6 @@ install-core.o:\
 cc-compile install-core.c install.h
 	./cc-compile install-core.c
 
-install-error.o:\
-cc-compile install-error.c install.h
-	./cc-compile install-error.c
-
 install-posix.o:\
 cc-compile install-posix.c install.h
 	./cc-compile install-posix.c
@@ -343,10 +324,8 @@ cc-compile install-win32.c install.h
 	./cc-compile install-win32.c
 
 install.a:\
-cc-slib install.sld install-core.o install-posix.o install-win32.o \
-install-error.o
-	./cc-slib install install-core.o install-posix.o install-win32.o \
-	install-error.o
+cc-slib install.sld install-core.o install-posix.o install-win32.o
+	./cc-slib install install-core.o install-posix.o install-win32.o
 
 install.h:\
 install_os.h
@@ -411,9 +390,9 @@ obj_clean:
 	ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o \
 	ctxt/fakeroot.c ctxt/fakeroot.o ctxt/incdir.c ctxt/incdir.o ctxt/repos.c \
 	ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o \
-	deinstaller deinstaller.o install-core.o install-error.o install-posix.o \
-	install-win32.o install.a installer installer.o instchk instchk.o insthier.o \
-	types-sizes types-sizes.o
+	deinstaller deinstaller.o install-core.o install-posix.o install-win32.o \
+	install.a installer installer.o instchk instchk.o insthier.o types-sizes \
+	types-sizes.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-systype mk-ctxt
 
