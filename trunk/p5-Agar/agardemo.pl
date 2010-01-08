@@ -62,9 +62,6 @@ my $pane = Agar::Pane->newHoriz($tab1, { hFill=>1, vFill=>1 });
 my $lbox = $pane->leftPane();
 my $rbox = $pane->rightPane();
 
-print "move divider\n";
-$pane->moveDivider(100);
-
 ################################
 # Console
 ################################
@@ -242,6 +239,7 @@ $saveDlg->setEvent('file-chosen', sub {
 ################################
 
 $win->show();
+$pane->moveDividerPct(50);
 
 Agar::EventLoop();
 
