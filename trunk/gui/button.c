@@ -82,7 +82,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 	AG_Button *bu;
 	AG_Event *ev;
 
-	bu = AG_ButtonNew(parent, flags, caption);
+	bu = AG_ButtonNewS(parent, flags, caption);
 	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	return (bu);
@@ -91,7 +91,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 AG_Button *
 AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindInt(bu, "state", v);
 	return (bu);
 }
@@ -99,7 +99,7 @@ AG_ButtonNewInt(void *parent, Uint flags, const char *caption, int *v)
 AG_Button *
 AG_ButtonNewUint8(void *parent, Uint flags, const char *caption, Uint8 *v)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindUint8(bu, "state", v);
 	return (bu);
 }
@@ -107,7 +107,7 @@ AG_ButtonNewUint8(void *parent, Uint flags, const char *caption, Uint8 *v)
 AG_Button *
 AG_ButtonNewUint16(void *parent, Uint flags, const char *caption, Uint16 *v)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindUint16(bu, "state", v);
 	return (bu);
 }
@@ -115,7 +115,7 @@ AG_ButtonNewUint16(void *parent, Uint flags, const char *caption, Uint16 *v)
 AG_Button *
 AG_ButtonNewUint32(void *parent, Uint flags, const char *caption, Uint32 *v)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindUint32(bu, "state", v);
 	return (bu);
 }
@@ -124,7 +124,7 @@ AG_Button *
 AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
     Uint *p, Uint bitmask)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindFlag(bu, "state", p, bitmask);
 	return (bu);
 }
@@ -133,7 +133,7 @@ AG_Button *
 AG_ButtonNewFlag8(void *parent, Uint flags, const char *caption,
    Uint8 *p, Uint8 bitmask)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindFlag8(bu, "state", p, bitmask);
 	return (bu);
 }
@@ -142,7 +142,7 @@ AG_Button *
 AG_ButtonNewFlag16(void *parent, Uint flags, const char *caption,
     Uint16 *p, Uint16 bitmask)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindFlag16(bu, "state", p, bitmask);
 	return (bu);
 }
@@ -151,7 +151,7 @@ AG_Button *
 AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
     Uint32 *p, Uint32 bitmask)
 {
-	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_Button *bu = AG_ButtonNewS(parent, flags, caption);
 	AG_BindFlag32(bu, "state", p, bitmask);
 	return (bu);
 }

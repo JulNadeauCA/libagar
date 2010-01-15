@@ -80,7 +80,7 @@ AG_NumericalNewDbl(void *parent, Uint flags, const char *unit,
     const char *label, double *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindDouble(num, "value", v);
 	return (num);
 }
@@ -89,7 +89,7 @@ AG_NumericalNewDblR(void *parent, Uint flags, const char *unit,
     const char *label, double *v, double min, double max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindDouble(num, "value", v);
 	AG_NumericalSetMinDbl(num, min);
 	AG_NumericalSetMaxDbl(num, max);
@@ -101,7 +101,7 @@ AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
     const char *label, float *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindFloat(num, "value", v);
 	return (num);
 }
@@ -110,7 +110,7 @@ AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
     const char *label, float *v, float min, float max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindFloat(num, "value", v);
 	AG_NumericalSetMinFlt(num, min);
 	AG_NumericalSetMaxFlt(num, max);
@@ -122,7 +122,7 @@ AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
     const char *label, int *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindInt(num, "value", v);
 	return (num);
 }
@@ -131,7 +131,7 @@ AG_NumericalNewIntR(void *parent, Uint flags, const char *unit,
     const char *label, int *v, int min, int max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindInt(num, "value", v);
 	AG_NumericalSetMin(num, (double)min);	/* XXX */
 	AG_NumericalSetMax(num, (double)max);
@@ -142,7 +142,7 @@ AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
     const char *label, Uint *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint(num, "value", v);
 	return (num);
 }
@@ -151,7 +151,7 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit,
     const char *label, Uint *v, Uint min, Uint max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -163,7 +163,7 @@ AG_NumericalNewUint8(void *parent, Uint flags, const char *unit,
     const char *label, Uint8 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint8(num, "value", v);
 	return (num);
 }
@@ -172,7 +172,7 @@ AG_NumericalNewUint8R(void *parent, Uint flags, const char *unit,
     const char *label, Uint8 *v, Uint8 min, Uint8 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint8(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -184,7 +184,7 @@ AG_NumericalNewSint8(void *parent, Uint flags, const char *unit,
     const char *label, Sint8 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint8(num, "value", v);
 	return (num);
 }
@@ -193,7 +193,7 @@ AG_NumericalNewSint8R(void *parent, Uint flags, const char *unit,
     const char *label, Sint8 *v, Sint8 min, Sint8 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint8(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -205,7 +205,7 @@ AG_NumericalNewUint16(void *parent, Uint flags, const char *unit,
     const char *label, Uint16 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint16(num, "value", v);
 	return (num);
 }
@@ -214,7 +214,7 @@ AG_NumericalNewUint16R(void *parent, Uint flags, const char *unit,
     const char *label, Uint16 *v, Uint16 min, Uint16 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint16(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -226,7 +226,7 @@ AG_NumericalNewSint16(void *parent, Uint flags, const char *unit,
     const char *label, Sint16 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint16(num, "value", v);
 	return (num);
 }
@@ -235,7 +235,7 @@ AG_NumericalNewSint16R(void *parent, Uint flags, const char *unit,
     const char *label, Sint16 *v, Sint16 min, Sint16 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint16(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -247,7 +247,7 @@ AG_NumericalNewUint32(void *parent, Uint flags, const char *unit,
     const char *label, Uint32 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint32(num, "value", v);
 	return (num);
 }
@@ -256,7 +256,7 @@ AG_NumericalNewUint32R(void *parent, Uint flags, const char *unit,
     const char *label, Uint32 *v, Uint32 min, Uint32 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint32(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
@@ -268,7 +268,7 @@ AG_NumericalNewSint32(void *parent, Uint flags, const char *unit,
     const char *label, Sint32 *v)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint32(num, "value", v);
 	return (num);
 }
@@ -277,7 +277,7 @@ AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit,
     const char *label, Sint32 *v, Sint32 min, Sint32 max)
 {
 	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
+	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint32(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);

@@ -77,7 +77,7 @@ AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
 	AG_Checkbox *cb;
 	AG_Event *ev;
 
-	cb = AG_CheckboxNew(parent, flags, label);
+	cb = AG_CheckboxNewS(parent, flags, label);
 	ev = AG_SetEvent(cb, "checkbox-changed", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	return (cb);
@@ -87,7 +87,7 @@ AG_Checkbox *
 AG_CheckboxNewInt(void *parent, Uint flags, const char *label, int *pVal)
 {
 	AG_Checkbox *cb;
-	cb = AG_CheckboxNew(parent, flags, label);
+	cb = AG_CheckboxNewS(parent, flags, label);
 	AG_BindInt(cb, "state", pVal);
 	return (cb);
 }
@@ -97,7 +97,7 @@ AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
     Uint bitmask)
 {
 	AG_Checkbox *cb;
-	cb = AG_CheckboxNew(parent, flags, label);
+	cb = AG_CheckboxNewS(parent, flags, label);
 	AG_BindFlag(cb, "state", pFlags, bitmask);
 	return (cb);
 }
@@ -107,7 +107,7 @@ AG_CheckboxNewFlag32(void *parent, Uint flags, const char *label,
     Uint32 *pFlags, Uint32 bitmask)
 {
 	AG_Checkbox *cb;
-	cb = AG_CheckboxNew(parent, flags, label);
+	cb = AG_CheckboxNewS(parent, flags, label);
 	AG_BindFlag32(cb, "state", pFlags, bitmask);
 	return (cb);
 }
