@@ -544,7 +544,11 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 			AG_SetError("%s: %s", file, strerror(errno));
 			return (-1);
 		}
-		fread(fbuf, sizeof(fbuf), 1, f);
+		if (fread(fbuf, sizeof(fbuf), 1, f) < 1) {
+			AG_SetError("%s: %s", file, strerror(errno));
+			fclose(f);
+			return (-1);
+		}
 		fclose(f);
 
 		fbufp = fbuf;
