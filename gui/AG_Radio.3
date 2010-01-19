@@ -84,9 +84,20 @@ widget.
 If
 .Fa items
 is not NULL, it should point to a NULL-terminated array of strings.
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Bl -tag -width "AG_RADIO_EXPAND "
+.It AG_RADIO_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_RADIO_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_RADIO_EXPAND
+Shorthand for
+.Dv AG_RADIO_HFILL|AG_RADIO_VFILL .
+.El
 .Pp
 The
 .Fn AG_RadioNewFn

@@ -74,12 +74,21 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-Accepted
+Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_UCOMBO_SCROLLTOSEL "
 .It AG_UCOMBO_SCROLLTOSEL
 Scroll to initial selection if it is not visible.
+.It AG_UCOMBO_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_UCOMBO_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_UCOMBO_EXPAND
+Shorthand for
+.Dv AG_UCOMBO_HFILL|AG_UCOMBO_VFILL .
 .El
 .Pp
 The

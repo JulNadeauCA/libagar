@@ -115,7 +115,7 @@ function allocates, initializes, and attaches a
 widget displaying the specified
 .Fa vg
 object.
-Acceptable initialization
+Acceptable
 .Fa flags
 include:
 .Bl -tag -width "VG_VIEW_CONSTRUCTION "
@@ -131,6 +131,15 @@ Disable the VG-specific background.
 Display VG elements marked as "for construction", such as the points used to
 construct a polygon.
 The exact interpretation of this setting is element-specific.
+.It VG_VIEW_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It VG_VIEW_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It VG_VIEW_EXPAND
+Shorthand for
+.Dv VG_VIEW_HFILL|VG_VIEW_VFILL .
 .El
 .Pp
 The VG object displayed can be changed at runtime with

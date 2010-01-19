@@ -91,6 +91,12 @@ variants do not take a
 .Fa type
 argument.
 .Pp
+It is unnecessary to call
+.Xr AG_ExpandHoriz 3
+on horizontal separators or
+.Xr AG_ExpandVert 3
+on vertical separators, they are expanded by default.
+.Pp
 The
 .Fn AG_SeparatorSetPadding
 function sets the padding around the separator line in pixels.

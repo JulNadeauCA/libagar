@@ -86,15 +86,24 @@ enum ag_mpane_layout {
 };
 .Ed
 .Pp
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_MPANE_FORCE_DIV "
 .It AG_MPANE_FRAMES
 Render decorative frames.
 .It AG_MPANE_FORCE_DIV
 Don't allow the user to move the dividers.
+.It AG_MPANE_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_MPANE_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_MPANE_EXPAND
+Shorthand for
+.Dv AG_MPANE_HFILL|AG_MPANE_VFILL .
 .El
 .Pp
 The

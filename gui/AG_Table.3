@@ -117,9 +117,9 @@ and the following arguments are optional
 style parameters that will be passed on to
 .Fa event_fn .
 .Pp
-Acceptable values for the
+Acceptable
 .Fa flags
-argument include:
+include:
 .Pp
 .Bl -tag -width "AG_TABLE_HIGHLIGHT_COLS "
 .It AG_TABLE_MULTI
@@ -142,6 +142,17 @@ If the selection is not visible, scroll towards it.
 This flag is writeable, but is automatically set or cleared by keyboard events.
 .It AG_TABLE_HIGHLIGHT_COLS
 Highlight the currently selected column(s) using transparency.
+.It AG_TABLE_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_TABLE_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_TABLE_EXPAND
+Shorthand for
+.Dv AG_TABLE_HFILL|AG_TABLE_VFILL .
+This is recommended as an alternative to calling
+.Fn AG_TableSizeHint .
 .El
 .Pp
 The

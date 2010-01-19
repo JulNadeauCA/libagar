@@ -66,9 +66,21 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Pp
+.Bl -tag -width "AG_VBOX_EXPAND "
+.It AG_VBOX_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_VBOX_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_VBOX_EXPAND
+Shorthand for
+.Dv AG_VBOX_HFILL|AG_VBOX_VFILL .
+.El
 .Pp
 The
 .Fn AG_VBoxSetHomogenous

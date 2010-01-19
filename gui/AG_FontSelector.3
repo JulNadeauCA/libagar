@@ -59,9 +59,20 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Bl -tag -width "AG_FONTSELECTOR_EXPAND "
+.It AG_FONTSELECTOR_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_FONTSELECTOR_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_FONTSELECTOR_EXPAND
+Shorthand for
+.Dv AG_FONTSELECTOR_HFILL|AG_FONTSELECTOR_VFILL .
+.El
 .Sh BINDINGS
 The
 .Nm

@@ -148,9 +148,21 @@ enum ag_slider_type {
 };
 .Ed
 .Pp
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Pp
+.Bl -tag -width "AG_SLIDER_EXPAND "
+.It AG_SLIDER_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_SLIDER_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_SLIDER_EXPAND
+Shorthand for
+.Dv AG_SLIDER_HFILL|AG_SLIDER_VFILL .
+.El
 .Pp
 The
 .Fn AG_SliderNew*

@@ -59,14 +59,25 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Pp
-.Fn AG_ConsoleSetPadding
-sets the padding around messages in pixels.
-.Pp
-There are currently no specific
+Acceptable
 .Fa flags
-defined for 
-.Nm .
+include:
+.Pp
+.Bl -tag -width "AG_CONSOLE_EXPAND "
+.It AG_CONSOLE_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_CONSOLE_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_CONSOLE_EXPAND
+Shorthand for
+.Dv AG_CONSOLE_HFILL|AG_CONSOLE_VFILL .
+.El
+.Pp
+The
+.Fn AG_ConsoleSetPadding
+function sets the padding around messages in pixels.
 .Sh MESSAGES
 .nr nS 1
 .Ft "AG_ConsoleLine *"

@@ -98,13 +98,22 @@ and
 .Fn AG_SocketFromBMP
 variants also set a background image for the socket, typically used to show
 the type of icons that can be drag-and-dropped onto the socket.
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_SOCKET_STICKY_STATE "
 .It AG_SOCKET_STICKY_STATE
 Mouse click should toggle the boolean state.
+.It AG_SOCKET_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_SOCKET_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_SOCKET_EXPAND
+Shorthand for
+.Dv AG_SOCKET_HFILL|AG_SOCKET_VFILL .
 .El
 .Pp
 The

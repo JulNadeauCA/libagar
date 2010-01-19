@@ -80,9 +80,9 @@ functions allocate, initialize, and attach a new
 .Nm
 container, dividing space in the specified orientation.
 .Pp
-Available
+Acceptable
 .Fa flags
-options include:
+include:
 .Pp
 .Bl -tag -width "AG_PANE_FORCE_DIV1FILL "
 .It AG_PANE_DIV1FILL
@@ -102,6 +102,15 @@ Enforce continuous
 behavior.
 .It AG_PANE_UNMOVABLE
 Do not allow the user to move the divider.
+.It AG_PANE_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_PANE_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_PANE_EXPAND
+Shorthand for
+.Dv AG_PANE_HFILL|AG_PANE_VFILL .
 .El
 .Pp
 If

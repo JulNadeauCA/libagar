@@ -79,12 +79,22 @@ enum ag_progress_bar_type {
 };
 .Ed
 .Pp
-The following
+Acceptable
 .Fa flags
-are accepted:
+include:
+.Pp
 .Bl -tag -width "AG_PROGRESS_BAR_SHOW_PCT "
 .It AG_PROGRESS_BAR_SHOW_PCT
 Display text showing the percentage.
+.It AG_PROGRESS_BAR_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_PROGRESS_BAR_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_PROGRESS_BAR_EXPAND
+Shorthand for
+.Dv AG_PROGRESS_BAR_HFILL|AG_PROGRESS_BAR_VFILL .
 .El
 .Pp
 The

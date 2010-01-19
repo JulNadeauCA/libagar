@@ -66,11 +66,11 @@ function allocates, initializes, and attaches a
 .Nm
 widget, initially displaying the given
 .Fa tile .
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
-.Bl -tag -compact -width "RG_TILEVIEW_HIDE_CONTROLS "
+.Bl -tag -width "RG_TILEVIEW_HIDE_CONTROLS "
 .It RG_TILEVIEW_NO_SCROLLING
 Disable panning on right click.
 .It RG_TILEVIEW_HIDE_CONTROLS
@@ -81,6 +81,15 @@ Disable background tiling.
 Don't display the boundary rectangle.
 .It RG_TILEVIEW_NO_GRID
 Disable the standard tile grid.
+.It RG_TILEVIEW_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It RG_TILEVIEW_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It RG_TILEVIEW_EXPAND
+Shorthand for
+.Dv RG_TILEVIEW_HFILL|RG_TILEVIEW_VFILL .
 .El
 .Pp
 The

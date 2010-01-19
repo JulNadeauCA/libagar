@@ -69,15 +69,24 @@ enum ag_fixed_plotter_type {
 } type;
 .Ed
 .Pp
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_FIXED_PLOTTER_SCROLL "
 .It AG_FIXED_PLOTTER_SCROLL
 Always scroll to the end of the plot if it is not visible.
 .It AG_FIXED_PLOTTER_XAXIS
 Display the X-axis line.
+.It AG_FIXED_PLOTTER_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_FIXED_PLOTTER_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_FIXED_PLOTTER_EXPAND
+Shorthand for
+.Dv AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL .
 .El
 .Sh PLOTTING
 .nr nS 1

@@ -76,6 +76,15 @@ As an optimisation when large number of widgets are to be positioned, this
 option can be used and
 .Xr AG_WidgetUpdate 3
 manually invoked only once all widgets are in place.
+.It AG_FIXED_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_FIXED_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_FIXED_EXPAND
+Shorthand for
+.Dv AG_FIXED_HFILL|AG_FIXED_VFILL .
 .El
 .Sh CHILD WIDGETS
 .nr nS 1

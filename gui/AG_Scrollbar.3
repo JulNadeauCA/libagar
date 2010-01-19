@@ -134,9 +134,22 @@ enum ag_scrollbar_type {
 };
 .Ed
 .Pp
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Bl -tag -width "AG_SCROLLBAR_EXPAND "
+.It AG_SCROLLBAR_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+This is commonly used with horizontal scrollbars.
+.It AG_SCROLLBAR_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+This is commonly used with vertical scrollbars.
+.It AG_SCROLLBAR_EXPAND
+Shorthand for
+.Dv AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL .
+.El
 .Pp
 The
 .Fn AG_ScrollbarNew*
