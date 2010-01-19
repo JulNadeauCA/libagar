@@ -714,7 +714,7 @@ DrawText(AG_Scrollbar *sb)
 
 	AG_PushTextState();
 	AG_TextColor(agColors[TEXT_COLOR]);
-	AG_TextBGColorHex(0xccccccff);
+	AG_TextBGColor(AG_ColorRGB(127,127,127));
 
 	Snprintf(label, sizeof(label), "%d < %d < %d(%d)",
 	    AG_GetInt(sb,"min"),
