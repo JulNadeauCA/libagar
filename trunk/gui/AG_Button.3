@@ -253,6 +253,15 @@ Invert the interpretation of the
 .Sq state
 binding.
 By default, a value of 1 causes the button to be pressed.
+.It AG_BUTTON_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_BUTTON_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_BUTTON_EXPAND
+Shorthand for
+.Dv AG_BUTTON_HFILL|AG_BUTTON_VFILL .
 .El
 .Sh EVENTS
 The

@@ -110,6 +110,22 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+Acceptable
+.Fa flags
+include:
+.Pp
+.Bl -tag -width "AG_MENU_EXPAND ".
+.It AG_MENU_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+This option is recommended.
+.It AG_MENU_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_MENU_EXPAND
+Shorthand for
+.Dv AG_MENU_HFILL|AG_MENU_VFILL .
+.El
 .Pp
 The
 .Fn AG_MenuNewGlobal

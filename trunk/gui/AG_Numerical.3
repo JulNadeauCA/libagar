@@ -105,6 +105,9 @@ for choosing between different units
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewSint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint32 *value"
 .Pp
+.Ft "void"
+.Fn AG_NumericalSizeHint "AG_Numerical *num" "const char *sizeHint"
+.Pp
 .Ft void
 .Fn AG_NumericalSetMinInt "AG_Numerical *num" "int min_value"
 .Pp
@@ -153,6 +156,23 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+Acceptable
+.Fa flags
+include:
+.Pp
+.Bl -tag -width "AG_NUMERICAL_EXPAND "
+.It AG_NUMERICAL_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+This is recommended as an alternative to calling
+.Fn AG_NumericalSizeHint .
+.It AG_NUMERICAL_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_NUMERICAL_EXPAND
+Shorthand for
+.Dv AG_NUMERICAL_HFILL|AG_NUMERICAL_VFILL .
+.El
 .Pp
 The
 .Fa unit 
@@ -171,6 +191,14 @@ The
 constructors also assign a default
 .Sq value
 binding of the given type.
+.Pp
+.Fn AG_NumericalSizeHint
+requests that the initial geometry of the
+.Nm
+widget be sufficient to display
+.Fa sizeHint
+in its entirety (see
+.Xr AG_SizeSpec 3 ) .
 .Pp
 The
 .Fn AG_NumericalSetMin* ,

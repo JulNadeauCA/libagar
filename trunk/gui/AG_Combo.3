@@ -97,6 +97,15 @@ flag to the
 Allow user to enter text that does not match any item in the list.
 .It AG_COMBO_SCROLLTOSEL
 Scroll to initial selection if it is not visible.
+.It AG_COMBO_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_COMBO_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_COMBO_EXPAND
+Shorthand for
+.Dv AG_COMBO_HFILL|AG_COMBO_VFILL .
 .El
 .Pp
 The

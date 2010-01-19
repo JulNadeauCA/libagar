@@ -104,6 +104,15 @@ The selected file must be writeable or an error is returned to the user.
 .It AG_FILEDLG_ASYNC
 Load/save routines will be executed in a separate thread.
 This flag is available only if agar was compiled with threads support.
+.It AG_FILEDLG_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_FILEDLG_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_FILEDLG_EXPAND
+Shorthand for
+.Dv AG_FILEDLG_HFILL|AG_FILEDLG_VFILL .
 .El
 .Pp
 The working directory can be set manually with the

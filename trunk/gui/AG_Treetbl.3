@@ -79,9 +79,9 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_TREETBL_REORDERCOLS "
 .It AG_TREETBL_MULTI
@@ -104,6 +104,17 @@ When a row is deleted,
 .Nm
 will remember selection information for later use by
 .Fn AG_TreetblRowRestoreAll .
+.It AG_TREETBL_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_TREETBL_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_TREETBL_EXPAND
+Shorthand for
+.Dv AG_TREETBL_HFILL|AG_TREETBL_VFILL .
+This is recommended as an alternative to
+.Fn AG_TreetblSizeHint .
 .El
 .Pp
 The

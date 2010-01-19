@@ -86,13 +86,22 @@ The initial geometry of the widget is defined by the
 and
 .Fa height
 parameters.
-The following
+Acceptable
 .Fa flags
-are accepted:
+include:
 .Pp
 .Bl -tag -width "AG_PIXMAP_RESCALE "
-.It Dv AG_PIXMAP_RESCALE
+.It AG_PIXMAP_RESCALE
 Rescale image to fit widget size.
+.It AG_PIXMAP_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_PIXMAP_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_PIXMAP_EXPAND
+Shorthand for
+.Dv AG_PIXMAP_HFILL|AG_PIXMAP_VFILL .
 .El
 .Pp
 The following functions create a new

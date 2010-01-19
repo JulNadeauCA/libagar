@@ -345,6 +345,19 @@ The label is partially hidden (read-only).
 Force re-rendering of the text at next draw (used internally by
 .Fn AG_LabelString ,
 etc.)
+.It AG_LABEL_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+Polled labels, whenever possible, should use this option (otherwise a
+.Fn AG_LabelSizeHint
+call is needed).
+.It AG_LABEL_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+This option is useful with dynamically changing multi-line labels.
+.It AG_LABEL_EXPAND
+Shorthand for
+.Dv AG_LABEL_HFILL|AG_LABEL_VFILL .
 .El
 .Sh EXAMPLES
 The following code snippet creates a window containing both a static label

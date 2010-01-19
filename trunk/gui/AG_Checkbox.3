@@ -92,9 +92,18 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Pp
-.Bl -tag -width "AG_CHECKBOX_SET "
+.Bl -tag -width "AG_CHECKBOX_EXPAND "
 .It AG_CHECKBOX_SET
 Set the state to 1 on initialization.
+.It AG_CHECKBOX_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_CHECKBOX_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_CHECKBOX_EXPAND
+Shorthand for
+.Dv AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL .
 .El
 .Pp
 The

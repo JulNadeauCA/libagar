@@ -64,9 +64,9 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_SCROLLVIEW_BY_MOUSE "
 .It AG_SCROLLVIEW_NOPAN_X
@@ -83,6 +83,15 @@ Panning with cursor is permitted (may interfere with the operation
 of child widgets).
 .It AG_SCROLLVIEW_FRAME
 Draw background and frame.
+.It AG_SCROLLVIEW_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_SCROLLVIEW_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_SCROLLVIEW_EXPAND
+Shorthand for
+.Dv AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL .
 .El
 .Pp
 The

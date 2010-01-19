@@ -105,9 +105,9 @@ flag and configures a default
 .Sq tlist-poll
 event handler.
 .Pp
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
 .It AG_TLIST_MULTI
@@ -136,6 +136,20 @@ List contents are organized in a tree structure.
 When using
 .Dv AG_TLIST_POLL ,
 don't try to preserve selection information across list updates.
+.It AG_TLIST_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_TLIST_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_TLIST_EXPAND
+Shorthand for
+.Dv AG_TLIST_HFILL|AG_TLIST_VFILL .
+This is recommended as an alternative to
+.Fn AG_TlistSizeHint ,
+.Fn AG_TlistSizeHintPixels
+or
+.Fn AG_TlistSizeHintLargest .
 .El
 .Pp
 .Fn AG_TlistSetRefresh

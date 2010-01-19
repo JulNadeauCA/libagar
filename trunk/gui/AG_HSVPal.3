@@ -62,9 +62,10 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There following
+Acceptable
 .Fa flags
-options are available:
+include:
+.Pp
 .Bl -tag -width "AG_HSVPAL_NOPREVIEW "
 .It AG_HSVPAL_NOALPHA
 Disable the alpha component editor.
@@ -76,6 +77,15 @@ Disable the alpha component editor, regardless of whether the
 pixel format includes alpha support.
 .It AG_HSVPAL_NOPREVIEW
 Disable the color preview band.
+.It AG_HSVPAL_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_HSVPAL_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_HSVPAL_EXPAND
+Shorthand for
+.Dv AG_HSVPAL_HFILL|AG_HSVPAL_VFILL .
 .El
 .Sh BINDINGS
 The

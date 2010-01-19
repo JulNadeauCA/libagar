@@ -100,6 +100,15 @@ Divide space into equal parts.
 .It AG_BOX_FRAME
 Draw a decorative frame by default.
 This flag is implied if a caption text is set.
+.It AG_BOX_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_BOX_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_BOX_EXPAND
+Shorthand for
+.Dv AG_BOX_HFILL|AG_BOX_VFILL .
 .El
 .Pp
 The

@@ -83,9 +83,9 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
+Acceptable
 .Fa flags
-may include:
+include:
 .Pp
 .Bl -tag -width "AG_TOOLBAR_MULTI_STICKY "
 .It AG_TOOLBAR_HOMOGENOUS
@@ -97,6 +97,12 @@ at any given time.
 .It AG_TOOLBAR_MULTI_STICKY
 Button should preserve their state but multiple buttons can be selected.
 .El
+.Pp
+NOTE: It is not necessary to invoke
+.Xr AG_ExpandHoriz 3
+on horizontal toolbars or
+.Xr AG_ExpandVert 3
+on vertical toolbars, they are expanded by default.
 .Pp
 .Fn AG_ToolbarRow
 specifies the row number for all subsequent operations.

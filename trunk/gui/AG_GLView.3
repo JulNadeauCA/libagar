@@ -87,9 +87,21 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are currently no
+Acceptable
 .Fa flags
-specific to this widget.
+include:
+.Pp
+.Bl -tag -width "AG_GLVIEW_EXPAND "
+.It AG_GLVIEW_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_GLVIEW_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_GLVIEW_EXPAND
+Shorthand for
+.Dv AG_GLVIEW_HFILL|AG_GLVIEW_VFILL .
+.El
 .Pp
 .Fn AG_GLViewSizeHint
 suggests an initial widget size in pixels.

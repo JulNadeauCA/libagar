@@ -69,9 +69,21 @@ function allocates, initializes, and attaches a new
 widget displaying the matrix
 .Fa M
 (if not NULL).
-There are no
+Acceptable
 .Fa flags
-options currently defined.
+include:
+.Pp
+.Bl -tag -width "M_MATVIEW_EXPAND "
+.It M_MATVIEW_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It M_MATVIEW_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It M_MATVIEW_EXPAND
+Shorthand for
+.Dv M_MATVIEW_HFILL|M_MATVIEW_VFILL .
+.El
 .Pp
 .Fn M_MatviewSizeHint
 sets an initial preferred widget size such that the widget can display

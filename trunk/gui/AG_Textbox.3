@@ -61,6 +61,12 @@ multiline mode.
 .Ft "void"
 .Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
 .Pp
+.Ft "void"
+.Fn AG_TextboxBindAutoUTF8 "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
+.Pp
+.Ft "void"
+.Fn AG_TextboxBindAutoASCII "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
+.Pp
 .Ft void
 .Fn AG_TextboxSetStatic "AG_Textbox *textbox" "int enable"
 .Pp
@@ -102,6 +108,7 @@ of the textbox.
 Acceptable
 .Fa flags
 include:
+.Pp
 .Bl -tag -width "AG_TEXTBOX_ABANDON_FOCUS "
 .It AG_TEXTBOX_MULTILINE
 Causes newlines to be entered literally into the string, and arranges for
@@ -139,6 +146,19 @@ Disable the emacs-style ALT-f and ALT-b keys which conflict with traditional
 LATIN-1 combinations.
 .It AG_TEXTBOX_NOLATIN1
 Disable traditional LATIN-1 key combinations.
+.It AG_TEXTBOX_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+This is recommended as an alternative to
+.Fn AG_TextboxSizeHint .
+.It AG_TEXTBOX_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+This is recommended for multi-line text, as an alternative to
+.Fn AG_TextboxSizeHintLines .
+.It AG_TEXTBOX_EXPAND
+Shorthand for
+.Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
 .El
 .Pp
 The
@@ -150,6 +170,18 @@ respectively.
 The
 .Fa bufferSize
 argument indicates the complete size of the buffer in bytes.
+The
+.Fn AG_TextboxBindAutoUTF8
+and
+.Fn AG_TextboxBindAutoASCII
+variants accept pointer-to-pointer
+.Ft char **
+and
+.Ft int *
+arguments, and arrange for the buffer to be automatically resized to accomodate
+new text input.
+Upon reallocation, the size variable is updated and the text buffer pointer
+may change.
 .Pp
 The
 .Fn AG_TextboxSetStatic
@@ -213,6 +245,16 @@ in pixels to a position in the text buffer and return this position into
 .Fa pos .
 The function returns -1 or 1 if the cursor lies before or after the end
 of the string, respectively.
+If
+.Fa absolute
+if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_TextboxMoveCursor
+moves the text cursor to the position closest to the specified pixel coordinates
+.Fa mx
+and
+.Fy my
+(in the widget's local coordinate system).
 If
 .Fa absolute
 if 1, y coordinates outside of the widget area are allowed.
@@ -355,7 +397,7 @@ The string is about to be modified.
 The string was just modified.
 .El
 .Sh EXAMPLES
-The following code fragment binds a
+The following code fragment binds an
 .Nm
 to a string contained in a fixed-size buffer:
 .Pp
@@ -367,13 +409,12 @@ tb = AG_TextboxNew(parent, 0, "Name: ");
 AG_TextboxBindUTF8(tb, name, sizeof(name));
 .Ed
 .Pp
-As is the case with all widgets, a default binding (residing in the widget
-structure) is provided.
-The following code uses
-.Fn AG_TextboxPrintf
-to set the value of the default binding, and
+As is the case with all widgets, a "default" binding (limited to
+.Dv AG_TEXTBOX_STRING_MAX
+bytes) is provided.
+The following code uses and
 .Fn AG_TextboxDupString
-to retrieve a pointer to it:
+on the default binding:
 .Pp
 .Bd -literal -offset indent
 AG_Textbox *tb;
@@ -384,9 +425,22 @@ AG_TextboxPrintf(tb, "Foo");
 value_ptr = AG_TextboxDupString(tb);
 .Ed
 .Pp
-Note that the default binding is limited to
-.Dv AG_TEXTBOX_STRING_MAX
-bytes in size.
+The following code fragment binds a multi-line
+.Nm
+to a text buffer which will be grown automatically to accomodate any new
+user input:
+.Pp
+.Bd -literal -offset indent
+char *text;
+Uint textSize;
+AG_Textbox *tb;
+
+tb = AG_TextboxNew(parent, AG_TEXTBOX_MULTILINE, NULL);
+text = AG_Strdup("foo");
+textSize = strlen(text)+1;
+AG_TextboxBindAutoUTF8(tb, &text, &textSize);
+AG_Expand(tb);
+.Ed
 .Pp
 Also see
 .Pa demos/textbox
@@ -404,3 +458,4 @@ widget first appeared in Agar 1.0.
 It was mostly rewritten as
 .Xr AG_Editable 3
 was added in Agar 1.3.2.
+Support for dynamically-resized text buffers was added in Agar 1.4.0.

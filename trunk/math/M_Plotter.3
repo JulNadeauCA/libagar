@@ -103,9 +103,23 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are no
+Acceptable
 .Fa flags
-options currently defined.
+include:
+.Pp
+.Bl -tag -width "M_PLOTTER_EXPAND "
+.It M_PLOTTER_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It M_PLOTTER_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It M_PLOTTER_EXPAND
+Shorthand for
+.Dv M_PLOTTER_HFILL|M_PLOTTER_VFILL .
+This is recommended as an alternative to
+.Fn M_PlotterSizeHint .
+.El
 .Pp
 .Fn M_PlotterSizeHint
 sets an initial preferred widget size in pixels.
