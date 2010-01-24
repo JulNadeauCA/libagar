@@ -27,6 +27,9 @@ typedef struct ag_toolbar {
 #define AG_TOOLBAR_HOMOGENOUS	0x01	/* Scale buttons homogenously */
 #define AG_TOOLBAR_STICKY	0x02	/* Single toggle selection */
 #define AG_TOOLBAR_MULTI_STICKY	0x04	/* Multiple toggle selections */
+#define AG_TOOLBAR_HFILL	0x08
+#define AG_TOOLBAR_VFILL	0x10
+#define AG_TOOLBAR_EXPAND	(AG_TOOLBAR_HFILL|AG_TOOLBAR_VFILL)
 } AG_Toolbar;
 
 __BEGIN_DECLS

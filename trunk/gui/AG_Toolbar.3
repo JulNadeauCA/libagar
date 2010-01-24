@@ -96,6 +96,15 @@ Buttons should preserve their state, and only one button can be selected
 at any given time.
 .It AG_TOOLBAR_MULTI_STICKY
 Button should preserve their state but multiple buttons can be selected.
+.It AG_TOOLBAR_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_TOOLBAR_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_TOOLBAR_EXPAND
+Shorthand for
+.Dv AG_TOOLBAR_HFILL|AG_TOOLBAR_VFILL .
 .El
 .Pp
 NOTE: It is not necessary to invoke

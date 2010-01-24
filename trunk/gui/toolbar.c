@@ -50,14 +50,14 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 		}
 		switch (type) {
 		case AG_TOOLBAR_HORIZ:
-			bar->rows[i] = AG_BoxNew(bar, AG_BOX_HORIZ,
-			    AG_BOX_HFILL|bflags);
+			bar->rows[i] = AG_BoxNew(bar, AG_BOX_HORIZ, bflags);
 			break;
 		case AG_TOOLBAR_VERT:
-			bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, 
-			    AG_BOX_VFILL|bflags);
+			bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, bflags);
 			break;
 		}
+		if (flags & AG_TOOLBAR_HFILL) { AG_ExpandHoriz(bar->rows[i]); }
+		if (flags & AG_TOOLBAR_VFILL) { AG_ExpandVert(bar->rows[i]); }
 		AG_BoxSetPadding(bar->rows[i], 1);
 		AG_BoxSetSpacing(bar->rows[i], 1);
 		bar->nRows++;
