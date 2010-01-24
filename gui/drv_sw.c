@@ -417,10 +417,8 @@ AG_WM_LimitWindowToView(AG_Window *win)
 	AG_DriverSw *dsw = OBJECT(win)->parent;
 	AG_Widget *w = WIDGET(win);
 
-	if (w->x < dsw->windowXOutLimit - w->w) {
-		w->x = dsw->windowXOutLimit - w->w;
-	} else if (w->x > dsw->w - dsw->windowXOutLimit) {
-		w->x = dsw->w - dsw->windowXOutLimit;
+	if (w->x < 0) {
+		w->x = 0;
 	}
 	if (w->y < 0) {
 		w->y = 0;
