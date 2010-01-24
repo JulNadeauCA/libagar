@@ -13,6 +13,10 @@
 
 typedef struct ag_statusbar {
 	struct ag_box box;
+	Uint flags;
+#define AG_STATUSBAR_HFILL	0x01
+#define AG_STATUSBAR_VFILL	0x02
+#define AG_STATUSBAR_EXPAND	(AG_STATUSBAR_HFILL|AG_STATUSBAR_VFILL)
 	AG_Label *labels[AG_STATUSBAR_MAX_LABELS];
 	int nlabels;
 } AG_Statusbar;
