@@ -36,7 +36,9 @@ AG_StatusbarNew(void *parent, Uint flags)
 
 	sbar = Malloc(sizeof(AG_Statusbar));
 	AG_ObjectInit(sbar, &agStatusbarClass);
-	AG_ExpandHoriz(sbar);
+	sbar->flags |= flags;
+	if (flags & AG_STATUSBAR_HFILL) { AG_ExpandHoriz(sbar); }
+	if (flags & AG_STATUSBAR_VFILL) { AG_ExpandVert(sbar); }
 	AG_ObjectAttach(parent, sbar);
 	return (sbar);
 }
@@ -50,6 +52,7 @@ Init(void *obj)
 	AG_BoxSetType(box, AG_BOX_VERT);
 	AG_BoxSetPadding(box, 2);
 	AG_BoxSetSpacing(box, 1);
+	sbar->flags = 0;
 	sbar->nlabels = 0;
 #ifdef AG_DEBUG
 	AG_BindInt(sbar, "nlabels", &sbar->nlabels);
