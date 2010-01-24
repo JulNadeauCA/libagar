@@ -61,6 +61,9 @@ bar representing the value.
 .Ft void
 .Fn AG_ProgressBarSetWidth "AG_ProgressBar *pb" "int width"
 .Pp
+.Ft void
+.Fn AG_ProgressBarSetLength "AG_ProgressBar *pb" "int length"
+.Pp
 .Ft int
 .Fn AG_ProgressBarPercent "AG_ProgressBar *pb" 
 .Pp
@@ -89,9 +92,15 @@ Display text showing the percentage.
 .It AG_PROGRESS_BAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
+If this flag is not used,
+.Fn AG_ProgressBarSetLength
+should be called explicitely.
 .It AG_PROGRESS_BAR_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
+If this flag is not used,
+.Fn AG_ProgressBarSetLength
+should be called explicitely.
 .It AG_PROGRESS_BAR_EXPAND
 Shorthand for
 .Dv AG_PROGRESS_BAR_HFILL|AG_PROGRESS_BAR_VFILL .
@@ -115,6 +124,14 @@ variants specify the layout on initialization.
 The
 .Fn AG_ProgressBarSetWidth
 function sets the width of the bar in pixels.
+.Pp
+.Fn AG_ProgressBarSetLength
+requests a preferred length in pixels.
+Alternatively,
+.Dv AG_PROGRESS_BAR_HFILL
+or
+.Dv AG_PROGRESS_BAR_VFILL
+may be used.
 .Pp
 The
 .Fn AG_ProgressBarPercent

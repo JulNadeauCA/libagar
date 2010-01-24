@@ -41,17 +41,8 @@ AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)
 	AG_ObjectInit(pb, &agProgressBarClass);
 	pb->type = type;
 	pb->flags |= flags;
-
-	switch (type) {
-	case AG_PROGRESS_BAR_HORIZ:
-		AG_ExpandHoriz(pb);
-		break;
-	case AG_PROGRESS_BAR_VERT:
-		AG_ExpandVert(pb);
-		break;
-	default:
-		break;
-	}
+	if (flags & AG_PROGRESS_BAR_HFILL) { AG_ExpandHoriz(pb); }
+	if (flags & AG_PROGRESS_BAR_VFILL) { AG_ExpandVert(pb); }
 	AG_ObjectAttach(parent, pb);
 	return (pb);
 }
@@ -82,6 +73,7 @@ Init(void *obj)
 	pb->min = 0;
 	pb->max = 100;
 	pb->width = 25;
+	pb->length = 300;
 	pb->pad = 2;
 	pb->tCache = agTextCache ? AG_TextCacheNew(pb, 50, 10) : NULL;
 
@@ -92,6 +84,7 @@ Init(void *obj)
 	AG_BindUint(pb, "flags", &pb->flags);
 	AG_BindUint(pb, "type", &pb->type);
 	AG_BindInt(pb, "width", &pb->width);
+	AG_BindInt(pb, "length", &pb->length);
 	AG_BindInt(pb, "pad", &pb->pad);
 #endif
 }
@@ -113,6 +106,14 @@ AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 	AG_ObjectUnlock(pb);
 }
 
+void
+AG_ProgressBarSetLength(AG_ProgressBar *pb, int length)
+{
+	AG_ObjectLock(pb);
+	pb->length = length;
+	AG_ObjectUnlock(pb);
+}
+
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
@@ -120,12 +121,12 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_HORIZ:
-		r->w = 32;
+		r->w = pb->length;
 		r->h = pb->width;
 		break;
 	case AG_PROGRESS_BAR_VERT:
 		r->w = pb->width;
-		r->h = 32;
+		r->h = pb->length;
 		break;
 	}
 }
@@ -165,10 +166,6 @@ Draw(void *obj)
 	char pctText[32];
 	AG_Rect rd;
 	int min, max, val, wAvail;
-
-	/* XXX why isn't SizeAllocate() working? */
-	if (WIDTH(pb) < pb->width || HEIGHT(pb) < pb->width)
-		return;
 
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");

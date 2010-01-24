@@ -25,6 +25,7 @@ typedef struct ag_progress_bar {
 	int min, max;			/* Default range binding */
 	enum ag_progress_bar_type type;	/* Style */
 	int width;			/* Width in pixels */
+	int length;			/* Length in pixels */
 	int pad;			/* Padding in pixels */
 	struct ag_text_cache *tCache;	/* For SHOW_PCT */
 } AG_ProgressBar;
@@ -41,6 +42,7 @@ AG_ProgressBar *AG_ProgressBarNewInt(void *, enum ag_progress_bar_type, Uint,
 #define AG_ProgressBarNewVert(p,flags) \
 	AG_ProgressBarNew((p),AG_PROGRESS_BAR_VERT,(flags))
 
+void    AG_ProgressBarSetLength(AG_ProgressBar *, int);
 void	AG_ProgressBarSetWidth(AG_ProgressBar *, int);
 int	AG_ProgressBarPercent(AG_ProgressBar *);
 __END_DECLS
