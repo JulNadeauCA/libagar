@@ -351,6 +351,19 @@ Uint32 MyFlags = 0;
 AG_ButtonNewFlag32(parent, 0, "Bit 1", &MyFlags, 0x01);
 AG_ButtonNewFlag32(parent, 0, "Bit 2", &MyFlags, 0x02);
 .Ed
+.Pp
+The following code fragment uses a button to control an int protected
+by a mutex device:
+.Pp
+.Bd -literal -offset indent
+int MyInt = 0;
+AG_Mutex MyMutex;
+AG_Button *btn;
+
+AG_MutexInit(&MyMutex);
+btn = AG_ButtonNew(parent, 0, "Mutex-protected flag");
+AG_BindIntMp(btn, "state", &MyInt, &MyMutex);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
