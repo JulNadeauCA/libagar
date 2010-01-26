@@ -16,7 +16,7 @@ VG_CircleNew(void *pNode, VG_Point *pCenter, float r)
 {
 	VG_Circle *vc;
 
-	vc = Malloc(sizeof(VG_Circle));
+	vc = AG_Malloc(sizeof(VG_Circle));
 	VG_NodeInit(vc, &vgCircleOps);
 	vc->p = pCenter;
 	vc->r = r;

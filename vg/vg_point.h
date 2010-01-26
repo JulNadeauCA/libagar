@@ -15,7 +15,7 @@ VG_PointNew(void *pNode, VG_Vector pos)
 {
 	VG_Point *vp;
 
-	vp = Malloc(sizeof(VG_Point));
+	vp = AG_Malloc(sizeof(VG_Point));
 	VG_NodeInit(vp, &vgPointOps);
 	VG_Translate(vp, pos);
 	VG_NodeAttach(pNode, vp);
