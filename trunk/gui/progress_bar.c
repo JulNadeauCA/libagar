@@ -175,6 +175,9 @@ Draw(void *obj)
 
 	STYLE(pb)->ProgressBarBackground(pb);
 
+	if ((max - min) <= 0) {
+		return;
+	}
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_VERT:
 		wAvail = WIDGET(pb)->h - pb->pad*2;
