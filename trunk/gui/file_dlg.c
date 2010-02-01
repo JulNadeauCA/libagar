@@ -826,27 +826,29 @@ SelectedType(AG_Event *event)
 			    &fo->data.i.val);
 			break;
 		case AG_FILEDLG_INT:
-			num = AG_NumericalNewS(fd->optsCtr, 0, NULL, fo->descr);
+			num = AG_NumericalNewS(fd->optsCtr, AG_NUMERICAL_HFILL,
+			    NULL, fo->descr);
 			AG_BindInt(num, "value", &fo->data.i.val);
 			AG_NumericalSetRangeInt(num, fo->data.i.min,
 			    fo->data.i.max);
 			break;
 		case AG_FILEDLG_FLOAT:
-			num = AG_NumericalNewS(fd->optsCtr, 0, fo->unit,
-			    fo->descr);
+			num = AG_NumericalNewS(fd->optsCtr, AG_NUMERICAL_HFILL,
+			    fo->unit, fo->descr);
 			AG_BindFloat(num, "value", &fo->data.flt.val);
 			AG_NumericalSetRangeDbl(num, fo->data.flt.min,
 			                             fo->data.flt.max);
 			break;
 		case AG_FILEDLG_DOUBLE:
-			num = AG_NumericalNewS(fd->optsCtr, 0, fo->unit,
-			    fo->descr);
+			num = AG_NumericalNewS(fd->optsCtr, AG_NUMERICAL_HFILL,
+			    fo->unit, fo->descr);
 			AG_BindDouble(num, "value", &fo->data.dbl.val);
 			AG_NumericalSetRange(num, fo->data.dbl.min,
 			                          fo->data.dbl.max);
 			break;
 		case AG_FILEDLG_STRING:
-			tbox = AG_TextboxNewS(fd->optsCtr, 0, fo->descr);
+			tbox = AG_TextboxNewS(fd->optsCtr, AG_TEXTBOX_HFILL,
+			    fo->descr);
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
 			break;
