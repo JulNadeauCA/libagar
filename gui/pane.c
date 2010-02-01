@@ -199,14 +199,6 @@ Init(void *obj)
 
 #ifdef AG_DEBUG
 	AG_BindInt(pa, "flags", &pa->flags);
-	AG_BindInt(pa, "wMin[0]", &pa->wMin[0]);
-	AG_BindInt(pa, "hMin[0]", &pa->hMin[0]);
-	AG_BindInt(pa, "wMin[1]", &pa->wMin[1]);
-	AG_BindInt(pa, "hMin[1]", &pa->hMin[1]);
-	AG_BindInt(pa, "wReq[0]", &pa->wReq[0]);
-	AG_BindInt(pa, "hReq[0]", &pa->hReq[0]);
-	AG_BindInt(pa, "wReq[1]", &pa->wReq[1]);
-	AG_BindInt(pa, "hReq[1]", &pa->hReq[1]);
 	AG_BindInt(pa, "dmoving", &pa->dmoving);
 	AG_BindInt(pa, "dx", &pa->dx);
 	AG_BindInt(pa, "rx", &pa->rx);
