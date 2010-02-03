@@ -1100,12 +1100,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			if (AG_GetInt(tt->hBar, "value") > scroll) {
 				AG_SetInt(tt->hBar, "value", scroll);
 			}
-			AG_ScrollbarSetBarSize(tt->hBar,
-			    WIDTH(tt->hBar)*(a->w - tt->hBar->wButton*3) / 
-			    col_w);
+			AG_ScrollbarSetControlLength(tt->hBar,
+			    WIDTH(tt->hBar)*tt->hBar->length/col_w);
 		} else {
 			AG_SetInt(tt->hBar, "value", 0);
-			AG_ScrollbarSetBarSize(tt->hBar, -1);
+			AG_ScrollbarSetControlLength(tt->hBar, -1);
 		}
 	}
 
@@ -1310,7 +1309,7 @@ static void
 ViewChanged(AG_Treetbl *tt)
 {
 	int rows_per_view, max, filled, value;
-	int scrolling_area = HEIGHT(tt->vBar) - tt->vBar->wButton*2;
+	int scrolling_area = HEIGHT(tt->vBar) - tt->vBar->width*2;
 	Uint i;
 
 	/* cancel double clicks if what's under it changes it */
@@ -1334,10 +1333,10 @@ ViewChanged(AG_Treetbl *tt)
 
 	/* Calculate Scrollbar Size */
 	if (rows_per_view && tt->nExpandedRows > rows_per_view) {
-		AG_ScrollbarSetBarSize(tt->vBar,
-		    rows_per_view * scrolling_area / tt->nExpandedRows);
+		AG_ScrollbarSetControlLength(tt->vBar,
+		    rows_per_view*scrolling_area/tt->nExpandedRows);
 	} else {
-		AG_ScrollbarSetBarSize(tt->vBar, -1);
+		AG_ScrollbarSetControlLength(tt->vBar, -1);
 	}
 
 	/* locate visible rows */

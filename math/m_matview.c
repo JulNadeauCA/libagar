@@ -191,16 +191,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	mv->r.h = a->h;
 
 	aBar.x = 0;
-	aBar.y = a->h - mv->hBar->wButton;
+	aBar.y = a->h - mv->hBar->width;
 	aBar.w = a->w;
-	aBar.h = mv->hBar->wButton+1;
+	aBar.h = mv->hBar->width+1;
 	AG_WidgetSizeAlloc(mv->hBar, &aBar);
 	mv->r.h -= HEIGHT(mv->hBar);
 
-	aBar.x = a->w - mv->vBar->wButton;
-	aBar.y = mv->vBar->wButton;
-	aBar.w = mv->vBar->wButton;
-	aBar.h = a->h - mv->hBar->wButton+1;
+	aBar.x = a->w - mv->vBar->width;
+	aBar.y = mv->vBar->width;
+	aBar.w = mv->vBar->width;
+	aBar.h = a->h - mv->hBar->width+1;
 	AG_WidgetSizeAlloc(mv->vBar, &aBar);
 	mv->r.w -= WIDTH(mv->vBar);
 

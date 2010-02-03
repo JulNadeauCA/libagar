@@ -149,12 +149,13 @@ Disable traditional LATIN-1 key combinations.
 .It AG_TEXTBOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
-This is recommended as an alternative to
-.Fn AG_TextboxSizeHint .
+This flag renders the use of
+.Fn AG_TextboxSizeHint
+unnecessary.
 .It AG_TEXTBOX_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
-This is recommended for multi-line text, as an alternative to
+This flag is recommended for multi-line text as an alternative to calling
 .Fn AG_TextboxSizeHintLines .
 .It AG_TEXTBOX_EXPAND
 Shorthand for
