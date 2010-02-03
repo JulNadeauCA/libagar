@@ -32,23 +32,26 @@ typedef struct ag_scrollbar {
 	int visible;			/* Subtracts from range */
 	enum ag_scrollbar_type type;	/* Style of scrollbar */
 	enum ag_scrollbar_button curBtn; /* Active button */
-	int wButton;			/* Button size */
-	int wBar;			/* Scroll bar size */
+	int width;			/* Scrollbar width */
+	int length;			/* Length of scrolling control area */
+	int wBar;			/* Scrolling control length */
+	int extent;			/* (length - wBar) */
 	int hArrow;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
 	AG_Timeout scrollTo;		/* Timer for scrolling */
 	AG_Timeout incTo, decTo;	/* Timer for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
-	int extent;			/* Available area for scrolling */
 	double rInc;			/* Base increment for real bindings */
 	int    iInc;			/* Base increment for int bindings */
+	Uint lenPre;			/* Preferred length size hint */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(p) ((AG_Scrollbar *)p)
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
+extern int agPrefScrollbarSize;
 
 AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 AG_Scrollbar *AG_ScrollbarNewInt(void *, enum ag_scrollbar_type, Uint,
@@ -83,58 +86,73 @@ AG_Scrollbar *AG_ScrollbarNewLongDouble(void *, enum ag_scrollbar_type, Uint,
 					long double *, long double *);
 #endif
 
-int  AG_ScrollbarVisible(AG_Scrollbar *);
+void AG_ScrollbarSizeHint(AG_Scrollbar *, int);
 void AG_ScrollbarSetIncFn(AG_Scrollbar *, AG_EventFn, const char *, ...);
 void AG_ScrollbarSetDecFn(AG_Scrollbar *, AG_EventFn, const char *, ...);
 void AG_ScrollbarSetIntIncrement(AG_Scrollbar *, int);
 void AG_ScrollbarSetRealIncrement(AG_Scrollbar *, double);
 
+int  AG_ScrollbarVisible(AG_Scrollbar *);
+
+/* Set and retrieve global scrollbar width preference. */
 static __inline__ void
-AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)
+AG_ScrollbarSetPrefWidth(int n)
+{
+	agPrefScrollbarSize = n;
+}
+static __inline__ int
+AG_ScrollbarPrefWidth(void)
+{
+	return (agPrefScrollbarSize);
+}
+
+/* Set and retrieve scrolling control length */
+static __inline__ void
+AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int bsize)
 {
 	AG_ObjectLock(sb);
 	sb->wBar = (bsize > 10 || bsize == -1) ? bsize : 10;
-	sb->extent = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
+	sb->length = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
 	                                               AGWIDGET(sb)->w;
-	sb->extent -= sb->wButton*2;
-	sb->extent -= sb->wBar;
+	sb->length -= sb->width*2;
+	sb->length -= sb->wBar;
 	AG_ObjectUnlock(sb);
 }
-
 static __inline__ int
-AG_ScrollbarGetBarSize(AG_Scrollbar *sb)
+AG_ScrollbarControlLength(AG_Scrollbar *sb)
 {
 	int rv;
 
-	AG_ObjectLock(sb);
 	if (sb->wBar == -1) {
 		rv = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
 		                                       AGWIDGET(sb)->w;
-		rv -= sb->wButton*2;
+		rv -= sb->width*2;
 		if (rv < 0) { rv = 0; }
 	} else {
 		rv = sb->wBar;
 	}
-	AG_ObjectUnlock(sb);
 	return (rv);
 }
 
 static __inline__ void
-AG_ScrollbarSetButtonSize(AG_Scrollbar *sb, int wButton)
+AG_ScrollbarSetWidth(AG_Scrollbar *sb, int width)
 {
 	AG_ObjectLock(sb);
-	sb->wButton = wButton;
+	sb->width = width;
 	AG_ObjectUnlock(sb);
 }
 static __inline__ int
-AG_ScrollbarGetButtonSize(AG_Scrollbar *sb)
+AG_ScrollbarWidth(AG_Scrollbar *sb)
 {
-	int rv;
-	AG_ObjectLock(sb);
-	rv = sb->wButton;
-	AG_ObjectUnlock(sb);
-	return (rv);
+	return (sb->width);
 }
+
+#ifdef AG_LEGACY
+# define AG_ScrollbarSetBarSize(sb,len)  AG_ScrollbarSetControlLength((sb),(len))
+# define AG_ScrollbarGetBarSize(sb)	 AG_ScrollbarControlLength(sb)
+# define AG_ScrollbarSetButtonSize(sb,w) AG_ScrollbarSetWidth((sb),(w))
+# define AG_ScrollbarGetButtonSize(sb)	 AG_ScrollbarWidth(sb)
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -35,6 +35,8 @@
 
 #define TOTSIZE(sb) (((sb)->type==AG_SCROLLBAR_VERT) ? HEIGHT(sb) : WIDTH(sb))
 
+int agPrefScrollbarSize = 16;		/* Preferred width for new scrollbars */
+
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
@@ -166,6 +168,15 @@ AG_ScrollbarNewDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
 	if (max != NULL) { AG_BindDouble(sb, "max", max); }
 	if (vis != NULL) { AG_BindDouble(sb, "visible", vis); }
 	return (sb);
+}
+
+/* Configure an initial length for the size requisition. */
+void
+AG_ScrollbarSizeHint(AG_Scrollbar *sb, int len)
+{
+	AG_ObjectLock(sb);
+	sb->lenPre = len;
+	AG_ObjectUnlock(sb);
 }
 
 /* Set an alternate handler for UP/LEFT button click. */
@@ -437,7 +448,7 @@ MouseButtonDown(AG_Event *event)
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
 	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
-	        sb->wButton;
+	        sb->width;
 	int pos = 0, posFound;
 
 	if (button != AG_MOUSE_LEFT) {
@@ -459,7 +470,7 @@ MouseButtonDown(AG_Event *event)
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
 		}
-	} else if (x > TOTSIZE(sb) - sb->wButton*2) {
+	} else if (x > TOTSIZE(sb) - sb->width*2) {
 		/*
 		 * Click on INCREMENT button. Unless user provided a handler
 		 * function, we increment once and start the timer.
@@ -505,7 +516,7 @@ MouseMotion(AG_Event *event)
 		return;
 	}
 	SeekToPosition(sb, ((sb->type == AG_SCROLLBAR_HORIZ) ?
-	                    AG_INT(1):AG_INT(2)) - sb->wButton - sb->xOffs);
+	                    AG_INT(1):AG_INT(2)) - sb->width - sb->xOffs);
 }
 
 static Uint32
@@ -637,10 +648,11 @@ Init(void *obj)
 	sb->xOffs = 0;
 	sb->rInc = 1.0;	
 	sb->iInc = 1;
+	sb->lenPre = 32;
 
-	sb->wBar = 8;
-	sb->wButton = 16;
-	sb->hArrow = sb->wButton*5/9;
+	sb->wBar = agPrefScrollbarSize/2;
+	sb->width = agPrefScrollbarSize;
+	sb->hArrow = sb->width*5/9;
 
 	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
@@ -661,15 +673,12 @@ Init(void *obj)
 	AG_BindInt(sb, "visible", &sb->visible);
 #ifdef AG_DEBUG
 	AG_BindUint(sb, "flags", &sb->flags);
-	AG_BindUint(sb, "type", &sb->type);
-	AG_BindUint(sb, "curBtn", &sb->curBtn);
-	AG_BindInt(sb, "wButton", &sb->wButton);
+	AG_BindInt(sb, "width", &sb->width);
+	AG_BindInt(sb, "length", &sb->length);
+	AG_BindInt(sb, "extent", &sb->extent);
 	AG_BindInt(sb, "wBar", &sb->wBar);
 	AG_BindInt(sb, "hArrow", &sb->hArrow);
 	AG_BindInt(sb, "xOffs", &sb->xOffs);
-	AG_BindInt(sb, "extent", &sb->extent);
-	AG_BindDouble(sb, "rInc", &sb->rInc);
-	AG_BindInt(sb, "iInc", &sb->iInc);
 #endif /* AG_DEBUG */
 }
 
@@ -680,12 +689,12 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->w = sb->wButton*2;
-		r->h = sb->wButton;
+		r->w = sb->width*2 + sb->lenPre;
+		r->h = sb->width;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = sb->wButton;
-		r->h = sb->wButton*2;
+		r->w = sb->width;
+		r->h = sb->width*2 + sb->lenPre;
 		break;
 	}
 }
@@ -698,8 +707,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
-	sb->extent = ((sb->type==AG_SCROLLBAR_VERT) ? a->h : a->w) -
-	             sb->wButton*2 - sb->wBar;
+	sb->length = ((sb->type==AG_SCROLLBAR_VERT) ? a->h:a->w) - sb->width*2;
+	if (sb->length < 0) { sb->length = 0; }
+	sb->extent = sb->length - sb->wBar;
 	if (sb->extent < 0) { sb->extent = 0; }
 	return (0);
 }
@@ -744,21 +754,21 @@ static void
 Draw(void *obj)
 {
 	AG_Scrollbar *sb = obj;
-	int x = 0, size;
+	int x = 0, len;
 
 	if (GetPosition(sb, &x) == 0) {
-		size = (sb->wBar == -1) ? sb->extent : sb->wBar;
-		if (size < 0) { size = 0; }
+		len = (sb->wBar == -1) ? sb->extent : sb->wBar;
+		if (len < 0) { len = 0; }
 	} else {
-		size = sb->extent + sb->wBar;
+		len = sb->length;
 	}
 	
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
-		STYLE(sb)->ScrollbarVert(sb, x, size);
+		STYLE(sb)->ScrollbarVert(sb, x, len);
 		break;
 	case AG_SCROLLBAR_HORIZ:
-		STYLE(sb)->ScrollbarHoriz(sb, x, size);
+		STYLE(sb)->ScrollbarHoriz(sb, x, len);
 		break;
 	}
 	if (sb->flags & AG_SCROLLBAR_TEXT)

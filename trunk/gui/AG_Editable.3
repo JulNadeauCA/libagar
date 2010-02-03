@@ -148,9 +148,15 @@ Disable traditional LATIN-1 key combinations.
 .It AG_EDITABLE_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
+This flag renders the use of
+.Fn AG_EditableSizeHint
+unnecessary.
 .It AG_EDITABLE_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
+This flag renders the use of
+.Fn AG_EditableSizeHint
+unnecessary.
 .It AG_EDITABLE_EXPAND
 Shorthand for
 .Dv AG_EDITABLE_HFILL|AG_EDITABLE_VFILL .

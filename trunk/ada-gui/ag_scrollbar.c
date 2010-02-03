@@ -4,11 +4,11 @@
 void
 agar_gui_widget_scrollbar_set_size (AG_Scrollbar *sb, int bsize)
 {
-  AG_ScrollbarSetBarSize (sb, bsize);
+  AG_ScrollbarSetControlLength (sb, bsize);
 }
 
 int
 agar_gui_widget_scrollbar_get_size (AG_Scrollbar *sb)
 {
-  return AG_ScrollbarGetBarSize (sb);
+  return AG_ScrollbarGetControlLength (sb);
 }

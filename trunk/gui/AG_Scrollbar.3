@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -99,10 +99,25 @@ are more suitable alternatives.
 .Fn AG_ScrollbarNewLongDouble "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "long double *value" "long double *min" "long double *max" "long double *visible"
 .Pp
 .Ft void
-.Fn AG_ScrollbarSetBarSize "AG_Scrollbar *scrollbar" "int size"
+.Fn AG_ScrollbarSizeHint "AG_Scrollbar *scrollbar" "int length"
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetControlLength "AG_Scrollbar *scrollbar" "int length"
 .Pp
 .Ft int
-.Fn AG_ScrollbarGetBarSize "AG_Scrollbar *scrollbar"
+.Fn AG_ScrollbarControlLength "AG_Scrollbar *scrollbar"
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetWidth "int width"
+.Pp
+.Ft int
+.Fn AG_ScrollbarWidth "void"
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetPrefWidth "int width"
+.Pp
+.Ft int
+.Fn AG_ScrollbarPrefWidth "void"
 .Pp
 .Ft int
 .Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
@@ -125,15 +140,12 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+The
 .Fa type
-defines the orientation of the scrollbar:
-.Bd -literal
-enum ag_scrollbar_type {
-	AG_SCROLLBAR_HORIZ,
-	AG_SCROLLBAR_VERT
-};
-.Ed
-.Pp
+argument should be either
+.Dv AG_SCROLLBAR_HORIZ
+or
+.Dv AG_SCROLLBAR_VERT .
 Acceptable
 .Fa flags
 include:
@@ -141,11 +153,15 @@ include:
 .It AG_SCROLLBAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
-This is commonly used with horizontal scrollbars.
+This flag is only sensible with horizontal scrollbars, and renders the use of
+.Fn AG_ScrollbarSizeHint
+unnecessary.
 .It AG_SCROLLBAR_VFILL
 Expand vertically in parent (equivalent to invoking
 .Xr AG_ExpandVert 3 ) .
-This is commonly used with vertical scrollbars.
+This flag is only sensible with vertical scrollbars, and renders the use of
+.Fn AG_ScrollbarSizeHint
+unnecessary.
 .It AG_SCROLLBAR_EXPAND
 Shorthand for
 .Dv AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL .
@@ -162,25 +178,57 @@ variants create a scrollbar and also bind
 .Va max ,
 and
 .Va visible
-to the specified non-NULL variables.
-.Fn AG_ScrollbarNewUint16 ,
-.Fn AG_ScrollbarNewSint16
-and
-.Fn AG_ScrollbarNewLongDouble
-are only available on platforms which support these types.
+to the specified variables (if passed NULL, the variable is left unbound).
+.Pp
+.Fn AG_ScrollbarSizeHint
+specifies a default, preferred scrollbar length in pixels.
+It is not necessary to invoke this function when using the
+.Dv AG_SCROLLBAR_HFILL
+or
+.Dv AG_SCROLLBAR_VFILL
+flag.
+.Dv 
 .Pp
 The
-.Fn AG_ScrollbarSetBarSize
-function sets the size of the scrollbar in pixels.
-In scrolling applications, the scrollbar size is usually computed from the
-ratio between the visible area and the total area that can be displayed.
-.Fn AG_ScrollbarGetBarSize
-returns the current size of the scrollbar in pixels.
+.Fn AG_ScrollbarSetControlLength
+function sets the length of the scrolling control (i.e., the center button),
+in pixels.
+This length is often computed from the ratio between the visible area of
+whatever is being displayed, and the total area of the content that can
+be displayed.
+.Fn AG_ScrollbarControlLength
+returns the current length of the scrolling control, in pixels.
 .Pp
-.Fn AG_ScrollbarSetButtonSize
-requests a preferred size for the scrollbar buttons.
-.Fn AG_ScrollbarGetButtonSize
-returns the current button size, which may be less than previously requested.
+.Fn AG_ScrollbarSetWidth
+configures the width (i.e., thickness) of the scrollbar.
+.Fn AG_ScrollbarWidth
+returns the effective width of a scrollbar in pixels.
+.Pp
+If the width of the scrollbar is not specified on initialization,
+.Nm
+will use a default width.
+This default width can be set with
+.Fn AG_ScrollbarSetPrefWidth ,
+and retrieved with
+.Fn AG_ScrollbarPrefWidth
+(typically from the
+.Fn size_request
+or
+.Fn size_allocate
+operation of a container widget).
+.Pp
+Note: Under multithreading,
+.Fn AG_ScrollbarControlLength ,
+.Fn AG_ScrollbarWidth
+and
+.Fn AG_ScrollbarPrefWidth
+should be considered safe to invoke only in widget context (e.g.,
+event handlers,
+.Fn size_request ,
+.Fn size_allocate
+or
+.Fn draw
+operations)
 .Pp
 The
 .Fn AG_ScrollbarVisible

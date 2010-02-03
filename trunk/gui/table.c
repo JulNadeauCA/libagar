@@ -216,11 +216,10 @@ UpdateScrollbars(AG_Table *t)
 			*value = 0;
 		}
 		if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
-			AG_ScrollbarSetBarSize(t->vbar,
-			    (t->mVis-1)*(HEIGHT(t->vbar) - t->vbar->wButton*2) /
-			    t->m);
+			AG_ScrollbarSetControlLength(t->vbar,
+			    (t->mVis - 1)*t->vbar->length / t->m);
 		} else {
-			AG_ScrollbarSetBarSize(t->vbar, -1);
+			AG_ScrollbarSetControlLength(t->vbar, -1);
 		}
 		AG_UnlockVariable(bValue);
 		AG_UnlockVariable(bMax);
@@ -228,11 +227,10 @@ UpdateScrollbars(AG_Table *t)
 	if (t->hbar != NULL) {
 		SizeColumns(t);
 		if (t->wTot == 0 || t->wTot <= t->r.w || t->r.w == 0) {
-			AG_ScrollbarSetBarSize(t->hbar, -1);
+			AG_ScrollbarSetControlLength(t->hbar, -1);
 		} else {
-			AG_ScrollbarSetBarSize(t->hbar,
-			    t->r.w*(WIDTH(t->hbar) - t->hbar->wButton*2) /
-			    t->wTot);
+			AG_ScrollbarSetControlLength(t->hbar,
+			    t->r.w*t->hbar->length/t->wTot);
 		}
 		bValue = AG_GetVariable(t->hbar, "value", &value);
 		if ((t->wTot - t->r.w - *value) < 0) {

@@ -519,11 +519,10 @@ UpdateListScrollbar(AG_Tlist *tl)
 
 	if (tl->nitems > 0 && tl->nvisitems > 0 &&
 	    tl->nvisitems < tl->nitems) {
-		AG_ScrollbarSetBarSize(tl->sbar,
-		    tl->nvisitems*(HEIGHT(tl->sbar) - tl->sbar->wButton*2) /
-		    tl->nitems);
+		AG_ScrollbarSetControlLength(tl->sbar,
+		    tl->nvisitems*(tl->sbar->length)/tl->nitems);
 	} else {
-		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
+		AG_ScrollbarSetControlLength(tl->sbar, -1);
 	}
 
 	AG_UnlockVariable(offsetb);
