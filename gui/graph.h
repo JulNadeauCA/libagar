@@ -77,8 +77,8 @@ typedef struct ag_graph {
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
 	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
 
-	AG_TAILQ_HEAD(,ag_graph_vertex) vertices;	/* Graph vertices */
-	AG_TAILQ_HEAD(,ag_graph_edge) edges;		/* Graph edges */
+	AG_TAILQ_HEAD_(ag_graph_vertex) vertices;	/* Graph vertices */
+	AG_TAILQ_HEAD_(ag_graph_edge) edges;		/* Graph edges */
 	Uint nvertices, nedges;	
 	int pxMin, pxMax, pyMin, pyMax;		/* Bounds of last cluster
 						   (for autoplacer) */

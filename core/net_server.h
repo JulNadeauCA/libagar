@@ -67,7 +67,7 @@ typedef struct ns_server {
 	size_t *listItemSize;
 	Uint	listItemCount;
 
-	AG_TAILQ_HEAD(,ns_client) clients;	/* Connected clients */
+	AG_TAILQ_HEAD_(ns_client) clients;	/* Connected clients */
 } NS_Server;
 
 typedef struct ns_client {

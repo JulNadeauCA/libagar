@@ -39,6 +39,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
 #define AG_EDITABLE_WORDWRAP      0x40000 /* Word wrapping */
+#define AG_EDITABLE_GROW          0x80000 /* Grow string buffer as needed */
 
 	enum ag_editable_encoding encoding;  /* Character set of buffer */
 	char string[AG_EDITABLE_STRING_MAX]; /* Default string binding */
@@ -81,6 +82,8 @@ extern AG_WidgetClass agEditableClass;
 AG_Editable *AG_EditableNew(void *, Uint);
 void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
 void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
+void         AG_EditableBindAutoUTF8(AG_Editable *, char **, Uint *);
+void         AG_EditableBindAutoASCII(AG_Editable *, char **, Uint *);
 
 void         AG_EditableSizeHint(AG_Editable *, const char *);
 void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);

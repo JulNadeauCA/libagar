@@ -47,8 +47,8 @@ typedef struct vg_tool {
 	AG_Window *editWin;			/* Edition window (if any) */
 	AG_Widget *editArea;			/* Edition area (if any) */
 	VG_Vector vCursor;			/* Last cursor position */
-	AG_SLIST_HEAD(,vg_tool_keybinding) kbindings;
-	AG_TAILQ_HEAD(,vg_tool_command) cmds;
+	AG_SLIST_HEAD_(vg_tool_keybinding) kbindings;
+	AG_TAILQ_HEAD_(vg_tool_command) cmds;
 	AG_TAILQ_ENTRY(vg_tool) tools;
 } VG_Tool;
 

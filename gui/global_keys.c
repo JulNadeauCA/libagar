@@ -39,7 +39,7 @@ struct ag_global_key {
 	void (*fn_ev)(AG_Event *);
 	SLIST_ENTRY(ag_global_key) gkeys;
 };
-static SLIST_HEAD(,ag_global_key) agGlobalKeys;
+static SLIST_HEAD_(ag_global_key) agGlobalKeys;
 #ifdef AG_THREADS
 static AG_Mutex agGlobalKeysLock;
 #endif

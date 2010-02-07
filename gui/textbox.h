@@ -75,6 +75,8 @@ void        AG_TextboxSetWordWrap(AG_Textbox *, int);
 
 #define AG_TextboxBindUTF8(tb,p,sz) AG_EditableBindUTF8((tb)->ed,(p),(sz))
 #define AG_TextboxBindASCII(tb,p,sz) AG_EditableBindASCII((tb)->ed,(p),(sz))
+#define AG_TextboxBindAutoUTF8(tb,p,sz) AG_EditableBindAutoUTF8((tb)->ed,(p),(sz))
+#define AG_TextboxBindAutoASCII(tb,p,sz) AG_EditableBindAutoASCII((tb)->ed,(p),(sz))
 
 #define AG_TextboxMapPosition(tb,x,y,pos,abs) \
 	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))

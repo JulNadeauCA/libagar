@@ -58,8 +58,8 @@ struct objent {
 	AG_Window *win;
 	TAILQ_ENTRY(objent) objs;
 };
-static TAILQ_HEAD(,objent) dobjs;
-static TAILQ_HEAD(,objent) gobjs;
+static TAILQ_HEAD_(objent) dobjs;
+static TAILQ_HEAD_(objent) gobjs;
 static int editNowFlag = 1;
 static void *lastSelectedParent = NULL;
 

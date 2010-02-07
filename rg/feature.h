@@ -51,8 +51,8 @@ typedef struct rg_feature {
 	struct rg_tileset *ts;
 	int flags;
 	Uint nrefs;
-/*	AG_TAILQ_HEAD(,rg_feature_sketch) sketches; */
-	AG_TAILQ_HEAD(,rg_feature_pixmap) pixmaps;
+/*	AG_TAILQ_HEAD_(rg_feature_sketch) sketches; */
+	AG_TAILQ_HEAD_(rg_feature_pixmap) pixmaps;
 	AG_TAILQ_ENTRY(rg_feature) features;
 } RG_Feature;
 

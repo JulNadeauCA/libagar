@@ -98,7 +98,7 @@ typedef struct vg_node {
 	VG_Matrix T;			/* Transformation matrix */
 	void     *p;			/* User pointer */
 
-	AG_TAILQ_HEAD(,vg_node) cNodes;	/* Child nodes */
+	AG_TAILQ_HEAD_(vg_node) cNodes;	/* Child nodes */
 	AG_TAILQ_ENTRY(vg_node) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(vg_node) list;	/* Entry in global list */
 	AG_TAILQ_ENTRY(vg_node) reverse; /* For VG_NodeTransform() */
@@ -126,7 +126,7 @@ typedef struct vg {
 	Uint      nT;
 
 	VG_Node *root;			/* Tree of entities */
-	AG_TAILQ_HEAD(,vg_node) nodes;	/* List of entities */
+	AG_TAILQ_HEAD_(vg_node) nodes;	/* List of entities */
 	AG_TAILQ_ENTRY(vg) user;	/* Entry in user list */
 } VG;
 

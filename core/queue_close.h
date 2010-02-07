@@ -1,6 +1,7 @@
 /*	Public domain	*/
 
 #undef SLIST_HEAD
+#undef SLIST_HEAD_
 #undef SLIST_HEAD_INITIALIZER
 #undef SLIST_ENTRY
 #undef SLIST_FIRST
@@ -15,6 +16,7 @@
 #undef SLIST_REMOVE
 
 #undef LIST_HEAD
+#undef LIST_HEAD_
 #undef LIST_HEAD_INITIALIZER
 #undef LIST_ENTRY
 #undef LIST_FIRST
@@ -30,6 +32,7 @@
 #undef LIST_REPLACE
 
 #undef SIMPLEQ_HEAD
+#undef SIMPLEQ_HEAD_
 #undef SIMPLEQ_HEAD_INITIALIZER
 #undef SIMPLEQ_ENTRY
 #undef SIMPLEQ_FIRST
@@ -44,6 +47,7 @@
 #undef SIMPLEQ_REMOVE_HEAD
 
 #undef TAILQ_HEAD
+#undef TAILQ_HEAD_
 #undef TAILQ_HEAD_INITIALIZER
 #undef TAILQ_ENTRY
 #undef TAILQ_FIRST
@@ -63,6 +67,7 @@
 #undef TAILQ_REPLACE
 
 #undef CIRCLEQ_HEAD
+#undef CIRCLEQ_HEAD_
 #undef CIRCLEQ_HEAD_INITIALIZER
 #undef CIRCLEQ_ENTRY
 #undef CIRCLEQ_FIRST

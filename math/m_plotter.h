@@ -80,7 +80,7 @@ typedef struct m_plot {
 	M_Real xScale, yScale;		/* Scaling factors */
 	int xOffs, yOffs;		/* Offset in display */
 	int xLabel, yLabel;		/* Item position */
-	AG_TAILQ_HEAD(,m_plot_label) labels; /* User labels */
+	AG_TAILQ_HEAD_(m_plot_label) labels; /* User labels */
 	AG_TAILQ_ENTRY(m_plot) plots;
 } M_Plot;
 
@@ -111,7 +111,7 @@ typedef struct m_plotter {
 	int curColor;				/* Current default color */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
 	AG_Rect r;			/* View area */
-	AG_TAILQ_HEAD(,m_plot) plots;	/* Plots in this view */
+	AG_TAILQ_HEAD_(m_plot) plots;	/* Plots in this view */
 } M_Plotter;
 
 __BEGIN_DECLS

@@ -93,7 +93,7 @@ typedef struct ag_text_metrics {
 } AG_TextMetrics;
 
 typedef struct ag_glyph_cache {
-	AG_SLIST_HEAD(, ag_glyph) glyphs;
+	AG_SLIST_HEAD_(ag_glyph) glyphs;
 } AG_GlyphCache;
 
 __BEGIN_DECLS

@@ -88,6 +88,10 @@
 struct name {								\
 	struct t *slh_first;	/* first element */			\
 }
+#define AG_SLIST_HEAD_(t)						\
+struct {								\
+	struct t *slh_first;	/* first element */			\
+}
  
 #define	AG_SLIST_HEAD_INITIALIZER(head)					\
 	{ NULL }
@@ -149,6 +153,10 @@ struct {								\
  */
 #define AG_LIST_HEAD(name, t)						\
 struct name {								\
+	struct t *lh_first;	/* first element */			\
+}
+#define AG_LIST_HEAD_(t)						\
+struct {								\
 	struct t *lh_first;	/* first element */			\
 }
 
@@ -226,6 +234,11 @@ struct name {								\
 	struct t *sqh_first;	/* first element */			\
 	struct t **sqh_last;	/* addr of last next element */		\
 }
+#define AG_SIMPLEQ_HEAD_(t)						\
+struct {								\
+	struct t *sqh_first;	/* first element */			\
+	struct t **sqh_last;	/* addr of last next element */		\
+}
 
 #define AG_SIMPLEQ_HEAD_INITIALIZER(head)				\
 	{ NULL, &(head).sqh_first }
@@ -284,6 +297,11 @@ struct {								\
  */
 #define AG_TAILQ_HEAD(name, t)						\
 struct name {								\
+	struct t *tqh_first;	/* first element */			\
+	struct t **tqh_last;	/* addr of last next element */		\
+}
+#define AG_TAILQ_HEAD_(t)						\
+struct {								\
 	struct t *tqh_first;	/* first element */			\
 	struct t **tqh_last;	/* addr of last next element */		\
 }
@@ -388,6 +406,11 @@ struct {								\
  */
 #define AG_CIRCLEQ_HEAD(name, t)					\
 struct name {								\
+	struct t *cqh_first;		/* first element */		\
+	struct t *cqh_last;		/* last element */		\
+}
+#define AG_CIRCLEQ_HEAD_(t)						\
+struct {								\
 	struct t *cqh_first;		/* first element */		\
 	struct t *cqh_last;		/* last element */		\
 }
@@ -499,6 +522,7 @@ struct {								\
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_QUEUE)
 
 #define SLIST_HEAD			AG_SLIST_HEAD
+#define SLIST_HEAD_			AG_SLIST_HEAD_
 #define SLIST_HEAD_INITIALIZER		AG_SLIST_HEAD_INITIALIZER
 #define SLIST_ENTRY			AG_SLIST_ENTRY
 #define SLIST_FIRST			AG_SLIST_FIRST
@@ -513,6 +537,7 @@ struct {								\
 #define SLIST_REMOVE			AG_SLIST_REMOVE
 
 #define LIST_HEAD			AG_LIST_HEAD
+#define LIST_HEAD_			AG_LIST_HEAD_
 #define LIST_HEAD_INITIALIZER		AG_LIST_HEAD_INITIALIZER
 #define LIST_ENTRY			AG_LIST_ENTRY
 #define LIST_FIRST			AG_LIST_FIRST
@@ -528,6 +553,7 @@ struct {								\
 #define LIST_REPLACE			AG_LIST_REPLACE
 
 #define SIMPLEQ_HEAD			AG_SIMPLEQ_HEAD
+#define SIMPLEQ_HEAD_			AG_SIMPLEQ_HEAD_
 #define SIMPLEQ_HEAD_INITIALIZER	AG_SIMPLEQ_HEAD_INITIALIZER
 #define SIMPLEQ_ENTRY			AG_SIMPLEQ_ENTRY
 #define SIMPLEQ_FIRST			AG_SIMPLEQ_FIRST
@@ -542,6 +568,7 @@ struct {								\
 #define SIMPLEQ_REMOVE_HEAD		AG_SIMPLEQ_REMOVE_HEAD
 
 #define TAILQ_HEAD			AG_TAILQ_HEAD
+#define TAILQ_HEAD_			AG_TAILQ_HEAD_
 #define TAILQ_HEAD_INITIALIZER		AG_TAILQ_HEAD_INITIALIZER
 #define TAILQ_ENTRY			AG_TAILQ_ENTRY
 #define TAILQ_FIRST			AG_TAILQ_FIRST
@@ -561,6 +588,7 @@ struct {								\
 #define TAILQ_REPLACE			AG_TAILQ_REPLACE
 
 #define CIRCLEQ_HEAD			AG_CIRCLEQ_HEAD
+#define CIRCLEQ_HEAD_			AG_CIRCLEQ_HEAD_
 #define CIRCLEQ_HEAD_INITIALIZER	AG_CIRCLEQ_HEAD_INITIALIZER
 #define CIRCLEQ_ENTRY			AG_CIRCLEQ_ENTRY
 #define CIRCLEQ_FIRST			AG_CIRCLEQ_FIRST

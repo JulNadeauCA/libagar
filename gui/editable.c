@@ -92,6 +92,30 @@ AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
 	AG_ObjectUnlock(ed);
 }
 
+/* Bind a growable UTF-8 text buffer to the widget. */
+void
+AG_EditableBindAutoUTF8(AG_Editable *ed, char **buf, Uint *bufSize)
+{
+	AG_ObjectLock(ed);
+	AG_BindPointer(ed, "buffer", (void **)buf);
+	AG_BindUint(ed, "size", bufSize);
+	AG_BindString(ed, "string", *buf, *bufSize);
+	ed->encoding = AG_ENCODING_UTF8;
+	AG_ObjectUnlock(ed);
+}
+
+/* Bind a growable ASCII text buffer to the widget. */
+void
+AG_EditableBindAutoASCII(AG_Editable *ed, char **buf, Uint *bufSize)
+{
+	AG_ObjectLock(ed);
+	AG_BindPointer(ed, "buffer", (void **)buf);
+	AG_BindUint(ed, "size", bufSize);
+	AG_BindString(ed, "string", *buf, *bufSize);
+	ed->encoding = AG_ENCODING_ASCII;
+	AG_ObjectUnlock(ed);
+}
+
 /* Enable or disable password entry mode. */
 void
 AG_EditableSetPassword(AG_Editable *ed, int enable)

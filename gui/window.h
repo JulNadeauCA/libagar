@@ -91,7 +91,7 @@ typedef struct ag_window {
 	int minPct;				/* For MINSIZEPCT */
 
 	struct ag_window *parent;		/* Parent window */
-	AG_TAILQ_HEAD(,ag_window) subwins;	/* For AG_WindowAttach() */
+	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
 	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
 	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
 
@@ -99,7 +99,7 @@ typedef struct ag_window {
 	AG_Rect r;				/* View area */
 	int nFocused;				/* Widgets in focus chain */
 	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
-	AG_TAILQ_HEAD(,ag_cursor_area) cursorAreas; /* Cursor-change areas */
+	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas; /* Cursor-change areas */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);

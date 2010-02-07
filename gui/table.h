@@ -144,7 +144,7 @@ typedef struct ag_table {
 	int wTot;			/* Total width for all columns */
 	AG_Color selColor;		/* Selection color */
 
-	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
+	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
 
 __BEGIN_DECLS
