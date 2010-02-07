@@ -16,7 +16,7 @@ struct ag_popup_menu;
 
 enum ag_graph_vertex_style {	/* Vertex style */
 	AG_GRAPH_RECTANGLE,	/* Rectangular box */
-	AG_GRAPH_CIRCLE,	/* Circle */
+	AG_GRAPH_CIRCLE		/* Circle */
 };
 
 typedef struct ag_graph_vertex {
