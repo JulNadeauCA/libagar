@@ -11,7 +11,7 @@ typedef struct ag_cached_text {
 } AG_CachedText;
 
 typedef struct ag_text_cache_bucket {
-	AG_SLIST_HEAD(,ag_cached_text) ents;
+	AG_SLIST_HEAD_(ag_cached_text) ents;
 } AG_TextCacheBucket;
 
 typedef struct ag_text_cache {

@@ -64,7 +64,7 @@ typedef struct rg_anim {
 	RG_AnimFrame *frames;		/* Generated frames */
 	Uint	     nframes;
 	Uint	     gframe;		   /* Current frame (global) */
-	SLIST_HEAD(,rg_anim_variant) vars; /* Transformed variants */
+	AG_SLIST_HEAD_(rg_anim_variant) vars; /* Transformed variants */
 };
 
 typedef struct rg_anim_frame {

@@ -44,7 +44,7 @@ typedef struct ag_file_type {
 	char **exts;				/* Filename extensions */
 	Uint nexts;
 	AG_Event *action;			  /* Action (save/load) */
-	AG_TAILQ_HEAD(,ag_file_type_option) opts; /* Type-specific options */
+	AG_TAILQ_HEAD_(ag_file_type_option) opts; /* Type-specific options */
 	AG_TAILQ_ENTRY(ag_file_type) types;
 } AG_FileType;
 
@@ -75,7 +75,7 @@ typedef struct ag_file_dlg {
 	AG_Event *cancelAction;			/* Cancel action */
 	char *dirMRU;				/* MRU Directory */
 	void *optsCtr;				/* Container widget for opts */
-	AG_TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
+	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
 	AG_Combo *comLoc;			/* Locations list */
 	AG_Window *winGlob;			/* Glob results window */
 	AG_Rect winGlobRect;			/* Glob results window size */

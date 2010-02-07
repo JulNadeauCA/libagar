@@ -17,7 +17,7 @@ typedef struct ag_dso {
 	char path[AG_PATHNAME_MAX];		/* Path to DSO */
 	Uint refCount;				/* Reference count */
 	Uint flags;
-	AG_TAILQ_HEAD(,ag_dso_sym) syms;	/* Previously used symbols */
+	AG_TAILQ_HEAD_(ag_dso_sym) syms;	/* Previously used symbols */
 	AG_TAILQ_ENTRY(ag_dso) dsos;
 } AG_DSO;
 

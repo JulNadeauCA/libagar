@@ -69,7 +69,7 @@ typedef struct ag_tlist {
 	int nitems;			/* Current item count */
 	int nvisitems;			/* Visible item count */
 	AG_Scrollbar *sbar;		/* Vertical scrollbar */
-	AG_TAILQ_HEAD(,ag_tlist_popup) popups; /* Popup menus */
+	AG_TAILQ_HEAD_(ag_tlist_popup) popups; /* Popup menus */
 	int (*compare_fn)(const AG_TlistItem *, const AG_TlistItem *);
 	AG_Event *popupEv;		/* Popup menu hook */
 	AG_Event *changedEv;		/* Selection change hook */

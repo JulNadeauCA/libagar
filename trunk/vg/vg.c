@@ -890,7 +890,7 @@ VG_NodeTransform(void *p, VG_Matrix *T)
 {
 	VG_Node *node = p;
 	VG_Node *cNode = node;
-	TAILQ_HEAD(,vg_node) rNodes = TAILQ_HEAD_INITIALIZER(rNodes);
+	TAILQ_HEAD_(vg_node) rNodes = TAILQ_HEAD_INITIALIZER(rNodes);
 
 	while (cNode != NULL) {
 		TAILQ_INSERT_HEAD(&rNodes, cNode, reverse);

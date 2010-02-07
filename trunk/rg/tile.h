@@ -96,7 +96,7 @@ typedef struct rg_tile {
 	/* Pixel blending function */
 	void (*blend_fn)(struct rg_tile *, AG_Surface *, AG_Rect *);
 
-	AG_SLIST_HEAD(,rg_tile_variant) vars;	/* Cached variants */
+	AG_SLIST_HEAD_(rg_tile_variant) vars;	/* Cached variants */
 	AG_TAILQ_ENTRY(rg_tile) tiles;
 } RG_Tile;
 

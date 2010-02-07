@@ -61,7 +61,7 @@ typedef struct ag_label {
 		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Pointers to polled data */
 		int nptrs;
 	} poll;
-	AG_SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
+	AG_SLIST_HEAD_(ag_label_flag) lflags;	/* Label flag descriptions */
 	struct ag_text_cache *tCache;		/* Cache for polled labels */
 	AG_Rect rClip;				/* Clipping rectangle */
 } AG_Label;

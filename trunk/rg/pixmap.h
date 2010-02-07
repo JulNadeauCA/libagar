@@ -62,7 +62,7 @@ typedef struct rg_pixmap {
 	float h, s, v, a;			/* Current pixel value */
 	RG_Brush *curbrush;			/* Current brush */
 	enum rg_pixmap_blend_mode blend_mode;	/* Current blending method */
-	AG_TAILQ_HEAD(, rg_brush) brushes;	/* Brush references */
+	AG_TAILQ_HEAD_(rg_brush) brushes;	/* Brush references */
 	AG_TAILQ_ENTRY(rg_pixmap) pixmaps;
 } RG_Pixmap;
 

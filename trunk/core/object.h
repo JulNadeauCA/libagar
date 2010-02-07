@@ -70,13 +70,13 @@ typedef struct ag_object {
 				 AG_OBJECT_REMAIN_DATA)
 
 	Uint nevents;				/* Number of event handlers */
-	AG_TAILQ_HEAD(,ag_event) events;	/* Event handlers */
-	AG_TAILQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
+	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers */
+	AG_TAILQ_HEAD_(ag_timeout) timeouts;	/* Timers tied to object */
 	
 	struct ag_variable *vars;		/* Variables / bindings */
 	Uint               nVars;
 
-	AG_TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
+	AG_TAILQ_HEAD_(ag_object_dep) deps; /* Object dependencies */
 	struct ag_objectq children;	 /* Child objects */
 	AG_TAILQ_ENTRY(ag_object) cobjs; /* Entry in child object queue */
 	AG_TAILQ_ENTRY(ag_object) tobjs; /* Entry in timeout queue */

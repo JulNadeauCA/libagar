@@ -135,7 +135,7 @@ typedef struct ag_widget {
 	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
 	AG_Mutex bindings_lock;		 	/* Lock on bindings */
-	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
+	AG_SLIST_HEAD_(ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 	struct ag_window *window;		/* Back ptr to parent window */
 	struct ag_driver *drv;			/* Back ptr to driver */

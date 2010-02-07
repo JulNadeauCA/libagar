@@ -71,7 +71,7 @@ struct client {
 };
 
 static AG_Mutex lock = AG_MUTEX_INITIALIZER;
-static TAILQ_HEAD(,client) clients = TAILQ_HEAD_INITIALIZER(clients);
+static TAILQ_HEAD_(client) clients = TAILQ_HEAD_INITIALIZER(clients);
 static NS_Server server;
 static int server_inited = 0;
 static AG_Thread listenTh;

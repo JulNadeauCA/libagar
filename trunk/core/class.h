@@ -37,7 +37,7 @@ typedef struct ag_object_class {
 	 */
 	char name[AG_OBJECT_TYPE_MAX];			/* Short name */
 	char libs[AG_OBJECT_LIBS_MAX];			/* Required modules */
-	AG_TAILQ_HEAD(,ag_object_class) sub;		/* Direct subclasses */
+	AG_TAILQ_HEAD_(ag_object_class) sub;		/* Direct subclasses */
 	AG_TAILQ_ENTRY(ag_object_class) subclasses;	/* Subclass entry */
 	struct ag_object_class *super;			/* Superclass */
 } AG_ObjectClass;

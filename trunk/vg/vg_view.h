@@ -69,7 +69,7 @@ typedef struct vg_view {
 
 	VG_Tool *curtool;			/* Selected tool */
 	VG_Tool *deftool;			/* Default tool if any */
-	AG_TAILQ_HEAD(,vg_tool) tools;		/* Map edition tools */
+	AG_TAILQ_HEAD_(vg_tool) tools;		/* Map edition tools */
 
 	char status[128];			/* Status text buffer */
 	AG_TextCache *tCache;			/* Text cache for VG_Text */

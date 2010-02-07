@@ -40,7 +40,7 @@ typedef struct ag_notebook {
 	int lblPartial;			/* "..." label */
 	int lblPartialWidth;		/* Width of "..." */
 	struct ag_notebook_tab *sel_tab;
-	AG_TAILQ_HEAD(,ag_notebook_tab) tabs;
+	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;
 	AG_Rect r;			/* View area */
 } AG_Notebook;
 

@@ -222,8 +222,8 @@ typedef struct rg_tileview {
 		Uint8 r, g, b, a;		/* Current color */
 		Uint32 pc;			/* (for binding controls) */
 	} c;
-	AG_TAILQ_HEAD(,rg_tileview_ctrl) ctrls;	/* Binding controls */
-	AG_TAILQ_HEAD(,rg_tileview_tool) tools;	/* Edition tools */
+	AG_TAILQ_HEAD_(rg_tileview_ctrl) ctrls;	/* Binding controls */
+	AG_TAILQ_HEAD_(rg_tileview_tool) tools;	/* Edition tools */
 	RG_TileviewTool *cur_tool;		/* Current tool */
 	struct ag_text_cache *tCache;		/* For "status" line */
 } RG_Tileview;
