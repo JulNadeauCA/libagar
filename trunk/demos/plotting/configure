@@ -2570,6 +2570,9 @@ fi;
 if [ -d "/usr/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11R6/include"
 fi;
+if [ -d "/usr/local/include/GL" ]; then
+GL_CFLAGS="-I/usr/local/include"
+fi;
 if [ -d "/usr/local/X11/lib" ]; then
 GL_LIBS="-L/usr/local/X11/lib"
 fi;
@@ -2581,6 +2584,9 @@ GL_LIBS="-L/usr/X11/lib"
 fi;
 if [ -d "/usr/X11R6/lib" ]; then
 GL_LIBS="-L/usr/X11R6/lib"
+fi;
+if [ -d "/usr/local/lib" ]; then
+GL_LIBS="-L/usr/local/lib"
 fi;
 echo "yes"
 echo "yes" >> config.log
@@ -3400,12 +3406,12 @@ echo "hdefs[\"AGAR_MATH_LIBS\"] = nil" >>configure.lua
 fi;
 if [ "${HAVE_AGAR}" != "yes" ]
  then
-	echo "This demo requires Agar and Agar-SC installed on your system."
+	echo "This demo requires Agar installed on your system."
 	exit 1
 fi
 if [ "${HAVE_AGAR_MATH}" != "yes" ]
  then
-	echo "* This package requires Agar-Math (http://libagar.org/)"
+	echo "This demo requires Agar-Math installed on your system."
 	exit 1
 fi
 if [ "${enable_static}" = "yes" ]
