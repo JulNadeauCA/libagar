@@ -342,7 +342,8 @@ echo "    --with-gl                 GUI: OpenGL rendering support [check]"
 echo "    --with-glx                GUI: GL rendering via GLX [check]"
 echo "    --with-wgl                GUI: GL rendering via WGL [check]"
 echo "    --with-sdl                GUI: SDL rendering support [check]"
-echo "    --with-jpeg               GUI: JPEG screenshot support [check]"
+echo "    --with-jpeg               GUI: Built-in JPEG image support [check]"
+echo "    --with-png                GUI: Built-in PNG image support [check]"
 echo "    --with-freetype           GUI: Enable FreeType support [check]"
 echo "    --with-sse                M: SSE[123] optimizations [no]"
 echo "    --with-altivec            M: AltiVec optimizations [check]"
@@ -5263,8 +5264,9 @@ X11_LIBS=""""
 echo "X11_LIBS=$X11_LIBS" >>Makefile.config
 echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 	fi
-	
-	if [ "${with_glx}" != "no" ]
+	if [ "${HAVE_OPENGL}" = "yes" ]
+ then
+		if [ "${with_glx}" != "no" ]
  then
 $ECHO_N "checking for the GLX interface..."
 $ECHO_N "checking for the GLX interface..." >> config.log
@@ -5356,21 +5358,21 @@ echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
 echo "#undef GLX_LIBS" >config/glx_libs.h
 echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
 fi;
-		if [ "${HAVE_GLX}" != "yes" ]
+			if [ "${HAVE_GLX}" != "yes" ]
  then
-			if [ "${with_glx}" = "yes" ]
+				if [ "${with_glx}" = "yes" ]
  then
-				echo "*"
-				echo "* --with-glx was requested, but no"
-				echo "* compatible GLX library was found."
-				echo "*"
-				exit 1
-			else
+					echo "*"
+					echo "* --with-glx was requested, but no"
+					echo "* compatible GLX library was found."
+					echo "*"
+					exit 1
+				else
 echo "#undef HAVE_GLX" >config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+				fi
 			fi
-		fi
-	else
+		else
 echo "#undef HAVE_GLX" >config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
 GLX_CFLAGS=""""
@@ -5379,28 +5381,100 @@ echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
 GLX_LIBS=""""
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
-	fi
-	
-	if [ "$with_wgl" != "no" ] && [ "${HAVE_OPENGL}" == "yes" ] && echo $OS | grep -Eq '^Windows'
- then
-		echo "*"
-		echo "* WGL is used since OpenGL was requested and we're building on a Windows platform"
-		echo "*"
+		fi
 		
+		if [ "${with_wgl}" != "no" ]
+ then
+$ECHO_N "checking for WGL..."
+$ECHO_N "checking for WGL..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_WGL" ]; then
+		HAVE_WGL=`cat ${cache}/ctest-HAVE_WGL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_WGL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <windows.h>
+int main(int argc, char *argv[]) {
+	HWND hwnd;
+	HDC hdc;
+	HGLRC hglrc;
+
+	hwnd = CreateWindowEx(0, "a", "a", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+	    CW_USEDEFAULT, 0,0, NULL, NULL, GetModuleHandle(NULL), NULL);
+	hdc = GetDC(hwnd);
+	hglrc = wglCreateContext(hdc);
+	wglDeleteContext(hglrc);
+	ReleaseDC(hwnd, hdc);
+	DestroyWindow(hwnd);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
 HAVE_WGL="yes"
+echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
+echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
 echo "#ifndef HAVE_WGL" > config/have_wgl.h
 echo "#define HAVE_WGL \"$HAVE_WGL\"" >> config/have_wgl.h
 echo "#endif" >> config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_WGL="no"
+echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
+echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
+echo "#undef HAVE_WGL" >config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_WGL" > ${cache}/ctest-HAVE_WGL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_WGL
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+			if [ "${HAVE_WGL}" != "yes" ]
+ then
+				if [ "${with_wgl}" = "yes" ]
+ then
+					echo "*"
+					echo "* --with-wgl was requested, but the"
+					echo "* WGL test has failed."
+					echo "*"
+					exit 1
+				else
+echo "#undef HAVE_WGL" >config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
+				fi
+			fi
+		else
+echo "#undef HAVE_WGL" >config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
+		fi
 	else
 echo "#undef HAVE_WGL" >config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
-WGL_CFLAGS=""""
-echo "WGL_CFLAGS=$WGL_CFLAGS" >>Makefile.config
-echo "mdefs[\"WGL_CFLAGS\"] = \"$WGL_CFLAGS\"" >>configure.lua
-WGL_LIBS=""""
-echo "WGL_LIBS=$WGL_LIBS" >>Makefile.config
-echo "mdefs[\"WGL_LIBS\"] = \"$WGL_LIBS\"" >>configure.lua
+echo "#undef HAVE_GLX" >config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+GLX_CFLAGS=""""
+echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+GLX_LIBS=""""
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_freetype}" != "no" ]
@@ -5604,6 +5678,8 @@ echo "no" >> config.log
 fi;
 		if [ "${HAVE_FREETYPE}" != "yes" ]
  then
+			echo "*"
+			echo "* The FreeType library was not found, aborting!"
 			echo "*"
 			echo "* Agar needs FreeType to display vector fonts"
 			echo "* (http://www.freetype.org/)."
