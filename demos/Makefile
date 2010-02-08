@@ -43,17 +43,23 @@ install:
 	@exit 1
 
 configure:
-	if [ ! -e ".cache" ]; then \
-		echo "mkdir .cache"; \
-		mkdir .cache; \
+	if [ -e ".configurecache" ]; then \
+		echo "rm -fR .configurecache"; \
+		rm -fR .configurecache; \
 	fi
+	echo "mkdir .configurecache"; \
+	mkdir .configurecache; \
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
-		(cd $$D && ./configure --cache=../.cache); \
+		(cd $$D && ./configure --cache=../.configurecache); \
+		if [ $$? != 0 ]; then \
+			echo "$$D: configure failed; aborting"; \
+			exit 1; \
+		fi; \
 	done
 
 cleandir-cache:
-	rm -fR .cache
+	rm -fR .configurecache
 
 configure-scripts:
 	for D in ${SUBDIR}; do \
