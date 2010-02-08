@@ -5385,8 +5385,8 @@ echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 		
 		if [ "${with_wgl}" != "no" ]
  then
-$ECHO_N "checking for WGL..."
-$ECHO_N "checking for WGL..." >> config.log
+$ECHO_N "checking for the WGL interface..."
+$ECHO_N "checking for the WGL interface..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -5920,7 +5920,7 @@ if [ "${MK_CACHED}" = "No" ]; then
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/libpng-config" ]; then
 			if [ -f "${path}/libpng-config" ]; then
-				PNG_LIBS=`${path}/libpng-config --libs`
+				PNG_LIBS=`${path}/libpng-config --L_opts`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
