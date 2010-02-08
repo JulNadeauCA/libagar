@@ -9,10 +9,14 @@
  * general-purpose Agar visualization widget (SG_View).
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGLa
+
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/gui/opengl.h>
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -236,7 +240,7 @@ CreateMainWindow(void)
 	AG_Box *hb;
 	AG_HSVPal *pal;
 
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
 	hb = AG_BoxNewHoriz(win, 0);
 	AG_Expand(hb);
 	{
@@ -309,3 +313,13 @@ main(int argc, char *argv[])
 	return (0);
 }
 
+#else /* !HAVE_OPENGL */
+#include "../common/stub.h"
+int
+main(int argc, char *argv[])
+{
+	return DemoFail(
+	    "This demo requires OpenGL support. Please recompile Agar\n"
+	    "with the `--with-opengl' configure option\n");
+}
+#endif /* HAVE_OPENGL */

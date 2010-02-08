@@ -3311,7 +3311,8 @@ if [ "${AGAR_HAVE_OPENGL}" != "yes" ]
 	echo "* this demo to work. Use the configure option --with-gl"
 	echo "* when compiling Agar to make sure this is the case."
 	echo "*"
-	exit 1
+	echo "* This demo will be compiled as a no-op"
+	echo "*"
 fi
 if [ "${enable_static}" = "yes" ]
  then
