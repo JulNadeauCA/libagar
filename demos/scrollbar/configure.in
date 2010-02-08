@@ -9,6 +9,8 @@ CHECK(opengl)
 CHECK(freetype)
 CHECK(agar, 1.3)
 
+C_DEFINE(_USE_AGAR_TYPES)
+
 if [ "${HAVE_AGAR}" != "yes" ]; then
 	echo "This demo requires Agar installed on your system."
 	exit 1

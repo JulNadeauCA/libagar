@@ -3160,6 +3160,12 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 if [ "${HAVE_AGAR}" != "yes" ]
  then
 	echo "This demo requires Agar installed on your system."
