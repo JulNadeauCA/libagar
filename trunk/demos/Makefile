@@ -43,17 +43,23 @@ install:
 	@exit 1
 
 configure:
-	if [ -e ".configurecache" ]; then \
+	@if [ -e ".configurecache" ]; then \
 		echo "rm -fR .configurecache"; \
 		rm -fR .configurecache; \
 	fi
-	echo "mkdir .configurecache"; \
-	mkdir .configurecache; \
-	for D in ${SUBDIR}; do \
+	mkdir .configurecache
+	@for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
 		(cd $$D && ./configure --cache=../.configurecache); \
 		if [ $$? != 0 ]; then \
-			echo "$$D: configure failed; aborting"; \
+			echo "* "; \
+			echo "* If the previous test failed due to Agar not being found,"; \
+			echo "* make sure you have already installed Agar on your system"; \
+			echo "* and that the agar-config binary is in your PATH."; \
+			echo "* "; \
+			echo "* To install Agar, go to the top-level directory and run:"; \
+			echo "*     $ make all install"; \
+			echo "* "; \
 			exit 1; \
 		fi; \
 	done
