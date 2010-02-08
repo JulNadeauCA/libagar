@@ -16,7 +16,7 @@ SUBDIR=	core agar-core-config \
 	${SUBDIR_dev}
 
 all: all-subdir
-clean: clean-config clean-subdir
+clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
 install: install-subdir install-includes
 deinstall: deinstall-subdir deinstall-includes
@@ -36,11 +36,8 @@ configure:
 	cat configure.in | mkconfigure > configure
 	chmod 755 configure
 
-clean-config:
-	rm -fR include
-
-cleandir-config: clean-config
-	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
+cleandir-config:
+	rm -fR include config config.log Makefile.config .projfiles.out .projfiles2.out
 	rm -f configure.lua
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
