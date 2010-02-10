@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -286,7 +286,11 @@ KeyUp(AG_Event *event)
 	binding = AG_GetVariable(bu, "state", &pState);
 	SetState(binding, pState, 0);
 	AG_UnlockVariable(binding);
-	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+
+	if (bu->flags & AG_BUTTON_KEYDOWN) {
+		bu->flags &= ~(AG_BUTTON_KEYDOWN);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+	}
 }
 
 static void
@@ -306,6 +310,7 @@ KeyDown(AG_Event *event)
 	binding = AG_GetVariable(bu, "state", &pState);
 	SetState(binding, pState, 1);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+	bu->flags |= AG_BUTTON_KEYDOWN;
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->repeat_to);
