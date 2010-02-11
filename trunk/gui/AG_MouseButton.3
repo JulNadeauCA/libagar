@@ -1,0 +1,63 @@
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd February 11, 2010
+.Dt AG_MOUSEBUTTON 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_MouseButton
+.Nd agar mouse button definitions
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+type describes a mouse button (or a combination of mouse buttons):
+.Bd -literal
+typedef enum ag_mouse_button {
+	AG_MOUSE_NONE		= 0x00,
+	AG_MOUSE_LEFT		= 0x01,
+	AG_MOUSE_MIDDLE		= 0x02,
+	AG_MOUSE_RIGHT		= 0x03,
+	AG_MOUSE_WHEELUP	= 0x04,
+	AG_MOUSE_WHEELDOWN	= 0x05,
+	AG_MOUSE_X1		= 0x06,
+	AG_MOUSE_X2		= 0x07,
+	AG_MOUSE_ANY		= 0xff
+} AG_MouseButton;
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Keyboard 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+type first appeared in Agar 1.4.
