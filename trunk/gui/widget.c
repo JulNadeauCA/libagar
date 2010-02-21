@@ -30,6 +30,7 @@
 #include "opengl.h"
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "gui.h"
 #include "widget.h"
@@ -275,6 +276,48 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	Strlcpy(at->action, action, sizeof(at->action));
 }
 
+static Uint32
+ActionKeyRepeat(void *obj, Uint32 ival, void *arg)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at = arg;
+	AG_Action *a;
+	
+	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	    a == NULL) {
+		return (0);
+	}
+	(void)AG_ExecAction(wid, a);
+	return (agKbdRepeat);
+}
+
+static Uint32
+ActionKeyDelay(void *obj, Uint32 ival, void *arg)
+{
+	AG_ActionTie *at = arg;
+
+	AG_ScheduleTimeout(obj, &at->data.key.toRepeat, agKbdRepeat);
+	return (0);
+}
+
+/* Tie an action to a key-down event, with key repeat. */
+void
+AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
+{
+	AG_Widget *wid = obj;
+	AG_ActionTie *at;
+
+	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
+	                                           sizeof(AG_ActionTie));
+	at = &wid->keyActions[wid->nKeyActions++];
+	at->type = AG_ACTION_ON_KEYREPEAT;
+	at->data.key.sym = sym;
+	at->data.key.mod = mod;
+	Strlcpy(at->action, action, sizeof(at->action));
+	AG_SetTimeout(&at->data.key.toDelay, ActionKeyDelay, at, 0);
+	AG_SetTimeout(&at->data.key.toRepeat, ActionKeyRepeat, at, 0);
+}
+
 /* Configure a widget action. */
 AG_Action *
 AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
@@ -396,7 +439,7 @@ AG_ExecAction(void *obj, AG_Action *a)
 	return (0);
 }
 
-/* Run any action tied to a mouse-button-down event. */
+/* Run any action tied to a mouse-button event. */
 int
 AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
     int xCurs, int yCurs)
@@ -436,15 +479,17 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	AG_ActionTie *at;
 	AG_Action *a;
 	Uint i;
+	int rv;
 
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_KEYDOWN &&
 	    et != AG_ACTION_ON_KEYUP)
-		AG_FatalError("Invalid type arg to AG_ExecKeyAction()");
+		AG_FatalError("AG_ExecKeyAction() type");
 #endif
 	for (i = 0; i < wid->nKeyActions; i++) {
 		at = &wid->keyActions[i];
-		if (at->type != et) {
+		if (at->type != et &&
+		    at->type != AG_ACTION_ON_KEYREPEAT) {
 			continue;
 		}
 		if ((at->data.key.mod == AG_KEYMOD_ANY ||
@@ -457,10 +502,21 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 		return (0);
 	}
 	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
-	    a == NULL) {
+	    a == NULL)
 		return (0);
+
+	rv = AG_ExecAction(wid, a);
+
+	if (at->type == AG_ACTION_ON_KEYREPEAT) {
+		if (et == AG_ACTION_ON_KEYDOWN) {
+			AG_ScheduleTimeout(wid, &at->data.key.toDelay,
+			    agKbdDelay);
+		} else {
+			AG_DelTimeout(wid, &at->data.key.toDelay);
+			AG_DelTimeout(wid, &at->data.key.toRepeat);
+		}
 	}
-	return AG_ExecAction(wid, a);
+	return (rv);
 }
 
 /* Traverse the widget tree using a pathname. */
