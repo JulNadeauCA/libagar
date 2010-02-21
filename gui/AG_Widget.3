@@ -711,6 +711,9 @@ creates a generic menu item containing a widget's available actions.
 .Ft void
 .Fn AG_ActionOnKeyUp "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
 .Pp
+.Ft void
+.Fn AG_ActionOnKey "AG_Widget *widget" "AG_KeySym sym" "AG_KeyMod mod" "const char *action"
+.Pp
 .Ft int
 .Fn AG_ExecMouseAction "AG_Widget *widget" "AG_ActionEventType type" "int button" "int x" "int y"
 .Pp
@@ -781,6 +784,18 @@ To match any key or any modifier state,
 or
 .Dv AG_KEYMOD_ANY
 can be used.
+.Pp
+With
+.Fn AG_ActionOnKeyDown
+and
+.Fn AG_ActionOnKeyUp ,
+the action is triggered once immediately on key press or key release.
+The
+.Fn AG_ActionOnKey
+variant ties an action to a key press, but with "key repeat" behavior.
+The action is triggered immediately once after an initial key press.
+If the key combination is held longer than the "key delay" (by default 250ms),
+the event is repeated with the "key repeat" interval (by default 30ms).
 .Pp
 .Fn AG_ExecMouseAction
 executes any action associated with mouse button events.

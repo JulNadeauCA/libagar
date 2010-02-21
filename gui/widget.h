@@ -78,7 +78,8 @@ typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
 	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
 	AG_ACTION_ON_KEYDOWN,		/* On key-down */
-	AG_ACTION_ON_KEYUP		/* On key-up */
+	AG_ACTION_ON_KEYUP,		/* On key-up */
+	AG_ACTION_ON_KEYREPEAT,		/* On key-down, with key repeat */
 #define AG_ACTION_ON_BUTTON \
 	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
 } AG_ActionEventType;
@@ -90,6 +91,8 @@ typedef struct ag_action_tie {
 		struct {
 			AG_KeySym sym;		/* Matching symbol */
 			AG_KeyMod mod;		/* Matching modifier */
+			AG_Timeout toDelay;	/* Key repeat delay */
+			AG_Timeout toRepeat;	/* Key repeat interval */
 		} key;
 	} data;
 	char action[64];			/* Action name */
@@ -235,6 +238,7 @@ void        AG_ActionOnButtonUp(void *, int, const char *);
 #define     AG_ActionOnButton(w,b,a) \
             AG_ActionOnButtonDown((w),(b),(a))
 
+void        AG_ActionOnKey(void *, AG_KeySym, AG_KeyMod, const char *);
 void        AG_ActionOnKeyDown(void *, AG_KeySym, AG_KeyMod, const char *);
 void        AG_ActionOnKeyUp(void *, AG_KeySym, AG_KeyMod, const char *);
 
