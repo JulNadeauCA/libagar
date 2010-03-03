@@ -289,11 +289,11 @@ widget generates the following events:
 .Bl -tag -compact -width 2n
 .It Fn button-pushed "int new_state"
 The button was pressed.
-The
+If using
+.Dv AG_BUTTON_STICKY ,
+the
 .Fa new_state
-argument is useful in conjunction with the
-.Dv AG_BUTTON_STICKY
-flag.
+argument indicates the new state of the button.
 .It Fn button-mouseoverlap "int overlap"
 The mouse cursor has entered/exited the button area.
 This is typically is used to display tool tips.

@@ -396,7 +396,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aLbl.y = bu->tPad;
 		aLbl.w = a->w - (bu->lPad+bu->rPad);
 		aLbl.h = a->h - (bu->tPad+bu->bPad);
-
 		AG_WidgetSizeAlloc(bu->lbl, &aLbl);
 	}
 	return (0);
