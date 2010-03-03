@@ -34,7 +34,6 @@
 #include <core/config.h>
 
 #include "ttf.h"
-#include "label.h"
 #include "textbox.h"
 
 #include "text.h"
@@ -130,12 +129,14 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 
 	tb->flags |= flags;
 	if (label != NULL) {
-		tb->labelText = Strdup(label);
+		tb->lbl = AG_LabelNewS(tb, 0, label);
+		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectAttach(parent, tb);
 	return (tb);
 }
 
+/* Toggle word wrapping */
 void
 AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 {
@@ -159,12 +160,13 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	}
 }
 
-static void
-Destroy(void *p)
+/* Configure alternate font */
+void
+AG_TextboxSetFont(AG_Textbox *tb, AG_Font *font)
 {
-	AG_Textbox *tb = p;
-
-	Free(tb->labelText);
+	AG_ObjectLock(tb);
+	tb->font = font;
+	AG_ObjectUnlock(tb);
 }
 
 static void
@@ -174,23 +176,8 @@ Draw(void *p)
 
 	STYLE(tb)->TextboxBackground(tb, tb->r, (tb->flags & AG_TEXTBOX_COMBO));
 
-	if (tb->labelText != NULL && tb->label == -1) {
-		AG_PushTextState();
-		AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
-		tb->label = AG_WidgetMapSurface(tb,
-		    AG_TextRender(tb->labelText));
-		AG_PopTextState();
-	}
-	
-	if (tb->label != -1) {
-		AG_Surface *lblSu = WSURFACE(tb,tb->label);
-	
-		AG_PushClipRect(tb, tb->rLbl);
-		AG_WidgetBlitSurface(tb, tb->label,
-		    tb->lblPadL,
-		    HEIGHT(tb)/2 - lblSu->h/2);
-		AG_PopClipRect(tb);
-	}
+	if (tb->lbl != NULL)
+		AG_WidgetDraw(tb->lbl);
 
 	AG_PushClipRect(tb, tb->r);
 
@@ -210,7 +197,11 @@ Draw(void *p)
 		}
 		AG_WidgetUpdate(tb);
 	}
+
+	/* Render the Editable widget, inheriting our Font. */
+	tb->ed->font = tb->font;
 	AG_WidgetDraw(tb->ed);
+
 	if (tb->hBar != NULL) { AG_WidgetDraw(tb->hBar); }
 	if (tb->vBar != NULL) { AG_WidgetDraw(tb->vBar); }
 
@@ -221,22 +212,16 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Textbox *tb = obj;
-	AG_SizeReq rEd;
-	int wLbl, hLbl;
+	AG_SizeReq rEd, rLbl;
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 
 	r->w = tb->boxPadX*2 + rEd.w;
 	r->h = tb->boxPadY*2 + rEd.h;
 
-	if (tb->labelText != NULL) {
-		if (tb->label != -1) {
-			wLbl = WSURFACE(tb,tb->label)->w;
-			hLbl = WSURFACE(tb,tb->label)->h;
-		} else {
-			AG_TextSize(tb->labelText, &wLbl, &hLbl);
-		}
-		r->w += tb->lblPadL + wLbl + tb->lblPadR;
+	if (tb->lbl != NULL) {
+		AG_WidgetSizeReq(tb->lbl, &rLbl);
+		r->w += rLbl.w;
 	}
 	r->h = MAX(r->h, agTextFontLineSkip);
 }
@@ -247,77 +232,60 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_Textbox *tb = obj;
 	int boxPadW = tb->boxPadX*2;
 	int boxPadH = tb->boxPadY*2;
-	int lblPadW = tb->lblPadL + tb->lblPadR;
 	int wBar = 0, hBar = 0;
-	AG_SizeAlloc aChld;
+	AG_SizeAlloc aLbl, aEd, aSb;
 	AG_SizeReq r;
 	int d;
 
-	tb->wLbl = 0;
-	tb->hLbl = 0;
-
-	if (tb->labelText == NULL && (a->w < boxPadW || a->h < boxPadH))
-		return (-1);
-	if (a->w < boxPadW + lblPadW || a->h < boxPadH)
+	if (a->w < boxPadW*2 || a->h < boxPadH*2)
 		return (-1);
 
-	if (tb->label != -1) {
-		tb->wLbl = WSURFACE(tb,tb->label)->w;
-		tb->hLbl = WSURFACE(tb,tb->label)->h;
-	} else {
-		AG_TextSize(tb->labelText, &tb->wLbl, &tb->hLbl);
+	if (tb->lbl != NULL) {
+		AG_WidgetSizeReq(tb->lbl, &r);
+		aLbl.x = boxPadW;
+		aLbl.y = boxPadH;
+		aLbl.w = MIN(r.w, a->w);
+		aLbl.h = MIN(r.h, a->h);
+		AG_WidgetSizeAlloc(tb->lbl, &aLbl);
 	}
-	if (a->w < (boxPadW+lblPadW) + tb->wLbl+tb->ed->wPre) {
-		tb->wLbl = a->w - (boxPadW-lblPadW) - tb->ed->wPre;
-		if (tb->wLbl <= 0) {
-			if (a->w > boxPadW+lblPadW) {
-				tb->wLbl = 0;
-			} else {
-				return (-1);
-			}
-		}
-	}
-	
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
 		if (tb->hBar != NULL) {
 			AG_WidgetSizeReq(tb->hBar, &r);
 			d = MIN(r.h, a->h);
-			aChld.x = 0;
-			aChld.y = a->h - d;
-			aChld.w = a->w - d + 1;
-			aChld.h = d;
-			AG_WidgetSizeAlloc(tb->hBar, &aChld);
+			aSb.x = 0;
+			aSb.y = a->h - d;
+			aSb.w = a->w - d + 1;
+			aSb.h = d;
+			AG_WidgetSizeAlloc(tb->hBar, &aSb);
 			if (AG_ScrollbarVisible(tb->hBar))
-				hBar = aChld.h;
+				hBar = aSb.h;
 		}
 		AG_WidgetSizeReq(tb->vBar, &r);
 		d = MIN(r.w, a->w);
-		aChld.x = a->w - d;
-		aChld.y = 0;
-		aChld.w = d;
-		aChld.h = a->h - d + 1;
-		AG_WidgetSizeAlloc(tb->vBar, &aChld);
+		aSb.x = a->w - d;
+		aSb.y = 0;
+		aSb.w = d;
+		aSb.h = a->h - d + 1;
+		AG_WidgetSizeAlloc(tb->vBar, &aSb);
 		if (AG_ScrollbarVisible(tb->vBar))
-			wBar = aChld.w;
+			wBar = aSb.w;
 		
 		tb->r.x = 0;
 		tb->r.y = 0;
 		tb->r.w = a->w;
 		tb->r.h = a->h;
 	} else {
-		tb->r.x = tb->wLbl + tb->lblPadL + tb->lblPadR;
+		tb->r.x = (tb->lbl != NULL) ? WIDTH(tb->lbl) : 0;
 		tb->r.y = 0;
 		tb->r.w = a->w - tb->r.x;
 		tb->r.h = a->h;
 	}
 	
-	tb->rLbl = AG_RECT(0, 0, tb->wLbl, a->h);
-	
-	aChld.x = lblPadW + tb->wLbl + tb->boxPadX;
-	aChld.y = tb->boxPadY;
-	aChld.w = a->w - boxPadW - aChld.x - wBar;
-	aChld.h = a->h - boxPadH - hBar;
-	AG_WidgetSizeAlloc(tb->ed, &aChld);
+	aEd.x = ((tb->lbl != NULL) ? WIDTH(tb->lbl) : 0) + tb->boxPadX;
+	aEd.y = tb->boxPadY;
+	aEd.w = a->w - boxPadW - aEd.x - wBar;
+	aEd.h = a->h - boxPadH - hBar;
+	AG_WidgetSizeAlloc(tb->ed, &aEd);
 
 	return (0);
 }
@@ -350,20 +318,14 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 void
 AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 {
+	char *s;
 	va_list ap;
-	
-	AG_ObjectLock(tb);
 
 	va_start(ap, fmt);
-	Free(tb->labelText);
-	Vasprintf(&tb->labelText, fmt, ap);
+	Vasprintf(&s, fmt, ap);
 	va_end(ap);
-
-	if (tb->label != -1) {
-		AG_WidgetUnmapSurface(tb, tb->label);
-		tb->label = -1;
-	}
-	AG_ObjectUnlock(tb);
+	AG_TextboxSetLabelS(tb, s);
+	Free(s);
 }
 
 /* Set the textbox label (C string). */
@@ -371,13 +333,11 @@ void
 AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 {
 	AG_ObjectLock(tb);
-
-	Free(tb->labelText);
-	tb->labelText = Strdup(s);
-
-	if (tb->label != -1) {
-		AG_WidgetUnmapSurface(tb, tb->label);
-		tb->label = -1;
+	if (tb->lbl != NULL) {
+		AG_LabelTextS(tb->lbl, s);
+	} else {
+		tb->lbl = AG_LabelNewS(tb, 0, s);
+		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectUnlock(tb);
 }
@@ -438,19 +398,15 @@ Init(void *obj)
 	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
 	tb->ed = AG_EditableNew(tb, 0);
+	tb->lbl = NULL;
 
 	tb->boxPadX = 2;
 	tb->boxPadY = 2;
-	tb->lblPadL = 2;
-	tb->lblPadR = 2;
-	tb->wLbl = 0;
 	tb->flags = 0;
-	tb->label = -1;
-	tb->labelText = NULL;
 	tb->hBar = NULL;
 	tb->vBar = NULL;
 	tb->r = AG_RECT(0,0,0,0);
-	tb->rLbl = AG_RECT(0,0,0,0);
+	tb->font = NULL;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
@@ -463,14 +419,8 @@ Init(void *obj)
 
 #ifdef AG_DEBUG
 	AG_BindUint(tb, "flags", &tb->flags);
-	AG_BindInt(tb, "label", &tb->label);
 	AG_BindInt(tb, "boxPadX", &tb->boxPadX);
 	AG_BindInt(tb, "boxPadY", &tb->boxPadY);
-	AG_BindInt(tb, "lblPadL", &tb->lblPadL);
-	AG_BindInt(tb, "lblPadR", &tb->lblPadR);
-	AG_BindInt(tb, "wLbl", &tb->wLbl);
-	AG_BindInt(tb, "hLbl", &tb->hLbl);
-
 	AG_SetEvent(tb, "bound", Bound, NULL);
 #endif /* AG_DEBUG */
 }
@@ -482,7 +432,7 @@ AG_WidgetClass agTextboxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

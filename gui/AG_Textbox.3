@@ -77,10 +77,13 @@ multiline mode.
 .Fn AG_TextboxSetWordWrap "AG_Textbox *textbox" "int enable"
 .Pp
 .Ft void
-.Fn AG_TextboxSetIntOnly "AG_Editable *ed" "int enable"
+.Fn AG_TextboxSetIntOnly "AG_Textbox *textbox" "int enable"
 .Pp
 .Ft void
-.Fn AG_TextboxSetFltOnly "AG_Editable *ed" "int enable"
+.Fn AG_TextboxSetFltOnly "AG_Textbox *textbox" "int enable"
+.Pp
+.Ft void
+.Fn AG_TextboxSetFont "AG_Textbox *textbox" "AG_Font *font"
 .Pp
 .Ft void
 .Fn AG_TextboxSetLabel "AG_Textbox *textbox" "const char *format" "..."
@@ -206,6 +209,15 @@ restricts input to integers (see flags)
 .Fn AG_TextboxSetFltOnly
 restricts input to real numbers (see flags).
 .Pp
+.Fn AG_TextboxSetFont
+configures an alternate font (see
+.Xr AG_FetchFont 3 ) .
+It is also legal to modify the
+.Va font
+pointer of the
+.Nm
+object (see
+.Dq STRUCTURE DATA ) .
 .Pp
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.
@@ -396,6 +408,25 @@ is not set.
 The string is about to be modified.
 .It Fn textbox-postchg "void"
 The string was just modified.
+.El
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Textbox
+object:
+.Pp
+.Bl -tag -compact -width "AG_Label *lbl "
+.It Ft AG_Label *lbl
+Pointer to the textbox's associated
+.Xr AG_Label 3 .
+If no text label was given, this is a NULL pointer.
+A call to
+.Fn AG_TextboxSetLabel
+will create a new label object.
+.It Ft AG_Font *font
+Alternate font (if NULL, the default font is used).
+If calling
+.Fn AG_TextboxSetFont
+is not convenient, it is legal to modify this pointer at run time.
 .El
 .Sh EXAMPLES
 The following code fragment binds an
