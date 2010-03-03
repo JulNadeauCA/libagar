@@ -192,12 +192,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	}
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
-		if (lbl->surface != -1) {
-			r->w = WSURFACE(lbl,lbl->surface)->w;
-			r->h = WSURFACE(lbl,lbl->surface)->h;
-		} else {
-			AG_TextSize(lbl->text, &r->w, &r->h);
-		}
+		AG_TextSize(lbl->text, &r->w, &r->h);
 		r->w += lbl->lPad + lbl->rPad;
 		r->h += lbl->tPad + lbl->bPad;
 		break;
