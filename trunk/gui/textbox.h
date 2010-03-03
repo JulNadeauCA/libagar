@@ -5,6 +5,7 @@
 
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
+#include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
 
 #include <agar/gui/begin.h>
@@ -15,9 +16,7 @@ typedef struct ag_textbox {
 	struct ag_widget _inherit;
 	struct ag_editable *ed;
 
-	char *labelText;		/* Label text */
-	int   label;			/* Label surface mapping */
-
+	AG_Label *lbl;			/* Textbox label */
 	Uint flags;
 #define AG_TEXTBOX_MULTILINE     0x00001 /* Enable multiline edition */
 #define AG_TEXTBOX_PASSWORD      0x00004 /* Hide buffer contents */
@@ -39,11 +38,9 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_WORDWRAP	 0x40000 /* Enable word wrapping */
 
 	int boxPadX, boxPadY;		/* Padding around textbox */
-	int lblPadL, lblPadR;		/* Padding around label */
-	int wLbl, hLbl;			/* Label dimensions */
 	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
 	AG_Rect r;			/* View area */
-	AG_Rect rLbl;			/* Label area */
+	AG_Font *font;			/* Font for text entry */
 } AG_Textbox;
 
 #define AGTEXTBOX(p) ((AG_Textbox *)(p))
@@ -72,6 +69,7 @@ void        AG_TextboxSetLabelS(AG_Textbox *, const char *);
 #define     AG_TextboxSetFltOnly(tb,flag) AG_EditableSetFltOnly((tb)->ed,(flag))
 #define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
 void        AG_TextboxSetWordWrap(AG_Textbox *, int);
+void        AG_TextboxSetFont(AG_Textbox *, AG_Font *);
 
 #define AG_TextboxBindUTF8(tb,p,sz) AG_EditableBindUTF8((tb)->ed,(p),(sz))
 #define AG_TextboxBindASCII(tb,p,sz) AG_EditableBindASCII((tb)->ed,(p),(sz))
