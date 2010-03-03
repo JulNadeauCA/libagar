@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -217,23 +217,51 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
 	AG_ObjectUnlock(sb);
 }
 
-/*
- * Return the current position of the scrollbar, in terms of the position of
- * the Left (or Top) edge in pixels. Returns 0 on success and -1 if the range
- * is currently <= 0.
- */
-#define GET_POSITION(type)						\
-	if (*(type *)pMin >= (*(type *)pMax) - *(type *)pVis) {		\
+#define GET_EXTENT(type) do {						\
+	if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {			\
+		if ((*(type *)pMax - *(type *)pMin) != 0) {		\
+			extent = sb->length -				\
+			    (*(type *)pVis * sb->length /		\
+			     (*(type *)pMax - *(type *)pMin));		\
+		} else {						\
+			extent = 0;					\
+		}							\
+	} else {							\
+		extent = (sb->wBar == -1) ? 0 : (sb->length - sb->wBar); \
+	}								\
+} while (0)
+
+#define GET_PX_COORDS(type) do {					\
+	int extent;							\
+	if (*(type *)pMin >= (*(type *)pMax - *(type *)pVis)) {		\
 		goto fail;						\
 	}								\
-	*x = (int)(((*(type *)pVal - *(type *)pMin) * sb->extent) /	\
-	          (*(type *)pMax - *(type *)pVis - *(type *)pMin)) 
+	GET_EXTENT(type);						\
+	*x = (int)(((*(type *)pVal - *(type *)pMin) * extent) /		\
+	          (*(type *)pMax - *(type *)pVis - *(type *)pMin));	\
+	if (len != NULL) { 						\
+		if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {		\
+			*len = *(type *)pVis * sb->length /		\
+			    *(type *)pMax;				\
+		} else {						\
+			*len = (sb->wBar == -1) ? sb->length : sb->wBar; \
+		}							\
+	}								\
+} while (0)
 
+/*
+ * Return the the position of the left/top edge, and the scrollbar
+ * control size in pixels.
+ * Returns 0 on success and -1 if the range is currently <= 0.
+ */
 static __inline__ int
-GetPosition(AG_Scrollbar *sb, int *x)
+GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
+
+	*x = 0;
+	if (len != NULL) { *len = 0; }
 
 	bVal = AG_GetVariable(sb, "value", &pVal);
 	bMin = AG_GetVariable(sb, "min", &pMin);
@@ -241,21 +269,23 @@ GetPosition(AG_Scrollbar *sb, int *x)
 	bVis = AG_GetVariable(sb, "visible", &pVis);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		GET_POSITION(int);	break;
-	case AG_VARIABLE_UINT:		GET_POSITION(Uint);	break;
-	case AG_VARIABLE_FLOAT:		GET_POSITION(float);	break;
-	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);	break;
-	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);	break;
-	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);	break;
-	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);	break;
-	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);	break;
-	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);	break;
-	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);	break;
-	default:					break;
+	case AG_VARIABLE_INT:		GET_PX_COORDS(int);	break;
+	case AG_VARIABLE_UINT:		GET_PX_COORDS(Uint);	break;
+	case AG_VARIABLE_FLOAT:		GET_PX_COORDS(float);	break;
+	case AG_VARIABLE_DOUBLE:	GET_PX_COORDS(double);	break;
+	case AG_VARIABLE_UINT8:		GET_PX_COORDS(Uint8);	break;
+	case AG_VARIABLE_SINT8:		GET_PX_COORDS(Sint8);	break;
+	case AG_VARIABLE_UINT16:	GET_PX_COORDS(Uint16);	break;
+	case AG_VARIABLE_SINT16:	GET_PX_COORDS(Sint16);	break;
+	case AG_VARIABLE_UINT32:	GET_PX_COORDS(Uint32);	break;
+	case AG_VARIABLE_SINT32:	GET_PX_COORDS(Sint32);	break;
+	default:						break;
 	} 
+#if 0
 	if (sb->wBar == -1) {
 		*x = 0;
 	}
+#endif
 	AG_UnlockVariable(bVis);
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
@@ -268,20 +298,23 @@ fail:
 	AG_UnlockVariable(bVal);
 	return (-1);
 }
-#undef GET_POSITION
+#undef GET_PX_COORDS
 
 /*
  * Set the value from a specified position in pixels.
  */
-#define SEEK_TO_POSITION(type)						\
+#define MAP_PX_COORDS(type) do {					\
+	int extent;							\
+	GET_EXTENT(type);						\
 	if (x <= 0) {							\
 		*(type *)pVal = *(type *)pMin;				\
-	} else if (x >= sb->extent) {					\
-		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
+	} else if (x >= extent) {					\
+		*(type *)pVal = MAX(*(type *)pMin,			\
+		                    (*(type *)pMax - *(type *)pVis));	\
 	} else {							\
 		*(type *)pVal = x *					\
 		    (*(type *)pMax - *(type *)pVis - *(type *)pMin) /	\
-		    sb->extent;						\
+		    extent;						\
 		*(type *)pVal += *(type *)pMin;				\
 		if (*(type *)pVal < *(type *)pMin) {			\
 			*(type *)pVal = *(type *)pMin;			\
@@ -289,10 +322,11 @@ fail:
 		if (*(type *)pVal > *(type *)pMax) {			\
 			*(type *)pVal = *(type *)pMax;			\
 		}							\
-	}
+	}								\
+} while (0)
 
 static __inline__ void
-SeekToPosition(AG_Scrollbar *sb, int x)
+SeekToPxCoords(AG_Scrollbar *sb, int x)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
@@ -303,16 +337,16 @@ SeekToPosition(AG_Scrollbar *sb, int x)
 	bVis = AG_GetVariable(sb, "visible", &pVis);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
-	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
-	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
-	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
-	case AG_VARIABLE_UINT8:		SEEK_TO_POSITION(Uint8);	break;
-	case AG_VARIABLE_SINT8:		SEEK_TO_POSITION(Sint8);	break;
-	case AG_VARIABLE_UINT16:	SEEK_TO_POSITION(Uint16);	break;
-	case AG_VARIABLE_SINT16:	SEEK_TO_POSITION(Sint16);	break;
-	case AG_VARIABLE_UINT32:	SEEK_TO_POSITION(Uint32);	break;
-	case AG_VARIABLE_SINT32:	SEEK_TO_POSITION(Sint32);	break;
+	case AG_VARIABLE_INT:		MAP_PX_COORDS(int);	break;
+	case AG_VARIABLE_UINT:		MAP_PX_COORDS(Uint);	break;
+	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);	break;
+	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);	break;
+	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);	break;
+	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);	break;
+	case AG_VARIABLE_UINT16:	MAP_PX_COORDS(Uint16);	break;
+	case AG_VARIABLE_SINT16:	MAP_PX_COORDS(Sint16);	break;
+	case AG_VARIABLE_UINT32:	MAP_PX_COORDS(Uint32);	break;
+	case AG_VARIABLE_SINT32:	MAP_PX_COORDS(Sint32);	break;
 	default:						break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -321,7 +355,7 @@ SeekToPosition(AG_Scrollbar *sb, int x)
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
 }
-#undef SEEK_TO_POSITION
+#undef MAP_PX_COORDS
 
 /*
  * Decrement the value by the specified amount multiplied by iInc/rInc.
@@ -375,14 +409,16 @@ Decrement(AG_Scrollbar *sb, int v)
  * Increment the value by the specified amount multiplied by iInc/rInc.
  */
 #define INCREMENT_INT(type)						\
-	if ((*(type *)pVal + ((type)sb->iInc)*v) > *(type *)pMax) 	\
-		*(type *)pVal = *(type *)pMax;				\
+	if ((*(type *)pVal + ((type)sb->iInc)*v) >			\
+	    (*(type *)pMax - *(type *)pVis)) 				\
+		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
 	else 								\
 		*(type *)pVal += ((type)sb->iInc)*v
 
 #define INCREMENT_REAL(type)						\
-	if ((*(type *)pVal + ((type)v)*sb->rInc) > *(type *)pMax) 	\
-		*(type *)pVal = *(type *)pMax;				\
+	if ((*(type *)pVal + ((type)v)*sb->rInc) >			\
+	    (*(type *)pMax - *(type *)pVis)) 				\
+		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
 	else 								\
 		*(type *)pVal += ((type)v)*sb->rInc
 
@@ -449,13 +485,13 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
 	        sb->width;
-	int pos = 0, posFound;
+	int pos, posFound, len;
 
 	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
 	AG_WidgetFocus(sb);
-	posFound = (GetPosition(sb, &pos) == 0);
+	posFound = (GetPxCoords(sb, &pos, &len) == 0);
 	if (x < 0) {
 		/*
 		 * Click on DECREMENT button. Unless user provided a handler
@@ -492,7 +528,7 @@ MouseButtonDown(AG_Event *event)
 		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 		sb->xOffs = posFound ? (x - pos) : x;
-	} else if (sb->wBar != -1) {
+	} else {
 		/*
 		 * Click outside of scrollbar. We seek to the absolute position
 		 * described by the cursor.
@@ -501,8 +537,8 @@ MouseButtonDown(AG_Event *event)
 		 * position since many users will expect that.
 		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		sb->xOffs = sb->wBar/2;
-		SeekToPosition(sb, x - sb->xOffs);
+		sb->xOffs = len/2;
+		SeekToPxCoords(sb, x - sb->xOffs);
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 }
@@ -515,7 +551,7 @@ MouseMotion(AG_Event *event)
 	if (sb->curBtn != AG_SCROLLBAR_BUTTON_SCROLL) {
 		return;
 	}
-	SeekToPosition(sb, ((sb->type == AG_SCROLLBAR_HORIZ) ?
+	SeekToPxCoords(sb, ((sb->type == AG_SCROLLBAR_HORIZ) ?
 	                    AG_INT(1):AG_INT(2)) - sb->width - sb->xOffs);
 }
 
@@ -675,7 +711,6 @@ Init(void *obj)
 	AG_BindUint(sb, "flags", &sb->flags);
 	AG_BindInt(sb, "width", &sb->width);
 	AG_BindInt(sb, "length", &sb->length);
-	AG_BindInt(sb, "extent", &sb->extent);
 	AG_BindInt(sb, "wBar", &sb->wBar);
 	AG_BindInt(sb, "hArrow", &sb->hArrow);
 	AG_BindInt(sb, "xOffs", &sb->xOffs);
@@ -709,8 +744,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	sb->length = ((sb->type==AG_SCROLLBAR_VERT) ? a->h:a->w) - sb->width*2;
 	if (sb->length < 0) { sb->length = 0; }
-	sb->extent = sb->length - sb->wBar;
-	if (sb->extent < 0) { sb->extent = 0; }
 	return (0);
 }
 
@@ -726,7 +759,9 @@ DrawText(AG_Scrollbar *sb)
 	AG_TextColor(agColors[TEXT_COLOR]);
 	AG_TextBGColor(AG_ColorRGB(127,127,127));
 
-	Snprintf(label, sizeof(label), "%d < %d < %d(%d)",
+	Snprintf(label, sizeof(label),
+	    (sb->type == AG_SCROLLBAR_HORIZ) ?
+	    "%d|%d|%d|%d" : "%d\n:%d\n%d\nv%d\n",
 	    AG_GetInt(sb,"min"),
 	    AG_GetInt(sb,"value"),
 	    AG_GetInt(sb,"max"),
@@ -741,7 +776,6 @@ DrawText(AG_Scrollbar *sb)
 	AG_WidgetBlit(sb, txt, r.x, r.y);
 	AG_SurfaceFree(txt);
 
-	AG_DrawRectOutline(sb, r, AG_ColorRGB(250,250,0));
 	AG_RectTranslate(&r, WIDGET(sb)->rView.x1, WIDGET(sb)->rView.y1);
 
 	if (AGDRIVER_CLASS(drv)->updateRegion != NULL) {
@@ -754,15 +788,13 @@ static void
 Draw(void *obj)
 {
 	AG_Scrollbar *sb = obj;
-	int x = 0, len;
+	int x, len;
 
-	if (GetPosition(sb, &x) == 0) {
-		len = (sb->wBar == -1) ? sb->extent : sb->wBar;
-		if (len < 0) { len = 0; }
-	} else {
+	if (GetPxCoords(sb, &x, &len) == -1) {
+		x = 0;
 		len = sb->length;
 	}
-	
+
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
 		STYLE(sb)->ScrollbarVert(sb, x, len);
@@ -782,7 +814,7 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 	int rv, x;
 
 	AG_ObjectLock(sb);
-	rv = (GetPosition(sb, &x) == -1) ? 0 : 1;
+	rv = (GetPxCoords(sb, &x, NULL) == -1) ? 0 : 1;
 	AG_ObjectUnlock(sb);
 	return (rv);
 }

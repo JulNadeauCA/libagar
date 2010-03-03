@@ -40,16 +40,31 @@ The
 .Nm
 widget allows the user to control an integer or floating-point value within a
 specified range.
-It is almost always used to control a scrollable view, and it features a
-special
+.Nm
+is almost always used from a widget implementation, to provide scrolling
+controls (and it features a special
 .Va visible
-binding to faciliate this application.
+binding to faciliate this application).
 .Pp
-For general-purpose edition of numerical values,
+For example, in a scrollable view containing a given number of "items" (e.g.,
+the lines of a multi-line
+.Xr AG_Textbox 3 ) ,
+the
+.Va max
+binding would be tied to the total item count, and the
+.Va visible
+binding would be tied to the number of items that can be displayed on-screen
+(based on the current widget dimensions).
+Finally, the
+.Va value
+binding is tied to an index variable defining the first item that should
+be rendered.
+.Pp
+NOTE: For general-purpose edition of numerical values,
 .Xr AG_Slider 3
 or
 .Xr AG_Numerical 3
-are more suitable alternatives.
+are more suitable widgets.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -150,6 +165,13 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_SCROLLBAR_EXPAND "
+.It AG_SCROLLBAR_AUTOSIZE
+Automatically determine the size of the scrollbar control based on current
+.Va min ,
+.Va max
+and
+.Va visible
+values (recommended).
 .It AG_SCROLLBAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -187,7 +209,6 @@ It is not necessary to invoke this function when using the
 or
 .Dv AG_SCROLLBAR_VFILL
 flag.
-.Dv 
 .Pp
 The
 .Fn AG_ScrollbarSetControlLength
@@ -353,3 +374,6 @@ User is done dragging the scrollbar.
 The
 .Nm
 widget first appeared in Agar 1.0.
+The
+.Dv AG_SCROLLBAR_AUTOSIZE
+feature was introduced in Agar 1.4.0.
