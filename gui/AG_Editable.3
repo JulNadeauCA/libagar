@@ -80,6 +80,9 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Fn AG_EditableSetFltOnly "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
+.Fn AG_EditableSetFont "AG_Editable *ed" "AG_Font *font"
+.Pp
+.Ft void
 .Fn AG_EditableSizeHint "AG_Editable *ed" "const char *text"
 .Pp
 .Ft void
@@ -204,6 +207,16 @@ enables/disable word wrapping.
 restricts input to integers (see flags)
 .Fn AG_EditableSetFltOnly
 restricts input to real numbers (see flags).
+.Pp
+.Fn AG_EditableSetFont
+configures an alternate font (see
+.Xr AG_FetchFont 3 ) .
+It is also legal to modify the
+.Va font
+pointer of the
+.Nm
+object (see
+.Dq STRUCTURE DATA ) .
 .Pp
 .Fn AG_EditableSizeHint
 requests that the initial geometry of
@@ -400,6 +413,18 @@ is not set.
 The string is about to be modified.
 .It Fn editable-postchg "void"
 The string was just modified.
+.El
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Editable
+object:
+.Pp
+.Bl -tag -compact -width "AG_Font *font "
+.It Ft AG_Font *font
+Alternate font (if NULL, the default font is used).
+If calling
+.Fn AG_EditableSetFont
+is not convenient, it is legal to modify this pointer at run time.
 .El
 .Sh EXAMPLES
 The following code fragment binds a

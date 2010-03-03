@@ -153,6 +153,7 @@ AG_EditableSetStatic(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
+/* Toggle floating-point only input */
 void
 AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 {
@@ -166,6 +167,7 @@ AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
+/* Toggle integer only input */
 void
 AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 {
@@ -176,6 +178,15 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 	} else {
 		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
 	}
+	AG_ObjectUnlock(ed);
+}
+
+/* Set alternate font */
+void
+AG_EditableSetFont(AG_Editable *ed, AG_Font *font)
+{
+	AG_ObjectLock(ed);
+	ed->font = font;
 	AG_ObjectUnlock(ed);
 }
 
@@ -416,7 +427,8 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 
 	stringb = AG_GetVariable(ed, "string", &s);
 	GetStringUCS4(ed, s, &ucs, &len);
-	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
+	if ((font = ed->font) == NULL &&
+	    (font = AG_FetchFont(NULL, -1, -1)) == NULL)
 		AG_FatalError("AG_Editable: %s", AG_GetError());
 
  	for (i = 0; i < len; i++) {
@@ -623,7 +635,10 @@ Draw(void *obj)
 	AG_PushClipRect(ed, ed->r);
 
 	AG_PushTextState();
+
+	if (ed->font != NULL) { AG_TextFont(ed->font); }
 	AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
+
 	x = 0;
 	y = -ed->y*agTextFontLineSkip;
 	ed->xMax = 10;
@@ -1145,6 +1160,7 @@ Init(void *obj)
 	ed->ucsLen = 0;
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
+	ed->font = NULL;
 
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
