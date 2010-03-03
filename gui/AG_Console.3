@@ -53,6 +53,9 @@ The display is automatically scrolled to display new messages.
 .Ft "void"
 .Fn AG_ConsoleSetPadding "AG_Console *cons" "int padding"
 .Pp
+.Ft "void"
+.Fn AG_ConsoleSetFont "AG_Console *cons" "AG_Font *font"
+.Pp
 .nr nS 0
 The
 .Fn AG_ConsoleNew
@@ -78,6 +81,12 @@ Shorthand for
 The
 .Fn AG_ConsoleSetPadding
 function sets the padding around messages in pixels.
+.Pp
+.Fn AG_ConsoleSetFont
+configures an alternate font for the
+.Nm
+messages (see
+.Xr AG_FetchFont 3 ) .
 .Sh MESSAGES
 .nr nS 1
 .Ft "AG_ConsoleLine *"
@@ -168,7 +177,11 @@ Line selection flag.
 .It Ft int icon
 Icon surface to display.
 .It Ft AG_Font *font
-Text font.
+Alternate font (if NULL, the default font is used).
+If calling
+.Fn AG_ConsoleSetFont
+is not convenient, it is legal to modify this pointer at run time (but
+due to caching, only newly entered lines will use the new font).
 .It Ft Uint32 cFg
 Foreground color (in
 .Va agDisplayFmt
@@ -183,6 +196,7 @@ User pointer
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
+.Xr AG_Text 3 ,
 .Xr AG_Textbox 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
