@@ -19,7 +19,6 @@ typedef struct ag_console_line {
 	int surface;			/* Cached surface handle (or -1) */
 	int selected;			/* Row is selected */
 	int icon;			/* Icon to display */
-	AG_Font *font;			/* Font */
 	AG_Color cFg;			/* Foreground color (display fmt) */
 	AG_Color cBg;			/* Background color (display fmt) */
 	void *p;			/* User pointer */
@@ -31,6 +30,7 @@ typedef struct ag_console {
 	Uint flags;
 #define AG_CONSOLE_HFILL	0x01	/* Fill available width */
 #define AG_CONSOLE_VFILL	0x02	/* Fill available height */
+#define AG_CONSOLE_AUTOSCROLL	0x04	/* Scroll new lines are added */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
@@ -41,6 +41,7 @@ typedef struct ag_console {
 	AG_Scrollbar *vBar;		/* Scrollbar */
 	AG_Rect r;			/* View area */
 	int rVisible;
+	AG_Font *font;			/* Font */
 } AG_Console;
 
 __BEGIN_DECLS
@@ -48,6 +49,7 @@ extern AG_WidgetClass agConsoleClass;
 
 AG_Console     *AG_ConsoleNew(void *, Uint);
 void		AG_ConsoleSetPadding(AG_Console *, int);
+void            AG_ConsoleSetFont(AG_Console *, AG_Font *);
 AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
 AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
                               FORMAT_ATTRIBUTE(printf, 2, 3)

@@ -24,16 +24,13 @@
  */
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "console.h"
 #include "primitive.h"
 
 #include <stdarg.h>
 #include <string.h>
-
-static void MouseButtonDown(AG_Event *);
-static void KeyUp(AG_Event *);
-static void KeyDown(AG_Event *);
 
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
@@ -51,6 +48,99 @@ AG_ConsoleNew(void *parent, Uint flags)
 	return (cons);
 }
 
+static __inline__ void
+ScrollUp(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int n = AG_INT(1);
+
+	if ((cons->rOffs - n) > 0) {
+		cons->rOffs -= n;
+	} else {
+		cons->rOffs = 0;
+	}
+}
+
+static __inline__ void
+ScrollDown(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int n = AG_INT(1);
+
+	if ((cons->rOffs + n) < cons->nLines - cons->rVisible) {
+		cons->rOffs += n;
+	} else {
+		cons->rOffs = cons->nLines - cons->rVisible;
+	}
+}
+
+static __inline__ void
+PageUp(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+
+	if ((cons->rOffs - cons->rVisible) > 0) {
+		cons->rOffs -= cons->rVisible;
+	} else {
+		cons->rOffs = 0;
+	}
+}
+
+static __inline__ void
+PageDown(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+
+	if ((cons->rOffs + cons->rVisible) < cons->nLines - cons->rVisible) {
+		cons->rOffs += cons->rVisible;
+	} else {
+		cons->rOffs = cons->nLines - cons->rVisible;
+	}
+}
+
+static void
+MouseButtonDown(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int btn = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	AG_WidgetFocus(cons);
+	AG_ExecMouseAction(cons, AG_ACTION_ON_BUTTONDOWN, btn, x, y);
+}
+
+static void
+MouseButtonUp(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int btn = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	AG_ExecMouseAction(cons, AG_ACTION_ON_BUTTONUP, btn, x, y);
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
+
+	AG_ExecKeyAction(cons, AG_ACTION_ON_KEYDOWN, sym, mod);
+}
+
+static void
+KeyUp(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
+
+	AG_ExecKeyAction(cons, AG_ACTION_ON_KEYUP, sym, mod);
+}
+
 static void
 Init(void *obj)
 {
@@ -66,16 +156,32 @@ Init(void *obj)
 	cons->rOffs = 0;
 	cons->rVisible = 0;
 	cons->cBg = AG_ColorRGB(0,0,0);
-	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
+	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
+	    AG_SCROLLBAR_AUTOSIZE);
 	cons->r = AG_RECT(0,0,0,0);
+	cons->font = NULL;
 
 	AG_BindInt(cons->vBar, "value", &cons->rOffs);
 	AG_BindInt(cons->vBar, "max", &cons->nLines);
 	AG_BindInt(cons->vBar, "visible", &cons->rVisible);
 
+	AG_ActionFn(cons, "ScrollUp",	ScrollUp, "%i", 1);
+	AG_ActionFn(cons, "ScrollDown",	ScrollDown, "%i", 1);
+	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
+	AG_ActionFn(cons, "PageDown",   PageDown, NULL);
+
+	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP,		"ScrollUp");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN,		"ScrollDown");
+
+	AG_ActionOnKey(cons, AG_KEY_UP,		AG_KEYMOD_ANY,	"ScrollUp");
+	AG_ActionOnKey(cons, AG_KEY_DOWN,	AG_KEYMOD_ANY,	"ScrollDown");
+	AG_ActionOnKey(cons, AG_KEY_PAGEUP,	AG_KEYMOD_ANY,	"PageUp");
+	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN,	AG_KEYMOD_ANY,	"PageDown");
+
 	AG_SetEvent(cons, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(cons, "key-up", KeyUp, NULL);
+	AG_SetEvent(cons, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(cons, "key-down", KeyDown, NULL);
+	AG_SetEvent(cons, "key-up", KeyUp, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(cons, "flags", &cons->flags);
@@ -91,15 +197,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
 	r->h *= 2;
-}
-
-static __inline__ void
-UpdateOffset(AG_Console *cons)
-{
-	if ((cons->rOffs+cons->rVisible) > cons->nLines) {
-		cons->rOffs = cons->nLines - cons->rVisible;
-		if (cons->rOffs < 0) { cons->rOffs = 0; }
-	}
 }
 
 static int
@@ -120,8 +217,12 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
-	cons->rVisible = a->h / (agTextFontHeight + cons->lineskip + 1);
-	UpdateOffset(cons);
+	cons->rVisible = a->h;
+	if (cons->font != NULL) {
+		cons->rVisible /= cons->font->height;
+	} else {
+		cons->rVisible /= agTextFontHeight;
+	}
 	return (0);
 }
 
@@ -130,35 +231,49 @@ Draw(void *p)
 {
 	AG_Console *cons = p;
 	AG_Surface *su;
+	AG_Rect rDst;
 	Uint r;
-	int y;
 
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
 
-	AG_WidgetDraw(cons->vBar);
-	UpdateOffset(cons);
+	AG_PushTextState();
 
-	if (cons->nLines == 0)
-		return;
-
-	AG_PushClipRect(cons, cons->r);
-	for (r = cons->rOffs, y = cons->padding;
-	     r < cons->nLines && y < WIDGET(cons)->h;
-	     r++) {
-		AG_ConsoleLine *ln = &cons->lines[r];
-
-		if (ln->surface == -1) {
-			if (ln->font != NULL) {
-				AG_TextFont(ln->font);
-			}
-			AG_TextColor(ln->cFg);
-			su = AG_TextRender(ln->text);
-			ln->surface = AG_WidgetMapSurface(cons, su);
-		}
-		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
-		y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
+	if (cons->font != NULL) {
+		AG_TextFont(cons->font);
 	}
-	AG_PopClipRect(cons);
+	if (cons->nLines > 0) {
+		AG_PushClipRect(cons, cons->r);
+		rDst = cons->r;
+		for (r = cons->rOffs, rDst.y = cons->padding;
+		     r < cons->nLines && rDst.y < WIDGET(cons)->h;
+		     r++) {
+			AG_ConsoleLine *ln = &cons->lines[r];
+	
+			if (ln->surface == -1) {
+				AG_TextColor(ln->cFg);
+				AG_TextBGColor(ln->cBg);
+				su = AG_TextRender(ln->text);
+				ln->surface = AG_WidgetMapSurface(cons, su);
+			}
+			AG_WidgetBlitSurface(cons, ln->surface, cons->padding,
+			    rDst.y);
+			rDst.y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
+		}
+		AG_PopClipRect(cons);
+	}
+	
+	AG_PopTextState();
+
+	/* Trigger autoscrolling */
+	if (cons->rVisible < cons->nLines+1) {
+//		printf("autoscroll enable\n");
+//		cons->flags |= AG_CONSOLE_AUTOSCROLL;
+	} else {
+//		printf("autoscroll disable\n");
+//		cons->flags &= ~(AG_CONSOLE_AUTOSCROLL);
+	}
+
+	AG_WidgetDraw(cons->vBar);
 }
 
 static void
@@ -182,33 +297,7 @@ Destroy(void *p)
 	FreeLines(cons);
 }
 
-static void
-MouseButtonDown(AG_Event *event)
-{
-#if 0
-	AG_Console *bu = AG_SELF();
-	int button = AG_INT(1);
-#endif
-}
-
-static void
-KeyDown(AG_Event *event)
-{
-#if 0
-	AG_Console *bu = AG_SELF();
-	int keysym = AG_INT(1);
-#endif
-}
-
-static void
-KeyUp(AG_Event *event)
-{
-#if 0
-	AG_Console *bu = AG_SELF();
-	int keysym = AG_INT(1);
-#endif
-}
-
+/* Configure padding in pixels */
 void
 AG_ConsoleSetPadding(AG_Console *cons, int padding)
 {
@@ -217,6 +306,26 @@ AG_ConsoleSetPadding(AG_Console *cons, int padding)
 	AG_ObjectUnlock(cons);
 }
 
+/* Configure an alternate font */
+void
+AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
+{
+	int i;
+
+	AG_ObjectLock(cons);
+	cons->font = font;
+	cons->rVisible = HEIGHT(cons) / font->height;
+
+	for (i = 0; i < cons->nLines; i++) {
+		AG_ConsoleLine *ln = &cons->lines[i];
+
+		AG_WidgetUnmapSurface(cons, ln->surface);
+		ln->surface = -1;
+	}
+	AG_ObjectUnlock(cons);
+}
+
+/* Append a line to the log */
 AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
@@ -237,13 +346,13 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->cons = cons;
 	ln->selected = 0;
 	ln->p = NULL;
-	ln->font = NULL;
 	ln->surface = -1;
 	ln->cBg = AG_ColorRGBA(0,0,0,0);
 	ln->cFg = AG_ColorRGB(250,250,230);
 
-	cons->rOffs++;
-	UpdateOffset(cons);
+	if (cons->flags & AG_CONSOLE_AUTOSCROLL)
+		cons->rOffs++;
+
 	AG_ObjectUnlock(cons);
 	return (ln);
 }
@@ -314,7 +423,6 @@ AG_ConsoleClear(AG_Console *cons)
 {
 	FreeLines(cons);
 	cons->rOffs = 0;
-	UpdateOffset(cons);
 }
 
 AG_WidgetClass agConsoleClass = {
