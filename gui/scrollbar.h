@@ -24,7 +24,8 @@ typedef struct ag_scrollbar {
 	Uint flags;
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02
-#define AG_SCROLLBAR_TEXT	0x08	/* Print values */
+#define AG_SCROLLBAR_TEXT	0x08	/* Print numbers (for debugging) */
+#define AG_SCROLLBAR_AUTOSIZE	0x10	/* Automatically size control */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
 	int value;			/* Default value binding */
@@ -35,7 +36,6 @@ typedef struct ag_scrollbar {
 	int width;			/* Scrollbar width */
 	int length;			/* Length of scrolling control area */
 	int wBar;			/* Scrolling control length */
-	int extent;			/* (length - wBar) */
 	int hArrow;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
