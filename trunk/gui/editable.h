@@ -4,6 +4,7 @@
 #define _AGAR_GUI_EDITABLE_H_
 
 #include <agar/gui/widget.h>
+#include <agar/gui/text.h>
 
 #include <agar/gui/begin.h>
 
@@ -69,6 +70,7 @@ typedef struct ag_editable {
 	Uint    ucsLen;			/* Buffer length (for STATIC) */
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
+	AG_Font *font;			/* Font for text rendering */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -94,6 +96,7 @@ void         AG_EditableSetWordWrap(AG_Editable *, int);
 void         AG_EditableSetStatic(AG_Editable *, int);
 void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
+void         AG_EditableSetFont(AG_Editable *, AG_Font *);
 
 int  AG_EditableMapPosition(AG_Editable *, int, int, int *, int);
 void AG_EditableMoveCursor(AG_Editable *, int, int, int);
