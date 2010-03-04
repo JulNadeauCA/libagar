@@ -93,6 +93,8 @@ void            AG_SurfaceBlit(const AG_Surface *, const AG_Rect *,
 int             AG_SurfaceResize(AG_Surface *, Uint, Uint);
 void            AG_SurfaceFree(AG_Surface *);
 
+AG_Surface     *AG_ReadSurfaceFromBMP(AG_DataSource *);
+
 AG_Surface     *AG_SurfaceFromPNG(const char *);
 AG_Surface     *AG_SurfaceFromJPEG(const char *);
 AG_Surface     *AG_SurfaceFromBMP(const char *);
