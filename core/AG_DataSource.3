@@ -193,6 +193,26 @@ The
 variant writes to the given position
 .Fa pos .
 .Pp
+Note that
+.Fn AG_Read ,
+.Fn AG_ReadAt ,
+.Fn AG_Write
+and
+.Fn AG_WriteAt
+all return an enum of type
+.Ft AG_IOStatus
+relating the success of the operation.
+.Ft AG_IOStatus
+is defined as:
+.Bd -literal
+typedef enum ag_io_status {
+	AG_IO_SUCCESS = 0,
+	AG_IO_EOF = 1,
+	AG_IO_ERROR = 2,
+	AG_IO_UNAVAIL = 3
+} AG_IOStatus;
+.Ed
+.Pp
 .Fn AG_Tell
 returns the current position in the data source.
 If the underlying data source does not support this operation, a value
