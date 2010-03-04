@@ -90,5 +90,6 @@ if [ "$PHASE" = "stable" ]; then
 	echo "- Update http://sourceforge.net/projects/agar/"
 	echo "- Update http://freshmeat.net/projects/agar/"
 	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
+	echo "- Notify Twitter"
 	echo "*********************************************************"
 fi
