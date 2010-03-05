@@ -72,8 +72,8 @@ LoadBMP(AG_Event *event)
 	AG_PixmapFromSurfaceScaled(sv, 0, bmp, bmp->w, bmp->h);
 	AG_Expand(sv);
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
+	AG_WindowSetGeometry(win, -1, -1, bmp->w+20, bmp->h+20);
 	
 	AG_SurfaceFree(bmp);
 }
@@ -115,8 +115,8 @@ LoadIMG(AG_Event *event)
 	AG_PixmapFromSurface(sv, 0, AG_SurfaceFromSDL(img));
 	AG_Expand(sv);
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
+	AG_WindowSetGeometry(win, -1, -1, img->w+20, img->h+20);
 	
 	SDL_FreeSurface(img);
 }
@@ -131,7 +131,7 @@ CreateWindow(void)
 	AG_Box *box;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Image loader");
+	AG_WindowSetCaption(win, "Agar loader dialog demo");
 
 	/* Create the file loader widget. */
 	fd = AG_FileDlgNew(win, 0);

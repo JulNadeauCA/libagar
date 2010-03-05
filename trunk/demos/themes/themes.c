@@ -15,7 +15,6 @@
 
 #include <agar/core/types.h>
 
-#include "config/have_getopt.h"
 #include <agar/config/ag_debug.h>
 
 #include "mytheme.h"
@@ -382,6 +381,8 @@ main(int argc, char *argv[])
 	int useDoubleBuf = 0;
 	char *colorFile = NULL;
 	char *drivers = NULL;
+	char *optArg;
+	int c;
 
 	/* Initialize Agar-Core. */
 	if (AG_InitCore("agar-themes-demo", AG_VERBOSE) == -1) {
@@ -392,70 +393,55 @@ main(int argc, char *argv[])
 	/* Fetch Agar version information. */
 	AG_GetVersion(&ver);
 
-#ifdef HAVE_GETOPT
-	{
-		int c;
-
-		while ((c = getopt(argc, argv, "?d:vw:h:fbBt:T:r:c:")) != -1) {
-			extern char *optarg;
-
-			switch (c) {
-			case 'd':
-				drivers = optarg;
-				break;
-			case 'v':
-				/* Display Agar version information */
-				printf("Agar version: %d.%d.%d\n", ver.major,
-				    ver.minor, ver.patch);
-				printf("Release name: \"%s\"\n", ver.release);
-				exit(0);
-			case 'w':
-				/* Set display width in pixels */
-				w = atoi(optarg);
-				break;
-			case 'h':
-				/* Set display height in pixels */
-				h = atoi(optarg);
-				break;
-			case 'f':
-				/* Force full screen */
-				AG_SetBool(agConfig, "view.full-screen", 1);
-				break;
-			case 'r':
-				/* Change default refresh rate */
-				fps = atoi(optarg);
-				break;
-			case 'b':
-				/* Force use of the FreeType font engine */
-				AG_SetBool(agConfig, "font.freetype", 0);
-				break;
-			case 'B':
-				/* Force use of the bitmap font engine */
-				AG_SetBool(agConfig, "font.freetype", 1);
-				break;
-			case 'T':
-				/* Set an alternate font directory */
-				AG_SetString(agConfig, "font-path", optarg);
-				break;
-			case 't':
-				/* Change the default font */
-				AG_TextParseFontSpec(optarg);
-				break;
-			case 'c':
-				/* Load color scheme */
-				colorFile = optarg;
-				break;
-			case '?':
-			default:
-				printf("%s [-vgsDdfbBR] [-d driver] [-r fps] [-t fontspec] "
-				       "[-w width] [-h height] "
-				       "[-T font-path] [-c colors.acs]\n",
-				       agProgName);
-				exit(0);
-			}
+	while ((c = AG_Getopt(argc, argv, "?d:vw:h:ft:T:r:c:", &optArg, NULL))
+	    != -1) {
+		switch (c) {
+		case 'd':
+			drivers = optArg;
+			break;
+		case 'v':
+			/* Display Agar version information */
+			printf("Agar version: %d.%d.%d\n", ver.major,
+			    ver.minor, ver.patch);
+			printf("Release name: \"%s\"\n", ver.release);
+			exit(0);
+		case 'w':
+			/* Set display width in pixels */
+			w = atoi(optArg);
+			break;
+		case 'h':
+			/* Set display height in pixels */
+			h = atoi(optArg);
+			break;
+		case 'f':
+			/* Force full screen */
+			AG_SetBool(agConfig, "view.full-screen", 1);
+			break;
+		case 'r':
+			/* Change default refresh rate */
+			fps = atoi(optArg);
+			break;
+		case 'T':
+			/* Set an alternate font directory */
+			AG_SetString(agConfig, "font-path", optArg);
+			break;
+		case 't':
+			/* Change the default font */
+			AG_TextParseFontSpec(optArg);
+			break;
+		case 'c':
+			/* Load color scheme */
+			colorFile = optArg;
+			break;
+		case '?':
+		default:
+			printf("%s [-vgsDdfR] [-d driver] [-r fps] [-t fontspec] "
+			       "[-w width] [-h height] "
+			       "[-T font-path] [-c colors.acs]\n",
+			       agProgName);
+			exit(0);
 		}
 	}
-#endif
 
 	/* Initialize Agar-GUI. */
 	if (AG_InitGraphics(drivers) == -1) {
