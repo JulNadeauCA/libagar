@@ -26,8 +26,9 @@ CreateWindow(void)
 	AG_Label *lbl;
 	AG_Scrollbar *sb;
 
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	AG_WindowSetCaption(win, "Agar scrollbar demo");
+
 	lbl = AG_LabelNewPolled(win, 0, "Int binding: %d", &vInt);
 	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, 0, &vInt, &minInt, &maxInt, &visInt);
 	AG_ExpandHoriz(lbl);

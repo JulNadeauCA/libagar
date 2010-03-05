@@ -158,13 +158,10 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Button *btn;
 
-	if (AG_InitCore("agar-focusing-demo", 0) == -1) {
+	if (AG_InitCore("agar-focusing-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitGraphics(NULL) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
@@ -172,7 +169,8 @@ main(int argc, char *argv[])
 	TestUnfocusedMouseMotion();
 	TestTabCycle();
 
-	win = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_NOCLOSE);
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN|AG_WINDOW_NOCLOSE : 0);
+	AG_WindowSetCaption(win, "Agar widget focusing demo");
 	AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
 	btn = AG_ButtonNewFn(win, 0, "Focus widget 1", FocusWidget1, NULL);
 	AG_WidgetSetFocusable(btn, 0);

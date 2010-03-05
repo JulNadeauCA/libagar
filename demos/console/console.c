@@ -10,26 +10,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-AG_Font *myFont;
+AG_Textbox *textbox;
 
 static void
-AddLines(AG_Event *event)
+AppendLine(AG_Event *event)
+{
+	AG_Console *cons = AG_PTR(1);
+	
+	AG_ConsoleMsg(cons, textbox->ed->string);
+	textbox->ed->string[0] = '\0';
+}
+
+static void
+EnterJunk(AG_Event *event)
 {
 	AG_Console *cons = AG_PTR(1);
 	AG_ConsoleLine *cl;
-	int i, nLines = AG_INT(2);
-	
-	for (i = 0; i < nLines; i++) {
-		cl = AG_ConsoleMsg(cons,
-		    "%d%d Foo bar baz bezo papi grow mami smoke\nMush snow storm",
-		    i, (int)AG_GetTicks());
-		if (i%2) {
-			cl->font = agDefaultFont;
-			cl->cBg = AG_ColorRGB(0,100,0);
-		} else {
-			cl->font = myFont;
-			cl->cBg = AG_ColorRGBA(0,0,0,0);
-		}
+	int i;
+
+	for (i = 0; i <= 100; i++) {
+		AG_ConsoleMsg(cons, "%d/%d foo bar baz bezo foo bar baz "
+		                    "bezo foo bar baz bezo foo bar baz bezo",
+		    i, 100);
 	}
 }
 
@@ -41,12 +43,31 @@ ClearLines(AG_Event *event)
 	AG_ConsoleClear(cons);
 }
 
+static void
+SelFont(AG_Event *event)
+{
+	AG_Console *cons = AG_PTR(1);
+	AG_Window *win;
+	AG_FontSelector *fs;
+
+	if ((win = AG_WindowNewNamedS(0, "selfont")) != NULL) {
+		/* Duplicate the default font */
+		cons->font = AG_TextFontPct(100);
+
+		AG_WindowSetCaption(win, "Select font");
+		fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
+		AG_BindPointer(fs, "font", (void **)&cons->font);
+		AG_WindowShow(win);
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
 	AG_Window *win;
 	AG_Console *cons;
 	AG_Box *box;
+	AG_Button *btn;
 
 	if (AG_InitCore("agar-console-demo", 0) == -1 ||
 	    AG_InitGraphics(NULL) == -1) {
@@ -59,16 +80,25 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
 	AG_WindowSetCaption(win, "Agar console demo");
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	box = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		AG_ButtonNewFn(box, 0, "Add Line", AddLines, "%p,%i", cons, 1);
-		AG_ButtonNewFn(box, 0, "Add 10 Lines", AddLines, "%p,%i", cons, 10);
+		textbox = AG_TextboxNew(box, AG_TEXTBOX_HFILL, "Input: ");
+		AG_SetEvent(textbox, "textbox-return", AppendLine, "%p", cons);
+		AG_WidgetFocus(textbox);
+
+		btn = AG_ButtonNewFn(box, 0, "OK", AppendLine, "%p", cons);
+		AG_WidgetSetFocusable(btn, 0);
+	}
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	{
+		AG_ButtonNewFn(box, 0, "Junk", EnterJunk, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);
+		AG_ButtonNewFn(box, 0, "Sel.Font", SelFont, "%p", cons);
+		AG_ButtonNewFlag(box, AG_BUTTON_STICKY, "Debug",
+		    &cons->vBar->flags, AG_SCROLLBAR_TEXT);
 	}
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
 	AG_WindowShow(win);
-
-	myFont = AG_TextFontPct(200);
 
 	AG_EventLoop();
 	AG_Destroy();

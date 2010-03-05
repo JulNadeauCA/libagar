@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	win = AG_WindowNew(0);
-
+	AG_WindowSetCaption(win, "Agar scrollview demo");
 
 	AG_ButtonNew(win, 0, "Foo");
 	sv = AG_ScrollviewNew(win, 0);

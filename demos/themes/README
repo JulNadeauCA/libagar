@@ -9,8 +9,6 @@ AG_Style(3) for details). Command-line options are:
 	-h [height] 		Display height in pixels
 	-f			Force full screen mode
 	-r [fps]		Set fixed refresh rate
-	-b			Force use of FreeType font engine
-	-B			Force use of bitmap font engine
 	-T [dir]		Set font loading directory
 	-t [face,pts,flags]	Load an alternate font as default
 	                        (accepted flags include 'b'=bold,

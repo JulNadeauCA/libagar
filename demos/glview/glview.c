@@ -10,7 +10,7 @@
  */
 
 #include <agar/config/have_opengl.h>
-#ifdef HAVE_OPENGLa
+#ifdef HAVE_OPENGL
 
 #include <agar/core.h>
 #include <agar/gui.h>
@@ -201,7 +201,8 @@ MyOverlayFunction(AG_Event *event)
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
-	myText = AG_TextRenderf("Spin = %.0f degrees, z = %.02f", spin, vz);
+	myText = AG_TextRenderf("Zoom using mouse wheel\n"
+	                        "Spin = %.0f degrees, z = %.02f", spin, vz);
 	AG_PopTextState();
 
 	/*
@@ -211,7 +212,7 @@ MyOverlayFunction(AG_Event *event)
 	 */
 	AG_WidgetBlit(glv, myText,
 	    0,
-	    AGWIDGET(glv)->h - agTextFontHeight);
+	    AGWIDGET(glv)->h - agTextFontHeight*2 - 5);
 
 	AG_SurfaceFree(myText);
 }
@@ -241,6 +242,8 @@ CreateMainWindow(void)
 	AG_HSVPal *pal;
 
 	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	AG_WindowSetCaption(win, "Agar low-level OpenGL context demo");
+
 	hb = AG_BoxNewHoriz(win, 0);
 	AG_Expand(hb);
 	{

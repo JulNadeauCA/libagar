@@ -33,5 +33,6 @@ main(int argc, char *argv[])
 		printf("\tDestroy()\n");
 		AG_Destroy();
 	}
+	printf("Test successful\n");
 	return (0);
 }

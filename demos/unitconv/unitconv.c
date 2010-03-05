@@ -50,15 +50,16 @@ CreateUI(void)
 	AG_Window *win;
 	AG_Toolbar *tb;
 
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
 	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
-	agColors[WINDOW_BG_COLOR] = agColors[BG_COLOR];
 
 	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS|
-	                                             AG_TOOLBAR_STICKY);
+	                                             AG_TOOLBAR_STICKY|
+						     AG_TOOLBAR_HFILL);
+
 	for (i = 0; i < sizeof(units)/sizeof(units[0]); i++) {
-		if (i == 5) {
+		if (i == 6) {
 			AG_ToolbarRow(tb, 1);
 		}
 		AG_ToolbarButton(tb, units[i].name, (i == 0),
@@ -89,7 +90,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	AG_TextParseFontSpec("_agFontVera:14");
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 	

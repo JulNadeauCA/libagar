@@ -213,7 +213,7 @@ main(int argc, char *argv[])
 
 	/* Create a new window. */
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "M_Plotter example");
+	AG_WindowSetCaption(win, "Agar plotting demo");
 
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
 	AG_Expand(pane);
@@ -288,6 +288,7 @@ main(int argc, char *argv[])
 		AG_ExpandHoriz(btn);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);
 	AG_WindowShow(win);
 
 	AG_EventLoop();

@@ -13,14 +13,20 @@ static void
 CreateWindow(void)
 {
 	AG_Window *win;
+	AG_Label *lbl;
 	AG_Table *table;
 	int i;
 
 	/* Create a window without titlebar or decorations. */
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	AG_WindowSetCaption(win, "Agar maximized window demo");
 
 	/* Disable the default spacing at the window's edges. */
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
+
+	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Agar maximized window demo");
+	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	AG_SpacerNewHoriz(win);
 
 	/* Create an example table. */
 	table = AG_TableNew(win, 0);

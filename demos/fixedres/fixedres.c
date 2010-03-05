@@ -1,9 +1,9 @@
 /*	Public domain	*/
 /*
  * This program demonstrates the use of fixed-size widgets. This is
- * typically used for specialized applications like game menus. Most
- * GUI applications should rely on container widgets such as AG_Window
- * and AG_Box to position and size widgets.
+ * typically used for specialized applications like game menus (most
+ * GUI applications should rely on the automatic widget packing provided
+ * by widgets such as AG_Window, AG_Box, AG_Pane, etc.).
  */
 
 #include <agar/core.h>
@@ -20,10 +20,11 @@ CreateGameMenu(void)
 	AG_Button *btn;
 	AG_Pixmap *px;
 
-	/* Create a fixed-size window with no titlebar or decorations. */
-	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
+	win = AG_WindowNewNamedS(agDriverSw ? AG_WINDOW_PLAIN : 0,
+	    "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, 640, 128);
+	AG_WindowSetCaption(win, "Agar fixed widget positioning demo");
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
@@ -41,7 +42,7 @@ CreateGameMenu(void)
 
 	/* Create the background pixmap from bmp file. */
 	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
-		fprintf(stderr, "Cannot find menubg.bmp\n", AG_GetError());
+		fprintf(stderr, "%s\n", AG_GetError());
 		exit(1);
 	}
 	AG_FixedMove(fx, px, 0, 0);
@@ -50,7 +51,7 @@ CreateGameMenu(void)
 	 * Create two labels. We don't initially attach the labels to a
 	 * parent, so we must use AG_FixedPut().
 	 */
-	lb1 = AG_LabelNew(NULL, 0, "Fixed Resolution");
+	lb1 = AG_LabelNew(NULL, 0, "Fixed Widget Positioning");
 	lb2 = AG_LabelNew(NULL, 0, "Demo");
 	AG_FixedPut(fx, lb1, 20, 32);
 	AG_FixedPut(fx, lb2, 20, 32+agTextFontHeight);
@@ -79,13 +80,10 @@ CreateGameMenu(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("agar-fixedres-demo", 0) == -1) {
+	if (AG_InitCore("agar-fixedres-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitGraphics(NULL) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);

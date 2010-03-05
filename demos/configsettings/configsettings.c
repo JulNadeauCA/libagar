@@ -38,17 +38,13 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Box *box;
 	AG_Textbox *tb;
-	int i;
 
 	someString[0] = '\0';
 
-	if (AG_InitCore("agar-configsettings-demo", 0) == -1) {
-		printf("AG_InitCore(%d): %s\n", i, AG_GetError());
-		exit(1);
-	}
-	if (AG_InitGraphics(NULL) == -1) {
-		printf("AG_InitGraphics: %s\n", AG_GetError());
-		exit(1);
+	if (AG_InitCore("agar-configsettings-demo", 0) == -1 ||
+	    AG_InitGraphics(NULL) == -1) {
+		printf("Initializing Agar: %s\n", AG_GetError());
+		return (1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	
@@ -59,7 +55,8 @@ main(int argc, char *argv[])
 	AG_SetInt(agConfig, "some-int", 2345);
 
 	/* Create some widgets */
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	AG_WindowSetCaption(win, "Agar config settings demo");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 	AG_NumericalNewInt(win, 0, NULL, "Some int: ", &someInt);
 	AG_CheckboxNewInt(win, 0, "Some bool", &someBool);
