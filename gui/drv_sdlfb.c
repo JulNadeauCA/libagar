@@ -723,10 +723,9 @@ static int
 RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 {
 	AG_DriverSDLFB *sfb = drv;
-	AG_Surface *su;
 	int visiblePrev;
 
-	if ((su = AG_SurfaceStdRGB(wid->w, wid->h)) == NULL)
+	if ((*s = AG_SurfaceStdRGB(wid->w, wid->h)) == NULL)
 		return (-1);
 
 	/* XXX TODO render to offscreen buffer instead */
@@ -737,7 +736,7 @@ RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 	wid->window->visible = visiblePrev;
 	AG_EndRendering(AGDRIVER(sfb));
 
-	AG_SDL_BlitSurface(su, NULL, sfb->s, wid->rView.x1, wid->rView.y1);
+	AG_SDL_BlitSurface(*s, NULL, sfb->s, wid->rView.x1, wid->rView.y1);
 	return (0);
 }
 
