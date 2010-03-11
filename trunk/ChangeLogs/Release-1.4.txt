@@ -35,4 +35,11 @@ http://wiki.libagar.org/wiki/Agar-1.4.
   complications with language bindings.
 - As the "window-*" prefixes in events such as "window-mousemotion" is no
   longer relevant, mark them deprecated in favor of "mouse-*" and "key-*".
+- The integer typedefs Uint8, Sint8, Uint16, Sint16, etc. are no longer
+  made public unless _USE_AGAR_TYPES is defined.
+- AG_Textbox(3) now uses AG_Label(3) to display its optional text label.
+- Added AG_TextboxSetFont(), AG_EditableSetFont(). The "font" structure
+  members of AG_Textbox(3) and AG_Editable(3) are now public.
+- Various improvements to AG_Console(3), added scrolling actions.
+- Implement AG_SCROLLBAR_AUTOSIZE option in AG_Scrollbar(3).
 
