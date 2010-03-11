@@ -55,6 +55,7 @@ static Display *agDisplay = NULL;	/* X display (shared) */
 static int      agScreen = 0;		/* Default screen (shared) */
 static Uint     rNom = 16;		/* Nominal refresh rate (ms) */
 static int      rCur = 0;		/* Effective refresh rate (ms) */
+static AG_Mutex agDisplayLock;		/* Lock on agDisplay */
 
 static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
@@ -71,6 +72,7 @@ typedef struct ag_driver_glx {
 	Uint            *textureGC;	/* Textures queued for deletion */
 	Uint            nTextureGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
+	AG_Mutex         lock;		/* Protect Xlib calls */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -117,6 +119,7 @@ Init(void *obj)
 	memset(glx->clipStates, 0, sizeof(glx->clipStates));
 	glx->textureGC = NULL;
 	glx->nTextureGC = 0;
+	AG_MutexInitRecursive(&glx->lock);
 }
 
 static void
@@ -124,6 +127,7 @@ Destroy(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 
+	AG_MutexDestroy(&glx->lock);
 	Free(glx->clipRects);
 	Free(glx->textureGC);
 }
@@ -135,6 +139,7 @@ Destroy(void *obj)
 static void
 InitGlobals(void)
 {
+	AG_MutexInitRecursive(&agDisplayLock);
 	agScreen = DefaultScreen(agDisplay);
 	InitKeymaps();
 	memset(xkbBuf, '\0', sizeof(xkbBuf));
@@ -174,6 +179,8 @@ Open(void *obj, const char *spec)
 		}
 		InitGlobals();
 	}
+	
+	AG_MutexLock(&agDisplayLock);
 
 	/* Register the core X mouse and keyboard */
 	if ((drv->mouse = AG_MouseNew(glx, "X mouse")) == NULL ||
@@ -186,6 +193,7 @@ Open(void *obj, const char *spec)
 #endif /* DEBUG_XSYNC */
 
 	nDrivers++;
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 fail:
 	if (drv->kbd != NULL) {
@@ -200,6 +208,7 @@ fail:
 	}
 	agDisplay = NULL;
 	agScreen = 0;
+	AG_MutexUnlock(&agDisplayLock);
 	return (-1);
 }
 
@@ -211,11 +220,14 @@ Close(void *obj)
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
+	AG_MutexLock(&agDisplayLock);
 	if (--nDrivers == 0) {
 		XCloseDisplay(agDisplay);
 		agDisplay = NULL;
 		agScreen = 0;
 	}
+	AG_MutexUnlock(&agDisplayLock);
+
 	AG_ObjectDetach(drv->mouse);
 	AG_ObjectDestroy(drv->mouse);
 	AG_ObjectDetach(drv->kbd);
@@ -228,8 +240,10 @@ Close(void *obj)
 static int
 GetDisplaySize(Uint *w, Uint *h)
 {
+	AG_MutexLock(&agDisplayLock);
 	*w = (Uint)DisplayWidth(agDisplay, agScreen);
 	*h = (Uint)DisplayHeight(agDisplay, agScreen);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -238,27 +252,35 @@ static int
 LookupKeyCode(KeyCode keycode, AG_KeySym *rv)
 {
 	KeySym ks;
+	int ret = 0;
+	
+	AG_MutexLock(&agDisplayLock);
 
 	if ((ks = XKeycodeToKeysym(agDisplay, keycode, 0)) == 0) {
 		*rv = AG_KEY_NONE;
-		return (0);
+		goto out;
 	}
-
 	switch (ks>>8) {
 #ifdef XK_MISCELLANY
 	case 0xff:
 		*rv = agKeymapMisc[ks&0xff];
-		return (1);
+		ret = 1;
+		goto out;
 #endif
 #ifdef XK_XKB_KEYS
 	case 0xfe:
 		*rv = agKeymapXKB[ks&0xff];
-		return (1);
+		ret = 1;
+		goto out;
 #endif
 	default:
 		*rv = (AG_KeySym)(ks&0xff);
-		return (1);
+		ret = 1;
+		goto out;
 	}
+out:
+	AG_MutexUnlock(&agDisplayLock);
+	return (ret);
 }
 
 /* Return the number of pending events in the event queue. */
@@ -267,14 +289,19 @@ PendingEvents(void)
 {
 	struct timeval tv;
 	fd_set fdset;
-	int fd;
+	int fd, ret = 0;
+
+	AG_MutexLock(&agDisplayLock);
 
 	if (agDisplay == NULL)
-		return (0);
+		goto out;
 
 	XFlush(agDisplay);
-	if (XEventsQueued(agDisplay, QueuedAlready))
-		return (1);
+
+	if (XEventsQueued(agDisplay, QueuedAlready)) {
+		ret = 1;
+		goto out;
+	}
 
 	/* Block on the X connection fd */
 	fd = ConnectionNumber(agDisplay);
@@ -282,10 +309,12 @@ PendingEvents(void)
 	FD_SET(fd, &fdset);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	if (select(fd+1, &fdset, NULL, NULL, &tv) == 1)
-		return XPending(agDisplay);
-
-	return (0);
+	if (select(fd+1, &fdset, NULL, NULL, &tv) == 1) {
+		ret = XPending(agDisplay);
+	}
+out:
+	AG_MutexUnlock(&agDisplayLock);
+	return (ret);
 }
 
 /* Return the Agar window corresponding to a X Window ID */
@@ -354,6 +383,8 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	Window dummy;
 	int x, y;
 	Uint mask;
+	
+	AG_MutexLock(&agDisplayLock);
 
 	/* Get the keyboard modifier state. XXX */
 	InitModifierMasks();
@@ -399,6 +430,8 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 
 	/* Set the final modifier state */
 	AG_SetModState(kbd, ms);
+	
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static int
@@ -417,12 +450,15 @@ ProcessEvents(void *drvCaller)
 
 	while (PendingEvents()) {
 		AG_LockVFS(&agDrivers);
+		AG_MutexLock(&agDisplayLock);
 		XNextEvent(agDisplay, &xev);
 		switch (xev.type) {
 		case MotionNotify:
 			if ((win = LookupWindowByID(xev.xmotion.window))) {
 				drv = WIDGET(win)->drv;
 				glx = (AG_DriverGLX *)drv;
+				AG_MutexLock(&glx->lock);
+
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xmotion.y);
 				AG_MouseMotionUpdate(drv->mouse, x,y);
@@ -443,6 +479,7 @@ ProcessEvents(void *drvCaller)
 				} else if (ca->c != drv->activeCursor) {
 					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
 				}
+				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("MotionNotify on unknown window\n");
 			}
@@ -450,6 +487,9 @@ ProcessEvents(void *drvCaller)
 		case ButtonPress:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
 				drv = WIDGET(win)->drv;
+				glx = (AG_DriverGLX *)drv;
+
+				AG_MutexLock(&glx->lock);
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
 				AG_MouseButtonUpdate(drv->mouse,
@@ -457,6 +497,7 @@ ProcessEvents(void *drvCaller)
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonDown(win, x, y,
 				    xev.xbutton.button);
+				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("ButtonPress on unknown window\n");
 			}
@@ -464,6 +505,9 @@ ProcessEvents(void *drvCaller)
 		case ButtonRelease:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
 				drv = WIDGET(win)->drv;
+				glx = (AG_DriverGLX *)drv;
+
+				AG_MutexLock(&glx->lock);
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
 				AG_MouseButtonUpdate(drv->mouse,
@@ -471,6 +515,7 @@ ProcessEvents(void *drvCaller)
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonUp(win, x, y,
 				    xev.xbutton.button);
+				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("ButtonRelease on unknown window\n");
 			}
@@ -493,8 +538,12 @@ ProcessEvents(void *drvCaller)
 			if (LookupKeyCode(xev.xkey.keycode, &ks)) {
 				if ((win = LookupWindowByID(xev.xkey.window))) {
 					drv = WIDGET(win)->drv;
+					glx = (AG_DriverGLX *)drv;
+
+					AG_MutexLock(&glx->lock);
 					AG_KeyboardUpdate(drv->kbd, ka, ks, ucs);
 					AG_ProcessKey(drv->kbd, win, ka, ks, ucs);
+					AG_MutexUnlock(&glx->lock);
 				}
 			} else {
 				Verbose("Unknown keycode: %d\n",
@@ -526,25 +575,37 @@ ProcessEvents(void *drvCaller)
 #endif
 		case EnterNotify:
 			if ((win = LookupWindowByID(xev.xcrossing.window))) {
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-enter", NULL);
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case LeaveNotify:
 			if ((win = LookupWindowByID(xev.xcrossing.window))) {
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-leave", NULL);
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case FocusIn:
 			if ((win = LookupWindowByID(xev.xfocus.window))) {
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
 				agWindowFocused = win;
 				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case FocusOut:
 			if ((win = LookupWindowByID(xev.xfocus.window)) &&
 			    agWindowFocused == win) {
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
 				agWindowFocused = NULL;
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case MapNotify:
@@ -558,7 +619,10 @@ ProcessEvents(void *drvCaller)
 				if (!AGDRIVER_IS_GLX(drv)) {
 					continue;
 				}
+				glx = (AG_DriverGLX *)drv;
+				AG_MutexLock(&glx->lock);
 				UpdateKeyboard(drv->kbd, xev.xkeymap.key_vector);
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case MappingNotify:
@@ -568,6 +632,10 @@ ProcessEvents(void *drvCaller)
 			if ((win = LookupWindowByID(xev.xconfigure.window))) {
 				AG_SizeAlloc a;
 				Window ignore;
+
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
+
 				XTranslateCoordinates(agDisplay,
 				    xev.xconfigure.window,
 				    DefaultRootWindow(agDisplay),
@@ -581,6 +649,8 @@ ProcessEvents(void *drvCaller)
 				} else {
 					PostMoveCallback(win, &a);
 				}
+
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case ReparentNotify:
@@ -590,7 +660,10 @@ ProcessEvents(void *drvCaller)
 			if ((xev.xclient.format == 32) &&
 			    (xev.xclient.data.l[0] == wmDeleteWindow) &&
 			    (win = LookupWindowByID(xev.xclient.window))) {
+				glx = (AG_DriverGLX *)WIDGET(win)->drv;
+				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-close", NULL);
+				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 #if 0
@@ -611,25 +684,33 @@ ProcessEvents(void *drvCaller)
 		}
 next_event:
 		nProcessed++;
+		AG_MutexUnlock(&agDisplayLock);
 		AG_UnlockVFS(&agDrivers);
 
 		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
 			AG_FreeDetachedWindows();
 		}
-		/* Exit when no more windows exist. XXX */
+		/*
+		 * Exit when no more windows exist.
+		 * XXX TODO make this behavior configurable
+		 */
 		if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children))
 			goto quit;
 
+		AG_MutexLock(&agDisplayLock);
 		AG_LockVFS(&agDrivers);
 		if (agWindowToFocus != NULL) {
 			glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
 			if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
+				AG_MutexLock(&glx->lock);
 				RaiseWindow(agWindowToFocus);
 				SetInputFocus(agWindowToFocus);
+				AG_MutexUnlock(&glx->lock);
 			}
 			agWindowToFocus = NULL;
 		}
 		AG_UnlockVFS(&agDrivers);
+		AG_MutexUnlock(&agDisplayLock);
 	}
 	return (nProcessed);
 quit:
@@ -641,6 +722,7 @@ static void
 GenericEventLoop(void *obj)
 {
 	AG_Driver *drv;
+	AG_DriverGLX *glx;
 	AG_Window *win;
 	Uint32 t1, t2;
 
@@ -652,6 +734,8 @@ GenericEventLoop(void *obj)
 				if (!AGDRIVER_IS_GLX(drv)) {
 					continue;
 				}
+				glx = (AG_DriverGLX *)drv;
+				AG_MutexLock(&glx->lock);
 				win = AGDRIVER_MW(drv)->win;
 				if (win->visible) {
 					AG_BeginRendering(drv);
@@ -660,6 +744,7 @@ GenericEventLoop(void *obj)
 					AG_ObjectUnlock(win);
 					AG_EndRendering(drv);
 				}
+				AG_MutexUnlock(&glx->lock);
 			}
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
@@ -684,15 +769,19 @@ Terminate(void)
 	AG_DriverGLX *glx;
 	XClientMessageEvent xe;
 	
+	AG_MutexLock(&agDisplayLock);
 	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
 		if (!AGDRIVER_IS_GLX(glx)) {
 			continue;
 		}
+		AG_MutexLock(&glx->lock);
 		xe.format = 32;
 		xe.data.l[0] = glx->w;
 		XSendEvent(agDisplay, glx->w, False, NoEventMask, (XEvent *)&xe);
+		AG_MutexUnlock(&glx->lock);
 	}
 	XSync(agDisplay, False);
+	AG_MutexUnlock(&agDisplayLock);
 	exit(0);
 }
 
@@ -701,7 +790,9 @@ BeginRendering(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 
+	AG_MutexLock(&agDisplayLock);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static void
@@ -729,6 +820,8 @@ EndRendering(void *obj)
 	AG_DriverGLX *glx = obj;
 	Uint i;
 	
+	AG_MutexLock(&agDisplayLock);
+	
 /*	glFlush(); */
 	glXSwapBuffers(agDisplay, glx->w);
 
@@ -738,6 +831,8 @@ EndRendering(void *obj)
 	}
 	glx->nTextureGC = 0;
 /*	glXMakeCurrent(agDisplay, None, NULL); */
+	
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static void
@@ -745,9 +840,11 @@ DeleteTexture(void *drv, Uint texture)
 {
 	AG_DriverGLX *glx = drv;
 
+	AG_MutexLock(&agDisplayLock);
 	glx->textureGC = Realloc(glx->textureGC,
 	    (glx->nTextureGC+1)*sizeof(Uint));
 	glx->textureGC[glx->nTextureGC++] = texture;
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static int
@@ -757,8 +854,10 @@ SetRefreshRate(void *obj, int fps)
 		AG_SetError("Invalid refresh rate");
 		return (-1);
 	}
+	AG_MutexLock(&agDisplayLock);
 	rNom = 1000/fps;
 	rCur = 0;
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -771,6 +870,8 @@ PushClipRect(void *obj, AG_Rect r)
 {
 	AG_DriverGLX *glx = obj;
 	AG_ClipRect *cr, *crPrev;
+
+	AG_MutexLock(&glx->lock);
 
 	glx->clipRects = Realloc(glx->clipRects, (glx->nClipRects+1)*
 	                                         sizeof(AG_ClipRect));
@@ -800,6 +901,8 @@ PushClipRect(void *obj, AG_Rect r)
 	cr->eqns[3][2] = 0.0;
 	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
+	
+	AG_MutexUnlock(&glx->lock);
 }
 
 static void
@@ -808,6 +911,7 @@ PopClipRect(void *obj)
 	AG_DriverGLX *glx = obj;
 	AG_ClipRect *cr;
 	
+	AG_MutexLock(&glx->lock);
 #ifdef AG_DEBUG
 	if (glx->nClipRects < 1)
 		AG_FatalError("PopClipRect() without PushClipRect()");
@@ -819,12 +923,16 @@ PopClipRect(void *obj)
 	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
 	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
+	
+	AG_MutexUnlock(&glx->lock);
 }
 
 static void
 PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	AG_DriverGLX *glx = obj;
+	
+	AG_MutexLock(&glx->lock);
 
 	/* XXX TODO: stack */
 	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
@@ -836,12 +944,16 @@ PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
+	
+	AG_MutexUnlock(&glx->lock);
 }
 
 static void
 PopBlendingMode(void *obj)
 {
 	AG_DriverGLX *glx = obj;
+	
+	AG_MutexLock(&glx->lock);
 
 	/* XXX TODO: stack */
 	if (glx->bs[0].enabled) {
@@ -850,6 +962,8 @@ PopBlendingMode(void *obj)
 		glDisable(GL_BLEND);
 	}
 	glBlendFunc(glx->bs[0].srcFactor, glx->bs[0].dstFactor);
+	
+	AG_MutexUnlock(&glx->lock);
 }
 
 /*
@@ -859,6 +973,7 @@ PopBlendingMode(void *obj)
 static int
 CreateCursor(void *obj, AG_Cursor *ac)
 {
+	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *cg;
 	int i, size;
 	char *xData, *xMask;
@@ -890,6 +1005,9 @@ CreateCursor(void *obj, AG_Cursor *ac)
 		xMask[i] = ac->data[i] | ac->mask[i];
 		xData[i] = ac->data[i];
 	}
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	/* Create the data image */
 	dataImg = XCreateImage(agDisplay,
@@ -933,6 +1051,9 @@ CreateCursor(void *obj, AG_Cursor *ac)
 	XFreePixmap(agDisplay, dataPixmap);
 	XFreePixmap(agDisplay, maskPixmap);
 	XSync(agDisplay, False);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 
 	ac->p = cg;
 	return (0);
@@ -941,10 +1062,18 @@ CreateCursor(void *obj, AG_Cursor *ac)
 static void
 FreeCursor(void *obj, AG_Cursor *ac)
 {
+	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *cg = ac->p;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 	
 	XFreeCursor(agDisplay, cg->xc);
 	XSync(agDisplay, False);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 	Free(cg);
 	ac->p = NULL;
 }
@@ -959,11 +1088,19 @@ SetCursor(void *obj, AG_Cursor *ac)
 	if (drv->activeCursor == ac) {
 		return (0);
 	}
+
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
 	if (ac == &drv->cursors[0]) {
 		XUndefineCursor(agDisplay, glx->w);
 	} else {
 		XDefineCursor(agDisplay, glx->w, cg->xc);
 	}
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 	drv->activeCursor = ac;
 	cg->visible = 1;
 	return (0);
@@ -975,11 +1112,17 @@ UnsetCursor(void *obj)
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
 	
-	if (drv->activeCursor == &drv->cursors[0]) {
+	if (drv->activeCursor == &drv->cursors[0])
 		return;
-	}
+
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
 	XUndefineCursor(agDisplay, glx->w);
 	drv->activeCursor = &drv->cursors[0];
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static int
@@ -1176,7 +1319,10 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	glxAttrs[i++] = GLX_GREEN_SIZE;	glxAttrs[i++] = 2;
 	glxAttrs[i++] = GLX_BLUE_SIZE;	glxAttrs[i++] = 2;
 	glxAttrs[i++] = GLX_DEPTH_SIZE;	glxAttrs[i++] = 16;
-	
+
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
 	/* Try to obtain a double-buffered visual, fallback to single. */
 	glxAttrs[i++] = GLX_DOUBLEBUFFER;
 	glxAttrs[i++] = None;
@@ -1185,7 +1331,7 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs))
 		    == NULL) {
 			AG_SetError("Cannot find an acceptable GLX visual");
-			return (-1);
+			goto fail_unlock;
 		}
 	}
 
@@ -1216,7 +1362,7 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	    &xwAttrs);
 	if (glx->w == 0) {
 		AG_SetError("XCreateWindow failed");
-		return (-1);
+		goto fail_unlock;
 	}
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
 
@@ -1255,6 +1401,8 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	    AG_InitStockCursors(drv) == -1) {
 		goto fail;
 	}
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 fail:
 	glXDestroyContext(agDisplay, glx->glxCtx);
@@ -1264,6 +1412,9 @@ fail:
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
+fail_unlock:
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (-1);
 }
 
@@ -1274,6 +1425,9 @@ CloseWindow(AG_Window *win)
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
 /*	AG_Glyph *gl; */
 /*	int i; */
+
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 #if 0
@@ -1294,6 +1448,9 @@ CloseWindow(AG_Window *win)
 		drv->videoFmt = NULL;
 	}
 	AGDRIVER_MW(glx)->flags &= ~(AG_DRIVER_MW_OPEN);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static int
@@ -1302,6 +1459,9 @@ MapWindow(AG_Window *win)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 	AG_SizeAlloc a;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	XMapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitMapNotify, (char *)glx->w);
@@ -1310,6 +1470,10 @@ MapWindow(AG_Window *win)
 	a.w = WIDTH(win);
 	a.h = HEIGHT(win);
 	PostResizeCallback(win, &a);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 	return (0);
 }
 
@@ -1318,9 +1482,15 @@ UnmapWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	XUnmapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitUnmapNotify, (char *)glx->w);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1328,8 +1498,14 @@ static int
 RaiseWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	XRaiseWindow(agDisplay, glx->w);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1337,8 +1513,14 @@ static int
 LowerWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	XLowerWindow(agDisplay, glx->w);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1348,8 +1530,17 @@ ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
 	AG_DriverGLX *glxWin = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_DriverGLX *glxParentWin = (AG_DriverGLX *)WIDGET(winParent)->drv;
 /*	XEvent xev; */
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glxWin->lock);
+	AG_MutexLock(&glxParentWin->lock);
 
 	XReparentWindow(agDisplay, glxWin->w, glxParentWin->w, x,y);
+
+	AG_MutexUnlock(&glxParentWin->lock);
+	AG_MutexUnlock(&glxWin->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 /*	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w); */
 	return (0);
 }
@@ -1361,7 +1552,9 @@ GetInputFocus(AG_Window **rv)
 	Window wRet;
 	int revertToRet;
 
+	AG_MutexLock(&agDisplayLock);
 	XGetInputFocus(agDisplay, &wRet, &revertToRet);
+	AG_MutexUnlock(&agDisplayLock);
 
 	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
 		if (!AGDRIVER_IS_GLX(glx)) {
@@ -1383,7 +1576,13 @@ SetInputFocus(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
 	XSetInputFocus(agDisplay, glx->w, RevertToParent, CurrentTime);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1412,6 +1611,9 @@ PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	char kv[32];
 	int x = a->x;
 	int y = a->y;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	/* Update per-widget coordinate information. */
 	a->x = 0;
@@ -1429,6 +1631,9 @@ PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	/* Update GLX context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
@@ -1457,10 +1662,17 @@ MoveWindow(AG_Window *win, int x, int y)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	/* printf("XMoveWindow(%d,%d)\n", x, y); */
 	XMoveWindow(agDisplay, glx->w, x, y);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 	return (0);
 }
 
@@ -1494,9 +1706,15 @@ ResizeWindow(AG_Window *win, Uint w, Uint h)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+	
 	/* Resize the window and wait for notification from the server. */
 	XResizeWindow(agDisplay, glx->w, w, h);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1505,6 +1723,9 @@ MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	/* printf("XMoveResizeWindow: %d,%d (%dx%d)\n",
 	    a->x, a->y, a->w, a->h); */
@@ -1512,6 +1733,10 @@ MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 	    a->x, a->y,
 	    a->w, a->h);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+
 	return (0);
 }
 
@@ -1520,9 +1745,15 @@ SetBorderWidth(AG_Window *win, Uint width)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
 
 	XSetWindowBorderWidth(agDisplay, glx->w, width);
 	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
 
@@ -1536,6 +1767,10 @@ SetWindowCaption(AG_Window *win, const char *s)
 	if (s[0] == '\0') {
 		return (0);
 	}
+
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
 #ifdef X_HAVE_UTF8_STRING
 	/* XFree86 "utf8" and "UTF8" functions are available */
 	rv = Xutf8TextListToTextProperty(agDisplay,
@@ -1548,12 +1783,19 @@ SetWindowCaption(AG_Window *win, const char *s)
 #endif
 	if (rv != Success) {
 		AG_SetError("Cannot convert string to X property");
-		return (-1);
+		goto fail;
 	}
 	XSetTextProperty(agDisplay, glx->w, &xtp, XA_WM_NAME);
 	XFree(xtp.value);
 	XSync(agDisplay, False);
+
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 	return (0);
+fail:
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
+	return (-1);
 }
 
 static void
@@ -1561,7 +1803,10 @@ SetTransientFor(AG_Window *win, AG_Window *winParent)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_DriverGLX *glxParent;
-
+	
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+	
 	if (winParent != NULL &&
 	    (glxParent = (AG_DriverGLX *)WIDGET(winParent)->drv) != NULL &&
 	    AGDRIVER_IS_GLX(glxParent) &&
@@ -1570,6 +1815,9 @@ SetTransientFor(AG_Window *win, AG_Window *winParent)
 	} else {
 		XSetTransientForHint(agDisplay, glx->w, None);
 	}
+	
+	AG_MutexUnlock(&glx->lock);
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 AG_DriverMwClass agDriverGLX = {
