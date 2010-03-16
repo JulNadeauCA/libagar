@@ -136,15 +136,38 @@ Destroy(void *obj)
  * Driver initialization
  */
 
-static void
+static int
 InitGlobals(void)
 {
+	int err, ev;
+
+	if ((agDisplay = XOpenDisplay(NULL)) == NULL) {
+		AG_SetError("Cannot open X display");
+		return (-1);
+	}
+	if (!glXQueryExtension(agDisplay, &err, &ev)) {
+		AG_SetError("GLX extension is not available");
+		XCloseDisplay(agDisplay);
+		agDisplay = NULL;
+		return (-1);
+	}
+
 	AG_MutexInitRecursive(&agDisplayLock);
 	agScreen = DefaultScreen(agDisplay);
 	InitKeymaps();
 	memset(xkbBuf, '\0', sizeof(xkbBuf));
 	memset(&xkbCompStatus, 0, sizeof(xkbCompStatus));
 	wmDeleteWindow = XInternAtom(agDisplay, "WM_DELETE_WINDOW", False);
+	return (0);
+}
+
+static void
+DestroyGlobals(void)
+{
+	XCloseDisplay(agDisplay);
+	agDisplay = NULL;
+	agScreen = 0;
+	AG_MutexDestroy(&agDisplayLock);
 }
 
 #ifdef DEBUG_XSYNC
@@ -164,20 +187,13 @@ Open(void *obj, const char *spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
-	int err, ev;
+	int initedGlobals = 0;
 
 	if (agDisplay == NULL) {
-		/* Initialize globals */
-		if ((agDisplay = XOpenDisplay(NULL)) == NULL) {
-			AG_SetError("Cannot open X display");
+		if (InitGlobals() == -1) {
 			goto fail;
 		}
-		if (!glXQueryExtension(agDisplay, &err, &ev)) {
-			AG_SetError("GLX extension is not available");
-			XCloseDisplay(agDisplay);
-			goto fail;
-		}
-		InitGlobals();
+		initedGlobals = 1;
 	}
 	
 	AG_MutexLock(&agDisplayLock);
@@ -206,8 +222,9 @@ fail:
 		AG_ObjectDestroy(drv->mouse);
 		drv->mouse = NULL;
 	}
-	agDisplay = NULL;
-	agScreen = 0;
+	if (initedGlobals) {
+		DestroyGlobals();
+	}
 	AG_MutexUnlock(&agDisplayLock);
 	return (-1);
 }
@@ -220,13 +237,8 @@ Close(void *obj)
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
-	AG_MutexLock(&agDisplayLock);
-	if (--nDrivers == 0) {
-		XCloseDisplay(agDisplay);
-		agDisplay = NULL;
-		agScreen = 0;
-	}
-	AG_MutexUnlock(&agDisplayLock);
+	if (--nDrivers == 0)
+		DestroyGlobals();
 
 	AG_ObjectDetach(drv->mouse);
 	AG_ObjectDestroy(drv->mouse);
@@ -247,74 +259,35 @@ GetDisplaySize(Uint *w, Uint *h)
 	return (0);
 }
 
-/* Get Agar keycode corresponding to an X KeyCode */
+/*
+ * Get Agar keycode corresponding to an X KeyCode.
+ * agDisplayLock must be held.
+ */
 static int
 LookupKeyCode(KeyCode keycode, AG_KeySym *rv)
 {
 	KeySym ks;
-	int ret = 0;
 	
-	AG_MutexLock(&agDisplayLock);
-
 	if ((ks = XKeycodeToKeysym(agDisplay, keycode, 0)) == 0) {
 		*rv = AG_KEY_NONE;
-		goto out;
+		return (0);
 	}
 	switch (ks>>8) {
 #ifdef XK_MISCELLANY
 	case 0xff:
 		*rv = agKeymapMisc[ks&0xff];
-		ret = 1;
-		goto out;
+		return (1);
 #endif
 #ifdef XK_XKB_KEYS
 	case 0xfe:
 		*rv = agKeymapXKB[ks&0xff];
-		ret = 1;
-		goto out;
+		return (1);
 #endif
 	default:
 		*rv = (AG_KeySym)(ks&0xff);
-		ret = 1;
-		goto out;
+		return (1);
 	}
-out:
-	AG_MutexUnlock(&agDisplayLock);
-	return (ret);
-}
-
-/* Return the number of pending events in the event queue. */
-static int
-PendingEvents(void)
-{
-	struct timeval tv;
-	fd_set fdset;
-	int fd, ret = 0;
-
-	AG_MutexLock(&agDisplayLock);
-
-	if (agDisplay == NULL)
-		goto out;
-
-	XFlush(agDisplay);
-
-	if (XEventsQueued(agDisplay, QueuedAlready)) {
-		ret = 1;
-		goto out;
-	}
-
-	/* Block on the X connection fd */
-	fd = ConnectionNumber(agDisplay);
-	FD_ZERO(&fdset);
-	FD_SET(fd, &fdset);
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	if (select(fd+1, &fdset, NULL, NULL, &tv) == 1) {
-		ret = XPending(agDisplay);
-	}
-out:
-	AG_MutexUnlock(&agDisplayLock);
-	return (ret);
+	return (0);
 }
 
 /* Return the Agar window corresponding to a X Window ID */
@@ -325,6 +298,7 @@ LookupWindowByID(Window xw)
 	AG_DriverGLX *glx;
 
 	/* XXX TODO portable to optimize based on numerical XIDs? */
+	AG_LockVFS(&agDrivers);
 	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
 		if (!AGDRIVER_IS_GLX(glx)) {
 			continue;
@@ -332,11 +306,14 @@ LookupWindowByID(Window xw)
 		if (glx->w == xw) {
 			win = AGDRIVER_MW(glx)->win;
 			if (WIDGET(win)->drv == NULL) {	/* Being detached */
-				return (NULL);
+				goto fail;
 			}
+			AG_UnlockVFS(&agDrivers);
 			return (win);
 		}
 	}
+fail:
+	AG_UnlockVFS(&agDrivers);
 	return (NULL);
 }
 
@@ -434,10 +411,43 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	AG_MutexUnlock(&agDisplayLock);
 }
 
+/* Return the number of pending events in the event queue. */
+static int
+PendingEvents(void *drvCaller)
+{
+	struct timeval tv;
+	fd_set fdset;
+	int fd, ret = 0;
+
+	AG_MutexLock(&agDisplayLock);
+
+	if (agDisplay == NULL)
+		goto out;
+
+	XFlush(agDisplay);
+
+	if (XEventsQueued(agDisplay, QueuedAlready)) {
+		ret = 1;
+		goto out;
+	}
+
+	/* Block on the X connection fd */
+	fd = ConnectionNumber(agDisplay);
+	FD_ZERO(&fdset);
+	FD_SET(fd, &fdset);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	if (select(fd+1, &fdset, NULL, NULL, &tv) == 1) {
+		ret = XPending(agDisplay);
+	}
+out:
+	AG_MutexUnlock(&agDisplayLock);
+	return (ret);
+}
+
 static int
 ProcessEvents(void *drvCaller)
 {
-	AG_DriverGLX *glx;
 	AG_Driver *drv;
 	AG_Window *win;
 	XEvent xev;
@@ -448,19 +458,18 @@ ProcessEvents(void *drvCaller)
 	int nProcessed = 0;
 	AG_CursorArea *ca;
 
-	while (PendingEvents()) {
-		AG_LockVFS(&agDrivers);
+	while (PendingEvents(NULL)) {
 		AG_MutexLock(&agDisplayLock);
 		XNextEvent(agDisplay, &xev);
+		AG_MutexUnlock(&agDisplayLock);
+
 		switch (xev.type) {
 		case MotionNotify:
 			if ((win = LookupWindowByID(xev.xmotion.window))) {
 				drv = WIDGET(win)->drv;
-				glx = (AG_DriverGLX *)drv;
-				AG_MutexLock(&glx->lock);
-
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xmotion.y);
+
 				AG_MouseMotionUpdate(drv->mouse, x,y);
 				AG_ProcessMouseMotion(win, x, y,
 				    drv->mouse->xRel,
@@ -479,7 +488,6 @@ ProcessEvents(void *drvCaller)
 				} else if (ca->c != drv->activeCursor) {
 					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
 				}
-				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("MotionNotify on unknown window\n");
 			}
@@ -487,17 +495,14 @@ ProcessEvents(void *drvCaller)
 		case ButtonPress:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
 				drv = WIDGET(win)->drv;
-				glx = (AG_DriverGLX *)drv;
-
-				AG_MutexLock(&glx->lock);
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
+
 				AG_MouseButtonUpdate(drv->mouse,
 				    AG_BUTTON_PRESSED,
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonDown(win, x, y,
 				    xev.xbutton.button);
-				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("ButtonPress on unknown window\n");
 			}
@@ -505,24 +510,23 @@ ProcessEvents(void *drvCaller)
 		case ButtonRelease:
 			if ((win = LookupWindowByID(xev.xbutton.window))) {
 				drv = WIDGET(win)->drv;
-				glx = (AG_DriverGLX *)drv;
-
-				AG_MutexLock(&glx->lock);
 				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
+
 				AG_MouseButtonUpdate(drv->mouse,
 				    AG_BUTTON_RELEASED,
 				    xev.xbutton.button);
 				AG_ProcessMouseButtonUp(win, x, y,
 				    xev.xbutton.button);
-				AG_MutexUnlock(&glx->lock);
 			} else {
 				Verbose("ButtonRelease on unknown window\n");
 			}
 			break;
 		case KeyRelease:
+			AG_MutexLock(&agDisplayLock);
 			if (IsKeyRepeat(&xev)) {
 				/* We implement key repeat internally */
+				AG_MutexUnlock(&agDisplayLock);
 				goto next_event;
 			}
 			/* FALLTHROUGH */
@@ -535,20 +539,18 @@ ProcessEvents(void *drvCaller)
 			}
 			ka = (xev.type == KeyPress) ? AG_KEY_PRESSED :
 			                              AG_KEY_RELEASED;
+
 			if (LookupKeyCode(xev.xkey.keycode, &ks)) {
 				if ((win = LookupWindowByID(xev.xkey.window))) {
 					drv = WIDGET(win)->drv;
-					glx = (AG_DriverGLX *)drv;
-
-					AG_MutexLock(&glx->lock);
 					AG_KeyboardUpdate(drv->kbd, ka, ks, ucs);
 					AG_ProcessKey(drv->kbd, win, ka, ks, ucs);
-					AG_MutexUnlock(&glx->lock);
 				}
 			} else {
 				Verbose("Unknown keycode: %d\n",
 				    (int)xev.xkey.keycode);
 			}
+			AG_MutexUnlock(&agDisplayLock);
 			break;
 #if 0
 		case EnterNotify:
@@ -575,37 +577,25 @@ ProcessEvents(void *drvCaller)
 #endif
 		case EnterNotify:
 			if ((win = LookupWindowByID(xev.xcrossing.window))) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-enter", NULL);
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case LeaveNotify:
 			if ((win = LookupWindowByID(xev.xcrossing.window))) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-leave", NULL);
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case FocusIn:
 			if ((win = LookupWindowByID(xev.xfocus.window))) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
 				agWindowFocused = win;
 				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case FocusOut:
 			if ((win = LookupWindowByID(xev.xfocus.window)) &&
 			    agWindowFocused == win) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
 				agWindowFocused = NULL;
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case MapNotify:
@@ -615,33 +605,34 @@ ProcessEvents(void *drvCaller)
 		case DestroyNotify:
 			break;
 		case KeymapNotify:
+			AG_LockVFS(&agDrivers);
 			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 				if (!AGDRIVER_IS_GLX(drv)) {
 					continue;
 				}
-				glx = (AG_DriverGLX *)drv;
-				AG_MutexLock(&glx->lock);
 				UpdateKeyboard(drv->kbd, xev.xkeymap.key_vector);
-				AG_MutexUnlock(&glx->lock);
 			}
+			AG_UnlockVFS(&agDrivers);
 			break;
 		case MappingNotify:
+			AG_MutexLock(&agDisplayLock);
 			XRefreshKeyboardMapping(&xev.xmapping);
+			AG_MutexUnlock(&agDisplayLock);
 			break;
 		case ConfigureNotify:
 			if ((win = LookupWindowByID(xev.xconfigure.window))) {
 				AG_SizeAlloc a;
 				Window ignore;
 
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
-
+				AG_MutexLock(&agDisplayLock);
 				XTranslateCoordinates(agDisplay,
 				    xev.xconfigure.window,
 				    DefaultRootWindow(agDisplay),
 				    0, 0,
 				    &a.x, &a.y,
 				    &ignore);
+				AG_MutexUnlock(&agDisplayLock);
+
 				a.w = xev.xconfigure.width;
 				a.h = xev.xconfigure.height;
 				if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
@@ -649,8 +640,6 @@ ProcessEvents(void *drvCaller)
 				} else {
 					PostMoveCallback(win, &a);
 				}
-
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 		case ReparentNotify:
@@ -660,10 +649,7 @@ ProcessEvents(void *drvCaller)
 			if ((xev.xclient.format == 32) &&
 			    (xev.xclient.data.l[0] == wmDeleteWindow) &&
 			    (win = LookupWindowByID(xev.xclient.window))) {
-				glx = (AG_DriverGLX *)WIDGET(win)->drv;
-				AG_MutexLock(&glx->lock);
 				AG_PostEvent(NULL, win, "window-close", NULL);
-				AG_MutexUnlock(&glx->lock);
 			}
 			break;
 #if 0
@@ -684,8 +670,6 @@ ProcessEvents(void *drvCaller)
 		}
 next_event:
 		nProcessed++;
-		AG_MutexUnlock(&agDisplayLock);
-		AG_UnlockVFS(&agDrivers);
 
 		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
 			AG_FreeDetachedWindows();
@@ -697,20 +681,22 @@ next_event:
 		if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children))
 			goto quit;
 
-		AG_MutexLock(&agDisplayLock);
 		AG_LockVFS(&agDrivers);
 		if (agWindowToFocus != NULL) {
-			glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
+			AG_DriverGLX *glx =
+			    (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
+
 			if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
+				AG_MutexLock(&agDisplayLock);
 				AG_MutexLock(&glx->lock);
 				RaiseWindow(agWindowToFocus);
 				SetInputFocus(agWindowToFocus);
 				AG_MutexUnlock(&glx->lock);
+				AG_MutexUnlock(&agDisplayLock);
 			}
 			agWindowToFocus = NULL;
 		}
 		AG_UnlockVFS(&agDrivers);
-		AG_MutexUnlock(&agDisplayLock);
 	}
 	return (nProcessed);
 quit:
@@ -730,6 +716,7 @@ GenericEventLoop(void *obj)
 	for (;;) {
 		t2 = AG_GetTicks();
 		if (t2 - t1 >= rNom) {
+			AG_LockVFS(&agDrivers);
 			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 				if (!AGDRIVER_IS_GLX(drv)) {
 					continue;
@@ -746,12 +733,14 @@ GenericEventLoop(void *obj)
 				}
 				AG_MutexUnlock(&glx->lock);
 			}
+			AG_UnlockVFS(&agDrivers);
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-		} else if (PendingEvents() != 0) {
-			if (ProcessEvents(NULL) == -1)
+		} else if (PendingEvents(NULL) != 0) {
+			if (ProcessEvents(NULL) == -1) {
 				return;
+			}
 #ifdef AG_DEBUG
 			agEventAvg++;
 #endif
@@ -1841,6 +1830,7 @@ AG_DriverMwClass agDriverGLX = {
 		Close,
 		GetDisplaySize,
 		NULL,			/* beginEventProcessing */
+		PendingEvents,
 		ProcessEvents,
 		GenericEventLoop,
 		NULL,			/* endEventProcessing */

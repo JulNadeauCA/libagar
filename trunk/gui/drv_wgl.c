@@ -560,6 +560,12 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 static int
+WGL_PendingEvents(void *drvCaller)
+{
+	return (GetQueueStatus(QS_ALLEVENTS) != 0);
+}
+
+static int
 WGL_ProcessEvents(void *drvCaller)
 {
 	MSG msg;
@@ -1176,6 +1182,7 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_Close,
 		WGL_GetDisplaySize,
 		NULL,			/* beginEventProcessing */
+		WGL_PendingEvents,
 		WGL_ProcessEvents,
 		WGL_GenericEventLoop,
 		NULL,			/* endEventProcessing */
