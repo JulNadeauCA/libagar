@@ -39,6 +39,7 @@ typedef struct ag_driver_class {
 	int  (*getDisplaySize)(Uint *w, Uint *h);
 	/* Event processing */
 	void (*beginEventProcessing)(void *drv);
+	int  (*pendingEvents)(void *drv);
 	int  (*processEvents)(void *drv);
 	void (*genericEventLoop)(void *drv);
 	void (*endEventProcessing)(void *drv);

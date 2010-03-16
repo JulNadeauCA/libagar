@@ -381,6 +381,12 @@ scan:
 }
 
 static int
+PendingEvents(void *drvCaller)
+{
+	return (SDL_PollEvent(NULL) != 0);
+}
+
+static int
 ProcessEvents(void *obj)
 {
 	AG_Driver *drv = obj;
@@ -1809,6 +1815,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		Close,
 		GetDisplaySize,
 		BeginEventProcessing,
+		PendingEvents,
 		ProcessEvents,
 		GenericEventLoop,
 		EndEventProcessing,
