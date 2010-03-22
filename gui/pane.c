@@ -378,7 +378,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.w = a->w - pa->dx - pa->wDiv;
 		a2.h = a->h;
 
-		if (WIDGET(pa)->window != NULL) {
+		if (WIDGET(pa)->window != NULL &&
+		    WIDGET(pa)->window->visible) {
 			AG_Rect r;
 
 			r.x = pa->dx;

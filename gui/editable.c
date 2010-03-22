@@ -804,8 +804,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	ed->yVis = a->h/agTextFontLineSkip;
 	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
 
-	if (WIDGET(ed)->window != NULL) {
-		AG_Rect r = AG_RECT(0, 0, WIDTH(ed), HEIGHT(ed));
+	if (WIDGET(ed)->window != NULL &&
+	    WIDGET(ed)->window->visible) {
+		AG_Rect r = AG_RECT(0, 0, a->w, a->h);
 
 		if (ed->ca == NULL) {
 			ed->ca = AG_MapStockCursor(ed, r, AG_TEXT_CURSOR);
