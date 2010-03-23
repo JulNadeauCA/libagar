@@ -89,9 +89,18 @@ The
 .Fn AG_DriverOpen
 function creates a new instance of a driver class, as described by
 .Fa dc .
+This function is seldom invoked directly, since it is called internally by
+.Xr AG_InitGraphics 3
+(or
+.Xr AG_WindowNew 3
+in the case of multiple-window drivers which create one driver instance
+per window).
+.Pp
 The
 .Ft AG_DriverClass
-structure is defined as follows:
+structure inherits from the base
+.Xr AG_Object 3
+class, and is defined as follows:
 .Pp
 .Bd -literal
 typedef struct ag_driver_class {
@@ -99,78 +108,94 @@ typedef struct ag_driver_class {
 	const char *name;			/* Short name */
 	enum ag_driver_type type;		/* Driver type */
 	enum ag_driver_wm_type wm;		/* Window manager type */
-	Uint flags;
+	Uint flags;				/* Flags; see below */
 
 	/* Initialization */
-	int  (*open)(void *drv, const char *spec);
-	void (*close)(void *drv);
+	int  (*open)(void *, const char *spec);
+	void (*close)(void *);
 	int  (*getDisplaySize)(Uint *w, Uint *h);
+
 	/* Event processing */
-	void (*beginEventProcessing)(void *drv);
-	int  (*pendingEvents)(void *drv);
-	int  (*getNextEvent)(void *drv, struct ag_driver_event *dev);
-	int  (*processEvent)(void *drv, struct ag_driver_event *dev);
-	void (*genericEventLoop)(void *drv);
-	void (*endEventProcessing)(void *drv);
+	void (*beginEventProcessing)(void *);
+	int  (*pendingEvents)(void *);
+	int  (*getNextEvent)(void *, AG_DriverEvent *dev);
+	int  (*processEvent)(void *, AG_DriverEvent *dev);
+	void (*genericEventLoop)(void *);
+	void (*endEventProcessing)(void *);
 	void (*terminate)(void);
-	/* GUI rendering */
-	void (*beginRendering)(void *drv);
-	void (*renderWindow)(struct ag_window *);
-	void (*endRendering)(void *drv);
-	/* Primitives */
-	void (*fillRect)(void *drv, AG_Rect r, AG_Color c);
-	/* Update video region (rendering context; FB driver specific) */
-	void (*updateRegion)(void *drv, AG_Rect r);
-	/* Texture operations (GL driver specific) */
+
+	/* GUI rendering related */
+	void (*beginRendering)(void *);
+	void (*renderWindow)(AG_Window *);
+	void (*endRendering)(void *);
+	void (*fillRect)(void *, AG_Rect r, AG_Color c);
+	void (*updateRegion)(void *, AG_Rect r);
 	void (*uploadTexture)(Uint *, AG_Surface *, AG_TexCoord *);
 	int  (*updateTexture)(Uint, AG_Surface *, AG_TexCoord *);
-	void (*deleteTexture)(void *drv, Uint);
-	/* Request a specific refresh rate (driver specific) */
-	int (*setRefreshRate)(void *drv, int fps);
+	void (*deleteTexture)(void *, Uint);
+	int (*setRefreshRate)(void *, int fps);
+
 	/* Clipping and blending control (rendering context) */
-	void (*pushClipRect)(void *drv, AG_Rect r);
-	void (*popClipRect)(void *drv);
-	void (*pushBlendingMode)(void *drv, AG_BlendFn srcFn, AG_BlendFn dstFn);
-	void (*popBlendingMode)(void *drv);
-	/* Hardware cursor operations */
-	int  (*createCursor)(void *drv, struct ag_cursor *curs);
-	void (*freeCursor)(void *drv, struct ag_cursor *curs);
-	int  (*setCursor)(void *drv, struct ag_cursor *curs);
-	void (*unsetCursor)(void *drv);
-	int  (*getCursorVisibility)(void *drv);
-	void (*setCursorVisibility)(void *drv, int flag);
+	void (*pushClipRect)(void *, AG_Rect r);
+	void (*popClipRect)(void *);
+	void (*pushBlendingMode)(void *, AG_BlendFn sFn, AG_BlendFn dFn);
+	void (*popBlendingMode)(void *);
+
+	/* Hardware cursor interface */
+	int  (*createCursor)(void *, AG_Cursor *curs);
+	void (*freeCursor)(void *, AG_Cursor *curs);
+	int  (*setCursor)(void *, AG_Cursor *curs);
+	void (*unsetCursor)(void *);
+	int  (*getCursorVisibility)(void *);
+	void (*setCursorVisibility)(void *, int flag);
+
 	/* Widget surface operations (rendering context) */
-	void (*blitSurface)(void *drv, struct ag_widget *wid, AG_Surface *s, int x, int y);
-	void (*blitSurfaceFrom)(void *drv, struct ag_widget *wid, struct ag_widget *widSrc, int s, AG_Rect *r, int x, int y);
-	void (*blitSurfaceGL)(void *drv, struct ag_widget *wid, AG_Surface *s, float w, float h);
-	void (*blitSurfaceFromGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
-	void (*blitSurfaceFlippedGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
-	void (*backupSurfaces)(void *drv, struct ag_widget *wid);
-	void (*restoreSurfaces)(void *drv, struct ag_widget *wid);
-	int  (*renderToSurface)(void *drv, struct ag_widget *wid, AG_Surface **su);
+	void (*blitSurface)(void *, AG_Widget *wid,
+	                    AG_Surface *s, int x, int y);
+	void (*blitSurfaceFrom)(void *, AG_Widget *wid, AG_Widget *widSrc,
+	                        int s, AG_Rect *r, int x, int y);
+	void (*blitSurfaceGL)(void *, AG_Widget *wid, AG_Surface *s,
+	                      float w, float h);
+	void (*blitSurfaceFromGL)(void *, AG_Widget *wid, int s,
+	                          float w, float h);
+	void (*blitSurfaceFlippedGL)(void *, AG_Widget *wid, int s,
+	                             float w, float h);
+	void (*backupSurfaces)(void *, AG_Widget *wid);
+	void (*restoreSurfaces)(void *, AG_Widget *wid);
+	int  (*renderToSurface)(void *, AG_Widget *wid, AG_Surface **su);
+
 	/* Rendering operations (rendering context) */
-	void (*putPixel)(void *drv, int x, int y, AG_Color c);
-	void (*putPixel32)(void *drv, int x, int y, Uint32 c);
-	void (*putPixelRGB)(void *drv, int x, int y, Uint8 r, Uint8 g, Uint8 b);
-	void (*blendPixel)(void *drv, int x, int y, AG_Color c, AG_BlendFn fnSrc, AG_BlendFn fnDst);
-	void (*drawLine)(void *drv, int x1, int y1, int x2, int y2, AG_Color C);
-	void (*drawLineH)(void *drv, int x1, int x2, int y, AG_Color C);
-	void (*drawLineV)(void *drv, int x, int y1, int y2, AG_Color C);
-	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
-	void (*drawArrowUp)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowDown)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowLeft)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowRight)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
-	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
-	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
-	void (*drawCircle2)(void *drv, int x, int y, int r, AG_Color C);
-	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
-	void (*drawRectBlended)(void *drv, AG_Rect r, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
-	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
-	void (*drawFrame)(void *drv, AG_Rect r, AG_Color C[2]);
-	void (*updateGlyph)(void *drv, struct ag_glyph *);
-	void (*drawGlyph)(void *drv, const struct ag_glyph *, int x, int y);
+	void (*putPixel)(void *, int x, int y, AG_Color c);
+	void (*putPixel32)(void *, int x, int y, Uint32 c);
+	void (*putPixelRGB)(void *, int x, int y, Uint8 r, Uint8 g,
+	                    Uint8 b);
+	void (*blendPixel)(void *, int x, int y, AG_Color c,
+	                   AG_BlendFn sFn, AG_BlendFn dFn);
+	void (*drawLine)(void *, int x1, int y1, int x2, int y2,
+	                 AG_Color C);
+	void (*drawLineH)(void *, int x1, int x2, int y, AG_Color C);
+	void (*drawLineV)(void *, int x, int y1, int y2, AG_Color C);
+	void (*drawLineBlended)(void *, int x1, int y1, int x2, int y2,
+	                        AG_Color C, AG_BlendFn sFn,
+				AG_BlendFn dFn);
+	void (*drawArrowUp)(void *, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowDown)(void *, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowLeft)(void *, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowRight)(void *, int x, int y, int h,
+	                       AG_Color C[2]);
+	void (*drawBoxRounded)(void *, AG_Rect r, int z, int rad,
+	                       AG_Color C[3]);
+	void (*drawBoxRoundedTop)(void *, AG_Rect r, int z, int rad,
+	                          AG_Color C[3]);
+	void (*drawCircle)(void *, int x, int y, int r, AG_Color C);
+	void (*drawCircle2)(void *, int x, int y, int r, AG_Color C);
+	void (*drawRectFilled)(void *, AG_Rect r, AG_Color C);
+	void (*drawRectBlended)(void *, AG_Rect r, AG_Color C,
+	                        AG_BlendFn sFn, AG_BlendFn dFn);
+	void (*drawRectDithered)(void *, AG_Rect r, AG_Color C);
+	void (*drawFrame)(void *, AG_Rect r, AG_Color C[2]);
+	void (*updateGlyph)(void *, AG_Glyph *);
+	void (*drawGlyph)(void *, const AG_Glyph *, int x, int y);
 } AG_DriverClass;
 .Ed
 .Pp
@@ -205,7 +230,8 @@ Texture management operations are supported.
 The
 .Fn open
 method is invoked to initialize a new driver instance.
-This method is expected to initialize the
+.Fn open
+is expected to initialize the
 .Va mouse
 and
 .Va kbd
@@ -214,9 +240,7 @@ fields of
 (see
 .Xr AG_MouseNew 3 ,
 .Xr AG_KeyboardNew 3 ) .
-.Fn open
-should return 0 on success.
-On failure, it should return -1 and set an appropriate error message.
+Return 0 on success and -1 on failure.
 .Pp
 The
 .Fn close
@@ -260,15 +284,16 @@ processes the event described by
 (see
 .Fn AG_ProcessEvent ) .
 .Pp
+The
 .Fn genericEventLoop
-implements the
+method implements the
 .Xr AG_EventLoop 3 ,
 .Xr AG_EventLoop_FixedFPS 3
 and
 .Xr AG_EventLoop_Drv 3
-routine.
+routines.
 While the event loop can be driver-independent, this operation allows
-for optimized, driver-specific event loops.
+for event loops optimized for the driver.
 If invoked via
 .Xr AG_EventLoop_FixedFPS 3 ,
 the
@@ -358,9 +383,187 @@ If a blending mode is already set, it should be saved on a stack.
 .Fn popBlendingMode
 pops the last blending mode off the stack.
 .Pp
-.\"
-.\" TODO
-.\"
+The following operations are optional and provide Agar with access over
+hardware cursors.
+See
+.Xr AG_Cursor 3
+for details on the Agar cursor control interface.
+.Pp
+The
+.Fn createCursor
+operation registers a hardware cursor for the specified
+.Ft AG_Cursor
+structure, returning 0 on success or -1 on failure.
+.Fn freeCursor
+destroys any hardware cursor corresponding to the given
+.Ft AG_Cursor
+structure.
+.Pp
+The
+.Fn setCursor
+operation changes the current cursor to the specified cursor, returning 0
+on success or -1 on failure.
+.Fn unsetCursor
+reverts to the default cursor.
+.Pp
+The
+.Fn getCursorVisibility
+and
+.Fn setCursorVisibility
+routines retrieve and set the cursor visibility flag.
+.Pp
+The following operations form the backend of the
+.Xr AG_Widget 3
+surface operations such as
+.Xr AG_WidgetBlitFrom 3 .
+They all accept a
+.Ft AG_Widget
+argument, and coordinate arguments are always with respect to the widget's
+local coordinate system.
+.Pp
+The
+.Fn blitSurface 
+operation implements
+.Xr AG_WidgetBlit 3 ,
+which performs (or emulates) a surface blit from the given
+.Xr AG_Surface 3 ,
+to target coordinates
+.Fa x ,
+.Fa y .
+The
+.Fn blitSurfaceFrom
+variant of this operation implements
+.Xr AG_WidgetBlitFrom 3 ,
+which uses a registered widget surface as source, and is generally much more
+amenable to hardware acceleration than
+.Fn blitSurface .
+.Pp
+The
+.Fn blitSurfaceGL
+and
+.Fn blitSurfaceFromGL
+variants are specific to OpenGL drivers.
+Instead of accepting an explicit source or destination rectangle parameter,
+they rely on the current transformation matrix being set accordingly.
+.Fn blitSurfaceFlippedGL
+reverses the order of the rows in the image.
+.Pp
+The
+.Fn backupSurfaces
+operation should create a software backup of all surfaces registered under
+the given widget.
+.Fn restoreSurfaces
+restores a widget's surfaces from backup.
+These operations are needed with OpenGL on some platforms, where a window
+resize may result in a loss of OpenGL context data.
+.Pp
+The
+.Fn renderToSurface
+operation renders a widget to a newly allocated
+.Xr AG_Surface 3 ,
+returned into the
+.Fa su
+argument.
+The function should return 0 on success or -1 on failure.
+.Pp
+.Fn putPixel ,
+.Fn putPixel32
+and
+.Fn putPixelRGB
+writes a pixel of specified color at coordinates
+.Fa x ,
+.Fa y .
+.Fn blendPixelRGB
+performs blending against the target pixel at
+.Fa x ,
+.Fa y .
+See
+.Xr AG_BlendFn 3
+for acceptable
+.Fa sFn
+and
+.Fa dFn
+values.
+.Pp
+The
+.Fn drawLine
+routine renders a line of color
+.Fa C
+from endpoint
+.Fa x1 ,
+.Fa y1
+to endpoint
+.Fa x2 ,
+.Fa y2 .
+The
+.Fn drawLineH
+operation renders a horizontal line, and
+.Fn drawLineV
+renders a vertical line.
+.Fn drawLineBlended
+renders a line with transparency (see
+.Xr AG_BlendFn 3 ) .
+.Pp
+.Fn drawArrowUp ,
+.Fn drawArrowDown ,
+.Fn drawArrowLeft
+and
+.Fn drawArrowRight
+render an arrow of length
+.Fa h ,
+at coordinates
+.Fa x ,
+.Fa y .
+.Pp
+.Fn drawBoxRounded
+renders a 3D-style box of depth
+.Fa z ,
+with corners rounded to radius
+.Fa rad .
+The
+.Fn drawBoxRoundedTop
+variant only rounds the two top corners.
+.Pp
+The
+.Fn drawCircle
+operation renders a circle of radius
+.Fa r ,
+centered around
+.Fa x ,
+.Fa y .
+The
+.Fn drawCircle2
+variant adds a 3D-style effect.
+.Pp
+The
+.Fn drawRectFilled
+operation fills the target rectangle
+.Fa r
+with the given color
+.Fn drawRectBlended
+renders a filled rectangle with transparency (see
+.Xr AG_BlendFn 3 ) .
+.Fn drawRectDithered
+renders a filled rectangle with ditering effect (commonly used to illustrate
+"disabled" GUI controls).
+.Pp
+.Fn drawFrame
+renders a 3D-style frame at target rectangle
+.Fa r .
+.Pp
+The
+.Fn updateGlyph
+operation ensures that the specified font glyph (see
+.Xr AG_Text 3 )
+is ready to be rendered.
+OpenGL drivers, for example, can use this operation to upload a rendered
+version of the glyph to the texture hardware.
+The
+.Fn drawGlyph
+operation renders a given font glyph at target coordinates
+.Fa x ,
+.Fa y .
+The target point will correspond to the top left corner of the rendered glyph.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft int
