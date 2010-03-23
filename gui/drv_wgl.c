@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,25 +47,28 @@
 
 #include "drv_gl_common.h"
 
-static int  inited = 0;
-static int  nDrivers = 0;	   /* Drivers open */
-static Uint rNom = 16;		   /* Nominal refresh rate (ms) */
-static int  rCur = 0;		   /* Effective refresh rate (ms) */
-static int  wndClassCount = 1; // Window class counter
+static int  nDrivers = 0;		/* Drivers open */
+static Uint rNom = 16;			/* Nominal refresh rate (ms) */
+static int  rCur = 0;			/* Effective refresh rate (ms) */
+static int  wndClassCount = 1;		/* Window class counter */
+static AG_Mutex wndClassLock;		/* Lock on wndClassCount */
+static AG_DriverEventQ wglEventQ;	/* Event queue */
+static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 
 // Driver instance data
 typedef struct ag_driver_wgl {
 	struct ag_driver_mw _inherit;
-	HWND                hwnd;          // Window handle
-	HDC                 hdc;           // Device context
-	HGLRC               hglrc;         // Rendering context
-	WNDCLASSEX          wndclass;      // Window class
-	int                 clipStates[4]; // Clipping GL state 
-	AG_ClipRect         *clipRects;	   // Clipping rectangles
-	Uint                nClipRects;
-	Uint                *textureGC;	   // Textures queued for deletion
-	Uint                nTextureGC;
-	AG_GL_BlendState    bs[1];	   // Saved blending states
+	HWND        hwnd;          // Window handle
+	HDC         hdc;           // Device context
+	HGLRC       hglrc;         // Rendering context
+	WNDCLASSEX  wndclass;      // Window class
+
+	int               clipStates[4]; // Clipping GL state 
+	AG_ClipRect      *clipRects;	   // Clipping rectangles
+	Uint             nClipRects;
+	Uint             *textureGC;	   // Textures queued for deletion
+	Uint             nTextureGC;
+	AG_GL_BlendState bs[1];	   // Saved blending states
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
@@ -92,6 +95,8 @@ static int       InitClipRects(AG_DriverWGL *wgl, int w, int h);
 static void      InitClipRect0(AG_DriverWGL *wgl, AG_Window *win);
 static int       InitDefaultCursor(AG_DriverWGL *wgl);
 static void      WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a);
+static int       WGL_RaiseWindow(AG_Window *);
+static int       WGL_SetInputFocus(AG_Window *);
 
 void
 _SetWindowsError(char* errorMessage, DWORD errorCode)
@@ -139,16 +144,6 @@ WGL_Init(void *obj)
 {
 	AG_DriverWGL *wgl = obj;
 	
-#ifdef _DEBUG
-	agVerbose = 1;
-	AG_Verbose("WGL_Init\n");
-#endif
-	
-	if (!inited) {
-		InitKeymaps();
-		inited = 1;
-	}
-
 	wgl->clipRects = NULL;
 	wgl->nClipRects = 0;
 	wgl->textureGC = NULL;
@@ -167,7 +162,13 @@ WGL_Open(void *obj, const char *spec)
 	if ((drv->mouse = AG_MouseNew(wgl, "Windows mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(wgl, "Windows keyboard")) == NULL)
 		goto fail;
-
+	
+	if (nDrivers == 0) {
+		InitKeymaps();
+		TAILQ_INIT(&wglEventQ);
+		AG_MutexInitRecrusive(&wndClassLock);
+		AG_MutexInitRecrusive(&wglEventLock);
+	}
 	nDrivers++;
 	return (0);
 fail:
@@ -188,10 +189,24 @@ static void
 WGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
+	AG_DriverEvent *dev, *devNext;
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
+	if (--nDrivers == 0) {
+		for (dev = TAILQ_FIRST(&wglEventQ);
+		     dev != TAILQ_LAST(&wglEventQ);
+		     dev = devNext) {
+			devNext = TAILQ_NEXT(dev, events);
+			Free(dev);
+		}
+		TAILQ_INIT(&wglEventQ);
+
+		AG_MutexDestroy(&wndClassLock);
+		AG_MutexDestroy(&wndEventLock);
+	}
+
 	AG_ObjectDetach(drv->mouse);
 	AG_ObjectDestroy(drv->mouse);
 	AG_ObjectDetach(drv->kbd);
@@ -205,10 +220,6 @@ static void
 WGL_Destroy(void *obj)
 {
 	AG_DriverWGL *wgl = obj;
-	
-#ifdef _DEBUG
-	AG_Verbose("WGL_Destroy\n");
-#endif
 	
 	Free(wgl->clipRects);
 	Free(wgl->textureGC);
@@ -243,13 +254,11 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	RECT wndRect       = {r.x, r.y, r.x + r.w, r.y + r.h};
 	char wndClassName[64]; 
 
-#ifdef _DEBUG
-	AG_Verbose("WGL_OpenWindow\n");
-#endif
-
 	// Generate window class atom name
+	AG_MutexLock(&wndClassLock);
 	sprintf(wndClassName, "agar-wgl-windowclass-%d", wndClassCount);
 	wndClassCount++;
+	AG_MutexUnlock(&wndClassLock);
 
 	// Register Window Class	
 	memset(&wndClass, 0, sizeof(WNDCLASSEX));
@@ -265,10 +274,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		return -1;
 	}
 	
-#ifdef _DEBUG
-	AG_Verbose("WGL_OpenWindow: Registered window class\n");
-#endif
-
 	// Adjust window with account for window borders
 	AdjustWindowRectEx (&wndRect, wndStyle, 0, wndStyleEx);
 
@@ -301,10 +306,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		return -1;
 	}
 	
-#ifdef _DEBUG
-	AG_Verbose("WGL_OpenWindow: Created window\n");
-#endif
-
 	// Initialize device & rendering contxt
 	if (!(wgl->hdc = GetDC(wgl->hwnd))) {
 		DestroyWindow(wgl->hwnd);
@@ -338,10 +339,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
-#ifdef _DEBUG
-	AG_Verbose("WGL_OpenWindow: Initialized GL\n");
-#endif
-
 	// Show the window
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	SetForegroundWindow(wgl->hwnd);
@@ -383,10 +380,6 @@ WGL_CloseWindow(AG_Window *win)
 	AG_Glyph *gl;
 	int i;
 
-#ifdef _DEBUG
-	AG_Verbose("WGL_CloseWindow\n");
-#endif
-
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
 
 	/* Invalidate cached glyph textures. */
@@ -425,170 +418,258 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	AG_DriverWGL      *wgl;
-	AG_Driver         *drv;
-	AG_Window         *win;
-	int               x, y;
+	AG_Driver *drv;
+	AG_Window *win;
+	AG_DriverEvent *dev;
 	AG_KeyboardAction ka;
+	HKL kLayout;
+	unsigned char kState[256];
+	unsigned short kResult = 0;
+	int ret;
 
-	switch(uMsg) {
-		case WM_MOUSEMOVE:
-			if ((win = LookupWindowByID(hWnd))) {
-				drv = WIDGET(win)->drv;
-				wgl = (AG_DriverWGL *)drv;
-				x   = AGDRIVER_BOUNDED_WIDTH(win,  LOWORD(lParam));
-				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
-				AG_MouseMotionUpdate(drv->mouse, x, y);
-				AG_ProcessMouseMotion(
-					win, x, y,
-					drv->mouse->xRel,
-					drv->mouse->yRel,
-					drv->mouse->btnState
-				);
-				AG_Verbose("WGL_ProcessEvents: MouseMove (%d, %d)\n", x, y);
-			} else {
-				Verbose("WGL_ProcessEvents: WM_MOUSEMOVE on unknown window!\n");
-			}
-			break;
-		case WM_LBUTTONDOWN:
-		case WM_MBUTTONDOWN:
-		case WM_RBUTTONDOWN:
-			if ((win = LookupWindowByID(hWnd))) {
-				int button = 
-					(wParam & MK_LBUTTON) ? AG_MOUSE_LMASK :
-					(wParam & MK_MBUTTON) ? AG_MOUSE_MMASK :
-					(wParam & MK_RBUTTON) ? AG_MOUSE_RMASK : 0;
-
-				drv = WIDGET(win)->drv;
-				x   = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
-				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
-				AG_MouseButtonUpdate(drv->mouse,
-				    AG_BUTTON_PRESSED,
-				    button);
-				AG_ProcessMouseButtonDown(win, x, y,
-				   button);
-				AG_Verbose("WGL_ProcessEvents: MouseButtonDown (%d, %d, %d)\n", x, y, button);
-			} else {
-				Verbose("WGL: WM_L|M|RBUTTONDOWN on unknown window\n");
-			}
-			break;
-		case WM_LBUTTONUP:
-		case WM_MBUTTONUP:
-		case WM_RBUTTONUP:
-			if ((win = LookupWindowByID(hWnd))) {
-				int button = 
-					(uMsg == WM_LBUTTONUP) ? AG_MOUSE_LMASK :
-					(uMsg == WM_MBUTTONUP) ? AG_MOUSE_MMASK :
-					(uMsg == WM_RBUTTONUP) ? AG_MOUSE_RMASK : 0;
-
-				drv = WIDGET(win)->drv;
-				x   = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
-				y   = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
-				AG_MouseButtonUpdate(drv->mouse,
-				    AG_BUTTON_RELEASED,
-				    button);
-				AG_ProcessMouseButtonUp(win, x, y,
-				   button);
-				AG_Verbose("WGL_ProcessEvents: MouseButtonUp (%d, %d, %d)\n", x, y, button);
-			} else {
-				AG_Verbose("WGL_ProcessEvents: WM_L|M|RBUTTONUP on unknown window\n");
-			}
-			break;
-		case WM_KEYUP:
-		case WM_KEYDOWN:			
-			if ((win = LookupWindowByID(hWnd))) {	
-				HKL            kLayout;
-				unsigned char  kState[256];
-				unsigned short kResult = 0;
-				int            ret;
-				
-				ka  = (uMsg == WM_KEYDOWN) ? AG_KEY_PRESSED : AG_KEY_RELEASED;
-				drv = WIDGET(win)->drv;
-
-				kLayout = GetKeyboardLayout(0);
-				GetKeyboardState(kState);
-				ret = ToAsciiEx(wParam, HIWORD(lParam) & 0xFF, kState, &kResult, 0, kLayout);
-				if (ret == 1) {
-					// @todo Do we have to take notice of ucs here?
-					AG_KeyboardUpdate(drv->kbd, ka, kResult, kResult);
-					AG_ProcessKey(drv->kbd, win, ka, kResult, kResult);
-				} else {
-					// Entered char is a special keycode, search it in map
-					AG_KeySym sym = agKeymapMisc[wParam&0xff];
-					AG_KeyboardUpdate(drv->kbd, ka, sym, sym);
-					AG_ProcessKey(drv->kbd, win, ka, sym, sym);					
-				}
-			}
-			break;
-		case WM_SETFOCUS:
-			if ((win = LookupWindowByID(hWnd))) {
-				AG_Verbose("WGL_ProcessEvents: %08X has focus now!\n", hWnd);
-				agWindowFocused = win;
-				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-			}
-			break;
-		case WM_KILLFOCUS:
-			if ((win = LookupWindowByID(hWnd)) && agWindowFocused == win) {
-				AG_Verbose("WGL_ProcessEvents: %08X lost focus!\n", hWnd);
-				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-				agWindowFocused = NULL;
-			}
-			break;
-		case WM_SIZE:
-			if (win = LookupWindowByID(hWnd)) {
-				drv = WIDGET(win)->drv;
-
-				if (drv->flags & AG_DRIVER_MW_OPEN) {
-					AG_SizeAlloc a;
-
-					a.x = 0;
-					a.y = 0;
-					a.w = LOWORD(lParam);
-					a.h = HIWORD(lParam);
-					
-					AG_Verbose("WGL_ProcessEvents: Set window size to %d,%d,%d,%d\n", a.x, a.y, a.w, a.h);
-
-					WGL_PostResizeCallback(win, &a);
-				}
-			}
-			break;
+	if ((win = LookupWindowByID(hWnd)) == NULL) {
+		goto out;
 	}
-	
-	// We just forward all window messages, which haven't been handled
-	// by ProcessEvents, to the system-internal window procedure
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) == NULL) {
+		goto out;
+	}
+	dev->win = win;
+	drv = WIDGET(win)->drv;
+
+	switch (uMsg) {
+	case WM_MOUSEMOVE:
+		dev->type = AG_DRIVER_MOUSE_MOTION;
+		dev->data.motion.x = AGDRIVER_BOUNDED_WIDTH(win, LOWORD(lParam));
+		dev->data.motion.y = AGDRIVER_BOUNDED_WIDTH(win, HIWORD(lParam));
+		AG_MouseMotionUpdate(drv->mouse, dev->data.motion.x, dev->data.motion.y);
+		break;
+	case WM_LBUTTONDOWN:
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+		dev->data.button.which =
+		    (wParam & MK_LBUTTON) ? AG_MOUSE_LEFT :
+		    (wParam & MK_MBUTTON) ? AG_MOUSE_MIDDLE :
+		    (wParam & MK_RBUTTON) ? AG_MOUSE_RIGHT : 0;
+		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
+		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
+		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, dev->data.button.which);
+		break;
+	case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
+	case WM_RBUTTONUP:
+		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
+		dev->data.button.which =
+		    (uMsg == WM_LBUTTONUP) ? AG_MOUSE_LEFT :
+		    (uMsg == WM_MBUTTONUP) ? AG_MOUSE_MIDDLE :
+		    (uMsg == WM_RBUTTONUP) ? AG_MOUSE_RIGHT : 0;
+		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH (win, LOWORD(lParam));
+		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, HIWORD(lParam));
+		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, dev->data.button.which);
+		break;
+	case WM_KEYUP:
+	case WM_KEYDOWN:
+		if (uMsg == WM_KEYDOWN) {
+			dev->type = AG_DRIVER_KEY_DOWN;
+			ka = AG_KEY_PRESSED
+		} else {
+			dev->type = AG_DRIVER_KEY_UP;
+			ka = AG_KEY_RELEASED;
+		}
+		kLayout = GetKeyboardLayout(0);
+		GetKeyboardState(kState);
+		ret = ToAsciiEx(wParam, HIWORD(lParam) & 0xFF, kState, &kResult, 0, kLayout);
+		if (ret == 1) {
+			/* XXX @todo Do we have to take notice of ucs here? */
+			AG_KeyboardUpdate(drv->kbd, ka, kResult, kResult);
+			dev->data.key.ks = kResult;
+			dev->data.key.ucs = (Uint32)kResult;
+		} else {
+			// Entered char is a special keycode, search it in map
+			AG_KeySym sym = agKeymapMisc[wParam&0xff];
+			AG_KeyboardUpdate(drv->kbd, ka, sym, sym);
+			dev->data.key.ks = sym;
+			dev->data.key.ucs = (Uint32)sym;
+		}
+		break;
+	case WM_SETFOCUS:
+		agWindowFocused = win;
+		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		dev->type = AG_DRIVER_FOCUS_IN;
+		break;
+	case WM_KILLFOCUS:
+		if (agWindowFocused == win) {
+			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		dev->type = AG_DRIVER_FOCUS_OUT;
+		break;
+	case WM_SIZE:
+		if (drv->flags & AG_DRIVER_MW_OPEN) {
+			dev->type = AG_DRIVER_VIDEORESIZE;
+			dev->data.videoresize.x = 0;
+			dev->data.videoresize.y = 0;
+			dev->data.videoresize.w = LOWORD(lParam);
+			dev->data.videoresize.h = HIWORD(lParam);
+		}
+		break;
+#if 0
+	/*
+	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER and
+	 * WM_MOUSELEAVE events to AG_DRIVER_MOUSE_{ENTER,LEAVE}
+	 */
+	case WM_MOUSEHOVER:
+	case WM_MOUSELEAVE:
+		break;
+#endif
+	}
+	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+
+out:
+	/*
+	 * We just forward all window messages, which haven't been handled
+	 * by ProcessEvents, to the system-internal window procedure.
+	 */
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-static int
+static __inline__ int
 WGL_PendingEvents(void *drvCaller)
 {
 	return (GetQueueStatus(QS_ALLEVENTS) != 0);
 }
 
 static int
-WGL_ProcessEvents(void *drvCaller)
+WGL_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 {
+	AG_DriverEvent *devFirst;
 	MSG msg;
-	int nProcessed = 0;
 	
-	AG_LockVFS(&agDrivers);
-
-	// @todo : window handle NULL must be replaced by a real one?
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-		if (LookupWindowByID(msg.hwnd)) {
-			// Dispatch message
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-
-			nProcessed++;	
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
-
-	AG_UnlockVFS(&agDrivers);
-	
-	return nProcessed;
+	if (TAILQ_EMPTY(&wglEventQ)) {
+		return (0);
+	}
+	devFirst = TAILQ_FIRST(&wglEventQ);
+	TAILQ_REMOVE(&wglEventQ, devFirst, events);
+	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
+	return (1);
 }
 
+static int
+WGL_PostEventCallback(void *drvCaller)
+{
+	if (!TAILQ_EMPTY(&agWindowDetachQ))
+		AG_FreeDetachedWindows();
+
+	/*
+	 * Exit when no more windows exist.
+	 * XXX TODO make this behavior configurable
+	 */
+	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
+		AG_SetError("No more windows exist");
+		agTerminating = 1;
+		return (-1);
+	}
+
+	AG_LockVFS(&agDrivers);
+	if (agWindowToFocus != NULL) {
+		AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(agWindowToFocus)->drv;
+
+		if (wgl != NULL && AGDRIVER_IS_WGL(wgl)) {
+			WGL_RaiseWindow(agWindowToFocus);
+			WGL_SetInputFocus(agWindowToFocus);
+		}
+		agWindowToFocus = NULL;
+	}
+	AG_UnlockVFS(&agDrivers);
+	return (1);
+}
+
+static int
+WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
+{
+	AG_Driver *drv;
+	AG_SizeAlloc a;
+
+	if (dev->win == NULL) {
+		return (0);
+	}
+	drv = WIDGET(dev->win)->drv;
+
+	switch (dev->type) {
+	case AG_DRIVER_MOUSE_MOTION:
+		AG_ProcessMouseMotion(dev->win,
+		    dev->data.motion.x, dev->data.motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel,
+		    drv->mouse->btnState);
+		AG_MouseCursorUpdate(dev->win,
+		     dev->data.motion.x, dev->data.motion.y);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_DOWN:
+		AG_ProcessMouseButtonDown(dev->win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_UP:
+		AG_ProcessMouseButtonUp(dev->win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_KEY_UP:
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_KEY_DOWN:
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_MOUSE_ENTER:
+		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		break;
+	case AG_DRIVER_MOUSE_LEAVE:
+		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		break;
+	case AG_DRIVER_FOCUS_IN:
+		agWindowFocused = dev->win;
+		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		break;
+	case AG_DRIVER_FOCUS_OUT:
+		if (dev->win == agWindowFocused) {
+			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		break;
+	case AG_DRIVER_VIDEORESIZE:
+		a.x = dev->data.videoresize.x;
+		a.y = dev->data.videoresize.y;
+		a.w = dev->data.videoresize.w;
+		a.h = dev->data.videoresize.h;
+		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
+			PostResizeCallback(dev->win, &a);
+		} else {
+			PostMoveCallback(dev->win, &a);
+		}
+		break;
+	case AG_DRIVER_CLOSE:
+		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		break;
+	case AG_DRIVER_EXPOSE:
+#if 0
+		AG_BeginRendering(drv);
+		AG_ObjectLock(dev->win);
+		AG_WindowDraw(dev->win);
+		AG_ObjectUnlock(dev->win);
+		AG_EndRendering(drv);
+		break;
+#endif
+	default:
+		break;
+	}
+	return WGL_PostEventCallback(drvCaller);
+}
 
 static void
 WGL_GenericEventLoop(void *obj)
@@ -596,10 +677,6 @@ WGL_GenericEventLoop(void *obj)
 	AG_Driver *drv;
 	AG_Window *win;
 	Uint32 t1, t2;
-
-#ifdef _DEBUG
-	AG_Verbose("WGL_GenericEventLoop\n");
-#endif
 
 	t1 = AG_GetTicks();
 	for (;;) {
@@ -621,12 +698,15 @@ WGL_GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-		} else if (GetQueueStatus(QS_ALLEVENTS) != 0) {
-			if (WGL_ProcessEvents(NULL) == -1)
-				return;
+		} else if (WGL_PendingEvents(NULL) != 0) {
+			do {
+				if (WGL_GetNextEvent(NULL, &dev) == 1 &&
+				    WGL_ProcessEvent(NULL, &dev) == -1)
+					return;
 #ifdef AG_DEBUG
-			agEventAvg++;
+				agEventAvg++;
 #endif
+			} while (WGL_PendingEvents(NULL) > 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
 		} else {
@@ -990,19 +1070,12 @@ InitDefaultCursor(AG_DriverWGL *wgl)
 	return (0);
 }
 
-static void
-ChangeCursor(AG_DriverWGL *wgl)
-{
-}
-
 static int
 WGL_CreateCursor(void *obj, AG_Cursor *ac)
 {
 	AG_CursorWGL *cg;
 	int          size, i;
 	BYTE         *xorMask, *andMask;
-
-	AG_Verbose("WGL_CreateCursor");
 
 	// Initialize cursor struct
 	if ((cg = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
@@ -1037,15 +1110,11 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	if (cg->cursor = CreateCursor(GetModuleHandle(NULL), ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask)) {
 		cg->visible = 0;
 		ac->p = cg;
-
-		AG_Verbose("WGL_CreateCursor: Created.");
-
-		return 0;
+		return (0);
 	}
 	
 	_SetWindowsError("CreateCursor failed!", GetLastError());
-	
-	return -1;
+	return (-1);
 }
 
 static void

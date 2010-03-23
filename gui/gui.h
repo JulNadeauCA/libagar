@@ -51,8 +51,6 @@ void       AG_DestroyGUIGlobals(void);
 void       AG_QuitGUI(void);
 void       AG_DestroyVideo(void);
 void       AG_ViewCapture(void);
-void       AG_EventLoop_FixedFPS(void);
-#define    AG_EventLoop() AG_EventLoop_FixedFPS()
 #ifdef AG_DEBUG
 AG_Window *AG_GuiDebugger(void);
 #endif

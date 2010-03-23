@@ -42,6 +42,7 @@ extern AG_ObjectClass agMouseClass;
 
 AG_Mouse *AG_MouseNew(void *, const char *);
 void      AG_MouseMotionUpdate(AG_Mouse *, int, int);
+void      AG_MouseCursorUpdate(struct ag_window *, int, int);
 void      AG_MouseButtonUpdate(AG_Mouse *, AG_MouseButtonAction, int);
 void      AG_ProcessMouseMotion(struct ag_window *, int, int, int, int, Uint);
 void      AG_ProcessMouseButtonUp(struct ag_window *, int, int, AG_MouseButton);

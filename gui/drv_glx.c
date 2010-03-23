@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -164,9 +164,11 @@ InitGlobals(void)
 static void
 DestroyGlobals(void)
 {
+	AG_MutexLock(&agDisplayLock);
 	XCloseDisplay(agDisplay);
 	agDisplay = NULL;
 	agScreen = 0;
+	AG_MutexUnlock(&agDisplayLock);
 	AG_MutexDestroy(&agDisplayLock);
 }
 
@@ -314,6 +316,7 @@ LookupWindowByID(Window xw)
 	}
 fail:
 	AG_UnlockVFS(&agDrivers);
+	AG_SetError("X event from unknown window");
 	return (NULL);
 }
 
@@ -411,8 +414,23 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	AG_MutexUnlock(&agDisplayLock);
 }
 
-/* Return the number of pending events in the event queue. */
-static int
+/* Refresh the internal keyboard state for all glx driver instances. */
+static void
+UpdateKeyboardAll(char *kv)
+{
+	AG_Driver *drv;
+
+	AG_LockVFS(&agDrivers);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (!AGDRIVER_IS_GLX(drv)) {
+			continue;
+		}
+		UpdateKeyboard(drv->kbd, kv);
+	}
+	AG_UnlockVFS(&agDrivers);
+}
+
+static __inline__ int
 PendingEvents(void *drvCaller)
 {
 	struct timeval tv;
@@ -446,262 +464,308 @@ out:
 }
 
 static int
-ProcessEvents(void *drvCaller)
+PostEventCallback(void *drvCaller)
 {
-	AG_Driver *drv;
-	AG_Window *win;
-	XEvent xev;
-	AG_KeySym ks;
-	AG_KeyboardAction ka;
-	Uint32 ucs;
-	int x, y;
-	int nProcessed = 0;
-	AG_CursorArea *ca;
+	if (!TAILQ_EMPTY(&agWindowDetachQ))
+		AG_FreeDetachedWindows();
 
-	while (PendingEvents(NULL)) {
+	/*
+	 * Exit when no more windows exist.
+	 * XXX TODO make this behavior configurable
+	 */
+	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
+		AG_SetError("No more windows exist");
+		agTerminating = 1;
+		return (-1);
+	}
+
+	AG_LockVFS(&agDrivers);
+	if (agWindowToFocus != NULL) {
+		AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
+
+		if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
+			AG_MutexLock(&agDisplayLock);
+			AG_MutexLock(&glx->lock);
+			RaiseWindow(agWindowToFocus);
+			SetInputFocus(agWindowToFocus);
+			AG_MutexUnlock(&glx->lock);
+			AG_MutexUnlock(&agDisplayLock);
+		}
+		agWindowToFocus = NULL;
+	}
+	AG_UnlockVFS(&agDrivers);
+	return (1);
+}
+
+static int
+GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
+{
+	XEvent xev;
+	int x, y;
+	AG_KeySym ks;
+	AG_Window *win;
+	Uint32 ucs;
+	
+	AG_MutexLock(&agDisplayLock);
+	XNextEvent(agDisplay, &xev);
+	AG_MutexUnlock(&agDisplayLock);
+
+	switch (xev.type) {
+	case MotionNotify:
+		if ((win = LookupWindowByID(xev.xmotion.window)) == NULL) {
+			return (-1);
+		}
+		x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
+		y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xmotion.y);
+		AG_MouseMotionUpdate(WIDGET(win)->drv->mouse, x,y);
+		
+		dev->type = AG_DRIVER_MOUSE_MOTION;
+		dev->win = win;
+		dev->data.motion.x = x;
+		dev->data.motion.y = y;
+		break;
+	case ButtonPress:
+		if ((win = LookupWindowByID(xev.xbutton.window)) == NULL) {
+			return (-1);
+		}
+		x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
+		y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
+		AG_MouseButtonUpdate(WIDGET(win)->drv->mouse,
+		    AG_BUTTON_PRESSED, xev.xbutton.button);
+
+		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+		dev->win = win;
+		dev->data.button.which = (AG_MouseButton)xev.xbutton.button;
+		dev->data.button.x = xev.xbutton.x;
+		dev->data.button.y = xev.xbutton.y;
+		break;
+	case ButtonRelease:
+		if ((win = LookupWindowByID(xev.xbutton.window)) == NULL) {
+			return (-1);
+		}
+		x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
+		y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
+		AG_MouseButtonUpdate(WIDGET(win)->drv->mouse,
+		    AG_BUTTON_RELEASED, xev.xbutton.button);
+
+		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
+		dev->win = win;
+		dev->data.button.which = (AG_MouseButton)xev.xbutton.button;
+		dev->data.button.x = xev.xbutton.x;
+		dev->data.button.y = xev.xbutton.y;
+		break;
+	case KeyRelease:
 		AG_MutexLock(&agDisplayLock);
-		XNextEvent(agDisplay, &xev);
+		if (IsKeyRepeat(&xev)) {
+			/* We implement key repeat internally */
+			AG_MutexUnlock(&agDisplayLock);
+			return (0);
+		}
+		AG_MutexUnlock(&agDisplayLock);
+		/* FALLTHROUGH */
+	case KeyPress:
+		AG_MutexLock(&agDisplayLock);
+		if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
+		    NULL, &xkbCompStatus) >= 1) {
+			ucs = (Uint8)xkbBuf[0];	/* XXX */
+		} else {
+			ucs = 0;
+		}
+		if (!LookupKeyCode(xev.xkey.keycode, &ks)) {
+			AG_SetError("Keyboard event: Unknown keycode: %d",
+			    (int)xev.xkey.keycode);
+			AG_MutexUnlock(&agDisplayLock);
+			return (-1);
+		}
 		AG_MutexUnlock(&agDisplayLock);
 
-		switch (xev.type) {
-		case MotionNotify:
-			if ((win = LookupWindowByID(xev.xmotion.window))) {
-				drv = WIDGET(win)->drv;
-				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xmotion.x);
-				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xmotion.y);
+		if ((win = LookupWindowByID(xev.xkey.window)) == NULL) {
+			return (-1);
+		}
+		AG_KeyboardUpdate(WIDGET(win)->drv->kbd,
+		    (xev.type == KeyPress) ? AG_KEY_PRESSED : AG_KEY_RELEASED,
+		    ks, ucs);
 
-				AG_MouseMotionUpdate(drv->mouse, x,y);
-				AG_ProcessMouseMotion(win, x, y,
-				    drv->mouse->xRel,
-				    drv->mouse->yRel,
-				    drv->mouse->btnState);
+		dev->type = (xev.type == KeyPress) ? AG_DRIVER_KEY_DOWN :
+		                                     AG_DRIVER_KEY_UP;
+		dev->win = win;
+		dev->data.key.ks = ks;
+		dev->data.key.ucs = ucs;
+		break;
+	case EnterNotify:
+		if ((win = LookupWindowByID(xev.xcrossing.window)) == NULL) {
+			return (-1);
+		}
+		dev->type = AG_DRIVER_MOUSE_ENTER;
+		dev->win = win;
+		break;
+	case LeaveNotify:
+		if ((win = LookupWindowByID(xev.xcrossing.window)) == NULL) {
+			return (-1);
+		}
+		dev->type = AG_DRIVER_MOUSE_ENTER;
+		dev->win = win;
+		break;
+	case FocusIn:
+		if ((win = LookupWindowByID(xev.xfocus.window)) == NULL) {
+			return (-1);
+		}
+		agWindowFocused = win;
+		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		dev->type = AG_DRIVER_FOCUS_IN;
+		dev->win = win;
+		break;
+	case FocusOut:
+		if ((win = LookupWindowByID(xev.xfocus.window)) == NULL) {
+			return (-1);
+		}
+		if (agWindowFocused == win) {
+			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		dev->type = AG_DRIVER_FOCUS_OUT;
+		dev->win = win;
+		break;
+	case KeymapNotify:					/* Internal */
+		UpdateKeyboardAll(xev.xkeymap.key_vector);
+		return (0);
+	case MappingNotify:					/* Internal */
+		AG_MutexLock(&agDisplayLock);
+		XRefreshKeyboardMapping(&xev.xmapping);
+		AG_MutexUnlock(&agDisplayLock);
+		return (0);
+	case ConfigureNotify:					/* Internal */
+		if ((win = LookupWindowByID(xev.xconfigure.window))) {
+			Window ignore;
 
-				/* Change the cursor if necessary. */
-				TAILQ_FOREACH(ca, &win->cursorAreas,
-				    cursorAreas) {
-					if (AG_RectInside(&ca->r, x,y))
-						break;
-				}
-				if (ca == NULL) {
-					if (drv->activeCursor != &drv->cursors[0])
-						AGDRIVER_CLASS(drv)->unsetCursor(drv);
-				} else if (ca->c != drv->activeCursor) {
-					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
-				}
-			} else {
-				Verbose("MotionNotify on unknown window\n");
-			}
-			break;
-		case ButtonPress:
-			if ((win = LookupWindowByID(xev.xbutton.window))) {
-				drv = WIDGET(win)->drv;
-				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
-				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
-
-				AG_MouseButtonUpdate(drv->mouse,
-				    AG_BUTTON_PRESSED,
-				    xev.xbutton.button);
-				AG_ProcessMouseButtonDown(win, x, y,
-				    xev.xbutton.button);
-			} else {
-				Verbose("ButtonPress on unknown window\n");
-			}
-			break;
-		case ButtonRelease:
-			if ((win = LookupWindowByID(xev.xbutton.window))) {
-				drv = WIDGET(win)->drv;
-				x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
-				y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
-
-				AG_MouseButtonUpdate(drv->mouse,
-				    AG_BUTTON_RELEASED,
-				    xev.xbutton.button);
-				AG_ProcessMouseButtonUp(win, x, y,
-				    xev.xbutton.button);
-			} else {
-				Verbose("ButtonRelease on unknown window\n");
-			}
-			break;
-		case KeyRelease:
 			AG_MutexLock(&agDisplayLock);
-			if (IsKeyRepeat(&xev)) {
-				/* We implement key repeat internally */
-				AG_MutexUnlock(&agDisplayLock);
-				goto next_event;
-			}
-			/* FALLTHROUGH */
-		case KeyPress:
-			if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
-			    NULL, &xkbCompStatus) >= 1) {
-				ucs = (Uint8)xkbBuf[0];	/* XXX */
-			} else {
-				ucs = 0;
-			}
-			ka = (xev.type == KeyPress) ? AG_KEY_PRESSED :
-			                              AG_KEY_RELEASED;
-
-			if (LookupKeyCode(xev.xkey.keycode, &ks)) {
-				if ((win = LookupWindowByID(xev.xkey.window))) {
-					drv = WIDGET(win)->drv;
-					AG_KeyboardUpdate(drv->kbd, ka, ks, ucs);
-					AG_ProcessKey(drv->kbd, win, ka, ks, ucs);
-				}
-			} else {
-				Verbose("Unknown keycode: %d\n",
-				    (int)xev.xkey.keycode);
-			}
+			XTranslateCoordinates(agDisplay,
+			    xev.xconfigure.window,
+			    DefaultRootWindow(agDisplay),
+			    0, 0,
+			    &x, &y,
+			    &ignore);
 			AG_MutexUnlock(&agDisplayLock);
-			break;
-#if 0
-		case EnterNotify:
-			if ((xev.xcrossing.mode != NotifyGrab) &&
-			    (xev.xcrossing.mode != NotifyUngrab)) {
-				/* TODO: AG_AppFocusEvent() */
-				AG_MouseMotionUpdate(drv->mouse,
-				    xev->xcrossing.x,
-				    xev->xcrossing.y);
-				InputEvent(&xev);
-			}
-			break;
-		case LeaveNotify:
-			if ((xev.xcrossing.mode != NotifyGrab) &&
-			    (xev.xcrossing.mode != NotifyUngrab) &&
-			    (xev.xcrossing.detail != NotifyInferior)) {
-				/* TODO: AG_AppFocusEvent() */
-				AG_MouseMotionUpdate(drv->mouse,
-				    xev.xcrossing.x,
-				    xev.xcrossing.y);
-				InputEvent(&xev);
-			}
-			break;
-#endif
-		case EnterNotify:
-			if ((win = LookupWindowByID(xev.xcrossing.window))) {
-				AG_PostEvent(NULL, win, "window-enter", NULL);
-			}
-			break;
-		case LeaveNotify:
-			if ((win = LookupWindowByID(xev.xcrossing.window))) {
-				AG_PostEvent(NULL, win, "window-leave", NULL);
-			}
-			break;
-		case FocusIn:
-			if ((win = LookupWindowByID(xev.xfocus.window))) {
-				agWindowFocused = win;
-				AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-			}
-			break;
-		case FocusOut:
-			if ((win = LookupWindowByID(xev.xfocus.window)) &&
-			    agWindowFocused == win) {
-				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-				agWindowFocused = NULL;
-			}
-			break;
-		case MapNotify:
-			break;
-		case UnmapNotify:
-			break;
-		case DestroyNotify:
-			break;
-		case KeymapNotify:
-			AG_LockVFS(&agDrivers);
-			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-				if (!AGDRIVER_IS_GLX(drv)) {
-					continue;
-				}
-				UpdateKeyboard(drv->kbd, xev.xkeymap.key_vector);
-			}
-			AG_UnlockVFS(&agDrivers);
-			break;
-		case MappingNotify:
-			AG_MutexLock(&agDisplayLock);
-			XRefreshKeyboardMapping(&xev.xmapping);
-			AG_MutexUnlock(&agDisplayLock);
-			break;
-		case ConfigureNotify:
-			if ((win = LookupWindowByID(xev.xconfigure.window))) {
-				AG_SizeAlloc a;
-				Window ignore;
 
-				AG_MutexLock(&agDisplayLock);
-				XTranslateCoordinates(agDisplay,
-				    xev.xconfigure.window,
-				    DefaultRootWindow(agDisplay),
-				    0, 0,
-				    &a.x, &a.y,
-				    &ignore);
-				AG_MutexUnlock(&agDisplayLock);
-
-				a.w = xev.xconfigure.width;
-				a.h = xev.xconfigure.height;
-				if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
-					PostResizeCallback(win, &a);
-				} else {
-					PostMoveCallback(win, &a);
-				}
-			}
+			dev->type = AG_DRIVER_VIDEORESIZE;
+			dev->win = win;
+			dev->data.videoresize.x = x;
+			dev->data.videoresize.y = y;
+			dev->data.videoresize.w = xev.xconfigure.width;
+			dev->data.videoresize.h = xev.xconfigure.height;
 			break;
-		case ReparentNotify:
-			/* printf("ReparentNotify\n"); */
-			break;
-		case ClientMessage:
-			if ((xev.xclient.format == 32) &&
-			    (xev.xclient.data.l[0] == wmDeleteWindow) &&
-			    (win = LookupWindowByID(xev.xclient.window))) {
-				AG_PostEvent(NULL, win, "window-close", NULL);
-			}
-			break;
-#if 0
-		case Expose:
-			if ((win = LookupWindowByID(xev.xexpose.window))) {
-				AG_Driver *drv = WIDGET(win)->drv;
-				AG_BeginRendering(drv);
-				AG_ObjectLock(win);
-				AG_WindowDraw(win);
-				AG_ObjectUnlock(win);
-				AG_EndRendering(drv);
-			}
-			break;
-#endif
-		default:
-			printf("Unknown X event %d\n", xev.type);
+		} else {
+			return (-1);
+		}
+	case Expose:
+		if ((win = LookupWindowByID(xev.xexpose.window)) == NULL) {
+			return (-1);
+		}
+		dev->type = AG_DRIVER_EXPOSE;
+		dev->win = win;
+		break;
+	case ClientMessage:
+		if ((xev.xclient.format == 32) &&
+		    (xev.xclient.data.l[0] == wmDeleteWindow) &&
+		    (win = LookupWindowByID(xev.xclient.window))) {
+			dev->type = AG_DRIVER_CLOSE;
+			dev->win = win;
 			break;
 		}
-next_event:
-		nProcessed++;
-
-		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
-			AG_FreeDetachedWindows();
-		}
-		/*
-		 * Exit when no more windows exist.
-		 * XXX TODO make this behavior configurable
-		 */
-		if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children))
-			goto quit;
-
-		AG_LockVFS(&agDrivers);
-		if (agWindowToFocus != NULL) {
-			AG_DriverGLX *glx =
-			    (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
-
-			if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
-				AG_MutexLock(&agDisplayLock);
-				AG_MutexLock(&glx->lock);
-				RaiseWindow(agWindowToFocus);
-				SetInputFocus(agWindowToFocus);
-				AG_MutexUnlock(&glx->lock);
-				AG_MutexUnlock(&agDisplayLock);
-			}
-			agWindowToFocus = NULL;
-		}
-		AG_UnlockVFS(&agDrivers);
+		return (0);
+	case MapNotify:
+	case UnmapNotify:
+	case DestroyNotify:
+	case ReparentNotify:
+		return (0);
+	default:
+		AG_SetError("Unknown X event %d\n", xev.type);
+		return (-1);
 	}
-	return (nProcessed);
-quit:
-	agTerminating = 1;
-	return (-1);
+	return (1);
+}
+
+static int
+ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
+{
+	AG_Driver *drv;
+	AG_SizeAlloc a;
+
+	if (dev->win == NULL) {
+		return (0);
+	}
+	drv = WIDGET(dev->win)->drv;
+
+	switch (dev->type) {
+	case AG_DRIVER_MOUSE_MOTION:
+		AG_ProcessMouseMotion(dev->win,
+		    dev->data.motion.x, dev->data.motion.y,
+		    drv->mouse->xRel, drv->mouse->yRel,
+		    drv->mouse->btnState);
+		AG_MouseCursorUpdate(dev->win,
+		     dev->data.motion.x, dev->data.motion.y);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_DOWN:
+		AG_ProcessMouseButtonDown(dev->win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_MOUSE_BUTTON_UP:
+		AG_ProcessMouseButtonUp(dev->win,
+		    dev->data.button.x, dev->data.button.y,
+		    dev->data.button.which);
+		break;
+	case AG_DRIVER_KEY_UP:
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_RELEASED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_KEY_DOWN:
+		AG_ProcessKey(drv->kbd, dev->win, AG_KEY_PRESSED,
+		    dev->data.key.ks, dev->data.key.ucs);
+		break;
+	case AG_DRIVER_MOUSE_ENTER:
+		AG_PostEvent(NULL, dev->win, "window-enter", NULL);
+		break;
+	case AG_DRIVER_MOUSE_LEAVE:
+		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
+		break;
+	case AG_DRIVER_FOCUS_IN:
+		agWindowFocused = dev->win;
+		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		break;
+	case AG_DRIVER_FOCUS_OUT:
+		if (dev->win == agWindowFocused) {
+			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		break;
+	case AG_DRIVER_VIDEORESIZE:
+		a.x = dev->data.videoresize.x;
+		a.y = dev->data.videoresize.y;
+		a.w = dev->data.videoresize.w;
+		a.h = dev->data.videoresize.h;
+		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
+			PostResizeCallback(dev->win, &a);
+		} else {
+			PostMoveCallback(dev->win, &a);
+		}
+		break;
+	case AG_DRIVER_CLOSE:
+		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		break;
+	case AG_DRIVER_EXPOSE:
+#if 0
+		AG_BeginRendering(drv);
+		AG_ObjectLock(dev->win);
+		AG_WindowDraw(dev->win);
+		AG_ObjectUnlock(dev->win);
+		AG_EndRendering(drv);
+		break;
+#endif
+	default:
+		break;
+	}
+	return PostEventCallback(drvCaller);
 }
 
 static void
@@ -709,6 +773,7 @@ GenericEventLoop(void *obj)
 {
 	AG_Driver *drv;
 	AG_DriverGLX *glx;
+	AG_DriverEvent dev;
 	AG_Window *win;
 	Uint32 t1, t2;
 
@@ -738,12 +803,14 @@ GenericEventLoop(void *obj)
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
 		} else if (PendingEvents(NULL) != 0) {
-			if (ProcessEvents(NULL) == -1) {
-				return;
-			}
+			do {
+				if (GetNextEvent(NULL, &dev) == 1 &&
+				    ProcessEvent(NULL, &dev) == -1)
+					return;
 #ifdef AG_DEBUG
-			agEventAvg++;
+				agEventAvg++;
 #endif
+			} while (PendingEvents(NULL) > 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
 		} else {
@@ -1039,10 +1106,11 @@ CreateCursor(void *obj, AG_Cursor *ac)
 
 	XFreePixmap(agDisplay, dataPixmap);
 	XFreePixmap(agDisplay, maskPixmap);
-	XSync(agDisplay, False);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	
+	XSync(agDisplay, False);
 
 	ac->p = cg;
 	return (0);
@@ -1058,10 +1126,11 @@ FreeCursor(void *obj, AG_Cursor *ac)
 	AG_MutexLock(&glx->lock);
 	
 	XFreeCursor(agDisplay, cg->xc);
-	XSync(agDisplay, False);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	
+	XSync(agDisplay, False);
 
 	Free(cg);
 	ac->p = NULL;
@@ -1089,6 +1158,8 @@ SetCursor(void *obj, AG_Cursor *ac)
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	
+	XSync(agDisplay, False);
 
 	drv->activeCursor = ac;
 	cg->visible = 1;
@@ -1112,6 +1183,8 @@ UnsetCursor(void *obj)
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	
+	XSync(agDisplay, False);
 }
 
 static int
@@ -1831,7 +1904,8 @@ AG_DriverMwClass agDriverGLX = {
 		GetDisplaySize,
 		NULL,			/* beginEventProcessing */
 		PendingEvents,
-		ProcessEvents,
+		GetNextEvent,
+		ProcessEvent,
 		GenericEventLoop,
 		NULL,			/* endEventProcessing */
 		Terminate,

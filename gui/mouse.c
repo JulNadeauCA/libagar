@@ -84,6 +84,33 @@ AG_MouseMotionUpdate(AG_Mouse *ms, int x, int y)
 	}
 }
 
+/*
+ * Change the cursor if overlapping a registered cursor area.
+ * Generally called in response to mousemotion events.
+ */
+void
+AG_MouseCursorUpdate(AG_Window *win, int x, int y)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	AG_CursorArea *ca;
+	AG_Rect r;
+
+	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+		r.x = ca->r.x + ca->wid->rView.x1;
+		r.y = ca->r.y + ca->wid->rView.y1;
+		r.w = ca->r.w;
+		r.h = ca->r.h;
+		if (AG_RectInside(&r, x,y))
+			break;
+	}
+	if (ca == NULL) {
+		if (drv->activeCursor != &drv->cursors[0])
+			AGDRIVER_CLASS(drv)->unsetCursor(drv);
+	} else if (ca->c != drv->activeCursor) {
+		AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
+	}
+}
+
 /* Update the mouse state following a button press/release event. */
 void
 AG_MouseButtonUpdate(AG_Mouse *ms, AG_MouseButtonAction a, int which)

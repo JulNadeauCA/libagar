@@ -11,9 +11,9 @@
 #include <agar/gui/surface.h>
 #include <agar/gui/style.h>
 
-#include <agar/gui/drv.h>
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
+#include <agar/gui/drv.h>
 
 #include <agar/gui/begin.h>
 

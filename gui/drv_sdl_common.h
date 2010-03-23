@@ -30,6 +30,8 @@ void            AG_SDL_BlitSurface(const AG_Surface *, const AG_Rect *,
                                    SDL_Surface *, int, int);
 AG_Surface     *AG_SDL_ImportSurface(SDL_Surface *);
 
+int             AG_SDL_SetRefreshRate(void *, int);
+
 int             AG_SDL_InitDefaultCursor(void *);
 int             AG_SDL_SetCursor(void *, AG_Cursor *);
 void            AG_SDL_UnsetCursor(void *);
@@ -37,6 +39,17 @@ int             AG_SDL_CreateCursor(void *, AG_Cursor *);
 void            AG_SDL_FreeCursor(void *, AG_Cursor *);
 int             AG_SDL_GetCursorVisibility(void *);
 void            AG_SDL_SetCursorVisibility(void *, int);
+
+int             AG_SDL_PostEventCallback(void *);
+
+int             AG_SDL_GetDisplaySize(Uint *, Uint *);
+void            AG_SDL_BeginEventProcessing(void *);
+int             AG_SDL_PendingEvents(void *);
+int             AG_SDL_GetNextEvent(void *, AG_DriverEvent *);
+int             AG_SDL_ProcessEvent(void *, AG_DriverEvent *);
+void            AG_SDL_GenericEventLoop(void *);
+void            AG_SDL_EndEventProcessing(void *);
+void            AG_SDL_Terminate(void);
 __END_DECLS
 
 #endif /* HAVE_SDL */
