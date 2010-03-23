@@ -1,0 +1,519 @@
+.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 22, 2010
+.Dt AG_DRIVER 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.0
+.Sh NAME
+.Nm AG_Driver
+.Nd agar low-level driver interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+In Agar, low-level graphics rendering, event processing and window management
+is handled by modular "drivers".
+A simple class registration interface allows Agar to be "ported" to new
+platforms, environments and graphics systems.
+In a manner similar to Agar widgets, new Agar "drivers" may be implemented
+as part of an application, without need for changing the Agar source code
+itself.
+.Pp
+The interface differs based on whether an underlying window system is available.
+All drivers are a subclass of
+.Ft AG_Driver .
+The
+.Ft AG_DriverSw
+subclass (for "single-window") is used by drivers that do not interface with
+an underlying window system.
+For example, the "sdlfb" and "sdlgl" drivers use the SDL 1.2 API, and are
+therefore limited to a single window as far as the native window system is
+concerned).
+A dumb framebuffer used in an embedded device would also use the
+.Ft AG_DriverSw
+subclass.
+.Pp
+The
+.Ft AG_DriverMw
+subclass (for "multiple-window") is used by drivers that do interface with
+an underlying window system.
+In a multiple-window environment, each Agar window (e.g., each window created
+by
+.Xr AG_WindowNew 3 )
+is associated with a "native" window.
+For example, the "glx" driver uses the GLX API to create an accelerated
+rendering context, and also uses the Xlib API to manage windows.
+.Pp
+The part of the
+.Nm
+API that deals with low-level event processing is of particular importance
+to applications using "custom" event loops (see
+.Xr AG_EventLoop 3 ) .
+It is possible, in a driver-independent fashion, for an application to catch
+and process low-level events (see below).
+.Sh DRIVER INTERFACE
+.nr nS 1
+.Ft "AG_Driver *"
+.Fn AG_DriverOpen "AG_DriverClass *dc"
+.Pp
+.Ft "void"
+.Fn AG_DriverClose "AG_Driver *drv"
+.Pp
+.nr nS 0
+The
+.Fn AG_DriverOpen
+function creates a new instance of a driver class, as described by
+.Fa dc .
+The
+.Ft AG_DriverClass
+structure is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_driver_class {
+	struct ag_object_class _inherit;
+	const char *name;			/* Short name */
+	enum ag_driver_type type;		/* Driver type */
+	enum ag_driver_wm_type wm;		/* Window manager type */
+	Uint flags;
+
+	/* Initialization */
+	int  (*open)(void *drv, const char *spec);
+	void (*close)(void *drv);
+	int  (*getDisplaySize)(Uint *w, Uint *h);
+	/* Event processing */
+	void (*beginEventProcessing)(void *drv);
+	int  (*pendingEvents)(void *drv);
+	int  (*getNextEvent)(void *drv, struct ag_driver_event *dev);
+	int  (*processEvent)(void *drv, struct ag_driver_event *dev);
+	void (*genericEventLoop)(void *drv);
+	void (*endEventProcessing)(void *drv);
+	void (*terminate)(void);
+	/* GUI rendering */
+	void (*beginRendering)(void *drv);
+	void (*renderWindow)(struct ag_window *);
+	void (*endRendering)(void *drv);
+	/* Primitives */
+	void (*fillRect)(void *drv, AG_Rect r, AG_Color c);
+	/* Update video region (rendering context; FB driver specific) */
+	void (*updateRegion)(void *drv, AG_Rect r);
+	/* Texture operations (GL driver specific) */
+	void (*uploadTexture)(Uint *, AG_Surface *, AG_TexCoord *);
+	int  (*updateTexture)(Uint, AG_Surface *, AG_TexCoord *);
+	void (*deleteTexture)(void *drv, Uint);
+	/* Request a specific refresh rate (driver specific) */
+	int (*setRefreshRate)(void *drv, int fps);
+	/* Clipping and blending control (rendering context) */
+	void (*pushClipRect)(void *drv, AG_Rect r);
+	void (*popClipRect)(void *drv);
+	void (*pushBlendingMode)(void *drv, AG_BlendFn srcFn, AG_BlendFn dstFn);
+	void (*popBlendingMode)(void *drv);
+	/* Hardware cursor operations */
+	int  (*createCursor)(void *drv, struct ag_cursor *curs);
+	void (*freeCursor)(void *drv, struct ag_cursor *curs);
+	int  (*setCursor)(void *drv, struct ag_cursor *curs);
+	void (*unsetCursor)(void *drv);
+	int  (*getCursorVisibility)(void *drv);
+	void (*setCursorVisibility)(void *drv, int flag);
+	/* Widget surface operations (rendering context) */
+	void (*blitSurface)(void *drv, struct ag_widget *wid, AG_Surface *s, int x, int y);
+	void (*blitSurfaceFrom)(void *drv, struct ag_widget *wid, struct ag_widget *widSrc, int s, AG_Rect *r, int x, int y);
+	void (*blitSurfaceGL)(void *drv, struct ag_widget *wid, AG_Surface *s, float w, float h);
+	void (*blitSurfaceFromGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
+	void (*blitSurfaceFlippedGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
+	void (*backupSurfaces)(void *drv, struct ag_widget *wid);
+	void (*restoreSurfaces)(void *drv, struct ag_widget *wid);
+	int  (*renderToSurface)(void *drv, struct ag_widget *wid, AG_Surface **su);
+	/* Rendering operations (rendering context) */
+	void (*putPixel)(void *drv, int x, int y, AG_Color c);
+	void (*putPixel32)(void *drv, int x, int y, Uint32 c);
+	void (*putPixelRGB)(void *drv, int x, int y, Uint8 r, Uint8 g, Uint8 b);
+	void (*blendPixel)(void *drv, int x, int y, AG_Color c, AG_BlendFn fnSrc, AG_BlendFn fnDst);
+	void (*drawLine)(void *drv, int x1, int y1, int x2, int y2, AG_Color C);
+	void (*drawLineH)(void *drv, int x1, int x2, int y, AG_Color C);
+	void (*drawLineV)(void *drv, int x, int y1, int y2, AG_Color C);
+	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
+	void (*drawArrowUp)(void *drv, int x0, int y0, int h, AG_Color C[2]);
+	void (*drawArrowDown)(void *drv, int x0, int y0, int h, AG_Color C[2]);
+	void (*drawArrowLeft)(void *drv, int x0, int y0, int h, AG_Color C[2]);
+	void (*drawArrowRight)(void *drv, int x0, int y0, int h, AG_Color C[2]);
+	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
+	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
+	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
+	void (*drawCircle2)(void *drv, int x, int y, int r, AG_Color C);
+	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
+	void (*drawRectBlended)(void *drv, AG_Rect r, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
+	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
+	void (*drawFrame)(void *drv, AG_Rect r, AG_Color C[2]);
+	void (*updateGlyph)(void *drv, struct ag_glyph *);
+	void (*drawGlyph)(void *drv, const struct ag_glyph *, int x, int y);
+} AG_DriverClass;
+.Ed
+.Pp
+The
+.Va type
+field should be set to
+.Dv AG_FRAMEBUFFER
+for dumb-framebuffer drawing, or
+.Dv AG_VECTOR
+for vector-based drawing such as OpenGL.
+.Pp
+The
+.Va wm
+field may be set to
+.Dv AG_WM_SINGLE
+for single-window drivers, or
+.Dv AG_WM_MULTIPLE
+for multiple-window drivers.
+.Pp
+Acceptable values for the
+.Va flags
+field include:
+.Bl -tag -compact -width "AG_DRIVER_TEXTURES "
+.It AG_DRIVER_OPENGL
+OpenGL calls are supported.
+.It AG_DRIVER_SDL
+SDL 1.2 calls are supported.
+.It AG_DRIVER_TEXTURES
+Texture management operations are supported.
+.El
+.Pp
+The
+.Fn open
+method is invoked to initialize a new driver instance.
+This method is expected to initialize the
+.Va mouse
+and
+.Va kbd
+fields of
+.Nm
+(see
+.Xr AG_MouseNew 3 ,
+.Xr AG_KeyboardNew 3 ) .
+.Fn open
+should return 0 on success.
+On failure, it should return -1 and set an appropriate error message.
+.Pp
+The
+.Fn close
+method is invoked to destroy a driver instance.
+It is expected to destroy the
+.Va mouse
+and
+.Va kbd
+fields of
+.Nm .
+.Pp
+The
+.Fn getDisplaySize
+operation should return the total display size available, in pixels, into
+.Fa w
+and
+.Fa h .
+For single-window drivers, this is the size of the display available to
+Agar.
+For multiple-window drivers, this is the total size of the desktop (if
+multiple workspaces are supported, it should be limited to the size of
+a single workspace in pixels).
+This operation should return 0 on success and -1 on failure.
+.Pp
+The
+.Fn beginEventProcessing
+callback is invoked before event processing begins.
+Most drivers will not need to do anything here.
+.Pp
+.Fn pendingEvents
+returns a non-zero value if there are events waiting to be processed (see
+.Fn AG_PendingEvents ) .
+.Pp
+.Fn getNextEvent
+retrieves and remove the next event from the queue (see
+.Fn AG_GetNextEvent ) .
+.Pp
+.Fn processEvent
+processes the event described by
+.Fa dev
+(see
+.Fn AG_ProcessEvent ) .
+.Pp
+.Fn genericEventLoop
+implements the
+.Xr AG_EventLoop 3 ,
+.Xr AG_EventLoop_FixedFPS 3
+and
+.Xr AG_EventLoop_Drv 3
+routine.
+While the event loop can be driver-independent, this operation allows
+for optimized, driver-specific event loops.
+If invoked via
+.Xr AG_EventLoop_FixedFPS 3 ,
+the
+.Va flags
+field of the
+.Nm
+structure will have
+.Dv AG_DRIVER_FIXED_FPS
+set.
+See
+.Xr AG_EventLoop 3
+for details.
+.Pp
+The
+.Fn endEventProcessing
+callback is invoked after event processing is done.
+For most drivers, there is nothing to do here.
+.Pp
+The
+.Fn terminate
+operation requests that the application be terminated normally.
+.Pp
+The
+.Fn beginRendering
+and
+.Fn endRendering
+operations are invoked by
+.Xr AG_BeginRendering 3
+and
+.Xr AG_EndRendering 3
+to prepare for rendering of GUI elements.
+.Pp
+The
+.Fn renderWindow
+operation renders an Agar window.
+Usually, it will simply invoke
+.Xr AG_WidgetDraw 3
+on
+.Fa win .
+Framebuffer drivers may also want to update video regions from here.
+.Pp
+The
+.Fn fillRect
+operation is expected to fill a rectangle
+.Fa r
+with color
+.Fa c .
+.Pp
+The
+.Fn updateRegion
+operation, usually specific to framebuffer drivers, is expected to update
+a region of video memory represented by
+.Fa r .
+.Pp
+.Fn uploadTexture ,
+.Fn updateTexture
+and
+.Fn deleteTexture
+are specific to drivers with texture management facilities.
+.Fn uploadTexture
+creates a texture from an
+.Xr AG_Surface 3 ,
+returning the computed texture coordinates.
+.Fn updateTexture
+is expected to update an existing texture from a recently modified surface.
+.Fn deleteTexture
+destroy the specified texture.
+.Pp
+The
+.Fn setRefreshRate
+operation is invoked by
+.Xr AG_SetRefreshRate 3 ,
+to configure a fixed refresh rate, as a driver-specific hint that can
+be ignored.
+.Pp
+.Fn pushClipRect
+should create a clipping rectangle over
+.Fa r .
+If a clipping rectangle is already in effect, it should be saved on a stack.
+.Fn popClipRect
+pops the last clipping rectangle off the stack.
+.Pp
+.Fn pushBlendingMode
+should configure an alpha blending mode (see
+.Xr AG_BlendFn 3 ) .
+If a blending mode is already set, it should be saved on a stack.
+.Fn popBlendingMode
+pops the last blending mode off the stack.
+.Pp
+.\"
+.\" TODO
+.\"
+.Sh EVENT PROCESSING
+.nr nS 1
+.Ft int
+.Fn AG_PendingEvents "AG_Driver *drv"
+.Pp
+.Ft int
+.Fn AG_GetNextEvent "AG_Driver *drv" "AG_DriverEvent *dev"
+.Pp
+.Ft int
+.Fn AG_ProcessEvent "AG_Driver *drv" "AG_DriverEvent *dev"
+.Pp
+.nr nS 0
+Low-level driver events are represented by the
+.Ft AG_DriverEvent
+structure, which provides the public members
+.Va type
+and
+.Va win .
+The
+.Va win
+member is a pointer to the corresponding
+.Xr AG_Window 3
+(for single-window drivers,
+.Va win
+is always NULL).
+The
+.Va type
+field is an enum that can take on the values:
+.Pp
+.Bl -tag -compact -width "AG_DRIVER_MOUSE_BUTTON_DOWN "
+.It AG_DRIVER_MOUSE_MOTION
+Mouse cursor has moved to coordinates
+.Va data.motion.{x,y} .
+.It AG_DRIVER_MOUSE_BUTTON_DOWN
+.It AG_DRIVER_MOUSE_BUTTON_UP
+Mouse button has been pressed or released at coordinates
+.Va data.button.{x,y} .
+The button index is passed as
+.Va data.button.which .
+.It AG_DRIVER_MOUSE_ENTER
+.It AG_DRIVER_MOUSE_LEAVE
+The mouse cursor has entered or left the window area.
+These events are specific to multiple-window drivers.
+.It AG_DRIVER_FOCUS_IN
+.It AG_DRIVER_FOCUS_OUT
+Application focus has been gained or lost.
+These events are specific to multiple-window drivers.
+.It AG_DRIVER_KEY_DOWN
+.It AG_DRIVER_KEY_UP
+A key has been pressed or released.
+The keysym (see
+.Xr AG_KeySym 3 )
+is passed as
+.Va data.key.ks .
+A 32-bit Unicode (UCS-4) representation of the corresponding character, if
+any, is passed as
+.Va data.key.ucs .
+.It AG_DRIVER_EXPOSE
+The underlying graphics system is requesting a refresh of the video display.
+.It AG_DRIVER_VIDEORESIZE
+The application window has been resized to
+.Va data.videoresize.{w,h} .
+Some drivers may also raise this event when the window is moved.
+.It AG_DRIVER_CLOSE
+The user has requested that a window be closed.
+For multiple-window drivers, the default behavior is to post a
+.Sq window-close
+event to the corresponding Agar window.
+For single-window drivers, the application is usually terminated as a result.
+.El
+.Pp
+The
+.Fn AG_PendingEvents
+function returns 1 if there are events waiting to be processed, or 0 if the
+event queue is empty.
+.Pp
+.Fn AG_GetNextEvent
+retrieves and removes the next event on the queue, initializing the structure
+pointed by
+.Fa dev
+with its contents.
+.Fn AG_GetNextEvent
+returns 1 if the event has been successfully retrieved into
+.Fa dev .
+If the event has been removed from the queue, but no further processing
+is required,
+.Fn AG_GetNextEvent
+returns 0 .
+If an unexpected error occured,
+.Fn AG_GetNextEvent
+returns -1 .
+.Pp
+.Fn AG_ProcessEvent
+processes the event pointed by
+.Fa dev
+in a default, generic manner.
+.Fn AG_ProcessEvent
+returns 1 if the event was successfully processed or 0 if the event has been
+ignored entirely.
+.Fn AG_ProcessEvent
+returns -1 if either a fatal error has occured.
+If the application should be terminated as a result of the last event,
+.Fn AG_ProcessEvent
+also returns -1, with the global variable
+.Va agTerminating
+variable set to 1.
+.Pp
+The
+.Fa drv
+argument to
+.Fn AG_PendingEvents ,
+.Fn AG_GetNextEvent
+and
+.Fn AG_ProcessEvent
+specifies a driver instance.
+This is useful for applications using multiple drivers concurrently.
+In most cases, this argument should be passed as NULL, so the default
+driver instance will be used.
+.Sh EXAMPLES
+The following code fragment retrieves pending events, examines them, and
+forwards them to Agar for generic processing:
+.Bd -literal
+AG_DriverEvent ev;
+
+while (AG_PendingEvents(NULL) > 0) {
+	if (AG_GetNextEvent(NULL, &ev)) {
+		switch (ev.type) {
+		case AG_DRIVER_MOUSE_BUTTON_DOWN:
+			printf("Click at %d,%d\\n",
+			    dev.data.button.x,
+			    dev.data.button.y);
+			break;
+		case AG_DRIVER_KEY_DOWN:
+			printf("Key pressed: %d\\n", (int)dev.data.key.ks);
+			break;
+		default:
+			break;
+		}
+		if (AG_ProcessEvent(NULL, &ev) == -1)
+			break;
+	}
+}
+.Ed
+.Pp
+See
+.Pa demos/customeventloop
+in the Agar distribution for an example of an application using a custom
+event loop.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.4.0.
