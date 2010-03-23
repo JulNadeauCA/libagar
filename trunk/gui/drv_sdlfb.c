@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,6 @@ typedef struct ag_sdlfb_driver {
 	SDL_Surface *s;			/* View surface */
 	SDL_Rect    *dirty;		/* Video regions queued for update */
 	Uint        nDirty, maxDirty;
-	Uint         rNom;		/* Nominal refresh rate (ms) */
-	int          rCur;		/* Effective refresh rate (ms) */
 	AG_ClipRect *clipRects;		/* Clipping rectangle stack */
 	Uint        nClipRects;
 } AG_DriverSDLFB;
@@ -63,15 +61,17 @@ static void
 Init(void *obj)
 {
 	AG_DriverSDLFB *sfb = obj;
+	AG_DriverSw *dsw = obj;
 
 	sfb->s = NULL;
 	sfb->nDirty = 0;
 	sfb->maxDirty = 4;
 	sfb->dirty = Malloc(sfb->maxDirty*sizeof(SDL_Rect));
-	sfb->rNom = 16;
-	sfb->rCur = 0;
 	sfb->clipRects = NULL;
 	sfb->nClipRects = 0;
+	
+	dsw->rNom = 16;
+	dsw->rCur = 0;
 }
 
 static void
@@ -167,379 +167,6 @@ Close(void *obj)
 	nDrivers = 0;
 }
 
-static int
-GetDisplaySize(Uint *w, Uint *h)
-{
-	const SDL_VideoInfo *vi;
-
-	vi = SDL_GetVideoInfo();
-#if SDL_VERSION_ATLEAST(1,2,10)
-	*w = (Uint)vi->current_w;
-	*h = (Uint)vi->current_h;
-#else
-	*w = 320;		/* Arbitrary */
-	*h = 240;
-#endif
-	return (0);
-}
-
-static void
-BeginEventProcessing(void *obj)
-{
-	/* Nothing to do */
-}
-
-/* Test if the given coordinates overlap a window resize control. */
-static __inline__ int
-MouseOverCtrl(AG_Window *win, int x, int y)
-{
-	if ((y - WIDGET(win)->y) > (HEIGHT(win) - win->wBorderBot)) {
-		int xRel = x - WIDGET(win)->x;
-	    	if (xRel < win->wResizeCtrl) {
-			return (AG_WINOP_LRESIZE);
-		} else if (xRel > (WIDTH(win) - win->wResizeCtrl)) {
-			return (AG_WINOP_RRESIZE);
-		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
-			return (AG_WINOP_HRESIZE);
-		}
-	}
-	return (AG_WINOP_NONE);
-}
-
-/*
- * If there is a modal window, request its shutdown if a click is
- * detected outside of its area.
- */
-static int
-ModalClose(AG_Window *win, int x, int y)
-{
-	if (!AG_WidgetArea(win, x, y)) {
-		AG_PostEvent(NULL, win, "window-modal-close", NULL);
-		return (1);
-	}
-	return (0);
-}
-
-/* Process an input device event. */
-static int
-InputEvent(AG_DriverSDLFB *sfb, SDL_Event *ev)
-{
-	AG_Driver *drv = AGDRIVER(sfb);
-	AG_DriverSw *dsw = AGDRIVER_SW(sfb);
-	AG_Window *win;
-	AG_CursorArea *ca;
-
-	if (dsw->Lmodal->n > 0) {
-		win = dsw->Lmodal->v[dsw->Lmodal->n-1].data.p;
-		switch (ev->type) {
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			if (ModalClose(win, ev->button.x, ev->button.y)) {
-				return (1);
-			}
-			break;
-		default:
-			break;
-		}
-		goto scan;		/* Skip WM events */
-	}
-
-	/* Process WM events */
-	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:			/* Focus on window */
-		AG_WindowFocusAtPos(dsw, ev->button.x, ev->button.y);
-		break;
-	case SDL_MOUSEBUTTONUP:				/* Terminate WM op */
-		dsw->winop = AG_WINOP_NONE;
-		break;
-	}
-
-scan:
-	/*
-	 * Iterate over the visible windows and deliver the appropriate Agar
-	 * events.
-	 */
-	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
-		AG_ObjectLock(win);
-
-		/* XXX TODO move invisible windows to different tailq! */
-		if (!win->visible || (dsw->Lmodal->n > 0 &&
-		    win != dsw->Lmodal->v[dsw->Lmodal->n-1].data.p)) {
-			AG_ObjectUnlock(win);
-			continue;
-		}
-		switch (ev->type) {
-		case SDL_MOUSEMOTION:
-			/*
-			 * Pass event to the internal WM if a window manager
-			 * operation is in progress. 
-			 */
-			if (dsw->winop != AG_WINOP_NONE) {
-				if (dsw->winSelected != win) {
-					AG_ObjectUnlock(win);
-					continue;
-				}
-				AG_WM_MouseMotion(dsw, win, ev->motion.xrel,
-				    ev->motion.yrel);
-			}
-
-			/* Post mouse-motion events to interested widgets. */
-			AG_ProcessMouseMotion(win,
-			    ev->motion.x, ev->motion.y,
-			    ev->motion.xrel, ev->motion.yrel,
-			    ev->motion.state);
-			
-			/*
-			 * Change the cursor if the mouse is in a cursor-change
-			 * area and this window holds focus.
-			 */
-			if (AG_WindowIsFocused(win)) {
-				int xWin = ev->motion.x - WIDGET(win)->x;
-				int yWin = ev->motion.y - WIDGET(win)->y;
-				TAILQ_FOREACH(ca, &win->cursorAreas,
-				    cursorAreas) {
-					if (AG_RectInside(&ca->r, xWin, yWin))
-						break;
-				}
-				if (ca == NULL) {
-					if (drv->activeCursor != &drv->cursors[0])
-						AGDRIVER_CLASS(drv)->unsetCursor(drv);
-				} else if (ca->c != drv->activeCursor) {
-					AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
-				}
-			}
-			break;
-		case SDL_MOUSEBUTTONUP:
-			/* Terminate active window operations. */
-			/* XXX redundant? */
-			if (dsw->winop != AG_WINOP_NONE) {
-				dsw->winop = AG_WINOP_NONE;
-				dsw->winSelected = NULL;
-			}
-			AG_ProcessMouseButtonUp(win,
-			    ev->button.x, ev->button.y,
-			    (AG_MouseButton)ev->button.button);
-			if (agWindowToFocus != NULL ||
-			    !TAILQ_EMPTY(&agWindowDetachQ)) {
-				AG_ObjectUnlock(win);
-				return (1);
-			}
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			if (!AG_WidgetArea(win, ev->button.x, ev->button.y)) {
-				AG_ObjectUnlock(win);
-				continue;
-			}
-			if (win->wBorderBot > 0 &&
-			    !(win->flags & AG_WINDOW_NORESIZE)) {
-				dsw->winop = MouseOverCtrl(win,
-				    ev->button.x, ev->button.y);
-				if (dsw->winop != AG_WINOP_NONE) {
-					dsw->winSelected = win;
-					AG_ObjectUnlock(win);
-					return (1);
-				}
-			}
-			AG_ProcessMouseButtonDown(win,
-			    ev->button.x, ev->button.y,
-			    (AG_MouseButton)ev->button.button);
-			if (agWindowToFocus != NULL ||
-			    !TAILQ_EMPTY(&agWindowDetachQ)) {
-				AG_ObjectUnlock(win);
-				return (1);
-			}
-			break;
-		case SDL_KEYUP:
-			if (dsw->winLastKeydown != NULL &&
-			    dsw->winLastKeydown != win) {
-				/*
-				 * Key was initially pressed while another
-				 * window was holding focus, ignore.
-				 */
-				dsw->winLastKeydown = NULL;
-				break;
-			}
-			AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
-			    (AG_KeySym)ev->key.keysym.sym,
-			    (Uint32)ev->key.keysym.unicode);
-			AG_ProcessKey(drv->kbd, win, AG_KEY_RELEASED,
-			    (AG_KeySym)ev->key.keysym.sym,
-			    (Uint32)ev->key.keysym.unicode);
-			break;
-		case SDL_KEYDOWN:
-			AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
-			    (AG_KeySym)ev->key.keysym.sym,
-			    (Uint32)ev->key.keysym.unicode);
-			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
-			    (AG_KeySym)ev->key.keysym.sym,
-			    (Uint32)ev->key.keysym.unicode);
-			break;
-		}
-		AG_ObjectUnlock(win);
-	}
-	return (0);
-}
-
-static int
-PendingEvents(void *drvCaller)
-{
-	return (SDL_PollEvent(NULL) != 0);
-}
-
-static int
-ProcessEvents(void *obj)
-{
-	AG_Driver *drv = obj;
-	AG_DriverSw *dsw = obj;
-	AG_DriverSDLFB *sfb = obj;
-	SDL_Event ev;
-	int nProcessed = 0;
-
-	while (SDL_PollEvent(&ev) != 0) {
-		AG_LockVFS(sfb);
-		switch (ev.type) {
-		case SDL_MOUSEMOTION:
-			AG_MouseMotionUpdate(drv->mouse,
-			    ev.motion.x, ev.motion.y);
-			nProcessed += InputEvent(sfb, &ev);
-			break;
-		case SDL_MOUSEBUTTONUP:
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED,
-			    ev.button.button);
-			nProcessed += InputEvent(sfb, &ev);
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
-			    ev.button.button);
-			if (InputEvent(sfb, &ev) == 0) {
-				if (dsw->flags & AG_DRIVER_SW_BGPOPUP &&
-				    (ev.button.button == AG_MOUSE_MIDDLE ||
-				     ev.button.button == AG_MOUSE_RIGHT)) {
-					AG_WM_BackgroundPopupMenu(dsw);
-					nProcessed++;
-					break;
-				}
-			} else {
-				nProcessed++;
-			}
-			break;
-		case SDL_KEYDOWN:
-			AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED,
-			    (AG_KeySym)ev.key.keysym.sym,
-			    (Uint32)ev.key.keysym.unicode);
-			if (AG_ExecGlobalKeys(
-			    (AG_KeySym)ev.key.keysym.sym,
-			    (AG_KeyMod)ev.key.keysym.mod) == 0) {
-				nProcessed += InputEvent(sfb, &ev);
-			} else {
-				nProcessed++;
-			}
-			break;
-		case SDL_KEYUP:
-			AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED,
-			    (AG_KeySym)ev.key.keysym.sym,
-			    (Uint32)ev.key.keysym.unicode);
-			nProcessed += InputEvent(sfb, &ev);
-			break;
-		case SDL_VIDEORESIZE:
-			AG_ResizeDisplay(ev.resize.w, ev.resize.h);
-			nProcessed++;
-			break;
-		case SDL_VIDEOEXPOSE:
-			nProcessed++;
-			break;
-		case SDL_QUIT:
-			/* FALLTHROUGH */
-		case SDL_USEREVENT:
-			goto quit;
-		}
-		if (!TAILQ_EMPTY(&agWindowDetachQ)) {
-			AG_FreeDetachedWindows();
-		}
-		if (agWindowToFocus != NULL) {
-			AG_WM_CommitWindowFocus(agWindowToFocus);
-			agWindowToFocus = NULL;
-		}
-		AG_UnlockVFS(sfb);
-	}
-	return (nProcessed);
-quit:
-	AG_UnlockVFS(sfb);
-	agTerminating = 1;
-	return (-1);
-}
-
-static void
-GenericEventLoop(void *obj)
-{
-	AG_DriverSDLFB *sfb = obj;
-	AG_Window *win;
-	Uint32 Tr1, Tr2 = 0;
-
-#ifdef AG_DEBUG
-	AG_PerfMonInit();
-#endif
-	Tr1 = AG_GetTicks();
-	for (;;) {
-		Tr2 = AG_GetTicks();
-		if (Tr2-Tr1 >= sfb->rNom) {
-			AG_LockVFS(sfb);
-			AG_BeginRendering(AGDRIVER(sfb));
-			AG_FOREACH_WINDOW(win, sfb) {
-				AG_ObjectLock(win);
-				AG_WindowDraw(win);
-				AG_ObjectUnlock(win);
-			}
-			AG_EndRendering(AGDRIVER(sfb));
-			AG_UnlockVFS(sfb);
-
-			/* Recalibrate the effective refresh rate. */
-			Tr1 = AG_GetTicks();
-			sfb->rCur = sfb->rNom - (Tr1-Tr2);
-#ifdef AG_DEBUG
-			if (agPerfWindow->visible)
-				AG_PerfMonUpdate(sfb->rCur);
-#endif
-			if (sfb->rCur < 1) {
-				sfb->rCur = 1;
-			}
-		} else if (SDL_PollEvent(NULL) != 0) {
-			if (ProcessEvents(sfb) != 0) {
-				if (agTerminating)
-					return;
-#ifdef AG_DEBUG
-				agEventAvg++;
-#endif
-			} 
-		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
-			AG_ProcessTimeouts(Tr2);
-		} else if (sfb->rCur > agIdleThresh) {
-			AG_Delay(sfb->rCur - agIdleThresh);
-#ifdef AG_DEBUG
-			agIdleAvg = AG_GetTicks() - Tr2;
-		} else {
-			agIdleAvg = 0;
-		}
-#else
-		}
-#endif
-	}
-}
-
-static void
-EndEventProcessing(void *obj)
-{
-	/* Nothing to do */
-}
-
-static void
-Terminate(void)
-{
-	SDL_Event nev;
-	nev.type = SDL_QUIT;
-	SDL_PushEvent(&nev);
-}
-
 static void
 BeginRendering(void *obj)
 {
@@ -614,20 +241,6 @@ UpdateRegion(void *obj, AG_Rect rp)
 	sr->y = r.y1;
 	sr->w = r.w;
 	sr->h = r.h;
-}
-
-static int
-SetRefreshRate(void *obj, int fps)
-{
-	AG_DriverSDLFB *sfb = obj;
-
-	if (fps < 1) {
-		AG_SetError("Invalid refresh rate");
-		return (-1);
-	}
-	sfb->rNom = 1000/fps;
-	sfb->rCur = 0;
-	return (0);
 }
 
 /*
@@ -1813,13 +1426,14 @@ AG_DriverSwClass agDriverSDLFB = {
 		AG_DRIVER_SDL,
 		Open,
 		Close,
-		GetDisplaySize,
-		BeginEventProcessing,
-		PendingEvents,
-		ProcessEvents,
-		GenericEventLoop,
-		EndEventProcessing,
-		Terminate,
+		AG_SDL_GetDisplaySize,
+		AG_SDL_BeginEventProcessing,
+		AG_SDL_PendingEvents,
+		AG_SDL_GetNextEvent,
+		AG_SDL_ProcessEvent,
+		AG_SDL_GenericEventLoop,
+		AG_SDL_EndEventProcessing,
+		AG_SDL_Terminate,
 		BeginRendering,
 		RenderWindow,
 		EndRendering,
@@ -1828,7 +1442,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		NULL,			/* uploadTexture */
 		NULL,			/* updateTexture */
 		NULL,			/* deleteTexture */
-		SetRefreshRate,
+		AG_SDL_SetRefreshRate,
 		PushClipRect,
 		PopClipRect,
 		PushBlendingMode,

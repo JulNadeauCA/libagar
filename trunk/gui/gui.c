@@ -514,9 +514,3 @@ AG_DestroyVideo(void)
 	AG_DestroyGUIGlobals();
 }
 
-/* Stock event loop routine. */
-void
-AG_EventLoop_FixedFPS(void)
-{
-	agDriverOps->genericEventLoop(agDriverSw);
-}

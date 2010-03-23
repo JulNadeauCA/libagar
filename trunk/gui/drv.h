@@ -21,6 +21,7 @@ struct ag_window;
 struct ag_glyph;
 struct ag_glyph_cache;
 struct ag_cursor;
+struct ag_driver_event;
 
 /* Generic graphics driver class */
 typedef struct ag_driver_class {
@@ -40,7 +41,8 @@ typedef struct ag_driver_class {
 	/* Event processing */
 	void (*beginEventProcessing)(void *drv);
 	int  (*pendingEvents)(void *drv);
-	int  (*processEvents)(void *drv);
+	int  (*getNextEvent)(void *drv, struct ag_driver_event *dev);
+	int  (*processEvent)(void *drv, struct ag_driver_event *dev);
 	void (*genericEventLoop)(void *drv);
 	void (*endEventProcessing)(void *drv);
 	void (*terminate)(void);
@@ -109,6 +111,7 @@ typedef struct ag_driver {
 	struct ag_object _inherit;
 	Uint id;			/* Numerical instance ID */
 	Uint flags;
+#define AG_DRIVER_FIXED_FPS	0x01	/* Invoked AG_EventLoop_FixedFPS() */
 
 	AG_Surface *sRef;		/* "Reference" surface */
 	AG_PixelFormat *videoFmt;	/* Video pixel format (for
@@ -121,6 +124,46 @@ typedef struct ag_driver {
 	struct ag_glyph_cache *glyphCache; /* Cache of rendered glyphs */
 	Uint8 glStipple[128];		/* For GL drivers */
 } AG_Driver;
+
+/* Generic driver event (for custom event loops). */
+enum ag_driver_event_type {
+	AG_DRIVER_UNKNOWN,		/* Unknown event */
+	AG_DRIVER_MOUSE_MOTION,		/* Cursor moved */
+	AG_DRIVER_MOUSE_BUTTON_DOWN,	/* Mouse button pressed */
+	AG_DRIVER_MOUSE_BUTTON_UP,	/* Mouse button released */
+	AG_DRIVER_MOUSE_ENTER,		/* Mouse entering window (MW) */
+	AG_DRIVER_MOUSE_LEAVE,		/* Mouse leaving window (MW) */
+	AG_DRIVER_FOCUS_IN,		/* Focus on window (MW) */
+	AG_DRIVER_FOCUS_OUT,		/* Focus out of window (MW) */
+	AG_DRIVER_KEY_DOWN,		/* Key pressed */
+	AG_DRIVER_KEY_UP,		/* Key released */
+	AG_DRIVER_EXPOSE,		/* Video update needed */
+	AG_DRIVER_VIDEORESIZE,		/* Video resize request */
+	AG_DRIVER_CLOSE			/* Window close request */
+};
+typedef struct ag_driver_event {
+	enum ag_driver_event_type type;	/* Type of event */
+	struct ag_window *win;		/* Associated window (AG_WM_MULTIPLE) */
+	union {
+		struct {
+			int x, y;
+		} motion;
+		struct {
+			AG_MouseButton which;
+			int x, y;
+		} button;
+		struct {
+			AG_KeySym ks;
+			Uint32 ucs;
+		} key;
+		struct {
+			int x, y, w, h;
+		} videoresize;
+	} data;
+	AG_TAILQ_ENTRY(ag_driver_event) events;
+} AG_DriverEvent;
+
+typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
 
 #define AGDRIVER(obj)		((AG_Driver *)(obj))
 #define AGDRIVER_CLASS(obj)	((struct ag_driver_class *)(AGOBJECT(obj)->cls))
@@ -196,7 +239,7 @@ AG_UpdateTexture(AG_Surface *su, int texid, AG_TexCoord *tc)
 
 #ifdef AG_LEGACY
 extern AG_Driver *agView;  	/* Pre-1.4 */
-#endif
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/drv_mw.h>

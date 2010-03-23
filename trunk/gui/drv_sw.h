@@ -66,6 +66,8 @@ typedef struct ag_driver_sw {
 	int windowIconHeight;
 	int windowCurX[AG_WINDOW_ALIGNMENT_LAST];	/* For cascading */
 	int windowCurY[AG_WINDOW_ALIGNMENT_LAST];
+	Uint rNom;			/* Nominal refresh rate (ms) */
+	int rCur;			/* Effective refresh rate (ms) */
 } AG_DriverSw;
 
 #define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))
@@ -106,6 +108,70 @@ AG_SetRefreshRate(int fps)
 		return (-1);
 	}
 	return agDriverOps->setRefreshRate(agDriverSw, fps);
+}
+
+/* Invoke the generic event loop on the default driver (default mode). */
+static __inline__ void
+AG_EventLoop(void)
+{
+	if (agDriverSw != NULL) {
+		agDriverSw->flags &= ~(AG_DRIVER_FIXED_FPS);
+	}
+	agDriverOps->genericEventLoop(agDriverSw);
+}
+
+/* Invoke the generic event loop on the default driver (fixed FPS mode). */
+static __inline__ void
+AG_EventLoop_FixedFPS(void)
+{
+	if (agDriverSw != NULL) {
+		agDriverSw->flags |= AG_DRIVER_FIXED_FPS;
+	}
+	agDriverOps->genericEventLoop(agDriverSw);
+}
+
+/* Evaluate whether there are pending events to be processed. */
+static __inline__ int
+AG_PendingEvents(AG_Driver *drv)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->pendingEvents(drv);
+	} else {
+		return agDriverOps->pendingEvents(agDriverSw);
+	}
+}
+
+/* Retrieve the next pending event, translated to generic AG_DriverEvent form. */
+static __inline__ int
+AG_GetNextEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->getNextEvent(drv, dev);
+	} else {
+		return agDriverOps->getNextEvent(agDriverSw, dev);
+	}
+}
+
+/* Process the next pending event in generic manner. */
+static __inline__ int
+AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
+	} else {
+		return agDriverOps->processEvent(agDriverSw, dev);
+	}
+}
+
+/* Enter the event loop for a specific driver instance. */
+static __inline__ void
+AG_EventLoop_Drv(AG_Driver *drv)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->genericEventLoop(drv);
+	} else {
+		return agDriverOps->genericEventLoop(agDriverSw);
+	}
 }
 
 #ifdef AG_LEGACY
