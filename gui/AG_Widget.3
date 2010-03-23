@@ -617,10 +617,10 @@ VFS remains locked.
 .Fn AG_WidgetDraw "AG_Widget *widget"
 .Pp
 .Ft "void"
-.Fn AG_BeginRendering "void"
+.Fn AG_BeginRendering "AG_Driver *drv"
 .Pp
 .Ft "void"
-.Fn AG_EndRendering "void"
+.Fn AG_EndRendering "AG_Driver *drv"
 .Pp
 .Ft "void"
 .Fn AG_WidgetHide "AG_Widget *widget"
@@ -642,6 +642,7 @@ It is typically invoked from an event loop routine (such as
 .Xr AG_EventLoop 3 ) ,
 to recursively draw the hierarchy of visible GUI elements.
 .Pp
+In the event loop,
 .Fn AG_WidgetDraw
 invocations must be enclosed between calls to
 .Fn AG_BeginRendering
