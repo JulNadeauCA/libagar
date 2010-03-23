@@ -202,7 +202,7 @@ AG_GetDriverByID(Uint id)
 
 /* Enter GUI rendering context. */
 static __inline__ void
-AG_BeginRendering(AG_Driver *drv)
+AG_BeginRendering(void *drv)
 {
 #ifdef AG_DEBUG
 	agRenderingContext = 1;
@@ -212,7 +212,7 @@ AG_BeginRendering(AG_Driver *drv)
 
 /* Leave GUI rendering context. */
 static __inline__ void
-AG_EndRendering(AG_Driver *drv)
+AG_EndRendering(void *drv)
 {
 	AGDRIVER_CLASS(drv)->endRendering(drv);
 #ifdef AG_DEBUG
