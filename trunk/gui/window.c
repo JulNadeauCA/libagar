@@ -888,6 +888,12 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 	int new;
 	int nw, nh;
 	int wMin, hMin;
+	Uint wDisp, hDisp;
+
+	if (AG_GetDisplaySize(drv, &wDisp, &hDisp) == -1) {
+		wDisp = 0;
+		hDisp = 0;
+	}
 
 	AG_ObjectLock(win);
 	rPrev = AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
@@ -912,6 +918,12 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 	}
 	if (nw < wMin) { nw = wMin; }
 	if (nh < hMin) { nh = hMin; }
+	if (WIDGET(win)->x == -1) {
+		WIDGET(win)->x = wDisp/2 - nw/2;
+	}
+	if (WIDGET(win)->y == -1) {
+		WIDGET(win)->y = hDisp/2 - nh/2;
+	}
 	a.x = (r.x == -1) ? WIDGET(win)->x : r.x;
 	a.y = (r.y == -1) ? WIDGET(win)->y : r.y;
 	a.w = nw;
