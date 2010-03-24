@@ -17,6 +17,7 @@ SUBDIR=	fixedres \
 	scrollbar \
 	keyevents \
 	customwidget \
+	customeventloop \
 	windows \
 	threads \
 	minimal \
