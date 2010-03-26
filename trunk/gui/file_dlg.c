@@ -46,10 +46,7 @@
 #include "icons.h"
 
 #ifdef _WIN32
-# include <core/queue_close.h>			/* Conflicts */
-# include <windows.h>
-# include <core/queue_close.h>
-# include <core/queue.h>
+# include <core/win32.h>
 #else
 # include <sys/types.h>
 # include <sys/stat.h>

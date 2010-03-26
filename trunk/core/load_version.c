@@ -61,13 +61,15 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 		rver->minor = minor;
 	}
 	if (major != ver->major) {
-		AG_SetError(_("%s: Major differs: v%d.%d != %d.%d"),
-		    name, major, minor, ver->major, ver->minor);
+		AG_SetError(_("%s: Major differs: v%u.%u != %u.%u"),
+		    name, (Uint)major, (Uint)minor, 
+		    (Uint)ver->major, (Uint)ver->minor);
 		return (-1);
 	}
 	if (minor != ver->minor) {
-		Verbose(_("Warning: %s: Minor differs: v%d.%d != %d.%d\n"),
-		    name, major, minor, ver->major, ver->minor);
+		Verbose(_("Warning: %s: Minor differs: v%u.%u != %u.%u\n"),
+		    name, (Uint)major, (Uint)minor, 
+		    (Uint)ver->major, (Uint)ver->minor);
 	}
 	return (0);
 }

@@ -22,7 +22,9 @@ static const struct ag_key_mapping agMiscKeys[] = {
 	{ VK_NUMPAD7,		0xff,	AG_KEY_KP7 },
 	{ VK_NUMPAD8,		0xff,	AG_KEY_KP8 },
 	{ VK_NUMPAD9,		0xff,	AG_KEY_KP9 },
+#ifdef VK_OEM_PERIOD
 	{ VK_OEM_PERIOD,	0xff,	AG_KEY_KP_PERIOD },
+#endif
 	{ VK_DIVIDE,		0xff,	AG_KEY_KP_DIVIDE },
 	{ VK_MULTIPLY,		0xff,	AG_KEY_KP_MULTIPLY },
 	{ VK_SUBTRACT,		0xff,	AG_KEY_KP_MINUS },
