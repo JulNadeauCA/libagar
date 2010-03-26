@@ -1,7 +1,8 @@
 /*	Public domain	*/
 
 #include <config/have_gettimeofday.h>
-#ifdef HAVE_GETTIMEOFDAY
+#include <config/have_cygwin.h>
+#if defined(HAVE_GETTIMEOFDAY) && !defined(HAVE_CYGWIN)
 
 #include <sys/time.h>
 #include <core/core.h>
@@ -59,4 +60,4 @@ const AG_TimeOps agTimeOps_gettimeofday = {
 	Delay
 };
 
-#endif /* HAVE_GETTIMEOFDAY */
+#endif /* HAVE_GETTIMEOFDAY and !HAVE_CYGWIN */

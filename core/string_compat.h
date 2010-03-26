@@ -57,11 +57,6 @@
 #ifndef	_AGAR_CORE_STRING_COMPAT_H_
 #define	_AGAR_CORE_STRING_COMPAT_H_
 
-#include <agar/config/_mk_have_sys_types_h.h>
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
 #include <agar/core/begin.h>
 
 enum ag_unicode_conv {

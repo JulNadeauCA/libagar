@@ -5,13 +5,19 @@
  * defines AG_HAVE_64BIT and AG_HAVE_LONG_DOUBLE.
  */
 
-#if !defined(_WIN32)
-# include <agar/config/_mk_have_sys_types_h.h>
-# ifdef _MK_HAVE_SYS_TYPES_H
-#  undef _MK_HAVE_SYS_TYPES_H
-#  include <sys/types.h>
-# endif
-#endif
+#include <agar/config/have_cygwin.h>
+
+#if defined(HAVE_CYGWIN)
+# include <basetyps.h>
+#else
+# if !defined(_WIN32)
+#  include <agar/config/_mk_have_sys_types_h.h>
+#  ifdef _MK_HAVE_SYS_TYPES_H
+#   undef _MK_HAVE_SYS_TYPES_H
+#   include <sys/types.h>
+#  endif
+# endif /* !_WIN32 */
+#endif /* HAVE_CYGWIN */
 
 #ifndef _AGAR_HAVE_64BIT_H
 # include <agar/config/have_64bit.h>
