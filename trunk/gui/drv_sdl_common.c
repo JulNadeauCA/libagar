@@ -728,6 +728,9 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
 	int rv;
 	
+	if (dev->win == NULL) {
+		return (0);
+	}
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
 		rv = ProcessInputEvent(drv, dev);
