@@ -10,7 +10,6 @@
 #if defined(HAVE_CYGWIN)
 # include <basetyps.h>
 #else
-# include <types.h>
 # if !defined(_WIN32)
 #  include <agar/config/_mk_have_sys_types_h.h>
 #  ifdef _MK_HAVE_SYS_TYPES_H
