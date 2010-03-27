@@ -124,7 +124,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 		               vPos.y - pos.y);
 		if ((pEx = VG_NearestPoint(vv, vPos, t->vtIns->p2))) {
 			VG_Status(vv, _("End baseline at Point%u"),
-			    VGNODE(pEx)->handle);
+			    (Uint)VGNODE(pEx)->handle);
 		} else {
 			VG_Status(vv,
 			    _("End baseline at %.2f,%.2f "
@@ -135,7 +135,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	} else {
 		if ((pEx = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Start baseline at Point%u"),
-			    VGNODE(pEx)->handle);
+			    (Uint)VGNODE(pEx)->handle);
 		} else {
 			VG_Status(vv, _("Start baseline at %.2f,%.2f"), vPos.x,
 			    vPos.y);

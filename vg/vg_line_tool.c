@@ -117,7 +117,8 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 		rad = VG_Hypot(vPos.x - pos.x,
 		               vPos.y - pos.y);
 		if ((pEx = VG_NearestPoint(vv, vPos, t->vlCur->p2))) {
-			VG_Status(vv, _("Use Point%u"), VGNODE(pEx)->handle);
+			VG_Status(vv, _("Use Point%u"),
+			    (Uint)VGNODE(pEx)->handle);
 		} else {
 			VG_Status(vv,
 			    _("Create Point at %.2f,%.2f (%.2f|%.2f\xc2\xb0)"),
@@ -127,7 +128,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	} else {
 		if ((pEx = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Start Line at Point%u"),
-			    VGNODE(pEx)->handle);
+			    (Uint)VGNODE(pEx)->handle);
 		} else {
 			VG_Status(vv, _("Start Line at %.2f,%.2f"), vPos.x,
 			    vPos.y);

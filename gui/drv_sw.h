@@ -168,9 +168,9 @@ static __inline__ void
 AG_EventLoop_Drv(AG_Driver *drv)
 {
 	if (drv != NULL) {
-		return AGDRIVER_CLASS(drv)->genericEventLoop(drv);
+		AGDRIVER_CLASS(drv)->genericEventLoop(drv);
 	} else {
-		return agDriverOps->genericEventLoop(agDriverSw);
+		agDriverOps->genericEventLoop(agDriverSw);
 	}
 }
 

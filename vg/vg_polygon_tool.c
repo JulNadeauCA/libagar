@@ -115,7 +115,8 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	
 	if (t->vpCur != NULL) {
 		if ((pt = VG_NearestPoint(vv, vPos, t->vpCur->pts[t->vtxCur]))) {
-			VG_Status(vv, _("Use Point%u"), VGNODE(pt)->handle);
+			VG_Status(vv, _("Use Point%u"),
+			    (Uint)VGNODE(pt)->handle);
 		} else {
 			VG_Status(vv, _("Create vertex at %.2f,%.2f"),
 			    vPos.x, vPos.y);
@@ -124,7 +125,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	} else {
 		if ((pt = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Start Polygon at Point%u"),
-			    VGNODE(pt)->handle);
+			    (Uint)VGNODE(pt)->handle);
 		} else {
 			VG_Status(vv, _("Start Polygon at %.2f,%.2f"), vPos.x,
 			    vPos.y);

@@ -163,8 +163,8 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 		if ((vn = ProximityQuery(vv, vPos)) != NULL &&
 		    t->vnMouseOver != vn) {
 			t->vnMouseOver = vn;
-			VG_Status(vv, _("Select schematic entity: %s%d"),
-			    vn->ops->name, vn->handle);
+			VG_Status(vv, _("Select schematic entity: %s%u"),
+			    vn->ops->name, (Uint)vn->handle);
 		}
 		return (0);
 	}
@@ -187,8 +187,8 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 					continue;
 				}
 				vn->ops->moveNode(vn, v, vSnapRel);
-				VG_Status(vv, _("Moving entity: %s%d (grid)"),
-				    vn->ops->name, vn->handle);
+				VG_Status(vv, _("Moving entity: %s%u (grid)"),
+				    vn->ops->name, (Uint)vn->handle);
 			}
 			t->vLast = v;
 		}
@@ -199,8 +199,8 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 				continue;
 			}
 			vn->ops->moveNode(vn, v, vRel);
-			VG_Status(vv, _("Moving entity: %s%d (free)"),
-			    vn->ops->name, vn->handle);
+			VG_Status(vv, _("Moving entity: %s%u (free)"),
+			    vn->ops->name, (Uint)vn->handle);
 		}
 	}
 	return (0);
@@ -222,7 +222,7 @@ del:
 				if (VG_Delete(vn) == -1) {
 					vn->flags &= ~(VG_NODE_SELECTED);
 					VG_Status(vv, "%s%u: %s",
-					    vn->ops->name, vn->handle,
+					    vn->ops->name, (Uint)vn->handle,
 					    AG_GetError());
 					return (0);
 				} else {
