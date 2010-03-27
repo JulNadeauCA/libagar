@@ -495,7 +495,7 @@ ClampOffsets(RG_Tileview *tv)
 	   (lim = (WIDTH(tv) - RG_TILEVIEW_MIN_W))) {
 		tv->xoffs = lim;
 	} else if (tv->xoffs <
-	   (lim = (-tv->scaled->w + RG_TILEVIEW_MIN_W))) {
+	   (lim = (-((int)tv->scaled->w) + RG_TILEVIEW_MIN_W))) {
 		tv->xoffs = lim;
 	}
 
@@ -503,7 +503,7 @@ ClampOffsets(RG_Tileview *tv)
 	    (lim = (HEIGHT(tv) - RG_TILEVIEW_MIN_H))) {
 		tv->yoffs = lim;
 	} else if (tv->yoffs <
-	    (lim = (-tv->scaled->h + RG_TILEVIEW_MIN_H))) {
+	    (lim = (-((int)tv->scaled->h) + RG_TILEVIEW_MIN_H))) {
 		tv->yoffs = lim;
 	}
 }

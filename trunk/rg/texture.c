@@ -65,8 +65,8 @@ RG_TextureLoad(RG_Texture *tex, AG_DataSource *buf)
 	AG_CopyString(tex->tileset, buf, sizeof(tex->tileset));
 	AG_CopyString(tex->tile, buf, sizeof(tex->tile));
 	tex->flags = (int)AG_ReadUint32(buf);
-	tex->wrap_s = (enum texture_wrap_mode)AG_ReadUint8(buf);
-	tex->wrap_t = (enum texture_wrap_mode)AG_ReadUint8(buf);
+	tex->wrap_s = (Uint)AG_ReadUint8(buf);
+	tex->wrap_t = (Uint)AG_ReadUint8(buf);
 	tex->blend_func = (int)AG_ReadUint8(buf);
 	tex->alpha = AG_ReadUint8(buf);
 	return (0);

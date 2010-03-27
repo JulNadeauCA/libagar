@@ -72,7 +72,7 @@ typedef struct rg_tile {
 	float texcoords[4];
 	
 	int xOrig, yOrig;		/* Origin point */
-	enum rg_snap_mode snap_mode;	/* Snapping mode (edition) */
+	Uint snap_mode;			/* Snapping mode (edition) */
 	Uint *attrs;			/* Node attribute grid (edition) */
 	int *layers;			/* Node layer offset grid (edition) */
 	Uint nw, nh;			/* Node grid dimensions */

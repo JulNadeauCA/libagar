@@ -881,7 +881,7 @@ void        AG_SurfaceUnlock(AG_Surface *su) { /* No-op */ }
 Uint32      AG_MapRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b) { return AG_MapPixelRGB(pf, r,g,b); }
 Uint32      AG_MapRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a) { return AG_MapPixelRGBA(pf, r,g,b,a); }
 AG_Surface *AG_DupSurface(AG_Surface *su) { return AG_SurfaceDup((const AG_Surface *)su); }
-void        AG_GetRGB(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b) { return AG_GetPixelRGB(px, pf, r,g,b); }
-void        AG_GetRGBA(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a) { return AG_GetPixelRGBA(px, pf, r,g,b,a); }
+void        AG_GetRGB(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b) { AG_GetPixelRGB(px, pf, r,g,b); }
+void        AG_GetRGBA(Uint32 px, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a) { AG_GetPixelRGBA(px, pf, r,g,b,a); }
 int         AG_SamePixelFmt(const AG_Surface *s1, const AG_Surface *s2) { return (AG_PixelFormatCompare(s1->format, s2->format)) == 0; }
 #endif /* AG_LEGACY */
