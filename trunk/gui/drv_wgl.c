@@ -29,6 +29,7 @@
  */
 
 #include <config/have_wgl.h>
+#include <config/ag_threads.h>
 #ifdef HAVE_WGL
 
 #include <core/core.h>
@@ -50,8 +51,8 @@ static Uint rNom = 16;			/* Nominal refresh rate (ms) */
 static int  rCur = 0;			/* Effective refresh rate (ms) */
 static int  wndClassCount = 1;		/* Window class counter */
 static AG_DriverEventQ wglEventQ;	/* Event queue */
-#ifdef THREADS
-static AG_Mutex wndClassLock;		/* Lock on wndClassCount */
+#ifdef AG_THREADS
+static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
 
@@ -168,7 +169,7 @@ WGL_Open(void *obj, const char *spec)
 	if (nDrivers == 0) {
 		InitKeymaps();
 		TAILQ_INIT(&wglEventQ);
-		AG_MutexInitRecursive(&wndClassLock);
+		AG_MutexInitRecursive(&wglClassLock);
 		AG_MutexInitRecursive(&wglEventLock);
 	}
 	nDrivers++;
@@ -205,8 +206,8 @@ WGL_Close(void *obj)
 		}
 		TAILQ_INIT(&wglEventQ);
 
-		AG_MutexDestroy(&wndClassLock);
-		AG_MutexDestroy(&wndEventLock);
+		AG_MutexDestroy(&wglClassLock);
+		AG_MutexDestroy(&wglEventLock);
 	}
 
 	AG_ObjectDetach(drv->mouse);
@@ -257,10 +258,10 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	char wndClassName[64]; 
 
 	// Generate window class atom name
-	AG_MutexLock(&wndClassLock);
+	AG_MutexLock(&wglClassLock);
 	sprintf(wndClassName, "agar-wgl-windowclass-%d", wndClassCount);
 	wndClassCount++;
-	AG_MutexUnlock(&wndClassLock);
+	AG_MutexUnlock(&wglClassLock);
 
 	// Register Window Class	
 	memset(&wndClass, 0, sizeof(WNDCLASSEX));
