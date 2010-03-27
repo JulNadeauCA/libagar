@@ -10,6 +10,7 @@
 #if defined(HAVE_CYGWIN)
 # include <basetyps.h>
 #else
+# include <types.h>
 # if !defined(_WIN32)
 #  include <agar/config/_mk_have_sys_types_h.h>
 #  ifdef _MK_HAVE_SYS_TYPES_H
@@ -69,6 +70,9 @@
 # endif
 # ifndef Uint64
 # define Uint64 unsigned __int64
+# endif
+# ifndef off_t
+# define off_t long
 # endif
 #else /* !_WIN32 */
 # ifndef Sint8
