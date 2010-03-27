@@ -70,7 +70,7 @@
 # ifndef Uint64
 # define Uint64 unsigned __int64
 # endif
-# ifndef off_t
+# if !defined(_AGAR_INTERNAL) && !defined(off_t)
 # define off_t long
 # endif
 #else /* !_WIN32 */
