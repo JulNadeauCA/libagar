@@ -235,9 +235,9 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 	/* XXX TODO optimized cases */
 	/* XXX TODO per-surface alpha */
 	for (y = 0; y < dr.h; y++) {
-		pSrc = ss->pixels + (sr.y+y)*ss->pitch +
+		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch +
 		    sr.x*ss->format->BytesPerPixel;
-		pDst = ds->pixels + (dr.y+y)*ds->pitch +
+		pDst = (Uint8 *)ds->pixels + (dr.y+y)*ds->pitch +
 		    dr.x*ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
 			AG_PACKEDPIXEL_GET(ss->format->BytesPerPixel, px, pSrc);
