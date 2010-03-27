@@ -101,7 +101,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 	} else {
 		if ((pEx = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Use Point%u as center"),
-			    VGNODE(pEx)->handle);
+			    (Uint)VGNODE(pEx)->handle);
 		} else {
 			VG_Status(vv, _("Circle center at %.2f,%.2f"),
 			    vPos.x, vPos.y);

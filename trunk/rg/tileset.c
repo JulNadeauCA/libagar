@@ -223,13 +223,13 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	RG_Tileset *ts = obj;
 	RG_Pixmap *px;
-	Uint32 count, i;
+	Uint count, i;
 
 	AG_MutexLock(&ts->lock);
 	AG_CopyString(ts->tmpl, buf, sizeof(ts->tmpl));
 	ts->flags = AG_ReadUint32(buf);
 
-	count = AG_ReadUint32(buf);
+	count = (Uint)AG_ReadUint32(buf);
 	if (count != 0)
 		AG_FatalError("Vector sketches not supported");
 #if 0
@@ -494,7 +494,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
-	Debug(ts, "Saved %u tiles\n", count);
+	Debug(ts, "Saved %u tiles\n", (Uint)count);
 	
 	/* Save the animation information. */
 	count = 0;
@@ -507,7 +507,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
-	Debug(ts, "Saved %u animations\n", count);
+	Debug(ts, "Saved %u animations\n", (Uint)count);
 	
 	/* Save the textures. */
 	count = 0;
@@ -519,7 +519,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
-	Debug(ts, "Saved %u textures\n", count);
+	Debug(ts, "Saved %u textures\n", (Uint)count);
 
 	/* Save the static tile and animation mappings. */
 	AG_WriteUint32(buf, ts->ntiletbl);

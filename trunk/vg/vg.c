@@ -244,7 +244,7 @@ VG_Delete(void *pVn)
 #endif
 	VG_Lock(vg);
 	if (vn->nDeps > 0) {
-		AG_SetError("%s%u is in use", vn->ops->name, vn->handle);
+		AG_SetError("%s%u is in use", vn->ops->name, (Uint)vn->handle);
 		goto fail;
 	}
 	if (vn->ops->deleteNode != NULL) {
@@ -669,7 +669,7 @@ LoadNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds, const AG_Version *dsVer)
 	}
 	if (vn->ops->load != NULL &&
 	    vn->ops->load(vn, ds, dsVer) == -1) {
-		AG_SetError("%s%u: %s", vn->ops->name, vn->handle,
+		AG_SetError("%s%u: %s", vn->ops->name, (Uint)vn->handle,
 		    AG_GetError());
 		return (-1);
 	}

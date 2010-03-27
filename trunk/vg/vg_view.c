@@ -376,7 +376,6 @@ Init(void *obj)
 	AG_BindInt(vv, "mouse.panning", &vv->mouse.panning);
 	AG_BindPointer(vv, "curtool", (void *)&vv->curtool);
 	AG_BindPointer(vv, "deftool", (void *)&vv->deftool);
-	AG_BindStringMp(vv, "status", vv->status, sizeof(vv->status), &OBJECT(vv)->lock);
 	AG_BindUint(vv, "nEditAreas", &vv->nEditAreas);
 	AG_BindInt(vv, "pointSelRadius", &vv->pointSelRadius);
 #endif /* AG_DEBUG */
