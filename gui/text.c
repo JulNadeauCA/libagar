@@ -1296,7 +1296,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
-	return AG_TextMsgS(title, s);
+	AG_TextMsgS(title, s);
 }
 
 /* Display a message (C string). */

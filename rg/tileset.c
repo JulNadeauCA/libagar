@@ -840,7 +840,7 @@ static int ins_tile_w = RG_TILESZ;
 static int ins_tile_h = RG_TILESZ;
 static int ins_alpha = 0;
 static int ins_colorkey = 1;
-static enum rg_snap_mode ins_snap_mode = RG_SNAP_NONE;
+static Uint ins_snap_mode = RG_SNAP_NONE;
 
 static int
 InsertTileMapping(RG_Tileset *ts, RG_Tile *t, Uint32 *id)

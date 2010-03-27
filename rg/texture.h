@@ -21,8 +21,8 @@ typedef struct rg_texture {
 	char tile[RG_PIXMAP_NAME_MAX];		/* Source tile */
 	RG_Tile *t;				/* Set by RG_TextureFind() */
 	int flags;
-	enum texture_wrap_mode wrap_s;		/* Wrap mode for s coordinate */
-	enum texture_wrap_mode wrap_t;		/* Wrap mode for t coordinate */
+	Uint wrap_s;				/* Wrap mode for s coordinate */
+	Uint wrap_t;				/* Wrap mode for t coordinate */
 	int blend_func;				/* Blending function to use
 						   (ag_blend_func) */
 	Uint8 alpha;				/* Overall alpha value */

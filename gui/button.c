@@ -654,7 +654,7 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
-	return AG_ButtonTextS(bu, s);
+	AG_ButtonTextS(bu, s);
 }
 
 AG_WidgetClass agButtonClass = {
