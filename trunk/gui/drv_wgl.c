@@ -99,6 +99,8 @@ static void      WGL_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static int       WGL_RaiseWindow(AG_Window *);
 static int       WGL_SetInputFocus(AG_Window *);
 static void      WGL_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
+static int       WGL_GetNextEvent(void *, AG_DriverEvent *);
+static int       WGL_ProcessEvent(void *, AG_DriverEvent *);
 
 
 static void
@@ -233,12 +235,10 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
-
-	// WGL-specific variables
-	GLuint     pixelFormat;	
+	GLuint pixelFormat;	
 	WNDCLASSEX wndClass;
-	DWORD      wndStyle   = WS_OVERLAPPEDWINDOW;
-	DWORD      wndStyleEx = 0;
+	DWORD wndStyle = WS_OVERLAPPEDWINDOW;
+	DWORD wndStyleEx = 0;
 
 	PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {
 		sizeof(PIXELFORMATDESCRIPTOR),
@@ -279,7 +279,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	
 	// Adjust window with account for window borders
-	AdjustWindowRectEx (&wndRect, wndStyle, 0, wndStyleEx);
+	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
 
 	// Calc window position
 	left = wndRect.left;
@@ -293,7 +293,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	wgl->hwnd = CreateWindowEx(
 		wndStyleEx,
 		wndClassName,
-		"AGAR Window",
+		win->caption,
 		wndStyle,
 		CW_USEDEFAULT, //wndRect.left,
 		CW_USEDEFAULT, //wndRect.top,
@@ -436,10 +436,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	int x, y, ret;
 
 	if ((win = LookupWindowByID(hWnd)) == NULL) {
-		goto out;
+		goto fallback;
 	}
 	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) == NULL) {
-		goto out;
+		goto fallback;
 	}
 	dev->win = win;
 	drv = WIDGET(win)->drv;
@@ -484,6 +484,21 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, 
 		    dev->data.button.which);
 		break;
+#if (_WIN32_WINNT >= 0x400) || (_WIN32_WINDOWS > 0x400)
+	case WM_MOUSEWHEEL:
+		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+		dev->data.button.which =
+		    (short)HIWORD(wParam) > 0 ?
+		    AG_MOUSE_WHEELUP :
+		    AG_MOUSE_WHEELDOWN;
+		x = (int)LOWORD(lParam);
+		y = (int)HIWORD(lParam);
+		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
+		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
+		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, 
+		    dev->data.button.which);
+		break;
+#endif
 	case WM_KEYUP:
 	case WM_KEYDOWN:
 		if (uMsg == WM_KEYDOWN) {
@@ -523,33 +538,47 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		dev->type = AG_DRIVER_FOCUS_OUT;
 		break;
 	case WM_SIZE:
-		if (drv->flags & AG_DRIVER_MW_OPEN) {
+		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			dev->type = AG_DRIVER_VIDEORESIZE;
 			dev->data.videoresize.x = 0;
 			dev->data.videoresize.y = 0;
 			dev->data.videoresize.w = LOWORD(lParam);
 			dev->data.videoresize.h = HIWORD(lParam);
+		} else {
+			Free(dev);
+			goto fallback;
 		}
-		break;
+		goto ret0;
 #if 0
 	/*
-	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER and
-	 * WM_MOUSELEAVE events to AG_DRIVER_MOUSE_{ENTER,LEAVE}
+	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER
+	 * events to AG_DRIVER_MOUSE_ENTER.
 	 */
 	case WM_MOUSEHOVER:
-	case WM_MOUSELEAVE:
 		break;
 #endif
+	case WM_MOUSELEAVE:
+		dev->type = AG_DRIVER_MOUSE_LEAVE;
+		dev->win = win;
+		break;
+	default:
+		Free(dev);
+		goto fallback;
 	}
 	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
-out:
+	return (1);
+ret0:
+	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	return (0);
+fallback:
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 static __inline__ int
 WGL_PendingEvents(void *drvCaller)
 {
-	return (GetQueueStatus(QS_ALLEVENTS) != 0);
+	return (!TAILQ_EMPTY(&wglEventQ) ||
+	        GetQueueStatus(QS_ALLEVENTS) != 0);
 }
 
 static int
@@ -557,17 +586,22 @@ WGL_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	AG_DriverEvent *devFirst;
 	MSG msg;
-	
+
+	if (!TAILQ_EMPTY(&wglEventQ)) {
+		goto get_event;
+	}
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+		if (!TAILQ_EMPTY(&wglEventQ))
+			goto get_event;
 	}
-	if (TAILQ_EMPTY(&wglEventQ)) {
-		return (0);
-	}
+	return (0);
+get_event:
 	devFirst = TAILQ_FIRST(&wglEventQ);
 	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
+	Free(devFirst);
 	return (1);
 }
 
@@ -679,7 +713,7 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		break;
 #endif
 	default:
-		break;
+		return (0);
 	}
 	return WGL_PostEventCallback(drvCaller);
 }
@@ -711,16 +745,16 @@ WGL_GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-		} else if (WGL_PendingEvents(NULL) != 0) {
+		} else if (WGL_PendingEvents(NULL)) {
 			AG_DriverEvent dev;
-			do {
-				if (WGL_GetNextEvent(NULL, &dev) == 1 &&
-				    WGL_ProcessEvent(NULL, &dev) == -1)
-					return;
+
+			if (WGL_GetNextEvent(NULL, &dev) == 1 &&
+			    WGL_ProcessEvent(NULL, &dev) == -1) {
+				return;
+			}
 #ifdef AG_DEBUG
-				agEventAvg++;
+			agEventAvg++;
 #endif
-			} while (WGL_PendingEvents(NULL) > 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
 		} else {
