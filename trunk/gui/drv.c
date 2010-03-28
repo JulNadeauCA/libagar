@@ -62,14 +62,14 @@ void *agDriverList[] = {
 #if defined(HAVE_GLX)
 	&agDriverGLX,
 #endif
+#if defined(HAVE_WGL)
+	&agDriverWGL,
+#endif
 #if defined(HAVE_SDL)
 	&agDriverSDLFB,
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 	&agDriverSDLGL,
-#endif
-#if defined(HAVE_WGL)
-	&agDriverWGL,
 #endif
 };
 Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
