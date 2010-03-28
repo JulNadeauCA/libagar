@@ -603,7 +603,7 @@ GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 		if ((win = LookupWindowByID(xev.xcrossing.window)) == NULL) {
 			return (-1);
 		}
-		dev->type = AG_DRIVER_MOUSE_ENTER;
+		dev->type = AG_DRIVER_MOUSE_LEAVE;
 		dev->win = win;
 		break;
 	case FocusIn:
