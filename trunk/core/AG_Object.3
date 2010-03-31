@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -118,6 +118,12 @@ different languages (currently C, C++, Objective C, Perl and Ada).
 .Pp
 .Ft "void"
 .Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "size_t len"
+.Pp
+.Ft "void"
+.Fn AG_ObjectSetAttachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_ObjectSetDetachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetDebugFn "AG_Object *obj" "void (*fn)(void *obj, void *userPtr, void *msg)" "void *userPtr"
@@ -302,6 +308,20 @@ long as the parent object's VFS is locked.
 Similarly,
 .Fn AG_ObjectGenNamePfx
 generates a name using the specified prefix instead of the class name.
+.Pp
+.Fn AG_ObjectSetAttachFn
+and
+.Fn AG_ObjectSetDetachFn
+allow custom "attach" and "detach" hooks to be registered.
+These hooks are used where it is necessary to control the order of the
+child objects (for example, in the
+.Xr AG_Window 3
+system of Agar-GUI, the ordering of window objects is important as it
+determines the order of rendering).
+The hook function is expected to insert the child object somewhere into the
+parent's
+.Va children
+list.
 .Pp
 .Fn AG_ObjectSetDebugFn
 specifies a function to process debug messages (as issued by
