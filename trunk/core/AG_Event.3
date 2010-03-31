@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -497,6 +497,56 @@ style format string, and the argument is retrieved using
 .Pp
 .Fn AG_EventPopArgument
 removes the last argument from the list.
+.Sh EVENT QUEUES
+Under some circumstances, it is useful to gather
+.Ft AG_Event
+objects into a simple queue.
+For example, a custom event loop routine (see
+.Xr AG_EventLoop 3 )
+or a low-level Agar driver (see
+.Xr AG_Driver 3 )
+may gather events from input devices and later process them.
+The
+.Ft AG_EventQ
+structure describes a queue of events:
+.Bd -literal
+typedef struct ag_event_queue {
+	Uint     nEvents;
+	AG_Event *events;
+} AG_EventQ;
+.Ed
+.Pp
+The following routines operate on the
+.Ft AG_EventQ
+structure:
+.Pp
+.nr nS 1
+.Ft void
+.Fn AG_InitEventQ "AG_EventQ *eq"
+.Pp
+.Ft void
+.Fn AG_FreeEventQ "AG_EventQ *eq"
+.Pp
+.Ft void
+.Fn AG_QueueEvent "AG_EventQ *eq" "const char *event_name" "const char *fmt" "..."
+.nr nS 0
+.Pp
+The
+.Fn AG_InitEventQ
+function initializes an
+.Ft AG_EventQ
+structure.
+.Fn AG_FreeEventQ
+releases all resources allocated under an event queue.
+.Pp
+.Fn AG_QueueEvent
+inserts an event in an event queue structure.
+The meaning of
+.Fa event_name
+as well as the syntax of
+.Fa fmt
+are identical to.
+.Fn AG_PostEvent .
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Event
