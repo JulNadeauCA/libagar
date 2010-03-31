@@ -726,7 +726,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 {
 	AG_Driver *drv = (AG_Driver *)obj;
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
-	int rv;
+	int rv = 0;
 	
 	if (dev->win == NULL) {
 		return (0);
