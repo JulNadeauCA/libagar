@@ -174,8 +174,7 @@ Edit(void *p, VG_View *vv)
 	AG_NumericalNewUint16(box, 0, NULL, _("Stipple pattern: "), &vl->stipple);
 
 	AG_LabelNew(box, 0, _("Endpoint style: "));
-	rad = AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles,
-	    (Uint *)&vl->endPt);
+	rad = AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles, &vl->endPt);
 
 	return (box);
 }
