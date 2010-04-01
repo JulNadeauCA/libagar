@@ -273,8 +273,11 @@ argument is NULL, the defaults are set.
 .Pp
 The
 .Fn AG_WindowSetPosition
-specifies the method used to compute the initial window position.
-Acceptable values include:
+function moves a window to a standard position, per the specified
+alignment.
+Possible values for the
+.Fa alignment
+argument are:
 .Bd -literal
  AG_WINDOW_TL  AG_WINDOW_TC  AG_WINDOW_TR
  AG_WINDOW_ML  AG_WINDOW_MC  AG_WINDOW_MR
@@ -293,22 +296,25 @@ each call (depending on the preferred alignment).
 .Pp
 The
 .Fn AG_WindowSetGeometry
-assigns a specific position and geometry in pixels to a window, overriding
-the default automatically-computed values.
-If either
+function moves/resizes a window to the specific position and geometry, given
+in pixels.
+If a value of -1 is passed for
 .Fa w
 or
-.Fa h
-is specified as -1, the current width / height is preserved.
+.Fa h ,
+the window's default (or current) geometry is preserved.
 .Pp
 The
 .Fn AG_WindowSetGeometryRect
-variants accepts an
-.Ft AG_Rect
+variant of
+.Fn AG_WindowSetGeometry
+accepts a
+.Xr AG_Rect 3
 argument.
 The
 .Fa bounded
-flag limits the window to the view area.
+argument specifies whether the window should be limited to the available
+view area.
 .Pp
 The
 .Fn AG_WindowSetGeometryAligned
