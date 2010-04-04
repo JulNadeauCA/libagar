@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -61,12 +61,12 @@ multiline mode.
 .Ft "void"
 .Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
 .Pp
-.Ft "void"
-.Fn AG_TextboxBindAutoUTF8 "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
-.Pp
-.Ft "void"
-.Fn AG_TextboxBindAutoASCII "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
-.Pp
+.\".Ft "void"
+.\".Fn AG_TextboxBindAutoUTF8 "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
+.\".Pp
+.\".Ft "void"
+.\".Fn AG_TextboxBindAutoASCII "AG_Textbox *textbox" "char **pBuffer" "Uint *pBufferSize"
+.\".Pp
 .Ft void
 .Fn AG_TextboxSetStatic "AG_Textbox *textbox" "int enable"
 .Pp
@@ -174,18 +174,18 @@ respectively.
 The
 .Fa bufferSize
 argument indicates the complete size of the buffer in bytes.
-The
-.Fn AG_TextboxBindAutoUTF8
-and
-.Fn AG_TextboxBindAutoASCII
-variants accept pointer-to-pointer
-.Ft char **
-and
-.Ft int *
-arguments, and arrange for the buffer to be automatically resized to accomodate
-new text input.
-Upon reallocation, the size variable is updated and the text buffer pointer
-may change.
+.\"The
+.\".Fn AG_TextboxBindAutoUTF8
+.\"and
+.\".Fn AG_TextboxBindAutoASCII
+.\"variants accept pointer-to-pointer
+.\".Ft char **
+.\"and
+.\".Ft int *
+.\"arguments, and arrange for the buffer to be automatically resized to accomodate
+.\"new text input.
+.\"Upon reallocation, the size variable is updated and the text buffer pointer
+.\"may change.
 .Pp
 The
 .Fn AG_TextboxSetStatic
@@ -455,23 +455,6 @@ char *value_ptr;
 tb = AG_TextboxNew(parent, 0, "Value: ");
 AG_TextboxPrintf(tb, "Foo");
 value_ptr = AG_TextboxDupString(tb);
-.Ed
-.Pp
-The following code fragment binds a multi-line
-.Nm
-to a text buffer which will be grown automatically to accomodate any new
-user input:
-.Pp
-.Bd -literal -offset indent
-char *text;
-Uint textSize;
-AG_Textbox *tb;
-
-tb = AG_TextboxNew(parent, AG_TEXTBOX_MULTILINE, NULL);
-text = AG_Strdup("foo");
-textSize = strlen(text)+1;
-AG_TextboxBindAutoUTF8(tb, &text, &textSize);
-AG_Expand(tb);
 .Ed
 .Pp
 Also see

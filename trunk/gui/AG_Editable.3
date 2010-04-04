@@ -58,12 +58,12 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Ft "void"
 .Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "size_t bufferSize"
 .Pp
-.Ft "void"
-.Fn AG_EditableBindAutoUTF8 "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
-.Pp
-.Ft "void"
-.Fn AG_EditableBindAutoASCII "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
-.Pp
+.\".Ft "void"
+.\".Fn AG_EditableBindAutoUTF8 "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
+.\".Pp
+.\".Ft "void"
+.\".Fn AG_EditableBindAutoASCII "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
+.\".Pp
 .Ft void
 .Fn AG_EditableSetStatic "AG_Editable *ed" "int enable"
 .Pp
@@ -174,18 +174,18 @@ respectively.
 The
 .Fa bufferSize
 argument indicates the complete size of the buffer in bytes.
-The
-.Fn AG_EditableBindAutoUTF8
-and
-.Fn AG_EditableBindAutoASCII
-variants accept pointer-to-pointer
-.Ft char **
-and
-.Ft int *
-arguments, and arrange for the buffer to be automatically resized to accomodate
-new text input.
-Upon reallocation, the size variable is updated and the text buffer pointer
-may change.
+.\"The
+.\".Fn AG_EditableBindAutoUTF8
+.\"and
+.\".Fn AG_EditableBindAutoASCII
+.\"variants accept pointer-to-pointer
+.\".Ft char **
+.\"and
+.\".Ft int *
+.\"arguments, and arrange for the buffer to be automatically resized to accomodate
+.\"new text input.
+.\"Upon reallocation, the size variable is updated and the text buffer pointer
+.\"may change.
 .Pp
 The
 .Fn AG_EditableSetStatic
