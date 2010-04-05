@@ -52,7 +52,6 @@ int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
 
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
-int agTextAntialiasing = 1;		/* Use font antialiasing */
 int agTextCache = 0;			/* Dynamic text caching */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
@@ -167,7 +166,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	agMouseSpinIval = (int)AG_ReadUint16(ds);
 	agScreenshotQuality = (int)AG_ReadUint8(ds);
 	agTextTabWidth = (int)AG_ReadUint16(ds);
-	if (ver->minor >= 1) { agTextAntialiasing = AG_ReadUint8(ds); }
+	if (ver->minor >= 1) { (void)AG_ReadUint8(ds); } /* agTextAntialiasing */
 
 	agRcsMode = (int)AG_ReadUint8(ds);
 	AG_CopyString(agRcsHostname, ds, sizeof(agRcsHostname));
@@ -202,7 +201,7 @@ Save(void *obj, AG_DataSource *ds)
 	AG_WriteUint16(ds, (Uint16)agMouseSpinIval);
 	AG_WriteUint8(ds, (Uint8)agScreenshotQuality);
 	AG_WriteUint16(ds, (Uint16)agTextTabWidth);
-	AG_WriteUint8(ds, (Uint8)agTextAntialiasing);
+	AG_WriteUint8(ds, 0);				/* agTextAntialiasing */
 
 	AG_WriteUint8(ds, (Uint8)agRcsMode);
 	AG_WriteString(ds, agRcsHostname);
