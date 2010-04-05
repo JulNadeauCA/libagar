@@ -172,7 +172,6 @@ void	 AG_WindowCycleFocus(AG_Window *, int);
 #define  AG_WindowIsFocused(win) (agWindowFocused == win)
 void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
-void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 void	 AG_FreeDetachedWindows(void);
 

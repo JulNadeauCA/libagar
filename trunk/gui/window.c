@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -996,15 +996,16 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 
 /* Assign a window a specific alignment and size in pixels. */
 int
-AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
+AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
     int w, int h)
 {
 	Uint wMax, hMax;
 	int x, y;
 
+	win->alignment = alignment;
 	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
 
-	switch (align) {
+	switch (alignment) {
 	case AG_WINDOW_ALIGNMENT_NONE:
 		return (0);
 	case AG_WINDOW_TL:
@@ -1030,14 +1031,29 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
 	case AG_WINDOW_BL:
 		x = 0;
 		y = hMax - h;
+		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
+			/* XXX hack compensate for titlebar */
+			y -= 34;
+			if (y < 0) { y = 0; }
+		}
 		break;
 	case AG_WINDOW_BC:
 		x = wMax/2 - w/2;
 		y = hMax - h;
+		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
+			/* XXX hack compensate for titlebar */
+			y -= 34;
+			if (y < 0) { y = 0; }
+		}
 		break;
 	case AG_WINDOW_BR:
 		x = wMax - w;
 		y = hMax - h;
+		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
+			/* XXX hack compensate for titlebar */
+			y -= 34;
+			if (y < 0) { y = 0; }
+		}
 		break;
 	case AG_WINDOW_MC:
 	default:
@@ -1048,6 +1064,7 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
 	return AG_WindowSetGeometry(win, x, y, w, h);
 }
 
+/* Assign a window a specific alignment and size in percentage of view area. */
 int
 AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
     int wPct, int hPct)
@@ -1055,11 +1072,13 @@ AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
 	Uint wMax, hMax;
 
 	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
+
 	return AG_WindowSetGeometryAligned(win, align,
 	                                   wPct*wMax/100,
 	                                   hPct*hMax/100);
 }
 
+/* Backup the current window geometry (i.e., before a minimize) */
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
@@ -1069,12 +1088,14 @@ AG_WindowSaveGeometry(AG_Window *win)
 	win->rSaved.h = HEIGHT(win);
 }
 
+/* Restore saved geometry (i.e., after an unminimize operation) */
 int
 AG_WindowRestoreGeometry(AG_Window *win)
 {
 	return AG_WindowSetGeometryRect(win, win->rSaved, 0);
 }
 
+/* Maximize a window */
 void
 AG_WindowMaximize(AG_Window *win)
 {
@@ -1086,6 +1107,7 @@ AG_WindowMaximize(AG_Window *win)
 		win->flags |= AG_WINDOW_MAXIMIZED;
 }
 
+/* Restore a window's geometry prior to maximization. */
 void
 AG_WindowUnmaximize(AG_Window *win)
 {
@@ -1182,6 +1204,7 @@ DoubleClickTimeout(AG_Event *event)
 	icon->flags &= ~(AG_ICON_DBLCLICKED);
 }
 
+/* Minimize a window */
 void
 AG_WindowMinimize(AG_Window *win)
 {
@@ -1224,6 +1247,7 @@ AG_WindowMinimize(AG_Window *win)
 	/* TODO MW: send a WM_CHANGE_STATE */
 }
 
+/* Unminimize a window */
 void
 AG_WindowUnminimize(AG_Window *win)
 {
@@ -1236,6 +1260,7 @@ AG_WindowUnminimize(AG_Window *win)
 	/* TODO MW: send a WM_CHANGE_STATE */
 }
 
+/* AGWINDETACH(): General-purpose "detach window" event handler. */
 void
 AG_WindowDetachGenEv(AG_Event *event)
 {
@@ -1244,18 +1269,14 @@ AG_WindowDetachGenEv(AG_Event *event)
 	AG_ObjectDetach(win);
 }
 
-void
-AG_WindowShowGenEv(AG_Event *event)
-{
-	AG_WindowShow(AG_PTR(1));
-}
-
+/* AGWINHIDE(): General-purpose "hide window" event handler. */
 void
 AG_WindowHideGenEv(AG_Event *event)
 {
 	AG_WindowHide(AG_PTR(1));
 }
 
+/* AGWINCLOSE(): General-purpose "close window" event handler. */
 void
 AG_WindowCloseGenEv(AG_Event *event)
 {
