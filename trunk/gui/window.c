@@ -76,6 +76,7 @@ AG_WindowNew(Uint flags)
 	AG_ObjectInit(win, &agWindowClass);
 	AG_ObjectSetNameS(win, "generic");
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+	WIDGET(win)->window = win;
 
 	win->flags |= flags;
 	
