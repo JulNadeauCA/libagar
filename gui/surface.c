@@ -179,11 +179,15 @@ AG_PixelFormatDup(const AG_PixelFormat *pf)
 		return (NULL);
 	}
 	if (pf->palette != NULL) {
-		pfd->palette = TryMalloc(pf->palette->nColors*sizeof(AG_Color));
-		if (pfd->palette == NULL) {
-			Free(pfd);
-			return (NULL);
+		if ((pfd->palette = TryMalloc(sizeof(AG_Palette))) == NULL) {
+			goto fail;
 		}
+		if ((pfd->palette->colors =
+		    TryMalloc(pf->palette->nColors*sizeof(AG_Color))) == NULL) {
+			Free(pfd->palette);
+			goto fail;
+		}
+		pfd->palette->nColors = pf->palette->nColors;
 		memcpy(pfd->palette->colors, pf->palette->colors,
 		    pf->palette->nColors*sizeof(AG_Color));
 	} else {
@@ -206,6 +210,9 @@ AG_PixelFormatDup(const AG_PixelFormat *pf)
 	pfd->Bmask = pf->Bmask;
 	pfd->Amask = pf->Amask;
 	return (pfd);
+fail:
+	Free(pfd);
+	return (NULL);
 }
 
 /* Release an AG_PixelFormat structure. */
@@ -686,7 +693,7 @@ AG_SurfaceBlendPixel(AG_Surface *s, Uint8 *pDst, AG_Color Cnew, AG_BlendFn fn)
 		    (((Cnew.r - Cdst.r)*Cnew.a) >> 8) + Cdst.r,
 		    (((Cnew.g - Cdst.g)*Cnew.a) >> 8) + Cdst.g,
 		    (((Cnew.b - Cdst.b)*Cnew.a) >> 8) + Cdst.b,
-		    a));
+		    Cdst.a));
 	}
 }
 
@@ -873,6 +880,46 @@ AG_FillRect(AG_Surface *su, const AG_Rect *rDst, AG_Color C)
 			    px);
 		}
 	}
+}
+
+/* Called by AG_MapPixelRGB() for color-index surfaces. */
+Uint32
+AG_MapPixelIndexedRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
+{
+	Uint i, iMin = 0;
+	int err, errMin = 255*3;
+
+	for (i = 0; i < pf->palette->nColors; i++) {
+		AG_Color *C = &pf->palette->colors[i];
+
+		err = Fabs(C->r - r) + Fabs(C->g - g) + Fabs(C->b - b);
+		if (err < errMin) {
+			errMin = err;
+			iMin = i;
+		}
+	}
+	return (Uint32)iMin;
+}
+
+/* Called by AG_MapPixelRGBA() for color-index surfaces. */
+Uint32
+AG_MapPixelIndexedRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b,
+    Uint8 a)
+{
+	Uint i, iMin = 0;
+	int err, errMin = 255*4;
+
+	for (i = 0; i < pf->palette->nColors; i++) {
+		AG_Color *C = &pf->palette->colors[i];
+
+		err = Fabs(C->r - r) + Fabs(C->g - g) + Fabs(C->b - b) +
+		      Fabs(C->a - a);
+		if (err < errMin) {
+			errMin = err;
+			iMin = i;
+		}
+	}
+	return (Uint32)iMin;
 }
 
 #ifdef AG_LEGACY
