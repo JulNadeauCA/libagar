@@ -104,12 +104,15 @@ int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
 AG_Surface     *AG_SurfaceFromSDL(void *);
 void           *AG_SurfaceExportSDL(const AG_Surface *);
 
-void            AG_SurfaceBlendPixel(AG_Surface *, Uint8 *, AG_Color, AG_BlendFn);
-void            AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
-void            AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
-int             AG_ScaleSurface(const AG_Surface *, Uint16, Uint16, AG_Surface **);
-void            AG_SetAlphaPixels(AG_Surface *, Uint8);
-void            AG_FillRect(AG_Surface *, const AG_Rect *, AG_Color);
+void   AG_SurfaceBlendPixel(AG_Surface *, Uint8 *, AG_Color, AG_BlendFn);
+void   AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
+void   AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
+int    AG_ScaleSurface(const AG_Surface *, Uint16, Uint16, AG_Surface **);
+void   AG_SetAlphaPixels(AG_Surface *, Uint8);
+void   AG_FillRect(AG_Surface *, const AG_Rect *, AG_Color);
+Uint32 AG_MapPixelIndexedRGB(const AG_PixelFormat *, Uint8, Uint8, Uint8);
+Uint32 AG_MapPixelIndexedRGBA(const AG_PixelFormat *, Uint8, Uint8, Uint8,
+                              Uint8);
 
 #define AG_SurfaceStdRGB(w,h) \
 	AG_SurfaceRGB((w),(h),agSurfaceFmt->BitsPerPixel,0, \
@@ -169,10 +172,9 @@ void            AG_FillRect(AG_Surface *, const AG_Rect *, AG_Color);
 static __inline__ Uint32
 AG_MapPixelRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 {
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_MapPixelRGB() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return AG_MapPixelIndexedRGB(pf, r, g, b);
+	}
 	return (r >> pf->Rloss) << pf->Rshift |
 	       (g >> pf->Gloss) << pf->Gshift |
 	       (b >> pf->Bloss) << pf->Bshift | pf->Amask;
@@ -182,10 +184,9 @@ AG_MapPixelRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 static __inline__ Uint32
 AG_MapPixelRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_MapPixelRGBA() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return AG_MapPixelIndexedRGBA(pf, r, g, b, a);
+	}
 	return (r >> pf->Rloss) << pf->Rshift |
 	       (g >> pf->Gloss) << pf->Gshift |
 	       (b >> pf->Bloss) << pf->Bshift |
@@ -196,10 +197,9 @@ AG_MapPixelRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 static __inline__ Uint32
 AG_MapColorRGB(const AG_PixelFormat *pf, AG_Color C)
 {
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_MapColorRGB() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return AG_MapPixelIndexedRGB(pf, C.r, C.g, C.b);
+	}
 	return (C.r >> pf->Rloss) << pf->Rshift |
 	       (C.g >> pf->Gloss) << pf->Gshift |
 	       (C.b >> pf->Bloss) << pf->Bshift | pf->Amask;
@@ -209,10 +209,9 @@ AG_MapColorRGB(const AG_PixelFormat *pf, AG_Color C)
 static __inline__ Uint32
 AG_MapColorRGBA(const AG_PixelFormat *pf, AG_Color C)
 {
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_MapColorRGBA() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return AG_MapPixelIndexedRGBA(pf, C.r, C.g, C.b, C.a);
+	}
 	return (C.r >> pf->Rloss) << pf->Rshift |
 	       (C.g >> pf->Gloss) << pf->Gshift |
 	       (C.b >> pf->Bloss) << pf->Bshift |
@@ -230,13 +229,16 @@ AG_GetPixelRGB(Uint32 pc, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g,
 {
 	Uint tmp;
 
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_GetPixelRGB() called on color-index format");
-#endif
-	AG_GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
-	AG_GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
-	AG_GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
+	if (pf->palette != NULL) {
+		AG_Color *C = &pf->palette->colors[(Uint)pc % pf->palette->nColors];
+		*r = C->r;
+		*g = C->g;
+		*b = C->b;
+	} else {
+		AG_GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
+		AG_GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
+		AG_GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
+	}
 }
 
 /* Decompose a pixel value to RGBA components. */
@@ -246,17 +248,21 @@ AG_GetPixelRGBA(Uint32 pc, const AG_PixelFormat *pf, Uint8 *r, Uint8 *g,
 {
 	Uint tmp;
 
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_GetPixelRGBA() called on color-index format");
-#endif
-	AG_GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
-	AG_GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
-	AG_GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
-	if (pf->Amask != 0) {
-		AG_GET_PIXEL_COMPONENT(*a, pf->Amask, pf->Ashift, pf->Aloss);
+	if (pf->palette != NULL) {
+		AG_Color *C = &pf->palette->colors[(Uint)pc % pf->palette->nColors];
+		*r = C->r;
+		*g = C->g;
+		*b = C->b;
+		*a = C->a;
 	} else {
-		*a = AG_ALPHA_OPAQUE;
+		AG_GET_PIXEL_COMPONENT(*r, pf->Rmask, pf->Rshift, pf->Rloss);
+		AG_GET_PIXEL_COMPONENT(*g, pf->Gmask, pf->Gshift, pf->Gloss);
+		AG_GET_PIXEL_COMPONENT(*b, pf->Bmask, pf->Bshift, pf->Bloss);
+		if (pf->Amask != 0) {
+			AG_GET_PIXEL_COMPONENT(*a, pf->Amask, pf->Ashift, pf->Aloss);
+		} else {
+			*a = AG_ALPHA_OPAQUE;
+		}
 	}
 }
 
@@ -267,10 +273,9 @@ AG_GetColorRGB(Uint32 pc, const AG_PixelFormat *pf)
 	AG_Color C;
 	Uint tmp;
 
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_GetColorRGB() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return (pf->palette->colors[(Uint)pc % pf->palette->nColors]);
+	}
 	AG_GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
 	AG_GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
 	AG_GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
@@ -285,10 +290,9 @@ AG_GetColorRGBA(Uint32 pc, const AG_PixelFormat *pf)
 	AG_Color C;
 	Uint tmp;
 
-#ifdef AG_DEBUG
-	if (pf->palette != NULL)
-		AG_FatalError("AG_GetColorRGBA() called on color-index format");
-#endif
+	if (pf->palette != NULL) {
+		return (pf->palette->colors[(Uint)pc % pf->palette->nColors]);
+	}
 	AG_GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
 	AG_GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
 	AG_GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
