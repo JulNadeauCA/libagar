@@ -14,24 +14,14 @@
 # Premake is available from http://premake.sourceforge.net/.
 #
 
-PROJFILES=	bsd:cb-gcc:: \
-		linux:cb-gcc:: \
+PROJFILES=	linux:cb-gcc:: \
 		macosx:cb-gcc:: \
 		windows:vs2005:: \
 		windows:vs2005:-nofreetype:--without-freetype \
 		windows:vs2005:-nothreads:--disable-threads \
-		windows:vs2005:-nogl:--without-gl\
-		windows:vs2005:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:vs2005:-nosdl:--without-sdl\
+		windows:vs2005:-nogl:--without-gl \
+		windows:vs2005:-nofreetype,nothreads,nosdl:--without-freetype,--disable-threads,--without-sdl \
 		windows:cb-gcc:: \
-		windows:cb-gcc:-nofreetype:--without-freetype \
-		windows:cb-gcc:-nothreads:--disable-threads \
-		windows:cb-gcc:-nogl:--without-gl \
-		windows:cb-gcc:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:cb-ow:: \
-		windows:vs2003:: \
-		windows:vs2003:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:vs2002:: \
-		windows:vs2002:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:vs6:: \
-		windows:vs6:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:cb-ow::
 
