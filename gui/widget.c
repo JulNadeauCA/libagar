@@ -1133,6 +1133,7 @@ AG_WidgetShownRecursive(void *p)
 		AG_WidgetShownRecursive(chld);
 	}
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	wid->flags &= ~(AG_WIDGET_HIDE);
 	
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);
@@ -1155,6 +1156,7 @@ AG_WidgetHiddenRecursive(void *p)
 		AG_WidgetHiddenRecursive(chld);
 	}
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+	wid->flags |= AG_WIDGET_HIDE;
 	
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);

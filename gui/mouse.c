@@ -96,6 +96,9 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 	AG_Rect r;
 
 	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+		if (ca->wid->flags & AG_WIDGET_HIDE) {
+			continue;
+		}
 		r.x = ca->r.x + ca->wid->rView.x1;
 		r.y = ca->r.y + ca->wid->rView.y1;
 		r.w = ca->r.w;
