@@ -85,9 +85,15 @@ CreateWindow(void)
 		AG_LabelNew(div1, 0, "This is a static label");
 
 		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME,
-		    "This is a polled label (x=%i)", &pane->dx);
+		    "This is a polled label.\n"
+		    "Window is at %i,%i (%ux%u)",
+		    &AGWIDGET(win)->x,
+		    &AGWIDGET(win)->y,
+		    &AGWIDGET(win)->w,
+		    &AGWIDGET(win)->h);
 		AG_LabelSizeHint(lbl, 1,
-		    "This is a polled label (x=1234)");
+		    "This is a polled label\n"
+		    "Window is at 0000,0000 (0000x0000)");
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 	}
 
@@ -495,8 +501,7 @@ main(int argc, char *argv[])
 			AG_ButtonNewFn(hBox, 0, "Lighter",
 			    TweakColorScheme, "%i", 0);
 		}
-
-		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
+		AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
 		AG_WindowShow(win);
 	}
 
