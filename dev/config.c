@@ -64,6 +64,7 @@ SetPath(AG_Event *event)
 	AG_WidgetUnfocus(tbox);
 }
 
+#if 0
 static void
 WarnRestart(AG_Event *event)
 {
@@ -73,6 +74,7 @@ WarnRestart(AG_Event *event)
 	    _("Note: Save the configuration and restart %s "
 	      "for this change to take effect"), agProgName);
 }
+#endif
 
 static void
 BindSelectedColor(AG_Event *event)
@@ -187,7 +189,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_Window *win;
 	AG_HBox *hb;
 	AG_Textbox *tbox;
-	AG_Checkbox *cb;
+/*	AG_Checkbox *cb; */
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
 
@@ -208,13 +210,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
 	{
-		cb = AG_CheckboxNewInt(tab, 0, _("Text antialiasing"),
-		    &agTextAntialiasing);
-		AG_SetEvent(cb, "checkbox-changed", WarnRestart, "%s",
-		    "config.text.antialiasing");
-		
-		AG_SpacerNewHoriz(tab);
-
 		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
 		    &agTextComposition);
 		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),
