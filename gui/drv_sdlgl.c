@@ -89,7 +89,7 @@ Destroy(void *obj)
  */
 
 static int
-Open(void *obj, const char *spec)
+SDLGL_Open(void *obj, const char *spec)
 {
 	extern const AG_TimeOps agTimeOps_SDL;
 	AG_Driver *drv = obj;
@@ -144,7 +144,7 @@ fail:
 }
 
 static void
-Close(void *obj)
+SDLGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLGL *sgl = obj;
@@ -169,7 +169,7 @@ Close(void *obj)
 }
 
 static void
-BeginRendering(void *obj)
+SDLGL_BeginRendering(void *obj)
 {
 	AG_DriverSDLGL *sgl = obj;
 	
@@ -194,13 +194,13 @@ BeginRendering(void *obj)
 }
 
 static void
-RenderWindow(struct ag_window *win)
+SDLGL_RenderWindow(struct ag_window *win)
 {
 	AG_WidgetDraw(win);
 }
 
 static void
-EndRendering(void *drv)
+SDLGL_EndRendering(void *drv)
 {
 	AG_DriverSDLGL *sgl = drv;
 	Uint i;
@@ -227,7 +227,7 @@ EndRendering(void *drv)
 }
 
 static void
-DeleteTexture(void *drv, Uint texture)
+SDLGL_DeleteTexture(void *drv, Uint texture)
 {
 	AG_DriverSDLGL *sgl = drv;
 
@@ -241,7 +241,7 @@ DeleteTexture(void *drv, Uint texture)
  */
 
 static void
-PushClipRect(void *obj, AG_Rect r)
+SDLGL_PushClipRect(void *obj, AG_Rect r)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_ClipRect *cr, *crPrev;
@@ -277,7 +277,7 @@ PushClipRect(void *obj, AG_Rect r)
 }
 
 static void
-PopClipRect(void *obj)
+SDLGL_PopClipRect(void *obj)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_ClipRect *cr;
@@ -296,7 +296,7 @@ PopClipRect(void *obj)
 }
 
 static void
-PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+SDLGL_PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	AG_DriverSDLGL *sgl = drv;
 
@@ -312,7 +312,7 @@ PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
 }
 static void
-PopBlendingMode(void *drv)
+SDLGL_PopBlendingMode(void *drv)
 {
 	AG_DriverSDLGL *sgl = drv;
 
@@ -373,7 +373,7 @@ ClearBackground(void)
 }
 
 static int
-OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
+SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
@@ -444,7 +444,7 @@ fail:
 }
 
 static int
-OpenVideoContext(void *obj, void *ctx, Uint flags)
+SDLGL_OpenVideoContext(void *obj, void *ctx, Uint flags)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_DriverSw *dsw = obj;
@@ -493,7 +493,7 @@ fail:
 }
 
 static void
-CloseVideo(void *obj)
+SDLGL_CloseVideo(void *obj)
 {
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -502,7 +502,7 @@ CloseVideo(void *obj)
 }
 
 static int
-VideoResize(void *obj, Uint w, Uint h)
+SDLGL_VideoResize(void *obj, Uint w, Uint h)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
@@ -541,7 +541,7 @@ VideoResize(void *obj, Uint w, Uint h)
 }
 
 static int
-VideoCapture(void *obj, AG_Surface **sp)
+SDLGL_VideoCapture(void *obj, AG_Surface **sp)
 {
 #if 0
 	AG_DriverSDLGL *sgl = obj;
@@ -559,7 +559,7 @@ VideoCapture(void *obj, AG_Surface **sp)
 }
 
 static void
-VideoClear(void *obj, AG_Color c)
+SDLGL_VideoClear(void *obj, AG_Color c)
 {
 	glClearColor(c.r, c.g, c.b, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -582,8 +582,8 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_VECTOR,
 		AG_WM_SINGLE,
 		AG_DRIVER_SDL|AG_DRIVER_OPENGL|AG_DRIVER_TEXTURES,
-		Open,
-		Close,
+		SDLGL_Open,
+		SDLGL_Close,
 		AG_SDL_GetDisplaySize,
 		AG_SDL_BeginEventProcessing,
 		AG_SDL_PendingEvents,
@@ -592,19 +592,19 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_SDL_GenericEventLoop,
 		AG_SDL_EndEventProcessing,
 		AG_SDL_Terminate,
-		BeginRendering,
-		RenderWindow,
-		EndRendering,
+		SDLGL_BeginRendering,
+		SDLGL_RenderWindow,
+		SDLGL_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
 		AG_GL_UploadTexture,
 		AG_GL_UpdateTexture,
-		DeleteTexture,
+		SDLGL_DeleteTexture,
 		AG_SDL_SetRefreshRate,
-		PushClipRect,
-		PopClipRect,
-		PushBlendingMode,
-		PopBlendingMode,
+		SDLGL_PushClipRect,
+		SDLGL_PopClipRect,
+		SDLGL_PushBlendingMode,
+		SDLGL_PopBlendingMode,
 		AG_SDL_CreateCursor,
 		AG_SDL_FreeCursor,
 		AG_SDL_SetCursor,
@@ -643,12 +643,12 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawGlyph
 	},
 	0,
-	OpenVideo,
-	OpenVideoContext,
-	CloseVideo,
-	VideoResize,
-	VideoCapture,
-	VideoClear
+	SDLGL_OpenVideo,
+	SDLGL_OpenVideoContext,
+	SDLGL_CloseVideo,
+	SDLGL_VideoResize,
+	SDLGL_VideoCapture,
+	SDLGL_VideoClear
 };
 
 #endif /* HAVE_SDL and HAVE_OPENGL */

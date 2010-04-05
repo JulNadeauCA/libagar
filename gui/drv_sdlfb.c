@@ -54,8 +54,8 @@ static int nDrivers = 0;		/* Opened driver instances */
 static int initedSDL = 0;		/* Used SDL_Init() */
 static int initedSDLVideo = 0;		/* Used SDL_INIT_VIDEO */
 
-static void DrawRectFilled(void *, AG_Rect, AG_Color);
-static void UpdateRegion(void *, AG_Rect);
+static void SDLFB_DrawRectFilled(void *, AG_Rect, AG_Color);
+static void SDLFB_UpdateRegion(void *, AG_Rect);
 
 static void
 Init(void *obj)
@@ -88,7 +88,7 @@ Destroy(void *obj)
  */
 
 static int
-Open(void *obj, const char *spec)
+SDLFB_Open(void *obj, const char *spec)
 {
 	extern const AG_TimeOps agTimeOps_SDL;
 	AG_Driver *drv = obj;
@@ -143,7 +143,7 @@ fail:
 }
 
 static void
-Close(void *obj)
+SDLFB_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -168,7 +168,7 @@ Close(void *obj)
 }
 
 static void
-BeginRendering(void *obj)
+SDLFB_BeginRendering(void *obj)
 {
 //	AG_DriverSDLFB *sfb = obj;
 
@@ -176,16 +176,16 @@ BeginRendering(void *obj)
 }
 
 static void
-RenderWindow(struct ag_window *win)
+SDLFB_RenderWindow(struct ag_window *win)
 {
 	AG_WidgetDraw(win);
-	UpdateRegion(WIDGET(win)->drv,
+	SDLFB_UpdateRegion(WIDGET(win)->drv,
 	    AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
 	            WIDTH(win), HEIGHT(win)));
 }
 
 static void
-EndRendering(void *obj)
+SDLFB_EndRendering(void *obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 
@@ -201,7 +201,7 @@ EndRendering(void *obj)
 }
 
 static void
-FillRect(void *obj, AG_Rect r, AG_Color c)
+SDLFB_FillRect(void *obj, AG_Rect r, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Rect sr;
@@ -215,7 +215,7 @@ FillRect(void *obj, AG_Rect r, AG_Color c)
 }
 
 static void
-UpdateRegion(void *obj, AG_Rect rp)
+SDLFB_UpdateRegion(void *obj, AG_Rect rp)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -248,7 +248,7 @@ UpdateRegion(void *obj, AG_Rect rp)
  */
 
 static void
-PushClipRect(void *obj, AG_Rect r)
+SDLFB_PushClipRect(void *obj, AG_Rect r)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_ClipRect *cr, *crPrev;
@@ -268,7 +268,7 @@ PushClipRect(void *obj, AG_Rect r)
 }
 
 static void
-PopClipRect(void *obj)
+SDLFB_PopClipRect(void *obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_ClipRect *cr;
@@ -289,12 +289,12 @@ PopClipRect(void *obj)
 }
 
 static void
-PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+SDLFB_PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
 static void
-PopBlendingMode(void *drv)
+SDLFB_PopBlendingMode(void *drv)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
@@ -304,7 +304,7 @@ PopBlendingMode(void *drv)
  */
 
 static void
-BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
+SDLFB_BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 
@@ -312,7 +312,7 @@ BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
 }
 
 static void
-BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s,
+SDLFB_BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s,
     AG_Rect *rSrc, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
@@ -321,25 +321,25 @@ BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s,
 }
 
 static void
-BlitSurfaceGL(void *drv, AG_Widget *wid, AG_Surface *s, float w, float h)
+SDLFB_BlitSurfaceGL(void *drv, AG_Widget *wid, AG_Surface *s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static void
-BlitSurfaceFromGL(void *drv, AG_Widget *wid, int s, float w, float h)
+SDLFB_BlitSurfaceFromGL(void *drv, AG_Widget *wid, int s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static void
-BlitSurfaceFlippedGL(void *drv, AG_Widget *wid, int s, float w, float h)
+SDLFB_BlitSurfaceFlippedGL(void *drv, AG_Widget *wid, int s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static int
-RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
+SDLFB_RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 {
 	AG_DriverSDLFB *sfb = drv;
 	int visiblePrev;
@@ -372,7 +372,7 @@ ClippedPixel(SDL_Surface *s, int x, int y)
 }
 
 static void
-PutPixel(void *obj, int x, int y, AG_Color c)
+SDLFB_PutPixel(void *obj, int x, int y, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
@@ -386,7 +386,7 @@ PutPixel(void *obj, int x, int y, AG_Color c)
 }
 
 static void
-PutPixel32(void *obj, int x, int y, Uint32 c)
+SDLFB_PutPixel32(void *obj, int x, int y, Uint32 c)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
@@ -399,15 +399,15 @@ PutPixel32(void *obj, int x, int y, Uint32 c)
 }
 
 static void
-PutPixelRGB(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+SDLFB_PutPixelRGB(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_DriverSDLFB *sfb = obj;
 
-	PutPixel32(obj, x,y, SDL_MapRGB(sfb->s->format, r,g,b));
+	SDLFB_PutPixel32(obj, x,y, SDL_MapRGB(sfb->s->format, r,g,b));
 }
 
 static void
-BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
+SDLFB_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
     AG_BlendFn fnDst)
 {
 	AG_DriverSDLFB *sfb = obj;
@@ -456,7 +456,7 @@ BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 }
 
 static void
-DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
+SDLFB_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int dx, dy;
@@ -487,7 +487,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 			yDir = 1;
 			xEnd = x2;
 		}
-		PutPixel32(obj, x,y, c);
+		SDLFB_PutPixel32(obj, x,y, c);
 
 		if (((y2-y1)*yDir) > 0) {
 			while (x < xEnd) {
@@ -498,7 +498,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 					y++;
 					d += inc2;
 				}
-				PutPixel32(obj, x,y, c);
+				SDLFB_PutPixel32(obj, x,y, c);
 			}
 		} else {
 			while (x < xEnd) {
@@ -509,7 +509,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 					y--;
 					d += inc2;
 				}
-				PutPixel32(obj, x,y, c);
+				SDLFB_PutPixel32(obj, x,y, c);
 			}
 		}		
 	} else {
@@ -527,7 +527,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 			yEnd = y2;
 			xDir = 1;
 		}
-		PutPixel32(obj, x,y, c);
+		SDLFB_PutPixel32(obj, x,y, c);
 
 		if (((x2-x1)*xDir) > 0) {
 			while (y < yEnd) {
@@ -538,7 +538,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 					x++;
 					d += inc2;
 				}
-				PutPixel32(obj, x,y, c);
+				SDLFB_PutPixel32(obj, x,y, c);
 			}
 		} else {
 			while (y < yEnd) {
@@ -549,7 +549,7 @@ DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 					x--;
 					d += inc2;
 				}
-				PutPixel32(obj, x,y, c);
+				SDLFB_PutPixel32(obj, x,y, c);
 			}
 		}
 	}
@@ -601,7 +601,7 @@ ClipVertLine(AG_DriverSDLFB *sfb, int *x, int *y1, int *y2, int *dy)
 }
 
 static void
-DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
+SDLFB_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	Uint8 *pDst, *pEnd;
@@ -654,7 +654,7 @@ DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
 }
 
 static void
-DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
+SDLFB_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	Uint8 *pDst, *pEnd;
@@ -710,7 +710,7 @@ DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
 }
 
 static __inline__ void
-DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
+SDLFB_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
     AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	int dx, dy;
@@ -737,7 +737,7 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 			ydir = 1;
 			xend = x2;
 		}
-		BlendPixel(obj, x,y, C, fnSrc, fnDst);
+		SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 
 		if (((y2-y1)*ydir) > 0) {
 			while (x < xend) {
@@ -748,7 +748,7 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 					y++;
 					d += inc2;
 				}
-				BlendPixel(obj, x,y, C, fnSrc, fnDst);
+				SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 			}
 		} else {
 			while (x < xend) {
@@ -759,7 +759,7 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 					y--;
 					d += inc2;
 				}
-				BlendPixel(obj, x,y, C, fnSrc, fnDst);
+				SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 			}
 		}		
 	} else {
@@ -777,7 +777,7 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 			yend = y2;
 			xdir = 1;
 		}
-		BlendPixel(obj, x,y, C, fnSrc, fnDst);
+		SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 
 		if (((x2-x1)*xdir) > 0) {
 			while (y < yend) {
@@ -788,7 +788,7 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 					x++;
 					d += inc2;
 				}
-				BlendPixel(obj, x,y, C, fnSrc, fnDst);
+				SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 			}
 		} else {
 			while (y < yend) {
@@ -799,14 +799,14 @@ DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 					x--;
 					d += inc2;
 				}
-				BlendPixel(obj, x,y, C, fnSrc, fnDst);
+				SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 			}
 		}
 	}
 }
 
 static void
-DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color C[2])
+SDLFB_DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color C[2])
 {
 	AG_DriverSDLFB *sfb = obj;
 	int y1 = y0 - (h>>1);
@@ -819,8 +819,8 @@ DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color C[2])
 	c[1] = SDL_MapRGB(sfb->s->format, C[1].r, C[1].g, C[1].b);
 	for (y = y1; y < y2; y+=2) {
 		for (x = xs; x <= xe; x++) {
-			PutPixel32(obj, x,y, (x == xs || x == xe) ? c[1]:c[0]);
-			PutPixel32(obj, x,y+1, c[0]);
+			SDLFB_PutPixel32(obj, x,y, (x == xs || x == xe) ? c[1]:c[0]);
+			SDLFB_PutPixel32(obj, x,y+1, c[0]);
 		}
 		xs--;
 		xe++;
@@ -828,7 +828,7 @@ DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color C[2])
 }
 
 static void
-DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color C[2])
+SDLFB_DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color C[2])
 {
 	AG_DriverSDLFB *sfb = obj;
 	int y1 = y0 - (h>>1);
@@ -841,8 +841,8 @@ DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color C[2])
 	c[1] = SDL_MapRGB(sfb->s->format, C[1].r, C[1].g, C[1].b);
 	for (y = y2; y > y1; y-=2) {
 		for (x = xs; x <= xe; x++) {
-			PutPixel32(obj, x,y, (x == xs || x == xe) ? c[1]:c[0]);
-			PutPixel32(obj, x,y-1, c[0]);
+			SDLFB_PutPixel32(obj, x,y, (x == xs || x == xe) ? c[1]:c[0]);
+			SDLFB_PutPixel32(obj, x,y-1, c[0]);
 		}
 		xs--;
 		xe++;
@@ -850,7 +850,7 @@ DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color C[2])
 }
 
 static void
-DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color C[2])
+SDLFB_DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color C[2])
 {
 	AG_DriverSDLFB *sfb = obj;
 	int x1 = x0 - (h>>1);
@@ -863,8 +863,8 @@ DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color C[2])
 	c[1] = SDL_MapRGB(sfb->s->format, C[1].r, C[1].g, C[1].b);
 	for (x = x1; x < x2; x+=2) {
 		for (y = ys; y <= ye; y++) {
-			PutPixel32(obj, x+1,y, c[0]);
-			PutPixel32(obj, x,y, (y == ys || y == ye) ? c[1]:c[0]);
+			SDLFB_PutPixel32(obj, x+1,y, c[0]);
+			SDLFB_PutPixel32(obj, x,y, (y == ys || y == ye) ? c[1]:c[0]);
 		}
 		ys--;
 		ye++;
@@ -872,7 +872,7 @@ DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color C[2])
 }
 
 static void
-DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color C[2])
+SDLFB_DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color C[2])
 {
 	AG_DriverSDLFB *sfb = obj;
 	int x1 = x0 - (h>>1);
@@ -885,8 +885,8 @@ DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color C[2])
 	c[1] = SDL_MapRGB(sfb->s->format, C[1].r, C[1].g, C[1].b);
 	for (x = x2; x > x1; x-=2) {
 		for (y = ys; y <= ye; y++) {
-			PutPixel32(obj, x-1,y, c[0]);
-			PutPixel32(obj, x,y, (y == ys || y == ye) ? c[1]:c[0]);
+			SDLFB_PutPixel32(obj, x-1,y, c[0]);
+			SDLFB_PutPixel32(obj, x,y, (y == ys || y == ye) ? c[1]:c[0]);
 		}
 		ys--;
 		ye++;
@@ -894,7 +894,7 @@ DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color C[2])
 }
 
 static void
-DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
+SDLFB_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Rect rd;
@@ -910,25 +910,25 @@ DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	rd.y = r.y+rad;
 	rd.w = r.w - rad*2;
 	rd.h = r.h - rad;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.y = r.y;					/* Top rect */
 	rd.h = r.h;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.x = r.x;					/* Left rect */
 	rd.y = r.y+rad;
 	rd.w = rad;
 	rd.h = r.h-rad;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.x = r.x+r.w-rad;				/* Right rect */
 	rd.y = r.y+rad;
 	rd.w = rad;
 	rd.h = r.h-rad;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 
 	/* Top, left and right lines */
-	DrawLineH(obj, r.x+rad,   r.x+r.w-rad, r.y,		C[0]);
-	DrawLineV(obj, r.x,       r.y+rad,     r.y+r.h,		C[1]);
-	DrawLineV(obj, r.x+r.w-1, r.y+rad,     r.y+r.h,		C[2]);
+	SDLFB_DrawLineH(obj, r.x+rad,   r.x+r.w-rad, r.y,		C[0]);
+	SDLFB_DrawLineV(obj, r.x,       r.y+rad,     r.y+r.h,		C[1]);
+	SDLFB_DrawLineV(obj, r.x+r.w-1, r.y+rad,     r.y+r.h,		C[2]);
 
 	/* Top left and top right rounded edges */
 	v = 2*rad - 1;
@@ -937,17 +937,17 @@ DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	x = 0;
 	y = rad;
 	while (x <= y) {
-		PutPixel32(obj, r.x+rad-x, r.y+rad-y,         c[1]);
-		PutPixel32(obj, r.x+rad-y, r.y+rad-x,         c[1]);
-		PutPixel32(obj, r.x-rad+(r.w-1)+x, r.y+rad-y, c[2]);
-		PutPixel32(obj, r.x-rad+(r.w-1)+y, r.y+rad-x, c[2]);
+		SDLFB_PutPixel32(obj, r.x+rad-x, r.y+rad-y,         c[1]);
+		SDLFB_PutPixel32(obj, r.x+rad-y, r.y+rad-x,         c[1]);
+		SDLFB_PutPixel32(obj, r.x-rad+(r.w-1)+x, r.y+rad-y, c[2]);
+		SDLFB_PutPixel32(obj, r.x-rad+(r.w-1)+y, r.y+rad-x, c[2]);
 		for (i = 0; i < x; i++) {
-			PutPixel32(obj, r.x+rad-i, r.y+rad-y,         c[0]);
-			PutPixel32(obj, r.x-rad+(r.w-1)+i, r.y+rad-y, c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i, r.y+rad-y,         c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+(r.w-1)+i, r.y+rad-y, c[0]);
 		}
 		for (i = 0; i < y; i++) {
-			PutPixel32(obj, r.x+rad-i, r.y+rad-x,         c[0]);
-			PutPixel32(obj, r.x-rad+(r.w-1)+i, r.y+rad-x, c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i, r.y+rad-x,         c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+(r.w-1)+i, r.y+rad-x, c[0]);
 		}
 		e += u;
 		u += 2;
@@ -961,7 +961,7 @@ DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 }
 
 static void
-DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
+SDLFB_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Rect rd;
@@ -984,23 +984,23 @@ DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	rd.y = r.y + rad;
 	rd.w = r.w - rad*2;
 	rd.h = r.h - rad*2;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.y = r.y;						/* Top */
 	rd.h = rad;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.y = r.y+r.h - rad;					/* Bottom */
 	rd.h = rad;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.x = r.x;						/* Left */
 	rd.y = r.y + rad;
 	rd.w = rad;
 	rd.h = r.h - rad*2;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 	rd.x = r.x + r.w - rad;					/* Right */
 	rd.y = r.y + rad;
 	rd.w = rad;
 	rd.h = r.h - rad*2;
-	DrawRectFilled(obj, rd, C[0]);
+	SDLFB_DrawRectFilled(obj, rd, C[0]);
 
 	/* Rounded edges */
 	v = 2*rad - 1;
@@ -1009,27 +1009,27 @@ DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	x = 0;
 	y = rad;
 	while (x <= y) {
-		PutPixel32(obj, r.x+rad-x,    r.y+rad-y,     	c[1]);
-		PutPixel32(obj, r.x+rad-y,    r.y+rad-x,     	c[1]);
-		PutPixel32(obj, r.x-rad+w1+x, r.y+rad-y,     	c[2]);
-		PutPixel32(obj, r.x-rad+w1+y, r.y+rad-x,     	c[2]);
+		SDLFB_PutPixel32(obj, r.x+rad-x,    r.y+rad-y,     	c[1]);
+		SDLFB_PutPixel32(obj, r.x+rad-y,    r.y+rad-x,     	c[1]);
+		SDLFB_PutPixel32(obj, r.x-rad+w1+x, r.y+rad-y,     	c[2]);
+		SDLFB_PutPixel32(obj, r.x-rad+w1+y, r.y+rad-x,     	c[2]);
 
-		PutPixel32(obj, r.x+rad-x,    r.y+r.h-rad+y, 	c[1]);
-		PutPixel32(obj, r.x+rad-y,    r.y+r.h-rad+x, 	c[1]);
-		PutPixel32(obj, r.x-rad+w1+x, r.y+r.h-rad+y, 	c[2]);
-		PutPixel32(obj, r.x-rad+w1+y, r.y+r.h-rad+x, 	c[2]);
+		SDLFB_PutPixel32(obj, r.x+rad-x,    r.y+r.h-rad+y, 	c[1]);
+		SDLFB_PutPixel32(obj, r.x+rad-y,    r.y+r.h-rad+x, 	c[1]);
+		SDLFB_PutPixel32(obj, r.x-rad+w1+x, r.y+r.h-rad+y, 	c[2]);
+		SDLFB_PutPixel32(obj, r.x-rad+w1+y, r.y+r.h-rad+x, 	c[2]);
 
 		for (i = 0; i < x; i++) {
-			PutPixel32(obj, r.x+rad-i,    r.y+rad-y,	c[0]);
-			PutPixel32(obj, r.x-rad+w1+i, r.y+rad-y,	c[0]);
-			PutPixel32(obj, r.x+rad-i,    r.y+r.h-rad+y,	c[0]);
-			PutPixel32(obj, r.x-rad+w1+i, r.y+r.h-rad+y,	c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i,    r.y+rad-y,	c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+w1+i, r.y+rad-y,	c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i,    r.y+r.h-rad+y,	c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+w1+i, r.y+r.h-rad+y,	c[0]);
 		}
 		for (i = 0; i < y; i++) {
-			PutPixel32(obj, r.x+rad-i,    r.y+rad-x,	c[0]);
-			PutPixel32(obj, r.x-rad+w1+i, r.y+rad-x,	c[0]);
-			PutPixel32(obj, r.x+rad-i,    r.y+r.h-rad+x,	c[0]);
-			PutPixel32(obj, r.x-rad+w1+i, r.y+r.h-rad+x,	c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i,    r.y+rad-x,	c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+w1+i, r.y+rad-x,	c[0]);
+			SDLFB_PutPixel32(obj, r.x+rad-i,    r.y+r.h-rad+x,	c[0]);
+			SDLFB_PutPixel32(obj, r.x-rad+w1+i, r.y+r.h-rad+x,	c[0]);
 		}
 		e += u;
 		u += 2;
@@ -1042,15 +1042,15 @@ DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
 	}
 	
 	/* Contour lines */
-	DrawLineH(obj, r.x+rad,   r.x+r.w-rad,   r.y,         C[0]);
-	DrawLineH(obj, r.x+rad/2, r.x+r.w-rad/2, r.y,         C[1]);
-	DrawLineH(obj, r.x+rad/2, r.x+r.w-rad/2, r.y+r.h,     C[2]);
-	DrawLineV(obj, r.x,       r.y+rad,       r.y+r.h-rad, C[1]);
-	DrawLineV(obj, r.x+w1,    r.y+rad,       r.y+r.h-rad, C[2]);
+	SDLFB_DrawLineH(obj, r.x+rad,   r.x+r.w-rad,   r.y,         C[0]);
+	SDLFB_DrawLineH(obj, r.x+rad/2, r.x+r.w-rad/2, r.y,         C[1]);
+	SDLFB_DrawLineH(obj, r.x+rad/2, r.x+r.w-rad/2, r.y+r.h,     C[2]);
+	SDLFB_DrawLineV(obj, r.x,       r.y+rad,       r.y+r.h-rad, C[1]);
+	SDLFB_DrawLineV(obj, r.x+w1,    r.y+rad,       r.y+r.h-rad, C[2]);
 }
 
 static void
-DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
+SDLFB_DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int v = 2*radius - 1;
@@ -1060,10 +1060,10 @@ DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 
 	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
 	while (x < y) {
-		PutPixel32(obj, x1+x, y1+y, c);
-		PutPixel32(obj, x1+x, y1-y, c);
-		PutPixel32(obj, x1-x, y1+y, c);
-		PutPixel32(obj, x1-x, y1-y, c);
+		SDLFB_PutPixel32(obj, x1+x, y1+y, c);
+		SDLFB_PutPixel32(obj, x1+x, y1-y, c);
+		SDLFB_PutPixel32(obj, x1-x, y1+y, c);
+		SDLFB_PutPixel32(obj, x1-x, y1-y, c);
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -1072,17 +1072,17 @@ DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 			v -= 2;
 		}
 		x++;
-		PutPixel32(obj, x1+y, y1+x, c);
-		PutPixel32(obj, x1+y, y1-x, c);
-		PutPixel32(obj, x1-y, y1+x, c);
-		PutPixel32(obj, x1-y, y1-x, c);
+		SDLFB_PutPixel32(obj, x1+y, y1+x, c);
+		SDLFB_PutPixel32(obj, x1+y, y1-x, c);
+		SDLFB_PutPixel32(obj, x1-y, y1+x, c);
+		SDLFB_PutPixel32(obj, x1-y, y1-x, c);
 	}
-	PutPixel32(obj, x1-radius, y1, c);
-	PutPixel32(obj, x1+radius, y1, c);
+	SDLFB_PutPixel32(obj, x1-radius, y1, c);
+	SDLFB_PutPixel32(obj, x1+radius, y1, c);
 }
 
 static void
-DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
+SDLFB_DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int v = 2*radius - 1;
@@ -1092,14 +1092,14 @@ DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
 
 	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
 	while (x < y) {
-		PutPixel32(obj, px+x,   py+y, c);
-		PutPixel32(obj, px+x+1, py+y, c);
-		PutPixel32(obj, px+x,   py-y, c);
-		PutPixel32(obj, px+x+1, py-y, c);
-		PutPixel32(obj, px-x,   py+y, c);
-		PutPixel32(obj, px-x-1, py+y, c);
-		PutPixel32(obj, px-x,   py-y, c);
-		PutPixel32(obj, px-x-1, py-y, c);
+		SDLFB_PutPixel32(obj, px+x,   py+y, c);
+		SDLFB_PutPixel32(obj, px+x+1, py+y, c);
+		SDLFB_PutPixel32(obj, px+x,   py-y, c);
+		SDLFB_PutPixel32(obj, px+x+1, py-y, c);
+		SDLFB_PutPixel32(obj, px-x,   py+y, c);
+		SDLFB_PutPixel32(obj, px-x-1, py+y, c);
+		SDLFB_PutPixel32(obj, px-x,   py-y, c);
+		SDLFB_PutPixel32(obj, px-x-1, py-y, c);
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -1108,21 +1108,21 @@ DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
 			v -= 2;
 		}
 		x++;
-		PutPixel32(obj, px+y,   py+x, c);
-		PutPixel32(obj, px+y+1, py+x, c);
-		PutPixel32(obj, px+y,   py-x, c);
-		PutPixel32(obj, px+y+1, py-x, c);
-		PutPixel32(obj, px-y,   py+x, c);
-		PutPixel32(obj, px-y-1, py+x, c);
-		PutPixel32(obj, px-y,   py-x, c);
-		PutPixel32(obj, px-y-1, py-x, c);
+		SDLFB_PutPixel32(obj, px+y,   py+x, c);
+		SDLFB_PutPixel32(obj, px+y+1, py+x, c);
+		SDLFB_PutPixel32(obj, px+y,   py-x, c);
+		SDLFB_PutPixel32(obj, px+y+1, py-x, c);
+		SDLFB_PutPixel32(obj, px-y,   py+x, c);
+		SDLFB_PutPixel32(obj, px-y-1, py+x, c);
+		SDLFB_PutPixel32(obj, px-y,   py-x, c);
+		SDLFB_PutPixel32(obj, px-y-1, py-x, c);
 	}
-	PutPixel32(obj, px-radius, py, c);
-	PutPixel32(obj, px+radius, py, c);
+	SDLFB_PutPixel32(obj, px-radius, py, c);
+	SDLFB_PutPixel32(obj, px+radius, py, c);
 }
 
 static void
-DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
+SDLFB_DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Rect rd;
@@ -1136,7 +1136,7 @@ DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
 }
 
 static void
-DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
+SDLFB_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
     AG_BlendFn fnDst)
 {
 	AG_DriverSDLFB *sfb = obj;
@@ -1147,13 +1147,13 @@ DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
 			if (ClippedPixel(sfb->s, x,y)) {
 				continue;
 			}
-			BlendPixel(obj, x,y, C, fnSrc, fnDst);
+			SDLFB_BlendPixel(obj, x,y, C, fnSrc, fnDst);
 		}
 	}
 }
 
 static void
-DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
+SDLFB_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int x, y;
@@ -1165,27 +1165,27 @@ DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 	for (y = r.y; y < r.y+r.h-2; y++) {
 		flag = !flag;
 		for (x = r.x+1+flag; x < r.x+r.w-2; x+=2)
-			PutPixel32(obj, x,y, c);
+			SDLFB_PutPixel32(obj, x,y, c);
 	}
 }
 
 static void
-DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
+SDLFB_DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
 {
-	DrawLineH(obj, r.x,		r.x+r.w-1,	r.y,		C[0]);
-	DrawLineH(obj, r.x,		r.x+r.w,	r.y+r.h-1,	C[1]);
-	DrawLineV(obj, r.x,		r.y,		r.y+r.h-1,	C[0]);
-	DrawLineV(obj, r.x+r.w-1,	r.y,		r.y+r.h-1,	C[1]);
+	SDLFB_DrawLineH(obj, r.x,		r.x+r.w-1,	r.y,		C[0]);
+	SDLFB_DrawLineH(obj, r.x,		r.x+r.w,	r.y+r.h-1,	C[1]);
+	SDLFB_DrawLineV(obj, r.x,		r.y,		r.y+r.h-1,	C[0]);
+	SDLFB_DrawLineV(obj, r.x+r.w-1,	r.y,		r.y+r.h-1,	C[1]);
 }
 
 static void
-UpdateGlyph(void *drv, AG_Glyph *gl)
+SDLFB_UpdateGlyph(void *drv, AG_Glyph *gl)
 {
 	/* Nothing to do */
 }
 
 static void
-DrawGlyph(void *drv, const AG_Glyph *gl, int x, int y)
+SDLFB_DrawGlyph(void *drv, const AG_Glyph *gl, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 	
@@ -1213,7 +1213,7 @@ InitClipRects(AG_DriverSDLFB *sfb, int wView, int hView)
  */
 
 static int
-OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
+SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
@@ -1291,7 +1291,7 @@ fail:
 }
 
 static int
-OpenVideoContext(void *obj, void *ctx, Uint flags)
+SDLFB_OpenVideoContext(void *obj, void *ctx, Uint flags)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_DriverSw *dsw = obj;
@@ -1337,7 +1337,7 @@ fail:
 }
 
 static void
-CloseVideo(void *obj)
+SDLFB_CloseVideo(void *obj)
 {
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -1346,7 +1346,7 @@ CloseVideo(void *obj)
 }
 
 static int
-VideoResize(void *obj, Uint w, Uint h)
+SDLFB_VideoResize(void *obj, Uint w, Uint h)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -1385,7 +1385,7 @@ VideoResize(void *obj, Uint w, Uint h)
 }
 
 static int
-VideoCapture(void *obj, AG_Surface **ds)
+SDLFB_VideoCapture(void *obj, AG_Surface **ds)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Surface *s;
@@ -1398,7 +1398,7 @@ VideoCapture(void *obj, AG_Surface **ds)
 }
 
 static void
-VideoClear(void *obj, AG_Color c)
+SDLFB_VideoClear(void *obj, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
 
@@ -1424,8 +1424,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		AG_FRAMEBUFFER,
 		AG_WM_SINGLE,
 		AG_DRIVER_SDL,
-		Open,
-		Close,
+		SDLFB_Open,
+		SDLFB_Close,
 		AG_SDL_GetDisplaySize,
 		AG_SDL_BeginEventProcessing,
 		AG_SDL_PendingEvents,
@@ -1434,63 +1434,63 @@ AG_DriverSwClass agDriverSDLFB = {
 		AG_SDL_GenericEventLoop,
 		AG_SDL_EndEventProcessing,
 		AG_SDL_Terminate,
-		BeginRendering,
-		RenderWindow,
-		EndRendering,
-		FillRect,
-		UpdateRegion,
+		SDLFB_BeginRendering,
+		SDLFB_RenderWindow,
+		SDLFB_EndRendering,
+		SDLFB_FillRect,
+		SDLFB_UpdateRegion,
 		NULL,			/* uploadTexture */
 		NULL,			/* updateTexture */
 		NULL,			/* deleteTexture */
 		AG_SDL_SetRefreshRate,
-		PushClipRect,
-		PopClipRect,
-		PushBlendingMode,
-		PopBlendingMode,
+		SDLFB_PushClipRect,
+		SDLFB_PopClipRect,
+		SDLFB_PushBlendingMode,
+		SDLFB_PopBlendingMode,
 		AG_SDL_CreateCursor,
 		AG_SDL_FreeCursor,
 		AG_SDL_SetCursor,
 		AG_SDL_UnsetCursor,
 		AG_SDL_GetCursorVisibility,
 		AG_SDL_SetCursorVisibility,
-		BlitSurface,
-		BlitSurfaceFrom,
-		BlitSurfaceGL,
-		BlitSurfaceFromGL,
-		BlitSurfaceFlippedGL,
+		SDLFB_BlitSurface,
+		SDLFB_BlitSurfaceFrom,
+		SDLFB_BlitSurfaceGL,
+		SDLFB_BlitSurfaceFromGL,
+		SDLFB_BlitSurfaceFlippedGL,
 		NULL,			/* backupSurfaces */
 		NULL,			/* restoreSurfaces */
-		RenderToSurface,
-		PutPixel,
-		PutPixel32,
-		PutPixelRGB,
-		BlendPixel,
-		DrawLine,
-		DrawLineH,
-		DrawLineV,
-		DrawLineBlended,
-		DrawArrowUp,
-		DrawArrowDown,
-		DrawArrowLeft,
-		DrawArrowRight,
-		DrawBoxRounded,
-		DrawBoxRoundedTop,
-		DrawCircle,
-		DrawCircle2,
-		DrawRectFilled,
-		DrawRectBlended,
-		DrawRectDithered,
-		DrawFrame,
-		UpdateGlyph,
-		DrawGlyph
+		SDLFB_RenderToSurface,
+		SDLFB_PutPixel,
+		SDLFB_PutPixel32,
+		SDLFB_PutPixelRGB,
+		SDLFB_BlendPixel,
+		SDLFB_DrawLine,
+		SDLFB_DrawLineH,
+		SDLFB_DrawLineV,
+		SDLFB_DrawLineBlended,
+		SDLFB_DrawArrowUp,
+		SDLFB_DrawArrowDown,
+		SDLFB_DrawArrowLeft,
+		SDLFB_DrawArrowRight,
+		SDLFB_DrawBoxRounded,
+		SDLFB_DrawBoxRoundedTop,
+		SDLFB_DrawCircle,
+		SDLFB_DrawCircle2,
+		SDLFB_DrawRectFilled,
+		SDLFB_DrawRectBlended,
+		SDLFB_DrawRectDithered,
+		SDLFB_DrawFrame,
+		SDLFB_UpdateGlyph,
+		SDLFB_DrawGlyph
 	},
 	0,
-	OpenVideo,
-	OpenVideoContext,
-	CloseVideo,
-	VideoResize,
-	VideoCapture,
-	VideoClear
+	SDLFB_OpenVideo,
+	SDLFB_OpenVideoContext,
+	SDLFB_CloseVideo,
+	SDLFB_VideoResize,
+	SDLFB_VideoCapture,
+	SDLFB_VideoClear
 };
 
 #endif /* HAVE_SDL */
