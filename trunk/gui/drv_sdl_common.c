@@ -727,10 +727,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	AG_Driver *drv = (AG_Driver *)obj;
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
 	int rv = 0;
-	
-	if (dev->win == NULL) {
-		return (0);
-	}
+
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
 		rv = ProcessInputEvent(drv, dev);
@@ -765,7 +762,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = 1;
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_PostEvent(NULL, dev->win, "window-close", NULL);
+		AG_SDL_Terminate();
 		rv = 1;
 		break;
 	case AG_DRIVER_EXPOSE:
@@ -822,7 +819,7 @@ AG_SDL_GenericEventLoop(void *obj)
 				    AG_SDL_ProcessEvent(drv, &dev) == -1)
 					return;
 #ifdef AG_DEBUG
-				agEventAvg++;
+					agEventAvg++;
 #endif
 			} while (SDL_PollEvent(NULL) != 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
