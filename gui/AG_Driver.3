@@ -84,18 +84,33 @@ and process low-level events (see below).
 .Ft "void"
 .Fn AG_DriverClose "AG_Driver *drv"
 .Pp
+.Ft "void"
+.Fn AG_ListDriverNames "char *buf" "size_t buf_len"
+.Pp
 .nr nS 0
 The
 .Fn AG_DriverOpen
 function creates a new instance of a driver class, as described by
-.Fa dc .
-This function is seldom invoked directly, since it is called internally by
+.Fa dc
+(see section below).
+.Fn AG_DriverClose
+destroys a driver instance.
+These two functions are seldom used directly, since they are called
+internally from either
 .Xr AG_InitGraphics 3
-(or
+or
 .Xr AG_WindowNew 3
-in the case of multiple-window drivers which create one driver instance
-per window).
+in the case of multiple-window drivers (which use one driver instance per
+window).
 .Pp
+The
+.Fn AG_ListDriverNames
+returns a space-separated list of available drivers for the current
+platform, into the specified buffer
+.Fa buf
+of size
+.Fa buf_len . 
+.Sh DRIVER INTERFACE
 The
 .Ft AG_DriverClass
 structure inherits from the base

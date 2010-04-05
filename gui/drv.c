@@ -74,6 +74,26 @@ void *agDriverList[] = {
 };
 Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
 
+/* Return a string with the available drivers. */
+void
+AG_ListDriverNames(char *buf, size_t buf_len)
+{
+	Uint i;
+
+	if (buf_len == 0) {
+		return;
+	}
+	buf[0] = '\0';
+
+	for (i = 0; i < agDriverListSize; i++) {
+		AG_DriverClass *drvClass = agDriverList[i];
+
+		Strlcat(buf, drvClass->name, buf_len);
+		if (i < agDriverListSize-1)
+			Strlcat(buf, " ", buf_len);
+	}
+}
+
 /* Create an instance of the given driver class, if it opens successfully. */
 AG_Driver *
 AG_DriverOpen(AG_DriverClass *dc)

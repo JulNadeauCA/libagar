@@ -183,6 +183,8 @@ extern void           *agDriverList[];	/* Available drivers (AG_DriverClass) */
 extern Uint            agDriverListSize;
 extern int             agRenderingContext;
 
+void       AG_ListDriverNames(char *, size_t)
+                              BOUNDED_ATTRIBUTE(__string__, 1, 2);
 AG_Driver *AG_DriverOpen(AG_DriverClass *);
 void       AG_DriverClose(AG_Driver *);
 void       AG_ViewCapture(void);

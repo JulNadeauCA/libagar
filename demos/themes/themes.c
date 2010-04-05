@@ -16,6 +16,7 @@
 #include <agar/core/types.h>
 
 #include <agar/config/ag_debug.h>
+#include <agar/config/version.h>
 
 #include "mytheme.h"
 
@@ -473,14 +474,20 @@ main(int argc, char *argv[])
 	AG_ObjectSetName(win, "PanelWindow");
 	AG_WindowSetCaption(win, "Agar version / driver");
 	{
+		char drvNames[256];
 		AG_Label *lbl;
 		AG_Box *hBox;
 
+		AG_ListDriverNames(drvNames, sizeof(drvNames));
 		lbl = AG_LabelNew(win, 0,
-		    "Using Agar version: %d.%d.%d (\"%s\")\n"
-		    "Graphics driver: %s",
-		    ver.major, ver.minor, ver.patch, ver.release,
-		    AGWIDGET(win)->drvOps->name);
+		    "Agar Library Version: %d.%d.%d\n"
+		    "Compiled Release: %s (\"%s\")\n"
+		    "Using Graphics Driver: %s\n"
+		    "(available drivers: <%s>)",
+		    ver.major, ver.minor, ver.patch,
+		    VERSION, ver.release,
+		    AGWIDGET(win)->drvOps->name,
+		    drvNames);
 		AG_ExpandHoriz(lbl);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
