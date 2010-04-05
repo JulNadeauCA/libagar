@@ -37,15 +37,15 @@ details.
 
 Documentation
 -------------
-- The Agar Manual, available online at:
-  http://wiki.libagar.org/Manual/.
-- The API Reference. This is a detailed description of all public Agar
-  structures, objects and functions. On Unix-like systems, it is installed
-  in traditional manual page format (see AG_Intro(3)). The API Reference
-  is also available online at:
+- The online API Reference. This is a detailed description of all
+  public Agar structures, objects and functions, at:
   http://libagar.org/man3
-- The Agar Wiki (user-contributed tutorials, code snippets, etc.), at:
+- On Unix-like platforms, the API reference is also available in
+  traditional manual page format; see AG_Intro(3).
+- The Agar Wiki (user-contributed tutorials, code snippets), at:
   http://wiki.libagar.org/
+- The Agar Manual (work in progress), at:
+  http://libagar.org/man/.
 
 Availability
 ------------
@@ -55,10 +55,10 @@ http://libagar.org/download.html.
 Portability
 -----------
 Agar is portable to many different platforms, including FreeBSD, IRIX,
-Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD, Solaris and Windows. It
-has even been ported to various consoles such as the GP2x, Nintendo
-Gamecube/Wii, Sony Playstation2 and Nintendo DS. For the list of official
-ports, see: http://libagar.org/portable.html.
+Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD, Solaris and Windows. Agar
+has been used on ARM embedded devices. It has even been ported to game
+consoles such as the GP2x and Nintendo Gamecube/Wii. See:
+http://libagar.org/portable.html.
 
 License
 -------
