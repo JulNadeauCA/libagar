@@ -175,7 +175,21 @@ AG_Verbose(const char *fmt, ...)
 		return;
 
 	va_start(args, fmt);
+#ifdef _WIN32
+	{
+		char path[AG_FILENAME_MAX];
+		FILE *f;
+
+		Strlcpy(path, agProgName, sizeof(path));
+		Strlcat(path, ".out", sizeof(path));
+		if ((f = fopen(path, "a")) != NULL) {
+			vfprintf(f, fmt, args);
+			fclose(f);
+		}
+	}
+#else
 	vprintf(fmt, args);
+#endif
 	va_end(args);
 }
 
