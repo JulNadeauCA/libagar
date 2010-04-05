@@ -959,13 +959,11 @@ static void
 ShowPopup(AG_Table *t, AG_TablePopup *tp, int x, int y)
 {
 	if (tp->panel != NULL) {
-		AG_MenuCollapse(tp->menu, tp->item);
+		AG_MenuCollapse(t, tp->item);
 		tp->panel = NULL;
 	}
 	tp->menu->itemSel = tp->item;
-	tp->panel = AG_MenuExpand(tp->menu, tp->item,
-	    WIDGET(t)->rView.x1 + x + 4,
-	    WIDGET(t)->rView.y1 + y + 4);
+	tp->panel = AG_MenuExpand(t, tp->item, x+4, y+4);
 }
 
 /* Right click on a column header; display the column's popup menu. */

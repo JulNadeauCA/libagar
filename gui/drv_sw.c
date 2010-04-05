@@ -141,7 +141,7 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	AG_MenuAction(mi, _("Exit application"), agIconWinClose.s,
 	    ExitApplication, NULL);
 				
-	AG_MenuExpand(me, mi,
+	AG_MenuExpand(NULL, mi,
 	    AGDRIVER(dsw)->mouse->x + 4,
 	    AGDRIVER(dsw)->mouse->y + 4);
 }

@@ -97,7 +97,7 @@ TickFrame(void *p, Uint32 ival, void *arg)
 static void
 CloseMenu(RG_Animview *av)
 {
-	AG_MenuCollapse(av->menu, av->menu_item);
+	AG_MenuCollapse(av, av->menu_item);
 	AG_ObjectDestroy(av->menu);
 	av->menu = NULL;
 	av->menu_win = NULL;
@@ -152,9 +152,7 @@ OpenMenu(RG_Animview *av, int x, int y)
 		}
 	}
 
-	av->menu_win = AG_MenuExpand(av->menu, av->menu_item,
-	    WIDGET(av)->rView.x1 + x,
-	    WIDGET(av)->rView.y1 + y);
+	av->menu_win = AG_MenuExpand(av, av->menu_item, x, y);
 }
 
 static void
