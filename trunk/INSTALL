@@ -1,13 +1,14 @@
 
 Prerequisites
 -------------
-Agar has no mandatory dependencies.
+Starting from version 1.4.0, Agar has no dependencies.
 
 Options
 -------
-- The OpenGL rendering driver requires an OpenGL library.
+- The OpenGL rendering drivers ("glx", "wgl", "sdlgl") require an OpenGL
+  library.
 
-- The SDL rendering driver requires at least SDL 1.2.0
+- The SDL rendering drivers ("sdlgl", "sdlfb") require at least SDL 1.2.0
   (http://www.libsdl.org/).
 
 - The FreeType library (http://www.freetype.org/) is required for high

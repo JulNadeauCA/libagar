@@ -2,44 +2,63 @@
 Release Notes for Agar 1.4 (Landscapes of Frozen Methane)
 ---------------------------------------------------------
 
-(Work in progress)
-
 Here are some of the most notable changes since Agar 1.3.4, in no
 particular order. A wikified version of this list is available at:
 http://wiki.libagar.org/wiki/Agar-1.4.
 
-- Added support for multiple native windows; rework of the basic graphics
-  and input device interface. As of this release, the available drivers are:
+This release preserves backward compatibility with Agar 1.3.4, but it is
+recommended to compile Agar with the `--disable-legacy' configure option,
+ensuring that existing applications are not using deprecated API calls.
+
+- Added support for multiple native windows; rework of the low-level graphics
+  and input device interfaces. As of this release, the available drivers are:
   - "glx" (GL rendering via X Window System; multiple windows)
   - "wgl" (GL rendering under Windows; multiple windows)
-  - "sdlfb" (framebuffer rendering via SDL; single window)
-  - "sdlgl" (GL rendering via SDL; single window)
+  - "sdlfb" (framebuffer rendering via SDL; internal WM)
+  - "sdlgl" (GL rendering via SDL; internal WM)
+  New drivers can also be implemented as part of an application, the driver
+  API is documented in AG_Driver(3).
 - Applications should now use AG_InitGraphics() to initialize the graphical
   interface. Backward compatibility is preserved, but AG_InitVideo() will
   only select among single-window graphics drivers.
 - Agar can now be built without the SDL library, where the SDL graphics
   driver is not needed.
+- Many improvements to the AG_Surface(3) interface.
+- Implement generic AG_Keyboard and AG_Mouse interfaces; allow for multiple
+  input devices.
 - Implement widget "actions" as a generic method of handling mouse and
   keyboard actions per user preferences (see AG_Widget(3)/ACTIONS).
-- Windows are now attached, like widgets, using generic AG_ObjectAttach()
-  and AG_ObjectDetach(), against a parent AG_Driver(3). With multiple-window
-  drivers, there is one Driver instance per Window. AG_ViewDetach() is now
-  marked deprecated.
+- Agar windows are now attached and detached using AG_ObjectAttach() and
+  AG_ObjectDetach() against a parent AG_Driver(3); the AG_ViewDetach()
+  function is now deprecated.
 - Added AG_Tbl(3), AG_Tree(3) interfaces to ag_core.
 - Fix handling of dynamically-allocated strings in AG_CopyVariable().
 - Implement AG_TlistUniq(), AG_TlistAddHead().
-- Avoid a very inefficient tree traversal in AG_LookupClass() by keeping
-  a separate hash table for class specification strings.
+- Important optimizations to AG_LookupClass().
 - Consistently provide plain string variants for every function accepting
   format string arguments. This allows for more efficient code, and avoids
   complications with language bindings.
 - As the "window-*" prefixes in events such as "window-mousemotion" is no
   longer relevant, mark them deprecated in favor of "mouse-*" and "key-*".
 - The integer typedefs Uint8, Sint8, Uint16, Sint16, etc. are no longer
-  made public unless _USE_AGAR_TYPES is defined.
-- AG_Textbox(3) now uses AG_Label(3) to display its optional text label.
-- Added AG_TextboxSetFont(), AG_EditableSetFont(). The "font" structure
-  members of AG_Textbox(3) and AG_Editable(3) are now public.
-- Various improvements to AG_Console(3), added scrolling actions.
-- Implement AG_SCROLLBAR_AUTOSIZE option in AG_Scrollbar(3).
-
+  made public unless _USE_AGAR_TYPES is explicitely defined.
+- Widgets such as AG_Textbox(3) now embed AG_Label(3) widgets to display
+  their associated text labels.
+- Added AG_TextboxSetFont(), AG_EditableSetFont(), AG_ConsoleSetFont().
+- Various additions to AG_Console(3).
+- It is now possible to have the AG_Scrollbar(3) control size scaled
+  automatically from the "visible" binding, by enabling AG_SCROLLBAR_AUTOSIZE.
+- Consistently represent color values using AG_Color(3) throughout the API.
+- Many additions and updates to the API reference.
+- Added various size hint routines: AG_ProgressBarSetLength(),
+  AG_ScrollbarSizeHint().
+- Fixed a few memory leaks on AG_Destroy(); added demos/reinit/ test case.
+- Cursor changes are no longer performed directly from widget code. Instead,
+  widgets now register "cursor change areas" via the AG_Cursor(3) interface.
+- Introduce AG_EventQ structure, 
+- Added AG_ObjectSetAttachFn(), AG_ObjectSetDetachFn(), AG_ObjectMoveToHead()
+  and AG_ObjectMoveToTail() functions, allowing the order of child objects
+  to be controlled. This is used by AG_Window(3) where order is important.
+- Implemented AG_ShortFilename() utility routine.
+- VG: Implemented VG_Status(), VG_TextString(). VG_View(3) now uses widget
+  actions.
