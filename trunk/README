@@ -69,11 +69,10 @@ How to contribute
 -----------------
 See: http://libagar.org/contribute.html.
 
-Other libraries based on Agar
------------------------------
-There are a number of useful libraries based on Agar. Some of them are
-bundled with this source distribution (Agar-VG, etc), but you will need
-to explicitely link your application against them in order to use them.
+Libraries and toolkits based on Agar
+------------------------------------
+Here are some useful libraries which implement new Agar widgets and
+extend Agar's functionality toward more specific applications:
 
 Agar-MATH	General-purpose math library (bundled, use `agar-math-config`)
 Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
