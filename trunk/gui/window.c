@@ -943,6 +943,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 		goto fail;
 	}
 	AG_WidgetUpdateCoords(win, a.x, a.y);
+
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		if (win->visible && !new) {
@@ -950,7 +951,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if (win->visible &&
+		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 		    AGDRIVER_MW_CLASS(drv)->moveResizeWindow(win, &a) == -1) {
 			goto fail;
 		}
@@ -1677,8 +1678,8 @@ scan:
 			if (ca->stock == -1) {
 				AG_CursorFree(drv, ca->c);
 			}
-			Free(ca);
 			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+			Free(ca);
 			goto scan;
 		}
 	}
