@@ -103,11 +103,11 @@ AG_DriverMwClass agDriverGLX;
 #define AGDRIVER_IS_GLX(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
 
-static void PostResizeCallback(AG_Window *, AG_SizeAlloc *);
-static void PostMoveCallback(AG_Window *, AG_SizeAlloc *);
-static int  RaiseWindow(AG_Window *);
-static int  SetInputFocus(AG_Window *);
-static void SetTransientFor(AG_Window *, AG_Window *);
+static void GLX_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
+static void GLX_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
+static int  GLX_RaiseWindow(AG_Window *);
+static int  GLX_SetInputFocus(AG_Window *);
+static void GLX_SetTransientFor(AG_Window *, AG_Window *);
 
 static void
 Init(void *obj)
@@ -185,7 +185,7 @@ HandleErrorX11(Display *disp, XErrorEvent *xev)
 #endif /* DEBUG_XSYNC */
 
 static int
-Open(void *obj, const char *spec)
+GLX_Open(void *obj, const char *spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
@@ -232,7 +232,7 @@ fail:
 }
 
 static void
-Close(void *obj)
+GLX_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 
@@ -252,7 +252,7 @@ Close(void *obj)
 }
 
 static int
-GetDisplaySize(Uint *w, Uint *h)
+GLX_GetDisplaySize(Uint *w, Uint *h)
 {
 	AG_MutexLock(&agDisplayLock);
 	*w = (Uint)DisplayWidth(agDisplay, agScreen);
@@ -431,7 +431,7 @@ UpdateKeyboardAll(char *kv)
 }
 
 static __inline__ int
-PendingEvents(void *drvCaller)
+GLX_PendingEvents(void *drvCaller)
 {
 	struct timeval tv;
 	fd_set fdset;
@@ -486,8 +486,8 @@ PostEventCallback(void *drvCaller)
 		if (glx != NULL && AGDRIVER_IS_GLX(glx)) {
 			AG_MutexLock(&agDisplayLock);
 			AG_MutexLock(&glx->lock);
-			RaiseWindow(agWindowToFocus);
-			SetInputFocus(agWindowToFocus);
+			GLX_RaiseWindow(agWindowToFocus);
+			GLX_SetInputFocus(agWindowToFocus);
 			AG_MutexUnlock(&glx->lock);
 			AG_MutexUnlock(&agDisplayLock);
 		}
@@ -498,7 +498,7 @@ PostEventCallback(void *drvCaller)
 }
 
 static int
-GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
+GLX_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	XEvent xev;
 	int x, y;
@@ -686,7 +686,7 @@ GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 }
 
 static int
-ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
+GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	AG_Driver *drv;
 	AG_SizeAlloc a;
@@ -745,9 +745,9 @@ ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		a.w = dev->data.videoresize.w;
 		a.h = dev->data.videoresize.h;
 		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
-			PostResizeCallback(dev->win, &a);
+			GLX_PostResizeCallback(dev->win, &a);
 		} else {
-			PostMoveCallback(dev->win, &a);
+			GLX_PostMoveCallback(dev->win, &a);
 		}
 		break;
 	case AG_DRIVER_CLOSE:
@@ -769,7 +769,7 @@ ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 }
 
 static void
-GenericEventLoop(void *obj)
+GLX_GenericEventLoop(void *obj)
 {
 	AG_Driver *drv;
 	AG_DriverGLX *glx;
@@ -802,15 +802,15 @@ GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-		} else if (PendingEvents(NULL) != 0) {
+		} else if (GLX_PendingEvents(NULL) != 0) {
 			do {
-				if (GetNextEvent(NULL, &dev) == 1 &&
-				    ProcessEvent(NULL, &dev) == -1)
+				if (GLX_GetNextEvent(NULL, &dev) == 1 &&
+				    GLX_ProcessEvent(NULL, &dev) == -1)
 					return;
 #ifdef AG_DEBUG
 				agEventAvg++;
 #endif
-			} while (PendingEvents(NULL) > 0);
+			} while (GLX_PendingEvents(NULL) > 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
 		} else {
@@ -820,7 +820,7 @@ GenericEventLoop(void *obj)
 }
 
 static void
-Terminate(void)
+GLX_Terminate(void)
 {
 	AG_DriverGLX *glx;
 	XClientMessageEvent xe;
@@ -842,7 +842,7 @@ Terminate(void)
 }
 
 static void
-BeginRendering(void *obj)
+GLX_BeginRendering(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 
@@ -852,7 +852,7 @@ BeginRendering(void *obj)
 }
 
 static void
-RenderWindow(AG_Window *win)
+GLX_RenderWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
@@ -871,7 +871,7 @@ RenderWindow(AG_Window *win)
 }
 
 static void
-EndRendering(void *obj)
+GLX_EndRendering(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 	Uint i;
@@ -892,7 +892,7 @@ EndRendering(void *obj)
 }
 
 static void
-DeleteTexture(void *drv, Uint texture)
+GLX_DeleteTexture(void *drv, Uint texture)
 {
 	AG_DriverGLX *glx = drv;
 
@@ -904,7 +904,7 @@ DeleteTexture(void *drv, Uint texture)
 }
 
 static int
-SetRefreshRate(void *obj, int fps)
+GLX_SetRefreshRate(void *obj, int fps)
 {
 	if (fps < 1) {
 		AG_SetError("Invalid refresh rate");
@@ -922,7 +922,7 @@ SetRefreshRate(void *obj, int fps)
  */
 
 static void
-PushClipRect(void *obj, AG_Rect r)
+GLX_PushClipRect(void *obj, AG_Rect r)
 {
 	AG_DriverGLX *glx = obj;
 	AG_ClipRect *cr, *crPrev;
@@ -962,7 +962,7 @@ PushClipRect(void *obj, AG_Rect r)
 }
 
 static void
-PopClipRect(void *obj)
+GLX_PopClipRect(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 	AG_ClipRect *cr;
@@ -984,7 +984,7 @@ PopClipRect(void *obj)
 }
 
 static void
-PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+GLX_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 {
 	AG_DriverGLX *glx = obj;
 	
@@ -1005,7 +1005,7 @@ PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 }
 
 static void
-PopBlendingMode(void *obj)
+GLX_PopBlendingMode(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 	
@@ -1027,7 +1027,7 @@ PopBlendingMode(void *obj)
  */
 
 static int
-CreateCursor(void *obj, AG_Cursor *ac)
+GLX_CreateCursor(void *obj, AG_Cursor *ac)
 {
 	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *cg;
@@ -1117,7 +1117,7 @@ CreateCursor(void *obj, AG_Cursor *ac)
 }
 
 static void
-FreeCursor(void *obj, AG_Cursor *ac)
+GLX_FreeCursor(void *obj, AG_Cursor *ac)
 {
 	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *cg = ac->p;
@@ -1137,7 +1137,7 @@ FreeCursor(void *obj, AG_Cursor *ac)
 }
 
 static int
-SetCursor(void *obj, AG_Cursor *ac)
+GLX_SetCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
@@ -1167,7 +1167,7 @@ SetCursor(void *obj, AG_Cursor *ac)
 }
 
 static void
-UnsetCursor(void *obj)
+GLX_UnsetCursor(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
@@ -1188,14 +1188,14 @@ UnsetCursor(void *obj)
 }
 
 static int
-GetCursorVisibility(void *obj)
+GLX_GetCursorVisibility(void *obj)
 {
 	/* XXX TODO */
 	return (1);
 }
 
 static void
-SetCursorVisibility(void *obj, int flag)
+GLX_SetCursorVisibility(void *obj, int flag)
 {
 	/* XXX TODO */
 }
@@ -1365,7 +1365,7 @@ SetNoDecorationHints(AG_Window *win)
 }
 
 static int
-OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
+GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -1429,7 +1429,7 @@ OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
 
 	if (win->parent != NULL) {
-		SetTransientFor(win, win->parent);
+		GLX_SetTransientFor(win, win->parent);
 	}
 	SetWmNormalHints(win, &r, mwFlags);
 
@@ -1481,7 +1481,7 @@ fail_unlock:
 }
 
 static void
-CloseWindow(AG_Window *win)
+GLX_CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
@@ -1516,7 +1516,7 @@ CloseWindow(AG_Window *win)
 }
 
 static int
-MapWindow(AG_Window *win)
+GLX_MapWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1531,7 +1531,7 @@ MapWindow(AG_Window *win)
 	a.y = WIDGET(win)->y;
 	a.w = WIDTH(win);
 	a.h = HEIGHT(win);
-	PostResizeCallback(win, &a);
+	GLX_PostResizeCallback(win, &a);
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -1540,7 +1540,7 @@ MapWindow(AG_Window *win)
 }
 
 static int
-UnmapWindow(AG_Window *win)
+GLX_UnmapWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1557,7 +1557,7 @@ UnmapWindow(AG_Window *win)
 }
 
 static int
-RaiseWindow(AG_Window *win)
+GLX_RaiseWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	
@@ -1572,7 +1572,7 @@ RaiseWindow(AG_Window *win)
 }
 
 static int
-LowerWindow(AG_Window *win)
+GLX_LowerWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	
@@ -1587,7 +1587,7 @@ LowerWindow(AG_Window *win)
 }
 
 static int
-ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
+GLX_ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
 {
 	AG_DriverGLX *glxWin = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_DriverGLX *glxParentWin = (AG_DriverGLX *)WIDGET(winParent)->drv;
@@ -1608,7 +1608,7 @@ ReparentWindow(AG_Window *win, AG_Window *winParent, int x, int y)
 }
 
 static int
-GetInputFocus(AG_Window **rv)
+GLX_GetInputFocus(AG_Window **rv)
 {
 	AG_DriverGLX *glx = NULL;
 	Window wRet;
@@ -1634,7 +1634,7 @@ GetInputFocus(AG_Window **rv)
 }
 
 static int
-SetInputFocus(AG_Window *win)
+GLX_SetInputFocus(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
@@ -1649,7 +1649,7 @@ SetInputFocus(AG_Window *win)
 }
 
 static void
-PreResizeCallback(AG_Window *win)
+GLX_PreResizeCallback(AG_Window *win)
 {
 #if 0
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
@@ -1666,7 +1666,7 @@ PreResizeCallback(AG_Window *win)
 }
 
 static void
-PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
+GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
@@ -1703,7 +1703,7 @@ PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 }
 
 static void
-PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
+GLX_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	int x = a->x;
 	int y = a->y;
@@ -1720,7 +1720,7 @@ PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 }
 
 static int
-MoveWindow(AG_Window *win, int x, int y)
+GLX_MoveWindow(AG_Window *win, int x, int y)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1763,7 +1763,7 @@ RegenWidgetResources(AG_Widget *wid)
 #endif
 
 static int
-ResizeWindow(AG_Window *win, Uint w, Uint h)
+GLX_ResizeWindow(AG_Window *win, Uint w, Uint h)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1781,7 +1781,7 @@ ResizeWindow(AG_Window *win, Uint w, Uint h)
 }
 
 static int
-MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
+GLX_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1803,7 +1803,7 @@ MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 }
 
 static int
-SetBorderWidth(AG_Window *win, Uint width)
+GLX_SetBorderWidth(AG_Window *win, Uint width)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
@@ -1820,7 +1820,7 @@ SetBorderWidth(AG_Window *win, Uint width)
 }
 
 static int
-SetWindowCaption(AG_Window *win, const char *s)
+GLX_SetWindowCaption(AG_Window *win, const char *s)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XTextProperty xtp;
@@ -1861,7 +1861,7 @@ fail:
 }
 
 static void
-SetTransientFor(AG_Window *win, AG_Window *winParent)
+GLX_SetTransientFor(AG_Window *win, AG_Window *winParent)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_DriverGLX *glxParent;
@@ -1899,35 +1899,35 @@ AG_DriverMwClass agDriverGLX = {
 		AG_VECTOR,
 		AG_WM_MULTIPLE,
 		AG_DRIVER_OPENGL|AG_DRIVER_TEXTURES,
-		Open,
-		Close,
-		GetDisplaySize,
+		GLX_Open,
+		GLX_Close,
+		GLX_GetDisplaySize,
 		NULL,			/* beginEventProcessing */
-		PendingEvents,
-		GetNextEvent,
-		ProcessEvent,
-		GenericEventLoop,
+		GLX_PendingEvents,
+		GLX_GetNextEvent,
+		GLX_ProcessEvent,
+		GLX_GenericEventLoop,
 		NULL,			/* endEventProcessing */
-		Terminate,
-		BeginRendering,
-		RenderWindow,
-		EndRendering,
+		GLX_Terminate,
+		GLX_BeginRendering,
+		GLX_RenderWindow,
+		GLX_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
 		AG_GL_UploadTexture,
 		AG_GL_UpdateTexture,
-		DeleteTexture,
-		SetRefreshRate,
-		PushClipRect,
-		PopClipRect,
-		PushBlendingMode,
-		PopBlendingMode,
-		CreateCursor,
-		FreeCursor,
-		SetCursor,
-		UnsetCursor,
-		GetCursorVisibility,
-		SetCursorVisibility,
+		GLX_DeleteTexture,
+		GLX_SetRefreshRate,
+		GLX_PushClipRect,
+		GLX_PopClipRect,
+		GLX_PushBlendingMode,
+		GLX_PopBlendingMode,
+		GLX_CreateCursor,
+		GLX_FreeCursor,
+		GLX_SetCursor,
+		GLX_UnsetCursor,
+		GLX_GetCursorVisibility,
+		GLX_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
 		AG_GL_BlitSurfaceGL,
@@ -1959,24 +1959,24 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph
 	},
-	OpenWindow,
-	CloseWindow,
-	MapWindow,
-	UnmapWindow,
-	RaiseWindow,
-	LowerWindow,
-	ReparentWindow,
-	GetInputFocus,
-	SetInputFocus,
-	MoveWindow,
-	ResizeWindow,
-	MoveResizeWindow,
-	PreResizeCallback,
-	PostResizeCallback,
+	GLX_OpenWindow,
+	GLX_CloseWindow,
+	GLX_MapWindow,
+	GLX_UnmapWindow,
+	GLX_RaiseWindow,
+	GLX_LowerWindow,
+	GLX_ReparentWindow,
+	GLX_GetInputFocus,
+	GLX_SetInputFocus,
+	GLX_MoveWindow,
+	GLX_ResizeWindow,
+	GLX_MoveResizeWindow,
+	GLX_PreResizeCallback,
+	GLX_PostResizeCallback,
 	NULL,				/* captureWindow */
-	SetBorderWidth,
-	SetWindowCaption,
-	SetTransientFor
+	GLX_SetBorderWidth,
+	GLX_SetWindowCaption,
+	GLX_SetTransientFor
 };
 
 #endif /* HAVE_GLX */
