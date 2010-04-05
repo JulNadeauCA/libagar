@@ -56,20 +56,20 @@ static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
 
-// Driver instance data
+/* Driver instance data */
 typedef struct ag_driver_wgl {
 	struct ag_driver_mw _inherit;
-	HWND        hwnd;          // Window handle
-	HDC         hdc;           // Device context
-	HGLRC       hglrc;         // Rendering context
-	WNDCLASSEX  wndclass;      // Window class
+	HWND        hwnd;		/* Window handle */
+	HDC         hdc;		/* Device context */
+	HGLRC       hglrc;		/* Rendering context */
+	WNDCLASSEX  wndclass;		/* Window class */
 
-	int               clipStates[4]; // Clipping GL state 
-	AG_ClipRect      *clipRects;	   // Clipping rectangles
-	Uint             nClipRects;
-	Uint             *textureGC;	   // Textures queued for deletion
-	Uint             nTextureGC;
-	AG_GL_BlendState bs[1];	   // Saved blending states
+	int          clipStates[4];	/* Clipping GL state */
+	AG_ClipRect *clipRects;		/* Clipping rectangles */
+	Uint        nClipRects;
+	Uint        *textureGC;		/* Textures queued for deletion */
+	Uint        nTextureGC;
+	AG_GL_BlendState bs[1];		/* Saved blending states */
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
@@ -163,7 +163,7 @@ WGL_Open(void *obj, const char *spec)
 	AG_Driver *drv = obj;
 	AG_DriverWGL *wgl = obj;
 	
-	// Register Mouse and keyboard
+	/* Register Mouse and keyboard */
 	if ((drv->mouse = AG_MouseNew(wgl, "Windows mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(wgl, "Windows keyboard")) == NULL)
 		goto fail;
@@ -237,67 +237,65 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	AG_Driver *drv = WIDGET(win)->drv;
 	GLuint pixelFormat;	
 	WNDCLASSEX wndClass;
-	DWORD wndStyle = WS_OVERLAPPEDWINDOW;
+	DWORD wndStyle;
 	DWORD wndStyleEx = 0;
-
 	PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {
 		sizeof(PIXELFORMATDESCRIPTOR),
 		1,
 		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
 		PFD_TYPE_RGBA,
-		16,                      // Color depth
-		0, 0, 0, 0, 0, 0, 0, 0,  // Ignore Color bits
-		0, 0, 0, 0, 0,           // No Accumulation buffer
-		0,                       // No Z-Buffer
-		0, 0,                    // No Stencil + AUX-Buffer
-		0, 0, 0, 0, 0            // All other attributes are not used
+		16,                      /* Color depth */
+		0, 0, 0, 0, 0, 0, 0, 0,  /* Ignore Color bits */
+		0, 0, 0, 0, 0,           /* No Accumulation buffer */
+		0,                       /* No Z-Buffer */
+		0, 0,                    /* No Stencil + AUX-Buffer */
+		0, 0, 0, 0, 0            /* All other attributes are not used */
 	};
-
-	int  left, top;
-	RECT wndRect       = {r.x, r.y, r.x + r.w, r.y + r.h};
+	RECT wndRect = {r.x, r.y, r.x + r.w, r.y + r.h};
 	char wndClassName[64]; 
 
-	// Generate window class atom name
+	/* Register Window Class */
 	AG_MutexLock(&wglClassLock);
 	sprintf(wndClassName, "agar-wgl-windowclass-%d", wndClassCount);
 	wndClassCount++;
 	AG_MutexUnlock(&wglClassLock);
 
-	// Register Window Class	
 	memset(&wndClass, 0, sizeof(WNDCLASSEX));
 	wndClass.cbSize        = sizeof(WNDCLASSEX);
 	wndClass.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	wndClass.lpfnWndProc   = WndProc; // We handle the messages on our own!
+	wndClass.lpfnWndProc   = WndProc;
 	wndClass.hInstance     = GetModuleHandle(NULL);
 	wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wndClass.hCursor       = NULL;
 	wndClass.lpszClassName = wndClassName;
+
 	if (!RegisterClassEx(&wndClass)) {
 		WGL_SetWindowsError("Cannot register WGL window class", 
 		    GetLastError());
-		return -1;
+		return (-1);
+	}
+
+	/* Apply the window style */
+	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE)) {
+		wndStyle = WS_POPUP;
+		if (!(win->flags & AG_WINDOW_NOBORDERS))
+			wndStyle |= WS_BORDER;
+	} else {
+		wndStyle = WS_OVERLAPPEDWINDOW;
 	}
 	
-	// Adjust window with account for window borders
+	/* Adjust window with account for window borders, if any */
 	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
-
-	// Calc window position
-	left = wndRect.left;
-	top  = wndRect.top;
-	if (mwFlags & AG_DRIVER_MW_ANYPOS) {
-		left = CW_USEDEFAULT;
-		top  = CW_USEDEFAULT;
-	}
-
-	// Create OpenGL Window
+	
+	/* Create OpenGL Window */
 	wgl->hwnd = CreateWindowEx(
 		wndStyleEx,
 		wndClassName,
 		win->caption,
 		wndStyle,
-		CW_USEDEFAULT, //wndRect.left,
-		CW_USEDEFAULT, //wndRect.top,
-		wndRect.right  - wndRect.left,
+		(mwFlags & AG_DRIVER_MW_ANYPOS) ? CW_USEDEFAULT : wndRect.left,
+		(mwFlags & AG_DRIVER_MW_ANYPOS) ? CW_USEDEFAULT : wndRect.top,
+		wndRect.right - wndRect.left,
 		wndRect.bottom - wndRect.top,
 		NULL,
 		NULL,
@@ -307,62 +305,61 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	if (!wgl->hwnd) {
 		WGL_SetWindowsError("Cannot create window", GetLastError());
-		return -1;
+		return (-1);
 	}
 	
-	// Initialize device & rendering contxt
+	/* Initialize device & rendering context */
 	if (!(wgl->hdc = GetDC(wgl->hwnd))) {
 		DestroyWindow(wgl->hwnd);
 		WGL_SetWindowsError("GetDC failed", GetLastError());
-		return -1;
+		return (-1);
 	}
 	if (!(pixelFormat = ChoosePixelFormat(wgl->hdc, &pixelFormatDescriptor))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		WGL_SetWindowsError("ChoosePixelFormat failed", GetLastError());
-		return -1;
+		return (-1);
 	}
 	if (!(SetPixelFormat(wgl->hdc, pixelFormat, &pixelFormatDescriptor))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		WGL_SetWindowsError("SetPixelFormat failed", GetLastError());
-		return -1;
+		return (-1);
 	}
 	if (!(wgl->hglrc = wglCreateContext(wgl->hdc))) {
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		WGL_SetWindowsError("wglCreateContext failed", GetLastError());
-		return -1;
+		return (-1);
 	}
 	if (!(wglMakeCurrent(wgl->hdc, wgl->hglrc))) {
 		wglDeleteContext(wgl->hglrc);
 		ReleaseDC(wgl->hwnd, wgl->hdc);
 		DestroyWindow(wgl->hwnd);
 		WGL_SetWindowsError("wglMakeCurrent failed", GetLastError());
-		return -1;
+		return (-1);
 	}
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
-	// Show the window
+	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	SetForegroundWindow(wgl->hwnd);
 	SetFocus(wgl->hwnd);
 	
 	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
 
-	// Set the pixel format
+	/* Set the pixel format */
 	drv->videoFmt = AG_PixelFormatRGB(16, 0x000000ff, 0x0000ff00, 0x00ff0000);
 	if (drv->videoFmt == NULL)
 		goto fail;
 
-	// Initialize the clipping rectangle stack
+	/* Initialize the clipping rectangle stack */
 	if (InitClipRects(wgl, r.w, r.h) == -1)
 		goto fail;
 	
-	/* Create the built-in cursors. */
+	/* Create the built-in cursors */
 	if (InitDefaultCursor(wgl) == -1 || AG_InitStockCursors(drv) == -1)
 		goto fail;
-	
 
 	return (0);
 fail:
@@ -416,7 +413,7 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 	*w = r.right  - r.left;
 	*h = r.bottom - r.top;
 
-	return 0;
+	return (0);
 }
 
 /* 
@@ -484,7 +481,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, 
 		    dev->data.button.which);
 		break;
-#if (_WIN32_WINNT >= 0x400) || (_WIN32_WINDOWS > 0x400)
+/*#if (_WIN32_WINNT >= 0x400) || (_WIN32_WINDOWS > 0x400) */
+#ifdef WM_MOUSEWHEEL
 	case WM_MOUSEWHEEL:
 		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 		dev->data.button.which =
@@ -518,7 +516,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			dev->data.key.ks = kResult;
 			dev->data.key.ucs = (Uint32)kResult;
 		} else {
-			// Entered char is a special keycode, search it in map
+			/* Special keycode, search it in map */
 			AG_KeySym sym = agKeymapMisc[wParam&0xff];
 			AG_KeyboardUpdate(drv->kbd, ka, sym, sym);
 			dev->data.key.ks = sym;
@@ -540,8 +538,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			dev->type = AG_DRIVER_VIDEORESIZE;
-			dev->data.videoresize.x = 0;
-			dev->data.videoresize.y = 0;
+			dev->data.videoresize.x = -1;
+			dev->data.videoresize.y = -1;
 			dev->data.videoresize.w = LOWORD(lParam);
 			dev->data.videoresize.h = HIWORD(lParam);
 		} else {
@@ -549,6 +547,12 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			goto fallback;
 		}
 		goto ret0;
+#ifdef WM_MOVE
+	case WM_MOVE:
+		WIDGET(win)->x = (int)(short)LOWORD(lParam);
+		WIDGET(win)->y = (int)(short)HIWORD(lParam);
+		goto ret0;
+#endif
 #if 0
 	/*
 	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER
@@ -805,7 +809,7 @@ WGL_EndRendering(void *obj)
 	
 	SwapBuffers(wgl->hdc);
 
-	// Remove textures queued for deletion.
+	/* Remove textures queued for deletion */
 	for (i = 0; i < wgl->nTextureGC; i++) {
 		glDeleteTextures(1, (GLuint *)&wgl->textureGC[i]);
 	}
@@ -1013,10 +1017,10 @@ WGL_GetInputFocus(AG_Window **rv)
 	}
 	if (wgl == NULL) {
 		AG_SetError("Input focus is external to this application");
-		return -1;
+		return (-1);
 	}
 	*rv = AGDRIVER_MW(wgl)->win;
-	return 0;
+	return (0);
 }
 
 static int
@@ -1024,7 +1028,7 @@ WGL_SetInputFocus(AG_Window *win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	SetFocus(wgl->hwnd);
-	return 0;
+	return (0);
 }
 
 static int
@@ -1033,13 +1037,13 @@ WGL_MoveWindow(AG_Window *win, int x, int y)
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_SizeAlloc a;
 
-	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	SetWindowPos(wgl->hwnd, NULL, x, y, 0, 0, SWP_NOZORDER|SWP_NOSIZE);
 	a.x = x;
 	a.y = y;
 	a.w = WIDTH(win);
 	a.h = HEIGHT(win);
 	WGL_PostMoveCallback(win, &a);
-	return 0;
+	return (0);
 }
 
 static int
@@ -1048,13 +1052,13 @@ WGL_ResizeWindow(AG_Window *win, Uint w, Uint h)
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_SizeAlloc a;
 
-	SetWindowPos(wgl->hwnd, NULL, 0, 0, w, h, SWP_NOZORDER | SWP_NOMOVE);	
+	SetWindowPos(wgl->hwnd, NULL, 0, 0, w, h, SWP_NOZORDER|SWP_NOMOVE);	
 	a.x = WIDGET(win)->x;
 	a.y = WIDGET(win)->y;
 	a.w = w;
 	a.h = h;
 	WGL_PostResizeCallback(win, &a);
-	return 0;
+	return (0);
 }
 
 static int
@@ -1064,14 +1068,14 @@ WGL_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 
 	SetWindowPos(wgl->hwnd, NULL, a->x, a->y, a->w, a->h, SWP_NOZORDER);	
 	WGL_PostResizeCallback(win, a);
-	return 0;
+	return (0);
 }
 
 static int
 WGL_SetBorderWidth(AG_Window *win, Uint width)
 {
-	// @todo There is no border width in win32!
-	return 0;
+	/* There is no border width in win32! */
+	return (0);
 }
 
 static int
@@ -1079,15 +1083,14 @@ WGL_SetWindowCaption(AG_Window *win, const char *s)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	SetWindowText(wgl->hwnd, s);
-	return 0;
+	return (0);
 }
 
 static void
 WGL_SetTransientFor(AG_Window *win, AG_Window *winParent)
 {
-	// @todo Therse is no need for transient windows in win32?
+	/* Nothing to do */
 }
-
 
 /*
  * Cursor operations
@@ -1124,36 +1127,35 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	int          size, i;
 	BYTE         *xorMask, *andMask;
 
-	// Initialize cursor struct
 	if ((cg = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
-		return -1;
+		return (-1);
 	}
 	cg->black = RGB(0, 0, 0);
 	cg->white = RGB(0xFF, 0xFF, 0xFF);
 	
-	// Calc size for cursor data
+	/* Calc size for cursor data */
 	size = (ac->w / 8) * ac->h;
 
-	// Allocate memory for xorMask (which represents the cursor data)
+	/* Allocate memory for xorMask (which represents the cursor data) */
 	if ((xorMask = TryMalloc(size)) == NULL) {
 		Free(cg);
-		return -1;
+		return (-1);
 	}
 
-	// Allocate memory for andMask (which represents the transparence)
+	/* Allocate memory for andMask (which represents the transparence) */
 	if ((andMask = TryMalloc(size)) == NULL) {
 		Free(xorMask);
 		Free(cg);
-		return -1;
+		return (-1);
 	}
 
-	// Copy cursor data into buffers for use with CreateCursor
+	/* Copy cursor data into buffers for use with CreateCursor */
 	for (i = 0; i < size; i++) {
 		andMask[i] = ~ac->mask[i];
 		xorMask[i] = ~ac->data[i] ^ ~ac->mask[i];
 	}
 
-	// Create cursor
+	/* Create cursor */
 	if ((cg->cursor = CreateCursor(GetModuleHandle(NULL), 
 	    ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask))) {
 		cg->visible = 0;
@@ -1220,23 +1222,40 @@ WGL_SetCursorVisibility(void *obj, int flag)
 }
 
 static void
+WGL_PreResizeCallback(AG_Window *win)
+{
+#if 0
+	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+
+	/*
+	 * Backup all GL resources since it is not portable to assume that a
+	 * display resize will not cause a change in GL contexts
+	 * (XXX TODO test for platforms where this is unnecessary)
+	 */
+	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	FreeWidgetResources(WIDGET(win));
+	AG_ClearGlyphCache();
+#endif
+}
+
+static void
 WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
-	AG_Driver    *drv = WIDGET(win)->drv;
+	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
-	int x = a->x;
-	int y = a->y;
+	int x = (a->x == -1) ? WIDGET(win)->x : a->x;
+	int y = (a->y == -1) ? WIDGET(win)->y : a->y;
 	
-	// Update per-widget coordinate information.
+	/* Update per-widget coordinate information */
 	a->x = 0;
 	a->y = 0;
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
-	// Update clipping rectangle 0
+	/* Update clipping rectangle 0 */
 	InitClipRect0(wgl, win);
 	
-	// Update WGL context.
+	/* Update WGL context */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
@@ -1364,13 +1383,12 @@ AG_DriverMwClass agDriverWGL = {
 	WGL_MoveWindow,
 	WGL_ResizeWindow,
 	WGL_MoveResizeWindow,
-	NULL, // PreResizeCallback,
+	WGL_PreResizeCallback,
 	WGL_PostResizeCallback,
 	NULL,				/* captureWindow */
 	WGL_SetBorderWidth,
 	WGL_SetWindowCaption,
 	WGL_SetTransientFor
 };
-
 
 #endif /* HAVE_WGL */
