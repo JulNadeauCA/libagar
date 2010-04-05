@@ -41,14 +41,10 @@ PROJFILELIST=	.projfiles2.out
 PROJCONFIGDIR?=
 PROJNOCLEAN?=	no
 
-PROJFILES?=	bsd:cb-gcc:: \
-		linux:cb-gcc:: \
+PROJFILES?=	linux:cb-gcc:: \
 		macosx:cb-gcc:: \
 		windows:cb-gcc:: \
 		windows:cb-ow:: \
-		windows:vs6:: \
-		windows:vs2002:: \
-		windows:vs2003:: \
 		windows:vs2005:: \
 		windows:vs2008::
 
