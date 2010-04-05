@@ -183,10 +183,8 @@ RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 
 	ft->ops->menu(ft, tv->tv_feature.menu_item);
 
-	tv->tv_feature.menu_win = AG_MenuExpand(tv->tv_feature.menu,
-	    tv->tv_feature.menu_item,
-	    WIDGET(tv)->rView.x1 + x,
-	    WIDGET(tv)->rView.y1 + y);
+	tv->tv_feature.menu_win = AG_MenuExpand(tv,
+	    tv->tv_feature.menu_item, x, y);
 }
 
 void
@@ -195,7 +193,7 @@ RG_FeatureCloseMenu(RG_Tileview *tv)
 	AG_Menu *menu = tv->tv_feature.menu;
 	AG_MenuItem *item = tv->tv_feature.menu_item;
 
-	AG_MenuCollapse(menu, item);
+	AG_MenuCollapse(tv, item);
 	AG_ObjectDestroy(menu);
 	tv->tv_feature.menu = NULL;
 	tv->tv_feature.menu_item = NULL;

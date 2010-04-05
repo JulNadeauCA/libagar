@@ -1052,9 +1052,7 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_TileviewGenericMenu(tv, mi);
 	}
 	tv->tv_pixmap.menu->itemSel = mi;
-	tv->tv_pixmap.menu_win = AG_MenuExpand(me, mi,
-	    WIDGET(tv)->rView.x1 + x,
-	    WIDGET(tv)->rView.y1 + y);
+	tv->tv_pixmap.menu_win = AG_MenuExpand(tv, mi, x, y);
 }
 
 void
@@ -1063,7 +1061,7 @@ RG_PixmapCloseMenu(RG_Tileview *tv)
 	AG_Menu *me = tv->tv_pixmap.menu;
 	AG_MenuItem *mi = tv->tv_pixmap.menu_item;
 
-	AG_MenuCollapse(me, mi);
+	AG_MenuCollapse(tv, mi);
 	AG_ObjectDestroy(me);
 
 	tv->tv_pixmap.menu = NULL;

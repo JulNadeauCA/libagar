@@ -147,21 +147,30 @@ LeaveWindow(AG_Event *event)
 
 /* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
-AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
+AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 {
 	AG_Window *win, *winParent;
 	AG_MenuView *mv;
 	AG_Menu *m;
+	int x = x1;
+	int y = y1;
 
-	/* XXX AG_Menu and AG_MenuView should share subclasses */
-	if (AG_OfClass(obj, "AG_Widget:AG_MenuView")) {
-		m = ((AG_MenuView *)obj)->pmenu;
-	} else if (AG_OfClass(obj, "AG_Widget:AG_Menu")) {
-		m = obj;
+	if (parentWidget != NULL) {
+		/* XXX AG_Menu and AG_MenuView should share subclasses */
+		if (AG_OfClass(parentWidget, "AG_Widget:AG_MenuView")) {
+			m = ((AG_MenuView *)parentWidget)->pmenu;
+		} else if (AG_OfClass(parentWidget, "AG_Widget:AG_Menu")) {
+			m = parentWidget;
+		} else {
+			m = mi->pmenu;
+		}
+		x += WIDGET(parentWidget)->rView.x1;
+		y += WIDGET(parentWidget)->rView.y1;
+		winParent = WIDGET(parentWidget)->window;
 	} else {
-		AG_FatalError("Invalid argument to AG_MenuExpand()");
+		m = mi->pmenu;
+		winParent = NULL;
 	}
-	winParent = WIDGET(obj)->window;
 
 	AG_MenuUpdateItem(mi);
 
@@ -170,7 +179,8 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
 
 	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
-	AG_ObjectSetName(win, "_Popup-%s", OBJECT(obj)->name);
+	AG_ObjectSetName(win, "_Popup-%s",
+	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 #if 0
 	AG_SetEvent(win, "window-leave", LeaveWindow, "%p,%p", m, mi);
@@ -203,7 +213,7 @@ AG_MenuExpand(void *obj, AG_MenuItem *mi, int x, int y)
  * displaying subitems are recursively collapsed as well.
  */
 void
-AG_MenuCollapse(void *obj, AG_MenuItem *mi)
+AG_MenuCollapse(void *parentWidget, AG_MenuItem *mi)
 {
 	Uint i, j;
 
@@ -213,7 +223,7 @@ AG_MenuCollapse(void *obj, AG_MenuItem *mi)
 	/* Collapse any expanded submenus as well. */
 	for (i = 0; i < mi->nsubitems; i++) {
 		if (mi->subitems[i].view != NULL)
-			AG_MenuCollapse(obj, &mi->subitems[i]);
+			AG_MenuCollapse(parentWidget, &mi->subitems[i]);
 	}
 
 	/* Destroy the MenuView's window. */
@@ -316,8 +326,8 @@ MouseButtonDown(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->rView.x1 + item->x,
-				    WIDGET(m)->rView.y1 + item->y + hLbl + m->bPad - 1);
+				    item->x,
+				    item->y + hLbl + m->bPad - 1);
 				m->selecting = 1;
 			}
 			break;
@@ -384,8 +394,8 @@ MouseMotion(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->rView.x1 + item->x,
-				    WIDGET(m)->rView.y1 + item->y + hLbl + m->bPad - 1);
+				    item->x,
+				    item->y + hLbl + m->bPad - 1);
 			}
 			break;
 		}
@@ -1227,7 +1237,7 @@ AG_PopupShow(AG_PopupMenu *pm)
 		AG_PopupHide(pm);
 	}
 	drv = WIDGET(pm->widget)->drv;
-	pm->win = AG_MenuExpand(pm->menu, pm->item,
+	pm->win = AG_MenuExpand(NULL, pm->item,
 	    (drv != NULL) ? drv->mouse->x : 0,
 	    (drv != NULL) ? drv->mouse->y : 0);
 	AG_UnlockVFS(pm->widget);
@@ -1240,9 +1250,7 @@ AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)
 	if (pm->win != NULL) {
 		AG_PopupHide(pm);
 	}
-	pm->win = AG_MenuExpand(pm->menu, pm->item,
-	    pm->widget->rView.x1 + x,
-	    pm->widget->rView.y1 + y);
+	pm->win = AG_MenuExpand(pm->widget, pm->item, x, y);
 	AG_UnlockVFS(pm->widget);
 }
 
@@ -1251,7 +1259,7 @@ AG_PopupHide(AG_PopupMenu *pm)
 {
 	AG_ObjectLock(pm->menu);
 	if (pm->win != NULL) {
-		AG_MenuCollapse(pm->menu, pm->item);
+		AG_MenuCollapse(pm->widget, pm->item);
 		pm->win = NULL;
 	}
 	AG_ObjectUnlock(pm->menu);
@@ -1266,7 +1274,7 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 		AG_ObjectUnlock(pWid);
 	}
 	if (pm->menu != NULL) {
-		AG_MenuCollapse(pm->menu, pm->item);
+		AG_MenuCollapse(pWid, pm->item);
 		AG_ObjectDestroy(pm->menu);
 	}
 	pm->menu = NULL;
