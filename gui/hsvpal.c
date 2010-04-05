@@ -28,12 +28,11 @@
 
 #include "gui.h"
 
-#include <rg/prim.h>					/* XXX depends on rg */
-
 #include "hsvpal.h"
 #include "primitive.h"
 #include "numerical.h"
 #include "gui_math.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -399,29 +398,12 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 static void
 CloseMenu(AG_HSVPal *pal)
 {
-	AG_MenuCollapse(pal->menu, pal->menu_item);
+	AG_MenuCollapse(pal, pal->menu_item);
 	AG_ObjectDestroy(pal->menu);
 
 	pal->menu = NULL;
 	pal->menu_item = NULL;
 	pal->menu_win = NULL;
-}
-
-static void
-ShowRGBValue(AG_Event *event)
-{
-	AG_HSVPal *pal = AG_PTR(1);
-	Uint8 r, g, b;
-	float h, s, v;
-
-	AG_ObjectLock(pal);
-	h = AG_GetFloat(pal, "hue");
-	s = AG_GetFloat(pal, "saturation");
-	v = AG_GetFloat(pal, "value");
-	AG_ObjectUnlock(pal);
-
-	AG_HSV2RGB(h, s, v, &r, &g, &b);
-	AG_TextMsg(AG_MSG_INFO, "%.2f,%.2f,%.2f -> %u,%u,%u", h, s, v, r, g, b);
 }
 
 #if 0
@@ -563,21 +545,20 @@ OpenMenu(AG_HSVPal *pal, int x, int y)
 		AG_MenuAction(pal->menu_item, _("Edit numerically"), NULL,
 		    EditNumValues, "%p", pal);
 #endif
-		AG_MenuAction(pal->menu_item, _("Copy"), NULL,
+		AG_MenuAction(pal->menu_item, _("Copy color"), agIconSave.s,
 		    CopyColor, "%p", pal);
-		AG_MenuAction(pal->menu_item, _("Paste"), NULL,
+		AG_MenuAction(pal->menu_item, _("Paste color"), agIconLoad.s,
 		    PasteColor, "%p", pal);
-		AG_MenuSeparator(pal->menu_item);
-		AG_MenuAction(pal->menu_item, _("Show RGB value"), NULL,
-		    ShowRGBValue, "%p", pal);
 		AG_MenuAction(pal->menu_item, _("Complementary color"), NULL,
 		    SetComplementaryColor, "%p", pal);
+		AG_MenuSeparator(pal->menu_item);
+		AG_MenuFlags(pal->menu_item, _("Show RGB value"), agIconMagnifier.s,
+		    &pal->flags, AG_HSVPAL_SHOW_RGB, 0);
+		AG_MenuFlags(pal->menu_item, _("Show HSV value"), agIconMagnifier.s,
+		    &pal->flags, AG_HSVPAL_SHOW_HSV, 0);
 	}
 	pal->menu->itemSel = pal->menu_item;
-	
-	pal->menu_win = AG_MenuExpand(pal->menu, pal->menu_item,
-	    WIDGET(pal)->rView.x1 + x,
-	    WIDGET(pal)->rView.y1 + y);
+	pal->menu_win = AG_MenuExpand(pal, pal->menu_item, x, y);
 }
 
 static void
@@ -886,7 +867,7 @@ Draw(void *obj)
 	Uint8 r, g, b, a;
 	int x, y;
 
-	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
+	if (WIDTH(pal) < 16 || HEIGHT(pal) < 16)
 		return;
 	
 	if (pal->flags & AG_HSVPAL_DIRTY) {
@@ -922,16 +903,18 @@ Draw(void *obj)
 
 	x = a*pal->rAlpha.w/255;
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
+	
+	AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
 
 	/* Draw the color preview. */
 	if (!(pal->flags & AG_HSVPAL_NOPREVIEW)) {
-		AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
 		AG_DrawRectFilled(pal,
 		    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
 		    AG_ColorRGB(r,g,b));
 	}
+
+	/* Draw the transparency color preview. */
 	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
-		/* Draw the alpha bar. */
 		AG_DrawLineV(pal,
 		    pal->rAlpha.x + x,
 		    pal->rAlpha.y + 1,
@@ -947,6 +930,36 @@ Draw(void *obj)
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
 		    agColors[HSVPAL_BAR1_COLOR]);
+	}
+
+	/* Display RGB/HSV values */
+	if (pal->flags & (AG_HSVPAL_SHOW_RGB|AG_HSVPAL_SHOW_HSV)) {
+		AG_Surface *s;
+
+		/* XXX inefficient */
+		AG_PushTextState();
+		AG_TextBGColorRGB(0,0,0);
+		AG_TextColorRGB(255,255,255);
+		if ((pal->flags & AG_HSVPAL_SHOW_RGB) &&
+		    (pal->flags & AG_HSVPAL_SHOW_HSV)) {
+			s = AG_TextRenderf(
+			    "RGB: %u,%u,%u\n"
+			    "HSV: %.02f,%.02f,%.02f",
+			    r, g, b,
+			    (cur_h*360.0)/(2.0*AG_PI),
+			    cur_s, cur_v);
+		} else if (pal->flags & AG_HSVPAL_SHOW_RGB) {
+			s = AG_TextRenderf("RGB: %u,%u,%u", r, g, b);
+		} else {
+			s = AG_TextRenderf("HSV: %.01f,%.02f,%.02f",
+			    (cur_h*360.0)/(2.0*AG_PI),
+			    cur_s, cur_v);
+		}
+		AG_WidgetBlit(pal, s,
+		    WIDTH(pal)/2 - s->w/2,
+		    pal->rAlpha.y + pal->rAlpha.h/2 - s->h/2);
+		AG_SurfaceFree(s);
+		AG_PopTextState();
 	}
 }
 
