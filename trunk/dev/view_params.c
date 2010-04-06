@@ -45,8 +45,7 @@ DEV_DisplaySettings(void)
 	AG_VBox *vb;
 /*	AG_Label *lbl; */
 
-	if ((win = AG_WindowNewNamedS(AG_WINDOW_NORESIZE,
-	    "DEV_DisplaySettings")) == NULL) {
+	if ((win = AG_WindowNewNamedS(0, "DEV_DisplaySettings")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaptionS(win, _("Display Settings"));
