@@ -650,115 +650,169 @@ AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 }
 
 void
-AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
+AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 {
+	float rad = (float)radius;
+	float i, nFull = 10.0, nQuart = nFull/4.0;
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef((float)r.x, (float)r.y, 0.0);
 
-	/* XXX TODO */
+	glTranslatef((float)r.x + rad,
+	             (float)r.y + rad,
+		     0.0);
+
 	glBegin(GL_POLYGON);
+	glColor3ub(C[0].r, C[0].g, C[0].b);
 	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(0, r.h);
-		glVertex2i(0, rad);
-		glVertex2i(rad, 0);
-		glVertex2i(r.w-rad, 0);
-		glVertex2i(r.w, rad);
-		glVertex2i(r.w, r.h);
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
+			           -rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		for (i = nQuart-1; i > 0.0; i--) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		for (i = nQuart; i > 0.0; i--) {
+			glVertex2f(            - rad*Cos((2.0*AG_PI*i)/nFull),
+			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		}
 	}
 	glEnd();
-	if (z >= 0) {
-		glBegin(GL_LINE_STRIP);
-		{
-			glColor3ub(C[1].r, C[1].g, C[1].b);
-			glVertex2i(0, r.h);
-			glVertex2i(0, rad);
-			glVertex2i(rad, 0);
+	
+	glBegin(GL_LINE_STRIP);
+	{
+		glColor3ub(C[1].r, C[1].g, C[1].b);
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
+			           -rad*Sin((2.0*AG_PI*i)/nFull));
 		}
-		glEnd();
-		glBegin(GL_LINES);
-		{
-			glColor3ub(C[2].r, C[2].g, C[2].b);
-			glVertex2i(r.w-1, r.h);
-			glVertex2i(r.w-1, rad);
+		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
+		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
+
+		glColor3ub(C[2].r, C[2].g, C[2].b);
+		for (i = nQuart-1; i > 0.0; i--) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			                       - rad*Sin((2.0*AG_PI*i)/nFull));
 		}
-		glEnd();
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		for (i = nQuart; i > 0.0; i--) {
+			glVertex2f(            - rad*Cos((2.0*AG_PI*i)/nFull),
+			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		glColor3ub(C[1].r, C[1].g, C[1].b);
+		glVertex2f(-rad, 0.0);
 	}
+	glEnd();
 
 	glPopMatrix();
 }
 
 void
-AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color C[3])
+AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 {
+	float rad = (float)radius;
+	float i, nFull = 10.0, nQuart = nFull/4.0;
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef((float)r.x, (float)r.y, 0.0);
 
-	/* XXX TODO */
+	glTranslatef((float)r.x + rad,
+	             (float)r.y + rad,
+		     0.0);
+
 	glBegin(GL_POLYGON);
+	glColor3ub(C[0].r, C[0].g, C[0].b);
 	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(0, r.h);
-		glVertex2i(0, rad);
-		glVertex2i(rad, 0);
-		glVertex2i(r.w-rad, 0);
-		glVertex2i(r.w, rad);
-		glVertex2i(r.w, r.h);
+		glVertex2f(-rad, (float)r.h - rad);
+
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
+			           -rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		glVertex2f(0.0, -rad);
+
+		for (i = nQuart; i > 0.0; i--) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		}
+		glVertex2f((float)r.w - rad,
+		           (float)r.h - rad);
 	}
 	glEnd();
-	if (z >= 0) {
-		glBegin(GL_LINE_STRIP);
-		{
-			glColor3ub(C[1].r, C[1].g, C[1].b);
-			glVertex2i(0, r.h);
-			glVertex2i(0, rad);
-			glVertex2i(rad, 0);
+	
+	glBegin(GL_LINE_STRIP);
+	{
+		glColor3ub(C[1].r, C[1].g, C[1].b);
+		glVertex2i(-rad, r.h-rad);
+		for (i = 0.0; i < nQuart; i++) {
+			glVertex2f(-(float)rad*Cos((2.0*AG_PI*i)/nFull),
+			           -(float)rad*Sin((2.0*AG_PI*i)/nFull));
 		}
-		glEnd();
-		glBegin(GL_LINES);
-		{
-			glColor3ub(C[2].r, C[2].g, C[2].b);
-			glVertex2i(r.w-1, r.h);
-			glVertex2i(r.w-1, rad);
+		glVertex2f(0.0, -rad);
+		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
+		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
+
+		glColor3ub(C[2].r, C[2].g, C[2].b);
+		for (i = nQuart-1; i > 0.0; i--) {
+			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
+			                       - rad*Sin((2.0*AG_PI*i)/nFull));
 		}
-		glEnd();
+		glVertex2f((float)r.w - rad,
+		           (float)r.h - rad);
 	}
+	glEnd();
 
 	glPopMatrix();
 }
 
 void
-AG_GL_DrawCircle(void *obj, int x, int y, int radius, AG_Color C)
+AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color C)
 {
-	int nEdges = radius*2;
-	int i;
+	float i, nEdges = r*2;
+	
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef((float)x, (float)y, 0.0);
 	
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(C.r, C.g, C.b);
 	for (i = 0; i < nEdges; i++) {
-		glVertex2f(x + radius*Cos((2*AG_PI*i)/nEdges),
-		           y + radius*Sin((2*AG_PI*i)/nEdges));
+		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
+		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
 	}
 	glEnd();
+
+	glPopMatrix();
 }
 
 void
-AG_GL_DrawCircle2(void *obj, int x, int y, int radius, AG_Color C)
+AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color C)
 {
-	int nEdges = radius*2;
-	int i;
+	float i, nEdges = r*2;
+	
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef((float)x, (float)y, 0.0);
 	
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(C.r, C.g, C.b);
 	for (i = 0; i < nEdges; i++) {
-		glVertex2f(x + radius*Cos((2*AG_PI*i)/nEdges),
-		           y + radius*Sin((2*AG_PI*i)/nEdges));
-		glVertex2f(x + (radius+1)*Cos((2*AG_PI*i)/nEdges),
-		           y + (radius+1)*Sin((2*AG_PI*i)/nEdges));
+		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
+		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
+		glVertex2f(((float)r + 1.0)*Cos((2.0*AG_PI*i)/nEdges),
+		           ((float)r + 1.0)*Sin((2.0*AG_PI*i)/nEdges));
 	}
 	glEnd();
+
+	glPopMatrix();
 }
 
 void
