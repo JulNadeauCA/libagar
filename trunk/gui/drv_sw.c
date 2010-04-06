@@ -479,6 +479,7 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 		*x = xOffs;
 		*y = dsw->h/2 - h/2 + yOffs;
 		break;
+	case AG_WINDOW_ALIGNMENT_NONE:
 	case AG_WINDOW_MC:
 		*x = dsw->w/2 - w/2 + xOffs;
 		*y = dsw->h/2 - h/2 + yOffs;
