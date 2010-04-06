@@ -168,6 +168,19 @@ and
 .Fn AG_ExpandVert
 cause the widget to expand to fill available space horizontally or vertically.
 .Pp
+Note that most widget constructors recognize
+.Dv AG_FOO_EXPAND ,
+.Dv AG_FOO_HFILL
+and
+.Dv AG_FOO_VFILL
+option flags.
+Setting these flags is equivalent to calling
+.Fn AG_Expand ,
+.Fn AG_ExpandHoriz
+and
+.Fn AG_ExpandVert ,
+respectively.
+.Pp
 The
 .Fn AG_WidgetSizeReq
 function invokes the

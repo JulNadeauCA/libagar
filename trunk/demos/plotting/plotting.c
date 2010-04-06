@@ -215,12 +215,10 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar plotting demo");
 
-	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
-	AG_Expand(pane);
+	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	{
 		/* Create our plotter widget */
-		plt = M_PlotterNew(pane->div[1], 0);
-		AG_Expand(plt);
+		plt = M_PlotterNew(pane->div[1], M_PLOTTER_EXPAND);
 
 		/*
 		 * Create the velocity plot item. This is what our algorithm
@@ -249,8 +247,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Allow the user to play with the parameters. */
-	box = AG_BoxNew(pane->div[0], AG_BOX_VERT, 0);
-	AG_Expand(box);
+	box = AG_BoxNew(pane->div[0], AG_BOX_VERT, AG_BOX_EXPAND);
 	{
 		struct {
 			const char *name;
@@ -267,10 +264,10 @@ main(int argc, char *argv[])
 		};
 
 		for (i = 0; i < 7; i++) {
-			num = AG_NumericalNewS(box, 0, NULL, param[i].name);
+			num = AG_NumericalNewS(box, AG_NUMERICAL_HFILL, NULL,
+			    param[i].name);
 			AG_BindDouble(num, "value", param[i].f);
 			AG_NumericalSetIncrement(num, param[i].incr);
-			AG_ExpandHoriz(num);
 			AG_SetEvent(num, "numerical-changed",
 			    GeneratePlot, "%p", plt);
 		}
@@ -284,8 +281,8 @@ main(int argc, char *argv[])
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
 
-		btn = AG_ButtonAct(box, 0, "Generate", GeneratePlot, "%p", plt);
-		AG_ExpandHoriz(btn);
+		btn = AG_ButtonAct(box, AG_BUTTON_HFILL,
+		    "Generate", GeneratePlot, "%p", plt);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);

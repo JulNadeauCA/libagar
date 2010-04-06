@@ -78,19 +78,16 @@ MultiLineExample(const char *title)
 	char *someText;
 	FILE *f;
 	size_t size, bufSize;
-	unsigned int flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB;
+	unsigned int flags;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaptionS(win, title);
 
 	/*
 	 * Create a multiline textbox.
-	 *
-	 * We use the CATCH_TAB flag so that tabs are entered literally in
-	 * the string.
 	 */
+	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND;
 	textbox = AG_TextboxNew(win, flags, NULL);
-	AG_Expand(textbox);
 
 	/*
 	 * Load the contents of this file into a buffer. Make the buffer a
@@ -123,13 +120,11 @@ MultiLineExample(const char *title)
 	{
 		AG_Label *lbl;
 
-		lbl = AG_LabelNewPolled(win, 0, "Lines: %d",
-		    &textbox->ed->yMax);
-		AG_ExpandHoriz(lbl);
+		lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
+		    "Lines: %d", &textbox->ed->yMax);
 
-		lbl = AG_LabelNewPolled(win, 0, "Cursor position: %d",
-		    &textbox->ed->pos);
-		AG_ExpandHoriz(lbl);
+		lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
+		    "Cursor position: %d", &textbox->ed->pos);
 	}
 #endif
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);

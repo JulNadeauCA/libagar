@@ -29,8 +29,7 @@ CreateWindow(void)
 	AG_SpacerNewHoriz(win);
 
 	/* Create an example table. */
-	table = AG_TableNew(win, 0);
-	AG_Expand(table);
+	table = AG_TableNew(win, AG_TABLE_EXPAND);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", NULL, NULL);
 	for (i = 0; i < 100; i++) {

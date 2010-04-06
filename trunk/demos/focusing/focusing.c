@@ -73,8 +73,7 @@ TestUnfocusedMouseMotion(void)
 	AG_WindowSetCaption(win, "Unfocused mousemotion");
 	AG_LabelNew(win, 0, "Mouse hover to gain focus");
 
-	fx1 = AG_FixedNew(win, 0);
-	AG_Expand(fx1);
+	fx1 = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	btn = AG_ButtonNew(fx1, 0, "Foo");
 	AG_FixedMove(fx1, btn, 0, 0);
@@ -115,26 +114,18 @@ TestTabCycle(void)
 
 	AG_LabelNew(win, 0, "<TAB> = Cycle focus forward\n"
 	                    "<SHIFT+TAB> = Cycle focus backward");
-	b = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS);
-	AG_Expand(b);
+	b = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_EXPAND);
 
-	btn = AG_ButtonNew(b, 0, "Foo");
-	AG_ExpandHoriz(btn);
+	btn = AG_ButtonNew(b, AG_BUTTON_HFILL, "Foo");
 	widget2 = AGWIDGET(btn);
 
-	b1 = AG_BoxNewVert(b, 0);
-	AG_ExpandVert(b1);
-	for (i = 0; i < 5; i++) {
-		AG_ButtonNew(b1, 0, "#%d", i);
-		AG_ExpandHoriz(b1);
-	}
+	b1 = AG_BoxNewVert(b, AG_BOX_VFILL);
+	for (i = 0; i < 5; i++)
+		AG_ButtonNew(b1, AG_BUTTON_HFILL, "#%d", i);
 
-	b2 = AG_BoxNewVert(b, 0);;
-	AG_ExpandVert(b2);
-	for (i = 5; i < 10; i++) {
-		AG_ButtonNew(b2, 0, "#%d", i);
-		AG_ExpandHoriz(b2);
-	}
+	b2 = AG_BoxNewVert(b, AG_BOX_VFILL);
+	for (i = 5; i < 10; i++)
+		AG_ButtonNew(b2, AG_BUTTON_HFILL, "#%d", i);
 
 	AG_WindowSetPosition(win, AG_WINDOW_MR, 0);
 	AG_WindowShow(win);

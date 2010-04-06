@@ -26,8 +26,7 @@ main(int argc, char *argv[])
 	AG_WindowSetCaption(win, "Agar scrollview demo");
 
 	AG_ButtonNew(win, 0, "Foo");
-	sv = AG_ScrollviewNew(win, 0);
-	AG_Expand(sv);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 
 	/* Create a bunch of buttons under the Scrollview. */
 	for (y = 0; y < 20; y++) {

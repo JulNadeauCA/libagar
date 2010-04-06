@@ -68,9 +68,8 @@ LoadBMP(AG_Event *event)
 	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) so
 	 * the user can pan the view.
 	 */
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE|AG_SCROLLVIEW_EXPAND);
 	AG_PixmapFromSurfaceScaled(sv, 0, bmp, bmp->w, bmp->h);
-	AG_Expand(sv);
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win, -1, -1, bmp->w+20, bmp->h+20);
@@ -111,9 +110,8 @@ LoadIMG(AG_Event *event)
 	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) to
 	 * display the image.
 	 */
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE|AG_SCROLLVIEW_EXPAND);
 	AG_PixmapFromSurface(sv, 0, AG_SurfaceFromSDL(img));
-	AG_Expand(sv);
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win, -1, -1, img->w+20, img->h+20);
@@ -134,8 +132,7 @@ CreateWindow(void)
 	AG_WindowSetCaption(win, "Agar loader dialog demo");
 
 	/* Create the file loader widget. */
-	fd = AG_FileDlgNew(win, 0);
-	AG_Expand(fd);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
 	
 	/* Set some default directory. */
 	AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
@@ -170,8 +167,7 @@ CreateWindow(void)
 	 * create various widgets for per-type options. We specify where those
 	 * widgets will be created here.
 	 */
-	box = AG_BoxNewVert(win, 0);
-	AG_ExpandHoriz(box);
+	box = AG_BoxNewVert(win, AG_BOX_HFILL);
 	AG_FileDlgSetOptionContainer(fd, box);
 
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);

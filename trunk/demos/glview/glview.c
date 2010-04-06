@@ -244,15 +244,13 @@ CreateMainWindow(void)
 	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
 	AG_WindowSetCaption(win, "Agar low-level OpenGL context demo");
 
-	hb = AG_BoxNewHoriz(win, 0);
-	AG_Expand(hb);
+	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 
 		/* Create the AG_GLView widget. */
-		glv = AG_GLViewNew(hb, 0);
-		AG_Expand(glv);
+		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
 		AG_WidgetFocus(glv);
 
 		/* Set up our callback functions. */ 
@@ -261,26 +259,26 @@ CreateMainWindow(void)
 		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
 		AG_GLViewButtondownFn(glv, ButtonDown, NULL);
 
-		nb = AG_NotebookNew(hb, 0);
-		AG_ExpandVert(nb);
+		/* Edit ambient and diffuse color components. */
+		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
+		{
+			ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
+			pal = AG_HSVPalNew(ntab,
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			AG_BindFloat(pal, "RGBAv", ambient);
 
-		ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
-		AG_BindFloat(pal, "RGBAv", ambient);
-		AG_ExpandVert(pal);
+			ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
+			pal = AG_HSVPalNew(ntab,
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			AG_BindFloat(pal, "RGBAv", diffuse);
 
-		ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
-		AG_BindFloat(pal, "RGBAv", diffuse);
-		AG_ExpandVert(pal);
-
-		ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
-		AG_BindFloat(pal, "RGBAv", specular);
-		AG_ExpandVert(pal);
+			ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
+			pal = AG_HSVPalNew(ntab,
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			AG_BindFloat(pal, "RGBAv", specular);
+		}
 	}
-	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME);
-	AG_ExpandHoriz(hb);
+	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME|AG_BOX_HFILL);
 	{
 		AG_RadioNewInt(hb, 0, primitiveNames, (int *)&primitive);
 		AG_SeparatorNewVert(hb);
