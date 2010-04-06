@@ -204,8 +204,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 	{
 		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
 		    &agScreenshotQuality, 1, 100);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Idling threshold: "),
-		    &agIdleThresh, 0, 255);
 	}
 
 	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
@@ -296,6 +294,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		}
 	}
 
+#if 0
 #ifdef AG_NETWORK
 	tab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
@@ -325,6 +324,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		}
 	}
 #endif /* AG_NETWORK */
+#endif
 
 #ifdef AG_DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
