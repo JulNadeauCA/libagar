@@ -56,7 +56,7 @@ Init(void *obj)
 	dsw->winSelected = NULL;
 	dsw->winLastKeydown = NULL;
 	dsw->style = &agStyleDefault;
-	dsw->rNom = 16;
+	dsw->rNom = 20;
 	dsw->rCur = 0;
 
 	for (i = 0; i < AG_WINDOW_ALIGNMENT_LAST; i++) {

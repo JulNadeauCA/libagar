@@ -53,7 +53,7 @@
 static int      nDrivers = 0;		/* Drivers open */
 static Display *agDisplay = NULL;	/* X display (shared) */
 static int      agScreen = 0;		/* Default screen (shared) */
-static Uint     rNom = 16;		/* Nominal refresh rate (ms) */
+static Uint     rNom = 20;		/* Nominal refresh rate (ms) */
 static int      rCur = 0;		/* Effective refresh rate (ms) */
 static AG_Mutex agDisplayLock;		/* Lock on agDisplay */
 
@@ -803,14 +803,12 @@ GLX_GenericEventLoop(void *obj)
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
 		} else if (GLX_PendingEvents(NULL) != 0) {
-			do {
-				if (GLX_GetNextEvent(NULL, &dev) == 1 &&
-				    GLX_ProcessEvent(NULL, &dev) == -1)
-					return;
+			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
+			    GLX_ProcessEvent(NULL, &dev) == -1)
+				return;
 #ifdef AG_DEBUG
-				agEventAvg++;
+			agEventAvg++;
 #endif
-			} while (GLX_PendingEvents(NULL) > 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
 		} else {
