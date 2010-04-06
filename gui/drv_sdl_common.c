@@ -814,14 +814,12 @@ AG_SDL_GenericEventLoop(void *obj)
 				dsw->rCur = 1;
 			}
 		} else if (SDL_PollEvent(NULL) != 0) {
-			do {
-				if (AG_SDL_GetNextEvent(drv, &dev) == 1 &&
-				    AG_SDL_ProcessEvent(drv, &dev) == -1)
-					return;
+			if (AG_SDL_GetNextEvent(drv, &dev) == 1 &&
+			    AG_SDL_ProcessEvent(drv, &dev) == -1)
+				return;
 #ifdef AG_DEBUG
-					agEventAvg++;
+				agEventAvg++;
 #endif
-			} while (SDL_PollEvent(NULL) != 0);
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(Tr2);
 		} else if (dsw->rCur > agIdleThresh) {

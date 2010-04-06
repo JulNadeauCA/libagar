@@ -68,10 +68,8 @@ CreateUI(void)
 
 	AG_SeparatorNewHoriz(win);
 
-	n1 = AG_NumericalNewS(win, 0, "in", "Value: ");
-	n2 = AG_NumericalNewS(win, 0, "mm", "Value: ");
-	AG_ExpandHoriz(n1);
-	AG_ExpandHoriz(n2);
+	n1 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "in", "Value: ");
+	n2 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "mm", "Value: ");
 	AG_BindDouble(n1, "value", &value);
 	AG_BindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");

@@ -84,8 +84,7 @@ CreateGameMenu(void)
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_BL, 100, 30);
 	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
 
-	fx = AG_FixedNew(win, 0);
-	AG_Expand(fx);
+	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
 		fprintf(stderr, "Cannot find menubg.bmp\n", AG_GetError());

@@ -60,9 +60,8 @@ main(int argc, char *argv[])
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 	AG_NumericalNewInt(win, 0, NULL, "Some int: ", &someInt);
 	AG_CheckboxNewInt(win, 0, "Some bool", &someBool);
-	tb = AG_TextboxNew(win, 0, "Some string: ");
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Some string: ");
 	AG_TextboxBindUTF8(tb, someString, sizeof(someString));
-	AG_ExpandHoriz(tb);
 
 	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{

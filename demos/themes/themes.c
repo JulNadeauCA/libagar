@@ -63,13 +63,10 @@ CreateWindow(void)
 	/*
 	 * Pane provides two Box containers which can be resized using
 	 * a control placed in the middle.
-	 *
-	 * The MPane widget also provides a set of preconfigured layouts
-	 * for multiple pane views.
 	 */
-	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
+	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	AG_PaneSetDivisionMin(pane, 0, 50, 100);
-	AG_Expand(pane);
+	AG_PaneMoveDividerPct(pane, 40);
 	div1 = pane->div[0];
 	div2 = pane->div[1];
 	{
@@ -102,8 +99,7 @@ CreateWindow(void)
 	 * Box is a general-purpose widget container. We use AG_BoxNewHoriz()
 	 * for horizontal widget packing.
 	 */
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_FRAME);
-	AG_ExpandHoriz(hBox);
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -114,8 +110,7 @@ CreateWindow(void)
 			AG_ButtonNew(hBox, 0, "%c", 0x41+i);
 	}
 
-	hBox = AG_BoxNewHoriz(div1, 0);
-	AG_ExpandHoriz(hBox);
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
 	{
 		/* The Radio checkbox is a group of radio buttons. */
 		{
@@ -126,8 +121,7 @@ CreateWindow(void)
 			};
 			AG_Radio *rad;
 
-			rad = AG_RadioNew(hBox, 0, radioItems);
-			AG_Expand(rad);
+			rad = AG_RadioNew(hBox, AG_RADIO_EXPAND, radioItems);
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);
@@ -149,14 +143,12 @@ CreateWindow(void)
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist(3) widget).
 	 */
-	com = AG_ComboNew(div1, 0, "Combo: ");
-	AG_ExpandHoriz(com);
+	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
 	AG_ComboSizeHint(com, "Item #00 ", 10);
 	AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
-	ucom = AG_UComboNew(div1, 0);
-	AG_ExpandHoriz(ucom);
+	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
 	AG_UComboSizeHint(ucom, "Item #1234", 5);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
@@ -174,12 +166,10 @@ CreateWindow(void)
 		static float myFloat = 1.0;
 		static int myMin = 0, myMax = 10, myInt = 1;
 
-		num = AG_NumericalNewS(div1, 0, "cm", "Real: ");
-		AG_ExpandHoriz(num);
+		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);
 
-		num = AG_NumericalNewS(div1, 0, NULL, "Int: ");
-		AG_ExpandHoriz(num);
+		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
 		AG_BindInt(num, "value", &myInt);
 	}
 
@@ -187,8 +177,7 @@ CreateWindow(void)
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to a fixed-size buffer and supports UTF-8.
 	 */
-	tbox = AG_TextboxNew(div1, 0, "Enter text: ");
-	AG_ExpandHoriz(tbox);
+	tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
@@ -201,14 +190,14 @@ CreateWindow(void)
 		AG_Slider *sl;
 		AG_ProgressBar *pb;
 
-		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ, 0,
+		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
+		    AG_SCROLLBAR_HFILL,
 		    &myVal, &myMin, &myMax, &myVisible);
-		AG_ExpandHoriz(sb);
 		AG_ScrollbarSetIntIncrement(sb, 10);
 
-		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ, 0,
+		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
+		    AG_SLIDER_HFILL,
 		    &myVal, &myMin, &myMax);
-		AG_ExpandHoriz(sl);
 		AG_SliderSetIntIncrement(sl, 10);
 
 		pb = AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
@@ -228,8 +217,7 @@ CreateWindow(void)
 		AG_MenuItem *m;
 
 		/* Create a test menu */
-		menu = AG_MenuNew(div2, 0);
-		AG_ExpandHoriz(menu);
+		menu = AG_MenuNew(div2, AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
 		AG_MenuAction(m, "Preferences...", agIconGear.s, Preferences, NULL);
 		AG_MenuSeparator(m);
@@ -242,10 +230,9 @@ CreateWindow(void)
 		AG_MenuNode(m, "Submenu D", NULL);
 		AG_MenuNode(m, "Submenu E", NULL);
 
-		nb = AG_NotebookNew(div2, 0);
-		AG_Expand(nb);
+		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
-		ntab = AG_NotebookAddTab(nb, "Table", AG_BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, "Some table", AG_BOX_VERT);
 		{
 			float f;
 
@@ -255,11 +242,10 @@ CreateWindow(void)
 			 * the table is static or needs to be repopulated
 			 * periodically.
 			 */
-			table = AG_TableNew(ntab, 0);
+			table = AG_TableNew(ntab, AG_TABLE_EXPAND);
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
-			AG_Expand(table);
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
@@ -271,7 +257,7 @@ CreateWindow(void)
 			}
 		}
 		
-		ntab = AG_NotebookAddTab(nb, "Text", AG_BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, "Some text", AG_BOX_VERT);
 		{
 			char *someText;
 			size_t size, bufSize;
@@ -283,9 +269,9 @@ CreateWindow(void)
 			 * causes the widget to receive TAB key events
 			 * (normally used to focus other widgets).
 			 */
-			tbox = AG_TextboxNew(ntab, AG_TEXTBOX_MULTILINE|
-						   AG_TEXTBOX_CATCH_TAB, NULL);
-			AG_Expand(tbox);
+			tbox = AG_TextboxNew(ntab,
+			    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|
+			    AG_TEXTBOX_EXPAND, NULL);
 			AG_WidgetSetFocusable(tbox, 1);
 
 			/*
@@ -315,6 +301,8 @@ CreateWindow(void)
 			AG_TextboxBindUTF8(tbox, someText, bufSize);
 			AG_TextboxSetCursorPos(tbox, 0);
 		}
+		
+		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
 	}
 
 	/* Override default window sizing. */
@@ -479,7 +467,7 @@ main(int argc, char *argv[])
 		AG_Box *hBox;
 
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
-		lbl = AG_LabelNew(win, 0,
+		lbl = AG_LabelNew(win, AG_LABEL_HFILL,
 		    "Agar Library Version: %d.%d.%d\n"
 		    "Compiled Release: %s (\"%s\")\n"
 		    "Using Graphics Driver: %s\n"
@@ -488,11 +476,9 @@ main(int argc, char *argv[])
 		    VERSION, ver.release,
 		    AGWIDGET(win)->drvOps->name,
 		    drvNames);
-		AG_ExpandHoriz(lbl);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
-		hBox = AG_BoxNewHoriz(win, 0);
-		AG_ExpandHoriz(hBox);
+		hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 		{
 			AG_ButtonNewFn(hBox, 0, "Default theme",
 			    SetTheme, "%p", &agStyleDefault);
