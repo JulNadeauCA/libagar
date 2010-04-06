@@ -1466,7 +1466,9 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 	AG_ObjectLock(win);
 	win->alignment = alignment;
 	AG_SETFLAGS(win->flags, AG_WINDOW_CASCADE, cascade);
-	(void)AG_WindowSetGeometry(win, -1, -1, -1, -1);
+	if (win->visible) {
+		(void)AG_WindowSetGeometry(win, -1, -1, -1, -1);
+	}
 	AG_ObjectUnlock(win);
 }
 
