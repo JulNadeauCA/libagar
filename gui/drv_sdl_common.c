@@ -762,9 +762,8 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = 1;
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_SDL_Terminate();
-		rv = 1;
-		break;
+		agTerminating = 1;
+		return (-1);
 	case AG_DRIVER_EXPOSE:
 		rv = 1;
 		break;
@@ -822,16 +821,9 @@ AG_SDL_GenericEventLoop(void *obj)
 #endif
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(Tr2);
-		} else if (dsw->rCur > agIdleThresh) {
-			AG_Delay(dsw->rCur - agIdleThresh);
-#ifdef AG_DEBUG
-			agIdleAvg = AG_GetTicks() - Tr2;
 		} else {
-			agIdleAvg = 0;
+			AG_Delay(1);
 		}
-#else
-		}
-#endif
 	}
 }
 
