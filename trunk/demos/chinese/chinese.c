@@ -12,10 +12,25 @@ int
 main(int argc, char *argv[])
 {
 	AG_Font *font;
+	char *optArg, *driverSpec = NULL;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: chinese [-d agar-driver-spec]\n");
+			exit(1);
+		}
+	}
 
 	/* Initialize Agar-GUI. */
 	if (AG_InitCore("agar-chinese-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

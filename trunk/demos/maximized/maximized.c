@@ -46,8 +46,23 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: maximized [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("agar-maximized-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

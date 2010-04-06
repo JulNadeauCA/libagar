@@ -12,9 +12,24 @@ main(int argc, char *argv[])
 {
 	AG_Window *win;
 	MyWidget *my;
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: customwidget [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 
 	if (AG_InitCore("agar-customwidget-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
@@ -25,7 +40,7 @@ main(int argc, char *argv[])
 	AG_RegisterClass(&myWidgetClass);
 
 	/* Create test window containing our widget stretched over its area. */
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar custom widget demo");
 	my = MyWidgetNew(win, "foo");
 	AG_Expand(my);

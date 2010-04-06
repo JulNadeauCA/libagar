@@ -241,7 +241,7 @@ CreateMainWindow(void)
 	AG_Box *hb;
 	AG_HSVPal *pal;
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar low-level OpenGL context demo");
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
@@ -294,13 +294,26 @@ CreateMainWindow(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("agar-glview-demo", 0) == -1) {
+	char *optArg, *driverSpec = "<OpenGL>";
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: glview [-d agar-driver-spec]\n");
+			exit(1);
+		}
+	}
+
+	if (AG_InitCore("agar-glview-demo", 0) == -1 ||
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	if (AG_InitGraphics("<OpenGL>") == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);

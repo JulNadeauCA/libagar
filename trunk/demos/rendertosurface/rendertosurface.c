@@ -13,10 +13,23 @@ main(int argc, char *argv[])
 	AG_Pixmap *px;
 	AG_Button *btn;
 	AG_Surface *s;
+	char *driverSpec = NULL, *optArg;
+	int c;
 
-	/* Initialize Agar-GUI. */
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: rendertosurface [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("agar-rendertosurface-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

@@ -50,7 +50,7 @@ CreateUI(void)
 	AG_Window *win;
 	AG_Toolbar *tb;
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 
@@ -83,8 +83,23 @@ CreateUI(void)
 int
 main(int argc, char *argv[])
 {
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: unitconv [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("unitconv", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

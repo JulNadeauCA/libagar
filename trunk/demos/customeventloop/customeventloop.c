@@ -114,15 +114,30 @@ int
 main(int argc, char *argv[])
 {
 	AG_Window *win;
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: customeventloop [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 
 	if (AG_InitCore("agar-customeventloop-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar custom event loop demo");
 	AG_LabelNewPolled(win, AG_LABEL_EXPAND,
 	    "Testing custom event loop\n"
