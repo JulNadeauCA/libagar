@@ -729,6 +729,9 @@ WGL_GenericEventLoop(void *obj)
 	AG_Window *win;
 	Uint32 t1, t2;
 
+#ifdef AG_DEBUG
+	AG_PerfMonInit();
+#endif
 	t1 = AG_GetTicks();
 	for (;;) {
 		t2 = AG_GetTicks();
@@ -749,6 +752,10 @@ WGL_GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
+#ifdef AG_DEBUG
+			if (agPerfWindow->visible)
+				AG_PerfMonUpdate(rCur);
+#endif
 		} else if (WGL_PendingEvents(NULL)) {
 			AG_DriverEvent dev;
 
