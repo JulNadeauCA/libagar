@@ -343,9 +343,18 @@ SDLFB_RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 {
 	AG_DriverSDLFB *sfb = drv;
 	int visiblePrev;
+	SDL_Surface *sd;
+	SDL_Rect sr;
 
-	if ((*s = AG_SurfaceStdRGB(wid->w, wid->h)) == NULL)
+	if ((sd = SDL_CreateRGBSurface(SDL_SWSURFACE, wid->w, wid->h, 32,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+ 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+	)) == NULL) {
 		return (-1);
+	}
 
 	/* XXX TODO render to offscreen buffer instead */
 	AG_BeginRendering(AGDRIVER(sfb));
@@ -355,7 +364,16 @@ SDLFB_RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 	wid->window->visible = visiblePrev;
 	AG_EndRendering(AGDRIVER(sfb));
 
-	AG_SDL_BlitSurface(*s, NULL, sfb->s, wid->rView.x1, wid->rView.y1);
+	sr.x = wid->rView.x1;
+	sr.y = wid->rView.y1;
+	sr.w = wid->w;
+	sr.h = wid->h;
+	SDL_BlitSurface(sfb->s, &sr, sd, NULL);
+	if ((*s = AG_SDL_ImportSurface(sd)) == NULL) {
+		SDL_FreeSurface(sd);
+		return (-1);
+	}
+	SDL_FreeSurface(sd);
 	return (0);
 }
 

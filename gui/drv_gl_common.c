@@ -456,12 +456,21 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	if ((pixels = AG_TryMalloc(wid->w*wid->h*4)) == NULL) {
 		return (-1);
 	}
-	glReadPixels(
-	    wid->rView.x1,
-	    HEIGHT(AGDRIVER_MW(drv)->win) - wid->rView.y2,
-	    wid->w,
-	    wid->h,
-	    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	if (AGDRIVER_MULTIPLE(drv)) {
+		glReadPixels(
+		    wid->rView.x1,
+		    HEIGHT(AGDRIVER_MW(drv)->win) - wid->rView.y2,
+		    wid->w,
+		    wid->h,
+		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	} else {
+		glReadPixels(
+		    wid->rView.x1,
+		    agDriverSw->h - wid->rView.y2,
+		    wid->w,
+		    wid->h,
+		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	}
 	AG_PackedPixelFlip(pixels, wid->h, wid->w*4);
 	*s = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 32,
 	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
