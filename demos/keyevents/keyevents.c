@@ -38,7 +38,7 @@ CreateWindow(void)
 	AG_Label *lbl;
 	AG_Console *cons;
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar keyboard events demo");
 	lbl = AG_LabelNew(win, AG_LABEL_HFILL, "Agar keyboard events demo");
 	AG_LabelJustify(lbl, AG_TEXT_CENTER);
@@ -71,8 +71,23 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: keyevents [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("agar-keyevents-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

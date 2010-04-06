@@ -13,9 +13,23 @@ main(int argc, char *argv[])
 	AG_Scrollview *sv;
 	int x, y;
 	AG_Box *hBox;
-	
+	char *driverSpec = NULL, *optArg;
+	int c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: scrollview [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("agar-scrollview-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

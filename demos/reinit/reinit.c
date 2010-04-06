@@ -10,7 +10,21 @@ int
 main(int argc, char *argv[])
 {
 	AG_Window *win;
-	int i;
+	char *driverSpec = NULL, *optArg;
+	int i, c;
+
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: reinit [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 
 	for (i = 0; i < 100; i++) {
 		printf("Test %d/100:\n", i);
@@ -20,7 +34,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 		printf("\tInitGraphics()\n");
-		if (AG_InitGraphics(0) == -1) {
+		if (AG_InitGraphics(driverSpec) == -1) {
 			printf("AG_InitGraphics(%d): %s\n", i, AG_GetError());
 			exit(1);
 		}

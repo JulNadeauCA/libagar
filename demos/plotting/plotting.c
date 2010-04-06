@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -201,9 +201,23 @@ main(int argc, char *argv[])
 	AG_Box *box;
 	AG_Button *btn;
 	int i;
+	char *driverSpec = NULL, *optArg;
+	int c;
 
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: plotting [-d agar-driver-spec]\n");
+			return (1);
+		}
+	}
 	if (AG_InitCore("agar-plotting-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

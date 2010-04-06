@@ -148,9 +148,23 @@ main(int argc, char *argv[])
 {
 	AG_Window *win;
 	AG_Button *btn;
+	char *optArg, *driverSpec = NULL;
+	int c;
 
+	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'd':
+			driverSpec = optArg;
+			break;
+		case '?':
+		case 'h':
+		default:
+			printf("Usage: focusing [-d agar-driver-spec]\n");
+			exit(1);
+		}
+	}
 	if (AG_InitCore("agar-focusing-demo", 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
+	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
@@ -160,7 +174,7 @@ main(int argc, char *argv[])
 	TestUnfocusedMouseMotion();
 	TestTabCycle();
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN|AG_WINDOW_NOCLOSE : 0);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar widget focusing demo");
 	AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
 	btn = AG_ButtonNewFn(win, 0, "Focus widget 1", FocusWidget1, NULL);
