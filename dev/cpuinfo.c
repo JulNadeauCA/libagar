@@ -79,7 +79,7 @@ DEV_CPUInfo(void)
 	}
 	AG_WindowSetCaptionS(win, _("CPU Information"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 70);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 30);
 
 	AG_LabelNew(win, 0, _("Architecture: %s"),
 	    agCPU.arch[0] != '\0' ? agCPU.arch : "unknown");

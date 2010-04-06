@@ -47,10 +47,12 @@ static const struct dev_tool_ent {
 } devTools[] = {
 	{ N_("Registered classes"),	DEV_ClassInfo },
 	{ N_("Display Settings"),	DEV_DisplaySettings },
+#if 0
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
+#endif
 #if defined(AG_DEBUG)
-	{ N_("Performance Graph"),	AG_PerfMonShow },
+	{ N_("Performance Monitor"),	AG_PerfMonShow },
 	{ N_("CPU Information"),	DEV_CPUInfo },
 #endif
 #if defined(AG_NETWORK) && defined(AG_THREADS) && defined(HAVE_JPEG)
