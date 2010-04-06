@@ -529,6 +529,14 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	cr0 = &sgl->clipRects[0];
 	cr0->r.w = w;
 	cr0->r.h = h;
+	cr0->eqns[0][0] = 1.0;	cr0->eqns[0][1] = 0.0;
+	cr0->eqns[0][2] = 0.0;	cr0->eqns[0][3] = 0.0;
+	cr0->eqns[1][0] = 0.0;	cr0->eqns[1][1] = 1.0;
+	cr0->eqns[1][2] = 0.0;	cr0->eqns[1][3] = 0.0;
+	cr0->eqns[2][0] = -1.0;	cr0->eqns[2][1] = 0.0;
+	cr0->eqns[2][2] = 0.0;	cr0->eqns[2][3] = (double)w;
+	cr0->eqns[3][0] = 0.0;	cr0->eqns[3][1] = -1.0;
+	cr0->eqns[3][2] = 0.0;	cr0->eqns[3][3] = (double)h;
 	
 	/* Reinitialize the GL viewport. */
 	AG_GL_InitContext(
