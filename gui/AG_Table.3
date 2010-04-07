@@ -324,10 +324,10 @@ selection flag of individual cells; their meaning is application-specific.
 .Fn AG_TableAddRow "AG_Table *tbl" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_TableSelectRow "AG_Table *tbl" "Uint row"
+.Fn AG_TableSelectRow "AG_Table *tbl" "int row"
 .Pp
 .Ft "void"
-.Fn AG_TableDeselectRow "AG_Table *tbl" "Uint row"
+.Fn AG_TableDeselectRow "AG_Table *tbl" "int row"
 .Pp
 .Ft "void"
 .Fn AG_TableSelectAllRows "AG_Table *tbl"
@@ -336,7 +336,7 @@ selection flag of individual cells; their meaning is application-specific.
 .Fn AG_TableDeselectAllRows "AG_Table *tbl"
 .Pp
 .Ft "void"
-.Fn AG_TableRowSelected "AG_Table *tbl" "Uint row"
+.Fn AG_TableRowSelected "AG_Table *tbl" "int row"
 .Pp
 .nr nS 0
 The
@@ -430,13 +430,13 @@ returns 1 if the given row is selected, 0 otherwise.
 .Sh CELL FUNCTIONS
 .nr nS 1
 .Ft "void"
-.Fn AG_TableSelectCell "AG_Table *tbl" "Uint row" "Uint col"
+.Fn AG_TableSelectCell "AG_Table *tbl" "int row" "int col"
 .Pp
 .Ft "void"
-.Fn AG_TableDeselectCell "AG_Table *tbl" "Uint row" "Uint col"
+.Fn AG_TableDeselectCell "AG_Table *tbl" "int row" "int col"
 .Pp
 .Ft "void"
-.Fn AG_TableCellSelected "AG_Table *tbl" "Uint row" "Uint col"
+.Fn AG_TableCellSelected "AG_Table *tbl" "int row" "int col"
 .Pp
 .Ft "void"
 .Fn AG_TableCompareCells "const AG_TableCell *c1" "const AG_TableCell *c2"
@@ -518,10 +518,10 @@ For the
 .Ft AG_Table
 object:
 .Pp
-.Bl -tag -compact -width "Uint n "
-.It Ft Uint n
+.Bl -tag -compact -width "int n "
+.It Ft int n
 Number of columns (read-only).
-.It Ft Uint m
+.It Ft int m
 Number of rows (read-only).
 .El
 .Sh EXAMPLES

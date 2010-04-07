@@ -79,6 +79,7 @@ typedef struct ag_tlist {
 	int wRow;			/* Row width */
 	AG_Rect r;			/* View area */
 	AG_Timeout refreshTo;		/* Autorefresh timer */
+	int rOffs;			/* Row display offset */
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \

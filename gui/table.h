@@ -98,7 +98,7 @@ typedef struct ag_table_col {
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
 	AG_TableCell *pool;		/* Pool of inactive cells */
-	Uint         mpool;		/* Number of rows in pool */
+	int          mpool;		/* Number of rows in pool */
 } AG_TableCol;
 
 typedef struct ag_table {
@@ -125,9 +125,9 @@ typedef struct ag_table {
 	int mOffs;			/* Row offset (for poll function) */
 	AG_TableCol *cols;		/* Column data */
 	AG_TableCell **cells;		/* Row data */
-	Uint n;				/* Number of columns */
-	Uint m;				/* Number of rows */
-	Uint mVis;			/* Maximum number of visible rows */
+	int n;				/* Number of columns */
+	int m;				/* Number of rows */
+	int mVis;			/* Maximum number of visible rows */
 	int nResizing;			/* Column being resized (or -1) */
 	AG_Scrollbar *vbar;		/* Vertical scrollbar */
 	AG_Scrollbar *hbar;		/* Horizontal scrollbar */
@@ -168,8 +168,8 @@ void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
 void AG_TableSetSelectionColor(AG_Table *, Uint8, Uint8, Uint8, Uint8);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
-int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
-void	  AG_TablePoolFree(AG_Table *, Uint);
+int	  AG_TablePoolAdd(AG_Table *, int, int);
+void	  AG_TablePoolFree(AG_Table *, int);
 
 void	  AG_TableClear(AG_Table *);
 void	  AG_TableBegin(AG_Table *);
@@ -181,11 +181,11 @@ void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
 #define	  AG_TableDeselectCell(t,m,n) ((t)->cells[m][n].selected = 1)
 
 int	  AG_TableAddRow(AG_Table *, const char *, ...);
-void	  AG_TableSelectRow(AG_Table *, Uint);
-void	  AG_TableDeselectRow(AG_Table *, Uint);
+void	  AG_TableSelectRow(AG_Table *, int);
+void	  AG_TableDeselectRow(AG_Table *, int);
 void	  AG_TableSelectAllRows(AG_Table *);
 void	  AG_TableDeselectAllRows(AG_Table *);
-int	  AG_TableRowSelected(AG_Table *, Uint);
+int	  AG_TableRowSelected(AG_Table *, int);
 
 int	  AG_TableAddCol(AG_Table *, const char *, const char *,
 	                 int (*)(const void *, const void *));
