@@ -41,8 +41,6 @@ static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
 static void PopupMenu(AG_Tlist *, AG_TlistPopup *, int x, int y);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
-static void UpdateListScrollbar(AG_Tlist *);
-static void ScrollbarChanged(AG_Event *);
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -90,13 +88,11 @@ SelectionVisible(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 	int y = 0, i = 0;
-	int offset;
 
 	UpdatePolled(tl);
-	offset = AG_GetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (i++ < offset)
+		if (i++ < tl->rOffs)
 			continue;
 		if (y > HEIGHT(tl) - tl->item_h)
 			break;
@@ -114,20 +110,14 @@ ScrollToSelection(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 	int m = 0;
-	int offset = AG_GetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
 			m++;
 			continue;
 		}
-		if (offset > m) {
-			AG_SetInt(tl->sbar, "value", m);
-		} else {
-			offset = m - tl->nvisitems + 1;
-			if (offset < 0) { offset = 0; }
-			AG_SetInt(tl->sbar, "value", offset);
-		}
+		tl->rOffs = (tl->rOffs > m) ? m :
+		    MAX(0, m - tl->nvisitems + 1);
 		return;
 	}
 }
@@ -261,14 +251,17 @@ Init(void *obj)
 	tl->dblClickEv = NULL;
 	tl->wheelTicks = 0;
 	tl->r = AG_RECT(0,0,0,0);
+	tl->rOffs = 0;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 	
-	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
+	AG_BindInt(tl->sbar, "value", &tl->rOffs);
+	AG_BindInt(tl->sbar, "max", &tl->nitems);
+	AG_BindInt(tl->sbar, "visible", &tl->nvisitems);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
-	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
@@ -397,7 +390,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	tl->r.w = tl->wRow;
 	tl->r.h = a->h;
 
-	UpdateListScrollbar(tl);
+	/* Limit vertical scrollbar parameters */
+	tl->nvisitems = a->h/tl->item_h;
+	if (tl->rOffs+tl->nvisitems >= tl->nitems) {
+		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+	}
 	return (0);
 }
 
@@ -407,7 +404,6 @@ Draw(void *obj)
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	int y = 0, i = 0, selSeen = 0, selPos = 1;
-	int offset;
 
 	STYLE(tl)->ListBackground(tl, tl->r);
 	AG_WidgetDraw(tl->sbar);
@@ -415,11 +411,10 @@ Draw(void *obj)
 
 	UpdatePolled(tl);
 
-	offset = AG_GetInt(tl->sbar, "value");
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
 
-		if (i++ < offset) {
+		if (i++ < tl->rOffs) {
 			if (it->selected) {
 				selPos = -1;
 			}
@@ -474,59 +469,15 @@ Draw(void *obj)
 		}
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
-		AG_Variable *offsetb;
-		int *offset;
-
-		offsetb = AG_GetVariable(tl->sbar, "value", &offset);
 		if (selPos == -1) {
-			(*offset)--;
+			tl->rOffs--;
 		} else {
-			(*offset)++;
+			tl->rOffs++;
 		}
-		AG_UnlockVariable(offsetb);
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
 	AG_PopClipRect(tl);
-}
-
-/*
- * Adjust the scrollbar offset according to the number of visible items.
- * Tlist must be locked.
- */
-static void
-UpdateListScrollbar(AG_Tlist *tl)
-{
-	AG_Variable *maxb, *offsetb;
-	int *max, *offset;
-	int noffset;
-	
-	tl->nvisitems = HEIGHT(tl)/tl->item_h;
-
-	maxb = AG_GetVariable(tl->sbar, "max", &max);
-	offsetb = AG_GetVariable(tl->sbar, "value", &offset);
-	noffset = *offset;
-
-	*max = tl->nitems - tl->nvisitems;
-
-	if (noffset > *max)
-		noffset = *max;
-	if (noffset < 0)
-		noffset = 0;
-
-	if (*offset != noffset)
-		*offset = noffset;
-
-	if (tl->nitems > 0 && tl->nvisitems > 0 &&
-	    tl->nvisitems < tl->nitems) {
-		AG_ScrollbarSetControlLength(tl->sbar,
-		    tl->nvisitems*(tl->sbar->length)/tl->nitems);
-	} else {
-		AG_ScrollbarSetControlLength(tl->sbar, -1);
-	}
-
-	AG_UnlockVariable(offsetb);
-	AG_UnlockVariable(maxb);
 }
 
 static void
@@ -548,24 +499,15 @@ FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 void
 AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_Variable *offsetb;
-	int *offset;
-	int nitems;
-
 	AG_ObjectLock(tl);
 	TAILQ_REMOVE(&tl->items, it, items);
-	nitems = --tl->nitems;
+	tl->nitems--;
 	FreeItem(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
-	AG_SetInt(tl->sbar, "max", nitems);
-	offsetb = AG_GetVariable(tl->sbar, "value", &offset);
-	if (*offset > nitems) {
-		*offset = nitems;
-	} else if (nitems > 0 && *offset < nitems) {		/* XXX ugly */
-		*offset = 0;
+	if (tl->rOffs+tl->nvisitems > tl->nitems) {
+		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 	}
-	AG_UnlockVariable(offsetb);
 	AG_ObjectUnlock(tl);
 }
 
@@ -610,10 +552,6 @@ AG_TlistClear(AG_Tlist *tl)
 	}
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
-	
-	/* Preserve the offset value, for polling. */
-	AG_SetInt(tl->sbar, "max", 0);
-
 	AG_ObjectUnlock(tl);
 }
 
@@ -695,7 +633,6 @@ AG_TlistRestore(AG_Tlist *tl)
 	}
 	TAILQ_INIT(&tl->selitems);
 
-	UpdateListScrollbar(tl);
 	AG_ObjectUnlock(tl);
 }
 
@@ -728,7 +665,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 	} else {
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
-	AG_SetInt(tl->sbar, "max", ++tl->nitems);
+	tl->nitems++;
 }
 
 /* Add an item to the tail of the list (user pointer) */
@@ -971,7 +908,7 @@ MouseButtonDown(AG_Event *event)
 	AG_TlistItem *ti;
 	int tind;
 
-	tind = (AG_GetInt(tl->sbar, "value") + y/tl->item_h) + 1;
+	tind = tl->rOffs + y/tl->item_h + 1;
 
 	/* XXX use array */
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
@@ -979,29 +916,13 @@ MouseButtonDown(AG_Event *event)
 
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-		{
-			AG_Variable *offsb;
-			int *offs;
-
-			offsb = AG_GetVariable(tl->sbar, "value", &offs);
-			(*offs) -= AG_WidgetScrollDelta(&tl->wheelTicks);
-			if (*offs < 0) {
-				*offs = 0;
-			}
-			AG_UnlockVariable(offsb);
-		}
+		tl->rOffs -= AG_WidgetScrollDelta(&tl->wheelTicks);
+		if (tl->rOffs < 0) { tl->rOffs = 0; }
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		{
-			AG_Variable *offsb;
-			int *offs;
-
-			offsb = AG_GetVariable(tl->sbar, "value", &offs);
-			(*offs) += AG_WidgetScrollDelta(&tl->wheelTicks);
-			if (*offs > (tl->nitems - tl->nvisitems)) {
-				*offs = tl->nitems - tl->nvisitems;
-			}
-			AG_UnlockVariable(offsb);
+		tl->rOffs += AG_WidgetScrollDelta(&tl->wheelTicks);
+		if (tl->rOffs > (tl->nitems - tl->nvisitems)) {
+			tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 		}
 		break;
 	case AG_MOUSE_LEFT:
@@ -1173,16 +1094,6 @@ KeyUp(AG_Event *event)
 		AG_DelTimeout(tl, &tl->incTo);
 		break;
 	}
-}
-
-static void
-ScrollbarChanged(AG_Event *event)
-{
-	AG_Tlist *tl = AG_PTR(1);
-
-	AG_ObjectLock(tl);
-	UpdateListScrollbar(tl);
-	AG_ObjectUnlock(tl);
 }
 
 /*
@@ -1427,14 +1338,14 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 void
 AG_TlistScrollToStart(AG_Tlist *tl)
 {
-	AG_SetInt(tl->sbar, "value", 0);
+	tl->rOffs = 0;
 }
 
 /* Scroll to the end of the list. */
 void
 AG_TlistScrollToEnd(AG_Tlist *tl)
 {
-	AG_SetInt(tl->sbar, "value", tl->nitems - tl->nvisitems);
+	tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 }
 
 static void
