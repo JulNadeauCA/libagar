@@ -156,8 +156,7 @@ Init(void *obj)
 	cons->rOffs = 0;
 	cons->rVisible = 0;
 	cons->cBg = AG_ColorRGB(0,0,0);
-	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_AUTOSIZE);
+	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
 	cons->r = AG_RECT(0,0,0,0);
 	cons->font = NULL;
 
@@ -222,6 +221,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		cons->rVisible /= cons->font->height;
 	} else {
 		cons->rVisible /= agTextFontHeight;
+	}
+	if (cons->rOffs+cons->rVisible >= cons->nLines) {
+		cons->rOffs = MAX(0, cons->nLines - cons->rVisible);
 	}
 	return (0);
 }
