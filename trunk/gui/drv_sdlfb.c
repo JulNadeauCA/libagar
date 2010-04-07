@@ -1299,6 +1299,12 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	c = agColors[BG_COLOR];
 	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 	SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
+
+	/* Toggle fullscreen if requested. */
+	if (AG_CfgBool("view.full-screen")) {
+		if (!SDL_WM_ToggleFullScreen(sfb->s))
+			AG_SetCfgBool("view.full-screen", 0);
+	}
 	return (0);
 fail:
 	if (drv->videoFmt) {
@@ -1357,6 +1363,11 @@ fail:
 static void
 SDLFB_CloseVideo(void *obj)
 {
+	AG_DriverSDLFB *sfb = obj;
+
+	if (AG_CfgBool("view.full-screen")) {
+		SDL_WM_ToggleFullScreen(sfb->s);
+	}
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		initedSDLVideo = 0;
