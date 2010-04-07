@@ -46,6 +46,7 @@ main(int argc, char *argv[])
 		AG_DestroyVideo();
 		printf("\tDestroy()\n");
 		AG_Destroy();
+		AG_Delay(100);
 	}
 	printf("Test successful\n");
 	return (0);
