@@ -466,20 +466,32 @@ out:
 static int
 PostEventCallback(void *drvCaller)
 {
+	AG_Window *win;
+	AG_Driver *drv;
+
+	AG_LockVFS(&agDrivers);
+
 	if (!TAILQ_EMPTY(&agWindowDetachQ))
 		AG_FreeDetachedWindows();
-
+	
 	/*
-	 * Exit when no more windows exist.
+	 * Exit when no more visible windows exist.
 	 * XXX TODO make this behavior configurable
 	 */
 	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
-		AG_SetError("No more windows exist");
-		agTerminating = 1;
-		return (-1);
+		goto nowindows;
 	}
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(win, drv) {
+			if (win->visible)
+				break;
+		}
+		if (win != NULL)
+			break;
+	}
+	if (win == NULL)
+		goto nowindows;
 
-	AG_LockVFS(&agDrivers);
 	if (agWindowToFocus != NULL) {
 		AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(agWindowToFocus)->drv;
 
@@ -495,6 +507,11 @@ PostEventCallback(void *drvCaller)
 	}
 	AG_UnlockVFS(&agDrivers);
 	return (1);
+nowindows:
+	AG_SetError("No more windows exist");
+	agTerminating = 1;
+	AG_UnlockVFS(&agDrivers);
+	return (-1);
 }
 
 static int
