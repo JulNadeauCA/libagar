@@ -154,6 +154,9 @@ SDLGL_Close(void *obj)
 #endif
 	AG_FreeCursors(AGDRIVER(sgl));
 
+	if (AG_CfgBool("view.full-screen")) {
+		SDL_WM_ToggleFullScreen(sgl->s);
+	}
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		initedSDLVideo = 0;
@@ -433,6 +436,12 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
 		ClearBackground();
+	}
+
+	/* Toggle fullscreen if requested. */
+	if (AG_CfgBool("view.full-screen")) {
+		if (!SDL_WM_ToggleFullScreen(sgl->s))
+			AG_SetCfgBool("view.full-screen", 0);
 	}
 	return (0);
 fail:
