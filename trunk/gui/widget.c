@@ -1298,7 +1298,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 		wid->surfaceFlags = Realloc(wid->surfaceFlags,
 		    (wid->nsurfaces+1)*sizeof(Uint));
 		wid->textures = Realloc(wid->textures,
-		    (wid->nsurfaces+1)*sizeof(GLuint));
+		    (wid->nsurfaces+1)*sizeof(Uint));
 		wid->texcoords = Realloc(wid->texcoords,
 		    (wid->nsurfaces+1)*sizeof(AG_TexCoord));
 		s = wid->nsurfaces++;
