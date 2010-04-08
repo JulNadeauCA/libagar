@@ -80,21 +80,21 @@ OUTPUT:
 
 void
 expandItem(self, item, x, y)
-	Agar::Widget parentWidget
+	Agar::Widget self
 	Agar::MenuItem item
 	int x
 	int y
 PREINIT:
 	AG_Widget *parent;
 CODE:
-	AG_MenuExpand(parentWidget, item, x, y);
+	AG_MenuExpand(self, item, x, y);
 
 void
 collapseItem(self, item)
-	Agar::Widget parentWidget
+	Agar::Widget self
 	Agar::MenuItem item
 CODE:
-	AG_MenuCollapse(parentWidget, item);
+	AG_MenuCollapse(self, item);
 
 void
 setPadding(self, l, r, t, b)
