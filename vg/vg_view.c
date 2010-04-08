@@ -707,7 +707,7 @@ VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)
 		if (ntool->ops->selected != NULL)
 			ntool->ops->selected(ntool, vv);
 	} else {
-		VG_Status(vv, NULL);
+		VG_StatusS(vv, NULL);
 	}
 out:
 	AG_ObjectUnlock(vv);

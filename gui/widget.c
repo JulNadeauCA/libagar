@@ -445,7 +445,7 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
     int xCurs, int yCurs)
 {
 	AG_Widget *wid = obj;
-	AG_ActionTie *at;
+	AG_ActionTie *at = NULL;
 	AG_Action *a;
 	Uint i;
 
@@ -476,7 +476,7 @@ int
 AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 {
 	AG_Widget *wid = obj;
-	AG_ActionTie *at;
+	AG_ActionTie *at = NULL;
 	AG_Action *a;
 	Uint i;
 	int rv;

@@ -1019,7 +1019,7 @@ Init(void *obj)
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
-	fd->comLoc = AG_ComboNew(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
+	fd->comLoc = AG_ComboNewS(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
 	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 	AG_TlistSetCompareFn(fd->comLoc->list, AG_TlistCompareStrings);
 
