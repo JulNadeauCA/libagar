@@ -50,7 +50,6 @@ void AG_GL_DrawCircle(void *, int, int, int, AG_Color);
 void AG_GL_DrawCircle2(void *, int, int, int, AG_Color);
 void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
 void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
-void AG_GL_DrawFrame(void *, AG_Rect, AG_Color [2]);
 void AG_GL_UpdateGlyph(void *, AG_Glyph *);
 void AG_GL_DrawGlyph(void *, const AG_Glyph *, int, int);
 

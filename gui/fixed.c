@@ -120,7 +120,7 @@ Draw(void *obj)
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
 		    agColors[FRAME_COLOR]);
 	} else if (fx->flags & AG_FIXED_FILLBG) {
-		AG_DrawRectFilled(fx,
+		AG_DrawRect(fx,
 		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)),
 		    agColors[FIXED_BG_COLOR]);
 	}

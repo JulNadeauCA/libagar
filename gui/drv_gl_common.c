@@ -864,15 +864,6 @@ AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
 }
 
 void
-AG_GL_DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
-{
-	AG_GL_DrawLineH(obj, r.x,		r.x+r.w-1,	r.y,		C[0]);
-	AG_GL_DrawLineH(obj, r.x,		r.x+r.w,	r.y+r.h-1,	C[1]);
-	AG_GL_DrawLineV(obj, r.x,		r.y,		r.y+r.h-1,	C[0]);
-	AG_GL_DrawLineV(obj, r.x+r.w-1,	r.y,	r.y+r.h-1,	C[1]);
-}
-
-void
 AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
 	AG_GL_UploadTexture(&gl->texture, gl->su, &gl->texcoords);

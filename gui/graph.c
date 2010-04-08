@@ -606,9 +606,9 @@ Draw(void *obj)
 				            su->w+4, su->h+4),
 				    agColors[TEXT_COLOR]);
 			}
-			AG_DrawRectBlended(gf,
+			AG_DrawRect(gf,
 			    AG_RECT(lblX, lblY, su->w, su->h),
-			    AG_ColorRGBA(128,128,128,128), AG_ALPHA_SRC);
+			    AG_ColorRGBA(128,128,128,128));
 			AG_WidgetBlitSurface(gf, edge->labelSu, lblX, lblY);
 		}
 	}
@@ -622,12 +622,12 @@ Draw(void *obj)
 		}
 		switch (vtx->style) {
 		case AG_GRAPH_RECTANGLE:
-			AG_DrawRectBlended(gf,
+			AG_DrawRect(gf,
 			    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs,
 			            vtx->y - vtx->h/2 - gf->yOffs,
 				    vtx->w,
 				    vtx->h),
-			    vtx->bgColor, AG_ALPHA_SRC);
+			    vtx->bgColor);
 			if (vtx->flags & AG_GRAPH_SELECTED) {
 				AG_DrawRectOutline(gf,
 				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 1,

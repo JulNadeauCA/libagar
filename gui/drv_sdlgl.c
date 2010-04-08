@@ -655,7 +655,6 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawRectFilled,
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,
-		AG_GL_DrawFrame,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph
 	},

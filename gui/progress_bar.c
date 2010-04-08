@@ -195,7 +195,7 @@ Draw(void *obj)
 		rd.h = WIDGET(pb)->h - pb->pad*2;
 		break;
 	}
-	AG_DrawRectFilled(pb, rd, agColors[PROGRESS_BAR_COLOR]);
+	AG_DrawRect(pb, rd, agColors[PROGRESS_BAR_COLOR]);
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
 		Snprintf(pctText, sizeof(pctText), "%d%%",

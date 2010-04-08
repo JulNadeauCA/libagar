@@ -208,7 +208,6 @@ typedef struct ag_driver_class {
 	void (*drawRectBlended)(void *, AG_Rect r, AG_Color C,
 	                        AG_BlendFn sFn, AG_BlendFn dFn);
 	void (*drawRectDithered)(void *, AG_Rect r, AG_Color C);
-	void (*drawFrame)(void *, AG_Rect r, AG_Color C[2]);
 	void (*updateGlyph)(void *, AG_Glyph *);
 	void (*drawGlyph)(void *, const AG_Glyph *, int x, int y);
 } AG_DriverClass;
@@ -561,10 +560,6 @@ renders a filled rectangle with transparency (see
 .Fn drawRectDithered
 renders a filled rectangle with ditering effect (commonly used to illustrate
 "disabled" GUI controls).
-.Pp
-.Fn drawFrame
-renders a 3D-style frame at target rectangle
-.Fa r .
 .Pp
 The
 .Fn updateGlyph

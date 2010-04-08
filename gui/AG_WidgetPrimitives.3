@@ -37,15 +37,12 @@
 .Ed
 .Sh DESCRIPTION
 Agar provides a few primitive rendering routines designed specifically for
-the rendering of GUI elements.
-.Pp
-This interface is not intended for general-purpose graphics.
-For general-purpose vector graphics, see
-.Xr VG 3 .
-For raster graphics manipulation, see
-.Xr RG 3 .
-Both libraries are part of the Agar distribution.
-For 3D graphics, see the FreeSG library (http://freesg.org/).
+the rendering of GUI elements, as opposed to general-purpose graphics (look
+into other libraries, such as the included
+.Xr VG 3
+and
+.Xr RG 3
+for this).
 .Pp
 It is illegal to invoke the following routines outside of
 .Xr AG_Widget 3
@@ -55,11 +52,15 @@ operation).
 The coordinates for all
 .Fn AG_Draw*
 functions are given in pixels, in the widget's local coordinate system.
-See
-.Xr AG_Color 3
-for a description of the
+The
 .Ft AG_Color
-type.
+and
+.Ft AG_BlendFn
+types are commonly used to specify colors and blending modes, see
+.Xr AG_Color 3
+and
+.Xr AG_BlendFn 3
+for details.
 .Sh PRIMITIVES
 .nr nS 1
 .Ft void
@@ -100,6 +101,9 @@ type.
 .Pp
 .Ft void
 .Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_DrawRect "AG_Widget *widget, AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "AG_Color c"
@@ -191,18 +195,30 @@ renders an alpha-blended line, where the RGBA components are passed as the
 array, and the blending function is specified in
 .Fa blendFn .
 .Pp
+The
+.Fn AG_DrawRect
+function fills a destination rectangle with the specified color.
+If the color is non-opaque, blending is performed.
+.Pp
 .Fn AG_DrawRectOutline
 draws the outline of a rectangle.
 .Pp
 .Fn AG_DrawRectFilled
-fills a rectangle of pixels
-.Fa r .
+fills an opaque rectangle with the specified color, ignoring any alpha
+component.
+.Pp
 .Fn AG_DrawRectBlended
 draws a blended rectangle of the color
 .Fa c ,
-specified as an array or RGBA components, with the specified blending
-mode
-.Fa blendFn .
+specified as an array or RGBA components.
+.Fn AG_DrawRectBlended
+differs from
+.Fn AG_DrawRect
+in that it accepts an explicit blending mode
+.Fa blendFn
+(see
+.Xr AG_BlendFn 3
+for details).
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
 .Ft void
