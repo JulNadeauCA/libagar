@@ -1939,6 +1939,7 @@ Init(void *obj)
 	t->n = 0;
 	t->m = 0;
 	t->mVis = 0;
+	t->mOffs = 0;
 	t->xOffs = 0;
 	t->dblClickRowEv = NULL;
 	t->dblClickColEv = NULL;
