@@ -1131,7 +1131,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	}
 	AG_PopTextState();
 
-	AG_DrawRectFilled(tv,
+	AG_DrawRect(tv,
 	    AG_RECT((wSu >= WIDTH(tv)) ? 0 : (WIDTH(tv)-wSu-2),
 	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
 	    agColors[TILEVIEW_TEXTBG_COLOR]);

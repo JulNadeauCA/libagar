@@ -221,30 +221,6 @@ AG_DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
 	    h, c);
 }
 
-/* Render a 3D-style box with disabled control-style dithering. */
-static __inline__ void
-AG_DrawBoxDisabled(void *obj, AG_Rect r, int z, AG_Color cBox, AG_Color cDither)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color cFrame[2];
-	
-	AG_WidgetOffsetRect(wid, &r);
-
-	if (AG_WidgetIsFocusedInWindow(wid)) {
-		cDither = AG_ColorShift(cDither,
-		    (z<0) ? agFocusSunkColorShift : agFocusRaisedColorShift);
-	} else {
-		cDither = AG_ColorShift(cDither,
-		    (z<0) ? agNofocusSunkColorShift : agNofocusRaisedColorShift);
-	}
-	cFrame[0] = AG_ColorShift(cBox, (z<0)?agLowColorShift:agHighColorShift);
-	cFrame[1] = AG_ColorShift(cBox, (z<0)?agHighColorShift:agLowColorShift);
-
-	wid->drvOps->drawRectFilled(wid->drv, r, cBox);
-	wid->drvOps->drawFrame(wid->drv, r, cFrame);
-	wid->drvOps->drawRectDithered(wid->drv, r, cDither);
-}
-
 /* Render a 3D-style box with rounded edges. */
 static __inline__ void
 AG_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
@@ -304,7 +280,22 @@ AG_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
 	    r, c);
 }
 
-/* Render a filled rectangle. */
+/* Render a filled rectangle (opaque or transparent). */
+static __inline__ void
+AG_DrawRect(void *obj, AG_Rect r, AG_Color c)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	
+	AG_WidgetOffsetRect(wid, &r);
+	if (c.a < AG_ALPHA_OPAQUE) {
+		wid->drvOps->drawRectBlended(wid->drv, r, c,
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	} else {
+		wid->drvOps->drawRectFilled(wid->drv, r, c);
+	}
+}
+
+/* Render a filled rectangle (opaque). */
 static __inline__ void
 AG_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
 {
@@ -314,7 +305,7 @@ AG_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
 	wid->drvOps->drawRectFilled(wid->drv, r, c);
 }
 
-/* Render an alpha blended rectangle. */
+/* Render a filled rectangle (transparent). */
 static __inline__ void
 AG_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_BlendFn fnSrc)
 {
@@ -338,15 +329,34 @@ AG_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
 
 /* Render a 3D-style frame. */
 static __inline__ void
-AG_DrawFrame(void *obj, AG_Rect r, int z, AG_Color c)
+AG_DrawFrame(void *obj, AG_Rect r, int z, AG_Color cBase)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color cFrame[2];
-	
+	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
+	AG_Color c[2];
+	int y2, x2;
+
 	AG_WidgetOffsetRect(wid, &r);
-	cFrame[0] = AG_ColorShift(c, (z<0)?agLowColorShift:agHighColorShift);
-	cFrame[1] = AG_ColorShift(c, (z<0)?agHighColorShift:agLowColorShift);
-	wid->drvOps->drawFrame(wid->drv, r, cFrame);
+	c[0] = AG_ColorShift(cBase, (z<0)?agLowColorShift:agHighColorShift);
+	c[1] = AG_ColorShift(cBase, (z<0)?agHighColorShift:agLowColorShift);
+	x2 = r.x+r.w - 1;
+	y2 = r.y+r.h - 1;
+
+	if (c[0].a < AG_ALPHA_OPAQUE) {
+		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
+		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
+	} else {
+		drvOps->drawLineH(drv, r.x, x2,  r.y, c[0]);
+		drvOps->drawLineV(drv, r.x, r.y, y2,  c[0]);
+	}
+	if (c[1].a < AG_ALPHA_OPAQUE) {
+		drvOps->drawLineBlended(drv, r.x, y2,  x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
+		drvOps->drawLineBlended(drv, x2,  r.y, x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
+	} else {
+		drvOps->drawLineH(drv, r.x, x2,  y2, c[1]);
+		drvOps->drawLineV(drv, x2,  r.y, y2, c[1]);
+	}
 }
 
 /*
@@ -359,7 +369,7 @@ AG_DrawBox(void *obj, AG_Rect r, int z, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
-	AG_Color cFrame[2];
+	AG_Rect rOffs;
 
 	if (AG_WidgetIsFocusedInWindow(wid)) {
 		c = AG_ColorShift(c,
@@ -368,26 +378,54 @@ AG_DrawBox(void *obj, AG_Rect r, int z, AG_Color c)
 		c = AG_ColorShift(c,
 		    (z<0)?agNofocusSunkColorShift:agNofocusRaisedColorShift);
 	}
-	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawRectFilled(drv, r, c);
-
-	cFrame[0] = AG_ColorShift(c, (z<0)?agLowColorShift:agHighColorShift);
-	cFrame[1] = AG_ColorShift(c, (z<0)?agHighColorShift:agLowColorShift);
-	wid->drvOps->drawFrame(drv, r, cFrame);
+	rOffs = r;
+	AG_WidgetOffsetRect(wid, &rOffs);
+	if (c.a < AG_ALPHA_OPAQUE) {
+		wid->drvOps->drawRectBlended(drv, rOffs, c,
+		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+	} else {
+		wid->drvOps->drawRectFilled(drv, rOffs, c);
+	}
+	AG_DrawFrame(wid, r, z, c);
 }
 
-/* Render a blended 3D-style frame. */
+/* Render a 3D-style box with disabled control-style dithering. */
+static __inline__ void
+AG_DrawBoxDisabled(void *obj, AG_Rect r, int z, AG_Color cBox, AG_Color cDither)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Rect rOffs;
+
+	if (AG_WidgetIsFocusedInWindow(wid)) {
+		cDither = AG_ColorShift(cDither,
+		    (z<0) ? agFocusSunkColorShift : agFocusRaisedColorShift);
+	} else {
+		cDither = AG_ColorShift(cDither,
+		    (z<0) ? agNofocusSunkColorShift : agNofocusRaisedColorShift);
+	}
+	rOffs = r;
+	AG_WidgetOffsetRect(wid, &rOffs);
+	wid->drvOps->drawRectFilled(wid->drv, rOffs, cBox);
+	AG_DrawFrame(wid, r, z, cBox);
+	wid->drvOps->drawRectDithered(wid->drv, rOffs, cDither);
+}
+
+/* Render 3D-style frame using a specific blending mode. */
 static __inline__ void
 AG_DrawFrameBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
+	int x2, y2;
 
 	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawLineBlended(drv, r.x, r.y, r.x+r.w-1, r.y, C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, r.x, r.y, r.x, r.y+r.h-1, C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, r.x, r.y+r.h-1, r.x+r.w-1, r.y+r.h-1, C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv, r.x+r.w-1, r.y, r.x+r.w-1, r.y+r.h-1, C, fnSrc, AG_ALPHA_ZERO);
+	x2 = r.x+r.w - 1;
+	y2 = r.y+r.h - 1;
+	drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, C, fnSrc, AG_ALPHA_ZERO);
+	drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  C, fnSrc, AG_ALPHA_ZERO);
+	drvOps->drawLineBlended(drv, r.x, y2,  x2,  y2,  C, fnSrc, AG_ALPHA_ZERO);
+	drvOps->drawLineBlended(drv, x2,  r.y, x2,  y2,  C, fnSrc, AG_ALPHA_ZERO);
 }
 
 /* Render a rectangle outline. */
@@ -396,15 +434,23 @@ AG_DrawRectOutline(void *obj, AG_Rect r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
+	AG_DriverClass *drvOps = wid->drvOps;
 	int x2, y2;
 
 	AG_WidgetOffsetRect(wid, &r);
-	x2 = r.x + r.w - 1;
-	y2 = r.y + r.h - 1;
-	wid->drvOps->drawLineH(drv, r.x, x2, r.y, c);
-	wid->drvOps->drawLineH(drv, r.x, x2, y2, c);
-	wid->drvOps->drawLineV(drv, r.x, r.y, y2, c);
-	wid->drvOps->drawLineV(drv, x2, r.y, y2, c);
+	x2 = r.x+r.w - 1;
+	y2 = r.y+r.h - 1;
+	if (c.a < AG_ALPHA_OPAQUE) {
+		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
+		drvOps->drawLineBlended(drv, r.x, r.y, x2,  y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
+		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
+		drvOps->drawLineBlended(drv, x2,  r.y, r.x, y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
+	} else {
+		drvOps->drawLineH(drv, r.x, x2,  r.y, c);
+		drvOps->drawLineH(drv, r.x, x2,  y2,  c);
+		drvOps->drawLineV(drv, r.x, r.y, y2,  c);
+		drvOps->drawLineV(drv, x2,  r.y, y2,  c);
+	}
 }
 
 /* Render a [+] sign. */
@@ -413,16 +459,13 @@ AG_DrawPlus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Driver *drv = wid->drv;
+	int x1, y1;
 
 	AG_WidgetOffsetRect(wid, &r);
-	wid->drvOps->drawLineBlended(drv,
-	    r.x + r.w/2,	r.y,
-	    r.x + r.w/2,	r.y + r.h,
-	    C, fnSrc, AG_ALPHA_ZERO);
-	wid->drvOps->drawLineBlended(drv,
-	    r.x,		r.y + r.h/2,
-	    r.x+r.w,		r.y + r.h/2,
-	    C, fnSrc, AG_ALPHA_ZERO);
+	x1 = r.x + r.w/2;
+	y1 = r.y + r.h/2;
+	wid->drvOps->drawLineBlended(drv, x1,  r.y, x1,      r.y+r.h, C, fnSrc, AG_ALPHA_ZERO);
+	wid->drvOps->drawLineBlended(drv, r.x, y1,  r.x+r.w, y1,      C, fnSrc, AG_ALPHA_ZERO);
 }
 
 /* Render a [-] sign. */
@@ -435,8 +478,7 @@ AG_DrawMinus(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc)
 	AG_WidgetOffsetRect(wid, &r);
 	x = r.x + r.w/2;
 	y = r.y + r.h/2;
-	wid->drvOps->drawLineBlended(wid->drv, x,y, r.x+r.w, y,
-	    C, fnSrc, AG_ALPHA_ZERO);
+	wid->drvOps->drawLineBlended(wid->drv, x,y, r.x+r.w, y, C, fnSrc, AG_ALPHA_ZERO);
 }
 
 /* Render a 3D-style line. */
@@ -489,7 +531,6 @@ AG_DrawTiling(void *obj, AG_Rect r, int tsz, int offs, AG_Color c1, AG_Color c2)
 		alt1 = alt2;
 	}
 }
-
 __END_DECLS
 
 #include <agar/gui/close.h>

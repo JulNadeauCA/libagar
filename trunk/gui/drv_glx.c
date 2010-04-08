@@ -119,6 +119,7 @@ Init(void *obj)
 	memset(glx->clipStates, 0, sizeof(glx->clipStates));
 	glx->textureGC = NULL;
 	glx->nTextureGC = 0;
+	glx->w = 0;
 	AG_MutexInitRecursive(&glx->lock);
 }
 
@@ -1977,7 +1978,6 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawRectFilled,
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,
-		AG_GL_DrawFrame,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph
 	},

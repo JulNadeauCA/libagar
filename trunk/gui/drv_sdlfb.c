@@ -1188,15 +1188,6 @@ SDLFB_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 }
 
 static void
-SDLFB_DrawFrame(void *obj, AG_Rect r, AG_Color C[2])
-{
-	SDLFB_DrawLineH(obj, r.x,		r.x+r.w-1,	r.y,		C[0]);
-	SDLFB_DrawLineH(obj, r.x,		r.x+r.w,	r.y+r.h-1,	C[1]);
-	SDLFB_DrawLineV(obj, r.x,		r.y,		r.y+r.h-1,	C[0]);
-	SDLFB_DrawLineV(obj, r.x+r.w-1,	r.y,		r.y+r.h-1,	C[1]);
-}
-
-static void
 SDLFB_UpdateGlyph(void *drv, AG_Glyph *gl)
 {
 	/* Nothing to do */
@@ -1509,7 +1500,6 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawRectFilled,
 		SDLFB_DrawRectBlended,
 		SDLFB_DrawRectDithered,
-		SDLFB_DrawFrame,
 		SDLFB_UpdateGlyph,
 		SDLFB_DrawGlyph
 	},

@@ -580,9 +580,9 @@ Draw(void *obj)
 				yLbl = 4 + plbl->y;
 				break;
 			}
-			AG_DrawRectBlended(ptr,
+			AG_DrawRect(ptr,
 			    AG_RECT(xLbl+2, yLbl, su->w, su->h),
-			    colBG, AG_ALPHA_SRC);
+			    colBG);
 			AG_WidgetBlitSurface(ptr, plbl->text_surface,
 			    xLbl+2, yLbl);
 		}

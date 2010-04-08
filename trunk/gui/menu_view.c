@@ -304,7 +304,7 @@ Draw(void *obj)
 
 		/* Indicate active item selection */
 		if (item == mi->sel_subitem && item->state == 1)
-			AG_DrawRectFilled(mview, r, agColors[MENU_SEL_COLOR]);
+			AG_DrawRect(mview, r, agColors[MENU_SEL_COLOR]);
 
 		/* Render the menu item's icon */
 		if (item->icon == -1 &&

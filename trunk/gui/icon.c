@@ -163,7 +163,7 @@ Draw(void *obj)
 		}
 		hIcon = WSURFACE(icon,icon->surface)->h;
 		if (icon->flags & AG_ICON_BGFILL) {
-			AG_DrawRectFilled(icon,
+			AG_DrawRect(icon,
 			    AG_RECT(0, hIcon, WIDTH(icon), HEIGHT(icon)-hIcon),
 			    icon->cBackground);
 		}

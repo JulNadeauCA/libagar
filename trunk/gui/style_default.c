@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,11 +59,12 @@ Window(AG_Window *win)
 {
 	AG_Rect r;
 	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
+	AG_Color *bgColor = &agColors[WINDOW_BG_COLOR];
 
 	if (!(win->flags & AG_WINDOW_NOBACKGROUND)) {
-		AG_DrawRectFilled(win,
+		AG_DrawRect(win,
 		    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
-		    agColors[WINDOW_BG_COLOR]);
+		    *bgColor);
 	}
 	if (win->wBorderBot > 0) {
 		r.x = 0;
@@ -171,7 +172,7 @@ CheckboxButton(void *cbox, int state, int size)
 static void
 ConsoleBackground(void *cons, AG_Color bgColor)
 {
-	AG_DrawRectFilled(cons,
+	AG_DrawRect(cons,
 	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)),
 	    bgColor);
 }
@@ -202,7 +203,7 @@ MenuRootBackground(void *m)
 static void
 MenuRootSelectedItemBackground(void *m, AG_Rect r)
 {
-	AG_DrawRectFilled(m, r, agColors[MENU_SEL_COLOR]);
+	AG_DrawRect(m, r, agColors[MENU_SEL_COLOR]);
 }
 
 /* Background for Menu views */
@@ -225,7 +226,7 @@ static void
 NotebookBackground(void *nb, AG_Rect r)
 {
 	/* XXX use something less expensive */
-	AG_DrawRectFilled(nb, r, agColors[NOTEBOOK_SEL_COLOR]);
+	AG_DrawRect(nb, r, agColors[NOTEBOOK_SEL_COLOR]);
 }
 
 /* Background for individual notebook tab */
@@ -675,7 +676,7 @@ static void
 ListItemBackground(void *tl, AG_Rect r, int isSelected)
 {
 	if (isSelected)
-		AG_DrawRectFilled(tl, r, agColors[TLIST_SEL_COLOR]);
+		AG_DrawRect(tl, r, agColors[TLIST_SEL_COLOR]);
 }
 
 /* Indicate presence of child items in a tree display. */

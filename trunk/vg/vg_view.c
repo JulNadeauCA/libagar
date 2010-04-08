@@ -627,7 +627,7 @@ Draw(void *obj)
 		return;
 
 	if (!(vv->flags & VG_VIEW_DISABLE_BG))
-		AG_DrawRectFilled(vv, vv->r, VG_MapColorRGB(vg->fillColor));
+		AG_DrawRect(vv, vv->r, VG_MapColorRGBA(vg->fillColor));
 	
 	AG_PushClipRect(vv, vv->r);
 
