@@ -278,7 +278,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 	
 	CreateStaticTable();

@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 		printf("Initializing Agar: %s\n", AG_GetError());
 		return (1);
 	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
 	
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);
@@ -88,6 +88,6 @@ main(int argc, char *argv[])
 
 	AG_AtExitFunc(SaveOnExit);
 	AG_EventLoop();
-	AG_Quit();
+	AG_Destroy();
 	return (0);
 }
