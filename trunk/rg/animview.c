@@ -187,13 +187,13 @@ Init(void *obj)
 	av->menu_win = NULL;
 	AG_SetTimeout(&av->timer, TickFrame, av, 0);
 	
-	av->btns.play = AG_ButtonNew(av, 0, NULL);
+	av->btns.play = AG_ButtonNewS(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.play, rgIconPlay.s);
 	AG_SetEvent(av->btns.play, "button-pushed", Play, "%p", av);
-	av->btns.pause = AG_ButtonNew(av, 0, NULL);
+	av->btns.pause = AG_ButtonNewS(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.pause, rgIconPause.s);
 	AG_SetEvent(av->btns.pause, "button-pushed", Pause, "%p", av);
-	av->btns.stop = AG_ButtonNew(av, 0, NULL);
+	av->btns.stop = AG_ButtonNewS(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.stop, rgIconStop.s);
 	AG_SetEvent(av->btns.stop, "button-pushed", Stop, "%p", av);
 	

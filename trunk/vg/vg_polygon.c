@@ -204,7 +204,6 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 static void
 Draw(void *p, VG_View *vv)
 {
-	AG_Driver *drv = WIDGET(vv)->drv;
 	VG_Polygon *vp = p;
 
 	if (vp->nPts < 3 || vp->outline) {
@@ -212,7 +211,7 @@ Draw(void *p, VG_View *vv)
 		return;
 	}
 #ifdef HAVE_OPENGL
-	if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
+	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		VG_Color *c = &VGNODE(vp)->color;
 		int x, y, i;
 
