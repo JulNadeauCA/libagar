@@ -1,8 +1,0 @@
-#!/bin/sh
-# Public domain
-
-if [ "${MAKE}" != "" ]; then
-	${MAKE} configure
-else
-	make configure
-fi
