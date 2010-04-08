@@ -448,7 +448,7 @@ main(int argc, char *argv[])
 	AG_SetRefreshRate(fps);
 
 	/* Bind some useful accelerator keys. */
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_Quit);
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
 	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	/* Initialize the Agar-DEV library. */
