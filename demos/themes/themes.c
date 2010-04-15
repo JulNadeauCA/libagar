@@ -458,7 +458,7 @@ main(int argc, char *argv[])
 	InitMyRoundedStyle(&myRoundedStyle);
 
 	/* Display the version and current graphics driver in use. */
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_NOMAXIMIZE);
 	AG_ObjectSetName(win, "PanelWindow");
 	AG_WindowSetCaption(win, "Agar version / driver");
 	{
