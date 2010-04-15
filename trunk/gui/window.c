@@ -1069,6 +1069,8 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
 			y -= 34;
 			if (y < 0) { y = 0; }
 			break;
+		default:
+			break;
 		}
 	}
 	return AG_WindowSetGeometry(win, x, y, w, h);
