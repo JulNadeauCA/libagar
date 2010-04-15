@@ -101,7 +101,7 @@ static int       WGL_SetInputFocus(AG_Window *);
 static void      WGL_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int       WGL_GetNextEvent(void *, AG_DriverEvent *);
 static int       WGL_ProcessEvent(void *, AG_DriverEvent *);
-
+static int       WGL_GetDisplaySize(Uint *, Uint *);
 
 static void
 WGL_SetWindowsError(char* errorMessage, DWORD errorCode)
@@ -230,15 +230,65 @@ WGL_Destroy(void *obj)
 	Free(wgl->textureGC);
 }
 
+/* Return suitable window style from Agar window flags. */
+static void
+WGL_GetWndStyle(AG_Window *win, DWORD *wndStyle, DWORD *wndStyleEx)
+{
+	*wndStyle = ((win->flags & AG_WINDOW_POPUP) ||
+	             (win->flags & AG_WINDOW_DIALOG) ||
+	             (win->flags & AG_WINDOW_NOTITLE)) ?
+		     WS_POPUP : WS_OVERLAPPEDWINDOW;
+	*wndStyleEx = 0;
+	
+	if (win->flags & AG_WINDOW_NOTITLE)
+		(*wndStyle) &= ~(WS_CAPTION);
+	if (win->flags & AG_WINDOW_NOMINIMIZE)
+		(*wndStyle) &= ~(WS_MINIMIZEBOX);
+	if (win->flags & AG_WINDOW_NOMAXIMIZE)
+		(*wndStyle) &= ~(WS_MAXIMIZEBOX);
+	if (win->flags & AG_WINDOW_NORESIZE)
+		(*wndStyle) &= ~(WS_THICKFRAME);
+
+#if defined(WINVER) && (WINVER >= 0x0400)
+	if ((win->flags & AG_WINDOW_NOTITLE) || (win->flags & AG_WINDOW_POPUP))
+		(*wndStyleEx) |= WS_EX_TOOLWINDOW;
+#endif
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0500)
+	if (win->flags & AG_WINDOW_KEEPBELOW)
+		(*wndStyleEx) |= WS_EX_NOACTIVATE;
+#endif
+}
+
+/* Return window rectangle adjusted for titlebar/border style. */
+static void
+WGL_GetWndRect(AG_Window *win, AG_Rect *r)
+{
+	DWORD wndStyle, wndStyleEx;
+	RECT wndRect = {
+	    r->x,
+	    r->y,
+	    r->x + r->w,
+	    r->y + r->h
+	};
+
+	WGL_GetWndStyle(win, &wndStyle, &wndStyleEx);
+	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
+
+	r->x = wndRect.left;
+	r->y = wndRect.top;
+	r->w = wndRect.right - wndRect.left;
+	r->h = wndRect.bottom - wndRect.top;
+}
+
 static int
 WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_Driver *drv = WIDGET(win)->drv;
+	char wndClassName[64]; 
 	GLuint pixelFormat;	
 	WNDCLASSEX wndClass;
-	DWORD wndStyle;
-	DWORD wndStyleEx = 0;
+	DWORD wndStyle, wndStyleEx;
 	PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {
 		sizeof(PIXELFORMATDESCRIPTOR),
 		1,
@@ -251,8 +301,8 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		0, 0,                    /* No Stencil + AUX-Buffer */
 		0, 0, 0, 0, 0            /* All other attributes are not used */
 	};
-	RECT wndRect = {r.x, r.y, r.x + r.w, r.y + r.h};
-	char wndClassName[64]; 
+	RECT wndRect;
+	AG_SizeAlloc a;
 
 	/* Register Window Class */
 	AG_MutexLock(&wglClassLock);
@@ -275,28 +325,41 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		return (-1);
 	}
 
-	/* Apply the window style */
-	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE)) {
-		wndStyle = WS_POPUP;
-		if (!(win->flags & AG_WINDOW_NOBORDERS))
-			wndStyle |= WS_BORDER;
-	} else {
-		wndStyle = WS_OVERLAPPEDWINDOW;
+	/* Translate Agar window flags to window style. */
+	WGL_GetWndStyle(win, &wndStyle, &wndStyleEx);
+	
+	/*
+	 * XXX TODO it would be best to pass CW_USEDEFAULT here, but
+	 * I could not find a way to retrieve the final allocated
+	 * coordinates; GetWindowRect() for instance does not seem
+	 * to work as expected. For now we'll just center the window.
+	 */
+	if (mwFlags & AG_DRIVER_MW_ANYPOS) {
+		Uint wDisp, hDisp;
+
+		if (WGL_GetDisplaySize(&wDisp, &hDisp) == 0) {
+			r.x = wDisp/2 - r.w/2;
+			r.y = hDisp/2 - r.h/2;
+		}
 	}
 	
 	/* Adjust window with account for window borders, if any */
+	wndRect.left = r.x;
+	wndRect.top = r.y;
+	wndRect.right = r.x + r.w;
+	wndRect.bottom = r.y + r.h;
 	AdjustWindowRectEx(&wndRect, wndStyle, 0, wndStyleEx);
-	
+
 	/* Create OpenGL Window */
 	wgl->hwnd = CreateWindowEx(
 		wndStyleEx,
 		wndClassName,
 		win->caption,
 		wndStyle,
-		(mwFlags & AG_DRIVER_MW_ANYPOS) ? CW_USEDEFAULT : wndRect.left,
-		(mwFlags & AG_DRIVER_MW_ANYPOS) ? CW_USEDEFAULT : wndRect.top,
-		wndRect.right - wndRect.left,
-		wndRect.bottom - wndRect.top,
+		wndRect.left,
+		wndRect.top,
+		(wndRect.right - wndRect.left),
+		(wndRect.bottom - wndRect.top),
 		NULL,
 		NULL,
 		GetModuleHandle(NULL),
@@ -343,9 +406,12 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	
 	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
-	SetForegroundWindow(wgl->hwnd);
-	SetFocus(wgl->hwnd);
-	
+	if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
+		SetForegroundWindow(wgl->hwnd);
+	}
+	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
+		SetFocus(wgl->hwnd);
+	}
 	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
 
 	/* Set the pixel format */
@@ -361,6 +427,14 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	if (InitDefaultCursor(wgl) == -1 || AG_InitStockCursors(drv) == -1)
 		goto fail;
 
+	/* Update agar's idea of the actual window coordinates. */
+	a.x = r.x;
+	a.y = r.y;
+	a.w = r.w;
+	a.h = r.h;
+	if (AG_WidgetSizeAlloc(win, &a) == 0)
+		AG_WidgetUpdateCoords(win, a.x, a.y);
+	
 	return (0);
 fail:
 	wglDeleteContext(wgl->hglrc);
@@ -431,7 +505,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	unsigned char kState[256];
 	unsigned short kResult = 0;
 	int x, y, ret;
-
+	
 	if ((win = LookupWindowByID(hWnd)) == NULL) {
 		goto fallback;
 	}
@@ -524,17 +598,29 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_SETFOCUS:
-		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-		dev->type = AG_DRIVER_FOCUS_IN;
-		break;
-	case WM_KILLFOCUS:
-		if (agWindowFocused == win) {
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-			agWindowFocused = NULL;
+		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+		    !(win->flags & AG_WINDOW_DETACHING) &&
+		    win->visible) {
+			agWindowFocused = win;
+			AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+			dev->type = AG_DRIVER_FOCUS_IN;
+			goto ret0;
+		} else {
+			goto fallback;
 		}
-		dev->type = AG_DRIVER_FOCUS_OUT;
-		break;
+	case WM_KILLFOCUS:
+		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+		    !(win->flags & AG_WINDOW_DETACHING) &&
+		    win->visible) {
+			if (agWindowFocused == win) {
+				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+				agWindowFocused = NULL;
+			}
+			dev->type = AG_DRIVER_FOCUS_OUT;
+			goto ret0;
+		} else {
+			goto fallback;
+		}
 	case WM_SIZE:
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			dev->type = AG_DRIVER_VIDEORESIZE;
@@ -547,12 +633,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			goto fallback;
 		}
 		goto ret0;
-#ifdef WM_MOVE
 	case WM_MOVE:
 		WIDGET(win)->x = (int)(short)LOWORD(lParam);
 		WIDGET(win)->y = (int)(short)HIWORD(lParam);
 		goto ret0;
-#endif
 #if 0
 	/*
 	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER
@@ -565,6 +649,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		dev->type = AG_DRIVER_MOUSE_LEAVE;
 		dev->win = win;
 		break;
+	case WM_CLOSE:
+		dev->type = AG_DRIVER_CLOSE;
+		dev->win = win;
+		goto ret0;
 	default:
 		Free(dev);
 		goto fallback;
@@ -582,7 +670,7 @@ static __inline__ int
 WGL_PendingEvents(void *drvCaller)
 {
 	return (!TAILQ_EMPTY(&wglEventQ) ||
-	        GetQueueStatus(QS_ALLEVENTS) != 0);
+	        GetQueueStatus(QS_ALLINPUT) != 0);
 }
 
 static int
@@ -612,20 +700,32 @@ get_event:
 static int
 WGL_PostEventCallback(void *drvCaller)
 {
+	AG_Window *win;
+	AG_Driver *drv;
+	
+	AG_LockVFS(&agDrivers);
+
 	if (!TAILQ_EMPTY(&agWindowDetachQ))
 		AG_FreeDetachedWindows();
-
+	
 	/*
-	 * Exit when no more windows exist.
+	 * Exit when no more visible windows exist.
 	 * XXX TODO make this behavior configurable
 	 */
 	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
-		AG_SetError("No more windows exist");
-		agTerminating = 1;
-		return (-1);
+		goto nowindows;
 	}
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(win, drv) {
+			if (win->visible)
+				break;
+		}
+		if (win != NULL)
+			break;
+	}
+	if (win == NULL)
+		goto nowindows;
 
-	AG_LockVFS(&agDrivers);
 	if (agWindowToFocus != NULL) {
 		AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(agWindowToFocus)->drv;
 
@@ -637,6 +737,11 @@ WGL_PostEventCallback(void *drvCaller)
 	}
 	AG_UnlockVFS(&agDrivers);
 	return (1);
+nowindows:
+	AG_SetError("No more windows exist");
+	agTerminating = 1;
+	AG_UnlockVFS(&agDrivers);
+	return (-1);
 }
 
 static int
@@ -1058,8 +1163,16 @@ WGL_ResizeWindow(AG_Window *win, Uint w, Uint h)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
 	AG_SizeAlloc a;
+	AG_Rect r;
 
-	SetWindowPos(wgl->hwnd, NULL, 0, 0, w, h, SWP_NOZORDER|SWP_NOMOVE);	
+	r.x = WIDGET(win)->x;
+	r.y = WIDGET(win)->y;
+	r.w = w;
+	r.h = h;
+	WGL_GetWndRect(win, &r);
+	SetWindowPos(wgl->hwnd, NULL, 0, 0, r.w, r.h,
+	    SWP_NOZORDER|SWP_NOMOVE);	
+
 	a.x = WIDGET(win)->x;
 	a.y = WIDGET(win)->y;
 	a.w = w;
@@ -1072,8 +1185,16 @@ static int
 WGL_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+	AG_Rect r;
 
-	SetWindowPos(wgl->hwnd, NULL, a->x, a->y, a->w, a->h, SWP_NOZORDER);	
+	r.x = a->x;
+	r.y = a->y;
+	r.w = a->w;
+	r.h = a->h;
+	WGL_GetWndRect(win, &r);
+	SetWindowPos(wgl->hwnd, NULL, r.x, r.y, r.w, r.h,
+	    SWP_NOZORDER);
+
 	WGL_PostResizeCallback(win, a);
 	return (0);
 }
