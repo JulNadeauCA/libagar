@@ -1199,9 +1199,9 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
-			   AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
+			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1235,7 +1235,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 expire, const char *s)
 	AG_Window *win;
 	AG_VBox *vb;
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
@@ -1296,7 +1296,7 @@ AG_TextInfoS(const char *key, const char *s)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_INFO]));
@@ -1356,9 +1356,9 @@ AG_TextWarningS(const char *key, const char *s)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
-			   AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
+			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1398,9 +1398,9 @@ AG_TextErrorS(const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
-			   AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
+			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1428,7 +1428,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
@@ -1458,7 +1458,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaptionS(win, _("Enter real number"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1495,7 +1495,7 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	Vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaptionS(win, _("Edit string"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1526,7 +1526,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	AG_Textbox *tb;
 	AG_Event *ev;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
+	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);

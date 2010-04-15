@@ -237,6 +237,9 @@ Detach(AG_Event *event)
 	/* Implicitely hide the window. */
 	if (win->visible)
 		AG_WindowHide(win);
+	
+	/* Window is being detached. */
+	win->flags |= AG_WINDOW_DETACHING;
 
 	/* The window's titlebar and icon are no longer safe to use. */
 	if (win->tbar != NULL)
@@ -250,7 +253,7 @@ Detach(AG_Event *event)
 		    OBJECT(win)->name);
 		agWindowToFocus = NULL;
 	}
-	
+
 	/* Remove any reference from another window to this one. */
 	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(owin, odrv) {
@@ -539,7 +542,10 @@ Shown(AG_Event *event)
 	if (!(win->flags & AG_WINDOW_DENYFOCUS))
 		AG_WindowFocus(win);
 
+	/* Notify that the window is now visible. */
 	AG_PostEvent(NULL, win, "window-shown", NULL);
+
+	/* Assume we gained focus. XXX */
 	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
 	
 	if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
@@ -561,7 +567,7 @@ Hidden(AG_Event *event)
 	/* Cancel any planned focus change to this window. */
 	if (win == agWindowToFocus)
 		agWindowToFocus = NULL;
-	
+
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		dsw = (AG_DriverSw *)drv;
@@ -670,7 +676,7 @@ AG_WindowHide(AG_Window *win)
 	AG_ObjectLock(win);
 	if (win->visible) {
 		win->visible = 0;
-		AG_PostEvent(NULL, win, "widget-hidden", NULL);
+		AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
 	}
 	AG_ObjectUnlock(win);
 }
@@ -1032,35 +1038,38 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
 	case AG_WINDOW_BL:
 		x = 0;
 		y = hMax - h;
-		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
-			/* XXX hack compensate for titlebar */
-			y -= 34;
-			if (y < 0) { y = 0; }
-		}
 		break;
 	case AG_WINDOW_BC:
 		x = wMax/2 - w/2;
 		y = hMax - h;
-		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
-			/* XXX hack compensate for titlebar */
-			y -= 34;
-			if (y < 0) { y = 0; }
-		}
 		break;
 	case AG_WINDOW_BR:
 		x = wMax - w;
 		y = hMax - h;
-		if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
-			/* XXX hack compensate for titlebar */
-			y -= 34;
-			if (y < 0) { y = 0; }
-		}
 		break;
 	case AG_WINDOW_MC:
 	default:
 		x = wMax/2 - w/2;
 		y = hMax/2 - h/2;
 		break;
+	}
+	
+	/* XXX hack to compensate for titlebars */
+	if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
+		switch (alignment) {
+		case AG_WINDOW_TL:
+		case AG_WINDOW_TC:
+		case AG_WINDOW_TR:
+			y += 34;
+			if (y > hMax) { y = 0; }
+			break;
+		case AG_WINDOW_BL:
+		case AG_WINDOW_BC:
+		case AG_WINDOW_BR:
+			y -= 34;
+			if (y < 0) { y = 0; }
+			break;
+		}
 	}
 	return AG_WindowSetGeometry(win, x, y, w, h);
 }
@@ -1589,11 +1598,12 @@ AG_FreeDetachedWindows(void)
 		/* Remove the Window detach handler and free the object. */
 		AG_ObjectSetDetachFn(win, NULL, NULL);
 		AG_ObjectDetach(win);
-		AG_ObjectDestroy(win);
 
 		/* Free the driver instance as well in MW mode. */
 		if (AGDRIVER_MULTIPLE(drv))
 			AG_DriverClose(drv);
+		
+		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
 }

@@ -88,7 +88,7 @@ AG_MenuNewGlobal(Uint flags)
 		goto exists;
 
 	if (agDriverSw) {
-		wFlags |= AG_WINDOW_PLAIN|AG_WINDOW_HMAXIMIZE;
+		wFlags |= AG_WINDOW_POPUP|AG_WINDOW_PLAIN|AG_WINDOW_HMAXIMIZE;
 	}
 	win = AG_WindowNewNamedS(wFlags, "_agAppMenu");
 	if (win == NULL) {
@@ -177,7 +177,7 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 	if (mi->nsubitems == 0)
 		return (NULL);
 
-	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
+	win = AG_WindowNew(AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
 	AG_ObjectSetName(win, "_Popup-%s",
 	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
