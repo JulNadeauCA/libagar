@@ -552,7 +552,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.4.0-beta"
+VERSION="1.4.0"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
