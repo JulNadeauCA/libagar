@@ -1460,11 +1460,17 @@ fi
 rm -f conftest.c $testdir/conftest
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
-		echo "* Disabling cygwin compatibility layer"
+		echo "*"
+		echo "* NOTE: Disabling Cygwin compatibility layer."
+		echo "* (Resulting binaries will not depend on Cygwin)"
+		echo "*"
 		CFLAGS="$CFLAGS -mno-cygwin"
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
 	else
-		echo "* Using cygwin compatibility layer"
+		echo "*"
+		echo "* NOTE: Enabling Cygwin compatibility layer."
+		echo "* (Resulting binaries will depend on Cygwin)"
+		echo "*"
 	fi
 fi
 $ECHO_N "checking for POSIX threads..."
@@ -1638,39 +1644,51 @@ $ECHO_N "checking for -pthread (common paths)..."
 $ECHO_N "checking for -pthread (common paths)..." >> config.log
 if [ -f "/usr/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/include/pthreads"
+break
 fi;
 if [ -f "/usr/local/include/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include"
+break
 fi;
 if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
+break
 fi;
 if [ -f "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthread"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+break
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -1839,39 +1857,51 @@ $ECHO_N "checking for the X/Open Threads Extension (common paths)..."
 $ECHO_N "checking for the X/Open Threads Extension (common paths)..." >> config.log
 if [ -f "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2d"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2"
+break
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+break
 fi;
 if [ -f "/usr/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/include/pthreads"
+break
 fi;
 if [ -f "/usr/local/include/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include"
+break
 fi;
 if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
+break
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -2559,45 +2589,54 @@ GL_CFLAGS=""
 GL_LIBS=""
 if [ -d "/usr/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11"
+break
 fi;
 if [ -d "/usr/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11R6"
+break
 fi;
 if [ -d "/usr/local/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11/include"
+break
 fi;
 if [ -d "/usr/local/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11R6/include"
+break
 fi;
 if [ -d "/usr/local/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11"
+break
 fi;
 if [ -d "/usr/local/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11R6"
+break
 fi;
 if [ -d "/usr/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11/include"
+break
 fi;
 if [ -d "/usr/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11R6/include"
+break
 fi;
 if [ -d "/usr/local/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/include"
+break
 fi;
 if [ -d "/usr/local/X11/lib" ]; then
-GL_LIBS="-L/usr/local/X11/lib"
+GL_LIBS="${GL_LIBS} -L/usr/local/X11/lib"
 fi;
 if [ -d "/usr/local/X11R6/lib" ]; then
-GL_LIBS="-L/usr/local/X11R6/lib"
+GL_LIBS="${GL_LIBS} -L/usr/local/X11R6/lib"
 fi;
 if [ -d "/usr/X11/lib" ]; then
-GL_LIBS="-L/usr/X11/lib"
+GL_LIBS="${GL_LIBS} -L/usr/X11/lib"
 fi;
 if [ -d "/usr/X11R6/lib" ]; then
-GL_LIBS="-L/usr/X11R6/lib"
+GL_LIBS="${GL_LIBS} -L/usr/X11R6/lib"
 fi;
 if [ -d "/usr/local/lib" ]; then
-GL_LIBS="-L/usr/local/lib"
+GL_LIBS="${GL_LIBS} -L/usr/local/lib"
 fi;
 echo "yes"
 echo "yes" >> config.log
@@ -4181,18 +4220,22 @@ $ECHO_N "checking whether gettext requires -lintl..." >> config.log
 if [ -e /usr/include/libintl.h ]; then
 GETTEXT_CFLAGS="-I/usr/include"
 GETTEXT_LIBS="-L/usr/lib -lintl"
+break
 fi;
 if [ -e /usr/local/include/libintl.h ]; then
 GETTEXT_CFLAGS="-I/usr/local/include"
 GETTEXT_LIBS="-L/usr/local/lib -lintl"
+break
 fi;
 if [ -e /opt/include/libintl.h ]; then
 GETTEXT_CFLAGS="-I/opt/include"
 GETTEXT_LIBS="-L/opt/lib -lintl"
+break
 fi;
 if [ -e /opt/local/include/libintl.h ]; then
 GETTEXT_CFLAGS="-I/opt/local/include"
 GETTEXT_LIBS="-L/opt/local/lib -lintl"
+break
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -4267,18 +4310,22 @@ $ECHO_N "checking whether -lintl requires -liconv..." >> config.log
 if [ -e /usr/include/iconv.h ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/usr/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/usr/lib -liconv"
+break
 fi;
 if [ -e /usr/local/include/iconv.h ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/usr/local/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/usr/local/lib -liconv"
+break
 fi;
 if [ -e /opt/include/iconv.h ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/opt/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/opt/lib -liconv"
+break
 fi;
 if [ -e /opt/local/include/iconv.h ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/opt/local/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/opt/local/lib -liconv"
+break
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
