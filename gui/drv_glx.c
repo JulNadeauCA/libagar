@@ -712,6 +712,13 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	if (dev->win == NULL) {
 		return (0);
 	}
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (WIDGET(dev->win)->drv == drv)
+			break;
+	}
+	if (drv == NULL) {
+		return (0);
+	}
 	drv = WIDGET(dev->win)->drv;
 
 	switch (dev->type) {
