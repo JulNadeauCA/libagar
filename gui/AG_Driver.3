@@ -110,7 +110,7 @@ platform, into the specified buffer
 .Fa buf
 of size
 .Fa buf_len . 
-.Sh DRIVER INTERFACE
+.Sh DRIVER CLASS STRUCTURE
 The
 .Ft AG_DriverClass
 structure inherits from the base
@@ -574,6 +574,222 @@ operation renders a given font glyph at target coordinates
 .Fa x ,
 .Fa y .
 The target point will correspond to the top left corner of the rendered glyph.
+.Sh SINGLE-WINDOW DRIVER CLASS STRUCTURE
+The
+.Ft AG_DriverSwClass
+structure describes a "single-window" graphics driver (i.e., a dumb framebuffer,
+or any other interface where Agar will need to provide its own window manager).
+.Ft AG_DriverSwClass
+inherits from
+.Ft AG_DriverClass
+and is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_driver_sw_class {
+	struct ag_driver_class _inherit;
+	Uint flags;
+	int  (*openVideo)(void *drv, Uint w, Uint h, int depth,
+	                  Uint flags);
+	int  (*openVideoContext)(void *drv, void *ctx, Uint flags);
+	void (*closeVideo)(void *drv);
+	int  (*videoResize)(void *drv, Uint w, Uint h);
+	int  (*videoCapture)(void *drv, AG_Surface **);
+	void (*videoClear)(void *drv, AG_Color c);
+} AG_DriverSwClass;
+.Ed
+.Pp
+At this time, there are no flag options and
+.Va flags
+should be initialized to 0.
+.Pp
+The
+.Fn openVideo
+operation opens a new graphics display of specified dimensions
+.Fa w ,
+.Fa h
+in pixels, and
+.Fa depth
+in bits per pixel.
+The
+.Fa flags
+argument defines the various flags options passed by
+.Fn AG_InitVideo
+(see
+.Xr AG_InitVideo 3
+for a description of those options).
+.Pp
+The
+.Fn openVideoContext
+operation "attaches" Agar to an existing display context, passed as
+.Fa ctx .
+For example, drivers for the SDL library will accept a pointer to a
+.Xr SDL_Surface 3
+as
+.Fa ctx .
+The
+.Fa flags
+argument specifies video options (see
+.Xr AG_InitVideo 3
+for the list of options).
+.Pp
+The
+.Fn closeVideo
+operation should "close" or detach from a graphics display, releasing any
+resources previously allocated by
+.Fn openVideo
+or
+.Fn openVideoContext .
+.Pp
+The
+.Fn videoResize
+operation resizes the video display to the specified geometry in pixels.
+It should return -1 if the display cannot be resized, or 0 on success.
+.Pp
+.Fn videoCapture
+captures the content of the video display to an
+.Xr AG_Surface 3 .
+The function should return 0 on success or -1 on failure.
+.Pp
+.Fn videoClear
+clears the video background with the specified color
+.Fa c .
+.Sh MULTIPLE-WINDOW DRIVER CLASS STRUCTURE
+The
+.Ft AG_DriverMwClass
+structure describes a "multiple-window" graphics driver, where Agar will need
+to interface with an existing window manager.
+.Ft AG_DriverMwClass
+inherits from
+.Ft AG_DriverClass
+and is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_driver_mw_class {
+	struct ag_driver_class _inherit;
+
+	/* Open/close native windows */
+	int  (*openWindow)(AG_Window *, AG_Rect r, int bpp, Uint flags);
+	void (*closeWindow)(AG_Window *);
+
+	/* Show and hide window */
+	int (*mapWindow)(AG_Window *);
+	int (*unmapWindow)(AG_Window *);
+
+	/* Configure stacking order and parenting */
+	int (*raiseWindow)(AG_Window *);
+	int (*lowerWindow)(AG_Window *);
+	int (*reparentWindow)(AG_Window *, AG_Window *winParent,
+	                      int x, int y);
+
+	/* Change and query input focus state */
+	int (*getInputFocus)(AG_Window **);
+	int (*setInputFocus)(AG_Window *);
+
+	/* Move and resize windows */
+	int  (*moveWindow)(AG_Window *, int x, int y);
+	int  (*resizeWindow)(AG_Window *, Uint w, Uint h);
+	int  (*moveResizeWindow)(AG_Window *, AG_SizeAlloc *a);
+	void (*preResizeCallback)(AG_Window *);
+	void (*postResizeCallback)(AG_Window *, AG_SizeAlloc *a);
+
+	/* Capture window framebuffer contents (unlike renderToSurface) */
+	int (*captureWindow)(AG_Window *, AG_Surface **s);
+	
+	/* Configure window parameters */
+	int  (*setBorderWidth)(AG_Window *, Uint w);
+	int  (*setWindowCaption)(AG_Window *, const char *s);
+	void (*setTransientFor)(AG_Window *, AG_Window *winParent);
+} AG_DriverMwClass;
+.Ed
+.Pp
+The
+.Fn openWindow
+operation opens a new "native" window corresponding to an
+.Xr AG_Window 3
+that is in the process of being created, returning 0 on success or -1 on
+failure.
+The
+.Fa r
+argument specifies the preferred location and geometry of the window, in
+pixels.
+.Fa bpp
+specifies a preferred depth in bits per pixels.
+The following
+.Fa flags
+are recognized:
+.Pp
+.Bl -tag -compact -width "AG_DRIVER_MW_ANYPOS "
+.It AG_DRIVER_MW_ANYPOS
+Ignore the coordinates in
+.Fa r
+and let the underlying window system select some default coordinates.
+.El
+.Pp
+.Fn mapWindow
+and
+.Fn unmapWindow
+make a window visible or invisible, returning 0 on success and -1 on failure.
+.Pp
+.Fn raiseWindow
+and
+.Fn lowerWindow
+respectively raise and lower the window, returning 0 on success and -1 on
+failure.
+The
+.Fn reparentWindow
+function arranges for the window to become a child of
+.Fa winParent ,
+moving it to parent-relative coordinates
+.Fa x ,
+.Fa y .
+The function should return 0 on success or -1 on failure.
+.Pp
+The
+.Fn getInputFocus
+operation retrieves a pointer to the window currently holding focus,
+returning 0 on success.
+If the focus is external to the Agar application, it should return -1.
+.Fn setInputFocus
+gives focus to the specified window, returning 0 on success or -1 on failure.
+.Pp
+The
+.Fn moveWindow ,
+.Fn resizeWindow
+and
+.Fn moveResizeWindow
+operations respectively move, resize or move+resize a window to specified
+coordinates and geometry, returning 0 on success or -1 on failure.
+.Pp
+The
+.Fn preResizeCallback
+operation is invoked prior to a window resize,
+and
+.Fn postResizeCallback
+is invoked following a window resize (the new window geometry is passed
+as the
+.Fa a
+argument).
+.Pp
+The
+.Fn captureWindow
+operation captures the window's visual rendering to an
+.Xr AG_Surface 3 ,
+returning 0 on success or -1 on failure.
+.Pp
+.Fn setBorderWidth
+configures a window border size in pixels, returning 0 on success or -1
+if the operation is unsupported or an error occured.
+.Pp
+.Fn setWindowCaption
+sets the associated window caption text, if supported by the window system.
+The string passed to the function may contain characters in UTF-8 encoding.
+The function should return 0 on success or -1 on failure.
+.Pp
+.Fn setTransientFor
+passes a hint to the window manager that the window should be marked as
+"transient" for the specified window
+.Fa winParent .
+This operation is optional and window manager specific.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft int
