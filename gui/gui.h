@@ -40,7 +40,7 @@ extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
 extern int agGUI;			/* GUI is initialized */
 
 int        AG_InitGraphics(const char *);
-int        AG_InitVideo(int, int, int, Uint)	DEPRECATED_ATTRIBUTE;
+int        AG_InitVideo(int, int, int, Uint);
 #ifdef HAVE_SDL
 int        AG_InitVideoSDL(void *, Uint);
 #endif
