@@ -62,3 +62,5 @@ ensuring that existing applications are not using deprecated API calls.
 - Implemented AG_ShortFilename() utility routine.
 - VG: Implemented VG_Status(), VG_TextString(). VG_View(3) now uses widget
   actions.
+- The default theme now allows transparency in the color scheme.
+
