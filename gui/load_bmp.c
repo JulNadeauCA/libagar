@@ -266,7 +266,6 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 					}
 					break;
 				}
-			}
 			case 32:
 				{
 					Uint32 *px = (Uint32 *)bits;
