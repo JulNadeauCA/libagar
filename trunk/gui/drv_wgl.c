@@ -130,16 +130,17 @@ LookupWindowByID(HWND hwnd)
 
 	/* XXX TODO portable to optimize based on numerical XIDs? */
 	AGOBJECT_FOREACH_CHILD(wgl, &agDrivers, ag_driver_wgl) {
-		if (!AGDRIVER_IS_WGL(wgl)) {
+		if (!AGDRIVER_IS_WGL(wgl) ||
+		    wgl->hwnd != hwnd) {
 			continue;
 		}
-		if (wgl->hwnd == hwnd) {
-			win = AGDRIVER_MW(wgl)->win;
-			if (WIDGET(win)->drv == NULL) {	/* Being detached */
-				return (NULL);
-			}
-			return (win);
+		win = AGDRIVER_MW(wgl)->win;
+		if (!(AGDRIVER_MW(wgl)->flags & AG_DRIVER_MW_OPEN) ||
+		    (win->flags & AG_WINDOW_DETACHING) ||
+		    WIDGET(win)->drv == NULL) {
+			return (NULL);
 		}
+		return (win);
 	}
 	return (NULL);
 }
@@ -598,24 +599,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_SETFOCUS:
-		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
-		    !(win->flags & AG_WINDOW_DETACHING) &&
-		    win->visible) {
-			agWindowFocused = win;
-			AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		if (win->visible) {
 			dev->type = AG_DRIVER_FOCUS_IN;
 			goto ret0;
 		} else {
 			goto fallback;
 		}
 	case WM_KILLFOCUS:
-		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
-		    !(win->flags & AG_WINDOW_DETACHING) &&
-		    win->visible) {
-			if (agWindowFocused == win) {
-				AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-				agWindowFocused = NULL;
-			}
+		if (win->visible) {
 			dev->type = AG_DRIVER_FOCUS_OUT;
 			goto ret0;
 		} else {
@@ -751,6 +742,13 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	AG_SizeAlloc a;
 
 	if (dev->win == NULL) {
+		return (0);
+	}
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (WIDGET(dev->win)->drv == drv)
+			break;
+	}
+	if (drv == NULL) {
 		return (0);
 	}
 	drv = WIDGET(dev->win)->drv;
