@@ -31,7 +31,7 @@ REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
 REGISTER("--with-<mode>-fp",    "M: Precision (single|double|quad) [double]")
 
 # Agar version
-HDEFINE(VERSION, "1.4.0")
+HDEFINE(VERSION, "1.4.1-beta")
 HDEFINE(RELEASE, "Landscapes of Frozen Methane")
 
 # Installation directories
