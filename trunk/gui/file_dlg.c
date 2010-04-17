@@ -418,7 +418,7 @@ fail:
 static void
 CheckAccessAndChoose(AG_FileDlg *fd)
 {
-	AG_Window *pwin = AG_WidgetParentWindow(fd);
+	AG_Window *pwin = AG_ParentWindow(fd);
 	char *s;
 
 	for (s = &fd->cfile[0]; *s != '\0'; s++) {
@@ -790,7 +790,7 @@ PressedCancel(AG_Event *event)
 	if (fd->cancelAction != NULL) {
 		AG_PostEvent(NULL, fd, fd->cancelAction->name, NULL);
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
-		if ((pwin = AG_WidgetParentWindow(fd)) != NULL) {
+		if ((pwin = AG_ParentWindow(fd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
 			AG_ObjectDetach(pwin);
 		}

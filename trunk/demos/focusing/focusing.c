@@ -26,7 +26,7 @@ mousemotion(AG_Event *event)
 			 * Both of these calls are necessary since the widget
 			 * focus is independent from the window focus.
 			 */
-			AG_WindowFocus(AG_WidgetParentWindow(w));
+			AG_WindowFocus(AG_ParentWindow(w));
 			AG_WidgetFocus(w);
 			printf("%s: focused\n", AGOBJECT(w)->name);
 		}

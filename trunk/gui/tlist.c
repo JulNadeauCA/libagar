@@ -1353,7 +1353,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
 {
 	AG_Menu *m = tp->menu;
 #if 0
-	if (AG_WidgetParentWindow(tl) == NULL)
+	if (AG_ParentWindow(tl) == NULL)
 		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
 #endif
 	if (tp->panel != NULL) {

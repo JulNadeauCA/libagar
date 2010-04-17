@@ -56,7 +56,6 @@ const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
 	{ AG_OBJECT_INDESTRUCTIBLE,	N_("Indestructible"),		  1 },
 	{ AG_OBJECT_NON_PERSISTENT,	N_("Non-persistent"),		  1 },
-	{ AG_OBJECT_RELOAD_PROPS,	N_("Don't clear props on load"),  1 },
 	{ AG_OBJECT_PRESERVE_DEPS,	N_("Preserve null dependencies"), 1 },
 	{ AG_OBJECT_REMAIN_DATA,	N_("Keep data resident"),	  1 },
 	{ AG_OBJECT_RESIDENT,		N_("Data part is resident"),	  0 },
@@ -245,7 +244,7 @@ RefreshRepoStatus(AG_Event *event)
 	}
 	status = AG_RcsStatus(ob, objdir, digest, NULL, NULL, &repo_rev,
 	    &working_rev);
-	AG_LabelPrintf(lblStatus,
+	AG_LabelText(lblStatus,
 	    _("RCS status: %s\n"
 	      "Working revision: #%u\n"
 	      "Repository revision: #%u\n"),

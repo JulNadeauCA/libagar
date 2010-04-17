@@ -500,7 +500,7 @@ AG_MenuItem *item;
 
 toolbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
 menu = AG_MenuNew(win, 0);
-item = AG_MenuAddItem(menu, "File");
+item = AG_MenuNode(menu->root, "File", NULL);
 {
 	AG_MenuToolbar(item, toolbar);
 	AG_MenuAction(item, "Load", NULL, LoadFile, NULL);
@@ -533,7 +533,7 @@ QuitApplication(AG_Event *event)
 .Li ...
 
 AG_Menu *menu = AG_MenuNew(win);
-AG_MenuItem *item = AG_MenuAddItem(menu, "File");
+AG_MenuItem *item = AG_MenuNode(menu->root, "File", NULL);
 {
 	AG_MenuInt16Flags(item, "Foo", NULL, &flags, FOO_FLAG, 0);
 	AG_MenuInt16Flags(item, "Bar", NULL, &flags, BAR_FLAG, 0);

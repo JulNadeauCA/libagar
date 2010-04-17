@@ -538,7 +538,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 			if (closest_vge->selected) {
 				RG_SketchUnselect(tv, tel, closest_vge);
 			} else {
-				AG_Window *pwin = AG_WidgetParentWindow(tv);
+				AG_Window *pwin = AG_ParentWindow(tv);
 				AG_Window *win;
 
 				if (!(AG_GetModState(drv->kbd)&AG_KEYMOD_CTRL)) {
@@ -718,7 +718,7 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_SketchCloseMenu(tv);
 
 	me = tv->tv_sketch.menu = AG_MenuNew(NULL, 0);
-	mi = tv->tv_sketch.menu_item = AG_MenuAddItem(me, NULL);
+	mi = tv->tv_sketch.menu_item = AG_MenuNode(me, NULL, NULL);
 	{
 		RG_TileviewTool *tvt;
 		AG_MenuItem *m_tool;

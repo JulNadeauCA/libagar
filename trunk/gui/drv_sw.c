@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -119,7 +119,7 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	int nWindows = 0;
 
 	me = AG_MenuNew(NULL, 0);
-	mi = me->itemSel = AG_MenuAddItem(me, NULL);
+	mi = me->itemSel = AG_MenuNode(me->root, NULL, NULL);
 
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		if (strcmp(win->caption, "win-popup") == 0) {

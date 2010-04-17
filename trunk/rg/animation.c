@@ -641,7 +641,7 @@ RG_AnimEdit(RG_Anim *ani)
 		AG_SetEvent(tl, "tlist-dblclick",
 		    SelectInsn, "%p,%p", ani, editBox);
 
-		mi = AG_MenuAddItem(me, _("Instructions"));
+		mi = AG_MenuNode(me->root, _("Instructions"), NULL);
 		for (i = 0; i < RG_ANIM_LAST; i++)
 			AG_MenuAction(mi, _(insnNames[i]), NULL, InsertInsn,
 			    "%p,%i,%p,%p", ani, i, editBox, tl);
@@ -659,7 +659,7 @@ RG_AnimEdit(RG_Anim *ani)
 		    SelectFrame, "%p,%p", ani, editBox);
 	}
 	
-	mi = AG_MenuAddItem(me, _("Animation"));
+	mi = AG_MenuNode(me->root, _("Animation"), NULL);
 	{
 		AG_MenuAction(mi, _("Recompile"), NULL,
 		    RegenAnim, "%p", ani);
