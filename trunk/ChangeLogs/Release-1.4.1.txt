@@ -1,0 +1,12 @@
+
+Release Notes for Agar 1.4.1
+----------------------------
+
+Here are some of the most notable changes since Agar 1.4.0, in no
+particular order. A wikified version of this list is available at:
+http://wiki.libagar.org/wiki/Agar-1.4.1.
+
+- Fixed compilation with --disable-legacy option.
+- Implemented AG_SurfaceFromPNG() and AG_SurfaceFromJPEG().
+- Added AG_SetJPEGQuality(), to set quality used by AG_SurfaceExportJPEG().
+
