@@ -819,7 +819,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 {
 	AG_Window *pWin;
 	
-	if ((pWin = AG_WidgetParentWindow(tv)) == NULL)
+	if ((pWin = AG_ParentWindow(tv)) == NULL)
 		return;
 
 	CloseElement(tv);
@@ -1105,7 +1105,7 @@ AttachPixmapDlg(AG_Event *event)
 		    "%p,%p,%p,%p", tv, win, tlFeatures, tl);
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
-	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
+	AG_WindowAttach(AG_ParentWindow(tv), win);
 	AG_WindowShow(win);
 }
 
@@ -1182,7 +1182,7 @@ AttachSketchDlg(AG_Event *event)
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
-	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
+	AG_WindowAttach(AG_ParentWindow(tv), win);
 	AG_WindowShow(win);
 }
 #endif
@@ -1572,7 +1572,7 @@ TileSettingsDlg(AG_Event *event)
 		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
-	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
+	AG_WindowAttach(AG_ParentWindow(tv), win);
 	AG_WindowShow(win);
 }
 
@@ -1709,7 +1709,7 @@ ImportImageDlg(AG_Event *event)
 	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp",
 	    ImportBMP, "%p,%p", t, tv);
-	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
+	AG_WindowAttach(AG_ParentWindow(tv), win);
 	AG_WindowShow(win);
 }
 
@@ -1742,7 +1742,7 @@ ExportImageDlg(AG_Event *event)
 	    AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ExportBMP, "%p", t);
-	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
+	AG_WindowAttach(AG_ParentWindow(tv), win);
 	AG_WindowShow(win);
 }
 
@@ -1897,7 +1897,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 
 	tbar = AG_ToolbarNew(NULL, AG_TOOLBAR_HORIZ, 1, 0);
 
-	mi = AG_MenuAddItem(me, ("File"));
+	mi = AG_MenuNode(me->root, ("File"), NULL);
 	{
 		AG_MenuAction(mi, _("Import image file..."), agIconLoad.s,
 		    ImportImageDlg, "%p", tv);
@@ -1911,7 +1911,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    AG_WindowCloseGenEv, "%p", win);
 	}
 	
-	mi = AG_MenuAddItem(me, _("Edit"));
+	mi = AG_MenuNode(me->root, _("Edit"), NULL);
 	{
 		AG_MenuActionKb(mi, _("Undo"), NULL,
 		    AG_KEY_Z, AG_KEYMOD_CTRL,
@@ -1926,7 +1926,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    TileSettingsDlg, "%p", tv);
 	}
 
-	mi = AG_MenuAddItem(me, _("Features"));
+	mi = AG_MenuNode(me->root, _("Features"), NULL);
 	{
 		AG_MenuTool(mi, tbar, _("Fill"), rgIconFill.s,
 		    AG_KEY_F, AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT,
@@ -1938,13 +1938,13 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 #endif
 	}
 
-	mi = AG_MenuAddItem(me, _("View"));
+	mi = AG_MenuNode(me->root, _("View"), NULL);
 	{
 		AG_MenuAction(mi, _("Create view..."), rgIconMagnifier.s,
 		    CreateView, "%p,%p,%p", tv->ts, tv->tile, win);
 	}
 
-	mi = AG_MenuAddItem(me, _("Pixmaps"));
+	mi = AG_MenuNode(me->root, _("Pixmaps"), NULL);
 	{
 		AG_MenuTool(mi, tbar, _("Create pixmap"), rgIconPixmap.s, 0, 0,
 		    CreatePixmap, "%p,%p", tv, tlFeatures);
@@ -1954,7 +1954,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    AttachPixmapDlg, "%p,%p", tv, tlFeatures);
 	}
 #if 0
-	mi = AG_MenuAddItem(me, _("Sketches"));
+	mi = AG_MenuNode(me->root, _("Sketches"), NULL);
 	{
 		AG_MenuTool(mi, tbar, _("Create sketch..."), rgIconSketch.s,
 		    0, 0,
@@ -2005,7 +2005,7 @@ RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_TileCloseMenu(tv);
 	}
 	tv->menu = AG_MenuNew(NULL, 0);
-	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
+	tv->menu_item = AG_MenuNode(tv->menu->root, NULL, NULL);
 	RG_TileviewGenericMenu(tv, tv->menu_item);
 	tv->menu->itemSel = tv->menu_item;
 	tv->menu_win = AG_MenuExpand(tv, tv->menu_item, x, y);

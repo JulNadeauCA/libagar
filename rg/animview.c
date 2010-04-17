@@ -45,9 +45,9 @@ Play(AG_Event *event)
 	RG_Animview *av = AG_PTR(1);
 
 	AG_ScheduleTimeout(av, &av->timer, 1);
-	AG_ButtonDisable(av->btns.play);
-	AG_ButtonEnable(av->btns.pause);
-	AG_ButtonEnable(av->btns.stop);
+	AG_WidgetDisable(av->btns.play);
+	AG_WidgetEnable(av->btns.pause);
+	AG_WidgetEnable(av->btns.stop);
 }
 
 static void
@@ -56,9 +56,9 @@ Pause(AG_Event *event)
 	RG_Animview *av = AG_PTR(1);
 	
 	AG_DelTimeout(av, &av->timer);
-	AG_ButtonEnable(av->btns.play);
-	AG_ButtonDisable(av->btns.pause);
-	AG_ButtonDisable(av->btns.stop);
+	AG_WidgetEnable(av->btns.play);
+	AG_WidgetDisable(av->btns.pause);
+	AG_WidgetDisable(av->btns.stop);
 }
 
 static void
@@ -69,9 +69,9 @@ Stop(AG_Event *event)
 	AG_DelTimeout(av, &av->timer);
 	av->frame = 0;
 	
-	AG_ButtonEnable(av->btns.play);
-	AG_ButtonDisable(av->btns.pause);
-	AG_ButtonDisable(av->btns.stop);
+	AG_WidgetEnable(av->btns.play);
+	AG_WidgetDisable(av->btns.pause);
+	AG_WidgetDisable(av->btns.stop);
 }
 
 static Uint32
@@ -120,7 +120,8 @@ OpenMenu(RG_Animview *av, int x, int y)
 		CloseMenu(av);
 	
 	av->menu = AG_MenuNew(NULL, 0);
-	av->menu_item = av->menu->itemSel = AG_MenuAddItem(av->menu, NULL);
+	av->menu_item = AG_MenuNode(av->menu->root, NULL, NULL);
+	av->menu->itemSel = av->menu_item;
 	{
 		AG_MenuItem *m_speed;
 
@@ -197,9 +198,9 @@ Init(void *obj)
 	AG_ButtonSurfaceNODUP(av->btns.stop, rgIconStop.s);
 	AG_SetEvent(av->btns.stop, "button-pushed", Stop, "%p", av);
 	
-	AG_ButtonEnable(av->btns.play);
-	AG_ButtonDisable(av->btns.pause);
-	AG_ButtonDisable(av->btns.stop);
+	AG_WidgetEnable(av->btns.play);
+	AG_WidgetDisable(av->btns.pause);
+	AG_WidgetDisable(av->btns.stop);
 	
 	AG_SetEvent(av, "mouse-button-down", MouseButtonDown, NULL);
 }

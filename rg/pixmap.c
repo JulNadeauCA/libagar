@@ -499,7 +499,7 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
 	AG_ToolbarButtonIcon(tbar, rgIconStamp.s, 0,
-	    CreateBrushDlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
+	    CreateBrushDlg, "%p,%p,%p", tv, px, AG_ParentWindow(tv));
 	AG_ToolbarButtonIcon(tbar, rgIconFlip.s, 0,
 	    FlipPixmap, "%p,%p", tv, px);
 	AG_ToolbarButtonIcon(tbar, rgIconMirror.s, 0,
@@ -1047,7 +1047,7 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_PixmapCloseMenu(tv);
 
 	me = tv->tv_pixmap.menu = AG_MenuNew(NULL, 0);
-	mi = tv->tv_pixmap.menu_item = AG_MenuAddItem(me, NULL);
+	mi = tv->tv_pixmap.menu_item = AG_MenuNode(me->root, NULL, NULL);
 	{
 		RG_TileviewGenericMenu(tv, mi);
 	}

@@ -229,7 +229,7 @@ Detach(AG_Event *event)
 	AG_Window *owin;
 
 #ifdef AG_DEBUG
-	if (drv == NULL || !AG_ObjectIsClass(drv, "AG_Driver:*"))
+	if (drv == NULL || !AG_OfClass(drv, "AG_Driver:*"))
 		AG_FatalError("Window is not attached to a Driver");
 #endif
 	AG_LockVFS(&agDrivers);
@@ -642,19 +642,6 @@ static void
 LostFocus(AG_Event *event)
 {
 	WidgetLostFocus(WIDGET(AG_SELF()));
-}
-
-/* Set the visibility state of a window. */
-void
-AG_WindowSetVisibility(AG_Window *win, int flag)
-{
-	AG_ObjectLock(win);
-	if (win->visible) {
-		AG_WindowHide(win);
-	} else {
-		AG_WindowShow(win);
-	}
-	AG_ObjectUnlock(win);
 }
 
 /* Set the visibility bit of a window. */
@@ -1744,6 +1731,18 @@ void
 AG_ViewDetach(AG_Window *win)
 {
 	AG_ObjectDetach(win);
+}
+
+void
+AG_WindowSetVisibility(AG_Window *win, int flag)
+{
+	AG_ObjectLock(win);
+	if (win->visible) {
+		AG_WindowHide(win);
+	} else {
+		AG_WindowShow(win);
+	}
+	AG_ObjectUnlock(win);
 }
 #endif /* AG_LEGACY */
 

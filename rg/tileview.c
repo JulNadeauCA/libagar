@@ -1777,7 +1777,7 @@ CloseToolWindow(AG_Event *event)
 void
 RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 {
-	AG_Window *pwin = AG_WidgetParentWindow(tv);
+	AG_Window *pwin = AG_ParentWindow(tv);
 
 #ifdef AG_DEBUG
 	if (pwin == NULL)

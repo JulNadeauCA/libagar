@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -415,9 +415,8 @@ Attached(AG_Event *event)
 	AG_Window *pwin;
 
 	/* Adjust the top padding of the parent window if any. */
-	if ((pwin = AG_WidgetParentWindow(pwid)) != NULL) {
+	if ((pwin = AG_ParentWindow(pwid)) != NULL)
 		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
-	}
 }
 
 /* Generic constructor for menu items. Menu must be locked. */
@@ -1217,7 +1216,7 @@ AG_PopupNew(void *pwid)
 	pm->widget = wid;
 	pm->menu = AG_MenuNew(NULL, 0);
 	WIDGET(pm->menu)->window = wid->window;	/* For AG_MenuExpand() */
-	pm->item = AG_MenuAddItem(pm->menu, NULL);
+	pm->item = AG_MenuNode(pm->menu->root, NULL, NULL);
 	pm->menu->itemSel = pm->item;
 	pm->win = NULL;
 	

@@ -923,7 +923,7 @@ DEV_Browser(void *vfsRoot)
 	    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_EDIT_DATA);
 
 	me = AG_MenuNew(win, AG_MENU_HFILL);
-	mi = AG_MenuAddItem(me, _("File"));
+	mi = AG_MenuNode(me->root, _("File"), NULL);
 	{
 		mi_objs = AG_MenuNode(mi, _("New object"), NULL);
 		GenNewObjectMenu(mi_objs, agClassTree, vfsRoot, win);
@@ -940,7 +940,7 @@ DEV_Browser(void *vfsRoot)
 		AG_MenuAction(mi, _("Exit"), NULL, ExitProgram, NULL);
 	}
 	
-	mi = AG_MenuAddItem(me, _("Edit"));
+	mi = AG_MenuNode(me->root, _("Edit"), NULL);
 	{
 		AG_MenuAction(mi, _("Edit object data..."), NULL,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
@@ -967,7 +967,7 @@ DEV_Browser(void *vfsRoot)
 	}
 
 #ifdef AG_NETWORK
-	mi = AG_MenuAddItem(me, _("Repository"));
+	mi = AG_MenuNode(me->root, _("Repository"), NULL);
 	{
 		AG_MenuAction(mi, _("Commit"), agIconLoad.s,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_COMMIT);
@@ -989,7 +989,7 @@ DEV_Browser(void *vfsRoot)
 #endif /* AG_NETWORK */
 	
 #ifdef AG_DEBUG
-	mi = AG_MenuAddItem(me, _("Debug"));
+	mi = AG_MenuNode(me->root, _("Debug"), NULL);
 	DEV_ToolMenu(mi);
 #endif /* AG_DEBUG */
 

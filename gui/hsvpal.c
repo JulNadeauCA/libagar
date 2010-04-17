@@ -417,7 +417,7 @@ EditNumValues(AG_Event *event)
 	AG_Variable *b1, *b2;
 	float v;
 
-	if ((pwin = AG_WidgetParentWindow(pal)) == NULL)
+	if ((pwin = AG_ParentWindow(pal)) == NULL)
 		return;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_NOMAXIMIZE, "hsvpal-%p-numedit",
@@ -539,7 +539,7 @@ OpenMenu(AG_HSVPal *pal, int x, int y)
 		CloseMenu(pal);
 
 	pal->menu = AG_MenuNew(NULL, 0);
-	pal->menu_item = AG_MenuAddItem(pal->menu, NULL);
+	pal->menu_item = AG_MenuNode(pal->menu->root, NULL, NULL);
 	{
 #if 0
 		AG_MenuAction(pal->menu_item, _("Edit numerically"), NULL,
