@@ -93,16 +93,21 @@ void            AG_SurfaceBlit(const AG_Surface *, const AG_Rect *,
 int             AG_SurfaceResize(AG_Surface *, Uint, Uint);
 void            AG_SurfaceFree(AG_Surface *);
 
-AG_Surface     *AG_ReadSurfaceFromBMP(AG_DataSource *);
-
-AG_Surface     *AG_SurfaceFromPNG(const char *);
-AG_Surface     *AG_SurfaceFromJPEG(const char *);
-AG_Surface     *AG_SurfaceFromBMP(const char *);
-int             AG_SurfaceExportPNG(const AG_Surface *, const char *);
-int             AG_SurfaceExportJPEG(const AG_Surface *, const char *);
-int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
 AG_Surface     *AG_SurfaceFromSDL(void *);
 void           *AG_SurfaceExportSDL(const AG_Surface *);
+
+AG_Surface     *AG_ReadSurfaceFromBMP(AG_DataSource *);
+AG_Surface     *AG_SurfaceFromBMP(const char *);
+int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
+
+AG_Surface     *AG_ReadSurfaceFromPNG(AG_DataSource *);
+AG_Surface     *AG_SurfaceFromPNG(const char *);
+int             AG_SurfaceExportPNG(const AG_Surface *, const char *);
+
+AG_Surface     *AG_ReadSurfaceFromJPEG(AG_DataSource *);
+AG_Surface     *AG_SurfaceFromJPEG(const char *);
+int             AG_SurfaceExportJPEG(const AG_Surface *, const char *);
+int             AG_SetJPEGQuality(int);
 
 void   AG_SurfaceBlendPixel(AG_Surface *, Uint8 *, AG_Color, AG_BlendFn);
 void   AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,8 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_png.h>
-#include <config/have_jpeg.h>
 #include <config/have_sdl.h>
 
 #include <core/core.h>
@@ -37,14 +35,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
-
-#ifdef HAVE_PNG
-# include <png.h>
-#endif
-#ifdef HAVE_JPEG
-# include <jpeglib.h>
-# include <errno.h>
-#endif
 
 const char *agBlendFuncNames[] = {
 	"dst+src",
@@ -377,24 +367,6 @@ AG_SurfaceSetPalette(AG_Surface *su, AG_Color *c, Uint offs, Uint count)
 	return (0);
 }
 
-/* Load the contents of a surface from an image in PNG format. */
-AG_Surface *
-AG_SurfaceFromPNG(const char *path)
-{
-	/* XXX TODO */
-	AG_SetError("No PNG support");
-	return (NULL);
-}
-
-/* Load the contents of a surface from an image in JPEG format. */
-AG_Surface *
-AG_SurfaceFromJPEG(const char *path)
-{
-	/* XXX TODO */
-	AG_SetError("No JPEG support");
-	return (NULL);
-}
-
 /* Return a newly-allocated duplicate of a surface. */
 AG_Surface *
 AG_SurfaceDup(const AG_Surface *ss)
@@ -568,82 +540,6 @@ AG_SurfaceFree(AG_Surface *s)
 	AG_PixelFormatFree(s->format);
 	Free(s->pixels);
 	Free(s);
-}
-
-/* Dump a surface to a PNG file. */
-int
-AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
-{
-#ifdef HAVE_PNG
-	/* TODO */
-#endif
-	AG_SetError("Unimplemented");
-	return (-1);
-}
-
-/* Dump a surface to a JPEG file. */
-int
-AG_SurfaceExportJPEG(const AG_Surface *su, const char *path)
-{
-#ifdef HAVE_JPEG
-	struct jpeg_error_mgr jerrmgr;
-	struct jpeg_compress_struct jcomp;
-	Uint8 *jcopybuf;
-	FILE *f;
-	JSAMPROW row[1];
-	int x;
-
-	if ((f = fopen(path, "wb")) == NULL) {
-		AG_SetError("fdopen: %s", strerror(errno));
-		return (-1);
-	}
-
-	jcomp.err = jpeg_std_error(&jerrmgr);
-
-	jpeg_create_compress(&jcomp);
-
-	jcomp.image_width = su->w;
-	jcomp.image_height = su->h;
-	jcomp.input_components = 3;
-	jcomp.in_color_space = JCS_RGB;
-
-	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
-	jpeg_stdio_dest(&jcomp, f);
-
-	if ((jcopybuf = TryMalloc(su->w*3)) == NULL) {
-		jpeg_destroy_compress(&jcomp);
-		fclose(f);
-		return (-1);
-	}
-
-	jpeg_start_compress(&jcomp, TRUE);
-	while (jcomp.next_scanline < jcomp.image_height) {
-		Uint8 *pSrc = (Uint8 *)su->pixels +
-		    jcomp.next_scanline*su->pitch;
-		Uint8 *pDst = jcopybuf;
-		AG_Color C;
-
-		for (x = 0; x < su->w; x++) {
-			C = AG_GetColorRGB(AG_GET_PIXEL(su,pSrc), su->format);
-			*pDst++ = C.r;
-			*pDst++ = C.g;
-			*pDst++ = C.b;
-			pSrc += su->format->BytesPerPixel;
-		}
-		row[0] = jcopybuf;
-		jpeg_write_scanlines(&jcomp, row, 1);
-	}
-	jpeg_finish_compress(&jcomp);
-	jpeg_destroy_compress(&jcomp);
-
-	fclose(f);
-	Free(jcopybuf);
-	return (0);
-#else
-	AG_SetError(_("Agar was not compiled with libjpeg support"));
-	return (-1);
-#endif /* HAVE_JPEG */
 }
 
 /*

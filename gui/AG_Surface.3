@@ -291,6 +291,9 @@ function releases all resources allocated by the given surface.
 .Fn AG_SurfaceExportJPEG "const AG_Surface *su" "char *path"
 .Pp
 .Ft "int"
+.Fn AG_SetJPEGQuality "int quality"
+.Pp
+.Ft "int"
 .Fn AG_SurfaceExportBMP "const AG_Surface *su" "char *path"
 .Pp
 .Ft "SDL_Surface *"
@@ -380,6 +383,14 @@ An error is returned if Agar was not compiled with libpng support.
 exports a JPEG image file from the contents of a surface.
 If the surface has an alpha-channel, it is ignored.
 An error is returned if Agar was not compiled with libjpeg support.
+.Pp
+The
+.Fn AG_SetJPEGQuality
+function may be used to configure the quality for subsequent
+.Fn AG_SurfaceExportJPEG
+calls.
+The value is given in percent, 100% being the highest quality.
+The default value is 75%.
 .Pp
 .Fn AG_SurfaceExportBMP
 exports a BMP image file from the contents of a surface.
