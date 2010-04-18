@@ -3808,6 +3808,65 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the select() interface..."
+$ECHO_N "checking for the select() interface..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SELECT" ]; then
+		HAVE_SELECT=`cat ${cache}/ctest-HAVE_SELECT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SELECT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/time.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct timeval tv;
+	int rv;
+
+	tv.tv_sec = 1;
+	tv.tv_usec = 1;
+	rv = select(0, NULL, NULL, NULL, &tv);
+	return (rv == -1 && errno != EINTR);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SELECT="yes"
+echo "#ifndef HAVE_SELECT" > config/have_select.h
+echo "#define HAVE_SELECT \"$HAVE_SELECT\"" >> config/have_select.h
+echo "#endif" >> config/have_select.h
+echo "hdefs[\"HAVE_SELECT\"] = \"$HAVE_SELECT\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SELECT="no"
+echo "#undef HAVE_SELECT" >config/have_select.h
+echo "hdefs[\"HAVE_SELECT\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SELECT" > ${cache}/ctest-HAVE_SELECT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SELECT
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a setproctitle() function..."
 $ECHO_N "checking for a setproctitle() function..." >> config.log
 MK_CACHED="No"

@@ -1,12 +1,17 @@
 /*	Public domain	*/
 
 #include <config/have_gettimeofday.h>
+#include <config/have_select.h>
 #include <config/have_cygwin.h>
-#if defined(HAVE_GETTIMEOFDAY) && !defined(HAVE_CYGWIN)
+#if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT) && !defined(HAVE_CYGWIN)
 
+#include <sys/types.h>
 #include <sys/time.h>
-#include <core/core.h>
+#include <string.h>
+#include <unistd.h>
 #include <errno.h>
+
+#include "core.h"
 
 static struct timeval t0;
 
@@ -60,4 +65,4 @@ const AG_TimeOps agTimeOps_gettimeofday = {
 	Delay
 };
 
-#endif /* HAVE_GETTIMEOFDAY and !HAVE_CYGWIN */
+#endif /* HAVE_GETTIMEOFDAY and HAVE_SELECT and !HAVE_CYGWIN */
