@@ -34,6 +34,8 @@
 #include <config/ag_network.h>
 #include <config/ag_threads.h>
 #include <config/have_gettimeofday.h>
+#include <config/have_select.h>
+#include <config/have_cygwin.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -101,7 +103,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_RegisterClass(&agDbObjectClass);
 	AG_RegisterClass(&agDbClass);
 
-#if defined(HAVE_GETTIMEOFDAY)
+#if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT) && !defined(HAVE_CYGWIN)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);
 #elif defined(_WIN32)
 	AG_SetTimeOps(&agTimeOps_win32);
