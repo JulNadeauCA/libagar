@@ -1,0 +1,208 @@
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 18, 2010
+.Dt AG_INITGRAPHICS 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_InitGraphics
+.Nd agar graphics initialization
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+After having called
+.Xr AG_InitCore 3 ,
+Agar-GUI applications also need to initialize the graphics facilities.
+Since some Agar applications may have very specific requirements in terms
+of the graphics interface, Agar provides a number of options to that
+effect.
+.Sh INTERFACE
+.nr nS 1
+.Ft "int"
+.Fn AG_InitGraphics "const char *driver"
+.Pp
+.Ft "void"
+.Fn AG_QuitGUI "void"
+.Pp
+.nr nS 0
+Most common Agar applications will use the
+.Fn AG_InitGraphics
+function to initialize the graphics system.
+If the
+.Fa drivers
+argument is non-NULL, it specifies a comma-separated list of driver names,
+in order of preference.
+If
+.Fa drivers
+is NULL, Agar selects the "best" drivers available on the current platform.
+If
+.Fa drivers
+is set to "<OpenGL>" or "<SDL>", Agar selects the "best" drivers with OpenGL
+or SDL support, respectively, and fails if none are found.
+See section below for the list of available drivers.
+.Pp
+The preferred way to terminate an Agar application is by calling
+.Fn AG_QuitGUI .
+This results in a message being sent, leaving an opportunity for the
+termination process to be interrupted or aborted (e.g., by confirmation
+dialogs).
+.Pp
+To shut down and release resources allocated by Agar without terminating
+an application,
+.Xr AG_Destroy 3
+can be used instead.
+.Sh AVAILABLE DRIVERS
+As of Agar-1.4.0, the available drivers were:
+.Pp
+.Bl -tag -width "sdlfb " -compact
+.It glx
+OpenGL rendering via X Window System, using GLX interface.
+Multiple windows are supported.
+.It wgl
+OpenGL rendering via Windows API, using WGL interface.
+Multiple windows are supported.
+.It sdlfb
+Framebuffer rendering via SDL library.
+Single-window display.
+.It sdlgl
+OpenGL rendering via SDL library.
+Single-window display.
+.El
+.Pp
+Note that new drivers can be easily implemented through a class registration
+interface (see
+.Xr AG_Driver 3
+for details).
+.Sh USING SINGLE-WINDOW DRIVERS
+.nr nS 1
+.Ft "int"
+.Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
+.Pp
+.Ft "int"
+.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Pp
+.Ft "int"
+.Fn AG_ResizeDisplay "int w" "int h"
+.Pp
+.Ft "void"
+.Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h))"
+.Pp
+.nr nS 0
+The
+.Fn AG_InitVideo
+function is an alternative to
+.Fn AG_InitGraphics
+which selects only those drivers with no multiple-window support (e.g.,
+.Sq sdlfb ,
+.Sq sdlgl ) .
+.Pp
+The
+.Fn AG_InitVideoSDL
+function is another alternative which reuses an existing SDL display surface.
+This function is only available if Agar has been compiled with SDL support.
+Note that if the specified surface has the
+.Dv SDL_OPENGL
+flag set, the
+.Va sdlgl
+driver is selected, otherwise
+.Va sdlfb
+is used.
+.Pp
+The
+.Fn AG_ResizeDisplay
+function resizes the video display to the specified dimensions in pixels.
+.Fn AG_SetVideoResizeCallback
+registers a callback function which will be invoked whenever the display is
+resized.
+Both of these functions are only applicable to single-window drivers.
+.Pp
+.Fn AG_InitVideo
+and
+.Fn AG_InitVideoSDL
+both recognize the following
+.Fa flags
+options:
+.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
+.It AG_VIDEO_HWSURFACE
+Request a hardware frame buffer (pass
+.Dv SDL_HWSURFACE
+in SDL mode).
+.It AG_VIDEO_ASYNCBLIT
+Enable asynchronous blitting updates (pass
+.Dv SDL_ASYNCBLIT
+in SDL mode).
+.It AG_VIDEO_ANYFORMAT
+Disable emulation of surface depth (pass
+.Dv SDL_ANYFORMAT
+in SDL mode).
+.It AG_VIDEO_HWPALETTE
+Exclusive palette access (pass
+.Dv SDL_HWPALETTE
+in SDL mode).
+.It AG_VIDEO_DOUBLEBUF
+Enable double-buffering in frame buffer mode.
+.It AG_VIDEO_FULLSCREEN
+Start up application in full-screen mode
+.It AG_VIDEO_RESIZABLE
+If a window manager is available, request that the application be
+resizable.
+.It AG_VIDEO_NOFRAME
+If a window manager is available, disable window decorations.
+.It AG_VIDEO_BGPOPUPMENU
+Whenever the user right-clicks on an area not covered by an Agar window,
+display a standard pop-up menu with the list of active windows.
+.It AG_VIDEO_OPENGL
+Require OpenGL mode.
+If OpenGL is not available, initialization will fail.
+.It AG_VIDEO_OPENGL_OR_SDL
+Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
+.It AG_VIDEO_OVERLAY
+Run in OpenGL "overlay" mode.
+In this mode, Agar will never clear the background of the application or
+swap the GL buffers.
+.El
+.Sh SEE ALSO
+.Xr AG_Core 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Pp
+.Bd -literal
+http://www.libsdl.org/
+http://www.opengl.org/
+.Ed
+.Sh HISTORY
+The
+.Fn AG_InitVideo
+function first appeared in Agar 1.0.
+The driver system (see
+.Xr AG_Driver 3 )
+and the
+.Nm
+function first appeared in Agar 1.4.0.

@@ -40,24 +40,16 @@
 These functions are responsible for the initialization of Agar's internals
 and subsystems.
 .Pp
+Note: This manual page is specific to the Agar-Core library.
+For initialization functions related to Agar-GUI, see
+.Xr AG_InitGraphics 3 .
+.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_GetVersion "AG_AgarVersion *ver"
 .Pp
 .Ft "int"
 .Fn AG_InitCore "const char *progname" "Uint flags"
-.Pp
-.Ft "int"
-.Fn AG_InitGraphics "const char *driver"
-.Pp
-.Ft "int"
-.Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
-.Pp
-.Ft "int"
-.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
-.Pp
-.Ft "int"
-.Fn AG_InitGUI "Uint flags"
 .Pp
 .Ft "void"
 .Fn AG_AtExitFunc "void (*fn)(void)"
@@ -66,13 +58,7 @@ and subsystems.
 .Fn AG_Quit "void"
 .Pp
 .Ft "void"
-.Fn AG_QuitGUI "void"
-.Pp
-.Ft "void"
 .Fn AG_Destroy "void"
-.Pp
-.Ft "void"
-.Fn AG_DestroyGUI "void"
 .Pp
 .nr nS 0
 The
@@ -101,116 +87,6 @@ configuration data on startup.
 .El
 .Pp
 The
-.Fn AG_InitGraphics
-function initializes the Agar GUI library.
-If the
-.Fa drivers
-argument is non-NULL, it specifies a comma-separated list of driver names,
-in order of preference.
-If
-.Fa drivers
-is NULL, Agar selects the "best" drivers available on the current platform.
-If
-.Fa drivers
-is set to "<OpenGL>" or "<SDL>", Agar selects the "best" drivers with OpenGL
-or SDL support, respectively, and fails if none are found.
-As of this release, available drivers include:
-.Pp
-.Bl -tag -width "sdlfb " -compact
-.It glx
-OpenGL rendering with GLX (Xorg).
-Multiple windows supported.
-.It wgl
-OpenGL rendering with WGL (Windows).
-Multiple windows supported.
-.It sdlfb
-Framebuffer rendering via SDL.
-Single-window display.
-.It sdlgl
-OpenGL rendering via SDL.
-Single-window display.
-.El
-.Pp
-The
-.Fn AG_InitVideo
-function is an alternative to
-.Fn AG_InitGraphics
-which selects only those drivers with no multiple-window support (e.g.,
-.Sq sdlfb ,
-.Sq sdlgl ) .
-.Pp
-The
-.Fn AG_InitVideoSDL
-is another alternative which reuses an existing SDL display surface.
-This function is only available if Agar has been compiled with SDL support.
-If the specified surface has the
-.Dv SDL_OPENGL
-flag set, the
-.Va sdlgl
-driver is selected, otherwise
-.Va sdlfb
-is used.
-.Pp
-.Fn AG_InitVideo
-and
-.Fn AG_InitVideoSDL
-recognize the following
-.Fa flags
-options:
-.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
-.It AG_VIDEO_HWSURFACE
-Request a hardware frame buffer (pass
-.Dv SDL_HWSURFACE
-in SDL mode).
-.It AG_VIDEO_ASYNCBLIT
-Enable asynchronous blitting updates (pass
-.Dv SDL_ASYNCBLIT
-in SDL mode).
-.It AG_VIDEO_ANYFORMAT
-Disable emulation of surface depth (pass
-.Dv SDL_ANYFORMAT
-in SDL mode).
-.It AG_VIDEO_HWPALETTE
-Exclusive palette access (pass
-.Dv SDL_HWPALETTE
-in SDL mode).
-.It AG_VIDEO_DOUBLEBUF
-Enable double-buffering in frame buffer mode.
-.It AG_VIDEO_FULLSCREEN
-Start up application in full-screen mode
-.It AG_VIDEO_RESIZABLE
-If a window manager is available, request that the application be
-resizable.
-.It AG_VIDEO_NOFRAME
-If a window manager is available, disable window decorations.
-.It AG_VIDEO_BGPOPUPMENU
-Whenever the user right-clicks on an area not covered by an Agar window,
-display a standard pop-up menu with the list of active windows.
-.It AG_VIDEO_OPENGL
-Require OpenGL mode.
-If OpenGL is not available, initialization will fail.
-.It AG_VIDEO_OPENGL_OR_SDL
-Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
-.It AG_VIDEO_OVERLAY
-Run in OpenGL "overlay" mode.
-In this mode, Agar will never clear the background of the application or
-swap the GL buffers.
-.El
-.Pp
-The
-.Fn AG_InitGUI
-function initializes the Agar GUI system.
-This involves registering the widget classes, initializing the global tables
-(e.g., colors, primitives, cursors, icons), the themes, as well as the font
-engine and the input devices.
-.Fn AG_InitVideo
-and
-.Fn AG_InitVideoSDL
-invoke
-.Fn AG_InitGUI ,
-so it is rarely used directly.
-.Pp
-The
 .Fn AG_AtExitFunc
 registers a function that will be invoked automatically by
 .Fn AG_Destroy .
@@ -220,21 +96,9 @@ immediately terminates the application by releasing resources allocated by
 Agar-Core and invoking
 .Xr exit 2 .
 .Pp
-If Agar-GUI is in use, the
-.Fn AG_QuitGUI
-function should be used instead as it requests the termination of the
-application through the event system, leaving an opportunity for the
-termination to be interrupted or aborted (e.g., by confirmation dialogs).
-.Pp
 The
 .Fn AG_Destroy
 function immediately frees all resources allocated by Agar.
-.Pp
-.Fn AG_DestroyGUI
-frees all resources allocated by the Agar GUI system.
-Being implicitely invoked from
-.Fn AG_Destroy ,
-it is rarely used directly.
 .Pp
 .Sh AGAR VERSION INFORMATION
 .nr nS 1
@@ -268,14 +132,11 @@ The
 macro evaluates to true if the current Agar version is equal to, or exceeds
 the given version number.
 .Sh SEE ALSO
-.Xr AG_Object 3 ,
-.Xr AG_View 3 ,
-.Xr AG_Widget 3 ,
-.Xr AG_Window 3
-.Pp
-.Bd -literal
-http://www.libsdl.org/
-http://www.opengl.org/
-.Ed
-.Sh BUGS
-Routines related to Agar-GUI should be documented in a separate manual page.
+.Xr AG_Intro 3 ,
+.Xr AG_InitGraphics 3
+.Sh HISTORY
+The
+.Fn AG_InitCore
+function first appeared in Agar 1.0.
+Agar 1.4.0 saw the introduction of
+.Xr AG_InitGraphics 3 .
