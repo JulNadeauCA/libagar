@@ -36,6 +36,12 @@ static void OutputLIBS(void);
 #include <config/jpeg_cflags.h>
 #endif
 
+#include <config/have_png.h>
+#ifdef HAVE_PNG
+#include <config/png_libs.h>
+#include <config/png_cflags.h>
+#endif
+
 #include <config/have_math.h>
 #ifdef HAVE_MATH
 #include <config/math_libs.h>
@@ -124,6 +130,9 @@ OutputCFLAGS(void)
 #ifdef JPEG_CFLAGS
 	printf("%s ", JPEG_CFLAGS);
 #endif
+#ifdef PNG_CFLAGS
+	printf("%s ", PNG_CFLAGS);
+#endif
 #ifdef HAVE_PTHREADS
 	printf("%s ", PTHREADS_CFLAGS);
 #endif
@@ -158,6 +167,9 @@ OutputLIBS(void)
 #endif
 #ifdef JPEG_LIBS
 	printf("%s ", JPEG_LIBS);
+#endif
+#ifdef PNG_LIBS
+	printf("%s ", PNG_LIBS);
 #endif
 #ifdef HAVE_PTHREADS
 	printf("%s ", PTHREADS_LIBS);
