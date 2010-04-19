@@ -95,8 +95,8 @@ Init(void *obj)
 
 	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
 
-	glv->wPre = 64;
-	glv->hPre = 64;
+	glv->wPre = 100;
+	glv->hPre = 100;
 
 	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
@@ -228,8 +228,10 @@ AG_GLViewReshape(AG_GLView *glv)
 void
 AG_GLViewSizeRequest(void *obj, AG_SizeReq *r)
 {
-	r->w = 32;
-	r->h = 32;
+	AG_GLView *glv = obj;
+
+	r->w = glv->wPre;
+	r->h = glv->hPre;
 }
 
 int
