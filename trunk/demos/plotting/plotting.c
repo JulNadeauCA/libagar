@@ -295,7 +295,7 @@ main(int argc, char *argv[])
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
 
-		btn = AG_ButtonAct(box, AG_BUTTON_HFILL,
+		btn = AG_ButtonNewFn(box, AG_BUTTON_HFILL,
 		    "Generate", GeneratePlot, "%p", plt);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);

@@ -81,7 +81,7 @@ TestUnfocusedMouseMotion(void)
 	btn = AG_ButtonNew(fx1, 0, "Bar");
 	AG_FixedMove(fx1, btn, 0, 32);
 	AG_FixedSize(fx1, btn, 32, 32);
-	AG_ButtonDisable(btn);
+	AG_WidgetDisable(btn);
 	btn = AG_ButtonNew(fx1, 0, "Baz");
 	AG_FixedMove(fx1, btn, 0, 64);
 	AG_FixedSize(fx1, btn, 32, 32);
