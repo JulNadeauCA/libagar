@@ -9,7 +9,7 @@ CHECK(pthreads)
 CHECK(sdl)
 CHECK(opengl)
 CHECK(freetype)
-CHECK(agar, 1.3)
+CHECK(agar, 1.4.0)
 CHECK(agar-threads)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
