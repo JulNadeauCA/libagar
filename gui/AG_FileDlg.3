@@ -404,7 +404,11 @@ structure (as returned by
 Back pointer to the parent
 .Ft AG_FileDlg
 (read-only).
-.It Ft const char *descr"
+.It Ft char **exts
+List of associated file extensions.
+.It Ft Uint nexts
+Count of file extensions.
+.It Ft const char *descr
 Description string (read-only).
 .It Ft AG_Event *action
 Callback function (as returned by
