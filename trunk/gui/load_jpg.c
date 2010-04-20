@@ -64,11 +64,15 @@ AG_JPG_FillInputBuffer(j_decompress_ptr cinfo)
 	struct ag_jpg_sourcemgr *sm = (struct ag_jpg_sourcemgr *)cinfo->src;
 	size_t rv;
 
-	rv = AG_Read(sm->ds, sm->buffer, 1, sizeof(sm->buffer));
-	if (rv <= 0) {
+	if (AG_Read(sm->ds, sm->buffer, 1, sizeof(sm->buffer)) == AG_IO_ERROR) {
+		return (FALSE);
+	}
+	if (sm->ds->rdLast == 0) {			/* Reached EOF */
 		sm->buffer[0] = 0xff;
 		sm->buffer[1] = (Uint8)JPEG_EOI;
 		rv = 2;
+	} else {
+		rv = sm->ds->rdLast;
 	}
 	sm->pub.next_input_byte = sm->buffer;
 	sm->pub.bytes_in_buffer = rv;
@@ -259,13 +263,13 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		jpeg_calc_output_dimensions(&cinfo);
 
 		su = AG_SurfaceRGB(cinfo.output_width, cinfo.output_height,
-		    24,
+		    24, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-		    0x00ff0000, 0x0000ff00, 0x000000ff,
+		    0xff0000, 0x00ff00, 0x0000ff,
 #else
-		    0x000000ff, 0x0000ff00, 0x00ff0000,
+		    0x0000ff, 0x00ff00, 0xff0000
 #endif
-		    0);
+		    );
 	}
 	if (su == NULL) {
 		jpeg_destroy_decompress(&cinfo);
