@@ -49,8 +49,6 @@
 
 #include "dev.h"
 
-#include <config/ag_lockdebug.h>
-
 const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },
 	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
@@ -121,22 +119,6 @@ PollVariables(AG_Event *event)
 	}
 	AG_TlistRestore(tl);
 }
-
-#if defined(AG_THREADS) && defined(AG_LOCKDEBUG)
-static void
-PollLocks(AG_Event *event)
-{
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
-	int i;
-	
-	AG_TlistClear(tl);
-	for (i = 0; i < ob->nlockinfo; i++) {
-		AG_TlistAddS(tl, NULL, ob->lockinfo[i]);
-	}
-	AG_TlistRestore(tl);
-}
-#endif /* AG_THREADS and AG_LOCKDEBUG */
 
 static void
 PollEvents(AG_Event *event)
@@ -369,13 +351,5 @@ DEV_ObjectEdit(void *p)
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", PollVariables, "%p", ob);
 	}
-	
-#if defined(AG_THREADS) && defined(AG_LOCKDEBUG)
-	ntab = AG_NotebookAddTab(nb, _("Locks"), AG_BOX_VERT);
-	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_SetEvent(tl, "tlist-poll", PollLocks, "%p", ob);
-	}
-#endif
 	return (win);
 }

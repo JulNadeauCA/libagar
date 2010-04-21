@@ -12,7 +12,6 @@
 #include <core/types.h>
 
 #include <config/ag_debug.h>
-#include <config/ag_lockdebug.h>
 #include <config/ag_legacy.h>
 #include <config/ag_threads.h>
 #include <config/ag_network.h>

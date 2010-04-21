@@ -9,4 +9,5 @@ http://wiki.libagar.org/wiki/Agar-1.4.1.
 - Fixed compilation with --disable-legacy option.
 - Implemented AG_SurfaceFromPNG() and AG_SurfaceFromJPEG().
 - Added AG_SetJPEGQuality(), to set quality used by AG_SurfaceExportJPEG().
+- Merge --enable-{class,event}debug into --enable-objdebug; remove lockdebug.
 

@@ -1,7 +1,6 @@
 /*	Public domain	*/
 
 #include <agar/config/ag_debug.h>
-#include <agar/config/ag_lockdebug.h>
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_threads.h>
 

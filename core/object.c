@@ -42,9 +42,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include <config/ag_lockdebug.h>
 #include <config/ag_objdebug.h>
-#include <config/ag_classdebug.h>
 
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",
@@ -83,10 +81,6 @@ AG_ObjectInit(void *p, void *cl)
 	ob->attachFn = NULL;
 	ob->detachFn = NULL;
 
-#ifdef AG_LOCKDEBUG
-	ob->lockinfo = Malloc(sizeof(char *));
-	ob->nlockinfo = 0;
-#endif
 #ifdef AG_DEBUG
 	ob->debugFn = NULL;
 	ob->debugPtr = NULL;
@@ -1505,7 +1499,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		AG_ObjectFreeDataset(ob);
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_CLASSDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1649,7 +1643,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_CLASSDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Saving as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->save == NULL)
@@ -1720,7 +1714,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_CLASSDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -2480,25 +2474,3 @@ tryname:
 		}
 	}
 }
-
-#ifdef AG_LOCKDEBUG
-void
-AG_ObjectLockDebug(AG_Object *ob, const char *info)
-{
-	if (agDebugLvl >= 10) { Debug(ob, "Locking (%s)...", info); }
-	AG_MutexLock(&ob->lock);
-	if (agDebugLvl >= 10) { Debug(ob, "OK\n"); }
-
-	ob->lockinfo = (const char **)AG_Realloc(ob->lockinfo,
-	    (ob->nlockinfo+1)*sizeof(char *));
-	ob->lockinfo[ob->nlockinfo++] = info;
-}
-
-void
-AG_ObjectUnlockDebug(AG_Object *ob, const char *info)
-{
-	ob->nlockinfo--;
-	AG_MutexUnlock(&ob->lock);
-	if (agDebugLvl >= 10) { Debug(ob, "Unlocked (%s)\n", info); }
-}
-#endif /* AG_LOCKDEBUG */
