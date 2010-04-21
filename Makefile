@@ -7,19 +7,25 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=	core gui vg rg math dev
-SUBDIR=	core agar-core-config \
-	${SUBDIR_gui} \
-	${SUBDIR_vg} \
-	${SUBDIR_rg} \
-	${SUBDIR_math} \
-	${SUBDIR_dev}
+INCDIR=		core gui vg rg math dev
+SUBDIR=		core \
+		${SUBDIR_gui} \
+		${SUBDIR_vg} \
+		${SUBDIR_rg} \
+		${SUBDIR_math} \
+		${SUBDIR_dev}
+CONFSCRIPTS=	agar-config \
+		agar-core-config \
+		agar-dev-config \
+		agar-math-config \
+		agar-rg-config \
+		agar-vg-config
 
 all: all-subdir
 clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
-install: install-subdir install-includes
-deinstall: deinstall-subdir deinstall-includes
+install: install-subdir install-includes install-config
+deinstall: deinstall-subdir deinstall-includes deinstall-config
 depend: depend-subdir
 regress: regress-subdir
 
@@ -86,6 +92,18 @@ install-includes:
 deinstall-includes:
 	@echo "rm -fR ${INCLDIR}/agar"
 	@${SUDO} rm -fR ${DESTDIR}${INCLDIR}/agar
+
+install-config:
+	@for PROG in ${CONFSCRIPTS}; do \
+		echo "${INSTALL_PROG} $$PROG ${BINDIR}"; \
+		${SUDO} ${INSTALL_PROG} $$PROG ${BINDIR}; \
+	done
+
+deinstall-config:
+	@for PROG in ${CONFSCRIPTS}; do \
+		echo "${DEINSTALL_PROG} ${BINDIR}/$$PROG"; \
+		${SUDO} ${DEINSTALL_PROG} ${BINDIR}/$$PROG; \
+	done
 
 pre-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
