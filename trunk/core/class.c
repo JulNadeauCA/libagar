@@ -32,7 +32,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <config/ag_classdebug.h>
+#include <config/ag_objdebug.h>
 
 extern AG_ObjectClass agObjectClass;
 
@@ -216,7 +216,7 @@ AG_RegisterClass(void *p)
 	}
 	InitClass(cl, cs.hier, cs.libs);
 	
-#ifdef AG_CLASSDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
 	    cs.libs);
 #endif
@@ -249,7 +249,7 @@ AG_UnregisterClass(void *p)
 	AG_ObjectClass *clSuper = cl->super;
 
 	AG_MutexLock(&agClassLock);
-#ifdef AG_CLASSDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(NULL, "Unregistering class: %s\n", cl->name);
 #endif
 	/* Remove from the class tree. */

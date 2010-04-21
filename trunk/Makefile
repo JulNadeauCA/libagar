@@ -33,7 +33,7 @@ includes:
 	fi
 
 configure:
-	cat configure.in | mkconfigure > configure
+	cat configure.in | mkconfigure --verbose > configure
 	chmod 755 configure
 
 cleandir-config:

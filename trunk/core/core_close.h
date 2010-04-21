@@ -1,7 +1,6 @@
 /*	Public domain	*/
 
 #undef AG_DEBUG
-#undef AG_LOCKDEBUG
 #undef AG_LEGACY
 #undef AG_THREADS
 

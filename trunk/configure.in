@@ -5,34 +5,34 @@
 # http://bsdbuild.hypertriton.com/.
 #
 
+PACKAGE("Agar")
+VERSION("1.4.1-beta")
+RELEASE("Landscapes of Frozen Methane")
+
+REGISTER_SECTION("Options specific to Agar:")
 REGISTER("--enable-<library>",	"Build libraries (gui|vg|rg|math|dev) [all]")
-
-REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
-REGISTER("--enable-threads",	"Thread safety [check]")
-
 REGISTER("--enable-debug",	"General debugging [no]")
-REGISTER("--enable-<type>debug","Debugging (obj|class|event) [none]")
 REGISTER("--enable-legacy",	"Deprecated interfaces [yes]")
+REGISTER("--enable-network",	"Network I/O support in Agar-Core [check]")
+REGISTER("--enable-objdebug",	"Object system debugging [no]")
+REGISTER("--enable-threads",	"Thread safety [check]")
+REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
+REGISTER("--with-db4",		"Berkeley DB support in Agar-Core [check]")
 
-REGISTER("--enable-network",	"CORE: Network support [check]")
-REGISTER("--with-db4",		"CORE: Berkeley DB support [check]")
+REGISTER_SECTION("Options specific to Agar-GUI (ag_gui):")
+REGISTER("--with-freetype",	"Enable FreeType support [check]")
+REGISTER("--with-gl",		"OpenGL rendering support [check]")
+REGISTER("--with-glx",		"GL rendering via GLX [check]")
+REGISTER("--with-jpeg",		"Built-in JPEG image support [check]")
+REGISTER("--with-png",		"Built-in PNG image support [check]")
+REGISTER("--with-sdl",		"SDL rendering support [check]")
+REGISTER("--with-wgl",		"GL rendering via WGL [check]")
 
-REGISTER("--with-gl",		"GUI: OpenGL rendering support [check]")
-REGISTER("--with-glx",		"GUI: GL rendering via GLX [check]")
-REGISTER("--with-wgl",		"GUI: GL rendering via WGL [check]")
-REGISTER("--with-sdl",		"GUI: SDL rendering support [check]")
-REGISTER("--with-jpeg",		"GUI: Built-in JPEG image support [check]")
-REGISTER("--with-png",		"GUI: Built-in PNG image support [check]")
-REGISTER("--with-freetype",	"GUI: Enable FreeType support [check]")
-
-REGISTER("--with-sse",		"M: SSE[123] optimizations [no]")
+REGISTER_SECTION("Options specific to Agar-MATH (ag_math):")
 REGISTER("--with-altivec",	"M: AltiVec optimizations [check]")
-REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
+REGISTER("--with-sse",		"M: SSE[123] optimizations [no]")
 REGISTER("--with-<mode>-fp",    "M: Precision (single|double|quad) [double]")
-
-# Agar version
-HDEFINE(VERSION, "1.4.1-beta")
-HDEFINE(RELEASE, "Landscapes of Frozen Methane")
+REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
@@ -44,6 +44,7 @@ HDEFINE(TTFDIR, "$PREFIX/share/agar/fonts")
 MDEFINE(INCLDIR, "\${PREFIX}/include/agar")
 HDEFINE(INCLDIR, "$PREFIX/include/agar")
 
+# Tests
 CHECK(cc)
 CHECK(sys_types)
 CHECK(stdlib_h)
@@ -77,6 +78,7 @@ CHECK(syslog)
 CHECK(glob)
 CHECK(getopt)
 
+# C compiler options
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
 C_NO_SECURE_WARNINGS()
@@ -98,25 +100,10 @@ if [ "${enable_debug}" = "yes" ]; then
 else
 	HUNDEF(AG_DEBUG)
 fi
-if [ "${enable_lockdebug}" = "yes" ]; then
-	HDEFINE(AG_LOCKDEBUG, "yes")
-else
-	HUNDEF(AG_LOCKDEBUG)
-fi
 if [ "${enable_objdebug}" = "yes" ]; then
 	HDEFINE(AG_OBJDEBUG, "yes")
 else
 	HUNDEF(AG_OBJDEBUG)
-fi
-if [ "${enable_classdebug}" = "yes" ]; then
-	HDEFINE(AG_CLASSDEBUG, "yes")
-else
-	HUNDEF(AG_CLASSDEBUG)
-fi
-if [ "${enable_eventdebug}" = "yes" ]; then
-	HDEFINE(AG_EVENTDEBUG, "yes")
-else
-	HUNDEF(AG_EVENTDEBUG)
 fi
 if [ "${enable_legacy}" != "no" ]; then
 	HDEFINE(AG_LEGACY, "yes")
