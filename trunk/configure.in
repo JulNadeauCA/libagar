@@ -116,7 +116,7 @@ fi
 #
 if [ "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_GUI, "yes")
-	MDEFINE(SUBDIR_gui, "gui agar-config")
+	MDEFINE(SUBDIR_gui, "gui")
 
 	# Enable SDL support if the SDL library is found.
 	if [ "${with_sdl}" != "no" ]; then
@@ -427,7 +427,7 @@ fi
 #
 if [ "${enable_math}" != "no" ]; then
 	HDEFINE(ENABLE_MATH, "yes")
-	MDEFINE(SUBDIR_math, "math agar-math-config")
+	MDEFINE(SUBDIR_math, "math")
 else
 	HUNDEF(ENABLE_MATH)
 	MDEFINE(SUBDIR_math, "")
@@ -553,7 +553,7 @@ fi
 #
 if [ "${enable_vg}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_VG, "yes")
-	MDEFINE(SUBDIR_vg, "vg agar-vg-config")
+	MDEFINE(SUBDIR_vg, "vg")
 else
 	HUNDEF(ENABLE_VG)
 	MDEFINE(SUBDIR_vg, "")
@@ -564,7 +564,7 @@ fi
 #
 if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_RG, "yes")
-	MDEFINE(SUBDIR_rg, "rg agar-rg-config")
+	MDEFINE(SUBDIR_rg, "rg")
 else
 	HUNDEF(ENABLE_RG)
 	MDEFINE(SUBDIR_rg, "")
@@ -575,7 +575,7 @@ fi
 #
 if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_DEV, "yes")
-	MDEFINE(SUBDIR_dev, "dev agar-dev-config")
+	MDEFINE(SUBDIR_dev, "dev")
 else
 	HUNDEF(ENABLE_DEV)
 	MDEFINE(SUBDIR_dev, "")
@@ -588,6 +588,14 @@ C_INCPREP(include,agar)
 C_INCDIR($BLD/include)
 C_INCDIR($BLD/include/agar)
 C_INCDIR_CONFIG($BLD/include/agar/config)
+
+# Generate the "foo-config" scripts.
+CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}")
+CONFIG_SCRIPT(agar-core-config, "-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}", "-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}")
+CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
 
 echo "*"
 echo "* Configuration successful."

@@ -4410,7 +4410,7 @@ echo "#ifndef ENABLE_GUI" > config/enable_gui.h
 echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
 echo "#endif" >> config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
-SUBDIR_gui="gui agar-config"
+SUBDIR_gui="gui"
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
 	if [ "${with_sdl}" != "no" ]
@@ -4970,6 +4970,8 @@ case "$host" in
 powerpc-*-darwin*)
 	OPENGL_CFLAGS=""
 	OPENGL_LIBS="-framework OpenGL"
+    # MacOS X 10.5 nonsense
+	OPENGL_LIBS_CONFIG="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
 	;;
 *-*-cygwin* | *-*-mingw32*)
 $ECHO_N "checking whether -lopengl32 works..."
@@ -5033,10 +5035,12 @@ OPENGL_LIBS="${GL_LIBS} -lopengl32"
 else
 OPENGL_LIBS="${GL_LIBS} -lGL"
 fi;
+    OPENGL_LIBS_CONFIG=""
 	;;
 *)
 	OPENGL_CFLAGS=""
 	OPENGL_LIBS="-lGL"
+	OPENGL_LIBS_CONFIG=""
 	;;
 esac
 $ECHO_N "checking whether OpenGL works..."
@@ -7423,7 +7427,7 @@ echo "#ifndef ENABLE_MATH" > config/enable_math.h
 echo "#define ENABLE_MATH \"$ENABLE_MATH\"" >> config/enable_math.h
 echo "#endif" >> config/enable_math.h
 echo "hdefs[\"ENABLE_MATH\"] = \"$ENABLE_MATH\"" >>configure.lua
-SUBDIR_math="math agar-math-config"
+SUBDIR_math="math"
 echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
 echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 else
@@ -8100,7 +8104,7 @@ echo "#ifndef ENABLE_VG" > config/enable_vg.h
 echo "#define ENABLE_VG \"$ENABLE_VG\"" >> config/enable_vg.h
 echo "#endif" >> config/enable_vg.h
 echo "hdefs[\"ENABLE_VG\"] = \"$ENABLE_VG\"" >>configure.lua
-SUBDIR_vg="vg agar-vg-config"
+SUBDIR_vg="vg"
 echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
 echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 else
@@ -8117,7 +8121,7 @@ echo "#ifndef ENABLE_RG" > config/enable_rg.h
 echo "#define ENABLE_RG \"$ENABLE_RG\"" >> config/enable_rg.h
 echo "#endif" >> config/enable_rg.h
 echo "hdefs[\"ENABLE_RG\"] = \"$ENABLE_RG\"" >>configure.lua
-SUBDIR_rg="rg agar-rg-config"
+SUBDIR_rg="rg"
 echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
 echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 else
@@ -8134,7 +8138,7 @@ echo "#ifndef ENABLE_DEV" > config/enable_dev.h
 echo "#define ENABLE_DEV \"$ENABLE_DEV\"" >> config/enable_dev.h
 echo "#endif" >> config/enable_dev.h
 echo "hdefs[\"ENABLE_DEV\"] = \"$ENABLE_DEV\"" >>configure.lua
-SUBDIR_dev="dev agar-dev-config"
+SUBDIR_dev="dev"
 echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
 echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 else
@@ -8199,6 +8203,432 @@ if [ -e "$BLD/include/agar" ]; then
 	echo "cp -fR config $BLD/include/agar/config"
 	cp -fR config "$BLD/include/agar/config"
 fi
+config_script_out="agar-config"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
+config_script_out="agar-core-config"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
+config_script_out="agar-dev-config"
+config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
+config_script_out="agar-math-config"
+config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
+config_script_out="agar-rg-config"
+config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
+config_script_out="agar-vg-config"
+config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}"
+cat << EOT > $config_script_out
+#!/bin/sh
+# Generated for ${PACKAGE} by BSDBuild 2.8-beta.
+# <http://bsdbuild.hypertriton.com>
+
+prefix="${PREFIX}"
+exec_prefix="${EXEC_PREFIX}"
+exec_prefix_set="no"
+libdir="${LIBDIR}"
+
+usage="\
+Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
+
+if test \$# -eq 0; then
+	echo "\${usage}" 1>&2
+	exit 1
+fi
+
+while test \$# -gt 0; do
+	case "\$1" in
+	-*=*)
+		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case \$1 in
+	--prefix=*)
+		prefix=\$optarg
+		if test \$exec_prefix_set = no ; then
+			exec_prefix=\$optarg
+		fi
+		;;
+	--prefix)
+		echo "\$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=\$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "\$exec_prefix"
+		;;
+	--version)
+		echo "${VERSION}"
+		;;
+	--cflags)
+		echo "$config_script_cflags"
+		;;
+	--libs | --static-libs)
+		if test x"\${prefix}" != x"/usr" ; then
+			libdirs="-L/usr/lib64"
+		else
+			libdirs=""
+		fi
+		echo "\$libdirs $config_script_libs"
+		;;
+	*)
+		echo "\${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
+EOT
+
 echo "*"
 echo "* Configuration successful."
 echo "* Use \"make depend\" if you plan on editing the source code."
