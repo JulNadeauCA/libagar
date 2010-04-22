@@ -1,5 +1,7 @@
 # Public domain
 
+CONFIG_GUESS("../../mk/config.guess")
+
 REGISTER("--enable-static",	"Produce a static binary [default: no]")
 
 CHECK(cc)
