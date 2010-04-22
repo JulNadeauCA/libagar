@@ -12,21 +12,11 @@ CHECK(sdl)
 CHECK(opengl)
 CHECK(freetype)
 CHECK(agar, 1.4.0)
-CHECK(agar-threads)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
 	echo "This demo requires Agar installed on your system."
 	exit 1
 fi
-if [ "${AGAR_HAVE_THREADS}" != "yes" ]; then
-	echo "*"
-	echo "* This demo requires threads support in agar. Please recompile"
-	echo "* agar with the --enable-threads option."
-	echo "*"
-	exit 1
-fi
-
-
 if [ "${enable_static}" = "yes" ]; then
 	MDEFINE(LDFLAGS, "-static")
 fi
