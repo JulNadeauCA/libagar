@@ -1,22 +1,11 @@
 # Public domain
 
-REGISTER("--enable-static",	"Produce a static binary [default: no]")
+CONFIG_GUESS("../../mk/config.guess")
 
-C_DEFINE(_USE_AGAR_MATH)
-MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
-
-# TODO test
-C_DEFINE(HAVE_RDTSC)
-
-CHECK(cc)
-CHECK(agar, 1.0)
+REQUIRE(cc)
+REQUIRE(agar, 1.4.1)
 CHECK(pctr)
 
-if [ "${HAVE_AGAR}" != "yes" ]; then
-	echo "This program requires Agar installed on your system."
-	exit 1
-fi
+C_DEFINE(_USE_AGAR_MATH)
+C_DEFINE(HAVE_RDTSC)
 
-if [ "${enable_static}" = "yes" ]; then
-	MDEFINE(LDFLAGS, "-static")
-fi

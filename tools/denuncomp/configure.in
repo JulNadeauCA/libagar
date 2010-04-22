@@ -1,21 +1,6 @@
 # Public domain
 
-REGISTER("--enable-static",	"Produce a static binary [default: no]")
-REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
+CONFIG_GUESS("../../mk/config.guess")
+REQUIRE(cc)
+REQUIRE(agar-core, 1.4.1)
 
-CHECK(cc)
-REQUIRE(agar-core, 1.3)
-
-if [ "${HAVE_AGAR_CORE}" != "yes" ]; then
-	echo "This application requires Agar-Core."
-	exit 1
-fi
-
-if [ "${enable_warnings}" = "yes" ]; then
-	C_OPTION(-Wall)
-	C_OPTION(-Werror)
-	C_OPTION(-Wmissing-prototypes)
-fi
-if [ "${enable_static}" = "yes" ]; then
-	MDEFINE(LDFLAGS, "-static")
-fi
