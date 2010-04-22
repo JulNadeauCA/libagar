@@ -53,21 +53,24 @@ to ./configure, and compile your application using `agar-core-config`.
 
 Concurrent building
 -------------------
-Under Unix, it is possible to build Agar outside of the source directory.
-Developers will generally prefer this method, since it results in a faster
-build, does not clutter the source directories with object files and
-facilitates testing on multiple machines using network filesystems.
+Under Unix-like platforms, it is possible to build Agar outside of the source
+directory. Developers will generally prefer this method, since it results in
+a faster build and does not clutter the source directories with object files.
 
 1) Create the build directory. When available, a memory filesystem is
    a good location to build from.
     $ mkdir w-agar
     $ cd w-agar
 
-2) Run configure from the source directory with "--srcdir". If you are going
+2) If configure was already executed from the source directory, make sure
+   to clean it up or the build will fail:
+    $ (cd ~/agar-sources && make cleandir)
+
+3) Run configure from the source directory with "--srcdir". If you are going
    to be editing the header files, "--includes=link" is also recommended.
     $ ~/agar-sources/configure --includes=link --srcdir=$HOME/agar-sources [...]
 
-3) Now build the libraries and executables as you normally would.
+4) Now build the libraries and executables as you normally would.
     $ make depend && make
     # make install
 
