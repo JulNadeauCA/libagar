@@ -290,7 +290,7 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 	for (y = 0; y < ss->h; y++) {
 		memcpy(pDst, pSrc, ss->pitch);
 		pSrc += ss->pitch;
-		pDst += ss->pitch;
+		pDst += ds->pitch;
 	}
 out:
 	AG_PixelFormatFree(pf);
