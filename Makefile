@@ -39,25 +39,19 @@ includes:
 	fi
 
 configure:
-	cat configure.in | mkconfigure --verbose > configure
+	cat configure.in | mkconfigure > configure
 	chmod 755 configure
 
 cleandir-config:
-	rm -fR include config config.log Makefile.config .projfiles.out .projfiles2.out
-	rm -f configure.lua
+	rm -fR include config 
+	rm -f Makefile.config config.log configure.lua .projfiles.out .projfiles2.out
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
 	-(cd demos && ${MAKE} cleandir)
 	find . -name premake.lua -exec rm -f {} \;
 
-beta:
-	sh mk/dist.sh beta
-
-package:
-	-${MAKE} all-manlinks
-	env NOUPLOAD=Yes sh mk/dist.sh beta
-
 release:
+	-${MAKE} cleandir
 	-${MAKE} all-manlinks
 	sh mk/dist.sh stable
 
@@ -84,10 +78,6 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
-	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
-	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
-	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
-	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 
 deinstall-includes:
 	@echo "rm -fR ${INCLDIR}/agar"
@@ -98,12 +88,18 @@ install-config:
 		echo "${INSTALL_PROG} $$PROG ${BINDIR}"; \
 		${SUDO} ${INSTALL_PROG} $$PROG ${BINDIR}; \
 	done
+	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
+	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
+	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
+	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 
 deinstall-config:
 	@for PROG in ${CONFSCRIPTS}; do \
 		echo "${DEINSTALL_PROG} ${BINDIR}/$$PROG"; \
 		${SUDO} ${DEINSTALL_PROG} ${BINDIR}/$$PROG; \
 	done
+	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
+	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
 
 pre-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
@@ -148,9 +144,9 @@ function-list:
 	find . -name \*.3 -exec grep ^\.Fn {} \; |awk '{print $$2}' |uniq
 
 .PHONY: clean cleandir install deinstall depend regress includes
-.PHONY: configure cleandir-config package beta release
-.PHONY: install-includes deinstall-includes pre-package post-package
-.PHONY: function-list
+.PHONY: configure cleandir-config release
+.PHONY: install-includes deinstall-includes install-config deinstall-config
+.PHONY: pre-package post-package function-list
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk

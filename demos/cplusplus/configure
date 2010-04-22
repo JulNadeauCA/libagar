@@ -363,21 +363,25 @@ echo "    --with-gettext            Use gettext for multi-language [auto-detect]
 echo "    --with-libtool            Specify path to libtool [auto-detect]"
 echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
-echo "    --enable-static           Produce a static binary [default: no]"
+
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
 echo "BSDBuild 2.8-beta"
 exit 0
 fi;
-if [ "${srcdir}" != "" ]; then
-	host=`sh ${srcdir}/../../mk/config.guess`
+if [ "${host_arg}" != "" ]; then
+	host="${host_arg}"
 else
-	host=`sh ../../mk/config.guess`
-fi
-if [ $? != 0 ]; then
-	echo "../../mk/config.guess failed"
-	exit 1
+	if [ "${srcdir}" != "" ]; then
+		host=`sh ${srcdir}/../../mk/config.guess`
+	else
+		host=`sh ../../mk/config.guess`
+	fi
+	if [ $? != 0 ]; then
+		echo "../../mk/config.guess failed"
+		exit 1
+	fi
 fi
 echo "BSDBuild 2.8-beta (host: $host)"
 
@@ -607,8 +611,8 @@ echo "#ifndef LOCALSTATEDIR" > config/localstatedir.h
 echo "#define LOCALSTATEDIR \"$LOCALSTATEDIR\"" >> config/localstatedir.h
 echo "#endif" >> config/localstatedir.h
 echo "hdefs[\"LOCALSTATEDIR\"] = \"$LOCALSTATEDIR\"" >>configure.lua
-$ECHO_N "checking for a usable C compiler..."
-$ECHO_N "checking for a usable C compiler..." >> config.log
+$ECHO_N "checking for a C compiler..."
+$ECHO_N "checking for a C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -624,50 +628,65 @@ if [ "$CC" = "" ]; then
 		fi
 	done
 	if [ "$CC" = "" ]; then
-		echo "Unable to find a C compiler in PATH. Please set your compiler"
-		echo "explicitely with the CC environment variable."
+		echo "*"
+		echo "* Unable to find a standard C compiler in PATH. You may need"
+		echo "* to set the CC environment variable."
+		echo "*"
 		echo "Unable to find a C compiler in PATH." >> config.log
-		exit 1
+		HAVE_CC="no"
+		echo "no"
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >> config.log
 	fi
+else
+	echo "using ${CC}"
 fi
 
-cat << 'EOT' > conftest.c
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N "checking whether the C compiler works..."
+	$ECHO_N "checking whether the C compiler works..." >> config.log
+	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no, the test failed to compile"
+	    echo "no, the test failed to compile" >> config.log
+		HAVE_CC="no"
+	else
+		echo "yes"
+		echo "yes" >> config.log
+		HAVE_CC="yes"
+	fi
 
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-    echo "no"
-	echo "Test C program (conftest.c) failed to compile."
-	echo "Test C program (conftest.c) failed to compile." >> config.log
-    exit 1
+	if [ "${EXECSUFFIX}" = "" ]; then
+		EXECSUFFIX=""
+		for OUTFILE in conftest.exe conftest conftest.*; do
+			if [ -f $OUTFILE ]; then
+				case $OUTFILE in
+				*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					;;
+				*.* )
+					EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+					break ;;
+				* )
+					break ;;
+				esac;
+		    fi
+		done
+		if [ "$EXECSUFFIX" != "" ]; then
+			echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+		fi
+		echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
+		echo "#ifndef EXECSUFFIX" > config/execsuffix.h
+		echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
+		echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
+	fi
+	rm -f conftest.c conftest$EXECSUFFIX
+	TEST_CFLAGS=""
 fi
-
-EXECSUFFIX=""
-for OUTFILE in conftest.exe conftest conftest.*; do
-	if [ -f $OUTFILE ]; then
-		case $OUTFILE in
-		*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
-			;;
-		*.* )
-			EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
-			break ;;
-		* )
-			break ;;
-		esac;
-    fi
-done
-if [ "$EXECSUFFIX" != "" ]; then
-	echo "Detected executable suffix: $EXECSUFFIX" >> config.log
-fi
-echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
-echo "#ifndef EXECSUFFIX" > config/execsuffix.h
-echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
-echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
-
-echo "yes"
-rm -f conftest.c conftest$EXECSUFFIX
-TEST_CFLAGS=""
 $ECHO_N "checking for compiler warning options..."
 $ECHO_N "checking for compiler warning options..." >> config.log
 MK_CACHED="No"
@@ -1538,13 +1557,23 @@ echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
-$ECHO_N "checking for a usable C++ compiler..."
-$ECHO_N "checking for a usable C++ compiler..." >> config.log
+if [ "${HAVE_CC}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires cc installed on your system."
+echo "* This software requires cc installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
+$ECHO_N "checking for a C++ compiler..."
+$ECHO_N "checking for a C++ compiler..." >> config.log
 if [ "$CXX" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
-		if [ -x "${i}/c++" ]; then
-			if [ -f "${i}/c++" ]; then
-				CXX="${i}/c++"
+		if [ -x "${i}/cxx" ]; then
+			if [ -f "${i}/cxx" ]; then
+				CXX="${i}/cxx"
 				break
 			fi
 		elif [ -x "${i}/gcc" ]; then
@@ -1555,48 +1584,84 @@ if [ "$CXX" = "" ]; then
 		fi
 	done
 	if [ "$CXX" = "" ]; then
-		echo "Could not find a C++ compiler, try setting CXX."
-		echo "CXX is unset and c++/gcc is not in PATH." >> config.log
-		exit 1
+		echo "*"
+		echo "* Unable to find a standard C++ compiler in PATH. You may need"
+		echo "* to set the CXX environment variable."
+		echo "*"
+		echo "Unable to find a C compiler in PATH." >> config.log
+		HAVE_CXX="no"
+		echo "no"
+	else
+		HAVE_CXX="yes"
+		echo "yes, ${CXX}"
+		echo "yes, ${CXX}" >> config.log
 	fi
+else
+	echo "using ${CXX}"
 fi
 
-cat << 'EOT' > cxx-test.c
-int
-main(int argc, char *argv[])
-{
-	return (0);
-}
+if [ "${HAVE_CXX}" = "yes" ]; then
+	$ECHO_N "checking whether the C++ compiler works..."
+	$ECHO_N "checking whether the C++ compiler works..." >> config.log
+	cat << 'EOT' > conftest.cc
+#include <iostream>
+int main(void) { std::cout << "Hello world!" << std::endl; return 0; }
 EOT
+	$CXX -o conftest conftest.cc -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no, the test failed to compile"
+	    echo "no, the test failed to compile" >> config.log
+		HAVE_CXX="no"
+	else
+		echo "yes"
+		echo "yes" >> config.log
+		HAVE_CXX="yes"
+	fi
 
-$CXX -o cxx-test cxx-test.c 2>>config.log
-if [ $? != 0 ]; then
-    echo "no"
-	echo "The test C++ program failed to compile."
-	rm -f cxx-test cxx-test.c
-    exit 1
+	if [ "${EXECSUFFIX}" = "" ]; then
+		EXECSUFFIX=""
+		for OUTFILE in conftest.exe conftest conftest.*; do
+			if [ -f $OUTFILE ]; then
+				case $OUTFILE in
+				*.c | *.cc | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					;;
+				*.* )
+					EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+					break ;;
+				* )
+					break ;;
+				esac;
+		    fi
+		done
+		if [ "$EXECSUFFIX" != "" ]; then
+			echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+		fi
+		echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
+		echo "#ifndef EXECSUFFIX" > config/execsuffix.h
+		echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
+		echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
+	fi
+	rm -f conftest.cc conftest$EXECSUFFIX
+	TEST_CXXFLAGS=""
 fi
-echo "yes"
-rm -f cxx-test cxx-test.c
-TEST_CXXFLAGS=""
-$ECHO_N "checking for c++ compiler warnings..."
-$ECHO_N "checking for c++ compiler warnings..." >> config.log
+$ECHO_N "checking for c++ compiler warning options..."
+$ECHO_N "checking for c++ compiler warning options..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_WARNINGS" ]; then
-		CXX_HAVE_WARNINGS=`cat ${cache}/cxxtest-CXX_HAVE_WARNINGS`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_WARNINGS`
+	if [ -e "${cache}/cxxtest-HAVE_CXX_WARNINGS" ]; then
+		HAVE_CXX_WARNINGS=`cat ${cache}/cxxtest-HAVE_CXX_WARNINGS`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_CXX_WARNINGS`
 		MK_CACHED="Yes"
 	fi
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.cpp
-int main(int argc, char *argv[]) { return (0); }
+int main(void) { return (0); }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp " >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp  2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1605,38 +1670,141 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_WARNINGS="yes"
-echo "CXX_HAVE_WARNINGS=$CXX_HAVE_WARNINGS" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
-echo "#ifndef CXX_HAVE_WARNINGS" > config/cxx_have_warnings.h
-echo "#define CXX_HAVE_WARNINGS \"$CXX_HAVE_WARNINGS\"" >> config/cxx_have_warnings.h
-echo "#endif" >> config/cxx_have_warnings.h
-echo "hdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
+HAVE_CXX_WARNINGS="yes"
+echo "HAVE_CXX_WARNINGS=$HAVE_CXX_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_CXX_WARNINGS\"] = \"$HAVE_CXX_WARNINGS\"" >>configure.lua
+echo "#ifndef HAVE_CXX_WARNINGS" > config/have_cxx_warnings.h
+echo "#define HAVE_CXX_WARNINGS \"$HAVE_CXX_WARNINGS\"" >> config/have_cxx_warnings.h
+echo "#endif" >> config/have_cxx_warnings.h
+echo "hdefs[\"HAVE_CXX_WARNINGS\"] = \"$HAVE_CXX_WARNINGS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_WARNINGS="no"
-echo "CXX_HAVE_WARNINGS=$CXX_HAVE_WARNINGS" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
-echo "#undef CXX_HAVE_WARNINGS" >config/cxx_have_warnings.h
-echo "hdefs[\"CXX_HAVE_WARNINGS\"] = nil" >>configure.lua
+HAVE_CXX_WARNINGS="no"
+echo "HAVE_CXX_WARNINGS=$HAVE_CXX_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_CXX_WARNINGS\"] = \"$HAVE_CXX_WARNINGS\"" >>configure.lua
+echo "#undef HAVE_CXX_WARNINGS" >config/have_cxx_warnings.h
+echo "hdefs[\"HAVE_CXX_WARNINGS\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_WARNINGS" > ${cache}/cxxtest-CXX_HAVE_WARNINGS
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_WARNINGS
+	echo "$HAVE_CXX_WARNINGS" > ${cache}/cxxtest-HAVE_CXX_WARNINGS
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_CXX_WARNINGS
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-if [ "${CXX_HAVE_WARNINGS}" = "yes" ]; then
+if [ "${HAVE_CXX_WARNINGS}" = "yes" ]; then
 TEST_CXXFLAGS="-Wall -Werror"
 fi;
-$ECHO_N "checking for __bounded__ attribute in c++..."
-$ECHO_N "checking for __bounded__ attribute in c++..." >> config.log
+$ECHO_N "checking for gcc..."
+$ECHO_N "checking for gcc..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_BOUNDED_ATTRIBUTE" ]; then
-		CXX_HAVE_BOUNDED_ATTRIBUTE=`cat ${cache}/cxxtest-CXX_HAVE_BOUNDED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_BOUNDED_ATTRIBUTE`
+	if [ -e "${cache}/cxxtest-HAVE_GCC" ]; then
+		HAVE_GCC=`cat ${cache}/cxxtest-HAVE_GCC`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_GCC`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+int main(void) {
+#if !defined(__GNUC__)
+# error "Not GCC"
+#endif
+	return (0);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GCC="yes"
+echo "HAVE_GCC=$HAVE_GCC" >>Makefile.config
+echo "mdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
+echo "#ifndef HAVE_GCC" > config/have_gcc.h
+echo "#define HAVE_GCC \"$HAVE_GCC\"" >> config/have_gcc.h
+echo "#endif" >> config/have_gcc.h
+echo "hdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GCC="no"
+echo "HAVE_GCC=$HAVE_GCC" >>Makefile.config
+echo "mdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
+echo "#undef HAVE_GCC" >config/have_gcc.h
+echo "hdefs[\"HAVE_GCC\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GCC" > ${cache}/cxxtest-HAVE_GCC
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_GCC
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking aligned attribute in c++..."
+$ECHO_N "checking aligned attribute in c++..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_ALIGNED_ATTRIBUTE" ]; then
+		HAVE_ALIGNED_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_ALIGNED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_ALIGNED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+int main(void)
+{
+	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
+	return (0);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="yes"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> config/have_aligned_attribute.h
+echo "#endif" >> config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="no"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_ALIGNED_ATTRIBUTE" >config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALIGNED_ATTRIBUTE" > ${cache}/cxxtest-HAVE_ALIGNED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_ALIGNED_ATTRIBUTE
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking bounded attribute in c++..."
+$ECHO_N "checking bounded attribute in c++..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_BOUNDED_ATTRIBUTE" ]; then
+		HAVE_BOUNDED_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_BOUNDED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_BOUNDED_ATTRIBUTE`
 		MK_CACHED="Yes"
 	fi
 fi
@@ -1644,7 +1812,7 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.cpp
 void foo(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
 void foo(char *a, int c) { }
-int main(int argc, char *argv[])
+int main(void)
 {
 	char buf[32];
 	foo(buf, sizeof(buf));
@@ -1652,8 +1820,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp " >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp  2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1662,35 +1830,142 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_BOUNDED_ATTRIBUTE="yes"
-echo "CXX_HAVE_BOUNDED_ATTRIBUTE=$CXX_HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
-echo "#ifndef CXX_HAVE_BOUNDED_ATTRIBUTE" > config/cxx_have_bounded_attribute.h
-echo "#define CXX_HAVE_BOUNDED_ATTRIBUTE \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >> config/cxx_have_bounded_attribute.h
-echo "#endif" >> config/cxx_have_bounded_attribute.h
-echo "hdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+HAVE_BOUNDED_ATTRIBUTE="yes"
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> config/have_bounded_attribute.h
+echo "#endif" >> config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_BOUNDED_ATTRIBUTE="no"
-echo "CXX_HAVE_BOUNDED_ATTRIBUTE=$CXX_HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
-echo "#undef CXX_HAVE_BOUNDED_ATTRIBUTE" >config/cxx_have_bounded_attribute.h
-echo "hdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
+HAVE_BOUNDED_ATTRIBUTE="no"
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_BOUNDED_ATTRIBUTE" >config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_BOUNDED_ATTRIBUTE" > ${cache}/cxxtest-CXX_HAVE_BOUNDED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_BOUNDED_ATTRIBUTE
+	echo "$HAVE_BOUNDED_ATTRIBUTE" > ${cache}/cxxtest-HAVE_BOUNDED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_BOUNDED_ATTRIBUTE
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for __format__ attribute in c++..."
-$ECHO_N "checking for __format__ attribute in c++..." >> config.log
+$ECHO_N "checking const attribute in c++..."
+$ECHO_N "checking const attribute in c++..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_FORMAT_ATTRIBUTE" ]; then
-		CXX_HAVE_FORMAT_ATTRIBUTE=`cat ${cache}/cxxtest-CXX_HAVE_FORMAT_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_FORMAT_ATTRIBUTE`
+	if [ -e "${cache}/cxxtest-HAVE_CONST_ATTRIBUTE" ]; then
+		HAVE_CONST_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_CONST_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_CONST_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+int foo(int) __attribute__ ((const));
+int foo(int x) { return (x*x); }
+int main(void)
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CONST_ATTRIBUTE="yes"
+echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_CONST_ATTRIBUTE" > config/have_const_attribute.h
+echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> config/have_const_attribute.h
+echo "#endif" >> config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CONST_ATTRIBUTE="no"
+echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_CONST_ATTRIBUTE" >config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CONST_ATTRIBUTE" > ${cache}/cxxtest-HAVE_CONST_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_CONST_ATTRIBUTE
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking deprecated attribute in c++..."
+$ECHO_N "checking deprecated attribute in c++..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_DEPRECATED_ATTRIBUTE" ]; then
+		HAVE_DEPRECATED_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_DEPRECATED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_DEPRECATED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+void foo(void) __attribute__ ((deprecated));
+void foo(void) { }
+
+int main(void)
+{
+/*	foo(); */
+	return (0);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_DEPRECATED_ATTRIBUTE="yes"
+echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_DEPRECATED_ATTRIBUTE" > config/have_deprecated_attribute.h
+echo "#define HAVE_DEPRECATED_ATTRIBUTE \"$HAVE_DEPRECATED_ATTRIBUTE\"" >> config/have_deprecated_attribute.h
+echo "#endif" >> config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_DEPRECATED_ATTRIBUTE="no"
+echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_DEPRECATED_ATTRIBUTE" >config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DEPRECATED_ATTRIBUTE" > ${cache}/cxxtest-HAVE_DEPRECATED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_DEPRECATED_ATTRIBUTE
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking format attribute in c++..."
+$ECHO_N "checking format attribute in c++..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_FORMAT_ATTRIBUTE" ]; then
+		HAVE_FORMAT_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_FORMAT_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_FORMAT_ATTRIBUTE`
 		MK_CACHED="Yes"
 	fi
 fi
@@ -1704,7 +1979,7 @@ void foo2(char *, ...)
      __attribute__((__nonnull__ (1)));
 void foo1(char *a, ...) {}
 void foo2(char *a, ...) {}
-int main(int argc, char *argv[])
+int main(void)
 {
 	foo1("foo %s", "bar");
 	foo2("foo %d", 1);
@@ -1712,8 +1987,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp " >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp  2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1722,35 +1997,35 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_FORMAT_ATTRIBUTE="yes"
-echo "CXX_HAVE_FORMAT_ATTRIBUTE=$CXX_HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
-echo "#ifndef CXX_HAVE_FORMAT_ATTRIBUTE" > config/cxx_have_format_attribute.h
-echo "#define CXX_HAVE_FORMAT_ATTRIBUTE \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >> config/cxx_have_format_attribute.h
-echo "#endif" >> config/cxx_have_format_attribute.h
-echo "hdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+HAVE_FORMAT_ATTRIBUTE="yes"
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> config/have_format_attribute.h
+echo "#endif" >> config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_FORMAT_ATTRIBUTE="no"
-echo "CXX_HAVE_FORMAT_ATTRIBUTE=$CXX_HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
-echo "#undef CXX_HAVE_FORMAT_ATTRIBUTE" >config/cxx_have_format_attribute.h
-echo "hdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
+HAVE_FORMAT_ATTRIBUTE="no"
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_FORMAT_ATTRIBUTE" >config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_FORMAT_ATTRIBUTE" > ${cache}/cxxtest-CXX_HAVE_FORMAT_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_FORMAT_ATTRIBUTE
+	echo "$HAVE_FORMAT_ATTRIBUTE" > ${cache}/cxxtest-HAVE_FORMAT_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_FORMAT_ATTRIBUTE
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for __nonnull__ attribute in c++..."
-$ECHO_N "checking for __nonnull__ attribute in c++..." >> config.log
+$ECHO_N "checking nonnull attribute in c++..."
+$ECHO_N "checking nonnull attribute in c++..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_NONNULL_ATTRIBUTE" ]; then
-		CXX_HAVE_NONNULL_ATTRIBUTE=`cat ${cache}/cxxtest-CXX_HAVE_NONNULL_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_NONNULL_ATTRIBUTE`
+	if [ -e "${cache}/cxxtest-HAVE_NONNULL_ATTRIBUTE" ]; then
+		HAVE_NONNULL_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_NONNULL_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_NONNULL_ATTRIBUTE`
 		MK_CACHED="Yes"
 	fi
 fi
@@ -1758,15 +2033,15 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.cpp
 void foo(char *) __attribute__((__nonnull__ (1)));
 void foo(char *a) { }
-int main(int argc, char *argv[])
+int main(void)
 {
 	foo("foo");
 	return (0);
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp" >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp 2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1775,49 +2050,52 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_NONNULL_ATTRIBUTE="yes"
-echo "CXX_HAVE_NONNULL_ATTRIBUTE=$CXX_HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_NONNULL_ATTRIBUTE\"] = \"$CXX_HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
-echo "#ifndef CXX_HAVE_NONNULL_ATTRIBUTE" > config/cxx_have_nonnull_attribute.h
-echo "#define CXX_HAVE_NONNULL_ATTRIBUTE \"$CXX_HAVE_NONNULL_ATTRIBUTE\"" >> config/cxx_have_nonnull_attribute.h
-echo "#endif" >> config/cxx_have_nonnull_attribute.h
-echo "hdefs[\"CXX_HAVE_NONNULL_ATTRIBUTE\"] = \"$CXX_HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+HAVE_NONNULL_ATTRIBUTE="yes"
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> config/have_nonnull_attribute.h
+echo "#endif" >> config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_NONNULL_ATTRIBUTE="no"
-echo "CXX_HAVE_NONNULL_ATTRIBUTE=$CXX_HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_NONNULL_ATTRIBUTE\"] = \"$CXX_HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
-echo "#undef CXX_HAVE_NONNULL_ATTRIBUTE" >config/cxx_have_nonnull_attribute.h
-echo "hdefs[\"CXX_HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
+HAVE_NONNULL_ATTRIBUTE="no"
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_NONNULL_ATTRIBUTE" >config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_NONNULL_ATTRIBUTE" > ${cache}/cxxtest-CXX_HAVE_NONNULL_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_NONNULL_ATTRIBUTE
+	echo "$HAVE_NONNULL_ATTRIBUTE" > ${cache}/cxxtest-HAVE_NONNULL_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_NONNULL_ATTRIBUTE
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for __aligned__ attribute in c++..."
-$ECHO_N "checking for __aligned__ attribute in c++..." >> config.log
+$ECHO_N "checking noreturn attribute in c++..."
+$ECHO_N "checking noreturn attribute in c++..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_ALIGNED_ATTRIBUTE" ]; then
-		CXX_HAVE_ALIGNED_ATTRIBUTE=`cat ${cache}/cxxtest-CXX_HAVE_ALIGNED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_ALIGNED_ATTRIBUTE`
+	if [ -e "${cache}/cxxtest-HAVE_NORETURN_ATTRIBUTE" ]; then
+		HAVE_NORETURN_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_NORETURN_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_NORETURN_ATTRIBUTE`
 		MK_CACHED="Yes"
 	fi
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.cpp
-int main(int argc, char *argv[])
+#include <unistd.h>
+#include <stdlib.h>
+void foo(void) __attribute__ ((noreturn));
+void foo(void) { _exit(0); }
+int main(void)
 {
-	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
-	return (0);
+	foo();
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp" >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp 2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1826,49 +2104,49 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_ALIGNED_ATTRIBUTE="yes"
-echo "CXX_HAVE_ALIGNED_ATTRIBUTE=$CXX_HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_ALIGNED_ATTRIBUTE\"] = \"$CXX_HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
-echo "#ifndef CXX_HAVE_ALIGNED_ATTRIBUTE" > config/cxx_have_aligned_attribute.h
-echo "#define CXX_HAVE_ALIGNED_ATTRIBUTE \"$CXX_HAVE_ALIGNED_ATTRIBUTE\"" >> config/cxx_have_aligned_attribute.h
-echo "#endif" >> config/cxx_have_aligned_attribute.h
-echo "hdefs[\"CXX_HAVE_ALIGNED_ATTRIBUTE\"] = \"$CXX_HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+HAVE_NORETURN_ATTRIBUTE="yes"
+echo "HAVE_NORETURN_ATTRIBUTE=$HAVE_NORETURN_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_NORETURN_ATTRIBUTE" > config/have_noreturn_attribute.h
+echo "#define HAVE_NORETURN_ATTRIBUTE \"$HAVE_NORETURN_ATTRIBUTE\"" >> config/have_noreturn_attribute.h
+echo "#endif" >> config/have_noreturn_attribute.h
+echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_ALIGNED_ATTRIBUTE="no"
-echo "CXX_HAVE_ALIGNED_ATTRIBUTE=$CXX_HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_ALIGNED_ATTRIBUTE\"] = \"$CXX_HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
-echo "#undef CXX_HAVE_ALIGNED_ATTRIBUTE" >config/cxx_have_aligned_attribute.h
-echo "hdefs[\"CXX_HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
+HAVE_NORETURN_ATTRIBUTE="no"
+echo "HAVE_NORETURN_ATTRIBUTE=$HAVE_NORETURN_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_NORETURN_ATTRIBUTE" >config/have_noreturn_attribute.h
+echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_ALIGNED_ATTRIBUTE" > ${cache}/cxxtest-CXX_HAVE_ALIGNED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_ALIGNED_ATTRIBUTE
+	echo "$HAVE_NORETURN_ATTRIBUTE" > ${cache}/cxxtest-HAVE_NORETURN_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_NORETURN_ATTRIBUTE
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for __packed__ attribute in c++..."
-$ECHO_N "checking for __packed__ attribute in c++..." >> config.log
+$ECHO_N "checking packed attribute in c++..."
+$ECHO_N "checking packed attribute in c++..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_PACKED_ATTRIBUTE" ]; then
-		CXX_HAVE_PACKED_ATTRIBUTE=`cat ${cache}/cxxtest-CXX_HAVE_PACKED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_PACKED_ATTRIBUTE`
+	if [ -e "${cache}/cxxtest-HAVE_PACKED_ATTRIBUTE" ]; then
+		HAVE_PACKED_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_PACKED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_PACKED_ATTRIBUTE`
 		MK_CACHED="Yes"
 	fi
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.cpp
-int main(int argc, char *argv[])
+int main(void)
 {
 	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
 	return (0);
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp" >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp 2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS -Wall -Werror -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1877,35 +2155,242 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_PACKED_ATTRIBUTE="yes"
-echo "CXX_HAVE_PACKED_ATTRIBUTE=$CXX_HAVE_PACKED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_PACKED_ATTRIBUTE\"] = \"$CXX_HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
-echo "#ifndef CXX_HAVE_PACKED_ATTRIBUTE" > config/cxx_have_packed_attribute.h
-echo "#define CXX_HAVE_PACKED_ATTRIBUTE \"$CXX_HAVE_PACKED_ATTRIBUTE\"" >> config/cxx_have_packed_attribute.h
-echo "#endif" >> config/cxx_have_packed_attribute.h
-echo "hdefs[\"CXX_HAVE_PACKED_ATTRIBUTE\"] = \"$CXX_HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+HAVE_PACKED_ATTRIBUTE="yes"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> config/have_packed_attribute.h
+echo "#endif" >> config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_PACKED_ATTRIBUTE="no"
-echo "CXX_HAVE_PACKED_ATTRIBUTE=$CXX_HAVE_PACKED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_PACKED_ATTRIBUTE\"] = \"$CXX_HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
-echo "#undef CXX_HAVE_PACKED_ATTRIBUTE" >config/cxx_have_packed_attribute.h
-echo "hdefs[\"CXX_HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
+HAVE_PACKED_ATTRIBUTE="no"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_PACKED_ATTRIBUTE" >config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_PACKED_ATTRIBUTE" > ${cache}/cxxtest-CXX_HAVE_PACKED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_PACKED_ATTRIBUTE
+	echo "$HAVE_PACKED_ATTRIBUTE" > ${cache}/cxxtest-HAVE_PACKED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_PACKED_ATTRIBUTE
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for cygwin environment in c++..."
-$ECHO_N "checking for cygwin environment in c++..." >> config.log
+$ECHO_N "checking pure attribute in c++..."
+$ECHO_N "checking pure attribute in c++..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/cxxtest-CXX_HAVE_CYGWIN" ]; then
-		CXX_HAVE_CYGWIN=`cat ${cache}/cxxtest-CXX_HAVE_CYGWIN`
-		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-CXX_HAVE_CYGWIN`
+	if [ -e "${cache}/cxxtest-HAVE_PURE_ATTRIBUTE" ]; then
+		HAVE_PURE_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_PURE_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_PURE_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+int foo(int) __attribute__ ((pure));
+int foo(int x) { return (x*x); }
+int main(void)
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PURE_ATTRIBUTE="yes"
+echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_PURE_ATTRIBUTE" > config/have_pure_attribute.h
+echo "#define HAVE_PURE_ATTRIBUTE \"$HAVE_PURE_ATTRIBUTE\"" >> config/have_pure_attribute.h
+echo "#endif" >> config/have_pure_attribute.h
+echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PURE_ATTRIBUTE="no"
+echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_PURE_ATTRIBUTE" >config/have_pure_attribute.h
+echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PURE_ATTRIBUTE" > ${cache}/cxxtest-HAVE_PURE_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_PURE_ATTRIBUTE
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking warn_unused_result attribute in c++..."
+$ECHO_N "checking warn_unused_result attribute in c++..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" ]; then
+		HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=`cat ${cache}/cxxtest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.cpp
+int foo(void) __attribute__ ((warn_unused_result));
+int foo(void) { return (1); }
+int main(void)
+{
+	int rv = foo();
+	return (rv);
+}
+
+EOT
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS  -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="yes"
+echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > config/have_warn_unused_result_attribute.h
+echo "#define HAVE_WARN_UNUSED_RESULT_ATTRIBUTE \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >> config/have_warn_unused_result_attribute.h
+echo "#endif" >> config/have_warn_unused_result_attribute.h
+echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="no"
+echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >config/have_warn_unused_result_attribute.h
+echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > ${cache}/cxxtest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
+fi
+rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for long double..."
+$ECHO_N "checking for long double..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_LONG_DOUBLE" ]; then
+		HAVE_LONG_DOUBLE=`cat ${cache}/ctest-HAVE_LONG_DOUBLE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_LONG_DOUBLE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int
+main(void)
+{
+	long double ld = 0.1;
+
+	ld = 0;
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_LONG_DOUBLE="yes"
+echo "#ifndef HAVE_LONG_DOUBLE" > config/have_long_double.h
+echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >> config/have_long_double.h
+echo "#endif" >> config/have_long_double.h
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_LONG_DOUBLE="no"
+echo "#undef HAVE_LONG_DOUBLE" >config/have_long_double.h
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_LONG_DOUBLE" > ${cache}/ctest-HAVE_LONG_DOUBLE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_DOUBLE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for long long..."
+$ECHO_N "checking for long long..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_LONG_LONG" ]; then
+		HAVE_LONG_LONG=`cat ${cache}/ctest-HAVE_LONG_LONG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_LONG_LONG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int
+main(void)
+{
+	long long ll = 0.0;
+	unsigned long long ull = 0.0;
+	ll = 1.0;
+	ull = 1.0;
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_LONG_LONG="yes"
+echo "#ifndef HAVE_LONG_LONG" > config/have_long_long.h
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >> config/have_long_long.h
+echo "#endif" >> config/have_long_long.h
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_LONG_LONG="no"
+echo "#undef HAVE_LONG_LONG" >config/have_long_long.h
+echo "hdefs[\"HAVE_LONG_LONG\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_LONG_LONG" > ${cache}/ctest-HAVE_LONG_LONG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_LONG
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for cygwin environment..."
+$ECHO_N "checking for cygwin environment..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/cxxtest-HAVE_CYGWIN" ]; then
+		HAVE_CYGWIN=`cat ${cache}/cxxtest-HAVE_CYGWIN`
+		MK_COMPILE_STATUS=`cat ${cache}/cxxtest-status-HAVE_CYGWIN`
 		MK_CACHED="Yes"
 	fi
 fi
@@ -1916,7 +2401,7 @@ if [ "${MK_CACHED}" = "No" ]; then
 #include <windows.h>
 
 int
-main(int argc, char *argv[]) {
+main(void) {
 	struct stat sb;
 	DWORD rv;
 	rv = GetFileAttributes("foo");
@@ -1925,8 +2410,8 @@ main(int argc, char *argv[]) {
 }
 
 EOT
-	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -mcygwin -o $testdir/conftest conftest.cpp" >>config.log
-	$CXX $CXXFLAGS $TEST_CXXFLAGS -mcygwin -o $testdir/conftest conftest.cpp 2>>config.log
+	echo "$CXX $CXXFLAGS $TEST_CXXFLAGS -mcygwin -o $testdir/conftest conftest.cpp -lstdc++" >>config.log
+	$CXX $CXXFLAGS $TEST_CXXFLAGS -mcygwin -o $testdir/conftest conftest.cpp -lstdc++ 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -1935,33 +2420,55 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-CXX_HAVE_CYGWIN="yes"
-echo "CXX_HAVE_CYGWIN=$CXX_HAVE_CYGWIN" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_CYGWIN\"] = \"$CXX_HAVE_CYGWIN\"" >>configure.lua
-echo "#ifndef CXX_HAVE_CYGWIN" > config/cxx_have_cygwin.h
-echo "#define CXX_HAVE_CYGWIN \"$CXX_HAVE_CYGWIN\"" >> config/cxx_have_cygwin.h
-echo "#endif" >> config/cxx_have_cygwin.h
-echo "hdefs[\"CXX_HAVE_CYGWIN\"] = \"$CXX_HAVE_CYGWIN\"" >>configure.lua
+HAVE_CYGWIN="yes"
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >> config/have_cygwin.h
+echo "#endif" >> config/have_cygwin.h
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-CXX_HAVE_CYGWIN="no"
-echo "CXX_HAVE_CYGWIN=$CXX_HAVE_CYGWIN" >>Makefile.config
-echo "mdefs[\"CXX_HAVE_CYGWIN\"] = \"$CXX_HAVE_CYGWIN\"" >>configure.lua
-echo "#undef CXX_HAVE_CYGWIN" >config/cxx_have_cygwin.h
-echo "hdefs[\"CXX_HAVE_CYGWIN\"] = nil" >>configure.lua
+HAVE_CYGWIN="no"
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "#undef HAVE_CYGWIN" >config/have_cygwin.h
+echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
 if [ "${cache}" != "" ]; then
-	echo "$CXX_HAVE_CYGWIN" > ${cache}/cxxtest-CXX_HAVE_CYGWIN
-	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_CYGWIN
+	echo "$HAVE_CYGWIN" > ${cache}/cxxtest-HAVE_CYGWIN
+	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-HAVE_CYGWIN
 fi
 rm -f conftest.cpp $testdir/conftest$EXECSUFFIX
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
+		echo "*"
+		echo "* NOTE: Disabling Cygwin compatibility layer."
+		echo "* (Resulting binaries will not depend on Cygwin)"
+		echo "*"
 		CXXFLAGS="$CXXFLAGS -mno-cygwin"
-		echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+	else
+		echo "*"
+		echo "* NOTE: Enabling Cygwin compatibility layer."
+		echo "* (Resulting binaries will depend on Cygwin)"
+		echo "*"
 	fi
 fi
+echo "CXX=$CXX" >>Makefile.config
+echo "mdefs[\"CXX\"] = \"$CXX\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
+if [ "${HAVE_CXX}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires cxx installed on your system."
+echo "* This software requires cxx installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
 $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
@@ -2892,8 +3399,8 @@ fi
 	;;
 esac
 if [ "${SDL_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${SDL_VERSION}"
+echo "yes, found ${SDL_VERSION}" >> config.log
 $ECHO_N "checking whether SDL works..."
 $ECHO_N "checking whether SDL works..." >> config.log
 MK_CACHED="No"
@@ -3404,8 +3911,8 @@ if [ -d /usr/freeware/include ]; then
 FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
 fi;
 if [ "${FREETYPE_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${FREETYPE_VERSION}"
+echo "yes, found ${FREETYPE_VERSION}" >> config.log
 $ECHO_N "checking whether FreeType works..."
 $ECHO_N "checking whether FreeType works..." >> config.log
 MK_CACHED="No"
@@ -3527,8 +4034,31 @@ if [ "${MK_CACHED}" = "No" ]; then
 	fi
 fi
 if [ "${AGAR_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${AGAR_VERSION}"
+echo "yes, found ${AGAR_VERSION}" >> config.log
+MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 4 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 4 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 1 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
 if [ "${cache}" != "" ]; then
@@ -3657,14 +4187,25 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_AGAR}" != "yes" ]
- then
-	echo "This demo requires Agar installed on your system."
-	exit 1
-fi
-if [ "${enable_static}" = "yes" ]
- then
-LDFLAGS="-static"
-echo "LDFLAGS=$LDFLAGS" >>Makefile.config
-echo "mdefs[\"LDFLAGS\"] = \"$LDFLAGS\"" >>configure.lua
-fi
+if [ "${HAVE_AGAR}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar installed on your system."
+echo "* This software requires agar installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar version >= 1.4.1,"
+echo "* This software requires agar version >= 1.4.1," >> config.log
+echo "* please upgrade and try again."
+echo "* please upgrade and try again." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;

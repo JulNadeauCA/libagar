@@ -33,7 +33,6 @@ sub Scan ($$)
 			next;
 		}
 		if ($ent =~ /\.h$/) {
-			print $outfile,"\n";
 			my @o = readpipe("perl mk/gen-declspecs.pl '$file'");
 			if ($? != 0) {
 				print STDERR "gen-declspecs.pl failed\n";
