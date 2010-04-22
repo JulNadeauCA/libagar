@@ -1,38 +1,15 @@
-# $Csoft: configure.in,v 1.1.1.1 2005/03/25 02:29:22 vedge Exp $
 # Public domain
 
-REGISTER("--enable-warnings",	"Enable compiler warnings [default: no]")
+CONFIG_GUESS("../../mk/config.guess")
 
-HDEFINE(VERSION, "1.1-beta")
-HDEFINE(RELEASE, "Source of Agony")
+VERSION("1.1")
 
-CHECK(cc)
-REQUIRE(agar, 1.3.3)
+REQUIRE(cc)
+REQUIRE(agar, 1.4.1)
 REQUIRE(agar-dev)
-REQUIRE(agar-network)
 CHECK(gethostname)
 
-if [ "${HAVE_AGAR}" != "yes" ]; then
-	echo "This program requires Agar (http://agar.csoft.org/)"
-	exit 1
-fi
-# XXX check for server mode
-if [ "${AGAR_HAVE_NETWORK}" != "yes" ]; then
-	echo "This application requires network support in Agar."
-	echo "Please recompile Agar with the --enable-network."
-	exit 1
-fi
-if [ "${HAVE_AGAR_DEV}" != "yes" ]; then
-	echo "This program requires Agar-DEV"
-	exit 1
-fi
-
 C_INCDIR($SRC)
-
-if [ "${enable_warnings}" = "yes" ]; then
-	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
-	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
-fi
 
 echo "*"
 echo "* Configuration successful."
