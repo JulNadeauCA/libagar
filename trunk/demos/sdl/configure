@@ -149,16 +149,6 @@ do
 	    ;;
 	esac
 done
-
-if [ "${srcdir}" != "" ]; then
-	host=`sh ${srcdir}/mk/config.guess`
-else
-	host=`sh mk/config.guess`
-fi
-if [ $? != 0 ]; then
-	echo "config.guess failed"
-	exit 1
-fi
 if [ -e "/bin/echo" ]; then
     /bin/echo -n ""
     if [ $? = 0 ]; then
@@ -380,6 +370,15 @@ if [ "${show_version}" = "yes" ]; then
 echo "BSDBuild 2.8-beta"
 exit 0
 fi;
+if [ "${srcdir}" != "" ]; then
+	host=`sh ${srcdir}/../../mk/config.guess`
+else
+	host=`sh ../../mk/config.guess`
+fi
+if [ $? != 0 ]; then
+	echo "../../mk/config.guess failed"
+	exit 1
+fi
 echo "BSDBuild 2.8-beta (host: $host)"
 
 if [ -e "Makefile.config" ]; then
