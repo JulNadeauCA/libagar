@@ -3233,60 +3233,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for OpenGL support in Agar..."
-$ECHO_N "checking for OpenGL support in Agar..." >> config.log
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-MK_EXEC_UNIQUE="No"
-MK_EXEC_FOUND_PATH=""
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_HAVE_OPENGL" ]; then
-		AGAR_HAVE_OPENGL=`cat ${cache}/exec-AGAR_HAVE_OPENGL`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_HAVE_OPENGL`
-		MK_EXEC_FOUND_PATH=`cat ${cache}/exec-found-path-AGAR_HAVE_OPENGL`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_HAVE_OPENGL=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
-				if [ "$MK_EXEC_FOUND" = "Yes" ]; then
-					echo "yes."
-					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
-					break
-				fi
-				AGAR_HAVE_OPENGL=`${path}/agar-config --opengl`
-				MK_EXEC_FOUND="Yes"
-				MK_EXEC_FOUND_PATH="${path}/agar-config"
-			fi
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_HAVE_OPENGL" > ${cache}/exec-AGAR_HAVE_OPENGL
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_HAVE_OPENGL
-		echo $MK_EXEC_FOUND_PATH > ${cache}/exec-found-path-AGAR_HAVE_OPENGL
-	fi
-fi
-if [ "${AGAR_HAVE_OPENGL}" = "yes" ]; then
-echo "yes"
-echo "yes" >> config.log
-echo "AGAR_HAVE_OPENGL=$AGAR_HAVE_OPENGL" >>Makefile.config
-echo "mdefs[\"AGAR_HAVE_OPENGL\"] = \"$AGAR_HAVE_OPENGL\"" >>configure.lua
-echo "#ifndef AGAR_HAVE_OPENGL" > config/agar_have_opengl.h
-echo "#define AGAR_HAVE_OPENGL \"$AGAR_HAVE_OPENGL\"" >> config/agar_have_opengl.h
-echo "#endif" >> config/agar_have_opengl.h
-echo "hdefs[\"AGAR_HAVE_OPENGL\"] = \"$AGAR_HAVE_OPENGL\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-echo "AGAR_HAVE_OPENGL=$AGAR_HAVE_OPENGL" >>Makefile.config
-echo "mdefs[\"AGAR_HAVE_OPENGL\"] = \"$AGAR_HAVE_OPENGL\"" >>configure.lua
-echo "#undef AGAR_HAVE_OPENGL" >config/agar_have_opengl.h
-echo "hdefs[\"AGAR_HAVE_OPENGL\"] = nil" >>configure.lua
-fi;
 $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"
@@ -3365,18 +3311,6 @@ if [ "${HAVE_AGAR}" != "yes" ]
  then
 	echo "This demo requires Agar installed on your system."
 	exit 1
-fi
-if [ "${AGAR_HAVE_OPENGL}" != "yes" ]
- then
-	echo "*"
-	echo "* OpenGL support in Agar was disabled at compile time."
-	echo "*"
-	echo "* Agar must have been compiled with OpenGL support for"
-	echo "* this demo to work. Use the configure option --with-gl"
-	echo "* when compiling Agar to make sure this is the case."
-	echo "*"
-	echo "* This demo will be compiled as a no-op"
-	echo "*"
 fi
 if [ "${enable_static}" = "yes" ]
  then

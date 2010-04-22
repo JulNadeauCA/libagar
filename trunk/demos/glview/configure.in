@@ -10,25 +10,12 @@ CHECK(sdl)
 CHECK(opengl, 1.0)
 CHECK(freetype)
 CHECK(agar, 1.4.0)
-CHECK(agar-opengl)
 CHECK(math)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
 	echo "This demo requires Agar installed on your system."
 	exit 1
 fi
-if [ "${AGAR_HAVE_OPENGL}" != "yes" ]; then
-	echo "*"
-	echo "* OpenGL support in Agar was disabled at compile time."
-	echo "*"
-	echo "* Agar must have been compiled with OpenGL support for"
-	echo "* this demo to work. Use the configure option --with-gl"
-	echo "* when compiling Agar to make sure this is the case."
-	echo "*"
-	echo "* This demo will be compiled as a no-op"
-	echo "*"
-fi
-
 if [ "${enable_static}" = "yes" ]; then
 	MDEFINE(LDFLAGS, "-static")
 fi
