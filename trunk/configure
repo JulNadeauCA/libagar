@@ -633,8 +633,26 @@ echo "#define LOCALSTATEDIR \"$LOCALSTATEDIR\"" >> config/localstatedir.h
 echo "#endif" >> config/localstatedir.h
 echo "hdefs[\"LOCALSTATEDIR\"] = \"$LOCALSTATEDIR\"" >>configure.lua
 PACKAGE="Agar"
+echo "PACKAGE=$PACKAGE" >>Makefile.config
+echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
+echo "#ifndef PACKAGE" > config/package.h
+echo "#define PACKAGE \"$PACKAGE\"" >> config/package.h
+echo "#endif" >> config/package.h
+echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 VERSION="1.4.1-beta"
+echo "VERSION=$VERSION" >>Makefile.config
+echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
+echo "#ifndef VERSION" > config/version.h
+echo "#define VERSION \"$VERSION\"" >> config/version.h
+echo "#endif" >> config/version.h
+echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 RELEASE="Landscapes of Frozen Methane"
+echo "RELEASE=$RELEASE" >>Makefile.config
+echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
+echo "#ifndef RELEASE" > config/release.h
+echo "#define RELEASE \"$RELEASE\"" >> config/release.h
+echo "#endif" >> config/release.h
+echo "hdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 SHAREDIR="\${PREFIX}/share/agar"
 echo "SHAREDIR=$SHAREDIR" >>Makefile.config
 echo "mdefs[\"SHAREDIR\"] = \"$SHAREDIR\"" >>configure.lua
@@ -4970,8 +4988,6 @@ case "$host" in
 powerpc-*-darwin*)
 	OPENGL_CFLAGS=""
 	OPENGL_LIBS="-framework OpenGL"
-    # MacOS X 10.5 nonsense
-	OPENGL_LIBS_CONFIG="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
 	;;
 *-*-cygwin* | *-*-mingw32*)
 $ECHO_N "checking whether -lopengl32 works..."
@@ -5035,12 +5051,10 @@ OPENGL_LIBS="${GL_LIBS} -lopengl32"
 else
 OPENGL_LIBS="${GL_LIBS} -lGL"
 fi;
-    OPENGL_LIBS_CONFIG=""
 	;;
 *)
 	OPENGL_CFLAGS=""
 	OPENGL_LIBS="-lGL"
-	OPENGL_LIBS_CONFIG=""
 	;;
 esac
 $ECHO_N "checking whether OpenGL works..."
@@ -8634,21 +8648,3 @@ echo "* Configuration successful."
 echo "* Use \"make depend\" if you plan on editing the source code."
 echo "* Use \"make\" and \"make install\" to build and install Agar."
 echo "*"
-echo "PACKAGE=$PACKAGE" >>Makefile.config
-echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-echo "VERSION=$VERSION" >>Makefile.config
-echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-echo "RELEASE=$RELEASE" >>Makefile.config
-echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
-echo "#ifndef PACKAGE" > config/package.h
-echo "#define PACKAGE \"$PACKAGE\"" >> config/package.h
-echo "#endif" >> config/package.h
-echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-echo "#ifndef VERSION" > config/version.h
-echo "#define VERSION \"$VERSION\"" >> config/version.h
-echo "#endif" >> config/version.h
-echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-echo "#ifndef RELEASE" > config/release.h
-echo "#define RELEASE \"$RELEASE\"" >> config/release.h
-echo "#endif" >> config/release.h
-echo "hdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
