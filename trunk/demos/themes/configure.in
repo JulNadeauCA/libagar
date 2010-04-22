@@ -2,26 +2,12 @@
 
 CONFIG_GUESS("../../mk/config.guess")
 
-REGISTER("--enable-static",	"Produce a static binary [default: no]")
-
-CHECK(cc)
+REQUIRE(cc)
 CHECK(pthreads)
 CHECK(sdl)
 CHECK(opengl)
 CHECK(freetype)
-CHECK(agar, 1.4.0)
-CHECK(agar-dev, 1.4.0)
 CHECK(getopt)
+REQUIRE(agar, 1.4.1)
+REQUIRE(agar-dev, 1.4.1)
 
-if [ "${HAVE_AGAR}" != "yes" ]; then
-	echo "This demo requires Agar installed on your system."
-	exit 1
-fi
-if [ "${HAVE_AGAR_DEV}" != "yes" ]; then
-	echo "This demo requires Agar-DEV installed on your system."
-	exit 1
-fi
-
-if [ "${enable_static}" = "yes" ]; then
-	MDEFINE(LDFLAGS, "-static")
-fi

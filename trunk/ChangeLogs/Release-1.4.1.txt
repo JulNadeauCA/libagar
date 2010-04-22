@@ -8,6 +8,10 @@ http://wiki.libagar.org/wiki/Agar-1.4.1.
 
 - Fixed compilation with --disable-legacy option.
 - Implemented AG_SurfaceFromPNG() and AG_SurfaceFromJPEG().
+- Fixed crash bug in AG_SurfaceFromSDL(); thanks trapdoor!
 - Added AG_SetJPEGQuality(), to set quality used by AG_SurfaceExportJPEG().
 - Merge --enable-{class,event}debug into --enable-objdebug; remove lockdebug.
+- Upgrade build system to BSDBuild 2.8. Note that stale ./agar-config/ and
+  ./agar-foo-config/ directories may break the build and should be removed
+  before ./configure is executed.
 

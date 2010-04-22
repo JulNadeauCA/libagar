@@ -363,21 +363,25 @@ echo "    --with-gettext            Use gettext for multi-language [auto-detect]
 echo "    --with-libtool            Specify path to libtool [auto-detect]"
 echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
-echo "    --enable-static           Produce a static binary [default: no]"
+
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
 echo "BSDBuild 2.8-beta"
 exit 0
 fi;
-if [ "${srcdir}" != "" ]; then
-	host=`sh ${srcdir}/../../mk/config.guess`
+if [ "${host_arg}" != "" ]; then
+	host="${host_arg}"
 else
-	host=`sh ../../mk/config.guess`
-fi
-if [ $? != 0 ]; then
-	echo "../../mk/config.guess failed"
-	exit 1
+	if [ "${srcdir}" != "" ]; then
+		host=`sh ${srcdir}/../../mk/config.guess`
+	else
+		host=`sh ../../mk/config.guess`
+	fi
+	if [ $? != 0 ]; then
+		echo "../../mk/config.guess failed"
+		exit 1
+	fi
 fi
 echo "BSDBuild 2.8-beta (host: $host)"
 
@@ -607,8 +611,8 @@ echo "#ifndef LOCALSTATEDIR" > config/localstatedir.h
 echo "#define LOCALSTATEDIR \"$LOCALSTATEDIR\"" >> config/localstatedir.h
 echo "#endif" >> config/localstatedir.h
 echo "hdefs[\"LOCALSTATEDIR\"] = \"$LOCALSTATEDIR\"" >>configure.lua
-$ECHO_N "checking for a usable C compiler..."
-$ECHO_N "checking for a usable C compiler..." >> config.log
+$ECHO_N "checking for a C compiler..."
+$ECHO_N "checking for a C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -624,50 +628,65 @@ if [ "$CC" = "" ]; then
 		fi
 	done
 	if [ "$CC" = "" ]; then
-		echo "Unable to find a C compiler in PATH. Please set your compiler"
-		echo "explicitely with the CC environment variable."
+		echo "*"
+		echo "* Unable to find a standard C compiler in PATH. You may need"
+		echo "* to set the CC environment variable."
+		echo "*"
 		echo "Unable to find a C compiler in PATH." >> config.log
-		exit 1
+		HAVE_CC="no"
+		echo "no"
+	else
+		HAVE_CC="yes"
+		echo "yes, ${CC}"
+		echo "yes, ${CC}" >> config.log
 	fi
+else
+	echo "using ${CC}"
 fi
 
-cat << 'EOT' > conftest.c
+if [ "${HAVE_CC}" = "yes" ]; then
+	$ECHO_N "checking whether the C compiler works..."
+	$ECHO_N "checking whether the C compiler works..." >> config.log
+	cat << 'EOT' > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
+	$CC -o conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no, the test failed to compile"
+	    echo "no, the test failed to compile" >> config.log
+		HAVE_CC="no"
+	else
+		echo "yes"
+		echo "yes" >> config.log
+		HAVE_CC="yes"
+	fi
 
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-    echo "no"
-	echo "Test C program (conftest.c) failed to compile."
-	echo "Test C program (conftest.c) failed to compile." >> config.log
-    exit 1
+	if [ "${EXECSUFFIX}" = "" ]; then
+		EXECSUFFIX=""
+		for OUTFILE in conftest.exe conftest conftest.*; do
+			if [ -f $OUTFILE ]; then
+				case $OUTFILE in
+				*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					;;
+				*.* )
+					EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+					break ;;
+				* )
+					break ;;
+				esac;
+		    fi
+		done
+		if [ "$EXECSUFFIX" != "" ]; then
+			echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+		fi
+		echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
+		echo "#ifndef EXECSUFFIX" > config/execsuffix.h
+		echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
+		echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
+	fi
+	rm -f conftest.c conftest$EXECSUFFIX
+	TEST_CFLAGS=""
 fi
-
-EXECSUFFIX=""
-for OUTFILE in conftest.exe conftest conftest.*; do
-	if [ -f $OUTFILE ]; then
-		case $OUTFILE in
-		*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
-			;;
-		*.* )
-			EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
-			break ;;
-		* )
-			break ;;
-		esac;
-    fi
-done
-if [ "$EXECSUFFIX" != "" ]; then
-	echo "Detected executable suffix: $EXECSUFFIX" >> config.log
-fi
-echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
-echo "#ifndef EXECSUFFIX" > config/execsuffix.h
-echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
-echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
-
-echo "yes"
-rm -f conftest.c conftest$EXECSUFFIX
-TEST_CFLAGS=""
 $ECHO_N "checking for compiler warning options..."
 $ECHO_N "checking for compiler warning options..." >> config.log
 MK_CACHED="No"
@@ -1538,6 +1557,16 @@ echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+if [ "${HAVE_CC}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires cc installed on your system."
+echo "* This software requires cc installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
 $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
@@ -2468,8 +2497,8 @@ fi
 	;;
 esac
 if [ "${SDL_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${SDL_VERSION}"
+echo "yes, found ${SDL_VERSION}" >> config.log
 $ECHO_N "checking whether SDL works..."
 $ECHO_N "checking whether SDL works..." >> config.log
 MK_CACHED="No"
@@ -2980,8 +3009,8 @@ if [ -d /usr/freeware/include ]; then
 FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
 fi;
 if [ "${FREETYPE_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${FREETYPE_VERSION}"
+echo "yes, found ${FREETYPE_VERSION}" >> config.log
 $ECHO_N "checking whether FreeType works..."
 $ECHO_N "checking whether FreeType works..." >> config.log
 MK_CACHED="No"
@@ -3103,8 +3132,31 @@ if [ "${MK_CACHED}" = "No" ]; then
 	fi
 fi
 if [ "${AGAR_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
+echo "yes, found ${AGAR_VERSION}"
+echo "yes, found ${AGAR_VERSION}" >> config.log
+MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 4 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 4 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 1 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
 if [ "${cache}" != "" ]; then
@@ -3233,20 +3285,31 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_AGAR}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar installed on your system."
+echo "* This software requires agar installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar version >= 1.4.1,"
+echo "* This software requires agar version >= 1.4.1," >> config.log
+echo "* please upgrade and try again."
+echo "* please upgrade and try again." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-if [ "${HAVE_AGAR}" != "yes" ]
- then
-	echo "This demo requires Agar installed on your system."
-	exit 1
-fi
-if [ "${enable_static}" = "yes" ]
- then
-LDFLAGS="-static"
-echo "LDFLAGS=$LDFLAGS" >>Makefile.config
-echo "mdefs[\"LDFLAGS\"] = \"$LDFLAGS\"" >>configure.lua
-fi
