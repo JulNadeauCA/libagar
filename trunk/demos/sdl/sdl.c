@@ -53,6 +53,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Attached to existing SDL display");
+	AG_PixmapFromSurface(win, 0, agbmp);
 	AG_WindowShow(win);
 
 	AG_EventLoop();
