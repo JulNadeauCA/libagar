@@ -28,7 +28,8 @@ SUBDIR=	fixedres \
 	rendertosurface \
 	reinit \
 	modalwindowhandler \
-	configsettings
+	configsettings \
+	sdl
 
 all: all-subdir
 clean: prereq clean-subdir
