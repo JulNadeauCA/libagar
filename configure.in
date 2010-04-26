@@ -29,10 +29,10 @@ REGISTER("--with-sdl",		"SDL rendering support [check]")
 REGISTER("--with-wgl",		"GL rendering via WGL [check]")
 
 REGISTER_SECTION("Options specific to Agar-MATH (ag_math):")
-REGISTER("--with-altivec",	"M: AltiVec optimizations [check]")
-REGISTER("--with-sse",		"M: SSE[123] optimizations [no]")
-REGISTER("--with-<mode>-fp",    "M: Precision (single|double|quad) [double]")
-REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
+REGISTER("--with-altivec",	"AltiVec optimizations [check]")
+REGISTER("--with-sse",		"SSE[123] optimizations [no]")
+REGISTER("--with-<mode>-fp",    "Precision (single|double|quad) [double]")
+REGISTER("--with-<opt>-inline",	"Inline ops (sse2|sse3|altivec) [no]")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
