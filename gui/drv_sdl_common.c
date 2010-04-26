@@ -58,7 +58,7 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 	SDL_Surface *display = pDisplay;
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL;
-	Uint dcFlags = AG_DRIVER_SDL;
+	int useGL = 0;
 	int i;
 
 	if (AG_InitGUIGlobals() == -1)
@@ -71,7 +71,7 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 			            "display surface has SDL_OPENGL set");
 			goto fail;
 		}
-		dcFlags |= AG_DRIVER_OPENGL;
+		useGL = 1;
 	} else {
 		if (flags & AG_VIDEO_OPENGL) {
 			AG_SetError("AG_VIDEO_OPENGL flag requested, but "
@@ -82,7 +82,8 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 	for (i = 0; i < agDriverListSize; i++) {
 		dc = agDriverList[i];
 		if (dc->wm == AG_WM_SINGLE &&
-		    (dc->flags & dcFlags) &&
+		    (dc->flags & AG_DRIVER_SDL) &&
+		    (!useGL || (dc->flags & AG_DRIVER_OPENGL)) &&
 		    (drv = AG_DriverOpen(dc)) != NULL)
 			break;
 	}
@@ -97,10 +98,8 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 		AG_DriverClose(drv);
 		goto fail;
 	}
-#ifdef AG_DEBUG
 	if (drv->videoFmt == NULL)
 		AG_FatalError("Driver did not set video format");
-#endif
 
 	/* Generic Agar-GUI initialization. */
 	if (AG_InitGUI(0) == -1) {
@@ -150,7 +149,7 @@ AG_SDL_GetPixelFormat(SDL_Surface *su)
 
 /*
  * Blend the specified components with the pixel at s:[x,y], using the
- * given alpha function. No clipping is done.
+ * given alpha function. No clipping is done. The surface must be locked.
  */
 static void
 AG_SDL_SurfaceBlendPixel(SDL_Surface *s, Uint8 *pDst, AG_Color Cnew,
@@ -234,6 +233,9 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 
 	/* XXX TODO optimized cases */
 	/* XXX TODO per-surface alpha */
+	if (SDL_MUSTLOCK(ds)) {
+		SDL_LockSurface(ds);
+	}
 	for (y = 0; y < dr.h; y++) {
 		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch +
 		    sr.x*ss->format->BytesPerPixel;
@@ -261,7 +263,40 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 			pDst += ds->format->BytesPerPixel;
 		}
 	}
+	if (SDL_MUSTLOCK(ds))
+		SDL_UnlockSurface(ds);
 }
+
+#if 0
+#define AG_SDL_GET_PIXEL_COMPONENT(rv, mask, shift, loss)		\
+	tmp = (pc & mask) >> shift;					\
+	(rv) = (tmp << loss) + (tmp >> (8 - (loss << 1)));
+
+/* Decompose a pixel value to an AG_Color (honor any alpha). */
+static __inline__ AG_Color
+AG_SDL_GetColorRGBA(Uint32 pc, const SDL_PixelFormat *pf)
+{
+	AG_Color C;
+	Uint tmp;
+
+	if (pf->palette != NULL) {
+		SDL_Color sc = pf->palette->colors[(Uint)pc % pf->palette->ncolors];
+		C.r = sc.r;
+		C.g = sc.g;
+		C.b = sc.b;
+		return (C);
+	}
+	AG_SDL_GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
+	AG_SDL_GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
+	AG_SDL_GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
+	if (pf->Amask != 0) {
+		AG_SDL_GET_PIXEL_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss);
+	} else {
+		C.a = AG_ALPHA_OPAQUE;
+	}
+	return (C);
+}
+#endif
 
 /* Convert a SDL_Surface to an AG_Surface. */
 AG_Surface *
@@ -271,6 +306,11 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 	AG_Surface *ds;
 	Uint8 *pSrc, *pDst;
 	int y;
+#if 0
+	Uint32 px;
+	AG_Color C;
+	int x;
+#endif
 
 	if ((pf = AG_SDL_GetPixelFormat(ss)) == NULL) {
 		return (NULL);
@@ -284,7 +324,10 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 	if ((ds = AG_SurfaceNew(AG_SURFACE_PACKED, ss->w, ss->h, pf, 0))
 	    == NULL)
 		goto out;
-
+	
+	if (SDL_MUSTLOCK(ss)) {
+		SDL_LockSurface(ss);
+	}
 	pSrc = (Uint8 *)ss->pixels;
 	pDst = (Uint8 *)ds->pixels;
 	for (y = 0; y < ss->h; y++) {
@@ -292,6 +335,21 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 		pSrc += ss->pitch;
 		pDst += ds->pitch;
 	}
+#if 0
+	for (y = 0; y < ss->h; y++) {
+		for (x = 0; x < ss->w; x++) {
+			AG_PACKEDPIXEL_GET(ss->format->BytesPerPixel, px, pSrc);
+			C = AG_SDL_GetColorRGBA(px, ss->format);
+			AG_PUT_PIXEL(ds,pDst,
+			    AG_MapColorRGBA(ds->format, C));
+			pSrc += ss->format->BytesPerPixel;
+			pDst += ds->format->BytesPerPixel;
+		}
+	}
+#endif
+	if (SDL_MUSTLOCK(ss))
+		SDL_UnlockSurface(ss);
+
 out:
 	AG_PixelFormatFree(pf);
 	return (ds);
