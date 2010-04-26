@@ -385,10 +385,10 @@ echo "    --with-sdl                SDL rendering support [check]"
 echo "    --with-wgl                GL rendering via WGL [check]"
 echo ""
 echo "Options specific to Agar-MATH (ag_math):"
-echo "    --with-altivec            M: AltiVec optimizations [check]"
-echo "    --with-sse                M: SSE[123] optimizations [no]"
-echo "    --with-<mode>-fp          M: Precision (single|double|quad) [double]"
-echo "    --with-<opt>-inline       M: Inline ops (sse2|sse3|altivec) [no]"
+echo "    --with-altivec            AltiVec optimizations [check]"
+echo "    --with-sse                SSE[123] optimizations [no]"
+echo "    --with-<mode>-fp          Precision (single|double|quad) [double]"
+echo "    --with-<opt>-inline       Inline ops (sse2|sse3|altivec) [no]"
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
@@ -8296,6 +8296,17 @@ fi
 config_script_out="agar-config"
 config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
@@ -8366,6 +8377,17 @@ EOT
 config_script_out="agar-core-config"
 config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
@@ -8436,6 +8458,17 @@ EOT
 config_script_out="agar-dev-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
@@ -8506,6 +8539,17 @@ EOT
 config_script_out="agar-math-config"
 config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
@@ -8576,6 +8620,17 @@ EOT
 config_script_out="agar-rg-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
@@ -8646,6 +8701,17 @@ EOT
 config_script_out="agar-vg-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}"
+# Avoid breakage with existing trees compiled before BSDBuild 2.8.
+if [ -d "$config_script_out" ]; then
+	echo "rm -fR $config_script_out"
+	rm -fR $config_script_out
+fi
+if [ "${SRC}" != "" ]; then
+	if [ -d "${SRC}/$config_script_out" ]; then
+		echo "rm -fR ${SRC}/$config_script_out"
+		rm -fR ${SRC}/$config_script_out
+	fi
+fi
 cat << EOT > $config_script_out
 #!/bin/sh
 # Generated for ${PACKAGE} by BSDBuild 2.8-beta.
