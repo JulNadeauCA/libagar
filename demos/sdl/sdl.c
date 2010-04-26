@@ -1,11 +1,16 @@
 /*	Public domain	*/
 /*
- * Test functionality specific to SDL.
+ * Test functionality specific to SDL, notably attaching to an existing
+ * SDL display surface, and converting a SDL_Surface to an AG_Surface.
  */
 
 #include <agar/config/have_sdl.h>
+#include <agar/config/have_opengl.h>
 #ifdef HAVE_SDL
 #include <SDL.h>
+#endif
+#ifdef HAVE_OPENGL
+#include <agar/gui/opengl.h>
 #endif
 
 #include <agar/core.h>
@@ -18,29 +23,43 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	SDL_Surface *screen, *bmp;
 	AG_Surface *agbmp;
+	int c, useGL = 0;
+	Uint32 sdlFlags = 0;
+	char *optArg;
+	
+	if (AG_InitCore("agar-sdl-demo", 0) == -1) {
+		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
+		goto fail;
+	}
+	while ((c = AG_Getopt(argc, argv, "?g", &optArg, NULL)) != -1) {
+		switch (c) {
+		case 'g':
+			useGL = 1;
+			break;
+		default:
+			printf("Usage: %s [-g]\n", agProgName);
+			break;
+		}
+	}
 
 	/* Set up SDL */
 	if (SDL_Init(SDL_INIT_VIDEO) == -1) {
 		fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
 		return (1);
 	}
-	if ((screen = SDL_SetVideoMode(320, 240, 32, SDL_SWSURFACE|SDL_RESIZABLE)) == NULL) {
+	if (useGL) {
+		sdlFlags = SDL_RESIZABLE|SDL_OPENGL;
+	} else {
+		sdlFlags = SDL_RESIZABLE|SDL_SWSURFACE;
+	}
+	if ((screen = SDL_SetVideoMode(320, 240, 32, sdlFlags)) == NULL) {
 		fprintf(stderr, "SDL_SetVideoMode: %s\n", SDL_GetError());
 		goto fail;
 	}
-	if ((bmp = SDL_LoadBMP("agar.bmp")) == NULL) {
-		fprintf(stderr, "SDL_LoadBMP: %s\n", SDL_GetError());
-		goto fail;
-	}
-	if ((agbmp = AG_SurfaceFromSDL(bmp)) == NULL) {
-		fprintf(stderr, "AG_SurfaceFromSDL: %s\n", SDL_GetError());
-		goto fail;
-	}
 
-	/* Initialize Agar-Core */
-	if (AG_InitCore("agar-sdl-demo", 0) == -1) {
-		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
-		goto fail;
+	if (useGL) {
+		/* Set up OpenGL viewport and projection. */
+		AG_GL_InitContext(AG_RECT(0,0,320,240));
 	}
 
 	/* Initialize Agar-GUI to reuse display */
@@ -49,11 +68,24 @@ main(int argc, char *argv[])
 		AG_Destroy();
 		goto fail;
 	}
-
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
+
+	/* Display some test widgets. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	AG_LabelNew(win, 0, "Attached to existing SDL display");
-	AG_PixmapFromSurface(win, 0, agbmp);
+	AG_LabelNew(win, 0, "Attached to existing %s display",
+	    useGL ? "SDL/OpenGL" : "SDL");
+
+	/* Test conversion from SDL_Surface to AG_Surface. */
+	if ((bmp = SDL_LoadBMP("agar.bmp")) != NULL) {
+		if ((agbmp = AG_SurfaceFromSDL(bmp)) != NULL) {
+			AG_PixmapFromSurface(win, 0, agbmp);
+		} else {
+			AG_LabelNewS(win, 0, AG_GetError());
+		}
+	} else {
+		AG_LabelNewS(win, 0, SDL_GetError());
+	}
+
 	AG_WindowShow(win);
 
 	AG_EventLoop();
