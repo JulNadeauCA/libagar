@@ -167,6 +167,13 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 		x += WIDGET(parentWidget)->rView.x1;
 		y += WIDGET(parentWidget)->rView.y1;
 		winParent = WIDGET(parentWidget)->window;
+
+		if (WIDGET(winParent)->drv != NULL &&
+		    AGDRIVER_MULTIPLE(WIDGET(winParent)->drv)) {
+			/* Convert to absolute coordinates */
+			x += WIDGET(winParent)->x;
+			y += WIDGET(winParent)->y;
+		}
 	} else {
 		m = mi->pmenu;
 		winParent = NULL;
@@ -196,13 +203,6 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 
 	AG_WindowFocus(win);
 
-	if (winParent != NULL &&
-	    WIDGET(winParent)->drv != NULL &&
-	    !AGDRIVER_SINGLE(WIDGET(winParent)->drv)) {
-		/* Convert to absolute coordinates */
-		x += WIDGET(winParent)->x;
-		y += WIDGET(winParent)->y;
-	}
 	AG_WindowSetGeometry(win, x, y, -1,-1);
 	AG_WindowShow(win);
 	return (win);
@@ -1230,15 +1230,23 @@ void
 AG_PopupShow(AG_PopupMenu *pm)
 {
 	AG_Driver *drv;
+	AG_Window *winParent;
+	int x, y;
 
 	AG_LockVFS(pm->widget);
 	if (pm->win != NULL) {
 		AG_PopupHide(pm);
 	}
-	drv = WIDGET(pm->widget)->drv;
-	pm->win = AG_MenuExpand(NULL, pm->item,
-	    (drv != NULL) ? drv->mouse->x : 0,
-	    (drv != NULL) ? drv->mouse->y : 0);
+	if ((drv = WIDGET(pm->widget)->drv) != NULL &&
+	    (winParent = AG_ParentWindow(pm->widget)) != NULL) {
+	    	x = drv->mouse->x;
+	    	y = drv->mouse->y;
+		if (AGDRIVER_SINGLE(drv)) {
+			x -= WIDGET(winParent)->x;
+			y -= WIDGET(winParent)->y;
+		}
+		pm->win = AG_MenuExpand(winParent, pm->item, x, y);
+	}
 	AG_UnlockVFS(pm->widget);
 }
 
