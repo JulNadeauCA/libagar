@@ -8,6 +8,7 @@ CHECK(sdl)
 CHECK(opengl)
 CHECK(freetype)
 REQUIRE(agar, 1.4.1)
+CHECK(sdl_image)
 
 C_DEFINE(_USE_AGAR_STD)
 C_INCDIR($SRC)
