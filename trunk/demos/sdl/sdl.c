@@ -29,18 +29,6 @@ main(int argc, char *argv[])
 	char *optArg;
 	Uint32 rmask, gmask, bmask, amask;
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-        rmask = 0xff000000;
-        gmask = 0x00ff0000;
-        bmask = 0x0000ff00;
-        amask = 0x000000ff;
-#else
-        rmask = 0x000000ff;
-        gmask = 0x0000ff00;
-        bmask = 0x00ff0000;
-        amask = 0xff000000;
-#endif
-	
 	if (AG_InitCore("agar-sdl-demo", 0) == -1) {
 		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
 		goto fail;
@@ -99,15 +87,23 @@ main(int argc, char *argv[])
 	}
 	tex1 = IMG_Load("test1.png");
 	tex2 = IMG_Load("test2.png");
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+        amask = 0xff000000;
+#endif
 	avatar = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, 64, 128,
                 tex1->format->BitsPerPixel, rmask, gmask, bmask, amask);
-
 	SDL_SetAlpha(tex1, 0, 0);
         SDL_BlitSurface(tex1, NULL, avatar, NULL);
-
 	SDL_SetAlpha(tex2, SDL_SRCALPHA, 0);
         SDL_BlitSurface(tex2, NULL, avatar, NULL);
-	
 	if ((agavatar = AG_SurfaceFromSDL(avatar)) != NULL) {
 		AG_PixmapFromSurface(win, 0, agavatar);
 	} else {
