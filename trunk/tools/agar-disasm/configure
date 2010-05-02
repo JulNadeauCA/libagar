@@ -655,6 +655,7 @@ if [ "$CC" = "" ]; then
 		echo "yes, ${CC}" >> config.log
 	fi
 else
+	HAVE_CC="yes"
 	echo "using ${CC}"
 fi
 
@@ -2849,8 +2850,8 @@ OPENGL_LIBS="${GL_LIBS} -lGL"
 fi;
 	;;
 *)
-	OPENGL_CFLAGS=""
-	OPENGL_LIBS="-lGL"
+	OPENGL_CFLAGS="${GL_CFLAGS}"
+	OPENGL_LIBS="${GL_LIBS} -lGL"
 	;;
 esac
 $ECHO_N "checking whether OpenGL works..."

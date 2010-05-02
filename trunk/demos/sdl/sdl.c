@@ -8,6 +8,7 @@
 #include <agar/config/have_opengl.h>
 #ifdef HAVE_SDL
 #include <SDL.h>
+#include <SDL_image.h>
 #endif
 #ifdef HAVE_OPENGL
 #include <agar/gui/opengl.h>
@@ -21,11 +22,24 @@ main(int argc, char *argv[])
 {
 #ifdef HAVE_SDL
 	AG_Window *win;
-	SDL_Surface *screen, *bmp;
-	AG_Surface *agbmp;
+	SDL_Surface *screen, *bmp, *tex1, *tex2, *avatar;
+	AG_Surface *agbmp, *agavatar;
 	int c, useGL = 0;
 	Uint32 sdlFlags = 0;
 	char *optArg;
+	Uint32 rmask, gmask, bmask, amask;
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+        amask = 0xff000000;
+#endif
 	
 	if (AG_InitCore("agar-sdl-demo", 0) == -1) {
 		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
@@ -82,8 +96,22 @@ main(int argc, char *argv[])
 		} else {
 			AG_LabelNewS(win, 0, AG_GetError());
 		}
+	}
+	tex1 = IMG_Load("test1.png");
+	tex2 = IMG_Load("test2.png");
+	avatar = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, 64, 128,
+                tex1->format->BitsPerPixel, rmask, gmask, bmask, amask);
+
+	SDL_SetAlpha(tex1, 0, 0);
+        SDL_BlitSurface(tex1, NULL, avatar, NULL);
+
+	SDL_SetAlpha(tex2, SDL_SRCALPHA, 0);
+        SDL_BlitSurface(tex2, NULL, avatar, NULL);
+	
+	if ((agavatar = AG_SurfaceFromSDL(avatar)) != NULL) {
+		AG_PixmapFromSurface(win, 0, agavatar);
 	} else {
-		AG_LabelNewS(win, 0, SDL_GetError());
+		AG_LabelNewS(win, 0, AG_GetError());
 	}
 
 	AG_WindowShow(win);
