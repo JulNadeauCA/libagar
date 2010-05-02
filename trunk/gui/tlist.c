@@ -39,7 +39,7 @@ static void KeyUp(AG_Event *);
 static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
-static void PopupMenu(AG_Tlist *, AG_TlistPopup *, int x, int y);
+static void PopupMenu(AG_Tlist *, AG_TlistPopup *, int, int);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 
 AG_Tlist *
@@ -1352,6 +1352,7 @@ static void
 PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
 {
 	AG_Menu *m = tp->menu;
+	
 #if 0
 	if (AG_ParentWindow(tl) == NULL)
 		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
@@ -1360,11 +1361,6 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
 		AG_MenuCollapse(tl, tp->item);
 		tp->panel = NULL;
 	}
-#if 0
-	if (m->itemSel != NULL) {
-		AG_MenuCollapse(tl, m->itemSel);
-	}
-#endif
 	m->itemSel = tp->item;
 	tp->panel = AG_MenuExpand(tl, tp->item, x+4, y+4);
 }
