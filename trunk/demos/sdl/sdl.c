@@ -6,9 +6,13 @@
 
 #include <agar/config/have_sdl.h>
 #include <agar/config/have_opengl.h>
+#include "config/have_sdl_image.h"
+
 #ifdef HAVE_SDL
 #include <SDL.h>
-#include <SDL_image.h>
+# ifdef HAVE_SDL_IMAGE
+#  include <SDL_image.h>
+# endif
 #endif
 #ifdef HAVE_OPENGL
 #include <agar/gui/opengl.h>
@@ -85,19 +89,20 @@ main(int argc, char *argv[])
 			AG_LabelNewS(win, 0, AG_GetError());
 		}
 	}
+#ifdef HAVE_SDL_IMAGE
 	tex1 = IMG_Load("test1.png");
 	tex2 = IMG_Load("test2.png");
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
         rmask = 0xff000000;
         gmask = 0x00ff0000;
         bmask = 0x0000ff00;
         amask = 0x000000ff;
-#else
+# else
         rmask = 0x000000ff;
         gmask = 0x0000ff00;
         bmask = 0x00ff0000;
         amask = 0xff000000;
-#endif
+# endif
 	avatar = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, 64, 128,
                 tex1->format->BitsPerPixel, rmask, gmask, bmask, amask);
 	SDL_SetAlpha(tex1, 0, 0);
@@ -109,6 +114,7 @@ main(int argc, char *argv[])
 	} else {
 		AG_LabelNewS(win, 0, AG_GetError());
 	}
+#endif /* HAVE_SDL_IMAGE */
 
 	AG_WindowShow(win);
 
