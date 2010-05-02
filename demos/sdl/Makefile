@@ -12,7 +12,7 @@ PROG=	sdl
 SRCS=	sdl.c
 
 CFLAGS+=${AGAR_CFLAGS}
-LIBS+=	${AGAR_LIBS}
+LIBS+=	${AGAR_LIBS} -lSDL_image
 
 all: all-subdir ${PROG}
 
