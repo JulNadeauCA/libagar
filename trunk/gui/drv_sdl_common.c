@@ -322,8 +322,11 @@ AG_SDL_ImportSurface(SDL_Surface *ss)
 	}
 
 	if ((ds = AG_SurfaceNew(AG_SURFACE_PACKED, ss->w, ss->h, pf, 0))
-	    == NULL)
+	    == NULL) {
 		goto out;
+	}
+	if (ss->flags & SDL_SRCCOLORKEY) { ds->flags |= AG_SRCCOLORKEY; }
+	if (ss->flags & SDL_SRCALPHA) { ds->flags |= AG_SRCALPHA; }
 	
 	if (SDL_MUSTLOCK(ss)) {
 		SDL_LockSurface(ss);
