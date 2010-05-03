@@ -279,23 +279,31 @@ AG_QuitGUI(void)
 }
 
 /*
- * Initialize the graphics driver. If spec is non-NULL, select the driver
+ * Initialize the graphics system. If spec is non-NULL, select the driver
  * by priority from a comma-separated list. If spec is NULL, try to match
  * the "best" driver for the current platform.
  */
 int
 AG_InitGraphics(const char *spec)
 {
+	char specBuf[128], *s, *sOpts = "", *tok;
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL;
-	char specBuf[128], *s, *ds;
 	int i;
+	size_t len;
 	
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
 
 	if (spec != NULL && spec[0] != '\0') {
-		if (strcmp(spec, "<OpenGL>") == 0) {
+		Strlcpy(specBuf, spec, sizeof(specBuf));
+		s = &specBuf[0];
+
+		if (strncmp(s, "<OpenGL>", 8) == 0) {
+			/*
+			 * Select preferred OpenGL-compatible driver.
+			 */
+			sOpts = &s[8];
 			for (i = 0; i < agDriverListSize; i++) {
 				dc = agDriverList[i];
 				if (dc->flags & AG_DRIVER_OPENGL &&
@@ -306,7 +314,11 @@ AG_InitGraphics(const char *spec)
 				AG_SetError(_("No OpenGL drivers are available"));
 				goto fail;
 			}
-		} else if (strcmp(spec, "<SDL>") == 0) {
+		} else if (strncmp(s, "<SDL>", 5) == 0) {
+			/*
+			 * Select preferred SDL-compatible driver.
+			 */
+			sOpts = &s[5];
 			for (i = 0; i < agDriverListSize; i++) {
 				dc = agDriverList[i];
 				if (dc->flags & AG_DRIVER_SDL &&
@@ -318,25 +330,32 @@ AG_InitGraphics(const char *spec)
 				goto fail;
 			}
 		} else {
-			Strlcpy(specBuf, spec, sizeof(specBuf));
-			s = &specBuf[0];
-			while ((ds = AG_Strsep(&s, ",;")) != NULL) {
+			/*
+			 * Try explicit list of preferred drivers.
+			 */
+			while ((tok = AG_Strsep(&s, ",;")) != NULL) {
 				for (i = 0; i < agDriverListSize; i++) {
 					dc = agDriverList[i];
-					if (strcmp(dc->name, ds) == 0 &&
-					    (drv = AG_DriverOpen(dc)) != NULL)
+					len = strlen(dc->name);
+					if (strncmp(dc->name, tok, len) == 0 &&
+					    (drv = AG_DriverOpen(dc)) != NULL) {
+						sOpts = &tok[len];
 						break;
+					}
 				}
 				if (i < agDriverListSize)
 					break;
 			}
-			if (ds == NULL) {
+			if (tok == NULL) {
 				AG_SetError(_("Requested drivers (%s) are not "
-				              "available"), spec);
+				              "available"), s);
 				goto fail;
 			}
 		}
 	} else {
+		/*
+		 * Auto-select best available driver.
+		 */
 		for (i = 0; i < agDriverListSize; i++) {
 			dc = agDriverList[i];
 			if ((drv = AG_DriverOpen(dc)) != NULL)
@@ -347,7 +366,28 @@ AG_InitGraphics(const char *spec)
 			goto fail;
 		}
 	}
-	Verbose(_("Selected graphics driver: %s\n"), dc->name);
+	
+	Verbose(_("Selected graphics driver: %s %s\n"), dc->name, sOpts);
+
+	/* Process driver options */
+	if (sOpts[0] == '(' && sOpts[1] != '\0') {
+		char *key, *val, *ep;
+
+		sOpts++;
+		if ((ep = strrchr(sOpts, ')')) != NULL) {
+			*ep = '\0';
+		} else {
+			Verbose(_("Syntax error in driver options: %s"), sOpts);
+		}
+		while ((tok = AG_Strsep(&sOpts, ":")) != NULL) {
+			if ((key = AG_Strsep(&tok, "=")) &&
+			    (val = AG_Strsep(&tok, "="))) {
+				AG_SetString(drv, key, val);
+			} else {
+				Verbose(_("Syntax error in driver options: %s"), sOpts);
+			}
+		}
+	}
 
 	switch (dc->wm) {
 	case AG_WM_MULTIPLE:
@@ -356,25 +396,16 @@ AG_InitGraphics(const char *spec)
 		drv = NULL;
 		break;
 	case AG_WM_SINGLE:
-		{
-			Uint wView, hView;
-
-			if (AG_GetDisplaySize(drv, &wView, &hView) == -1 ||
-			    wView == 0 || hView == 0) {
-				wView = 640;
-				hView = 480;
-			}
-			/* Open the video display. */
-			if (AGDRIVER_SW_CLASS(drv)->openVideo(drv,
-			    wView,hView,32, AG_VIDEO_RESIZABLE) == -1) {
-				AG_DriverClose(drv);
-				goto fail;
-			}
-#ifdef AG_DEBUG
-			if (drv->videoFmt == NULL)
-				AG_FatalError("Driver did not set video format");
-#endif
+		/* Open the video display. */
+		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0,0,
+		    AG_VIDEO_RESIZABLE) == -1) {
+			AG_DriverClose(drv);
+			goto fail;
 		}
+#ifdef AG_DEBUG
+		if (drv->videoFmt == NULL)
+			AG_FatalError("Driver did not set video format");
+#endif
 		break;
 	}
 

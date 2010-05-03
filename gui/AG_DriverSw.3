@@ -1,0 +1,136 @@
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 2, 2010
+.Dt AG_DRIVERSW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.1
+.Sh NAME
+.Nm AG_DriverSw
+.Nd agar single-window driver class
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a subclass of
+.Xr AG_Driver 3
+for "single-window" drivers.
+This class of drivers includes dumb framebuffers and any other interface where
+Agar needs to implement a window manager internally.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Driver 3 ->
+.Nm .
+.Sh INTERNAL API
+The
+.Ft AG_DriverSwClass
+structure describes a "single-window" graphics driver
+(i.e., a dumb framebuffer,
+or any other interface where Agar will need to provide its own window manager).
+.Ft AG_DriverSwClass
+inherits from
+.Ft AG_DriverClass
+and is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_driver_sw_class {
+	struct ag_driver_class _inherit;
+	Uint flags;
+	int  (*openVideo)(void *drv, Uint w, Uint h, int depth,
+	                  Uint flags);
+	int  (*openVideoContext)(void *drv, void *ctx, Uint flags);
+	void (*closeVideo)(void *drv);
+	int  (*videoResize)(void *drv, Uint w, Uint h);
+	int  (*videoCapture)(void *drv, AG_Surface **);
+	void (*videoClear)(void *drv, AG_Color c);
+} AG_DriverSwClass;
+.Ed
+.Pp
+At this time, there are no flag options and
+.Va flags
+should be initialized to 0.
+.Pp
+The
+.Fn openVideo
+operation opens a new graphics display of specified dimensions
+.Fa w ,
+.Fa h
+in pixels, and
+.Fa depth
+in bits per pixel.
+The
+.Fa flags
+argument defines the various flags options passed by
+.Fn AG_InitVideo
+(see
+.Xr AG_InitVideo 3
+for a description of those options).
+.Pp
+The
+.Fn openVideoContext
+operation "attaches" Agar to an existing display context, passed as
+.Fa ctx .
+For example, drivers for the SDL library will accept a pointer to a
+.Xr SDL_Surface 3
+as
+.Fa ctx .
+The
+.Fa flags
+argument specifies video options (see
+.Xr AG_InitVideo 3
+for the list of options).
+.Pp
+The
+.Fn closeVideo
+operation should "close" or detach from a graphics display, releasing any
+resources previously allocated by
+.Fn openVideo
+or
+.Fn openVideoContext .
+.Pp
+The
+.Fn videoResize
+operation resizes the video display to the specified geometry in pixels.
+It should return -1 if the display cannot be resized, or 0 on success.
+.Pp
+.Fn videoCapture
+captures the content of the video display to an
+.Xr AG_Surface 3 .
+The function should return 0 on success or -1 on failure.
+.Pp
+.Fn videoClear
+clears the video background with the specified color
+.Fa c .
+.Sh SEE ALSO
+.Xr AG_Driver 3 ,
+.Xr AG_DriverMw 3 ,
+.Xr AG_DriverSDLFB 3 ,
+.Xr AG_DriverSDLGL 3
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.4.0.

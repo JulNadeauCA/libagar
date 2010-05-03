@@ -1,0 +1,192 @@
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 2, 2010
+.Dt AG_DRIVERMW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.1
+.Sh NAME
+.Nm AG_DriverMw
+.Nd agar multiple-window driver class
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a subclass of
+.Xr AG_Driver 3
+for "multiple-window" drivers (i.e., drivers where Agar must interface with
+a native window system).
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Driver 3 ->
+.Nm .
+.Sh INTERNAL API
+The
+.Ft AG_DriverMwClass
+structure describes a "multiple-window" graphics driver, where Agar will need
+to interface with an existing window manager.
+.Ft AG_DriverMwClass
+inherits from
+.Ft AG_DriverClass
+and is defined as follows:
+.Pp
+.Bd -literal
+typedef struct ag_driver_mw_class {
+	struct ag_driver_class _inherit;
+
+	/* Open/close native windows */
+	int  (*openWindow)(AG_Window *, AG_Rect r, int bpp, Uint flags);
+	void (*closeWindow)(AG_Window *);
+
+	/* Show and hide window */
+	int (*mapWindow)(AG_Window *);
+	int (*unmapWindow)(AG_Window *);
+
+	/* Configure stacking order and parenting */
+	int (*raiseWindow)(AG_Window *);
+	int (*lowerWindow)(AG_Window *);
+	int (*reparentWindow)(AG_Window *, AG_Window *winParent,
+	                      int x, int y);
+
+	/* Change and query input focus state */
+	int (*getInputFocus)(AG_Window **);
+	int (*setInputFocus)(AG_Window *);
+
+	/* Move and resize windows */
+	int  (*moveWindow)(AG_Window *, int x, int y);
+	int  (*resizeWindow)(AG_Window *, Uint w, Uint h);
+	int  (*moveResizeWindow)(AG_Window *, AG_SizeAlloc *a);
+	void (*preResizeCallback)(AG_Window *);
+	void (*postResizeCallback)(AG_Window *, AG_SizeAlloc *a);
+
+	/* Capture window framebuffer contents (unlike renderToSurface) */
+	int (*captureWindow)(AG_Window *, AG_Surface **s);
+	
+	/* Configure window parameters */
+	int  (*setBorderWidth)(AG_Window *, Uint w);
+	int  (*setWindowCaption)(AG_Window *, const char *s);
+	void (*setTransientFor)(AG_Window *, AG_Window *winParent);
+} AG_DriverMwClass;
+.Ed
+.Pp
+The
+.Fn openWindow
+operation opens a new "native" window corresponding to an
+.Xr AG_Window 3
+that is in the process of being created, returning 0 on success or -1 on
+failure.
+The
+.Fa r
+argument specifies the preferred location and geometry of the window, in
+pixels.
+.Fa bpp
+specifies a preferred depth in bits per pixels.
+The following
+.Fa flags
+are recognized:
+.Pp
+.Bl -tag -compact -width "AG_DRIVER_MW_ANYPOS "
+.It AG_DRIVER_MW_ANYPOS
+Ignore the coordinates in
+.Fa r
+and let the underlying window system select some default coordinates.
+.El
+.Pp
+.Fn mapWindow
+and
+.Fn unmapWindow
+make a window visible or invisible, returning 0 on success and -1 on failure.
+.Pp
+.Fn raiseWindow
+and
+.Fn lowerWindow
+respectively raise and lower the window, returning 0 on success and -1 on
+failure.
+The
+.Fn reparentWindow
+function arranges for the window to become a child of
+.Fa winParent ,
+moving it to parent-relative coordinates
+.Fa x ,
+.Fa y .
+The function should return 0 on success or -1 on failure.
+.Pp
+The
+.Fn getInputFocus
+operation retrieves a pointer to the window currently holding focus,
+returning 0 on success.
+If the focus is external to the Agar application, it should return -1.
+.Fn setInputFocus
+gives focus to the specified window, returning 0 on success or -1 on failure.
+.Pp
+The
+.Fn moveWindow ,
+.Fn resizeWindow
+and
+.Fn moveResizeWindow
+operations respectively move, resize or move+resize a window to specified
+coordinates and geometry, returning 0 on success or -1 on failure.
+.Pp
+The
+.Fn preResizeCallback
+operation is invoked prior to a window resize,
+and
+.Fn postResizeCallback
+is invoked following a window resize (the new window geometry is passed
+as the
+.Fa a
+argument).
+.Pp
+The
+.Fn captureWindow
+operation captures the window's visual rendering to an
+.Xr AG_Surface 3 ,
+returning 0 on success or -1 on failure.
+.Pp
+.Fn setBorderWidth
+configures a window border size in pixels, returning 0 on success or -1
+if the operation is unsupported or an error occured.
+.Pp
+.Fn setWindowCaption
+sets the associated window caption text, if supported by the window system.
+The string passed to the function may contain characters in UTF-8 encoding.
+The function should return 0 on success or -1 on failure.
+.Pp
+.Fn setTransientFor
+passes a hint to the window manager that the window should be marked as
+"transient" for the specified window
+.Fa winParent .
+This operation is optional and window manager specific.
+.Sh SEE ALSO
+.Xr AG_Driver 3 ,
+.Xr AG_DriverSw 3 ,
+.Xr AG_DriverGLX 3 ,
+.Xr AG_DriverWGL 3
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.4.0.
