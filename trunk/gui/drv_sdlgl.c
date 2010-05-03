@@ -73,6 +73,10 @@ Init(void *obj)
 	
 	dsw->rNom = 16;
 	dsw->rCur = 0;
+	
+	AG_SetString(sgl, "width", "auto");
+	AG_SetString(sgl, "height", "auto");
+	AG_SetString(sgl, "depth", "auto");
 }
 
 static void
@@ -378,6 +382,7 @@ ClearBackground(void)
 static int
 SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
+	char buf[16];
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
@@ -396,8 +401,23 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		dsw->flags |= AG_DRIVER_SW_OVERLAY;
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
+	
+	/* Apply the default resolution settings. */
+	if (w == 0 && AG_Defined(drv, "width")) {
+		AG_GetString(drv, "width", buf, sizeof(buf));
+		w = atoi(buf);
+	}
+	if (h == 0 && AG_Defined(drv, "height")) {
+		AG_GetString(drv, "height", buf, sizeof(buf));
+		h = atoi(buf);
+	}
+	if (depth == 0 && AG_Defined(drv, "depth")) {
+		AG_GetString(drv, "depth", buf, sizeof(buf));
+		depth = atoi(buf);
+	}
 
 	/* Set the video mode. Force hardware palette in 8bpp. */
+	Verbose(_("SDLGL: Setting mode %dx%d (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
 		Verbose(_("Enabling hardware palette"));

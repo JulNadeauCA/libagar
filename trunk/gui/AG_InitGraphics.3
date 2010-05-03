@@ -26,7 +26,7 @@
 .Dt AG_INITGRAPHICS 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.4
+.ds oS Agar 1.4.1
 .Sh NAME
 .Nm AG_InitGraphics
 .Nd agar graphics initialization
@@ -60,12 +60,18 @@ argument is non-NULL, it specifies a comma-separated list of driver names,
 in order of preference.
 If
 .Fa drivers
-is NULL, Agar selects the "best" drivers available on the current platform.
+is NULL, Agar selects the "best" drivers available on the current platform
+(see section below for the list of available driver).
 If
 .Fa drivers
 is set to "<OpenGL>" or "<SDL>", Agar selects the "best" drivers with OpenGL
 or SDL support, respectively, and fails if none are found.
-See section below for the list of available drivers.
+Some drivers support extra arguments, for example, the string:
+.Bd -literal
+	<SDL>(width=640:height=480:depth=32)
+.Ed
+.Pp
+would request a SDL-compatible driver with a 640x480x32 bpp display.
 .Pp
 The preferred way to terminate an Agar application is by calling
 .Fn AG_QuitGUI .

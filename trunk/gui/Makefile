@@ -39,7 +39,9 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Editable.3 AG_Slider.3 AG_Surface.3 AG_Scrollview.3 AG_Rect.3 \
 	AG_Titlebar.3 AG_FontSelector.3 AG_Treetbl.3 AG_GuiDebugger.3 \
 	AG_WidgetPrimitives.3 AG_EventLoop.3 AG_BlendFn.3 AG_KeySym.3 \
-	AG_KeyMod.3 AG_Color.3 AG_MouseButton.3 AG_Driver.3 AG_InitGraphics.3
+	AG_KeyMod.3 AG_Color.3 AG_MouseButton.3 AG_Driver.3 AG_InitGraphics.3 \
+	AG_DriverMw.3 AG_DriverSw.3 AG_DriverGLX.3 AG_DriverWGL.3 \
+	AG_DriverSDLFB.3 AG_DriverSDLGL.3
 
 CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} \
 	${X11_CFLAGS} ${JPEG_CFLAGS} ${PNG_CFLAGS} ${MATH_CFLAGS} \
