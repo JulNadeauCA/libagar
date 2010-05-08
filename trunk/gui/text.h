@@ -104,6 +104,7 @@ extern int agTextFontAscent;
 extern int agTextFontDescent;
 extern int agTextFontLineSkip;
 extern int agFreetypeInited;
+extern int agRTL;
 extern int agGlyphGC;
 extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
@@ -117,6 +118,7 @@ void	 AG_TextParseFontSpec(const char *);
 AG_Font	*AG_FetchFont(const char *, int, int);
 void     AG_DestroyFont(AG_Font *);
 void	 AG_SetDefaultFont(AG_Font *);
+void	 AG_SetRTL(int);
 
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);

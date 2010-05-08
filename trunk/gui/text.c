@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,6 +110,7 @@ int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agGlyphGC = 0;			/* Enable glyph garbage collector */
 int agFreetypeInited = 0;		/* Initialized Freetype library */
+int agRTL = 0;				/* Right-to-left mode */
 
 static AG_TextState states[AG_TEXT_STATES_MAX];
 static Uint curState = 0;
@@ -357,6 +358,14 @@ AG_SetDefaultFont(AG_Font *font)
 {
 	AG_MutexLock(&agTextLock);
 	agDefaultFont = font;
+	AG_MutexUnlock(&agTextLock);
+}
+
+void
+AG_SetRTL(int enable)
+{
+	AG_MutexLock(&agTextLock);
+	agRTL = enable;
 	AG_MutexUnlock(&agTextLock);
 }
 
