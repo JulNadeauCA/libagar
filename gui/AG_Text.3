@@ -388,9 +388,48 @@ widgets to display.
 .Fn AG_SetDefaultFont "AG_Font *font"
 .Pp
 .Ft void
+.Fn AG_SetRTL "int enable"
+.Pp
+.Ft void
 .Fn AG_TextParseFontSpec "const char *fontspec"
 .Pp
 .nr nS 0
+The
+.Fn AG_FetchFont
+function retrieves the specified font face, loading it from file if it's
+not currently resident.
+If
+.Fa face
+is NULL, the default
+.Va font.face
+configuration setting is used (see
+.Xr AG_Config 3 ) .
+The font file should reside in one of the directories specified in
+.Va font-path
+setting.
+If
+.Fa size
+is -1, the default configuration setting
+.Va font.size
+is used.
+If
+.Fa flags
+is -1, the default configuration setting
+.Va font.flags
+is used.
+The function returns a pointer to the font object, or NULL if an
+error occured.
+.Pp
+The
+.Fn AG_DestroyFont
+function releases a font object assuming it is no longer in use.
+.Pp
+.Fn AG_SetDefaultFont
+sets the specified font object as the default font.
+.Pp
+.Fn AG_SetRTL
+enables or disables right-to-left text mode.
+.Pp
 The
 .Fn AG_TextParseFontSpec
 function parses a font specification of the form
@@ -401,36 +440,13 @@ and assigns the default font.
 This function is typically called prior to
 .Fn AG_InitGraphics
 (e.g., to parse alternate fonts specified on the command line).
-The default font is selected from the following
-.Xr AG_Config 3
-settings:
-.Bl -tag -width "font.flags "
-.It Va font.face
-This specifies the filename of the default font to use.
-The file should reside in one of the directories specified in the
-.Va font-path
-.Xr AG_Config 3
-setting.
-.It Va font.size
-The default font size in points.
-.It Va font.flags
-The default font attribute flags.
-The meaning of this parameter is specific to the underlying font engine.
-.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Config 3 ,
-.Xr AG_Button 3 ,
-.Xr AG_Combo 3 ,
+.Xr AG_Editable 3 ,
 .Xr AG_Label 3 ,
-.Xr AG_Radio 3 ,
-.Xr AG_Statusbar 3 ,
 .Xr AG_Surface 3 ,
-.Xr AG_Numerical 3 ,
 .Xr AG_Textbox 3 ,
-.Xr AG_Titlebar 3 ,
-.Xr AG_Tlist 3 ,
-.Xr AG_UCombo 3 ,
 .Xr AG_Widget 3
 .Bd -literal
 The FreeType project - http://www.freetype.org/
@@ -441,3 +457,4 @@ The
 .Nm
 interface first appeared in Agar 1.0.
 The stack of rendering attributes was added in Agar 1.3.
+Right-to-left rendering first appeared in Agar 1.4.1.
