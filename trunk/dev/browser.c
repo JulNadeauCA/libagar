@@ -104,7 +104,7 @@ enum {
 	OBJEDIT_EDIT_GENERIC,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
-	OBJEDIT_SAVE_ALL,
+	OBJEDIT_SAVE_ALL,		/* unused */
 	OBJEDIT_EXPORT,
 	OBJEDIT_FREE_DATASET,
 	OBJEDIT_DESTROY,
@@ -276,7 +276,7 @@ fail:
 }
 
 static void
-ExportObject(AG_Event *event)
+SaveObjectToFile(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(3);
@@ -359,7 +359,7 @@ DEV_BrowserSaveTo(void *p, const char *name)
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, ExportObject, "%p,%p", ob, win);
+	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile, "%p,%p", ob, win);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 }
@@ -421,23 +421,13 @@ ObjectOp(AG_Event *event)
 			}
 			break;
 		case OBJEDIT_SAVE:
-			if (AG_ObjectSave(ob) == -1) {
-				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
-				    AG_GetError());
-			} else {
-				AG_TextTmsg(AG_MSG_INFO, 1000,
-				    _("Object `%s' was saved successfully."),
-				    ob->name);
-			}
-			break;
-		case OBJEDIT_SAVE_ALL:
-			if (AG_ObjectSaveAll(ob) == -1) {
-				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
-				    AG_GetError());
-			} else {
-				AG_TextTmsg(AG_MSG_INFO, 1000,
-				    _("Object `%s' was saved successfully."),
-				    ob->name);
+			{
+				AG_Event ev;
+
+				AG_EventInit(&ev);
+				AG_EventPushPointer(&ev, ob);
+				AG_EventPushString(&ev, ob->archivePath);
+				SaveObjectToFile(&ev);
 			}
 			break;
 		case OBJEDIT_EXPORT:
@@ -1020,9 +1010,6 @@ DEV_Browser(void *vfsRoot)
 			AG_MenuAction(mi, _("Save"), agIconSave.s,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_SAVE);
-			AG_MenuAction(mi, _("Save all"), agIconSave.s,
-			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-			    OBJEDIT_SAVE_ALL);
 			AG_MenuAction(mi, _("Save to..."), agIconSave.s,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_EXPORT);
