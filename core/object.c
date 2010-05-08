@@ -1753,16 +1753,20 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
-	int pagedTemporarily;
 	int dataFound;
 
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
 
 	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
+		AG_SetError("Object (%s) is non-persistent", ob->name);
 		goto fail_unlock;
 	}
+	if (!OBJECT_RESIDENT(ob)) {
+		AG_SetError("Object (%s) is non-resident", ob->name);
+		goto fail_unlock;
+	}
+
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
 	if (pPath != NULL) {
@@ -1777,35 +1781,6 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		if (AG_FileExists(pathDir) == 0 &&
 		    AG_MkPath(pathDir) == -1)
 			goto fail_unlock;
-	}
-
-	/*
-	 * If we are trying to save a non-resident object, page it in
-	 * temporarily for the duration of the operation.
-	 * 
-	 * XXX TODO Allow partial generic and data modifications instead.
-	 */
-	if (!OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (!dataFound) {
-				/*
-				 * Data has not been found, just assume
-				 * that this object has never been saved
-				 * before and mark it resident.
-				 */
-				ob->flags |= AG_OBJECT_RESIDENT;
-			} else {
-				AG_FatalError("LoadData failed: %s",
-				    AG_GetError());
-				AG_SetError("Failed to load non-resident "
-				            "object for save: %s",
-				    AG_GetError());
-				goto fail_unlock;
-			}
-		}
-		pagedTemporarily = 1;
-	} else {
-		pagedTemporarily = 0;
 	}
 
 	if (pPath == NULL) {
@@ -1828,20 +1803,17 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		AG_FileDelete(path);
 	}
 	if ((ds = AG_OpenFile(path, "wb")) == NULL) {
-		goto fail_free;
+		goto fail_unlock;
 	}
 	if (AG_ObjectSerialize(ob, ds) == -1) {
 		goto fail;
 	}
 	AG_CloseFile(ds);
-	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (0);
 fail:
 	AG_CloseFile(ds);
-fail_free:
-	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 fail_unlock:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
