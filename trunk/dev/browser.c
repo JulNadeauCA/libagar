@@ -425,8 +425,8 @@ ObjectOp(AG_Event *event)
 				AG_Event ev;
 
 				AG_EventInit(&ev);
-				AG_EventPushPointer(&ev, ob);
-				AG_EventPushString(&ev, ob->archivePath);
+				AG_EventPushPointer(&ev, "", ob);
+				AG_EventPushString(&ev, "", ob->archivePath);
 				SaveObjectToFile(&ev);
 			}
 			break;
