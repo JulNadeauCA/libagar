@@ -90,8 +90,11 @@ main(int argc, char *argv[])
 		}
 	}
 #ifdef HAVE_SDL_IMAGE
-	tex1 = IMG_Load("test1.png");
-	tex2 = IMG_Load("test2.png");
+	if ((tex1 = IMG_Load("test1.png")) == NULL ||
+	    (tex2 = IMG_Load("test2.png")) == NULL) {
+		fprintf(stderr, "IMG_Load() failed\n");
+		goto fail;
+	}
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
         rmask = 0xff000000;
         gmask = 0x00ff0000;
