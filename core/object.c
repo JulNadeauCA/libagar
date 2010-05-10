@@ -1753,7 +1753,6 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
-	int dataFound;
 
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
