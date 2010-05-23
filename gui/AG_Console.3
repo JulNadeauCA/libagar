@@ -95,9 +95,6 @@ messages (see
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleMsgS "AG_Console *cons" "const char *text"
 .Pp
-.Ft "AG_ConsoleLine *"
-.Fn AG_ConsoleAppendLine "AG_Console *cons" "const char *s"
-.Pp
 .Ft "void"
 .Fn AG_ConsoleMsgPtr "AG_ConsoleLine *line" "void *ptr"
 .Pp
@@ -113,12 +110,22 @@ The
 function appends a new message to the console log and returns a pointer to
 the newly created
 .Ft AG_ConsoleLine
-structure.
-.Fn AG_ConsoleMsg
-may fail and return NULL if there is insufficient memory for the new message.
+structure, useful for tweaking attributes specific to the message.
 The
-.Fn AG_ConsoleAppendLine
-variant accepts a bare string.
+.Fn AG_ConsoleMsgS
+variant accepts a plain C string.
+Either function may fail and return NULL if there is insufficient memory
+for the new message.
+.Pp
+As a special case, if a
+.Fa cons
+argument of NULL is passed to
+.Fn AG_ConsoleMsg
+or
+.Fn AG_ConsoleMsgS ,
+the function prints the message with
+.Xr AG_Verbose 3
+before returning NULL.
 .Pp
 .Fn AG_ConsoleMsgPtr
 associates an arbitrary user pointer with the given line entry.
