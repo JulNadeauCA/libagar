@@ -626,6 +626,7 @@ static void
 ExpandGlobResults(AG_FileDlg *fd, int wMax)
 {
 	AG_SizeReq rList;
+	AG_Window *winParent = WIDGET(fd)->window;
 	Uint wView, hView;
 	int x, y, w, h;
 
@@ -644,6 +645,12 @@ ExpandGlobResults(AG_FileDlg *fd, int wMax)
  	}
 	x = WIDGET(fd->tbFile)->rView.x2 - w;
 	y = WIDGET(fd->tbFile)->rView.y1;
+	
+	if (winParent != NULL &&
+	    AGDRIVER_MULTIPLE(WIDGET(fd)->drv)) {
+		x += WIDGET(winParent)->x;
+		y += WIDGET(winParent)->y;
+	}
 
 	AG_GetDisplaySize(WIDGET(fd)->drv, &wView, &hView);
 	if (x+w > wView) { w = wView - x; }
