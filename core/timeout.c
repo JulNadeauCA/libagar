@@ -144,11 +144,14 @@ void
 AG_ProcessTimeouts(Uint32 t)
 {
 	AG_Timeout *to;
-	AG_Object *ob;
+	AG_Object *ob, *obNext;
 	Uint32 rv;
 
 	AG_LockTiming();
-	TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
+	for (ob = TAILQ_FIRST(&agTimeoutObjQ);
+	     ob != TAILQ_END(&agTimeoutObjQ);
+	     ob = obNext) {
+		obNext = TAILQ_NEXT(ob, tobjs);
 		AG_ObjectLock(ob);
 		/*
 		 * Loop comparing the timestamp of the first element with
@@ -160,6 +163,7 @@ pop:
 			to = TAILQ_FIRST(&ob->timeouts);
 			if ((int)(to->ticks - t) <= 0) {
 				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+
 				if (TAILQ_EMPTY(&ob->timeouts)) {
 					TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 				}
