@@ -216,11 +216,10 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
-	cons->rVisible = a->h;
-	if (cons->font != NULL) {
-		cons->rVisible /= cons->font->height;
-	} else {
-		cons->rVisible /= agTextFontHeight;
+	cons->rVisible = a->h / ((cons->font != NULL) ? cons->font->height :
+	                                                agTextFontHeight);
+	if (cons->rVisible > 1) {
+		cons->rVisible--;
 	}
 	if (cons->rOffs+cons->rVisible >= cons->nLines) {
 		cons->rOffs = MAX(0, cons->nLines - cons->rVisible);
@@ -365,6 +364,22 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 {
 	AG_ConsoleLine *ln;
 	va_list args;
+	size_t len;
+	char *s;
+
+	if (cons == NULL) {
+		va_start(args, fmt);
+		if (TryVasprintf(&s, fmt, args) == -1) {
+			return (NULL);
+		}
+		va_end(args);
+		Verbose("%s", s);
+		if ((len = strlen(s)) > 1 && s[len - 1] != '\n') {
+			Verbose("\n");
+		}
+		Free(s);
+		return (NULL);
+	}
 
 	AG_ObjectLock(cons);
 
@@ -378,6 +393,10 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 		}
 		va_end(args);
 		ln->len = strlen(ln->text);
+		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
+			ln->text[ln->len - 1] = '\0';
+			ln->len--;
+		}
 	}
 out:
 	AG_ObjectUnlock(cons);
@@ -389,6 +408,15 @@ AG_ConsoleLine *
 AG_ConsoleMsgS(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
+	size_t len;
+	
+	if (cons == NULL) {
+		Verbose("%s", s);
+		if ((len = strlen(s)) > 1 && s[len - 1] != '\n') {
+			Verbose("\n");
+		}
+		return (NULL);
+	}
 
 	AG_ObjectLock(cons);
 	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
@@ -398,6 +426,10 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 			goto out;
 		}
 		ln->len = strlen(ln->text);
+		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
+			ln->text[ln->len - 1] = '\0';
+			ln->len--;
+		}
 	}
 out:
 	AG_ObjectUnlock(cons);
