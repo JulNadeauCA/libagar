@@ -116,7 +116,7 @@ AG_SurfaceFromJPEG(const char *path)
 	AG_DataSource *ds;
 	AG_Surface *s;
 
-	if ((ds = AG_OpenFile(path, "r")) == NULL) {
+	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		return (NULL);
 	}
 	if ((s = AG_ReadSurfaceFromJPEG(ds)) == NULL) {
