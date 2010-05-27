@@ -39,12 +39,56 @@
 The
 .Nm
 widget provides a low-level OpenGL context.
+In order to be useful, two important functions must be registered: The
+.Em scale
+function and the
+.Em draw
+function.
 .Pp
-If needed, the Agar-SG library can provide higher-level scene rendering
-capabilities (see
-.Xr SG_View 3 ,
-which inherits from
-.Nm ) .
+The
+.Em scale
+function should set a projection matrix.
+For example, a minimal scale function could be a simple call to
+.Xr glOrtho 3 .
+The
+.Fn glMatrixMode
+and
+.Fn glLoadIdentity
+functions are used before the scale function is invoked.
+.Pp
+The
+.Em draw
+function renders the scene to the display.
+Before calling the
+.Em draw
+function,
+.Nm
+calls
+.Xr glViewport 3 .
+It also sets the
+.Dv GL_TEXTURE ,
+.Dv GL_PROJECTION ,
+.Dv GL_MODELVIEW
+matrices and saves the state of the clipping planes by calling
+.Xr glPushAttrib 3
+with
+.Dv GL_TRANSFORM_BIT .
+.Pp
+In OpenGL mode, the Agar GUI elements are rendered using GL primitives, so
+it is the responsibility of the caller to save and restore all GL state
+(except for the matrices and clipping plane states), in the
+.Em draw
+function.
+.Pp
+Typically,
+.Nm
+is used as a base class to implement more specific scene-rendering widgets.
+For example, the
+.Xr SG_View 3
+and
+.Xr SK_View 3
+widgets of FreeSG (http://freesg.org/) are subclasses of
+.Nm .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
