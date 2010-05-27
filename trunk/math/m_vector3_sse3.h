@@ -28,27 +28,27 @@ __BEGIN_DECLS
 static __inline__ M_Real
 M_VectorDot3_SSE3(M_Vector3 v1, M_Vector3 v2)
 {
-	M_Real rv;
+	float rv;
 	__m128 a;
 
 	a = _mm_mul_ps(v1.m128, v2.m128);
 	a = _mm_hadd_ps(a, a);
 	a = _mm_hadd_ps(a, a);
 	_mm_store_ss(&rv, a);
-	return (rv);
+	return (M_Real)(rv);
 }
 
 static __inline__ M_Real
 M_VectorDot3p_SSE3(const M_Vector3 *v1, const M_Vector3 *v2)
 {
-	M_Real rv;
+	float rv;
 	__m128 a;
 
 	a = _mm_mul_ps(v1->m128, v2->m128);
 	a = _mm_hadd_ps(v1->m128, v1->m128);
 	a = _mm_hadd_ps(v1->m128, v1->m128);
 	_mm_store_ss(&rv, v1->m128);
-	return (rv);
+	return (M_Real)(rv);
 }
 __END_DECLS
 
