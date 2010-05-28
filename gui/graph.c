@@ -135,7 +135,7 @@ MouseMotion(AG_Event *event)
 			    MouseOverVertex(vtx,x,y));
 		}
 		TAILQ_FOREACH(edge, &gf->edges, edges) {
-			AG_SETFLAGS(vtx->flags, AG_GRAPH_MOUSEOVER,
+			AG_SETFLAGS(edge->flags, AG_GRAPH_MOUSEOVER,
 			    MouseOverEdge(edge,x,y));
 		}
 	}
