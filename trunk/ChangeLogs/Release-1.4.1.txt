@@ -14,4 +14,6 @@ http://wiki.libagar.org/wiki/Agar-1.4.1.
 - Upgrade build system to BSDBuild 2.8. Note that stale ./agar-config/ and
   ./agar-foo-config/ directories may break the build and should be removed
   before ./configure is executed.
+- Fix deadlock condition with the AG_Timeout interface when timers are
+  scheduled in reverse order; thanks to Jakob Reschke for the fix!
 
