@@ -8,7 +8,7 @@ typedef struct ag_timeout {
 	Uint flags;
 #define AG_CANCEL_ONDETACH	0x01	/* Cancel on ObjectDetach() */
 #define AG_CANCEL_ONLOAD	0x02	/* Cancel on ObjectLoad() */
-#define AG_TIMEOUT_QUEUED	0x04	/* In queue for execution */
+#define AG_TIMEOUT_ACTIVE	0x04	/* In queue for execution */
 	Uint32 ticks;			/* Expiry time in ms */
 	Uint32 ival;			/* Interval in ticks */
 
@@ -43,7 +43,7 @@ void	AG_ProcessTimeouts(Uint32);
 static __inline__ int
 AG_TimeoutIsScheduled(void *obj, AG_Timeout *to)
 {
-	return (to->flags & AG_TIMEOUT_QUEUED);
+	return (to->flags & AG_TIMEOUT_ACTIVE);
 }
 
 #ifdef AG_LEGACY

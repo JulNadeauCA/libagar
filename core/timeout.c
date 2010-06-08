@@ -61,7 +61,7 @@ AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
 	to->flags = flags;
 }
 
-/* Schedule (or re-schedule) the timeout to occur in dt ticks. */
+/* Schedule (or reschedule) the timeout to occur in dt ticks. */
 void
 AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt)
 {
@@ -73,22 +73,22 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt)
 	AG_ObjectLock(ob);
 	listEmpty = TAILQ_EMPTY(&ob->timeouts);
 
-	if (!listEmpty && (to->flags & AG_TIMEOUT_QUEUED)) {
+	if (to->flags & AG_TIMEOUT_ACTIVE) {			/* Reschedule */
 		TAILQ_REMOVE(&ob->timeouts, to, timeouts);
 	}
 	TAILQ_FOREACH(toAfter, &ob->timeouts, timeouts) {
-		if (dt < toAfter->ticks) {
+		if (t < toAfter->ticks) {
 			TAILQ_INSERT_BEFORE(toAfter, to, timeouts);
 			break;
 		}
 	}
 	if (toAfter == TAILQ_END(&ob->timeouts)) {
-		TAILQ_INSERT_HEAD(&ob->timeouts, to, timeouts);
+		TAILQ_INSERT_TAIL(&ob->timeouts, to, timeouts);
 	}
 
 	to->ticks = t;
 	to->ival = dt;
-	to->flags |= AG_TIMEOUT_QUEUED;
+	to->flags |= AG_TIMEOUT_ACTIVE;
 
 	if (listEmpty) {
 		AG_LockTiming();
@@ -105,11 +105,12 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 	
 	AG_LockTimeouts(ob);
-	if (to->flags & AG_TIMEOUT_QUEUED) {
-		to->flags &= ~(AG_TIMEOUT_QUEUED);
+	if (to->flags & AG_TIMEOUT_ACTIVE) {
+		to->flags &= ~(AG_TIMEOUT_ACTIVE);
 		TAILQ_REMOVE(&ob->timeouts, to, timeouts);
-		if (TAILQ_EMPTY(&ob->timeouts))
+		if (TAILQ_EMPTY(&ob->timeouts)) {
 			TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
+		}
 	}
 	AG_UnlockTimeouts(ob);
 }
@@ -132,7 +133,7 @@ wait:
 	}
 	AG_Delay(1);
 	AG_LockTimeouts(ob);
-	if (to->flags & AG_TIMEOUT_QUEUED) {
+	if (to->flags & AG_TIMEOUT_ACTIVE) {
 		AG_UnlockTimeouts(ob);
 		goto wait;
 	}
@@ -143,8 +144,9 @@ wait:
 void
 AG_ProcessTimeouts(Uint32 t)
 {
-	AG_Timeout *to;
+	AG_Timeout *to, *toNext;
 	AG_Object *ob, *obNext;
+	AG_Timeout *toAfter;
 	Uint32 rv;
 
 	AG_LockTiming();
@@ -153,27 +155,40 @@ AG_ProcessTimeouts(Uint32 t)
 	     ob = obNext) {
 		obNext = TAILQ_NEXT(ob, tobjs);
 		AG_ObjectLock(ob);
-		/*
-		 * Loop comparing the timestamp of the first element with
-		 * the current time for as long as the timestamp is in
-		 * the past.
-		 */
-pop:
-		if (!TAILQ_EMPTY(&ob->timeouts)) {
-			to = TAILQ_FIRST(&ob->timeouts);
-			if ((int)(to->ticks - t) <= 0) {
-				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+rescan:
+		for (to = TAILQ_FIRST(&ob->timeouts);
+		     to != TAILQ_END(&ob->timeouts);
+		     to = toNext) {
+			toNext = TAILQ_NEXT(to, timeouts);
 
+			if ((int)(to->ticks - t) > 0) {
+				continue;
+			}
+			rv = to->fn(ob, to->ival, to->arg);
+			if (rv > 0) {
+				/* Reschedule timer */
+				to->ticks = AG_GetTicks()+rv;
+				to->ival = rv;
+				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+				TAILQ_FOREACH(toAfter, &ob->timeouts, timeouts) {
+					if (t < toAfter->ticks) {
+						TAILQ_INSERT_BEFORE(toAfter, to,
+						    timeouts);
+						break;
+					}
+				}
+				if (toAfter == TAILQ_END(&ob->timeouts)) {
+					TAILQ_INSERT_TAIL(&ob->timeouts, to,
+					    timeouts);
+				}
+				goto rescan;
+			} else {
+				/* Stop timer */
+				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
 				if (TAILQ_EMPTY(&ob->timeouts)) {
 					TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 				}
-				to->flags &= ~(AG_TIMEOUT_QUEUED);
-				rv = to->fn(ob, to->ival, to->arg);
-				if (rv > 0) {
-					to->ival = rv;
-					AG_ScheduleTimeout(ob, to, rv);
-				}
-				goto pop;
+				to->flags &= ~(AG_TIMEOUT_ACTIVE);
 			}
 		}
 		AG_ObjectUnlock(ob);
