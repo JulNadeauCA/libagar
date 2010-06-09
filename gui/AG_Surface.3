@@ -92,6 +92,9 @@ as
 .Ft "AG_Surface *"
 .Fn AG_SurfaceFromBMP "const char *path"
 .Pp
+.Bd -literal
+/* Requires Agar compiled --with-sdl */
+.Ed
 .Ft "AG_Surface *"
 .Fn AG_SurfaceFromSDL "SDL_Surface *surface"
 .Pp
@@ -296,6 +299,9 @@ function releases all resources allocated by the given surface.
 .Ft "int"
 .Fn AG_SurfaceExportBMP "const AG_Surface *su" "char *path"
 .Pp
+.Bd -literal
+/* Requires Agar compiled --with-sdl */
+.Ed
 .Ft "SDL_Surface *"
 .Fn AG_SurfaceExportSDL "const AG_Surface *su"
 .Pp
