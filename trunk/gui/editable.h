@@ -8,7 +8,7 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_EDITABLE_STRING_MAX 1024
+#define AG_EDITABLE_STRING_MAX 1024	/* For "default" string binding */
 
 struct ag_cursor_area;
 
@@ -43,7 +43,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_GROW          0x80000 /* Grow string buffer as needed */
 
 	enum ag_editable_encoding encoding;  /* Character set of buffer */
-	char string[AG_EDITABLE_STRING_MAX]; /* Default string binding */
+	char string[AG_EDITABLE_STRING_MAX]; /* "Default" string binding */
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
 	Uint32 compose;			/* For input composition */

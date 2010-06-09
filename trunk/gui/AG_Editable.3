@@ -106,12 +106,17 @@ Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
 .It AG_EDITABLE_STATIC
-Enable some important optimizations based on the assumption that the contents
-of the buffer will not change under the widget's feet.
-The default behavior makes no such assumption.
-Use
+By default, the contents of the buffer may be modified directly, and
+.Nm
+will reflect the changes immediately.
+This involves frequent UTF-8 conversions, and requires the widget to be
+redrawn periodically.
+.Dv AG_EDITABLE_STATIC
+indicates that it is safe to assume that the contents of the buffer
+will not change under the widget's feet.
+Pass this flag at initialization, or use
 .Fn AG_EditableSetStatic
-to change at runtime.
+to set/unset this mode at runtime.
 .It AG_EDITABLE_PASSWORD
 Password-style entry where characters are hidden.
 Use
