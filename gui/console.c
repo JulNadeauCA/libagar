@@ -59,6 +59,7 @@ ScrollUp(AG_Event *event)
 	} else {
 		cons->rOffs = 0;
 	}
+	AG_Redraw(cons);
 }
 
 static __inline__ void
@@ -72,6 +73,7 @@ ScrollDown(AG_Event *event)
 	} else {
 		cons->rOffs = cons->nLines - cons->rVisible;
 	}
+	AG_Redraw(cons);
 }
 
 static __inline__ void
@@ -84,6 +86,7 @@ PageUp(AG_Event *event)
 	} else {
 		cons->rOffs = 0;
 	}
+	AG_Redraw(cons);
 }
 
 static __inline__ void
@@ -96,6 +99,7 @@ PageDown(AG_Event *event)
 	} else {
 		cons->rOffs = cons->nLines - cons->rVisible;
 	}
+	AG_Redraw(cons);
 }
 
 static void
@@ -186,7 +190,6 @@ Init(void *obj)
 	AG_BindUint(cons, "flags", &cons->flags);
 	AG_BindInt(cons, "padding", &cons->padding);
 	AG_BindInt(cons, "lineskip", &cons->lineskip);
-	AG_BindInt(cons, "nLines", &cons->nLines);
 	AG_BindInt(cons, "rOffs", &cons->rOffs);
 #endif
 }
@@ -323,6 +326,7 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 		AG_WidgetUnmapSurface(cons, ln->surface);
 		ln->surface = -1;
 	}
+	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
 }
 
@@ -354,6 +358,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	if (cons->flags & AG_CONSOLE_AUTOSCROLL)
 		cons->rOffs++;
 
+	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
 	return (ln);
 }
@@ -457,6 +462,7 @@ AG_ConsoleClear(AG_Console *cons)
 {
 	FreeLines(cons);
 	cons->rOffs = 0;
+	AG_Redraw(cons);
 }
 
 AG_WidgetClass agConsoleClass = {

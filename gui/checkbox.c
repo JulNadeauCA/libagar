@@ -191,6 +191,7 @@ Init(void *obj)
 	                     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(cb, "state", &cb->state);
+	AG_RedrawOnChange(cb, 100, "state");
 
 	cb->flags = 0;
 	cb->state = 0;

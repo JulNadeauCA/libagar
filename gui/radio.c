@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -392,6 +392,8 @@ Init(void *obj)
 	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);
 
 	AG_BindInt(rad, "value", &rad->value);
+	AG_RedrawOnChange(rad, 100, "value");
+
 #ifdef AG_DEBUG
 	AG_BindUint(rad, "flags", &rad->flags);
 	AG_BindInt(rad, "nItems", &rad->nItems);

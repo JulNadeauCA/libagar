@@ -707,6 +707,12 @@ Init(void *obj)
 	AG_BindInt(sb, "min", &sb->min);
 	AG_BindInt(sb, "max", &sb->max);
 	AG_BindInt(sb, "visible", &sb->visible);
+
+	AG_RedrawOnChange(sb, 50, "value");
+	AG_RedrawOnChange(sb, 100, "min");
+	AG_RedrawOnChange(sb, 100, "max");
+	AG_RedrawOnChange(sb, 100, "visible");
+
 #ifdef AG_DEBUG
 	AG_BindUint(sb, "flags", &sb->flags);
 	AG_BindInt(sb, "width", &sb->width);
