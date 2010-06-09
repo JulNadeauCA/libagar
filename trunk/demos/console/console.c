@@ -97,7 +97,8 @@ main(int argc, char *argv[])
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		textbox = AG_TextboxNew(box, AG_TEXTBOX_HFILL, "Input: ");
+		textbox = AG_TextboxNew(box, AG_TEXTBOX_STATIC|AG_TEXTBOX_HFILL,
+		    "Input: ");
 		AG_SetEvent(textbox, "textbox-return", AppendLine, "%p", cons);
 		AG_WidgetFocus(textbox);
 
