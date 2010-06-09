@@ -130,6 +130,22 @@ widget, vertically.
 Expand the widget to fill all available space in the parent container,
 both horizontally and vertically.
 
+=item B<$widget-E<gt>redraw()>
+
+Request a redraw of the widget to the display as soon as possible.
+
+=item B<$widget-E<gt>redrawOnChange($refresh_ms, $binding_name)>
+
+Request an automatic redraw of the widget whenever the value associated
+with the given binding changes.
+The value is checked for changes at the specified interval in milliseconds
+(specify an interval of -1 to undo).
+
+=item B<$widget-E<gt>redrawOnTick($refresh_ms)>
+
+Request an unconditional redraw of the widget at the specified interval
+in milliseconds (specify an interval of -1 to disable).
+
 =back
 
 =head1 BASE FLAGS

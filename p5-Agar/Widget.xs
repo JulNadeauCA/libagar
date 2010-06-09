@@ -182,3 +182,24 @@ expand(self)
 CODE:
 	AG_Expand(self);
 
+void
+redraw(self)
+	Agar::Widget self
+CODE:
+	AG_Redraw(self);
+
+void
+redrawOnChange(self, refresh_ms, name)
+	Agar::Widget self
+	int refresh_ms
+	const char *name
+CODE:
+	AG_RedrawOnChange(self, refresh_ms, name);
+
+void
+redrawOnTick(self, refresh_ms)
+	Agar::Widget self
+	int refresh_ms
+CODE:
+	AG_RedrawOnTick(self, refresh_ms);
+

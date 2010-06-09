@@ -159,16 +159,18 @@ CODE:
 	AG_WindowDraw(win);
 
 void
-attach(win)
+attach(win, chld)
 	Agar::Window win
+	Agar::Window chld
 CODE:
-	AG_ObjectAttach(agView, win);
+	AG_WindowAttach(win, chld);
 
 void
-detach(win)
+detach(win, chld)
 	Agar::Window win
+	Agar::Window chld
 CODE:
-	AG_ObjectDetach(win);
+	AG_WindowDetach(win, chld);
 
 Agar::Widget
 findFocused(win)
