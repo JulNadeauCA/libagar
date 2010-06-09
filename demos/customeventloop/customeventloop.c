@@ -34,29 +34,47 @@ MyEventLoop(void)
 
 			/* Render the Agar windows */
 			if (agDriverSw) {
-				/* With single-window drivers (e.g., sdlfb). */
-				AG_BeginRendering(agDriverSw);
+				/*
+				 * We are using a single-window driver
+				 * (e.g., sdlfb). If one of the windows is
+				 * marked dirty, all windows must be redrawn.
+				 */
 				AG_FOREACH_WINDOW(win, agDriverSw) {
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
+					if (win->dirty)
+						break;
 				}
-				AG_EndRendering(agDriverSw);
+				if (win != NULL) {
+					AG_BeginRendering(agDriverSw);
+					AG_FOREACH_WINDOW(win, agDriverSw) {
+						if (!win->visible) {
+							continue;
+						}
+						AG_ObjectLock(win);
+						AG_WindowDraw(win);
+						AG_ObjectUnlock(win);
+					}
+					AG_EndRendering(agDriverSw);
+				}
 			} else {
-				/* With multiple-window drivers (e.g., glx). */
+				/*
+				 * We are using a multiple-window driver
+				 * (e.g., glx). Windows marked dirty are
+				 * redrawn.
+				 */
 				AGOBJECT_FOREACH_CHILD(drv, &agDrivers,
 				    ag_driver) {
 					if (!AGDRIVER_MULTIPLE(drv)) {
 						continue;
 					}
 					win = AGDRIVER_MW(drv)->win;
-					if (win->visible) {
-						AG_BeginRendering(drv);
-						AG_ObjectLock(win);
-						AG_WindowDraw(win);
-						AG_ObjectUnlock(win);
-						AG_EndRendering(drv);
+					if (!win->visible || !win->dirty) {
+						continue;
 					}
+					AG_BeginRendering(drv);
+					AG_ObjectLock(win);
+					AG_WindowDraw(win);
+					AG_ObjectUnlock(win);
+					AG_EndRendering(drv);
 				}
 			}
 			AG_UnlockVFS(&agDrivers);
