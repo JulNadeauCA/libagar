@@ -109,7 +109,9 @@ for details).
 .nr nS 1
 .Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
-.Pp
+.Bd -literal
+/* Requires Agar compiled --with-sdl */
+.Ed
 .Ft "int"
 .Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
 .Pp
