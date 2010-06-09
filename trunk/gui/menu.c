@@ -277,6 +277,7 @@ AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 	if (tPad != -1) { m->tPad = tPad; }
 	if (bPad != -1) { m->bPad = bPad; }
 	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 void
@@ -288,6 +289,7 @@ AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 	if (tPad != -1) { m->tPadLbl = tPad; }
 	if (bPad != -1) { m->bPadLbl = bPad; }
 	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 static void
@@ -330,6 +332,7 @@ MouseButtonDown(AG_Event *event)
 				    item->y + hLbl + m->bPad - 1);
 				m->selecting = 1;
 			}
+			AG_Redraw(m);
 			break;
 		}
 	}
@@ -397,6 +400,7 @@ MouseMotion(AG_Event *event)
 				    item->x,
 				    item->y + hLbl + m->bPad - 1);
 			}
+			AG_Redraw(m);
 			break;
 		}
 	}
@@ -488,6 +492,9 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 		AG_WidgetSizeReq(mi->pmenu, &rMenu);
 		AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
 	}
+	if (mi->pmenu != NULL) {
+		AG_Redraw(mi->pmenu);
+	}
 	return (mi);
 }
 
@@ -564,6 +571,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 		mi->icon = -1;
 	}
 	AG_ObjectUnlock(mi->pmenu);
+	AG_Redraw(mi->pmenu);
 }
 
 /* Unmap cached Menu/MenuView label surfaces for the specified item. */
@@ -600,6 +608,7 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 	va_end(ap);
 	InvalidateLabelSurfaces(mi);
 	AG_ObjectUnlock(mi->pmenu);
+	AG_Redraw(mi->pmenu);
 }
 
 /* Change menu item text (C string). */
@@ -612,6 +621,7 @@ AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
 	mi->text = Strdup(s);
 	InvalidateLabelSurfaces(mi);
 	AG_ObjectUnlock(mi->pmenu);
+	AG_Redraw(mi->pmenu);
 }
 
 /* Create a menu separator. */
@@ -1049,6 +1059,7 @@ AG_MenuState(AG_MenuItem *mi, int state)
 	AG_ObjectLock(mi->pmenu);
 	mi->pmenu->curState = state;
 	AG_ObjectUnlock(mi->pmenu);
+	AG_Redraw(mi->pmenu);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	}
 	va_end(ap);
 
+	AG_RedrawOnTick(lbl, 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
@@ -131,6 +132,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	}
 	va_end(ap);
 
+	AG_RedrawOnTick(lbl, 500);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
 }
@@ -310,6 +312,7 @@ AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 	if (tPad != -1) { lbl->tPad = tPad; }
 	if (bPad != -1) { lbl->bPad = bPad; }
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /* Justify the text in the specified way. */
@@ -319,6 +322,7 @@ AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 	AG_ObjectLock(lbl);
 	lbl->justify = justify;
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /* Vertically align the text in the specified way. */
@@ -328,6 +332,7 @@ AG_LabelValign(AG_Label *lbl, enum ag_text_valign valign)
 	AG_ObjectLock(lbl);
 	lbl->valign = valign;
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /* Change the text displayed by the label (format string). */
@@ -343,6 +348,7 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 	va_end(ap);
 	lbl->flags |= AG_LABEL_REGEN;
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /* Change the text displayed by the label (C string). */
@@ -354,6 +360,7 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /*
@@ -806,6 +813,7 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text, AG_VariableType type,
 	lfl->v = v;
 	SLIST_INSERT_HEAD(&lbl->lflags, lfl, lflags);
 	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 AG_WidgetClass agLabelClass = {

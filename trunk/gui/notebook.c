@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,7 @@ MouseButtonDown(AG_Event *event)
 #endif
 			if (x >= tx && x < tx+(label->w + SPACING*2)) {
 				AG_NotebookSelectTab(nb, tab);
+				AG_Redraw(nb);
 				break;
 			}
 			tx += label->w + SPACING*2;
@@ -249,6 +250,7 @@ AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 	AG_ObjectLock(nb);
 	nb->tab_align = ta;
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 void
@@ -257,6 +259,7 @@ AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 	AG_ObjectLock(nb);
 	nb->spacing = spacing;
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 void
@@ -266,6 +269,7 @@ AG_NotebookSetTabFont(AG_Notebook *nb, AG_Font *font)
 	nb->tabFont = font;
 	AG_TextSize("...", &nb->lblPartialWidth, NULL);
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 void
@@ -274,6 +278,7 @@ AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 	AG_ObjectLock(nb);
 	nb->padding = padding;
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 AG_NotebookTab *
@@ -301,6 +306,7 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 		AG_NotebookSelectTab(nb, tab);
 	
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 	return (tab);
 }
 
@@ -312,6 +318,7 @@ AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_WidgetUnmapSurface(nb, tab->label);
 	AG_ObjectDestroy(tab);
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 void
@@ -348,6 +355,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 out:
 	AG_ObjectUnlock(nb);
 	AG_UnlockVFS(nb);
+	AG_Redraw(nb);
 }
 
 void
@@ -356,6 +364,7 @@ AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 	AG_ObjectLock(nb);
 	AG_SETFLAGS(nb->flags, AG_NOTEBOOK_HIDE_TABS, flag);
 	AG_ObjectUnlock(nb);
+	AG_Redraw(nb);
 }
 
 AG_WidgetClass agNotebookClass = {

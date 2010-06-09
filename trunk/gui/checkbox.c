@@ -377,6 +377,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	}
 	AG_UnlockVariable(stateb);
 	AG_ObjectUnlock(cb);
+	AG_Redraw(cb);
 }
 
 AG_WidgetClass agCheckboxClass = {

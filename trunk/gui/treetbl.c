@@ -91,6 +91,7 @@ ScrollbarChanged(AG_Event *event)
 	AG_Treetbl *tt = AG_PTR(1);
 
 	tt->visible.dirty = 1;
+	AG_Redraw(tt);
 }
 
 /* Process mouse column resize */
@@ -103,6 +104,7 @@ ResizeColumn(AG_Treetbl *tt, int cid, int left)
 	AG_MouseGetState(WIDGET(tt)->drv->mouse, &x, NULL);
 	x -= WIDGET(tt)->rView.x1;
 	col->w = (x-left) > 16 ? (x-left) : 16;
+	AG_Redraw(tt);
 }
 
 /*
@@ -140,6 +142,7 @@ SwapColumns(AG_Treetbl *tt, Uint a, Uint b)
 	tt->column[a] = tt->column[b];
 	tt->column[b] = col_tmp;
 	tt->visible.dirty = 1;
+	AG_Redraw(tt);
 }
 
 /* Process mouse column move. */
@@ -177,6 +180,7 @@ MoveColumn(AG_Treetbl *tt, Uint cid, int left)
 			cid++;
 		}
 	}
+	AG_Redraw(tt);
 }
 
 /*
@@ -262,6 +266,7 @@ MouseButtonUp(AG_Event *event)
 		}
 		col->flags &= ~(AG_TREETBL_COL_MOVING|AG_TREETBL_COL_SELECTED);
 	}
+	AG_Redraw(tt);
 }
 
 /* Process click on a column header. */
@@ -282,8 +287,10 @@ ClickedColumnHeader(AG_Treetbl *tt, int x1, int x2, Uint32 idx,
 			MoveColumn(tt, idx, x1);
 		}
 		if (tt->flags & AG_TREETBL_REORDERCOLS ||
-		    tt->flags & AG_TREETBL_SORT)
+		    tt->flags & AG_TREETBL_SORT) {
 			col->flags |= AG_TREETBL_COL_SELECTED;
+			AG_Redraw(tt);
+		}
 	}
 	/* click on the LEFT resize line */
 	else if (idx-1 >= 0 && idx-1 < tt->n &&
@@ -374,6 +381,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 			tt->nExpandedRows += CountVisibleChld(&row->children, 0);
 		}
 		tt->visible.dirty = 1;
+		AG_Redraw(tt);
 		return (0);
 	}
 	
@@ -382,12 +390,14 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 		if (row->flags & AG_TREETBL_ROW_SELECTED) {
 			row->flags &= ~(AG_TREETBL_ROW_SELECTED);
 			AG_PostEvent(NULL, tt, "treetbl-deselect", "%p", row);
+			AG_Redraw(tt);
 		} else {
 			if (!(tt->flags & AG_TREETBL_MULTI)) {
 				DeselectAll(&tt->children);
 			}
 			row->flags |= AG_TREETBL_ROW_SELECTED;
 			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
+			AG_Redraw(tt);
 		}
 	} else if (kmod & AG_KEYMOD_SHIFT) {
 		for (j = 0; j < tt->visible.count; j++) {
@@ -414,12 +424,14 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 					VISROW(tt,row_idx)->flags |=
 					    AG_TREETBL_ROW_SELECTED;
 			}
+			AG_Redraw(tt);
 		}
 	} else {
 		DeselectAll(&tt->children);
 		if (!(row->flags & AG_TREETBL_ROW_SELECTED)) {
 			row->flags |= AG_TREETBL_ROW_SELECTED;
 			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
+			AG_Redraw(tt);
 		}
 	}
 
@@ -430,6 +442,7 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 		row->flags |= AG_TREETBL_ROW_SELECTED;
 		tt->dblclicked = 0;
 		AG_PostEvent(NULL, tt, "treetbl-dblclick", "%p", row);
+		AG_Redraw(tt);
 	} else {
 		tt->dblclicked++;
 		AG_SchedEvent(NULL, tt, agMouseDblclickDelay, "dblclick-expire",
@@ -540,6 +553,7 @@ AG_TreetblSetColHeight(AG_Treetbl *tt, int h)
 	tt->hCol = h;
 	AG_WidgetUpdate(tt);
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Insert a column in the table. */
@@ -611,6 +625,7 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 
 	tt->visible.dirty = 1;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 	return (col);
 fail:
 	AG_ObjectUnlock(tt);
@@ -629,6 +644,7 @@ AG_TreetblSetSortCol(AG_Treetbl *tt, AG_TreetblCol *col)
 	}
 	col->flags |= AG_TREETBL_COL_SORTING;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Set the sorting order */
@@ -638,6 +654,7 @@ AG_TreetblSetSortMode(AG_Treetbl *tt, enum ag_treetbl_sort_mode mode)
 	AG_ObjectLock(tt);
 	tt->sortMode = mode;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Select an alternate column for the expand/collapse controls. */
@@ -652,6 +669,7 @@ AG_TreetblSetExpanderCol(AG_Treetbl *tt, AG_TreetblCol *col)
 	}
 	col->flags |= AG_TREETBL_COL_EXPANDER;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Select a column. */
@@ -661,6 +679,7 @@ AG_TreetblSelectCol(AG_Treetbl *tt, AG_TreetblCol *col)
 	AG_ObjectLock(tt);
 	col->flags |= AG_TREETBL_COL_SELECTED;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Deselect a column. */
@@ -670,6 +689,7 @@ AG_TreetblDeselectCol(AG_Treetbl *tt, AG_TreetblCol *col)
 	AG_ObjectLock(tt);
 	col->flags &= ~(AG_TREETBL_COL_SELECTED);
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Select a column by ID */
@@ -689,6 +709,7 @@ AG_TreetblSelectColID(AG_Treetbl *tt, int colID)
 	}
 	tt->column[i].flags |= AG_TREETBL_COL_SELECTED;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 	return (0);
 }
 
@@ -709,6 +730,7 @@ AG_TreetblDeselectColID(AG_Treetbl *tt, int colID)
 	}
 	tt->column[i].flags &= ~(AG_TREETBL_COL_SELECTED);
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 	return (0);
 }
 
@@ -823,6 +845,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 	tt->visible.dirty = 1;
 
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 	return (row);
 fail:
 	AG_ObjectUnlock(tt);
@@ -879,6 +902,7 @@ AG_TreetblDelRow(AG_Treetbl *tt, AG_TreetblRow *row)
 out:
 	tt->visible.dirty = 1;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /*
@@ -902,6 +926,7 @@ AG_TreetblClearRows(AG_Treetbl *tt)
 	tt->nExpandedRows = 0;
 	tt->visible.dirty = 1;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 void
@@ -936,6 +961,7 @@ AG_TreetblRestoreRows(AG_Treetbl *tt)
 	TAILQ_INIT(&tt->backstore);
 
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 /* Select the given row. */
@@ -948,6 +974,7 @@ AG_TreetblSelectRow(AG_Treetbl *tt, AG_TreetblRow *row)
 	}
 	row->flags |= AG_TREETBL_ROW_SELECTED;
 	AG_ObjectUnlock(tt);
+	AG_Redraw(tt);
 }
 
 static void
@@ -1002,6 +1029,7 @@ AG_TreetblExpandRow(AG_Treetbl *tt, AG_TreetblRow *in)
 		if (RowIsVisible(in)) {
 			tt->nExpandedRows += CountVisibleChld(&in->children, 0);
 			tt->visible.dirty = 1;
+			AG_Redraw(tt);
 		}
 	}
 	AG_ObjectUnlock(tt);
@@ -1017,6 +1045,7 @@ AG_TreetblCollapseRow(AG_Treetbl *tt, AG_TreetblRow *in)
 		if (RowIsVisible(in)) {
 			tt->nExpandedRows -= CountVisibleChld(&in->children, 0);
 			tt->visible.dirty = 1;
+			AG_Redraw(tt);
 		}
 	}
 	AG_ObjectUnlock(tt);

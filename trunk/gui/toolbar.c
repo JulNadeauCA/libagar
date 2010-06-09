@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -152,6 +152,7 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
 	}
 	
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 	return (bu);
 }
 
@@ -178,6 +179,7 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	}
 	
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 	return (bu);
 }
 
@@ -189,18 +191,21 @@ AG_ToolbarSeparator(AG_Toolbar *bar)
 	    (bar->type == AG_TOOLBAR_HORIZ) ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 }
 
 void
 AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 {
 	AG_SetInt(bSel, "state", 1);
+	AG_Redraw(bar);
 }
 
 void
 AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 {
 	AG_SetInt(bSel, "state", 0);
+	AG_Redraw(bar);
 }
 
 void
@@ -219,6 +224,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 		}
 	}
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 }
 
 void
@@ -237,6 +243,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 		}
 	}
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 }
 
 void
@@ -255,6 +262,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 		}
 	}
 	AG_ObjectUnlock(bar);
+	AG_Redraw(bar);
 }
 
 static void

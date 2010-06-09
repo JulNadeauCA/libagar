@@ -245,14 +245,6 @@ Init(void *obj)
 	TAILQ_INIT(&wid->redrawTies);
 }
 
-/* Request widget redraw. */
-void
-AG_Redraw(void *p)
-{
-	if (WIDGET(p)->window != NULL)
-		WIDGET(p)->window->dirty = 1;
-}
-
 /* Trigger a redraw if a given binding value has changed. */
 static Uint32
 PollRedrawOnChange(void *obj, Uint32 ival, void *arg)

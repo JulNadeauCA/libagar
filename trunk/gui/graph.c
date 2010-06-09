@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ KeyDown(AG_Event *event)
 		gf->yOffs = 0;
 		break;
 	}
+	AG_Redraw(gf);
 }
 
 static __inline__ int
@@ -119,6 +120,7 @@ MouseMotion(AG_Event *event)
 	if (gf->flags & AG_GRAPH_PANNING) {
 		gf->xOffs -= dx;
 		gf->yOffs -= dy;
+		AG_Redraw(gf);
 		return;
 	}
 	if (gf->flags & AG_GRAPH_DRAGGING) {
@@ -138,6 +140,9 @@ MouseMotion(AG_Event *event)
 			AG_SETFLAGS(edge->flags, AG_GRAPH_MOUSEOVER,
 			    MouseOverEdge(edge,x,y));
 		}
+		if (!TAILQ_EMPTY(&gf->vertices) ||
+		    !TAILQ_EMPTY(&gf->edges))
+			AG_Redraw(gf);
 	}
 }
 
@@ -206,6 +211,7 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->v2->edges[edge->v2->nedges++] = edge;
 
 	AG_ObjectUnlock(gf);
+	AG_Redraw(gf);
 	return (edge);
 }
 
@@ -229,6 +235,7 @@ AG_GraphEdgeLabelS(AG_GraphEdge *ge, const char *s)
 	AG_TextColor(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
+	AG_Redraw(ge->graph);
 }
 
 void
@@ -246,6 +253,7 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	AG_TextColor(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph, AG_TextRender(ge->labelTxt));
 	AG_ObjectUnlock(ge->graph);
+	AG_Redraw(ge->graph);
 }
 
 void
@@ -254,6 +262,7 @@ AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 	AG_ObjectLock(edge->graph);
 	edge->labelColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(edge->graph);
+	AG_Redraw(edge->graph);
 }
 
 void
@@ -262,6 +271,7 @@ AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 	AG_ObjectLock(edge->graph);
 	edge->edgeColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(edge->graph);
+	AG_Redraw(edge->graph);
 }
 
 void
@@ -270,6 +280,7 @@ AG_GraphEdgePopupMenu(AG_GraphEdge *edge, struct ag_popup_menu *pm)
 	AG_ObjectLock(edge->graph);
 	edge->popupMenu = pm;
 	AG_ObjectUnlock(edge->graph);
+	AG_Redraw(edge->graph);
 }
 
 static void
@@ -286,6 +297,7 @@ UnselectEdge(AG_Graph *gf, AG_GraphEdge *edge)
 {
 	edge->flags &= ~(AG_GRAPH_SELECTED);
 	AG_PostEvent(NULL, gf, "graph-edge-unselected", "%p", edge);
+	AG_Redraw(gf);
 }
 
 static void
@@ -293,6 +305,7 @@ SelectEdge(AG_Graph *gf, AG_GraphEdge *edge)
 {
 	edge->flags |= AG_GRAPH_SELECTED;
 	AG_PostEvent(NULL, gf, "graph-edge-selected", "%p", edge);
+	AG_Redraw(gf);
 }
 
 static void
@@ -300,6 +313,7 @@ UnselectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 {
 	vtx->flags &= ~(AG_GRAPH_SELECTED);
 	AG_PostEvent(NULL, gf, "graph-vertex-unselected", "%p", vtx);
+	AG_Redraw(gf);
 }
 
 static void
@@ -307,6 +321,7 @@ SelectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
 {
 	vtx->flags |= AG_GRAPH_SELECTED;
 	AG_PostEvent(NULL, gf, "graph-vertex-selected", "%p", vtx);
+	AG_Redraw(gf);
 }
 
 static void
@@ -518,6 +533,7 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
 	
 	AG_ObjectUnlock(gf);
+	AG_Redraw(gf);
 }
 
 static void
@@ -703,6 +719,7 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	gf->nvertices++;
 	AG_ObjectUnlock(gf);
 
+	AG_Redraw(gf);
 	return (vtx);
 }
 
@@ -722,6 +739,7 @@ AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 	AG_ObjectLock(vtx->graph);
 	vtx->labelColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(vtx->graph);
+	AG_Redraw(vtx->graph);
 }
 
 void
@@ -730,6 +748,7 @@ AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 	AG_ObjectLock(vtx->graph);
 	vtx->bgColor = AG_ColorRGB(r,g,b);
 	AG_ObjectUnlock(vtx->graph);
+	AG_Redraw(vtx->graph);
 }
 
 void
@@ -756,6 +775,7 @@ AG_GraphVertexLabelS(AG_GraphVertex *vtx, const char *s)
 	AG_TextColor(vtx->labelColor);
 	vtx->labelSu = AG_WidgetMapSurface(vtx->graph, AG_TextRender(vtx->labelTxt));
 	AG_ObjectUnlock(vtx->graph);
+	AG_Redraw(vtx->graph);
 }
 
 void
@@ -774,6 +794,7 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 	if (y > gf->yMax) { gf->yMax = y; }
 	
 	AG_ObjectUnlock(gf);
+	AG_Redraw(gf);
 }
 
 void
@@ -783,6 +804,7 @@ AG_GraphVertexSize(AG_GraphVertex *vtx, Uint w, Uint h)
 	vtx->w = w;
 	vtx->h = h;
 	AG_ObjectUnlock(vtx->graph);
+	AG_Redraw(vtx->graph);
 }
 
 void
@@ -791,6 +813,7 @@ AG_GraphVertexStyle(AG_GraphVertex *vtx, enum ag_graph_vertex_style style)
 	AG_ObjectLock(vtx->graph);
 	vtx->style = style;
 	AG_ObjectUnlock(vtx->graph);
+	AG_Redraw(vtx->graph);
 }
 
 void
@@ -924,6 +947,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 		}
 	}
 	AG_ObjectUnlock(gf);
+	AG_Redraw(gf);
 	Free(vSorted);
 }
 

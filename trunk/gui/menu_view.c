@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -105,13 +105,16 @@ MouseMotion(AG_Event *event)
 			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
 				SelectItem(mi, subitem);
 			}
+			AG_Redraw(mview);
 			return;
 		}
 	}
 selnone:
 	if (mi->sel_subitem != NULL &&
-	    mi->sel_subitem->nsubitems == 0)
+	    mi->sel_subitem->nsubitems == 0) {
+		AG_Redraw(mview);
 		SelectItem(mi, NULL);
+	}
 }
 
 static int
@@ -226,6 +229,7 @@ MouseButtonUp(AG_Event *event)
 				}
 				AG_MenuCollapseAll(m);
 			}
+			AG_Redraw(mview);
 			return;
 		}
 	}

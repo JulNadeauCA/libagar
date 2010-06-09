@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -278,6 +278,7 @@ AG_SliderSetControlSize(AG_Slider *sl, int size)
 		break;
 	}
 	AG_ObjectUnlock(sl);
+	AG_Redraw(sl);
 }
 
 /* Set the base increment for integer bindings. */
@@ -386,6 +387,7 @@ SeekToPosition(AG_Slider *sl, int x)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sl);
 }
 #undef SEEK_TO_POSITION
 
@@ -431,6 +433,7 @@ Decrement(AG_Slider *sl, int v)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sl);
 }
 #undef DECREMENT_INT
 #undef DECREMENT_REAL
@@ -477,6 +480,7 @@ Increment(AG_Slider *sl, int v)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sl);
 }
 #undef INCREMENT_INT
 #undef INCREMENT_REAL
@@ -490,6 +494,7 @@ MouseButtonUp(AG_Event *event)
 		sl->ctlPressed = 0;
 		sl->xOffs = 0;
 		AG_PostEvent(NULL, sl, "slider-drag-end", NULL);
+		AG_Redraw(sl);
 	}
 }
 
@@ -527,6 +532,7 @@ MouseButtonDown(AG_Event *event)
 		SeekToPosition(sl, x - sl->xOffs);
 		AG_PostEvent(NULL, sl, "slider-drag-begin", NULL);
 	}
+	AG_Redraw(sl);
 }
 
 static void
@@ -661,10 +667,15 @@ Init(void *obj)
 
 	AG_SetTimeout(&sl->incTo, IncrementTimeout, NULL, 0);
 	AG_SetTimeout(&sl->decTo, DecrementTimeout, NULL, 0);
-
+	
 	AG_BindInt(sl, "value", &sl->value);
 	AG_BindInt(sl, "min", &sl->min);
 	AG_BindInt(sl, "max", &sl->max);
+	
+	AG_RedrawOnChange(sl, 100, "value");
+	AG_RedrawOnChange(sl, 250, "min");
+	AG_RedrawOnChange(sl, 250, "max");
+
 #ifdef AG_DEBUG
 	AG_BindUint(sl, "flags", &sl->flags);
 	AG_BindUint(sl, "type", &sl->type);

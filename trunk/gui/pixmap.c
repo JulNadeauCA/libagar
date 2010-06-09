@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include "pixmap.h"
 #include "primitive.h"
 #include "opengl.h"
+#include "window.h"
 
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
@@ -264,7 +265,10 @@ AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, int surface_name, AG_Surface *su,
 	}
 	AG_ObjectLock(px);
 	AG_WidgetReplaceSurface(px, surface_name, scaled);
-	if (surface_name == px->n) { px->flags |= AG_PIXMAP_UPDATE; }
+	if (surface_name == px->n) {
+		px->flags |= AG_PIXMAP_UPDATE;
+		AG_Redraw(px);
+	}
 	AG_ObjectUnlock(px);
 }
 

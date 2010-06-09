@@ -354,6 +354,7 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sb);
 }
 #undef MAP_PX_COORDS
 
@@ -401,6 +402,7 @@ Decrement(AG_Scrollbar *sb, int v)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sb);
 }
 #undef DECREMENT_INT
 #undef DECREMENT_REAL
@@ -451,6 +453,7 @@ Increment(AG_Scrollbar *sb, int v)
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_Redraw(sb);
 }
 #undef INCREMENT_INT
 #undef INCREMENT_REAL
@@ -476,6 +479,7 @@ MouseButtonUp(AG_Event *event)
 		sb->xOffs = 0;
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-end", NULL);
+	AG_Redraw(sb);
 }
 
 static void
@@ -541,6 +545,7 @@ MouseButtonDown(AG_Event *event)
 		SeekToPxCoords(sb, x - sb->xOffs);
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
+	AG_Redraw(sb);
 }
 
 static void
@@ -708,10 +713,10 @@ Init(void *obj)
 	AG_BindInt(sb, "max", &sb->max);
 	AG_BindInt(sb, "visible", &sb->visible);
 
-	AG_RedrawOnChange(sb, 50, "value");
-	AG_RedrawOnChange(sb, 100, "min");
-	AG_RedrawOnChange(sb, 100, "max");
-	AG_RedrawOnChange(sb, 100, "visible");
+	AG_RedrawOnChange(sb, 100, "value");
+	AG_RedrawOnChange(sb, 250, "min");
+	AG_RedrawOnChange(sb, 250, "max");
+	AG_RedrawOnChange(sb, 250, "visible");
 
 #ifdef AG_DEBUG
 	AG_BindUint(sb, "flags", &sb->flags);

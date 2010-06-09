@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
 #include <core/core.h>
 
 #include "statusbar.h"
+#include "window.h"
 
 #include <stdarg.h>
 
@@ -116,6 +117,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	AG_ObjectAttach(&sbar->box, lab);
 	lab = sbar->labels[sbar->nlabels++];
 	AG_ObjectUnlock(sbar);
+	AG_Redraw(sbar);
 	return (lab);
 }
 

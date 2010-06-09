@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,6 +95,7 @@ Bound(AG_Event *event)
 			break;
 		}
 	}
+	AG_Redraw(sbu);
 }
 
 static void
@@ -144,6 +145,7 @@ TextReturn(AG_Event *event)
 	AG_WidgetUnfocus(sbu->input);
 	
 	AG_ObjectUnlock(sbu);
+	AG_Redraw(sbu);
 }
 
 static void
@@ -169,6 +171,7 @@ TextChanged(AG_Event *event)
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
 	AG_ObjectUnlock(sbu);
+	AG_Redraw(sbu);
 }
 
 static void
@@ -231,7 +234,7 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->sep = ",";
 	
-	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
+	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_STATIC, NULL);
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "88888");
@@ -431,6 +434,7 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(valueb);
 	AG_ObjectUnlock(sbu);
+	AG_Redraw(sbu);
 }
 
 void
@@ -563,6 +567,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(sbu);
+	AG_Redraw(sbu);
 }
 
 void
@@ -634,6 +639,7 @@ AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
 		AG_WidgetDisable(sbu->input);
 	}
 	AG_ObjectUnlock(sbu);
+	AG_Redraw(sbu);
 }
 
 AG_WidgetClass agMSpinbuttonClass = {

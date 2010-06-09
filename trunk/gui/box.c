@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,7 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 		box->sCaption = -1;
 	}
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 static void
@@ -343,6 +344,7 @@ AG_BoxSetHomogenous(AG_Box *box, int enable)
 	AG_ObjectLock(box);
 	AG_SETFLAGS(box->flags, AG_BOX_HOMOGENOUS, enable);
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 void
@@ -351,6 +353,7 @@ AG_BoxSetPadding(AG_Box *box, int padding)
 	AG_ObjectLock(box);
 	box->padding = padding;
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 void
@@ -359,6 +362,7 @@ AG_BoxSetSpacing(AG_Box *box, int spacing)
 	AG_ObjectLock(box);
 	box->spacing = spacing;
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 void
@@ -367,6 +371,7 @@ AG_BoxSetDepth(AG_Box *box, int depth)
 	AG_ObjectLock(box);
 	box->depth = depth;
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 void
@@ -382,6 +387,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	a.h = WIDGET(box)->h;
 	SizeAllocate(box, &a);
 	AG_ObjectUnlock(box);
+	AG_Redraw(box);
 }
 
 #ifdef AG_DEBUG

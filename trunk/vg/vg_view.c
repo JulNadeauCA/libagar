@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,6 +83,7 @@ MouseMotion(AG_Event *event)
 	if (vv->mouse.panning) {
 		vv->x += (float)xRel;
 		vv->y += (float)yRel;
+		AG_Redraw(vv);
 		return;
 	}
 	if (vv->vg == NULL)
@@ -97,6 +98,7 @@ MouseMotion(AG_Event *event)
 			VG_ApplyConstraints(vv, &vCt);
 		}
 		tool->vCursor = vCt;
+		AG_Redraw(vv);
 		if (tool->ops->mousemotion(tool, vCt,
 		    VG_ScaleVector(1.0f/vv->scale,VGVECTOR(xRel,yRel)),
 		    state) == 1) {
@@ -137,6 +139,7 @@ MouseButtonDown(AG_Event *event)
 		if (!(tool->ops->flags & VG_BUTTONDOWN_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
 		}
+		AG_Redraw(vv);
 		if (tool->ops->mousebuttondown(tool, vCt, button) == 1)
 			return;
 	}
@@ -168,12 +171,15 @@ MouseButtonUp(AG_Event *event)
 		if (!(tool->ops->flags & VG_BUTTONUP_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
 		}
+		AG_Redraw(vv);
 		if (tool->ops->mousebuttonup(tool, vCt, button) == 1)
 			return;
 	}
-	if (vv->btnup_ev != NULL)
+	if (vv->btnup_ev != NULL) {
 		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f",
 		    button, x, y);
+		AG_Redraw(vv);
+	}
 }
 
 static void
@@ -194,14 +200,17 @@ KeyDown(AG_Event *event)
 	if (tool == NULL) {
 		return;
 	}
+	AG_Redraw(vv);
 	if (tool->ops->keydown != NULL &&
 	    tool->ops->keydown(tool, sym, mod, unicode) == 1) {
 		return;
 	}
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
 		if (cmd->kSym == sym &&
-		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod))
+		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod)) {
 			AG_PostEvent(NULL, tool->vgv, cmd->fn->name, "%p", tool);
+			AG_Redraw(vv);
+		}
 	}
 }
 
@@ -219,10 +228,11 @@ KeyUp(AG_Event *event)
 	if (AG_ExecKeyAction(vv, AG_ACTION_ON_KEYUP, sym, mod))
 		return;
 	
+	AG_Redraw(vv);
+
 	if (tool != NULL &&
-	    tool->ops->keyup != NULL) {
+	    tool->ops->keyup != NULL)
 		tool->ops->keyup(tool, sym, mod, unicode);
-	}
 }
 
 static void
@@ -400,6 +410,7 @@ VG_ViewSetVG(VG_View *vv, VG *vg)
 		VG_ViewSelectTool(vv, NULL, NULL);
 	}
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Set the snapping constraint. */
@@ -442,6 +453,7 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 	}
 	UpdateGridIntervals(vv);
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Register a "draw" callback. */
@@ -711,6 +723,7 @@ VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)
 	}
 out:
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Generic event handler for tool selection. */
@@ -810,6 +823,7 @@ VG_ViewSetScale(VG_View *vv, float c)
 	UpdateGridIntervals(vv);
 
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Set the display scale factor by preset index. */
@@ -841,6 +855,7 @@ VG_StatusS(VG_View *vv, const char *s)
 		vv->status[0] = '\0';
 	}
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Set the status line text (format string). */
@@ -858,6 +873,7 @@ VG_Status(VG_View *vv, const char *fmt, ...)
 		vv->status[0] = '\0';
 	}
 	AG_ObjectUnlock(vv);
+	AG_Redraw(vv);
 }
 
 /* Register a new container widget to associate with the tool. */

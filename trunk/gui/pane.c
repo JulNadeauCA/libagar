@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@ MouseButtonDown(AG_Event *event)
 			/* Set up for receiving motion events exclusively. */
 			WIDGET(pa)->window->widExclMotion = WIDGET(pa);
 		}
+		AG_Redraw(pa);
 	}
 }
 
@@ -96,6 +97,7 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		pa->rx = rv;
 	}
 	AG_ObjectUnlock(pa);
+	AG_Redraw(pa);
 	return (rv);
 }
 
@@ -163,6 +165,7 @@ MouseButtonUp(AG_Event *event)
 			WIDGET(pa)->window->widExclMotion = NULL;
 		}
 		pa->dmoving = 0;
+		AG_Redraw(pa);
 	}
 }
 
@@ -212,6 +215,7 @@ AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 	AG_ObjectLock(pa);
 	pa->wDiv = wDiv;
 	AG_ObjectUnlock(pa);
+	AG_Redraw(pa);
 }
 
 void
@@ -250,6 +254,7 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 	
 	AG_ObjectUnlock(box);
 	AG_ObjectUnlock(pa);
+	AG_Redraw(pa);
 }
 
 void
@@ -259,6 +264,7 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 	AG_PaneAttachBox(pa, 0, box1);
 	AG_PaneAttachBox(pa, 1, box2);
 	AG_ObjectUnlock(pa);
+	AG_Redraw(pa);
 }
 
 static void

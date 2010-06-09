@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,11 @@ Init(void *obj)
 	AG_BindInt(pb, "value", &pb->value);
 	AG_BindInt(pb, "min", &pb->min);
 	AG_BindInt(pb, "max", &pb->max);
+
+	AG_RedrawOnChange(pb, 250, "value");
+	AG_RedrawOnChange(pb, 1000, "min");
+	AG_RedrawOnChange(pb, 1000, "max");
+
 #ifdef AG_DEBUG
 	AG_BindUint(pb, "flags", &pb->flags);
 	AG_BindUint(pb, "type", &pb->type);
@@ -104,6 +109,7 @@ AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 	AG_ObjectLock(pb);
 	pb->width = width;
 	AG_ObjectUnlock(pb);
+	AG_Redraw(pb);
 }
 
 void
@@ -112,6 +118,7 @@ AG_ProgressBarSetLength(AG_ProgressBar *pb, int length)
 	AG_ObjectLock(pb);
 	pb->length = length;
 	AG_ObjectUnlock(pb);
+	AG_Redraw(pb);
 }
 
 static void

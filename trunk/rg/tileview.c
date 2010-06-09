@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,6 +88,7 @@ MoveCursor(RG_Tileview *tv, int x, int y)
 	tv->yms -= tv->ysub;
 	tv->xms /= tv->pxsz;
 	tv->yms /= tv->pxsz;
+	AG_Redraw(tv);
 }
 
 static __inline__ int
@@ -241,6 +242,7 @@ ToggleAttrib(RG_Tileview *tv, int sx, int sy)
 	tv->tv_attrs.ny = ny;
 
 	t->flags |= RG_TILE_DIRTY;
+	AG_Redraw(tv);
 }
 
 static void
@@ -259,6 +261,7 @@ IncrementLayer(RG_Tileview *tv, int sx, int sy, int inc)
 	(*a) += inc;
 
 	t->flags |= RG_TILE_DIRTY;
+	AG_Redraw(tv);
 }
 
 static void
@@ -326,6 +329,7 @@ MouseButtonDown(AG_Event *event)
 						    ctrl->buttondown->name,
 						    "%i,%i", sx, sy);
 					}
+					AG_Redraw(tv);
 					break;
 				}
 			}
@@ -609,6 +613,8 @@ MoveHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
 	if (ctrl->motion != NULL)
 		AG_PostEvent(NULL, tv, ctrl->motion->name, "%i,%i",
 		    xoffs, yoffs);
+	
+	AG_Redraw(tv);
 }
 
 static void
@@ -708,6 +714,7 @@ RedrawTimeout(void *obj, Uint32 ival, void *arg)
 	RG_Tileview *tv = obj;
 
 	tv->tile->flags |= RG_TILE_DIRTY;
+	AG_Redraw(tv);
 	return (ival);
 }
 
@@ -740,6 +747,7 @@ RG_TileviewSetTile(RG_Tileview *tv, RG_Tile *t)
 		t->nrefs++;
 		RG_TileviewSetZoom(tv, 100, 0);
 	}
+	AG_Redraw(tv);
 }
 
 static void
@@ -926,6 +934,7 @@ out:
 		th->over = 0;
 		th->enable = 0;
 	}
+	AG_Redraw(tv);
 	return (ctrl);
 missingvals:
 	AG_FatalError("RG_TileviewAddCtrl: Missing values");
@@ -954,6 +963,7 @@ RG_TileviewDelCtrl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 {
 	TAILQ_REMOVE(&tv->ctrls, ctrl, ctrls);
 	FreeCtrl(ctrl);
+	AG_Redraw(tv);
 }
 
 void
@@ -1002,6 +1012,7 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 		ClampOffsets(tv);
 	}
 	t->flags |= RG_TILE_DIRTY;
+	AG_Redraw(tv);
 }
 
 static void
@@ -1804,6 +1815,7 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 	}
 	
 	tv->cur_tool = tvt;
+	AG_Redraw(tv);
 }
 
 void
@@ -1818,6 +1830,7 @@ RG_TileviewUnselectTool(RG_Tileview *tv)
 			tv->cur_tool->ops->unselected(tv->cur_tool);
 	}
 	tv->cur_tool = NULL;
+	AG_Redraw(tv);
 }
 
 void

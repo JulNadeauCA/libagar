@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -118,6 +118,7 @@ ScrollToSelection(AG_Tlist *tl)
 		}
 		tl->rOffs = (tl->rOffs > m) ? m :
 		    MAX(0, m - tl->nvisitems + 1);
+		AG_Redraw(tl);
 		return;
 	}
 }
@@ -275,6 +276,7 @@ Init(void *obj)
 	AG_SetTimeout(&tl->refreshTo, RefreshTimeout, NULL, 0);
 
 	AG_BindPointer(tl, "selected", &tl->selected);
+
 #ifdef AG_DEBUG
 	AG_BindUint(tl, "flags", &tl->flags);
 	AG_BindInt(tl, "wHint", &tl->wHint);
@@ -509,6 +511,7 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 		tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 	}
 	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
 }
 
 /* Remove duplicate items from the list. */
@@ -553,6 +556,7 @@ AG_TlistClear(AG_Tlist *tl)
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
 	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
 }
 
 /* Generic string compare routine. */
@@ -666,6 +670,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
 	tl->nitems++;
+	AG_Redraw(tl);
 }
 
 /* Add an item to the tail of the list (user pointer) */
@@ -875,6 +880,7 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 	}
 	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
 	AG_UnlockVariable(selectedb);
+	AG_Redraw(tl);
 }
 
 /* The Tlist must be locked. */
@@ -895,6 +901,7 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	}
 	AG_UnlockVariable(selectedb);
+	AG_Redraw(tl);
 }
 
 static void
@@ -913,17 +920,21 @@ MouseButtonDown(AG_Event *event)
 	/* XXX use array */
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
 		return;
-
+	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
 		tl->rOffs -= AG_WidgetScrollDelta(&tl->wheelTicks);
-		if (tl->rOffs < 0) { tl->rOffs = 0; }
+		if (tl->rOffs < 0) {
+			tl->rOffs = 0;
+		}
+		AG_Redraw(tl);
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		tl->rOffs += AG_WidgetScrollDelta(&tl->wheelTicks);
 		if (tl->rOffs > (tl->nitems - tl->nvisitems)) {
 			tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
 		}
+		AG_Redraw(tl);
 		break;
 	case AG_MOUSE_LEFT:
 		/* Expand the children if the user clicked on the [+] sign. */
@@ -936,6 +947,7 @@ MouseButtonDown(AG_Event *event)
 					ti->flags |=  AG_TLIST_VISIBLE_CHILDREN;
 				}
 				tl->flags |= AG_TLIST_REFRESH;
+				AG_Redraw(tl);
 				return;
 			}
 		}
@@ -1251,6 +1263,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 		}
 	}
 	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
 }
 
 /* Update the icon associated with an item. The Tlist must be locked. */
@@ -1283,6 +1296,7 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 	it->flags |= AG_TLIST_DYNICON;
 	UpdateItemIcon(tl, it, iconsrc);
 	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
 }
 
 void
@@ -1339,6 +1353,7 @@ void
 AG_TlistScrollToStart(AG_Tlist *tl)
 {
 	tl->rOffs = 0;
+	AG_Redraw(tl);
 }
 
 /* Scroll to the end of the list. */
@@ -1346,6 +1361,7 @@ void
 AG_TlistScrollToEnd(AG_Tlist *tl)
 {
 	tl->rOffs = MAX(0, tl->nitems - tl->nvisitems);
+	AG_Redraw(tl);
 }
 
 static void

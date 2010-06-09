@@ -237,7 +237,8 @@ GetStringUCS4(AG_Editable *ed, char **s, Uint32 **ucs, size_t *len)
 		*ucs = ed->ucsBuf;
 		*len = ed->ucsLen;
 	} else {
-		*ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, *s, 0);
+		*ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, *s,
+		    stringb->info.size);
 		*len = AG_LengthUCS4(*ucs);
 	}
 	return (stringb);
@@ -599,7 +600,9 @@ AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 		AG_UnlockVariable(stringb);
 	}
 	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
+
+	if (!agRenderingContext)
+		AG_Redraw(ed);
 }
 
 /* Return the last cursor position. */
