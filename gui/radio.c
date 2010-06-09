@@ -102,6 +102,7 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		if (w > rad->max_w) { rad->max_w = w; }
 	}
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 }
 
 /* Create a radio item and return its index (C string). */
@@ -123,6 +124,7 @@ AG_RadioAddItemS(AG_Radio *rad, const char *s)
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 	return (rv);
 }
 
@@ -149,6 +151,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 	return (rv);
 }
 
@@ -171,6 +174,7 @@ AG_RadioAddItemHKS(AG_Radio *rad, AG_KeySym hotkey, const char *s)
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 	return (rv);
 }
 
@@ -196,6 +200,7 @@ AG_RadioAddItemHK(AG_Radio *rad, AG_KeySym hotkey, const char *fmt, ...)
 	rv = rad->nItems++;
 
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 	return (rv);
 }
 
@@ -215,6 +220,7 @@ AG_RadioClearItems(AG_Radio *rad)
 	rad->nItems = 0;
 	rad->max_w = 0;
 	AG_ObjectUnlock(rad);
+	AG_Redraw(rad);
 }
 
 static void
@@ -294,8 +300,13 @@ MouseMotion(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
 	int y = AG_INT(2) - rad->yPadding;
+	int ns;
 
-	rad->oversel = (y/(rad->radius*2 + rad->ySpacing));
+	ns = (y/(rad->radius*2 + rad->ySpacing));
+	if (ns != rad->oversel) {
+		rad->oversel = ns;
+		AG_Redraw(rad);
+	}
 }
 
 static void
@@ -324,6 +335,7 @@ MouseButtonDown(AG_Event *event)
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;
 		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+		AG_Redraw(rad);
 	}
 	AG_UnlockVariable(value);
 }
@@ -362,6 +374,7 @@ KeyDown(AG_Event *event)
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;
 		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+		AG_Redraw(rad);
 	}
 	AG_UnlockVariable(value);
 }

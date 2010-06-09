@@ -205,9 +205,7 @@ AG_GetDriverByID(Uint id)
 static __inline__ void
 AG_BeginRendering(void *drv)
 {
-#ifdef AG_DEBUG
 	agRenderingContext = 1;
-#endif
 	AGDRIVER_CLASS(drv)->beginRendering(drv);
 }
 
@@ -216,9 +214,7 @@ static __inline__ void
 AG_EndRendering(void *drv)
 {
 	AGDRIVER_CLASS(drv)->endRendering(drv);
-#ifdef AG_DEBUG
 	agRenderingContext = 0;
-#endif
 }
 
 /* Create a texture from a surface (GL drivers). */

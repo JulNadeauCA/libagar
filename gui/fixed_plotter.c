@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -90,6 +90,7 @@ AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 	AG_ObjectLock(fpl);
 	fpl->yrange = range;
 	AG_ObjectUnlock(fpl);
+	AG_Redraw(fpl);
 }
 
 static void
@@ -101,13 +102,17 @@ KeyDown(AG_Event *event)
 	switch (key) {
 	case AG_KEY_0:
 		fpl->xoffs = 0;
+		AG_Redraw(fpl);
 		break;
 	case AG_KEY_LEFT:
-		if ((fpl->xoffs -= 10) < 0)
+		if ((fpl->xoffs -= 10) < 0) {
 			fpl->xoffs = 0;
+		}
+		AG_Redraw(fpl);
 		break;
 	case AG_KEY_RIGHT:
 		fpl->xoffs += 10;
+		AG_Redraw(fpl);
 		break;
 	default:
 		break;
@@ -133,6 +138,9 @@ MouseMotion(AG_Event *event)
 		fpl->yOrigin = 0;
 	if (fpl->yOrigin > WIDGET(fpl)->h)
 		fpl->yOrigin = WIDGET(fpl)->h;
+
+	if (xrel != 0 || yrel != 0)
+		AG_Redraw(fpl);
 }
 
 static void
@@ -235,6 +243,8 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 	AG_ObjectLock(fpl);
 	TAILQ_INSERT_HEAD(&fpl->items, gi, items);
 	AG_ObjectUnlock(fpl);
+	
+	AG_Redraw(fpl);
 	return (gi);
 }
 
@@ -260,6 +270,7 @@ AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 	}
 	
 	AG_ObjectUnlock(gi->fpl);
+	AG_Redraw(gi->fpl);
 }
 
 void
@@ -277,12 +288,22 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 	}
 	TAILQ_INIT(&fpl->items);
 	AG_ObjectUnlock(fpl);
+	AG_Redraw(fpl);
 }
 
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	AG_FixedPlotterFreeItems((AG_FixedPlotter *)p);
+	AG_FixedPlotter *fpl = obj;
+	AG_FixedPlotterItem *git, *nextgit;
+
+	for (git = TAILQ_FIRST(&fpl->items);
+	     git != TAILQ_END(&fpl->items);
+	     git = nextgit) {
+		nextgit = TAILQ_NEXT(git, items);
+		Free(git->vals);
+		Free(git);
+	}
 }
 
 AG_WidgetClass agFixedPlotterClass = {

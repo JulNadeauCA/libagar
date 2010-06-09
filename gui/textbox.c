@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -167,6 +167,7 @@ AG_TextboxSetFont(AG_Textbox *tb, AG_Font *font)
 	AG_ObjectLock(tb);
 	tb->font = font;
 	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
 }
 
 static void
@@ -312,6 +313,10 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	AG_TextboxBufferChanged(tb);
 	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(tb->ed);
+
+	/* XXX for AG_Numerical, etc. */
+	if (!agRenderingContext)
+		AG_Redraw(tb);
 }
 
 /* Set the textbox label (format string). */

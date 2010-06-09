@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,8 @@ TickFrame(void *p, Uint32 ival, void *arg)
 
 	if (av->anim->nframes == 0)
 		return (0);
+
+	AG_Redraw(av);
 
 	if (++av->frame < av->anim->nframes) {
 		RG_AnimFrame *fr = &av->anim->frames[av->frame];
@@ -284,6 +286,7 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 	av->ranim.y = (WIDGET(av)->h - WIDGET(av->btns.play)->h)/2 - anim->h/2;
 	av->ranim.w = anim->w;
 	av->ranim.h = anim->h;
+	AG_Redraw(av);
 }
 
 AG_WidgetClass rgAnimviewClass = {

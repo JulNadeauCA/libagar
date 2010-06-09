@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 
 #include <stdarg.h>
 
-static void SetState(AG_Variable *, void *, int);
+static void SetState(AG_Socket *, AG_Variable *, void *, int);
 static void MouseMotion(AG_Event *);
 static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
@@ -111,6 +111,10 @@ Init(void *obj)
 	
 	AG_BindInt(sock, "state", &sock->state);
 	AG_BindInt(sock, "count", &sock->count);
+
+	AG_RedrawOnChange(sock, 100, "state");
+	AG_RedrawOnChange(sock, 500, "count");
+
 #ifdef AG_DEBUG
 	AG_BindUint(sock, "flags", &sock->flags);
 	AG_BindUint(sock, "bgType", &sock->bgType);
@@ -257,7 +261,7 @@ Draw(void *obj)
 }
 
 static void
-SetState(AG_Variable *binding, void *p, int v)
+SetState(AG_Socket *sock, AG_Variable *binding, void *p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -287,6 +291,7 @@ SetState(AG_Variable *binding, void *p, int v)
 	default:
 		break;
 	}
+	AG_Redraw(sock);
 }
 
 #if 0
@@ -322,16 +327,18 @@ MouseMotion(AG_Event *event)
 	if (!AG_WidgetRelativeArea(sock, x, y)) {
 		if ((sock->flags & AG_SOCKET_STICKY_STATE) == 0 &&
 		    GetState(binding, pState) == 1) {
-			SetState(binding, pState, 0);
+			SetState(sock, binding, pState, 0);
 		}
 		if (sock->flags & AG_SOCKET_MOUSEOVER) {
 			sock->flags &= ~(AG_SOCKET_MOUSEOVER);
 			AG_PostEvent(NULL, sock, "socket-mouseoverlap",
 			    "%i", 0);
+			AG_Redraw(sock);
 		}
 	} else {
 		sock->flags |= AG_SOCKET_MOUSEOVER;
 		AG_PostEvent(NULL, sock, "socket-mouseoverlap", "%i", 1);
+		AG_Redraw(sock);
 	}
 	AG_UnlockVariable(binding);
 }
@@ -398,10 +405,10 @@ MouseButtonDown(AG_Event *event)
 	
 	binding = AG_GetVariable(sock, "state", &pState);
 	if (!(sock->flags & AG_SOCKET_STICKY_STATE)) {
-		SetState(binding, pState, 1);
+		SetState(sock, binding, pState, 1);
 	} else {
 		newState = !GetState(binding, pState);
-		SetState(binding, pState, newState);
+		SetState(sock, binding, pState, newState);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", newState);
 	}
 	AG_UnlockVariable(binding);
@@ -450,7 +457,7 @@ MouseButtonUp(AG_Event *event)
 	binding = AG_GetVariable(sock, "state", &pState);
 	if (GetState(binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
-	    	SetState(binding, pState, 0);
+	    	SetState(sock, binding, pState, 0);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);
 	}
 	AG_UnlockVariable(binding);
@@ -465,6 +472,7 @@ AG_SocketSetPadding(AG_Socket *sock, int lPad, int rPad, int tPad, int bPad)
 	if (tPad != -1) { sock->tPad = tPad; }
 	if (bPad != -1) { sock->bPad = bPad; }
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -475,6 +483,7 @@ AG_SocketBgRect(AG_Socket *sock, Uint w, Uint h)
 	sock->bgData.rect.w = w;
 	sock->bgData.rect.h = h;
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -484,6 +493,7 @@ AG_SocketBgCircle(AG_Socket *sock, Uint r)
 	sock->bgType = AG_SOCKET_RECT;
 	sock->bgData.circle.r = r;
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -495,6 +505,7 @@ AG_SocketBgPixmap(AG_Socket *sock, AG_Surface *su)
 	sock->bgType = AG_SOCKET_PIXMAP;
 	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, suDup);
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -504,6 +515,7 @@ AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *su)
 	sock->bgType = AG_SOCKET_PIXMAP;
 	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, su);
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -527,6 +539,7 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 	
 	AG_ObjectUnlock(icon);
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 void
@@ -548,6 +561,7 @@ AG_SocketRemoveIcon(AG_Socket *sock)
 	sock->icon = NULL;
 out:
 	AG_ObjectUnlock(sock);
+	AG_Redraw(sock);
 }
 
 AG_WidgetClass agSocketClass = {

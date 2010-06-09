@@ -35,7 +35,7 @@
 #include <stdarg.h>
 
 static int  GetState(AG_Button *, AG_Variable *, void *);
-static void SetState(AG_Variable *, void *, int);
+static void SetState(AG_Button *, AG_Variable *, void *, int);
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
@@ -196,7 +196,7 @@ MouseButtonUp(AG_Event *event)
 	binding = AG_GetVariable(bu, "state", &pState);
 	if (GetState(bu, binding, pState) && button == AG_MOUSE_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	SetState(binding, pState, 0);
+	    	SetState(bu, binding, pState, 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 	}
 	AG_UnlockVariable(binding);
@@ -221,10 +221,10 @@ MouseButtonDown(AG_Event *event)
 	
 	binding = AG_GetVariable(bu, "state", &pState);
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		SetState(binding, pState, 1);
+		SetState(bu, binding, pState, 1);
 	} else {
 		newState = !GetState(bu, binding, pState);
-		SetState(binding, pState, newState);
+		SetState(bu, binding, pState, newState);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
 	}
 	AG_UnlockVariable(binding);
@@ -251,7 +251,7 @@ MouseMotion(AG_Event *event)
 	if (!AG_WidgetRelativeArea(bu, x, y)) {
 		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
 		    GetState(bu, binding, pState) == 1) {
-			SetState(binding, pState, 0);
+			SetState(bu, binding, pState, 0);
 		}
 		if (bu->flags & AG_BUTTON_MOUSEOVER) {
 			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
@@ -284,7 +284,7 @@ KeyUp(AG_Event *event)
 		return;
 	}
 	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(binding, pState, 0);
+	SetState(bu, binding, pState, 0);
 	AG_UnlockVariable(binding);
 
 	if (bu->flags & AG_BUTTON_KEYDOWN) {
@@ -308,7 +308,7 @@ KeyDown(AG_Event *event)
 		return;
 	}
 	binding = AG_GetVariable(bu, "state", &pState);
-	SetState(binding, pState, 1);
+	SetState(bu, binding, pState, 1);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 	bu->flags |= AG_BUTTON_KEYDOWN;
 
@@ -443,7 +443,7 @@ GetState(AG_Button *bu, AG_Variable *binding, void *p)
 }
 
 static void
-SetState(AG_Variable *binding, void *p, int v)
+SetState(AG_Button *bu, AG_Variable *binding, void *p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -473,6 +473,7 @@ SetState(AG_Variable *binding, void *p, int v)
 	default:
 		break;
 	}
+	AG_Redraw(bu);
 }
 
 static void
@@ -524,6 +525,7 @@ AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
 	if (tPad != -1) { bu->tPad = tPad; }
 	if (bPad != -1) { bu->bPad = bPad; }
 	AG_ObjectUnlock(bu);
+	AG_Redraw(bu);
 }
 
 void
@@ -595,6 +597,7 @@ AG_ButtonSurface(AG_Button *bu, AG_Surface *su)
 		bu->surface = AG_WidgetMapSurface(bu, suDup);
 	}
 	AG_ObjectUnlock(bu);
+	AG_Redraw(bu);
 }
 
 void
@@ -612,6 +615,7 @@ AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *su)
 		bu->surface = AG_WidgetMapSurfaceNODUP(bu, su);
 	}
 	AG_ObjectUnlock(bu);
+	AG_Redraw(bu);
 }
 
 void
@@ -644,6 +648,7 @@ AG_ButtonTextS(AG_Button *bu, const char *label)
 		AG_LabelTextS(bu->lbl, label);
 	}
 	AG_ObjectUnlock(bu);
+	AG_Redraw(bu);
 }
 
 /* Set the label text (format string). */

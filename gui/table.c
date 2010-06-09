@@ -91,6 +91,7 @@ AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	AG_ObjectLock(t);
 	t->selColor = AG_ColorRGBA(r,g,b,a);
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 /* Change the set of recognized field separators (defaults to ":") */
@@ -110,6 +111,7 @@ AG_TableSetColHeight(AG_Table *t, int h)
 	t->hCol = h;
 	AG_WidgetUpdate(t);
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 /* Set row height in pixels */
@@ -120,6 +122,7 @@ AG_TableSetRowHeight(AG_Table *t, int h)
 	t->hRow = h;
 	AG_WidgetUpdate(t);
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 /* Specify the minimum allowed column width in pixels. */
@@ -500,6 +503,7 @@ ScrollToSelection(AG_Table *t)
 		}
 		t->mOffs = (t->mOffs > m) ? m :
 		    MAX(0, m - t->mVis + 2);
+		AG_Redraw(t);
 		return;
 	}
 }
@@ -722,6 +726,7 @@ AG_TableRedrawCells(AG_Table *t)
 	AG_ObjectLock(t);
 	t->flags |= AG_TABLE_REDRAW_CELLS;
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 /* Table must be locked. */
@@ -988,9 +993,12 @@ ColumnLeftClick(AG_Table *t, int px)
 				}
 				goto cont;
 			}
+			AG_Redraw(t);
 		}
-		if (!multi)
+		if (!multi) {
 			tc->selected = 0;
+			AG_Redraw(t);
+		}
 cont:
 		x1 += tc->w;
 	}
@@ -1161,6 +1169,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 		}
 		break;
 	}
+	AG_Redraw(t);
 }
 
 /* Right click on cell; show the cell's popup menu. */
@@ -1298,13 +1307,17 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
 		t->mOffs -= AG_WidgetScrollDelta(&t->wheelTicks);
-		if (t->mOffs < 0) { t->mOffs = 0; }
+		if (t->mOffs < 0) {
+			t->mOffs = 0;
+		}
+		AG_Redraw(t);
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		t->mOffs += AG_WidgetScrollDelta(&t->wheelTicks);
 		if (t->mOffs > (t->m - t->mVis)) {
 			t->mOffs = MAX(0, t->m - t->mVis);
 		}
+		AG_Redraw(t);
 		break;
 	case AG_MOUSE_LEFT:
 		if (OverColumnHeader(t, y)) {
@@ -1345,6 +1358,7 @@ MouseButtonUp(AG_Event *event)
 	case AG_MOUSE_LEFT:
 		if (t->nResizing >= 0) {
 			t->nResizing = -1;
+			AG_Redraw(t);
 		}
 		break;
 	}
@@ -1398,6 +1412,7 @@ MouseMotion(AG_Event *event)
 			tc->w = t->wColMin;
 		}
 		SizeColumns(t);
+		AG_Redraw(t);
 	}
 }
 
@@ -1460,11 +1475,11 @@ AG_TableSelectRow(AG_Table *t, int m)
 
 	AG_ObjectLock(t);
 	if (m < t->m) {
-		for (n = 0; n < t->n; n++) {
+		for (n = 0; n < t->n; n++)
 			t->cells[m][n].selected = 1;
-		}
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 void
@@ -1474,11 +1489,11 @@ AG_TableDeselectRow(AG_Table *t, int m)
 
 	AG_ObjectLock(t);
 	if (m < t->m) {
-		for (n = 0; n < t->n; n++) {
+		for (n = 0; n < t->n; n++)
 			t->cells[m][n].selected = 0;
-		}
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 void
@@ -1492,6 +1507,7 @@ AG_TableSelectAllRows(AG_Table *t)
 			t->cells[m][n].selected = 1;
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 void
@@ -1505,6 +1521,7 @@ AG_TableDeselectAllRows(AG_Table *t)
 			t->cells[m][n].selected = 0;
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 void
@@ -1517,6 +1534,7 @@ AG_TableSelectAllCols(AG_Table *t)
 		t->cols[n].selected = 1;
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 void
@@ -1529,6 +1547,7 @@ AG_TableDeselectAllCols(AG_Table *t)
 		t->cols[n].selected = 0;
 	}
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 }
 
 static void
@@ -1624,6 +1643,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	}
 	n = t->n++;
 	AG_ObjectUnlock(t);
+	AG_Redraw(t);
 	return (n);
 fail:
 	AG_ObjectUnlock(t);
@@ -1839,6 +1859,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_end(ap);
 
 	rv = t->m++;
+	AG_Redraw(t);
 	AG_ObjectUnlock(t);
 	return (rv);
 fail:

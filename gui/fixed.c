@@ -157,6 +157,7 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(fx);
+	AG_Redraw(fx);
 }
 
 void
@@ -179,6 +180,7 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(fx);
+	AG_Redraw(fx);
 }
 
 void
@@ -200,6 +202,7 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(fx);
+	AG_Redraw(fx);
 }
 
 void
@@ -213,6 +216,7 @@ AG_FixedDel(AG_Fixed *fx, void *chld)
 	
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(fx);
+	AG_Redraw(fx);
 }
 
 AG_WidgetClass agFixedClass = {

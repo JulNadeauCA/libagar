@@ -28,6 +28,7 @@
 
 #include "console.h"
 #include "primitive.h"
+#include "window.h"
 
 #include <stdarg.h>
 #include <string.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -178,6 +178,7 @@ AG_IconSetBackgroundFill(AG_Icon *icon, int enable, AG_Color C)
 {
 	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
 	icon->cBackground = C;
+	AG_Redraw(icon);
 }
 
 void
@@ -192,6 +193,7 @@ AG_IconSetSurface(AG_Icon *icon, AG_Surface *su)
 		icon->surface = AG_WidgetMapSurface(icon, suDup);
 	}
 	AG_ObjectUnlock(icon);
+	AG_Redraw(icon);
 }
 
 void
@@ -204,6 +206,7 @@ AG_IconSetSurfaceNODUP(AG_Icon *icon, AG_Surface *su)
 		icon->surface = AG_WidgetMapSurfaceNODUP(icon, su);
 	}
 	AG_ObjectUnlock(icon);
+	AG_Redraw(icon);
 }
 
 void
@@ -223,6 +226,7 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
 	AG_ObjectUnlock(icon);
+	AG_Redraw(icon);
 }
 
 void
@@ -238,6 +242,7 @@ AG_IconSetTextS(AG_Icon *icon, const char *s)
 		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
 	AG_ObjectUnlock(icon);
+	AG_Redraw(icon);
 }
 
 AG_WidgetClass agIconClass = {

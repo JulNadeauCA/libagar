@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,6 +111,7 @@ SetAlpha8(AG_HSVPal *pal, Uint8 a)
 		break;
 	}
 	AG_UnlockVariable(bAlpha);
+	AG_Redraw(pal);
 }
 
 static __inline__ void
@@ -188,6 +189,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	bFormat = AG_GetVariable(pal, "pixel-format", &pFormat);
 	AG_SetUint32(pal, "pixel", AG_MapPixelRGBA(*pFormat, r,g,b,a));
 	AG_UnlockVariable(bFormat);
+	AG_Redraw(pal);
 }
 
 static void
@@ -206,6 +208,7 @@ UpdateHSVFromPixel(AG_HSVPal *hsv, Uint32 pixel)
 	AG_SetFloat(hsv, "value", v);
 	SetAlpha8(hsv, a);
 	AG_UnlockVariable(bFormat);
+	AG_Redraw(hsv);
 }
 
 static void
@@ -259,6 +262,7 @@ UpdateHSVFromRGBAv(AG_HSVPal *hsv)
 	SetAlpha8(hsv, a);
 	AG_UnlockVariable(bRGBAv);
 	hsv->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(hsv);
 }
 
 static void
@@ -306,6 +310,7 @@ UpdateHSVFromRGBv(AG_HSVPal *hsv)
 	AG_SetFloat(hsv, "value", v);
 	AG_UnlockVariable(bRGBv);
 	hsv->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(hsv);
 }
 
 static void
@@ -322,6 +327,7 @@ UpdateHue(AG_HSVPal *pal, int x, int y)
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(pal);
 }
 
 static void
@@ -349,6 +355,7 @@ UpdateSV(AG_HSVPal *pal, int ax, int ay)
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(pal);
 }
 
 static void
@@ -393,6 +400,7 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "a-changed", NULL);
+	AG_Redraw(pal);
 }
 
 static void
@@ -493,6 +501,7 @@ SetComplementaryColor(AG_Event *event)
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 	AG_ObjectUnlock(pal);
+	AG_Redraw(pal);
 }
 
 static void
@@ -508,6 +517,7 @@ CopyColor(AG_Event *event)
 	cA = AG_GetFloat(pal, "alpha");
 	AG_MutexUnlock(&CopyLock);
 	AG_ObjectUnlock(pal);
+	AG_Redraw(pal);
 }
 
 static void
@@ -530,6 +540,7 @@ PasteColor(AG_Event *event)
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 
 	AG_ObjectUnlock(pal);
+	AG_Redraw(pal);
 }
 
 static void
@@ -589,6 +600,7 @@ MouseButtonDown(AG_Event *event)
 			}
 		}
 		AG_WidgetFocus(pal);
+		AG_Redraw(pal);
 		break;
 	case AG_MOUSE_MIDDLE:
 	case AG_MOUSE_RIGHT:
@@ -655,6 +667,7 @@ Bound(AG_Event *event)
 			}
 		}
 	}
+	AG_Redraw(hsv);
 }
 
 static void

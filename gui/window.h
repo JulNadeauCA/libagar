@@ -329,6 +329,18 @@ AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
 void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
 void       AG_ViewDetach(AG_Window *) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
+
+/* Request widget redraw. */
+static __inline__ void
+AG_Redraw(void *obj)
+{
+#ifdef AG_DEBUG
+	if (agRenderingContext)
+		AG_FatalError("AG_Redraw() called from rendering context");
+#endif
+	if (AGWIDGET(obj)->window != NULL)
+		AGWIDGET(obj)->window->dirty = 1;
+}
 __END_DECLS
 
 #include <agar/gui/close.h>

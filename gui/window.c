@@ -751,6 +751,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 out:
 	AG_ListDestroy(Lfoc);
 	AG_ListDestroy(Luniq);
+	win->dirty = 1;
 }
 
 /*
@@ -776,6 +777,7 @@ AG_WindowFocus(AG_Window *win)
 	} else {
 		agWindowToFocus = win;
 	}
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 out:
 	AG_UnlockVFS(&agDrivers);
@@ -958,7 +960,8 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 		}
 		break;
 	}
-	
+
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 	return (0);
 fail:
@@ -981,6 +984,7 @@ AG_WindowSetMinSizePct(AG_Window *win, int pct)
 	AG_ObjectLock(win);
 	win->flags |= AG_WINDOW_MINSIZEPCT;
 	win->minPct = pct;
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
 
@@ -992,6 +996,7 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 	win->flags &= ~(AG_WINDOW_MINSIZEPCT);
 	win->wMin = w;
 	win->hMin = h;
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
 
@@ -1423,6 +1428,7 @@ AG_WindowSetSideBorders(AG_Window *win, int pixels)
 	if (win != NULL) {
 		AG_ObjectLock(win);
 		win->wBorderSide = pixels;
+		win->dirty = 1;
 		AG_ObjectUnlock(win);
 	} else {
 		agWindowSideBorderDefault = pixels;
@@ -1436,6 +1442,7 @@ AG_WindowSetBottomBorder(AG_Window *win, int pixels)
 	if (win != NULL) {
 		AG_ObjectLock(win);
 		win->wBorderBot = pixels;
+		win->dirty = 1;
 		AG_ObjectUnlock(win);
 	} else {
 		agWindowBotBorderDefault = pixels;
@@ -1448,6 +1455,7 @@ AG_WindowSetSpacing(AG_Window *win, int spacing)
 {
 	AG_ObjectLock(win);
 	win->spacing = spacing;
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
 
@@ -1460,6 +1468,7 @@ AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
 	if (rPad != -1) { win->rPad = rPad; }
 	if (tPad != -1) { win->tPad = tPad; }
 	if (bPad != -1) { win->bPad = bPad; }
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
 
@@ -1546,6 +1555,7 @@ AG_WindowSetCaptionS(AG_Window *win, const char *s)
 	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
 		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
 	}
+	win->dirty = 1;
 	AG_ObjectUnlock(win);
 }
 
