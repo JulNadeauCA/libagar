@@ -106,8 +106,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
 		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
-	if (flags & AG_TEXTBOX_STATIC)
-		tb->ed->flags |= AG_EDITABLE_STATIC;
 	if (flags & AG_TEXTBOX_NOEMACS)
 		tb->ed->flags |= AG_EDITABLE_NOEMACS;
 	if (flags & AG_TEXTBOX_NOWORDSEEK)
@@ -125,6 +123,8 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_SetEvent(tb->vBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 	}
+	
+	AG_TextboxSetStatic(tb, (flags & AG_TEXTBOX_STATIC));
 	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
 
 	tb->flags |= flags;
