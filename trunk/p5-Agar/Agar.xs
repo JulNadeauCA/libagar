@@ -215,7 +215,7 @@ Agar::Widget
 FindWidget(name)
 	const char * name
 CODE:
-	if ((RETVAL = AG_WidgetFind(agView, name)) == NULL) {
+	if ((RETVAL = AG_WidgetFind(agDriverSw, name)) == NULL) {
 		XSRETURN_UNDEF;
 	}
 OUTPUT:
@@ -225,7 +225,7 @@ Agar::Object
 FindObject(name)
 	const char * name
 CODE:
-	if ((RETVAL = AG_ObjectFindS(AGOBJECT(agView), name)) == NULL) {
+	if ((RETVAL = AG_ObjectFindS(AGOBJECT(agDriverSw), name)) == NULL) {
 		XSRETURN_UNDEF;
 	}
 OUTPUT:

@@ -158,12 +158,13 @@ event loop.
 
 =item B<$win-E<gt>attach()>
 
-Attach this window to the view. Windows returned by constructors are already
-attached; this method is only useful in combination with detach.
+Attach a "logical" child window to this window.
+When the window is detached, the child window will be automatically
+detached as well.
 
 =item B<$win-E<gt>detach()>
 
-Detach this window from the view.
+Remove a "logical" child window from this window.
 
 =item B<$widget = $win-E<gt>findFocused()>
 
