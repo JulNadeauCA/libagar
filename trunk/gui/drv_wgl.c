@@ -811,14 +811,8 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		AG_PostEvent(NULL, dev->win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
-#if 0
-		AG_BeginRendering(drv);
-		AG_ObjectLock(dev->win);
-		AG_WindowDraw(dev->win);
-		AG_ObjectUnlock(dev->win);
-		AG_EndRendering(drv);
+		dev->win->dirty = 1;
 		break;
-#endif
 	default:
 		return (0);
 	}
@@ -844,13 +838,14 @@ WGL_GenericEventLoop(void *obj)
 					continue;
 				}
 				win = AGDRIVER_MW(drv)->win;
-				if (win->visible) {
-					AG_BeginRendering(drv);
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-					AG_EndRendering(drv);
+				if (!win->visible || !win->dirty) {
+					continue;
 				}
+				AG_BeginRendering(drv);
+				AG_ObjectLock(win);
+				AG_WindowDraw(win);
+				AG_ObjectUnlock(win);
+				AG_EndRendering(drv);
 			}
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);

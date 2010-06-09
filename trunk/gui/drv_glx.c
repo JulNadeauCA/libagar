@@ -779,14 +779,8 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		AG_PostEvent(NULL, dev->win, "window-close", NULL);
 		break;
 	case AG_DRIVER_EXPOSE:
-#if 0
-		AG_BeginRendering(drv);
-		AG_ObjectLock(dev->win);
-		AG_WindowDraw(dev->win);
-		AG_ObjectUnlock(dev->win);
-		AG_EndRendering(drv);
+		dev->win->dirty = 1;
 		break;
-#endif
 	default:
 		break;
 	}
@@ -817,7 +811,7 @@ GLX_GenericEventLoop(void *obj)
 				glx = (AG_DriverGLX *)drv;
 				AG_MutexLock(&glx->lock);
 				win = AGDRIVER_MW(drv)->win;
-				if (win->visible) {
+				if (win->visible && win->dirty) {
 					AG_BeginRendering(drv);
 					AG_ObjectLock(win);
 					AG_WindowDraw(win);
@@ -1439,7 +1433,8 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 			     PointerMotionMask|ButtonMotionMask|
 			     KeymapStateMask|
 			     StructureNotifyMask|
-			     FocusChangeMask;
+			     FocusChangeMask|
+			     ExposureMask;
 	valuemask = CWColormap | CWBackPixmap | CWBorderPixel | CWEventMask;
 
 	/* Create a new window. */

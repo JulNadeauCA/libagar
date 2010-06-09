@@ -865,7 +865,7 @@ SelectedType(AG_Event *event)
 }
 
 static void
-WidgetShown(AG_Event *event)
+Shown(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 	AG_TlistItem *it;
@@ -1052,7 +1052,7 @@ Init(void *obj)
 	AG_ObjectInit(fd->winGlobList, &agTlistClass);
 	AG_Expand(fd->winGlobList);
 
-	AG_SetEvent(fd, "widget-shown", WidgetShown, NULL);
+	AG_AddEvent(fd, "widget-shown", Shown, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
 	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);

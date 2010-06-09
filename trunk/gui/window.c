@@ -547,13 +547,17 @@ Shown(AG_Event *event)
 
 	/* Assume we gained focus. XXX */
 	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-	
+
+	/* Apply initial alignment setting */
 	if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
 		AG_WindowSetGeometryAligned(win,
 		    win->alignment,
 		    WIDTH(win),
 		    HEIGHT(win));
 	}
+
+	/* Mark for redraw */
+	win->dirty = 1;
 }
 
 static void
@@ -564,7 +568,10 @@ Hidden(AG_Event *event)
 	AG_DriverSw *dsw;
 	int i;
 
-	/* Cancel any planned focus change to this window. */
+	/* Cancel any pending redraw. */
+	win->dirty = 0;
+
+	/* Cancel any pending focus change to this window. */
 	if (win == agWindowToFocus)
 		agWindowToFocus = NULL;
 
