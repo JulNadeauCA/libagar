@@ -512,6 +512,58 @@ places the focus over the widget following (or preceeding if
 is 1) the widget currently holding focus inside of
 .Fa win .
 By default, Agar maps the "TAB" key to this function.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Window
+object:
+.Pp
+.Bl -tag -width "AG_Window *parent "
+.It Ft Uint flags
+Option flags (see
+.Dq FLAGS
+section below).
+.It Ft int visible
+Visibility flag (1 = visible, 0 = hidden).
+Read-only (see
+.Fn AG_WindowShow
+and
+.Fn AG_WindowHide ) .
+.It Ft int dirty
+Redraw flag.
+If set to 1, the window will be redrawn as soon as possible.
+.It Ft AG_Titlebar *tbar
+Pointer to the associated
+.Xr AG_Titlebar 3
+widget, or NULL if the window has no titlebar.
+Read-only.
+.It Ft int wReq, hReq
+Ideal window geometry in pixels, as last computed from the
+.Fn size_request
+operation of its attached widgets.
+Read-only (see
+.Xr AG_WidgetSizeReq 3 ) .
+.It Ft int wMin, hMin
+Suggested minimum window geometyry in pixels.
+Read-only (use
+.Fn AG_WindowSetMinSize ) .
+.It Ft AG_Window *parent
+Pointer to "logical" parent window, or NULL if there isn't any.
+Read-only (see
+.Fn AG_WindowAttach
+and
+.Fn AG_WindowDetach ) .
+.It Ft TAILQ subwins
+List of "logical" child windows.
+Read-only (see
+.Fn AG_WindowAttach
+and
+.Fn AG_WindowDetach ) .
+.It Ft AG_Icon *icon
+Pointer to the floating
+.Xr AG_Icon 3
+object if we are using Agar's internal window manager, NULL otherwise.
+Read-only.
+.El
 .Sh FLAGS
 For the
 .Ft AG_Window

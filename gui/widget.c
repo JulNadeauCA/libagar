@@ -161,6 +161,30 @@ OnDetach(AG_Event *event)
 	}
 }
 
+static void
+Shown(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	AG_RedrawTie *rt;
+
+	wid->flags &= ~(AG_WIDGET_HIDE);
+	
+	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies)
+		AG_ScheduleTimeout(wid, &rt->to, rt->ival);
+}
+
+static void
+Hidden(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	AG_RedrawTie *rt;
+	
+	wid->flags |= AG_WIDGET_HIDE;
+	
+	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies)
+		AG_DelTimeout(wid, &rt->to);
+}
+
 #ifdef AG_LEGACY
 /* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
 static void
@@ -176,6 +200,7 @@ static void
 Init(void *obj)
 {
 	AG_Widget *wid = obj;
+	AG_Event *ev;
 
 	OBJECT(wid)->save_pfx = "/widgets";
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
@@ -208,10 +233,120 @@ Init(void *obj)
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
+	ev = AG_SetEvent(wid, "widget-shown", Shown, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
+	ev = AG_SetEvent(wid, "widget-hidden", Hidden, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
 #ifdef AG_LEGACY
 	/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
 	AG_SetEvent(wid, "bound", Bound, NULL);
 #endif
+
+	TAILQ_INIT(&wid->redrawTies);
+}
+
+/* Request widget redraw. */
+void
+AG_Redraw(void *p)
+{
+	if (WIDGET(p)->window != NULL)
+		WIDGET(p)->window->dirty = 1;
+}
+
+/* Trigger a redraw if a given binding value has changed. */
+static Uint32
+PollRedrawOnChange(void *obj, Uint32 ival, void *arg)
+{
+	AG_Widget *wid = obj;
+	AG_RedrawTie *rt = arg;
+	AG_Variable *V;
+	void *p;
+	int rv;
+
+	if ((V = AG_GetVariable(wid, rt->name, &p)) == NULL) {
+		return (ival);
+	}
+	if (memcmp(&rt->dataLast, p, sizeof(union ag_variable_data)) != 0) {
+		memcpy(&rt->dataLast, p, sizeof(union ag_variable_data));
+		rv = 1;
+	} else {
+		rv = 0;
+	}
+	if (rv != 0) {
+		if (wid->window != NULL)
+			wid->window->dirty = 1;
+	}
+	return (ival);
+}
+
+/* Arrange for a redraw whenever a given binding value changes. */
+void
+AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
+{
+	AG_Widget *wid = obj;
+	AG_RedrawTie *rt;
+	
+	if (refresh_ms == -1) {
+		TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+			if (rt->type == AG_REDRAW_ON_CHANGE &&
+			    strcmp(rt->name, name) == 0)
+				break;
+		}
+		if (rt != NULL) {
+			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
+			AG_DelTimeout(wid, &rt->to);
+			Free(rt);
+		}
+		return;
+	}
+
+	rt = Malloc(sizeof(AG_RedrawTie));
+	rt->type = AG_REDRAW_ON_CHANGE;
+	rt->ival = refresh_ms;
+	Strlcpy(rt->name, name, sizeof(rt->name));
+	memset(&rt->dataLast, 0, sizeof(union ag_variable_data));
+	AG_SetTimeout(&rt->to, PollRedrawOnChange, rt, 0);
+	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
+}
+
+/* Trigger a redraw periodically. */
+static Uint32
+PollRedrawOnTick(void *obj, Uint32 ival, void *arg)
+{
+	AG_Widget *wid = obj;
+
+	if (wid->window != NULL) {
+		wid->window->dirty = 1;
+	}
+	return (ival);
+}
+
+/* Arrange for an unconditional redraw at a periodic interval. */
+void
+AG_RedrawOnTick(void *obj, int refresh_ms)
+{
+	AG_Widget *wid = obj;
+	AG_RedrawTie *rt;
+
+	if (refresh_ms == -1) {
+		TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+			if (rt->type == AG_REDRAW_ON_TICK)
+				break;
+		}
+		if (rt != NULL) {
+			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
+			AG_DelTimeout(wid, &rt->to);
+			Free(rt);
+		}
+		return;
+	}
+
+	rt = Malloc(sizeof(AG_RedrawTie));
+	rt->type = AG_REDRAW_ON_TICK;
+	rt->ival = refresh_ms;
+	rt->name[0] = '\0';
+	AG_SetTimeout(&rt->to, PollRedrawOnTick, rt, 0);
+	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
 }
 
 /* Tie an action to a mouse-button-down event. */
@@ -634,6 +769,36 @@ AG_WidgetSetFocusable(void *obj, int flag)
 	AG_ObjectUnlock(wid);
 }
 
+/* Set widget to "enabled" state for input. */
+void
+AG_WidgetEnable(void *obj)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	if (wid->flags & AG_WIDGET_DISABLED) {
+		wid->flags &= ~(AG_WIDGET_DISABLED);
+		AG_PostEvent(NULL, wid, "widget-enabled", NULL);
+		AG_Redraw(wid);
+	}
+	AG_ObjectUnlock(wid);
+}
+
+/* Set widget to "disabled" state for input. */
+void
+AG_WidgetDisable(void *obj)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	if (!(wid->flags & AG_WIDGET_DISABLED)) {
+		wid->flags |= AG_WIDGET_DISABLED;
+		AG_PostEvent(NULL, wid, "widget-disabled", NULL);
+		AG_Redraw(wid);
+	}
+	AG_ObjectUnlock(wid);
+}
+
 /* Arrange for a widget to automatically forward focus to another widget. */
 void
 AG_WidgetForwardFocus(void *obj, void *objFwd)
@@ -655,16 +820,22 @@ static void
 Destroy(void *obj)
 {
 	AG_Widget *wid = obj;
-	AG_PopupMenu *pm, *pm2;
+	AG_PopupMenu *pm, *pmNext;
+	AG_RedrawTie *rt, *rtNext;
 	AG_Variable *V;
 	Uint i, j;
 
-	/* Destroy any attached popup menu. */
 	for (pm = SLIST_FIRST(&wid->menus);
 	     pm != SLIST_END(&wid->menus);
-	     pm = pm2) {
-		pm2 = SLIST_NEXT(pm, menus);
+	     pm = pmNext) {
+		pmNext = SLIST_NEXT(pm, menus);
 		AG_PopupDestroy(NULL, pm);
+	}
+	for (rt = TAILQ_FIRST(&wid->redrawTies);
+	     rt != TAILQ_END(&wid->redrawTies);
+	     rt = rtNext) {
+		rtNext = TAILQ_NEXT(rt, redrawTies);
+		Free(rt);
 	}
 
 	/* Free the action tables. */
@@ -741,6 +912,7 @@ FocusWidget(AG_Widget *w)
 	if (w->window != NULL) {
 		AG_PostEvent(w->window, w, "widget-gainfocus", NULL);
 		w->window->nFocused++;
+		w->window->dirty = 1;
 	} else {
 		Verbose("%s: Gained focus, but no parent window\n",
 		    OBJECT(w)->name);
@@ -755,6 +927,7 @@ UnfocusWidget(AG_Widget *w)
 	if (w->window != NULL) {
 		AG_PostEvent(w->window, w, "widget-lostfocus", NULL);
 		w->window->nFocused--;
+		w->window->dirty = 1;
 	}
 }
 
@@ -1116,8 +1289,22 @@ AG_WidgetScrollDelta(Uint32 *t1)
 	return (1);
 }
 
+/* Show a widget */
+void
+AG_WidgetShow(void *wid)
+{
+	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+}
+
+/* Hide a widget */
+void
+AG_WidgetHide(void *wid)
+{
+	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+}
+
 /*
- * Raise `widget-shown' on a widget and its children.
+ * Raise `widget-shown' event on a widget and its children.
  * Used by containers such as Notebook.
  */
 void
@@ -1129,18 +1316,17 @@ AG_WidgetShownRecursive(void *p)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetShownRecursive(chld);
-	}
+
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
-	wid->flags &= ~(AG_WIDGET_HIDE);
-	
+
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);
 }
 
 /*
- * Raise `widget-hidden' on a widget and its children.
+ * Raise `widget-hidden' event on a widget and its children.
  * Used by containers such as Notebook.
  */
 void
@@ -1152,11 +1338,10 @@ AG_WidgetHiddenRecursive(void *p)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 	
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetHiddenRecursive(chld);
-	}
+
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
-	wid->flags |= AG_WIDGET_HIDE;
 	
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(wid);

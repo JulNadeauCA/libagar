@@ -20,15 +20,18 @@
 #define AG_SIZE_SPEC_MAX		256
 #define AG_WIDGET_BINDING_NAME_MAX	16
 
+/* For AG_WidgetSizeReq() */
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
 } AG_SizeReq;
 
+/* For AG_WidgetSizeAlloc() */
 typedef struct ag_size_alloc {
 	int w, h;			/* Allocated geometry in pixels */
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 
+/* Widget class description structure. */
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;
 	void (*draw)(void *);
@@ -36,6 +39,7 @@ typedef struct ag_widget_class {
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetClass;
 
+/* Relative size specification of visual element. */
 typedef enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,	/* Parser error */
 	AG_WIDGET_PIXELS,	/* Pixel count */
@@ -44,11 +48,13 @@ typedef enum ag_widget_sizespec {
 	AG_WIDGET_FILL		/* Fill remaining space */
 } AG_SizeSpec;
 
+/* Container widget "packing mode" specification. */
 enum ag_widget_packing {
 	AG_PACK_HORIZ,
 	AG_PACK_VERT
 };
 
+/* Flag description (e.g., for AG_Checkbox(3)) */
 typedef struct ag_flag_descr {
 	Uint bitmask;			/* Bitmask */
 	const char *descr;		/* Bit(s) description */
@@ -57,6 +63,7 @@ typedef struct ag_flag_descr {
 
 struct ag_popup_menu;
 
+/* Type of widget action */
 typedef enum ag_action_type {
 	AG_ACTION_FN,			/* Execute function */
 	AG_ACTION_SET_INT,		/* Set an integer */
@@ -65,6 +72,7 @@ typedef enum ag_action_type {
 	AG_ACTION_TOGGLE_FLAG		/* Toggle specified bits in a word */
 } AG_ActionType;
 
+/* Registered widget action */
 typedef struct ag_action {
 	AG_ActionType type;
 	struct ag_widget *widget;	/* Back pointer to widget */
@@ -74,6 +82,7 @@ typedef struct ag_action {
 	Uint bitmask;			/* Bitmask (for SET_FLAG) */
 } AG_Action;
 
+/* Widget action type */
 typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
 	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
@@ -84,6 +93,7 @@ typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
 } AG_ActionEventType;
 
+/* Widget event->action tie, as registered by AG_WidgetActionOn*(). */
 typedef struct ag_action_tie {
 	AG_ActionEventType type;		/* Trigger event type */
 	union {
@@ -98,6 +108,22 @@ typedef struct ag_action_tie {
 	char action[64];			/* Action name */
 } AG_ActionTie;
 
+enum ag_redraw_tie_type {
+	AG_REDRAW_ON_CHANGE,
+	AG_REDRAW_ON_TICK
+};
+
+/* For AG_RedrawOn*() */
+typedef struct ag_redraw_tie {
+	enum ag_redraw_tie_type type;
+	char name[AG_VARIABLE_NAME_MAX];	/* Polled variable */
+	union ag_variable_data dataLast;	/* Last accessed data */
+	AG_Timeout to;				/* Polling timer */
+	Uint ival;				/* Polling interval */
+	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
+} AG_RedrawTie;
+
+/* Widget instance structure */
 typedef struct ag_widget {
 	struct ag_object obj;
 
@@ -150,7 +176,8 @@ typedef struct ag_widget {
 	AG_ActionTie *keyActions;		/* Keyboard event ties */
 	Uint         nKeyActions;
 	
-	AG_TAILQ_ENTRY(ag_widget) detach;	/* In agWidgetDetachQ */
+	AG_TAILQ_ENTRY(ag_widget) detach;	  /* In agWidgetDetachQ */
+	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies; /* For AG_RedrawOn*() */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -219,6 +246,9 @@ int         AG_WidgetSensitive(void *, int, int);
 AG_SizeSpec AG_WidgetParseSizeSpec(const char *, int *);
 int         AG_WidgetScrollDelta(Uint32 *);
 void       *AG_WidgetFind(void *, const char *);
+
+void        AG_WidgetShow(void *);
+void        AG_WidgetHide(void *);
 void        AG_WidgetShownRecursive(void *);
 void        AG_WidgetHiddenRecursive(void *);
 
@@ -226,6 +256,10 @@ void        AG_WidgetInheritDraw(void *);
 void        AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
 int         AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
 AG_Surface *AG_WidgetSurface(void *);
+
+void        AG_Redraw(void *);
+void        AG_RedrawOnChange(void *, int, const char *);
+void        AG_RedrawOnTick(void *, int);
 
 AG_Action  *AG_ActionFn(void *, const char *, AG_EventFn, const char *, ...);
 AG_Action  *AG_ActionSetInt(void *, const char *, int *, int);
@@ -246,27 +280,8 @@ int         AG_ExecMouseAction(void *, AG_ActionEventType, int, int, int);
 int         AG_ExecKeyAction(void *, AG_ActionEventType, AG_KeySym, AG_KeyMod);
 int         AG_ExecAction(void *, AG_Action *);
 
-/* Set the widget state. */
-static __inline__ void
-AG_WidgetEnable(void *p)
-{
-	AG_ObjectLock(p);
-	if (AGWIDGET(p)->flags & AG_WIDGET_DISABLED) {
-		AGWIDGET(p)->flags &= ~(AG_WIDGET_DISABLED);
-		AG_PostEvent(NULL, p, "widget-enabled", NULL);
-	}
-	AG_ObjectUnlock(p);
-}
-static __inline__ void
-AG_WidgetDisable(void *p)
-{
-	AG_ObjectLock(p);
-	if (!(AGWIDGET(p)->flags & AG_WIDGET_DISABLED)) {
-		AGWIDGET(p)->flags |= AG_WIDGET_DISABLED;
-		AG_PostEvent(NULL, p, "widget-disabled", NULL);
-	}
-	AG_ObjectUnlock(p);
-}
+void        AG_WidgetEnable(void *);
+void        AG_WidgetDisable(void *);
 
 /* Return the widget state. The Widget object must be locked. */
 static __inline__ int
@@ -332,22 +347,6 @@ AG_ExpandVert(void *wid)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
-	AG_ObjectUnlock(wid);
-}
-
-/* Toggle widget visibility */
-static __inline__ void
-AG_WidgetHide(void *wid)
-{
-	AG_ObjectLock(wid);
-	AGWIDGET(wid)->flags |= AG_WIDGET_HIDE;
-	AG_ObjectUnlock(wid);
-}
-static __inline__ void
-AG_WidgetShow(void *wid)
-{
-	AG_ObjectLock(wid);
-	AGWIDGET(wid)->flags &= ~(AG_WIDGET_HIDE);
 	AG_ObjectUnlock(wid);
 }
 

@@ -108,7 +108,7 @@ Init(void *obj)
 	
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(nb, "widget-shown", Shown, NULL);
+	AG_AddEvent(nb, "widget-shown", Shown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindInt(nb, "flags", &nb->flags);

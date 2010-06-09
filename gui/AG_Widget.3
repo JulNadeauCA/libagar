@@ -70,7 +70,7 @@ system and the
 interface which is the basis of widget
 .Em bindings
 (see
-.Dq WIDGET BINDINGS
+.Dq BINDINGS
 section below).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
@@ -563,6 +563,58 @@ Manual pages for standard Agar widgets include a
 .Dq BINDINGS
 section with a list of bindings supported by each widget, their supported
 data types and effects.
+.Pp
+Since the value of bindings associated with a widget often dictates the
+way the widget is rendered (e.g.,
+.Xr AG_Button 3
+is drawn as a pressed button if its
+.Sq state
+binding is 1), Agar provides a built-in facility to monitor binding values
+and request a video update whenever the value changes:
+.Sh WIDGET REDRAW CONTROL
+.nr nS 1
+.Ft "void"
+.Fn AG_Redraw "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_RedrawOnChange "AG_Widget *widget" "int refresh_ms" "const char *binding_name"
+.Pp
+.Ft "void"
+.Fn AG_RedrawOnTick "AG_Widget *widget" "int refresh_ms"
+.Pp
+.nr nS 0
+.Pp
+The
+.Fn AG_Redraw
+function signals that the widget must be redrawn to the video display.
+It is equivalent to setting the
+.Va dirty
+variable of the widget's parent window to 1.
+.Pp
+The
+.Fn AG_RedrawOnChange
+function arranges for the widget to be automatically redrawn whenever the
+value associated with the existing binding
+.Fa binding_name
+changes.
+The value of the binding will be checked at the specified interval
+.Fa refresh_ms
+in milliseconds.
+If a
+.Fa refresh_ms
+argument of -1 is passed, the effect of any previous
+.Fn AG_RedrawOnChange
+call with the specified binding is disabled.
+.Pp
+The
+.Fn AG_RedrawOnTick
+function arranges for the widget to be unconditionally redrawn at the
+specified interval in milliseconds.
+If a
+.Fa refresh_ms
+argument of -1 is passed, the effect of any previous
+.Fn AG_RedrawOnTick
+call is disabled.
 .Sh WIDGET QUERIES
 .nr nS 1
 .Ft "AG_Window *"
@@ -857,8 +909,16 @@ objects the following events:
 .Bl -tag -compact -width 2n
 .It Fn widget-shown "void"
 The widget is now visible.
+NOTE: User-defined handlers for this event should use
+.Xr AG_AddEvent 3
+instead of
+.Xr AG_SetEvent 3 .
 .It Fn widget-hidden "void"
 The widget is no longer visible.
+NOTE: User-defined handlers for this event should use
+.Xr AG_AddEvent 3
+instead of
+.Xr AG_SetEvent 3 .
 .It Fn widget-enabled "void"
 Input state has been enabled with
 .Xr AG_WidgetEnable 3 .

@@ -854,15 +854,21 @@ AG_SDL_GenericEventLoop(void *obj)
 	for (;;) {
 		Tr2 = AG_GetTicks();
 		if (Tr2-Tr1 >= dsw->rNom) {
-			AG_LockVFS(drv);
-			AG_BeginRendering(drv);
 			AG_FOREACH_WINDOW(win, drv) {
-				AG_ObjectLock(win);
-				AG_WindowDraw(win);
-				AG_ObjectUnlock(win);
+				if (win->dirty)
+					break;
 			}
-			AG_EndRendering(drv);
-			AG_UnlockVFS(drv);
+			if (win != NULL) {
+				AG_LockVFS(drv);
+				AG_BeginRendering(drv);
+				AG_FOREACH_WINDOW(win, drv) {
+					AG_ObjectLock(win);
+					AG_WindowDraw(win);
+					AG_ObjectUnlock(win);
+				}
+				AG_EndRendering(drv);
+				AG_UnlockVFS(drv);
+			}
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = AG_GetTicks();

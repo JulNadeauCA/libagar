@@ -80,6 +80,7 @@ typedef struct ag_window {
 
 	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
 	int visible;				/* Window is visible */
+	int dirty;				/* Window needs redraw */
 
 	struct ag_titlebar *tbar;		/* Titlebar (if any) */
 	enum ag_window_alignment alignment;	/* Initial position */
@@ -198,8 +199,11 @@ AG_WindowDraw(AG_Window *win)
 {
 	AG_Driver *drv = AGWIDGET(win)->drv;
 
-	if (win->visible)
-		AGDRIVER_CLASS(drv)->renderWindow(win);
+	if (!win->visible) {
+		return;
+	}
+	AGDRIVER_CLASS(drv)->renderWindow(win);
+	win->dirty = 0;
 }
 
 /*

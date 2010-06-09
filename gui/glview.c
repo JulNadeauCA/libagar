@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,6 +111,9 @@ Init(void *obj)
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
+
+	/* XXX TODO should make this configurable through AG_GLView. */
+	AG_RedrawOnTick(glv, 1);
 
 #ifdef AG_DEBUG
 	AG_BindUint(glv, "flags", &glv->flags);
