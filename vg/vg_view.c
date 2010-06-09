@@ -226,7 +226,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+Shown(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 
@@ -356,7 +356,7 @@ Init(void *obj)
 	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(vv, "key-down", KeyDown, NULL);
 	AG_SetEvent(vv, "key-up", KeyUp, NULL);
-	AG_SetEvent(vv, "widget-shown", OnShow, NULL);
+	AG_AddEvent(vv, "widget-shown", Shown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(vv, "flags", &vv->flags);
