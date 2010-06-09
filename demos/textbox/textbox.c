@@ -47,7 +47,7 @@ SingleLineExample(void)
 	 * Create a single-line Textbox. TextboxSizeHint() requests an initial
 	 * textbox size large enough to display the given string entirely.
 	 */
-	textbox = AG_TextboxNew(win, 0, "Static string: ");
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_STATIC, "Static string: ");
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
 	AG_TextboxPrintf(textbox, "Hello");
 	AG_WidgetFocus(textbox);
@@ -86,7 +86,8 @@ MultiLineExample(const char *title)
 	/*
 	 * Create a multiline textbox.
 	 */
-	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND;
+	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND|
+	        AG_TEXTBOX_STATIC;
 	textbox = AG_TextboxNew(win, flags, NULL);
 
 	/*
