@@ -1512,7 +1512,7 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	AG_LabelNewS(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	tb = AG_TextboxNewS(vb, 0, NULL);
+	tb = AG_TextboxNewS(vb, AG_TEXTBOX_STATIC, NULL);
 	AG_ExpandHoriz(tb);
 	AG_TextboxBindUTF8(tb, sp, len);
 	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
@@ -1545,7 +1545,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		tb = AG_TextboxNewS(bo, 0, NULL);
+		tb = AG_TextboxNewS(bo, AG_TEXTBOX_STATIC, NULL);
 		AG_ExpandHoriz(tb);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)

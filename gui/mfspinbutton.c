@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,6 +82,7 @@ Bound(AG_Event *event)
 			break;
 		}
 	}
+	AG_Redraw(fsu);
 }
 
 static void
@@ -136,6 +137,7 @@ TextChanged(AG_Event *event)
 		AG_WidgetUnfocus(fsu->input);
 	
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 static void
@@ -250,11 +252,14 @@ Init(void *obj)
 	AG_BindDouble(fsu, "yvalue", &fsu->yvalue);
 	AG_BindDouble(fsu, "min", &fsu->min);
 	AG_BindDouble(fsu, "max", &fsu->max);
+	
+	AG_RedrawOnChange(fsu, 250, "xvalue");
+	AG_RedrawOnChange(fsu, 250, "yvalue");
 
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = AG_TextboxNewS(fsu, 0, NULL);
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_STATIC, NULL);
 	fsu->writeable = 1;
 	fsu->sep = ",";
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
@@ -526,6 +531,7 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 	AG_UnlockVariable(maxb);
 	
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void
@@ -563,6 +569,7 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 	AG_UnlockVariable(maxb);
 	
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void
@@ -624,6 +631,7 @@ AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *fsu, const char *mode,
 	AG_ObjectLock(fsu);
 	Snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s", precision, mode);
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void
@@ -646,6 +654,7 @@ AG_MFSpinbuttonSelectUnit(AG_MFSpinbutton *fsu, const char *uname)
 	}
 	AG_ObjectUnlock(fsu->units->list);
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void
@@ -667,6 +676,7 @@ AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *fsu, int writeable)
 		AG_WidgetDisable(fsu->input);
 	}
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void

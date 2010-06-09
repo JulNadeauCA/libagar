@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -346,6 +346,7 @@ Bound(AG_Event *event)
 			break;
 		}
 	}
+	AG_Redraw(num);
 }
 
 /* Update the textbox contents from the binding value. */
@@ -576,7 +577,7 @@ Init(void *obj)
 
 	num->inc = 1.0;
 	num->value = 0.0;
-	num->input = AG_TextboxNewS(num, 0, NULL);
+	num->input = AG_TextboxNewS(num, AG_TEXTBOX_STATIC, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
@@ -609,6 +610,9 @@ Init(void *obj)
 	AG_BindDouble(num, "value", &num->value);
 	AG_BindDouble(num, "min", &num->min);
 	AG_BindDouble(num, "max", &num->max);
+
+	AG_RedrawOnChange(num, 250, "value");
+
 #ifdef AG_DEBUG
 	AG_BindUint(num, "flags", &num->flags);
 	AG_BindDouble(num, "inc", &num->inc);
@@ -759,6 +763,7 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 
 	UpdateTextbox(num);
 	AG_ObjectUnlock(num);
+	AG_Redraw(num);
 }
 #undef ADD_REAL
 #undef ADD_CONVERTED
@@ -802,6 +807,7 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(num);
+	AG_Redraw(num);
 }
 #undef ASSIGN_VALUE
 #undef CONV_VALUE
@@ -870,6 +876,7 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode,
 	Snprintf(&num->format[2], sizeof(num->format)-2, "%d", precision);
 	Strlcat(num->format, mode, sizeof(num->format));
 	AG_ObjectUnlock(num);
+	AG_Redraw(num);
 }
 
 void
@@ -892,6 +899,7 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 	}
 	AG_ObjectUnlock(num->units->list);
 	AG_ObjectUnlock(num);
+	AG_Redraw(num);
 }
 
 void

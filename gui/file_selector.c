@@ -198,7 +198,7 @@ Init(void *obj)
 	fs->wSaved = 0;
 	fs->hSaved = 0;
 	
-	fs->tbox = AG_TextboxNewS(fs, AG_TEXTBOX_COMBO, NULL);
+	fs->tbox = AG_TextboxNewS(fs, AG_TEXTBOX_COMBO|AG_TEXTBOX_STATIC, NULL);
 	fs->button = AG_ButtonNewS(fs, AG_BUTTON_STICKY, _("Browse..."));
 	AG_ButtonSetPadding(fs->button, 1,1,1,1);
 	AG_WidgetSetFocusable(fs->button, 0);

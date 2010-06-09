@@ -851,7 +851,8 @@ SelectedType(AG_Event *event)
 			                          fo->data.dbl.max);
 			break;
 		case AG_FILEDLG_STRING:
-			tbox = AG_TextboxNewS(fd->optsCtr, AG_TEXTBOX_HFILL,
+			tbox = AG_TextboxNewS(fd->optsCtr,
+			    AG_TEXTBOX_HFILL|AG_TEXTBOX_STATIC,
 			    fo->descr);
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
@@ -1037,7 +1038,7 @@ Init(void *obj)
 	AG_LabelSizeHint(fd->lbCwd, 1,
 	    _("Directory: XXXXXXXXXXXXX"));
 
-	fd->tbFile = AG_TextboxNewS(fd, 0, _("File: "));
+	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_STATIC, _("File: "));
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
