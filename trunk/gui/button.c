@@ -351,6 +351,8 @@ Init(void *obj)
 	AG_SetEvent(bu, "key-down", KeyDown, NULL);
 
 	AG_BindInt(bu, "state", &bu->state);
+	AG_RedrawOnChange(bu, 100, "state");
+
 #ifdef AG_DEBUG
 	AG_BindInt(bu, "surface", &bu->surface);
 	AG_BindUint(bu, "flags", &bu->flags);
