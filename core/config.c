@@ -54,7 +54,7 @@ int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextCache = 0;			/* Dynamic text caching */
 int agTextTabWidth = 40;		/* Tab width (px) */
-int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
+int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 
