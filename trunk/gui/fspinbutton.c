@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,6 +127,7 @@ Bound(AG_Event *event)
 			break;
 		}
 	}
+	AG_Redraw(fsu);
 }
 
 static void
@@ -279,9 +280,12 @@ Init(void *obj)
 	AG_BindDouble(fsu, "min", &fsu->min);
 	AG_BindDouble(fsu, "max", &fsu->max);
 	
+	AG_RedrawOnChange(fsu, 250, "value");
+	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_STATIC,
+	    NULL);
 	fsu->writeable = 1;
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
 	AG_TextboxSizeHint(fsu->input, "88.88");
@@ -480,6 +484,7 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
+	AG_Redraw(fsu);
 }
 #undef ADD_INCREMENT
 #undef ADD_REAL
@@ -522,6 +527,7 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
+	AG_Redraw(fsu);
 }
 #undef ASSIGN_VALUE
 #undef CONV_VALUE
@@ -586,6 +592,7 @@ AG_FSpinbuttonSetPrecision(AG_FSpinbutton *fsu, const char *mode,
 	Snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
 	Strlcat(fsu->format, mode, sizeof(fsu->format));
 	AG_ObjectUnlock(fsu);
+	AG_Redraw(fsu);
 }
 
 void
