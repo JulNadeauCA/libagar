@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ M_PlotterNew(void *parent, Uint flags)
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int keysym = AG_INT(1);
@@ -73,12 +73,15 @@ keydown(AG_Event *event)
 	case AG_KEY_0:
 	case AG_KEY_1:
 		ptr->yScale = 1.0;
+		AG_Redraw(ptr);
 		break;
 	case AG_KEY_EQUALS:
 		ptr->yScale += 0.125;
+		AG_Redraw(ptr);
 		break;
 	case AG_KEY_MINUS:
 		ptr->yScale -= 0.125;
+		AG_Redraw(ptr);
 		break;
 	}
 	if (ptr->yScale <= 0.125) { ptr->yScale = 0.125; }
@@ -96,7 +99,7 @@ MouseOverPlotItem(M_Plotter *ptr, M_Plot *pl, int x, int y)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int x = AG_INT(1);
@@ -112,18 +115,25 @@ mousemotion(AG_Event *event)
 		if (pl->flags & M_PLOT_SELECTED &&
 		    state & AG_MOUSE_LEFT) {
 			pl->yOffs += dy;
+			AG_Redraw(ptr);
 		}
 		if (MouseOverPlotItem(ptr, pl, x, y)) {
-			pl->flags |= M_PLOT_MOUSEOVER;
+			if (!(pl->flags & M_PLOT_MOUSEOVER)) {
+				pl->flags |= M_PLOT_MOUSEOVER;
+				AG_Redraw(ptr);
+			}
 		} else {
-			pl->flags &= ~M_PLOT_MOUSEOVER;
+			if (pl->flags & M_PLOT_MOUSEOVER) {
+				pl->flags &= ~M_PLOT_MOUSEOVER;
+				AG_Redraw(ptr);
+			}
 		}
 	}
 }
 
 #if 0
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int button = AG_INT(1);
@@ -153,6 +163,7 @@ M_PlotUpdateLabel(M_Plot *pl)
 	AG_TextColor(pl->color);
 	pl->label = (pl->label_txt == NULL) ? -1 :
 	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
+	AG_Redraw(ptr);
 }
 
 static void
@@ -243,7 +254,7 @@ ShowPlotSettings(AG_Event *event)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	M_Plotter *ptr = AG_SELF();
 	M_Plot *pl, *opl;
@@ -261,6 +272,7 @@ mousebuttondown(AG_Event *event)
 					continue;
 				}
 				AG_INVFLAGS(pl->flags, M_PLOT_SELECTED);
+				AG_Redraw(ptr);
 			}
 		} else {
 			TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -272,6 +284,7 @@ mousebuttondown(AG_Event *event)
 					opl->flags &= ~M_PLOT_SELECTED;
 				}
 				pl->flags |= M_PLOT_SELECTED;
+				AG_Redraw(ptr);
 			}
 		}
 		break;
@@ -297,12 +310,14 @@ mousebuttondown(AG_Event *event)
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			if (! (pl->flags & M_PLOT_SELECTED)) { continue; }
 			pl->yScale -= 0.250;
+			AG_Redraw(ptr);
 		}
 		break;
 	case AG_MOUSE_WHEELUP:
 		TAILQ_FOREACH(pl, &ptr->plots, plots) {
 			if (! (pl->flags & M_PLOT_SELECTED)) { continue; }
 			pl->yScale += 0.250;
+			AG_Redraw(ptr);
 		}
 		break;
 	default:
@@ -382,10 +397,10 @@ Init(void *obj)
 	AG_SetInt(ptr->hbar, "min", 0);
 	AG_SetInt(ptr->vbar, "min", 0);
 
-	AG_SetEvent(ptr, "key-down", keydown, NULL);
-	AG_SetEvent(ptr, "mouse-button-down", mousebuttondown, NULL);
-/*	AG_SetEvent(ptr, "mouse-button-up", mousebuttonup, NULL); */
-	AG_SetEvent(ptr, "mouse-motion", mousemotion, NULL);
+	AG_SetEvent(ptr, "key-down", KeyDown, NULL);
+	AG_SetEvent(ptr, "mouse-button-down", MouseButtonDown, NULL);
+/*	AG_SetEvent(ptr, "mouse-button-up", MouseButtonUp, NULL); */
+	AG_SetEvent(ptr, "mouse-motion", MouseMotion, NULL);
 }
 
 static void
@@ -596,30 +611,36 @@ M_PlotClear(M_Plot *pl)
 {
 	pl->data.r = Realloc(pl->data.r, sizeof(M_Real));
 	pl->n = 0;
+	AG_Redraw(pl->plotter);
 }
 
 void
 M_PlotReal(M_Plot *pl, M_Real v)
 {
+	M_Plotter *ptr = pl->plotter;
+
 	pl->data.r = Realloc(pl->data.r, (pl->n+1)*sizeof(M_Real));
 	pl->data.r[pl->n] = v;
-	if (++pl->n > pl->plotter->xMax) { pl->plotter->xMax = pl->n; }
-	if (v > pl->plotter->yMax) { pl->plotter->yMax = v; }
-	if (v < pl->plotter->yMin) { pl->plotter->yMin = v; }
+	if (++pl->n > ptr->xMax) { ptr->xMax = pl->n; }
+	if (v > ptr->yMax) { ptr->yMax = v; }
+	if (v < ptr->yMin) { ptr->yMin = v; }
+	AG_Redraw(ptr);
 }
 
 void
 M_PlotRealv(M_Plot *pl, Uint n, const M_Real *vp)
 {
+	M_Plotter *ptr = pl->plotter;
 	Uint i;
 
 	pl->data.r = Realloc(pl->data.r, (pl->n+n)*sizeof(M_Real));
 	memcpy(&pl->data.r[pl->n], vp, n*sizeof(M_Real));
-	if ((pl->n += n) > pl->plotter->xMax) { pl->plotter->xMax = pl->n; }
+	if ((pl->n += n) > ptr->xMax) { ptr->xMax = pl->n; }
 	for (i = 0; i < n; i++) {
-		if (vp[i] > pl->plotter->yMax) { pl->plotter->yMax = vp[i]; }
-		if (vp[i] < pl->plotter->yMin) { pl->plotter->yMin = vp[i]; }
+		if (vp[i] > ptr->yMax) { ptr->yMax = vp[i]; }
+		if (vp[i] < ptr->yMin) { ptr->yMin = vp[i]; }
 	}
+	AG_Redraw(ptr);
 }
 
 static void
@@ -653,31 +674,36 @@ VectorMaximum(M_Vector *c, const M_Vector * a, const M_Vector *b)
 void
 M_PlotVector(M_Plot *pl, const M_Vector *v)
 {
+	M_Plotter *ptr = pl->plotter;
 	int i;
+
 	pl->data.v = Realloc(pl->data.v, (pl->n)*sizeof(M_Vector *));
 	pl->data.v[pl->n] = M_VecNew(v->m);
-	VectorMinimum(pl->plotter->vMin, pl->plotter->vMin, v);
-	VectorMaximum(pl->plotter->vMax, pl->plotter->vMax, v);
+	VectorMinimum(ptr->vMin, ptr->vMin, v);
+	VectorMaximum(ptr->vMax, ptr->vMax, v);
 	for (i = 0; i < v->m; i++) {
 		M_Real *e = M_VecGetElement(pl->data.v[pl->n], i);
 		*e = M_VecGet(v, i);
 	}
 	pl->n++;
+	AG_Redraw(ptr);
 }
 
 void
 M_PlotVectorv(M_Plot *pl, Uint n, const M_Vector **vp)
 {
+	M_Plotter *ptr = pl->plotter;
 	Uint i;
 
 	pl->data.v = Realloc(pl->data.v, (pl->n+n)*sizeof(M_Vector));
 	for (i = 0; i < n; i++) {
 		pl->data.v[pl->n+i] = M_VecNew(vp[i]->m);
-		VectorMinimum(pl->plotter->vMin, pl->plotter->vMin, vp[i]);
-		VectorMaximum(pl->plotter->vMax, pl->plotter->vMax, vp[i]);
+		VectorMinimum(ptr->vMin, ptr->vMin, vp[i]);
+		VectorMaximum(ptr->vMax, ptr->vMax, vp[i]);
 		M_Copy(pl->data.v[pl->n+i], vp[i]);
 	}
 	pl->n += n;
+	AG_Redraw(ptr);
 }
 
 static __inline__ void
@@ -759,14 +785,17 @@ M_PlotterUpdate(M_Plotter *ptr)
 			break;
 		}
 	}
-	if (ptr->flags & M_PLOTTER_SCROLL)
+	if (ptr->flags & M_PLOTTER_SCROLL) {
 		ptr->xOffs++;
+		AG_Redraw(ptr);
+	}
 }
 
 M_PlotLabel *
 M_PlotLabelNew(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
     const char *fmt, ...)
 {
+	M_Plotter *ptr = pl->plotter;
 	M_PlotLabel *plbl;
 	va_list args;
 
@@ -780,30 +809,32 @@ M_PlotLabelNew(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
 	va_end(args);
 
 	AG_PushTextState();
-	AG_TextFont(pl->plotter->font);
+	AG_TextFont(ptr->font);
 	AG_TextColor(pl->color);
-	plbl->text_surface = AG_WidgetMapSurface(pl->plotter,
-	    AG_TextRender(plbl->text));
+	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
 	AG_PopTextState();
 
 	TAILQ_INSERT_TAIL(&pl->labels, plbl, labels);
+
+	AG_Redraw(ptr);
 	return (plbl);
 }
 
 void
 M_PlotLabelSetText(M_Plot *pl, M_PlotLabel *plbl, const char *fmt, ...)
 {
+	M_Plotter *ptr = pl->plotter;
 	va_list args;
 
 	va_start(args, fmt);
 	Vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
 	va_end(args);
 
-	AG_WidgetUnmapSurface(pl->plotter, plbl->text_surface);
-	AG_TextFont(pl->plotter->font);
+	AG_WidgetUnmapSurface(ptr, plbl->text_surface);
+	AG_TextFont(ptr->font);
 	AG_TextColor(pl->color);
-	plbl->text_surface = AG_WidgetMapSurface(pl->plotter,
-	    AG_TextRender(plbl->text));
+	plbl->text_surface = AG_WidgetMapSurface(ptr, AG_TextRender(plbl->text));
+	AG_Redraw(ptr);
 }
 
 /* Replace plot labels matching the given text. */
@@ -843,6 +874,7 @@ M_PlotLabelReplace(M_Plot *pl, enum m_plot_label_type type, Uint x, Uint y,
 		Uint ny = y;
 		AG_Surface *su;
 reposition:
+		/* XXX */
 		/* Do what we can to avoid overlapping labels */
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
 			if (plbl->x != nx || plbl->y != ny) {
@@ -898,6 +930,7 @@ M_PlotNew(M_Plotter *ptr, enum m_plot_type type)
 	if (ptr->curColor >= M_PLOTTER_NDEFCOLORS) {
 		ptr->curColor = 0;
 	}
+	AG_Redraw(ptr);
 	return (pl);
 }
 
@@ -963,6 +996,7 @@ void
 M_PlotSetColor(M_Plot *pl, Uint8 r, Uint8 g, Uint8 b)
 {
 	pl->color = AG_ColorRGB(r,g,b);
+	AG_Redraw(pl->plotter);
 }
 
 void
@@ -982,30 +1016,35 @@ M_PlotSetScale(M_Plot *pl, M_Real xScale, M_Real yScale)
 {
 	if (xScale > 0.0) { pl->xScale = xScale; }
 	if (yScale > 0.0) { pl->yScale = yScale; }
+	AG_Redraw(pl->plotter);
 }
 
 void
 M_PlotSetXoffs(M_Plot *pl, int xOffs)
 {
 	pl->xOffs = xOffs;
+	AG_Redraw(pl->plotter);
 }
 
 void
 M_PlotSetYoffs(M_Plot *pl, int yOffs)
 {
 	pl->yOffs = yOffs;
+	AG_Redraw(pl->plotter);
 }
 
 void
 M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, int size)
 {
 	ptr->font = AG_FetchFont(face, size, 0);
+	AG_Redraw(ptr);
 }
 
 void
 M_PlotterSetDefaultColor(M_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
 {
 	ptr->colors[i] = AG_ColorRGB(r,g,b);
+	AG_Redraw(ptr);
 }
 
 void
@@ -1013,6 +1052,7 @@ M_PlotterSetDefaultScale(M_Plotter *ptr, M_Real xScale, M_Real yScale)
 {
 	ptr->xScale = xScale;
 	ptr->yScale = yScale;
+	AG_Redraw(ptr);
 }
 
 AG_WidgetClass mPlotterClass = {
