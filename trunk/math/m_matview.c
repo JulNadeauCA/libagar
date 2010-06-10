@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 	AG_BindInt(mv->hBar, "max", (int *)&MMATRIX(mv->matrix)->m);
 	AG_BindInt(mv->vBar, "max", (int *)&MMATRIX(mv->matrix)->n);
 	AG_ObjectUnlock(mv);
+	AG_Redraw(mv);
 }
 
 static void
@@ -86,11 +87,13 @@ KeyDown(AG_Event *event)
 		break;
 	case AG_KEY_EQUALS:
 		mv->scale++;
+		AG_Redraw(mv);
 		break;
 	case AG_KEY_MINUS:
 		if (mv->scale-1 >= 0) {
 			mv->scale--;
 		}
+		AG_Redraw(mv);
 		break;
 	}
 }
@@ -152,6 +155,7 @@ M_MatviewSetDisplayMode(M_Matview *mv, enum m_matview_mode mode)
 	AG_ObjectLock(mv);
 	mv->mode = mode;
 	AG_ObjectUnlock(mv);
+	AG_Redraw(mv);
 }
 
 void
@@ -160,6 +164,7 @@ M_MatviewSetNumericalFmt(M_Matview *mv, const char *fmt)
 	AG_ObjectLock(mv);
 	mv->numFmt = fmt;
 	AG_ObjectUnlock(mv);
+	AG_Redraw(mv);
 }
 
 void
