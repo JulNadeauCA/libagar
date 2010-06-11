@@ -556,7 +556,9 @@ AG_TlistClear(AG_Tlist *tl)
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
 	AG_ObjectUnlock(tl);
-	AG_Redraw(tl);
+
+	if (!agRenderingContext)
+		AG_Redraw(tl);
 }
 
 /* Generic string compare routine. */
@@ -670,7 +672,9 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
 	tl->nitems++;
-	AG_Redraw(tl);
+
+	if (!agRenderingContext)
+		AG_Redraw(tl);
 }
 
 /* Add an item to the tail of the list (user pointer) */
