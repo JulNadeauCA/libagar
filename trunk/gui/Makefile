@@ -5,8 +5,8 @@ include ${TOP}/core/Makefile.inc
 SUBDIR=	fonts
 
 LIB=		ag_gui
-LIB_MAJOR=	1
-LIB_MINOR=	4
+LIB_MAJOR=	4
+LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"

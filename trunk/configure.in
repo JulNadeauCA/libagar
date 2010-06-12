@@ -6,7 +6,7 @@
 #
 
 PACKAGE("Agar")
-VERSION("1.4.1-beta")
+VERSION("1.4.1")
 RELEASE("Landscapes of Frozen Methane")
 
 REGISTER_SECTION("Options specific to Agar:")

@@ -4,8 +4,8 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_math
-LIB_MAJOR=	1
-LIB_MINOR=	4
+LIB_MAJOR=	4
+LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"ba35a553-bd88-4e5e-8c4b-d17f60ae7439"
