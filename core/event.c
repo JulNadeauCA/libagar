@@ -496,48 +496,45 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 #endif
 	AG_ObjectLock(rcvr);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(event->name, ev->name) == 0)
-			break;
-	}
-	if (ev == NULL)
-		goto out;
+		if (strcmp(event->name, ev->name) != 0)
+			continue;
 #ifdef AG_THREADS
-	if (ev->flags & AG_EVENT_ASYNC) {
-		AG_Thread th;
-		AG_Event *evNew;
+		if (ev->flags & AG_EVENT_ASYNC) {
+			AG_Thread th;
+			AG_Event *evNew;
 
-		/* TODO allocate from an per-object pool */
-		evNew = Malloc(sizeof(AG_Event));
-		memcpy(evNew, ev, sizeof(AG_Event));
-		InitPointer(&evNew->argv[0], "_self", rcvr);
-		InitPointer(&evNew->argv[evNew->argc], "_sender", sndr);
-		AG_ThreadCreate(&th, EventThread, evNew);
-	} else
+			/* TODO allocate from an per-object pool */
+			evNew = Malloc(sizeof(AG_Event));
+			memcpy(evNew, ev, sizeof(AG_Event));
+			InitPointer(&evNew->argv[0], "_self", rcvr);
+			InitPointer(&evNew->argv[evNew->argc], "_sender", sndr);
+			AG_ThreadCreate(&th, EventThread, evNew);
+		} else
 #endif /* AG_THREADS */
-	{
-		AG_Event tmpev;
+		{
+			AG_Event tmpev;
 
-		memcpy(&tmpev, event, sizeof(AG_Event));
-		InitPointer(&tmpev.argv[0], "_self", rcvr);
-		InitPointer(&tmpev.argv[tmpev.argc], "_sender", sndr);
+			memcpy(&tmpev, event, sizeof(AG_Event));
+			InitPointer(&tmpev.argv[0], "_self", rcvr);
+			InitPointer(&tmpev.argv[tmpev.argc], "_sender", sndr);
 
-		if (ev->flags & AG_EVENT_PROPAGATE) {
+			if (ev->flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_OBJDEBUG
-			if (agDebugLvl >= 5)
-				Debug(rcvr, "Propagate <%s> (forward)\n",
-				    event->name);
+				if (agDebugLvl >= 5)
+					Debug(rcvr, "Propagate <%s> (forward)\n",
+					    event->name);
 #endif
-			AG_LockVFS(rcvr);
-			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
-				PropagateEvent(rcvr, chld, ev);
+				AG_LockVFS(rcvr);
+				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+					PropagateEvent(rcvr, chld, ev);
+				}
+				AG_UnlockVFS(rcvr);
 			}
-			AG_UnlockVFS(rcvr);
+			/* XXX AG_EVENT_ASYNC.. */
+			if (ev->handler != NULL)
+				ev->handler(&tmpev);
 		}
-		/* XXX AG_EVENT_ASYNC.. */
-		if (ev->handler != NULL)
-			ev->handler(&tmpev);
 	}
-out:
 	AG_ObjectUnlock(rcvr);
 }
 
