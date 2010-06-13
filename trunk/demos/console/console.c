@@ -16,9 +16,12 @@ static void
 AppendLine(AG_Event *event)
 {
 	AG_Console *cons = AG_PTR(1);
+	char *s;
 	
-	AG_ConsoleMsg(cons, textbox->ed->string);
-	textbox->ed->string[0] = '\0';
+	s = AG_TextboxDupString(textbox);
+	AG_ConsoleMsgS(cons, s);
+	AG_TextboxSetString(textbox, "");
+	free(s);
 }
 
 static void
