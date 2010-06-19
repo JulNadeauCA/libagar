@@ -30,6 +30,7 @@
 #include <core/config.h>
 
 #include <gui/widget.h>
+#include <gui/window.h>
 #include <gui/button.h>
 #include <gui/primitive.h>
 #include <gui/text_cache.h>
