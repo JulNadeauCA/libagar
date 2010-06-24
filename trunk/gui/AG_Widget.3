@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -109,8 +109,8 @@ widget might return the expected size in pixels of the rendered label's text.
 .Pp
 The
 .Fn size_allocate
-callback notifies the widget that it has been allocated a new size or position
-within its parent.
+function is called whenever the widget has been allocated a new size
+or position within its parent container.
 The
 .Ft AG_SizeAlloc
 parameter specifies the new allocation.
@@ -125,10 +125,17 @@ members of the
 .Nm
 structure are already set to the new allocated position and size.
 .Pp
-Widgets are not allowed to modify their geometry from
-.Fn size_allocate ,
-but the function can return -1, effectively marking the widget as "undersize",
-and disabling further rendering of the widget until it is resized.
+The
+.Fn size_allocate
+routine of a container widget is responsible for positioning and
+dimensioning of child widgets attached to it (by calling
+.Fn AG_WidgetSizeAlloc
+on them -- see
+.Dq WIDGET SIZING
+section below).
+The function should return 0 on success or -1 to flag the widget as
+"undersize", disabling further calls to
+.Fn draw .
 .Sh WIDGET SIZING
 .nr nS 1
 .Ft "void"
@@ -189,9 +196,20 @@ operation of the widget and returns its size requisition into
 .Fa req .
 .Fn AG_WidgetSizeAlloc
 allocates the given position and geometry of the widget.
-These functions are generally used to implement
-.Sq container
-widgets.
+.Pp
+.Fn AG_WidgetSizeReq
+and
+.Fn AG_WidgetSizeAlloc
+are meant to be called only from within the
+.Fn size_request
+and
+.Fn size_allocate
+functions of a container widget implementation, in order to
+size and position the child widgets attached to the container
+(if you must set widget geometries explicitely, use either the
+.Xr AG_Fixed 3
+container, or create your own container widget).
+.Pp
 The
 .Ft AG_SizeReq
 and
