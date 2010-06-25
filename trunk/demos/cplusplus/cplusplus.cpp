@@ -1,10 +1,14 @@
 /*	Public domain	*/
 /*
- * This application tests Agar from C++.
+ * This program tests that the various Agar headers are compiling
+ * cleanly under C++.
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/math.h>
+#include <agar/rg.h>
+#include <agar/vg.h>
 
 #include <iostream>
 
