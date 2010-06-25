@@ -196,13 +196,13 @@ __BEGIN_DECLS
 static __inline__ void
 M_GeomSetAdd2(M_GeomSet2 *S, const M_Geom2 *g)
 {
-	S->g = AG_Realloc(S->g, (S->n+1)*sizeof(M_Geom2));
+	S->g = (M_Geom2 *)AG_Realloc(S->g, (S->n+1)*sizeof(M_Geom2));
 	S->g[S->n++] = *g;
 }
 static __inline__ void
 M_GeomSetAdd3(M_GeomSet3 *S, const M_Geom3 *g)
 {
-	S->g = AG_Realloc(S->g, (S->n+1)*sizeof(M_Geom3));
+	S->g = (M_Geom3 *)AG_Realloc(S->g, (S->n+1)*sizeof(M_Geom3));
 	S->g[S->n++] = *g;
 }
 

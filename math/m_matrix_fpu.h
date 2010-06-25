@@ -36,7 +36,7 @@ __BEGIN_DECLS
 static __inline__ M_Real *
 M_GetElement_FPU(void *pM, Uint i, Uint j)
 {
-	M_MatrixFPU *M=pM;
+	M_MatrixFPU *M = (M_MatrixFPU *)pM;
 	return &(M->v[i][j]);
 }
 
@@ -44,7 +44,7 @@ M_GetElement_FPU(void *pM, Uint i, Uint j)
 static __inline__ M_Real 
 M_Get_FPU(void *pM, Uint i, Uint j)
 {
-	M_MatrixFPU *M=pM;
+	M_MatrixFPU *M = (M_MatrixFPU *)pM;
 	return (M->v[i][j]);
 }
 
@@ -52,7 +52,7 @@ M_Get_FPU(void *pM, Uint i, Uint j)
 static __inline__ int
 M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i;
 
 	if (m == 0 && n == 0) {
@@ -61,11 +61,11 @@ M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
 		MCOLS(A) = 0;
 		return (0);
 	}
-	if ((A->v = AG_TryMalloc(m*sizeof(M_Real *))) == NULL) {
+	if ((A->v = (M_Real **)AG_TryMalloc(m*sizeof(M_Real *))) == NULL) {
 		return (-1);
 	}
 	for (i = 0; i < m; i++) {
-		if ((A->v[i] = AG_TryMalloc(n*sizeof(M_Real))) == NULL) {
+		if ((A->v[i] = (M_Real *)AG_TryMalloc(n*sizeof(M_Real))) == NULL) {
 #if 0
 			for (; i >= 0; i--) { AG_Free(A->v[i]); }
 			AG_Free(A->v);
@@ -82,7 +82,7 @@ M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
 static __inline__ void
 M_MatrixFreeEnts_FPU(void *pA)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i;
 
 	for (i = 0; i < MROWS(A); i++) {
@@ -98,7 +98,7 @@ M_MatrixFreeEnts_FPU(void *pA)
 static __inline__ int
 M_MatrixResize_FPU(void *pA, Uint m, Uint n)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	M_MatrixFreeEnts_FPU(A);
 	return M_MatrixAllocEnts_FPU(A, m,n);
 }
@@ -107,7 +107,7 @@ M_MatrixResize_FPU(void *pA, Uint m, Uint n)
 static __inline__ void
 M_MatrixFree_FPU(void *pA)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	M_MatrixFreeEnts_FPU(A);
 	AG_Free(A);
 }
@@ -118,7 +118,7 @@ M_MatrixNew_FPU(Uint m, Uint n)
 {
 	M_MatrixFPU *A;
 
-	A = AG_Malloc(sizeof(M_MatrixFPU));
+	A = (M_MatrixFPU *)AG_Malloc(sizeof(M_MatrixFPU));
 	MMATRIX(A)->ops = &mMatOps_FPU;
 	if (M_MatrixAllocEnts_FPU(A, m,n) == -1) {
 		M_MatrixFreeEnts_FPU(A);
@@ -133,7 +133,7 @@ M_MatrixNew_FPU(Uint m, Uint n)
 static __inline__ void
 M_MatrixSetIdentity_FPU(void *pA)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i, j;
 
 	for (i = 0; i < MROWS(A); i++)
@@ -145,7 +145,7 @@ M_MatrixSetIdentity_FPU(void *pA)
 static __inline__ void
 M_MatrixSetZero_FPU(void *pA)
 {
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i, j;
 
 	for (i = 0; i < MROWS(A); i++)
@@ -157,12 +157,12 @@ M_MatrixSetZero_FPU(void *pA)
 static __inline__ void *
 M_MatrixTranspose_FPU(const void *pA)
 {
-	const M_MatrixFPU *A=pA;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	M_MatrixFPU *At;
 	Uint i, j;
 
 	M_ASSERT_SQUARE_MATRIX(A, NULL);
-	if ((At = M_MatrixNew_FPU(MROWS(A), MCOLS(A))) == NULL) {
+	if ((At = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A))) == NULL) {
 		return (NULL);
 	}
 	for (i = 0; i < MROWS(A); i++) {
@@ -176,8 +176,8 @@ M_MatrixTranspose_FPU(const void *pA)
 static __inline__ int
 M_MatrixCopy_FPU(void *pB, const void *pA)
 {
-	M_MatrixFPU *B=pB;
-	const M_MatrixFPU *A=pA;
+	M_MatrixFPU *B = (M_MatrixFPU *)pB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	Uint i, j;
 
 	M_ASSERT_COMPAT_MATRICES(A,B, -1);
@@ -193,10 +193,10 @@ M_MatrixCopy_FPU(void *pB, const void *pA)
 static __inline__ void *
 M_MatrixDup_FPU(const void *pA)
 {
-	const M_MatrixFPU *A=pA;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	M_MatrixFPU *B;
 	
-	if ((B = M_MatrixNew_FPU(MROWS(A), MCOLS(A))) == NULL) {
+	if ((B = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A))) == NULL) {
 		return (NULL);
 	}
 	M_MatrixCopy_FPU(B, A);
@@ -207,12 +207,13 @@ M_MatrixDup_FPU(const void *pA)
 static __inline__ void *
 M_MatrixAdd_FPU(const void *pA, const void *pB)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
 	M_MatrixFPU *P;
 	Uint n, m;
 
 	M_ASSERT_COMPAT_MATRICES(A,B, NULL);
-	P = M_MatrixNew_FPU(MROWS(A), MCOLS(A));
+	P = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A));
 	for (m = 0; m < MROWS(A); m++) {
 		for (n = 0; n < MCOLS(A); n++)
 			P->v[m][n] = A->v[m][n] + B->v[m][n];
@@ -224,8 +225,8 @@ M_MatrixAdd_FPU(const void *pA, const void *pB)
 static __inline__ int
 M_MatrixAddv_FPU(void *pA, const void *pB)
 {
-	M_MatrixFPU *A=pA;
-	const M_MatrixFPU *B=pB;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
 	Uint n, m;
 	
 	M_ASSERT_COMPAT_MATRICES(A,B, -1);
@@ -240,11 +241,12 @@ M_MatrixAddv_FPU(void *pA, const void *pB)
 static __inline__ void *
 M_MatrixDirectSum_FPU(const void *pA, const void *pB)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
 	M_MatrixFPU *P;
 	Uint m, n;
 
-	P = M_MatrixNew_FPU(MROWS(A)+MROWS(B), MCOLS(A)+MCOLS(B));
+	P = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A)+MROWS(B), MCOLS(A)+MCOLS(B));
 	for (m = 0; m < MROWS(P); m++) {
 		for (n = 0; n < MCOLS(P); n++) {
 			if (m < MROWS(A) && n < MCOLS(A)) {
@@ -263,13 +265,14 @@ M_MatrixDirectSum_FPU(const void *pA, const void *pB)
 static __inline__ void *
 M_MatrixMul_FPU(const void *pA, const void *pB)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
 	Uint i, j, k;
 	M_MatrixFPU *AB;
 	M_Real sum;
 
 	M_ASSERT_MULTIPLIABLE_MATRICES(A,B, NULL);
-	AB = M_MatrixNew_FPU(MROWS(A), MCOLS(B));
+	AB = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(B));
 	for (i = 0; i < MROWS(A); i++) {
 		for (j = 0; j < MCOLS(B); j++) {
 			for (sum = 0.0, k = 0; k < MCOLS(A); k++) {
@@ -285,8 +288,9 @@ M_MatrixMul_FPU(const void *pA, const void *pB)
 static __inline__ int
 M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
-	M_MatrixFPU *C=pC;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
+	M_MatrixFPU *C = (M_MatrixFPU *)pC;
 	Uint i, j, k;
 
 	M_ASSERT_MULTIPLIABLE_MATRICES(A,B, -1);
@@ -314,12 +318,13 @@ M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
 static __inline__ void *
 M_MatrixEntMul_FPU(const void *pA, const void *pB)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
 	M_MatrixFPU *AB;
 	Uint i, j;
 
 	M_ASSERT_COMPAT_MATRICES(A,B, NULL);
-	AB = M_MatrixNew_FPU(MROWS(A), MCOLS(A));
+	AB = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A));
 	for (i = 0; i < MROWS(A); i++) {
 		for (j = 0; j < MCOLS(A); j++)
 			AB->v[i][j] = A->v[i][j] * B->v[i][j];
@@ -331,8 +336,9 @@ M_MatrixEntMul_FPU(const void *pA, const void *pB)
 static __inline__ int
 M_MatrixEntMulv_FPU(const void *pA, const void *pB, void *pAB)
 {
-	const M_MatrixFPU *A=pA, *B=pB;
-	const M_MatrixFPU *AB=pAB;
+	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
+	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
+	const M_MatrixFPU *AB = (const M_MatrixFPU *)pAB;
 	Uint i, j;
 
 	M_ASSERT_COMPAT_MATRICES(A,B, -1);
@@ -353,7 +359,7 @@ static __inline__ void
 M_AddToDiag_FPU(void *pA, M_Real g)
 {
 	Uint i, N;
-	M_MatrixFPU *A=pA;
+	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 
 	N = M_Min(MROWS(A), MCOLS(A));
 	for(i = 1; i < N; i++)

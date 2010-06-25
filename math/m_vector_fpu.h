@@ -10,9 +10,9 @@ M_VectorNew_FPU(Uint m)
 {
 	M_Vector *v;
 
-	v = AG_Malloc(sizeof(M_Vector));
+	v = (M_Vector *)AG_Malloc(sizeof(M_Vector));
 	M_VectorInit(v, m);
-	v->v = (m > 0) ? AG_Malloc(m*sizeof(M_Real)) : NULL;
+	v->v = (M_Real *)((m > 0) ? AG_Malloc(m*sizeof(M_Real)) : NULL);
 	return (v);
 }
 
@@ -29,7 +29,8 @@ M_VectorResize_FPU(M_Vector *pv, Uint m)
 	M_Real *vNew;
 
 	if (m > 0) {
-		if ((vNew = AG_TryRealloc(v->v, m*sizeof(M_Real))) == NULL) {
+		if ((vNew = (M_Real *)AG_TryRealloc(v->v, m*sizeof(M_Real)))
+		    == NULL) {
 			return (-1);
 		}
 		v->v = vNew;
