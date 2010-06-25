@@ -26,7 +26,7 @@ VG_LineNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
 	VG_Line *vl;
 
-	vl = AG_Malloc(sizeof(VG_Line));
+	vl = (VG_Line *)AG_Malloc(sizeof(VG_Line));
 	VG_NodeInit(vl, &vgLineOps);
 	vl->p1 = p1;
 	vl->p2 = p2;

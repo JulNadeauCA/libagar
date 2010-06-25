@@ -41,7 +41,7 @@ VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
 	VG_Text *vt;
 
-	vt = AG_Malloc(sizeof(VG_Text));
+	vt = (VG_Text *)AG_Malloc(sizeof(VG_Text));
 	VG_NodeInit(vt, &vgTextOps);
 	vt->p1 = p1;
 	vt->p2 = p2;
