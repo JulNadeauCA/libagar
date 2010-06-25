@@ -29,25 +29,25 @@ void M_PointSetPrint2(M_PointSet2 *);
 static __inline__ void
 M_PointSetAdd2(M_PointSet2 *S, M_Vector2 v)
 {
-	S->p = AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector2));
+	S->p = (M_Vector2 *)AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector2));
 	S->p[S->n++] = v;
 }
 static __inline__ void
 M_PointSetAdd3(M_PointSet3 *S, M_Vector3 v)
 {
-	S->p = AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector3));
+	S->p = (M_Vector3 *)AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector3));
 	S->p[S->n++] = v;
 }
 static __inline__ void
 M_PointSetAdd2p(M_PointSet2 *S, const M_Vector2 *p)
 {
-	S->p = AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector2));
+	S->p = (M_Vector2 *)AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector2));
 	S->p[S->n++] = *p;
 }
 static __inline__ void
 M_PointSetAdd3p(M_PointSet3 *S, const M_Vector3 *p)
 {
-	S->p = AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector3));
+	S->p = (M_Vector3 *)AG_Realloc(S->p, (S->n+1)*sizeof(M_Vector3));
 	S->p[S->n++] = *p;
 }
 
@@ -58,7 +58,7 @@ static __inline__ M_PointSet2
 M_PointSetDup2(M_PointSet2 *S1)
 {
 	M_PointSet2 S2;
-	S2.p = AG_Malloc(S1->n*sizeof(M_Vector2));
+	S2.p = (M_Vector2 *)AG_Malloc(S1->n*sizeof(M_Vector2));
 	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector2));
 	S2.n = S1->n;
 	return (S2);
@@ -67,7 +67,7 @@ static __inline__ M_PointSet3
 M_PointSetDup3(M_PointSet3 *S1)
 {
 	M_PointSet3 S2;
-	S2.p = AG_Malloc(S1->n*sizeof(M_Vector3));
+	S2.p = (M_Vector3 *)AG_Malloc(S1->n*sizeof(M_Vector3));
 	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector3));
 	S2.n = S1->n;
 	return (S2);
