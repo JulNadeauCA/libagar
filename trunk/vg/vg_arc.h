@@ -18,7 +18,7 @@ VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)
 {
 	VG_Arc *va;
 
-	va = AG_Malloc(sizeof(VG_Arc));
+	va = (VG_Arc *)AG_Malloc(sizeof(VG_Arc));
 	VG_NodeInit(va, &vgArcOps);
 	va->p = pCenter;
 	va->r = r;

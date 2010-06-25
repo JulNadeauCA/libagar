@@ -310,7 +310,7 @@ VG_FindNode(VG *vg, Uint32 handle, const char *type)
 static __inline__ void
 VG_PushMatrix(VG *vg)
 {
-	vg->T = AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
+	vg->T = (VG_Matrix *)AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
 	memcpy(&vg->T[vg->nT], &vg->T[vg->nT-1], sizeof(VG_Matrix));
 	vg->nT++;
 }
@@ -329,7 +329,7 @@ VG_PopMatrix(VG *vg)
 static __inline__ void
 VG_LoadIdentity(void *pNode)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	
 	vn->T.m[0][0] = 1.0f;	vn->T.m[0][1] = 0.0f;	vn->T.m[0][2] = 0.0f;
 	vn->T.m[1][0] = 0.0f;	vn->T.m[1][1] = 1.0f;	vn->T.m[1][2] = 0.0f;
@@ -340,7 +340,7 @@ VG_LoadIdentity(void *pNode)
 static __inline__ void
 VG_SetPositionInParent(void *pNode, VG_Vector v)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	
 	vn->T.m[0][2] = v.x;
 	vn->T.m[1][2] = v.y;
@@ -350,7 +350,7 @@ VG_SetPositionInParent(void *pNode, VG_Vector v)
 static __inline__ void
 VG_Translate(void *pNode, VG_Vector v)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
 	
 	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = v.x;
@@ -364,7 +364,7 @@ VG_Translate(void *pNode, VG_Vector v)
 static __inline__ void
 VG_Scale(void *pNode, float s)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
 	
 	T.m[0][0] = s;		T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
@@ -378,7 +378,7 @@ VG_Scale(void *pNode, float s)
 static __inline__ void
 VG_Rotate(void *pNode, float theta)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
 	float rCos = VG_Cos(theta);
 	float rSin = VG_Sin(theta);
@@ -394,7 +394,7 @@ VG_Rotate(void *pNode, float theta)
 static __inline__ void
 VG_FlipVert(void *pNode)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
 
 	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
@@ -408,7 +408,7 @@ VG_FlipVert(void *pNode)
 static __inline__ void
 VG_FlipHoriz(void *pNode)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
 
 	T.m[0][0] = -1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
@@ -466,7 +466,7 @@ VG_Pos(void *node)
 static __inline__ void
 VG_SetPosition(void *pNode, VG_Vector v)
 {
-	VG_Node *vn = pNode;
+	VG_Node *vn = (VG_Node *)pNode;
 	VG_Vector vParent;
 
 	vn->T.m[0][2] = v.x;

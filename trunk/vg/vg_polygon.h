@@ -19,7 +19,7 @@ VG_PolygonNew(void *pNode)
 {
 	VG_Polygon *vP;
 
-	vP = AG_Malloc(sizeof(VG_Polygon));
+	vP = (VG_Polygon *)AG_Malloc(sizeof(VG_Polygon));
 	VG_NodeInit(vP, &vgPolygonOps);
 	VG_NodeAttach(pNode, vP);
 	return (vP);
@@ -37,7 +37,7 @@ static __inline__ Uint
 VG_PolygonVertex(VG_Polygon *vP, VG_Point *pt)
 {
 	VG_Lock(VGNODE(vP)->vg);
-	vP->pts = AG_Realloc(vP->pts, (vP->nPts+1)*sizeof(VG_Point *));
+	vP->pts = (VG_Point **)AG_Realloc(vP->pts, (vP->nPts+1)*sizeof(VG_Point *));
 	vP->pts[vP->nPts] = pt;
 	VG_AddRef(vP, pt);
 	VG_Unlock(VGNODE(vP)->vg);
