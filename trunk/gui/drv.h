@@ -172,7 +172,6 @@ typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
                                       ((x) > AGWIDGET(win)->w) ? (AGWIDGET(win)->w - 1) : (x))
 #define AGDRIVER_BOUNDED_HEIGHT(win,y) (((y) < 0) ? 0 : \
                                        ((y) > AGWIDGET(win)->h) ? (AGWIDGET(win)->h - 1) : (y))
-
 __BEGIN_DECLS
 extern AG_ObjectClass agDriverClass;
 
@@ -243,17 +242,38 @@ __END_DECLS
 #include <agar/gui/drv_sw.h>
 
 __BEGIN_DECLS
+/* Return whether Agar is using OpenGL. */
+static __inline__ int
+AG_UsingGL(void *drv)
+{
+	if (drv != NULL) {
+		return (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL);
+	} else {
+		return (agDriverOps->flags & AG_DRIVER_OPENGL);
+	}
+}
+
+/* Return whether Agar is using SDL. */
+static __inline__ int
+AG_UsingSDL(void *drv)
+{
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+	return (dc->flags & AG_DRIVER_SDL);
+}
+
 /* Query a driver for available display area in pixels. */
 static __inline__ int
 AG_GetDisplaySize(void *drv, Uint *w, Uint *h)
 {
-	switch (AGDRIVER_CLASS(drv)->wm) {
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+
+	switch (dc->wm) {
 	case AG_WM_SINGLE:
 		*w = AGDRIVER_SW(drv)->w;
 		*h = AGDRIVER_SW(drv)->h;
 		return (0);
 	case AG_WM_MULTIPLE:
-		return AGDRIVER_CLASS(drv)->getDisplaySize(w, h);
+		return dc->getDisplaySize(w, h);
 	}
 	return (-1);
 }
