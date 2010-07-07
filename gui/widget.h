@@ -88,7 +88,7 @@ typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
 	AG_ACTION_ON_KEYDOWN,		/* On key-down */
 	AG_ACTION_ON_KEYUP,		/* On key-up */
-	AG_ACTION_ON_KEYREPEAT,		/* On key-down, with key repeat */
+	AG_ACTION_ON_KEYREPEAT		/* On key-down, with key repeat */
 #define AG_ACTION_ON_BUTTON \
 	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
 } AG_ActionEventType;
