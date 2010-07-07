@@ -45,6 +45,7 @@ int             AG_SDL_PostEventCallback(void *);
 int             AG_SDL_GetDisplaySize(Uint *, Uint *);
 void            AG_SDL_BeginEventProcessing(void *);
 int             AG_SDL_PendingEvents(void *);
+void            AG_SDL_TranslateEvent(void *, const SDL_Event *, AG_DriverEvent *);
 int             AG_SDL_GetNextEvent(void *, AG_DriverEvent *);
 int             AG_SDL_ProcessEvent(void *, AG_DriverEvent *);
 void            AG_SDL_GenericEventLoop(void *);

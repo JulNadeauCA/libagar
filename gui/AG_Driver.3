@@ -583,7 +583,16 @@ The target point will correspond to the top left corner of the rendered glyph.
 .Fn AG_GetNextEvent "AG_Driver *drv" "AG_DriverEvent *dev"
 .Pp
 .Ft int
+.Fn AG_GetNextEvent "AG_Driver *drv" "AG_DriverEvent *dev"
+.Pp
+.Ft int
 .Fn AG_ProcessEvent "AG_Driver *drv" "AG_DriverEvent *dev"
+.Pp
+.Bd -literal
+/* Requires Agar compiled --with-sdl */
+.Ed
+.Ft int
+.Fn AG_SDL_TranslateEvent "AG_Driver *drv" "const SDL_Event *ev" "AG_DriverEvent *dev"
 .Pp
 .nr nS 0
 Low-level driver events are represented by the
@@ -682,13 +691,22 @@ also returns -1, with the global variable
 variable set to 1.
 .Pp
 The
+.Fn AG_SDL_TranslateEvent
+function translates a
+.Xr SDL_Event 3
+structure to an Agar
+.Fn AG_DriverEvent .
+This function is only available if Agar was compiled with SDL support.
+.Pp
+The
 .Fa drv
-argument to
+argument
 .Fn AG_PendingEvents ,
-.Fn AG_GetNextEvent
-and
+.Fn AG_GetNextEvent ,
 .Fn AG_ProcessEvent
-specifies a driver instance.
+and
+.Fn AG_SDL_TranslateEvent
+specify a driver instance.
 This is useful for applications using multiple drivers concurrently.
 In most cases, this argument should be passed as NULL, so the default
 driver instance will be used.
