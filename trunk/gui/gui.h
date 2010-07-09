@@ -50,7 +50,6 @@ void       AG_DestroyGUI(void);
 void       AG_DestroyGUIGlobals(void);
 void       AG_QuitGUI(void);
 void       AG_DestroyVideo(void);
-void       AG_ViewCapture(void);
 #ifdef AG_DEBUG
 AG_Window *AG_GuiDebugger(void);
 #endif
