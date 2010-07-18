@@ -833,7 +833,9 @@ WGL_GenericEventLoop(void *obj)
 	t1 = AG_GetTicks();
 	for (;;) {
 		t2 = AG_GetTicks();
-		if (t2 - t1 >= rNom) {
+		if (agExitWGL) {
+			break;
+		} else if (t2 - t1 >= rNom) {
 			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 				if (!AGDRIVER_IS_WGL(drv)) {
 					continue;
@@ -867,8 +869,6 @@ WGL_GenericEventLoop(void *obj)
 #endif
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
-		} else if (agExitWGL) {
-			break;
 		} else {
 			AG_Delay(1);
 		}
