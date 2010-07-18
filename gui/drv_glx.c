@@ -56,6 +56,7 @@ static int      agScreen = 0;		/* Default screen (shared) */
 static Uint     rNom = 20;		/* Nominal refresh rate (ms) */
 static int      rCur = 0;		/* Effective refresh rate (ms) */
 static AG_Mutex agDisplayLock;		/* Lock on agDisplay */
+static int      agExitGLX = 0;		/* Exit event loop */
 
 static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
@@ -837,6 +838,8 @@ GLX_GenericEventLoop(void *obj)
 #endif
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
+		} else if (agExitGLX) {
+			break;
 		} else {
 			AG_Delay(1);
 		}
@@ -861,8 +864,8 @@ GLX_Terminate(void)
 		AG_MutexUnlock(&glx->lock);
 	}
 	XSync(agDisplay, False);
+	agExitGLX = 1;
 	AG_MutexUnlock(&agDisplayLock);
-	exit(0);
 }
 
 static void

@@ -55,6 +55,7 @@ static AG_DriverEventQ wglEventQ;	/* Event queue */
 static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
+static int  agExitWGL = 1;		/* Exit event loop */
 
 /* Driver instance data */
 typedef struct ag_driver_wgl {
@@ -866,6 +867,8 @@ WGL_GenericEventLoop(void *obj)
 #endif
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(t2);
+		} else if (agExitWGL) {
+			break;
 		} else {
 			AG_Delay(1);
 		}
@@ -876,7 +879,7 @@ static void
 WGL_Terminate(void)
 {
 	/* XXX TODO */
-	exit(0);
+	agExitWGL = 1;
 }
 
 static void
