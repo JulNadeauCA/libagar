@@ -274,6 +274,8 @@ Init(void *obj)
 	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&tl->incTo, IncrementTimeout, NULL, 0);
 	AG_SetTimeout(&tl->refreshTo, RefreshTimeout, NULL, 0);
+	
+	AG_RedrawOnTick(tl, 1000);
 
 	AG_BindPointer(tl, "selected", &tl->selected);
 
