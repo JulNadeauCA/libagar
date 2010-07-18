@@ -11,6 +11,8 @@
 #define AG_TABLE_TXT_MAX 128
 #define AG_TABLE_FMT_MAX 16
 #define AG_TABLE_COL_NAME_MAX 48
+
+struct ag_table;
 	
 enum ag_table_selmode {
 	AG_TABLE_SEL_ROWS,	/* Select entire rows */
@@ -80,11 +82,12 @@ typedef struct ag_table_cell {
 	AG_Widget *widget;			/* For AG_CELL_WIDGET */
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
+	struct ag_table *tbl;			/* Back pointer to Table */
 } AG_TableCell;
 
 typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
-	int (*sort_fn)(const void *, const void *);
+	int (*sortFn)(const void *, const void *);
 	Uint flags;
 #define AG_TABLE_COL_FILL	 0x01
 #define AG_TABLE_SORT_ASCENDING	 0x02
@@ -104,13 +107,15 @@ typedef struct ag_table_col {
 typedef struct ag_table {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_TABLE_MULTI		0x01	/* Multiple selections (ctrl/shift) */
-#define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
-#define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
-#define AG_TABLE_POLL		0x08	/* Table is polled */
-#define AG_TABLE_HIGHLIGHT_COLS	0x40	/* Highlight column selection */
-#define AG_TABLE_WIDGETS	0x80	/* Embedded widgets are in use */
+#define AG_TABLE_MULTI		0x001	/* Multiple selections (ctrl/shift) */
+#define AG_TABLE_MULTITOGGLE	0x002	/* Toggle multiple selections */
+#define AG_TABLE_REDRAW_CELLS	0x004	/* Redraw the cells */
+#define AG_TABLE_POLL		0x008	/* Table is polled */
+#define AG_TABLE_HIGHLIGHT_COLS	0x040	/* Highlight column selection */
+#define AG_TABLE_WIDGETS	0x080	/* Embedded widgets are in use */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
+#define AG_TABLE_NOAUTOSORT	0x100	/* Disable automatic sorting */
+#define AG_TABLE_NEEDSORT	0x200	/* Need sorting */
 	enum ag_table_selmode selMode;	/* Selection mode */
 	int wHint, hHint;		/* Size hint */
 
@@ -145,6 +150,16 @@ typedef struct ag_table {
 	AG_Color selColor;		/* Selection color */
 
 	AG_SLIST_HEAD_(ag_table_popup) popups; /* Registered popup menus */
+
+	Uint colAction;
+#define AG_TABLE_COL_SELECT	0x01	/* Select column */
+#define AG_TABLE_COL_SORT	0x02	/* Set sorting mode */
+
+	AG_Event *clickRowEv;		/* Row double click callback */
+	AG_Event *clickColEv;		/* Column double click callback */
+	AG_Event *clickCellEv;		/* Cell double click callback */
+	Uint nSorting;			/* Index of sorting column
+					   (computed from flags) */
 } AG_Table;
 
 __BEGIN_DECLS
@@ -157,6 +172,9 @@ void	  AG_TableSizeHint(AG_Table *, int, int);
 #define	  AG_TablePrescale AG_TableSizeHint
 
 void AG_TableSetSeparator(AG_Table *, const char *);
+void AG_TableSetRowClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void AG_TableSetColClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void AG_TableSetCellClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetCellDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
@@ -166,6 +184,7 @@ void AG_TableSetColMin(AG_Table *, int);
 void AG_TableSetDefaultColWidth(AG_Table *, int);
 void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
 void AG_TableSetSelectionColor(AG_Table *, Uint8, Uint8, Uint8, Uint8);
+void AG_TableSetColumnAction(AG_Table *, Uint);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, int, int);
@@ -174,6 +193,7 @@ void	  AG_TablePoolFree(AG_Table *, int);
 void	  AG_TableClear(AG_Table *);
 void	  AG_TableBegin(AG_Table *);
 void	  AG_TableEnd(AG_Table *);
+void      AG_TableSort(AG_Table *);
 
 void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
 #define	  AG_TableCellSelected(t,m,n) ((t)->cells[m][n].selected)

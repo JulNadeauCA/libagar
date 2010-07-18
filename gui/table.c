@@ -94,6 +94,14 @@ AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	AG_Redraw(t);
 }
 
+void
+AG_TableSetColumnAction(AG_Table *t, Uint flags)
+{
+	AG_ObjectLock(t);
+	t->colAction = flags;
+	AG_ObjectUnlock(t);
+}
+
 /* Change the set of recognized field separators (defaults to ":") */
 void
 AG_TableSetSeparator(AG_Table *t, const char *sep)
@@ -341,7 +349,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static __inline__ void
-PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
+PrintCell(AG_TableCell *c, char *buf, size_t bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_INT:
@@ -379,7 +387,7 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 #ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
-		Snprintf(buf, bufsz, c->fmt, c->data.f);
+		Snprintf(buf, bufsz, c->fmt, c->data.u64);
 		break;
 	case AG_CELL_PUINT64:
 		Snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
@@ -478,7 +486,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		}
 		break;
 	default:
-		PrintCell(t, c, txt, sizeof(txt));
+		PrintCell(c, txt, sizeof(txt));
 		break;
 	}
 	AG_TextColor(agColors[TEXT_COLOR]);
@@ -583,6 +591,10 @@ Draw(void *obj)
 	}
 	if (t->flags & AG_TABLE_WIDGETS)
 		UpdateEmbeddedWidgets(t);
+	
+	if (!(t->flags & AG_TABLE_NOAUTOSORT) &&
+	    t->flags & AG_TABLE_NEEDSORT)
+		AG_TableSort(t);
 
 	AG_PushTextState();
 
@@ -623,6 +635,22 @@ Draw(void *obj)
 			AG_WidgetBlitSurface(t, col->surface,
 			    rCell.x + col->w/2 - WSURFACE(t,col->surface)->w/2,
 			    t->hCol/2 - WSURFACE(t,col->surface)->h/2);
+
+			if (col->flags & AG_TABLE_SORT_ASCENDING) {
+				AG_DrawArrowUp(t,
+				    rCell.x + col->w - 10,
+				    t->hCol/2,
+				    10,
+				    agColors[SCROLLBAR_ARR1_COLOR],
+				    agColors[SCROLLBAR_ARR2_COLOR]);
+			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
+				AG_DrawArrowDown(t,
+				    rCell.x + col->w - 10,
+				    t->hCol/2,
+				    10,
+				    agColors[SCROLLBAR_ARR1_COLOR],
+				    agColors[SCROLLBAR_ARR2_COLOR]);
+			}
 		}
 
 		/* Rows of this column */
@@ -666,6 +694,7 @@ Draw(void *obj)
 	AG_PopTextState();
 }
 
+/* Register a new popup menu. */
 AG_MenuItem *
 AG_TableSetPopup(AG_Table *t, int m, int n)
 {
@@ -693,6 +722,7 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	return (rv);
 }
 
+/* Register a row double-click callback function. */
 void
 AG_TableSetRowDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
@@ -702,6 +732,7 @@ AG_TableSetRowDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 	AG_ObjectUnlock(t);
 }
 
+/* Register a column double-click callback function. */
 void
 AG_TableSetColDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
@@ -711,6 +742,7 @@ AG_TableSetColDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 	AG_ObjectUnlock(t);
 }
 
+/* Register a cell double-click callback function. */
 void
 AG_TableSetCellDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 {
@@ -720,6 +752,37 @@ AG_TableSetCellDblClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
 	AG_ObjectUnlock(t);
 }
 
+/* Register a row single-click callback function. */
+void
+AG_TableSetRowClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
+{
+	AG_ObjectLock(t);
+	t->clickRowEv = AG_SetEvent(t, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(t->clickRowEv, fmt);
+	AG_ObjectUnlock(t);
+}
+
+/* Register a column single-click callback function. */
+void
+AG_TableSetColClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
+{
+	AG_ObjectLock(t);
+	t->clickColEv = AG_SetEvent(t, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(t->clickColEv, fmt);
+	AG_ObjectUnlock(t);
+}
+
+/* Register a cell single-click callback function. */
+void
+AG_TableSetCellClickFn(AG_Table *t, AG_EventFn ev, const char *fmt, ...)
+{
+	AG_ObjectLock(t);
+	t->clickCellEv = AG_SetEvent(t, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(t->clickCellEv, fmt);
+	AG_ObjectUnlock(t);
+}
+
+/* Redraw table cells. */
 void
 AG_TableRedrawCells(AG_Table *t)
 {
@@ -729,7 +792,10 @@ AG_TableRedrawCells(AG_Table *t)
 	AG_Redraw(t);
 }
 
-/* Table must be locked. */
+/*
+ * Cleanup a table cell structure.
+ * Table must be locked.
+ */
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
@@ -741,7 +807,10 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 		AG_WidgetUnmapSurface(t, c->surface);
 }
 
-/* Table must be locked. */
+/*
+ * Add an entry to a column pool.
+ * Table must be locked.
+ */
 int
 AG_TablePoolAdd(AG_Table *t, int m, int n)
 {
@@ -752,7 +821,10 @@ AG_TablePoolAdd(AG_Table *t, int m, int n)
 	return (tc->mpool++);
 }
 
-/* Table must be locked. */
+/*
+ * Cleanup a column pool.
+ * Table must be locked.
+ */
 void
 AG_TablePoolFree(AG_Table *t, int n)
 {
@@ -790,6 +862,17 @@ AG_TableBegin(AG_Table *t)
 	t->flags &= ~(AG_TABLE_WIDGETS);
 }
 
+static int
+AG_TableCompareFnTxtCells(const AG_TableCell *c1, const AG_TableCell *c2)
+{
+	char b1[AG_TABLE_TXT_MAX];
+	char b2[AG_TABLE_TXT_MAX];
+
+	c1->fnTxt(c1->data.p, b1, sizeof(b1));
+	c2->fnTxt(c2->data.p, b2, sizeof(b2));
+	return (strcoll(b1, b2));
+}
+
 int
 AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 {
@@ -798,15 +881,17 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	}
 	switch (c1->type) {
 	case AG_CELL_STRING:
-		return (strcmp(c1->data.s, c2->data.s));
+		return (strcoll(c1->data.s, c2->data.s));
 	case AG_CELL_PSTRING:
-		return (strcmp((char *)c1->data.p, (char *)c2->data.p));
+		return (strcoll((char *)c1->data.p, (char *)c2->data.p));
 	case AG_CELL_INT:
-	case AG_CELL_UINT:
 		return (c1->data.i - c2->data.i);
+	case AG_CELL_UINT:
+		return ((Uint)c1->data.i - (Uint)c2->data.i);
 	case AG_CELL_LONG:
-	case AG_CELL_ULONG:
 		return (c1->data.l - c2->data.l);
+	case AG_CELL_ULONG:
+		return ((Ulong)c1->data.l - (Ulong)c2->data.l);
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
 		return (c1->data.f != c2->data.f);
@@ -842,14 +927,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_FN_SU:
 		return ((c1->data.p != c2->data.p) || (c1->fnSu != c2->fnSu));
 	case AG_CELL_FN_TXT:
-		{
-			char b1[AG_TABLE_TXT_MAX];
-			char b2[AG_TABLE_TXT_MAX];
-
-			c1->fnTxt(c1->data.p, b1, sizeof(b1));
-			c2->fnTxt(c2->data.p, b2, sizeof(b2));
-			return (strcmp(b1, b2));
-		}
+		return AG_TableCompareFnTxtCells(c1, c2);
 	case AG_CELL_WIDGET:
 		/* XXX TODO hooks */
 		return (1);
@@ -890,6 +968,52 @@ AG_TableEnd(AG_Table *t)
 		tc->mpool = 0;
 	}
 	AG_ObjectUnlock(t);
+}
+
+static int
+AG_TableSortCellsAsc(const void *p1, const void *p2)
+{
+	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
+	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
+	AG_Table *t = row1[0].tbl;
+
+	return AG_TableCompareCells(&row1[t->nSorting], &row2[t->nSorting]);
+}
+
+static int
+AG_TableSortCellsDsc(const void *p1, const void *p2)
+{
+	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
+	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
+	AG_Table *t = row1[0].tbl;
+
+	return AG_TableCompareCells(&row2[t->nSorting], &row1[t->nSorting]);
+}
+
+/* Sort the items in the table. */
+void
+AG_TableSort(AG_Table *t)
+{
+	int i;
+	int (*sortFn)(const void *, const void *) = NULL;
+
+	for (i = 0; i < t->n; i++) {
+		AG_TableCol *tc = &t->cols[i];
+
+		if (tc->flags & AG_TABLE_SORT_ASCENDING) {
+			sortFn = AG_TableSortCellsAsc;
+			break;
+		} else if (tc->flags & AG_TABLE_SORT_DESCENDING) {
+			sortFn = AG_TableSortCellsDsc;
+			break;
+		}
+	}
+	if (i == t->n) {
+		return;
+	}
+	t->nSorting = i;
+	qsort(t->cells, t->m, sizeof(AG_TableCell *), sortFn);
+	t->flags &= ~(AG_TABLE_NEEDSORT);
 }
 
 /* Return true if multiple item selection is enabled. */
@@ -948,7 +1072,31 @@ ColumnRightClick(AG_Table *t, int px, int py)
 	}
 }
 
-/* Left click on a column header; resize or set the sorting mode. */
+/* Left click on a column header; column action is sort. */
+static void
+ColumnLeftClickSort(AG_Table *t, AG_TableCol *tc)
+{
+	int n;
+
+	for (n = 0; n < t->n; n++) {
+		AG_TableCol *tcOther = &t->cols[n];
+
+		if (tcOther != tc) {
+			tcOther->flags &= ~(AG_TABLE_SORT_ASCENDING);
+			tcOther->flags &= ~(AG_TABLE_SORT_DESCENDING);
+		}
+	}
+	if (tc->flags & AG_TABLE_SORT_ASCENDING) {
+		tc->flags &= ~(AG_TABLE_SORT_ASCENDING);
+		tc->flags |= AG_TABLE_SORT_DESCENDING;
+	} else {
+		tc->flags &= ~(AG_TABLE_SORT_DESCENDING);
+		tc->flags |= AG_TABLE_SORT_ASCENDING;
+	}
+	t->flags |= AG_TABLE_NEEDSORT;
+}
+
+/* Left click on a column header; resize or execute column action. */
 static void
 ColumnLeftClick(AG_Table *t, int px)
 {
@@ -968,28 +1116,37 @@ ColumnLeftClick(AG_Table *t, int px)
 					t->nResizing = n;
 				}
 			} else {
-				if (multi) {
-					tc->selected = !tc->selected;
-				} else {
-					tc->selected = 1;
-				}
-				if (t->dblClickedCol != -1 &&
-				    t->dblClickedCol == n) {
-					AG_CancelEvent(t,
-					    "dblclick-col-expire");
-					if (t->dblClickColEv != NULL) {
-						AG_PostEvent(NULL, t,
-						    t->dblClickColEv->name,
-						    "%i", n);
+				if (t->colAction & AG_TABLE_COL_SELECT) {
+					if (multi) {
+						tc->selected = !tc->selected;
+					} else {
+						tc->selected = 1;
 					}
+				}
+				if (t->colAction & AG_TABLE_COL_SORT) {
+					ColumnLeftClickSort(t, tc);
+				}
+				if (t->clickColEv != NULL) {
 					AG_PostEvent(NULL, t,
-					    "table-dblclick-col", "%i", n);
-					t->dblClickedCol = -1;
+					    t->clickColEv->name,
+					    "%i", n);
 				} else {
-					t->dblClickedCol = n;
-					AG_SchedEvent(NULL, t,
-					    agMouseDblclickDelay,
-					    "dblclick-col-expire", NULL);
+					if (t->dblClickedCol != -1 &&
+					    t->dblClickedCol == n) {
+						AG_CancelEvent(t,
+						    "dblclick-col-expire");
+						if (t->dblClickColEv != NULL) {
+							AG_PostEvent(NULL, t,
+							    t->dblClickColEv->name,
+							    "%i", n);
+						}
+						t->dblClickedCol = -1;
+					} else {
+						t->dblClickedCol = n;
+						AG_SchedEvent(NULL, t,
+						    agMouseDblclickDelay,
+						    "dblclick-col-expire", NULL);
+					}
 				}
 				goto cont;
 			}
@@ -1023,7 +1180,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 	switch (t->selMode) {
 	case AG_TABLE_SEL_ROWS:
 		if (SelectingRange(t)) {
-			for (m=0; m < t->m; m++) {
+			for (m = 0; m < t->m; m++) {
 				if (AG_TableRowSelected(t,m))
 					break;
 			}
@@ -1031,48 +1188,52 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (m < mc) {
-				for (i=m; i <= mc; i++)
+				for (i = m; i <= mc; i++)
 					AG_TableSelectRow(t, i);
 			} else if (m > mc) {
-				for (i=mc; i <= m; i++)
+				for (i = mc; i <= m; i++)
 					AG_TableSelectRow(t, i);
 			} else {
 				AG_TableSelectRow(t, mc);
 			}
 		} else if (SelectingMultiple(t)) {
-			for (n=0; n < t->n; n++) {
+			for (n = 0; n < t->n; n++) {
 				c = &t->cells[mc][n];
 				c->selected = !c->selected;
 			}
 		} else {
-			for (m=0; m < t->m; m++) {
-				for (n=0; n < t->n; n++) {
+			for (m = 0; m < t->m; m++) {
+				for (n = 0; n < t->n; n++) {
 					c = &t->cells[m][n];
 					c->selected = ((int)m == mc);
 				}
 			}
-			if (t->dblClickedRow != -1 &&
-			    t->dblClickedRow == mc) {
-				AG_CancelEvent(t, "dblclick-row-expire");
-				if (t->dblClickRowEv != NULL) {
-					AG_PostEvent(NULL, t,
-					    t->dblClickRowEv->name,
-					    "%i", mc);
-				}
+			if (t->clickRowEv != NULL) {
 				AG_PostEvent(NULL, t,
-				    "table-dblclick-row", "%i", mc);
-				t->dblClickedRow = -1;
+				    t->clickRowEv->name,
+				    "%i", mc);
 			} else {
-				t->dblClickedRow = mc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-row-expire", NULL);
+				if (t->dblClickedRow != -1 &&
+				    t->dblClickedRow == mc) {
+					AG_CancelEvent(t, "dblclick-row-expire");
+					if (t->dblClickRowEv != NULL) {
+						AG_PostEvent(NULL, t,
+						    t->dblClickRowEv->name,
+						    "%i", mc);
+					}
+					t->dblClickedRow = -1;
+				} else {
+					t->dblClickedRow = mc;
+					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+					    "dblclick-row-expire", NULL);
+				}
 			}
 		}
 		break;
 	case AG_TABLE_SEL_CELLS:
 		if (SelectingRange(t)) {
-			for (m=0, n=0; m < t->m; m++) {
-				for (n=0; n < t->n; n++) {
+			for (m = 0, n=0; m < t->m; m++) {
+				for (n = 0; n < t->n; n++) {
 					if (AG_TableCellSelected(t,m,n))
 						break;
 				}
@@ -1083,11 +1244,11 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (m < mc && n < nc) {
-				for (i=n; i <= nc; i++)
+				for (i = n; i <= nc; i++)
 					for (j = m; j <= mc; j++)
 						AG_TableSelectCell(t, j,i);
 			} else if (m > mc && n > nc) {
-				for (i=nc; i <= n; i++)
+				for (i = nc; i <= n; i++)
 					for (j = mc; j <= m; j++)
 						AG_TableSelectCell(t, j,i);
 			} else {
@@ -1097,34 +1258,38 @@ CellLeftClick(AG_Table *t, int mc, int x)
 			c = &t->cells[mc][nc];
 			c->selected = !c->selected;
 		} else {
-			for (m=0; m < t->m; m++) {
-				for (n=0; n < t->n; n++) {
+			for (m = 0; m < t->m; m++) {
+				for (n = 0; n < t->n; n++) {
 					c = &t->cells[m][n];
 					c->selected = ((int)m == mc) &&
 					              ((int)n == nc);
 				}
 			}
-			if (t->dblClickedCell != -1 &&
-			    t->dblClickedCell == mc) {
-				AG_CancelEvent(t, "dblclick-cell-expire");
-				if (t->dblClickCellEv != NULL) {
-					AG_PostEvent(NULL, t,
-					    t->dblClickCellEv->name,
-					    "%i", mc);
-				}
+			if (t->clickCellEv != NULL) {
 				AG_PostEvent(NULL, t,
-				    "table-dblclick-cell", "%i,%i", mc, nc);
-				t->dblClickedCell = -1;
+				    t->clickCellEv->name,
+				    "%i", mc);
 			} else {
-				t->dblClickedRow = mc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-cell-expire", NULL);
+				if (t->dblClickedCell != -1 &&
+				    t->dblClickedCell == mc) {
+					AG_CancelEvent(t, "dblclick-cell-expire");
+					if (t->dblClickCellEv != NULL) {
+						AG_PostEvent(NULL, t,
+						    t->dblClickCellEv->name,
+						    "%i", mc);
+					}
+					t->dblClickedCell = -1;
+				} else {
+					t->dblClickedRow = mc;
+					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+					    "dblclick-cell-expire", NULL);
+				}
 			}
 		}
 		break;
 	case AG_TABLE_SEL_COLS:
 		if (SelectingRange(t)) {
-			for (n=0; n < t->n; n++) {
+			for (n = 0; n < t->n; n++) {
 				if (AG_TableColSelected(t,n))
 					break;
 			}
@@ -1132,39 +1297,43 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (n < nc) {
-				for (i=n; i <= nc; i++)
+				for (i = n; i <= nc; i++)
 					AG_TableSelectCol(t, i);
 			} else if (n > nc) {
-				for (i=nc; i <= n; i++)
+				for (i = nc; i <= n; i++)
 					AG_TableSelectCol(t, i);
 			} else {
 				AG_TableSelectCol(t, nc);
 			}
 		} else if (SelectingMultiple(t)) {
-			for (n=0; n < t->n; n++) {
+			for (n = 0; n < t->n; n++) {
 				tc = &t->cols[n];
 				tc->selected = !tc->selected;
 			}
 		} else {
-			for (n=0; n < t->n; n++) {
+			for (n = 0; n < t->n; n++) {
 				tc = &t->cols[n];
 				tc->selected = ((int)n == nc);
 			}
-			if (t->dblClickedCol != -1 &&
-			    t->dblClickedCol == nc) {
-				AG_CancelEvent(t, "dblclick-col-expire");
-				if (t->dblClickColEv != NULL) {
-					AG_PostEvent(NULL, t,
-					    t->dblClickColEv->name,
-					    "%i", nc);
-				}
+			if (t->clickColEv != NULL) {
 				AG_PostEvent(NULL, t,
-				    "table-dblclick-col", "%i", nc);
-				t->dblClickedCol = -1;
+				    t->clickColEv->name,
+				    "%i", nc);
 			} else {
-				t->dblClickedCol = nc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-col-expire", NULL);
+				if (t->dblClickedCol != -1 &&
+				    t->dblClickedCol == nc) {
+					AG_CancelEvent(t, "dblclick-col-expire");
+					if (t->dblClickColEv != NULL) {
+						AG_PostEvent(NULL, t,
+						    t->dblClickColEv->name,
+						    "%i", nc);
+					}
+					t->dblClickedCol = -1;
+				} else {
+					t->dblClickedCol = nc;
+					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+					    "dblclick-col-expire", NULL);
+				}
 			}
 		}
 		break;
@@ -1573,7 +1742,7 @@ ExpireCellDblClick(AG_Event *event)
 
 int
 AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
-    int (*sort_fn)(const void *, const void *))
+    int (*sortFn)(const void *, const void *))
 {
 	AG_TableCol *tc, *lc;
 	AG_TableCol *colsNew;
@@ -1594,8 +1763,8 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	} else {
 		tc->name[0] = '\0';
 	}
-	tc->flags = AG_TABLE_SORT_ASCENDING;
-	tc->sort_fn = sort_fn;
+	tc->flags = 0;
+	tc->sortFn = sortFn;
 	tc->selected = 0;
 	tc->w = 0;
 	tc->wPct = -1;
@@ -1642,6 +1811,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
 	n = t->n++;
+	t->flags |= AG_TABLE_NEEDSORT;
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
 	return (n);
@@ -1660,6 +1830,7 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 	c->selected = 0;
 	c->surface = -1;
 	c->widget = NULL;
+	c->tbl = t;
 }
 
 int
@@ -1859,8 +2030,12 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_end(ap);
 
 	rv = t->m++;
-	AG_Redraw(t);
+	t->flags |= AG_TABLE_NEEDSORT;
 	AG_ObjectUnlock(t);
+
+	if (!agRenderingContext) {
+		AG_Redraw(t);
+	}
 	return (rv);
 fail:
 	AG_ObjectUnlock(t);
@@ -1887,7 +2062,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 			if (t->cols[n].name[0] == '\0') {
 				continue;
 			}
-			PrintCell(t, &t->cells[m][n], txt, sizeof(txt));
+			PrintCell(&t->cells[m][n], txt, sizeof(txt));
 			fputs(txt, f);
 			fputc(sep, f);
 		}
@@ -1938,6 +2113,8 @@ Init(void *obj)
 	t->selMode = AG_TABLE_SEL_ROWS;
 	t->selColor = AG_ColorRGBA(0,0,250,32);
 	t->wTot = 0;
+	t->colAction = AG_TABLE_COL_SORT;
+	t->nSorting = 0;
 
 	/* Horizontal scrollbar */
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_AUTOSIZE);
@@ -1962,6 +2139,9 @@ Init(void *obj)
 	t->mVis = 0;
 	t->mOffs = 0;
 	t->xOffs = 0;
+	t->clickRowEv = NULL;
+	t->clickColEv = NULL;
+	t->clickCellEv = NULL;
 	t->dblClickRowEv = NULL;
 	t->dblClickColEv = NULL;
 	t->dblClickCellEv = NULL;
@@ -1969,7 +2149,7 @@ Init(void *obj)
 	t->dblClickedCol = -1;
 	t->wheelTicks = 0;
 	SLIST_INIT(&t->popups);
-	
+
 	AG_SetEvent(t, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
@@ -1984,6 +2164,8 @@ Init(void *obj)
 
 	AG_SetTimeout(&t->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&t->incTo, IncrementTimeout, NULL, 0);
+	
+	AG_RedrawOnTick(t, 1000);
 
 #ifdef AG_DEBUG
 	AG_BindUint(t, "flags", &t->flags);
@@ -2000,10 +2182,6 @@ Init(void *obj)
 	AG_BindInt(t, "m", &t->m);
 	AG_BindInt(t, "mVis", &t->mVis);
 	AG_BindInt(t, "nResizing", &t->nResizing);
-	AG_BindInt(t, "dblClickedRow", &t->dblClickedRow);
-	AG_BindInt(t, "dblClickedCol", &t->dblClickedCol);
-	AG_BindInt(t, "dblClickedCell", &t->dblClickedCell);
-	AG_BindUint32(t, "wheelTicks", &t->wheelTicks);
 	AG_BindInt(t, "wTot", &t->wTot);
 #endif /* AG_DEBUG */
 }
