@@ -91,10 +91,25 @@ interface from
 .Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
 .Pp
 .Ft "void"
+.Fn AG_TableSetRowClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSetColClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSetCellClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
 .Fn AG_TableSetRowDblClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
 .Ft "void"
 .Fn AG_TableSetColDblClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSetCellDblClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSetColumnAction "AG_Table *tbl" "Uint action"
 .Pp
 .nr nS 0
 The
@@ -109,8 +124,12 @@ variant sets the polling flag and configures the
 .Sq table-poll
 event.
 .Fa event_fn
-is a pointer to the event-handler function responsible for entering the
-values into the table.
+is a pointer to the event-handler function responsible for populating
+the table (see
+.Fn AG_TableBegin
+and
+.Fn AG_TableEnd
+for details).
 .Fa event_args
 and the following arguments are optional
 .Xr AG_Event 3
@@ -153,6 +172,9 @@ Shorthand for
 .Dv AG_TABLE_HFILL|AG_TABLE_VFILL .
 This is recommended as an alternative to calling
 .Fn AG_TableSizeHint .
+.It AG_TABLE_NOAUTOSORT
+Disable automatic sorting (see
+.Fn AG_TableSort ) .
 .El
 .Pp
 The
@@ -224,21 +246,43 @@ are both valid indices, the menu is shown when clicking on the given cell.
 If both indices are -1, the menu is shown when clicking on any cell.
 .Pp
 The
-.Fn AG_TableSetRowDblClickFn ,
-.Fn AG_TableSetColDblClickFn
+.Fn AG_TableSetRowClickFn ,
+.Fn AG_TableSetColClickFn
 and
-.Fn AG_TableSetCellDblClickFn
-functions register a callback routine to invoke upon double-click on a
+.Fn AG_TableSetCellClickFn
+functions register a callback routine to invoke upon single-click on a
 row, column or cell, respectively, depending on the current selection mode.
 The callback routine for
-.Fn AG_TableSetRowDblClickFn
+.Fn AG_TableSetRowClickFn
 is passed the row index as an
 .Ft int
 argument.
-.Fn AG_TableSetColDblClickFn
+.Fn AG_TableSetColClickFn
 is passed the column index and
-.Fn AG_TableSetCellDblClickFn
+.Fn AG_TableSetCellClickFn
 is passed the row and column indices in order.
+.Pp
+The
+.Fn AG_TableSetRowDblClickFn ,
+.Fn AG_TableSetColDblClickFn ,
+and
+.Fn AG_TableSetCellDblClickFn
+variants register callbacks to invoke on double-click.
+If both single and double-click callbacks are defined, only the single-click
+callback is used.
+.Pp
+The
+.Fn AG_TableSetColumnAction
+specifies the action(s) to take whenever a column header is pressed.
+Acceptable arguments to
+.Fa flags
+include:
+.Bl -tag -width "AG_TABLE_SELECT "
+.It AG_TABLE_SELECT
+Select the entire column.
+.It AG_TABLE_SORT
+Change the sort direction of the column.
+.El
 .Sh TABLE FUNCTIONS
 .nr nS 1
 .Ft "void"
@@ -247,29 +291,41 @@ is passed the row and column indices in order.
 .Ft "void"
 .Fn AG_TableEnd "AG_Table *tbl"
 .Pp
+.Ft "void"
+.Fn AG_TableSort "AG_Table *tbl"
+.Pp
 .nr nS 0
-.Nm
-is aimed at tables with dynamic content that has to be respecified
-frequently.
-To achieve this, rows must be specified between calls to
+Tables created with
+.Fn AG_TableNewPolled
+are periodically repopulated, using a callback routine.
+In this callback routine, calls to
+.Fn AG_TableAddRow
+should be enclosed between
 .Fn AG_TableBegin
 and
 .Fn AG_TableEnd .
-.Pp
 The
 .Fn AG_TableBegin
-function saves current selection information (to keep selections consistent
-across table respecifications), and clears all rows.
+function, notably, saves current selection information (to keep selections
+consistent across table re-population), and clears all rows.
 .Pp
-Since dynamic tables that are respecified periodically usually exhibit high
-temporal coherence,
+This method of repopulating a table using a function nicely separates the
+GUI from the underlying application.
+It is also more efficient than it seems, since
 .Fn AG_TableBegin
-actually moves existing rows to a pool for possible reuse, to avoid
-unnecessary text rendering (and texture uploads in OpenGL mode).
+will re-use the important resources (e.g., hardware texture handles of
+rendered text surfaces) for unchanged cells.
+.Pp
+The
+.Fn AG_TableSort
+function sorts the rows of the table.
+This function is useful in combination with the
+.Dv AG_TABLE_NOAUTOSORT
+option.
 .Sh COLUMN FUNCTIONS
 .nr nS 1
 .Ft "int"
-.Fn AG_TableAddCol "AG_Table *tbl" "const char *name" "const char *size_spec" "int (*sort_fn)(const void *, const void *)"
+.Fn AG_TableAddCol "AG_Table *tbl" "const char *name" "const char *size_spec" "int (*sortFn)(const void *, const void *)"
 .Pp
 .Ft "void"
 .Fn AG_TableSelectCol "AG_Table *tbl" "int col"
@@ -297,7 +353,7 @@ specifies the text to display in the column header.
 is an optional size specification (see
 .Xr AG_SizeSpec 3 )
 used in initial sizing of the column.
-.Fa sort_fn ,
+.Fa sortFn ,
 if not NULL, is the compare function to use for items of this column.
 It is passed pointers to two
 .Ft AG_TableCell
