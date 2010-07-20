@@ -357,6 +357,7 @@ echo "    --sbindir=DIR             Executables (for administrator) [PREFIX/sbin
 echo "    --srcdir=DIR              Source directory for concurrent build [.]"
 echo "    --sysconfdir=DIR          System configuration files [PREFIX/etc]"
 echo "    --testdir=DIR             Execute ./configure tests in directory [.]"
+echo "    --with-catman             Install cat files for manual pages [auto-detect]"
 echo "    --with-ctags              Generate ctags(1) tag files [no]"
 echo "    --with-cygwin             Use Cygwin compatibility layer [no]"
 echo "    --with-docs               Generate printable documentation [no]"
@@ -483,6 +484,22 @@ if [ "${HAVE_MANDOC}" = "no" ]; then
 	echo "NOMANLINKS=yes" >> Makefile.config
 else
 	echo "HAVE_MANDOC=yes" >> Makefile.config
+	if [ "${with_catman}" = "no" ]; then
+		echo "NOCATMAN=yes" >> Makefile.config
+	else
+		if [ "${with_catman}" = "yes" ]; then
+			echo "NOCATMAN=no" >> Makefile.config
+		else
+			case "${host}" in
+			*-*-freebsd*)
+				echo "NOCATMAN=yes" >> Makefile.config
+				;;
+			*)
+				echo "NOCATMAN=no" >> Makefile.config
+				;;
+			esac
+		fi
+	fi
 	if [ "${with_manpages}" = "no" ]; then
 		echo "NOMAN=yes" >> Makefile.config
 		echo "NOMANLINKS=yes" >> Makefile.config

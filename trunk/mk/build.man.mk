@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@ CATMAN9?=""
 MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 MANLINKS?=
 NOMAN?=
+NOCATMAN?=
 NOMANLINKS?=
 CLEANFILES?=
 
@@ -348,7 +349,7 @@ install-man-dirs:
 
 install-man:
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN1}" CATMAN="${CATMAN1}" \
+	    env MAN="${MAN1}" CATMAN="${CATMAN1}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man1" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat1" \
@@ -359,7 +360,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN2}" CATMAN="${CATMAN2}" \
+	    env MAN="${MAN2}" CATMAN="${CATMAN2}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man2" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat2" \
@@ -370,7 +371,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN3}" CATMAN="${CATMAN3}" \
+	    env MAN="${MAN3}" CATMAN="${CATMAN3}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man3" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat3" \
@@ -381,7 +382,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN4}" CATMAN="${CATMAN4}" \
+	    env MAN="${MAN4}" CATMAN="${CATMAN4}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man4" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat4" \
@@ -392,7 +393,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN5}" CATMAN="${CATMAN5}" \
+	    env MAN="${MAN5}" CATMAN="${CATMAN5}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man5" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat5" \
@@ -403,7 +404,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN6}" CATMAN="${CATMAN6}" \
+	    env MAN="${MAN6}" CATMAN="${CATMAN6}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man6" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat6" \
@@ -414,7 +415,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN7}" CATMAN="${CATMAN7}" \
+	    env MAN="${MAN7}" CATMAN="${CATMAN7}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man7" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat7" \
@@ -425,7 +426,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN8}" CATMAN="${CATMAN8}" \
+	    env MAN="${MAN8}" CATMAN="${CATMAN8}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man8" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat8" \
@@ -436,7 +437,7 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    env MAN="${MAN9}" CATMAN="${CATMAN9}" \
+	    env MAN="${MAN9}" CATMAN="${CATMAN9}" NOCATMAN="${NOCATMAN}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${DESTDIR}${MANDIR}/man9" \
 	        CATMANDIR="${DESTDIR}${MANDIR}/cat9" \
@@ -460,14 +461,16 @@ install-manlinks:
 		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
 	    done)
-	@(cd ${DESTDIR}${MANDIR} && \
+	@if [ "${NOCATMAN}" != "yes" ]; then \
+	    (cd ${DESTDIR}${MANDIR} && \
 	     for L in ${CATLINKS}; do \
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
 		echo "ln -fs $$MPG $$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG $$MS/$$MLNK; \
-	    done)
+	    done); \
+	fi
 
 man:
 	@if [ "${MAN}" != "" ]; then \
