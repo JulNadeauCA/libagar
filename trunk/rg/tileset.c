@@ -1858,8 +1858,9 @@ Edit(void *p)
 	{
 		AG_Pane *pane;
 
-		pane = AG_PaneNew(ntab, AG_PANE_HORIZ,
-		    AG_PANE_EXPAND|AG_PANE_DIV|AG_PANE_FORCE_DIV);
+		pane = AG_PaneNew(ntab, AG_PANE_HORIZ, AG_PANE_EXPAND);
+		AG_PaneMoveDividerPct(pane, 50);
+		AG_PaneResizeAction(pane, AG_PANE_DIVIDE_EVEN);
 		AG_LabelNewS(pane->div[0], 0, _("Tiles:"));
 		AG_ObjectAttach(pane->div[0], tlTileTbl);
 		AG_LabelNewS(pane->div[1], 0, _("Animations:"));
