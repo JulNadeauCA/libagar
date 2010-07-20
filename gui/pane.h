@@ -15,6 +15,13 @@ enum ag_pane_type {
 	AG_PANE_VERT
 };
 
+enum ag_pane_resize_action {
+	AG_PANE_EXPAND_DIV1,		/* Expand left/upper division */
+	AG_PANE_EXPAND_DIV2,		/* Expand right/lower division */
+	AG_PANE_DIVIDE_EVEN,		/* Divide evenly */
+	AG_PANE_DIVIDE_PCT		/* Divide per AG_PaneMoveDividerPct() */
+};
+
 typedef struct ag_pane {
 	struct ag_widget wid;
 	enum ag_pane_type type;
@@ -23,12 +30,15 @@ typedef struct ag_pane {
 #define AG_PANE_VFILL		0x002
 #define AG_PANE_DIV1FILL	0x004	/* Expand div1 (default is div2) */
 #define AG_PANE_FRAME		0x008	/* Display frames for each division */
+#define AG_PANE_UNMOVABLE	0x100	/* Pane is not user-movable */
+#define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
+
+#ifdef AG_LEGACY
 #define AG_PANE_FORCE_DIV1FILL	0x010	/* Enforce div1 expansion */
 #define AG_PANE_FORCE_DIV2FILL	0x020	/* Enforce div2 expansion */
 #define AG_PANE_DIV		0x040	/* Initially divide equally */
 #define AG_PANE_FORCE_DIV	0x080	/* Enforce equal division */
-#define AG_PANE_UNMOVABLE	0x100	/* Pane is not user-movable */
-#define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
+#endif
 
 	AG_Box *div[2];			/* Division containers */
 	int	wMin[2], hMin[2];	/* Minimum geometry */
@@ -39,6 +49,7 @@ typedef struct ag_pane {
 	int     rxPct;			/* Requested position in % */
 	int	wDiv;			/* Divider width */
 	struct ag_cursor_area *ca;	/* Cursor-change area in divider */
+	enum ag_pane_resize_action resizeAction;	/* Resize action */
 } AG_Pane;
 
 __BEGIN_DECLS
@@ -54,6 +65,7 @@ void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
 void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
 int	 AG_PaneMoveDivider(AG_Pane *, int);
 int	 AG_PaneMoveDividerPct(AG_Pane *, int);
+void	 AG_PaneResizeAction(AG_Pane *, enum ag_pane_resize_action);
 __END_DECLS
 
 #include <agar/gui/close.h>

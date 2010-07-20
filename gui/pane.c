@@ -44,6 +44,17 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 	if (flags & AG_PANE_HFILL) { AG_ExpandHoriz(pa); }
 	if (flags & AG_PANE_VFILL) { AG_ExpandVert(pa); }
 
+#ifdef AG_LEGACY
+	if (flags & AG_PANE_DIV)
+		AG_PaneMoveDividerPct(pa, 50);
+	if (flags & AG_PANE_FORCE_DIV1FILL)
+		pa->resizeAction = AG_PANE_EXPAND_DIV1;
+	if (flags & AG_PANE_FORCE_DIV2FILL)
+		pa->resizeAction = AG_PANE_EXPAND_DIV2;
+	if (flags & AG_PANE_FORCE_DIV)
+		pa->resizeAction = AG_PANE_DIVIDE_EVEN;
+#endif /* AG_LEGACY */
+
 	AG_ObjectAttach(parent, pa);
 	return (pa);
 }
@@ -188,6 +199,7 @@ Init(void *obj)
 	pa->dmoving = 0;
 	pa->wDiv = 8;
 	pa->ca = NULL;
+	pa->resizeAction = AG_PANE_EXPAND_DIV1;
 
 	for (i = 0; i < 2; i++) {
 		pa->wMin[i] = 0;
@@ -265,6 +277,14 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 	AG_PaneAttachBox(pa, 1, box2);
 	AG_ObjectUnlock(pa);
 	AG_Redraw(pa);
+}
+
+void
+AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
+{
+	AG_ObjectLock(pa);
+	pa->resizeAction = ra;
+	AG_ObjectUnlock(pa);
 }
 
 static void
@@ -347,10 +367,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
 		if (pa->dx == 0 && pa->rx == -1) {
-			/* Set initial divider position. */
-			if (pa->flags & AG_PANE_DIV) {
-				pa->dx = a->w/2;
-			} else if (pa->flags & AG_PANE_DIV1FILL) {
+			if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = a->w - pa->wReq[1];
 			} else {
 				if (pa->rxPct != -1) {
@@ -361,13 +378,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			}
 			pa->rx = pa->dx;
 		} else {
-			/* Apply change in divider position. */
-			if (pa->flags & AG_PANE_FORCE_DIV) {
-				pa->dx = a->w/2;
-			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+			switch (pa->resizeAction) {
+			case AG_PANE_EXPAND_DIV1:
 				pa->dx = a->w - pa->wReq[1];
-			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
+				break;
+			case AG_PANE_EXPAND_DIV2:
 				pa->dx = pa->wReq[0];
+				break;
+			case AG_PANE_DIVIDE_EVEN:
+				pa->dx = a->w/2;
+				break;
+			case AG_PANE_DIVIDE_PCT:
+				pa->dx = pa->rxPct*WIDTH(pa)/100;
+				break;
 			}
 		}
 		if (pa->dx < pa->wMin[0]) {
@@ -402,10 +425,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
-			/* Set initial divider position. */
-			if (pa->flags & AG_PANE_DIV) {
-				pa->dx = a->h/2;
-			} else if (pa->flags & AG_PANE_DIV1FILL) {
+			if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = a->h - pa->hReq[1];
 			} else {
 				if (pa->rxPct != -1) {
@@ -416,13 +436,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			}
 			pa->rx = pa->dx;
 		} else {
-			/* Apply change in divider position. */
-			if (pa->flags & AG_PANE_FORCE_DIV) {
-				pa->dx = a->h/2;
-			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+			switch (pa->resizeAction) {
+			case AG_PANE_EXPAND_DIV1:
 				pa->dx = a->h - pa->hReq[1];
-			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
+				break;
+			case AG_PANE_EXPAND_DIV2:
 				pa->dx = pa->hReq[0];
+				break;
+			case AG_PANE_DIVIDE_EVEN:
+				pa->dx = a->h/2;
+				break;
+			case AG_PANE_DIVIDE_PCT:
+				pa->dx = pa->rxPct*HEIGHT(pa)/100;
+				break;
 			}
 		}
 		if (pa->dx < pa->hMin[0]) {

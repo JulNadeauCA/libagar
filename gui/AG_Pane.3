@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -71,6 +71,9 @@ containers), horizontally or vertically.
 .Ft "int"
 .Fn AG_PaneMoveDividerPct "AG_Pane *pane" "int pct"
 .Pp
+.Ft "void"
+.Fn AG_PaneResizeAction "AG_Pane *pane" "enum ag_pane_resize_action resizeAction"
+.Pp
 .nr nS 0
 The
 .Fn AG_PaneNewHoriz
@@ -86,20 +89,12 @@ include:
 .Pp
 .Bl -tag -width "AG_PANE_FORCE_DIV1FILL "
 .It AG_PANE_DIV1FILL
-Allocate optimal size for the second division and expand the first division
-to use the remaining space.
-.It AG_PANE_FORCE_DIV1FILL
-Enforce continuous
-.Dv AG_PANE_DIV1FILL
-behavior.
+By default, the size of the first (left or top) division is computed from its
+child widgets, and the second division is sized to use the remaining space.
+This flag arranges for the first division to be sized from the remaining
+space instead.
 .It AG_PANE_FRAME
 Render decorative frames.
-.It AG_PANE_DIV
-Divide in two equal parts.
-.It AG_PANE_FORCE_DIV
-Enforce continuous
-.Dv AG_PANE_DIV
-behavior.
 .It AG_PANE_UNMOVABLE
 Do not allow the user to move the divider.
 .It AG_PANE_HFILL
@@ -155,9 +150,33 @@ Note that
 will not have any effect if any of the
 .Dv AG_PANE_FORCE_*
 options are set.
+.Pp
 The
 .Fn AG_PaneMoveDividerPct
 variant accepts an argument in % of total available size.
+If
+.Fn AG_PaneResizeAction
+is used with
+.Dv AG_PANE_DIVIDE_PCT ,
+this percentage is preserved through resizing.
+.Pp
+.Fn AG_PaneResizeAction
+specifies the behavior of
+.Nm
+following a resize of the parent container widget.
+Possible arguments include:
+.Pp
+.Bl -tag -compact -width  "AG_PANE_EXPAND_DIV1 "
+.It AG_PANE_EXPAND_DIV1
+Expand or shrink the left/upper division (default).
+.It AG_PANE_EXPAND_DIV2
+Expand or shrink the right/lower division.
+.It AG_PANE_DIVIDE_EVEN
+Divide the space evenly in two.
+.It AG_PANE_DIVIDE_PCT
+Divide the space by the percentage value specified in
+.Fn AG_PaneMoveDividerPct .
+.El
 .Sh EVENTS
 The
 .Nm
