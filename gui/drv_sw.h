@@ -115,7 +115,7 @@ static __inline__ void
 AG_EventLoop(void)
 {
 	if (agDriverSw != NULL) {
-		agDriverSw->flags &= ~(AG_DRIVER_FIXED_FPS);
+		AGDRIVER(agDriverSw)->flags &= ~(AG_DRIVER_FIXED_FPS);
 	}
 	agDriverOps->genericEventLoop(agDriverSw);
 }
@@ -125,7 +125,7 @@ static __inline__ void
 AG_EventLoop_FixedFPS(void)
 {
 	if (agDriverSw != NULL) {
-		agDriverSw->flags |= AG_DRIVER_FIXED_FPS;
+		AGDRIVER(agDriverSw)->flags |= AG_DRIVER_FIXED_FPS;
 	}
 	agDriverOps->genericEventLoop(agDriverSw);
 }
