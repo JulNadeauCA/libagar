@@ -518,7 +518,7 @@ Init(void *obj)
 	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 	AG_SetEvent(tt, "dblclick-expire", ExpireDoubleClick, NULL);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
-	AG_SetEvent(tt, "widget-hidden", FocusLost, NULL);
+	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(tt, "flags", &tt->flags);

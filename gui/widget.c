@@ -178,7 +178,7 @@ Hidden(AG_Event *event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
-	
+
 	wid->flags |= AG_WIDGET_HIDE;
 	
 	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies)
@@ -1046,9 +1046,14 @@ AG_WidgetDraw(void *p)
 		AG_FatalError("Widget is not attached to a window");
 #endif
 
-	if (!(wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) &&
-	    !OccultedWidget(wid) &&
-	    WIDGET_OPS(wid)->draw != NULL) {
+	if (wid->flags & AG_WIDGET_HIDE ||
+	    wid->flags & AG_WIDGET_UNDERSIZE)
+		goto out;
+
+	if (OccultedWidget(wid))
+		goto out;
+
+	if (WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
 #ifdef AG_DEBUG
 		if (wid->flags & AG_WIDGET_DEBUG_RSENS) {
@@ -1066,6 +1071,8 @@ AG_WidgetDraw(void *p)
 		}
 #endif /* AG_DEBUG */
 	}
+
+out:
 	AG_ObjectUnlock(wid);
 }
 
@@ -1283,16 +1290,22 @@ AG_WidgetScrollDelta(Uint32 *t1)
 
 /* Show a widget */
 void
-AG_WidgetShow(void *wid)
+AG_WidgetShow(void *obj)
 {
+	AG_Widget *wid = obj;
+
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	AG_WindowUpdate(wid->window);
 }
 
 /* Hide a widget */
 void
-AG_WidgetHide(void *wid)
+AG_WidgetHide(void *obj)
 {
+	AG_Widget *wid = obj;
+
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+	AG_WindowUpdate(wid->window);
 }
 
 /*

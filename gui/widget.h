@@ -294,6 +294,13 @@ AG_WidgetDisabled(void *p)
 	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
 }
 
+/* Return the widget's visibility state. The Widget object must be locked. */
+static __inline__ int
+AG_WidgetVisible(void *p)
+{
+	return !(AGWIDGET(p)->flags & AG_WIDGET_HIDE);
+}
+
 /*
  * Return the focus state of the widget inside of its parent window (not
  * necessarily the effective focus). The Widget object must be locked.

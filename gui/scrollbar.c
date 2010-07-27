@@ -634,6 +634,23 @@ DecrementTimeout(void *obj, Uint32 ival, void *arg)
 	return (agKbdRepeat);
 }
 
+static Uint32
+AutoHideTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Scrollbar *sb = obj;
+	int x, len;
+
+	if ((GetPxCoords(sb, &x, &len) == -1 ||
+	    len == sb->length)) {
+		if (AG_WidgetVisible(sb))
+			AG_WidgetHide(sb);
+	} else {
+		if (!AG_WidgetVisible(sb))
+			AG_WidgetShow(sb);
+	}
+	return (ival);
+}
+
 static void
 LostFocus(AG_Event *event)
 {
@@ -669,6 +686,23 @@ BoundValue(AG_Event *event)
 }
 
 static void
+OnAttach(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	
+	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
+		AG_ScheduleTimeout(sb, &sb->autohideTo, 250);
+}
+
+static void
+OnDetach(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	
+	AG_DelTimeout(sb, &sb->autohideTo);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Scrollbar *sb = obj;
@@ -701,12 +735,15 @@ Init(void *obj)
 	AG_SetEvent(sb, "key-down", KeyDown, NULL);
 	AG_SetEvent(sb, "key-up", KeyUp, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(sb, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sb, "bound", BoundValue, NULL);
+	AG_AddEvent(sb, "attached", OnAttach, NULL);
+	AG_AddEvent(sb, "detached", OnDetach, NULL);
 
 	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
 	AG_SetTimeout(&sb->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&sb->incTo, IncrementTimeout, NULL, 0);
+	AG_SetTimeout(&sb->autohideTo, AutoHideTimeout, NULL, 0);
 	
 	AG_BindInt(sb, "value", &sb->value);
 	AG_BindInt(sb, "min", &sb->min);
@@ -805,6 +842,8 @@ Draw(void *obj)
 		x = 0;
 		len = sb->length;
 	}
+	if (sb->flags & AG_SCROLLBAR_AUTOHIDE && len == sb->length)
+		return;
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:

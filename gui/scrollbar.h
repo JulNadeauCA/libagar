@@ -26,6 +26,7 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_VFILL	0x02
 #define AG_SCROLLBAR_TEXT	0x08	/* Print numbers (for debugging) */
 #define AG_SCROLLBAR_AUTOSIZE	0x10	/* Automatically size control */
+#define AG_SCROLLBAR_AUTOHIDE	0x20	/* Show/hide widget based on range */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
 	int value;			/* Default value binding */
@@ -41,6 +42,7 @@ typedef struct ag_scrollbar {
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
 	AG_Timeout scrollTo;		/* Timer for scrolling */
 	AG_Timeout incTo, decTo;	/* Timer for keyboard motion */
+	AG_Timeout autohideTo;		/* Timer for autohide check */
 	int xOffs;			/* Cursor offset for scrolling */
 	double rInc;			/* Base increment for real bindings */
 	int    iInc;			/* Base increment for int bindings */

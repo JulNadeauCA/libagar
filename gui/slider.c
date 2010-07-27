@@ -662,7 +662,7 @@ Init(void *obj)
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(sl, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(sl, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sl, "bound", BoundValue, NULL);
 
 	AG_SetTimeout(&sl->incTo, IncrementTimeout, NULL, 0);

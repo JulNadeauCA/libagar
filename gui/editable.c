@@ -1213,7 +1213,7 @@ Init(void *obj)
 	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(ed, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(ed, "widget-hidden", LostFocus, NULL);
 
 	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);

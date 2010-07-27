@@ -116,7 +116,8 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 
-		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, 0);
+		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT,
+		    AG_SCROLLBAR_AUTOHIDE);
 		AG_BindInt(tb->vBar, "value", &tb->ed->y);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
@@ -149,7 +150,8 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 			tb->hBar = NULL;
 		}
 		if (!flag) {
-			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
+			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
+			    AG_SCROLLBAR_AUTOHIDE);
 			AG_BindInt(tb->hBar, "value", &tb->ed->x);
 			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
 			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
@@ -203,8 +205,10 @@ Draw(void *p)
 	tb->ed->font = tb->font;
 	AG_WidgetDraw(tb->ed);
 
-	if (tb->hBar != NULL) { AG_WidgetDraw(tb->hBar); }
-	if (tb->vBar != NULL) { AG_WidgetDraw(tb->vBar); }
+	if (tb->hBar != NULL)
+		AG_WidgetDraw(tb->hBar);
+	if (tb->vBar != NULL)
+		AG_WidgetDraw(tb->vBar);
 
 	AG_PopClipRect(tb);
 }
@@ -233,10 +237,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_Textbox *tb = obj;
 	int boxPadW = tb->boxPadX*2;
 	int boxPadH = tb->boxPadY*2;
-	int wBar = 0, hBar = 0;
+	int wBar = 0, hBar = 0, wBarSz = 0, hBarSz = 0;
 	AG_SizeAlloc aLbl, aEd, aSb;
 	AG_SizeReq r;
-	int d;
 
 	if (a->w < boxPadW*2 || a->h < boxPadH*2)
 		return (-1);
@@ -250,27 +253,31 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		AG_WidgetSizeAlloc(tb->lbl, &aLbl);
 	}
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
-		if (tb->hBar != NULL) {
+		if (tb->hBar != NULL &&
+		    AG_WidgetVisible(tb->hBar)) {
 			AG_WidgetSizeReq(tb->hBar, &r);
-			d = MIN(r.h, a->h);
+			hBarSz = MIN(r.h, a->h);
 			aSb.x = 0;
-			aSb.y = a->h - d;
-			aSb.w = a->w - d + 1;
-			aSb.h = d;
+			aSb.y = a->h - hBarSz;
+			aSb.w = a->w - hBarSz + 1;
+			aSb.h = hBarSz;
 			AG_WidgetSizeAlloc(tb->hBar, &aSb);
 			if (AG_ScrollbarVisible(tb->hBar))
 				hBar = aSb.h;
 		}
-		AG_WidgetSizeReq(tb->vBar, &r);
-		d = MIN(r.w, a->w);
-		aSb.x = a->w - d;
-		aSb.y = 0;
-		aSb.w = d;
-		aSb.h = a->h - d + 1;
-		AG_WidgetSizeAlloc(tb->vBar, &aSb);
-		if (AG_ScrollbarVisible(tb->vBar))
-			wBar = aSb.w;
-		
+		if (tb->vBar != NULL &&
+		    AG_WidgetVisible(tb->vBar)) {
+			AG_WidgetSizeReq(tb->vBar, &r);
+			wBarSz = MIN(r.w, a->w);
+			aSb.x = a->w - wBarSz;
+			aSb.y = 0;
+			aSb.w = wBarSz;
+			aSb.h = a->h - hBarSz + 1;
+			AG_WidgetSizeAlloc(tb->vBar, &aSb);
+			if (AG_ScrollbarVisible(tb->vBar))
+				wBar = aSb.w;
+		}
+
 		tb->r.x = 0;
 		tb->r.y = 0;
 		tb->r.w = a->w;
