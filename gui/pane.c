@@ -199,7 +199,7 @@ Init(void *obj)
 	pa->dmoving = 0;
 	pa->wDiv = 8;
 	pa->ca = NULL;
-	pa->resizeAction = AG_PANE_EXPAND_DIV1;
+	pa->resizeAction = AG_PANE_EXPAND_DIV2;
 
 	for (i = 0; i < 2; i++) {
 		pa->wMin[i] = 0;
