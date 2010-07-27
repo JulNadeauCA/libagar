@@ -86,7 +86,7 @@ deinstall-includes:
 install-config:
 	@for PROG in ${CONFSCRIPTS}; do \
 		echo "${INSTALL_PROG} $$PROG ${BINDIR}"; \
-		${SUDO} ${INSTALL_PROG} $$PROG ${BINDIR}; \
+		${SUDO} ${INSTALL_PROG} $$PROG ${DESTDIR}${BINDIR}; \
 	done
 	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
@@ -96,7 +96,7 @@ install-config:
 deinstall-config:
 	@for PROG in ${CONFSCRIPTS}; do \
 		echo "${DEINSTALL_PROG} ${BINDIR}/$$PROG"; \
-		${SUDO} ${DEINSTALL_PROG} ${BINDIR}/$$PROG; \
+		${SUDO} ${DEINSTALL_PROG} ${DESTDIR}${BINDIR}/$$PROG; \
 	done
 	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
 	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
