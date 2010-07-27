@@ -145,7 +145,7 @@ MouseMotion(AG_Event *event)
 			return;
 		}
 		if (pa->dmoving) {
-			if (pa->rx < 0) { pa->rx = pa->dx; }
+			pa->rx = pa->dx;
 			pa->rx += dx;
 			if (pa->rx < 2) { pa->rx = 2; }
 			AG_PaneMoveDivider(pa, pa->rx);
@@ -156,7 +156,7 @@ MouseMotion(AG_Event *event)
 			return;
 		}
 		if (pa->dmoving) {
-			if (pa->rx < 0) { pa->rx = pa->dx; }
+			pa->rx = pa->dx;
 			pa->rx += dy;
 			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
@@ -377,16 +377,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 				}
 			}
 			pa->rx = pa->dx;
-		} else {
+		} else if ((WIDTH(pa->div[0]) + pa->wDiv + WIDTH(pa->div[1])) 
+			    != a->w) {
+			/* Pane resize as opposed to divider move */
 			switch (pa->resizeAction) {
 			case AG_PANE_EXPAND_DIV1:
-				pa->dx = a->w - pa->wReq[1];
+				pa->dx = a->w - (WIDTH(pa->div[1]) + pa->wDiv);
 				break;
 			case AG_PANE_EXPAND_DIV2:
-				pa->dx = pa->wReq[0];
 				break;
 			case AG_PANE_DIVIDE_EVEN:
-				pa->dx = a->w/2;
+				/* The difference halved */
+				pa->dx += (a->w - (WIDTH(pa->div[0]) +
+				    pa->wDiv + WIDTH(pa->div[1]))) / 2;
 				break;
 			case AG_PANE_DIVIDE_PCT:
 				pa->dx = pa->rxPct*WIDTH(pa)/100;
@@ -435,16 +438,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 				}
 			}
 			pa->rx = pa->dx;
-		} else {
+		} else if ((HEIGHT(pa->div[0]) + pa->wDiv + HEIGHT(pa->div[1]))
+		    != a->h) {
+			/* Pane resize as opposed to divider move */
 			switch (pa->resizeAction) {
 			case AG_PANE_EXPAND_DIV1:
-				pa->dx = a->h - pa->hReq[1];
+				pa->dx = a->h - (HEIGHT(pa->div[1]) + pa->wDiv);
 				break;
 			case AG_PANE_EXPAND_DIV2:
-				pa->dx = pa->hReq[0];
 				break;
 			case AG_PANE_DIVIDE_EVEN:
-				pa->dx = a->h/2;
+				/* The difference halved */
+				pa->dx += (a->h - (HEIGHT(pa->div[0]) + 
+				    pa->wDiv + HEIGHT(pa->div[1]))) / 2;
 				break;
 			case AG_PANE_DIVIDE_PCT:
 				pa->dx = pa->rxPct*HEIGHT(pa)/100;
