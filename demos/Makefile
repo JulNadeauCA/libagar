@@ -30,7 +30,8 @@ SUBDIR=	fixedres \
 	modalwindowhandler \
 	configsettings \
 	sdl \
-	timeouts
+	timeouts \
+	pane
 
 all: all-subdir
 clean: prereq clean-subdir
