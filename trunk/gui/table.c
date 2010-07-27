@@ -305,6 +305,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_Table *t = obj;
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
+	int vBarSz = 0, hBarSz = 0;
 	
 	t->r.w = a->w;
 	t->r.h = a->h - t->hCol;
@@ -312,27 +313,34 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	if (t->r.h <= 0)
 		return (-1);
-
-	if (t->vbar) {
+	
+	if (t->vbar && AG_WidgetVisible(t->vbar)) {
 		AG_WidgetSizeReq(t->vbar, &rBar);
 		if (rBar.w > a->w/2) { rBar.w = a->w/2; }
 		aBar.x = a->w - rBar.w;
 		aBar.y = 0;
 		aBar.w = rBar.w;
-		aBar.h = a->h - rBar.w;
+		aBar.h = a->h;
 		AG_WidgetSizeAlloc(t->vbar, &aBar);
-		t->r.w -= WIDTH(t->vbar);
+		vBarSz = WIDTH(t->vbar);
 	}
-	if (t->hbar) {
+	if (t->hbar && AG_WidgetVisible(t->hbar)) {
+		if (vBarSz) {
+			aBar.h -= rBar.w;
+			AG_WidgetSizeAlloc(t->vbar, &aBar);
+		}
 		AG_WidgetSizeReq(t->hbar, &rBar);
 		if (rBar.h > a->h/2) { rBar.h = a->h/2; }
 		aBar.x = 0;
 		aBar.y = a->h - rBar.h;
-		aBar.w = a->w - (t->vbar ? WIDTH(t->vbar) : 0);
+		aBar.w = a->w - vBarSz;
 		aBar.h = rBar.h;
 		AG_WidgetSizeAlloc(t->hbar, &aBar);
-		t->r.h -= HEIGHT(t->hbar);
+		hBarSz = HEIGHT(t->hbar);
 	}
+
+	t->r.w -= vBarSz;
+	t->r.h -= hBarSz;
 
 	SizeColumns(t);
 
@@ -2117,14 +2125,16 @@ Init(void *obj)
 	t->nSorting = 0;
 
 	/* Horizontal scrollbar */
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_AUTOSIZE);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ,
+	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
 	AG_BindInt(t->hbar, "value", &t->xOffs);
 	AG_BindInt(t->hbar, "visible", &t->r.w);
 	AG_BindInt(t->hbar, "max", &t->wTot);
 	AG_WidgetSetFocusable(t->hbar, 0);
 
 	/* Vertical scrollbar */
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT,
+	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
 	AG_BindInt(t->vbar, "value", &t->mOffs);
 	AG_BindInt(t->vbar, "visible", &t->mVis);
 	AG_BindInt(t->vbar, "max", &t->m);
@@ -2156,7 +2166,7 @@ Init(void *obj)
 	AG_SetEvent(t, "key-down", KeyDown, NULL);
 	AG_SetEvent(t, "key-up", KeyUp, NULL);
 	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(t, "detached", LostFocus, NULL);
 	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
 	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);

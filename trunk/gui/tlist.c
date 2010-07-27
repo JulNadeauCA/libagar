@@ -268,7 +268,7 @@ Init(void *obj)
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(tl, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(tl, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(tl, "widget-shown", Shown, NULL);
 	
 	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);

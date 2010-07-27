@@ -711,6 +711,9 @@ VFS remains locked.
 .Ft "void"
 .Fn AG_WidgetShow "AG_Widget *widget"
 .Pp
+.Ft "int"
+.Fn AG_WidgetVisible "AG_Widget *widget"
+.Pp
 .Ft "AG_Surface *"
 .Fn AG_WidgetSurface "AG_Widget *widget"
 .Pp
@@ -736,6 +739,8 @@ and
 and
 .Fn AG_WidgetShow
 set the visibility of a widget.
+.Fn AG_WidgetVisible
+returns 1 if the widget is visible, 0 if hidden.
 .Pp
 The
 .Fn AG_WidgetSurface
