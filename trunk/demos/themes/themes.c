@@ -281,12 +281,14 @@ CreateWindow(void)
 			 * entering text.
 			 */
 			if ((f = fopen("themes.c", "r")) != NULL) {
+				size_t rv;
+
 				fseek(f, 0, SEEK_END);
 				size = ftell(f);
 				fseek(f, 0, SEEK_SET);
 				bufSize = size+1024;
 				someText = AG_Malloc(bufSize);
-				fread(someText, size, 1, f);
+				rv = fread(someText, size, 1, f);
 				fclose(f);
 				someText[size] = '\0';
 			} else {
