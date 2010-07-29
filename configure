@@ -359,7 +359,6 @@ echo "    --sysconfdir=DIR          System configuration files [PREFIX/etc]"
 echo "    --testdir=DIR             Execute ./configure tests in directory [.]"
 echo "    --with-catman             Install cat files for manual pages [auto-detect]"
 echo "    --with-ctags              Generate ctags(1) tag files [no]"
-echo "    --with-cygwin             Use Cygwin compatibility layer [no]"
 echo "    --with-docs               Generate printable documentation [no]"
 echo "    --with-gettext            Use gettext for multi-language [auto-detect]"
 echo "    --with-libtool            Specify path to libtool [auto-detect]"
@@ -1648,20 +1647,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f conftest.c $testdir/conftest
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-	if [ "${with_cygwin}" != "yes" ]; then
-		echo "*"
-		echo "* NOTE: Disabling Cygwin compatibility layer."
-		echo "* (Resulting binaries will not depend on Cygwin)"
-		echo "*"
-		CFLAGS="$CFLAGS -mno-cygwin"
-	else
-		echo "*"
-		echo "* NOTE: Enabling Cygwin compatibility layer."
-		echo "* (Resulting binaries will depend on Cygwin)"
-		echo "*"
-	fi
-fi
 echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
