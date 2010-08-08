@@ -895,6 +895,9 @@ int
 AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 {
 	if (c1->type != c2->type || strcmp(c1->fmt, c2->fmt) != 0) {
+		if (c1->type == AG_CELL_NULL || c2->type == AG_CELL_NULL) {
+			return (c1->type == AG_CELL_NULL ? 1 : -1);
+		}
 		return (1);
 	}
 	switch (c1->type) {
