@@ -198,7 +198,7 @@ void      AG_TableSort(AG_Table *);
 void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
 #define	  AG_TableCellSelected(t,m,n) ((t)->cells[m][n].selected)
 #define	  AG_TableSelectCell(t,m,n) ((t)->cells[m][n].selected = 1)
-#define	  AG_TableDeselectCell(t,m,n) ((t)->cells[m][n].selected = 1)
+#define	  AG_TableDeselectCell(t,m,n) ((t)->cells[m][n].selected = 0)
 
 int	  AG_TableAddRow(AG_Table *, const char *, ...);
 void	  AG_TableSelectRow(AG_Table *, int);
