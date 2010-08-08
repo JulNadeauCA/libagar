@@ -216,7 +216,9 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	fi
 
 # Build a Libtool version of the library.
-lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
+_lib_shobjs ${SHOBJS}: ${LIBTOOL_COOKIE}
+
+lib${LIB}.la: _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${SRCS}" != "none" ]; then \
 	    if [ "${SHOBJS}" = "none" ]; then \
