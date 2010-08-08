@@ -1689,8 +1689,9 @@ Draw(void *obj)
 					AG_Surface *tsu;
 					int l = RG_TILE_LAYER2(t,nx,ny);
 
-					Snprintf(text, sizeof(text), "%s%d",
-					    (l > 0) ? "+" : "", l);
+					Strlcpy(text, (l > 0) ? "+" : "",
+					    sizeof(text));
+					StrlcatInt(text, l, sizeof(text));
 					AG_TextColorRGB(0,0,0);
 					tsu = AG_TextRender(text);
 					AG_DrawRectBlended(tv,

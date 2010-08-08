@@ -38,7 +38,7 @@
 #include <string.h>
 
 void
-AG_FeatureInit(void *p, RG_Tileset *ts, int flags, const RG_FeatureOps *ops)
+RG_FeatureInit(void *p, RG_Tileset *ts, int flags, const RG_FeatureOps *ops)
 {
 	RG_Feature *ft = p;
 	RG_Feature *oft;
@@ -123,7 +123,7 @@ RG_FeatureDelPixmap(RG_Feature *ft, RG_Pixmap *px)
 }
 
 void
-AG_FeatureDestroy(RG_Feature *ft)
+RG_FeatureDestroy(RG_Feature *ft)
 {
 /*	RG_FeatureSketch *fsk, *nfsk; */
 	RG_FeaturePixmap *fpx, *nfpx;

@@ -171,7 +171,7 @@ FreeDataset(void *obj)
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
 		nft = TAILQ_NEXT(ft, features);
-		AG_FeatureDestroy(ft);
+		RG_FeatureDestroy(ft);
 		Free(ft);
 	}
 	for (ani = TAILQ_FIRST(&ts->animations);
@@ -293,7 +293,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 		ft->ops = *ftops;
 		ft->ops->init(ft, ts, flags);
 		if (RG_FeatureLoad(ft, buf) == -1) {
-			AG_FeatureDestroy(ft);
+			RG_FeatureDestroy(ft);
 			Free(ft);
 			goto fail;
 		}
