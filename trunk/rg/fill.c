@@ -62,7 +62,7 @@ RG_FillInit(void *p, RG_Tileset *ts, int flags)
 {
 	struct rg_fill_feature *f = p;
 
-	AG_FeatureInit(f, ts, flags, &rgFillOps);
+	RG_FeatureInit(f, ts, flags, &rgFillOps);
 	f->type = FILL_SOLID;
 	f->alpha = 255;
 	f->f_gradient.c1 = AG_ColorRGB(0,0,0);

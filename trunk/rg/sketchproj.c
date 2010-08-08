@@ -61,7 +61,7 @@ RG_SketchProjInit(void *p, RG_Tileset *ts, int flags)
 {
 	struct rg_sketchproj *sproj = p;
 
-	AG_FeatureInit(sproj, ts, flags, &rgSketchProjOps);
+	RG_FeatureInit(sproj, ts, flags, &rgSketchProjOps);
 	sproj->alpha = 255;
 	sproj->color = AG_MapPixelRGB(ts->fmt, 0,0,0);
 	sproj->sketch[0] = '\0';

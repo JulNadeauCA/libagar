@@ -340,7 +340,7 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 			    _("Destroying unreferenced feature: %s"),
 			    ft->name);
 			TAILQ_REMOVE(&t->ts->features, ft, features);
-			AG_FeatureDestroy(ft);
+			RG_FeatureDestroy(ft);
 			Free(ft);
 		}
 	}

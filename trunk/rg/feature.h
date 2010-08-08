@@ -59,8 +59,8 @@ typedef struct rg_feature {
 #define RG_FEATURE(f) ((RG_Feature *)(f))
 
 __BEGIN_DECLS
-void	AG_FeatureInit(void *, struct rg_tileset *, int, const RG_FeatureOps *);
-void	AG_FeatureDestroy(RG_Feature *);
+void	RG_FeatureInit(void *, struct rg_tileset *, int, const RG_FeatureOps *);
+void	RG_FeatureDestroy(RG_Feature *);
 int	RG_FeatureLoad(void *, AG_DataSource *);
 void	RG_FeatureSave(void *, AG_DataSource *);
 
