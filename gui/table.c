@@ -361,8 +361,18 @@ PrintCell(AG_TableCell *c, char *buf, size_t bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_INT:
+		if (strcmp(c->fmt, "%d") == 0) {
+			StrlcpyInt(buf, c->data.i, bufsz);
+		} else {
+			Snprintf(buf, bufsz, c->fmt, c->data.i);
+		}
+		break;
 	case AG_CELL_UINT:
-		Snprintf(buf, bufsz, c->fmt, c->data.i);
+		if (strcmp(c->fmt, "%u") == 0) {
+			StrlcpyUint(buf, (Uint)c->data.i, bufsz);
+		} else {
+			Snprintf(buf, bufsz, c->fmt, (Uint)c->data.i);
+		}
 		break;
 	case AG_CELL_LONG:
 	case AG_CELL_ULONG:

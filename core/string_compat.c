@@ -594,3 +594,158 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 		return (-1);
 	}
 }
+
+/* Reverse the characters of a string. */
+void
+AG_StrReverse(char *s)
+{
+	char *p, *q, c;
+
+	if (*s == '\0') {
+		return;
+	}
+	q = s;
+	while (*(++q) != '\0')
+		;;
+	for (p = s; p < --q; p++) {
+		c = *p;
+		*p = *q;
+		*q = c;
+	}
+}
+
+/*
+ * Format an int (base 10) into a fixed-size buffer.
+ */
+int
+AG_StrlcpyInt(char *s, int val, size_t len)
+{
+	static const char *digits = "0123456789";
+	int sign = (val < 0) ? -val : val;
+	int i = 0;
+
+	if (len < 1)
+		return (-1);
+
+	do {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = digits[val % 10];
+	} while ((val /= 10) > 0);
+
+	if (sign < 0) {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = '-';
+	}
+	if (i+1 > len) {
+		goto fail;
+	}
+	s[i] = '\0';
+	AG_StrReverse(s);
+	return (0);
+fail:
+	s[0] = '\0';
+	return (-1);
+}
+
+/*
+ * Format an unsigned int (base 10) into a fixed-size buffer.
+ */
+int
+AG_StrlcpyUint(char *s, Uint val, size_t len)
+{
+	static const char *digits = "0123456789";
+	int i = 0;
+
+	if (len < 1)
+		return (-1);
+
+	do {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = digits[val % 10];
+	} while ((val /= 10) > 0);
+
+	if (i+1 > len) {
+		goto fail;
+	}
+	s[i] = '\0';
+	AG_StrReverse(s);
+	return (0);
+fail:
+	s[0] = '\0';
+	return (-1);
+}
+
+/*
+ * Format an int (base 10) into a fixed-size buffer (concatenate).
+ */
+int
+AG_StrlcatInt(char *s, int val, size_t len)
+{
+	static const char *digits = "0123456789";
+	int sign = (val < 0) ? -val : val;
+	int i = strlen(s);
+	int iStart = i;
+
+	if (len < 1)
+		return (-1);
+
+	do {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = digits[val % 10];
+	} while ((val /= 10) > 0);
+
+	if (sign < 0) {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = '-';
+	}
+	if (i+1 > len) {
+		goto fail;
+	}
+	s[i] = '\0';
+	AG_StrReverse(&s[iStart]);
+	return (0);
+fail:
+	s[0] = '\0';
+	return (-1);
+}
+
+/*
+ * Format an unsigned int (base 10) into a fixed-size buffer (concatenate).
+ */
+int
+AG_StrlcatUint(char *s, Uint val, size_t len)
+{
+	static const char *digits = "0123456789";
+	int i = strlen(s);
+	int iStart = i;
+
+	if (len < 1)
+		return (-1);
+
+	do {
+		if (i+1 > len) {
+			goto fail;
+		}
+		s[i++] = digits[val % 10];
+	} while ((val /= 10) > 0);
+
+	if (i+1 > len) {
+		goto fail;
+	}
+	s[i] = '\0';
+	AG_StrReverse(&s[iStart]);
+	return (0);
+fail:
+	s[0] = '\0';
+	return (-1);
+}

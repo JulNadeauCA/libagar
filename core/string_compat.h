@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,24 +68,34 @@ enum ag_unicode_conv {
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 
-size_t  AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
-size_t  AG_Strlcpy(char *, const char *, size_t)
-                   BOUNDED_ATTRIBUTE(__string__, 1, 3);
-size_t  AG_StrlcatUCS4(Uint32 *, const Uint32 *, size_t);
-size_t  AG_Strlcat(char *, const char *, size_t)
-                   BOUNDED_ATTRIBUTE(__string__, 1, 3);
-Uint32 *AG_StrsepUCS4(Uint32 **, const Uint32 *);
-char   *AG_Strsep(char **, const char *);
-char   *AG_Strdup(const char *);
-char   *AG_TryStrdup(const char *);
-Uint32 *AG_StrdupUCS4(const Uint32 *);
-Uint32 *AG_TryStrdupUCS4(const Uint32 *);
+size_t      AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
+size_t      AG_Strlcpy(char *, const char *, size_t)
+                       BOUNDED_ATTRIBUTE(__string__, 1, 3);
+size_t      AG_StrlcatUCS4(Uint32 *, const Uint32 *, size_t);
+size_t      AG_Strlcat(char *, const char *, size_t)
+                       BOUNDED_ATTRIBUTE(__string__, 1, 3);
+Uint32     *AG_StrsepUCS4(Uint32 **, const Uint32 *);
+char       *AG_Strsep(char **, const char *);
+char       *AG_Strdup(const char *);
+char       *AG_TryStrdup(const char *);
+Uint32     *AG_StrdupUCS4(const Uint32 *);
+Uint32     *AG_TryStrdupUCS4(const Uint32 *);
 const char *AG_Strcasestr(const char *, const char *);
+void        AG_StrReverse(char *);
+int         AG_StrlcpyInt(char *, int, size_t)
+                          BOUNDED_ATTRIBUTE(__string__, 1, 3);
+int         AG_StrlcatInt(char *, int, size_t)
+                          BOUNDED_ATTRIBUTE(__string__, 1, 3);
+int         AG_StrlcpyUint(char *, Uint, size_t)
+                           BOUNDED_ATTRIBUTE(__string__, 1, 3);
+int         AG_StrlcatUint(char *, Uint, size_t)
+                           BOUNDED_ATTRIBUTE(__string__, 1, 3);
 
 Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
 size_t	 AG_CopyUnicode(enum ag_unicode_conv, const char *, Uint32 *, size_t);
+
 
 /*
  * Return the length of a UCS-4 string in characters, without the
@@ -222,6 +232,7 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 	}
 	return i == n ? 0 : cm[us1[i]] - cm[us2[i]];
 }
+
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
@@ -238,6 +249,11 @@ __END_DECLS
 #define StrsepUCS4 AG_StrsepUCS4
 #define StrdupUCS4 AG_StrdupUCS4
 #define TryStrdupUCS4 AG_TryStrdupUCS4
+#define StrReverse AG_StrReverse
+#define StrlcpyInt AG_StrlcpyInt
+#define StrlcatInt AG_StrlcatInt
+#define StrlcpyUint AG_StrlcpyUint
+#define StrlcatUint AG_StrlcatUint
 #endif
 
 #include <agar/core/close.h>

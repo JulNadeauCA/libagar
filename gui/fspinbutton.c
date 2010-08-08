@@ -589,7 +589,8 @@ AG_FSpinbuttonSetPrecision(AG_FSpinbutton *fsu, const char *mode,
 	AG_ObjectLock(fsu);
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
-	Snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
+	fsu->format[2] = '\0';
+	StrlcatInt(fsu->format, precision, sizeof(fsu->format));
 	Strlcat(fsu->format, mode, sizeof(fsu->format));
 	AG_ObjectUnlock(fsu);
 	AG_Redraw(fsu);

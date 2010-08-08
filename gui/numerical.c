@@ -873,7 +873,8 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode,
 	AG_ObjectLock(num);
 	num->format[0] = '%';
 	num->format[1] = '.';
-	Snprintf(&num->format[2], sizeof(num->format)-2, "%d", precision);
+	num->format[2] = '\0';
+	StrlcatInt(num->format, precision, sizeof(num->format));
 	Strlcat(num->format, mode, sizeof(num->format));
 	AG_ObjectUnlock(num);
 	AG_Redraw(num);
