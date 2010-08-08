@@ -205,8 +205,8 @@ Draw(void *obj)
 	AG_DrawRect(pb, rd, agColors[PROGRESS_BAR_COLOR]);
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
-		Snprintf(pctText, sizeof(pctText), "%d%%",
-		    AG_ProgressBarPercent(pb));
+		StrlcpyInt(pctText, AG_ProgressBarPercent(pb), sizeof(pctText));
+		Strlcat(pctText, "%", sizeof(pctText));
 
 		AG_PushTextState();
 		AG_TextColor(agColors[TEXT_COLOR]);

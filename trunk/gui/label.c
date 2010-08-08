@@ -367,46 +367,54 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
  * Built-in extended format specifiers (table follows).
  */
 static void PrintU8(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint8));
+	StrlcpyUint(s, (unsigned int)AG_LABEL_ARG(lbl,Uint8), len);
 }
 static void PrintS8(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint8));
+	StrlcpyInt(s, (int)AG_LABEL_ARG(lbl,Sint8), len);
 }
 static void PrintU16(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint16));
+	StrlcpyUint(s, (unsigned int)AG_LABEL_ARG(lbl,Uint16), len);
 }
 static void PrintS16(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint16));
+	StrlcpyInt(s, (int)AG_LABEL_ARG(lbl,Sint16), len);
 }
 static void PrintU32(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint32));
+	StrlcpyUint(s, (unsigned int)AG_LABEL_ARG(lbl,Uint32), len);
 }
 static void PrintS32(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint32));
+	StrlcpyInt(s, (int)AG_LABEL_ARG(lbl,Sint32), len);
 }
 static void
 PrintOBJNAME(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	AG_Object *ob = AG_LABEL_ARG(lbl,AG_Object *);
-	Snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
+
+	if (ob != NULL) {
+		Strlcpy(s, ob->name, len);
+	} else {
+		Strlcpy(s, "(null)", len);
+	}
 }
 static void
 PrintOBJTYPE(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	AG_Object *ob = AG_LABEL_ARG(lbl,AG_Object *);
-	Snprintf(s, len, "%s", ob->cls->name);
+
+	Strlcpy(s, ob->cls->name, len);
 }
 static void
 PrintIBOOL(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	int *flag = &AG_LABEL_ARG(lbl,int);
-	Snprintf(s, len, "%s", *flag ? _("yes") : _("no"));
+
+	Strlcpy(s, *flag ? _("yes") : _("no"), len);
 }
 static void
 PrintFLAGS(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	Uint *flags = &AG_LABEL_ARG(lbl,Uint);
 	struct ag_label_flag *lfl;
+
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint)lfl->v) {
@@ -420,6 +428,7 @@ PrintFLAGS8(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	Uint8 *flags = &AG_LABEL_ARG(lbl,Uint8);
 	struct ag_label_flag *lfl;
+
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint8)lfl->v) {
@@ -433,6 +442,7 @@ PrintFLAGS16(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	Uint16 *flags = &AG_LABEL_ARG(lbl,Uint16);
 	struct ag_label_flag *lfl;
+
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint16)lfl->v) {
@@ -446,6 +456,7 @@ PrintFLAGS32(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	Uint32 *flags = &AG_LABEL_ARG(lbl,Uint32);
 	struct ag_label_flag *lfl;
+
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint32)lfl->v) {
@@ -545,12 +556,12 @@ AG_UnregisterLabelFormat(const char *fmt)
 	AG_MutexUnlock(&fmtsLock);
 }
 
+#define PINT(arg)   StrlcatInt(s, (arg), AG_LABEL_MAX); fPos++
+#define PUINT(arg)  StrlcatUint(s, (arg), AG_LABEL_MAX); fPos++
+#define PSTRING(ps) Strlcat(s, ps, AG_LABEL_MAX); fPos++
 #define PF(fmt,arg) \
 	Snprintf(s2, AG_LABEL_MAX, (fmt), (arg)); \
 	Strlcat(s, s2, AG_LABEL_MAX); \
-	fPos++
-#define PSTRING(ps) \
-	Strlcat(s, ps, AG_LABEL_MAX); \
 	fPos++
 
 #ifdef HAVE_64BIT
@@ -639,13 +650,13 @@ DrawPolled(AG_Label *lbl)
 				break;
 			case 'd':
 			case 'i':
-				PF("%d", AG_LABEL_ARG(lbl,int));
+				PINT(AG_LABEL_ARG(lbl,int));
+				break;
+			case 'u':
+				PUINT(AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'o':
 				PF("%o", AG_LABEL_ARG(lbl,unsigned int));
-				break;
-			case 'u':
-				PF("%u", AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'x':
 				PF("%x", AG_LABEL_ARG(lbl,unsigned int));
@@ -707,6 +718,11 @@ DrawPolled(AG_Label *lbl)
 		AG_SurfaceFree(su);
 	}
 }
+
+#undef PINT
+#undef PUINT
+#undef PSTRING
+#undef PF
 
 static void
 Draw(void *obj)

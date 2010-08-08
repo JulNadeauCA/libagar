@@ -2407,7 +2407,9 @@ AG_ObjectGenName(void *p, AG_ObjectClass *cl, char *name, size_t len)
 	AG_Object *ch;
 
 tryname:
-	Snprintf(name, len, "%s #%u", cl->name, i);
+	Strlcpy(name, cl->name, len);
+	Strlcat(name, " #", len);
+	StrlcatUint(name, i, len);
 	if (pobj != NULL) {
 		AG_LockVFS(pobj);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
@@ -2431,7 +2433,8 @@ AG_ObjectGenNamePfx(void *p, const char *pfx, char *name, size_t len)
 	AG_Object *ch;
 
 tryname:
-	Snprintf(name, len, "%s%u", pfx, i);
+	Strlcpy(name, pfx, len);
+	StrlcatUint(name, i, len);
 	if (pobj != NULL) {
 		AG_LockVFS(pobj);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {

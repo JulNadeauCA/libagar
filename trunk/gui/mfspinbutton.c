@@ -378,39 +378,29 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
 	case AG_VARIABLE_INT:
-		Snprintf(sx, sizeof(sx), "%d", *(int *)value);
+		StrlcpyInt(sx, *(int *)value, sizeof(sx));
 		break;
 	case AG_VARIABLE_UINT:
-		Snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
+		StrlcpyUint(sx, *(Uint *)value, sizeof(sx));
 		break;
 	case AG_VARIABLE_UINT8:
-		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint8 *)value));
+		StrlcpyUint(sx, (unsigned)(*(Uint8 *)value), sizeof(sx));
 		break;
 	case AG_VARIABLE_SINT8:
-		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint8 *)value));
+		StrlcpyInt(sx, (int)(*(Sint8 *)value), sizeof(sx));
 		break;
 	case AG_VARIABLE_UINT16:
-		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint16 *)value));
+		StrlcpyUint(sx, (unsigned)(*(Uint16 *)value), sizeof(sx));
 		break;
 	case AG_VARIABLE_SINT16:
-		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint16 *)value));
+		StrlcpyInt(sx, (int)(*(Sint16 *)value), sizeof(sx));
 		break;
 	case AG_VARIABLE_UINT32:
-		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint32 *)value));
+		StrlcpyUint(sx, (unsigned)(*(Uint32 *)value), sizeof(sx));
 		break;
 	case AG_VARIABLE_SINT32:
-		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint32 *)value));
+		StrlcpyInt(sx, (int)(*(Sint32 *)value), sizeof(sx));
 		break;
-#if 0
-	case AG_VARIABLE_UINT64:
-		Snprintf(sx, sizeof(sx), "%llu",
-		    (unsigned long long)(*(Uint64 *)value));
-		break;
-	case AG_VARIABLE_SINT64:
-		Snprintf(sx, sizeof(sx), "%lld",
-		    (long long)(*(Sint64 *)value));
-		break;
-#endif
 	default:
 		break;
 	}
@@ -428,39 +418,29 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
 	case AG_VARIABLE_INT:
-		Snprintf(sy, sizeof(sy), "%d", *(int *)value);
+		StrlcpyInt(sy, *(int *)value, sizeof(sy));
 		break;
 	case AG_VARIABLE_UINT:
-		Snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
+		StrlcpyUint(sy, *(Uint *)value, sizeof(sy));
 		break;
 	case AG_VARIABLE_UINT8:
-		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint8 *)value));
+		StrlcpyUint(sy, (unsigned)(*(Uint8 *)value), sizeof(sy));
 		break;
 	case AG_VARIABLE_SINT8:
-		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint8 *)value));
+		StrlcpyInt(sy, (int)(*(Sint8 *)value), sizeof(sy));
 		break;
 	case AG_VARIABLE_UINT16:
-		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint16 *)value));
+		StrlcpyUint(sy, (unsigned)(*(Uint16 *)value), sizeof(sy));
 		break;
 	case AG_VARIABLE_SINT16:
-		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint16 *)value));
+		StrlcpyInt(sy, (int)(*(Sint16 *)value), sizeof(sy));
 		break;
 	case AG_VARIABLE_UINT32:
-		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint32 *)value));
+		StrlcpyUint(sy, (unsigned)(*(Uint32 *)value), sizeof(sy));
 		break;
 	case AG_VARIABLE_SINT32:
-		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint32 *)value));
+		StrlcpyInt(sy, (int)(*(Sint32 *)value), sizeof(sy));
 		break;
-#if 0
-	case AG_VARIABLE_UINT64:
-		Snprintf(sy, sizeof(sy), "%llu",
-		    (unsigned long long)(*(Uint64 *)value));
-		break;
-	case AG_VARIABLE_SINT64:
-		Snprintf(sy, sizeof(sy), "%lld",
-		    (long long)(*(Uint64 *)value));
-		break;
-#endif
 	default:
 		break;
 	}

@@ -219,18 +219,18 @@ void
 AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 {
 	switch (V->type) {
-	case AG_VARIABLE_UINT:		Snprintf(s, len, "%u", V->data.u);			break;
-	case AG_VARIABLE_P_UINT:	Snprintf(s, len, "%u", *(Uint *)V->data.p);		break;
-	case AG_VARIABLE_INT:		Snprintf(s, len, "%d", V->data.i);			break;
-	case AG_VARIABLE_P_INT:		Snprintf(s, len, "%d", *(int *)V->data.p);		break;
-	case AG_VARIABLE_UINT8:		Snprintf(s, len, "%u", (Uint)V->data.u8);		break;
-	case AG_VARIABLE_P_UINT8:	Snprintf(s, len, "%u", (Uint)*(Uint8 *)V->data.p);	break;
-	case AG_VARIABLE_SINT8:		Snprintf(s, len, "%d", (int)V->data.s8);		break;
-	case AG_VARIABLE_P_SINT8:	Snprintf(s, len, "%d", (int)*(Sint8 *)V->data.p);	break;
-	case AG_VARIABLE_UINT16:	Snprintf(s, len, "%u", (Uint)V->data.u16);		break;
-	case AG_VARIABLE_P_UINT16:	Snprintf(s, len, "%u", (Uint)*(Uint16 *)V->data.p);	break;
-	case AG_VARIABLE_SINT16:	Snprintf(s, len, "%d", (int)V->data.s16);		break;
-	case AG_VARIABLE_P_SINT16:	Snprintf(s, len, "%d", (int)*(Sint16 *)V->data.p);	break;
+	case AG_VARIABLE_UINT:		StrlcpyUint(s, V->data.u, len);				break;
+	case AG_VARIABLE_P_UINT:	StrlcpyUint(s, *(Uint *)V->data.p, len);		break;
+	case AG_VARIABLE_INT:		StrlcpyInt(s, V->data.i, len);				break;
+	case AG_VARIABLE_P_INT:		StrlcpyInt(s, *(int *)V->data.p, len);			break;
+	case AG_VARIABLE_UINT8:		StrlcpyUint(s, (Uint)V->data.u8, len);			break;
+	case AG_VARIABLE_P_UINT8:	StrlcpyUint(s, (Uint)*(Uint8 *)V->data.p, len);		break;
+	case AG_VARIABLE_SINT8:		StrlcpyInt(s, (int)V->data.s8, len);			break;
+	case AG_VARIABLE_P_SINT8:	StrlcpyInt(s, (int)*(Sint8 *)V->data.p, len);		break;
+	case AG_VARIABLE_UINT16:	StrlcpyUint(s, (Uint)V->data.u16, len);			break;
+	case AG_VARIABLE_P_UINT16:	StrlcpyUint(s, (Uint)*(Uint16 *)V->data.p, len);	break;
+	case AG_VARIABLE_SINT16:	StrlcpyInt(s, (int)V->data.s16, len);			break;
+	case AG_VARIABLE_P_SINT16:	StrlcpyInt(s, (int)*(Sint16 *)V->data.p, len);		break;
 	case AG_VARIABLE_UINT32:	Snprintf(s, len, "%lu", (Ulong)V->data.u32);		break;
 	case AG_VARIABLE_P_UINT32:	Snprintf(s, len, "%lu", (Ulong)*(Uint32 *)V->data.p);	break;
 	case AG_VARIABLE_SINT32:	Snprintf(s, len, "%ld", (long)V->data.s32);		break;

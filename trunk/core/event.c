@@ -77,9 +77,10 @@ SetEventName(AG_Event *ev, AG_Object *ob, const char *name)
 {
 	if (name == NULL) {
 		if (ob != NULL) {
-			/* XXX snprintf is too slow */
-			Snprintf(ev->name, sizeof(ev->name), "__%u",
-			    ob->nevents);
+			ev->name[0] = '_';
+			ev->name[1] = '_';
+			ev->name[2] = '\0';
+			StrlcpyUint(ev->name, ob->nevents, sizeof(ev->name));
 		} else {
 			Strlcpy(ev->name, "noname", sizeof(ev->name));
 		}
