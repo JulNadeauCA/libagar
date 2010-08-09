@@ -100,8 +100,8 @@ typedef struct ag_table_col {
 	int wPct;			/* Width (percent or -1) */
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
-	AG_TableCell *pool;		/* Pool of inactive cells */
-	int          mpool;		/* Number of rows in pool */
+	AG_TableCell *pool;		/* Backing store */
+	int          mpool;		/* Number of rows in backing store */
 } AG_TableCol;
 
 typedef struct ag_table {
