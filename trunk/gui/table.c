@@ -64,8 +64,21 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
+	AG_ScheduleTimeout(t, &t->pollTo, 250);
 	AG_ObjectUnlock(t);
 	return (t);
+}
+
+void
+AG_TableSetPollInterval(AG_Table *t, Uint ival)
+{
+	AG_ObjectLock(t);
+	if (ival == 0) {
+		AG_DelTimeout(t, &t->pollTo);
+	} else {
+		AG_ScheduleTimeout(t, &t->pollTo, ival);
+	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -602,11 +615,6 @@ Draw(void *obj)
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
 	
-	if (t->poll_ev != NULL) {
-		t->poll_ev->handler(t->poll_ev);
-		if (t->mOffs+t->mVis >= t->m)
-			t->mOffs = MAX(0, t->m - t->mVis);
-	}
 	if (t->flags & AG_TABLE_WIDGETS)
 		UpdateEmbeddedWidgets(t);
 	
@@ -2121,6 +2129,19 @@ IncrementTimeout(void *obj, Uint32 ival, void *arg)
 	return (agKbdRepeat);
 }
 
+static Uint32
+PollTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Table *t = obj;
+
+	t->poll_ev->handler(t->poll_ev);
+	if (t->mOffs+t->mVis >= t->m) {
+		t->mOffs = MAX(0, t->m - t->mVis);
+	}
+	AG_Redraw(t);
+	return (ival);
+}
+
 static void
 Init(void *obj)
 {
@@ -2195,9 +2216,8 @@ Init(void *obj)
 
 	AG_SetTimeout(&t->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&t->incTo, IncrementTimeout, NULL, 0);
+	AG_SetTimeout(&t->pollTo, PollTimeout, NULL, 0);
 	
-	AG_RedrawOnTick(t, 1000);
-
 #ifdef AG_DEBUG
 	AG_BindUint(t, "flags", &t->flags);
 	AG_BindUint(t, "selMode", &t->selMode);
