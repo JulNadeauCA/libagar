@@ -160,6 +160,7 @@ typedef struct ag_table {
 	AG_Event *clickCellEv;		/* Cell double click callback */
 	Uint nSorting;			/* Index of sorting column
 					   (computed from flags) */
+	AG_Timeout pollTo;		/* Polled table update timeout */
 } AG_Table;
 
 __BEGIN_DECLS
@@ -171,6 +172,7 @@ AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
 void	  AG_TableSizeHint(AG_Table *, int, int);
 #define	  AG_TablePrescale AG_TableSizeHint
 
+void AG_TableSetPollInterval(AG_Table *, Uint);
 void AG_TableSetSeparator(AG_Table *, const char *);
 void AG_TableSetRowClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetColClickFn(AG_Table *, AG_EventFn, const char *, ...);
