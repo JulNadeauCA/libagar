@@ -152,6 +152,19 @@ UpdateTable(AG_Event *event)
  * intervals.
  */
 static void
+PausePolling(AG_Event *event)
+{
+	AG_Button *btn = AG_SELF();
+	AG_Table *tbl = AG_PTR(1);
+	int state = AG_INT(2);
+
+	if (!state) {
+		AG_TableSetPollInterval(tbl, 100);
+	} else {
+		AG_TableSetPollInterval(tbl, 0);
+	}
+}
+static void
 CreatePolledTable(void)
 {
 	AG_Window *win;
@@ -163,8 +176,12 @@ CreatePolledTable(void)
 
 	/* Create a polled table. */
 	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
-	AG_TableAddCol(table, "Column 1", "<8888>", NULL);
-	AG_TableAddCol(table, "Column 2", "<888888888>", NULL);
+	AG_TableSetPollInterval(table, 100);
+	AG_TableAddCol(table, "A", "<8888888>", NULL);
+	AG_TableAddCol(table, "B", "<888888888888>", NULL);
+
+	AG_ButtonNewFn(win, AG_BUTTON_STICKY,
+	    "Pause polling", PausePolling, "%p", table);
 
 	/* Display and resize our window. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 150, 300);
