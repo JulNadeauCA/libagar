@@ -973,20 +973,24 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 void
 AG_TableEnd(AG_Table *t)
 {
-	int n, m;
+	int m, n, mPool;
 
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
 
-		for (m = 0; m < tc->mpool; m++) {
-			AG_TableCell *cPool = &tc->pool[m];
+		/*
+		 * Compare the new cells against the backing store to
+		 * recycle surfaces and recover selection state.
+		 */
+		for (mPool = 0; mPool < tc->mpool; mPool++) {
+			AG_TableCell *cPool = &tc->pool[mPool];
 
-			if (m < t->m) {
-				AG_TableCell *cDst = &t->cells[m][n];
-
-				if (AG_TableCompareCells(cDst, cPool) == 0) {
-					cDst->surface = cPool->surface;
-					cDst->selected = cPool->selected;
+			for (m = 0; m < t->m; m++) {
+				AG_TableCell *c = &t->cells[m][n];
+				
+				if (AG_TableCompareCells(c, cPool) == 0) {
+					c->surface = cPool->surface;
+					c->selected = cPool->selected;
 					cPool->surface = -1;
 				}
 			}
