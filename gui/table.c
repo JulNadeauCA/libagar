@@ -997,7 +997,11 @@ AG_TableSortCellsAsc(const void *p1, const void *p2)
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
 	AG_Table *t = row1[0].tbl;
+	AG_TableCol *tc = &t->cols[t->nSorting];
 
+	if (tc->sortFn) {
+		return tc->sortFn(&row1[t->nSorting], &row2[t->nSorting]);
+	}
 	return AG_TableCompareCells(&row1[t->nSorting], &row2[t->nSorting]);
 }
 
@@ -1007,7 +1011,11 @@ AG_TableSortCellsDsc(const void *p1, const void *p2)
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
 	AG_Table *t = row1[0].tbl;
+	AG_TableCol *tc = &t->cols[t->nSorting];
 
+	if (tc->sortFn) {
+		return tc->sortFn(&row2[t->nSorting], &row1[t->nSorting]);
+	}
 	return AG_TableCompareCells(&row2[t->nSorting], &row1[t->nSorting]);
 }
 
