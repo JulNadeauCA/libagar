@@ -4382,6 +4382,62 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETOPT
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the execvp() function..."
+$ECHO_N "checking for the execvp() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_EXECVP" ]; then
+		HAVE_EXECVP=`cat ${cache}/ctest-HAVE_EXECVP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_EXECVP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	char *args[3];
+	int rv;
+
+	args[0] = "foo";
+	args[2] = NULL;
+
+	rv = execvp(args[0], args);
+	return (rv);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_EXECVP="yes"
+echo "#ifndef HAVE_EXECVP" > config/have_execvp.h
+echo "#define HAVE_EXECVP \"$HAVE_EXECVP\"" >> config/have_execvp.h
+echo "#endif" >> config/have_execvp.h
+echo "hdefs[\"HAVE_EXECVP\"] = \"$HAVE_EXECVP\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_EXECVP="no"
+echo "#undef HAVE_EXECVP" >config/have_execvp.h
+echo "hdefs[\"HAVE_EXECVP\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_EXECVP" > ${cache}/ctest-HAVE_EXECVP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_EXECVP
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
