@@ -51,6 +51,9 @@ different languages (currently C, C++, Objective C, Perl and Ada).
 .Fn AG_ObjectInitStatic "AG_Object *obj" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
+.Fn AG_ObjectInitNamed "AG_Object *obj" "AG_ObjectClass *classInfo" "const char *name"
+.Pp
+.Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
@@ -176,12 +179,23 @@ section).
 .Pp
 The
 .Fn AG_ObjectInitStatic
-function is a variant of
+variant of
 .Fn AG_ObjectInit
-which marks the new object as statically-allocated.
-(see description of the
+implicitely sets the
 .Dv AG_OBJECT_STATIC
-flag).
+flag (see
+.Dq FLAGS ) .
+The
+.Fn AG_ObjectInitNamed
+variant either implicitely calls
+.Fn AG_ObjectSetNameS
+if the
+.Fa name
+argument is non-NULL, or it sets the
+.Dv AG_OBJECT_NAME_ONATTACH
+flag if the name is NULL (see
+.Dq FLAGS
+for details).
 .Pp
 Objects are organized in a tree structure.
 .Fn AG_ObjectAttach
@@ -686,6 +700,9 @@ and -1 on failure.
 .Ft "void"
 .Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
+.Ft void
+.Fn AG_ObjectRemain "AG_Object *obj" "Uint policy"
+.Pp
 .nr nS 0
 The
 .Fn AG_ObjectFreeDataset
@@ -755,6 +772,15 @@ removes entries in the dependency table where the reference count is zero
 .Dv AG_OBJECT_PRESERVE_DEPS
 flag set).
 .Pp
+The
+.Fn AG_ObjectRemain
+function specifies the behavior of
+.Fn AG_ObjectPageOut
+once a dataset is no longer in use.
+The default behavior is to free the dataset.
+If an argument of
+.Dv AG_OBJECT_REMAIN_DATA
+is passed, the dataset will be kept in memory.
 .Sh ARCHIVING
 .nr nS 1
 .Ft "int"
@@ -952,6 +978,8 @@ Prevent the object's dataset from being automatically freed (with
 as a result of an
 .Fn AG_ObjectPageOut
 call, when the reference count reaches zero.
+Also see
+.Fn AG_ObjectRemain .
 .It AG_OBJECT_DEBUG
 Enable per-object debugging; application-specific.
 .It AG_OBJECT_NAME_ONATTACH

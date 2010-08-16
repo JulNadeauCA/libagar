@@ -61,6 +61,7 @@ int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
+/* Initialize an AG_Object instance. */
 void
 AG_ObjectInit(void *p, void *cl)
 {
@@ -106,14 +107,30 @@ AG_ObjectInit(void *p, void *cl)
 	}
 }
 
+/* Initialize an AG_Object instance (name argument variant). */
 void
-AG_ObjectInitStatic(void *p, void *cl)
+AG_ObjectInitNamed(void *obj, void *cl, const char *name)
 {
-	AG_ObjectInit(p, cl);
+	AG_ObjectInit(obj, cl);
+	if (name != NULL) {
+		AG_ObjectSetNameS(obj, name);
+	} else {
+		OBJECT(obj)->flags |= AG_OBJECT_NAME_ONATTACH;
+	}
+}
+
+/* Initialize an AG_Object instance (static variant). */
+void
+AG_ObjectInitStatic(void *obj, void *cl)
+{
+	AG_ObjectInit(obj, cl);
 	OBJECT(p)->flags |= AG_OBJECT_STATIC;
 }
 
-/* Create a new object instance and mark it resident. */
+/*
+ * Allocate, initialize and attach a new object instance of the specified
+ * class.
+ */
 void *
 AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 {
@@ -143,8 +160,9 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 	return (obj);
 }
 
+/* Specify the dataset release policy. */
 void
-AG_ObjectRemain(void *p, int flags)
+AG_ObjectRemain(void *p, Uint flags)
 {
 	AG_Object *ob = p;
 
@@ -516,6 +534,7 @@ out:
 #endif
 }
 
+/* Shorthand for detach and destroy. */
 void
 AG_ObjectDelete(void *p)
 {
