@@ -463,7 +463,7 @@ AG_WidgetReplaceSurfaceNODUP(void *obj, int name, AG_Surface *su)
 
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
-	if (name < 0 || name >= wid->nsurfaces)
+	if (name < 0 || name >= (int)wid->nsurfaces)
 		AG_FatalError("Bad surface handle");
 #endif
 	AG_WidgetReplaceSurface(wid, name, su);
