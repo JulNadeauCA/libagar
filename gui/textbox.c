@@ -28,8 +28,6 @@
  * AG_Editable(3) adding a built-in label, pixel padding and scrollbars.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
 #include <core/config.h>
 

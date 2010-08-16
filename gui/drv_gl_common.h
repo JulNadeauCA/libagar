@@ -3,12 +3,9 @@
  * Code common to all drivers using OpenGL.
  */
 
-#include <agar/gui/opengl.h>
+#include <agar/gui/begin.h>
 
-#include <agar/config/have_glx.h>
-#ifdef HAVE_GLX
-# include <GL/glx.h>
-#endif
+struct ag_glyph;
 
 /* Saved blending state */
 typedef struct ag_gl_blending_state {
@@ -18,10 +15,12 @@ typedef struct ag_gl_blending_state {
 	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
 } AG_GL_BlendState;
 
+__BEGIN_DECLS
+
 void AG_GL_InitContext(AG_Rect);
-void AG_GL_FillRect(void *, AG_Rect, AG_Color);
 void AG_GL_UploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
 int  AG_GL_UpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
+void AG_GL_PrepareTexture(void *, int);
 void AG_GL_BlitSurface(void *, AG_Widget *, AG_Surface *, int, int);
 void AG_GL_BlitSurfaceFrom(void *, AG_Widget *, AG_Widget *, int, AG_Rect *, int, int);
 void AG_GL_BlitSurfaceGL(void *, AG_Widget *, AG_Surface *, float, float);
@@ -31,6 +30,7 @@ void AG_GL_BackupSurfaces(void *, AG_Widget *);
 void AG_GL_RestoreSurfaces(void *, AG_Widget *);
 int  AG_GL_RenderToSurface(void *, AG_Widget *, AG_Surface **);
 
+void AG_GL_FillRect(void *, AG_Rect, AG_Color);
 void AG_GL_PutPixel(void *, int, int, AG_Color);
 void AG_GL_PutPixel32(void *, int, int, Uint32);
 void AG_GL_PutPixelRGB(void *, int, int, Uint8, Uint8, Uint8);
@@ -50,8 +50,8 @@ void AG_GL_DrawCircle(void *, int, int, int, AG_Color);
 void AG_GL_DrawCircle2(void *, int, int, int, AG_Color);
 void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
 void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
-void AG_GL_UpdateGlyph(void *, AG_Glyph *);
-void AG_GL_DrawGlyph(void *, const AG_Glyph *, int, int);
+void AG_GL_UpdateGlyph(void *, struct ag_glyph *);
+void AG_GL_DrawGlyph(void *, const struct ag_glyph *, int, int);
 
 /* Get corresponding GL blending function */
 static __inline__ GLenum
@@ -68,3 +68,7 @@ AG_GL_GetBlendingFunc(AG_BlendFn fn)
 	default:			return (GL_ONE);
 	}
 }
+
+__END_DECLS
+
+#include <agar/gui/close.h>

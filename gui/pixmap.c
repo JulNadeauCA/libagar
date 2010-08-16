@@ -23,15 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_opengl.h>
 #include <core/core.h>
 #if 0
 #include "load_xcf.h"
 #endif
 #include "pixmap.h"
 #include "primitive.h"
-#include "opengl.h"
 #include "window.h"
+#include "opengl.h"
 
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)

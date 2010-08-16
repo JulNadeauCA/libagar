@@ -39,7 +39,7 @@
 #include "cursors.h"
 #include "perfmon.h"
 
-#include "drv_sdl_common.h"
+#include "sdl.h"
 
 typedef struct ag_sdlfb_driver {
 	struct ag_driver_sw _inherit;

@@ -23,16 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
+#include <core/config.h>
 
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <core/config.h>
-
 #include "glview.h"
+#include "opengl.h"
 
 #include <stdarg.h>
 

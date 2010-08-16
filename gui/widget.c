@@ -27,8 +27,6 @@
  * Implementation of the AG_Widget(3) object.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -40,6 +38,7 @@
 #include "primitive.h"
 #include "notebook.h"
 #include "gui_math.h"
+#include "opengl.h"
 
 #include <stdarg.h>
 #include <string.h>

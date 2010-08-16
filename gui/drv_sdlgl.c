@@ -40,8 +40,8 @@
 #include "packedpixel.h"
 #include "cursors.h"
 
-#include "drv_gl_common.h"
-#include "drv_sdl_common.h"
+#include "opengl.h"
+#include "sdl.h"
 
 typedef struct ag_sdlgl_driver {
 	struct ag_driver_sw _inherit;

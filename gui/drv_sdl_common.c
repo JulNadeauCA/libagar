@@ -35,11 +35,9 @@
 #include "packedpixel.h"
 #include "cursors.h"
 #include "perfmon.h"
+#include "sdl.h"
 
-#include <config/have_sdl.h>
 #ifdef HAVE_SDL
-
-#include "drv_sdl_common.h"
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
 	((ax) < (s)->clip_rect.x ||			\
