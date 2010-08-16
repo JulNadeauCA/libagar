@@ -172,8 +172,9 @@ void	 AG_ObjectDelete(void *);
 
 void	 AG_ObjectInit(void *, void *);
 void	 AG_ObjectInitStatic(void *, void *);
+void	 AG_ObjectInitNamed(void *, void *, const char *);
 void	 AG_ObjectFreeDataset(void *);
-void	 AG_ObjectRemain(void *, int);
+void	 AG_ObjectRemain(void *, Uint);
 int	 AG_ObjectCopyName(void *, char *, size_t)
 	                   BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_ObjectCopyDirname(void *, char *, size_t)
