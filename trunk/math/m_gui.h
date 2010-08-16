@@ -5,6 +5,9 @@
 #include <agar/math/begin.h>
 
 #if defined(QUAD_PRECISION)
+# define M_BindReal				AG_BindLongDbl
+# define M_BindRealMp				AG_BindLongDblMp
+# define M_BindRealFn				AG_BindLongDblFn
 # define M_NumericalNewReal			AG_NumericalNewLongDbl
 # define M_NumericalNewRealR			AG_NumericalNewLongDblR
 # define M_NumericalGetReal			AG_NumericalGetLongDbl
@@ -13,6 +16,9 @@
 # define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
 # define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
 #elif defined(DOUBLE_PRECISION)
+# define M_BindReal				AG_BindDouble
+# define M_BindRealMp				AG_BindDoubleMp
+# define M_BindRealFn				AG_BindDoubleFn
 # define M_NumericalNewReal	 		AG_NumericalNewDbl
 # define M_NumericalNewRealR	 		AG_NumericalNewDblR
 # define M_NumericalGetReal	 		AG_NumericalGetDbl
@@ -21,6 +27,9 @@
 # define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
 # define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
 #elif defined(SINGLE_PRECISION)
+# define M_BindReal				AG_BindFloat
+# define M_BindRealMp				AG_BindFloatMp
+# define M_BindRealFn				AG_BindFloatFn
 # define M_NumericalNewReal			AG_NumericalNewFlt
 # define M_NumericalNewRealR			AG_NumericalNewFltR
 # define M_NumericalGetReal	 		AG_NumericalGetFlt
@@ -40,12 +49,19 @@
 
 __BEGIN_DECLS
 void	*M_EditVector3(void *, const char *, M_Vector3 *);
+void	*M_EditVector3Mp(void *, const char *, M_Vector3 *, AG_Mutex *);
 void	*M_EditVector4(void *, const char *, M_Vector4 *);
+void	*M_EditVector4Mp(void *, const char *, M_Vector4 *, AG_Mutex *);
 void	*M_EditMatrix44(void *, const char *, M_Matrix44 *);
+void	*M_EditMatrix44Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 void	*M_EditTranslate3(void *, const char *, M_Matrix44 *);
+void	*M_EditTranslate3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 void	*M_EditTranslate4(void *, const char *, M_Matrix44 *);
+void	*M_EditTranslate4Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 void	*M_EditScale3(void *, const char *, M_Matrix44 *);
+void	*M_EditScale3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 void	*M_EditScale4(void *, const char *, M_Matrix44 *);
+void	*M_EditScale4Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 __END_DECLS
 
 #include <agar/math/close.h>
