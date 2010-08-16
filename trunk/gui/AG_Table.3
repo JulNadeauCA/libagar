@@ -315,6 +315,7 @@ should be enclosed between
 .Fn AG_TableBegin
 and
 .Fn AG_TableEnd .
+It is not allowed to add or remove columns from the callback routine.
 The
 .Fn AG_TableBegin
 function, notably, saves current selection information (to keep selections
@@ -324,8 +325,8 @@ This method of repopulating a table using a function nicely separates the
 GUI from the underlying application.
 It is also more efficient than it seems, since
 .Fn AG_TableBegin
-will re-use the important resources (e.g., hardware texture handles of
-rendered text surfaces) for unchanged cells.
+will re-use the resources (e.g., already rendered text surfaces) of
+unchanged cells.
 .Pp
 The
 .Fn AG_TableSort
