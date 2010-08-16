@@ -27,8 +27,6 @@
  * Standard color palette for GUI elements.
  */
 
-#include "opengl.h"
-
 #include <core/core.h>
 #include <core/config.h>
 

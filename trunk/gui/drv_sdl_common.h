@@ -23,6 +23,8 @@
 #undef Sint64
 #include <SDL.h>
 
+#include <agar/gui/begin.h>
+
 __BEGIN_DECLS
 int             AG_InitVideoSDL(void *, Uint);
 AG_PixelFormat *AG_SDL_GetPixelFormat(SDL_Surface *);
@@ -53,4 +55,5 @@ void            AG_SDL_EndEventProcessing(void *);
 void            AG_SDL_Terminate(void);
 __END_DECLS
 
+#include <agar/gui/close.h>
 #endif /* HAVE_SDL */

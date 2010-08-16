@@ -29,7 +29,6 @@
 
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
-#include "opengl.h"
 
 #include <core/core.h>
 #include <core/config.h>
@@ -39,8 +38,7 @@
 #include "gui_math.h"
 #include "text.h"
 #include "packedpixel.h"
-
-#include "drv_gl_common.h"
+#include "opengl.h"
 
 /*
  * Initialize GL for rendering of Agar GUI elements. The vp argument
@@ -190,10 +188,12 @@ AG_GL_UpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
 }
 
 
-/* Update a texture associated with a widget from corresponding surface. */
-static __inline__ void
-UpdateWidgetTexture(AG_Widget *wid, int s)
+/* Prepare a widget-bound texture for rendering. */
+void
+AG_GL_PrepareTexture(void *obj, int s)
 {
+	AG_Widget *wid = obj;
+
 	if (wid->textures[s] == 0) {
 		wid->textures[s] = AG_SurfaceTexture(wid->surfaces[s],
 		    &wid->texcoords[s]);
@@ -253,7 +253,7 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s,
 	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 	AG_ASSERT_CLASS(widSrc, "AG_Widget:*");
 
-	UpdateWidgetTexture(widSrc, s);
+	AG_GL_PrepareTexture(widSrc, s);
 
 	if (r == NULL) {
 		tc = &widSrc->texcoords[s];
@@ -322,7 +322,7 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	float w2 = w/2.0f;
 	float h2 = h/2.0f;
 	
-	UpdateWidgetTexture(wid, s);
+	AG_GL_PrepareTexture(wid, s);
 	tc = &wid->texcoords[s];
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
@@ -350,7 +350,7 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	AG_Driver *drv = obj;
 	AG_TexCoord *tc;
 	
-	UpdateWidgetTexture(wid, s);
+	AG_GL_PrepareTexture(wid, s);
 	tc = &wid->texcoords[s];
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,

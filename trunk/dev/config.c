@@ -27,8 +27,6 @@
  * Generic configuration settings dialog.
  */
 
-#include <gui/opengl.h>
-
 #include <core/core.h>
 #include <core/config.h>
 #include <core/rcs.h>

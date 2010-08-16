@@ -45,8 +45,7 @@
 #include "gui_math.h"
 #include "text.h"
 #include "cursors.h"
-
-#include "drv_gl_common.h"
+#include "opengl.h"
 
 #define DEBUG_XSYNC
 

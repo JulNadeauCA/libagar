@@ -27,18 +27,14 @@
  * Polygon entity.
  */
 
-#include <config/have_opengl.h>
-
 #include <core/core.h>
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
 #include <gui/checkbox.h>
 #include <gui/separator.h>
-#ifdef HAVE_OPENGL
-#include <gui/opengl.h>
-#endif
 #include <gui/iconmgr.h>
+#include <gui/opengl.h>
 
 #include "vg.h"
 #include "vg_view.h"

@@ -33,10 +33,10 @@
 #include <gui/gui.h>
 #include <gui/widget.h>
 #include <gui/primitive.h>
-#include <gui/opengl.h>
 #include <gui/textbox.h>
 #include <gui/font_selector.h>
 #include <gui/checkbox.h>
+#include <gui/opengl.h>
 
 #include "vg.h"
 #include "vg_view.h"
