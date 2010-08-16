@@ -117,22 +117,93 @@ texture coordinates are returned into
 .Fa tc 
 if non-NULL.
 .Pp
-The
+The remaining functions
 .Fn AG_GL_BlitSurface ,
 .Fn AG_GL_BlitSurfaceFrom ,
-.Fn AG_GL_BlitSurfaceGL ,
-.Fn AG_GL_BlitSurfaceFromGL ,
-.Fn AG_GL_BlitSurfaceFlippedGL ,
-.Fn AG_GL_BackupSurfaces ,
-.Fn AG_GL_RestoreSurfaces
-and
-.Fn AG_GL_RenderToSurface
-operations are generic OpenGL backends to the corresponding
-.Xr AG_Driver 3
-operations
+etc. are generic OpenGL backends to the corresponding driver
+surface/texture operations (i.e.,
 .Fn blitSurface ,
 .Fn blitSurfaceFrom ,
-etc.
+etc.)
+See
+.Xr AG_Driver 3
+for details.
+.Sh RENDERING PRIMITIVES
+.nr nS 1
+.Ft void
+.Fn AG_GL_FillRect "AG_Driver *drv" "AG_Rect r" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_PutPixel "AG_Driver *drv" "int x" "int y" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_PutPixel32 "AG_Driver *drv" "int x" "int y" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_GL_PutPixelRGB "AG_Driver *drv" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn AG_GL_BlendPixel "AG_Driver *drv" "int x" "int y" "AG_Color C" "AG_BlendFn fnSrc" "AG_BlendFn fnDst"
+.Pp
+.Ft void
+.Fn AG_GL_DrawLine "AG_Driver *drv" "int x1" "int y1" "int x2" "int y2" "AG_Color C"
+.Pp
+.Ft void
+.Fn AG_GL_DrawLineH "AG_Driver *drv" "int x1" "int x2" "int y" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_DrawLineV "AG_Driver *drv" "int x" "int y1" "int y2" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_DrawLineBlended "AG_Driver *drv" "int x1" "int y1" "int x2" "int y2" "AG_Color c" "AG_BlendFn fnSrc" "AG_BlendFn fnDst"
+.Pp
+.Ft void
+.Fn AG_GL_DrawArrowUp "AG_Driver *drv" "int x" "int y" "int h" "AG_Color C[2]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawArrowDown "AG_Driver *drv" "int x" "int y" "int h" "AG_Color C[2]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawArrowLeft "AG_Driver *drv" "int x" "int y" "int h" "AG_Color C[2]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawArrowRight "AG_Driver *drv" "int x" "int y" "int h" "AG_Color C[2]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawRectDithered "AG_Driver *drv" "AG_Rect r" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_DrawBoxRounded "AG_Driver *drv" "AG_Rect r" "int z" "int radius" "AG_Color C[3]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawBoxRoundedTop "AG_Driver *drv" "AG_Rect r" "int z" "int radius" "AG_Color C[3]"
+.Pp
+.Ft void
+.Fn AG_GL_DrawCircle "AG_Driver *drv" "int x" "int y" "int r" "AG_Color C"
+.Pp
+.Ft void
+.Fn AG_GL_DrawCircle2 "AG_Driver *drv" "int x" "int y" "int r" "AG_Color C"
+.Pp
+.Ft void
+.Fn AG_GL_DrawRectFilled "AG_Driver *drv" "AG_Rect r" "AG_Color c"
+.Pp
+.Ft void
+.Fn AG_GL_DrawRectBlended "AG_Driver *drv" "AG_Rect r" "AG_Color c" "AG_BlendFn fnSrc" "AG_BlendFn fnDst"
+.Pp
+.Ft void
+.Fn AG_GL_UpdateGlyph "AG_Driver *drv" "AG_Glyph *glyph"
+.Pp
+.Ft void
+.Fn AG_GL_DrawGlyph "AG_Driver *drv" "const AG_Glyph *glyph" "int x" "int y"
+.Pp
+.nr nS 0
+These functions are generic OpenGL backends to the corresponding driver
+surface/texture operations (e.g.,
+.Fn fillRect ,
+.Fn putPixel ,
+etc); see
+.Xr AG_Driver 3
+for details.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Driver 3 ,
