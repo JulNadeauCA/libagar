@@ -124,7 +124,7 @@ void
 AG_ObjectInitStatic(void *obj, void *cl)
 {
 	AG_ObjectInit(obj, cl);
-	OBJECT(p)->flags |= AG_OBJECT_STATIC;
+	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
 }
 
 /*
