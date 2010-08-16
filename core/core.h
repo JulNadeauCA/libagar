@@ -93,6 +93,7 @@
 #include <core/time.h>
 #include <core/db.h>
 #include <core/dbobject.h>
+#include <core/exec.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

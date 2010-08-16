@@ -52,6 +52,9 @@ all Agar libraries, and available to applications as well.
 .Ft void
 .Fn AG_SetFatalCallback "void (*callback)(const char *msg)"
 .Pp
+.Ft "const char *"
+.Fn AG_Strerror "int errno"
+.Pp
 .nr nS 0
 The
 .Fn AG_GetError
@@ -83,6 +86,11 @@ to do program-specific cleanup and then terminate the program itself.
 An error message is passed to the callback via the
 .Fa msg
 argument.
+.Pp
+The
+.Fn AG_Strerror
+function returns an error message for the given platform-specific error
+code (i.e., errno under Unix).
 .Sh DEBUG ROUTINES
 .nr nS 1
 .Ft void
