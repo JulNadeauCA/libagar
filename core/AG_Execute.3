@@ -60,8 +60,6 @@ accordingly.
 .Pp
 .Fn AG_WaitOnProcess
 checks for status or waits until the specified process terminates.
-The function returns the PID of the terminated process, or -1 if an error
-occured.
 The
 .Fa wait_type
 argument may be one of:
@@ -71,6 +69,13 @@ If the process has not exited, return immediately without blocking.
 .It AG_EXEC_WAIT_INFINITE
 Block the calling thread until the process has exited.
 .El
+.Pp
+The function returns the PID of the terminated process, -1 if an error
+occured, or 0 if
+.Fa wait_type
+is
+.Dv AG_EXEC_WAIT_IMMEDIATE
+and the process is still running.
 .Pp
 The
 .Fn AG_Kill
