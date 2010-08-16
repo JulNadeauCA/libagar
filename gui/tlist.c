@@ -1269,7 +1269,9 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 		}
 	}
 	AG_ObjectUnlock(tl);
-	AG_Redraw(tl);
+	
+	if (!agRenderingContext)
+		AG_Redraw(tl);
 }
 
 /* Update the icon associated with an item. The Tlist must be locked. */
@@ -1302,7 +1304,9 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 	it->flags |= AG_TLIST_DYNICON;
 	UpdateItemIcon(tl, it, iconsrc);
 	AG_ObjectUnlock(tl);
-	AG_Redraw(tl);
+
+	if (!agRenderingContext)
+		AG_Redraw(tl);
 }
 
 void
