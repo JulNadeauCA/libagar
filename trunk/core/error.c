@@ -33,6 +33,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef AG_THREADS
 AG_ThreadKey agErrorKey;		/* Error message (thread-specific) */
 AG_ThreadKey agErrorCode;		/* Error code (thread-specific) */
@@ -107,6 +111,38 @@ AG_GetError(void)
 	return ((const char *)agErrorKey);
 #endif
 }
+
+const char *
+AG_Strerror(int error) 
+{
+#if defined(_WIN32)
+	static char *str = NULL;
+	char *p;
+
+	if(str != NULL) {
+		AG_Free(str);
+	}
+	
+	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		error,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&str,
+		0, NULL );
+
+	p = strchr(str, '\r');
+	if(p != NULL) {
+		*p = '\0';
+	}
+
+	return (const char *)str;
+#else
+	return (const char *)strerror(error);
+#endif
+}
+
 
 /* Set the symbolic error code. */
 void

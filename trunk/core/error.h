@@ -80,6 +80,7 @@ void		*AG_PtrMismatch(void);
 void		*AG_ObjectMismatch(const char *, const char *);
 int		 AG_IntMismatch(void);
 float		 AG_FloatMismatch(void);
+const char	*AG_Strerror(int);
 
 
 static __inline__ void *
