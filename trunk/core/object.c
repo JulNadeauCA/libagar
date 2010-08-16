@@ -93,6 +93,8 @@ AG_ObjectInit(void *p, void *cl)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->timeouts);
 	
+	ob->flags &= ~(AG_OBJECT_RESIDENT);
+	
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
 			if (hier[i]->init != NULL)
@@ -102,7 +104,6 @@ AG_ObjectInit(void *p, void *cl)
 	} else {
 		AG_FatalError("AG_ObjectInit: %s", AG_GetError());
 	}
-	ob->flags &= ~(AG_OBJECT_RESIDENT);
 }
 
 void
