@@ -505,6 +505,9 @@ set the selection on all cells of the table.
 returns 1 if the given row is selected, 0 otherwise.
 .Sh CELL FUNCTIONS
 .nr nS 1
+.Ft "AG_TableCell *"
+.Fn AG_TableGetCell "AG_Table *tbl" "int row" "int col"
+.Pp
 .Ft "void"
 .Fn AG_TableSelectCell "AG_Table *tbl" "int row" "int col"
 .Pp
@@ -517,7 +520,15 @@ returns 1 if the given row is selected, 0 otherwise.
 .Ft "void"
 .Fn AG_TableCompareCells "const AG_TableCell *c1" "const AG_TableCell *c2"
 .Pp
+.Ft "void"
+.Fn AG_TablePrintCell "AG_Table *tbl" "const AG_TableCell *c" "char *dst" "size_t dstLen"
+.Pp
 .nr nS 0
+The
+.Fn AG_TableGetCell
+routine returns a pointer to the table cell currently at the specified
+row and column position.
+.Pp
 .Fn AG_TableSelectCell ,
 .Fn AG_TableDeselectCell
 and
@@ -539,6 +550,12 @@ If they are text-based, the return value of
 is returned.
 If they are numerical, the difference is returned.
 For pointer and surface cells, the return value is 1 if they differ.
+.Pp
+The
+.Fn AG_TablePrintCell
+function writes a formatted string representation of the current cell value,
+to the fixed-size buffer
+.Fa dst .
 .Sh MISCELLANEOUS FUNCTIONS
 .nr nS 1
 .Ft "int"
@@ -552,7 +569,6 @@ Each row is separated by a newline, and cells are separated by the character
 given by the
 .Fa separator
 argument.
-Non-text cells are skipped.
 The function returns 0 on success, -1 on failure.
 .Pp
 .Sh EVENTS
@@ -594,11 +610,125 @@ For the
 .Ft AG_Table
 object:
 .Pp
-.Bl -tag -compact -width "int n "
+.Bl -tag -compact -width "AG_TableCell *cells "
+.It Ft AG_TableCell *cells
+Cell data in sorted rows (read-only).
+.It Ft AG_TableCol *cols
+Column data (read-only);
 .It Ft int n
 Number of columns (read-only).
 .It Ft int m
 Number of rows (read-only).
+.El
+.Pp
+For the
+.Ft AG_TableCell
+structure:
+.Pp
+.Bl -tag -compact -width "AG_Widget *widget "
+.It enum ag_table_cell_type type
+Cell data type (see below).
+.It Uint id
+Optional user-specified ID or 0.
+.It Uint flags
+Option flags.
+If
+.Dv AG_TABLE_CELL_NOCOMPARE
+is set, this cell will be ignored when comparing cells of a polled table
+against the backing store in order to restore selection state.
+.It char fmt[]
+Format string (read-only; see
+.Fn AG_TableAddRow ) .
+.It AG_Widget *widget
+Embedded widget for
+.Dv AG_CELL_WIDGET
+type cells (read-only).
+.It int selected
+Selection flag (1 = selected, 0 = not selected).
+.It AG_Table *tbl
+Back pointer to
+.Nm
+widget.
+.El
+.Pp
+For the
+.Ft AG_TableCol
+structure:
+.Pp
+.Bl -tag -compact -width "char name[] "
+.It char name[]
+Column header text string (read-only).
+.It int selected
+Column is selected (assuming column selection mode).
+.It int w
+Column width in pixels (read-only).
+.It int x
+Current column position (local widget coordinates).
+.El
+.Sh CELL DATA TYPES
+The cell data type is determined by
+.Ft enum ag_table_cell_type :
+.Bl -tag -compact -width "AG_CELL_FN_SU_NODUP "
+.It AG_CELL_NULL
+Empty cell.
+.It AG_CELL_STRING
+C string.
+.It AG_CELL_INT
+Integer value.
+.It AG_CELL_UINT
+Unsigned integer value.
+.It AG_CELL_LONG
+Native
+.Ft long
+integer.
+.It AG_CELL_LONG
+Native
+.Ft unsigned long
+integer.
+.It AG_CELL_FLOAT
+Floating point number (single-precision).
+.It AG_CELL_DOUBLE
+Floating point number (double-precision).
+.It AG_CELL_PSTRING
+Pointer to a C string.
+.It AG_CELL_PINT
+Pointer to an integer.
+.It AG_CELL_PUINT
+Pointer to an unsigned integer.
+.It AG_CELL_PLONG
+Pointer to a
+.Ft long
+integer.
+.It AG_CELL_PULONG
+Pointer to a
+.Ft unsigned long
+integer.
+.It AG_CELL_INT64
+64-bit integer (if
+.Dv HAVE_64BIT
+only).
+.It AG_CELL_PUINT8
+.It AG_CELL_PSINT8
+.It AG_CELL_PUINT16
+.It AG_CELL_PSINT16
+.It AG_CELL_PUINT32
+.It AG_CELL_PSINT32
+.It AG_CELL_PUINT64
+.It AG_CELL_PSINT64
+Pointer to an integer in specified format.
+.It AG_CELL_PFLOAT
+.It AG_CELL_PDOUBLE
+Pointer to a floating-point number.
+.It AG_CELL_POINTER
+Generic pointer.
+.It AG_CELL_FN_SU
+Function returning a surface (see %[Fs]).
+.It AG_CELL_FN_SU_NODUP
+Function returning a surface that should not be freed (see %[FS]).
+.It AG_CELL_FN_TXT
+Function returning a text string.
+.It AG_CELL_WIDGET
+Embedded widget (see %[W]).
 .El
 .Sh EXAMPLES
 The following code fragment creates a table and immediately populates it:

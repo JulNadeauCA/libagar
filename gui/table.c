@@ -369,8 +369,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return (0);
 }
 
-static __inline__ void
-PrintCell(AG_TableCell *c, char *buf, size_t bufsz)
+void
+AG_TablePrintCell(const AG_TableCell *c, char *buf, size_t bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_INT:
@@ -454,22 +454,13 @@ PrintCell(AG_TableCell *c, char *buf, size_t bufsz)
 	case AG_CELL_FN_TXT:
 		c->fnTxt(c->data.p, buf, bufsz);
 		break;
-	case AG_CELL_FN_SU:
-	case AG_CELL_FN_SU_NODUP:
-		Strlcpy(buf, "<image>", bufsz);
-		break;
 	case AG_CELL_POINTER:
 		Snprintf(buf, bufsz, c->fmt, c->data.p);
 		break;
-	case AG_CELL_NULL:
-		if (c->fmt[0] == '\0') {
-			Strlcpy(buf, "<null>", bufsz);
-		} else {
-			Strlcpy(buf, c->fmt, bufsz);
+	default:
+		if (bufsz > 0) {
+			buf[0] = '\0';
 		}
-		break;
-	case AG_CELL_WIDGET:
-		Strlcpy(buf, "<widget>", bufsz);
 		break;
 	}
 }
@@ -523,7 +514,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		}
 		break;
 	default:
-		PrintCell(c, txt, sizeof(txt));
+		AG_TablePrintCell(c, txt, sizeof(txt));
 		break;
 	}
 	AG_TextColor(agColors[TEXT_COLOR]);
@@ -841,36 +832,18 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 	}
 }
 
-/*
- * Add an entry to a column pool.
- * Table must be locked.
- */
-int
-AG_TablePoolAdd(AG_Table *t, int m, int n)
+static __inline__ Uint
+HashPrevCell(AG_Table *t, const AG_TableCell *c)
 {
-	AG_TableCol *tc = &t->cols[n];
-	
-	tc->pool = Realloc(tc->pool, (tc->mpool+1)*sizeof(AG_TableCell));
-	memcpy(&tc->pool[tc->mpool], &t->cells[m][n], sizeof(AG_TableCell));
-	return (tc->mpool++);
-}
+	char buf[AG_TABLE_HASHBUF_MAX];
+	Uint h;
+	Uchar *p;
 
-/*
- * Cleanup a column pool.
- * Table must be locked.
- */
-void
-AG_TablePoolFree(AG_Table *t, int n)
-{
-	AG_TableCol *tc = &t->cols[n];
-	int m;
-
-	for (m = 0; m < tc->mpool; m++) {
-		AG_TableFreeCell(t, &tc->pool[m]);
+	AG_TablePrintCell(c, buf, sizeof(buf));
+	for (h = 0, p = (Uchar *)buf; *p != '\0'; p++) {
+		h = 31*h + *p;
 	}
-	Free(tc->pool);
-	tc->pool = NULL;
-	tc->mpool = 0;
+	return (h % t->nPrevBuckets);
 }
 
 /*
@@ -882,11 +855,18 @@ AG_TableBegin(AG_Table *t)
 {
 	int m, n;
 
-	AG_ObjectLock(t);
-	/* Copy the existing cells to the column pools and free the table. */
+	AG_ObjectLock(t);		/* Lock across TableBegin/End */
+
+	/* Copy the existing cells to the backing store and free the table. */
 	for (m = 0; m < t->m; m++) {
 		for (n = 0; n < t->n; n++) {
-			AG_TablePoolAdd(t, m, n);
+			AG_TableCell *c = &t->cells[m][n], *cPrev;
+			AG_TableBucket *tbPrev = &t->cPrev[HashPrevCell(t,c)];
+
+			cPrev = Malloc(sizeof(AG_TableCell));
+			memcpy(cPrev, c, sizeof(AG_TableCell));
+			TAILQ_INSERT_HEAD(&tbPrev->cells, cPrev, cells);
+			TAILQ_INSERT_HEAD(&t->cPrevList, cPrev, cells_list);
 		}
 		Free(t->cells[m]);
 	}
@@ -896,6 +876,7 @@ AG_TableBegin(AG_Table *t)
 	t->flags &= ~(AG_TABLE_WIDGETS);
 }
 
+/* Compare two "%[Ft]" cells. */
 static int
 AG_TableCompareFnTxtCells(const AG_TableCell *c1, const AG_TableCell *c2)
 {
@@ -907,6 +888,7 @@ AG_TableCompareFnTxtCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	return (strcoll(b1, b2));
 }
 
+/* Compare two table cells. */
 int
 AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 {
@@ -915,6 +897,9 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 			return (c1->type == AG_CELL_NULL ? 1 : -1);
 		}
 		return (1);
+	}
+	if (c1->id != 0 && c2->id != 0) {
+		return (c1->id - c2->id);
 	}
 	switch (c1->type) {
 	case AG_CELL_STRING:
@@ -975,41 +960,146 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	return (1);
 }
 
+/* Restore selection state on a per-row basis. */
+static void
+TableRestoreRowSelections(AG_Table *t)
+{
+	int m, n;
+	int nMatched, nCompared, sel;
+
+	for (m = 0; m < t->m; m++) {
+		nMatched = 0;
+		nCompared = 0;
+		sel = 0;
+		for (n = 0; n < t->n; n++) {
+			AG_TableCell *c = &t->cells[m][n];
+			AG_TableCell *cPrev;
+			AG_TableBucket *tb;
+
+			if (c->type == AG_CELL_NULL) {
+				continue;
+			}
+			tb = &t->cPrev[HashPrevCell(t,c)];
+			TAILQ_FOREACH(cPrev, &tb->cells, cells) {
+				if (AG_TableCompareCells(c, cPrev) != 0) {
+					continue;
+				}
+				c->surface = cPrev->surface;
+				cPrev->surface = -1;
+				if (!(cPrev->flags & AG_TABLE_CELL_NOCOMPARE)) {
+					if (cPrev->selected)
+						nMatched++;
+				}
+			}
+			if (!(c->flags & AG_TABLE_CELL_NOCOMPARE))
+				nCompared++;
+		}
+		if (nMatched == nCompared)
+			AG_TableSelectRow(t, m);
+	}
+}
+
+/*
+ * Restore selection state on a per-cell basis. In most applications, the
+ * user will almost always need to specify per-cell unique IDs for selections
+ * to restore properly.
+ */
+static void
+TableRestoreCellSelections(AG_Table *t)
+{
+	int m, n;
+
+	for (n = 0; n < t->n; n++) {
+		for (m = 0; m < t->m; m++) {
+			AG_TableCell *c = &t->cells[m][n];
+			AG_TableCell *cPrev;
+			AG_TableBucket *tb;
+			
+			if (c->type == AG_CELL_NULL) {
+				continue;
+			}
+			tb = &t->cPrev[HashPrevCell(t,c)];
+			TAILQ_FOREACH(cPrev, &tb->cells, cells) {
+				if (AG_TableCompareCells(c, cPrev) != 0) {
+					continue;
+				}
+				c->selected = cPrev->selected;
+				c->surface = cPrev->surface;
+				cPrev->surface = -1;
+				break;
+			}
+		}
+	}
+}
+
+/*
+ * Restore selection state on a per-column basis.
+ */
+static void
+TableRestoreColSelections(AG_Table *t)
+{
+	int m, n;
+
+	for (n = 0; n < t->n; n++) {
+		for (m = 0; m < t->m; m++) {
+			AG_TableCell *c = &t->cells[m][n];
+			AG_TableCell *cPrev;
+			AG_TableBucket *tb;
+			
+			if (c->type == AG_CELL_NULL) {
+				continue;
+			}
+			tb = &t->cPrev[HashPrevCell(t,c)];
+
+			TAILQ_FOREACH(cPrev, &tb->cells, cells) {
+				if (AG_TableCompareCells(c, cPrev) != 0) {
+					continue;
+				}
+				c->surface = cPrev->surface;
+				cPrev->surface = -1;
+			}
+		}
+	}
+}
+
 /*
  * Restore the selection state and recover the surfaces of matching
- * items in the column pool. Unlock the table.
+ * items in the backing store. Unlock the table.
  */
 void
 AG_TableEnd(AG_Table *t)
 {
-	int m, n, mPool;
+	AG_TableCell *tc, *tcNext;
 
-	for (n = 0; n < t->n; n++) {
-		AG_TableCol *tc = &t->cols[n];
-
-		/*
-		 * Compare the new cells against the backing store to
-		 * recycle surfaces and recover selection state.
-		 */
-		for (mPool = 0; mPool < tc->mpool; mPool++) {
-			AG_TableCell *cPool = &tc->pool[mPool];
-
-			for (m = 0; m < t->m; m++) {
-				AG_TableCell *c = &t->cells[m][n];
-				
-				if (AG_TableCompareCells(c, cPool) == 0) {
-					c->surface = cPool->surface;
-					c->selected = cPool->selected;
-					cPool->surface = -1;
-				}
-			}
-			AG_TableFreeCell(t, cPool);
-		}
-		Free(tc->pool);
-		tc->pool = NULL;
-		tc->mpool = 0;
+	if (t->n == 0)
+		goto out;
+	
+	/* Recover surfaces and selection state from the backing store. */
+	switch (t->selMode) {
+	case AG_TABLE_SEL_ROWS:
+		TableRestoreRowSelections(t);
+		break;
+	case AG_TABLE_SEL_CELLS:
+		TableRestoreCellSelections(t);
+		break;
+	case AG_TABLE_SEL_COLS:
+		TableRestoreColSelections(t);
+		break;
 	}
-	AG_ObjectUnlock(t);
+
+	/* Clear the backing store. */
+	for (tc = TAILQ_FIRST(&t->cPrevList);
+	     tc != TAILQ_END(&t->cPrevList);
+	     tc = tcNext) {
+		tcNext = TAILQ_NEXT(tc, cells_list);
+		Free(tc);
+	}
+	TAILQ_INIT(&t->cPrevList);
+	/* It is safe to use memset() in place of TAILQ_INIT(). */
+	memset(t->cPrev, 0, t->nPrevBuckets*sizeof(AG_TableBucket));
+
+out:
+	AG_ObjectUnlock(t);		/* Lock across TableBegin/End */
 }
 
 static int
@@ -1818,8 +1908,6 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->selected = 0;
 	tc->w = 0;
 	tc->wPct = -1;
-	tc->pool = NULL;
-	tc->mpool = 0;
 
 	AG_PushTextState();
 	AG_TextColor(agColors[TEXT_COLOR]);
@@ -1851,13 +1939,13 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 
 	/* Resize the row arrays. */
 	for (m = 0; m < t->m; m++) {
-		AG_TableCell *cellsNew;
+		AG_TableCell *cNew;
 
-		if ((cellsNew = TryRealloc(t->cells[m],
+		if ((cNew = TryRealloc(t->cells[m],
 		    (t->n+1)*sizeof(AG_TableCell))) == NULL) {
 			goto fail;
 		}
-		t->cells[m] = cellsNew;
+		t->cells[m] = cNew;
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
 	n = t->n++;
@@ -1881,6 +1969,8 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 	c->surface = -1;
 	c->widget = NULL;
 	c->tbl = t;
+	c->id = 0;
+	c->flags = 0;
 }
 
 int
@@ -1889,21 +1979,20 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	char fmt[64], *sp = &fmt[0];
 	va_list ap;
 	int n, rv;
-	AG_TableCell **cellsNew;
+	AG_TableCell **cNew;
 
 	Strlcpy(fmt, fmtp, sizeof(fmt));
 
 	AG_ObjectLock(t);
 
-	if ((cellsNew = TryRealloc(t->cells, (t->m+1)*sizeof(AG_TableCell)))
-	    == NULL) {
+	if ((cNew = TryRealloc(t->cells, (t->m+1)*sizeof(AG_TableCell))) == NULL) {
 		goto fail;
 	}
-	if ((cellsNew[t->m] = TryMalloc(t->n*sizeof(AG_TableCell))) == NULL) {
-		Free(cellsNew);
+	if ((cNew[t->m] = TryMalloc(t->n*sizeof(AG_TableCell))) == NULL) {
+		Free(cNew);
 		goto fail;
 	}
-	t->cells = cellsNew;
+	t->cells = cNew;
 
 	va_start(ap, fmtp);
 	for (n = 0; n < t->n; n++) {
@@ -2116,7 +2205,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 			if (t->cols[n].name[0] == '\0') {
 				continue;
 			}
-			PrintCell(&t->cells[m][n], txt, sizeof(txt));
+			AG_TablePrintCell(&t->cells[m][n], txt, sizeof(txt));
 			fputs(txt, f);
 			fputc(sep, f);
 		}
@@ -2163,6 +2252,7 @@ static void
 Init(void *obj)
 {
 	AG_Table *t = obj;
+	Uint i;
 
 	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
 	                    AG_WIDGET_UNFOCUSED_MOTION|
@@ -2219,6 +2309,14 @@ Init(void *obj)
 	t->wheelTicks = 0;
 	SLIST_INIT(&t->popups);
 
+	t->nPrevBuckets = 256;
+	t->cPrev = Malloc(t->nPrevBuckets*sizeof(AG_TableBucket));
+	for (i = 0; i < t->nPrevBuckets; i++) {
+		AG_TableBucket *tb = &t->cPrev[i];
+		TAILQ_INIT(&tb->cells);
+	}
+	TAILQ_INIT(&t->cPrevList);
+
 	AG_SetEvent(t, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
@@ -2258,22 +2356,37 @@ static void
 Destroy(void *obj)
 {
 	AG_Table *t = obj;
-	AG_TablePopup *tp, *tpn;
+	AG_TablePopup *pop, *nPop;
+	AG_TableCell *c, *cNext;
 	int i;
-	
-	for (tp = SLIST_FIRST(&t->popups);
-	     tp != SLIST_END(&t->popups);
-	     tp = tpn) {
-		tpn = SLIST_NEXT(tp, popups);
-		AG_ObjectDestroy(tp->menu);
-		Free(tp);
+
+	/* Free the attached popup menus. */
+	for (pop = SLIST_FIRST(&t->popups);
+	     pop != SLIST_END(&t->popups);
+	     pop = nPop) {
+		nPop = SLIST_NEXT(pop, popups);
+		AG_ObjectDestroy(pop->menu);
+		Free(pop);
 	}
-	for (i = 0; i < t->n; i++) {
-		Free(t->cols[i].pool);
+
+	/* Free the active cells. */
+	for (i = 0; i < t->m; i++) {
+		Free(t->cells[i]);
 	}
+	Free(t->cells);
+
+	/* Free the backing store. */
+	for (c = TAILQ_FIRST(&t->cPrevList);
+	     c != TAILQ_END(&t->cPrevList);
+	     c = cNext) {
+		cNext = TAILQ_NEXT(c, cells_list);
+		Free(c);
+	}
+	Free(t->cPrev);
+
+	/* Free the columns. */
 	Free(t->cols);
 }
-
 
 AG_WidgetClass agTableClass = {
 	{
