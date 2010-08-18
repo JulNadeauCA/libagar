@@ -455,6 +455,7 @@ PrintCell(AG_TableCell *c, char *buf, size_t bufsz)
 		c->fnTxt(c->data.p, buf, bufsz);
 		break;
 	case AG_CELL_FN_SU:
+	case AG_CELL_FN_SU_NODUP:
 		Strlcpy(buf, "<image>", bufsz);
 		break;
 	case AG_CELL_POINTER:
@@ -481,6 +482,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 	if (c->surface >= 0) {
 		if (t->flags & AG_TABLE_REDRAW_CELLS) {
 			AG_WidgetUnmapSurface(t, c->surface);
+			c->surface = 0;
 		} else {
 			goto blit;
 		}
@@ -498,6 +500,10 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		goto blit;
 	case AG_CELL_FN_SU:
 		c->surface = AG_WidgetMapSurface(t,
+		    c->fnSu(c->data.p, rd->x, rd->y));
+		goto blit;
+	case AG_CELL_FN_SU_NODUP:
+		c->surface = AG_WidgetMapSurfaceNODUP(t,
 		    c->fnSu(c->data.p, rd->x, rd->y));
 		goto blit;
 	case AG_CELL_WIDGET:
@@ -829,8 +835,10 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
-	if (c->surface >= 0)
+	if (c->surface >= 0) {
 		AG_WidgetUnmapSurface(t, c->surface);
+		c->surface = 0;
+	}
 }
 
 /*
@@ -954,6 +962,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_POINTER:
 		return (c1->data.p != c2->data.p);
 	case AG_CELL_FN_SU:
+	case AG_CELL_FN_SU_NODUP:
 		return ((c1->data.p != c2->data.p) || (c1->fnSu != c2->fnSu));
 	case AG_CELL_FN_TXT:
 		return AG_TableCompareFnTxtCells(c1, c2);
@@ -1958,6 +1967,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->type = AG_CELL_FN_SU;
 				c->fnSu = c->data.p;
 				c->data.p = c;
+			} else if (sc[0] == 'F' && sc[1] == 'S') {
+				c->type = AG_CELL_FN_SU_NODUP;
+				c->fnSu = c->data.p;
+				c->data.p = c;
 			} else if (sc[0] == 'W') {
 				AG_SizeAlloc a;
 
@@ -2246,7 +2259,7 @@ Destroy(void *obj)
 {
 	AG_Table *t = obj;
 	AG_TablePopup *tp, *tpn;
-	int m, n;
+	int i;
 	
 	for (tp = SLIST_FIRST(&t->popups);
 	     tp != SLIST_END(&t->popups);
@@ -2255,13 +2268,8 @@ Destroy(void *obj)
 		AG_ObjectDestroy(tp->menu);
 		Free(tp);
 	}
-	
-	for (m = 0; m < t->m; m++) {
-		for (n = 0; n < t->n; n++)
-			AG_TableFreeCell(t, &t->cells[m][n]);
-	}
-	for (n = 0; n < t->n; n++) {
-		AG_TablePoolFree(t, n);
+	for (i = 0; i < t->n; i++) {
+		Free(t->cols[i].pool);
 	}
 	Free(t->cols);
 }
