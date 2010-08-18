@@ -44,7 +44,7 @@ AG_Execute(const char *file, char **argv)
 		return (-1);
 	}
 #if defined(_WIN32)
-	STARTUPINFO si;
+	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	char argstr[AG_ARG_MAX];
 	int  i = 0;
@@ -74,7 +74,7 @@ AG_Execute(const char *file, char **argv)
 		i++;
 	}
 
-	if(CreateProcess(NULL, argstr, NULL, NULL, FALSE, 
+	if(CreateProcessA(NULL, argstr, NULL, NULL, FALSE, 
 						0, NULL, NULL, &si, &pi) == 0) {
 		AG_SetError(_("Failed to execute (%s)"), AG_Strerror(GetLastError()));
 		return (-1);

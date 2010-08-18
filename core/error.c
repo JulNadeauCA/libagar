@@ -121,15 +121,16 @@ AG_Strerror(int error)
 
 	if(str != NULL) {
 		AG_Free(str);
+		str = NULL;
 	}
 	
-	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+	FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
 		error,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&str,
+		(LPSTR)&str,
 		0, NULL );
 
 	p = strchr(str, '\r');
