@@ -465,11 +465,19 @@ User-specified function of the form:
 The returned
 .Xr AG_Surface 3
 will be displayed in the cell.
+Note that this surface will be automatically freed once the
+widget is destroyed (similarly to
+.Xr AG_WidgetMapSurface 3 ,
+see %[FS] variant below).
 The
 .Fa x
 and
 .Fa y
 parameters can be ignored.
+.It %[FS]
+Same as "%[Fs]", except that Agar will never try to free
+the returned surface (similarly to
+.Xr AG_WidgetMapSurfaceNODUP 3 ) .
 .It %[W]
 A widget to insert into the table.
 The widget must have the

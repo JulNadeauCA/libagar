@@ -45,8 +45,16 @@ MyCustomDynamicTextFn(void *p, char *s, size_t len)
 static AG_Surface *
 MyCustomSurfaceFn(void *p, int x, int y)
 {
-	/* Return the surface of a built-in icon. */
+	/*
+	 * Return the surface of a built-in Agar icon.
+	 */
 	return (agIconLoad.s);
+
+	/*
+	 * We are using %[FS], so Agar will never try to free this
+	 * surface. If we were using %[Fs], this would be needed:
+	 */
+	/* return AG_SurfaceDup(agIconLoad.s); */
 }
 
 /*
@@ -105,8 +113,13 @@ CreateStaticTable(void)
 		AG_TableAddRow(table, "%s:%d:%[Ft]", "Baz", i,
 		    MyCustomDynamicTextFn);
 		
-		/* The %[Fs] element is a function that returns a surface. */
-		AG_TableAddRow(table, "%s:%d:%[Fs]", "Foo", i,
+		/*
+		 * The %[Fs] element is a function that returns a surface
+		 * (see AG_Surface(3)).
+		 * The %[FS] variant sets the "NODUP" flag (so that Agar
+		 * will never free the surface automatically).
+		 */
+		AG_TableAddRow(table, "%s:%d:%[FS]", "Foo", i,
 		    MyCustomSurfaceFn);
 	}
 
