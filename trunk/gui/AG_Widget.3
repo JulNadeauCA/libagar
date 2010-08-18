@@ -442,17 +442,40 @@ See
 .Xr AG_Surface 3
 for more information on the Agar surface structure.
 .Pp
-Software to hardware blits are slow, so the
+Software to hardware blits are slow, so the widget system provides an
+interface to efficiently take advantage of graphics hardware where it
+is available.
 .Fn AG_WidgetMapSurface
-interface provides a way to take advantage of hardware->hardware blits.
-It copies the specified surface (possibly creating a hardware texture if
-Agar is using an API such as OpenGL), and returns a name which will be
-used to later reference the surface.
+registers the specified
+.Xr AG_Surface 3
+with the widget, returning an integer handle to that surface.
+The surface can be subsequently rendered by calling
+.Fn AG_WidgetBlitSurface
+or
+.Fn AG_WidgetBlitFrom
+using this handle.
+The exact manner in which the surface is rendered depends on the Agar
+driver in use.
+For OpenGL-based drivers, a matching hardware texture will typically be
+generated for the surface on the first call to
+.Fn AG_WidgetBlitSurface ,
+and cached.
 .Pp
+By default, mapped surfaces are automatically freed once the widget
+is destroyed.
 The
 .Fn AG_WidgetMapSurfaceNODUP
-variant does not copy the given surface, which is assumed to remain valid
-for as long as the widget exists.
+variant sets the "NODUP" flag on the given surface, so the widget system
+will never attempt to free the surface.
+.Pp
+Note that
+.Fn AG_WidgetMapSurface
+will never duplicate the surface.
+The function merely registers the provided surface pointer with the widget
+structure.
+The surface pointer must remain valid for the lifetime of the widget (if in
+doubt, use
+.Xr AG_SurfaceDup 3 ) .
 .Pp
 Under multithreading,
 .Fn AG_WidgetMapSurface
