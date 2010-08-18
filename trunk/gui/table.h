@@ -8,9 +8,10 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_TABLE_TXT_MAX 128
-#define AG_TABLE_FMT_MAX 16
-#define AG_TABLE_COL_NAME_MAX 48
+#define AG_TABLE_TXT_MAX	128	/* Length of fixed text cells */
+#define AG_TABLE_FMT_MAX	16	/* Length of cell specifier string */
+#define AG_TABLE_COL_NAME_MAX	48	/* Column name string */
+#define AG_TABLE_HASHBUF_MAX	64	/* Buffer used in hash function */
 
 struct ag_table;
 	
@@ -84,7 +85,17 @@ typedef struct ag_table_cell {
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
 	struct ag_table *tbl;			/* Back pointer to Table */
+	Uint id;				/* Optional user-specified ID */
+	Uint flags;
+#define AG_TABLE_CELL_NOCOMPARE	0x01		/* Ignore when comparing cells
+						   against backing store. */
+	AG_TAILQ_ENTRY(ag_table_cell) cells;	/* In AG_TableBucket */
+	AG_TAILQ_ENTRY(ag_table_cell) cells_list; /* In AG_Table */
 } AG_TableCell;
+
+typedef struct ag_table_bucket {
+	AG_TAILQ_HEAD_(ag_table_cell) cells;
+} AG_TableBucket;
 
 typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
@@ -101,8 +112,6 @@ typedef struct ag_table_col {
 	int wPct;			/* Width (percent or -1) */
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
-	AG_TableCell *pool;		/* Backing store */
-	int          mpool;		/* Number of rows in backing store */
 } AG_TableCol;
 
 typedef struct ag_table {
@@ -129,8 +138,13 @@ typedef struct ag_table {
 					   columns */
 	int xOffs;			/* Column display offset */
 	int mOffs;			/* Row offset (for poll function) */
-	AG_TableCol *cols;		/* Column data */
-	AG_TableCell **cells;		/* Row data */
+
+	AG_TableCol     *cols;		/* Column data */
+	AG_TableCell   **cells;		/* Current cell data (sorted rows) */
+	AG_TableBucket *cPrev;		/* Saved cells (value hash) */
+	Uint            nPrevBuckets;
+	AG_TAILQ_HEAD_(ag_table_cell) cPrevList;	
+
 	int n;				/* Number of columns */
 	int m;				/* Number of rows */
 	int mVis;			/* Maximum number of visible rows */
@@ -189,19 +203,14 @@ void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
 void AG_TableSetSelectionColor(AG_Table *, Uint8, Uint8, Uint8, Uint8);
 void AG_TableSetColumnAction(AG_Table *, Uint);
 
-void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
-int	  AG_TablePoolAdd(AG_Table *, int, int);
-void	  AG_TablePoolFree(AG_Table *, int);
-
 void	  AG_TableClear(AG_Table *);
 void	  AG_TableBegin(AG_Table *);
 void	  AG_TableEnd(AG_Table *);
 void      AG_TableSort(AG_Table *);
 
 void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
-#define	  AG_TableCellSelected(t,m,n) ((t)->cells[m][n].selected)
-#define	  AG_TableSelectCell(t,m,n) ((t)->cells[m][n].selected = 1)
-#define	  AG_TableDeselectCell(t,m,n) ((t)->cells[m][n].selected = 0)
+void	  AG_TablePrintCell(const AG_TableCell *, char *, size_t);
+void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 
 int	  AG_TableAddRow(AG_Table *, const char *, ...);
 void	  AG_TableSelectRow(AG_Table *, int);
@@ -214,15 +223,53 @@ int	  AG_TableAddCol(AG_Table *, const char *, const char *,
 	                 int (*)(const void *, const void *));
 void	  AG_TableSelectAllCols(AG_Table *);
 void	  AG_TableDeselectAllCols(AG_Table *);
-#define	  AG_TableSelectCol(t,n) do { (t)->cols[n].selected = 1; } while (0)
-#define	  AG_TableDeselectCol(t,n) do { (t)->cols[n].selected = 0; } while (0)
-#define	  AG_TableColSelected(t,n) ((t)->cols[n].selected)
 
 void	  AG_TableRedrawCells(AG_Table *);
 int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
 
 AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
+
+/* Return cell at [m,n]. */
+static __inline__ AG_TableCell *
+AG_TableGetCell(AG_Table *t, int m, int n)
+{
+	return (&t->cells[m][n]);
+}
+
+/* Cell selection control */
+static __inline__ int
+AG_TableCellSelected(AG_Table *t, int m, int n)
+{
+	return (t->cells[m][n].selected);
+}
+static __inline__ void
+AG_TableSelectCell(AG_Table *t, int m, int n)
+{
+	t->cells[m][n].selected = 1;
+}
+static __inline__ void
+AG_TableDeselectCell(AG_Table *t, int m, int n)
+{
+	t->cells[m][n].selected = 0;
+}
+
+/* Column selection control */
+static __inline__ int
+AG_TableColSelected(AG_Table *t, int n)
+{
+	return (t->cols[n].selected);
+}
+static __inline__ void
+AG_TableSelectCol(AG_Table *t, int n)
+{
+	t->cols[n].selected = 1;
+}
+static __inline__ void
+AG_TableDeselectCol(AG_Table *t, int n)
+{
+	t->cols[n].selected = 0;
+}
 __END_DECLS
 
 #include <agar/gui/close.h>
