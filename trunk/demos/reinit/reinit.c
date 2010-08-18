@@ -11,6 +11,7 @@ main(int argc, char *argv[])
 {
 	AG_Window *win;
 	char *driverSpec = NULL, *optArg;
+	AG_DriverEvent dev;
 	int i, c;
 
 	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
@@ -26,8 +27,8 @@ main(int argc, char *argv[])
 		}
 	}
 
-	for (i = 0; i < 100; i++) {
-		printf("Test %d/100:\n", i);
+	for (i = 0; i < 25; i++) {
+		printf("Test %d/25:\n", i);
 		printf("\tInitCore()\n");
 		if (AG_InitCore("agar-reinit-demo", 0) == -1) {
 			printf("AG_InitCore(%d): %s\n", i, AG_GetError());
@@ -42,6 +43,8 @@ main(int argc, char *argv[])
 		win = AG_WindowNew(0);
 		AG_WindowSetCaption(win, "foo");
 		AG_WindowShow(win);
+		dev.type = AG_DRIVER_CLOSE;
+		AG_ProcessEvent(NULL, &dev);
 		printf("\tDestroyVideo()\n");
 		AG_DestroyVideo();
 		printf("\tDestroy()\n");
