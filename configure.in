@@ -17,16 +17,18 @@ REGISTER("--enable-network",	"Network I/O support in Agar-Core [check]")
 REGISTER("--enable-objdebug",	"Object system debugging [no]")
 REGISTER("--enable-threads",	"Thread safety [check]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
-REGISTER("--with-db4",		"Berkeley DB support in Agar-Core [check]")
+REGISTER("--with-db4[=PREFIX]",	"Berkeley DB support in Agar-Core [check]")
+REGISTER("--with-pthreads[=PREFIX]", "Specify libpthreads location [check]")
 
 REGISTER_SECTION("Options specific to Agar-GUI (ag_gui):")
-REGISTER("--with-freetype",	"Enable FreeType support [check]")
-REGISTER("--with-gl",		"OpenGL rendering support [check]")
-REGISTER("--with-glx",		"GL rendering via GLX [check]")
-REGISTER("--with-jpeg",		"Built-in JPEG image support [check]")
-REGISTER("--with-png",		"Built-in PNG image support [check]")
-REGISTER("--with-sdl",		"SDL rendering support [check]")
-REGISTER("--with-wgl",		"GL rendering via WGL [check]")
+REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
+REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
+REGISTER("--with-glx[=PREFIX]",		"GL rendering via GLX [check]")
+REGISTER("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
+REGISTER("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
+REGISTER("--with-sdl[=PREFIX]",		"SDL rendering support [check]")
+REGISTER("--with-x[=PREFIX]",		"X Windows driver support [check]")
+REGISTER("--with-wgl",			"GL rendering via WGL [check]")
 
 REGISTER_SECTION("Options specific to Agar-MATH (ag_math):")
 REGISTER("--with-altivec",	"AltiVec optimizations [check]")
@@ -61,12 +63,10 @@ CHECK(strsep)
 CHECK(snprintf)
 CHECK(vsnprintf)
 CHECK(vasprintf)
-CHECK(x11)
 CHECK(signal)
 CHECK(setjmp)
 CHECK(strtoll)
 CHECK(strtold)
-CHECK(altivec)
 CHECK(byte_order)
 CHECK(dlopen)
 CHECK(dyld)
@@ -121,7 +121,7 @@ if [ "${enable_gui}" != "no" ]; then
 
 	# Enable SDL support if the SDL library is found.
 	if [ "${with_sdl}" != "no" ]; then
-		CHECK(sdl, 1.2.0)
+		CHECK(sdl, 1.2.0, ${prefix_sdl})
 		if [ "${HAVE_SDL}" != "yes" ]; then
 			if [ "${with_sdl}" = "yes" ]; then
 				echo "*"
@@ -141,7 +141,7 @@ if [ "${enable_gui}" != "no" ]; then
 
 	# Enable OpenGL support if an OpenGL library is found.
 	if [ "${with_gl}" != "no" ]; then
-		CHECK(opengl)
+		CHECK(opengl, 0, ${prefix_gl})
 		if [ "${HAVE_OPENGL}" = "yes" ]; then
 			MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
 		else
@@ -163,7 +163,7 @@ if [ "${enable_gui}" != "no" ]; then
 	
 	# Enable X Windows support if Xlib is found.
 	if [ "${with_x}" != "no" ]; then
-		CHECK(x11)
+		CHECK(x11, 0, ${prefix_x})
 		if [ "${HAVE_X11}" != "yes" ]; then
 			if [ "${with_x}" = "yes" ]; then
 				echo "*"
@@ -187,7 +187,7 @@ if [ "${enable_gui}" != "no" ]; then
 	if [ "${HAVE_OPENGL}" = "yes" ]; then
 		# Enable GLX support if the GLX library is found.
 		if [ "${with_glx}" != "no" ]; then
-			CHECK(glx, 1.4)
+			CHECK(glx, 1.4, ${prefix_glx})
 			if [ "${HAVE_GLX}" != "yes" ]; then
 				if [ "${with_glx}" = "yes" ]; then
 					echo "*"
@@ -207,7 +207,7 @@ if [ "${enable_gui}" != "no" ]; then
 		
 		# Enable WGL support on Windows.
 		if [ "${with_wgl}" != "no" ]; then
-			CHECK(wgl)
+			CHECK(wgl, 0, ${prefix_wgl})
 			if [ "${HAVE_WGL}" != "yes" ]; then
 				if [ "${with_wgl}" = "yes" ]; then
 					echo "*"
@@ -232,7 +232,7 @@ if [ "${enable_gui}" != "no" ]; then
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
 	if [ "${with_freetype}" != "no" ]; then
-		CHECK(freetype, 7.0.1)
+		CHECK(freetype, 7.0.1, ${prefix_freetype})
 		if [ "${HAVE_FREETYPE}" != "yes" ]; then
 			echo "*"
 			echo "* The FreeType library was not found, aborting!"
@@ -254,7 +254,7 @@ if [ "${enable_gui}" != "no" ]; then
 	
 	# Enable JPEG format support if libjpeg is found.
 	if [ "${with_jpeg}" != "no" ]; then
-		CHECK(jpeg)
+		CHECK(jpeg, 0, ${prefix_jpeg})
 		if [ "${HAVE_JPEG}" != "yes" ]; then
 			if [ "${with_jpeg}" = "yes" ]; then
 				echo "*"
@@ -274,7 +274,7 @@ if [ "${enable_gui}" != "no" ]; then
 	
 	# Enable PNG format support if libpng is found.
 	if [ "${with_png}" != "no" ]; then
-		CHECK(png)
+		CHECK(png, 0, ${prefix_png})
 		if [ "${HAVE_PNG}" != "yes" ]; then
 			if [ "${with_png}" = "yes" ]; then
 				echo "*"
@@ -339,7 +339,7 @@ fi
 	
 # Enable Berkeley DB support if requested (for AG_DbObject).
 if [ "${with_db4}" = "yes" ]; then
-	CHECK(db4)
+	CHECK(db4, ${prefix_db4})
 	if [ "${HAVE_DB4}" != "yes" ]; then
 		if [ "${with_db4}" = "yes" ]; then
 			echo "*"
@@ -359,7 +359,7 @@ fi
 
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != "no" ]; then
-	CHECK(pthreads)
+	CHECK(pthreads, ${prefix_pthreads})
 	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
 		HDEFINE(AG_THREADS, "yes")
@@ -414,7 +414,7 @@ HDEFINE(HISTORICAL_UNITS, "yes")
 
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = "yes" ]; then
-	CHECK(gettext)
+	CHECK(gettext, 0, ${prefix_gettext})
 	if [ "${HAVE_GETTEXT}" != "yes" ]; then
 		echo "*"
 		echo "* --enable-nls was given but gettext was not found."

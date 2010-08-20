@@ -93,6 +93,7 @@ do
 	    case "$arg" in
 	        *=*)
 	            eval "enable_${option}='$optarg'"
+	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
 	            eval "enable_${option}=yes"
@@ -110,6 +111,7 @@ do
 	    case "$arg" in
 	        *=*)
 	            eval "with_${option}='$optarg'"
+	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
 	            eval "with_${option}=yes"
@@ -373,15 +375,17 @@ echo "    --enable-network          Network I/O support in Agar-Core [check]"
 echo "    --enable-objdebug         Object system debugging [no]"
 echo "    --enable-threads          Thread safety [check]"
 echo "    --enable-warnings         Suggested compiler warnings [no]"
-echo "    --with-db4                Berkeley DB support in Agar-Core [check]"
+echo "    --with-db4[=PREFIX]       Berkeley DB support in Agar-Core [check]"
+echo "    --with-pthreads[=PREFIX]  Specify libpthreads location [check]"
 echo ""
 echo "Options specific to Agar-GUI (ag_gui):"
-echo "    --with-freetype           Enable FreeType support [check]"
-echo "    --with-gl                 OpenGL rendering support [check]"
-echo "    --with-glx                GL rendering via GLX [check]"
-echo "    --with-jpeg               Built-in JPEG image support [check]"
-echo "    --with-png                Built-in PNG image support [check]"
-echo "    --with-sdl                SDL rendering support [check]"
+echo "    --with-freetype[=PREFIX]  Enable FreeType support [check]"
+echo "    --with-gl[=PREFIX]        OpenGL rendering support [check]"
+echo "    --with-glx[=PREFIX]       GL rendering via GLX [check]"
+echo "    --with-jpeg[=PREFIX]      Built-in JPEG image support [check]"
+echo "    --with-png[=PREFIX]       Built-in PNG image support [check]"
+echo "    --with-sdl[=PREFIX]       SDL rendering support [check]"
+echo "    --with-x[=PREFIX]         X Windows driver support [check]"
 echo "    --with-wgl                GL rendering via WGL [check]"
 echo ""
 echo "Options specific to Agar-MATH (ag_math):"
@@ -2210,8 +2214,13 @@ fi
 rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
-MATH_LIBS="-lm"
+if [ "" != "" ]; then
+MATH_CFLAGS="-I"
+MATH_LIBS="-L -lm"
+else
 MATH_CFLAGS=""
+MATH_LIBS="-lm"
+fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -2268,24 +2277,31 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
-echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
-echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 echo "#ifndef MATH_CFLAGS" > config/math_cflags.h
 echo "#define MATH_CFLAGS \"$MATH_CFLAGS\"" >> config/math_cflags.h
 echo "#endif" >> config/math_cflags.h
 echo "hdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
+echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 echo "#ifndef MATH_LIBS" > config/math_libs.h
 echo "#define MATH_LIBS \"$MATH_LIBS\"" >> config/math_libs.h
 echo "#endif" >> config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 else
+echo "#undef MATH_CFLAGS" >config/math_cflags.h
+echo "hdefs[\"MATH_CFLAGS\"] = nil" >>configure.lua
 echo "#undef MATH_LIBS" >config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for the C math library (C99)..."
 $ECHO_N "checking for the C math library (C99)..." >> config.log
-MATH_C99_LIBS="-lm"
+if [ "" != "" ]; then
+MATH_C99_CFLAGS="-I"
+MATH_C99_LIBS="-L -lm"
+else
 MATH_C99_CFLAGS=""
+MATH_C99_LIBS="-lm"
+fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -2345,17 +2361,19 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_MATH_C99}" = "yes" ]; then
 echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
-echo "MATH_C99_LIBS=$MATH_C99_LIBS" >>Makefile.config
-echo "mdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
 echo "#ifndef MATH_C99_CFLAGS" > config/math_c99_cflags.h
 echo "#define MATH_C99_CFLAGS \"$MATH_C99_CFLAGS\"" >> config/math_c99_cflags.h
 echo "#endif" >> config/math_c99_cflags.h
 echo "hdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
+echo "MATH_C99_LIBS=$MATH_C99_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
 echo "#ifndef MATH_C99_LIBS" > config/math_c99_libs.h
 echo "#define MATH_C99_LIBS \"$MATH_C99_LIBS\"" >> config/math_c99_libs.h
 echo "#endif" >> config/math_c99_libs.h
 echo "hdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
 else
+echo "#undef MATH_C99_CFLAGS" >config/math_c99_cflags.h
+echo "hdefs[\"MATH_C99_CFLAGS\"] = nil" >>configure.lua
 echo "#undef MATH_C99_LIBS" >config/math_c99_libs.h
 echo "hdefs[\"MATH_C99_LIBS\"] = nil" >>configure.lua
 fi;
@@ -2693,117 +2711,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
 fi
 rm -f conftest.c $testdir/conftest
-$ECHO_N "checking for the X window system..."
-$ECHO_N "checking for the X window system..." >> config.log
-X11_CFLAGS=""
-X11_LIBS=""
-if [ -d /usr/include/X11/X11 ]; then
-X11_CFLAGS="-I/usr/include/X11"
-fi;
-if [ -d /usr/include/X11R6/X11 ]; then
-X11_CFLAGS="-I/usr/include/X11R6"
-fi;
-if [ -d /usr/local/X11/include/X11 ]; then
-X11_CFLAGS="-I/usr/local/X11/include"
-fi;
-if [ -d /usr/local/X11R6/include/X11 ]; then
-X11_CFLAGS="-I/usr/local/X11R6/include"
-fi;
-if [ -d /usr/local/include/X11/X11 ]; then
-X11_CFLAGS="-I/usr/local/include/X11"
-fi;
-if [ -d /usr/local/include/X11R6/X11 ]; then
-X11_CFLAGS="-I/usr/local/include/X11R6"
-fi;
-if [ -d /usr/X11/include/X11 ]; then
-X11_CFLAGS="-I/usr/X11/include"
-fi;
-if [ -d /usr/X11R6/include/X11 ]; then
-X11_CFLAGS="-I/usr/X11R6/include"
-fi;
-if [ -d /usr/local/X11/lib ]; then
-X11_LIBS="${X11_LIBS} -L/usr/local/X11/lib"
-fi;
-if [ -d /usr/local/X11R6/lib ]; then
-X11_LIBS="${X11_LIBS} -L/usr/local/X11R6/lib"
-fi;
-if [ -d /usr/X11/lib ]; then
-X11_LIBS="${X11_LIBS} -L/usr/X11/lib"
-fi;
-if [ -d /usr/X11R6/lib ]; then
-X11_LIBS="${X11_LIBS} -L/usr/X11R6/lib"
-fi;
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_X11" ]; then
-		HAVE_X11=`cat ${cache}/ctest-HAVE_X11`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_X11`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <X11/Xlib.h>
-int main(int argc, char *argv[])
-{
-	Display *disp;
-	disp = XOpenDisplay(NULL);
-	XCloseDisplay(disp);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_X11="yes"
-echo "HAVE_X11=$HAVE_X11" >>Makefile.config
-echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
-echo "#ifndef HAVE_X11" > config/have_x11.h
-echo "#define HAVE_X11 \"$HAVE_X11\"" >> config/have_x11.h
-echo "#endif" >> config/have_x11.h
-echo "hdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_X11="no"
-echo "HAVE_X11=$HAVE_X11" >>Makefile.config
-echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
-echo "#undef HAVE_X11" >config/have_x11.h
-echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_X11" > ${cache}/ctest-HAVE_X11
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_X11
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_X11}" != "" ]; then
-echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
-echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
-echo "#endif" >> config/x11_cflags.h
-echo "hdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
-echo "#ifndef X11_LIBS" > config/x11_libs.h
-echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
-echo "#endif" >> config/x11_libs.h
-echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
-echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
-echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
-echo "X11_LIBS=$X11_LIBS" >>Makefile.config
-echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
-else
-echo "#undef X11_CFLAGS" >config/x11_cflags.h
-echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
-echo "#undef X11_LIBS" >config/x11_libs.h
-echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
-fi;
 $ECHO_N "checking for the signal() function..."
 $ECHO_N "checking for the signal() function..." >> config.log
 MK_CACHED="No"
@@ -3036,169 +2943,6 @@ echo "#undef _MK_HAVE_STRTOLD" >config/_mk_have_strtold.h
 echo "hdefs[\"_MK_HAVE_STRTOLD\"] = nil" >>configure.lua
 echo "skipping (no long double)"
 echo "skipping (no long double)" >> config.log
-fi;
-$ECHO_N "checking for AltiVec (with <altivec.h>)..."
-$ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
-case "$host" in
-powerpc-*-darwin*)
-	ALTIVEC_CFLAGS="-faltivec -maltivec"
-	ALTIVEC_CHECK_CFLAGS="-D_DARWIN_C_SOURCE"
-	echo "ALTIVEC_CHECK_CFLAGS=${ALTIVEC_CHECK_CFLAGS}" >> Makefile.config
-	;;
-*)
-	ALTIVEC_CFLAGS="-mabi=altivec -maltivec"
-	ALTIVEC_CHECK_CFLAGS=""
-	echo "ALTIVEC_CHECK_CFLAGS=" >> Makefile.config
-	;;
-esac
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
-		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <altivec.h>
-float a[4] = { 1,2,3,4 };
-float b[4] = { 5,6,7,8 };
-float c[4];
-
-int
-main(int argc, char *argv[])
-{
-	vector float *va = (vector float *)a;
-	vector float *vb = (vector float *)b;
-	vector float *vc = (vector float *)c;
-
-	*vc = vec_add(*va, *vb);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_ALTIVEC="yes"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
-echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
-echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
-echo "#endif" >> config/have_altivec.h
-echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_ALTIVEC="no"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
-echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
-echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_ALTIVEC}" = "yes" ]; then
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
-echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-HAVE_ALTIVEC_H=""
-echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
-echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
-echo "#endif" >> config/altivec_cflags.h
-echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-echo "#ifndef HAVE_ALTIVEC_H" > config/have_altivec_h.h
-echo "#define HAVE_ALTIVEC_H \"$HAVE_ALTIVEC_H\"" >> config/have_altivec_h.h
-echo "#endif" >> config/have_altivec_h.h
-echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
-else
-$ECHO_N "checking for AltiVec (without <altivec.h>)..."
-$ECHO_N "checking for AltiVec (without <altivec.h>)..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
-		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-float a[4] = { 1,2,3,4 };
-float b[4] = { 5,6,7,8 };
-float c[4];
-
-int
-main(int argc, char *argv[])
-{
-	vector float *va = (vector float *)a;
-	vector float *vb = (vector float *)b;
-	vector float *vc = (vector float *)c;
-
-	*vc = vec_add(*va, *vb);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_ALTIVEC="yes"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
-echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
-echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
-echo "#endif" >> config/have_altivec.h
-echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_ALTIVEC="no"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
-echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
-echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_ALTIVEC}" = "yes" ]; then
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
-echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
-echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
-echo "#endif" >> config/altivec_cflags.h
-echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-else
-echo "#undef ALTIVEC_CFLAGS" >config/altivec_cflags.h
-echo "hdefs[\"ALTIVEC_CFLAGS\"] = nil" >>configure.lua
-ALTIVEC_CFLAGS=""
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
-echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-fi;
-echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
-echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for byte order..."
 $ECHO_N "checking for byte order..." >> config.log
@@ -3530,7 +3274,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_DLOPEN}" != "yes" ]; then
+if [ "${HAVE_DLOPEN}" = "no" ]; then
 $ECHO_N "checking for dlopen() in -ldl..."
 $ECHO_N "checking for dlopen() in -ldl..." >> config.log
 MK_CACHED="No"
@@ -3600,12 +3344,12 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_CFLAGS" > config/dso_cflags.h
 echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> config/dso_cflags.h
 echo "#endif" >> config/dso_cflags.h
 echo "hdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
+echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
+echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_LIBS" > config/dso_libs.h
 echo "#define DSO_LIBS \"$DSO_LIBS\"" >> config/dso_libs.h
 echo "#endif" >> config/dso_libs.h
@@ -3693,7 +3437,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_DYLD}" = "Yes" ]; then
+if [ "${HAVE_DYLD}" = "yes" ]; then
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR"
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR" >> config.log
 MK_CACHED="No"
@@ -3767,12 +3511,12 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_CFLAGS" > config/dso_cflags.h
 echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> config/dso_cflags.h
 echo "#endif" >> config/dso_cflags.h
 echo "hdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
+echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
+echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_LIBS" > config/dso_libs.h
 echo "#define DSO_LIBS \"$DSO_LIBS\"" >> config/dso_libs.h
 echo "#endif" >> config/dso_libs.h
@@ -3808,6 +3552,11 @@ HAVE_DL_H="no"
 echo "#undef HAVE_DL_H" >config/have_dl_h.h
 echo "hdefs[\"HAVE_DL_H\"] = nil" >>configure.lua
 fi;
+if [ "" != "" ]; then
+DSO_LIBS="-L -ldld"
+else
+DSO_LIBS="-ldld"
+fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -3837,8 +3586,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c 2>>config.log
+	echo "$CC $CFLAGS $TEST_CFLAGS ${DSO_LIBS} -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${DSO_LIBS} -o $testdir/conftest conftest.c 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -3869,23 +3618,26 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SHL_LOAD}" = "yes" ]; then
-DSO_CFLAGS=""
-DSO_LIBS="-ldld"
-fi;
-TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
-TEST_HEADERS=""
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_CFLAGS" > config/dso_cflags.h
 echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> config/dso_cflags.h
 echo "#endif" >> config/dso_cflags.h
 echo "hdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
+echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
+echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "#ifndef DSO_LIBS" > config/dso_libs.h
 echo "#define DSO_LIBS \"$DSO_LIBS\"" >> config/dso_libs.h
 echo "#endif" >> config/dso_libs.h
 echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+else
+echo "#undef DSO_CFLAGS" >config/dso_cflags.h
+echo "hdefs[\"DSO_CFLAGS\"] = nil" >>configure.lua
+echo "#undef DSO_LIBS" >config/dso_libs.h
+echo "hdefs[\"DSO_LIBS\"] = nil" >>configure.lua
+fi;
+TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
+TEST_HEADERS=""
 $ECHO_N "checking for the gettimeofday() function..."
 $ECHO_N "checking for the gettimeofday() function..." >> config.log
 MK_CACHED="No"
@@ -4474,7 +4226,7 @@ WNO_UNINITIALIZED="-Wno-uninitialized"
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
 echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 else
-WNO_UNINITIALIZED=""""
+WNO_UNINITIALIZED=""
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
 echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 fi
@@ -4526,84 +4278,102 @@ echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
  then
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
-case "${host}" in
-*-*-darwin*)
+if [ "${prefix_sdl}" != "" ]; then
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-SDL_VERSION" ]; then
-		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
-		MK_CACHED="Yes"
+
+if [ "${prefix_sdl}" != "" ]; then
+	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+		SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	SDL_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_VERSION" ]; then
+			SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_VERSION=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
 				SDL_VERSION=`${path}/sdl-config --version`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
-		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_sdl}" != "" ]; then
+	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+		SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	SDL_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+			SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
 				SDL_CFLAGS=`${path}/sdl-config --cflags`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-SDL_LIBS" ]; then
-		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_sdl}" != "" ]; then
+	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+		SDL_LIBS=`${prefix_sdl}/bin/sdl-config --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	SDL_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_LIBS" ]; then
+			SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
 				SDL_LIBS=`${path}/sdl-config --libs`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
 	fi
 fi
-	;;
+else
+case "${host}" in
 *-*-freebsd*)
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
@@ -4617,12 +4387,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl11-config" ]; then
-			if [ -f "${path}/sdl11-config" ]; then
-				SDL_VERSION=`${path}/sdl11-config --version`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_VERSION=`${path}/sdl11-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4643,12 +4411,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl11-config" ]; then
-			if [ -f "${path}/sdl11-config" ]; then
-				SDL_CFLAGS=`${path}/sdl11-config --cflags`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_CFLAGS=`${path}/sdl11-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4668,12 +4434,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl11-config" ]; then
-			if [ -f "${path}/sdl11-config" ]; then
-				SDL_LIBS=`${path}/sdl11-config --libs`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_LIBS=`${path}/sdl11-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4694,12 +4458,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_VERSION=`${path}/sdl-config --version`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4719,12 +4481,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_CFLAGS=`${path}/sdl-config --cflags`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4744,12 +4504,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_LIBS=`${path}/sdl-config --libs`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4758,7 +4516,7 @@ if [ "${MK_CACHED}" = "No" ]; then
 	fi
 fi
 fi;
-	;;
+;;
 *)
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
@@ -4772,12 +4530,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_VERSION=`${path}/sdl-config --version`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4797,12 +4553,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_CFLAGS=`${path}/sdl-config --cflags`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4822,12 +4576,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/sdl-config" ]; then
-			if [ -f "${path}/sdl-config" ]; then
-				SDL_LIBS=`${path}/sdl-config --libs`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4835,11 +4587,17 @@ if [ "${MK_CACHED}" = "No" ]; then
 		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
 	fi
 fi
-	;;
+;;
 esac
+fi;
 if [ "${SDL_VERSION}" != "" ]; then
-echo "yes, found ${SDL_VERSION}"
-echo "yes, found ${SDL_VERSION}" >> config.log
+if [ "${prefix_sdl}" != "" ]; then
+echo "yes ($SDL_VERSION in ${prefix_sdl})"
+echo "yes ($SDL_VERSION in ${prefix_sdl})" >> config.log
+else
+echo "yes ($SDL_VERSION)"
+echo "yes ($SDL_VERSION)" >> config.log
+fi;
 MK_VERSION_MAJOR=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
 MK_VERSION_MICRO=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
@@ -4878,8 +4636,10 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
+
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
+
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		return (1);
 	}
@@ -4921,15 +4681,15 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_SDL}" != "no" ]; then
+if [ "${HAVE_SDL}" = "yes" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
-echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif" >> config/sdl_cflags.h
 echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
@@ -4951,8 +4711,10 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
+
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
+
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		return (1);
 	}
@@ -4994,15 +4756,15 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_SDL}" != "no" ]; then
+if [ "${HAVE_SDL}" = "yes" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
-echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif" >> config/sdl_cflags.h
 echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
@@ -5015,8 +4777,13 @@ echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 fi;
 fi;
 else
+if [ "${prefix_sdl}" != "" ]; then
+echo "no (not in ${prefix_sdl})"
+echo "no (not in ${prefix_sdl})" >> config.log
+else
 echo "no"
 echo "no" >> config.log
+fi;
 echo "#undef HAVE_SDL" >config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
@@ -5041,10 +4808,10 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_SDL" >config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
-SDL_CFLAGS=""""
+SDL_CFLAGS=""
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-SDL_LIBS=""""
+SDL_LIBS=""
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
 echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 	fi
@@ -5054,55 +4821,79 @@ $ECHO_N "checking for OpenGL (http://www.opengl.org)..."
 $ECHO_N "checking for OpenGL (http://www.opengl.org)..." >> config.log
 GL_CFLAGS=""
 GL_LIBS=""
-if [ -d "/usr/include/X11/GL" ]; then
+GL_FOUND=""
+if [ "${prefix_gl}" != "" ]; then
+if [ -e  "${prefix_gl}/include" ]; then
+GL_CFLAGS="-I${prefix_gl}/include"
+GL_LIBS="${GL_LIBS} -L${prefix_gl}/lib"
+GL_FOUND="yes"
+fi;
+else
+if [ -e  "/usr/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/include/X11R6/GL" ]; then
+if [ -e  "/usr/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11R6"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/X11/include/GL" ]; then
+if [ -e  "/usr/local/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11/include"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/X11R6/include/GL" ]; then
+if [ -e  "/usr/local/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11R6/include"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/include/X11/GL" ]; then
+if [ -e  "/usr/local/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/include/X11R6/GL" ]; then
+if [ -e  "/usr/local/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11R6"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/X11/include/GL" ]; then
+if [ -e  "/usr/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11/include"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/X11R6/include/GL" ]; then
+if [ -e  "/usr/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11R6/include"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/include/GL" ]; then
+if [ -e  "/usr/local/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/include"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/X11/lib" ]; then
+if [ -e  "/usr/local/X11/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/local/X11/lib"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/X11R6/lib" ]; then
+if [ -e  "/usr/local/X11R6/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/local/X11R6/lib"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/X11/lib" ]; then
+if [ -e  "/usr/X11/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/X11/lib"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/X11R6/lib" ]; then
+if [ -e  "/usr/X11R6/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/X11R6/lib"
+GL_FOUND="yes"
 fi;
-if [ -d "/usr/local/lib" ]; then
+if [ -e  "/usr/local/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/local/lib"
+GL_FOUND="yes"
 fi;
+fi;
+if [ "${GL_FOUND}" = "yes" ]; then
 echo "yes"
 echo "yes" >> config.log
-case "$host" in
-powerpc-*-darwin*)
-	OPENGL_CFLAGS=""
-	OPENGL_LIBS="-framework OpenGL"
-	;;
+case "${host}" in
+*-*-darwin*)
+OPENGL_CFLAGS=""
+OPENGL_LIBS="-framework OpenGL"
+;;
 *-*-cygwin* | *-*-mingw32*)
 $ECHO_N "checking whether -lopengl32 works..."
 $ECHO_N "checking whether -lopengl32 works..." >> config.log
@@ -5165,11 +4956,11 @@ OPENGL_LIBS="${GL_LIBS} -lopengl32"
 else
 OPENGL_LIBS="${GL_LIBS} -lGL"
 fi;
-	;;
+;;
 *)
-	OPENGL_CFLAGS="${GL_CFLAGS}"
-	OPENGL_LIBS="${GL_LIBS} -lGL"
-	;;
+OPENGL_CFLAGS="${GL_CFLAGS}"
+OPENGL_LIBS="${GL_LIBS} -lGL"
+;;
 esac
 $ECHO_N "checking whether OpenGL works..."
 $ECHO_N "checking whether OpenGL works..." >> config.log
@@ -5230,12 +5021,12 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
-echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
 echo "#endif" >> config/opengl_cflags.h
 echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
 echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
 echo "#endif" >> config/opengl_libs.h
@@ -5301,12 +5092,12 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
-echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
 echo "#endif" >> config/opengl_cflags.h
 echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
 echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
 echo "#endif" >> config/opengl_libs.h
@@ -5317,6 +5108,10 @@ echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
 echo "#undef OPENGL_LIBS" >config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 fi;
+fi;
+else
+echo "no"
+echo "no" >> config.log
 fi;
 		if [ "${HAVE_OPENGL}" = "yes" ]
  then
@@ -5339,10 +5134,10 @@ echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
-OPENGL_CFLAGS=""""
+OPENGL_CFLAGS=""
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-OPENGL_LIBS=""""
+OPENGL_LIBS=""
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 	fi
@@ -5353,41 +5148,50 @@ $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 X11_CFLAGS=""
 X11_LIBS=""
-if [ -d /usr/include/X11/X11 ]; then
+if [ "${prefix_x}" != "" ]; then
+if [ -e  "${prefix_x}/include/X11" ]; then
+X11_CFLAGS="-I${prefix_x}/include"
+fi;
+if [ -e  "${prefix_x}/lib" ]; then
+X11_LIBS="-L${prefix_x}/lib"
+fi;
+else
+if [ -e  "/usr/include/X11/X11" ]; then
 X11_CFLAGS="-I/usr/include/X11"
 fi;
-if [ -d /usr/include/X11R6/X11 ]; then
+if [ -e  "/usr/include/X11R6/X11" ]; then
 X11_CFLAGS="-I/usr/include/X11R6"
 fi;
-if [ -d /usr/local/X11/include/X11 ]; then
+if [ -e  "/usr/local/X11/include/X11" ]; then
 X11_CFLAGS="-I/usr/local/X11/include"
 fi;
-if [ -d /usr/local/X11R6/include/X11 ]; then
+if [ -e  "/usr/local/X11R6/include/X11" ]; then
 X11_CFLAGS="-I/usr/local/X11R6/include"
 fi;
-if [ -d /usr/local/include/X11/X11 ]; then
+if [ -e  "/usr/local/include/X11/X11" ]; then
 X11_CFLAGS="-I/usr/local/include/X11"
 fi;
-if [ -d /usr/local/include/X11R6/X11 ]; then
+if [ -e  "/usr/local/include/X11R6/X11" ]; then
 X11_CFLAGS="-I/usr/local/include/X11R6"
 fi;
-if [ -d /usr/X11/include/X11 ]; then
+if [ -e  "/usr/X11/include/X11" ]; then
 X11_CFLAGS="-I/usr/X11/include"
 fi;
-if [ -d /usr/X11R6/include/X11 ]; then
+if [ -e  "/usr/X11R6/include/X11" ]; then
 X11_CFLAGS="-I/usr/X11R6/include"
 fi;
-if [ -d /usr/local/X11/lib ]; then
+if [ -e  "/usr/local/X11/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/local/X11/lib"
 fi;
-if [ -d /usr/local/X11R6/lib ]; then
+if [ -e  "/usr/local/X11R6/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/local/X11R6/lib"
 fi;
-if [ -d /usr/X11/lib ]; then
+if [ -e  "/usr/X11/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/X11/lib"
 fi;
-if [ -d /usr/X11R6/lib ]; then
+if [ -e  "/usr/X11R6/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/X11R6/lib"
+fi;
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -5441,19 +5245,19 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_X11
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_X11}" != "" ]; then
+if [ "${HAVE_X11}" = "yes" ]; then
+echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
+echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
 echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
 echo "#endif" >> config/x11_cflags.h
 echo "hdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "X11_LIBS=$X11_LIBS" >>Makefile.config
+echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 echo "#ifndef X11_LIBS" > config/x11_libs.h
 echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
 echo "#endif" >> config/x11_libs.h
 echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
-echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
-echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
-echo "X11_LIBS=$X11_LIBS" >>Makefile.config
-echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 else
 echo "#undef X11_CFLAGS" >config/x11_cflags.h
 echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
@@ -5477,10 +5281,10 @@ echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_X11" >config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
-X11_CFLAGS=""""
+X11_CFLAGS=""
 echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
 echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
-X11_LIBS=""""
+X11_LIBS=""
 echo "X11_LIBS=$X11_LIBS" >>Makefile.config
 echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 	fi
@@ -5562,12 +5366,12 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GLX}" = "yes" ]; then
 echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
 echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
-echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 echo "#ifndef GLX_CFLAGS" > config/glx_cflags.h
 echo "#define GLX_CFLAGS \"$GLX_CFLAGS\"" >> config/glx_cflags.h
 echo "#endif" >> config/glx_cflags.h
 echo "hdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 echo "#ifndef GLX_LIBS" > config/glx_libs.h
 echo "#define GLX_LIBS \"$GLX_LIBS\"" >> config/glx_libs.h
 echo "#endif" >> config/glx_libs.h
@@ -5595,10 +5399,10 @@ echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
 		else
 echo "#undef HAVE_GLX" >config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""""
+GLX_CFLAGS=""
 echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
 echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""""
+GLX_LIBS=""
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 		fi
@@ -5619,6 +5423,7 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <windows.h>
+
 int main(int argc, char *argv[]) {
 	HWND hwnd;
 	HDC hdc;
@@ -5689,10 +5494,10 @@ echo "#undef HAVE_WGL" >config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_GLX" >config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""""
+GLX_CFLAGS=""
 echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
 echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""""
+GLX_LIBS=""
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 	fi
@@ -5702,86 +5507,113 @@ echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 $ECHO_N "checking for FreeType (http://www.freetype.org)..."
 $ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_VERSION" ]; then
-		FREETYPE_VERSION=`cat ${cache}/exec-FREETYPE_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_VERSION`
-		MK_CACHED="Yes"
+
+if [ "${prefix_freetype}" != "" ]; then
+	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+		FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config --version`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-FREETYPE_VERSION" ]; then
+			FREETYPE_VERSION=`cat ${cache}/exec-FREETYPE_VERSION`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_VERSION`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		FREETYPE_VERSION=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/freetype-config" ]; then
 				FREETYPE_VERSION=`${path}/freetype-config --version`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$FREETYPE_VERSION" > ${cache}/exec-FREETYPE_VERSION
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_VERSION
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_VERSION" > ${cache}/exec-FREETYPE_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_VERSION
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_CFLAGS" ]; then
-		FREETYPE_CFLAGS=`cat ${cache}/exec-FREETYPE_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_CFLAGS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_freetype}" != "" ]; then
+	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+		FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-FREETYPE_CFLAGS" ]; then
+			FREETYPE_CFLAGS=`cat ${cache}/exec-FREETYPE_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		FREETYPE_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/freetype-config" ]; then
 				FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$FREETYPE_CFLAGS" > ${cache}/exec-FREETYPE_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_CFLAGS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_CFLAGS" > ${cache}/exec-FREETYPE_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_CFLAGS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-FREETYPE_LIBS" ]; then
-		FREETYPE_LIBS=`cat ${cache}/exec-FREETYPE_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_LIBS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_freetype}" != "" ]; then
+	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
+		FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	FREETYPE_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/freetype-config" ]; then
-			if [ -f "${path}/freetype-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-FREETYPE_LIBS" ]; then
+			FREETYPE_LIBS=`cat ${cache}/exec-FREETYPE_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		FREETYPE_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/freetype-config" ]; then
 				FREETYPE_LIBS=`${path}/freetype-config --libs`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$FREETYPE_LIBS" > ${cache}/exec-FREETYPE_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_LIBS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$FREETYPE_LIBS" > ${cache}/exec-FREETYPE_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_LIBS
 	fi
 fi
-if [ -d /usr/freeware/include ]; then
+case "${host}" in
+*-*-irix*)
+if [ -e  "/usr/freeware/include" ]; then
 FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
 fi;
+;;
+esac
 if [ "${FREETYPE_VERSION}" != "" ]; then
-echo "yes, found ${FREETYPE_VERSION}"
-echo "yes, found ${FREETYPE_VERSION}" >> config.log
+if [ "${prefix_freetype}" != "" ]; then
+echo "yes ($FREETYPE_VERSION in ${prefix_freetype})"
+echo "yes ($FREETYPE_VERSION in ${prefix_freetype})" >> config.log
+else
+echo "yes ($FREETYPE_VERSION)"
+echo "yes ($FREETYPE_VERSION)" >> config.log
+fi;
 MK_VERSION_MAJOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
 MK_VERSION_MICRO=`echo "$FREETYPE_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
@@ -5864,18 +5696,18 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
 echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
 echo "#endif" >> config/freetype_cflags.h
 echo "hdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
 echo "#endif" >> config/freetype_libs.h
 echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 else
 echo "#undef FREETYPE_CFLAGS" >config/freetype_cflags.h
 echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
@@ -5883,10 +5715,15 @@ echo "#undef FREETYPE_LIBS" >config/freetype_libs.h
 echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
 fi;
 else
-echo "#undef HAVE_FREETYPE" >config/have_freetype.h
-echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+if [ "${prefix_freetype}" != "" ]; then
+echo "no (not in ${prefix_freetype})"
+echo "no (not in ${prefix_freetype})" >> config.log
+else
 echo "no"
 echo "no" >> config.log
+fi;
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 fi;
 		if [ "${HAVE_FREETYPE}" != "yes" ]
  then
@@ -5905,10 +5742,10 @@ fi;
 	else
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""""
+FREETYPE_CFLAGS=""
 echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
 echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""""
+FREETYPE_LIBS=""
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 	fi
@@ -5918,27 +5755,34 @@ echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 $ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 $ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
 JPEG_CFLAGS=""
-if [ -f "/usr/local/include/jpeglib.h" ]; then
+if [ "${prefix_jpeg}" != "" ]; then
+if [ -e  "${prefix_jpeg}/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I${prefix_jpeg}/include"
+JPEG_LIBS="-L${prefix_jpeg}/lib -ljpeg"
+fi;
+else
+if [ -e  "/usr/local/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/local/include"
 JPEG_LIBS="-L/usr/local/lib -ljpeg"
 fi;
-if [ -f "/usr/X11R6/include/jpeglib.h" ]; then
+if [ -e  "/usr/X11R6/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/X11R6/include"
 JPEG_LIBS="-L/usr/X11R6/lib -ljpeg"
 fi;
-if [ -f "/usr/include/jpeglib.h" ]; then
+if [ -e  "/usr/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/include"
 JPEG_LIBS="-L/usr/lib -ljpeg"
 fi;
-if [ -f "/opt/local/include/jpeglib.h" ]; then
+if [ -e  "/opt/local/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/opt/local/include"
 JPEG_LIBS="-L/opt/local/lib -ljpeg"
 fi;
-if [ -f "/opt/include/jpeglib.h" ]; then
+if [ -e  "/opt/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/opt/include"
 JPEG_LIBS="-L/opt/lib -ljpeg"
 fi;
-if [ "${JPEG_CFLAGS}" != "" ]; then
+fi;
+if [ "${JPEG_LIBS}" != "" ]; then
 echo "ok"
 echo "ok" >> config.log
 $ECHO_N "checking whether libjpeg works..."
@@ -6014,15 +5858,15 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_JPEG
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_JPEG}" != "" ]; then
+if [ "${HAVE_JPEG}" = "yes" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
 echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
-echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 echo "#ifndef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#define JPEG_CFLAGS \"$JPEG_CFLAGS\"" >> config/jpeg_cflags.h
 echo "#endif" >> config/jpeg_cflags.h
 echo "hdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
+echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
+echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 echo "#ifndef JPEG_LIBS" > config/jpeg_libs.h
 echo "#define JPEG_LIBS \"$JPEG_LIBS\"" >> config/jpeg_libs.h
 echo "#endif" >> config/jpeg_libs.h
@@ -6036,6 +5880,10 @@ fi;
 else
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+echo "#undef JPEG_CFLAGS" >config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef JPEG_LIBS" >config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
 echo "no"
 echo "no" >> config.log
 fi;
@@ -6056,10 +5904,10 @@ echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
-JPEG_CFLAGS=""""
+JPEG_CFLAGS=""
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
 echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-JPEG_LIBS=""""
+JPEG_LIBS=""
 echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
 echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 	fi
@@ -6069,109 +5917,138 @@ echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 $ECHO_N "checking for libpng (http://www.libpng.org)..."
 $ECHO_N "checking for libpng (http://www.libpng.org)..." >> config.log
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-PNG_VERSION" ]; then
-		PNG_VERSION=`cat ${cache}/exec-PNG_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_VERSION`
-		MK_CACHED="Yes"
+
+if [ "${prefix_png}" != "" ]; then
+	if [ -e "${prefix_png}/bin/libpng-config" ]; then
+		PNG_VERSION=`${prefix_png}/bin/libpng-config --version`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	PNG_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libpng-config" ]; then
-			if [ -f "${path}/libpng-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-PNG_VERSION" ]; then
+			PNG_VERSION=`cat ${cache}/exec-PNG_VERSION`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_VERSION`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		PNG_VERSION=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/libpng-config" ]; then
 				PNG_VERSION=`${path}/libpng-config --version`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$PNG_VERSION" > ${cache}/exec-PNG_VERSION
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_VERSION
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$PNG_VERSION" > ${cache}/exec-PNG_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_VERSION
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-PNG_CFLAGS" ]; then
-		PNG_CFLAGS=`cat ${cache}/exec-PNG_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_CFLAGS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_png}" != "" ]; then
+	if [ -e "${prefix_png}/bin/libpng-config" ]; then
+		PNG_CFLAGS=`${prefix_png}/bin/libpng-config --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	PNG_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libpng-config" ]; then
-			if [ -f "${path}/libpng-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-PNG_CFLAGS" ]; then
+			PNG_CFLAGS=`cat ${cache}/exec-PNG_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		PNG_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/libpng-config" ]; then
 				PNG_CFLAGS=`${path}/libpng-config --cflags`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$PNG_CFLAGS" > ${cache}/exec-PNG_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_CFLAGS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$PNG_CFLAGS" > ${cache}/exec-PNG_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_CFLAGS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-PNG_LOPTS" ]; then
-		PNG_LOPTS=`cat ${cache}/exec-PNG_LOPTS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_LOPTS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_png}" != "" ]; then
+	if [ -e "${prefix_png}/bin/libpng-config" ]; then
+		PNG_LOPTS=`${prefix_png}/bin/libpng-config --L_opts`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	PNG_LOPTS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libpng-config" ]; then
-			if [ -f "${path}/libpng-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-PNG_LOPTS" ]; then
+			PNG_LOPTS=`cat ${cache}/exec-PNG_LOPTS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_LOPTS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		PNG_LOPTS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/libpng-config" ]; then
 				PNG_LOPTS=`${path}/libpng-config --L_opts`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$PNG_LOPTS" > ${cache}/exec-PNG_LOPTS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_LOPTS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$PNG_LOPTS" > ${cache}/exec-PNG_LOPTS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_LOPTS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-PNG_LIBS" ]; then
-		PNG_LIBS=`cat ${cache}/exec-PNG_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_LIBS`
-		MK_CACHED="Yes"
+
+if [ "${prefix_png}" != "" ]; then
+	if [ -e "${prefix_png}/bin/libpng-config" ]; then
+		PNG_LIBS=`${prefix_png}/bin/libpng-config --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	PNG_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libpng-config" ]; then
-			if [ -f "${path}/libpng-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-PNG_LIBS" ]; then
+			PNG_LIBS=`cat ${cache}/exec-PNG_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-PNG_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		PNG_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/libpng-config" ]; then
 				PNG_LIBS=`${path}/libpng-config --libs`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$PNG_LIBS" > ${cache}/exec-PNG_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_LIBS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$PNG_LIBS" > ${cache}/exec-PNG_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-PNG_LIBS
 	fi
 fi
 PNG_LIBS="${PNG_LOPTS} ${PNG_LIBS}"
 if [ "${PNG_VERSION}" != "" ]; then
-echo "yes, found ${PNG_VERSION}"
-echo "yes, found ${PNG_VERSION}" >> config.log
+if [ "${prefix_png}" != "" ]; then
+echo "yes ($PNG_VERSION in ${prefix_png})"
+echo "yes ($PNG_VERSION in ${prefix_png})" >> config.log
+else
+echo "yes ($PNG_VERSION)"
+echo "yes ($PNG_VERSION)" >> config.log
+fi;
 $ECHO_N "checking whether libpng works..."
 $ECHO_N "checking whether libpng works..." >> config.log
 MK_CACHED="No"
@@ -6230,23 +6107,33 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PNG
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_PNG}" != "no" ]; then
+if [ "${HAVE_PNG}" = "yes" ]; then
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
-echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
-echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
 echo "#ifndef PNG_CFLAGS" > config/png_cflags.h
 echo "#define PNG_CFLAGS \"$PNG_CFLAGS\"" >> config/png_cflags.h
 echo "#endif" >> config/png_cflags.h
 echo "hdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
+echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
 echo "#ifndef PNG_LIBS" > config/png_libs.h
 echo "#define PNG_LIBS \"$PNG_LIBS\"" >> config/png_libs.h
 echo "#endif" >> config/png_libs.h
 echo "hdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+else
+echo "#undef PNG_CFLAGS" >config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef PNG_LIBS" >config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
 fi;
+else
+if [ "${prefix_png}" != "" ]; then
+echo "no (not in ${prefix_png})"
+echo "no (not in ${prefix_png})" >> config.log
 else
 echo "no"
 echo "no" >> config.log
+fi;
 echo "#undef HAVE_PNG" >config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef PNG_CFLAGS" >config/png_cflags.h
@@ -6271,65 +6158,65 @@ echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_PNG" >config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
-PNG_CFLAGS=""""
+PNG_CFLAGS=""
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
-PNG_LIBS=""""
+PNG_LIBS=""
 echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
 echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
 	fi
 else
 echo "#undef ENABLE_GUI" >config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
-SUBDIR_gui=""""
+SUBDIR_gui=""
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
 echo "#undef HAVE_SDL" >config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
-SDL_CFLAGS=""""
+SDL_CFLAGS=""
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-SDL_LIBS=""""
+SDL_LIBS=""
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
 echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#undef HAVE_GLX" >config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""""
+GLX_CFLAGS=""
 echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
 echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""""
+GLX_LIBS=""
 echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
 echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 echo "#undef HAVE_WGL" >config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
-WGL_CFLAGS=""""
+WGL_CFLAGS=""
 echo "WGL_CFLAGS=$WGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"WGL_CFLAGS\"] = \"$WGL_CFLAGS\"" >>configure.lua
-WGL_LIBS=""""
+WGL_LIBS=""
 echo "WGL_LIBS=$WGL_LIBS" >>Makefile.config
 echo "mdefs[\"WGL_LIBS\"] = \"$WGL_LIBS\"" >>configure.lua
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
-OPENGL_CFLAGS=""""
+OPENGL_CFLAGS=""
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-OPENGL_LIBS=""""
+OPENGL_LIBS=""
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""""
+FREETYPE_CFLAGS=""
 echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
 echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""""
+FREETYPE_LIBS=""
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
-JPEG_CFLAGS=""""
+JPEG_CFLAGS=""
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
 echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-JPEG_LIBS=""""
+JPEG_LIBS=""
 echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
 echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 fi
@@ -6430,45 +6317,46 @@ $ECHO_N "checking for Berkeley DB 4.x..." >> config.log
 DB4_CFLAGS=""
 DB4_LIBS=""
 DB4_VERSION=""
-for path in /usr /usr/local /opt; do
+
+for path in  /usr /usr/local /opt; do
 	if [ -e "${path}/include/db4.7" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.7"
+		DB4_CFLAGS="-I${path}/include/db4.7 -I${path}/include"
 		DB4_VERSION="4.7"
 	elif [ -e "${path}/include/db4.6" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.6"
+		DB4_CFLAGS="-I${path}/include/db4.6 -I${path}/include"
 		DB4_VERSION="4.6"
 	elif [ -e "${path}/include/db4.5" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.5"
+		DB4_CFLAGS="-I${path}/include/db4.5 -I${path}/include"
 		DB4_VERSION="4.5"
 	elif [ -e "${path}/include/db4.4" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.4"
+		DB4_CFLAGS="-I${path}/include/db4.4 -I${path}/include"
 		DB4_VERSION="4.4"
 	elif [ -e "${path}/include/db4.3" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.3"
+		DB4_CFLAGS="-I${path}/include/db4.3 -I${path}/include"
 		DB4_VERSION="4.3"
 	elif [ -e "${path}/include/db4.2" ]; then
-		DB4_CFLAGS="-I${path}/include/db4.2"
+		DB4_CFLAGS="-I${path}/include/db4.2 -I${path}/include"
 		DB4_VERSION="4.2"
 	elif [ -e "${path}/include/db47" ]; then
-		DB4_CFLAGS="-I${path}/include/db47"
+		DB4_CFLAGS="-I${path}/include/db47 -I${path}/include"
 		DB4_VERSION="4.7"
 	elif [ -e "${path}/include/db46" ]; then
-		DB4_CFLAGS="-I${path}/include/db46"
+		DB4_CFLAGS="-I${path}/include/db46 -I${path}/include"
 		DB4_VERSION="4.6"
 	elif [ -e "${path}/include/db45" ]; then
-		DB4_CFLAGS="-I${path}/include/db45"
+		DB4_CFLAGS="-I${path}/include/db45 -I${path}/include"
 		DB4_VERSION="4.5"
 	elif [ -e "${path}/include/db44" ]; then
-		DB4_CFLAGS="-I${path}/include/db44"
+		DB4_CFLAGS="-I${path}/include/db44 -I${path}/include"
 		DB4_VERSION="4.4"
 	elif [ -e "${path}/include/db43" ]; then
-		DB4_CFLAGS="-I${path}/include/db43"
+		DB4_CFLAGS="-I${path}/include/db43 -I${path}/include"
 		DB4_VERSION="4.3"
 	elif [ -e "${path}/include/db42" ]; then
-		DB4_CFLAGS="-I${path}/include/db42"
+		DB4_CFLAGS="-I${path}/include/db42 -I${path}/include"
 		DB4_VERSION="4.2"
 	elif [ -e "${path}/include/db4" ]; then
-		DB4_CFLAGS="-I${path}/include/db4"
+		DB4_CFLAGS="-I${path}/include/db4 -I${path}/include"
 		DB4_VERSION="4"
 	fi
 	case "${DB4_VERSION}" in
@@ -6524,8 +6412,20 @@ for path in /usr /usr/local /opt; do
 	esac
 done
 if [ "${DB4_VERSION}" != "" ]; then
-echo "yes, found ${DB4_VERSION}"
-echo "yes, found ${DB4_VERSION}" >> config.log
+if [ "" != "" ]; then
+echo "yes ($DB4_VERSION in )"
+echo "yes ($DB4_VERSION in )" >> config.log
+else
+echo "yes ($DB4_VERSION)"
+echo "yes ($DB4_VERSION)" >> config.log
+fi;
+MK_VERSION_MAJOR=`echo "$DB4_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt ${prefix_db4} ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -ge ${prefix_db4} ]; then
+	MK_VERSION_OK="yes";
+fi
 $ECHO_N "checking whether DB4 works..."
 $ECHO_N "checking whether DB4 works..." >> config.log
 MK_CACHED="No"
@@ -6540,6 +6440,7 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <db.h>
+
 int main(int argc, char *argv[]) {
 	DB *db;
 	db_create(&db, NULL, 0);
@@ -6578,23 +6479,33 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DB4
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_DB4}" != "" ]; then
+if [ "${HAVE_DB4}" = "yes" ]; then
 echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
 echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
-echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
-echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 echo "#ifndef DB4_CFLAGS" > config/db4_cflags.h
 echo "#define DB4_CFLAGS \"$DB4_CFLAGS\"" >> config/db4_cflags.h
 echo "#endif" >> config/db4_cflags.h
 echo "hdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
+echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
+echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 echo "#ifndef DB4_LIBS" > config/db4_libs.h
 echo "#define DB4_LIBS \"$DB4_LIBS\"" >> config/db4_libs.h
 echo "#endif" >> config/db4_libs.h
 echo "hdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
+else
+echo "#undef DB4_CFLAGS" >config/db4_cflags.h
+echo "hdefs[\"DB4_CFLAGS\"] = nil" >>configure.lua
+echo "#undef DB4_LIBS" >config/db4_libs.h
+echo "hdefs[\"DB4_LIBS\"] = nil" >>configure.lua
 fi;
+else
+if [ "" != "" ]; then
+echo "no (not in )"
+echo "no (not in )" >> config.log
 else
 echo "no"
 echo "no" >> config.log
+fi;
 echo "#undef HAVE_DB4" >config/have_db4.h
 echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
 fi;
@@ -6615,10 +6526,10 @@ echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
 else
 echo "#undef HAVE_DB4" >config/have_db4.h
 echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
-DB4_CFLAGS=""""
+DB4_CFLAGS=""
 echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
 echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
-DB4_LIBS=""""
+DB4_LIBS=""
 echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
 echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 fi
@@ -6626,8 +6537,13 @@ if [ "${enable_threads}" != "no" ]
  then
 $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
+if [ "" != "" ]; then
+PTHREADS_CFLAGS="-I/include"
+PTHREADS_LIBS="-L/lib -lpthread"
+else
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
+fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -6793,40 +6709,70 @@ PTHREADS_CFLAGS=""
 PTHREADS_LIBS=""
 $ECHO_N "checking for -pthread (common paths)..."
 $ECHO_N "checking for -pthread (common paths)..." >> config.log
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
+if [ -e  "/lib/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/lib"
+fi;
+if [ -e  "/usr/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/include/pthreads"
 fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
+if [ -e  "/usr/local/include/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include"
 fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+if [ -e  "/usr/local/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
 fi;
-if [ -f "/usr/local/lib/libpthread.a" ]; then
+if [ -e  "/lib/libpthread.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthread"
+fi;
+if [ -e  "/lib/libpthreadGC1.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGC1"
+fi;
+if [ -e  "/lib/libpthreadGC1d.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGC1d"
+fi;
+if [ -e  "/lib/libpthreadGCE1.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGCE1"
+fi;
+if [ -e  "/lib/libpthreadGCE1d.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGCE1d"
+fi;
+if [ -e  "/lib/libpthreadGC2.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGC2"
+fi;
+if [ -e  "/lib/libpthreadGC2d.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGC2d"
+fi;
+if [ -e  "/lib/libpthreadGCE2.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGCE2"
+fi;
+if [ -e  "/lib/libpthreadGCE2d.a" ]; then
+PTHREADS_LIBS="-L/lib -lpthreadGCE2d"
+fi;
+if [ -e  "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthread"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC1.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC1d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE1.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE1d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC2.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC2d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE2.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
 fi;
 MK_CACHED="No"
@@ -6914,13 +6860,17 @@ $ECHO_N "checking for the X/Open Threads Extension..."
 $ECHO_N "checking for the X/Open Threads Extension..." >> config.log
 case "${host}" in
 *-*-freebsd*)
-	PTHREADS_XOPEN_CFLAGS=""
-	;;
+PTHREADS_XOPEN_CFLAGS=""
+;;
 *)
-	PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-	;;
+PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+;;
 esac
+if [ "" != "" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthread"
+else
 PTHREADS_XOPEN_LIBS="-lpthread"
+fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -6997,40 +6947,70 @@ else
 PTHREADS_XOPEN_LIBS=""
 $ECHO_N "checking for the X/Open Threads Extension (common paths)..."
 $ECHO_N "checking for the X/Open Threads Extension (common paths)..." >> config.log
-if [ -f "/usr/local/lib/libpthread.a" ]; then
+if [ -e  "/lib/libpthread.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthread"
+fi;
+if [ -e  "/lib/libpthreadGC1.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGC1"
+fi;
+if [ -e  "/lib/libpthreadGC1d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGC1d"
+fi;
+if [ -e  "/lib/libpthreadGCE1.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGCE1"
+fi;
+if [ -e  "/lib/libpthreadGCE1d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGCE1d"
+fi;
+if [ -e  "/lib/libpthreadGC2.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGC2"
+fi;
+if [ -e  "/lib/libpthreadGC2d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGC2d"
+fi;
+if [ -e  "/lib/libpthreadGCE2.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGCE2"
+fi;
+if [ -e  "/lib/libpthreadGCE2d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/lib -lpthreadGCE2d"
+fi;
+if [ -e  "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC1.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC1d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE1.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE1d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC2.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2"
 fi;
-if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGC2d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2d"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE2.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2"
 fi;
-if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
+if [ -e  "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2d"
 fi;
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
+if [ -e  "/lib/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/lib"
+fi;
+if [ -e  "/usr/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/include/pthreads"
 fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
+if [ -e  "/usr/local/include/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include"
 fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+if [ -e  "/usr/local/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
 fi;
 MK_CACHED="No"
@@ -7286,16 +7266,16 @@ echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
 echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
-PTHREADS_CFLAGS=""""
+PTHREADS_CFLAGS=""
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
 echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-PTHREADS_LIBS=""""
+PTHREADS_LIBS=""
 echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
 echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
-PTHREADS_XOPEN_CFLAGS=""""
+PTHREADS_XOPEN_CFLAGS=""
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
 echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
-PTHREADS_XOPEN_LIBS=""""
+PTHREADS_XOPEN_LIBS=""
 echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
 echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 	if [ "${enable_warnings}" = "yes" ]
@@ -7378,21 +7358,32 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" = "no" ]; then
 $ECHO_N "checking whether gettext requires -lintl..."
 $ECHO_N "checking whether gettext requires -lintl..." >> config.log
-if [ -e /usr/include/libintl.h ]; then
+if [ "${prefix_gettext}" != "" ]; then
+if [ -e  "${prefix_gettext}/include/libintl.h" ]; then
+GETTEXT_CFLAGS="-I${prefix_gettext}/include"
+GETTEXT_LIBS="-L${prefix_gettext}/lib -lintl"
+fi;
+else
+if [ -e  "${prefix_gettext}/include/libintl.h" ]; then
+GETTEXT_CFLAGS="-I${prefix_gettext}/include"
+GETTEXT_LIBS="-L${prefix_gettext}/lib -lintl"
+fi;
+if [ -e  "/usr/include/libintl.h" ]; then
 GETTEXT_CFLAGS="-I/usr/include"
 GETTEXT_LIBS="-L/usr/lib -lintl"
 fi;
-if [ -e /usr/local/include/libintl.h ]; then
+if [ -e  "/usr/local/include/libintl.h" ]; then
 GETTEXT_CFLAGS="-I/usr/local/include"
 GETTEXT_LIBS="-L/usr/local/lib -lintl"
 fi;
-if [ -e /opt/include/libintl.h ]; then
+if [ -e  "/opt/include/libintl.h" ]; then
 GETTEXT_CFLAGS="-I/opt/include"
 GETTEXT_LIBS="-L/opt/lib -lintl"
 fi;
-if [ -e /opt/local/include/libintl.h ]; then
+if [ -e  "/opt/local/include/libintl.h" ]; then
 GETTEXT_CFLAGS="-I/opt/local/include"
 GETTEXT_LIBS="-L/opt/local/lib -lintl"
+fi;
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -7449,36 +7440,47 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" = "yes" ]; then
+echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
+echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
 echo "#define GETTEXT_CFLAGS \"$GETTEXT_CFLAGS\"" >> config/gettext_cflags.h
 echo "#endif" >> config/gettext_cflags.h
 echo "hdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
+echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
+echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "#ifndef GETTEXT_LIBS" > config/gettext_libs.h
 echo "#define GETTEXT_LIBS \"$GETTEXT_LIBS\"" >> config/gettext_libs.h
 echo "#endif" >> config/gettext_libs.h
 echo "hdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
-echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
-echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
-echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
-echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 else
 $ECHO_N "checking whether -lintl requires -liconv..."
 $ECHO_N "checking whether -lintl requires -liconv..." >> config.log
-if [ -e /usr/include/iconv.h ]; then
+if [ "${prefix_gettext}" != "" ]; then
+if [ -e  "${prefix_gettext}/include/iconv.h" ]; then
+GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I${prefix_gettext}/include"
+GETTEXT_LIBS="${GETTEXT_LIBS} -L${prefix_gettext}/lib -liconv"
+fi;
+else
+if [ -e  "${prefix_gettext}/include/iconv.h" ]; then
+GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I${prefix_gettext}/include"
+GETTEXT_LIBS="${GETTEXT_LIBS} -L${prefix_gettext}/lib -liconv"
+fi;
+if [ -e  "/usr/include/iconv.h" ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/usr/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/usr/lib -liconv"
 fi;
-if [ -e /usr/local/include/iconv.h ]; then
+if [ -e  "/usr/local/include/iconv.h" ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/usr/local/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/usr/local/lib -liconv"
 fi;
-if [ -e /opt/include/iconv.h ]; then
+if [ -e  "/opt/include/iconv.h" ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/opt/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/opt/lib -liconv"
 fi;
-if [ -e /opt/local/include/iconv.h ]; then
+if [ -e  "/opt/local/include/iconv.h" ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/opt/local/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/opt/local/lib -liconv"
+fi;
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -7534,34 +7536,31 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_GETTEXT}" != "" ]; then
+if [ "${HAVE_GETTEXT}" = "yes" ]; then
+echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
+echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
 echo "#define GETTEXT_CFLAGS \"$GETTEXT_CFLAGS\"" >> config/gettext_cflags.h
 echo "#endif" >> config/gettext_cflags.h
 echo "hdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
+echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
+echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "#ifndef GETTEXT_LIBS" > config/gettext_libs.h
 echo "#define GETTEXT_LIBS \"$GETTEXT_LIBS\"" >> config/gettext_libs.h
 echo "#endif" >> config/gettext_libs.h
 echo "hdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
-echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
-echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
-echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
-echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
+else
+echo "#undef GETTEXT_CFLAGS" >config/gettext_cflags.h
+echo "hdefs[\"GETTEXT_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GETTEXT_LIBS" >config/gettext_libs.h
+echo "hdefs[\"GETTEXT_LIBS\"] = nil" >>configure.lua
 fi;
 fi;
 else
-echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
-echo "#define GETTEXT_CFLAGS \"$GETTEXT_CFLAGS\"" >> config/gettext_cflags.h
-echo "#endif" >> config/gettext_cflags.h
-echo "hdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
-echo "#ifndef GETTEXT_LIBS" > config/gettext_libs.h
-echo "#define GETTEXT_LIBS \"$GETTEXT_LIBS\"" >> config/gettext_libs.h
-echo "#endif" >> config/gettext_libs.h
-echo "hdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
-echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
-echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
-echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
-echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
+echo "#undef GETTEXT_CFLAGS" >config/gettext_cflags.h
+echo "hdefs[\"GETTEXT_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GETTEXT_LIBS" >config/gettext_libs.h
+echo "hdefs[\"GETTEXT_LIBS\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_GETTEXT}" != "yes" ]
  then
@@ -7584,7 +7583,7 @@ echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 else
 echo "#undef ENABLE_MATH" >config/enable_math.h
 echo "hdefs[\"ENABLE_MATH\"] = nil" >>configure.lua
-SUBDIR_math=""""
+SUBDIR_math=""
 echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
 echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 fi
@@ -8261,7 +8260,7 @@ echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 else
 echo "#undef ENABLE_VG" >config/enable_vg.h
 echo "hdefs[\"ENABLE_VG\"] = nil" >>configure.lua
-SUBDIR_vg=""""
+SUBDIR_vg=""
 echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
 echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 fi
@@ -8278,7 +8277,7 @@ echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 else
 echo "#undef ENABLE_RG" >config/enable_rg.h
 echo "hdefs[\"ENABLE_RG\"] = nil" >>configure.lua
-SUBDIR_rg=""""
+SUBDIR_rg=""
 echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
 echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 fi
@@ -8295,7 +8294,7 @@ echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 else
 echo "#undef ENABLE_DEV" >config/enable_dev.h
 echo "hdefs[\"ENABLE_DEV\"] = nil" >>configure.lua
-SUBDIR_dev=""""
+SUBDIR_dev=""
 echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
 echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 fi
