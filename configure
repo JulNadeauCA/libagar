@@ -57,6 +57,9 @@ do
 	--target=*)
 	    target=$optarg
 	    ;;
+	--byte-order=*)
+	    byte_order=$optarg
+	    ;;
 	--prefix=*)
 	    prefix=$optarg
 	    ;;
@@ -2946,6 +2949,18 @@ echo "skipping (no long double)" >> config.log
 fi;
 $ECHO_N "checking for byte order..."
 $ECHO_N "checking for byte order..." >> config.log
+if [ "${byte_order}" != "" ]; then
+if [ "${byte_order}" = "LE" ]; then
+_MK_BYTE_ORDER="LE"
+else
+if [ "${byte_order}" = "BE" ]; then
+_MK_BYTE_ORDER="BE"
+else
+echo "Usage: --byte-order=[LE|BE]"
+exit 1
+fi;
+fi;
+else
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
@@ -2982,8 +2997,8 @@ if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
 	_MK_BYTE_ORDER="LE"
 	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
 		echo "*"
-		echo "* Unable to determine host byte order (1)."
-		echo "* Please specify --byte-order."
+		echo "* Unable to auto-determine host byte order. Please re-run ./configure"
+		echo "* with --byte-order=LE or --byte-order=BE."
 		echo "*"
 		exit 1
 	fi
@@ -2992,14 +3007,15 @@ else
 		_MK_BYTE_ORDER="BE"
 		if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
 			echo "*"
-			echo "* Unable to determine host byte order (2)."
-			echo "* Please specify --byte-order."
+			echo "* Unable to auto-determine host byte order. Please re-run ./configure"
+			echo "* with --byte-order=LE or --byte-order=BE."
 			echo "*"
 			exit 1
 		fi
 	fi
 fi
-rm -f $testdir/conftest$EXECSUFFIX
+rm -f conftest.c $testdir/conftest $testdir/conftest.dump
+fi;
 if [ "$_MK_BYTE_ORDER" = "LE" ]; then
 echo "little-endian"
 echo "little-endian" >> config.log
@@ -3021,7 +3037,6 @@ echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
-rm -f conftest.c $testdir/conftest$EXECSUFFIX $testdir/conftest.dump
 $ECHO_N "checking for dlopen() interface..."
 $ECHO_N "checking for dlopen() interface..." >> config.log
 DSO_CFLAGS=""
