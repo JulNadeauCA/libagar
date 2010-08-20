@@ -2946,249 +2946,82 @@ echo "skipping (no long double)" >> config.log
 fi;
 $ECHO_N "checking for byte order..."
 $ECHO_N "checking for byte order..." >> config.log
-echo ""
-echo "" >> config.log
-$ECHO_N "checking for BIG_ENDIAN..."
-$ECHO_N "checking for BIG_ENDIAN..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-MK_RUN_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-_MK_BIG_ENDIAN" ]; then
-		_MK_BIG_ENDIAN=`cat ${cache}/ctest-_MK_BIG_ENDIAN`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_BIG_ENDIAN`
-		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_BIG_ENDIAN`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
+cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
 int
 main(int argc, char *argv[])
 {
 #if BYTE_ORDER == BIG_ENDIAN
-	return (0);
+	static volatile char *bo = "BiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiAN";
 #else
-	return (1);
+	static volatile char *bo = "LiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiAN";
 #endif
+	int c = 0;
+	volatile char *p = bo;
+	while (*p != '\0') { c *= (int)*p; }
+	return (c>123?c:456);
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
+echo "$CC $CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "Failed to compile test program for byte order ($?)"
+	echo "Failed to compile test program for byte order ($?)" >> config.log
+	exit 1
 fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-_MK_BIG_ENDIAN="yes"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-echo "#ifndef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
-echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
-echo "#endif" >> config/_mk_big_endian.h
-echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-else
-echo "no (test program failed)"
-echo "no (test program failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_BIG_ENDIAN="no"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
-echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
-fi;
-else
-echo "no (compilation failed)"
-echo "no (compilation failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_BIG_ENDIAN="no"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
-echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$_MK_BIG_ENDIAN" > ${cache}/ctest-_MK_BIG_ENDIAN
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_BIG_ENDIAN
-	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_BIG_ENDIAN
-fi
-rm -f conftest.c $testdir/conftest
-if [ "${_MK_BIG_ENDIAN}" = "yes" ]; then
-_MK_LITTLE_ENDIAN="no"
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-else
-$ECHO_N "checking for LITTLE_ENDIAN..."
-$ECHO_N "checking for LITTLE_ENDIAN..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-MK_RUN_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-_MK_LITTLE_ENDIAN" ]; then
-		_MK_LITTLE_ENDIAN=`cat ${cache}/ctest-_MK_LITTLE_ENDIAN`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_LITTLE_ENDIAN`
-		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sys/param.h>
-int
-main(int argc, char *argv[])
-{
-#if BYTE_ORDER == LITTLE_ENDIAN
-	return (0);
-#else
-	return (1);
-#endif
-}
+rm -f conftest.c
 
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
+_MK_BYTE_ORDER=""
+_MK_BYTE_ORDER_LESTRING="L   i   T   T   L   e   E   n   D"
+_MK_BYTE_ORDER_BESTRING="B   i   G   E   n   D   i   A   N"
+od -tc $testdir/conftest$EXECSUFFIX > $testdir/conftest.dump
+
+if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
+	_MK_BYTE_ORDER="LE"
+	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
+		echo "*"
+		echo "* Unable to determine host byte order (1)."
+		echo "* Please specify --byte-order."
+		echo "*"
+		exit 1
+	fi
+else
+	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
+		_MK_BYTE_ORDER="BE"
+		if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
+			echo "*"
+			echo "* Unable to determine host byte order (2)."
+			echo "* Please specify --byte-order."
+			echo "*"
+			exit 1
+		fi
 	fi
 fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
+rm -f $testdir/conftest$EXECSUFFIX
+if [ "$_MK_BYTE_ORDER" = "LE" ]; then
+echo "little-endian"
+echo "little-endian" >> config.log
 _MK_LITTLE_ENDIAN="yes"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo "#ifndef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
 echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_endian.h
 echo "#endif" >> config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-else
-echo "no (test program failed)"
-echo "no (test program failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-fi;
-else
-echo "no (compilation failed)"
-echo "no (compilation failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$_MK_LITTLE_ENDIAN" > ${cache}/ctest-_MK_LITTLE_ENDIAN
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
-	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
-fi
-rm -f conftest.c $testdir/conftest
-if [ "${_MK_LITTLE_ENDIAN}" = "yes" ]; then
-_MK_BIG_ENDIAN="no"
 echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
 echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 else
-$ECHO_N "checking for little endian byte order..."
-$ECHO_N "checking for little endian byte order..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-MK_RUN_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-_MK_LITTLE_ENDIAN" ]; then
-		_MK_LITTLE_ENDIAN=`cat ${cache}/ctest-_MK_LITTLE_ENDIAN`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_LITTLE_ENDIAN`
-		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int
-main(int argc, char *argv[])
-{
-	union {
-		long l;
-		char c[sizeof (long)];
-	} u;
-	u.l = 1;
-	return (u.c[sizeof (long) - 1] == 1);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-_MK_LITTLE_ENDIAN="yes"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#ifndef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
-echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_endian.h
-echo "#endif" >> config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-else
-echo "no (test program failed)"
-echo "no (test program failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-fi;
-else
-echo "no (compilation failed)"
-echo "no (compilation failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$_MK_LITTLE_ENDIAN" > ${cache}/ctest-_MK_LITTLE_ENDIAN
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
-	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
-fi
-rm -f conftest.c $testdir/conftest
-if [ "${MK_COMPILE_STATUS}" != "OK" ]; then
-echo "Unable to determine byte order"
-exit 1
-fi;
-if [ "${_MK_LITTLE_ENDIAN}" = "no" ]; then
+echo "big-endian"
+echo "big-endian" >> config.log
 _MK_BIG_ENDIAN="yes"
 echo "#ifndef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
 echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
 echo "#endif" >> config/_mk_big_endian.h
 echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
-fi;
-fi;
+rm -f conftest.c $testdir/conftest$EXECSUFFIX $testdir/conftest.dump
 $ECHO_N "checking for dlopen() interface..."
 $ECHO_N "checking for dlopen() interface..." >> config.log
 DSO_CFLAGS=""
@@ -3523,8 +3356,6 @@ echo "#endif" >> config/dso_libs.h
 echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 $ECHO_N "checking for shl_load() interface..."
 $ECHO_N "checking for shl_load() interface..." >> config.log
-DSO_CFLAGS=""
-DSO_LIBS=""
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
 TEST_HEADERS="Yes"
 echo > conftest.c
@@ -3553,9 +3384,9 @@ echo "#undef HAVE_DL_H" >config/have_dl_h.h
 echo "hdefs[\"HAVE_DL_H\"] = nil" >>configure.lua
 fi;
 if [ "" != "" ]; then
-DSO_LIBS="-L -ldld"
+SHL_LOAD_LIBS="-L -ldld"
 else
-DSO_LIBS="-ldld"
+SHL_LOAD_LIBS="-ldld"
 fi;
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -3586,8 +3417,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${DSO_LIBS} -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${DSO_LIBS} -o $testdir/conftest conftest.c 2>>config.log
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SHL_LOAD_LIBS} -o $testdir/conftest conftest.c 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -3618,23 +3449,16 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SHL_LOAD}" = "yes" ]; then
-echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
-echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "#ifndef DSO_CFLAGS" > config/dso_cflags.h
-echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> config/dso_cflags.h
-echo "#endif" >> config/dso_cflags.h
-echo "hdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
-echo "#ifndef DSO_LIBS" > config/dso_libs.h
-echo "#define DSO_LIBS \"$DSO_LIBS\"" >> config/dso_libs.h
-echo "#endif" >> config/dso_libs.h
-echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
+echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
+echo "#ifndef HAVE_SHL_LOAD" > config/have_shl_load.h
+echo "#define HAVE_SHL_LOAD \"$HAVE_SHL_LOAD\"" >> config/have_shl_load.h
+echo "#endif" >> config/have_shl_load.h
+echo "hdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
+DSO_LIBS="$DSO_LIBS $SHL_LOAD_LIBS"
 else
-echo "#undef DSO_CFLAGS" >config/dso_cflags.h
-echo "hdefs[\"DSO_CFLAGS\"] = nil" >>configure.lua
-echo "#undef DSO_LIBS" >config/dso_libs.h
-echo "hdefs[\"DSO_LIBS\"] = nil" >>configure.lua
+echo "#undef HAVE_SHL_LOAD" >config/have_shl_load.h
+echo "hdefs[\"HAVE_SHL_LOAD\"] = nil" >>configure.lua
 fi;
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
@@ -5783,8 +5607,8 @@ JPEG_LIBS="-L/opt/lib -ljpeg"
 fi;
 fi;
 if [ "${JPEG_LIBS}" != "" ]; then
-echo "ok"
-echo "ok" >> config.log
+echo "yes"
+echo "yes" >> config.log
 $ECHO_N "checking whether libjpeg works..."
 $ECHO_N "checking whether libjpeg works..." >> config.log
 MK_CACHED="No"
