@@ -57,6 +57,9 @@ do
 	--target=*)
 	    target=$optarg
 	    ;;
+	--byte-order=*)
+	    byte_order=$optarg
+	    ;;
 	--prefix=*)
 	    prefix=$optarg
 	    ;;
@@ -93,6 +96,7 @@ do
 	    case "$arg" in
 	        *=*)
 	            eval "enable_${option}='$optarg'"
+	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
 	            eval "enable_${option}=yes"
@@ -110,6 +114,7 @@ do
 	    case "$arg" in
 	        *=*)
 	            eval "with_${option}='$optarg'"
+	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
 	            eval "with_${option}=yes"
@@ -357,8 +362,8 @@ echo "    --sbindir=DIR             Executables (for administrator) [PREFIX/sbin
 echo "    --srcdir=DIR              Source directory for concurrent build [.]"
 echo "    --sysconfdir=DIR          System configuration files [PREFIX/etc]"
 echo "    --testdir=DIR             Execute ./configure tests in directory [.]"
+echo "    --with-catman             Install cat files for manual pages [auto-detect]"
 echo "    --with-ctags              Generate ctags(1) tag files [no]"
-echo "    --with-cygwin             Use Cygwin compatibility layer [no]"
 echo "    --with-docs               Generate printable documentation [no]"
 echo "    --with-gettext            Use gettext for multi-language [auto-detect]"
 echo "    --with-libtool            Specify path to libtool [auto-detect]"
@@ -459,6 +464,22 @@ if [ "${HAVE_MANDOC}" = "no" ]; then
 	echo "NOMANLINKS=yes" >> Makefile.config
 else
 	echo "HAVE_MANDOC=yes" >> Makefile.config
+	if [ "${with_catman}" = "no" ]; then
+		echo "NOCATMAN=yes" >> Makefile.config
+	else
+		if [ "${with_catman}" = "yes" ]; then
+			echo "NOCATMAN=no" >> Makefile.config
+		else
+			case "${host}" in
+			*-*-freebsd*)
+				echo "NOCATMAN=yes" >> Makefile.config
+				;;
+			*)
+				echo "NOCATMAN=no" >> Makefile.config
+				;;
+			esac
+		fi
+	fi
 	if [ "${with_manpages}" = "no" ]; then
 		echo "NOMAN=yes" >> Makefile.config
 		echo "NOMANLINKS=yes" >> Makefile.config
@@ -1561,20 +1582,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f conftest.c $testdir/conftest
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-	if [ "${with_cygwin}" != "yes" ]; then
-		echo "*"
-		echo "* NOTE: Disabling Cygwin compatibility layer."
-		echo "* (Resulting binaries will not depend on Cygwin)"
-		echo "*"
-		CFLAGS="$CFLAGS -mno-cygwin"
-	else
-		echo "*"
-		echo "* NOTE: Enabling Cygwin compatibility layer."
-		echo "* (Resulting binaries will depend on Cygwin)"
-		echo "*"
-	fi
-fi
 echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -1606,18 +1613,16 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
-				if [ "$MK_EXEC_FOUND" = "Yes" ]; then
-					echo "yes."
-					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
-					break
-				fi
-				AGAR_VERSION=`${path}/agar-config --version`
-				MK_EXEC_FOUND="Yes"
-				MK_EXEC_FOUND_PATH="${path}/agar-config"
+		if [ -e "${path}/agar-config" ]; then
+			if [ "$MK_EXEC_FOUND" = "Yes" ]; then
+				echo "yes."
+				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+				break
 			fi
+			AGAR_VERSION=`${path}/agar-config --version`
+			MK_EXEC_FOUND="Yes"
+			MK_EXEC_FOUND_PATH="${path}/agar-config"
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1627,8 +1632,13 @@ if [ "${MK_CACHED}" = "No" ]; then
 	fi
 fi
 if [ "${AGAR_VERSION}" != "" ]; then
-echo "yes, found ${AGAR_VERSION}"
-echo "yes, found ${AGAR_VERSION}" >> config.log
+if [ "" != "" ]; then
+echo "yes ($AGAR_VERSION in )"
+echo "yes ($AGAR_VERSION in )" >> config.log
+else
+echo "yes ($AGAR_VERSION)"
+echo "yes ($AGAR_VERSION)" >> config.log
+fi;
 MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
 MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
@@ -1652,6 +1662,8 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 		fi
 	fi
 fi
+$ECHO_N "checking whether Agar works..."
+$ECHO_N "checking whether Agar works..." >> config.log
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
 if [ "${cache}" != "" ]; then
@@ -1664,12 +1676,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
-				AGAR_CFLAGS=`${path}/agar-config --cflags`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/agar-config" ]; then
+			AGAR_CFLAGS=`${path}/agar-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1689,12 +1699,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
-				AGAR_LIBS=`${path}/agar-config --libs`
-				MK_EXEC_FOUND="Yes"
-				break
-			fi
+		if [ -e "${path}/agar-config" ]; then
+			AGAR_LIBS=`${path}/agar-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1702,28 +1710,6 @@ if [ "${MK_CACHED}" = "No" ]; then
 		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_LIBS
 	fi
 fi
-echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
-echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
-echo "#ifndef AGAR_CFLAGS" > config/agar_cflags.h
-echo "#define AGAR_CFLAGS \"$AGAR_CFLAGS\"" >> config/agar_cflags.h
-echo "#endif" >> config/agar_cflags.h
-echo "hdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
-echo "#ifndef AGAR_LIBS" > config/agar_libs.h
-echo "#define AGAR_LIBS \"$AGAR_LIBS\"" >> config/agar_libs.h
-echo "#endif" >> config/agar_libs.h
-echo "hdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-echo "#undef AGAR_CFLAGS" >config/agar_cflags.h
-echo "hdefs[\"AGAR_CFLAGS\"] = nil" >>configure.lua
-echo "#undef AGAR_LIBS" >config/agar_libs.h
-echo "hdefs[\"AGAR_LIBS\"] = nil" >>configure.lua
-fi;
-$ECHO_N "checking whether Agar works..."
-$ECHO_N "checking whether Agar works..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -1780,6 +1766,40 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_AGAR}" = "yes" ]; then
+echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
+echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
+echo "#ifndef AGAR_CFLAGS" > config/agar_cflags.h
+echo "#define AGAR_CFLAGS \"$AGAR_CFLAGS\"" >> config/agar_cflags.h
+echo "#endif" >> config/agar_cflags.h
+echo "hdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
+echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
+echo "#ifndef AGAR_LIBS" > config/agar_libs.h
+echo "#define AGAR_LIBS \"$AGAR_LIBS\"" >> config/agar_libs.h
+echo "#endif" >> config/agar_libs.h
+echo "hdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
+else
+echo "#undef AGAR_CFLAGS" >config/agar_cflags.h
+echo "hdefs[\"AGAR_CFLAGS\"] = nil" >>configure.lua
+AGAR_CFLAGS=""
+echo "#undef AGAR_LIBS" >config/agar_libs.h
+echo "hdefs[\"AGAR_LIBS\"] = nil" >>configure.lua
+AGAR_LIBS=""
+fi;
+else
+if [ "" != "" ]; then
+echo "no (not in )"
+echo "no (not in )" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "#undef AGAR_CFLAGS" >config/agar_cflags.h
+echo "hdefs[\"AGAR_CFLAGS\"] = nil" >>configure.lua
+echo "#undef AGAR_LIBS" >config/agar_libs.h
+echo "hdefs[\"AGAR_LIBS\"] = nil" >>configure.lua
+fi;
 if [ "${HAVE_AGAR}" != "yes" ]; then
 echo "* "
 echo "* " >> config.log
@@ -1805,143 +1825,168 @@ fi;
 $ECHO_N "checking for agar-dev (http://libagar.org/)..."
 $ECHO_N "checking for agar-dev (http://libagar.org/)..." >> config.log
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-MK_EXEC_UNIQUE="No"
-MK_EXEC_FOUND_PATH=""
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_DEV_VERSION" ]; then
-		AGAR_DEV_VERSION=`cat ${cache}/exec-AGAR_DEV_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_VERSION`
-		MK_EXEC_FOUND_PATH=`cat ${cache}/exec-found-path-AGAR_DEV_VERSION`
-		MK_CACHED="Yes"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/agar-dev-config" ]; then
+		AGAR_DEV_VERSION=`/bin/agar-dev-config --version`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_DEV_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-dev-config" ]; then
-			if [ -f "${path}/agar-dev-config" ]; then
-				if [ "$MK_EXEC_FOUND" = "Yes" ]; then
-					echo "yes."
-					echo "* Warning: Multiple 'agar-dev-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-					echo "* Warning: Multiple 'agar-dev-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
-					break
-				fi
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-AGAR_DEV_VERSION" ]; then
+			AGAR_DEV_VERSION=`cat ${cache}/exec-AGAR_DEV_VERSION`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_VERSION`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		AGAR_DEV_VERSION=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/agar-dev-config" ]; then
 				AGAR_DEV_VERSION=`${path}/agar-dev-config --version`
 				MK_EXEC_FOUND="Yes"
-				MK_EXEC_FOUND_PATH="${path}/agar-dev-config"
+				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$AGAR_DEV_VERSION" > ${cache}/exec-AGAR_DEV_VERSION
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_VERSION
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_DEV_VERSION" > ${cache}/exec-AGAR_DEV_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_VERSION
-		echo $MK_EXEC_FOUND_PATH > ${cache}/exec-found-path-AGAR_DEV_VERSION
 	fi
 fi
 if [ "${AGAR_DEV_VERSION}" != "" ]; then
-echo "yes, found ${AGAR_DEV_VERSION}"
-echo "yes, found ${AGAR_DEV_VERSION}" >> config.log
-$ECHO_N "checking whether agar-dev works..."
-$ECHO_N "checking whether agar-dev works..." >> config.log
+if [ "" != "" ]; then
+echo "yes ($AGAR_DEV_VERSION in )"
+echo "yes ($AGAR_DEV_VERSION in )" >> config.log
+else
+echo "yes ($AGAR_DEV_VERSION)"
+echo "yes ($AGAR_DEV_VERSION)" >> config.log
+fi;
+$ECHO_N "checking whether Agar-DEV works..."
+$ECHO_N "checking whether Agar-DEV works..." >> config.log
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_CFLAGS" ]; then
-		AGAR_CFLAGS=`cat ${cache}/exec-AGAR_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_CFLAGS`
-		MK_CACHED="Yes"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/agar-config" ]; then
+		AGAR_CFLAGS=`/bin/agar-config --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-AGAR_CFLAGS" ]; then
+			AGAR_CFLAGS=`cat ${cache}/exec-AGAR_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		AGAR_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/agar-config" ]; then
 				AGAR_CFLAGS=`${path}/agar-config --cflags`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$AGAR_CFLAGS" > ${cache}/exec-AGAR_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_CFLAGS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_CFLAGS" > ${cache}/exec-AGAR_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_CFLAGS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_LIBS" ]; then
-		AGAR_LIBS=`cat ${cache}/exec-AGAR_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_LIBS`
-		MK_CACHED="Yes"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/agar-config" ]; then
+		AGAR_LIBS=`/bin/agar-config --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ -f "${path}/agar-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-AGAR_LIBS" ]; then
+			AGAR_LIBS=`cat ${cache}/exec-AGAR_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		AGAR_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/agar-config" ]; then
 				AGAR_LIBS=`${path}/agar-config --libs`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$AGAR_LIBS" > ${cache}/exec-AGAR_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_LIBS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_LIBS" > ${cache}/exec-AGAR_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_LIBS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_DEV_CFLAGS" ]; then
-		AGAR_DEV_CFLAGS=`cat ${cache}/exec-AGAR_DEV_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_CFLAGS`
-		MK_CACHED="Yes"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/agar-dev-config" ]; then
+		AGAR_DEV_CFLAGS=`/bin/agar-dev-config --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_DEV_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-dev-config" ]; then
-			if [ -f "${path}/agar-dev-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-AGAR_DEV_CFLAGS" ]; then
+			AGAR_DEV_CFLAGS=`cat ${cache}/exec-AGAR_DEV_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		AGAR_DEV_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/agar-dev-config" ]; then
 				AGAR_DEV_CFLAGS=`${path}/agar-dev-config --cflags`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$AGAR_DEV_CFLAGS" > ${cache}/exec-AGAR_DEV_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_CFLAGS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_DEV_CFLAGS" > ${cache}/exec-AGAR_DEV_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_CFLAGS
 	fi
 fi
 MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_DEV_LIBS" ]; then
-		AGAR_DEV_LIBS=`cat ${cache}/exec-AGAR_DEV_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_LIBS`
-		MK_CACHED="Yes"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/agar-dev-config" ]; then
+		AGAR_DEV_LIBS=`/bin/agar-dev-config --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_DEV_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-dev-config" ]; then
-			if [ -f "${path}/agar-dev-config" ]; then
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-AGAR_DEV_LIBS" ]; then
+			AGAR_DEV_LIBS=`cat ${cache}/exec-AGAR_DEV_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_DEV_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		AGAR_DEV_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/agar-dev-config" ]; then
 				AGAR_DEV_LIBS=`${path}/agar-dev-config --libs`
 				MK_EXEC_FOUND="Yes"
 				break
 			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$AGAR_DEV_LIBS" > ${cache}/exec-AGAR_DEV_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_LIBS
 		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_DEV_LIBS" > ${cache}/exec-AGAR_DEV_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_DEV_LIBS
 	fi
 fi
 MK_CACHED="No"
@@ -2002,23 +2047,35 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR_DEV
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-if [ "${HAVE_AGAR_DEV}" != "" ]; then
+if [ "${HAVE_AGAR_DEV}" = "yes" ]; then
 echo "AGAR_DEV_CFLAGS=$AGAR_DEV_CFLAGS" >>Makefile.config
 echo "mdefs[\"AGAR_DEV_CFLAGS\"] = \"$AGAR_DEV_CFLAGS\"" >>configure.lua
-echo "AGAR_DEV_LIBS=$AGAR_DEV_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_DEV_LIBS\"] = \"$AGAR_DEV_LIBS\"" >>configure.lua
 echo "#ifndef AGAR_DEV_CFLAGS" > config/agar_dev_cflags.h
 echo "#define AGAR_DEV_CFLAGS \"$AGAR_DEV_CFLAGS\"" >> config/agar_dev_cflags.h
 echo "#endif" >> config/agar_dev_cflags.h
 echo "hdefs[\"AGAR_DEV_CFLAGS\"] = \"$AGAR_DEV_CFLAGS\"" >>configure.lua
+echo "AGAR_DEV_LIBS=$AGAR_DEV_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_DEV_LIBS\"] = \"$AGAR_DEV_LIBS\"" >>configure.lua
 echo "#ifndef AGAR_DEV_LIBS" > config/agar_dev_libs.h
 echo "#define AGAR_DEV_LIBS \"$AGAR_DEV_LIBS\"" >> config/agar_dev_libs.h
 echo "#endif" >> config/agar_dev_libs.h
 echo "hdefs[\"AGAR_DEV_LIBS\"] = \"$AGAR_DEV_LIBS\"" >>configure.lua
+else
+echo "#undef AGAR_DEV_CFLAGS" >config/agar_dev_cflags.h
+echo "hdefs[\"AGAR_DEV_CFLAGS\"] = nil" >>configure.lua
+AGAR_DEV_CFLAGS=""
+echo "#undef AGAR_DEV_LIBS" >config/agar_dev_libs.h
+echo "hdefs[\"AGAR_DEV_LIBS\"] = nil" >>configure.lua
+AGAR_DEV_LIBS=""
 fi;
+else
+if [ "" != "" ]; then
+echo "no (not in )"
+echo "no (not in )" >> config.log
 else
 echo "no"
 echo "no" >> config.log
+fi;
 echo "#undef HAVE_AGAR_DEV" >config/have_agar_dev.h
 echo "hdefs[\"HAVE_AGAR_DEV\"] = nil" >>configure.lua
 echo "#undef AGAR_DEV_CFLAGS" >config/agar_dev_cflags.h
