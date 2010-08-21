@@ -1,0 +1,65 @@
+.\"
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 21, 2010
+.Dt M_LABEL 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.4.1
+.Sh NAME
+.Nm M_Label
+.Nd Agar-Math extensions to AG_Label
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Xr AG_Label 3
+widget provides a "polled label" feature, which allows parts of a label to
+be updated in real-time by accessing variables of specified types.
+Once the Agar-Math library is initialized, the following specifiers
+become available:
+.Pp
+.Bl -tag -compact -width "%[M44] "
+.It %[R]
+Variable of type
+.Ft M_Real .
+.It %[T]
+Variable of type
+.Ft M_Time .
+.It %[C]
+Variable of type
+.Ft M_Complex .
+.It %[V]
+Variable of type
+.Ft M_Vector .
+.It %[M]
+Variable of type
+.Ft M_Matrix .
+.El
+.Sh SEE ALSO
+.Xr AG_Label 3

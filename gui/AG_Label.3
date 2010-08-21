@@ -61,6 +61,12 @@ on rendering.
 .Ft "AG_Label *"
 .Fn AG_LabelNewPolledMT "AG_Widget *parent" "Uint flags" "AG_Mutex *mutex" "const char *fmt" "..."
 .Pp
+.Ft void
+.Fn AG_LabelText "AG_Label *label" "const char *format" "..."
+.Pp
+.Ft void
+.Fn AG_LabelTextS "AG_Label *label" "const char *s"
+.Pp
 .Ft "void"
 .Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
 .Pp
@@ -88,12 +94,6 @@ The
 function allocates, initializes and attaches a
 .Nm
 widget initially displaying the given text.
-The
-.Fn AG_LabelNewS
-variant accepts a non-formatted string.
-See the
-.Dq STATIC LABELS
-section for more details.
 .Pp
 The
 .Fn AG_LabelNewPolled
@@ -112,7 +112,14 @@ See
 .Dq LABEL FLAGS
 section for a the accepted
 .Fa flags
-values.
+values for
+.Fn AG_LabelNew
+and
+.Fn AG_LabelNewPolled .
+.Pp
+The
+.Fn AG_LabelText
+function changes the current label text.
 .Pp
 The
 .Fn AG_LabelSetPadding
@@ -151,36 +158,19 @@ lines of the given text string.
 If
 .Fa nlines
 is 0, the number of lines will be based on the contents of the text string.
-.Sh STATIC LABELS
-.nr nS 1
-.Ft void
-.Fn AG_LabelText "AG_Label *label" "const char *format" "..."
-.Pp
-.Ft void
-.Fn AG_LabelTextS "AG_Label *label" "const char *s"
-.Pp
-.nr nS 0
-The
-.Fn AG_LabelText
-function sets the text displayed by the label.
-.Pp
 .Sh POLLED LABELS
-Polled labels are specified to
 .Fn AG_LabelNewPolled
 and
 .Fn AG_LabelNewPolledMT
-as a format string containing regular text
-with zero or more
-.Xr printf 3
-like directives.
-Arguments following the format string are expected to be pointers to the
-actual variables, which
+may be used to display a label containing dynamically accessed elements.
+The format string argument to
+.Fn AG_LabelNewPolled
+is similar to a printf-style format string but the subsequent arguments in
+the variable-argument list are pointers.
+The
 .Nm
-will dereference at the time of rendering using either built-in methods
-or user-specified functions.
-.Pp
-Due to memory alignment and format issues, the format string for polled labels
-is non-standard.
+widget will display a continuously updated string, dereferencing the specified
+variables at time of rendering.
 Built-in format specifiers include:
 .Pp
 .Bl -tag -compact -width "%llu, %llo, %llx "
@@ -252,48 +242,15 @@ with a string.
 The argument is retrieved using the
 .Fn AG_LABEL_ARG
 macro.
-.Pp
 .Fn AG_UnregisterLabelFormat
 removes the given format specifier.
 .Pp
-Note that a call to
+Note that the length of dynamic labels is difficult to determine automatically,
+so it is recommended to use either
 .Fn AG_LabelSizeHint
-(or
-.Xr AG_ExpandHoriz 3 )
-is usually recommended in the case of polled labels, since the exact size of
-the string cannot be known until rendering.
-.Pp
-The following specifiers should be considered reserved for use by the
-developer's preferred math library.
-The Agar-Math library, which is included in the Agar sources, does implement
-them (they are registered as soon as the library is initialized
-with
-.Fn M_InitSubsystem ) .
-.Pp
-.Bl -tag -compact -width "%[M44] "
-.It %[C]
-Complex number
-.It %[V]
-Vector in R^n
-.It %[Vn]
-Vector in R^n
-.It %[M]
-Matrix (m*n)
-.It %[Mmn]
-Matrix (m*n)
-.It %[T]
-Time (seconds)
-.It %[R]
-Rectangular coordinates
-.It %[Po]
-Polar coordinates
-.It %[Pa]
-Parabolic coordinates
-.It %[Sp]
-Spherical coordinates
-.It %[Cy]
-Cylindrical coordinates
-.El
+or
+.Xr AG_ExpandHoriz 3
+with polled labels.
 .Sh FLAG DESCRIPTIONS
 .nr nS 1
 .Ft "void"
@@ -422,6 +379,7 @@ PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
 .Xr AG_Pixmap 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3 ,
+.Xr M_Label 3 ,
 .Xr printf 3
 .Sh HISTORY
 The
