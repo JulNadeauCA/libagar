@@ -71,6 +71,8 @@ typedef struct ag_driver_glx {
 	Uint            nClipRects;
 	Uint            *textureGC;	/* Textures queued for deletion */
 	Uint            nTextureGC;
+	Uint            *listGC;	/* Display lists queued for deletion */
+	Uint            nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
 	AG_Mutex         lock;		/* Protect Xlib calls */
 } AG_DriverGLX;
@@ -119,6 +121,8 @@ Init(void *obj)
 	memset(glx->clipStates, 0, sizeof(glx->clipStates));
 	glx->textureGC = NULL;
 	glx->nTextureGC = 0;
+	glx->listGC = NULL;
+	glx->nListGC = 0;
 	glx->w = 0;
 	AG_MutexInitRecursive(&glx->lock);
 }
@@ -131,6 +135,7 @@ Destroy(void *obj)
 	AG_MutexDestroy(&glx->lock);
 	Free(glx->clipRects);
 	Free(glx->textureGC);
+	Free(glx->listGC);
 }
 
 /*
@@ -903,17 +908,18 @@ GLX_EndRendering(void *obj)
 	Uint i;
 	
 	AG_MutexLock(&agDisplayLock);
-	
-/*	glFlush(); */
+
+	/* Exchange front and back buffers. */
 	glXSwapBuffers(agDisplay, glx->w);
 
-	/* Remove textures queued for deletion. */
-	for (i = 0; i < glx->nTextureGC; i++) {
-		glDeleteTextures(1, (GLuint *)&glx->textureGC[i]);
+	/* Remove textures and display lists queued for deletion. */
+	glDeleteTextures(glx->nTextureGC, (const GLuint *)glx->textureGC);
+	for (i = 0; i < glx->nListGC; i++) {
+		glDeleteLists(glx->listGC[i], 1);
 	}
 	glx->nTextureGC = 0;
-/*	glXMakeCurrent(agDisplay, None, NULL); */
-	
+	glx->nListGC = 0;
+
 	AG_MutexUnlock(&agDisplayLock);
 }
 
@@ -923,9 +929,19 @@ GLX_DeleteTexture(void *drv, Uint texture)
 	AG_DriverGLX *glx = drv;
 
 	AG_MutexLock(&agDisplayLock);
-	glx->textureGC = Realloc(glx->textureGC,
-	    (glx->nTextureGC+1)*sizeof(Uint));
+	glx->textureGC = Realloc(glx->textureGC, (glx->nTextureGC+1)*sizeof(Uint));
 	glx->textureGC[glx->nTextureGC++] = texture;
+	AG_MutexUnlock(&agDisplayLock);
+}
+
+static void
+GLX_DeleteList(void *drv, Uint list)
+{
+	AG_DriverGLX *glx = drv;
+
+	AG_MutexLock(&agDisplayLock);
+	glx->listGC = Realloc(glx->listGC, (glx->nListGC+1)*sizeof(Uint));
+	glx->listGC[glx->nListGC++] = list;
 	AG_MutexUnlock(&agDisplayLock);
 }
 
@@ -1983,7 +1999,8 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
-		AG_GL_DrawGlyph
+		AG_GL_DrawGlyph,
+		GLX_DeleteList
 	},
 	GLX_OpenWindow,
 	GLX_CloseWindow,

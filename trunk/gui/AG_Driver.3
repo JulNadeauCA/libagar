@@ -240,6 +240,9 @@ typedef struct ag_driver_class {
 	void (*drawRectDithered)(void *, AG_Rect r, AG_Color C);
 	void (*updateGlyph)(void *, AG_Glyph *);
 	void (*drawGlyph)(void *, const AG_Glyph *, int x, int y);
+
+	/* Display list management (GL driver specific) */
+	void (*deleteList)(void *, Uint);
 } AG_DriverClass;
 .Ed
 .Pp
@@ -404,7 +407,7 @@ returning the computed texture coordinates.
 .Fn updateTexture
 is expected to update an existing texture from a recently modified surface.
 .Fn deleteTexture
-destroy the specified texture.
+arranges for the specified texture to be deleted as soon as possible.
 .Pp
 The
 .Fn setRefreshRate
@@ -604,6 +607,13 @@ operation renders a given font glyph at target coordinates
 .Fa x ,
 .Fa y .
 The target point will correspond to the top left corner of the rendered glyph.
+.Pp
+The
+.Fn deleteList
+operation arranges for the specified display list to be deleted as soon as
+possible (typically in the
+.Fn endRendering
+routine).
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft int

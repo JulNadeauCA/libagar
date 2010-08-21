@@ -204,6 +204,16 @@ AG_GL_PrepareTexture(void *obj, int s)
 	}
 }
 
+/* Delete a GL texture (thread-safely) */
+void
+AG_GL_DeleteTexture(void *obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->deleteTexture(drv, name);
+}
+
 /* Generic emulated BlitSurface() for GL drivers. */
 /* XXX inefficient */
 void
@@ -885,6 +895,16 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/* Delete a GL display list (thread-safely) */
+void
+AG_GL_DeleteList(void *obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->deleteList(drv, name);
 }
 
 #endif /* HAVE_OPENGL */

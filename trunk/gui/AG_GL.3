@@ -70,7 +70,10 @@ given in pixels.
 .Fn AG_GL_UpdateTexture "Uint texName" "AG_Surface *suSrc" "AG_TexCoord *tc"
 .Pp
 .Ft "void"
-.Fn AG_GL_PrepareTexture "AG_Widget *widget" "int surfName"
+.Fn AG_GL_DeleteTexture "AG_Driver *drv" "Uint texName"
+.Pp
+.Ft "void"
+.Fn AG_GL_DeleteList "AG_Driver *drv" "Uint listName"
 .Pp
 .Ft "void"
 .Fn AG_GL_BlitSurface "AG_Driver *drv" "AG_Widget *wid" "AG_Surface *s" "int x" "int y"
@@ -116,6 +119,20 @@ Similarly to
 texture coordinates are returned into
 .Fa tc 
 if non-NULL.
+.Pp
+The
+.Fn AG_GL_DeleteTexture
+operation arranges for the specified GL texture to be deleted as soon
+as possible.
+Unlike a direct call to
+.Xr glDeleteTextures 3 ,
+using the
+.Fn AG_GL_DeleteTexture
+function is thread-safe.
+.Pp
+Similarly,
+.Fn AG_GL_DeleteList
+arranges for the given GL display list to be deleted as soon as possible.
 .Pp
 The remaining functions
 .Fn AG_GL_BlitSurface ,

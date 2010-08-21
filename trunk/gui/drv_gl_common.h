@@ -21,6 +21,9 @@ void AG_GL_InitContext(AG_Rect);
 void AG_GL_UploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
 int  AG_GL_UpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
 void AG_GL_PrepareTexture(void *, int);
+void AG_GL_DeleteTexture(void *, Uint);
+void AG_GL_DeleteList(void *, Uint);
+
 void AG_GL_BlitSurface(void *, AG_Widget *, AG_Surface *, int, int);
 void AG_GL_BlitSurfaceFrom(void *, AG_Widget *, AG_Widget *, int, AG_Rect *, int, int);
 void AG_GL_BlitSurfaceGL(void *, AG_Widget *, AG_Surface *, float, float);
