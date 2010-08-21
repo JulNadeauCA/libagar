@@ -43,8 +43,7 @@
 #include "gui_math.h"
 #include "text.h"
 #include "cursors.h"
-
-#include "drv_gl_common.h"
+#include "opengl.h"
 
 static int  nDrivers = 0;		/* Drivers open */
 static Uint rNom = 16;			/* Nominal refresh rate (ms) */
@@ -70,6 +69,8 @@ typedef struct ag_driver_wgl {
 	Uint        nClipRects;
 	Uint        *textureGC;		/* Textures queued for deletion */
 	Uint        nTextureGC;
+	Uint        *listGC;		/* Display lists queued for deletion */
+	Uint        nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
 } AG_DriverWGL;
 
@@ -155,6 +156,8 @@ WGL_Init(void *obj)
 	wgl->nClipRects = 0;
 	wgl->textureGC = NULL;
 	wgl->nTextureGC = 0;
+	wgl->listGC = NULL;
+	wgl->nListGC = 0;
 
 	memset(wgl->clipStates, 0, sizeof(wgl->clipStates));
 }
@@ -230,6 +233,7 @@ WGL_Destroy(void *obj)
 	
 	Free(wgl->clipRects);
 	Free(wgl->textureGC);
+	Free(wgl->listGC);
 }
 
 /* Return suitable window style from Agar window flags. */
@@ -917,11 +921,13 @@ WGL_EndRendering(void *obj)
 	
 	SwapBuffers(wgl->hdc);
 
-	/* Remove textures queued for deletion */
-	for (i = 0; i < wgl->nTextureGC; i++) {
-		glDeleteTextures(1, (GLuint *)&wgl->textureGC[i]);
+	/* Remove textures and display lists queued for deletion */
+	glDeleteTextures(wgl->nTextureGC, wgl->textureGC);
+	for (i = 0; i < wgl->nListGC; i++) {
+		glDeleteLists(wgl->listGC[i], 1);
 	}
 	wgl->nTextureGC = 0;
+	wgl->nListGC = 0;
 }
 
 static void
@@ -931,6 +937,15 @@ WGL_DeleteTexture(void *drv, Uint texture)
 
 	wgl->textureGC = Realloc(wgl->textureGC, (wgl->nTextureGC+1)*sizeof(Uint));
 	wgl->textureGC[wgl->nTextureGC++] = texture;
+}
+
+static void
+WGL_DeleteList(void *drv, Uint list)
+{
+	AG_DriverWGL *wgl = drv;
+
+	wgl->listGC = Realloc(wgl->listGC, (wgl->nListGC+1)*sizeof(Uint));
+	wgl->listGC[wgl->nListGC++] = list;
 }
 
 /*
@@ -1492,7 +1507,8 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
-		AG_GL_DrawGlyph
+		AG_GL_DrawGlyph,
+		WGL_DeleteList
 	},
 	WGL_OpenWindow,
 	WGL_CloseWindow,

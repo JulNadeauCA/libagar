@@ -103,6 +103,8 @@ typedef struct ag_driver_class {
 	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
 	void (*updateGlyph)(void *drv, struct ag_glyph *);
 	void (*drawGlyph)(void *drv, const struct ag_glyph *, int x, int y);
+	/* Display list management (GL driver specific) */
+	void (*deleteList)(void *drv, Uint);
 } AG_DriverClass;
 
 /* Generic driver instance. */

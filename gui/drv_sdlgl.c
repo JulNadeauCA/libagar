@@ -51,6 +51,8 @@ typedef struct ag_sdlgl_driver {
 	Uint            nClipRects;
 	Uint            *textureGC;	/* Textures queued for deletion */
 	Uint            nTextureGC;
+	Uint            *listGC;	/* Display lists queued for deletion */
+	Uint            nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
 } AG_DriverSDLGL;
 
@@ -70,6 +72,8 @@ Init(void *obj)
 	memset(sgl->clipStates, 0, sizeof(sgl->clipStates));
 	sgl->textureGC = NULL;
 	sgl->nTextureGC = 0;
+	sgl->listGC = NULL;
+	sgl->nListGC = 0;
 	
 	dsw->rNom = 16;
 	dsw->rCur = 0;
@@ -86,6 +90,7 @@ Destroy(void *obj)
 
 	Free(sgl->clipRects);
 	Free(sgl->textureGC);
+	Free(sgl->listGC);
 }
 
 /*
@@ -226,11 +231,13 @@ SDLGL_EndRendering(void *drv)
 
 	glPopAttrib();
 	
-	/* Remove textures queued for deletion. */
-	for (i = 0; i < sgl->nTextureGC; i++) {
-		glDeleteTextures(1, (GLuint *)&sgl->textureGC[i]);
+	/* Remove textures and display lists queued for deletion. */
+	glDeleteTextures(sgl->nTextureGC, sgl->textureGC);
+	for (i = 0; i < sgl->nListGC; i++) {
+		glDeleteLists(sgl->listGC[i], 1);
 	}
 	sgl->nTextureGC = 0;
+	sgl->nListGC = 0;
 }
 
 static void
@@ -238,9 +245,17 @@ SDLGL_DeleteTexture(void *drv, Uint texture)
 {
 	AG_DriverSDLGL *sgl = drv;
 
-	sgl->textureGC = Realloc(sgl->textureGC,
-	    (sgl->nTextureGC+1)*sizeof(Uint));
+	sgl->textureGC = Realloc(sgl->textureGC, (sgl->nTextureGC+1)*sizeof(Uint));
 	sgl->textureGC[sgl->nTextureGC++] = texture;
+}
+
+static void
+SDLGL_DeleteList(void *drv, Uint list)
+{
+	AG_DriverSDLGL *sgl = drv;
+
+	sgl->listGC = Realloc(sgl->listGC, (sgl->nListGC+1)*sizeof(Uint));
+	sgl->listGC[sgl->nListGC++] = list;
 }
 
 /*
@@ -676,7 +691,8 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
-		AG_GL_DrawGlyph
+		AG_GL_DrawGlyph,
+		SDLGL_DeleteList
 	},
 	0,
 	SDLGL_OpenVideo,

@@ -1526,7 +1526,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawRectBlended,
 		SDLFB_DrawRectDithered,
 		SDLFB_UpdateGlyph,
-		SDLFB_DrawGlyph
+		SDLFB_DrawGlyph,
+		NULL			/* deleteList */
 	},
 	0,
 	SDLFB_OpenVideo,
