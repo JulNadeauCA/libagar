@@ -2148,73 +2148,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PROGNAME
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for free(NULL) is a no-op..."
-$ECHO_N "checking for free(NULL) is a no-op..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-MK_RUN_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-FREE_NULL_IS_A_NOOP" ]; then
-		FREE_NULL_IS_A_NOOP=`cat ${cache}/ctest-FREE_NULL_IS_A_NOOP`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-FREE_NULL_IS_A_NOOP`
-		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-FREE_NULL_IS_A_NOOP`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <stdlib.h>
-int main(int argc, char *argv[]) {
-	free(NULL);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-FREE_NULL_IS_A_NOOP="yes"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
-echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
-echo "#ifndef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
-echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_is_a_noop.h
-echo "#endif" >> config/free_null_is_a_noop.h
-echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
-else
-echo "no (test program failed)"
-echo "no (test program failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-FREE_NULL_IS_A_NOOP="no"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
-echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
-echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
-echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
-fi;
-else
-echo "no (compilation failed)"
-echo "no (compilation failed)" >> config.log
-MK_RUN_STATUS="FAIL(\$?)"
-FREE_NULL_IS_A_NOOP="no"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
-echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
-echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
-echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$FREE_NULL_IS_A_NOOP" > ${cache}/ctest-FREE_NULL_IS_A_NOOP
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-FREE_NULL_IS_A_NOOP
-	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-FREE_NULL_IS_A_NOOP
-fi
-rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
 if [ "" != "" ]; then
@@ -2989,9 +2922,9 @@ fi
 rm -f conftest.c
 
 _MK_BYTE_ORDER=""
-_MK_BYTE_ORDER_LESTRING="L   i   T   T   L   e   E   n   D"
-_MK_BYTE_ORDER_BESTRING="B   i   G   E   n   D   i   A   N"
-od -tc $testdir/conftest$EXECSUFFIX > $testdir/conftest.dump
+_MK_BYTE_ORDER_LESTRING="LiTTLeEnD"
+_MK_BYTE_ORDER_BESTRING="BiGEnDiAN"
+od -tc $testdir/conftest$EXECSUFFIX | sed 's/ //g' > $testdir/conftest.dump
 
 if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
 	_MK_BYTE_ORDER="LE"

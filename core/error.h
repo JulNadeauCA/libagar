@@ -3,7 +3,6 @@
 #ifndef	_AGAR_CORE_ERROR_H_
 #define	_AGAR_CORE_ERROR_H_
 
-#include <agar/config/free_null_is_a_noop.h>
 #include <agar/config/_mk_have_stdlib_h.h>
 #ifdef _MK_HAVE_STDLIB_H
 #include <stdlib.h>
@@ -82,7 +81,7 @@ int		 AG_IntMismatch(void);
 float		 AG_FloatMismatch(void);
 const char	*AG_Strerror(int);
 
-
+/* Malloc wrapper (failure is fatal) */
 static __inline__ void *
 AG_Malloc(size_t len)
 {
@@ -91,6 +90,7 @@ AG_Malloc(size_t len)
 	return (p);
 }
 
+/* Malloc wrapper (return on failure) */
 static __inline__ void *
 AG_TryMalloc(size_t len)
 {
@@ -102,6 +102,7 @@ AG_TryMalloc(size_t len)
 	return (p);
 }
 
+/* Realloc wrapper (failure is fatal) */
 static __inline__ void *
 AG_Realloc(void *pOld, size_t len)
 {
@@ -117,6 +118,7 @@ AG_Realloc(void *pOld, size_t len)
 	return (pNew);
 }
 
+/* Realloc wrapper (return on failure) */
 static __inline__ void *
 AG_TryRealloc(void *pOld, size_t len)
 {
@@ -135,16 +137,8 @@ outofmem:
 	return (NULL);
 }
 
-#ifdef FREE_NULL_IS_A_NOOP
-# define AG_Free(p) free(p)
-# undef FREE_NULL_IS_A_NOOP
-#else
-static __inline__ void
-AG_Free(void *p) {
-	if (p != NULL)
-		free(p);
-}
-#endif
+/* Free wrapper for symmetry */
+#define AG_Free(p) free(p)
 __END_DECLS
 
 #include <agar/core/close.h>
