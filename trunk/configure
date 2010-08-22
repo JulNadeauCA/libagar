@@ -2226,8 +2226,10 @@ echo "hdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 else
 echo "#undef MATH_CFLAGS" >config/math_cflags.h
 echo "hdefs[\"MATH_CFLAGS\"] = nil" >>configure.lua
+MATH_CFLAGS=""
 echo "#undef MATH_LIBS" >config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
+MATH_LIBS=""
 fi;
 $ECHO_N "checking for the C math library (C99)..."
 $ECHO_N "checking for the C math library (C99)..." >> config.log
@@ -2310,8 +2312,10 @@ echo "hdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
 else
 echo "#undef MATH_C99_CFLAGS" >config/math_c99_cflags.h
 echo "hdefs[\"MATH_C99_CFLAGS\"] = nil" >>configure.lua
+MATH_C99_CFLAGS=""
 echo "#undef MATH_C99_LIBS" >config/math_c99_libs.h
 echo "hdefs[\"MATH_C99_LIBS\"] = nil" >>configure.lua
+MATH_C99_LIBS=""
 fi;
 $ECHO_N "checking for a getpwuid() function..."
 $ECHO_N "checking for a getpwuid() function..." >> config.log
@@ -4544,8 +4548,10 @@ echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 else
 echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
 echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+SDL_CFLAGS=""
 echo "#undef SDL_LIBS" >config/sdl_libs.h
 echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
+SDL_LIBS=""
 fi;
 fi;
 else
@@ -4877,8 +4883,10 @@ echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 else
 echo "#undef OPENGL_CFLAGS" >config/opengl_cflags.h
 echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
+OPENGL_CFLAGS=""
 echo "#undef OPENGL_LIBS" >config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
+OPENGL_LIBS=""
 fi;
 fi;
 else
@@ -5033,8 +5041,10 @@ echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 else
 echo "#undef X11_CFLAGS" >config/x11_cflags.h
 echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+X11_CFLAGS=""
 echo "#undef X11_LIBS" >config/x11_libs.h
 echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
+X11_LIBS=""
 fi;
 		if [ "${HAVE_X11}" != "yes" ]
  then
@@ -5151,8 +5161,10 @@ echo "hdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 else
 echo "#undef GLX_CFLAGS" >config/glx_cflags.h
 echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+GLX_CFLAGS=""
 echo "#undef GLX_LIBS" >config/glx_libs.h
 echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
+GLX_LIBS=""
 fi;
 			if [ "${HAVE_GLX}" != "yes" ]
  then
@@ -5205,6 +5217,7 @@ int main(int argc, char *argv[]) {
 	    CW_USEDEFAULT, 0,0, NULL, NULL, GetModuleHandle(NULL), NULL);
 	hdc = GetDC(hwnd);
 	hglrc = wglCreateContext(hdc);
+	SwapBuffers(hdc);
 	wglDeleteContext(hglrc);
 	ReleaseDC(hwnd, hdc);
 	DestroyWindow(hwnd);
@@ -5212,8 +5225,8 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} -lgdi32" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} -lgdi32 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -5243,6 +5256,15 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_WGL
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_WGL}" = "yes" ]; then
+OPENGL_LIBS="${OPENGL_LIBS} -lgdi32"
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
+echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
+echo "#endif" >> config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+fi;
 			if [ "${HAVE_WGL}" != "yes" ]
  then
 				if [ "${with_wgl}" = "yes" ]
@@ -5483,8 +5505,10 @@ echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 else
 echo "#undef FREETYPE_CFLAGS" >config/freetype_cflags.h
 echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
+FREETYPE_CFLAGS=""
 echo "#undef FREETYPE_LIBS" >config/freetype_libs.h
 echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
+FREETYPE_LIBS=""
 fi;
 else
 if [ "${prefix_freetype}" != "" ]; then
@@ -5646,8 +5670,10 @@ echo "hdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 else
 echo "#undef JPEG_CFLAGS" >config/jpeg_cflags.h
 echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+JPEG_CFLAGS=""
 echo "#undef JPEG_LIBS" >config/jpeg_libs.h
 echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
+JPEG_LIBS=""
 fi;
 else
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
@@ -5895,8 +5921,10 @@ echo "hdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
 else
 echo "#undef PNG_CFLAGS" >config/png_cflags.h
 echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+PNG_CFLAGS=""
 echo "#undef PNG_LIBS" >config/png_libs.h
 echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
+PNG_LIBS=""
 fi;
 else
 if [ "${prefix_png}" != "" ]; then
@@ -6267,8 +6295,10 @@ echo "hdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 else
 echo "#undef DB4_CFLAGS" >config/db4_cflags.h
 echo "hdefs[\"DB4_CFLAGS\"] = nil" >>configure.lua
+DB4_CFLAGS=""
 echo "#undef DB4_LIBS" >config/db4_libs.h
 echo "hdefs[\"DB4_LIBS\"] = nil" >>configure.lua
+DB4_LIBS=""
 fi;
 else
 if [ "" != "" ]; then
@@ -7324,8 +7354,10 @@ echo "hdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 else
 echo "#undef GETTEXT_CFLAGS" >config/gettext_cflags.h
 echo "hdefs[\"GETTEXT_CFLAGS\"] = nil" >>configure.lua
+GETTEXT_CFLAGS=""
 echo "#undef GETTEXT_LIBS" >config/gettext_libs.h
 echo "hdefs[\"GETTEXT_LIBS\"] = nil" >>configure.lua
+GETTEXT_LIBS=""
 fi;
 fi;
 else
