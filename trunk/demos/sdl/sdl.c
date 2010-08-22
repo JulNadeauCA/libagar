@@ -14,12 +14,10 @@
 #  include <SDL_image.h>
 # endif
 #endif
-#ifdef HAVE_OPENGL
-#include <agar/gui/opengl.h>
-#endif
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/gui/opengl.h>
 
 int
 main(int argc, char *argv[])
