@@ -601,8 +601,7 @@ AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 	}
 	AG_ObjectUnlock(ed);
 
-	if (!agRenderingContext)
-		AG_Redraw(ed);
+	AG_Redraw(ed);
 }
 
 /* Return the last cursor position. */

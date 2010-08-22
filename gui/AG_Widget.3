@@ -631,6 +631,11 @@ function signals that the widget must be redrawn to the video display.
 It is equivalent to setting the
 .Va dirty
 variable of the widget's parent window to 1.
+If called from rendering context (i.e., from the
+.Fn draw
+operation of a widget),
+.Fn AG_Redraw
+is a no-op.
 .Pp
 The
 .Fn AG_RedrawOnChange
