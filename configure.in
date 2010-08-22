@@ -206,7 +206,7 @@ if [ "${enable_gui}" != "no" ]; then
 		
 		# Enable WGL support on Windows.
 		if [ "${with_wgl}" != "no" ]; then
-			CHECK(wgl, 0, ${prefix_wgl})
+			CHECK(wgl, 0, ${prefix_gl})
 			if [ "${HAVE_WGL}" != "yes" ]; then
 				if [ "${with_wgl}" = "yes" ]; then
 					echo "*"
