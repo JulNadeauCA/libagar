@@ -559,8 +559,7 @@ AG_TlistClear(AG_Tlist *tl)
 	tl->nitems = 0;
 	AG_ObjectUnlock(tl);
 
-	if (!agRenderingContext)
-		AG_Redraw(tl);
+	AG_Redraw(tl);
 }
 
 /* Generic string compare routine. */
@@ -675,8 +674,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 	}
 	tl->nitems++;
 
-	if (!agRenderingContext)
-		AG_Redraw(tl);
+	AG_Redraw(tl);
 }
 
 /* Add an item to the tail of the list (user pointer) */
@@ -1269,9 +1267,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 		}
 	}
 	AG_ObjectUnlock(tl);
-	
-	if (!agRenderingContext)
-		AG_Redraw(tl);
+	AG_Redraw(tl);
 }
 
 /* Update the icon associated with an item. The Tlist must be locked. */
@@ -1304,9 +1300,7 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 	it->flags |= AG_TLIST_DYNICON;
 	UpdateItemIcon(tl, it, iconsrc);
 	AG_ObjectUnlock(tl);
-
-	if (!agRenderingContext)
-		AG_Redraw(tl);
+	AG_Redraw(tl);
 }
 
 void

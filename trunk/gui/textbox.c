@@ -320,8 +320,7 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	AG_ObjectUnlock(tb->ed);
 
 	/* XXX for AG_Numerical, etc. */
-	if (!agRenderingContext)
-		AG_Redraw(tb);
+	AG_Redraw(tb);
 }
 
 /* Set the textbox label (format string). */
