@@ -470,10 +470,10 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
-	if (c->surface >= 0) {
+	if (c->surface != -1) {
 		if (t->flags & AG_TABLE_REDRAW_CELLS) {
 			AG_WidgetUnmapSurface(t, c->surface);
-			c->surface = 0;
+			c->surface = -1;
 		} else {
 			goto blit;
 		}
@@ -506,8 +506,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
 			AG_TextColor(agColors[TEXT_COLOR]);
-			c->surface = AG_WidgetMapSurface(t,
-			    AG_TextRender(c->fmt));
+			c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->fmt));
 			goto blit;
 		} else {
 			return;
@@ -826,9 +825,9 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
-	if (c->surface >= 0) {
+	if (c->surface != -1) {
 		AG_WidgetUnmapSurface(t, c->surface);
-		c->surface = 0;
+		c->surface = -1;
 	}
 }
 
@@ -1092,12 +1091,15 @@ AG_TableEnd(AG_Table *t)
 	     tc != TAILQ_END(&t->cPrevList);
 	     tc = tcNext) {
 		tcNext = TAILQ_NEXT(tc, cells_list);
+		if (tc->surface != -1) {
+			AG_WidgetUnmapSurface(t, tc->surface);
+		}
 		Free(tc);
 	}
 	TAILQ_INIT(&t->cPrevList);
-	/* It is safe to use memset() in place of TAILQ_INIT(). */
-	memset(t->cPrev, 0, t->nPrevBuckets*sizeof(AG_TableBucket));
 
+	/* It is safe to use memset() in place of TAILQ_INIT() in a loop. */
+	memset(t->cPrev, 0, t->nPrevBuckets*sizeof(AG_TableBucket));
 out:
 	AG_ObjectUnlock(t);		/* Lock across TableBegin/End */
 }
@@ -2176,9 +2178,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	t->flags |= AG_TABLE_NEEDSORT;
 	AG_ObjectUnlock(t);
 
-	if (!agRenderingContext) {
-		AG_Redraw(t);
-	}
+	AG_Redraw(t);
 	return (rv);
 fail:
 	AG_ObjectUnlock(t);
