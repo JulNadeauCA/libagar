@@ -54,7 +54,7 @@ static AG_DriverEventQ wglEventQ;	/* Event queue */
 static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
-static int  agExitWGL = 1;		/* Exit event loop */
+static int  agExitWGL = 0;		/* Exit event loop */
 
 /* Driver instance data */
 typedef struct ag_driver_wgl {
