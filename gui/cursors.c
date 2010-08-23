@@ -127,8 +127,8 @@ AG_Cursor *
 AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 {
 	int i = -1, x, y;
-	Uint8 data[4*AG_CURSOR_MAX_W];
-	Uint8 mask[4*AG_CURSOR_MAX_H];
+	Uint8 data[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
+	Uint8 mask[4*AG_CURSOR_MAX_W*AG_CURSOR_MAX_H];
 	int w, h;
 
 	sscanf(xpm[0], "%d %d", &w, &h);
