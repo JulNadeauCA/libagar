@@ -829,7 +829,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = 1;
 		break;
 	case AG_DRIVER_CLOSE:
-		AGDRIVER_SW_CLASS(drv)->closeVideo(drv);
+		AG_DriverClose(drv);
 		agTerminating = 1;
 		return (-1);
 	case AG_DRIVER_EXPOSE:
