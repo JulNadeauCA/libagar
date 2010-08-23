@@ -262,7 +262,8 @@ AG_SetCfgString(const char *key, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
-	(void)AG_SetProp(agConfig, key, AG_PROP_STRING, s);
+	AG_SetString(agConfig, key, s);
+	Free(s);
 }
 
 AG_ObjectClass agConfigClass = {
