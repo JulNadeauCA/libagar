@@ -31,6 +31,7 @@
 #include "gui.h"
 
 #include <config/have_png.h>
+#include <config/have_libpng14.h>
 #if defined(HAVE_PNG)
 
 #ifdef macintosh
@@ -80,6 +81,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	int row, i, t;
 	volatile int ckey = -1;
 	png_color_16 *transv;
+	int channels;
 
 	start = AG_Tell(ds);
 
@@ -90,10 +92,6 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	}
 	if ((info_ptr = png_create_info_struct(png)) == NULL) {
 		AG_SetError("png_create_info_struct() failed");
-		goto fail;
-	}
-	if (setjmp(png->jmpbuf)) {
-		AG_SetError("Error reading PNG image");
 		goto fail;
 	}
 
@@ -153,9 +151,15 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	png_get_IHDR(png, info_ptr, &width, &height, &depth,
 	    &colorType, &intlaceType, NULL, NULL);
 
+#ifdef HAVE_LIBPNG14
+	channels = (int)png_get_channels(png, info_ptr);
+#else
+	channels = info_ptr->channels;
+#endif
+
 	if (colorType != PNG_COLOR_TYPE_PALETTE) {
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-		int s = (info_ptr->channels == 4) ? 0 : 8;
+		int s = (channels == 4) ? 0 : 8;
 		Rmask = 0xff000000 >> s;
 		Gmask = 0x00ff0000 >> s;
 		Bmask = 0x0000ff00 >> s;
@@ -164,10 +168,10 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		Rmask = 0x000000ff;
 		Gmask = 0x0000ff00;
 		Bmask = 0x00ff0000;
-		Amask = (info_ptr->channels == 4) ? 0xff000000 : 0;
+		Amask = (channels == 4) ? 0xff000000 : 0;
 #endif
 	}
-	if ((su = AG_SurfaceRGBA(width, height, depth*info_ptr->channels, 0,
+	if ((su = AG_SurfaceRGBA(width, height, depth*channels, 0,
 	    Rmask, Gmask, Bmask, Amask)) == NULL)
 		goto fail;
 
@@ -192,6 +196,10 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 
 	/* Read palette information */
 	if ((pal = su->format->palette) != NULL) {
+#ifdef HAVE_LIBPNG14
+		int numPalette;
+		png_colorp palette;
+#endif
 		if (colorType == PNG_COLOR_TYPE_GRAY) {
 			pal->nColors = 256;
 			for (i = 0; i < 256; i++) {
@@ -199,7 +207,18 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 				pal->colors[i].g = i;
 				pal->colors[i].b = i;
 			}
-		} else if (info_ptr->num_palette > 0) {
+		}
+#ifdef HAVE_LIBPNG14
+		else if (png_get_PLTE(png, info_ptr, &palette, &numPalette)) {
+			pal->nColors = numPalette; 
+			for (i = 0; i < numPalette; i++) {
+				pal->colors[i].b = palette[i].blue;
+				pal->colors[i].g = palette[i].green;
+				pal->colors[i].r = palette[i].red;
+			}
+		}
+#else
+		else if (info_ptr->num_palette > 0) {
 			pal->nColors = info_ptr->num_palette; 
 			for (i = 0; i < info_ptr->num_palette; i++) {
 				pal->colors[i].b = info_ptr->palette[i].blue;
@@ -207,6 +226,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 				pal->colors[i].r = info_ptr->palette[i].red;
 			}
 		}
+#endif
 	}
 	if (png != NULL) {
 		png_destroy_read_struct(&png,
