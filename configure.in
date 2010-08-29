@@ -5,10 +5,12 @@
 # http://bsdbuild.hypertriton.com/.
 #
 
+# Version information
 PACKAGE("Agar")
 VERSION("1.4.1")
 RELEASE("Landscapes of Frozen Methane")
 
+# Register options for configure --help
 REGISTER_SECTION("Options specific to Agar:")
 REGISTER("--enable-<library>",	"Build libraries (gui|vg|rg|math|dev) [all]")
 REGISTER("--enable-debug",	"General debugging [no]")
@@ -581,10 +583,8 @@ else
 	MDEFINE(SUBDIR_dev, "")
 fi
 
-# Generate includes into ./include/agar.
-C_INCPREP(include,agar)
-
-# We use both <foo.h> and <agar/foo.h> in the sources.
+# Set up configure script output
+C_INCPREP($BLD/include/agar)
 C_INCDIR($BLD/include)
 C_INCDIR($BLD/include/agar)
 C_INCDIR_CONFIG($BLD/include/agar/config)
