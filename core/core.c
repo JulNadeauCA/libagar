@@ -120,7 +120,9 @@ AG_InitCore(const char *progname, Uint flags)
 	if (AG_ConfigInit(agConfig, flags) == -1) {
 		return (-1);
 	}
-	(void)AG_ObjectLoad(agConfig);
+	if (!(flags & AG_NO_CFG_AUTOLOAD)) {
+		(void)AG_ConfigLoad();
+	}
 #ifdef AG_NETWORK
 	AG_InitNetwork(0);
 #endif
