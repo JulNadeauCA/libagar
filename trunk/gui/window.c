@@ -579,6 +579,9 @@ Hidden(AG_Event *event)
 	case AG_WM_SINGLE:
 		dsw = (AG_DriverSw *)drv;
 
+		if (OBJECT(drv)->parent == NULL)
+			break;
+
 		/* Remove from the modal window list if modal. */
 		if (win->flags & AG_WINDOW_MODAL) {
 			for (i = 0; i < dsw->Lmodal->n; i++) {
