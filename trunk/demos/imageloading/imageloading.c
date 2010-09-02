@@ -27,28 +27,6 @@ main(int argc, char *argv[])
 		goto fail;
 	}
 
-	{
-		AG_Surface *s;
-
-		s = AG_SurfaceRGBA(32, 32, 16, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
-#else
-		    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-#endif
-		);
-		printf("loss: 0x%x, 0x%x, 0x%x, 0x%x\n",
-		    s->format->Rloss,
-		    s->format->Gloss,
-		    s->format->Bloss,
-		    s->format->Aloss);
-		printf("shift: %d, %d, %d, %d\n",
-		    s->format->Rshift,
-		    s->format->Gshift,
-		    s->format->Bshift,
-		    s->format->Ashift);
-	}
-
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar image loading demo");
 
