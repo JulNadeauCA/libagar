@@ -104,6 +104,7 @@ int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
 AG_Surface     *AG_ReadSurfaceFromPNG(AG_DataSource *);
 AG_Surface     *AG_SurfaceFromPNG(const char *);
 int             AG_SurfaceExportPNG(const AG_Surface *, const char *);
+void            AG_SetPNGInterlacing(int);
 
 AG_Surface     *AG_ReadSurfaceFromJPEG(AG_DataSource *);
 AG_Surface     *AG_SurfaceFromJPEG(const char *);
