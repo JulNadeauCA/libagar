@@ -605,6 +605,9 @@ AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		dev->type = AG_DRIVER_CLOSE;
 		dev->win = NULL;
 		break;
+	default:
+		dev->type = AG_DRIVER_UNKNOWN;
+		dev->win = NULL;
 	}
 }
 
