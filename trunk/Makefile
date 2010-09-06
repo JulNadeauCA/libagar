@@ -58,7 +58,7 @@ release:
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 	${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
-	@(cd include/agar && for DIR in ${INCDIR}; do \
+	@(cd include/agar && for DIR in ${INCDIR} config; do \
 	    echo "mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
@@ -66,12 +66,6 @@ install-includes:
 	      ${SH} ${SRCDIR}/mk/install-includes.sh \
 	        $$DIR ${DESTDIR}${INCLDIR}/agar; \
 	done)
-	@echo "mk/install-includes.sh config ${INCLDIR}/agar"
-	@${SUDO} env \
-	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
-	    INSTALL_INCL="${INSTALL_INCL}" \
-	    ${SH} ${SRCDIR}/mk/install-includes.sh config \
-	    ${DESTDIR}${INCLDIR}/agar
 	@for INC in ${INCDIR}; do \
 		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${INCLDIR}/agar/$${INC}.h"; \
