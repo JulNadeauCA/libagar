@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -43,8 +43,9 @@ in R^2, in terms of its
 sides:
 .Bd -literal
 typedef struct m_polygon2 {
-	M_Line2 *s;
-	Uint n;
+	M_Line2 *s;	/* Line segments */
+	Uint n;		/* Segment count */
+	Uint vn;	/* Vertex count */
 } M_Polygon2;
 .Ed
 .Pp
@@ -53,8 +54,9 @@ Similarly,
 describes a polygon in R^3:
 .Bd -literal
 typedef struct m_polygon3 {
-	M_Line3 *s;
-	Uint n;
+	M_Line3 *s;	/* Line segments */
+	Uint n;		/* Segment count */
+	Uint vn;	/* Vertex count */
 } M_Polygon3;
 .Ed
 .Sh INITIALIZATION
@@ -64,6 +66,12 @@ typedef struct m_polygon3 {
 .Pp
 .Ft void
 .Fn M_PolygonInit3 "M_Polygon3 *P"
+.Pp
+.Ft M_Polygon2
+.Fn M_POLYGON2_INITIALIZER "void"
+.Pp
+.Ft M_Polygon3
+.Fn M_POLYGON3_INITIALIZER "void"
 .Pp
 .Ft void
 .Fn M_PolygonFree2 "M_Polygon2 *P"
@@ -77,6 +85,24 @@ typedef struct m_polygon3 {
 .Ft M_Polygon3
 .Fn M_PolygonFromLines3 "Uint n" M_Line3 *L"
 .Pp
+.Ft int
+.Fn M_PolygonAddLine2 "M_Polygon2 *P" "M_Line2 L"
+.Pp
+.Ft int
+.Fn M_PolygonAddLine3 "M_Polygon3 *P" "M_Line3 L"
+.Pp
+.Ft int
+.Fn M_PolygonAddVertex2 "M_Polygon2 *P" "M_Vector2 v"
+.Pp
+.Ft int
+.Fn M_PolygonAddVertex3 "M_Polygon3 *P" "M_Vector3 v"
+.Pp
+.Ft int
+.Fn M_PolygonDelLine2 "M_Polygon2 *P" "int sIdx"
+.Pp
+.Ft int
+.Fn M_PolygonDelLine3 "M_Polygon3 *P" "int sIdx"
+.Pp
 .Ft M_Polygon2
 .Fn M_PolygonRead2 "AG_DataSource *ds"
 .Pp
@@ -89,12 +115,6 @@ typedef struct m_polygon3 {
 .Ft void
 .Fn M_PolygonWrite3 "AG_DataSource *ds" "M_Polygon3 *P"
 .Pp
-.Ft M_Polygon2
-.Fn M_POLYGON2_INITIALIZER "void"
-.Pp
-.Ft M_Polygon3
-.Fn M_POLYGON3_INITIALIZER "void"
-.Pp
 .nr nS 0
 .Fn M_PolygonInit2
 and
@@ -103,18 +123,19 @@ initialize a
 .Ft M_Polygon2
 or
 .Ft M_Polygon3
-structure, respectively.
+structure.
+The macros
+.Fn M_POLYGON[23]_INITIALIZER
+expand to static initializers for the
+.Ft M_Polygon[23]
+structures.
 .Pp
-.Fn M_PolygonFree2
-and
-.Fn M_PolygonFree3
-release the dynamically-allocated resources (i.e., the "sides" array) of
+.Fn M_PolygonFree[23]
+release the dynamically-allocated resources (i.e., the line segments) of
 a polygon.
 .Pp
 The functions
-.Fn M_PolygonFromLines2
-and
-.Fn M_PolygonFromLines3
+.Fn M_PolygonFromLines[23]
 return a polygon from an array of lines
 .Fa L ,
 where
@@ -122,21 +143,24 @@ where
 is the number of elements in the array.
 .Pp
 The
+.Fn M_PolygonAddLine[23]
+functions append a new line segment to a polygon.
+Returns index of new line segment on success, -1 on failure.
+.Pp
+.Fn M_PolygonAddVertex[23]
+append a new vertex to a polygon (creating the corresponding line segments
+as appropriate).
+Returns index of new vertex on success, -1 on failure.
+.Pp
+.Fn M_PolygonDelLine[23]
+removes a line segment from a polygon by index.
+.Pp
+The
 .Fn M_PolygonRead[23]
 and
 .Fn M_PolygonWrite[23]
 functions read or write a polygon structure from/to an
 .Xr AG_DataSource 3 .
-.Pp
-The macros
-.Fn M_POLYGON2_INITIALIZER
-and
-.Fn M_POLYGON3_INITIALIZER
-expand to static initializers for
-.Ft M_Polygon2
-and
-.Ft M_Polygon3 ,
-respectively.
 .Sh COMPUTATIONS
 .nr nS 1
 .Ft int
