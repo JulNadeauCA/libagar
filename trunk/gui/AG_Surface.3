@@ -395,8 +395,7 @@ The
 function may be used to configure the quality for subsequent
 .Fn AG_SurfaceExportJPEG
 calls.
-The value is given in percent, 100% being the highest quality.
-The default value is 75%.
+The value is given in percent, 100% being the highest quality (the default).
 .Pp
 .Fn AG_SurfaceExportBMP
 exports a BMP image file from the contents of a surface.
@@ -447,7 +446,7 @@ fail returning NULL.
 compares two pixel formats.
 The function returns 0 if the two formats are identical, nonzero if the
 two formats differ.
-When comparing color-index formats, the palettes are ignored.
+When comparing color-index formats, the two palettes are compared as well.
 .Pp
 .Fn AG_PixelFormatFree
 releases all resources allocated by an

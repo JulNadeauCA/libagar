@@ -50,13 +50,12 @@ AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for new surfaces */
 #define COMPUTE_SHIFTLOSS(mask, shift, loss) \
 	shift = 0; \
 	loss = 8; \
-	if (mask != 0) { \
-		for (m = mask ; (m & 0x01) == 0; m >>= 1) { \
+	if (mask) { \
+		for (m = mask ; !(m & 0x01); m >>= 1) { \
 			shift++; \
-		} \
-		while ((m & 0x01) != 0) { \
+		}  \
+		for (; (m & 0x01); m >>= 1) { \
 			loss--; \
-			m >>= 1; \
 		} \
 	}
 
@@ -66,6 +65,7 @@ AG_PixelFormatRGB(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
 {
 	AG_PixelFormat *pf;
 	Uint32 m;
+	Uint32 Amask = 0;
 
 	if ((pf = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		return (NULL);
@@ -75,13 +75,14 @@ AG_PixelFormatRGB(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
 	pf->colorkey = 0;
 	pf->alpha = AG_ALPHA_OPAQUE;
 	pf->palette = NULL;
+	COMPUTE_SHIFTLOSS(Rmask, pf->Rshift, pf->Rloss);
+	COMPUTE_SHIFTLOSS(Gmask, pf->Gshift, pf->Gloss);
+	COMPUTE_SHIFTLOSS(Bmask, pf->Bshift, pf->Bloss);
+	COMPUTE_SHIFTLOSS(Amask, pf->Ashift, pf->Aloss);
 	pf->Rmask = Rmask;
 	pf->Gmask = Gmask;
 	pf->Bmask = Bmask;
 	pf->Amask = 0;
-	COMPUTE_SHIFTLOSS(pf->Rmask, pf->Rshift, pf->Rloss);
-	COMPUTE_SHIFTLOSS(pf->Gmask, pf->Gshift, pf->Gloss);
-	COMPUTE_SHIFTLOSS(pf->Bmask, pf->Bshift, pf->Bloss);
 	return (pf);
 }
 
@@ -101,14 +102,14 @@ AG_PixelFormatRGBA(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
 	pf->colorkey = 0;
 	pf->alpha = AG_ALPHA_OPAQUE;
 	pf->palette = NULL;
+	COMPUTE_SHIFTLOSS(Rmask, pf->Rshift, pf->Rloss);
+	COMPUTE_SHIFTLOSS(Gmask, pf->Gshift, pf->Gloss);
+	COMPUTE_SHIFTLOSS(Bmask, pf->Bshift, pf->Bloss);
+	COMPUTE_SHIFTLOSS(Amask, pf->Ashift, pf->Aloss);
 	pf->Rmask = Rmask;
 	pf->Gmask = Gmask;
 	pf->Bmask = Bmask;
 	pf->Amask = Amask;
-	COMPUTE_SHIFTLOSS(pf->Rmask, pf->Rshift, pf->Rloss);
-	COMPUTE_SHIFTLOSS(pf->Gmask, pf->Gshift, pf->Gloss);
-	COMPUTE_SHIFTLOSS(pf->Bmask, pf->Bshift, pf->Bloss);
-	COMPUTE_SHIFTLOSS(pf->Amask, pf->Ashift, pf->Aloss);
 	return (pf);
 }
 
@@ -214,6 +215,17 @@ AG_PixelFormatFree(AG_PixelFormat *pf)
 		Free(pf->palette);
 	}
 	Free(pf);
+}
+
+/* Compare two palettes. */
+int
+AG_PixelFormatComparePalettes(const AG_Palette *pal1, const AG_Palette *pal2)
+{
+	if (pal1->nColors != pal2->nColors) {
+		return (1);
+	}
+	return memcmp(pal1->colors, pal2->colors,
+	              pal1->nColors*sizeof(AG_Color));
 }
 
 #undef COMPUTE_SHIFTLOSS

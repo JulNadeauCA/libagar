@@ -48,7 +48,7 @@ struct ag_jpg_sourcemgr {
 	Uint8 buffer[4096];
 };
 
-int agJPEGQuality = 75;		/* Quality for JPEG export */
+int agJPEGQuality = 100;		/* Quality for JPEG export */
 
 /*
  * Callbacks
