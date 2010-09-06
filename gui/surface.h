@@ -72,6 +72,7 @@ AG_PixelFormat *AG_PixelFormatRGBA(int, Uint32, Uint32, Uint32, Uint32);
 AG_PixelFormat *AG_PixelFormatIndexed(int);
 AG_PixelFormat *AG_PixelFormatDup(const AG_PixelFormat *);
 void            AG_PixelFormatFree(AG_PixelFormat *);
+int             AG_PixelFormatComparePalettes(const AG_Palette *, const AG_Palette *);
 
 AG_Surface     *AG_SurfaceNew(enum ag_surface_type, Uint, Uint,
                               const AG_PixelFormat *, Uint);
@@ -354,21 +355,29 @@ AG_SurfacePutPixel(AG_Surface *s, Uint8 *pDst, Uint32 cDst)
 #endif
 		break;
 	case 2:
-		*(Uint16 *)pDst = cDst;
+		*(Uint16 *)pDst = (Uint16)cDst;
 		break;
 	default:
-		*pDst = cDst;
+		*pDst = (Uint8)cDst;
 		break;
 	}
 }
 
 /*
- * Test whether two pixel formats are identical (for color-index formats,
- * the palettes may still differ).
+ * Test whether two pixel formats are identical. If both formats are
+ * color-index, compare the palettes as well.
  */
 static __inline__ int
 AG_PixelFormatCompare(const AG_PixelFormat *pf1, const AG_PixelFormat *pf2)
 {
+	if ((pf1->palette != NULL && pf2->palette == NULL) ||
+	    (pf1->palette == NULL && pf2->palette != NULL)) {
+		return (1);
+	}
+	if (pf1->palette != NULL && pf2->palette != NULL &&
+	    AG_PixelFormatComparePalettes(pf1->palette, pf2->palette) != 0) {
+		return (1);
+	}
 	return !(pf1->BytesPerPixel == pf2->BytesPerPixel &&
 	         pf1->Rmask == pf2->Rmask &&
 		 pf1->Gmask == pf2->Gmask &&
