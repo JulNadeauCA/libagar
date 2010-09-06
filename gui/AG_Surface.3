@@ -290,6 +290,9 @@ function releases all resources allocated by the given surface.
 .Ft "int"
 .Fn AG_SurfaceExportPNG "const AG_Surface *su" "char *path"
 .Pp
+.Ft "void"
+.Fn AG_SetPNGInterlacing "int enable"
+.Pp
 .Ft "int"
 .Fn AG_SurfaceExportJPEG "const AG_Surface *su" "char *path"
 .Pp
@@ -384,17 +387,15 @@ The
 .Fn AG_SurfaceExportPNG
 function exports a PNG image file from the contents of a surface.
 An error is returned if Agar was not compiled with libpng support.
+.Fn AG_SetPNGInterlacing
+enables or disables interlacing (Adam7).
 .Pp
 .Fn AG_SurfaceExportJPEG
 exports a JPEG image file from the contents of a surface.
 If the surface has an alpha-channel, it is ignored.
 An error is returned if Agar was not compiled with libjpeg support.
-.Pp
-The
 .Fn AG_SetJPEGQuality
-function may be used to configure the quality for subsequent
-.Fn AG_SurfaceExportJPEG
-calls.
+sets the quality setting for saved JPEGs.
 The value is given in percent, 100% being the highest quality (the default).
 .Pp
 .Fn AG_SurfaceExportBMP
