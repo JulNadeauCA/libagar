@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2010 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,33 +31,37 @@
 #include "m.h"
 
 void
-M_PolygonInit2(M_Polygon2 *poly)
+M_PolygonInit2(M_Polygon2 *P)
 {
-	poly->s = NULL;
-	poly->n = 0;
+	P->s = NULL;
+	P->n = 0;
+	P->vn = 0;
 }
 
 void
-M_PolygonInit3(M_Polygon3 *poly)
+M_PolygonInit3(M_Polygon3 *P)
 {
-	poly->s = NULL;
-	poly->n = 0;
+	P->s = NULL;
+	P->n = 0;
+	P->vn = 0;
 }
 
 void
-M_PolygonFree2(M_Polygon2 *poly)
+M_PolygonFree2(M_Polygon2 *P)
 {
-	Free(poly->s);
-	poly->s = NULL;
-	poly->n = 0;
+	Free(P->s);
+	P->s = NULL;
+	P->n = 0;
+	P->vn = 0;
 }
 
 void
-M_PolygonFree3(M_Polygon3 *poly)
+M_PolygonFree3(M_Polygon3 *P)
 {
-	Free(poly->s);
-	poly->s = NULL;
-	poly->n = 0;
+	Free(P->s);
+	P->s = NULL;
+	P->n = 0;
+	P->vn = 0;
 }
 
 M_Polygon2
@@ -67,6 +71,7 @@ M_PolygonRead2(AG_DataSource *ds)
 	Uint i;
 
 	P.n = (Uint)AG_ReadUint32(ds);
+	P.vn = P.n*2;
 	P.s = Malloc(P.n*sizeof(M_Line2));
 	for (i = 0; i < P.n; i++) {
 		P.s[i] = M_LineRead2(ds);
@@ -81,6 +86,7 @@ M_PolygonRead3(AG_DataSource *ds)
 	Uint i;
 
 	P.n = (Uint)AG_ReadUint32(ds);
+	P.vn = P.n*2;
 	P.s = Malloc(P.n*sizeof(M_Line3));
 	for (i = 0; i < P.n; i++) {
 		P.s[i] = M_LineRead3(ds);
@@ -108,6 +114,7 @@ M_PolygonWrite3(AG_DataSource *ds, M_Polygon3 *P)
 		M_LineWrite3(ds, &P->s[i]);
 }
 
+/* Create a new polygon in R^2 from a set of lines. */
 M_Polygon2
 M_PolygonFromLines2(Uint n, M_Line2 *lines)
 {
@@ -116,12 +123,14 @@ M_PolygonFromLines2(Uint n, M_Line2 *lines)
 
 	P.s = Malloc(n*sizeof(M_Line2));
 	P.n = n;
+	P.vn = n*2;
 	for (i = 0; i < n; i++) {
 		P.s[i] = lines[i];
 	}
 	return (P);
 }
 
+/* Create a new polygon in R^3 from a set of lines. */
 M_Polygon3
 M_PolygonFromLines3(Uint n, M_Line3 *lines)
 {
@@ -130,10 +139,137 @@ M_PolygonFromLines3(Uint n, M_Line3 *lines)
 
 	P.s = Malloc(n*sizeof(M_Line3));
 	P.n = n;
+	P.vn = n*2;
 	for (i = 0; i < n; i++) {
 		P.s[i] = lines[i];
 	}
 	return (P);
+}
+
+/*
+ * Add a line segment to a polygon in R^2.
+ * Return segment index on success, -1 on failure.
+ */
+int
+M_PolygonAddLine2(M_Polygon2 *P, M_Line2 L)
+{
+	M_Line2 *sNew;
+
+	if ((sNew = TryRealloc(P->s, (P->n+1)*sizeof(M_Line2))) == NULL) {
+		return (-1);
+	}
+	P->s = sNew;
+	P->s[P->n] = L;
+	P->vn += 2;
+	return (P->n++);
+}
+
+/*
+ * Add a line segment to a polygon in R^3.
+ * Return segment index on success, -1 on failure.
+ */
+int
+M_PolygonAddLine3(M_Polygon3 *P, M_Line3 L)
+{
+	M_Line3 *sNew;
+
+	if ((sNew = TryRealloc(P->s, (P->n+1)*sizeof(M_Line3))) == NULL) {
+		return (-1);
+	}
+	P->s = sNew;
+	P->s[P->n] = L;
+	P->vn += 2;
+	return (P->n++);
+}
+
+/*
+ * Add a vertex to a polygon in R^2.
+ * Return vertex index on success, -1 on failure.
+ */
+int
+M_PolygonAddVertex2(M_Polygon2 *P, M_Vector2 v)
+{
+	M_Line2 *sNew;
+
+	if (((P->vn+1)%2) == 1) {
+		if ((sNew = TryRealloc(P->s, (P->n+1)*sizeof(M_Line2))) == NULL) {
+			return (-1);
+		}
+		P->s = sNew;
+	}
+	if (P->n == 0) {
+		P->s[0] = M_LineFromPts2(v, v);			/* Degenerate */
+	} else {
+		M_Line2 *sPrev = &P->s[P->n - 1];
+		*sPrev = M_LineFromPts2(sPrev->p, v);
+		P->s[P->n] = M_LineFromPts2(v, P->s[0].p);	/* Close */
+	}
+	if (((P->n+1)%2) == 1) {
+		P->n++;
+	}
+	return (P->vn++);
+}
+
+/*
+ * Add a vertex to a polygon in R^3.
+ * Return vertex index on success, -1 on failure.
+ */
+int
+M_PolygonAddVertex3(M_Polygon3 *P, M_Vector3 v)
+{
+	M_Line3 *sNew;
+
+	if (((P->vn+1)%2) == 1) {
+		if ((sNew = TryRealloc(P->s, (P->n+1)*sizeof(M_Line3))) == NULL) {
+			return (-1);
+		}
+		P->s = sNew;
+	}
+	if (P->n == 0) {
+		P->s[0] = M_LineFromPts3(v, v);			/* Degenerate */
+	} else {
+		M_Line3 *sPrev = &P->s[P->n - 1];
+		*sPrev = M_LineFromPts3(sPrev->p, v);
+		P->s[P->n] = M_LineFromPts3(v, P->s[0].p);	/* Close */
+	}
+	if (((P->n+1)%2) == 1) {
+		P->n++;
+	}
+	return (P->vn++);
+}
+
+/* Remove a line segment from a polygon in R^2. */
+int
+M_PolygonDelLine2(M_Polygon2 *P, int sIdx)
+{
+	if (sIdx < 0 || sIdx >= P->n) {
+		AG_SetError("Bad segment index");
+		return (-1);
+	}
+	if (sIdx < P->n-1) {
+		memmove(&P->s[sIdx], &P->s[sIdx+1],
+		    (P->n - 1)*sizeof(M_Line2));
+	}
+	P->n--;
+	P->vn -= 2;
+	return (0);
+}
+
+/* Remove a line segment from a polygon in R^3. */
+int
+M_PolygonDelLine3(M_Polygon3 *P, int sIdx)
+{
+	if (sIdx < 0 || sIdx >= P->n) {
+		AG_SetError("Bad segment index");
+		return (-1);
+	}
+	if (sIdx < P->n-1) {
+		memmove(&P->s[sIdx], &P->s[sIdx+1],
+		    (P->n - 1)*sizeof(M_Line3));
+	}
+	P->n--;
+	P->vn -= 2;
+	return (0);
 }
 
 /* Test whether the given point lies inside the polygon. */
@@ -174,20 +310,20 @@ M_PointInPolygon2(M_Polygon2 *poly, M_Vector2 p)
 }
 
 /* Test whether the given polygon is convex (1) or concave (0). */
-/* XXX test; assumes no self-intersections */
+/* XXX assumes no self-intersections */
 int
-M_PolygonIsConvex2(M_Polygon2 *poly)
+M_PolygonIsConvex2(M_Polygon2 *P)
 {
 	int i, flag = 0;
 
-	if (poly->n < 3) {
+	if (P->n < 3) {
 		AG_SetError("<3 vertices");
 		return (-1);
 	}
-	for (i = 0; i < poly->n; i++) {
-		M_Vector2 pi = poly->s[(i)   % poly->n].p;
-		M_Vector2 pj = poly->s[(i+1) % poly->n].p;
-		M_Vector2 pk = poly->s[(i+2) % poly->n].p;
+	for (i = 0; i < P->n; i++) {
+		M_Vector2 pi = P->s[(i)   % P->n].p;
+		M_Vector2 pj = P->s[(i+1) % P->n].p;
+		M_Vector2 pk = P->s[(i+2) % P->n].p;
 		M_Vector2 pji = M_VecSub2p(&pj, &pi);
 		M_Vector2 pkj = M_VecSub2p(&pk, &pj);
 		M_Real dot;
@@ -210,23 +346,23 @@ M_PolygonIsConvex2(M_Polygon2 *poly)
 
 /* Test whether the given polygon is planar to machine precision. */
 int
-M_PolygonIsPlanar3(M_Polygon3 *poly)
+M_PolygonIsPlanar3(M_Polygon3 *P)
 {
-	M_Plane3 P;
+	M_Plane3 Pl;
 	Uint i;
 
-	if (poly->n < 3) {
+	if (P->n < 3) {
 		AG_SetError("<3 vertices");
 		return (-1);
 	}
-	if (poly->n == 3)
+	if (P->n == 3)
 		return (1);
 
-	P = M_PlaneFromPts3(poly->s[0].p, poly->s[1].p, poly->s[2].p);
-	for (i = 3; i < poly->n; i++) {
-		M_Vector3 p = poly->s[i].p;
+	Pl = M_PlaneFromPts3(P->s[0].p, P->s[1].p, P->s[2].p);
+	for (i = 3; i < P->n; i++) {
+		M_Vector3 p = P->s[i].p;
 
-		if ((P.a*p.x + P.b*p.y + P.c*p.z + P.d) > M_MACHEP)
+		if ((Pl.a*p.x + Pl.b*p.y + Pl.c*p.z + Pl.d) > M_MACHEP)
 			return (0);
 	}
 	return (1);

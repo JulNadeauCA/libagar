@@ -96,10 +96,12 @@ typedef struct m_rectangle3 {
 typedef struct m_polygon2 {
 	M_Line2 *s;		/* Sides (must be closed) */
 	Uint n;			/* Number of sides */
+	Uint vn;		/* Number of vertices */
 } M_Polygon2;
 typedef struct m_polygon3 {
 	M_Line3 *s;
 	Uint n;
+	Uint vn;
 } M_Polygon3;
 
 #define M_POLYGON2_INITIALIZER { NULL, 0 }
