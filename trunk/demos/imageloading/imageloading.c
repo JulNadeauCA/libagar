@@ -26,6 +26,8 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		goto fail;
 	}
+	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
+	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar image loading demo");
@@ -37,6 +39,7 @@ main(int argc, char *argv[])
 	} else {
 		AG_PixmapFromSurface(win, 0, su);
 	}
+
 	AG_LabelNew(win, 0, "Saving agar.png:");
 	if (AG_SurfaceExportPNG(su, "agar-save.png") == -1) {
 		AG_LabelNew(win, 0, "Save failed: %s", AG_GetError());
@@ -48,6 +51,23 @@ main(int argc, char *argv[])
 		}
 	}
 	
+	AG_LabelNew(win, 0, "Loading agar-index.png:");
+	if ((su = AG_SurfaceFromPNG("agar-index.png")) == NULL) {
+		AG_LabelNew(win, 0, "Failed: %s", AG_GetError());
+	} else {
+		AG_PixmapFromSurface(win, 0, su);
+	}
+	AG_LabelNew(win, 0, "Saving agar-index.png:");
+	if (AG_SurfaceExportPNG(su, "agar-index-save.png") == -1) {
+		AG_LabelNew(win, 0, "Save failed: %s", AG_GetError());
+	} else {
+		if ((su2 = AG_SurfaceFromPNG("agar-index-save.png")) == NULL) {
+			AG_LabelNew(win, 0, "Load failed: %s", AG_GetError());
+		} else {
+			AG_PixmapFromSurface(win, 0, su2);
+		}
+	}
+
 	AG_LabelNew(win, 0, "Loading pepe.jpg:");
 	if ((su = AG_SurfaceFromJPEG("pepe.jpg")) == NULL) {
 		AG_LabelNew(win, 0, "Failed: %s", AG_GetError());
