@@ -13,7 +13,11 @@
 
 #ifdef HAVE_VSNPRINTF
 # include <stdio.h>
+#ifdef _XBOX
+# define AG_Vsnprintf _vsnprintf
+#else
 # define AG_Vsnprintf vsnprintf
+#endif // _XBOX
 #else
 # include <agar/core/begin.h>
 __BEGIN_DECLS

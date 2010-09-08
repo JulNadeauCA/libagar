@@ -21,7 +21,9 @@
 #else
 # define AG_FILENAME_MAX 256
 #endif
-#ifdef ARG_MAX
+#if defined (_XBOX)
+#define AG_ARG_MAX 2932
+#elif defined(ARG_MAX)
 #define AG_ARG_MAX ARG_MAX
 #else
 #define AG_ARG_MAX 4096

@@ -56,7 +56,11 @@
 
 #ifdef _WIN32
 # include <core/queue_close.h>			/* Conflicts */
+#ifdef _XBOX
+# include <xtl.h>
+#else
 # include <windows.h>
+#endif
 # include <core/queue_close.h>
 # include <core/queue.h>
 #else
@@ -69,6 +73,10 @@
 #include <errno.h>
 
 #include <core/core.h>
+
+#ifdef _XBOX
+#include <core/xbox.h>
+#endif
 
 int
 AG_MkDir(const char *dir)
@@ -117,7 +125,10 @@ AG_RmDir(const char *dir)
 int
 AG_ChDir(const char *dir)
 {
-#ifdef _WIN32
+#ifdef _XBOX
+	AG_SetError("Changing directories is not currently supported on Xbox");
+	return (-1);
+#elif _WIN32
 	if (SetCurrentDirectory(dir)) {
 		return (0);
 	} else {
@@ -152,18 +163,46 @@ AG_OpenDir(const char *path)
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
 
-		Strlcpy(dpath, path, sizeof(dpath));
-		Strlcat(dpath, "\\*", sizeof(dpath));
-		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
+#ifdef _XBOX
+		if(!AG_XBOX_PathIsValid(path)) {
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
 			goto fail;
 		}
-		while (FindNextFile(h, &fdata) != 0) {
+#endif
+
+		Strlcpy(dpath, path, sizeof(dpath));
+		if(dpath[strlen(dpath) - 1] != '\\') {
+			Strlcat(dpath, "\\*", sizeof(dpath));
+		} else {
+			Strlcat(dpath, "*", sizeof(dpath));
+		}
+
+		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
+#ifndef _XBOX
+			AG_SetError(_("Invalid file handle (%d)"),
+			    (int)GetLastError());
+			goto fail;
+#endif
+		}
+
+#ifdef _XBOX
+		/* On Xbox we need to manually include "." and ".." */
+		dir->ents = Realloc(dir->ents,
+		    (dir->nents+2)*sizeof(char *));
+		dir->ents[dir->nents++] = Strdup(".");
+		dir->ents[dir->nents++] = Strdup("..");
+
+		/* If the path was empty the handle will be invalid */
+		if(h == INVALID_HANDLE_VALUE) {
+			return dir;
+		}
+#endif
+		do {
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
 			dir->ents[dir->nents++] = Strdup(fdata.cFileName);
-		}
+		} while (FindNextFile(h, &fdata) != 0);
 		rv = GetLastError();
 		FindClose(h);
 		if (rv != ERROR_NO_MORE_FILES) {
@@ -249,7 +288,20 @@ fail:
 int
 AG_GetCWD(char *buf, size_t len)
 {
-#ifdef _WIN32
+#ifdef _XBOX
+	if(buf == NULL) {
+		buf = TryStrdup("D:\\");
+		len = 4;
+	} else {
+		if(len >= 4)
+			Strlcpy(buf, "D:\\", len);
+	}
+	if(buf == NULL) {
+		AG_SetError("Failed to get current directory");
+		return (-1);
+	}
+	return (0);
+#elif _WIN32
 	DWORD rv;
 
 	if ((rv = GetCurrentDirectory(len, buf)) == 0) {

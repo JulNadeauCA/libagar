@@ -3,8 +3,12 @@
 #ifdef _WIN32
 
 #include <core/queue_close.h>			/* Conflicts */
+#ifdef _XBOX
+#include <xtl.h>
+#else
 #include <windows.h>
 #include <mmsystem.h>
+#endif
 #include <core/queue_close.h>			/* Conflicts */
 #include <core/queue.h>
 
@@ -15,7 +19,9 @@ static DWORD t0;
 static void
 Init(void)
 {
+#ifndef _XBOX
 	timeBeginPeriod(1);
+#endif
 	t0 = timeGetTime();
 }
 

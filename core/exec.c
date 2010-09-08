@@ -31,23 +31,124 @@
 
 #include <core/core.h>
 
-#ifdef WIN32
+#ifdef _XBOX
+#include <core/xbox.h>
+#elif defined(_WIN32)
 #include <windows.h>
 #endif
-
 
 AG_ProcessID
 AG_Execute(const char *file, char **argv)
 {
+#ifdef _XBOX 
+	LAUNCH_DATA launchData = { LDT_TITLE };
+	char xbePath[AG_PATHNAME_MAX];
+	char xbeName[AG_FILENAME_MAX];
+	char argstr[AG_ARG_MAX];
+	char mntDev[AG_PATHNAME_MAX];
+	char *p;
+	DWORD xbeID;
+	int i = 0;
+
 	if(!file) {
 		AG_SetError("No file provided for execution.");
 		return (-1);
 	}
-#if defined(_WIN32)
+
+	/* Get the destination xbe path */
+	if(!argv || !argv[0] || (file && strcmp(file, argv[0]))) {
+		p = (char *)file;
+	} else {
+		p = argv[0];
+		i++;
+	}
+
+	/* Handle the command-line parameters */
+	Strlcpy(argstr, "", AG_ARG_MAX);
+	if(argv) {
+		while(argv[i] != NULL) {
+			if( (AG_ARG_MAX - strlen(argstr) < strlen(argv[i]) + 1) ) {
+				AG_SetError(_("%s: Supplied command arguments exceed AG_ARG_MAX (%d)"), 
+					p, AG_ARG_MAX);
+				return (-1);
+			}
+			Strlcat(argstr, argv[i], AG_ARG_MAX);
+			Strlcat(argstr, " ", AG_ARG_MAX);
+			i++;
+		}
+		Strlcpy((char*)((PLD_DEMO)&launchData)->Reserved, argstr, AG_ARG_MAX);
+	}
+
+	/* Resolve the full xbe path */
+	if((strlen(p) >= 7) && (!strncmp(p, "\\Device", 7))) {
+		/* The xbe path was passed with the partition mapping */
+		Strlcpy(xbePath, p, AG_PATHNAME_MAX);
+	} else {
+		char drive[3];
+		char *dev;
+
+		if(strlen(p) > 3 && isalpha(p[0]) && p[1] == ':' && p[2] == AG_PATHSEPCHAR) {
+			/* The xbe path was passed with a drive letter */
+			Strlcpy(drive, p, sizeof(drive));
+			p = &p[3];
+		} else {
+			/* Path is relative */
+			Strlcpy(drive, "D:", sizeof(drive));
+		}
+		if((dev = AG_XBOX_GetDeviceFromLogicalDrive(drive)) == NULL) {
+			AG_SetError("Invalid or unsupported drive letter."
+				" Please provide a valid drive letter or the full device path.");
+			return (-1);
+		}
+		Strlcpy(xbePath, dev, sizeof(xbePath));
+		Strlcat(xbePath, AG_PATHSEP, sizeof(xbePath));
+		Strlcat(xbePath, p, sizeof(xbePath));
+		Free(dev);
+	}
+
+	/* Isolate the xbe name */
+	p = strrchr(xbePath, '\\') + 1;
+	if(!p) {
+		AG_SetError("No XBE Name included with path");
+		return (-1);
+	}
+	Strlcpy(xbeName, p, AG_FILENAME_MAX);
+
+	/* mntDev will be the D: path for the new xbe */
+	Strlcpy(mntDev, xbePath, p - xbePath);
+	mntDev[p - xbePath] = '\0';
+
+	/* Get the xbe ID */
+	if((xbeID = AG_XBOX_GetXbeTitleId(xbePath)) == -1) {
+		AG_SetError("XBE is invalid or currupted");
+		return (-1);
+	}
+
+	/* Complete the launch data */
+	Strlcpy(((PLD_DEMO)&launchData)->szLauncherXBE, XeImageFileName->Buffer, XeImageFileName->Length + 1);
+	Strlcpy(((PLD_DEMO)&launchData)->szLaunchedXBE, xbePath, 64);
+
+	/* Get the launcher ID */
+	((PLD_DEMO)&launchData)->dwID = AG_XBOX_GetXbeTitleId(((PLD_DEMO)&launchData)->szLauncherXBE);
+
+	/* If this call succeeds the Agar application will be terminated so any
+	   configs need to be saved prior to this call. */
+	XWriteTitleInfoAndRebootA(xbeName, mntDev, LDT_TITLE, xbeID, &launchData);
+
+	/* If we are here an error occurred */
+	AG_SetError("XWriteTitleInfoAndRebootA failed.");
+	return (-1);
+
+#elif defined(_WIN32)
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	char argstr[AG_ARG_MAX];
 	int  i = 0;
+
+	if(!file) {
+		AG_SetError("No file provided for execution.");
+		return (-1);
+	}
 
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
@@ -83,8 +184,14 @@ AG_Execute(const char *file, char **argv)
 	CloseHandle(pi.hProcess);
 
 	return (pi.dwProcessId);
+
 #elif defined(HAVE_EXECVP)
 	AG_ProcessID pid;
+
+	if(!file) {
+		AG_SetError("No file provided for execution.");
+		return (-1);
+	}
 
 	if((pid = fork()) == -1) {
 		AG_SetError(_("Fork failed (%s)"), AG_Strerror(errno));
@@ -97,6 +204,7 @@ AG_Execute(const char *file, char **argv)
 	} else {
 		return (pid);
 	}
+
 #endif
 	AG_SetError("AG_Execute() is not supported on this platform");
 	return (-1);
@@ -105,7 +213,7 @@ AG_Execute(const char *file, char **argv)
 AG_ProcessID
 AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(_XBOX)
 	int time = 0;
 	int res;
 	DWORD status;
@@ -144,6 +252,7 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 	CloseHandle(psHandle);
 
 	return (pid);
+
 #elif defined(HAVE_EXECVP)
 	int res;
 	int status;
@@ -169,6 +278,7 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 		return (-1);
 	}
 	return (res);
+
 #endif
 	AG_SetError("AG_WaitOnProcess() is not supported on this platform");
 	return (-1);
@@ -182,7 +292,7 @@ AG_Kill(AG_ProcessID pid)
 		return (-1);
 	}
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(_XBOX)
 	HANDLE psHandle;
 
 	if((psHandle = OpenProcess(SYNCHRONIZE |

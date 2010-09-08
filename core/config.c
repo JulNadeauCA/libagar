@@ -38,6 +38,10 @@
 #include <core/config.h>
 #include <core/rcs.h>
 
+#ifdef _XBOX
+#include <core/xbox.h>
+#endif
+
 #include <string.h>
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 #include <pwd.h>
@@ -122,21 +126,37 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	Strlcat(udatadir, ".", sizeof(udatadir));
 	Strlcat(udatadir, agProgName, sizeof(udatadir));
 	AG_SetString(cfg, "home", pwd->pw_dir);
+#elif defined(_XBOX)
+	/* If the persistent data drive is mounted use it */
+	if(AG_XBOX_DriveIsMounted('T')) {
+		Strlcpy(udatadir, "T:\\", sizeof(udatadir));
+	} else {
+		Strlcpy(udatadir, "D:\\.", sizeof(udatadir));
+	}
+	Strlcat(udatadir, agProgName, sizeof(udatadir)-1);
+	AG_SetString(cfg, "home", "D:\\");
 #else
 	udatadir[0] = '.';
 	Strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 	AG_SetString(cfg, "home", ".");
 #endif
 	AG_SetString(cfg, "save-path", udatadir);
-	AG_PrtString(cfg, "tmp-path", "%s/tmp", udatadir);
+	AG_PrtString(cfg, "tmp-path", "%s%stmp", udatadir, AG_PATHSEP);
 
-#if defined(_WIN32)
+#if defined(_XBOX)
+	if(AG_XBOX_DriveIsMounted('T')) {
+		AG_SetString(cfg, "den-path", "T:\\");
+	} else {
+		AG_SetString(cfg, "den-path", "D:\\");
+	}
+	AG_PrtString(cfg, "load-path", "%s;D:\\", udatadir);
+#elif defined(_WIN32)
 	AG_SetString(cfg, "den-path", ".");
 	AG_PrtString(cfg, "load-path", "%s:.", udatadir);
 #else
 	AG_SetString(cfg, "den-path", SHAREDIR);
 	AG_PrtString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
-#endif
+#endif /* _WIN32 */
 	
 	if (flags & AG_CREATE_DATADIR) {
 		if (AG_CreateDataDir() == -1)

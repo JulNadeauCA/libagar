@@ -87,6 +87,9 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_GetCPUInfo(&agCPU);
 
 #ifdef AG_THREADS
+#ifdef _XBOX
+	ptw32_processInitialize();
+#endif
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
 # if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,

@@ -805,7 +805,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 		goto fail;
 
 	/* Create the working copy if it does not exist. */
-	localpath[0] = '/';
+	localpath[0] = AG_PATHSEPCHAR;
 	localpath[1] = '\0';
 	Strlcat(localpath, path, sizeof(localpath));
 	if ((obj = AG_ObjectFindS(vfsRoot, localpath)) == NULL) {

@@ -45,7 +45,9 @@
 
 #include "icons.h"
 
-#ifdef _WIN32
+#ifdef _XBOX
+# include <core/xbox.h>
+#elif _WIN32
 # include <core/win32.h>
 #else
 # include <sys/types.h>
@@ -152,7 +154,9 @@ RefreshListing(AG_FileDlg *fd)
 		char path[AG_FILENAME_MAX];
 		
 		Strlcpy(path, fd->cwd, sizeof(path));
-		Strlcat(path, AG_PATHSEP, sizeof(path));
+		if(path[strlen(path) - 1] != AG_PATHSEPCHAR) {
+			Strlcat(path, AG_PATHSEP, sizeof(path));
+		}
 		Strlcat(path, dir->ents[i], sizeof(path));
 
 		if (PathIsFilesystemRoot(fd->cwd) &&
@@ -207,8 +211,12 @@ RefreshLocations(AG_FileDlg *fd, int init)
 #ifdef _WIN32
 	{
 		char path[4];
-		DWORD d = GetLogicalDrives();
 		int drive;
+#ifdef _XBOX
+		DWORD d = AG_XBOX_GetLogicalDrives();
+#else
+		DWORD d = GetLogicalDrives();
+#endif
 
 		/* Add the Windows drives */
 		for (drive = 0; drive < 26; drive++) {
@@ -920,18 +928,24 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 				ncwd[0] = AG_PATHSEPCHAR;
 				ncwd[1] = '\0';
 			}
+#ifdef _XBOX
+			if(PathIsFilesystemRoot(ncwd) && ncwd[2] != AG_PATHSEPCHAR) {
+				Strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
+			}
+#endif
 		}
 	} else if (!PathIsAbsolute(dir)) {
 		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 		if (!(ncwd[0] == AG_PATHSEPCHAR &&
-		      ncwd[1] == '\0')) {
+		      ncwd[1] == '\0') &&
+			  ncwd[strlen(ncwd) - 1] != AG_PATHSEPCHAR) {
 			Strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
 		}
 		Strlcat(ncwd, dir, sizeof(ncwd));
 	} else {
 		Strlcpy(ncwd, dir, sizeof(ncwd));
 	}
-	
+
 	if (AG_GetFileInfo(ncwd, &info) == -1) {
 		goto fail;
 	}

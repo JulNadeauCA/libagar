@@ -864,7 +864,9 @@ AG_SDL_GenericEventLoop(void *obj)
 		Tr2 = AG_GetTicks();
 		if (Tr2-Tr1 >= dsw->rNom) {
 			AG_FOREACH_WINDOW(win, drv) {
+#ifndef _XBOX
 				if (win->dirty)
+#endif
 					break;
 			}
 			if (win != NULL) {
