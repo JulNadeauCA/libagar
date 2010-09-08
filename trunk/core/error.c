@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 #include <windows.h>
 #endif
 
@@ -115,7 +115,7 @@ AG_GetError(void)
 const char *
 AG_Strerror(int error) 
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined (_XBOX)
 	static char *str = NULL;
 	char *p;
 

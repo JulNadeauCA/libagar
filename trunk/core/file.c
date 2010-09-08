@@ -25,7 +25,11 @@
 
 #ifdef _WIN32
 # include <core/queue_close.h>			/* Conflicts */
+#ifdef _XBOX
+#include <xtl.h>
+#else
 # include <windows.h>
+#endif
 # include <core/queue_close.h>
 # include <core/queue.h>
 #else
@@ -40,13 +44,29 @@
 
 #include <core/core.h>
 
+#ifdef _XBOX
+#include <core/xbox.h>
+#define INVALID_FILE_ATTRIBUTES -1
+#endif
+
 #ifdef _WIN32
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
 	DWORD attrs;
 	FILE *f;
-	
+
+#ifdef _XBOX
+	if((strlen(path) >= 2) && (path[strlen(path) -1] == '.') && 
+	   ((path[strlen(path) -2] == '.') ||
+	   (path[strlen(path) -2] == AG_PATHSEPCHAR))) {
+		i->type = AG_FILE_DIRECTORY;
+		i->perms |= AG_FILE_EXECUTABLE;
+		return (0);
+	}
+	else {
+#endif
+
 	if ((attrs = GetFileAttributes(path)) == INVALID_FILE_ATTRIBUTES) {
 		AG_SetError(_("%s: Failed to get information"), path);
 		return (-1);
@@ -61,13 +81,19 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 		i->type = AG_FILE_REGULAR;
 	}
 	if (attrs & FILE_ATTRIBUTE_ARCHIVE) i->flags |= AG_FILE_ARCHIVE;
-	if (attrs & FILE_ATTRIBUTE_COMPRESSED) i->flags |= AG_FILE_COMPRESSED;
-	if (attrs & FILE_ATTRIBUTE_ENCRYPTED) i->flags |= AG_FILE_ENCRYPTED;
 	if (attrs & FILE_ATTRIBUTE_HIDDEN) i->flags |= AG_FILE_HIDDEN;
-	if (attrs & FILE_ATTRIBUTE_SPARSE_FILE) i->flags |= AG_FILE_SPARSE;
 	if (attrs & FILE_ATTRIBUTE_SYSTEM) i->flags |= AG_FILE_SYSTEM;
 	if (attrs & FILE_ATTRIBUTE_TEMPORARY) i->flags |= AG_FILE_TEMPORARY;
+#ifndef _XBOX
+	if (attrs & FILE_ATTRIBUTE_COMPRESSED) i->flags |= AG_FILE_COMPRESSED;
+	if (attrs & FILE_ATTRIBUTE_ENCRYPTED) i->flags |= AG_FILE_ENCRYPTED;
+	if (attrs & FILE_ATTRIBUTE_SPARSE_FILE) i->flags |= AG_FILE_SPARSE;
+#endif // !_XBOX
 	
+#ifdef _XBOX
+	} /* !if(path[strlen(path) -1] == '.') */
+#endif
+
 	if ((f = fopen(path, "rb")) != NULL) {
 		fclose(f);
 		i->perms |= AG_FILE_READABLE;
@@ -135,7 +161,17 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 int
 AG_GetSystemTempDir(char *buf, size_t len)
 {
-#ifdef _WIN32
+#ifdef _XBOX
+	/* Use a cache partition if it is available */
+	if(AG_XBOX_DriveIsMounted('Z')) {
+		Strlcpy(buf, "Z:\\", len);
+	} else if(AG_XBOX_DriveIsMounted('D')) {
+		Strlcpy(buf, "D:\\", len);
+	} else {
+		return (-1);
+	}
+	return (0);
+#elif defined(_WIN32)
 	if (GetTempPath((DWORD)len, buf) == 0) {
 		AG_SetError("GetTempPath() failed");
 		return (-1);

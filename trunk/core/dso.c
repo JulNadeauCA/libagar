@@ -47,7 +47,11 @@
 # include <dll.h>
 #elif defined(_WIN32)
 # include <core/queue_close.h>			/* Conflicts */
+#ifdef _XBOX
+# include <xtl.h>
+#else
 # include <windows.h>
+#endif
 # include <core/queue_close.h>
 # include <core/queue.h>
 #else
@@ -150,7 +154,7 @@ LoadDSO_OS390(const char *path)
 #endif /* OS390 */
 
 /* Load a DSO using the LoadLibraryExW() interface on Windows. */
-#ifdef _WIN32
+#if defined(_WIN32) && !defined (_XBOX)
 static AG_DSO *
 LoadDSO_WIN32(const char *path)
 {
@@ -336,7 +340,7 @@ AG_LoadDSO(const char *name, Uint flags)
 	dso = LoadDSO_OS2(path);
 #elif defined(OS390)
 	dso = LoadDSO_OS390(path);
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !defined(_XBOX)
 	dso = LoadDSO_WIN32(path);
 #elif defined(HAVE_SHL_LOAD)
 	dso = LoadDSO_SHL(path);
@@ -406,7 +410,7 @@ AG_UnloadDSO(AG_DSO *dso)
 			goto out;
 		}
 	}
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !defined(_XBOX)
 	{
 		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
 		if (!FreeLibrary(d->handle)) {
@@ -507,7 +511,7 @@ SymDSO_OS390(AG_DSO_Generic *d, const char *sym, void **p)
 }
 #endif /* OS390 */
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_XBOX)
 /* Look up a symbol using the Windows GetProcAddress() interface. */
 static int
 SymDSO_WIN32(AG_DSO_Generic *d, const char *sym, void **p)
@@ -623,7 +627,7 @@ AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 	rv = SymDSO_OS2((AG_DSO_OS2 *)dso, sym, p);
 #elif defined(OS390)
 	rv = SymDSO_OS390((AG_DSO_Generic *)dso, sym, p);
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !defined(_XBOX)
 	rv = SymDSO_WIN32((AG_DSO_Generic *)dso, sym, p);
 #elif defined(HAVE_SHL_LOAD)
 	rv = SymDSO_SHL((AG_DSO_Generic *)dso, sym, p);

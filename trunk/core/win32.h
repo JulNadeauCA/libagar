@@ -10,7 +10,7 @@
 # include <windows.h>
 # include <agar/core/queue_close.h>		/* Naming conflicts */
 # include <agar/core/queue.h>
-#elif defined(_WIN32)
+#elif defined(_WIN32) && !defined(_XBOX)
 # include <agar/core/queue_close.h>		/* Naming conflicts */
 # include <windows.h>
 # include <agar/core/queue_close.h>		/* Naming conflicts */

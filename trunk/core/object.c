@@ -70,7 +70,11 @@ AG_ObjectInit(void *p, void *cl)
 	int i, nHier;
 
 	ob->name[0] = '\0';
+#ifdef _WIN32
+	ob->save_pfx = "\\world";
+#else
 	ob->save_pfx = "/world";
+#endif
 	ob->archivePath = NULL;
 	ob->cls = (cl != NULL) ? cl : &agObjectClass;
 	ob->parent = NULL;
@@ -235,7 +239,7 @@ GenerateObjectPath(void *obj, char *path, size_t path_len)
 	
 	/* Prepend / and the object name. */
 	memmove(&path[name_len], path, cur_len);    /* Move the NUL as well */
-	path[0] = '/';
+	path[0] = AG_PATHSEPCHAR;
 	memcpy(&path[1], ob->name, name_len-1);	    /* Omit the NUL */
 
 	if (ob->parent != ob->root && ob->parent != NULL) {
@@ -256,15 +260,14 @@ AG_ObjectCopyName(void *obj, char *path, size_t path_len)
 	AG_Object *ob = obj;
 	int rv = 0;
 
-	path[0] = '/';
+	path[0] = AG_PATHSEPCHAR;
 	path[1] = '\0';
 
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
-	if (ob != ob->root) {
+	if (ob == ob->root) {
 		Strlcat(path, ob->name, path_len);
-	}
-	if (ob != ob->root && ob->parent != ob->root && ob->parent != NULL) {
+	} else {
 		rv = GenerateObjectPath(ob->parent, path, path_len);
 	}
 	AG_ObjectUnlock(ob);
@@ -468,7 +471,7 @@ AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 		AG_SetError(_("Path name overflow"));
 		return (-1);
 	}
-	if ((p = strrchr(ppath, '/')) != NULL) {
+	if ((p = strrchr(ppath, AG_PATHSEPCHAR)) != NULL) {
 		*p = '\0';
 	} else {
 		AG_SetError(_("Not an absolute path: %s"), path);
@@ -560,14 +563,14 @@ FindObjectByName(const AG_Object *parent, const char *name)
 
 	Strlcpy(node_name, name, sizeof(node_name));
 
-	if ((s = strchr(node_name, '/')) != NULL) {
+	if ((s = strchr(node_name, AG_PATHSEPCHAR)) != NULL) {
 		*s = '\0';
 	}
 	TAILQ_FOREACH(child, &parent->children, cobjs) {
 		if (strcmp(child->name, node_name) != 0)
 			continue;
 
-		if ((s = strchr(name, '/')) != NULL) {
+		if ((s = strchr(name, AG_PATHSEPCHAR)) != NULL) {
 			rv = FindObjectByName(child, &s[1]);
 			if (rv != NULL) {
 				return (rv);
@@ -590,10 +593,10 @@ AG_ObjectFindS(void *vfsRoot, const char *name)
 	void *rv;
 
 #ifdef AG_DEBUG
-	if (name[0] != '/')
+	if (name[0] != AG_PATHSEPCHAR)
 		AG_FatalError("AG_ObjectFindS: Not an absolute path: %s", name);
 #endif
-	if (name[0] == '/' && name[1] == '\0')
+	if (name[0] == AG_PATHSEPCHAR && name[1] == '\0')
 		return (vfsRoot);
 	
 	AG_LockVFS(vfsRoot);
@@ -621,7 +624,7 @@ AG_ObjectFind(void *vfsRoot, const char *fmt, ...)
 	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
 #ifdef AG_DEBUG
-	if (path[0] != '/')
+	if (path[0] != AG_PATHSEPCHAR)
 		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", path);
 #endif
 	AG_LockVFS(vfsRoot);
@@ -881,9 +884,15 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
+#ifdef _XBOX
+	for (dir = Strsep(&loadpathp, ";");
+	     dir != NULL;
+	     dir = Strsep(&loadpathp, ";")) {
+#else
 	for (dir = Strsep(&loadpathp, ":");
 	     dir != NULL;
 	     dir = Strsep(&loadpathp, ":")) {
+#endif
 	     	Strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
 			Strlcat(path, ob->save_pfx, path_len);
@@ -923,9 +932,15 @@ AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
+#ifdef _XBOX
+	for (dir = Strsep(&loadpathp, ";");
+	     dir != NULL;
+	     dir = Strsep(&loadpathp, ";")) {
+#else
 	for (dir = Strsep(&loadpathp, ":");
 	     dir != NULL;
 	     dir = Strsep(&loadpathp, ":")) {
+#endif
 		char tmp_path[AG_PATHNAME_MAX];
 
 	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));
@@ -2372,7 +2387,8 @@ AG_ObjectChanged(void *p)
 		return (1);
 	}
 	AG_GetString(agConfig, "tmp-path", pathCur, sizeof(pathCur));
-	Strlcat(pathCur, "/_chg.", sizeof(pathCur));
+	Strlcat(pathCur, AG_PATHSEP, sizeof(pathCur));
+	Strlcat(pathCur, "_chg.", sizeof(pathCur));
 	Strlcat(pathCur, ob->name, sizeof(pathCur));
 	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {
 		fclose(fLast);
