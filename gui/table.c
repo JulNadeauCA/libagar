@@ -572,9 +572,6 @@ SelectionVisible(AG_Table *t)
 	int n, m;
 	int x, y;
 	
-	if (t->poll_ev != NULL) {
-		t->poll_ev->handler(t->poll_ev);
-	}
 	for (n = 0, x = -t->xOffs;
 	     n < t->n && x < t->r.w;
 	     n++) {
