@@ -1338,12 +1338,8 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				c->selected = !c->selected;
 			}
 		} else {
-			for (m = 0; m < t->m; m++) {
-				for (n = 0; n < t->n; n++) {
-					c = &t->cells[m][n];
-					c->selected = ((int)m == mc);
-				}
-			}
+			AG_TableDeselectAllRows(t);
+			AG_TableSelectRow(t, mc);
 			if (t->clickRowEv != NULL) {
 				AG_PostEvent(NULL, t,
 				    t->clickRowEv->name,
@@ -1776,6 +1772,7 @@ AG_TableSelectRow(AG_Table *t, int m)
 	if (m < t->m) {
 		for (n = 0; n < t->n; n++)
 			t->cells[m][n].selected = 1;
+		AG_PostEvent(NULL, t, "row-selected", "%i", m);
 	}
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
