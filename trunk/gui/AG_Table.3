@@ -604,7 +604,14 @@ are used to scroll the view of the table.
 .Pp
 The
 .Nm
-widget does not generate any event.
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn row-selected "int index"
+The row at specified
+.Fa index
+was selected.
+.El
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Table
