@@ -955,6 +955,9 @@ AG_WidgetFocus(void *obj)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
+	if (AG_WidgetIsFocused(wid))
+		goto out;
+
 	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
 		if (wid->focusFwd != NULL &&
 		    !(wid->focusFwd->flags & AG_WIDGET_FOCUSED)) {
