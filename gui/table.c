@@ -1269,23 +1269,20 @@ ColumnLeftClick(AG_Table *t, int px)
 					AG_PostEvent(NULL, t,
 					    t->clickColEv->name,
 					    "%i", n);
-				} else {
-					if (t->dblClickedCol != -1 &&
-					    t->dblClickedCol == n) {
-						AG_CancelEvent(t,
-						    "dblclick-col-expire");
-						if (t->dblClickColEv != NULL) {
-							AG_PostEvent(NULL, t,
-							    t->dblClickColEv->name,
-							    "%i", n);
-						}
-						t->dblClickedCol = -1;
-					} else {
-						t->dblClickedCol = n;
-						AG_SchedEvent(NULL, t,
-						    agMouseDblclickDelay,
-						    "dblclick-col-expire", NULL);
+				}
+				if (t->dblClickedCol != -1 &&
+				    t->dblClickedCol == n) {
+					AG_CancelEvent(t, "dblclick-col-expire");
+					if (t->dblClickColEv != NULL) {
+						AG_PostEvent(NULL, t,
+						    t->dblClickColEv->name,
+						    "%i", n);
 					}
+					t->dblClickedCol = -1;
+				} else {
+					t->dblClickedCol = n;
+					AG_SchedEvent(NULL, t,
+					    agMouseDblclickDelay, "dblclick-col-expire", NULL);
 				}
 				goto cont;
 			}
@@ -1351,21 +1348,19 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				AG_PostEvent(NULL, t,
 				    t->clickRowEv->name,
 				    "%i", mc);
-			} else {
-				if (t->dblClickedRow != -1 &&
-				    t->dblClickedRow == mc) {
-					AG_CancelEvent(t, "dblclick-row-expire");
-					if (t->dblClickRowEv != NULL) {
-						AG_PostEvent(NULL, t,
-						    t->dblClickRowEv->name,
-						    "%i", mc);
-					}
-					t->dblClickedRow = -1;
-				} else {
-					t->dblClickedRow = mc;
-					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-					    "dblclick-row-expire", NULL);
+			}
+			if (t->dblClickedRow != -1 &&
+			    t->dblClickedRow == mc) {
+				AG_CancelEvent(t, "dblclick-row-expire");
+				if (t->dblClickRowEv != NULL) {
+					AG_PostEvent(NULL, t,
+					    t->dblClickRowEv->name, "%i", mc);
 				}
+				t->dblClickedRow = -1;
+			} else {
+				t->dblClickedRow = mc;
+				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+				    "dblclick-row-expire", NULL);
 			}
 		}
 		break;
@@ -1408,21 +1403,19 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				AG_PostEvent(NULL, t,
 				    t->clickCellEv->name,
 				    "%i", mc);
-			} else {
-				if (t->dblClickedCell != -1 &&
-				    t->dblClickedCell == mc) {
-					AG_CancelEvent(t, "dblclick-cell-expire");
-					if (t->dblClickCellEv != NULL) {
-						AG_PostEvent(NULL, t,
-						    t->dblClickCellEv->name,
-						    "%i", mc);
-					}
-					t->dblClickedCell = -1;
-				} else {
-					t->dblClickedRow = mc;
-					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-					    "dblclick-cell-expire", NULL);
+			}
+			if (t->dblClickedCell != -1 &&
+			    t->dblClickedCell == mc) {
+				AG_CancelEvent(t, "dblclick-cell-expire");
+				if (t->dblClickCellEv != NULL) {
+					AG_PostEvent(NULL, t,
+					    t->dblClickCellEv->name, "%i", mc);
 				}
+				t->dblClickedCell = -1;
+			} else {
+				t->dblClickedRow = mc;
+				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+				    "dblclick-cell-expire", NULL);
 			}
 		}
 		break;
@@ -1458,21 +1451,19 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				AG_PostEvent(NULL, t,
 				    t->clickColEv->name,
 				    "%i", nc);
-			} else {
-				if (t->dblClickedCol != -1 &&
-				    t->dblClickedCol == nc) {
-					AG_CancelEvent(t, "dblclick-col-expire");
-					if (t->dblClickColEv != NULL) {
-						AG_PostEvent(NULL, t,
-						    t->dblClickColEv->name,
-						    "%i", nc);
-					}
-					t->dblClickedCol = -1;
-				} else {
-					t->dblClickedCol = nc;
-					AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-					    "dblclick-col-expire", NULL);
+			}
+			if (t->dblClickedCol != -1 &&
+			    t->dblClickedCol == nc) {
+				AG_CancelEvent(t, "dblclick-col-expire");
+				if (t->dblClickColEv != NULL) {
+					AG_PostEvent(NULL, t,
+					    t->dblClickColEv->name, "%i", nc);
 				}
+				t->dblClickedCol = -1;
+			} else {
+				t->dblClickedCol = nc;
+				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
+				    "dblclick-col-expire", NULL);
 			}
 		}
 		break;
