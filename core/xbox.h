@@ -52,6 +52,7 @@ XBOXAPI NTSTATUS WINAPI NtCreateFile(OUT PHANDLE FileHandle, IN ACCESS_MASK Desi
 									 IN PLARGE_INTEGER AllocationSize OPTIONAL, IN ULONG FileAttributes,
 									 IN ULONG ShareAccess, IN ULONG CreateDisposition, IN ULONG CreateOptions);
 
+#include <agar/core/begin.h>
 __BEGIN_DECLS
 DWORD AG_XBOX_GetXbeTitleId(const char *xbePath);
 char* AG_XBOX_GetDeviceFromLogicalDrive(const char *drive);
@@ -59,5 +60,6 @@ BOOL AG_XBOX_DriveIsMounted(const char driveLetter);
 BOOL AG_XBOX_PathIsValid(const char *path);
 DWORD AG_XBOX_GetLogicalDrives();
 __END_DECLS
+#include <agar/core/close.h>
 
 #endif
