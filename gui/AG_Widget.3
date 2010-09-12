@@ -343,9 +343,11 @@ The
 .Fn AG_WidgetFocus
 function gives focus to the given widget (and all of its parent widgets,
 up to the parent window if there is one).
-Returns 1 on success and 0 if the widget cannot gain focus (i.e.,
+.Fn AG_WidgetFocus
+returns 1 on success and 0 if the widget cannot gain focus (i.e.,
 .Dv AG_WIDGET_FOCUSABLE
 is not set).
+If the widget is already focused, the function is a no-op and returns 1.
 .Pp
 .Fn AG_WidgetUnfocus
 removes the focus state from the given widget and its children (but not
