@@ -73,42 +73,61 @@ CreateWindow(void)
 {
 	AG_Window *win;
 	AG_FileDlg *fd;
-	AG_FileType *ft;
+	AG_DirDlg *dd;
+	AG_FileType *ft[3];
 	AG_Box *box;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	int i;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar loader dialog demo");
 
-	/* Create the file loader widget. */
-	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+	ntab = AG_NotebookAddTab(nb, "Load file", AG_BOX_VERT);
+	{
+		/* Create the file loader widget. */
+		fd = AG_FileDlgNew(ntab, AG_FILEDLG_EXPAND);
 	
-	/* Set some default directory. */
-	AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
+		/* Set some default directory. */
+		AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
 	
-	/* Set some default filename. */
-	AG_FileDlgSetFilenameS(fd, "Meme.bmp");
+		/* Set some default filename. */
+		AG_FileDlgSetFilenameS(fd, "Meme.bmp");
 
-	/*
-	 * Register the loader functions. We can assign a set of user
-	 * options to specific types as well.
-	 */
-	ft = AG_FileDlgAddType(fd, "Windows Bitmap", "*.bmp", LoadImage, NULL);
-	AG_FileOptionNewBool(ft, "Invert colors", "invert", 0);
- 
-	ft = AG_FileDlgAddType(fd, "JPEG image", "*.jpg,*.jpeg", LoadImage, NULL);
-	AG_FileOptionNewBool(ft, "Invert colors", "invert", 0);
+		/*
+		 * Register the loader functions. We can assign a set of user
+		 * specified options to specific types as well.
+		 */
+		ft[0] = AG_FileDlgAddType(fd, "Windows Bitmap",
+		    "*.bmp",
+		    LoadImage, NULL);
+		ft[1] = AG_FileDlgAddType(fd, "JPEG image",
+		    "*.jpg,*.jpeg",
+		    LoadImage, NULL);
+		ft[2] = AG_FileDlgAddType(fd, "Portable Network Graphics",
+		    "*.png",
+		    LoadImage, NULL);
 
-	ft = AG_FileDlgAddType(fd, "Portable Network Graphics", "*.png",
-	    LoadImage, NULL);
-	AG_FileOptionNewBool(ft, "Invert colors", "invert", 0);
-
-	/*
-	 * As different file types are selected, FileDlg will automatically
-	 * create various widgets for per-type options. We specify where those
-	 * widgets will be created here.
-	 */
-	box = AG_BoxNewVert(win, AG_BOX_HFILL);
-	AG_FileDlgSetOptionContainer(fd, box);
+		for (i = 0; i < 3; i++)
+			AG_FileOptionNewBool(ft[i], "Inverted", "invert", 0);
+	
+		/*
+		 * As different file types are selected, FileDlg may create
+		 * widgets for type specific options. We specify where those
+		 * widgets will be created here.
+		 */
+		box = AG_BoxNewVert(ntab, AG_BOX_HFILL);
+		AG_FileDlgSetOptionContainer(fd, box);
+	}
+	ntab = AG_NotebookAddTab(nb, "Select directory", AG_BOX_VERT);
+	{
+		/* Create the directory selector widget. */
+		dd = AG_DirDlgNew(ntab, AG_DIRDLG_EXPAND);
+	
+		/* Set some default directory. */
+		AG_DirDlgSetDirectoryMRU(dd, "images-dir", "./Images");
+	}
 
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_WindowShow(win);
