@@ -880,6 +880,11 @@ Shown(AG_Event *event)
 	AG_TlistItem *it;
 	int w, wMax = 0, nItems = 0;
 
+	if (!(fd->flags & AG_FILEDLG_RESET_ONSHOW)) {
+		return;
+	}
+	fd->flags &= ~(AG_FILEDLG_RESET_ONSHOW);
+
 	AG_WidgetFocus(fd->tbFile);
 	RefreshListing(fd);
 	RefreshLocations(fd, 1);
@@ -1031,7 +1036,7 @@ Init(void *obj)
 {
 	AG_FileDlg *fd = obj;
 
-	fd->flags = 0;
+	fd->flags = AG_FILEDLG_RESET_ONSHOW;
 	fd->cfile[0] = '\0';
 	fd->dirMRU = NULL;
 	if (AG_GetCWD(fd->cwd, sizeof(fd->cwd)) == -1) {
