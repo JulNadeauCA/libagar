@@ -79,7 +79,7 @@ include:
 .Pp
 .Bl -tag -width "AG_NOTEBOOK_HIDE_TABS "
 .It AG_NOTEBOOK_HIDE_TABS
-Don't display the tabs.
+Don't display the tab selector controls.
 .It AG_NOTEBOOK_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -129,26 +129,36 @@ controls the visibility of the tab header (0 = invisible, 1 = visible).
 .Fn AG_NotebookSelectTab "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
 .nr nS 1
-Use the
-.Fn AG_NotebookAddTab
-function to create a new tabbed container.
 The
+.Fn AG_NotebookAddTab
+function creates a new tabbed container.
 .Fa name
-argument will be displayed on the tab header.
+is an arbitrary text label to be displayed on the tab header.
+The
 .Fa type
-describes the type of
+argument sets the type of
+.Xr AG_Box 3 ,
+that is either for
+.Dv AG_BOX_HORIZ
+horizontal packing, or
+.Dv AG_BOX_VERT
+for vertical packing (see
 .Xr AG_Box 3
-to create.
-To remove an existing tabbed container, call
-.Fn AG_NotebookDelTab .
+for details).
+.Fn AG_NotebookAddTab
+returns a pointer to the newly created
+.Ft AG_NotebookTab
+container widget (which is derived from
+.Xr AG_Box 3 ) .
+.Pp
+The
+.Fn AG_NotebookDelTab
+function removes an existing tab and any widgets contained.
 .Pp
 The
 .Fn AG_NotebookSelectTab
-function selects the visible container.
+function selects the active tab.
 .Sh EVENTS
-.\" The
-.\" .Nm
-.\" widget neither reacts to nor generates any event.
 The
 .Nm
 widget reacts to the following events:
@@ -161,6 +171,22 @@ Selects new visible container when user clicks on tab.
 The
 .Nm
 widget does not generate any event.
+.Sh EXAMPLES
+The following code fragment creates a notebook with two tabs:
+.Pp
+.Bd -literal -offset indent
+AG_Notebook *nb;
+AG_Notebook *ntab;
+
+nb = AG_NotebookNew(parent, AG_NOTEBOOK_EXPAND);
+{
+	ntab = AG_NotebookAddTab(nb, "Tab #1", AG_BOX_VERT);
+	AG_LabelNew(ntab, 0, "This is Tab #1");
+
+	ntab = AG_NotebookAddTab(nb, "Tab #2", AG_BOX_VERT);
+	AG_LabelNew(ntab, 0, "This is Tab #2");
+}
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
