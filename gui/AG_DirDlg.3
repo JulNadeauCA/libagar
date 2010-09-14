@@ -1,0 +1,252 @@
+.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 14, 2010
+.Dt AG_DIRDLG 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.1
+.Sh NAME
+.Nm AG_DirDlg
+.Nd agar directory browser widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a directory selection widget, similar to
+.Xr AG_DirDlg 3
+but restricted to directories.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft AG_DirDlg *
+.Fn AG_DirDlgNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft AG_DirDlg *
+.Fn AG_DirDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
+.Pp
+.Ft int
+.Fn AG_DirDlgSetDirectory "AG_DirDlg *file_dlg" "const char *format" "..."
+.Pp
+.Ft int
+.Fn AG_DirDlgSetDirectoryS "AG_DirDlg *file_dlg" "const char *path"
+.Pp
+.Ft void
+.Fn AG_DirDlgSetDirectoryMRU "AG_DirDlg *file_dlg" "const char *mruKey" "const char *defaultDir"
+.Pp
+.nr nS 0
+The
+.Fn AG_DirDlgNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+The
+.Fn AG_DirDlgNewMRU
+variant implicitely calls
+.Fn AG_DirDlgSetDirectoryMRU
+with the given key.
+Note that unless
+.Fn AG_DirDlgSetDirectory
+is used (see below), the default directory is set according to the
+.Xr AG_Config 3
+.Sq save-path
+parameter.
+.Pp
+Acceptable
+.Fa flags
+include:
+.Bl -tag -width "AG_DIRDLG_CLOSEWIN "
+.It AG_DIRDLG_MULTI
+Allow multiple files to be selected at once.
+.It AG_DIRDLG_CLOSEWIN
+Automatically close the
+.Nm
+widget's parent window when a file is selected.
+.It AG_DIRDLG_LOAD
+The selected directory must exist and be accessible or an error is returned to
+the user.
+.It AG_DIRDLG_SAVE
+The selected directory must be writeable or an error is returned to the user.
+.It AG_DIRDLG_ASYNC
+Load/save routines will be executed in a separate thread.
+This flag is available only if agar was compiled with threads support.
+.It AG_DIRDLG_HFILL
+Expand horizontally in parent (equivalent to invoking
+.Xr AG_ExpandHoriz 3 ) .
+.It AG_DIRDLG_VFILL
+Expand vertically in parent (equivalent to invoking
+.Xr AG_ExpandVert 3 ) .
+.It AG_DIRDLG_EXPAND
+Shorthand for
+.Dv AG_DIRDLG_HFILL|AG_DIRDLG_VFILL .
+.El
+.Pp
+The active directory can be set programmatically with the
+.Fn AG_DirDlgSetDirectory
+function.
+.Pp
+The
+.Fn AG_DirDlgSetDirectoryMRU
+sets the working directory according to an
+.Xr AG_Config 3
+parameter named
+.Fa mruKey
+If the parameter does not exist, it will be set to
+.Fa defaultDir
+(it is customary to use a name such as
+.Sq myapp.mru.foofiles ) .
+If
+.Fn AG_DirDlgSetDirectoryMRU
+is used, subsequent directory changes will cause the current
+.Xr AG_Config 3
+settings to be saved automatically.
+.Pp
+.Sh OK/CANCEL ACTIONS
+By default, selecting a file will trigger the following checks:
+.Pp
+.Bl -enum -compact
+.It
+If
+.Dv AG_DIRDLG_LOAD
+or
+.Dv AG_DIRDLG_SAVE
+is set, check whether the directory is accessible or writeable.
+.It
+Select the directory, raising a
+.Dq dir-chosen
+event.
+.It
+If
+.Dv AG_DIRDLG_CLOSEWIN
+is set, close the parent window.
+.El
+.Pp
+The default action performed when a user clicks on "Cancel" is simply to
+close the parent window if
+.Dv AG_DIRDLG_CLOSEWIN
+is set.
+.Pp
+These default actions can be overridden using the functions below:
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_DirDlgOkAction "AG_DirDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_DirDlgCancelAction "AG_DirDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "int"
+.Fn AG_DirDlgCheckReadAccess "AG_DirDlg *file_dlg"
+.Pp
+.Ft "int"
+.Fn AG_DirDlgCheckWriteAccess "AG_DirDlg *file_dlg"
+.Pp
+.nr nS 0
+The
+.Fn AG_DirDlgOkAction
+function configures an event handler function to invoke when a directory is
+selected, overriding the default behavior.
+The event handler will be passed a string argument containing the
+absolute path to the selected directory.
+.Pp
+.Fn AG_DirDlgCancelAction
+overrides the default behavior of the "Cancel" button.
+.Pp
+The utility functions
+.Fn AG_DirDlgCheckReadAccess
+and
+.Fn AG_DirDlgCheckWriteAccess
+evaluate whether the selected directory is readable or writeable.
+.Sh BINDINGS
+The
+.Nm
+widget does not provide any bindings.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "pushed (Cancel button) "
+.It dblclick (dir list)
+Change the working directory.
+.It return (text input)
+If the entered path is an existing directory, change the working directory.
+Otherwise, assume that the path refers to a file and select it.
+.Xr glob 3
+is used on systems that support it.
+.It pushed (OK button)
+Select the current directory, checking for needed permissions if either
+.Dv AG_DIRDLG_LOAD
+or
+.Dv AG_DIRDLG_SAVE
+is set.
+Also closes parent window if
+.Dv AG_DIRDLG_CLOSEWIN is set.
+.It pushed (Cancel button)
+Closes the parent window if
+.Dv AG_DIRDLG_CLOSEWIN
+is set, otherwise a no-op.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -width 2n
+.It Fn dir-chosen "char *path"
+The user has selected the given directory.
+.Fa path
+is the full pathname to the directory.
+.It Fn dir-selected "char *path"
+The user has browsed to the given directory.
+.El
+.Sh STRUCTURE DATA
+For the
+.Ft AG_DirDlg
+object:
+.Pp
+.Bl -tag -width "char cwd[AG_PATHNAME_MAX] " -compact
+.It Ft char cwd[AG_PATHNAME_MAX]
+Absolute path of current working directory.
+.El
+.Sh EXAMPLES
+See
+.Pa demos/loader
+in the Agar source distribution.
+.Sh SEE ALSO
+.Xr AG_FileDlg 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Limits 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.4.1
