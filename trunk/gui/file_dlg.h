@@ -57,6 +57,7 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_LOAD		  0x004	/* File must exist and be readable */
 #define AG_FILEDLG_SAVE		  0x008	/* File must be writeable */
 #define AG_FILEDLG_ASYNC	  0x010	/* Separate thread for load/save fn */
+#define AG_FILEDLG_RESET_ONSHOW	  0x020	/* Reset listing/locations on show */
 #define AG_FILEDLG_HFILL	  0x100
 #define AG_FILEDLG_VFILL	  0x200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
