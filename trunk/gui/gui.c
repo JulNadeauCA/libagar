@@ -39,6 +39,7 @@
 #include "checkbox.h"
 #include "combo.h"
 #include "console.h"
+#include "dir_dlg.h"
 #include "editable.h"
 #include "file_dlg.h"
 #include "file_selector.h"
@@ -93,6 +94,7 @@ void *agGUIClasses[] = {
 	&agCheckboxClass,
 	&agComboClass,
 	&agConsoleClass,
+	&agDirDlgClass,
 	&agEditableClass,
 	&agFontSelectorClass,
 	&agFileDlgClass,

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,24 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-is a file selection widget.
-It is typically used to implement file dialog boxes where actions are tied
-to specific file extensions.
+is a traditional file selection widget.
+The widget displays a list of directories and shortcuts at the left, a
+list of files at the right and an input textbox and file type selector
+at the bottom.
+On platforms with
+.Xr glob 3
+support, glob patterns may be entered in the input textbox.
+.Pp
+Although
+.Nm
+is most often used to implement "Load" or "Save as..." dialog windows, it
+may also be embedded into any arbitrary container widget.
+User-specified actions (with optional parameters) can be tied to specific
+file extensions.
+.Pp
+For selecting directories, the
+.Xr AG_DirDlg 3
+widget may be used instead.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -81,10 +96,12 @@ The
 variant implicitely calls
 .Fn AG_FileDlgSetDirectoryMRU
 with the given key.
-The
+Note that unless
+.Fn AG_FileDlgSetDirectory
+is used (see below), the default directory is set according to the
 .Xr AG_Config 3
 .Sq save-path
-parameter is used as the default directory.
+parameter.
 .Pp
 Acceptable
 .Fa flags
@@ -115,9 +132,9 @@ Shorthand for
 .Dv AG_FILEDLG_HFILL|AG_FILEDLG_VFILL .
 .El
 .Pp
-The working directory can be set manually with the
+The working directory can be set programmatically with the
 .Fn AG_FileDlgSetDirectory
-function, which will return 0 on success and -1 on failure.
+function.
 .Pp
 The
 .Fn AG_FileDlgSetDirectoryMRU
@@ -377,9 +394,9 @@ describes the file type that was selected by the user.
 User has moved selection over the given file, where
 .Fa path
 is the full pathname to it.
-This event is typically used by file loader dialogs for previewing file
-contents using an external widget.
-.It Fn dir-selected "void"
+This event is useful for things like previewing file contents using
+an external widget.
+.It Fn dir-selected "char *path"
 The given directory was selected.
 .El
 .Sh STRUCTURE DATA
@@ -420,6 +437,7 @@ See
 .Pa demos/loader
 in the Agar source distribution.
 .Sh SEE ALSO
+.Xr AG_DirDlg 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Limits 3 ,
 .Xr AG_Widget 3 ,
