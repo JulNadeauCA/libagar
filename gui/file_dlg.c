@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,9 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_getpwuid.h>
-#include <config/have_getuid.h>
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -39,9 +36,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-#include <pwd.h>
-#endif
 
 #include "icons.h"
 
@@ -57,10 +51,7 @@
 # include <errno.h>
 #endif
 
-#include <config/have_glob.h>
-#ifdef HAVE_GLOB
-#include <glob.h>
-#endif
+#include "file_dlg_common.h"
 
 AG_FileDlg *
 AG_FileDlgNew(void *parent, Uint flags)
@@ -98,37 +89,6 @@ AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 	AG_ObjectUnlock(fd);
 }
 
-static __inline__ int
-PathIsFilesystemRoot(const char *path)
-{
-#ifdef _WIN32
-	return isalpha(path[0]) && path[1] == ':' &&
-	       (path[2] == '\0' || (path[2] == '\\' && path[3] == '\0'));
-#else
-	return (path[0] == AG_PATHSEPCHAR && path[1] == '\0');
-#endif
-}
-
-static __inline__ int
-PathIsAbsolute(const char *path)
-{
-#ifdef _WIN32
-	return isalpha(path[0]) && path[1] == ':' &&
-	       (path[2] == '\0' || path[2] == '\\');
-#else
-	return (path[0] == AG_PATHSEPCHAR);
-#endif
-}
-
-static int
-AG_FilenameCompare(const void *p1, const void *p2)
-{
-	const char *s1 = *(const void **)p1;
-	const char *s2 = *(const void **)p2;
-
-	return (strcmp(s1, s2));
-}
-
 /* Update the file / directory listing */
 static void
 RefreshListing(AG_FileDlg *fd)
@@ -159,13 +119,14 @@ RefreshListing(AG_FileDlg *fd)
 		}
 		Strlcat(path, dir->ents[i], sizeof(path));
 
-		if (PathIsFilesystemRoot(fd->cwd) &&
+		if (AG_PathIsFilesystemRoot(fd->cwd) &&
 		    strcmp(dir->ents[i], "..")==0) {
 			continue;
 		}
 		if (AG_GetFileInfo(path, &info) == -1) {
 			continue;
 		}
+		/* XXX TODO: check for symlinks to directories */
 		if (info.type == AG_FILE_DIRECTORY) {
 			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
 			dirs[ndirs++] = Strdup(dir->ents[i]);
@@ -201,9 +162,9 @@ RefreshListing(AG_FileDlg *fd)
 	AG_CloseDir(dir);
 }
 
-/* Update locations box. */
+/* Update the shortcuts. */
 static void
-RefreshLocations(AG_FileDlg *fd, int init)
+RefreshShortcuts(AG_FileDlg *fd, int init)
 {
 	AG_Tlist *tl = fd->comLoc->list;
 
@@ -255,21 +216,17 @@ RefreshLocations(AG_FileDlg *fd, int init)
 	{
 		char path[AG_PATHNAME_MAX], *pPath = &path[0], *p;
 	
-		/* Add the filesystem root. */
+		/* Add the filesystem root, home and cwd. */
 		AG_TlistAddS(tl, agIconDirectory.s, "/");
-
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 		{
-			/* Add the home directory */
 			struct passwd *pw;
 			if ((pw = getpwuid(getuid())) != NULL)
 				AG_TlistAddS(tl, agIconDirectory.s, pw->pw_dir);
 		}
 #endif
-		/* Add the cwd */
-		if (AG_GetCWD(path, sizeof(path)) == 0) {
+		if (AG_GetCWD(path, sizeof(path)) == 0)
 			AG_TlistAddS(tl, agIconDirectory.s, path);
-		}
 		
 		/* Add the Agar save-path or load-path */
 		AG_GetString(agConfig,
@@ -302,7 +259,7 @@ DirSelected(AG_Event *event)
 		if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 			/* AG_TextMsgFromError() */
 		} else {
-			AG_PostEvent(NULL, fd, "dir-selected", NULL);
+			AG_PostEvent(NULL, fd, "dir-selected", "%s", fd->cwd);
 			RefreshListing(fd);
 		}
 	}
@@ -322,7 +279,7 @@ LocSelected(AG_Event *event)
 	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 		/* AG_TextMsgFromError() */
 	} else {
-		AG_PostEvent(NULL, fd, "dir-selected", NULL);
+		AG_PostEvent(NULL, fd, "dir-selected", "%s", fd->cwd);
 		RefreshListing(fd);
 	}
 }
@@ -541,42 +498,6 @@ PressedOK(AG_Event *event)
 	AG_ObjectUnlock(fd);
 }
 
-static int
-ProcessFilename(char *file, size_t len)
-{
-	char *end = &file[strlen(file)-1];
-	char *s;
-
-	/* Remove trailing whitespaces. */
-	while ((end >= file) && *end == ' ') {
-		*end = '\0';
-		end--;
-	}
-	if (file[0] == '\0')
-		return (-1);
-
-	/* Remove leading whitespaces. */
-	for (s = file; *s == ' '; s++)
-		;;
-	if (s > file) {
-		memmove(file, s, end-s+2);
-		end -= (s-file);
-	}
-	if (file[0] == '\0')
-		return (-1);
-
-	/* Treat the root specially. */
-	if (strcmp(file, AG_PATHSEP) == 0)
-		return (0);
-
-	/* Remove trailing path separators. */
-	if (*end == AG_PATHSEPCHAR) {
-		*end = '\0';
-		end--;
-	}
-	return (0);
-}
-
 static void
 SetFilename(AG_FileDlg *fd, const char *file)
 {
@@ -584,7 +505,7 @@ SetFilename(AG_FileDlg *fd, const char *file)
 		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
 	} else {
 		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
-		if (!PathIsFilesystemRoot(fd->cwd) &&
+		if (!AG_PathIsFilesystemRoot(fd->cwd) &&
 		    (fd->cfile[0] != '\0' &&
 		     fd->cfile[strlen(fd->cfile)-1] != AG_PATHSEPCHAR)) {
 			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
@@ -887,7 +808,7 @@ Shown(AG_Event *event)
 
 	AG_WidgetFocus(fd->tbFile);
 	RefreshListing(fd);
-	RefreshLocations(fd, 1);
+	RefreshShortcuts(fd, 1);
 	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 
 	AG_COMBO_FOREACH(it, fd->comTypes) {
@@ -924,7 +845,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 	if (dir[0] == '.' && dir[1] == '\0') {
 		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
-		if (!PathIsFilesystemRoot(fd->cwd)) {
+		if (!AG_PathIsFilesystemRoot(fd->cwd)) {
 			Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 			if ((c = strrchr(ncwd, AG_PATHSEPCHAR)) != NULL) {
 				*c = '\0';
@@ -934,12 +855,13 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 				ncwd[1] = '\0';
 			}
 #ifdef _XBOX
-			if(PathIsFilesystemRoot(ncwd) && ncwd[2] != AG_PATHSEPCHAR) {
+			if (AG_PathIsFilesystemRoot(ncwd) &&
+			    ncwd[2] != AG_PATHSEPCHAR) {
 				Strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
 			}
 #endif
 		}
-	} else if (!PathIsAbsolute(dir)) {
+	} else if (!AG_PathIsAbsolute(dir)) {
 		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 		if (!(ncwd[0] == AG_PATHSEPCHAR &&
 		      ncwd[1] == '\0') &&
@@ -1039,9 +961,7 @@ Init(void *obj)
 	fd->flags = AG_FILEDLG_RESET_ONSHOW;
 	fd->cfile[0] = '\0';
 	fd->dirMRU = NULL;
-	if (AG_GetCWD(fd->cwd, sizeof(fd->cwd)) == -1) {
-		fprintf(stderr, "%s: %s", fd->cwd, AG_GetError());
-	}
+	(void)AG_GetCWD(fd->cwd, sizeof(fd->cwd));
 	fd->optsCtr = NULL;
 	TAILQ_INIT(&fd->types);
 
