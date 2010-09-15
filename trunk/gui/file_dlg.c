@@ -529,78 +529,13 @@ TextboxChanged(AG_Event *event)
 
 #ifdef HAVE_GLOB
 static void
-CollapseGlobResults(AG_FileDlg *fd)
-{
-	if (fd->winGlob == NULL) {
-		return;
-	}
-	fd->winGlobRect.w = WIDTH(fd->winGlob);
-	fd->winGlobRect.h = HEIGHT(fd->winGlob);
-	AG_WindowHide(fd->winGlob);
-	AG_ObjectDetach(fd->winGlobList);
-	AG_ObjectDetach(fd->winGlob);
-	fd->winGlob = NULL;
-}
-
-static void
-ModalCloseGlobResults(AG_Event *event)
-{
-	AG_FileDlg *fd = AG_PTR(1);
-
-	if (fd->winGlob != NULL)
-		CollapseGlobResults(fd);
-}
-
-static void
-ExpandGlobResults(AG_FileDlg *fd, int wMax)
-{
-	AG_SizeReq rList;
-	AG_Window *winParent = WIDGET(fd)->window;
-	Uint wView, hView;
-	int x, y, w, h;
-
-	fd->winGlob = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
-	AG_WindowSetPadding(fd->winGlob, 0, 0, 0, 0);
-	AG_ObjectAttach(fd->winGlob, fd->winGlobList);
-		
-	if (fd->winGlobRect.w > 0) {
-		w = fd->winGlobRect.w;
-		h = fd->winGlobRect.h;
-	} else {
-		AG_TlistSizeHintPixels(fd->winGlobList, wMax, 10);
-		AG_WidgetSizeReq(fd->winGlobList, &rList);
-		w = rList.w + fd->winGlob->wBorderSide*2;
-		h = rList.h + fd->winGlob->wBorderBot;
- 	}
-	x = WIDGET(fd->tbFile)->rView.x2 - w;
-	y = WIDGET(fd->tbFile)->rView.y1;
-	
-	if (winParent != NULL &&
-	    AGDRIVER_MULTIPLE(WIDGET(fd)->drv)) {
-		x += WIDGET(winParent)->x;
-		y += WIDGET(winParent)->y;
-	}
-
-	AG_GetDisplaySize(WIDGET(fd)->drv, &wView, &hView);
-	if (x+w > wView) { w = wView - x; }
-	if (y+h > hView) { h = hView - y; }
-	if (w < 4 || h < 4) {
-		CollapseGlobResults(fd);
-		return;
-	}
-	AG_SetEvent(fd->winGlob, "window-modal-close",
-	    ModalCloseGlobResults, "%p", fd);
-	AG_WindowSetGeometry(fd->winGlob, x, y, w, h);
-	AG_WindowShow(fd->winGlob);
-}
-
-static void
 SelectGlobResult(AG_Event *event)
 {
 	char file[AG_PATHNAME_MAX];
-	AG_FileDlg *fd = AG_PTR(1);
+	AG_Window *win = AG_PTR(1);
+	AG_FileDlg *fd = AG_PTR(2);
+	AG_TlistItem *ti = AG_PTR(3);
 	AG_Textbox *tb = fd->tbFile;
-	AG_TlistItem *ti = AG_PTR(2);
 	AG_FileInfo info;
 	int endSep;
 
@@ -622,56 +557,109 @@ SelectGlobResult(AG_Event *event)
 		CheckAccessAndChoose(fd);
 	}
 out:
-	CollapseGlobResults(fd);
 	AG_ObjectUnlock(fd);
+	AG_ObjectDetach(win);
+}
+
+static void
+CloseGlobResults(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+	AG_ObjectDetach(win);
+}
+
+static void
+ExpandGlobResults(AG_FileDlg *fd, glob_t *gl, const char *pattern)
+{
+	AG_Window *winParent = WIDGET(fd)->window;
+	AG_Window *win;
+	Uint wView, hView;
+	int x, y, w, h;
+	int wMax = 0, hMax = 0;
+	AG_Button *btn;
+	AG_Tlist *tl;
+	int i;
+	
+	win = AG_WindowNew(0);
+	AG_WindowAttach(winParent, win);
+	AG_WindowSetCaption(win, _("Matching \"%s\""), pattern);
+
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
+	AG_SetEvent(tl, "tlist-selected", SelectGlobResult, "%p,%p", win, fd);
+	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Dismiss"),
+	    CloseGlobResults, "%p", win);
+	AG_WidgetFocus(btn);
+
+	for (i = 0; i < gl->gl_pathc; i++) {
+		char *p = gl->gl_pathv[i];
+		AG_FileInfo fi;
+		AG_TlistItem *ti;
+
+		if (AG_GetFileInfo(p, &fi) != 0) {
+			continue;
+		}
+		if (fi.type == AG_FILE_DIRECTORY) {
+			if (p[strlen(p)-1] != AG_PATHSEPCHAR) {
+				ti = AG_TlistAdd(tl, agIconDirectory.s,
+				    "%s%c", p, AG_PATHSEPCHAR);
+			} else {
+				ti = AG_TlistAddS(tl, agIconDirectory.s, p);
+			}
+		} else {
+			ti = AG_TlistAddS(tl, agIconDoc.s, p);
+		}
+		ti->p1 = &gl->gl_pathv[i];
+		AG_TextSize(p, &w, NULL);
+		if (w > wMax) { wMax = w; }
+		hMax++;
+	}
+
+	/* Compute geometry. */
+	w = wMax + 100 + tl->item_h+2 + agPrefScrollbarSize;
+	h = hMax*tl->item_h + 32;
+	x = WIDGET(fd->tbFile)->rView.x2 - w;
+	y = WIDGET(fd->tbFile)->rView.y1;
+	if (winParent != NULL &&
+	    AGDRIVER_MULTIPLE(WIDGET(fd)->drv)) {
+		x += WIDGET(winParent)->x;
+		y += WIDGET(winParent)->y;
+	}
+
+	/* Limit to display area. */
+	AG_GetDisplaySize(WIDGET(fd)->drv, &wView, &hView);
+	if (x+w > wView) { w = wView - x; }
+	if (y+h > hView) { h = hView - y; }
+	if (w < 10 || h < 10) {
+		AG_ObjectDetach(win);
+		return;
+	}
+
+	AG_WindowSetGeometry(win, x, y, w, h);
+	AG_WindowShow(win);
 }
 
 static int
 GlobExpansion(AG_FileDlg *fd, char *path, size_t path_len)
 {
+	char *pathOrig;
 	glob_t gl;
-	int i;
 
-	if (glob(path, GLOB_TILDE, NULL, &gl) != 0) {
+	if ((pathOrig = TryStrdup(path)) == NULL) {
 		return (0);
+	}
+	if (glob(path, GLOB_TILDE, NULL, &gl) != 0) {
+		goto out;
 	}
 	if (gl.gl_pathc == 1) {
 		Strlcpy(path, gl.gl_pathv[0], path_len);
 	} else if (gl.gl_pathc > 1) {
-		int w, wMax = 0;
-		AG_TlistBegin(fd->winGlobList);
-		for (i = 0; i < gl.gl_pathc; i++) {
-			char *p = gl.gl_pathv[i];
-			AG_FileInfo fi;
-			AG_TlistItem *ti;
-
-			if (AG_GetFileInfo(p, &fi) != 0) {
-				continue;
-			}
-			if (fi.type == AG_FILE_DIRECTORY) {
-				if (p[strlen(p)-1] != AG_PATHSEPCHAR) {
-					ti = AG_TlistAdd(fd->winGlobList,
-					    agIconDirectory.s,
-					    "%s%c", p, AG_PATHSEPCHAR);
-				} else {
-					ti = AG_TlistAddS(fd->winGlobList,
-					    agIconDirectory.s, p);
-				}
-			} else {
-				ti = AG_TlistAddS(fd->winGlobList, agIconDoc.s,
-				    p);
-			}
-			ti->p1 = &gl.gl_pathv[i];
-			AG_TextSize(p, &w, NULL);
-			if (w > wMax) { wMax = w; }
-		}
-		AG_TlistEnd(fd->winGlobList);
-		AG_SetEvent(fd->winGlobList, "tlist-selected",
-		    SelectGlobResult, "%p", fd);
-		ExpandGlobResults(fd, wMax);
+		ExpandGlobResults(fd, &gl, pathOrig);
+		free(pathOrig);
 		return (1);
 	}
 	globfree(&gl);
+out:
+	free(pathOrig);
 	return (0);
 }
 #endif /* HAVE_GLOB */
@@ -800,7 +788,7 @@ Shown(AG_Event *event)
 	AG_FileDlg *fd = AG_SELF();
 	AG_TlistItem *it;
 	int w, wMax = 0, nItems = 0;
-
+	
 	if (!(fd->flags & AG_FILEDLG_RESET_ONSHOW)) {
 		return;
 	}
@@ -966,6 +954,9 @@ Init(void *obj)
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
+	AG_PaneMoveDividerPct(fd->hPane, 50);
+	AG_PaneResizeAction(fd->hPane, AG_PANE_DIVIDE_EVEN);
+
 	fd->comLoc = AG_ComboNewS(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
 	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 	AG_TlistSetCompareFn(fd->comLoc->list, AG_TlistCompareStrings);
@@ -986,11 +977,6 @@ Init(void *obj)
 	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
 	fd->okAction = NULL;
 	fd->cancelAction = NULL;
-
-	fd->winGlob = NULL;
-	fd->winGlobList = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(fd->winGlobList, &agTlistClass);
-	AG_Expand(fd->winGlobList);
 
 	AG_AddEvent(fd, "widget-shown", Shown, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);

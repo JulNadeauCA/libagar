@@ -78,9 +78,6 @@ typedef struct ag_file_dlg {
 	void *optsCtr;				/* Container widget for opts */
 	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
 	AG_Combo *comLoc;			/* Locations list */
-	AG_Window *winGlob;			/* Glob results window */
-	AG_Rect winGlobRect;			/* Glob results window size */
-	AG_Tlist *winGlobList;			/* Glob results list */
 } AG_FileDlg;
 
 __BEGIN_DECLS
