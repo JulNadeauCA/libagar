@@ -469,17 +469,19 @@ ExpandGlobResults(AG_DirDlg *dd, glob_t *gl, const char *pattern)
 	h = hMax*tl->item_h + 32;
 	x = WIDGET(dd->tbInput)->rView.x2 - w;
 	y = WIDGET(dd->tbInput)->rView.y1;
-	if (winParent != NULL &&
-	    AGDRIVER_MULTIPLE(WIDGET(dd)->drv)) {
+	if (AGDRIVER_MULTIPLE(WIDGET(dd)->drv) &&
+	    winParent != NULL) {
 		x += WIDGET(winParent)->x;
 		y += WIDGET(winParent)->y;
 	}
 
 	/* Limit to display area. */
 	AG_GetDisplaySize(WIDGET(dd)->drv, &wView, &hView);
+	if (x < 0) { x = 0; }
+	if (y < 0) { y = 0; }
 	if (x+w > wView) { w = wView - x; }
 	if (y+h > hView) { h = hView - y; }
-	if (w < 10 || h < 10) {
+	if (w < 5 || h < 5) {
 		AG_ObjectDetach(win);
 		return;
 	}

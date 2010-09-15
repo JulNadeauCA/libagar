@@ -125,19 +125,17 @@ Expand(AG_Event *event)
 		x = WIDGET(com)->rView.x2 - w;
 		y = WIDGET(com)->rView.y1;
 		
-		switch (AGDRIVER_CLASS(drv)->wm) {
-		case AG_WM_SINGLE:
-			AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
-			if (x+w > wView) { w = wView - x; }
-			if (y+h > hView) { h = hView - y; }
-			break;
-		case AG_WM_MULTIPLE:
-			if (WIDGET(com)->window != NULL) {
-				x += WIDGET(WIDGET(com)->window)->x;
-				y += WIDGET(WIDGET(com)->window)->y;
-			}
-			break;
+		AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
+		if (x+w > wView) { w = wView - x; }
+		if (y+h > hView) { h = hView - y; }
+		
+		if (AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE &&
+		    WIDGET(com)->window != NULL) {
+			x += WIDGET(WIDGET(com)->window)->x;
+			y += WIDGET(WIDGET(com)->window)->y;
 		}
+		if (x < 0) { x = 0; }
+		if (y < 0) { y = 0; }
 		if (w < 4 || h < 4) {
 			Collapse(com);
 			return;

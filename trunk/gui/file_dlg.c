@@ -619,17 +619,19 @@ ExpandGlobResults(AG_FileDlg *fd, glob_t *gl, const char *pattern)
 	h = hMax*tl->item_h + 32;
 	x = WIDGET(fd->tbFile)->rView.x2 - w;
 	y = WIDGET(fd->tbFile)->rView.y1;
-	if (winParent != NULL &&
-	    AGDRIVER_MULTIPLE(WIDGET(fd)->drv)) {
+	if (AGDRIVER_MULTIPLE(WIDGET(fd)->drv) &&
+	    winParent != NULL) {
 		x += WIDGET(winParent)->x;
 		y += WIDGET(winParent)->y;
 	}
 
 	/* Limit to display area. */
 	AG_GetDisplaySize(WIDGET(fd)->drv, &wView, &hView);
+	if (x < 0) { x = 0; }
+	if (y < 0) { y = 0; }
 	if (x+w > wView) { w = wView - x; }
 	if (y+h > hView) { h = hView - y; }
-	if (w < 10 || h < 10) {
+	if (w < 5 || h < 5) {
 		AG_ObjectDetach(win);
 		return;
 	}
