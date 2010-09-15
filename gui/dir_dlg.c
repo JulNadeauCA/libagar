@@ -390,144 +390,130 @@ TextboxChanged(AG_Event *event)
 
 #ifdef HAVE_GLOB
 static void
-CollapseGlobResults(AG_DirDlg *dd)
+SelectGlobResult(AG_Event *event)
 {
-	if (dd->winGlob == NULL) {
-		return;
+	char file[AG_PATHNAME_MAX];
+	AG_Window *win = AG_PTR(1);
+	AG_DirDlg *dd = AG_PTR(2);
+	AG_TlistItem *ti = AG_PTR(3);
+	AG_Textbox *tb = dd->tbInput;
+
+	AG_ObjectLock(dd);
+	Strlcpy(file, ti->text, sizeof(file));
+	AG_TextboxSetString(tb, file);
+	if (AG_DirDlgSetDirectoryS(dd, file) != 0) {
+		AG_TextMsgFromError();
+		goto out;
 	}
-	dd->winGlobRect.w = WIDTH(dd->winGlob);
-	dd->winGlobRect.h = HEIGHT(dd->winGlob);
-	AG_WindowHide(dd->winGlob);
-	AG_ObjectDetach(dd->winGlobList);
-	AG_ObjectDetach(dd->winGlob);
-	dd->winGlob = NULL;
+	CheckAccessAndChoose(dd);
+out:
+	AG_ObjectUnlock(dd);
+	AG_ObjectDetach(win);
 }
 
 static void
-ModalCloseGlobResults(AG_Event *event)
+CloseGlobResults(AG_Event *event)
 {
-	AG_DirDlg *dd = AG_PTR(1);
-
-	if (dd->winGlob != NULL)
-		CollapseGlobResults(dd);
+	AG_Window *win = AG_PTR(1);
+	AG_ObjectDetach(win);
 }
 
 static void
-ExpandGlobResults(AG_DirDlg *dd, int wMax)
+ExpandGlobResults(AG_DirDlg *dd, glob_t *gl, const char *pattern)
 {
-	AG_SizeReq rList;
 	AG_Window *winParent = WIDGET(dd)->window;
+	AG_Window *win;
 	Uint wView, hView;
 	int x, y, w, h;
+	int wMax = 0, hMax = 0;
+	AG_Button *btn;
+	AG_Tlist *tl;
+	int i;
+	
+	win = AG_WindowNew(0);
+	AG_WindowAttach(winParent, win);
+	AG_WindowSetCaption(win, _("Matching \"%s\""), pattern);
 
-	dd->winGlob = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
-	AG_WindowSetPadding(dd->winGlob, 0, 0, 0, 0);
-	AG_ObjectAttach(dd->winGlob, dd->winGlobList);
-		
-	if (dd->winGlobRect.w > 0) {
-		w = dd->winGlobRect.w;
-		h = dd->winGlobRect.h;
-	} else {
-		AG_TlistSizeHintPixels(dd->winGlobList, wMax, 10);
-		AG_WidgetSizeReq(dd->winGlobList, &rList);
-		w = rList.w + dd->winGlob->wBorderSide*2;
-		h = rList.h + dd->winGlob->wBorderBot;
- 	}
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
+	AG_SetEvent(tl, "tlist-selected", SelectGlobResult, "%p,%p", win, dd);
+	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Dismiss"),
+	    CloseGlobResults, "%p", win);
+	AG_WidgetFocus(btn);
+
+	for (i = 0; i < gl->gl_pathc; i++) {
+		char *p = gl->gl_pathv[i];
+		AG_FileInfo fi;
+		AG_TlistItem *ti;
+
+		if (AG_GetFileInfo(p, &fi) != 0) {
+			continue;
+		}
+		if (fi.type == AG_FILE_DIRECTORY) {
+			if (p[strlen(p)-1] != AG_PATHSEPCHAR) {
+				ti = AG_TlistAdd(tl, agIconDirectory.s,
+				    "%s%c", p, AG_PATHSEPCHAR);
+			} else {
+				ti = AG_TlistAddS(tl, agIconDirectory.s, p);
+			}
+		} else {
+			ti = AG_TlistAddS(tl, agIconDoc.s, p);
+		}
+		ti->p1 = &gl->gl_pathv[i];
+		AG_TextSize(p, &w, NULL);
+		if (w > wMax) { wMax = w; }
+		hMax++;
+	}
+
+	/* Compute geometry. */
+	w = wMax + 100 + tl->item_h+2 + agPrefScrollbarSize;
+	h = hMax*tl->item_h + 32;
 	x = WIDGET(dd->tbInput)->rView.x2 - w;
 	y = WIDGET(dd->tbInput)->rView.y1;
-	
 	if (winParent != NULL &&
 	    AGDRIVER_MULTIPLE(WIDGET(dd)->drv)) {
 		x += WIDGET(winParent)->x;
 		y += WIDGET(winParent)->y;
 	}
 
+	/* Limit to display area. */
 	AG_GetDisplaySize(WIDGET(dd)->drv, &wView, &hView);
 	if (x+w > wView) { w = wView - x; }
 	if (y+h > hView) { h = hView - y; }
-	if (w < 4 || h < 4) {
-		CollapseGlobResults(dd);
+	if (w < 10 || h < 10) {
+		AG_ObjectDetach(win);
 		return;
 	}
-	AG_SetEvent(dd->winGlob, "window-modal-close",
-	    ModalCloseGlobResults, "%p", dd);
-	AG_WindowSetGeometry(dd->winGlob, x, y, w, h);
-	AG_WindowShow(dd->winGlob);
-}
 
-static void
-SelectGlobResult(AG_Event *event)
-{
-	char dir[AG_PATHNAME_MAX];
-	AG_DirDlg *dd = AG_PTR(1);
-	AG_Textbox *tb = dd->tbInput;
-	AG_TlistItem *ti = AG_PTR(2);
-	AG_FileInfo info;
-	int endSep;
-
-	AG_ObjectLock(dd);
-	Strlcpy(dir, ti->text, sizeof(dir));
-	endSep = (dir[strlen(dir)-1]==AG_PATHSEPCHAR) ? 1 : 0;
-	AG_TextboxSetString(tb, dir);
-
-	if (endSep ||
-	    (AG_GetFileInfo(dir,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
-		if (AG_DirDlgSetDirectoryS(dd, dir) == 0) {
-			RefreshListing(dd);
-		} else {
-			/* AG_TextMsgFromError() */
-			goto out;
-		}
-	} else {
-		AG_TextError(_("%s: Not a directory"), dir);
-	}
-out:
-	CollapseGlobResults(dd);
-	AG_ObjectUnlock(dd);
+	AG_WindowSetGeometry(win, x, y, w, h);
+	AG_WindowShow(win);
 }
 
 static int
 GlobExpansion(AG_DirDlg *dd, char *path, size_t path_len)
 {
+	char *pathOrig;
 	glob_t gl;
-	int i;
+	int glFlags = GLOB_TILDE;
 
-	if (glob(path, GLOB_TILDE, NULL, &gl) != 0) {
+#if defined(GLOB_ONLYDIR)
+	glFlags |= GLOB_ONLYDIR;
+#endif
+	if ((pathOrig = TryStrdup(path)) == NULL) {
 		return (0);
+	}
+	if (glob(path, glFlags, NULL, &gl) != 0) {
+		goto out;
 	}
 	if (gl.gl_pathc == 1) {
 		Strlcpy(path, gl.gl_pathv[0], path_len);
 	} else if (gl.gl_pathc > 1) {
-		int w, wMax = 0;
-		AG_TlistBegin(dd->winGlobList);
-		for (i = 0; i < gl.gl_pathc; i++) {
-			char *p = gl.gl_pathv[i];
-			AG_FileInfo fi;
-			AG_TlistItem *ti;
-
-			if (AG_GetFileInfo(p, &fi) != 0 ||
-			    fi.type != AG_FILE_DIRECTORY) {
-				continue;
-			}
-			if (p[strlen(p)-1] != AG_PATHSEPCHAR) {
-				ti = AG_TlistAdd(dd->winGlobList,
-				    agIconDirectory.s,
-				    "%s%c", p, AG_PATHSEPCHAR);
-			} else {
-				ti = AG_TlistAddS(dd->winGlobList,
-				    agIconDirectory.s, p);
-			}
-			ti->p1 = &gl.gl_pathv[i];
-			AG_TextSize(p, &w, NULL);
-			if (w > wMax) { wMax = w; }
-		}
-		AG_TlistEnd(dd->winGlobList);
-		AG_SetEvent(dd->winGlobList, "tlist-selected",
-		    SelectGlobResult, "%p", dd);
-		ExpandGlobResults(dd, wMax);
+		ExpandGlobResults(dd, &gl, pathOrig);
+		free(pathOrig);
 		return (1);
 	}
 	globfree(&gl);
+out:
+	free(pathOrig);
 	return (0);
 }
 #endif /* HAVE_GLOB */
@@ -732,11 +718,6 @@ Init(void *obj)
 	dd->btnCancel = AG_ButtonNewS(dd, 0, _("Cancel"));
 	dd->okAction = NULL;
 	dd->cancelAction = NULL;
-
-	dd->winGlob = NULL;
-	dd->winGlobList = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(dd->winGlobList, &agTlistClass);
-	AG_Expand(dd->winGlobList);
 
 	AG_AddEvent(dd, "widget-shown", Shown, NULL);
 	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected, "%p", dd);

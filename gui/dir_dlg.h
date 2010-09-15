@@ -39,9 +39,6 @@ typedef struct ag_dir_dlg {
 	AG_Event *cancelAction;			/* Cancel action */
 	char *dirMRU;				/* MRU Directory */
 	AG_Combo *comLoc;			/* Locations list */
-	AG_Window *winGlob;			/* Glob results window */
-	AG_Rect winGlobRect;			/* Glob results window size */
-	AG_Tlist *winGlobList;			/* Glob results list */
 } AG_DirDlg;
 
 __BEGIN_DECLS
