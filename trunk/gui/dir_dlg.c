@@ -799,7 +799,7 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_DirDlg *dd = obj;
-	AG_SizeReq r;
+	AG_SizeReq r, rLoc, rInput;
 	AG_SizeAlloc aChld;
 	int hBtn = 0, wBtn = a->w/2;
 
@@ -807,24 +807,30 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	hBtn = MAX(hBtn, r.h);
 	AG_WidgetSizeReq(dd->btnCancel, &r);
 	hBtn = MAX(hBtn, r.h);
+	
+	AG_WidgetSizeReq(dd->comLoc, &rLoc);
+	AG_WidgetSizeReq(dd->tbInput, &rInput);
 
-	/* Size horizontal pane */
+	/* Shortcuts */
 	aChld.x = 0;
 	aChld.y = 0;
 	aChld.w = a->w;
-	aChld.h = a->h - hBtn - 10;
-	AG_WidgetSizeReq(dd->tbInput, &r);
-	aChld.h -= r.h;
-	AG_WidgetSizeAlloc(dd->tlDirs, &aChld);
-	aChld.y += aChld.h+4;
+	aChld.h = rLoc.h;
+	AG_WidgetSizeAlloc(dd->comLoc, &aChld);
 
-	/* Size entry textbox. */
-	AG_WidgetSizeReq(dd->tbInput, &r);
-	aChld.h = r.h;
+	/* Listing */
+	aChld.w = a->w;
+	aChld.h = a->h - (hBtn + rInput.h + rLoc.h + 4);
+	aChld.y += rLoc.h;
+	AG_WidgetSizeAlloc(dd->tlDirs, &aChld);
+
+	/* Input textbox */
+	aChld.y += aChld.h+4;
+	aChld.h = rInput.h;
 	AG_WidgetSizeAlloc(dd->tbInput, &aChld);
-	aChld.y += aChld.h+2;
 
 	/* Size buttons */
+	aChld.y += aChld.h+2;
 	aChld.w = wBtn;
 	aChld.h = hBtn;
 	AG_WidgetSizeAlloc(dd->btnOk, &aChld);
