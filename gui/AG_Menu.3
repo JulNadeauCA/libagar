@@ -254,11 +254,13 @@ will be invoked repeatedly to update the menu item.
 The
 .Nm
 object is passed as
-.Xr AG_SELF 3
+.Fn AG_SELF ,
 and pointer to the
 .Ft AG_MenuItem
 structure can be retrieved using
-.Xr AG_SENDER 3 .
+.Fn AG_SENDER
+(see
+.Xr AG_Event 3 ) .
 The callback routine is allowed to directly modify the
 .Va state
 member of the
