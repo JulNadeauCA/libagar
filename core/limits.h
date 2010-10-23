@@ -22,7 +22,7 @@
 # define AG_FILENAME_MAX 256
 #endif
 #if defined (_XBOX)
-#define AG_ARG_MAX 2932
+#define AG_ARG_MAX MAX_LAUNCH_DATA_SIZE - 520
 #elif defined(ARG_MAX)
 #define AG_ARG_MAX ARG_MAX
 #else
