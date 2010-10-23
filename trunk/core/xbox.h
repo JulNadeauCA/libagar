@@ -52,6 +52,17 @@ XBOXAPI NTSTATUS WINAPI NtCreateFile(OUT PHANDLE FileHandle, IN ACCESS_MASK Desi
 									 IN PLARGE_INTEGER AllocationSize OPTIONAL, IN ULONG FileAttributes,
 									 IN ULONG ShareAccess, IN ULONG CreateDisposition, IN ULONG CreateOptions);
 
+// Custom LAUNCH_DATA struct for external XBE execution from AG_Execute()
+#define AG_LAUNCH_MAGIC 0x41474152
+
+typedef struct {
+	DWORD magic;               // Test this against AG_LAUNCH_MAGIC to know this special struct was used
+	DWORD dwID;                // The Title ID of the launcher XBE
+	CHAR  szLauncherXBE[256];  // The full path to the launcher XBE
+	CHAR  szLaunchedXBE[256];  // The full path to the launched XBE
+	CHAR  szCmdLine[MAX_LAUNCH_DATA_SIZE - 520]; // The command-line parameters
+} AG_LAUNCH_DATA, *PAG_LAUNCH_DATA;
+
 #include <agar/core/begin.h>
 __BEGIN_DECLS
 DWORD AG_XBOX_GetXbeTitleId(const char *xbePath);

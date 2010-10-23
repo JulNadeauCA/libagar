@@ -41,7 +41,7 @@ AG_ProcessID
 AG_Execute(const char *file, char **argv)
 {
 #ifdef _XBOX 
-	LAUNCH_DATA launchData = { LDT_TITLE };
+	AG_LAUNCH_DATA launchData = { LDT_TITLE };
 	char xbePath[AG_PATHNAME_MAX];
 	char xbeName[AG_FILENAME_MAX];
 	char argstr[AG_ARG_MAX];
@@ -76,7 +76,7 @@ AG_Execute(const char *file, char **argv)
 			Strlcat(argstr, " ", AG_ARG_MAX);
 			i++;
 		}
-		Strlcpy((char*)((PLD_DEMO)&launchData)->Reserved, argstr, AG_ARG_MAX);
+		Strlcpy(launchData.szCmdLine, argstr, AG_ARG_MAX);
 	}
 
 	/* Resolve the full xbe path */
@@ -101,7 +101,8 @@ AG_Execute(const char *file, char **argv)
 			return (-1);
 		}
 		Strlcpy(xbePath, dev, sizeof(xbePath));
-		Strlcat(xbePath, AG_PATHSEP, sizeof(xbePath));
+		if(xbePath[strlen(xbePath) - 1] != AG_PATHSEPCHAR && p[0] != AG_PATHSEPCHAR)
+			Strlcat(xbePath, AG_PATHSEP, sizeof(xbePath));
 		Strlcat(xbePath, p, sizeof(xbePath));
 		Free(dev);
 	}
@@ -125,11 +126,13 @@ AG_Execute(const char *file, char **argv)
 	}
 
 	/* Complete the launch data */
-	Strlcpy(((PLD_DEMO)&launchData)->szLauncherXBE, XeImageFileName->Buffer, XeImageFileName->Length + 1);
-	Strlcpy(((PLD_DEMO)&launchData)->szLaunchedXBE, xbePath, 64);
+	Strlcpy(launchData.szLauncherXBE, XeImageFileName->Buffer, XeImageFileName->Length + 1);
+	Strlcpy(launchData.szLaunchedXBE, xbePath, 64);
 
 	/* Get the launcher ID */
-	((PLD_DEMO)&launchData)->dwID = AG_XBOX_GetXbeTitleId(((PLD_DEMO)&launchData)->szLauncherXBE);
+	launchData.dwID = AG_XBOX_GetXbeTitleId(launchData.szLauncherXBE);
+
+	launchData.magic = AG_LAUNCH_MAGIC;
 
 	/* If this call succeeds the Agar application will be terminated so any
 	   configs need to be saved prior to this call. */
