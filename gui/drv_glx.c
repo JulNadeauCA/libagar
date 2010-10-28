@@ -346,6 +346,7 @@ InitModifierMasks(void)
 			KeySym ks = XKeycodeToKeysym(agDisplay, kc, 0);
 			Uint mask = 1<<i;
 
+#ifdef XK_MISCELLANY
 			switch (ks) {
 			case XK_Num_Lock:	modMasks.num = mask;	break;
 			case XK_Alt_L:		modMasks.Lalt = mask;	break;
@@ -354,6 +355,7 @@ InitModifierMasks(void)
 			case XK_Meta_R:		modMasks.Rmeta = mask;	break;
 			case XK_Mode_switch:	modMasks.mode = mask;	break;
 			}
+#endif /* XK_MISCELLANY */
 		}
 	}
 	XFreeModifiermap(xmk);
