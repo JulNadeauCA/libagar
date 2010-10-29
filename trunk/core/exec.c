@@ -127,7 +127,7 @@ AG_Execute(const char *file, char **argv)
 
 	/* Complete the launch data */
 	Strlcpy(launchData.szLauncherXBE, XeImageFileName->Buffer, XeImageFileName->Length + 1);
-	Strlcpy(launchData.szLaunchedXBE, xbePath, 64);
+	Strlcpy(launchData.szLaunchedXBE, xbePath, sizeof(xbePath));
 
 	/* Get the launcher ID */
 	launchData.dwID = AG_XBOX_GetXbeTitleId(launchData.szLauncherXBE);
