@@ -9,25 +9,27 @@
 #include <agar/core/attributes.h>
 
 /* Define internationalization macros if NLS is enabled. */
-#include <agar/config/enable_nls.h>
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(String) dgettext("agar",String)
-# ifdef dgettext_noop
-#  define N_(String) dgettext_noop("agar",String)
+#if !defined(_)
+# include <agar/config/enable_nls.h>
+# ifdef ENABLE_NLS
+#  include <libintl.h>
+#  define _(String) dgettext("agar",String)
+#  ifdef dgettext_noop
+#   define N_(String) dgettext_noop("agar",String)
+#  else
+#   define N_(String) (String)
+#  endif
+#  define _AGAR_RG_DEFINED_NLS
 # else
+#  undef _
+#  undef N_
+#  undef ngettext
+#  define _(String) (String)
 #  define N_(String) (String)
+#  define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
+#  define _AGAR_RG_DEFINED_NLS
 # endif
-# define _AGAR_RG_DEFINED_NLS
-#else
-# undef _
-# undef N_
-# undef ngettext
-# define _(String) (String)
-# define N_(String) (String)
-# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
-# define _AGAR_RG_DEFINED_NLS
-#endif
+#endif /* defined(_) */
 
 /* Define __BEGIN_DECLS and __END_DECLS if needed. */
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
