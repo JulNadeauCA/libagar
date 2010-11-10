@@ -9,6 +9,7 @@
 #include <agar/gui/geometry.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/surface.h>
+#include <agar/gui/anim.h>
 #include <agar/gui/style.h>
 
 #include <agar/gui/mouse.h>
