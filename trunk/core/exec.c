@@ -64,7 +64,7 @@ AG_Execute(const char *file, char **argv)
 	}
 
 	/* Handle the command-line parameters */
-	Strlcpy(argstr, "", AG_ARG_MAX);
+	argstr[0] = '\0';
 	if(argv) {
 		while(argv[i] != NULL) {
 			if( (AG_ARG_MAX - strlen(argstr) < strlen(argv[i]) + 1) ) {
@@ -290,14 +290,15 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 int
 AG_Kill(AG_ProcessID pid)
 {
+#if defined(_WIN32) && !defined(_XBOX)
+	HANDLE psHandle;
+#endif
 	if(pid <= 0) {
 		AG_SetError("Invalid process id");
 		return (-1);
 	}
 
 #if defined(_WIN32) && !defined(_XBOX)
-	HANDLE psHandle;
-
 	if((psHandle = OpenProcess(SYNCHRONIZE |
 	                           PROCESS_TERMINATE |
 	                           PROCESS_QUERY_INFORMATION,
