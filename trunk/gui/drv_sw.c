@@ -388,7 +388,7 @@ AG_WM_CommitWindowFocus(AG_Window *win)
 void
 AG_WM_LimitWindowToDisplaySize(AG_Driver *drv, AG_SizeAlloc *a)
 {
-	Uint wMax, hMax;
+	Uint wMax = 0, hMax = 0;
 
 	AG_GetDisplaySize(drv, &wMax, &hMax);
 
