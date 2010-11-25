@@ -1083,7 +1083,7 @@ int
 AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
     int wPct, int hPct)
 {
-	Uint wMax, hMax;
+	Uint wMax = 0, hMax = 0;
 
 	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
 
