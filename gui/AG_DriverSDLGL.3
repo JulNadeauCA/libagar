@@ -52,10 +52,11 @@ driver automatically.
 .Sh EXAMPLES
 .Bd -literal
 AG_InitGraphics("sdlgl(width=640:height=480:depth=32)");
+AG_InitGraphics("sdlgl(out=%08d.jpg:outFirst=10)");
 AG_InitVideoSDL(screen, 0);
 .Ed
 .Sh OPTIONS
-.Bl -tag -compact -width "width "
+.Bl -tag -compact -width "outFirst "
 .It width
 Width in pixels (or
 .Sq auto
@@ -66,6 +67,18 @@ Height in pixels (or
 .It depth
 Depth in bits per pixel (or
 .Sq auto ) .
+.It out
+Capture display to specified output file(s).
+Supported file formats include JPEG and PNG.
+The specified path may include a printf-style format string for a numerical
+argument.
+For example,
+.Sq %08d.jpg
+will output to a series of JPEG files.
+.It outFirst
+Name the first output file following this frame number.
+.It outLast
+Terminate the application after this many frames have been rendered.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
