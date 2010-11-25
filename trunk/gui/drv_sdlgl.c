@@ -43,6 +43,12 @@
 #include "opengl.h"
 #include "sdl.h"
 
+enum ag_sdlgl_out {
+	AG_SDLGL_OUT_NONE,		/* No capture */
+	AG_SDLGL_OUT_JPEG,		/* Output JPEG files */
+	AG_SDLGL_OUT_PNG		/* Output PNG files */
+};
+
 typedef struct ag_sdlgl_driver {
 	struct ag_driver_sw _inherit;
 	SDL_Surface     *s;		/* View surface */
@@ -54,6 +60,11 @@ typedef struct ag_sdlgl_driver {
 	Uint            *listGC;	/* Display lists queued for deletion */
 	Uint            nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
+	enum ag_sdlgl_out outMode;	/* Output capture mode */
+	char		*outPath;	/* Output capture path */
+	Uint		 outFrame;	/* Capture frame# counter */
+	Uint		 outLast;	/* Terminate after this many frames */
+	Uint8		*outBuf;	/* Output capture buffer */
 } AG_DriverSDLGL;
 
 static int nDrivers = 0;		/* Opened driver instances */
@@ -128,10 +139,16 @@ SDLGL_Open(void *obj, const char *spec)
 	/* We can use SDL's time interface. */
 	AG_SetTimeOps(&agTimeOps_SDL);
 
-	/* Initialize the main mouse and keyboard devices. */
+	/* Initialize this driver instance. */
 	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL)
+	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL) {
 		goto fail;
+	}
+	sgl->outMode = AG_SDLGL_OUT_NONE;
+	sgl->outPath = NULL;
+	sgl->outFrame = 0;
+	sgl->outLast = 0;
+	sgl->outBuf = NULL;
 
 	/* Configure the window caption */
 	SDL_WM_SetCaption(agProgName, agProgName);
@@ -177,6 +194,12 @@ SDLGL_Close(void *obj)
 	drv->mouse = NULL;
 	drv->kbd = NULL;
 
+	if (sgl->outMode != AG_SDLGL_OUT_NONE) {
+		Free(sgl->outBuf);
+		sgl->outBuf = NULL;
+		sgl->outMode = AG_SDLGL_OUT_NONE;
+	}
+
 	nDrivers = 0;
 }
 
@@ -212,10 +235,59 @@ SDLGL_RenderWindow(struct ag_window *win)
 }
 
 static void
+SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
+{
+	char path[AG_PATHNAME_MAX];
+	AG_DriverSw *dsw = (AG_DriverSw *)sgl;
+	AG_Surface *s;
+
+	snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
+	glReadPixels(0, 0, dsw->w, dsw->h, GL_RGBA, GL_UNSIGNED_BYTE,
+	    sgl->outBuf);
+
+	AG_PackedPixelFlip(sgl->outBuf, dsw->h, dsw->w*4);
+	s = AG_SurfaceFromPixelsRGBA(sgl->outBuf,
+	    dsw->w, dsw->h, 32,
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
+	if (s == NULL)
+		goto fail;
+
+	switch (sgl->outMode) {
+	case AG_SDLGL_OUT_JPEG:
+		if (AG_SurfaceExportJPEG(s, path) == -1) {
+			goto fail;
+		}
+		break;
+	case AG_SDLGL_OUT_PNG:
+		if (AG_SurfaceExportPNG(s, path) == -1) {
+			goto fail;
+		}
+		break;
+	default:
+		break;
+	}
+
+	if (++sgl->outFrame == sgl->outLast) {
+		Verbose("Reached last frame; terminating\n");
+		AG_SDL_Terminate();
+	}
+	AG_SurfaceFree(s);
+	return;
+fail:
+	AG_SurfaceFree(s);
+	AG_Verbose("%s; disabling capture\n", AG_GetError());
+	sgl->outMode = AG_SDLGL_OUT_NONE;
+}
+
+static void
 SDLGL_EndRendering(void *drv)
 {
 	AG_DriverSDLGL *sgl = drv;
 	Uint i;
+	
+	/* Render to specified capture output. */
+	if (sgl->outMode != AG_SDLGL_OUT_NONE)
+		SDLGL_CaptureOutput(sgl);
 	
 	if (!(AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY)) {
 		SDL_GL_SwapBuffers();
@@ -228,7 +300,7 @@ SDLGL_EndRendering(void *drv)
 		if (sgl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
 		else			{ glDisable(GL_CLIP_PLANE3); }
 	}
-
+	
 	glPopAttrib();
 	
 	/* Remove textures and display lists queued for deletion. */
@@ -411,11 +483,44 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	if (flags & AG_VIDEO_DOUBLEBUF) { sFlags |= SDL_DOUBLEBUF; }
 	if (flags & AG_VIDEO_FULLSCREEN) { sFlags |= SDL_FULLSCREEN; }
 	if (flags & AG_VIDEO_NOFRAME) { sFlags |= SDL_NOFRAME; }
-
+	
 	if (flags & AG_VIDEO_OVERLAY)
 		dsw->flags |= AG_DRIVER_SW_OVERLAY;
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
+
+	/* Apply the output capture settings. */
+	if (AG_Defined(drv, "out")) {
+		char *ext;
+
+		AG_GetString(drv, "out", buf, sizeof(buf));
+		if ((ext = strrchr(buf, '.')) != NULL &&
+		    ext[1] != '\0') {
+			if (strcasecmp(&ext[1], "jpeg") == 0 ||
+			    strcasecmp(&ext[1], "jpg") == 0) {
+				sgl->outMode = AG_SDLGL_OUT_JPEG;
+				if ((sgl->outPath = TryStrdup(buf)) == NULL)
+					return (-1);
+			} else if (strcasecmp(&ext[1], "png") == 0) {
+				sgl->outMode = AG_SDLGL_OUT_PNG;
+				if ((sgl->outPath = TryStrdup(buf)) == NULL)
+					return (-1);
+			} else {
+				AG_SetError("Invalid out= argument: `%s'", buf);
+				return (-1);
+			}
+			if (AG_Defined(drv, "outFirst")) {
+				AG_GetString(drv, "outFirst", buf, sizeof(buf));
+				sgl->outFrame = atoi(buf);
+			} else {
+				sgl->outFrame = 0;
+			}
+			if (AG_Defined(drv, "outLast")) {
+				AG_GetString(drv, "outLast", buf, sizeof(buf));
+				sgl->outLast = atoi(buf);
+			}
+		}
+	}
 	
 	/* Apply the default resolution settings. */
 	if (w == 0 && AG_Defined(drv, "width")) {
@@ -471,6 +576,13 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
 		ClearBackground();
+	}
+
+	/* Initialize the output capture buffer. */
+	Free(sgl->outBuf);
+	if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
+		AG_Verbose("Out of memory for buffer; disabling capture\n");
+		sgl->outMode = AG_SDLGL_OUT_NONE;
 	}
 
 	/* Toggle fullscreen if requested. */
@@ -581,7 +693,16 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	cr0->eqns[2][2] = 0.0;	cr0->eqns[2][3] = (double)w;
 	cr0->eqns[3][0] = 0.0;	cr0->eqns[3][1] = -1.0;
 	cr0->eqns[3][2] = 0.0;	cr0->eqns[3][3] = (double)h;
-	
+
+	/* Resize the output capture buffer. */
+	if (sgl->outBuf != NULL) {
+		Free(sgl->outBuf);
+		if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
+			AG_Verbose("Out of memory for buffer; disabling capture\n");
+			sgl->outMode = AG_SDLGL_OUT_NONE;
+		}
+	}
+
 	/* Reinitialize the GL viewport. */
 	AG_GL_InitContext(
 	    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
