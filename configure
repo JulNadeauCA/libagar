@@ -3960,6 +3960,141 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_EXECVP
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for clock_gettime() interface..."
+$ECHO_N "checking for clock_gettime() interface..." >> config.log
+CLOCK_CFLAGS=""
+CLOCK_LIBS=""
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CLOCK_GETTIME" ]; then
+		HAVE_CLOCK_GETTIME=`cat ${cache}/ctest-HAVE_CLOCK_GETTIME`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CLOCK_GETTIME`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <time.h>
+int
+main(int argc, char *argv[])
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c ${CLOCK_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c ${CLOCK_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CLOCK_GETTIME="yes"
+echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.h
+echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CLOCK_GETTIME="no"
+echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#undef HAVE_CLOCK_GETTIME" >$BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CLOCK_GETTIME" > ${cache}/ctest-HAVE_CLOCK_GETTIME
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CLOCK_GETTIME
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
+echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.h
+echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
+echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
+echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
+else
+$ECHO_N "checking whether clock_gettime() requires -lrt..."
+$ECHO_N "checking whether clock_gettime() requires -lrt..." >> config.log
+CLOCK_LIBS="-lrt"
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CLOCK_GETTIME" ]; then
+		HAVE_CLOCK_GETTIME=`cat ${cache}/ctest-HAVE_CLOCK_GETTIME`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CLOCK_GETTIME`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <time.h>
+int
+main(int argc, char *argv[])
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c ${CLOCK_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c ${CLOCK_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CLOCK_GETTIME="yes"
+echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.h
+echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CLOCK_GETTIME="no"
+echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#undef HAVE_CLOCK_GETTIME" >$BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CLOCK_GETTIME" > ${cache}/ctest-HAVE_CLOCK_GETTIME
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CLOCK_GETTIME
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
+echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.h
+echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
+echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
+echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
+else
+echo "#undef HAVE_CLOCK_GETTIME" >$BLD/include/agar/config/have_clock_gettime.h
+echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = nil" >>configure.lua
+fi;
+fi;
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -8206,8 +8341,8 @@ echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -8287,8 +8422,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-core-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"

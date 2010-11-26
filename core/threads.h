@@ -43,8 +43,8 @@ __END_DECLS
 # define AG_CondDestroy(cd) if (pthread_cond_destroy(cd)!=0) abort()
 # define AG_CondBroadcast(cd) if (pthread_cond_broadcast(cd)!=0) abort()
 # define AG_CondSignal(cd) if (pthread_cond_signal(cd)!=0) abort()
-# define AG_CondWait(cd,m) if (pthread_cond_wait(cd,m)!=0) abort()
-# define AG_CondTimedWait(cd,m,t) if (pthread_cond_timedwait(cd,m,t)!=0) abort()
+# define AG_CondWait(cd,m) pthread_cond_wait(cd,m)
+# define AG_CondTimedWait(cd,m,t) pthread_cond_timedwait(cd,m,t)
 
 # define AG_ThreadCancel(t) if (pthread_cancel(t)!=0) abort();
 

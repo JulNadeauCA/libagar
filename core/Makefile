@@ -15,7 +15,7 @@ SRCS=	variable.c config.c core.c error.c event.c object.c prop.c rcs.c \
 	snprintf.c vsnprintf.c vasprintf.c \
 	net_client.c net_command.c net_fgetln.c net_server.c \
 	dir.c md5.c sha1.c rmd160.c file.c string_compat.c dso.c tree.c \
-	time.c time_dummy.c time_gettimeofday.c time_win32.c \
+	time.c time_dummy.c time_gettimeofday.c time_win32.c time_condwait.c \
 	db.c dbobject.c tbl.c getopt.c exec.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
@@ -26,7 +26,7 @@ MAN5=	AG_DEN.5
 
 CFLAGS+=-D_AGAR_CORE_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${DB4_CFLAGS}
+	${DB4_CFLAGS} ${CLOCK_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
