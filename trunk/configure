@@ -3960,8 +3960,8 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_EXECVP
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for clock_gettime() interface..."
-$ECHO_N "checking for clock_gettime() interface..." >> config.log
+$ECHO_N "checking for clock_gettime() interface (w/o -lrt)..."
+$ECHO_N "checking for clock_gettime() interface (w/o -lrt)..." >> config.log
 CLOCK_CFLAGS=""
 CLOCK_LIBS=""
 MK_CACHED="No"
@@ -4021,13 +4021,21 @@ echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.
 echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
 echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
 echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#ifndef CLOCK_CFLAGS" > $BLD/include/agar/config/clock_cflags.h
+echo "#define CLOCK_CFLAGS \"$CLOCK_CFLAGS\"" >> $BLD/include/agar/config/clock_cflags.h
+echo "#endif" >> $BLD/include/agar/config/clock_cflags.h
+echo "hdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "#ifndef CLOCK_LIBS" > $BLD/include/agar/config/clock_libs.h
+echo "#define CLOCK_LIBS \"$CLOCK_LIBS\"" >> $BLD/include/agar/config/clock_libs.h
+echo "#endif" >> $BLD/include/agar/config/clock_libs.h
+echo "hdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
 echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
 echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
 echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
 else
-$ECHO_N "checking whether clock_gettime() requires -lrt..."
-$ECHO_N "checking whether clock_gettime() requires -lrt..." >> config.log
+$ECHO_N "checking for clock_gettime() interface (with -lrt)..."
+$ECHO_N "checking for clock_gettime() interface (with -lrt)..." >> config.log
 CLOCK_LIBS="-lrt"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -4086,6 +4094,14 @@ echo "#ifndef HAVE_CLOCK_GETTIME" > $BLD/include/agar/config/have_clock_gettime.
 echo "#define HAVE_CLOCK_GETTIME \"$HAVE_CLOCK_GETTIME\"" >> $BLD/include/agar/config/have_clock_gettime.h
 echo "#endif" >> $BLD/include/agar/config/have_clock_gettime.h
 echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "#ifndef CLOCK_CFLAGS" > $BLD/include/agar/config/clock_cflags.h
+echo "#define CLOCK_CFLAGS \"$CLOCK_CFLAGS\"" >> $BLD/include/agar/config/clock_cflags.h
+echo "#endif" >> $BLD/include/agar/config/clock_cflags.h
+echo "hdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "#ifndef CLOCK_LIBS" > $BLD/include/agar/config/clock_libs.h
+echo "#define CLOCK_LIBS \"$CLOCK_LIBS\"" >> $BLD/include/agar/config/clock_libs.h
+echo "#endif" >> $BLD/include/agar/config/clock_libs.h
+echo "hdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
 echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
 echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
