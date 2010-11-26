@@ -29,6 +29,10 @@
 
 #include <config/have_sdl.h>
 #include <config/have_opengl.h>
+#include <config/ag_threads.h>
+#include <config/have_gettimeofday.h>
+#include <config/have_clock_gettime.h>
+#include <config/have_cygwin.h>
 
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 
@@ -137,7 +141,8 @@ SDLGL_Open(void *obj, const char *spec)
 	}
 
 	/* We can use SDL's time interface. */
-	AG_SetTimeOps(&agTimeOps_SDL);
+	if (agTimeOps == &agTimeOps_dummy)
+		AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize this driver instance. */
 	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
@@ -207,7 +212,16 @@ static void
 SDLGL_BeginRendering(void *obj)
 {
 	AG_DriverSDLGL *sgl = obj;
-	
+
+#if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
+    defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
+	{
+		extern AG_Cond agCondBeginRender;
+		/* Suspend any AG_Delay()'ed threads. */
+		AG_CondBroadcast(&agCondBeginRender);
+	}
+#endif
+
 	glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|GL_LIGHTING_BIT|
 	             GL_ENABLE_BIT);
 	
@@ -310,6 +324,15 @@ SDLGL_EndRendering(void *drv)
 	}
 	sgl->nTextureGC = 0;
 	sgl->nListGC = 0;
+
+#if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
+    defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
+	{
+		extern AG_Cond agCondEndRender;
+		/* Resume any AG_Delay()'ed threads. */
+		AG_CondBroadcast(&agCondEndRender);
+	}
+#endif
 }
 
 static void

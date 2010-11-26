@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -150,10 +150,10 @@ will raise a fatal condition if an error is encountered.
 .Ft "void"
 .Fn AG_CondSignal "AG_Cond *cv"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_CondWait "AG_Cond *cv" "AG_Mutex *m"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_CondTimedWait "AG_Cond *cv" "AG_Mutex *m" "const struct timespec *t"
 .Pp
 .nr nS 0

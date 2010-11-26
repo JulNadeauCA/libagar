@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #include <config/have_gettimeofday.h>
 #include <config/have_select.h>
 #include <config/have_cygwin.h>
+#include <config/have_clock_gettime.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -106,8 +107,14 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_RegisterClass(&agDbObjectClass);
 	AG_RegisterClass(&agDbClass);
 
-#if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT) && !defined(HAVE_CYGWIN)
+#if defined(HAVE_GETTIMEOFDAY) && !defined(HAVE_CYGWIN)
+# if defined(AG_THREADS) && defined(HAVE_CLOCK_GETTIME)
+	AG_SetTimeOps(&agTimeOps_condwait);
+# else
+#  if defined(HAVE_SELECT)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);
+#  endif
+# endif
 #elif defined(_WIN32)
 	AG_SetTimeOps(&agTimeOps_win32);
 #else
