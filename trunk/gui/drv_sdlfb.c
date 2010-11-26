@@ -120,7 +120,8 @@ SDLFB_Open(void *obj, const char *spec)
 	}
 
 	/* We can use SDL's time interface. */
-	AG_SetTimeOps(&agTimeOps_SDL);
+	if (agTimeOps == &agTimeOps_dummy)
+		AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Initialize the main mouse and keyboard devices. */
 	if ((drv->mouse = AG_MouseNew(sfb, "SDL mouse")) == NULL ||
