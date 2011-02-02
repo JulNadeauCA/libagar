@@ -81,9 +81,9 @@ AG_Surface     *AG_SurfaceIndexed(Uint, Uint, int, Uint);
 AG_Surface     *AG_SurfaceRGB(Uint, Uint, int, Uint, Uint32, Uint32, Uint32);
 AG_Surface     *AG_SurfaceRGBA(Uint, Uint, int, Uint, Uint32, Uint32, Uint32,
                                Uint32);
-AG_Surface     *AG_SurfaceFromPixelsRGB(void *, Uint, Uint, int, Uint32,
+AG_Surface     *AG_SurfaceFromPixelsRGB(const void *, Uint, Uint, int, Uint32,
                                         Uint32, Uint32);
-AG_Surface     *AG_SurfaceFromPixelsRGBA(void *, Uint, Uint, int, Uint32,
+AG_Surface     *AG_SurfaceFromPixelsRGBA(const void *, Uint, Uint, int, Uint32,
                                          Uint32, Uint32, Uint32);
 int             AG_SurfaceSetPalette(AG_Surface *, AG_Color *, Uint, Uint);
 AG_Surface     *AG_SurfaceDup(const AG_Surface *);
