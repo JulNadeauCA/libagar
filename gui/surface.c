@@ -323,7 +323,7 @@ AG_SurfaceRGBA(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
 
 /* Create a new surface from pixel data in the specified packed RGB format. */
 AG_Surface *
-AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp,
+AG_SurfaceFromPixelsRGB(const void *pixels, Uint w, Uint h, int bpp,
     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
 {
 	AG_PixelFormat *pf;
@@ -343,7 +343,7 @@ AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp,
  * The SRCALPHA flag is set implicitely.
  */
 AG_Surface *
-AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp,
+AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, int bpp,
     Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask)
 {
 	AG_PixelFormat *pf;
