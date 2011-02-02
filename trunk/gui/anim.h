@@ -40,6 +40,19 @@ int         AG_AnimResize(AG_Anim *, Uint, Uint);
 void        AG_AnimFree(AG_Anim *);
 
 int         AG_AnimFrameNew(AG_Anim *, const AG_Surface *);
+AG_Surface *AG_AnimFrameToSurface(const AG_Anim *, int);
+
+#define AG_AnimStdRGB(w,h) \
+	AG_AnimRGB((w),(h),agSurfaceFmt->BitsPerPixel,0, \
+	    agSurfaceFmt->Rmask, \
+	    agSurfaceFmt->Gmask, \
+	    agSurfaceFmt->Bmask)
+#define AG_AnimStdRGBA(w,h) \
+	AG_AnimRGBA((w),(h),agSurfaceFmt->BitsPerPixel,0, \
+	    agSurfaceFmt->Rmask, \
+	    agSurfaceFmt->Gmask, \
+	    agSurfaceFmt->Bmask, \
+	    agSurfaceFmt->Amask)
 
 static __inline__ Uint32
 AG_AnimGetPixel(const AG_Anim *an, const Uint8 *pSrc)

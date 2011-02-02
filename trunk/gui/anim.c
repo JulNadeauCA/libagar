@@ -266,3 +266,30 @@ AG_AnimFrameNew(AG_Anim *a, const AG_Surface *su)
 	memcpy(a->pixels[a->n], su->pixels, su->h*su->pitch);
 	return (a->n++);
 }
+
+/* Return a new surface from a given frame#. */
+AG_Surface *
+AG_AnimFrameToSurface(const AG_Anim *a, int f)
+{
+	AG_Surface *su;
+
+	if (f < 0 || f >= a->n) {
+		AG_SetError("No such frame#");
+		return (NULL);
+	}
+	if (a->format->Amask != 0) {
+		su = AG_SurfaceFromPixelsRGBA(a->pixels[f], a->w, a->h,
+		    a->format->BitsPerPixel,
+		    a->format->Rmask,
+		    a->format->Gmask,
+		    a->format->Bmask,
+		    a->format->Amask);
+	} else {
+		su = AG_SurfaceFromPixelsRGB(a->pixels[f], a->w, a->h,
+		    a->format->BitsPerPixel,
+		    a->format->Rmask,
+		    a->format->Gmask,
+		    a->format->Bmask);
+	}
+	return (su);
+}
