@@ -57,7 +57,7 @@ as
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Surface *"
-.Fn AG_SurfaceNew "enum ag_surface_type type" "Uint w" "Uint h" "AG_PixelFormat *fmt" "Uint flags"
+.Fn AG_SurfaceNew "enum ag_surface_type type" "Uint w" "Uint h" "const AG_PixelFormat *fmt" "Uint flags"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceEmpty "void"
@@ -610,8 +610,8 @@ Pointer to raw pixel data.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Rect 3 ,
-.Xr AG_Widget 3
+.Xr AG_Anim 3 ,
+.Xr AG_Rect 3
 .Sh HISTORY
 The
 .Nm
