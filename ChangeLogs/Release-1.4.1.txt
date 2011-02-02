@@ -6,6 +6,7 @@ Here are some of the most notable changes since Agar 1.4.0, in no
 particular order. A wikified version of this list is available at:
 http://wiki.libagar.org/wiki/Agar-1.4.1.
 
+- Port to Xbox (thanks Michael J. Wood!).
 - Widget code can now use the AG_Redraw() and AG_RedrawOn*() interfaces to
   trigger rendering. The generic event loop uses this information to avoid
   unnecessary video updates -- custom event loops should be modified to
@@ -22,13 +23,17 @@ http://wiki.libagar.org/wiki/Agar-1.4.1.
   scheduled in reverse order; thanks to Jakob Reschke for the fix!
 - Fixed UTF8 conversion bug with 3-byte sequences; thanks Jerry Huang!
 - Fixed coordinates offset for popup menus under single-window drivers.
-- Added AG_InitGraphics(3) as a separate manual page.
+- Numerous improvements to the API reference. Added AG_DriverGLX(3),
+  AG_DriverWGL(3), AG_DriverSDLFB(3), AG_DriverSDLGL(3), AG_DriverMw(3)
+  and AG_DriverSw(3), AG_InitGraphics(3) manual pages.
 - Fixed crash bug with AG_TEXTBOX_STATIC and AG_EDITABLE_STATIC.
 - Added "STRUCTURE DATA" section to AG_Window(3).
 - Added missing SDL_LockSurface() calls in sdlfb/sdlgl drivers.
 - AG_InitGraphics() can now accept driver initialization arguments.
-- Added AG_DriverGLX(3), AG_DriverWGL(3), AG_DriverSDLFB(3),
-  AG_DriverSDLGL(3), AG_DriverMw(3) and AG_DriverSw(3) manual pages.
 - Avoid use of gettimeofday() on cygwin platform.
 - MATH: Fix type conversion warnings.
-
+- Implemented AG_DirDlg(3) directory selection widget.
+- Implemented AG_Anim(3) interface.
+- In the wgl driver, terminate application by exiting the event loop
+  instead of using exit().
+- In AG_Scrollbar(3), implement AG_SCROLLBAR_AUTOHIDE option.
