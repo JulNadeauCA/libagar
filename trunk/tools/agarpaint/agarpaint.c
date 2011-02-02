@@ -31,7 +31,6 @@
 #include "config/sharedir.h"
 #include "config/have_agar_dev.h"
 #include "config/version.h"
-#include "config/release.h"
 #include "config/enable_nls.h"
 #include "config/localedir.h"
 
