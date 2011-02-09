@@ -70,7 +70,7 @@ M_EditVector3Mp(void *parent, const char *label, M_Vector3 *pv, AG_Mutex *lock)
 	AG_LabelNewS(box, 0, label);
 
 	for (i = 0; i < 3; i++)
-		n[i] = AG_NumericalNew(box, 0, NULL, NULL);
+		n[i] = AG_NumericalNewS(box, 0, NULL, NULL);
 
 	M_BindRealMp(n[0], "value", &pv->x, lock);
 	M_BindRealMp(n[1], "value", &pv->y, lock);
@@ -172,7 +172,7 @@ M_EditMatrix44Mp(void *parent, const char *label, M_Matrix44 *T, AG_Mutex *lock)
 		hbox = AG_BoxNew(vbox, AG_BOX_HORIZ,
 		    AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 		for (i = 0; i < 4; i++) {
-			n = AG_NumericalNew(hbox, 0, NULL, NULL);
+			n = AG_NumericalNewS(hbox, 0, NULL, NULL);
 			M_BindRealMp(n, "value", &T->m[i][j], lock);
 			AG_NumericalSetIncrement(n, 0.1);
 		}
@@ -213,7 +213,7 @@ M_EditTranslate3Mp(void *parent, const char *label, M_Matrix44 *T,
 		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
-		n = AG_NumericalNew(box, 0, NULL, NULL);
+		n = AG_NumericalNewS(box, 0, NULL, NULL);
 		M_BindRealMp(n, "value", &T->m[i][3], lock);
 		AG_NumericalSetIncrement(n, 0.5);
 	}
@@ -253,7 +253,7 @@ M_EditTranslate4Mp(void *parent, const char *label, M_Matrix44 *T,
 		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
-		n = AG_NumericalNew(box, 0, NULL, NULL);
+		n = AG_NumericalNewS(box, 0, NULL, NULL);
 		M_BindRealMp(n, "value", &T->m[i][3], lock);
 		AG_NumericalSetIncrement(n, 0.5);
 	}
@@ -292,7 +292,7 @@ M_EditScale3Mp(void *parent, const char *label, M_Matrix44 *T, AG_Mutex *lock)
 		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
-		n = AG_NumericalNew(box, 0, NULL, NULL);
+		n = AG_NumericalNewS(box, 0, NULL, NULL);
 		M_BindRealMp(n, "value", &T->m[i][i], lock);
 		AG_NumericalSetIncrement(n, 0.05);
 	}
@@ -331,7 +331,7 @@ M_EditScale4Mp(void *parent, const char *label, M_Matrix44 *T, AG_Mutex *lock)
 		AG_LabelNewS(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
-		n = AG_NumericalNew(box, 0, NULL, NULL);
+		n = AG_NumericalNewS(box, 0, NULL, NULL);
 		M_BindRealMp(n, "value", &T->m[i][i], lock);
 		AG_NumericalSetIncrement(n, 0.05);
 	}
