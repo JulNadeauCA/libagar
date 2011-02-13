@@ -265,7 +265,7 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		su = AG_SurfaceRGB(cinfo.output_width, cinfo.output_height,
 		    24, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-		    0xff0000, 0x00ff00, 0x0000ff,
+		    0xff0000, 0x00ff00, 0x0000ff
 #else
 		    0x0000ff, 0x00ff00, 0xff0000
 #endif
