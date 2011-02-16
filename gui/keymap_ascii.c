@@ -119,7 +119,7 @@ InsertASCII(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
 		break;
 	}
 
-	if (AG_GetBool(agConfig,"input.composition")) {
+	if (agTextComposition) {
 		if ((nins = AG_KeyInputCompose(ed, (Uint32)ch, ins)) == 0)
 			return (0);
 	} else {

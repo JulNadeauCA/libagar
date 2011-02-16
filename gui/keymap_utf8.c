@@ -94,7 +94,7 @@ InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
 		break;
 	}
 
-	if (AG_GetBool(agConfig,"input.composition")) {
+	if (agTextComposition) {
 		if ((nins = AG_KeyInputCompose(ed, uch, ins)) == 0)
 			return (0);
 	} else {
