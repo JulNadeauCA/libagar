@@ -116,7 +116,6 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	AG_SetInt(cfg, "no-confirm-quit", 0);
 
 	/* XXX XXX move to agar-gui */
-	AG_SetInt(cfg, "input.composition", 1);
 	AG_SetInt(cfg, "view.full-screen", 0);
 
 	/* Set the save directory path and create it as needed. */
