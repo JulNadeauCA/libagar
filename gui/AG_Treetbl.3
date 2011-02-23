@@ -53,7 +53,7 @@ in that rows and columns are uniquely identified.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Treetbl *"
-.Fn AG_TreetblNew "AG_Widget *parent" "Uint flags"
+.Fn AG_TreetblNew "AG_Widget *parent" "Uint flags" "AG_TreetblDataFn dataFn" "AG_TreetblSortFn sortFn"
 .Pp
 .Ft "void"
 .Fn AG_TreetblSizeHint "AG_Treetbl *tbl" "int width" "int nrows"
@@ -79,9 +79,34 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-Acceptable
+The
+.Fn dataFn
+argument specifies the callback function from which to obtain the text
+to display for a given cell.
+The callback function should return a pointer to a valid C string to
+display under the given cell, and is declared as:
+.Pp
+.nr nS 1
+.Ft "char *"
+.Fn MyDataFn "AG_Treetbl *tbl" "int col" "int row"
+.nr nS 0
+.Ed
+.Pp
+The
+.Fn sortFn
+argument, if not NULL, specifies an optional comparison function to
+use in sorting cells, and is declared as:
+.Pp
+.nr nS 1
+.Ft int
+.Fn MySortFn "AG_Treetbl *tbl" "int col1" "int row1" "int col2" "int row2"
+.nr nS 0
+.Pp
+The
 .Fa flags
-include:
+argument to
+.Fn AG_TreetblNew
+may include:
 .Pp
 .Bl -tag -width "AG_TREETBL_REORDERCOLS "
 .It AG_TREETBL_MULTI

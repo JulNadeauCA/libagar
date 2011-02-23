@@ -13,7 +13,7 @@
 struct ag_treetbl;
 
 typedef char *(*AG_TreetblDataFn)(struct ag_treetbl *, int, int);
-typedef int (*AG_TreetblSortFn)(int, int, int, char);
+typedef int (*AG_TreetblSortFn)(struct ag_treetbl *, int, int, int, int);
 
 enum ag_treetbl_sort_mode {
 	AG_TREETBL_SORT_NOT = 0,
