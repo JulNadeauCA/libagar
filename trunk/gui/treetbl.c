@@ -1151,6 +1151,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 				nonfill_width += col->w;
 			}
 		}
+		if (fill_cols == 0)
+			fill_cols = 1;
 
 		fill_width = (a->w - WIDTH(tt->vBar) - nonfill_width) /
 		             fill_cols;
