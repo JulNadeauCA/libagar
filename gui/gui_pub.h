@@ -62,5 +62,11 @@
 #include <agar/gui/load_surface.h>
 #include <agar/gui/load_color.h>
 
+#ifdef __APPLE__
+/* Work around MacOS X retardation */
+#include <agar/gui/cursors.h>
+#include <agar/gui/sdl.h>
+#endif
+
 #include <agar/core/core_close.h>
 #endif /* _AGAR_GUI_PUBLIC_H_ */
