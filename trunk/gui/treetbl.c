@@ -767,10 +767,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 {
 	AG_TreetblRow *row;
 	Uint i;
-#if 0
 	va_list ap;
-	int colID;
-#endif
 
 	AG_ObjectLock(tt);
 
@@ -797,10 +794,17 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 		row->cell[i].text = NULL;
 		row->cell[i].image = NULL;
 	}
-#if 0
+
 	/* import static data */
-	va_start(ap, rowID);
-	while ((colID = va_arg(ap, int)) != -1) {
+	va_start(ap, argSpec);
+	while (*argSpec)
+	{
+		int colID = va_arg(ap, int);
+
+		if(!*argSpec++) {
+			break;
+		}
+
 		void *data = va_arg(ap, void *);
 
 		for (i = 0; i < tt->n; i++) {
@@ -826,9 +830,9 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 				break;
 			}
 		}
+		*argSpec++;
 	}
 	va_end(ap);
-#endif
 
 	row->rid = rowID;
 
@@ -860,7 +864,9 @@ DestroyRow(AG_Treetbl *tt, AG_TreetblRow *row)
 	for (i = 0; i < tt->n; i++) {
 		AG_TreetblCell *cell = &row->cell[i];
 
-		AG_SurfaceFree(cell->image);
+		if(cell->image != NULL) {
+			AG_SurfaceFree(cell->image);
+		}
 		Free(cell->text);
 	}
 	Free(row->cell);
