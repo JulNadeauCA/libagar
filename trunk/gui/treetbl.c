@@ -768,6 +768,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 	AG_TreetblRow *row;
 	Uint i;
 	va_list ap;
+	char *p;
 
 	AG_ObjectLock(tt);
 
@@ -797,11 +798,16 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 
 	/* import static data */
 	va_start(ap, argSpec);
-	while (*argSpec)
+	p = (char*)argSpec;
+	while(*p)
 	{
 		int colID = va_arg(ap, int);
 
-		if(!*argSpec++) {
+		/* Next argument */
+		p += 2;
+
+		if(!*p) {
+			/* Incomplete argument list */
 			break;
 		}
 
@@ -830,7 +836,8 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 				break;
 			}
 		}
-		*argSpec++;
+		/* Next argument */
+		p += 2;
 	}
 	va_end(ap);
 
