@@ -110,7 +110,15 @@ may include:
 .Pp
 .Bl -tag -width "AG_TREETBL_REORDERCOLS "
 .It AG_TREETBL_MULTI
-Allow selection of multiple columns at once.
+Allow selection of multiple rows at once while holding
+.Dv CTRL
+or
+.Dv SHIFT .
+.It AG_TREETBL_MULTITOGGLE
+Allow selection of multiple rows at once without holding
+.Dv CTRL
+or
+.Dv SHIFT .
 .It AG_TREETBL_REORDERCOLS
 Allow reordering of the columns through dragging and dropping of the column
 headers.
@@ -307,7 +315,9 @@ variants lookup the row by ID and return -1 if it is invalid.
 returns the currently selected row or NULL if there is none.
 If the
 .Dv AG_TREETBL_MULTI
-option is in effect, the first selected row is returned.
+or
+.Dv AG_TREETBL_MULTITOGGLE
+flags are in effect, the first selected row is returned.
 .Pp
 The
 .Fn AG_TreetblSelectAll
