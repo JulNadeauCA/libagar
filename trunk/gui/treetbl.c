@@ -440,11 +440,20 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	/* Handle double-clicks. */
 	if (tt->dblclicked) {
 		AG_CancelEvent(tt, "dblclick-expire");
-		DeselectAll(&tt->children);
-		row->flags |= AG_TREETBL_ROW_SELECTED;
+		if(!TAILQ_EMPTY(&row->children)) {
+			if (row->flags & AG_TREETBL_ROW_EXPANDED) {
+				AG_TreetblCollapseRow(tt, row);
+			} else {
+				AG_TreetblExpandRow(tt, row);
+			}
+		}
+		else {
+			DeselectAll(&tt->children);
+			row->flags |= AG_TREETBL_ROW_SELECTED;
+			AG_Redraw(tt);
+		}
 		tt->dblclicked = 0;
 		AG_PostEvent(NULL, tt, "treetbl-dblclick", "%p", row);
-		AG_Redraw(tt);
 	} else {
 		tt->dblclicked++;
 		AG_SchedEvent(NULL, tt, agMouseDblclickDelay, "dblclick-expire",
