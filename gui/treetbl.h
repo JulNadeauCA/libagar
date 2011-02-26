@@ -68,10 +68,11 @@ typedef struct ag_treetbl {
 	
 	Uint flags;
 #define AG_TREETBL_MULTI	0x001	/* Allow multiple selections */
-#define AG_TREETBL_REORDERCOLS	0x002	/* Allow column reordering */
-#define AG_TREETBL_NODUPCHECKS	0x004	/* Skip checks for duplicate IDs */
-#define AG_TREETBL_SORT		0x008	/* Enable sorting */
-#define AG_TREETBL_POLLED	0x010	/* Polling mode */
+#define AG_TREETBL_MULTITOGGLE  0x002
+#define AG_TREETBL_REORDERCOLS	0x004	/* Allow column reordering */
+#define AG_TREETBL_NODUPCHECKS	0x008	/* Skip checks for duplicate IDs */
+#define AG_TREETBL_SORT		0x010	/* Enable sorting */
+#define AG_TREETBL_POLLED	0x020	/* Polling mode */
 #define AG_TREETBL_HFILL	0x040
 #define AG_TREETBL_VFILL	0x080
 #define AG_TREETBL_EXPAND	(AG_TREETBL_HFILL|AG_TREETBL_VFILL)

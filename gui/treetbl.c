@@ -386,13 +386,15 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	}
 	
 	/* Handle command/control clicks and range selections. */
-	if ((kmod & AG_KEYMOD_META || kmod & AG_KEYMOD_CTRL)) {
+	if (((tt->flags & AG_TREETBL_MULTITOGGLE) || kmod & AG_KEYMOD_META ||
+	      kmod & AG_KEYMOD_CTRL)) {
 		if (row->flags & AG_TREETBL_ROW_SELECTED) {
 			row->flags &= ~(AG_TREETBL_ROW_SELECTED);
 			AG_PostEvent(NULL, tt, "treetbl-deselect", "%p", row);
 			AG_Redraw(tt);
 		} else {
-			if (!(tt->flags & AG_TREETBL_MULTI)) {
+			if (!(tt->flags & AG_TREETBL_MULTI) && 
+			    !(tt->flags & AG_TREETBL_MULTITOGGLE)) {
 				DeselectAll(&tt->children);
 			}
 			row->flags |= AG_TREETBL_ROW_SELECTED;
@@ -982,7 +984,8 @@ void
 AG_TreetblSelectRow(AG_Treetbl *tt, AG_TreetblRow *row)
 {
 	AG_ObjectLock(tt);
-	if (!(tt->flags & AG_TREETBL_MULTI)) {
+	if (!(tt->flags & AG_TREETBL_MULTI) &&
+	    !(tt->flags & AG_TREETBL_MULTITOGGLE)) {
 		AG_TreetblDeselectRow(tt, NULL);
 	}
 	row->flags |= AG_TREETBL_ROW_SELECTED;
@@ -1007,7 +1010,8 @@ SelectAll(AG_TreetblRowQ *children)
 void
 AG_TreetblSelectAll(AG_Treetbl *tt, AG_TreetblRow *root)
 {
-	if (!(tt->flags & AG_TREETBL_MULTI))
+	if (!(tt->flags & AG_TREETBL_MULTI) &&
+	    !(tt->flags & AG_TREETBL_MULTITOGGLE))
 		return;
 
 	AG_ObjectLock(tt);
