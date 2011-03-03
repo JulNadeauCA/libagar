@@ -239,8 +239,8 @@ void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
 void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
 void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
-void	 AG_WidgetFreeResourcesGL(AG_Widget *);
-void	 AG_WidgetRegenResourcesGL(AG_Widget *);
+void	 AG_WidgetFreeResourcesGL(void *);
+void	 AG_WidgetRegenResourcesGL(void *);
 #endif
 
 int         AG_WidgetSensitive(void *, int, int);
