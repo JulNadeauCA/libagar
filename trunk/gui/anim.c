@@ -56,7 +56,10 @@ AG_AnimNew(enum ag_anim_type type, Uint w, Uint h, const AG_PixelFormat *pf,
 	a->n = 0;
 	a->pitch = w*pf->BytesPerPixel;
 	a->clipRect = AG_RECT(0,0,w,h);
-	a->pixels = NULL;
+	a->f = NULL;
+	a->fpsOrig = 30.0;
+	AG_MutexInitRecursive(&a->lock);
+
 	return (a);
 }
 
@@ -166,46 +169,57 @@ AG_AnimSetPalette(AG_Anim *a, AG_Color *c, Uint offs, Uint count)
 {
 	Uint i;
 
+	AG_MutexLock(&a->lock);
 	if (a->type != AG_ANIM_INDEXED) {
 		AG_SetError("Not an indexed animation");
-		return (-1);
+		goto fail;
 	}
 	if (offs >= a->format->palette->nColors ||
 	    offs+count >= a->format->palette->nColors) {
 		AG_SetError("Bad palette offset/count");
-		return (-1);
+		goto fail;
 	}
 	for (i = 0; i < count; i++) {
 		a->format->palette->colors[offs+i] = c[i];
 	}
+	AG_MutexUnlock(&a->lock);
 	return (0);
+fail:
+	AG_MutexUnlock(&a->lock);
+	return (-1);
 }
 
 /* Return a newly-allocated duplicate of an animation. */
 AG_Anim *
-AG_AnimDup(const AG_Anim *sa)
+AG_AnimDup(AG_Anim *sa)
 {
 	AG_Anim *a;
 	int i;
 
-	a = AG_AnimNew(sa->type,
-	    sa->w, sa->h, sa->format,
+	AG_MutexLock(&sa->lock);
+
+	a = AG_AnimNew(sa->type, sa->w, sa->h, sa->format,
 	    (sa->flags & AG_SAVED_ANIM_FLAGS));
 	if (a == NULL) {
+		AG_MutexUnlock(&sa->lock);
 		return (NULL);
 	}
-	if ((a->pixels = TryMalloc(sa->n*sizeof(void *))) == NULL) {
+	if ((a->f = TryMalloc(sa->n*sizeof(AG_AnimFrame))) == NULL) {
 		goto fail;
 	}
 	for (i = 0; i < sa->n; i++) {
-		if ((a->pixels[i] = TryMalloc(sa->h*sa->pitch)) == NULL) {
+		AG_AnimFrame *af = &a->f[i];
+
+		if ((af->pixels = TryMalloc(sa->h*sa->pitch)) == NULL) {
 			goto fail;
 		}
-		memcpy(a->pixels[i], sa->pixels[i], sa->h*sa->pitch);
+		memcpy(af->pixels, sa->f[i].pixels, sa->h*sa->pitch);
 		a->n++;
 	}
+	AG_MutexUnlock(&sa->lock);
 	return (a);
 fail:
+	AG_MutexUnlock(&sa->lock);
 	AG_AnimFree(a);
 	return (NULL);
 }
@@ -216,22 +230,31 @@ AG_AnimResize(AG_Anim *a, Uint w, Uint h)
 {
 	Uint8 *pixelsNew;
 	int i;
-	int pitchNew = w*a->format->BytesPerPixel;
+	int pitchNew;
 
+	AG_MutexLock(&a->lock);
+
+	pitchNew = w*a->format->BytesPerPixel;
 	for (i = 0; i < a->n; i++) {
-		if ((pixelsNew = TryRealloc(a->pixels[i], h*pitchNew)) == NULL) {
+		AG_AnimFrame *af = &a->f[i];
+		if ((pixelsNew = TryRealloc(af->pixels, h*pitchNew)) == NULL) {
 			for (i--; i >= 0; i--) {
-				Free(a->pixels[i]);
+				Free(af->pixels);
 			}
-			return (-1);
+			goto fail;
 		}
-		a->pixels[i] = pixelsNew;
+		af->pixels = pixelsNew;
 	}
 	a->pitch = pitchNew;
 	a->w = w;
 	a->h = h;
 	a->clipRect = AG_RECT(0,0,w,h);
+
+	AG_MutexUnlock(&a->lock);
 	return (0);
+fail:
+	AG_MutexUnlock(&a->lock);
+	return (-1);
 }
 
 /* Free the specified animation. */
@@ -241,55 +264,260 @@ AG_AnimFree(AG_Anim *a)
 	int i;
 
 	AG_PixelFormatFree(a->format);
+	AG_MutexDestroy(&a->lock);
 
 	for (i = 0; i < a->n; i++) {
-		Free(a->pixels[i]);
+		AG_AnimFrame *af = &a->f[i];
+		Free(af->pixels);
 	}
-	Free(a->pixels);
+	Free(a->f);
 	Free(a);
+}
+
+void
+AG_AnimStateInit(AG_Anim *an, AG_AnimState *ast)
+{
+	AG_MutexInitRecursive(&ast->lock);
+	ast->an = an;
+	ast->flags = 0;
+	ast->play = 0;
+	ast->f = 0;
+	
+	AG_MutexLock(&an->lock);
+	ast->fps = an->fpsOrig;
+	AG_MutexUnlock(&an->lock);
+}
+
+void
+AG_AnimStateDestroy(AG_Anim *an, AG_AnimState *ast)
+{
+	ast->play = 0;
+	AG_MutexDestroy(&ast->lock);
+}
+
+/* Set original playback speed. */
+void
+AG_AnimSetOrigFPS(AG_Anim *an, double fps)
+{
+	AG_MutexLock(&an->lock);
+	an->fpsOrig = fps;
+	AG_MutexUnlock(&an->lock);
+}
+
+/* Set effective playback speed. */
+void
+AG_AnimSetFPS(AG_AnimState *ast, double fps)
+{
+	AG_MutexLock(&ast->lock);
+	ast->fps = fps;
+	AG_MutexUnlock(&ast->lock);
+}
+
+void
+AG_AnimSetLoop(AG_AnimState *ast, int enable)
+{
+	AG_MutexLock(&ast->lock);
+	if (enable) {
+		ast->flags |= AG_ANIM_LOOP;
+		ast->flags &= ~(AG_ANIM_PINGPONG);
+	} else {
+		ast->flags &= ~(AG_ANIM_LOOP);
+	}
+	AG_MutexUnlock(&ast->lock);
+}
+
+void
+AG_AnimSetPingPong(AG_AnimState *ast, int enable)
+{
+	AG_MutexLock(&ast->lock);
+	if (enable) {
+		ast->flags |= AG_ANIM_PINGPONG;
+		ast->flags &= ~(AG_ANIM_LOOP);
+	} else {
+		ast->flags &= ~(AG_ANIM_PINGPONG);
+	}
+	AG_MutexUnlock(&ast->lock);
+}
+
+/* Set the source alpha flag and per-animation alpha. */
+void
+AG_AnimSetAlpha(AG_Anim *an, Uint flags, Uint8 alpha)
+{
+	AG_MutexLock(&an->lock);
+	if (flags & AG_SRCALPHA) {
+		an->flags |= AG_SRCALPHA;
+	} else {
+		an->flags &= ~(AG_SRCALPHA);
+	}
+	an->format->alpha = alpha;
+	AG_MutexUnlock(&an->lock);
+}
+
+/* Set the source colorkey flag and per-animation colorkey. */
+void
+AG_AnimSetColorKey(AG_Anim *an, Uint flags, Uint32 colorkey)
+{
+	AG_MutexLock(&an->lock);
+	if (flags & AG_SRCCOLORKEY) {
+		an->flags |= AG_SRCCOLORKEY;
+	} else {
+		an->flags &= ~(AG_SRCCOLORKEY);
+	}
+	an->format->colorkey = colorkey;
+	AG_MutexUnlock(&an->lock);
+}
+
+/* Animation processing loop */
+static void *
+AnimProc(void *arg)
+{
+	AG_AnimState *ast = arg;
+	Uint32 delay;
+
+	while (ast->play) {
+		AG_MutexLock(&ast->lock);
+		AG_MutexLock(&ast->an->lock);
+
+		if (ast->an->n < 1) {
+			AG_MutexUnlock(&ast->an->lock);
+			AG_MutexUnlock(&ast->lock);
+			goto out;
+		}
+		if (ast->f & AG_ANIM_REVERSE) {
+			if (--ast->f < 0) {
+				if (ast->flags & AG_ANIM_LOOP) {
+					ast->f = (ast->an->n - 1);
+				} else if (ast->flags & AG_ANIM_PINGPONG) {
+					ast->f = 0;
+					ast->flags &= ~(AG_ANIM_REVERSE);
+				} else {
+					ast->play = 0;
+					AG_MutexUnlock(&ast->an->lock);
+					AG_MutexUnlock(&ast->lock);
+					goto out;
+				}
+			}
+		} else {
+			if (++ast->f >= ast->an->n) {
+				if (ast->flags & AG_ANIM_LOOP) {
+					ast->f = 0;
+				} else if (ast->flags & AG_ANIM_PINGPONG) {
+					ast->f--;
+					ast->flags |= AG_ANIM_REVERSE;
+				} else {
+					ast->play = 0;
+					AG_MutexUnlock(&ast->an->lock);
+					AG_MutexUnlock(&ast->lock);
+					goto out;
+				}
+			}
+		}
+
+		delay = (Uint32)(1000.0/ast->fps);
+
+		AG_MutexUnlock(&ast->an->lock);
+		AG_MutexUnlock(&ast->lock);
+
+		AG_Delay(delay);
+	}
+out:
+	return (NULL);
+}
+
+int
+AG_AnimPlay(AG_AnimState *ast)
+{
+	int rv = 0;
+
+	AG_MutexLock(&ast->lock);
+	ast->play = 1;
+	if (AG_ThreadCreate(&ast->th, AnimProc, ast) != 0) {
+		AG_SetError("Failed to create playback thread");
+		rv = -1;
+		ast->play = 0;
+	}
+	AG_MutexUnlock(&ast->lock);
+	return (rv);
+}
+
+void
+AG_AnimStop(AG_AnimState *ast)
+{
+	AG_MutexLock(&ast->lock);
+	ast->play = 0;
+	AG_MutexUnlock(&ast->lock);
 }
 
 /* Insert a new animation frame. */
 int
 AG_AnimFrameNew(AG_Anim *a, const AG_Surface *su)
 {
-	void **pixelsNew;
+	AG_AnimFrame *afNew, *af;
+	AG_Surface *suTmp = NULL;
+	int nf;
 
-	if ((pixelsNew = TryRealloc(a->pixels, (a->n+1)*sizeof(void *)))
-	    == NULL) {
-		return (-1);
+	AG_MutexLock(&a->lock);
+
+	if (su->w != a->w || su->h != a->h) {
+		if (AG_ScaleSurface(su, a->w, a->h, &suTmp) == -1)
+			goto fail;
+	} else {
+		if ((suTmp = AG_SurfaceConvert(su, a->format)) == NULL)
+			goto fail;
 	}
-	a->pixels = pixelsNew;
-	if ((a->pixels[a->n] = TryMalloc(su->h*su->pitch)) == NULL) {
-		return (-1);
+
+	if ((afNew = TryRealloc(a->f, (a->n+1)*sizeof(AG_AnimFrame))) == NULL) {
+		goto fail;
 	}
-	memcpy(a->pixels[a->n], su->pixels, su->h*su->pitch);
-	return (a->n++);
+	a->f = afNew;
+	af = &a->f[a->n];
+	af->flags = 0;
+	if ((af->pixels = TryMalloc(su->h*a->pitch)) == NULL) {
+		a->n--;
+		goto fail;
+	}
+	memcpy(af->pixels, suTmp->pixels, su->h*a->pitch);
+	nf = a->n++;
+	AG_MutexUnlock(&a->lock);
+
+	AG_SurfaceFree(suTmp);
+	return (nf);
+fail:
+	AG_MutexUnlock(&a->lock);
+	if (suTmp != NULL) {
+		AG_SurfaceFree(suTmp);
+	}
+	return (-1);
 }
 
 /* Return a new surface from a given frame#. */
 AG_Surface *
-AG_AnimFrameToSurface(const AG_Anim *a, int f)
+AG_AnimFrameToSurface(AG_Anim *a, int f)
 {
 	AG_Surface *su;
+	AG_AnimFrame *af;
 
+	AG_MutexLock(&a->lock);
 	if (f < 0 || f >= a->n) {
 		AG_SetError("No such frame#");
+		AG_MutexUnlock(&a->lock);
 		return (NULL);
 	}
+	af = &a->f[f];
 	if (a->format->Amask != 0) {
-		su = AG_SurfaceFromPixelsRGBA(a->pixels[f], a->w, a->h,
+		su = AG_SurfaceFromPixelsRGBA(af->pixels, a->w, a->h,
 		    a->format->BitsPerPixel,
 		    a->format->Rmask,
 		    a->format->Gmask,
 		    a->format->Bmask,
 		    a->format->Amask);
 	} else {
-		su = AG_SurfaceFromPixelsRGB(a->pixels[f], a->w, a->h,
+		su = AG_SurfaceFromPixelsRGB(af->pixels, a->w, a->h,
 		    a->format->BitsPerPixel,
 		    a->format->Rmask,
 		    a->format->Gmask,
 		    a->format->Bmask);
 	}
+	AG_MutexUnlock(&a->lock);
 	return (su);
 }
