@@ -876,22 +876,34 @@ AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 }
 
 /*
- * Release/backup and regenerate the GL resources associated with a widget.
+ * Release/backup and regenerate the GL resources associated with a widget
+ * and its descendents.
+ *
  * If some textures exist without a corresponding surface, allocate a
  * software surface and copy their contents to be later restored. These
  * routines are necessary for dealing with GL context loss.
  */
 void
-AG_WidgetFreeResourcesGL(AG_Widget *wid)
+AG_WidgetFreeResourcesGL(void *obj)
 {
-	if (wid->drvOps->backupSurfaces != NULL)
+	AG_Widget *wid = obj, *cwid;
+
+	if (wid->drvOps->backupSurfaces != NULL) {
 		wid->drvOps->backupSurfaces(wid->drv, wid);
+	}
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetFreeResourcesGL(cwid);
 }
 void
-AG_WidgetRegenResourcesGL(AG_Widget *wid)
+AG_WidgetRegenResourcesGL(void *obj)
 {
-	if (wid->drvOps->restoreSurfaces != NULL)
+	AG_Widget *wid = obj, *cwid;
+
+	if (wid->drvOps->restoreSurfaces != NULL) {
 		wid->drvOps->restoreSurfaces(wid->drv, wid);
+	}
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetRegenResourcesGL(cwid);
 }
 #endif /* HAVE_OPENGL */
 

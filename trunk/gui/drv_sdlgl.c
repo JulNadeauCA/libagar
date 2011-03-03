@@ -688,11 +688,16 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	Uint32 sFlags;
 	SDL_Surface *su;
 	AG_ClipRect *cr0;
+	AG_Window *win;
 
 	sFlags = sgl->s->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|SDL_HWSURFACE|
 	                          SDL_ASYNCBLIT|SDL_HWPALETTE|SDL_RESIZABLE|
 	                          SDL_OPENGL);
 
+	/* Backup all widget surfaces prior to GL context loss. */
+	AG_FOREACH_WINDOW(win, sgl)
+		AG_WidgetFreeResourcesGL(win);
+	
 	if ((su = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
 		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
 		    SDL_GetError());
@@ -729,6 +734,10 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	/* Reinitialize the GL viewport. */
 	AG_GL_InitContext(
 	    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
+	
+	/* Regenerate all widget textures. */
+	AG_FOREACH_WINDOW(win, sgl)
+		AG_WidgetRegenResourcesGL(win);
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
 		ClearBackground();
