@@ -80,6 +80,7 @@ CHECK(glob)
 CHECK(getopt)
 CHECK(execvp)
 CHECK(clock_gettime)
+CHECK(clock_win32)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)

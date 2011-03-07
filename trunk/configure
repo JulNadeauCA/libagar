@@ -3410,6 +3410,15 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 $ECHO_N "checking for the gettimeofday() function..."
 $ECHO_N "checking for the gettimeofday() function..." >> config.log
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+echo "not checking (mingw32 issues)"
+echo "not checking (mingw32 issues)" >> config.log
+HAVE_GETTIMEOFDAY="no"
+echo "#undef HAVE_GETTIMEOFDAY" >$BLD/include/agar/config/have_gettimeofday.h
+echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = nil" >>configure.lua
+;;
+*)
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -3460,6 +3469,8 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+;;
+esac
 $ECHO_N "checking for the select() interface..."
 $ECHO_N "checking for the select() interface..." >> config.log
 MK_CACHED="No"
@@ -4110,6 +4121,94 @@ else
 echo "#undef HAVE_CLOCK_GETTIME" >$BLD/include/agar/config/have_clock_gettime.h
 echo "hdefs[\"HAVE_CLOCK_GETTIME\"] = nil" >>configure.lua
 fi;
+fi;
+$ECHO_N "checking for winmm time interface..."
+$ECHO_N "checking for winmm time interface..." >> config.log
+CLOCK_CFLAGS=""
+CLOCK_LIBS=""
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CLOCK_WIN32" ]; then
+		HAVE_CLOCK_WIN32=`cat ${cache}/ctest-HAVE_CLOCK_WIN32`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CLOCK_WIN32`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#ifdef _XBOX
+#include <xtl.h>
+#else
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
+int
+main(int argc, char *argv[])
+{
+	DWORD t0;
+#ifndef _XBOX
+	timeBeginPeriod(1);
+#endif
+	t0 = timeGetTime();
+	Sleep(1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c -lwinmm" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c -lwinmm 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CLOCK_WIN32="yes"
+echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
+echo "#ifndef HAVE_CLOCK_WIN32" > $BLD/include/agar/config/have_clock_win32.h
+echo "#define HAVE_CLOCK_WIN32 \"$HAVE_CLOCK_WIN32\"" >> $BLD/include/agar/config/have_clock_win32.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_win32.h
+echo "hdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CLOCK_WIN32="no"
+echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
+echo "#undef HAVE_CLOCK_WIN32" >$BLD/include/agar/config/have_clock_win32.h
+echo "hdefs[\"HAVE_CLOCK_WIN32\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CLOCK_WIN32" > ${cache}/ctest-HAVE_CLOCK_WIN32
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CLOCK_WIN32
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_CLOCK_WIN32}" = "yes" ]; then
+CLOCK_LIBS="-lwinmm"
+echo "#ifndef HAVE_CLOCK_WIN32" > $BLD/include/agar/config/have_clock_win32.h
+echo "#define HAVE_CLOCK_WIN32 \"$HAVE_CLOCK_WIN32\"" >> $BLD/include/agar/config/have_clock_win32.h
+echo "#endif" >> $BLD/include/agar/config/have_clock_win32.h
+echo "hdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
+echo "#ifndef CLOCK_CFLAGS" > $BLD/include/agar/config/clock_cflags.h
+echo "#define CLOCK_CFLAGS \"$CLOCK_CFLAGS\"" >> $BLD/include/agar/config/clock_cflags.h
+echo "#endif" >> $BLD/include/agar/config/clock_cflags.h
+echo "hdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "#ifndef CLOCK_LIBS" > $BLD/include/agar/config/clock_libs.h
+echo "#define CLOCK_LIBS \"$CLOCK_LIBS\"" >> $BLD/include/agar/config/clock_libs.h
+echo "#endif" >> $BLD/include/agar/config/clock_libs.h
+echo "hdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
+echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
+echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
+echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
+else
+echo "#undef HAVE_CLOCK_WIN32" >$BLD/include/agar/config/have_clock_win32.h
+echo "hdefs[\"HAVE_CLOCK_WIN32\"] = nil" >>configure.lua
 fi;
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
