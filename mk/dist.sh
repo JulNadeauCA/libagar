@@ -59,7 +59,7 @@ rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 (cd ${DISTNAME}/demos && ${MAKE} proj)
 (cd ${DISTNAME}/tools/agarpaint && touch Makefile.config && ${MAKE} proj)
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
-(cd ${DISTNAME} && rm -f INSTALL README RELEASE-${VER})
+(cd ${DISTNAME} && rm -f README RELEASE-${VER})
 
 # ZIP: Compress archive
 zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}

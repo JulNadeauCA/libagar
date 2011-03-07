@@ -104,7 +104,7 @@ pre-package:
 		if [ -e "`which unix2dos 2>/dev/null`" ]; then \
 			V=`perl mk/get-version.pl`; \
 			cat README |unix2dos >README.txt; \
-			cat INSTALL |unix2dos >INSTALL.txt; \
+			cat INSTALL.txt |unix2dos >INSTALL-Windows.txt; \
 			cat ChangeLogs/Release-$$V.txt | \
 			    unix2dos >RELEASE-$$V.txt; \
 			cat mk/LICENSE.txt |unix2dos >LICENSE.txt; \
@@ -112,7 +112,7 @@ pre-package:
 			    LICENSE-Vera.txt; \
 			cp -f mk/agar-logo.png Logo.png; \
 			echo "README.txt" >> ${PROJFILELIST}; \
-			echo "INSTALL.txt" >> ${PROJFILELIST}; \
+			echo "INSTALL-Windows.txt" >> ${PROJFILELIST}; \
 			echo "RELEASE-$$V.txt" >> ${PROJFILELIST}; \
 			echo "LICENSE.txt" >> ${PROJFILELIST}; \
 			echo "LICENSE-Vera.txt" >> ${PROJFILELIST}; \
@@ -128,7 +128,7 @@ pre-package:
 
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
-		rm -f install-sdk.exe README.txt INSTALL.txt VisualC.html; \
+		rm -f install-sdk.exe README.txt INSTALL-Windows.txt VisualC.html; \
 		rm -f RELEASE-*.txt LICENSE.txt LICENSE-Vera.txt Logo.png; \
 	else \
 		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
