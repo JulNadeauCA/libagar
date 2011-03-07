@@ -431,11 +431,16 @@ AG_AnimPlay(AG_AnimState *ast)
 
 	AG_MutexLock(&ast->lock);
 	ast->play = 1;
+#ifdef AG_THREADS
 	if (AG_ThreadCreate(&ast->th, AnimProc, ast) != 0) {
 		AG_SetError("Failed to create playback thread");
 		rv = -1;
 		ast->play = 0;
 	}
+#else
+	AG_SetError("AG_AnimPlay() requires threads support");
+	rv = -1;
+#endif
 	AG_MutexUnlock(&ast->lock);
 	return (rv);
 }
