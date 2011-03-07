@@ -495,6 +495,36 @@ AG_TextDestroy(void)
 	AG_MutexDestroy(&agTextLock);
 }
 
+/* Initialize the glyph cache. */
+void
+AG_TextInitGlyphCache(AG_Driver *drv)
+{
+	Uint i;
+
+	drv->glyphCache = Malloc(AG_GLYPH_NBUCKETS*sizeof(AG_GlyphCache));
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++)
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
+}
+
+/* Clear the glyph cache. */
+void
+AG_TextClearGlyphCache(AG_Driver *drv)
+{
+	int i;
+	AG_Glyph *gl, *ngl;
+
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		for (gl = SLIST_FIRST(&drv->glyphCache[i].glyphs);
+		     gl != SLIST_END(&drv->glyphCache[i].glyphs);
+		     gl = ngl) {
+			ngl = SLIST_NEXT(gl, glyphs);
+			AG_SurfaceFree(gl->su);
+			Free(gl);
+		}
+		SLIST_INIT(&drv->glyphCache[i].glyphs);
+	}
+}
+
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 AG_Glyph *
 AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
