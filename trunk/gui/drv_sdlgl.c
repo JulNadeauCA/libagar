@@ -683,6 +683,7 @@ SDLGL_CloseVideo(void *obj)
 static int
 SDLGL_VideoResize(void *obj, Uint w, Uint h)
 {
+	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
 	Uint32 sFlags;
@@ -695,8 +696,12 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	                          SDL_OPENGL);
 
 	/* Backup all widget surfaces prior to GL context loss. */
-	AG_FOREACH_WINDOW(win, sgl)
+	AG_FOREACH_WINDOW(win, sgl) {
 		AG_WidgetFreeResourcesGL(win);
+	}
+
+	/* Invalidate the font cache. */
+	AG_TextClearGlyphCache(drv);
 	
 	if ((su = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
 		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
