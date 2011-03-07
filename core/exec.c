@@ -248,7 +248,7 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 		AG_SetError(_("Failed to obtain process exit code (%s)"), AG_Strerror(GetLastError()));
 		return -1;
 	} else if(status) {
-		AG_SetError(_("Process exited with status (%d)"), status);
+		AG_SetError(_("Process exited with status (%d)"), (int)status);
 		return -1;
 	}
 
