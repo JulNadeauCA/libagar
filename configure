@@ -3410,15 +3410,6 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 $ECHO_N "checking for the gettimeofday() function..."
 $ECHO_N "checking for the gettimeofday() function..." >> config.log
-case "${host}" in
-*-*-cygwin* | *-*-mingw32*)
-echo "not checking (mingw32 issues)"
-echo "not checking (mingw32 issues)" >> config.log
-HAVE_GETTIMEOFDAY="no"
-echo "#undef HAVE_GETTIMEOFDAY" >$BLD/include/agar/config/have_gettimeofday.h
-echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = nil" >>configure.lua
-;;
-*)
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -3469,8 +3460,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-;;
-esac
 $ECHO_N "checking for the select() interface..."
 $ECHO_N "checking for the select() interface..." >> config.log
 MK_CACHED="No"
@@ -4124,8 +4113,6 @@ fi;
 fi;
 $ECHO_N "checking for winmm time interface..."
 $ECHO_N "checking for winmm time interface..." >> config.log
-CLOCK_CFLAGS=""
-CLOCK_LIBS=""
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -4157,8 +4144,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c -lwinmm" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${CLOCK_CFLAGS} -o $testdir/conftest conftest.c -lwinmm 2>>config.log
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c -lwinmm" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c -lwinmm 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -4189,6 +4176,7 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_CLOCK_WIN32}" = "yes" ]; then
+CLOCK_CFLAGS=""
 CLOCK_LIBS="-lwinmm"
 echo "#ifndef HAVE_CLOCK_WIN32" > $BLD/include/agar/config/have_clock_win32.h
 echo "#define HAVE_CLOCK_WIN32 \"$HAVE_CLOCK_WIN32\"" >> $BLD/include/agar/config/have_clock_win32.h
