@@ -33,7 +33,6 @@ sub Scan ($$)
 			next;
 		}
 		if ($ent =~ /\.h$/) {
-			print STDERR "file=$srcdir/$file, outfile=$outfile\n";
 			unless (symlink($srcdir.'/'.$file, $outfile)) {
 				print STDERR "$file to $outfile: $!\n";
 			}
