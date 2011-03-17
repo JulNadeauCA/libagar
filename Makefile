@@ -30,8 +30,9 @@ depend: depend-subdir
 regress: regress-subdir
 
 includes:
-	if [ ! -e "include" ]; then mkdir include; fi
-	if [ "${SRCDIR}" != "${BLDDIR}" ]; then \
+	@if [ ! -e "include" ]; then mkdir include; fi
+	@echo "perl mk/gen-includes.pl include/agar"
+	@if [ "${SRCDIR}" != "${BLDDIR}" ]; then \
 		(cd "${SRCDIR}" && \
 		 perl mk/gen-includes.pl "${BLDDIR}/include/agar"); \
 	else \
