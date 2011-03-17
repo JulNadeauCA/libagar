@@ -3410,6 +3410,15 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 $ECHO_N "checking for the gettimeofday() function..."
 $ECHO_N "checking for the gettimeofday() function..." >> config.log
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+echo "not checking (mingw32 issues)"
+echo "not checking (mingw32 issues)" >> config.log
+HAVE_GETTIMEOFDAY="no"
+echo "#undef HAVE_GETTIMEOFDAY" >$BLD/include/agar/config/have_gettimeofday.h
+echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = nil" >>configure.lua
+;;
+*)
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -3460,6 +3469,8 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+;;
+esac
 $ECHO_N "checking for the select() interface..."
 $ECHO_N "checking for the select() interface..." >> config.log
 MK_CACHED="No"
