@@ -255,7 +255,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 	AG_DriverSw *dsw = (AG_DriverSw *)sgl;
 	AG_Surface *s;
 
-	snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
+	Snprintf(path, sizeof(path), sgl->outPath, sgl->outFrame);
 	glReadPixels(0, 0, dsw->w, dsw->h, GL_RGBA, GL_UNSIGNED_BYTE,
 	    sgl->outBuf);
 
@@ -519,12 +519,12 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		AG_GetString(drv, "out", buf, sizeof(buf));
 		if ((ext = strrchr(buf, '.')) != NULL &&
 		    ext[1] != '\0') {
-			if (strcasecmp(&ext[1], "jpeg") == 0 ||
-			    strcasecmp(&ext[1], "jpg") == 0) {
+			if (Strcasecmp(&ext[1], "jpeg") == 0 ||
+			    Strcasecmp(&ext[1], "jpg") == 0) {
 				sgl->outMode = AG_SDLGL_OUT_JPEG;
 				if ((sgl->outPath = TryStrdup(buf)) == NULL)
 					return (-1);
-			} else if (strcasecmp(&ext[1], "png") == 0) {
+			} else if (Strcasecmp(&ext[1], "png") == 0) {
 				sgl->outMode = AG_SDLGL_OUT_PNG;
 				if ((sgl->outPath = TryStrdup(buf)) == NULL)
 					return (-1);
