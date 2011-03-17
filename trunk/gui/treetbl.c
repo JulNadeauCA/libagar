@@ -813,6 +813,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 	while(*p)
 	{
 		int colID = va_arg(ap, int);
+		void *data;
 
 		/* Next argument */
 		p += 2;
@@ -822,8 +823,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 			break;
 		}
 
-		void *data = va_arg(ap, void *);
-
+		data = va_arg(ap, void *);
 		for (i = 0; i < tt->n; i++) {
 			if (colID == tt->column[i].cid) {
 				AG_TreetblCell *cell = &row->cell[i];
