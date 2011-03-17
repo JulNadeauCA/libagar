@@ -26,7 +26,6 @@
 #include <agar/gui/begin.h>
 
 __BEGIN_DECLS
-int             AG_InitVideoSDL(void *, Uint);
 AG_PixelFormat *AG_SDL_GetPixelFormat(SDL_Surface *);
 void            AG_SDL_BlitSurface(const AG_Surface *, const AG_Rect *,
                                    SDL_Surface *, int, int);
