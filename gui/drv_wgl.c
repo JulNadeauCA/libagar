@@ -645,6 +645,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		dev->type = AG_DRIVER_MOUSE_LEAVE;
 		dev->win = win;
 		break;
+	case WM_ERASEBKGND:
+		dev->type = AG_DRIVER_EXPOSE;
+		dev->win = win;
+		goto ret0;
 	case WM_CLOSE:
 		dev->type = AG_DRIVER_CLOSE;
 		dev->win = win;
