@@ -57,7 +57,7 @@ Portability
 Agar is portable to many different platforms, including FreeBSD, IRIX,
 Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD, Solaris and Windows. Agar
 has been used on ARM embedded devices. It has even been ported to game
-consoles such as the GP2x and Nintendo Gamecube/Wii. See:
+consoles such as the GP2x, the Nintendo Gamecube/Wii and the Xbox. See:
 http://libagar.org/portable.html.
 
 License
