@@ -34,6 +34,10 @@ http://wiki.libagar.org/wiki/Agar-1.4.1.
 - MATH: Fix type conversion warnings.
 - Implemented AG_DirDlg(3) directory selection widget.
 - Implemented AG_Anim(3) interface.
-- In the wgl driver, terminate application by exiting the event loop
-  instead of using exit().
+- WGL: Terminate application by exiting the event loop instead of
+  using exit().
 - In AG_Scrollbar(3), implement AG_SCROLLBAR_AUTOHIDE option.
+- Fix compilation issues under MinGW / MSYS (thanks Joergen!)
+- WGL: Post a "window-gainfocus" event when a window is focused for
+  the first time on creation.
+
