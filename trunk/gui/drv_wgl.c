@@ -415,9 +415,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
 		SetForegroundWindow(wgl->hwnd);
 	}
-	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
-		SetFocus(wgl->hwnd);
-	}
 	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
 
 	/* Set the pixel format */
@@ -440,6 +437,13 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	a.h = r.h;
 	if (AG_WidgetSizeAlloc(win, &a) == 0)
 		AG_WidgetUpdateCoords(win, a.x, a.y);
+
+	/* Focus the window. */
+	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
+		SetFocus(wgl->hwnd);
+		agWindowFocused = win;
+		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+	}
 	
 	return (0);
 fail:
