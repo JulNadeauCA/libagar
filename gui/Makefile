@@ -5,7 +5,7 @@ include ${TOP}/core/Makefile.inc
 SUBDIR=	fonts
 
 LIB=		ag_gui
-LIB_MAJOR=	4
+LIB_MAJOR=	5
 LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes

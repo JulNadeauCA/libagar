@@ -2,7 +2,7 @@ TOP=..
 include ${TOP}/Makefile.config
 
 LIB=		ag_core
-LIB_MAJOR=	4
+LIB_MAJOR=	5
 LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes

@@ -7,8 +7,8 @@
 
 # Version information
 PACKAGE("Agar")
-VERSION("1.4.1")
-RELEASE("Landscapes of Frozen Methane")
+VERSION("1.4.2-beta")
+RELEASE("Oh le bon temps que ce siecle de fer")
 
 # Register options for configure --help
 REGISTER_SECTION("Options specific to Agar:")
@@ -100,7 +100,7 @@ fi
 
 if [ "${enable_debug}" = "yes" ]; then
 	HDEFINE(AG_DEBUG, "yes")
-	echo "LDFLAGS+=-g" >> Makefile.config
+	MDEFINE(CFLAGS, "${CFLAGS} -g")
 else
 	HUNDEF(AG_DEBUG)
 fi

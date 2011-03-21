@@ -671,14 +671,14 @@ echo "#ifndef PACKAGE" > $BLD/include/agar/config/package.h
 echo "#define PACKAGE \"$PACKAGE\"" >> $BLD/include/agar/config/package.h
 echo "#endif" >> $BLD/include/agar/config/package.h
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.4.1"
+VERSION="1.4.2-beta"
 echo "VERSION=$VERSION" >>Makefile.config
 echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 echo "#ifndef VERSION" > $BLD/include/agar/config/version.h
 echo "#define VERSION \"$VERSION\"" >> $BLD/include/agar/config/version.h
 echo "#endif" >> $BLD/include/agar/config/version.h
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="Landscapes of Frozen Methane"
+RELEASE="Oh le bon temps que ce siecle de fer"
 echo "RELEASE=$RELEASE" >>Makefile.config
 echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 echo "#ifndef RELEASE" > $BLD/include/agar/config/release.h
@@ -3410,15 +3410,6 @@ TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
 $ECHO_N "checking for the gettimeofday() function..."
 $ECHO_N "checking for the gettimeofday() function..." >> config.log
-case "${host}" in
-*-*-cygwin* | *-*-mingw32*)
-echo "not checking (mingw32 issues)"
-echo "not checking (mingw32 issues)" >> config.log
-HAVE_GETTIMEOFDAY="no"
-echo "#undef HAVE_GETTIMEOFDAY" >$BLD/include/agar/config/have_gettimeofday.h
-echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = nil" >>configure.lua
-;;
-*)
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -3469,8 +3460,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-;;
-esac
 $ECHO_N "checking for the select() interface..."
 $ECHO_N "checking for the select() interface..." >> config.log
 MK_CACHED="No"
@@ -4256,7 +4245,9 @@ echo "#ifndef AG_DEBUG" > $BLD/include/agar/config/ag_debug.h
 echo "#define AG_DEBUG \"$AG_DEBUG\"" >> $BLD/include/agar/config/ag_debug.h
 echo "#endif" >> $BLD/include/agar/config/ag_debug.h
 echo "hdefs[\"AG_DEBUG\"] = \"$AG_DEBUG\"" >>configure.lua
-	echo "LDFLAGS+=-g" >> Makefile.config
+CFLAGS="${CFLAGS} -g"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 else
 echo "#undef AG_DEBUG" >$BLD/include/agar/config/ag_debug.h
 echo "hdefs[\"AG_DEBUG\"] = nil" >>configure.lua
