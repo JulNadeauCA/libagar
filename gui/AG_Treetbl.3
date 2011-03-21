@@ -87,6 +87,7 @@ The callback function should return a pointer to a valid C string to
 display under the given cell, and is declared as:
 .Pp
 .nr nS 1
+.\" NOMANLINK
 .Ft "char *"
 .Fn MyDataFn "AG_Treetbl *tbl" "int col" "int row"
 .nr nS 0
@@ -98,6 +99,7 @@ argument, if not NULL, specifies an optional comparison function to
 use in sorting cells, and is declared as:
 .Pp
 .nr nS 1
+.\" NOMANLINK
 .Ft int
 .Fn MySortFn "AG_Treetbl *tbl" "int col1" "int row1" "int col2" "int row2"
 .nr nS 0
