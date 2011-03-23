@@ -347,8 +347,19 @@ section of
 for details).
 .It Ft int w, h
 Dimensions of the surface in pixels (read-only).
-.It Ft void **pixels
-Pointer to raw frame/pixel data.
+.It Ft AG_AnimFrame *f
+Pointer to per-frame data.
+.El
+.Pp
+For the
+.Ft AG_AnimFrame
+structure:
+.Pp
+.Bl -tag -width "void *pixels "
+.It Ft void *pixels
+Raw packed pixel data for this frame.
+.It Ft Uint flags
+Optional flags.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
