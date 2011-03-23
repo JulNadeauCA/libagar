@@ -63,7 +63,11 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 		return (-1);
 	
 	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
+#ifdef SDL_OPENGLBLIT
 	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
+#else
+	if (display->flags & (SDL_OPENGL)) {
+#endif
 		if (flags & AG_VIDEO_SDL) {
 			AG_SetError("AG_VIDEO_SDL flag requested, but "
 			            "display surface has SDL_OPENGL set");
@@ -158,10 +162,13 @@ AG_SDL_SurfaceBlendPixel(SDL_Surface *s, Uint8 *pDst, AG_Color Cnew,
 	Uint8 a;
 
 	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, pxDst, pDst);
+#if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
 	if ((s->flags & SDL_SRCCOLORKEY) && (pxDst == s->format->colorkey)) {
 		px = SDL_MapRGBA(s->format, Cnew.r, Cnew.g, Cnew.b, Cnew.a);
 	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, px);
-	} else {
+	} else 
+#endif
+	{
 		SDL_GetRGBA(pxDst, s->format, &Cdst.r, &Cdst.g, &Cdst.b,
 		    &Cdst.a);
 		switch (fn) {
@@ -404,10 +411,14 @@ AG_SDL_InitDefaultCursor(void *obj)
 	ac = &drv->cursors[0];
 	drv->nCursors = 1;
 	AG_CursorInit(ac);
+#if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
 	ac->w = (Uint)sc->area.w;
 	ac->h = (Uint)sc->area.h;
 	ac->xHot = (int)sc->hot_x;
 	ac->yHot = (int)sc->hot_y;
+#else
+    // TODO
+#endif
 	ac->p = sc;
 	return (0);
 }

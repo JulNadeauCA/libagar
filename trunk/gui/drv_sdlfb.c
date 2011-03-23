@@ -448,6 +448,7 @@ SDLFB_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 	/* Extract the current destination pixel color. */
 	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, pxDst, pDst);
 
+#if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
 	/* If the target pixel is colorkey-masked, put the pixel as-is. */
 	if ((s->flags & SDL_SRCCOLORKEY) &&
 	    (pxDst == s->format->colorkey)) {
@@ -455,6 +456,7 @@ SDLFB_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 		return;
 	}
+#endif
 
 	/* Blend the components and write the computed pixel value. */
 	SDL_GetRGBA(pxDst, s->format, &dR, &dG, &dB, &dA);
