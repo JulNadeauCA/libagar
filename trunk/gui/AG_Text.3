@@ -379,7 +379,7 @@ widgets to display.
 .Sh FONT SELECTION
 .nr nS 1
 .Ft "AG_Font *"
-.Fn AG_FetchFont "const char *face" "int points" "int flags"
+.Fn AG_FetchFont "const char *face" "int size" "int flags"
 .Pp
 .Ft void
 .Fn AG_DestroyFont "AG_Font *font"
@@ -407,11 +407,12 @@ configuration setting is used (see
 The font file should reside in one of the directories specified in
 .Va font-path
 setting.
-If
+The
 .Fa size
-is -1, the default configuration setting
+argument is specified in points (if -1 is passed, the default configuration
+setting
 .Va font.size
-is used.
+is used).
 If
 .Fa flags
 is -1, the default configuration setting
