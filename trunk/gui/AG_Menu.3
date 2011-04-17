@@ -243,7 +243,21 @@ and modifier.
 .Pp
 The
 .Fn AG_MenuTool
-variant automatically inserts an item into the given toolbar as well.
+variant also inserts an item into the specified
+.Xr AG_Toolbar 3
+widget.
+.Pp
+The
+.Fn AG_MenuSetIcon
+function sets the icon associated with a menu item.
+If an argument of NULL is given, any existing icon is removed.
+.Pp
+.Fn AG_MenuSetLabel
+changes the text associated with an existing menu item.
+.Fn AG_MenuSetPollFn
+changes the callback function associated with a given item (previously
+created with
+.Fn AG_MenuDynamicItem ) .
 .Pp
 The
 .Fn AG_MenuDynamicItem
@@ -275,9 +289,6 @@ The callback can also change the text label and icon using
 .Fn AG_MenuSetLabel
 and
 .Fn AG_MenuSetIcon .
-The
-.Fn AG_MenuSetPollFn
-routine sets the callback function associated with a given item.
 .Pp
 The
 .Fn AG_MenuItemFree

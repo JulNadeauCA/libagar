@@ -562,7 +562,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 	if (mi->iconSrc != NULL) {
 		AG_SurfaceFree(mi->iconSrc);
 	}
-	mi->iconSrc = AG_SurfaceDup(iconSrc);
+	mi->iconSrc = iconSrc != NULL ? AG_SurfaceDup(iconSrc) : NULL;
 
 	if (mi->icon != -1 &&
 	    mi->parent != NULL &&
