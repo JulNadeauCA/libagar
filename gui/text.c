@@ -358,6 +358,10 @@ AG_SetDefaultFont(AG_Font *font)
 {
 	AG_MutexLock(&agTextLock);
 	agDefaultFont = font;
+	agTextFontHeight = font->height;
+	agTextFontAscent = font->ascent;
+	agTextFontDescent = font->descent;
+	agTextFontLineSkip = font->lineskip;
 	AG_MutexUnlock(&agTextLock);
 }
 
