@@ -349,7 +349,7 @@ AG_LoadDSO(const char *name, Uint flags)
 #elif defined(HAVE_DLOPEN)
 	dso = LoadDSO_DLOPEN(path);
 #else
-	AG_SetError("Dynamic linking is supported on this platform");
+	AG_SetError("Dynamic linking is not supported on this platform");
 	dso = NULL;
 #endif
 	if (dso == NULL)
@@ -444,7 +444,7 @@ AG_UnloadDSO(AG_DSO *dso)
 		}
 	}
 #else
-	AG_SetError("Dynamic linking is supported on this platform");
+	AG_SetError("Dynamic linking is not supported on this platform");
 	goto out;
 #endif /* DSO_USE_FOO */
 
@@ -636,7 +636,7 @@ AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 #elif defined(HAVE_DLOPEN)
 	rv = SymDSO_DLOPEN((AG_DSO_Generic *)dso, sym, p);
 #else
-	AG_SetError("Dynamic linking is supported on this platform");
+	AG_SetError("Dynamic linking is not supported on this platform");
 	rv = -1;
 #endif
 	if (rv == 0) {
