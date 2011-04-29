@@ -178,6 +178,7 @@ void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 void	 AG_FreeDetachedWindows(void);
+int      AG_WindowIntersect(AG_DriverSw *, int, int);
 
 AG_CursorArea *AG_MapCursor(void *, AG_Rect, struct ag_cursor *);
 AG_CursorArea *AG_MapStockCursor(void *, AG_Rect, int);
