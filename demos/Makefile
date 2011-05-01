@@ -32,7 +32,8 @@ SUBDIR=	fixedres \
 	sdl \
 	timeouts \
 	pane \
-	imageloading
+	imageloading \
+	audio
 
 all: all-subdir
 clean: prereq clean-subdir
