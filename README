@@ -74,6 +74,7 @@ Libraries and toolkits based on Agar
 Here are some useful libraries which implement new Agar widgets and
 extend Agar's functionality toward more specific applications:
 
+Agar-AU		Portable audio interface (bundled, use `agar-au-config`)
 Agar-MATH	General-purpose math library (bundled, use `agar-math-config`)
 Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
 Agar-RG		Raster graphics library (bundled, use `agar-rg-config`)

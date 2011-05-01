@@ -22,7 +22,7 @@ REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
 REGISTER("--with-db4[=PREFIX]",	"Berkeley DB support in Agar-Core [check]")
 REGISTER("--with-pthreads[=PREFIX]", "Specify libpthreads location [check]")
 
-REGISTER_SECTION("Options specific to Agar-GUI (ag_gui):")
+REGISTER_SECTION("Options specific to ag_gui library:")
 REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
 REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
 REGISTER("--with-glx[=PREFIX]",		"GL rendering via GLX [check]")
@@ -32,11 +32,15 @@ REGISTER("--with-sdl[=PREFIX]",		"SDL rendering support [check]")
 REGISTER("--with-x[=PREFIX]",		"X Windows driver support [check]")
 REGISTER("--with-wgl",			"GL rendering via WGL [check]")
 
-REGISTER_SECTION("Options specific to Agar-MATH (ag_math):")
-REGISTER("--with-altivec",	"AltiVec optimizations [check]")
-REGISTER("--with-sse",		"SSE[123] optimizations [no]")
-REGISTER("--with-<mode>-fp",    "Precision (single|double|quad) [double]")
-REGISTER("--with-<opt>-inline",	"Inline ops (sse2|sse3|altivec) [no]")
+REGISTER_SECTION("Options specific to ag_math library:")
+REGISTER("--with-altivec",		"AltiVec optimizations [check]")
+REGISTER("--with-sse",			"SSE[123] optimizations [no]")
+REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
+REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
+
+REGISTER_SECTION("Options specific to ag_au library:")
+REGISTER("--enable-au",			"Build audio interface library [no]")
+REGISTER("--with-sndfile[=PREFIX]",	"Use sndfile library [check]")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
@@ -585,6 +589,54 @@ else
 	MDEFINE(SUBDIR_dev, "")
 fi
 
+#
+# Options specific to the Agar-AU library
+#
+if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
+	HDEFINE(ENABLE_AU, "yes")
+	MDEFINE(SUBDIR_au, "au")
+
+	# We need the sndfile library to load audio files
+	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
+	if [ "${HAVE_SNDFILE}" != "yes" ]; then
+		echo "*"
+		echo "* --enable-audio was requested, but the sndfile library "
+		echo "* was not found. You can specify a non-standard path"
+		echo "* to sndfile using --with-sndfile[=PREFIX]."
+		echo "*"
+		exit 1
+	fi
+
+	# Configure our bundled copy of PortAudio.
+	#
+	# XXX we need to filter out -W* from CFLAGS/LIBS for PortAudio's
+	# configure to succeed.
+	#
+	echo "*"
+	echo "* AU: Configuring bundled PortAudio..."
+	echo "*"
+	rm -fR au/portaudio
+	mkdir au/portaudio
+	if [ $? != 0 ]; then exit 1; fi
+	(cd au/portaudio && env CFLAGS="-O2" CXXFLAGS="-O2" \
+	    sh ${SRC}/au/portaudio/configure --prefix=${PREFIX})
+	if [ $? != 0 ]; then
+		echo "*"
+		echo "* Failed to configure PortAudio"
+		echo "*"
+		exit 1
+	fi
+	echo "*"
+	echo "* AU: PortAudio configured successfully"
+	echo "*"
+else
+	HUNDEF(ENABLE_AU)
+	HUNDEF(HAVE_SNDFILE)
+	MDEFINE(SNDFILE_CFLAGS, "")
+	MDEFINE(SNDFILE_LIBS, "")
+	MDEFINE(SUBDIR_au, "")
+fi
+
 # Set up configure script output
 C_INCPREP($BLD/include/agar)
 C_INCDIR($BLD/include)
@@ -598,6 +650,7 @@ CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -l
 CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS}", "-L${LIBDIR} -lag_au -lag_au_pa ${GETTEXT_LIBS} ${SNDFILE_LIBS}")
 
 echo "*"
 echo "* Configuration successful."

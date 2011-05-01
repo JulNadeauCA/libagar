@@ -1,0 +1,71 @@
+.\"
+.\" Copyright (c) 2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 19, 2011
+.Dt AU 3
+.Os
+.ds vT Agar-AU API Reference
+.ds oS Agar-AU 1.0
+.Sh NAME
+.Nm AU
+.Nd agar audio interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/au.h>
+.Ed
+.Sh DESCRIPTION
+The Agar-AU library integrates a simple audio mixer with a portable
+audio interface.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Ft RG_Tileset
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "RG_Tileset *"
+.Fn RG_TilesetNew "void *parent" "const char *name" "Uint flags"
+.Pp
+.nr nS 0
+The
+.Fn RG_TilesetNew
+function allocates and initializes a new
+.Nm
+object and attaches it to
+.Fa parent
+if not NULL.
+There are currently no
+.Fa flags
+defined.
+.Sh SEE ALSO
+.Xr RG_Tile 3 ,
+.Xr RG_Anim 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Feature 3 ,
+.Xr RG_Texture 3 ,
+.Xr RG_Tileview 3
+.Sh HISTORY
+The
+.Nm
+library first appeared in Agar 1.4.1.
