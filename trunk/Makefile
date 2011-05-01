@@ -7,19 +7,21 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		core gui vg rg math dev
+INCDIR=		core gui vg rg math dev au
 SUBDIR=		core \
 		${SUBDIR_gui} \
 		${SUBDIR_vg} \
 		${SUBDIR_rg} \
 		${SUBDIR_math} \
-		${SUBDIR_dev}
+		${SUBDIR_dev} \
+		${SUBDIR_au}
 CONFSCRIPTS=	agar-config \
 		agar-core-config \
 		agar-dev-config \
 		agar-math-config \
 		agar-rg-config \
-		agar-vg-config
+		agar-vg-config \
+		agar-au-config
 
 all: all-subdir
 clean: clean-subdir
@@ -111,12 +113,15 @@ pre-package:
 			cat mk/LICENSE.txt |unix2dos >LICENSE.txt; \
 			cat gui/fonts/Vera-Copyright.txt |unix2dos > \
 			    LICENSE-Vera.txt; \
+			cat au/portaudio/LICENSE.txt |unix2dos > \
+			    LICENSE-PortAudio.txt; \
 			cp -f mk/agar-logo.png Logo.png; \
 			echo "README.txt" >> ${PROJFILELIST}; \
 			echo "INSTALL-Windows.txt" >> ${PROJFILELIST}; \
 			echo "RELEASE-$$V.txt" >> ${PROJFILELIST}; \
 			echo "LICENSE.txt" >> ${PROJFILELIST}; \
 			echo "LICENSE-Vera.txt" >> ${PROJFILELIST}; \
+			echo "LICENSE-PortAudio.txt" >> ${PROJFILELIST}; \
 			echo "Logo.png" >> ${PROJFILELIST}; \
 		fi; \
 	else \
@@ -124,15 +129,16 @@ pre-package:
 		cp ChangeLogs/Release-$$V.txt RELEASE-$$V; \
 		cp mk/LICENSE.txt LICENSE; \
 		cp gui/fonts/Vera-Copyright.txt LICENSE-Vera; \
+		cp au/portaudio/LICENSE.txt LICENSE-PortAudio; \
 		cp mk/agar-logo.png Logo.png; \
 	fi
 
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
 		rm -f install-sdk.exe README.txt INSTALL-Windows.txt VisualC.html; \
-		rm -f RELEASE-*.txt LICENSE.txt LICENSE-Vera.txt Logo.png; \
+		rm -f RELEASE-*.txt LICENSE.txt LICENSE-*.txt Logo.png; \
 	else \
-		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
+		rm -f Release-* ChangeLog-* LICENSE LICENSE-* Logo.png; \
 	fi
 
 function-list:

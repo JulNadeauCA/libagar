@@ -355,6 +355,7 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	V = AG_GetVariableLocked(obj, name);
 	Strlcpy(V->name, name, sizeof(V->name));
 	if (AG_CopyVariable(V, &vList->v[0]) == -1) {
+		AG_UnlockVariable(V);
 		AG_FatalError(NULL);
 	}
 	AG_UnlockVariable(V);
