@@ -53,13 +53,13 @@ but restricted to directories.
 .Fn AG_DirDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
 .Pp
 .Ft int
-.Fn AG_DirDlgSetDirectory "AG_DirDlg *file_dlg" "const char *format" "..."
+.Fn AG_DirDlgSetDirectory "AG_DirDlg *dd" "const char *format" "..."
 .Pp
 .Ft int
-.Fn AG_DirDlgSetDirectoryS "AG_DirDlg *file_dlg" "const char *path"
+.Fn AG_DirDlgSetDirectoryS "AG_DirDlg *dd" "const char *path"
 .Pp
 .Ft void
-.Fn AG_DirDlgSetDirectoryMRU "AG_DirDlg *file_dlg" "const char *mruKey" "const char *defaultDir"
+.Fn AG_DirDlgSetDirectoryMRU "AG_DirDlg *dd" "const char *mruKey" "const char *defaultDir"
 .Pp
 .nr nS 0
 The
@@ -84,11 +84,11 @@ Acceptable
 include:
 .Bl -tag -width "AG_DIRDLG_CLOSEWIN "
 .It AG_DIRDLG_MULTI
-Allow multiple files to be selected at once.
+Allow multiple directories to be selected at once.
 .It AG_DIRDLG_CLOSEWIN
 Automatically close the
 .Nm
-widget's parent window when a file is selected.
+widget's parent window when a directory is selected.
 .It AG_DIRDLG_LOAD
 The selected directory must exist and be accessible or an error is returned to
 the user.
@@ -121,7 +121,7 @@ parameter named
 If the parameter does not exist, it will be set to
 .Fa defaultDir
 (it is customary to use a name such as
-.Sq myapp.mru.foofiles ) .
+.Sq myapp.mru.foodir ) .
 If
 .Fn AG_DirDlgSetDirectoryMRU
 is used, subsequent directory changes will cause the current
@@ -129,7 +129,7 @@ is used, subsequent directory changes will cause the current
 settings to be saved automatically.
 .Pp
 .Sh OK/CANCEL ACTIONS
-By default, selecting a file will trigger the following checks:
+By default, selecting a directory will trigger the following checks:
 .Pp
 .Bl -enum -compact
 .It
@@ -157,16 +157,16 @@ These default actions can be overridden using the functions below:
 .Pp
 .nr nS 1
 .Ft "void"
-.Fn AG_DirDlgOkAction "AG_DirDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_DirDlgOkAction "AG_DirDlg *dd" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_DirDlgCancelAction "AG_DirDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_DirDlgCancelAction "AG_DirDlg *dd" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_DirDlgCheckReadAccess "AG_DirDlg *file_dlg"
+.Fn AG_DirDlgCheckReadAccess "AG_DirDlg *dd"
 .Pp
 .Ft "int"
-.Fn AG_DirDlgCheckWriteAccess "AG_DirDlg *file_dlg"
+.Fn AG_DirDlgCheckWriteAccess "AG_DirDlg *dd"
 .Pp
 .nr nS 0
 The
@@ -197,8 +197,7 @@ widget reacts to the following events:
 .It dblclick (dir list)
 Change the working directory.
 .It return (text input)
-If the entered path is an existing directory, change the working directory.
-Otherwise, assume that the path refers to a file and select it.
+If the entered path is an existing directory, select it.
 .Xr glob 3
 is used on systems that support it.
 .It pushed (OK button)
