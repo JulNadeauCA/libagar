@@ -143,17 +143,10 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	AG_PrtString(cfg, "tmp-path", "%s%stmp", udatadir, AG_PATHSEP);
 
 #if defined(_XBOX)
-	if(AG_XBOX_DriveIsMounted('T')) {
-		AG_SetString(cfg, "den-path", "T:\\");
-	} else {
-		AG_SetString(cfg, "den-path", "D:\\");
-	}
 	AG_PrtString(cfg, "load-path", "%s;D:\\", udatadir);
 #elif defined(_WIN32)
-	AG_SetString(cfg, "den-path", ".");
 	AG_PrtString(cfg, "load-path", "%s:.", udatadir);
 #else
-	AG_SetString(cfg, "den-path", SHAREDIR);
 	AG_PrtString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
 #endif /* _WIN32 */
 	
