@@ -8,7 +8,7 @@
 #
 #     $ cat configure.in | mkconfigure > configure
 #
-# Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -170,6 +170,15 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}" ]; then
 		if [ -e "${path}/perl" ]; then
 			PERL="${path}/perl"
+			break
+		fi
+	fi
+done
+PKGCONFIG=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}" ]; then
+		if [ -e "${path}/pkg-config" ]; then
+			PKGCONFIG="${path}/pkg-config"
 			break
 		fi
 	fi
@@ -389,6 +398,7 @@ echo "    --with-jpeg[=PREFIX]      Built-in JPEG image support [check]"
 echo "    --with-png[=PREFIX]       Built-in PNG image support [check]"
 echo "    --with-sdl[=PREFIX]       SDL rendering support [check]"
 echo "    --with-x[=PREFIX]         X Windows driver support [check]"
+echo "    --with-xinerama[=PREFIX]  Xinerama extension support [check]"
 echo "    --with-wgl                GL rendering via WGL [check]"
 echo ""
 echo "Options specific to ag_math library:"
@@ -5170,6 +5180,62 @@ echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
  then
 $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
+if [ "${PKGCONFIG}" != "" ]; then
+if [ "${prefix_x}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix x11`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_x}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, x11 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_x}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct x11 prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		X11_VERSION=`$PKGCONFIG x11 --modversion`
+	fi
+else
+	X11_VERSION=`$PKGCONFIG x11 --modversion`
+fi
+if [ "${prefix_x}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix x11`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_x}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, x11 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_x}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct x11 prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		X11_CFLAGS=`$PKGCONFIG x11 --cflags`
+	fi
+else
+	X11_CFLAGS=`$PKGCONFIG x11 --cflags`
+fi
+if [ "${prefix_x}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix x11`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_x}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, x11 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_x}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct x11 prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		X11_LIBS=`$PKGCONFIG x11 --libs`
+	fi
+else
+	X11_LIBS=`$PKGCONFIG x11 --libs`
+fi
+else
 X11_CFLAGS=""
 X11_LIBS=""
 if [ "${prefix_x}" != "" ]; then
@@ -5180,6 +5246,8 @@ if [ -e  "${prefix_x}/lib" ]; then
 X11_LIBS="-L${prefix_x}/lib"
 fi;
 else
+echo "WARNING: You should probably use --with-x=prefix"
+echo "WARNING: You should probably use --with-x=prefix" >> config.log
 if [ -e  "/usr/include/X11/X11" ]; then
 X11_CFLAGS="-I/usr/include/X11"
 fi;
@@ -5215,6 +5283,7 @@ X11_LIBS="${X11_LIBS} -L/usr/X11/lib"
 fi;
 if [ -e  "/usr/X11R6/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/X11R6/lib"
+fi;
 fi;
 fi;
 MK_CACHED="No"
@@ -5303,6 +5372,222 @@ fi;
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 			fi
+		fi
+		if [ "${with_xinerama}" != "no" ]
+ then
+$ECHO_N "checking for the Xinerama extension..."
+$ECHO_N "checking for the Xinerama extension..." >> config.log
+if [ "${PKGCONFIG}" != "" ]; then
+if [ "${prefix_xinerama}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix xinerama`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_xinerama}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, xinerama is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_xinerama}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct xinerama prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		XINERAMA_VERSION=`$PKGCONFIG xinerama --modversion`
+	fi
+else
+	XINERAMA_VERSION=`$PKGCONFIG xinerama --modversion`
+fi
+if [ "${prefix_xinerama}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix xinerama`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_xinerama}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, xinerama is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_xinerama}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct xinerama prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		XINERAMA_CFLAGS=`$PKGCONFIG xinerama --cflags`
+	fi
+else
+	XINERAMA_CFLAGS=`$PKGCONFIG xinerama --cflags`
+fi
+if [ "${prefix_xinerama}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix xinerama`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_xinerama}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, xinerama is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_xinerama}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct xinerama prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		XINERAMA_LIBS=`$PKGCONFIG xinerama --libs`
+	fi
+else
+	XINERAMA_LIBS=`$PKGCONFIG xinerama --libs`
+fi
+else
+XINERAM_CFLAGS=""
+XINERAMA_LIBS=""
+if [ "${prefix_xinerama}" != "" ]; then
+if [ -e  "${prefix_xinerama}/include/X11" ]; then
+XINERAMA_CFLAGS="-I${prefix_xinerama}/include"
+fi;
+if [ -e  "${prefix_xinerama}/lib" ]; then
+XINERAMA_LIBS="-L${prefix_xinerama}/lib"
+fi;
+else
+echo "WARNING: You should probably use --with-xinerama=prefix"
+echo "WARNING: You should probably use --with-xinerama=prefix" >> config.log
+if [ -e  "/usr/include/X11/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/include/X11"
+fi;
+if [ -e  "/usr/include/X11R6/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/include/X11R6"
+fi;
+if [ -e  "/usr/local/X11/include/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/local/X11/include"
+fi;
+if [ -e  "/usr/local/X11R6/include/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/local/X11R6/include"
+fi;
+if [ -e  "/usr/local/include/X11/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/local/include/X11"
+fi;
+if [ -e  "/usr/local/include/X11R6/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/local/include/X11R6"
+fi;
+if [ -e  "/usr/X11/include/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/X11/include"
+fi;
+if [ -e  "/usr/X11R6/include/X11" ]; then
+XINERAMA_CFLAGS="-I/usr/X11R6/include"
+fi;
+if [ -e  "/usr/local/X11/lib" ]; then
+XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/local/X11/lib"
+fi;
+if [ -e  "/usr/local/X11R6/lib" ]; then
+XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/local/X11R6/lib"
+fi;
+if [ -e  "/usr/X11/lib" ]; then
+XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/X11/lib"
+fi;
+if [ -e  "/usr/X11R6/lib" ]; then
+XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/X11R6/lib"
+fi;
+fi;
+XINERAMA_LIBS="${XINERAMA_LIBS} -lXinerama"
+fi;
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_XINERAMA" ]; then
+		HAVE_XINERAMA=`cat ${cache}/ctest-HAVE_XINERAMA`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_XINERAMA`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <X11/Xlib.h>
+#include <X11/extensions/Xinerama.h>
+
+int main(int argc, char *argv[])
+{
+	Display *disp;
+	int event_base = 0, error_base = 0;
+	int rv = 1;
+
+	disp = XOpenDisplay(NULL);
+	if (XineramaQueryExtension(disp, &event_base, &error_base)) {
+		rv = 0;
+	}
+	XCloseDisplay(disp);
+	return (rv);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} ${XINERAMA_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} ${XINERAMA_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} ${XINERAMA_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_XINERAMA="yes"
+echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
+echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
+echo "#ifndef HAVE_XINERAMA" > $BLD/include/agar/config/have_xinerama.h
+echo "#define HAVE_XINERAMA \"$HAVE_XINERAMA\"" >> $BLD/include/agar/config/have_xinerama.h
+echo "#endif" >> $BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_XINERAMA="no"
+echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
+echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
+echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_XINERAMA" > ${cache}/ctest-HAVE_XINERAMA
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_XINERAMA
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_XINERAMA}" = "yes" ]; then
+echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
+echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
+echo "#ifndef XINERAMA_CFLAGS" > $BLD/include/agar/config/xinerama_cflags.h
+echo "#define XINERAMA_CFLAGS \"$XINERAMA_CFLAGS\"" >> $BLD/include/agar/config/xinerama_cflags.h
+echo "#endif" >> $BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
+echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
+echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
+echo "#ifndef XINERAMA_LIBS" > $BLD/include/agar/config/xinerama_libs.h
+echo "#define XINERAMA_LIBS \"$XINERAMA_LIBS\"" >> $BLD/include/agar/config/xinerama_libs.h
+echo "#endif" >> $BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
+else
+echo "#undef XINERAMA_CFLAGS" >$BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = nil" >>configure.lua
+XINERAMA_CFLAGS=""
+echo "#undef XINERAMA_LIBS" >$BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = nil" >>configure.lua
+XINERAMA_LIBS=""
+fi;
+			if [ "${HAVE_XINERAMA}" != "yes" ]
+ then
+				if [ "${with_xinerama}" = "yes" ]
+ then
+					echo "*"
+					echo "* --with-xinerama was requested, but the "
+					echo "* Xinerama extension was not found."
+					echo "*"
+					exit 1
+				else
+echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+				fi
+			fi
+		else
+echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+XINERAMA_CFLAGS=""
+echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
+echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
+XINERAMA_LIBS=""
+echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
+echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
 		fi
 	else
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
@@ -8414,7 +8699,7 @@ echo "mdefs[\"SUBDIR_au\"] = \"$SUBDIR_au\"" >>configure.lua
 $ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..."
 $ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..." >> config.log
 if [ "${prefix_sndfile}" != "" ]; then
-	MK_EXEC_PKGPREFIX=`pkg-config --variable=prefix sndfile`
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix sndfile`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_sndfile}" ]; then
 		echo " "
 		echo "* "
@@ -8426,13 +8711,13 @@ if [ "${prefix_sndfile}" != "" ]; then
 		echo "* "
 		exit 1
 	else
-		SNDFILE_VERSION=`pkg-config sndfile --modversion`
+		SNDFILE_VERSION=`$PKGCONFIG sndfile --modversion`
 	fi
 else
-	SNDFILE_VERSION=`pkg-config sndfile --modversion`
+	SNDFILE_VERSION=`$PKGCONFIG sndfile --modversion`
 fi
 if [ "${prefix_sndfile}" != "" ]; then
-	MK_EXEC_PKGPREFIX=`pkg-config --variable=prefix sndfile`
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix sndfile`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_sndfile}" ]; then
 		echo " "
 		echo "* "
@@ -8444,13 +8729,13 @@ if [ "${prefix_sndfile}" != "" ]; then
 		echo "* "
 		exit 1
 	else
-		SNDFILE_CFLAGS=`pkg-config sndfile --cflags`
+		SNDFILE_CFLAGS=`$PKGCONFIG sndfile --cflags`
 	fi
 else
-	SNDFILE_CFLAGS=`pkg-config sndfile --cflags`
+	SNDFILE_CFLAGS=`$PKGCONFIG sndfile --cflags`
 fi
 if [ "${prefix_sndfile}" != "" ]; then
-	MK_EXEC_PKGPREFIX=`pkg-config --variable=prefix sndfile`
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix sndfile`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_sndfile}" ]; then
 		echo " "
 		echo "* "
@@ -8462,10 +8747,10 @@ if [ "${prefix_sndfile}" != "" ]; then
 		echo "* "
 		exit 1
 	else
-		SNDFILE_LIBS=`pkg-config sndfile --libs`
+		SNDFILE_LIBS=`$PKGCONFIG sndfile --libs`
 	fi
 else
-	SNDFILE_LIBS=`pkg-config sndfile --libs`
+	SNDFILE_LIBS=`$PKGCONFIG sndfile --libs`
 fi
 if [ "${SNDFILE_VERSION}" != "" ]; then
 if [ "${prefix_sndfile}" != "" ]; then
@@ -8687,8 +8972,8 @@ echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
