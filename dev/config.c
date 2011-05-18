@@ -44,6 +44,7 @@
 #include <gui/hsvpal.h>
 #include <gui/separator.h>
 #include <gui/file_dlg.h>
+#include <gui/dir_dlg.h>
 #include <gui/pane.h>
 
 #include "dev.h"
@@ -180,12 +181,47 @@ SaveConfig(AG_Event *event)
 	}
 }
 
+static void
+SelectPathOK(AG_Event *event)
+{
+	char *key = AG_STRING(1);
+	AG_Textbox *tbox = AG_PTR(2);
+	AG_Window *win = AG_PTR(3);
+	char *path = AG_STRING(4);
+	
+	AG_SetString(agConfig, key, path);
+	AG_TextboxSetString(tbox, path);
+	AG_ObjectDetach(win);
+}
+
+static void
+SelectPath(AG_Event *event)
+{
+	char path[AG_PATHNAME_MAX];
+	AG_Window *win;
+	AG_DirDlg *dd;
+	char *key = AG_STRING(1);
+	AG_Textbox *tbox = AG_PTR(2);
+
+	win = AG_WindowNew(0);
+	dd = AG_DirDlgNew(win, AG_DIRDLG_EXPAND|AG_DIRDLG_CLOSEWIN);
+	AG_GetString(agConfig, key, path, sizeof(path));
+	if (AG_DirDlgSetDirectoryS(dd, path) == -1) {
+		AG_MkPath(path);
+		(void)AG_DirDlgSetDirectoryS(dd, path);
+	}
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
+	AG_WindowSetCaption(win, _("Select %s directory"), key);
+	AG_DirDlgOkAction(dd, SelectPathOK, "%s,%p,%p", key, tbox, win);
+	AG_WindowShow(win);
+}
+
 static AG_Window *
 DEV_ConfigWindow(AG_Config *cfg)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
-	AG_HBox *hb;
+	AG_Box *hb;
 	AG_Textbox *tbox;
 /*	AG_Checkbox *cb; */
 	AG_Notebook *nb;
@@ -227,30 +263,31 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 	{
-		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Temporary dir: "));
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
+		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Temporary file directory: "));
 		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
+		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "tmp-path", tbox);
 
-		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Data save dir: "));
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
+		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Dataset save directory: "));
 		AG_GetString(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
+		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "save-path", tbox);
 	
-		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Data load path: "));
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
+		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Dataset search path: "));
 		AG_GetString(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
-		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Font path: "));
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
+		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Font search path: "));
 		AG_GetString(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
-		
-		tbox = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Den path: "));
-		AG_GetString(agConfig, "den-path", path, sizeof(path));
-		AG_TextboxSetString(tbox, path);
-		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
 	}
 	
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
@@ -283,7 +320,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_LabelSetPaddingLeft(lbl, 10);
 		AG_LabelSetPaddingRight(lbl, 10);
 		
-		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
+		hb = AG_BoxNewHoriz(tab, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 		{
 			AG_ButtonNewFn(hb, 0, _("Load scheme"),
 			    LoadColorSchemeDlg, NULL);
@@ -332,7 +369,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 	}
 #endif
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
+	hb = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Close"), AGWINDETACH(win));
 		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);
