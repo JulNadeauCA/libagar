@@ -394,6 +394,9 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 .Ft "AG_ObjectClass *"
 .Fn AG_ObjectSuperclass "AG_Object *obj"
 .Pp
+.Ft "int"
+.Fn AG_ObjectGetInheritHier "AG_Object *obj" "AG_ObjectClass **pHier" "int *nHier"
+.Pp
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child" "AG_Object *parent" "TYPE type" "const char *pattern"
 .Pp
 .nr nS 0
@@ -596,21 +599,36 @@ removes the specified directory from the search path.
 .Pp
 The
 .Fn AG_OfClass
-function returns 1 if the object is an instance of the class specified in
-the
-.Fa pattern ,
-string.
-The pattern may contain wildcards such as
+function evaluates whether the given object is an instance of the
+specified class.
+The
+.Fa pattern
+string may contain wildcards such as
 .Dq MyClass:*
 or
 .Dq MyClass:*:MySubclass:* .
+.Fn AG_OfClass
+returns 1 if the object's class matches the given pattern.
 .Pp
 The
 .Fn AG_ObjectSuperclass
 function returns a pointer to the
 .Fa AG_ObjectClass
-structure describing the superclass of the given object (or if the object is
-an instance of the base class, the base class is returned).
+structure for the superclass of an object.
+Exceptionally, if the object is an instance of the base class (AG_Object),
+a pointer to the
+.Nm
+class is returned.
+.Pp
+The
+.Fn AG_ObjectGetInheritHier
+function returns into
+.Fa pHier
+an array of
+.Ft AG_ObjectClass
+pointers describing the complete inheritance hierarchy of an object.
+The size of the array is returned into
+.Fa nHier .
 .Pp
 The
 .Fn AGOBJECT_FOREACH_CLASS
