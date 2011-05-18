@@ -323,6 +323,15 @@ AG_UnlockTimeouts(void *p)
 	AG_ObjectUnlock(ob);
 #endif
 }
+
+/* Return the inheritance hierarchy of an object in string form. */
+static __inline__ void
+AG_ObjectGetInheritHierString(void *obj, char *buf, size_t buf_size)
+{
+	AG_ObjectLock(obj);
+	AG_Strlcpy(buf, AGOBJECT_CLASS(obj)->hier, buf_size);
+	AG_ObjectUnlock(obj);
+}
 __END_DECLS
 
 #include <agar/core/close.h>
