@@ -29,6 +29,7 @@
  */
 
 #include <config/have_glx.h>
+#include <config/have_xinerama.h>
 #ifdef HAVE_GLX
 
 #include <core/core.h>
@@ -38,6 +39,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
+#ifdef HAVE_XINERAMA
+#include <X11/extensions/Xinerama.h>
+#endif
 
 #include "gui.h"
 #include "window.h"
@@ -261,8 +265,23 @@ static int
 GLX_GetDisplaySize(Uint *w, Uint *h)
 {
 	AG_MutexLock(&agDisplayLock);
+#ifdef HAVE_XINERAMA
+	{
+		int event, error, nScreens;
+		XineramaScreenInfo *xs;
+
+		if (XineramaQueryExtension(agDisplay, &event, &error) &&
+		    (xs = XineramaQueryScreens(agDisplay, &nScreens)) != NULL) {
+			*w = (Uint)xs[0].width;
+			*h = (Uint)xs[0].height;
+			XFree(xs);
+			goto out;
+		}
+	}
+#endif /* HAVE_XINERAMA */
 	*w = (Uint)DisplayWidth(agDisplay, agScreen);
 	*h = (Uint)DisplayHeight(agDisplay, agScreen);
+out:
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 }
