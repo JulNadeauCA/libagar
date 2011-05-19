@@ -571,8 +571,25 @@ if [ "${with_ctags}" = "yes" ]; then
 	fi
 fi
 echo "CTAGS=${CTAGS}" >> Makefile.config
-LIBTOOL_BUNDLED="yes"
-LIBTOOL=\${TOP}/mk/libtool/libtool
+if [ "${prefix_libtool}" != "" ]; then
+	LIBTOOL_BUNDLED="no"
+	LIBTOOL="${prefix_libtool}"
+else
+	LIBTOOL=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/libtool" ]; then
+			LIBTOOL="${path}/libtool"
+			break
+		fi
+	done
+	if [ "${LIBTOOL}" = "" ]; then
+		LIBTOOL_BUNDLED="yes"
+		LIBTOOL=\${TOP}/mk/libtool/libtool
+	else
+		LIBTOOL_BUNDLED="no"
+	fi
+fi
+echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "#ifndef PREFIX" > $BLD/include/agar/config/prefix.h

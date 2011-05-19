@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@ YFLAGS?=	-d
 
 LIB_INSTALL?=	No
 LIB_SHARED?=	No
+LIB_MODULE?=	No
 LIB_MAJOR?=	1
 LIB_MINOR?=	0
 LIB_XOBJS?=
@@ -231,16 +232,31 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
 	    	    _shobjs="$$_shobjs $$F"; \
                 done; \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -rpath ${PREFIX}/lib \
-	                -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		        ${LDFLAGS} $$_shobjs \
-		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -rpath ${PREFIX}/lib \
-		        -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		        ${LDFLAGS} $$_shobjs \
-			${LIBS} ${LIB_XOBJS}; \
+	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
+	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+			    -module \
+		            -rpath ${PREFIX}/lib \
+	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} $$_shobjs \
+		            ${LIBS} ${LIB_XOBJS}"; \
+	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+			    -module \
+		            -rpath ${PREFIX}/lib \
+		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} $$_shobjs \
+			    ${LIBS} ${LIB_XOBJS}; \
+		    else \
+	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		            -rpath ${PREFIX}/lib \
+	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} $$_shobjs \
+		            ${LIBS} ${LIB_XOBJS}"; \
+	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		            -rpath ${PREFIX}/lib \
+		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} $$_shobjs \
+			    ${LIBS} ${LIB_XOBJS}; \
+		    fi; \
 		else \
 	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
 	                -static \
@@ -253,16 +269,31 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
 		fi; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -rpath ${PREFIX}/lib \
-	                -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		        ${LDFLAGS} ${SHOBJS} \
-		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -rpath ${PREFIX}/lib \
-		        -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		        ${LDFLAGS} ${SHOBJS} \
-			${LIBS} ${LIB_XOBJS}; \
+	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
+	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+			    -module \
+		            -rpath ${PREFIX}/lib \
+	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} ${SHOBJS} \
+		            ${LIBS} ${LIB_XOBJS}"; \
+	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+			    -module \
+		            -rpath ${PREFIX}/lib \
+		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} ${SHOBJS} \
+			    ${LIBS} ${LIB_XOBJS}; \
+		    else \
+	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		            -rpath ${PREFIX}/lib \
+	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} ${SHOBJS} \
+		            ${LIBS} ${LIB_XOBJS}"; \
+	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		            -rpath ${PREFIX}/lib \
+		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		            ${LDFLAGS} ${SHOBJS} \
+			    ${LIBS} ${LIB_XOBJS}; \
+		    fi; \
 	        else \
 	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
 		        -static \

@@ -101,6 +101,7 @@ EOF
 	my $libtool = 1;
 	my $shared = 0;
 	my $static = 1;
+	my $module = 1;
 	my $isProg = 0;
 	my $isLib = 0;
 
@@ -112,6 +113,7 @@ EOF
 		if (/^\s*USE_LIBTOOL\s*=\s*No\s*$/) { $libtool = 0; }
 		if (/^\s*LIB_SHARED\s*=\s*Yes\s*$/) { $shared = 1; }
 		if (/^\s*LIB_STATIC\s*=\s*No\s*$/) { $static = 0; }
+		if (/^\s*LIB_MODULE\s*=\s*Yes\s*$/) { $module = 1; }
 		if (/^\s*(SRCS|MAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
 
