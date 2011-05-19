@@ -290,7 +290,7 @@ AG_LoadDSO(const char *name, Uint flags)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_DSO *dso;
-	int i;
+	int i, j;
 
 	AG_MutexLock(&agDSOLock);
 	
@@ -304,9 +304,12 @@ AG_LoadDSO(const char *name, Uint flags)
 		goto out;
 	}
 
-	/* Scan the module directories for the file. */
+	/* Scan the module directories. */
 	path[0] = '\0';
 	for (i = 0; i < agModuleDirCount; i++) {
+		AG_Dir *dir;
+
+		/* Look for an exact file match. */
 		Strlcpy(path, agModuleDirs[i], sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
 #if defined(__AMIGAOS4__)
@@ -325,6 +328,50 @@ AG_LoadDSO(const char *name, Uint flags)
 #endif
 		if (AG_FileExists(path))
 			break;
+
+#if !defined(__AMIGAOS4__) && !defined(HPUX) && \
+    !defined(_WIN32) && !defined(OS2)
+		/* Look for a versioned library file. */
+		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
+			char latestFile[AG_FILENAME_MAX];
+			int latestVer;
+
+			latestFile[0] = '\0';
+			latestVer = 0;
+
+			for (j = 0; j < dir->nents; j++) {
+				char *file = dir->ents[j];
+				char pat[AG_FILENAME_MAX];
+				int noffs;
+				int verMin, verMaj;
+
+				Strlcpy(pat, "lib", sizeof(pat));
+				Strlcat(pat, name, sizeof(pat));
+				Strlcat(pat, ".so.", sizeof(pat));
+				noffs = (int)strlen(pat);
+				if (strncmp(file, pat, noffs) != 0) {
+					continue;
+				}
+				if (sscanf(&file[noffs], "%d.%d",
+				    &verMin, &verMaj) != 2) {
+					continue;
+				}
+				if ((verMaj*10000 + verMin) > latestVer) {
+					latestVer = verMaj*10000 + verMin;
+					Strlcpy(latestFile, file,
+					    sizeof(latestFile));
+				}
+			}
+			AG_CloseDir(dir);
+
+			if (latestFile[0] != '\0') {
+				Strlcpy(path, agModuleDirs[i], sizeof(path));
+				Strlcat(path, AG_PATHSEP, sizeof(path));
+				Strlcat(path, latestFile, sizeof(path));
+				break;
+			}
+		}
+#endif /* UNIX */
 	}
 	if (i == agModuleDirCount) {
 		AG_SetError("Cannot find \"%s\" module (last checked in: %s)",
@@ -696,7 +743,7 @@ AG_GetDSOList(Uint *count)
 #else
 				if (strncmp(file, "lib", 3) != 0 ||
 				   (s = (char *)Strcasestr(file, ".so")) == NULL ||
-				    s[3] != '\0') {
+				   s[3] != '\0') {
 					continue;
 				}
 				pStart = &file[3];
