@@ -104,6 +104,12 @@ proj:
 		env PROJTARGET="$$_tgtproj" PROJOS="$$_tgtos" \
 		    ${MAKE} proj-package-subdir; \
 		\
+		if [ "${PROJCONFIGDIR}" != "" ]; then \
+			echo "rm -fR ${PROJCONFIGDIR}"; \
+			rm -fR ${PROJCONFIGDIR}; \
+			echo "mv -f config ${PROJCONFIGDIR}"; \
+			mv -f config ${PROJCONFIGDIR}; \
+		fi; \
 		if [ "${PROJNOCLEAN}" = "no" ]; then \
 			echo "rm -f configure.tmp config.log"; \
 			rm -f configure.tmp config.log; \
