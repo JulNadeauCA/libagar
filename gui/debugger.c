@@ -195,6 +195,7 @@ WidgetSelected(AG_Event *event)
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Scrollview *sv;
+	AG_Tlist *tl;
 
 	AG_ObjectFreeChildren(box);
 
@@ -237,9 +238,7 @@ WidgetSelected(AG_Event *event)
 	
 	nTab = AG_NotebookAddTab(nb, _("Variables"), AG_BOX_VERT);
 	{
-		AG_Tlist *tlSurf;
-		
-		tlSurf = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollVariables, "%p", wid);
 	}
 
@@ -263,11 +262,9 @@ WidgetSelected(AG_Event *event)
 	}
 	nTab = AG_NotebookAddTab(nb, _("Surfaces"), AG_BOX_VERT);
 	{
-		AG_Tlist *tlSurf;
-		
-		tlSurf = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
-		AG_TlistSetItemHeight(tlSurf, 16);
+		AG_TlistSetItemHeight(tl, 16);
 	}
 
 	AG_WidgetUpdate(box);

@@ -576,12 +576,12 @@ SelectionVisible(AG_Table *t)
 	     n < t->n && x < t->r.w;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
-		int cw;
+/*		int cw; */
 	
 		if (col->w <= 0) {
 			continue;
 		}
-		cw = ((x + col->w) < t->r.w) ? col->w: t->r.w - x;
+/*		cw = ((x + col->w) < t->r.w) ? col->w: t->r.w - x; */
 		for (m = t->mOffs, y = t->hCol;
 		     m < MIN(t->m, t->mOffs+t->mVis) && (y < t->hCol+t->r.h);
 		     m++) {
@@ -961,12 +961,11 @@ static void
 TableRestoreRowSelections(AG_Table *t)
 {
 	int m, n;
-	int nMatched, nCompared, sel;
+	int nMatched, nCompared;
 
 	for (m = 0; m < t->m; m++) {
 		nMatched = 0;
 		nCompared = 0;
-		sel = 0;
 		for (n = 0; n < t->n; n++) {
 			AG_TableCell *c = &t->cells[m][n];
 			AG_TableCell *cPrev;

@@ -760,7 +760,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	char name[AG_OBJECT_NAME_MAX];
 	char type[AG_OBJECT_HIER_MAX];
 	char *buf, *s;
-	Uint rev = 0;
+/*	Uint rev = 0; */
 	AG_Object *obj;
 	AG_ObjectClass *cls = NULL;
 
@@ -791,7 +791,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 			Strlcpy(digest, val, AG_OBJECT_DIGEST_MAX);
 			break;
 		case 'r':
-			rev = (Uint)strtol(val, NULL, 10);
+/*			rev = (Uint)strtol(val, NULL, 10); */
 			break;
 		case 't':
 			Strlcpy(type, val, AG_OBJECT_HIER_MAX);

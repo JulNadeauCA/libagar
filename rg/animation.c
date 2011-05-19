@@ -520,13 +520,12 @@ static void
 EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
 	AG_Numerical *num;
-	AG_Pixmap *pix;
 
 	AG_ObjectFreeChildren(box);
 
 	ani->gframe = fr->name;
 
-	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_SurfaceDup(fr->su));
+	AG_PixmapFromSurfaceCopy(box, 0, AG_SurfaceDup(fr->su));
 
 	num = AG_NumericalNewUintR(box, AG_NUMERICAL_HFILL, "ms", _("Delay: "),
 	    &fr->delay, 0, 10000);

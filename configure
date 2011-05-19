@@ -930,9 +930,8 @@ main(int argc, char *argv[])
 {
 	float f = 1.5;
 	double d = 2.5;
-	f = 0;
-	d = 0;
-	return (0);
+
+	return (f == 1.0 || d == 1.0);
 }
 
 EOT
@@ -1521,8 +1520,7 @@ main(int argc, char *argv[])
 {
 	long double ld = 0.1;
 
-	ld = 0;
-	return (0);
+	return (ld == 1.0);
 }
 
 EOT
@@ -1569,11 +1567,10 @@ if [ "${MK_CACHED}" = "No" ]; then
 int
 main(int argc, char *argv[])
 {
-	long long ll = 0.0;
-	unsigned long long ull = 0.0;
-	ll = 1.0;
-	ull = 1.0;
-	return (0);
+	long long ll = -1;
+	unsigned long long ull = 1;
+
+	return (ll != -1 || ull != 1);
 }
 
 EOT
@@ -1736,9 +1733,8 @@ if [ "${MK_CACHED}" = "No" ]; then
 int main(int argc, char *argv[]) {
 	int64_t i64 = 0;
 	u_int64_t u64 = 0;
-	i64 = 1;
-	u64 = 1;
-	return (0);
+
+	return (i64 != 0 || u64 != 0);
 }
 
 EOT
@@ -1788,11 +1784,10 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
-	Uchar foo = 0;
-	Uint bar = 0;
-	Ulong baz = 0;
-	foo = 1; bar = 2; baz = 3;
-	return (0);
+	Uchar foo = 1;
+	Uint bar = 1;
+	Ulong baz = 1;
+	return (foo != 1 || bar != 1 || baz != 1);
 }
 
 EOT
@@ -1844,11 +1839,10 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 int main(int argc, char *argv[]) {
-	Uchar foo = 0;
-	Uint bar = 0;
-	Ulong baz = 0;
-	foo = 1; bar = 2; baz = 3;
-	return (0);
+	Uchar foo = 1;
+	Uint bar = 1;
+	Ulong baz = 1;
+	return (foo != 1 || bar != 1 || baz != 1);
 }
 
 EOT
@@ -1952,12 +1946,9 @@ if [ "${MK_CACHED}" = "No" ]; then
 #include <unistd.h>
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
-	uid_t uid = 0;
-	pid_t pid = 0;
-
-	uid = getuid();
-	pid = getpid();
-	return (0);
+	uid_t uid = getuid();
+	pid_t pid = getpid();
+	return (pid == 0 || uid == 0);
 }
 
 EOT
@@ -2008,14 +1999,15 @@ if [ "${MK_CACHED}" = "No" ]; then
 #include <limits.h>
 
 int main(int argc, char *argv[]) {
-	int i;
-	unsigned u;
-	long l;
-	unsigned long ul;
-
-	i = INT_MIN;	i = INT_MAX;	u = UINT_MAX;
-	l = LONG_MIN;	l = LONG_MAX;	ul = ULONG_MAX;
-	return (0);
+	int i = INT_MIN;
+	unsigned u = 0;
+	long l = LONG_MIN;
+	unsigned long ul = 0;
+	i = INT_MAX;
+	u = UINT_MAX;
+	l = LONG_MAX;
+	ul = ULONG_MAX;
+	return (i != INT_MAX || u != UINT_MAX || l != LONG_MAX || ul != LONG_MAX);
 }
 
 EOT
@@ -2348,7 +2340,7 @@ main(int argc, char *argv[])
 	uid_t uid = 0;
 
 	pwd = getpwuid(uid);
-	return (0);
+	return (pwd != NULL);
 }
 
 EOT
@@ -2398,10 +2390,8 @@ if [ "${MK_CACHED}" = "No" ]; then
 int
 main(int argc, char *argv[])
 {
-	uid_t uid;
-
-	uid = getuid();
-	return (0);
+	uid_t uid = getuid();
+	return (uid != 0);
 }
 
 EOT
@@ -2791,7 +2781,7 @@ main(int argc, char *argv[])
 	char *foo = "1234";
 
 	lli = strtoll(foo, &ep, 10);
-	return (0);
+	return (lli != 0);
 }
 
 EOT
@@ -2847,7 +2837,7 @@ main(int argc, char *argv[])
 	char *foo = "1234";
 
 	ld = strtold(foo, &ep);
-	return (0);
+	return (ld != 1234.0);
 }
 
 EOT
@@ -3024,6 +3014,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -3036,7 +3027,7 @@ main(int argc, char *argv[])
 	handle = dlopen("foo.so", 0);
 	error = dlerror();
 	(void)dlsym(handle, "foo");
-	return (0);
+	return (error != NULL);
 }
 
 EOT
@@ -3081,6 +3072,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -3093,7 +3085,7 @@ main(int argc, char *argv[])
 	handle = dlopen("foo.so", 0);
 	error = dlerror();
 	(void)dlsym(handle, "foo");
-	return (0);
+	return (error != NULL);
 }
 
 EOT
@@ -3359,6 +3351,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #ifdef HAVE_DL_H
 #include <dl.h>
 #endif
@@ -3373,7 +3366,7 @@ main(int argc, char *argv[])
 	(void)shl_findsym((shl_t *)&handle, "foo", TYPE_PROCEDURE, p);
 	(void)shl_findsym((shl_t *)&handle, "foo", TYPE_DATA, p);
 	shl_unload((shl_t)handle);
-	return (0);
+	return (handle != NULL);
 }
 
 EOT
@@ -3817,6 +3810,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #include <glob.h>
 #include <stdio.h>
 
@@ -3825,11 +3819,11 @@ main(int argc, char *argv[])
 {
 	glob_t gl;
 	int rv, i;
-	char *s;
+	char *s = NULL;
 
 	rv = glob("~/foo", GLOB_TILDE, NULL, &gl);
 	for (i = 0; i < gl.gl_pathc; i++) { s = gl.gl_pathv[i]; }
-	return (0);
+	return (rv != 0 && s != NULL);
 }
 
 EOT
@@ -3873,12 +3867,13 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #include <unistd.h>
 
 int
 main(int argc, char *argv[])
 {
-	int c, x;
+	int c, x = 0;
 	while ((c = getopt(argc, argv, "foo")) != -1) {
 		extern char *optarg;
 		extern int optind, opterr, optopt;
@@ -3887,7 +3882,7 @@ main(int argc, char *argv[])
 		if (opterr > 0) { x = 3; }
 		if (optopt > 0) { x = 4; }
 	}
-	return (0);
+	return (x != 0);
 }
 
 EOT
@@ -6613,6 +6608,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -6630,7 +6626,7 @@ main(int argc, char *argv[])
 	rv = getaddrinfo("hostname", "port", &hints, &res0);
 	s = gai_strerror(rv);
 	freeaddrinfo(res0);
-	return (0);
+	return (s != NULL);
 }
 
 EOT
