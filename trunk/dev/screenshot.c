@@ -322,15 +322,13 @@ DEV_ScreenshotUploader(void)
 
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL|AG_HBOX_VFILL);
 	{
-		AG_Event *ev;
 		AG_Button *bu;
 
 		bu = AG_ButtonNewS(hb, 0, _("Connect"));
 		AG_SetEvent(bu, "button-pushed", Connect, NULL);
 		
 		bu = AG_ButtonNewS(hb, 0, _("Disconnect"));
-		ev = AG_SetEvent(bu, "button-pushed", Disconnect, NULL);
-		//ev->flags |= AG_EVENT_ASYNC;
+		AG_SetEvent(bu, "button-pushed", Disconnect, NULL);
 	}
 	return (win);
 }

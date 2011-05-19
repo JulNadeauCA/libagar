@@ -139,9 +139,6 @@ srv_logout(NS_Server *srv, void *p)
 static int
 cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	char hostname[128];
-
-	hostname[0] = '\0';
 	NS_BeginList(ns);
 	NS_ListString(ns, "%s", VERSION);
 	NS_ListString(ns, "%s", RELEASE);

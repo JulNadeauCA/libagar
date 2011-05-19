@@ -21,7 +21,7 @@ M_ComplexAdditiveInverse(M_Complex z)
 
 	w.r = -z.r;
 	w.i = -z.i;
-	return (z);
+	return (w);
 }
 
 static __inline__ M_Complex

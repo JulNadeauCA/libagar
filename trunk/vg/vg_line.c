@@ -161,7 +161,6 @@ Edit(void *p, VG_View *vv)
 {
 	VG_Line *vl = p;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-	AG_Radio *rad;
 	const char *endPtStyles[] = {
 		N_("Square"),
 		N_("Beveled"),
@@ -174,7 +173,7 @@ Edit(void *p, VG_View *vv)
 	AG_NumericalNewUint16(box, 0, NULL, _("Stipple pattern: "), &vl->stipple);
 
 	AG_LabelNew(box, 0, _("Endpoint style: "));
-	rad = AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles, &vl->endPt);
+	AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles, &vl->endPt);
 
 	return (box);
 }

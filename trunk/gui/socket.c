@@ -239,15 +239,17 @@ Draw(void *obj)
 	AG_Socket *sock = obj;
 	AG_Variable *binding;
 	void *pBinding;
-	int state, count;
+	int state;
 	
 	binding = AG_GetVariable(sock, "state", &pBinding);
 	state = GetState(binding, pBinding);
 	AG_UnlockVariable(binding);
+#if 0
 	binding = AG_GetVariable(sock, "count", &pBinding);
 	count = GetCount(binding, pBinding);
 	AG_UnlockVariable(binding);
-	
+#endif
+
 	STYLE(sock)->SocketBackground(sock);
 	if (sock->icon != NULL) {
 		AGWIDGET_OPS(sock->icon)->draw(sock->icon);

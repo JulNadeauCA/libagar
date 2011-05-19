@@ -563,7 +563,7 @@ AG_SurfaceBlendPixel(AG_Surface *s, Uint8 *pDst, AG_Color Cnew, AG_BlendFn fn)
 {
 	Uint32 pxDst;
 	AG_Color Cdst;
-	Uint8 a;
+/*	Uint8 a; */
 
 	pxDst = AG_GET_PIXEL(s, pDst);
 	if ((s->flags & AG_SRCCOLORKEY) && (pxDst == s->format->colorkey)) {
@@ -571,6 +571,7 @@ AG_SurfaceBlendPixel(AG_Surface *s, Uint8 *pDst, AG_Color Cnew, AG_BlendFn fn)
 		    AG_MapColorRGBA(s->format, Cnew));
 	} else {
 		Cdst = AG_GetColorRGBA(pxDst, s->format);
+#if 0
 		switch (fn) {
 		case AG_ALPHA_DST:
 			a = Cdst.a;
@@ -596,6 +597,7 @@ AG_SurfaceBlendPixel(AG_Surface *s, Uint8 *pDst, AG_Color Cnew, AG_BlendFn fn)
 			a = 255;
 			break;
 		}
+#endif
 		AG_SurfacePutPixel(s, pDst,
 		    AG_MapPixelRGBA(s->format,
 		    (((Cnew.r - Cdst.r)*Cnew.a) >> 8) + Cdst.r,

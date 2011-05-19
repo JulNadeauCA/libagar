@@ -257,7 +257,6 @@ void
 NS_EndList(NS_Server *ns)
 {
 	char ack[2];
-	char *s;
 	int i;
 	
 	printf("0 %010u:", ns->listItemCount);
@@ -265,7 +264,7 @@ NS_EndList(NS_Server *ns)
 		printf("%012lu:", (unsigned long)ns->listItemSize[i]);
 	}
 	fputc('\n', stdout);
-	s = fgets(ack, 2, stdin);
+	(void)fgets(ack, 2, stdin);
 	
 	fflush(stdout);
 	setvbuf(stdout, NULL, _IONBF, 0);
@@ -280,7 +279,7 @@ NS_EndList(NS_Server *ns)
 	}
 	fflush(stdout);
 	setvbuf(stdout, NULL, _IOLBF, 0);
-	s = fgets(ack, 2, stdin);
+	(void)fgets(ack, 2, stdin);
 
 	if (ns->listItemCount > 0) {
 		Free(ns->listItems);

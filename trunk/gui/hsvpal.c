@@ -744,7 +744,7 @@ RenderPalette(AG_HSVPal *pal)
 	float h, cur_h, cur_s, cur_v;
 	AG_Color C;
 	Uint32 px;
-	Uint8 da;
+/*	Uint8 da; */
 	int x, y, i;
 	AG_Rect rd;
 
@@ -813,7 +813,7 @@ RenderPalette(AG_HSVPal *pal)
 		}
 		AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v,
 		    &C.r, &C.g, &C.b);
-		da = MIN(1, ds->w/255);
+/*		da = MIN(1, ds->w/255); */
 		for (y = pal->rAlpha.y+8; y < ds->h; y++) {
 			for (x = 0, C.a = 0;
 			     x < ds->w;
