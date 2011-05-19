@@ -2347,6 +2347,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <string.h>
 #include <sys/types.h>
 #include <pwd.h>
 
