@@ -652,7 +652,8 @@ SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
 	*p = dlsym(d->handle, sym);
 # endif /* !__ELF__ */
 
-	if ((error = dlerror()) != NULL) {
+	if (*p == NULL &&
+	    (error = dlerror()) != NULL) {
 		AG_SetError("%s: %s", AGDSO(d)->name, error);
 		return (-1);
 	}
