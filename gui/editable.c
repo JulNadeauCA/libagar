@@ -831,7 +831,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
 
 	if (WIDGET(ed)->window != NULL &&
-	    WIDGET(ed)->window->visible) {
+	   !(WIDGET(ed)->window->flags & AG_WINDOW_NOCURSORCHG)) {
 		AG_Rect r = AG_RECT(0, 0, a->w, a->h);
 
 		if (ed->ca == NULL) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -411,7 +411,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.h = a->h;
 
 		if (WIDGET(pa)->window != NULL &&
-		    WIDGET(pa)->window->visible) {
+		  !(WIDGET(pa)->window->flags & AG_WINDOW_NOCURSORCHG)) {
 			AG_Rect r;
 
 			r.x = pa->dx;
@@ -471,7 +471,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.w = a->w;
 		a2.h = a->h - pa->dx - pa->wDiv;
 		
-		if (WIDGET(pa)->window != NULL) {
+		if (WIDGET(pa)->window != NULL &&
+		  !(WIDGET(pa)->window->flags & AG_WINDOW_NOCURSORCHG)) {
 			AG_Rect r;
 			
 			r.x = 0;

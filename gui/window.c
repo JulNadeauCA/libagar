@@ -65,35 +65,79 @@ AG_DestroyWindowSystem(void)
 {
 }
 
-/* Create a generic window. */
+static void
+InitWindow(AG_Window *win, Uint flags)
+{
+	AG_ObjectInit(win, &agWindowClass);
+	AG_ObjectSetNameS(win, "generic");
+
+	/* We use a specific naming system. */
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+
+	WIDGET(win)->window = win;
+	win->flags |= flags;
+
+	if (win->flags & AG_WINDOW_MODAL)
+		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+
+	/* Default window "close" action should be detach/free. */
+	AG_SetEvent(win, "window-close", AGWINDETACH(win));
+}
+
+/*
+ * Create a generic window under a specific single-window driver. Return
+ * a pointer to the newly-allocated window, or NULL on failure.
+ */
+AG_Window *
+AG_WindowNewSw(void *pDrv, Uint flags)
+{
+	AG_Driver *drv = pDrv;
+	AG_Window *win;
+
+	if (!AG_OfClass(drv, "AG_Driver:AG_DriverSw:*")) {
+		return (NULL);
+	}
+	
+	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
+		return (NULL);
+	}
+	InitWindow(win, flags);
+	AG_ObjectAttach(drv, win);
+	
+	if (!(win->flags & AG_WINDOW_NOTITLE)) {
+		win->hMin += agTextFontHeight;
+	}
+	if (win->flags & AG_WINDOW_NOBORDERS) {
+		win->wBorderSide = 0;
+		win->wBorderBot = 0;
+	}
+	return (win);
+}
+
+/*
+ * Create a generic window using the default window driver; return
+ * a pointer to the newly-allocated window, or NULL on failure.
+ *
+ * - With single-window drivers, all Window objects are attached to
+ *   the main Driver object.
+ * - With multiple-window drivers: A parent Driver object is created
+ *   for every Window object.
+ */
 AG_Window *
 AG_WindowNew(Uint flags)
 {
 	AG_Driver *drv;
 	AG_Window *win;
 
-	win = Malloc(sizeof(AG_Window));
-	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetNameS(win, "generic");
-	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
-	WIDGET(win)->window = win;
-
-	win->flags |= flags;
-	
-	if (win->flags & AG_WINDOW_MODAL)
-		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
-	if (win->flags & AG_WINDOW_NORESIZE)
-		win->flags |= AG_WINDOW_NOMAXIMIZE;
-
-	AG_SetEvent(win, "window-close", AGWINDETACH(win));
+	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
+		return (NULL);
+	}
+	InitWindow(win, flags);
 
 	switch (agDriverOps->wm) {
 	case AG_WM_SINGLE:
-		/*
-		 * In single-display mode, windows are attached to the driver
-		 * object.
-		 * XXX todo: WindowNew() variant with parent driver arg.
-		 */
 		AG_ObjectAttach(agDriverSw, win);
 	
 		if (!(win->flags & AG_WINDOW_NOTITLE)) {
@@ -105,17 +149,11 @@ AG_WindowNew(Uint flags)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		/*
-		 * In multiple-display mode, one driver instance is created
-		 * for each window.
-		 */
 		if ((drv = AG_DriverOpen(agDriverOps)) == NULL) {
-			/* XXX TODO provide an error-check constructor */
-			AG_FatalError(NULL);
+			return (NULL);
 		}
 		AG_ObjectAttach(drv, win);
 		AGDRIVER_MW(drv)->win = win;
-
 		win->wBorderSide = 0;
 		win->wBorderBot = 0;
 		break;
@@ -301,7 +339,7 @@ Init(void *obj)
 	AG_Window *win = obj;
 	AG_Event *ev;
 
-	win->flags = 0;
+	win->flags = AG_WINDOW_NOCURSORCHG;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
 	win->spacing = 3;
@@ -558,6 +596,9 @@ Shown(AG_Event *event)
 
 	/* Mark for redraw */
 	win->dirty = 1;
+
+	/* We can now allow cursor changes. */
+	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
 }
 
 static void
@@ -570,6 +611,9 @@ Hidden(AG_Event *event)
 
 	/* Cancel any pending redraw. */
 	win->dirty = 0;
+	
+	/* Disallow cursor changes. */
+	win->flags |= AG_WINDOW_NOCURSORCHG;
 
 	/* Cancel any pending focus change to this window. */
 	if (win == agWindowToFocus)
@@ -1667,9 +1711,12 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 		AG_SetError("Unattached widget");
 		return (NULL);
 	}
+	if (win->flags & AG_WINDOW_NOCURSORCHG) {
+		AG_SetError("Cursor changes not allowed");
+		return (NULL);
+	}
 	if (name < 0 || name >= drv->nCursors) {
-		AG_SetError("No such cursor");
-		AG_Verbose("No such cursor: %d in %s\n", name, OBJECT(drv)->name);
+		AG_SetError("No such cursor: %d", name);
 		return (NULL);
 	}
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
