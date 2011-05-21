@@ -72,6 +72,7 @@ typedef struct ag_window {
 #define AG_WINDOW_DETACHING	0x0800000 /* Window is being detached */
 #define AG_WINDOW_POPUP		0x1000000 /* "Popup" style (WM-dependent) */
 #define AG_WINDOW_DIALOG	0x2000000 /* "Dialog" style (WM-dependent) */
+#define AG_WINDOW_NOCURSORCHG	0x4000000 /* Inhibit any cursor change */
 
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
@@ -118,6 +119,7 @@ extern AG_Window        *agWindowFocused;	/* Window holding focus */
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
 AG_Window *AG_WindowNew(Uint);
+AG_Window *AG_WindowNewSw(void *, Uint);
 AG_Window *AG_WindowNewNamedS(Uint, const char *);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf,2,3);

@@ -38,43 +38,46 @@
 .Sh DESCRIPTION
 The
 .Nm
-object is the basic container for Agar widgets; it is
-itself derived from the
+object describes an Agar window, the base container widget for other
+Agar widgets.
+The
 .Xr AG_Widget 3
-structure, and is attached to a parent
-.Xr AG_Driver 3
-which provides an interface to the low-level graphics system in use.
-Where the low-level graphics system actually involves a window manager
-(e.g., when using X Windows), each
+objects form a tree structure attached to a parent
+.Nm .
+.Pp
+Every
 .Nm
-object is attached to a dedicated
+is associated with an
+.Xr AG_Driver 3 ,
+which provides an interface to the low-level graphics system (the
+"Agar driver") in use.
+If the Agar driver interfaces with some type of window manager (as with
+so-called "multiple-window" drivers including "glx" and "wgl"), the
+associated
 .Ft AG_Driver
-instance.
-Where there are no underlying window managers involved (e.g., when writing
-to a plain framebuffer), Agar provides an internal "window manager" for the
-framebuffer, and multiple
+is unique to the window.
+If there is no underlying window manager (as with so-called "single-window"
+drivers including "sdlfb" and "sdlgl"), Agar provides a simple built-in window
+manager.
+.Pp
+Widgets can be attached directly to the
 .Nm
-objects can attach to a single
-.Ft AG_Driver
-instance representing the framebuffer.
-.Pp
-Similarly to
-.Xr AG_Box 3 ,
+object, and
 .Nm
-acts like a general-purpose widget container.
-When Agar provides an internal window manager, a
-.Xr AG_Titlebar 3
-widget is attached by default to the window when it is created.
+will behave like a standard, vertical
+.Xr AG_Box 3 .
 .Pp
-It not usually necessary to provide explicit dimensions in pixels when
-creating new Agar windows.
-Widgets are queried for preferred dimensions when the window is first
-displayed.
-In cases where the "best" widget dimensions cannot be guessed properly at
-initialization time, it is customary for Agar widgets to provide one or more
-"size hint" routine.
+Default Agar window dimensions are usually determined automatically
+(by a recursive query on the window's
+.Ft AG_Widget
+tree).
+The widget objects are expected to set a proper default size when
+it can be determined automatically, or otherwise provide a suitable API
+so applications can request widget-specific "size hints".
 .Pp
-Commonly used containers include
+Other than
+.Nm
+itself, standard container widgets include
 .Xr AG_Box 3 ,
 .Xr AG_VBox 3
 and
@@ -100,6 +103,9 @@ for notebook-style display.
 .Pp
 .Ft "AG_Window *"
 .Fn AG_WindowNewNamedS "Uint flags" "const char *name"
+.Pp
+.Ft "AG_Window *"
+.Fn AG_WindowNewSw "AG_DriverSw *drv" "Uint flags"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetCaption "AG_Window *win" "const char *format" "..."
@@ -185,22 +191,40 @@ for notebook-style display.
 .nr nS 0
 The
 .Fn AG_WindowNew
-allocates, initializes and attach a new window.
+function creates a new Agar window using the default
+.Xr AG_Driver 3 ,
+returning a pointer to the newly created
+.Nm
+or NULL on failure.
+If the default driver is a single-window driver, the new Agar window is
+attached to the
+.Ft AG_Driver
+object.
+If the default driver is a multiple-window driver, a new
+.Ft AG_Driver
+object instance is created for the new window.
+See the
+.Dq FLAGS
+section below for a description of the available
+.Fa flags
+options.
 .Pp
 The
 .Fn AG_WindowNewNamed
-variant creates a new named window.
+variant creates an Agar window with a unique name identifier.
 If a window of the same name exists,
 .Fn AG_WindowNewNamed
 only moves the focus to that window, and returns NULL.
 The name may contain any printable character, except
 .Sq / .
 .Pp
-See
-.Dq FLAGS
-for available
-.Fa flags
-options.
+The
+.Fn AG_WindowNewSw
+variant creates a new window and attaches it to the specified
+.Xr AG_DriverSw 3
+object.
+This function is only useful to applications that wish to use multiple
+single-window drivers concurrently.
 .Pp
 The
 .Fn AG_WindowSetCaption
@@ -666,6 +690,10 @@ This is a cosmetic hint to some window managers and may or may not have
 any effect depending on the underlying driver.
 Used notably by
 .Xr AG_TextMsg 3 .
+.It AG_WINDOW_NOCURSORCHG
+Deny any cursor change requested by widgets attached to this window.
+This flag is automatically set whenever a window hidden, and cleared a
+window is made visible.
 .El
 .Sh EVENTS
 The GUI system may send
@@ -701,6 +729,34 @@ The cursor has entered the window area.
 .It Fn window-leave "void"
 The cursor has left the window area.
 .El
+.Sh EXAMPLES
+The following code fragment creates an Agar window containing a row of
+buttons.
+The window will be positioned and dimensioned automatically:
+.Bd -literal
+AG_Window *win;
+AG_Box *box;
+AG_Button *b[3];
+
+win = AG_WindowNew(0);
+box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+{
+	b[0] = AG_ButtonNew(box, 0, "Foo");
+	b[1] = AG_ButtonNew(box, 0, "Bar");
+	b[2] = AG_ButtonNew(box, 0, "Baz");
+}
+AG_WindowShow(win);
+.Ed
+.Pp
+The following code fragment creates an empty Agar window, centers it
+and sets an explicit size of 320x240:
+.Bd -literal -offset indent
+AG_Window *win;
+
+win = AG_WindowNew(0);
+AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+AG_WindowShow(win);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Icon 3 ,
