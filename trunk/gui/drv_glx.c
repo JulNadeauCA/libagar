@@ -51,7 +51,7 @@
 #include "cursors.h"
 #include "opengl.h"
 
-#define DEBUG_XSYNC
+/* #define DEBUG_XSYNC */
 
 static int      nDrivers = 0;		/* Drivers open */
 static Display *agDisplay = NULL;	/* X display (shared) */
@@ -1531,6 +1531,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 fail:
+	glXMakeCurrent(agDisplay, None, NULL);
 	glXDestroyContext(agDisplay, glx->glxCtx);
 	XDestroyWindow(agDisplay, glx->w);
 	AGDRIVER_MW(glx)->flags &= ~(AG_DRIVER_MW_OPEN);
@@ -1567,6 +1568,7 @@ GLX_CloseWindow(AG_Window *win)
 		}
 	}
 #endif
+	glXMakeCurrent(agDisplay, None, NULL);
 	glXDestroyContext(agDisplay, glx->glxCtx);
 	XDestroyWindow(agDisplay, glx->w);
 	if (drv->videoFmt) {
