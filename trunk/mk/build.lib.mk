@@ -159,17 +159,19 @@ depend: depend-subdir
 _lib_objs:
 	@if [ "${LIB}" != "" -a "${OBJS}" = "none" -a "${SRCS}" != "none" \
 	      -a "${USE_LIBTOOL}" = "No" ]; then \
+	    FLIST=""; \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
+		FLIST="$$FLIST $$F"; \
             done; \
+	    ${MAKE} $$FLIST; \
+	    if [ $$? != 0 ]; then \
+	        echo "${MAKE}: failure"; \
+	        exit 1; \
+	    fi; \
 	fi
 	@if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
 		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
@@ -180,17 +182,19 @@ _lib_objs:
 _lib_shobjs:
 	@if [ "${LIB}" != "" -a "${SHOBJS}" = "none" -a "${SRCS}" != "none" \
 	      -a "${USE_LIBTOOL}" = "Yes" ]; then \
+	    FLIST=""; \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
-	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
-            done; \
+		FLIST="$$FLIST $$F"; \
+	    done; \
+	    ${MAKE} $$FLIST; \
+	    if [ $$? != 0 ]; then \
+	        echo "${MAKE}: failure"; \
+	        exit 1; \
+	    fi; \
 	fi
 
 # Build a non-libtool version of the library.
