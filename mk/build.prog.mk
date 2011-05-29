@@ -135,17 +135,19 @@ depend: depend-subdir
 _prog_objs:
 	@if [ "${PROG}" != "" -a "${OBJS}" = "none" \
 	      -a "${SRCS}" != "none" ]; then \
+	    FLIST=""; \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
+		FLIST="$$FLIST $$F"; \
 	    done; \
+	    ${MAKE} $$FLIST; \
+	    if [ $$? != 0 ]; then \
+	        echo "${MAKE}: failure"; \
+		exit 1; \
+	    fi; \
 	fi
 	@if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
 		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
@@ -156,17 +158,19 @@ _prog_objs:
 _prog_pobjs:
 	@if [ "${GMONOUT}" != "" -a "${POBJS}" = "none" \
 	      -a "${SRCS}" != "none" ]; then \
+	    FLIST=""; \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
 	        F=`echo $$F | sed 's/.cpp$$/.po/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.po/'`; \
-	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
+		FLIST="$$FLIST $$F"; \
 	    done; \
+	    ${MAKE} $$FLIST; \
+	    if [ $$? != 0 ]; then \
+	        echo "${MAKE}: failure"; \
+	        exit 1; \
+	    fi; \
 	fi
 
 # Compile and link the program
