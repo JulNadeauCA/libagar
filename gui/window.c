@@ -1668,7 +1668,8 @@ AG_WindowIntersect(AG_DriverSw *drv, int x, int y)
 	int rv = 0;
 
 	AG_FOREACH_WINDOW(win, drv) {
-		if (AG_WidgetArea(win, x, y))
+		if (win->visible &&
+		    AG_WidgetArea(win, x, y))
 			rv++;
 	}
 	return (rv);
