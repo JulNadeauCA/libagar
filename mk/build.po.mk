@@ -104,7 +104,7 @@ install-po:
 	@export _mos="${MOS}"; \
 	if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" \
 	     -a "$$_mos" != "" ]; then \
-            if [ ! -d "${LOCALEDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${LOCALEDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}; \
             fi; \
