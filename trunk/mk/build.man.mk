@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -82,90 +82,108 @@ depend: depend-subdir
 preformat-man:
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN1}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN1}; \
 	    fi; \
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN2}; \
 	    fi; \
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN3}; \
 	    fi; \
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN4}; \
 	    fi; \
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN5}; \
 	    fi; \
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN6}; \
 	    fi; \
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN7}; \
 	    fi; \
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN8}; \
 	    fi; \
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
+	        CATLIST=""; \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
-	            ${MAKE} $$CAT; \
+		    CATLIST="$$CATLIST $$CAT"; \
 	        done; \
+	        ${MAKE} $$CATLIST; \
 	    else \
 	        ${MAKE} ${CATMAN9}; \
 	    fi; \
@@ -269,79 +287,79 @@ clean-man:
 
 install-man-dirs:
 	@if [ "${MANS}" != "       " ]; then \
-	    if [ ! -d "${MANDIR}" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man1" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man1"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man1; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man2" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man2"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man2; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man3" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man3"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man3; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man4" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man4"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man4; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man5" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man5"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man5; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man6" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man6"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man6; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man7" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man7"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man7; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man8" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man8"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man8; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man9" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man9"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man9; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat1" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat1"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat1; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat2" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat2"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat2; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat3" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat3"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat3; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat4" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat4"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat4; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat5" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat5"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat5; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat6" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat6"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat6; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat7" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat7"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat7; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat8" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat8"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat8; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat9" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat9"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat9; \
 	    fi; \
