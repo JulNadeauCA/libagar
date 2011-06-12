@@ -61,6 +61,7 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_HFILL	  0x100
 #define AG_FILEDLG_VFILL	  0x200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
+#define AG_FILEDLG_NOBUTTONS	  0x400	/* No OK/Cancel buttons */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */

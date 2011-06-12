@@ -65,6 +65,13 @@ AG_FileDlgNew(void *parent, Uint flags)
 	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
 	if (flags & AG_FILEDLG_MULTI) { fd->tlFiles->flags |= AG_TLIST_MULTI; }
 
+	if (flags & AG_FILEDLG_NOBUTTONS) {
+		AG_ObjectDetach(fd->btnOk);
+		AG_ObjectDetach(fd->btnCancel);
+		fd->btnOk = NULL;
+		fd->btnCancel = NULL;
+	}
+
 	AG_ObjectAttach(parent, fd);
 	return (fd);
 }
@@ -1082,9 +1089,11 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	r->h += rChld.h+2;
 	AG_WidgetSizeReq(fd->comTypes, &rChld);
 	r->h += rChld.h+2;
-	AG_WidgetSizeReq(fd->btnOk, &rOk);
-	AG_WidgetSizeReq(fd->btnCancel, &rCancel);
-	r->h += MAX(rOk.h,rCancel.h)+1;
+	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
+		AG_WidgetSizeReq(fd->btnOk, &rOk);
+		AG_WidgetSizeReq(fd->btnCancel, &rCancel);
+		r->h += MAX(rOk.h,rCancel.h)+1;
+	}
 }
 
 static int
@@ -1095,10 +1104,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	int hBtn = 0, wBtn = a->w/2;
 
-	AG_WidgetSizeReq(fd->btnOk, &r);
-	hBtn = MAX(hBtn, r.h);
-	AG_WidgetSizeReq(fd->btnCancel, &r);
-	hBtn = MAX(hBtn, r.h);
+	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
+		AG_WidgetSizeReq(fd->btnOk, &r);
+		hBtn = MAX(hBtn, r.h);
+		AG_WidgetSizeReq(fd->btnCancel, &r);
+		hBtn = MAX(hBtn, r.h);
+	} else {
+		wBtn = 0;
+		hBtn = 0;
+	}
 
 	/* Size horizontal pane */
 	aChld.x = 0;
@@ -1133,14 +1147,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.y += aChld.h+2;
 
 	/* Size buttons */
-	aChld.w = wBtn;
-	aChld.h = hBtn;
-	AG_WidgetSizeAlloc(fd->btnOk, &aChld);
-	aChld.x = wBtn;
-	if (wBtn*2 < a->w) { aChld.w++; }
-	aChld.h = hBtn;
-	AG_WidgetSizeAlloc(fd->btnCancel, &aChld);
-
+	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
+		aChld.w = wBtn;
+		aChld.h = hBtn;
+		AG_WidgetSizeAlloc(fd->btnOk, &aChld);
+		aChld.x = wBtn;
+		if (wBtn*2 < a->w) { aChld.w++; }
+		aChld.h = hBtn;
+		AG_WidgetSizeAlloc(fd->btnCancel, &aChld);
+	}
 	return (0);
 }
 
