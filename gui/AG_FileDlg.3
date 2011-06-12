@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -121,6 +121,8 @@ The selected file must be writeable or an error is returned to the user.
 .It AG_FILEDLG_ASYNC
 Load/save routines will be executed in a separate thread.
 This flag is available only if agar was compiled with threads support.
+.It AG_FILEDLG_NOBUTTONS
+Don't display "OK" and "Cancel" buttons.
 .It AG_FILEDLG_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
