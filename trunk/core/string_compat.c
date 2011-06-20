@@ -621,9 +621,10 @@ int
 AG_StrlcpyInt(char *s, int val, size_t len)
 {
 	static const char *digits = "0123456789";
-	int sign = (val < 0) ? -val : val;
+	int sign = (val < 0);
 	int i = 0;
 
+	val = (val < 0) ? -val : val;
 	if (len < 1)
 		return (-1);
 
@@ -634,7 +635,7 @@ AG_StrlcpyInt(char *s, int val, size_t len)
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
-	if (sign < 0) {
+	if (sign) {
 		if (i+1 > len) {
 			goto fail;
 		}
@@ -688,10 +689,11 @@ int
 AG_StrlcatInt(char *s, int val, size_t len)
 {
 	static const char *digits = "0123456789";
-	int sign = (val < 0) ? -val : val;
+	int sign = (val < 0);
 	int i = strlen(s);
 	int iStart = i;
 
+	val = (val < 0) ? -val : val;
 	if (len < 1)
 		return (-1);
 
@@ -702,7 +704,7 @@ AG_StrlcatInt(char *s, int val, size_t len)
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
-	if (sign < 0) {
+	if (sign) {
 		if (i+1 > len) {
 			goto fail;
 		}
