@@ -40,8 +40,9 @@ REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
 
 REGISTER_SECTION("Options specific to ag_au library:")
-REGISTER("--enable-au",			"Build audio interface library [no]")
+REGISTER("--enable-audio",		"Build audio interface library [no]")
 REGISTER("--with-sndfile[=PREFIX]",	"Use sndfile library [check]")
+REGISTER("--with-portaudio[=PREFIX]",	"Use portaudio library [check]")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
@@ -619,41 +620,32 @@ if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
 	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
 	if [ "${HAVE_SNDFILE}" != "yes" ]; then
 		echo "*"
-		echo "* --enable-audio was requested, but the sndfile library "
-		echo "* was not found. You can specify a non-standard path"
-		echo "* to sndfile using --with-sndfile[=PREFIX]."
+		echo "* WARNING: sndfile was not found. The file driver in"
+		echo "* Agar-AU will be unavailable. If you need to specify a"
+		echo "* non-standard path, use --with-sndfile=PREFIX"
 		echo "*"
-		exit 1
+	fi
+	
+	# We need the portaudio library to playback sound
+	CHECK(portaudio, 19.0, ${prefix_portaudio})
+	if [ "${HAVE_PORTAUDIO}" != "yes" ]; then
+		echo "*"
+		echo "* WARNING: PortAudio was not found. The pa driver in"
+		echo "* Agar-AU will be unavailable. If you need to specify a"
+		echo "* non-standard path, use --with-portaudio=PREFIX"
+		echo "*"
 	fi
 
-	# Configure our bundled copy of PortAudio.
-	#
-	# XXX we need to filter out -W* from CFLAGS/LIBS for PortAudio's
-	# configure to succeed.
-	#
-	echo "*"
-	echo "* AU: Configuring bundled PortAudio..."
-	echo "*"
-	rm -fR au/portaudio
-	mkdir au/portaudio
-	if [ $? != 0 ]; then exit 1; fi
-	(cd au/portaudio && env CFLAGS="-O2" CXXFLAGS="-O2" \
-	    sh ${SRC}/au/portaudio/configure --prefix=${PREFIX})
-	if [ $? != 0 ]; then
-		echo "*"
-		echo "* Failed to configure PortAudio"
-		echo "*"
-		exit 1
-	fi
-	echo "*"
-	echo "* AU: PortAudio configured successfully"
-	echo "*"
 else
 	HUNDEF(ENABLE_AU)
+	MDEFINE(SUBDIR_au, "")
+
 	HUNDEF(HAVE_SNDFILE)
 	MDEFINE(SNDFILE_CFLAGS, "")
 	MDEFINE(SNDFILE_LIBS, "")
-	MDEFINE(SUBDIR_au, "")
+	HUNDEF(HAVE_PORTAUDIO)
+	MDEFINE(PORTAUDIO_CFLAGS, "")
+	MDEFINE(PORTAUDIO_LIBS, "")
 fi
 
 # Set up configure script output
@@ -669,7 +661,7 @@ CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -l
 CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
-CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS}", "-L${LIBDIR} -lag_au -lag_au_pa ${GETTEXT_LIBS} ${SNDFILE_LIBS}")
+CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}", "-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}")
 
 echo "*"
 echo "* Configuration successful."

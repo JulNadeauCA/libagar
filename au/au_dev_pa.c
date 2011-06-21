@@ -27,11 +27,20 @@
  * PortAudio output driver.
  */
 
+#include <config/have_portaudio.h>
+#ifdef HAVE_PORTAUDIO
+
 #include <core/core.h>
 
 #include "au_init.h"
 #include "au_dev_out.h"
-#include "portaudio/include/portaudio.h"
+
+#if defined(__FreeBSD__)
+/* Work around conflicting FreeBSD ports for v18 and v19. */
+# include <portaudio2/portaudio.h>
+#else
+# include <portaudio.h>
+#endif
 
 typedef struct au_dev_out_pa {
 	struct au_dev_out _inherit;
@@ -156,3 +165,5 @@ const AU_DevOutClass auDevOut_pa = {
 	Open,
 	Close
 };
+
+#endif /* HAVE_PORTAUDIO */
