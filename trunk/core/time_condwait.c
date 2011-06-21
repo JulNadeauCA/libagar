@@ -42,21 +42,36 @@ GetTicks(void)
 static void
 Delay(Uint32 Tdelay)
 {
-	Uint32 t0, t, Telapsed = 0;
-	struct timespec ts;
+	struct timespec ts, ts2;
+	int ret;
 
 	AG_MutexLock(&agCondRenderLock);
 	clock_gettime(CLOCK_REALTIME, &ts);
 	ts.tv_sec += (Tdelay/1000);
 	ts.tv_nsec += (Tdelay % 1000)*1000000;
-	while (Telapsed < Tdelay) {
-		t0 = GetTicks();
-		if (AG_CondTimedWait(&agCondBeginRender,
-		    &agCondRenderLock, &ts) != 0) {
-			t = GetTicks();
-			Telapsed += (t - t0);
-		} else {
-			AG_CondWait(&agCondEndRender, &agCondRenderLock);
+	if (ts.tv_nsec > 1000000000) {
+		/* printf("PING!\n"); */
+		ts.tv_nsec -= 1000000000;
+		ts.tv_sec  += 1;
+	}
+
+	while (/* CONSTCOND */ 1) {
+		if ((ret = AG_CondTimedWait(&agCondBeginRender,
+		    &agCondRenderLock, &ts)) != 0) {
+#if 0
+			if (ret != ETIMEDOUT) {
+				printf("agar warning: AG_CondTimedWait() returned %s\n",
+					 strerror(ret));
+				break;
+			}
+#endif
+			clock_gettime(CLOCK_REALTIME, &ts2);
+			if (ts2.tv_sec < ts.tv_sec)
+				continue;
+			if (ts2.tv_sec > ts.tv_sec)
+				break;
+			if (ts2.tv_nsec >= ts.tv_nsec)
+				break;
 		}
 	}
 	AG_MutexUnlock(&agCondRenderLock);
