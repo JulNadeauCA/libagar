@@ -63,6 +63,7 @@ LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
 LTMAIN_SH?=	${TOP}/mk/libtool/ltmain.sh
 LTCONFIG_LOG?=	./config.log
 LIBTOOLFLAGS?=
+LIBTOOLOPTS?=	--tag=CC
 
 SHARE?=none
 SHARESRC?=none
@@ -93,7 +94,8 @@ depend: depend-subdir
 .c.o:
 	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.lo: ${LIBTOOL}
-	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -101,7 +103,8 @@ depend: depend-subdir
 .m.o:
 	${CC} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	    ${CC} ${LIBTOOLFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
 	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -109,13 +112,15 @@ depend: depend-subdir
 .cc.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.lo: ${LIBTOOL}
-	${LIBTOOL} --mode=compile ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.lo: ${LIBTOOL}
-	${LIBTOOL} --mode=compile ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -237,75 +242,72 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
                 done; \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
 	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la \
 			    -module \
 		            -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-			    -module \
+	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la -module \
 		            -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    else \
-	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la \
 		            -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la \
 		            -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    fi; \
 		else \
-	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-	                -static \
-		        ${LDFLAGS} $$_shobjs \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
 		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -static \
-		        ${LDFLAGS} $$_shobjs \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
 			${LIBS} ${LIB_XOBJS}; \
 		fi; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
 	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-			    -module \
-		            -rpath ${PREFIX}/lib \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-			    -module \
-		            -rpath ${PREFIX}/lib \
+	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    else \
-	                echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		            -rpath ${PREFIX}/lib \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		            -rpath ${PREFIX}/lib \
+	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    fi; \
 	        else \
-	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -static \
-		        ${LDFLAGS} ${SHOBJS} \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
 		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
-		        -static \
-		        ${LDFLAGS} ${SHOBJS} \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
 			${LIBS} ${LIB_XOBJS}; \
 		fi; \
 	    fi; \
@@ -400,12 +402,12 @@ install-lib: ${LIBTOOL_COOKIE}
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LIBDIR}; \
 	    fi; \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
-	        echo "${LIBTOOL} --mode=install \
+	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
-	        ${SUDO} ${LIBTOOL} --mode=install \
+	        ${SUDO} ${LIBTOOL} ${LIBTOOLOPTS} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${DESTDIR}${LIBDIR}; \
-	        echo "${LIBTOOL} --finish ${LIBDIR}"; \
-	        ${SUDO} ${LIBTOOL} --finish ${DESTDIR}${LIBDIR}; \
+	        echo "${LIBTOOL} ${LIBTOOLOPTS} --finish ${LIBDIR}"; \
+	        ${SUDO} ${LIBTOOL} ${LIBTOOLOPTS} --finish ${DESTDIR}${LIBDIR}; \
 	    else \
 	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
 	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
@@ -468,9 +470,9 @@ install-lib: ${LIBTOOL_COOKIE}
 deinstall-lib: ${LIBTOOL_COOKIE}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" ]; then \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
-	        echo "${LIBTOOL} --mode=uninstall \
+	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=uninstall \
 	            rm -f ${LIBDIR}/lib${LIB}.la"; \
-	        ${SUDO} ${LIBTOOL} --mode=uninstall \
+	        ${SUDO} ${LIBTOOL} ${LIBTOOLOPTS} --mode=uninstall \
 	            rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    else \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
@@ -509,7 +511,8 @@ includes:
 	(cd ${TOP} && ${MAKE} install-includes)
 
 ${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
-	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
+	      -a "${LIBTOOL_BUNDLED}" = "yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH} ${HOST}"; \
 	    env CC="${CC}" CXX="${CXX}" \
 	        CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" \
@@ -522,8 +525,8 @@ ${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 		echo "mv libtool ${LIBTOOL}"; \
 		mv libtool ${LIBTOOL}; \
 	    fi; \
-	    echo "${LIBTOOL}" > ${LIBTOOL_COOKIE}; \
 	fi
+	echo "${LIBTOOL}" > ${LIBTOOL_COOKIE}
 
 none:
 
