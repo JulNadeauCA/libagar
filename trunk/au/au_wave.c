@@ -29,13 +29,8 @@
 
 #include <core/core.h>
 #include "au_wave.h"
-#include "portaudio/include/portaudio.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <jpeglib.h>
-#include <setjmp.h>
-#include <errno.h>
+#include <string.h>
 #include <math.h>
 
 AU_Wave *

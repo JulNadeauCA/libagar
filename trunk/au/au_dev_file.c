@@ -27,6 +27,9 @@
  * Audio file output driver.
  */
 
+#include <config/have_sndfile.h>
+#ifdef HAVE_SNDFILE
+
 #include <core/core.h>
 
 #include "au_init.h"
@@ -77,11 +80,9 @@ AU_DevFileThread(void *obj)
 			}
 			fprintf(stderr, "\n");
 #endif
-			rv = sf_writef_float(df->file, dev->buf,
-			    dev->bufSize);
+			rv = sf_writef_float(df->file, dev->buf, dev->bufSize);
 			if (rv < dev->bufSize) {
 				dev->flags |= AU_DEV_OUT_ERROR;
-				printf("WRITE ERROR\n");
 			}
 			dev->bufSize = 0;
 		}
@@ -107,8 +108,6 @@ Open(void *obj, const char *path, int rate, int ch)
 	df->info.channels = ch;
 	dev->rate = rate;
 	dev->ch = ch;
-
-	printf("File: open %d channels\n", (int)ch);
 
 	if ((c = strrchr(path, '.')) != NULL &&		/* XXX */
 	    strcasecmp(c, ".ogg") == 0) {
@@ -150,3 +149,5 @@ const AU_DevOutClass auDevOut_file = {
 	Open,
 	Close
 };
+
+#endif /* HAVE_SNDFILE */
