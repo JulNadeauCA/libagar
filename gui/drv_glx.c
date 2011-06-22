@@ -1504,7 +1504,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		XSetWMProtocols(agDisplay, glx->w, &wmDeleteWindow, 1);
 	
 	/* Create the GLX rendering context. */
-	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_FALSE);
+	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 
 	/* Set the pixel formats. */
