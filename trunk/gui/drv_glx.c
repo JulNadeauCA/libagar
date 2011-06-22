@@ -1529,6 +1529,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	Xfree(xvi);
 	return (0);
 fail:
 	glXMakeCurrent(agDisplay, None, NULL);
@@ -1542,6 +1543,8 @@ fail:
 fail_unlock:
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+	if (xvi)
+		Xfree(xvi);
 	return (-1);
 }
 
