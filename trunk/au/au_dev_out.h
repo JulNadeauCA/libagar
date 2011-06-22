@@ -2,7 +2,7 @@
 
 #include <agar/core/begin.h>
 
-#define AU_BUFSIZ 524288
+#define AU_MINBUFSIZ	65536
 
 typedef struct au_dev_out_class {
 	const char *name;
@@ -30,7 +30,8 @@ typedef struct au_dev_out {
 	int ch;			/* Channel count */
 	int bytesPerFrame;	/* Bytes per audio frame */
 	float *buf;		/* Audio buffer */
-	size_t bufSize;		/* Current buffer size (frames) */
+	size_t bufSize;		/* Buffer content size (frames) */
+	size_t bufMax;		/* Total buffer size (frames) */
 	int nOverruns;		/* Overruns occured */
 	AG_Cond wrRdy, rdRdy;	/* Buffer status */
 	AU_Channel *mix;	/* Mixing channels */
@@ -51,10 +52,17 @@ int        AU_DelChannel(AU_DevOut *, int);
 static __inline__ int
 AU_WriteFloat(AU_DevOut *dev, float *data, size_t frames)
 {
-	if (dev->bufSize+frames >= AU_BUFSIZ) {
-		return (-1);
-	}
 	AG_MutexLock(&dev->lock);
+	if (dev->bufSize+frames > dev->bufMax) {
+		float *bufNew;
+		if ((bufNew = AG_TryRealloc(dev->buf,
+		    (dev->bufSize+frames)*dev->bytesPerFrame)) == NULL) {
+			AG_MutexUnlock(&dev->lock);
+			return (-1);
+		}
+		dev->buf = bufNew;
+		dev->bufMax = dev->bufSize+frames;
+	}
 	memcpy(&dev->buf[dev->bufSize*dev->ch], data, frames*dev->bytesPerFrame);
 	dev->bufSize += frames;
 	AG_CondBroadcast(&dev->rdRdy);

@@ -75,6 +75,7 @@ AU_OpenOut(const char *path, int rate, int ch)
 	dev->cls = *pDevCls;
 	dev->flags = 0;
 	dev->bufSize = 0;
+	dev->bufMax = AU_MINBUFSIZ;
 	dev->nOverruns = 0;
 	dev->rate = 0;
 	dev->ch = ch;
@@ -83,10 +84,10 @@ AU_OpenOut(const char *path, int rate, int ch)
 	Verbose("Audio out: %s: %dHz, %d-Ch, %d Bytes/Frame\n",
 	    path, rate, ch, dev->bytesPerFrame);
 
-	if ((dev->buf = TryMalloc(AU_BUFSIZ*dev->bytesPerFrame)) == NULL) {
+	if ((dev->buf = TryMalloc(dev->bufMax*dev->bytesPerFrame)) == NULL) {
 		goto fail;
 	}
-	for (i = 0; i < AU_BUFSIZ*ch; i++)
+	for (i = 0; i < dev->bufMax*ch; i++)
 		dev->buf[i] = 0.0;
 
 	AG_MutexInit(&dev->lock);

@@ -35,12 +35,15 @@
 #include "au_init.h"
 #include "au_dev_out.h"
 #include <sndfile.h>
+#include <errno.h>
+#include <time.h>
 
 typedef struct au_dev_out_wav {
 	struct au_dev_out _inherit;
 	SNDFILE  *file;
 	SF_INFO   info;
 	AG_Thread th;
+	float    *silence;			/* 1s of silence */
 } AU_DevOutFile;
 
 static void
@@ -51,6 +54,7 @@ Init(void *obj)
 
 	dev->flags |= AU_DEV_OUT_THREADED;
 	df->file = NULL;
+	df->silence = NULL;
 	memset(&df->info, 0, sizeof(df->info));
 }
 
@@ -59,11 +63,7 @@ AU_DevFileThread(void *obj)
 {
 	AU_DevOut *dev = obj;
 	AU_DevOutFile *df = obj;
-	struct timespec ts;
 	long rv;
-
-	ts.tv_sec = 1;
-	ts.tv_nsec = 0;
 
 	for (;;) {
 		AG_MutexLock(&dev->lock);
@@ -72,22 +72,24 @@ AU_DevFileThread(void *obj)
 			AG_MutexUnlock(&dev->lock);
 			return (NULL);
 		}
-		if (AG_CondTimedWait(&dev->rdRdy, &dev->lock, &ts) == 0) {
-#if 0
-			int i;
-			for (i = 0; i < dev->bufSize*dev->ch; i++) {
-				fprintf(stderr, "%.02f ", dev->buf[i]);
-			}
-			fprintf(stderr, "\n");
-#endif
+		AG_CondBroadcast(&dev->wrRdy);
+		/* XXX */
+		if (dev->bufSize > dev->rate/1000) {
 			rv = sf_writef_float(df->file, dev->buf, dev->bufSize);
 			if (rv < dev->bufSize) {
 				dev->flags |= AU_DEV_OUT_ERROR;
 			}
 			dev->bufSize = 0;
+		} else {
+			/* Write ~1ms of silence */
+			rv = sf_writef_float(df->file, df->silence,
+			    dev->rate/1000);
+			if (rv < dev->rate) {
+				dev->flags |= AU_DEV_OUT_ERROR;
+			}
 		}
-		AG_CondBroadcast(&dev->wrRdy);
 		AG_MutexUnlock(&dev->lock);
+		AG_Delay(1);
 	}
 	return (NULL);
 }
@@ -98,6 +100,7 @@ Open(void *obj, const char *path, int rate, int ch)
 	AU_DevOut *dev = obj;
 	AU_DevOutFile *df = obj;
 	const char *c;
+	int i;
 
 	if (df->file != NULL) {
 		AG_SetError("Audio dump to file already in progress");
@@ -108,6 +111,14 @@ Open(void *obj, const char *path, int rate, int ch)
 	df->info.channels = ch;
 	dev->rate = rate;
 	dev->ch = ch;
+	
+	/* Allocate 1s of silence */
+	if (df->silence == NULL &&
+	    (df->silence = TryMalloc(rate*dev->bytesPerFrame)) == NULL) {
+		return (-1);
+	}
+	for (i = 0; i < rate*ch; i++)
+		df->silence[i] = 0.0;
 
 	if ((c = strrchr(path, '.')) != NULL &&		/* XXX */
 	    strcasecmp(c, ".ogg") == 0) {
@@ -139,6 +150,8 @@ Close(void *obj)
 		sf_close(df->file);
 		df->file = NULL;
 	}
+	Free(df->silence);
+	df->silence = NULL;
 }
 
 const AU_DevOutClass auDevOut_file = {

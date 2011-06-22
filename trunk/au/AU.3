@@ -38,34 +38,24 @@
 .Sh DESCRIPTION
 The Agar-AU library integrates a simple audio mixer with a portable
 audio interface.
-.Sh INHERITANCE HIERARCHY
-.Xr AG_Object 3 ->
-.Ft RG_Tileset
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "RG_Tileset *"
-.Fn RG_TilesetNew "void *parent" "const char *name" "Uint flags"
+.Ft "int"
+.Fn AU_InitSubsystem "void"
+.Pp
+.Ft "void"
+.Fn AU_DestroySubsystem "void"
 .Pp
 .nr nS 0
 The
-.Fn RG_TilesetNew
-function allocates and initializes a new
-.Nm
-object and attaches it to
-.Fa parent
-if not NULL.
-There are currently no
-.Fa flags
-defined.
+.Fn AU_InitSubsystem
+function initializes the Agar-AU library.
+.Fn AU_DestroySubsystem
+releases all resources allocated by Agar-AU.
 .Sh SEE ALSO
-.Xr RG_Tile 3 ,
-.Xr RG_Anim 3 ,
-.Xr RG_Pixmap 3 ,
-.Xr RG_Sketch 3 ,
-.Xr RG_Feature 3 ,
-.Xr RG_Texture 3 ,
-.Xr RG_Tileview 3
+.Xr AU_DevOut 3 ,
+.Xr AU_Wave 3
 .Sh HISTORY
 The
 .Nm
-library first appeared in Agar 1.4.1.
+library first appeared in Agar 1.4.2.
