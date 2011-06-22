@@ -35,25 +35,26 @@
 #include "au_init.h"
 #include "au_dev_out.h"
 
-#if defined(__FreeBSD__)
-/* Work around conflicting FreeBSD ports for v18 and v19. */
-# include <portaudio2/portaudio.h>
-#else
-# include <portaudio.h>
-#endif
+#include <portaudio.h>
 
 typedef struct au_dev_out_pa {
 	struct au_dev_out _inherit;
 	PaStream *stream;
 	int wrPos;
+	AG_Thread th;
 } AU_DevOutPA;
 
 static void
 Init(void *obj)
 {
+	AU_DevOut *dev = obj;
 	AU_DevOutPA *dpa = obj;
 	PaError rv;
+	
+	if (Pa_GetVersion() < 1899)
+		AG_FatalError("Agar-AU requires PortAudio >= v19");
 
+	dev->flags |= AU_DEV_OUT_THREADED;
 	dpa->stream = NULL;
 	dpa->wrPos = 0;
 	
@@ -61,41 +62,42 @@ Init(void *obj)
 		AG_FatalError("Pa_Initialize: %s", Pa_GetErrorText(rv));
 }
 
+static void *
+AU_DevPaThread(void *obj)
+{
+	AU_DevOut *dev = obj;
+	AU_DevOutPA *dpa = obj;
+	struct timespec ts;
+	PaError rv;
+
+	for (;;) {
+		AG_MutexLock(&dev->lock);
+		if (dev->flags & AU_DEV_OUT_CLOSING) {
+			dev->flags &= ~(AU_DEV_OUT_CLOSING);
+			AG_MutexUnlock(&dev->lock);
+			return (NULL);
+		}
+		AG_CondBroadcast(&dev->wrRdy);
+		ts.tv_sec = time(NULL) + 1;
+		ts.tv_nsec = 0;
+		if (AG_CondTimedWait(&dev->rdRdy, &dev->lock, &ts) == 0) {
+			rv = Pa_WriteStream(dpa->stream, dev->buf, dev->bufSize);
+			if (rv != paNoError) {
+				printf("Pa_WriteStream: %s\n",
+				    Pa_GetErrorText(rv));
+			}
+			dev->bufSize = 0;
+		}
+		AG_CondBroadcast(&dev->wrRdy);
+		AG_MutexUnlock(&dev->lock);
+	}
+	return (NULL);
+}
+
 static void
 Destroy(void *obj)
 {
 	Pa_Terminate();
-}
-
-static int
-AudioUpdatePA(const void *pIn, void *pOut, unsigned long count,
-    const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
-    void *pData)
-{
-	AU_DevOut *dev = pData;
-	AU_DevOutPA *dpa = pData;
-	float *out = (float *)pOut;
-	float *buf;
-	int i;
-	
-	AG_MutexLock(&dev->lock);
-	if (dev->flags & AU_DEV_OUT_CLOSING) {
-		dev->flags &= ~(AU_DEV_OUT_CLOSING);
-		AG_MutexUnlock(&dev->lock);
-		return (paComplete);
-	}
-	buf = &dev->buf[dpa->wrPos*dev->ch];
-	for (i = 0; i < count*dev->ch; i++) {
-		*out++ = *buf++;
-	}
-	dpa->wrPos += count;
-	if (dpa->wrPos > dev->bufSize) {
-		dpa->wrPos = 0;
-		dev->bufSize = 0;
-	}
-	AG_CondBroadcast(&dev->wrRdy);
-	AG_MutexUnlock(&dev->lock);
-	return (paContinue);
 }
 
 static int
@@ -110,8 +112,8 @@ Open(void *obj, const char *path, int rate, int channels)
 		AG_SetError("Audio playback already started");
 		return (-1);
 	}
-	if ((op.device = Pa_GetDefaultOutputDevice()) == -1) {
-		AG_SetError("No audio output device");
+	if ((op.device = Pa_GetDefaultOutputDevice()) == paNoDevice) {
+		AG_SetError("No default audio output device");
 		goto fail;
 	}
 	op.channelCount = channels;
@@ -126,7 +128,7 @@ Open(void *obj, const char *path, int rate, int channels)
 	    rate,
 	    0,
 	    paClipOff,
-	    AudioUpdatePA, dpa);
+	    NULL, NULL);
 	if (rv != paNoError) {
 		AG_SetError("Failed to open playback device: %s",
 		    Pa_GetErrorText(rv));
@@ -139,6 +141,9 @@ Open(void *obj, const char *path, int rate, int channels)
 	rv = Pa_StartStream(dpa->stream);
 	if (rv != paNoError) {
 		AG_SetError("PortAudio error: %s", Pa_GetErrorText(rv));
+		goto fail;
+	}
+	if (AG_ThreadCreate(&dpa->th, AU_DevPaThread, dpa) != 0) {
 		goto fail;
 	}
 	return (0);
