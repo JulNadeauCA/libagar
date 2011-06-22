@@ -18,9 +18,11 @@ int outAbort = 0;
 static void *
 GenSine(void *p)
 {
-#define SINEBUF 1000
+#define SINEBUF 4000
 	float x, out[SINEBUF*2];
 	int i, j;
+	double df = 0.010;
+	double k;
 	
 	x = 0.0;
 	for (;;) {
@@ -32,12 +34,20 @@ GenSine(void *p)
 		}
 		for (i = 0; i < SINEBUF*2; i++) {
 			out[i] = sin(x)/2.0;
-			x += 0.030;
+			x += df;
 		}
-		if (AU_WriteFloat(auOut, out, SINEBUF) == -1) {
-			AG_Delay(100);
+		for (k = 0.0, i = 0;
+		     k < 1.0 && i < 2000;
+		     k+=0.0005, i++) {
+			out[i] = out[i]*k;
+			out[SINEBUF*2-i] = out[SINEBUF*2-i]*k;
+		}
+		if (AU_WriteFloat(auOut, out, SINEBUF)) {
+			fprintf(stderr, "AU_WriteFloat: failed\n");
 		}
 		AG_MutexUnlock(&outLock);
+		AG_Delay(200);
+		df += 0.0001;
 	}
 	return (NULL);
 }
