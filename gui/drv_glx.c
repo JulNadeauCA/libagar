@@ -1507,6 +1507,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
 	/* Set the pixel formats. */
 	drv->videoFmt = AG_PixelFormatRGB(depth,
@@ -1530,6 +1531,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
+
 	XFree(xvi);
 	return (0);
 fail:
@@ -1776,6 +1778,8 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 static void
 GLX_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 {
+	AG_Driver *drv = WIDGET(win)->drv;
+	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
 	int x = a->x;
 	int y = a->y;
 
@@ -1785,6 +1789,10 @@ GLX_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
+	/* Update GLX context. */
+	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
 	WIDGET(win)->y = a->y = y;
