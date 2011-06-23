@@ -114,6 +114,7 @@ static void GLX_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  GLX_RaiseWindow(AG_Window *);
 static int  GLX_SetInputFocus(AG_Window *);
 static void GLX_SetTransientFor(AG_Window *, AG_Window *);
+static void GLX_FreeWidgetResources(AG_Widget *wid);
 
 static void
 Init(void *obj)
@@ -1727,10 +1728,11 @@ GLX_PreResizeCallback(AG_Window *win)
 	 * Backup all GL resources since it is not portable to assume that a
 	 * display resize will not cause a change in GL contexts
 	 * (XXX TODO test for platforms where this is unnecessary)
+	 * (XXX is this correctly done?)
 	 */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	FreeWidgetResources(WIDGET(win));
-	AG_ClearGlyphCache();
+	GLX_FreeWidgetResources(WIDGET(win));
+	AG_TextClearGlyphCache(glx);
 #endif
 }
 
@@ -1807,18 +1809,21 @@ GLX_MoveWindow(AG_Window *win, int x, int y)
 	return (0);
 }
 
-#if 0
+#if 1
 /* Save/restore associated widget GL resources (for GL context changes). */
 static void
-FreeWidgetResources(AG_Widget *wid)
+GLX_FreeWidgetResources(AG_Widget *wid)
 {
 	AG_Widget *chld;
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		FreeWidgetResources(chld);
+		GLX_FreeWidgetResources(chld);
 	}
 	AG_WidgetFreeResourcesGL(wid);
 }
+#endif
+
+#if 0
 static void
 RegenWidgetResources(AG_Widget *wid)
 {
