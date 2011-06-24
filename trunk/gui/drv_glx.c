@@ -909,8 +909,6 @@ GLX_RenderWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glx->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
 	glEnable(GL_CLIP_PLANE0);
 	glx->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
@@ -919,6 +917,10 @@ GLX_RenderWindow(AG_Window *win)
 	glEnable(GL_CLIP_PLANE2);
 	glx->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
 	glEnable(GL_CLIP_PLANE3);
+
+	/* clear the clipped erea with the background colour */
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
 }
