@@ -1362,11 +1362,12 @@ SetWmNormalHints(AG_Window *win, const AG_Rect *r, Uint mwFlags)
 	if ((h = XAllocSizeHints()) == NULL)  {
 		return;
 	}
-	h->flags = PMinSize|PMaxSize;
 
+	h->flags = 0;
 	if (!(mwFlags & AG_DRIVER_MW_ANYPOS))
 		h->flags |= PPosition;
 
+	h->flags |= PMinSize | PMaxSize;
 	if (!(win->flags & AG_WINDOW_NORESIZE)) {
 		h->min_width = 32;
 		h->min_height = 32;
