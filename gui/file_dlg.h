@@ -9,6 +9,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
 #include <agar/gui/combo.h>
+#include <agar/gui/checkbox.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/label.h>
 
@@ -62,6 +63,7 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_VFILL	  0x200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
 #define AG_FILEDLG_NOBUTTONS	  0x400	/* No OK/Cancel buttons */
+#define AG_FILEDLG_FILTER_EXT	  0x800	/* Mask unknown file extensions */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
@@ -71,6 +73,7 @@ typedef struct ag_file_dlg {
 	AG_Label *lbCwd;			/* CWD label */
 	AG_Textbox *tbFile;			/* Filename input */
 	AG_Combo *comTypes;			/* File types combo */
+	AG_Checkbox *cbFilterExt;		/* Filter by extension */
 	AG_Button *btnOk;			/* OK button */
 	AG_Button *btnCancel;			/* Cancel button */
 	AG_Event *okAction;			/* OK action */
@@ -104,6 +107,7 @@ void AG_FileDlgOkAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 void AG_FileDlgCancelAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 int AG_FileDlgCheckReadAccess(AG_FileDlg *);
 int AG_FileDlgCheckWriteAccess(AG_FileDlg *);
+void AG_FileDlgRefresh(AG_FileDlg *);
 
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
 			       const char *, void (*)(AG_Event *),

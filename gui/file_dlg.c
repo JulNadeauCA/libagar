@@ -96,6 +96,29 @@ AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 	AG_ObjectUnlock(fd);
 }
 
+/* Filter files by extension. */
+static int
+FilterByExtension(AG_FileDlg *fd, char *file)
+{
+	char *ext, *s;
+	AG_FileType *ft;
+	Uint i;
+
+	if ((ext = strrchr(file, '.')) == NULL) {
+		return (1);
+	}
+	TAILQ_FOREACH(ft, &fd->types, types) {
+		for (i = 0; i < ft->nexts; i++) {
+			if ((s = strrchr(ft->exts[i], '.')) != NULL &&
+			    Strcasecmp(s, ext) == 0)
+				break;
+		}
+		if (i < ft->nexts)
+			break;
+	}
+	return (ft == NULL);
+}
+
 /* Update the file / directory listing */
 static void
 RefreshListing(AG_FileDlg *fd)
@@ -138,6 +161,10 @@ RefreshListing(AG_FileDlg *fd)
 			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
 			dirs[ndirs++] = Strdup(dir->ents[i]);
 		} else {
+			if (fd->flags & AG_FILEDLG_FILTER_EXT &&
+			    FilterByExtension(fd, dir->ents[i])) {
+				continue;
+			}
 			files = Realloc(files, (nfiles + 1) * sizeof(char *));
 			files[nfiles++] = Strdup(dir->ents[i]);
 		}
@@ -251,6 +278,13 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 #endif /* _WIN32 */
 
 	AG_TlistRestore(tl);
+}
+
+void
+AG_FileDlgRefresh(AG_FileDlg *fd)
+{
+	RefreshListing(fd);
+	RefreshShortcuts(fd, 0);
 }
 
 static void
@@ -951,6 +985,14 @@ AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 }
 
 static void
+FilterByExtSelected(AG_Event *event)
+{
+	AG_FileDlg *fd = AG_PTR(1);
+
+	RefreshListing(fd);
+}
+
+static void
 Init(void *obj)
 {
 	AG_FileDlg *fd = obj;
@@ -960,43 +1002,56 @@ Init(void *obj)
 	fd->dirMRU = NULL;
 	(void)AG_GetCWD(fd->cwd, sizeof(fd->cwd));
 	fd->optsCtr = NULL;
+	fd->okAction = NULL;
+	fd->cancelAction = NULL;
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
 	AG_PaneMoveDividerPct(fd->hPane, 50);
 	AG_PaneResizeAction(fd->hPane, AG_PANE_DIVIDE_EVEN);
 
+	/* Shortcuts combo. */
 	fd->comLoc = AG_ComboNewS(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
 	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 	AG_TlistSetCompareFn(fd->comLoc->list, AG_TlistCompareStrings);
-
-	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
-	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
-	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
-	    _("Directory: %s"), &fd->cwd[0]);
-	AG_LabelSizeHint(fd->lbCwd, 1,
-	    _("Directory: XXXXXXXXXXXXX"));
-
-	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_STATIC, _("File: "));
-	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
-	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
-	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
-
-	fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
-	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
-	fd->okAction = NULL;
-	fd->cancelAction = NULL;
-
-	AG_AddEvent(fd, "widget-shown", Shown, NULL);
-	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
 	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected, "%p", fd);
+
+	/* Directories list. */
+	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
+	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
+	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
+
+	/* Files list. */
+	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
+	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
+
+	/* Current directory label. */
+	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, _("Directory: %s"), &fd->cwd[0]);
+	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
+
+	/* Manual file/directory entry textbox. */
+	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_STATIC, _("File: "));
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
 	AG_SetEvent(fd->tbFile, "textbox-return", TextboxReturn, "%p", fd);
-	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
-	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
+
+	/* File type selector */
+	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_SetEvent(fd->comTypes, "combo-selected", SelectedType, "%p", fd);
+	fd->cbFilterExt = AG_CheckboxNewFlag(fd, 0,
+	    _("Mask unknown files by extension"),
+	    &fd->flags, AG_FILEDLG_FILTER_EXT);
+	AG_SetEvent(fd->cbFilterExt, "checkbox-changed",
+	    FilterByExtSelected, "%p", fd);
+
+	/* OK/Cancel buttons */
+	fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
+	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
+	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
+	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
+
+	AG_AddEvent(fd, "widget-shown", Shown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindPointer(fd, "dirMRU", (void *)&fd->dirMRU);
@@ -1088,7 +1143,9 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_WidgetSizeReq(fd->tbFile, &rChld);
 	r->h += rChld.h+2;
 	AG_WidgetSizeReq(fd->comTypes, &rChld);
-	r->h += rChld.h+2;
+	r->h += rChld.h+4;
+	AG_WidgetSizeReq(fd->cbFilterExt, &rChld);
+	r->h += rChld.h+4;
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
 		AG_WidgetSizeReq(fd->btnOk, &rOk);
 		AG_WidgetSizeReq(fd->btnCancel, &rCancel);
@@ -1125,6 +1182,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h -= r.h;
 	AG_WidgetSizeReq(fd->comTypes, &r);
 	aChld.h -= r.h;
+	AG_WidgetSizeReq(fd->cbFilterExt, &r);
+	aChld.h -= r.h;
+	aChld.h -= 8;
 	AG_WidgetSizeAlloc(fd->hPane, &aChld);
 	aChld.y += aChld.h+4;
 
@@ -1144,7 +1204,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_WidgetSizeReq(fd->comTypes, &r);
 	aChld.h = r.h;
 	AG_WidgetSizeAlloc(fd->comTypes, &aChld);
-	aChld.y += aChld.h+2;
+	aChld.y += aChld.h+4;
+	AG_WidgetSizeReq(fd->cbFilterExt, &r);
+	aChld.h = r.h;
+	AG_WidgetSizeAlloc(fd->cbFilterExt, &aChld);
+	aChld.y += aChld.h+4;
 
 	/* Size buttons */
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
