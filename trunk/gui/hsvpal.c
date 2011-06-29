@@ -118,8 +118,9 @@ static __inline__ void
 UpdatePixelFromHSVA(AG_HSVPal *pal)
 {
 	Uint8 r, g, b, a;
-	AG_Variable *bFormat, *bv;
+	AG_Variable *bFormat, *bColor, *bv;
 	AG_PixelFormat **pFormat;
+	AG_Color *pColor;
 	void *v;
 
 	AG_HSV2RGB(AG_GetFloat(pal, "hue"),
@@ -189,6 +190,14 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	bFormat = AG_GetVariable(pal, "pixel-format", &pFormat);
 	AG_SetUint32(pal, "pixel", AG_MapPixelRGBA(*pFormat, r,g,b,a));
 	AG_UnlockVariable(bFormat);
+
+	bColor = AG_GetVariable(pal, "color", &pColor);
+	pColor->r = r;
+	pColor->g = g;
+	pColor->b = b;
+	pColor->a = a;
+	AG_UnlockVariable(bColor);
+
 	AG_Redraw(pal);
 }
 
@@ -676,6 +685,7 @@ OnAttach(AG_Event *event)
 	AG_HSVPal *pal = AG_SELF();
 	
 	pal->pixel = AG_MapPixelRGBA(agSurfaceFmt, 0,0,0,255);
+	pal->color = AG_ColorRGBA(0,0,0,255);
 	AG_BindPointer(pal, "pixel-format", (void *)&agSurfaceFmt);
 }
 
@@ -692,6 +702,7 @@ Init(void *obj)
 	pal->v = 0.0;
 	pal->a = 1.0;
 	pal->pixel = 0;
+	pal->color = AG_ColorRGBA(0,0,0,255);
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = AG_HSVPAL_SEL_NONE;
@@ -711,6 +722,7 @@ Init(void *obj)
 	AG_BindFloat(pal, "value", &pal->v);
 	AG_BindFloat(pal, "alpha", &pal->a);
 	AG_BindUint32(pal, "pixel", &pal->pixel);
+	AG_BindPointer(pal, "color", (void *)&pal->color);
 	AG_BindPointer(pal, "pixel-format", NULL);
 /*	AG_BindFloat(pal, "red", &pal->r); */
 /*	AG_BindFloat(pal, "green", &pal->g); */
