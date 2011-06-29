@@ -85,6 +85,9 @@ widget may be used instead.
 .Ft "AG_FileType *"
 .Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
+.Ft "void"
+.Fn AG_FileDlgRefresh "AG_FileDlg *file_dlg"
+.Pp
 .nr nS 0
 The
 .Fn AG_FileDlgNew
@@ -170,6 +173,11 @@ is a description of the file format and
 .Ft exts
 is a comma-separated list of file extensions to associate with the type, or
 an empty string.
+.Pp
+The
+.Fn AG_FileDlgRefresh
+function updates the displayed directory structure and current directory
+contents.
 .Pp
 .Sh OK/CANCEL ACTIONS
 By default, selecting a file will trigger the following checks:
