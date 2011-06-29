@@ -25,6 +25,7 @@ typedef struct ag_hsvpal {
 
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;			/* Calculated pixel */
+	AG_Color color;			/* Calculated color */
 	AG_Rect rAlpha;			/* Alpha selector rectangle */
 	AG_Surface *surface;		/* Cached surface */
 	int surfaceId;
