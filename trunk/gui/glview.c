@@ -255,6 +255,7 @@ AG_GLViewDraw(void *obj)
 	GLint vpSave[4];
 	Uint hView;
 
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glGetIntegerv(GL_VIEWPORT, vpSave);
 
 	if (glv->flags & AG_GLVIEW_INIT_MATRICES) {
@@ -289,7 +290,7 @@ AG_GLViewDraw(void *obj)
 	glPushMatrix();
 	glLoadMatrixf(glv->mModelview);
 
-	glPushAttrib(GL_TRANSFORM_BIT);
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_CLIP_PLANE0);
 	glDisable(GL_CLIP_PLANE1);
 	glDisable(GL_CLIP_PLANE2);
@@ -311,6 +312,7 @@ AG_GLViewDraw(void *obj)
 	
 	if (glv->overlay_ev != NULL)
 		glv->overlay_ev->handler(glv->overlay_ev);
+	glPopAttrib();
 }
 
 AG_WidgetClass agGLViewClass = {
