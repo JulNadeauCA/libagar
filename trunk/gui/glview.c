@@ -210,10 +210,8 @@ AG_GLViewReshape(AG_GLView *glv)
 {
 	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
 	if (glv->scale_ev != NULL) {
 		glv->scale_ev->handler(glv->scale_ev);
 	}
@@ -303,9 +301,9 @@ AG_GLViewDraw(void *obj)
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	glMatrixMode(GL_TEXTURE);
-	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);
 	glPopMatrix();
 	
 	glViewport(vpSave[0], vpSave[1], vpSave[2], vpSave[3]);
