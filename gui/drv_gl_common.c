@@ -233,12 +233,12 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	    AG_ALPHA_ONE_MINUS_SRC);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc.x, tc.y);	glVertex2i(x,      y);
 		glTexCoord2f(tc.w, tc.y);	glVertex2i(x+s->w, y);
-		glTexCoord2f(tc.x, tc.h);	glVertex2i(x,      y+s->h);
 		glTexCoord2f(tc.w, tc.h);	glVertex2i(x+s->w, y+s->h);
+		glTexCoord2f(tc.x, tc.h);	glVertex2i(x,      y+s->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -280,12 +280,12 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s,
 	    AG_ALPHA_ONE_MINUS_SRC);
 
 	glBindTexture(GL_TEXTURE_2D, widSrc->textures[s]);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
 		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
-		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
 		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
+		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -309,12 +309,12 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	    AG_ALPHA_ONE_MINUS_SRC);
 	
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc.x, tc.y);	glVertex2f( w2,  h2);
 		glTexCoord2f(tc.w, tc.y);	glVertex2f(-w2,  h2);
-		glTexCoord2f(tc.x, tc.h);	glVertex2f( w2, -h2);
 		glTexCoord2f(tc.w, tc.h);	glVertex2f(-w2, -h2);
+		glTexCoord2f(tc.x, tc.h);	glVertex2f( w2, -h2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -340,12 +340,12 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	    AG_ALPHA_ONE_MINUS_SRC);
 	
 	glBindTexture(GL_TEXTURE_2D, wid->textures[s]);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2f( w2,  h2);
 		glTexCoord2f(tc->w, tc->y);	glVertex2f(-w2,  h2);
-		glTexCoord2f(tc->x, tc->h);	glVertex2f( w2, -h2);
 		glTexCoord2f(tc->w, tc->h);	glVertex2f(-w2, -h2);
+		glTexCoord2f(tc->x, tc->h);	glVertex2f( w2, -h2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -368,12 +368,12 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	    AG_ALPHA_ONE_MINUS_SRC);
 	
 	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[s]);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->w, tc->y);	glVertex2f(0.0, 0.0);
 		glTexCoord2f(tc->x, tc->y);	glVertex2f(w,   0.0);
-		glTexCoord2f(tc->w, tc->h);	glVertex2f(0.0, h);
 		glTexCoord2f(tc->x, tc->h);	glVertex2f(w,   h);
+		glTexCoord2f(tc->w, tc->h);	glVertex2f(0.0, h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -886,12 +886,12 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 	const AG_TexCoord *tc = &gl->texcoords;
 
 	glBindTexture(GL_TEXTURE_2D, gl->texture);
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
 		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
-		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
 		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
+		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
