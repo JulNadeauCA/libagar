@@ -246,33 +246,39 @@ CreateMainWindow(void)
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
-		AG_Notebook *nb;
+		AG_Notebook *nb, *nbColor;
 		AG_NotebookTab *ntab;
+		int i;
+		
+		nb = AG_NotebookNew(hb, AG_NOTEBOOK_EXPAND);
 
 		/* Create the AG_GLView widget. */
-		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
-		AG_WidgetFocus(glv);
+		for (i = 0; i < 4; i++) {
+			ntab = AG_NotebookAddTab(nb, "Tab", AG_BOX_VERT);
+			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
+			AG_WidgetFocus(glv);
 
-		/* Set up our callback functions. */ 
-		AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
-		AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
-		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
-		AG_GLViewButtondownFn(glv, ButtonDown, NULL);
+			/* Set up our callback functions. */ 
+			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
+			AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
+			AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
+			AG_GLViewButtondownFn(glv, ButtonDown, NULL);
+		}
 
 		/* Edit ambient and diffuse color components. */
-		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
+		nbColor = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
 		{
-			ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
+			ntab = AG_NotebookAddTab(nbColor, "Amb", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
 			AG_BindFloat(pal, "RGBAv", ambient);
 
-			ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
+			ntab = AG_NotebookAddTab(nbColor, "Dif", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
 			AG_BindFloat(pal, "RGBAv", diffuse);
 
-			ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
+			ntab = AG_NotebookAddTab(nbColor, "Spe", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
 			AG_BindFloat(pal, "RGBAv", specular);
