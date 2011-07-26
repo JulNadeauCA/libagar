@@ -500,6 +500,10 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 	return (0);
 }
 
+#ifdef AGAR_DEBUG
+#include "drv_wgl_prwincmd.inc"
+#endif
+
 /* 
  * Window procedure. We only translate and queue events for later retrieval
  * by getNextEvent().
@@ -524,6 +528,10 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	dev->win = win;
 	drv = WIDGET(win)->drv;
+
+#ifdef AGAR_DEBUG
+	WGL_Print_WinMsg(win, uMsg, wParam, lParam);
+#endif
 
 	switch (uMsg) {
 	case WM_MOUSEMOVE:
