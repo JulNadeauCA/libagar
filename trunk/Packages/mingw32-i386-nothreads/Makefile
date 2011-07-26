@@ -8,7 +8,7 @@ CONFIGURE_ARGS=	--disable-threads \
 		--disable-network \
 		--with-gl \
 		--with-freetype \
-		--without-jpeg
-		--includes=link 
+		--without-jpeg \
+		--includes=link
 
 include ../Makefile.inc
