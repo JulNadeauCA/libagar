@@ -634,6 +634,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		goto ret0;
 	case WM_MOVE:
+		dev->type = AG_DRIVER_UNKNOWN;
 		WIDGET(win)->x = (int)(short)LOWORD(lParam);
 		WIDGET(win)->y = (int)(short)HIWORD(lParam);
 		goto ret0;
