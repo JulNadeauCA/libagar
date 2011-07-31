@@ -82,7 +82,8 @@ OnAttach(AG_Event *event)
 {
 	AG_Widget *parent = AG_SENDER();
 
-	if (!(AGDRIVER_CLASS(parent->drv)->flags & AG_DRIVER_OPENGL))
+	if (parent->drv != NULL &&
+	    !(AGDRIVER_CLASS(parent->drv)->flags & AG_DRIVER_OPENGL))
 		AG_FatalError("AG_GLView requires a driver with GL support");
 }
 
