@@ -68,7 +68,7 @@ structure.
 .Fn AG_ComboSizeHint "AG_Combo *combo" "const char *text" "int nitems"
 .Pp
 .Ft "void"
-.Fn AG_ComboSizeHintPixels "AG_Combo *combo" "int w" "int h"
+.Fn AG_ComboSizeHintPixels "AG_Combo *combo" "int w" "int nitems"
 .Pp
 .nr nS 0
 The
@@ -116,7 +116,7 @@ widget displayed on popup to request a size large enough to display the given
 number of items.
 The
 .Fn AG_ComboSizeHintPixels
-variant specifies the size of the list in pixels.
+variant specifies the width in number of pixels.
 .Sh ITEM SELECTION
 .nr nS 1
 .Ft void
