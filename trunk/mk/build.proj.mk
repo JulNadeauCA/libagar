@@ -75,14 +75,6 @@ proj:
 		echo "* Target options: $$_tgtopts"; \
 		echo "*"; \
 		\
-		if [ -e "config" ]; then \
-			echo "rm -fR config"; \
-			rm -fR config; \
-		fi; \
-		if [ -e "${PROJCONFIGDIR}" ]; then \
-			echo "rm -fR ${PROJCONFIGDIR}"; \
-			rm -fR "${PROJCONFIGDIR}"; \
-		fi; \
 		echo "mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
 		    --output-lua=${TOP}/configure.lua > configure.tmp"; \
 		cat configure.in | \
@@ -104,12 +96,6 @@ proj:
 		env PROJTARGET="$$_tgtproj" PROJOS="$$_tgtos" \
 		    ${MAKE} proj-package-subdir; \
 		\
-		if [ "${PROJCONFIGDIR}" != "" ]; then \
-			echo "rm -fR ${PROJCONFIGDIR}"; \
-			rm -fR ${PROJCONFIGDIR}; \
-			echo "mv -f config ${PROJCONFIGDIR}"; \
-			mv -f config ${PROJCONFIGDIR}; \
-		fi; \
 		if [ "${PROJNOCLEAN}" = "no" ]; then \
 			echo "rm -f configure.tmp config.log"; \
 			rm -f configure.tmp config.log; \
