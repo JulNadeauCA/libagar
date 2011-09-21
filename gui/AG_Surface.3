@@ -419,6 +419,26 @@ If the surface has an alpha-channel, it is ignored.
 .Fn AG_PixelFormatFree "AG_PixelFormat *format"
 .Pp
 .nr nS 0
+.\" MANLINK(AG_PixelFormat)
+The
+.Ft AG_PixelFormat
+structure describes a general indexed or packed-pixel surface
+format.
+It is defined as follows:
+.Bd -literal
+typedef struct ag_pixel_format {
+	AG_Palette *palette;                 /* For indexed formats */
+
+	Uint8   BitsPerPixel;                /* Depth (bits/pixel) */
+	Uint8   BytesPerPixel;               /* Depth (bytes/pixel) */
+	Uint8   Rloss, Gloss, Bloss, Aloss;
+	Uint8   Rshift, Gshift, Bshift, Ashift;
+	Uint32  Rmask, Gmask, Bmask, Amask;
+	Uint32  colorkey;                    /* Color key pixel */
+	Uint8   alpha;                       /* Per-surface alpha value */
+} AG_PixelFormat;
+.Ed
+.Pp
 The
 .Fn AG_PixelFormatRGB
 and
