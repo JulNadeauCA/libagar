@@ -35,9 +35,10 @@ typedef struct ag_surface {
 	enum ag_surface_type type;	/* Type of surface */
 	AG_PixelFormat *format;		/* Pixel format */
 	Uint flags;
-#define AG_SRCCOLORKEY	0x01		/* Enable color key for blit as src */
-#define AG_SRCALPHA	0x02		/* Enable alpha for blit as src */
-#define AG_SAVED_SURFACE_FLAGS (AG_SRCCOLORKEY|AG_SRCALPHA)
+#define AG_SRCCOLORKEY		0x01	/* Enable color key for blit as src */
+#define AG_SRCALPHA		0x02	/* Enable alpha for blit as src */
+#define AG_SURFACE_GLTEXTURE	0x04	/* Use directly as OpenGL texture */
+#define AG_SAVED_SURFACE_FLAGS	(AG_SRCCOLORKEY|AG_SRCALPHA|AG_SURFACE_GLTEXTURE)
 	Uint w, h;			/* Size in pixels */
 	Uint pitch;			/* Scanline size in bytes */
 	void *pixels;			/* Raw pixel data */
@@ -66,6 +67,7 @@ typedef enum ag_blend_func {
 
 __BEGIN_DECLS
 extern AG_PixelFormat *agSurfaceFmt;  /* Recommended format for new surfaces */
+extern AG_PixelFormat *agTextureFmt;  /* Recommended format for textures */
 
 AG_PixelFormat *AG_PixelFormatRGB(int, Uint32, Uint32, Uint32);
 AG_PixelFormat *AG_PixelFormatRGBA(int, Uint32, Uint32, Uint32, Uint32);
@@ -85,6 +87,8 @@ AG_Surface     *AG_SurfaceFromPixelsRGB(const void *, Uint, Uint, int, Uint32,
                                         Uint32, Uint32);
 AG_Surface     *AG_SurfaceFromPixelsRGBA(const void *, Uint, Uint, int, Uint32,
                                          Uint32, Uint32, Uint32);
+AG_Surface     *AG_SurfaceStdGL(Uint, Uint);
+
 int             AG_SurfaceSetPalette(AG_Surface *, AG_Color *, Uint, Uint);
 AG_Surface     *AG_SurfaceDup(const AG_Surface *);
 AG_Surface     *AG_SurfaceConvert(const AG_Surface *, const AG_PixelFormat *);

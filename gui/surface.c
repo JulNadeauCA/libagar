@@ -46,6 +46,7 @@ const char *agBlendFuncNames[] = {
 };
 
 AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for new surfaces */
+AG_PixelFormat *agTextureFmt = NULL;  /* Recommended format for textures */
 
 #define COMPUTE_SHIFTLOSS(mask, shift, loss) \
 	shift = 0; \
@@ -358,6 +359,40 @@ AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, int bpp,
 	return (s);
 }
 
+/*
+ * Create a new surface suitable to be used as an OpenGL texture. The
+ * returned surface size may be different from requested (unless the
+ * NPOT extension is available).
+ */
+AG_Surface *
+AG_SurfaceStdGL(Uint rw, Uint rh)
+{
+	AG_Surface *gsu;
+	int w, h;
+
+	/* TODO check for GL_ARB_texture_non_power_of_two. */
+	w = PowOf2i(rw);
+	h = PowOf2i(rh);
+	gsu = AG_SurfaceRGBA(w, h, 32, 0,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
+#else
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+#endif
+	);
+	if (gsu == NULL) {
+		return (NULL);
+	}
+	gsu->flags |= AG_SURFACE_GLTEXTURE;
+	return (gsu);
+}
+
 /* Set one or more entries in an indexed surface's palette. */
 int
 AG_SurfaceSetPalette(AG_Surface *su, AG_Color *c, Uint offs, Uint count)
@@ -498,9 +533,8 @@ AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
 	        (ds->clipRect.x+ds->clipRect.w - dr.x) : sr.w;
 	dr.h = (dr.y+sr.h > ds->clipRect.y+ds->clipRect.h) ?
 	        (ds->clipRect.y+ds->clipRect.h - dr.y) : sr.h;
- 
+
 	/* XXX TODO optimized cases */
-	/* XXX TODO per-surface alpha */
 	for (y = 0; y < dr.h; y++) {
 		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch;
 		pDst = (Uint8 *)ds->pixels + (dr.y+y)*ds->pitch +
@@ -514,12 +548,18 @@ AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
 				continue;
 			}
 			C = AG_GetColorRGBA(pixel, ss->format);
-			if ((C.a != AG_ALPHA_OPAQUE) &&
-			    (ss->flags & AG_SRCALPHA)) {
+			if (ss->format->alpha != AG_ALPHA_OPAQUE) {
+				/* Apply per-surface alpha */
+				C.a *= ss->format->alpha/255;
 				AG_SurfaceBlendPixel(ds, pDst, C, AG_ALPHA_SRC);
 			} else {
-				AG_PUT_PIXEL(ds, pDst,
-				    AG_MapColorRGB(ds->format, C));
+				if ((C.a != AG_ALPHA_OPAQUE) &&
+				    (ss->flags & AG_SRCALPHA)) {
+					AG_SurfaceBlendPixel(ds, pDst, C, AG_ALPHA_SRC);
+				} else {
+					AG_PUT_PIXEL(ds, pDst,
+					    AG_MapColorRGB(ds->format, C));
+				}
 			}
 			pSrc += ss->format->BytesPerPixel;
 			pDst += ds->format->BytesPerPixel;

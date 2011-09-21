@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,9 @@ as
 .Fn AG_SurfaceFromPixelsRGBA "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_SurfaceStdGL "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_SurfaceFromPNG "const char *path"
 .Pp
 .Ft "AG_Surface *"
@@ -137,7 +140,7 @@ Color-index format (per-surface palette)
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_SRCCOLORKEY "
+.Bl -tag -width "AG_SURFACE_GLTEXTURE "
 .It AG_SRCCOLORKEY
 Enable colorkeying.
 In
@@ -154,6 +157,13 @@ this option enables blending of pixels in the source and destination surfaces
 based on the alpha component of the source pixel.
 .Fn AG_SetAlpha
 controls this flag.
+.It AG_SURFACE_GLTEXTURE
+Surface is suitable to be uploaded directly as an OpenGL texture without
+format conversion.
+This flag is recognized by
+.Xr AG_GL_UploadTexture 3
+and
+.Xr AG_GL_UpdateTexture 3 .
 .El
 .Pp
 The
@@ -211,6 +221,16 @@ The
 function also sets the
 .Dv AG_SRCALPHA
 flag.
+.Pp
+The
+.Fn AG_SurfaceStdGL
+function creates a surface in an optimal format for OpenGL textures
+(packed, 32 bits per pixel with native RGB masks).
+It also sets the
+.Dv AG_SURFACE_GLTEXTURE
+flag on the new surface.
+The function does not use OpenGL itself and is available regardless
+of whether Agar was compiled with OpenGL support.
 .Pp
 The
 .Fn AG_SurfaceFromPNG ,

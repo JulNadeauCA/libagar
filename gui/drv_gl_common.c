@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,38 +88,25 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 
 /* Generic UploadTexture() for GL drivers. */
 void
-AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
+AG_GL_UploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 {
-	AG_Surface *suTex;
+	AG_Surface *gsu;
 	GLuint texture;
-	int w, h;
 
-	/* Convert to the GL_RGBA/GL_UNSIGNED_BYTE format. */
-	w = PowOf2i(suSrc->w);
-	h = PowOf2i(suSrc->h);
+	if (su->flags & AG_SURFACE_GLTEXTURE) {
+		gsu = su;
+	} else {
+		if ((gsu = AG_SurfaceStdGL(su->w, su->h)) == NULL) {
+			AG_FatalError(NULL);
+		}
+		AG_SurfaceCopy(gsu, su);
+	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)suSrc->w / w;
-		tc->h = (float)suSrc->h / h;
+		tc->w = (float)su->w / gsu->w;
+		tc->h = (float)su->h / gsu->h;
 	}
-	suTex = AG_SurfaceRGBA(w,h, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	    );
-	if (suTex == NULL) {
-		AG_FatalError(NULL);
-	}
-	AG_SurfaceCopy(suTex, suSrc);
 	
 	/* Upload as an OpenGL texture. */
 	glGenTextures(1, &texture);
@@ -131,11 +118,16 @@ AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 #endif
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-	    GL_UNSIGNED_BYTE, suTex->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+	    gsu->w, gsu->h, 0,
+	    GL_RGBA,
+	    GL_UNSIGNED_BYTE,
+	    gsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	AG_SurfaceFree(suTex);
+	if (!(su->flags & AG_SURFACE_GLTEXTURE)) {
+		AG_SurfaceFree(gsu);
+	}
 	*rv = texture;
 }
 
@@ -143,47 +135,34 @@ AG_GL_UploadTexture(Uint *rv, AG_Surface *suSrc, AG_TexCoord *tc)
 int
 AG_GL_UpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
 {
-	AG_Surface *suTex;
-	int w, h;
+	AG_Surface *gsu;
 
-	/*
-	 * Convert to the GL_RGBA/GL_UNSIGNED_BYTE format and adjust for
-	 * power-of-two dimensions.
-	 * TODO check for GL_ARB_texture_non_power_of_two.
-	 */
-	w = PowOf2i(su->w);
-	h = PowOf2i(su->h);
+	if (su->flags & AG_SURFACE_GLTEXTURE) {
+		gsu = su;
+	} else {
+		if ((gsu = AG_SurfaceStdGL(su->w, su->h)) == NULL) {
+			return (-1);
+		}
+		AG_SurfaceCopy(gsu, su);
+	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)su->w / w;
-		tc->h = (float)su->h / h;
+		tc->w = (float)gsu->w / su->w;
+		tc->h = (float)gsu->h / su->h;
 	}
-	suTex = AG_SurfaceRGBA(w,h, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	);
-	if (suTex == NULL) {
-		return (-1);
-	}
-	AG_SurfaceCopy(suTex, su);
 
-	/* Upload as an OpenGL texture. */
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-	    GL_UNSIGNED_BYTE, suTex->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+	    gsu->w, gsu->h, 0,
+	    GL_RGBA,
+	    GL_UNSIGNED_BYTE,
+	    gsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	AG_SurfaceFree(suTex);
+	if (!(su->flags & AG_SURFACE_GLTEXTURE)) {
+		AG_SurfaceFree(gsu);
+	}
 	return (0);
 }
 
@@ -404,17 +383,13 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT,
 		    &h);
 
-		su = AG_SurfaceRGBA(w, h, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-			0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
-#else
-			0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-#endif
-		);
-		if (su == NULL) {
-			AG_FatalError("Allocating texture: %s", AG_GetError());
+		if ((su = AG_SurfaceStdGL(w, h)) == NULL) {
+			AG_FatalError("Backup texture: %s",
+			    AG_GetError());
 		}
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		glGetTexImage(GL_TEXTURE_2D, 0,
+		    GL_RGBA,
+		    GL_UNSIGNED_BYTE,
 		    su->pixels);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		wid->surfaces[i] = su;
@@ -482,7 +457,9 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	}
 	AG_PackedPixelFlip(pixels, wid->h, wid->w*4);
-	*s = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 32,
+	*s = AG_SurfaceFromPixelsRGBA(pixels,
+	    wid->w, wid->h,
+	    32,
 	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
 	if (*s == NULL) {
 		Free(pixels);
