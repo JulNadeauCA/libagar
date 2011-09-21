@@ -204,7 +204,7 @@ GLX_Open(void *obj, const char *spec)
 
 	if (agDisplay == NULL) {
 		if (InitGlobals() == -1) {
-			goto fail;
+			return (-1);
 		}
 		initedGlobals = 1;
 	}
