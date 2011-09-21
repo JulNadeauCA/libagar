@@ -8,11 +8,11 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_unit {
-	char *key;		/* Key */
-	char *abbr;		/* Symbol */
-	char *name;		/* Long name */
-	double divider;		/* Base unit divider (for linear conv) */
-	double (*func)(double, int);	/* For nonlinear conversions */
+	char *key;			/* Key */
+	char *abbr;			/* Abbreviated symbol */
+	char *name;			/* Long name */
+	double divider;			/* Conversion factor (linear) */
+	double (*func)(double, int);	/* Function (nonlinear) */
 } AG_Unit;
 
 __BEGIN_DECLS
@@ -34,6 +34,7 @@ extern const int agnUnitGroups;
 extern const AG_Unit agIdentityUnit[];
 extern const AG_Unit agLengthUnits[];
 extern const AG_Unit agAngleUnits[];
+extern const AG_Unit agPercentageUnits[];
 extern const AG_Unit agVideoUnits[];
 extern const AG_Unit agAreaUnits[];
 extern const AG_Unit agVolumeUnits[];
@@ -43,6 +44,8 @@ extern const AG_Unit agTimeUnits[];
 extern const AG_Unit agCurrentUnits[];
 extern const AG_Unit agTemperatureUnits[];
 extern const AG_Unit agSubstanceAmountUnits[];
+extern const AG_Unit agEnergyPerSubstanceAmountUnits[];
+extern const AG_Unit agMolarHeatCapacityUnits[];
 extern const AG_Unit agLightUnits[];
 extern const AG_Unit agPowerUnits[];
 extern const AG_Unit agEMFUnits[];
@@ -53,10 +56,12 @@ extern const AG_Unit agCapacitanceUnits[];
 extern const AG_Unit agInductanceUnits[];
 extern const AG_Unit agFrequencyUnits[];
 extern const AG_Unit agPressureUnits[];
-extern const AG_Unit agMetabolicExpenditureUnits[];
-extern const AG_Unit agPercentageUnits[];
-extern const AG_Unit agKUnits[];
 extern const AG_Unit agVacuumUnits[];
+extern const AG_Unit agKUnits[];
+extern const AG_Unit agResistivityUnits[];
+extern const AG_Unit agThermalConductivityUnits[];
+extern const AG_Unit agThermalExpansionUnits[];
+extern const AG_Unit agDensityUnits[];
 
 static __inline__ double
 AG_Unit2Base(double n, const AG_Unit *unit)
