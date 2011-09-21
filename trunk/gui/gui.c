@@ -401,8 +401,9 @@ AG_InitGraphics(const char *spec)
 		/* Open the video display. */
 		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0,0,
 		    AG_VIDEO_RESIZABLE) == -1) {
-			AG_DriverClose(drv);
-			goto fail;
+			AG_SetError("%s: %s", OBJECT(drv)->name,
+			    AG_GetError());
+			goto fail_close;
 		}
 #ifdef AG_DEBUG
 		if (drv->videoFmt == NULL)
@@ -413,7 +414,7 @@ AG_InitGraphics(const char *spec)
 
 	/* Generic Agar-GUI initialization. */
 	if (AG_InitGUI(0) == -1)
-		goto fail;
+		goto fail_close;
 
 	agDriverOps = dc;
 	agDriverSw = (dc->wm == AG_WM_SINGLE) ? AGDRIVER_SW(drv) : NULL;
@@ -421,8 +422,9 @@ AG_InitGraphics(const char *spec)
 	agView = drv;
 #endif
 	return (0);
-fail:
+fail_close:
 	if (drv != NULL) { AG_DriverClose(drv); }
+fail:
 	AG_DestroyGUIGlobals();
 	return (-1);
 }
