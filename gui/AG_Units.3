@@ -1,4 +1,4 @@
-.\" Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2004-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,69 +38,98 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-facility implements linear as well as nonlinear unit conversion.
-Each unit is attributed an abbreviation and a long name.
-A numerical coefficient is associated with linear units and a function pointer
-is associated with nonlinear units.
-.Pp
+interface implements unit conversion.
 The
-.Xr AG_Numerical 3
-widget uses this interface.
+.Ft AG_Unit
+structure is defined as follows:
+.Bd -literal
+typedef struct ag_unit {
+	char *key;                    /* Key */
+	char *abbr;                   /* Abbreviated symbol */
+	char *name;                   /* Long name */
+	double divider;               /* Conversion factor (linear) */
+	double (*func)(double, int);  /* Function (nonlinear) */
+} AG_Unit;
+.Ed
 .Pp
-Units are arranged in unit groups, and Agar's
-.Pa agar/gui/units.c
-defines the groups:
+Built-in conversion units are defined in
+.Pa gui/units.c
+in the Agar sources.
+The following built-in groups are available:
 .Pp
-.Bl -tag -compact -width "agSubstanceAmountUnits "
+.Sh GENERAL
+.Bl -tag -compact -width "agPercentageUnits "
+.It agPercentageUnits
+Value in percentile
+.It agFrequencyUnits
+Units of frequency
+.It agTimeUnits
+Units of time
+.El
+.Sh LENGTHS & ANGLES
+.Bl -tag -compact -width "agLengthUnits "
 .It agLengthUnits
 Units of length/distance
+.It agAngleUnits
+Units of angular measurement
+.It agVideoUnits
+Units of video pixel resolution
 .It agAreaUnits
 Units of area
 .It agVolumeUnits
 Units of volume
 .It agSpeedUnits
-Units of speed or velocity
+Units of velocity
+.El
+.Sh PHYSICAL
+.Bl -tag -compact -width "agThermalConductivityUnits "
 .It agMassUnits
 Units of weight
-.It agTimeUnits
-Units of time
-.It agCurrentUnits
-Units of electrical current
-.It agTemperatureUnits
-Units of temperature
-.It agSubstanceAmountUnits
-Units of substance amount
+.It agPressureUnits
+Units of pressure and stress (general)
+.It agVacuumUnits
+Units of pressure (low pressures)
+.It agThermalConductivityUnits
+Units of thermal conductivity
+.It agThermalExpansionUnits
+Units of thermal expansion
+.It agDensityUnits
+Units of density
 .It agLightUnits
-Units of light measurement
+Units of light intensity
+.It agSubstanceAmountUnits
+Units of substance amount (moles)
+.El
+.Sh THERMODYNAMICS
+.Bl -tag -compact -width "agEnergyPerSubstanceAmountUnits "
 .It agPowerUnits
 Units of power
+.It agTemperatureUnits
+Units of temperature
+.It agEnergyPerSubstanceAmountUnits
+Units of energy per substance amount
+.It agMolarHeatCapacityUnits
+Units of molar heat capacity
+.El
+.Sh ELECTRICAL
+.Bl -tag -compact -width "agResistanceTC1Units "
 .It agEMFUnits
-Units of electromotive force
+Units of electromotive force / voltage
+.It agCurrentUnits
+Units of electrical current
 .It agResistanceUnits
 Units of electrical resistance
 .It agResistanceTC1Units
 Units of first-order temperature coefficients
 .It agResistanceTC2Units
 Units of second-order temperature coefficients
+.It agResistivityUnits
+Units of resistivity of a material
 .It agCapacitanceUnits
 Units of electrical capacitance
 .It agInductanceUnits
 Units of electrical inductance
-.It agFrequencyUnits
-Units of frequency
-.It agPressureUnits
-Units of pressure and stress
-.It agMetabolicExpenditureUnits
-Units of metabolic expenditure
-(somewhat humorous)
 .El
-.Pp
-The compile-time option
-.Dv ASTRONOMICAL_UNITS
-controls the inclusion of astronomical units of length and pressure.
-If
-.Dv HISTORICAL_UNITS
-is defined, historical units of weight and measure are included as well.
 .Sh INTERFACE
 .nr nS 1
 .Ft "const AG_Unit *"
@@ -155,6 +184,19 @@ converts
 .Fa n
 base units to the equivalent number of specified units.
 .Sh EXAMPLES
+One widget which uses this interface is 
+.Xr AG_Numerical 3 ,
+which accepts
+.Fa unit
+arguments.
+The following code fragment creates a widget for editing
+a length value given in meters:
+.Bd -literal
+float length = 1.234;
+AG_Numerical *num;
+num = AG_NumericalNewFlt(parent, 0, "m", "Length: ", &length)
+.Ed
+.Pp
 The following code fragment prints the equivalent milliseconds for a given
 .Va n
 number of seconds:

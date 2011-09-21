@@ -75,6 +75,7 @@ const AG_Unit *agUnitGroups[] = {
 	agCurrentUnits,
 	agTemperatureUnits,
 	agSubstanceAmountUnits,
+	agEnergyPerSubstanceAmountUnits,
 	agLightUnits,
 	agPowerUnits,
 	agEMFUnits,
@@ -86,9 +87,12 @@ const AG_Unit *agUnitGroups[] = {
 	agFrequencyUnits,
 	agPressureUnits,
 	agVacuumUnits,
-	agMetabolicExpenditureUnits,
 	agPercentageUnits,
 	agKUnits,
+	agResistivityUnits,
+	agThermalConductivityUnits,
+	agThermalExpansionUnits,
+	agDensityUnits,
 };
 const int agnUnitGroups = sizeof(agUnitGroups) / sizeof(agUnitGroups[0]);
 
@@ -355,6 +359,22 @@ const AG_Unit agSubstanceAmountUnits[] = {
 	{ NULL,	NULL, NULL,				0, NULL }
 };
 
+/* Units of energy per substance amount */
+const AG_Unit agEnergyPerSubstanceAmountUnits[] = {
+	{ "J/mol", "", "Joules per mole",		1e-3, NULL },
+	{ "kJ/mol", "", "Kilojoules per mole",		1.0, NULL },
+	{ "MJ/mol", "", "Megajoules per mole",		1e3, NULL },
+	{ NULL,	NULL, NULL,				0, NULL }
+};
+
+/* Units of molar heat capacity */
+const AG_Unit agMolarHeatCapacityUnits[] = {
+	{ "J/mol.k", "J/mol\xc2\xb7k", "Joules per mole kelvin",	1.0, NULL },
+	{ "kJ/mol.k", "kJ/mol\xc2\xb7k", "Kilojoules per mole kelvin",	1e3, NULL },
+	{ "MJ/mol.k", "MJ/mol\xc2\xb7k", "Megajoules per mole kelvin",	1e6, NULL },
+	{ NULL,	NULL, NULL,						0, NULL }
+};
+
 /* Units of light measurement */
 const AG_Unit agLightUnits[] = {
 	{ "ucd", "\xc2\xb5\x63\x64", "Microcandelas",		1e-6, NULL },
@@ -393,10 +413,10 @@ const AG_Unit agEMFUnits[] = {
 
 /* Units of electrical resistance */
 const AG_Unit agResistanceUnits[] = {
-	{ "uohm", "\xc2\xb5\xce\xa9", "Microohms",	1e-6, NULL },
+	{ "uohm", "\xc2\xb5\xce\xa9", "Micro-ohms",	1e-6, NULL },
 	{ "mohm", "m\xce\xa9", "Milliohms",		1e-3, NULL },
 	{ "ohm", "\xce\xa9", "Ohms",			1.0, NULL },
-	{ "kohm", "k\xce\xa9",	"Kilohms",		1e3, NULL },
+	{ "kohm", "k\xce\xa9",	"Kilo-ohms",		1e3, NULL },
 	{ "Mohm", "M\xce\xa9", N_("Megaohms"),		1e6, NULL },
 	{ NULL, NULL, NULL,				0, NULL }
 };
@@ -455,9 +475,11 @@ const AG_Unit agFrequencyUnits[] = {
 /* Units of pressure and stress */
 const AG_Unit agPressureUnits[] = {
 	{ "Pa",        "",                "Pascals",			1.0, NULL },
-	{ "mbar",      "",                "Millibars",			1e2, NULL },
 	{ "kPa",       "",                "Kilopascals",		1e3, NULL },
+	{ "MPa",       "",                N_("Megapascals"),		1e6, NULL },
+	{ "GPa",       "",                "Gigapascals",		1e9, NULL },
 	{ "bar",       "",                "Bars",			1e5, NULL },
+	{ "mbar",      "",                "Millibars",			1e2, NULL },
 	{ "Kg-f/m^2",  "Kg-f/m\xc2\xb2",  N_("Kg-force per m\xc2\xb2"),	9.80665, NULL },
 	{ "cm H2O",    "cm H\xc2\xb2O",   N_("Centimeters of water"),	98.0665, NULL },
 	{ "in H2O",    "in H\xc2\xb2O",   N_("Inches of water"),	249.08891, NULL },
@@ -493,29 +515,6 @@ const AG_Unit agVacuumUnits[] = {
 	{ NULL, NULL, NULL, 0.0, NULL }
 };
 
-/* Units of metabolic cost (ie. physical activity) */
-const AG_Unit agMetabolicExpenditureUnits[] = {
-	{ "MET", "", N_("Metabolic equivalent"),		1.0, NULL },
-	{ "MESS", "", N_("Attending church"),			2.5, NULL },
-	{ "Kcal/min", "", N_("Kilokalories per minute"),	1.0, NULL },
-	{ "O2/kg", "O\xc2/kg", "Millilitres O\xc2/kg/min",	3.5, NULL },
-	{ "Slo-mos", "", N_("Slow walking (<=2.0mph)"),		2.0, NULL },
-	{ "Marches", "", N_("Moderate walking (3.0mph)"),	3.5, NULL },
-	{ "Supermarches", "", N_("Walking - brisk (3.5mph)"),	4.0, NULL },
-	{ "Treks", "",	N_("Walking (3.5mph) + biking (10-11.9mph)"), 6, NULL},
-	{ "Hypermarches", "", N_("Walking - very brisk (4.5mph)"), 4.5,	NULL },
-	{ "Bikes", "", N_("Moderate biking (12-13.9mph)"),	8, NULL },
-	{ "Superbikes", "", N_("Vigorous biking (14-15.9mph)"),	10, NULL },
-	{ "Megabikes", "", N_("Race biking (16-19mph)"),	12, NULL },
-	{ "Gigabikes", "", N_("Race biking (>20mph)"),		16, NULL },
-	{ "Buttes", "", N_("Mountain and rock climbing"),	8, NULL },
-	{ "Yogas", "", N_("Stretching, yoga"),			4, NULL },
-	{ "Skis", "", N_("General/cross-country skiing"),	7, NULL },
-	{ "Superskis", "", N_("Cross-country/moderate skiing"),	8, NULL },
-	{ "Hyperskis", "", N_("Cross-country/vigorous skiing"),	14, NULL },
-	{ NULL, NULL, NULL,					0, NULL }
-};
-
 const AG_Unit agPercentageUnits[] = {
 	{ "%", "", N_("Percent"),	1.0, NULL },
 	{ NULL, NULL, NULL,		0.0, NULL }
@@ -529,3 +528,34 @@ const AG_Unit agKUnits[] = {
 	{ NULL, NULL, NULL, 0.0, NULL }
 };
 
+/* Units of resistivity in a material */
+const AG_Unit agResistivityUnits[] = {
+	{ "uohm/m", "\xc2\xb5\xce\xa9/m", "Micro-ohms per meter", 1e-6, NULL },
+	{ "mohm/m", "m\xce\xa9/m", "Milliohms per meter",	1e-3, NULL },
+	{ "ohm/m", "\xce\xa9/m", "Ohms per meter",		1.0, NULL },
+	{ "kohm/m", "k\xce\xa9/m", "Kilo-ohms per meter",	1e3, NULL },
+	{ "Mohm/m", "M\xce\xa9/m", N_("Megaohms per meter"),	1e6, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
+};
+
+/* Units of thermal conductivity of a material */
+const AG_Unit agThermalConductivityUnits[] = {
+	{ "W/m.k", "W/m\xc2\xb7k", "Watts per meter kelvin",	1.0, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
+};
+
+/* Units of thermal expansion of a material */
+const AG_Unit agThermalExpansionUnits[] = {
+	{ "um/m.k", "um/m\xc2\xb7k", "Micrometers per meter kelvin",	1.0, NULL },
+	{ "mm/m.k", "mm/m\xc2\xb7k", "Millimeters per meter kelvin",	1e3, NULL },
+	{ "m/m.k", "m/m\xc2\xb7k", "Meters per meter kelvin",		1e6, NULL },
+	{ NULL, NULL, NULL,						0, NULL }
+};
+
+/* Units of density of a material */
+const AG_Unit agDensityUnits[] = {
+	{ "mg/cm^3", "mg/cm\xc2\xb3", "Milligrams per cubic centimeter",	1e-3, NULL },
+	{ "g/cm^3", "g/cm\xc2\xb3", "Grams per cubic centimeter",		1.0, NULL },
+	{ "kg/cm^3", "kg/cm\xc2\xb3", "Kilograms per cubic centimeters",	1e3, NULL },
+	{ NULL, NULL, NULL,							0, NULL }
+};
