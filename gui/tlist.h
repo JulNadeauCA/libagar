@@ -106,6 +106,7 @@ void      AG_TlistSizeHintLargest(AG_Tlist *, int);
 #define   AG_TlistPrescale AG_TlistSizeHint
 
 void      AG_TlistSetItemHeight(AG_Tlist *, int);
+void      AG_TlistSetIconWidth(AG_Tlist *, int);
 void      AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 void      AG_TlistSetRefresh(AG_Tlist *, int);
 
