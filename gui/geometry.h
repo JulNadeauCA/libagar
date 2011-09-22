@@ -40,6 +40,12 @@ typedef struct ag_texcoord {
 
 __BEGIN_DECLS
 
+AG_Rect  AG_ReadRect(AG_DataSource *);
+void     AG_WriteRect(AG_DataSource *, AG_Rect);
+
+#define  AG_ReadRect2(ds)    AG_RectToRect2(AG_ReadRect(ds))
+#define  AG_WriteRect2(ds,r) AG_WriteRect(ds, AG_Rect2ToRect(r))
+
 /* Return a Point at x,y. */
 static __inline__ AG_Point
 AG_POINT(int x, int y)
