@@ -72,6 +72,18 @@ over
 .Fn AG_RECT2 "int x" "int y" "int w" "int h"
 .Pp
 .Ft AG_Rect
+.Fn AG_ReadRect "AG_DataSource *ds"
+.Pp
+.Ft AG_Rect2
+.Fn AG_ReadRect2 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn AG_WriteRect "AG_DataSource *ds" "AG_Rect r"
+.Pp
+.Ft void
+.Fn AG_WriteRect2 "AG_DataSource *ds" "AG_Rect2 r"
+.Pp
+.Ft AG_Rect
 .Fn AG_Rect2ToRect "AG_Rect2 r"
 .Pp
 .Ft AG_Rect2
@@ -113,7 +125,7 @@ The
 .Fn AG_RECT
 routine returns an
 .Ft AG_Rect
-from the given coordinates
+structure initialized to the given coordinates
 .Fa x ,
 .Fa y
 and dimensions
@@ -123,6 +135,13 @@ The
 .Fn AG_RECT2
 variant returns an
 .Ft AG_Rect2 .
+.Pp
+The
+.Fn AG_ReadRect
+function loads a rectangle from the given
+.Xr AG_DataSource 3 .
+.Fn AG_WriteRect
+writes a rectangle to a data source.
 .Pp
 The
 .Fn AG_RectToRect2
