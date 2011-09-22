@@ -800,9 +800,6 @@ The
 function frees any dynamically allocated resources by invoking the
 .Fn reinit
 of every class in the inheritance hierachy.
-The function also clears the
-.Dv AG_OBJECT_RESIDENT
-flag.
 Contrary to the
 .Fn destroy
 operation,
@@ -1003,14 +1000,15 @@ typedef struct ag_object_header {
 .Pp
 The
 .Fn AG_ObjectPageIn
-function loads an object's dataset into memory, assuming it is a persistent
-object and its dataset can be found on storage.
-On success, the
+function loads an object's dataset into memory and sets the
 .Dv AG_OBJECT_RESIDENT
-flag is set.
+flag.
 .Fn AG_ObjectPageOut
 checks whether an object is referenced by another object and if that is
-not the case, the dataset is archived to storage and freed from memory.
+not the case, the dataset is archived to storage, freed from memory and
+the
+.Dv AG_OBJECT_RESIDENT
+flag is cleared.
 Both functions return 0 on success or -1 if an error occured.
 .Pp
 The
@@ -1044,17 +1042,11 @@ calls will fail.
 This is an advisory, application-specific flag indicating that the
 object should be protected from deletion.
 .It AG_OBJECT_RESIDENT
-Read-only flag set by the object system to indicate that the object's dataset
-is currently resident in memory.
-This flag is set by
-.Fn AG_ObjectNew ,
-.Fn AG_ObjectLoadData
-and
+Set by
 .Fn AG_ObjectPageIn
-and is cleared by
-.Fn AG_ObjectFreeDataset
 and
-.Fn AG_ObjectPageOut .
+.Fn AG_ObjectPageOut
+to keep track of whether an object's data is resident in memory.
 .It AG_OBJECT_PRESERVE_DEPS
 Disable automatic removal of object dependencies when reference counts
 reach 0.
