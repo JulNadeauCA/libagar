@@ -871,14 +871,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
-	if (pal->surface == NULL) {
-		if ((pal->surface = AG_SurfaceStdRGBA(a->w, a->h)) == NULL) {
-			AG_FatalError(NULL);
-		}
-		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
-	} else {
-		if (AG_SurfaceResize(pal->surface, a->w, a->h) == -1)
-			AG_FatalError(NULL);
+	if (pal->surface != NULL) {
+		AG_SurfaceResize(pal->surface, a->w, a->h);
 	}
 	pal->flags |= AG_HSVPAL_DIRTY;
 	return (0);
@@ -894,7 +888,14 @@ Draw(void *obj)
 
 	if (WIDTH(pal) < 16 || HEIGHT(pal) < 16)
 		return;
-	
+
+	if (pal->surface == NULL) {
+		if ((pal->surface = AG_SurfaceStdGL(WIDTH(pal), HEIGHT(pal)))
+		    == NULL) {
+			AG_FatalError(NULL);
+		}
+		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
+	}
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		RenderPalette(pal);
