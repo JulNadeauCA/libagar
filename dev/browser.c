@@ -240,11 +240,6 @@ DEV_BrowserOpenData(void *p)
 		    AG_ObjectResolveDeps(ob) == -1 ||
 		    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
 			if (!dataFound) {
-				/*
-				 * Data not found in storage, so assume
-				 * object is new. Mark it resident and save it.
-				 */
-				ob->flags |= AG_OBJECT_RESIDENT;
 				if (AG_ObjectSave(ob) == -1) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
 					    ob->name, AG_GetError());
@@ -286,10 +281,7 @@ SaveObjectToFile(AG_Event *event)
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (!dataFound) {
-				/* Object was never saved before. */
-				ob->flags |= AG_OBJECT_RESIDENT;
-			} else {
+			if (dataFound) {
 				AG_TextMsg(AG_MSG_ERROR,
 				    _("%s: Loading failed (non-resident): %s"),
 				    ob->name, AG_GetError());
@@ -320,10 +312,7 @@ ImportObject(AG_Event *event)
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (!dataFound) {
-				/* Object was never saved before. */
-				ob->flags |= AG_OBJECT_RESIDENT;
-			} else {
+			if (dataFound) {
 				AG_TextMsg(AG_MSG_ERROR,
 				    _("%s: Loading failed (non-resident): %s"),
 				    ob->name, AG_GetError());

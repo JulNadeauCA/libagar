@@ -947,7 +947,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	} else {
 		AG_SetCfgString(key, "%s", dflt);
 		if (AG_ConfigSave() == -1) {
-			Verbose("Saving MRU: %s\n", AG_GetError());
+			Verbose("Saving MRU(%s): %s\n", key, AG_GetError());
 		}
 		AG_FileDlgSetDirectoryS(fd, dflt);
 	}

@@ -98,8 +98,6 @@ AG_ObjectInit(void *p, void *cl)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->timeouts);
 	
-	ob->flags &= ~(AG_OBJECT_RESIDENT);
-	
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
 			if (hier[i]->init != NULL)
@@ -157,7 +155,6 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 	}
 	AG_ObjectInit(obj, cl);
 	AG_ObjectSetNameS(obj, (name != NULL) ? name : nameGen);
-	obj->flags |= AG_OBJECT_RESIDENT;
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, obj);
 	}
@@ -172,7 +169,7 @@ AG_ObjectRemain(void *p, Uint flags)
 
 	AG_ObjectLock(ob);
 	if (flags & AG_OBJECT_REMAIN_DATA) {
-		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_RESIDENT);
+		ob->flags |= (AG_OBJECT_REMAIN_DATA);
 	} else {
 		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
 	}
@@ -192,9 +189,6 @@ AG_ObjectFreeDataset(void *p)
 	int i, nHier;
 
 	AG_ObjectLock(ob);
-	if (!OBJECT_RESIDENT(ob)) {
-		goto out;
-	}
 	preserveDeps = (ob->flags & AG_OBJECT_PRESERVE_DEPS);
 	ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
@@ -207,10 +201,9 @@ AG_ObjectFreeDataset(void *p)
 		AG_FatalError("AG_ObjectFreeDataset: %s: %s", ob->name,
 		    AG_GetError());
 	}
-	ob->flags &= ~(AG_OBJECT_RESIDENT);
-	if (!preserveDeps)
+	if (!preserveDeps) {
 		ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
-out:
+	}
 	AG_ObjectUnlock(ob);
 }
 
@@ -973,30 +966,19 @@ AG_ObjectPageIn(void *p)
 	int dataFound;
 
 	AG_ObjectLock(ob);
-	if (!OBJECT_PERSISTENT(ob)) {
-		ob->flags |= AG_OBJECT_RESIDENT;
-		goto out;
-	}
-	if (!OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (dataFound == 0) {
-				/*
-				 * Data not found in storage, just assume
-				 * the object has never been saved before.
-				 */
-				ob->flags |= AG_OBJECT_RESIDENT;
-				goto out;
-			} else {
-				goto fail;
-			}
+	if (!OBJECT_RESIDENT(ob) &&
+	    AG_ObjectLoadData(ob, &dataFound) == -1) {
+		if (dataFound == 0) {
+			ob->flags |= AG_OBJECT_RESIDENT;
+			AG_ObjectUnlock(ob);
+			return (0);
+		} else {
+			AG_ObjectUnlock(ob);
+			return (-1);
 		}
 	}
-out:
 	AG_ObjectUnlock(ob);
 	return (0);
-fail:
-	AG_ObjectUnlock(ob);
-	return (-1);
 }
 
 /*
@@ -1012,10 +994,6 @@ AG_ObjectPageOut(void *p)
 	if (!OBJECT_PERSISTENT(ob)) {
 		goto out;
 	}
-	if (!OBJECT_RESIDENT(ob)) {
-		AG_SetError(_("Object is non-resident"));
-		goto fail;
-	}
 	if (!AG_ObjectInUse(ob)) {
 		if (AG_FindEventHandler(ob->root, "object-page-out") != NULL) {
 			AG_PostEvent(ob, ob->root, "object-page-out", NULL);
@@ -1023,8 +1001,10 @@ AG_ObjectPageOut(void *p)
 			if (AG_ObjectSave(ob) == -1)
 				goto fail;
 		}
-		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0)
+		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0) {
 			AG_ObjectFreeDataset(ob);
+			ob->flags &= ~(AG_OBJECT_RESIDENT);
+		}
 	}
 out:
 	AG_ObjectUnlock(ob);
@@ -1393,10 +1373,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 
 	/* Free any resident dataset in order to clear the dependencies. */
-	if (OBJECT_RESIDENT(ob)) {
-		ob->flags |= AG_OBJECT_WAS_RESIDENT;
-		AG_ObjectFreeDataset(ob);
-	}
+	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 
 	/* Object header */
@@ -1527,12 +1504,11 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
 		AG_SetSourceDebug(ds, 1);
 	}
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1)
 		goto fail;
-	}
-	if (OBJECT_RESIDENT(ob)) {
-		AG_ObjectFreeDataset(ob);
-	}
+
+	AG_ObjectFreeDataset(ob);
+
 	for (i = 0; i < nHier; i++) {
 #ifdef AG_OBJDEBUG
 		Debug(ob, "Loading as %s\n", hier[i]->name);
@@ -1547,8 +1523,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		}
 	}
 	Free(hier);
-
-	ob->flags |= AG_OBJECT_RESIDENT;
 
 	AG_CloseFile(ds);
 	AG_PostEvent(ob, ob->root, "object-post-load-data", "%s", path);
@@ -1762,8 +1736,6 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 	}
 	Free(hier);
 
-	ob->flags |= AG_OBJECT_RESIDENT;
-
 	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
 		AG_SetSourceDebug(ds, 0);
 	}
@@ -1794,10 +1766,6 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError("Object (%s) is non-persistent", ob->name);
-		goto fail_unlock;
-	}
-	if (!OBJECT_RESIDENT(ob)) {
-		AG_SetError("Object (%s) is non-resident", ob->name);
 		goto fail_unlock;
 	}
 
@@ -2377,7 +2345,7 @@ AG_ObjectChanged(void *p)
 
 	AG_ObjectLock(ob);
 
-	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob)) {
 		AG_ObjectUnlock(ob);
 		return (0);
 	}
