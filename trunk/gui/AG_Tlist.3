@@ -70,6 +70,9 @@ widgets are more efficient alternatives to
 .Fn AG_TlistSetItemHeight "AG_Tlist *tl" "int item_height"
 .Pp
 .Ft void
+.Fn AG_TlistSetIconWidth "AG_Tlist *tl" "int icon_width"
+.Pp
+.Ft void
 .Fn AG_TlistSetIcon "AG_Tlist *tl, AG_TlistItem *item" "AG_Surface *icon"
 .Pp
 .Ft void
@@ -166,6 +169,8 @@ will be used to explicitely force updates.
 sets the height of all items to
 .Fa item_height
 pixels .
+.Fn AG_TlistSetIconWidth
+sets the width of icons in pixels.
 .Pp
 The
 .Fn AG_TlistSetIcon

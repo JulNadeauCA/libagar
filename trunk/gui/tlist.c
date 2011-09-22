@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1255,6 +1255,29 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 
 	AG_ObjectLock(tl);
 	tl->item_h = ih;
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->icon != -1) {
+			AG_Surface *scaled = NULL;
+
+			if (AG_ScaleSurface(it->iconsrc,
+			    tl->item_h, tl->item_h, &scaled) == -1) {
+				AG_FatalError(NULL);
+			}
+			AG_WidgetReplaceSurface(tl, it->icon, scaled);
+		}
+	}
+	AG_ObjectUnlock(tl);
+	AG_Redraw(tl);
+}
+
+/* Set the width to use for item icons. */
+void
+AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
+{
+	AG_TlistItem *it;
+
+	AG_ObjectLock(tl);
+	tl->icon_w = iw;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != -1) {
 			AG_Surface *scaled = NULL;
