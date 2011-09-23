@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -319,6 +319,7 @@ raises the entries of
 to the power
 .Fa pow ,
 and returns the resulting vector.
+.\" MANLINK(M_Vector2)
 .Sh VECTORS IN R^2
 The following routines operate on vectors in R^2, which are always
 represented by the structure:
@@ -329,7 +330,7 @@ typedef struct m_vector2 {
 .Ed
 .Pp
 The following backends are currently available for
-.Ft M_Vector :
+.Ft M_Vector2 :
 .Pp
 .Bl -tag -width "fpu " -compact
 .It fpu
@@ -345,6 +346,9 @@ Native scalar floating point methods.
 .Pp
 .Ft M_Vector2
 .Fn M_VecZero2 "void"
+.Pp
+.Ft M_Vector2
+.Fn M_VECTOR2 "M_Real x" "M_Real y"
 .Pp
 .Ft M_Vector2
 .Fn M_VecGet2 "M_Real x" "M_Real y"
@@ -370,11 +374,9 @@ routines return the basis vectors [1;0] and [0;1], respectively.
 .Fn M_VecZero2
 returns the zero vector [0;0].
 .Fn M_VecGet2
+(or
+.Fn M_VECTOR2 )
 returns the vector [x,y].
-The
-.Fn M_VECTOR2
-macro is an alias for
-.Fn M_VecGet2 .
 .Pp
 .Fn M_VecSet2
 writes the values [x,y] into vector
@@ -646,6 +648,7 @@ In R^2, this function is slightly faster than general
 or
 .Xr M_Quaternion 3
 rotations.
+.\" MANLINK(M_Vector3)
 .Sh VECTORS IN R^3
 The following routines operate on vectors in R^3, which are represented
 by the structure:
@@ -693,6 +696,9 @@ Accelerate operations using SSE3 extensions.
 .Fn M_VecZero3 "void"
 .Pp
 .Ft M_Vector3
+.Fn M_VECTOR3 "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft M_Vector3
 .Fn M_VecGet3 "M_Real x" "M_Real y" "M_Real z"
 .Pp
 .Ft void
@@ -717,6 +723,8 @@ routines return the basis vectors [1;0;0], [0;1;0] and [0;0;1], respectively.
 .Fn M_VecZero3
 returns the zero vector [0;0;0].
 .Fn M_VecGet3
+(or
+.Fn M_VECTOR3 )
 returns the vector [x,y,z].
 The
 .Fn M_VECTOR3
@@ -1040,6 +1048,7 @@ and
 shorthands perform a rotation of
 .Fa theta
 radians about the basis vectors I, J or K, respectively.
+.\" MANLINK(M_Vector4)
 .Sh VECTORS IN R^3
 The following routines operate on vectors in R^4, which are represented
 by the structure:
@@ -1090,6 +1099,9 @@ Accelerate operations using SSE3 extensions.
 .Fn M_VecZero4 "void"
 .Pp
 .Ft M_Vector4
+.Fn M_VECTOR4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Pp
+.Ft M_Vector4
 .Fn M_VecGet4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
 .Pp
 .Ft void
@@ -1116,11 +1128,9 @@ respectively.
 .Fn M_VecZero4
 returns the zero vector [0;0;0;0].
 .Fn M_VecGet4
+(or
+.Fn M_VECTOR4 )
 returns the vector [x,y,z,w].
-The
-.Fn M_VECTOR4
-macro is an alias for
-.Fn M_VecGet4 .
 .Pp
 .Fn M_VecSet4
 writes the values [x,y,z,w] into vector
