@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -57,6 +57,7 @@ Rectangle in R^2 (M_Rectangle2) or R^3 (M_Rectangle3).
 Polygon in R^2 (M_Polygon2) or R^3 (M_Polygon3).
 .El
 .Sh GENERIC GEOMETRIC ENTITIES
+.\" MANLINK(M_Geom2)
 A number of routines (e.g., computation of intersections) return sets of
 zero or more geometrical structures of different types, depending on the
 .Pp
@@ -76,6 +77,7 @@ typedef struct m_geom2 {
 	} g;
 } M_Geom2;
 .Ed
+.\" MANLINK(M_Geom3)
 .Pp
 Similarly,
 .Ft M_Geom3
@@ -108,6 +110,7 @@ for an
 .Xr M_Line 3 ,
 and so on.
 .Sh GENERIC GEOMETRIC ENTITIES: SETS
+.\" MANLINK(M_GeomSet2)
 Sets of generic geometric entities in R^2 are described by the structure:
 .Bd -literal
 typedef struct m_geom_set2 {
@@ -115,6 +118,7 @@ typedef struct m_geom_set2 {
 	Uint n;
 } M_GeomSet2;
 .Ed
+.\" MANLINK(M_GeomSet3)
 Similarly for R^3:
 .Bd -literal
 typedef struct m_geom_set3 {
