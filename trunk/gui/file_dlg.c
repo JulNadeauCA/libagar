@@ -141,16 +141,17 @@ RefreshListing(AG_FileDlg *fd)
 	AG_ObjectLock(fd->tlFiles);
 
 	for (i = 0; i < dir->nents; i++) {
+		char *ent = dir->ents[i];
 		char path[AG_FILENAME_MAX];
 		
 		Strlcpy(path, fd->cwd, sizeof(path));
 		if(path[strlen(path) - 1] != AG_PATHSEPCHAR) {
 			Strlcat(path, AG_PATHSEP, sizeof(path));
 		}
-		Strlcat(path, dir->ents[i], sizeof(path));
+		Strlcat(path, ent, sizeof(path));
 
 		if (AG_PathIsFilesystemRoot(fd->cwd) &&
-		    strcmp(dir->ents[i], "..")==0) {
+		    strcmp(ent, "..")==0) {
 			continue;
 		}
 		if (AG_GetFileInfo(path, &info) == -1) {
@@ -159,14 +160,18 @@ RefreshListing(AG_FileDlg *fd)
 		/* XXX TODO: check for symlinks to directories */
 		if (info.type == AG_FILE_DIRECTORY) {
 			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
-			dirs[ndirs++] = Strdup(dir->ents[i]);
+			dirs[ndirs++] = Strdup(ent);
 		} else {
-			if (fd->flags & AG_FILEDLG_FILTER_EXT &&
-			    FilterByExtension(fd, dir->ents[i])) {
+			if (fd->flags & AG_FILEDLG_MASK_HIDDEN &&
+			    ent[0] == '.') {
+				continue;
+			}
+			if (fd->flags & AG_FILEDLG_MASK_EXT &&
+			    FilterByExtension(fd, ent)) {
 				continue;
 			}
 			files = Realloc(files, (nfiles + 1) * sizeof(char *));
-			files[nfiles++] = Strdup(dir->ents[i]);
+			files[nfiles++] = Strdup(ent);
 		}
 	}
 	qsort(dirs, ndirs, sizeof(char *), AG_FilenameCompare);
@@ -985,7 +990,7 @@ AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 }
 
 static void
-FilterByExtSelected(AG_Event *event)
+MaskOptionSelected(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 
@@ -1039,11 +1044,18 @@ Init(void *obj)
 	/* File type selector */
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_SetEvent(fd->comTypes, "combo-selected", SelectedType, "%p", fd);
-	fd->cbFilterExt = AG_CheckboxNewFlag(fd, 0,
-	    _("Mask unknown files by extension"),
-	    &fd->flags, AG_FILEDLG_FILTER_EXT);
-	AG_SetEvent(fd->cbFilterExt, "checkbox-changed",
-	    FilterByExtSelected, "%p", fd);
+
+	fd->cbMaskExt = AG_CheckboxNewFlag(fd, 0,
+	    _("Mask files by extension"),
+	    &fd->flags, AG_FILEDLG_MASK_EXT);
+	AG_SetEvent(fd->cbMaskExt, "checkbox-changed",
+	    MaskOptionSelected, "%p", fd);
+	
+	fd->cbMaskHidden = AG_CheckboxNewFlag(fd, 0,
+	    _("Mask hidden files"),
+	    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
+	AG_SetEvent(fd->cbMaskHidden, "checkbox-changed",
+	    MaskOptionSelected, "%p", fd);
 
 	/* OK/Cancel buttons */
 	fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
@@ -1144,7 +1156,9 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	r->h += rChld.h+2;
 	AG_WidgetSizeReq(fd->comTypes, &rChld);
 	r->h += rChld.h+4;
-	AG_WidgetSizeReq(fd->cbFilterExt, &rChld);
+	AG_WidgetSizeReq(fd->cbMaskExt, &rChld);
+	r->h += rChld.h+4;
+	AG_WidgetSizeReq(fd->cbMaskHidden, &rChld);
 	r->h += rChld.h+4;
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
 		AG_WidgetSizeReq(fd->btnOk, &rOk);
@@ -1182,7 +1196,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h -= r.h;
 	AG_WidgetSizeReq(fd->comTypes, &r);
 	aChld.h -= r.h;
-	AG_WidgetSizeReq(fd->cbFilterExt, &r);
+	AG_WidgetSizeReq(fd->cbMaskExt, &r);
+	aChld.h -= r.h;
+	AG_WidgetSizeReq(fd->cbMaskHidden, &r);
 	aChld.h -= r.h;
 	aChld.h -= 8;
 	AG_WidgetSizeAlloc(fd->hPane, &aChld);
@@ -1205,9 +1221,13 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h = r.h;
 	AG_WidgetSizeAlloc(fd->comTypes, &aChld);
 	aChld.y += aChld.h+4;
-	AG_WidgetSizeReq(fd->cbFilterExt, &r);
+	AG_WidgetSizeReq(fd->cbMaskExt, &r);
 	aChld.h = r.h;
-	AG_WidgetSizeAlloc(fd->cbFilterExt, &aChld);
+	AG_WidgetSizeAlloc(fd->cbMaskExt, &aChld);
+	aChld.y += aChld.h+4;
+	AG_WidgetSizeReq(fd->cbMaskHidden, &r);
+	aChld.h = r.h;
+	AG_WidgetSizeAlloc(fd->cbMaskHidden, &aChld);
 	aChld.y += aChld.h+4;
 
 	/* Size buttons */

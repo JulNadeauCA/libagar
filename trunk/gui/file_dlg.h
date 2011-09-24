@@ -52,32 +52,30 @@ typedef struct ag_file_type {
 typedef struct ag_file_dlg {
 	AG_Widget wid;
 	Uint flags;
-#define AG_FILEDLG_MULTI	  0x001	/* Return a set of files */
-#define AG_FILEDLG_CLOSEWIN	  0x002	/* Close parent window on success or
-					   if "Cancel" is pressed */
-#define AG_FILEDLG_LOAD		  0x004	/* File must exist and be readable */
-#define AG_FILEDLG_SAVE		  0x008	/* File must be writeable */
-#define AG_FILEDLG_ASYNC	  0x010	/* Separate thread for load/save fn */
-#define AG_FILEDLG_RESET_ONSHOW	  0x020	/* Reset listing/locations on show */
-#define AG_FILEDLG_HFILL	  0x100
-#define AG_FILEDLG_VFILL	  0x200
+#define AG_FILEDLG_MULTI	  0x0001	/* Return a set of files */
+#define AG_FILEDLG_CLOSEWIN	  0x0002	/* Close parent window */
+#define AG_FILEDLG_LOAD		  0x0004	/* File must exist and be readable */
+#define AG_FILEDLG_SAVE		  0x0008	/* File must be writeable */
+#define AG_FILEDLG_ASYNC	  0x0010	/* Separate thread for load/save fn */
+#define AG_FILEDLG_RESET_ONSHOW	  0x0020	/* Reset listing/locations on show */
+#define AG_FILEDLG_HFILL	  0x0100
+#define AG_FILEDLG_VFILL	  0x0200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
-#define AG_FILEDLG_NOBUTTONS	  0x400	/* No OK/Cancel buttons */
-#define AG_FILEDLG_FILTER_EXT	  0x800	/* Mask unknown file extensions */
+#define AG_FILEDLG_NOBUTTONS	  0x0400	/* No OK/Cancel buttons */
+#define AG_FILEDLG_MASK_EXT	  0x0800	/* Mask files by extension */
+#define AG_FILEDLG_MASK_HIDDEN	  0x1000	/* Mask hidden files */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
 	AG_Pane *hPane;
 	AG_Tlist *tlDirs;			/* List of directories */
 	AG_Tlist *tlFiles;			/* List of files */
-	AG_Label *lbCwd;			/* CWD label */
-	AG_Textbox *tbFile;			/* Filename input */
-	AG_Combo *comTypes;			/* File types combo */
-	AG_Checkbox *cbFilterExt;		/* Filter by extension */
-	AG_Button *btnOk;			/* OK button */
-	AG_Button *btnCancel;			/* Cancel button */
-	AG_Event *okAction;			/* OK action */
-	AG_Event *cancelAction;			/* Cancel action */
+	AG_Label *lbCwd;
+	AG_Textbox *tbFile;
+	AG_Combo *comTypes;
+	AG_Checkbox *cbMaskExt, *cbMaskHidden;
+	AG_Button *btnOk, *btnCancel;
+	AG_Event *okAction, *cancelAction;
 	char *dirMRU;				/* MRU Directory */
 	void *optsCtr;				/* Container widget for opts */
 	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
