@@ -51,11 +51,10 @@ widget implements a group of "radio" buttons.
 .Ft "AG_Radio *"
 .Fn AG_RadioNewFn "AG_Widget *parent" "Uint flags" "const char *items[]" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
+.\" MANLINK(AG_RadioNewInt)
+.\" MANLINK(AG_RadioNewUint)
 .Ft "AG_Radio *"
-.Fn AG_RadioNewInt "AG_Widget *parent" "Uint flags" "const char *items[]" "int *value"
-.Pp
-.Ft "AG_Radio *"
-.Fn AG_RadioNewUint "AG_Widget *parent" "Uint flags" "const char *items[]" "Uint *value"
+.Fn AG_RadioNew{Int,Uint} "AG_Widget *parent" "Uint flags" "const char *items[]" "<Type> *value"
 .Pp
 .Ft void
 .Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
@@ -104,11 +103,13 @@ The
 variant sets an event handler for the
 .Sq radio-changed
 event.
-.Fn AG_RadioNewInt and
-.Fn AG_RadioNewUint
-bind the radio button
-.Sq value
-with the given integer.
+The
+.Fn AG_RadioNew{Int,Uint}
+variants tie the radio button with the specified
+.Fa int
+or
+.Fa Uint
+variable.
 .Pp
 The
 .Fn AG_RadioItemsFromArray

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -42,13 +42,13 @@ widget allows the user to control an integer or floating-point value within a
 specified range, as an alternative to
 .Xr AG_Numerical 3
 and
-.Xr AG_Scrollbar 3 .
-Unlike
+.Xr AG_Scrollbar 3
+(unlike
 .Ft AG_Scrollbar ,
 .Nm
 does not provide a
 .Sq visible
-binding.
+binding).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -58,71 +58,43 @@ binding.
 .Ft "AG_Slider *"
 .Fn AG_SliderNew "AG_Widget *parent" "enum ag_slider_type type" "Uint flags"
 .Pp
+.\" MANLINK(AG_SliderNewInt)
+.\" MANLINK(AG_SliderNewUint)
+.\" MANLINK(AG_SliderNewFlt)
+.\" MANLINK(AG_SliderNewDbl)
 .Ft "AG_Slider *"
-.Fn AG_SliderNewInt "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "int *val" "int *min" "int *max"
+.Fn AG_SliderNew{Int,Uint,Flt,Dbl} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
+.Pp
+.\" MANLINK(AG_SliderNewIntR)
+.\" MANLINK(AG_SliderNewUintR)
+.\" MANLINK(AG_SliderNewFltR)
+.\" MANLINK(AG_SliderNewDblR)
+.Ft "AG_Slider *"
+.Fn AG_SliderNew{Int,Uint,Flt,Dbl}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
+.Pp
+.\" MANLINK(AG_SliderNewUint8)
+.\" MANLINK(AG_SliderNewUint16)
+.\" MANLINK(AG_SliderNewUint32)
+.\" MANLINK(AG_SliderNewSint8)
+.\" MANLINK(AG_SliderNewSint16)
+.\" MANLINK(AG_SliderNewSint32)
+.Ft "AG_Slider *"
+.Fn AG_SliderNew{Uint8,Uint16,Uint32} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
 .Pp
 .Ft "AG_Slider *"
-.Fn AG_SliderNewIntR "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "int *val" "int min" "int max"
+.Fn AG_SliderNew{Sint8,Sint16,Sint32} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
+.Pp
+.\" MANLINK(AG_SliderNewUint8R)
+.\" MANLINK(AG_SliderNewUint16R)
+.\" MANLINK(AG_SliderNewUint32R)
+.\" MANLINK(AG_SliderNewSint8R)
+.\" MANLINK(AG_SliderNewSint16R)
+.\" MANLINK(AG_SliderNewSint32R)
+.Ft "AG_Slider *"
+.Fn AG_SliderNew{Uint8,Uint16,Uint32}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
 .Pp
 .Ft "AG_Slider *"
-.Fn AG_SliderNewUint "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint *value" "Uint *min" "Uint *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUintR "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint *value" "Uint min" "Uint max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint8 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint8 *value" "Uint8 *min" "Uint8 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint8R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint8 *value" "Uint8 min" "Uint8 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint8 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint8 *value" "Sint8 *min" "Sint8 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint8R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint8 *value" "Sint8 min" "Sint8 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint16 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint16 *value" "Uint16 *min" "Uint16 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint16R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint16 *value" "Uint16 min" "Uint16 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint16 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint16 *value" "Sint16 *min" "Sint16 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint16R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint16 *value" "Sint16 min" "Sint16 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint32 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint32 *value" "Uint32 *min" "Uint32 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint32R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint32 *value" "Uint32 min" "Uint32 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint32 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint32 *value" "Sint32 *min" "Sint32 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint32R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint32 *value" "Sint32 min" "Sint32 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewFlt "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "float *value" "float *min" "float *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewFltR "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "float *value" "float min" "float max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewDbl "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "double *value" "double *min" "double *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewDblR "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "double *value" "double min" "double max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewLongDbl "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "long double *value" "long double *min" "long double *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewLongDblR "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "long double *value" "long double min" "long double max"
+.Fn AG_SliderNew{Sint8,Sint16,Sint32}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
 .Pp
 .Ft void
 .Fn AG_SliderSetIntIncrement "AG_Slider *slider" "int increment"
@@ -164,25 +136,17 @@ Shorthand for
 .Dv AG_SLIDER_HFILL|AG_SLIDER_VFILL .
 .El
 .Pp
+The functions
+.Fn AG_SliderNew{Int,Uint,Flt,Dbl}
+create a new
+.Nm
+bound to the specified variables.
 The
-.Fn AG_SliderNew*
-routine creates a slider and binds variables to the slider's
-.Va value ,
-.Va min
+.Fn AG_SliderNew{Int,Uint,Flt,Dbl}R
+variants binds to the specified value, but accepts an explicit range
+.Fa min
 and
-.Va max
-values.
-If an argument is NULL, it is left to the default (type-specific) value.
-.Pp
-The
-.Fn AG_SliderNew*R
-variants binds only
-.Va value ,
-but sets
-.Va min
-and
-.Va max
-explicitely.
+.Fa max .
 .Pp
 .Fn AG_SliderSetIntIncrement
 and
