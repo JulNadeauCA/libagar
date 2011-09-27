@@ -59,7 +59,11 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 
 	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
-	
+	if (flags & AG_NUMERICAL_INT) {
+		AG_BindInt(num, "value", &num->intValue);
+		AG_BindInt(num, "min", &num->intMin);
+		AG_BindInt(num, "max", &num->intMax);
+	}
 	if (label != NULL) {
 		AG_TextboxSetLabelS(num->input, label);
 	}
@@ -575,8 +579,14 @@ Init(void *obj)
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	num->inc = 1.0;
 	num->value = 0.0;
+	num->min = 0.0;
+	num->max = 1.0;
+	num->intValue = 0;
+	num->intMin = 0;
+	num->intMax = 0;
+
+	num->inc = 1.0;
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_STATIC, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;

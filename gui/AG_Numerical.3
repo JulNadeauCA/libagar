@@ -136,6 +136,15 @@ Acceptable
 include:
 .Pp
 .Bl -tag -width "AG_NUMERICAL_EXPAND "
+.It AG_NUMERICAL_INT
+In
+.Fn AG_NumericalNew
+or
+.Fn AG_NumericalNewS ,
+use a default variable binding of integer type (default is to use
+a floating-point type; see
+.Dq STRUCTURE DATA
+section).
 .It AG_NUMERICAL_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -271,6 +280,31 @@ all clamp the value according to the
 and
 .Va max
 bindings.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Numerical
+object:
+.Pp
+.Bl -tag -compact -width "double value "
+.It Ft double value
+Default binding for value.
+.It Ft double min
+Default binding for limit minimum.
+.It Ft double max
+Default binding for limit maximum.
+.It Ft int intValue
+Default binding for value (if
+.Dv AG_NUMERICAL_INT
+was given).
+.It Ft int intMin
+Default binding for limiit minimum (if
+.Dv AG_NUMERICAL_INT
+was given).
+.It Ft int intMax
+Default binding for limiit maximum (if
+.Dv AG_NUMERICAL_INT
+was given).
+.El
 .Sh EVENTS
 The
 .Nm
@@ -345,7 +379,3 @@ widget first appeared in Agar 1.2 as a replacement for
 and
 .Sq AG_FSpinbutton
 that can handle both floating-point and integer values.
-.Sh BUGS
-We should handle key and mouse wheel increment/decrement values in a more
-sophisticated way, possibly allowing the user to change the value and
-remember the setting.
