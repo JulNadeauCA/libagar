@@ -1,4 +1,4 @@
-.\" Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2003-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget allows the user to modify the value of a floating-point or integer
-variable.
+widget displays the value of an integer or floating-point variable, and
+allows its value to be edited by the user.
 .Pp
 The widget is composed of an
 .Xr AG_Textbox 3 ,
@@ -63,77 +63,52 @@ for choosing between different units
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewS "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
 .Pp
+.\" MANLINK(AG_NumericalNewFlt)
+.\" MANLINK(AG_NumericalNewDbl)
+.\" MANLINK(AG_NumericalNewInt)
+.\" MANLINK(AG_NumericalNewUint)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewFlt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value"
+.Fn AG_NumericalNew{Flt,Dbl,Int,Uint} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
+.\" MANLINK(AG_NumericalNewFltR)
+.\" MANLINK(AG_NumericalNewDblR)
+.\" MANLINK(AG_NumericalNewIntR)
+.\" MANLINK(AG_NumericalNewUintR)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewFltR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value" "float min" "float max"
+.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}R "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
 .Pp
+.\" MANLINK(AG_NumericalNewUint8)
+.\" MANLINK(AG_NumericalNewUint16)
+.\" MANLINK(AG_NumericalNewUint32)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value"
+.Fn AG_NumericalNew{Uint8,Uint16,Uint32} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
+.\" MANLINK(AG_NumericalNewSint8)
+.\" MANLINK(AG_NumericalNewSint16)
+.\" MANLINK(AG_NumericalNewSint32)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewDblR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value" "double min" "double max"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewInt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewIntR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value" "int min" "int max"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUint "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUintR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint *value" "Uint min" "Uint max"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUint8 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint8 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewSint8 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint8 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUint16 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint16 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewSint16 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint16 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint32 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewSint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint32 *value"
+.Fn AG_NumericalNew{Sint8,Sint16,Sint32} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
 .Ft "void"
 .Fn AG_NumericalSizeHint "AG_Numerical *num" "const char *sizeHint"
 .Pp
+.\" MANLINK(AG_NumericalSetMinInt)
+.\" MANLINK(AG_NumericalSetMinFlt)
+.\" MANLINK(AG_NumericalSetMinDbl)
 .Ft void
-.Fn AG_NumericalSetMinInt "AG_Numerical *num" "int min_value"
+.Fn AG_NumericalSetMin{Int,Flt,Dbl} "AG_Numerical *num" "<Type> min_value"
 .Pp
+.\" MANLINK(AG_NumericalSetMaxInt)
+.\" MANLINK(AG_NumericalSetMaxFlt)
+.\" MANLINK(AG_NumericalSetMaxDbl)
 .Ft void
-.Fn AG_NumericalSetMinFlt "AG_Numerical *num" "float min_value"
+.Fn AG_NumericalSetMax{Int,Flt,Dbl} "AG_Numerical *num" "<Type> max_value"
 .Pp
+.\" MANLINK(AG_NumericalSetRangeInt)
+.\" MANLINK(AG_NumericalSetRangeFlt)
+.\" MANLINK(AG_NumericalSetRangeDbl)
 .Ft void
-.Fn AG_NumericalSetMinDbl "AG_Numerical *num" "double min_value"
-.Pp
-.Ft void
-.Fn AG_NumericalSetMaxInt "AG_Numerical *num" "int max_value"
-.Pp
-.Ft void
-.Fn AG_NumericalSetMaxFlt "AG_Numerical *num" "float max_value"
-.Pp
-.Ft void
-.Fn AG_NumericalSetMaxDbl "AG_Numerical *num" "double max_value"
-.Pp
-.Ft void
-.Fn AG_NumericalSetRangeInt "AG_Numerical *num" "int min" "int max"
-.Pp
-.Ft void
-.Fn AG_NumericalSetRangeFlt "AG_Numerical *num" "float min" "float max"
-.Pp
-.Ft void
-.Fn AG_NumericalSetRangeDbl "AG_Numerical *num" "double min" "double max"
+.Fn AG_NumericalSetRange{Int,Flt,Dbl} "AG_Numerical *num" "<Type> min" "<Type> max"
 .Pp
 .Ft void
 .Fn AG_NumericalSetIncrement "AG_Numerical *num" "double increment"
@@ -186,11 +161,33 @@ See
 .Xr AG_Units 3
 for more information.
 .Pp
-The
-.Fn AG_NumericalNew*
-constructors also assign a default
-.Sq value
-binding of the given type.
+The alternate constructor routines
+.Fn AG_NumericalNew<Type>
+create a new
+.Nm
+bound to a variable of the specified type.
+The functions
+.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}
+tie the widget to a variable of type
+.Ft float ,
+.Ft double ,
+.Ft int
+and
+.Ft Uint ,
+respectively.
+.Pp
+The alternate constructor routines
+.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}R
+also allow explicit limits to be specified in
+.Fa min
+and
+.Fa max .
+.Pp
+The functions
+.Fn AG_NumericalNew{Uint8,Uint16,Uint32}
+bind to an unsigned 8-bit, 16-bit or 32-bit integer, respectively.
+.Fn AG_NumericalNew{Sint8,Sint16,Sint32}
+bind to a signed 8-bit, 16-bit or 32-bit integer, respectively.
 .Pp
 .Fn AG_NumericalSizeHint
 requests that the initial geometry of the
@@ -200,23 +197,19 @@ widget be sufficient to display
 in its entirety (see
 .Xr AG_SizeSpec 3 ) .
 .Pp
-The
-.Fn AG_NumericalSetMin* ,
-.Fn AG_NumericalSetMax*
+The default limits are set according to the widest numerical range that
+can be represented according to the bound variable's type.
+The functions
+.Fn AG_NumericalSetMin{Int,Flt,Dbl} ,
+.Fn AG_NumericalSetMax{Int,Flt,Dbl}
 and
-.Fn AG_NumericalSetRange*
-functions define the range of acceptable values (in base units).
-.Pp
-Note: Calls to these routines must follow
-.Fn AG_BindFoo ,
-because binding to
+.Fn AG_NumericalSetRange{Int,Flt,Dbl}
+allow limits to be defined explicitely.
+Note that the action of setting a new
 .Va value
-automatically causes
-.Va min
-and
-.Va max
-to be adjusted to the maximum range allowed by the data type of the
-new binding.
+binding with
+.Fn AG_Bind<Type>
+has the side-effect of overriding any limits specified by these calls.
 .Pp
 The
 .Fn AG_NumericalSetIncrement

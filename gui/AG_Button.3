@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -56,29 +56,19 @@ can be used to trigger events, or control a boolean value.
 .Ft "AG_Button *"
 .Fn AG_ButtonNewFn "AG_Widget *parent" "Uint flags" "const char *label" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
+.\" MANLINK(AG_ButtonNewInt)
+.\" MANLINK(AG_ButtonNewUint8)
+.\" MANLINK(AG_ButtonNewUint16)
+.\" MANLINK(AG_ButtonNewUint32)
 .Ft "AG_Button *"
-.Fn AG_ButtonNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *p"
+.Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32} "AG_Widget *parent" "Uint flags" "const char *label" "<Type> *p"
 .Pp
+.\" MANLINK(AG_ButtonNewFlag)
+.\" MANLINK(AG_ButtonNewFlag8)
+.\" MANLINK(AG_ButtonNewFlag16)
+.\" MANLINK(AG_ButtonNewFlag32)
 .Ft "AG_Button *"
-.Fn AG_ButtonNewUint8 "AG_Widget *parent" "Uint flags" "const char *label" "Uint8 *p"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewUint16 "AG_Widget *parent" "Uint flags" "const char *label" "Uint16 *p"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewUint32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *p"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "Uint bitmask"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewFlag8 "AG_Widget *parent" "Uint flags" "const char *label" "Uint8 *p" "Uint8 bitmask"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewFlag16 "AG_Widget *parent" "Uint flags" "const char *label" "Uint16 *p" "Uint16 bitmask"
-.Pp
-.Ft "AG_Button *"
-.Fn AG_ButtonNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *p" "Uint32 bitmask"
+.Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "<Type> bitmask"
 .Pp
 .Ft void
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
@@ -122,6 +112,11 @@ widget.
 If the
 .Fa label
 argument is given, it sets a default text caption.
+For the list of acceptable
+.Fa flags ,
+see
+.Dq BUTTON FLAGS
+section.
 .Pp
 The
 .Fn AG_ButtonNewFn
@@ -131,34 +126,25 @@ See
 .Xr AG_Event 3
 for details on Agar event handlers.
 .Pp
-.Fn AG_ButtonNewInt ,
-.Fn AG_ButtonNewUint8 ,
-.Fn AG_ButtonNewUint16
-and
-.Fn AG_ButtonNewUint32
-associate the state of the button (the
+The 
+.Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32}
+functions tie the state of the button (the
 .Sq state
-binding) with the given integer, where a value of 0 is false and 1 is true.
-.Pp
-.Fn AG_ButtonNewFlag ,
-.Fn AG_ButtonNewFlag8 ,
-.Fn AG_ButtonNewFlag16
-and
-.Fn AG_ButtonNewFlag32
-associate the state of the button with the state of one or more bits
-(as described by
-.Fa bitmask )
-in the given integer.
+binding) with the given integer variable, where 1 = True and 0 = False.
 .Pp
 The
-.Fa caption
-argument, if not NULL, defines the string to display by default as
-button label.
-See
-.Dq BUTTON FLAGS
-for the acceptable
-.Fa flags
-values.
+.Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} ,
+functions tie the state of the button with the state of the bits
+described by
+.Fa bitmask
+in the specified integer variable.
+.Fn AG_ButtonNewFlag
+binds to an
+.Ft int ,
+.Fn AG_ButtonNewFlag8
+binds to an
+.Ft Uint8 ,
+etc.
 .Pp
 The
 .Fn AG_ButtonSetPadding

@@ -74,44 +74,24 @@ are more suitable widgets.
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNew "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags"
 .Pp
+.\" MANLINK(AG_ScrollbarNewInt)
+.\" MANLINK(AG_ScrollbarNewUint)
+.\" MANLINK(AG_ScrollbarNewFloat)
+.\" MANLINK(AG_ScrollbarNewDouble)
+.\" MANLINK(AG_ScrollbarNewUint8)
+.\" MANLINK(AG_ScrollbarNewUint16)
+.\" MANLINK(AG_ScrollbarNewUint32)
+.\" MANLINK(AG_ScrollbarNewSint8)
+.\" MANLINK(AG_ScrollbarNewSint16)
+.\" MANLINK(AG_ScrollbarNewSint32)
 .Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewInt "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "int *val" "int *min" "int *max" "int *visible"
+.Fn AG_ScrollbarNew{Int,Uint,Float,Double} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewUint "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint *value" "Uint *min" "Uint *max" "Uint *visible"
+.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewUint8 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint8 *value" "Uint8 *min" "Uint8 *max" "Uint8 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewSint8 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint8 *value" "Sint8 *min" "Sint8 *max" "Sint8 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewUint16 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint16 *value" "Uint16 *min" "Uint16 *max" "Uint16 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewSint16 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint16 *value" "Sint16 *min" "Sint16 *max" "Sint16 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewUint32 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint32 *value" "Uint32 *min" "Uint32 *max" "Uint32 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewSint32 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint32 *value" "Sint32 *min" "Sint32 *max" "Sint32 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewUint64 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint64 *value" "Uint64 *min" "Uint64 *max" "Uint64 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewSint64 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint64 *value" "Sint64 *min" "Sint64 *max" "Sint64 *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewFloat "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "float *value" "float *min" "float *max" "float *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewDouble "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "double *value" "double *min" "double *max" "double *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNewLongDouble "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "long double *value" "long double *min" "long double *max" "long double *visible"
+.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSizeHint "AG_Scrollbar *scrollbar" "int length"
@@ -164,7 +144,7 @@ or
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_SCROLLBAR_EXPAND "
+.Bl -tag -width "AG_SCROLLBAR_AUTOHIDE "
 .It AG_SCROLLBAR_AUTOSIZE
 Automatically determine the size of the scrollbar control based on current
 .Va min ,
@@ -195,15 +175,20 @@ Display the minimum, current and maximum values in text.
 This option is primarily useful for debugging.
 .El
 .Pp
-The
-.Fn AG_ScrollbarNew*
-variants create a scrollbar and also bind
+Alternate constructor routines
+.Fn AG_ScrollbarNew{Int,Uint,Float,Double} ,
+.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32}
+and
+.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32}
+create a new
+.Nm
+with
 .Va value ,
 .Va min ,
 .Va max ,
 and
 .Va visible
-to the specified variables (if passed NULL, the variable is left unbound).
+bound to the variables of the specified integer or floating-point type.
 .Pp
 .Fn AG_ScrollbarSizeHint
 specifies a default, preferred scrollbar length in pixels.
