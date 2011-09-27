@@ -16,9 +16,13 @@ typedef struct ag_numerical {
 	Uint flags;
 #define AG_NUMERICAL_HFILL	0x01
 #define AG_NUMERICAL_VFILL	0x02
+#define AG_NUMERICAL_INT	0x04	/* Create a default integer binding */
 
-	double value;			/* Default value binding */
-	double min, max;		/* Default range bindings */
+	double value;			/* Default real value binding */
+	double min, max;		/* Default real range bindings */
+	int intValue;			/* Default integer value binding */
+	int intMin, intMax;		/* Default integer range binding */
+
 	double inc;			/* Increment for buttons */
 	char format[32];		/* Printing format */
 	const AG_Unit *unit;		/* Conversion unit in use */
