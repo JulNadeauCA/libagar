@@ -201,12 +201,6 @@ Init(void *obj)
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
-
-#ifdef AG_DEBUG
-	AG_BindUint(cb, "flags", &cb->flags);
-	AG_BindInt(cb, "spacing", &cb->spacing);
-	AG_BindInt(cb, "btnSize", &cb->btnSize);
-#endif
 }
 
 static void

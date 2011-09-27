@@ -756,11 +756,9 @@ Init(void *obj)
 	AG_RedrawOnChange(sb, 250, "visible");
 
 #ifdef AG_DEBUG
-	AG_BindUint(sb, "flags", &sb->flags);
 	AG_BindInt(sb, "width", &sb->width);
 	AG_BindInt(sb, "length", &sb->length);
 	AG_BindInt(sb, "wBar", &sb->wBar);
-	AG_BindInt(sb, "hArrow", &sb->hArrow);
 	AG_BindInt(sb, "xOffs", &sb->xOffs);
 #endif /* AG_DEBUG */
 }

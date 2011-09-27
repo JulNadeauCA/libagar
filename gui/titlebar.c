@@ -186,11 +186,6 @@ Init(void *obj)
 
 	AG_SetEvent(tbar, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tbar, "mouse-button-up", MouseButtonUp, NULL);
-
-#ifdef AG_DEBUG
-	AG_BindUint(tbar, "flags", &tbar->flags);
-	AG_BindInt(tbar, "pressed", &tbar->pressed);
-#endif
 }
 
 static void

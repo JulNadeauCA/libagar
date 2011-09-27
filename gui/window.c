@@ -388,29 +388,15 @@ Init(void *obj)
 	AG_BindUint(win, "flags", &win->flags);
 	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
 	AG_BindInt(win, "visible", &win->visible);
-	AG_BindUint(win, "alignment", &win->alignment);
 	AG_BindInt(win, "spacing", &win->spacing);
-	AG_BindInt(win, "tPad", &win->tPad);
-	AG_BindInt(win, "bPad", &win->bPad);
-	AG_BindInt(win, "lPad", &win->lPad);
-	AG_BindInt(win, "rPad", &win->rPad);
 	AG_BindInt(win, "wReq", &win->wReq);
 	AG_BindInt(win, "hReq", &win->hReq);
 	AG_BindInt(win, "wMin", &win->wMin);
 	AG_BindInt(win, "hMin", &win->hMin);
-	AG_BindInt(win, "wBorderBot", &win->wBorderBot);
-	AG_BindInt(win, "wBorderSide", &win->wBorderSide);
-	AG_BindInt(win, "wResizeCtrl", &win->wResizeCtrl);
-	AG_BindInt(win, "rSaved.x", &win->rSaved.x);
-	AG_BindInt(win, "rSaved.y", &win->rSaved.y);
-	AG_BindInt(win, "rSaved.w", &win->rSaved.w);
-	AG_BindInt(win, "rSaved.h", &win->rSaved.h);
 	AG_BindInt(win, "r.x", &win->r.x);
 	AG_BindInt(win, "r.y", &win->r.y);
 	AG_BindInt(win, "r.w", &win->r.w);
 	AG_BindInt(win, "r.h", &win->r.h);
-	AG_BindInt(win, "minPct", &win->minPct);
-	AG_BindInt(win, "nFocused", &win->nFocused);
 #endif /* AG_DEBUG */
 }
 

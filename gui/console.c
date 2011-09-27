@@ -186,13 +186,6 @@ Init(void *obj)
 	AG_SetEvent(cons, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(cons, "key-down", KeyDown, NULL);
 	AG_SetEvent(cons, "key-up", KeyUp, NULL);
-
-#ifdef AG_DEBUG
-	AG_BindUint(cons, "flags", &cons->flags);
-	AG_BindInt(cons, "padding", &cons->padding);
-	AG_BindInt(cons, "lineskip", &cons->lineskip);
-	AG_BindInt(cons, "rOffs", &cons->rOffs);
-#endif
 }
 
 static void

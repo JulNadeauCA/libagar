@@ -288,13 +288,9 @@ Init(void *obj)
 	px->sScaled = -1;
 
 #ifdef AG_DEBUG
-	AG_BindUint(px, "flags", &px->flags);
 	AG_BindInt(px, "n", &px->n);
 	AG_BindInt(px, "s", &px->s);
 	AG_BindInt(px, "t", &px->t);
-	AG_BindInt(px, "pre_w", &px->pre_w);
-	AG_BindInt(px, "pre_h", &px->pre_h);
-	AG_BindInt(px, "sScaled", &px->sScaled);
 #endif
 }
 

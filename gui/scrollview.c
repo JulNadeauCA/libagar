@@ -246,19 +246,12 @@ Init(void *obj)
 	sv->incr = 10;
 
 #ifdef AG_DEBUG
-	AG_BindUint(sv, "flags", &sv->flags);
-	AG_BindUint(sv, "pack", &sv->pack);
-	AG_BindInt(sv, "wPre", &sv->wPre);
-	AG_BindInt(sv, "hPre", &sv->hPre);
 	AG_BindInt(sv, "xOffs", &sv->xOffs);
 	AG_BindInt(sv, "yOffs", &sv->yOffs);
 	AG_BindInt(sv, "xMin", &sv->xMin);
 	AG_BindInt(sv, "yMin", &sv->yMin);
 	AG_BindInt(sv, "xMax", &sv->xMax);
 	AG_BindInt(sv, "yMax", &sv->yMax);
-	AG_BindInt(sv, "wBar", &sv->wBar);
-	AG_BindInt(sv, "hBar", &sv->wBar);
-	AG_BindInt(sv, "incr", &sv->incr);
 #endif /* AG_DEBUG */
 }
 

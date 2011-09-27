@@ -114,17 +114,6 @@ Init(void *obj)
 
 	AG_RedrawOnChange(sock, 100, "state");
 	AG_RedrawOnChange(sock, 500, "count");
-
-#ifdef AG_DEBUG
-	AG_BindUint(sock, "flags", &sock->flags);
-	AG_BindUint(sock, "bgType", &sock->bgType);
-	AG_BindUint(sock, "lblJustify", &sock->lblJustify);
-	AG_BindInt(sock, "lPad", &sock->lPad);
-	AG_BindInt(sock, "rPad", &sock->rPad);
-	AG_BindInt(sock, "tPad", &sock->tPad);
-	AG_BindInt(sock, "bPad", &sock->bPad);
-	AG_BindPointer(sock, "icon", (void *)&sock->icon);
-#endif /* AG_DEBUG */
 }
 
 void

@@ -55,9 +55,6 @@ Init(void *obj)
 	AG_BoxSetSpacing(box, 1);
 	sbar->flags = 0;
 	sbar->nlabels = 0;
-#ifdef AG_DEBUG
-	AG_BindInt(sbar, "nlabels", &sbar->nlabels);
-#endif
 }
 
 AG_Label *

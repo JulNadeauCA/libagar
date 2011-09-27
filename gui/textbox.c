@@ -425,13 +425,6 @@ Init(void *obj)
 	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);
 	
 	AG_WidgetForwardFocus(tb, tb->ed);
-
-#ifdef AG_DEBUG
-	AG_BindUint(tb, "flags", &tb->flags);
-	AG_BindInt(tb, "boxPadX", &tb->boxPadX);
-	AG_BindInt(tb, "boxPadY", &tb->boxPadY);
-	AG_SetEvent(tb, "bound", Bound, NULL);
-#endif /* AG_DEBUG */
 }
 
 AG_WidgetClass agTextboxClass = {

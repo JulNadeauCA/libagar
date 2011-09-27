@@ -113,12 +113,6 @@ Init(void *obj)
 
 	/* XXX TODO should make this configurable through AG_GLView. */
 	AG_RedrawOnTick(glv, 1);
-
-#ifdef AG_DEBUG
-	AG_BindUint(glv, "flags", &glv->flags);
-	AG_BindInt(glv, "wPre", &glv->wPre);
-	AG_BindInt(glv, "hPre", &glv->hPre);
-#endif
 }
 
 void

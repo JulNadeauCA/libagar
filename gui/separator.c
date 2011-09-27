@@ -75,11 +75,6 @@ Init(void *obj)
 	sep->type = AG_SEPARATOR_HORIZ;
 	sep->padding = 4;
 	sep->visible = 1;
-#ifdef AG_DEBUG
-	AG_BindUint(sep, "type", &sep->type);
-	AG_BindUint(sep, "padding", &sep->padding);
-	AG_BindInt(sep, "visible", &sep->visible);
-#endif
 }
 
 static void

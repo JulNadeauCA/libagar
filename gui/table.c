@@ -2318,20 +2318,13 @@ Init(void *obj)
 	AG_SetTimeout(&t->pollTo, PollTimeout, NULL, 0);
 	
 #ifdef AG_DEBUG
-	AG_BindUint(t, "flags", &t->flags);
-	AG_BindUint(t, "selMode", &t->selMode);
-	AG_BindInt(t, "wHint", &t->wHint);
-	AG_BindInt(t, "hHint", &t->hHint);
 	AG_BindInt(t, "hRow", &t->hRow);
 	AG_BindInt(t, "hCol", &t->hCol);
-	AG_BindInt(t, "wColMin", &t->wColMin);
-	AG_BindInt(t, "wColDefault", &t->wColDefault);
 	AG_BindInt(t, "xOffs", &t->xOffs);
 	AG_BindInt(t, "mOffs", &t->mOffs);
 	AG_BindInt(t, "n", &t->n);
 	AG_BindInt(t, "m", &t->m);
 	AG_BindInt(t, "mVis", &t->mVis);
-	AG_BindInt(t, "nResizing", &t->nResizing);
 	AG_BindInt(t, "wTot", &t->wTot);
 #endif /* AG_DEBUG */
 }

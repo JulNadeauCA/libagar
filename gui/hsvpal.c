@@ -728,22 +728,6 @@ Init(void *obj)
 /*	AG_BindFloat(pal, "green", &pal->g); */
 /*	AG_BindFloat(pal, "blue", &pal->b); */
 /*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
-#ifdef AG_DEBUG
-	AG_BindInt(pal, "flags", &pal->flags);
-	AG_BindInt(pal, "selcircle_r", &pal->selcircle_r);
-	AG_BindInt(pal, "circle.x", &pal->circle.x);
-	AG_BindInt(pal, "circle.y", &pal->circle.y);
-	AG_BindInt(pal, "circle.rout", &pal->circle.rout);
-	AG_BindInt(pal, "circle.rin", &pal->circle.rin);
-	AG_BindInt(pal, "circle.spacing", &pal->circle.spacing);
-	AG_BindInt(pal, "circle.width", &pal->circle.width);
-	AG_BindFloat(pal, "circle.dh", &pal->circle.dh);
-	AG_BindInt(pal, "triangle.x", &pal->triangle.x);
-	AG_BindInt(pal, "triangle.y", &pal->triangle.y);
-	AG_BindInt(pal, "triangle.w", &pal->triangle.w);
-	AG_BindInt(pal, "triangle.h", &pal->triangle.h);
-	AG_BindUint(pal, "state", &pal->state);
-#endif /* AG_DEBUG */
 	
 	AG_SetEvent(pal, "bound", Bound, NULL);
 	AG_AddEvent(pal, "attached", OnAttach, NULL);
