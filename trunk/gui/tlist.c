@@ -280,17 +280,8 @@ Init(void *obj)
 	AG_BindPointer(tl, "selected", &tl->selected);
 
 #ifdef AG_DEBUG
-	AG_BindUint(tl, "flags", &tl->flags);
-	AG_BindInt(tl, "wHint", &tl->wHint);
-	AG_BindInt(tl, "hHint", &tl->hHint);
-	AG_BindInt(tl, "wSpace", &tl->wSpace);
-	AG_BindInt(tl, "item_h", &tl->item_h);
-	AG_BindInt(tl, "icon_w", &tl->icon_w);
-	AG_BindPointer(tl, "dblclicked", &tl->dblclicked);
 	AG_BindInt(tl, "nitems", &tl->nitems);
 	AG_BindInt(tl, "nvisitems", &tl->nvisitems);
-	AG_BindUint32(tl, "wheelTicks", &tl->wheelTicks);
-	AG_BindInt(tl, "wRow", &tl->wRow);
 #endif /* AG_DEBUG */
 }
 

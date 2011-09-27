@@ -677,11 +677,6 @@ Init(void *obj)
 	AG_RedrawOnChange(sl, 250, "max");
 
 #ifdef AG_DEBUG
-	AG_BindUint(sl, "flags", &sl->flags);
-	AG_BindUint(sl, "type", &sl->type);
-	AG_BindInt(sl, "ctlPressed", &sl->ctlPressed);
-	AG_BindInt(sl, "wControlPref", &sl->wControlPref);
-	AG_BindInt(sl, "wControl", &sl->wControl);
 	AG_BindInt(sl, "xOffs", &sl->xOffs);
 	AG_BindInt(sl, "extent", &sl->extent);
 	AG_BindDouble(sl, "rInc", &sl->rInc);

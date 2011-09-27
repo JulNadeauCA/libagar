@@ -89,19 +89,6 @@ Init(void *obj)
 	icon->wSaved = -1;
 	icon->hSaved = -1;
 	icon->cBackground = AG_ColorRGBA(0,0,0,0);
-#ifdef AG_DEBUG
-	AG_BindUint(icon, "flags", &icon->flags);
-	AG_BindInt(icon, "surface", &icon->surface);
-	/* AG_BindString(icon, "labelTxt", icon->labelTxt, sizeof(icon->labelTxt)); */
-	AG_BindInt(icon, "labelSurface", &icon->labelSurface);
-	AG_BindInt(icon, "labelPad", &icon->labelPad);
-	AG_BindPointer(icon, "wDND", (void *)&icon->wDND);
-	AG_BindPointer(icon, "sock", (void *)&icon->sock);
-	AG_BindInt(icon, "xSaved", &icon->xSaved);
-	AG_BindInt(icon, "ySaved", &icon->ySaved);
-	AG_BindInt(icon, "wSaved", &icon->wSaved);
-	AG_BindInt(icon, "hSaved", &icon->hSaved);
-#endif /* AG_DEBUG */
 }
 
 static void

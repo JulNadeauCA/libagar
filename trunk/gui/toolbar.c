@@ -80,14 +80,6 @@ Init(void *obj)
 	bar->nRows = 0;
 	bar->curRow = 0;
 	bar->nButtons = 0;
-
-#ifdef AG_DEBUG
-	AG_BindUint(bar, "flags", &bar->flags);
-	AG_BindUint(bar, "type", &bar->type);
-	AG_BindInt(bar, "nRows", &bar->nRows);
-	AG_BindInt(bar, "nButtons", &bar->nButtons);
-	AG_BindInt(bar, "curRow", &bar->curRow);
-#endif
 }
 
 static void

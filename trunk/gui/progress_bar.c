@@ -84,14 +84,6 @@ Init(void *obj)
 	AG_RedrawOnChange(pb, 250, "value");
 	AG_RedrawOnChange(pb, 1000, "min");
 	AG_RedrawOnChange(pb, 1000, "max");
-
-#ifdef AG_DEBUG
-	AG_BindUint(pb, "flags", &pb->flags);
-	AG_BindUint(pb, "type", &pb->type);
-	AG_BindInt(pb, "width", &pb->width);
-	AG_BindInt(pb, "length", &pb->length);
-	AG_BindInt(pb, "pad", &pb->pad);
-#endif
 }
 
 static void

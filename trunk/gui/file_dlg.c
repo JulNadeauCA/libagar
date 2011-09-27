@@ -1064,11 +1064,6 @@ Init(void *obj)
 	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 
 	AG_AddEvent(fd, "widget-shown", Shown, NULL);
-
-#ifdef AG_DEBUG
-	AG_BindPointer(fd, "dirMRU", (void *)&fd->dirMRU);
-	AG_BindPointer(fd, "optsCtr", &fd->optsCtr);
-#endif
 }
 
 /*

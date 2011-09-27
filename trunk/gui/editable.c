@@ -1223,12 +1223,7 @@ Init(void *obj)
 	AG_RedrawOnTick(ed, 1000);
 
 #ifdef AG_DEBUG
-	AG_BindUint(ed, "flags", &ed->flags);
-	AG_BindUint(ed, "encoding", &ed->encoding);
-	AG_BindInt(ed, "wPre", &ed->wPre);
-	AG_BindInt(ed, "hPre", &ed->hPre);
 	AG_BindInt(ed, "pos", &ed->pos);
-	AG_BindUint32(ed, "compose", &ed->compose);
 	AG_BindInt(ed, "xCurs", &ed->xCurs);
 	AG_BindInt(ed, "yCurs", &ed->yCurs);
 	AG_BindInt(ed, "xCursPref", &ed->xCursPref);
@@ -1240,9 +1235,6 @@ Init(void *obj)
 	AG_BindInt(ed, "y", &ed->y);
 	AG_BindInt(ed, "yMax", &ed->yMax);
 	AG_BindInt(ed, "yVis", &ed->yVis);
-	AG_BindUint32(ed, "wheelTicks", &ed->wheelTicks);
-	AG_BindUint32(ed, "repeatUnicode", &ed->repeatUnicode);
-	AG_BindUint(ed, "ucsLen", &ed->ucsLen);
 #endif /* AG_DEBUG */
 }
 

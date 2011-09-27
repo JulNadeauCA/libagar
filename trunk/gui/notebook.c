@@ -110,21 +110,6 @@ Init(void *obj)
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(nb, "widget-shown", Shown, NULL);
-
-#ifdef AG_DEBUG
-	AG_BindInt(nb, "flags", &nb->flags);
-	AG_BindUint(nb, "tab_align", &nb->tab_align);
-	AG_BindInt(nb, "bar_w", &nb->bar_w);
-	AG_BindInt(nb, "bar_h", &nb->bar_h);
-	AG_BindInt(nb, "cont_w", &nb->cont_w);
-	AG_BindInt(nb, "cont_h", &nb->cont_h);
-	AG_BindInt(nb, "spacing", &nb->spacing);
-	AG_BindInt(nb, "padding", &nb->padding);
-	AG_BindPointer(nb, "tabFont", (void *)&nb->tabFont);
-	AG_BindInt(nb, "lblPartial", &nb->lblPartial);
-	AG_BindInt(nb, "lblPartialWidth", &nb->lblPartialWidth);
-	AG_BindPointer(nb, "sel_tab", (void *)&nb->sel_tab);
-#endif /* AG_DEBUG */
 }
 
 static void

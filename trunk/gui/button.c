@@ -352,15 +352,6 @@ Init(void *obj)
 
 	AG_BindInt(bu, "state", &bu->state);
 	AG_RedrawOnChange(bu, 100, "state");
-
-#ifdef AG_DEBUG
-	AG_BindInt(bu, "surface", &bu->surface);
-	AG_BindUint(bu, "flags", &bu->flags);
-	AG_BindInt(bu, "lPad", &bu->lPad);
-	AG_BindInt(bu, "rPad", &bu->rPad);
-	AG_BindInt(bu, "tPad", &bu->tPad);
-	AG_BindInt(bu, "bPad", &bu->bPad);
-#endif
 }
 
 static void

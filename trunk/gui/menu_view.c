@@ -269,15 +269,6 @@ Init(void *obj)
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
-
-#ifdef AG_DEBUG
-	AG_BindInt(mview, "spIconLbl", &mview->spIconLbl);
-	AG_BindInt(mview, "spLblArrow", &mview->spLblArrow);
-	AG_BindInt(mview, "lPad", &mview->lPad);
-	AG_BindInt(mview, "rPad", &mview->rPad);
-	AG_BindInt(mview, "tPad", &mview->tPad);
-	AG_BindInt(mview, "bPad", &mview->bPad);
-#endif
 }
 
 static void

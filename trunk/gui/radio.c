@@ -406,19 +406,6 @@ Init(void *obj)
 
 	AG_BindInt(rad, "value", &rad->value);
 	AG_RedrawOnChange(rad, 100, "value");
-
-#ifdef AG_DEBUG
-	AG_BindUint(rad, "flags", &rad->flags);
-	AG_BindInt(rad, "nItems", &rad->nItems);
-	AG_BindInt(rad, "selitem", &rad->selitem);
-	AG_BindInt(rad, "max_w", &rad->max_w);
-	AG_BindInt(rad, "oversel", &rad->oversel);
-	AG_BindInt(rad, "xPadding", &rad->xPadding);
-	AG_BindInt(rad, "yPadding", &rad->yPadding);
-	AG_BindInt(rad, "xSpacing", &rad->xSpacing);
-	AG_BindInt(rad, "ySpacing", &rad->ySpacing);
-	AG_BindInt(rad, "radius", &rad->radius);
-#endif
 }
 
 AG_WidgetClass agRadioClass = {

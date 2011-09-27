@@ -612,17 +612,6 @@ Init(void *obj)
 	AG_BindDouble(num, "max", &num->max);
 
 	AG_RedrawOnChange(num, 250, "value");
-
-#ifdef AG_DEBUG
-	AG_BindUint(num, "flags", &num->flags);
-	AG_BindDouble(num, "inc", &num->inc);
-	/* AG_BindString(num, "format", num->format, sizeof(num->format)); */
-	AG_BindPointer(num, "unit", (void *)&num->unit);
-	AG_BindInt(num, "writeable", &num->writeable);
-	AG_BindInt(num, "wUnitSel", &num->wUnitSel);
-	AG_BindInt(num, "hUnitSel", &num->hUnitSel);
-	AG_BindInt(num, "wPreUnit", &num->wPreUnit);
-#endif /* AG_DEBUG */
 }
 
 void

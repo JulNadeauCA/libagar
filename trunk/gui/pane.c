@@ -213,11 +213,9 @@ Init(void *obj)
 	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
 
 #ifdef AG_DEBUG
-	AG_BindInt(pa, "flags", &pa->flags);
 	AG_BindInt(pa, "dmoving", &pa->dmoving);
 	AG_BindInt(pa, "dx", &pa->dx);
 	AG_BindInt(pa, "rx", &pa->rx);
-	AG_BindInt(pa, "wDiv", &pa->wDiv);
 #endif
 }
 
