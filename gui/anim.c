@@ -57,7 +57,7 @@ AG_AnimNew(enum ag_anim_type type, Uint w, Uint h, const AG_PixelFormat *pf,
 	a->pitch = w*pf->BytesPerPixel;
 	a->clipRect = AG_RECT(0,0,w,h);
 	a->f = NULL;
-	a->fpsOrig = 30.0;
+	a->fpsOrig = 1.0;
 	AG_MutexInitRecursive(&a->lock);
 
 	return (a);
