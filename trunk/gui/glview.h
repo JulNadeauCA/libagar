@@ -19,6 +19,7 @@ typedef struct ag_glview {
 #define AG_GLVIEW_NOCOLOR	0x10	/* Don't preserve color matrix */
 #define AG_GLVIEW_INIT_MATRICES	0x20	/* For initialization */
 #define AG_GLVIEW_RESHAPE	0x40	/* Matrices have changed */
+#define AG_GLVIEW_BGFILL	0x80	/* Fill background */
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
 
 	int	  wPre, hPre;			/* Initial geometry */
@@ -33,6 +34,8 @@ typedef struct ag_glview {
 	float mProjection[16];			/* Projection matrix to load */
 	float mModelview[16];			/* Modelview matrix to load */
 	float mTexture[16];			/* Texture matrix to load */
+
+	AG_Color bgColor;			/* Background color */
 } AG_GLView;
 
 #define AGGLVIEW(p) ((AG_GLView *)(p))
@@ -45,6 +48,7 @@ void	   AG_GLViewDraw(void *);
 void	   AG_GLViewSizeRequest(void *, AG_SizeReq *);
 int	   AG_GLViewSizeAllocate(void *, const AG_SizeAlloc *);
 
+void       AG_GLViewSetBgColor(AG_GLView *, AG_Color);
 void	   AG_GLViewSizeHint(AG_GLView *, int, int);
 #define	   AG_GLViewPrescale AG_GLViewSizeHint
 void	   AG_GLViewReshape(AG_GLView *);
