@@ -9018,39 +9018,54 @@ fi
 if [ "${PORTAUDIO_VERSION}" != "" ]; then
 PORTAUDIO_VERSION="${PORTAUDIO_VERSION}.0"
 fi;
+if [ -e  "/usr/local/include/portaudio2/portaudio.h" ]; then
+PORTAUDIO_CFLAGS="-I/usr/local/include ${PORTAUDIO_CFLAGS}"
+fi;
+if [ -e  "/usr/include/portaudio2/portaudio.h" ]; then
+PORTAUDIO_CFLAGS="-I/usr/include ${PORTAUDIO_CFLAGS}"
+fi;
+if [ -e  "/opt/local/include/portaudio2/portaudio.h" ]; then
+PORTAUDIO_CFLAGS="-I/opt/local/include ${PORTAUDIO_CFLAGS}"
+fi;
+if [ -e  "/opt/include/portaudio2/portaudio.h" ]; then
+PORTAUDIO_CFLAGS="-I/opt/include ${PORTAUDIO_CFLAGS}"
+fi;
+if [ -e  "/usr/pkg/include/portaudio2/portaudio.h" ]; then
+PORTAUDIO_CFLAGS="-I/usr/pkg/include ${PORTAUDIO_CFLAGS}"
+fi;
 else
 PORTAUDIO_CFLAGS=""
 PORTAUDIO_LIBS=""
 if [ "${prefix_portaudio}" != "" ]; then
 if [ -e  "${prefix_portaudio}/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I${prefix_portaudio}/include "
-PORTAUDIO_LIBS="-L${prefix_portaudio}/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I${prefix_portaudio}/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L${prefix_portaudio}/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 else
 if [ -e  "/usr/local/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I/usr/local/include "
-PORTAUDIO_LIBS="-L/usr/local/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I/usr/local/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L/usr/local/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 if [ -e  "/usr/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I/usr/include "
-PORTAUDIO_LIBS="-L/usr/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I/usr/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L/usr/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 if [ -e  "/opt/local/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I/opt/local/include "
-PORTAUDIO_LIBS="-L/opt/local/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I/opt/local/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L/opt/local/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 if [ -e  "/opt/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I/opt/include "
-PORTAUDIO_LIBS="-L/opt/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I/opt/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L/opt/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 if [ -e  "/usr/pkg/include/portaudio.h" ]; then
-PORTAUDIO_CFLAGS="-I/usr/pkg/include "
-PORTAUDIO_LIBS="-L/usr/pkg/lib -lportaudio "
+PORTAUDIO_CFLAGS="-I/usr/pkg/include ${PTHREADS_CFLAGS}"
+PORTAUDIO_LIBS="-L/usr/pkg/lib -lportaudio ${PTHREADS_LIBS}"
 PORTAUDIO_VERSION="18.0"
 fi;
 fi;
@@ -9096,7 +9111,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#include <portaudio.h>
+#include <portaudio2/portaudio.h>
 
 int
 main(int argc, char *argv[])
