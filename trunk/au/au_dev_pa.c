@@ -35,7 +35,7 @@
 #include "au_init.h"
 #include "au_dev_out.h"
 
-#include <portaudio.h>
+#include <portaudio2/portaudio.h>
 
 typedef struct au_dev_out_pa {
 	struct au_dev_out _inherit;
