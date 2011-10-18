@@ -30,6 +30,7 @@
 #ifdef HAVE_OPENGL
 
 #include "glview.h"
+#include "primitive.h"
 #include "opengl.h"
 
 #include <stdarg.h>
@@ -96,6 +97,7 @@ Init(void *obj)
 
 	glv->wPre = 100;
 	glv->hPre = 100;
+	glv->bgColor = AG_ColorRGB(0,0,0);
 
 	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
@@ -241,11 +243,25 @@ AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 void
+AG_GLViewSetBgColor(AG_GLView *glv, AG_Color c)
+{
+	AG_ObjectLock(glv);
+	glv->bgColor = c;
+	AG_ObjectUnlock(glv);
+}
+
+void
 AG_GLViewDraw(void *obj)
 {
 	AG_GLView *glv = obj;
 	AG_Driver *drv = WIDGET(glv)->drv;
 	Uint hView;
+	
+	if (glv->flags & AG_GLVIEW_BGFILL) {
+		AG_DrawRect(glv,
+		    AG_RECT(0,0, WIDTH(glv), HEIGHT(glv)),
+		    glv->bgColor);
+	}
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT);
 
