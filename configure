@@ -710,7 +710,7 @@ echo "#ifndef VERSION" > $BLD/include/agar/config/version.h
 echo "#define VERSION \"$VERSION\"" >> $BLD/include/agar/config/version.h
 echo "#endif" >> $BLD/include/agar/config/version.h
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="Oh le bon temps que ce siecle de fer"
+RELEASE="A Mild Breeze Upon The Brow Of The Dead"
 echo "RELEASE=$RELEASE" >>Makefile.config
 echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 echo "#ifndef RELEASE" > $BLD/include/agar/config/release.h
@@ -9350,7 +9350,7 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-core-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${HAVE_PTHREADS} ${HAVE_DB4} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
