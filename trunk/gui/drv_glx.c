@@ -1967,6 +1967,25 @@ GLX_SetTransientFor(AG_Window *win, AG_Window *winParent)
 	AG_MutexUnlock(&agDisplayLock);
 }
 
+static int
+GLX_SetOpacity(AG_Window *win, float f)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	unsigned long opacity = (f > 0.99) ? 0xffffffff : f*0xffffffff;
+	Atom wmOpacity;
+
+	if ((wmOpacity =
+	    XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", False)) == None) {
+		return (-1);
+	}
+	XChangeProperty(agDisplay, glx->w,
+	    wmOpacity, XA_CARDINAL, 32,
+	    PropModeReplace,
+	    (unsigned char *)&opacity,
+	    1L);
+	return (0);
+}
+
 AG_DriverMwClass agDriverGLX = {
 	{
 		{
@@ -2061,7 +2080,8 @@ AG_DriverMwClass agDriverGLX = {
 	NULL,				/* captureWindow */
 	GLX_SetBorderWidth,
 	GLX_SetWindowCaption,
-	GLX_SetTransientFor
+	GLX_SetTransientFor,
+	GLX_SetOpacity
 };
 
 #endif /* HAVE_GLX */

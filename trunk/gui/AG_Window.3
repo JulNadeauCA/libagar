@@ -161,6 +161,9 @@ for notebook-style display.
 .Ft "void"
 .Fn AG_WindowSetMinSizePct "AG_Window *win" "int pct"
 .Pp
+.Ft "int"
+.Fn AG_WindowSetOpacity "AG_Window *win" "float opacity"
+.Pp
 .Ft "void"
 .Fn AG_WindowMaximize "AG_Window *win"
 .Pp
@@ -371,8 +374,12 @@ The
 .Fn AG_WindowSetMinSize
 routine sets the minimum window size in pixels.
 .Fn AG_WindowSetMinSizePct
-sets the minimum window size in percentage of the requested (computed)
-size.
+sets the minimum window size in percentage of the requested (computed) size.
+.Pp
+.Fn AG_WindowSetOpacity
+configures the overall per-window opacity (requires a compositing
+window manager).
+The argument can range from 0.0 (transparent) to 1.0 (opaque).
 .Pp
 .Fn AG_WindowMaximize
 and

@@ -90,6 +90,7 @@ typedef struct ag_driver_mw_class {
 	int  (*setBorderWidth)(AG_Window *, Uint w);
 	int  (*setWindowCaption)(AG_Window *, const char *s);
 	void (*setTransientFor)(AG_Window *, AG_Window *winParent);
+	int  (*setOpacity)(AG_Window *, float opacity);
 } AG_DriverMwClass;
 .Ed
 .Pp
@@ -181,6 +182,10 @@ passes a hint to the window manager that the window should be marked as
 "transient" for the specified window
 .Fa winParent .
 This operation is optional and window manager specific.
+.Pp
+.Fn setOpacity
+passes a window opacity argument (ranging from 0.0 to 1.0) to the
+underlying window manager.
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,
 .Xr AG_DriverSw 3 ,
