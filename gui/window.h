@@ -157,6 +157,8 @@ int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
 
+int      AG_WindowSetOpacity(AG_Window *, float);
+
 void	 AG_WindowSaveGeometry(AG_Window *);
 int	 AG_WindowRestoreGeometry(AG_Window *);
 void	 AG_WindowMaximize(AG_Window *);

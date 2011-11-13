@@ -1775,6 +1775,20 @@ scan:
 	}
 }
 
+/* Configure per-window opacity (for compositing window managers). */
+int
+AG_WindowSetOpacity(AG_Window *win, float f)
+{
+	AG_Driver *drv = OBJECT(win)->parent;
+
+	if (AGDRIVER_MULTIPLE(drv) &&
+	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL) {
+		return AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
+	}
+	/* TODO: support compositing under single-window drivers. */
+	return (-1);
+}
+
 #ifdef AG_LEGACY
 /* Pre-1.4 */
 AG_Window *

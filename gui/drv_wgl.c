@@ -1544,7 +1544,8 @@ AG_DriverMwClass agDriverWGL = {
 	NULL,				/* captureWindow */
 	WGL_SetBorderWidth,
 	WGL_SetWindowCaption,
-	WGL_SetTransientFor
+	WGL_SetTransientFor,
+	NULL				/* setOpacity (TODO) */
 };
 
 #endif /* HAVE_WGL */
