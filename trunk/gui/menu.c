@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -184,8 +184,9 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 	if (mi->nsubitems == 0)
 		return (NULL);
 
-	win = AG_WindowNew(AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
-	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
+	win = AG_WindowNew(
+	    AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
+	    AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN);
 	AG_ObjectSetName(win, "_Popup-%s",
 	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
@@ -201,9 +202,12 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 	/* Attach the MenuItem to this view. */
 	mi->view = mv;
 
+	if (winParent != NULL) {
+		AG_WindowAttach(winParent, win);
+	}
 	AG_WindowFocus(win);
-
 	AG_WindowSetGeometry(win, x, y, -1,-1);
+
 	AG_WindowShow(win);
 	return (win);
 }
@@ -225,7 +229,7 @@ AG_MenuCollapse(void *parentWidget, AG_MenuItem *mi)
 		if (mi->subitems[i].view != NULL)
 			AG_MenuCollapse(parentWidget, &mi->subitems[i]);
 	}
-
+	
 	/* Destroy the MenuView's window. */
 	AG_ObjectDetach(WIDGET(mi->view)->window);
 	mi->view = NULL;
