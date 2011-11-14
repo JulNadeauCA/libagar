@@ -165,6 +165,12 @@ for notebook-style display.
 .Fn AG_WindowSetOpacity "AG_Window *win" "float opacity"
 .Pp
 .Ft "void"
+.Fn AG_WindowSetFadeIn "AG_Window *win" "float fadeTime" "float fadeIncr"
+.Pp
+.Ft "void"
+.Fn AG_WindowSetFadeOut "AG_Window *win" "float fadeTime" "float fadeIncr"
+.Pp
+.Ft "void"
 .Fn AG_WindowMaximize "AG_Window *win"
 .Pp
 .Ft "void"
@@ -377,9 +383,23 @@ routine sets the minimum window size in pixels.
 sets the minimum window size in percentage of the requested (computed) size.
 .Pp
 .Fn AG_WindowSetOpacity
-configures the overall per-window opacity (requires a compositing
-window manager).
+configures an overall per-window opacity (for compositing window managers).
 The argument can range from 0.0 (transparent) to 1.0 (opaque).
+.Pp
+For windows with the
+.Dv AG_WINDOW_FADEIN
+or
+.Dv AG_WINDOW_FADEOUT
+flags,
+.Fn AG_WindowSetFadeIn
+and
+.Fn AG_WindowSetFadeOut
+can be used to configure the fade timing parameters.
+During fade-in, the window opacity will be repeatedly incremented by
+.Fa fadeIncr ,
+over a total period of
+.Fa fadeTime
+(in seconds).
 .Pp
 .Fn AG_WindowMaximize
 and
@@ -612,6 +632,15 @@ For the
 object:
 .Pp
 .Bl -tag -width "AG_WINDOW_NOUPDATERECT "
+.It AG_WINDOW_FADEIN
+Enable smooth fade-in for compositing window managers.
+.It AG_WINDOW_FADEOUT
+Enable smooth fade-out for compositing window managers.
+Only effective with
+.Fn AG_WindowHide
+(i.e., windows destroyed with
+.Fn AG_ObjectDetach ,
+are not faded out).
 .It AG_WINDOW_MAXIMIZED
 Window is currently maximized (read-only).
 .It AG_WINDOW_MINIMIZED

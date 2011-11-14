@@ -265,13 +265,13 @@ Detach(AG_Event *event)
 	AG_Driver *drv = OBJECT(win)->parent, *odrv;
 	AG_Window *subwin, *nsubwin;
 	AG_Window *owin;
-
+	
 #ifdef AG_DEBUG
 	if (drv == NULL || !AG_OfClass(drv, "AG_Driver:*"))
 		AG_FatalError("Window is not attached to a Driver");
 #endif
 	AG_LockVFS(&agDrivers);
-
+	
 	/* Implicitely hide the window. */
 	if (win->visible)
 		AG_WindowHide(win);
@@ -333,6 +333,41 @@ Detach(AG_Event *event)
 	AG_UnlockVFS(&agDrivers);
 }
 
+static Uint32
+FadeInTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Window *win = obj;
+
+	if (win->fadeOpacity < 1.0) {
+		win->fadeOpacity += win->fadeInIncr;
+		AG_WindowSetOpacity(win, win->fadeOpacity);
+		return (ival);
+	} else {
+		return (0);
+	}
+}
+
+static Uint32
+FadeOutTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Window *win = obj;
+	Uint32 rv;
+
+	AG_ObjectLock(win);
+	if (win->fadeOpacity > 0.0) {
+		win->fadeOpacity -= win->fadeOutIncr;
+		AG_WindowSetOpacity(win, win->fadeOpacity);
+		rv = ival;
+	} else {
+		win->visible = 0;
+		AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
+		AG_WindowSetOpacity(win, 1.0);
+		rv = 0;
+	}
+	AG_ObjectUnlock(win);
+	return (rv);
+}
+
 static void
 Init(void *obj)
 {
@@ -363,8 +398,16 @@ Init(void *obj)
 	win->nFocused = 0;
 	win->parent = NULL;
 	win->widExclMotion = NULL;
+	win->fadeInTime = 0.06;
+	win->fadeInIncr = 0.2;
+	win->fadeOutTime = 0.06;
+	win->fadeOutIncr = 0.2;
+	win->fadeOpacity = 1.0;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
+
+	AG_SetTimeout(&win->fadeInTo, FadeInTimeout, NULL, AG_CANCEL_ONDETACH);
+	AG_SetTimeout(&win->fadeOutTo, FadeOutTimeout, NULL, AG_CANCEL_ONDETACH);
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
@@ -533,7 +576,6 @@ Shown(AG_Event *event)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		/* Append to modal window list */
 		if (win->flags & AG_WINDOW_MODAL) {
 			AG_Variable Vmodal;
 			AG_InitPointer(&Vmodal, win);
@@ -542,16 +584,16 @@ Shown(AG_Event *event)
 		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
-		/*
-		 * Create/map a native window of requested dimensions.
-		 * We expect the driver will call AG_WidgetUpdateCoords().
-		 */
+		/* We expect the driver will call AG_WidgetUpdateCoords(). */
 		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			if (AGDRIVER_MW_CLASS(drv)->openWindow(win,
 			    AG_RECT(a.x, a.y, a.w, a.h), 0,
 			    mwFlags) == -1) {
 				AG_FatalError(NULL);
 			}
+		}
+		if (win->flags & AG_WINDOW_FADEIN) {
+			AG_WindowSetOpacity(win, 0.0);
 		}
 		if (AGDRIVER_MW_CLASS(drv)->mapWindow(win) == -1) {
 			AG_FatalError(NULL);
@@ -585,6 +627,10 @@ Shown(AG_Event *event)
 
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
+
+	if (win->flags & AG_WINDOW_FADEIN)
+		AG_ScheduleTimeout(win, &win->fadeInTo,
+		    (Uint32)((win->fadeInTime*1000.0)/(1.0/win->fadeInIncr)));
 }
 
 static void
@@ -702,8 +748,14 @@ AG_WindowHide(AG_Window *win)
 {
 	AG_ObjectLock(win);
 	if (win->visible) {
-		win->visible = 0;
-		AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
+		if (win->flags & AG_WINDOW_FADEOUT) {
+			AG_WindowSetOpacity(win, 1.0); /* XXX */
+			AG_ScheduleTimeout(win, &win->fadeOutTo,
+			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)));
+		} else {
+			win->visible = 0;
+			AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
+		}
 	}
 	AG_ObjectUnlock(win);
 }
@@ -803,7 +855,12 @@ AG_WindowFocus(AG_Window *win)
 		agWindowToFocus = NULL;
 		goto out;
 	}
+
 	AG_ObjectLock(win);
+	if (win->flags & AG_WINDOW_DENYFOCUS) {
+		AG_ObjectUnlock(win);
+		goto out;
+	}
 	if (OBJECT(win)->parent == NULL) {
 		/* Will focus on future attach */
 		win->flags |= AG_WINDOW_FOCUSONATTACH;
@@ -1780,13 +1837,36 @@ int
 AG_WindowSetOpacity(AG_Window *win, float f)
 {
 	AG_Driver *drv = OBJECT(win)->parent;
+	int rv = -1;
+
+	AG_ObjectLock(win);
+	win->fadeOpacity = (f > 1.0) ? 1.0 : f;
 
 	if (AGDRIVER_MULTIPLE(drv) &&
-	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL) {
-		return AGDRIVER_MW_CLASS(drv)->setOpacity(win, f);
-	}
+	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
+		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->fadeOpacity);
+	
 	/* TODO: support compositing under single-window drivers. */
-	return (-1);
+	AG_ObjectUnlock(win);
+	return (rv);
+}
+
+/* Configure fade-in/fade-out parameters. */
+void
+AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
+{
+	AG_ObjectLock(win);
+	win->fadeInTime = fadeTime;
+	win->fadeInIncr = fadeIncr;
+	AG_ObjectUnlock(win);
+}
+void
+AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
+{
+	AG_ObjectLock(win);
+	win->fadeOutTime = fadeTime;
+	win->fadeOutIncr = fadeIncr;
+	AG_ObjectUnlock(win);
 }
 
 #ifdef AG_LEGACY

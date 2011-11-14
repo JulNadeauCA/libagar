@@ -45,34 +45,36 @@ typedef struct ag_window {
 	struct ag_widget wid;
 
 	Uint flags;
-#define AG_WINDOW_MODAL		0x0000001 /* Place in foreground */
-#define AG_WINDOW_MAXIMIZED	0x0000002 /* Window is maximized */
-#define AG_WINDOW_MINIMIZED	0x0000004 /* Window is minimized */
-#define AG_WINDOW_KEEPABOVE	0x0000008 /* Keep window above */
-#define AG_WINDOW_KEEPBELOW	0x0000010 /* Keep window below */
-#define AG_WINDOW_DENYFOCUS	0x0000020 /* Widgets cannot gain focus */
-#define AG_WINDOW_NOTITLE	0x0000040 /* Disable the titlebar */
-#define AG_WINDOW_NOBORDERS	0x0000080 /* Disable the window borders */
-#define AG_WINDOW_NOHRESIZE	0x0000100 /* Disable horizontal resize */
-#define AG_WINDOW_NOVRESIZE	0x0000200 /* Disable vertical resize */
-#define AG_WINDOW_NOCLOSE	0x0000400 /* Disable close button */
-#define AG_WINDOW_NOMINIMIZE	0x0000800 /* Disable minimize button */
-#define AG_WINDOW_NOMAXIMIZE	0x0001000 /* Disable maximize button */
-#define AG_WINDOW_CASCADE	0x0002000 /* For AG_WindowSetPosition() */
-#define AG_WINDOW_MINSIZEPCT	0x0004000 /* Set minimum size in % */
-#define AG_WINDOW_NOBACKGROUND	0x0008000 /* Don't fill the background */
-#define AG_WINDOW_NOUPDATERECT	0x0010000 /* Unused */
-#define AG_WINDOW_FOCUSONATTACH	0x0020000 /* Automatic focus on attach */
-#define AG_WINDOW_HMAXIMIZE	0x0040000 /* Keep maximized horizontally */
-#define AG_WINDOW_VMAXIMIZE	0x0080000 /* Keep maximized vertically */
-#define AG_WINDOW_NOMOVE	0x0100000 /* Disallow movement of window */
-#define AG_WINDOW_NOCLIPPING	0x0200000 /* Don't set a clipping rectangle over the window area */
-#define AG_WINDOW_MODKEYEVENTS	0x0400000 /* Generate key{up,down} events for
+#define AG_WINDOW_MODAL		0x00000001 /* Place in foreground */
+#define AG_WINDOW_MAXIMIZED	0x00000002 /* Window is maximized */
+#define AG_WINDOW_MINIMIZED	0x00000004 /* Window is minimized */
+#define AG_WINDOW_KEEPABOVE	0x00000008 /* Keep window above */
+#define AG_WINDOW_KEEPBELOW	0x00000010 /* Keep window below */
+#define AG_WINDOW_DENYFOCUS	0x00000020 /* Widgets cannot gain focus */
+#define AG_WINDOW_NOTITLE	0x00000040 /* Disable the titlebar */
+#define AG_WINDOW_NOBORDERS	0x00000080 /* Disable the window borders */
+#define AG_WINDOW_NOHRESIZE	0x00000100 /* Disable horizontal resize */
+#define AG_WINDOW_NOVRESIZE	0x00000200 /* Disable vertical resize */
+#define AG_WINDOW_NOCLOSE	0x00000400 /* Disable close button */
+#define AG_WINDOW_NOMINIMIZE	0x00000800 /* Disable minimize button */
+#define AG_WINDOW_NOMAXIMIZE	0x00001000 /* Disable maximize button */
+#define AG_WINDOW_CASCADE	0x00002000 /* For AG_WindowSetPosition() */
+#define AG_WINDOW_MINSIZEPCT	0x00004000 /* Set minimum size in % */
+#define AG_WINDOW_NOBACKGROUND	0x00008000 /* Don't fill the background */
+#define AG_WINDOW_NOUPDATERECT	0x00010000 /* Unused */
+#define AG_WINDOW_FOCUSONATTACH	0x00020000 /* Automatic focus on attach */
+#define AG_WINDOW_HMAXIMIZE	0x00040000 /* Keep maximized horizontally */
+#define AG_WINDOW_VMAXIMIZE	0x00080000 /* Keep maximized vertically */
+#define AG_WINDOW_NOMOVE	0x00100000 /* Disallow movement of window */
+#define AG_WINDOW_NOCLIPPING	0x00200000 /* Don't set a clipping rectangle over the window area */
+#define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Generate key{up,down} events for
                                             keypresses on modifier keys */
-#define AG_WINDOW_DETACHING	0x0800000 /* Window is being detached */
-#define AG_WINDOW_POPUP		0x1000000 /* "Popup" style (WM-dependent) */
-#define AG_WINDOW_DIALOG	0x2000000 /* "Dialog" style (WM-dependent) */
-#define AG_WINDOW_NOCURSORCHG	0x4000000 /* Inhibit any cursor change */
+#define AG_WINDOW_DETACHING	0x00800000 /* Window is being detached */
+#define AG_WINDOW_POPUP		0x01000000 /* "Popup" style (WM-dependent) */
+#define AG_WINDOW_DIALOG	0x02000000 /* "Dialog" style (WM-dependent) */
+#define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
+#define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
+#define AG_WINDOW_FADEOUT	0x10000000 /* Fade-out (compositing WMs) */
 
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
@@ -105,6 +107,11 @@ typedef struct ag_window {
 	int nFocused;				/* Widgets in focus chain */
 	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
 	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas; /* Cursor-change areas */
+
+	AG_Timeout fadeInTo, fadeOutTo;		/* Fade timer */
+	float fadeInTime, fadeOutTime;		/* Fade time (s) */
+	float fadeInIncr, fadeOutIncr;		/* Fade increment */
+	float fadeOpacity;			/* Fade opacity */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);
@@ -158,6 +165,8 @@ int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
 
 int      AG_WindowSetOpacity(AG_Window *, float);
+void     AG_WindowSetFadeIn(AG_Window *, float, float);
+void     AG_WindowSetFadeOut(AG_Window *, float, float);
 
 void	 AG_WindowSaveGeometry(AG_Window *);
 int	 AG_WindowRestoreGeometry(AG_Window *);
