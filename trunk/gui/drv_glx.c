@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,6 @@ static int      agExitGLX = 0;		/* Exit event loop */
 
 static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
-static Atom           wmDeleteWindow;	/* WM_DELETE_WINDOW atom */
 
 /* Driver instance data */
 typedef struct ag_driver_glx {
@@ -109,12 +108,20 @@ AG_DriverMwClass agDriverGLX;
 #define AGDRIVER_IS_GLX(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
 
+/* X Atoms */
+static Atom wmProtocols, wmTakeFocus, wmDeleteWindow,
+    wmMotifWmHints, wmKwmWinDecoration, wmWinHints,
+    wmNetWmState, wmNetWmStateModal, wmNetWmStateSkipTaskbar,
+    wmNetWmStateAbove, wmNetWmStateBelow, wmNetWmWindowType,
+    wmNetWmWindowTypePopupMenu, wmNetWmWindowTypeDropdownMenu,
+    wmNetWmWindowTypeDialog, wmNetWmWindowOpacity;
+
 static void GLX_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static void GLX_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  GLX_RaiseWindow(AG_Window *);
 static int  GLX_SetInputFocus(AG_Window *);
 static void GLX_SetTransientFor(AG_Window *, AG_Window *);
-static void GLX_FreeWidgetResources(AG_Widget *wid);
+static void GLX_FreeWidgetResources(AG_Widget *);
 
 static void
 Init(void *obj)
@@ -168,7 +175,22 @@ InitGlobals(void)
 	InitKeymaps();
 	memset(xkbBuf, '\0', sizeof(xkbBuf));
 	memset(&xkbCompStatus, 0, sizeof(xkbCompStatus));
-	wmDeleteWindow = XInternAtom(agDisplay, "WM_DELETE_WINDOW", False);
+	wmProtocols = XInternAtom(agDisplay, "WM_PROTOCOLS", True);
+	wmTakeFocus = XInternAtom(agDisplay, "WM_TAKE_FOCUS", True);
+	wmDeleteWindow = XInternAtom(agDisplay, "WM_DELETE_WINDOW", True);
+	wmMotifWmHints = XInternAtom(agDisplay, "_MOTIF_WM_HINTS", True);
+	wmKwmWinDecoration = XInternAtom(agDisplay, "KWM_WIN_DECORATION", True);
+	wmWinHints = XInternAtom(agDisplay, "_WIN_HINTS", True);
+	wmNetWmState = XInternAtom(agDisplay, "_NET_WM_STATE", True);
+	wmNetWmStateModal = XInternAtom(agDisplay, "_NET_WM_STATE_MODAL", True);
+	wmNetWmStateSkipTaskbar = XInternAtom(agDisplay, "_NET_WM_STATE_SKIP_TASKBAR", True);
+	wmNetWmStateAbove = XInternAtom(agDisplay, "_NET_WM_STATE_ABOVE", True);
+	wmNetWmStateBelow = XInternAtom(agDisplay, "_NET_WM_STATE_BELOW", True);
+	wmNetWmWindowType = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE", True);
+	wmNetWmWindowTypePopupMenu = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE_POPUP_MENU", True);
+	wmNetWmWindowTypeDropdownMenu = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", True);
+	wmNetWmWindowTypeDialog = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE_DIALOG", True);
+	wmNetWmWindowOpacity = XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", True);
 	return (0);
 }
 
@@ -1352,17 +1374,17 @@ InitDefaultCursor(AG_DriverGLX *glx)
 	return (0);
 }
 
-/* Set the WM_NORMAL_HINTS property. */
+/* Set window manager hints. */
 static void
-SetWmNormalHints(AG_Window *win, const AG_Rect *r, Uint mwFlags)
+SetWmHints(AG_Window *win, const AG_Rect *r, Uint mwFlags)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XSizeHints *h;
 
+	/* Set WM_NORMAL_HINTS */
 	if ((h = XAllocSizeHints()) == NULL)  {
 		return;
 	}
-
 	h->flags = 0;
 	if (!(mwFlags & AG_DRIVER_MW_ANYPOS))
 		h->flags |= PPosition;
@@ -1386,12 +1408,9 @@ static void
 SetNoDecorationHints(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	Atom wmHints;
-
+	
 	/* For Motif-compliant window managers. */
-	if ((wmHints = XInternAtom(agDisplay, "_MOTIF_WM_HINTS", True))
-	    != None) {
-		/* Hints used by Motif compliant window managers */
+	if (wmMotifWmHints != None) {
 		struct {
 			unsigned long flags;
 			unsigned long functions;
@@ -1401,33 +1420,114 @@ SetNoDecorationHints(AG_Window *win)
 		} MWMHints = { (1L << 1), 0, 0, 0, 0 };
 
 		XChangeProperty(agDisplay, glx->w,
-		    wmHints, wmHints, 32,
+		    wmMotifWmHints, wmMotifWmHints, 32,
 		    PropModeReplace,
-		    (unsigned char *)&MWMHints,
+		    (Uchar *)&MWMHints,
 		    sizeof(MWMHints)/sizeof(long));
 	}
 
 	/* For KWM */
-	if ((wmHints = XInternAtom(agDisplay, "KWM_WIN_DECORATION", True))
-	    != None) {
+	if (wmKwmWinDecoration != None) {
 		long KWMHints = 0;
 
 		XChangeProperty(agDisplay, glx->w,
-		    wmHints, wmHints, 32,
+		    wmKwmWinDecoration, wmKwmWinDecoration, 32,
 		    PropModeReplace,
-		    (unsigned char *)&KWMHints,
+		    (Uchar *)&KWMHints,
 		    sizeof(KWMHints)/sizeof(long));
 	}
 
 	/* For GNOME */
-	if ((wmHints = XInternAtom(agDisplay, "_WIN_HINTS", True)) != None) {
+	if (wmWinHints != None) {
 		long GNOMEHints = 0;
 
 		XChangeProperty(agDisplay, glx->w,
-		    wmHints, wmHints, 32,
+		    wmWinHints, wmWinHints, 32,
 		    PropModeReplace,
-		    (unsigned char *)&GNOMEHints,
+		    (Uchar *)&GNOMEHints,
 		    sizeof(GNOMEHints)/sizeof(long));
+	}
+}
+
+/* Set hints for AG_WINDOW_MODAL windows. */
+static void
+SetModalHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+
+	if (wmNetWmState != None && wmNetWmStateModal != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmState, XA_ATOM, 32,
+		    PropModeAppend,
+		    (Uchar *)&wmNetWmStateModal, 1);
+	}
+}
+
+/* Set hints for AG_WINDOW_POPUP style windows. */
+static void
+SetPopupHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+
+	if (wmNetWmState != None && wmNetWmStateSkipTaskbar != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmState, XA_ATOM, 32,
+		    PropModeAppend,
+		    (Uchar *)&wmNetWmStateSkipTaskbar, 1);
+	}
+	if (wmNetWmWindowType != None &&
+	    wmNetWmWindowTypeDropdownMenu != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmWindowType, XA_ATOM, 32,
+		    PropModeReplace,
+		    (Uchar *)&wmNetWmWindowTypeDropdownMenu, 1);
+	}
+}
+
+/* Set hints for AG_DIALOG style windows. */
+static void
+SetDialogHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+
+	if (wmNetWmState != None &&
+	    wmNetWmStateSkipTaskbar != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmState, XA_ATOM, 32,
+		    PropModeAppend,
+		    (Uchar *)&wmNetWmStateSkipTaskbar, 1);
+	}
+	if (wmNetWmWindowType != None &&
+	    wmNetWmWindowTypeDialog != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmWindowType, XA_ATOM, 32,
+		    PropModeReplace,
+		    (Uchar *)&wmNetWmWindowTypeDialog, 1);
+	}
+}
+
+/* Set hints for AG_WINDOW_KEEP* settings. */
+static void
+SetAboveBelowHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+
+	if (win->flags & AG_WINDOW_KEEPABOVE) {
+		if (wmNetWmState != None &&
+		    wmNetWmStateAbove != None) {
+			XChangeProperty(agDisplay, glx->w,
+			    wmNetWmState, XA_ATOM, 32,
+			    PropModeAppend,
+			    (Uchar *)&wmNetWmStateAbove, 1);
+		}
+	} else if (win->flags & AG_WINDOW_KEEPBELOW) {
+		if (wmNetWmState != None &&
+		    wmNetWmStateBelow != None) {
+			XChangeProperty(agDisplay, glx->w,
+			    wmNetWmState, XA_ATOM, 32,
+			    PropModeAppend,
+			    (Uchar *)&wmNetWmStateBelow, 1);
+		}
 	}
 }
 
@@ -1442,6 +1542,8 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	int i = 0;
 	Ulong valuemask;
 	int depth;
+	Atom wmprot[2];
+	int nwmprot = 0;
 	
 	glxAttrs[i++] = GLX_RGBA;
 	glxAttrs[i++] = GLX_RED_SIZE;	glxAttrs[i++] = 2;
@@ -1496,17 +1598,37 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
 
+	/* Set the window manager hints. */
 	if (win->parent != NULL) {
 		GLX_SetTransientFor(win, win->parent);
 	}
-	SetWmNormalHints(win, &r, mwFlags);
+	SetWmHints(win, &r, mwFlags);
 
 	if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE))
 		SetNoDecorationHints(win);
+	if (win->flags & AG_WINDOW_MODAL)
+		SetModalHints(win);
+	if (win->flags & AG_WINDOW_POPUP)
+		SetPopupHints(win);
+	if (win->flags & AG_WINDOW_DIALOG)
+		SetDialogHints(win);
+	if (win->flags & (AG_WINDOW_KEEPABOVE|AG_WINDOW_KEEPBELOW))
+		SetAboveBelowHints(win);
 
 	if (!(win->flags & AG_WINDOW_NOCLOSE))
-		XSetWMProtocols(agDisplay, glx->w, &wmDeleteWindow, 1);
-	
+		wmprot[nwmprot++] = wmDeleteWindow;
+	if (win->flags & AG_WINDOW_DENYFOCUS) {
+		XWMHints h;
+		h.flags = InputHint;
+		h.input = False;
+		XSetWMHints(agDisplay, glx->w, &h);
+		wmprot[nwmprot++] = wmTakeFocus;
+	}
+	XChangeProperty(agDisplay, glx->w,
+	    wmProtocols, XA_ATOM, 32,
+	    PropModeReplace,
+	    (Uchar *)wmprot, nwmprot);
+
 	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
@@ -1972,18 +2094,17 @@ GLX_SetOpacity(AG_Window *win, float f)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	unsigned long opacity = (f > 0.99) ? 0xffffffff : f*0xffffffff;
-	Atom wmOpacity;
 
-	if ((wmOpacity =
-	    XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", False)) == None) {
+	if (wmNetWmWindowOpacity != None) {
+		XChangeProperty(agDisplay, glx->w,
+		    wmNetWmWindowOpacity, XA_CARDINAL, 32,
+		    PropModeReplace,
+		    (Uchar *)&opacity, 1);
+		return (0);
+	} else {
+		AG_SetError("Opacity not implemented");
 		return (-1);
 	}
-	XChangeProperty(agDisplay, glx->w,
-	    wmOpacity, XA_CARDINAL, 32,
-	    PropModeReplace,
-	    (unsigned char *)&opacity,
-	    1L);
-	return (0);
 }
 
 AG_DriverMwClass agDriverGLX = {
