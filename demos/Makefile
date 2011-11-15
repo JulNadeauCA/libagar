@@ -33,7 +33,8 @@ SUBDIR=	fixedres \
 	timeouts \
 	pane \
 	imageloading \
-	audio
+	audio \
+	compositing
 
 all: all-subdir
 clean: prereq clean-subdir
