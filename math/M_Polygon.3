@@ -35,163 +35,109 @@
 #include <agar/math.h>
 .Ed
 .Sh DESCRIPTION
-.\" MANLINK(M_Polygon2)
 The
-.Ft M_Polygon2
-structure describes a simple polygon (no self-intersections, no holes),
-in R^2, in terms of its
-.Va n
-sides:
+.Ft M_Polygon
+structure describes a simple polygon.
+The polygon may be convex or concave.
+Self-intersections and holes are not allowed.
 .Bd -literal
-typedef struct m_polygon2 {
-	M_Line2 *s;	/* Line segments */
-	Uint n;		/* Segment count */
-	Uint vn;	/* Vertex count */
-} M_Polygon2;
-.Ed
-.\" MANLINK(M_Polygon3)
-.Pp
-Similarly,
-.Ft M_Polygon3
-describes a polygon in R^3:
-.Bd -literal
-typedef struct m_polygon3 {
-	M_Line3 *s;	/* Line segments */
-	Uint n;		/* Segment count */
-	Uint vn;	/* Vertex count */
-} M_Polygon3;
+typedef struct m_polygon {
+	M_Vector2 *v;	/* Vertices */
+	Uint n;		/* Vertex count */
+} M_Polygon;
 .Ed
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn M_PolygonInit2 "M_Polygon2 *P"
+.Fn M_PolygonInit "M_Polygon *P"
+.Pp
+.Ft M_Polygon
+.Fn M_POLYGON_INITIALIZER "void"
 .Pp
 .Ft void
-.Fn M_PolygonInit3 "M_Polygon3 *P"
+.Fn M_PolygonFree "M_Polygon *P"
 .Pp
-.Ft M_Polygon2
-.Fn M_POLYGON2_INITIALIZER "void"
+.Ft M_Polygon
+.Fn M_PolygonFromPts "Uint n" "const M_Vector2 *v"
 .Pp
-.Ft M_Polygon3
-.Fn M_POLYGON3_INITIALIZER "void"
+.Ft M_Polygon
+.Fn M_PolygonFromLines "Uint n" "const M_Line2 *L"
+.Pp
+.Ft int
+.Fn M_PolygonAddLine "M_Polygon *P" "M_Line2 L"
+.Pp
+.Ft int
+.Fn M_PolygonAddVertex "M_Polygon *P" "M_Vector2 v"
+.Pp
+.Ft int
+.Fn M_PolygonDelVertex "M_Polygon *P" "int v"
+.Pp
+.Ft M_Polygon
+.Fn M_PolygonRead "AG_DataSource *ds"
 .Pp
 .Ft void
-.Fn M_PolygonFree2 "M_Polygon2 *P"
-.Pp
-.Ft void
-.Fn M_PolygonFree3 "M_Polygon3 *P"
-.Pp
-.Ft M_Polygon2
-.Fn M_PolygonFromLines2 "Uint n" M_Line2 *L"
-.Pp
-.Ft M_Polygon3
-.Fn M_PolygonFromLines3 "Uint n" M_Line3 *L"
-.Pp
-.Ft int
-.Fn M_PolygonAddLine2 "M_Polygon2 *P" "M_Line2 L"
-.Pp
-.Ft int
-.Fn M_PolygonAddLine3 "M_Polygon3 *P" "M_Line3 L"
-.Pp
-.Ft int
-.Fn M_PolygonAddVertex2 "M_Polygon2 *P" "M_Vector2 v"
-.Pp
-.Ft int
-.Fn M_PolygonAddVertex3 "M_Polygon3 *P" "M_Vector3 v"
-.Pp
-.Ft int
-.Fn M_PolygonDelLine2 "M_Polygon2 *P" "int sIdx"
-.Pp
-.Ft int
-.Fn M_PolygonDelLine3 "M_Polygon3 *P" "int sIdx"
-.Pp
-.Ft M_Polygon2
-.Fn M_PolygonRead2 "AG_DataSource *ds"
-.Pp
-.Ft M_Polygon3
-.Fn M_PolygonRead3 "AG_DataSource *ds"
-.Pp
-.Ft void
-.Fn M_PolygonWrite2 "AG_DataSource *ds" "M_Polygon2 *P"
-.Pp
-.Ft void
-.Fn M_PolygonWrite3 "AG_DataSource *ds" "M_Polygon3 *P"
+.Fn M_PolygonWrite "AG_DataSource *ds" "const M_Polygon *P"
 .Pp
 .nr nS 0
-.Fn M_PolygonInit2
-and
-.Fn M_PolygonInit3
-initialize a
-.Ft M_Polygon2
-or
-.Ft M_Polygon3
+The
+.Fn M_PolygonInit
+function initializes a
+.Ft M_Polygon
 structure.
-The macros
-.Fn M_POLYGON[23]_INITIALIZER
-expand to static initializers for the
-.Ft M_Polygon[23]
-structures.
+The
+.Fn M_POLYGON_INITIALIZER
+macro may also be used as a static initializer.
 .Pp
-.Fn M_PolygonFree[23]
-release the dynamically-allocated resources (i.e., the line segments) of
-a polygon.
+The
+.Fn M_PolygonFree
+function releases the memory allocated for vertices.
 .Pp
-The functions
-.Fn M_PolygonFromLines[23]
-return a polygon from an array of lines
-.Fa L ,
-where
+The
+.Fn M_PolygonFromPts
+function returns a polygon structure given an array of points.
+.Fn M_PolygonFromLines
+returns a polygon from an array of lines
+.Fa L .
 .Fa n
 is the number of elements in the array.
 .Pp
 The
-.Fn M_PolygonAddLine[23]
-functions append a new line segment to a polygon.
+.Fn M_PolygonAddLine
+function appends a new line segment to a polygon.
 Returns index of new line segment on success, -1 on failure.
 .Pp
-.Fn M_PolygonAddVertex[23]
-append a new vertex to a polygon (creating the corresponding line segments
+.Fn M_PolygonAddVertex
+appends a new vertex to a polygon (creating the corresponding line segments
 as appropriate).
 Returns index of new vertex on success, -1 on failure.
 .Pp
-.Fn M_PolygonDelLine[23]
-removes a line segment from a polygon by index.
+.Fn M_PolygonDelVertex
+removes the vertex at given index
+.Fa v .
 .Pp
 The
-.Fn M_PolygonRead[23]
+.Fn M_PolygonRead
 and
-.Fn M_PolygonWrite[23]
+.Fn M_PolygonWrite
 functions read or write a polygon structure from/to an
 .Xr AG_DataSource 3 .
-.Sh COMPUTATIONS
+.Sh TESTS
 .nr nS 1
 .Ft int
-.Fn M_PointInPolygon2 "M_Polygon2 *P" "M_Vector2 p"
+.Fn M_PointInPolygon "const M_Polygon *P" "M_Vector2 p"
 .Pp
 .Ft int
-.Fn M_PolygonIsConvex2 "M_Polygon2 *P"
-.Pp
-.Ft int
-.Fn M_PolygonIsPlanar3 "M_Polygon3 *P"
+.Fn M_PolygonIsConvex "const M_Polygon *P"
 .Pp
 .nr nS 0
 The
-.Fn M_PointInPolygon2
-routine tests whether point
+.Fn M_PointInPolygon
+function returns 1 if the point
 .Fa p
-lies inside the polygon
-.Fa P
-and returns 1 if it does, otherwise 0.
+lies inside the polygon.
 .Pp
-.Fn M_PolygonIsConvex2
-evaluates to 1 if the polygon
-.Fa P
-is a convex polygon.
-.Pp
-.Fn M_PolygonIsPlanar3
-evaluates to 1 if the three points of
-.Fa P
-are coplanar in R^3.
+.Fn M_PolygonIsConvex
+returns 1 if the polygon is convex.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,

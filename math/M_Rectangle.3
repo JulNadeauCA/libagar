@@ -38,10 +38,10 @@
 .\" MANLINK(M_Rectangle2)
 The
 .Ft M_Rectangle2
-structure describes a rectangle in R^2 in terms of four lines:
+structure describes a rectangle in R^2 in terms of four points:
 .Bd -literal
 typedef struct m_rectangle2 {
-	M_Line2 a, b, c, d;
+	M_Vector2 a, b, c, d;
 } M_Rectangle2;
 .Ed
 .\" MANLINK(M_Rectangle3)
@@ -51,7 +51,7 @@ Similarly,
 describes a rectangle in R^3:
 .Bd -literal
 typedef struct m_rectangle3 {
-	M_Line3 a, b, c, d;
+	M_Vector3 a, b, c, d;
 } M_Rectangle3;
 .Ed
 .Sh INITIALIZATION
@@ -81,10 +81,10 @@ typedef struct m_rectangle3 {
 .Fn M_RectangleWrite3 "AG_DataSource *ds" "M_Rectangle3 *R"
 .Pp
 .Ft M_Rectangle2
-.Fn M_RECTANGLE2_INITIALIZER "M_Real ax" "M_Real ay" "M_Real bx" "M_Real by" "M_Real cx" "M_Real cy" "M_Real dx" "M_Real dy"
+.Fn M_RECTANGLE2_INITIALIZER "M_Vector2 a" "M_Vector2 b" "M_Vector2 c"
 .Pp
 .Ft M_Rectangle3
-.Fn M_RECTANGLE3_INITIALIZER "M_Real ax" "M_Real ay" "M_Real az" "M_Real bx" "M_Real by" "M_Real bz" "M_Real cx" "M_Real cy" "M_Real cz" "M_Real dx" "M_Real dy" "M_Real dz"
+.Fn M_RECTANGLE3_INITIALIZER "M_Vector3 a" "M_Vector3 b" "M_Vector3 c"
 .Pp
 .nr nS 0
 The functions
@@ -123,6 +123,30 @@ respectively.
 .Ft int
 .Fn M_PointInRectangle2 "M_Rectangle2 R" "M_Vector2 p"
 .Pp
+.Ft M_Real
+.Fn M_RectangleWidth2 "M_Rectangle2 R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleWidth2v "const M_Rectangle2 *R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleHeight2 "M_Rectangle2 R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleHeight2v "const M_Rectangle2 *R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleWidth3 "M_Rectangle3 R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleWidth3v "const M_Rectangle3 *R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleHeight3 "M_Rectangle3 R"
+.Pp
+.Ft M_Real
+.Fn M_RectangleHeight3v "const M_Rectangle3 *R"
+.Pp
 .nr nS 0
 The
 .Fn M_PointInRectangle2
@@ -131,6 +155,12 @@ routine tests whether point
 lies inside the rectangle
 .Fa R
 and returns 1 if it does, otherwise 0.
+.Pp
+The
+.Fn M_RectangleWidth[23]
+and
+.Fn M_RectangleHeight[23]
+routines return the width and height of the rectangle.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,

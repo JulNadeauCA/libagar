@@ -97,7 +97,7 @@ M_IntersectCircleCircle2(M_Circle2 C1, M_Circle2 C2)
 	    Fabs(C1.p.x - C2.p.x) <= M_MACHEP &&
 	    Fabs(C1.r - C2.r) <= M_MACHEP) {
 		G1.type = M_CIRCLE;
-		G1.g_circle = C1;
+		G1.g.circle = C1;
 		M_GeomSetAdd2(&Sint, &G1);
 		return (Sint);
 	}
@@ -113,14 +113,14 @@ M_IntersectCircleCircle2(M_Circle2 C1, M_Circle2 C2)
 	b = h/d12;
 
 	G1.type = M_POINT;
-	G1.g_point.x = p.x - b*(C2.p.y - C1.p.y);
-	G1.g_point.y = p.y + b*(C2.p.x - C1.p.x);
+	G1.g.point.x = p.x - b*(C2.p.y - C1.p.y);
+	G1.g.point.y = p.y + b*(C2.p.x - C1.p.x);
 	G2.type = M_POINT;
-	G2.g_point.x = p.x + b*(C2.p.y - C1.p.y);
-	G2.g_point.y = p.y - b*(C2.p.x - C1.p.x);
+	G2.g.point.x = p.x + b*(C2.p.y - C1.p.y);
+	G2.g.point.y = p.y - b*(C2.p.x - C1.p.x);
 
 	M_GeomSetAdd2(&Sint, &G1);
-	if (M_VecDistance2(G1.g_point, G2.g_point) > M_MACHEP) {
+	if (M_VecDistance2(G1.g.point, G2.g.point) > M_MACHEP) {
 		M_GeomSetAdd2(&Sint, &G2);
 	}
 	return (Sint);
@@ -161,24 +161,24 @@ M_IntersectCircleLine2(M_Circle2 C, M_Line2 L)
 			} else {
 				if (u1 >= 0.0 && u1 <= 1.0) {
 					G.type = M_POINT;
-					G.g_point = M_VecLERP2(p1,p2,u1);
+					G.g.point = M_VecLERP2(p1,p2,u1);
 					M_GeomSetAdd2(&Sint, &G);
 				}
 				if (u2 >= 0.0 && u2 <= 1.0) {
 					G.type = M_POINT;
-					G.g_point = M_VecLERP2(p1,p2,u2);
+					G.g.point = M_VecLERP2(p1,p2,u2);
 					M_GeomSetAdd2(&Sint, &G);
 				}
 			}
 		} else {
 			if (u1 >= 0.0 && u1 <= 1.0) {
 				G.type = M_POINT;
-				G.g_point = M_VecLERP2(p1,p2,u1);
+				G.g.point = M_VecLERP2(p1,p2,u1);
 				M_GeomSetAdd2(&Sint, &G);
 			}
 			if (u2 >= 0.0 && u2 <= 1.0) {
 				G.type = M_POINT;
-				G.g_point = M_VecLERP2(p1,p2,u2);
+				G.g.point = M_VecLERP2(p1,p2,u2);
 				M_GeomSetAdd2(&Sint, &G);
 			}
 		}

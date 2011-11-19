@@ -1,26 +1,34 @@
 /*	Public domain	*/
 
 __BEGIN_DECLS
-void       M_PolygonInit2(M_Polygon2 *);
-void       M_PolygonInit3(M_Polygon3 *);
-void       M_PolygonFree2(M_Polygon2 *);
-void       M_PolygonFree3(M_Polygon3 *);
-M_Polygon2 M_PolygonRead2(AG_DataSource *);
-M_Polygon3 M_PolygonRead3(AG_DataSource *);
-void       M_PolygonWrite2(AG_DataSource *, M_Polygon2 *);
-void       M_PolygonWrite3(AG_DataSource *, M_Polygon3 *);
+void       M_PolygonInit(M_Polygon *);
+void       M_PolygonFree(M_Polygon *);
+M_Polygon  M_PolygonRead(AG_DataSource *);
+void       M_PolygonWrite(AG_DataSource *, const M_Polygon *);
 
-M_Polygon2 M_PolygonFromLines2(Uint, M_Line2 *);
-M_Polygon3 M_PolygonFromLines3(Uint, M_Line3 *);
+M_Polygon  M_PolygonFromPts(Uint, const M_Vector2 *);
+M_Polygon  M_PolygonFromLines(Uint, const M_Line2 *);
 
-int        M_PolygonAddLine2(M_Polygon2 *, M_Line2);
-int        M_PolygonAddLine3(M_Polygon3 *, M_Line3);
-int        M_PolygonAddVertex2(M_Polygon2 *, M_Vector2);
-int        M_PolygonAddVertex3(M_Polygon3 *, M_Vector3);
-int        M_PolygonDelLine2(M_Polygon2 *, int);
-int        M_PolygonDelLine3(M_Polygon3 *, int);
+int        M_PolygonAddLine(M_Polygon *, M_Line2);
+int        M_PolygonDelVertex(M_Polygon *, int);
 
-int        M_PointInPolygon2(M_Polygon2 *, M_Vector2);
-int        M_PolygonIsConvex2(M_Polygon2 *);
-int        M_PolygonIsPlanar3(M_Polygon3 *);
+int        M_PointInPolygon(const M_Polygon *, M_Vector2);
+int        M_PolygonIsConvex(const M_Polygon *);
+
+/*
+ * Add a vertex to a polygon.
+ * Return vertex index on success, -1 on failure.
+ */
+static __inline__ int
+M_PolygonAddVertex(M_Polygon *P, M_Vector2 v)
+{
+	M_Vector2 *vNew;
+
+	if ((vNew = AG_TryRealloc(P->v, (P->n+1)*sizeof(M_Vector2))) == NULL) {
+		return (-1);
+	}
+	P->v = vNew;
+	P->v[P->n] = v;
+	return (P->n++);
+}
 __END_DECLS

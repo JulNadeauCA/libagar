@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2011 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,17 +23,17 @@
  */
 
 /*
- * Routines related to planes in R3.
+ * Plane in R^3.
  */
 
 #include <core/core.h>
 #include "m.h"
 
-/* Create a plane in R3 from a normal and distance from origin. */
-M_Plane3
-M_PlaneFromNormal3(M_Vector3 n, M_Real d)
+/* Create a plane given a normal vector and a distance. */
+M_Plane
+M_PlaneFromNormal(M_Vector3 n, M_Real d)
 {
-	M_Plane3 P;
+	M_Plane P;
 
 	P.a = n.x;
 	P.b = n.y;
@@ -42,11 +42,11 @@ M_PlaneFromNormal3(M_Vector3 n, M_Real d)
 	return (P);
 }
 
-/* Create a plane in R3 from three points in R3. */
-M_Plane3
-M_PlaneFromPts3(M_Vector3 p1, M_Vector3 p2, M_Vector3 p3)
+/* Create a plane given three points in R^3. */
+M_Plane
+M_PlaneFromPts(M_Vector3 p1, M_Vector3 p2, M_Vector3 p3)
 {
-	M_Plane3 P;
+	M_Plane P;
 	M_Vector3 n;
 
 	n = M_VecNormCross3(M_VecSub3(p1,p2), M_VecSub3(p3,p2));
@@ -57,11 +57,11 @@ M_PlaneFromPts3(M_Vector3 p1, M_Vector3 p2, M_Vector3 p3)
 	return (P);
 }
 
-/* Create a plane in R3 at distance d from another plane. */
-M_Plane3
-M_PlaneAtDistance3(M_Plane3 P1, M_Real d)
+/* Create a plane at distance d from another plane. */
+M_Plane
+M_PlaneAtDistance(M_Plane P1, M_Real d)
 {
-	M_Plane3 P2;
+	M_Plane P2;
 
 	P2.a = P1.a;
 	P2.b = P1.b;
@@ -70,10 +70,10 @@ M_PlaneAtDistance3(M_Plane3 P1, M_Real d)
 	return (P2);
 }
 
-M_Plane3
-M_PlaneRead3(AG_DataSource *buf)
+M_Plane
+M_PlaneRead(AG_DataSource *buf)
 {
-	M_Plane3 P;
+	M_Plane P;
 
 	P.a = M_ReadReal(buf);
 	P.b = M_ReadReal(buf);
@@ -83,7 +83,7 @@ M_PlaneRead3(AG_DataSource *buf)
 }
 
 void
-M_PlaneWrite3(AG_DataSource *buf, M_Plane3 *P)
+M_PlaneWrite(AG_DataSource *buf, M_Plane *P)
 {
 	M_WriteReal(buf, P->a);
 	M_WriteReal(buf, P->b);
@@ -92,35 +92,13 @@ M_PlaneWrite3(AG_DataSource *buf, M_Plane3 *P)
 }
 
 int
-M_PlaneIsValid3(M_Plane3 P)
+M_PlaneIsValid(M_Plane P)
 {
 	return (P.a != 0.0 && P.b != 0.0 && P.c != 0.0);
 }
 
-M_Vector3
-M_PlaneNorm3(M_Plane3 P)
-{
-	M_Vector3 n;
-
-	n.x = P.a;
-	n.y = P.b;
-	n.z = P.c;
-	return (n);
-}
-
-M_Vector3
-M_PlaneNorm3p(const M_Plane3 *P)
-{
-	M_Vector3 n;
-
-	n.x = P->a;
-	n.y = P->b;
-	n.z = P->c;
-	return (n);
-}
-
 M_Real
-M_PlaneVectorAngle3(M_Plane3 P, M_Vector3 v)
+M_PlaneVectorAngle(M_Plane P, M_Vector3 v)
 {
-	return (M_PI - Acos(M_VecDot3(M_PlaneNorm3p(&P),M_VecNorm3p(&v))));
+	return (M_PI - Acos(M_VecDot3(M_PlaneNormp(&P),M_VecNorm3p(&v))));
 }

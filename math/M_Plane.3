@@ -35,67 +35,53 @@
 #include <agar/math.h>
 .Ed
 .Sh DESCRIPTION
-.\" MANLINK(M_Plane3)
-The
-.Ft M_Plane3
-structure describes a plane in R^3 in terms of its 4 coefficients:
-.Bd -literal
-typedef struct m_plane3 {
-	M_Real a, b, c, d;
-} M_Plane3;
-.Ed
-.Pp
+.\" MANLINK(M_Plane)
 The
 .Ft M_Plane
-structure generalizes to a hyperplane:
+structure describes a plane in R^3 in terms of the coefficients of the
+plane equation (Ax+By+Cz+D=0):
 .Bd -literal
 typedef struct m_plane {
-	M_Real *c;
-	Uint n;
+	M_Real a, b, c, d;
 } M_Plane;
 .Ed
 .Sh INITIALIZATION
 .nr nS 1
-.Ft M_Plane3
-.Fn M_PlaneFromNormal3 "M_Vector3 n" "M_Real d"
-.Pp
-.Ft M_Plane3
-.Fn M_PlaneFromPts3 "M_Vector3 p1" "M_Vector p2" "M_Vector p3"
-.Pp
-.Ft M_Plane3
-.Fn M_PlaneAtDistance3 "M_Plane3 P" "M_Real d"
-.Pp
-.Ft M_Plane3
-.Fn M_PlaneRead3 "AG_DataSource *ds"
-.Pp
-.Ft void
-.Fn M_PlaneWrite3 "AG_DataSource *ds" "M_Plane3 *P"
+.Ft M_Plane
+.Fn M_PlaneFromNormal "M_Vector3 n" "M_Real d"
 .Pp
 .Ft M_Plane
-.Fn M_PLANE_INITIALIZER "void"
+.Fn M_PlaneFromPts "M_Vector3 p1" "M_Vector p2" "M_Vector p3"
 .Pp
-.Ft M_Plane3
-.Fn M_PLANE3_INITIALIZER "M_Real a" "M_Real b" "M_Real c" "M_Real d"
+.Ft M_Plane
+.Fn M_PlaneAtDistance "M_Plane P" "M_Real d"
+.Pp
+.Ft M_Plane
+.Fn M_PlaneRead "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_PlaneWrite "AG_DataSource *ds" "M_Plane *P"
+.Pp
+.Ft M_Plane
+.Fn M_PLANE_INITIALIZER "M_Real a" "M_Real b" "M_Real c" "M_Real d"
 .Pp
 .nr nS 0
 The
-.Fn M_PlaneFromNormal3
+.Fn M_PlaneFromNormal
 function returns an
-.Ft M_Plane3
+.Ft M_Plane
 from a normal vector
 .Fa n
-(unit-length) and a distance
+and a distance
 .Fa d
 from the origin.
-.Pp
-.Fn M_PlaneFromPts3
+.Fn M_PlaneFromPts
 returns a plane from three (non-colinear) points
 .Fa p1 ,
 .Fa p2
 and
 .Fa p3 .
-.Pp
-.Fn M_PlaneAtDistance3
+.Fn M_PlaneAtDistance
 returns the plane at distance
 .Fa d
 from the given plane
@@ -103,54 +89,51 @@ from the given plane
 .Pp
 .Pp
 The
-.Fn M_PlaneRead3
+.Fn M_PlaneRead
 and
-.Fn M_PlaneWrite3
+.Fn M_PlaneWrite
 functions read or write a plane structure from/to an
 .Xr AG_DataSource 3 .
 .Pp
-The macros
+The macro
 .Fn M_PLANE_INITIALIZER
-and
-.Fn M_PLANE3_INITIALIZER
-expand to static initializers for
+expands to a static initializer for a
 .Ft M_Plane
-and
-.Ft M_Plane3 ,
-respectively.
-.Sh COMPUTATIONS
+from the coefficients of the plane equation
+.Fa a ,
+.Fa b ,
+.Fa c ,
+.Fa d .
+.Sh TESTS
 .nr nS 1
 .Ft void
-.Fn M_PlaneIsValid3 "M_Plane3 P"
+.Fn M_PlaneIsValid "M_Plane P"
 .Pp
 .Ft M_Vector3
-.Fn M_PlaneNorm3 "M_Plane3 P"
+.Fn M_PlaneNorm "M_Plane P"
 .Pp
 .Ft M_Vector3
-.Fn M_PlaneNorm3p "const M_Plane3 *P"
+.Fn M_PlaneNormp "const M_Plane *P"
 .Pp
 .Ft M_Real
-.Fn M_PlaneVectorAngle "M_Plane3 P" "M_Vector3 v"
+.Fn M_PlaneVectorAngle "M_Plane P" "M_Vector3 v"
 .Pp
 .nr nS 0
 The
-.Fn M_PlaneIsValid3
+.Fn M_PlaneIsValid
 routine evaluates to 1 if the given
-.Ft M_Plane3
+.Ft M_Plane
 represents a valid plane (i.e., A, B and C are non-zero).
 .Pp
-.Fn M_PlaneNorm3
+.Fn M_PlaneNorm
 and
-.Fn M_PlaneNorm3p
-return the normal vector of the given plane.
+.Fn M_PlaneNormp
+return the normal vector of the plane.
 .Pp
 The
-.Fn M_PlaneVectorAngle3
-routine returns the angle (in radians) between plane
-.Fa P
-and vector
-.Fa v
-(from the origin).
+.Fn M_PlaneVectorAngle
+routine returns the angle (in radians) between the plane and a vector
+.Fa v .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,

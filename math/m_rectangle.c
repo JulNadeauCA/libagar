@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2011 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,10 +34,10 @@ M_RectangleRead2(AG_DataSource *ds)
 {
 	M_Rectangle2 R;
 
-	R.a = M_LineRead2(ds);
-	R.b = M_LineRead2(ds);
-	R.c = M_LineRead2(ds);
-	R.d = M_LineRead2(ds);
+	R.a = M_ReadVector2(ds);
+	R.b = M_ReadVector2(ds);
+	R.c = M_ReadVector2(ds);
+	R.d = M_ReadVector2(ds);
 	return (R);
 }
 
@@ -46,70 +46,34 @@ M_RectangleRead3(AG_DataSource *ds)
 {
 	M_Rectangle3 R;
 
-	R.a = M_LineRead3(ds);
-	R.b = M_LineRead3(ds);
-	R.c = M_LineRead3(ds);
-	R.d = M_LineRead3(ds);
+	R.a = M_ReadVector3(ds);
+	R.b = M_ReadVector3(ds);
+	R.c = M_ReadVector3(ds);
+	R.d = M_ReadVector3(ds);
 	return (R);
 }
 
 void
 M_RectangleWrite2(AG_DataSource *ds, M_Rectangle2 *R)
 {
-	M_LineWrite2(ds, &R->a);
-	M_LineWrite2(ds, &R->b);
-	M_LineWrite2(ds, &R->c);
-	M_LineWrite2(ds, &R->d);
+	M_WriteVector2(ds, &R->a);
+	M_WriteVector2(ds, &R->b);
+	M_WriteVector2(ds, &R->c);
+	M_WriteVector2(ds, &R->d);
 }
 
 void
 M_RectangleWrite3(AG_DataSource *ds, M_Rectangle3 *R)
 {
-	M_LineWrite3(ds, &R->a);
-	M_LineWrite3(ds, &R->b);
-	M_LineWrite3(ds, &R->c);
-	M_LineWrite3(ds, &R->d);
-}
-
-M_Rectangle2
-M_RectangleFromPts2(M_Vector2 a, M_Vector2 c)
-{
-	M_Rectangle2 R;
-	M_Vector2 b, d;
-
-	b.x = c.x;
-	b.y = a.y;
-	d.x = a.x;
-	d.y = c.y;
-	R.a = M_LineFromPts2(a, b);
-	R.b = M_LineFromPts2(b, c);
-	R.c = M_LineFromPts2(c, d);
-	R.d = M_LineFromPts2(d, a);
-	return (R);
-}
-
-M_Rectangle3
-M_RectangleFromPts3(M_Vector3 a, M_Vector3 b, M_Vector3 c)
-{
-	M_Rectangle3 R;
-	M_Vector3 d;
-	M_Plane3 P;
-	
-	P = M_PlaneFromPts3(a, b, c);
-	d.x = a.x;
-	d.y = c.y;
-	d.z = -(P.a*d.x + P.b*d.y + P.d)/P.d;
-
-	R.a = M_LineFromPts3(a, b);
-	R.b = M_LineFromPts3(b, c);
-	R.c = M_LineFromPts3(c, d);
-	R.d = M_LineFromPts3(d, a);
-	return (R);
+	M_WriteVector3(ds, &R->a);
+	M_WriteVector3(ds, &R->b);
+	M_WriteVector3(ds, &R->c);
+	M_WriteVector3(ds, &R->d);
 }
 
 int
 M_PointInRectangle2(M_Rectangle2 R, M_Vector2 p)
 {
-	return (p.x >= R.a.p.x && p.y >= R.a.p.y &&
-	        p.x <= R.c.p.x && p.y <= R.c.p.y);
+	return (p.x >= R.a.x && p.y >= R.a.y &&
+	        p.x <= R.b.x && p.y <= R.b.y);
 }
