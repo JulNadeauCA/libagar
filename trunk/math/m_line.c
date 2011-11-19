@@ -255,7 +255,7 @@ M_IntersectLineLine2(M_Line2 L1, M_Line2 L2)
 		if (ac >= 0.0 && ac <= 1.0 &&
 		    bc >= 0.0 && bc <= 1.0) {
 			G.type = M_POINT;
-			G.g_point = M_VecAdd2(a1,
+			G.g.point = M_VecAdd2(a1,
 			                      M_VecScale2(M_VecSub2(a2,a1),ac));
 			M_GeomSetAdd2(&Sint, &G);
 		}
@@ -263,7 +263,7 @@ M_IntersectLineLine2(M_Line2 L1, M_Line2 L2)
 		/* XXX TODO */
 		if (a == 0.0 || b == 0.0) {
 			G.type = M_LINE;
-			G.g_line = L1;
+			G.g.line = L1;
 			M_GeomSetAdd2(&Sint, &G);
 		}
 	}

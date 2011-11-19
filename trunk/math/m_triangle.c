@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2011 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,13 +30,33 @@
 #include "m.h"
 
 M_Triangle2
+M_TriangleFromLines2(M_Line2 a, M_Line2 b, M_Line2 c)
+{
+	M_Triangle2 T;
+	T.a = a.p;
+	T.b = b.p;
+	T.c = c.p;
+	return (T);
+}
+
+M_Triangle3
+M_TriangleFromLines3(M_Line3 a, M_Line3 b, M_Line3 c)
+{
+	M_Triangle3 T;
+	T.a = a.p;
+	T.b = b.p;
+	T.c = c.p;
+	return (T);
+}
+
+M_Triangle2
 M_TriangleRead2(AG_DataSource *ds)
 {
 	M_Triangle2 T;
 
-	T.a = M_LineRead2(ds);
-	T.b = M_LineRead2(ds);
-	T.c = M_LineRead2(ds);
+	T.a = M_ReadVector2(ds);
+	T.b = M_ReadVector2(ds);
+	T.c = M_ReadVector2(ds);
 	return (T);
 }
 
@@ -45,70 +65,26 @@ M_TriangleRead3(AG_DataSource *ds)
 {
 	M_Triangle3 T;
 
-	T.a = M_LineRead3(ds);
-	T.b = M_LineRead3(ds);
-	T.c = M_LineRead3(ds);
+	T.a = M_ReadVector3(ds);
+	T.b = M_ReadVector3(ds);
+	T.c = M_ReadVector3(ds);
 	return (T);
 }
 
 void
 M_TriangleWrite2(AG_DataSource *ds, M_Triangle2 *T)
 {
-	M_LineWrite2(ds, &T->a);
-	M_LineWrite2(ds, &T->b);
-	M_LineWrite2(ds, &T->c);
+	M_WriteVector2(ds, &T->a);
+	M_WriteVector2(ds, &T->b);
+	M_WriteVector2(ds, &T->c);
 }
 
 void
 M_TriangleWrite3(AG_DataSource *ds, M_Triangle3 *T)
 {
-	M_LineWrite3(ds, &T->a);
-	M_LineWrite3(ds, &T->b);
-	M_LineWrite3(ds, &T->c);
-}
-
-M_Triangle2
-M_TriangleFromPts2(M_Vector2 a, M_Vector2 b, M_Vector2 c)
-{
-	M_Triangle2 T;
-
-	T.a = M_LineFromPts2(a, b);
-	T.b = M_LineFromPts2(b, c);
-	T.c = M_LineFromPts2(c, a);
-	return (T);
-}
-
-M_Triangle3
-M_TriangleFromPts3(M_Vector3 a, M_Vector3 b, M_Vector3 c)
-{
-	M_Triangle3 T;
-
-	T.a = M_LineFromPts3(a, b);
-	T.b = M_LineFromPts3(b, c);
-	T.c = M_LineFromPts3(c, a);
-	return (T);
-}
-
-M_Triangle2
-M_TriangleFromLines2(M_Line2 a, M_Line2 b, M_Line2 c)
-{
-	M_Triangle2 T;
-
-	T.a = a;
-	T.b = b;
-	T.c = c;
-	return (T);
-}
-
-M_Triangle3
-M_TriangleFromLines3(M_Line3 a, M_Line3 b, M_Line3 c)
-{
-	M_Triangle3 T;
-
-	T.a = a;
-	T.b = b;
-	T.c = c;
-	return (T);
+	M_WriteVector3(ds, &T->a);
+	M_WriteVector3(ds, &T->b);
+	M_WriteVector3(ds, &T->c);
 }
 
 /*
@@ -122,9 +98,9 @@ M_PointInTriangle2(M_Triangle2 T, M_Vector2 p)
 	M_Real dot00, dot01, dot02, dot11, dot12;
 	M_Real d, u, v;
 
-	ca = M_VecSub2(T.c.p, T.a.p);
-	ba = M_VecSub2(T.b.p, T.a.p);
-	pa = M_VecSub2(p,     T.a.p);
+	ca = M_VecSub2(T.c, T.a);
+	ba = M_VecSub2(T.b, T.a);
+	pa = M_VecSub2(p,   T.a);
 	dot00 = M_VecDot2p(&ca, &ca);
 	dot01 = M_VecDot2p(&ca, &ba);
 	dot02 = M_VecDot2p(&ca, &pa);

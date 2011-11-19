@@ -47,117 +47,118 @@ typedef struct m_sphere {
  */
 typedef struct m_plane3 {
 	M_Real a, b, c, d;	/* Coefficients of plane equation */
-} M_Plane3;
-typedef struct m_plane {
-	M_Real *c;		/* Coefficients of plane equation */
-	Uint n;
 } M_Plane;
 
-#define M_PLANE3_INITIALIZER(a,b,c,d) { a,b,c,d }
-#define M_PLANE_INITIALIZER { NULL, 0 }
+#define M_PLANE_INITIALIZER(a,b,c,d) { a,b,c,d }
 
 /*
  * Triangle in R^2 and R^3.
  */
 typedef struct m_triangle2 {
-	M_Line2 a, b, c;
+	M_Vector2 a, b, c;
 } M_Triangle2;
 typedef struct m_triangle3 {
-	M_Line3 a, b, c;
+	M_Vector3 a, b, c;
 } M_Triangle3;
 
-#define M_TRIANGLE2_INITIALIZER(ax,ay,bx,by,cx,cy) \
-	{ M_LineFromPts2(ax,ay), M_LineFromPts2(bx,by), \
-	  M_LineFromPts2(cx,cy) }
-#define M_TRIANGLE3_INITIALIZER(ax,ay,az,bx,by,bz,cx,cy,cz) \
-	{ M_LineFromPts3(ax,ay,az), M_LineFromPts3(bx,by,bz), \
-	  M_LineFromPts3(cx,cy,cz) }
+#define M_TRIANGLE2_INITIALIZER(a,b,c) { a,b,c }
+#define M_TRIANGLE3_INITIALIZER(a,b,c) { a,b,c }
 
 /*
  * Rectangle in R^2 and R^3.
  */
 typedef struct m_rectangle2 {
-	M_Line2 a, b, c, d;
+	M_Vector2 a, b, c, d;
 } M_Rectangle2;
 typedef struct m_rectangle3 {
-	M_Line3 a, b, c, d;
+	M_Vector3 a, b, c, d;
 } M_Rectangle3;
 
-#define M_RECTANGLE2_INITIALIZER(ax,ay,bx,by,cx,cy,dx,dy) \
-	{ M_LineFromPts2(ax,ay), M_LineFromPts2(bx,by), \
-	  M_LineFromPts2(cx,cy), M_LineFromPts2(dx,dy) }
-#define M_RECTANGLE_INITIALIZER(ax,ay,az,bx,by,bz,cx,cy,cz,dx,dy,dz) \
-	{ M_LineFromPts3(ax,ay,az), M_LineFromPts3(bx,by,bz), \
-	  M_LineFromPts3(cx,cy,cz), M_LineFromPts3(dx,dy,dz) }
+#define M_RECTANGLE2_INITIALIZER(a,b,c) { a,b,c }
+#define M_RECTANGLE3_INITIALIZER(a,b,c) { a,b,c }
 
 /*
- * Simple polygon in R^2 and R^3 (no self-intersections, no holes).
+ * Polygon specified as ordered set of vertices. Polygon may be convex
+ * or concave, but holes and self-intersections are not allowed.
  */
-typedef struct m_polygon2 {
-	M_Line2 *s;		/* Sides (must be closed) */
-	Uint n;			/* Number of sides */
-	Uint vn;		/* Number of vertices */
-} M_Polygon2;
-typedef struct m_polygon3 {
-	M_Line3 *s;
-	Uint n;
-	Uint vn;
-} M_Polygon3;
+typedef struct m_polygon {
+	M_Vector2 *v;		/* Vertices */
+	Uint n;			/* Number of vertices */
+} M_Polygon;
 
-#define M_POLYGON2_INITIALIZER { NULL, 0 }
-#define M_POLYGON3_INITIALIZER { NULL, 0 }
+#define M_POLYGON_INITIALIZER { NULL, 0 }
+
+/*
+ * Polyhedron specified as boundary representation.
+ * Holes and self-intersections are not allowed.
+ */
+typedef struct m_halfedge {
+	Uint v;			/* Incident vertex index */
+	Uint f;			/* Incident facet index */
+	Uint oe;		/* Opposite halfedge index */
+} M_Halfedge;
+typedef struct m_facet {
+	Uint *e;		/* Incident edge indices */
+	Uint n;			/* Number of edges (>=3) */
+} M_Facet;
+typedef struct m_polyhedron {
+	M_Vector3  *v;		/* Vertices */
+	Uint       nv;
+	M_Halfedge *e;		/* Edges */
+	Uint       ne;
+	M_Facet    *f;		/* Facets */
+	Uint       nf;
+} M_Polyhedron;
+
+#define M_FACET_EDGES_MAX 255
+#define M_HALFEDGE_INITIALIZER { 0, 0, 0 }
+#define M_FACET_INITIALIZER { NULL, 0 }
+#define M_POLYHEDRON_INITIALIZER { NULL, 0, NULL, 0, NULL, 0 }
 
 /*
  * Generic geometrical structure in R^2 and R^3.
  */
 typedef enum m_geom_type {
+	/* In R^2 and R^3 */
 	M_NONE,
 	M_POINT,
 	M_LINE,
 	M_CIRCLE,
-	M_SPHERE,
-	M_PLANE,
-	M_POLYGON,
 	M_TRIANGLE,
-	M_RECTANGLE
+	M_RECTANGLE,
+	M_POLYGON,
+	/* In R^3 */
+	M_PLANE,
+	M_SPHERE,
+	M_POLYHEDRON
 } M_GeomType;
 
 typedef struct m_geom2 {
 	M_GeomType type;
 	union {
-		M_Vector2    point;
-		M_Line2      line;
-		M_Circle2    circle;
-		M_Polygon2   polygon;
-		M_Triangle2  triangle;
-		M_Rectangle2 rectangle;
+		M_Vector2	point;
+		M_Line2		line;
+		M_Circle2	circle;
+		M_Triangle2	triangle;
+		M_Rectangle2	rectangle;
+		M_Polygon	polygon;
 	} g;
 } M_Geom2;
 
 typedef struct m_geom3 {
 	M_GeomType type;
 	union {
-		M_Vector3   point;
-		M_Line3     line;
-		M_Circle3   circle;
-		M_Sphere    sphere;
-		M_Plane3    plane;
-		M_Polygon3  polygon;
-		M_Triangle3 triangle;
-		M_Rectangle3 rectangle;
+		M_Vector3	point;
+		M_Line3		line;
+		M_Circle3	circle;
+		M_Triangle3	triangle;
+		M_Rectangle3	rectangle;
+		M_Polygon	polygon;
+		M_Sphere	sphere;
+		M_Plane		plane;
+		M_Polyhedron	polyhedron;
 	} g;
 } M_Geom3;
-
-#ifdef _AGAR_INTERNAL
-#define g_point     g.point
-#define g_line      g.line
-#define g_circle    g.circle
-#define g_sphere    g.sphere
-#define g_plane     g.plane
-#define g_polygon   g.polygon
-#define g_triangle  g.triangle
-#define g_rectangle g.rectangle
-#endif
 
 /* Sets of generic geometric entities. */
 typedef struct m_geom_set2 {
@@ -205,6 +206,7 @@ typedef struct m_point_set3i {
 #include <agar/math/m_triangle.h>
 #include <agar/math/m_rectangle.h>
 #include <agar/math/m_polygon.h>
+#include <agar/math/m_polyhedron.h>
 #include <agar/math/m_point_set.h>
 
 __BEGIN_DECLS
@@ -230,8 +232,13 @@ M_GeomSetFree2(M_GeomSet2 *S)
 {
 	Uint i;
 	for (i = 0; i < S->n; i++) {
-		if (S->g[i].type == M_POLYGON)
-			M_PolygonFree2(&S->g[i].g.polygon);
+		switch (S->g[i].type) {
+		case M_POLYGON:
+			M_PolygonFree(&S->g[i].g.polygon);
+			break;
+		default:
+			break;
+		}
 	}
 	AG_Free(S->g);
 	S->g = NULL;
@@ -242,8 +249,16 @@ M_GeomSetFree3(M_GeomSet3 *S)
 {
 	Uint i;
 	for (i = 0; i < S->n; i++) {
-		if (S->g[i].type == M_POLYGON)
-			M_PolygonFree3(&S->g[i].g.polygon);
+		switch (S->g[i].type) {
+		case M_POLYGON:
+			M_PolygonFree(&S->g[i].g.polygon);
+			break;
+		case M_POLYHEDRON:
+			M_PolyhedronFree(&S->g[i].g.polyhedron);
+			break;
+		default:
+			break;
+		}
 	}
 	AG_Free(S->g);
 	S->g = NULL;

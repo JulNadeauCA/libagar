@@ -20,7 +20,7 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_gui.c m_plotter.c m_matview.c \
 	m_line.c m_circle.c m_triangle.c m_rectangle.c m_polygon.c m_plane.c \
 	m_coordinates.c m_heapsort.c m_mergesort.c m_qsort.c m_radixsort.c \
-	m_point_set.c m_color.c m_sphere.c \
+	m_point_set.c m_color.c m_sphere.c m_polyhedron.c \
 	m_matrix_sparse.c \
 	m_sparse_allocate.c \
 	m_sparse_build.c \

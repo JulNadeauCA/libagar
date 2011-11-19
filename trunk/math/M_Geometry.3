@@ -46,15 +46,17 @@ Line segment or ray in R^2 (M_Line2) or R^3 (M_Line3).
 .It Xr M_Circle 3
 Circle in R^2 (M_Circle2) or R^3 (M_Circle3).
 .It Xr M_Sphere 3
-Sphere in R^3 (M_Sphere3).
+Sphere in R^3.
 .It Xr M_Plane 3
-Plane in R^n (M_Plane) or R^3 (M_Plane3).
+Plane in R^3 (M_Plane).
 .It Xr M_Triangle 3
 Triangle in R^2 (M_Triangle2) or R^3 (M_Triangle3).
 .It Xr M_Rectangle 3
 Rectangle in R^2 (M_Rectangle2) or R^3 (M_Rectangle3).
 .It Xr M_Polygon 3
-Polygon in R^2 (M_Polygon2) or R^3 (M_Polygon3).
+Polygon in R^2.
+.It Xr M_Polyhedron 3
+Polyhedron in R^3.
 .El
 .Sh GENERIC GEOMETRIC ENTITIES
 .\" MANLINK(M_Geom2)
@@ -71,9 +73,9 @@ typedef struct m_geom2 {
 		M_Vector2    point;
 		M_Line2      line;
 		M_Circle2    circle;
-		M_Polygon2   polygon;
 		M_Triangle2  triangle;
 		M_Rectangle2 rectangle;
+		M_Polygon    polygon;
 	} g;
 } M_Geom2;
 .Ed
@@ -86,30 +88,63 @@ defines an entity in R^3:
 typedef struct m_geom3 {
 	M_GeomType type;
 	union {
-		M_Vector3   point;
-		M_Line3     line;
-		M_Circle3   circle;
-		M_Sphere3   sphere;
-		M_Plane3    plane;
-		M_Polygon3  polygon;
-		M_Triangle3 triangle;
+		M_Vector3    point;
+		M_Line3      line;
+		M_Circle3    circle;
+		M_Triangle3  triangle;
 		M_Rectangle3 rectangle;
+		M_Polygon    polygon;
+		M_Sphere     sphere;
+		M_Plane      plane;
+		M_Polyhedron polyhedron;
 	} g;
 } M_Geom3;
 .Ed
 .Pp
 The
 .Va type
-field can take on the values
-.Dv M_NONE ,
-.Dv M_POINT
-for an
-.Xr M_Point 3 ,
-.Dv M_LINE
-for an
-.Xr M_Line 3 ,
-and so on.
+field can take on the following values:
+.Pp
+.Bl -tag -width "M_RECTANGLE " -compact
+.It Dv M_NONE
+Undefined type
+.It Dv M_POINT
+An
+.Xr M_Vector2 3
+or
+.Xr M_Vector3 3 .
+.It Dv M_LINE
+An
+.Xr M_Line2 3
+or
+.Xr M_Line3 3 .
+.It Dv M_CIRCLE
+An
+.Xr M_Circle2 3
+or
+.Xr M_Circle3 3 .
+.It Dv M_POLYGON
+An
+.Xr M_Polygon 3 .
+.It Dv M_TRIANGLE
+An
+.Xr M_Triangle2 3
+or
+.Xr M_Triangle3 3 .
+.It Dv M_RECTANGLE
+An
+.Xr M_Rectangle2 3
+or
+.Xr M_Rectnagle3 3 .
+.It Dv M_SPHERE
+An
+.Xr M_Sphere 3 .
+.It Dv M_PLANE
+An
+.Xr M_Plane3 3 .
+.El
 .Sh GENERIC GEOMETRIC ENTITIES: SETS
+.\" MANLINK(M_GeomSet)
 .\" MANLINK(M_GeomSet2)
 Sets of generic geometric entities in R^2 are described by the structure:
 .Bd -literal
