@@ -411,6 +411,7 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 The
 .Fn AG_RegisterClass
 function registers a new object class.
+.\" MANLINK(AG_ObjectClass)
 The
 .Fa classInfo
 argument should point to an
@@ -435,8 +436,7 @@ The
 .Ft AG_ObjectClass
 structure also contains read-only members which are initialized internally
 by the object system (see
-.Dq STRUCTURE DATA
-section for a complete list).
+.Dq STRUCTURE DATA ) .
 .Pp
 Traditionally, in C, the source file for an Agar object will contain a
 static initializer for
