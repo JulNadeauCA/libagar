@@ -63,7 +63,9 @@ LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
 LTMAIN_SH?=	${TOP}/mk/libtool/ltmain.sh
 LTCONFIG_LOG?=	./config.log
 LIBTOOLFLAGS?=
-LIBTOOLOPTS?=	--tag=CC
+LIBTOOLOPTS?=	--quiet
+LIBTOOLOPTS_CC?=
+LIBTOOLOPTS_CXX?=
 
 SHARE?=none
 SHARESRC?=none
@@ -94,7 +96,7 @@ depend: depend-subdir
 .c.o:
 	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=compile \
 	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -103,7 +105,7 @@ depend: depend-subdir
 .m.o:
 	${CC} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=compile \
 	    ${CC} ${LIBTOOLFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
 	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -112,14 +114,14 @@ depend: depend-subdir
 .cc.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CXX} --mode=compile \
 	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CXX} --mode=compile \
 	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -386,7 +388,7 @@ cleandir-lib:
 
 install-lib: ${LIBTOOL_COOKIE}
 	@if [ "${INCL}" != "none" -a "${INCL}" != "none" ]; then \
-	    if [ ! -d "${INCLDIR}" ]; then \
+	    if [ ! -d "${DESTDIR}${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${INCLDIR}; \
 	    fi; \
@@ -397,7 +399,7 @@ install-lib: ${LIBTOOL_COOKIE}
 	fi
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a \
 	      "${LIB_INSTALL}" = "Yes" ]; then \
-	    if [ ! -d "${LIBDIR}" ]; then \
+	    if [ ! -d "${DESTDIR}${LIBDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LIBDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LIBDIR}; \
 	    fi; \
@@ -414,7 +416,7 @@ install-lib: ${LIBTOOL_COOKIE}
 	    fi; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
-            if [ ! -d "${SHAREDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
@@ -424,7 +426,7 @@ install-lib: ${LIBTOOL_COOKIE}
             done; \
 	fi
 	@if [ "${SHARESRC}" != "none" ]; then \
-            if [ ! -d "${SHAREDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
@@ -442,7 +444,7 @@ install-lib: ${LIBTOOL_COOKIE}
 	    fi; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
-            if [ ! -d "${SYSCONFDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SYSCONFDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SYSCONFDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SYSCONFDIR}; \
             fi; \

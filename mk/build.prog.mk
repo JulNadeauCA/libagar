@@ -300,7 +300,7 @@ cleandir-prog:
 	if [ -e ".depend" ]; then echo >.depend; fi
 
 install-prog:
-	@if [ ! -e "${BINDIR}" ]; then \
+	@if [ ! -e "${DESTDIR}${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG_DIR} ${DESTDIR}${BINDIR}; \
 	fi
@@ -309,7 +309,7 @@ install-prog:
 	    ${SUDO} ${INSTALL_PROG} ${PROG}${EXECSUFFIX} ${DESTDIR}${BINDIR}; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
-            if [ ! -d "${SHAREDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
@@ -319,7 +319,7 @@ install-prog:
             done; \
 	fi
 	@if [ "${SHARESRC}" != "none" ]; then \
-            if [ ! -d "${SHAREDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
@@ -337,7 +337,7 @@ install-prog:
 	    fi; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
-            if [ ! -d "${SYSCONFDIR}" ]; then \
+            if [ ! -d "${DESTDIR}${SYSCONFDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SYSCONFDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SYSCONFDIR}; \
             fi; \
