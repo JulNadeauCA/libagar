@@ -665,6 +665,5 @@ CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} 
 
 echo "*"
 echo "* Configuration successful."
-echo "* Use \"make depend\" if you plan on editing the source code."
-echo "* Use \"make\" and \"make install\" to build and install Agar."
+echo "* Use \"make depend all install\" to build and install Agar."
 echo "*"

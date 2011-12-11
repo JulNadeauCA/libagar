@@ -9837,6 +9837,5 @@ done
 EOT
 echo "*"
 echo "* Configuration successful."
-echo "* Use \"make depend\" if you plan on editing the source code."
-echo "* Use \"make\" and \"make install\" to build and install Agar."
+echo "* Use \"make depend all install\" to build and install Agar."
 echo "*"
