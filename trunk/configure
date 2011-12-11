@@ -1677,6 +1677,23 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for libtool --tag=CC retardation..."
+$ECHO_N "checking for libtool --tag=CC retardation..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+EOT
+$LIBTOOL --quiet --mode=compile $CC --tag=CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest.o conftest.c 2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+LIBTOOLOPTS_CC="--tag=CC"
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "LIBTOOLOPTS_CC=$LIBTOOLOPTS_CC" >>Makefile.config
+echo "mdefs[\"LIBTOOLOPTS_CC\"] = \"$LIBTOOLOPTS_CC\"" >>configure.lua
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
