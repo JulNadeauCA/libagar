@@ -19,7 +19,8 @@ M_Real		M_LinePointDistance2(M_Line2, M_Vector2);
 M_Real		M_LinePointDistance3(M_Line3, M_Vector3);
 M_Real		M_LineLineAngle2(M_Line2, M_Line2);
 M_Real		M_LineLineAngle3(M_Line3, M_Line3);
-M_GeomSet2	M_IntersectLineLine2(M_Line2, M_Line2);
+int             M_LineLineIntersect2(M_Line2, M_Line2, M_Vector2 *);
+int             M_LineLineShortest3(M_Line3, M_Line3, M_Line3 *);
 
 /* Return the two-point representation of the given line in R2. */
 static __inline__ void
@@ -51,14 +52,24 @@ M_LineIsRay3(M_Line3 L)
 
 /* Return the first and second Points of the given Line. */
 static __inline__ M_Vector2
-M_LineFirstPt2(M_Line2 L)
+M_LineInitPt2(M_Line2 L)
 {
 	return (L.p);
 }
 static __inline__ M_Vector2
-M_LineSecondPt2(M_Line2 L)
+M_LineTermPt2(M_Line2 L)
 {
 	return M_VecAdd2(L.p, M_VecScale2p(&L.d, L.t));
+}
+static __inline__ M_Vector3
+M_LineInitPt3(M_Line3 L)
+{
+	return (L.p);
+}
+static __inline__ M_Vector3
+M_LineTermPt3(M_Line3 L)
+{
+	return M_VecAdd3(L.p, M_VecScale3p(&L.d, L.t));
 }
 
 /* Test whether the given Point is left/on/right of an ideal line. */
