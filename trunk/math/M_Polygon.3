@@ -61,16 +61,19 @@ typedef struct m_polygon {
 .Fn M_PolygonFromPts "Uint n" "const M_Vector2 *v"
 .Pp
 .Ft M_Polygon
+.Fn M_PolygonFromPointSet2 "const M_PointSet2 *ps"
+.Pp
+.Ft M_Polygon
+.Fn M_PolygonFromPointSet2i "const M_PointSet2i *ps"
+.Pp
+.Ft M_Polygon
 .Fn M_PolygonFromLines "Uint n" "const M_Line2 *L"
 .Pp
-.Ft int
-.Fn M_PolygonAddLine "M_Polygon *P" "M_Line2 L"
+.Ft M_PointSet2
+.Fn M_PolygonToPointSet2 "const M_Polygon *P"
 .Pp
-.Ft int
-.Fn M_PolygonAddVertex "M_Polygon *P" "M_Vector2 v"
-.Pp
-.Ft int
-.Fn M_PolygonDelVertex "M_Polygon *P" "int v"
+.Ft M_PointSet2i
+.Fn M_PolygonToPointSet2i "const M_Polygon *P" "M_Real w" "M_Real h"
 .Pp
 .Ft M_Polygon
 .Fn M_PolygonRead "AG_DataSource *ds"
@@ -95,6 +98,11 @@ function releases the memory allocated for vertices.
 The
 .Fn M_PolygonFromPts
 function returns a polygon structure given an array of points.
+The
+.Fn M_PolygonFromPointSet
+variant accepts a
+.Xr M_PointSet2 3
+argument.
 .Fn M_PolygonFromLines
 returns a polygon from an array of lines
 .Fa L .
@@ -102,18 +110,16 @@ returns a polygon from an array of lines
 is the number of elements in the array.
 .Pp
 The
-.Fn M_PolygonAddLine
-function appends a new line segment to a polygon.
-Returns index of new line segment on success, -1 on failure.
-.Pp
-.Fn M_PolygonAddVertex
-appends a new vertex to a polygon (creating the corresponding line segments
-as appropriate).
-Returns index of new vertex on success, -1 on failure.
-.Pp
-.Fn M_PolygonDelVertex
-removes the vertex at given index
-.Fa v .
+.Fn M_PolygonToPointSet2
+and
+.Fn M_PolygonToPointSet2i
+routines convert a
+.Nm
+to a
+.Xr M_PointSet2
+or
+.Xr M_PointSet2i
+structure.
 .Pp
 The
 .Fn M_PolygonRead
@@ -121,8 +127,26 @@ and
 .Fn M_PolygonWrite
 functions read or write a polygon structure from/to an
 .Xr AG_DataSource 3 .
-.Sh TESTS
+.Sh OPERATIONS
 .nr nS 1
+.Ft int
+.Fn M_PolygonAddVertex "M_Polygon *P" "M_Vector2 v"
+.Pp
+.Ft int
+.Fn M_PolygonAddLine "M_Polygon *P" "M_Line2 L"
+.Pp
+.Ft int
+.Fn M_PolygonDelVertex "M_Polygon *P" "int v"
+.Pp
+.Ft int
+.Fn M_PolygonCopy "M_Polygon *Pdst" "const M_Polygon *Psrc"
+.Pp
+.Ft void
+.Fn M_PolygonScale "M_Polygon *P" "M_Real xScale" "M_Real yScale"
+.Pp
+.Ft void
+.Fn M_PolygonOffset "M_Polygon *P" "M_Real xOffs" "M_Real yOffs"
+.Pp
 .Ft int
 .Fn M_PointInPolygon "const M_Polygon *P" "M_Vector2 p"
 .Pp
@@ -130,6 +154,42 @@ functions read or write a polygon structure from/to an
 .Fn M_PolygonIsConvex "const M_Polygon *P"
 .Pp
 .nr nS 0
+The
+.Fn M_PolygonAddVertex
+function adds a new vertex to a polygon.
+Returns index of new vertex on success, -1 on failure.
+The
+.Fn M_PolygonAddLine
+variant accepts a
+.Xr M_Line 3
+argument instead of a vector.
+.Pp
+.Fn M_PolygonDelVertex
+removes the vertex at given index
+.Fa v .
+.Pp
+The
+.Fn M_PolygonCopy
+function copies the vertices of a source polygon
+.Fa Psrc
+to a destination polygon
+.Fa Pdst .
+The destination structure does not need to be initialized.
+Any existing vertices in
+.Fa Pdst
+will be overwritten.
+The function returns 0 on success or -1 if insufficient memory is
+available.
+.Pp
+.Fn M_PolygonScale
+multiplies all vertices of a polygon with the given scaling factors
+.Fa xScale ,
+.Fa yScale .
+.Fn M_PolygonOffset
+translates all vertices against
+.Fa xOffs ,
+.Fa yOffs .
+.Pp
 The
 .Fn M_PointInPolygon
 function returns 1 if the point
@@ -145,6 +205,7 @@ returns 1 if the polygon is convex.
 .Xr M_Circle 3 ,
 .Xr M_Sphere 3 ,
 .Xr M_Plane 3 ,
+.Xr M_PointSet 3 ,
 .Xr M_Triangle 3 ,
 .Xr M_Rectangle 3 ,
 .Xr M_Polygon 3 ,
