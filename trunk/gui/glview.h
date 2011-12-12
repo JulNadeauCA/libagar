@@ -52,14 +52,14 @@ void       AG_GLViewSetBgColor(AG_GLView *, AG_Color);
 void	   AG_GLViewSizeHint(AG_GLView *, int, int);
 #define	   AG_GLViewPrescale AG_GLViewSizeHint
 void	   AG_GLViewReshape(AG_GLView *);
-void	   AG_GLViewDrawFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewOverlayFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewScaleFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewKeydownFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewKeyupFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewButtondownFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewButtonupFn(AG_GLView *, AG_EventFn, const char *, ...);
-void	   AG_GLViewMotionFn(AG_GLView *, AG_EventFn, const char *, ...);
+void	   AG_GLViewDrawFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewOverlayFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewScaleFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewKeydownFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewKeyupFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewButtondownFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewButtonupFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewMotionFn(void *, AG_EventFn, const char *, ...);
 __END_DECLS
 
 #include <agar/gui/close.h>

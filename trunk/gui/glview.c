@@ -127,8 +127,10 @@ AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 }
 
 void
-AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
@@ -136,8 +138,10 @@ AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewOverlayFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewOverlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->overlay_ev, fmt);
@@ -145,8 +149,10 @@ AG_GLViewOverlayFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewScaleFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewScaleFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->scale_ev, fmt);
@@ -154,8 +160,10 @@ AG_GLViewScaleFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewKeydownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewKeydownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->keydown_ev = AG_SetEvent(glv, "key-down", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
@@ -163,8 +171,10 @@ AG_GLViewKeydownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewKeyupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewKeyupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->keyup_ev = AG_SetEvent(glv, "key-up", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
@@ -172,8 +182,10 @@ AG_GLViewKeyupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewButtondownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewButtondownFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->btndown_ev = AG_SetEvent(glv, "mouse-button-down", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
@@ -181,8 +193,10 @@ AG_GLViewButtondownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewButtonupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewButtonupFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->btnup_ev = AG_SetEvent(glv, "mouse-button-up", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
@@ -190,8 +204,10 @@ AG_GLViewButtonupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 }
 
 void
-AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+AG_GLViewMotionFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_GLView *glv = obj;
+
 	AG_ObjectLock(glv);
 	glv->motion_ev = AG_SetEvent(glv, "mouse-motion", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
