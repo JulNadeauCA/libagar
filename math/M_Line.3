@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -38,19 +38,19 @@
 .\" MANLINK(M_Line2)
 The
 .Ft M_Line2
-structure describes a line segment or half-line in R^2 in terms of an
-origin point
+structure describes a line segment, an Euclidean vector or a half-line
+in R^2.
+An
+.Nm
+is defined by an origin point
 .Va p ,
-a direction
-vector
+a normalized direction vector
 .Va d
-(of unit length), and a real length
-.Fa t .
-The length
+and a real length
 .Fa t
-can take on the value
+(which can be set to
 .Dv M_INFINITY
-in order to express a half-line.
+in order to express a half-line).
 The structure is defined as:
 .Bd -literal
 typedef struct m_line2 {
@@ -63,7 +63,7 @@ typedef struct m_line2 {
 .Pp
 Similarly,
 .Ft M_Line3
-describes a line segment or half-line in R^3:
+describes a line segment, an Euclidean vector or a half-line in R^3:
 .Bd -literal
 typedef struct m_line3 {
 	M_Vector3 p;
@@ -84,18 +84,6 @@ typedef struct m_line3 {
 .Pp
 .Ft M_Line3
 .Fn M_LineFromPts3 "M_Vector3 p1" "M_Vector3 p2"
-.Pp
-.Ft M_Line2
-.Fn M_LineParallel2 "M_Line2 L" "M_Real offset"
-.Pp
-.Ft M_Line3
-.Fn M_LineParallel3 "M_Line3 L" "M_Real offset"
-.Pp
-.Ft M_Line2
-.Fn M_LineProject2 "M_Line3 L"
-.Pp
-.Ft M_Line3
-.Fn M_LineProject3 "M_Line2 L"
 .Pp
 .Ft M_Line2
 .Fn M_LineRead2 "AG_DataSource *ds"
@@ -142,15 +130,6 @@ return a line segment from two specified endpoints
 and
 .Fa p2 .
 .Pp
-.Fn M_LineParallel2
-and
-.Fn M_LineParallel3
-return a line parallel to
-.Fa L ,
-with the specified offset amount.
-The direction of the offset is determined by the handedness of
-.Fa L .
-.Pp
 The
 .Fn M_LineRead[23]
 and
@@ -167,8 +146,20 @@ expand to static initializers for
 and
 .Ft M_Line3 ,
 respectively.
-.Sh COMPUTATIONS
+.Sh OPERATIONS
 .nr nS 1
+.Ft M_Vector2
+.Fn M_LineInitPt2 "M_Line2 L"
+.Pp
+.Ft M_Vector2
+.Fn M_LineTermPt2 "M_Line2 L"
+.Pp
+.Ft M_Vector3
+.Fn M_LineInitPt3 "M_Line3 L"
+.Pp
+.Ft M_Vector3
+.Fn M_LineTermPt3 "M_Line3 L"
+.Pp
 .Ft void
 .Fn M_LineToPts2 "M_Line2 L" "M_Vector2 *p1" "M_Vector2 *p2"
 .Pp
@@ -196,15 +187,35 @@ respectively.
 .Ft M_Real
 .Fn M_LineLineAngle3 "M_Line3 L1" "M_Line3 L2"
 .Pp
-.Ft M_GeomSet2
-.Fn M_IntersectLineLine2 "M_Line2 L1" "M_Line2 L2"
+.Ft M_Line2
+.Fn M_LineParallel2 "M_Line2 L" "M_Real offset"
+.Pp
+.Ft M_Line3
+.Fn M_LineParallel3 "M_Line3 L" "M_Real offset"
+.Pp
+.Ft M_Line2
+.Fn M_LineProject2 "M_Line3 L"
+.Pp
+.Ft M_Line3
+.Fn M_LineProject3 "M_Line2 L"
+.Pp
+.Ft int
+.Fn M_LineLineIntersect2 "M_Line2 L1" "M_Line2 L2" "M_Vector2 *x"
+.Pp
+.Ft int
+.Fn M_LineLineShortest3 "M_Line3 L1" "M_Line3 L2" "M_Line3 *Ls"
 .Pp
 .nr nS 0
 The
-.Fn M_LineToPts2
-and
-.Fn M_LineToPts3
-routines return the two endpoints of line
+.Fn M_LineInitPt[23]
+routines return the initial point (i.e., the
+.Va p
+vector).
+.Fn M_LineTermPt[23]
+routines return the terminal point (i.e., p + d*t).
+The
+.Fn M_LineToPts[23]
+functions return the two endpoints of line
 .Fa L
 into
 .Fa p1
@@ -214,7 +225,10 @@ and
 .Fn M_LineIsRay2
 and
 .Fn M_LineIsRay3
-evaluate to 1 of the line is defined as a half-line.
+evaluate to 1 of the line is defined as a half-line (i.e.,
+.Va t
+is
+.Dv M_INFINITY ) .
 .Pp
 .Fn M_LinePointSide2
 tests whether point
@@ -243,19 +257,33 @@ and
 The angle is computed as the arc cosine of the dot product of the
 direction vectors of the two lines.
 .Pp
-.Fn M_IntersectLineLine2
-computes the intersection of two lines in R^2 and returns an
-.Xr M_GeomSet2 3
-describing the intersection.
-The returned set may be:
-.Bl -bullet -compact
-.It
-One point.
-.It
-One line (lines are colinear).
-.It
-The empty set.
-.El
+The
+.Fn M_LineParallel[23]
+functions return a line parallel to
+.Fa L ,
+with the specified offset amount.
+The direction of the offset is determined by the handedness of
+.Fa L .
+.Pp
+.Fn M_LineProject2
+computes a line in R^2 from the projection onto the X-Y plane of a
+specified line in R^3.
+.Fn M_LineProject3
+returns the projection of a line in R^2 onto the X-Y plane in R^3.
+.Pp
+The
+.Fn M_LineLineIntersect2
+function computes the intersection point
+.Fa x
+of two lines in R^2.
+If there is a solution, the function returns 1, otherwise it returns 0.
+.Pp
+The
+.Fn M_LineLineShortest3
+function computes the shortest line segment
+.Fa Ls
+connecting two lines in R^3.
+Returns 1 if there is a solution, 0 if there is not.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,

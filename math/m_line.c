@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2011 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -169,7 +169,7 @@ M_LineProject2(M_Line3 L3)
 	return (L2);
 }
 
-/* Project a line in R2 onto the X-Y plane of R3. */
+/* Project a line in R^2 onto the X-Y plane of R^3. */
 M_Line3
 M_LineProject3(M_Line2 L2)
 {
@@ -235,38 +235,92 @@ M_LineLineAngle3(M_Line3 L1, M_Line3 L2)
 }
 
 /* Compute intersection between two line segments in R2. */
-M_GeomSet2
-M_IntersectLineLine2(M_Line2 L1, M_Line2 L2)
+int
+M_LineLineIntersect2(M_Line2 L1, M_Line2 L2, M_Vector2 *pInt)
 {
-	M_GeomSet2 Sint = M_GEOM_SET_EMPTY;
-	M_Vector2 a1 = M_LineFirstPt2(L1);
-	M_Vector2 a2 = M_LineSecondPt2(L1);
-	M_Vector2 b1 = M_LineFirstPt2(L2);
-	M_Vector2 b2 = M_LineSecondPt2(L2);
+	M_Vector2 a1 = M_LineInitPt2(L1);
+	M_Vector2 a2 = M_LineTermPt2(L1);
+	M_Vector2 b1 = M_LineInitPt2(L2);
+	M_Vector2 b2 = M_LineTermPt2(L2);
 	M_Real a = (b2.x - b1.x)*(a1.y - b1.y) - (b2.y - b1.y)*(a1.x - b1.x);
 	M_Real b = (a2.x - a1.x)*(a1.y - b1.y) - (a2.y - a1.y)*(a1.x - b1.x);
 	M_Real c = (b2.y - b1.y)*(a2.x - a1.x) - (b2.x - b1.x)*(a2.y - a1.y);
-	M_Geom2 G;
 
-	if (c != 0.0) {
+	if (c < M_MACHEP) {
 		M_Real ac = a/c;
 		M_Real bc = b/c;
 
-		if (ac >= 0.0 && ac <= 1.0 &&
-		    bc >= 0.0 && bc <= 1.0) {
-			G.type = M_POINT;
-			G.g.point = M_VecAdd2(a1,
-			                      M_VecScale2(M_VecSub2(a2,a1),ac));
-			M_GeomSetAdd2(&Sint, &G);
-		}
-	} else {
-		/* XXX TODO */
-		if (a == 0.0 || b == 0.0) {
-			G.type = M_LINE;
-			G.g.line = L1;
-			M_GeomSetAdd2(&Sint, &G);
+		if (ac >= 0 && ac <= 1 &&
+		    bc >= 0 && bc <= 1) {
+			if (pInt != NULL) {
+				*pInt = M_VecAdd2(a1,
+				    M_VecScale2(M_VecSub2(a2,a1),ac));
+			}
+			return (1);
 		}
 	}
-	return (Sint);
+	return (0);
 }
 
+/*
+ * Compute the shortest line segment connecting two lines in R^3.
+ * Adapted from Paul Bourke's example code:
+ * http://paulbourke.net/geometry/lineline3d
+ */
+int
+M_LineLineShortest3(M_Line3 L1, M_Line3 L2, M_Line3 *Ls)
+{
+	M_Vector3 p1 = M_LineInitPt3(L1);
+	M_Vector3 p2 = M_LineTermPt3(L1);
+	M_Vector3 p3 = M_LineInitPt3(L2);
+	M_Vector3 p4 = M_LineTermPt3(L2);
+	M_Vector3 p13, p43, p21;
+	M_Real d1343, d4321, d1321, d4343, d2121;
+	M_Real numer, denom;
+	M_Real muA, muB;
+
+	p13.x = p1.x - p3.x;
+	p13.y = p1.y - p3.y;
+	p13.z = p1.z - p3.z;
+	p43.x = p4.x - p3.x;
+	p43.y = p4.y - p3.y;
+	p43.z = p4.z - p3.z;
+	if (Fabs(p43.x) < M_MACHEP &&
+	    Fabs(p43.y) < M_MACHEP &&
+	    Fabs(p43.z) < M_MACHEP)
+		return (0);
+
+	p21.x = p2.x - p1.x;
+	p21.y = p2.y - p1.y;
+	p21.z = p2.z - p1.z;
+	if (Fabs(p21.x) < M_MACHEP &&
+	    Fabs(p21.y) < M_MACHEP &&
+	    Fabs(p21.z) < M_MACHEP)
+		return (0);
+
+	d1343 = p13.x*p43.x + p13.y*p43.y + p13.z*p43.z;
+	d4321 = p43.x*p21.x + p43.y*p21.y + p43.z*p21.z;
+	d1321 = p13.x*p21.x + p13.y*p21.y + p13.z*p21.z;
+	d4343 = p43.x*p43.x + p43.y*p43.y + p43.z*p43.z;
+	d2121 = p21.x*p21.x + p21.y*p21.y + p21.z*p21.z;
+
+	denom = d2121*d4343 - d4321*d4321;
+	if (Fabs(denom) < M_MACHEP) {
+		return (0);
+	}
+	numer = d1343*d4321 - d1321*d4343;
+
+	muA = numer/denom;
+	muB = (d1343 + d4321*muA) / d4343;
+
+	if (Ls != NULL) {
+		*Ls = M_LineFromPts3(
+		    M_VECTOR3(p1.x + muA*p21.x,
+		              p1.y + muA*p21.y,
+			      p1.z + muA*p21.z),
+		    M_VECTOR3(p3.x + muB*p43.x,
+		              p3.y + muB*p43.y,
+			      p3.z + muB*p43.z));
+	}
+	return (1);
+}
