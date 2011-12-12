@@ -68,23 +68,112 @@ M_PolygonWrite(AG_DataSource *ds, const M_Polygon *P)
 		M_WriteVector2(ds, &P->v[i]);
 }
 
-/* Create a new polygon in R^2 from a set of vertices. */
+/* Duplicate a polygon structure. */
+int
+M_PolygonCopy(M_Polygon *D, const M_Polygon *S)
+{
+	if ((D->v = TryMalloc(S->n*sizeof(M_Vector2))) == NULL) {
+		return (-1);
+	}
+	D->n = S->n;
+	memcpy(D->v, S->v, S->n*sizeof(M_Vector2));
+	return (0);
+}
+
+/* Scale the vertices of a polygon. */
+void
+M_PolygonScale(M_Polygon *P, M_Real xs, M_Real ys)
+{
+	Uint i;
+
+	for (i = 0; i < P->n; i++) {
+		P->v[i].x = xs*P->v[i].x;
+		P->v[i].y = ys*P->v[i].y;
+	}
+}
+
+/* Offset the vertices of a polygon. */
+void
+M_PolygonOffset(M_Polygon *P, M_Real xo, M_Real yo)
+{
+	Uint i;
+
+	for (i = 0; i < P->n; i++) {
+		P->v[i].x += xo;
+		P->v[i].y += yo;
+	}
+}
+
+/* Create a new polygon from an array of vectors. */
 M_Polygon
 M_PolygonFromPts(Uint n, const M_Vector2 *v)
 {
 	M_Polygon P;
-	Uint i;
 
 	P.v = Malloc(n*sizeof(M_Vector2));
 	P.n = n;
-	for (i = 0; i < n; i++) {
-		P.v[i] = v[i];
+	memcpy(P.v, v, n*sizeof(M_Vector2));
+	return (P);
+}
+
+/* Create a new polygon from a M_PointSet2. */
+M_Polygon
+M_PolygonFromPointSet2(const M_PointSet2 *ps)
+{
+	M_Polygon P;
+
+	P.v = Malloc(ps->n*sizeof(M_Vector2));
+	P.n = ps->n;
+	memcpy(P.v, ps->p, ps->n*sizeof(M_Vector2));
+	return (P);
+}
+
+/* Create a new polygon from a M_PointSet2i. */
+M_Polygon
+M_PolygonFromPointSet2i(const M_PointSet2i *ps)
+{
+	M_Polygon P;
+	Uint i;
+
+	P.v = Malloc(ps->n*sizeof(M_Vector2));
+	P.n = ps->n;
+	for (i = 0; i < ps->n; i++) {
+		P.v[i].x = ((M_Real)ps->x[i])/ps->w;
+		P.v[i].y = ((M_Real)ps->y[i])/ps->h;
 	}
 	return (P);
 }
 
+/* Convert polygon to M_PointSet2 */
+M_PointSet2
+M_PolygonToPointSet2(const M_Polygon *P)
+{
+	M_PointSet2 ps;
+
+	M_PointSetInit2(&ps);
+	M_PointSetAlloc2(&ps, P->n);
+	memcpy(ps.p, P->v, P->n*sizeof(M_Vector2));
+	return (ps);
+}
+
+/* Convert polygon to a M_PointSet2i of specified real dimensions. */
+M_PointSet2i
+M_PolygonToPointSet2i(const M_Polygon *P, M_Real w, M_Real h)
+{
+	M_PointSet2i ps;
+	Uint i;
+
+	M_PointSetInit2i(&ps, w, h);
+	M_PointSetAlloc2i(&ps, P->n);
+	for (i = 0; i < P->n; i++) {
+		ps.x[i] = (int)(P->v[i].x*w);
+		ps.y[i] = (int)(P->v[i].y*h);
+	}
+	return (ps);
+}
+
 /*
- * Create a new polygon in R^2 from a set of lines.
+ * Create a new polygon from a set of lines.
  * XXX TODO sanity check point order
  */
 M_Polygon

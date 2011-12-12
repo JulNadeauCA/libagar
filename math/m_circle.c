@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2011 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -131,8 +131,8 @@ M_GeomSet2
 M_IntersectCircleLine2(M_Circle2 C, M_Line2 L)
 {
 	M_GeomSet2 Sint = M_GEOM_SET_EMPTY;
-	M_Vector2 p1 = M_LineFirstPt2(L);
-	M_Vector2 p2 = M_LineSecondPt2(L);
+	M_Vector2 p1 = M_LineInitPt2(L);
+	M_Vector2 p2 = M_LineTermPt2(L);
 	M_Vector2 p3 = C.p;
 	M_Real a, b, c, det;
 	M_Geom2 G;

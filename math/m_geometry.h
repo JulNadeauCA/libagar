@@ -180,6 +180,8 @@ typedef struct m_point_set3 {
 	M_Vector3 *p;
 	Uint n, nMax;
 } M_PointSet3;
+#define M_POINT_SET2_EMPTY { NULL, 0, 0 }
+#define M_POINT_SET3_EMPTY { NULL, 0, 0 }
 #define M_POINT_SET_EMPTY { NULL, 0, 0 }
 
 /*
@@ -187,17 +189,17 @@ typedef struct m_point_set3 {
  * This is useful with pixel coordinates in image processing.
  */
 typedef struct m_point_set2i {
-	M_Vector2 *p;
+	M_Real w, h;
 	int *x, *y;
 	Uint n, nMax;
 } M_PointSet2i;
 typedef struct m_point_set3i {
-	M_Vector3 *p;
+	M_Real w, h, d;
 	int *x, *y, *z;
 	Uint n, nMax;
 } M_PointSet3i;
-#define M_POINT_SET2I_EMPTY { NULL, NULL, NULL, 0, 0 }
-#define M_POINT_SET3I_EMPTY { NULL, NULL, NULL, NULL, 0, 0 }
+#define M_POINT_SET2I_EMPTY { 1.0, 1.0, NULL, NULL, 0, 0 }
+#define M_POINT_SET3I_EMPTY { 1.0, 1.0, 1.0, NULL, NULL, NULL, 0, 0 }
 
 #include <agar/math/m_line.h>
 #include <agar/math/m_circle.h>

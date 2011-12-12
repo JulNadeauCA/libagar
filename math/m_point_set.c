@@ -30,95 +30,110 @@
 #include "m.h"
 
 /* Preallocate for a given number of points. */
-void
+int
 M_PointSetAlloc2(M_PointSet2 *S, Uint nAlloc)
 {
-	if (nAlloc > S->nMax) {
-		S->nMax = nAlloc;
-		S->p = Realloc(S->p, S->nMax*sizeof(M_Vector2));
+	M_Vector2 *pNew;
+
+	if (nAlloc <= S->nMax) {
+		return (0);
 	}
+	if ((pNew = TryRealloc(S->p, nAlloc*sizeof(M_Vector2))) == NULL) {
+		return (-1);
+	}
+	S->p = pNew;
+	S->nMax = nAlloc;
+	return (0);
 }
-void
+int
 M_PointSetAlloc3(M_PointSet3 *S, Uint nAlloc)
 {
-	if (nAlloc > S->nMax) {
-		S->nMax = nAlloc;
-		S->p = Realloc(S->p, S->nMax*sizeof(M_Vector3));
+	M_Vector3 *pNew;
+
+	if (nAlloc <= S->nMax) {
+		return (0);
 	}
+	if ((pNew = TryRealloc(S->p, nAlloc*sizeof(M_Vector3))) == NULL) {
+		return (-1);
+	}
+	S->p = pNew;
+	S->nMax = nAlloc;
+	return (0);
 }
-void
+int
 M_PointSetAlloc2i(M_PointSet2i *S, Uint nAlloc)
 {
-	if (nAlloc > S->nMax) {
-		S->nMax = nAlloc;
-		S->p = Realloc(S->p, S->nMax*sizeof(M_Vector2));
-		S->x = Realloc(S->x, S->nMax*sizeof(int));
-		S->y = Realloc(S->y, S->nMax*sizeof(int));
-	}
+	int *vNew;
+
+	if (nAlloc <= S->nMax)
+		return (0);
+
+	if ((vNew = TryRealloc(S->x, nAlloc*sizeof(int))) == NULL) { return (-1); }
+	S->x = vNew;
+	if ((vNew = TryRealloc(S->y, nAlloc*sizeof(int))) == NULL) { return (-1); }
+	S->y = vNew;
+	
+	S->nMax = nAlloc;
+	return (0);
 }
-void
+int
 M_PointSetAlloc3i(M_PointSet3i *S, Uint nAlloc)
 {
-	if (nAlloc > S->nMax) {
-		S->nMax = nAlloc;
-		S->p = Realloc(S->p, S->nMax*sizeof(M_Vector3));
-		S->x = Realloc(S->x, S->nMax*sizeof(int));
-		S->y = Realloc(S->y, S->nMax*sizeof(int));
-		S->z = Realloc(S->z, S->nMax*sizeof(int));
+	int *vNew;
+
+	if (nAlloc <= S->nMax)
+		return (0);
+
+	if ((vNew = TryRealloc(S->x, nAlloc*sizeof(int))) == NULL) { return (-1); }
+	S->x = vNew;
+	if ((vNew = TryRealloc(S->y, nAlloc*sizeof(int))) == NULL) { return (-1); }
+	S->y = vNew;
+	if ((vNew = TryRealloc(S->z, nAlloc*sizeof(int))) == NULL) { return (-1); }
+	S->z = vNew;
+	
+	S->nMax = nAlloc;
+	return (0);
+}
+
+/* Copy the contents a point set. */
+int
+M_PointSetCopy2(M_PointSet2 *D, const M_PointSet2 *S)
+{
+	if (M_PointSetAlloc2(D, S->n) == -1) {
+		return (-1);
 	}
+	memcpy(D->p, S->p, S->n*sizeof(M_Vector2));
+	return (0);
 }
-
-/* Duplicate a point set. */
-M_PointSet2
-M_PointSetDup2(M_PointSet2 *S1)
+int
+M_PointSetCopy3(M_PointSet3 *D, const M_PointSet3 *S)
 {
-	M_PointSet2 S2;
-
-	S2.p = Malloc(S1->n*sizeof(M_Vector2));
-	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector2));
-	S2.n = S1->n;
-	S2.nMax = S1->n;
-	return (S2);
+	if (M_PointSetAlloc3(D, S->n) == -1) {
+		return (-1);
+	}
+	memcpy(D->p, S->p, S->n*sizeof(M_Vector3));
+	return (0);
 }
-M_PointSet3
-M_PointSetDup3(M_PointSet3 *S1)
+int
+M_PointSetCopy2i(M_PointSet2i *D, const M_PointSet2i *S)
 {
-	M_PointSet3 S2;
-
-	S2.p = Malloc(S1->n*sizeof(M_Vector3));
-	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector3));
-	S2.n = S1->n;
-	S2.nMax = S1->n;
-	return (S2);
+	if (M_PointSetAlloc2i(D, S->n) == -1) {
+		return (-1);
+	}
+	memcpy(D->x, S->x, S->n*sizeof(int));
+	memcpy(D->y, S->y, S->n*sizeof(int));
+	return (0);
 }
-M_PointSet2i
-M_PointSetDup2i(M_PointSet2i *S1)
+int
+M_PointSetCopy3i(M_PointSet3i *D, const M_PointSet3i *S)
 {
-	M_PointSet2i S2;
-
-	S2.p = Malloc(S1->n*sizeof(M_Vector2));
-	S2.x = Malloc(S1->n*sizeof(int));
-	S2.y = Malloc(S1->n*sizeof(int));
-	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector2));
-	memcpy(S2.x, S1->x, S1->n*sizeof(int));
-	memcpy(S2.y, S1->y, S1->n*sizeof(int));
-	S2.n = S1->n;
-	S2.nMax = S1->n;
-	return (S2);
-}
-M_PointSet3i
-M_PointSetDup3i(M_PointSet3i *S1)
-{
-	M_PointSet3i S2;
-
-	S2.p = Malloc(S1->n*sizeof(M_Vector3));
-	memcpy(S2.p, S1->p, S1->n*sizeof(M_Vector3));
-	memcpy(S2.x, S1->x, S1->n*sizeof(int));
-	memcpy(S2.y, S1->y, S1->n*sizeof(int));
-	memcpy(S2.z, S1->z, S1->n*sizeof(int));
-	S2.n = S1->n;
-	S2.nMax = S1->n;
-	return (S2);
+	if (M_PointSetAlloc3i(D, S->n) == -1) {
+		return (-1);
+	}
+	memcpy(D->x, S->x, S->n*sizeof(int));
+	memcpy(D->y, S->y, S->n*sizeof(int));
+	memcpy(D->z, S->z, S->n*sizeof(int));
+	return (0);
 }
 
 /*
@@ -201,13 +216,13 @@ ComparePoints3_ZYX(const void *p1, const void *p2)
 
 /* Sort points in R2 by their X or Y coordinates. */
 void
-M_SortPoints2(M_PointSet2 *P, enum m_point_sort_mode2 mode)
+M_PointSetSort2(M_PointSet2 *P, enum m_point_set_sort_mode2 mode)
 {
 	switch (mode) {
-	case M_POINT_SORT_XY:
+	case M_POINT_SET_SORT_XY:
 		M_QSort(P->p, P->n, sizeof(M_Vector2), ComparePoints2_XY);
 		break;
-	case M_POINT_SORT_YX:
+	case M_POINT_SET_SORT_YX:
 		M_QSort(P->p, P->n, sizeof(M_Vector2), ComparePoints2_YX);
 		break;
 	}
@@ -215,25 +230,25 @@ M_SortPoints2(M_PointSet2 *P, enum m_point_sort_mode2 mode)
 
 /* Sort points in R3 by their X, Y or Z coordinates. */
 void
-M_SortPoints3(M_PointSet3 *P, enum m_point_sort_mode3 mode)
+M_PointSetSort3(M_PointSet3 *P, enum m_point_set_sort_mode3 mode)
 {
 	switch (mode) {
-	case M_POINT_SORT_XYZ:
+	case M_POINT_SET_SORT_XYZ:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_XYZ);
 		break;
-	case M_POINT_SORT_XZY:
+	case M_POINT_SET_SORT_XZY:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_XZY);
 		break;
-	case M_POINT_SORT_YXZ:
+	case M_POINT_SET_SORT_YXZ:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_YXZ);
 		break;
-	case M_POINT_SORT_YZX:
+	case M_POINT_SET_SORT_YZX:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_YZX);
 		break;
-	case M_POINT_SORT_ZXY:
+	case M_POINT_SET_SORT_ZXY:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_ZXY);
 		break;
-	case M_POINT_SORT_ZYX:
+	case M_POINT_SET_SORT_ZYX:
 		M_QSort(P->p, P->n, sizeof(M_Vector3), ComparePoints3_ZYX);
 		break;
 	}

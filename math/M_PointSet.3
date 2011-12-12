@@ -1,0 +1,289 @@
+.\"
+.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 17, 2009
+.Dt M_POINT_SET 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.4.2
+.Sh NAME
+.Nm M_PointSet
+.Nd Agar-Math point set structures
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+.\" MANLINK(M_PointSet2)
+.\" MANLINK(M_PointSet2i)
+.\" MANLINK(M_PointSet3)
+.\" MANLINK(M_PointSet3i)
+The
+.Nm
+family of structures describe arbitrary sets of points in space.
+They are defined as follows:
+.Pp
+.Bd -literal
+/* Points in R^2 */
+typedef struct m_point_set2 {
+	M_Vector2 *p;
+	Uint n, nMax;
+} M_PointSet2;
+
+/* Points in Z^2 */
+typedef struct m_point_set2i {
+	M_Real w, h;
+	int *x, *y;
+	Uint n, nMax;
+} M_PointSet2i;
+
+/* Points in R^3 */
+typedef struct m_point_set3 {
+	M_Vector3 *p;
+	Uint n, nMax;
+} M_PointSet3;
+
+/* Points in Z^3 */
+typedef struct m_point_set3i {
+	M_Real w, h, d;			/* Scaling factor */
+	int *x, *y, *z;
+	Uint n, nMax;
+} M_PointSet3i;
+.Ed
+.Pp
+The points in a
+.Ft M_PointSet[23]
+are stored under the
+.Va p
+array of vectors (see
+.Xr M_Vector 3 ) .
+.Pp
+The points in
+.Ft M_PointSet[23]i
+are stored as separate arrays of integers
+.Va x ,
+.Va y ,
+.Va z .
+The
+.Va w ,
+.Va h
+and
+.Va d
+members specify scaling factors to use when converting from an integer
+set to a real set.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn M_PointSetInit2 "M_PointSet2 *S"
+.Pp
+.Ft void
+.Fn M_PointSetInit3 "M_PointSet3 *S"
+.Pp
+.Ft void
+.Fn M_PointSetInit2i "M_PointSet2i *S" "M_Real w" "M_Real h"
+.Pp
+.Ft void
+.Fn M_PointSetInit3i "M_PointSet3i *S" "M_Real w" "M_Real h" "M_Real d"
+.Pp
+.Ft int
+.Fn M_PointSetAlloc2 "M_PointSet2 *S" "Uint n"
+.Pp
+.Ft int
+.Fn M_PointSetAlloc3 "M_PointSet3 *S" "Uint n"
+.Pp
+.Ft int
+.Fn M_PointSetAlloc2i "M_PointSet2i *S" "Uint n"
+.Pp
+.Ft int
+.Fn M_PointSetAlloc3i "M_PointSet3i *S" "Uint n"
+.Pp
+.Ft void
+.Fn M_PointSetFree2 "M_PointSet2 *S"
+.Pp
+.Ft void
+.Fn M_PointSetFree3 "M_PointSet3 *S"
+.Pp
+.Ft void
+.Fn M_PointSetFree2i "M_PointSet2i *S"
+.Pp
+.Ft void
+.Fn M_PointSetFree3i "M_PointSet2i *S"
+.Pp
+.Ft M_PointSet2
+.Fn M_PointSetRead2 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_PointSetWrite2 "AG_DataSource *ds" "const M_PointSet2 *S"
+.Pp
+.Ft M_PointSet3
+.Fn M_PointSetRead3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_PointSetWrite3 "AG_DataSource *ds" "const M_PointSet3 *S"
+.Pp
+.Ft M_PointSet2i
+.Fn M_PointSetRead2i "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_PointSetWrite2i "AG_DataSource *ds" "const M_PointSet2i *S"
+.Pp
+.Ft M_PointSet3i
+.Fn M_PointSetRead3i "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_PointSetWrite3i "AG_DataSource *ds" "const M_PointSet3i *S"
+.Pp
+.Ft M_PointSet2
+.Fn M_POINT_SET2_EMPTY "void"
+.Pp
+.Ft M_PointSet3
+.Fn M_POINT_SET3_EMPTY "void"
+.Pp
+.Ft M_PointSet2i
+.Fn M_POINT_SET2I_EMPTY "void"
+.Pp
+.Ft M_PointSet3i
+.Fn M_POINT_SET3I_EMPTY "void"
+.Pp
+.nr nS 0
+The
+.Fn M_PointSetInit[23]
+functions initialize a point set in R^2 or R^3 to the null set.
+.Pp
+The
+.Fn M_PointSetInit[23]i
+functions initialize a point set in Z^3 or Z^3 to the null set.
+The
+.Fa w ,
+.Fa h ,
+.Fa d
+arguments specify the scaling factor to use when converting from an
+integer to a real point set.
+.Pp
+The
+.Fn M_PointSetAlloc*
+functions allocates memory for the specified number of points, returning
+0 on success or -1 if insufficient memory is available.
+.Pp
+The
+.Fn M_PointSetFree*
+functions free the point sets, clearing the arrays and reinitializing the
+point count to 0.
+.Pp
+The
+.Fn M_PointSetRead*
+and
+.Fn M_TriangleWrite*
+functions read or write a triangle structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The macros
+.Fn M_POINT_SET*_EMPTY
+expand to static initializers for any of the
+.Nm
+structures.
+.Sh OPERATIONS
+.nr nS 1
+.Ft int
+.Fn M_PointSetAdd2 "M_PointSet2 *S" "M_Vector2 v"
+.Pp
+.Ft int
+.Fn M_PointSetAdd3 "M_PointSet3 *S" "M_Vector3 v"
+.Pp
+.Ft int
+.Fn M_PointSetAdd2i "M_PointSet2 *S" "int x" "int y"
+.Pp
+.Ft int
+.Fn M_PointSetAdd3i "M_PointSet3i *S" "int x" "int y" "int z"
+.Pp
+.Ft int
+.Fn M_PointSetCopy2 "M_PointSet2 *D" "const M_PointSet2 *S"
+.Pp
+.Ft int
+.Fn M_PointSetCopy3 "M_PointSet3 *D" "const M_PointSet3 *S"
+.Pp
+.Ft int
+.Fn M_PointSetCopy2i "M_PointSet2i *D" "const M_PointSet2i *S"
+.Pp
+.Ft int
+.Fn M_PointSetCopy3i "M_PointSet3i *D" "const M_PointSet3i *S"
+.Pp
+.Ft void
+.Fn M_PointSetSort2 "M_PointSet2 *S" "enum m_point_set_sort_mode2"
+.Pp
+.Ft void
+.Fn M_PointSetSort3 "M_PointSet3 *S" "enum m_point_set_sort_mode3"
+.Pp
+.nr nS 0
+The
+.Fn M_PointSetAdd*
+functions insert a new point at the end of the set
+.Fa S .
+On success, the index of the new point is returned.
+If insufficient memory is available, -1 is returned.
+.Pp
+The
+.Fn M_PointSetCopy*
+functions copy the contents of source set
+.Fa S
+into destination set
+.Fa D ,
+returning 0 on success or -1 if insufficient memory is available.
+.Pp
+The
+.Fn M_PointSetSort[23]
+functions sort the point sets by point coordinate.
+The
+.Fa mode
+arguments specify the sorting mode:
+.Pp
+.Bd -literal
+enum m_point_set_sort_mode2 {
+	M_POINT_SET_SORT_XY,
+	M_POINT_SET_SORT_YX,
+};
+enum m_point_set_sort_mode3 {
+	M_POINT_SET_SORT_XYZ,
+	M_POINT_SET_SORT_XZY,
+	M_POINT_SET_SORT_YXZ,
+	M_POINT_SET_SORT_YZX,
+	M_POINT_SET_SORT_ZXY,
+	M_POINT_SET_SORT_ZYX,
+};
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+family of structures first appeared in Agar 1.4.2
