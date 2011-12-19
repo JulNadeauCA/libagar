@@ -244,27 +244,27 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
                 done; \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
 	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la \
 			    -module \
 		            -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la -module \
 		            -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    else \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la \
 		            -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} $$_shobjs \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la \
 		            -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
@@ -272,43 +272,43 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
 			    ${LIBS} ${LIB_XOBJS}; \
 		    fi; \
 		else \
-	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
 		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	            ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
 			${LIBS} ${LIB_XOBJS}; \
 		fi; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
 	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    else \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
 	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
 		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
 		            ${LDFLAGS} ${SHOBJS} \
 			    ${LIBS} ${LIB_XOBJS}; \
 		    fi; \
 	        else \
-	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
 		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+	            ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
 		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
 			${LIBS} ${LIB_XOBJS}; \
 		fi; \
