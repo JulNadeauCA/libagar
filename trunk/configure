@@ -1682,7 +1682,7 @@ $ECHO_N "checking for libtool --tag=CC retardation..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
-$LIBTOOL --quiet --mode=compile $CC --tag=CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest.o conftest.c 2>>config.log
+$LIBTOOL --quiet --mode=compile --tag=CC $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest.o conftest.c 2>>config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
