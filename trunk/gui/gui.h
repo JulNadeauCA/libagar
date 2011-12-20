@@ -43,6 +43,7 @@ int        AG_InitGraphics(const char *);
 int        AG_InitVideo(int, int, int, Uint);
 #ifdef HAVE_SDL
 int        AG_InitVideoSDL(void *, Uint);
+int        AG_SetVideoSurfaceSDL(void *);
 #endif
 int        AG_InitGUI(Uint);
 int        AG_InitGUIGlobals(void);

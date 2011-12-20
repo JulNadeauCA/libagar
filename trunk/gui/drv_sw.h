@@ -12,6 +12,7 @@ typedef struct ag_driver_sw_class {
 	/* Create or attach to a graphics display */
 	int  (*openVideo)(void *drv, Uint w, Uint h, int depth, Uint flags);
 	int  (*openVideoContext)(void *drv, void *ctx, Uint flags);
+	int  (*setVideoContext)(void *drv, void *ctx);
 	void (*closeVideo)(void *drv);
 	/* Resize the display */
 	int  (*videoResize)(void *drv, Uint w, Uint h);
@@ -81,8 +82,11 @@ struct ag_size_alloc;
 
 void AG_WM_BackgroundPopupMenu(AG_DriverSw *);
 void AG_WM_CommitWindowFocus(struct ag_window *);
+
 int  AG_ResizeDisplay(int, int);
+void AG_PostResizeDisplay(AG_DriverSw *);
 void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
+
 void AG_WM_LimitWindowToView(struct ag_window *);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *, struct ag_size_alloc *);
 void AG_WM_GetPrefPosition(struct ag_window *, int *, int *, int, int);

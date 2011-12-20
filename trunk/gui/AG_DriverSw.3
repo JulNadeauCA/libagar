@@ -63,6 +63,7 @@ typedef struct ag_driver_sw_class {
 	int  (*openVideo)(void *drv, Uint w, Uint h, int depth,
 	                  Uint flags);
 	int  (*openVideoContext)(void *drv, void *ctx, Uint flags);
+	int  (*setVideoContext)(void *drv, void *ctx);
 	void (*closeVideo)(void *drv);
 	int  (*videoResize)(void *drv, Uint w, Uint h);
 	int  (*videoCapture)(void *drv, AG_Surface **);
@@ -125,6 +126,13 @@ The function should return 0 on success or -1 on failure.
 .Fn videoClear
 clears the video background with the specified color
 .Fa c .
+.Pp
+.Fn setVideoContext
+changes the existing display context (assumes
+.Fn openVideoContext
+has been called before).
+If the surface size has changed, Agar windows are clamped, moved or
+resized as appropriate.
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,
 .Xr AG_DriverMw 3 ,

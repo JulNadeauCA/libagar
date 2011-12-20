@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1455,6 +1455,27 @@ SDLFB_VideoClear(void *obj, AG_Color c)
 	SDL_UpdateRect(sfb->s, 0, 0, sfb->s->w, sfb->s->h);
 }
 
+static int
+SDLFB_SetVideoContext(void *obj, void *pSurface)
+{
+	AG_DriverSDLFB *sfb = obj;
+	AG_DriverSw *dsw = obj;
+	SDL_Surface *su = pSurface;
+	AG_ClipRect *cr0;
+
+	sfb->s = su;
+	dsw->w = su->w;
+	dsw->h = su->h;
+	dsw->depth = (Uint)su->format->BitsPerPixel;
+	
+	/* Update clipping rectangle 0. */
+	cr0 = &sfb->clipRects[0];
+	cr0->r.w = su->w;
+	cr0->r.h = su->h;
+	return (0);
+}
+
+
 AG_DriverSwClass agDriverSDLFB = {
 	{
 		{
@@ -1535,6 +1556,7 @@ AG_DriverSwClass agDriverSDLFB = {
 	0,
 	SDLFB_OpenVideo,
 	SDLFB_OpenVideoContext,
+	SDLFB_SetVideoContext,
 	SDLFB_CloseVideo,
 	SDLFB_VideoResize,
 	SDLFB_VideoCapture,

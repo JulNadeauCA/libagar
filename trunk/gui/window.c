@@ -552,6 +552,7 @@ Shown(AG_Event *event)
 	AG_SizeAlloc a;
 	int xPref, yPref;
 	Uint mwFlags = 0;
+	AG_Variable V;
 
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		AG_WidgetSizeReq(win, &r);
@@ -577,13 +578,18 @@ Shown(AG_Event *event)
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		if (win->flags & AG_WINDOW_MODAL) {
-			AG_Variable Vmodal;
-			AG_InitPointer(&Vmodal, win);
-			AG_ListAppend(AGDRIVER_SW(drv)->Lmodal, &Vmodal);
+			/* Use the per-driver modal window stack. */
+			AG_InitPointer(&V, win);
+			AG_ListAppend(AGDRIVER_SW(drv)->Lmodal, &V);
 		}
 		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
+		if (win->flags & AG_WINDOW_MODAL) {
+			/* Use the global modal window stack. */
+			AG_InitPointer(&V, win);
+			AG_ListAppend(agModalWindows, &V);
+		}
 		/* We expect the driver will call AG_WidgetUpdateCoords(). */
 		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			if (AGDRIVER_MW_CLASS(drv)->openWindow(win,
@@ -658,8 +664,8 @@ Hidden(AG_Event *event)
 		if (OBJECT(drv)->parent == NULL)
 			break;
 
-		/* Remove from the modal window list if modal. */
 		if (win->flags & AG_WINDOW_MODAL) {
+			/* Remove from per-driver modal window stack. */
 			for (i = 0; i < dsw->Lmodal->n; i++) {
 				if (dsw->Lmodal->v[i].data.p == win)
 					break;
@@ -681,6 +687,16 @@ Hidden(AG_Event *event)
 		}
 		break;
 	case AG_WM_MULTIPLE:
+		if (win->flags & AG_WINDOW_MODAL) {
+			/* Remove from global modal window stack. */
+			for (i = 0; i < agModalWindows->n; i++) {
+				if (agModalWindows->v[i].data.p == win)
+					break;
+			}
+			if (i < agModalWindows->n)
+				AG_ListRemove(agModalWindows, i);
+		}
+
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			if (AGDRIVER_MW_CLASS(drv)->unmapWindow(win) == -1)
 				AG_FatalError(NULL);
@@ -854,6 +870,15 @@ AG_WindowFocus(AG_Window *win)
 	if (win == NULL) {
 		agWindowToFocus = NULL;
 		goto out;
+	}
+
+	/*
+	 * Avoid clobbering modal windows (single-window drivers are
+	 * expected to perform this test internally).
+	 */
+	if (agDriverOps->wm == AG_WM_MULTIPLE) {
+		if (agModalWindows->n > 0)
+			goto out;
 	}
 
 	AG_ObjectLock(win);

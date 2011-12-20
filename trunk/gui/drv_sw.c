@@ -146,23 +146,16 @@ AG_WM_BackgroundPopupMenu(AG_DriverSw *dsw)
 	    AGDRIVER(dsw)->mouse->y + 4);
 }
 
-/* Resize a video display to the specified dimensions. */
-int
-AG_ResizeDisplay(int w, int h)
+/*
+ * Update Agar window geometries following a display resize (for
+ * single-window drivers).
+ */
+void
+AG_PostResizeDisplay(AG_DriverSw *dsw)
 {
 	AG_Window *win;
 
-	if (agDriverSw == NULL) {
-		AG_SetError("AG_ResizeDisplay() is only applicable to "
-		            "single-window graphics drivers");
-		return (-1);
-	}
-	if (AGDRIVER_SW_CLASS(agDriverSw)->videoResize(agDriverSw,
-	    (Uint)w, (Uint)h) == -1)
-		return (-1);
-
-	/* Update the Agar window geometries. */
-	AG_FOREACH_WINDOW(win, agDriverSw) {
+	AG_FOREACH_WINDOW(win, dsw) {
 		AG_SizeAlloc a;
 
 		a.x = WIDGET(win)->x;
@@ -177,25 +170,25 @@ AG_ResizeDisplay(int w, int h)
 		} else {
 			if (win->flags & AG_WINDOW_HMAXIMIZE) {
 				a.x = 0;
-				a.w = agDriverSw->w;
+				a.w = dsw->w;
 			} else {
-				if (a.x+a.w > agDriverSw->w) {
-					a.x = agDriverSw->w - a.w;
+				if (a.x+a.w > dsw->w) {
+					a.x = dsw->w - a.w;
 					if (a.x < 0) {
 						a.x = 0;
-						a.w = agDriverSw->w;
+						a.w = dsw->w;
 					}
 				}
 			}
 			if (win->flags & AG_WINDOW_VMAXIMIZE) {
 				a.y = 0;
-				a.h = agDriverSw->h;
+				a.h = dsw->h;
 			} else {
-				if (a.y+a.h > agDriverSw->h) {
-					a.y = agDriverSw->h - a.h;
+				if (a.y+a.h > dsw->h) {
+					a.y = dsw->h - a.h;
 					if (a.y < 0) {
 						a.y = 0;
-						a.h = agDriverSw->w;
+						a.h = dsw->w;
 					}
 				}
 			}
@@ -204,9 +197,24 @@ AG_ResizeDisplay(int w, int h)
 		}
 		AG_ObjectUnlock(win);
 	}
-	if (agVideoResizeCallback != NULL) {
-		agVideoResizeCallback(w, h);
+	if (agVideoResizeCallback != NULL)
+		agVideoResizeCallback(dsw->w, dsw->h);
+}
+
+/* Resize a video display to the specified dimensions. */
+int
+AG_ResizeDisplay(int w, int h)
+{
+	if (agDriverSw == NULL) {
+		AG_SetError("AG_ResizeDisplay() is only applicable to "
+		            "single-window graphics drivers");
+		return (-1);
 	}
+	if (AGDRIVER_SW_CLASS(agDriverSw)->videoResize(agDriverSw,
+	    (Uint)w, (Uint)h) == -1) {
+		return (-1);
+	}
+	AG_PostResizeDisplay(agDriverSw);
 	return (0);
 }
 

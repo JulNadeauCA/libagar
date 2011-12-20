@@ -59,5 +59,7 @@ typedef struct ag_driver_mw {
 #define AG_DRIVER_MW_ANYPOS	0x01		/* No preferred position */
 
 __BEGIN_DECLS
-extern AG_ObjectClass    agDriverMwClass;
+extern AG_ObjectClass  agDriverMwClass;
+extern AG_List        *agModalWindows;		/* Modal window stack */
+extern int             agModalWindowsRefs;
 __END_DECLS
