@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -118,6 +118,25 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 fail:
 	AG_DestroyGUIGlobals();
 	return (-1);
+}
+
+/*
+ * Reattach to a different SDL display surface.
+ */
+int
+AG_SetVideoSurfaceSDL(void *pDisplay)
+{
+	if (agDriverSw == NULL ||
+	    !(agDriverOps->flags & AG_DRIVER_SDL)) {
+		AG_SetError("Current driver is not an SDL driver");
+		return (-1);
+	}
+	if (AGDRIVER_SW_CLASS(agDriverSw)->setVideoContext(agDriverSw,
+	    pDisplay) == -1) {
+		return (-1);
+	}
+	AG_PostResizeDisplay(agDriverSw);
+	return (0);
 }
 
 /* Return the corresponding Agar PixelFormat structure for a SDL_Surface. */

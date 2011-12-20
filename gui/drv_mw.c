@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,9 @@
 
 #include "window.h"
 
+AG_List *agModalWindows = NULL;		/* Modal window stack */
+int      agModalWindowsRefs = 0;
+
 static void
 Init(void *obj)
 {
@@ -43,6 +46,19 @@ Init(void *obj)
 
 	dmw->flags = 0;
 	dmw->win = NULL;
+
+	if (agModalWindowsRefs++ == 0 &&
+	    (agModalWindows = AG_ListNew()) == NULL)
+		AG_FatalError(NULL);
+}
+
+static void
+Destroy(void *obj)
+{
+	if (--agModalWindowsRefs == 0) {
+		AG_ListDestroy(agModalWindows);
+		agModalWindows = NULL;
+	}
 }
 
 AG_ObjectClass agDriverMwClass = {
@@ -51,7 +67,7 @@ AG_ObjectClass agDriverMwClass = {
 	{ 1,4 },
 	Init,
 	NULL,		/* reinit */
-	NULL,		/* destroy */
+	Destroy,
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL		/* edit */

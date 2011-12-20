@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2010-2011 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -109,11 +109,12 @@ for details).
 .nr nS 1
 .Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
-.Bd -literal
-/* Requires Agar compiled --with-sdl */
-.Ed
+.Pp
 .Ft "int"
 .Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Pp
+.Ft "int"
+.Fn AG_SetVideoSurfaceSDL "SDL_Surface *display"
 .Pp
 .Ft "int"
 .Fn AG_ResizeDisplay "int w" "int h"
@@ -132,8 +133,7 @@ which selects only those drivers with no multiple-window support (e.g.,
 .Pp
 The
 .Fn AG_InitVideoSDL
-function is another alternative which reuses an existing SDL display surface.
-This function is only available if Agar has been compiled with SDL support.
+function initializes the GUI to attach to an existing SDL display surface.
 Note that if the specified surface has the
 .Dv SDL_OPENGL
 flag set, the
@@ -141,6 +141,16 @@ flag set, the
 driver is selected, otherwise
 .Va sdlfb
 is used.
+.Pp
+The
+.Fn AG_SetVideoSurfaceSDL
+function can be used to reattach to a different (e.g., a newly resized)
+SDL display surface without reinitializing the GUI.
+.Pp
+.Fn AG_InitVideoSDL
+and
+.Fn AG_SetVideoSurfaceSDL
+are only available if Agar has been compiled with SDL support.
 .Pp
 The
 .Fn AG_ResizeDisplay

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -775,6 +775,26 @@ SDLGL_VideoClear(void *obj, AG_Color c)
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
+static int
+SDLGL_SetVideoContext(void *obj, void *pSurface)
+{
+	AG_DriverSDLGL *sgl = obj;
+	AG_DriverSw *dsw = obj;
+	SDL_Surface *su = pSurface;
+	AG_ClipRect *cr0;
+
+	sgl->s = su;
+	dsw->w = su->w;
+	dsw->h = su->h;
+	dsw->depth = (Uint)su->format->BitsPerPixel;
+	
+	/* Update clipping rectangle 0. */
+	cr0 = &sgl->clipRects[0];
+	cr0->r.w = su->w;
+	cr0->r.h = su->h;
+	return (0);
+}
+
 AG_DriverSwClass agDriverSDLGL = {
 	{
 		{
@@ -855,6 +875,7 @@ AG_DriverSwClass agDriverSDLGL = {
 	0,
 	SDLGL_OpenVideo,
 	SDLGL_OpenVideoContext,
+	SDLGL_SetVideoContext,
 	SDLGL_CloseVideo,
 	SDLGL_VideoResize,
 	SDLGL_VideoCapture,
