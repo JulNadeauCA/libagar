@@ -62,9 +62,8 @@
 #include <agar/gui/load_surface.h>
 #include <agar/gui/load_color.h>
 
-#ifdef __APPLE__
 /* Work around MacOS X retardation */
-#include <agar/gui/cursors.h>
+#ifdef __APPLE__
 #include <agar/gui/sdl.h>
 #endif
 

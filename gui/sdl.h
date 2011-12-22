@@ -5,6 +5,7 @@
 
 #include <agar/config/have_sdl.h>
 #ifdef HAVE_SDL
+#include <agar/gui/cursors.h>
 #include <agar/gui/drv_sdl_common.h>
 #endif
 
