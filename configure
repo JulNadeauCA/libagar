@@ -6608,11 +6608,15 @@ fi;
 			else
 echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
+echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
 			fi
 		fi
 	else
 echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
+echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
 PNG_CFLAGS=""
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua

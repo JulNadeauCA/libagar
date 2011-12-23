@@ -311,10 +311,12 @@ if [ "${enable_gui}" != "no" ]; then
 				exit 1
 			else
 				HUNDEF(HAVE_PNG)
+				HUNDEF(HAVE_LIBPNG14)
 			fi
 		fi
 	else
 		HUNDEF(HAVE_PNG)
+		HUNDEF(HAVE_LIBPNG14)
 		MDEFINE(PNG_CFLAGS, "")
 		MDEFINE(PNG_LIBS, "")
 	fi
