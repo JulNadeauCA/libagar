@@ -31,8 +31,8 @@
 #include "gui.h"
 
 #include <config/have_png.h>
-#include <config/have_libpng14.h>
 #if defined(HAVE_PNG)
+#include <config/have_libpng14.h>
 
 #ifdef macintosh
 # define MACOS
