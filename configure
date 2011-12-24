@@ -578,6 +578,10 @@ if [ "${prefix_libtool}" != "" ]; then
 else
 	LIBTOOL=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/glibtool" ]; then
+			LIBTOOL="${path}/glibtool"
+			break
+		fi
 		if [ -x "${path}/libtool" ]; then
 			LIBTOOL="${path}/libtool"
 			break
@@ -587,7 +591,12 @@ else
 		LIBTOOL_BUNDLED="yes"
 		LIBTOOL=\${TOP}/mk/libtool/libtool
 	else
-		LIBTOOL_BUNDLED="no"
+		if [ "`libtool --version |grep GNU`" = "" ]; then
+			LIBTOOL_BUNDLED="yes"
+			LIBTOOL=\${TOP}/mk/libtool/libtool
+		else
+			LIBTOOL_BUNDLED="no"
+		fi
 	fi
 fi
 echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
