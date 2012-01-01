@@ -231,6 +231,9 @@ M_PointInPolygon(const M_Polygon *P, M_Vector2 p)
 	M_Real ix;
 	M_Vector2 p1, p2;
 
+	if (P->n < 3)
+		return (0);
+
 	p1 = P->v[0];
 	for (i = 1; i <= P->n; i++) {
 		p2 = P->v[i % P->n];
