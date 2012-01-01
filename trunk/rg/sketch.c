@@ -457,14 +457,13 @@ void
 RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
     VG_Element *vge)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
 	char name[AG_OBJECT_NAME_MAX];
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 	RG_TileviewCtrl *ctrl, *nctrl;
 	AG_Window *win;
 
-	AG_FOREACH_WINDOW(win, drv) {
+	AG_FOREACH_WINDOW(win, WIDGET(tv)->drv) {
 		Snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
 		    vge);
 		if (strcmp(name, OBJECT(win)->name) == 0) {
@@ -488,14 +487,13 @@ void
 RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
     int button)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 
 	if (button == AG_MOUSE_MIDDLE) {
 		int x, y;
 
-		AG_MouseGetState(drv->mouse, &x, &y);
+		AG_MouseGetState(WIDGET(tv)->drv->mouse, &x, &y);
 		RG_SketchOpenMenu(tv, x, y);
 		return;
 	} else if (button == AG_MOUSE_RIGHT) {
@@ -541,7 +539,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
 				AG_Window *pwin = AG_ParentWindow(tv);
 				AG_Window *win;
 
-				if (!(AG_GetModState(drv->kbd)&AG_KEYMOD_CTRL)) {
+				if (!(AG_GetModState(tv) & AG_KEYMOD_CTRL)) {
 					TAILQ_FOREACH(vge, &vg->vges, vges) {
 						if (vge->selected)
 							RG_SketchUnselect(tv,

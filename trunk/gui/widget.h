@@ -196,6 +196,11 @@ typedef struct ag_widget {
 #define AGWIDGET_NEXT_CHILD(var) \
 	AGOBJECT_NEXT_CHILD((var),ag_widget)
 
+#define AGWIDGET_KEYBOARD(obj)				\
+    (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd :	\
+     (agDriverSw != NULL) ? AGDRIVER(agDriverSw)->kbd:	\
+     NULL)
+
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
 #define WIDGET(wi)			AGWIDGET(wi)
 #define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
@@ -505,6 +510,40 @@ AG_WidgetBlitFrom(void *obj, void *objSrc, int s, AG_Rect *r, int x, int y)
 	    wid->rView.y1 + y);
 }
 
+/*
+ * Routines for direct access to keyboard key and modifier state
+ * from widget code.
+ */
+static __inline__ int *
+AG_GetKeyState(void *obj)
+{
+	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+	return (kbd->keyState);
+}
+static __inline__ void
+AG_SetKeyState(void *obj, int *ks)
+{
+	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+	memcpy(kbd->keyState, ks, kbd->keyCount*sizeof(int));
+}
+static __inline__ int
+AG_GetKeyCount(void *obj)
+{
+	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+	return (kbd->keyCount);
+}
+static __inline__ Uint
+AG_GetModState(void *obj)
+{
+	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+	return (kbd->modState);
+}
+static __inline__ void
+AG_SetModState(void *obj, Uint ms)
+{
+	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+	kbd->modState = ms;
+}
 __END_DECLS
 
 #ifdef AG_LEGACY

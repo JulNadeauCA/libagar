@@ -6,8 +6,8 @@
 #include <agar/gui/begin.h>
 
 typedef enum ag_keyboard_action {
-	AG_KEY_PRESSED,
-	AG_KEY_RELEASED
+	AG_KEY_PRESSED  = 1,
+	AG_KEY_RELEASED = 0
 } AG_KeyboardAction;
 
 typedef enum ag_key_sym {
@@ -182,9 +182,9 @@ typedef struct ag_key {
 typedef struct ag_keyboard {
 	struct ag_input_device _inherit;
 	Uint flags;
-	Uint8 *keyState;		/* Key state */
-	Uint   keyCount;
-	Uint modState;			/* Active modifiers */
+	int *keyState;		/* Key state */
+	Uint keyCount;
+	Uint modState;		/* Modifiers state */
 } AG_Keyboard;
 
 __BEGIN_DECLS
@@ -204,23 +204,6 @@ int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
 void AG_ClearGlobalKeys(void);
 int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
 
-/* Key/modifier state access routines. XXX thread unsafe */
-static __inline__ Uint8 *
-AG_GetKeyState(AG_Keyboard *kbd, int *count)
-{
-	if (count != NULL) { *count = kbd->keyCount; }
-	return (kbd->keyState);
-}
-static __inline__ Uint
-AG_GetModState(AG_Keyboard *kbd)
-{
-	return (kbd->modState);
-}
-static __inline__ void
-AG_SetModState(AG_Keyboard *kbd, Uint ms)
-{
-	kbd->modState = ms;
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -459,7 +459,7 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 	    AG_KEY_PRESSED : AG_KEY_RELEASED;
 
 	/* Set the final modifier state */
-	AG_SetModState(kbd, ms);
+	kbd->modState = ms;
 	
 	AG_MutexUnlock(&agDisplayLock);
 }

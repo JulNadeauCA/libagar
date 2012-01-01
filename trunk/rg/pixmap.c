@@ -701,29 +701,28 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 int
 RG_PixmapWheel(RG_Tileview *tv, RG_TileElement *tel, int nwheel)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
-	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
+	int *kbd = AG_GetKeyState(tv);
 	RG_Pixmap *px = tel->tel_pixmap.px;
 
-	if (ks[AG_KEY_H]) {
+	if (kbd[AG_KEY_H]) {
 		px->h += (nwheel == 0) ? -3 : 3;
 		if (px->h < 0.0) { px->h = 359.0; }
 		else if (px->h > 359.0) { px->h = 0.0; }
 		return (1);
 	}
-	if (ks[AG_KEY_S]) {
+	if (kbd[AG_KEY_S]) {
 		px->s += (nwheel == 0) ? 0.05 : -0.05;
 		if (px->s < 0.0) {  px->s = 0.0; }
 		else if (px->s > 1.0) { px->s = 1.0; }
 		return (1);
 	}
-	if (ks[AG_KEY_V]) {
+	if (kbd[AG_KEY_V]) {
 		px->v += (nwheel == 0) ? -0.05 : 0.05;
 		if (px->v < 0.0) { px->v = 0.0; }
 		else if (px->v > 1.0) { px->v = 1.0; }
 		return (1);
 	}
-	if (ks[AG_KEY_A]) {
+	if (kbd[AG_KEY_A]) {
 		px->a += (nwheel == 0) ? 0.1 : -0.1;
 		if (px->a < 0.0) { px->a = 0.0; }
 		else if (px->a > 1.0) { px->a = 1.0; }
@@ -735,16 +734,15 @@ RG_PixmapWheel(RG_Tileview *tv, RG_TileElement *tel, int nwheel)
 static __inline__ void
 pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
+	int *kbd = AG_GetKeyState(tv);
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b;
 	Uint8 a = (Uint8)(px->a*255);
-	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
 	int erase_mode;
 	enum rg_pixmap_blend_mode bmode_save = 0;
 	enum rg_brush_type btype_save = 0;
 
-	erase_mode = ks[AG_KEY_E];
+	erase_mode = kbd[AG_KEY_E];
 	if (erase_mode) {
 		r = 0;
 		g = 0;
@@ -881,14 +879,13 @@ randfill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 static void
 pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
+	int *kbd = AG_GetKeyState(tv);
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
-	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
 	Uint32 cOrig, cFill;
 
 	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
-	if (ks[AG_KEY_E]) {
+	if (kbd[AG_KEY_E]) {
 		r = 0;
 		g = 0;
 		b = 0;
@@ -904,16 +901,15 @@ pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 static void
 pixmap_randfill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
+	int *kbd = AG_GetKeyState(tv);
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
-	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
 	Uint32 cOrig, cFill;
 	Uint32 rand;
 	Uint32 bit = 0;
 
 	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
-	if (ks[AG_KEY_E]) {
+	if (kbd[AG_KEY_E]) {
 		r = 0;
 		g = 0;
 		b = 0;
@@ -951,14 +947,13 @@ void
 RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
     int x, int y, int button)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
+	int *kbd = AG_GetKeyState(tv);
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	Uint8 *ks;
 
 	if (button == AG_MOUSE_MIDDLE) {
 		int x, y;
 
-		AG_MouseGetState(drv->mouse, &x, &y);
+		AG_MouseGetState(WIDGET(tv)->drv->mouse, &x, &y);
 		RG_PixmapOpenMenu(tv, x, y);
 		return;
 	} else if (button == AG_MOUSE_RIGHT) {
@@ -968,26 +963,25 @@ RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
 		return;
 	}
 
-	ks = AG_GetKeyState(drv->kbd, NULL);
-	if (ks[AG_KEY_F]) {
+	if (kbd[AG_KEY_F]) {
 		enum rg_pixmap_blend_mode bmode_save = px->blend_mode;
 
-		if (ks[AG_KEY_R] || ks[AG_KEY_E]) {
+		if (kbd[AG_KEY_R] || kbd[AG_KEY_E]) {
 			px->blend_mode = RG_PIXMAP_NO_BLENDING;
 		}
 		RG_PixmapBeginUndoBlk(px);
-		if (ks[AG_KEY_R]) {
+		if (kbd[AG_KEY_R]) {
 			pixmap_randfill(tv, tel, x, y);
 		} else {
 			pixmap_fill(tv, tel, x, y);
 		}
 		px->blend_mode = bmode_save;
-	} else if (ks[AG_KEY_C]) {
+	} else if (kbd[AG_KEY_C]) {
 		pixmap_pick(tv, tel, x, y);
 	} else {
-		if (ks[AG_KEY_H]) {
+		if (kbd[AG_KEY_H]) {
 			tv->tv_pixmap.state = RG_TVPIXMAP_HORIZONTAL;
-		} else if (ks[AG_KEY_V]) {
+		} else if (kbd[AG_KEY_V]) {
 			tv->tv_pixmap.state = RG_TVPIXMAP_VERTICAL;
 		} else {
 			tv->tv_pixmap.state = RG_TVPIXMAP_FREEHAND;
@@ -1011,8 +1005,7 @@ void
 RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
-	AG_Driver *drv = WIDGET(tv)->drv;
-	Uint8 *ks = AG_GetKeyState(drv->kbd, NULL);
+	int *kbd = AG_GetKeyState(tv);
 
 #if 0
 	TODO: Set AG_FILL_CURSOR, AG_ERASE_CURSOR, AG_PICK_CURSOR
@@ -1032,7 +1025,7 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	}
 
 	if (state == AG_MOUSE_LEFT) {
-		if (ks[AG_KEY_C])
+		if (kbd[AG_KEY_C])
 			pixmap_pick(tv, tel, x, y);
 	}
 }

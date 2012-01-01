@@ -326,12 +326,12 @@ DeselectAll(AG_TreetblRowQ *children)
 static int
 ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 {
+	AG_KeyMod kmod = AG_GetModState(tt);
 	const int x = *(int *)arg1;
 	const int y = *(int *)arg2;
 	AG_TreetblRow *row = NULL;
 	int depth = 0;
 	int ts = tt->hRow/2 + 1;
-	AG_KeyMod kmod = AG_GetModState(WIDGET(tt)->drv->kbd);
 	Uint i, j, row_idx;
 	int px;
 
