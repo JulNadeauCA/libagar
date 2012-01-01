@@ -206,8 +206,9 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	Uint8 *ks = AG_GetKeyState(WIDGET(tl)->drv->kbd, NULL);
-	DecrementSelection(tl, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
+	int *kbd = AG_GetKeyState(tl);
+
+	DecrementSelection(tl, kbd[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -215,8 +216,9 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	Uint8 *ks = AG_GetKeyState(WIDGET(tl)->drv->kbd, NULL);
-	IncrementSelection(tl, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
+	int *kbd = AG_GetKeyState(tl);
+
+	IncrementSelection(tl, kbd[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -903,7 +905,6 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_Driver *drv = WIDGET(tl)->drv;
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -954,7 +955,7 @@ MouseButtonDown(AG_Event *event)
 		 * Handle range selections.
 		 */
 		if ((tl->flags & AG_TLIST_MULTI) &&
-		    (AG_GetModState(drv->kbd)&AG_KEYMOD_SHIFT)) {
+		    (AG_GetModState(tl) & AG_KEYMOD_SHIFT)) {
 			AG_TlistItem *oitem;
 			int oind = -1, i = 0, nitems = 0;
 
@@ -996,7 +997,7 @@ MouseButtonDown(AG_Event *event)
 		 */
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
-		     (AG_GetModState(drv->kbd)&AG_KEYMOD_CTRL))) {
+		     (AG_GetModState(tl) & AG_KEYMOD_CTRL))) {
 			if (ti->selected) {
 				DeselectItem(tl, ti);
 			} else {
@@ -1038,7 +1039,7 @@ MouseButtonDown(AG_Event *event)
 		
 			if (!(tl->flags &
 			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
-			    !(AG_GetModState(drv->kbd)&(AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
+			    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {
 				AG_TlistDeselectAll(tl);
 				SelectItem(tl, ti);
 			}

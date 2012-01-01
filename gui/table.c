@@ -1160,7 +1160,7 @@ SelectingMultiple(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
 	        ((t->flags & AG_TABLE_MULTI) &&
-		  AG_GetModState(WIDGET(t)->drv->kbd) & AG_KEYMOD_CTRL));
+		  AG_GetModState(t) & AG_KEYMOD_CTRL));
 }
 
 /* Return true if a range of items are being selected. */
@@ -1168,7 +1168,7 @@ static __inline__ int
 SelectingRange(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
-	        (AG_GetModState(WIDGET(t)->drv->kbd) & AG_KEYMOD_SHIFT));
+	        (AG_GetModState(t) & AG_KEYMOD_SHIFT));
 }
 
 /* Display the popup menu. */
@@ -2203,9 +2203,9 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks = AG_GetKeyState(WIDGET(t)->drv->kbd, NULL);
+	int *kbd = AG_GetKeyState(t);
 
-	DecrementSelection(t, ks[AG_KEY_PAGEUP] ? agPageIncrement : 1);
+	DecrementSelection(t, kbd[AG_KEY_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -2213,9 +2213,9 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	Uint8 *ks = AG_GetKeyState(WIDGET(t)->drv->kbd, NULL);
+	int *kbd = AG_GetKeyState(t);
 
-	IncrementSelection(t, ks[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
+	IncrementSelection(t, kbd[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 

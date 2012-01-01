@@ -81,8 +81,8 @@ typedef struct vg_view {
 
 #define VGVIEW(p) ((VG_View *)(p))
 
-#define VG_SKIP_CONSTRAINTS(vv) (AG_GetModState(AGWIDGET(vv)->drv->kbd) & AG_KEYMOD_SHIFT)
-#define VG_SELECT_MULTI(vv)     (AG_GetModState(AGWIDGET(vv)->drv->kbd) & AG_KEYMOD_CTRL)
+#define VG_SKIP_CONSTRAINTS(vv) (AG_GetModState(vv) & AG_KEYMOD_SHIFT)
+#define VG_SELECT_MULTI(vv)     (AG_GetModState(vv) & AG_KEYMOD_CTRL)
 
 __BEGIN_DECLS
 extern AG_WidgetClass vgViewClass;

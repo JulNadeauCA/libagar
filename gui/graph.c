@@ -331,7 +331,7 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	AG_KeyMod kmod = AG_GetModState(WIDGET(gf)->drv->kbd);
+	AG_KeyMod kmod = AG_GetModState(gf);
 	AG_GraphVertex *vtx, *vtx2;
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;

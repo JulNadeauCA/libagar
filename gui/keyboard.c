@@ -63,8 +63,8 @@ Init(void *obj)
 	OBJECT(kbd)->flags |= AG_OBJECT_NAME_ONATTACH;
 	kbd->flags = 0;
 	kbd->keyCount = AG_KEY_LAST;
-	kbd->keyState = Malloc(kbd->keyCount);
-	memset(kbd->keyState, 0, kbd->keyCount);
+	kbd->keyState = Malloc(kbd->keyCount*sizeof(int));
+	memset(kbd->keyState, 0, kbd->keyCount*sizeof(int));
 	kbd->modState = AG_KEYMOD_NONE;
 }
 
@@ -137,10 +137,10 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 		return (0);
 	}
 	kbd->modState = ms;
-	if (kbd->keyState[ks] == (Uint8)action) {
+	if (kbd->keyState[ks] == (int)action) {
 		return (0);
 	}
-	kbd->keyState[ks] = (Uint8)action;
+	kbd->keyState[ks] = (int)action;
 	return (1);
 }
 

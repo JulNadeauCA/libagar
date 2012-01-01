@@ -1,0 +1,137 @@
+.\" Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd January 1, 2012
+.Dt AG_KEYBOARD 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4.2
+.Sh NAME
+.Nm AG_Keyboard
+.Nd agar direct keyboard interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface provides Agar GUI widgets direct access to keyboard status
+(see the
+.Dq WIDGET INTERFACE
+section below).
+The
+.Nm
+object itself is registered and accessed through the
+.Xr AG_Driver 3
+interface.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_InputDevice 3 ->
+.Nm .
+.Sh WIDGET INTERFACE
+.nr nS 1
+.Ft "int *"
+.Fn AG_GetKeyState "AG_Widget *widget"
+.Pp
+.Ft "int"
+.Fn AG_GetKeyCount "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_SetKeyState "AG_Widget *widget" "int *keyState"
+.Pp
+.Ft "Uint"
+.Fn AG_GetModState "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_SetModState "AG_Widget *widget" "Uint modState"
+.Pp
+.nr nS 0
+The
+.Fn AG_GetKeyState
+function returns a pointer to an array of integers which represent the
+current keyboard status.
+The array has up to
+.Dv AG_KEY_LAST
+entries (see
+.Xr AG_KeySym 3 ) .
+.Fn AG_GetKeyCount
+returns the number of entries in the keyboard status array.
+.Pp
+The
+.Fn AG_SetKeyState
+routine overwrites the keyboard status array with the contents of
+.Fa keyState 
+(which should have
+.Dv AG_KEY_LAST
+entries).
+.Pp
+.Fn AG_GetModState
+returns the current keyboard modifier status (see
+.Xr AG_KeyMod 3 ) .
+.Fn AG_SetModState
+overwrites the current modifier status with the value of
+.Fa modState .
+.Sh DRIVER INTERFACE
+.nr nS 1
+.Ft "AG_Keyboard *"
+.Fn AG_KeyboardNew "AG_Driver *drv" "const char *descr"
+.Pp
+.Ft "int"
+.Fn AG_KeyboardUpdate "AG_Keyboard *kbd" "AG_KeyboardAction action" "AG_KeySym sym" "Uint32 unicode"
+.Pp
+.Ft "int"
+.Fn AG_ProcessKey "AG_Keyboard *kbd" "AG_Window *win" "AG_KeyboardAction action" "AG_KeySym sym" "Uint32 unicode"
+.Pp
+.nr nS 0
+The
+.Fn AG_KeyboardNew
+function registers a new keyboard device under the specified
+.Xr AG_Driver 3 .
+.Pp
+When a keyboard event is received by the underlying driver, it should call
+.Fn AG_KeyboardUpdate
+to immediately update the internal keyboard status.
+.Pp
+The
+.Fn AG_ProcessKey
+function is called by
+.Xr AG_ProcessEvent 3
+to post keyboard events (e.g.,
+.Sq key-up
+and
+.Sq key-down )
+to any widgets which are listening for keyboard events.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_KeySym 3 ,
+.Xr AG_KeyMod 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.4, and the widget interface was
+first documented in Agar 1.4.2.

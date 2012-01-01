@@ -261,12 +261,11 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	AG_KeyMod kmod = AG_GetModState(WIDGET(ptr)->drv->kbd);
 
 	switch (button) {
 	case AG_MOUSE_LEFT:
 		AG_WidgetFocus(ptr);
-		if (kmod & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT)) {
+		if (AG_GetModState(ptr) & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT)) {
 			TAILQ_FOREACH(pl, &ptr->plots, plots) {
 				if (!MouseOverPlotItem(ptr, pl, x, y)) {
 					continue;
