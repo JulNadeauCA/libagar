@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -97,6 +97,9 @@ system.
 .Pp
 .Ft "AG_Object *"
 .Fn AG_ObjectFindChild "AG_Object *obj" "const char *name"
+.Pp
+.Ft "char *"
+.Fn AG_ObjectGetName "AG_Object *obj"
 .Pp
 .Ft "int"
 .Fn AG_ObjectCopyName "AG_Object *obj" "char *pathbuf" "size_t pathbuf_len"
@@ -253,28 +256,28 @@ returns a pointer to the root of the VFS which the given object is attached to.
 .Fn AG_ObjectParent
 returns the immediate parent of the given object.
 .Pp
+The
 .Fn AG_ObjectFind
-performs a pathname lookup on the specified VFS.
-The function returns a pointer to the target object on success,
-otherwise NULL is returned.
+function returns the object corresponding to the specified path name.
+If there is no such object, NULL is returned.
 .Pp
 .Fn AG_ObjectFindParent
-performs a reverse lookup, starting from the specified object itself, up to
-the root of the VFS.
-For each element encountered, the object's name is compared against
+returns the first ancestor of the object matching either the
 .Fa name
-(if not-NULL) and the object class is compared against
+or
 .Fa type
-(if not NULL).
+string (whichever is non-NULL).
 .Pp
 .Fn AG_ObjectFindChild
 performs a name lookup on the immediate children of the specified object.
 The function returns the matching object if it was found, otherwise NULL.
 .Pp
+.Fn AG_ObjectGetName
+returns a newly-allocated string containing the full pathname of an object.
+The function returns NULL if insufficient memory is available.
+The
 .Fn AG_ObjectCopyName
-copies the absolute pathname of an object instance to a fixed-size buffer.
-Under multithreading, the returned pathnames can be considered valid only
-as long as the VFS of the object remains locked.
+function copies the object's pathname to a fixed-size buffer.
 .Pp
 .Fn AG_ObjectLock
 and

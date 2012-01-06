@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -261,11 +261,52 @@ AG_ObjectCopyName(void *obj, char *path, size_t path_len)
 	if (ob == ob->root) {
 		Strlcat(path, ob->name, path_len);
 	} else {
-		rv = GenerateObjectPath(ob->parent, path, path_len);
+		rv = GenerateObjectPath(ob, path, path_len);
 	}
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (rv);
+}
+
+/*
+ * Return a newly allocated string containing the absolute pathname of
+ * an object.
+ */
+char *
+AG_ObjectGetName(void *obj)
+{
+	AG_Object *ob = obj;
+	AG_Object *pob;
+	char *path;
+	size_t pathLen = 1;
+	int rv = 0;
+	
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
+
+	for (pob = ob;
+	     pob->parent != NULL;
+	     pob = pob->parent) {
+		pathLen += strlen(pob->name) + 1;
+	}
+	if ((path = TryMalloc(pathLen+1)) == NULL) {
+		goto fail;
+	}
+	path[0] = AG_PATHSEPCHAR;
+	path[1] = '\0';
+
+	if (ob == ob->root) {
+		Strlcat(path, ob->name, pathLen);
+	} else {
+		rv = GenerateObjectPath(ob, path, pathLen);
+	}
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
+	return (path);
+fail:
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
+	return (NULL);
 }
 
 /*
@@ -563,7 +604,8 @@ FindObjectByName(const AG_Object *parent, const char *name)
 		if (strcmp(child->name, node_name) != 0)
 			continue;
 
-		if ((s = strchr(name, AG_PATHSEPCHAR)) != NULL) {
+		if ((s = strchr(name, AG_PATHSEPCHAR)) != NULL &&
+		    s[1] != '\0') {
 			rv = FindObjectByName(child, &s[1]);
 			if (rv != NULL) {
 				return (rv);
