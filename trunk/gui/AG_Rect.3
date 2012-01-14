@@ -39,7 +39,7 @@
 Many functions in Agar accept
 .Fa AG_Rect
 parameters.
-This structure describes a rectangle in terms of position and dimensions:
+This structure describes a two-dimensional integer rectangle:
 .Bd -literal
 typedef struct ag_rect {
 	int x, y;
@@ -47,9 +47,9 @@ typedef struct ag_rect {
 } AG_Rect;
 .Ed
 .Pp
-Agar also defines an
+The alternate
 .Ft AG_Rect2
-structure, which describes a rectangle in terms of two endpoints:
+structure also stores the two endpoints explicitely:
 .Bd -literal
 typedef struct ag_rect2 {
 	int x1, y1;
@@ -57,12 +57,6 @@ typedef struct ag_rect2 {
 	int x2, y2;
 } AG_Rect2;
 .Ed
-.Pp
-For operations which involve intersection tests, it is more efficient to
-use
-.Ft AG_Rect2
-over
-.Ft AG_Rect .
 .Sh INTERFACE
 .nr nS 1
 .Ft AG_Rect

@@ -1067,20 +1067,8 @@ Pixel coordinates of the widget relative to its parent.
 .It Ft int w, h
 Dimensions of the widget in pixels.
 .It Ft AG_Rect2 rView
-Absolute view coordinates of the widget.
-Since both dimensions and upper-left/lower-right coordinates are frequently
-used, the
-.Ft AG_Rect2
-structure contains the fields
-.Va x1 ,
-.Va y1 ,
-.Va x2
-and
-.Va y2 ,
-as well as
-.Va w
-and
-.Va h .
+Absolute view coordinates of the widget (relative to the parent
+driver device).
 .It Ft AG_Rect2 rSens
 The sensitivity rectangle.
 This defines that area of the display which should respond to cursor events.
@@ -1158,6 +1146,7 @@ and
 .Xr AG_KeySym 3 ,
 .Xr AG_KeyMod 3 ,
 .Xr AG_GlobalKeys 3 ,
+.Xr AG_Rect 3 ,
 .Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Variable 3 ,
