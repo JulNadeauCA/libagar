@@ -1097,7 +1097,7 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 	} else {
 		AG_LockVariable(V);
 		if (V->type == AG_VARIABLE_P_STRING) {
-			/* NODUP is meaningless is this case */
+			/* NODUP is meaningless in this case */
 			Strlcpy(V->data.s, s, V->info.size);
 		} else {
 			if (V->info.size == 0) { Free(V->data.s); }

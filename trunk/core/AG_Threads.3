@@ -90,7 +90,7 @@ data structure against concurrent modifications.
 .Fn AG_MutexLock "AG_Mutex *mutex"
 .Pp
 .Ft "int"
-.Fn AG_MutexTrylock "AG_Mutex *mutex"
+.Fn AG_MutexTryLock "AG_Mutex *mutex"
 .Pp
 .Ft "void"
 .Fn AG_MutexUnlock "AG_Mutex *mutex"
@@ -113,12 +113,12 @@ and
 .Fn AG_MutexUnlock
 respectively acquire and release a mutex.
 .Pp
-.Fn AG_MutexTrylock
+.Fn AG_MutexTryLock
 tries to acquire a mutex without blocking and immediately returns 0 on success
 and -1 on failure.
 .Pp
 All of these functions except
-.Fn AG_MutexTrylock
+.Fn AG_MutexTryLock
 will raise a fatal condition if an error is encountered.
 .Sh CONDITION VARIABLES
 .\" MANLINK(AG_Cond)
