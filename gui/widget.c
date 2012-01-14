@@ -267,6 +267,7 @@ PollRedrawOnChange(void *obj, Uint32 ival, void *arg)
 		if (wid->window != NULL)
 			wid->window->dirty = 1;
 	}
+	AG_UnlockVariable(V);
 	return (ival);
 }
 
