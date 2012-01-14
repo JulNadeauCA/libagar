@@ -64,6 +64,13 @@ AG_DirDlgNew(void *parent, Uint flags)
 	if (flags & AG_DIRDLG_HFILL) { AG_ExpandHoriz(dd); }
 	if (flags & AG_DIRDLG_VFILL) { AG_ExpandVert(dd); }
 	if (flags & AG_DIRDLG_MULTI) { dd->tlDirs->flags |= AG_TLIST_MULTI; }
+	
+	if (flags & AG_DIRDLG_NOBUTTONS) {
+		AG_ObjectDetach(dd->btnOk);
+		AG_ObjectDetach(dd->btnCancel);
+		dd->btnOk = NULL;
+		dd->btnCancel = NULL;
+	}
 
 	AG_ObjectAttach(parent, dd);
 	return (dd);
@@ -790,9 +797,12 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	r->h = 4;
 	AG_WidgetSizeReq(dd->tbInput, &rChld);
 	r->h += rChld.h+2;
-	AG_WidgetSizeReq(dd->btnOk, &rOk);
-	AG_WidgetSizeReq(dd->btnCancel, &rCancel);
-	r->h += MAX(rOk.h,rCancel.h)+1;
+
+	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
+		AG_WidgetSizeReq(dd->btnOk, &rOk);
+		AG_WidgetSizeReq(dd->btnCancel, &rCancel);
+		r->h += MAX(rOk.h,rCancel.h)+1;
+	}
 }
 
 static int
@@ -803,11 +813,13 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	int hBtn = 0, wBtn = a->w/2;
 
-	AG_WidgetSizeReq(dd->btnOk, &r);
-	hBtn = MAX(hBtn, r.h);
-	AG_WidgetSizeReq(dd->btnCancel, &r);
-	hBtn = MAX(hBtn, r.h);
-	
+	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
+		AG_WidgetSizeReq(dd->btnOk, &r);
+		hBtn = MAX(hBtn, r.h);
+		AG_WidgetSizeReq(dd->btnCancel, &r);
+		hBtn = MAX(hBtn, r.h);
+	}
+
 	AG_WidgetSizeReq(dd->comLoc, &rLoc);
 	AG_WidgetSizeReq(dd->tbInput, &rInput);
 
@@ -829,16 +841,17 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h = rInput.h;
 	AG_WidgetSizeAlloc(dd->tbInput, &aChld);
 
-	/* Size buttons */
-	aChld.y += aChld.h+2;
-	aChld.w = wBtn;
-	aChld.h = hBtn;
-	AG_WidgetSizeAlloc(dd->btnOk, &aChld);
-	aChld.x = wBtn;
-	if (wBtn*2 < a->w) { aChld.w++; }
-	aChld.h = hBtn;
-	AG_WidgetSizeAlloc(dd->btnCancel, &aChld);
-
+	if (!(dd->flags & AG_DIRDLG_NOBUTTONS)) {
+		/* Size buttons */
+		aChld.y += aChld.h+2;
+		aChld.w = wBtn;
+		aChld.h = hBtn;
+		AG_WidgetSizeAlloc(dd->btnOk, &aChld);
+		aChld.x = wBtn;
+		if (wBtn*2 < a->w) { aChld.w++; }
+		aChld.h = hBtn;
+		AG_WidgetSizeAlloc(dd->btnCancel, &aChld);
+	}
 	return (0);
 }
 
