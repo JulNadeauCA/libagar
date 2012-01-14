@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -89,6 +89,7 @@ and the relevant widgets receiving the events, are already locked.
 When compiled with threads support, Agar provides a portable, minimal interface
 to the operating system's native threads interface.
 .Sh MUTEXES
+.\" MANLINK(AG_Mutex)
 Mutexes (MUTual EXclusion devices) are commonly used to protect shared
 data structure against concurrent modifications.
 .Pp
@@ -137,6 +138,7 @@ All of these functions except
 .Fn AG_MutexTrylock
 will raise a fatal condition if an error is encountered.
 .Sh CONDITION VARIABLES
+.\" MANLINK(AG_Cond)
 .nr nS 1
 .Ft "void"
 .Fn AG_CondInit "AG_Cond *cv"
@@ -179,6 +181,7 @@ variant will not block for more than the specified amount of time.
 .Pp
 All of these functions will raise a fatal condition if an error is encountered.
 .Sh THREADS
+.\" MANLINK(AG_Thread)
 .nr nS 1
 .Ft int
 .Fn AG_ThreadCreate "AG_Thread *th" "void *(*fn)(void *arg)" "void *arg"
@@ -235,6 +238,7 @@ sends a signal to the specified thread.
 .Pp
 .Sh THREAD-SPECIFIC VARIABLES
 .nr nS 1
+.\" MANLINK(AG_ThreadKey)
 .Ft int
 .Fn AG_ThreadKeyCreate "AG_ThreadKey *key"
 .Pp
