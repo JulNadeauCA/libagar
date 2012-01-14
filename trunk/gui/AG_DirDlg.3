@@ -82,7 +82,7 @@ parameter.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_DIRDLG_CLOSEWIN "
+.Bl -tag -width "AG_DIRDLG_NOBUTTONS "
 .It AG_DIRDLG_MULTI
 Allow multiple directories to be selected at once.
 .It AG_DIRDLG_CLOSEWIN
@@ -97,6 +97,8 @@ The selected directory must be writeable or an error is returned to the user.
 .It AG_DIRDLG_ASYNC
 Load/save routines will be executed in a separate thread.
 This flag is available only if agar was compiled with threads support.
+.It AG_DIRDLG_NOBUTTONS
+Don't display "OK" and "Cancel" buttons.
 .It AG_DIRDLG_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .

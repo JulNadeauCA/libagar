@@ -29,6 +29,7 @@ typedef struct ag_dir_dlg {
 #define AG_DIRDLG_HFILL		0x100
 #define AG_DIRDLG_VFILL		0x200
 #define AG_DIRDLG_EXPAND	(AG_DIRDLG_HFILL|AG_DIRDLG_VFILL)
+#define AG_DIRDLG_NOBUTTONS	0x400	/* No OK/Cancel buttons */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	AG_Tlist *tlDirs;			/* List of directories */
