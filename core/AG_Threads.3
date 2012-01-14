@@ -39,8 +39,7 @@ On all platforms with threads support, Agar can be compiled with support for
 multithreading.
 Agar API calls, unless otherwise documented, then become safe to invoke from
 arbitrary threads within an application.
-Internally this is achieved using many locking devices (e.g., mutexes),
-acquired and released in a fine-grained fashion.
+Internally this is achieved using fined-grained locking devices.
 .Pp
 The Agar object system (see
 .Xr AG_Object 3 )
@@ -54,37 +53,21 @@ otherwise.
 When multithreading is used, the return values of functions (except for error
 codes), should only be considered safe to use for as long as the related
 Agar objects are locked.
-Internally, the Agar functions will always acquire and release the necessary
-locks, but the calling function must be necessarily careful to avoid race
-conditions when a return value is used.
-For example, to disable a widget by name, the following code could be used:
+For example, the following code is unsafe:
 .Bd -literal -offset indent
-/* Thread unsafe */
-AG_Widget *myWidget;
-myWidget = AG_WidgetFind(agView, "MyWindow/MyWidget");
-if (widget != NULL) { AG_WidgetDisable(myWidget); }
+AG_Object *myObject;
+myObject = AG_ObjectFind(myRoot, "/Foo");
+if (myObject != NULL) { ... }			/* UNSAFE */
 .Ed
 .Pp
-But if we execute this code from an arbitrary thread, there is a chance that
-the widget returned by
-.Fn AG_WidgetFind
-might have been destroyed before we reach
-.Fn AG_WidgetDisable .
-To avoid this race condition, the following is needed:
+The following code should be used instead:
 .Bd -literal -offset indent
-/* Thread safe */
-AG_Widget *myWidget;
-AG_ObjectLock(agView);
-myWidget = AG_WidgetFind(agView, "MyWindow/MyWidget");
-if (widget != NULL) { AG_WidgetDisable(myWidget); }
-AG_ObjectUnlock(agView);
+AG_Object *myObject;
+AG_ObjectLock(myRoot);
+myObject = AG_ObjectFind(myRoot, "/Foo");
+if (myObject != NULL) { ... }
+AG_ObjectUnlock(myRoot);
 .Ed
-.Pp
-This convention is important to thread safety, but this is a relatively rare
-usage since in practice, most GUI calls are made from event context, where it
-is safe to assume that
-.Va agView ,
-and the relevant widgets receiving the events, are already locked.
 .Sh THREADS INTERFACE
 When compiled with threads support, Agar provides a portable, minimal interface
 to the operating system's native threads interface.
