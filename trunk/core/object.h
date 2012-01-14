@@ -213,7 +213,6 @@ void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
 void	 AG_ObjectMoveToHead(void *);
 void	 AG_ObjectMoveToTail(void *);
-void	*AG_ObjectDuplicate(void *, const char *);
 void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
 void	 AG_ObjectSetSavePfx(void *, char *);

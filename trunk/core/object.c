@@ -2192,51 +2192,6 @@ AG_ObjectUnlinkDatafiles(void *p)
 	AG_ObjectUnlock(ob);
 }
 
-/* Duplicate an object and its children. */
-/* XXX EXPERIMENTAL */
-void *
-AG_ObjectDuplicate(void *p, const char *newName)
-{
-	char nameSave[AG_OBJECT_NAME_MAX];
-	AG_Object *ob = p;
-	AG_ObjectClass *cl = ob->cls;
-	AG_Object *dob;
-
-	dob = Malloc(cl->size);
-	AG_ObjectLock(ob);
-	AG_ObjectInit(dob, cl);
-	AG_ObjectSetNameS(dob, newName);
-	if (AG_ObjectPageIn(ob) == -1) {
-		goto fail;
-	}
-	/* Change the name and attach to the same parent as the original. */
-	AG_ObjectAttach(ob->parent, dob);
-	dob->flags = (ob->flags & AG_OBJECT_DUPED_FLAGS);
-
-	/* Save the state of the original object using the new name. */
-	/* XXX Save to temp location!! */
-	Strlcpy(nameSave, ob->name, sizeof(nameSave));
-	Strlcpy(ob->name, dob->name, sizeof(ob->name));
-	if (AG_ObjectSave(ob) == -1) {
-		AG_ObjectPageOut(ob);
-		goto fail;
-	}
-	if (AG_ObjectPageOut(ob) == -1) {
-		goto fail;
-	}
-	if (AG_ObjectLoad(dob) == -1) {
-		goto fail;
-	}
-	Strlcpy(ob->name, nameSave, sizeof(ob->name));
-	AG_ObjectUnlock(ob);
-	return (dob);
-fail:
-	Strlcpy(ob->name, nameSave, sizeof(ob->name));
-	AG_ObjectUnlock(ob);
-	AG_ObjectDestroy(dob);
-	return (NULL);
-}
-
 /*
  * Return a cryptographic digest of an object's most recent archive. The
  * digest is accurate as long as the object is locked.
