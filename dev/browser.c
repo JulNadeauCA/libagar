@@ -429,24 +429,6 @@ ObjectOp(AG_Event *event)
 			}
 			break;
 		case OBJEDIT_DUP:
-			{
-				char dupName[AG_OBJECT_NAME_MAX];
-				AG_Object *dob;
-
-				if (ob == vfsRoot || !OBJECT_PERSISTENT(ob)) {
-					AG_TextMsg(AG_MSG_ERROR,
-					    _("%s: cannot duplicate."),
-					    ob->name);
-					break;
-				}
-				AG_ObjectGenName(ob->parent, ob->cls, dupName,
-				    sizeof(dupName));
-				if ((dob = AG_ObjectDuplicate(ob, dupName))
-				    == NULL) {
-					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
-					    ob->name, AG_GetError());
-				}
-			}
 			break;
 		case OBJEDIT_MOVE_UP:
 			AG_ObjectMoveUp(ob);
@@ -930,8 +912,6 @@ DEV_Browser(void *vfsRoot)
 		
 		AG_MenuSeparator(mi);
 			
-		AG_MenuAction(mi, _("Duplicate"), NULL,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    AG_KEY_U, AG_KEYMOD_SHIFT,
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_MOVE_UP);
@@ -1037,8 +1017,6 @@ DEV_Browser(void *vfsRoot)
 #endif /* AG_NETWORK */
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Duplicate"), NULL,
-			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 			AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 			    AG_KEY_U, AG_KEYMOD_SHIFT,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
