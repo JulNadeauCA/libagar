@@ -4,6 +4,7 @@
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_threads.h>
 
+#include <agar/core/error.h>
 #include <agar/core/threads.h>
 
 #include <agar/config/_mk_have_stdlib_h.h>

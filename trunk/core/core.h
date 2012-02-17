@@ -16,9 +16,6 @@
 #include <config/ag_threads.h>
 #include <config/ag_network.h>
 
-/* For threads types and use in inlines. */
-#include <core/threads.h>
-
 /* For inline routines */
 #include <config/_mk_have_stdlib_h.h>
 #ifdef _MK_HAVE_STDLIB_H
@@ -50,6 +47,7 @@
 #include <core/error.h>
 #include <core/queue.h>
 #include <core/limits.h>
+#include <core/threads.h>
 
 #include <core/string_compat.h>
 #include <core/snprintf.h>
@@ -94,6 +92,7 @@
 #include <core/db.h>
 #include <core/dbobject.h>
 #include <core/exec.h>
+#include <core/string.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */
