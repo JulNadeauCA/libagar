@@ -5,7 +5,6 @@
 #include <agar/core/core_begin.h>
 
 #include <agar/core/core_init.h>
-#include <agar/core/error.h>
 #include <agar/core/string_compat.h>
 
 #ifdef _USE_AGAR_STD
@@ -36,6 +35,7 @@
 #include <agar/core/dbobject.h>
 #include <agar/core/getopt.h>
 #include <agar/core/exec.h>
+#include <agar/core/string.h>
 
 #include <agar/core/core_close.h>
 #endif
