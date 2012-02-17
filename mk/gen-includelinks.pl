@@ -62,7 +62,7 @@ sub CleanEmptyDirs ($)
 }
 
 if (@ARGV < 2) {
-	print STDERR "Usage: prep-headers.pl [source-dir] [target-dir]\n";
+	print STDERR "Usage: gen-includelinks.pl [source-dir] [target-dir]\n";
 	exit(1);
 }
 $srcdir = $ARGV[0];

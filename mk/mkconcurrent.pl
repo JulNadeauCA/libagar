@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@ $BUILD = '';
 	'^cmpfiles\.pl$',
 	'^cleanfiles\.pl$',
 	'^gen-includes\.pl$',
+	'^gen-includelinks\.pl$',
 	'^gen-declspecs\.pl$',
 	'^install-manpages\.sh$',
 );
