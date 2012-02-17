@@ -67,7 +67,7 @@ sub CleanEmptyDirs ($)
 }
 
 if (@ARGV < 1) {
-	print STDERR "Usage: prep-headers.pl [directory]\n";
+	print STDERR "Usage: gen-includes.pl [directory]\n";
 	exit(1);
 }
 $outdir = $ARGV[0];

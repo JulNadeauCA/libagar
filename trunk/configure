@@ -1692,7 +1692,7 @@ cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 EOT
 $LIBTOOL --quiet --mode=compile --tag=CC $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest.o conftest.c 2>>config.log
-if [ $? == 0 ]; then
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 LIBTOOLOPTS_CC="--tag=CC"
@@ -7774,8 +7774,8 @@ echo "#endif" >> $BLD/include/agar/config/historical_units.h
 echo "hdefs[\"HISTORICAL_UNITS\"] = \"$HISTORICAL_UNITS\"" >>configure.lua
 if [ "${enable_nls}" = "yes" ]
  then
-$ECHO_N "checking for a gettext library..."
-$ECHO_N "checking for a gettext library..." >> config.log
+$ECHO_N "checking for a gettext library in libc..."
+$ECHO_N "checking for a gettext library in libc..." >> config.log
 GETTEXT_CFLAGS=""
 GETTEXT_LIBS=""
 MK_CACHED="No"
@@ -7833,8 +7833,8 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" = "no" ]; then
-$ECHO_N "checking whether gettext requires -lintl..."
-$ECHO_N "checking whether gettext requires -lintl..." >> config.log
+$ECHO_N "checking for a gettext library in -lintl..."
+$ECHO_N "checking for a gettext library in -lintl..." >> config.log
 if [ "${prefix_gettext}" != "" ]; then
 if [ -e  "${prefix_gettext}/include/libintl.h" ]; then
 GETTEXT_CFLAGS="-I${prefix_gettext}/include"
