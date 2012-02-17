@@ -321,8 +321,6 @@ ServerLoop(void *p)
 int
 DEV_DebugServerStart(void)
 {
-	int rv;
-
 	if (!server_inited) {
 		AG_ObjectInitStatic(&server, &nsServerClass);
 		AG_ObjectSetName(&server, "_DebugServer");
@@ -342,8 +340,8 @@ DEV_DebugServerStart(void)
 #endif
 		server_inited = 1;
 	}
-	if ((rv = AG_ThreadCreate(&listenTh, ServerLoop, NULL)) != 0) {
-		AG_TextMsg(AG_MSG_ERROR, "AG_ThreadCreate: %s", strerror(rv));
+	if (AG_ThreadTryCreate(&listenTh, ServerLoop, NULL) != 0) {
+		AG_TextMsgFromError();
 		return (-1);
 	}
 	return (0);
