@@ -265,9 +265,8 @@ Connect(AG_Event *event)
 		    "This feature requires a single-display graphics driver");
 		return;
 	}
-	if (AG_ThreadCreate(&thread, XmitThread, NULL) != 0) {
-		AG_TextMsg(AG_MSG_ERROR, "Failed to create thread!");
-	}
+	if (AG_ThreadTryCreate(&thread, XmitThread, NULL) != 0)
+		AG_TextMsgFromError();
 }
 
 static void
