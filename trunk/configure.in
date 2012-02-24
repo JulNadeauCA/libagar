@@ -19,7 +19,7 @@ REGISTER("--enable-network",	"Network I/O support in Agar-Core [check]")
 REGISTER("--enable-objdebug",	"Object system debugging [no]")
 REGISTER("--enable-threads",	"Thread safety [check]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
-REGISTER("--with-db4[=PREFIX]",	"Berkeley DB support in Agar-Core [check]")
+REGISTER("--with-db4[=PREFIX]",	"AG_Db: Berkeley DB backend [check]")
 REGISTER("--with-pthreads[=PREFIX]", "Specify libpthreads location [check]")
 
 REGISTER_SECTION("Options specific to ag_gui library:")
@@ -366,13 +366,13 @@ else
 	HUNDEF(HAVE_GETADDRINFO)
 fi
 	
-# Enable Berkeley DB support if requested (for AG_DbObject).
-if [ "${with_db4}" = "yes" ]; then
+# Enable Berkeley DB backend for AG_Db if available.
+if [ "${with_db4}" != "no" ]; then
 	CHECK(db4, ${prefix_db4})
 	if [ "${HAVE_DB4}" != "yes" ]; then
 		if [ "${with_db4}" = "yes" ]; then
 			echo "*"
-			echo "* --with-db4 was requested, but Berkeley DB v4"
+			echo "* --with-db4 was requested, but Berkeley DB"
 			echo "* was not found."
 			echo "*"
 			exit 1

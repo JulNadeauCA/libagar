@@ -387,7 +387,7 @@ echo "    --enable-network          Network I/O support in Agar-Core [check]"
 echo "    --enable-objdebug         Object system debugging [no]"
 echo "    --enable-threads          Thread safety [check]"
 echo "    --enable-warnings         Suggested compiler warnings [no]"
-echo "    --with-db4[=PREFIX]       Berkeley DB support in Agar-Core [check]"
+echo "    --with-db4[=PREFIX]       AG_Db: Berkeley DB backend [check]"
 echo "    --with-pthreads[=PREFIX]  Specify libpthreads location [check]"
 echo ""
 echo "Options specific to ag_gui library:"
@@ -6779,7 +6779,7 @@ echo "#undef HAVE_GETADDRINFO" >$BLD/include/agar/config/have_getaddrinfo.h
 echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi
 	
-if [ "${with_db4}" = "yes" ]
+if [ "${with_db4}" != "no" ]
  then
 $ECHO_N "checking for Berkeley DB 4.x..."
 $ECHO_N "checking for Berkeley DB 4.x..." >> config.log
@@ -6788,7 +6788,10 @@ DB4_LIBS=""
 DB4_VERSION=""
 
 for path in  /usr /usr/local /opt; do
-	if [ -e "${path}/include/db4.7" ]; then
+	if [ -e "${path}/include/db4.8" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.8 -I${path}/include"
+		DB4_VERSION="4.8"
+	elif [ -e "${path}/include/db4.7" ]; then
 		DB4_CFLAGS="-I${path}/include/db4.7 -I${path}/include"
 		DB4_VERSION="4.7"
 	elif [ -e "${path}/include/db4.6" ]; then
@@ -6876,6 +6879,13 @@ for path in  /usr /usr/local /opt; do
 			DB4_LIBS="-L${path}/lib -ldb-4.7"
 		fi
 		;;
+	4.8)
+		if [ -e "${path}/lib/db48" ]; then
+			DB4_LIBS="-L${path}/lib/db48 -ldb"
+		elif [ -e "${path}/lib/libdb-4.8.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.8"
+		fi
+		;;
 	*)
 		;;
 	esac
@@ -6915,7 +6925,9 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <db.h>
-
+#if DB_VERSION_MAJOR != 4
+#error version
+#endif
 int main(int argc, char *argv[]) {
 	DB *db;
 	db_create(&db, NULL, 0);
@@ -6991,7 +7003,7 @@ fi;
 		if [ "${with_db4}" = "yes" ]
  then
 			echo "*"
-			echo "* --with-db4 was requested, but Berkeley DB v4"
+			echo "* --with-db4 was requested, but Berkeley DB"
 			echo "* was not found."
 			echo "*"
 			exit 1
