@@ -131,7 +131,7 @@ Open(void *obj, const char *path, int rate, int ch)
 		AG_SetError("%s(%d): %s", path, rate, sf_strerror(NULL));
 		return (-1);
 	}
-	if (AG_ThreadCreate(&df->th, AU_DevFileThread, df) != 0) {
+	if (AG_ThreadTryCreate(&df->th, AU_DevFileThread, df) != 0) {
 		sf_write_sync(df->file);
 		sf_close(df->file);
 		df->file = NULL;
