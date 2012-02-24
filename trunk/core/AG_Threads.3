@@ -37,23 +37,20 @@
 .Sh DESCRIPTION
 On all platforms with threads support, Agar can be compiled with support for
 multithreading.
-Agar API calls, unless otherwise documented, then become safe to invoke from
-arbitrary threads within an application.
-Internally this is achieved using fined-grained locking devices.
-.Pp
-The Agar object system (see
-.Xr AG_Object 3 )
-provides built-in mechanisms to facilitate thread safety, such as per-object
-locks which remain held throughout the execution of event handlers.
+Agar API calls, unless otherwise documented, then become
+.Em free-threaded
+(safe to use from different threads without need for application-level
+synchronization).
 .Sh CONVENTIONS
-With respect to threads, the Agar documentation follows the convention that
-all functions are entirely safe to invoke from any thread, unless documented
-otherwise.
+The Agar API documentation follows the convention that all functions are
+free-threaded, unless mentioned otherwise.
 .Pp
-When multithreading is used, the return values of functions (except for error
-codes), should only be considered safe to use for as long as the related
-Agar objects are locked.
-For example, the following code is unsafe:
+Under some circumstances, application-level synchronization is required.
+The
+.Xr AG_Object 3
+simplifies this task by providing a per-object lock (which is implicitely
+acquired in some contexts, such as event handler execution).
+For instance, the following code accesses a VFS in an unsafe manner:
 .Bd -literal -offset indent
 AG_Object *myObject;
 myObject = AG_ObjectFind(myRoot, "/Foo");
@@ -83,6 +80,12 @@ data structure against concurrent modifications.
 .Ft "void"
 .Fn AG_MutexInitRecursive "AG_Mutex *mutex"
 .Pp
+.Ft "int"
+.Fn AG_MutexTryInit "AG_Mutex *mutex"
+.Pp
+.Ft "int"
+.Fn AG_MutexTryInitRecursive "AG_Mutex *mutex"
+.Pp
 .Ft "void"
 .Fn AG_MutexDestroy "AG_Mutex *mutex"
 .Pp
@@ -99,11 +102,17 @@ data structure against concurrent modifications.
 The
 .Fn AG_MutexInit
 function initializes a mutex structure.
-The
 .Fn AG_MutexInitRecursive
-variant initializes a mutex which allows multiple
+initializes a recursive mutex (a mutex with a reference count),
+which allows nested
 .Fn AG_MutexLock
-using a reference count.
+calls.
+If the mutex cannot be allocated, a fatal error is raised.
+The
+.Fn AG_MutexTryInit
+and
+.Fn AG_MutexTryInitRecursive
+variants return an error code on failure.
 .Pp
 .Fn AG_MutexDestroy
 frees all resources allocated for a mutex.
@@ -114,17 +123,20 @@ and
 respectively acquire and release a mutex.
 .Pp
 .Fn AG_MutexTryLock
-tries to acquire a mutex without blocking and immediately returns 0 on success
-and -1 on failure.
-.Pp
-All of these functions except
+tries to acquire a mutex without blocking and immediately returns 0 on
+success and -1 on failure.
+Note that
 .Fn AG_MutexTryLock
-will raise a fatal condition if an error is encountered.
+does not set any error message with
+.Xr AG_SetError 3 .
 .Sh CONDITION VARIABLES
 .\" MANLINK(AG_Cond)
 .nr nS 1
 .Ft "void"
 .Fn AG_CondInit "AG_Cond *cv"
+.Pp
+.Ft "int"
+.Fn AG_CondTryInit "AG_Cond *cv"
 .Pp
 .Ft "void"
 .Fn AG_CondDestroy "AG_Cond *cv"
@@ -144,6 +156,11 @@ will raise a fatal condition if an error is encountered.
 .nr nS 0
 .Fn AG_CondInit
 initializes a condition variable structure.
+If the condition variable cannot be allocated, a fatal error is raised.
+The
+.Fn AG_CondTryInit
+variant returns an error code on failure.
+.Pp
 .Fn AG_CondDestroy
 releases resources allocated for a condition variable.
 .Pp
@@ -166,8 +183,11 @@ All of these functions will raise a fatal condition if an error is encountered.
 .Sh THREADS
 .\" MANLINK(AG_Thread)
 .nr nS 1
-.Ft int
+.Ft void
 .Fn AG_ThreadCreate "AG_Thread *th" "void *(*fn)(void *arg)" "void *arg"
+.Pp
+.Ft int
+.Fn AG_ThreadTryCreate "AG_Thread *th" "void *(*fn)(void *arg)" "void *arg"
 .Pp
 .Ft void
 .Fn AG_ThreadCancel "AG_Thread th"
@@ -194,6 +214,10 @@ On success,
 initializes the
 .Fa th
 structure and returns 0.
+On failure, a fatal error is raised.
+The
+.Fn AG_ThreadTryCreate
+variant returns an error if the thread could not be created.
 .Pp
 .Fn AG_ThreadCancel
 requests that the specified thread be cancelled.

@@ -496,6 +496,7 @@ AG_Variable *AG_BindDoubleMp(void *, const char *, double *, AG_Mutex *);
 size_t       AG_GetString(void *, const char *, char *, size_t)
 	         BOUNDED_ATTRIBUTE(__string__, 3, 4);
 char        *AG_GetStringDup(void *, const char *);
+char        *AG_GetStringP(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *);
 AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
 AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)

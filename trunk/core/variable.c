@@ -1035,11 +1035,31 @@ AG_GetStringDup(void *pObj, const char *name)
 		return (NULL);
 	}
 	if (V->fn.fnString != NULL) {
-		s = Malloc(V->info.size);
+		if ((s = TryMalloc(V->info.size)) == NULL) {
+			goto fail;
+		}
 		(void)GetStringFn(obj, V, s, V->info.size);
 	} else {
 		s = Strdup(V->data.s);
 	}
+	AG_UnlockVariable(V);
+	return (s);
+fail:
+	AG_UnlockVariable(V);
+	return (NULL);
+}
+/* Return a direct pointer to a string buffer (not free-threaded). */
+char *
+AG_GetStringP(void *pObj, const char *name)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+	char *s;
+
+	if ((V = AG_GetVariableLocked(obj, name)) == NULL) {
+		return (NULL);
+	}
+	s = V->data.s;
 	AG_UnlockVariable(V);
 	return (s);
 }

@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_STRING_H_
-#define _AGAR_CORE_STRING_H_
+#ifndef _AGAR_CORE_TEXT_H_
+#define _AGAR_CORE_TEXT_H_
 #include <agar/core/begin.h>
 
 /* Language code (see iso639-gen.pl) */
@@ -149,95 +149,97 @@ enum ag_language {
 	AG_LANG_LAST
 };
 
-typedef struct ag_string_ent {
+/* Text entry */
+typedef struct ag_text_ent {
 	char  *buf;			/* String buffer */
 	size_t bufSize;			/* Length (allocated) */
 	size_t len;			/* Length (chars) */
-} AG_StringEnt;
+} AG_TextEnt;
 
-typedef struct ag_string {
+/* Text object */
+typedef struct ag_text {
 	AG_Mutex lock;
-	AG_StringEnt ent[AG_LANG_LAST];	/* Language entries */
+	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	enum ag_language lang;		/* Selected language */
-} AG_String;
+} AG_Text;
 
-#define AGSTRING(p) ((AG_String *)(p))
+#define AGTEXT(p) ((AG_Text *)(p))
 
 __BEGIN_DECLS
 extern const char *agLanguageCodes[];
 extern const char *agLanguageNames[];
 
-AG_String  *AG_StringNew(const char *, ...);
-AG_String  *AG_StringNewS(const char *);
-void        AG_StringFree(AG_String *);
-int         AG_StringSet(AG_String *, const char *, ...)
-                         FORMAT_ATTRIBUTE(__printf__, 2, 3);
-int         AG_StringSetS(AG_String *, const char *);
-int         AG_StringSetLangISO639(AG_String *, const char *);
-const char *AG_StringGetLangISO639(AG_String *);
-AG_String  *AG_StringDup(AG_String *);
+AG_Text    *AG_TextNew(const char *, ...);
+AG_Text    *AG_TextNewS(const char *);
+void        AG_TextFree(AG_Text *);
+int         AG_TextSet(AG_Text *, const char *, ...)
+                       FORMAT_ATTRIBUTE(__printf__, 2, 3);
+int         AG_TextSetS(AG_Text *, const char *);
+int         AG_TextSetLangISO(AG_Text *, const char *);
+const char *AG_TextGetLangISO(AG_Text *);
+AG_Text    *AG_TextDup(AG_Text *);
 
 static __inline__ void
-AG_StringSetLang(AG_String *as, enum ag_language lang)
+AG_TextSetLang(AG_Text *txt, enum ag_language lang)
 {
-	AG_MutexLock(&as->lock);
-	as->lang = lang;
-	AG_MutexUnlock(&as->lock);
+	AG_MutexLock(&txt->lock);
+	txt->lang = lang;
+	AG_MutexUnlock(&txt->lock);
 }
 
 /* Grow buffer size of specified entry. */
 static __inline__ void
-AG_StringGrowEnt(AG_StringEnt *se, size_t len)
+AG_TextGrowEnt(AG_TextEnt *te, size_t len)
 {
-	if (se->len+len >= se->bufSize) {
-		se->bufSize = se->len + len + 32;
-		se->buf = AG_Realloc(se->buf, se->bufSize);
+	if (te->len+len >= te->bufSize) {
+		te->bufSize = te->len + len + 32;
+		te->buf = AG_Realloc(te->buf, te->bufSize);
 	}
 }
 
-/* Append a string to current language entry. */
+/* Append a string to current entry. */
 static __inline__ void
-AG_StringCatS(AG_String *as, const char *s)
+AG_TextCatS(AG_Text *txt, const char *s)
 {
-	AG_StringEnt *se;
+	AG_TextEnt *te;
 	size_t len;
 	
 	len = strlen(s);
 
-	AG_MutexLock(&as->lock);
-	se = &as->ent[as->lang];
-	AG_StringGrowEnt(se, len+1);
-	memcpy(&se->buf[se->len], s, len+1);
-	se->len += len;
-	AG_MutexUnlock(&as->lock);
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[txt->lang];
+	AG_TextGrowEnt(te, len+1);
+	memcpy(&te->buf[te->len], s, len+1);
+	te->len += len;
+	AG_MutexUnlock(&txt->lock);
 }
-/* Append a character to current language entry. */
+/* Append a character to current entry. */
 static __inline__ void
-AG_StringCatC(AG_String *as, const char c)
+AG_TextCatC(AG_Text *txt, const char c)
 {
-	AG_StringEnt *se;
+	AG_TextEnt *te;
 
-	AG_MutexLock(&as->lock);
-	se = &as->ent[as->lang];
-	AG_StringGrowEnt(se, 1);
-	se->buf[se->len] = c;
-	se->buf[se->len++] = '\0';
-	AG_MutexUnlock(&as->lock);
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[txt->lang];
+	AG_TextGrowEnt(te, 1);
+	te->buf[te->len] = c;
+	te->buf[te->len++] = '\0';
+	AG_MutexUnlock(&txt->lock);
 }
-/* Append block of bytes to current language entry. */
+/* Append an arbitrary block of bytes to current entry. */
 static __inline__ void
-AS_StringCatBytes(AG_String *as, const char *s, size_t len)
+AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
 {
-	AG_StringEnt *se;
+	AG_TextEnt *te;
 
-	AG_MutexLock(&as->lock);
-	se = &as->ent[as->lang];
-	AG_StringGrowEnt(se, len+1);
-	memcpy(&se->buf[se->len], s, len);
-	se->len += len;
-	AG_MutexUnlock(&as->lock);
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[txt->lang];
+	AG_TextGrowEnt(te, len+1);
+	memcpy(&te->buf[te->len], s, len);
+	te->len += len;
+	AG_MutexUnlock(&txt->lock);
 }
 __END_DECLS
 
 #include <agar/core/close.h>
-#endif /* _AGAR_CORE_STRING_H_ */
+#endif /* _AGAR_CORE_TEXT_H_ */
