@@ -143,7 +143,7 @@ Open(void *obj, const char *path, int rate, int channels)
 		AG_SetError("PortAudio error: %s", Pa_GetErrorText(rv));
 		goto fail;
 	}
-	if (AG_ThreadCreate(&dpa->th, AU_DevPaThread, dpa) != 0) {
+	if (AG_ThreadTryCreate(&dpa->th, AU_DevPaThread, dpa) != 0) {
 		goto fail;
 	}
 	return (0);
