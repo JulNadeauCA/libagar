@@ -193,7 +193,7 @@ AG_TextGrowEnt(AG_TextEnt *te, size_t len)
 {
 	if (te->len+len >= te->bufSize) {
 		te->bufSize = te->len + len + 32;
-		te->buf = AG_Realloc(te->buf, te->bufSize);
+		te->buf = (char *)AG_Realloc(te->buf, te->bufSize);
 	}
 }
 
