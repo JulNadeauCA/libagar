@@ -41,7 +41,7 @@ typedef struct ag_db_hash_bt {
 static const struct {
 	const char *name;
 	Uint32 mask;
-} agBDBOptions[] = {
+} bdbOptions[] = {
 	{ "db-create",			DB_CREATE },
 	{ "db-create-excl",		DB_EXCL },
 	{ "db-auto-commit",		DB_AUTO_COMMIT },
@@ -57,43 +57,43 @@ static const struct {
 	{ "db-read-uncommitted",	DB_READ_UNCOMMITTED },
 #endif
 };
-static const int agBDBOptionCount = sizeof(agBDBOptions)/sizeof(agBDBOptions[0]);
+static const int bdbOptionCount = sizeof(bdbOptions)/sizeof(bdbOptions[0]);
 
 static void
 Init(void *obj)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	int i;
 
-	for (i = 0; i < ag; i++)
-		AG_SetInt(hbt, agBDBOptions[i].name, 0);
+	for (i = 0; i < bdbOptionCount; i++)
+		AG_SetInt(db, bdbOptions[i].name, 0);
 }
 
 static int
 Open(void *obj, const char *path, Uint flags)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	Uint32 dbFlags = 0;
 	int i, rv;
 	DBTYPE dbtype;
 
-	if (strcmp(AGDB_OPS(hbt)->name, "hash") == 0) {
+	if (strcmp(AGDB_CLASS(db)->name, "hash") == 0) {
 		dbtype = DB_HASH;
 	} else {
 		dbtype = DB_BTREE;
 	}
-	if ((rv = db_create(&hbt->pDB, NULL, 0)) != 0) {
+	if ((rv = db_create(&db->pDB, NULL, 0)) != 0) {
 		AG_SetError("db_create: %s", db_strerror(rv));
 		return (-1);
 	}
-	for (i = 0; i < agBDBOptionsCount; i++) {
-		if (AG_GetInt(hbt, agBDBOptions[i].name))
-			dbFlags |= agBDBOptions[i].mask;
+	for (i = 0; i < bdbOptionCount; i++) {
+		if (AG_GetInt(db, bdbOptions[i].name))
+			dbFlags |= bdbOptions[i].mask;
 	}
 	if (flags & AG_DB_READONLY) {
 		dbFlags |= DB_RDONLY;
 	}
-	rv = hbt->pDB->open(hbt->pDB, NULL, path, dbtype, dbFlags, 0);
+	rv = db->pDB->open(db->pDB, NULL, path, NULL, dbtype, dbFlags, 0);
 	if (rv != 0) {
 		AG_SetError("db_open %s: %s", path, db_strerror(rv));
 		return (-1);
@@ -104,20 +104,20 @@ Open(void *obj, const char *path, Uint flags)
 static void
 Close(void *obj)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	int rv;
 	
-	if ((rv = hbt->pDB->close(hbt->pDB, 0)) != 0)
+	if ((rv = db->pDB->close(db->pDB, 0)) != 0)
 		AG_Verbose("db_close: %s; ignoring", db_strerror(rv));
 }
 
 static int
 Sync(void *obj)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	int rv;
 	
-	if ((rv = hbt->pDB->sync(hbt->pDB, 0)) != 0) {
+	if ((rv = db->pDB->sync(db->pDB, 0)) != 0) {
 		AG_SetError("db_sync: %s", db_strerror(rv));
 		return (-1);
 	}
@@ -127,14 +127,14 @@ Sync(void *obj)
 static int
 Exists(void *obj, AG_DbEntry *dbe)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	DBT key;
 	int rv;
 	
 	memset(&key, 0, sizeof(DBT));
-	key.data = dbe->keyData;
+	key.data = dbe->key;
 	key.size = dbe->keySize;
-	if ((rv = hbt->pDB->exists(hbt->pDB, NULL, &key, 0)) != DB_NOTFOUND) {
+	if ((rv = db->pDB->exists(db->pDB, NULL, &key, 0)) != DB_NOTFOUND) {
 		return (1);
 	}
 	return (0);
@@ -143,15 +143,15 @@ Exists(void *obj, AG_DbEntry *dbe)
 static int
 Get(void *obj, AG_DbEntry *dbe)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	DBT key, data;
 	int rv;
 
 	memset(&key, 0, sizeof(DBT));
 	memset(&data, 0, sizeof(DBT));
-	key.data = keyData;
-	key.size = keySize;
-	if ((rv = hbt->pDB->get(hbt->pDB, NULL, &key, &data, 0)) != 0) {
+	key.data = dbe->key;
+	key.size = dbe->keySize;
+	if ((rv = db->pDB->get(db->pDB, NULL, &key, &data, 0)) != 0) {
 		AG_SetError("db_get: %s", db_strerror(rv));
 		return (-1);
 	}
@@ -165,7 +165,7 @@ Get(void *obj, AG_DbEntry *dbe)
 static int
 Put(void *obj, AG_DbEntry *dbe)
 {
-	AG_DbHashBT *hbt = obj;
+	AG_DbHashBT *db = obj;
 	DBT key, data;
 	int rv;
 
@@ -175,7 +175,7 @@ Put(void *obj, AG_DbEntry *dbe)
 	memset(&data, 0, sizeof(DBT));
 	data.data = dbe->data;
 	data.size = dbe->dataSize;
-	if ((rv = hbt->pDB->put(hbt->pDB, NULL, &key, &data, 0)) != 0) {
+	if ((rv = db->pDB->put(db->pDB, NULL, &key, &data, 0)) != 0) {
 		AG_SetError("db_put: %s", db_strerror(rv));
 		return (-1);
 	}
@@ -185,21 +185,20 @@ Put(void *obj, AG_DbEntry *dbe)
 static int
 Del(void *obj, AG_DbEntry *dbe)
 {
-	AG_DbHashBT *hbt = obj;
-	DBT key, data;
+	AG_DbHashBT *db = obj;
+	DBT key;
 	int rv;
 
-	memset(&key, 0, sizeof(DBT));
-	memset(&data, 0, sizeof(DBT));
-	key.data = keyData;
-	key.size = keySize;
 #if 0
-	if ((rv = hbt->pDB->get(hbt->pDB, NULL, &key, &data, 0)) == DB_NOTFOUND) {
+	if ((rv = db->pDB->get(db->pDB, NULL, &key, &data, 0)) == DB_NOTFOUND) {
 		AG_SetError("db_del: No such entry");
 		return (-1);
 	}
 #endif
-	if ((rv = hbt->pDB->del(hbt->pDB, NULL, &key, 0)) != 0) {
+	memset(&key, 0, sizeof(DBT));
+	key.data = dbe->key;
+	key.size = dbe->keySize;
+	if ((rv = db->pDB->del(db->pDB, NULL, &key, 0)) != 0) {
 		AG_SetError("DB Delete: %s", db_strerror(rv));
 		return (-1);
 	}
@@ -207,27 +206,26 @@ Del(void *obj, AG_DbEntry *dbe)
 }
 
 static int
-Iterate(void *obj, AG_DbIterateFn fn)
+Iterate(void *obj, AG_DbIterateFn fn, void *arg)
 {
-	AG_DbHashBT *hbt = obj;
-	AG_List *L;
+	AG_DbHashBT *db = obj;
 	DBC *c;
 	DBT key, data;
 	int rv;
 
-	hbt->pDB->cursor(hbt->pDB, NULL, &c, 0);
+	db->pDB->cursor(db->pDB, NULL, &c, 0);
 	memset(&key, 0, sizeof(DBT));
 	memset(&data, 0, sizeof(DBT));
 	while ((rv = c->c_get(c, &key, &data, DB_NEXT)) == 0) {
 		AG_DbEntry dbe;
 
-		dbe.db = db;
+		dbe.db = (AG_Db *)db;
 		dbe.key = key.data;
-		dbe.keySize key.size;
+		dbe.keySize = key.size;
 		dbe.data = data.data;
 		dbe.dataSize = data.size;
 
-		if (fn(&dbe) == -1) {
+		if (fn(&dbe, arg) == -1) {
 			c->c_close(c);
 			return (-1);
 		}
@@ -259,7 +257,7 @@ AG_DbClass agDbHashClass = {
 	AG_DB_KEY_DATA,		/* Key is variable data */
 	AG_DB_REC_VARIABLE,	/* Variable-sized records */
 	Open,
-	Close
+	Close,
 	Sync,
 	Exists,
 	Get,
@@ -284,7 +282,7 @@ AG_DbClass agDbBtreeClass = {
 	AG_DB_KEY_DATA,		/* Key is variable data */
 	AG_DB_REC_VARIABLE,	/* Variable-sized records */
 	Open,
-	Close
+	Close,
 	Sync,
 	Exists,
 	Get,

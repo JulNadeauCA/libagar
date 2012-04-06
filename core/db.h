@@ -20,8 +20,7 @@ typedef struct ag_db_entry {
 	size_t keySize, dataSize;
 } AG_DbEntry;
 
-typedef void (*AG_DbIterateFn)(void *db, void *key, size_t keySize,
-                               void *data, size_t dataSize);
+typedef int (*AG_DbIterateFn)(AG_DbEntry *, void *);
 
 typedef struct ag_db_class {
 	struct ag_object_class _inherit;
@@ -43,7 +42,7 @@ typedef struct ag_db_class {
 	int  (*get)(void *, AG_DbEntry *);
 	int  (*put)(void *, AG_DbEntry *);
 	int  (*del)(void *, AG_DbEntry *);
-	int  (*iterate)(void *, AG_DbIterateFn);
+	int  (*iterate)(void *, AG_DbIterateFn, void *);
 } AG_DbClass;
 
 #define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
@@ -122,13 +121,13 @@ AG_DbDel(AG_Db *db, AG_DbEntry *dbe)
 
 /* Iterate over all entries. */
 static __inline__ int
-AG_DbIterate(AG_Db *db, AG_DbIterateFn fn)
+AG_DbIterate(AG_Db *db, AG_DbIterateFn fn, void *arg)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
 
 	AG_ObjectLock(db);
-	rv = dbc->iterate(db, fn);
+	rv = dbc->iterate(db, fn, arg);
 	AG_ObjectUnlock(db);
 	return (rv);
 }
