@@ -379,7 +379,7 @@ echo "    --with-libtool            Specify path to libtool [auto-detect]"
 echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
-echo "Options specific to Agar:"
+echo "Options global to Agar:"
 echo "    --enable-<library>        Build libraries (gui|vg|rg|math|dev) [all]"
 echo "    --enable-debug            General debugging [no]"
 echo "    --enable-legacy           Deprecated interfaces [yes]"
@@ -387,10 +387,13 @@ echo "    --enable-network          Network I/O support in Agar-Core [check]"
 echo "    --enable-objdebug         Object system debugging [no]"
 echo "    --enable-threads          Thread safety [check]"
 echo "    --enable-warnings         Suggested compiler warnings [no]"
-echo "    --with-db4[=PREFIX]       AG_Db: Berkeley DB backend [check]"
-echo "    --with-pthreads[=PREFIX]  Specify libpthreads location [check]"
+echo "    --with-pthreads[=PREFIX]  POSIX Threads support [check]"
 echo ""
-echo "Options specific to ag_gui library:"
+echo "Options specific to AG_Db(3) interface:"
+echo "    --with-db4[=PREFIX]       Enable Berkeley DB backend [check]"
+echo "    --with-mysql[=PREFIX]     Enable MySQL backend [check]"
+echo ""
+echo "Options specific to GUI library:"
 echo "    --with-freetype[=PREFIX]  Enable FreeType support [check]"
 echo "    --with-gl[=PREFIX]        OpenGL rendering support [check]"
 echo "    --with-glx[=PREFIX]       GL rendering via GLX [check]"
@@ -401,13 +404,13 @@ echo "    --with-x[=PREFIX]         X Windows driver support [check]"
 echo "    --with-xinerama[=PREFIX]  Xinerama extension support [check]"
 echo "    --with-wgl                GL rendering via WGL [check]"
 echo ""
-echo "Options specific to ag_math library:"
+echo "Options specific to Math library:"
 echo "    --with-altivec            AltiVec optimizations [check]"
 echo "    --with-sse                SSE[123] optimizations [no]"
 echo "    --with-<mode>-fp          Precision (single|double|quad) [double]"
 echo "    --with-<opt>-inline       Inline ops (sse2|sse3|altivec) [no]"
 echo ""
-echo "Options specific to ag_au library:"
+echo "Options specific to Audio library:"
 echo "    --enable-audio            Build audio interface library [no]"
 echo "    --with-sndfile[=PREFIX]   Use sndfile library [check]"
 echo "    --with-portaudio[=PREFIX] Use portaudio library [check]"
@@ -2516,6 +2519,63 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_STRSEP
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for an asprintf() function..."
+$ECHO_N "checking for an asprintf() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ASPRINTF" ]; then
+		HAVE_ASPRINTF=`cat ${cache}/ctest-HAVE_ASPRINTF`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ASPRINTF`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	char *buf;
+	if (asprintf(&buf, "foo %s", "bar") == 0) {
+	    return (0);
+	}
+	return (1);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_ASPRINTF="yes"
+echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
+echo "#ifndef HAVE_ASPRINTF" > $BLD/include/agar/config/have_asprintf.h
+echo "#define HAVE_ASPRINTF \"$HAVE_ASPRINTF\"" >> $BLD/include/agar/config/have_asprintf.h
+echo "#endif" >> $BLD/include/agar/config/have_asprintf.h
+echo "hdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_ASPRINTF="no"
+echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
+echo "#undef HAVE_ASPRINTF" >$BLD/include/agar/config/have_asprintf.h
+echo "hdefs[\"HAVE_ASPRINTF\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ASPRINTF" > ${cache}/ctest-HAVE_ASPRINTF
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ASPRINTF
+fi
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for the snprintf() function..."
 $ECHO_N "checking for the snprintf() function..." >> config.log
 MK_CACHED="No"
@@ -7022,6 +7082,224 @@ DB4_LIBS=""
 echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
 echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 fi
+if [ "${with_mysql}" != "no" ]
+ then
+$ECHO_N "checking for MySQL (http://dev.mysql.com/)..."
+$ECHO_N "checking for MySQL (http://dev.mysql.com/)..." >> config.log
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+MK_EXEC_UNIQUE="No"
+MK_EXEC_FOUND_PATH=""
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-MYSQL_VERSION" ]; then
+		MYSQL_VERSION=`cat ${cache}/exec-MYSQL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-MYSQL_VERSION`
+		MK_EXEC_FOUND_PATH=`cat ${cache}/exec-found-path-MYSQL_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	MYSQL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/mysql_config" ]; then
+			if [ "$MK_EXEC_FOUND" = "Yes" ]; then
+				echo "yes."
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+				break
+			fi
+			MYSQL_VERSION=`${path}/mysql_config --version`
+			MK_EXEC_FOUND="Yes"
+			MK_EXEC_FOUND_PATH="${path}/mysql_config"
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$MYSQL_VERSION" > ${cache}/exec-MYSQL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-MYSQL_VERSION
+		echo $MK_EXEC_FOUND_PATH > ${cache}/exec-found-path-MYSQL_VERSION
+	fi
+fi
+if [ "${MYSQL_VERSION}" != "" ]; then
+if [ "" != "" ]; then
+echo "yes ($MYSQL_VERSION in )"
+echo "yes ($MYSQL_VERSION in )" >> config.log
+else
+echo "yes ($MYSQL_VERSION)"
+echo "yes ($MYSQL_VERSION)" >> config.log
+fi;
+if [ "${prefix_mysql}" != "" ]; then
+MK_VERSION_MAJOR=`echo "$MYSQL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt ${prefix_mysql} ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -ge ${prefix_mysql} ]; then
+	MK_VERSION_OK="yes";
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "Version ${prefix_mysql} or greater is required (found $MYSQL_VERSION)"
+exit 1
+fi;
+fi;
+$ECHO_N "checking whether MySQL works..."
+$ECHO_N "checking whether MySQL works..." >> config.log
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-MYSQL_CFLAGS" ]; then
+		MYSQL_CFLAGS=`cat ${cache}/exec-MYSQL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-MYSQL_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	MYSQL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/mysql_config" ]; then
+			MYSQL_CFLAGS=`${path}/mysql_config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$MYSQL_CFLAGS" > ${cache}/exec-MYSQL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-MYSQL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-MYSQL_LIBS" ]; then
+		MYSQL_LIBS=`cat ${cache}/exec-MYSQL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-MYSQL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	MYSQL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/mysql_config" ]; then
+			MYSQL_LIBS=`${path}/mysql_config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$MYSQL_LIBS" > ${cache}/exec-MYSQL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-MYSQL_LIBS
+	fi
+fi
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_MYSQL" ]; then
+		HAVE_MYSQL=`cat ${cache}/ctest-HAVE_MYSQL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_MYSQL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <mysql.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+	MYSQL *my = mysql_init(NULL);
+	if (my != NULL) { mysql_close(my); }
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest conftest.c ${MYSQL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${MYSQL_CFLAGS} -o $testdir/conftest conftest.c ${MYSQL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_MYSQL="yes"
+echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
+echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
+echo "#ifndef HAVE_MYSQL" > $BLD/include/agar/config/have_mysql.h
+echo "#define HAVE_MYSQL \"$HAVE_MYSQL\"" >> $BLD/include/agar/config/have_mysql.h
+echo "#endif" >> $BLD/include/agar/config/have_mysql.h
+echo "hdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_MYSQL="no"
+echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
+echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
+echo "#undef HAVE_MYSQL" >$BLD/include/agar/config/have_mysql.h
+echo "hdefs[\"HAVE_MYSQL\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_MYSQL" > ${cache}/ctest-HAVE_MYSQL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MYSQL
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_MYSQL}" = "yes" ]; then
+echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
+echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
+echo "#ifndef MYSQL_CFLAGS" > $BLD/include/agar/config/mysql_cflags.h
+echo "#define MYSQL_CFLAGS \"$MYSQL_CFLAGS\"" >> $BLD/include/agar/config/mysql_cflags.h
+echo "#endif" >> $BLD/include/agar/config/mysql_cflags.h
+echo "hdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
+echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
+echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
+echo "#ifndef MYSQL_LIBS" > $BLD/include/agar/config/mysql_libs.h
+echo "#define MYSQL_LIBS \"$MYSQL_LIBS\"" >> $BLD/include/agar/config/mysql_libs.h
+echo "#endif" >> $BLD/include/agar/config/mysql_libs.h
+echo "hdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
+else
+echo "#undef MYSQL_CFLAGS" >$BLD/include/agar/config/mysql_cflags.h
+echo "hdefs[\"MYSQL_CFLAGS\"] = nil" >>configure.lua
+MYSQL_CFLAGS=""
+echo "#undef MYSQL_LIBS" >$BLD/include/agar/config/mysql_libs.h
+echo "hdefs[\"MYSQL_LIBS\"] = nil" >>configure.lua
+MYSQL_LIBS=""
+fi;
+else
+if [ "" != "" ]; then
+echo "no (not in )"
+echo "no (not in )" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "#undef MYSQL_CFLAGS" >$BLD/include/agar/config/mysql_cflags.h
+echo "hdefs[\"MYSQL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef MYSQL_LIBS" >$BLD/include/agar/config/mysql_libs.h
+echo "hdefs[\"MYSQL_LIBS\"] = nil" >>configure.lua
+fi;
+	if [ "${HAVE_MYSQL}" != "yes" ]
+ then
+		if [ "${with_mysql}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-mysql was requested, but libmysqlclient"
+			echo "* was not found."
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_MYSQL" >$BLD/include/agar/config/have_mysql.h
+echo "hdefs[\"HAVE_MYSQL\"] = nil" >>configure.lua
+		fi
+	fi
+else
+echo "#undef HAVE_MYSQL" >$BLD/include/agar/config/have_mysql.h
+echo "hdefs[\"HAVE_MYSQL\"] = nil" >>configure.lua
+MYSQL_CFLAGS=""
+echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
+echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
+MYSQL_LIBS=""
+echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
+echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
+fi
 if [ "${enable_threads}" != "no" ]
  then
 $ECHO_N "checking for POSIX threads..."
@@ -9311,7 +9589,7 @@ echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
@@ -9393,7 +9671,7 @@ done
 EOT
 config_script_out="agar-core-config"
 config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
