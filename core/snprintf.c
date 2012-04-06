@@ -66,13 +66,6 @@
 
 #include "snprintf.h"
 
-#ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef MIN
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-
 static void 	dopr(char *, size_t, const char *, va_list);
 static void 	fmtstr(char *, size_t *, size_t, char *, int, int, int);
 static void 	fmtint(char *, size_t *, size_t, long, int, int, int, int);
@@ -486,7 +479,7 @@ fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
 	if (spadlen < 0)
 		spadlen = 0;
 	if (flags & DP_F_ZERO) {
-		zpadlen = MAX(zpadlen, spadlen);
+		zpadlen = AG_MAX(zpadlen, spadlen);
 		spadlen = 0;
 	}
 	if (flags & DP_F_MINUS) 
@@ -675,7 +668,7 @@ dopr_outch(char *buffer, size_t *currlen, size_t maxlen, char c)
 		buffer[(*currlen)++] = c;
 }
 
-int 
+size_t
 AG_Snprintf(char *str, size_t count, const char *fmt, ...)
 {
 	va_list ap;
@@ -684,7 +677,7 @@ AG_Snprintf(char *str, size_t count, const char *fmt, ...)
 	str[0] = 0;
 	dopr(str, count, fmt, ap);
 	va_end(ap);
-	return (int)strlen(str);
+	return strlen(str);
 }
 
 #endif /* HAVE_SNPRINTF */

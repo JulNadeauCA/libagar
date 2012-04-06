@@ -8,6 +8,10 @@
 #include <sys/types.h>
 #endif
 
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
+# define Snprintf AG_Snprintf
+#endif /* _AGAR_INTERNAL */
+
 #include <agar/config/have_snprintf.h>
 #ifdef HAVE_SNPRINTF
 # include <stdio.h>
@@ -19,9 +23,8 @@
 #else
 # include <agar/core/begin.h>
 __BEGIN_DECLS
-int AG_Snprintf(char *, size_t, const char *, ...);
+size_t AG_Snprintf(char *, size_t, const char *, ...);
 __END_DECLS
 # include <agar/core/close.h>
 #endif /* !HAVE_SNPRINTF */
-
 #endif /* _AGAR_CORE_SNPRINTF_H_ */

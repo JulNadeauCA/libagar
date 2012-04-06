@@ -53,6 +53,7 @@
 #include <core/snprintf.h>
 #include <core/vsnprintf.h>
 #include <core/vasprintf.h>
+#include <core/asprintf.h>
 
 #ifndef MIN
 #define	MIN(a,b) (((a)<(b))?(a):(b))

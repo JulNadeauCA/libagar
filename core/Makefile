@@ -12,7 +12,7 @@ LIB_LINKS=	pthreads winmm
 SRCS=	variable.c config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c class.c cpuinfo.c load_den.c \
 	data_source.c load_string.c load_version.c \
-	snprintf.c vsnprintf.c vasprintf.c \
+	snprintf.c vsnprintf.c vasprintf.c asprintf.c \
 	net_client.c net_command.c net_fgetln.c net_server.c \
 	dir.c md5.c sha1.c rmd160.c file.c string_compat.c dso.c tree.c \
 	time.c time_dummy.c time_gettimeofday.c time_win32.c time_condwait.c \
@@ -26,7 +26,7 @@ MAN5=	AG_DEN.5
 
 CFLAGS+=-D_AGAR_CORE_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${DB4_CFLAGS} ${CLOCK_CFLAGS}
+	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
