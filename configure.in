@@ -11,18 +11,21 @@ VERSION("1.4.2-beta")
 RELEASE("A Mild Breeze Upon The Brow Of The Dead")
 
 # Register options for configure --help
-REGISTER_SECTION("Options specific to Agar:")
-REGISTER("--enable-<library>",	"Build libraries (gui|vg|rg|math|dev) [all]")
-REGISTER("--enable-debug",	"General debugging [no]")
-REGISTER("--enable-legacy",	"Deprecated interfaces [yes]")
-REGISTER("--enable-network",	"Network I/O support in Agar-Core [check]")
-REGISTER("--enable-objdebug",	"Object system debugging [no]")
-REGISTER("--enable-threads",	"Thread safety [check]")
-REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
-REGISTER("--with-db4[=PREFIX]",	"AG_Db: Berkeley DB backend [check]")
-REGISTER("--with-pthreads[=PREFIX]", "Specify libpthreads location [check]")
+REGISTER_SECTION("Options global to Agar:")
+REGISTER("--enable-<library>",		"Build libraries (gui|vg|rg|math|dev) [all]")
+REGISTER("--enable-debug",		"General debugging [no]")
+REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
+REGISTER("--enable-network",		"Network I/O support in Agar-Core [check]")
+REGISTER("--enable-objdebug",		"Object system debugging [no]")
+REGISTER("--enable-threads",		"Thread safety [check]")
+REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
+REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 
-REGISTER_SECTION("Options specific to ag_gui library:")
+REGISTER_SECTION("Options specific to AG_Db(3) interface:")
+REGISTER("--with-db4[=PREFIX]",		"Enable Berkeley DB backend [check]")
+REGISTER("--with-mysql[=PREFIX]",	"Enable MySQL backend [check]")
+
+REGISTER_SECTION("Options specific to GUI library:")
 REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
 REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
 REGISTER("--with-glx[=PREFIX]",		"GL rendering via GLX [check]")
@@ -33,13 +36,13 @@ REGISTER("--with-x[=PREFIX]",		"X Windows driver support [check]")
 REGISTER("--with-xinerama[=PREFIX]",	"Xinerama extension support [check]")
 REGISTER("--with-wgl",			"GL rendering via WGL [check]")
 
-REGISTER_SECTION("Options specific to ag_math library:")
+REGISTER_SECTION("Options specific to Math library:")
 REGISTER("--with-altivec",		"AltiVec optimizations [check]")
 REGISTER("--with-sse",			"SSE[123] optimizations [no]")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
 
-REGISTER_SECTION("Options specific to ag_au library:")
+REGISTER_SECTION("Options specific to Audio library:")
 REGISTER("--enable-audio",		"Build audio interface library [no]")
 REGISTER("--with-sndfile[=PREFIX]",	"Use sndfile library [check]")
 REGISTER("--with-portaudio[=PREFIX]",	"Use portaudio library [check]")
@@ -67,6 +70,7 @@ CHECK(math_c99)
 CHECK(getpwuid)
 CHECK(getuid)
 CHECK(strsep)
+CHECK(asprintf)
 CHECK(snprintf)
 CHECK(vsnprintf)
 CHECK(vasprintf)
@@ -386,6 +390,26 @@ else
 	MDEFINE(DB4_LIBS, "")
 fi
 
+# Enable MySQL backend for AG_Db if available.
+if [ "${with_mysql}" != "no" ]; then
+	CHECK(mysql, ${prefix_mysql})
+	if [ "${HAVE_MYSQL}" != "yes" ]; then
+		if [ "${with_mysql}" = "yes" ]; then
+			echo "*"
+			echo "* --with-mysql was requested, but libmysqlclient"
+			echo "* was not found."
+			echo "*"
+			exit 1
+		else
+			HUNDEF(HAVE_MYSQL)
+		fi
+	fi
+else
+	HUNDEF(HAVE_MYSQL)
+	MDEFINE(MYSQL_CFLAGS, "")
+	MDEFINE(MYSQL_LIBS, "")
+fi
+
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads, ${prefix_pthreads})
@@ -657,8 +681,8 @@ C_INCDIR($BLD/include/agar)
 C_INCDIR_CONFIG($BLD/include/agar/config)
 
 # Generate the "foo-config" scripts.
-CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}")
-CONFIG_SCRIPT(agar-core-config, "-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", "-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}")
+CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}")
+CONFIG_SCRIPT(agar-core-config, "-I${INCLDIR} ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", "-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}")
 CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
