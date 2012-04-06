@@ -64,7 +64,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "snprintf.h"
+#include "core.h"
 
 static void 	dopr(char *, size_t, const char *, va_list);
 static void 	fmtstr(char *, size_t *, size_t, char *, int, int, int);
@@ -473,7 +473,7 @@ fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
 	convert[place] = 0;
 
 	zpadlen = max - place;
-	spadlen = min - MAX (max, place) - (signvalue ? 1 : 0);
+	spadlen = min - AG_MAX(max, place) - (signvalue ? 1 : 0);
 	if (zpadlen < 0)
 		zpadlen = 0;
 	if (spadlen < 0)
