@@ -88,7 +88,7 @@ AG_Asprintf(char **ret, const char *fmt, ...)
 	va_end(ap);
 	if (size <= buflen) {
 		*ret = buf;
-		return (size);
+		return;
 	}
 	if ((bufNew = TryRealloc(buf, size+1)) == NULL) {
 		Free(buf);
@@ -99,7 +99,7 @@ AG_Asprintf(char **ret, const char *fmt, ...)
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);
 	*ret = buf;
-	return (size);
+	return;
 fail:
 	AG_FatalError("asprintf: Out of memory");
 }
@@ -112,7 +112,7 @@ AG_TryAsprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 	int rv;
 
-	ap = va_start(fmt);
+	ap = va_start(ap, fmt);
 	rv = AG_Vasprintf(ret, fmt, ap);
 	va_end(ap);
 
@@ -129,7 +129,7 @@ AG_Asprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 	int rv;
 
-	ap = va_start(fmt);
+	ap = va_start(ap, fmt);
 	rv = AG_Vasprintf(ret, fmt, ap);
 	va_end(ap);
 
