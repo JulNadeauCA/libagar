@@ -33,6 +33,7 @@
 #include <core/core.h>
 #include <db.h>
 #include <ctype.h>
+#include <mysql.h>
 
 typedef struct ag_db_mysql {
 	struct ag_db _inherit;
@@ -43,7 +44,6 @@ static void
 Init(void *obj)
 {
 	AG_DbMySQL *db = obj;
-	int i;
 
 	AG_SetString(db, "host",		NULL);
 	AG_SetInt(db,    "port",		0);
@@ -74,7 +74,7 @@ Init(void *obj)
 static int
 Open(void *obj, const char *path, Uint flags)
 {
-	char dbName[128], host[128], user[128], pass[128];
+	char dbName[128];
 	AG_DbMySQL *db = obj;
 	MYSQL *my;
 	unsigned long myFlags = CLIENT_REMEMBER_OPTIONS;
@@ -84,7 +84,7 @@ Open(void *obj, const char *path, Uint flags)
 	
 	if ((my = mysql_init(NULL)) == NULL) {
 		AG_SetError("mysql_init failed");
-		return (NULL);
+		return (-1);
 	}
 	if (path != NULL) {
 		Strlcpy(dbName, path, sizeof(dbName));
@@ -109,11 +109,11 @@ Open(void *obj, const char *path, Uint flags)
 		case 'm':	i = MYSQL_PROTOCOL_MEMORY;	break;
 		default:	i = MYSQL_PROTOCOL_DEFAULT;	break;
 		}
-		mysql_options(my, MYSQL_OPT_PROTOCOL, &i);
+		mysql_options(my, MYSQL_OPT_PROTOCOL, (const char *)&i);
 	}
-	if ((i = AG_GetUint(db,"read-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_READ_TIMEOUT, &i); }
-	if ((i = AG_GetUint(db,"write-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_WRITE_TIMEOUT, &i); }
-	if (AG_GetUint(db,"reconnect") == 1)		 { mysql_options(my, MYSQL_OPT_RECONNECT, &b); }
+	if ((i = AG_GetUint(db,"read-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_READ_TIMEOUT, (const char *)&i); }
+	if ((i = AG_GetUint(db,"write-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&i); }
+	if (AG_GetUint(db,"reconnect") == 1)		 { mysql_options(my, MYSQL_OPT_RECONNECT, (const char *)&b); }
 
 	if ((s = AG_GetStringP(db,"charset")) != NULL)	 { mysql_options(my, MYSQL_SET_CHARSET_NAME, s); }
 	if ((s = AG_GetStringP(db,"charset-dir")) != NULL) { mysql_options(my, MYSQL_SET_CHARSET_DIR, s); }
@@ -124,10 +124,10 @@ Open(void *obj, const char *path, Uint flags)
 	    AG_GetStringP(my,"pass"),
 	    dbName,
 	    AG_GetInt(my,"port"),
-	    AG_GetString(my,"unix-socket"),
+	    AG_GetStringP(my,"unix-socket"),
 	    myFlags);
 	if (db->my == NULL) {
-		AG_SetError("MySQL: %s", mysql_error(my))
+		AG_SetError("MySQL: %s", mysql_error(my));
 		mysql_close(my);
 		return (-1);
 	}
@@ -141,6 +141,13 @@ Close(void *obj)
 
 	mysql_close(db->my);
 	db->my = NULL;
+}
+
+static __inline__ char *
+EncodeKey(AG_DbEntry *dbe)
+{
+	/* TODO */
+	return Strdup(dbe->key);
 }
 
 static int
@@ -157,7 +164,7 @@ Exists(void *obj, AG_DbEntry *dbe)
 		return (-1);
 	}
 	Free(q);
-	return (mysql_field_count(db->my) > 0) ? 1 : 0
+	return (mysql_field_count(db->my) > 0) ? 1 : 0;
 }
 
 static int
@@ -179,7 +186,7 @@ Del(void *obj, AG_DbEntry *dbe)
 }
 
 static int
-Iterate(void *obj, AG_DbIterateFn fn)
+Iterate(void *obj, AG_DbIterateFn fn, void *arg)
 {
 	return (-1);
 }
@@ -201,7 +208,7 @@ AG_DbClass agDbMySQLClass = {
 	AG_DB_KEY_DATA,		/* Key is variable data */
 	AG_DB_REC_VARIABLE,	/* Variable-sized records */
 	Open,
-	Close
+	Close,
 	NULL,			/* sync */
 	Exists,
 	Get,
