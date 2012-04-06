@@ -113,7 +113,7 @@ AG_TryAsprintf(char **ret, const char *fmt, ...)
 	int rv;
 
 	va_start(ap, fmt);
-	rv = AG_Vasprintf(ret, fmt, ap);
+	rv = AG_TryVasprintf(ret, fmt, ap);
 	va_end(ap);
 
 	if (rv == -1) {
@@ -130,7 +130,7 @@ AG_Asprintf(char **ret, const char *fmt, ...)
 	int rv;
 
 	va_start(ap, fmt);
-	rv = AG_Vasprintf(ret, fmt, ap);
+	rv = AG_TryVasprintf(ret, fmt, ap);
 	va_end(ap);
 
 	if (rv == -1)
