@@ -56,21 +56,14 @@
  *    acceptable.  Consider stealing from mutt or enlightenment.
  **************************************************************/
 
+#include <core/core.h>
+#include <stdio.h>
+#include "vsnprintf.h"
+
 #include <config/have_vsnprintf.h>
 #ifndef HAVE_VSNPRINTF
 
-#include <core/core.h>
-
-#include "vsnprintf.h"
-
 #include <ctype.h>
-
-#ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef MIN
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#endif
 
 static void 	dopr(char *, size_t, const char *, va_list);
 static void 	fmtstr(char *, size_t *, size_t, char *, int, int, int);
@@ -475,7 +468,7 @@ fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
 	if (spadlen < 0)
 		spadlen = 0;
 	if (flags & DP_F_ZERO) {
-		zpadlen = MAX(zpadlen, spadlen);
+		zpadlen = AG_MAX(zpadlen, spadlen);
 		spadlen = 0;
 	}
 	if (flags & DP_F_MINUS) 
@@ -665,11 +658,29 @@ dopr_outch(char *buffer, size_t *currlen, size_t maxlen, char c)
 }
 
 int 
-AG_Vsnprintf(char *str, size_t count, const char *fmt, va_list ap)
+AG_TryVsnprintf(char *str, size_t count, const char *fmt, va_list ap)
 {
 	str[0] = 0;
 	dopr(str, count, fmt, ap);
-	return (strlen(str));
+	return (0);
+}
+
+#else /* !HAVE_VSNPRINTF */
+
+int 
+AG_TryVsnprintf(char *str, size_t count, const char *fmt, va_list ap)
+{
+	int rv;
+#ifdef _XBOX
+	rv = _vsnprintf(str, count, fmt, ap);
+#else
+	rv = vsnprintf(str, count, fmt, ap);
+#endif
+	if (rv == -1) {
+		AG_SetError("vsnprintf: Out of memory");
+		return (-1);
+	}
+	return (0);
 }
 
 #endif /* HAVE_VSNPRINTF */

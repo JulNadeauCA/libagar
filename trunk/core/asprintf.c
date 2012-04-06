@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,53 +23,117 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_vasprintf.h>
+#include <config/have_asprintf.h>
 #include <config/_mk_have_sys_types_h.h>
 
 #if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
-
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "core.h"
 
+#ifndef HAVE_ASPRINTF
+
 int
-AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
+AG_TryAsprintf(char **ret, const char *fmt, ...)
 {
-#ifndef HAVE_VASPRINTF
-	char *buf;
+	char *buf, *bufNew;
 	int size;
 	size_t buflen;
+	va_list ap;
 
-	buflen = strlen(fmt) + 10240;			/* XXX */
+	buflen = strlen(fmt) + 128;	/* Guess */
 	if ((buf = TryMalloc(buflen)) == NULL) {
 		return (-1);
 	}
+	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
-	if ((size_t)size <= buflen) {
+	va_end(ap);
+	if (size <= buflen) {
 		*ret = buf;
 		return (size);
 	}
-
-	if ((buf = TryRealloc(buf, size+1)) == NULL) {
+	if ((bufNew = TryRealloc(buf, size+1)) == NULL) {
 		Free(buf);
 		return (-1);
 	}
+	buf = bufNew;
+	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
+	va_end(ap);
 	*ret = buf;
 	return (size);
-#else /* !HAVE_VASPRINTF */
-	if (vasprintf(ret, fmt, ap) == -1) {
-		AG_SetError("Out of memory");
+}
+
+void
+AG_Asprintf(char **ret, const char *fmt, ...)
+{
+	char *buf, *bufNew;
+	int size;
+	size_t buflen;
+	va_list ap;
+
+	buflen = strlen(fmt) + 128;	/* Guess */
+	if ((buf = TryMalloc(buflen)) == NULL) {
+		goto fail;
+	}
+	va_start(ap, fmt);
+	size = vsprintf(buf, fmt, ap);
+	va_end(ap);
+	if (size <= buflen) {
+		*ret = buf;
+		return (size);
+	}
+	if ((bufNew = TryRealloc(buf, size+1)) == NULL) {
+		Free(buf);
+		goto fail;
+	}
+	buf = bufNew;
+	va_start(ap, fmt);
+	size = vsprintf(buf, fmt, ap);
+	va_end(ap);
+	*ret = buf;
+	return (size);
+fail:
+	AG_FatalError("asprintf: Out of memory");
+}
+
+#else /* HAVE_ASPRINTF */
+
+int
+AG_TryAsprintf(char **ret, const char *fmt, ...)
+{
+	va_list ap;
+	int rv;
+
+	ap = va_start(fmt);
+	rv = AG_Vasprintf(ret, fmt, ap);
+	va_end(ap);
+
+	if (rv == -1) {
+		AG_SetError("asprintf: Out of memory");
 		return (-1);
 	}
-	return (0);
-#endif /* HAVE_VASPRINTF */
+	return (rv);
 }
+
+void
+AG_Asprintf(char **ret, const char *fmt, ...)
+{
+	va_list ap;
+	int rv;
+
+	ap = va_start(fmt);
+	rv = AG_Vasprintf(ret, fmt, ap);
+	va_end(ap);
+
+	if (rv == -1)
+		AG_FatalError("asprintf: Out of memory");
+}
+#endif /* !HAVE_ASPRINTF */
