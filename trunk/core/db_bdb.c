@@ -267,7 +267,7 @@ AG_DbClass agDbHashClass = {
 };
 AG_DbClass agDbBtreeClass = {
 	{
-		"Agar(Db:DbHash)",
+		"Agar(Db:DbBtree)",
 		sizeof(AG_DbHashBT),
 		{ 0,0 },
 		Init,
