@@ -112,7 +112,7 @@ AG_TryAsprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 	int rv;
 
-	ap = va_start(ap, fmt);
+	va_start(ap, fmt);
 	rv = AG_Vasprintf(ret, fmt, ap);
 	va_end(ap);
 
@@ -129,7 +129,7 @@ AG_Asprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 	int rv;
 
-	ap = va_start(ap, fmt);
+	va_start(ap, fmt);
 	rv = AG_Vasprintf(ret, fmt, ap);
 	va_end(ap);
 
