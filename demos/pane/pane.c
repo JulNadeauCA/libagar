@@ -12,7 +12,7 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Pane *paneHoriz, *paneVert;
 
-	if (AG_InitCore("agar-pane-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(NULL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);

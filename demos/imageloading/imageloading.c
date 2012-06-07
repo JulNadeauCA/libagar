@@ -18,7 +18,7 @@ main(int argc, char *argv[])
 	AG_Surface *su, *su2;
 	AG_Window *win;
 
-	if (AG_InitCore("agar-imageloading-demo", 0) == -1) {
+	if (AG_InitCore(NULL, 0) == -1) {
 		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
 		return (1);
 	}

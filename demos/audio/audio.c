@@ -113,7 +113,7 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	if (AG_InitCore("agar-audio-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1 ||
 	    AU_InitSubsystem()) {
 		fprintf(stderr, "%s\n", AG_GetError());

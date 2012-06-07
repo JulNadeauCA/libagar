@@ -47,7 +47,7 @@ SingleLineExample(void)
 	 * Create a single-line Textbox. TextboxSizeHint() requests an initial
 	 * textbox size large enough to display the given string entirely.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_STATIC, "Static string: ");
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_EXCL, "Static string: ");
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
 	AG_TextboxPrintf(textbox, "Hello");
 	AG_WidgetFocus(textbox);
@@ -87,7 +87,7 @@ MultiLineExample(const char *title)
 	 * Create a multiline textbox.
 	 */
 	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND|
-	        AG_TEXTBOX_STATIC;
+	        AG_TEXTBOX_EXCL;
 	textbox = AG_TextboxNew(win, flags, NULL);
 
 	/*
@@ -150,7 +150,7 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	if (AG_InitCore("agar-textbox-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
