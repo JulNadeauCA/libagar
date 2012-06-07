@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,12 +59,6 @@
 
 #include <agar/core/begin.h>
 
-enum ag_unicode_conv {
-	AG_UNICODE_FROM_USASCII,	/* US-ASCII -> UCS-4 */
-	AG_UNICODE_FROM_UTF8,		/* UTF-8 -> UCS-4 */
-	AG_UNICODE_TO_UTF8		/* UCS-4 -> UTF-8 */
-};
-
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 
@@ -91,10 +85,10 @@ int         AG_StrlcpyUint(char *, Uint, size_t)
 int         AG_StrlcatUint(char *, Uint, size_t)
                            BOUNDED_ATTRIBUTE(__string__, 1, 3);
 
-Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
-long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
+Uint32	*AG_ImportUnicode(const char *, const char *, size_t *);
+int      AG_ExportUnicode(const char *, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
-size_t	 AG_CopyUnicode(enum ag_unicode_conv, const char *, Uint32 *, size_t);
+size_t	 AG_CopyUnicode(const char *, const char *, Uint32 *, size_t);
 
 
 /*
