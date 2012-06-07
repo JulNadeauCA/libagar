@@ -152,7 +152,7 @@ enum ag_language {
 /* Text entry */
 typedef struct ag_text_ent {
 	char  *buf;			/* String buffer */
-	size_t bufSize;			/* Length (allocated) */
+	size_t maxLen;			/* Length (allocated) */
 	size_t len;			/* Length (chars) */
 } AG_TextEnt;
 
@@ -161,6 +161,7 @@ typedef struct ag_text {
 	AG_Mutex lock;
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	enum ag_language lang;		/* Selected language */
+	size_t maxLen;			/* Maximum string length (bytes) */
 } AG_Text;
 
 #define AGTEXT(p) ((AG_Text *)(p))
@@ -171,14 +172,42 @@ extern const char *agLanguageNames[];
 
 AG_Text    *AG_TextNew(const char *, ...);
 AG_Text    *AG_TextNewS(const char *);
+void        AG_TextClear(AG_Text *);
 void        AG_TextFree(AG_Text *);
+
 int         AG_TextSet(AG_Text *, const char *, ...)
                        FORMAT_ATTRIBUTE(__printf__, 2, 3);
-int         AG_TextSetS(AG_Text *, const char *);
+int         AG_TextSetEnt(AG_Text *, enum ag_language, const char *, ...)
+                          FORMAT_ATTRIBUTE(__printf__, 3, 4);
+int         AG_TextSetEntS(AG_Text *, enum ag_language, const char *);
+
 int         AG_TextSetLangISO(AG_Text *, const char *);
 const char *AG_TextGetLangISO(AG_Text *);
 AG_Text    *AG_TextDup(AG_Text *);
+int         AG_TextLoad(AG_Text *, AG_DataSource *);
+void        AG_TextSave(AG_DataSource *, AG_Text *);
 
+/* Set text of current entry from C string */
+static __inline__ int
+AG_TextSetS(AG_Text *txt, const char *s)
+{
+	int rv;
+	AG_MutexLock(&txt->lock);
+	rv = AG_TextSetEntS(txt, txt->lang, s);
+	AG_MutexUnlock(&txt->lock);
+	return (rv);
+}
+
+/* Set the size limit on strings. */
+static __inline__ void
+AG_TextSetLimit(AG_Text *txt, size_t maxLen)
+{
+	AG_MutexLock(&txt->lock);
+	txt->maxLen = maxLen;
+	AG_MutexUnlock(&txt->lock);
+}
+
+/* Select the active language. */
 static __inline__ void
 AG_TextSetLang(AG_Text *txt, enum ag_language lang)
 {
@@ -187,18 +216,35 @@ AG_TextSetLang(AG_Text *txt, enum ag_language lang)
 	AG_MutexUnlock(&txt->lock);
 }
 
-/* Grow buffer size of specified entry. */
-static __inline__ void
-AG_TextGrowEnt(AG_TextEnt *te, size_t len)
+/* Get the active language. */
+static __inline__ enum ag_language
+AG_TextGetLang(AG_Text *txt)
 {
-	if (te->len+len >= te->bufSize) {
-		te->bufSize = te->len + len + 32;
-		te->buf = (char *)AG_Realloc(te->buf, te->bufSize);
-	}
+	enum ag_language lang;
+	AG_MutexLock(&txt->lock);
+	lang = txt->lang;
+	AG_MutexUnlock(&txt->lock);
+	return (lang);
 }
 
-/* Append a string to current entry. */
-static __inline__ void
+/* Reallocate entry's buffer to size in bytes. */
+static __inline__ int
+AG_TextRealloc(AG_TextEnt *te, size_t maxLenNew)
+{
+	if (maxLenNew >= te->maxLen) {
+		char *bufNew;
+		bufNew = (char *)AG_TryRealloc(te->buf, te->maxLen);
+		if (bufNew == NULL) {
+			return (-1);
+		}
+		te->buf = bufNew;
+		te->maxLen = maxLenNew;
+	}
+	return (0);
+}
+
+/* Append a valid C string to the current buffer. */
+static __inline__ int
 AG_TextCatS(AG_Text *txt, const char *s)
 {
 	AG_TextEnt *te;
@@ -208,36 +254,31 @@ AG_TextCatS(AG_Text *txt, const char *s)
 
 	AG_MutexLock(&txt->lock);
 	te = &txt->ent[txt->lang];
-	AG_TextGrowEnt(te, len+1);
+	if (AG_TextRealloc(te, te->len + len + 1) == -1) {
+		AG_MutexUnlock(&txt->lock);
+		return (-1);
+	}
 	memcpy(&te->buf[te->len], s, len+1);
 	te->len += len;
 	AG_MutexUnlock(&txt->lock);
+	return (0);
 }
-/* Append a character to current entry. */
-static __inline__ void
-AG_TextCatC(AG_Text *txt, const char c)
-{
-	AG_TextEnt *te;
-
-	AG_MutexLock(&txt->lock);
-	te = &txt->ent[txt->lang];
-	AG_TextGrowEnt(te, 1);
-	te->buf[te->len] = c;
-	te->buf[te->len++] = '\0';
-	AG_MutexUnlock(&txt->lock);
-}
-/* Append an arbitrary block of bytes to current entry. */
-static __inline__ void
+/* Append an arbitrary block of bytes to the current buffer. */
+static __inline__ int
 AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
 {
 	AG_TextEnt *te;
 
 	AG_MutexLock(&txt->lock);
 	te = &txt->ent[txt->lang];
-	AG_TextGrowEnt(te, len+1);
+	if (AG_TextRealloc(te, te->len + len + 1) == -1) {
+		AG_MutexUnlock(&txt->lock);
+		return (-1);
+	}
 	memcpy(&te->buf[te->len], s, len);
 	te->len += len;
 	AG_MutexUnlock(&txt->lock);
+	return (0);
 }
 __END_DECLS
 

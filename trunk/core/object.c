@@ -70,7 +70,7 @@ AG_ObjectInit(void *p, void *cl)
 	int i, nHier;
 
 	ob->name[0] = '\0';
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_XBOX)
 	ob->save_pfx = "\\world";
 #else
 	ob->save_pfx = "/world";
@@ -919,7 +919,7 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-#ifdef _XBOX
+#if defined(_WIN32) || defined(_XBOX)
 	for (dir = Strsep(&loadpathp, ";");
 	     dir != NULL;
 	     dir = Strsep(&loadpathp, ";")) {

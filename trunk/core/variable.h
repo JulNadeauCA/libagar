@@ -44,47 +44,8 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
 	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
 	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
-	/* Agar-Core */
-	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object */
-#if 0
-	/* Agar-Math */
-	AG_VARIABLE_REAL,		/* M: Real number */
-	AG_VARIABLE_P_REAL,
-	AG_VARIABLE_RANGE,		/* M: Interval */
-	AG_VARIABLE_P_RANGE,
-	AG_VARIABLE_COMPLEX,		/* M: Complex number */
-	AG_VARIABLE_P_COMPLEX,
-	AG_VARIABLE_QUAT,		/* M: Quaternion */
-	AG_VARIABLE_P_QUAT,
-	AG_VARIABLE_RECTANGULAR,	/* M: Rectangular coordinates */
-	AG_VARIABLE_P_RECTANGULAR,
-	AG_VARIABLE_POLAR,		/* M: Polar coordinates */
-	AG_VARIABLE_P_POLAR,
-	AG_VARIABLE_PARABOLIC,		/* M: Parabolic coordinates */
-	AG_VARIABLE_P_PARABOLIC,
-	AG_VARIABLE_SPHERICAL,		/* M: Spherical coordinates */
-	AG_VARIABLE_P_SPHERICAL,
-	AG_VARIABLE_CYLINDRICAL,	/* M: Cylindrical coordinates */
-	AG_VARIABLE_P_CYLINDRICAL,
-	AG_VARIABLE_COLOR,		/* M: Vector in RGBA color space */
-	AG_VARIABLE_P_COLOR,
-	AG_VARIABLE_VECTOR,		/* M: Vector in Rn */
-	AG_VARIABLE_P_VECTOR,
-	AG_VARIABLE_VECTOR2,		/* M: Vector in R2 */
-	AG_VARIABLE_P_VECTOR2,
-	AG_VARIABLE_VECTOR3,		/* M: Vector in R3 */
-	AG_VARIABLE_P_VECTOR3,
-	AG_VARIABLE_VECTOR4,		/* M: Vector in R4 */
-	AG_VARIABLE_P_VECTOR4,
-	AG_VARIABLE_MATRIX,		/* M: mxn matrix */
-	AG_VARIABLE_P_MATRIX,
-	AG_VARIABLE_MATRIX22,		/* M: 2x2 matrix */
-	AG_VARIABLE_P_MATRIX22,
-	AG_VARIABLE_MATRIX33,		/* M: 3x3 matrix */
-	AG_VARIABLE_P_MATRIX33,
-	AG_VARIABLE_MATRIX44,		/* M: 4x4 matrix */
-	AG_VARIABLE_P_MATRIX44,
-#endif
+	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object(3) */
+	AG_VARIABLE_P_TEXT,		/* Pointer to AG_Text(3) */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
 
@@ -115,6 +76,7 @@ typedef double      (*AG_DoubleFn)(struct ag_event *);
 typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
+typedef AG_Text    *(*AG_TextFn)(struct ag_event *);
 
 union ag_variable_fn {
 	void (*fnVoid)(struct ag_event *);
@@ -131,6 +93,7 @@ union ag_variable_fn {
 	size_t (*fnString)(struct ag_event *, char *, size_t);
 	void *(*fnPointer)(struct ag_event *);
 	const void *(*fnConstPointer)(struct ag_event *);
+	AG_Text *(*fnText)(struct ag_event *);
 };
 	
 union ag_variable_data {
@@ -348,6 +311,9 @@ typedef struct ag_variable {
 			    s, char *, NULL,				\
 			    fnString, AG_StringFn);			\
 			break;						\
+		case 't':						\
+			V.type = AG_VARIABLE_P_TEXT;			\
+			break;						\
 		case 'd':						\
 		case 'i':						\
 			if (lFlag == 0) {				\
@@ -526,6 +492,13 @@ void         AG_InitConstPointer(AG_Variable *, const void *);
 AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
 AG_Variable *AG_BindConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
 AG_Variable *AG_BindConstPointerMp(void *, const char *, const void **, AG_Mutex *);
+
+AG_Text     *AG_GetText(void *, const char *);
+AG_Variable *AG_SetText(void *, const char *, AG_Text *);
+void         AG_InitText(AG_Variable *, AG_Text *);
+AG_Variable *AG_BindText(void *, const char *, AG_Text *);
+AG_Variable *AG_BindTextFn(void *, const char *, AG_TextFn, const char *, ...);
+AG_Variable *AG_BindTextMp(void *, const char *, AG_Text *, AG_Mutex *);
 
 AG_Variable *AG_BindFlag(void *, const char *, Uint *, Uint);
 AG_Variable *AG_BindFlagMp(void *, const char *, Uint *, Uint, AG_Mutex *);
