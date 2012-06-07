@@ -114,11 +114,6 @@ package agar.gui.widget.editable is
      text     : string);
   pragma inline (set_string);
 
-  procedure set_string_ucs4
-    (editable : editable_access_t;
-     text     : wide_wide_string);
-  pragma inline (set_string_ucs4);
-
   procedure clear_string (editable : editable_access_t);
   pragma import (c, clear_string, "AG_EditableClearString");
 

@@ -60,11 +60,6 @@ package body agar.gui.widget.editable is
        text     : cs.chars_ptr);
     pragma import (c, set_string, "AG_EditableSetString");
 
-    procedure set_string_ucs4
-      (editable : editable_access_t;
-       text     : access c.char32_t);
-    pragma import (c, set_string_ucs4, "AG_EditableSetStringUCS4");
-
     function get_integer (editable : editable_access_t) return c.int;
     pragma import (c, get_integer, "AG_EditableInt");
 
@@ -204,14 +199,6 @@ package body agar.gui.widget.editable is
   begin
     cbinds.set_string (editable, cs.to_chars_ptr (ca_text'unchecked_access));
   end set_string;
-
-  procedure set_string_ucs4
-    (editable : editable_access_t;
-     text     : wide_wide_string) is
-    ca_text : aliased c.char32_array := c.to_c (text);
-  begin
-    cbinds.set_string_ucs4 (editable, ca_text(ca_text'first)'unchecked_access);
-  end set_string_ucs4;
 
   function get_integer (editable : editable_access_t) return integer is
   begin
