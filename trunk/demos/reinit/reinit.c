@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < 25; i++) {
 		printf("Test %d/25:\n", i);
 		printf("\tInitCore()\n");
-		if (AG_InitCore("agar-reinit-demo", 0) == -1) {
+		if (AG_InitCore(NULL, 0) == -1) {
 			printf("AG_InitCore(%d): %s\n", i, AG_GetError());
 			exit(1);
 		}

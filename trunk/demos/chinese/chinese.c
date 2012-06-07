@@ -29,7 +29,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize Agar-GUI. */
-	if (AG_InitCore("agar-chinese-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);

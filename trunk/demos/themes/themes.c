@@ -177,7 +177,7 @@ CreateWindow(void)
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to a fixed-size buffer and supports UTF-8.
 	 */
-	tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_STATIC,
+	tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
 	    "Enter text: ");
 
 	/*
@@ -272,7 +272,7 @@ CreateWindow(void)
 			 */
 			tbox = AG_TextboxNew(ntab,
 			    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|
-			    AG_TEXTBOX_EXPAND|AG_TEXTBOX_STATIC, NULL);
+			    AG_TEXTBOX_EXPAND|AG_TEXTBOX_EXCL, NULL);
 			AG_WidgetSetFocusable(tbox, 1);
 
 			/*

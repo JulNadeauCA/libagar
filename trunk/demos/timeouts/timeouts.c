@@ -56,7 +56,7 @@ main(int argc, char **argv)
   AG_Window *win;
   AG_Button *btn;
 
-  AG_InitCore("timeouts", 0);
+  AG_InitCore(NULL, 0);
   AG_InitVideo(320, 200, 32, 0);
 
   win = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_NOMOVE);

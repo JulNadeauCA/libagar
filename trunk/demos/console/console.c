@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitCore("agar-console-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		textbox = AG_TextboxNew(box, AG_TEXTBOX_STATIC|AG_TEXTBOX_HFILL,
+		textbox = AG_TextboxNew(box, AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 		    "Input: ");
 		AG_SetEvent(textbox, "textbox-return", AppendLine, "%p", cons);
 		AG_WidgetFocus(textbox);
