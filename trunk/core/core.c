@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 AG_Config *agConfig;				/* Global Agar config data */
 void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
-char *agProgName = NULL;			/* User program name */
+char *agProgName = NULL;			/* Optional application name */
 
 int agVerbose = 0;		/* Verbose console output */
 int agTerminating = 0;		/* Application is exiting */
@@ -76,8 +76,12 @@ AG_InitCore(const char *progname, Uint flags)
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
 
-	if ((agProgName = TryStrdup(progname)) == NULL)
-		return (-1);
+	if (progname != NULL) {
+		if ((agProgName = TryStrdup(progname)) == NULL)
+			return (-1);
+	} else {
+		agProgName = NULL;
+	}
 
 #ifdef ENABLE_NLS
 	bindtextdomain("agar", LOCALEDIR);

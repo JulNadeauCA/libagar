@@ -80,6 +80,7 @@
 #include <core/load_string.h>
 #include <core/load_version.h>
 
+#include <core/text.h>
 #include <core/version.h>
 #include <core/object.h>
 #include <core/list.h>
@@ -92,7 +93,6 @@
 #include <core/time.h>
 #include <core/db.h>
 #include <core/exec.h>
-#include <core/text.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

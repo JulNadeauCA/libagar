@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -31,23 +31,27 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Core
-.Nd agar core initialization and globals
+.Nd agar core library initialization
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-These functions are responsible for the initialization of Agar's internals
-and subsystems.
+The Agar core library (ag_core) implements the base Agar object system
+(see
+.Xr AG_Object 3 ) .
+The ag_core library also provides light, platform-independent interfaces
+to filesystems, databases, and other resources.
 .Pp
-Note: This manual page is specific to the Agar-Core library.
-For initialization functions related to Agar-GUI, see
-.Xr AG_InitGraphics 3 .
+Note that there are no GUI-related functions in ag_core.
+The Agar GUI system (the ag_gui library) uses ag_core, but ag_core
+can be used in a standalone manner by non-GUI applications.
+.Pp
+The
+.Fn AG_InitCore
+function should be invoked before any other Agar library call is made.
 .Pp
 .nr nS 1
-.Ft "void"
-.Fn AG_GetVersion "AG_AgarVersion *ver"
-.Pp
 .Ft "int"
 .Fn AG_InitCore "const char *progname" "Uint flags"
 .Pp
@@ -63,27 +67,31 @@ For initialization functions related to Agar-GUI, see
 .nr nS 0
 The
 .Fn AG_InitCore
-function initializes the internal data structures of the Agar-Core library.
-It must be invoked before any other
-.Sq AG_
-function.
-The
+function initializes the ag_core library.
+The optional
 .Fa progname
-argument is an arbitrary name for the application.
+argument sets an application name (this name may be used by ag_gui and
+ag_core to set various platform-dependent defaults).
+.Fa progname
+may be set to NULL.
+.Pp
 Available
 .Fa flags
 options include:
 .Bl -tag -width "AG_NO_CFG_AUTOLOAD "
 .It AG_VERBOSE
-Allow errors and warning output on console.
+Allow errors/warnings on the standard error output.
 .It AG_CREATE_DATADIR
-If it does not exist, automatically create a
+Create a data directory for the application.
+The exact location of the directory is platform-dependent and may use
+.Fa progname .
+For example, under Unix,
 .Pa ~/.<progname>
-data directory on startup.
+would be used.
 .It AG_NO_CFG_AUTOLOAD
-Skip loading of
+If a previously saved
 .Xr AG_Config 3
-configuration data on startup.
+profile exists, don't attempt to load it upon initialization.
 .El
 .Pp
 The
@@ -92,13 +100,13 @@ registers a function that will be invoked automatically by
 .Fn AG_Destroy .
 .Pp
 .Fn AG_Quit
-immediately terminates the application by releasing resources allocated by
-Agar-Core and invoking
+terminates the application by releasing resources allocated by
+ag_core and invoking
 .Xr exit 2 .
 .Pp
 The
 .Fn AG_Destroy
-function immediately frees all resources allocated by Agar.
+function releases all resources allocated by the ag_core library.
 .Pp
 .Sh AGAR VERSION INFORMATION
 .nr nS 1
