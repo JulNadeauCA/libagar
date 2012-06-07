@@ -156,7 +156,8 @@ SDLGL_Open(void *obj, const char *spec)
 	sgl->outBuf = NULL;
 
 	/* Configure the window caption */
-	SDL_WM_SetCaption(agProgName, agProgName);
+	if (agProgName != NULL)
+		SDL_WM_SetCaption(agProgName, agProgName);
 
 	nDrivers = 1;
 	return (0);

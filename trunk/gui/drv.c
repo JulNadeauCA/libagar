@@ -135,6 +135,7 @@ void
 AG_ViewCapture(void)
 {
 	AG_Surface *s;
+	char *pname;
 	char dir[AG_PATHNAME_MAX];
 	char file[AG_PATHNAME_MAX];
 	Uint seq;
@@ -157,9 +158,10 @@ AG_ViewCapture(void)
 		Verbose("Capture failed: %s\n", AG_GetError());
 		return;
 	}
+	pname = (agProgName != NULL) ? agProgName : "agarapp";
 	for (seq = 0; ; seq++) {
 		Snprintf(file, sizeof(file), "%s%c%s%u.jpg",
-		    dir, AG_PATHSEPCHAR, agProgName, seq++);
+		    dir, AG_PATHSEPCHAR, pname, seq++);
 		if (!AG_FileExists(file))
 			break;			/* XXX race condition */
 	}
