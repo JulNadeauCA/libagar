@@ -234,7 +234,7 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->sep = ",";
 	
-	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_STATIC, NULL);
+	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_EXCL, NULL);
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "88888");

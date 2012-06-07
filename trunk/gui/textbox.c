@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,15 @@
  */
 
 /*
- * Single or multi-line text input widget. This is a simple subclass of
- * AG_Editable(3) adding a built-in label, pixel padding and scrollbars.
+ * Single or multi-line text input widget.
+ *
+ * Note that text processing is actually implemented in AG_Editable(3).
+ * AG_Textbox is only a container widget which implements the following
+ * features on top of AG_Editable(3):
+ *
+ *  - Horizontal and vertical scrollbars.
+ *  - Optional text label.
+ *  - Layout padding.
  */
 
 #include <core/core.h>
@@ -123,7 +130,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 	}
 	
-	AG_TextboxSetStatic(tb, (flags & AG_TEXTBOX_STATIC));
+	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
 	AG_TextboxSetWordWrap(tb, (flags & AG_TEXTBOX_WORDWRAP));
 
 	tb->flags |= flags;
@@ -296,33 +303,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return (0);
 }
 
-/* Set the text from a format string. */
-void
-AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
-{
-	AG_Variable *stringb;
-	va_list args;
-	char *text;
-
-	AG_ObjectLock(tb->ed);
-	stringb = AG_GetVariable(tb->ed, "string", &text);
-	if (fmt != NULL && fmt[0] != '\0') {
-		va_start(args, fmt);
-		Vsnprintf(text, stringb->info.size, fmt, args);
-		va_end(args);
-		tb->ed->pos = AG_LengthUTF8(text);
-	} else {
-		text[0] = '\0';
-		tb->ed->pos = 0;
-	}
-	AG_TextboxBufferChanged(tb);
-	AG_UnlockVariable(stringb);
-	AG_ObjectUnlock(tb->ed);
-
-	/* XXX for AG_Numerical, etc. */
-	AG_Redraw(tb);
-}
-
 /* Set the textbox label (format string). */
 void
 AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
@@ -349,6 +329,20 @@ AG_TextboxSetLabelS(AG_Textbox *tb, const char *s)
 		AG_LabelSetPadding(tb->lbl, -1, 10, -1, -1);
 	}
 	AG_ObjectUnlock(tb);
+}
+
+/* Set the text from a format string. */
+void
+AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	AG_EditableSetString(tb->ed, s);
+	Free(s);
 }
 
 static void

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,30 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget provides low-level text input functionality for widgets such as
+widget implements low-level text edition.
+.Nm
+may be bound to a fixed-size buffer containing a NUL-terminated
+string, or a dynamically-sized
+.Xr AG_Text 3
+buffer.
+.Pp
+Conversion between different character set encodings is done on the
+fly (US-ASCII, UTF-8 and UCS-4 encodings are built-in, conversion to
+other encodings requires that Agar be built with
+.Xr iconv 3
+support).
+.Pp
+Typically, applications will use
 .Xr AG_Textbox 3
-and
-.Xr AG_Table 3 .
-It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
+instead of the
+.Nm
+interface, since
+.Ft AG_Textbox
+adds scrollbars and cosmetics such as text labels.
+.Nm
+is designed to be easily embeddable (e.g., the
+.Xr AG_Table 3
+widget uses it for cells containing editable strings).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -58,14 +77,14 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Ft "void"
 .Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "size_t bufferSize"
 .Pp
-.\".Ft "void"
-.\".Fn AG_EditableBindAutoUTF8 "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
-.\".Pp
-.\".Ft "void"
-.\".Fn AG_EditableBindAutoASCII "AG_Editable *ed" "char **buffer" "Uint *bufferSize"
-.\".Pp
+.Ft "void"
+.Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "size_t bufferSize"
+.Pp
+.Ft "void"
+.Fn AG_EditableBindText "AG_Editable *ed" "AG_Text *txt"
+.Pp
 .Ft void
-.Fn AG_EditableSetStatic "AG_Editable *ed" "int enable"
+.Fn AG_EditableSetExcl "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
 .Fn AG_EditableSetPassword "AG_Editable *ed" "int enable"
@@ -105,18 +124,17 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
-.It AG_EDITABLE_STATIC
-By default, the contents of the buffer may be modified directly, and
+.It AG_EDITABLE_EXCL
+By default, external changes to the contents of the buffer are allowed and
+handled in a safe manner (at the cost of frequent character set conversions
+and periodical redrawing of the widget).
+If
+.Dv AG_EDITABLE_EXCL
+is set,
 .Nm
-will reflect the changes immediately.
-This involves frequent UTF-8 conversions, and requires the widget to be
-redrawn periodically.
-.Dv AG_EDITABLE_STATIC
-indicates that it is safe to assume that the contents of the buffer
-will not change under the widget's feet.
-Pass this flag at initialization, or use
-.Fn AG_EditableSetStatic
-to set/unset this mode at runtime.
+will assume exclusive access to the buffer, permitting some important
+optimizations (i.e., periodic redrawing and character set conversions
+are avoided).
 .It AG_EDITABLE_PASSWORD
 Password-style entry where characters are hidden.
 Use
@@ -174,29 +192,38 @@ The
 .Fn AG_EditableBindUTF8
 and
 .Fn AG_EditableBindASCII
-functions bind the widget to a text buffer in UTF-8 or plain ASCII encoding,
-respectively.
+functions bind the
+.Nm
+to a fixed-size buffer containing a C string in UTF-8 or
+US-ASCII encoding, respectively.
 The
 .Fa bufferSize
 argument indicates the complete size of the buffer in bytes.
-.\"The
-.\".Fn AG_EditableBindAutoUTF8
-.\"and
-.\".Fn AG_EditableBindAutoASCII
-.\"variants accept pointer-to-pointer
-.\".Ft char **
-.\"and
-.\".Ft int *
-.\"arguments, and arrange for the buffer to be automatically resized to accomodate
-.\"new text input.
-.\"Upon reallocation, the size variable is updated and the text buffer pointer
-.\"may change.
+.Pp
+.Fn AG_EditableBindEncoded
+binds to a fixed-size buffer containing a C string in the specified
+encoding.
+Support for the "US-ASCII" and "UTF-8" encodings is built-in, but
+conversion to other encodings requires that Agar be compiled with
+.Xr iconv 3
+support (see
+.Xr iconv_open 3
+for the complete list of supported encodings).
 .Pp
 The
-.Fn AG_EditableSetStatic
-function enables or disables static optimizations at runtime (see
-.Dv AG_EDITABLE_STATIC
-flag description).
+.Fn AG_EditableBindText
+function binds the
+.Nm
+to a multilingual, variable-length
+.Xr AG_Text 3
+element (uses UTF-8 encoding).
+.Pp
+The
+.Fn AG_EditableSetExcl
+function sets exclusive access to the buffer.
+Enable only if the bound string is guaranteed not to change externally (see
+.Dv AG_EDITABLE_EXCL
+flag description above).
 .Pp
 The
 .Fn AG_EditableSetPassword
@@ -295,22 +322,13 @@ returns the new position of the cursor.
 .Fn AG_EditableSetString "AG_Editable *ed" "const char *s"
 .Pp
 .Ft void
-.Fn AG_EditableSetStringUCS4 "AG_Editable *ed" "const Uint32 *s"
-.Pp
-.Ft void
 .Fn AG_EditableClearString "AG_Editable *ed"
 .Pp
 .Ft "char *"
 .Fn AG_EditableDupString "AG_Editable *ed"
 .Pp
-.Ft "Uint32 *"
-.Fn AG_EditableDupStringUCS4 "AG_Editable *ed"
-.Pp
 .Ft "size_t"
 .Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "size_t dst_size"
-.Pp
-.Ft "void"
-.Fn AG_EditableBufferChanged "AG_Editable *ed"
 .Pp
 .Ft int
 .Fn AG_EditableInt "AG_Editable *ed"
@@ -334,39 +352,30 @@ argument is NULL, a NUL string is assigned instead.
 .Fn AG_EditableSetString
 overwrites the contents of the buffer with the given string.
 The argument may be NULL to clear the string.
-.Fn AG_EditableSetStringUCS4
-accepts a string in UCS-4 encoding.
 .Pp
 .Fn AG_EditableClearString
 clears the contents of the buffer.
 .Pp
 The
 .Fn AG_EditableDupString
-function returns a copy of the text buffer (with terminating NUL).
-The
-.Fn AG_EditableDupStringUCS4
-variant returns an UCS-4 string (also with terminating NUL).
-.Pp
-The
+function returns a copy of the text buffer, as-is.
+If insufficient memory is available, NULL is returned.
 .Fn AG_EditableCopyString
-function copies up to
+copies the contents of the text buffer to a fixed-size buffer
+(up to
 .Fa dst_size
-- 1 bytes from the text buffer
-.Fa dst ,
-NUL-terminating the result and returning the number of bytes that would
-have been copied if
+- 1 bytes will be copied).
+Returns the number of bytes that would have been copied were
 .Fa dst_size
-was unlimited.
-The
-.Fn AG_EditableCopyStringUCS4
-variant operates on an UCS-4 buffer instead.
-.Pp
-The
-.Fn AG_EditableBufferChanged
-function signals an outside change in the buffer contents.
-It is only useful if the
-.Nm AG_EDITABLE_STATIC
-flag is set.
+unlimited (i.e., if the return value is >=
+.Fa dst_size ,
+truncation occured).
+Both
+.Fn AG_EditableDupString
+and
+.Fn AG_EditableCopyString
+return the raw contents of the text buffer, without performing
+any character set conversion.
 .Pp
 .Fn AG_EditableInt ,
 .Fn AG_EditableFlt
@@ -378,9 +387,11 @@ perform conversion of the string contents to
 and
 .Ft double ,
 respectively and return the value.
-You probably want to be using the
+Note that the
 .Xr AG_Numerical 3
-widget instead of these functions.
+widget is usually a better option than
+.Nm
+for editing numbers.
 .Sh BINDINGS
 The
 .Nm
@@ -388,7 +399,13 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string "
 .It Va char *string
-Text buffer using UTF-8 encoding.
+Bound fixed-size buffer containing a C string in the specified
+encoding (UTF-8 by default).
+.It Va AG_Text *text
+Bound
+.Xr AG_Text 3
+element containing an table of variable-length C strings (entries in
+this table correspond to different languages).
 .El
 .Sh EVENTS
 The
@@ -430,6 +447,12 @@ Alternate font (if NULL, the default font is used).
 If calling
 .Fn AG_EditableSetFont
 is not convenient, it is legal to modify this pointer at run time.
+.It Ft char *encoding
+Character set for the bound string.
+This may be set to "US-ASCII" or "UTF-8" (the default).
+Other character sets are supported if Agar was compiled with
+.Xr iconv 3
+support.
 .El
 .Sh EXAMPLES
 The following code fragment binds a

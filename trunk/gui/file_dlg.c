@@ -817,7 +817,7 @@ SelectedType(AG_Event *event)
 			break;
 		case AG_FILEDLG_STRING:
 			tbox = AG_TextboxNewS(fd->optsCtr,
-			    AG_TEXTBOX_HFILL|AG_TEXTBOX_STATIC,
+			    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 			    fo->descr);
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
@@ -1037,7 +1037,7 @@ Init(void *obj)
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
 
 	/* Manual file/directory entry textbox. */
-	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_STATIC, _("File: "));
+	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
 	AG_SetEvent(fd->tbFile, "textbox-return", TextboxReturn, "%p", fd);
 

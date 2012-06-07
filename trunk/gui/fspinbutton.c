@@ -284,7 +284,7 @@ Init(void *obj)
 	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_STATIC,
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_EXCL,
 	    NULL);
 	fsu->writeable = 1;
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));

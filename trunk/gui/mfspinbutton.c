@@ -259,7 +259,7 @@ Init(void *obj)
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_STATIC, NULL);
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_EXCL, NULL);
 	fsu->writeable = 1;
 	fsu->sep = ",";
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));

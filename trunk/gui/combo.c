@@ -264,7 +264,7 @@ Init(void *obj)
 	com->wPreList = -1;
 	com->hPreList = -1;
 	
-	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO|AG_TEXTBOX_STATIC, NULL);
+	com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO|AG_TEXTBOX_EXCL, NULL);
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 0,0,0,0);
 	AG_LabelSetPadding(com->button->lbl, 0,0,0,0);

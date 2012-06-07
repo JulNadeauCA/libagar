@@ -185,7 +185,7 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
-	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_STATIC, NULL);
+	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxSizeHint(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
