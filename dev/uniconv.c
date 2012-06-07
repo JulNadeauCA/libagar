@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -194,8 +194,7 @@ SelectUnicodeRange(AG_Event *event)
         
 		/* prep column 0 */
 		unitext[0] = i;
-		AG_ExportUnicode(AG_UNICODE_TO_UTF8, utf8text, unitext,
-		    sizeof(unitext));
+		AG_ExportUnicode("UTF-8", utf8text, unitext, sizeof(unitext));
 		Snprintf(text[0], sizeof(text[0]), "%s", utf8text);
         
 		/* prep column 1 */
