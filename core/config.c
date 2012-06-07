@@ -102,9 +102,8 @@ AG_ConfigLoad(void)
 int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
-	char udatadir[AG_PATHNAME_MAX];
+	char path[AG_PATHNAME_MAX];
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	struct passwd *pwd = getpwuid(getuid());
 #endif
 
 	AG_ObjectInit(cfg, &agConfigClass);
@@ -117,38 +116,56 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	/* XXX XXX move to agar-gui */
 	AG_SetInt(cfg, "view.full-screen", 0);
 
-	/* Set the save directory path and create it as needed. */
+	/*
+	 * Set the optional platform-specific access paths.
+	 */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	Strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
-	Strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
-	Strlcat(udatadir, ".", sizeof(udatadir));
-	Strlcat(udatadir, agProgName, sizeof(udatadir));
-	AG_SetString(cfg, "home", pwd->pw_dir);
-#elif defined(_XBOX)
-	/* If the persistent data drive is mounted use it */
-	if(AG_XBOX_DriveIsMounted('T')) {
-		Strlcpy(udatadir, "T:\\", sizeof(udatadir));
-	} else {
-		Strlcpy(udatadir, "D:\\.", sizeof(udatadir));
+	{
+		struct passwd *pw = getpwuid(getuid());
+
+		if (agProgName != NULL) {
+			Strlcpy(path, pw->pw_dir, sizeof(path));
+			Strlcat(path, AG_PATHSEP, sizeof(path));
+			Strlcat(path, ".", sizeof(path));
+			Strlcat(path, agProgName, sizeof(path));
+		} else {
+			path[0] = '\0';
+		}
+		AG_SetString(cfg, "save-path", path);
+		AG_PrtString(cfg, "load-path", "%s:%s", path, SHAREDIR);
+		AG_SetString(cfg, "home", pw->pw_dir);
 	}
-	Strlcat(udatadir, agProgName, sizeof(udatadir)-1);
+#elif defined(_XBOX)
+	if (agProgName != NULL) {
+		/* If the persistent data drive is mounted use it */
+		if(AG_XBOX_DriveIsMounted('T')) {
+			Strlcpy(path, "T:\\", sizeof(path));
+		} else {
+			Strlcpy(path, "D:\\.", sizeof(path));
+		}
+		Strlcat(path, agProgName, sizeof(path));
+	} else {
+		path[0] = '\0';
+	}
+	AG_SetString(cfg, "save-path", path);
+	AG_PrtString(cfg, "load-path", "%s;D:\\", path);
 	AG_SetString(cfg, "home", "D:\\");
 #else
-	udatadir[0] = '.';
-	Strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
+	if (agProgName != NULL) {
+		path[0] = '.';
+		Strlcpy(&path[1], agProgName, sizeof(path)-1);
+	} else {
+		path[0] = '\0';
+	}
+	AG_SetString(cfg, "save-path", path);
+	AG_PrtString(cfg, "load-path", "%s:%s", path, SHAREDIR);
 	AG_SetString(cfg, "home", ".");
 #endif
-	AG_SetString(cfg, "save-path", udatadir);
-	AG_PrtString(cfg, "tmp-path", "%s%stmp", udatadir, AG_PATHSEP);
-
-#if defined(_XBOX)
-	AG_PrtString(cfg, "load-path", "%s;D:\\", udatadir);
-#elif defined(_WIN32)
-	AG_PrtString(cfg, "load-path", "%s:.", udatadir);
-#else
-	AG_PrtString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
-#endif /* _WIN32 */
-	
+	if (path[0] != '\0') {
+		AG_PrtString(cfg, "tmp-path", "%s%stmp", path, AG_PATHSEP);
+	} else {
+		AG_PrtString(cfg, "tmp-path", "tmp");
+	}
 	if (flags & AG_CREATE_DATADIR) {
 		if (AG_CreateDataDir() == -1)
 			return (-1);
