@@ -108,11 +108,12 @@ AG_TextNewS(const char *s)
 	for (i = 0; i < AG_LANG_LAST; i++) {
 		AG_TextEnt *te = &txt->ent[i];
 		te->buf = NULL;
-		te->bufSize = 0;
+		te->maxLen = 0;
 		te->len = 0;
 	}
 	txt->lang = AG_LANG_NONE;
-	if (AG_MutexTryInit(&txt->lock) == -1) {
+	txt->maxLen = AG_INT_MAX;
+	if (AG_MutexTryInitRecursive(&txt->lock) == -1) {
 		Free(txt);
 		return (NULL);
 	}
@@ -134,68 +135,132 @@ AG_TextNew(const char *fmt, ...)
 		return (NULL);
 	}
 	if (fmt != NULL) {
-		AG_TextEnt *se = &txt->ent[AG_LANG_NONE];
+		AG_TextEnt *te = &txt->ent[AG_LANG_NONE];
 		va_list ap;
 	
 		va_start(ap, fmt);
-		if (vasprintf(&se->buf, fmt, ap) == -1) {
+		if (vasprintf(&te->buf, fmt, ap) == -1) {
 			AG_TextFree(txt);
 			return (NULL);
 		}
 		va_end(ap);
-		se->len = strlen(se->buf);
-		se->bufSize = se->len+1;
+		te->len = strlen(te->buf);
+		te->maxLen = te->len+1;
 	}
 	return (txt);
+}
+
+void
+AG_TextClear(AG_Text *txt)
+{
+	int i;
+
+	for (i = 0; i < AG_LANG_LAST; i++) {
+		AG_TextEnt *te = &txt->ent[i];
+
+		Free(te->buf);
+		te->buf = NULL;
+		te->maxLen = 0;
+		te->len = 0;
+	}
 }
 
 /* Free an AG_Text structure. */
 void
 AG_TextFree(AG_Text *txt)
 {
-	int i;
-
-	for (i = 0; i < AG_LANG_LAST; i++) {
-		Free(txt->ent[i].buf);
-	}
+	AG_TextClear(txt);
 	AG_MutexDestroy(&txt->lock);
 	Free(txt);
 }
 
 /* Set text of current entry from format string */
 int
-AG_TextSet(AG_Text *txt , const char *fmt, ...)
+AG_TextSet(AG_Text *txt, const char *fmt, ...)
 {
-	AG_TextEnt *se = &txt->ent[txt->lang];
+	AG_TextEnt *te;
 	va_list ap;
-	
-	Free(se->buf);
-	va_start(ap, fmt);
-	if (vasprintf(&se->buf, fmt, ap) == -1) {
-		return (-1);
+	char *sNew;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		if (vasprintf(&sNew, fmt, ap) != -1) {
+			return (-1);
+		}
+		va_end(ap);
+	} else {
+		sNew = NULL;
 	}
-	va_end(ap);
-	se->len = strlen(se->buf);
-	se->bufSize = se->len+1;
+
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[txt->lang];
+	Free(te->buf);
+	te->buf = sNew;
+	if (sNew != NULL) {
+		te->len = strlen(sNew);
+		te->maxLen = te->len+1;
+	} else {
+		te->len = 0;
+		te->maxLen = 0;
+	}
+	AG_MutexUnlock(&txt->lock);
 	return (0);
 }
 
-/* Set text of current entry from C string */
+/* Set text of specified entry from format string */
 int
-AG_TextSetS(AG_Text *txt, const char *s)
+AG_TextSetEnt(AG_Text *txt, enum ag_language lang, const char *fmt, ...)
 {
-	AG_TextEnt *se;
+	AG_TextEnt *te;
+	va_list ap;
 	char *sNew;
-
-	if ((sNew = TryStrdup(s)) == NULL) {
+	
+	va_start(ap, fmt);
+	if (vasprintf(&sNew, fmt, ap) == -1) {
 		return (-1);
 	}
+	va_end(ap);
+	
 	AG_MutexLock(&txt->lock);
-	se = &txt->ent[txt->lang];
-	Free(se->buf);
-	se->buf = sNew;
-	se->len = strlen(sNew);
-	se->bufSize = se->len+1;
+	te = &txt->ent[lang];
+	Free(te->buf);
+	te->buf = sNew;
+	if (sNew != NULL) {
+		te->len = strlen(te->buf);
+		te->maxLen = te->len+1;
+	} else {
+		te->len = 0;
+		te->maxLen = 0;
+	}
+	AG_MutexUnlock(&txt->lock);
+	return (0);
+}
+
+/* Set text of specified entry from C string */
+int
+AG_TextSetEntS(AG_Text *txt, enum ag_language lang, const char *s)
+{
+	AG_TextEnt *te;
+	char *sNew;
+
+	if (s != NULL) {
+		if ((sNew = TryStrdup(s)) == NULL)
+			return (-1);
+	} else {
+		sNew = NULL;
+	}
+
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[lang];
+	Free(te->buf);
+	te->buf = sNew;
+	if (sNew != NULL) {
+		te->len = strlen(sNew);
+		te->maxLen = te->len+1;
+	} else {
+		te->len = 0;
+		te->maxLen = 0;
+	}
 	AG_MutexUnlock(&txt->lock);
 	return (0);
 }
@@ -246,16 +311,16 @@ AG_TextDup(AG_Text *txtSrc)
 	AG_MutexLock(&txtSrc->lock);
 	txtDst->lang = txtSrc->lang;
 	for (i = 0; i < AG_LANG_LAST; i++) {
-		AG_TextEnt *se = &txtSrc->ent[i];
+		AG_TextEnt *te = &txtSrc->ent[i];
 
-		if (se->buf != NULL) {
+		if (te->buf != NULL) {
 			AG_TextEnt *de = &txtDst->ent[i];
 
-			if ((de->buf = TryStrdup(se->buf)) == NULL) {
+			if ((de->buf = TryStrdup(te->buf)) == NULL) {
 				goto fail;
 			}
 			de->len = strlen(de->buf);
-			de->bufSize = de->len+1;
+			de->maxLen = de->len+1;
 		}
 	}
 	AG_MutexUnlock(&txtDst->lock);
@@ -266,4 +331,62 @@ fail:
 	AG_MutexUnlock(&txtSrc->lock);
 	AG_TextFree(txtDst);
 	return (NULL);
+}
+
+/* Load text from a data source. */
+int
+AG_TextLoad(AG_Text *txt, AG_DataSource *ds)
+{
+	Uint i, count;
+	enum ag_language lang;
+	AG_TextEnt *te;
+		
+	count = (Uint)AG_ReadUint8(ds);
+	if (count >= AG_LANG_LAST) {
+		AG_SetError("Bad language count");
+		return (-1);
+	}
+	AG_TextClear(txt);
+	AG_MutexLock(&txt->lock);
+	for (i = 0; i < count; i++) {
+		lang = (enum ag_language)AG_ReadUint32(ds);
+		if (lang >= AG_LANG_LAST) {
+			AG_SetError("Bad language code (%u)", lang);
+			goto fail;
+		}
+		te = &txt->ent[lang];
+		if ((te->buf = AG_ReadStringLen(ds, txt->maxLen)) == NULL) {
+			goto fail;
+		}
+		te->len = strlen(te->buf);
+		te->maxLen = te->len+1;
+	}
+	AG_MutexUnlock(&txt->lock);
+	return (0);
+fail:
+	AG_MutexUnlock(&txt->lock);
+	return (-1);
+}
+
+void
+AG_TextSave(AG_DataSource *ds, AG_Text *txt)
+{
+	Uint count, i;
+	AG_TextEnt *te;
+
+	AG_MutexLock(&txt->lock);
+	for (i = 0, count = 0; i < AG_LANG_LAST; i++) {
+		te = &txt->ent[i];
+		if (te->buf != NULL)
+			count++;
+	}
+	AG_WriteUint8(ds, (Uint8)count);
+	for (i = 0; i < AG_LANG_LAST; i++) {
+		te = &txt->ent[i];
+		if (te->buf != NULL) {
+			AG_WriteUint32(ds, (Uint32)i);
+			AG_WriteString(ds, te->buf);
+		}
+	}
+	AG_MutexUnlock(&txt->lock);
 }

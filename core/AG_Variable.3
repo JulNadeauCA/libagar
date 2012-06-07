@@ -577,6 +577,29 @@ The
 .Fn AG_BindStringFn
 variant ties the variable to a function
 .Fa fn .
+.Sh TEXT OBJECTS
+.nr nS 1
+.Ft "AG_Text *"
+.Fn AG_GetText "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitText "AG_Variable *var" "AG_Text *txt"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetText "AG_Object *obj" "const char *name" "AG_Text *txt"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindText "AG_Object *obj" "const char *name" "AG_Text *txt"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindTextMp "AG_Object *obj" "const char *name" "AG_Text *txt" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindTextFn "AG_Object *obj" "const char *name" "AG_Text *(*fn)(AG_Event *)"
+.Pp
+.nr nS 0
+These functions provide an interface to Agar text objects (see
+.Xr AG_Text 3 ) .
 .Sh GENERIC POINTERS
 .nr nS 1
 .Ft "void *"
@@ -707,7 +730,8 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
 	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
 	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
-	/* ... */
+	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object(3) */
+	AG_VARIABLE_P_TEXT,		/* Pointer to AG_Text(3) */
 	AG_VARIABLE_TYPE_LAST
 };
 

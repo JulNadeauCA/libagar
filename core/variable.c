@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,29 +75,7 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	 * Agar-Core specific types
 	 */
 	{ AG_VARIABLE_P_OBJECT,		1,	"Object *",	AG_VARIABLE_P_OBJECT,		-1 },
-#if 0
-	/*
-	 * Agar-Math specific types
-	 */
-	{ AG_VARIABLE_P_REAL,		1,	"Real *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_RANGE,		1,	"Range *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_COMPLEX,	1,	"Complex *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_QUAT,		1,	"Quat *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_RECTANGULAR,	1,	"Rectangular *",AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_POLAR,		1,	"Polar *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_PARABOLIC,	1,	"Parabolic *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_SPHERICAL,	1,	"Spherical *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_CYLINDRICAL,	1,	"Cylindrical *",AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_COLOR,		1,	"Color *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_VECTOR,		1,	"Vector *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_VECTOR2,	1,	"Vector2 *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_VECTOR3,	1,	"Vector3 *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_VECTOR4,	1,	"Vector4 *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_MATRIX,		1,	"Matrix *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_MATRIX22,	1,	"Matrix22 *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_MATRIX33,	1,	"Matrix33 *",	AG_VARIABLE_NULL,		-1 },
-	{ AG_VARIABLE_P_MATRIX44,	1,	"Matrix44 *",	AG_VARIABLE_NULL,		-1 },
-#endif
+	{ AG_VARIABLE_P_TEXT,		1,	"Text *",	AG_VARIABLE_P_TEXT,		-1 },
 };
 
 /*
@@ -424,7 +402,7 @@ AG_Unset(void *pObj, const char *name)
 
 /* Body of AG_InitFoo() routines. */
 #undef  FN_VARIABLE_INIT
-#define FN_VARIABLE_INIT(_type,ntype)				\
+#define FN_VARIABLE_INIT(ntype)					\
 	V->name[0] = '\0';					\
 	V->type = ntype;					\
 	V->mutex = NULL;					\
@@ -521,7 +499,7 @@ AG_SetUint(void *obj, const char *name, Uint v)
 void
 AG_InitUint(AG_Variable *V, Uint v)
 {
-	FN_VARIABLE_INIT(Uint, AG_VARIABLE_UINT);
+	FN_VARIABLE_INIT(AG_VARIABLE_UINT);
 	V->data.u = v;
 }
 AG_Variable *
@@ -561,7 +539,7 @@ AG_SetInt(void *obj, const char *name, int v)
 void
 AG_InitInt(AG_Variable *V, int v)
 {
-	FN_VARIABLE_INIT(int, AG_VARIABLE_INT);
+	FN_VARIABLE_INIT(AG_VARIABLE_INT);
 	V->data.i = v;
 }
 AG_Variable *
@@ -601,7 +579,7 @@ AG_SetUint8(void *obj, const char *name, Uint8 v)
 void
 AG_InitUint8(AG_Variable *V, Uint8 v)
 {
-	FN_VARIABLE_INIT(Uint8, AG_VARIABLE_UINT8);
+	FN_VARIABLE_INIT(AG_VARIABLE_UINT8);
 	V->data.u8 = v;
 }
 AG_Variable *
@@ -641,7 +619,7 @@ AG_SetSint8(void *obj, const char *name, Sint8 v)
 void
 AG_InitSint8(AG_Variable *V, Sint8 v)
 {
-	FN_VARIABLE_INIT(Sint8, AG_VARIABLE_SINT8);
+	FN_VARIABLE_INIT(AG_VARIABLE_SINT8);
 	V->data.s8 = v;
 }
 AG_Variable *
@@ -681,7 +659,7 @@ AG_SetUint16(void *obj, const char *name, Uint16 v)
 void
 AG_InitUint16(AG_Variable *V, Uint16 v)
 {
-	FN_VARIABLE_INIT(Uint16, AG_VARIABLE_UINT16);
+	FN_VARIABLE_INIT(AG_VARIABLE_UINT16);
 	V->data.u16 = v;
 }
 AG_Variable *
@@ -721,7 +699,7 @@ AG_SetSint16(void *obj, const char *name, Sint16 v)
 void
 AG_InitSint16(AG_Variable *V, Sint16 v)
 {
-	FN_VARIABLE_INIT(Sint16, AG_VARIABLE_SINT16);
+	FN_VARIABLE_INIT(AG_VARIABLE_SINT16);
 	V->data.s16 = v;
 }
 AG_Variable *
@@ -761,7 +739,7 @@ AG_SetUint32(void *obj, const char *name, Uint32 v)
 void
 AG_InitUint32(AG_Variable *V, Uint32 v)
 {
-	FN_VARIABLE_INIT(Uint32, AG_VARIABLE_UINT32);
+	FN_VARIABLE_INIT(AG_VARIABLE_UINT32);
 	V->data.u32 = v;
 }
 AG_Variable *
@@ -801,7 +779,7 @@ AG_SetSint32(void *obj, const char *name, Sint32 v)
 void
 AG_InitSint32(AG_Variable *V, Sint32 v)
 {
-	FN_VARIABLE_INIT(Sint32, AG_VARIABLE_SINT32);
+	FN_VARIABLE_INIT(AG_VARIABLE_SINT32);
 	V->data.s32 = v;
 }
 AG_Variable *
@@ -841,7 +819,7 @@ AG_SetFloat(void *obj, const char *name, float v)
 void
 AG_InitFloat(AG_Variable *V, float v)
 {
-	FN_VARIABLE_INIT(float, AG_VARIABLE_FLOAT);
+	FN_VARIABLE_INIT(AG_VARIABLE_FLOAT);
 	V->data.flt = v;
 }
 AG_Variable *
@@ -881,7 +859,7 @@ AG_SetDouble(void *obj, const char *name, double v)
 void
 AG_InitDouble(AG_Variable *V, double v)
 {
-	FN_VARIABLE_INIT(double, AG_VARIABLE_DOUBLE);
+	FN_VARIABLE_INIT(AG_VARIABLE_DOUBLE);
 	V->data.dbl = v;
 }
 AG_Variable *
@@ -921,7 +899,7 @@ AG_SetPointer(void *obj, const char *name, void *v)
 void
 AG_InitPointer(AG_Variable *V, void *v)
 {
-	FN_VARIABLE_INIT(void *, AG_VARIABLE_POINTER);
+	FN_VARIABLE_INIT(AG_VARIABLE_POINTER);
 	V->data.p = v;
 }
 AG_Variable *
@@ -940,6 +918,48 @@ AG_BindPointerMp(void *obj, const char *name, void **v, AG_Mutex *mutex)
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_POINTER);
 	return (V);
 }
+
+/*
+ * AG_Text routines.
+ */
+static void
+GetTextFn(void *obj, AG_Variable *V)
+{
+	FN_VARIABLE_GETFN(p, fnText);
+}
+AG_Text *
+AG_GetText(void *obj, const char *name)
+{
+	FN_VARIABLE_GET(p, fnText, void *, GetTextFn);
+}
+AG_Variable *
+AG_SetText(void *obj, const char *name, AG_Text *v)
+{
+	FN_VARIABLE_SET(p, void *, AG_VARIABLE_P_TEXT);
+}
+void
+AG_InitText(AG_Variable *V, AG_Text *v)
+{
+	FN_VARIABLE_INIT(AG_VARIABLE_P_TEXT);
+	V->data.p = v;
+}
+AG_Variable *
+AG_BindText(void *obj, const char *name, AG_Text *v)
+{
+	FN_VARIABLE_BIND(AG_VARIABLE_P_TEXT);
+}
+AG_Variable *
+AG_BindTextFn(void *obj, const char *name, AG_TextFn fn, const char *fmt, ...)
+{
+	FN_VARIABLE_BIND_FN(fnText, AG_VARIABLE_P_TEXT);
+}
+AG_Variable *
+AG_BindTextMp(void *obj, const char *name, AG_Text *v, AG_Mutex *mutex)
+{
+	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_TEXT);
+	return (V);
+}
+
 
 /*
  * Const pointer routines.
@@ -962,7 +982,7 @@ AG_SetConstPointer(void *obj, const char *name, const void *v)
 void
 AG_InitConstPointer(AG_Variable *V, const void *v)
 {
-	FN_VARIABLE_INIT(const void *, AG_VARIABLE_CONST_POINTER);
+	FN_VARIABLE_INIT(AG_VARIABLE_CONST_POINTER);
 	V->data.Cp = v;
 }
 AG_Variable *
@@ -1091,14 +1111,14 @@ AG_SetString(void *obj, const char *name, const char *s)
 void
 AG_InitString(AG_Variable *V, const char *v)
 {
-	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	FN_VARIABLE_INIT(AG_VARIABLE_STRING);
 	V->data.s = Strdup(v);
 	V->info.size = 0;
 }
 void
 AG_InitStringNODUP(AG_Variable *V, char *v)
 {
-	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	FN_VARIABLE_INIT(AG_VARIABLE_STRING);
 	V->data.s = v;
 	V->info.size = 0;
 }
@@ -1148,7 +1168,7 @@ AG_SetStringFixed(void *obj, const char *name, char *buf, size_t bufSize)
 void
 AG_InitStringFixed(AG_Variable *V, char *v, size_t bufSize)
 {
-	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	FN_VARIABLE_INIT(AG_VARIABLE_STRING);
 	V->data.s = v;
 	V->info.size = bufSize;
 }
