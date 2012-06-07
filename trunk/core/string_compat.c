@@ -429,8 +429,8 @@ fail:
 
 /*
  * Return an internal UCS-4 buffer from the given string and specified
- * encoding. If bufSize is 0, the buffer is sized automatically to
- * accomodate the string.
+ * encoding. If pOutSize is non-NULL, return the number of characters
+ * converted.
  */
 Uint32 *
 AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
@@ -439,7 +439,7 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
 	size_t i, j;
 	size_t sLen = strlen(s);
 
-	if (Strcasecmp(encoding, "UTF-8") == 0) {
+	if (strcmp(encoding, "UTF-8") == 0) {
 		if ((ucs = TryMalloc((AG_LengthUTF8(s)+1)*sizeof(Uint32))) == NULL) {
 			return (NULL);
 		}
@@ -485,7 +485,7 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
 		}
 		ucs[j] = '\0';
 		if (pOutSize != NULL) { *pOutSize = j; }
-	} else if (Strcasecmp(encoding, "US-ASCII") == 0) {
+	} else if (strcmp(encoding, "US-ASCII") == 0) {
 		if ((ucs = TryMalloc((sLen+1)*sizeof(Uint32))) == NULL) {
 			return (NULL);
 		}
@@ -551,7 +551,7 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 {
 	size_t len;
 
-	if (Strcasecmp(encoding, "UTF-8") == 0) {
+	if (strcmp(encoding, "UTF-8") == 0) {
 		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
 			Uint32 uch = *ucs;
 			int chlen, ch1, i;

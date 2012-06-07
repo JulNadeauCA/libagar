@@ -233,7 +233,7 @@ AG_TextRealloc(AG_TextEnt *te, size_t maxLenNew)
 {
 	if (maxLenNew >= te->maxLen) {
 		char *bufNew;
-		bufNew = (char *)AG_TryRealloc(te->buf, te->maxLen);
+		bufNew = (char *)AG_TryRealloc(te->buf, maxLenNew);
 		if (bufNew == NULL) {
 			return (-1);
 		}
