@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,8 +57,14 @@
 #include <core/core.h>
 
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include <config/have_iconv.h>
+#ifdef HAVE_ICONV
+# include <iconv.h>
+#endif
 
 /*
  * This array is designed for mapping upper and lower case letter
@@ -376,29 +382,67 @@ AG_Strcasestr(const char *s, const char *find)
 	return (s);
 }
 
+#ifdef HAVE_ICONV
+
+static Uint32 *
+ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
+    size_t *pOutSize)
+{
+	Uint32 *ucs, *ucsNew;
+	const char *inPtr = s;
+	char *wrPtr;
+	size_t outSize = (sLen+1)*sizeof(Uint32);
+	iconv_t cd;
+
+	if ((ucs = TryMalloc(outSize)) == NULL) {
+		return (NULL);
+	}
+	if ((cd = iconv_open("UCS-4-INTERNAL", encoding)) == (iconv_t)-1) {
+		AG_SetError("iconv_open: %s", strerror(errno));
+		goto fail;
+	}
+	wrPtr = (char *)ucs;
+	if (iconv(cd, &inPtr, &sLen, &wrPtr, &outSize) == (size_t)-1) {
+		AG_SetError("iconv: %s", strerror(errno));
+		iconv_close(cd);
+		goto fail;
+	}
+	iconv_close(cd);
+
+	outSize = (wrPtr - (char *)ucs)/sizeof(Uint32);
+	if (pOutSize != NULL) { *pOutSize = outSize; }
+		
+	/* Shrink the buffer down to the actual string length. */
+	ucsNew = TryRealloc(ucs, (outSize+1)*sizeof(Uint32));
+	if (ucsNew == NULL) {
+		goto fail;
+	}
+	ucs = ucsNew;
+	ucs[outSize] = '\0';
+	return (ucs);
+fail:
+	Free(ucs);
+	return (NULL);
+}
+
+#endif /* HAVE_ICONV */
+
 /*
- * Returns a buffer containing a UCS-4 representation of the given
- * string/encoding. If len is 0, enough memory to hold the string is
- * allocated. Otherwise, a buffer of the specified size is allocated.
+ * Return an internal UCS-4 buffer from the given string and specified
+ * encoding. If bufSize is 0, the buffer is sized automatically to
+ * accomodate the string.
  */
 Uint32 *
-AG_ImportUnicode(enum ag_unicode_conv conv, const char *s, size_t pLen)
+AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
 {
 	Uint32 *ucs;
 	size_t i, j;
 	size_t sLen = strlen(s);
-	size_t bufLen = (pLen != 0) ? pLen : (sLen+1);
 
-	ucs = Malloc(bufLen*sizeof(Uint32));
-
-	switch (conv) {
-	case AG_UNICODE_FROM_USASCII:
-		for (i = 0; i < sLen; i++) {
-			ucs[i] = ((const unsigned char *)s)[i];
+	if (Strcasecmp(encoding, "UTF-8") == 0) {
+		if ((ucs = TryMalloc((AG_LengthUTF8(s)+1)*sizeof(Uint32))) == NULL) {
+			return (NULL);
 		}
-		ucs[i] = '\0';
-		break;
-	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < sLen; i++, j++) {
 			switch (AG_CharLengthUTF8(s[i])) {
 			case 1:
@@ -440,119 +484,75 @@ AG_ImportUnicode(enum ag_unicode_conv conv, const char *s, size_t pLen)
 			}
 		}
 		ucs[j] = '\0';
-		break;
-	default:
-		break;
+		if (pOutSize != NULL) { *pOutSize = j; }
+	} else if (Strcasecmp(encoding, "US-ASCII") == 0) {
+		if ((ucs = TryMalloc((sLen+1)*sizeof(Uint32))) == NULL) {
+			return (NULL);
+		}
+		for (i = 0; i < sLen; i++) {
+			ucs[i] = ((const unsigned char *)s)[i];
+		}
+		ucs[i] = '\0';
+		if (pOutSize != NULL) { *pOutSize = i; }
+	} else {
+#ifdef HAVE_ICONV
+		ucs = ImportUnicodeICONV(encoding, s, sLen, pOutSize);
+#else
+		AG_SetError("Unknown encoding: %s (no iconv support)", encoding);
+		return (NULL);
+#endif
 	}
 	return (ucs);
 }
 
-size_t
-AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
-    size_t ucs_len)
+#ifdef HAVE_ICONV
+
+static int
+ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
+    size_t dstSize)
 {
-	size_t len;
-	size_t i, j;
+	const char *inPtr = (const char *)ucs;
+	size_t inSize = AG_LengthUCS4(ucs)*sizeof(Uint32);
+	char *wrPtr = dst;
+	size_t outSize = dstSize;
+	iconv_t cd;
+	
+	if ((cd = iconv_open(encoding, "UCS-4-INTERNAL")) == (iconv_t)-1) {
+		AG_SetError("iconv_open: %s", strerror(errno));
+		return (-1);
+	}
+	if (iconv(cd, &inPtr, &inSize, &wrPtr, &outSize) == (size_t)-1) {
+		AG_SetError("iconv: %s", strerror(errno));
+		iconv_close(cd);
+		return (-1);
+	}
+	iconv_close(cd);
 
-	len = strlen(s);
-
-	switch (conv) {
-	case AG_UNICODE_FROM_USASCII:
-		if (len > ucs_len) {
-			len = ucs_len;
-		}
-		for (i = 0; i < len; i++) {
-			ucs[i] = ((const unsigned char *)s)[i];
-		}
-		ucs[i] = '\0';
-		return (i);
-	case AG_UNICODE_FROM_UTF8:
-		for (i = 0, j = 0; i < len; i++, j++) {
-			switch (AG_CharLengthUTF8(s[i])) {
-			case 1:
-				if (i+1 >= ucs_len) {
-					break;
-				}
-				ucs[j] = (Uint32)s[i];
-				break;
-			case 2:
-				if (i+2 >= ucs_len) {
-					break;
-				}
-				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
-				break;
-			case 3:
-				if (i+3 >= ucs_len) {
-					break;
-				}
-				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
-				break;
-			case 4:
-				if (i+4 >= ucs_len) {
-					break;
-				}
-				ucs[j]  = (Uint32)(s[i]   & 0x07) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
-				break;
-			case 5:
-				if (i+5 >= ucs_len) {
-					break;
-				}
-				ucs[j]  = (Uint32)(s[i]   & 0x03) << 24;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
-				break;
-			case 6:
-				if (i+6 >= ucs_len) {
-					break;
-				}
-				ucs[j]  = (Uint32)(s[i]   & 0x01) << 30;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 24;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
-				ucs[j] |= (Uint32)(s[++i] & 0x3f);
-				break;
-			case -1:
-				if (i+1 >= ucs_len) {
-					break;
-				}
-				ucs[j] = '?';
-				break;
-			}
-		}
-		ucs[j] = '\0';
-		return (j);
-	default:
-		break;
+	if (outSize >= sizeof(char)) {
+		outSize = wrPtr - dst;
+		dst[outSize] = '\0';
+	} else {
+		AG_SetError("iconv: Out of space for NUL");
+		return (-1);
 	}
 	return (0);
 }
 
+#endif /* HAVE_ICONV */
+
 /*
- * Convert a UCS-4 string to the given encoding.
- * At most dst_size-1 bytes will be copied. The string is NUL-terminated
- * unless dst_size == 0.
- *
- * If retval >= dst_size, truncation occurred. If retval == -1, a
- * conversion error has occurred.
+ * Convert an internal UCS-4 string to a fixed-size buffer using the specified
+ * encoding. At most dstSize-1 bytes will be copied. The string is always
+ * NUL-terminated.
  */
-long
-AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
-    size_t dst_size)
+int
+AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
+    size_t dstSize)
 {
 	size_t len;
 
-	switch (conv) {
-	case AG_UNICODE_TO_UTF8:
-		for (len = 0; *ucs != '\0' && len < dst_size; ucs++) {
+	if (Strcasecmp(encoding, "UTF-8") == 0) {
+		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
 			Uint32 uch = *ucs;
 			int chlen, ch1, i;
 
@@ -575,10 +575,12 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 				chlen = 6;
 				ch1 = 0xfc;
 			} else {
+				AG_SetError("Bad UCS-4 character");
 				return (-1);
 			}
-			if (len+chlen+1 >= dst_size) {
-				return ((long)len+chlen);
+			if (len+chlen+1 >= dstSize) {
+				AG_SetError("Out of space");
+				return (-1);
 			}
 			for (i = chlen - 1; i > 0; i--) {
 				dst[i] = (uch & 0x3f) | 0x80;
@@ -589,9 +591,14 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 			len += chlen;
 		}
 		*dst = '\0';
-		return (long)len;
-	default:
+		return (0);
+	} else {
+#ifdef HAVE_ICONV
+		return ExportUnicodeICONV(encoding, dst, ucs, dstSize);
+#else
+		AG_SetError("Unknown encoding: %s (no iconv support)", encoding);
 		return (-1);
+#endif
 	}
 }
 
