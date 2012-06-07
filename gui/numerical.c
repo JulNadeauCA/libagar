@@ -587,7 +587,7 @@ Init(void *obj)
 	num->intMax = 0;
 
 	num->inc = 1.0;
-	num->input = AG_TextboxNewS(num, AG_TEXTBOX_STATIC, NULL);
+	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;

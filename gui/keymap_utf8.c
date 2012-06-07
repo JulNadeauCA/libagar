@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,18 +43,39 @@ static AG_Mutex killRingLock = AG_MUTEX_INITIALIZER;
 #endif
 static Uint32  *killRing = NULL;
 static size_t	killRingLen = 0;
+static char     killRingEnc[32] = { '\0' };
 
 static int
-InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
-    Uint32 *ucs, int len, int bufSize)
+GrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins, size_t nIns)
+{
+	size_t maxLenNew;
+	Uint32 *sNew;
+
+	maxLenNew = (buf->len + nIns + 1)*sizeof(Uint32);
+	
+	if (!buf->reallocable && maxLenNew > buf->var->info.size)
+		return (-1);
+
+	if (maxLenNew >= buf->maxLen) {
+		if ((sNew = TryRealloc(buf->s, maxLenNew)) == NULL) {
+			return (-1);
+		}
+		buf->s = sNew;
+		buf->maxLen = maxLenNew;
+	}
+	return (0);
+}
+
+static int
+InsertUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 ch)
 {
 	Uint32 ins[3];
-	int i, nins;
+	int i, nIns;
 	Uint32 uch = ch;
 
 	if (AG_WidgetDisabled(ed) || keysym == 0)
 		return (0);
-
 #if 0
 	if (!unicodeKbd) {
 		uch = AG_ApplyModifiersASCII((Uint32)keysym, keymod);
@@ -84,54 +105,47 @@ InsertUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 ch,
 	if (uch == 0) { return (0); }
 	if (uch == '\r') { uch = '\n'; }
 
-	switch (ed->encoding) {
-	case AG_ENCODING_UTF8:
-		break;
-	case AG_ENCODING_ASCII:
-		if (!isascii((int)uch)) {
-			return (0);
-		}
-		break;
-	}
+	if (Strcasecmp(ed->encoding, "US-ASCII") == 0 &&
+	    !isascii((int)uch))
+		return (0);
 
 	if (agTextComposition) {
-		if ((nins = AG_KeyInputCompose(ed, uch, ins)) == 0)
+		if ((nIns = AG_KeyInputCompose(ed, uch, ins)) == 0)
 			return (0);
 	} else {
 		ins[0] = uch;
-		nins = 1;
+		nIns = 1;
 	}
-	ins[nins] = '\0';
+	ins[nIns] = '\0';
 
-	/* We need the expanded UTF-8 length to check bounds. */
-	/* XXX optimize for STATIC */
-	if (AG_LengthUTF8FromUCS4(ucs) + 
-	    AG_LengthUTF8FromUCS4(ins) + 1 >= bufSize)
+	if (GrowBuffer(ed, buf, ins, (size_t)nIns) == -1)
 		return (0);
 
-	if (ed->pos == len) {					/* Append */
-		for (i = 0; i < nins; i++)
-			ucs[len+i] = ins[i];
+	if (ed->pos == buf->len) {				/* Append */
+		for (i = 0; i < nIns; i++) {
+			buf->s[buf->len + i] = ins[i];
+		}
 	} else {						/* Insert */
-		memmove(&ucs[ed->pos+nins], &ucs[ed->pos],
-		       (len - ed->pos)*sizeof(Uint32));
-		for (i = 0; i < nins; i++)
-			ucs[ed->pos+i] = ins[i];
+		memmove(&buf->s[ed->pos + nIns], &buf->s[ed->pos],
+		       (buf->len - ed->pos)*sizeof(Uint32));
+		for (i = 0; i < nIns; i++)
+			buf->s[ed->pos + i] = ins[i];
 	}
-	ucs[len+nins] = '\0';
-	ed->pos += nins;
+	buf->s[buf->len + nIns] = '\0';
+	buf->len += nIns;
+	ed->pos += nIns;
 	return (1);
 }
 
 static int
-DeleteUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
-    Uint32 *ucs, int len, int bufSize)
+DeleteUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 unicode)
 {
 	Uint32 *c;
 
 	if (AG_WidgetDisabled(ed))
 		return (0);
-	if (len == 0)
+	if (buf->len == 0)
 		return (0);
 
 	switch (keysym) {
@@ -139,16 +153,16 @@ DeleteUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
 		if (ed->pos == 0) {
 			return (0);
 		}
-		if (ed->pos == len) { 
-			ucs[len-1] = '\0';
+		if (ed->pos == buf->len) { 
+			buf->s[buf->len - 1] = '\0';
 			ed->pos--;
 			return (1);
 		}
 		ed->pos--;
 		break;
 	case AG_KEY_DELETE:
-		if (ed->pos == len) {
-			ucs[len-1] = '\0';
+		if (ed->pos == buf->len) {
+			buf->s[buf->len - 1] = '\0';
 			ed->pos--;
 			return (1);
 		}
@@ -156,18 +170,20 @@ DeleteUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 unicode,
 	default:
 		break;
 	}
-	for (c = &ucs[ed->pos]; c < &ucs[len+1]; c++) {
+	for (c = &buf->s[ed->pos]; c < &buf->s[buf->len + 1]; c++) {
 		*c = c[1];
 		if (*c == '\0')
 			break;
 	}
+	buf->len--;
 	return (1);
 }
 
 static int
-KillUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+KillUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
+    Uint32 uch)
 {
+	Uint32 *killRingNew;
 	size_t lenKill = 0;
 	Uint32 *c;
 	
@@ -178,7 +194,7 @@ KillUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 	    (keysym == AG_KEY_K) && (keymod & AG_KEYMOD_CTRL))
 		return (0);
 
-	for (c = &ucs[ed->pos]; c < &ucs[len]; c++) {
+	for (c = &buf->s[ed->pos]; c < &buf->s[buf->len]; c++) {
 		if (*c == '\n') {
 			break;
 		}
@@ -188,24 +204,29 @@ KillUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 		return (0);
 
 	AG_MutexLock(&killRingLock);
-	killRing = Realloc(killRing, (lenKill+1)*sizeof(Uint32));
-	memcpy(killRing, &ucs[ed->pos], lenKill*sizeof(Uint32));
-	killRing[lenKill] = '\0';
-	killRingLen = lenKill;
+	killRingNew = TryRealloc(killRing, (lenKill+1)*sizeof(Uint32));
+	if (killRingNew != NULL) {
+		killRing = killRingNew;
+		memcpy(killRing, &buf->s[ed->pos], lenKill*sizeof(Uint32));
+		killRing[lenKill] = '\0';
+		killRingLen = lenKill;
+	}
+	Strlcpy(killRingEnc, ed->encoding, sizeof(killRingEnc));
 	AG_MutexUnlock(&killRingLock);
 
-	if (ed->pos+lenKill == len) {
-		ucs[ed->pos] = '\0';
+	if (ed->pos + lenKill == buf->len) {
+		buf->s[ed->pos] = '\0';
 	} else {
-		memmove(&ucs[ed->pos], &ucs[ed->pos+lenKill],
-		    (len-lenKill+1 - ed->pos)*sizeof(Uint32));
+		memmove(&buf->s[ed->pos], &buf->s[ed->pos + lenKill],
+		    (buf->len - lenKill + 1 - ed->pos)*sizeof(Uint32));
 	}
+	buf->len = AG_LengthUCS4(buf->s);
 	return (1);
 }
 
 static int
-YankUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+YankUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
+    Uint32 uch)
 {
 	int i;
 
@@ -217,42 +238,39 @@ YankUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 		return (0);
 
 	AG_MutexLock(&killRingLock);
-	if (killRing == NULL) {
-		goto nochange;
+	if (killRing == NULL ||
+	    strcmp(ed->encoding, killRingEnc) != 0) {	/* XXX TODO conv */
+		goto fail;
 	}
-	if (AG_LengthUTF8FromUCS4(ucs) +
-	    AG_LengthUTF8FromUCS4(killRing) + 1 >= bufSize) {
-		/* TODO truncate */
-		goto nochange;
-	}
-	switch (ed->encoding) {
-	case AG_ENCODING_UTF8:
-		break;
-	case AG_ENCODING_ASCII:
+	if (GrowBuffer(ed, buf, killRing, killRingLen) == -1)
+		goto fail;
+
+	/* XXX TODO: handle other charsets */
+	if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {
 		for (i = 0; i < killRingLen; i++) {
 			if (!isascii((int)killRing[i]))
-				goto nochange;
+				goto fail;
 		}
-		break;
 	}
 
-	if (ed->pos < len) {
-		memmove(&ucs[ed->pos+killRingLen], &ucs[ed->pos],
-		    (len - ed->pos)*sizeof(Uint32));
+	if (ed->pos < buf->len) {
+		memmove(&buf->s[ed->pos + killRingLen], &buf->s[ed->pos],
+		    (buf->len - ed->pos)*sizeof(Uint32));
 	}
-	memcpy(&ucs[ed->pos], killRing, killRingLen*sizeof(Uint32));
-	ucs[len+killRingLen] = '\0';
+	memcpy(&buf->s[ed->pos], killRing, killRingLen*sizeof(Uint32));
+	buf->s[buf->len + killRingLen] = '\0';
 	ed->pos += killRingLen;
 	AG_MutexUnlock(&killRingLock);
+	buf->len = AG_LengthUCS4(buf->s);
 	return (1);
-nochange:
+fail:
 	AG_MutexUnlock(&killRingLock);
 	return (0);
 }
 
 static int
-WordBackUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+WordBackUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	Uint32 *c;
 
@@ -262,11 +280,11 @@ WordBackUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 	    (keysym == AG_KEY_B) && (keymod & AG_KEYMOD_ALT))
 		return (0);
 
-	if (ed->pos > 1 && ucs[ed->pos-1] == ' ') {
+	if (ed->pos > 1 && buf->s[ed->pos - 1] == ' ') {
 		ed->pos -= 2;
 	}
-	for (c = &ucs[ed->pos];
-	     c > &ucs[0] && *c != ' ';
+	for (c = &buf->s[ed->pos];
+	     c > &buf->s[0] && *c != ' ';
 	     c--, ed->pos--)
 		;;
 	if (*c == ' ') {
@@ -277,8 +295,8 @@ WordBackUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-WordForwUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+WordForwUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	Uint32 *c;
 	
@@ -288,13 +306,13 @@ WordForwUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 	    (keysym == AG_KEY_F) && (keymod & AG_KEYMOD_ALT))
 		return (0);
 
-	if (ed->pos == len) {
+	if (ed->pos == buf->len) {
 		return (0);
 	}
-	if (len > 1 && ucs[ed->pos] == ' ') {
+	if (buf->len > 1 && buf->s[ed->pos] == ' ') {
 		ed->pos++;
 	}
-	for (c = &ucs[ed->pos];
+	for (c = &buf->s[ed->pos];
 	     *c != '\0' && *c != ' ';
 	     c++, ed->pos++)
 		;;
@@ -303,8 +321,8 @@ WordForwUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorHomeUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorHomeUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	Uint32 *c;
 
@@ -316,8 +334,8 @@ CursorHomeUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 		if (ed->pos == 0) {
 			return (0);
 		}
-		for (c = &ucs[ed->pos-1];
-		     c >= &ucs[0] && ed->pos >= 0;
+		for (c = &buf->s[ed->pos - 1];
+		     c >= &buf->s[0] && ed->pos >= 0;
 		     c--, ed->pos--) {
 			if (*c == '\n')
 				break;
@@ -330,8 +348,8 @@ CursorHomeUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorEndUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorEndUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	Uint32 *c;
 
@@ -340,30 +358,30 @@ CursorEndUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 		return (0);
 	}
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
-		if (ed->pos == len || ucs[ed->pos] == '\n') {
+		if (ed->pos == buf->len || buf->s[ed->pos] == '\n') {
 			return (0);
 		}
-		for (c = &ucs[ed->pos+1];
-		     c <= &ucs[len] && ed->pos <= len;
+		for (c = &buf->s[ed->pos + 1];
+		     c <= &buf->s[buf->len] && ed->pos <= buf->len;
 		     c++, ed->pos++) {
 			if (*c == '\n') {
 				ed->pos++;
 				break;
 			}
 		}
-		if (ed->pos > len) {
-			ed->pos = len;
+		if (ed->pos > buf->len) {
+			ed->pos = buf->len;
 		}
 	} else {
-		ed->pos = len;
+		ed->pos = buf->len;
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
 
 static int
-CursorLeftUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorLeftUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	if (--ed->pos < 1) {
 		ed->pos = 0;
@@ -373,10 +391,10 @@ CursorLeftUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorRightUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorRightUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
-	if (ed->pos < len) {
+	if (ed->pos < buf->len) {
 		ed->pos++;
 	}
 	ed->flags |= AG_EDITABLE_MARKPREF;
@@ -384,8 +402,8 @@ CursorRightUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorUpUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	AG_EditableMoveCursor(ed, ed->xCursPref,
 	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1,
@@ -394,8 +412,8 @@ CursorUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-CursorDownUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+CursorDownUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	AG_EditableMoveCursor(ed, ed->xCursPref,
 	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1,
@@ -404,8 +422,8 @@ CursorDownUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+PageUpUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
 	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1,
@@ -414,8 +432,8 @@ PageUpUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
 }
 
 static int
-PageDownUTF8(AG_Editable *ed, AG_KeySym keysym, int keymod, Uint32 uch,
-    Uint32 *ucs, int len, int bufSize)
+PageDownUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
+    int keymod, Uint32 uch)
 {
 	AG_EditableMoveCursor(ed, ed->xCurs,
 	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1,

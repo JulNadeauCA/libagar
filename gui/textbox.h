@@ -31,7 +31,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_CATCH_TAB     0x00800 /* Enter literal tabs into text
 					    instead of cycling focus */
 #define AG_TEXTBOX_CURSOR_MOVING 0x01000 /* Cursor is being moved */
-#define AG_TEXTBOX_STATIC        0x04000 /* String binding will not change */
+#define AG_TEXTBOX_EXCL          0x04000 /* Exclusive access to buffer */
 #define AG_TEXTBOX_NOEMACS       0x08000 /* Disable emacs-style fn keys */
 #define AG_TEXTBOX_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_TEXTBOX_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
@@ -65,16 +65,18 @@ void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...)
 void        AG_TextboxSetLabelS(AG_Textbox *, const char *);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))
-#define     AG_TextboxSetStatic(tb,flag) AG_EditableSetStatic((tb)->ed,(flag))
+#define     AG_TextboxSetExcl(tb,flag) AG_EditableSetExcl((tb)->ed,(flag))
 #define     AG_TextboxSetFltOnly(tb,flag) AG_EditableSetFltOnly((tb)->ed,(flag))
 #define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
 void        AG_TextboxSetWordWrap(AG_Textbox *, int);
 void        AG_TextboxSetFont(AG_Textbox *, AG_Font *);
+void        AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 
-#define AG_TextboxBindUTF8(tb,p,sz) AG_EditableBindUTF8((tb)->ed,(p),(sz))
-#define AG_TextboxBindASCII(tb,p,sz) AG_EditableBindASCII((tb)->ed,(p),(sz))
-#define AG_TextboxBindAutoUTF8(tb,p,sz) AG_EditableBindAutoUTF8((tb)->ed,(p),(sz))
-#define AG_TextboxBindAutoASCII(tb,p,sz) AG_EditableBindAutoASCII((tb)->ed,(p),(sz))
+
+#define AG_TextboxBindUTF8(tb,p,sz)        AG_EditableBindUTF8((tb)->ed,(p),(sz))
+#define AG_TextboxBindASCII(tb,p,sz)       AG_EditableBindASCII((tb)->ed,(p),(sz))
+#define AG_TextboxBindEncoded(tb,enc,p,sz) AG_EditableBindEncoded((tb)->ed,(enc),(p),(sz))
+#define AG_TextboxBindText(tb,txt)         AG_EditableBindText((tb)->ed,(txt))
 
 #define AG_TextboxMapPosition(tb,x,y,pos,abs) \
 	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))
@@ -84,21 +86,17 @@ void        AG_TextboxSetFont(AG_Textbox *, AG_Font *);
 #define AG_TextboxSetCursorPos(tb,pos) AG_EditableSetCursorPos((tb)->ed,(pos))
 
 #define AG_TextboxSetString(tb,s) AG_EditableSetString((tb)->ed,(s))
-#define AG_TextboxSetStringUCS4(tb,s) AG_EditableSetStringUCS4((tb)->ed,(s))
 #define	AG_TextboxClearString(tb) AG_EditableSetString((tb)->ed,NULL)
-void    AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 #define AG_TextboxDupString(tb) AG_EditableDupString((tb)->ed)
-#define AG_TextboxDupStringUCS4(tb) AG_EditableDupStringUCS4((tb)->ed)
 #define AG_TextboxCopyString(tb,p,len) AG_EditableCopyString((tb)->ed,(p),(len))
-#define AG_TextboxCopyStringUCS4(tb,p,len) \
-	AG_EditableCopyStringUCS4((tb)->ed,(p),(len))
 
-#define AG_TextboxBufferChanged(tb) AG_EditableBufferChanged((tb)->ed)
 #define AG_TextboxInt(tb) AG_EditableInt((tb)->ed)
 #define AG_TextboxFlt(tb) AG_EditableFlt((tb)->ed)
 #define AG_TextboxDbl(tb) AG_EditableDbl((tb)->ed)
 
 #ifdef AG_LEGACY
+# define AG_TEXTBOX_STATIC AG_TEXTBOX_EXCL
+# define AG_TextboxSetStatic AG_TextboxSetExcl
 # define AG_TextboxPrescale AG_TextboxSizeHint
 # define AG_TextboxSetWriteable(tb,flag) do {	\
 	if (flag) {				\

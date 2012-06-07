@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 
 /*
  * Low-level single/multi-line text input widget. This is the base widget
- * used by AG_Textbox(3), editable cells in AG_Table(3), etc.
+ * used by other widgets such as AG_Textbox(3).
  */
 
 #include <core/core.h>
@@ -51,6 +51,157 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+/* Return a new working buffer (non-exclusive mode). */
+static AG_EditableBuffer *
+GetBufferShared(AG_Editable *ed)
+{
+	AG_EditableBuffer *buf;
+
+	if ((buf = TryMalloc(sizeof(AG_EditableBuffer))) == NULL) {
+		return (NULL);
+	}
+	if (AG_Defined(ed, "text")) {
+		AG_Text *txt;
+		AG_TextEnt *te;
+
+		buf->var = AG_GetVariable(ed, "text", &txt);
+		te = &txt->ent[txt->lang];
+		buf->reallocable = 1;
+		AG_MutexLock(&txt->lock);
+		if (te->buf != NULL) {
+			buf->s = AG_ImportUnicode("UTF-8", te->buf, &buf->len);
+		} else {
+			if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
+				buf->s[0] = (Uint32)'\0';
+			}
+			buf->len = 0;
+		}
+	} else {
+		char *s;
+	
+		buf->var = AG_GetVariable(ed, "string", &s);
+		buf->reallocable = 0;
+		buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len);
+	}
+	if (buf->s == NULL) {
+		AG_UnlockVariable(buf->var);
+		Free(buf);
+		return (NULL);
+	}
+	buf->maxLen = (buf->len+1)*sizeof(Uint32);
+	return (buf);
+}
+
+/*
+ * Return a new working buffer. The variable is returned locked; the caller
+ * should invoke ReleaseBuffer() after use.
+ */
+static __inline__ AG_EditableBuffer *
+GetBuffer(AG_Editable *ed)
+{
+	AG_EditableBuffer *buf;
+
+	if ((ed->flags & AG_EDITABLE_EXCL) == 0)
+		return GetBufferShared(ed);
+
+	/*
+	 * Exclusive mode: We can assume the string has not changed
+	 * externally, and reuse the same static working buffer.
+	 */
+	buf = &ed->sBuf;
+		
+	if (AG_Defined(ed, "text")) {
+		AG_Text *txt;
+
+		buf->var = AG_GetVariable(ed, "text", &txt);
+		buf->reallocable = 1;
+		AG_MutexLock(&txt->lock);
+
+		if (buf->s == NULL) {			/* Import once */
+			AG_TextEnt *te = &txt->ent[txt->lang];
+			buf->s = AG_ImportUnicode("UTF-8", te->buf, &buf->len);
+			if (buf->s == NULL) {
+				AG_MutexUnlock(&txt->lock);
+				goto fail;
+			}
+		}
+	} else {
+		char *s;
+
+		buf->var = AG_GetVariable(ed, "string", &s);
+		buf->reallocable = 0;
+
+		if (buf->s == NULL) {			/* Import once */
+			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len);
+			if (buf->s == NULL)
+				goto fail;
+		}
+	}
+	buf->maxLen = (buf->len + 1)*sizeof(Uint32);
+	return (buf);
+fail:
+	AG_UnlockVariable(buf->var);
+	return (NULL);
+}
+
+/* Clear a working buffer. */
+static __inline__ void
+ClearBuffer(AG_EditableBuffer *buf)
+{
+	AG_Free(buf->s);
+	buf->s = NULL;
+	buf->len = 0;
+	buf->maxLen = 0;
+}
+
+/* Commit changes to the working buffer. */
+static void
+CommitBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
+		AG_Text *txt = buf->var->data.p;
+		AG_TextEnt *te = &txt->ent[txt->lang];
+		size_t lenEnc = AG_LengthUTF8FromUCS4(buf->s)+1;
+
+		if (lenEnc > te->maxLen &&
+		    AG_TextRealloc(te, lenEnc) == -1) {
+			goto fail;
+		}
+		if (AG_ExportUnicode(ed->encoding, te->buf, buf->s,
+		    te->maxLen+1) == -1) {
+			goto fail;
+		}
+	} else {					/* C string binding */
+		if (AG_ExportUnicode(ed->encoding, buf->var->data.s, buf->s,
+		    buf->var->info.size) == -1)
+			goto fail;
+	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	AG_PostEvent(NULL, ed, "editable-postchg", NULL);
+	return;
+fail:
+	Verbose(_("CommitBuffer: %s; ignoring\n"), AG_GetError());
+}
+
+/* Release the working buffer. */
+static __inline__ void
+ReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (AG_Defined(ed, "text")) {
+		AG_Text *txt = buf->var->data.p;
+		AG_MutexUnlock(&txt->lock);
+	}
+	if (buf->var != NULL) {
+		AG_UnlockVariable(buf->var);
+		buf->var = NULL;
+	}
+	if (!(ed->flags & AG_EDITABLE_EXCL)) {
+		ClearBuffer(buf);
+		Free(buf);
+	}
+}
+
+
 AG_Editable *
 AG_EditableNew(void *parent, Uint flags)
 {
@@ -68,52 +219,55 @@ AG_EditableNew(void *parent, Uint flags)
 
 	ed->flags |= flags;
 
-	AG_EditableSetStatic(ed, (flags & AG_EDITABLE_STATIC));
+	/* Set exclusive mode if requested; also sets default redraw rate. */
+	AG_EditableSetExcl(ed, (flags & AG_EDITABLE_EXCL));
+
 	AG_ObjectAttach(parent, ed);
 	return (ed);
 }
 
-/* Bind a UTF-8 text buffer to the widget. */
+/* Bind to a C string containing UTF-8 encoded text. */
 void
 AG_EditableBindUTF8(AG_Editable *ed, char *buf, size_t bufSize)
 {
 	AG_ObjectLock(ed);
+	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
-	ed->encoding = AG_ENCODING_UTF8;
+	ed->encoding = "UTF-8";
 	AG_ObjectUnlock(ed);
 }
 
-/* Bind an ASCII text buffer to the widget. */
+/* Bind to a C string containing ASCII text. */
 void
 AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
 {
 	AG_ObjectLock(ed);
+	AG_Unset(ed, "text");
 	AG_BindString(ed, "string", buf, bufSize);
-	ed->encoding = AG_ENCODING_ASCII;
+	ed->encoding = "US-ASCII";
 	AG_ObjectUnlock(ed);
 }
 
-/* Bind a growable UTF-8 text buffer to the widget. */
+/* Bind to a C string containing text in specified encoding. */
 void
-AG_EditableBindAutoUTF8(AG_Editable *ed, char **buf, Uint *bufSize)
+AG_EditableBindEncoded(AG_Editable *ed, const char *encoding, char *buf,
+    size_t bufSize)
 {
 	AG_ObjectLock(ed);
-	AG_BindPointer(ed, "buffer", (void **)buf);
-	AG_BindUint(ed, "size", bufSize);
-	AG_BindString(ed, "string", *buf, *bufSize);
-	ed->encoding = AG_ENCODING_UTF8;
+	AG_Unset(ed, "text");
+	AG_BindString(ed, "string", buf, bufSize);
+	ed->encoding = encoding;
 	AG_ObjectUnlock(ed);
 }
 
-/* Bind a growable ASCII text buffer to the widget. */
+/* Bind to an AG_Text element. */
 void
-AG_EditableBindAutoASCII(AG_Editable *ed, char **buf, Uint *bufSize)
+AG_EditableBindText(AG_Editable *ed, AG_Text *txt)
 {
 	AG_ObjectLock(ed);
-	AG_BindPointer(ed, "buffer", (void **)buf);
-	AG_BindUint(ed, "size", bufSize);
-	AG_BindString(ed, "string", *buf, *bufSize);
-	ed->encoding = AG_ENCODING_ASCII;
+	AG_Unset(ed, "string");
+	AG_BindPointer(ed, "text", (void *)txt);
+	ed->encoding = "UTF-8";
 	AG_ObjectUnlock(ed);
 }
 
@@ -135,24 +289,23 @@ AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
-/* Specify whether the bound string is modified exclusively by the widget. */
+/*
+ * Specify whether the buffer is accessed exclusively by the widget.
+ * We can disable periodic redraws in exclusive mode.
+ */
 void
-AG_EditableSetStatic(AG_Editable *ed, int enable)
+AG_EditableSetExcl(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
-
-	Free(ed->ucsBuf);
-	ed->ucsBuf = NULL;
-	ed->ucsLen = 0;
+	ClearBuffer(&ed->sBuf);
 
 	if (enable) {
-		ed->flags |= AG_EDITABLE_STATIC;
+		ed->flags |= AG_EDITABLE_EXCL;
 		AG_RedrawOnTick(ed, -1);
 	} else {
-		ed->flags &= ~(AG_EDITABLE_STATIC);
+		ed->flags &= ~(AG_EDITABLE_EXCL);
 		AG_RedrawOnTick(ed, 1000);
 	}
-
 	AG_ObjectUnlock(ed);
 }
 
@@ -219,38 +372,6 @@ KeyIsFltOnly(AG_KeySym ks, Uint32 unicode)
 }
 
 /*
- * Return a locked handle to the "string" binding, and perform
- * UTF-8 -> UCS-4 conversion if necessary.
- */
-static __inline__ AG_Variable *
-GetStringUCS4(AG_Editable *ed, char **s, Uint32 **ucs, size_t *len)
-{
-	AG_Variable *stringb;
-
-	stringb = AG_GetVariable(ed, "string", s);
-	if (ed->flags & AG_EDITABLE_STATIC) {
-		if (ed->ucsBuf == NULL) {
-			ed->ucsBuf = AG_ImportUnicode(AG_UNICODE_FROM_UTF8,
-			    *s, stringb->info.size);
-			ed->ucsLen = AG_LengthUCS4(ed->ucsBuf);
-		}
-		*ucs = ed->ucsBuf;
-		*len = ed->ucsLen;
-	} else {
-		*ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, *s,
-		    stringb->info.size);
-		*len = AG_LengthUCS4(*ucs);
-	}
-	return (stringb);
-}
-static __inline__ void
-FreeStringUCS4(AG_Editable *ed, Uint32 *ucs)
-{
-	if (!(ed->flags & AG_EDITABLE_STATIC))
-		Free(ucs);
-}
-
-/*
  * Process a keystroke. May be invoked from the repeat timeout routine or
  * the keydown handler. If we return 1, the current delay/repeat cycle will
  * be maintained, otherwise it will be cancelled.
@@ -258,11 +379,8 @@ FreeStringUCS4(AG_Editable *ed, Uint32 *ucs)
 static int
 ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 {
-	AG_Variable *stringb;
-	char *s;
+	AG_EditableBuffer *buf;
 	int i, rv = 0;
-	size_t len;
-	Uint32 *ucs;
 
 	if (ks == AG_KEY_ESCAPE) {
 		return (0);
@@ -283,10 +401,12 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 		}
 	}
 
-	stringb = GetStringUCS4(ed, &s, &ucs, &len);
+	if ((buf = GetBuffer(ed)) == NULL)
+		return (0);
 
 	if (ed->pos < 0) { ed->pos = 0; }
-	if (ed->pos > (int)len) { ed->pos = (int)len; }
+	if (ed->pos > buf->len) { ed->pos = buf->len; }
+
 	for (i = 0; ; i++) {
 		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
 		
@@ -297,24 +417,14 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 		if (kc->key == AG_KEY_LAST ||
 		    kc->modmask == 0 || (kmod & kc->modmask)) {
 			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
-			rv = kc->func(ed, ks, kmod, unicode, ucs, (int)len,
-			    stringb->info.size);
+			rv = kc->func(ed, buf, ks, kmod, unicode);
 			break;
 		}
 	}
 	if (rv == 1) {
-		if (ed->flags & AG_EDITABLE_STATIC) {
-			/* Update the cached UCS-4 length. */
-			ed->ucsLen = AG_LengthUCS4(ucs);
-		}
-		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->data.s, ucs,
-		    stringb->info.size);
-		ed->flags |= AG_EDITABLE_MARKPREF;
-		AG_PostEvent(NULL, ed, "editable-postchg", NULL);
+		CommitBuffer(ed, buf);
 	}
-
-	FreeStringUCS4(ed, ucs);
-	AG_UnlockVariable(stringb);
+	ReleaseBuffer(ed, buf);
 	return (1);
 }
 
@@ -429,11 +539,9 @@ int
 AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Variable *stringb;
+	AG_EditableBuffer *buf;
 	AG_Font *font;
-	size_t len;
-	char *s;
-	Uint32 *ucs, ch;
+	Uint32 ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
 	int yMouse;
@@ -442,22 +550,24 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 
 	yMouse = my + ed->y*agTextFontLineSkip;
 	if (yMouse < 0) {
-		AG_ObjectUnlock(ed);
-		return (-1);
+		goto fail;
 	}
 	x = 0;
 	y = 0;
 
-	stringb = GetStringUCS4(ed, &s, &ucs, &len);
-
+	if ((buf = GetBuffer(ed)) == NULL) {
+		goto fail;
+	}
 	if ((font = ed->font) == NULL &&
-	    (font = AG_FetchFont(NULL, -1, -1)) == NULL)
-		AG_FatalError("AG_Editable: %s", AG_GetError());
+	    (font = AG_FetchFont(NULL, -1, -1)) == NULL) {
+		ReleaseBuffer(ed, buf);
+		goto fail;
+	}
 
- 	for (i = 0; i < len; i++) {
-		Uint32 ch = ucs[i];
+ 	for (i = 0; i < buf->len; i++) {
+		Uint32 ch = buf->s[i];
 
-		if (WrapAtChar(ed, x, &ucs[i])) {
+		if (WrapAtChar(ed, x, &buf->s[i])) {
 			x = 0;
 			nLines++;
 		}
@@ -498,13 +608,13 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 	}
 
 	x = 0;
-	for (i = 0; i < len; i++) {
-		ch = ucs[i];
+	for (i = 0; i < buf->len; i++) {
+		ch = buf->s[i];
 		if (mx <= 0 && ON_LINE(yMouse,y)) {
 			*pos = i;
 			goto in;
 		}
-		if (WrapAtChar(ed, x, &ucs[i])) {
+		if (WrapAtChar(ed, x, &buf->s[i])) {
 			if (ON_LINE(yMouse,y) && mx > x) {
 				*pos = i;
 				goto in;
@@ -569,15 +679,16 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 			AG_FatalError("AG_Editable: Unknown font format");
 		}
 	}
-	FreeStringUCS4(ed, ucs);
-	AG_UnlockVariable(stringb);
+	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (1);
 in:
-	FreeStringUCS4(ed, ucs);
-	AG_UnlockVariable(stringb);
+	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (0);
+fail:
+	AG_ObjectUnlock(ed);
+	return (-1);
 }
 #undef ON_LINE
 #undef ON_CHAR
@@ -586,8 +697,6 @@ in:
 void
 AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 {
-	AG_Variable *stringb;
-	char *s;
 	int rv;
 
 	AG_ObjectLock(ed);
@@ -595,9 +704,12 @@ AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 	if (rv == -1) {
 		ed->pos = 0;
 	} else if (rv == 1) {
-		stringb = AG_GetVariable(ed, "string", &s);
-		ed->pos = AG_LengthUTF8(s);
-		AG_UnlockVariable(stringb);
+		AG_EditableBuffer *buf;
+
+		if ((buf = GetBuffer(ed)) != NULL) {
+			ed->pos = buf->len;
+			ReleaseBuffer(ed, buf);
+		}
 	}
 	AG_ObjectUnlock(ed);
 
@@ -620,23 +732,21 @@ AG_EditableGetCursorPos(AG_Editable *ed)
 int
 AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 {
-	AG_Variable *stringb;
-	size_t len;
-	char *s;
 	int rv;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &s);
-
 	ed->pos = pos;
 	if (ed->pos < 0) {
-		len = AG_LengthUTF8(s);
-		if (pos == -1 || ed->pos > len)
-			ed->pos = len+1;
+		AG_EditableBuffer *buf;
+
+		if ((buf = GetBuffer(ed)) != NULL) {
+			if (pos == -1 || ed->pos > buf->len) {
+				ed->pos = buf->len+1;
+			}
+			ReleaseBuffer(ed, buf);
+		}
 	}
 	rv = ed->pos;
-
-	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	
 	AG_Redraw(ed);
@@ -649,13 +759,11 @@ Draw(void *obj)
 	AG_Editable *ed = obj;
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
-	AG_Variable *stringb;
-	char *s;
+	AG_EditableBuffer *buf;
 	int i, dx, dy, x, y;
-	Uint32 *ucs;
-	size_t len;
 
-	stringb = GetStringUCS4(ed, &s, &ucs, &len);
+	if ((buf = GetBuffer(ed)) == NULL)
+		return;
 
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, ed->r);
@@ -669,9 +777,9 @@ Draw(void *obj)
 	y = -ed->y*agTextFontLineSkip;
 	ed->xMax = 10;
 	ed->yMax = 1;
-	for (i = 0; i <= len; i++) {
+	for (i = 0; i <= buf->len; i++) {
 		AG_Glyph *gl;
-		Uint32 c = ucs[i];
+		Uint32 c = buf->s[i];
 
 		if (i == ed->pos && AG_WidgetIsFocused(ed)) {
 			if ((ed->flags & AG_EDITABLE_BLINK_ON) &&
@@ -688,10 +796,10 @@ Draw(void *obj)
 			}
 			ed->yCurs = y/agTextFontLineSkip + ed->y;
 		}
-		if (i == len)
+		if (i == buf->len)
 			break;
 
-		if (WrapAtChar(ed, x, &ucs[i])) {
+		if (WrapAtChar(ed, x, &buf->s[i])) {
 			y += agTextFontLineSkip;
 			ed->xMax = MAX(ed->xMax, x);
 			ed->yMax++;
@@ -771,13 +879,12 @@ Draw(void *obj)
 		}
 	}
 	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
-	AG_UnlockVariable(stringb);
 	AG_PopTextState();
 
 	AG_PopClipRect(ed);
 	AG_PopBlendingMode(ed);
 
-	FreeStringUCS4(ed, ucs);
+	ReleaseBuffer(ed, buf);
 }
 
 void
@@ -984,72 +1091,80 @@ MouseMotion(AG_Event *event)
 	AG_Redraw(ed);
 }
 
-/* Overwrite the contents of the buffer with the given UTF-8 string. */
+/*
+ * Overwrite the contents of the text buffer with the given string
+ * (supplied in UTF-8).
+ */
 void
 AG_EditableSetString(AG_Editable *ed, const char *text)
 {
-	AG_Variable *stringb;
-	char *buf;
+	AG_EditableBuffer *buf;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &buf);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		goto out;
+	}
 	if (text != NULL) {
-		Strlcpy(buf, text, stringb->info.size);
-		ed->pos = AG_LengthUTF8(text);
+		Free(buf->s);
+		if ((buf->s = AG_ImportUnicode("UTF-8", text, &buf->len)) != NULL) {
+			ed->pos = buf->len;
+		} else {
+			buf->len = 0;
+		}
 	} else {
-		buf[0] = '\0';
-		ed->pos = 0;
+		if (buf->maxLen >= sizeof(Uint32)) {
+			buf->s[0] = '\0';
+			ed->pos = 0;
+			buf->len = 0;
+		}
 	}
-	AG_EditableBufferChanged(ed);
-	AG_UnlockVariable(stringb);
+	CommitBuffer(ed, buf);
+	ReleaseBuffer(ed, buf);
+out:
 	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
 }
 
-/* Overwrite the contents of the buffer with the given UCS-4 string. */
+/*
+ * Overwrite the contents of the text buffer with the given formatted
+ * C string (in UTF-8 encoding).
+ */
 void
-AG_EditableSetStringUCS4(AG_Editable *ed, const Uint32 *ucs)
+AG_EditablePrintf(void *obj, const char *fmt, ...)
 {
-	AG_Variable *stringb;
-	char *buf;
-
-	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &buf);
-	if (ucs != NULL) {
-		AG_ExportUnicode(AG_UNICODE_TO_UTF8, buf, ucs,
-		    stringb->info.size);
-		ed->pos = (int)AG_LengthUCS4(ucs);
-	} else {
-		buf[0] = '\0';
-		ed->pos = 0;
-	}
-	AG_EditableBufferChanged(ed);
-	AG_UnlockVariable(stringb);
-	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
-}
-
-/* Write a formatted string to the buffer. */
-void
-AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
-{
-	AG_Variable *stringb;
-	va_list args;
+	AG_Editable *ed = obj;
+	AG_EditableBuffer *buf;
+	va_list ap;
 	char *s;
 
+#ifdef AG_DEBUG
+	if (!AG_OfClass(obj, "AG_Widget:AG_Editable:*") &&
+	    !AG_OfClass(obj, "AG_Widget:AG_Textbox:*"))
+		AG_FatalError(NULL);
+#endif
+
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &s);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		goto out;
+	}
 	if (fmt != NULL && fmt[0] != '\0') {
-		va_start(args, fmt);
-		Vsnprintf(s, stringb->info.size, fmt, args);
-		va_end(args);
-		ed->pos = AG_LengthUTF8(s);
+		va_start(ap, fmt);
+		Vasprintf(&s, fmt, ap);
+		va_end(ap);
+
+		Free(buf->s);
+		if ((buf->s = AG_ImportUnicode("UTF-8", s, &buf->len)) != NULL) {
+			ed->pos = buf->len;
+		} else {
+			buf->len = 0;
+		}
 	} else {
 		s[0] = '\0';
 		ed->pos = 0;
 	}
-	AG_EditableBufferChanged(ed);
-	AG_UnlockVariable(stringb);
+	CommitBuffer(ed, buf);
+	ReleaseBuffer(ed, buf);
+out:
 	AG_ObjectUnlock(ed);
 	AG_Redraw(ed);
 }
@@ -1062,23 +1177,9 @@ AG_EditableDupString(AG_Editable *ed)
 	char *s, *sd;
 
 	stringb = AG_GetVariable(ed, "string", &s);
-	sd = Strdup(s);
+	sd = TryStrdup(s);
 	AG_UnlockVariable(stringb);
 	return (sd);
-}
-
-/* Return a duplicate of the current buffer in UCS-4 format. */
-Uint32 *
-AG_EditableDupStringUCS4(AG_Editable *ed)
-{
-	AG_Variable *stringb;
-	char *s;
-	Uint32 *ucs;
-
-	stringb = AG_GetVariable(ed, "string", &s);
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
-	AG_UnlockVariable(stringb);
-	return (ucs);
 }
 
 /* Copy text to a fixed-size buffer and always NUL-terminate. */
@@ -1097,39 +1198,21 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
 	return (rv);
 }
 
-/* Copy text to a fixed-size buffer and always NUL-terminate. */
-size_t
-AG_EditableCopyStringUCS4(AG_Editable *ed, Uint32 *dst, size_t dst_size)
-{
-	AG_Variable *stringb;
-	size_t rv;
-	char *s;
-	Uint32 *ucs;
-	size_t len;
-
-	AG_ObjectLock(ed);
-
-	stringb = GetStringUCS4(ed, &s, &ucs, &len);
-	rv = StrlcpyUCS4(dst, ucs, dst_size);
-	FreeStringUCS4(ed, ucs);
-	AG_UnlockVariable(stringb);
-
-	AG_ObjectUnlock(ed);
-	return (rv);
-}
-
 /* Perform trivial conversion from string to int. */
 int
 AG_EditableInt(AG_Editable *ed)
 {
-	AG_Variable *stringb;
-	char *text;
+	char abuf[32];
+	AG_EditableBuffer *buf;
 	int i;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &text);
-	i = atoi(text);
-	AG_UnlockVariable(stringb);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+	i = atoi(abuf);
+	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (i);
 }
@@ -1138,14 +1221,17 @@ AG_EditableInt(AG_Editable *ed)
 float
 AG_EditableFlt(AG_Editable *ed)
 {
-	AG_Variable *stringb;
-	char *text;
+	char abuf[32];
+	AG_EditableBuffer *buf;
 	float flt;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &text);
-	flt = (float)strtod(text, NULL);
-	AG_UnlockVariable(stringb);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+	flt = (float)strtod(abuf, NULL);
+	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
@@ -1154,14 +1240,17 @@ AG_EditableFlt(AG_Editable *ed)
 double
 AG_EditableDbl(AG_Editable *ed)
 {
-	AG_Variable *stringb;
-	char *text;
+	char abuf[32];
+	AG_EditableBuffer *buf;
 	double flt;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &text);
-	flt = strtod(text, NULL);
-	AG_UnlockVariable(stringb);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_ExportUnicode("UTF-8", abuf, buf->s, sizeof(abuf));
+	flt = strtod(abuf, NULL);
+	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
@@ -1176,7 +1265,7 @@ Init(void *obj)
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	ed->string[0] = '\0';
-	ed->encoding = AG_ENCODING_UTF8;
+	ed->encoding = "UTF-8";
 
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
@@ -1199,11 +1288,15 @@ Init(void *obj)
 	ed->repeatKey = 0;
 	ed->repeatMod = AG_KEYMOD_NONE;
 	ed->repeatUnicode = 0;
-	ed->ucsBuf = NULL;
-	ed->ucsLen = 0;
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
 	ed->font = NULL;
+
+	ed->sBuf.var = NULL;
+	ed->sBuf.s = NULL;
+	ed->sBuf.len = 0;
+	ed->sBuf.maxLen = 0;
+	ed->sBuf.reallocable = 0;
 
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
@@ -1243,8 +1336,8 @@ Destroy(void *obj)
 {
 	AG_Editable *ed = obj;
 
-	if (ed->flags & AG_EDITABLE_STATIC)
-		Free(ed->ucsBuf);
+	if (ed->flags & AG_EDITABLE_EXCL)
+		Free(ed->sBuf.s);
 }
 
 AG_WidgetClass agEditableClass = {

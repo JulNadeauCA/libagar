@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,7 +95,7 @@ AG_MenuNewGlobal(Uint flags)
 		goto exists;
 	}
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetCaptionS(win, agProgName);
+	AG_WindowSetCaptionS(win, agProgName != NULL ? agProgName : "agarapp");
 
 	m = AG_MenuNew(win, flags);
 	m->flags |= (flags|AG_MENU_GLOBAL);

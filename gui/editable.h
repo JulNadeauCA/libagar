@@ -12,10 +12,14 @@
 
 struct ag_cursor_area;
 
-enum ag_editable_encoding {
-	AG_ENCODING_UTF8,
-	AG_ENCODING_ASCII
-};
+/* Working UCS-4 text buffer for internal use */
+typedef struct ag_editable_buffer {
+	AG_Variable *var;		/* Variable binding (if any) */
+	Uint32 *s;			/* String buffer */
+	size_t len;			/* String length (chars) */
+	size_t maxLen;			/* Available buffer size (bytes) */
+	int reallocable;		/* Buffer can be realloc'd */
+} AG_EditableBuffer;
 
 typedef struct ag_editable {
 	struct ag_widget wid;
@@ -35,28 +39,26 @@ typedef struct ag_editable {
 #define AG_EDITABLE_NOSCROLL      0x00800 /* Inhibit automatic scrolling */
 #define AG_EDITABLE_NOSCROLL_ONCE 0x01000 /* Inhibit scrolling at next draw */
 #define AG_EDITABLE_MARKPREF      0x02000 /* Mark current cursor position */
-#define AG_EDITABLE_STATIC        0x04000 /* String binding will not change */
+#define AG_EDITABLE_EXCL          0x04000 /* Exclusive access to buffer */
 #define AG_EDITABLE_NOEMACS       0x08000 /* Disable emacs-style fn keys */
 #define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
 #define AG_EDITABLE_WORDWRAP      0x40000 /* Word wrapping */
 #define AG_EDITABLE_GROW          0x80000 /* Grow string buffer as needed */
 
-	enum ag_editable_encoding encoding;  /* Character set of buffer */
-	char string[AG_EDITABLE_STRING_MAX]; /* "Default" string binding */
+	const char *encoding;		/* Character set (default "UTF-8") */
+
+	char string[AG_EDITABLE_STRING_MAX]; /* Default "string" binding */
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
 	Uint32 compose;			/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
 	int xCursPref;			/* "Preferred" cursor position */
-
 	int sel_x1, sel_x2;		/* Selection points */
 	int sel_edit;			/* Point being edited */
-
 	AG_Timeout toDelay;		/* Pre-repeat delay timer */
 	AG_Timeout toRepeat;		/* Repeat timer */
 	AG_Timeout toCursorBlink;	/* Cursor blink timer */
-
 	int x;				/* Horizontal offset (px) */
 	int xMax;			/* Rightmost x of largest line (px) */
 	int y;				/* Vertical offset (lines) */
@@ -66,8 +68,7 @@ typedef struct ag_editable {
 	AG_KeySym repeatKey;		/* Last keysym */
 	AG_KeyMod repeatMod;		/* Last keymod */
 	Uint32 repeatUnicode;		/* Last unicode translated key */
-	Uint32 *ucsBuf;			/* UCS4 buffer (for STATIC) */
-	Uint    ucsLen;			/* Buffer length (for STATIC) */
+	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
 	AG_Font *font;			/* Font for text rendering */
@@ -84,8 +85,8 @@ extern AG_WidgetClass agEditableClass;
 AG_Editable *AG_EditableNew(void *, Uint);
 void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
 void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
-void         AG_EditableBindAutoUTF8(AG_Editable *, char **, Uint *);
-void         AG_EditableBindAutoASCII(AG_Editable *, char **, Uint *);
+void         AG_EditableBindEncoded(AG_Editable *, const char *, char *, size_t);
+void         AG_EditableBindText(AG_Editable *, AG_Text *);
 
 void         AG_EditableSizeHint(AG_Editable *, const char *);
 void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
@@ -93,7 +94,7 @@ void         AG_EditableSizeHintLines(AG_Editable *, Uint);
 #define      AG_EditablePrescale AG_EditableSizeHint
 void         AG_EditableSetPassword(AG_Editable *, int);
 void         AG_EditableSetWordWrap(AG_Editable *, int);
-void         AG_EditableSetStatic(AG_Editable *, int);
+void         AG_EditableSetExcl(AG_Editable *, int);
 void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
 void         AG_EditableSetFont(AG_Editable *, AG_Font *);
@@ -104,19 +105,18 @@ int  AG_EditableGetCursorPos(AG_Editable *);
 int  AG_EditableSetCursorPos(AG_Editable *, int);
 
 void     AG_EditableSetString(AG_Editable *, const char *);
-void     AG_EditableSetStringUCS4(AG_Editable *, const Uint32 *);
 #define  AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)
-void     AG_EditablePrintf(AG_Editable *, const char *, ...);
+void     AG_EditablePrintf(void *, const char *, ...);
 char    *AG_EditableDupString(AG_Editable *);
-Uint32  *AG_EditableDupStringUCS4(AG_Editable *);
 size_t   AG_EditableCopyString(AG_Editable *, char *, size_t)
                                BOUNDED_ATTRIBUTE(__string__, 2, 3);
-size_t   AG_EditableCopyStringUCS4(AG_Editable *, Uint32 *, size_t);
 int      AG_EditableInt(AG_Editable *);
 float    AG_EditableFlt(AG_Editable *);
 double   AG_EditableDbl(AG_Editable *);
 
 #ifdef AG_LEGACY
+# define AG_EditableSetStatic AG_EditableSetExcl
+# define AG_EDITABLE_STATIC AG_EDITABLE_EXCL
 # define AG_EditableSetWriteable(tb,flag) do {	\
 	if (flag) {				\
 	 	AG_WidgetEnable(tb);		\
@@ -126,17 +126,6 @@ double   AG_EditableDbl(AG_Editable *);
 } while (0)
 #endif /* AG_LEGACY */
 
-static __inline__ void
-AG_EditableBufferChanged(AG_Editable *ed)
-{
-	AG_ObjectLock(ed);
-	if (ed->flags & AG_EDITABLE_STATIC) {
-		AG_Free(ed->ucsBuf);
-		ed->ucsBuf = NULL;
-		ed->ucsLen = 0;
-	}
-	AG_ObjectUnlock(ed);
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

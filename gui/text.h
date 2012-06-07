@@ -228,8 +228,8 @@ AG_TextValignOffset(int h, int hLine)
 }
 
 /*
- * Allocate a transparent surface and render text from a standard C string
- * (possibly with UTF-8 sequences), onto it.
+ * Allocate a transparent surface and render text from a C string.
+ * The string may contain UTF-8 sequences.
  */
 static __inline__ AG_Surface *
 AG_TextRender(const char *text)
@@ -237,10 +237,12 @@ AG_TextRender(const char *text)
 	Uint32 *ucs;
 	AG_Surface *su;
 	
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-	su = AG_TextRenderUCS4(ucs);
-	AG_Free(ucs);
-	return (su);
+	if ((ucs = AG_ImportUnicode("UTF-8", text, 0)) != NULL) {
+		su = AG_TextRenderUCS4(ucs);
+		AG_Free(ucs);
+		return (su);
+	}
+	return (NULL);
 }
 
 /*

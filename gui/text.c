@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1150,34 +1150,47 @@ AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
 	if (nLines != NULL) { *nLines = tm.nLines; }
 }
 
-/* Return the rendered size in pixels of a text string. */
+/*
+ * Return the expected size in pixels of a rendered C string.
+ * The string may contain UTF-8 sequences.
+ */
 void
 AG_TextSize(const char *text, int *w, int *h)
 {
-	Uint32 *ucs4;
+	Uint32 *ucs;
 
 	if (text == NULL || text[0] == '\0') {
 		if (w != NULL) { *w = 0; }
 		if (h != NULL) { *h = 0; }
 		return;
 	}
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-	AG_TextSizeUCS4(ucs4, w, h);
-	Free(ucs4);
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL)) != NULL) {
+		AG_TextSizeUCS4(ucs, w, h);
+		Free(ucs);
+	} else {
+		*w = 0;
+		*h = 0;
+	}
 }
 
 /*
- * Return the rendered size in pixels of a text string, along with a line
- * count and the width of each line in an array.
+ * Return the expected size in pixels of a rendered C string, along with
+ * the line count and width of each line. The string may contain UTF-8
+ * sequences.
  */
 void
 AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 {
-	Uint32 *ucs4;
+	Uint32 *ucs;
 
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-	AG_TextSizeMultiUCS4(ucs4, w, h, wLines, nLines);
-	Free(ucs4);
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL)) != NULL) {
+		AG_TextSizeMultiUCS4(ucs, w, h, wLines, nLines);
+		Free(ucs);
+	} else {
+		*w = 0;
+		*h = 0;
+		*nLines = 0;
+	}
 }
 
 /*
@@ -1546,7 +1559,7 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	AG_LabelNewS(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	tb = AG_TextboxNewS(vb, AG_TEXTBOX_STATIC, NULL);
+	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL, NULL);
 	AG_ExpandHoriz(tb);
 	AG_TextboxBindUTF8(tb, sp, len);
 	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
@@ -1579,7 +1592,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		tb = AG_TextboxNewS(bo, AG_TEXTBOX_STATIC, NULL);
+		tb = AG_TextboxNewS(bo, AG_TEXTBOX_EXCL, NULL);
 		AG_ExpandHoriz(tb);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)

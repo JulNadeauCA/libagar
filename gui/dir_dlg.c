@@ -720,7 +720,7 @@ Init(void *obj)
 
 	dd->tlDirs = AG_TlistNew(dd, AG_TLIST_EXPAND);
 
-	dd->tbInput = AG_TextboxNewS(dd, AG_TEXTBOX_STATIC, _("Directory: "));
+	dd->tbInput = AG_TextboxNewS(dd, AG_TEXTBOX_EXCL, _("Directory: "));
 	AG_TlistSizeHint(dd->tlDirs, "XXXXXXXXXXXXXX", 8);
 
 	dd->btnOk = AG_ButtonNewS(dd, 0, _("OK"));
