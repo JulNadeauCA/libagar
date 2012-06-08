@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -112,9 +112,6 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 
 	AG_SetInt(cfg, "initial-run", 1);
 	AG_SetInt(cfg, "no-confirm-quit", 0);
-
-	/* XXX XXX move to agar-gui */
-	AG_SetInt(cfg, "view.full-screen", 0);
 
 	/*
 	 * Set the optional platform-specific access paths.
