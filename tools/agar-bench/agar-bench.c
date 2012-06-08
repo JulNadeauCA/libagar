@@ -266,26 +266,14 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFegw:h:t:r:T:")) != -1) {
+	while ((c = getopt(argc, argv, "?vegt:r:T:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
 		case 'v':
 			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
 		case 'g':
 			flags |= AG_VIDEO_OPENGL;
-			break;
-		case 'w':
-			AG_SetUint16(agConfig, "view.w", atoi(optarg));
-			break;
-		case 'h':
-			AG_SetUint16(agConfig, "view.h", atoi(optarg));
 			break;
 		case 't':
 			AG_TextParseFontSpec(optarg);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -179,6 +179,7 @@ static void
 SDLGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
+	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
 
 #ifdef AG_DEBUG
@@ -186,8 +187,9 @@ SDLGL_Close(void *obj)
 #endif
 	AG_FreeCursors(AGDRIVER(sgl));
 
-	if (AG_CfgBool("view.full-screen")) {
-		SDL_WM_ToggleFullScreen(sgl->s);
+	if (dsw->flags & AG_DRIVER_SW_FULLSCREEN) {
+		if (SDL_WM_ToggleFullScreen(sgl->s))
+			dsw->flags &= ~(AG_DRIVER_SW_FULLSCREEN);
 	}
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -608,11 +610,10 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		AG_Verbose("Out of memory for buffer; disabling capture\n");
 		sgl->outMode = AG_SDLGL_OUT_NONE;
 	}
-
-	/* Toggle fullscreen if requested. */
-	if (AG_CfgBool("view.full-screen")) {
-		if (!SDL_WM_ToggleFullScreen(sgl->s))
-			AG_SetCfgBool("view.full-screen", 0);
+	
+	if (flags & AG_VIDEO_FULLSCREEN) {
+		if (SDL_WM_ToggleFullScreen(sgl->s))
+			dsw->flags |= AG_DRIVER_SW_FULLSCREEN;
 	}
 	return (0);
 fail:

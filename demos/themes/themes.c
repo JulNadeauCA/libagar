@@ -391,7 +391,7 @@ main(int argc, char *argv[])
 	/* Fetch Agar version information. */
 	AG_GetVersion(&ver);
 
-	while ((c = AG_Getopt(argc, argv, "?d:vw:h:ft:T:r:c:", &optArg, NULL))
+	while ((c = AG_Getopt(argc, argv, "?d:vw:h:t:T:r:c:", &optArg, NULL))
 	    != -1) {
 		switch (c) {
 		case 'd':
@@ -411,10 +411,6 @@ main(int argc, char *argv[])
 			/* Set display height in pixels */
 			h = atoi(optArg);
 			break;
-		case 'f':
-			/* Force full screen */
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
 		case 'r':
 			/* Change default refresh rate */
 			fps = atoi(optArg);
@@ -433,7 +429,7 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			printf("%s [-vgsDdfR] [-d driver] [-r fps] [-t fontspec] "
+			printf("%s [-vgsDdR] [-d driver] [-r fps] [-t fontspec] "
 			       "[-w width] [-h height] "
 			       "[-T font-path] [-c colors.acs]\n",
 			       agProgName);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1320,10 +1320,9 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
 	SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
 
-	/* Toggle fullscreen if requested. */
-	if (AG_CfgBool("view.full-screen")) {
-		if (!SDL_WM_ToggleFullScreen(sfb->s))
-			AG_SetCfgBool("view.full-screen", 0);
+	if (flags & AG_VIDEO_FULLSCREEN) {
+		if (SDL_WM_ToggleFullScreen(sfb->s))
+			dsw->flags |= AG_DRIVER_SW_FULLSCREEN;
 	}
 	return (0);
 fail:
@@ -1383,10 +1382,12 @@ fail:
 static void
 SDLFB_CloseVideo(void *obj)
 {
+	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
 
-	if (AG_CfgBool("view.full-screen")) {
+	if (dsw->flags & AG_DRIVER_SW_FULLSCREEN) {
 		SDL_WM_ToggleFullScreen(sfb->s);
+		dsw->flags &= ~(AG_DRIVER_SW_FULLSCREEN);
 	}
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);

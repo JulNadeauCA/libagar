@@ -55,6 +55,7 @@ typedef struct ag_driver_sw {
 	Uint flags;
 #define AG_DRIVER_SW_OVERLAY	0x01	/* "Overlay" mode */
 #define AG_DRIVER_SW_BGPOPUP	0x02	/* Enable generic background popup */
+#define AG_DRIVER_SW_FULLSCREEN	0x04	/* Currently in full-screen mode */
 
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
 	struct ag_window *winLastKeydown; /* For keyboard processing */
