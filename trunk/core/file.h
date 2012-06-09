@@ -32,13 +32,25 @@ typedef struct ag_file_info {
 #define AG_FILE_SYSTEM		0x200
 } AG_FileInfo;
 
+typedef struct ag_file_ext_mapping {
+	const char *ext;			/* Extension */
+	const char *descr;			/* Type description */
+	void *cls;				/* Related Agar class */
+	int editDirect;				/* Directly editable */
+} AG_FileExtMapping;
+
 __BEGIN_DECLS
+AG_FileExtMapping *agFileExtMap;
+Uint               agFileExtCount;
+
 int AG_GetFileInfo(const char *, AG_FileInfo *);
 int AG_GetSystemTempDir(char *, size_t)
         BOUNDED_ATTRIBUTE(__string__, 1, 2);
 int AG_FileExists(const char *);
 int AG_FileDelete(const char *);
 const char *AG_ShortFilename(const char *);
+
+void AG_RegisterFileExtMappings(const AG_FileExtMapping *, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>
