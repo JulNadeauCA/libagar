@@ -36,8 +36,8 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-provides a consistent interface to filesystem operations which are
-implemented differently under different platforms.
+provides a consistent interface to basic filesystem operations (which may be
+implemented differently under different platforms).
 .Sh FILES
 .nr nS 1
 .Ft "int"
@@ -190,15 +190,56 @@ is in UTF-8 encoding.
 .Pp
 .Fn AG_CloseDir
 closes the given directory.
-.Sh MISCELLANEOUS
+.Sh UTILITY ROUTINES
 .nr nS 1
 .Ft "const char *"
 .Fn AG_ShortFilename "const char *path"
+.Pp
+.Ft void
+.Fn AG_RegisterFileExtMappings "const AG_FileExtMapping *map" "Uint count"
 .nr nS 0
 .Pp
 .Fn AG_ShortFilename
 returns a pointer to the first character of the last element of a pathname
 .Fa path .
+.Pp
+Agar maintains a general-purpose table mapping file extensions to Agar
+object classes.
+The
+.Fn AG_RegisterFileExtMappings
+function registers a set of new file extension descriptions.
+The
+.Fa map
+argument should point to an array containing up to
+.Fa count
+items:
+.Bd -literal
+typedef struct ag_file_ext_mapping {
+	const char *ext;
+	const char *descr;
+	void *cls;
+	int editDirect;
+} AG_FileExtMapping;
+.Ed
+.Pp
+The
+.Va ext
+member should be set to the file extension, including the leading dot.
+.Va descr
+is a short description string.
+The
+.Va cls
+pointer should be set to to an Agar object class (see
+.Xr AG_ObjectClass 3 )
+with a
+.Fn load
+function capable of loading files with the given extension.
+Set
+.Va editDirect
+to 1 to advise that objects of this class may be freely created, loaded
+from file and directly edited with the
+.Fa edit
+function of the class.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,

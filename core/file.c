@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,9 @@
 #include <core/xbox.h>
 #define INVALID_FILE_ATTRIBUTES -1
 #endif
+
+AG_FileExtMapping *agFileExtMap = NULL;
+Uint               agFileExtCount = 0;
 
 #ifdef _WIN32
 int
@@ -244,4 +247,22 @@ AG_ShortFilename(const char *p)
 
 	s = (const char *)strrchr(p, AG_PATHSEPCHAR);
 	return (s != NULL && s>p) ? &s[1] : p;
+}
+
+/* Register a set of file extensions mappings to object classes. */
+void
+AG_RegisterFileExtMappings(const AG_FileExtMapping *femNew, Uint count)
+{
+	AG_FileExtMapping *fem;
+	Uint i;
+
+	fem = Realloc(agFileExtMap,
+	    (agFileExtCount + count)*sizeof(AG_FileExtMapping));
+	for (i = 0; i < count; i++) {
+		memcpy(&fem[agFileExtCount+i],
+		       &femNew[i],
+		       sizeof(AG_FileExtMapping));
+	}
+	agFileExtMap = fem;
+	agFileExtCount += count;
 }
