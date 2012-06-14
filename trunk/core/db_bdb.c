@@ -67,6 +67,8 @@ Init(void *obj)
 
 	for (i = 0; i < bdbOptionCount; i++)
 		AG_SetInt(db, bdbOptions[i].name, 0);
+	
+	AG_SetInt(db, "db-create", 1);
 }
 
 static int
@@ -125,84 +127,95 @@ Sync(void *obj)
 }
 
 static int
-Exists(void *obj, AG_DbEntry *dbe)
+Exists(void *obj, const AG_Dbt *key)
 {
 	AG_DbHashBT *db = obj;
-	DBT key;
+	DBT dbKey;
 	int rv;
 	
-	memset(&key, 0, sizeof(DBT));
-	key.data = dbe->key;
-	key.size = dbe->keySize;
-	if ((rv = db->pDB->exists(db->pDB, NULL, &key, 0)) != DB_NOTFOUND) {
-		return (1);
-	}
-	return (0);
+	memset(&dbKey, 0, sizeof(DBT));
+	dbKey.data = Malloc(key->size);
+	memcpy(dbKey.data, key->data, key->size);
+	dbKey.size = key->size;
+
+	rv = db->pDB->exists(db->pDB, NULL, &dbKey, 0);
+	Free(dbKey.data);
+	return (rv != DB_NOTFOUND);
 }
 
 static int
-Get(void *obj, AG_DbEntry *dbe)
+Get(void *obj, const AG_Dbt *key, AG_Dbt *val)
 {
 	AG_DbHashBT *db = obj;
-	DBT key, data;
+	DBT dbKey, dbVal;
 	int rv;
 
-	memset(&key, 0, sizeof(DBT));
-	memset(&data, 0, sizeof(DBT));
-	key.data = dbe->key;
-	key.size = dbe->keySize;
-	if ((rv = db->pDB->get(db->pDB, NULL, &key, &data, 0)) != 0) {
-		AG_SetError("db_get: %s", db_strerror(rv));
+	memset(&dbKey, 0, sizeof(DBT));
+	if ((dbKey.data = TryMalloc(key->size)) == NULL) {
 		return (-1);
 	}
-	dbe->key = (void *)key.data;
-	dbe->keySize = (size_t)key.size;
-	dbe->data = (void *)data.data;
-	dbe->dataSize = (size_t)data.size;
-	return (0);
+	memcpy(dbKey.data, key->data, key->size);
+	dbKey.size = key->size;
+	
+	memset(&dbVal, 0, sizeof(DBT));
+	if ((rv = db->pDB->get(db->pDB, NULL, &dbKey, &dbVal, 0)) != 0) {
+		AG_SetError("db_get: %s", db_strerror(rv));
+	}
+	Free(dbKey.data);
+	val->data = dbVal.data;
+	val->size = dbVal.size;
+	return (rv != 0) ? -1 : 0;
 }
 		
 static int
-Put(void *obj, AG_DbEntry *dbe)
+Put(void *obj, const AG_Dbt *key, const AG_Dbt *val)
 {
 	AG_DbHashBT *db = obj;
-	DBT key, data;
+	DBT dbKey, dbVal;
 	int rv;
 
-	memset(&key, 0, sizeof(DBT));
-	key.data = dbe->key;
-	key.size = dbe->keySize;
-	memset(&data, 0, sizeof(DBT));
-	data.data = dbe->data;
-	data.size = dbe->dataSize;
-	if ((rv = db->pDB->put(db->pDB, NULL, &key, &data, 0)) != 0) {
-		AG_SetError("db_put: %s", db_strerror(rv));
+	memset(&dbKey, 0, sizeof(DBT));
+	if ((dbKey.data = TryMalloc(key->size)) == NULL) {
 		return (-1);
 	}
-	return (0);
+	memcpy(dbKey.data, key->data, key->size);
+	dbKey.size = key->size;
+
+	memset(&dbVal, 0, sizeof(DBT));
+	if ((dbVal.data = TryMalloc(val->size)) == NULL) {
+		Free(dbKey.data);
+		return (-1);
+	}
+	memcpy(dbVal.data, val->data, val->size);
+	dbVal.size = val->size;
+
+	if ((rv = db->pDB->put(db->pDB, NULL, &dbKey, &dbVal, 0)) != 0)
+		AG_SetError("db_put: %s", db_strerror(rv));
+
+	Free(dbKey.data);
+	Free(dbVal.data);
+	return (rv != 0) ? -1 : 0;
 }
 
 static int
-Del(void *obj, AG_DbEntry *dbe)
+Del(void *obj, const AG_Dbt *key)
 {
 	AG_DbHashBT *db = obj;
-	DBT key;
+	DBT dbKey;
 	int rv;
 
-#if 0
-	if ((rv = db->pDB->get(db->pDB, NULL, &key, &data, 0)) == DB_NOTFOUND) {
-		AG_SetError("db_del: No such entry");
+	memset(&dbKey, 0, sizeof(DBT));
+	if ((dbKey.data = TryMalloc(key->size)) == NULL) {
 		return (-1);
 	}
-#endif
-	memset(&key, 0, sizeof(DBT));
-	key.data = dbe->key;
-	key.size = dbe->keySize;
-	if ((rv = db->pDB->del(db->pDB, NULL, &key, 0)) != 0) {
+	memcpy(dbKey.data, key->data, key->size);
+	dbKey.size = key->size;
+
+	if ((rv = db->pDB->del(db->pDB, NULL, &dbKey, 0)) != 0) {
 		AG_SetError("DB Delete: %s", db_strerror(rv));
-		return (-1);
 	}
-	return (0);
+	Free(dbKey.data);
+	return (rv != 0) ? -1 : 0;
 }
 
 static int
@@ -210,22 +223,21 @@ Iterate(void *obj, AG_DbIterateFn fn, void *arg)
 {
 	AG_DbHashBT *db = obj;
 	DBC *c;
-	DBT key, data;
+	DBT dbk, dbv;
 	int rv;
 
 	db->pDB->cursor(db->pDB, NULL, &c, 0);
-	memset(&key, 0, sizeof(DBT));
-	memset(&data, 0, sizeof(DBT));
-	while ((rv = c->c_get(c, &key, &data, DB_NEXT)) == 0) {
-		AG_DbEntry dbe;
+	memset(&dbk, 0, sizeof(DBT));
+	memset(&dbv, 0, sizeof(DBT));
+	while ((rv = c->c_get(c, &dbk, &dbv, DB_NEXT)) == 0) {
+		AG_Dbt key, val;
 
-		dbe.db = (AG_Db *)db;
-		dbe.key = key.data;
-		dbe.keySize = key.size;
-		dbe.data = data.data;
-		dbe.dataSize = data.size;
+		key.data = dbk.data;
+		key.size = dbk.size;
+		val.data = dbv.data;
+		val.size = dbv.size;
 
-		if (fn(&dbe, arg) == -1) {
+		if (fn(&key, &val, arg) == -1) {
 			c->c_close(c);
 			return (-1);
 		}

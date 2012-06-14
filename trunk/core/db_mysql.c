@@ -144,19 +144,19 @@ Close(void *obj)
 }
 
 static __inline__ char *
-EncodeKey(AG_DbEntry *dbe)
+EncodeKey(const AG_Dbt *key)
 {
-	/* TODO */
-	return Strdup(dbe->key);
+	/* XXX: TODO */
+	return Strdup(key->data);
 }
 
 static int
-Exists(void *obj, AG_DbEntry *dbe)
+Exists(void *obj, const AG_Dbt *key)
 {
 	AG_DbMySQL *db = obj;
 	char *ks, *q;
 
-	ks = EncodeKey(dbe);
+	ks = EncodeKey(key);
 	Asprintf(&q, AG_GetStringP(db,"get-cmd"), ks);
 	Free(ks);
 	if (mysql_query(db->my, q) != 0) {
@@ -168,19 +168,19 @@ Exists(void *obj, AG_DbEntry *dbe)
 }
 
 static int
-Get(void *obj, AG_DbEntry *dbe)
+Get(void *obj, const AG_Dbt *key, AG_Dbt *val)
 {
 	return (-1);
 }
 		
 static int
-Put(void *obj, AG_DbEntry *dbe)
+Put(void *obj, const AG_Dbt *key, const AG_Dbt *val)
 {
 	return (-1);
 }
 
 static int
-Del(void *obj, AG_DbEntry *dbe)
+Del(void *obj, const AG_Dbt *key)
 {
 	return (-1);
 }

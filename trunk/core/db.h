@@ -6,21 +6,13 @@
 
 struct ag_db;
 
-/* Type of database */
-enum ag_db_type {
-	AG_DB_DUMMY,	/* No-op */
-	AG_DB_BTREE,	/* BDB: Sorted, balanced tree structure */
-	AG_DB_HASH,	/* BDB: Extended Linear Hashing */
-	AG_DB_LAST
-};
+/* Database data item (e.g., key or value) */
+typedef struct ag_dbt {
+	void *data;
+	size_t size;
+} AG_Dbt;
 
-typedef struct ag_db_entry {
-	struct ag_db *db;			/* Back pointer to Db */
-	void *key, *data;
-	size_t keySize, dataSize;
-} AG_DbEntry;
-
-typedef int (*AG_DbIterateFn)(AG_DbEntry *, void *);
+typedef int (*AG_DbIterateFn)(const AG_Dbt *key, const AG_Dbt *val, void *arg);
 
 typedef struct ag_db_class {
 	struct ag_object_class _inherit;
@@ -38,10 +30,10 @@ typedef struct ag_db_class {
 	int  (*open)(void *, const char *, Uint);
 	void (*close)(void *);
 	int  (*sync)(void *);
-	int  (*exists)(void *, AG_DbEntry *);
-	int  (*get)(void *, AG_DbEntry *);
-	int  (*put)(void *, AG_DbEntry *);
-	int  (*del)(void *, AG_DbEntry *);
+	int  (*exists)(void *, const AG_Dbt *);
+	int  (*get)(void *, const AG_Dbt *, AG_Dbt *);
+	int  (*put)(void *, const AG_Dbt *, const AG_Dbt *);
+	int  (*del)(void *, const AG_Dbt *);
 	int  (*iterate)(void *, AG_DbIterateFn, void *);
 } AG_DbClass;
 
@@ -69,52 +61,52 @@ int          AG_DbSync(AG_Db *);
 
 /* Test for existence of a key. */
 static __inline__ int
-AG_DbExists(AG_Db *db, AG_DbEntry *dbe)
+AG_DbExists(AG_Db *db, AG_Dbt *key)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
 
 	AG_ObjectLock(db);
-	rv = dbc->exists(db, dbe);
+	rv = dbc->exists(db, key);
 	AG_ObjectUnlock(db);
 	return (rv);
 }
 
-/* Get operation (BDB-style argument). */
+/* Retrieve a database entry. */
 static __inline__ int
-AG_DbGet(AG_Db *db, AG_DbEntry *dbe)
+AG_DbGet(AG_Db *db, const AG_Dbt *key, AG_Dbt *val)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
 
 	AG_ObjectLock(db);
-	rv = dbc->get(db, dbe);
+	rv = dbc->get(db, key, val);
 	AG_ObjectUnlock(db);
 	return (rv);
 }
 
-/* Put operation (BDB-style argument). */
+/* Write a database entry. */
 static __inline__ int
-AG_DbPut(AG_Db *db, AG_DbEntry *dbe)
+AG_DbPut(AG_Db *db, const AG_Dbt *key, const AG_Dbt *val)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
 
 	AG_ObjectLock(db);
-	rv = dbc->put(db, dbe);
+	rv = dbc->put(db, key, val);
 	AG_ObjectUnlock(db);
 	return (rv);
 }
 
-/* Delete operation (BDB-style argument). */
+/* Delete a database entry. */
 static __inline__ int
-AG_DbDel(AG_Db *db, AG_DbEntry *dbe)
+AG_DbDel(AG_Db *db, const AG_Dbt *key)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
 
 	AG_ObjectLock(db);
-	rv = dbc->del(db, dbe);
+	rv = dbc->del(db, key);
 	AG_ObjectUnlock(db);
 	return (rv);
 }
