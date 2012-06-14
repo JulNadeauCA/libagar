@@ -33,10 +33,6 @@
 #include <core/rmd160.h>
 #include <core/config.h>
 
-#ifdef AG_NETWORK
-#include <core/rcs.h>
-#endif
-
 #include <stdarg.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -1861,6 +1857,59 @@ fail:
 fail_unlock:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
+	return (-1);
+}
+
+/* Load an object from an AG_Db database entry. */
+int
+AG_ObjectLoadFromDB(void *obj, AG_Db *db, const AG_Dbt *key)
+{
+	AG_DataSource *ds;
+	AG_Dbt val;
+
+	if (AG_DbGet(db, key, &val) == -1) {
+		return (-1);
+	}
+	if ((ds = AG_OpenCore(val.data, val.size)) == NULL) {
+		return (-1);
+	}
+	if (AG_ObjectUnserialize(obj, ds) == -1) {
+		AG_CloseCore(ds);
+		return (-1);
+	}
+	return (0);
+}
+
+/* Archive an object to an AG_Db database entry. */
+int
+AG_ObjectSaveToDB(void *pObj, AG_Db *db, const AG_Dbt *key)
+{
+	AG_Object *obj = pObj;
+	AG_DataSource *ds;
+	AG_Dbt dbKey, dbVal;
+	int rv;
+
+	if ((ds = AG_OpenAutoCore()) == NULL)
+		return (-1);
+
+	AG_LockVFS(obj);
+	AG_ObjectLock(obj);
+	rv = AG_ObjectSerialize(obj, ds);
+	AG_ObjectUnlock(obj);
+	AG_UnlockVFS(obj);
+
+	if (rv == -1)
+		goto fail;
+
+	dbKey.data = obj->name;
+	dbKey.size = strlen(obj->name)+1;
+	dbVal.data = AG_CORE_SOURCE(ds)->data;
+	dbVal.size = AG_CORE_SOURCE(ds)->size;
+	rv = AG_DbPut(db, &dbKey, &dbVal);
+	AG_CloseAutoCore(ds);
+	return (rv);
+fail:
+	AG_CloseAutoCore(ds);
 	return (-1);
 }
 

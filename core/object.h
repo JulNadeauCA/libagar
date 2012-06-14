@@ -21,6 +21,8 @@
 
 struct ag_object;
 struct ag_event;
+struct ag_db;
+struct ag_dbt;
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
@@ -232,6 +234,8 @@ int	 AG_ObjectSaveToFile(void *, const char *);
 #define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
 void	 AG_ObjectSaveVariables(void *, AG_DataSource *);
+int      AG_ObjectLoadFromDB(void *, struct ag_db *, const struct ag_dbt *);
+int	 AG_ObjectSaveToDB(void *, struct ag_db *, const struct ag_dbt *);
 
 #define	 AG_ObjectLoad(p) AG_ObjectLoadFromFile((p),NULL)
 #define	 AG_ObjectLoadData(o,f) AG_ObjectLoadDataFromFile((o),(f),NULL)
