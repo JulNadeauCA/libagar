@@ -881,6 +881,9 @@ is passed, the dataset will be kept in memory.
 .Fn AG_ObjectLoadFromFile "AG_Object *obj" "const char *file"
 .Pp
 .Ft "int"
+.Fn AG_ObjectLoadFromDB "AG_Object *obj" "AG_Db *db" "const AG_Dbt *key"
+.Pp
+.Ft "int"
 .Fn AG_ObjectLoadData "AG_Object *obj"
 .Pp
 .Ft "int"
@@ -900,6 +903,9 @@ is passed, the dataset will be kept in memory.
 .Pp
 .Ft "int"
 .Fn AG_ObjectSaveToFile "AG_Object *obj" "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_ObjectSaveToDB "AG_Object *obj" "AG_Db *db" "const AG_Dbt *key"
 .Pp
 .Ft "int"
 .Fn AG_ObjectSerialize "AG_Object *obj" "AG_DataSource *ds"
@@ -923,39 +929,50 @@ is passed, the dataset will be kept in memory.
 .Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "size_t buf_len"
 .Pp
 .nr nS 0
-These functions implement archiving (or "serialization") of generic object
-information and arbitrary datasets to an efficient, machine-independent
-representation.
+These functions implement archiving (or "serialization") of the state of an
+.Nm
+instance to machine-independent binary format.
 .Pp
 The
-.Fn AG_ObjectLoad
-function (and its variants) are used to load the generic part or the dataset
-of either a single object or an object hierarchy, from archived data.
-.Fn AG_ObjectLoad
-invokes the
+.Fn AG_ObjectLoad*
+family of functions load the state of an Agar object from some binary data
+source.
+The generic
+.Nm
+state is loaded first, followed by the object's dataset (which is read
+by invoking the
 .Fn load
-operation of every class in the inheritance hierarchy of the object.
-.Pp
+operation for every class in the object's inheritance hierarchy).
+The
 .Fn AG_ObjectLoad ,
 .Fn AG_ObjectLoadGeneric
 and
 .Fn AG_ObjectLoadData
-look for the archive file in the default search path (using the
+functions look for an archive file in the default search path (using the
 .Sq load-path
 setting of
 .Xr AG_Config 3 ) .
-.Pp
+The
 .Fn AG_ObjectLoadFromFile ,
 .Fn AG_ObjectLoadGenericFromFile
 and
 .Fn AG_ObjectLoadDataFromFile
-will load the data from a specific file.
+variants attempt to load the object state from a specific file.
+The
+.Fn AG_ObjectLoadFromDB
+variant loads the object state from the given
+.Xr AG_Db 3
+database entry.
 .Pp
-Note that when loading object hierarchies, objects will need to be allocated
-and initialized from scratch.
-This functionality requires that all classes be registered with
-.Fn AG_RegisterClass .
-.Pp
+The
+.Fn AG_ObjectSave*
+family of functions serialize and save the state of the given object.
+The generic
+.Nm
+state is written first, followed by the object's dataset (which is written
+by invoking the
+.Fn save
+operation for every class in the object's inheritance hierarchy).
 The
 .Fn AG_ObjectSave
 function creates an archive of the given object in the default location
@@ -963,26 +980,23 @@ function creates an archive of the given object in the default location
 .Sq save-path
 setting of
 .Xr AG_Config 3 ) .
-.Fn AG_ObjectSave
-invokes the
-.Fn load
-operation of every class in the inheritance hierarchy of the object.
 The
 .Fn AG_ObjectSaveAll
-variant also saves the entire tree of child objects.
-.Pp
+variant saves the object's children as well as the object itself.
 .Fn AG_ObjectSaveToFile
-archives the given object to the specified file.
+archives the object to the specified file.
+.Fn AG_ObjectSaveToDB
+archives the object to the given
+.Xr AG_Db 3
+entry.
 .Pp
+The
 .Fn AG_ObjectSerialize
-writes an archive of the given object to the specified
+function writes an archive of the given object to the specified
 .Xr AG_DataSource 3 ,
 and
 .Fn AG_ObjectUnserialize
 reads an archive of the given object.
-Note that the
-.Dv AG_OBJECT_CHLD_AUTOSAVE
-feature will not work with these functions.
 .Pp
 The
 .Fn AG_ObjectReadHeader
