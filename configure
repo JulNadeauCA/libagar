@@ -9975,8 +9975,8 @@ echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10056,8 +10056,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-core-config"
-config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS}"
+config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
