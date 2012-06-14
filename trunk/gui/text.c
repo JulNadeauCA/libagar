@@ -362,6 +362,10 @@ AG_SetDefaultFont(AG_Font *font)
 	agTextFontAscent = font->ascent;
 	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
+	agTextState->font = font;
+	AG_SetCfgString("font.face", OBJECT(font)->name);
+	AG_SetCfgInt("font.size", font->size);
+	AG_SetCfgInt("font.flags", font->flags);
 	AG_MutexUnlock(&agTextLock);
 }
 
