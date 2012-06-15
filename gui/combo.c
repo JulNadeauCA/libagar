@@ -107,7 +107,7 @@ Expand(AG_Event *event)
 	if (expand) {
 		com->panel = AG_WindowNew(
 		    AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_DENYFOCUS|
-		    AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN);
+		    AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN|AG_WINDOW_MODAL);
 		AG_WindowSetPadding(com->panel, 0,0,0,0);
 		AG_ObjectSetName(com->panel, "_ComboPopup");
 		AG_ObjectAttach(com->panel, com->list);
