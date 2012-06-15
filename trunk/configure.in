@@ -476,6 +476,9 @@ if [ "${enable_nls}" = "yes" ]; then
 		echo "*"
 		exit 1
 	fi
+else
+	HUNDEF(HAVE_ICONV)
+	HUNDEF(HAVE_GETTEXT)
 fi
 
 #
