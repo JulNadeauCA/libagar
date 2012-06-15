@@ -8733,6 +8733,11 @@ fi;
 		echo "*"
 		exit 1
 	fi
+else
+echo "#undef HAVE_ICONV" >$BLD/include/agar/config/have_iconv.h
+echo "hdefs[\"HAVE_ICONV\"] = nil" >>configure.lua
+echo "#undef HAVE_GETTEXT" >$BLD/include/agar/config/have_gettext.h
+echo "hdefs[\"HAVE_GETTEXT\"] = nil" >>configure.lua
 fi
 if [ "${enable_math}" != "no" ]
  then
