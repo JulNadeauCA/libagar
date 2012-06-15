@@ -20,6 +20,7 @@ REGISTER("--enable-objdebug",		"Object system debugging [no]")
 REGISTER("--enable-threads",		"Thread safety [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
+REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
 REGISTER_SECTION("Options specific to AG_Db(3) interface:")
 REGISTER("--with-db4[=PREFIX]",		"Enable Berkeley DB backend [check]")
@@ -91,7 +92,6 @@ CHECK(getopt)
 CHECK(execvp)
 CHECK(clock_gettime)
 CHECK(clock_win32)
-CHECK(iconv)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)
@@ -468,6 +468,7 @@ HDEFINE(HISTORICAL_UNITS, "yes")
 
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = "yes" ]; then
+	CHECK(iconv)
 	CHECK(gettext, 0, ${prefix_gettext})
 	if [ "${HAVE_GETTEXT}" != "yes" ]; then
 		echo "*"
