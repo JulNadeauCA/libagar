@@ -156,22 +156,22 @@ The
 .Nm
 widget neither reacts to nor generates any event.
 .Sh EXAMPLES
-The following code fragment creates two rows of buttons, packed horizontally.
+The following code fragment packs two columns of buttons:
 .Pp
 .Bd -literal -offset indent
 AG_Window *win;
-AG_Box *boxVert, *boxRow[2];
+AG_Box *boxHoriz, *boxCol[2];
 int i;
 
 win = AG_WindowNew(0);
-boxVert = AG_BoxNewVert(win, AG_BOX_EXPAND);
-boxRow[0] = AG_BoxNewHoriz(boxVert, AG_BOX_EXPAND);
-boxRow[1] = AG_BoxNewHoriz(boxVert, AG_BOX_EXPAND);
+boxHoriz = AG_BoxNewVert(win, 0);
+boxCol[0] = AG_BoxNewHoriz(boxHoriz, 0);
+boxCol[1] = AG_BoxNewHoriz(boxHoriz, 0);
 
 for (i = 0; i < 5; i++)
-	AG_ButtonNew(boxRow[0], 0, "foo");
+	AG_ButtonNew(boxCol[0], 0, "In column 1");
 for (i = 0; i < 5; i++)
-	AG_ButtonNew(boxRow[1], 0, "bar");
+	AG_ButtonNew(boxCol[1], 0, "In column 2");
 
 AG_WindowShow(win);
 .Ed
