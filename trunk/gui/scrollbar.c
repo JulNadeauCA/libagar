@@ -362,19 +362,20 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
  * Decrement the value by the specified amount multiplied by iInc/rInc.
  */
 #define DECREMENT_INT(type)						\
-	if ((*(type *)pVal - ((type)sb->iInc)*v) < *(type *)pMin) 	\
+	if ((int)(*(type *)pVal - sb->iInc) < (int)*(type *)pMin) 	\
 		*(type *)pVal = *(type *)pMin;				\
-	else 								\
-		*(type *)pVal -= ((type)sb->iInc)*v
+	else { 								\
+		*(type *)pVal -= sb->iInc;				\
+	}
 
 #define DECREMENT_REAL(type)						\
-	if ((*(type *)pVal - ((type)v)*sb->rInc) < *(type *)pMin) 	\
+	if ((*(type *)pVal - sb->rInc) < *(type *)pMin) 		\
 		*(type *)pVal = *(type *)pMin;				\
 	else 								\
-		*(type *)pVal -= ((type)v)*sb->rInc
+		*(type *)pVal -= sb->rInc
 
 static void
-Decrement(AG_Scrollbar *sb, int v)
+Decrement(AG_Scrollbar *sb)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
@@ -395,8 +396,9 @@ Decrement(AG_Scrollbar *sb, int v)
 	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
 	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
-	default:					break;
-	} 
+	default:						break;
+	}
+
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
 	AG_UnlockVariable(bVis);
 	AG_UnlockVariable(bMax);
@@ -411,21 +413,21 @@ Decrement(AG_Scrollbar *sb, int v)
  * Increment the value by the specified amount multiplied by iInc/rInc.
  */
 #define INCREMENT_INT(type)						\
-	if ((*(type *)pVal + ((type)sb->iInc)*v) >			\
-	    (*(type *)pMax - *(type *)pVis)) 				\
+	if ((int)(*(type *)pVal + sb->iInc) >				\
+	    (int)(*(type *)pMax - *(type *)pVis)) 				\
 		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
 	else 								\
-		*(type *)pVal += ((type)sb->iInc)*v
+		*(type *)pVal += sb->iInc
 
 #define INCREMENT_REAL(type)						\
-	if ((*(type *)pVal + ((type)v)*sb->rInc) >			\
+	if ((*(type *)pVal + sb->rInc) >				\
 	    (*(type *)pMax - *(type *)pVis)) 				\
 		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
 	else 								\
-		*(type *)pVal += ((type)v)*sb->rInc
+		*(type *)pVal += sb->rInc
 
 static void
-Increment(AG_Scrollbar *sb, int v)
+Increment(AG_Scrollbar *sb)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
@@ -505,7 +507,7 @@ MouseButtonDown(AG_Event *event)
 		if (sb->buttonDecFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
-			Decrement(sb, 1);
+			Decrement(sb);
 			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
@@ -519,7 +521,7 @@ MouseButtonDown(AG_Event *event)
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
-			Increment(sb, 1);
+			Increment(sb);
 			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
@@ -567,10 +569,10 @@ ScrollTimeout(void *obj, Uint32 ival, void *arg)
 
 	switch (sb->curBtn) {
 	case AG_SCROLLBAR_BUTTON_DEC:
-		Decrement(sb, 1);
+		Decrement(sb);
 		break;
 	case AG_SCROLLBAR_BUTTON_INC:
-		Increment(sb, 1);
+		Increment(sb);
 		break;
 	default:
 		break;
@@ -587,13 +589,13 @@ KeyDown(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
-		Decrement(sb, 1);
+		Decrement(sb);
 		AG_DelTimeout(sb, &sb->incTo);
 		AG_ScheduleTimeout(sb, &sb->decTo, agKbdDelay);
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
-		Increment(sb, 1);
+		Increment(sb);
 		AG_DelTimeout(sb, &sb->decTo);
 		AG_ScheduleTimeout(sb, &sb->incTo, agKbdDelay);
 		break;
@@ -622,7 +624,7 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Scrollbar *sb = obj;
-	Increment(sb, 1);
+	Increment(sb);
 	return (agKbdRepeat);
 }
 
@@ -630,7 +632,7 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Scrollbar *sb = obj;
-	Decrement(sb, 1);
+	Decrement(sb);
 	return (agKbdRepeat);
 }
 
