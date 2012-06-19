@@ -13,7 +13,7 @@
 #include <string.h>
 
 int vInt = 50000, minInt = -100000, maxInt = 100000, visInt = 0;
-unsigned vUint = 0, minUint = -5, maxUint = 5, visUint = 0;
+unsigned vUint = 0, minUint = 0, maxUint = 10, visUint = 0;
 Sint8 v8 = 100, min8 = -100, max8 = 100, vis8 = 0;
 Uint32 v32 = 1234, min32 = 1, max32 = 1000000, vis32 = 0;
 float vFlt = 1.0, minFlt = 0.0, maxFlt = 10.0, visFlt = 0.0;
@@ -33,7 +33,8 @@ CreateWindow(void)
 	    &vInt);
 	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &vInt, &minInt, &maxInt, &visInt);
-	
+	AG_ScrollbarSetIntIncrement(sb, 100);
+
 	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
 	    "Uint binding: %d", &vUint);
 	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, AG_LABEL_HFILL,
