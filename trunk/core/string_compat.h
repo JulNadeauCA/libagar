@@ -85,7 +85,7 @@ int         AG_StrlcpyUint(char *, Uint, size_t)
 int         AG_StrlcatUint(char *, Uint, size_t)
                            BOUNDED_ATTRIBUTE(__string__, 1, 3);
 
-Uint32	*AG_ImportUnicode(const char *, const char *, size_t *);
+Uint32	*AG_ImportUnicode(const char *, const char *, size_t *, size_t *);
 int      AG_ExportUnicode(const char *, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
 size_t	 AG_CopyUnicode(const char *, const char *, Uint32 *, size_t);
