@@ -51,11 +51,11 @@ typedef struct ag_editable {
 	char string[AG_EDITABLE_STRING_MAX]; /* Default "string" binding */
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
+	int sel;			/* Selection offset / range */
+	int selDblClick;		/* Double click position */
 	Uint32 compose;			/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
 	int xCursPref;			/* "Preferred" cursor position */
-	int sel_x1, sel_x2;		/* Selection points */
-	int sel_edit;			/* Point being edited */
 	AG_Timeout toDelay;		/* Pre-repeat delay timer */
 	AG_Timeout toRepeat;		/* Repeat timer */
 	AG_Timeout toCursorBlink;	/* Cursor blink timer */

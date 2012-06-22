@@ -128,6 +128,7 @@ const char *agColorNames[] = {
 	N_("Socket highlight"),
 	N_("Progress bar"),
 	N_("Window border"),
+	N_("Text selection"),
 };
 
 /* Initialize the standard palette. */
@@ -216,6 +217,7 @@ AG_ColorsInit(void)
 	agColors[SOCKET_HIGHLIGHT_COLOR] = AG_ColorRGB(200, 0, 0);
 	agColors[PROGRESS_BAR_COLOR] = AG_ColorRGB(50, 50, 120);
 	agColors[WINDOW_BORDER_COLOR] = AG_ColorRGB(100, 100, 100);
+	agColors[TEXT_SEL_COLOR] = AG_ColorRGB(0, 0, 100);
 }
 
 #define AG_WriteRGBShift(ds,v) do {	\
