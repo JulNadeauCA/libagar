@@ -175,10 +175,17 @@ CreateWindow(void)
 
 	/*
 	 * Textbox is a single or multiline text edition widget. It can bind
-	 * to a fixed-size buffer and supports UTF-8.
+	 * to fixed-size or dynamically-sized buffers in any character set
+	 * encoding.
 	 */
-	tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "Enter text: ");
+	{
+		char buffer[30];
+
+		AG_Strlcpy(buffer, "Foo bar baz bezo", sizeof(buffer));
+		tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
+		    "Enter text: ");
+		AG_TextboxBindUTF8(tbox, buffer, sizeof(buffer));
+	}
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
