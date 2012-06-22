@@ -386,7 +386,7 @@ AG_Strcasestr(const char *s, const char *find)
 
 static Uint32 *
 ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
-    size_t *pOutSize)
+    size_t *pOutLen, size_t *pOutSize)
 {
 	Uint32 *ucs, *ucsNew;
 	const char *inPtr = s;
@@ -410,7 +410,7 @@ ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
 	iconv_close(cd);
 
 	outSize = (wrPtr - (char *)ucs)/sizeof(Uint32);
-	if (pOutSize != NULL) { *pOutSize = outSize; }
+	if (pOutLen != NULL) { *pOutLen = outSize; }
 		
 	/* Shrink the buffer down to the actual string length. */
 	ucsNew = TryRealloc(ucs, (outSize+1)*sizeof(Uint32));
@@ -419,6 +419,7 @@ ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
 	}
 	ucs = ucsNew;
 	ucs[outSize] = '\0';
+	if (pOutSize != NULL) { *pOutSize = (outSize+1)*sizeof(Uint32); }
 	return (ucs);
 fail:
 	Free(ucs);
@@ -429,18 +430,21 @@ fail:
 
 /*
  * Return an internal UCS-4 buffer from the given string and specified
- * encoding. If pOutSize is non-NULL, return the number of characters
- * converted.
+ * encoding. Optionally returns number of characters converted in
+ * pOutLen, and allocated buffer size in pOutSize.
  */
 Uint32 *
-AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
+AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutLen,
+    size_t *pOutSize)
 {
 	Uint32 *ucs;
 	size_t i, j;
 	size_t sLen = strlen(s);
+	size_t bufLen;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
-		if ((ucs = TryMalloc((AG_LengthUTF8(s)+1)*sizeof(Uint32))) == NULL) {
+		bufLen = (AG_LengthUTF8(s) + 1)*sizeof(Uint32);
+		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
 		}
 		for (i = 0, j = 0; i < sLen; i++, j++) {
@@ -484,19 +488,22 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutSize)
 			}
 		}
 		ucs[j] = '\0';
-		if (pOutSize != NULL) { *pOutSize = j; }
+		if (pOutLen != NULL) { *pOutLen = j; }
+		if (pOutSize != NULL) { *pOutSize = bufLen; }
 	} else if (strcmp(encoding, "US-ASCII") == 0) {
-		if ((ucs = TryMalloc((sLen+1)*sizeof(Uint32))) == NULL) {
+		bufLen = (sLen + 1)*sizeof(Uint32);
+		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
 		}
 		for (i = 0; i < sLen; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
 		ucs[i] = '\0';
-		if (pOutSize != NULL) { *pOutSize = i; }
+		if (pOutLen != NULL) { *pOutLen = i; }
+		if (pOutSize != NULL) { *pOutSize = bufLen; }
 	} else {
 #ifdef HAVE_ICONV
-		ucs = ImportUnicodeICONV(encoding, s, sLen, pOutSize);
+		ucs = ImportUnicodeICONV(encoding, s, sLen, pOutLen, pOutSize);
 #else
 		AG_SetError("Unknown encoding: %s (no iconv support)", encoding);
 		return (NULL);
@@ -578,7 +585,7 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 				AG_SetError("Bad UCS-4 character");
 				return (-1);
 			}
-			if (len+chlen+1 >= dstSize) {
+			if (len+chlen+1 > dstSize) {
 				AG_SetError("Out of space");
 				return (-1);
 			}
