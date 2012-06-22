@@ -41,55 +41,41 @@
 #include "keymap.h"
 #include "primitive.h"
 #include "cursors.h"
-
-#ifdef AG_DEBUG
-#include "numerical.h"
-#include "separator.h"
-#endif
+#include "gui_math.h"
 
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 
-/* Return a new working buffer (non-exclusive mode). */
-static AG_EditableBuffer *
-GetBufferShared(AG_Editable *ed)
+/* Initialize a working buffer for an AG_Text element. */
+static int
+GetBufferText(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	AG_EditableBuffer *buf;
+	AG_Text *txt;
 
-	if ((buf = TryMalloc(sizeof(AG_EditableBuffer))) == NULL) {
-		return (NULL);
-	}
-	if (AG_Defined(ed, "text")) {
-		AG_Text *txt;
-		AG_TextEnt *te;
+	buf->var = AG_GetVariable(ed, "text", &txt);
+	buf->reallocable = 1;
+	AG_MutexLock(&txt->lock);
 
-		buf->var = AG_GetVariable(ed, "text", &txt);
-		te = &txt->ent[txt->lang];
-		buf->reallocable = 1;
-		AG_MutexLock(&txt->lock);
+	if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
+	    buf->s == NULL) {
+		AG_TextEnt *te = &txt->ent[txt->lang];
+
 		if (te->buf != NULL) {
-			buf->s = AG_ImportUnicode("UTF-8", te->buf, &buf->len);
+			buf->s = AG_ImportUnicode("UTF-8", te->buf,
+			    &buf->len, &buf->maxLen);
 		} else {
 			if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
 				buf->s[0] = (Uint32)'\0';
 			}
 			buf->len = 0;
 		}
-	} else {
-		char *s;
-	
-		buf->var = AG_GetVariable(ed, "string", &s);
-		buf->reallocable = 0;
-		buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len);
+		if (buf->s == NULL) {
+			AG_MutexUnlock(&txt->lock);
+			return (-1);
+		}
 	}
-	if (buf->s == NULL) {
-		AG_UnlockVariable(buf->var);
-		Free(buf);
-		return (NULL);
-	}
-	buf->maxLen = (buf->len+1)*sizeof(Uint32);
-	return (buf);
+	return (0);
 }
 
 /*
@@ -101,46 +87,33 @@ GetBuffer(AG_Editable *ed)
 {
 	AG_EditableBuffer *buf;
 
-	if ((ed->flags & AG_EDITABLE_EXCL) == 0)
-		return GetBufferShared(ed);
-
-	/*
-	 * Exclusive mode: We can assume the string has not changed
-	 * externally, and reuse the same static working buffer.
-	 */
-	buf = &ed->sBuf;
-		
+	if (ed->flags & AG_EDITABLE_EXCL) {
+		buf = &ed->sBuf;
+	} else {
+		if ((buf = TryMalloc(sizeof(AG_EditableBuffer))) == NULL)
+			return (NULL);
+	}
 	if (AG_Defined(ed, "text")) {
-		AG_Text *txt;
-
-		buf->var = AG_GetVariable(ed, "text", &txt);
-		buf->reallocable = 1;
-		AG_MutexLock(&txt->lock);
-
-		if (buf->s == NULL) {			/* Import once */
-			AG_TextEnt *te = &txt->ent[txt->lang];
-			buf->s = AG_ImportUnicode("UTF-8", te->buf, &buf->len);
-			if (buf->s == NULL) {
-				AG_MutexUnlock(&txt->lock);
-				goto fail;
-			}
-		}
+		if (GetBufferText(ed, buf) == -1)
+			goto fail;
 	} else {
 		char *s;
 
 		buf->var = AG_GetVariable(ed, "string", &s);
 		buf->reallocable = 0;
 
-		if (buf->s == NULL) {			/* Import once */
-			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len);
+		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
+		    buf->s == NULL) {
+			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len,
+			    &buf->maxLen);
 			if (buf->s == NULL)
 				goto fail;
 		}
 	}
-	buf->maxLen = (buf->len + 1)*sizeof(Uint32);
 	return (buf);
 fail:
 	AG_UnlockVariable(buf->var);
+	if ((ed->flags & AG_EDITABLE_EXCL) == 0) { Free(buf); }
 	return (NULL);
 }
 
@@ -180,7 +153,7 @@ CommitBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 	AG_PostEvent(NULL, ed, "editable-postchg", NULL);
 	return;
 fail:
-	Verbose(_("CommitBuffer: %s; ignoring\n"), AG_GetError());
+	Verbose("CommitBuffer: %s; ignoring\n", AG_GetError());
 }
 
 /* Release the working buffer. */
@@ -200,7 +173,6 @@ ReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 		Free(buf);
 	}
 }
-
 
 AG_Editable *
 AG_EditableNew(void *parent, Uint flags)
@@ -492,6 +464,7 @@ LostFocus(AG_Event *event)
 	AG_DelTimeout(ed, &ed->toCursorBlink);
 	ed->flags &= ~(AG_EDITABLE_BLINK_ON|AG_EDITABLE_CURSOR_MOVING);
 	AG_UnlockTimeouts(ed);
+	AG_CancelEvent(ed, "dblclick-expire");
 	
 	AG_Redraw(ed);
 }
@@ -701,6 +674,7 @@ AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 
 	AG_ObjectLock(ed);
 	rv = AG_EditableMapPosition(ed, mx, my, &ed->pos, absflag);
+	ed->sel = 0;
 	if (rv == -1) {
 		ed->pos = 0;
 	} else if (rv == 1) {
@@ -736,6 +710,7 @@ AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 
 	AG_ObjectLock(ed);
 	ed->pos = pos;
+	ed->sel = 0;
 	if (ed->pos < 0) {
 		AG_EditableBuffer *buf;
 
@@ -760,10 +735,17 @@ Draw(void *obj)
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_DriverClass *drvOps = WIDGET(ed)->drvOps;
 	AG_EditableBuffer *buf;
+	AG_Rect2 rClip;
 	int i, dx, dy, x, y;
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
+
+	rClip = WIDGET(ed)->rView;
+	rClip.x1 -= agTextFontHeight*2;	/* XXX largest character width */
+	rClip.y1 -= agTextFontLineSkip;
+	rClip.x2 += agTextFontHeight*2;
+	rClip.y2 += agTextFontLineSkip;
 
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, ed->r);
@@ -781,9 +763,11 @@ Draw(void *obj)
 		AG_Glyph *gl;
 		Uint32 c = buf->s[i];
 
-		if (i == ed->pos && AG_WidgetIsFocused(ed)) {
-			if ((ed->flags & AG_EDITABLE_BLINK_ON) &&
-			    ed->y >= 0 && ed->y <= ed->yMax-1) {
+		if (i == ed->pos) {
+			if (ed->sel == 0 &&
+			    (ed->flags & AG_EDITABLE_BLINK_ON) &&
+			    (ed->y >= 0 && ed->y <= ed->yMax-1) &&
+			    AG_WidgetIsFocused(ed)) {
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
 				    (y + agTextFontLineSkip - 1),
@@ -796,6 +780,7 @@ Draw(void *obj)
 			}
 			ed->yCurs = y/agTextFontLineSkip + ed->y;
 		}
+
 		if (i == buf->len)
 			break;
 
@@ -812,6 +797,14 @@ Draw(void *obj)
 			x = 0;
 			continue;
 		} else if (c == '\t') {
+			if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
+			    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+				AG_DrawRectFilled(ed,
+				    AG_RECT(x - ed->x, y,
+				            agTextTabWidth+1,
+					    agTextFontLineSkip+1),
+				    agColors[TEXT_SEL_COLOR]);
+			}
 			x += agTextTabWidth;
 			continue;
 		}
@@ -820,10 +813,16 @@ Draw(void *obj)
 		gl = AG_TextRenderGlyph(drv, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
 		dy = WIDGET(ed)->rView.y1 + y;
-	
-		if (!AG_RectInside2(&WIDGET(ed)->rView, dx, dy)) {
+
+		if (!AG_RectInside2(&rClip, dx, dy)) {
 			x += gl->advance;
 			continue;
+		}
+		if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
+		    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+			AG_DrawRectFilled(ed,
+			    AG_RECT(x - ed->x, y, gl->su->w + 1, gl->su->h),
+			    agColors[TEXT_SEL_COLOR]);
 		}
 		drvOps->drawGlyph(drv, gl, dx,dy);
 		x += gl->advance;
@@ -1019,6 +1018,44 @@ KeyUp(AG_Event *event)
 }
 
 static void
+MouseDoubleClick(AG_Editable *ed)
+{
+	AG_EditableBuffer *buf;
+	Uint32 *c;
+
+	AG_CancelEvent(ed, "dblclick-expire");
+	ed->selDblClick = -1;
+
+	if ((buf = GetBuffer(ed)) == NULL) {
+		return;
+	}
+	if (ed->pos >= 0 && ed->pos < buf->len) {
+		ed->sel = 0;
+
+		c = &buf->s[ed->pos];
+		if (*c == (Uint32)('\n')) {
+			goto out;
+		}
+		for (;
+		     ed->pos > 0;
+		     ed->pos--, c--) {
+			if (isspace((char)*c) && ed->pos < buf->len) {
+				c++;
+				ed->pos++;
+				break;
+			}
+		}
+		while ((ed->pos + ed->sel) < buf->len &&
+		    !isspace((char)*c)) {
+			c++;
+			ed->sel++;
+		}
+	}
+out:
+	ReleaseBuffer(ed, buf);
+}
+
+static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
@@ -1034,6 +1071,15 @@ MouseButtonDown(AG_Event *event)
 		mx += ed->x;
 		AG_EditableMoveCursor(ed, mx, my, 0);
 		ed->flags |= AG_EDITABLE_MARKPREF;
+
+		if (ed->selDblClick != -1 &&
+		    Fabs(ed->selDblClick - ed->pos) <= 1) {
+			MouseDoubleClick(ed);
+		} else {
+			ed->selDblClick = ed->pos;
+			AG_SchedEvent(NULL, ed, agMouseDblclickDelay,
+			    "dblclick-expire", NULL);
+		}
 		break;
 	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
@@ -1079,16 +1125,17 @@ MouseMotion(AG_Event *event)
 	AG_Editable *ed = AG_SELF();
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
+	int newPos;
 
 	if (!AG_WidgetIsFocused(ed))
 		return;
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
 		return;
 
-	mx += ed->x;
-	AG_EditableMoveCursor(ed, mx, my, 1);
-	ed->flags |= AG_EDITABLE_MARKPREF;
-	AG_Redraw(ed);
+	if (AG_EditableMapPosition(ed, mx, my, &newPos, 0) == 0) {
+		ed->sel = newPos - ed->pos;
+		AG_Redraw(ed);
+	}
 }
 
 /*
@@ -1106,7 +1153,8 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 	}
 	if (text != NULL) {
 		Free(buf->s);
-		if ((buf->s = AG_ImportUnicode("UTF-8", text, &buf->len)) != NULL) {
+		buf->s = AG_ImportUnicode("UTF-8", text, &buf->len, &buf->maxLen);
+		if (buf->s != NULL) {
 			ed->pos = buf->len;
 		} else {
 			buf->len = 0;
@@ -1118,6 +1166,7 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 			buf->len = 0;
 		}
 	}
+	ed->sel = 0;
 	CommitBuffer(ed, buf);
 	ReleaseBuffer(ed, buf);
 out:
@@ -1153,7 +1202,8 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 		va_end(ap);
 
 		Free(buf->s);
-		if ((buf->s = AG_ImportUnicode("UTF-8", s, &buf->len)) != NULL) {
+		buf->s = AG_ImportUnicode("UTF-8", s, &buf->len, &buf->maxLen);
+		if (buf->s != NULL) {
 			ed->pos = buf->len;
 		} else {
 			buf->len = 0;
@@ -1162,6 +1212,7 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 		s[0] = '\0';
 		ed->pos = 0;
 	}
+	ed->sel = 0;
 	CommitBuffer(ed, buf);
 	ReleaseBuffer(ed, buf);
 out:
@@ -1256,6 +1307,13 @@ AG_EditableDbl(AG_Editable *ed)
 }
 
 static void
+DoubleClickTimeout(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	ed->selDblClick = -1;
+}
+
+static void
 Init(void *obj)
 {
 	AG_Editable *ed = obj;
@@ -1269,9 +1327,8 @@ Init(void *obj)
 
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
-	ed->sel_x1 = 0;
-	ed->sel_x2 = 0;
-	ed->sel_edit = 0;
+	ed->sel = 0;
+	ed->selDblClick = -1;
 	ed->compose = 0;
 	ed->wPre = 0;
 	ed->hPre = agTextFontLineSkip + 2;
@@ -1306,6 +1363,7 @@ Init(void *obj)
 	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
 	AG_AddEvent(ed, "widget-hidden", LostFocus, NULL);
+	AG_SetEvent(ed, "dblclick-expire", DoubleClickTimeout, NULL);
 
 	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);
@@ -1317,12 +1375,10 @@ Init(void *obj)
 
 #ifdef AG_DEBUG
 	AG_BindInt(ed, "pos", &ed->pos);
+	AG_BindInt(ed, "sel", &ed->sel);
 	AG_BindInt(ed, "xCurs", &ed->xCurs);
 	AG_BindInt(ed, "yCurs", &ed->yCurs);
 	AG_BindInt(ed, "xCursPref", &ed->xCursPref);
-	AG_BindInt(ed, "sel_x1", &ed->sel_x1);
-	AG_BindInt(ed, "sel_x2", &ed->sel_x2);
-	AG_BindInt(ed, "sel_edit", &ed->sel_edit);
 	AG_BindInt(ed, "x", &ed->x);
 	AG_BindInt(ed, "xMax", &ed->xMax);
 	AG_BindInt(ed, "y", &ed->y);

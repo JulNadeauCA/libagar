@@ -237,7 +237,7 @@ AG_TextRender(const char *text)
 	Uint32 *ucs;
 	AG_Surface *su;
 	
-	if ((ucs = AG_ImportUnicode("UTF-8", text, 0)) != NULL) {
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
 		su = AG_TextRenderUCS4(ucs);
 		AG_Free(ucs);
 		return (su);

@@ -48,22 +48,51 @@ static char     killRingEnc[32] = { '\0' };
 static int
 GrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins, size_t nIns)
 {
-	size_t maxLenNew;
+	size_t ucsSize;		/* UCS-4 buffer size in bytes */
+	size_t convLen;		/* Converted string length in bytes */
 	Uint32 *sNew;
 
-	maxLenNew = (buf->len + nIns + 1)*sizeof(Uint32);
-	
-	if (!buf->reallocable && maxLenNew > buf->var->info.size)
-		return (-1);
+	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
 
-	if (maxLenNew >= buf->maxLen) {
-		if ((sNew = TryRealloc(buf->s, maxLenNew)) == NULL) {
+	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
+		convLen = AG_LengthUTF8FromUCS4(buf->s) +
+		          AG_LengthUTF8FromUCS4(ins) + 1;
+	} else {
+		/* TODO Proper estimates for other charsets */
+		convLen = ucsSize;
+	}
+	
+	if (!buf->reallocable) {
+		if (convLen > buf->var->info.size) {
+			AG_SetError("%u > %u bytes", (Uint)convLen, (Uint)buf->var->info.size);
+			return (-1);
+		}
+	}
+	if (ucsSize > buf->maxLen) {
+		if ((sNew = TryRealloc(buf->s, ucsSize)) == NULL) {
 			return (-1);
 		}
 		buf->s = sNew;
-		buf->maxLen = maxLenNew;
+		buf->maxLen = ucsSize;
 	}
 	return (0);
+}
+
+static void
+KillSelection(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (ed->sel < 0) {
+		ed->pos += ed->sel;
+		ed->sel = -(ed->sel);
+	}
+	if (ed->pos + ed->sel == buf->len) {
+		buf->s[ed->pos] = '\0';
+	} else {
+		memmove(&buf->s[ed->pos], &buf->s[ed->pos + ed->sel],
+		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(Uint32));
+	}
+	buf->len -= ed->sel;
+	ed->sel = 0;
 }
 
 static int
@@ -118,21 +147,25 @@ InsertUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	}
 	ins[nIns] = '\0';
 
-	if (GrowBuffer(ed, buf, ins, (size_t)nIns) == -1)
+	if (ed->sel != 0) {
+		KillSelection(ed, buf);
+	}
+	if (GrowBuffer(ed, buf, ins, (size_t)nIns) == -1) {
+		Verbose("Insert Failed: %s\n", AG_GetError());
 		return (0);
+	}
 
 	if (ed->pos == buf->len) {				/* Append */
-		for (i = 0; i < nIns; i++) {
+		for (i = 0; i < nIns; i++)
 			buf->s[buf->len + i] = ins[i];
-		}
 	} else {						/* Insert */
 		memmove(&buf->s[ed->pos + nIns], &buf->s[ed->pos],
 		       (buf->len - ed->pos)*sizeof(Uint32));
 		for (i = 0; i < nIns; i++)
 			buf->s[ed->pos + i] = ins[i];
 	}
-	buf->s[buf->len + nIns] = '\0';
 	buf->len += nIns;
+	buf->s[buf->len] = '\0';
 	ed->pos += nIns;
 	return (1);
 }
@@ -148,34 +181,29 @@ DeleteUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	if (buf->len == 0)
 		return (0);
 
-	switch (keysym) {
-	case AG_KEY_BACKSPACE:
-		if (ed->pos == 0) {
+	if (ed->sel == 0) {
+		if (keysym == AG_KEY_BACKSPACE && ed->pos == 0) {
 			return (0);
 		}
 		if (ed->pos == buf->len) { 
-			buf->s[buf->len - 1] = '\0';
 			ed->pos--;
+			buf->s[--buf->len] = '\0';
 			return (1);
 		}
-		ed->pos--;
-		break;
-	case AG_KEY_DELETE:
-		if (ed->pos == buf->len) {
-			buf->s[buf->len - 1] = '\0';
+		if (keysym == AG_KEY_BACKSPACE) {
 			ed->pos--;
-			return (1);
 		}
-		break;
-	default:
-		break;
+		for (c = &buf->s[ed->pos];
+		     c < &buf->s[buf->len + 1];
+		     c++) {
+			*c = c[1];
+			if (*c == '\0')
+				break;
+		}
+		buf->len--;
+	} else {
+		KillSelection(ed, buf);
 	}
-	for (c = &buf->s[ed->pos]; c < &buf->s[buf->len + 1]; c++) {
-		*c = c[1];
-		if (*c == '\0')
-			break;
-	}
-	buf->len--;
 	return (1);
 }
 
@@ -220,7 +248,7 @@ KillUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 		memmove(&buf->s[ed->pos], &buf->s[ed->pos + lenKill],
 		    (buf->len - lenKill + 1 - ed->pos)*sizeof(Uint32));
 	}
-	buf->len = AG_LengthUCS4(buf->s);
+	buf->len -= lenKill;
 	return (1);
 }
 
@@ -242,8 +270,10 @@ YankUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 	    strcmp(ed->encoding, killRingEnc) != 0) {	/* XXX TODO conv */
 		goto fail;
 	}
-	if (GrowBuffer(ed, buf, killRing, killRingLen) == -1)
+	if (GrowBuffer(ed, buf, killRing, killRingLen) == -1) {
+		Verbose("Yank Failed: %s\n", AG_GetError());
 		goto fail;
+	}
 
 	/* XXX TODO: handle other charsets */
 	if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {

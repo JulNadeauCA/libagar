@@ -1168,7 +1168,7 @@ AG_TextSize(const char *text, int *w, int *h)
 		if (h != NULL) { *h = 0; }
 		return;
 	}
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL)) != NULL) {
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
 		AG_TextSizeUCS4(ucs, w, h);
 		Free(ucs);
 	} else {
@@ -1187,7 +1187,7 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 {
 	Uint32 *ucs;
 
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL)) != NULL) {
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
 		AG_TextSizeMultiUCS4(ucs, w, h, wLines, nLines);
 		Free(ucs);
 	} else {
