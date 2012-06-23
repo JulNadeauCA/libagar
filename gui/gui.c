@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -170,6 +170,7 @@ AG_InitGUIGlobals(void)
 
 	AG_InitGlobalKeys();
 	AG_LabelInitFormats();
+	AG_EditableInitClipboards();
 
 	agSurfaceFmt = AG_PixelFormatRGBA(32,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -199,6 +200,7 @@ AG_DestroyGUIGlobals(void)
 
 	AG_LabelDestroyFormats();
 	AG_DestroyGlobalKeys();
+	AG_EditableDestroyClipboards();
 	
 	AG_UnregisterClass(&agDriverClass);
 	AG_UnregisterClass(&agDriverSwClass);

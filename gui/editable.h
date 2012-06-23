@@ -21,6 +21,14 @@ typedef struct ag_editable_buffer {
 	int reallocable;		/* Buffer can be realloc'd */
 } AG_EditableBuffer;
 
+/* Internal clipboard for copy/paste and kill/yank */
+typedef struct ag_editable_clipboard {
+	AG_Mutex lock;
+	char encoding[32];		/* Character set encoding */
+	Uint32 *s;			/* UCS-4 buffer */
+	size_t len;			/* Length in characters */
+} AG_EditableClipboard;
+
 typedef struct ag_editable {
 	struct ag_widget wid;
 	
@@ -81,6 +89,8 @@ typedef struct ag_editable {
 
 __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;
+extern AG_EditableClipboard agEditableClipbrd;
+extern AG_EditableClipboard agEditableKillring;
 
 AG_Editable *AG_EditableNew(void *, Uint);
 void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
@@ -113,6 +123,9 @@ size_t   AG_EditableCopyString(AG_Editable *, char *, size_t)
 int      AG_EditableInt(AG_Editable *);
 float    AG_EditableFlt(AG_Editable *);
 double   AG_EditableDbl(AG_Editable *);
+
+void     AG_EditableInitClipboards(void);
+void     AG_EditableDestroyClipboards(void);
 
 #ifdef AG_LEGACY
 # define AG_EditableSetStatic AG_EditableSetExcl
