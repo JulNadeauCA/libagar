@@ -249,6 +249,7 @@ KillUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 		    (buf->len - lenKill + 1 - ed->pos)*sizeof(Uint32));
 	}
 	buf->len -= lenKill;
+	ed->sel = 0;
 	return (1);
 }
 
@@ -283,6 +284,9 @@ YankUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 		}
 	}
 
+	if (ed->sel != 0) {
+		KillSelection(ed, buf);
+	}
 	if (ed->pos < buf->len) {
 		memmove(&buf->s[ed->pos + killRingLen], &buf->s[ed->pos],
 		    (buf->len - ed->pos)*sizeof(Uint32));
@@ -320,6 +324,7 @@ WordBackUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	if (*c == ' ') {
 		ed->pos++;
 	}
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
@@ -346,6 +351,7 @@ WordForwUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	     *c != '\0' && *c != ' ';
 	     c++, ed->pos++)
 		;;
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
@@ -373,6 +379,7 @@ CursorHomeUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	} else {
 		ed->pos = 0;
 	}
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
@@ -399,12 +406,12 @@ CursorEndUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 				break;
 			}
 		}
-		if (ed->pos > buf->len) {
+		if (ed->pos > buf->len)
 			ed->pos = buf->len;
-		}
 	} else {
 		ed->pos = buf->len;
 	}
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
@@ -416,6 +423,7 @@ CursorLeftUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	if (--ed->pos < 1) {
 		ed->pos = 0;
 	}
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
@@ -427,6 +435,7 @@ CursorRightUTF8(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	if (ed->pos < buf->len) {
 		ed->pos++;
 	}
+	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
