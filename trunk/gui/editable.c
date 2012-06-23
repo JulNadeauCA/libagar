@@ -47,6 +47,9 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
+AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */
+
 /* Initialize a working buffer for an AG_Text element. */
 static int
 GetBufferText(AG_Editable *ed, AG_EditableBuffer *buf)
@@ -1394,6 +1397,34 @@ Destroy(void *obj)
 
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
+}
+
+/* Initialize/release the global clipboards. */
+static void
+InitClipboard(AG_EditableClipboard *cb)
+{
+	AG_MutexInit(&cb->lock);
+	Strlcpy(cb->encoding, "UTF-8", sizeof(cb->encoding));
+	cb->s = NULL;
+	cb->len = 0;
+}
+static void
+FreeClipboard(AG_EditableClipboard *cb)
+{
+	Free(cb->s);
+	AG_MutexDestroy(&cb->lock);
+}
+void
+AG_EditableInitClipboards(void)
+{
+	InitClipboard(&agEditableClipbrd);
+	InitClipboard(&agEditableKillring);
+}
+void
+AG_EditableDestroyClipboards(void)
+{
+	FreeClipboard(&agEditableClipbrd);
+	FreeClipboard(&agEditableKillring);
 }
 
 AG_WidgetClass agEditableClass = {
