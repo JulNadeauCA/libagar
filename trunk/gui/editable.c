@@ -383,7 +383,7 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 	if (ed->pos > buf->len) { ed->pos = buf->len; }
 
 	for (i = 0; ; i++) {
-		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
+		const struct ag_keycode *kc = &agKeymap[i];
 		
 		if (kc->key != AG_KEY_LAST &&
 		   (kc->key != ks || kc->func == NULL)) {

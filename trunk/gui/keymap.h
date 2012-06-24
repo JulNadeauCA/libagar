@@ -4,7 +4,7 @@
 #define _AGAR_WIDGET_KEYMAP_H_
 #include <agar/gui/begin.h>
 
-struct ag_keycode_utf8 {
+struct ag_keycode {
 	AG_KeySym key;
 	int modmask;
 	int (*func)(AG_Editable *, AG_EditableBuffer *buf, AG_KeySym ks,
@@ -24,7 +24,7 @@ struct ag_key_mapping {
 };
 
 __BEGIN_DECLS
-extern const struct ag_keycode_utf8     agKeymapUTF8[];
+extern const struct ag_keycode		agKeymap[];
 extern const struct ag_key_mapping	agKeymapLATIN1[];
 extern const struct ag_key_composition  agCompositionMap[];
 extern const int                        agCompositionMapSize;
