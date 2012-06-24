@@ -552,7 +552,7 @@ PageDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	return (0);
 }
 
-const struct ag_keycode_utf8 agKeymapUTF8[] = {
+const struct ag_keycode agKeymap[] = {
 	{ AG_KEY_HOME,		0,		CursorHome },
 	{ AG_KEY_A,		AG_KEYMOD_CTRL,	CursorHome },
 	{ AG_KEY_END,		0,		CursorEnd },

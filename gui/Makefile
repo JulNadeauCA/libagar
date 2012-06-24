@@ -13,8 +13,8 @@ LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} SDL opengl freetype
 
 SRCS=	gui.c widget.c window.c style.c style_default.c iconmgr.c geometry.c \
-	colors.c cursors.c ttf.c text.c keymap_utf8.c \
-	keymap_latin1.c keymap_compose.c keysyms.c editable.c \
+	colors.c cursors.c ttf.c text.c keymap.c keymap_latin1.c \
+	keymap_compose.c keysyms.c editable.c \
 	box.c label.c button.c checkbox.c textbox.c radio.c \
 	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
