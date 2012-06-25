@@ -40,23 +40,31 @@ The
 .Nm
 widget implements text edition.
 .Nm
-may be bound to a fixed-size buffer containing a NUL-terminated
-string, or a dynamically-sized
+may be bound to a fixed-size buffer containing a "C" string (i.e., a
+NUL-terminated string), or a dynamically-sized
 .Xr AG_Text 3
 buffer.
 .Pp
-Conversion between different character set encodings is done on the
-fly (US-ASCII, UTF-8 and UCS-4 encodings are built-in, conversion to
-other encodings requires that Agar be built with
+The string bound to
+.Nm
+may use different encodings (support for US-ASCII, UTF-8 and UCS-4 is built-in,
+conversion to/from other encodings requires that Agar be built with
 .Xr iconv 3
 support).
 .Pp
-Note: The low-level text edition functionality is actually implemented by
-an embedded
-.Xr AG_Editable 3
-widget.
+Most of the functionality of
 .Nm
-only adds scrollbars and cosmetics such as text labels.
+is actually implemented by the
+.Xr AG_Editable 3
+class (the
+.Nm
+widget itself simply embeds an
+.Ft AG_Editable
+along with scrollbars and cosmetics such as text labels).
+The
+.Xr AG_Editable 3
+API also provides direct buffer-access routines for more advanced text
+processing.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -166,6 +174,8 @@ Disable the emacs-style ALT-f and ALT-b keys which conflict with traditional
 LATIN-1 combinations.
 .It AG_TEXTBOX_NOLATIN1
 Disable traditional LATIN-1 key combinations.
+.It AG_TEXTBOX_NOPOPUP
+Disable the standard right-click popup menu.
 .It AG_TEXTBOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -180,6 +190,7 @@ This flag is recommended for multi-line text as an alternative to calling
 .It AG_TEXTBOX_EXPAND
 Shorthand for
 .Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
+.It AG_TEXTBOX_NOPOPUP
 .El
 .Pp
 The

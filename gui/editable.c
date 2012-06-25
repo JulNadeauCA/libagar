@@ -41,6 +41,8 @@
 #include "keymap.h"
 #include "primitive.h"
 #include "cursors.h"
+#include "menu.h"
+#include "icons.h"
 #include "gui_math.h"
 
 #include <string.h>
@@ -175,6 +177,64 @@ ReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 		ClearBuffer(buf);
 		Free(buf);
 	}
+}
+
+/* Return a working (locked) buffer handle. */
+AG_EditableBuffer *
+AG_EditableGetBuffer(AG_Editable *ed)
+{
+	AG_ObjectLock(ed);
+	return GetBuffer(ed);
+}
+
+/* Clear a working buffer. */
+void
+AG_EditableClearBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	return ClearBuffer(buf);
+}
+
+/* Increase the working buffer size to accomodate new characters. */
+int
+AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
+    size_t nIns)
+{
+	size_t ucsSize;		/* UCS-4 buffer size in bytes */
+	size_t convLen;		/* Converted string length in bytes */
+	Uint32 *sNew;
+
+	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
+
+	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
+		convLen = AG_LengthUTF8FromUCS4(buf->s) +
+		          AG_LengthUTF8FromUCS4(ins) + 1;
+	} else {
+		/* TODO Proper estimates for other charsets */
+		convLen = ucsSize;
+	}
+	
+	if (!buf->reallocable) {
+		if (convLen > buf->var->info.size) {
+			AG_SetError("%u > %u bytes", (Uint)convLen, (Uint)buf->var->info.size);
+			return (-1);
+		}
+	}
+	if (ucsSize > buf->maxLen) {
+		if ((sNew = TryRealloc(buf->s, ucsSize)) == NULL) {
+			return (-1);
+		}
+		buf->s = sNew;
+		buf->maxLen = ucsSize;
+	}
+	return (0);
+}
+
+/* Release a working buffer. */
+void
+AG_EditableReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	ReleaseBuffer(ed, buf);
+	AG_ObjectUnlock(ed);
 }
 
 AG_Editable *
@@ -1058,6 +1118,210 @@ out:
 	ReleaseBuffer(ed, buf);
 }
 
+/* Ensure selection offset is positive. */
+static __inline__ void
+NormSelection(AG_Editable *ed)
+{
+	if (ed->sel < 0) {
+		ed->pos += ed->sel;
+		ed->sel = -(ed->sel);
+	}
+}
+
+/* Copy specified range to specified clipboard. */
+void
+AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb,
+    Uint32 *s, size_t len)
+{
+	Uint32 *sNew;
+
+	AG_MutexLock(&cb->lock);
+	sNew = TryRealloc(cb->s, (len+1)*sizeof(Uint32));
+	if (sNew != NULL) {
+		cb->s = sNew;
+		memcpy(cb->s, s, len*sizeof(Uint32));
+		cb->s[len] = '\0';
+		cb->len = len;
+	}
+	Strlcpy(cb->encoding, ed->encoding, sizeof(cb->encoding));
+	AG_MutexUnlock(&cb->lock);
+}
+
+/* Perform Cut action on buffer. */
+int
+AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
+{
+	if (ed->sel == 0) {
+		return (0);
+	}
+	NormSelection(ed);
+	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
+	AG_EditableDelete(ed, buf);
+	return (1);
+}
+
+/* Perform Copy action on standard clipboard. */
+int
+AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
+{
+	if (ed->sel == 0) {
+		return (0);
+	}
+	NormSelection(ed);
+	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
+	return (1);
+}
+	
+/* Perform Paste action on buffer. */
+int
+AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
+    AG_EditableClipboard *cb)
+{
+	if (ed->sel != 0)
+		AG_EditableDelete(ed, buf);
+
+	AG_MutexLock(&cb->lock);
+
+	if (cb->s == NULL)
+		goto out;
+
+	if (strcmp(ed->encoding, cb->encoding) != 0) {
+		/* TODO: charset conversion */
+		goto fail;
+	}
+	if (AG_EditableGrowBuffer(ed, buf, cb->s, cb->len) == -1) {
+		Verbose("Paste Failed: %s\n", AG_GetError());
+		goto out;
+	}
+	if (ed->pos < buf->len) {
+		memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
+		    (buf->len - ed->pos)*sizeof(Uint32));
+	}
+	memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(Uint32));
+	buf->len += cb->len;
+	buf->s[buf->len] = '\0';
+	ed->pos += cb->len;
+out:
+	AG_MutexUnlock(&cb->lock);
+	return (1);
+fail:
+	AG_MutexUnlock(&cb->lock);
+	return (0);
+}
+
+/* Delete the current selection. */
+int
+AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (ed->sel == 0) {
+		return (0);
+	}
+	NormSelection(ed);
+	if (ed->pos + ed->sel == buf->len) {
+		buf->s[ed->pos] = '\0';
+	} else {
+		memmove(&buf->s[ed->pos], &buf->s[ed->pos + ed->sel],
+		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(Uint32));
+	}
+	buf->len -= ed->sel;
+	ed->sel = 0;
+	return (1);
+}
+
+/* Perform Select All action on buffer. */
+void
+AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	ed->pos = 0;
+	ed->sel = buf->len;
+}
+
+/*
+ * Right-click popup menu actions.
+ */
+static void
+MenuCut(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		if (AG_EditableCut(ed, buf, &agEditableClipbrd)) {
+			CommitBuffer(ed, buf);
+		}
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuCopy(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		AG_EditableCopy(ed, buf, &agEditableClipbrd);
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuPaste(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		if (AG_EditablePaste(ed, buf, &agEditableClipbrd)) {
+			CommitBuffer(ed, buf);
+		}
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuDelete(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		if (AG_EditableDelete(ed, buf)) {
+			CommitBuffer(ed, buf);
+		}
+		ReleaseBuffer(ed, buf);
+	}
+}
+static void
+MenuSelectAll(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	AG_EditableBuffer *buf;
+	
+	if ((buf = GetBuffer(ed)) != NULL) {
+		AG_EditableSelectAll(ed, buf);
+		ReleaseBuffer(ed, buf);
+	}
+}
+static AG_PopupMenu *
+PopupMenu(AG_Editable *ed)
+{
+	AG_PopupMenu *pm;
+	AG_MenuItem *m;
+
+	if ((pm = AG_PopupNew(ed)) == NULL) {
+		return (NULL);
+	}
+	m = AG_MenuAction(pm->item, _("Cut"), NULL, MenuCut, "%p", ed);
+	m->state = (ed->sel != 0);
+	m = AG_MenuAction(pm->item, _("Copy"), NULL, MenuCopy, "%p", ed);
+	m->state = (ed->sel != 0);
+	m = AG_MenuAction(pm->item, _("Paste"), NULL, MenuPaste, "%p", ed);
+	m->state = (agEditableClipbrd.len > 0);
+	m = AG_MenuAction(pm->item, _("Delete"), NULL, MenuDelete, "%p", ed);
+	m->state = (ed->sel != 0);
+	AG_MenuSeparator(pm->item);
+	AG_MenuAction(pm->item, _("Select All"), NULL, MenuSelectAll, "%p", ed);
+	return (pm);
+}
+
 static void
 MouseButtonDown(AG_Event *event)
 {
@@ -1070,6 +1334,10 @@ MouseButtonDown(AG_Event *event)
 
 	switch (btn) {
 	case AG_MOUSE_LEFT:
+		if (ed->pm != NULL) {
+			AG_PopupDestroy(ed, ed->pm);
+			ed->pm = NULL;
+		}
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
 		mx += ed->x;
 		AG_EditableMoveCursor(ed, mx, my, 0);
@@ -1082,6 +1350,15 @@ MouseButtonDown(AG_Event *event)
 			ed->selDblClick = ed->pos;
 			AG_SchedEvent(NULL, ed, agMouseDblclickDelay,
 			    "dblclick-expire", NULL);
+		}
+		break;
+	case AG_MOUSE_RIGHT:
+		if ((ed->flags & AG_EDITABLE_NOPOPUP) == 0) {
+			if (ed->pm != NULL) {
+				AG_PopupDestroy(ed, ed->pm);
+			}
+			if ((ed->pm = PopupMenu(ed)) != NULL)
+				AG_PopupShowAt(ed->pm, mx,my);
 		}
 		break;
 	case AG_MOUSE_WHEELUP:
@@ -1351,6 +1628,7 @@ Init(void *obj)
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
 	ed->font = NULL;
+	ed->pm = NULL;
 
 	ed->sBuf.var = NULL;
 	ed->sBuf.s = NULL;
