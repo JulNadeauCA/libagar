@@ -39,118 +39,6 @@
 #include <ctype.h>
 #include <string.h>
 
-/* Increase the working buffer size to accomodate new characters. */
-static int
-GrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins, size_t nIns)
-{
-	size_t ucsSize;		/* UCS-4 buffer size in bytes */
-	size_t convLen;		/* Converted string length in bytes */
-	Uint32 *sNew;
-
-	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
-
-	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
-		convLen = AG_LengthUTF8FromUCS4(buf->s) +
-		          AG_LengthUTF8FromUCS4(ins) + 1;
-	} else {
-		/* TODO Proper estimates for other charsets */
-		convLen = ucsSize;
-	}
-	
-	if (!buf->reallocable) {
-		if (convLen > buf->var->info.size) {
-			AG_SetError("%u > %u bytes", (Uint)convLen, (Uint)buf->var->info.size);
-			return (-1);
-		}
-	}
-	if (ucsSize > buf->maxLen) {
-		if ((sNew = TryRealloc(buf->s, ucsSize)) == NULL) {
-			return (-1);
-		}
-		buf->s = sNew;
-		buf->maxLen = ucsSize;
-	}
-	return (0);
-}
-
-/* Ensure sel is a positive number. */
-static __inline__ void
-NormSelection(AG_Editable *ed)
-{
-	if (ed->sel < 0) {
-		ed->pos += ed->sel;
-		ed->sel = -(ed->sel);
-	}
-}
-
-/* Delete the current selection. */
-static void
-KillSelection(AG_Editable *ed, AG_EditableBuffer *buf)
-{
-	NormSelection(ed);
-	if (ed->pos + ed->sel == buf->len) {
-		buf->s[ed->pos] = '\0';
-	} else {
-		memmove(&buf->s[ed->pos], &buf->s[ed->pos + ed->sel],
-		    (buf->len - ed->sel + 1 - ed->pos)*sizeof(Uint32));
-	}
-	buf->len -= ed->sel;
-	ed->sel = 0;
-}
-
-/* Copy given characters to clipboard. */
-static void
-CopyToClipboard(AG_Editable *ed, AG_EditableClipboard *cb, Uint32 *s,
-    size_t len)
-{
-	Uint32 *sNew;
-
-	AG_MutexLock(&cb->lock);
-	sNew = TryRealloc(cb->s, (len+1)*sizeof(Uint32));
-	if (sNew != NULL) {
-		cb->s = sNew;
-		memcpy(cb->s, s, len*sizeof(Uint32));
-		cb->s[len] = '\0';
-		cb->len = len;
-	}
-	Strlcpy(cb->encoding, ed->encoding, sizeof(cb->encoding));
-	AG_MutexUnlock(&cb->lock);
-}
-
-/* Paste contents of clipboard to current cursor position. */
-static int
-PasteFromClipboard(AG_Editable *ed, AG_EditableBuffer *buf,
-    AG_EditableClipboard *cb)
-{
-	AG_MutexLock(&cb->lock);
-
-	if (cb->s == NULL)
-		goto out;
-
-	if (strcmp(ed->encoding, cb->encoding) != 0) {
-		/* TODO: charset conversion */
-		goto fail;
-	}
-	if (GrowBuffer(ed, buf, cb->s, cb->len) == -1) {
-		Verbose("Paste Failed: %s\n", AG_GetError());
-		goto out;
-	}
-	if (ed->pos < buf->len) {
-		memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
-		    (buf->len - ed->pos)*sizeof(Uint32));
-	}
-	memcpy(&buf->s[ed->pos], cb->s, cb->len*sizeof(Uint32));
-	buf->len += cb->len;
-	buf->s[buf->len] = '\0';
-	ed->pos += cb->len;
-out:
-	AG_MutexUnlock(&cb->lock);
-	return (0);
-fail:
-	AG_MutexUnlock(&cb->lock);
-	return (-1);
-}
-
 /* Insert a new character at current cursor position. */
 static int
 Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
@@ -205,9 +93,9 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	ins[nIns] = '\0';
 
 	if (ed->sel != 0) {
-		KillSelection(ed, buf);
+		AG_EditableDelete(ed, buf);
 	}
-	if (GrowBuffer(ed, buf, ins, (size_t)nIns) == -1) {
+	if (AG_EditableGrowBuffer(ed, buf, ins, (size_t)nIns) == -1) {
 		Verbose("Insert Failed: %s\n", AG_GetError());
 		return (0);
 	}
@@ -240,7 +128,7 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		return (0);
 
 	if (ed->sel != 0) {
-		KillSelection(ed, buf);
+		AG_EditableDelete(ed, buf);
 		return (1);
 	}
 	if (keysym == AG_KEY_BACKSPACE && ed->pos == 0) {
@@ -270,12 +158,8 @@ static int
 Copy(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
-	if (ed->sel == 0) {
-		return (0);
-	}
-	NormSelection(ed);
-	CopyToClipboard(ed, &agEditableClipbrd, &buf->s[ed->pos], ed->sel);
-	return (1);
+	AG_EditableCopy(ed, buf, &agEditableClipbrd);
+	return (0);
 }
 
 /* Copy selection to clipboard and subsequently delete it. */
@@ -283,13 +167,7 @@ static int
 Cut(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
-	if (ed->sel == 0) {
-		return (0);
-	}
-	NormSelection(ed);
-	CopyToClipboard(ed, &agEditableClipbrd, &buf->s[ed->pos], ed->sel);
-	KillSelection(ed, buf);
-	return (1);
+	return AG_EditableCut(ed, buf, &agEditableClipbrd);
 }
 
 /* Paste clipboard contents to current cursor position. */
@@ -297,14 +175,7 @@ static int
 Paste(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
-	if (ed->sel != 0) {
-		KillSelection(ed, buf);
-	}
-	if (PasteFromClipboard(ed, buf, &agEditableClipbrd) == -1) {
-		return (0);
-	}
-	KillSelection(ed, buf);
-	return (1);
+	return AG_EditablePaste(ed, buf, &agEditableClipbrd);
 }
 
 /*
@@ -325,7 +196,10 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 		return (0);
 
 	if (ed->sel != 0) {
-		NormSelection(ed);
+		if (ed->sel < 0) {
+			ed->pos += ed->sel;
+			ed->sel = -(ed->sel);
+		}
 	} else {
 		for (c = &buf->s[ed->pos]; c < &buf->s[buf->len]; c++) {
 			if (*c == '\n') {
@@ -337,8 +211,8 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 			return (0);
 	}
 	
-	CopyToClipboard(ed, &agEditableKillring, &buf->s[ed->pos], ed->sel);
-	KillSelection(ed, buf);
+	AG_EditableCopyChunk(ed, &agEditableKillring, &buf->s[ed->pos], ed->sel);
+	AG_EditableDelete(ed, buf);
 	return (1);
 }
 
@@ -354,13 +228,7 @@ Yank(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 	    (keysym == AG_KEY_Y) && (keymod & AG_KEYMOD_CTRL))
 		return (0);
 
-	if (ed->sel != 0) {
-		KillSelection(ed, buf);
-	}
-	if (PasteFromClipboard(ed, buf, &agEditableKillring) == -1) {
-		return (0);
-	}
-	return (1);
+	return AG_EditablePaste(ed, buf, &agEditableKillring);
 }
 
 /* Seek one word backwards. */

@@ -11,11 +11,12 @@
 #define AG_EDITABLE_STRING_MAX 1024	/* For "default" string binding */
 
 struct ag_cursor_area;
+struct ag_popup_menu;
 
 /* Working UCS-4 text buffer for internal use */
 typedef struct ag_editable_buffer {
 	AG_Variable *var;		/* Variable binding (if any) */
-	Uint32 *s;			/* String buffer */
+	Uint32 *s;			/* String buffer (UCS-4 encoding) */
 	size_t len;			/* String length (chars) */
 	size_t maxLen;			/* Available buffer size (bytes) */
 	int reallocable;		/* Buffer can be realloc'd */
@@ -52,7 +53,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
 #define AG_EDITABLE_WORDWRAP      0x40000 /* Word wrapping */
-#define AG_EDITABLE_GROW          0x80000 /* Grow string buffer as needed */
+#define AG_EDITABLE_NOPOPUP	  0x80000 /* Disable popup menu */
 
 	const char *encoding;		/* Character set (default "UTF-8") */
 
@@ -80,6 +81,7 @@ typedef struct ag_editable {
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
 	AG_Font *font;			/* Font for text rendering */
+	struct ag_popup_menu *pm;	/* Right-click popup menu */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -97,6 +99,20 @@ void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
 void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
 void         AG_EditableBindEncoded(AG_Editable *, const char *, char *, size_t);
 void         AG_EditableBindText(AG_Editable *, AG_Text *);
+
+AG_EditableBuffer *AG_EditableGetBuffer(AG_Editable *);
+void               AG_EditableReleaseBuffer(AG_Editable *, AG_EditableBuffer *);
+void               AG_EditableClearBuffer(AG_Editable *, AG_EditableBuffer *);
+int                AG_EditableGrowBuffer(AG_Editable *, AG_EditableBuffer *,
+                                         Uint32 *, size_t);
+
+int  AG_EditableCut(AG_Editable *, AG_EditableBuffer *, AG_EditableClipboard *);
+int  AG_EditableCopy(AG_Editable *, AG_EditableBuffer *, AG_EditableClipboard *);
+void AG_EditableCopyChunk(AG_Editable *, AG_EditableClipboard *, Uint32 *,
+                          size_t);
+int  AG_EditablePaste(AG_Editable *, AG_EditableBuffer *, AG_EditableClipboard *);
+int  AG_EditableDelete(AG_Editable *, AG_EditableBuffer *);
+void AG_EditableSelectAll(AG_Editable *, AG_EditableBuffer *);
 
 void         AG_EditableSizeHint(AG_Editable *, const char *);
 void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
