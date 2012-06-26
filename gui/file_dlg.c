@@ -974,7 +974,7 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	AG_ObjectLock(fd);
 	SetFilename(fd, file);
 	AG_TextboxSetString(fd->tbFile, file);
-	AG_TextboxSetCursorPos(fd->tbFile, -1);
+/*	AG_TextboxSetCursorPos(fd->tbFile, -1); */
 	AG_ObjectUnlock(fd);
 }
 
@@ -985,7 +985,7 @@ AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 	AG_ObjectLock(fd);
 	SetFilename(fd, s);
 	AG_TextboxSetString(fd->tbFile, s);
-	AG_TextboxSetCursorPos(fd->tbFile, -1);
+/*	AG_TextboxSetCursorPos(fd->tbFile, -1); */
 	AG_ObjectUnlock(fd);
 }
 

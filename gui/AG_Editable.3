@@ -59,7 +59,7 @@ directly, and instead use
 (which adds scrollbars and cosmetics such as text labels).
 The bare-bones
 .Nm
-interface is designed to be easily embeddable into other widgets.
+widget is designed to be easily embeddable into other widgets.
 .Pp
 The API also includes methods for accessing the working buffer directly
 (see
@@ -269,58 +269,6 @@ The
 variant accepts arguments in pixels.
 .Fn AG_EditableSizeHintLines
 accepts a line count.
-.Sh CURSOR MANIPULATION
-.nr nS 1
-.Ft int
-.Fn AG_EditableMapPosition "AG_Editable *ed" "int x" "int y" "int *pos" "int absolute"
-.Pp
-.Ft int
-.Fn AG_EditableMoveCursor "AG_Editable *ed" "int x" "int y" "int absolute"
-.Pp
-.Ft int
-.Fn AG_EditableGetCursorPos "AG_Editable *ed"
-.Pp
-.Ft int
-.Fn AG_EditableSetCursorPos "AG_Editable *ed" "int pos"
-.Pp
-.nr nS 0
-The
-.Fn AG_EditableMapPosition
-function translates absolute coordinates (such as display coordinates)
-.Fa x
-and
-.Fa y
-in pixels to a position in the text buffer and return this position into
-.Fa pos .
-The function returns -1 or 1 if the cursor lies before or after the end
-of the string, respectively.
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
-.Pp
-.Fn AG_EditableMoveCursor
-moves the text cursor to the position closest to the specified pixel coordinates
-.Fa mx
-and
-.Fy my
-(in the widget's local coordinate system).
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
-.Pp
-.Fn AG_EditableGetCursorPos
-returns the current position of the cursor in the buffer.
-Under multithreading, the return value is only valid as long as the widget is
-locked.
-.Pp
-.Fn AG_EditableSetCursorPos
-tries to move the cursor to the specified position in the string, after
-bounds checking is done.
-If
-.Fa pos
-is -1, the cursor is moved to the end of the string.
-.Fn AG_EditableSetCursorPos
-returns the new position of the cursor.
 .Sh STRING UTILITY ROUTINES
 .nr nS 1
 .Ft void
@@ -494,6 +442,49 @@ or 0 if the buffer is unchanged.
 .Pp
 .Fn AG_EditableSelectAll
 selects all characters in the buffer.
+.Sh CURSOR CONTROL ROUTINES
+.nr nS 1
+.Ft int
+.Fn AG_EditableMapPosition "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int *pos" "int absolute"
+.Pp
+.Ft int
+.Fn AG_EditableMoveCursor "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int absolute"
+.Pp
+.Ft int
+.Fn AG_EditableSetCursorPos "AG_Editable *ed" "AG_EditableBuffer *buf" "int pos"
+.Pp
+.nr nS 0
+The
+.Fn AG_EditableMapPosition
+function translates absolute coordinates (such as display coordinates)
+.Fa x
+and
+.Fa y
+in pixels to a position in the text buffer and return this position into
+.Fa pos .
+The function returns -1 or 1 if the cursor lies before or after the end
+of the string, respectively.
+If
+.Fa absolute
+if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_EditableMoveCursor
+moves the text cursor to the position closest to the specified pixel coordinates
+.Fa mx
+and
+.Fy my
+(in the widget's local coordinate system).
+If
+.Fa absolute
+if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_EditableSetCursorPos
+tries to move the cursor to the specified position in the string (bounds
+checking is performed).
+If the
+.Fa pos
+argument is -1, the cursor is moved to the end of the string.
+The new position of the cursor is returned.
 .Sh BINDINGS
 The
 .Nm
@@ -501,13 +492,13 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string "
 .It Va char *string
-Bound fixed-size buffer containing a C string in the specified
-encoding (UTF-8 by default).
+Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
+in the specified encoding (UTF-8 by default).
 .It Va AG_Text *text
 Bound
 .Xr AG_Text 3
 element containing an table of variable-length C strings (entries in
-this table correspond to different languages).
+this table map to different languages).
 .El
 .Sh EVENTS
 The
@@ -544,6 +535,13 @@ For the
 object:
 .Pp
 .Bl -tag -compact -width "AG_Font *font "
+.It Ft int pos
+Current cursor position (ranging from 0 to the current buffer's
+.Va len
+value).
+.It Ft int sel
+Current selection, expressed as an offset from the cursor
+(0 = there is no selection).
 .It Ft AG_Font *font
 Alternate font (if NULL, the default font is used).
 If calling

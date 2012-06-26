@@ -259,58 +259,6 @@ The
 variant accepts arguments in pixels.
 .Fn AG_TextboxSizeHintLines
 accepts a number of lines.
-.Sh CURSOR MANIPULATION
-.nr nS 1
-.Ft int
-.Fn AG_TextboxMapPosition "AG_Textbox *textbox" "int x" "int y" "int *pos" "int absolute"
-.Pp
-.Ft void
-.Fn AG_TextboxMoveCursor "AG_Textbox *textbox" "int x" "int y" "int absolute"
-.Pp
-.Ft int
-.Fn AG_TextboxGetCursorPos "AG_Textbox *textbox"
-.Pp
-.Ft int
-.Fn AG_TextboxSetCursorPos "AG_Textbox *textbox" "int pos"
-.Pp
-.nr nS 0
-The
-.Fn AG_TextboxMapPosition
-function translates absolute coordinates (such as display coordinates)
-.Fa x
-and
-.Fa y
-in pixels to a position in the text buffer and return this position into
-.Fa pos .
-The function returns -1 or 1 if the cursor lies before or after the end
-of the string, respectively.
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
-.Pp
-.Fn AG_TextboxMoveCursor
-moves the text cursor to the position closest to the specified pixel coordinates
-.Fa mx
-and
-.Fy my
-(in the widget's local coordinate system).
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
-.Pp
-.Fn AG_TextboxGetCursorPos
-returns the current position of the cursor in the buffer.
-Under multithreading, the return value is only valid as long as the widget is
-locked.
-.Pp
-.Fn AG_TextboxSetCursorPos
-tries to move the cursor to the specified position in the string, after
-bounds checking is done.
-If
-.Fa pos
-is -1, the cursor is moved to the end of the string.
-.Fn AG_TextboxSetCursorPos
-returns the new position of the cursor.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void

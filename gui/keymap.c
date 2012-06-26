@@ -381,7 +381,7 @@ static int
 CursorUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
     int keymod, Uint32 uch)
 {
-	AG_EditableMoveCursor(ed, ed->xCursPref,
+	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
 	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1,
 	    1);
 	return (0);
@@ -392,7 +392,7 @@ static int
 CursorDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
     int keymod, Uint32 uch)
 {
-	AG_EditableMoveCursor(ed, ed->xCursPref,
+	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
 	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1,
 	    1);
 	return (0);
@@ -403,7 +403,7 @@ static int
 PageUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
     int keymod, Uint32 uch)
 {
-	AG_EditableMoveCursor(ed, ed->xCurs,
+	AG_EditableMoveCursor(ed, buf, ed->xCurs,
 	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1,
 	    1);
 	return (0);
@@ -414,7 +414,7 @@ static int
 PageDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
     int keymod, Uint32 uch)
 {
-	AG_EditableMoveCursor(ed, ed->xCurs,
+	AG_EditableMoveCursor(ed, buf, ed->xCurs,
 	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1,
 	    1);
 	return (0);
