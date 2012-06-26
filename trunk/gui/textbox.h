@@ -79,13 +79,6 @@ void        AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 #define AG_TextboxBindEncoded(tb,enc,p,sz) AG_EditableBindEncoded((tb)->ed,(enc),(p),(sz))
 #define AG_TextboxBindText(tb,txt)         AG_EditableBindText((tb)->ed,(txt))
 
-#define AG_TextboxMapPosition(tb,x,y,pos,abs) \
-	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))
-#define AG_TextboxMoveCursor(tb,x,y,abs) \
-	AG_EditableMoveCursor((tb)->ed,(x),(y),(abs))
-#define AG_TextboxGetCursorPos(tb) AG_EditableGetCursorPos((tb)->ed)
-#define AG_TextboxSetCursorPos(tb,pos) AG_EditableSetCursorPos((tb)->ed,(pos))
-
 #define AG_TextboxSetString(tb,s) AG_EditableSetString((tb)->ed,(s))
 #define	AG_TextboxClearString(tb) AG_EditableSetString((tb)->ed,NULL)
 #define AG_TextboxDupString(tb) AG_EditableDupString((tb)->ed)

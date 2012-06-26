@@ -674,7 +674,7 @@ AG_DirDlgSetDirectoryS(AG_DirDlg *dd, const char *dir)
 	}
 
 	AG_TextboxSetString(dd->tbInput, dd->cwd);
-	AG_TextboxSetCursorPos(dd->tbInput, -1);
+/*	AG_TextboxSetCursorPos(dd->tbInput, -1); */
 	AG_TlistScrollToStart(dd->tlDirs);
 
 	AG_ObjectUnlock(dd);

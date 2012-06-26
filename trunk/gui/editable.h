@@ -34,26 +34,27 @@ typedef struct ag_editable {
 	struct ag_widget wid;
 	
 	Uint flags;
-#define AG_EDITABLE_HFILL         0x00001
-#define AG_EDITABLE_VFILL         0x00002
+#define AG_EDITABLE_HFILL         0x000001
+#define AG_EDITABLE_VFILL         0x000002
 #define AG_EDITABLE_EXPAND        (AG_EDITABLE_HFILL|AG_EDITABLE_VFILL)
-#define AG_EDITABLE_MULTILINE     0x00004 /* Multiline edition */
-#define AG_EDITABLE_BLINK_ON      0x00008 /* Cursor blink state (internal) */
-#define AG_EDITABLE_PASSWORD      0x00010 /* Password (hidden) input */
-#define AG_EDITABLE_ABANDON_FOCUS 0x00020 /* Abandon focus on return */
-#define AG_EDITABLE_INT_ONLY      0x00040 /* Accepts only int input */
-#define AG_EDITABLE_FLT_ONLY      0x00080 /* Accepts only float input */
-#define AG_EDITABLE_CATCH_TAB     0x00100 /* Process tab key input */
-#define AG_EDITABLE_CURSOR_MOVING 0x00200 /* Cursor is being moved */
-#define AG_EDITABLE_NOSCROLL      0x00800 /* Inhibit automatic scrolling */
-#define AG_EDITABLE_NOSCROLL_ONCE 0x01000 /* Inhibit scrolling at next draw */
-#define AG_EDITABLE_MARKPREF      0x02000 /* Mark current cursor position */
-#define AG_EDITABLE_EXCL          0x04000 /* Exclusive access to buffer */
-#define AG_EDITABLE_NOEMACS       0x08000 /* Disable emacs-style fn keys */
-#define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
-#define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
-#define AG_EDITABLE_WORDWRAP      0x40000 /* Word wrapping */
-#define AG_EDITABLE_NOPOPUP	  0x80000 /* Disable popup menu */
+#define AG_EDITABLE_MULTILINE     0x000004 /* Multiline edition */
+#define AG_EDITABLE_BLINK_ON      0x000008 /* Cursor blink state (internal) */
+#define AG_EDITABLE_PASSWORD      0x000010 /* Password (hidden) input */
+#define AG_EDITABLE_ABANDON_FOCUS 0x000020 /* Abandon focus on return */
+#define AG_EDITABLE_INT_ONLY      0x000040 /* Accepts only int input */
+#define AG_EDITABLE_FLT_ONLY      0x000080 /* Accepts only float input */
+#define AG_EDITABLE_CATCH_TAB     0x000100 /* Process tab key input */
+#define AG_EDITABLE_CURSOR_MOVING 0x000200 /* Cursor is being moved */
+#define AG_EDITABLE_NOSCROLL      0x000800 /* Inhibit automatic scrolling */
+#define AG_EDITABLE_NOSCROLL_ONCE 0x001000 /* Inhibit scrolling at next draw */
+#define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
+#define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
+#define AG_EDITABLE_NOEMACS       0x008000 /* Disable emacs-style fn keys */
+#define AG_EDITABLE_NOWORDSEEK    0x010000 /* Disable ALT+b/ALT+f emacs keys */
+#define AG_EDITABLE_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
+#define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
+#define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
+#define AG_EDITABLE_WORDSELECT	  0x100000 /* Select whole words */
 
 	const char *encoding;		/* Character set (default "UTF-8") */
 
@@ -125,10 +126,9 @@ void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
 void         AG_EditableSetFont(AG_Editable *, AG_Font *);
 
-int  AG_EditableMapPosition(AG_Editable *, int, int, int *, int);
-void AG_EditableMoveCursor(AG_Editable *, int, int, int);
-int  AG_EditableGetCursorPos(AG_Editable *);
-int  AG_EditableSetCursorPos(AG_Editable *, int);
+int  AG_EditableMapPosition(AG_Editable *, AG_EditableBuffer *, int, int, int *, int);
+void AG_EditableMoveCursor(AG_Editable *, AG_EditableBuffer *, int, int, int);
+int  AG_EditableSetCursorPos(AG_Editable *, AG_EditableBuffer *, int);
 
 void     AG_EditableSetString(AG_Editable *, const char *);
 #define  AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)

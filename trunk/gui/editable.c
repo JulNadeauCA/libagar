@@ -562,7 +562,7 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 }
 
 /*
- * Map mouse coordinates to a position within the string.
+ * Map mouse coordinates to a position within the buffer.
  */
 #define ON_LINE(my,y) \
 	( ((my) >= (y) && (my) <= (y)+agTextFontLineSkip) || \
@@ -572,10 +572,10 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 #define ON_CHAR(mx,x,glyph) \
 	((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
 int
-AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
+AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
+    int *pos, int absflag)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_EditableBuffer *buf;
 	AG_Font *font;
 	Uint32 ch;
 	int i, x, y, line = 0;
@@ -586,18 +586,16 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 
 	yMouse = my + ed->y*agTextFontLineSkip;
 	if (yMouse < 0) {
-		goto fail;
+		AG_ObjectUnlock(ed);
+		return (-1);
 	}
 	x = 0;
 	y = 0;
 
-	if ((buf = GetBuffer(ed)) == NULL) {
-		goto fail;
-	}
 	if ((font = ed->font) == NULL &&
 	    (font = AG_FetchFont(NULL, -1, -1)) == NULL) {
-		ReleaseBuffer(ed, buf);
-		goto fail;
+		AG_ObjectUnlock(ed);
+		return (-1);
 	}
 
  	for (i = 0; i < buf->len; i++) {
@@ -715,59 +713,37 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 			AG_FatalError("AG_Editable: Unknown font format");
 		}
 	}
-	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (1);
 in:
-	ReleaseBuffer(ed, buf);
 	AG_ObjectUnlock(ed);
 	return (0);
-fail:
-	AG_ObjectUnlock(ed);
-	return (-1);
 }
 #undef ON_LINE
 #undef ON_CHAR
 
 /* Move cursor to the given position in pixels. */
 void
-AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
+AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
+    int absflag)
 {
 	int rv;
 
 	AG_ObjectLock(ed);
-	rv = AG_EditableMapPosition(ed, mx, my, &ed->pos, absflag);
+	rv = AG_EditableMapPosition(ed, buf, mx, my, &ed->pos, absflag);
 	ed->sel = 0;
 	if (rv == -1) {
 		ed->pos = 0;
 	} else if (rv == 1) {
-		AG_EditableBuffer *buf;
-
-		if ((buf = GetBuffer(ed)) != NULL) {
-			ed->pos = buf->len;
-			ReleaseBuffer(ed, buf);
-		}
+		ed->pos = buf->len;
 	}
 	AG_ObjectUnlock(ed);
-
 	AG_Redraw(ed);
-}
-
-/* Return the last cursor position. */
-int
-AG_EditableGetCursorPos(AG_Editable *ed)
-{
-	int rv;
-
-	AG_ObjectLock(ed);
-	rv = ed->pos;
-	AG_ObjectUnlock(ed);
-	return (rv);
 }
 
 /* Set the cursor position (-1 = end of the string) with bounds checking. */
 int
-AG_EditableSetCursorPos(AG_Editable *ed, int pos)
+AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 {
 	int rv;
 
@@ -775,14 +751,8 @@ AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 	ed->pos = pos;
 	ed->sel = 0;
 	if (ed->pos < 0) {
-		AG_EditableBuffer *buf;
-
-		if ((buf = GetBuffer(ed)) != NULL) {
-			if (pos == -1 || ed->pos > buf->len) {
-				ed->pos = buf->len+1;
-			}
-			ReleaseBuffer(ed, buf);
-		}
+		if (pos == -1 || ed->pos > buf->len)
+			ed->pos = buf->len+1;
 	}
 	rv = ed->pos;
 	AG_ObjectUnlock(ed);
@@ -913,27 +883,27 @@ Draw(void *obj)
 	} else {
 		if (ed->yCurs < ed->y) {
 			if (ed->flags & AG_EDITABLE_MULTILINE) {
-				AG_EditableMoveCursor(ed,
+				AG_EditableMoveCursor(ed, buf,
 				    ed->xCursPref - ed->x, 1,
 				    0);
 			}
 		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
 			if (ed->flags & AG_EDITABLE_MULTILINE) {
-				AG_EditableMoveCursor(ed,
+				AG_EditableMoveCursor(ed, buf,
 				    ed->xCursPref - ed->x,
 				    ed->yVis*agTextFontLineSkip - 1,
 				    0);
 			}
 		} else if (ed->xCurs < ed->x+10) {
 			if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
-				AG_EditableMoveCursor(ed,
+				AG_EditableMoveCursor(ed, buf,
 				    ed->x+10,
 				    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
 				    1);
 			}
 		} else if (ed->xCurs > ed->x+WIDTH(ed)-10) {
 			if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
-				AG_EditableMoveCursor(ed,
+				AG_EditableMoveCursor(ed, buf,
 				    ed->x+WIDTH(ed)-10,
 				    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
 				    1);
@@ -1088,6 +1058,7 @@ MouseDoubleClick(AG_Editable *ed)
 
 	AG_CancelEvent(ed, "dblclick-expire");
 	ed->selDblClick = -1;
+	ed->flags |= AG_EDITABLE_WORDSELECT;
 
 	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
@@ -1228,7 +1199,7 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 	return (1);
 }
 
-/* Perform Select All action on buffer. */
+/* Perform "Select All" on buffer. */
 void
 AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 {
@@ -1329,6 +1300,7 @@ MouseButtonDown(AG_Event *event)
 	int btn = AG_INT(1);
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
+	AG_EditableBuffer *buf;
 	
 	AG_WidgetFocus(ed);
 
@@ -1340,7 +1312,11 @@ MouseButtonDown(AG_Event *event)
 		}
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
 		mx += ed->x;
-		AG_EditableMoveCursor(ed, mx, my, 0);
+		if ((buf = GetBuffer(ed)) == NULL) {
+			return;
+		}
+		AG_EditableMoveCursor(ed, buf, mx, my, 0);
+		ReleaseBuffer(ed, buf);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 
 		if (ed->selDblClick != -1 &&
@@ -1391,6 +1367,7 @@ MouseButtonUp(AG_Event *event)
 	switch (btn) {
 	case AG_MOUSE_LEFT:
 		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
+		ed->flags &= ~(AG_EDITABLE_WORDSELECT);
 		break;
 	default:
 		break;
@@ -1403,6 +1380,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
+	AG_EditableBuffer *buf;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
 	int newPos;
@@ -1412,10 +1390,51 @@ MouseMotion(AG_Event *event)
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
 		return;
 
-	if (AG_EditableMapPosition(ed, mx, my, &newPos, 0) == 0) {
+	if ((buf = GetBuffer(ed)) == NULL)
+		return;
+	
+	if (AG_EditableMapPosition(ed, buf, mx, my, &newPos, 0) != 0)
+		return;
+
+	if (ed->flags & AG_EDITABLE_WORDSELECT) {
+		Uint32 *c;
+
+		c = &buf->s[newPos];
+		if (*c == (Uint32)('\n')) {
+			goto out;
+		}
+		if (newPos > ed->pos) {
+			if (ed->sel < 0) {
+				ed->pos += ed->sel;
+				ed->sel = -(ed->sel);
+			}
+			ed->sel = newPos - ed->pos;
+			while (c < &buf->s[buf->len] &&
+			    !isspace((char)*c) && *c != (Uint32)'\n') {
+				c++;
+				ed->sel++;
+			}
+		} else if (newPos < ed->pos) {
+			if (ed->sel > 0) {
+				ed->pos += ed->sel;
+				ed->sel = -(ed->sel);
+			}
+			ed->sel = newPos - ed->pos;
+			while (c > &buf->s[0] &&
+			    !isspace((char)*c) && *c != (Uint32)'\n') {
+				c--;
+				ed->sel--;
+			}
+			if (isspace((char)buf->s[ed->pos + ed->sel])) {
+				ed->sel++;
+			}
+		}
+	} else {
 		ed->sel = newPos - ed->pos;
-		AG_Redraw(ed);
 	}
+out:
+	ReleaseBuffer(ed, buf);
+	AG_Redraw(ed);
 }
 
 /*
