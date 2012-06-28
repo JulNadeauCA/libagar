@@ -121,7 +121,9 @@ static void GLX_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  GLX_RaiseWindow(AG_Window *);
 static int  GLX_SetInputFocus(AG_Window *);
 static void GLX_SetTransientFor(AG_Window *, AG_Window *);
+#if 0
 static void GLX_FreeWidgetResources(AG_Widget *);
+#endif
 
 static void
 Init(void *obj)
@@ -1942,7 +1944,7 @@ GLX_MoveWindow(AG_Window *win, int x, int y)
 	return (0);
 }
 
-#if 1
+#if 0
 /* Save/restore associated widget GL resources (for GL context changes). */
 static void
 GLX_FreeWidgetResources(AG_Widget *wid)
