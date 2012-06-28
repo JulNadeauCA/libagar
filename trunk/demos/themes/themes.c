@@ -309,7 +309,6 @@ CreateWindow(void)
 			 * space for the terminating NUL.
 			 */
 			AG_TextboxBindUTF8(tbox, someText, bufSize);
-			AG_TextboxSetCursorPos(tbox, 0);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);

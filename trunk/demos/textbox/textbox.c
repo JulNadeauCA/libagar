@@ -112,7 +112,6 @@ MultiLineExample(const char *title)
 	 * AG_TextboxBindUTF8() must include space for the terminating NUL.
 	 */
 	AG_TextboxBindUTF8(textbox, someText, bufSize);
-	AG_TextboxSetCursorPos(textbox, 0);
 
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
