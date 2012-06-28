@@ -139,7 +139,7 @@ AG_TextNew(const char *fmt, ...)
 		va_list ap;
 	
 		va_start(ap, fmt);
-		if (vasprintf(&te->buf, fmt, ap) == -1) {
+		if (TryVasprintf(&te->buf, fmt, ap) == -1) {
 			AG_TextFree(txt);
 			return (NULL);
 		}
@@ -184,7 +184,7 @@ AG_TextSet(AG_Text *txt, const char *fmt, ...)
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		if (vasprintf(&sNew, fmt, ap) != -1) {
+		if (TryVasprintf(&sNew, fmt, ap) != -1) {
 			return (-1);
 		}
 		va_end(ap);
@@ -216,7 +216,7 @@ AG_TextSetEnt(AG_Text *txt, enum ag_language lang, const char *fmt, ...)
 	char *sNew;
 	
 	va_start(ap, fmt);
-	if (vasprintf(&sNew, fmt, ap) == -1) {
+	if (TryVasprintf(&sNew, fmt, ap) == -1) {
 		return (-1);
 	}
 	va_end(ap);
