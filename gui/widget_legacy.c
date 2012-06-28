@@ -341,9 +341,8 @@ void *
 AG_WidgetPointer(void *wid, const char *name)
 {
 	AG_Variable *b;
-	void **p, *rv;
+	void **p;
 	if ((b = AG_GetVariable(wid, name, &p)) == NULL) { AG_FatalError(NULL); }
-	rv = *p;
 	AG_UnlockVariable(b);
 	return (p);
 }

@@ -275,7 +275,6 @@ AG_ObjectGetName(void *obj)
 	AG_Object *pob;
 	char *path;
 	size_t pathLen = 1;
-	int rv = 0;
 	
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
@@ -294,7 +293,7 @@ AG_ObjectGetName(void *obj)
 	if (ob == ob->root) {
 		Strlcat(path, ob->name, pathLen);
 	} else {
-		rv = GenerateObjectPath(ob, path, pathLen);
+		GenerateObjectPath(ob, path, pathLen);
 	}
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
