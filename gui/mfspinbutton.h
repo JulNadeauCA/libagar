@@ -23,6 +23,7 @@ typedef struct ag_mfspinbutton {
 	const char *sep;		/* x/y field separator */
 	const AG_Unit *unit;		/* Conversion unit */
 	int writeable;			/* 0 = read-only */
+	char inTxt[64];			/* Input text buffer */
 	AG_Textbox *input;
 	AG_UCombo *units;
 	AG_Button *xincbu, *xdecbu;

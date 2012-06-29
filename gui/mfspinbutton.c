@@ -110,16 +110,13 @@ KeyDown(AG_Event *event)
 static void
 TextChanged(AG_Event *event)
 {
-	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_Variable *stringb;
-	char *tp = &text[0], *s;
+	char inTxt[64];
+	char *tp = &inTxt[0], *s;
 
 	AG_ObjectLock(fsu);
-
-	stringb = AG_GetVariable(fsu->input->ed, "string", &s);
-	Strlcpy(text, s, sizeof(text));
+	Strlcpy(inTxt, fsu->inTxt, sizeof(inTxt));
 
 	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {
 		AG_MFSpinbuttonSetValue(fsu, "xvalue",
@@ -129,7 +126,6 @@ TextChanged(AG_Event *event)
 		AG_MFSpinbuttonSetValue(fsu, "yvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
-	AG_UnlockVariable(stringb);
 
 	AG_PostEvent(NULL, fsu, "mfspinbutton-return", NULL);
 
@@ -259,12 +255,15 @@ Init(void *obj)
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_EXCL, NULL);
 	fsu->writeable = 1;
 	fsu->sep = ",";
+	fsu->inTxt[0] = '\0';
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
+
+	fsu->input = AG_TextboxNewS(fsu, 0, NULL);
+	AG_TextboxBindASCII(fsu->input, fsu->inTxt, sizeof(fsu->inTxt));
 	AG_TextboxSizeHint(fsu->input, "888.88");
-	
+
 	fsu->unit = AG_FindUnit("identity");
 	fsu->units = NULL;
 
@@ -468,7 +467,7 @@ Draw(void *obj)
 	xvalueb = AG_GetVariable(fsu, "xvalue", &xvalue);
 	yvalueb = AG_GetVariable(fsu, "yvalue", &yvalue);
 
-	AG_TextboxPrintf(fsu->input, fsu->format,
+	Snprintf(fsu->inTxt, sizeof(fsu->inTxt), fsu->format,
 	    *xvalue/fsu->unit->divider,
 	    *yvalue/fsu->unit->divider);
 

@@ -176,7 +176,7 @@ FileChosen(AG_Event *event)
 static void
 Return(AG_Event *event)
 {
-	char path[AG_TEXTBOX_STRING_MAX];
+	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tbox = AG_SELF();
 	AG_FileSelector *fs = AG_PTR(1);
 	
@@ -197,8 +197,12 @@ Init(void *obj)
 	fs->panel = NULL;
 	fs->wSaved = 0;
 	fs->hSaved = 0;
-	
+	fs->inTxt[0] = '\0';
+
+	/* XXX TODO: Check for UTF-8 support in filesystem. */
 	fs->tbox = AG_TextboxNewS(fs, AG_TEXTBOX_COMBO|AG_TEXTBOX_EXCL, NULL);
+	AG_TextboxBindUTF8(fs->tbox, fs->inTxt, sizeof(fs->inTxt));
+
 	fs->button = AG_ButtonNewS(fs, AG_BUTTON_STICKY, _("Browse..."));
 	AG_ButtonSetPadding(fs->button, 1,1,1,1);
 	AG_WidgetSetFocusable(fs->button, 0);

@@ -121,16 +121,10 @@ static void
 PostChange(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
-	AG_Variable *string;
-	char *s;
 
 	AG_ObjectLock(sbu);
-
-	string = AG_GetVariable(sbu->input->ed, "string", &s);
-	AG_SpinbuttonSetValue(sbu, atoi(s));
-	AG_UnlockVariable(string);
+	AG_SpinbuttonSetValue(sbu, atoi(sbu->inTxt));
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
-
 	AG_ObjectUnlock(sbu);
 }
 
@@ -185,7 +179,10 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
+	sbu->inTxt[0] = '\0';
+
 	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_EXCL, NULL);
+	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));
 	AG_TextboxSizeHint(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);

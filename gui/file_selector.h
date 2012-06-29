@@ -20,6 +20,7 @@ typedef struct ag_file_selector {
 				   AG_FILE_SELECTOR_VFILL)
 #define AG_FILE_SELECTOR_ANY_FILE 0x04	/* Don't check file access */
 
+	char inTxt[AG_PATHNAME_MAX];	/* Input text buffer */
 	AG_Textbox *tbox;		/* Textbox */
 	AG_Button *button;		/* "Browse" button */
 	AG_FileDlg *filedlg;		/* File selection widget */

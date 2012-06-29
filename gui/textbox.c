@@ -91,34 +91,24 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	tb = Malloc(sizeof(AG_Textbox));
 	AG_ObjectInit(tb, &agTextboxClass);
 
-	if (flags & AG_TEXTBOX_HFILL)
-		AG_ExpandHoriz(tb);
-	if (flags & AG_TEXTBOX_VFILL)
-		AG_ExpandVert(tb);
-	if (flags & AG_TEXTBOX_READONLY) {
-		AG_WidgetDisable(tb);
-		AG_WidgetDisable(tb->ed);
-	}
-	if (flags & AG_TEXTBOX_PASSWORD)
-		tb->ed->flags |= AG_EDITABLE_PASSWORD;
-	if (flags & AG_TEXTBOX_ABANDON_FOCUS)
-		tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
-	if (flags & AG_TEXTBOX_INT_ONLY)
-		tb->ed->flags |= AG_EDITABLE_INT_ONLY;
-	if (flags & AG_TEXTBOX_FLT_ONLY)
-		tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
+	if (flags & AG_TEXTBOX_HFILL)		AG_ExpandHoriz(tb);
+	if (flags & AG_TEXTBOX_VFILL)		AG_ExpandVert(tb);
+	if (flags & AG_TEXTBOX_READONLY)	tb->ed->flags |= AG_EDITABLE_READONLY;
+	if (flags & AG_TEXTBOX_PASSWORD)	tb->ed->flags |= AG_EDITABLE_PASSWORD;
+	if (flags & AG_TEXTBOX_ABANDON_FOCUS)	tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
+	if (flags & AG_TEXTBOX_INT_ONLY)	tb->ed->flags |= AG_EDITABLE_INT_ONLY;
+	if (flags & AG_TEXTBOX_FLT_ONLY)	tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
+
 	if (flags & AG_TEXTBOX_CATCH_TAB) {
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
 		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
-	if (flags & AG_TEXTBOX_NOEMACS)
-		tb->ed->flags |= AG_EDITABLE_NOEMACS;
-	if (flags & AG_TEXTBOX_NOWORDSEEK)
-		tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
-	if (flags & AG_TEXTBOX_NOLATIN1)
-		tb->ed->flags |= AG_EDITABLE_NOLATIN1;
-	if (flags & AG_TEXTBOX_NOPOPUP)
-		tb->ed->flags |= AG_EDITABLE_NOPOPUP;
+
+	if (flags & AG_TEXTBOX_NOEMACS)		tb->ed->flags |= AG_EDITABLE_NOEMACS;
+	if (flags & AG_TEXTBOX_NOWORDSEEK)	tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
+	if (flags & AG_TEXTBOX_NOLATIN1)	tb->ed->flags |= AG_EDITABLE_NOLATIN1;
+	if (flags & AG_TEXTBOX_NOPOPUP)		tb->ed->flags |= AG_EDITABLE_NOPOPUP;
+	if (flags & AG_TEXTBOX_MULTILINGUAL)	tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;
 	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
@@ -347,6 +337,50 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	Free(s);
 }
 
+/*
+ * Map pixel coordinates to a position in the text.
+ * Return value is only valid as long as widget is locked.
+ */
+int
+AG_TextboxMapPosition(AG_Textbox *tb, int x, int y, int *pos, int absolute)
+{
+	AG_EditableBuffer *buf;
+	int rv;
+
+	if ((buf = AG_EditableGetBuffer(tb->ed)) == NULL) {
+		return (-1);				/* XXX ambiguous */
+	}
+	rv = AG_EditableMapPosition(tb->ed, buf, x, y, pos, absolute);
+	AG_EditableReleaseBuffer(tb->ed, buf);
+	return (rv);
+}
+
+/* Move cursor as close as possible to specified pixel coordinates. */
+void
+AG_TextboxMoveCursor(AG_Textbox *tb, int x, int y, int absolute)
+{
+	AG_EditableBuffer *buf;
+
+	if ((buf = AG_EditableGetBuffer(tb->ed)) == NULL) {
+		return;
+	}
+	AG_EditableMoveCursor(tb->ed, buf, x, y, absolute);
+	AG_EditableReleaseBuffer(tb->ed, buf);
+}
+
+/* Move cursor to specified character position in text. */
+void
+AG_TextboxSetCursorPos(AG_Textbox *tb, int pos)
+{
+	AG_EditableBuffer *buf;
+
+	if ((buf = AG_EditableGetBuffer(tb->ed)) == NULL) {
+		return;
+	}
+	AG_EditableSetCursorPos(tb->ed, buf, pos);
+	AG_EditableReleaseBuffer(tb->ed, buf);
+}
+
 static void
 MouseButtonDown(AG_Event *event)
 {
@@ -412,6 +446,7 @@ Init(void *obj)
 	tb->vBar = NULL;
 	tb->r = AG_RECT(0,0,0,0);
 	tb->font = NULL;
+	tb->text = tb->ed->text;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);

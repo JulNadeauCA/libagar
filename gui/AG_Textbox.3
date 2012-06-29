@@ -86,6 +86,12 @@ processing.
 .Ft "void"
 .Fn AG_TextboxBindEncoded "AG_Textbox *textbox" "const char *encoding" "char *buffer" "size_t bufferSize"
 .Pp
+.Ft "void"
+.Fn AG_TextboxBindText "AG_Textbox *textbox" "AG_Text *txt"
+.Pp
+.Ft void
+.Fn AG_TextboxSetLang "AG_Textbox *textbox" "enum ag_language lang"
+.Pp
 .Ft void
 .Fn AG_TextboxSetExcl "AG_Textbox *textbox" "int enable"
 .Pp
@@ -136,6 +142,11 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
+.It AG_TEXTBOX_MULTILINGUAL
+Allow the user to select different languages from the right-click popup
+menu (provided the widget is bound to an
+.Xr AG_Text 3
+element).
 .It AG_TEXTBOX_EXCL
 By default, external changes to the contents of the buffer are allowed and
 handled in a safe manner (at the cost of frequent character set conversions
@@ -176,6 +187,11 @@ LATIN-1 combinations.
 Disable traditional LATIN-1 key combinations.
 .It AG_TEXTBOX_NOPOPUP
 Disable the standard right-click popup menu.
+.It AG_TEXTBOX_READONLY
+Make the string read-only.
+This has the same effect as using
+.Xr AG_WidgetDisable 3 ,
+except that the textbox is not grayed out.
 .It AG_TEXTBOX_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -190,7 +206,6 @@ This flag is recommended for multi-line text as an alternative to calling
 .It AG_TEXTBOX_EXPAND
 Shorthand for
 .Dv AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL .
-.It AG_TEXTBOX_NOPOPUP
 .El
 .Pp
 The
@@ -212,6 +227,20 @@ conversion to other encodings requires that Agar be compiled with
 support (see
 .Xr iconv_open 3
 for the complete list of supported encodings).
+.Pp
+The
+.Fn AG_EditableBindText
+function binds the
+.Nm
+to a multilingual, variable-length
+.Xr AG_Text 3
+element.
+.Pp
+The
+.Fn AG_EditableSetLang
+function selects the specified language for the current
+.Xr AG_Text 3
+binding.
 .Pp
 The
 .Fn AG_TextboxSetExcl
@@ -259,6 +288,57 @@ The
 variant accepts arguments in pixels.
 .Fn AG_TextboxSizeHintLines
 accepts a number of lines.
+.Sh CURSOR MANIPULATION
+.nr nS 1
+.Ft int
+.Fn AG_TextboxMapPosition "AG_Textbox *textbox" "int x" "int y" "int *pos" "int absolute"
+.Pp
+.Ft void
+.Fn AG_TextboxMoveCursor "AG_Textbox *textbox" "int x" "int y" "int absolute"
+.Pp
+.Ft int
+.Fn AG_TextboxGetCursorPos "AG_Textbox *textbox"
+.Pp
+.Ft int
+.Fn AG_TextboxSetCursorPos "AG_Textbox *textbox" "int pos"
+.Pp
+.nr nS 0
+The
+.Fn AG_TextboxMapPosition
+function translates absolute coordinates (such as display coordinates)
+.Fa x
+and
+.Fa y
+in pixels to a position in the text buffer and return this position into
+.Fa pos .
+The function returns -1 or 1 if the cursor lies before or after the end
+of the string, respectively.
+If
+.Fa absolute
+if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_TextboxMoveCursor
+moves the text cursor to the position closest to the specified pixel coordinates
+.Fa mx
+and
+.Fy my
+(in the widget's local coordinate system).
+If
+.Fa absolute
+if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_TextboxGetCursorPos
+returns the current position of the cursor in the buffer.
+The return value is only valid as long as the widget remains locked.
+.Pp
+.Fn AG_TextboxSetCursorPos
+tries to move the cursor to the specified position in the string, after
+bounds checking is done.
+If
+.Fa pos
+is -1, the cursor is moved to the end of the string.
+.Fn AG_TextboxSetCursorPos
+returns the new position of the cursor.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
@@ -353,7 +433,13 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string "
 .It Va char *string
-Text buffer using UTF-8 encoding.
+Bound fixed-size buffer containing a "C" string (i.e., a NUL-terminated string)
+in the specified encoding (UTF-8 by default).
+.It Va AG_Text *text
+Bound
+.Xr AG_Text 3
+element containing an table of variable-length C strings (entries in
+this table map to different languages).
 .El
 .Sh EVENTS
 The
@@ -363,11 +449,12 @@ widget reacts to the following events:
 .Bl -tag -compact -width 25n
 .It mouse-button-down
 Move focus to the widget.
-Position the cursor at a specific position.
+Move the cursor to a specific position.
 .It mouse-motion
-Move the cursor and scroll.
+Move the cursor, select, scroll.
+.It key-up
 .It key-down
-Perform the action that the current keymap associates with this key.
+Perform associated keyboard action.
 .El
 .Pp
 The
@@ -389,11 +476,15 @@ For the
 .Ft AG_Textbox
 object:
 .Pp
-.Bl -tag -compact -width "AG_Label *lbl "
+.Bl -tag -compact -width "AG_Editable *ed "
+.It Ft AG_Editable *ed
+Pointer to the underlying
+.Xr AG_Editable 3
+widget.
 .It Ft AG_Label *lbl
-Pointer to the textbox's associated
-.Xr AG_Label 3 .
-If no text label was given, this is a NULL pointer.
+Pointer to the
+.Xr AG_Label 3
+(if any).
 A call to
 .Fn AG_TextboxSetLabel
 will create a new label object.
@@ -402,6 +493,12 @@ Alternate font (if NULL, the default font is used).
 If calling
 .Fn AG_TextboxSetFont
 is not convenient, it is legal to modify this pointer at run time.
+.It Ft AG_Text *text
+An initially empty
+.Xr AG_Text 3
+object used as the default binding (where
+.Fn AG_TextboxBind*
+is not used).
 .El
 .Sh EXAMPLES
 The following code fragment binds an

@@ -64,7 +64,7 @@ GetBufferText(AG_Editable *ed, AG_EditableBuffer *buf)
 
 	if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
 	    buf->s == NULL) {
-		AG_TextEnt *te = &txt->ent[txt->lang];
+		AG_TextEnt *te = &txt->ent[ed->lang];
 
 		if (te->buf != NULL) {
 			buf->s = AG_ImportUnicode("UTF-8", te->buf,
@@ -138,7 +138,7 @@ CommitBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 {
 	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
 		AG_Text *txt = buf->var->data.p;
-		AG_TextEnt *te = &txt->ent[txt->lang];
+		AG_TextEnt *te = &txt->ent[ed->lang];
 		size_t lenEnc = AG_LengthUTF8FromUCS4(buf->s)+1;
 
 		if (lenEnc > te->maxLen &&
@@ -304,6 +304,18 @@ AG_EditableBindText(AG_Editable *ed, AG_Text *txt)
 	AG_BindPointer(ed, "text", (void *)txt);
 	ed->encoding = "UTF-8";
 	AG_ObjectUnlock(ed);
+}
+
+/* Set the current language (for AG_Text bindings). */
+void
+AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
+{
+	AG_ObjectLock(ed);
+	ed->lang = lang;
+	ed->pos = 0;
+	ed->sel = 0;
+	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
 }
 
 /* Enable or disable password entry mode. */
@@ -752,7 +764,7 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 	ed->sel = 0;
 	if (ed->pos < 0) {
 		if (pos == -1 || ed->pos > buf->len)
-			ed->pos = buf->len+1;
+			ed->pos = buf->len;
 	}
 	rv = ed->pos;
 	AG_ObjectUnlock(ed);
@@ -1122,7 +1134,7 @@ AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb,
 int
 AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb)
 {
-	if (ed->sel == 0) {
+	if (AG_EditableReadOnly(ed) || ed->sel == 0) {
 		return (0);
 	}
 	NormSelection(ed);
@@ -1148,6 +1160,9 @@ int
 AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
     AG_EditableClipboard *cb)
 {
+	if (AG_EditableReadOnly(ed))
+		return (0);
+
 	if (ed->sel != 0)
 		AG_EditableDelete(ed, buf);
 
@@ -1184,9 +1199,9 @@ fail:
 int
 AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	if (ed->sel == 0) {
+	if (AG_EditableReadOnly(ed) || ed->sel == 0)
 		return (0);
-	}
+
 	NormSelection(ed);
 	if (ed->pos + ed->sel == buf->len) {
 		buf->s[ed->pos] = '\0';
@@ -1271,25 +1286,54 @@ MenuSelectAll(AG_Event *event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+static void
+MenuSetLang(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	enum ag_language lang = (enum ag_language)AG_INT(2);
+
+	AG_EditableSetLang(ed, lang);
+}
 static AG_PopupMenu *
 PopupMenu(AG_Editable *ed)
 {
 	AG_PopupMenu *pm;
 	AG_MenuItem *m;
+	AG_Variable *vText;
+	AG_Text *txt;
 
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
 	}
 	m = AG_MenuAction(pm->item, _("Cut"), NULL, MenuCut, "%p", ed);
-	m->state = (ed->sel != 0);
+	m->state = (!AG_EditableReadOnly(ed) && ed->sel != 0);
 	m = AG_MenuAction(pm->item, _("Copy"), NULL, MenuCopy, "%p", ed);
 	m->state = (ed->sel != 0);
 	m = AG_MenuAction(pm->item, _("Paste"), NULL, MenuPaste, "%p", ed);
-	m->state = (agEditableClipbrd.len > 0);
+	m->state = (!AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0);
 	m = AG_MenuAction(pm->item, _("Delete"), NULL, MenuDelete, "%p", ed);
-	m->state = (ed->sel != 0);
+	m->state = (!AG_EditableReadOnly(ed) && ed->sel != 0);
 	AG_MenuSeparator(pm->item);
 	AG_MenuAction(pm->item, _("Select All"), NULL, MenuSelectAll, "%p", ed);
+	if ((ed->flags & AG_EDITABLE_MULTILINGUAL) &&
+	    AG_Defined(ed, "text") &&
+	    (vText = AG_GetVariable(ed, "text", &txt)) != NULL) {
+		AG_MenuItem *mLang;
+		int i;
+		
+		AG_MenuSeparator(pm->item);
+		mLang = AG_MenuNode(pm->item, _("Select Language"), NULL);
+		for (i = 0; i < AG_LANG_LAST; i++) {
+			AG_TextEnt *te = &txt->ent[i];
+
+			if (te->len == 0)
+				continue;
+
+			AG_MenuAction(mLang, _(agLanguageNames[i]),
+			    NULL, MenuSetLang, "%p,%i", ed, i);
+		}
+		AG_UnlockVariable(vText);
+	}
 	return (pm);
 }
 
@@ -1523,27 +1567,39 @@ out:
 char *
 AG_EditableDupString(AG_Editable *ed)
 {
-	AG_Variable *stringb;
-	char *s, *sd;
+	AG_Variable *var;
+	char *sDup;
 
-	stringb = AG_GetVariable(ed, "string", &s);
-	sd = TryStrdup(s);
-	AG_UnlockVariable(stringb);
-	return (sd);
+	if (AG_Defined(ed, "text")) {
+		AG_Text *txt;
+		var = AG_GetVariable(ed, "text", &txt);
+		sDup = TryStrdup(txt->ent[ed->lang].buf);
+	} else {
+		char *s;
+		var = AG_GetVariable(ed, "string", &s);
+		sDup = TryStrdup(s);
+	}
+	return (sDup);
 }
 
 /* Copy text to a fixed-size buffer and always NUL-terminate. */
 size_t
 AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
 {
-	AG_Variable *stringb;
+	AG_Variable *var;
 	size_t rv;
-	char *s;
 
 	AG_ObjectLock(ed);
-	stringb = AG_GetVariable(ed, "string", &s);
-	rv = Strlcpy(dst, s, dst_size);
-	AG_UnlockVariable(stringb);
+	if (AG_Defined(ed, "text")) {
+		AG_Text *txt;
+		var = AG_GetVariable(ed, "text", &txt);
+		rv = Strlcpy(dst, txt->ent[ed->lang].buf, dst_size);
+	} else {
+		char *s;
+		var = AG_GetVariable(ed, "string", &s);
+		rv = Strlcpy(dst, s, dst_size);
+	}
+	AG_UnlockVariable(var);
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
@@ -1613,6 +1669,19 @@ DoubleClickTimeout(AG_Event *event)
 }
 
 static void
+Bound(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	AG_Variable *binding = AG_PTR(1);
+
+	if (strcmp(binding->name, "string") == 0) {
+		AG_Unset(ed, "text");
+	} else if (strcmp(binding->name, "text") == 0) {
+		AG_Unset(ed, "string");
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Editable *ed = obj;
@@ -1621,8 +1690,8 @@ Init(void *obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
-	ed->string[0] = '\0';
 	ed->encoding = "UTF-8";
+	ed->text = AG_TextNewS(NULL);
 
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
@@ -1648,6 +1717,7 @@ Init(void *obj)
 	ed->ca = NULL;
 	ed->font = NULL;
 	ed->pm = NULL;
+	ed->lang = AG_LANG_NONE;
 
 	ed->sBuf.var = NULL;
 	ed->sBuf.s = NULL;
@@ -1664,12 +1734,13 @@ Init(void *obj)
 	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
 	AG_AddEvent(ed, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(ed, "dblclick-expire", DoubleClickTimeout, NULL);
+	AG_SetEvent(ed, "bound", Bound, NULL);
 
 	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toCursorBlink, BlinkTimeout, NULL, 0);
 
-	AG_BindString(ed, "string", ed->string, sizeof(ed->string));
+	AG_BindPointer(ed, "text", (void *)ed->text);
 
 	AG_RedrawOnTick(ed, 1000);
 
@@ -1694,6 +1765,8 @@ Destroy(void *obj)
 
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
+	
+	AG_TextFree(ed->text);
 }
 
 /* Initialize/release the global clipboards. */

@@ -18,6 +18,7 @@ typedef struct ag_spinbutton {
 	int min, max;			/* Default range bindings */
 	int incr;			/* Increment for buttons */
 	int writeable;			/* 0 = read-only */
+	char inTxt[64];			/* Input text buffer */
 	AG_Textbox *input;
 	AG_Button *incbu;
 	AG_Button *decbu;
