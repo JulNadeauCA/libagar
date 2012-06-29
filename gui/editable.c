@@ -1579,6 +1579,7 @@ AG_EditableDupString(AG_Editable *ed)
 		var = AG_GetVariable(ed, "string", &s);
 		sDup = TryStrdup(s);
 	}
+	AG_UnlockVariable(var);
 	return (sDup);
 }
 
