@@ -40,8 +40,8 @@ typedef struct ag_file_ext_mapping {
 } AG_FileExtMapping;
 
 __BEGIN_DECLS
-AG_FileExtMapping *agFileExtMap;
-Uint               agFileExtCount;
+extern AG_FileExtMapping *agFileExtMap;
+extern Uint               agFileExtCount;
 
 int AG_GetFileInfo(const char *, AG_FileInfo *);
 int AG_GetSystemTempDir(char *, size_t)
