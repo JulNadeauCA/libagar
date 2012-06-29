@@ -1116,7 +1116,7 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 		break;
 	}
 	if (w != NULL) { *w = tm.w; }
-	if (h != NULL) { *h = tm.h; }
+	if (h != NULL) { *h = tm.h + 2; }
 	FreeMetrics(&tm);
 }
 
@@ -1601,7 +1601,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
-		    &tb->ed->string[0]);
+		    tb->text->ent[0].buf);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
 
@@ -1611,7 +1611,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		ev = AG_SetEvent(btnOK, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
 		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
-		    &tb->ed->string[0]);
+		    tb->text->ent[0].buf);
 		AG_AddEvent(btnOK, "button-pushed", AGWINDETACH(win));
 
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));

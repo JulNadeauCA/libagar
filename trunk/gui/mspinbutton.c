@@ -123,27 +123,20 @@ KeyDown(AG_Event *event)
 static void
 TextReturn(AG_Event *event)
 {
-	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MSpinbutton *sbu = AG_PTR(1);
-	AG_Variable *stringb;
-	char *tp = &text[0], *s;
+	char inTxt[64];
+	char *tp = &inTxt[0], *s;
 
 	AG_ObjectLock(sbu);
-
-	stringb = AG_GetVariable(sbu->input->ed, "string", &s);
-	Strlcpy(text, s, sizeof(text));
-
+	Strlcpy(inTxt, sbu->inTxt, sizeof(inTxt));
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
 	}
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_UnlockVariable(stringb);
-
 	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
 	AG_WidgetUnfocus(sbu->input);
-	
 	AG_ObjectUnlock(sbu);
 	AG_Redraw(sbu);
 }
@@ -151,24 +144,18 @@ TextReturn(AG_Event *event)
 static void
 TextChanged(AG_Event *event)
 {
-	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MSpinbutton *sbu = AG_PTR(1);
-	AG_Variable *stringb;
-	char *tp = &text[0], *s;
+	char inTxt[64];
+	char *tp = &inTxt[0], *s;
 	
 	AG_ObjectLock(sbu);
-
-	stringb = AG_GetVariable(sbu->input->ed, "string", &s);
-	Strlcpy(text, s, sizeof(text));
-
+	Strlcpy(inTxt, sbu->inTxt, sizeof(inTxt));
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
 	}
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_UnlockVariable(stringb);
-
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
 	AG_ObjectUnlock(sbu);
 	AG_Redraw(sbu);
@@ -233,8 +220,10 @@ Init(void *obj)
 	sbu->inc = 1;
 	sbu->writeable = 0;
 	sbu->sep = ",";
+	sbu->inTxt[0] = '\0';
 	
-	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_EXCL, NULL);
+	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
+	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", TextChanged, "%p", sbu);
 	AG_TextboxSizeHint(sbu->input, "88888");
@@ -333,35 +322,35 @@ Draw(void *obj)
 	yvalueb = AG_GetVariable(sbu, "yvalue", &yvalue);
 	switch (AG_VARIABLE_TYPE(xvalueb)) {
 	case AG_VARIABLE_INT:
-		AG_TextboxPrintf(sbu->input, "%d%s%d",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
 		    *(int *)xvalue, sbu->sep, *(int *)yvalue);
 		break;
 	case AG_VARIABLE_UINT:
-		AG_TextboxPrintf(sbu->input, "%u%s%u",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
 		    *(Uint *)xvalue, sbu->sep, *(Uint *)yvalue);
 		break;
 	case AG_VARIABLE_UINT8:
-		AG_TextboxPrintf(sbu->input, "%u%s%u",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
 		    *(Uint8 *)xvalue, sbu->sep, *(Uint8 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT8:
-		AG_TextboxPrintf(sbu->input, "%d%s%d",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
 		    *(Sint8 *)xvalue, sbu->sep, *(Sint8 *)yvalue);
 		break;
 	case AG_VARIABLE_UINT16:
-		AG_TextboxPrintf(sbu->input, "%u%s%u",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
 		    *(Uint16 *)xvalue, sbu->sep, *(Uint16 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT16:
-		AG_TextboxPrintf(sbu->input, "%d%s%d",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
 		    *(Sint16 *)xvalue, sbu->sep, *(Sint16 *)yvalue);
 		break;
 	case AG_VARIABLE_UINT32:
-		AG_TextboxPrintf(sbu->input, "%u%s%u",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
 		    *(Uint32 *)xvalue, sbu->sep, *(Uint32 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT32:
-		AG_TextboxPrintf(sbu->input, "%d%s%d",
+		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
 		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
 		break;
 	default:

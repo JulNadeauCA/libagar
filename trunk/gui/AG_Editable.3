@@ -90,6 +90,9 @@ or "Select All" functions could be implemented externally in this way).
 .Fn AG_EditableBindText "AG_Editable *ed" "AG_Text *txt"
 .Pp
 .Ft void
+.Fn AG_EditableSetLang "AG_Editable *ed" "enum ag_language lang"
+.Pp
+.Ft void
 .Fn AG_EditableSetExcl "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
@@ -130,6 +133,11 @@ include:
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
+.It AG_EDITABLE_MULTILINGUAL
+Allow the user to select different languages from the right-click popup
+menu (provided the widget is bound to an
+.Xr AG_Text 3
+element).
 .It AG_EDITABLE_EXCL
 By default, external changes to the contents of the buffer are allowed and
 handled in a safe manner (at the cost of frequent character set conversions
@@ -179,6 +187,11 @@ LATIN-1 combinations.
 Disable traditional LATIN-1 key combinations.
 .It AG_EDITABLE_NOPOPUP
 Disable the standard right-click popup menu.
+.It AG_EDITABLE_READONLY
+Make the string read-only.
+This has the same effect as using
+.Xr AG_WidgetDisable 3 ,
+except that the textbox is not grayed out.
 .It AG_EDITABLE_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -224,7 +237,13 @@ function binds the
 .Nm
 to a multilingual, variable-length
 .Xr AG_Text 3
-element (uses UTF-8 encoding).
+element.
+.Pp
+The
+.Fn AG_EditableSetLang
+function selects the specified language for the current
+.Xr AG_Text 3
+binding.
 .Pp
 The
 .Fn AG_EditableSetExcl
@@ -451,6 +470,9 @@ selects all characters in the buffer.
 .Fn AG_EditableMoveCursor "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int absolute"
 .Pp
 .Ft int
+.Fn AG_EditableGetCursorPos "AG_Editable *ed"
+.Pp
+.Ft int
 .Fn AG_EditableSetCursorPos "AG_Editable *ed" "AG_EditableBuffer *buf" "int pos"
 .Pp
 .nr nS 0
@@ -477,6 +499,14 @@ and
 If
 .Fa absolute
 if 1, y coordinates outside of the widget area are allowed.
+.Pp
+.Fn AG_EditableGetCursorPos
+returns the current position of the cursor in the text.
+The return value is only valid as long as the widget remains locked.
+The position can also be retrieved from the
+.Va pos
+variable (see
+.Dq STRUCTURE DATA ) .
 .Pp
 .Fn AG_EditableSetCursorPos
 tries to move the cursor to the specified position in the string (bounds
@@ -508,11 +538,12 @@ widget reacts to the following events:
 .Bl -tag -compact -width 25n
 .It mouse-button-down
 Move focus to the widget.
-Position the cursor at a specific position.
+Move the cursor to a specific position.
 .It mouse-motion
-Move the cursor and scroll.
+Move the cursor, select, scroll.
+.It key-up
 .It key-down
-Perform the action that the current keymap associates with this key.
+Perform associated keyboard action.
 .El
 .Pp
 The
@@ -534,7 +565,7 @@ For the
 .Ft AG_Editable
 object:
 .Pp
-.Bl -tag -compact -width "AG_Font *font "
+.Bl -tag -compact -width "enum ag_language lang "
 .It Ft int pos
 Current cursor position (ranging from 0 to the current buffer's
 .Va len
@@ -547,12 +578,25 @@ Alternate font (if NULL, the default font is used).
 If calling
 .Fn AG_EditableSetFont
 is not convenient, it is legal to modify this pointer at run time.
+.It Ft AG_Text *text
+An initially empty
+.Xr AG_Text 3
+object used as the default binding (where
+.Fn AG_EditableBind*
+is not used).
 .It Ft char *encoding
 Character set for the bound string.
 This may be set to "US-ASCII" or "UTF-8" (the default).
 Other character sets are supported if Agar was compiled with
 .Xr iconv 3
 support.
+.It Ft enum ag_language lang
+Currently selected language (for
+.Xr AG_Text 3
+bindings only).
+Read-only; use
+.Fn AG_EditableSetLang
+to change.
 .El
 .Sh EXAMPLES
 The following code fragment binds a

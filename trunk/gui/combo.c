@@ -209,13 +209,12 @@ SelectedItem(AG_Event *event)
 static void
 Return(AG_Event *event)
 {
-	char text[AG_TEXTBOX_STRING_MAX];
 	AG_Textbox *tbox = AG_SELF();
 	AG_Combo *com = AG_PTR(1);
+	char *text;
 	
 	AG_ObjectLock(com->list);
-
-	AG_TextboxCopyString(tbox, text, sizeof(text));
+	text = tbox->text->ent[0].buf;
 
 	if ((com->flags & AG_COMBO_ANY_TEXT) == 0) {
 		AG_TlistItem *it;

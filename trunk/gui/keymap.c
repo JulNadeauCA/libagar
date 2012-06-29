@@ -48,7 +48,7 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	int i, nIns;
 	Uint32 uch = ch;
 
-	if (AG_WidgetDisabled(ed) || keysym == 0)
+	if (AG_EditableReadOnly(ed) || keysym == 0)
 		return (0);
 #if 0
 	if (!unicodeKbd) {
@@ -122,9 +122,7 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 {
 	Uint32 *c;
 
-	if (AG_WidgetDisabled(ed))
-		return (0);
-	if (buf->len == 0)
+	if (AG_EditableReadOnly(ed) || buf->len == 0)
 		return (0);
 
 	if (ed->sel != 0) {
@@ -167,6 +165,9 @@ static int
 Cut(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
+	if (AG_EditableReadOnly(ed)) {
+		return (0);
+	}
 	return AG_EditableCut(ed, buf, &agEditableClipbrd);
 }
 
@@ -175,6 +176,9 @@ static int
 Paste(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
+	if (AG_EditableReadOnly(ed)) {
+		return (0);
+	}
 	return AG_EditablePaste(ed, buf, &agEditableClipbrd);
 }
 
@@ -188,7 +192,7 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
 {
 	Uint32 *c;
 	
-	if (AG_WidgetDisabled(ed)) {
+	if (AG_EditableReadOnly(ed)) {
 		return (0);
 	}
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
@@ -221,7 +225,7 @@ static int
 Yank(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, int keymod,
     Uint32 uch)
 {
-	if (AG_WidgetDisabled(ed)) {
+	if (AG_EditableReadOnly(ed)) {
 		return (0);
 	}
 	if ((ed->flags & AG_EDITABLE_NOEMACS) &&

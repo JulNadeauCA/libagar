@@ -430,18 +430,16 @@ UpdateFromText(AG_Event *event)
 {
 	AG_Numerical *num = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_Variable *stringb, *valueb;
-	char *s;
+	AG_Variable *valueb;
 	void *value;
 
 	valueb = AG_GetVariable(num, "value", &value);
-	stringb = AG_GetVariable(num->input->ed, "string", &s);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_DOUBLE:
 	case AG_VARIABLE_FLOAT:
 		AG_NumericalSetValue(num,
-		    AG_Unit2Base(strtod(s, NULL), num->unit));
+		    AG_Unit2Base(strtod(num->inTxt, NULL), num->unit));
 		break;
 	case AG_VARIABLE_INT:
 	case AG_VARIABLE_UINT:
@@ -451,13 +449,13 @@ UpdateFromText(AG_Event *event)
 	case AG_VARIABLE_SINT16:
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
-		AG_NumericalSetValue(num, (double)strtol(s, NULL, 10));
+		AG_NumericalSetValue(num,
+		    (double)strtol(num->inTxt, NULL, 10));
 		break;
 	default:
 		break;
 	}
 
-	AG_UnlockVariable(stringb);
 	AG_UnlockVariable(valueb);
 
 	if (unfocus) {
@@ -587,11 +585,14 @@ Init(void *obj)
 	num->intMax = 0;
 
 	num->inc = 1.0;
-	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
+	num->inTxt[0] = '\0';
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
+	
+	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
+	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(num->input, "8888.88");
 	
 	num->unit = AG_FindUnit("identity");

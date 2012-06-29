@@ -8,8 +8,6 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_EDITABLE_STRING_MAX 1024	/* For "default" string binding */
-
 struct ag_cursor_area;
 struct ag_popup_menu;
 
@@ -55,10 +53,11 @@ typedef struct ag_editable {
 #define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
 #define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
 #define AG_EDITABLE_WORDSELECT	  0x100000 /* Select whole words */
+#define AG_EDITABLE_READONLY	  0x200000 /* Disable user input */
+#define AG_EDITABLE_MULTILINGUAL  0x400000 /* Multilingual edition */
 
 	const char *encoding;		/* Character set (default "UTF-8") */
-
-	char string[AG_EDITABLE_STRING_MAX]; /* Default "string" binding */
+	AG_Text *text;			/* Default binding */
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
 	int sel;			/* Selection offset / range */
@@ -83,6 +82,7 @@ typedef struct ag_editable {
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
 	AG_Font *font;			/* Font for text rendering */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */
+	enum ag_language lang;		/* Selected language (for AG_Text) */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -100,6 +100,7 @@ void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
 void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
 void         AG_EditableBindEncoded(AG_Editable *, const char *, char *, size_t);
 void         AG_EditableBindText(AG_Editable *, AG_Text *);
+void         AG_EditableSetLang(AG_Editable *, enum ag_language);
 
 AG_EditableBuffer *AG_EditableGetBuffer(AG_Editable *);
 void               AG_EditableReleaseBuffer(AG_Editable *, AG_EditableBuffer *);
@@ -126,10 +127,6 @@ void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
 void         AG_EditableSetFont(AG_Editable *, AG_Font *);
 
-int  AG_EditableMapPosition(AG_Editable *, AG_EditableBuffer *, int, int, int *, int);
-void AG_EditableMoveCursor(AG_Editable *, AG_EditableBuffer *, int, int, int);
-int  AG_EditableSetCursorPos(AG_Editable *, AG_EditableBuffer *, int);
-
 void     AG_EditableSetString(AG_Editable *, const char *);
 #define  AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)
 void     AG_EditablePrintf(void *, const char *, ...);
@@ -142,6 +139,28 @@ double   AG_EditableDbl(AG_Editable *);
 
 void     AG_EditableInitClipboards(void);
 void     AG_EditableDestroyClipboards(void);
+
+int  AG_EditableMapPosition(AG_Editable *, AG_EditableBuffer *, int, int, int *, int);
+void AG_EditableMoveCursor(AG_Editable *, AG_EditableBuffer *, int, int, int);
+int  AG_EditableSetCursorPos(AG_Editable *, AG_EditableBuffer *, int);
+
+/* Return current cursor position in text. */
+static __inline__ int
+AG_EditableGetCursorPos(AG_Editable *ed)
+{
+	int rv;
+	AG_ObjectLock(ed);
+	rv = ed->pos;
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+/* Return 1 if the Editable is effectively read-only. */
+static __inline__ int
+AG_EditableReadOnly(AG_Editable *ed)
+{
+	return (ed->flags & AG_EDITABLE_READONLY) || AG_WidgetDisabled(ed);
+}
 
 #ifdef AG_LEGACY
 # define AG_EditableSetStatic AG_EditableSetExcl

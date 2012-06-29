@@ -151,20 +151,18 @@ TextChanged(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_Variable *stringb, *valueb;
-	char *s;
+	AG_Variable *valueb;
 	void *value;
 
 	AG_ObjectLock(fsu);
 
 	valueb = AG_GetVariable(fsu, "value", &value);
-	stringb = AG_GetVariable(fsu->input->ed, "string", &s);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
 	case AG_VARIABLE_DOUBLE:
 	case AG_VARIABLE_FLOAT:
 		AG_FSpinbuttonSetValue(fsu,
-		    AG_Unit2Base(strtod(s, NULL), fsu->unit));
+		    AG_Unit2Base(strtod(fsu->inTxt, NULL), fsu->unit));
 		break;
 	case AG_VARIABLE_INT:
 	case AG_VARIABLE_UINT:
@@ -174,13 +172,12 @@ TextChanged(AG_Event *event)
 	case AG_VARIABLE_SINT16:
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
-		AG_FSpinbuttonSetValue(fsu, (double)strtol(s, NULL, 10));
+		AG_FSpinbuttonSetValue(fsu, (double)strtol(fsu->inTxt, NULL, 10));
 		break;
 	default:
 		break;
 	}
 
-	AG_UnlockVariable(stringb);
 	AG_UnlockVariable(valueb);
 
 	if (unfocus) {
@@ -275,19 +272,21 @@ Init(void *obj)
 	AG_FSpinbutton *fsu = obj;
 	
 	WIDGET(fsu)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
-
+	
 	AG_BindDouble(fsu, "value", &fsu->value);
 	AG_BindDouble(fsu, "min", &fsu->min);
 	AG_BindDouble(fsu, "max", &fsu->max);
 	
 	AG_RedrawOnChange(fsu, 250, "value");
-	
+
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_EXCL,
-	    NULL);
 	fsu->writeable = 1;
+	fsu->inTxt[0] = '\0';
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
+
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_EXCL, NULL);
+	AG_TextboxBindASCII(fsu->input, fsu->inTxt, sizeof(fsu->inTxt));
 	AG_TextboxSizeHint(fsu->input, "88.88");
 	
 	fsu->unit = AG_FindUnit("identity");
@@ -302,7 +301,7 @@ Init(void *obj)
 	AG_ButtonSetPadding(fsu->decbu, 0,0,0,0);
 	AG_LabelSetPadding(fsu->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
-
+	
 	AG_SetEvent(fsu, "bound", Bound, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);

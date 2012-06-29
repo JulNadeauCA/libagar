@@ -23,6 +23,7 @@ typedef struct ag_fspinbutton {
 	char format[32];		/* Printing format */
 	const AG_Unit *unit;		/* Conversion unit in use */
 	int writeable;			/* 0 = read-only */
+	char inTxt[64];			/* Input text buffer */
 	AG_Textbox *input;
 	AG_UCombo *units;
 	AG_Button *incbu;
