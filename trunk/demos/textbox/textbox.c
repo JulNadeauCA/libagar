@@ -35,38 +35,61 @@ SetWordWrap(AG_Event *event)
 }
 
 static void
+TestFlags(AG_Box *win, AG_Textbox *textbox)
+{
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Cursor at: %i", &textbox->ed->pos);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Selection: %i", &textbox->ed->sel);
+	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
+	AG_CheckboxNewFlag(win, 0, "Read-only", &textbox->ed->flags, AG_EDITABLE_READONLY);
+	AG_CheckboxNewFlag(win, 0, "Password input", &textbox->ed->flags, AG_EDITABLE_PASSWORD);
+	AG_CheckboxNewFlag(win, 0, "Force integer input", &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Disable emacs keys", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
+}
+
+static void
 SingleLineExample(void)
 {
+	char buffer[60];
+	AG_Text *txt;
 	AG_Window *win;
+	AG_Box *hBox, *vBox;
 	AG_Textbox *textbox;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Single-line Example");
+	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_HOMOGENOUS);
 
-	/*
-	 * Create a single-line Textbox. TextboxSizeHint() requests an initial
-	 * textbox size large enough to display the given string entirely.
-	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_EXCL, "Static string: ");
-	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
-	AG_TextboxPrintf(textbox, "Hello");
+	/* Create a single-line Textbox bound to a fixed-size buffer. */
+	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
+	textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
+	    "Fixed C buffer: ");
+	AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
+	AG_TextboxPrintf(textbox, "Foo bar baz bezo foo");
+	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	AG_WidgetFocus(textbox);
+	AG_SeparatorNewHoriz(vBox);
+	TestFlags(vBox, textbox);
 
-	/* Bind checkboxes to some flags. */
-	AG_SeparatorNewHoriz(win);
-	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
-	AG_CheckboxNewFlag(win, 0, "Password input",
-	    &textbox->ed->flags, AG_EDITABLE_PASSWORD);
-	AG_CheckboxNewFlag(win, 0, "Force integer input",
-	    &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Force float input",
-	    &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Disable emacs keys",
-	    &textbox->ed->flags, AG_EDITABLE_NOEMACS);
-	AG_CheckboxNewFlag(win, 0, "Disable traditional LATIN-1",
-	    &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
+	/* Create a single-line Textbox bound to an AG_Text object. */
+	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
+	txt = AG_TextNewS(NULL);
+	{
+		AG_TextSetEntS(txt, AG_LANG_EN, "Hello");
+		AG_TextSetEntS(txt, AG_LANG_FR, "Bonjour");
+		AG_TextSetEntS(txt, AG_LANG_DE, "Guten Tag");
+	}
+	textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_MULTILINGUAL,
+	    "AG_Text element: ");
+	AG_TextboxBindText(textbox, txt);
+	AG_TextboxSetLang(textbox, AG_LANG_EN);
+	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
+	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
+	AG_SeparatorNewHoriz(vBox);
+	TestFlags(vBox, textbox);
 
-	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowShow(win);
 }
 
@@ -113,6 +136,8 @@ MultiLineExample(const char *title)
 	 */
 	AG_TextboxBindUTF8(textbox, someText, bufSize);
 
+	AG_CheckboxNewFlag(win, 0, "Read-only",
+	    &textbox->ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
 #if 0
