@@ -34,7 +34,7 @@ M_PolygonAddVertex(M_Polygon *P, M_Vector2 v)
 {
 	M_Vector2 *vNew;
 
-	if ((vNew = AG_TryRealloc(P->v, (P->n+1)*sizeof(M_Vector2))) == NULL) {
+	if ((vNew = (M_Vector2 *)AG_TryRealloc(P->v, (P->n+1)*sizeof(M_Vector2))) == NULL) {
 		return (-1);
 	}
 	P->v = vNew;
