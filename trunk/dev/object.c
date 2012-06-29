@@ -168,7 +168,7 @@ RenameObject(AG_Event *event)
 
 	if (AG_ObjectPageIn(ob) == 0) {
 		AG_ObjectUnlinkDatafiles(ob);
-		Strlcpy(ob->name, tb->ed->string, sizeof(ob->name));
+		AG_TextboxCopyString(tb, ob->name, sizeof(ob->name));
 		AG_ObjectPageOut(ob);
 	}
 	AG_PostEvent(NULL, ob, "renamed", NULL);
