@@ -35,8 +35,35 @@ SetWordWrap(AG_Event *event)
 }
 
 static void
-TestFlags(AG_Box *win, AG_Textbox *textbox)
+DupString(AG_Event *event)
 {
+	AG_Textbox *textbox = AG_PTR(1);
+	char *s;
+
+	if ((s = AG_TextboxDupString(textbox)) != NULL) {
+		AG_TextMsg(AG_MSG_INFO, "Duplicated string:\n\"%s\"\n", s);
+		free(s);
+	} else {
+		AG_TextMsgS(AG_MSG_INFO, "Failed");
+	}
+}
+
+static void
+CopyString(AG_Event *event)
+{
+	char tinybuf[10];
+	AG_Textbox *textbox = AG_PTR(1);
+
+	AG_TextboxCopyString(textbox, tinybuf, sizeof(tinybuf));
+	AG_TextMsg(AG_MSG_INFO, "Copied string (to %d-byte buffer):\n\"%s\"\n",
+	    (int)sizeof(tinybuf), tinybuf);
+}
+
+static void
+DebugStuff(AG_Box *win, AG_Textbox *textbox)
+{
+	AG_Box *hBox;
+
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Cursor at: %i", &textbox->ed->pos);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Selection: %i", &textbox->ed->sel);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
@@ -45,6 +72,9 @@ TestFlags(AG_Box *win, AG_Textbox *textbox)
 	AG_CheckboxNewFlag(win, 0, "Force integer input", &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Disable emacs keys", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
+	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_ButtonNewFn(hBox, 0, "Dup string", DupString, "%p", textbox);
+	AG_ButtonNewFn(hBox, 0, "Copy string", CopyString, "%p", textbox);
 }
 
 static void
@@ -70,7 +100,7 @@ SingleLineExample(void)
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	AG_WidgetFocus(textbox);
 	AG_SeparatorNewHoriz(vBox);
-	TestFlags(vBox, textbox);
+	DebugStuff(vBox, textbox);
 
 	/* Create a single-line Textbox bound to an AG_Text object. */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
@@ -87,7 +117,7 @@ SingleLineExample(void)
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	AG_SeparatorNewHoriz(vBox);
-	TestFlags(vBox, textbox);
+	DebugStuff(vBox, textbox);
 
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowShow(win);
