@@ -77,6 +77,8 @@ GetBufferText(AG_Editable *ed, AG_EditableBuffer *buf)
 		}
 		if (buf->s == NULL) {
 			AG_MutexUnlock(&txt->lock);
+			AG_UnlockVariable(buf->var);
+			buf->var = NULL;
 			return (-1);
 		}
 	}
@@ -111,13 +113,14 @@ GetBuffer(AG_Editable *ed)
 		    buf->s == NULL) {
 			buf->s = AG_ImportUnicode(ed->encoding, s, &buf->len,
 			    &buf->maxLen);
-			if (buf->s == NULL)
+			if (buf->s == NULL) {
+				AG_UnlockVariable(buf->var);
 				goto fail;
+			}
 		}
 	}
 	return (buf);
 fail:
-	AG_UnlockVariable(buf->var);
 	if ((ed->flags & AG_EDITABLE_EXCL) == 0) { Free(buf); }
 	return (NULL);
 }
