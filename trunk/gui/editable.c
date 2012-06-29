@@ -142,7 +142,12 @@ CommitBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
 		AG_Text *txt = buf->var->data.p;
 		AG_TextEnt *te = &txt->ent[ed->lang];
-		size_t lenEnc = AG_LengthUTF8FromUCS4(buf->s)+1;
+		size_t lenEnc;
+
+		if (AG_LengthUTF8FromUCS4(buf->s, &lenEnc) == -1) {
+			goto fail;
+		}
+		lenEnc++;
 
 		if (lenEnc > te->maxLen &&
 		    AG_TextRealloc(te, lenEnc) == -1) {
@@ -209,8 +214,13 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
 	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
 
 	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
-		convLen = AG_LengthUTF8FromUCS4(buf->s) +
-		          AG_LengthUTF8FromUCS4(ins) + 1;
+		size_t sLen, insLen;
+
+		if (AG_LengthUTF8FromUCS4(buf->s, &sLen) == -1 ||
+		    AG_LengthUTF8FromUCS4(ins, &insLen) == -1) {
+			return (-1);
+		}
+		convLen = sLen + insLen + 1;
 	} else {
 		/* TODO Proper estimates for other charsets */
 		convLen = ucsSize;

@@ -120,7 +120,7 @@ AG_CharLengthUTF8FromUCS4(Uint32 ch)
 	else if (ch <  0x4000000)	{ return (5); }
 	else if (ch <= 0x7fffffff)	{ return (6); }
 
-	AG_FatalError("CharLengthUTF8");
+	AG_SetError("Bad UCS-4 character");
 	return (-1);
 }
 
@@ -128,16 +128,20 @@ AG_CharLengthUTF8FromUCS4(Uint32 ch)
  * Return the number of bytes (not including the terminating NUL) that would
  * be needed to encode the given UCS-4 string in UTF-8.
  */
-static __inline__ size_t
-AG_LengthUTF8FromUCS4(const Uint32 *ucs4)
+static __inline__ int
+AG_LengthUTF8FromUCS4(const Uint32 *ucs4, size_t *rv)
 {
-	size_t rv = 0;
 	const Uint32 *c;
+	int cLen;
 
+	*rv = 0;
 	for (c = &ucs4[0]; *c != '\0'; c++) {
-		rv += AG_CharLengthUTF8FromUCS4(*c);
+		if ((cLen = AG_CharLengthUTF8FromUCS4(*c)) == -1) {
+			return (-1);
+		}
+		(*rv) += cLen;
 	}
-	return (rv);
+	return (0);
 }
 
 /*
@@ -147,49 +151,53 @@ AG_LengthUTF8FromUCS4(const Uint32 *ucs4)
 static __inline__ int
 AG_CharLengthUTF8(unsigned char ch)
 {
+	int rv;
+
 	if ((ch >> 7) == 0) {
-		return (1);
+		rv = 1;
 	} else if (((ch & 0xe0) >> 5) == 0x6) {
-		return (2);
+		rv = 2;
 	} else if (((ch & 0xf0) >> 4) == 0xe) {
-		return (3);
+		rv = 3;
 	} else if (((ch & 0xf8) >> 3) == 0x1e) {
-		return (4);
+		rv = 4;
 	} else if (((ch & 0xfc) >> 2) == 0x3e) {
-		return (5);
+		rv = 5;
 	} else if (((ch & 0xfe) >> 1) == 0x7e) {
-		return (6);
+		rv = 6;
 	} else {
+		AG_SetError("Bad UTF-8 sequence");
 		return (-1);
 	}
+	return (rv);
 }
 
 /*
  * Return the number of characters in the given UTF-8 string, not counting
- * the terminating NUL.
+ * the terminating NUL. If the string is invalid, fail and return -1.
  */
-static __inline__ size_t
-AG_LengthUTF8(const char *s)
+static __inline__ int
+AG_LengthUTF8(const char *s, size_t *rv)
 {
 	const char *c = &s[0];
-	size_t rv = 0;
 	int i, cLen;
 
+	*rv = 0;
 	if (s[0] == '\0') {
 		return (0);
 	}
 	for (;;) {
 		if ((cLen = AG_CharLengthUTF8((unsigned char)*c)) == -1) {
-			break;
+			return (-1);
 		}
 		for (i = 0; i < cLen; i++) {
 			if (c[i] == '\0')
-				return (rv);
+				return (0);
 		}
-		rv++;
+		(*rv)++;
 		c += cLen;
 	}
-	return (rv);
+	return (0);
 }
 
 /*
