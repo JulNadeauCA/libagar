@@ -1568,14 +1568,14 @@ char *
 AG_EditableDupString(AG_Editable *ed)
 {
 	AG_Variable *var;
-	char *sDup;
+	char *sDup, *s;
 
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt;
 		var = AG_GetVariable(ed, "text", &txt);
-		sDup = TryStrdup(txt->ent[ed->lang].buf);
+		s = txt->ent[ed->lang].buf;
+		sDup = TryStrdup((s != NULL) ? s : "");
 	} else {
-		char *s;
 		var = AG_GetVariable(ed, "string", &s);
 		sDup = TryStrdup(s);
 	}
@@ -1589,14 +1589,15 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
 {
 	AG_Variable *var;
 	size_t rv;
+	char *s;
 
 	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt;
 		var = AG_GetVariable(ed, "text", &txt);
-		rv = Strlcpy(dst, txt->ent[ed->lang].buf, dst_size);
+		s = txt->ent[ed->lang].buf;
+		rv = Strlcpy(dst, (s != NULL) ? s : "", dst_size);
 	} else {
-		char *s;
 		var = AG_GetVariable(ed, "string", &s);
 		rv = Strlcpy(dst, s, dst_size);
 	}
