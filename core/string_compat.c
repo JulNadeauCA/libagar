@@ -440,10 +440,13 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutLen,
 	Uint32 *ucs;
 	size_t i, j;
 	size_t sLen = strlen(s);
-	size_t bufLen;
+	size_t bufLen, utf8len;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
-		bufLen = (AG_LengthUTF8(s) + 1)*sizeof(Uint32);
+		if (AG_LengthUTF8(s, &utf8len) == -1) {
+			return (NULL);
+		}
+		bufLen = (utf8len + 1)*sizeof(Uint32);
 		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
 		}
@@ -483,8 +486,8 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutLen,
 				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case -1:
-				ucs[j] = '?';
-				break;
+				Free(ucs);
+				return (NULL);
 			}
 		}
 		ucs[j] = '\0';
