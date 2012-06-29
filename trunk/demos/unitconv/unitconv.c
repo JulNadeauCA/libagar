@@ -43,8 +43,7 @@ CreateUI(void)
 		{ "Temp", agTemperatureUnits },
 		{ "Pwr", agPowerUnits },
 		{ "Press", agPressureUnits },
-		{ "Vac", agVacuumUnits },
-		{ "Met", agMetabolicExpenditureUnits },
+		{ "Vac", agVacuumUnits }
 	};
 	int i;
 	AG_Window *win;
