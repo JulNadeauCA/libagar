@@ -2513,6 +2513,7 @@ $ECHO_N "checking for libtool --tag=CXX retardation..." >> config.log
 cat << EOT > conftest.cc
 #include <iostream>
 int main(void) { std::cout << "Hello world!" << std::endl; return 0; }
+EOT
 $LIBTOOL --quiet --mode=compile --tag=CXX $CXX $CXXFLAGS $TEST_CXXFLAGS -o $testdir/conftest.o conftest.cc 2>>config.log
 if [ "$?" = "0" ]; then
 echo "yes"
