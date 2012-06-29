@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL, "LATIN-1 Buffer: ");
 	AG_TextboxBindEncoded(tb, "ISO-8859-1", myLat1, sizeof(myLat1));
 #else
-	AG_LabelNewS(win, "(Agar was not compiled with iconv support)");
+	AG_LabelNewS(win, 0, "(Agar was not compiled with iconv support)");
 #endif
 
 	/* Bind to a multilingual AG_Text(3) element. */
