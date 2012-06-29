@@ -22,7 +22,7 @@ MyKeyboardHandler(AG_Event *event)
 
 	AG_ConsoleMsg(cons,
 	    "%s: sym=%d, modifier=0x%x, unicode=0x%lx",
-	    event->name, sym, (unsigned)mod, unicode);
+	    event->name, sym, (unsigned)mod, (long unsigned int)unicode);
 }
 
 static void
