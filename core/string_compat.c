@@ -582,7 +582,7 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 				chlen = 6;
 				ch1 = 0xfc;
 			} else {
-				AG_SetError("Bad UCS-4 character");
+				AG_SetError("Bad UTF-8 sequence");
 				return (-1);
 			}
 			if (len+chlen+1 > dstSize) {
@@ -596,6 +596,18 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 			dst[0] = uch | ch1;
 			dst += chlen;
 			len += chlen;
+		}
+		*dst = '\0';
+		return (0);
+	} else if (strcmp(encoding, "US-ASCII") == 0) {
+		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
+			if (!isascii((int)*ucs)) {
+				AG_SetError("Bad ASCII character");
+				return (-1);
+			}
+			*dst = (char)*ucs;
+			dst++;
+			len++;
 		}
 		*dst = '\0';
 		return (0);
