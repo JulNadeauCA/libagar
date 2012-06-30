@@ -52,39 +52,6 @@
 AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
 AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */
 
-/* Initialize a working buffer for an AG_Text element. */
-static int
-GetBufferText(AG_Editable *ed, AG_EditableBuffer *buf)
-{
-	AG_Text *txt;
-
-	buf->var = AG_GetVariable(ed, "text", &txt);
-	buf->reallocable = 1;
-	AG_MutexLock(&txt->lock);
-
-	if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
-	    buf->s == NULL) {
-		AG_TextEnt *te = &txt->ent[ed->lang];
-
-		if (te->buf != NULL) {
-			buf->s = AG_ImportUnicode("UTF-8", te->buf,
-			    &buf->len, &buf->maxLen);
-		} else {
-			if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
-				buf->s[0] = (Uint32)'\0';
-			}
-			buf->len = 0;
-		}
-		if (buf->s == NULL) {
-			AG_MutexUnlock(&txt->lock);
-			AG_UnlockVariable(buf->var);
-			buf->var = NULL;
-			return (-1);
-		}
-	}
-	return (0);
-}
-
 /*
  * Return a new working buffer. The variable is returned locked; the caller
  * should invoke ReleaseBuffer() after use.
@@ -97,13 +64,42 @@ GetBuffer(AG_Editable *ed)
 	if (ed->flags & AG_EDITABLE_EXCL) {
 		buf = &ed->sBuf;
 	} else {
-		if ((buf = TryMalloc(sizeof(AG_EditableBuffer))) == NULL)
+		if ((buf = TryMalloc(sizeof(AG_EditableBuffer))) == NULL) {
 			return (NULL);
+		}
+		buf->s = NULL;
+		buf->len = 0;
+		buf->maxLen = 0;
 	}
-	if (AG_Defined(ed, "text")) {
-		if (GetBufferText(ed, buf) == -1)
-			goto fail;
-	} else {
+	if (AG_Defined(ed, "text")) {			/* AG_Text element */
+		AG_Text *txt;
+
+		buf->var = AG_GetVariable(ed, "text", &txt);
+		buf->reallocable = 1;
+
+		AG_MutexLock(&txt->lock);
+
+		if ((ed->flags & AG_EDITABLE_EXCL) == 0 ||
+		    buf->s == NULL) {
+			AG_TextEnt *te = &txt->ent[ed->lang];
+
+			if (te->buf != NULL) {
+				buf->s = AG_ImportUnicode("UTF-8", te->buf,
+				    &buf->len, &buf->maxLen);
+			} else {
+				if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
+					buf->s[0] = (Uint32)'\0';
+				}
+				buf->len = 0;
+			}
+			if (buf->s == NULL) {
+				AG_MutexUnlock(&txt->lock);
+				AG_UnlockVariable(buf->var);
+				buf->var = NULL;
+				goto fail;
+			}
+		}
+	} else {					/* Fixed-size buffer */
 		char *s;
 
 		buf->var = AG_GetVariable(ed, "string", &s);
