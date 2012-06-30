@@ -1060,7 +1060,7 @@ AG_GetStringDup(void *pObj, const char *name)
 		}
 		(void)GetStringFn(obj, V, s, V->info.size);
 	} else {
-		s = Strdup(V->data.s);
+		s = TryStrdup(V->data.s);
 	}
 	AG_UnlockVariable(V);
 	return (s);
