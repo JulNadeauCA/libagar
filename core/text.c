@@ -24,7 +24,7 @@
  */
 
 /*
- * Multilanguage text structure.
+ * Dynamically-allocated, multilanguage text element.
  */
 
 #include <core/core.h>
@@ -150,11 +150,13 @@ AG_TextNew(const char *fmt, ...)
 	return (txt);
 }
 
+/* Clear all strings in an AG_Text. */
 void
 AG_TextClear(AG_Text *txt)
 {
 	int i;
 
+	AG_MutexLock(&txt->lock);
 	for (i = 0; i < AG_LANG_LAST; i++) {
 		AG_TextEnt *te = &txt->ent[i];
 
@@ -163,13 +165,18 @@ AG_TextClear(AG_Text *txt)
 		te->maxLen = 0;
 		te->len = 0;
 	}
+	AG_MutexUnlock(&txt->lock);
 }
 
-/* Free an AG_Text structure. */
+/* Free an AG_Text element. */
 void
 AG_TextFree(AG_Text *txt)
 {
-	AG_TextClear(txt);
+	int i;
+
+	for (i = 0; i < AG_LANG_LAST; i++) {
+		Free(txt->ent[i].buf);
+	}
 	AG_MutexDestroy(&txt->lock);
 	Free(txt);
 }
@@ -346,8 +353,8 @@ AG_TextLoad(AG_Text *txt, AG_DataSource *ds)
 		AG_SetError("Bad language count");
 		return (-1);
 	}
-	AG_TextClear(txt);
 	AG_MutexLock(&txt->lock);
+	AG_TextClear(txt);
 	for (i = 0; i < count; i++) {
 		lang = (enum ag_language)AG_ReadUint32(ds);
 		if (lang >= AG_LANG_LAST) {
