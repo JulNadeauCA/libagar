@@ -1116,7 +1116,7 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 		break;
 	}
 	if (w != NULL) { *w = tm.w; }
-	if (h != NULL) { *h = tm.h + 2; }
+	if (h != NULL) { *h = tm.h; }
 	FreeMetrics(&tm);
 }
 
