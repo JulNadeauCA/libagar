@@ -1421,12 +1421,11 @@ MouseButtonUp(AG_Event *event)
 	case AG_MOUSE_LEFT:
 		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
 		ed->flags &= ~(AG_EDITABLE_WORDSELECT);
+		AG_Redraw(ed);
 		break;
 	default:
 		break;
 	}
-	
-	AG_Redraw(ed);
 }
 
 static void
@@ -1446,8 +1445,10 @@ MouseMotion(AG_Event *event)
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
 	
-	if (AG_EditableMapPosition(ed, buf, mx, my, &newPos, 0) != 0)
+	if (AG_EditableMapPosition(ed, buf, mx, my, &newPos, 0) != 0) {
+		ReleaseBuffer(ed, buf);
 		return;
+	}
 
 	if (ed->flags & AG_EDITABLE_WORDSELECT) {
 		Uint32 *c;
@@ -1702,7 +1703,9 @@ Init(void *obj)
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	ed->encoding = "UTF-8";
-	ed->text = AG_TextNewS(NULL);
+
+	if ((ed->text = AG_TextNewS(NULL)) == NULL)
+		AG_FatalError(NULL);
 
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
