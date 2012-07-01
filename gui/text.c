@@ -449,7 +449,7 @@ AG_TextInit(void)
 					     agDefaultFaceBitmap);
 	}
 	if (!AG_CfgDefined("font.size")) {
-		AG_SetCfgInt("font.size", 10);
+		AG_SetCfgInt("font.size", 12);
 	}
 	if (!AG_CfgDefined("font.flags")) {
 		AG_SetCfgUint("font.flags", 0);

@@ -782,6 +782,40 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 	return (rv);
 }
 
+/* Do whatever we can do to make the cursor visible. */
+static void
+MoveCursorToView(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (ed->yCurs < ed->y) {
+		if (ed->flags & AG_EDITABLE_MULTILINE) {
+			AG_EditableMoveCursor(ed, buf,
+			    ed->xCursPref - ed->x, 1,
+			    0);
+		}
+	} else if (ed->yCurs > ed->y + ed->yVis - 1) {
+		if (ed->flags & AG_EDITABLE_MULTILINE) {
+			AG_EditableMoveCursor(ed, buf,
+			    ed->xCursPref - ed->x,
+			    ed->yVis*agTextFontLineSkip - 1,
+			    0);
+		}
+	} else if (ed->xCurs < ed->x+10) {
+		if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
+			AG_EditableMoveCursor(ed, buf,
+			    ed->x+10,
+			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
+			    1);
+		}
+	} else if (ed->xCurs > ed->x+WIDTH(ed)-10) {
+		if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
+			AG_EditableMoveCursor(ed, buf,
+			    ed->x+WIDTH(ed)-10,
+			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
+			    1);
+		}
+	}
+}
+
 static void
 Draw(void *obj)
 {
@@ -794,7 +828,7 @@ Draw(void *obj)
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
-
+	
 	rClip = WIDGET(ed)->rView;
 	rClip.x1 -= agTextFontHeight*2;	/* XXX largest character width */
 	rClip.y1 -= agTextFontLineSkip;
@@ -884,54 +918,40 @@ Draw(void *obj)
 	if (ed->yMax == 1)
 		ed->xMax = x;
 	
-	if ( !(ed->flags & (AG_EDITABLE_NOSCROLL|AG_EDITABLE_NOSCROLL_ONCE)) ) {
-		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			if (ed->yCurs < ed->y) {
-				ed->y = ed->yCurs;
-				if (ed->y < 0) { ed->y = 0; }
-			} else if (ed->yCurs > ed->y + ed->yVis - 1) {
-				ed->y = ed->yCurs - ed->yVis + 1;
-			}
+	/* Process any scrolling requests. */
+	if (ed->flags & AG_EDITABLE_KEEPVISCURSOR) {
+		MoveCursorToView(ed, buf);
+	} else if (ed->flags & AG_EDITABLE_SCROLLTOCURSOR) {
+		if ((ed->xCurs - ed->x) < 0) {
+			ed->x += (ed->xCurs - ed->x);
+			if (ed->x < 0) { ed->x = 0; }
+			AG_Redraw(ed);
 		}
-		if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
-			if (ed->xCurs < ed->x) {
-				ed->x = ed->xCurs;
-				if (ed->x < 0) { ed->x = 0; }
-			} else if (ed->xCurs > ed->x + WIDTH(ed) - 10) {
-				ed->x = ed->xCurs - WIDTH(ed) + 10;
-			}
+		if ((ed->xCurs - ed->x) > WIDTH(ed) - 10) {
+			ed->x = ed->xCurs - WIDTH(ed) + 10;
+			AG_Redraw(ed);
 		}
+		if ((ed->yCurs - ed->y) < 0) {
+			ed->y += (ed->yCurs - ed->y);
+			if (ed->y < 0) { ed->y = 0; }
+			AG_Redraw(ed);
+		}
+		if ((ed->yCurs - ed->y) > ed->yVis - 1) {
+			ed->y = ed->yCurs - ed->yVis + 1;
+			AG_Redraw(ed);
+		}
+		ed->flags &= ~(AG_EDITABLE_SCROLLTOCURSOR);
 	} else {
-		if (ed->yCurs < ed->y) {
-			if (ed->flags & AG_EDITABLE_MULTILINE) {
-				AG_EditableMoveCursor(ed, buf,
-				    ed->xCursPref - ed->x, 1,
-				    0);
+		if (ed->xScrollReq != 0) {
+			if (ed->xCurs < ed->x - ed->xScrollReq ||
+			    ed->xCurs > ed->x + WIDTH(ed) - ed->xScrollReq) {
+				ed->x += ed->xScrollReq;
 			}
-		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
-			if (ed->flags & AG_EDITABLE_MULTILINE) {
-				AG_EditableMoveCursor(ed, buf,
-				    ed->xCursPref - ed->x,
-				    ed->yVis*agTextFontLineSkip - 1,
-				    0);
-			}
-		} else if (ed->xCurs < ed->x+10) {
-			if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
-				AG_EditableMoveCursor(ed, buf,
-				    ed->x+10,
-				    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
-				    1);
-			}
-		} else if (ed->xCurs > ed->x+WIDTH(ed)-10) {
-			if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
-				AG_EditableMoveCursor(ed, buf,
-				    ed->x+WIDTH(ed)-10,
-				    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
-				    1);
-			}
+			ed->xScrollReq = 0;
+			AG_Redraw(ed);
 		}
 	}
-	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
+
 	AG_PopTextState();
 
 	AG_PopClipRect(ed);
@@ -1392,14 +1412,12 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case AG_MOUSE_WHEELUP:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
 			ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
 			if (ed->y < 0) { ed->y = 0; }
 		}
 		break;
 	case AG_MOUSE_WHEELDOWN:
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
 			ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
 			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
 		}
@@ -1717,6 +1735,8 @@ Init(void *obj)
 	ed->xCurs = 0;
 	ed->yCurs = 0;
 	ed->xCursPref = 0;
+	ed->xScrollReq = 0;
+	ed->yScrollReq = 0;
 
 	ed->x = 0;
 	ed->xMax = 10;

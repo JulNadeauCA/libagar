@@ -50,23 +50,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-static void
-BeginScrollbarDrag(AG_Event *event)
-{
-	AG_Textbox *tb = AG_PTR(1);
-	
-	AG_WidgetFocus(tb->ed);
-	tb->ed->flags |= AG_EDITABLE_NOSCROLL;
-}
-
-static void
-EndScrollbarDrag(AG_Event *event)
-{
-	AG_Textbox *tb = AG_PTR(1);
-
-	tb->ed->flags &= ~(AG_EDITABLE_NOSCROLL);
-}
-
 AG_Textbox *
 AG_TextboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
@@ -118,8 +101,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		AG_BindInt(tb->vBar, "value", &tb->ed->y);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
-		AG_SetEvent(tb->vBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
-		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 	}
 	
 	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
@@ -152,8 +133,6 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 			AG_BindInt(tb->hBar, "value", &tb->ed->x);
 			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
 			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
-			AG_SetEvent(tb->hBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
-			AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 			AG_TextboxSizeHintLines(tb, 4);
 		}
 	}
