@@ -26,6 +26,7 @@ typedef struct ag_glview {
 
 	AG_Event *draw_ev;			/* Draw callback */
 	AG_Event *overlay_ev;			/* Graphics overlay callback */
+	AG_Event *underlay_ev;			/* Graphics underlay callback */
 	AG_Event *scale_ev;			/* Scaling/movement event */
 	AG_Event *keydown_ev, *keyup_ev;	/* Keyboard events */
 	AG_Event *btndown_ev, *btnup_ev;	/* Mouse button events */
@@ -53,6 +54,7 @@ void	   AG_GLViewSizeHint(AG_GLView *, int, int);
 #define	   AG_GLViewPrescale AG_GLViewSizeHint
 void	   AG_GLViewReshape(AG_GLView *);
 void	   AG_GLViewDrawFn(void *, AG_EventFn, const char *, ...);
+void	   AG_GLViewUnderlayFn(void *, AG_EventFn, const char *, ...);
 void	   AG_GLViewOverlayFn(void *, AG_EventFn, const char *, ...);
 void	   AG_GLViewScaleFn(void *, AG_EventFn, const char *, ...);
 void	   AG_GLViewKeydownFn(void *, AG_EventFn, const char *, ...);
