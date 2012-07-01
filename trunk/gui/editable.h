@@ -43,8 +43,8 @@ typedef struct ag_editable {
 #define AG_EDITABLE_FLT_ONLY      0x000080 /* Accepts only float input */
 #define AG_EDITABLE_CATCH_TAB     0x000100 /* Process tab key input */
 #define AG_EDITABLE_CURSOR_MOVING 0x000200 /* Cursor is being moved */
-#define AG_EDITABLE_NOSCROLL      0x000800 /* Inhibit automatic scrolling */
-#define AG_EDITABLE_NOSCROLL_ONCE 0x001000 /* Inhibit scrolling at next draw */
+#define AG_EDITABLE_KEEPVISCURSOR 0x000800 /* Try to keep cursor visible */
+#define AG_EDITABLE_SCROLLTOCURSOR 0x001000 /* Request scroll to cursor */
 #define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
 #define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_EDITABLE_NOEMACS       0x008000 /* Disable emacs-style fn keys */
@@ -83,6 +83,7 @@ typedef struct ag_editable {
 	AG_Font *font;			/* Font for text rendering */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */
 	enum ag_language lang;		/* Selected language (for AG_Text) */
+	int xScrollReq, yScrollReq;	/* Scrolling offsets (requested) */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
