@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+char bufferShd[60];	/* Shared text buffer */
+char bufferExcl[60];	/* Exclusive text buffer */
+
+
 static void
 SetDisable(AG_Event *event)
 {
@@ -111,13 +115,11 @@ SingleLineExample(void)
 	 */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	{
-		char buffer[60];
-
-		AG_Strlcpy(buffer, "Foo bar baz bezo fou", sizeof(buffer));
+		AG_Strlcpy(bufferShd, "Foo bar baz bezo fou", sizeof(bufferShd));
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
 		    "Fixed C buffer (shared): ");
-		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		AG_TextboxBindUTF8(textbox, bufferShd, sizeof(bufferShd));
 		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 		AG_WidgetFocus(textbox);
@@ -125,7 +127,7 @@ SingleLineExample(void)
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
 		    "Fixed C buffer (shared): ");
-		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		AG_TextboxBindUTF8(textbox, bufferShd, sizeof(bufferShd));
 		DebugStuff(vBox, textbox);
 	}
 	
@@ -135,13 +137,11 @@ SingleLineExample(void)
 	 */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	{
-		char buffer[60];
-
-		AG_Strlcpy(buffer, "Foo bar baz bezo fou", sizeof(buffer));
+		AG_Strlcpy(bufferExcl, "Foo bar baz bezo fou", sizeof(bufferExcl));
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
 		    "Fixed C buffer (excl): ");
-		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		AG_TextboxBindUTF8(textbox, bufferExcl, sizeof(bufferExcl));
 		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 		AG_WidgetFocus(textbox);

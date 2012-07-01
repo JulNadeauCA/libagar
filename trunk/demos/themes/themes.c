@@ -20,6 +20,9 @@
 
 #include "mytheme.h"
 
+char textBuffer[30];
+
+
 static void
 ComboSelected(AG_Event *event)
 {
@@ -179,13 +182,21 @@ CreateWindow(void)
 	 * encoding.
 	 */
 	{
-		char buffer[30];
+		AG_Strlcpy(textBuffer, "Foo bar baz bezo", sizeof(textBuffer));
 
-		AG_Strlcpy(buffer, "Foo bar baz bezo", sizeof(buffer));
+		/* Create a textbox bound to a fixed-size buffer */
 		tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-		    "Enter text: ");
-		AG_TextboxBindUTF8(tbox, buffer, sizeof(buffer));
+		    "Fixed text buffer: ");
+		AG_TextboxBindUTF8(tbox, textBuffer, sizeof(textBuffer));
+
+		/* Create a textbox bound to a built-in AG_Text element */
+		tbox = AG_TextboxNew(div1,
+		    AG_TEXTBOX_HFILL|AG_TEXTBOX_MULTILINGUAL,
+		    "AG_Text element: ");
+		AG_TextboxSetString(tbox, "Foo");
 	}
+
+	AG_SeparatorNewHoriz(div1);
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
