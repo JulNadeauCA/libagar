@@ -35,6 +35,15 @@ SetWordWrap(AG_Event *event)
 }
 
 static void
+SetString(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+
+	AG_TextboxPrintf(textbox, "Formatted string");
+	AG_TextboxSetString(textbox, "Set string");
+}
+
+static void
 DupString(AG_Event *event)
 {
 	AG_Textbox *textbox = AG_PTR(1);
@@ -64,15 +73,22 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 {
 	AG_Box *hBox;
 
+	AG_SeparatorNewHoriz(win);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Cursor at: %i", &textbox->ed->pos);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Selection: %i", &textbox->ed->sel);
+	AG_SeparatorNewHoriz(win);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFlag(win, 0, "Read-only", &textbox->ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFlag(win, 0, "Password input", &textbox->ed->flags, AG_EDITABLE_PASSWORD);
 	AG_CheckboxNewFlag(win, 0, "Force integer input", &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Disable emacs keys", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
+	AG_CheckboxNewFlag(win, 0, "Disable auto scroll", &textbox->ed->flags, AG_EDITABLE_NOSCROLL);
+	AG_CheckboxNewFlag(win, 0, "Disable emacs", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
+	AG_CheckboxNewFlag(win, 0, "Disable word seek", &textbox->ed->flags, AG_EDITABLE_NOWORDSEEK);
+	AG_CheckboxNewFlag(win, 0, "Disable latin1", &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
+	AG_SeparatorNewHoriz(win);
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_ButtonNewFn(hBox, 0, "Set string", SetString, "%p", textbox);
 	AG_ButtonNewFn(hBox, 0, "Dup string", DupString, "%p", textbox);
 	AG_ButtonNewFn(hBox, 0, "Copy string", CopyString, "%p", textbox);
 }
@@ -80,7 +96,6 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 static void
 SingleLineExample(void)
 {
-	char buffer[60];
 	AG_Text *txt;
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
@@ -90,20 +105,51 @@ SingleLineExample(void)
 	AG_WindowSetCaption(win, "Single-line Example");
 	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_HOMOGENOUS);
 
-	/* Create a single-line Textbox bound to a fixed-size buffer. */
+	/*
+	 * Create two single-line Textbox widgets bound to the same
+	 * fixed-size buffer.
+	 */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
-	textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "Fixed C buffer: ");
-	AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
-	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
-	AG_TextboxPrintf(textbox, "Foo bar baz bezo foo");
-	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
-	AG_WidgetFocus(textbox);
-	AG_SeparatorNewHoriz(vBox);
-	DebugStuff(vBox, textbox);
+	{
+		char buffer[60];
+
+		AG_Strlcpy(buffer, "Foo bar baz bezo fou", sizeof(buffer));
+
+		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
+		    "Fixed C buffer (shared): ");
+		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
+		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
+		AG_WidgetFocus(textbox);
+		DebugStuff(vBox, textbox);
+
+		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
+		    "Fixed C buffer (shared): ");
+		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		DebugStuff(vBox, textbox);
+	}
+	
+	/*
+	 * Create a single-line Textbox widget using a fixed-size buffer
+	 * in exclusive mode.
+	 */
+	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
+	{
+		char buffer[60];
+
+		AG_Strlcpy(buffer, "Foo bar baz bezo fou", sizeof(buffer));
+
+		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
+		    "Fixed C buffer (excl): ");
+		AG_TextboxBindUTF8(textbox, buffer, sizeof(buffer));
+		AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
+		AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
+		AG_WidgetFocus(textbox);
+		DebugStuff(vBox, textbox);
+	}
 
 	/* Create a single-line Textbox bound to an AG_Text object. */
-	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
+	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL|AG_BOX_FRAME);
 	txt = AG_TextNewS(NULL);
 	{
 		AG_TextSetEntS(txt, AG_LANG_EN, "Hello");
@@ -116,7 +162,6 @@ SingleLineExample(void)
 	AG_TextboxSetLang(textbox, AG_LANG_EN);
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
-	AG_SeparatorNewHoriz(vBox);
 	DebugStuff(vBox, textbox);
 
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
@@ -170,7 +215,6 @@ MultiLineExample(const char *title)
 	    &textbox->ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
-#if 0
 	AG_SeparatorNewHoriz(win);
 	{
 		AG_Label *lbl;
@@ -181,7 +225,6 @@ MultiLineExample(const char *title)
 		lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
 		    "Cursor position: %d", &textbox->ed->pos);
 	}
-#endif
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowShow(win);
 }
