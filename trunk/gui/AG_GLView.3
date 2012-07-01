@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -111,6 +111,9 @@ widgets of FreeSG (http://freesg.org/) are subclasses of
 .Fn AG_GLViewOverlayFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
 .Pp
 .Ft void
+.Fn AG_GLViewUnderlayFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
 .Fn AG_GLViewScaleFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
 .Pp
 .Ft void
@@ -175,8 +178,15 @@ widget-specific matrices.
 registers a function that will be invoked after rendering, after the
 GUI matrices and viewport have been restored.
 It is typically used to draw text or controls independently of the
-.Nm ' s
 projection and viewing matrices.
+Similarly,
+.Fn AG_GLViewUnderlayFn
+registers a function that will be invoked before rendering.
+Both overlay and underlay callbacks may invoke standard Agar GUI
+primitives such as
+.Xr AG_DrawRect 3
+or
+.Xr AG_WidgetBlit 3 .
 .Pp
 .Fn AG_GLViewScaleFn
 registers a function to invoke whenever the widget is resized.

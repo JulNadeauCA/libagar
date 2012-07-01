@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,6 +101,7 @@ Init(void *obj)
 
 	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
+	glv->underlay_ev = NULL;
 	glv->overlay_ev = NULL;
 	glv->scale_ev = NULL;
 	glv->keydown_ev = NULL;
@@ -134,6 +135,17 @@ AG_GLViewDrawFn(void *obj, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectLock(glv);
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
+	AG_ObjectUnlock(glv);
+}
+
+void
+AG_GLViewUnderlayFn(void *obj, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_GLView *glv = obj;
+
+	AG_ObjectLock(glv);
+	glv->underlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(glv->underlay_ev, fmt);
 	AG_ObjectUnlock(glv);
 }
 
@@ -278,6 +290,8 @@ AG_GLViewDraw(void *obj)
 		    AG_RECT(0,0, WIDTH(glv), HEIGHT(glv)),
 		    glv->bgColor);
 	}
+	if (glv->underlay_ev != NULL)
+		glv->underlay_ev->handler(glv->underlay_ev);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT);
 
@@ -300,7 +314,7 @@ AG_GLViewDraw(void *obj)
 	glViewport(WIDGET(glv)->rView.x1,
 	           hView - WIDGET(glv)->rView.y2,
 	           WIDTH(glv), HEIGHT(glv));
-
+	
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();
 	glLoadMatrixf(glv->mTexture);
@@ -308,7 +322,7 @@ AG_GLViewDraw(void *obj)
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadMatrixf(glv->mProjection);
-		
+	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadMatrixf(glv->mModelview);
@@ -317,7 +331,7 @@ AG_GLViewDraw(void *obj)
 	glDisable(GL_CLIP_PLANE1);
 	glDisable(GL_CLIP_PLANE2);
 	glDisable(GL_CLIP_PLANE3);
-
+	
 	if (glv->draw_ev != NULL)
 		glv->draw_ev->handler(glv->draw_ev);
 	
@@ -330,12 +344,12 @@ AG_GLViewDraw(void *obj)
 
 	/* restore transform and viewport */
 	glPopAttrib();
-	glPushAttrib(GL_TRANSFORM_BIT);
-	
-	if (glv->overlay_ev != NULL)
-		glv->overlay_ev->handler(glv->overlay_ev);
 
-	glPopAttrib();
+	if (glv->overlay_ev != NULL) {
+		glPushAttrib(GL_TRANSFORM_BIT);
+		glv->overlay_ev->handler(glv->overlay_ev);
+		glPopAttrib();
+	}
 }
 
 AG_WidgetClass agGLViewClass = {
