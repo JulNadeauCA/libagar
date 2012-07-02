@@ -270,12 +270,6 @@ restricts input to real numbers (see flags).
 .Fn AG_EditableSetFont
 configures an alternate font (see
 .Xr AG_FetchFont 3 ) .
-It is also legal to modify the
-.Va font
-pointer of the
-.Nm
-object (see
-.Dq STRUCTURE DATA ) .
 .Pp
 .Fn AG_EditableSizeHint
 requests that the initial geometry of
@@ -464,10 +458,10 @@ selects all characters in the buffer.
 .Sh CURSOR CONTROL ROUTINES
 .nr nS 1
 .Ft int
-.Fn AG_EditableMapPosition "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int *pos" "int absolute"
+.Fn AG_EditableMapPosition "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int *pos"
 .Pp
 .Ft int
-.Fn AG_EditableMoveCursor "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y" "int absolute"
+.Fn AG_EditableMoveCursor "AG_Editable *ed" "AG_EditableBuffer *buf" "int x" "int y"
 .Pp
 .Ft int
 .Fn AG_EditableGetCursorPos "AG_Editable *ed"
@@ -478,27 +472,20 @@ selects all characters in the buffer.
 .nr nS 0
 The
 .Fn AG_EditableMapPosition
-function translates absolute coordinates (such as display coordinates)
+function translates pixel coordinates
 .Fa x
 and
 .Fa y
-in pixels to a position in the text buffer and return this position into
+to a character position within the text buffer.
+On success, the position is returned into
 .Fa pos .
-The function returns -1 or 1 if the cursor lies before or after the end
-of the string, respectively.
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
+The function returns 0 on success or -1 on failure.
 .Pp
 .Fn AG_EditableMoveCursor
-moves the text cursor to the position closest to the specified pixel coordinates
+moves the text cursor to the position closest to the pixel coordinates
 .Fa mx
 and
-.Fy my
-(in the widget's local coordinate system).
-If
-.Fa absolute
-if 1, y coordinates outside of the widget area are allowed.
+.Fy my .
 .Pp
 .Fn AG_EditableGetCursorPos
 returns the current position of the cursor in the text.
@@ -575,9 +562,9 @@ Current selection, expressed as an offset from the cursor
 (0 = there is no selection).
 .It Ft AG_Font *font
 Alternate font (if NULL, the default font is used).
-If calling
+Read-only (use
 .Fn AG_EditableSetFont
-is not convenient, it is legal to modify this pointer at run time.
+to change).
 .It Ft AG_Text *text
 An initially empty
 .Xr AG_Text 3

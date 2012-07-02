@@ -114,12 +114,13 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	buf->s[buf->len] = '\0';
 	ed->pos += nIns;
 
-	if (ed->flags & AG_EDITABLE_MULTILINE) {
-		ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
-	} else {
+	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {	/* Optimize case */
 		int wIns;
 		AG_TextSizeUCS4(ins, &wIns, NULL);
-		ed->xScrollReq += wIns;
+		ed->xScrollPx += wIns;
+	} else {
+		ed->xScrollTo = &ed->xCurs;
+		ed->yScrollTo = &ed->yCurs;
 	}
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	return (1);
@@ -148,7 +149,8 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		buf->s[--buf->len] = '\0';
 
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
-			ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+			ed->xScrollTo = &ed->xCurs;
+			ed->yScrollTo = &ed->yCurs;
 		} else {
 			AG_TextSizeUCS4(&buf->s[buf->len-1], &wDel, NULL);
 			if (ed->x > 0) { ed->x -= wDel; }
@@ -159,7 +161,8 @@ Delete(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		ed->pos--;
 
 	if (ed->flags & AG_EDITABLE_MULTILINE) {
-		ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+		ed->xScrollTo = &ed->xCurs;
+		ed->yScrollTo = &ed->yCurs;
 	} else {
 		Uint32 cDel[2];
 	
@@ -290,8 +293,9 @@ WordBack(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	}
 	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -321,8 +325,9 @@ WordForw(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		;;
 	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -388,7 +393,8 @@ CursorEnd(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	}
 	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -403,8 +409,9 @@ CursorLeft(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	}
 	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -419,8 +426,9 @@ CursorRight(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 	}
 	ed->sel = 0;
 	ed->flags |= AG_EDITABLE_MARKPREF;
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -434,10 +442,10 @@ CursorUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		return (0);
 	}
 	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
-	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1,
-	    1);
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -451,10 +459,10 @@ CursorDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		return (0);
 	}
 	AG_EditableMoveCursor(ed, buf, ed->xCursPref,
-	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1,
-	    1);
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -468,9 +476,9 @@ PageUp(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		return (0);
 	}
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
-	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1,
-	    1);
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1);
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }
@@ -484,9 +492,9 @@ PageDown(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym,
 		return (0);
 	}
 	AG_EditableMoveCursor(ed, buf, ed->xCurs,
-	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1,
-	    1);
-	ed->flags |= AG_EDITABLE_SCROLLTOCURSOR;
+	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1);
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_Redraw(ed);
 	return (0);
 }

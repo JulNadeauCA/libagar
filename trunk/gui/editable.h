@@ -44,7 +44,6 @@ typedef struct ag_editable {
 #define AG_EDITABLE_CATCH_TAB     0x000100 /* Process tab key input */
 #define AG_EDITABLE_CURSOR_MOVING 0x000200 /* Cursor is being moved */
 #define AG_EDITABLE_KEEPVISCURSOR 0x000800 /* Try to keep cursor visible */
-#define AG_EDITABLE_SCROLLTOCURSOR 0x001000 /* Request scroll to cursor */
 #define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
 #define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_EDITABLE_NOEMACS       0x008000 /* Disable emacs-style fn keys */
@@ -64,7 +63,9 @@ typedef struct ag_editable {
 	int selDblClick;		/* Double click position */
 	Uint32 compose;			/* For input composition */
 	int xCurs, yCurs;		/* Last cursor position */
-	int xCursPref;			/* "Preferred" cursor position */
+	int xSelStart, ySelStart;	/* Last selection start position */
+	int xSelEnd, ySelEnd;		/* Last selection end position */
+	int xCursPref;			/* Requested cursor position */
 	AG_Timeout toDelay;		/* Pre-repeat delay timer */
 	AG_Timeout toRepeat;		/* Repeat timer */
 	AG_Timeout toCursorBlink;	/* Cursor blink timer */
@@ -81,9 +82,12 @@ typedef struct ag_editable {
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
 	AG_Font *font;			/* Font for text rendering */
+	int lineSkip;			/* Y-increment in multiline mode */
+	int fontMaxHeight;		/* Maximum character height */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */
 	enum ag_language lang;		/* Selected language (for AG_Text) */
-	int xScrollReq, yScrollReq;	/* Scrolling offsets (requested) */
+	int xScrollPx;			/* Explicit scroll request in pixels */
+	int *xScrollTo, *yScrollTo;	/* Scroll to specified position */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -141,8 +145,8 @@ double   AG_EditableDbl(AG_Editable *);
 void     AG_EditableInitClipboards(void);
 void     AG_EditableDestroyClipboards(void);
 
-int  AG_EditableMapPosition(AG_Editable *, AG_EditableBuffer *, int, int, int *, int);
-void AG_EditableMoveCursor(AG_Editable *, AG_EditableBuffer *, int, int, int);
+int  AG_EditableMapPosition(AG_Editable *, AG_EditableBuffer *, int, int, int *);
+void AG_EditableMoveCursor(AG_Editable *, AG_EditableBuffer *, int, int);
 int  AG_EditableSetCursorPos(AG_Editable *, AG_EditableBuffer *, int);
 
 /* Return current cursor position in text. */

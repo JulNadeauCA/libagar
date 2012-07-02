@@ -399,32 +399,27 @@ AG_EditableSetFont(AG_Editable *ed, AG_Font *font)
 {
 	AG_ObjectLock(ed);
 	ed->font = font;
+	ed->lineSkip = (font != NULL) ? font->lineskip : agTextFontLineSkip;
+	ed->fontMaxHeight = (font != NULL) ? font->height : agTextFontHeight;
+	ed->yVis = WIDGET(ed)->h/ed->lineSkip;
 	AG_ObjectUnlock(ed);
 }
 
-/* Evaluate if a key is acceptable in integer-only mode. */
-static int
-KeyIsIntOnly(AG_KeySym ks)
+/* Evaluate if a character is acceptable in integer-only mode. */
+static __inline__ int
+CharIsIntOnly(Uint32 c)
 {
-	return (ks == AG_KEY_MINUS ||
-	        ks == AG_KEY_PLUS ||
-		isdigit((int)ks));
+	return (c == '-' || c == '+' || isdigit((int)c));
 }
 
-/* Evaluate if a key is acceptable in float-only mode. */
-static int
-KeyIsFltOnly(AG_KeySym ks, Uint32 unicode)
+/* Evaluate if a character is acceptable in float-only mode. */
+static __inline__ int
+CharIsFltOnly(Uint32 c)
 {
-	return (ks == AG_KEY_PLUS ||
-	        ks == AG_KEY_MINUS ||
-	        ks == AG_KEY_PERIOD ||
-	        ks == AG_KEY_E ||
-	        ks == AG_KEY_I ||
-	        ks == AG_KEY_N ||
-	        ks == AG_KEY_F ||
-	        ks == AG_KEY_A ||
-	        unicode == 0x221e ||		/* Infinity */
-	        isdigit((int)ks));
+	return (c == '+' || c == '-' || c == '.' || c == 'e' ||
+	        c == 'i' || c == 'n' || c == 'f' || c == 'a' ||
+	        c == 0x221e ||		/* Infinity */
+	        isdigit((int)c));
 }
 
 /*
@@ -449,10 +444,10 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 	    isascii((int)ks) &&
 	    isprint((int)ks)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY) &&
-		    !KeyIsIntOnly(ks)) {
+		    !CharIsIntOnly((Uint32)ks)) {
 			return (0);
 		} else if ((ed->flags & AG_EDITABLE_FLT_ONLY) &&
-		           !KeyIsFltOnly(ks, unicode)) {
+		           !CharIsFltOnly((Uint32)ks)) {
 			return (0);
 		}
 	}
@@ -585,16 +580,11 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 /*
  * Map mouse coordinates to a position within the buffer.
  */
-#define ON_LINE(my,y) \
-	( ((my) >= (y) && (my) <= (y)+agTextFontLineSkip) || \
-	  (!absflag && \
-	   (((my) <= ed->y*agTextFontLineSkip && line == 0) || \
-	    ((my) > (nLines*agTextFontLineSkip) && (line == nLines-1)))) )
-#define ON_CHAR(mx,x,glyph) \
-	((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
+#define ON_LINE(my,y)       ((my) >= (y) && (my) <= (y)+ed->lineSkip)
+#define ON_CHAR(mx,x,glyph) ((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
 int
 AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
-    int *pos, int absflag)
+    int *pos)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Font *font;
@@ -605,20 +595,17 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 	
 	AG_ObjectLock(ed);
 
-	yMouse = my + ed->y*agTextFontLineSkip;
+	yMouse = my + ed->y*ed->lineSkip;
 	if (yMouse < 0) {
-		AG_ObjectUnlock(ed);
-		return (-1);
+		*pos = 0;
+		goto out;
 	}
+	if ((font = ed->font) == NULL &&
+	    (font = AG_FetchFont(NULL, -1, -1)) == NULL)
+		goto fail;
+
 	x = 0;
 	y = 0;
-
-	if ((font = ed->font) == NULL &&
-	    (font = AG_FetchFont(NULL, -1, -1)) == NULL) {
-		AG_ObjectUnlock(ed);
-		return (-1);
-	}
-
  	for (i = 0; i < buf->len; i++) {
 		Uint32 ch = buf->s[i];
 
@@ -667,23 +654,23 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		ch = buf->s[i];
 		if (mx <= 0 && ON_LINE(yMouse,y)) {
 			*pos = i;
-			goto in;
+			goto out;
 		}
 		if (WrapAtChar(ed, x, &buf->s[i])) {
 			if (ON_LINE(yMouse,y) && mx > x) {
 				*pos = i;
-				goto in;
+				goto out;
 			}
-			y += agTextFontLineSkip;
+			y += ed->lineSkip;
 			x = 0;
 			line++;
 		}
 		if (ch == '\n') {
 			if (ON_LINE(yMouse,y) && mx > x) {
 				*pos = i;
-				goto in;
+				goto out;
 			}
-			y += agTextFontLineSkip;
+			y += ed->lineSkip;
 			x = 0;
 			line++;
 			continue;
@@ -691,7 +678,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			if (ON_LINE(yMouse,y) &&
 			    mx >= x && mx <= x+agTextTabWidth) {
 				*pos = (mx < x + agTextTabWidth/2) ? i : i+1;
-				goto in;
+				goto out;
 			}
 			x += agTextTabWidth;
 			continue;
@@ -712,7 +699,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 
 			if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
 				*pos = (mx < x+glyph->advance/2) ? i : i+1;
-				goto in;
+				goto out;
 			}
 			x += glyph->advance;
 			break;
@@ -725,7 +712,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			gl = AG_TextRenderGlyph(drv, ch);
 			if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
 				*pos = i;
-				goto in;
+				goto out;
 			}
 			x += gl->su->w;
 			break;
@@ -734,32 +721,27 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			AG_FatalError("AG_Editable: Unknown font format");
 		}
 	}
-	AG_ObjectUnlock(ed);
-	return (1);
-in:
+	*pos = buf->len;
+out:
 	AG_ObjectUnlock(ed);
 	return (0);
+fail:
+	AG_ObjectUnlock(ed);
+	return (-1);
 }
 #undef ON_LINE
 #undef ON_CHAR
 
 /* Move cursor to the given position in pixels. */
 void
-AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
-    int absflag)
+AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my)
 {
-	int rv;
-
 	AG_ObjectLock(ed);
-	rv = AG_EditableMapPosition(ed, buf, mx, my, &ed->pos, absflag);
-	ed->sel = 0;
-	if (rv == -1) {
-		ed->pos = 0;
-	} else if (rv == 1) {
-		ed->pos = buf->len;
+	if (AG_EditableMapPosition(ed, buf, mx, my, &ed->pos) == 0) {
+		ed->sel = 0;
+		AG_Redraw(ed);
 	}
 	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
 }
 
 /* Set the cursor position (-1 = end of the string) with bounds checking. */
@@ -789,29 +771,26 @@ MoveCursorToView(AG_Editable *ed, AG_EditableBuffer *buf)
 	if (ed->yCurs < ed->y) {
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
 			AG_EditableMoveCursor(ed, buf,
-			    ed->xCursPref - ed->x, 1,
-			    0);
+			    ed->xCursPref - ed->x,
+			    1);
 		}
 	} else if (ed->yCurs > ed->y + ed->yVis - 1) {
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
 			AG_EditableMoveCursor(ed, buf,
 			    ed->xCursPref - ed->x,
-			    ed->yVis*agTextFontLineSkip - 1,
-			    0);
+			    ed->yVis*ed->lineSkip - 1);
 		}
 	} else if (ed->xCurs < ed->x+10) {
 		if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
 			AG_EditableMoveCursor(ed, buf,
 			    ed->x+10,
-			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
-			    1);
+			    (ed->yCurs - ed->y)*ed->lineSkip + 1);
 		}
 	} else if (ed->xCurs > ed->x+WIDTH(ed)-10) {
 		if (!(ed->flags & AG_EDITABLE_WORDWRAP)) {
 			AG_EditableMoveCursor(ed, buf,
 			    ed->x+WIDTH(ed)-10,
-			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
-			    1);
+			    (ed->yCurs - ed->y)*ed->lineSkip + 1);
 		}
 	}
 }
@@ -825,15 +804,16 @@ Draw(void *obj)
 	AG_EditableBuffer *buf;
 	AG_Rect2 rClip;
 	int i, dx, dy, x, y;
+	int inSel = 0;
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
 	
 	rClip = WIDGET(ed)->rView;
-	rClip.x1 -= agTextFontHeight*2;	/* XXX largest character width */
-	rClip.y1 -= agTextFontLineSkip;
-	rClip.x2 += agTextFontHeight*2;
-	rClip.y2 += agTextFontLineSkip;
+	rClip.x1 -= ed->fontMaxHeight*2;
+	rClip.y1 -= ed->lineSkip;
+	rClip.x2 += ed->fontMaxHeight*2;
+	rClip.y2 += ed->lineSkip;
 
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, ed->r);
@@ -844,21 +824,21 @@ Draw(void *obj)
 	AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
 
 	x = 0;
-	y = -ed->y*agTextFontLineSkip;
+	y = -ed->y * ed->lineSkip;
 	ed->xMax = 10;
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {
 		AG_Glyph *gl;
 		Uint32 c = buf->s[i];
 
-		if (i == ed->pos) {
+		if (i == ed->pos) {			/* At cursor */
 			if (ed->sel == 0 &&
 			    (ed->flags & AG_EDITABLE_BLINK_ON) &&
 			    (ed->y >= 0 && ed->y <= ed->yMax-1) &&
 			    AG_WidgetIsFocused(ed)) {
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
-				    (y + agTextFontLineSkip - 1),
+				    (y + ed->lineSkip - 1),
 				    agColors[TEXTBOX_CURSOR_COLOR]);
 			}
 			ed->xCurs = x;
@@ -866,31 +846,43 @@ Draw(void *obj)
 				ed->flags &= ~(AG_EDITABLE_MARKPREF);
 				ed->xCursPref = x;
 			}
-			ed->yCurs = y/agTextFontLineSkip + ed->y;
+			ed->yCurs = y/ed->lineSkip + ed->y;
 		}
-
+		if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
+		    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+			if (!inSel) {
+				inSel = 1;
+				ed->xSelStart = x;
+				ed->ySelStart = y/ed->lineSkip + ed->y;
+			}
+		} else {
+			if (inSel) {
+				inSel = 0;
+				ed->xSelEnd = x;
+				ed->ySelEnd = y/ed->lineSkip + ed->y;
+			}
+		}
 		if (i == buf->len)
 			break;
 
 		if (WrapAtChar(ed, x, &buf->s[i])) {
-			y += agTextFontLineSkip;
+			y += ed->lineSkip;
 			ed->xMax = MAX(ed->xMax, x);
 			ed->yMax++;
 			x = 0;
 		}
 		if (c == '\n') {
-			y += agTextFontLineSkip;
+			y += ed->lineSkip;
 			ed->xMax = MAX(ed->xMax, x+10);
 			ed->yMax++;
 			x = 0;
 			continue;
 		} else if (c == '\t') {
-			if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
-			    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+			if (inSel) {
 				AG_DrawRectFilled(ed,
 				    AG_RECT(x - ed->x, y,
 				            agTextTabWidth+1,
-					    agTextFontLineSkip+1),
+					    ed->lineSkip+1),
 				    agColors[TEXT_SEL_COLOR]);
 			}
 			x += agTextTabWidth;
@@ -906,8 +898,7 @@ Draw(void *obj)
 			x += gl->advance;
 			continue;
 		}
-		if ((ed->sel > 0 && i >= ed->pos && i < ed->pos + ed->sel) ||
-		    (ed->sel < 0 && i <  ed->pos && i > ed->pos + ed->sel - 1)) {
+		if (inSel) {
 			AG_DrawRectFilled(ed,
 			    AG_RECT(x - ed->x, y, gl->su->w + 1, gl->su->h),
 			    agColors[TEXT_SEL_COLOR]);
@@ -921,35 +912,36 @@ Draw(void *obj)
 	/* Process any scrolling requests. */
 	if (ed->flags & AG_EDITABLE_KEEPVISCURSOR) {
 		MoveCursorToView(ed, buf);
-	} else if (ed->flags & AG_EDITABLE_SCROLLTOCURSOR) {
-		if ((ed->xCurs - ed->x) < 0) {
-			ed->x += (ed->xCurs - ed->x);
+	}
+	if (ed->xScrollTo != NULL) {
+		if ((*ed->xScrollTo - ed->x) < 0) {
+			ed->x += (*ed->xScrollTo - ed->x);
 			if (ed->x < 0) { ed->x = 0; }
-			AG_Redraw(ed);
 		}
-		if ((ed->xCurs - ed->x) > WIDTH(ed) - 10) {
-			ed->x = ed->xCurs - WIDTH(ed) + 10;
-			AG_Redraw(ed);
+		if ((*ed->xScrollTo - ed->x) > WIDTH(ed) - 10) {
+			ed->x = *ed->xScrollTo - WIDTH(ed) + 10;
 		}
-		if ((ed->yCurs - ed->y) < 0) {
-			ed->y += (ed->yCurs - ed->y);
+		ed->xScrollTo = NULL;
+		AG_Redraw(ed);
+	}
+	if (ed->yScrollTo != NULL) {
+		if ((*ed->yScrollTo - ed->y) < 0) {
+			ed->y += (*ed->yScrollTo - ed->y);
 			if (ed->y < 0) { ed->y = 0; }
-			AG_Redraw(ed);
 		}
-		if ((ed->yCurs - ed->y) > ed->yVis - 1) {
-			ed->y = ed->yCurs - ed->yVis + 1;
-			AG_Redraw(ed);
+		if ((*ed->yScrollTo - ed->y) > ed->yVis - 1) {
+			ed->y = *ed->yScrollTo - ed->yVis + 1;
 		}
-		ed->flags &= ~(AG_EDITABLE_SCROLLTOCURSOR);
-	} else {
-		if (ed->xScrollReq != 0) {
-			if (ed->xCurs < ed->x - ed->xScrollReq ||
-			    ed->xCurs > ed->x + WIDTH(ed) - ed->xScrollReq) {
-				ed->x += ed->xScrollReq;
-			}
-			ed->xScrollReq = 0;
-			AG_Redraw(ed);
+		ed->yScrollTo = NULL;
+		AG_Redraw(ed);
+	}
+	if (ed->xScrollPx != 0) {
+		if (ed->xCurs < ed->x - ed->xScrollPx ||
+		    ed->xCurs > ed->x + WIDTH(ed) - ed->xScrollPx) {
+			ed->x += ed->xScrollPx;
 		}
+		ed->xScrollPx = 0;
+		AG_Redraw(ed);
 	}
 
 	AG_PopTextState();
@@ -981,7 +973,7 @@ void
 AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
 {
 	AG_ObjectLock(ed);
-	ed->hPre = nLines*agTextFontHeight;
+	ed->hPre = nLines*ed->lineSkip;
 	AG_ObjectUnlock(ed);
 }
 
@@ -1007,7 +999,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		}
 		return (-1);
 	}
-	ed->yVis = a->h/agTextFontLineSkip;
+	ed->yVis = a->h/ed->lineSkip;
 	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
 
 	if (WIDGET(ed)->window != NULL &&
@@ -1189,6 +1181,8 @@ int
 AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
     AG_EditableClipboard *cb)
 {
+	Uint32 *c;
+
 	if (AG_EditableReadOnly(ed))
 		return (0);
 
@@ -1202,11 +1196,35 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 
 	if (strcmp(ed->encoding, cb->encoding) != 0) {
 		/* TODO: charset conversion */
+		AG_SetError("Incompatible encoding: %s", cb->encoding);
 		goto fail;
 	}
+	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
+		for (c = &cb->s[0]; *c != '\0'; c++) {
+			if (*c == '\n') {
+				AG_SetError("Newlines in clipboard");
+				goto fail;
+			}
+		}
+	}
+	if (ed->flags & AG_EDITABLE_INT_ONLY) {
+		for (c = &cb->s[0]; *c != '\0'; c++) {
+			if (!CharIsIntOnly(*c)) {
+				AG_SetError("Non-integer input near `%c'", *c);
+				goto fail;
+			}
+		}
+	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
+		for (c = &cb->s[0]; *c != '\0'; c++) {
+			if (!CharIsFltOnly(*c)) {
+				AG_SetError("Non-float input near `%c'", *c);
+				goto fail;
+			}
+		}
+	}
+
 	if (AG_EditableGrowBuffer(ed, buf, cb->s, cb->len) == -1) {
-		Verbose("Paste Failed: %s\n", AG_GetError());
-		goto out;
+		goto fail;
 	}
 	if (ed->pos < buf->len) {
 		memmove(&buf->s[ed->pos + cb->len], &buf->s[ed->pos],
@@ -1216,10 +1234,13 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	buf->len += cb->len;
 	buf->s[buf->len] = '\0';
 	ed->pos += cb->len;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 out:
 	AG_MutexUnlock(&cb->lock);
 	return (1);
 fail:
+	Verbose("Paste Failed: %s\n", AG_GetError());
 	AG_MutexUnlock(&cb->lock);
 	return (0);
 }
@@ -1388,7 +1409,7 @@ MouseButtonDown(AG_Event *event)
 		if ((buf = GetBuffer(ed)) == NULL) {
 			return;
 		}
-		AG_EditableMoveCursor(ed, buf, mx, my, 0);
+		AG_EditableMoveCursor(ed, buf, mx, my);
 		ReleaseBuffer(ed, buf);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 
@@ -1455,18 +1476,14 @@ MouseMotion(AG_Event *event)
 	int my = AG_INT(2);
 	int newPos;
 
-	if (!AG_WidgetIsFocused(ed))
-		return;
-	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
+	if (!AG_WidgetIsFocused(ed) ||
+	    (ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
 		return;
 
 	if ((buf = GetBuffer(ed)) == NULL)
 		return;
-	
-	if (AG_EditableMapPosition(ed, buf, mx, my, &newPos, 0) != 0) {
-		ReleaseBuffer(ed, buf);
-		return;
-	}
+	if (AG_EditableMapPosition(ed, buf, ed->x + mx, my, &newPos) == -1)
+		goto out;
 
 	if (ed->flags & AG_EDITABLE_WORDSELECT) {
 		Uint32 *c;
@@ -1486,6 +1503,8 @@ MouseMotion(AG_Event *event)
 				c++;
 				ed->sel++;
 			}
+			ed->xScrollTo = &ed->xSelEnd;
+			ed->yScrollTo = &ed->ySelEnd;
 		} else if (newPos < ed->pos) {
 			if (ed->sel > 0) {
 				ed->pos += ed->sel;
@@ -1500,13 +1519,23 @@ MouseMotion(AG_Event *event)
 			if (isspace((char)buf->s[ed->pos + ed->sel])) {
 				ed->sel++;
 			}
+			ed->xScrollTo = &ed->xSelStart;
+			ed->yScrollTo = &ed->ySelStart;
 		}
+		AG_Redraw(ed);
 	} else {
 		ed->sel = newPos - ed->pos;
+		if (ed->sel > 0) {
+			ed->xScrollTo = &ed->xSelEnd;
+			ed->yScrollTo = &ed->ySelEnd;
+		} else if (ed->sel < 0) {
+			ed->xScrollTo = &ed->xSelStart;
+			ed->yScrollTo = &ed->ySelStart;
+		}
+		AG_Redraw(ed);
 	}
 out:
 	ReleaseBuffer(ed, buf);
-	AG_Redraw(ed);
 }
 
 /*
@@ -1730,13 +1759,14 @@ Init(void *obj)
 	ed->sel = 0;
 	ed->selDblClick = -1;
 	ed->compose = 0;
-	ed->wPre = 0;
-	ed->hPre = agTextFontLineSkip + 2;
 	ed->xCurs = 0;
 	ed->yCurs = 0;
 	ed->xCursPref = 0;
-	ed->xScrollReq = 0;
-	ed->yScrollReq = 0;
+	ed->xSelStart = 0;
+	ed->ySelStart = 0;
+	ed->xScrollTo = NULL;
+	ed->yScrollTo = NULL;
+	ed->xScrollPx = 0;
 
 	ed->x = 0;
 	ed->xMax = 10;
@@ -1750,8 +1780,12 @@ Init(void *obj)
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
 	ed->font = NULL;
+	ed->lineSkip = agTextFontLineSkip;
+	ed->fontMaxHeight = agTextFontHeight;
 	ed->pm = NULL;
 	ed->lang = AG_LANG_NONE;
+	ed->wPre = 0;
+	ed->hPre = ed->lineSkip + 2;
 
 	ed->sBuf.var = NULL;
 	ed->sBuf.s = NULL;

@@ -197,8 +197,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 
-	r->w = tb->boxPadX*2 + rEd.w;
-	r->h = tb->boxPadY*2 + rEd.h;
+	r->w = tb->boxPadX*2 + rEd.w + 2;
+	r->h = tb->boxPadY*2 + rEd.h + 2;
 
 	if (tb->lbl != NULL) {
 		AG_WidgetSizeReq(tb->lbl, &rLbl);
@@ -321,7 +321,7 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
  * Return value is only valid as long as widget is locked.
  */
 int
-AG_TextboxMapPosition(AG_Textbox *tb, int x, int y, int *pos, int absolute)
+AG_TextboxMapPosition(AG_Textbox *tb, int x, int y, int *pos)
 {
 	AG_EditableBuffer *buf;
 	int rv;
@@ -329,21 +329,21 @@ AG_TextboxMapPosition(AG_Textbox *tb, int x, int y, int *pos, int absolute)
 	if ((buf = AG_EditableGetBuffer(tb->ed)) == NULL) {
 		return (-1);				/* XXX ambiguous */
 	}
-	rv = AG_EditableMapPosition(tb->ed, buf, x, y, pos, absolute);
+	rv = AG_EditableMapPosition(tb->ed, buf, x, y, pos);
 	AG_EditableReleaseBuffer(tb->ed, buf);
 	return (rv);
 }
 
 /* Move cursor as close as possible to specified pixel coordinates. */
 void
-AG_TextboxMoveCursor(AG_Textbox *tb, int x, int y, int absolute)
+AG_TextboxMoveCursor(AG_Textbox *tb, int x, int y)
 {
 	AG_EditableBuffer *buf;
 
 	if ((buf = AG_EditableGetBuffer(tb->ed)) == NULL) {
 		return;
 	}
-	AG_EditableMoveCursor(tb->ed, buf, x, y, absolute);
+	AG_EditableMoveCursor(tb->ed, buf, x, y);
 	AG_EditableReleaseBuffer(tb->ed, buf);
 }
 

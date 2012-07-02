@@ -74,8 +74,8 @@ void        AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 #define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
 #define     AG_TextboxSetLang(tb,lang) AG_EditableSetLang((tb)->ed,(lang))
 
-int         AG_TextboxMapPosition(AG_Textbox *, int, int, int *, int);
-void        AG_TextboxMoveCursor(AG_Textbox *, int, int, int);
+int         AG_TextboxMapPosition(AG_Textbox *, int, int, int *);
+void        AG_TextboxMoveCursor(AG_Textbox *, int, int);
 void        AG_TextboxSetCursorPos(AG_Textbox *, int);
 #define     AG_TextboxGetCursorPos(tb) AG_EditableGetCursorPos((tb)->ed)
 
