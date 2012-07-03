@@ -5595,8 +5595,6 @@ if [ -e  "${prefix_xinerama}/lib" ]; then
 XINERAMA_LIBS="-L${prefix_xinerama}/lib"
 fi;
 else
-echo "WARNING: You should probably use --with-xinerama=prefix"
-echo "WARNING: You should probably use --with-xinerama=prefix" >> config.log
 if [ -e  "/usr/include/X11/X11" ]; then
 XINERAMA_CFLAGS="-I/usr/include/X11"
 fi;
@@ -5632,6 +5630,12 @@ XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/X11/lib"
 fi;
 if [ -e  "/usr/X11R6/lib" ]; then
 XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/X11R6/lib"
+fi;
+if [ "${XINERAMA_CFLAGS}" != "" ]; then
+echo "trying autodetected path"
+echo "trying autodetected path" >> config.log
+echo "WARNING: You should probably use --with-xinerama=prefix"
+echo "WARNING: You should probably use --with-xinerama=prefix" >> config.log
 fi;
 fi;
 XINERAMA_LIBS="${XINERAMA_LIBS} -lXinerama"
@@ -5770,6 +5774,8 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.m
 #import <Cocoa/Cocoa.h>
+
+int main(int argc, char *argv[]) { return (0); }
 
 EOT
 	echo "$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest conftest.m ${COCOA_LIBS}" >>config.log
