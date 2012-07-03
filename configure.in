@@ -26,20 +26,9 @@ REGISTER_SECTION("Options specific to AG_Db(3) interface:")
 REGISTER("--with-db4[=PREFIX]",		"Enable Berkeley DB backend [check]")
 REGISTER("--with-mysql[=PREFIX]",	"Enable MySQL backend [check]")
 
-REGISTER_SECTION("Options specific to GUI library:")
-REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
-REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
-REGISTER("--with-glx[=PREFIX]",		"GL rendering via GLX [check]")
-REGISTER("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
-REGISTER("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
-REGISTER("--with-sdl[=PREFIX]",		"SDL rendering support [check]")
-REGISTER("--with-x[=PREFIX]",		"X Windows driver support [check]")
-REGISTER("--with-xinerama[=PREFIX]",	"Xinerama extension support [check]")
-REGISTER("--with-wgl",			"GL rendering via WGL [check]")
-
 REGISTER_SECTION("Options specific to Math library:")
 REGISTER("--with-altivec",		"AltiVec optimizations [check]")
-REGISTER("--with-sse",			"SSE[123] optimizations [no]")
+REGISTER("--with-sse",			"SSE optimizations [no]")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
 
@@ -47,6 +36,18 @@ REGISTER_SECTION("Options specific to Audio library:")
 REGISTER("--enable-audio",		"Build audio interface library [no]")
 REGISTER("--with-sndfile[=PREFIX]",	"Use sndfile library [check]")
 REGISTER("--with-portaudio[=PREFIX]",	"Use portaudio library [check]")
+
+REGISTER_SECTION("Options specific to GUI library:")
+REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
+REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
+REGISTER("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
+REGISTER("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
+REGISTER("--with-x[=PREFIX]",		"Build with X windows support [check]")
+REGISTER("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
+REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
+REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
+REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
+REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
@@ -60,6 +61,7 @@ HDEFINE(INCLDIR, "$PREFIX/include/agar")
 
 # Tests
 CHECK(cc)
+CHECK(objc)
 CHECK(sys_types)
 CHECK(stdlib_h)
 CHECK(unistd_h)
@@ -212,6 +214,26 @@ if [ "${enable_gui}" != "no" ]; then
 		MDEFINE(X11_CFLAGS, "")
 		MDEFINE(X11_LIBS, "")
 	fi
+	
+	# Enable MacOS X / Cocoa support if Cocoa is found.
+	if [ "${with_cocoa}" != "no" ]; then
+		CHECK(cocoa, 0)
+		if [ "${HAVE_COCOA}" != "yes" ]; then
+			if [ "${with_cocoa}" = "yes" ]; then
+				echo "*"
+				echo "* --with-cocoa was requested, but the "
+				echo "* Cocoa framework was not found."
+				echo "*"
+				exit 1
+			else
+				HUNDEF(HAVE_COCOA)
+			fi
+		fi
+	else
+		HUNDEF(HAVE_COCOA)
+		MDEFINE(COCOA_CFLAGS, "")
+		MDEFINE(COCOA_LIBS, "")
+	fi
 
 	#
 	# Platform-specific OpenGL APIs
@@ -239,7 +261,7 @@ if [ "${enable_gui}" != "no" ]; then
 		
 		# Enable WGL support on Windows.
 		if [ "${with_wgl}" != "no" ]; then
-			CHECK(wgl, 0, ${prefix_gl})
+			CHECK(wgl, 0)
 			if [ "${HAVE_WGL}" != "yes" ]; then
 				if [ "${with_wgl}" = "yes" ]; then
 					echo "*"
