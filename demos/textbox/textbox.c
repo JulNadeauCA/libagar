@@ -80,13 +80,14 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 	AG_SeparatorNewHoriz(win);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Cursor at: %i", &textbox->ed->pos);
 	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Selection: %i", &textbox->ed->sel);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "x: %i", &textbox->ed->x);
 	AG_SeparatorNewHoriz(win);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFlag(win, 0, "Read-only", &textbox->ed->flags, AG_EDITABLE_READONLY);
 	AG_CheckboxNewFlag(win, 0, "Password input", &textbox->ed->flags, AG_EDITABLE_PASSWORD);
 	AG_CheckboxNewFlag(win, 0, "Force integer input", &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Disable auto scroll", &textbox->ed->flags, AG_EDITABLE_NOSCROLL);
+	AG_CheckboxNewFlag(win, 0, "Maintain visible cursor", &textbox->ed->flags, AG_EDITABLE_KEEPVISCURSOR);
 	AG_CheckboxNewFlag(win, 0, "Disable emacs", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
 	AG_CheckboxNewFlag(win, 0, "Disable word seek", &textbox->ed->flags, AG_EDITABLE_NOWORDSEEK);
 	AG_CheckboxNewFlag(win, 0, "Disable latin1", &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
@@ -149,7 +150,7 @@ SingleLineExample(void)
 	}
 
 	/* Create a single-line Textbox bound to an AG_Text object. */
-	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL|AG_BOX_FRAME);
+	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	txt = AG_TextNewS(NULL);
 	{
 		AG_TextSetEntS(txt, AG_LANG_EN, "Hello");
