@@ -5376,8 +5376,6 @@ if [ -e  "${prefix_x}/lib" ]; then
 X11_LIBS="-L${prefix_x}/lib"
 fi;
 else
-echo "WARNING: You should probably use --with-x=prefix"
-echo "WARNING: You should probably use --with-x=prefix" >> config.log
 if [ -e  "/usr/include/X11/X11" ]; then
 X11_CFLAGS="-I/usr/include/X11"
 fi;
@@ -5431,6 +5429,12 @@ X11_LIBS="${X11_LIBS} -L/usr/X11R6/lib"
 fi;
 if [ -e  "/usr/X11R7/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/X11R7/lib"
+fi;
+if [ "${X11_CFLAGS}" != "" ]; then
+echo "trying autodetected path"
+echo "trying autodetected path" >> config.log
+echo "WARNING: You should probably use --with-x=prefix"
+echo "WARNING: You should probably use --with-x=prefix" >> config.log
 fi;
 fi;
 fi;
@@ -5753,7 +5757,7 @@ echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 $ECHO_N "checking for the Cocoa framework..."
 $ECHO_N "checking for the Cocoa framework..." >> config.log
 COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -falign-loops=16 -force_cpusubtype_ALL -fpascal-strings"
-COCOA_LIBS="-lobjc -Wl,framework,Cocoa -Wl,framework,Carbon -Wl,framework,IOKit"
+COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
