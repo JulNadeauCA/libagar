@@ -6,10 +6,7 @@
 #include <agar/core/net.h>
 #include <agar/core/snprintf.h>
 
-#include <agar/config/_mk_have_unsigned_typedefs.h>
-#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 typedef unsigned int Uint;
-#endif
 
 #define Malloc AG_Malloc
 #define Free AG_Free
