@@ -394,20 +394,9 @@ echo "Options specific to AG_Db(3) interface:"
 echo "    --with-db4[=PREFIX]       Enable Berkeley DB backend [check]"
 echo "    --with-mysql[=PREFIX]     Enable MySQL backend [check]"
 echo ""
-echo "Options specific to GUI library:"
-echo "    --with-freetype[=PREFIX]  Enable FreeType support [check]"
-echo "    --with-gl[=PREFIX]        OpenGL rendering support [check]"
-echo "    --with-glx[=PREFIX]       GL rendering via GLX [check]"
-echo "    --with-jpeg[=PREFIX]      Built-in JPEG image support [check]"
-echo "    --with-png[=PREFIX]       Built-in PNG image support [check]"
-echo "    --with-sdl[=PREFIX]       SDL rendering support [check]"
-echo "    --with-x[=PREFIX]         X Windows driver support [check]"
-echo "    --with-xinerama[=PREFIX]  Xinerama extension support [check]"
-echo "    --with-wgl                GL rendering via WGL [check]"
-echo ""
 echo "Options specific to Math library:"
 echo "    --with-altivec            AltiVec optimizations [check]"
-echo "    --with-sse                SSE[123] optimizations [no]"
+echo "    --with-sse                SSE optimizations [no]"
 echo "    --with-<mode>-fp          Precision (single|double|quad) [double]"
 echo "    --with-<opt>-inline       Inline ops (sse2|sse3|altivec) [no]"
 echo ""
@@ -415,6 +404,18 @@ echo "Options specific to Audio library:"
 echo "    --enable-audio            Build audio interface library [no]"
 echo "    --with-sndfile[=PREFIX]   Use sndfile library [check]"
 echo "    --with-portaudio[=PREFIX] Use portaudio library [check]"
+echo ""
+echo "Options specific to GUI library:"
+echo "    --with-freetype[=PREFIX]  Enable FreeType support [check]"
+echo "    --with-gl[=PREFIX]        OpenGL rendering support [check]"
+echo "    --with-jpeg[=PREFIX]      Built-in JPEG image support [check]"
+echo "    --with-png[=PREFIX]       Built-in PNG image support [check]"
+echo "    --with-x[=PREFIX]         Build with X windows support [check]"
+echo "    --with-xinerama[=PREFIX]  Build with Xinerama support [check]"
+echo "    --with-glx[=PREFIX]       Enable accelerated X driver [check]"
+echo "    --with-sdl[=PREFIX]       Enable SDL 1.2 driver [check]"
+echo "    --with-wgl                Enable MS Windows driver [check]"
+echo "    --with-cocoa              Enable MacOS X Cocoa driver [check]"
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
@@ -818,7 +819,7 @@ EOT
 		for OUTFILE in conftest.exe conftest conftest.*; do
 			if [ -f $OUTFILE ]; then
 				case $OUTFILE in
-				*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+				*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
 					;;
 				*.* )
 					EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
@@ -891,58 +892,6 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
-$ECHO_N "checking for gcc..."
-$ECHO_N "checking for gcc..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_GCC" ]; then
-		HAVE_GCC=`cat ${cache}/ctest-HAVE_GCC`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GCC`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int main(int argc, char *argv[]) {
-#if !defined(__GNUC__)
-# error "Not GCC"
-#endif
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_GCC="yes"
-echo "HAVE_GCC=$HAVE_GCC" >>Makefile.config
-echo "mdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
-echo "#ifndef HAVE_GCC" > $BLD/include/agar/config/have_gcc.h
-echo "#define HAVE_GCC \"$HAVE_GCC\"" >> $BLD/include/agar/config/have_gcc.h
-echo "#endif" >> $BLD/include/agar/config/have_gcc.h
-echo "hdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_GCC="no"
-echo "HAVE_GCC=$HAVE_GCC" >>Makefile.config
-echo "mdefs[\"HAVE_GCC\"] = \"$HAVE_GCC\"" >>configure.lua
-echo "#undef HAVE_GCC" >$BLD/include/agar/config/have_gcc.h
-echo "hdefs[\"HAVE_GCC\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_GCC" > ${cache}/ctest-HAVE_GCC
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GCC
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for IEEE754 floating point..."
 $ECHO_N "checking for IEEE754 floating point..." >> config.log
 MK_CACHED="No"
@@ -1711,6 +1660,163 @@ echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+$ECHO_N "checking for an Objective-C compiler..."
+$ECHO_N "checking for an Objective-C compiler..." >> config.log
+if [ "$OBJC" = "" ]; then
+	if [ "$CC" != "" ]; then
+		OBJC="$CC"
+		HAVE_OBJC="yes"
+		echo "using CC (${OBJC})"
+	else
+		for i in `echo $PATH |sed 's/:/ /g'`; do
+			if [ -x "${i}/cc" ]; then
+				if [ -f "${i}/cc" ]; then
+					OBJC="${i}/cc"
+					break
+				fi
+			elif [ -x "${i}/gcc" ]; then
+				if [ -f "${i}/gcc" ]; then
+					OBJC="${i}/gcc"
+					break
+				fi
+			fi
+		done
+		if [ "$OBJC" = "" ]; then
+			echo "*"
+			echo "* Unable to find an Objective-C compiler in PATH. You may need"
+			echo "* to set the CC or OBJC environment variable."
+			echo "*"
+			echo "Unable to find an Objective-C compiler in PATH." >> config.log
+			HAVE_OBJC="no"
+			echo "no"
+		else
+			HAVE_OBJC="yes"
+			echo "yes, ${OBJC}"
+			echo "yes, ${OBJC}" >> config.log
+		fi
+	fi
+else
+	HAVE_OBJC="yes"
+	echo "using ${OBJC}"
+fi
+
+if [ "${HAVE_OBJC}" = "yes" ]; then
+	$ECHO_N "checking whether the Objective-C compiler works..."
+	$ECHO_N "checking whether the Objective-C compiler works..." >> config.log
+	cat << 'EOT' > conftest.m
+#import <stdio.h>
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$OBJC -x objective-c -o conftest conftest.m 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no, the test failed to compile"
+	    echo "no, the test failed to compile" >> config.log
+		HAVE_OBJC="no"
+	else
+		echo "yes"
+		echo "yes" >> config.log
+		HAVE_OBJC="yes"
+	fi
+
+	if [ "${EXECSUFFIX}" = "" ]; then
+		EXECSUFFIX=""
+		for OUTFILE in conftest.exe conftest conftest.*; do
+			if [ -f $OUTFILE ]; then
+				case $OUTFILE in
+				*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+					;;
+				*.* )
+					EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+					break ;;
+				* )
+					break ;;
+				esac;
+		    fi
+		done
+		if [ "$EXECSUFFIX" != "" ]; then
+			echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+		fi
+echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
+echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+echo "#ifndef EXECSUFFIX" > $BLD/include/agar/config/execsuffix.h
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >> $BLD/include/agar/config/execsuffix.h
+echo "#endif" >> $BLD/include/agar/config/execsuffix.h
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+	fi
+	rm -f conftest.m conftest$EXECSUFFIX
+	TEST_OBJCFLAGS=""
+fi
+$ECHO_N "checking for compiler warning options..."
+$ECHO_N "checking for compiler warning options..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_OBJC_WARNINGS" ]; then
+		HAVE_OBJC_WARNINGS=`cat ${cache}/ctest-HAVE_OBJC_WARNINGS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_OBJC_WARNINGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.m
+int main(int argc, char *argv[]) { return (0); }
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest conftest.m " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest conftest.m  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_OBJC_WARNINGS="yes"
+echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+echo "#ifndef HAVE_OBJC_WARNINGS" > $BLD/include/agar/config/have_objc_warnings.h
+echo "#define HAVE_OBJC_WARNINGS \"$HAVE_OBJC_WARNINGS\"" >> $BLD/include/agar/config/have_objc_warnings.h
+echo "#endif" >> $BLD/include/agar/config/have_objc_warnings.h
+echo "hdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_OBJC_WARNINGS="no"
+echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+echo "#undef HAVE_OBJC_WARNINGS" >$BLD/include/agar/config/have_objc_warnings.h
+echo "hdefs[\"HAVE_OBJC_WARNINGS\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_OBJC_WARNINGS" > ${cache}/ctest-HAVE_OBJC_WARNINGS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_OBJC_WARNINGS
+fi
+rm -f conftest.m $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_OBJC_WARNINGS}" = "yes" ]; then
+TEST_OBJCFLAGS="-Wall -Werror"
+fi;
+$ECHO_N "checking for libtool --tag=OBJC retardation..."
+$ECHO_N "checking for libtool --tag=OBJC retardation..." >> config.log
+cat << EOT > conftest.m
+int main(int argc, char *argv[]) { return (0); }
+EOT
+$LIBTOOL --quiet --mode=compile --tag=OBJC $OBJC $CFLAGS $OBJCFLAGS $TEST_OBJCFLAGS -o $testdir/conftest.o conftest.m 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+LIBTOOLOPTS_OBJC="--tag=OBJC"
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "LIBTOOLOPTS_OBJC=$LIBTOOLOPTS_OBJC" >>Makefile.config
+echo "mdefs[\"LIBTOOLOPTS_OBJC\"] = \"$LIBTOOLOPTS_OBJC\"" >>configure.lua
+rm -f conftest.m $testdir/conftest$EXECSUFFIX
+echo "OBJC=$OBJC" >>Makefile.config
+echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
+echo "OBJCFLAGS=$OBJCFLAGS" >>Makefile.config
+echo "mdefs[\"OBJCFLAGS\"] = \"$OBJCFLAGS\"" >>configure.lua
 $ECHO_N "checking for <sys/types.h>..."
 $ECHO_N "checking for <sys/types.h>..." >> config.log
 MK_CACHED="No"
@@ -1817,114 +1923,9 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_64BIT
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for conflicting typedefs..."
-$ECHO_N "checking for conflicting typedefs..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS" ]; then
-		_MK_HAVE_UNSIGNED_TYPEDEFS=`cat ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <sys/types.h>
-int main(int argc, char *argv[]) {
-	Uchar foo = 1;
-	Uint bar = 1;
-	Ulong baz = 1;
-	return (foo != 1 || bar != 1 || baz != 1);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-_MK_HAVE_UNSIGNED_TYPEDEFS="yes"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "#endif" >> $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-_MK_HAVE_UNSIGNED_TYPEDEFS="no"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >$BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
 else
 echo "#undef HAVE_64BIT" >$BLD/include/agar/config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
-$ECHO_N "checking for conflicting typedefs..."
-$ECHO_N "checking for conflicting typedefs..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS" ]; then
-		_MK_HAVE_UNSIGNED_TYPEDEFS=`cat ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int main(int argc, char *argv[]) {
-	Uchar foo = 1;
-	Uint bar = 1;
-	Ulong baz = 1;
-	return (foo != 1 || bar != 1 || baz != 1);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-_MK_HAVE_UNSIGNED_TYPEDEFS="yes"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "#endif" >> $BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-_MK_HAVE_UNSIGNED_TYPEDEFS="no"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
-echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >$BLD/include/agar/config/_mk_have_unsigned_typedefs.h
-echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
 fi;
 $ECHO_N "checking for <stdlib.h>..."
 $ECHO_N "checking for <stdlib.h>..." >> config.log
@@ -2488,8 +2489,12 @@ if [ "${MK_CACHED}" = "No" ]; then
 int
 main(int argc, char *argv[])
 {
-	(void)strsep(NULL, NULL);
-	return (0);
+	char foo[32], *pFoo = &foo[0];
+	char *s;
+
+	foo[0] = '\0';
+	s = strsep(&pFoo, " ");
+	return (s != NULL);
 }
 
 EOT
@@ -5742,6 +5747,103 @@ X11_LIBS=""
 echo "X11_LIBS=$X11_LIBS" >>Makefile.config
 echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 	fi
+	
+	if [ "${with_cocoa}" != "no" ]
+ then
+$ECHO_N "checking for the Cocoa framework..."
+$ECHO_N "checking for the Cocoa framework..." >> config.log
+COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -falign-loops=16 -force_cpusubtype_ALL -fpascal-strings"
+COCOA_LIBS="-lobjc -Wl,framework,Cocoa -Wl,framework,Carbon -Wl,framework,IOKit"
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_COCOA" ]; then
+		HAVE_COCOA=`cat ${cache}/ctest-HAVE_COCOA`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_COCOA`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.m
+#import <Cocoa/Cocoa.h>
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest conftest.m ${COCOA_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${COCOA_CFLAGS} -x objective-c -o $testdir/conftest conftest.m ${COCOA_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_COCOA="yes"
+echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
+echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
+echo "#ifndef HAVE_COCOA" > $BLD/include/agar/config/have_cocoa.h
+echo "#define HAVE_COCOA \"$HAVE_COCOA\"" >> $BLD/include/agar/config/have_cocoa.h
+echo "#endif" >> $BLD/include/agar/config/have_cocoa.h
+echo "hdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_COCOA="no"
+echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
+echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
+echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
+echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_COCOA" > ${cache}/ctest-HAVE_COCOA
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_COCOA
+fi
+rm -f conftest.m $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_COCOA}" = "yes" ]; then
+echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
+echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
+echo "#ifndef COCOA_CFLAGS" > $BLD/include/agar/config/cocoa_cflags.h
+echo "#define COCOA_CFLAGS \"$COCOA_CFLAGS\"" >> $BLD/include/agar/config/cocoa_cflags.h
+echo "#endif" >> $BLD/include/agar/config/cocoa_cflags.h
+echo "hdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
+echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
+echo "mdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
+echo "#ifndef COCOA_LIBS" > $BLD/include/agar/config/cocoa_libs.h
+echo "#define COCOA_LIBS \"$COCOA_LIBS\"" >> $BLD/include/agar/config/cocoa_libs.h
+echo "#endif" >> $BLD/include/agar/config/cocoa_libs.h
+echo "hdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
+else
+echo "#undef COCOA_CFLAGS" >$BLD/include/agar/config/cocoa_cflags.h
+echo "hdefs[\"COCOA_CFLAGS\"] = nil" >>configure.lua
+COCOA_CFLAGS=""
+echo "#undef COCOA_LIBS" >$BLD/include/agar/config/cocoa_libs.h
+echo "hdefs[\"COCOA_LIBS\"] = nil" >>configure.lua
+COCOA_LIBS=""
+fi;
+		if [ "${HAVE_COCOA}" != "yes" ]
+ then
+			if [ "${with_cocoa}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-cocoa was requested, but the "
+				echo "* Cocoa framework was not found."
+				echo "*"
+				exit 1
+			else
+echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
+echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+			fi
+		fi
+	else
+echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
+echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+COCOA_CFLAGS=""
+echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
+echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
+COCOA_LIBS=""
+echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
+echo "mdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
+	fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
 		if [ "${with_glx}" != "no" ]
@@ -8474,7 +8576,7 @@ int main(int argc, char *argv[])
 	textdomain("foo");
 	s = gettext("string");
 	s = dgettext("foo","string");
-	return (0);
+	return (s != NULL);
 }
 
 EOT
@@ -8562,7 +8664,7 @@ int main(int argc, char *argv[])
 	textdomain("foo");
 	s = gettext("string");
 	s = dgettext("foo","string");
-	return (0);
+	return (s != NULL);
 }
 
 EOT
@@ -8663,7 +8765,7 @@ int main(int argc, char *argv[])
 	textdomain("foo");
 	s = gettext("string");
 	s = dgettext("foo","string");
-	return (0);
+	return (s != NULL);
 }
 
 EOT
