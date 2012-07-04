@@ -29,10 +29,6 @@
  * manager internally.
  */
 
-#include <config/have_sdl.h>
-#include <config/have_opengl.h>
-#include <config/have_glx.h>
-
 #include <core/core.h>
 
 #include "gui.h"
