@@ -28,10 +28,6 @@
  * Agar window has a corresponding "native" window managed by the driver.
  */
 
-#include <config/have_sdl.h>
-#include <config/have_opengl.h>
-#include <config/have_glx.h>
-
 #include <core/core.h>
 
 #include "window.h"
