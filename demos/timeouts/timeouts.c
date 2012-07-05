@@ -56,8 +56,9 @@ main(int argc, char **argv)
   AG_Window *win;
   AG_Button *btn;
 
-  AG_InitCore(NULL, 0);
-  AG_InitVideo(320, 200, 32, 0);
+  if (AG_InitCore(NULL, 0) == -1 || AG_InitGraphics(NULL) == -1) {
+    return 1;
+  }
 
   win = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_NOMOVE);
   btn = AG_ButtonNewFn(win, 0, "Schedule timeouts", ScheduleTimeouts, "");
