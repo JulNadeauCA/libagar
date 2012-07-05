@@ -24,17 +24,13 @@
  */
 
 /*
- * Driver for OpenGL graphics via the SDL library.
+ * Driver for OpenGL graphics via the SDL 1.2 library.
  */
 
-#include <config/have_sdl.h>
-#include <config/have_opengl.h>
 #include <config/ag_threads.h>
 #include <config/have_gettimeofday.h>
 #include <config/have_clock_gettime.h>
 #include <config/have_cygwin.h>
-
-#if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 
 #include <core/core.h>
 #include <core/config.h>
@@ -883,5 +879,3 @@ AG_DriverSwClass agDriverSDLGL = {
 	SDLGL_VideoCapture,
 	SDLGL_VideoClear
 };
-
-#endif /* HAVE_SDL and HAVE_OPENGL */

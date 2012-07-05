@@ -28,9 +28,7 @@
  * driver; one context is created for each Agar window.
  */
 
-#include <config/have_wgl.h>
 #include <config/ag_threads.h>
-#ifdef HAVE_WGL
 
 #include <core/core.h>
 #include <core/config.h>
@@ -1547,5 +1545,3 @@ AG_DriverMwClass agDriverWGL = {
 	WGL_SetTransientFor,
 	NULL				/* setOpacity (TODO) */
 };
-
-#endif /* HAVE_WGL */

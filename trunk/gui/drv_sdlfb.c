@@ -24,11 +24,8 @@
  */
 
 /*
- * Driver for framebuffer graphics via the SDL library.
+ * Driver for framebuffer graphics via the SDL 1.2 library.
  */
-
-#include <config/have_sdl.h>
-#ifdef HAVE_SDL
 
 #include <core/core.h>
 #include <core/config.h>
@@ -1564,5 +1561,3 @@ AG_DriverSwClass agDriverSDLFB = {
 	SDLFB_VideoCapture,
 	SDLFB_VideoClear
 };
-
-#endif /* HAVE_SDL */
