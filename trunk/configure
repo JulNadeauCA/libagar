@@ -203,10 +203,6 @@ if [ "${srcdir}" != "" ]; then
 	fi
 	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
-	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
-	if [ $? != 0 ]; then
-		exit 1;
-	fi
 else
 	SRC=`pwd`
 fi
@@ -596,7 +592,7 @@ else
 		LIBTOOL_BUNDLED="yes"
 		LIBTOOL=\${TOP}/mk/libtool/libtool
 	else
-		if [ "`libtool --version |grep GNU`" = "" ]; then
+		if [ "`libtool --version 2>/dev/null |grep GNU`" = "" ]; then
 			LIBTOOL_BUNDLED="yes"
 			LIBTOOL=\${TOP}/mk/libtool/libtool
 		else
@@ -4946,12 +4942,6 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
-SDL_CFLAGS=""
-echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
-echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-SDL_LIBS=""
-echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
-echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 	fi
 	if [ "${with_gl}" != "no" ]
  then
@@ -5298,12 +5288,6 @@ echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_OPENGL" >$BLD/include/agar/config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
-OPENGL_CFLAGS=""
-echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
-echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-OPENGL_LIBS=""
-echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
-echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_x}" != "no" ]
@@ -5738,22 +5722,10 @@ echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
 		else
 echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
 echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
-XINERAMA_CFLAGS=""
-echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
-echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
-XINERAMA_LIBS=""
-echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
-echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
 		fi
 	else
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
-X11_CFLAGS=""
-echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
-echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
-X11_LIBS=""
-echo "X11_LIBS=$X11_LIBS" >>Makefile.config
-echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_cocoa}" != "no" ]
@@ -5761,7 +5733,7 @@ echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 $ECHO_N "checking for the Cocoa framework..."
 $ECHO_N "checking for the Cocoa framework..." >> config.log
 COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -falign-loops=16 -force_cpusubtype_ALL -fpascal-strings"
-COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit"
+COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,Carbon -Wl,-framework,IOKit"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -5847,12 +5819,6 @@ echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
 echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
-COCOA_CFLAGS=""
-echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
-echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
-COCOA_LIBS=""
-echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
-echo "mdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
 	fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
@@ -5967,12 +5933,6 @@ echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
 		else
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""
-echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
-echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""
-echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
-echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 		fi
 		
 		if [ "${with_wgl}" != "no" ]
@@ -6072,12 +6032,6 @@ echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""
-echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
-echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""
-echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
-echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_freetype}" != "no" ]
@@ -6328,12 +6282,6 @@ fi;
 	else
 echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_jpeg}" != "no" ]
@@ -6496,12 +6444,6 @@ echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
-JPEG_CFLAGS=""
-echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
-echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-JPEG_LIBS=""
-echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
-echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 	fi
 	
 	if [ "${with_png}" != "no" ]
@@ -6799,12 +6741,42 @@ echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
 echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
-PNG_CFLAGS=""
-echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
-echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
-PNG_LIBS=""
-echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
-echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+	fi
+	if [ "${HAVE_SDL}" = "yes" ]
+ then
+SRCS_SDL="drv_sdl_common.c drv_sdlfb.c"
+echo "SRCS_SDL=$SRCS_SDL" >>Makefile.config
+echo "mdefs[\"SRCS_SDL\"] = \"$SRCS_SDL\"" >>configure.lua
+		if [ "${HAVE_OPENGL}" = "yes" ]
+ then
+SRCS_SDL="${SRCS_SDL} drv_sdlgl.c"
+echo "SRCS_SDL=$SRCS_SDL" >>Makefile.config
+echo "mdefs[\"SRCS_SDL\"] = \"$SRCS_SDL\"" >>configure.lua
+		fi
+	fi
+	if [ "${HAVE_OPENGL}" = "yes" ]
+ then
+SRCS_GL="drv_gl_common.c"
+echo "SRCS_GL=$SRCS_GL" >>Makefile.config
+echo "mdefs[\"SRCS_GL\"] = \"$SRCS_GL\"" >>configure.lua
+		if [ "${HAVE_GLX}" = "yes" ]
+ then
+SRCS_GL="drv_glx.c"
+echo "SRCS_GL=$SRCS_GL" >>Makefile.config
+echo "mdefs[\"SRCS_GL\"] = \"$SRCS_GL\"" >>configure.lua
+		fi
+		if [ "${HAVE_WGL}" = "yes" ]
+ then
+SRCS_GL="drv_wgl.c"
+echo "SRCS_GL=$SRCS_GL" >>Makefile.config
+echo "mdefs[\"SRCS_GL\"] = \"$SRCS_GL\"" >>configure.lua
+		fi
+	fi
+	if [ "${HAVE_COCOA}" = "yes" ]
+ then
+SRCS_COCOA="drv_cocoa.m"
+echo "SRCS_COCOA=$SRCS_COCOA" >>Makefile.config
+echo "mdefs[\"SRCS_COCOA\"] = \"$SRCS_COCOA\"" >>configure.lua
 	fi
 else
 echo "#undef ENABLE_GUI" >$BLD/include/agar/config/enable_gui.h
@@ -6814,52 +6786,24 @@ echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
-SDL_CFLAGS=""
-echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
-echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-SDL_LIBS=""
-echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
-echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
-echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
-echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
-GLX_CFLAGS=""
-echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
-echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-GLX_LIBS=""
-echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
-echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
-echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
-echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
-WGL_CFLAGS=""
-echo "WGL_CFLAGS=$WGL_CFLAGS" >>Makefile.config
-echo "mdefs[\"WGL_CFLAGS\"] = \"$WGL_CFLAGS\"" >>configure.lua
-WGL_LIBS=""
-echo "WGL_LIBS=$WGL_LIBS" >>Makefile.config
-echo "mdefs[\"WGL_LIBS\"] = \"$WGL_LIBS\"" >>configure.lua
+echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
+echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
 echo "#undef HAVE_OPENGL" >$BLD/include/agar/config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
-OPENGL_CFLAGS=""
-echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
-echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-OPENGL_LIBS=""
-echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
-echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
+echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
+echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
-FREETYPE_CFLAGS=""
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-FREETYPE_LIBS=""
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
-JPEG_CFLAGS=""
-echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
-echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-JPEG_LIBS=""
-echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
-echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
+echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
+echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
+echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
+echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
 fi
 if [ "${enable_network}" = "yes" ]
  then
@@ -7188,12 +7132,6 @@ echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
 else
 echo "#undef HAVE_DB4" >$BLD/include/agar/config/have_db4.h
 echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
-DB4_CFLAGS=""
-echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
-echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
-DB4_LIBS=""
-echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
-echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 fi
 if [ "${with_mysql}" != "no" ]
  then
@@ -7406,12 +7344,6 @@ echo "hdefs[\"HAVE_MYSQL\"] = nil" >>configure.lua
 else
 echo "#undef HAVE_MYSQL" >$BLD/include/agar/config/have_mysql.h
 echo "hdefs[\"HAVE_MYSQL\"] = nil" >>configure.lua
-MYSQL_CFLAGS=""
-echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
-echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
-MYSQL_LIBS=""
-echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
-echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
 fi
 if [ "${enable_threads}" != "no" ]
  then
@@ -8146,18 +8078,6 @@ echo "#undef HAVE_PTHREADS" >$BLD/include/agar/config/have_pthreads.h
 echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 echo "#undef HAVE_PTHREADS_XOPEN" >$BLD/include/agar/config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
-PTHREADS_CFLAGS=""
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
-echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-PTHREADS_LIBS=""
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
-echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
-PTHREADS_XOPEN_CFLAGS=""
-echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
-echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
-PTHREADS_XOPEN_LIBS=""
-echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
-echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 	if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wno-unused"
@@ -10029,20 +9949,8 @@ echo "SUBDIR_au=$SUBDIR_au" >>Makefile.config
 echo "mdefs[\"SUBDIR_au\"] = \"$SUBDIR_au\"" >>configure.lua
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
-SNDFILE_CFLAGS=""
-echo "SNDFILE_CFLAGS=$SNDFILE_CFLAGS" >>Makefile.config
-echo "mdefs[\"SNDFILE_CFLAGS\"] = \"$SNDFILE_CFLAGS\"" >>configure.lua
-SNDFILE_LIBS=""
-echo "SNDFILE_LIBS=$SNDFILE_LIBS" >>Makefile.config
-echo "mdefs[\"SNDFILE_LIBS\"] = \"$SNDFILE_LIBS\"" >>configure.lua
 echo "#undef HAVE_PORTAUDIO" >$BLD/include/agar/config/have_portaudio.h
 echo "hdefs[\"HAVE_PORTAUDIO\"] = nil" >>configure.lua
-PORTAUDIO_CFLAGS=""
-echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
-echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
-PORTAUDIO_LIBS=""
-echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
-echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
 fi
 if [ ! -e "$BLD/include/agar" ]; then
 	mkdir -p "$BLD/include/agar"
@@ -10093,8 +10001,8 @@ echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10624,7 +10532,15 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
+if [ "${srcdir}" != "" ]; then
+	$ECHO_N "* Source is in ${srcdir}. Generating Makefiles..."
+	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
+	if [ $? != 0 ]; then
+		exit 1;
+	fi
+	echo "done"
+fi
 echo "*"
-echo "* Configuration successful."
-echo "* Use \"make depend all install\" to build and install Agar."
+echo "* Configuration successful. Use \"make depend all\" to compile,"
+echo "* and \"make install\" to install this software under $PREFIX."
 echo "*"
