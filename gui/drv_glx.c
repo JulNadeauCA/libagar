@@ -28,9 +28,7 @@
  * driver; one context is created for each Agar window.
  */
 
-#include <config/have_glx.h>
 #include <config/have_xinerama.h>
-#ifdef HAVE_GLX
 
 #include <core/core.h>
 #include <core/config.h>
@@ -2206,5 +2204,3 @@ AG_DriverMwClass agDriverGLX = {
 	GLX_SetTransientFor,
 	GLX_SetOpacity
 };
-
-#endif /* HAVE_GLX */

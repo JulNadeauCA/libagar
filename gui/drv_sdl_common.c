@@ -24,7 +24,7 @@
  */
 
 /*
- * Common code for SDL drivers.
+ * Common code for SDL 1.2 drivers.
  */
 
 #include <core/core.h>
@@ -36,8 +36,6 @@
 #include "cursors.h"
 #include "perfmon.h"
 #include "sdl.h"
-
-#ifdef HAVE_SDL
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
 	((ax) < (s)->clip_rect.x ||			\
@@ -949,21 +947,3 @@ AG_SDL_Terminate(void)
 	nev.type = SDL_QUIT;
 	SDL_PushEvent(&nev);
 }
-
-#else /* HAVE_SDL */
-
-AG_Surface *
-AG_SurfaceFromSDL(void *p)
-{
-	AG_SetError("Agar compiled without SDL support");
-	return (NULL);
-}
-
-void *
-AG_SurfaceExportSDL(const AG_Surface *su)
-{
-	AG_SetError("Agar compiled without SDL support");
-	return (NULL);
-}
-
-#endif /* HAVE_SDL */
