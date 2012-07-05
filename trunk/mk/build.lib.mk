@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@ LIB?=
 WINRES?=
 
 CC?=		cc
+OBJC?=		cc
+CXX?=		c++
 ASM?=		nasm
 LEX?=		lex
 YACC?=		yacc
@@ -40,7 +42,7 @@ RANLIB?=	ranlib
 CFLAGS?=
 CPPFLAGS?=
 CXXFLAGS?=
-OBJCFLAGS?=	${CFLAGS}
+OBJCFLAGS?=
 ASMFLAGS?=	-g -w-orphan-labels
 LFLAGS?=
 LIBL?=		-ll
@@ -65,6 +67,7 @@ LTCONFIG_LOG?=	./config.log
 LIBTOOLFLAGS?=
 LIBTOOLOPTS?=	--quiet
 LIBTOOLOPTS_CC?=
+LIBTOOLOPTS_OBJC?=
 LIBTOOLOPTS_CXX?=
 
 SHARE?=none
@@ -103,12 +106,12 @@ depend: depend-subdir
 
 # Compile Objective-C code into an object file
 .m.o:
-	${CC} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${OBJC} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=compile \
-	    ${CC} ${LIBTOOLFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_OBJC} --mode=compile \
+	    ${OBJC} ${LIBTOOLFLAGS} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
-	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${OBJC} -pg -DPROF ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C++ code into an object file
 .cc.o:
@@ -516,8 +519,8 @@ ${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${LIBTOOL_BUNDLED}" = "yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH} ${HOST}"; \
-	    env CC="${CC}" CXX="${CXX}" \
-	        CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" \
+	    env CC="${CC}" OBJC="${OBJC}" CXX="${CXX}" \
+	        CFLAGS="${CFLAGS}" OBJCFLAGS="${OBJCFLAGS}" CXXFLAGS="${CXXFLAGS}" \
 		${SH} ${LTCONFIG} ${LTMAIN_SH} ${HOST}; \
 	    if [ $? != 0 ]; then \
 	    	echo "${LTCONFIG} failed"; \
