@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <config/have_opengl.h>
 #include <config/have_glx.h>
 #include <config/have_wgl.h>
+#include <config/have_cocoa.h>
 
 #include <core/core.h>
 #include <core/config.h>
@@ -50,6 +51,9 @@ extern AG_Driver agDriverSDLGL;
 #if defined(HAVE_WGL)
 extern AG_Driver agDriverWGL;
 #endif
+#if defined(HAVE_COCOA)
+extern AG_Driver agDriverCocoa;
+#endif
 
 AG_Object         agDrivers;			/* Drivers VFS */
 AG_DriverClass   *agDriverOps = NULL;		/* Current driver class */
@@ -64,6 +68,9 @@ void *agDriverList[] = {
 #endif
 #if defined(HAVE_WGL)
 	&agDriverWGL,
+#endif
+#if defined(HAVE_COCOA)
+	&agDriverCocoa,
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 	&agDriverSDLGL,
