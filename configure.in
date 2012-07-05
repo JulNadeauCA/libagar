@@ -151,8 +151,6 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_SDL)
-		MDEFINE(SDL_CFLAGS, "")
-		MDEFINE(SDL_LIBS, "")
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
@@ -173,8 +171,6 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_OPENGL)
-		MDEFINE(OPENGL_CFLAGS, "")
-		MDEFINE(OPENGL_LIBS, "")
 	fi
 	
 	# Enable X Windows support if Xlib is found.
@@ -206,13 +202,9 @@ if [ "${enable_gui}" != "no" ]; then
 			fi
 		else
 			HUNDEF(HAVE_XINERAMA)
-			MDEFINE(XINERAMA_CFLAGS, "")
-			MDEFINE(XINERAMA_LIBS, "")
 		fi
 	else
 		HUNDEF(HAVE_X11)
-		MDEFINE(X11_CFLAGS, "")
-		MDEFINE(X11_LIBS, "")
 	fi
 	
 	# Enable MacOS X / Cocoa support if Cocoa is found.
@@ -231,8 +223,6 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_COCOA)
-		MDEFINE(COCOA_CFLAGS, "")
-		MDEFINE(COCOA_LIBS, "")
 	fi
 
 	#
@@ -255,8 +245,6 @@ if [ "${enable_gui}" != "no" ]; then
 			fi
 		else
 			HUNDEF(HAVE_GLX)
-			MDEFINE(GLX_CFLAGS, "")
-			MDEFINE(GLX_LIBS, "")
 		fi
 		
 		# Enable WGL support on Windows.
@@ -279,8 +267,6 @@ if [ "${enable_gui}" != "no" ]; then
 	else
 		HUNDEF(HAVE_WGL)
 		HUNDEF(HAVE_GLX)
-		MDEFINE(GLX_CFLAGS, "")
-		MDEFINE(GLX_LIBS, "")
 	fi
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
@@ -302,8 +288,6 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_FREETYPE)
-		MDEFINE(FREETYPE_CFLAGS, "")
-		MDEFINE(FREETYPE_LIBS, "")
 	fi
 	
 	# Enable JPEG format support if libjpeg is found.
@@ -322,8 +306,6 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_JPEG)
-		MDEFINE(JPEG_CFLAGS, "")
-		MDEFINE(JPEG_LIBS, "")
 	fi
 	
 	# Enable PNG format support if libpng is found.
@@ -344,31 +326,41 @@ if [ "${enable_gui}" != "no" ]; then
 	else
 		HUNDEF(HAVE_PNG)
 		HUNDEF(HAVE_LIBPNG14)
-		MDEFINE(PNG_CFLAGS, "")
-		MDEFINE(PNG_LIBS, "")
+	fi
+
+	# Compile the different drivers conditionally.
+	if [ "${HAVE_SDL}" = "yes" ]; then
+		MDEFINE(SRCS_SDL, "drv_sdl_common.c drv_sdlfb.c")
+		if [ "${HAVE_OPENGL}" = "yes" ]; then
+			MDEFINE(SRCS_SDL, "${SRCS_SDL} drv_sdlgl.c")
+		fi
+	fi
+	if [ "${HAVE_OPENGL}" = "yes" ]; then
+		MDEFINE(SRCS_GL, "drv_gl_common.c")
+		if [ "${HAVE_GLX}" = "yes" ]; then
+			MDEFINE(SRCS_GL, "drv_glx.c")
+		fi
+		if [ "${HAVE_WGL}" = "yes" ]; then
+			MDEFINE(SRCS_GL, "drv_wgl.c")
+		fi
+	fi
+	if [ "${HAVE_COCOA}" = "yes" ]; then
+		MDEFINE(SRCS_COCOA, "drv_cocoa.m")
 	fi
 else
 	HUNDEF(ENABLE_GUI)
 	MDEFINE(SUBDIR_gui, "")
 
 	HUNDEF(HAVE_SDL)
-	MDEFINE(SDL_CFLAGS, "")
-	MDEFINE(SDL_LIBS, "")
-	HUNDEF(HAVE_GLX)
-	MDEFINE(GLX_CFLAGS, "")
-	MDEFINE(GLX_LIBS, "")
-	HUNDEF(HAVE_WGL)
-	MDEFINE(WGL_CFLAGS, "")
-	MDEFINE(WGL_LIBS, "")
+	HUNDEF(HAVE_X11)
+	HUNDEF(HAVE_COCOA)
 	HUNDEF(HAVE_OPENGL)
-	MDEFINE(OPENGL_CFLAGS, "")
-	MDEFINE(OPENGL_LIBS, "")
+	HUNDEF(HAVE_GLX)
+	HUNDEF(HAVE_WGL)
 	HUNDEF(HAVE_FREETYPE)
-	MDEFINE(FREETYPE_CFLAGS, "")
-	MDEFINE(FREETYPE_LIBS, "")
 	HUNDEF(HAVE_JPEG)
-	MDEFINE(JPEG_CFLAGS, "")
-	MDEFINE(JPEG_LIBS, "")
+	HUNDEF(HAVE_PNG)
+	HUNDEF(HAVE_LIBPNG14)
 fi
 
 # Enable network support if system supports getaddrinfo().
@@ -409,8 +401,6 @@ if [ "${with_db4}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_DB4)
-	MDEFINE(DB4_CFLAGS, "")
-	MDEFINE(DB4_LIBS, "")
 fi
 
 # Enable MySQL backend for AG_Db if available.
@@ -429,8 +419,6 @@ if [ "${with_mysql}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_MYSQL)
-	MDEFINE(MYSQL_CFLAGS, "")
-	MDEFINE(MYSQL_LIBS, "")
 fi
 
 # Enable threads support if POSIX threads are available.
@@ -468,10 +456,6 @@ else
 	HUNDEF(AG_THREADS)
 	HUNDEF(HAVE_PTHREADS)
 	HUNDEF(HAVE_PTHREADS_XOPEN)
-	MDEFINE(PTHREADS_CFLAGS, "")
-	MDEFINE(PTHREADS_LIBS, "")
-	MDEFINE(PTHREADS_XOPEN_CFLAGS, "")
-	MDEFINE(PTHREADS_XOPEN_LIBS, "")
 	#
 	# Lock macros expand to no-ops when compiled !AG_THREADS, which may
 	# result in unused variables in some places.
@@ -694,11 +678,7 @@ else
 	MDEFINE(SUBDIR_au, "")
 
 	HUNDEF(HAVE_SNDFILE)
-	MDEFINE(SNDFILE_CFLAGS, "")
-	MDEFINE(SNDFILE_LIBS, "")
 	HUNDEF(HAVE_PORTAUDIO)
-	MDEFINE(PORTAUDIO_CFLAGS, "")
-	MDEFINE(PORTAUDIO_LIBS, "")
 fi
 
 # Set up configure script output
@@ -708,7 +688,7 @@ C_INCDIR($BLD/include/agar)
 C_INCDIR_CONFIG($BLD/include/agar/config)
 
 # Generate the "foo-config" scripts.
-CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
+CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
 CONFIG_SCRIPT(agar-core-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}", "-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
 CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
@@ -716,7 +696,3 @@ CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -la
 CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}", "-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}")
 
-echo "*"
-echo "* Configuration successful."
-echo "* Use \"make depend all install\" to build and install Agar."
-echo "*"
