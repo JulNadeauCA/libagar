@@ -201,7 +201,6 @@ if [ "${srcdir}" != "" ]; then
 		echo "*"
 		exit 1
 	fi
-	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
 else
 	SRC=`pwd`
@@ -5733,7 +5732,7 @@ echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 $ECHO_N "checking for the Cocoa framework..."
 $ECHO_N "checking for the Cocoa framework..." >> config.log
 COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -falign-loops=16 -force_cpusubtype_ALL -fpascal-strings"
-COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,Carbon -Wl,-framework,IOKit"
+COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,IOKit"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then

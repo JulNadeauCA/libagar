@@ -22,30 +22,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*
-  Simple DirectMedia Layer
-  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
-
-  This software is provided 'as-is', without any express or implied
-  warranty.  In no event will the authors be held liable for any damages
-  arising from the use of this software.
-
-  Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
-  freely, subject to the following restrictions:
-
-  1. The origin of this software must not be misrepresented; you must not
-     claim that you wrote the original software. If you use this software
-     in a product, an acknowledgment in the product documentation would be
-     appreciated but is not required.
-  2. Altered source versions must be plainly marked as such, and must not be
-     misrepresented as being the original software.
-  3. This notice may not be removed or altered from any source distribution.
-*/
 
 /*
- * Driver for Cocoa framework. This is a multiple display driver;
- * one Cocoa window is created for each Agar window.
+ * Driver for Cocoa framework. This is a multiple display driver (one
+ * Cocoa window is created for each Agar window).
  */
 
 #include <core/core.h>
@@ -65,22 +45,18 @@
 #include <OpenGL/CGLRenderers.h>
 
 #include "drv_gl_common.h"
+#include "drv_cocoa_keymap.h"
 
-static int nDrivers = 0;	/* Drivers open */
-static Uint rNom = 20;		/* Nominal refresh rate (ms) */
-static int rCur = 0;		/* Effective refresh rate (ms) */
+static int nDrivers = 0;		/* Drivers open */
+static Uint rNom = 20;			/* Nominal refresh rate (ms) */
+static int rCur = 0;			/* Effective refresh rate (ms) */
 static int agExitCocoa = 0;
-
+static AG_DriverEventQ agCocoaEventQ;	/* Private event queue */
 struct ag_driver_cocoa;
 
 /*
  * Application delegate
  */
-
-/* setAppleMenu disappeared from the headers in 10.4 */
-@interface NSApplication(NSAppleMenu)
-- (void)setAppleMenu:(NSMenu *)menu;
-@end
 
 @interface AG_AppDelegate : NSObject
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
@@ -92,18 +68,16 @@ struct ag_driver_cocoa;
 	AG_QuitGUI();
 	return (NSTerminateCancel);
 }
-
-- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
-{
-	/* TODO */
-	return NO;
-}
 @end
 
 /*
  * Window interface
  */
-@interface AG_CocoaWindow : NSWindow
+@interface AG_CocoaWindow : NSWindow {
+@public
+	AG_Window *agarWindow;		/* Corresponding Agar window */
+}
+
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)canBecomeMainWindow;
 @end
@@ -159,33 +133,6 @@ struct ag_driver_cocoa;
 -(void) windowDidBecomeKey:(NSNotification *) aNotification;
 -(void) windowDidResignKey:(NSNotification *) aNotification;
 
-/* Window event handling */
--(void) mouseDown:(NSEvent *) theEvent;
--(void) rightMouseDown:(NSEvent *) theEvent;
--(void) otherMouseDown:(NSEvent *) theEvent;
--(void) mouseUp:(NSEvent *) theEvent;
--(void) rightMouseUp:(NSEvent *) theEvent;
--(void) otherMouseUp:(NSEvent *) theEvent;
--(void) mouseEntered:(NSEvent *) theEvent;
--(void) mouseExited:(NSEvent *) theEvent;
--(void) mouseMoved:(NSEvent *) theEvent;
--(void) mouseDragged:(NSEvent *) theEvent;
--(void) rightMouseDragged:(NSEvent *) theEvent;
--(void) otherMouseDragged:(NSEvent *) theEvent;
--(void) scrollWheel:(NSEvent *) theEvent;
--(void) touchesBeganWithEvent:(NSEvent *) theEvent;
--(void) touchesMovedWithEvent:(NSEvent *) theEvent;
--(void) touchesEndedWithEvent:(NSEvent *) theEvent;
--(void) touchesCancelledWithEvent:(NSEvent *) theEvent;
-
-enum ag_cocoa_touch_type {
-    AG_COCOA_TOUCH_DOWN,
-    AG_COCOA_TOUCH_UP,
-    AG_COCOA_TOUCH_MOVE,
-    AG_COCOA_TOUCH_CANCELLED
-};
--(void) handleTouches:(enum ag_cocoa_touch_type)type withEvent:(NSEvent*) event;
-
 @end
 
 /* Driver instance data */
@@ -203,6 +150,7 @@ typedef struct ag_driver_cocoa {
 	Uint            nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
 	AG_Mutex         lock;		/* Protect Cocoa calls */
+	Uint modFlags;			/* Last modifier state */
 } AG_DriverCocoa;
 
 AG_DriverMwClass agDriverCocoa;
@@ -210,7 +158,6 @@ AG_DriverMwClass agDriverCocoa;
 #define AGDRIVER_IS_COCOA(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverCocoa)
 
-static void *COCOA_UpdateThread(void *);
 static void COCOA_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static void COCOA_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  COCOA_RaiseWindow(AG_Window *);
@@ -236,6 +183,8 @@ ConvertNSRect(NSRect *r)
 
 	_driver = co;
 	_window = AGDRIVER_MW(co)->win;
+	
+	nc = [NSNotificationCenter defaultCenter];
 
 	if ([win delegate] != nil) {
 		[nc addObserver:self selector:@selector(windowDidExpose:) name:NSWindowDidExposeNotification object:win];
@@ -352,257 +301,15 @@ ConvertNSRect(NSRect *r)
 - (void)windowDidBecomeKey:(NSNotification *)aNotification
 {
 	agWindowFocused = _window;
-#if 0
-    /* If we just gained focus we need the updated mouse position */
-    {
-        NSPoint point;
-        int x, y;
-
-        point = [_data->nswindow mouseLocationOutsideOfEventStream];
-        x = (int)point.x;
-        y = (int)(window->h - point.y);
-
-        if (x >= 0 && x < window->w && y >= 0 && y < window->h) {
-            if (SDL_GetMouseFocus() != window) {
-                [self mouseEntered:nil];
-            }
-            SDL_SendMouseMotion(window, 0, x, y);
-        }
-    }
-
-    /* Check to see if someone updated the clipboard */
-    Cocoa_CheckClipboardUpdate(_data->videodata);
-#endif
+	AG_PostEvent(NULL, _window, "window-gainfocus", NULL);
 }
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
-	if (agWindowFocused == _window)
+	if (agWindowFocused == _window) {
+		AG_PostEvent(NULL, _window, "window-lostfocus", NULL);
 		agWindowFocused = NULL;
-}
-
-- (void)mouseDown:(NSEvent *)theEvent
-{
-	AG_Mouse *mouse = WIDGET(_window)->drv->mouse;
-	int button;
-
-	switch ([theEvent buttonNumber]) {
-	case 0:
-		button = AG_MOUSE_LEFT;
-		break;
-	case 1:
-		button = AG_MOUSE_RIGHT;
-		break;
-	case 2:
-		button = AG_MOUSE_MIDDLE;
-		break;
-	default:
-		button = [theEvent buttonNumber] + 1;
-		break;
 	}
-	AG_MouseButtonUpdate(mouse, AG_BUTTON_PRESSED, button);
-	AG_ProcessMouseButtonDown(_window, mouse->x, mouse->y, button);
-}
-
-- (void)rightMouseDown:(NSEvent *)theEvent
-{
-	[self mouseDown:theEvent];
-}
-
-- (void)otherMouseDown:(NSEvent *)theEvent
-{
-	[self mouseDown:theEvent];
-}
-
-- (void)mouseUp:(NSEvent *)theEvent
-{
-	AG_Mouse *mouse = WIDGET(_window)->drv->mouse;
-	int button;
-
-	switch ([theEvent buttonNumber]) {
-	case 0:
-		button = AG_MOUSE_LEFT;
-		break;
-	case 1:
-		button = AG_MOUSE_RIGHT;
-		break;
-	case 2:
-		button = AG_MOUSE_MIDDLE;
-		break;
-	default:
-		button = [theEvent buttonNumber] + 1;
-		break;
-	}
-	AG_MouseButtonUpdate(mouse, AG_BUTTON_RELEASED, button);
-	AG_ProcessMouseButtonUp(_window, mouse->x, mouse->y, button);
-}
-
-- (void)rightMouseUp:(NSEvent *)theEvent
-{
-	[self mouseUp:theEvent];
-}
-
-- (void)otherMouseUp:(NSEvent *)theEvent
-{
-	[self mouseUp:theEvent];
-}
-
-- (void)mouseEntered:(NSEvent *)theEvent
-{
-	AG_PostEvent(NULL, _window, "window-enter", NULL);
-}
-
-- (void)mouseExited:(NSEvent *)theEvent
-{
-	AG_PostEvent(NULL, _window, "window-leave", NULL);
-}
-
-- (void)mouseMoved:(NSEvent *)theEvent
-{
-	AG_Window *win = _window;
-	AG_Mouse *mouse = WIDGET(win)->drv->mouse;
-	NSPoint point;
-	int x, y;
-
-	point = [theEvent locationInWindow];
-	x = (int)point.x;
-	y = (int)(WIDGET(win)->h - point.y);
-	AG_MouseMotionUpdate(mouse, x, y);
-	AG_ProcessMouseMotion(win, x, y, mouse->xRel, mouse->yRel, mouse->btnState);
-	AG_MouseCursorUpdate(win, x, y);
-}
-
-- (void)mouseDragged:(NSEvent *)theEvent
-{
-	[self mouseMoved:theEvent];
-}
-
-- (void)rightMouseDragged:(NSEvent *)theEvent
-{
-	[self mouseMoved:theEvent];
-}
-
-- (void)otherMouseDragged:(NSEvent *)theEvent
-{
-	[self mouseMoved:theEvent];
-}
-
-- (void)scrollWheel:(NSEvent *)theEvent
-{
-	AG_Mouse *mouse = WIDGET(_window)->drv->mouse;
-	float x = [theEvent deltaX];
-	float y = [theEvent deltaY];
-	AG_MouseButton btn;
-	
-	/* XXX */
-
-	if (x > 0) {
-		x += 0.9f;
-		btn = AG_MOUSE_X2;
-	} else if (x < 0) {
-		x -= 0.9f;
-		btn = AG_MOUSE_X1;
-	}
-	if (y > 0) {
-		y += 0.9f;
-		btn = AG_MOUSE_WHEELDOWN;
-	} else if (y < 0) {
-		y -= 0.9f;
-		btn = AG_MOUSE_WHEELUP;
-	}
-
-	AG_MouseButtonUpdate(mouse, AG_BUTTON_PRESSED, btn);
-	AG_ProcessMouseButtonDown(_window, mouse->x, mouse->y, btn);
-}
-
-- (void)touchesBeganWithEvent:(NSEvent *) theEvent
-{
-	[self handleTouches:AG_COCOA_TOUCH_DOWN withEvent:theEvent];
-}
-
-- (void)touchesMovedWithEvent:(NSEvent *) theEvent
-{
-	[self handleTouches:AG_COCOA_TOUCH_MOVE withEvent:theEvent];
-}
-
-- (void)touchesEndedWithEvent:(NSEvent *) theEvent
-{
-	[self handleTouches:AG_COCOA_TOUCH_UP withEvent:theEvent];
-}
-
-- (void)touchesCancelledWithEvent:(NSEvent *) theEvent
-{
-	[self handleTouches:AG_COCOA_TOUCH_CANCELLED withEvent:theEvent];
-}
-
-- (void)handleTouches:(enum ag_cocoa_touch_type)type withEvent:(NSEvent *)event
-{
-#if 0
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-	NSSet *touches = 0;
-	NSEnumerator *enumerator;
-	NSTouch *touch;
-
-	switch (type) {
-	case COCOA_TOUCH_DOWN:
-		touches = [event touchesMatchingPhase:NSTouchPhaseBegan inView:nil];
-		break;
-        case COCOA_TOUCH_UP:
-        case COCOA_TOUCH_CANCELLED:
-		touches = [event touchesMatchingPhase:NSTouchPhaseEnded inView:nil];
-		break;
-	case COCOA_TOUCH_MOVE:
-		touches = [event touchesMatchingPhase:NSTouchPhaseMoved inView:nil];
-		break;
-	}
-
-	enumerator = [touches objectEnumerator];
-	touch = (NSTouch*)[enumerator nextObject];
-	while (touch) {
-		const SDL_TouchID touchId = (SDL_TouchID) ((size_t) [touch device]);
-
-		if (!SDL_GetTouch(touchId)) {
-			SDL_Touch touch;
-
-			touch.id = touchId;
-			touch.x_min = 0;
-			touch.x_max = 1;
-			touch.native_xres = touch.x_max - touch.x_min;
-			touch.y_min = 0;
-			touch.y_max = 1;
-			touch.native_yres = touch.y_max - touch.y_min;
-			touch.pressure_min = 0;
-			touch.pressure_max = 1;
-			touch.native_pressureres = touch.pressure_max - touch.pressure_min;
-            
-			if (SDL_AddTouch(&touch, "") < 0) {
-				return;
-			}
-		} 
-
-		const SDL_FingerID fingerId = (SDL_FingerID) ((size_t) [touch identity]);
-		float x = [touch normalizedPosition].x;
-		float y = [touch normalizedPosition].y;
-
-		/* Make the origin the upper left instead of the lower left */
-		y = 1.0f - y;
-
-		switch (type) {
-		case COCOA_TOUCH_DOWN:
-			SDL_SendFingerDown(touchId, fingerId, SDL_TRUE, x, y, 1);
-			break;
-		case COCOA_TOUCH_UP:
-		case COCOA_TOUCH_CANCELLED:
-			SDL_SendFingerDown(touchId, fingerId, SDL_FALSE, x, y, 1);
-			break;
-		case COCOA_TOUCH_MOVE:
-			SDL_SendTouchMotion(touchId, fingerId, SDL_FALSE, x, y, 1);
-			break;
-		}
-		touch = (NSTouch*)[enumerator nextObject];
-	}
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 1060 */
-#endif
 }
 
 @end
@@ -621,6 +328,7 @@ Init(void *obj)
 	co->nListGC = 0;
 	co->win = NULL;
 	co->glCtx = NULL;
+	co->modFlags = 0;
 	AG_MutexInitRecursive(&co->lock);
 }
 
@@ -642,27 +350,31 @@ Destroy(void *obj)
 static int
 COCOA_Open(void *obj, const char *spec)
 {
-	NSAutoreleasePool *pool;
 	AG_Driver *drv = obj;
 	AG_DriverCocoa *co = obj;
-
-	/* Register the core mouse and keyboard */
-	/* TODO: touch handling */
-	if ((drv->mouse = AG_MouseNew(co, "X mouse")) == NULL ||
-	    (drv->kbd = AG_KeyboardNew(co, "X keyboard")) == NULL)
-		goto fail;
-
+	NSAutoreleasePool *pool;
+	
+	if (nDrivers == 0)
+		TAILQ_INIT(&agCocoaEventQ);
+	
+	/* Initialize NSApp if needed. */
 	pool = [[NSAutoreleasePool alloc] init];
 	if (NSApp == nil) {
-		[NSApplication sharedApplication];
-		/* TODO: app menus */
+		NSApp = [NSApplication sharedApplication];
 		[NSApp finishLaunching];
 	}
 	if ([NSApp delegate] == nil) {
 		[NSApp setDelegate:[[AG_AppDelegate alloc] init]];
 	}
 	[pool release];
-
+	
+	/* Initialize the core mouse and keyboard */
+	/* TODO: touch handling */
+	if ((drv->mouse = AG_MouseNew(co, "X mouse")) == NULL ||
+	    (drv->kbd = AG_KeyboardNew(co, "X keyboard")) == NULL) {
+		goto fail;
+	}
+    
 	nDrivers++;
 	return (0);
 fail:
@@ -683,11 +395,22 @@ static void
 COCOA_Close(void *obj)
 {
 	AG_Driver *drv = obj;
-	AG_DriverCocoa *co = obj;
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
+	if (--nDrivers == 0) {
+		AG_DriverEvent *dev, *devNext;
+
+		for (dev = TAILQ_FIRST(&agCocoaEventQ);
+		     dev != TAILQ_LAST(&agCocoaEventQ, ag_driver_eventq);
+		     dev = devNext) {
+			devNext = TAILQ_NEXT(dev, events);
+			Free(dev);
+		}
+		TAILQ_INIT(&agCocoaEventQ);
+	}
+
 	AG_ObjectDetach(drv->mouse);
 	AG_ObjectDestroy(drv->mouse);
 	AG_ObjectDetach(drv->kbd);
@@ -716,10 +439,14 @@ COCOA_GetDisplaySize(Uint *w, Uint *h)
 static __inline__ int
 COCOA_PendingEvents(void *drvCaller)
 {
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSAutoreleasePool *pool;
 	NSEvent *ev;
 	int rv;
-	
+
+	if (!TAILQ_EMPTY(&agCocoaEventQ))
+		return (1);
+
+	pool = [[NSAutoreleasePool alloc] init];
 	ev = [NSApp nextEventMatchingMask:NSAnyEventMask
 	                                  untilDate:[NSDate distantPast]
 					  inMode:NSDefaultRunLoopMode
@@ -779,55 +506,277 @@ nowindows:
 	return (-1);
 }
 
+/* Convert a NSEvent mouse button number to AG_MouseButton. */
+static AG_MouseButton
+GetMouseButton(int which)
+{
+	switch (which) {
+	case 0:		return (AG_MOUSE_LEFT);
+	case 1:		return (AG_MOUSE_RIGHT);
+	case 2:		return (AG_MOUSE_MIDDLE);
+	default:	return (which+1);
+	}
+}
+
+static AG_MouseButton
+GetScrollWheelButton(float x, float y)
+{
+	if (x > 0) {
+		return (AG_MOUSE_X1);
+	} else if (x < 0) {
+		return (AG_MOUSE_X2);
+	}
+	if (y > 0) {
+		return (AG_MOUSE_WHEELUP);
+	} else if (y < 0) {
+		return (AG_MOUSE_WHEELDOWN);
+	}
+	return (AG_MOUSE_NONE);
+}
+
+/* Add a keyboard event to the queue. */
+static void
+QueueKeyEvent(AG_DriverCocoa *co, enum ag_driver_event_type type,
+    AG_KeySym ks, Uint32 ucs)
+{
+	AG_DriverEvent *dev;
+
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) == NULL) {
+		AG_Verbose("Out of memory for keymod event\n");
+		return;
+	}
+	dev->win = AGDRIVER_MW(co)->win;
+	dev->type = type;
+	dev->data.key.ks = ks;
+	dev->data.key.ucs = ucs;
+	TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+}
+
 static int
 COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 {
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	NSEvent *ev;
+	NSAutoreleasePool *pool;
+	AG_CocoaWindow *coWin;
+	AG_Window *win;
+	AG_Driver *drv;
+	AG_DriverCocoa *co;
+	AG_DriverEvent *devFirst;
+	NSEvent *event;
+	int rv = 0;
 	
-	ev = [NSApp nextEventMatchingMask:NSAnyEventMask
-	                                  untilDate:[NSDate distantPast]
-					  inMode:NSDefaultRunLoopMode
-					  dequeue:YES];
-	if (ev == nil) {
+	if (!TAILQ_EMPTY(&agCocoaEventQ))
+		goto out_dequeue;
+
+	pool = [[NSAutoreleasePool alloc] init];
+	event = [NSApp nextEventMatchingMask:NSAnyEventMask
+	         untilDate:[NSDate distantPast]
+	         inMode:NSDefaultRunLoopMode
+	         dequeue:YES];
+
+	if (event == nil) {
 		goto out;
 	}
+	if ((coWin = (AG_CocoaWindow *)[event window]) == nil) {
+		[NSApp sendEvent:event];
+		goto out;
+	}
+	win = coWin->agarWindow;
+	drv = WIDGET(win)->drv;
+	co = (AG_DriverCocoa *)drv;
 
-	switch ([ev type]) {
+	switch ([event type]) {
+	case NSMouseMoved:
+	case NSLeftMouseDragged:
+	case NSRightMouseDragged:
+	case NSOtherMouseDragged:
+		{
+			NSPoint point = [event locationInWindow];
+			int x = (int)point.x;
+			int y = (int)(WIDGET(win)->h - point.y);
+
+			AG_MouseMotionUpdate(drv->mouse, x, y);
+			dev->type = AG_DRIVER_MOUSE_MOTION;
+			dev->win = win;
+			dev->data.motion.x = x;
+			dev->data.motion.y = y;
+			rv = 1;
+			break;
+		}
+	case NSScrollWheel:
+		{
+			float x = [event deltaX];
+			float y = [event deltaY];
+			AG_MouseButton btn = GetScrollWheelButton(x, y);
+		
+			if (btn == AG_MOUSE_NONE) {
+				break;
+			}
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
+			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+			dev->win = win;
+			dev->data.button.which = btn;
+			dev->data.button.x = drv->mouse->x;
+			dev->data.button.y = drv->mouse->y;
+			rv = 1;
+			break;
+		}
 	case NSLeftMouseDown:
 	case NSOtherMouseDown:
 	case NSRightMouseDown:
+		{
+			AG_MouseButton btn = GetMouseButton([event buttonNumber]);
+		
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
+			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+			dev->win = win;
+			dev->data.button.which = btn;
+			dev->data.button.x = drv->mouse->x;
+			dev->data.button.y = drv->mouse->y;
+			rv = 1;
+			break;
+		}
 	case NSLeftMouseUp:
 	case NSOtherMouseUp:
 	case NSRightMouseUp:
-		[NSApp sendEvent:ev];
+		{
+			AG_MouseButton btn = GetMouseButton([event buttonNumber]);
+			
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, btn);
+			dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
+			dev->win = win;
+			dev->data.button.which = btn;
+			dev->data.button.x = drv->mouse->x;
+			dev->data.button.y = drv->mouse->y;
+			rv = 1;
+			break;
+		}
+	case NSMouseEntered:
+		dev->type = AG_DRIVER_MOUSE_ENTER;
+		dev->win = win;
+		rv = 1;
 		break;
-	case NSLeftMouseDragged:
-	case NSRightMouseDragged:
-	case NSOtherMouseDragged:	/* usually middle mouse dragged */
-	case NSMouseMoved:
-	case NSScrollWheel:
-		//Cocoa_HandleMouseEvent(_this, event);
-		[NSApp sendEvent:ev];
+	case NSMouseExited:
+		dev->type = AG_DRIVER_MOUSE_LEAVE;
+		dev->win = win;
+		rv = 1;
 		break;
 	case NSKeyDown:
-	case NSKeyUp:
-	case NSFlagsChanged:
-		//Cocoa_HandleKeyEvent(_this, event);
-		/* Fall through to pass event to NSApp; er, nevermind... */
-		/* Add to support system-wide keyboard shortcuts like CMD+Space */
-		if (([ev modifierFlags] & NSCommandKeyMask) ||
-		    [ev type] == NSFlagsChanged) {
-			[NSApp sendEvent: ev];
+		if ([event isARepeat]) {
+			/* Agar implements its own key repeat */
+			goto out;
 		}
-		break;
+		/* FALLTHROUGH */
+	case NSKeyUp:
+		{
+			NSString *characters = [event characters];
+			enum ag_driver_event_type evType;
+			enum ag_keyboard_action kbdAction;
+			AG_KeySym ks;
+			unichar c;
+			NSUInteger i;
+
+			if ([characters length] == 0)
+				goto out;
+
+			if ([event type] == NSKeyDown) {
+				evType = AG_DRIVER_KEY_DOWN;
+				kbdAction = AG_KEY_PRESSED;
+			} else {
+				evType = AG_DRIVER_KEY_UP;
+				kbdAction = AG_KEY_RELEASED;
+			}
+	
+			/* Look for matching function keys first. */
+			c = [characters characterAtIndex: 0];
+			ks = AG_KEY_NONE;
+			for (i = 0; i < agCocoaFunctionKeysSize; i++) {
+				const struct ag_cocoa_function_key *fnKey =
+				    &agCocoaFunctionKeys[i];
+
+				if (fnKey->uc == c) {
+					ks = fnKey->keySym;
+					break;
+				}
+			}
+			if (ks != AG_KEY_NONE) {
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks, 0);
+				dev->type = evType;
+				dev->win = win;
+				dev->data.key.ks = ks;
+				if (ks == AG_KEY_RETURN) {
+					dev->data.key.ucs = '\n';
+				} else {
+					dev->data.key.ucs = 0;
+				}
+				rv = 1;
+				goto out;
+			}
+
+			/* Process as a character sequence. */
+			for (i = 0; i < [characters length]; i++) {
+				AG_KeySym ks;
+
+				c = [characters characterAtIndex: i];
+				ks = (c <= AG_KEY_ASCII_END) ?
+				    (AG_KeySym)c : AG_KEY_NONE;
+				AG_KeyboardUpdate(drv->kbd, kbdAction, ks,
+				    (Uint32)c);
+
+				if (i == 0) {
+					dev->type = evType;
+					dev->win = win;
+					dev->data.key.ks = ks;
+					dev->data.key.ucs = (Uint32)c;
+					rv = 1;
+				} else {
+					QueueKeyEvent(co, evType, ks,
+					    (Uint32)c);
+				}
+			}
+			if (rv == 1)
+				goto out;
+		}
+	case NSFlagsChanged:
+		{
+			Uint modFlags = [event modifierFlags];
+			int i, nChanged = 0;
+
+			for (i = 0; i < agCocoaKeymodSize; i++) {
+				const struct ag_cocoa_keymod_entry *kmEnt =
+				    &agCocoaKeymod[i];
+			
+				if ((modFlags & kmEnt->keyMask) &&
+				     !(co->modFlags & kmEnt->keyMask)) {
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym, 0);
+					QueueKeyEvent(co, AG_KEY_PRESSED, kmEnt->keySym, 0);
+					nChanged++;
+				} else if (!(modFlags & kmEnt->keyMask) &&
+				    (co->modFlags & kmEnt->keyMask)) {
+					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym, 0);
+					QueueKeyEvent(co, AG_KEY_RELEASED, kmEnt->keySym, 0);
+					nChanged++;
+				}
+			}
+			co->modFlags = modFlags;
+
+			if (nChanged > 0) {
+				goto out_dequeue;
+			}
+			break;
+		}
 	default:
-		[NSApp sendEvent:ev];
 		break;
 	}
+	[NSApp sendEvent:event];
 out:
 	[pool release];
-	return (0);
+	return (rv);
+out_dequeue:
+	devFirst = TAILQ_FIRST(&agCocoaEventQ);
+	TAILQ_REMOVE(&agCocoaEventQ, devFirst, events);
+	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
+	Free(devFirst);
+	return (1);
 }
 
 static int
@@ -957,9 +906,8 @@ COCOA_GenericEventLoop(void *obj)
 			if (agPerfWindow->visible)
 				AG_PerfMonUpdate(rCur);
 #endif
-		} else if (COCOA_PendingEvents(NULL) != 0) {
-			if (COCOA_GetNextEvent(NULL, &dev) == 1 &&
-			    COCOA_ProcessEvent(NULL, &dev) == -1)
+		} else if (COCOA_GetNextEvent(NULL, &dev) == 1) {
+			if (COCOA_ProcessEvent(NULL, &dev) == -1)
 				return;
 #ifdef AG_DEBUG
 			agEventAvg++;
@@ -1233,7 +1181,6 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	NSView *contentView;
 	NSOpenGLPixelFormatAttribute pfAttr[32];
 	NSOpenGLPixelFormat *pf;
-	CGLPixelFormatObj *pfObj;
 	int i, count;
 	AG_SizeAlloc a;
 
@@ -1273,13 +1220,12 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 			break;
 		}
 	}
-
-	printf("Setting window(%s) at %f,%f (scr=%f,%f)\n",
-	    OBJECT(win)->name,
-	    winRect.origin.x,
-	    winRect.origin.y,
-	    scrRect.size.width,
-	    scrRect.size.height);
+	if (selScreen == nil) {
+		AG_MutexUnlock(&co->lock);
+		[pool release];
+		AG_SetError("Failed to select screen");
+		return (-1);
+	}
 
 	/* Create the window. */
 	co->win = [[AG_CocoaWindow alloc] initWithContentRect:winRect
@@ -1287,15 +1233,13 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 				          backing:NSBackingStoreBuffered
 				          defer:YES
 				          screen:selScreen];
+	co->win->agarWindow = win;
 
 	/* Create an event listener. */
 	co->evListener = [[AG_CocoaListener alloc] init];
 
 	/* Obtain the effective window coordinates; create the NSView. */
 	winRect = [co->win contentRectForFrameRect:[co->win frame]];
-	printf("Effective window(%s) at %f,%f\n", OBJECT(win)->name,
-	    winRect.origin.x,
-	    winRect.origin.y);
 	contentView = [co->win contentView];
 	if (!contentView) {
 		contentView = [[AG_CocoaView alloc] initWithFrame:winRect];
@@ -1358,7 +1302,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("Cannot create NSOpenGLContext");
 		goto fail;
 	}
-
+	
 	AGDRIVER_MW(co)->flags |= AG_DRIVER_MW_OPEN;
 
 	/* Set the preferred Agar pixel formats. */
@@ -1499,7 +1443,6 @@ COCOA_GetInputFocus(AG_Window **rv)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = NULL;
-	int revertToRet;
 
 	AGOBJECT_FOREACH_CHILD(co, &agDrivers, ag_driver_cocoa) {
 		if (!AGDRIVER_IS_COCOA(co)) {
@@ -1562,7 +1505,6 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
-	char kv[32];
 	int x = a->x;
 	int y = a->y;
 	
@@ -1620,7 +1562,6 @@ COCOA_MoveWindow(AG_Window *win, int x, int y)
 	NSRect scrRect = [screen frame];
 	NSPoint pt;
 
-	printf("MoveWindow(%s): to %d,%d\n", x, y, OBJECT(win)->name);
 	pt.x = x;
 	pt.y = scrRect.size.height - y;
 
