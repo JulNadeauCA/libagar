@@ -147,7 +147,19 @@ typedef enum ag_key_sym {
 	AG_KEY_POWER		= 0x0140,
 	AG_KEY_EURO		= 0x0141,
 	AG_KEY_UNDO		= 0x0142,
-	AG_KEY_LAST		= 0x0143,
+	AG_KEY_GRAVE		= 0x0143,
+	AG_KEY_KP_CLEAR		= 0x0144,
+	AG_KEY_COMMAND		= 0x0145,
+	AG_KEY_FUNCTION		= 0x0146,
+	AG_KEY_VOLUME_UP	= 0x0147,
+	AG_KEY_VOLUME_DOWN	= 0x0148,
+	AG_KEY_VOLUME_MUTE	= 0x0149,
+	AG_KEY_F16		= 0x014a,
+	AG_KEY_F17		= 0x014b,
+	AG_KEY_F18		= 0x014c,
+	AG_KEY_F19		= 0x014d,
+	AG_KEY_F20		= 0x014e,
+	AG_KEY_LAST		= 0x014f,
 	AG_KEY_ANY		= 0xffff	/* As argument for matching */
 } AG_KeySym;
 
