@@ -53,6 +53,12 @@ interface.
 .Nm .
 .Sh WIDGET INTERFACE
 .nr nS 1
+.Ft "const char *"
+.Fn AG_LookupKeyName "AG_KeySym sym"
+.Pp
+.Ft "AG_KeySym"
+.Fn AG_LookupKeySym "const char *name"
+.Pp
 .Ft "int *"
 .Fn AG_GetKeyState "AG_Widget *widget"
 .Pp
@@ -69,6 +75,16 @@ interface.
 .Fn AG_SetModState "AG_Widget *widget" "Uint modState"
 .Pp
 .nr nS 0
+The
+.Fn AG_LookupKeyName
+function returns a short string describing the given
+.Xr AG_KeySym 3
+value (or NULL if the argument is out of range).
+.Fn AG_LookupKeySym
+returns a keysym value for the specified name (or
+.Dv AG_KEY_NONE
+if no match was found).
+.Pp
 The
 .Fn AG_GetKeyState
 function returns a pointer to an array of integers which represent the
@@ -111,19 +127,56 @@ The
 function registers a new keyboard device under the specified
 .Xr AG_Driver 3 .
 .Pp
-When a keyboard event is received by the underlying driver, it should call
+When a keyboard event is received by the driver, it should call
 .Fn AG_KeyboardUpdate
-to immediately update the internal keyboard status.
+to update Agar's internal keyboard status as soon as the event is
+received.
+Typically,
+.Fn AG_KeyboardUpdate
+is called by the
+.Fn GetNextEvent
+routine of the driver (see
+.Xr AG_GetNextEvent 3 ) .
 .Pp
 The
 .Fn AG_ProcessKey
-function is called by
-.Xr AG_ProcessEvent 3
-to post keyboard events (e.g.,
+function is called to perform final processing of key press and key
+release events (sending
 .Sq key-up
 and
-.Sq key-down )
-to any widgets which are listening for keyboard events.
+.Sq key-down
+events to the appropriate Agar widgets).
+Typically,
+.Fn AG_ProcessKey
+is called from the
+.Fn ProcessEvent
+routine of the driver (see
+.Xr AG_ProcessEvent 3 ) .
+.Pp
+.Fn AG_KeyboardUpdate
+and
+.Fn AG_ProcessKey
+accept the same arguments.
+.Fa action
+should be
+.Dv AG_KEY_PRESSED
+or
+.Dv AG_KEY_RELEASED .
+The
+.Fa sym
+argument is the Agar virtual key (see
+.Xr AG_KeySym 3 ) ,
+and
+.Fa unicode
+is the Unicode character value.
+Either (but not both) arguments may be undefined.
+.Fa sym
+may be set to
+.Dv AG_KEY_NONE
+if there is no corresponding Agar virtual key, and
+.Fa unicode
+may be set to 0 if there is no corresponding Unicode character
+(as should be the case for function keys).
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_KeySym 3 ,
