@@ -11,7 +11,7 @@
 
 typedef struct ag_hsvpal {
 	struct ag_widget wid;
-	int flags;
+	Uint flags;
 #define AG_HSVPAL_PIXEL		0x01	/* Edit the pixel binding */ 
 #define AG_HSVPAL_DIRTY		0x02	/* Redraw the palette */
 #define AG_HSVPAL_HFILL 	0x04

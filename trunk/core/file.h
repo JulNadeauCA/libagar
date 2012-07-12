@@ -15,11 +15,11 @@ enum ag_file_info_type {
 
 typedef struct ag_file_info {
 	enum ag_file_info_type type;
-	int perms;
+	Uint perms;
 #define AG_FILE_READABLE	0x01
 #define AG_FILE_WRITEABLE	0x02
 #define AG_FILE_EXECUTABLE	0x04
-	int flags;
+	Uint flags;
 #define AG_FILE_SUID		0x001
 #define AG_FILE_SGID		0x002
 #define AG_FILE_ARCHIVE		0x004

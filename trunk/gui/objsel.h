@@ -10,7 +10,7 @@
 
 typedef struct ag_object_selector {
 	struct ag_combo com;
-	int flags;
+	Uint flags;
 #define AG_OBJSEL_PAGE_DATA	0x01
 #define AG_OBJSEL_PAGE_GFX	0x02
 	char type_mask[AG_OBJECT_HIER_MAX];
