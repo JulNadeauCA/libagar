@@ -28,7 +28,7 @@ typedef struct ag_notebook_tab {
 typedef struct ag_notebook {
 	struct ag_widget wid;
 	enum ag_notebook_tab_alignment tab_align;
-	int flags;
+	Uint flags;
 #define AG_NOTEBOOK_HFILL 	0x01	/* Expand to fill available width */
 #define AG_NOTEBOOK_VFILL 	0x02	/* Expand to fill available height */
 #define AG_NOTEBOOK_HIDE_TABS	0x04	/* Don't display the tabs. */

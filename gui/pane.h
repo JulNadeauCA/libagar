@@ -25,7 +25,7 @@ enum ag_pane_resize_action {
 typedef struct ag_pane {
 	struct ag_widget wid;
 	enum ag_pane_type type;
-	int flags;
+	Uint flags;
 #define AG_PANE_HFILL		0x001
 #define AG_PANE_VFILL		0x002
 #define AG_PANE_DIV1FILL	0x004	/* Expand div1 (default is div2) */
