@@ -309,6 +309,42 @@ int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
 void AG_ClearGlobalKeys(void);
 int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
 
+/* Compare unsided modifier state against a string of flags. */
+static __inline__ int
+AG_CompareKeyMods(Uint modState, const char *flags)
+{
+	const char *c;
+
+	for (c = &flags[0]; *c != '\0'; c++) {
+		switch (*c) {
+		case 'C':
+			if (modState & AG_KEYMOD_LCTRL ||
+			    modState & AG_KEYMOD_RCTRL) {
+				return (1);
+			}
+			break;
+		case 'A':
+			if (modState & AG_KEYMOD_LALT ||
+			    modState & AG_KEYMOD_RALT) {
+				return (1);
+			}
+			break;
+		case 'S':
+			if (modState & AG_KEYMOD_LSHIFT ||
+			    modState & AG_KEYMOD_RSHIFT) {
+				return (1);
+			}
+			break;
+		case 'M':
+			if (modState & AG_KEYMOD_LMETA ||
+			    modState & AG_KEYMOD_RMETA) {
+				return (1);
+			}
+			break;
+		}
+	}
+	return (0);
+}
 __END_DECLS
 
 #include <agar/gui/close.h>

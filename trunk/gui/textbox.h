@@ -31,7 +31,6 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_CURSOR_MOVING 0x001000 /* Cursor is being moved */
 #define AG_TEXTBOX_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_TEXTBOX_NOEMACS       0x008000 /* Disable emacs-style fn keys */
-#define AG_TEXTBOX_NOWORDSEEK    0x010000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_TEXTBOX_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
 #define AG_TEXTBOX_WORDWRAP	 0x040000 /* Enable word wrapping */
 #define AG_TEXTBOX_NOPOPUP	 0x080000 /* Disable popup menu */
@@ -94,6 +93,7 @@ void        AG_TextboxSetCursorPos(AG_Textbox *, int);
 #define AG_TextboxDbl(tb) AG_EditableDbl((tb)->ed)
 
 #ifdef AG_LEGACY
+# define AG_TEXTBOX_NOWORDSEEK 0
 # define AG_TEXTBOX_STATIC AG_TEXTBOX_EXCL
 # define AG_TextboxSetStatic AG_TextboxSetExcl
 # define AG_TextboxPrescale AG_TextboxSizeHint

@@ -37,7 +37,7 @@ CreateWindow(void)
 
 	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
 	    "Uint binding: %d", &vUint);
-	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, AG_LABEL_HFILL,
+	sb = AG_ScrollbarNewUint(win, AG_SCROLLBAR_HORIZ, AG_LABEL_HFILL,
 	    &vUint, &minUint, &maxUint, &visUint);
 
 	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,

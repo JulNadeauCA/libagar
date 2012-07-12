@@ -460,18 +460,36 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 
 	for (i = 0; ; i++) {
 		const struct ag_keycode *kc = &agKeymap[i];
-		
-		if (kc->key != AG_KEY_LAST &&
-		   (kc->key != ks || kc->func == NULL)) {
+		const char *flag;
+	
+		if ((kc->key != AG_KEY_LAST) &&
+		    (kc->key != ks || (kc->modFlags[0] != '\0' &&
+		     !AG_CompareKeyMods(kmod, kc->modFlags)))) {
 			continue;
 		}
-		if (kc->key == AG_KEY_LAST ||
-		    kc->modmask == 0 || (kmod & kc->modmask)) {
-			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
-			rv = kc->func(ed, buf, ks, kmod, unicode);
-			break;
+		for (flag = &kc->flags[0]; *flag != '\0'; flag++) {
+			switch (*flag) {
+			case 'w':
+				if (AG_EditableReadOnly(ed)) {
+					rv = 0;
+					goto out;
+				}
+				break;
+			case 'e':
+				if (ed->flags & AG_EDITABLE_NOEMACS) {
+					rv = 0;
+					goto out;
+				}
+				break;
+			default:
+				break;
+			}
 		}
+		AG_PostEvent(NULL, ed, "editable-prechg", NULL);
+		rv = kc->func(ed, buf, ks, kmod, unicode);
+		break;
 	}
+out:
 	if (rv == 1) {
 		CommitBuffer(ed, buf);
 	}
@@ -1270,6 +1288,7 @@ AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
 {
 	ed->pos = 0;
 	ed->sel = buf->len;
+	AG_Redraw(ed);
 }
 
 /*

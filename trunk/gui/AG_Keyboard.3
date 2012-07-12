@@ -38,10 +38,9 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface provides Agar GUI widgets direct access to keyboard status
-(see the
-.Dq WIDGET INTERFACE
-section below).
+interface provides a direct interface to keyboard status.
+This manual page also documents a few utility routines for dealing
+with Agar keyboard symbols.
 The
 .Nm
 object itself is registered and accessed through the
@@ -73,6 +72,9 @@ interface.
 .Pp
 .Ft "void"
 .Fn AG_SetModState "AG_Widget *widget" "Uint modState"
+.Pp
+.Ft "int"
+.Fn AG_CompareKeyMods "Uint modState" "const char *flags"
 .Pp
 .nr nS 0
 The
@@ -110,7 +112,15 @@ returns the current keyboard modifier status (see
 .Fn AG_SetModState
 overwrites the current modifier status with the value of
 .Fa modState .
-.Sh DRIVER INTERFACE
+.Pp
+The
+.Fn AG_CompareKeyMods
+function compares a modifier status against a string of flags, returning
+1 if any of the modifiers described by the string are active, or 0 otherwise.
+No distinction is made between left and right-sided modifiers.
+The string may contain "C" for CTRL, "A" for ALT, "S" for SHIFT,
+and "M" for META.
+.Sh INTERNAL DRIVER INTERFACE
 .nr nS 1
 .Ft "AG_Keyboard *"
 .Fn AG_KeyboardNew "AG_Driver *drv" "const char *descr"
