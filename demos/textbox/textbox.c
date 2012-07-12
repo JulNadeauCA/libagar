@@ -89,7 +89,6 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
 	AG_CheckboxNewFlag(win, 0, "Maintain visible cursor", &textbox->ed->flags, AG_EDITABLE_KEEPVISCURSOR);
 	AG_CheckboxNewFlag(win, 0, "Disable emacs", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
-	AG_CheckboxNewFlag(win, 0, "Disable word seek", &textbox->ed->flags, AG_EDITABLE_NOWORDSEEK);
 	AG_CheckboxNewFlag(win, 0, "Disable latin1", &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
 	AG_SeparatorNewHoriz(win);
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);

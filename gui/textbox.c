@@ -88,7 +88,6 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	}
 
 	if (flags & AG_TEXTBOX_NOEMACS)		tb->ed->flags |= AG_EDITABLE_NOEMACS;
-	if (flags & AG_TEXTBOX_NOWORDSEEK)	tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
 	if (flags & AG_TEXTBOX_NOLATIN1)	tb->ed->flags |= AG_EDITABLE_NOLATIN1;
 	if (flags & AG_TEXTBOX_NOPOPUP)		tb->ed->flags |= AG_EDITABLE_NOPOPUP;
 	if (flags & AG_TEXTBOX_MULTILINGUAL)	tb->ed->flags |= AG_EDITABLE_MULTILINGUAL;

@@ -6,9 +6,10 @@
 
 struct ag_keycode {
 	AG_KeySym key;
-	int modmask;
+	const char *modFlags;
 	int (*func)(AG_Editable *, AG_EditableBuffer *buf, AG_KeySym ks,
-	            int mod, Uint32 ch);
+	            Uint mod, Uint32 ch);
+	const char *flags;
 };
 
 struct ag_key_composition {
@@ -19,7 +20,7 @@ struct ag_key_composition {
 
 struct ag_key_mapping {
 	AG_KeySym key;		/* Key */
-	int modmask;		/* Modifier mask */
+	Uint modmask;		/* Modifier mask */
 	Uint32 unicode;		/* UCS-4 mapping */
 };
 

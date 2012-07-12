@@ -47,7 +47,6 @@ typedef struct ag_editable {
 #define AG_EDITABLE_MARKPREF      0x002000 /* Mark current cursor position */
 #define AG_EDITABLE_EXCL          0x004000 /* Exclusive access to buffer */
 #define AG_EDITABLE_NOEMACS       0x008000 /* Disable emacs-style fn keys */
-#define AG_EDITABLE_NOWORDSEEK    0x010000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x020000 /* Disable LATIN-1 combinations */
 #define AG_EDITABLE_WORDWRAP      0x040000 /* Word wrapping */
 #define AG_EDITABLE_NOPOPUP	  0x080000 /* Disable popup menu */
@@ -170,6 +169,7 @@ AG_EditableReadOnly(AG_Editable *ed)
 #ifdef AG_LEGACY
 # define AG_EditableSetStatic AG_EditableSetExcl
 # define AG_EDITABLE_STATIC AG_EDITABLE_EXCL
+# define AG_EDITABLE_NOWORDSEEK 0
 # define AG_EditableSetWriteable(tb,flag) do {	\
 	if (flag) {				\
 	 	AG_WidgetEnable(tb);		\
