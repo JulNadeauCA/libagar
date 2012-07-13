@@ -166,6 +166,29 @@ AG_EditableReadOnly(AG_Editable *ed)
 	return (ed->flags & AG_EDITABLE_READONLY) || AG_WidgetDisabled(ed);
 }
 
+/*
+ * Ensure that the selection range is valid. The Editable and buffer
+ * must both be locked.
+ */
+static __inline__ void
+AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if (ed->pos > buf->len) {
+		ed->pos = buf->len;
+		ed->sel = 0;
+	}
+	if (ed->sel != 0) {
+		int ep = ed->pos + ed->sel;
+		if (ep < 0) {
+			ed->pos = 0;
+			ed->sel = 0;
+		} else if (ep > buf->len) {
+			ed->pos = buf->len;
+			ed->sel = 0;
+		}
+	}
+}	
+
 #ifdef AG_LEGACY
 # define AG_EditableSetStatic AG_EditableSetExcl
 # define AG_EDITABLE_STATIC AG_EDITABLE_EXCL
