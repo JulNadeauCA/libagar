@@ -27,9 +27,6 @@
  * Berkeley DB database access.
  */
 
-#include <config/have_db4.h>
-#ifdef HAVE_DB4
-
 #include <core/core.h>
 #include <db.h>
 
@@ -302,5 +299,3 @@ AG_DbClass agDbBtreeClass = {
 	Del,
 	Iterate
 };
-
-#endif /* HAVE_DB4 */

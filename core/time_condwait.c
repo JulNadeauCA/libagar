@@ -1,12 +1,5 @@
 /*	Public domain	*/
 
-#include <config/ag_threads.h>
-#include <config/have_gettimeofday.h>
-#include <config/have_clock_gettime.h>
-#include <config/have_cygwin.h>
-#if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
-    defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <string.h>
@@ -84,6 +77,3 @@ const AG_TimeOps agTimeOps_condwait = {
 	GetTicks,
 	Delay
 };
-
-#endif /* AG_THREADS and HAVE_GETTIMEOFDAY and 
-          HAVE_CLOCK_GETTIME and !HAVE_CYGWIN */

@@ -1,10 +1,5 @@
 /*	Public domain	*/
 
-#include <config/have_gettimeofday.h>
-#include <config/have_select.h>
-#include <config/have_cygwin.h>
-#if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT) && !defined(HAVE_CYGWIN)
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <string.h>
@@ -64,5 +59,3 @@ const AG_TimeOps agTimeOps_gettimeofday = {
 	GetTicks,
 	Delay
 };
-
-#endif /* HAVE_GETTIMEOFDAY and HAVE_SELECT and !HAVE_CYGWIN */
