@@ -237,6 +237,9 @@ GLX_Open(void *obj, const char *spec)
 	if ((drv->mouse = AG_MouseNew(glx, "X mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(glx, "X keyboard")) == NULL)
 		goto fail;
+	
+	/* Driver manages rendering of window background. */
+	drv->flags |= AG_DRIVER_WINDOW_BG;
 
 #ifdef DEBUG_XSYNC
 	XSynchronize(agDisplay, True);
@@ -930,6 +933,7 @@ static void
 GLX_RenderWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	AG_Color C = agColors[WINDOW_BG_COLOR];
 
 	glx->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
 	glEnable(GL_CLIP_PLANE0);
@@ -940,8 +944,8 @@ GLX_RenderWindow(AG_Window *win)
 	glx->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
 	glEnable(GL_CLIP_PLANE3);
 
-	/* clear the clipped erea with the background colour */
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	/* clear the clipped area with the background colour */
+	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);

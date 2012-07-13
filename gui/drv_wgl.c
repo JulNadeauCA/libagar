@@ -171,6 +171,9 @@ WGL_Open(void *obj, const char *spec)
 	    (drv->kbd = AG_KeyboardNew(wgl, "Windows keyboard")) == NULL)
 		goto fail;
 	
+	/* Driver manages rendering of window background. */
+	drv->flags |= AG_DRIVER_WINDOW_BG;
+	
 	if (nDrivers == 0) {
 		InitKeymaps();
 		TAILQ_INIT(&wglEventQ);
@@ -913,9 +916,8 @@ static void
 WGL_RenderWindow(AG_Window *win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+	AG_Color C = agColors[WINDOW_BG_COLOR];
 
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	wgl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
 	glEnable(GL_CLIP_PLANE0);
 	wgl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
@@ -924,6 +926,9 @@ WGL_RenderWindow(AG_Window *win)
 	glEnable(GL_CLIP_PLANE2);
 	wgl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
 	glEnable(GL_CLIP_PLANE3);
+	
+	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
 }

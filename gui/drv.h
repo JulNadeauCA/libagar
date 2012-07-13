@@ -113,6 +113,7 @@ typedef struct ag_driver {
 	Uint id;			/* Numerical instance ID */
 	Uint flags;
 #define AG_DRIVER_FIXED_FPS	0x01	/* Invoked AG_EventLoop_FixedFPS() */
+#define AG_DRIVER_WINDOW_BG	0x02	/* Managed window background */
 
 	AG_Surface *sRef;		/* "Reference" surface */
 	AG_PixelFormat *videoFmt;	/* Video pixel format (for

@@ -61,7 +61,8 @@ Window(AG_Window *win)
 	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
 	AG_Color *bgColor = &agColors[WINDOW_BG_COLOR];
 
-	if (!(win->flags & AG_WINDOW_NOBACKGROUND)) {
+	if (!(win->flags & AG_WINDOW_NOBACKGROUND) &&
+	    !(WIDGET(win)->drv->flags & AG_DRIVER_WINDOW_BG)) {
 		AG_DrawRect(win,
 		    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
 		    *bgColor);
