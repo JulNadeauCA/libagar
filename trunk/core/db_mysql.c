@@ -27,9 +27,6 @@
  * MySQL database access.
  */
 
-#include <config/have_mysql.h>
-#ifdef HAVE_MYSQL
-
 #include <core/core.h>
 #include <db.h>
 #include <ctype.h>
@@ -216,5 +213,3 @@ AG_DbClass agDbMySQLClass = {
 	Del,
 	Iterate
 };
-
-#endif /* HAVE_MYSQL */

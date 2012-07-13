@@ -325,9 +325,6 @@ CreateWindow(void)
 		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
 	}
 
-	/* Override default window sizing. */
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 70);
-	
 	AG_WindowShow(win);
 }
 

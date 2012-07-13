@@ -56,9 +56,7 @@
  *    acceptable.  Consider stealing from mutt or enlightenment.
  **************************************************************/
 
-#include <config/have_snprintf.h>
 #include <config/have_long_long.h>
-#ifndef HAVE_SNPRINTF
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -679,5 +677,3 @@ AG_Snprintf(char *str, size_t count, const char *fmt, ...)
 	va_end(ap);
 	return strlen(str);
 }
-
-#endif /* HAVE_SNPRINTF */

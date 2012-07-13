@@ -27,9 +27,6 @@
  * Routines common to all OpenGL drivers.
  */
 
-#include <config/have_opengl.h>
-#ifdef HAVE_OPENGL
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -884,4 +881,3 @@ AG_GL_DeleteList(void *obj, Uint name)
 	dc->deleteList(drv, name);
 }
 
-#endif /* HAVE_OPENGL */

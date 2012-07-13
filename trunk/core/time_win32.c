@@ -1,7 +1,6 @@
 /*	Public domain	*/
 
-#include <config/have_clock_win32.h>
-#if defined(_WIN32) && defined(HAVE_CLOCK_WIN32)
+#if defined(_WIN32)
 
 #include <core/queue_close.h>			/* Conflicts */
 #ifdef _XBOX
@@ -53,4 +52,4 @@ const AG_TimeOps agTimeOps_win32 = {
 	Delay
 };
 
-#endif /* _WIN32 and HAVE_CLOCK_WIN32 */
+#endif /* _WIN32 */
