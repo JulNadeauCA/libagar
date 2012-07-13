@@ -75,7 +75,7 @@ struct ag_driver_cocoa;
  */
 @interface AG_CocoaWindow : NSWindow {
 @public
-	AG_Window *agarWindow;		/* Corresponding Agar window */
+	AG_Window *_agarWindow;		/* Corresponding Agar window */
 }
 
 - (BOOL)canBecomeKeyWindow;
@@ -85,26 +85,47 @@ struct ag_driver_cocoa;
 @implementation AG_CocoaWindow
 - (BOOL)canBecomeKeyWindow
 {
-	return YES;
+	return (YES);
 }
 
 - (BOOL)canBecomeMainWindow
 {
-	return YES;
+	return (YES);
 }
 @end
 
 /*
  * View interface
  */
-@interface AG_CocoaView : NSView
+@interface AG_CocoaView : NSView {
+@public
+	AG_Window *_agarWindow;		/* Corresponding Agar window */
+}
 - (void)rightMouseDown:(NSEvent *)theEvent;
+- (BOOL)preservesContentDuringLiveResize;
+- (void)viewWillStartLiveResize;
+- (void)viewDidEndLiveResize;
 @end
 
 @implementation AG_CocoaView
 - (void)rightMouseDown:(NSEvent *)theEvent
 {
 	[[self nextResponder] rightMouseDown:theEvent];
+}
+
+- (BOOL)preservesContentDuringLiveResize
+{
+	return (YES);
+}
+
+- (void)viewWillStartLiveResize
+{
+	[super viewWillStartLiveResize];
+}
+
+- (void)viewDidEndLiveResize
+{
+	[super viewDidEndLiveResize];
 }
 @end
 
@@ -150,7 +171,8 @@ typedef struct ag_driver_cocoa {
 	Uint            nListGC;
 	AG_GL_BlendState bs[1];		/* Saved blending states */
 	AG_Mutex         lock;		/* Protect Cocoa calls */
-	Uint modFlags;			/* Last modifier state */
+	Uint             modFlags;	/* Last modifier state */
+	NSTrackingRectTag trackRect;	/* For window-{enter,leave} */
 } AG_DriverCocoa;
 
 AG_DriverMwClass agDriverCocoa;
@@ -241,13 +263,25 @@ ConvertNSRect(NSRect *r)
 
 - (BOOL)windowShouldClose:(id)sender
 {
-	AG_PostEvent(NULL, _window, "window-close", NULL);
+	AG_DriverEvent *dev;
+
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
+		dev->type = AG_DRIVER_CLOSE;
+		dev->win = _window;
+		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+	}
 	return NO;
 }
 
 - (void)windowDidExpose:(NSNotification *)aNotification
 {
-	_window->dirty = 1;
+	AG_DriverEvent *dev;
+
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
+		dev->type = AG_DRIVER_EXPOSE;
+		dev->win = _window;
+		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+	}
 }
 
 - (void)windowDidMove:(NSNotification *)aNotification
@@ -269,23 +303,40 @@ ConvertNSRect(NSRect *r)
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
-	AG_DriverCocoa *co = _driver;
 	AG_Window *win = _window;
-	NSRect rect;
+	AG_DriverCocoa *co = _driver;
 	AG_SizeAlloc a;
+	NSRect rect;
 
 	rect = [co->win contentRectForFrameRect:[co->win frame]];
 	ConvertNSRect(&rect);
 
+	/*
+	 * Since the event loop will not run during a live resize
+	 * operation, we can't use AG_DRIVER_VIDEORESIZE, and we
+	 * must redraw the window immediately.
+	 */
 	a.x = (int)rect.origin.x;
 	a.y = (int)rect.origin.y;
 	a.w = (int)rect.size.width;
 	a.h = (int)rect.size.height;
-	if (a.x != WIDGET(win)->x ||
-	    a.y != WIDGET(win)->y) {
+
+	AG_MutexLock(&co->lock);
+	AG_ObjectLock(win);
+
+	if (a.w != WIDTH(win) || a.h != HEIGHT(win)) {
+		COCOA_PostResizeCallback(win, &a);
+	} else {
 		COCOA_PostMoveCallback(win, &a);
 	}
-	COCOA_PostResizeCallback(win, &a);
+	if (win->visible) {
+		AG_BeginRendering(_driver);
+		AG_WindowDraw(win);
+		AG_EndRendering(_driver);
+	}
+
+	AG_ObjectUnlock(win);
+	AG_MutexUnlock(&co->lock);
 }
 
 - (void)windowDidMiniaturize:(NSNotification *)aNotification
@@ -300,15 +351,30 @@ ConvertNSRect(NSRect *r)
 
 - (void)windowDidBecomeKey:(NSNotification *)aNotification
 {
+	AG_DriverEvent *dev;
+
 	agWindowFocused = _window;
-	AG_PostEvent(NULL, _window, "window-gainfocus", NULL);
+
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
+		dev->type = AG_DRIVER_FOCUS_IN;
+		dev->win = _window;
+		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+	}
 }
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
-	if (agWindowFocused == _window) {
-		AG_PostEvent(NULL, _window, "window-lostfocus", NULL);
-		agWindowFocused = NULL;
+	AG_DriverEvent *dev;
+
+	if (agWindowFocused != _window) {
+		return;
+	}
+	agWindowFocused = NULL;
+	
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
+		dev->type = AG_DRIVER_FOCUS_OUT;
+		dev->win = _window;
+		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
 	}
 }
 
@@ -329,6 +395,7 @@ Init(void *obj)
 	co->win = NULL;
 	co->glCtx = NULL;
 	co->modFlags = 0;
+	co->trackRect = -1;
 	AG_MutexInitRecursive(&co->lock);
 }
 
@@ -356,7 +423,10 @@ COCOA_Open(void *obj, const char *spec)
 	
 	if (nDrivers == 0)
 		TAILQ_INIT(&agCocoaEventQ);
-	
+
+	/* Driver manages rendering of window background. */
+	drv->flags |= AG_DRIVER_WINDOW_BG;
+
 	/* Initialize NSApp if needed. */
 	pool = [[NSAutoreleasePool alloc] init];
 	if (NSApp == nil) {
@@ -545,8 +615,8 @@ QueueKeyEvent(AG_DriverCocoa *co, enum ag_driver_event_type type,
 		AG_Verbose("Out of memory for keymod event\n");
 		return;
 	}
-	dev->win = AGDRIVER_MW(co)->win;
 	dev->type = type;
+	dev->win = AGDRIVER_MW(co)->win;
 	dev->data.key.ks = ks;
 	dev->data.key.ucs = ucs;
 	TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
@@ -576,11 +646,12 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	if (event == nil) {
 		goto out;
 	}
+
 	if ((coWin = (AG_CocoaWindow *)[event window]) == nil) {
 		[NSApp sendEvent:event];
 		goto out;
 	}
-	win = coWin->agarWindow;
+	win = coWin->_agarWindow;
 	drv = WIDGET(win)->drv;
 	co = (AG_DriverCocoa *)drv;
 
@@ -783,7 +854,6 @@ static int
 COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	AG_Driver *drv;
-	AG_SizeAlloc a;
 
 	if (dev->win == NULL) {
 		return (0);
@@ -835,21 +905,7 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		if (dev->win == agWindowFocused) {
-			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
-			agWindowFocused = NULL;
-		}
-		break;
-	case AG_DRIVER_VIDEORESIZE:
-		a.x = dev->data.videoresize.x;
-		a.y = dev->data.videoresize.y;
-		a.w = dev->data.videoresize.w;
-		a.h = dev->data.videoresize.h;
-		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
-			COCOA_PostResizeCallback(dev->win, &a);
-		} else {
-			COCOA_PostMoveCallback(dev->win, &a);
-		}
+		AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
 		break;
 	case AG_DRIVER_CLOSE:
 		AG_PostEvent(NULL, dev->win, "window-close", NULL);
@@ -953,6 +1009,7 @@ static void
 COCOA_RenderWindow(AG_Window *win)
 {
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
+	AG_Color C = agColors[WINDOW_BG_COLOR];
 
 	co->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
 	glEnable(GL_CLIP_PLANE0);
@@ -963,8 +1020,8 @@ COCOA_RenderWindow(AG_Window *win)
 	co->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
 	glEnable(GL_CLIP_PLANE3);
 
-	/* clear the clipped erea with the background colour */
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	/* Clear the clipped area with the background colour */
+	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
@@ -1168,6 +1225,23 @@ InitClipRect0(AG_DriverCocoa *co, AG_Window *win)
 	cr->eqns[3][3] = (double)HEIGHT(win);
 }
 
+static void
+SetBackgroundColor(AG_DriverCocoa *co, const AG_Color *C)
+{
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSColor *bgColor;
+	CGFloat r, g, b, a;
+
+	r = (CGFloat)(C->r / 255.0);
+	g = (CGFloat)(C->g / 255.0);
+	b = (CGFloat)(C->b / 255.0);
+	a = (CGFloat)(C->a / 255.0);
+	bgColor = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
+	[co->win setBackgroundColor:bgColor];
+
+	[pool release];
+}
+
 static int
 COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 {
@@ -1178,7 +1252,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	NSRect winRect, scrRect;
 	NSArray *screens;
 	NSScreen *screen, *selScreen = nil;
-	NSView *contentView;
+	AG_CocoaView *contentView;
 	NSOpenGLPixelFormatAttribute pfAttr[32];
 	NSOpenGLPixelFormat *pf;
 	int i, count;
@@ -1233,21 +1307,19 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 				          backing:NSBackingStoreBuffered
 				          defer:YES
 				          screen:selScreen];
-	co->win->agarWindow = win;
+	co->win->_agarWindow = win;
+	SetBackgroundColor(co, &agColors[WINDOW_BG_COLOR]);
 
 	/* Create an event listener. */
 	co->evListener = [[AG_CocoaListener alloc] init];
 
-	/* Obtain the effective window coordinates; create the NSView. */
+	/* Obtain the effective window coordinates; set up our contentView. */
 	winRect = [co->win contentRectForFrameRect:[co->win frame]];
-	contentView = [co->win contentView];
-	if (!contentView) {
-		contentView = [[AG_CocoaView alloc] initWithFrame:winRect];
-		[co->win setContentView: contentView];
-		[contentView release];
-	}
-	ConvertNSRect(&winRect);
-
+	contentView = [[AG_CocoaView alloc] initWithFrame:winRect];
+	contentView->_agarWindow = win;
+	[co->win setContentView: contentView];
+	[contentView release];
+	
 	/* Set our event listener. */
 	[co->evListener listen:co];
 
@@ -1302,7 +1374,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("Cannot create NSOpenGLContext");
 		goto fail;
 	}
-	
+
 	AGDRIVER_MW(co)->flags |= AG_DRIVER_MW_OPEN;
 
 	/* Set the preferred Agar pixel formats. */
@@ -1322,6 +1394,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		goto fail;
 	
 	/* Set the effective window geometry, initialize the GL context. */
+	ConvertNSRect(&winRect);
 	a.x = winRect.origin.x;
 	a.y = winRect.origin.y;
 	a.w = winRect.size.width;
@@ -1355,6 +1428,7 @@ COCOA_CloseWindow(AG_Window *win)
 /*	int i; */
 
 	AG_MutexLock(&co->lock);
+	[[co->win contentView] removeTrackingRect:co->trackRect];
 #if 0
 	/* Invalidate cached glyph textures. */
 	COCOA_GL_MakeCurrent(co, win)
@@ -1507,6 +1581,7 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
 	int x = a->x;
 	int y = a->y;
+	NSRect trackRect;
 	
 	AG_MutexLock(&co->lock);
 
@@ -1522,7 +1597,18 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	/* Update OpenGL context. */
 	COCOA_GL_MakeCurrent(co, win);
 	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
-	
+
+	/* Update the tracking rectangle. */
+	if (co->trackRect != -1) {
+		[[co->win contentView] removeTrackingRect:co->trackRect];
+	}
+	trackRect.origin.x = 0;
+	trackRect.origin.y = 0;
+	trackRect.size.width = WIDTH(win);
+	trackRect.size.height = HEIGHT(win);
+	co->trackRect = [[co->win contentView] addTrackingRect:trackRect
+	                 owner:co->win userData:NULL assumeInside:NO];
+
 	AG_MutexUnlock(&co->lock);
 
 	/* Save the new effective window position. */
@@ -1533,8 +1619,6 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 static void
 COCOA_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 {
-	AG_Driver *drv = WIDGET(win)->drv;
-	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
 	int x = a->x;
 	int y = a->y;
 
@@ -1544,10 +1628,6 @@ COCOA_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
-	/* Update OpenGL context. */
-	COCOA_GL_MakeCurrent(co, win);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
-	
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
 	WIDGET(win)->y = a->y = y;
@@ -1671,30 +1751,21 @@ COCOA_SetWindowCaption(AG_Window *win, const char *s)
 static int
 COCOA_SetOpacity(AG_Window *win, float f)
 {
-#if 0
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
-	AG_Color bgColor = agColors[BG_COLOR];
-	CGFloat r, g, b;
-
-	r = (CGFloat)(bgColor.r / 255.0);
-	g = (CGFloat)(bgColor.g / 255.0);
-	b = (CGFloat)(bgColor.b / 255.0);
 
 	AG_MutexLock(&co->lock);
 	if (f > 0.99) {
 		[co->win setOpaque:YES];
+		[co->win setAlphaValue:1.0];
 	} else {
 		[co->win setOpaque:NO];
-		[co->win setBackgroundColor:[NSColor colorWithSRGBRed:r green:g blue:b alpha:f]];
+		[co->win setAlphaValue:f];
 	}
 	AG_MutexUnlock(&co->lock);
 
 	[pool release];
 	return (0);
-#endif
-	AG_SetError("Opacity not supported");
-	return (-1);
 }
 
 AG_DriverMwClass agDriverCocoa = {
