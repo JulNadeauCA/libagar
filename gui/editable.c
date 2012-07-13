@@ -824,8 +824,10 @@ Draw(void *obj)
 	int i, dx, dy, x, y;
 	int inSel = 0;
 
-	if ((buf = GetBuffer(ed)) == NULL)
+	if ((buf = GetBuffer(ed)) == NULL) {
 		return;
+	}
+	AG_EditableValidateSelection(ed, buf);
 	
 	rClip = WIDGET(ed)->rView;
 	rClip.x1 -= ed->fontMaxHeight*2;
@@ -1176,6 +1178,7 @@ AG_EditableCut(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *cb
 	if (AG_EditableReadOnly(ed) || ed->sel == 0) {
 		return (0);
 	}
+	AG_EditableValidateSelection(ed, buf);
 	NormSelection(ed);
 	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
 	AG_EditableDelete(ed, buf);
@@ -1189,6 +1192,7 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *c
 	if (ed->sel == 0) {
 		return (0);
 	}
+	AG_EditableValidateSelection(ed, buf);
 	NormSelection(ed);
 	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
 	return (1);
@@ -1270,6 +1274,7 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 	if (AG_EditableReadOnly(ed) || ed->sel == 0)
 		return (0);
 
+	AG_EditableValidateSelection(ed, buf);
 	NormSelection(ed);
 	if (ed->pos + ed->sel == buf->len) {
 		buf->s[ed->pos] = '\0';
