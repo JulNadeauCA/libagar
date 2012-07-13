@@ -328,25 +328,6 @@ if [ "${enable_gui}" != "no" ]; then
 		HUNDEF(HAVE_LIBPNG14)
 	fi
 
-	# Compile the different drivers conditionally.
-	if [ "${HAVE_SDL}" = "yes" ]; then
-		MDEFINE(SRCS_SDL, "drv_sdl_common.c drv_sdlfb.c")
-		if [ "${HAVE_OPENGL}" = "yes" ]; then
-			MDEFINE(SRCS_SDL, "${SRCS_SDL} drv_sdlgl.c")
-		fi
-	fi
-	if [ "${HAVE_OPENGL}" = "yes" ]; then
-		MDEFINE(SRCS_GL, "drv_gl_common.c")
-		if [ "${HAVE_GLX}" = "yes" ]; then
-			MDEFINE(SRCS_GL, "drv_glx.c")
-		fi
-		if [ "${HAVE_WGL}" = "yes" ]; then
-			MDEFINE(SRCS_GL, "drv_wgl.c")
-		fi
-	fi
-	if [ "${HAVE_COCOA}" = "yes" ]; then
-		MDEFINE(SRCS_COCOA, "drv_cocoa.m")
-	fi
 else
 	HUNDEF(ENABLE_GUI)
 	MDEFINE(SUBDIR_gui, "")
@@ -368,6 +349,7 @@ fi
 if [ "${enable_network}" = "yes" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
+		MDEFINE(HAVE_NETWORK, "yes")
 		HDEFINE(AG_NETWORK, "yes")
 	else
 		if [ "${enable_network}" = "yes" ]; then
@@ -377,10 +359,12 @@ if [ "${enable_network}" = "yes" ]; then
 			echo "*"
 			exit 1
 		else
+			MDEFINE(HAVE_NETWORK, "no")
 			HUNDEF(AG_NETWORK)
 		fi
 	fi
 else
+	MDEFINE(HAVE_NETWORK, "no")
 	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO)
 fi
@@ -679,6 +663,61 @@ else
 
 	HUNDEF(HAVE_SNDFILE)
 	HUNDEF(HAVE_PORTAUDIO)
+fi
+
+#
+# Conditionally compiled sources in Agar-Core
+#
+MDEFINE(SRCS_CORE, "")
+if [ "${HAVE_SNPRINTF}" != "yes" ]; then
+	MAPPEND(SRCS_CORE, "snprintf.c")
+fi
+if [ "${HAVE_CLOCK_WIN32}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "time_win32.c")
+fi
+if [ "${HAVE_CYGWIN}" != "yes" ]; then
+	if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]; then
+		if [ "${HAVE_SELECT}" = "yes" ]; then
+			MAPPEND(SRCS_CORE, "time_gettimeofday.c")
+		fi
+		if [ "${HAVE_PTHREADS}" = "yes" ]; then
+			if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
+				MAPPEND(SRCS_CORE, "time_condwait.c")
+			fi
+		fi
+	fi
+fi
+if [ "${HAVE_DB4}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "db_bdb.c")
+fi
+if [ "${HAVE_MYSQL}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "db_mysql.c")
+fi
+if [ "${HAVE_NETWORK}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "net_client.c net_command.c net_fgetln.c net_server.c")
+fi
+
+#
+# Conditionally compiled sources in Agar-GUI
+#
+MDEFINE(SRCS_GUI, "")
+if [ "${HAVE_SDL}" = "yes" ]; then
+	MAPPEND(SRCS_GUI, "drv_sdl_common.c drv_sdlfb.c")
+	if [ "${HAVE_OPENGL}" = "yes" ]; then
+		MAPPEND(SRCS_GUI, "drv_sdlgl.c")
+	fi
+fi
+if [ "${HAVE_OPENGL}" = "yes" ]; then
+	MAPPEND(SRCS_GUI, "drv_gl_common.c")
+	if [ "${HAVE_GLX}" = "yes" ]; then
+		MAPPEND(SRCS_GUI, "drv_glx.c")
+	fi
+	if [ "${HAVE_WGL}" = "yes" ]; then
+		MAPPEND(SRCS_GUI, "drv_wgl.c")
+	fi
+fi
+if [ "${HAVE_COCOA}" = "yes" ]; then
+	MAPPEND(SRCS_GUI, "drv_cocoa.m")
 fi
 
 # Set up configure script output

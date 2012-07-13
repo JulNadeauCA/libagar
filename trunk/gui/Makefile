@@ -12,7 +12,7 @@ LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} SDL opengl freetype
 
-SRCS=	drv.c drv_sw.c drv_mw.c ${SRCS_GL} ${SRCS_SDL} ${SRCS_COCOA} \
+SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	gui.c widget.c window.c style.c style_default.c iconmgr.c geometry.c \
 	colors.c cursors.c ttf.c text.c keymap.c keymap_latin1.c \
 	keymap_compose.c keysyms.c editable.c \
