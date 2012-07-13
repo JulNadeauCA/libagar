@@ -214,6 +214,7 @@ Kill(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, Uin
 	Uint32 *c;
 	
 	if (ed->sel != 0) {
+		AG_EditableValidateSelection(ed, buf);
 		if (ed->sel < 0) {
 			ed->pos += ed->sel;
 			ed->sel = -(ed->sel);
