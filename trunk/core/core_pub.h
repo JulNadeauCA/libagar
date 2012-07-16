@@ -28,7 +28,6 @@
 #include <agar/core/tree.h>
 #include <agar/core/tbl.h>
 #include <agar/core/config.h>
-#include <agar/core/rcs.h>
 #include <agar/core/file.h>
 #include <agar/core/dir.h>
 #include <agar/core/dso.h>

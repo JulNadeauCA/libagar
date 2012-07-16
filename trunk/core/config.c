@@ -36,7 +36,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/rcs.h>
 
 #ifdef _XBOX
 #include <core/xbox.h>
@@ -194,11 +193,11 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	agTextTabWidth = (int)AG_ReadUint16(ds);
 	if (ver->minor >= 1) { (void)AG_ReadUint8(ds); } /* agTextAntialiasing */
 
-	agRcsMode = (int)AG_ReadUint8(ds);
-	AG_CopyString(agRcsHostname, ds, sizeof(agRcsHostname));
-	agRcsPort = (Uint)AG_ReadUint16(ds);
-	AG_CopyString(agRcsUsername, ds, sizeof(agRcsUsername));
-	AG_CopyString(agRcsPassword, ds, sizeof(agRcsPassword));
+	(void)AG_ReadUint8(ds);		/* agRcsMode */
+	AG_SkipString(ds);		/* agRcsHostname */
+	(void)AG_ReadUint16(ds);	/* agRcsPort */
+	AG_SkipString(ds);		/* agRcsUsername */
+	AG_SkipString(ds);		/* agRcsPassword */
 	return (0);
 }
 
@@ -229,11 +228,11 @@ Save(void *obj, AG_DataSource *ds)
 	AG_WriteUint16(ds, (Uint16)agTextTabWidth);
 	AG_WriteUint8(ds, 0);				/* agTextAntialiasing */
 
-	AG_WriteUint8(ds, (Uint8)agRcsMode);
-	AG_WriteString(ds, agRcsHostname);
-	AG_WriteUint16(ds, (Uint16)agRcsPort);
-	AG_WriteString(ds, agRcsUsername);
-	AG_WriteString(ds, agRcsPassword);
+	AG_WriteUint8(ds, 0);		/* agRcsMode */
+	AG_WriteString(ds, "");		/* agRcsHostname */
+	AG_WriteUint16(ds, 0);		/* agRcsPort */
+	AG_WriteString(ds, "");		/* agRcsUsername */
+	AG_WriteString(ds, "");		/* agRcsPassword */
 	return (0);
 }
 

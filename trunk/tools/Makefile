@@ -4,7 +4,6 @@ include ${TOP}/Makefile.config
 SUBDIR=	agar-bench \
 	agar-disasm \
 	agarpaint \
-	agarrcsd \
 	dencomp \
 	denuncomp
 

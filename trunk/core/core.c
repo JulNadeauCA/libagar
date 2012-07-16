@@ -31,7 +31,6 @@
 #include <config/release.h>
 #include <config/enable_nls.h>
 #include <config/localedir.h>
-#include <config/ag_network.h>
 #include <config/ag_threads.h>
 #include <config/have_gettimeofday.h>
 #include <config/have_select.h>
@@ -48,9 +47,6 @@
 #include "core.h"
 #include "config.h"
 #include "dso.h"
-#ifdef AG_NETWORK
-#include "rcs.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -141,20 +137,8 @@ AG_InitCore(const char *progname, Uint flags)
 	if (!(flags & AG_NO_CFG_AUTOLOAD)) {
 		(void)AG_ConfigLoad();
 	}
-#ifdef AG_NETWORK
-	AG_InitNetwork(0);
-#endif
 	return (0);
 }
-
-#ifdef AG_NETWORK
-int
-AG_InitNetwork(Uint flags)
-{
-	AG_RcsInit();
-	return (0);
-}
-#endif /* AG_NETWORK */
 
 /* Register a function to invoke in AG_Quit(). */
 void
@@ -184,9 +168,6 @@ AG_Destroy(void)
 	if (agAtexitFunc != NULL) { agAtexitFunc(); }
 	if (agAtexitFuncEv != NULL) { agAtexitFuncEv(NULL); }
 
-#ifdef AG_NETWORK
-	AG_RcsDestroy();
-#endif
 	AG_ObjectDestroy(agConfig);
 	AG_DataSourceDestroySubsystem();
 

@@ -345,8 +345,7 @@ else
 fi
 
 # Enable network support if system supports getaddrinfo().
-# XXX Should enable check by default
-if [ "${enable_network}" = "yes" ]; then
+if [ "${enable_network}" != "no" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
 		MDEFINE(HAVE_NETWORK, "yes")
@@ -693,9 +692,9 @@ fi
 if [ "${HAVE_MYSQL}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "db_mysql.c")
 fi
-if [ "${HAVE_NETWORK}" = "yes" ]; then
-	MAPPEND(SRCS_CORE, "net_client.c net_command.c net_fgetln.c net_server.c")
-fi
+#if [ "${HAVE_NETWORK}" = "yes" ]; then
+#	MAPPEND(SRCS_CORE, "net_client.c net_command.c net_fgetln.c net_server.c")
+#fi
 
 #
 # Conditionally compiled sources in Agar-GUI
