@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/rcs.h>
 
 #include <gui/window.h>
 #include <gui/hbox.h>
@@ -328,38 +327,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 			    SaveColorSchemeDlg, NULL);
 		}
 	}
-
-#if 0
-#ifdef AG_NETWORK
-	tab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
-	{
-		AG_Textbox *tb;
-		AG_Box *box;
-
-		AG_CheckboxNewInt(tab, 0, _("Enable RCS"), &agRcsMode);
-
-		AG_SpacerNewHoriz(tab);
-
-		tb = AG_TextboxNewS(tab, AG_TEXTBOX_HFILL, _("Host: "));
-		AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXX");
-		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
-		AG_NumericalNewUint(tab, 0, NULL, _("Port: "), &agRcsPort);
-		AG_SeparatorNewHoriz(tab);
-
-		box = AG_BoxNewHoriz(tab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
-		{
-			tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Username: "));
-			AG_TextboxBindUTF8(tb, agRcsUsername,
-			    sizeof(agRcsUsername));
-
-			tb = AG_TextboxNewS(box, AG_TEXTBOX_HFILL, _("Password: "));
-			AG_TextboxSetPassword(tb, 1);
-			AG_TextboxBindUTF8(tb, agRcsPassword,
-			    sizeof(agRcsPassword));
-		}
-	}
-#endif /* AG_NETWORK */
-#endif
 
 #ifdef AG_DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);

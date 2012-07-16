@@ -27,7 +27,6 @@
  * Generic dev tool initialization.
  */
 
-#include <config/ag_network.h>
 #include <config/ag_threads.h>
 #include <config/ag_debug.h>
 #include <config/have_jpeg.h>
@@ -54,12 +53,6 @@ static const struct dev_tool_ent {
 #if defined(AG_DEBUG)
 	{ N_("Performance Monitor"),	AG_PerfMonShow },
 	{ N_("CPU Information"),	DEV_CPUInfo },
-#endif
-#if defined(AG_NETWORK) && defined(AG_THREADS) && defined(HAVE_JPEG)
-	{ N_("Screenshot Uploader"),	DEV_ScreenshotUploader },
-#endif
-#if defined(AG_NETWORK) && defined(AG_THREADS)
-	{ N_("Debug Server"),		DEV_DebugServer },
 #endif
 };
 

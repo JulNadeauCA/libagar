@@ -14,7 +14,6 @@
 #include <config/ag_debug.h>
 #include <config/ag_legacy.h>
 #include <config/ag_threads.h>
-#include <config/ag_network.h>
 
 /* For inline routines */
 #include <config/_mk_have_stdlib_h.h>

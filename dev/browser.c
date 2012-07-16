@@ -29,9 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#ifdef AG_NETWORK
-#include <core/rcs.h>
-#endif
 
 #include <gui/gui.h>
 #include <gui/window.h>
@@ -110,13 +107,7 @@ enum {
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
 	OBJEDIT_MOVE_DOWN,
-	OBJEDIT_DUP,
-	OBJEDIT_RCS_UPDATE,
-	OBJEDIT_RCS_UPDATE_ALL,
-	OBJEDIT_RCS_COMMIT,
-	OBJEDIT_RCS_COMMIT_ALL,
-	OBJEDIT_RCS_IMPORT,
-	OBJEDIT_RCS_IMPORT_ALL
+	OBJEDIT_DUP
 };
 
 static void
@@ -461,47 +452,6 @@ ObjectOp(AG_Event *event)
 			AG_ObjectUnlinkDatafiles(ob);
 			AG_ObjectDestroy(ob);
 			break;
-#ifdef AG_NETWORK
-		case OBJEDIT_RCS_IMPORT:
-			if (AG_ObjectSave(ob) == -1 ||
-			    AG_RcsImport(ob) == -1) {
-				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
-				    AG_GetError());
-			}
-			break;
-		case OBJEDIT_RCS_IMPORT_ALL:
-			AG_RcsImportAll(ob);
-			break;
-		case OBJEDIT_RCS_COMMIT:
-			if (AG_ObjectSave(ob) == -1 ||
-			    AG_RcsCommit(ob) == -1) {
-				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
-				    AG_GetError());
-			}
-			break;
-		case OBJEDIT_RCS_COMMIT_ALL:
-			AG_RcsCommitAll(ob);
-			break;
-		case OBJEDIT_RCS_UPDATE:
-			if (AG_ObjectSave(ob) == -1) {
-				AG_TextMsg(AG_MSG_ERROR,
-				    _("Save failed: %s: %s"), ob->name,
-				    AG_GetError());
-				break;
-			}
-			if (AG_RcsUpdate(ob) == 0) {
-				if (AG_ObjectLoad(ob) == -1) {
-					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
-					    ob->name, AG_GetError());
-				}
-			} else {
-				AG_TextMsgFromError();
-			}
-			break;
-		case OBJEDIT_RCS_UPDATE_ALL:
-			AG_RcsUpdateAll(ob);
-			break;
-#endif /* AG_NETWORK */
 		}
 	}
 }
@@ -716,131 +666,6 @@ CreateObjectDlg(AG_Event *event)
 	AG_WindowShow(win);
 }
 
-#ifdef AG_NETWORK
-
-static void
-PollRevisions(AG_Event *event)
-{
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	AG_RCSList list;
-	int i;
-
-	if (!agRcsMode) {
-		AG_TextMsg(AG_MSG_ERROR, _("RCS is currently disabled."));
-		return;
-	}
-	if (AG_RcsConnect() == -1 ||
-	    AG_RcsGetList(&list) == -1) {
-		AG_TextMsgFromError();
-		goto out;
-	}
-
-	AG_TlistClear(tl);
-	it = AG_TlistAdd(tl, NULL, "/");
-	it->flags |= AG_TLIST_HAS_CHILDREN;
-	it->cat = "object";
-	it->depth = 0;
-
-	for (i = 0; i < list.nEnts; i++) {
-		AG_RCSListEntry *lent = &list.ents[i];
-		int depth = 0;
-		char *c;
-
-		for (c = &lent->name[0]; *c != '\0'; c++) {
-			if (*c == '/')
-				depth++;
-		}
-		it = AG_TlistAddS(tl, NULL, &lent->name[1]);
-		it->cat = "object";
-		it->depth = depth;
-	}
-	AG_TlistRestore(tl);
-	AG_RcsFreeList(&list);
-out:
-	AG_RcsDisconnect();
-}
-
-static void
-UpdateFromRepo(AG_Event *event)
-{
-	void *vfsRoot = AG_PTR(1);
-	AG_Tlist *tl = AG_PTR(2);
-	AG_TlistItem *it;
-
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (!it->selected)
-			continue;
-
-		if (AG_RcsCheckout(vfsRoot, it->text) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "%s: %s", it->text,
-			    AG_GetError());
-		}
-	}
-}
-
-static void
-DeleteFromRepo(AG_Event *event)
-{
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (!it->selected)
-			continue;
-
-		if (AG_RcsDelete(it->text) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "%s: %s", it->text,
-			    AG_GetError());
-		} else {
-			AG_TextTmsg(AG_MSG_INFO, 500,
-			    _("Object %s removed from repository."), it->text);
-		}
-	}
-#if 0
-	if (AG_RcsConnect() == 0) {
-		AG_RcsList(tl);
-		AG_RcsDisconnect();
-	}
-#endif
-}
-
-static void
-RepoRenameObject(AG_Event *event)
-{
-	char *from = AG_STRING(2);
-	char *to = AG_STRING(3);
-
-	if (AG_RcsRename(from, to) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", from, AG_GetError());
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000, _("Object %s renamed to %s."),
-		    from, to);
-	}
-#if 0
-	if (AG_RcsConnect() == 0) {
-		AG_RcsList(tl);
-		AG_RcsDisconnect();
-	}
-#endif
-}
-
-static void
-RepoRenameDlg(AG_Event *event)
-{
-	char prompt[AG_LABEL_MAX];
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	
-	if ((it = AG_TlistSelectedItem(tl)) == NULL)
-		return;
-	
-	Snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
-	AG_TextPromptString(prompt, RepoRenameObject, "%p,%s", tl, it->text);
-}
-
-#endif /* AG_NETWORK */
-
 static void
 GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
     AG_Window *win)
@@ -925,28 +750,6 @@ DEV_Browser(void *vfsRoot)
 		    ShowPreferences, NULL);
 	}
 
-#ifdef AG_NETWORK
-	mi = AG_MenuNode(me->root, _("Repository"), NULL);
-	{
-		AG_MenuAction(mi, _("Commit"), agIconLoad.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_COMMIT);
-		AG_MenuAction(mi, _("Update"), agIconLoad.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_UPDATE);
-		AG_MenuAction(mi, _("Import"), agIconSave.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_IMPORT);
-		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Commit all"), agIconSave.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-		    OBJEDIT_RCS_COMMIT_ALL);
-		AG_MenuAction(mi, _("Update all"), agIconLoad.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-		    OBJEDIT_RCS_UPDATE_ALL);
-		AG_MenuAction(mi, _("Import all"), agIconSave.s,
-		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-		    OBJEDIT_RCS_IMPORT_ALL);
-	}
-#endif /* AG_NETWORK */
-	
 #ifdef AG_DEBUG
 	mi = AG_MenuNode(me->root, _("Debug"), NULL);
 	DEV_ToolMenu(mi);
@@ -956,9 +759,6 @@ DEV_Browser(void *vfsRoot)
 	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
 	{
 		AG_MenuItem *mi;
-#ifdef AG_NETWORK
-		AG_MenuItem *mi2;
-#endif
 
 		AG_ObjectAttach(ntab, tlObjs);
 
@@ -983,38 +783,6 @@ DEV_Browser(void *vfsRoot)
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_EXPORT);
 
-#ifdef AG_NETWORK
-			if (agRcsMode) {
-				AG_MenuSeparator(mi);
-			
-				mi2 = AG_MenuAction(mi, _("Repository"),
-				    agIconLoad.s, NULL, NULL);
-				AG_MenuAction(mi2, _("Commit"), agIconLoad.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_COMMIT);
-				AG_MenuAction(mi2, _("Update"), agIconLoad.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_UPDATE);
-				AG_MenuAction(mi2, _("Import"), agIconLoad.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_IMPORT);
-		
-				AG_MenuSeparator(mi2);
-				
-				AG_MenuAction(mi2, _("Commit all"),
-				    agIconLoad.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_COMMIT_ALL);
-				AG_MenuAction(mi2, _("Update all"),
-				    agIconLoad.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_UPDATE_ALL);
-				AG_MenuAction(mi2, _("Import all"),
-				    agIconSave.s,
-				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-				    OBJEDIT_RCS_IMPORT_ALL);
-			}
-#endif /* AG_NETWORK */
 			AG_MenuSeparator(mi);
 			
 			AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
@@ -1037,35 +805,6 @@ DEV_Browser(void *vfsRoot)
 		}
 	}
 
-#ifdef AG_NETWORK
-	ntab = AG_NotebookAddTab(nb, _("Repository"), AG_BOX_VERT);
-	{
-		AG_Tlist *tl;
-		AG_Button *btn;
-		AG_MenuItem *mi;
-
-		tl = AG_TlistNew(ntab, AG_TLIST_MULTI|AG_TLIST_TREE|
-		                       AG_TLIST_EXPAND);
-		AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
-		mi = AG_TlistSetPopup(tl, "object");
-		{
-			AG_MenuAction(mi, _("Update from repository"),
-			    agIconLoad.s, UpdateFromRepo, "%p,%p", vfsRoot, tl);
-			AG_MenuAction(mi, _("Delete from repository"),
-			    agIconTrash.s, DeleteFromRepo, "%p", tl);
-			AG_MenuAction(mi, _("Rename"), NULL,
-			    RepoRenameDlg, "%p", tl);
-		}
-
-		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL,
-		    _("Refresh revisions"),
-		    PollRevisions, "%p", tl);
-	
-		if (agRcsMode)
-			AG_PostEvent(NULL, btn, "button-pushed", NULL);
-	}
-#endif /* AG_NETWORK */
-	
 	AG_WindowShow(win);
 	return (win);
 }

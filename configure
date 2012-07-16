@@ -6464,7 +6464,7 @@ echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
 echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
 fi
-if [ "${enable_network}" = "yes" ]
+if [ "${enable_network}" != "no" ]
  then
 $ECHO_N "checking for the getaddrinfo() function..."
 $ECHO_N "checking for the getaddrinfo() function..." >> config.log
@@ -9455,10 +9455,6 @@ fi
 if [ "${HAVE_MYSQL}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} db_mysql.c"
-fi
-if [ "${HAVE_NETWORK}" = "yes" ]
- then
-SRCS_CORE="${SRCS_CORE} net_client.c net_command.c net_fgetln.c net_server.c"
 fi
 SRCS_GUI=""
 if [ "${HAVE_SDL}" = "yes" ]
