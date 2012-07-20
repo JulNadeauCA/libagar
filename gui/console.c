@@ -50,100 +50,54 @@ AG_ConsoleNew(void *parent, Uint flags)
 }
 
 static __inline__ void
+ClampVisible(AG_Console *cons)
+{
+	if (cons->rOffs > (cons->nLines - cons->rVisible + 2))
+		cons->rOffs = cons->nLines - cons->rVisible + 2;
+	if (cons->rOffs < 0)
+		cons->rOffs = 0;
+}
+
+static void
 ScrollUp(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 	int n = AG_INT(1);
 
-	if ((cons->rOffs - n) > 0) {
-		cons->rOffs -= n;
-	} else {
-		cons->rOffs = 0;
-	}
+	cons->rOffs -= n;
+	ClampVisible(cons);
 	AG_Redraw(cons);
 }
 
-static __inline__ void
+static void
 ScrollDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 	int n = AG_INT(1);
 
-	if ((cons->rOffs + n) < cons->nLines - cons->rVisible) {
-		cons->rOffs += n;
-	} else {
-		cons->rOffs = cons->nLines - cons->rVisible;
-	}
+	cons->rOffs += n;
+	ClampVisible(cons);
 	AG_Redraw(cons);
 }
 
-static __inline__ void
+static void
 PageUp(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 
-	if ((cons->rOffs - cons->rVisible) > 0) {
-		cons->rOffs -= cons->rVisible;
-	} else {
-		cons->rOffs = 0;
-	}
+	cons->rOffs -= cons->rVisible;
+	ClampVisible(cons);
 	AG_Redraw(cons);
 }
 
-static __inline__ void
+static void
 PageDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 
-	if ((cons->rOffs + cons->rVisible) < cons->nLines - cons->rVisible) {
-		cons->rOffs += cons->rVisible;
-	} else {
-		cons->rOffs = cons->nLines - cons->rVisible;
-	}
+	cons->rOffs += cons->rVisible;
+	ClampVisible(cons);
 	AG_Redraw(cons);
-}
-
-static void
-MouseButtonDown(AG_Event *event)
-{
-	AG_Console *cons = AG_SELF();
-	int btn = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-
-	AG_WidgetFocus(cons);
-	AG_ExecMouseAction(cons, AG_ACTION_ON_BUTTONDOWN, btn, x, y);
-}
-
-static void
-MouseButtonUp(AG_Event *event)
-{
-	AG_Console *cons = AG_SELF();
-	int btn = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-
-	AG_ExecMouseAction(cons, AG_ACTION_ON_BUTTONUP, btn, x, y);
-}
-
-static void
-KeyDown(AG_Event *event)
-{
-	AG_Console *cons = AG_SELF();
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
-
-	AG_ExecKeyAction(cons, AG_ACTION_ON_KEYDOWN, sym, mod);
-}
-
-static void
-KeyUp(AG_Event *event)
-{
-	AG_Console *cons = AG_SELF();
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
-
-	AG_ExecKeyAction(cons, AG_ACTION_ON_KEYUP, sym, mod);
 }
 
 static void
@@ -162,8 +116,11 @@ Init(void *obj)
 	cons->rVisible = 0;
 	cons->cBg = AG_ColorRGB(0,0,0);
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
+	cons->vBar->maxOffs = +2;
+
 	cons->r = AG_RECT(0,0,0,0);
 	cons->font = NULL;
+	cons->scrollTo = NULL;
 
 	AG_BindInt(cons->vBar, "value", &cons->rOffs);
 	AG_BindInt(cons->vBar, "max", &cons->nLines);
@@ -174,18 +131,12 @@ Init(void *obj)
 	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
 	AG_ActionFn(cons, "PageDown",   PageDown, NULL);
 
-	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP,		"ScrollUp");
-	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN,		"ScrollDown");
-
-	AG_ActionOnKey(cons, AG_KEY_UP,		AG_KEYMOD_ANY,	"ScrollUp");
-	AG_ActionOnKey(cons, AG_KEY_DOWN,	AG_KEYMOD_ANY,	"ScrollDown");
-	AG_ActionOnKey(cons, AG_KEY_PAGEUP,	AG_KEYMOD_ANY,	"PageUp");
-	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN,	AG_KEYMOD_ANY,	"PageDown");
-
-	AG_SetEvent(cons, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(cons, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(cons, "key-down", KeyDown, NULL);
-	AG_SetEvent(cons, "key-up", KeyUp, NULL);
+	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP, "ScrollUp");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN, "ScrollDown");
+	AG_ActionOnKey(cons, AG_KEY_UP, AG_KEYMOD_ANY, "ScrollUp");
+	AG_ActionOnKey(cons, AG_KEY_DOWN, AG_KEYMOD_ANY, "ScrollDown");
+	AG_ActionOnKey(cons, AG_KEY_PAGEUP, AG_KEYMOD_ANY, "PageUp");
+	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
 }
 
 static void
@@ -215,12 +166,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
 	cons->rVisible = a->h / ((cons->font != NULL) ? cons->font->height :
 	                                                agTextFontHeight);
-	if (cons->rVisible > 1) {
-		cons->rVisible--;
-	}
-	if (cons->rOffs+cons->rVisible >= cons->nLines) {
-		cons->rOffs = MAX(0, cons->nLines - cons->rVisible);
-	}
+	ClampVisible(cons);
 	return (0);
 }
 
@@ -236,10 +182,15 @@ Draw(void *p)
 
 	AG_PushTextState();
 
+	if (cons->scrollTo != NULL) {
+		cons->rOffs = *cons->scrollTo;
+		cons->scrollTo = NULL;
+		ClampVisible(cons);
+	}
 	if (cons->font != NULL) {
 		AG_TextFont(cons->font);
 	}
-	if (cons->nLines > 0) {
+	if (cons->nLines > 1) {
 		AG_PushClipRect(cons, cons->r);
 		rDst = cons->r;
 		for (r = cons->rOffs, rDst.y = cons->padding;
@@ -261,15 +212,6 @@ Draw(void *p)
 	}
 	
 	AG_PopTextState();
-
-	/* Trigger autoscrolling */
-	if (cons->rVisible < cons->nLines+1) {
-//		printf("autoscroll enable\n");
-//		cons->flags |= AG_CONSOLE_AUTOSCROLL;
-	} else {
-//		printf("autoscroll disable\n");
-//		cons->flags &= ~(AG_CONSOLE_AUTOSCROLL);
-	}
 
 	AG_WidgetDraw(cons->vBar);
 }
@@ -349,9 +291,9 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->cBg = AG_ColorRGBA(0,0,0,0);
 	ln->cFg = AG_ColorRGB(250,250,230);
 
-	if (cons->flags & AG_CONSOLE_AUTOSCROLL)
-		cons->rOffs++;
-
+	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
+		cons->scrollTo = &cons->nLines;
+	}
 	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
 	return (ln);

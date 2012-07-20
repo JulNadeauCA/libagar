@@ -30,7 +30,7 @@ typedef struct ag_console {
 	Uint flags;
 #define AG_CONSOLE_HFILL	0x01	/* Fill available width */
 #define AG_CONSOLE_VFILL	0x02	/* Fill available height */
-#define AG_CONSOLE_AUTOSCROLL	0x04	/* Scroll new lines are added */
+#define AG_CONSOLE_NOAUTOSCROLL	0x04	/* Scroll new lines are added */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
@@ -42,6 +42,7 @@ typedef struct ag_console {
 	AG_Rect r;			/* View area */
 	int rVisible;
 	AG_Font *font;			/* Font */
+	int *scrollTo;			/* Scrolling request */
 } AG_Console;
 
 __BEGIN_DECLS
