@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,33 +38,45 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget allows the user to control an integer or floating-point value within a
-specified range.
+widget provides a basic panning control.
 .Nm
-is almost always used from a widget implementation, to provide scrolling
-controls (and it features a special
-.Va visible
-binding to faciliate this application).
+is almost always integrated in a widget's implementation, where the user
+should be able to scroll over some partially visible graphics.
+The scrollbar's range and value parameters are specified by integer or
+floating-point bindings.
 .Pp
-For example, in a scrollable view containing a given number of "items" (e.g.,
-the lines of a multi-line
-.Xr AG_Textbox 3 ) ,
+For example, in
+.Xr AG_Textbox 3 ,
 the
 .Va max
-binding would be tied to the total item count, and the
-.Va visible
-binding would be tied to the number of items that can be displayed on-screen
-(based on the current widget dimensions).
-Finally, the
+binding would be tied to the total line count, and
 .Va value
-binding is tied to an index variable defining the first item that should
-be rendered.
+to the index of the first line to display.
+The
+.Va visible
+binding would be tied to the number of lines that can be displayed on-screen.
+Note that the
+.Va visible
+value, being dependent on the widget's dimensions, is usually calculated in
+the widget's
+.Fn sizeAlloc
+routine.
 .Pp
-NOTE: For general-purpose edition of numerical values,
+The
+.Va minOffs ,
+.Va maxOffs
+and
+.Va minOffs
+variables (see
+.Dq STRUCTURE DATA )
+can be used to add/subtract a constant value to that of the bound variables.
+.Pp
+NOTE: This widget is meant only as a panning control.
+For general edition of numerical values,
 .Xr AG_Slider 3
 or
 .Xr AG_Numerical 3
-are more suitable widgets.
+should be used instead.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -267,13 +279,11 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *{value,min,max,visible} "
+.Bl -tag -compact -width "double *{value,min,max,visible} "
 .It Va float *{value,min,max,visible}
 Single precision position/range
 .It Va double *{value,min,max,visible}
 Double precision position/range
-.It Va long double *{value,min,max,visible}
-Quad precision position/range
 .It Va int *{value,min,max,visible}
 Integer position/range
 .It Va Uint *{value,min,max,visible}
@@ -284,16 +294,12 @@ Unsigned 8-bit position/range
 Unsigned 16-bit position/range
 .It Va Uint32 *{value,min,max,visible}
 Unsigned 32-bit position/range
-.It Va Uint64 *{value,min,max,visible}
-Unsigned 64-bit position/range
 .It Va Sint8 *{value,min,max,visible}
 Signed 8-bit position/range
 .It Va Sint16 *{value,min,max,visible}
 Signed 16-bit position/range
 .It Va Sint32 *{value,min,max,visible}
 Signed 32-bit position/range
-.It Va Uint64 *{value,min,max,visible}
-Signed 64-bit position/range
 .El
 .Pp
 The scrollbar is positioned to represent
@@ -305,7 +311,7 @@ and
 In scrolling applications,
 .Va visible
 is typically used to conveniently represent the size of the display area
-(its value is simply subtracted from the range).
+(internally, its value is simply subtracted from the range).
 .Pp
 Note that the
 .Va min ,
@@ -314,19 +320,6 @@ and
 .Va visible
 bindings must be of the same type as
 .Va value .
-.Pp
-The
-.Ft Uint64 ,
-.Ft Sint64
-and
-.Ft long double
-types are only available on platforms which support these types.
-The
-.Ft Uint64 ,
-.Ft Sint64
-and
-.Ft long double
-types are only available on platforms which support these types.
 .Sh EVENTS
 The
 .Nm
@@ -353,6 +346,46 @@ User is starting to drag the scrollbar.
 .It Fn scrollbar-drag-end "void"
 User is done dragging the scrollbar.
 .El
+.Sh STRUCTURE DATA
+For the
+.Ft AG_Scrollbar
+object:
+.Pp
+.Bl -tag -compact -width "int visible "
+.It Ft int value
+Default
+.Sq value
+binding.
+.It Ft int min
+Default
+.Sq min
+binding.
+.It Ft int max
+Default
+.Sq max
+binding.
+.It Ft int visible
+Default
+.Sq visible
+binding.
+.It Ft int minOffs
+Constant integer value to add to
+.Sq min .
+.It Ft int maxOffs
+Constant integer value to add to
+.Sq max .
+.It Ft int visOffs
+Constant integer value to add to
+.Sq visible .
+.It Ft int width
+Scrollbar width in pixels.
+.It Ft int wBar
+Width of scrolling control button in pixels (ignored if
+.Dv AG_SCROLLBAR_AUTOSIZE
+is set).
+.It Ft int hArrow
+Size of "arrow" icons in pixels.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Scrollview 3 ,
@@ -362,6 +395,5 @@ User is done dragging the scrollbar.
 The
 .Nm
 widget first appeared in Agar 1.0.
-The
-.Dv AG_SCROLLBAR_AUTOSIZE
-feature was introduced in Agar 1.4.0.
+The autosize feature was introduced in Agar 1.4.0.
+The constant offsets were introduced in Agar 1.4.2.

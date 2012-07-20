@@ -219,10 +219,12 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
 
 #define GET_EXTENT(type) do {						\
 	if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {			\
-		if ((*(type *)pMax - *(type *)pMin) != 0) {		\
+		if (((*(type *)pMax + sb->maxOffs) - 			\
+		     (*(type *)pMin + sb->minOffs)) != 0) {		\
 			extent = sb->length -				\
-			    (*(type *)pVis * sb->length /		\
-			     (*(type *)pMax - *(type *)pMin));		\
+			    ((*(type *)pVis + sb->visOffs) * sb->length / \
+			    ((*(type *)pMax + sb->maxOffs) - 		\
+			     (*(type *)pMin + sb->minOffs)));		\
 		} else {						\
 			extent = 0;					\
 		}							\
@@ -233,16 +235,19 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
 
 #define GET_PX_COORDS(type) do {					\
 	int extent;							\
-	if (*(type *)pMin >= (*(type *)pMax - *(type *)pVis)) {		\
+	if ((*(type *)pMin + sb->minOffs) >=				\
+	   ((*(type *)pMax + sb->maxOffs) -				\
+	    (*(type *)pVis + sb->visOffs))) {				\
 		goto fail;						\
 	}								\
 	GET_EXTENT(type);						\
-	*x = (int)(((*(type *)pVal - *(type *)pMin) * extent) /		\
-	          (*(type *)pMax - *(type *)pVis - *(type *)pMin));	\
+	*x = (int)(((*(type *)pVal - (*(type *)pMin + sb->minOffs)) * extent) / \
+	           ((*(type *)pMax + sb->maxOffs) -			\
+		    (*(type *)pVis + sb->visOffs) - *(type *)pMin));	\
 	if (len != NULL) { 						\
 		if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {		\
-			*len = *(type *)pVis * sb->length /		\
-			    *(type *)pMax;				\
+			*len = (*(type *)pVis + sb->visOffs) * sb->length / \
+			       (*(type *)pMax + sb->maxOffs);		\
 		} else {						\
 			*len = (sb->wBar == -1) ? sb->length : sb->wBar; \
 		}							\
@@ -307,20 +312,22 @@ fail:
 	int extent;							\
 	GET_EXTENT(type);						\
 	if (x <= 0) {							\
-		*(type *)pVal = *(type *)pMin;				\
+		*(type *)pVal = (*(type *)pMin + sb->minOffs);		\
 	} else if (x >= extent) {					\
-		*(type *)pVal = MAX(*(type *)pMin,			\
-		                    (*(type *)pMax - *(type *)pVis));	\
+		*(type *)pVal = MAX((*(type *)pMin + sb->minOffs),	\
+		                   ((*(type *)pMax + sb->maxOffs) -	\
+				    (*(type *)pVis + sb->visOffs)));	\
 	} else {							\
 		*(type *)pVal = x *					\
-		    (*(type *)pMax - *(type *)pVis - *(type *)pMin) /	\
-		    extent;						\
-		*(type *)pVal += *(type *)pMin;				\
-		if (*(type *)pVal < *(type *)pMin) {			\
-			*(type *)pVal = *(type *)pMin;			\
+		    ((*(type *)pMax + sb->maxOffs) -			\
+		     (*(type *)pVis + sb->visOffs) -			\
+		     (*(type *)pMin + sb->minOffs)) / extent;		\
+		*(type *)pVal += (*(type *)pMin + sb->minOffs);		\
+		if (*(type *)pVal < (*(type *)pMin + sb->minOffs)) {	\
+			*(type *)pVal = (*(type *)pMin + sb->minOffs);	\
 		}							\
-		if (*(type *)pVal > *(type *)pMax) {			\
-			*(type *)pVal = *(type *)pMax;			\
+		if (*(type *)pVal > (*(type *)pMax + sb->maxOffs)) {	\
+			*(type *)pVal = (*(type *)pMax + sb->maxOffs);	\
 		}							\
 	}								\
 } while (0)
@@ -414,15 +421,19 @@ Decrement(AG_Scrollbar *sb)
  */
 #define INCREMENT_INT(type)						\
 	if ((int)(*(type *)pVal + sb->iInc) >				\
-	    (int)(*(type *)pMax - *(type *)pVis)) 				\
-		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
+	    (int)((*(type *)pMax + sb->maxOffs) -			\
+	          (*(type *)pVis + sb->visOffs)))			\
+		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
+		                (*(type *)pVis + sb->visOffs);		\
 	else 								\
 		*(type *)pVal += sb->iInc
 
 #define INCREMENT_REAL(type)						\
 	if ((*(type *)pVal + sb->rInc) >				\
-	    (*(type *)pMax - *(type *)pVis)) 				\
-		*(type *)pVal = *(type *)pMax - *(type *)pVis;		\
+	    ((*(type *)pMax + sb->maxOffs) -				\
+	     (*(type *)pVis + sb->visOffs))) 				\
+		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
+		                (*(type *)pVis + sb->visOffs);		\
 	else 								\
 		*(type *)pVal += sb->rInc
 
@@ -726,6 +737,9 @@ Init(void *obj)
 	sb->rInc = 1.0;	
 	sb->iInc = 1;
 	sb->lenPre = 32;
+	sb->minOffs = 0;
+	sb->maxOffs = 0;
+	sb->visOffs = 0;
 
 	sb->wBar = agPrefScrollbarSize/2;
 	sb->width = agPrefScrollbarSize;

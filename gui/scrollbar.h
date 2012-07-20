@@ -47,6 +47,7 @@ typedef struct ag_scrollbar {
 	double rInc;			/* Base increment for real bindings */
 	int    iInc;			/* Base increment for int bindings */
 	Uint lenPre;			/* Preferred length size hint */
+	int minOffs, maxOffs, visOffs;	/* Constants to add to binding values */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(p) ((AG_Scrollbar *)p)
