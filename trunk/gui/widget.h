@@ -107,6 +107,7 @@ typedef struct ag_action_tie {
 		} key;
 	} data;
 	char action[64];			/* Action name */
+	AG_TAILQ_ENTRY(ag_action_tie) ties;
 } AG_ActionTie;
 
 enum ag_redraw_tie_type {
@@ -171,12 +172,10 @@ typedef struct ag_widget {
 	struct ag_driver *drv;			/* Back ptr to driver */
 	struct ag_driver_class *drvOps;		/* Back ptr to driver class */
 
-	AG_Tbl        actions;			/* Registered actions */
-	AG_ActionTie *mouseActions;		/* Mouse event ties */
-	Uint         nMouseActions;
-	AG_ActionTie *keyActions;		/* Keyboard event ties */
-	Uint         nKeyActions;
-	
+	AG_Tbl actions;				 /* Registered actions */
+	AG_TAILQ_HEAD_(ag_action_tie) mouseActions; /* Mouse action ties */
+	AG_TAILQ_HEAD_(ag_action_tie) keyActions;   /* Keyboard action ties */
+
 	AG_TAILQ_ENTRY(ag_widget) detach;	  /* In agWidgetDetachQ */
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies; /* For AG_RedrawOn*() */
 } AG_Widget;
@@ -265,6 +264,11 @@ AG_Surface *AG_WidgetSurface(void *);
 
 void        AG_RedrawOnChange(void *, int, const char *);
 void        AG_RedrawOnTick(void *, int);
+
+void        AG_WidgetStdKeyDown(AG_Event *);
+void        AG_WidgetStdKeyUp(AG_Event *);
+void        AG_WidgetStdMouseButtonDown(AG_Event *);
+void        AG_WidgetStdMouseButtonUp(AG_Event *);
 
 AG_Action  *AG_ActionFn(void *, const char *, AG_EventFn, const char *, ...);
 AG_Action  *AG_ActionSetInt(void *, const char *, int *, int);

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -785,22 +785,24 @@ See
 for more information about widget themes.
 Note that child widgets automatically inherit the theme associated with
 their parent object.
-.Sh WIDGET ACTIONS
-Input events such as key presses or mouse button events can be "tied" to
-simple actions, such as executing a specified routine or controlling a flag
-variable.
-Widget actions are preferred over event handlers where the conditions are fixed
-(e.g., a specific mouse button was clicked, or a specific key was pressed).
-Keyboard and mouse bindings may be edited by the user.
-Actions are identified by a name string, and are mapped to events by a table
-kept in the
-.Nm
+.Sh STANDARD WIDGET ACTIONS
+User-generated events such as key presses or mouse button events can be
+tied to
+.Em actions ,
+such as executing a specified routine or controlling
+a boolean variable.
+Registered actions are described by the
+.Fa AG_Action
 structure.
-The
-.Xr AG_MenuWidgetActions 3
-function of
+.Pp
+Where the conditions for execution of an Action are fixed (e.g., a specific
+mouse button was clicked, or a specific key was pressed), use of
+.Fn AG_ActionOn*
+is preferred over low-level event handlers
+(such as "key-down" or "mouse-button-down"), because it allows keyboard
+and mouse bindings to be configured by the end-user in a standard way.
 .Xr AG_Menu 3
-creates a generic menu item containing a widget's available actions.
+also provides interfaces for working with widget actions.
 .Pp
 .nr nS 1
 .Ft "AG_Action *"
@@ -874,11 +876,6 @@ variants do not take an explicit
 .Fa value
 argument, and toggle the current value instead.
 .Pp
-Actions are tied to events (identified by
-.Fa event
-string) with
-.Fn AG_ActionOn* .
-.Pp
 .Fn AG_ActionOnButtonDown
 and
 .Fn AG_ActionOnButtonUp
@@ -916,8 +913,19 @@ The action is triggered immediately once after an initial key press.
 If the key combination is held longer than the "key delay" (by default 250ms),
 the event is repeated with the "key repeat" interval (by default 30ms).
 .Pp
+If there are currently no event handlers registered for "key-up", "key-down",
+"mouse-button-up" and "mouse-button-down", the
+.Fn AG_ActionOn*
+functions automatically register event handlers which will invoke
+.Fn AG_ExecMouseAction
+or
+.Fn AG_ExecKeyAction
+as appropriate (see below).
+.Pp
 .Fn AG_ExecMouseAction
 executes any action associated with mouse button events.
+It is typically invoked from the "mouse-button-down" and "mouse-button-up"
+event handlers of the widget.
 Accepted
 .Fa type
 values are
@@ -934,6 +942,8 @@ is the position of the cursor in the widget's coordinate system.
 .Pp
 .Fn AG_ExecKeyAction
 executes any action associated with keyboard events.
+It is typically invoked from the "key-down" and "key-up"
+event handlers of the widget.
 Accepted
 .Fa type
 values are
