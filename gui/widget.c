@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -225,10 +225,8 @@ Init(void *obj)
 	wid->texcoords = NULL;
 
 	AG_TblInit(&wid->actions, 32, 0);
-	wid->mouseActions = NULL;
-	wid->nMouseActions = 0;
-	wid->keyActions = NULL;
-	wid->nKeyActions = 0;
+	TAILQ_INIT(&wid->mouseActions);
+	TAILQ_INIT(&wid->keyActions);
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
@@ -341,6 +339,53 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
 }
 
+/* Default event handler for "key-down" (for widgets using Actions). */
+void
+AG_WidgetStdKeyDown(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
+
+	AG_ExecKeyAction(wid, AG_ACTION_ON_KEYDOWN, sym, mod);
+}
+
+/* Default event handler for "key-up" (for widgets using Actions). */
+void
+AG_WidgetStdKeyUp(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
+
+	AG_ExecKeyAction(wid, AG_ACTION_ON_KEYUP, sym, mod);
+}
+
+/* Default event handler for "mouse-button-down" (for widgets using Actions). */
+void
+AG_WidgetStdMouseButtonDown(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	int btn = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	AG_WidgetFocus(wid);
+	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONDOWN, btn, x, y);
+}
+
+/* Default event handler for "mouse-button-up" (for widgets using Actions). */
+void
+AG_WidgetStdMouseButtonUp(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	int btn = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONUP, btn, x, y);
+}
+
 /* Tie an action to a mouse-button-down event. */
 void
 AG_ActionOnButtonDown(void *obj, int button, const char *action)
@@ -348,12 +393,14 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
-	wid->mouseActions = Realloc(wid->mouseActions, (wid->nMouseActions+1)*
-	                                               sizeof(AG_ActionTie));
-	at = &wid->mouseActions[wid->nMouseActions++];
+	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONDOWN;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
+	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+
+	if (AG_FindEventHandler(wid, "mouse-button-down") == NULL)
+		AG_SetEvent(wid, "mouse-button-down", AG_WidgetStdMouseButtonDown, NULL);
 }
 
 /* Tie an action to a mouse-button-up event. */
@@ -363,12 +410,14 @@ AG_ActionOnButtonUp(void *obj, int button, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
-	wid->mouseActions = Realloc(wid->mouseActions, (wid->nMouseActions+1)*
-	                                               sizeof(AG_ActionTie));
-	at = &wid->mouseActions[wid->nMouseActions++];
+	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_BUTTONUP;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
+	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	
+	if (AG_FindEventHandler(wid, "mouse-button-up") == NULL)
+		AG_SetEvent(wid, "mouse-button-up", AG_WidgetStdMouseButtonUp, NULL);
 }
 
 /* Tie an action to a key-down event. */
@@ -378,13 +427,15 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
-	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
-	                                           sizeof(AG_ActionTie));
-	at = &wid->keyActions[wid->nKeyActions++];
+	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYDOWN;
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
+	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+
+	if (AG_FindEventHandler(wid, "key-down") == NULL)
+		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
 }
 
 /* Tie an action to a key-up event. */
@@ -394,13 +445,15 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
-	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
-	                                           sizeof(AG_ActionTie));
-	at = &wid->keyActions[wid->nKeyActions++];
+	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYUP;
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
+	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	
+	if (AG_FindEventHandler(wid, "key-up") == NULL)
+		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
 }
 
 static Uint32
@@ -409,7 +462,7 @@ ActionKeyRepeat(void *obj, Uint32 ival, void *arg)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at = arg;
 	AG_Action *a;
-	
+
 	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
 	    a == NULL) {
 		return (0);
@@ -423,6 +476,7 @@ ActionKeyDelay(void *obj, Uint32 ival, void *arg)
 {
 	AG_ActionTie *at = arg;
 
+	at->type = AG_ACTION_ON_KEYREPEAT;
 	AG_ScheduleTimeout(obj, &at->data.key.toRepeat, agKbdRepeat);
 	return (0);
 }
@@ -434,15 +488,20 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	AG_Widget *wid = obj;
 	AG_ActionTie *at;
 
-	wid->keyActions = Realloc(wid->keyActions, (wid->nKeyActions+1)*
-	                                           sizeof(AG_ActionTie));
-	at = &wid->keyActions[wid->nKeyActions++];
+	at = Malloc(sizeof(AG_ActionTie));
 	at->type = AG_ACTION_ON_KEYREPEAT;
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
 	AG_SetTimeout(&at->data.key.toDelay, ActionKeyDelay, at, 0);
 	AG_SetTimeout(&at->data.key.toRepeat, ActionKeyRepeat, at, 0);
+	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
+	
+	if (AG_FindEventHandler(wid, "key-up") == NULL &&
+	    AG_FindEventHandler(wid, "key-down") == NULL) {
+		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
+		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
+	}
 }
 
 /* Configure a widget action. */
@@ -572,23 +631,21 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
     int xCurs, int yCurs)
 {
 	AG_Widget *wid = obj;
-	AG_ActionTie *at = NULL;
+	AG_ActionTie *at;
 	AG_Action *a;
-	Uint i;
 
 #ifdef AG_DEBUG
 	if (et != AG_ACTION_ON_BUTTONDOWN &&
 	    et != AG_ACTION_ON_BUTTONUP)
 		AG_FatalError("Invalid type arg to AG_ExecMouseAction()");
 #endif
-	for (i = 0; i < wid->nMouseActions; i++) {
-		at = &wid->mouseActions[i];
+	TAILQ_FOREACH(at, &wid->mouseActions, ties) {
 		if (at->type == et &&
 		    ((button == at->data.button) ||
 		     (at->data.button == AG_MOUSE_ANY)))
 			break;
 	}
-	if (i == wid->nMouseActions) {
+	if (at == NULL) {
 		return (0);
 	}
 	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
@@ -603,9 +660,8 @@ int
 AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 {
 	AG_Widget *wid = obj;
-	AG_ActionTie *at = NULL;
+	AG_ActionTie *at;
 	AG_Action *a;
-	Uint i;
 	int rv;
 
 #ifdef AG_DEBUG
@@ -613,8 +669,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	    et != AG_ACTION_ON_KEYUP)
 		AG_FatalError("AG_ExecKeyAction() type");
 #endif
-	for (i = 0; i < wid->nKeyActions; i++) {
-		at = &wid->keyActions[i];
+	TAILQ_FOREACH(at, &wid->keyActions, ties) {
 		if (at->type != et &&
 		    at->type != AG_ACTION_ON_KEYREPEAT) {
 			continue;
@@ -625,7 +680,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 		     at->data.key.sym == sym))
 			break;
 	}
-	if (i == wid->nKeyActions) {
+	if (at == NULL) {
 		return (0);
 	}
 	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
@@ -814,6 +869,7 @@ Destroy(void *obj)
 	AG_Widget *wid = obj;
 	AG_PopupMenu *pm, *pmNext;
 	AG_RedrawTie *rt, *rtNext;
+	AG_ActionTie *at, *atNext;
 	AG_Variable *V;
 	Uint i, j;
 
@@ -829,14 +885,24 @@ Destroy(void *obj)
 		rtNext = TAILQ_NEXT(rt, redrawTies);
 		Free(rt);
 	}
+	for (at = TAILQ_FIRST(&wid->mouseActions);
+	     at != TAILQ_END(&wid->mouseActions);
+	     at = atNext) {
+		atNext = TAILQ_NEXT(at, ties);
+		Free(at);
+	}
+	for (at = TAILQ_FIRST(&wid->keyActions);
+	     at != TAILQ_END(&wid->keyActions);
+	     at = atNext) {
+		atNext = TAILQ_NEXT(at, ties);
+		Free(at);
+	}
 
 	/* Free the action tables. */
 	AG_TBL_FOREACH(V, i,j, &wid->actions) {
 		Free(V->data.p);
 	}
 	AG_TblDestroy(&wid->actions);
-	Free(wid->mouseActions);
-	Free(wid->keyActions);
 
 	/*
 	 * Free surfaces. We can assume that drivers have already deleted
