@@ -99,7 +99,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 	int i, pitch, expandBpp = 0, pad;
 
 	offs = AG_Tell(ds);
-	if (AG_Read(ds, bh.magic, 1, 2) != AG_IO_SUCCESS ||
+	if (AG_Read(ds, bh.magic, 2) != 0 ||
 	    bh.magic[0] != 'B' || bh.magic[1] != 'M') {
 		AG_SetError("Not a Windows BMP file (`%c%c')",
 		bh.magic[0], bh.magic[1]);
@@ -252,7 +252,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 			}
 			break;
 		default:
-			if (AG_Read(ds, bits, 1, s->pitch) != AG_IO_SUCCESS) {
+			if (AG_Read(ds, bits, s->pitch) != 0) {
 				goto fail;
 			}
 #if AG_BYTEORDER == AG_BIG_ENDIAN

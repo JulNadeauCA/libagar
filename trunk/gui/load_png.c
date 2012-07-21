@@ -70,7 +70,7 @@ static void
 AG_PNG_ReadData(png_structp png, png_bytep buf, png_size_t size)
 {
 	AG_DataSource *ds = (AG_DataSource*)png_get_io_ptr(png);
-	AG_Read(ds, buf, size, 1);
+	AG_Read(ds, buf, size);
 }
 
 #if 1
