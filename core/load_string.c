@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 
 	AG_LockDataSource(ds);
 
-	if (AG_CheckTypev(ds, AG_SOURCE_STRING) == -1) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
 	if (AG_ReadUint32v(ds, &len) == -1) {
@@ -54,7 +54,7 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 		goto fail;
 	}
 	if (len > 0) {
-	  	if (AG_Read(ds, s, len, 1) != 0) {
+	  	if (AG_Read(ds, s, len) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
 			Free(s);
@@ -86,7 +86,7 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 
 	AG_LockDataSource(ds);
 
-	if (AG_CheckTypev(ds, AG_SOURCE_STRING) == -1) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
 	if (AG_ReadUint32v(ds, &len) == -1) {
@@ -103,7 +103,7 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 	}
 	*s = sp;
 	if (len > 0) {
-	  	if (AG_Read(ds, sp, len, 1) != 0) {
+	  	if (AG_Read(ds, sp, len) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
 			sp[0] = '\0';
@@ -145,7 +145,7 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 		goto fail;
 	}
 	if (len > 0) {
-		if (AG_Read(ds, s, (size_t)len, 1) != 0) {
+		if (AG_Read(ds, s, (size_t)len) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
 			Free(s);
@@ -166,14 +166,15 @@ AG_WriteString(AG_DataSource *ds, const char *s)
 {
 	size_t len;
 
-	AG_WriteType(ds, AG_SOURCE_STRING);
+	if (ds->debug)
+		AG_WriteTypeCode(ds, AG_SOURCE_STRING);
 
 	if (s == NULL || s[0] == '\0') {
 		AG_WriteUint32(ds, 0);
 	} else {
 		len = strlen(s);
 		AG_WriteUint32(ds, (Uint32)len);
-		if (AG_Write(ds, s, len, 1) != 0)
+		if (AG_Write(ds, s, len) != 0)
 			AG_DataSourceError(ds, NULL);
 	}
 }
@@ -184,11 +185,14 @@ AG_WriteStringv(AG_DataSource *ds, const char *s)
 {
 	Uint32 len = (s != NULL && s[0] != '\0') ? strlen(s) : 0;
 	
-	if (AG_WriteTypev(ds, AG_SOURCE_STRING) == -1 ||
-	    AG_WriteUint32v(ds, &len) == -1) {
+	if (ds->debug &&
+	    AG_WriteTypeCodeE(ds, AG_SOURCE_STRING) == -1) {
 		return (-1);
 	}
-	return (len > 0) ? AG_Write(ds, s, len, 1) : 0;
+	if (AG_WriteUint32v(ds, &len) == -1) {
+		return (-1);
+	}
+	return (len > 0) ? AG_Write(ds, s, len) : 0;
 }
 
 /*
@@ -204,7 +208,7 @@ AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 
 	AG_LockDataSource(ds);
 	
-	if (AG_CheckTypev(ds, AG_SOURCE_STRING) == -1) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
 	if (AG_ReadUint32v(ds, &len) == -1) {
@@ -224,7 +228,7 @@ AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 	if (len == 0) {
 		dst[0] = '\0';
 	} else {
-		if (AG_Read(ds, dst, 1, (size_t)len) != 0) {
+		if (AG_Read(ds, dst, (size_t)len) != 0) {
 			goto fail;
 		}
 		dst[ds->rdLast] = '\0';
@@ -246,7 +250,7 @@ AG_SkipString(AG_DataSource *ds)
 
 	AG_LockDataSource(ds);
 	
-	if (AG_CheckTypev(ds, AG_SOURCE_STRING) == -1) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
 	if (AG_ReadUint32v(ds, &len) == -1) {
@@ -290,7 +294,7 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 	} else {
 		rv = (size_t)len;
 	}
-	if (AG_Read(ds, dst, 1, (size_t)len) != 0)
+	if (AG_Read(ds, dst, (size_t)len) != 0)
 		goto fail;
 	
 	AG_UnlockDataSource(ds);

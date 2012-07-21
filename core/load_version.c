@@ -44,7 +44,7 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	nlen = strlen(name);
 
-	if (AG_Read(ds, nbuf, sizeof(nbuf), 1) != 0 ||
+	if (AG_Read(ds, nbuf, sizeof(nbuf)) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
 		AG_SetError("%s: Bad magic (\"%s\" != %s)", name, nbuf,
 		    name);
@@ -88,7 +88,7 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 		nbuf[i+3] = 'r';
 	}
 	Strlcpy(nbuf, name, sizeof(nbuf));
-	if (AG_Write(ds, nbuf, sizeof(nbuf), 1) != 0) {
+	if (AG_Write(ds, nbuf, sizeof(nbuf)) != 0) {
 		AG_SetError("Writing magic: %s", AG_GetError());
 		return (-1);
 	}

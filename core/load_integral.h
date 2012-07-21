@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,8 +68,10 @@ AG_ReadUint8(AG_DataSource *ds)
 {
 	Uint8 i;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_UINT8, 0);
-	if (AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT8) == -1) {
+		return (0);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0);
 	}
@@ -80,8 +82,10 @@ AG_ReadUint8v(AG_DataSource *ds, Uint8 *v)
 {
 	Uint8 i;
 
-	if (AG_CheckTypev(ds, AG_SOURCE_UINT8) == -1 ||
-	    AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT8) == -1) {
+		return (-1);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		return (-1);
 	}
 	*v = i;
@@ -90,23 +94,23 @@ AG_ReadUint8v(AG_DataSource *ds, Uint8 *v)
 static __inline__ void
 AG_WriteUint8(AG_DataSource *ds, Uint8 i)
 {
-	AG_WriteType(ds, AG_SOURCE_UINT8);
-	if (AG_Write(ds, &i, sizeof(i), 1) != 0)
+	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_UINT8); }
+	if (AG_Write(ds, &i, sizeof(i)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
 AG_WriteUint8v(AG_DataSource *ds, const Uint8 *i)
 {
-	if (AG_WriteTypev(ds, AG_SOURCE_UINT8) == -1) {
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_UINT8) == -1) {
 		return (-1);
 	}
-	return AG_Write(ds, i, sizeof(Uint8), 1);
+	return AG_Write(ds, i, sizeof(Uint8));
 }
 static __inline__ void
 AG_WriteUint8At(AG_DataSource *ds, Uint8 i, off_t pos)
 {
-	AG_WriteTypeAt(ds, AG_SOURCE_UINT8, pos);
-	if (AG_WriteAt(ds, &i, sizeof(i), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
+	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_UINT8, pos); }
+	if (AG_WriteAt(ds, &i, sizeof(i), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 
@@ -118,8 +122,10 @@ AG_ReadUint16(AG_DataSource *ds)
 {
 	Uint16 i;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_UINT16, 0);
-	if (AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT16) == -1) {
+		return (0);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0);
 	}
@@ -131,8 +137,10 @@ AG_ReadUint16v(AG_DataSource *ds, Uint16 *v)
 {
 	Uint16 i;
 
-	if (AG_CheckTypev(ds, AG_SOURCE_UINT16) == -1 ||
-	    AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT16) == -1) {
+		return (-1);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		return (-1);
 	}
 	*v = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE16(i) :
@@ -145,8 +153,8 @@ AG_WriteUint16(AG_DataSource *ds, Uint16 u16)
 	Uint16 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE16(u16) :
 	                                                 AG_SwapLE16(u16);
 
-	AG_WriteType(ds, AG_SOURCE_UINT16);
-	if (AG_Write(ds, &i, sizeof(i), 1) != 0)
+	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_UINT16); }
+	if (AG_Write(ds, &i, sizeof(i)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
@@ -155,10 +163,10 @@ AG_WriteUint16v(AG_DataSource *ds, const Uint16 *u16)
 	Uint16 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE16(*u16) :
 	                                                 AG_SwapLE16(*u16);
 
-	if (AG_WriteTypev(ds, AG_SOURCE_UINT16) == -1) {
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_UINT16) == -1) {
 		return (-1);
 	}
-	return AG_Write(ds, &i, sizeof(i), 1);
+	return AG_Write(ds, &i, sizeof(i));
 }
 static __inline__ void
 AG_WriteUint16At(AG_DataSource *ds, Uint16 u16, off_t pos)
@@ -166,8 +174,8 @@ AG_WriteUint16At(AG_DataSource *ds, Uint16 u16, off_t pos)
 	Uint16 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE16(u16) :
 	                                                 AG_SwapLE16(u16);
 
-	AG_WriteTypeAt(ds, AG_SOURCE_UINT16, pos);
-	if (AG_WriteAt(ds, &i, sizeof(i), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
+	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_UINT16, pos); }
+	if (AG_WriteAt(ds, &i, sizeof(i), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 
@@ -179,8 +187,10 @@ AG_ReadUint32(AG_DataSource *ds)
 {
 	Uint32 i;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_UINT32, 0);
-	if (AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT32) == -1) {
+		return (0);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0);
 	}
@@ -192,8 +202,10 @@ AG_ReadUint32v(AG_DataSource *ds, Uint32 *v)
 {
 	Uint32 i;
 
-	if (AG_CheckTypev(ds, AG_SOURCE_UINT32) == -1 ||
-	    AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT32) == -1) {
+		return (-1);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		return (-1);
 	}
 	*v = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(i) :
@@ -206,8 +218,8 @@ AG_WriteUint32(AG_DataSource *ds, Uint32 u32)
 	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(u32) :
 	                                                 AG_SwapLE32(u32);
 
-	AG_WriteType(ds, AG_SOURCE_UINT32);
-	if (AG_Write(ds, &i, sizeof(i), 1) != 0)
+	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_UINT32); }
+	if (AG_Write(ds, &i, sizeof(i)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
@@ -216,10 +228,10 @@ AG_WriteUint32v(AG_DataSource *ds, const Uint32 *u32)
 	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(*u32) :
 	                                                 AG_SwapLE32(*u32);
 
-	if (AG_WriteTypev(ds, AG_SOURCE_UINT32) == -1) {
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_UINT32) == -1) {
 		return (-1);
 	}
-	return AG_Write(ds, &i, sizeof(i), 1);
+	return AG_Write(ds, &i, sizeof(i));
 }
 static __inline__ void
 AG_WriteUint32At(AG_DataSource *ds, Uint32 u32, off_t pos)
@@ -227,8 +239,8 @@ AG_WriteUint32At(AG_DataSource *ds, Uint32 u32, off_t pos)
 	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(u32) :
 	                                                 AG_SwapLE32(u32);
 
-	AG_WriteTypeAt(ds, AG_SOURCE_UINT32, pos);
-	if (AG_WriteAt(ds, &i, sizeof(i), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
+	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_UINT32, pos); }
+	if (AG_WriteAt(ds, &i, sizeof(i), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 
@@ -241,8 +253,10 @@ AG_ReadUint64(AG_DataSource *ds)
 {
 	Uint64 i;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_UINT64, 0);
-	if (AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT64) == -1) {
+		return (0);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0);
 	}
@@ -254,8 +268,10 @@ AG_ReadUint64v(AG_DataSource *ds, Uint64 *v)
 {
 	Uint64 i;
 
-	if (AG_CheckTypev(ds, AG_SOURCE_UINT64) == -1 ||
-	    AG_Read(ds, &i, sizeof(i), 1) != 0) {
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT64) == -1) {
+		return (-1);
+	}
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
 		return (-1);
 	}
 	*v = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE64(i) :
@@ -268,8 +284,8 @@ AG_WriteUint64(AG_DataSource *ds, Uint64 u64)
 	Uint64 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE64(u64) :
 	                                                 AG_SwapLE64(u64);
 
-	AG_WriteType(ds, AG_SOURCE_UINT64);
-	if (AG_Write(ds, &i, sizeof(i), 1) != 0)
+	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_UINT64); }
+	if (AG_Write(ds, &i, sizeof(i)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
@@ -278,10 +294,10 @@ AG_WriteUint64v(AG_DataSource *ds, const Uint64 *u64)
 	Uint64 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE64(*u64) :
 	                                                 AG_SwapLE64(*u64);
 
-	if (AG_WriteTypev(ds, AG_SOURCE_UINT64) == -1) {
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_UINT64) == -1) {
 		return (-1);
 	}
-	return AG_Write(ds, &i, sizeof(i), 1);
+	return AG_Write(ds, &i, sizeof(i));
 }
 static __inline__ void
 AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
@@ -289,8 +305,8 @@ AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
 	Uint64 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE64(u64) :
 	                                                 AG_SwapLE64(u64);
 
-	AG_WriteTypeAt(ds, AG_SOURCE_UINT64, pos);
-	if (AG_WriteAt(ds, &i, sizeof(i), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
+	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_UINT64, pos); }
+	if (AG_WriteAt(ds, &i, sizeof(i), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 #endif /* HAVE_64BIT */
