@@ -92,6 +92,8 @@
 #include <core/time.h>
 #include <core/db.h>
 #include <core/exec.h>
+#include <core/user.h>
+#include <core/net.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

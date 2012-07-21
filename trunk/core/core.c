@@ -31,12 +31,17 @@
 #include <config/release.h>
 #include <config/enable_nls.h>
 #include <config/localedir.h>
+
 #include <config/ag_threads.h>
+#include <config/ag_network.h>
+
 #include <config/have_gettimeofday.h>
 #include <config/have_select.h>
 #include <config/have_cygwin.h>
 #include <config/have_clock_gettime.h>
 #include <config/have_db4.h>
+#include <config/have_getaddrinfo.h>
+#include <config/have_getpwuid.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -88,6 +93,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitError();
 	AG_GetCPUInfo(&agCPU);
 
+	/* Initialize the thread resources. */
 #ifdef AG_THREADS
 #ifdef _XBOX
 	ptw32_processInitialize();
@@ -103,6 +109,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_MutexInitRecursive(&agDSOLock);
 #endif /* AG_THREADS */
 
+	/* Register the object classes from ag_core. */
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
 	AG_RegisterClass(&agDbClass);
@@ -111,6 +118,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_RegisterClass(&agDbBtreeClass);
 #endif
 
+	/* Select the timekeeping functions. */
 #if defined(HAVE_GETTIMEOFDAY) && !defined(HAVE_CYGWIN)
 # if defined(AG_THREADS) && defined(HAVE_CLOCK_GETTIME)
 	AG_SetTimeOps(&agTimeOps_condwait);
@@ -123,6 +131,24 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_win32);
 #else
 	AG_SetTimeOps(&agTimeOps_dummy);
+#endif
+	
+	/* Select the network access routines. */
+#ifdef AG_NETWORK
+# if defined(_WIN32)
+	AG_SetNetOps(&agNetOps_win32);
+# elif defined(HAVE_GETADDRINFO)
+	AG_SetNetOps(&agNetOps_bsd);
+# endif
+#else
+	AG_SetNetOps(&agNetOps_dummy);
+#endif
+	
+	/* Select the user account interface routines. */
+#ifdef HAVE_GETPWUID
+	AG_SetUserOps(&agUserOps_posix);
+#else
+	AG_SetUserOps(&agUserOps_dummy);
 #endif
 
 	AG_InitTimeouts();
