@@ -374,20 +374,20 @@ echo "    --with-libtool            Specify path to libtool [auto-detect]"
 echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
-echo "Options global to Agar:"
+echo "Global Agar options:"
 echo "    --enable-<library>        Build libraries (gui|vg|rg|math|dev) [all]"
 echo "    --enable-debug            General debugging [no]"
 echo "    --enable-legacy           Deprecated interfaces [yes]"
-echo "    --enable-network          Network I/O support in Agar-Core [check]"
-echo "    --enable-objdebug         Object system debugging [no]"
 echo "    --enable-threads          Thread safety [check]"
 echo "    --enable-warnings         Suggested compiler warnings [no]"
 echo "    --with-pthreads[=PREFIX]  POSIX Threads support [check]"
-echo "    --with-iconv[=PREFIX]     Character set conversion [check]"
 echo ""
-echo "Options specific to AG_Db(3) interface:"
-echo "    --with-db4[=PREFIX]       Enable Berkeley DB backend [check]"
-echo "    --with-mysql[=PREFIX]     Enable MySQL backend [check]"
+echo "Options specific to Core library:"
+echo "    --enable-network          Network interface [check]"
+echo "    --enable-objdebug         Object system debugging [no]"
+echo "    --with-db4[=PREFIX]       Berkeley DB backend [check]"
+echo "    --with-mysql[=PREFIX]     MySQL backend [check]"
+echo "    --with-iconv[=PREFIX]     Character set conversion [check]"
 echo ""
 echo "Options specific to Math library:"
 echo "    --with-altivec            AltiVec optimizations [check]"
@@ -916,502 +916,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_IEEE754
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking aligned attribute..."
-$ECHO_N "checking aligned attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE" ]; then
-		HAVE_ALIGNED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int main(int argc, char *argv[])
-{
-	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_ALIGNED_ATTRIBUTE="yes"
-echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > $BLD/include/agar/config/have_aligned_attribute.h
-echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_aligned_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_aligned_attribute.h
-echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_ALIGNED_ATTRIBUTE="no"
-echo "#undef HAVE_ALIGNED_ATTRIBUTE" >$BLD/include/agar/config/have_aligned_attribute.h
-echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_ALIGNED_ATTRIBUTE" > ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking bounded attribute..."
-$ECHO_N "checking bounded attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE" ]; then
-		HAVE_BOUNDED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-void foo(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
-void foo(char *a, int c) { }
-int main(int argc, char *argv[])
-{
-	char buf[32];
-	foo(buf, sizeof(buf));
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_BOUNDED_ATTRIBUTE="yes"
-echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > $BLD/include/agar/config/have_bounded_attribute.h
-echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_bounded_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_bounded_attribute.h
-echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_BOUNDED_ATTRIBUTE="no"
-echo "#undef HAVE_BOUNDED_ATTRIBUTE" >$BLD/include/agar/config/have_bounded_attribute.h
-echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_BOUNDED_ATTRIBUTE" > ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking const attribute..."
-$ECHO_N "checking const attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_CONST_ATTRIBUTE" ]; then
-		HAVE_CONST_ATTRIBUTE=`cat ${cache}/ctest-HAVE_CONST_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int foo(int) __attribute__ ((const));
-int foo(int x) { return (x*x); }
-int main(int argc, char *argv[])
-{
-	int x = foo(1);
-	return (x);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_CONST_ATTRIBUTE="yes"
-echo "#ifndef HAVE_CONST_ATTRIBUTE" > $BLD/include/agar/config/have_const_attribute.h
-echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> $BLD/include/agar/config/have_const_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_const_attribute.h
-echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_CONST_ATTRIBUTE="no"
-echo "#undef HAVE_CONST_ATTRIBUTE" >$BLD/include/agar/config/have_const_attribute.h
-echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_CONST_ATTRIBUTE" > ${cache}/ctest-HAVE_CONST_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking deprecated attribute..."
-$ECHO_N "checking deprecated attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE" ]; then
-		HAVE_DEPRECATED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-void foo(void) __attribute__ ((deprecated));
-void foo(void) { }
-
-int main(int argc, char *argv[])
-{
-/*	foo(); */
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_DEPRECATED_ATTRIBUTE="yes"
-echo "#ifndef HAVE_DEPRECATED_ATTRIBUTE" > $BLD/include/agar/config/have_deprecated_attribute.h
-echo "#define HAVE_DEPRECATED_ATTRIBUTE \"$HAVE_DEPRECATED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_deprecated_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_deprecated_attribute.h
-echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_DEPRECATED_ATTRIBUTE="no"
-echo "#undef HAVE_DEPRECATED_ATTRIBUTE" >$BLD/include/agar/config/have_deprecated_attribute.h
-echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_DEPRECATED_ATTRIBUTE" > ${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking format attribute..."
-$ECHO_N "checking format attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_FORMAT_ATTRIBUTE" ]; then
-		HAVE_FORMAT_ATTRIBUTE=`cat ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <stdarg.h>
-void foo1(char *, ...)
-     __attribute__((__format__ (printf, 1, 2)));
-void foo2(char *, ...)
-     __attribute__((__format__ (__printf__, 1, 2)))
-     __attribute__((__nonnull__ (1)));
-void foo1(char *a, ...) {}
-void foo2(char *a, ...) {}
-int main(int argc, char *argv[])
-{
-	foo1("foo %s", "bar");
-	foo2("foo %d", 1);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_FORMAT_ATTRIBUTE="yes"
-echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > $BLD/include/agar/config/have_format_attribute.h
-echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_format_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_format_attribute.h
-echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_FORMAT_ATTRIBUTE="no"
-echo "#undef HAVE_FORMAT_ATTRIBUTE" >$BLD/include/agar/config/have_format_attribute.h
-echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_FORMAT_ATTRIBUTE" > ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking nonnull attribute..."
-$ECHO_N "checking nonnull attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_NONNULL_ATTRIBUTE" ]; then
-		HAVE_NONNULL_ATTRIBUTE=`cat ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-void foo(char *) __attribute__((__nonnull__ (1)));
-void foo(char *a) { }
-int main(int argc, char *argv[])
-{
-	foo("foo");
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_NONNULL_ATTRIBUTE="yes"
-echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > $BLD/include/agar/config/have_nonnull_attribute.h
-echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> $BLD/include/agar/config/have_nonnull_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_nonnull_attribute.h
-echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_NONNULL_ATTRIBUTE="no"
-echo "#undef HAVE_NONNULL_ATTRIBUTE" >$BLD/include/agar/config/have_nonnull_attribute.h
-echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_NONNULL_ATTRIBUTE" > ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking noreturn attribute..."
-$ECHO_N "checking noreturn attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_NORETURN_ATTRIBUTE" ]; then
-		HAVE_NORETURN_ATTRIBUTE=`cat ${cache}/ctest-HAVE_NORETURN_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NORETURN_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <unistd.h>
-#include <stdlib.h>
-void foo(void) __attribute__ ((noreturn));
-void foo(void) { _exit(0); }
-int main(int argc, char *argv[])
-{
-	foo();
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_NORETURN_ATTRIBUTE="yes"
-echo "#ifndef HAVE_NORETURN_ATTRIBUTE" > $BLD/include/agar/config/have_noreturn_attribute.h
-echo "#define HAVE_NORETURN_ATTRIBUTE \"$HAVE_NORETURN_ATTRIBUTE\"" >> $BLD/include/agar/config/have_noreturn_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_noreturn_attribute.h
-echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_NORETURN_ATTRIBUTE="no"
-echo "#undef HAVE_NORETURN_ATTRIBUTE" >$BLD/include/agar/config/have_noreturn_attribute.h
-echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_NORETURN_ATTRIBUTE" > ${cache}/ctest-HAVE_NORETURN_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NORETURN_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking packed attribute..."
-$ECHO_N "checking packed attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_PACKED_ATTRIBUTE" ]; then
-		HAVE_PACKED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_PACKED_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int main(int argc, char *argv[])
-{
-	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_PACKED_ATTRIBUTE="yes"
-echo "#ifndef HAVE_PACKED_ATTRIBUTE" > $BLD/include/agar/config/have_packed_attribute.h
-echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_packed_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_packed_attribute.h
-echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_PACKED_ATTRIBUTE="no"
-echo "#undef HAVE_PACKED_ATTRIBUTE" >$BLD/include/agar/config/have_packed_attribute.h
-echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_PACKED_ATTRIBUTE" > ${cache}/ctest-HAVE_PACKED_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking pure attribute..."
-$ECHO_N "checking pure attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_PURE_ATTRIBUTE" ]; then
-		HAVE_PURE_ATTRIBUTE=`cat ${cache}/ctest-HAVE_PURE_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PURE_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int foo(int) __attribute__ ((pure));
-int foo(int x) { return (x*x); }
-int main(int argc, char *argv[])
-{
-	int x = foo(1);
-	return (x);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_PURE_ATTRIBUTE="yes"
-echo "#ifndef HAVE_PURE_ATTRIBUTE" > $BLD/include/agar/config/have_pure_attribute.h
-echo "#define HAVE_PURE_ATTRIBUTE \"$HAVE_PURE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_pure_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_pure_attribute.h
-echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_PURE_ATTRIBUTE="no"
-echo "#undef HAVE_PURE_ATTRIBUTE" >$BLD/include/agar/config/have_pure_attribute.h
-echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_PURE_ATTRIBUTE" > ${cache}/ctest-HAVE_PURE_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PURE_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
-$ECHO_N "checking warn_unused_result attribute..."
-$ECHO_N "checking warn_unused_result attribute..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" ]; then
-		HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=`cat ${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-int foo(void) __attribute__ ((warn_unused_result));
-int foo(void) { return (1); }
-int main(int argc, char *argv[])
-{
-	int rv = foo();
-	return (rv);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="yes"
-echo "#ifndef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "#define HAVE_WARN_UNUSED_RESULT_ATTRIBUTE \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "#endif" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="no"
-echo "#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >$BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > ${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
-fi
-rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for long double..."
 $ECHO_N "checking for long double..." >> config.log
 MK_CACHED="No"
@@ -1581,6 +1085,505 @@ echo "no" >> config.log
 fi;
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 fi;
+$ECHO_N "checking for aligned attribute..."
+$ECHO_N "checking for aligned attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE" ]; then
+		HAVE_ALIGNED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="yes"
+echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > $BLD/include/agar/config/have_aligned_attribute.h
+echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_aligned_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="no"
+echo "#undef HAVE_ALIGNED_ATTRIBUTE" >$BLD/include/agar/config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALIGNED_ATTRIBUTE" > ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for __bounded__ attribute..."
+$ECHO_N "checking for __bounded__ attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE" ]; then
+		HAVE_BOUNDED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+void foostring(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
+void foostring(char *a, int c) { }
+void foobuffer(void *, int) __attribute__ ((__bounded__(__buffer__,1,2)));
+void foobuffer(void *a, int c) { }
+int main(void)
+{
+	char buf[32];
+	foostring(buf, sizeof(buf));
+	foobuffer(buf, sizeof(buf));
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_BOUNDED_ATTRIBUTE="yes"
+echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > $BLD/include/agar/config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_bounded_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_BOUNDED_ATTRIBUTE="no"
+echo "#undef HAVE_BOUNDED_ATTRIBUTE" >$BLD/include/agar/config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_BOUNDED_ATTRIBUTE" > ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for const attribute..."
+$ECHO_N "checking for const attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CONST_ATTRIBUTE" ]; then
+		HAVE_CONST_ATTRIBUTE=`cat ${cache}/ctest-HAVE_CONST_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int foo(int) __attribute__ ((const));
+int foo(int x) { return (x*x); }
+int main(int argc, char *argv[])
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CONST_ATTRIBUTE="yes"
+echo "#ifndef HAVE_CONST_ATTRIBUTE" > $BLD/include/agar/config/have_const_attribute.h
+echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> $BLD/include/agar/config/have_const_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CONST_ATTRIBUTE="no"
+echo "#undef HAVE_CONST_ATTRIBUTE" >$BLD/include/agar/config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CONST_ATTRIBUTE" > ${cache}/ctest-HAVE_CONST_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for deprecated attribute..."
+$ECHO_N "checking for deprecated attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE" ]; then
+		HAVE_DEPRECATED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+void foo(void) __attribute__ ((deprecated));
+void foo(void) { }
+
+int main(int argc, char *argv[])
+{
+/*	foo(); */
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_DEPRECATED_ATTRIBUTE="yes"
+echo "#ifndef HAVE_DEPRECATED_ATTRIBUTE" > $BLD/include/agar/config/have_deprecated_attribute.h
+echo "#define HAVE_DEPRECATED_ATTRIBUTE \"$HAVE_DEPRECATED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_deprecated_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_DEPRECATED_ATTRIBUTE="no"
+echo "#undef HAVE_DEPRECATED_ATTRIBUTE" >$BLD/include/agar/config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DEPRECATED_ATTRIBUTE" > ${cache}/ctest-HAVE_DEPRECATED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for __format__ attribute..."
+$ECHO_N "checking for __format__ attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_FORMAT_ATTRIBUTE" ]; then
+		HAVE_FORMAT_ATTRIBUTE=`cat ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdarg.h>
+void foo1(char *, ...)
+     __attribute__((__format__ (printf, 1, 2)));
+void foo2(char *, ...)
+     __attribute__((__format__ (__printf__, 1, 2)))
+     __attribute__((__nonnull__ (1)));
+void foo1(char *a, ...) {}
+void foo2(char *a, ...) {}
+int main(int argc, char *argv[])
+{
+	foo1("foo %s", "bar");
+	foo2("foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_FORMAT_ATTRIBUTE="yes"
+echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > $BLD/include/agar/config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_format_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_FORMAT_ATTRIBUTE="no"
+echo "#undef HAVE_FORMAT_ATTRIBUTE" >$BLD/include/agar/config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_FORMAT_ATTRIBUTE" > ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for __nonnull__ attribute..."
+$ECHO_N "checking for __nonnull__ attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_NONNULL_ATTRIBUTE" ]; then
+		HAVE_NONNULL_ATTRIBUTE=`cat ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+void foo(char *) __attribute__((__nonnull__ (1)));
+void foo(char *a) { }
+int main(int argc, char *argv[])
+{
+	foo("foo");
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_NONNULL_ATTRIBUTE="yes"
+echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > $BLD/include/agar/config/have_nonnull_attribute.h
+echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> $BLD/include/agar/config/have_nonnull_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_NONNULL_ATTRIBUTE="no"
+echo "#undef HAVE_NONNULL_ATTRIBUTE" >$BLD/include/agar/config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_NONNULL_ATTRIBUTE" > ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for noreturn attribute..."
+$ECHO_N "checking for noreturn attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_NORETURN_ATTRIBUTE" ]; then
+		HAVE_NORETURN_ATTRIBUTE=`cat ${cache}/ctest-HAVE_NORETURN_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NORETURN_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <unistd.h>
+#include <stdlib.h>
+void foo(void) __attribute__ ((noreturn));
+void foo(void) { _exit(0); }
+int main(int argc, char *argv[])
+{
+	foo();
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_NORETURN_ATTRIBUTE="yes"
+echo "#ifndef HAVE_NORETURN_ATTRIBUTE" > $BLD/include/agar/config/have_noreturn_attribute.h
+echo "#define HAVE_NORETURN_ATTRIBUTE \"$HAVE_NORETURN_ATTRIBUTE\"" >> $BLD/include/agar/config/have_noreturn_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_noreturn_attribute.h
+echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_NORETURN_ATTRIBUTE="no"
+echo "#undef HAVE_NORETURN_ATTRIBUTE" >$BLD/include/agar/config/have_noreturn_attribute.h
+echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_NORETURN_ATTRIBUTE" > ${cache}/ctest-HAVE_NORETURN_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NORETURN_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for packed attribute..."
+$ECHO_N "checking for packed attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PACKED_ATTRIBUTE" ]; then
+		HAVE_PACKED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_PACKED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PACKED_ATTRIBUTE="yes"
+echo "#ifndef HAVE_PACKED_ATTRIBUTE" > $BLD/include/agar/config/have_packed_attribute.h
+echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_packed_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PACKED_ATTRIBUTE="no"
+echo "#undef HAVE_PACKED_ATTRIBUTE" >$BLD/include/agar/config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PACKED_ATTRIBUTE" > ${cache}/ctest-HAVE_PACKED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for pure attribute..."
+$ECHO_N "checking for pure attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PURE_ATTRIBUTE" ]; then
+		HAVE_PURE_ATTRIBUTE=`cat ${cache}/ctest-HAVE_PURE_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PURE_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int foo(int) __attribute__ ((pure));
+int foo(int x) { return (x*x); }
+int main(int argc, char *argv[])
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PURE_ATTRIBUTE="yes"
+echo "#ifndef HAVE_PURE_ATTRIBUTE" > $BLD/include/agar/config/have_pure_attribute.h
+echo "#define HAVE_PURE_ATTRIBUTE \"$HAVE_PURE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_pure_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_pure_attribute.h
+echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PURE_ATTRIBUTE="no"
+echo "#undef HAVE_PURE_ATTRIBUTE" >$BLD/include/agar/config/have_pure_attribute.h
+echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PURE_ATTRIBUTE" > ${cache}/ctest-HAVE_PURE_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PURE_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for warn_unused_result attribute..."
+$ECHO_N "checking for warn_unused_result attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" ]; then
+		HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=`cat ${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int foo(void) __attribute__ ((warn_unused_result));
+int foo(void) { return (1); }
+int main(int argc, char *argv[])
+{
+	int rv = foo();
+	return (rv);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="yes"
+echo "#ifndef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "#define HAVE_WARN_UNUSED_RESULT_ATTRIBUTE \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE="no"
+echo "#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >$BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" > ${cache}/ctest-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for an Objective-C compiler..."
 $ECHO_N "checking for an Objective-C compiler..." >> config.log
 if [ "$OBJC" = "" ]; then
@@ -2263,7 +2266,7 @@ main(int argc, char *argv[])
 	uid_t uid = 0;
 
 	pwd = getpwuid(uid);
-	return (pwd != NULL);
+	return (pwd != NULL && pwd->pw_gecos != NULL && pwd->pw_class != NULL);
 }
 
 EOT
@@ -2292,6 +2295,73 @@ fi;
 if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETPWUID" > ${cache}/ctest-HAVE_GETPWUID
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWUID
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the getpwnam_r() interface..."
+$ECHO_N "checking for the getpwnam_r() interface..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETPWNAM_R" ]; then
+		HAVE_GETPWNAM_R=`cat ${cache}/ctest-HAVE_GETPWNAM_R`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETPWNAM_R`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct passwd pw, *res;
+	char *buf;
+	size_t bufSize;
+	int rv;
+
+	bufSize = sysconf(_SC_GETPW_R_SIZE_MAX);
+	if (bufSize == -1) { bufSize = 16384; }
+	if ((buf = malloc(bufSize)) == NULL) { return (1); }
+
+	rv = getpwnam_r("foo", &pw, buf, bufSize, &res);
+	if (res == NULL) {
+		return (rv == 0);
+	}
+	return (pw.pw_class != NULL && pw.pw_gecos != NULL && pw.pw_dir != NULL);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETPWNAM_R="yes"
+echo "#ifndef HAVE_GETPWNAM_R" > $BLD/include/agar/config/have_getpwnam_r.h
+echo "#define HAVE_GETPWNAM_R \"$HAVE_GETPWNAM_R\"" >> $BLD/include/agar/config/have_getpwnam_r.h
+echo "#endif" >> $BLD/include/agar/config/have_getpwnam_r.h
+echo "hdefs[\"HAVE_GETPWNAM_R\"] = \"$HAVE_GETPWNAM_R\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETPWNAM_R="no"
+echo "#undef HAVE_GETPWNAM_R" >$BLD/include/agar/config/have_getpwnam_r.h
+echo "hdefs[\"HAVE_GETPWNAM_R\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETPWNAM_R" > ${cache}/ctest-HAVE_GETPWNAM_R
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWNAM_R
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getuid() function..."
@@ -6528,34 +6598,401 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETADDRINFO
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-	if [ "${HAVE_GETADDRINFO}" = "yes" ]
- then
+$ECHO_N "checking for the setsockopt() interface..."
+$ECHO_N "checking for the setsockopt() interface..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SETSOCKOPT" ]; then
+		HAVE_SETSOCKOPT=`cat ${cache}/ctest-HAVE_SETSOCKOPT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SETSOCKOPT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct timeval tv;
+	socklen_t tvLen = sizeof(tv);
+	tv.tv_sec = 1; tv.tv_usec = 0;
+	rv = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, tvLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SETSOCKOPT="yes"
+echo "#ifndef HAVE_SETSOCKOPT" > $BLD/include/agar/config/have_setsockopt.h
+echo "#define HAVE_SETSOCKOPT \"$HAVE_SETSOCKOPT\"" >> $BLD/include/agar/config/have_setsockopt.h
+echo "#endif" >> $BLD/include/agar/config/have_setsockopt.h
+echo "hdefs[\"HAVE_SETSOCKOPT\"] = \"$HAVE_SETSOCKOPT\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SETSOCKOPT="no"
+echo "#undef HAVE_SETSOCKOPT" >$BLD/include/agar/config/have_setsockopt.h
+echo "hdefs[\"HAVE_SETSOCKOPT\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SETSOCKOPT" > ${cache}/ctest-HAVE_SETSOCKOPT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SETSOCKOPT
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SETSOCKOPT}" = "yes" ]; then
+$ECHO_N "checking for SO_OOBINLINE..."
+$ECHO_N "checking for SO_OOBINLINE..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_OOBINLINE" ]; then
+		HAVE_SO_OOBINLINE=`cat ${cache}/ctest-HAVE_SO_OOBINLINE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_OOBINLINE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_OOBINLINE, &val, valLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_OOBINLINE="yes"
+echo "#ifndef HAVE_SO_OOBINLINE" > $BLD/include/agar/config/have_so_oobinline.h
+echo "#define HAVE_SO_OOBINLINE \"$HAVE_SO_OOBINLINE\"" >> $BLD/include/agar/config/have_so_oobinline.h
+echo "#endif" >> $BLD/include/agar/config/have_so_oobinline.h
+echo "hdefs[\"HAVE_SO_OOBINLINE\"] = \"$HAVE_SO_OOBINLINE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_OOBINLINE="no"
+echo "#undef HAVE_SO_OOBINLINE" >$BLD/include/agar/config/have_so_oobinline.h
+echo "hdefs[\"HAVE_SO_OOBINLINE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_OOBINLINE" > ${cache}/ctest-HAVE_SO_OOBINLINE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_OOBINLINE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for SO_REUSEPORT..."
+$ECHO_N "checking for SO_REUSEPORT..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_REUSEPORT" ]; then
+		HAVE_SO_REUSEPORT=`cat ${cache}/ctest-HAVE_SO_REUSEPORT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_REUSEPORT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &val, valLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_REUSEPORT="yes"
+echo "#ifndef HAVE_SO_REUSEPORT" > $BLD/include/agar/config/have_so_reuseport.h
+echo "#define HAVE_SO_REUSEPORT \"$HAVE_SO_REUSEPORT\"" >> $BLD/include/agar/config/have_so_reuseport.h
+echo "#endif" >> $BLD/include/agar/config/have_so_reuseport.h
+echo "hdefs[\"HAVE_SO_REUSEPORT\"] = \"$HAVE_SO_REUSEPORT\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_REUSEPORT="no"
+echo "#undef HAVE_SO_REUSEPORT" >$BLD/include/agar/config/have_so_reuseport.h
+echo "hdefs[\"HAVE_SO_REUSEPORT\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_REUSEPORT" > ${cache}/ctest-HAVE_SO_REUSEPORT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_REUSEPORT
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for SO_TIMESTAMP..."
+$ECHO_N "checking for SO_TIMESTAMP..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_TIMESTAMP" ]; then
+		HAVE_SO_TIMESTAMP=`cat ${cache}/ctest-HAVE_SO_TIMESTAMP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_TIMESTAMP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &val, valLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_TIMESTAMP="yes"
+echo "#ifndef HAVE_SO_TIMESTAMP" > $BLD/include/agar/config/have_so_timestamp.h
+echo "#define HAVE_SO_TIMESTAMP \"$HAVE_SO_TIMESTAMP\"" >> $BLD/include/agar/config/have_so_timestamp.h
+echo "#endif" >> $BLD/include/agar/config/have_so_timestamp.h
+echo "hdefs[\"HAVE_SO_TIMESTAMP\"] = \"$HAVE_SO_TIMESTAMP\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_TIMESTAMP="no"
+echo "#undef HAVE_SO_TIMESTAMP" >$BLD/include/agar/config/have_so_timestamp.h
+echo "hdefs[\"HAVE_SO_TIMESTAMP\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_TIMESTAMP" > ${cache}/ctest-HAVE_SO_TIMESTAMP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_TIMESTAMP
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for SO_NOSIGPIPE..."
+$ECHO_N "checking for SO_NOSIGPIPE..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_NOSIGPIPE" ]; then
+		HAVE_SO_NOSIGPIPE=`cat ${cache}/ctest-HAVE_SO_NOSIGPIPE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_NOSIGPIPE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &val, valLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_NOSIGPIPE="yes"
+echo "#ifndef HAVE_SO_NOSIGPIPE" > $BLD/include/agar/config/have_so_nosigpipe.h
+echo "#define HAVE_SO_NOSIGPIPE \"$HAVE_SO_NOSIGPIPE\"" >> $BLD/include/agar/config/have_so_nosigpipe.h
+echo "#endif" >> $BLD/include/agar/config/have_so_nosigpipe.h
+echo "hdefs[\"HAVE_SO_NOSIGPIPE\"] = \"$HAVE_SO_NOSIGPIPE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_NOSIGPIPE="no"
+echo "#undef HAVE_SO_NOSIGPIPE" >$BLD/include/agar/config/have_so_nosigpipe.h
+echo "hdefs[\"HAVE_SO_NOSIGPIPE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_NOSIGPIPE" > ${cache}/ctest-HAVE_SO_NOSIGPIPE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_NOSIGPIPE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for SO_LINGER..."
+$ECHO_N "checking for SO_LINGER..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_LINGER" ]; then
+		HAVE_SO_LINGER=`cat ${cache}/ctest-HAVE_SO_LINGER`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_LINGER`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct linger ling;
+	socklen_t lingLen = sizeof(ling);
+	ling.l_onoff = 1; ling.l_linger = 1;
+	rv = setsockopt(fd, SOL_SOCKET, SO_LINGER, &ling, lingLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_LINGER="yes"
+echo "#ifndef HAVE_SO_LINGER" > $BLD/include/agar/config/have_so_linger.h
+echo "#define HAVE_SO_LINGER \"$HAVE_SO_LINGER\"" >> $BLD/include/agar/config/have_so_linger.h
+echo "#endif" >> $BLD/include/agar/config/have_so_linger.h
+echo "hdefs[\"HAVE_SO_LINGER\"] = \"$HAVE_SO_LINGER\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_LINGER="no"
+echo "#undef HAVE_SO_LINGER" >$BLD/include/agar/config/have_so_linger.h
+echo "hdefs[\"HAVE_SO_LINGER\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_LINGER" > ${cache}/ctest-HAVE_SO_LINGER
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_LINGER
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for SO_ACCEPTFILTER..."
+$ECHO_N "checking for SO_ACCEPTFILTER..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SO_ACCEPTFILTER" ]; then
+		HAVE_SO_ACCEPTFILTER=`cat ${cache}/ctest-HAVE_SO_ACCEPTFILTER`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SO_ACCEPTFILTER`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct accept_filter_arg afa;
+	socklen_t afaLen = sizeof(afa);
+	afa.af_name[0] = '\0';
+	afa.af_arg[0] = '\0';
+	rv = setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, afaLen);
+	return (rv != 0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SO_ACCEPTFILTER="yes"
+echo "#ifndef HAVE_SO_ACCEPTFILTER" > $BLD/include/agar/config/have_so_acceptfilter.h
+echo "#define HAVE_SO_ACCEPTFILTER \"$HAVE_SO_ACCEPTFILTER\"" >> $BLD/include/agar/config/have_so_acceptfilter.h
+echo "#endif" >> $BLD/include/agar/config/have_so_acceptfilter.h
+echo "hdefs[\"HAVE_SO_ACCEPTFILTER\"] = \"$HAVE_SO_ACCEPTFILTER\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SO_ACCEPTFILTER="no"
+echo "#undef HAVE_SO_ACCEPTFILTER" >$BLD/include/agar/config/have_so_acceptfilter.h
+echo "hdefs[\"HAVE_SO_ACCEPTFILTER\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SO_ACCEPTFILTER" > ${cache}/ctest-HAVE_SO_ACCEPTFILTER
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SO_ACCEPTFILTER
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+fi;
 HAVE_NETWORK="yes"
 AG_NETWORK="yes"
 echo "#ifndef AG_NETWORK" > $BLD/include/agar/config/ag_network.h
 echo "#define AG_NETWORK \"$AG_NETWORK\"" >> $BLD/include/agar/config/ag_network.h
 echo "#endif" >> $BLD/include/agar/config/ag_network.h
 echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
-	else
-		if [ "${enable_network}" = "yes" ]
- then
-			echo "*"
-			echo "* --enable-network was requested, but this system"
-			echo "* does not seem to support getaddrinfo()."
-			echo "*"
-			exit 1
-		else
-HAVE_NETWORK="no"
-echo "#undef AG_NETWORK" >$BLD/include/agar/config/ag_network.h
-echo "hdefs[\"AG_NETWORK\"] = nil" >>configure.lua
-		fi
-	fi
 else
 HAVE_NETWORK="no"
 echo "#undef AG_NETWORK" >$BLD/include/agar/config/ag_network.h
 echo "hdefs[\"AG_NETWORK\"] = nil" >>configure.lua
 echo "#undef HAVE_GETADDRINFO" >$BLD/include/agar/config/have_getaddrinfo.h
 echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
+echo "#undef HAVE_SETSOCKOPT" >$BLD/include/agar/config/have_setsockopt.h
+echo "hdefs[\"HAVE_SETSOCKOPT\"] = nil" >>configure.lua
 fi
 	
 if [ "${with_db4}" != "no" ]
@@ -9456,6 +9893,25 @@ if [ "${HAVE_MYSQL}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} db_mysql.c"
 fi
+if [ "${HAVE_NETWORK}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} net.c net_dummy.c"
+	case "${host}" in
+	*-*-cygwin* | *-*-mingw32*)
+SRCS_CORE="${SRCS_CORE} net_win32.c"
+		;;
+	*)
+		if [ "${HAVE_GETADDRINFO}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} net_bsd.c"
+		fi
+		;;
+	esac
+fi
+if [ "${HAVE_GETPWUID}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} user_posix.c"
+fi
 SRCS_GUI=""
 if [ "${HAVE_SDL}" = "yes" ]
  then
@@ -10169,10 +10625,10 @@ echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
 echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
-echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
 echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
 echo "HAVE_NETWORK=$HAVE_NETWORK" >>Makefile.config
