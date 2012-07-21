@@ -36,7 +36,9 @@
 void
 AG_WriteColor(AG_DataSource *ds, AG_Color C)
 {
-	AG_WriteType(ds, AG_SOURCE_COLOR_RGBA);
+	if (ds->debug) {
+		AG_WriteTypeCode(ds, AG_SOURCE_COLOR_RGBA);
+	}
 	AG_WriteUint8(ds, C.r);
 	AG_WriteUint8(ds, C.g);
 	AG_WriteUint8(ds, C.b);
@@ -48,7 +50,9 @@ AG_ReadColor(AG_DataSource *ds)
 {
 	AG_Color C;
 
-	AG_CHECK_TYPE(ds, AG_SOURCE_COLOR_RGBA, AG_ColorRGB(255,0,0));
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_COLOR_RGBA) == -1) {
+		return AG_ColorRGB(255,0,0);
+	}
 	C.r = AG_ReadUint8(ds);
 	C.g = AG_ReadUint8(ds);
 	C.b = AG_ReadUint8(ds);

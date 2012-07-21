@@ -183,7 +183,7 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 		prop->data.colormap.size = AG_ReadUint32(buf);
 		prop->data.colormap.data = Malloc(prop->data.colormap.size*3);
 		if (AG_Read(buf, prop->data.colormap.data,
-		    prop->data.colormap.size, 3) != 0) {
+		    prop->data.colormap.size*3) != 0) {
 			AG_FatalError(NULL);
 		}
 		break;
@@ -202,7 +202,7 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 		prop->data.compression = (enum xcf_compression)c;
 		break;
 	case PROP_COLOR:			       /* Color of a channel */
-		if (AG_Read(buf, &prop->data.color, sizeof(Uint8), 3) != 0)
+		if (AG_Read(buf, &prop->data.color, sizeof(Uint8)*3) != 0)
 			AG_FatalError(NULL);
 		break;
 	case PROP_GUIDES:			                  /* Guides */
@@ -226,7 +226,7 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 		prop->data.parasite.size = AG_ReadUint32(buf);
 		prop->data.parasite.data = Malloc(prop->data.parasite.size);
 		if (AG_Read(buf, prop->data.parasite.data,
-		    prop->data.parasite.size, 1) != 0) {
+		    prop->data.parasite.size) != 0) {
 			AG_FatalError(NULL);
 		}
 		Free(prop->data.parasite.name);
@@ -250,7 +250,7 @@ ReadTileFlat(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 	Uint8 *load;
 
 	load = Malloc(len);
-	if (AG_Read(buf, load, len, 1) != 0) {
+	if (AG_Read(buf, load, len) != 0) {
 		Free(load);
 		return (NULL);
 	}
@@ -264,7 +264,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 	Uint8 *tilep, *tile, *data;
 
 	tilep = tile = Malloc(len);
-	if (AG_Read(buf, tile, len, 1) != AG_IO_SUCCESS) {
+	if (AG_Read(buf, tile, len) != 0) {
 		AG_SetError("XCF Tile: Read error");
 		return (NULL);
 	}
@@ -579,7 +579,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 
 	AG_Seek(buf, xcf_offs, AG_SEEK_SET);
 
-	if (AG_Read(buf, magic, sizeof(magic), 1) != 0 ||
+	if (AG_Read(buf, magic, sizeof(magic)) != 0 ||
 	    strncmp(magic, "gimp xcf ", 9) != 0) {
 		AG_SetError(_("Not a Gimp XCF file"));
 		return (-1);

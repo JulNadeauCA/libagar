@@ -64,7 +64,7 @@ AG_JPG_FillInputBuffer(j_decompress_ptr cinfo)
 	struct ag_jpg_sourcemgr *sm = (struct ag_jpg_sourcemgr *)cinfo->src;
 	size_t rv;
 
-	if (AG_Read(sm->ds, sm->buffer, 1, sizeof(sm->buffer)) == AG_IO_ERROR) {
+	if (AG_Read(sm->ds, sm->buffer, sizeof(sm->buffer)) != 0) {
 		return (FALSE);
 	}
 	if (sm->ds->rdLast == 0) {			/* Reached EOF */
