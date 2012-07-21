@@ -110,12 +110,12 @@ AG_DenWriteMappings(AG_Den *den)
 
 		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->name));
 
-		if (AG_Write(den->buf, memb->name, sizeof(memb->name), 1) != 0)
+		if (AG_Write(den->buf, memb->name, sizeof(memb->name)) != 0)
 			AG_FatalError(NULL);
 
 		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->lang));
 		
-		if (AG_Write(den->buf, memb->lang, sizeof(memb->lang), 1) != 0)
+		if (AG_Write(den->buf, memb->lang, sizeof(memb->lang)) != 0)
 			AG_FatalError(NULL);
 			
 		AG_WriteUint32(den->buf, (Uint32)memb->offs);
@@ -188,7 +188,7 @@ AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
 		rrv = fread(buf, 1, sizeof(buf), f);
 		size += rrv;
 
-		if (AG_Write(den->buf, buf, rrv, 1) != 0) {
+		if (AG_Write(den->buf, buf, rrv) != 0) {
 			return (-1);
 		}
 	}

@@ -5,8 +5,9 @@
 #include <agar/core/begin.h>
 
 struct ag_event;
+struct ag_net_socket;
 
-/* Datafile byte order */
+/* Data source byte order */
 enum ag_byte_order {
 	AG_BYTEORDER_BE,		/* Big-endian */
 	AG_BYTEORDER_LE			/* Little-endian */
@@ -19,7 +20,10 @@ enum ag_seek_mode {
 	AG_SEEK_END
 };
 
-/* Signatures for type-safety checks */
+/*
+ * Signatures for type-safety checks.
+ * The range 0x41470000 - 0x4147ffff is reserved by Agar.
+ */
 enum ag_data_source_type {
 	AG_SOURCE_UINT8 =	0x41470001,
 	AG_SOURCE_SINT8	=	0x41470002,
@@ -36,44 +40,34 @@ enum ag_data_source_type {
 	AG_SOURCE_COLOR_RGBA =	0x4147000d
 };
 
-typedef enum ag_io_status {
-	AG_IO_SUCCESS = 0,
-	AG_IO_EOF = 1,
-	AG_IO_ERROR = 2,
-	AG_IO_UNAVAIL = 3
-} AG_IOStatus;
-
+/* Generic data source object */
 typedef struct ag_data_source {
 	AG_Mutex lock;				/* Lock on all operations */
 	int debug;
-
 	struct ag_event *errorFn;		/* Exception handler */
-
 	enum ag_byte_order byte_order;		/* Byte order of source */
 	size_t wrLast;				/* Last write count (bytes) */
 	size_t rdLast;				/* Last read count (bytes) */
 	size_t wrTotal;				/* Total write count (bytes) */
 	size_t rdTotal;				/* Total read count (bytes) */
 
-	AG_IOStatus (*read)(struct ag_data_source *, void *, size_t, size_t,
-	                    size_t *);
-	AG_IOStatus (*read_at)(struct ag_data_source *, void *, size_t, size_t,
-	                       off_t, size_t *);
-	AG_IOStatus (*write)(struct ag_data_source *, const void *, size_t,
-	                     size_t, size_t *);
-	AG_IOStatus (*write_at)(struct ag_data_source *, const void *, size_t,
-	                        size_t, off_t, size_t *);
-	off_t       (*tell)(struct ag_data_source *);
-	int         (*seek)(struct ag_data_source *, off_t, enum ag_seek_mode);
-	void        (*close)(struct ag_data_source *);
+	int   (*read)(struct ag_data_source *, void *, size_t, size_t *);
+	int   (*read_at)(struct ag_data_source *, void *, size_t, off_t, size_t *);
+	int   (*write)(struct ag_data_source *, const void *, size_t, size_t *);
+	int   (*write_at)(struct ag_data_source *, const void *, size_t, off_t, size_t *);
+	off_t (*tell)(struct ag_data_source *);
+	int   (*seek)(struct ag_data_source *, off_t, enum ag_seek_mode);
+	void  (*close)(struct ag_data_source *);
 } AG_DataSource;
 
+/* File */
 typedef struct ag_file_source {
 	struct ag_data_source ds;
 	char *path;			/* Open file path (or NULL) */
 	FILE *file;			/* Opened file */
 } AG_FileSource;
 
+/* Memory region */
 typedef struct ag_core_source {
 	struct ag_data_source ds;
 	Uint8 *data;			/* Pointer to data */
@@ -81,6 +75,7 @@ typedef struct ag_core_source {
 	off_t  offs;			/* Current position */
 } AG_CoreSource;
 
+/* Memory region (const) */
 typedef struct ag_const_core_source {
 	struct ag_data_source ds;
 	const Uint8 *data;		/* Pointer to data */
@@ -88,11 +83,18 @@ typedef struct ag_const_core_source {
 	off_t  offs;			/* Current position */
 } AG_ConstCoreSource;
 
+/* Network socket */
+typedef struct ag_net_socket_source {
+	struct ag_data_source ds;
+	struct ag_net_socket *sock;	/* Network socket */
+} AG_NetSocketSource;
+
 #define AG_DATA_SOURCE(ds) ((AG_DataSource *)(ds))
 #define AG_FILE_SOURCE(ds) ((AG_FileSource *)(ds))
 #define AG_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
 #define AG_AUTO_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
 #define AG_CONST_CORE_SOURCE(ds) ((AG_ConstCoreSource *)(ds))
+#define AG_NET_SOCKET_SOURCE(ds) ((AG_NetSocketSource *)(ds))
 
 __BEGIN_DECLS
 void AG_DataSourceInitSubsystem(void);
@@ -110,51 +112,66 @@ void AG_CloseDataSource(AG_DataSource *);
 
 AG_DataSource *AG_OpenFile(const char *, const char *);
 AG_DataSource *AG_OpenFileHandle(FILE *);
-AG_DataSource *AG_OpenCore(void *, size_t);
-AG_DataSource *AG_OpenConstCore(const void *, size_t);
+AG_DataSource *AG_OpenCore(void *, size_t)
+                           BOUNDED_ATTRIBUTE(__buffer__,1,2);
+AG_DataSource *AG_OpenConstCore(const void *, size_t)
+                                BOUNDED_ATTRIBUTE(__buffer__,1,2);
 AG_DataSource *AG_OpenAutoCore(void);
+AG_DataSource *AG_OpenNetSocket(struct ag_net_socket *);
 
-void           AG_CloseFile(AG_DataSource *);
-#define        AG_CloseFileHandle(ds) AG_CloseFile(ds)
-void           AG_CloseCore(AG_DataSource *);
-#define        AG_CloseConstCore(ds) AG_CloseCore(ds)
-void           AG_CloseAutoCore(AG_DataSource *);
+int     AG_Read(AG_DataSource *, void *, size_t)
+                BOUNDED_ATTRIBUTE(__buffer__,2,3);
+int     AG_ReadP(AG_DataSource *, void *, size_t, size_t *)
+                 BOUNDED_ATTRIBUTE(__buffer__,2,3);
+int     AG_ReadAt(AG_DataSource *, void *, size_t, off_t);
+int     AG_ReadAtP(AG_DataSource *, void *, size_t, off_t, size_t *);
 
-AG_IOStatus    AG_Read(AG_DataSource *, void *, size_t, size_t);
-AG_IOStatus    AG_ReadAt(AG_DataSource *, void *, size_t, size_t, off_t);
-AG_IOStatus    AG_Write(AG_DataSource *, const void *, size_t, size_t);
-AG_IOStatus    AG_WriteAt(AG_DataSource *, const void *, size_t, size_t, off_t);
-off_t          AG_Tell(AG_DataSource *);
-int            AG_Seek(AG_DataSource *, off_t, enum ag_seek_mode);
-void           AG_WriteTypeCode(AG_DataSource *, Uint32);
-void           AG_WriteTypeCodeAt(AG_DataSource *, Uint32, off_t);
-int            AG_WriteTypev(AG_DataSource *, Uint32);
-int            AG_CheckTypev(AG_DataSource *, Uint32);
+int     AG_Write(AG_DataSource *, const void *, size_t)
+                 BOUNDED_ATTRIBUTE(__buffer__,2,3);
+int     AG_WriteP(AG_DataSource *, const void *, size_t, size_t *)
+                  BOUNDED_ATTRIBUTE(__buffer__,2,3);
+int     AG_WriteAt(AG_DataSource *, const void *, size_t, off_t);
+int     AG_WriteAtP(AG_DataSource *, const void *, size_t, off_t, size_t *);
+
+void    AG_CloseFile(AG_DataSource *);
+#define AG_CloseFileHandle(ds) AG_CloseFile(ds)
+void    AG_CloseCore(AG_DataSource *);
+#define AG_CloseConstCore(ds) AG_CloseCore(ds)
+void    AG_CloseAutoCore(AG_DataSource *);
+void    AG_CloseNetSocket(AG_DataSource *);
+
+void    AG_WriteTypeCode(AG_DataSource *, Uint32);
+void    AG_WriteTypeCodeAt(AG_DataSource *, Uint32, off_t);
+int     AG_WriteTypeCodeE(AG_DataSource *, Uint32);
+int     AG_CheckTypeCode(AG_DataSource *, Uint32);
 
 #define AG_LockDataSource(ds) AG_MutexLock(&(ds)->lock);
 #define AG_UnlockDataSource(ds) AG_MutexUnlock(&(ds)->lock);
 
-#define AG_WriteType(ds,code)					\
-	do {							\
-		if ((ds)->debug)				\
-			AG_WriteTypeCode((ds),(code));		\
-	} while (0)
+/* For AG_WriteFooAt() */
+#define AG_WRITEAT_DEBUGOFFS(ds,pos) ((ds)->debug ? (pos)+sizeof(Uint32) : (pos))
 
-#define AG_CHECK_TYPE(ds,code,rv)					\
-	do {								\
-		if ((ds)->debug && AG_CheckTypev(ds,code) == -1) {	\
-			return (rv);					\
-		}							\
-	} while (0)
+/* Return current position. */
+static __inline__ off_t
+AG_Tell(AG_DataSource *ds)
+{
+	off_t pos;
+	AG_MutexLock(&ds->lock);
+	pos = (ds->tell != NULL) ? ds->tell(ds) : 0;
+	AG_MutexUnlock(&ds->lock);
+	return (pos);
+}
 
-#define AG_WriteTypeAt(ds,code,off)				\
-	do {							\
-		if ((ds)->debug)				\
-			AG_WriteTypeCodeAt((ds),(code),(off));	\
-	} while (0)
-
-#define AG_TYPE_OFFSET(ds,pos) ((ds)->debug ? (pos)+sizeof(Uint32) : (pos))
-
+/* Seek to position. */
+static __inline__ int
+AG_Seek(AG_DataSource *ds, off_t pos, enum ag_seek_mode mode)
+{
+	int rv;
+	AG_MutexLock(&ds->lock);
+	rv = ds->seek(ds, pos, mode);
+	AG_MutexUnlock(&ds->lock);
+	return (rv);
+}
 __END_DECLS
 
 #include <agar/core/close.h>
