@@ -689,7 +689,7 @@ AG_Write(AG_DataSource *ds, const void *ptr, size_t size)
 	AG_MutexLock(&ds->lock);
 	rv = ds->write(ds, ptr, size, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
-	if (ds->rdLast < size) {
+	if (ds->wrLast < size) {
 		AG_SetError("Short write");
 		rv = -1;
 	}
@@ -718,7 +718,7 @@ AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, off_t pos)
 	AG_MutexLock(&ds->lock);
 	rv = ds->write_at(ds, ptr, size, pos, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
-	if (ds->rdLast < size) {
+	if (ds->wrLast < size) {
 		AG_SetError("Short write");
 		rv = -1;
 	}
