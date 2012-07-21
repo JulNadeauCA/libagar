@@ -11,20 +11,20 @@ VERSION("1.4.2-beta")
 RELEASE("A Mild Breeze Upon The Brow Of The Dead")
 
 # Register options for configure --help
-REGISTER_SECTION("Options global to Agar:")
+REGISTER_SECTION("Global Agar options:")
 REGISTER("--enable-<library>",		"Build libraries (gui|vg|rg|math|dev) [all]")
 REGISTER("--enable-debug",		"General debugging [no]")
 REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
-REGISTER("--enable-network",		"Network I/O support in Agar-Core [check]")
-REGISTER("--enable-objdebug",		"Object system debugging [no]")
 REGISTER("--enable-threads",		"Thread safety [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
-REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
-REGISTER_SECTION("Options specific to AG_Db(3) interface:")
-REGISTER("--with-db4[=PREFIX]",		"Enable Berkeley DB backend [check]")
-REGISTER("--with-mysql[=PREFIX]",	"Enable MySQL backend [check]")
+REGISTER_SECTION("Options specific to Core library:")
+REGISTER("--enable-network",		"Network interface [check]")
+REGISTER("--enable-objdebug",		"Object system debugging [no]")
+REGISTER("--with-db4[=PREFIX]",		"Berkeley DB backend [check]")
+REGISTER("--with-mysql[=PREFIX]",	"MySQL backend [check]")
+REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
 REGISTER_SECTION("Options specific to Math library:")
 REGISTER("--with-altivec",		"AltiVec optimizations [check]")
@@ -61,6 +61,7 @@ HDEFINE(INCLDIR, "$PREFIX/include/agar")
 
 # Tests
 CHECK(cc)
+CHECK(cc_attributes)
 CHECK(objc)
 CHECK(sys_types)
 CHECK(stdlib_h)
@@ -71,6 +72,7 @@ CHECK(progname)
 CHECK(math)
 CHECK(math_c99)
 CHECK(getpwuid)
+CHECK(getpwnam_r)
 CHECK(getuid)
 CHECK(strsep)
 CHECK(asprintf)
@@ -344,28 +346,17 @@ else
 	HUNDEF(HAVE_LIBPNG14)
 fi
 
-# Enable network support if system supports getaddrinfo().
+# Enable network interface unless requested otherwise.
 if [ "${enable_network}" != "no" ]; then
 	CHECK(getaddrinfo)
-	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
-		MDEFINE(HAVE_NETWORK, "yes")
-		HDEFINE(AG_NETWORK, "yes")
-	else
-		if [ "${enable_network}" = "yes" ]; then
-			echo "*"
-			echo "* --enable-network was requested, but this system"
-			echo "* does not seem to support getaddrinfo()."
-			echo "*"
-			exit 1
-		else
-			MDEFINE(HAVE_NETWORK, "no")
-			HUNDEF(AG_NETWORK)
-		fi
-	fi
+	CHECK(sockopts)
+	MDEFINE(HAVE_NETWORK, "yes")
+	HDEFINE(AG_NETWORK, "yes")
 else
 	MDEFINE(HAVE_NETWORK, "no")
 	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO)
+	HUNDEF(HAVE_SETSOCKOPT)
 fi
 	
 # Enable Berkeley DB backend for AG_Db if available.
@@ -692,9 +683,22 @@ fi
 if [ "${HAVE_MYSQL}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "db_mysql.c")
 fi
-#if [ "${HAVE_NETWORK}" = "yes" ]; then
-#	MAPPEND(SRCS_CORE, "net_client.c net_command.c net_fgetln.c net_server.c")
-#fi
+if [ "${HAVE_NETWORK}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "net.c net_dummy.c")
+	case "${host}" in
+	*-*-cygwin* | *-*-mingw32*)
+		MAPPEND(SRCS_CORE, "net_win32.c")
+		;;
+	*)
+		if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
+			MAPPEND(SRCS_CORE, "net_bsd.c")
+		fi
+		;;
+	esac
+fi
+if [ "${HAVE_GETPWUID}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "user_posix.c")
+fi
 
 #
 # Conditionally compiled sources in Agar-GUI
@@ -733,4 +737,3 @@ CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}",
 CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
 CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}", "-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}")
-
