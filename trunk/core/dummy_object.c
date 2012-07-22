@@ -1,21 +1,22 @@
 /*	Public domain	*/
+/*
+ * Implementation of an example Agar object class.
+ */
 
 #include <agar/core.h>
 
-/*
- * Definition of Dummy Agar object class
- */
+/* Optional constructor routine */
+AG_Dummy *
+AG_DummyNew(void)
+{
+	AG_Dummy *d;
 
-typedef struct ag_dummy {
-	struct object _inherit;
-	int foo;
-} AG_Dummy;
-
-extern AG_ObjectClass agDummyClass;
-
-/*
- * Implementation of Dummy Agar object class
- */
+	if ((d = AG_TryMalloc(sizeof(AG_Dummy))) == NULL) {
+		return (NULL);
+	}
+	AG_ObjectInit(d, &mdDummyClass);
+	return (d);
+}
 
 static void
 Init(void *obj)
