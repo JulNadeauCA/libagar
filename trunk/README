@@ -40,10 +40,14 @@ Documentation
   http://libagar.org/man3
 - On Unix-like platforms, the API reference is also available in
   traditional manual page format; see AG_Intro(3).
-- The Agar Wiki (user-contributed tutorials, code snippets), at:
-  http://wiki.libagar.org/
 - The Agar Manual (work in progress), at:
   http://libagar.org/man/.
+
+Installation
+------------
+Step-by-step installation guides are available for various platforms.
+Refer to the "Installation Guides" section of the Agar documentation
+page at: http://libagar.org/docs/.
 
 Availability
 ------------
