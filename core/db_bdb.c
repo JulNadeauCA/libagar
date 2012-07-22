@@ -135,7 +135,17 @@ Exists(void *obj, const AG_Dbt *key)
 	memcpy(dbKey.data, key->data, key->size);
 	dbKey.size = key->size;
 
+#if (DB_VERSION_MAJOR == 4) && (DB_VERSION_MINOR >= 6)
 	rv = db->pDB->exists(db->pDB, NULL, &dbKey, 0);
+#else
+	{
+		DBT dbVal;
+	
+		memset(&dbVal, 0, sizeof(DBT));
+		rv = db->pDB->get(db->pDB, NULL, &dbKey, &dbVal, 0);
+		Free(dbVal.data);
+	}
+#endif
 	Free(dbKey.data);
 	return (rv != DB_NOTFOUND);
 }
