@@ -1,76 +1,10 @@
 
-Prerequisites
--------------
-Starting from version 1.4.0, Agar has no dependencies.
+Agar Installation
+-----------------
 
-Options
--------
-- The OpenGL rendering drivers ("glx", "wgl", "sdlgl") require an OpenGL
-  library.
+Step-by-step installation guides are available for various platforms.
+Please refer to the "Installation Guides" section of the Agar
+documentation page at:
 
-- The SDL rendering drivers ("sdlgl", "sdlfb") require at least SDL 1.2.0
-  (http://www.libsdl.org/).
-
-- The FreeType library (http://www.freetype.org/) is required for high
-  quality font rendering. If compiled without FreeType, Agar will revert
-  to a simple bitmap font engine (not recommended).
-
-- Threads support (--enable-threads) requires a POSIX threads interface
-  which conforms to SUSv2 (recursive mutexes are needed).
-
-Installation under Unix
------------------------
-1) Execute the configure script. See `./configure --help' for options.
-    $ ./configure
-
-2) Compile the libraries and executables.
-    $ make depend all
-    # make install
-
-3) Let the developers know of your success/failure. If you happen to run
-   into trouble, please set a valid return address so we can respond.
-    $ cat config.log | mail -s "compiles fine" compile@libagar.org
-
-Installation under SGI IRIX
----------------------------
-Under IRIX, we recommend using gcc3 (or SGI cc) because of gcc 2.95 issues
-with varargs. There are .tardist packages for gcc3, SDL and freetype
-available from: http://www.nekochan.net/.
-
-Installation under Windows
---------------------------
-Under Windows, Agar can be compiled under Microsoft Visual Studio, Cygwin
-and MSYS. We also provide precompiled DLL and LIB files. See "Platform 
-specific notes" section of the Agar website at http://libagar.org/docs/
-for more information.
-
-Installing only Agar-Core
--------------------------
-Some command-line applications and daemons use the object system implemented
-in Agar-Core, but don't need graphics capabilities. You can compile Agar-Core
-without Agar-GUI and its related dependencies using the "--disable-gui" option
-to ./configure, and compile your application using `agar-core-config`.
-
-Concurrent building
--------------------
-Under Unix-like platforms, it is possible to build Agar outside of the source
-directory. Developers will generally prefer this method, since it results in
-a faster build and does not clutter the source directories with object files.
-
-1) Create the build directory. When available, a memory filesystem is
-   a good location to build from.
-    $ mkdir w-agar
-    $ cd w-agar
-
-2) If configure was already executed from the source directory, make sure
-   to clean it up or the build will fail:
-    $ (cd ~/agar-sources && make cleandir)
-
-3) Run configure from the source directory with "--srcdir". If you are going
-   to be editing the header files, "--includes=link" is also recommended.
-    $ ~/agar-sources/configure --includes=link --srcdir=$HOME/agar-sources [...]
-
-4) Now build the libraries and executables as you normally would.
-    $ make depend && make
-    # make install
+	http://libagar.org/docs/
 
