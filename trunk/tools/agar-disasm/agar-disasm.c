@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 		    (unsigned long)len);
 		goto fail;
 	}
-	if (AG_Read(ds, buf, len, 1) == AG_IO_ERROR)
+	if (AG_Read(ds, buf, len) == -1)
 		goto fail;
 
 	for (p = buf; ;) {
