@@ -35,7 +35,8 @@ SUBDIR=	fixedres \
 	imageloading \
 	audio \
 	compositing \
-	charsets
+	charsets \
+	network
 
 all: all-subdir
 clean: prereq clean-subdir
