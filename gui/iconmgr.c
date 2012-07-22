@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/load_den.h>
 
 #include "gui.h"
 #include "load_xcf.h"

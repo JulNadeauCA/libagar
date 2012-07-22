@@ -3,9 +3,7 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	agar-bench \
 	agar-disasm \
-	agarpaint \
-	dencomp \
-	denuncomp
+	agarpaint
 
 #SUBDIR+=bundlefont
 
