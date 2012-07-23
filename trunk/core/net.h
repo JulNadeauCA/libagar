@@ -109,6 +109,8 @@ typedef struct ag_net_socket {
 	AG_NetAddr *addrRemote;			/* Connected remote address */
 	int fd;					/* File descriptor (if any) */
 	int listenBacklog;			/* For AG_NET_BACKLOG */
+	void *p;				/* User pointer */
+
 	AG_TAILQ_ENTRY(ag_net_socket) sockets;
 	AG_TAILQ_ENTRY(ag_net_socket) read;	/* Poll read results */
 	AG_TAILQ_ENTRY(ag_net_socket) write;	/* Poll write results */

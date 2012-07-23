@@ -60,10 +60,12 @@ AG_NetSocketNew(enum ag_net_addr_family af, enum ag_net_socket_type type,
 	ns->type = type;
 	ns->proto = proto;
 	ns->flags = 0;
+	ns->poll = 0;
 	ns->addrLocal = NULL;
 	ns->addrRemote = NULL;
 	ns->fd = -1;
 	ns->listenBacklog = 10;
+	ns->p = NULL;
 
 	if (agNetOps->initSocket != NULL &&
 	    agNetOps->initSocket(ns) == -1) {
