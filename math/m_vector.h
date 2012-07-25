@@ -215,9 +215,9 @@ void	   M_ReadVector2v(AG_DataSource *, M_Vector2 *);
 void	   M_ReadVector3v(AG_DataSource *, M_Vector3 *);
 void	   M_ReadVector4v(AG_DataSource *, M_Vector4 *);
 
-void	   M_WriteVector2(AG_DataSource *, M_Vector2 *);
-void	   M_WriteVector3(AG_DataSource *, M_Vector3 *);
-void	   M_WriteVector4(AG_DataSource *, M_Vector4 *);
+void	   M_WriteVector2(AG_DataSource *, const M_Vector2 *);
+void	   M_WriteVector3(AG_DataSource *, const M_Vector3 *);
+void	   M_WriteVector4(AG_DataSource *, const M_Vector4 *);
 
 M_Vector2  M_RealvToVector2(const M_Real *);
 M_Vector3  M_RealvToVector3(const M_Real *);

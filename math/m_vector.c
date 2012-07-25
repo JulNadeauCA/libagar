@@ -194,14 +194,14 @@ M_ReadVector4v(AG_DataSource *buf, M_Vector4 *v)
 }
 
 void
-M_WriteVector2(AG_DataSource *buf, M_Vector2 *v)
+M_WriteVector2(AG_DataSource *buf, const M_Vector2 *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
 }
 
 void
-M_WriteVector3(AG_DataSource *buf, M_Vector3 *v)
+M_WriteVector3(AG_DataSource *buf, const M_Vector3 *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
@@ -209,7 +209,7 @@ M_WriteVector3(AG_DataSource *buf, M_Vector3 *v)
 }
 
 void
-M_WriteVector4(AG_DataSource *buf, M_Vector4 *v)
+M_WriteVector4(AG_DataSource *buf, const M_Vector4 *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
