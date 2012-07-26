@@ -217,8 +217,8 @@ MouseButtonUp(AG_Event *event)
 			if (item->state == 0) {
 				/* Nothing to do */
 			} else if (item->clickFn != NULL) {
-				AG_ExecEventFn(m, item->clickFn);
 				AG_MenuCollapseAll(m);
+				AG_ExecEventFn(m, item->clickFn);
 			} else if (item->bind_type != AG_MENU_NO_BINDING) {
 				if (item->bind_lock != NULL) {
 					AG_MutexLock(item->bind_lock);
