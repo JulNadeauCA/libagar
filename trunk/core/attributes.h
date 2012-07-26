@@ -15,6 +15,7 @@
 #include <agar/config/have_packed_attribute.h>
 #include <agar/config/have_pure_attribute.h>
 #include <agar/config/have_warn_unused_result_attribute.h>
+#include <agar/config/have_unused_variable_attribute.h>
 
 #undef ALIGNED_ATTRIBUTE
 #ifdef HAVE_ALIGNED_ATTRIBUTE
@@ -84,4 +85,11 @@
 # define WARN_UNUSED_RESULT_ATTRIBUTE __attribute__((__warn_unused_result__))
 #else
 # define WARN_UNUSED_RESULT_ATTRIBUTE
+#endif
+
+#undef UNUSED_VARIABLE_ATTRIBUTE
+#ifdef HAVE_UNUSED_VARIABLE_ATTRIBUTE
+# define UNUSED_VARIABLE_ATTRIBUTE __attribute__((unused))
+#else
+# define UNUSED_VARIABLE_ATTRIBUTE
 #endif
