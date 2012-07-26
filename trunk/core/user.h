@@ -40,10 +40,31 @@ AG_User  *AG_UserNew(void);
 void      AG_UserFree(AG_User *);
 void      AG_SetUserOps(const AG_UserOps *);
 
-#define   AG_GetUserByName	agUserOps->getUserByName
-#define   AG_GetUserByUID	agUserOps->getUserByUID
-#define   AG_GetRealUser	agUserOps->getRealUser
-#define   AG_GetEffectiveUser   agUserOps->getEffectiveUser
+/* Return the real user account. */
+static __inline__ AG_User *
+AG_GetRealUser(void)
+{
+	AG_User *u;
+	if ((u = AG_UserNew()) == NULL) { return (NULL); }
+	if (agUserOps->getRealUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
+}
+
+/* Return the effective user account. */
+static __inline__ AG_User *
+AG_GetEffectiveUser(void)
+{
+	AG_User *u;
+	if ((u = AG_UserNew()) == NULL) { return (NULL); }
+	if (agUserOps->getEffectiveUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
+}
 __END_DECLS
 
 #include <agar/core/close.h>
