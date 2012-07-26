@@ -130,6 +130,9 @@ structure.
 .Ft "void"
 .Fn AG_DataSourceError "AG_DataSource *ds" "const char *fmt" "..."
 .Pp
+.Ft "int"
+.Fn AG_DataSourceRealloc "AG_CoreSource *dsCore" "size_t size"
+.Pp
 .nr nS 0
 The
 .Fn AG_OpenFile
@@ -289,6 +292,15 @@ If
 .Fa fmt
 is NULL, the error is obtained from
 .Xr AG_GetError 3 .
+.Pp
+The
+.Fn AG_DataSourceRealloc
+routine explicitely resizes the buffer of a data source previously created
+with
+.Fn AG_OpenAutoCore .
+While the buffer is already resized automatically as data is written to
+the source, setting an explicit buffer size may be desirable in some
+situations.
 .Sh INTEGER OPERATIONS
 The following functions read and write integer values using the byte order
 specified for the data source.
