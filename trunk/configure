@@ -391,7 +391,7 @@ echo "    --with-iconv[=PREFIX]     Character set conversion [check]"
 echo ""
 echo "Options specific to Math library:"
 echo "    --with-altivec            AltiVec optimizations [check]"
-echo "    --with-sse                SSE optimizations [no]"
+echo "    --with-sse                SSE optimizations [check]"
 echo "    --with-<mode>-fp          Precision (single|double|quad) [double]"
 echo "    --with-<opt>-inline       Inline ops (sse2|sse3|altivec) [no]"
 echo ""
@@ -8769,7 +8769,7 @@ if [ "${with_sse}" != "no" ]
  then
 $ECHO_N "checking for SSE extensions..."
 $ECHO_N "checking for SSE extensions..." >> config.log
-SSE_CFLAGS="-msse"
+SSE_CFLAGS="-msse -Wno-unused-but-set-variable"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 MK_RUN_STATUS="OK"
@@ -9141,7 +9141,7 @@ echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
 echo "#undef INLINE_SSE3" >$BLD/include/agar/config/inline_sse3.h
 echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
 fi
-if [ "${with_altivec}" = "yes" ]
+if [ "${with_altivec}" != "no" ]
  then
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
