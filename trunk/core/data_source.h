@@ -92,7 +92,6 @@ typedef struct ag_net_socket_source {
 #define AG_DATA_SOURCE(ds) ((AG_DataSource *)(ds))
 #define AG_FILE_SOURCE(ds) ((AG_FileSource *)(ds))
 #define AG_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
-#define AG_AUTO_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
 #define AG_CONST_CORE_SOURCE(ds) ((AG_ConstCoreSource *)(ds))
 #define AG_NET_SOCKET_SOURCE(ds) ((AG_NetSocketSource *)(ds))
 
@@ -150,6 +149,21 @@ int     AG_CheckTypeCode(AG_DataSource *, Uint32);
 
 /* For AG_WriteFooAt() */
 #define AG_WRITEAT_DEBUGOFFS(ds,pos) ((ds)->debug ? (pos)+sizeof(Uint32) : (pos))
+
+/* Reallocate the buffer of a dynamically-allocated memory source. */
+static __inline__ int
+AG_DataSourceRealloc(void *obj, size_t size)
+{
+	AG_CoreSource *cs = (AG_CoreSource *)obj;
+	Uint8 *dataNew;
+		
+	if ((dataNew = AG_TryRealloc(cs->data, size)) == NULL) {
+		return (-1);
+	}
+	cs->data = dataNew;
+	cs->size = size;
+	return (0);
+}
 
 /* Return current position. */
 static __inline__ off_t
