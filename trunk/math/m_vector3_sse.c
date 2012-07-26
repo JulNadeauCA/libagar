@@ -129,11 +129,11 @@ M_VectorRotate3v_SSE(M_Vector3 *v, M_Real theta, M_Vector3 n)
 }
 
 M_Vector3
-M_VectorRotateQuat3_SSE(M_Vector3 V, M_Quat Q)
+M_VectorRotateQuat3_SSE(M_Vector3 V, M_Quaternion Q)
 {
 	M_Matrix44 R;
 
-	M_QuatToMatrix44(&R, &Q);
+	M_QuaternionToMatrix44(&R, &Q);
 	return M_MatMult44Vector3p(&R, &V);
 }
 

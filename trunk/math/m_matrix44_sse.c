@@ -18,15 +18,20 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixTranspose44_FPU,
 	M_MatrixTranspose44p_FPU,
 	M_MatrixTranspose44v_FPU,
+#ifdef SINGLE_PRECISION
 	M_MatrixInvert44_SSE,			/* To test */
 	M_MatrixInvert44p_SSE,			/* To test */
+#else
+	M_MatrixInvert44_FPU,
+	M_MatrixInvert44p_FPU,
+#endif
 	M_MatrixInvertGaussJordan44v_FPU,
 	M_MatrixMult44_SSE,			/* To test */
 	M_MatrixMult44v_SSE,			/* To test */
 	M_MatrixMult44pv_SSE,			/* To test */
-	M_MatrixMultVector44_FPU,
-	M_MatrixMultVector44p_FPU,
-	M_MatrixMultVector44v_FPU,
+	M_MatrixMultVector344_FPU,
+	M_MatrixMultVector344p_FPU,
+	M_MatrixMultVector344v_FPU,
 	M_MatrixMultVector444_FPU,
 	M_MatrixMultVector444p_FPU,
 	M_MatrixMultVector444v_FPU,
@@ -51,6 +56,8 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixScale44_FPU,
 	M_MatrixUniScale44_FPU,
 };
+
+#ifdef SINGLE_PRECISION
 
 M_Matrix44
 M_MatrixInvert44_SSE(M_Matrix44 A)
@@ -257,5 +264,7 @@ M_MatrixInvert44p_SSE(const M_Matrix44 *A)
 
 	return (Ainv);
 }
+
+#endif /* SINGLE_PRECISION */
 
 #endif /* HAVE_SSE */
