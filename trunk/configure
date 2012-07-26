@@ -1584,6 +1584,53 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
 fi
 rm -f conftest.c $testdir/conftest
+$ECHO_N "checking for unused variable attribute..."
+$ECHO_N "checking for unused variable attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_UNUSED_VARIABLE_ATTRIBUTE" ]; then
+		HAVE_UNUSED_VARIABLE_ATTRIBUTE=`cat ${cache}/ctest-HAVE_UNUSED_VARIABLE_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_UNUSED_VARIABLE_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	int __attribute__ ((unused)) variable;
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_UNUSED_VARIABLE_ATTRIBUTE="yes"
+echo "#ifndef HAVE_UNUSED_VARIABLE_ATTRIBUTE" > $BLD/include/agar/config/have_unused_variable_attribute.h
+echo "#define HAVE_UNUSED_VARIABLE_ATTRIBUTE \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_unused_variable_attribute.h
+echo "#endif" >> $BLD/include/agar/config/have_unused_variable_attribute.h
+echo "hdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_UNUSED_VARIABLE_ATTRIBUTE="no"
+echo "#undef HAVE_UNUSED_VARIABLE_ATTRIBUTE" >$BLD/include/agar/config/have_unused_variable_attribute.h
+echo "hdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_UNUSED_VARIABLE_ATTRIBUTE" > ${cache}/ctest-HAVE_UNUSED_VARIABLE_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_UNUSED_VARIABLE_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for an Objective-C compiler..."
 $ECHO_N "checking for an Objective-C compiler..." >> config.log
 if [ "$OBJC" = "" ]; then
@@ -8769,7 +8816,7 @@ if [ "${with_sse}" != "no" ]
  then
 $ECHO_N "checking for SSE extensions..."
 $ECHO_N "checking for SSE extensions..." >> config.log
-SSE_CFLAGS="-msse -Wno-unused-but-set-variable"
+SSE_CFLAGS="-msse"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 MK_RUN_STATUS="OK"
@@ -10206,7 +10253,7 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-math-config"
-config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
@@ -10653,6 +10700,8 @@ echo "PACKAGE=$PACKAGE" >>Makefile.config
 echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
+echo "HAVE_UNUSED_VARIABLE_ATTRIBUTE=$HAVE_UNUSED_VARIABLE_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
 echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
 echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
 echo "OBJCFLAGS=$OBJCFLAGS" >>Makefile.config
