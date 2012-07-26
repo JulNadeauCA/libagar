@@ -471,8 +471,14 @@ else
 	HUNDEF(ENABLE_MATH)
 	MDEFINE(SUBDIR_math, "")
 fi
+
+#
 # Enable optional SSE optimizations if compiler supports intrinsics.
-if [ "${with_sse}" = "yes" ]; then
+# Note that the library performs a CPU check, so enabling SSE support
+# will not break the build on non-SSE machines (unless --with-sse-inline
+# is used, in which case the resulting build will be SSE-dependent).
+#
+if [ "${with_sse}" != "no" ]; then
 	CHECK(sse)
 	if [ "${HAVE_SSE}" != "yes" ]; then
 		if [ "${with_sse}" = "yes" ]; then
