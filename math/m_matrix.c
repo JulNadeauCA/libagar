@@ -35,21 +35,20 @@
 const M_MatrixOps *mMatOps = NULL;
 const M_MatrixOps44 *mMatOps44 = NULL;
 
+/* #define SSE_DEBUG */
+
 void
 M_MatrixInitEngine(void)
 {
 	mMatOps = &mMatOps_FPU;
 	mMatOps44 = &mMatOps44_FPU;
 	
-	if (HasSSE()) {
 #ifdef HAVE_SSE
+	if (HasSSE())
 		mMatOps44 = &mMatOps44_SSE;
-#elif defined(AG_DEBUG)
-		AG_Verbose("SSE available, but disabled at compile time\n");
 #endif
-	}
 
-#ifdef AG_DEBUG
+#ifdef SSE_DEBUG
 	AG_Verbose("Matrix operations: ");
 #if defined(INLINE_ALTIVEC)
 	AG_Verbose("altivec (inline)\n");
@@ -62,9 +61,8 @@ M_MatrixInitEngine(void)
 #else
 	AG_Verbose("%s\n", mMatOps44->name);
 #endif
-#endif /* AG_DEBUG */
+#endif /* SSE_DEBUG */
 }
-
 
 void
 M_MatrixPrint44(const M_Matrix44 *A)
