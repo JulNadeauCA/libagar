@@ -217,6 +217,8 @@ AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
 			return (-1);
 		}
 		convLen = sLen + insLen + 1;
+	} else if (Strcasecmp(ed->encoding, "US-ASCII") == 0) {
+		convLen = AG_LengthUCS4(buf->s) + nIns + 1;
 	} else {
 		/* TODO Proper estimates for other charsets */
 		convLen = ucsSize;
