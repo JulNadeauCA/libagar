@@ -28,7 +28,7 @@ REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
 REGISTER_SECTION("Options specific to Math library:")
 REGISTER("--with-altivec",		"AltiVec optimizations [check]")
-REGISTER("--with-sse",			"SSE optimizations [no]")
+REGISTER("--with-sse",			"SSE optimizations [check]")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
 
@@ -528,7 +528,7 @@ else
 fi
 
 # Enable optional AltiVec optimizations if compiler supports intrinsics.
-if [ "${with_altivec}" = "yes" ]; then
+if [ "${with_altivec}" != "no" ]; then
 	CHECK(altivec)
 	if [ "${HAVE_ALTIVEC}" != "yes" ]; then
 		if [ "${with_altivec}" = "yes" ]; then
