@@ -47,7 +47,7 @@ M_VectorDot3p_SSE3(const M_Vector3 *v1, const M_Vector3 *v2)
 	a = _mm_mul_ps(v1->m128, v2->m128);
 	a = _mm_hadd_ps(v1->m128, v1->m128);
 	a = _mm_hadd_ps(v1->m128, v1->m128);
-	_mm_store_ss(&rv, v1->m128);
+	_mm_store_ss(&rv, a);
 	return (M_Real)(rv);
 }
 __END_DECLS

@@ -35,7 +35,7 @@ MAN3=	M_Matrix.3 M_Circle.3 M_Color.3 M_Complex.3 M_Geometry.3 M_Line.3 \
 	M_Matview.3 M_Real.3 M_Plotter.3 M_Quaternion.3 M_Vector.3 \
 	M_Label.3 M_PointSet.3
 
-CFLAGS+=-D_AGAR_MATH_INTERNAL ${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS} \
+CFLAGS+=-D_AGAR_MATH_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} \
 	${MATH_CFLAGS}
 
