@@ -330,10 +330,12 @@ CoreAutoWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	Uint8 *dataNew;
 
-	if ((dataNew = TryRealloc(cs->data, (cs->size+size))) == NULL) {
-		return (-1);
+	if (cs->offs+size > cs->size) {
+		if ((dataNew = TryRealloc(cs->data, (cs->offs+size))) == NULL) {
+			return (-1);
+		}
+		cs->data = dataNew;
 	}
-	cs->data = dataNew;
 	memcpy(&cs->data[cs->offs], buf, size);
 	cs->size += size;
 	cs->offs += size;
