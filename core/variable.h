@@ -4,7 +4,6 @@
 
 typedef enum ag_variable_type {
 	AG_VARIABLE_NULL,		/* No data */
-	/* Primitive */
 	AG_VARIABLE_UINT,		/* Unsigned int */
 	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
 	AG_VARIABLE_INT,		/* Natural int */
@@ -39,13 +38,13 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
 	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
 	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
-	/* Bitmask */
 	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
 	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
 	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
 	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
 	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object(3) */
 	AG_VARIABLE_P_TEXT,		/* Pointer to AG_Text(3) */
+	AG_VARIABLE_P_VARIABLE,		/* Reference to an AG_Variable(3) */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
 
@@ -118,11 +117,15 @@ typedef struct ag_variable {
 	AG_VariableType type;	 	 /* Variable type */
 	AG_Mutex *mutex;		 /* Lock protecting data (or NULL) */
 	union {
-		Uint32 bitmask;		 /* Bitmask (for AG_VARIABLE_P_FLAG_*) */
-		size_t size;		 /* Size (for AG_VARIABLE_STRING_*) */
+		Uint32 bitmask;		/* Bitmask (P_FLAG_*) */
+		size_t size;		/* Length / Buffer size (STRING_*) */
+		struct {		/* For P_VARIABLE type */
+			char *key;
+			struct ag_variable *var;
+		} ref;
 	} info;
-	union ag_variable_fn fn;
-	union ag_variable_data data;
+	union ag_variable_fn fn;	/* Eval function */
+	union ag_variable_data data;	/* Variable-stored data */
 } AG_Variable;
 
 #undef AG_VARIABLE_SETARG
@@ -509,6 +512,8 @@ AG_Variable *AG_BindFlag16Mp(void *, const char *, Uint16 *, Uint16, AG_Mutex *)
 AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
 AG_Variable *AG_BindFlag32Mp(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
 
+AG_Variable *AG_BindVariable(void *, const char *, void *, const char *);
+
 static __inline__ int          AG_Defined(void *, const char *)
                                    WARN_UNUSED_RESULT_ATTRIBUTE;
 static __inline__ AG_Variable *AG_GetVariableLocked(void *, const char *)
@@ -550,8 +555,18 @@ AG_UnlockVariable(AG_Variable *V)
 static __inline__ void
 AG_FreeVariable(AG_Variable *V)
 {
-	if (V->type == AG_VARIABLE_STRING && V->info.size == 0)
-		AG_Free(V->data.s);
+	switch (V->type) {
+	case AG_VARIABLE_STRING:
+		if (V->info.size == 0) {
+			AG_Free(V->data.s);
+		}
+		break;
+	case AG_VARIABLE_P_VARIABLE:
+		AG_Free(V->info.ref.key);
+		break;
+	default:
+		break;
+	}
 }
 
 /*
@@ -562,7 +577,7 @@ static __inline__ AG_Variable *
 AG_GetVariableLocked(void *pObj, const char *name)
 {
 	AG_Object *obj = AGOBJECT(pObj);
-	AG_Variable *V;
+	AG_Variable *V, *Vtgt;
 	Uint i;
 	
 	for (i = 0; i < obj->nVars; i++) {
@@ -574,6 +589,11 @@ AG_GetVariableLocked(void *pObj, const char *name)
 	}
 	V = &obj->vars[i];
 	AG_LockVariable(V);
+	if (V->type == AG_VARIABLE_P_VARIABLE) {
+		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.ref.key);
+		AG_UnlockVariable(V);
+		return (Vtgt);
+	}
 	return (V);
 }
 

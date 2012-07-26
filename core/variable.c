@@ -76,6 +76,7 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	 */
 	{ AG_VARIABLE_P_OBJECT,		1,	"Object *",	AG_VARIABLE_P_OBJECT,		-1 },
 	{ AG_VARIABLE_P_TEXT,		1,	"Text *",	AG_VARIABLE_P_TEXT,		-1 },
+	{ AG_VARIABLE_P_VARIABLE,	1,	"Variable *",	AG_VARIABLE_P_VARIABLE,		-1 },
 };
 
 /*
@@ -241,9 +242,11 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 }
 
 /*
- * Lookup a variable by name and return a generic pointer to its current value
- * after having evaluated the associated function if there is one. Variable is
- * returned locked. Return NULL if the variable does not exist.
+ * Lookup a variable by name and return a generic pointer to its current value.
+ * If the variable is a reference, the target is accessed. If the variable is
+ * function-defined, that function is invoked.
+ *
+ * The variable is returned locked. Returns NULL if the variable is undefined.
  */
 AG_Variable *
 AG_GetVariable(void *pObj, const char *name, ...)
@@ -1390,6 +1393,31 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	V->mutex = mutex;
+	AG_PostEvent(NULL, obj, "bound", "%p", V);
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+/* Create a Variable->Variable reference. */
+AG_Variable *
+AG_BindVariable(void *obj, const char *name, void *tgtObj, const char *tgtKey)
+{
+	AG_Variable *V;
+	char *keyDup;
+	int new;
+
+	if ((keyDup = TryStrdup(tgtKey)) == NULL)
+		return (NULL);
+
+	AG_ObjectLock(obj);
+	V = FetchVariableNew(obj, name, &new);
+	V->type = AG_VARIABLE_P_VARIABLE;
+	if (!new) {
+		Free(V->info.ref.key);
+	}
+	V->data.p = tgtObj;
+	V->info.ref.key = keyDup;
+	V->info.ref.var = NULL;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
