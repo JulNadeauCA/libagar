@@ -8765,7 +8765,7 @@ echo "#undef ENABLE_MATH" >$BLD/include/agar/config/enable_math.h
 echo "hdefs[\"ENABLE_MATH\"] = nil" >>configure.lua
 SUBDIR_math=""
 fi
-if [ "${with_sse}" = "yes" ]
+if [ "${with_sse}" != "no" ]
  then
 $ECHO_N "checking for SSE extensions..."
 $ECHO_N "checking for SSE extensions..." >> config.log
