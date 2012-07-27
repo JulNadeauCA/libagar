@@ -30,7 +30,6 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include <config/have_sdl.h>
 #include <config/have_opengl.h>
 
 #include "gui.h"
@@ -141,7 +140,23 @@ void *agGUIClasses[] = {
 
 int agGUI = 0;				/* GUI is initialized */
 static int initedGlobals = 0;		/* GUI globals are initialized */
-int agRenderingContext = 0;		/* In rendering context (DEBUG) */
+int agRenderingContext = 0;		/* In rendering context */
+
+int agKbdDelay = 250;			/* Key repeat delay */
+int agKbdRepeat = 35;			/* Key repeat interval */
+int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
+int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
+int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
+int agTextComposition = 1;		/* Built-in input composition */
+int agTextBidi = 0;			/* Bidirectionnal text display */
+int agTextCache = 0;			/* Dynamic text caching */
+int agTextTabWidth = 40;		/* Tab width (px) */
+int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
+int agTextSymbols = 1;			/* Process special symbols in text */
+int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
+int agIdleThresh = 20;			/* Idling threshold */
+int agScreenshotQuality = 100;		/* JPEG quality in % */
+int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 
 /*
  * Initialize the Agar-GUI globals and built-in classes. This function
@@ -183,6 +198,24 @@ AG_InitGUIGlobals(void)
 	agRenderingContext = 0;
 	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
+
+	/* Save GUI globals in agConfig. */
+	AG_BindInt(agConfig, "ag_kbd_delay", &agKbdDelay);
+	AG_BindInt(agConfig, "ag_kbd_repeat", &agKbdRepeat);
+	AG_BindInt(agConfig, "ag_mouse_dblclick_delay", &agMouseDblclickDelay);
+	AG_BindInt(agConfig, "ag_mouse_spin_delay", &agMouseSpinDelay);
+	AG_BindInt(agConfig, "ag_mouse_spin_interval", &agMouseSpinIval);
+	AG_BindInt(agConfig, "ag_text_composition", &agTextComposition);
+	AG_BindInt(agConfig, "ag_text_bidi", &agTextBidi);
+	AG_BindInt(agConfig, "ag_text_cache", &agTextCache);
+	AG_BindInt(agConfig, "ag_text_tab_width", &agTextTabWidth);
+	AG_BindInt(agConfig, "ag_text_blink_rate", &agTextBlinkRate);
+	AG_BindInt(agConfig, "ag_text_symbols", &agTextSymbols);
+	AG_BindInt(agConfig, "ag_page_increment", &agPageIncrement);
+	AG_BindInt(agConfig, "ag_idle_threshold", &agIdleThresh);
+	AG_BindInt(agConfig, "ag_screenshot_quality", &agScreenshotQuality);
+	AG_BindInt(agConfig, "ag_msg_delay", &agMsgDelay);
+
 	return (0);
 }
 

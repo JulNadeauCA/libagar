@@ -83,7 +83,7 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_CopyCfgString("save-path", savePath, sizeof(savePath));
+	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
 	AG_FileDlgSetDirectoryMRU(fd, mruKey, savePath);
 	return (fd);
 }
@@ -923,7 +923,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 		goto fail;
 	}
 	if (fd->dirMRU != NULL) {
-		AG_SetCfgString(fd->dirMRU, "%s", fd->cwd);
+		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
 		AG_ConfigSave();
 	}
 
@@ -948,7 +948,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 		AG_FileDlgSetDirectoryS(fd, s);
 		Free(s);
 	} else {
-		AG_SetCfgString(key, "%s", dflt);
+		AG_SetString(agConfig, key, dflt);
 		if (AG_ConfigSave() == -1) {
 			Verbose("Saving MRU(%s): %s\n", key, AG_GetError());
 		}

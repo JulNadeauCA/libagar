@@ -199,8 +199,8 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 {
 	char path[AG_PATHNAME_MAX];
 	char name[AG_OBJECT_NAME_MAX];
-	int ptsize = (psize >= 0) ? psize : AG_CfgInt("font.size");
-	Uint flags = (pflags >= 0) ? pflags : AG_CfgUint("font.flags");
+	int ptsize = (psize >= 0) ? psize : AG_GetInt(agConfig,"font.size");
+	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(agConfig,"font.flags");
 	enum ag_font_type type;
 	AG_StaticFont *builtin;
 	AG_Font *font;
@@ -209,7 +209,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (pname != NULL) {
 		Strlcpy(name, pname, sizeof(name));
 	} else {
-		AG_CopyCfgString("font.face", name, sizeof(name));
+		AG_GetString(agConfig, "font.face", name, sizeof(name));
 	}
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
@@ -363,9 +363,9 @@ AG_SetDefaultFont(AG_Font *font)
 	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
 	agTextState->font = font;
-	AG_SetCfgString("font.face", OBJECT(font)->name);
-	AG_SetCfgInt("font.size", font->size);
-	AG_SetCfgInt("font.flags", font->flags);
+	AG_SetString(agConfig, "font.face", OBJECT(font)->name);
+	AG_SetInt(agConfig, "font.size", font->size);
+	AG_SetInt(agConfig, "font.flags", font->flags);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -406,29 +406,30 @@ AG_TextInit(void)
 	SLIST_INIT(&fonts);
 
 	/* Set the default font search path. */
-	if (!AG_CfgDefined("font-path")) {
+	if (!AG_Defined(agConfig,"font-path")) {
 #if defined(__APPLE__)
 # if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 		char savePath[AG_PATHNAME_MAX];
 		char home[AG_PATHNAME_MAX];
-		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
-		AG_CopyCfgString("home", home, sizeof(home));
-		AG_SetCfgString("font-path",
+		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+		AG_GetString(agConfig, "home", home, sizeof(home));
+		AG_PrtString(agConfig, "font-path",
 		    "%s/fonts:%s:%s/Library/Fonts:/Library/Fonts:/System/Library/Fonts",
 		    savePath, TTFDIR, home);
 # else
 		char savePath[AG_PATHNAME_MAX];
-		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
-		AG_SetCfgString("font-path",
+		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+		AG_PrtString("font-path",
 		    "%s/fonts:%s:/Library/Fonts:/System/Library/Fonts",
 		    savePath, TTFDIR);
 # endif
 #elif defined(_WIN32)
-		AG_SetCfgString("font-path", "fonts:.");
+		AG_SetString(agConfig, "font-path", "fonts:.");
 #else
 		char savePath[AG_PATHNAME_MAX];
-		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
-		AG_SetCfgString("font-path", "%s/fonts:%s", savePath, TTFDIR);
+		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+		AG_PrtString(agConfig, "font-path", "%s/fonts:%s", savePath,
+		    TTFDIR);
 #endif
 	}
 	
@@ -443,16 +444,15 @@ AG_TextInit(void)
 #endif
 
 	/* Load the default font. */
-	if (!AG_CfgDefined("font.face")) {
-		AG_SetCfgString("font.face", agFreetypeInited ?
-		                             agDefaultFaceFT :
-					     agDefaultFaceBitmap);
+	if (!AG_Defined(agConfig,"font.face")) {
+		AG_SetString(agConfig, "font.face",
+		    agFreetypeInited ? agDefaultFaceFT : agDefaultFaceBitmap);
 	}
-	if (!AG_CfgDefined("font.size")) {
-		AG_SetCfgInt("font.size", 12);
+	if (!AG_Defined(agConfig,"font.size")) {
+		AG_SetInt(agConfig, "font.size", 12);
 	}
-	if (!AG_CfgDefined("font.flags")) {
-		AG_SetCfgUint("font.flags", 0);
+	if (!AG_Defined(agConfig,"font.flags")) {
+		AG_SetUint(agConfig, "font.flags", 0);
 	}
 	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 		AG_SetError("Failed to load default font: %s", AG_GetError());
@@ -1213,11 +1213,11 @@ AG_TextParseFontSpec(const char *fontspec)
 
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetCfgString("font.face", s);
+		AG_SetString(agConfig, "font.face", s);
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetCfgInt("font.size", atoi(s));
+		AG_SetInt(agConfig, "font.size", atoi(s));
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
@@ -1230,7 +1230,7 @@ AG_TextParseFontSpec(const char *fontspec)
 			case 'U': flags |= AG_FONT_UPPERCASE;	break;
 			}
 		}
-		AG_SetCfgUint("font.flags", flags);
+		AG_SetUint(agConfig, "font.flags", flags);
 	}
 }
 
