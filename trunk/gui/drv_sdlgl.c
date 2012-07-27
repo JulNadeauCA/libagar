@@ -33,13 +33,13 @@
 #include <config/have_cygwin.h>
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
+#include "drv.h"
+#include "text.h"
 #include "window.h"
 #include "packedpixel.h"
 #include "cursors.h"
-
 #include "opengl.h"
 #include "sdl.h"
 
@@ -258,7 +258,9 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 	glReadPixels(0, 0, dsw->w, dsw->h, GL_RGBA, GL_UNSIGNED_BYTE,
 	    sgl->outBuf);
 
-	AG_PackedPixelFlip(sgl->outBuf, dsw->h, dsw->w*4);
+	if (AG_PackedPixelFlip(sgl->outBuf, dsw->h, dsw->w*4) == -1) {
+		goto fail_disable;
+	}
 	s = AG_SurfaceFromPixelsRGBA(sgl->outBuf,
 	    dsw->w, dsw->h, 32,
 	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
@@ -288,6 +290,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 	return;
 fail:
 	AG_SurfaceFree(s);
+fail_disable:
 	AG_Verbose("%s; disabling capture\n", AG_GetError());
 	sgl->outMode = AG_SDLGL_OUT_NONE;
 }

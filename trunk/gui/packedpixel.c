@@ -24,25 +24,28 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
-#include "geometry.h"
 #include "surface.h"
 #include "packedpixel.h"
+
+#include <string.h>
 
 /*
  * Flip the lines of a packed-pixel surface; this is useful with OpenGL
  * conversions.
  */
-void
+int
 AG_PackedPixelFlip(Uint8 *src, Uint h, int pitch)
 {
-	Uint8 *tmp = Malloc(pitch);
+	Uint8 *tmp;
 	Uint h2 = h >> 1;
 	Uint8 *p1 = &src[0];
 	Uint8 *p2 = &src[(h-1)*pitch];
 	Uint i;
 
+	if ((tmp = TryMalloc(pitch)) == NULL) {
+		return (-1);
+	}
 	for (i = 0; i < h2; i++) {
 		memcpy(tmp, p1, pitch);
 		memcpy(p1, p2, pitch);
@@ -52,4 +55,5 @@ AG_PackedPixelFlip(Uint8 *src, Uint h, int pitch)
 		p2 -= pitch;
 	}
 	Free(tmp);
+	return (0);
 }

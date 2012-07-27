@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
 #include "window.h"
@@ -453,16 +452,20 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 		    wid->h,
 		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	}
-	AG_PackedPixelFlip(pixels, wid->h, wid->w*4);
+	if (AG_PackedPixelFlip(pixels, wid->h, wid->w*4) == -1) {
+		goto fail;
+	}
 	*s = AG_SurfaceFromPixelsRGBA(pixels,
 	    wid->w, wid->h,
 	    32,
 	    0x000000ff, 0x0000ff00, 0x00ff0000, 0);
 	if (*s == NULL) {
-		Free(pixels);
-		return (-1);
+		goto fail;
 	}
 	return (0);
+fail:
+	Free(pixels);
+	return (-1);
 }
 
 /*
