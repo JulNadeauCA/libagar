@@ -63,22 +63,30 @@ is reserved for Agar settings.
 The
 .Fn AG_ConfigLoad
 function loads the configuration data from disk, returning 0 on sucess
-or -1 if an error occured.
-It is equivalent to calling:
-.Bd -literal
-	AG_ObjectLoad(agConfig);
-.Ed
+or -1 on failure.
+It is equivalent to calling
+.Xr AG_ObjectLoad 3
+on the
+.Va agConfig
+object.
+Note that
+.Fn AG_ConfigLoad
+must be called after the initialization of all Agar libraries
+(i.e., if an application uses Agar-GUI, then the
+.Fn AG_ConfigLoad
+call must follow the
+.Fn AG_InitGraphics
+call).
 .Pp
 The
 .Fn AG_ConfigSave
-function saves the configuration data, creating the parent directories if
-needed.
-Returns 0 on success or -1 on failure.
-It is equivalent to:
-.Bd -literal
-	AG_CreateDataDir();
-	AG_ObjectSave(agConfig);
-.Ed
+function saves the configuration data to disk, returning 0 on success
+or -1 on failure.
+It is equivalent to calling
+.Xr AG_ObjectSave 3
+on the
+.Va agConfig
+object.
 .Pp
 The
 .Fn AG_ConfigFile
