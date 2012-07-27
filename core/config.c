@@ -24,9 +24,9 @@
  */
 
 /*
- * Global configuration object. Used for Agar-related settings, but
- * applications are free to insert additional properties into the
- * object.
+ * Global configuration object (agObject). Used to store Agar-related
+ * settings, but applications are free to define new properties
+ * (note: the "ag_" prefix is reserved for Agar settings).
  */
 
 #include <core/core.h>
@@ -36,33 +36,15 @@
 
 #include <config/datadir.h>
 
-/* XXX XXX move to agar-gui */
-int agKbdDelay = 250;			/* Key repeat delay */
-int agKbdRepeat = 35;			/* Key repeat interval */
-int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
-int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
-int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
-
-int agTextComposition = 1;		/* Built-in input composition */
-int agTextBidi = 0;			/* Bidirectionnal text display */
-int agTextCache = 0;			/* Dynamic text caching */
-int agTextTabWidth = 40;		/* Tab width (px) */
-int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
-int agTextSymbols = 1;			/* Process special symbols in text */
-int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
-
-int agIdleThresh = 20;			/* Idling threshold */
-int agScreenshotQuality = 100;		/* JPEG quality in % */
-int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
-
+/* Create the "save-path" / "tmp-path" directories, if they don't exist. */
 int
 AG_CreateDataDir(void)
 {
 	char dataDir[AG_PATHNAME_MAX];
 	char tmpDir[AG_PATHNAME_MAX];
 
-	AG_CopyCfgString("save-path", dataDir, sizeof(dataDir));
-	AG_CopyCfgString("tmp-path", tmpDir, sizeof(tmpDir));
+	AG_GetString(agConfig, "save-path", dataDir, sizeof(dataDir));
+	AG_GetString(agConfig, "tmp-path", tmpDir, sizeof(tmpDir));
 
 	if (AG_FileExists(dataDir) == 0 && AG_MkDir(dataDir) != 0)
 		return (-1);
@@ -126,9 +108,9 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 		AG_SetString(cfg, "tmp-path", "tmp");
 	}
 
-	if (flags & AG_CREATE_DATADIR) {
-		if (AG_CreateDataDir() == -1)
-			return (-1);
+	if ((flags & AG_CREATE_DATADIR) &&
+	    AG_CreateDataDir() == -1) {
+		return (-1);
 	}
 	return (0);
 }
@@ -141,27 +123,18 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 #else
 	(void)AG_ReadUint8(ds);
 #endif
-	if (ver->minor < 2) { (void)AG_ReadUint8(ds); } /* agServerMode */
-	agIdleThresh = (int)AG_ReadUint8(ds);
-	if (ver->minor >= 3) { (void)AG_ReadUint8(ds); } /* agWindowAnySize */
-	if (ver->minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
-	agTextComposition = AG_ReadUint8(ds);
-	agTextBidi = AG_ReadUint8(ds);
-	(void)AG_ReadUint8(ds);				/* agKbdUnicode */
-	agKbdDelay = (int)AG_ReadUint32(ds);
-	agKbdRepeat = (int)AG_ReadUint32(ds);
-	agMouseDblclickDelay = (int)AG_ReadUint32(ds);
-	agMouseSpinDelay = (int)AG_ReadUint16(ds);
-	agMouseSpinIval = (int)AG_ReadUint16(ds);
-	agScreenshotQuality = (int)AG_ReadUint8(ds);
-	agTextTabWidth = (int)AG_ReadUint16(ds);
-	if (ver->minor >= 1) { (void)AG_ReadUint8(ds); } /* agTextAntialiasing */
-
-	(void)AG_ReadUint8(ds);		/* agRcsMode */
-	AG_SkipString(ds);		/* agRcsHostname */
-	(void)AG_ReadUint16(ds);	/* agRcsPort */
-	AG_SkipString(ds);		/* agRcsUsername */
-	AG_SkipString(ds);		/* agRcsPassword */
+	/* For backward compatibility with <9.5 (pre-1.4.2) saves. */
+	if (ver->minor < 2) { AG_ReadUint8(ds); }
+	(void)AG_ReadUint8(ds);
+	if (ver->minor >= 3) { AG_ReadUint8(ds); }
+	if (ver->minor >= 4) { AG_ReadUint32(ds); }
+	AG_Seek(ds, 22, AG_SEEK_CUR);
+	if (ver->minor >= 1) { AG_ReadUint8(ds); }
+	(void)AG_ReadUint8(ds);				/* agRcsMode */
+	AG_SkipString(ds);				/* agRcsHostname */
+	(void)AG_ReadUint16(ds);			/* agRcsPort */
+	AG_SkipString(ds);				/* agRcsUsername */
+	AG_SkipString(ds);				/* agRcsPassword */
 	return (0);
 }
 
@@ -169,34 +142,21 @@ static int
 Save(void *obj, AG_DataSource *ds)
 {
 	AG_Config *cfg = obj;
+	char buf[30];
 
 	AG_SetInt(cfg, "initial-run", 0);
-
 #ifdef AG_DEBUG
 	AG_WriteUint8(ds, (Uint8)agDebugLvl);
 #else
 	AG_WriteUint8(ds, 0);
 #endif
-	AG_WriteUint8(ds, (Uint8)agIdleThresh);
-	AG_WriteUint8(ds, 0);				/* agWindowAnySize */
-	AG_WriteUint32(ds, (Uint32)agMsgDelay);
-	AG_WriteUint8(ds, (Uint8)agTextComposition);
-	AG_WriteUint8(ds, (Uint8)agTextBidi);
-	AG_WriteUint8(ds, 0);				/* agKbdUnicode */
-	AG_WriteUint32(ds, (Uint32)agKbdDelay);
-	AG_WriteUint32(ds, (Uint32)agKbdRepeat);
-	AG_WriteUint32(ds, (Uint32)agMouseDblclickDelay);
-	AG_WriteUint16(ds, (Uint16)agMouseSpinDelay);
-	AG_WriteUint16(ds, (Uint16)agMouseSpinIval);
-	AG_WriteUint8(ds, (Uint8)agScreenshotQuality);
-	AG_WriteUint16(ds, (Uint16)agTextTabWidth);
-	AG_WriteUint8(ds, 0);				/* agTextAntialiasing */
-
-	AG_WriteUint8(ds, 0);		/* agRcsMode */
-	AG_WriteString(ds, "");		/* agRcsHostname */
-	AG_WriteUint16(ds, 0);		/* agRcsPort */
-	AG_WriteString(ds, "");		/* agRcsUsername */
-	AG_WriteString(ds, "");		/* agRcsPassword */
+	/* For backward compatibility with <9.5 (pre-1.4.2) saves. */
+	memset(buf, 0, sizeof(buf));
+	AG_Write(ds, buf, sizeof(buf));
+	AG_WriteString(ds, "");			/* agRcsHostname */
+	AG_WriteUint16(ds, 0);			/* agRcsPort */
+	AG_WriteString(ds, "");			/* agRcsUsername */
+	AG_WriteString(ds, "");			/* agRcsPassword */
 	return (0);
 }
 
@@ -241,23 +201,10 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	return (-1);
 }
 
-void
-AG_SetCfgString(const char *key, const char *fmt, ...)
-{
-	va_list ap;
-	char *s;
-
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-	AG_SetString(agConfig, key, s);
-	Free(s);
-}
-
 AG_ObjectClass agConfigClass = {
 	"Agar(Config)",
 	sizeof(AG_Config),
-	{ 9, 4 },
+	{ 9, 5 },
 	NULL,
 	NULL,
 	NULL,

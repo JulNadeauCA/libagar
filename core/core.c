@@ -161,9 +161,6 @@ AG_InitCore(const char *progname, Uint flags)
 	if (AG_ConfigInit(agConfig, flags) == -1) {
 		return (-1);
 	}
-	if (!(flags & AG_NO_CFG_AUTOLOAD)) {
-		(void)AG_ConfigLoad();
-	}
 	return (0);
 }
 
