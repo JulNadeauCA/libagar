@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,13 @@
 
 PREFIX?=	/usr/local
 DESTDIR?=
-LOCALSTATEDIR?=	${PREFIX}/share
+STATEDIR?=	${PREFIX}/var
 SYSCONFDIR?=	${PREFIX}/etc
-SHAREDIR?=	${PREFIX}/share
+DATADIR?=	${PREFIX}/share
 BINDIR?=	${PREFIX}/bin
 LIBDIR?=	${PREFIX}/lib
 INCLDIR?=	${PREFIX}/include
 MANDIR?=	${PREFIX}/man
-PSDIR?=		${PREFIX}/man
 
 SUDO?=
 SH?=		sh
@@ -52,7 +51,6 @@ INSTALL_LIB_DIR=	mkdir -p
 INSTALL_DATA_DIR=	mkdir -p
 INSTALL_INCL_DIR=	mkdir -p
 INSTALL_MAN_DIR=	mkdir -p
-INSTALL_PS_DIR=		mkdir -p
 
 DEINSTALL_PROG=		rm -f
 DEINSTALL_LIB=		rm -f

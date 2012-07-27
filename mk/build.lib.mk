@@ -70,8 +70,13 @@ LIBTOOLOPTS_CC?=
 LIBTOOLOPTS_OBJC?=
 LIBTOOLOPTS_CXX?=
 
+# Compat (DATADIR was formerly called SHAREDIR)
 SHARE?=none
 SHARESRC?=none
+SHAREDIR=${DATADIR}
+
+DATAFILES?=${SHARE}
+DATAFILES_SRC?=${SHARESRC}
 SRCS?=none
 OBJS?=none
 SHOBJS?=none
@@ -418,31 +423,31 @@ install-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
 	    fi; \
 	fi
-	@if [ "${SHARE}" != "none" ]; then \
-            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
+	@if [ "${DATAFILES}" != "none" ]; then \
+            if [ ! -d "${DESTDIR}${DATADIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${DIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${DATADIR}; \
             fi; \
-            for F in ${SHARE}; do \
-                echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
+            for F in ${DATAFILES}; do \
+                echo "${INSTALL_DATA} $$F ${DATADIR}"; \
+                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${DATADIR}; \
             done; \
 	fi
-	@if [ "${SHARESRC}" != "none" ]; then \
-            if [ ! -d "${DESTDIR}${SHAREDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
+	@if [ "${DATAFILES_SRC}" != "none" ]; then \
+            if [ ! -d "${DESTDIR}${DATADIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${DATADIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${DATADIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
-                for F in ${SHARESRC}; do \
-                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                for F in ${DATAFILES_SRC}; do \
+                    echo "${INSTALL_DATA} $$F ${DATADIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
-		    ${DESTDIR}${SHAREDIR}; \
+		    ${DESTDIR}${DATADIR}; \
                 done; \
 	    else \
-                for F in ${SHARESRC}; do \
-                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                    ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
+                for F in ${DATAFILES_SRC}; do \
+                    echo "${INSTALL_DATA} $$F ${DATADIR}"; \
+                    ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${DATADIR}; \
                 done; \
 	    fi; \
 	fi
@@ -484,16 +489,16 @@ deinstall-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
 	    fi; \
 	fi
-	@if [ "${SHARE}" != "none" ]; then \
-	    for F in ${SHARE}; do \
-	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
+	@if [ "${DATAFILES}" != "none" ]; then \
+	    for F in ${DATAFILES}; do \
+	        echo "${DEINSTALL_DATA} ${DATADIR}/$$F"; \
+	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${DATADIR}/$$F; \
 	    done; \
 	fi
-	@if [ "${SHARESRC}" != "none" ]; then \
-	    for F in ${SHARESRC}; do \
-	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
+	@if [ "${DATAFILES_SRC}" != "none" ]; then \
+	    for F in ${DATAFILES_SRC}; do \
+	        echo "${DEINSTALL_DATA} ${DATADIR}/$$F"; \
+	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${DATADIR}/$$F; \
 	    done; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
