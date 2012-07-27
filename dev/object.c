@@ -31,7 +31,6 @@
 #include <core/md5.h>
 #include <core/sha1.h>
 #include <core/rmd160.h>
-#include <core/config.h>
 
 #include <gui/window.h>
 #include <gui/box.h>

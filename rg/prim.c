@@ -24,7 +24,9 @@
  */
 
 #include <core/core.h>
+
 #include <gui/gui.h>
+#include <gui/surface.h>
 
 #include "tileset.h"
 #include "rg_math.h"

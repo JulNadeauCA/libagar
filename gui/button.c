@@ -24,13 +24,10 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "button.h"
-
-#include "window.h"
 #include "primitive.h"
-#include "label.h"
+#include "window.h"
 
 #include <stdarg.h>
 

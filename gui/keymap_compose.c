@@ -30,14 +30,10 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "widget.h"
 #include "editable.h"
 #include "keymap.h"
-
-#include <ctype.h>
-#include <string.h>
 
 int
 AG_KeyInputCompose(AG_Editable *ed, Uint32 key, Uint32 *ins)

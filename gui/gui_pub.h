@@ -7,7 +7,11 @@
 
 #include <agar/gui/gui.h>
 
+#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
+#include <agar/gui/text.h>
 #include <agar/gui/icons.h>
+#include <agar/gui/iconmgr.h>
 #include <agar/gui/primitive.h>
 
 #include <agar/gui/box.h>
@@ -50,7 +54,6 @@
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
 #include <agar/gui/treetbl.h>
-#include <agar/gui/text.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/text_cache.h>
 #include <agar/gui/tlist.h>

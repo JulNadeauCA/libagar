@@ -36,7 +36,6 @@
 #include <config/have_mach_o_dyld_h.h>
 
 #include <core/core.h>
-#include <core/config.h>
 
 #if defined(BEOS)
 # include <kernel/image.h>

@@ -28,14 +28,14 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
+#include "drv.h"
+#include "text.h"
 #include "window.h"
 #include "packedpixel.h"
 #include "cursors.h"
 #include "perfmon.h"
-
 #include "sdl.h"
 
 typedef struct ag_sdlfb_driver {

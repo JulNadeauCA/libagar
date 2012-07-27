@@ -1,5 +1,8 @@
 #ifndef _AGAR_GUI_TEXT_CACHE_H_
 #define _AGAR_GUI_TEXT_CACHE_H_
+
+#include <agar/gui/text.h>
+
 #include <agar/gui/begin.h>
 
 typedef struct ag_cached_text {
@@ -14,8 +17,10 @@ typedef struct ag_text_cache_bucket {
 	AG_SLIST_HEAD_(ag_cached_text) ents;
 } AG_TextCacheBucket;
 
+struct ag_widget;
+
 typedef struct ag_text_cache {
-	AG_Widget          *widget;		/* Widget managing surfaces */
+	struct ag_widget *widget;		/* Widget managing surfaces */
 	AG_TextCacheBucket *buckets;		/* Hash table */
 	Uint               nBuckets;
 	Uint               curEnts;		/* Current entries */

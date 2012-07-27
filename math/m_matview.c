@@ -27,7 +27,6 @@
 #ifdef ENABLE_GUI
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include <gui/widget.h>
 #include <gui/window.h>

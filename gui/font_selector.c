@@ -28,9 +28,7 @@
 
 #include "font_selector.h"
 
-#include <stdarg.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "icons.h"
 #include "primitive.h"
@@ -143,7 +141,7 @@ UpdateFaces(AG_Event *event)
 			ti->selected++;
 	}
 
-	AG_CopyCfgString("font-path", fontPath, sizeof(fontPath));
+	AG_GetString(agConfig, "font-path", fontPath, sizeof(fontPath));
 	while ((s = AG_Strsep(&pFontPath, ":")) != NULL) {
 		AG_Dir *dir;
 		int i;

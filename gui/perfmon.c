@@ -33,12 +33,10 @@
 #ifdef AG_DEBUG
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "window.h"
 #include "label.h"
 #include "fixed_plotter.h"
-
 #include "perfmon.h"
 
 int agEventAvg = 0;		/* Number of events in last frame */

@@ -24,16 +24,9 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
-#include "geometry.h"
-#include "surface.h"
 #include "anim.h"
 #include "gui_math.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
 
 /* Create a new animation of the specified pixel format. */
 AG_Anim *

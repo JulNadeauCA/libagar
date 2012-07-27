@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include <gui/gui.h>
 #include <gui/primitive.h>

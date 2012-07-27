@@ -28,7 +28,9 @@
  */
 
 #include <core/core.h>
+
 #include "gui.h"
+#include "surface.h"
 
 struct ag_bmp_header {
 	char magic[2];

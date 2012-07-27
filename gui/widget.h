@@ -6,6 +6,7 @@
 #include <agar/config/have_sdl.h>
 #include <agar/config/have_opengl.h>
 
+#include <agar/gui/gui.h>
 #include <agar/gui/geometry.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/surface.h>

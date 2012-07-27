@@ -2,6 +2,9 @@
 
 #ifndef _AGAR_VG_TOOL_H_
 #define _AGAR_VG_TOOL_H_
+
+#include <agar/gui/iconmgr.h>
+
 #include <agar/vg/begin.h>
 
 struct vg_tool_keybinding;

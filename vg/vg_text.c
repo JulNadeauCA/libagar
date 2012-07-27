@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include <gui/gui.h>
 #include <gui/widget.h>
@@ -37,6 +36,7 @@
 #include <gui/font_selector.h>
 #include <gui/checkbox.h>
 #include <gui/opengl.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"

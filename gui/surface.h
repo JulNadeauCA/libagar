@@ -3,6 +3,8 @@
 #ifndef _AGAR_GUI_SURFACE_H_
 #define _AGAR_GUI_SURFACE_H_
 
+#include <agar/gui/geometry.h>
+
 #include <agar/gui/begin.h>
 
 /* Palette of AG_Color values */

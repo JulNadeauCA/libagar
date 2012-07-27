@@ -33,6 +33,7 @@
 #include <core/core.h>
 
 #include "gui.h"
+#include "surface.h"
 #include "load_xcf.h"
 
 #include <string.h>

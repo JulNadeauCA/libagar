@@ -3,6 +3,8 @@
 #ifndef _AGAR_GUI_ANIM_H_
 #define _AGAR_GUI_ANIM_H_
 
+#include <agar/gui/surface.h>
+
 #include <agar/gui/begin.h>
 
 enum ag_anim_type {

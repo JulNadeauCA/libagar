@@ -36,7 +36,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "ttf.h"
 #include "textbox.h"
