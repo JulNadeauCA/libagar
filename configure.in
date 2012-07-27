@@ -12,30 +12,29 @@ RELEASE("A Mild Breeze Upon The Brow Of The Dead")
 
 # Register options for configure --help
 REGISTER_SECTION("Global Agar options:")
-REGISTER("--enable-<library>",		"Build libraries (gui|vg|rg|math|dev) [all]")
+REGISTER("--enable-<library>",		"Build libraries (gui|vg|rg|math|dev|au) [all]")
 REGISTER("--enable-debug",		"General debugging [no]")
 REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
 REGISTER("--enable-threads",		"Thread safety [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 
-REGISTER_SECTION("Options specific to Core library:")
+REGISTER_SECTION("Options specific to CORE library:")
 REGISTER("--enable-network",		"Network interface [check]")
 REGISTER("--enable-objdebug",		"Object system debugging [no]")
 REGISTER("--with-db4[=PREFIX]",		"Berkeley DB backend [check]")
 REGISTER("--with-mysql[=PREFIX]",	"MySQL backend [check]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
-REGISTER_SECTION("Options specific to Math library:")
+REGISTER_SECTION("Options specific to MATH library:")
 REGISTER("--with-altivec",		"AltiVec optimizations [check]")
 REGISTER("--with-sse",			"SSE optimizations [check]")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
 REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
 
-REGISTER_SECTION("Options specific to Audio library:")
-REGISTER("--enable-audio",		"Build audio interface library [no]")
-REGISTER("--with-sndfile[=PREFIX]",	"Use sndfile library [check]")
-REGISTER("--with-portaudio[=PREFIX]",	"Use portaudio library [check]")
+REGISTER_SECTION("Options specific to AU library:")
+REGISTER("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
+REGISTER("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
 
 REGISTER_SECTION("Options specific to GUI library:")
 REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
@@ -49,15 +48,10 @@ REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
 REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
 REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 
-# Installation directories
-MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
-HDEFINE(SHAREDIR, "$PREFIX/share/agar")
-MDEFINE(LOCALEDIR, "\${PREFIX}/share/agar/locale")
-HDEFINE(LOCALEDIR, "$PREFIX/share/agar/locale")
-MDEFINE(TTFDIR, "\${PREFIX}/share/agar/fonts")
-HDEFINE(TTFDIR, "$PREFIX/share/agar/fonts")
-MDEFINE(INCLDIR, "\${PREFIX}/include/agar")
-HDEFINE(INCLDIR, "$PREFIX/include/agar")
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
+DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
+DEFAULT_DIR(TTFDIR, "${DATADIR}/fonts")
+DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar")
 
 # Tests
 CHECK(cc)
@@ -633,26 +627,8 @@ if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
 	HDEFINE(ENABLE_AU, "yes")
 	MDEFINE(SUBDIR_au, "au")
 
-	# We need the sndfile library to load audio files
 	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
-	if [ "${HAVE_SNDFILE}" != "yes" ]; then
-		echo "*"
-		echo "* WARNING: sndfile was not found. The file driver in"
-		echo "* Agar-AU will be unavailable. If you need to specify a"
-		echo "* non-standard path, use --with-sndfile=PREFIX"
-		echo "*"
-	fi
-	
-	# We need the portaudio library to playback sound
 	CHECK(portaudio, 19.0, ${prefix_portaudio})
-	if [ "${HAVE_PORTAUDIO}" != "yes" ]; then
-		echo "*"
-		echo "* WARNING: PortAudio was not found. The pa driver in"
-		echo "* Agar-AU will be unavailable. If you need to specify a"
-		echo "* non-standard path, use --with-portaudio=PREFIX"
-		echo "*"
-	fi
-
 else
 	HUNDEF(ENABLE_AU)
 	MDEFINE(SUBDIR_au, "")
