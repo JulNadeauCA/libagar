@@ -350,23 +350,23 @@ echo ""
 echo "Usage: ./configure [options]"
 echo ""
 echo "Standard build options:"
-echo "    --bindir=DIR              Executables (for common users) [PREFIX/bin]"
+echo "    --bindir=DIR              Executables for common users [PREFIX/bin]"
 echo "    --build=STRING            Host environment for build [auto-detect]"
 echo "    --byte-order=STRING       Byte order for target environment (LE|BE) [auto-detect]"
 echo "    --cache=DIR               Cache ./configure results in directory [none]"
-echo "    --datadir=DIR             Data files (for program use) [PREFIX/share]"
+echo "    --datadir=DIR|NONE        Data files for program use [PREFIX/share]"
 echo "    --enable-nls              Multi-language support [no]"
-echo "    --exec-prefix=DIR         Installation base (machine-dependent) [PREFIX]"
+echo "    --exec-prefix=DIR         Machine-dependent installation base [PREFIX]"
 echo "    --host=STRING             Cross-compile for target environment [BUILD]"
 echo "    --includes=STRING         Preprocess C headers (yes|no|link) [yes]"
 echo "    --libdir=DIR              System libraries [PREFIX/lib]"
-echo "    --libexecdir=DIR          Executables (for program use) [PREFIX/libexec]"
+echo "    --libexecdir=DIR          Executables for program use [PREFIX/libexec]"
 echo "    --localedir=DIR           Multi-language support locales [DATADIR/locale]"
 echo "    --mandir=DIR              Manual page documentation [PREFIX/man]"
-echo "    --prefix=DIR              Installation base (machine-independent) [/usr/local]"
+echo "    --prefix=DIR              Installation base [/usr/local]"
 echo "    --srcdir=DIR              Source directory for concurrent build [.]"
-echo "    --statedir=DIR            Modifiable single-machine data [PREFIX/var]"
-echo "    --sysconfdir=DIR          System configuration files [PREFIX/etc]"
+echo "    --statedir=DIR|NONE       Modifiable single-machine data [PREFIX/var]"
+echo "    --sysconfdir=DIR|NONE     System configuration files [PREFIX/etc]"
 echo "    --testdir=DIR             Execute all tests in this directory [.]"
 echo "    --with-catman             Install cat files for manual pages [auto-detect]"
 echo "    --with-ctags              Generate ctags(1) tag files [no]"
@@ -699,28 +699,28 @@ echo "#define RELEASE \"$RELEASE\"" >> $BLD/include/agar/config/release.h
 echo "#endif" >> $BLD/include/agar/config/release.h
 echo "hdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 if [ "${DATADIR_SPECIFIED}" != "yes" ]; then
-DATADIR=""${PREFIX}/share/agar""
+DATADIR="${PREFIX}/share/agar"
 echo "#ifndef DATADIR" > $BLD/include/agar/config/datadir.h
 echo "#define DATADIR \"$DATADIR\"" >> $BLD/include/agar/config/datadir.h
 echo "#endif" >> $BLD/include/agar/config/datadir.h
 echo "hdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 fi;
 if [ "${LOCALEDIR_SPECIFIED}" != "yes" ]; then
-LOCALEDIR=""${DATADIR}/locale""
+LOCALEDIR="${DATADIR}/locale"
 echo "#ifndef LOCALEDIR" > $BLD/include/agar/config/localedir.h
 echo "#define LOCALEDIR \"$LOCALEDIR\"" >> $BLD/include/agar/config/localedir.h
 echo "#endif" >> $BLD/include/agar/config/localedir.h
 echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 fi;
 if [ "${TTFDIR_SPECIFIED}" != "yes" ]; then
-TTFDIR=""${DATADIR}/fonts""
+TTFDIR="${DATADIR}/fonts"
 echo "#ifndef TTFDIR" > $BLD/include/agar/config/ttfdir.h
 echo "#define TTFDIR \"$TTFDIR\"" >> $BLD/include/agar/config/ttfdir.h
 echo "#endif" >> $BLD/include/agar/config/ttfdir.h
 echo "hdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
 fi;
 if [ "${INCLDIR_SPECIFIED}" != "yes" ]; then
-INCLDIR=""${PREFIX}/include/agar""
+INCLDIR="${PREFIX}/include/agar"
 echo "#ifndef INCLDIR" > $BLD/include/agar/config/incldir.h
 echo "#define INCLDIR \"$INCLDIR\"" >> $BLD/include/agar/config/incldir.h
 echo "#endif" >> $BLD/include/agar/config/incldir.h
