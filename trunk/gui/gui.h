@@ -5,14 +5,9 @@
 
 #include <agar/config/have_sdl.h>
 
-#include <agar/gui/widget.h>
-#include <agar/gui/window.h>
-#include <agar/gui/text.h>
-#include <agar/gui/iconmgr.h>
-
 #include <agar/gui/begin.h>
 
-/* Flags for AG_InitVideo() */
+/* Flags for AG_InitVideo() API (now deprecated) */
 #define AG_VIDEO_HWSURFACE     0x0001  /* Request hardware FB */
 #define AG_VIDEO_ASYNCBLIT     0x0002  /* Multithreaded blits */
 #define AG_VIDEO_ANYFORMAT     0x0004  /* Disable depth emulation */
@@ -37,7 +32,15 @@
 __BEGIN_DECLS
 extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
 
-extern int agGUI;			/* GUI is initialized */
+/* Global configuration settings (bound to agConfig) */
+extern int agGUI, agRenderingContext;
+extern int agKbdDelay, agKbdRepeat;
+extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
+extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
+           agTextBlinkRate, agTextSymbols, agPageIncrement;
+extern int agIdleThresh, agScreenshotQuality, agMsgDelay;
+
+struct ag_window;
 
 int        AG_InitGraphics(const char *);
 int        AG_InitVideo(int, int, int, Uint)
@@ -53,14 +56,8 @@ void       AG_DestroyGUIGlobals(void);
 void       AG_QuitGUI(void);
 void       AG_DestroyVideo(void);
 #ifdef AG_DEBUG
-AG_Window *AG_GuiDebugger(void);
+struct ag_window *AG_GuiDebugger(void);
 #endif
-
-#ifdef AG_LEGACY
-#define AGVIEW_FOREACH_WINDOW AG_FOREACH_WINDOW
-#define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
-#define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
-#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>
