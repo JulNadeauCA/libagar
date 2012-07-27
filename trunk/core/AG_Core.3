@@ -78,20 +78,17 @@ may be set to NULL.
 Available
 .Fa flags
 options include:
-.Bl -tag -width "AG_NO_CFG_AUTOLOAD "
+.Bl -tag -width "AG_CREATE_DATADIR "
 .It AG_VERBOSE
 Allow errors/warnings on the standard error output.
 .It AG_CREATE_DATADIR
 Create a data directory for the application.
-The exact location of the directory is platform-dependent and may use
-.Fa progname .
-For example, under Unix,
+The exact location of the directory is platform-dependent (and may
+depend on
+.Fa progname ) .
+For example, on POSIX platforms,
 .Pa ~/.<progname>
 would be used.
-.It AG_NO_CFG_AUTOLOAD
-If a previously saved
-.Xr AG_Config 3
-profile exists, don't attempt to load it upon initialization.
 .El
 .Pp
 The

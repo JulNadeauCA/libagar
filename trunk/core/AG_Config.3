@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -37,27 +37,52 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-interface provides an
+interface (accessed via the global
+.Va agConfig
+object) manages persistent Agar configuration settings, which are
+stored as
 .Xr AG_Variable 3
-interface to various Agar parameters which should remain persistent.
-Typically, parameters are registered as
-.Xr AG_Variable 3
-bindings to specific global variables.
+values and bindings.
+.Pp
+Application-specific data may also be stored in
+.Va agConfig ,
+as long as the variable names don't start with the "ag_" prefix which
+is reserved for Agar settings.
 .Sh INTERFACE
 .nr nS 1
-.Ft "int"
-.Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "size_t dst_len"
-.Pp
 .Ft "int"
 .Fn AG_ConfigLoad "void"
 .Pp
 .Ft "int"
 .Fn AG_ConfigSave "void"
 .Pp
+.Ft "int"
+.Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "size_t dst_len"
+.Pp
 .nr nS 0
 The
+.Fn AG_ConfigLoad
+function loads the configuration data from disk, returning 0 on sucess
+or -1 if an error occured.
+It is equivalent to calling:
+.Bd -literal
+	AG_ObjectLoad(agConfig);
+.Ed
+.Pp
+The
+.Fn AG_ConfigSave
+function saves the configuration data, creating the parent directories if
+needed.
+Returns 0 on success or -1 on failure.
+It is equivalent to:
+.Bd -literal
+	AG_CreateDataDir();
+	AG_ObjectSave(agConfig);
+.Ed
+.Pp
+The
 .Fn AG_ConfigFile
-utility function searches a colon-separated pathname setting (ie.
+utility routine searches a colon-separated pathname setting (i.e.,
 .Sq load-path )
 for a file with the given
 .Fa name
@@ -71,24 +96,9 @@ fixed-size buffer
 bytes).
 .Fn AG_ConfigFile
 returns 0 on success and -1 on failure.
-.Pp
-.Fn AG_ConfigLoad
-loads the configuration data.
-It is equivalent to:
-.Bd -literal
-	AG_ObjectLoad(agConfig);
-.Ed
-.Pp
-.Fn AG_ConfigSave
-saves the configuration data, creating the parent directories if needed.
-It is equivalent to:
-.Bd -literal
-	AG_CreateDataDir();
-	AG_ObjectSave(agConfig);
-.Ed
 .Sh CONFIGURATION PARAMETERS
 The following parameters are registered by Agar-Core:
-.Bl -tag -width "BOOL view.full-screen "
+.Bl -tag -width "BOOL initial-run "
 .It Va BOOL initial-run
 Application is being ran for the first time (read-only).
 .It Va STRING load-path
@@ -97,12 +107,7 @@ Directory containing data files for the
 virtual filesystem, as well as the
 .Nm
 data itself.
-Default is platform-dependent (ie. for systems with
-.Xr getpwuid 3
-and
-.Xr getuid 3 ,
-it is
-.Pa $HOME/.(application-name) .
+Default is platform-dependent.
 .It Va STRING save-path
 Target directory for writing the
 .Xr AG_Object 3
@@ -110,64 +115,42 @@ virtual filesystem (usually the same as
 .Sq load-path ) .
 .It Va STRING tmp-path
 Directory for temporary files.
+Default is platform-dependent (on POSIX platforms, the
+.Ev TMPDIR
+environment variable is honored).
 .El
-.Pp
-The following parameters are registered by the Agar-GUI library:
-.Pp
-.Bl -tag -width "BOOL view.full-screen "
-.It Va STRING font-path
-Directory containing font files used by the
-.Xr AG_Text 3
-interface, including both FreeType and bitmap fonts.
-Default is platform-specific.
-.It Va BOOL font.freetype
-If Agar-GUI was compiled with FreeType support, this enables use of
-FreeType fonts as opposed to bitmap fonts.
-Default is 1 if FreeType support available, otherwise 0.
-.It Va STRING font.face
-Default font file to use where no specific face is requested in
-.Xr AG_TextRender 3 .
-.It Va INT font.size
-Default font size in points.
-.It Va UINT font.flags
-Default font flags (style, weight).
-.El
-.Pp
 .Sh EXAMPLES
-The following example sets some platform-specific font paths.
+The following code sets an integer option and a string.
+The configuration is then immediately saved to disk:
 .Bd -literal
-#ifdef __APPLE__
-AG_PrtString(agConfig, "font-path", "%s/Library/Fonts:/Library/Fonts:"
-                                    "/System/Library/Fonts",
-			            getenv("HOME"));
-#elif _WIN32
-AG_SetString(agConfig, "font-path", "c:\\windows\\fonts");
-#else
-AG_PrtString(agConfig, "font-path", "%s/.fonts:"
-                                    "/usr/X11R6/lib/X11/fonts/TTF",
-                                    getenv("HOME"));
-#endif
+	AG_SetInt(agConfig, "my-setting", 1);
+	AG_SetString(agConfig, "my-string", "Foo bar");
+	AG_ConfigSave();
 .Ed
-.Sh OBSOLETE PARAMETERS
-The following parameters were used before Agar-1.4 and are now obsolete:
 .Pp
-.Bl -tag -compact
-.It Va BOOL view.full-screen
-.It Va BOOL view.opengl
-.It Va UINT16 view.w
-.It Va UINT16 view.h
-.It Va UINT16 view.min-w
-.It Va UINT16 view.min-h
-.It Va UINT8 view.depth
-.It Va UINT view.nominal-fps
-.El
+The following Agar-GUI code displays a checkbox controlling the value
+of "my-setting":
+.Bd -literal
+	AG_Checkbox *cb;
+	
+	cb = AG_CheckboxNew(win, 0, "My setting");
+	AG_BindVariable(cb, "state", agConfig, "my-setting");
+.Ed
+.Pp
+The following code binds "my-ext-setting" to an external variable, and then
+reads the configuration from disk.
+If the saved configuration has "my-ext-setting" defined, then the variable will
+be set accordingly:
+.Bd -literal
+	int myExtSetting = 0;
+	
+	AG_BindInt(agConfig, "my-ext-setting", &myExtSetting);
+	AG_ConfigLoad();
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Object 3 ,
-.Xr AG_Text 3
+.Xr AG_Object 3
 .Sh HISTORY
 The
 .Nm
 interface first appeared in Agar 1.0
-.Sh BUGS
-The Agar-GUI parameters should be documented in a separate manual page.
