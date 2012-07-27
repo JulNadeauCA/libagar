@@ -42,6 +42,7 @@
 #include <config/have_db4.h>
 #include <config/have_getaddrinfo.h>
 #include <config/have_getpwuid.h>
+#include <config/have_getuid.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -145,7 +146,7 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 	
 	/* Select the user account interface routines. */
-#ifdef HAVE_GETPWUID
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	AG_SetUserOps(&agUserOps_posix);
 #else
 	AG_SetUserOps(&agUserOps_dummy);

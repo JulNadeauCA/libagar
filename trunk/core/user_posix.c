@@ -6,6 +6,7 @@
 #include <pwd.h>
 
 #include <config/have_getpwnam_r.h>
+#include <config/have_getenv.h>
 
 /*
  * Access user account information on POSIX-like platforms.
@@ -21,6 +22,19 @@ ConvertUserData(AG_User *u, const struct passwd *pw)
 	u->gecos = TryStrdup(pw->pw_gecos);
 	u->home = TryStrdup(pw->pw_dir);
 	u->shell = TryStrdup(pw->pw_shell);
+
+#ifdef HAVE_GETENV
+	{
+		char *s;
+		if ((s = getenv("TMPDIR")) != NULL && s[0] != '\0') {
+			u->tmp = TryStrdup(s);
+		} else {
+			u->tmp = TryStrdup("/tmp");
+		}
+	}
+#else
+	u->tmp = TryStrdup("/tmp");
+#endif
 }
 
 static int

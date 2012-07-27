@@ -29,22 +29,12 @@
  * object.
  */
 
-#include <config/sharedir.h>
-#include <config/have_getpwuid.h>
-#include <config/have_getuid.h>
-#include <config/have_freetype.h>
-
 #include <core/core.h>
 #include <core/config.h>
 
-#ifdef _XBOX
-#include <core/xbox.h>
-#endif
-
 #include <string.h>
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-#include <pwd.h>
-#endif
+
+#include <config/datadir.h>
 
 /* XXX XXX move to agar-gui */
 int agKbdDelay = 250;			/* Key repeat delay */
@@ -102,8 +92,7 @@ int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
 	char path[AG_PATHNAME_MAX];
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-#endif
+	AG_User *sysUser;
 
 	AG_ObjectInit(cfg, &agConfigClass);
 	AG_ObjectSetName(cfg, "config");
@@ -112,56 +101,31 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	AG_SetInt(cfg, "initial-run", 1);
 	AG_SetInt(cfg, "no-confirm-quit", 0);
 
-	/*
-	 * Set the optional platform-specific access paths.
-	 */
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	{
-		struct passwd *pw = getpwuid(getuid());
+	if (agProgName != NULL &&
+	    (sysUser = AG_GetRealUser()) != NULL) {
+		AG_SetString(cfg, "home", sysUser->home);
+		AG_SetString(cfg, "tmp-path", sysUser->tmp);
 
-		if (agProgName != NULL) {
-			Strlcpy(path, pw->pw_dir, sizeof(path));
-			Strlcat(path, AG_PATHSEP, sizeof(path));
-			Strlcat(path, ".", sizeof(path));
-			Strlcat(path, agProgName, sizeof(path));
-		} else {
-			path[0] = '\0';
-		}
-		AG_SetString(cfg, "save-path", path);
-		AG_PrtString(cfg, "load-path", "%s:%s", path, SHAREDIR);
-		AG_SetString(cfg, "home", pw->pw_dir);
-	}
-#elif defined(_XBOX)
-	if (agProgName != NULL) {
-		/* If the persistent data drive is mounted use it */
-		if(AG_XBOX_DriveIsMounted('T')) {
-			Strlcpy(path, "T:\\", sizeof(path));
-		} else {
-			Strlcpy(path, "D:\\.", sizeof(path));
-		}
+		Strlcpy(path, sysUser->home, sizeof(path));
+		Strlcat(path, AG_PATHSEP, sizeof(path));
+		Strlcat(path, ".", sizeof(path));
 		Strlcat(path, agProgName, sizeof(path));
+		AG_SetString(cfg, "save-path", path);
+
+		if (strcmp(DATADIR, "NONE") != 0) {
+			AG_PrtString(cfg, "load-path", "%s:%s", path, DATADIR);
+		} else {
+			AG_SetString(cfg, "load-path", path);
+		}
+		AG_UserFree(sysUser);
 	} else {
-		path[0] = '\0';
+		AG_SetString(cfg, "home", "");
+		AG_SetString(cfg, "save-path", "");
+		AG_SetString(cfg, "load-path",
+		    (strcmp(DATADIR,"NONE") != 0) ? DATADIR : "");
+		AG_SetString(cfg, "tmp-path", "tmp");
 	}
-	AG_SetString(cfg, "save-path", path);
-	AG_PrtString(cfg, "load-path", "%s;D:\\", path);
-	AG_SetString(cfg, "home", "D:\\");
-#else
-	if (agProgName != NULL) {
-		path[0] = '.';
-		Strlcpy(&path[1], agProgName, sizeof(path)-1);
-	} else {
-		path[0] = '\0';
-	}
-	AG_SetString(cfg, "save-path", path);
-	AG_PrtString(cfg, "load-path", "%s:%s", path, SHAREDIR);
-	AG_SetString(cfg, "home", ".");
-#endif
-	if (path[0] != '\0') {
-		AG_PrtString(cfg, "tmp-path", "%s%stmp", path, AG_PATHSEP);
-	} else {
-		AG_PrtString(cfg, "tmp-path", "tmp");
-	}
+
 	if (flags & AG_CREATE_DATADIR) {
 		if (AG_CreateDataDir() == -1)
 			return (-1);

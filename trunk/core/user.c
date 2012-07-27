@@ -49,6 +49,7 @@ AG_UserNew(void)
 	u->gecos = NULL;
 	u->home = NULL;
 	u->shell = NULL;
+	u->tmp = NULL;
 	return (u);
 }
 
@@ -61,6 +62,7 @@ AG_UserFree(AG_User *u)
 	Free(u->gecos);
 	Free(u->home);
 	Free(u->shell);
+	Free(u->tmp);
 	free(u);
 }
 

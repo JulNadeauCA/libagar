@@ -8,6 +8,7 @@
 typedef struct ag_user {
 	char	 name[AG_USER_NAME_MAX];	/* User name */
 	Uint     flags;
+#define AG_USER_NO_ACCOUNT	0x01		/* Not a real user account */
 	char    *passwd;			/* Encrypted password */
 	Uint32   uid;				/* User ID */
 	Uint32   gid;				/* Group ID */
@@ -15,6 +16,7 @@ typedef struct ag_user {
 	char    *gecos;				/* Honeywell login info */
 	char    *home;				/* Home directory */
 	char    *shell;				/* Default shell */
+	char    *tmp;				/* Temp. directory */
 	AG_TAILQ_ENTRY(ag_user) users;
 } AG_User;
 
