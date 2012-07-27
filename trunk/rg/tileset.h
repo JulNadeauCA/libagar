@@ -3,6 +3,8 @@
 #ifndef _AGAR_RG_TILESET_H_
 #define _AGAR_RG_TILESET_H_
 
+#include <agar/gui/surface.h>
+
 struct rg_tileset;
 struct rg_tile;
 /* struct rg_sketch; */

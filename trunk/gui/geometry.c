@@ -26,6 +26,7 @@
 #include <core/core.h>
 
 #include "gui.h"
+#include "geometry.h"
 
 AG_Rect
 AG_ReadRect(AG_DataSource *ds)

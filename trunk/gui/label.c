@@ -24,17 +24,15 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
+#include "window.h"
 #include "label.h"
 #include "primitive.h"
 #include "text_cache.h"
 
 #include <string.h>
 #include <stdarg.h>
-
-#include <core/snprintf.h>
 
 static AG_LabelFormatSpec *fmts = NULL;		/* Extended format specifiers */
 static int nFmts = 0;

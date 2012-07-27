@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
 #include "window.h"

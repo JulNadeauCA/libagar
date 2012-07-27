@@ -30,6 +30,8 @@
 #include <core/core.h>
 
 #include "gui.h"
+#include "widget.h"
+#include "window.h"
 
 static void
 ApplyStyle(AG_Widget *w, AG_Style *style)

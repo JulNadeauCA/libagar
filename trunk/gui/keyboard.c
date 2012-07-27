@@ -28,7 +28,7 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
+
 #include "window.h"
 
 static const struct {

@@ -5,6 +5,12 @@
 
 #ifndef _AGAR_GUI_DRV_H_
 #define _AGAR_GUI_DRV_H_
+
+#include <agar/gui/mouse.h>
+#include <agar/gui/keyboard.h>
+#include <agar/gui/keymap.h>
+#include <agar/gui/surface.h>
+
 #include <agar/gui/begin.h>
 
 enum ag_driver_type {
@@ -182,7 +188,6 @@ extern AG_Object       agDrivers;	/* Drivers VFS */
 extern AG_DriverClass *agDriverOps;	/* Current driver class */
 extern void           *agDriverList[];	/* Available drivers (AG_DriverClass) */
 extern Uint            agDriverListSize;
-extern int             agRenderingContext;
 
 void       AG_ListDriverNames(char *, size_t)
                               BOUNDED_ATTRIBUTE(__string__, 1, 2);

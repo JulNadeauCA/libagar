@@ -23,18 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_sdl.h>
-
 #include <core/core.h>
-#include <core/config.h>
 
-#include "geometry.h"
 #include "surface.h"
 #include "gui_math.h"
 
-#include <stdio.h>
 #include <string.h>
-#include <fcntl.h>
 
 const char *agBlendFuncNames[] = {
 	"dst+src",

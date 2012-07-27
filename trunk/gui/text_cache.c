@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,10 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
 #include "text_cache.h"
+#include "widget.h"
 
 /* #define TEXTCACHE_DEBUG */
 

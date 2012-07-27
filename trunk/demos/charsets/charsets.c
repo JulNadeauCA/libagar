@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	if (AG_InitCore(NULL, AG_CORE_VERBOSE) == -1 ||
+	if (AG_InitCore(NULL, AG_VERBOSE) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);

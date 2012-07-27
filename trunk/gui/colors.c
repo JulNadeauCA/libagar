@@ -33,6 +33,7 @@
 #include "gui.h"
 #include "colors.h"
 #include "load_color.h"
+#include "drv.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
 
@@ -299,7 +300,7 @@ AG_ColorsSaveDefault(void)
 {
 	char path[AG_PATHNAME_MAX];
 
-	AG_CopyCfgString("save-path", path, sizeof(path));
+	AG_GetString(agConfig, "save-path", path, sizeof(path));
 	if (path[0] != '\0') {
 		Strlcat(path, AG_PATHSEP, sizeof(path));
 		Strlcat(path, "gui-colors.acs", sizeof(path));

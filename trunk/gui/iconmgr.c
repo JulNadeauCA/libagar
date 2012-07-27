@@ -28,13 +28,11 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "gui.h"
+#include "surface.h"
 #include "load_xcf.h"
-
-#include <string.h>
-#include <stdarg.h>
+#include "iconmgr.h"
 
 /* Compile surfaces/textures for the given static icon. */
 void

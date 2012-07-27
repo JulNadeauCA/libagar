@@ -29,9 +29,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
-
-#include <config/have_freetype.h>
 
 #include "editable.h"
 #include "text.h"
@@ -48,6 +45,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+
+#include <config/have_freetype.h>
 
 AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
 AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */

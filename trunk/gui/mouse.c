@@ -29,7 +29,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "window.h"
 #include "cursors.h"

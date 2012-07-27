@@ -31,8 +31,6 @@
 #include <config/ag_threads.h>
 
 #include <core/core.h>
-#include <core/config.h>
-
 #include <core/win32.h>
 
 #include "gui.h"

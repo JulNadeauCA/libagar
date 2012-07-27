@@ -35,7 +35,6 @@
 
 #include <stdarg.h>
 #include <ctype.h>
-#include <fcntl.h>
 #include <string.h>
 
 #include <config/ag_objdebug.h>

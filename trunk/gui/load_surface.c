@@ -31,6 +31,7 @@
 #include <core/load_version.h>
 
 #include "gui.h"
+#include "surface.h"
 #include "load_surface.h"
 
 const AG_Version agSurfaceVer = { 0, 0 };

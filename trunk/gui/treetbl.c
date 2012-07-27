@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include "treetbl.h"
 

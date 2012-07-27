@@ -5,7 +5,7 @@
 
 #ifdef XK_MISCELLANY
 static AG_KeySym agKeymapMisc[256];
-static const struct ag_key_mapping agMiscKeys[] = {
+static const struct ag_glx_key_mapping agMiscKeys[] = {
 	{ XK_BackSpace,			0xff,	AG_KEY_BACKSPACE },
 	{ XK_Tab,			0xff,	AG_KEY_TAB },
 	{ XK_Clear,			0xff,	AG_KEY_CLEAR },
@@ -92,7 +92,7 @@ static const int agMiscKeyCount = sizeof(agMiscKeys) / sizeof(agMiscKeys[0]);
 
 #ifdef XK_XKB_KEYS
 static AG_KeySym agKeymapXKB[256];
-static const struct ag_key_mapping agXkbKeys[] = {
+static const struct ag_glx_key_mapping agXkbKeys[] = {
 	{ XK_dead_grave,		0xff,	AG_KEY_COMPOSE },
 	{ XK_dead_acute,		0xff,	AG_KEY_COMPOSE },
 	{ XK_dead_tilde,		0xff,	AG_KEY_COMPOSE },

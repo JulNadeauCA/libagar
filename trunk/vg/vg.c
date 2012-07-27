@@ -31,6 +31,7 @@
 
 #include <gui/gui.h>
 #include <gui/primitive.h>
+#include <gui/iconmgr.h>
 
 #include "vg.h"
 #include "vg_view.h"

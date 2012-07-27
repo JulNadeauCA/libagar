@@ -2,6 +2,10 @@
 
 #ifndef _AGAR_GUI_TEXT_H_
 #define _AGAR_GUI_TEXT_H_
+
+#include <agar/gui/surface.h>
+#include <agar/gui/drv.h>
+
 #include <agar/gui/begin.h>
 
 #define AG_GLYPH_NBUCKETS 1024	/* Buckets for glyph cache table */

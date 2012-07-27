@@ -26,6 +26,8 @@
 #include <core/core.h>
 
 #include <gui/gui.h>
+
+#include <gui/surface.h>
 #include <gui/load_surface.h>
 
 #include <gui/box.h>

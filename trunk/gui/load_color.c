@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 
-#include "geometry.h"
 #include "surface.h"
 #include "load_color.h"
 

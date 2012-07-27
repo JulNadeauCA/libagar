@@ -31,7 +31,6 @@
 #include <config/have_xinerama.h>
 
 #include <core/core.h>
-#include <core/config.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -42,10 +41,11 @@
 #endif
 
 #include "gui.h"
+#include "drv.h"
+#include "text.h"
 #include "window.h"
 #include "perfmon.h"
 #include "gui_math.h"
-#include "text.h"
 #include "cursors.h"
 #include "opengl.h"
 
@@ -84,7 +84,7 @@ struct {
 	Uint Lalt, Ralt;
 	Uint num, mode;
 } modMasks;
-struct ag_key_mapping {			/* Keymap translation table entry */
+struct ag_glx_key_mapping {		/* Keymap translation table entry */
 	int kcode;			/* Scancode */
 	int kclass;			/* X keysym class (e.g., 0xff) */
 	AG_KeySym key;			/* Corresponding Agar keysym */

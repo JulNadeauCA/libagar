@@ -6,6 +6,9 @@
 
 #ifndef _AGAR_GUI_PRIMITIVE_H_
 #define _AGAR_GUI_PRIMITIVE_H_
+
+#include <agar/gui/widget.h>
+
 #include <agar/gui/begin.h>
 
 __BEGIN_DECLS

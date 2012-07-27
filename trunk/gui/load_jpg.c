@@ -28,7 +28,9 @@
  */
 
 #include <core/core.h>
+
 #include "gui.h"
+#include "surface.h"
 
 #include <config/have_jpeg.h>
 #ifdef HAVE_JPEG
