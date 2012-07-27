@@ -2397,6 +2397,55 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWNAM_R
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for a getenv() function..."
+$ECHO_N "checking for a getenv() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETENV" ]; then
+		HAVE_GETENV=`cat ${cache}/ctest-HAVE_GETENV`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETENV`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	(void)getenv("PATH");
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETENV="yes"
+echo "#ifndef HAVE_GETENV" > $BLD/include/agar/config/have_getenv.h
+echo "#define HAVE_GETENV \"$HAVE_GETENV\"" >> $BLD/include/agar/config/have_getenv.h
+echo "#endif" >> $BLD/include/agar/config/have_getenv.h
+echo "hdefs[\"HAVE_GETENV\"] = \"$HAVE_GETENV\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETENV="no"
+echo "#undef HAVE_GETENV" >$BLD/include/agar/config/have_getenv.h
+echo "hdefs[\"HAVE_GETENV\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETENV" > ${cache}/ctest-HAVE_GETENV
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETENV
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getuid() function..."
 $ECHO_N "checking for a getuid() function..." >> config.log
 MK_CACHED="No"

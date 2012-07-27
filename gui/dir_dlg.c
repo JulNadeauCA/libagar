@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -199,16 +199,14 @@ RefreshShortcuts(AG_DirDlg *dd, int init)
 #else /* !_WIN32 */
 	{
 		char path[AG_PATHNAME_MAX], *pPath = &path[0], *p;
+		AG_User *sysUser;
 	
 		/* Add the filesystem root, home and cwd. */
 		AG_TlistAddS(tl, agIconDirectory.s, "/");
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-		{
-			struct passwd *pw;
-			if ((pw = getpwuid(getuid())) != NULL)
-				AG_TlistAddS(tl, agIconDirectory.s, pw->pw_dir);
+		if ((sysUser = AG_GetRealUser()) != NULL) {
+			AG_TlistAddS(tl, agIconDirectory.s, sysUser->home);
+			AG_UserFree(sysUser);
 		}
-#endif
 		if (AG_GetCWD(path, sizeof(path)) == 0)
 			AG_TlistAddS(tl, agIconDirectory.s, path);
 		

@@ -27,17 +27,10 @@
  * Common code between AG_FileDlg and AG_DirDlg.
  */
 
-#include <config/have_getpwuid.h>
-#include <config/have_getuid.h>
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-# include <pwd.h>
-#endif
-
 #include <config/have_glob.h>
 #ifdef HAVE_GLOB
 # include <glob.h>
 #endif
-
 
 /* Evaluate if path is a filesystem root. */
 static __inline__ int

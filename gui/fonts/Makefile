@@ -1,8 +1,8 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-SHAREDIR=	${TTFDIR}
-SHARESRC=	minimal.xcf \
+DATADIR=	${TTFDIR}
+DATAFILES_SRC=	minimal.xcf \
 		serif.xcf \
 		Vera-Copyright.txt \
 		Vera-README.txt \
