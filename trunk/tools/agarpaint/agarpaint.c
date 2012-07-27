@@ -28,7 +28,7 @@
 #include <agar/gui/load_xcf.h>
 #include <agar/rg.h>
 
-#include "config/sharedir.h"
+#include "config/datadir.h"
 #include "config/have_agar_dev.h"
 #include "config/version.h"
 #include "config/enable_nls.h"
@@ -590,7 +590,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_PrtString(agConfig, "load-path", ".:%s", SHAREDIR);
+	AG_PrtString(agConfig, "load-path", ".:%s", DATADIR);
 
 	AG_AtExitFuncEv(Quit);
 	AG_BindGlobalKeyEv(AG_KEY_ESCAPE, AG_KEYMOD_ANY, Quit);

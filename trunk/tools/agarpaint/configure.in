@@ -14,8 +14,7 @@ REQUIRE(agar-vg, 1.4.1)
 REQUIRE(agar-rg, 1.4.1)
 REQUIRE(agar-dev, 1.4.1)
 
-MDEFINE(SHAREDIR, "$PREFIX/share/agarpaint")
-HDEFINE(SHAREDIR, "$PREFIX/share/agarpaint")
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agarpaint")
 
 C_DEFINE(_USE_AGAR_QUEUE)
 C_DEFINE(_USE_AGAR_STD)
@@ -34,8 +33,3 @@ C_NO_SECURE_WARNINGS()
 #		exit 1
 #	fi
 #fi
-
-echo "*"
-echo "* Configuration successful."
-echo "* Use make && make install to build and install this application."
-echo "*"
