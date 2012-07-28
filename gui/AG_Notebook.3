@@ -117,8 +117,8 @@ The font of the text displaying the tab names can be changed with
 The function
 .Fn AG_NotebookSetTabVisibility
 controls the visibility of the tab header (0 = invisible, 1 = visible).
-.Sh TABS
-.nr nS 0
+.Sh TAB MANAGEMENT
+.nr nS 1
 .Ft "AG_NotebookTab *"
 .Fn AG_NotebookAddTab "AG_Notebook *nb" "const char *name" "enum ag_box_type type"
 .Pp
@@ -128,7 +128,7 @@ controls the visibility of the tab header (0 = invisible, 1 = visible).
 .Ft "void"
 .Fn AG_NotebookSelectTab "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
-.nr nS 1
+.nr nS 0
 The
 .Fn AG_NotebookAddTab
 function creates a new tabbed container.

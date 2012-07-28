@@ -93,19 +93,14 @@ constructor configures a polled
 and assigns the polling function.
 .Pp
 The
-.Fn AG_ComboSizeHint
+.Fn AG_UComboSizeHint
 function arranges for the
 .Xr AG_Tlist 3
 widget displayed on popup to request a size large enough to display the given
 number of items.
 The
-.Fn AG_ComboSizeHintPixels
+.Fn AG_UComboSizeHintPixels
 variant specifies the size of the list in pixels.
-.Sh ITEM SELECTION
-.nr nS 1
-.Ft void
-.Fn AG_ComboSelect "AG_Combo *combo" "AG_TlistItem *item"
-.Pp
 .Sh EVENTS
 The
 .Nm

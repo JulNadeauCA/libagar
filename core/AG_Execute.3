@@ -41,13 +41,13 @@ function provides a cross-platform interface for executing external
 applications.
 .Sh INTERFACE
 .nr nS 1
-.Ft "AG_ProcessID "
+.Ft "AG_ProcessID"
 .Fn AG_Execute "const char *file" "char **argv"
 .Pp
-.Ft "AG_ProcessID "
+.Ft "AG_ProcessID"
 .Fn AG_WaitOnProcess "AG_ProcessID pid" "enum ag_exec_wait_type wait_type"
 .Pp
-.Ft int
+.Ft "int"
 .Fn AG_Kill "AG_ProcessID pid"
 .Pp
 .nr nS 0

@@ -60,7 +60,6 @@ Event handlers are declared as:
 .Fn MyEventHandler "AG_Event *event"
 .Pp
 .nr nS 0
-.Pp
 The
 .Fa event
 structure contains the event arguments, which are most convenient retrieved
@@ -530,8 +529,8 @@ structure:
 .Pp
 .Ft void
 .Fn AG_QueueEvent "AG_EventQ *eq" "const char *event_name" "const char *fmt" "..."
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_InitEventQ
 function initializes an

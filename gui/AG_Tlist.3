@@ -435,14 +435,14 @@ scrolls the display to the start of the list, and
 .Fn AG_TlistScrollToEnd
 scrolls the display to the end of the list.
 .Sh POPUP MENUS
-.nr nS 0
+.nr nS 1
 .Ft "AG_MenuItem *"
 .Fn AG_TlistSetPopupFn "AG_Tlist *tlist" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_TlistSetPopup "AG_Tlist *tlist" "const char *category"
 .Pp
-.nr nS 1
+.nr nS 0
 The
 .Fn AG_TlistSetPopupFn
 function arranges for the given callback
