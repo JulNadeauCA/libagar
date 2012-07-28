@@ -54,8 +54,8 @@ void
 AG_InitError(void)
 {
 #ifdef AG_THREADS
-	AG_ThreadKeyCreate(&agErrorKey);
-	AG_ThreadKeyCreate(&agErrorCode);
+	AG_ThreadKeyCreate(&agErrorKey, NULL);
+	AG_ThreadKeyCreate(&agErrorCode, NULL);
 #else
 	agErrorKey = NULL;
 	agErrorCode = AG_EUNDEFINED;
