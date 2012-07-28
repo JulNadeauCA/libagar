@@ -320,47 +320,41 @@ Shorthand for
 The following code snippet creates a window containing both a static label
 and a polled label:
 .Pp
-.Bd -literal
-{
-	AG_Window *win;
-	int myInt = 1234;
-	AG_Label *myLbl;
+.Bd -literal -offset indent
+AG_Window *win;
+int myInt = 1234;
+AG_Label *myLbl;
 
-	win = AG_WindowNew(0);
-	AG_LabelNew(win, 0, "Foo");
-	myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
-	AG_LabelSizeHint(myLbl, 1, "myInt=0000");
-}
+win = AG_WindowNew(0);
+AG_LabelNew(win, 0, "Foo");
+myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
+AG_LabelSizeHint(myLbl, 1, "myInt=0000");
 .Ed
 .Pp
 Thread-safe code can associate polled labels with mutexes protecting
 the data to access:
-.Bd -literal
-{
-	int myInt = 1234;
-	AG_Mutex myMutex = AG_MUTEX_INITIALIZER;
+.Bd -literal -offset indent
+int myInt = 1234;
+AG_Mutex myMutex = AG_MUTEX_INITIALIZER;
 
-	AG_LabelNewPolledMT(win, 0, &myMutex, "myInt=%i", &myInt);
-}
+AG_LabelNewPolledMT(win, 0, &myMutex, "myInt=%i", &myInt);
 .Ed
 .Pp
 It is frequently useful to display bit values in textual format.
 The following example would display
 .Sq FOO_FLAG, BAR_FLAG .
-.Bd -literal
-{
-	Uint MyFlags = FOO_FLAG|BAR_FLAG;
-	AG_Label *lbl;
+.Bd -literal -offset indent
+Uint MyFlags = FOO_FLAG|BAR_FLAG;
+AG_Label *lbl;
 
-	lbl = AG_LabelNewPolled(win, 0, "MyFlags=%[flags]", &MyFlags);
-	AG_LabelFlag(lbl, 0, "FOO_FLAG", FOO_FLAG);
-	AG_LabelFlag(lbl, 0, "BAR_FLAG", BAR_FLAG);
-}
+lbl = AG_LabelNewPolled(win, 0, "MyFlags=%[flags]", &MyFlags);
+AG_LabelFlag(lbl, 0, "FOO_FLAG", FOO_FLAG);
+AG_LabelFlag(lbl, 0, "BAR_FLAG", BAR_FLAG);
 .Ed
 .Pp
 The following code fragment defines a custom format specifier for use
 in polled labels:
-.Bd -literal
+.Bd -literal -offset indent
 void
 PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
 {
@@ -368,11 +362,12 @@ PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
 	snprintf(s, len, "[%f,%f]", my->x, my->y);
 }
 
-{
-	struct my_vector v;
-	AG_RegisterLabelFormat("myVec", PrintMyVector);
-	AG_LabelNewPolled(parent, 0, "%[myVec]", &v);
-}
+.Li ...
+
+struct my_vector v;
+
+AG_RegisterLabelFormat("myVec", PrintMyVector);
+AG_LabelNewPolled(parent, 0, "%[myVec]", &v);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

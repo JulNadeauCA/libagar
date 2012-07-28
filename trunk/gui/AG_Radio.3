@@ -187,6 +187,8 @@ MyCallback(AG_Event *event)
 	printf("Selected item %d\\n", newSelection);
 }
 
+.Li ...
+
 AG_Radio *r = AG_RadioNewFn(NULL, 0, fruitNames, MyCallback, NULL);
 AG_BindInt(r, "value", &fruit);
 .Ed
