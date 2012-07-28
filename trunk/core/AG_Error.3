@@ -40,11 +40,11 @@ This manual page describes the error handling system which is used by
 all Agar libraries, and available to applications as well.
 .Sh ERROR RETURNS
 .nr nS 1
-.Ft "const char *"
-.Fn AG_GetError "void"
-.Pp
 .Ft void
 .Fn AG_SetError "const char *fmt" "..."
+.Pp
+.Ft "const char *"
+.Fn AG_GetError "void"
 .Pp
 .Ft void
 .Fn AG_FatalError "const char *fmt" "..."
@@ -57,21 +57,15 @@ all Agar libraries, and available to applications as well.
 .Pp
 .nr nS 0
 The
-.Fn AG_GetError
-function returns the error message string last set by
-.Fn AG_SetError .
-.Pp
-the
 .Fn AG_SetError
 function sets the error message string using a
 .Xr printf 3
 like format string.
-.Pp
-If Agar was compiled with thread support, both
-.Fn AG_SetError
-and
 .Fn AG_GetError
-use thread-specific data keys to achieve thread safety.
+returns the error message string last set by
+.Fn AG_SetError .
+If Agar was compiled with thread support, the error message string is
+kept in thread-local storage, so these functions are thread-safe.
 .Pp
 The
 .Fn AG_FatalError
@@ -90,7 +84,9 @@ argument.
 The
 .Fn AG_Strerror
 function returns an error message for the given platform-specific error
-code (i.e., errno under Unix).
+code (e.g., on POSIX platforms, the argument should be a valid
+.Xr errno 2
+value).
 .Sh DEBUG ROUTINES
 .nr nS 1
 .Ft void
@@ -144,7 +140,7 @@ is >= 1.
 .Pp
 .nr nS 0
 The
-.Ft AG_Malloc
+.Fn AG_Malloc
 function calls
 .Xr malloc 3
 and raises a fatal error if the memory cannot be allocated.
@@ -155,7 +151,7 @@ variant also calls
 but sets the standard error message and returns NULL if the memory cannot
 be allocated.
 .Pp
-.Ft AG_Realloc
+.Fn AG_Realloc
 calls
 .Xr realloc 3
 and raises a fatal error if the memory cannot be allocated.
@@ -172,7 +168,7 @@ and
 simply invoke
 .Xr malloc 3 .
 .Pp
-.Ft AG_Free
+.Fn AG_Free
 calls
 .Xr free 3 .
 If

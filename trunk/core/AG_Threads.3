@@ -68,6 +68,8 @@ AG_ObjectUnlock(myRoot);
 .Sh THREADS INTERFACE
 When compiled with threads support, Agar provides a portable, minimal interface
 to the operating system's native threads interface.
+These functions follow Agar's standard error-handling style (see
+.Xr AG_Intro 3 ) .
 .Sh MUTEXES
 .\" MANLINK(AG_Mutex)
 Mutexes (MUTual EXclusion devices) are commonly used to protect shared
@@ -77,11 +79,11 @@ data structure against concurrent modifications.
 .Ft "void"
 .Fn AG_MutexInit "AG_Mutex *mutex"
 .Pp
-.Ft "void"
-.Fn AG_MutexInitRecursive "AG_Mutex *mutex"
-.Pp
 .Ft "int"
 .Fn AG_MutexTryInit "AG_Mutex *mutex"
+.Pp
+.Ft "void"
+.Fn AG_MutexInitRecursive "AG_Mutex *mutex"
 .Pp
 .Ft "int"
 .Fn AG_MutexTryInitRecursive "AG_Mutex *mutex"
@@ -107,12 +109,6 @@ initializes a recursive mutex (a mutex with a reference count),
 which allows nested
 .Fn AG_MutexLock
 calls.
-If the mutex cannot be allocated, a fatal error is raised.
-The
-.Fn AG_MutexTryInit
-and
-.Fn AG_MutexTryInitRecursive
-variants return an error code on failure.
 .Pp
 .Fn AG_MutexDestroy
 frees all resources allocated for a mutex.
@@ -124,11 +120,10 @@ respectively acquire and release a mutex.
 .Pp
 .Fn AG_MutexTryLock
 tries to acquire a mutex without blocking and immediately returns 0 on
-success and -1 on failure.
-Note that
-.Fn AG_MutexTryLock
-does not set any error message with
-.Xr AG_SetError 3 .
+success.
+On failure, the function returns -1, but does not set any error message (so
+.Xr AG_GetError 3
+should not be used).
 .Sh CONDITION VARIABLES
 .\" MANLINK(AG_Cond)
 .nr nS 1
@@ -156,10 +151,6 @@ does not set any error message with
 .nr nS 0
 .Fn AG_CondInit
 initializes a condition variable structure.
-If the condition variable cannot be allocated, a fatal error is raised.
-The
-.Fn AG_CondTryInit
-variant returns an error code on failure.
 .Pp
 .Fn AG_CondDestroy
 releases resources allocated for a condition variable.
@@ -193,12 +184,18 @@ All of these functions will raise a fatal condition if an error is encountered.
 .Fn AG_ThreadCancel "AG_Thread th"
 .Pp
 .Ft int
+.Fn AG_ThreadTryCancel "AG_Thread th"
+.Pp
+.Ft void
 .Fn AG_ThreadJoin "AG_Thread th" "void **exitVal"
+.Pp
+.Ft int
+.Fn AG_ThreadTryJoin "AG_Thread th" "void **exitVal"
 .Pp
 .Ft void
 .Fn AG_ThreadExit "void *exitVal"
 .Pp
-.Ft int
+.Ft void
 .Fn AG_ThreadKill "AG_Thread th" "int signal"
 .Pp
 .nr nS 0
@@ -209,31 +206,21 @@ The optional argument
 .Fa arg
 is passed to
 .Fa fn .
-On success,
-.Fn AG_ThreadCreate
-initializes the
-.Fa th
-structure and returns 0.
-On failure, a fatal error is raised.
-The
-.Fn AG_ThreadTryCreate
-variant returns an error if the thread could not be created.
 .Pp
+The
 .Fn AG_ThreadCancel
-requests that the specified thread be cancelled.
+routine requests that the specified thread be cancelled.
 If the given thread is invalid, a fatal error is raised.
 .Pp
+The
 .Fn AG_ThreadJoin
-suspends the execution of the current thread until 
+function suspends the execution of the current thread until 
 .Fa th
 terminates.
 When it does, the value passed to 
 .Fn AG_ThreadExit
 is made available in
-.Fa exitVal
-and
-.Fn AG_ThreadJoin
-returns 0.
+.Fa exitVal .
 .Pp
 .Fn AG_ThreadExit
 terminates the current thread.
@@ -246,25 +233,42 @@ sends a signal to the specified thread.
 .Sh THREAD-SPECIFIC VARIABLES
 .nr nS 1
 .\" MANLINK(AG_ThreadKey)
+.Ft void
+.Fn AG_ThreadKeyCreate "AG_ThreadKey *key" "void (*destructor)(void *)"
+.Pp
 .Ft int
-.Fn AG_ThreadKeyCreate "AG_ThreadKey *key"
+.Fn AG_ThreadKeyTryCreate "AG_ThreadKey *key" "void (*destructor)(void *)"
 .Pp
 .Ft void
 .Fn AG_ThreadKeyDelete "AG_ThreadKey key"
 .Pp
+.Ft int
+.Fn AG_ThreadKeyTryDelete "AG_ThreadKey key"
+.Pp
 .Ft "void *"
 .Fn AG_ThreadKeyGet "AG_ThreadKey key"
 .Pp
-.Ft "void *"
+.Ft "void"
 .Fn AG_ThreadKeySet "AG_ThreadKey key" "const void *value"
+.Pp
+.Ft "int"
+.Fn AG_ThreadKeyTrySet "AG_ThreadKey key" "const void *value"
 .Pp
 .nr nS 0
 .Fn AG_ThreadKeyCreate
-initializes a thread-specific value described by the
-.Fa key
-structure.
+initializes a key (i.e., a handle) to a thread-specific value.
+The handle itself is accessible to all threads.
+The thread-specific value (i.e., the value specified by
+.Fn AG_ThreadKeySet ,
+and which defaults to NULL) will persist only for the life of the thread.
+If an optional
+.Fa destructor
+is given, that function will be called (with the thread-specific value as
+its argument), when the thread exists.
+.Pp
+The
 .Fn AG_ThreadKeyDelete
-releases resources allocated for a key.
+function releases resources allocated for a key.
 .Pp
 .Fn AG_ThreadKeyGet
 returns the thread-specific value associated with
