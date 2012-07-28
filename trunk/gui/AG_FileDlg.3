@@ -351,49 +351,6 @@ widget does not provide any bindings.
 .Sh EVENTS
 The
 .Nm
-widget reacts to the following events:
-.Pp
-.Bl -tag -compact -width "pushed (Cancel button) "
-.It dblclick (dir list)
-Change the working directory.
-.It dblclick (file list)
-Select the given file.
-If either
-.Dv AG_FILEDLG_LOAD
-or
-.Dv AG_FILEDLG_SAVE
-is set, display an error if the file is not readable or writeable.
-Otherwise, the
-.Sq file-chosen
-event is raised.
-The widget will also request that its parent window be closed if the
-.Dv AG_FILEDLG_CLOSEWIN
-flag is set.
-.It selected (file list)
-Raise the
-.Sq file-selected
-event.
-.It return (text input)
-If the entered path is an existing directory, change the working directory.
-Otherwise, assume that the path refers to a file and select it.
-.Xr glob 3
-is used on systems that support it.
-.It pushed (OK button)
-Select the current file, checking for needed permissions if either
-.Dv AG_FILEDLG_LOAD
-or
-.Dv AG_FILEDLG_SAVE
-is set.
-Also closes parent window if
-.Dv AG_FILEDLG_CLOSEWIN is set.
-.It pushed (Cancel button)
-Closes the parent window if
-.Dv AG_FILEDLG_CLOSEWIN
-is set, otherwise a no-op.
-.El
-.Pp
-The
-.Nm
 widget generates the following events:
 .Pp
 .Bl -tag -width 2n

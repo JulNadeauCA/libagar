@@ -306,28 +306,6 @@ was given).
 .Sh EVENTS
 The
 .Nm
-widget reacts to the following events:
-.Pp
-.Bl -tag -compact -width "mouse-button-down "
-.It bound
-A new binding has been configured, so we set the maximum possible range that
-the new binding's data type can accomodate (we set an initial value for the
-.Va min
-and
-.Va max
-bindings).
-.It key-down
-Increment or decrement the value if
-.Dv AG_KEY_UP
-or
-.Dv AG_KEY_DOWN
-is pressed.
-.It mouse-button-down
-Increment or decrement the value in response to mouse wheel events.
-.El
-.Pp
-The
-.Nm
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n

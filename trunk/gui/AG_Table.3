@@ -575,36 +575,6 @@ The function returns 0 on success, -1 on failure.
 .Sh EVENTS
 The
 .Nm
-widget reacts to the following events:
-.Pp
-.Bl -tag -compact -width "mouse-button-down"
-.It mouse-motion
-Process resizing actions in progress.
-.It key-down
-By default,
-.Dv AG_KEY_UP ,
-.Dv AG_KEY_DOWN ,
-.Dv AG_KEY_PAGEUP
-and
-.Dv AG_KEY_PAGEDOWN
-will move the current single-row selection.
-.It mouse-button-up
-Stop any resizing action in progress.
-.It mouse-button-down
-.Dv AG_MOUSE_LEFT
-selects the overlapping column, row or cell.
-.Dv AG_MOUSE_RIGHT
-works similarly, but displays the popup menu associated with the
-selected column or cell, as configured with
-.Fn AG_TableSetPopup .
-.Dv AG_MOUSE_WHEELUP
-and
-.Dv AG_MOUSE_WHEELDOWN
-are used to scroll the view of the table.
-.El
-.Pp
-The
-.Nm
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n

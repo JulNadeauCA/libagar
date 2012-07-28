@@ -160,29 +160,6 @@ variant prevents the surface from being copied.
 .Sh EVENTS
 The
 .Nm
-widget reacts to the following events:
-.Pp
-.Bl -tag -compact -width "mouse-button-down "
-.It mouse-motion
-Toggle the
-.Dv AG_SOCKET_MOUSEOVER
-flag and raise the
-.Sq socket-mouseoverlap
-event whenever the cursor moves in and out of the socket area.
-If the cursor moves out of the area (and
-.Dv AG_SOCKET_STICKY_STATE
-is not set), the boolean state reverts to 0.
-.It mouse-button-down
-Set the boolean state of the socket to 1.
-If the socket contains an icon, start the drag-and-drop process.
-.It mouse-button-up
-Set the boolean state of the socket back to 0, unless the
-.Dv AG_SOCKET_STICKY_STATE
-flag is set.
-.El
-.Pp
-The
-.Nm
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
