@@ -57,39 +57,34 @@
 #ifndef	_AGAR_CORE_STRING_H_
 #define	_AGAR_CORE_STRING_H_
 
+#define AG_STRING_BUFFERS_MAX	8			/* For AG_Printf() */
+
 #include <agar/core/begin.h>
 
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 
-size_t      AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
-size_t      AG_Strlcpy(char *, const char *, size_t)
-                       BOUNDED_ATTRIBUTE(__string__, 1, 3);
-size_t      AG_StrlcatUCS4(Uint32 *, const Uint32 *, size_t);
-size_t      AG_Strlcat(char *, const char *, size_t)
-                       BOUNDED_ATTRIBUTE(__string__, 1, 3);
-Uint32     *AG_StrsepUCS4(Uint32 **, const Uint32 *);
-char       *AG_Strsep(char **, const char *);
-char       *AG_Strdup(const char *);
-char       *AG_TryStrdup(const char *);
-Uint32     *AG_StrdupUCS4(const Uint32 *);
-Uint32     *AG_TryStrdupUCS4(const Uint32 *);
+char  *AG_Printf(const char *, ...);
+char  *AG_PrintfN(Uint, const char *, ...);
+char  *AG_Strsep(char **, const char *);
+char  *AG_Strdup(const char *);
+char  *AG_TryStrdup(const char *);
+size_t AG_Strlcpy(char *, const char *, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+size_t AG_Strlcat(char *, const char *, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+int    AG_StrlcpyInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+int    AG_StrlcatInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+int    AG_StrlcpyUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+int    AG_StrlcatUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+
 const char *AG_Strcasestr(const char *, const char *);
 void        AG_StrReverse(char *);
-int         AG_StrlcpyInt(char *, int, size_t)
-                          BOUNDED_ATTRIBUTE(__string__, 1, 3);
-int         AG_StrlcatInt(char *, int, size_t)
-                          BOUNDED_ATTRIBUTE(__string__, 1, 3);
-int         AG_StrlcpyUint(char *, Uint, size_t)
-                           BOUNDED_ATTRIBUTE(__string__, 1, 3);
-int         AG_StrlcatUint(char *, Uint, size_t)
-                           BOUNDED_ATTRIBUTE(__string__, 1, 3);
 
 Uint32	*AG_ImportUnicode(const char *, const char *, size_t *, size_t *);
 int      AG_ExportUnicode(const char *, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
-size_t	 AG_CopyUnicode(const char *, const char *, Uint32 *, size_t);
 
+int    AG_InitStringSubsystem(void);
+void   AG_DestroyStringSubsystem(void);
 
 /*
  * Return the length of a UCS-4 string in characters, without the
@@ -246,11 +241,6 @@ __END_DECLS
 #define Strcasecmp AG_Strcasecmp
 #define Strncasecmp AG_Strncasecmp
 #define Strcasestr AG_Strcasestr
-#define StrlcatUCS4 AG_StrlcatUCS4
-#define StrlcpyUCS4 AG_StrlcpyUCS4
-#define StrsepUCS4 AG_StrsepUCS4
-#define StrdupUCS4 AG_StrdupUCS4
-#define TryStrdupUCS4 AG_TryStrdupUCS4
 #define StrReverse AG_StrReverse
 #define StrlcpyInt AG_StrlcpyInt
 #define StrlcatInt AG_StrlcatInt

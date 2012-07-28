@@ -28,7 +28,7 @@ ComboSelected(AG_Event *event)
 {
 	AG_TlistItem *ti = AG_PTR(1);
 
-	AG_TextMsg(AG_MSG_INFO, "Item %s", ti->text);
+	AG_TextMsgS(AG_MSG_INFO, AG_Printf("Selected Item: %s", ti->text));
 }
 
 static void
@@ -60,7 +60,7 @@ CreateWindow(void)
 	 * acts as a container widget that packs its children vertically.
 	 */
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Some Agar-GUI widgets");
+	AG_WindowSetCaptionS(win, "Some Agar-GUI widgets");
 	AG_ObjectSetName(win, "MainWindow");
 	
 	/*
@@ -83,7 +83,7 @@ CreateWindow(void)
 		 * (polled labels use special format strings; see AG_Label(3)
 		 * for details).
 		 */
-		AG_LabelNew(div1, 0, "This is a static label");
+		AG_LabelNewS(div1, 0, "This is a static label");
 
 		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME,
 		    "This is a polled label.\n"
@@ -110,7 +110,7 @@ CreateWindow(void)
 		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
-			AG_ButtonNew(hBox, 0, "%c", 0x41+i);
+			AG_ButtonNew(hBox, 0, AG_Printf("%c", 0x41+i));
 	}
 
 	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
@@ -156,8 +156,14 @@ CreateWindow(void)
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
-		AG_TlistAdd(com->list, NULL, "Item #%d", i);
-		AG_TlistAdd(ucom->list, NULL, "Item #%d", i);
+		char text[32];
+
+		/* This is more efficient than AG_Printf() */
+		AG_Strlcpy(text, "Item #", sizeof(text));
+		AG_StrlcatInt(text, i, sizeof(text));
+
+		AG_TlistAddS(com->list, NULL, text);
+		AG_TlistAddS(ucom->list, NULL, text);
 	}
 
 	/*

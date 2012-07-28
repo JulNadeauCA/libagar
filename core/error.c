@@ -37,42 +37,48 @@
 #include <windows.h>
 #endif
 
+char         *agErrorMsg = NULL;		/* Error message */
+AG_ErrorCode  agErrorCode = AG_EUNDEFINED; 	/* Error code */
 #ifdef AG_THREADS
-AG_ThreadKey agErrorKey;		/* Error message (thread-specific) */
-AG_ThreadKey agErrorCode;		/* Error code (thread-specific) */
-#else
-char *agErrorKey;			/* Error message */
-AG_ErrorCode agErrorCode; 		/* Error code */
+AG_ThreadKey agErrorMsgKey;
+AG_ThreadKey agErrorCodeKey;
 #endif
+
 int agDebugLvl = 1;			/* Default debug level */
 
 /* Error callback for AG_FatalError() */
 static void (*agErrorCallback)(const char *) = NULL;
 
-/* Initialize the error facility. */
-void
-AG_InitError(void)
-{
 #ifdef AG_THREADS
-	AG_ThreadKeyCreate(&agErrorKey, NULL);
-	AG_ThreadKeyCreate(&agErrorCode, NULL);
-#else
-	agErrorKey = NULL;
+static void DestroyErrorMsg(void *msg) { Free(msg); }
+#endif /* AG_THREADS */
+
+int
+AG_InitErrorSubsystem(void)
+{
+	agErrorMsg = NULL;
 	agErrorCode = AG_EUNDEFINED;
+
+#ifdef AG_THREADS
+	if (AG_ThreadKeyTryCreate(&agErrorMsgKey, DestroyErrorMsg) == -1 ||
+	    AG_ThreadKeyTryCreate(&agErrorCodeKey, NULL) == -1) {
+		return (-1);
+	}
+	AG_ThreadKeySet(agErrorMsgKey, NULL);
+	AG_ThreadKeySet(agErrorCodeKey, NULL);
 #endif
+	return (0);
 }
 
-/* Destroy the error facility. */
 void
-AG_DestroyError(void)
+AG_DestroyErrorSubsystem(void)
 {
+	Free(agErrorMsg);
+	agErrorMsg = NULL;
+	agErrorCode = AG_EUNDEFINED;
 #ifdef AG_THREADS
-#if 0
-	/* XXX uninitialized warnings */
-	AG_ThreadKeyDelete(agErrorKey);
-#endif
-#else
-	Free(agErrorKey);
+	AG_ThreadKeyDelete(agErrorMsgKey);
+	AG_ThreadKeyDelete(agErrorCodeKey);
 #endif
 }
 
@@ -81,23 +87,20 @@ void
 AG_SetError(const char *fmt, ...)
 {
 	va_list args;
-	char *buf;
-	
-	va_start(args, fmt);
-	Vasprintf(&buf, fmt, args);
-	va_end(args);
-#ifdef AG_THREADS
-	{
-		char *ekey;
 
-		if ((ekey = (char *)AG_ThreadKeyGet(agErrorKey)) != NULL) {
-			Free(ekey);
-		}
-		AG_ThreadKeySet(agErrorKey, buf);
+#ifdef AG_THREADS
+	if ((agErrorMsg = (char *)AG_ThreadKeyGet(agErrorMsgKey)) != NULL) {
+		free(agErrorMsg);
 	}
+	va_start(args, fmt);
+	Vasprintf(&agErrorMsg, fmt, args);
+	va_end(args);
+	AG_ThreadKeySet(agErrorMsgKey, agErrorMsg);
 #else
-	Free(agErrorKey);
-	agErrorKey = buf;
+	Free(agErrorMsg);
+	va_start(args, fmt);
+	Vasprintf(&agErrorMsg, fmt, args);
+	va_end(args);
 #endif
 }
 
@@ -106,9 +109,9 @@ const char *
 AG_GetError(void)
 {
 #ifdef AG_THREADS
-	return ((const char *)AG_ThreadKeyGet(agErrorKey));
+	return ((const char *)AG_ThreadKeyGet(agErrorMsgKey));
 #else
-	return ((const char *)agErrorKey);
+	return ((const char *)agErrorMsg);
 #endif
 }
 
@@ -144,13 +147,12 @@ AG_Strerror(int error)
 #endif
 }
 
-
 /* Set the symbolic error code. */
 void
 AG_SetErrorCode(AG_ErrorCode code)
 {
 #ifdef AG_THREADS
-	AG_ThreadKeySet(agErrorCode, (void *)code);
+	AG_ThreadKeySet(agErrorCodeKey, (void *)code);
 #else
 	agErrorCode = code;
 #endif
@@ -161,9 +163,9 @@ AG_ErrorCode
 AG_GetErrorCode(void)
 {
 #ifdef AG_THREADS
-	return ((AG_ErrorCode)AG_ThreadKeyGet(agErrorCode));
+	return (AG_ErrorCode)AG_ThreadKeyGet(agErrorCodeKey);
 #else
-	return agErrorCode;
+	return (agErrorCode);
 #endif
 }
 

@@ -19,7 +19,8 @@ SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
 	AG_Config.3 AG_Version.3 AG_DataSource.3 AG_Error.3 AG_Threads.3 \
 	AG_CPUInfo.3 AG_ByteSwap.3 AG_Queue.3 AG_Limits.3 AG_DSO.3 AG_File.3 \
-	AG_List.3 AG_Variable.3 AG_Time.3 AG_Tbl.3 AG_Getopt.3 AG_Execute.3
+	AG_List.3 AG_Variable.3 AG_Time.3 AG_Tbl.3 AG_Getopt.3 AG_Execute.3 \
+	AG_String.3
 
 CFLAGS+=-D_AGAR_CORE_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \

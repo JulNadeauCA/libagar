@@ -51,8 +51,8 @@ typedef enum ag_error_code {
 __BEGIN_DECLS
 extern int agDebugLvl;
 
-void		 AG_InitError(void);
-void		 AG_DestroyError(void);
+int		 AG_InitErrorSubsystem(void);
+void		 AG_DestroyErrorSubsystem(void);
 AG_ErrorCode	 AG_GetErrorCode(void);
 const char	*AG_GetError(void);
 void		 AG_SetErrorCode(AG_ErrorCode);
