@@ -9,6 +9,8 @@
 #ifdef HAVE_PTHREADS
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #else
 # error "AG_THREADS option requires POSIX threads"
 #endif
@@ -32,14 +34,10 @@ __END_DECLS
 #include <agar/core/close.h>
 
 #define AG_ThreadSelf()			pthread_self()
-#define AG_ThreadJoin(t,vp)		pthread_join((t),(vp))
 #define AG_ThreadExit(p)		pthread_exit(p)
-#define AG_ThreadKeyCreate(k)		pthread_key_create(k,NULL)
-#define AG_ThreadKeyDelete(k)		pthread_key_delete(k)
 #define AG_ThreadKeyGet(k)		pthread_getspecific(k)
-#define AG_ThreadKeySet(k,v)		pthread_setspecific((k),(v))
 #define AG_ThreadSigMask(how,n,o)	pthread_sigmask((how),(n),(o))
-#define AG_ThreadKill(thread,signo)	pthread_kill((thread),(signo))
+#define AG_ThreadKill(thread,signo)	(void)pthread_kill((thread),(signo))
 #define AG_MutexTryLock(m)		pthread_mutex_trylock(m)
 #define AG_CondWait(cd,m)		pthread_cond_wait(cd,m)
 #define AG_CondTimedWait(cd,m,t)	pthread_cond_timedwait(cd,m,t)
@@ -52,14 +50,14 @@ AG_ThreadCreate(AG_Thread *th, void *(*fn)(void *), void *arg)
 {
 	int rv;
 	if ((rv = pthread_create(th, NULL, fn, arg)) != 0)
-		AG_FatalError("AG_ThreadCreate (%d)", rv);
+		AG_FatalError("pthread_create (%d)", rv);
 }
 static __inline__ int
 AG_ThreadTryCreate(AG_Thread *th, void *(*fn)(void *), void *arg)
 {
 	int rv;
 	if ((rv = pthread_create(th, NULL, fn, arg)) != 0) {
-		AG_SetError("pthread_create failed (%d)", rv);
+		AG_SetError(strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -68,7 +66,33 @@ static __inline__ void
 AG_ThreadCancel(AG_Thread th)
 {
 	if (pthread_cancel(th) != 0)
-		AG_FatalError("pthread_cancel failed");
+		AG_FatalError("pthread_cancel");
+}
+static __inline__ int
+AG_ThreadTryCancel(AG_Thread th)
+{
+	int rv;
+	if ((rv = pthread_cancel(th)) != 0) {
+		AG_SetError(strerror(rv));
+		return (-1);
+	}
+	return (0);
+}
+static __inline__ void
+AG_ThreadJoin(AG_Thread th, void **p)
+{
+	if (pthread_join(th, p) != 0)
+		AG_FatalError("pthread_join");
+}
+static __inline__ int
+AG_ThreadTryJoin(AG_Thread th, void **p)
+{
+	int rv;
+	if ((rv = pthread_join(th, p)) != 0) {
+		AG_SetError(strerror(rv));
+		return (-1);
+	}
+	return (0);
 }
 
 /*
@@ -78,20 +102,20 @@ static __inline__ void
 AG_MutexInit(AG_Mutex *m)
 {
 	if (pthread_mutex_init(m, NULL) != 0)
-		AG_FatalError("AG_MutexInit");
+		AG_FatalError("pthread_mutex_init");
 }
 static __inline__ void
 AG_MutexInitRecursive(AG_Mutex *m)
 {
 	if (pthread_mutex_init(m, &agRecursiveMutexAttr) != 0)
-		AG_FatalError("AG_MutexInitRecursive");
+		AG_FatalError("pthread_mutex_init(recursive)");
 }
 static __inline__ int
 AG_MutexTryInit(AG_Mutex *m)
 {
 	int rv;
 	if ((rv = pthread_mutex_init(m, NULL)) != 0) {
-		AG_SetError("pthread_mutex_init failed (%d)", rv);
+		AG_SetError(strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -101,7 +125,7 @@ AG_MutexTryInitRecursive(AG_Mutex *m)
 {
 	int rv;
 	if ((rv = pthread_mutex_init(m, &agRecursiveMutexAttr)) != 0) {
-		AG_SetError("pthread_mutex_init failed (%d)", rv);
+		AG_SetError(strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -110,19 +134,19 @@ static __inline__ void
 AG_MutexLock(AG_Mutex *m)
 {
 	if (pthread_mutex_lock(m) != 0)
-		AG_FatalError("AG_MutexLock");
+		AG_FatalError("pthread_mutex_lock");
 }
 static __inline__ void
 AG_MutexUnlock(AG_Mutex *m)
 {
 	if (pthread_mutex_unlock(m) != 0)
-		AG_FatalError("AG_MutexUnlock");
+		AG_FatalError("pthread_mutex_unlock");
 }
 static __inline__ void
 AG_MutexDestroy(AG_Mutex *m)
 {
 	if (pthread_mutex_destroy(m) != 0)
-		AG_FatalError("AG_MutexDestroy");
+		AG_FatalError("pthread_mutex_destroy");
 }
 
 /*
@@ -132,14 +156,14 @@ static __inline__ void
 AG_CondInit(AG_Cond *cd)
 {
 	if (pthread_cond_init(cd, NULL) != 0)
-		AG_FatalError("AG_CondInit");
+		AG_FatalError("pthread_cond_init");
 }
 static __inline__ int
 AG_CondTryInit(AG_Cond *cd)
 {
 	int rv;
 	if ((rv = pthread_cond_init(cd, NULL)) != 0) {
-		AG_SetError("pthread_cond_init failed (%d)", rv);
+		AG_SetError(strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -148,19 +172,71 @@ static __inline__ void
 AG_CondDestroy(AG_Cond *cd)
 {
 	if (pthread_cond_destroy(cd) != 0)
-		AG_FatalError("AG_CondDestroy");
+		AG_FatalError("pthread_cond_destroy");
 }
 static __inline__ void
 AG_CondBroadcast(AG_Cond *cd)
 {
 	if (pthread_cond_broadcast(cd) != 0)
-		AG_FatalError("AG_CondBroadcast");
+		AG_FatalError("pthread_cond_broadcast");
 }
 static __inline__ void
 AG_CondSignal(AG_Cond *cd)
 {
 	if (pthread_cond_signal(cd) != 0)
-		AG_FatalError("AG_CondSignal");
+		AG_FatalError("pthread_cond_signal");
+}
+
+/*
+ * Thread-local storage interface
+ */
+static __inline__ void
+AG_ThreadKeyCreate(AG_ThreadKey *k, void (*destructorFn)(void *))
+{
+	if (pthread_key_create(k,destructorFn) != 0)
+		AG_FatalError("pthread_key_create");
+}
+static __inline__ int
+AG_ThreadKeyTryCreate(AG_ThreadKey *k, void (*destructorFn)(void *))
+{
+	int rv;
+	if ((rv = pthread_key_create(k,destructorFn)) != 0) {
+		AG_SetError(strerror(rv));
+		return (-1);
+	}
+	return (0);
+}
+static __inline__ void
+AG_ThreadKeyDelete(AG_ThreadKey k)
+{
+	if (pthread_key_delete(k) != 0)
+		AG_FatalError("pthread_key_delete");
+}
+static __inline__ int
+AG_ThreadKeyTryDelete(AG_ThreadKey k)
+{
+	int rv;
+	if ((rv = pthread_key_delete(k)) != 0) {
+		AG_SetError(strerror(rv));
+		return (-1);
+	}
+	return (0);
+}
+static __inline__ void
+AG_ThreadKeySet(AG_ThreadKey k, const void *p)
+{
+	if (pthread_setspecific(k, p) != 0)
+		AG_FatalError("pthread_setspecific");
+}
+static __inline__ int
+AG_ThreadKeyTrySet(AG_ThreadKey k, const void *p)
+{
+	int rv;
+	if ((rv = pthread_setspecific(k, p)) != 0) {
+		AG_SetError(strerror(rv));
+		return (-1);
+	}
+	return (0);
 }
 
 #else /* !AG_THREADS */
@@ -185,21 +261,10 @@ typedef int AG_ThreadKey;
 #define AG_CondSignal(cd)
 #define AG_CondWait(cd,m)
 #define AG_CondTimedWait(cd,m,t)
-#define AG_ThreadCancel(thread)
-#define AG_ThreadSelf(thread) AG_FatalError("No AG_THREADS")
-#define AG_ThreadCreate(thread,func,arg) AG_FatalError("No AG_THREADS")
-#define AG_ThreadJoin(thread,valptr) AG_FatalError("No AG_THREADS")
-#define AG_ThreadExit(p)
-#define AG_ThreadKeyCreate(k)
-#define AG_ThreadKeyDelete(k)
-#define AG_ThreadKeyGet(k)
-#define AG_ThreadKeySet(k,v)
-#define AG_ThreadSigMask(how,newmask,oldmask)
-#define AG_ThreadKill(thread,signo)
 
-static __inline__ int AG_MutexTryInit(AG_Mutex *mutex) { return (0); }
-static __inline__ int AG_MutexTryInitRecursive(AG_Mutex *mutex) { return (0); }
-static __inline__ int AG_MutexTryLock(AG_Mutex *mutex) { return (0); }
+static __inline__ int AG_MutexTryInit(AG_Mutex *mu) { return (0); }
+static __inline__ int AG_MutexTryInitRecursive(AG_Mutex *mu) { return (0); }
+static __inline__ int AG_MutexTryLock(AG_Mutex *mu) { return (0); }
 
 #undef HAVE_PTHREADS
 #endif /* AG_THREADS */
