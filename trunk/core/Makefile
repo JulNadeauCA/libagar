@@ -12,7 +12,7 @@ LIB_LINKS=	pthreads winmm
 SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \
 	prop.c timeout.c class.c cpuinfo.c data_source.c \
 	load_string.c load_version.c vsnprintf.c vasprintf.c asprintf.c \
-	dir.c md5.c sha1.c rmd160.c file.c string_compat.c dso.c tree.c \
+	dir.c md5.c sha1.c rmd160.c file.c string.c dso.c tree.c \
 	time.c time_dummy.c db.c tbl.c getopt.c exec.c text.c user.c \
 	user_dummy.c
 

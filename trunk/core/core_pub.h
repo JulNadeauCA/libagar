@@ -5,7 +5,7 @@
 #include <agar/core/core_begin.h>
 
 #include <agar/core/core_init.h>
-#include <agar/core/string_compat.h>
+#include <agar/core/string.h>
 
 #ifdef _USE_AGAR_STD
 # include <agar/core/snprintf.h>
