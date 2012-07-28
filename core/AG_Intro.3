@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -44,29 +44,42 @@ These libraries share the same version number and release cycle, but they are
 separate and can be packaged and distributed independently.
 .Pp
 .Sh USING THE AGAR API REFERENCE
-Since the Agar API Reference is also intended as a detailed specification
-(defining function prototypes, structures and function behavior in detail),
-the content can become repetitive and difficult to read, so the API Reference
-uses a number of conventions:
-.Bl -enum
+The Agar API Reference is intended as a detailed specification explaining
+Agar's functions and structures in sufficient detail.
+To avoid the content becoming repetitive, the API Reference uses a number
+of important conventions regarding error handling and thread-safety:
+.Bl -bullet -enum
 .It
 The return value for functions returning
 .Ft int ,
-unless otherwise documented, represents an error code (where 0 = success,
--1 = failure).
-On failure, the error message can be retrieved using
+unless otherwise documented, represents an error code, where 0 indicates
+success and -1 indicates failure.
+On failure, an error message string can be retrieved using
 .Xr AG_GetError 3 .
 .It
-Every function prototype described in the documentation has some associated
-text, except for those function "variants" that are trivial and obvious by
-looking at the function prototype (for example,
+Some functions have variants differing only in argument format.
+For example,
 .Xr AG_LabelNew 3
-accepts a printf-style format string, and
+accepts a format string, and
 .Xr AG_LabelNewS 3
-accepts a plain C string).
+accepts a plain C string.
+Since the difference is shown in function prototype, it is customary to omit
+mentioning those variants in the following paragraph describing the function.
 .It
-When Agar is compiled with threads support, functions are thread-safe
-unless documented otherwise (see
+Some functions have variants differing only in error-handling style.
+Those may also be omitted from the description paragraph.
+For example,
+.Xr AG_MutexInit 3
+has no return value.
+If the function fails, an
+.Xr AG_FatalError 3
+is raised.
+The
+.Xr AG_MutexTryInit
+variant, however, returns 0 on success or -1 on failure.
+.It
+When Agar is compiled with threads support, Agar functions are thread-safe
+(free-threaded), unless documented otherwise (see
 .Dq CONVENTIONS
 section of
 .Xr AG_Threads 3
@@ -91,14 +104,11 @@ for details on Agar events.
 .It STRUCTURE DATA
 List of public structure members which are safe to access directly (in the
 specified way).
-Function interfaces are always available so developers who prefer to use them
-exclusively can ignore these sections.
-.Pp
-Note: Multithreaded applications must use
+Multithreaded applications must use
 .Xr AG_ObjectLock 3
-prior to accessing this data (although the object can be assumed locked
-in some contexts, see
-.Xr AG_Event 3
+prior to accessing this data (although in some contexts, such as inside event
+handler routines, objects can be presumed locked; see
+.Xr AG_Threads 3
 for details).
 .El
 .Sh AGAR-CORE
