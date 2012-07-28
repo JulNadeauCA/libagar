@@ -706,6 +706,19 @@ if [ "${HAVE_COCOA}" = "yes" ]; then
 	MAPPEND(SRCS_GUI, "drv_cocoa.m")
 fi
 
+#
+# Conditionally compiled sources in Agar-AU
+#
+MDEFINE(SRCS_AU, "")
+if [ "${AG_THREADS}" = "yes" ]; then
+	if [ "${HAVE_SNDFILE}" = "yes" ]; then
+		MAPPEND(SRCS_AU, "au_dev_file.c")
+	fi
+	if [ "${HAVE_PORTAUDIO}" = "yes" ]; then
+		MAPPEND(SRCS_AU, "au_dev_pa.c")
+	fi
+fi
+
 # Set up configure script output
 C_INCPREP($BLD/include/agar)
 C_INCDIR($BLD/include)
