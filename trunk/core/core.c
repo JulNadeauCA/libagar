@@ -91,7 +91,10 @@ AG_InitCore(const char *progname, Uint flags)
 	textdomain("agar");
 #endif
 
-	AG_InitError();
+	if (AG_InitErrorSubsystem() == -1 ||
+	    AG_InitStringSubsystem() == -1) {
+		return (-1);
+	}
 	AG_GetCPUInfo(&agCPU);
 
 	/* Initialize the thread resources. */
@@ -196,7 +199,8 @@ AG_Destroy(void)
 	AG_DataSourceDestroySubsystem();
 
 	AG_DestroyTimeouts();
-	AG_DestroyError();
+	AG_DestroyStringSubsystem();
+	AG_DestroyErrorSubsystem();
 	AG_DestroyClassTbl();
 	Free(agProgName);
 }

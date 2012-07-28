@@ -54,6 +54,10 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * C-string related routines.
+ */
+
 #include <core/core.h>
 
 #include <string.h>
@@ -64,6 +68,11 @@
 #include <config/have_iconv.h>
 #ifdef HAVE_ICONV
 # include <iconv.h>
+#endif
+
+char        *agPrintBuf[AG_STRING_BUFFERS_MAX];	      /* AG_Printf() buffers */
+#ifdef AG_THREADS
+AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
 #endif
 
 /*
@@ -107,6 +116,60 @@ const unsigned char agStrcasecmpMapASCII[] = {
 };
 
 /*
+ * Build a C string from a format string, returning a pointer to an
+ * internally-managed buffer. The caller must never free() this buffer.
+ *
+ * AG_Printf() prints to the first buffer, AG_PrintfN() allows the
+ * buffer index to be specified.
+ *
+ * In multi-threaded mode, the buffer is allocated as thread-local storage.
+ * This buffer will remain valid until the application or thread exits
+ * (or a subsequent AG_Printf() call is made, which will overwrite it).
+ */
+char *
+AG_Printf(const char *fmt, ...)
+{
+	va_list args;
+
+#ifdef AG_THREADS
+	if ((agPrintBuf[0] = (char *)AG_ThreadKeyGet(agPrintBufKey[0])) != NULL) {
+		free(agPrintBuf[0]);
+	}
+	va_start(args, fmt);
+	Vasprintf(&agPrintBuf[0], fmt, args);
+	va_end(args);
+	AG_ThreadKeySet(agPrintBufKey[0], agPrintBuf[0]);
+#else
+	Free(agPrintBuf[0]);
+	va_start(args, fmt);
+	Vasprintf(&agPrintBuf[0], fmt, args);
+	va_end(args);
+#endif
+	return (agPrintBuf[0]);
+}
+char *
+AG_PrintfN(Uint i, const char *fmt, ...)
+{
+	va_list args;
+
+#ifdef AG_THREADS
+	if ((agPrintBuf[i] = (char *)AG_ThreadKeyGet(agPrintBufKey[i])) != NULL) {
+		free(agPrintBuf[i]);
+	}
+	va_start(args, fmt);
+	Vasprintf(&agPrintBuf[i], fmt, args);
+	va_end(args);
+	AG_ThreadKeySet(agPrintBufKey[i], agPrintBuf[i]);
+#else
+	Free(agPrintBuf[i]);
+	va_start(args, fmt);
+	Vasprintf(&agPrintBuf[i], fmt, args);
+	va_end(args);
+#endif
+	return (agPrintBuf[i]);
+}
+
+/*
  * Copy src to string dst of size siz.  At most siz-1 characters
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
@@ -136,35 +199,6 @@ AG_Strlcpy(char *dst, const char *src, size_t siz)
 	}
 
 	return (s - src - 1);	/* count does not include NUL */
-}
-
-/* UCS-4 version of Strlcpy() */
-size_t
-AG_StrlcpyUCS4(Uint32 *dst, const Uint32 *src, size_t bytes)
-{
-	Uint32 *d = dst;
-	const Uint32 *s = src;
-	size_t n = bytes / sizeof(Uint32);
-
-	/* Copy as many characters as will fit. */
-	if (n != 0 && --n != 0) {
-		do {
-			if ((*d++ = *s++) == 0) {
-				break;
-			}
-		} while (--n != 0);
-	}
-
-	/* Not enough room in dst, add NUL and traverse rest of src. */
-	if (n == 0) {
-		if (bytes != 0) {
-			*d = '\0';			 /* NUL-terminate dst */
-		}
-		while (*s++)
-			;
-	}
-
-	return ((s - src - 1) * sizeof(Uint32));      /* Does not include NUL */
 }
 
 /*
@@ -203,38 +237,6 @@ AG_Strlcat(char *dst, const char *src, size_t siz)
 	return (dlen + (s - src));	/* count does not include NUL */
 }
 
-/* UCS-4 version of Strlcat() */
-size_t
-AG_StrlcatUCS4(Uint32 *dst, const Uint32 *src, size_t bytes)
-{
-	Uint32 *d = dst;
-	const Uint32 *s = src;
-	size_t siz = bytes / sizeof(Uint32);
-	size_t n = siz;
-	size_t dlen;
-
-	/* Find the end of dst and adjust bytes left but don't go past end. */
-	while (n-- != 0 && *d != '\0') {
-		d++;
-	}
-	dlen = d - dst;
-	n = siz - dlen;
-
-	if (n == 0) {
-		return ((dlen + AG_LengthUCS4(s))*sizeof(Uint32));
-	}
-	while (*s != '\0') {
-		if (n != 1) {
-			*d++ = *s;
-			n--;
-		}
-		s++;
-	}
-	*d = '\0';
-
-	return ((dlen + (s - src))*sizeof(Uint32));   /* Does not include NUL */
-}
-
 /*
  * Get next token from string *stringp, where tokens are possibly-empty
  * strings separated by characters from delim.  
@@ -253,35 +255,6 @@ AG_Strsep(char **stringp, const char *delim)
 	const char *spanp;
 	int c, sc;
 	char *tok;
-
-	if ((s = *stringp) == NULL) {
-		return (NULL);
-	}
-	for (tok = s;;) {
-		c = *s++;
-		spanp = delim;
-		do {
-			if ((sc = *spanp++) == c) {
-				if (c == 0) {
-					s = NULL;
-				} else {
-					s[-1] = 0;
-				}
-				*stringp = s;
-				return (tok);
-			}
-		} while (sc != 0);
-	}
-}
-
-/* UCS-4 version of Strsep() */
-Uint32 *
-AG_StrsepUCS4(Uint32 **stringp, const Uint32 *delim)
-{
-	Uint32 *s;
-	const Uint32 *spanp;
-	Uint32 c, sc;
-	Uint32 *tok;
 
 	if ((s = *stringp) == NULL) {
 		return (NULL);
@@ -328,34 +301,6 @@ AG_TryStrdup(const char *s)
 		return (NULL);
 	}
 	memcpy(ns, s, buflen);
-	return (ns);
-}
-
-/* Duplicate a UCS-4 string. */
-Uint32 *
-AG_StrdupUCS4(const Uint32 *ucs)
-{
-	size_t buflen;
-	Uint32 *ns;
-	
-	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
-	ns = Malloc(buflen);
-	memcpy(ns, ucs, buflen);
-	return (ns);
-}
-
-/* Duplicate a UCS-4 string or fail. */
-Uint32 *
-AG_TryStrdupUCS4(const Uint32 *ucs)
-{
-	size_t buflen;
-	Uint32 *ns;
-	
-	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
-	if ((ns = TryMalloc(buflen)) == NULL) {
-		return (NULL);
-	}
-	memcpy(ns, ucs, buflen);
 	return (ns);
 }
 
@@ -779,4 +724,38 @@ AG_StrlcatUint(char *s, Uint val, size_t len)
 fail:
 	s[0] = '\0';
 	return (-1);
+}
+
+#ifdef AG_THREADS
+static void DestroyPrintBuffer(void *buf) { Free(buf); }
+#endif /* AG_THREADS */
+
+int
+AG_InitStringSubsystem(void)
+{
+	Uint i;
+
+	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
+		agPrintBuf[i] = NULL;
+#ifdef AG_THREADS
+		if (AG_ThreadKeyTryCreate(&agPrintBufKey[i], DestroyPrintBuffer) == -1) {
+			return (-1);
+		}
+		AG_ThreadKeySet(agPrintBufKey[i], NULL);
+#endif
+	}
+	return (0);
+}
+
+void
+AG_DestroyStringSubsystem(void)
+{
+	Uint i;
+
+	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
+		Free(agPrintBuf[i]);
+#ifdef AG_THREADS
+		AG_ThreadKeyDelete(agPrintBufKey[i]);
+#endif
+	}
 }
