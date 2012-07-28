@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,14 +39,14 @@
 #  include <sys/sysctl.h>
 # endif
 #elif defined(__AMIGAOS4__)
-#include <exec/exec.h>
-#include <interfaces/exec.h>
-#include <proto/exec.h>
+# include <exec/exec.h>
+# include <interfaces/exec.h>
+# include <proto/exec.h>
 #endif
 
-#if defined(HAVE_ALTIVEC) && defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
-#include <signal.h>
-#include <setjmp.h>
+#if defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
+# include <signal.h>
+# include <setjmp.h>
 static jmp_buf jmpbuf;
 #endif
 
@@ -138,7 +138,7 @@ Conv32(char *d, unsigned int v)
 	d[3] = (v >> 24) & 0xff;
 }
 
-#if defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
+#if defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
 /* SIGILL handler for AltiVec test */
 static void
 IllegalInsn(int sig)
@@ -279,7 +279,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
     		if (rv == VECTORTYPE_ALTIVEC)
 			cpu->ext |= AG_EXT_ALTIVEC;
 	}
-#elif defined(HAVE_ALTIVEC) && defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
+#elif defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
 	{
 		volatile int hasAltiVec = 0;
 		void (*fn)(int);
@@ -297,5 +297,5 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 		if (hasAltiVec)
 			cpu->ext |= AG_EXT_ALTIVEC;
 	}
-#endif /* HAVE_ALTIVEC and HAVE_SIGNAL and HAVE_SETJMP */
+#endif /* HAVE_ALTIVEC and _MK_HAVE_SIGNAL and _MK_HAVE_SETJMP */
 }

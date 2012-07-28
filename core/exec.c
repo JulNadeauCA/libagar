@@ -23,18 +23,24 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Cross-platform file execution interface.
+ */
+
 #include <stdio.h>
 #include <errno.h>
-#ifdef HAVE_SIGNAL
-#include <signal.h>
-#endif
 
 #include <core/core.h>
 
-#ifdef _XBOX
-#include <core/xbox.h>
+#if defined(_XBOX)
+# include <core/xbox.h>
 #elif defined(_WIN32)
-#include <windows.h>
+# include <windows.h>
+#endif
+
+#include <config/_mk_have_signal.h>
+#ifdef _MK_HAVE_SIGNAL
+#include <signal.h>
 #endif
 
 AG_ProcessID
@@ -315,8 +321,8 @@ AG_Kill(AG_ProcessID pid)
 	CloseHandle(psHandle);
 
 	return (0);
-#elif defined(HAVE_EXECVP)
-	if(kill(pid, SIGKILL) == -1) {
+#elif defined(_MK_HAVE_SIGNAL)
+	if (kill(pid, SIGKILL) == -1) {
 		AG_SetError(_("Failed to kill process (%s)"), AG_Strerror(errno));
 		return (-1);
 	}
