@@ -211,14 +211,12 @@ Graphics surfaces.
 Interface to font engine (i.e., FreeType or bitmap fonts).
 .It Xr AG_Units 3
 Conversion between different unit systems.
-.It Xr AG_View 3
-Low-level interface to the graphics display.
 .It Xr AG_Widget 3
 Generic widget interface.
 .It Xr AG_WidgetPrimitives 3
 Widget rendering primitives.
 .It Xr AG_Window 3
-Basic window widget; interface to built-in window manager.
+Basic window / window manager interface.
 .El
 .Sh AGAR-GUI: STANDARD WIDGETS
 The standard Agar widget set provides the basic GUI functionality useful to
@@ -232,11 +230,11 @@ system).
 .It Xr AG_Box 3
 Horizontal/vertical widget container.
 .It Xr AG_Button 3
-Generic push-button widget (boolean bindings).
+Push-button widget.
 .It Xr AG_Checkbox 3
-Generic checkbox widget (boolean bindings).
+Checkbox widget.
 .It Xr AG_Combo 3
-Text input/drop-down menu widget.
+Canned text input/drop-down menu widget.
 .It Xr AG_Console 3
 Scrollable text console widget.
 .It Xr AG_DirDlg 3
@@ -279,10 +277,6 @@ values.
 .\" Selector for
 .\" .Xr AG_Object 3
 .\" trees.
-.It Xr AG_Palette 3
-Edit a RGB color value (Uint32/AG_PixelFormat bindings). Obsoleted
-by
-.Xr AG_HSVPal 3 .
 .It Xr AG_Pane 3
 Dual paned view.
 .It Xr AG_Pixmap 3
@@ -380,8 +374,6 @@ To use this library, link against
 Container for graphics, animations and textures.
 .It Xr RG_Tile 3
 Surface generated from a set of instructions.
-.It Xr RG_Texture 3
-Tile reference with texturing settings.
 .It Xr RG_Anim 3
 Animation generated from a set of instructions.
 .It Xr RG_Pixmap 3
@@ -404,8 +396,6 @@ To use this library, link against
 .Sq agar-math-config --libs .
 .Pp
 .Bl -tag -width "M_Quaternion(3) " -compact
-.It Xr M_Intro 3
-Math library initialization and primitive types.
 .It Xr M_Matrix 3
 Routines specific to matrices.
 This includes general m-by-n matrices (frequently encountered in scientific

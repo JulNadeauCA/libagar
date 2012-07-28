@@ -90,8 +90,8 @@ display under the given cell, and is declared as:
 .\" NOMANLINK
 .Ft "char *"
 .Fn MyDataFn "AG_Treetbl *tbl" "int col" "int row"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn sortFn
 argument, if not NULL, specifies an optional comparison function to
@@ -101,8 +101,8 @@ use in sorting cells, and is declared as:
 .\" NOMANLINK
 .Ft int
 .Fn MySortFn "AG_Treetbl *tbl" "int col1" "int row1" "int col2" "int row2"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fa flags
 argument to
@@ -208,7 +208,6 @@ By default, the first column is used.
 .Fn AG_TreetblRestoreRows "AG_Treetbl *tbl"
 .Pp
 .nr nS 0
-.Pp
 .Fn AG_TreetblAddCol
 creates a new table column.
 .Fa colID
@@ -289,8 +288,8 @@ recovered by
 .Pp
 .Ft void
 .Fn AG_TreetblDeselectAll "AG_Treetbl *tbl" "AG_TreetblRow *row"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_TreetblSelectCol
 and

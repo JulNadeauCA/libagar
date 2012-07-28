@@ -222,6 +222,7 @@ argument is the current time in milliseconds (usually obtained from
 This function intended to be invoked from an event loop function such as
 .Xr AG_EventLoop 3 ,
 in the following way:
+.Pp
 .Bd -literal
 	if (AG_TIMEOUTS_QUEUED())
 		AG_ProcessTimeouts(AG_GetTicks());
@@ -243,5 +244,4 @@ The
 facility first appeared in Agar 1.0.
 The interface was modeled after the OpenBSD
 .Xr timeout 9
-API designed by Artur Grabowski and Thomas Nordin.
-Implementation uses the algorithms presented by George Varghese and Tony Lauck.
+API by Artur Grabowski and Thomas Nordin.

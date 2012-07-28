@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Combo
-.Nd agar text input + drop-down menu widget
+.Nd agar canned text input + drop-down menu widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,20 +38,14 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget is a composite widget that packs a
+widget packs a
 .Xr AG_Textbox 3
 widget left to a
 .Xr AG_Button 3 ,
 which causes a
 .Xr AG_Tlist 3
 to popup when pressed.
-The tlist disappears when an option is selected, and is directly accessed
-as the
-.Va list
-member of the
-.Nm
-structure.
-.Pp
+The tlist disappears when an option is selected.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->

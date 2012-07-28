@@ -41,21 +41,19 @@ structure can store the following types of data:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
-Integers
-.Ft ( int ,
+Integers (i.e.,
+.Ft int ,
 .Ft Uint ,
-.Ft Sint16 ,
-etc)
+.Ft Sint16 )
 .It
-Floating-point numbers
-.Ft ( float ,
+Floating-point numbers (i.e.,
+.Ft float ,
 .Ft double ,
-.Ft long double ) .
+.Ft long double )
 .It
-C strings (dynamically allocated).
+C strings (dynamically allocated)
 .It
-Generic pointers (i.e.,
-.Ft void * ) .
+Generic pointers
 .El
 .Pp
 .Nm
@@ -63,27 +61,25 @@ can also reference the following types of data:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
-Integers
-.Ft ( int * ,
+Integers (i.e.,
+.Ft int * ,
 .Ft Uint * ,
-.Ft Sint16 * ,
-etc).
+.Ft Sint16 * )
 .It
-Floating-point numbers
-.Ft ( float * ,
+Floating-point numbers (i.e.,
+.Ft float * ,
 .Ft double * ,
-.Ft long double * ) .
+.Ft long double * )
 .It
-C strings (in fixed-size buffers).
+C strings (in fixed-size buffers)
 .It
 Agar text elements (see
-.Xr AG_Text 3 ) .
+.Xr AG_Text 3 )
 .It
 Generic pointers
-.Ft ( void ** ) .
 .It
 Agar objects (pointer to
-.Xr AG_Object 3 ) .
+.Xr AG_Object 3 )
 .It
 Named Agar object variables.
 .El
