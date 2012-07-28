@@ -751,9 +751,11 @@ This is useful for applications using multiple drivers concurrently.
 In most cases, this argument should be passed as NULL, so the default
 driver instance will be used.
 .Sh EXAMPLES
-The following code fragment retrieves pending events, examines them, and
-forwards them to Agar for generic processing:
-.Bd -literal
+.\" MANLINK(AG_CustomEventLoop)
+The following code fragment implements a basic event loop.
+It retrieves pending events, examines them, and forwards them to Agar
+for processing:
+.Bd -literal -offset indent
 AG_DriverEvent ev;
 
 while (AG_PendingEvents(NULL) > 0) {
@@ -765,7 +767,8 @@ while (AG_PendingEvents(NULL) > 0) {
 			    dev.data.button.y);
 			break;
 		case AG_DRIVER_KEY_DOWN:
-			printf("Key pressed: %d\\n", (int)dev.data.key.ks);
+			printf("Key pressed: %d\\n",
+			    (int)dev.data.key.ks);
 			break;
 		default:
 			break;

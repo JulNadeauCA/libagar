@@ -130,30 +130,30 @@ environment variable is honored).
 .Sh EXAMPLES
 The following code sets an integer option and a string.
 The configuration is then immediately saved to disk:
-.Bd -literal
-	AG_SetInt(agConfig, "my-setting", 1);
-	AG_SetString(agConfig, "my-string", "Foo bar");
-	AG_ConfigSave();
+.Bd -literal -offset indent
+AG_SetInt(agConfig, "my-setting", 1);
+AG_SetString(agConfig, "my-string", "Foo bar");
+AG_ConfigSave();
 .Ed
 .Pp
 The following Agar-GUI code displays a checkbox controlling the value
 of "my-setting":
-.Bd -literal
-	AG_Checkbox *cb;
-	
-	cb = AG_CheckboxNew(win, 0, "My setting");
-	AG_BindVariable(cb, "state", agConfig, "my-setting");
+.Bd -literal -offset indent
+AG_Checkbox *cb;
+
+cb = AG_CheckboxNew(win, 0, "My setting");
+AG_BindVariable(cb, "state", agConfig, "my-setting");
 .Ed
 .Pp
 The following code binds "my-ext-setting" to an external variable, and then
 reads the configuration from disk.
 If the saved configuration has "my-ext-setting" defined, then the variable will
 be set accordingly:
-.Bd -literal
-	int myExtSetting = 0;
-	
-	AG_BindInt(agConfig, "my-ext-setting", &myExtSetting);
-	AG_ConfigLoad();
+.Bd -literal -offset indent
+int myExtSetting = 0;
+
+AG_BindInt(agConfig, "my-ext-setting", &myExtSetting);
+AG_ConfigLoad();
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

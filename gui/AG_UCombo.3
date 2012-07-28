@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_UCombo
-.Nd agar button + drop-down menu widget
+.Nd agar canned button + drop-down menu widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,17 +38,12 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget is a composite widget that displays a
+widget displays an
 .Xr AG_Button 3 ,
-which causes a
+which causes a popup
 .Xr AG_Tlist 3
 to be displayed when pressed.
-The tlist disappears when an option is selected, and is directly accessed
-as the
-.Va list
-member of the
-.Nm
-structure.
+The list disappears when an option is selected.
 .Pp
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
@@ -148,6 +143,8 @@ Selected(AG_Event *event)
 	AG_TlistItem *item = AG_PTR(1);
 	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
 }
+
+.Li ...
 
 AG_UCombo *com;
 

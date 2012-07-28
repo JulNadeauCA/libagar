@@ -739,7 +739,10 @@ UpdateMyTable(AG_Event *event)
 	AG_TableEnd(tbl);
 }
 
+.Li ...
+
 AG_Table *tbl;
+
 tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateMyTable, NULL);
 .Ed
 .Pp

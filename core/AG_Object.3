@@ -363,7 +363,7 @@ pointer is cast to the given structure
 .Fa type ,
 without type checking.
 Example:
-.Bd -literal
+.Bd -literal -offset indent
 struct my_class *chld;
 
 AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
@@ -585,23 +585,23 @@ removes the specified object class.
 registers a new namespace with the specified name, prefix and informational
 URL.
 For example, Agar registers its own namespace using:
-.Bd -literal
-  AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+.Bd -literal -offset indent
+AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
 .Ed
 .Pp
 Once the namespace is registered, it is possible to specify inheritance
 hierarchies using the
 .Em namespace
 format:
-.Bd -literal
-    Agar(Widget:Button):MyLib(MyButton)
+.Bd -literal -offset indent
+Agar(Widget:Button):MyLib(MyButton)
 .Ed
 .Pp
 or the equivalent
 .Em expanded
 format:
-.Bd -literal
-    AG_Widget:AG_Button:MY_Button
+.Bd -literal -offset indent
+AG_Widget:AG_Button:MY_Button
 .Ed
 .Pp
 The
@@ -718,7 +718,7 @@ which is an instance of the class specified by
 is cast to the given structure
 .Fa type .
 Example:
-.Bd -literal
+.Bd -literal -offset indent
 struct my_class *chld;
 
 AGOBJECT_FOREACH_CLASS(chld, parent, my_class, "MyClass") {

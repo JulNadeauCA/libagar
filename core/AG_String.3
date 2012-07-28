@@ -426,69 +426,67 @@ The following Agar-GUI code creates an
 .Xr AG_Label 3 ,
 passing a formatted string (in an internally-managed buffer) to the
 label constructor:
-.Bd -literal
-	int myInt = 1234;
-	
-	AG_LabelNewS(win, 0, AG_Printf("myInt=%d", myInt));
+.Bd -literal -offset indent
+int myInt = 1234;
+
+AG_LabelNewS(win, 0, AG_Printf("myInt=%d", myInt));
 .Ed
 .Pp
 Whenever multiple strings are needed simultaneously,
 .Fn AG_PrintfN
 allows a buffer index to be specified:
-.Bd -literal
-	void MyFn(const char *string1, const char *string2);
-	
-	MyFn(AG_Printf(0, "First string"),
-	     AG_Printf(1, "Second string"));
+.Bd -literal -offset indent
+void MyFn(const char *string1, const char *string2);
+
+MyFn(AG_Printf(0, "First string"),
+     AG_Printf(1, "Second string"));
 .Ed
 .Pp
 The following code uses
 .Fn AG_Strsep
 to parse a string, and prints each token in separate line:
 .Bd -literal -offset indent
-	char *string = AG_Strdup("abc,def,ghi");
-	char *pString = string, *token;
-	
-	while ((token = AG_Strsep(&string, ",")) != NULL) {
-		printf("%s\en", token);
-	}
-	free(pString);
+char *string = AG_Strdup("abc,def,ghi");
+char *pString = string, *token;
+
+while ((token = AG_Strsep(&string, ",")) != NULL) {
+	printf("%s\en", token);
+}
+free(pString);
 .Ed
 .Pp
 The following code efficiently constructs a string from a substring and
 an integer:
 .Bd -literal -offset indent
-	char myBuffer[30];
-	int i = 0;
+char myBuffer[30];
+int i = 0;
 
-	for (i = 0; i < 10; i++) {
-		AG_Strlcpy(myBuffer, "Item #", sizeof(myBuffer));
-		AG_StrlcatInt(myBuffer, i, sizeof(myBuffer));
-	}
+for (i = 0; i < 10; i++) {
+	AG_Strlcpy(myBuffer, "Item #", sizeof(myBuffer));
+	AG_StrlcatInt(myBuffer, i, sizeof(myBuffer));
+}
 .Ed
 .Pp
 The following code converts a string from LATIN-1 to Unicode, counts
 the number of Unicode characters, and exports the string to UTF-8:
 .Pp
 .Bd -literal
-	char *latin1 = "Feils\\xF8king!";
-	char *dst;
-	Uint32 *unicode, *s;
-	int count = 0;
-	size_t dstLen;
+char *dst;
+Uint32 *unicode, *s;
+int count = 0;
+size_t dstLen;
 
-	if ((unicode = AG_ImportUnicode("ISO-8859-1", latin1, NULL))
-	    == NULL) {
-		AG_FatalError(NULL);
-	}
-	for (s = &unicode[0]; *s != '\0'; s++) {
-		count++;
-	}
-	if (AG_LengthUTF8FromUCS4(unicode, &dstLen) == -1) {
-		AG_FatalError(NULL);
-	}
-	dst = AG_Malloc(dstLen);
-	AG_ExportUnicode("UTF-8", dst, unicode, dstLen)
+if ((unicode = AG_ImportUnicode("ISO-8859-1", input, NULL)) == NULL) {
+	AG_FatalError(NULL);
+}
+for (s = &unicode[0]; *s != '\0'; s++) {
+	count++;
+}
+if (AG_LengthUTF8FromUCS4(unicode, &dstLen) == -1) {
+	AG_FatalError(NULL);
+}
+dst = AG_Malloc(dstLen);
+AG_ExportUnicode("UTF-8", dst, unicode, dstLen)
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
