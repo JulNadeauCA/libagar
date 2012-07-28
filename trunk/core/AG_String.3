@@ -1,0 +1,501 @@
+.\" Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $OpenBSD: strlcpy.3,v 1.19 2007/05/31 19:19:32 jmc Exp $
+.\"
+.\" Copyright (c) 1998, 2000 Todd C. Miller <Todd.Miller@courtesan.com>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+.\" INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+.\" THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+.\" EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+.\" PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+.\" OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+.\" WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+.\" OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+.\" ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $FreeBSD: src/lib/libc/string/strlcpy.3,v 1.16.4.2 2012/05/18 00:31:20 gjb Exp $
+.\"
+.\" Copyright (c) 1990, 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" Chris Torek.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	@(#)strsep.3	8.1 (Berkeley) 6/9/93
+.\" $FreeBSD: src/lib/libc/string/strsep.3,v 1.16.4.1 2011/09/23 00:51:37 kensmith Exp $
+.\"
+.Dd December 5, 2008
+.Dt STRSEP 3
+.Os
+.Dd July 28, 2012
+.Dt AG_STRING 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.4
+.Sh NAME
+.Nm AG_String
+.Nd agar C string specific functions
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+These functions manipulate C strings.
+.Sh FORMATTED OUTPUT CONVERSION
+.nr nS 1
+.Ft "char *"
+.Fn AG_Printf  "const char *format" "..."
+.Pp
+.Ft "char *"
+.Fn AG_PrintfN "Uint buffer" "const char *format" "..."
+.Pp
+.nr nS 0
+The
+.Fn AG_Printf
+function performs
+.Xr printf 3
+style formatted output conversion, returning a pointer to an internally
+managed buffer.
+.Pp
+The return buffer will remain valid until the application or thread
+terminates (in multithreaded mode, thread-local storage is used).
+The caller must not attempt to
+.Xr free 3
+the returned pointer.
+.Pp
+The
+.Fn AG_PrintfN
+variant allows multiple buffers to be used.
+The
+.Fa buffer
+argument specifies the buffer index to use (any integer up to
+.Dv AG_STRING_BUFFER_MAX
+is valid).
+.Sh SEPARATING STRINGS
+.nr nS 1
+.Ft "char *"
+.Fn AG_Strsep "char **stringp" "const char *delim"
+.Pp
+.nr nS 0
+The
+.Fn AG_Strsep
+function locates, in the string referenced by
+.Fa *stringp ,
+the first occurrence of any character in the string
+.Fa delim
+(or the terminating NUL character) and replaces it with a NUL.
+The location of the next character after the delimiter character
+(or NULL, if the end of the string was reached) is stored in
+.Fa *stringp .
+The original value of
+.Fa *stringp
+is returned.
+.Pp
+An
+.Dq empty
+field (i.e., a character in the string
+.Fa delim
+occurs as the first character of
+.Fa *stringp )
+can be detected by comparing the location referenced by the returned pointer
+to NUL.
+If
+.Fa *stringp
+is initially
+.Dv NULL ,
+.Fn AG_Strsep
+returns
+.Dv NULL .
+.Sh COPYING AND CONCATENATING STRINGS
+.nr nS 1
+.Ft "char *"
+.Fn AG_Strdup "const char *s"
+.Pp
+.Ft "char *"
+.Fn AG_TryStrdup "const char *s"
+.Pp
+.Ft "size_t"
+.Fn AG_Strlcpy "char *dst" "const char *src" "size_t dst_size"
+.Pp
+.Ft "size_t"
+.Fn AG_Strlcat "char *dst" "const char *src" "size_t dst_size"
+.Pp
+.Ft "int"
+.Fn AG_StrlcpyInt "char *dst" "int number" "size_t dst_size"
+.Pp
+.Ft "int"
+.Fn AG_StrlcatInt "char *dst" "int number" "size_t dst_size"
+.Pp
+.Ft "int"
+.Fn AG_StrlcpyUint "char *dst" "Uint number" "size_t dst_size"
+.Pp
+.Ft "int"
+.Fn AG_StrlcatUint "char *dst" "Uint number" "size_t dst_size"
+.Pp
+.nr nS 0
+The
+.Fn AG_Strdup
+function returns a copy of the given C string.
+If insufficient memory is available, a
+.Xr AG_FatalError 3
+is raised.
+The
+.Fn AG_TryStrdup
+variant returns NULL on failure.
+.Pp
+The
+.Fn AG_Strlcpy
+and
+.Fn AG_Strlcat
+functions copy and concatenate C strings respectively.
+They are designed
+to be safer, more consistent, and less error prone replacements for
+.Xr strncpy 3
+and
+.Xr strncat 3 .
+Unlike those functions,
+.Fn AG_Strlcpy
+and
+.Fn AG_Strlcat
+take the full size of the buffer (not just the length) and guarantee to
+NUL-terminate the result (as long as
+.Fa size
+is larger than 0 or, in the case of
+.Fn AG_Strlcat ,
+as long as there is at least one byte free in
+.Fa dst ) .
+Note that a byte for the NUL should be included in
+.Fa size .
+.Pp
+The
+.Fn AG_Strlcpy
+function copies up to
+.Fa size
+- 1 characters from the NUL-terminated string
+.Fa src
+to
+.Fa dst ,
+NUL-terminating the result.
+The
+.Fn AG_Strlcat
+function appends the NUL-terminated string
+.Fa src
+to the end of
+.Fa dst .
+It will append at most
+.Fa size
+- strlen(dst) - 1 bytes, NUL-terminating the result.
+.Pp
+The
+.Fn AG_Strlcpy
+and
+.Fn AG_Strlcat
+functions return the total length of the string they tried to create.
+For
+.Fn AG_Strlcpy
+that means the length of
+.Fa src .
+For
+.Fn AG_Strlcat
+that means the initial length of
+.Fa dst
+plus
+the length of
+.Fa src .
+.Pp
+The
+.Fn AG_StrlcpyInt ,
+.Fn AG_StrlcpyUint ,
+.Fn AG_StrlcatInt ,
+and
+.Fn AG_StrlcatUint
+functions efficiently convert a numerical integer to a string and respectively
+copy or concatenate that string to the given buffer, in the same manner as
+.Fn AG_Strlcpy
+and
+.Fn AG_Strlcat .
+Whenever possible, constructing a string using only
+.Fn AG_Strlcpy ,
+.Fn AG_Strlcat
+and
+.Fn AG_StrlcatInt
+is always more efficient than using the standard
+.Xr printf 3
+formatting engine.
+.Sh UNICODE OPERATIONS
+.nr nS 1
+.Ft "Uint32 *"
+.Fn AG_ImportUnicode "const char *encoding" "const char *src" "size_t *pOutLen" "size_t *pOutSize"
+.Pp
+.Ft "int"
+.Fn AG_ExportUnicode "const char *encoding" "char *dst" "const Uint32 *src" "size_t dstSize"
+.Pp
+.Ft "int"
+.Fn AG_LengthUTF8 "const char *s" "size_t *rv"
+.Pp
+.Ft "int"
+.Fn AG_CharLengthUTF8 "unsigned char byte"
+.Pp
+.Ft "size_t"
+.Fn AG_LengthUCS4 "const Uint32 *ucs"
+.Pp
+.Ft "int"
+.Fn AG_LengthUTF8FromUCS4 "const Uint32 *ucs" "size_t *rv"
+.Pp
+.Ft "size_t"
+.Fn AG_CharLengthUTF8FromUCS4 "Uint32 ch"
+.Pp
+.nr nS 0
+The
+.Fn AG_ImportUnicode
+function converts the given string
+.Fa src
+(assumed to be in the specified
+.Fa encoding )
+to UCS-4 format.
+On success, the function returns a newly-allocated UCS-4 text buffer.
+If
+.Fa pOutLen
+is non-NULL, the total number of characters is returned in it.
+Acceptable values for
+.Fa encoding
+include "US-ASCII" and "UTF-8".
+If Agar was compiled with support for the
+.Xr iconv 3
+library, any character set supported by iconv may be specified.
+Agar always handles the US-ASCII and UTF-8 encodings internally, even if
+iconv is available.
+.Pp
+The
+.Fn AG_ExportUnicode
+function converts the contents of the given UCS-4 text buffer to the
+specified
+.Fa encoding
+(again, "US-ASCII and "UTF-8" are handled internally by Agar, other
+encodings may be specified if iconv is available).
+The resulting text is written to the specified buffer
+.Fa dst ,
+which should be of the specified size
+.Fa dstSize ,
+in bytes.
+The written string is always NUL-terminated.
+.Pp
+The
+.Fn AG_LengthUTF8
+function counts the number of characters in the given UTF-8 string.
+On success, the function returns 0 the character count is written to
+.Fa rv .
+If the string is not a valid UTF-8 string, the function returns -1.
+.Pp
+.Fn AG_CharLengthUTF8
+evaluates whether the given byte is the start of an UTF-8 character
+sequence.
+Returns the sequence length in bytes (or 1 if there is none).
+.Pp
+The
+.Fn AG_LengthUCS4
+function returns the number of characters in the given UCS-4 text buffer
+(similarly to
+.Xr strlen 3 ) .
+The terminating NUL is not included in the count.
+.Pp
+The
+.Fn AG_LengthUTF8FromUCS4
+function returns the number of bytes that would be needed to encode
+the given UCS-4 string in UTF-8 encoding.
+On success, the function returns 0 and writes the count to
+.Fa rv .
+If
+.Fa ucs
+contains an invalid Unicode character, the function fails and returns -1.
+.Pp
+The
+.Fn AG_CharLengthUTF8FromUCS4
+function returns the number of bytes that would be needed to encode the
+given UCS-4 character as an UTF-8 character sequence.
+.Sh MISCELLANEOUS STRING OPERATIONS
+.nr nS 1
+.Ft "int"
+.Fn AG_Strcasecmp "const char *s1" "const char *s2"
+.Pp
+.Ft "int"
+.Fn AG_Strncasecmp "const char *s1" "const char *s2" "size_t n"
+.Pp
+.Ft "const char *"
+.Fn AG_Strcasestr "const char *big" "const char *little"
+.Pp
+.Ft "void"
+.Fn AG_StrReverse "char *s"
+.Pp
+.nr nS 0
+The
+.Fn AG_Strcasecmp
+and
+.Fn AG_Strncasecmp
+functions peforms comparison between two C strings
+.Fa s1
+and
+.Fa s2
+like the standard
+.Xr strcmp 3
+and
+.Xr strncmp 3 ,
+except that the comparison is done in a case-insensitive way.
+Returns an integer greater than, equal to, or less than 0, depending on whether
+.Fa s1
+is lexicographically greater than, equal to, or less than
+.Fa s2
+after translation of each corresponding character to lower-case.
+.Pp
+The
+.Fn AG_Strcasestr
+function is a case-insensitive version of the standard
+.Xr strstr 3 .
+It locates the first occurence of the
+.Fa little
+string in the
+.Fa big
+string.
+.Pp
+The
+.Fn AG_StrReverse
+function reverses the characters in the given C string.
+.Sh EXAMPLES
+The following Agar-GUI code creates an
+.Xr AG_Label 3 ,
+passing a formatted string (in an internally-managed buffer) to the
+label constructor:
+.Bd -literal
+	int myInt = 1234;
+	
+	AG_LabelNewS(win, 0, AG_Printf("myInt=%d", myInt));
+.Ed
+.Pp
+Whenever multiple strings are needed simultaneously,
+.Fn AG_PrintfN
+allows a buffer index to be specified:
+.Bd -literal
+	void MyFn(const char *string1, const char *string2);
+	
+	MyFn(AG_Printf(0, "First string"),
+	     AG_Printf(1, "Second string"));
+.Ed
+.Pp
+The following code uses
+.Fn AG_Strsep
+to parse a string, and prints each token in separate line:
+.Bd -literal -offset indent
+	char *string = AG_Strdup("abc,def,ghi");
+	char *pString = string, *token;
+	
+	while ((token = AG_Strsep(&string, ",")) != NULL) {
+		printf("%s\en", token);
+	}
+	free(pString);
+.Ed
+.Pp
+The following code efficiently constructs a string from a substring and
+an integer:
+.Bd -literal -offset indent
+	char myBuffer[30];
+	int i = 0;
+
+	for (i = 0; i < 10; i++) {
+		AG_Strlcpy(myBuffer, "Item #", sizeof(myBuffer));
+		AG_StrlcatInt(myBuffer, i, sizeof(myBuffer));
+	}
+.Ed
+.Pp
+The following code converts a string from LATIN-1 to Unicode, counts
+the number of Unicode characters, and exports the string to UTF-8:
+.Pp
+.Bd -literal
+	char *latin1 = "Feils\\xF8king!";
+	char *dst;
+	Uint32 *unicode, *s;
+	int count = 0;
+	size_t dstLen;
+
+	if ((unicode = AG_ImportUnicode("ISO-8859-1", latin1, NULL))
+	    == NULL) {
+		AG_FatalError(NULL);
+	}
+	for (s = &unicode[0]; *s != '\0'; s++) {
+		count++;
+	}
+	if (AG_LengthUTF8FromUCS4(unicode, &dstLen) == -1) {
+		AG_FatalError(NULL);
+	}
+	dst = AG_Malloc(dstLen);
+	AG_ExportUnicode("UTF-8", dst, unicode, dstLen)
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Error 3 ,
+.Xr string 3 ,
+.Xr strlen 3 ,
+.Xr strcmp 3
+.Sh HISTORY
+The
+.Nm
+interface was first documented in Agar 1.4.2.
