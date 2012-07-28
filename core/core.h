@@ -48,7 +48,7 @@
 #include <core/limits.h>
 #include <core/threads.h>
 
-#include <core/string_compat.h>
+#include <core/string.h>
 #include <core/snprintf.h>
 #include <core/vsnprintf.h>
 #include <core/vasprintf.h>

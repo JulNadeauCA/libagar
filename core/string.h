@@ -54,8 +54,8 @@
  * SUCH DAMAGE.
  */
 
-#ifndef	_AGAR_CORE_STRING_COMPAT_H_
-#define	_AGAR_CORE_STRING_COMPAT_H_
+#ifndef	_AGAR_CORE_STRING_H_
+#define	_AGAR_CORE_STRING_H_
 
 #include <agar/core/begin.h>
 
@@ -259,4 +259,4 @@ __END_DECLS
 #endif
 
 #include <agar/core/close.h>
-#endif /* _AGAR_CORE_STRING_COMPAT_H_ */
+#endif /* _AGAR_CORE_STRING_H_ */
