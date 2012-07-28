@@ -75,6 +75,9 @@ do
 	--libdir=*)
 	    libdir=$optarg
 	    ;;
+	--moduledir=*)
+	    moduledir=$optarg
+	    ;;
 	--libexecdir=*)
 	    libexecdir=$optarg
 	    ;;
@@ -352,7 +355,7 @@ echo ""
 echo "Standard build options:"
 echo "    --bindir=DIR              Executables for common users [PREFIX/bin]"
 echo "    --build=STRING            Host environment for build [auto-detect]"
-echo "    --byte-order=STRING       Byte order for target environment (LE|BE) [auto-detect]"
+echo "    --byte-order=STRING       Byte order for build (LE|BE) [auto-detect]"
 echo "    --cache=DIR               Cache ./configure results in directory [none]"
 echo "    --datadir=DIR|NONE        Data files for program use [PREFIX/share]"
 echo "    --enable-nls              Multi-language support [no]"
@@ -363,6 +366,7 @@ echo "    --libdir=DIR              System libraries [PREFIX/lib]"
 echo "    --libexecdir=DIR          Executables for program use [PREFIX/libexec]"
 echo "    --localedir=DIR           Multi-language support locales [DATADIR/locale]"
 echo "    --mandir=DIR              Manual page documentation [PREFIX/man]"
+echo "    --moduledir=DIR|NONE      Dynamically loaded modules [PREFIX/lib]"
 echo "    --prefix=DIR              Installation base [/usr/local]"
 echo "    --srcdir=DIR              Source directory for concurrent build [.]"
 echo "    --statedir=DIR|NONE       Modifiable single-machine data [PREFIX/var]"
@@ -623,6 +627,16 @@ echo "#ifndef LIBDIR" > $BLD/include/agar/config/libdir.h
 echo "#define LIBDIR \"$LIBDIR\"" >> $BLD/include/agar/config/libdir.h
 echo "#endif" >> $BLD/include/agar/config/libdir.h
 echo "hdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
+if [ "${moduledir}" != "" ]; then
+	MODULEDIR="${moduledir}"
+	MODULEDIR_SPECIFIED="yes"
+else
+	MODULEDIR="${PREFIX}/lib"
+fi
+echo "#ifndef MODULEDIR" > $BLD/include/agar/config/moduledir.h
+echo "#define MODULEDIR \"$MODULEDIR\"" >> $BLD/include/agar/config/moduledir.h
+echo "#endif" >> $BLD/include/agar/config/moduledir.h
+echo "hdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 if [ "${libexecdir}" != "" ]; then
 	LIBEXECDIR="${libexecdir}"
 	LIBEXECDIR_SPECIFIED="yes"
@@ -10002,6 +10016,18 @@ if [ "${HAVE_COCOA}" = "yes" ]
  then
 SRCS_GUI="${SRCS_GUI} drv_cocoa.m"
 fi
+SRCS_AU=""
+if [ "${AG_THREADS}" = "yes" ]
+ then
+	if [ "${HAVE_SNDFILE}" = "yes" ]
+ then
+SRCS_AU="${SRCS_AU} au_dev_file.c"
+	fi
+	if [ "${HAVE_PORTAUDIO}" = "yes" ]
+ then
+SRCS_AU="${SRCS_AU} au_dev_pa.c"
+	fi
+fi
 if [ ! -e "$BLD/include/agar" ]; then
 	mkdir -p "$BLD/include/agar"
 fi
@@ -10646,6 +10672,8 @@ echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
 echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
+echo "SRCS_AU=$SRCS_AU" >>Makefile.config
+echo "mdefs[\"SRCS_AU\"] = \"$SRCS_AU\"" >>configure.lua
 echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
 echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
@@ -10658,6 +10686,8 @@ echo "HAVE_NETWORK=$HAVE_NETWORK" >>Makefile.config
 echo "mdefs[\"HAVE_NETWORK\"] = \"$HAVE_NETWORK\"" >>configure.lua
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+echo "MODULEDIR=$MODULEDIR" >>Makefile.config
+echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
