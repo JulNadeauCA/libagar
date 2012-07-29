@@ -768,10 +768,15 @@ AG_TreetblRow *
 AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
     const char *argSpec, ...)
 {
+	char argBuf[128], *pArg = argBuf;
 	AG_TreetblRow *row;
-	Uint i;
+	Uint i, arg, nArgs = 0;
 	va_list ap;
-	char *p;
+
+	Strlcpy(argBuf, argSpec, sizeof(argBuf));
+	while (AG_Strsep(&pArg, ", ") != NULL) {
+		nArgs++;
+	}
 
 	AG_ObjectLock(tt);
 
@@ -801,46 +806,29 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 
 	/* import static data */
 	va_start(ap, argSpec);
-	p = (char*)argSpec;
-	while(*p)
-	{
+	for (arg = 0; arg < nArgs; arg++) {
 		int colID = va_arg(ap, int);
-		void *data;
+		void *data = va_arg(ap, void *);
+		AG_TreetblCell *cell;
 
-		/* Next argument */
-		p += 2;
-
-		if(!*p) {
-			/* Incomplete argument list */
-			break;
-		}
-
-		data = va_arg(ap, void *);
 		for (i = 0; i < tt->n; i++) {
-			if (colID == tt->column[i].cid) {
-				AG_TreetblCell *cell = &row->cell[i];
-
-				/*
-				 * If the user already passed for this col,
-				 * don't leak.
-				 */
-				if (cell->text != NULL) {
-					Free(cell->text);
-				}
-				if (cell->image != NULL) {
-					AG_SurfaceFree(cell->image);
-				}
-				cell->text = (data != NULL) ?
-				             Strdup((char *)data) :
-				             Strdup("(null)");
-
-				AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
-				cell->image = AG_TextRender(cell->text);
+			if (colID == tt->column[i].cid)
 				break;
-			}
 		}
-		/* Next argument */
-		p += 2;
+		if (i == tt->n) {
+			continue;
+		}
+		cell = &row->cell[i];
+		Free(cell->text);
+		if (cell->image != NULL) {
+			AG_SurfaceFree(cell->image);
+		}
+		cell->text = (data != NULL) ?
+		             Strdup((char *)data) :
+		             Strdup("(null)");
+
+		AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
+		cell->image = AG_TextRender(cell->text);
 	}
 	va_end(ap);
 
