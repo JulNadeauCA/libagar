@@ -36,10 +36,6 @@
 
 #include "dev.h"
 
-static Uint32 unitext[2] = { '\0', '\0' };
-static char utf8text[256] = "";
-static char utf8seq[256] = "";
-
 static const struct unicode_range {
 	Uint32 start;
 	char *name;
@@ -169,13 +165,15 @@ static const int unicodeRangeCount = sizeof(unicodeRanges) /
 static void
 SelectUnicodeRange(AG_Event *event)
 {
-	char text[4][128];
 	AG_Treetbl *tt = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
 	Uint32 i, end;
-	char *c;
+	Uint32 uchar[2] = { '\0', '\0' };
+	char numtext[32];
+	char utf8text[64], *c;
+	char utf8seq[64];
 
 	for (i = 0; i < unicodeRangeCount; i++) {
 		if ((&unicodeRanges[i] == range) &&
@@ -193,21 +191,24 @@ SelectUnicodeRange(AG_Event *event)
 			continue;
         
 		/* prep column 0 */
-		unitext[0] = i;
-		AG_ExportUnicode("UTF-8", utf8text, unitext, sizeof(unitext));
-		Snprintf(text[0], sizeof(text[0]), "%s", utf8text);
+		uchar[0] = i;
+		if (AG_ExportUnicode("UTF-8", utf8text, uchar, sizeof(uchar))
+		    == -1 || utf8text[0] == '\0') {
+			continue;
+		}
+		Snprintf(numtext, sizeof(numtext), "0x%x", (Uint)uchar[0]);
         
 		/* prep column 1 */
 		utf8seq[0] = '\0';
 		for (c = &utf8text[0]; *c != '\0'; c++) {
-			char s[4];
-            
-			Snprintf(s, sizeof(s), "%x", (unsigned char)*c);
+			char s[16];
+			Snprintf(s, sizeof(s), "\\x%x", (unsigned char)*c);
 			Strlcat(utf8seq, s, sizeof(utf8seq));
 		}
-		Snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
-        
-		AG_TreetblAddRow(tt, NULL, i, "%s,%s", text[0], text[1]);
+		AG_TreetblAddRow(tt, NULL, i, "%s,%s,%s",
+		    0, utf8text,
+		    1, numtext,
+		    2, utf8seq);
 	}
 }
 
@@ -237,7 +238,8 @@ DEV_UnicodeBrowser(void)
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
-	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Hex");
+	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Unicode");
+	AG_TreetblAddCol(tt, 2, "<XXXXXXX>", "UTF-8");
 
 	AG_SetEvent(comRange, "combo-selected", SelectUnicodeRange, "%p", tt);
 

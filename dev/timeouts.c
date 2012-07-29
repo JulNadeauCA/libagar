@@ -51,17 +51,19 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 
 	id = 0;
 	TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
-		char text[128];
 		AG_TreetblRow *objRow;
 		
-		objRow = AG_TreetblAddRow(tt, NULL, id++, "%s", ob->name);
+		objRow = AG_TreetblAddRow(tt, NULL, id++,
+		    "%s",
+		    0, ob->name);
 		AG_TreetblExpandRow(tt, objRow);
 
 		AG_ObjectLock(ob);
 		TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
-			Snprintf(text, sizeof(text),
-			    "%p: %u ticks", to, (Uint)to->ticks);
-			AG_TreetblAddRow(tt, objRow, id++, "%s", text);
+			AG_TreetblAddRow(tt, objRow, id++,
+			    "%s,%s",
+			    0, AG_PrintfN(1,"%p",to),
+			    1, AG_PrintfN(2,"%u",(Uint)to->ticks));
 		}
 		AG_ObjectUnlock(ob);
 	}
@@ -91,7 +93,8 @@ DEV_TimerInspector(void)
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);
-	AG_TreetblAddCol(tt, 0, NULL, NULL);
+	AG_TreetblAddCol(tt, 0, "<XXXXXXXXXXXXXX>", _("TimerID"));
+	AG_TreetblAddCol(tt, 1, "<XXXXXXXX>", _("Ticks"));
 	
 	AG_SetTimeout(&refresher, UpdateTbl, tt, 0);
 	AG_ScheduleTimeout(tt, &refresher, 50);
