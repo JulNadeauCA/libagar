@@ -289,7 +289,7 @@ AG_LoadDSO(const char *name, Uint flags)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_DSO *dso;
-	int i, j;
+	int i;
 
 	AG_MutexLock(&agDSOLock);
 	
@@ -306,8 +306,6 @@ AG_LoadDSO(const char *name, Uint flags)
 	/* Scan the module directories. */
 	path[0] = '\0';
 	for (i = 0; i < agModuleDirCount; i++) {
-		AG_Dir *dir;
-
 		/* Look for an exact file match. */
 		Strlcpy(path, agModuleDirs[i], sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
@@ -331,9 +329,10 @@ AG_LoadDSO(const char *name, Uint flags)
 #if !defined(__AMIGAOS4__) && !defined(HPUX) && \
     !defined(_WIN32) && !defined(OS2)
 		/* Look for a versioned library file. */
+		AG_Dir *dir;
 		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
 			char latestFile[AG_FILENAME_MAX];
-			int latestVer;
+			int latestVer, j;
 
 			latestFile[0] = '\0';
 			latestVer = 0;

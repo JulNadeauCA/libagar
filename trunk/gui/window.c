@@ -397,11 +397,11 @@ Init(void *obj)
 	win->nFocused = 0;
 	win->parent = NULL;
 	win->widExclMotion = NULL;
-	win->fadeInTime = 0.06;
-	win->fadeInIncr = 0.2;
-	win->fadeOutTime = 0.06;
-	win->fadeOutIncr = 0.2;
-	win->fadeOpacity = 1.0;
+	win->fadeInTime = 0.06f;
+	win->fadeInIncr = 0.2f;
+	win->fadeOutTime = 0.06f;
+	win->fadeOutIncr = 0.2f;
+	win->fadeOpacity = 1.0f;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
 

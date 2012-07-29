@@ -35,6 +35,7 @@
 #if defined(_XBOX)
 # include <core/xbox.h>
 #elif defined(_WIN32)
+# undef SLIST_ENTRY
 # include <windows.h>
 #endif
 

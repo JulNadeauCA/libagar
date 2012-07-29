@@ -34,6 +34,7 @@
 #include <string.h>
 
 #if defined(_WIN32) && !defined(_XBOX)
+#undef SLIST_ENTRY
 #include <windows.h>
 #endif
 

@@ -194,7 +194,7 @@ AG_EditableGetBuffer(AG_Editable *ed)
 void
 AG_EditableClearBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	return ClearBuffer(buf);
+	ClearBuffer(buf);
 }
 
 /* Increase the working buffer size to accomodate new characters. */
@@ -1638,8 +1638,12 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 			buf->len = 0;
 		}
 	} else {
-		s[0] = '\0';
+		Free(buf->s);
+		if ((buf->s = TryMalloc(sizeof(Uint32))) != NULL) {
+			buf->s[0] = '\0';
+		}
 		ed->pos = 0;
+		buf->len = 0;
 	}
 	ed->sel = 0;
 	CommitBuffer(ed, buf);

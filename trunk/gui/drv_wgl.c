@@ -82,7 +82,7 @@ AG_DriverMwClass agDriverWGL;
 #define AGDRIVER_IS_WGL(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverWGL)
 
-struct ag_key_mapping {			/* Keymap translation table entry */
+struct ag_wgl_key_mapping {		/* Keymap translation table entry */
 	int kcode;			/* Scancode */
 	int kclass;			/* X keysym class (e.g., 0xff) */
 	AG_KeySym key;			/* Corresponding Agar keysym */
