@@ -4,7 +4,7 @@
  */
 
 static AG_KeySym agKeymapMisc[256];
-static const struct ag_key_mapping agMiscKeys[] = {
+static const struct ag_wgl_key_mapping agMiscKeys[] = {
 	{ VK_BACK,			0xff,	AG_KEY_BACKSPACE },
 	{ VK_TAB,			0xff,	AG_KEY_TAB },
 	{ VK_CLEAR,			0xff,	AG_KEY_CLEAR },
