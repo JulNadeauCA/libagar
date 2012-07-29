@@ -45,18 +45,35 @@ The
 structure is defined as follows:
 .Bd -literal
 typedef struct ag_unit {
-	char *key;                    /* Key */
-	char *abbr;                   /* Abbreviated symbol */
-	char *name;                   /* Long name */
-	double divider;               /* Conversion factor (linear) */
-	double (*func)(double, int);  /* Function (nonlinear) */
+	char *key;
+	char *abbr;
+	char *name;
+	double divider;
+	double (*func)(double, int mode);
 } AG_Unit;
 .Ed
 .Pp
-Built-in conversion units are defined in
+The
+.Va key
+member is a unique identifier for this unit.
+.Va abbr
+is an abbreviated symbol, and
+.Va name
+is the full name of the unit.
+.Pp
+The linear conversion factor is specified in
+.Va divider .
+For non-linear conversions,
+.Va func
+can be defined instead (the first argument to the function is
+the value to convert; if
+.Fa mode
+is 1, the function make the reverse conversion).
+.Pp
+A set of standard conversion unit groups are defined in
 .Pa gui/units.c
 in the Agar sources.
-The following built-in groups are available:
+The standard groups are summarized below.
 .Pp
 .Sh GENERAL
 .Bl -tag -compact -width "agPercentageUnits "
