@@ -342,6 +342,10 @@ void
 AG_EditableSetWordWrap(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
+	ed->x = 0;
+	ed->y = 0;
+	ed->pos = 0;
+	ed->sel = 0;
 	AG_SETFLAGS(ed->flags, AG_EDITABLE_WORDWRAP, enable);
 	AG_ObjectUnlock(ed);
 }
