@@ -44,6 +44,15 @@ Quit(AG_Event *event)
 }
 
 static void
+SetWordWrap(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+	int flag = AG_INT(2);
+
+	AG_TextboxSetWordWrap(textbox, flag);
+}
+
+static void
 CreateWindow(void)
 {
 	AG_Window *win;
@@ -304,7 +313,7 @@ CreateWindow(void)
 			 * the buffer a bit larger so the user can try
 			 * entering text.
 			 */
-			if ((f = fopen("themes.c", "r")) != NULL) {
+			if ((f = fopen("loss.txt", "r")) != NULL) {
 				size_t rv;
 
 				fseek(f, 0, SEEK_END);
@@ -316,8 +325,7 @@ CreateWindow(void)
 				fclose(f);
 				someText[size] = '\0';
 			} else {
-				someText = AG_Strdup("Failed to load "
-				                     "themes.c");
+				someText = AG_Strdup("Failed to load loss.txt");
 			}
 	
 			/*
@@ -326,6 +334,10 @@ CreateWindow(void)
 			 * space for the terminating NUL.
 			 */
 			AG_TextboxBindUTF8(tbox, someText, bufSize);
+	
+			/* Add a word wrapping control */
+			AG_CheckboxNewFn(ntab, 0, "Word wrapping",
+			    SetWordWrap, "%p", tbox);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
