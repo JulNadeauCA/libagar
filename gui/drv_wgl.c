@@ -413,6 +413,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	ShowWindow(wgl->hwnd, SW_SHOW);
 	if (!(win->flags & AG_WINDOW_KEEPBELOW)) {
 		SetForegroundWindow(wgl->hwnd);
+		/* SetCapture(wgl->hwnd); */
 	}
 	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
 
@@ -537,8 +538,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		dev->type = AG_DRIVER_MOUSE_MOTION;
 		x = (int)LOWORD(lParam);
 		y = (int)HIWORD(lParam);
-		dev->data.motion.x = AGDRIVER_BOUNDED_WIDTH(win, x);
-		dev->data.motion.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
+		dev->data.motion.x = x;
+		dev->data.motion.y = y;
 		AG_MouseMotionUpdate(drv->mouse, 
 		    dev->data.motion.x, dev->data.motion.y);
 		break;
@@ -572,22 +573,25 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, 
 		    dev->data.button.which);
 		break;
-/*#if (_WIN32_WINNT >= 0x400) || (_WIN32_WINDOWS > 0x400) */
-#ifdef WM_MOUSEWHEEL
-	case WM_MOUSEWHEEL:
-		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
-		dev->data.button.which =
-		    (short)HIWORD(wParam) > 0 ?
-		    AG_MOUSE_WHEELUP :
-		    AG_MOUSE_WHEELDOWN;
-		x = (int)LOWORD(lParam);
-		y = (int)HIWORD(lParam);
-		dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
-		dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
-		AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, 
-		    dev->data.button.which);
+	case 0x020a:				/* WM_MOUSEWHEEL (missing define) */
+		{
+			int move = (short)HIWORD(wParam);
+
+			if (move == 0) {
+				goto fallback;
+			}
+			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+			dev->data.button.which =
+			    (move > 0) ? AG_MOUSE_WHEELUP : AG_MOUSE_WHEELDOWN;
+			x = (int)LOWORD(lParam) - WIDGET(win)->x;
+			y = (int)HIWORD(lParam) - WIDGET(win)->y;
+			dev->data.button.x = AGDRIVER_BOUNDED_WIDTH(win, x);
+			dev->data.button.y = AGDRIVER_BOUNDED_HEIGHT(win, y);
+			
+			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED,
+			    dev->data.button.which);
+		}
 		break;
-#endif
 	case WM_KEYUP:
 	case WM_KEYDOWN:
 		if (uMsg == WM_KEYDOWN) {
@@ -616,6 +620,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SETFOCUS:
 		if (win->visible) {
+			/* SetCapture(hWnd); */
 			dev->type = AG_DRIVER_FOCUS_IN;
 			goto ret0;
 		} else {

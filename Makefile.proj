@@ -14,13 +14,6 @@
 # Premake is available from http://premake.sourceforge.net/.
 #
 
-PROJFILES=	linux:cb-gcc:: \
-		macosx:cb-gcc:: \
-		windows:vs2005:: \
-		windows:vs2005:-nofreetype:--without-freetype \
-		windows:vs2005:-nothreads:--disable-threads \
-		windows:vs2005:-nosdl:--without-sdl\
-		windows:vs2005:-nofreetype,nothreads,nosdl:--without-freetype,--disable-threads,--without-sdl \
-		windows:cb-gcc:: \
-		windows:cb-ow::
+PROJFILES=	\
+		windows:vs2005::
 
