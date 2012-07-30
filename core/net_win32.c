@@ -28,11 +28,10 @@
  */
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
 
 #include <core/core.h>
+
+#undef SLIST_ENTRY
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,21 +40,10 @@
 # include <errno.h>
 #endif
 
-#ifdef _WIN64
-# include <winsock2.h>
-# include <ws2tcpip.h>
-#else
-# include <winsock.h>
-typedef int socklen_t;
-#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #include <iphlpapi.h>
-
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <netdb.h>
 
 static int agSockOptionMap[] = {
 	0,
@@ -75,9 +63,7 @@ GetAddrFamily(int family)
 {
 	switch (family) {
 	case AF_INET:	return (AG_NET_INET4);
-#ifdef AF_INET6
 	case AF_INET6:	return (AG_NET_INET6);
-#endif
 	default:	return (0);
 	}
 }
@@ -98,7 +84,6 @@ NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *
 			*saLen = sizeof(struct sockaddr_in);
 		}
 		break;
-#ifdef AF_INET6
 	case AG_NET_INET6:
 		{
 			struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
@@ -106,15 +91,6 @@ NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *
 			sin6->sin6_port = AG_SwapBE16(na->port);
 			memcpy(&sin6->sin6_addr, na->na_inet6.addr, 16);
 			*saLen = sizeof(struct sockaddr_in6);
-		}
-		break;
-#endif
-	case AG_NET_LOCAL:
-		{
-			struct sockaddr_un *sun = (struct sockaddr_un *)sa;
-			sun->sun_family = AF_UNIX;
-			Strlcpy(sun->sun_path, na->na_local.path, sizeof(sun->sun_path));
-			*saLen = sizeof(struct sockaddr_un);
 		}
 		break;
 	default:
@@ -143,7 +119,6 @@ SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
 			return (na);
 		}
 		break;
-#ifdef AF_INET6
 	case AG_NET_INET6:
 		{
 			const struct sockaddr_in6 *sin6;
@@ -158,7 +133,6 @@ SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
 			return (na);
 		}
 		break;
-#endif /* AF_INET6 */
 	default:
 		break;
 	}
@@ -181,7 +155,7 @@ GetTimeval(struct timeval *tv, Uint32 ms)
 static int
 Init(void)
 {
-	WORD verPref = MAKEWORD(1,1);
+	WORD verPref = MAKEWORD(2,2);
 	WSADATA wsaData;
 
 	if (AG_MutexTryInit(&agNetWin32Lock) == -1) {
@@ -223,7 +197,7 @@ GetIfConfig(AG_NetAddrList *nal)
 
 	AG_MutexLock(&agNetWin32Lock);
 
-	dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)
+	dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
 	if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
 		PIP_ADAPTER_INFO pAdapterInfoNew;
 		if ((pAdapterInfoNew = TryRealloc(pAdapterInfo, ulOutBufLen))
@@ -240,7 +214,7 @@ GetIfConfig(AG_NetAddrList *nal)
 	}
 	for (pAdapter = pAdapterInfo;
 	     pAdapter != NULL;
-	     pAdapter = pAdapter->next) {
+	     pAdapter = pAdapter->Next) {
 		for (pAddress = &pAdapterInfo->IpAddressList;
 		     pAddress != NULL;
 		     pAddress = pAddress->Next) {
@@ -251,8 +225,8 @@ GetIfConfig(AG_NetAddrList *nal)
 				goto fail;
 			}
 			na->family = AG_NET_INET4;
-			na->host = inet_addr(pAddress->IpAddress.String);
 			na->port = 0;
+			na->na_inet4.addr = inet_addr(pAddress->IpAddress.String);
 			TAILQ_INSERT_TAIL(nal, na, addrs);
 		}
 	}
@@ -268,34 +242,36 @@ fail:
 static int
 Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 {
+	struct addrinfo hints, *res, *res0;
+	enum ag_net_addr_family af;
 	AG_NetAddr *na;
-	struct hostent *he;
-	struct in_addr inaddr;
+	int rv;
+	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	if (flags & AG_NET_NUMERIC_HOST) { hints.ai_flags |= AI_NUMERICHOST; }
 
-	AG_MutexLock(&agNetWin32Lock);
-
-	if ((hp = gethostbyname(host)) == NULL) {
-		AG_SetError(_("Failed to resolve: %s"), host);
-		goto fail;
+	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
+		AG_SetError("%s:%s: %s", host, port, gai_strerror(rv));
+		return (-1);
 	}
-	if ((na = AG_NetAddrNew()) == NULL) {
-		goto fail;
+	for (res = res0; res != NULL; res = res->ai_next) {
+		if ((af = GetAddrFamily(res->ai_family)) == 0) {
+			continue;
+		}
+		if ((na = SockAddrToNetAddr(af, res->ai_addr)) != NULL)
+			TAILQ_INSERT_TAIL(nal, na, addrs);
 	}
-	na->family = AG_NET_INET4;
-	na->port = atoi(port);
-	TAILQ_INSERT_TAIL(nal, na, addrs);
-
-	AG_MutexUnlock(&agNetWin32Lock);
+	freeaddrinfo(res0);
 	return (0);
-fail:
-	AG_MutexUnlock(&agNetWin32Lock);
-	return (-1);
 }
 
 static char *
 GetAddrNumerical(AG_NetAddr *na)
 {
-	const char *s;
+	char *s;
+	struct in_addr inaddr;
 
 	switch (na->family) {
 	case AG_NET_INET4:
@@ -303,19 +279,19 @@ GetAddrNumerical(AG_NetAddr *na)
 		if ((na->sNum = TryMalloc(INET_ADDRSTRLEN)) == NULL) {
 			return (NULL);
 		}
-		s = inet_ntop(AF_INET, &na->na_inet4.addr, na->sNum,
-		    INET_ADDRSTRLEN);
+		inaddr.s_addr = na->na_inet4.addr;
+		s = inet_ntoa(inaddr);
+		Strlcpy(na->sNum, s, sizeof(na->sNum));
 		break;
-#ifdef AF_INET6
 	case AG_NET_INET6:
 		Free(na->sNum);
 		if ((na->sNum = TryMalloc(INET6_ADDRSTRLEN)) == NULL) {
 			return (NULL);
 		}
-		s = inet_ntop(AF_INET6, &na->na_inet4.addr, na->sNum,
-		    INET6_ADDRSTRLEN);
+		memcpy(&inaddr.s_addr, &na->na_inet6.addr,
+		    sizeof(inaddr.s_addr));
+		s = inet_ntoa(inaddr);
 		break;
-#endif
 	default:
 		AG_SetError("Bad address format");
 		return (NULL);
@@ -361,7 +337,7 @@ static void
 DestroySocket(AG_NetSocket *ns)
 {
 	if (ns->fd != -1) {
-		close(ns->fd);
+		closesocket(ns->fd);
 		ns->fd = -1;
 	}
 }
@@ -451,7 +427,8 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 			struct linger ling;
 
 			optLen = sizeof(struct linger);
-			rv = getsockopt(ns->fd, SOL_SOCKET, SO_LINGER, &ling, &optLen);
+			rv = getsockopt(ns->fd, SOL_SOCKET, SO_LINGER,
+			    (char *)&ling, &optLen);
 			if (rv == 0) {
 				*(int *)p = ling.l_onoff ? ling.l_linger : 0;
 			}
@@ -505,7 +482,7 @@ SetOption(AG_NetSocket *ns, enum ag_net_socket_option so, const void *p)
 			ling.l_onoff = (val > 0);
 			ling.l_linger = val;
 			rv = setsockopt(ns->fd, SOL_SOCKET, SO_LINGER,
-			    &ling, sizeof(struct linger));
+			    (const char *)&ling, sizeof(struct linger));
 		}
 		break;
 	default:
@@ -527,13 +504,13 @@ fail:
 static int
 Read(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
 {
-	ssize_t rv;
+	int rv;
 
 	AG_MutexLock(&agNetWin32Lock);
 
-	rv = read(ns->fd, p, size);
-	if (rv < 0) {
-		AG_SetError("read: %s", strerror(errno));
+	rv = recv(ns->fd, (char *)p, size, 0);
+	if (rv == SOCKET_ERROR) {
+		AG_SetError("recv: failed (%d)", rv);
 		goto fail;
 	}
 	if (nRead != NULL) { *nRead = (size_t)rv; }
@@ -548,13 +525,13 @@ fail:
 static int
 Write(AG_NetSocket *ns, const void *p, size_t size, size_t *nWrote)
 {
-	ssize_t rv;
+	int rv;
 
 	AG_MutexLock(&agNetWin32Lock);
 
-	rv = write(ns->fd, p, size);
-	if (rv < 0) {
-		AG_SetError("write: %s", strerror(errno));
+	rv = send(ns->fd, (const char *)p, size, 0);
+	if (rv == SOCKET_ERROR) {
+		AG_SetError("send: failed (%d)", rv);
 		goto fail;
 	}
 	if (nWrote != NULL) { *nWrote = (size_t)rv; }
@@ -572,7 +549,7 @@ Close(AG_NetSocket *ns)
 	AG_MutexLock(&agNetWin32Lock);
 
 	if (ns->fd != -1) {
-		close(ns->fd);
+		closesocket(ns->fd);
 		ns->fd = -1;
 	}
 	if (InitSocket(ns) == -1)
@@ -657,7 +634,7 @@ Accept(AG_NetSocket *ns)
 	struct sockaddr_storage sa;
 	AG_NetSocket *nsNew;
 	socklen_t saLen = sizeof(struct sockaddr_storage);
-	int sock;
+	SOCKET sock;
 
 	AG_MutexLock(&agNetWin32Lock);
 
@@ -674,13 +651,13 @@ Accept(AG_NetSocket *ns)
 		goto fail;
 	}
 	nsNew->family = ns->family;
-	nsNew->fd = sock;
+	nsNew->fd = (int)sock;
 	nsNew->flags |= AG_NET_SOCKET_CONNECTED;
 
 	AG_MutexUnlock(&agNetWin32Lock);
 	return (nsNew);
 fail:
-	if (sock != -1) { close(sock); }
+	if (sock != -1) { closesocket(sock); }
 	AG_MutexUnlock(&agNetWin32Lock);
 	return (NULL);
 }
