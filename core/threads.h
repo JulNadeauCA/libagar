@@ -57,7 +57,7 @@ AG_ThreadTryCreate(AG_Thread *th, void *(*fn)(void *), void *arg)
 {
 	int rv;
 	if ((rv = pthread_create(th, NULL, fn, arg)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -73,7 +73,7 @@ AG_ThreadTryCancel(AG_Thread th)
 {
 	int rv;
 	if ((rv = pthread_cancel(th)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -89,7 +89,7 @@ AG_ThreadTryJoin(AG_Thread th, void **p)
 {
 	int rv;
 	if ((rv = pthread_join(th, p)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -115,7 +115,7 @@ AG_MutexTryInit(AG_Mutex *m)
 {
 	int rv;
 	if ((rv = pthread_mutex_init(m, NULL)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -125,7 +125,7 @@ AG_MutexTryInitRecursive(AG_Mutex *m)
 {
 	int rv;
 	if ((rv = pthread_mutex_init(m, &agRecursiveMutexAttr)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -163,7 +163,7 @@ AG_CondTryInit(AG_Cond *cd)
 {
 	int rv;
 	if ((rv = pthread_cond_init(cd, NULL)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -201,7 +201,7 @@ AG_ThreadKeyTryCreate(AG_ThreadKey *k, void (*destructorFn)(void *))
 {
 	int rv;
 	if ((rv = pthread_key_create(k,destructorFn)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -217,7 +217,7 @@ AG_ThreadKeyTryDelete(AG_ThreadKey k)
 {
 	int rv;
 	if ((rv = pthread_key_delete(k)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -233,7 +233,7 @@ AG_ThreadKeyTrySet(AG_ThreadKey k, const void *p)
 {
 	int rv;
 	if ((rv = pthread_setspecific(k, p)) != 0) {
-		AG_SetError(strerror(rv));
+		AG_SetError(AG_Strerror(rv));
 		return (-1);
 	}
 	return (0);
