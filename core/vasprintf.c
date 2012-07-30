@@ -47,7 +47,7 @@ int
 AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
 {
 #ifndef HAVE_VASPRINTF
-	char *buf;
+	char *buf, *bufNew;
 	int size;
 	size_t buflen;
 
@@ -61,10 +61,11 @@ AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
 		return (size);
 	}
 
-	if ((buf = TryRealloc(buf, size+1)) == NULL) {
+	if ((bufNew = TryRealloc(buf, size+1)) == NULL) {
 		Free(buf);
 		return (-1);
 	}
+	buf = bufNew;
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);
