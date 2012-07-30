@@ -7,7 +7,7 @@ LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
-LIB_LINKS=	pthreads winmm
+LIB_LINKS=	pthreads winmm Ws2_32 iphlpapi
 
 SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \
 	prop.c timeout.c class.c cpuinfo.c data_source.c \
