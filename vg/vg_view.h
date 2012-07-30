@@ -133,7 +133,7 @@ VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 	switch (vv->snap_mode) {
 	case VG_GRID:
 		grid = &vv->grid[0];
-		ival2 = grid->ival>>1;
+		ival2 = (float)(grid->ival>>1);
 
 		r = VG_Mod(pos->x, grid->ival);
 		pos->x -= r;

@@ -31,7 +31,7 @@ RG_PutPixel(AG_Surface *su, int x, int y, Uint32 pc)
 {
 	Uint8 *dst;
 	    
-	if (x < 0 || y < 0 || x >= su->w || y >= su->h) {
+	if (x < 0 || y < 0 || (Uint)x >= su->w || (Uint)y >= su->h) {
 		return;
 	}
 	dst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
