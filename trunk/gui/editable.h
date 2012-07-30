@@ -173,8 +173,8 @@ AG_EditableReadOnly(AG_Editable *ed)
 static __inline__ void
 AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
 {
-	if (ed->pos > buf->len) {
-		ed->pos = buf->len;
+	if ((Uint)ed->pos > buf->len) {
+		ed->pos = (int)buf->len;
 		ed->sel = 0;
 	}
 	if (ed->sel != 0) {
@@ -182,8 +182,8 @@ AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
 		if (ep < 0) {
 			ed->pos = 0;
 			ed->sel = 0;
-		} else if (ep > buf->len) {
-			ed->pos = buf->len;
+		} else if ((Uint)ep > buf->len) {
+			ed->pos = (int)buf->len;
 			ed->sel = 0;
 		}
 	}

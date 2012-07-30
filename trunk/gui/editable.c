@@ -571,6 +571,34 @@ LostFocus(AG_Event *event)
 	AG_Redraw(ed);
 }
 
+/*
+ * Evaluate whether the given character should be considered
+ * a space for word wrapping and word selection.
+ */
+static __inline__ int
+IsSpaceUCS4(Uint32 c)
+{
+	switch (c) {
+	case ' ':		/* SPACE */
+	case '\t':		/* TAB */
+	case 0x00a0:		/* NO-BREAK SPACE */
+	case 0x1680:		/* OGHAM SPACE MARK */
+	case 0x180e:		/* MONGOLIAN VOWEL SEPARATOR */
+	case 0x202f:		/* NARROW NO-BREAK SPACE */
+	case 0x205f:		/* MEDIUM MATHEMATICAL SPACE */
+	case 0x3000:		/* IDEOGRAPHIC SPACE */
+	case 0xfeff:		/* ZERO WIDTH NO-BREAK SPACE */
+		return (1);
+	default:
+		break;
+	}
+	if (c >= 0x2000 && c <= 0x200b) {
+		/* EN/EM SPACES */
+		return (1);
+	}
+	return (0);
+}
+
 /* Evaluate word wrapping at given character. */
 static __inline__ int
 WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
@@ -581,7 +609,7 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 	int x2;
 
 	if (!(ed->flags & AG_EDITABLE_WORDWRAP) ||
-	    x == 0 || !isspace((int)*s)) {
+	    x == 0 || !IsSpaceUCS4(*s)) {
 		return (0);
 	}
 	for (t = &s[1], x2 = x;
@@ -589,7 +617,7 @@ WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
 	     t++) {
 		gl = AG_TextRenderGlyph(drv, *t);
 		x2 += gl->advance;
-		if (isspace((int)*t) || *t == '\n') {
+		if (IsSpaceUCS4(*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
 			} else {
@@ -1131,14 +1159,14 @@ MouseDoubleClick(AG_Editable *ed)
 		for (;
 		     ed->pos > 0;
 		     ed->pos--, c--) {
-			if (isspace((char)*c) && ed->pos < buf->len) {
+			if (IsSpaceUCS4(*c) && ed->pos < buf->len) {
 				c++;
 				ed->pos++;
 				break;
 			}
 		}
 		while ((ed->pos + ed->sel) < buf->len &&
-		    !isspace((char)*c)) {
+		    !IsSpaceUCS4(*c)) {
 			c++;
 			ed->sel++;
 		}
@@ -1528,7 +1556,7 @@ MouseMotion(AG_Event *event)
 			}
 			ed->sel = newPos - ed->pos;
 			while (c < &buf->s[buf->len] &&
-			    !isspace((char)*c) && *c != (Uint32)'\n') {
+			    !IsSpaceUCS4(*c) && *c != (Uint32)'\n') {
 				c++;
 				ed->sel++;
 			}
@@ -1541,11 +1569,11 @@ MouseMotion(AG_Event *event)
 			}
 			ed->sel = newPos - ed->pos;
 			while (c > &buf->s[0] &&
-			    !isspace((char)*c) && *c != (Uint32)'\n') {
+			    !IsSpaceUCS4(*c) && *c != (Uint32)'\n') {
 				c--;
 				ed->sel--;
 			}
-			if (isspace((char)buf->s[ed->pos + ed->sel])) {
+			if (IsSpaceUCS4(buf->s[ed->pos + ed->sel])) {
 				ed->sel++;
 			}
 			ed->xScrollTo = &ed->xSelStart;
