@@ -157,7 +157,7 @@ AG_DataSourceRealloc(void *obj, size_t size)
 	AG_CoreSource *cs = (AG_CoreSource *)obj;
 	Uint8 *dataNew;
 		
-	if ((dataNew = AG_TryRealloc(cs->data, size)) == NULL) {
+	if ((dataNew = (Uint8 *)AG_TryRealloc(cs->data, size)) == NULL) {
 		return (-1);
 	}
 	cs->data = dataNew;

@@ -271,7 +271,8 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 	Uint32 pixel;
 	Uint8 *dst;
 
-	if (sx < 0 || sy < 0 || sx >= tv->scaled->w || sy >= tv->scaled->h) {
+	if (sx < 0 || sy < 0 ||
+	    (Uint)sx >= tv->scaled->w || (Uint)sy >= tv->scaled->h) {
 		return;
 	}
 	pixel = AG_MapPixelRGB(tv->scaled->format, r,g,b);
