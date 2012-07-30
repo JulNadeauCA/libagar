@@ -123,7 +123,7 @@ typedef AG_TAILQ_HEAD(ag_net_socket_set, ag_net_socket) AG_NetSocketSet;
 typedef struct ag_net_ops {
 	const char *name;
 
-	void          (*init)(void);
+	int           (*init)(void);
 	void          (*destroy)(void);
 	int           (*getIfConfig)(AG_NetAddrList *);
 	int           (*resolve)(AG_NetAddrList *, const char *, const char *, Uint);
@@ -150,7 +150,8 @@ extern const AG_NetOps  agNetOps_win32;
 extern const char *agNetAddrFamilyNames[];
 extern const char *agNetSocketTypeNames[];
 
-void		AG_SetNetOps(const AG_NetOps *);
+int             AG_InitNetworkSubsystem(const AG_NetOps *);
+void		AG_DestroyNetworkSubsystem(void);
 
 AG_NetSocket   *AG_NetSocketNew(enum ag_net_addr_family,
                                 enum ag_net_socket_type, int);
