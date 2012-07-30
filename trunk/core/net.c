@@ -484,16 +484,24 @@ out:
 	AG_MutexUnlock(&ns->lock);
 }
 
-void
-AG_SetNetOps(const AG_NetOps *ops)
+int
+AG_InitNetworkSubsystem(const AG_NetOps *ops)
 {
 	if (agNetOps == ops) {
-		return;
+		return (0);
 	}
 	if (agNetOps != NULL && agNetOps->destroy != NULL) {
-		agNetOps->destroy();
+		AG_DestroyNetworkSubsystem();
 	}
 	agNetOps = ops;
-	if (ops->init != NULL)
-		ops->init();
+	return (ops->init != NULL) ? ops->init() : 0;
+}
+
+void
+AG_DestroyNetworkSubsystem(void)
+{
+	if (agNetOps != NULL) {
+		agNetOps->destroy();
+	}
+	agNetOps = NULL;
 }

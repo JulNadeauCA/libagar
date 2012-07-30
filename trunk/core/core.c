@@ -75,6 +75,8 @@ int agTerminating = 0;		/* Application is exiting */
 int
 AG_InitCore(const char *progname, Uint flags)
 {
+	int rv;
+
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
 
@@ -140,13 +142,15 @@ AG_InitCore(const char *progname, Uint flags)
 	/* Select the network access routines. */
 #ifdef AG_NETWORK
 # if defined(_WIN32)
-	AG_SetNetOps(&agNetOps_win32);
+	rv = AG_InitNetworkSubsystem(&agNetOps_win32);
 # elif defined(HAVE_GETADDRINFO)
-	AG_SetNetOps(&agNetOps_bsd);
+	rv = AG_InitNetworkSubsystem(&agNetOps_bsd);
 # endif
 #else
-	AG_SetNetOps(&agNetOps_dummy);
+	rv = AG_InitNetworkSubsystem(&agNetOps_dummy);
 #endif
+	if (rv != 0)
+		return (-1);
 	
 	/* Select the user account interface routines. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)

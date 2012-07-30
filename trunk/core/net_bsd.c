@@ -173,23 +173,29 @@ GetTimeval(struct timeval *tv, Uint32 ms)
 	}
 }
 
-static void
+static int
 Init(void)
 {
 	void (*fn)(int);
-
+	struct sockaddr_in sin;
+#ifdef AF_INET6
+	struct sockaddr_in6 sin6;
+#endif
 	if ((fn = signal(SIGPIPE, SIG_IGN)) != SIG_DFL)
 		signal(SIGPIPE, fn);
 	
 	/* Sanity check the sockaddr lengths. */
-#ifdef AG_DEBUG	
-	struct sockaddr_in sin;
-	if (sizeof(sin.sin_addr.s_addr) != 4) { AG_FatalError("sockaddr_in"); }
-# ifdef AF_INET6
-	struct sockaddr_in6 sin6;
-	if (sizeof(sin6.sin6_addr) != 16) { AG_FatalError("sockaddr_in6"); }
-# endif
-#endif /* AG_DEBUG */
+	if (sizeof(sin.sin_addr.s_addr) != 4) {
+		AG_SetError("Bad sockaddr_in size");
+		return (-1);
+	}
+#ifdef AF_INET6
+	if (sizeof(sin6.sin6_addr) != 16) {
+		AG_SetError("Bad sockaddr_in6 size");
+		return (-1);
+	}
+#endif
+	return (0);
 }
 
 static void
@@ -677,7 +683,6 @@ poll:
 		AG_SetError("select: %s", strerror(errno));
 		return (-1);
 	} else if (rv == 0) {
-		AG_SetError("select: timeout");
 		return (0);
 	}
 
