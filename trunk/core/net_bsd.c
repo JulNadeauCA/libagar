@@ -499,7 +499,7 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 		return (-1);
 	}
 	if (rv != 0) {
-		AG_SetError("setsockopt: %s", strerror(errno));
+		AG_SetError("getsockopt: %s", strerror(errno));
 		return (-1);
 	}
 	return (0);
