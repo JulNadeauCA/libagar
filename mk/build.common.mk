@@ -33,6 +33,7 @@ SYSCONFDIR?=	${PREFIX}/etc
 DATADIR?=	${PREFIX}/share
 BINDIR?=	${PREFIX}/bin
 LIBDIR?=	${PREFIX}/lib
+MODULEDIR?=	${PREFIX}/lib
 INCLDIR?=	${PREFIX}/include
 MANDIR?=	${PREFIX}/man
 

@@ -345,6 +345,7 @@ fi
 if [ "${enable_network}" != "no" ]; then
 	CHECK(getaddrinfo)
 	CHECK(sockopts)
+	CHECK(winsock)
 	MDEFINE(HAVE_NETWORK, "yes")
 	HDEFINE(AG_NETWORK, "yes")
 else
@@ -668,16 +669,15 @@ if [ "${HAVE_MYSQL}" = "yes" ]; then
 fi
 if [ "${HAVE_NETWORK}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "net.c net_dummy.c")
-	case "${host}" in
-	*-*-cygwin* | *-*-mingw32*)
-		MAPPEND(SRCS_CORE, "net_win32.c")
-		;;
-	*)
-		if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
-			MAPPEND(SRCS_CORE, "net_bsd.c")
-		fi
-		;;
-	esac
+	if [ "${HAVE_WINSOCK1}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "net_winsock1.c")
+	fi
+	if [ "${HAVE_WINSOCK2}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "net_winsock2.c")
+	fi
+	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "net_bsd.c")
+	fi
 fi
 if [ "${HAVE_GETPWUID}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "user_posix.c")

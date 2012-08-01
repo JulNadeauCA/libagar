@@ -40,9 +40,12 @@
 #include <config/have_cygwin.h>
 #include <config/have_clock_gettime.h>
 #include <config/have_db4.h>
-#include <config/have_getaddrinfo.h>
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
+
+#include <config/have_getaddrinfo.h>
+#include <config/have_winsock1.h>
+#include <config/have_winsock2.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -141,8 +144,10 @@ AG_InitCore(const char *progname, Uint flags)
 	
 	/* Select the network access routines. */
 #ifdef AG_NETWORK
-# if defined(_WIN32)
-	rv = AG_InitNetworkSubsystem(&agNetOps_win32);
+# if defined(HAVE_WINSOCK2)
+	rv = AG_InitNetworkSubsystem(&agNetOps_winsock2);
+# elif defined(HAVE_WINSOCK1)
+	rv = AG_InitNetworkSubsystem(&agNetOps_winsock1);
 # elif defined(HAVE_GETADDRINFO)
 	rv = AG_InitNetworkSubsystem(&agNetOps_bsd);
 # endif
