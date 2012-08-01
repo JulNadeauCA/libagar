@@ -1,6 +1,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
+include ${TOP}/au/Makefile.inc
 
 LIB=		ag_au
 LIB_MAJOR=	5
@@ -8,7 +9,7 @@ LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"26f09743-b62e-4c74-abaf-0a4339a2b5d9"
-LIB_LINKS=	${CORE_LINKS_STATIC} portaudio sndfile
+LIB_LINKS=	${CORE_LINKS_STATIC} ${AU_LIBS}
 
 SRCS=	${SRCS_AU} au.c au_wave.c au_dev_out.c
 MAN3=	AU.3

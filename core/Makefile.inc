@@ -1,2 +1,4 @@
-CORE_LINKS=		ag_core pthreads winmm Ws2_32 iphlpapi
-CORE_LINKS_STATIC=	ag_core_static pthreads winmm Ws2_32 iphlpapi
+# ex:syn=make
+CORE_LIBS=		${PTHREADS_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS}
+CORE_LINKS=		ag_core ${CORE_LIBS}
+CORE_LINKS_STATIC=	ag_core_static ${CORE_LIBS}
