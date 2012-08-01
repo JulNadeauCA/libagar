@@ -3,10 +3,6 @@
 CONFIG_GUESS("../../mk/config.guess")
 
 REQUIRE(cc)
-CHECK(pthreads)
-CHECK(sdl)
-CHECK(opengl)
-CHECK(freetype)
 REQUIRE(agar, 1.4.1)
 CHECK(sdl_image)
 
