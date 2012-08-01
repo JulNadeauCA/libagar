@@ -162,7 +162,7 @@ Init(void)
 		return (-1);
 	}
 	if (WSAStartup(verPref, &wsaData) != 0) {
-		AG_SetError("Winsock 1.1 initialization failed");
+		AG_SetError("Winsock 2.2 initialization failed");
 		return (-1);
 	}
 	return (0);
@@ -270,33 +270,18 @@ Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 static char *
 GetAddrNumerical(AG_NetAddr *na)
 {
-	char *s;
-	struct in_addr inaddr;
-
-	switch (na->family) {
-	case AG_NET_INET4:
-		Free(na->sNum);
-		if ((na->sNum = TryMalloc(INET_ADDRSTRLEN)) == NULL) {
-			return (NULL);
-		}
-		inaddr.s_addr = na->na_inet4.addr;
-		s = inet_ntoa(inaddr);
-		Strlcpy(na->sNum, s, sizeof(na->sNum));
-		break;
-	case AG_NET_INET6:
-		Free(na->sNum);
-		if ((na->sNum = TryMalloc(INET6_ADDRSTRLEN)) == NULL) {
-			return (NULL);
-		}
-		memcpy(&inaddr.s_addr, &na->na_inet6.addr,
-		    sizeof(inaddr.s_addr));
-		s = inet_ntoa(inaddr);
-		break;
-	default:
-		AG_SetError("Bad address format");
+	struct sockaddr_storage sa;
+	socklen_t saLen;
+	
+	Free(na->sNum);
+	if ((na->sNum = TryMalloc(NI_MAXHOST)) == NULL) {
 		return (NULL);
 	}
-	if (s == NULL) {
+	
+	NetAddrToSockAddr(na, &sa, &saLen);
+	if (getnameinfo((struct sockaddr *)&sa, saLen,
+	    na->sNum, NI_MAXHOST, NULL, 0,
+	    NI_NUMERICHOST) != 0) {
 		AG_SetError("inet_ntop: %s", strerror(errno));
 		return (NULL);
 	}
@@ -326,7 +311,7 @@ InitSocket(AG_NetSocket *ns)
 		AG_SetError("Bad socket type: %d", ns->type);
 		return (-1);
 	}
-	if ((ns->fd = socket(sockDomain, sockType, ns->proto)) == -1) {
+	if ((ns->fd = socket(sockDomain, sockType, ns->proto)) == INVALID_SOCKET) {
 		AG_SetError("socket: %s", strerror(errno));
 		return (-1);
 	}
@@ -379,7 +364,7 @@ Bind(AG_NetSocket *ns, const AG_NetAddr *na)
 			goto fail;
 	}
 	NetAddrToSockAddr(na, &sa, &saLen);
-	if (bind(ns->fd, (struct sockaddr *)&sa, saLen) < 0) {
+	if (bind(ns->fd, (struct sockaddr *)&sa, saLen) == SOCKET_ERROR) {
 		AG_SetError("bind: %s", strerror(errno));
 		goto fail;
 	}
@@ -438,8 +423,8 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 		AG_SetError("Bad socket option");
 		goto fail;
 	}
-	if (rv != 0) {
-		AG_SetError("setsockopt: %s", strerror(errno));
+	if (rv == SOCKET_ERROR) {
+		AG_SetError("getsockopt(%u): %s", (Uint)opt, strerror(errno));
 		goto fail;
 	}
 	
@@ -489,8 +474,8 @@ SetOption(AG_NetSocket *ns, enum ag_net_socket_option so, const void *p)
 		AG_SetError("Bad socket option");
 		goto fail;
 	}
-	if (rv != 0) {
-		AG_SetError("setsockopt: %s", strerror(errno));
+	if (rv != SOCKET_ERROR) {
+		AG_SetError("setsockopt(%u): %s", (Uint)opt, strerror(errno));
 		goto fail;
 	}
 
@@ -639,7 +624,7 @@ Accept(AG_NetSocket *ns)
 	AG_MutexLock(&agNetWin32Lock);
 
 	memset(&sa, 0, saLen);
-	if ((sock = accept(ns->fd, (struct sockaddr *)&sa, &saLen)) == -1) {
+	if ((sock = accept(ns->fd, (struct sockaddr *)&sa, &saLen)) == INVALID_SOCKET) {
 		AG_SetError("accept: %s", strerror(errno));
 		goto fail;
 	}
