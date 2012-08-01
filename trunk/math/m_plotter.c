@@ -406,13 +406,19 @@ static void
 Destroy(void *obj)
 {
 	M_Plotter *ptr = obj;
-	M_Plot *plot;
-	M_PlotLabel *plbl;
+	M_Plot *plot, *plotNext;
+	M_PlotLabel *plbl, *plblNext;
 	Uint i;
 
-	while ((plot = TAILQ_FIRST(&ptr->plots)) != NULL) {
-		while ((plbl = TAILQ_FIRST(&plot->labels)) != NULL) {
-			Free(plbl);
+	for (plot = TAILQ_FIRST(&ptr->plots);
+	     plot != TAILQ_END(&ptr->plots);
+	     plot = plotNext) {
+		plotNext = TAILQ_NEXT(plot, plots);
+		for (plbl = TAILQ_FIRST(&plot->labels);
+		     plbl != TAILQ_END(&plot->labels);
+		     plbl = plblNext) {
+			plblNext = TAILQ_NEXT(plbl, labels);
+			free(plbl);
 		}
 		if (plot->type == M_PLOT_VECTORS) {
 			for (i = 0; i < plot->n; i++) {
@@ -422,8 +428,9 @@ Destroy(void *obj)
 		} else {
 			Free(plot->data.r);
 		}
+		free(plot);
 	}
-	
+	     
 	M_Free(ptr->vMin);
 	M_Free(ptr->vMax);
 }

@@ -95,13 +95,19 @@ proj:
 		(cd $$D && touch Makefile.config && ${MAKE} proj); \
 	done
 
-proj-vs2005:
+proj-windows:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
-		(cd $$D && unzip ProjectFiles/vs2005-windows.zip); \
+		(cd $$D && unzip -f ProjectFiles/vs2005-windows.zip); \
 	done
 
-.PHONY: clean cleandir cleandir-cache install deinstall depend configure configure-scripts prereq proj proj-vs2005
+proj-windows-xp:
+	for D in ${SUBDIR}; do \
+		echo "==> $$D"; \
+		(cd $$D && unzip -f ProjectFiles/vs2005-windows-xp.zip); \
+	done
+
+.PHONY: clean cleandir cleandir-cache install deinstall depend configure configure-scripts prereq proj proj-windows proj-windows-xp
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
