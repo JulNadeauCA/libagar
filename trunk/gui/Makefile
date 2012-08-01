@@ -1,6 +1,7 @@
 TOP=..
 include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 SUBDIR=	fonts
 
@@ -10,7 +11,7 @@ LIB_MINOR=	0
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
-LIB_LINKS=	${CORE_LINKS_STATIC} SDL opengl freetype
+LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
 
 SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	gui.c widget.c window.c style.c style_default.c iconmgr.c geometry.c \
