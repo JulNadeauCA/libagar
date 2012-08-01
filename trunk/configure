@@ -57,6 +57,9 @@ do
 	--target=*)
 	    target=$optarg
 	    ;;
+	--emul-os=*)
+	    PROJ_TARGET=$optarg
+	    ;;
 	--byte-order=*)
 	    byte_order=$optarg
 	    ;;
@@ -2791,8 +2794,8 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
 fi
 rm -f conftest.c $testdir/conftest
-$ECHO_N "checking for the signal() function..."
-$ECHO_N "checking for the signal() function..." >> config.log
+$ECHO_N "checking for ANSI-style signal() facilities..."
+$ECHO_N "checking for ANSI-style signal() facilities..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -9975,17 +9978,18 @@ fi
 if [ "${HAVE_NETWORK}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} net.c net_dummy.c"
-	case "${host}" in
-	*-*-cygwin* | *-*-mingw32*)
-SRCS_CORE="${SRCS_CORE} net_win32.c"
-		;;
-	*)
-		if [ "${HAVE_GETADDRINFO}" = "yes" ]
+	if [ "${HAVE_WINSOCK1}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} net_winsock1.c"
+	fi
+	if [ "${HAVE_WINSOCK2}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} net_winsock2.c"
+	fi
+	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} net_bsd.c"
-		fi
-		;;
-	esac
+	fi
 fi
 if [ "${HAVE_GETPWUID}" = "yes" ]
  then

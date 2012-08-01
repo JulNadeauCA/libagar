@@ -145,7 +145,8 @@ typedef struct ag_net_ops {
 __BEGIN_DECLS
 extern const AG_NetOps *agNetOps;
 extern const AG_NetOps  agNetOps_bsd;
-extern const AG_NetOps  agNetOps_win32;
+extern const AG_NetOps  agNetOps_winsock1;
+extern const AG_NetOps  agNetOps_winsock2;
 
 extern const char *agNetAddrFamilyNames[];
 extern const char *agNetSocketTypeNames[];

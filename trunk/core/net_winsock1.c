@@ -24,7 +24,7 @@
  */
 
 /*
- * Network access under win32.
+ * Network access under Windows via WinSock 1.1.
  */
 
 #include <sys/types.h>
@@ -36,14 +36,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32_WCE
-# include <errno.h>
-#endif
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <winsock.h>
 
-#include <iphlpapi.h>
+typedef int socklen_t;
 
 static int agSockOptionMap[] = {
 	0,
@@ -63,16 +59,15 @@ GetAddrFamily(int family)
 {
 	switch (family) {
 	case AF_INET:	return (AG_NET_INET4);
-	case AF_INET6:	return (AG_NET_INET6);
 	default:	return (0);
 	}
 }
 
 /* Convert an AG_NetAddr to a struct sockaddr. */
 static void
-NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *saLen)
+NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_in *sa, socklen_t *saLen)
 {
-	memset(sa, 0, sizeof(struct sockaddr_storage));
+	memset(sa, 0, sizeof(struct sockaddr_in));
 
 	switch (na->family) {
 	case AG_NET_INET4:
@@ -82,15 +77,6 @@ NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *
 			sin->sin_port = AG_SwapBE16(na->port);
 			sin->sin_addr.s_addr = na->na_inet4.addr;
 			*saLen = sizeof(struct sockaddr_in);
-		}
-		break;
-	case AG_NET_INET6:
-		{
-			struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
-			sin6->sin6_family = AF_INET6;
-			sin6->sin6_port = AG_SwapBE16(na->port);
-			memcpy(&sin6->sin6_addr, na->na_inet6.addr, 16);
-			*saLen = sizeof(struct sockaddr_in6);
 		}
 		break;
 	default:
@@ -119,20 +105,6 @@ SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
 			return (na);
 		}
 		break;
-	case AG_NET_INET6:
-		{
-			const struct sockaddr_in6 *sin6;
-
-			if ((na = AG_NetAddrNew()) == NULL) {
-				return (NULL);
-			}
-			sin6 = (const struct sockaddr_in6 *)sa;
-			na->family = AG_NET_INET6;
-			na->port = AG_SwapBE16(sin6->sin6_port);
-			memcpy(na->na_inet6.addr, &sin6->sin6_addr, 16);
-			return (na);
-		}
-		break;
 	default:
 		break;
 	}
@@ -155,14 +127,14 @@ GetTimeval(struct timeval *tv, Uint32 ms)
 static int
 Init(void)
 {
-	WORD verPref = MAKEWORD(2,2);
+	WORD verPref = MAKEWORD(1,1);
 	WSADATA wsaData;
 
 	if (AG_MutexTryInit(&agNetWin32Lock) == -1) {
 		return (-1);
 	}
 	if (WSAStartup(verPref, &wsaData) != 0) {
-		AG_SetError("Winsock 2.2 initialization failed");
+		AG_SetError("Winsock 1.1 initialization failed");
 		return (-1);
 	}
 	return (0);
@@ -184,105 +156,63 @@ Destroy(void)
 static int
 GetIfConfig(AG_NetAddrList *nal)
 {
-	PIP_ADAPTER_INFO pAdapterInfo;
-	PIP_ADAPTER_INFO pAdapter;
-	PIP_ADDR_STRING pAddress;
-	DWORD dwRetVal = 0;
-	ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
-	
-	AG_NetAddrListClear(nal);
-
-	if ((pAdapterInfo = TryMalloc(sizeof(IP_ADAPTER_INFO))) == NULL)
-		return (-1);
-
-	AG_MutexLock(&agNetWin32Lock);
-
-	dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
-	if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
-		PIP_ADAPTER_INFO pAdapterInfoNew;
-		if ((pAdapterInfoNew = TryRealloc(pAdapterInfo, ulOutBufLen))
-		    == NULL) {
-			free(pAdapterInfo);
-			goto fail;
-		}
-		pAdapterInfo = pAdapterInfoNew;
-		dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
-	}
-	if (dwRetVal != NO_ERROR) {
-		AG_SetError("GetAdaptersInfo() failed");
-		goto fail;
-	}
-	for (pAdapter = pAdapterInfo;
-	     pAdapter != NULL;
-	     pAdapter = pAdapter->Next) {
-		for (pAddress = &pAdapterInfo->IpAddressList;
-		     pAddress != NULL;
-		     pAddress = pAddress->Next) {
-			AG_NetAddr *na;
-
-			if ((na = AG_NetAddrNew()) == NULL) {
-				AG_NetAddrListClear(nal);
-				goto fail;
-			}
-			na->family = AG_NET_INET4;
-			na->port = 0;
-			na->na_inet4.addr = inet_addr(pAddress->IpAddress.String);
-			TAILQ_INSERT_TAIL(nal, na, addrs);
-		}
-	}
-
-	AG_MutexUnlock(&agNetWin32Lock);
-	free(pAdapterInfo);
-	return (0);
-fail:
-	AG_MutexUnlock(&agNetWin32Lock);
+	AG_SetError("GetIfConfig() is not supported with winsock1");
 	return (-1);
 }
 
 static int
 Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 {
-	struct addrinfo hints, *res, *res0;
-	enum ag_net_addr_family af;
 	AG_NetAddr *na;
-	int rv;
-	
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	if (flags & AG_NET_NUMERIC_HOST) { hints.ai_flags |= AI_NUMERICHOST; }
+	struct hostent *hp;
+	int i = 0;
 
-	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
-		AG_SetError("%s:%s: %s", host, port, gai_strerror(rv));
-		return (-1);
+	AG_MutexLock(&agNetWin32Lock);
+
+	if ((hp = gethostbyname(host)) == NULL ||
+	    hp->h_length != sizeof(Uint32)) {
+		AG_SetError(_("Failed to resolve: %s"), host);
+		goto fail;
 	}
-	for (res = res0; res != NULL; res = res->ai_next) {
-		if ((af = GetAddrFamily(res->ai_family)) == 0) {
-			continue;
+	while (hp->h_addr_list[i] != NULL) {
+		struct in_addr *inAddr = (struct in_addr *)hp->h_addr_list[i];
+
+		if ((na = AG_NetAddrNew()) == NULL) {
+			goto fail;
 		}
-		if ((na = SockAddrToNetAddr(af, res->ai_addr)) != NULL)
-			TAILQ_INSERT_TAIL(nal, na, addrs);
+		na->family = AG_NET_INET4;
+		memcpy(&na->na_inet4.addr, (void *)inAddr, sizeof(Uint32));
+		na->port = atoi(port);
+		TAILQ_INSERT_TAIL(nal, na, addrs);
+		i++;
 	}
-	freeaddrinfo(res0);
+	AG_MutexUnlock(&agNetWin32Lock);
 	return (0);
+fail:
+	AG_MutexUnlock(&agNetWin32Lock);
+	return (-1);
 }
 
 static char *
 GetAddrNumerical(AG_NetAddr *na)
 {
-	struct sockaddr_storage sa;
-	socklen_t saLen;
-	
-	Free(na->sNum);
-	if ((na->sNum = TryMalloc(NI_MAXHOST)) == NULL) {
-		return (NULL);
-	}
-	
-	NetAddrToSockAddr(na, &sa, &saLen);
-	if (getnameinfo((struct sockaddr *)&sa, saLen,
-	    na->sNum, NI_MAXHOST, NULL, 0,
-	    NI_NUMERICHOST) != 0) {
-		AG_SetError("inet_ntop: %s", strerror(errno));
+	struct in_addr in;
+	char *s;
+
+	switch (na->family) {
+	case AG_NET_INET4:
+		Free(na->sNum);
+		memcpy(&in, &na->na_inet4.addr, sizeof(Uint32));
+		if ((s = inet_ntoa(in)) == NULL) {
+			AG_SetError("inet_ntoa() failed");
+			return (NULL);
+		}
+		if ((na->sNum = TryStrdup(s)) == NULL) {
+			return (NULL);
+		}
+		break;
+	default:
+		AG_SetError("Bad address format");
 		return (NULL);
 	}
 	return (na->sNum);
@@ -299,7 +229,6 @@ InitSocket(AG_NetSocket *ns)
 	}
 	switch (ns->family) {
 	case AG_NET_INET4:	sockDomain = PF_INET;	break;
-	case AG_NET_INET6:	sockDomain = PF_INET6;	break;
 	default:
 		AG_SetError("Bad address family: %d", ns->family);
 		return (-1);
@@ -312,7 +241,7 @@ InitSocket(AG_NetSocket *ns)
 		return (-1);
 	}
 	if ((ns->fd = socket(sockDomain, sockType, ns->proto)) == INVALID_SOCKET) {
-		AG_SetError("socket: %s", strerror(errno));
+		AG_SetError("socket() failed");
 		return (-1);
 	}
 	return (0);
@@ -330,9 +259,9 @@ DestroySocket(AG_NetSocket *ns)
 static int
 Connect(AG_NetSocket *ns, const AG_NetAddr *na)
 {
-	struct sockaddr_storage sa;
+	struct sockaddr_in sa;
 	socklen_t saLen = 0;
-	
+
 	AG_MutexLock(&agNetWin32Lock);
 	if (ns->family == 0) {			/* Inherit from address */
 		ns->family = na->family;
@@ -340,8 +269,8 @@ Connect(AG_NetSocket *ns, const AG_NetAddr *na)
 			goto fail;
 	}
 	NetAddrToSockAddr(na, &sa, &saLen);
-	if (connect(ns->fd, (struct sockaddr *)&sa, saLen) < 0) {
-		AG_SetError("connect: %s", strerror(errno));
+	if (connect(ns->fd, (struct sockaddr *)&sa, saLen) == SOCKET_ERROR) {
+		AG_SetError("connect() failed: %d", WSAGetLastError());
 		goto fail;
 	}
 	AG_MutexUnlock(&agNetWin32Lock);
@@ -354,7 +283,7 @@ fail:
 static int
 Bind(AG_NetSocket *ns, const AG_NetAddr *na)
 {
-	struct sockaddr_storage sa;
+	struct sockaddr_in sa;
 	socklen_t saLen = 0;
 
 	AG_MutexLock(&agNetWin32Lock);
@@ -365,7 +294,7 @@ Bind(AG_NetSocket *ns, const AG_NetAddr *na)
 	}
 	NetAddrToSockAddr(na, &sa, &saLen);
 	if (bind(ns->fd, (struct sockaddr *)&sa, saLen) == SOCKET_ERROR) {
-		AG_SetError("bind: %s", strerror(errno));
+		AG_SetError("bind() failed: %d", WSAGetLastError());
 		goto fail;
 	}
 	if (ns->type == AG_NET_STREAM ||
@@ -413,7 +342,7 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 
 			optLen = sizeof(struct linger);
 			rv = getsockopt(ns->fd, SOL_SOCKET, SO_LINGER,
-			    (char *)&ling, &optLen);
+			    (void *)&ling, &optLen);
 			if (rv == 0) {
 				*(int *)p = ling.l_onoff ? ling.l_linger : 0;
 			}
@@ -424,7 +353,8 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 		goto fail;
 	}
 	if (rv == SOCKET_ERROR) {
-		AG_SetError("getsockopt(%u): %s", (Uint)opt, strerror(errno));
+		AG_SetError("getsockopt(%u) failed: %d", (Uint)so,
+		    WSAGetLastError());
 		goto fail;
 	}
 	
@@ -467,15 +397,16 @@ SetOption(AG_NetSocket *ns, enum ag_net_socket_option so, const void *p)
 			ling.l_onoff = (val > 0);
 			ling.l_linger = val;
 			rv = setsockopt(ns->fd, SOL_SOCKET, SO_LINGER,
-			    (const char *)&ling, sizeof(struct linger));
+			    (const void *)&ling, sizeof(struct linger));
 		}
 		break;
 	default:
 		AG_SetError("Bad socket option");
 		goto fail;
 	}
-	if (rv != SOCKET_ERROR) {
-		AG_SetError("setsockopt(%u): %s", (Uint)opt, strerror(errno));
+	if (rv == SOCKET_ERROR) {
+		AG_SetError("setsockopt(%u) failed: %d", (Uint)so,
+		    WSAGetLastError());
 		goto fail;
 	}
 
@@ -495,7 +426,7 @@ Read(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
 
 	rv = recv(ns->fd, (char *)p, size, 0);
 	if (rv == SOCKET_ERROR) {
-		AG_SetError("recv: failed (%d)", rv);
+		AG_SetError("recv(%u) failed: %d", (Uint)size, WSAGetLastError());
 		goto fail;
 	}
 	if (nRead != NULL) { *nRead = (size_t)rv; }
@@ -516,7 +447,7 @@ Write(AG_NetSocket *ns, const void *p, size_t size, size_t *nWrote)
 
 	rv = send(ns->fd, (const char *)p, size, 0);
 	if (rv == SOCKET_ERROR) {
-		AG_SetError("send: failed (%d)", rv);
+		AG_SetError("send(%u) failed: %d", (Uint)size, WSAGetLastError());
 		goto fail;
 	}
 	if (nWrote != NULL) { *nWrote = (size_t)rv; }
@@ -585,7 +516,7 @@ poll:
 			AG_MutexUnlock(&agNetWin32Lock);
 			goto poll;
 		}
-		AG_SetError("select: failed (%d)", WSAGetLastError());
+		AG_SetError("select() failed: %d", WSAGetLastError());
 		count = -1;
 		goto out;
 	} else if (rv == 0) {
@@ -616,16 +547,16 @@ out:
 static AG_NetSocket *
 Accept(AG_NetSocket *ns)
 {
-	struct sockaddr_storage sa;
+	struct sockaddr_in sa;
 	AG_NetSocket *nsNew;
-	socklen_t saLen = sizeof(struct sockaddr_storage);
+	socklen_t saLen = sizeof(struct sockaddr_in);
 	SOCKET sock;
 
 	AG_MutexLock(&agNetWin32Lock);
 
 	memset(&sa, 0, saLen);
 	if ((sock = accept(ns->fd, (struct sockaddr *)&sa, &saLen)) == INVALID_SOCKET) {
-		AG_SetError("accept: %s", strerror(errno));
+		AG_SetError("accept() failed: %d", WSAGetLastError());
 		goto fail;
 	}
 	if ((nsNew = AG_NetSocketNew(0, ns->type, ns->proto)) == NULL) {
@@ -647,8 +578,8 @@ fail:
 	return (NULL);
 }
 
-const AG_NetOps agNetOps_win32 = {
-	"win32",
+const AG_NetOps agNetOps_winsock1 = {
+	"winsock1",
 	Init,
 	Destroy,
 	GetIfConfig,

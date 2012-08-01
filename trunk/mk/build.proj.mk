@@ -41,12 +41,8 @@ PROJFILELIST=	.projfiles2.out
 PROJCONFIGDIR?=
 PROJNOCLEAN?=	no
 
-PROJFILES?=	linux:cb-gcc:: \
-		macosx:cb-gcc:: \
-		windows:cb-gcc:: \
-		windows:cb-ow:: \
-		windows:vs2005:: \
-		windows:vs2008::
+PROJFILES?=	windows:vs2005:: \
+		windows-xp:vs2005::
 
 CLEANFILES+=	${PREMAKEOUT}
 
@@ -85,8 +81,8 @@ proj:
 			rm -fR configure.tmp ${TOP}/configure.lua; \
 			exit 1; \
 		fi; \
-		echo "./configure.tmp $$_tgtopts --with-proj-generation"; \
-		${SH} ./configure.tmp $$_tgtopts --with-proj-generation; \
+		echo "./configure.tmp $$_tgtopts --with-proj-generation --emul-os=$$_tgtos"; \
+		${SH} ./configure.tmp $$_tgtopts --with-proj-generation --emul-os=$$_tgtos; \
 		if [ $$? != 0 ]; then \
 			echo "configure failed"; \
 			echo > Makefile.config; \
@@ -108,10 +104,17 @@ proj:
 		    PROJINCLUDES="${TOP}/configure.lua" \
 		    ${MKPROJFILES} > ${PREMAKEOUT}; \
 	        perl ${TOP}/mk/cmpfiles.pl; \
+		_premakeos="$$_tgtos"; \
+		if [ "$$_tgtos" = "windows-xp" ]; then _premakeos="windows"; fi; \
+		if [ "$$_tgtos" = "windows-vista" ]; then _premakeos="windows"; fi; \
+		if [ "$$_tgtos" = "windows-7" ]; then _premakeos="windows"; fi; \
+		if [ "$$_tgtos" = "windows-xp-x64" ]; then _premakeos="windows"; fi; \
+		if [ "$$_tgtos" = "windows-vista-x64" ]; then _premakeos="windows"; fi; \
+		if [ "$$_tgtos" = "windows-7-x64" ]; then _premakeos="windows"; fi; \
 	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
-		    --os $$_tgtos --target $$_tgtproj"; \
+		    --os $$_premakeos --target $$_tgtproj"; \
 	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
-		    --os $$_tgtos --target $$_tgtproj; \
+		    --os $$_premakeos --target $$_tgtproj; \
 		if [ $$? != 0 ]; then \
 			echo "premake failed"; \
 			exit 1; \
