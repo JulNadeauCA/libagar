@@ -85,7 +85,7 @@ TestServer(AG_Event *event)
 		AG_NetSetOptionInt(ns, AG_NET_REUSEADDR, 1);
 		na->port = 3456;
 		if (AG_NetBind(ns, na) == -1) {
-			AG_ConsoleMsg(cons, "%s: %s; skipping",
+			AG_ConsoleMsg(cons, "bind(%s): %s; skipping",
 			    AG_NetAddrNumerical(na), AG_GetError());
 			AG_NetSocketFree(ns);
 			continue;
@@ -128,7 +128,7 @@ TestServer(AG_Event *event)
 				AG_TAILQ_INSERT_TAIL(&sockSet, nsNew, sockets);
 			
 				AG_Strlcpy(buf, "Hello\n", sizeof(buf));
-				if (AG_NetWrite(nsNew, buf, sizeof(buf), NULL)
+				if (AG_NetWrite(nsNew, buf, strlen(buf), NULL)
 				    == -1) {
 					goto fail;
 				}
