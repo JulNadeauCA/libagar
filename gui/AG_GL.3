@@ -39,29 +39,61 @@
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_GLView.png, "The AG_GLView(3) widget")
 This manual page documents the OpenGL-specific functions exported by Agar.
-These functions are only available where Agar is compiled with OpenGL support
-(i.e.,
+These functions are available if Agar was compiled with OpenGL support
+(i.e., 
 .Dv HAVE_OPENGL
-is set), and are mostly useful for implementing new OpenGL-based drivers (see
+is defined after including the headers above).
+.Pp
+Those functions are mostly useful for implementing new OpenGL-based
+Agar drivers (see
 .Xr AG_Driver 3 ) .
 Some of these functions are also useful to simplify texture management when
 implementing OpenGL-specific Agar-GUI widgets.
-.Sh INITIALIZATION
+.Sh OPENGL CONTEXT MANAGEMENT
 .nr nS 1
+.Ft "int"
+.Fn AG_GL_InitContext "void *drv" "AG_GL_Context *gl"
+.Pp
 .Ft "void"
-.Fn AG_GL_InitContext "AG_Rect r"
+.Fn AG_GL_SetViewport "void *drv" "AG_Rect rect"
+.Pp
+.Ft "void"
+.Fn AG_GL_DestroyContext "void *drv"
 .Pp
 .nr nS 0
 The
 .Fn AG_GL_InitContext
-function is to be invoked by OpenGL-specific drivers to prepare the GL for
-proper rendering of Agar GUI elements by setting the viewport, loading an
-orthographic projection matrix, and initializing various OpenGL options.
+function is to be invoked by OpenGL-specific Agar drivers to initialize
+the GL context for rendering Agar GUI elements.
+This involves setting the projection and view matrices as well as various
+OpenGL options.
 .Fn AG_GL_InitContext
-does not save the previous state, the caller is expected to do that.
-The rectangle argument specifies the parameters to pass to
+saves the current OpenGL state so that it can be later restored.
+The
+.Fa gl
+argument should point to an uninitialized
+.Ft AG_GL_Context
+structure.
+.Pp
+The
+.Fn AG_GL_SetViewPort
+function configures the GL viewport.
+In addition to invoking
 .Xr glViewport 3 ,
-given in pixels.
+this function also updates internal resolution-dependent states.
+.Pp
+The
+.Fn AG_GL_DestroyContext
+routines frees Agar's internal OpenGL state (restoring the state
+previously saved in
+.Fn AG_GL_InitContext ) .
+.Pp
+Multiple-window drivers will typically create a single OpenGL context
+per window, but single-window drivers may initialize and destroy the GL
+state more than once (see the
+.Dv AG_DRIVER_SW_OVERLAY
+option in
+.Xr AG_DriverSw 3 ) .
 .Sh TEXTURE/SURFACE MANAGEMENT
 .nr nS 1
 .Ft "void"

@@ -134,11 +134,36 @@ changes the existing display context (assumes
 has been called before).
 If the surface size has changed, Agar windows are clamped, moved or
 resized as appropriate.
+.Sh STRUCTURE DATA
+For the
+.Ft AG_DriverSw
+(driver instance) object:
+.Bl -tag -width "Uint flags"
+.It Ft Uint flags
+Option flags.
+Possible flags include:
+.Bl -tag -width "AG_DRIVER_SW_FULLSCREEN "
+.It Dv AG_DRIVER_SW_OVERLAY
+Enables "overlay" mode, forcing the OpenGL state to be completely
+initialized and released at every rendering cycle.
+.It Dv AG_DRIVER_SW_BGPOPUP
+Display a generic "window list" popup menu on right-click over empty
+background.
+.It Dv AG_DRIVER_SW_FULLSCREEN
+The driver is currently in full-screen mode (read-only).
+.El
+.It Ft Uint rNom
+Target refresh rate in ms (only applies if
+.Xr AG_EventLoop_FixedFPS 3
+is used as the event loop).
+.It Ft int rCur
+Effective refresh rate in ms.
+.El
 .Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_InitGraphics 3 ,
 .Xr AG_Driver 3 ,
-.Xr AG_DriverMw 3 ,
-.Xr AG_DriverSDLFB 3 ,
-.Xr AG_DriverSDLGL 3
+.Xr AG_DriverMw 3
 .Sh HISTORY
 The
 .Nm
