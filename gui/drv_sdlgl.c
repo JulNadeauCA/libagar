@@ -52,14 +52,8 @@ enum ag_sdlgl_out {
 typedef struct ag_sdlgl_driver {
 	struct ag_driver_sw _inherit;
 	SDL_Surface     *s;		/* View surface */
-	int              clipStates[4];	/* Clipping GL state */
-	AG_ClipRect     *clipRects;	/* Clipping rectangle stack */
-	Uint            nClipRects;
-	Uint            *textureGC;	/* Textures queued for deletion */
-	Uint            nTextureGC;
-	Uint            *listGC;	/* Display lists queued for deletion */
-	Uint            nListGC;
-	AG_GL_BlendState bs[1];		/* Saved blending states */
+	AG_GL_Context    gl;		/* Common OpenGL context data */
+
 	enum ag_sdlgl_out outMode;	/* Output capture mode */
 	char		*outPath;	/* Output capture path */
 	Uint		 outFrame;	/* Capture frame# counter */
@@ -78,30 +72,11 @@ Init(void *obj)
 	AG_DriverSDLGL *sgl = obj;
 
 	sgl->s = NULL;
-	sgl->clipRects = NULL;
-	sgl->nClipRects = 0;
-	memset(sgl->clipStates, 0, sizeof(sgl->clipStates));
-	sgl->textureGC = NULL;
-	sgl->nTextureGC = 0;
-	sgl->listGC = NULL;
-	sgl->nListGC = 0;
-	
 	dsw->rNom = 16;
 	dsw->rCur = 0;
-	
 	AG_SetString(sgl, "width", "auto");
 	AG_SetString(sgl, "height", "auto");
 	AG_SetString(sgl, "depth", "auto");
-}
-
-static void
-Destroy(void *obj)
-{
-	AG_DriverSDLGL *sgl = obj;
-
-	Free(sgl->clipRects);
-	Free(sgl->textureGC);
-	Free(sgl->listGC);
 }
 
 /*
@@ -178,6 +153,9 @@ SDLGL_Close(void *obj)
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
 
+	if (drv->gl != NULL)
+		AG_GL_DestroyContext(sgl);
+
 #ifdef AG_DEBUG
 	if (nDrivers != 1) { AG_FatalError("Driver close without open"); }
 #endif
@@ -211,6 +189,7 @@ static void
 SDLGL_BeginRendering(void *obj)
 {
 	AG_DriverSDLGL *sgl = obj;
+	AG_GL_Context *gl = &sgl->gl;
 
 #if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
     defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
@@ -225,20 +204,25 @@ SDLGL_BeginRendering(void *obj)
 	             GL_ENABLE_BIT);
 	
 	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
-		AG_GL_InitContext(
+		AG_Driver *drv = obj;
+
+		/* Reinitialize Agar's OpenGL context. */
+		if (drv->gl != NULL) {
+			AG_GL_DestroyContext(drv);
+		}
+		if (AG_GL_InitContext(drv, gl) == -1) {
+			AG_FatalError(NULL);
+		}
+		AG_GL_SetViewport(gl,
 		    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
 	} else {
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	}
 
-	sgl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE0);
-	sgl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE1);
-	sgl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE2);
-	sgl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
-	glEnable(GL_CLIP_PLANE3);
+	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
+	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
+	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
+	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 }
 
 static void
@@ -299,34 +283,32 @@ static void
 SDLGL_EndRendering(void *drv)
 {
 	AG_DriverSDLGL *sgl = drv;
-	Uint i;
+	AG_GL_Context *gl = &sgl->gl;
 	
 	/* Render to specified capture output. */
 	if (sgl->outMode != AG_SDLGL_OUT_NONE)
 		SDLGL_CaptureOutput(sgl);
+
+	glPopAttrib();
 	
-	if (!(AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY)) {
+	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+		/*
+		 * Restore the OpenGL state exactly to its former state
+		 * (all textures are display lists are deleted).
+		 */
+		AG_GL_DestroyContext(gl);
+	} else {
 		SDL_GL_SwapBuffers();
-		if (sgl->clipStates[0])	{ glEnable(GL_CLIP_PLANE0); }
+		if (gl->clipStates[0])	{ glEnable(GL_CLIP_PLANE0); }
 		else			{ glDisable(GL_CLIP_PLANE0); }
-		if (sgl->clipStates[1])	{ glEnable(GL_CLIP_PLANE1); }
+		if (gl->clipStates[1])	{ glEnable(GL_CLIP_PLANE1); }
 		else			{ glDisable(GL_CLIP_PLANE1); }
-		if (sgl->clipStates[2])	{ glEnable(GL_CLIP_PLANE2); }
+		if (gl->clipStates[2])	{ glEnable(GL_CLIP_PLANE2); }
 		else			{ glDisable(GL_CLIP_PLANE2); }
-		if (sgl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
+		if (gl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
 		else			{ glDisable(GL_CLIP_PLANE3); }
 	}
 	
-	glPopAttrib();
-	
-	/* Remove textures and display lists queued for deletion. */
-	glDeleteTextures(sgl->nTextureGC, sgl->textureGC);
-	for (i = 0; i < sgl->nListGC; i++) {
-		glDeleteLists(sgl->listGC[i], 1);
-	}
-	sgl->nTextureGC = 0;
-	sgl->nListGC = 0;
-
 #if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
     defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
 	{
@@ -337,149 +319,8 @@ SDLGL_EndRendering(void *drv)
 #endif
 }
 
-static void
-SDLGL_DeleteTexture(void *drv, Uint texture)
-{
-	AG_DriverSDLGL *sgl = drv;
-
-	sgl->textureGC = Realloc(sgl->textureGC, (sgl->nTextureGC+1)*sizeof(Uint));
-	sgl->textureGC[sgl->nTextureGC++] = texture;
-}
-
-static void
-SDLGL_DeleteList(void *drv, Uint list)
-{
-	AG_DriverSDLGL *sgl = drv;
-
-	sgl->listGC = Realloc(sgl->listGC, (sgl->nListGC+1)*sizeof(Uint));
-	sgl->listGC[sgl->nListGC++] = list;
-}
-
 /*
- * Clipping and blending control (rendering context)
- */
-
-static void
-SDLGL_PushClipRect(void *obj, AG_Rect r)
-{
-	AG_DriverSDLGL *sgl = obj;
-	AG_ClipRect *cr, *crPrev;
-
-	sgl->clipRects = Realloc(sgl->clipRects, (sgl->nClipRects+1)*
-	                                         sizeof(AG_ClipRect));
-	crPrev = &sgl->clipRects[sgl->nClipRects-1];
-	cr = &sgl->clipRects[sgl->nClipRects++];
-
-	cr->eqns[0][0] = 1.0;
-	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	
-	cr->eqns[1][0] = 0.0;
-	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-		
-	cr->eqns[2][0] = -1.0;
-	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-		
-	cr->eqns[3][0] = 0.0;
-	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-}
-
-static void
-SDLGL_PopClipRect(void *obj)
-{
-	AG_DriverSDLGL *sgl = obj;
-	AG_ClipRect *cr;
-	
-#ifdef AG_DEBUG
-	if (sgl->nClipRects < 1)
-		AG_FatalError("PopClipRect() without PushClipRect()");
-#endif
-	cr = &sgl->clipRects[sgl->nClipRects-2];
-	sgl->nClipRects--;
-
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-}
-
-static void
-SDLGL_PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
-{
-	AG_DriverSDLGL *sgl = drv;
-
-	/* XXX TODO: stack */
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
-	    &sgl->bs[0].texEnvMode);
-	glGetBooleanv(GL_BLEND, &sgl->bs[0].enabled);
-	glGetIntegerv(GL_BLEND_SRC, &sgl->bs[0].srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &sgl->bs[0].dstFactor);
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
-}
-static void
-SDLGL_PopBlendingMode(void *drv)
-{
-	AG_DriverSDLGL *sgl = drv;
-
-	/* XXX TODO: stack */
-	if (sgl->bs[0].enabled) {
-		glEnable(GL_BLEND);
-	} else {
-		glDisable(GL_BLEND);
-	}
-	glBlendFunc(sgl->bs[0].srcFactor, sgl->bs[0].dstFactor);
-}
-
-/*
- * Rendering operations (rendering context)
- */
-
-/* Initialize the clipping rectangle stack. */
-static int
-InitClipRects(AG_DriverSDLGL *sgl, int wView, int hView)
-{
-	AG_ClipRect *cr;
-	int i;
-
-	for (i = 0; i < 4; i++)
-		sgl->clipStates[i] = 0;
-
-	/* Rectangle 0 always covers the whole view. */
-	if ((sgl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL)
-		return (-1);
-
-	cr = &sgl->clipRects[0];
-	cr->r = AG_RECT(0, 0, wView, hView);
-
-	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
-	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
-	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = (double)wView;
-	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = (double)hView;
-	
-	sgl->nClipRects = 1;
-	return (0);
-}
-
-/*
- * Single-display specific operations.
+ * Operations specific to single-display drivers.
  */
 
 static void
@@ -586,22 +427,19 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	Verbose(_("SDLGL: New display (%dbpp)\n"),
 	     (int)drv->videoFmt->BitsPerPixel);
 	
-	/* Initialize clipping rectangles. */
-	if (InitClipRects(sgl, dsw->w, dsw->h) == -1)
-		goto fail;
-	
 	/* Create the cursors. */
 	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
 
-	/* Initialize the GL viewport. */
-	AG_GL_InitContext(
-	    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
-
-	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
-		ClearBackground();
+	/* Initialize our OpenGL context and viewport. */
+	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
+		goto fail;
 	}
+	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
+
+	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
+		ClearBackground();
 
 	/* Initialize the output capture buffer. */
 	Free(sgl->outBuf);
@@ -651,13 +489,15 @@ SDLGL_OpenVideoContext(void *obj, void *ctx, Uint flags)
 	dsw->h = sgl->s->h;
 	dsw->depth = (Uint)drv->videoFmt->BitsPerPixel;
 
-	Verbose(_("SDLGL: Using existing display (%dbpp)\n"),
-	     (int)drv->videoFmt->BitsPerPixel);
-
-	/* Initialize clipping rectangles. */
-	if (InitClipRects(sgl, dsw->w, dsw->h) == -1)
-		goto fail;
+	Verbose(_("SDLGL: Using existing display (%ux%ux%d bpp)\n"),
+	    dsw->w, dsw->h, (int)drv->videoFmt->BitsPerPixel);
 	
+	/* Initialize our OpenGL context and viewport. */
+	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
+		goto fail;
+	}
+	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
+
 	/* Create the cursors. */
 	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
 	    AG_InitStockCursors(drv) == -1)
@@ -689,7 +529,6 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	AG_DriverSDLGL *sgl = obj;
 	Uint32 sFlags;
 	SDL_Surface *su;
-	AG_ClipRect *cr0;
 	AG_Window *win;
 
 	sFlags = sgl->s->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|SDL_HWSURFACE|
@@ -715,19 +554,6 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	dsw->h = su->h;
 	dsw->depth = (Uint)su->format->BitsPerPixel;
 
-	/* Update clipping rectangle 0. */
-	cr0 = &sgl->clipRects[0];
-	cr0->r.w = w;
-	cr0->r.h = h;
-	cr0->eqns[0][0] = 1.0;	cr0->eqns[0][1] = 0.0;
-	cr0->eqns[0][2] = 0.0;	cr0->eqns[0][3] = 0.0;
-	cr0->eqns[1][0] = 0.0;	cr0->eqns[1][1] = 1.0;
-	cr0->eqns[1][2] = 0.0;	cr0->eqns[1][3] = 0.0;
-	cr0->eqns[2][0] = -1.0;	cr0->eqns[2][1] = 0.0;
-	cr0->eqns[2][2] = 0.0;	cr0->eqns[2][3] = (double)w;
-	cr0->eqns[3][0] = 0.0;	cr0->eqns[3][1] = -1.0;
-	cr0->eqns[3][2] = 0.0;	cr0->eqns[3][3] = (double)h;
-
 	/* Resize the output capture buffer. */
 	if (sgl->outBuf != NULL) {
 		Free(sgl->outBuf);
@@ -737,9 +563,8 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 		}
 	}
 
-	/* Reinitialize the GL viewport. */
-	AG_GL_InitContext(
-	    AG_RECT(0, 0, AGDRIVER_SW(sgl)->w, AGDRIVER_SW(sgl)->h));
+	/* Update the viewport coordinates. */
+	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
 	
 	/* Regenerate all widget textures. */
 	AG_FOREACH_WINDOW(win, sgl)
@@ -780,19 +605,24 @@ static int
 SDLGL_SetVideoContext(void *obj, void *pSurface)
 {
 	AG_DriverSDLGL *sgl = obj;
+	AG_GL_Context *gl = &sgl->gl;
 	AG_DriverSw *dsw = obj;
 	SDL_Surface *su = pSurface;
-	AG_ClipRect *cr0;
 
 	sgl->s = su;
 	dsw->w = su->w;
 	dsw->h = su->h;
 	dsw->depth = (Uint)su->format->BitsPerPixel;
-	
-	/* Update clipping rectangle 0. */
-	cr0 = &sgl->clipRects[0];
-	cr0->r.w = su->w;
-	cr0->r.h = su->h;
+
+	if (dsw->flags & AG_DRIVER_SW_OVERLAY) {
+		AG_ClipRect *cr0 = &gl->clipRects[0];
+
+		/* Just update clipping rectangle 0. */
+		cr0->r.w = su->w;
+		cr0->r.h = su->h;
+	} else {
+		AG_GL_SetViewport(gl, AG_RECT(0, 0, su->w, su->h));
+	}
 	return (0);
 }
 
@@ -804,7 +634,7 @@ AG_DriverSwClass agDriverSDLGL = {
 			{ 1,4 },
 			Init,
 			NULL,	/* reinit */
-			Destroy,
+			NULL,	/* destroy */
 			NULL,	/* load */
 			NULL,	/* save */
 			NULL,	/* edit */
@@ -828,14 +658,14 @@ AG_DriverSwClass agDriverSDLGL = {
 		SDLGL_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
-		AG_GL_UploadTexture,
-		AG_GL_UpdateTexture,
-		SDLGL_DeleteTexture,
+		AG_GL_StdUploadTexture,
+		AG_GL_StdUpdateTexture,
+		AG_GL_StdDeleteTexture,
 		AG_SDL_SetRefreshRate,
-		SDLGL_PushClipRect,
-		SDLGL_PopClipRect,
-		SDLGL_PushBlendingMode,
-		SDLGL_PopBlendingMode,
+		AG_GL_StdPushClipRect,
+		AG_GL_StdPopClipRect,
+		AG_GL_StdPushBlendingMode,
+		AG_GL_StdPopBlendingMode,
 		AG_SDL_CreateCursor,
 		AG_SDL_FreeCursor,
 		AG_SDL_SetCursor,
@@ -871,7 +701,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		SDLGL_DeleteList
+		AG_GL_StdDeleteList
 	},
 	0,
 	SDLGL_OpenVideo,

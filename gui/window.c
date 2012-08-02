@@ -596,6 +596,7 @@ Shown(AG_Event *event)
 			    mwFlags) == -1) {
 				AG_FatalError(NULL);
 			}
+			AGDRIVER_MW(drv)->flags |= AG_DRIVER_MW_OPEN;
 		}
 		if (win->flags & AG_WINDOW_FADEIN) {
 			AG_WindowSetOpacity(win, 0.0);
@@ -695,7 +696,6 @@ Hidden(AG_Event *event)
 			if (i < agModalWindows->n)
 				AG_ListRemove(agModalWindows, i);
 		}
-
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			if (AGDRIVER_MW_CLASS(drv)->unmapWindow(win) == -1)
 				AG_FatalError(NULL);
@@ -1665,7 +1665,7 @@ AG_WindowSetCaptionS(AG_Window *win, const char *s)
 		UpdateIconCaption(win);
 
 	if (AGDRIVER_MULTIPLE(drv) &&
-	    (AGDRIVER_MW(drv)->flags&AG_DRIVER_MW_OPEN) &&
+	    (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
 		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
 	}
@@ -1712,8 +1712,10 @@ AG_FreeDetachedWindows(void)
 		/* Close the associated window in MW mode. */
 		drv = WIDGET(win)->drv;
 		if (AGDRIVER_MULTIPLE(drv) &&
-		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)
+		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			AGDRIVER_MW_CLASS(drv)->closeWindow(win);
+			AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
+		}
 
 		/* Remove the Window detach handler and free the object. */
 		AG_ObjectSetDetachFn(win, NULL, NULL);

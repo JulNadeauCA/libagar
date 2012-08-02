@@ -44,6 +44,7 @@
 #include <ctype.h>
 
 /* #define DEBUG_CLIPPING */
+/* #define DEBUG_RSENS */
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
@@ -1135,21 +1136,17 @@ AG_WidgetDraw(void *p)
 
 	if (WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
-#ifdef AG_DEBUG
+#ifdef DEBUG_RSENS
 		if (wid->flags & AG_WIDGET_DEBUG_RSENS) {
 			AG_Rect r = AG_Rect2ToRect(wid->rSens);
 
-/*			if (r.x != wid->rView.x1 || r.y != wid->rView.y1 || */
-/*			    r.w != wid->rView.w || r.h != wid->rView.h) { */
-				r.x -= wid->rView.x1;
-				r.y -= wid->rView.y1;
-				AG_DrawRectBlended(wid, r,
-				    AG_ColorRGBA(200,0,0,25),
-				    AG_ALPHA_SRC);
-				AG_DrawRectOutline(wid, r, AG_ColorRGB(100,0,0));
-/*			} */
+			r.x -= wid->rView.x1;
+			r.y -= wid->rView.y1;
+			AG_DrawRectBlended(wid, r, AG_ColorRGBA(200,0,0,25),
+			    AG_ALPHA_SRC);
+			AG_DrawRectOutline(wid, r, AG_ColorRGB(100,0,0));
 		}
-#endif /* AG_DEBUG */
+#endif /* DEBUG_RSENS */
 	}
 
 out:

@@ -130,7 +130,7 @@ typedef struct ag_driver {
 	struct ag_cursor *cursors;	/* Registered mouse cursors */
 	Uint             nCursors;
 	struct ag_glyph_cache *glyphCache; /* Cache of rendered glyphs */
-	Uint8 glStipple[128];		/* For GL drivers */
+	void *gl;			/* AG_GL_Context (for GL drivers) */
 } AG_Driver;
 
 /* Generic driver event (for custom event loops). */

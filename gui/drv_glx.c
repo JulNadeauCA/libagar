@@ -67,14 +67,8 @@ typedef struct ag_driver_glx {
 	struct ag_driver_mw _inherit;
 	Window           w;		/* X window */
 	GLXContext       glxCtx;	/* GLX context */
-	int              clipStates[4];	/* Clipping GL state */
-	AG_ClipRect     *clipRects;	/* Clipping rectangles */
-	Uint            nClipRects;
-	Uint            *textureGC;	/* Textures queued for deletion */
-	Uint            nTextureGC;
-	Uint            *listGC;	/* Display lists queued for deletion */
-	Uint            nListGC;
-	AG_GL_BlendState bs[1];		/* Saved blending states */
+
+	AG_GL_Context    gl;		/* Common OpenGL context data */
 	AG_Mutex         lock;		/* Protect Xlib calls */
 } AG_DriverGLX;
 
@@ -128,13 +122,6 @@ Init(void *obj)
 {
 	AG_DriverGLX *glx = obj;
 
-	glx->clipRects = NULL;
-	glx->nClipRects = 0;
-	memset(glx->clipStates, 0, sizeof(glx->clipStates));
-	glx->textureGC = NULL;
-	glx->nTextureGC = 0;
-	glx->listGC = NULL;
-	glx->nListGC = 0;
 	glx->w = 0;
 	AG_MutexInitRecursive(&glx->lock);
 }
@@ -145,9 +132,6 @@ Destroy(void *obj)
 	AG_DriverGLX *glx = obj;
 
 	AG_MutexDestroy(&glx->lock);
-	Free(glx->clipRects);
-	Free(glx->textureGC);
-	Free(glx->listGC);
 }
 
 /*
@@ -933,16 +917,13 @@ static void
 GLX_RenderWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	AG_GL_Context *gl = &glx->gl;
 	AG_Color C = agColors[WINDOW_BG_COLOR];
 
-	glx->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE0);
-	glx->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE1);
-	glx->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE2);
-	glx->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
-	glEnable(GL_CLIP_PLANE3);
+	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
+	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
+	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
+	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
 	/* clear the clipped area with the background colour */
 	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
@@ -955,6 +936,7 @@ static void
 GLX_EndRendering(void *obj)
 {
 	AG_DriverGLX *glx = obj;
+	AG_GL_Context *gl = &glx->gl;
 	Uint i;
 	
 	AG_MutexLock(&agDisplayLock);
@@ -963,35 +945,13 @@ GLX_EndRendering(void *obj)
 	glXSwapBuffers(agDisplay, glx->w);
 
 	/* Remove textures and display lists queued for deletion. */
-	glDeleteTextures(glx->nTextureGC, (const GLuint *)glx->textureGC);
-	for (i = 0; i < glx->nListGC; i++) {
-		glDeleteLists(glx->listGC[i], 1);
+	glDeleteTextures(gl->nTextureGC, (const GLuint *)gl->textureGC);
+	for (i = 0; i < gl->nListGC; i++) {
+		glDeleteLists(gl->listGC[i], 1);
 	}
-	glx->nTextureGC = 0;
-	glx->nListGC = 0;
+	gl->nTextureGC = 0;
+	gl->nListGC = 0;
 
-	AG_MutexUnlock(&agDisplayLock);
-}
-
-static void
-GLX_DeleteTexture(void *drv, Uint texture)
-{
-	AG_DriverGLX *glx = drv;
-
-	AG_MutexLock(&agDisplayLock);
-	glx->textureGC = Realloc(glx->textureGC, (glx->nTextureGC+1)*sizeof(Uint));
-	glx->textureGC[glx->nTextureGC++] = texture;
-	AG_MutexUnlock(&agDisplayLock);
-}
-
-static void
-GLX_DeleteList(void *drv, Uint list)
-{
-	AG_DriverGLX *glx = drv;
-
-	AG_MutexLock(&agDisplayLock);
-	glx->listGC = Realloc(glx->listGC, (glx->nListGC+1)*sizeof(Uint));
-	glx->listGC[glx->nListGC++] = list;
 	AG_MutexUnlock(&agDisplayLock);
 }
 
@@ -1012,107 +972,6 @@ GLX_SetRefreshRate(void *obj, int fps)
 /*
  * Clipping and blending control (rendering context)
  */
-
-static void
-GLX_PushClipRect(void *obj, AG_Rect r)
-{
-	AG_DriverGLX *glx = obj;
-	AG_ClipRect *cr, *crPrev;
-
-	AG_MutexLock(&glx->lock);
-
-	glx->clipRects = Realloc(glx->clipRects, (glx->nClipRects+1)*
-	                                         sizeof(AG_ClipRect));
-	crPrev = &glx->clipRects[glx->nClipRects-1];
-	cr = &glx->clipRects[glx->nClipRects++];
-
-	cr->eqns[0][0] = 1.0;
-	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	
-	cr->eqns[1][0] = 0.0;
-	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-		
-	cr->eqns[2][0] = -1.0;
-	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-		
-	cr->eqns[3][0] = 0.0;
-	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-	
-	AG_MutexUnlock(&glx->lock);
-}
-
-static void
-GLX_PopClipRect(void *obj)
-{
-	AG_DriverGLX *glx = obj;
-	AG_ClipRect *cr;
-	
-	AG_MutexLock(&glx->lock);
-#ifdef AG_DEBUG
-	if (glx->nClipRects < 1)
-		AG_FatalError("PopClipRect() without PushClipRect()");
-#endif
-	cr = &glx->clipRects[glx->nClipRects-2];
-	glx->nClipRects--;
-
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-	
-	AG_MutexUnlock(&glx->lock);
-}
-
-static void
-GLX_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
-{
-	AG_DriverGLX *glx = obj;
-	
-	AG_MutexLock(&glx->lock);
-
-	/* XXX TODO: stack */
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
-	    &glx->bs[0].texEnvMode);
-	glGetBooleanv(GL_BLEND, &glx->bs[0].enabled);
-	glGetIntegerv(GL_BLEND_SRC, &glx->bs[0].srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &glx->bs[0].dstFactor);
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
-	
-	AG_MutexUnlock(&glx->lock);
-}
-
-static void
-GLX_PopBlendingMode(void *obj)
-{
-	AG_DriverGLX *glx = obj;
-	
-	AG_MutexLock(&glx->lock);
-
-	/* XXX TODO: stack */
-	if (glx->bs[0].enabled) {
-		glEnable(GL_BLEND);
-	} else {
-		glDisable(GL_BLEND);
-	}
-	glBlendFunc(glx->bs[0].srcFactor, glx->bs[0].dstFactor);
-	
-	AG_MutexUnlock(&glx->lock);
-}
 
 /*
  * Cursor operations
@@ -1308,50 +1167,6 @@ WaitMapNotify(Display *d, XEvent *xe, char *arg) {
 static Bool
 WaitUnmapNotify(Display *d, XEvent *xe, char *arg) {
 	return (xe->type == UnmapNotify) && (xe->xmap.window == (Window)arg);
-}
-
-/* Initialize the clipping rectangle stack. */
-static int
-InitClipRects(AG_DriverGLX *glx, int w, int h)
-{
-	AG_ClipRect *cr;
-	int i;
-
-	for (i = 0; i < 4; i++)
-		glx->clipStates[i] = 0;
-
-	/* Rectangle 0 always covers the whole view. */
-	if ((glx->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
-		return (-1);
-	}
-	glx->nClipRects = 1;
-
-	cr = &glx->clipRects[0];
-	cr->r = AG_RECT(0,0, w,h);
-
-	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
-	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
-	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = (double)w;
-	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = (double)h;
-
-	return (0);
-}
-
-/* Initialize clipping rectangle 0 for the current window geometry. */
-static void
-InitClipRect0(AG_DriverGLX *glx, AG_Window *win)
-{
-	AG_ClipRect *cr;
-
-	cr = &glx->clipRects[0];
-	cr->r.w = WIDTH(win);
-	cr->r.h = HEIGHT(win);
-	cr->eqns[2][3] = (double)WIDTH(win);
-	cr->eqns[3][3] = (double)HEIGHT(win);
 }
 
 /* Initialize the default cursor. */
@@ -1600,8 +1415,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("XCreateWindow failed");
 		goto fail_unlock;
 	}
-	AGDRIVER_MW(glx)->flags |= AG_DRIVER_MW_OPEN;
-
+	
 	/* Set the window manager hints. */
 	if (win->parent != NULL) {
 		GLX_SetTransientFor(win, win->parent);
@@ -1636,8 +1450,11 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	/* Create the GLX rendering context. */
 	glx->glxCtx = glXCreateContext(agDisplay, xvi, 0, GL_TRUE);
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
-
+	if (AG_GL_InitContext(glx, &glx->gl) == -1) {
+		goto fail_win;
+	}
+	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	
 	/* Set the pixel formats. */
 	drv->videoFmt = AG_PixelFormatRGB(depth,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -1647,27 +1464,24 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 #endif
 	);
 	if (drv->videoFmt == NULL)
-		goto fail;
+		goto fail_ctx;
 
-	/* Initialize the clipping rectangle stack. */
-	if (InitClipRects(glx, r.w, r.h) == -1)
-		goto fail;
-	
 	/* Create the built-in cursors. */
 	if (InitDefaultCursor(glx) == -1 ||
 	    AG_InitStockCursors(drv) == -1) {
-		goto fail;
+		goto fail_ctx;
 	}
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 
 	XFree(xvi);
 	return (0);
-fail:
+fail_ctx:
+	AG_GL_DestroyContext(glx);
 	glXMakeCurrent(agDisplay, None, NULL);
 	glXDestroyContext(agDisplay, glx->glxCtx);
+fail_win:
 	XDestroyWindow(agDisplay, glx->w);
-	AGDRIVER_MW(glx)->flags &= ~(AG_DRIVER_MW_OPEN);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
@@ -1685,33 +1499,23 @@ GLX_CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-/*	AG_Glyph *gl; */
-/*	int i; */
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
+	/* Destroy our OpenGL context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-#if 0
-	/* Invalidate cached glyph textures. */
-	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		SLIST_FOREACH(gl, &drv->glyphCache[i].glyphs, glyphs) {
-			if (gl->texture != 0) {
-				glDeleteTextures(1, (GLuint *)&gl->texture);
-				gl->texture = 0;
-			}
-		}
-	}
-#endif
+	AG_GL_DestroyContext(glx);
 	glXMakeCurrent(agDisplay, None, NULL);
 	glXDestroyContext(agDisplay, glx->glxCtx);
+
+	/* Destroy the window. */
 	XDestroyWindow(agDisplay, glx->w);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
-	AGDRIVER_MW(glx)->flags &= ~(AG_DRIVER_MW_OPEN);
-	
+
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 }
@@ -1885,16 +1689,13 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
-	/* Update clipping rectangle 0 */
-	InitClipRect0(glx, win);
-	
 	/* Update the keyboard state. XXX */
 	XQueryKeymap(agDisplay, kv);
 	UpdateKeyboard(drv->kbd, kv);
 
-	/* Update GLX context. */
+	/* Update the viewport. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -1920,7 +1721,7 @@ GLX_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 
 	/* Update GLX context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
@@ -2143,14 +1944,14 @@ AG_DriverMwClass agDriverGLX = {
 		GLX_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
-		AG_GL_UploadTexture,
-		AG_GL_UpdateTexture,
-		GLX_DeleteTexture,
+		AG_GL_StdUploadTexture,
+		AG_GL_StdUpdateTexture,
+		AG_GL_StdDeleteTexture,
 		GLX_SetRefreshRate,
-		GLX_PushClipRect,
-		GLX_PopClipRect,
-		GLX_PushBlendingMode,
-		GLX_PopBlendingMode,
+		AG_GL_StdPushClipRect,
+		AG_GL_StdPopClipRect,
+		AG_GL_StdPushBlendingMode,
+		AG_GL_StdPopBlendingMode,
 		GLX_CreateCursor,
 		GLX_FreeCursor,
 		GLX_SetCursor,
@@ -2186,7 +1987,7 @@ AG_DriverMwClass agDriverGLX = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		GLX_DeleteList
+		AG_GL_StdDeleteList
 	},
 	GLX_OpenWindow,
 	GLX_CloseWindow,
