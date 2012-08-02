@@ -60,11 +60,11 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 		return (-1);
 	
 	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
+	if ((display->flags & SDL_OPENGL)
 #ifdef SDL_OPENGLBLIT
-	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
-#else
-	if (display->flags & (SDL_OPENGL)) {
+	    || (display->flags & SDL_OPENGLBLIT)
 #endif
+	    ) {
 		if (flags & AG_VIDEO_SDL) {
 			AG_SetError("AG_VIDEO_SDL flag requested, but "
 			            "display surface has SDL_OPENGL set");
@@ -80,14 +80,25 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 	}
 	for (i = 0; i < agDriverListSize; i++) {
 		dc = agDriverList[i];
-		if (dc->wm == AG_WM_SINGLE &&
-		    (dc->flags & AG_DRIVER_SDL) &&
-		    (!useGL || (dc->flags & AG_DRIVER_OPENGL)) &&
-		    (drv = AG_DriverOpen(dc)) != NULL)
+		if ((dc->wm == AG_WM_SINGLE) &&
+		    (dc->flags & AG_DRIVER_SDL)) {
+			if (useGL) {
+				if (!(dc->flags & AG_DRIVER_OPENGL))
+					continue;
+			} else {
+				if (dc->flags & AG_DRIVER_OPENGL)
+					continue;
+			}
 			break;
+		}
 	}
 	if (i == agDriverListSize) {
-		AG_SetError("No compatible SDL driver is available");
+		AG_SetError("No compatible %s driver is available",
+		    useGL ? "SDL/OpenGL" : "SDL");
+		goto fail;
+	}
+	dc = agDriverList[i];
+	if ((drv = AG_DriverOpen(dc)) == NULL) {
 		goto fail;
 	}
 
