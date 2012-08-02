@@ -372,7 +372,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		WGL_SetWindowsError("wglMakeCurrent failed", GetLastError());
 		return (-1);
 	}
-	if (AG_GL_InitContext(glx, &glx->gl) == -1) {
+	if (AG_GL_InitContext(wgl, &wgl->gl) == -1) {
 		return (-1);
 	}
 	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
@@ -424,12 +424,10 @@ WGL_CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
-	AG_Glyph *gl;
-	int i;
 
 	/* Destroy our OpenGL context. */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-	AG_GL_DestroyContext(wgl, &wgl->gl);
+	AG_GL_DestroyContext(wgl);
 	wglDeleteContext(wgl->hglrc);
 
 	/* Close the window. */
@@ -873,16 +871,13 @@ static void
 WGL_RenderWindow(AG_Window *win)
 {
 	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
+	AG_GL_Context *gl = &wgl->gl;
 	AG_Color C = agColors[WINDOW_BG_COLOR];
 
-	wgl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE0);
-	wgl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE1);
-	wgl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE2);
-	wgl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
-	glEnable(GL_CLIP_PLANE3);
+	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
+	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
+	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
+	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 	
 	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
