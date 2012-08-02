@@ -45,6 +45,10 @@ In a manner similar to Agar widgets, new Agar "drivers" may be implemented
 as part of an application, without need for changing the Agar source code
 itself.
 .Pp
+For the list of drivers included in the Agar distribution, see the
+.Xr AG_InitGraphics 3
+manual page, under "AVAILABLE DRIVERS".
+.Pp
 The interface differs based on whether an underlying window system is available.
 All drivers are a subclass of
 .Ft AG_Driver .
@@ -52,7 +56,7 @@ The
 .Ft AG_DriverSw
 subclass (for "single-window") is used by drivers that do not interface with
 an underlying window system.
-For example, the "sdlfb" and "sdlgl" drivers use the SDL 1.2 API, and are
+For example, the "sdlfb" and "sdlgl" drivers use the SDL 1.x API, and are
 therefore limited to a single window as far as the native window system is
 concerned).
 A dumb framebuffer used in an embedded device would also use the
@@ -270,7 +274,7 @@ field include:
 .It AG_DRIVER_OPENGL
 OpenGL calls are supported.
 .It AG_DRIVER_SDL
-SDL 1.2 calls are supported.
+SDL 1.x calls are supported.
 .It AG_DRIVER_TEXTURES
 Texture management operations are supported.
 .El
@@ -786,10 +790,7 @@ in the Agar distribution for an example of an application using a custom
 event loop.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_DriverGLX 3 ,
-.Xr AG_DriverSDLFB 3 ,
-.Xr AG_DriverSDLGL 3 ,
-.Xr AG_DriverWGL 3 ,
+.Xr AG_InitGraphics 3 ,
 .Xr AG_GL 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

@@ -76,7 +76,7 @@ a resolution of 640x480x32, one could use:
 .Ed
 .Pp
 Use the wildcard expressions "<OpenGL>" or "<SDL>" to select the "best"
-drivers featuring OpenGL or SDL 1.2 support, respectively:
+drivers featuring OpenGL or SDL 1.x support, respectively:
 .Bd -literal
 	<SDL>(width=640:height=480:depth=32)
 .Ed
@@ -113,12 +113,12 @@ Multiple windows and OpenGL are supported.
 See
 .Xr AG_DriverCocoa 3 .
 .It sdlfb
-Framebuffer rendering via SDL 1.2 library.
+Framebuffer rendering via SDL 1.x library.
 Single-window display.
 See
 .Xr AG_DriverSDLFB 3 .
 .It sdlgl
-OpenGL rendering via SDL 1.2 library.
+OpenGL rendering via SDL 1.x library.
 Single-window display.
 See
 .Xr AG_DriverSDLGL 3 .
@@ -140,7 +140,7 @@ See
 .nr nS 0
 The
 .Fn AG_InitVideoSDL
-function initializes the GUI to attach to an existing SDL 1.2 display surface.
+function initializes the GUI to attach to an existing SDL 1.x display surface.
 Note that if the specified surface has the
 .Dv SDL_OPENGL
 flag set, the
@@ -185,24 +185,28 @@ If OpenGL is not available, initialization will fail.
 Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
 .It AG_VIDEO_OVERLAY
 Run in OpenGL "overlay" mode.
-In this mode, Agar will never clear the background of the application or
-swap the GL buffers.
+In this mode, Agar will never clear the background or swap GL buffers.
+Before rendering itself, Agar will also save the current OpenGL state and
+restore it completely once rendering is complete.
+Internally, this option causes the
+.Dv AG_DRIVER_SW_OVERLAY
+option to be set (see
+.Xr AG_DriverSw 3 ) .
 .El
-.Sh SEE ALSO
-.Xr AG_Core 3 ,
-.Xr AG_Intro 3 ,
-.Xr AG_Widget 3 ,
-.Xr AG_Window 3
 .Pp
 The
 .Fn AG_SetVideoSurfaceSDL
 function can be used to reattach to a different (e.g., a newly resized)
 SDL display surface without reinitializing the GUI.
 .Pp
+Note: The
 .Fn AG_InitVideoSDL
 and
 .Fn AG_SetVideoSurfaceSDL
-are only available if Agar has been compiled with SDL support.
+functions are only available if Agar has been compiled with SDL 1.x support
+(to find out, include "<agar/config/have_sdl.h>" and test
+for
+.Dv HAVE_SDL ) .
 .Pp
 The
 .Fn AG_ResizeDisplay
@@ -211,7 +215,11 @@ function resizes the video display to the specified dimensions in pixels.
 registers a callback function which will be invoked whenever the display is
 resized.
 Both of these functions are only applicable to single-window drivers.
-.Pp
+.Sh SEE ALSO
+.Xr AG_Core 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Bd -literal
 http://www.libsdl.org/
 http://www.opengl.org/
