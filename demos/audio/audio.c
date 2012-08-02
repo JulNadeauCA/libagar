@@ -3,6 +3,9 @@
  * This application tests the Agar-AU library.
  */
 
+#include <agar/config/enable_au.h>
+#ifdef ENABLE_AU
+
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/au.h>
@@ -136,3 +139,16 @@ main(int argc, char *argv[])
 	AG_Destroy();
 	return (0);
 }
+
+#else
+
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	printf("Agar-AU library is not available\n");
+	return (0);
+}
+
+#endif /* !ENABLE_AU */
