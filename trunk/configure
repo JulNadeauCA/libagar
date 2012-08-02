@@ -7078,6 +7078,14 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 fi;
+$ECHO_N "checking for the WinSock interface..."
+$ECHO_N "checking for the WinSock interface..." >> config.log
+HAVE_WINSOCK1="no"
+HAVE_WINSOCK2="no"
+echo "#undef HAVE_WINSOCK1" >$BLD/include/agar/config/have_winsock1.h
+echo "hdefs[\"HAVE_WINSOCK1\"] = nil" >>configure.lua
+echo "#undef HAVE_WINSOCK2" >$BLD/include/agar/config/have_winsock2.h
+echo "hdefs[\"HAVE_WINSOCK2\"] = nil" >>configure.lua
 HAVE_NETWORK="yes"
 AG_NETWORK="yes"
 echo "#ifndef AG_NETWORK" > $BLD/include/agar/config/ag_network.h
