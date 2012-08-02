@@ -1257,3 +1257,716 @@ echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
+$ECHO_N "checking for SDL (http://www.libsdl.org)..."
+$ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
+if [ "" != "" ]; then
+MK_EXEC_FOUND="No"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/sdl-config" ]; then
+		SDL_VERSION=`/bin/sdl-config --version`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_VERSION" ]; then
+			SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_VERSION=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+		fi
+	fi
+fi
+MK_EXEC_FOUND="No"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/sdl-config" ]; then
+		SDL_CFLAGS=`/bin/sdl-config --cflags`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+			SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_CFLAGS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+		fi
+	fi
+fi
+MK_EXEC_FOUND="No"
+
+if [ "" != "" ]; then
+	if [ -e "/bin/sdl-config" ]; then
+		SDL_LIBS=`/bin/sdl-config --libs`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	MK_CACHED="No"
+	if [ "${cache}" != "" ]; then
+		if [ -e "${cache}/exec-SDL_LIBS" ]; then
+			SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+			MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+			MK_CACHED="Yes"
+		fi
+	fi
+	if [ "${MK_CACHED}" = "No" ]; then
+		SDL_LIBS=""
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -e "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
+		done
+		if [ "${cache}" != "" ]; then
+			echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+			echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+		fi
+	fi
+fi
+else
+case "${host}" in
+*-*-freebsd*)
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_VERSION=`${path}/sdl11-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+	fi
+fi
+if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_CFLAGS=`${path}/sdl11-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl11-config" ]; then
+			SDL_LIBS=`${path}/sdl11-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
+else
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
+fi;
+;;
+*)
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
+;;
+esac
+fi;
+if [ "${SDL_VERSION}" != "" ]; then
+if [ "" != "" ]; then
+echo "yes ($SDL_VERSION in )"
+echo "yes ($SDL_VERSION in )" >> config.log
+else
+echo "yes ($SDL_VERSION)"
+echo "yes ($SDL_VERSION)" >> config.log
+fi;
+if [ "1.2.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$SDL_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 2 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 2 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "Version 1.2.0 or greater is required (found $SDL_VERSION)"
+exit 1
+fi;
+fi;
+$ECHO_N "checking whether SDL works..."
+$ECHO_N "checking whether SDL works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SDL" ]; then
+		HAVE_SDL=`cat ${cache}/ctest-HAVE_SDL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SDL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdio.h>
+#include <SDL.h>
+
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SDL="yes"
+echo "#ifndef HAVE_SDL" > config/have_sdl.h
+echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
+echo "#endif" >> config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SDL="no"
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SDL}" = "yes" ]; then
+echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
+echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
+echo "#endif" >> config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "#ifndef SDL_LIBS" > config/sdl_libs.h
+echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
+echo "#endif" >> config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+else
+$ECHO_N "checking whether SDL works (with X11 libs)..."
+$ECHO_N "checking whether SDL works (with X11 libs)..." >> config.log
+SDL_LIBS="${SDL_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SDL" ]; then
+		HAVE_SDL=`cat ${cache}/ctest-HAVE_SDL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SDL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdio.h>
+#include <SDL.h>
+
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SDL="yes"
+echo "#ifndef HAVE_SDL" > config/have_sdl.h
+echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
+echo "#endif" >> config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SDL="no"
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SDL}" = "yes" ]; then
+echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
+echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
+echo "#endif" >> config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "#ifndef SDL_LIBS" > config/sdl_libs.h
+echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
+echo "#endif" >> config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+else
+echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+SDL_CFLAGS=""
+echo "#undef SDL_LIBS" >config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
+SDL_LIBS=""
+fi;
+fi;
+else
+if [ "" != "" ]; then
+echo "no (not in )"
+echo "no (not in )" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
+fi;
+$ECHO_N "checking for SDL_image (http://libsdl.org/projects/SDL_image)..."
+$ECHO_N "checking for SDL_image (http://libsdl.org/projects/SDL_image)..." >> config.log
+if [ "" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix SDL_image 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, SDL_image is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix () was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct SDL_image prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		SDL_IMAGE_VERSION=`$PKGCONFIG SDL_image --modversion 2>/dev/null`
+	fi
+else
+	SDL_IMAGE_VERSION=`$PKGCONFIG SDL_image --modversion 2>/dev/null`
+fi
+if [ "" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix SDL_image 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, SDL_image is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix () was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct SDL_image prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		SDL_IMAGE_CFLAGS=`$PKGCONFIG SDL_image --cflags 2>/dev/null`
+	fi
+else
+	SDL_IMAGE_CFLAGS=`$PKGCONFIG SDL_image --cflags 2>/dev/null`
+fi
+if [ "" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix SDL_image 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, SDL_image is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix () was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct SDL_image prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		SDL_IMAGE_LIBS=`$PKGCONFIG SDL_image --libs 2>/dev/null`
+	fi
+else
+	SDL_IMAGE_LIBS=`$PKGCONFIG SDL_image --libs 2>/dev/null`
+fi
+if [ "${SDL_IMAGE_VERSION}" != "" ]; then
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SDL_IMAGE" ]; then
+		HAVE_SDL_IMAGE=`cat ${cache}/ctest-HAVE_SDL_IMAGE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SDL_IMAGE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <SDL.h>
+#include <SDL_image.h>
+int
+main(int argc, char *argv[])
+{
+	SDL_Surface *image;
+	SDL_Init(0);
+	image = IMG_Load(NULL);
+	SDL_Quit();
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_IMAGE_CFLAGS} -o $testdir/conftest conftest.c ${SDL_IMAGE_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SDL_IMAGE_CFLAGS} -o $testdir/conftest conftest.c ${SDL_IMAGE_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SDL_IMAGE="yes"
+echo "#ifndef HAVE_SDL_IMAGE" > config/have_sdl_image.h
+echo "#define HAVE_SDL_IMAGE \"$HAVE_SDL_IMAGE\"" >> config/have_sdl_image.h
+echo "#endif" >> config/have_sdl_image.h
+echo "hdefs[\"HAVE_SDL_IMAGE\"] = \"$HAVE_SDL_IMAGE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SDL_IMAGE="no"
+echo "#undef HAVE_SDL_IMAGE" >config/have_sdl_image.h
+echo "hdefs[\"HAVE_SDL_IMAGE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SDL_IMAGE" > ${cache}/ctest-HAVE_SDL_IMAGE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL_IMAGE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SDL_IMAGE}" = "yes" ]; then
+echo "#ifndef SDL_IMAGE_CFLAGS" > config/sdl_image_cflags.h
+echo "#define SDL_IMAGE_CFLAGS \"$SDL_IMAGE_CFLAGS\"" >> config/sdl_image_cflags.h
+echo "#endif" >> config/sdl_image_cflags.h
+echo "hdefs[\"SDL_IMAGE_CFLAGS\"] = \"$SDL_IMAGE_CFLAGS\"" >>configure.lua
+echo "#ifndef SDL_IMAGE_LIBS" > config/sdl_image_libs.h
+echo "#define SDL_IMAGE_LIBS \"$SDL_IMAGE_LIBS\"" >> config/sdl_image_libs.h
+echo "#endif" >> config/sdl_image_libs.h
+echo "hdefs[\"SDL_IMAGE_LIBS\"] = \"$SDL_IMAGE_LIBS\"" >>configure.lua
+else
+echo "#undef SDL_IMAGE_CFLAGS" >config/sdl_image_cflags.h
+echo "hdefs[\"SDL_IMAGE_CFLAGS\"] = nil" >>configure.lua
+SDL_IMAGE_CFLAGS=""
+echo "#undef SDL_IMAGE_LIBS" >config/sdl_image_libs.h
+echo "hdefs[\"SDL_IMAGE_LIBS\"] = nil" >>configure.lua
+SDL_IMAGE_LIBS=""
+fi;
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_SDL_IMAGE" >config/have_sdl_image.h
+echo "hdefs[\"HAVE_SDL_IMAGE\"] = nil" >>configure.lua
+fi;
+CFLAGS="$CFLAGS -D_USE_AGAR_STD"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
+CFLAGS="$CFLAGS -I$SRC"
+CXXFLAGS="$CXXFLAGS -I$SRC"
+echo "SDL_IMAGE_CFLAGS=$SDL_IMAGE_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_IMAGE_CFLAGS\"] = \"$SDL_IMAGE_CFLAGS\"" >>configure.lua
+echo "CC=$CC" >>Makefile.config
+echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
+echo "LIBTOOLOPTS_CC=$LIBTOOLOPTS_CC" >>Makefile.config
+echo "mdefs[\"LIBTOOLOPTS_CC\"] = \"$LIBTOOLOPTS_CC\"" >>configure.lua
+echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
+echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
+echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
+echo "mdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
+echo "LIBDIR=$LIBDIR" >>Makefile.config
+echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
+echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
+echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
+echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
+echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
+echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
+echo "DATADIR=$DATADIR" >>Makefile.config
+echo "mdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
+echo "BINDIR=$BINDIR" >>Makefile.config
+echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
+echo "HAVE_SDL_IMAGE=$HAVE_SDL_IMAGE" >>Makefile.config
+echo "mdefs[\"HAVE_SDL_IMAGE\"] = \"$HAVE_SDL_IMAGE\"" >>configure.lua
+echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
+echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
+echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
+echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
+echo "HAVE_AGAR=$HAVE_AGAR" >>Makefile.config
+echo "mdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "MANDIR=$MANDIR" >>Makefile.config
+echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
+echo "SDL_IMAGE_LIBS=$SDL_IMAGE_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_IMAGE_LIBS\"] = \"$SDL_IMAGE_LIBS\"" >>configure.lua
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "MODULEDIR=$MODULEDIR" >>Makefile.config
+echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
+echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
+echo "STATEDIR=$STATEDIR" >>Makefile.config
+echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
+echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
+if [ "${srcdir}" != "" ]; then
+	$ECHO_N "* Source is in ${srcdir}. Generating Makefiles..."
+	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
+	if [ $? != 0 ]; then
+		exit 1;
+	fi
+	echo "done"
+fi
+echo "*"
+echo "* Configuration successful. Use \"make depend all\" to compile,"
+echo "* and \"make install\" to install this software under $PREFIX."
+echo "*"

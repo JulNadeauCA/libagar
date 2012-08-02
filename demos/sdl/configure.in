@@ -4,6 +4,7 @@ CONFIG_GUESS("../../mk/config.guess")
 
 REQUIRE(cc)
 REQUIRE(agar, 1.4.1)
+REQUIRE(sdl, 1.2.0)
 CHECK(sdl_image)
 
 C_DEFINE(_USE_AGAR_STD)
