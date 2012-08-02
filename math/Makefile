@@ -37,7 +37,7 @@ MAN3=	M_Matrix.3 M_Circle.3 M_Color.3 M_Complex.3 M_Geometry.3 M_Line.3 \
 
 CFLAGS+=-D_AGAR_MATH_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} \
-	${MATH_CFLAGS}
+	${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 # For gcc warnings in m_matrix44_sse.c.
 CFLAGS+=${WNO_UNINITIALIZED}
