@@ -15,14 +15,36 @@ typedef struct ag_gl_blending_state {
 	GLfloat texEnvMode;		/* GL_TEXTURE_ENV mode */
 } AG_GL_BlendState;
 
+/* Common OpenGL context data */
+typedef struct ag_gl_context {
+	int              clipStates[4];	/* Clipping rectangles enabled state */
+	AG_ClipRect     *clipRects;	/* Clipping rectangle coordinates */
+	Uint            nClipRects;
+	Uint            *textureGC;	/* Textures queued for deletion */
+	Uint            nTextureGC;
+	Uint            *listGC;	/* Display lists queued for deletion */
+	Uint            nListGC;
+	AG_GL_BlendState bs[1];		/* Saved blending states */
+	Uint8            dither[128];	/* Dithering stipple pattern */
+} AG_GL_Context;
+
 __BEGIN_DECLS
 
-void AG_GL_InitContext(AG_Rect);
-void AG_GL_UploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
-int  AG_GL_UpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
+int  AG_GL_InitContext(void *, AG_GL_Context *);
+void AG_GL_SetViewport(AG_GL_Context *, AG_Rect);
+void AG_GL_DestroyContext(void *);
+
+void AG_GL_StdPushClipRect(void *, AG_Rect);
+void AG_GL_StdPopClipRect(void *);
+void AG_GL_StdPushBlendingMode(void *, AG_BlendFn, AG_BlendFn);
+void AG_GL_StdPopBlendingMode(void *);
+
+void AG_GL_StdUploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
+int  AG_GL_StdUpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
+void AG_GL_StdDeleteTexture(void *, Uint);
+void AG_GL_StdDeleteList(void *, Uint);
+
 void AG_GL_PrepareTexture(void *, int);
-void AG_GL_DeleteTexture(void *, Uint);
-void AG_GL_DeleteList(void *, Uint);
 
 void AG_GL_BlitSurface(void *, AG_Widget *, AG_Surface *, int, int);
 void AG_GL_BlitSurfaceFrom(void *, AG_Widget *, AG_Widget *, int, AG_Rect *, int, int);
@@ -55,6 +77,26 @@ void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
 void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
 void AG_GL_UpdateGlyph(void *, struct ag_glyph *);
 void AG_GL_DrawGlyph(void *, const struct ag_glyph *, int, int);
+
+/* Queue a GL texture for deletion. */
+static __inline__ void
+AG_GL_DeleteTexture(void *obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->deleteTexture(drv, name);
+}
+
+/* Queue a GL display list for deletion. */
+static __inline__ void
+AG_GL_DeleteList(void *obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->deleteList(drv, name);
+}
 
 /* Get corresponding GL blending function */
 static __inline__ GLenum

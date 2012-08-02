@@ -60,14 +60,7 @@ typedef struct ag_driver_wgl {
 	HGLRC       hglrc;		/* Rendering context */
 	WNDCLASSEX  wndclass;		/* Window class */
 
-	int          clipStates[4];	/* Clipping GL state */
-	AG_ClipRect *clipRects;		/* Clipping rectangles */
-	Uint        nClipRects;
-	Uint        *textureGC;		/* Textures queued for deletion */
-	Uint        nTextureGC;
-	Uint        *listGC;		/* Display lists queued for deletion */
-	Uint        nListGC;
-	AG_GL_BlendState bs[1];		/* Saved blending states */
+	AG_GL_Context gl;		/* Common OpenGL context data */
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
@@ -90,8 +83,6 @@ struct ag_wgl_key_mapping {		/* Keymap translation table entry */
 #include "drv_wgl_keymaps.h"
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-static int       InitClipRects(AG_DriverWGL *, int, int);
-static void      InitClipRect0(AG_DriverWGL *, AG_Window *);
 static int       InitDefaultCursor(AG_DriverWGL *);
 static void      WGL_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static int       WGL_RaiseWindow(AG_Window *);
@@ -141,21 +132,6 @@ LookupWindowByID(HWND hwnd)
 		return (win);
 	}
 	return (NULL);
-}
-
-static void
-WGL_Init(void *obj)
-{
-	AG_DriverWGL *wgl = obj;
-	
-	wgl->clipRects = NULL;
-	wgl->nClipRects = 0;
-	wgl->textureGC = NULL;
-	wgl->nTextureGC = 0;
-	wgl->listGC = NULL;
-	wgl->nListGC = 0;
-
-	memset(wgl->clipStates, 0, sizeof(wgl->clipStates));
 }
 
 static int
@@ -223,16 +199,6 @@ WGL_Close(void *obj)
 	
 	drv->mouse = NULL;
 	drv->kbd = NULL;
-}
-
-static void
-WGL_Destroy(void *obj)
-{
-	AG_DriverWGL *wgl = obj;
-	
-	Free(wgl->clipRects);
-	Free(wgl->textureGC);
-	Free(wgl->listGC);
 }
 
 /* Return suitable window style from Agar window flags. */
@@ -370,7 +336,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		GetModuleHandle(NULL),
 		NULL
 	);
-
 	if (!wgl->hwnd) {
 		WGL_SetWindowsError("Cannot create window", GetLastError());
 		return (-1);
@@ -407,7 +372,10 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		WGL_SetWindowsError("wglMakeCurrent failed", GetLastError());
 		return (-1);
 	}
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	if (AG_GL_InitContext(glx, &glx->gl) == -1) {
+		return (-1);
+	}
+	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
 	/* Show the window */
 	ShowWindow(wgl->hwnd, SW_SHOW);
@@ -415,17 +383,12 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		SetForegroundWindow(wgl->hwnd);
 		/* SetCapture(wgl->hwnd); */
 	}
-	AGDRIVER_MW(wgl)->flags |= AG_DRIVER_MW_OPEN;
-
+	
 	/* Set the pixel format */
 	drv->videoFmt = AG_PixelFormatRGB(16, 0x000000ff, 0x0000ff00, 0x00ff0000);
 	if (drv->videoFmt == NULL)
 		goto fail;
 
-	/* Initialize the clipping rectangle stack */
-	if (InitClipRects(wgl, r.w, r.h) == -1)
-		goto fail;
-	
 	/* Create the built-in cursors */
 	if (InitDefaultCursor(wgl) == -1 || AG_InitStockCursors(drv) == -1)
 		goto fail;
@@ -449,7 +412,6 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 fail:
 	wglDeleteContext(wgl->hglrc);
 	DestroyWindow(wgl->hwnd);
-	AGDRIVER_MW(wgl)->flags &= (~AG_DRIVER_MW_OPEN);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
@@ -465,25 +427,17 @@ WGL_CloseWindow(AG_Window *win)
 	AG_Glyph *gl;
 	int i;
 
+	/* Destroy our OpenGL context. */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-
-	/* Invalidate cached glyph textures. */
-	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		SLIST_FOREACH(gl, &drv->glyphCache[i].glyphs, glyphs) {
-			if (gl->texture != 0) {
-				glDeleteTextures(1, (GLuint *)&gl->texture);
-				gl->texture = 0;
-			}
-		}
-	}
-
+	AG_GL_DestroyContext(wgl, &wgl->gl);
 	wglDeleteContext(wgl->hglrc);
+
+	/* Close the window. */
 	DestroyWindow(wgl->hwnd);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
-	AGDRIVER_MW(wgl)->flags &= ~(AG_DRIVER_MW_OPEN);
 }
 
 static int
@@ -940,171 +894,20 @@ static void
 WGL_EndRendering(void *obj)
 {
 	AG_DriverWGL *wgl = obj;
+	AG_GL_Context *gl = &wgl->gl;
 	Uint i;
 	
 	SwapBuffers(wgl->hdc);
 
 	/* Remove textures and display lists queued for deletion */
-	glDeleteTextures(wgl->nTextureGC, wgl->textureGC);
-	for (i = 0; i < wgl->nListGC; i++) {
-		glDeleteLists(wgl->listGC[i], 1);
+	glDeleteTextures(gl->nTextureGC, gl->textureGC);
+	for (i = 0; i < gl->nListGC; i++) {
+		glDeleteLists(gl->listGC[i], 1);
 	}
-	wgl->nTextureGC = 0;
-	wgl->nListGC = 0;
+	gl->nTextureGC = 0;
+	gl->nListGC = 0;
 }
 
-static void
-WGL_DeleteTexture(void *drv, Uint texture)
-{
-	AG_DriverWGL *wgl = drv;
-
-	wgl->textureGC = Realloc(wgl->textureGC, (wgl->nTextureGC+1)*sizeof(Uint));
-	wgl->textureGC[wgl->nTextureGC++] = texture;
-}
-
-static void
-WGL_DeleteList(void *drv, Uint list)
-{
-	AG_DriverWGL *wgl = drv;
-
-	wgl->listGC = Realloc(wgl->listGC, (wgl->nListGC+1)*sizeof(Uint));
-	wgl->listGC[wgl->nListGC++] = list;
-}
-
-/*
- * Clipping and blending control (rendering context)
- */
-
-static void
-WGL_PushClipRect(void *obj, AG_Rect r)
-{
-	AG_DriverWGL *wgl = obj;
-	AG_ClipRect *cr, *crPrev;
-
-	wgl->clipRects = Realloc(wgl->clipRects, (wgl->nClipRects+1)*
-	                                         sizeof(AG_ClipRect));
-	crPrev = &wgl->clipRects[wgl->nClipRects-1];
-	cr = &wgl->clipRects[wgl->nClipRects++];
-
-	cr->eqns[0][0] = 1.0;
-	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	
-	cr->eqns[1][0] = 0.0;
-	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-		
-	cr->eqns[2][0] = -1.0;
-	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-		
-	cr->eqns[3][0] = 0.0;
-	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-}
-
-static void
-WGL_PopClipRect(void *obj)
-{
-	AG_DriverWGL *wgl = obj;
-	AG_ClipRect *cr;
-	
-#ifdef AG_DEBUG
-	if (wgl->nClipRects < 1)
-		AG_FatalError("PopClipRect() without PushClipRect()");
-#endif
-	cr = &wgl->clipRects[wgl->nClipRects-2];
-	wgl->nClipRects--;
-
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-}
-
-
-/* Initialize the clipping rectangle stack. */
-static int
-InitClipRects(AG_DriverWGL *wgl, int w, int h)
-{
-	AG_ClipRect *cr;
-	int i;
-
-	for (i = 0; i < 4; i++)
-		wgl->clipStates[i] = 0;
-
-	/* Rectangle 0 always covers the whole view. */
-	if ((wgl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
-		return (-1);
-	}
-	wgl->nClipRects = 1;
-
-	cr = &wgl->clipRects[0];
-	cr->r = AG_RECT(0,0, w,h);
-
-	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
-	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
-	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = (double)w;
-	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = (double)h;
-
-	return (0);
-}
-
-/* Initialize clipping rectangle 0 for the current window geometry. */
-static void
-InitClipRect0(AG_DriverWGL *wgl, AG_Window *win)
-{
-	AG_ClipRect *cr;
-
-	cr = &wgl->clipRects[0];
-	cr->r.w = WIDTH(win);
-	cr->r.h = HEIGHT(win);
-	cr->eqns[2][3] = (double)WIDTH(win);
-	cr->eqns[3][3] = (double)HEIGHT(win);
-}
-
-static void
-WGL_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
-{
-	AG_DriverWGL *wgl = obj;
-
-	/* XXX TODO: stack */
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
-	    &wgl->bs[0].texEnvMode);
-	glGetBooleanv(GL_BLEND, &wgl->bs[0].enabled);
-	glGetIntegerv(GL_BLEND_SRC, &wgl->bs[0].srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &wgl->bs[0].dstFactor);
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
-}
-
-static void
-WGL_PopBlendingMode(void *obj)
-{
-	AG_DriverWGL *wgl = obj;
-
-	/* XXX TODO: stack */
-	if (wgl->bs[0].enabled) {
-		glEnable(GL_BLEND);
-	} else {
-		glDisable(GL_BLEND);
-	}
-	glBlendFunc(wgl->bs[0].srcFactor, wgl->bs[0].dstFactor);
-}
 static int
 WGL_MapWindow(AG_Window *win)
 {
@@ -1414,12 +1217,9 @@ WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
-	/* Update clipping rectangle 0 */
-	InitClipRect0(wgl, win);
-	
-	/* Update WGL context */
+	/* Viewport dimensions have changed */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_GL_SetViewport(&wgl->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 	
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
@@ -1462,9 +1262,9 @@ AG_DriverMwClass agDriverWGL = {
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
 			{ 1,4 },
-			WGL_Init,
+			NULL,	/* init */
 			NULL,	/* reinit */
-			WGL_Destroy,
+			NULL,	/* destroy */
 			NULL,	/* load */
 			NULL,	/* save */
 			NULL,	/* edit */
@@ -1488,14 +1288,14 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
-		AG_GL_UploadTexture,
-		AG_GL_UpdateTexture,
-		WGL_DeleteTexture,
+		AG_GL_StdUploadTexture,
+		AG_GL_StdUpdateTexture,
+		AG_GL_StdDeleteTexture,
 		WGL_SetRefreshRate,
-		WGL_PushClipRect,
-		WGL_PopClipRect,
-		WGL_PushBlendingMode,
-		WGL_PopBlendingMode,
+		AG_GL_StdPushClipRect,
+		AG_GL_StdPopClipRect,
+		AG_GL_StdPushBlendingMode,
+		AG_GL_StdPopBlendingMode,
 		WGL_CreateCursor,
 		WGL_FreeCursor,
 		WGL_SetCursor,
@@ -1531,7 +1331,7 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		WGL_DeleteList
+		AG_GL_StdDeleteList
 	},
 	WGL_OpenWindow,
 	WGL_CloseWindow,

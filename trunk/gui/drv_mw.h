@@ -48,7 +48,7 @@ typedef struct ag_driver_mw_class {
 typedef struct ag_driver_mw {
 	struct ag_driver _inherit;
 	Uint flags;
-#define AG_DRIVER_MW_OPEN	0x01		/* Window is open */
+#define AG_DRIVER_MW_OPEN	0x01		/* Rendering is operational */
 	struct ag_window *win;			/* Back pointer to window */
 } AG_DriverMw;
 

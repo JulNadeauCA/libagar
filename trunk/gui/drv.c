@@ -203,8 +203,8 @@ Init(void *obj)
 	drv->cursors = NULL;
 	drv->nCursors = 0;
 	drv->activeCursor = NULL;
+	drv->gl = NULL;
 	AG_TextInitGlyphCache(drv);
-	memset(drv->glStipple, 0xaa, sizeof(drv->glStipple));
 }
 
 static void

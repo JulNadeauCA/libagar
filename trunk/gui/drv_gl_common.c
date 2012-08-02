@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,19 +37,27 @@
 #include "opengl.h"
 
 /*
- * Initialize GL for rendering of Agar GUI elements. The vp argument
- * specifies the viewport in view coordinates.
+ * Initialize an OpenGL context for Agar GUI rendering.
+ *
+ * This routine is usually invoked once when initially creating a window,
+ * but single-window drivers such as "sdlgl" may Init/Destroy the context
+ * during rendering (i.e., to implement the AG_DRIVER_SW_OVERLAY mode).
  */
-void
-AG_GL_InitContext(AG_Rect vp)
+int
+AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 {
-	glViewport(vp.x, vp.y, vp.w, vp.h);
+	AG_Driver *drv = obj;
+	AG_ClipRect *cr;
+	
+	gl->textureGC = NULL;
+	gl->nTextureGC = 0;
+	gl->listGC = NULL;
+	gl->nListGC = 0;
+	memset(&gl->bs, sizeof(AG_GL_BlendState), sizeof(AG_GL_BlendState));
+	memset(gl->dither, 0xaa, sizeof(gl->dither));
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, vp.w, vp.h, 0, -1.0, 1.0);
 
 	glShadeModel(GL_FLAT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -60,31 +68,217 @@ AG_GL_InitContext(AG_Rect vp)
 	glDisable(GL_DITHER);
 	glDisable(GL_BLEND);
 	glDisable(GL_LIGHTING);
-}
 
-/* Generic FillRect() operation for GL drivers. */
-void
-AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
-{
-	int x2 = r.x + r.w - 1;
-	int y2 = r.y + r.h - 1;
+	/* Initialize our clipping rectangles. */
+	memset(gl->clipStates, 0, sizeof(gl->clipStates));
+	if ((gl->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
+		return (-1);
+	}
+	gl->nClipRects = 1;
 
-	glBegin(GL_POLYGON);
-	glColor3ub(c.r, c.g, c.b);
-	glVertex2i(r.x, r.y);
-	glVertex2i(x2, r.y);
-	glVertex2i(x2, y2);
-	glVertex2i(r.x, y2);
-	glEnd();
+	/* Initialize the first clipping rectangle. */
+	cr = &gl->clipRects[0];
+	cr->r = AG_RECT(0,0,0,0);
+	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
+	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
+	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
+	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
+	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
+	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = 0.0; /* w */
+	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
+	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = 0.0; /* h */
+	
+	drv->gl = gl;
+	return (0);
 }
 
 /*
- * Surface operations (rendering context)
+ * Size or resize an OpenGL context to specified dimensions.
  */
-
-/* Generic UploadTexture() for GL drivers. */
 void
-AG_GL_UploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_SetViewport(AG_GL_Context *gl, AG_Rect vp)
+{
+	AG_ClipRect *cr = &gl->clipRects[0];
+
+	/* Set up the view port and projection */
+	glViewport(vp.x, vp.y, vp.w, vp.h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, vp.w, vp.h, 0, -1.0, 1.0);
+
+	/* Update clipping rectangle 0. */
+	cr->r.w = vp.w;
+	cr->r.h = vp.h;
+	cr->eqns[2][3] = (double)vp.w;
+	cr->eqns[3][3] = (double)vp.h;
+}
+
+/* Destroy an OpenGL rendering context. */
+void
+AG_GL_DestroyContext(void *obj)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+	AG_Glyph *glyph;
+	int i;
+
+	if (gl == NULL)
+		return;
+
+	/* Restore the previous clipping rectangle state. */
+	if (gl->clipStates[0])	{ glEnable(GL_CLIP_PLANE0); }
+	else			{ glDisable(GL_CLIP_PLANE0); }
+	if (gl->clipStates[1])	{ glEnable(GL_CLIP_PLANE1); }
+	else			{ glDisable(GL_CLIP_PLANE1); }
+	if (gl->clipStates[2])	{ glEnable(GL_CLIP_PLANE2); }
+	else			{ glDisable(GL_CLIP_PLANE2); }
+	if (gl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
+	else			{ glDisable(GL_CLIP_PLANE3); }
+	
+	/* Invalidate any cached glyph renderings. */
+	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
+		SLIST_FOREACH(glyph, &drv->glyphCache[i].glyphs, glyphs) {
+			if (glyph->texture != 0) {
+				glDeleteTextures(1, (GLuint *)&glyph->texture);
+				glyph->texture = 0;
+			}
+		}
+	}
+	
+	/* Destroy any texture or display list queued for deletion. */
+	glDeleteTextures(gl->nTextureGC, gl->textureGC);
+	for (i = 0; i < gl->nListGC; i++) {
+		glDeleteLists(gl->listGC[i], 1);
+	}
+	gl->nTextureGC = 0;
+	gl->nListGC = 0;
+	Free(gl->textureGC);
+	Free(gl->listGC);
+
+	free(gl->clipRects);
+	gl->clipRects = NULL;
+	gl->nClipRects = 0;
+
+	drv->gl = NULL;
+}
+
+/*
+ * Standard clipping rectangle operations.
+ */
+void
+AG_GL_StdPushClipRect(void *obj, AG_Rect r)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+	AG_ClipRect *cr, *crPrev;
+
+	gl->clipRects = Realloc(gl->clipRects, (gl->nClipRects+1)*
+	                                         sizeof(AG_ClipRect));
+	crPrev = &gl->clipRects[gl->nClipRects-1];
+	cr = &gl->clipRects[gl->nClipRects++];
+
+	cr->eqns[0][0] = 1.0;
+	cr->eqns[0][1] = 0.0;
+	cr->eqns[0][2] = 0.0;
+	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
+	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
+	
+	cr->eqns[1][0] = 0.0;
+	cr->eqns[1][1] = 1.0;
+	cr->eqns[1][2] = 0.0;
+	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
+	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
+		
+	cr->eqns[2][0] = -1.0;
+	cr->eqns[2][1] = 0.0;
+	cr->eqns[2][2] = 0.0;
+	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
+	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
+		
+	cr->eqns[3][0] = 0.0;
+	cr->eqns[3][1] = -1.0;
+	cr->eqns[3][2] = 0.0;
+	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
+	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
+}
+void
+AG_GL_StdPopClipRect(void *obj)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+	AG_ClipRect *cr;
+	
+#ifdef AG_DEBUG
+	if (gl->nClipRects < 1)
+		AG_FatalError("PopClipRect() without PushClipRect()");
+#endif
+	cr = &gl->clipRects[gl->nClipRects-2];
+	gl->nClipRects--;
+
+	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
+	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
+	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
+	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
+}
+
+/*
+ * Standard blending control operations.
+ */
+void
+AG_GL_StdPushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+	
+	/* XXX TODO: stack */
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &gl->bs[0].texEnvMode);
+	glGetBooleanv(GL_BLEND, &gl->bs[0].enabled);
+	glGetIntegerv(GL_BLEND_SRC, &gl->bs[0].srcFactor);
+	glGetIntegerv(GL_BLEND_DST, &gl->bs[0].dstFactor);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
+}
+void
+AG_GL_StdPopBlendingMode(void *obj)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+	
+	/* XXX TODO: stack */
+	if (gl->bs[0].enabled) {
+		glEnable(GL_BLEND);
+	} else {
+		glDisable(GL_BLEND);
+	}
+	glBlendFunc(gl->bs[0].srcFactor, gl->bs[0].dstFactor);
+}
+
+/*
+ * Standard texture management operations.
+ */
+void
+AG_GL_StdDeleteTexture(void *obj, Uint texture)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+
+	gl->textureGC = Realloc(gl->textureGC, (gl->nTextureGC+1)*sizeof(Uint));
+	gl->textureGC[gl->nTextureGC++] = texture;
+}
+void
+AG_GL_StdDeleteList(void *obj, Uint list)
+{
+	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
+
+	gl->listGC = Realloc(gl->listGC, (gl->nListGC+1)*sizeof(Uint));
+	gl->listGC[gl->nListGC++] = list;
+}
+
+void
+AG_GL_StdUploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 {
 	AG_Surface *gsu;
 	GLuint texture;
@@ -126,10 +320,8 @@ AG_GL_UploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 	}
 	*rv = texture;
 }
-
-/* Generic UpdateTexture() for GL drivers. */
 int
-AG_GL_UpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
 {
 	AG_Surface *gsu;
 
@@ -162,7 +354,6 @@ AG_GL_UpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
 	return (0);
 }
 
-
 /* Prepare a widget-bound texture for rendering. */
 void
 AG_GL_PrepareTexture(void *obj, int s)
@@ -174,19 +365,9 @@ AG_GL_PrepareTexture(void *obj, int s)
 		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(wid->textures[s], wid->surfaces[s],
+		AG_GL_StdUpdateTexture(wid->textures[s], wid->surfaces[s],
 		    &wid->texcoords[s]);
 	}
-}
-
-/* Delete a GL texture (thread-safely) */
-void
-AG_GL_DeleteTexture(void *obj, Uint name)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	dc->deleteTexture(drv, name);
 }
 
 /* Generic emulated BlitSurface() for GL drivers. */
@@ -630,16 +811,33 @@ AG_GL_DrawArrowRight(void *obj, int x, int y, int h, AG_Color C[2])
 	glEnd();
 }
 
+/* Generic FillRect() operation for GL drivers. */
+void
+AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
+{
+	int x2 = r.x + r.w - 1;
+	int y2 = r.y + r.h - 1;
+
+	glBegin(GL_POLYGON);
+	glColor3ub(c.r, c.g, c.b);
+	glVertex2i(r.x, r.y);
+	glVertex2i(x2, r.y);
+	glVertex2i(x2, y2);
+	glVertex2i(r.x, y2);
+	glEnd();
+}
+
 void
 AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 {
 	AG_Driver *drv = obj;
+	AG_GL_Context *gl = drv->gl;
 	int stipplePrev;
 	
 	stipplePrev = glIsEnabled(GL_POLYGON_STIPPLE);
 	glEnable(GL_POLYGON_STIPPLE);
 	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
-	glPolygonStipple((GLubyte *)drv->glStipple);
+	glPolygonStipple((GLubyte *)gl->dither);
 	AG_GL_DrawRectFilled(obj, r, C);
 	glPopAttrib();
 	if (!stipplePrev) { glDisable(GL_POLYGON_STIPPLE); }
@@ -853,7 +1051,7 @@ AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
 void
 AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
-	AG_GL_UploadTexture(&gl->texture, gl->su, &gl->texcoords);
+	AG_GL_StdUploadTexture(&gl->texture, gl->su, &gl->texcoords);
 }
 
 void
@@ -873,14 +1071,3 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-
-/* Delete a GL display list (thread-safely) */
-void
-AG_GL_DeleteList(void *obj, Uint name)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	dc->deleteList(drv, name);
-}
-

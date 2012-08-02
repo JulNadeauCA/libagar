@@ -162,14 +162,7 @@ typedef struct ag_driver_cocoa {
 	AG_CocoaWindow   *win;		/* Cocoa window */
 	AG_CocoaListener *evListener;	/* Cocoa event listener */
 	NSOpenGLContext *glCtx;
-	int              clipStates[4];	/* Clipping GL state */
-	AG_ClipRect     *clipRects;	/* Clipping rectangles */
-	Uint            nClipRects;
-	Uint            *textureGC;	/* Textures queued for deletion */
-	Uint            nTextureGC;
-	Uint            *listGC;	/* Display lists queued for deletion */
-	Uint            nListGC;
-	AG_GL_BlendState bs[1];		/* Saved blending states */
+	AG_GL_Context    gl;
 	AG_Mutex         lock;		/* Protect Cocoa calls */
 	Uint             modFlags;	/* Last modifier state */
 	NSTrackingRectTag trackRect;	/* For window-{enter,leave} */
@@ -385,13 +378,6 @@ Init(void *obj)
 {
 	AG_DriverCocoa *co = obj;
 
-	co->clipRects = NULL;
-	co->nClipRects = 0;
-	memset(co->clipStates, 0, sizeof(co->clipStates));
-	co->textureGC = NULL;
-	co->nTextureGC = 0;
-	co->listGC = NULL;
-	co->nListGC = 0;
 	co->win = NULL;
 	co->glCtx = NULL;
 	co->modFlags = 0;
@@ -405,9 +391,6 @@ Destroy(void *obj)
 	AG_DriverCocoa *co = obj;
 
 	AG_MutexDestroy(&co->lock);
-	Free(co->clipRects);
-	Free(co->textureGC);
-	Free(co->listGC);
 }
 
 /*
@@ -1031,35 +1014,18 @@ static void
 COCOA_EndRendering(void *obj)
 {
 	AG_DriverCocoa *co = obj;
+	AG_GL_Context *gl = &co->gl;
 	Uint i;
 
 	[co->glCtx flushBuffer];
 
 	/* Remove textures and display lists queued for deletion. */
-	glDeleteTextures(co->nTextureGC, (const GLuint *)co->textureGC);
-	for (i = 0; i < co->nListGC; i++) {
-		glDeleteLists(co->listGC[i], 1);
+	glDeleteTextures(gl->nTextureGC, (const GLuint *)gl->textureGC);
+	for (i = 0; i < gl->nListGC; i++) {
+		glDeleteLists(gl->listGC[i], 1);
 	}
-	co->nTextureGC = 0;
-	co->nListGC = 0;
-}
-
-static void
-COCOA_DeleteTexture(void *drv, Uint texture)
-{
-	AG_DriverCocoa *co = drv;
-
-	co->textureGC = Realloc(co->textureGC, (co->nTextureGC+1)*sizeof(Uint));
-	co->textureGC[co->nTextureGC++] = texture;
-}
-
-static void
-COCOA_DeleteList(void *drv, Uint list)
-{
-	AG_DriverCocoa *co = drv;
-
-	co->listGC = Realloc(co->listGC, (co->nListGC+1)*sizeof(Uint));
-	co->listGC[co->nListGC++] = list;
+	gl->nTextureGC = 0;
+	gl->nListGC = 0;
 }
 
 static int
@@ -1075,155 +1041,8 @@ COCOA_SetRefreshRate(void *obj, int fps)
 }
 
 /*
- * Clipping and blending control (rendering context)
- */
-
-static void
-COCOA_PushClipRect(void *obj, AG_Rect r)
-{
-	AG_DriverCocoa *co = obj;
-	AG_ClipRect *cr, *crPrev;
-
-	AG_MutexLock(&co->lock);
-
-	co->clipRects = Realloc(co->clipRects, (co->nClipRects+1)*sizeof(AG_ClipRect));
-	crPrev = &co->clipRects[co->nClipRects-1];
-	cr = &co->clipRects[co->nClipRects++];
-
-	cr->eqns[0][0] = 1.0;
-	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;
-	cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	
-	cr->eqns[1][0] = 0.0;
-	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;
-	cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-		
-	cr->eqns[2][0] = -1.0;
-	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;
-	cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-		
-	cr->eqns[3][0] = 0.0;
-	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;
-	cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-	
-	AG_MutexUnlock(&co->lock);
-}
-
-static void
-COCOA_PopClipRect(void *obj)
-{
-	AG_DriverCocoa *co = obj;
-	AG_ClipRect *cr;
-	
-	AG_MutexLock(&co->lock);
-#ifdef AG_DEBUG
-	if (co->nClipRects < 1)
-		AG_FatalError("PopClipRect() without PushClipRect()");
-#endif
-	cr = &co->clipRects[co->nClipRects-2];
-	co->nClipRects--;
-
-	glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
-	glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
-	glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
-	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
-	
-	AG_MutexUnlock(&co->lock);
-}
-
-static void
-COCOA_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
-{
-	AG_DriverCocoa *co = obj;
-	
-	AG_MutexLock(&co->lock);
-
-	/* XXX TODO: stack */
-	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &co->bs[0].texEnvMode);
-	glGetBooleanv(GL_BLEND, &co->bs[0].enabled);
-	glGetIntegerv(GL_BLEND_SRC, &co->bs[0].srcFactor);
-	glGetIntegerv(GL_BLEND_DST, &co->bs[0].dstFactor);
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
-	
-	AG_MutexUnlock(&co->lock);
-}
-
-static void
-COCOA_PopBlendingMode(void *obj)
-{
-	AG_DriverCocoa *co = obj;
-	
-	AG_MutexLock(&co->lock);
-
-	/* XXX TODO: stack */
-	if (co->bs[0].enabled) {
-		glEnable(GL_BLEND);
-	} else {
-		glDisable(GL_BLEND);
-	}
-	glBlendFunc(co->bs[0].srcFactor, co->bs[0].dstFactor);
-	
-	AG_MutexUnlock(&co->lock);
-}
-
-/*
  * Window operations
  */
-
-/* Initialize the clipping rectangle stack. */
-static int
-InitClipRects(AG_DriverCocoa *co, int w, int h)
-{
-	AG_ClipRect *cr;
-	int i;
-
-	for (i = 0; i < 4; i++)
-		co->clipStates[i] = 0;
-
-	/* Rectangle 0 always covers the whole view. */
-	if ((co->clipRects = TryMalloc(sizeof(AG_ClipRect))) == NULL) {
-		return (-1);
-	}
-	co->nClipRects = 1;
-
-	cr = &co->clipRects[0];
-	cr->r = AG_RECT(0,0, w,h);
-
-	cr->eqns[0][0] = 1.0;	cr->eqns[0][1] = 0.0;
-	cr->eqns[0][2] = 0.0;	cr->eqns[0][3] = 0.0;
-	cr->eqns[1][0] = 0.0;	cr->eqns[1][1] = 1.0;
-	cr->eqns[1][2] = 0.0;	cr->eqns[1][3] = 0.0;
-	cr->eqns[2][0] = -1.0;	cr->eqns[2][1] = 0.0;
-	cr->eqns[2][2] = 0.0;	cr->eqns[2][3] = (double)w;
-	cr->eqns[3][0] = 0.0;	cr->eqns[3][1] = -1.0;
-	cr->eqns[3][2] = 0.0;	cr->eqns[3][3] = (double)h;
-
-	return (0);
-}
-
-/* Initialize clipping rectangle 0 for the current window geometry. */
-static void
-InitClipRect0(AG_DriverCocoa *co, AG_Window *win)
-{
-	AG_ClipRect *cr;
-
-	cr = &co->clipRects[0];
-	cr->r.w = WIDTH(win);
-	cr->r.h = HEIGHT(win);
-	cr->eqns[2][3] = (double)WIDTH(win);
-	cr->eqns[3][3] = (double)HEIGHT(win);
-}
 
 static void
 SetBackgroundColor(AG_DriverCocoa *co, const AG_Color *C)
@@ -1374,8 +1193,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("Cannot create NSOpenGLContext");
 		goto fail;
 	}
-
-	AGDRIVER_MW(co)->flags |= AG_DRIVER_MW_OPEN;
+	if (AG_GL_InitContext(sgl, &sgl->gl) == -1)
+		goto fail;
 
 	/* Set the preferred Agar pixel formats. */
 	/* XXX XXX XXX: retrieve effective depth */
@@ -1387,13 +1206,12 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 #endif
 	);
 	if (drv->videoFmt == NULL)
-		goto fail;
+		goto fail_ctx;
 
-	/* Initialize the clipping rectangle stack. */
-	if (InitClipRects(co, r.w, r.h) == -1)
-		goto fail;
-	
-	/* Set the effective window geometry, initialize the GL context. */
+	/*
+	 * Set the effective window geometry, initialize the viewport
+	 * and tracking rectangle.
+	 */
 	ConvertNSRect(&winRect);
 	a.x = winRect.origin.x;
 	a.y = winRect.origin.y;
@@ -1404,6 +1222,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	AG_MutexUnlock(&co->lock);
 	[pool release];
 	return (0);
+fail_ctx:
+	AG_GL_DestroyContext(sgl);
 fail:
 	[NSOpenGLContext clearCurrentContext];
 	[co->evListener close];
@@ -1424,31 +1244,26 @@ COCOA_CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
-/*	AG_Glyph *gl; */
-/*	int i; */
 
 	AG_MutexLock(&co->lock);
+
 	[[co->win contentView] removeTrackingRect:co->trackRect];
-#if 0
-	/* Invalidate cached glyph textures. */
+	
+	/* Destroy our OpenGL rendering context. */
 	COCOA_GL_MakeCurrent(co, win)
-	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		SLIST_FOREACH(gl, &drv->glyphCache[i].glyphs, glyphs) {
-			if (gl->texture != 0) {
-				glDeleteTextures(1, (GLuint *)&gl->texture);
-				gl->texture = 0;
-			}
-		}
-	}
-#endif
+	AG_GL_DestroyContext(drv);
 	[co->glCtx clearDrawable];
 	[co->glCtx release];
+	AGDRIVER_MW(co)->flags &= ~(AG_DRIVER_MW_OPEN);
+
+	/* Close the window. */
 	[co->evListener close];
 	[co->evListener release];
 	[co->win close];
+
 	AG_PixelFormatFree(drv->videoFmt);
 	drv->videoFmt = NULL;
-	AGDRIVER_MW(co)->flags &= ~(AG_DRIVER_MW_OPEN);
+
 	AG_MutexUnlock(&co->lock);
 }
 
@@ -1591,12 +1406,9 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	(void)AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
-	/* Update clipping rectangle 0 */
-	InitClipRect0(co, win);
-
-	/* Update OpenGL context. */
+	/* The viewport coordinates have changed. */
 	COCOA_GL_MakeCurrent(co, win);
-	AG_GL_InitContext(AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_GL_SetViewport(&co->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
 	/* Update the tracking rectangle. */
 	if (co->trackRect != -1) {
@@ -1800,14 +1612,14 @@ AG_DriverMwClass agDriverCocoa = {
 		COCOA_EndRendering,
 		AG_GL_FillRect,
 		NULL,			/* updateRegion */
-		AG_GL_UploadTexture,
-		AG_GL_UpdateTexture,
-		COCOA_DeleteTexture,
+		AG_GL_StdUploadTexture,
+		AG_GL_StdUpdateTexture,
+		AG_GL_StdDeleteTexture,
 		COCOA_SetRefreshRate,
-		COCOA_PushClipRect,
-		COCOA_PopClipRect,
-		COCOA_PushBlendingMode,
-		COCOA_PopBlendingMode,
+		AG_GL_StdPushClipRect,
+		AG_GL_StdPopClipRect,
+		AG_GL_StdPushBlendingMode,
+		AG_GL_StdPopBlendingMode,
 		NULL,			/* createCursor */
 		NULL,			/* freeCursor */
 		NULL,			/* setCursor */
@@ -1843,7 +1655,7 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawRectDithered,
 		AG_GL_UpdateGlyph,
 		AG_GL_DrawGlyph,
-		COCOA_DeleteList
+		AG_GL_StdDeleteList
 	},
 	COCOA_OpenWindow,
 	COCOA_CloseWindow,
