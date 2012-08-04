@@ -42,12 +42,35 @@
 
 const AG_Version vgVer = { 6, 1 };
 
+int          vgInitedSubsystem = 0;
 VG_NodeOps **vgNodeClasses;
 Uint         vgNodeClassCount;
+
+extern VG_NodeOps vgPointOps;
+extern VG_NodeOps vgLineOps;
+extern VG_NodeOps vgPolygonOps;
+extern VG_NodeOps vgCircleOps;
+extern VG_NodeOps vgArcOps;
+extern VG_NodeOps vgTextOps;
+
+VG_NodeOps *vgBuiltinClasses[] = {
+	&vgPointOps,
+	&vgLineOps,
+	&vgPolygonOps,
+	&vgCircleOps,
+	&vgArcOps,
+	&vgTextOps,
+	NULL
+};
 
 void
 VG_InitSubsystem(void)
 {
+	VG_NodeOps **vnOps;
+
+	if (vgInitedSubsystem)
+		return;
+
 	vgNodeClasses = NULL;
 	vgNodeClassCount = 0;
 
@@ -55,24 +78,29 @@ VG_InitSubsystem(void)
 	if (agGUI) {
 		AG_RegisterClass(&vgViewClass);
 	}
-	VG_RegisterClass(&vgPointOps);
-	VG_RegisterClass(&vgLineOps);
-	VG_RegisterClass(&vgPolygonOps);
-	VG_RegisterClass(&vgCircleOps);
-	VG_RegisterClass(&vgArcOps);
-	VG_RegisterClass(&vgTextOps);
+	for (vnOps = &vgBuiltinClasses[0]; *vnOps != NULL; vnOps++)
+		VG_RegisterClass(*vnOps);
 
 	vgIcon_Init();
+	vgInitedSubsystem = 1;
 }
 
 void
 VG_DestroySubsystem(void)
 {
+	if (!vgInitedSubsystem)
+		return;
+	
+	if (agGUI) {
+		AG_UnregisterClass(&vgViewClass);
+	}
 	Free(vgNodeClasses);
 	vgNodeClasses = NULL;
 	vgNodeClassCount = 0;
 
-	AG_UnregisterClass(&vgViewClass);
+	AG_UnregisterNamespace("VG");
+	
+	vgInitedSubsystem = 0;
 }
 
 VG *

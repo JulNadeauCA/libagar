@@ -12,6 +12,8 @@ struct ag_menu_item;
 
 __BEGIN_DECLS
 void	   DEV_InitSubsystem(Uint);
+void	   DEV_DestroySubsystem(void);
+
 void	   DEV_ToolMenu(struct ag_menu_item *);
 AG_Window *DEV_TimerInspector(void);
 AG_Window *DEV_UnicodeBrowser(void);
@@ -24,9 +26,9 @@ void	   DEV_BrowserDestroy(void);
 void	   DEV_BrowserOpenData(void *);
 void	   DEV_BrowserCloseData(void *);
 void	   DEV_BrowserOpenGeneric(AG_Object *);
-void	   DEV_BrowserSaveTo(void *, const char *);
-void	   DEV_BrowserLoadFrom(void *, const char *);
-void	   DEV_BrowserGenericMenu(void *, void *);
+AG_Window *DEV_BrowserSaveToDlg(void *, const char *);
+AG_Window *DEV_BrowserLoadFromDlg(void *, const char *);
+void	   DEV_BrowserGenericMenu(void *, void *, AG_Window *);
 
 void	   DEV_ConfigShow(void);
 void	  *DEV_ObjectEdit(void *);

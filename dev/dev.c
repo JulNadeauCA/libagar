@@ -54,6 +54,8 @@ static const struct dev_tool_ent {
 #endif
 };
 
+int devInitedSubsystem = 0;
+
 static void
 SelectTool(AG_Event *event)
 {
@@ -68,7 +70,7 @@ SelectTool(AG_Event *event)
 static void
 ShowGuiDebugger(AG_Event *event)
 {
-	AG_WindowShow(AG_GuiDebugger());
+	AG_WindowShow(AG_GuiDebugger(NULL));
 }
 #endif /* AG_DEBUG */
 
@@ -91,4 +93,11 @@ DEV_ToolMenu(AG_MenuItem *mi)
 void
 DEV_InitSubsystem(Uint flags)
 {
+	devInitedSubsystem++;
+}
+
+void
+DEV_DestroySubsystem(void)
+{
+	devInitedSubsystem--;
 }

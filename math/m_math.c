@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,6 +39,8 @@
 # include "m_plotter.h"
 # include "m_matview.h"
 #endif
+
+int mInitedSubsystem = 0;
 
 #ifdef ENABLE_GUI
 
@@ -110,6 +112,9 @@ PrintMatrix(AG_Label *lbl, char *s, size_t len, int fPos)
 void
 M_InitSubsystem(void)
 {
+	if (mInitedSubsystem++ > 0)
+		return;
+
 	M_VectorInitEngine();
 	M_MatrixInitEngine();
 
@@ -124,13 +129,28 @@ M_InitSubsystem(void)
 		AG_RegisterLabelFormat("V", PrintVector);
 		AG_RegisterLabelFormat("M", PrintMatrix);
 	}
-#endif /* ENABLE_GUI */
+#endif
 }
 
 /* Release resources allocated by the math library. */
 void
 M_DestroySubsystem(void)
 {
+	if (--mInitedSubsystem > 0)
+		return;
+
+#ifdef ENABLE_GUI
+	if (agGUI) {
+		AG_UnregisterClass(&mPlotterClass);
+		AG_UnregisterClass(&mMatviewClass);
+
+		AG_UnregisterLabelFormat("R");
+		AG_UnregisterLabelFormat("T");
+		AG_UnregisterLabelFormat("C");
+		AG_UnregisterLabelFormat("V");
+		AG_UnregisterLabelFormat("M");
+	}
+#endif
 }
 
 /* Unserialize a real number. */
