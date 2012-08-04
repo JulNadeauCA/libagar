@@ -117,15 +117,21 @@ static void
 PollWidgets(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_Driver *drv = WIDGET(tl)->drv;
-	AG_Window *win;
-
+	AG_Window *win = AG_PTR(1);
+	AG_Driver *drv;
+	
 	AG_TlistClear(tl);
-	AG_LockVFS(drv);
-	AG_FOREACH_WINDOW_REVERSE(win, drv) {
+	if (win != NULL) {
 		FindWindows(tl, win, 0);
+	} else {
+		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+			AG_LockVFS(drv);
+			AG_FOREACH_WINDOW(win, drv) {
+				FindWindows(tl, win, 0);
+			}
+			AG_UnlockVFS(drv);
+		}
 	}
-	AG_UnlockVFS(drv);
 	AG_TlistRestore(tl);
 }
 
@@ -264,7 +270,8 @@ WidgetSelected(AG_Event *event)
 	{
 		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
-		AG_TlistSetItemHeight(tl, 16);
+		AG_TlistSetItemHeight(tl, 32);
+		AG_TlistSetIconWidth(tl, 64);
 	}
 
 	AG_WidgetUpdate(box);
@@ -295,7 +302,7 @@ ContextualMenu(AG_Event *event)
 
 /* Create the GUI debugger window. Return NULL if window exists. */
 AG_Window *
-AG_GuiDebugger(void)
+AG_GuiDebugger(void *obj)
 {
 	AG_Window *win;
 	AG_Pane *pane;
@@ -305,11 +312,17 @@ AG_GuiDebugger(void)
 	if ((win = AG_WindowNewNamedS(0, "AG_GuiDebugger")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("GUI Debugger"));
+	if (win != NULL) {
+		AG_WindowSetCaption(win,
+		    _("Agar GUI Debugger: <%s> (\"%s\")"),
+		    OBJECT(obj)->name, AGWINDOW(obj)->caption);
+	} else {
+		AG_WindowSetCaptionS(win, _("Agar GUI Debugger"));
+	}
 
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
-	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, NULL);
+	tl = AG_TlistNewPolled(pane->div[0], 0, PollWidgets, "%p", obj);
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXXXXXX>", 10);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetSelected, "%p", pane->div[1]);
 	AG_Expand(tl);
@@ -318,7 +331,7 @@ AG_GuiDebugger(void)
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, ContextualMenu, "%p", tl);
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 70, 50);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 640, 300);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	return (win);
 }

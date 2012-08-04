@@ -554,15 +554,25 @@ Shown(AG_Event *event)
 	AG_Variable V;
 
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
+		/*
+		 * No explicit window geometry was provided; compute a
+		 * default size from the widget sizeReq() operations,
+		 * and apply initial window alignment settings.
+		 */
 		AG_WidgetSizeReq(win, &r);
 		if (AGDRIVER_SINGLE(drv)) {
 			AG_WM_GetPrefPosition(win, &xPref, &yPref, r.w, r.h);
 			a.x = xPref;
 			a.y = yPref;
 		} else {
-			mwFlags |= AG_DRIVER_MW_ANYPOS;
 			a.x = 0;
 			a.y = 0;
+		}
+		if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
+			AG_WindowComputeAlignment(win, &a);
+		} else {
+			/* Let the window manager choose a default position */
+			mwFlags |= AG_DRIVER_MW_ANYPOS;
 		}
 		a.w = r.w;
 		a.h = r.h;
@@ -573,7 +583,7 @@ Shown(AG_Event *event)
 		a.h = HEIGHT(win);
 	}
 	AG_WidgetSizeAlloc(win, &a);
-
+	
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		if (win->flags & AG_WINDOW_MODAL) {
@@ -585,7 +595,6 @@ Shown(AG_Event *event)
 		break;
 	case AG_WM_MULTIPLE:
 		if (win->flags & AG_WINDOW_MODAL) {
-			/* Use the global modal window stack. */
 			AG_InitPointer(&V, win);
 			AG_ListAppend(agModalWindows, &V);
 		}
@@ -619,14 +628,6 @@ Shown(AG_Event *event)
 
 	/* Assume we gained focus. XXX */
 	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-
-	/* Apply initial alignment setting */
-	if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
-		AG_WindowSetGeometryAligned(win,
-		    win->alignment,
-		    WIDTH(win),
-		    HEIGHT(win));
-	}
 
 	/* Mark for redraw */
 	win->dirty = 1;
@@ -1114,79 +1115,83 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 	AG_ObjectUnlock(win);
 }
 
+/*
+ * Update the x,y of the a to produce the required alignment for the
+ * window's current display.
+ */
+void
+AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
+{
+	AG_Driver *drv = WIDGET(win)->drv;
+	Uint wMax, hMax;
+	int w = a->w;
+	int h = a->h;
+
+	if (AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax) == -1)
+		return;
+
+	switch (win->alignment) {
+	case AG_WINDOW_TL:
+		a->x = 0;
+		a->y = 0;
+		break;
+	case AG_WINDOW_TC:
+		a->x = wMax/2 - w/2;
+		a->y = 0;
+		break;
+	case AG_WINDOW_TR:
+		a->x = wMax - w;
+		a->y = 0;
+		break;
+	case AG_WINDOW_ML:
+		a->x = 0;
+		a->y = hMax/2 - h/2;
+		break;
+	case AG_WINDOW_MR:
+		a->x = wMax - w;
+		a->y = hMax/2 - h/2;
+		break;
+	case AG_WINDOW_BL:
+		a->x = 0;
+		a->y = hMax - h;
+		break;
+	case AG_WINDOW_BC:
+		a->x = wMax/2 - w/2;
+		a->y = hMax - h;
+		break;
+	case AG_WINDOW_BR:
+		a->x = wMax - w;
+		a->y = hMax - h;
+		break;
+	case AG_WINDOW_MC:
+	case AG_WINDOW_ALIGNMENT_NONE:
+	default:
+		a->x = wMax/2 - w/2;
+		a->y = hMax/2 - h/2;
+		break;
+	}
+	if (AGDRIVER_MW_CLASS(drv)->tweakAlignment != NULL)
+		AGDRIVER_MW_CLASS(drv)->tweakAlignment(win, a, wMax, hMax);
+}
+
 /* Assign a window a specific alignment and size in pixels. */
 int
 AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment alignment,
     int w, int h)
 {
-	Uint wMax, hMax;
-	int x, y;
+	AG_SizeAlloc a;
+	int rv;
 
+	AG_ObjectLock(win);
 	win->alignment = alignment;
-	AG_GetDisplaySize(WIDGET(win)->drv, &wMax, &hMax);
-
-	switch (alignment) {
-	case AG_WINDOW_ALIGNMENT_NONE:
-		return (0);
-	case AG_WINDOW_TL:
-		x = 0;
-		y = 0;
-		break;
-	case AG_WINDOW_TC:
-		x = wMax/2 - w/2;
-		y = 0;
-		break;
-	case AG_WINDOW_TR:
-		x = wMax - w;
-		y = 0;
-		break;
-	case AG_WINDOW_ML:
-		x = 0;
-		y = hMax/2 - h/2;
-		break;
-	case AG_WINDOW_MR:
-		x = wMax - w;
-		y = hMax/2 - h/2;
-		break;
-	case AG_WINDOW_BL:
-		x = 0;
-		y = hMax - h;
-		break;
-	case AG_WINDOW_BC:
-		x = wMax/2 - w/2;
-		y = hMax - h;
-		break;
-	case AG_WINDOW_BR:
-		x = wMax - w;
-		y = hMax - h;
-		break;
-	case AG_WINDOW_MC:
-	default:
-		x = wMax/2 - w/2;
-		y = hMax/2 - h/2;
-		break;
-	}
-	
-	/* XXX hack to compensate for titlebars */
-	if (AGDRIVER_MULTIPLE(WIDGET(win)->drv)) {
-		switch (alignment) {
-		case AG_WINDOW_TL:
-		case AG_WINDOW_TC:
-		case AG_WINDOW_TR:
-			y += 34;
-			if (y > hMax) { y = 0; }
-			break;
-		case AG_WINDOW_BL:
-		case AG_WINDOW_BC:
-		case AG_WINDOW_BR:
-			y -= 34;
-			if (y < 0) { y = 0; }
-			break;
-		default:
-			break;
-		}
-	}
-	return AG_WindowSetGeometry(win, x, y, w, h);
+	a.x = 0;
+	a.y = 0;
+	a.w = (w != -1) ? w : WIDGET(win)->w;
+	a.h = (h != -1) ? h : WIDGET(win)->h;
+	AG_WindowComputeAlignment(win, &a);
+	rv = AG_WindowSetGeometry(win, a.x, a.y, a.w, a.h);
+	AG_ObjectUnlock(win);
+	return (rv);
 }
 
 /* Assign a window a specific alignment and size in percentage of view area. */
@@ -1594,9 +1599,6 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 	AG_ObjectLock(win);
 	win->alignment = alignment;
 	AG_SETFLAGS(win->flags, AG_WINDOW_CASCADE, cascade);
-	if (win->visible) {
-		(void)AG_WindowSetGeometry(win, -1, -1, -1, -1);
-	}
 	AG_ObjectUnlock(win);
 }
 

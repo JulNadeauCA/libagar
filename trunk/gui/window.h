@@ -163,6 +163,7 @@ int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),0)
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
+void     AG_WindowComputeAlignment(AG_Window *, AG_SizeAlloc *);
 
 int      AG_WindowSetOpacity(AG_Window *, float);
 void     AG_WindowSetFadeIn(AG_Window *, float, float);

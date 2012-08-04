@@ -56,7 +56,7 @@ void       AG_DestroyGUIGlobals(void);
 void       AG_QuitGUI(void);
 void       AG_DestroyVideo(void);
 #ifdef AG_DEBUG
-struct ag_window *AG_GuiDebugger(void);
+struct ag_window *AG_GuiDebugger(void *);
 #endif
 __END_DECLS
 

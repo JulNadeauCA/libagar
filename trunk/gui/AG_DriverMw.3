@@ -92,6 +92,7 @@ typedef struct ag_driver_mw_class {
 	int  (*setWindowCaption)(AG_Window *, const char *s);
 	void (*setTransientFor)(AG_Window *, AG_Window *winParent);
 	int  (*setOpacity)(AG_Window *, float opacity);
+	void (*tweakAlignment)(struct ag_window *, struct ag_size_alloc *a);
 } AG_DriverMwClass;
 .Ed
 .Pp
@@ -187,6 +188,26 @@ This operation is optional and window manager specific.
 .Fn setOpacity
 passes a window opacity argument (ranging from 0.0 to 1.0) to the
 underlying window manager.
+.Pp
+The optional
+.Fn tweakAlignment
+operation allows the driver to override or alter the effect of the window
+alignment request (set by
+.Xr AG_WindowSetPosition 3
+or
+.Xr AG_WindowSetGeometryAligned 3 ) ,
+such that underlying WM-specific items (desktop panels and such) can be taken
+into consideration (by default, the display boundaries are used).
+This routine should set the
+.Va x
+and
+.Va y
+members of
+.Fa a ,
+in function of
+.Va w
+and
+.Va h .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_InitGraphics 3 ,

@@ -1052,6 +1052,28 @@ WGL_SetTransientFor(AG_Window *win, AG_Window *winParent)
 	/* Nothing to do */
 }
 
+static void
+WGL_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
+{
+	/* XXX TODO */
+	switch (win->alignment) {
+	case AG_WINDOW_TL:
+	case AG_WINDOW_TC:
+	case AG_WINDOW_TR:
+		a->y += 50;
+		if (a->y+a->h > hMax) { a->y = 0; }
+		break;
+	case AG_WINDOW_BL:
+	case AG_WINDOW_BC:
+	case AG_WINDOW_BR:
+		a->y -= 100;
+		if (a->y < 0) { a->y = 0; }
+		break;
+	default:
+		break;
+	}
+}
+
 /*
  * Cursor operations
  */
@@ -1346,5 +1368,6 @@ AG_DriverMwClass agDriverWGL = {
 	WGL_SetBorderWidth,
 	WGL_SetWindowCaption,
 	WGL_SetTransientFor,
-	NULL				/* setOpacity (TODO) */
+	NULL,				/* setOpacity (TODO) */
+	WGL_TweakAlignment
 };
