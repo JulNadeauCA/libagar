@@ -24,7 +24,7 @@ Fadein(AG_Event *event)
 	AG_Window *win;
 
 	win = AG_WindowNew(AG_WINDOW_FADEIN);
-	AG_WindowSetFadeIn(win, 1.0, 0.1);
+	AG_WindowSetFadeIn(win, 1.0f, 0.1f);
 
 	AG_PixmapFromBMP(win, 0, "agar.bmp");
 	AG_LabelNew(win, 0, "Testing AG_WINDOW_FADEIN");

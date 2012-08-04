@@ -7,6 +7,8 @@
 
 #include <agar/dev.h>
 
+#include "config/have_agar_au.h"
+
 extern const AG_TestCase audioTest;
 extern const AG_TestCase charsetsTest;
 extern const AG_TestCase chineseTest;
@@ -41,7 +43,9 @@ extern const AG_TestCase unitconvTest;
 extern const AG_TestCase windowsTest;
 
 const AG_TestCase *testCases[] = {
+#ifdef HAVE_AGAR_AU
 	&audioTest,
+#endif
 	&charsetsTest,
 	&chineseTest,
 	&compositingTest,
@@ -50,7 +54,9 @@ const AG_TestCase *testCases[] = {
 	&customWidgetTest,
 	&fixedResTest,
 	&focusingTest,
+#ifdef HAVE_OPENGL
 	&glviewTest,
+#endif
 	&imageLoadingTest,
 	&keyEventsTest,
 	&loaderTest,
