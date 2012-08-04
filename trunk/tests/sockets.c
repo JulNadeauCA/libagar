@@ -4,8 +4,7 @@
  * AG_Socket widgets in a fixed container.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 #include <string.h>
 
@@ -54,21 +53,9 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 	return (1);
 }
 
-static void
-CreateGameView(void)
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	AG_Window *win;
-	unsigned int wView, hView;
-
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 100, 70);
-	AG_WindowShow(win);
-}
-
-static void
-CreateGameMenu(void)
-{
-	AG_Window *win;
 	AG_Fixed *fx;
 	AG_Label *lbl;
 	AG_Socket *sock;
@@ -76,18 +63,12 @@ CreateGameMenu(void)
 	AG_Icon *helmet, *sword, *axe;
 	int i;
 
-	/*
-	 * Create a fixed-size window with a Fixed container.
-	 */
-	win = AG_WindowNewNamedS(AG_WINDOW_PLAIN, "game-menu");
-	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_BL, 100, 30);
-	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
-
+	/* Create a fixed widget container */
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
+	/* Create a pixmap */
 	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
-		fprintf(stderr, "Cannot find menubg.bmp\n", AG_GetError());
+		TestMsg(obj, "Cannot find menubg.bmp: %s", AG_GetError());
 		exit(1);
 	}
 	AG_FixedMove(fx, px, 0, 0);
@@ -153,39 +134,20 @@ CreateGameMenu(void)
 	AG_FixedSize(fx, sock, 32, 32);
 	AG_SocketInsertIcon(sock, axe);
 
-	AG_WindowShow(win);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char *driverSpec = "<SDL>", *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: sockets [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore("agar-sockets-demo", 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	CreateGameView();
-	CreateGameMenu();
-
-	AG_EventLoop();
-	AG_Destroy();
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 640, 128);
+	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
 	return (0);
 }
+
+const AG_TestCase socketsTest = {
+	"sockets",
+	N_("Test drag-and-drop with AG_Icon(3) and AG_Socket(3)"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

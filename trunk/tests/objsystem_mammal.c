@@ -5,11 +5,9 @@
  * "Animal" class. This demonstrates inheritance under the Agar Object system.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-
-#include "animal.h"
-#include "mammal.h"
+#include "agartest.h"
+#include "objsystem_animal.h"
+#include "objsystem_mammal.h"
 
 /*
  * Initialization routine. Note that the object system will automatically

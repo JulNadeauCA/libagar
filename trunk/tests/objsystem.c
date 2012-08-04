@@ -5,67 +5,91 @@
  * Agar-DEV library.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
+
 #include <agar/dev.h>
 
-#include <string.h>
+#include "objsystem_animal.h"
+#include "objsystem_mammal.h"
 
-#include "animal.h"
-#include "mammal.h"
+typedef struct {
+	AG_Object vfsRoot;			/* Our test VFS */
+} MyTestInstance;
 
-/* This will be the root of our virtual filesystem. */
-AG_Object vfsRoot;
+static int inited = 0;
 
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	char *driverSpec = NULL, *optArg;
-	int c;
+	MyTestInstance *ti = obj;
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: objsystem [-d agar-driver-spec]\n");
-			return (1);
-		}
+	if (inited++ == 0) {
+		DEV_InitSubsystem(0);
+
+		/* Register the Agar object classes which we implement. */
+		AG_RegisterClass(&AnimalClass);
+		AG_RegisterClass(&MammalClass);
 	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* Register the Agar object classes which we implement. */
-	AG_RegisterClass(&AnimalClass);
-	AG_RegisterClass(&MammalClass);
-
-	/*
-	 * Initialize our virtual filesystem root and load its contents if it
-	 * was previously saved to disk. This structure was not malloc'ed so
-	 * we must use AG_ObjectInitStatic(). We use NULL as the class so the
-	 * generic AG_Object(3) class will be used.
-	 */
-	AG_ObjectInitStatic(&vfsRoot, NULL);
-	AG_ObjectSetName(&vfsRoot, "My VFS");
-	(void)AG_ObjectLoad(&vfsRoot);
-
-	/*
-	 * Initialize the DEV library. DEV_Browser() is a simple object
-	 * browser that allows the user to browse and manipulate the
-	 * contents of the VFS.
-	 */
-	DEV_InitSubsystem(0);
-	AG_WindowShow(DEV_Browser(&vfsRoot));
 	
-	AG_EventLoop();
-	AG_Destroy();
+	/*
+	 * Initialize our virtual filesystem root. Since vfsRoot was not
+	 * malloc'ed, we must use the AG_ObjectInitStatic() variant.
+	 */
+	AG_ObjectInitStatic(&ti->vfsRoot, NULL);
+	AG_ObjectSetName(&ti->vfsRoot, "My VFS");
 	return (0);
 }
+
+static void
+Destroy(void *obj)
+{
+	MyTestInstance *ti = obj;
+
+	/* Destroy our test VFS. */
+	AG_ObjectDestroy(&ti->vfsRoot);
+
+	if (--inited == 0) {
+		/* Unregister our classes for a complete cleanup. */
+		AG_UnregisterClass(&AnimalClass);
+		AG_UnregisterClass(&MammalClass);
+
+		DEV_DestroySubsystem();
+	}
+}
+
+static void
+StartBrowser(AG_Event *event)
+{
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2), *win;
+
+	if ((win = DEV_Browser(&ti->vfsRoot)) != NULL)
+		AG_WindowAttach(winParent, win);
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyTestInstance *ti = obj;
+
+	if (AG_ObjectLoad(&ti->vfsRoot) == 0) {
+		AG_LabelNewS(win, 0, "Test VFS loaded");
+	} else {
+		AG_LabelNewS(win, 0, "New test VFS");
+	}
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Start VFS browser",
+	    StartBrowser, "%p,%p", ti, win);
+	return (0);
+}
+
+const AG_TestCase objSystemTest = {
+	"objSystem",
+	N_("Test basic AG_Object(3) VFS functions"),
+	"1.4.2",
+	0,
+	sizeof(MyTestInstance),
+	Init,
+	Destroy,
+	NULL,		/* test */
+	TestGUI
+};

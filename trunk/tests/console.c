@@ -3,12 +3,7 @@
  * This application tests the AG_Console widget.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "agartest.h"
 
 AG_Textbox *textbox;
 
@@ -21,14 +16,13 @@ AppendLine(AG_Event *event)
 	s = AG_TextboxDupString(textbox);
 	AG_ConsoleMsgS(cons, s);
 	AG_TextboxSetString(textbox, "");
-	free(s);
+	Free(s);
 }
 
 static void
 EnterJunk(AG_Event *event)
 {
 	AG_Console *cons = AG_PTR(1);
-	AG_ConsoleLine *cl;
 	int i;
 
 	for (i = 0; i <= 100; i++) {
@@ -59,44 +53,18 @@ SelFont(AG_Event *event)
 
 		AG_WindowSetCaption(win, "Select font");
 		fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
-		AG_BindPointer(fs, "font", (void **)&cons->font);
+		AG_BindPointer(fs, "font", (void *)&cons->font);
 		AG_WindowShow(win);
 	}
 }
 
-int
-main(int argc, char *argv[])
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	AG_Window *win;
 	AG_Console *cons;
 	AG_Box *box;
 	AG_Button *btn;
-	char *driverSpec = NULL, *optArg;
-	int c;
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: console [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar console demo");
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
@@ -117,9 +85,17 @@ main(int argc, char *argv[])
 		    &cons->vBar->flags, AG_SCROLLBAR_TEXT);
 	}
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
-	AG_WindowShow(win);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase consoleTest = {
+	"console",
+	N_("Test the AG_Console(3) widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

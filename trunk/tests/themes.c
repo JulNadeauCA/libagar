@@ -6,8 +6,8 @@
  * various command-line options provided.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
+
 #include <agar/dev.h>
 
 #include <stdio.h>
@@ -18,7 +18,7 @@
 #include <agar/config/ag_debug.h>
 #include <agar/config/version.h>
 
-#include "mytheme.h"
+#include "themes_mytheme.h"
 
 char textBuffer[30];
 
@@ -53,8 +53,9 @@ SetWordWrap(AG_Event *event)
 }
 
 static void
-CreateWindow(void)
+CreateWindow(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
 	AG_Pane *pane;
@@ -68,9 +69,10 @@ CreateWindow(void)
 	 * Create a new window and attach widgets to it. The Window object
 	 * acts as a container widget that packs its children vertically.
 	 */
-	win = AG_WindowNew(0);
-	AG_WindowSetCaptionS(win, "Some Agar-GUI widgets");
-	AG_ObjectSetName(win, "MainWindow");
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, "themes: Some Agar-GUI widgets");
 	
 	/*
 	 * Pane provides two Box containers which can be resized using
@@ -182,7 +184,7 @@ CreateWindow(void)
 	{
 		AG_Numerical *num;
 		static float myFloat = 1.0;
-		static int myMin = 0, myMax = 10, myInt = 1;
+		static int myInt = 1;
 
 		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);
@@ -303,7 +305,7 @@ CreateWindow(void)
 			 * causes the widget to receive TAB key events
 			 * (normally used to focus other widgets).
 			 */
-			tbox = AG_TextboxNew(ntab,
+			tbox = AG_TextboxNewS(ntab,
 			    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|
 			    AG_TEXTBOX_EXPAND|AG_TEXTBOX_EXCL, NULL);
 			AG_WidgetSetFocusable(tbox, 1);
@@ -326,6 +328,7 @@ CreateWindow(void)
 				someText[size] = '\0';
 			} else {
 				someText = AG_Strdup("Failed to load loss.txt");
+				bufSize = strlen(someText)+1;
 			}
 	
 			/*
@@ -343,6 +346,7 @@ CreateWindow(void)
 		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
 	}
 
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
@@ -350,7 +354,11 @@ CreateWindow(void)
 static void
 ShowGuiDebugger(AG_Event *event)
 {
-	AG_WindowShow(AG_GuiDebugger());
+	AG_Window *winParent = AG_PTR(1);
+	AG_Window *win;
+
+	if ((win = AG_GuiDebugger(winParent)) != NULL)
+		AG_WindowAttach(winParent, win);
 }
 #endif
 
@@ -399,179 +407,93 @@ TweakColorScheme(AG_Event *event)
 	}
 }
 
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	AG_AgarVersion ver;
-	extern AG_Style myRoundedStyle;
-	AG_Menu *appMenu;
-	AG_MenuItem *m;
-	AG_Window *win;
-	int w = 640, h = 480, fps = -1;
-	int useDoubleBuf = 0;
-	char *colorFile = NULL;
-	char *drivers = NULL;
-	char *optArg;
-	int c;
-
-	/* Initialize Agar-Core. */
-	if (AG_InitCore("agar-themes-demo", AG_VERBOSE) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	
-	/* Fetch Agar version information. */
-	AG_GetVersion(&ver);
-
-	while ((c = AG_Getopt(argc, argv, "?d:vw:h:t:T:r:c:", &optArg, NULL))
-	    != -1) {
-		switch (c) {
-		case 'd':
-			drivers = optArg;
-			break;
-		case 'v':
-			/* Display Agar version information */
-			printf("Agar version: %d.%d.%d\n", ver.major,
-			    ver.minor, ver.patch);
-			printf("Release name: \"%s\"\n", ver.release);
-			exit(0);
-		case 'w':
-			/* Set display width in pixels */
-			w = atoi(optArg);
-			break;
-		case 'h':
-			/* Set display height in pixels */
-			h = atoi(optArg);
-			break;
-		case 'r':
-			/* Change default refresh rate */
-			fps = atoi(optArg);
-			break;
-		case 'T':
-			/* Set an alternate font directory */
-			AG_SetString(agConfig, "font-path", optArg);
-			break;
-		case 't':
-			/* Change the default font */
-			AG_TextParseFontSpec(optArg);
-			break;
-		case 'c':
-			/* Load color scheme */
-			colorFile = optArg;
-			break;
-		case '?':
-		default:
-			printf("%s [-vgsDdR] [-d driver] [-r fps] [-t fontspec] "
-			       "[-w width] [-h height] "
-			       "[-T font-path] [-c colors.acs]\n",
-			       agProgName);
-			exit(0);
-		}
-	}
-
-	/* Initialize Agar-GUI. */
-	if (AG_InitGraphics(drivers) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (-1);
-	}
-
-	/* Change the default refresh rate. */
-	AG_SetRefreshRate(fps);
-
-	/* Bind some useful accelerator keys. */
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* Initialize the Agar-DEV library. */
-	DEV_InitSubsystem(0);
-
 	/* Initialize our custom theme. */
 	InitMyRoundedStyle(&myRoundedStyle);
+	
+	DEV_InitSubsystem(0);
+	return (0);
+}
 
-	/* Display the version and current graphics driver in use. */
-	win = AG_WindowNew(AG_WINDOW_NOMAXIMIZE);
-	AG_ObjectSetName(win, "PanelWindow");
-	AG_WindowSetCaption(win, "Agar version / driver");
+static void
+Destroy(void *obj)
+{
+	DEV_DestroySubsystem();
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	extern AG_Style myRoundedStyle;
+	char drvNames[256];
+	AG_AgarVersion ver;
+	AG_Menu *menu;
+	AG_MenuItem *m;
+	AG_Label *lbl;
+	AG_Box *hBox;
+
+	menu = AG_MenuNew(win, AG_MENU_HFILL);
+
+	AG_GetVersion(&ver);
+	AG_ListDriverNames(drvNames, sizeof(drvNames));
+	lbl = AG_LabelNew(win, AG_LABEL_HFILL,
+	    "Agar Library Version: %d.%d.%d\n"
+	    "Compiled Release: %s (\"%s\")\n"
+	    "Using Graphics Driver: %s\n"
+	    "(available drivers: <%s>)",
+	    ver.major, ver.minor, ver.patch,
+	    VERSION, ver.release,
+	    AGWIDGET(win)->drvOps->name,
+	    drvNames);
+	AG_LabelJustify(lbl, AG_TEXT_CENTER);
+	
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create test window",
+	    CreateWindow, "%p", win);
+
+	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		char drvNames[256];
-		AG_Label *lbl;
-		AG_Box *hBox;
-
-		AG_ListDriverNames(drvNames, sizeof(drvNames));
-		lbl = AG_LabelNew(win, AG_LABEL_HFILL,
-		    "Agar Library Version: %d.%d.%d\n"
-		    "Compiled Release: %s (\"%s\")\n"
-		    "Using Graphics Driver: %s\n"
-		    "(available drivers: <%s>)",
-		    ver.major, ver.minor, ver.patch,
-		    VERSION, ver.release,
-		    AGWIDGET(win)->drvOps->name,
-		    drvNames);
-		AG_LabelJustify(lbl, AG_TEXT_CENTER);
-
-		hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-		{
-			AG_ButtonNewFn(hBox, 0, "Default theme",
-			    SetTheme, "%p", &agStyleDefault);
-			AG_ButtonNewFn(hBox, 0, "Custom theme",
-			    SetTheme, "%p", &myRoundedStyle);
-			
-			AG_SeparatorNewVert(hBox);
-			
-			AG_ButtonNewFn(hBox, 0, "Green",
-			    SetColorScheme, "%s", "green.acs");
-			AG_ButtonNewFn(hBox, 0, "Darker",
-			    TweakColorScheme, "%i", 1);
-			AG_ButtonNewFn(hBox, 0, "Lighter",
-			    TweakColorScheme, "%i", 0);
-		}
-		AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
-		AG_WindowShow(win);
+		AG_ButtonNewFn(hBox, 0, "Default theme", SetTheme, "%p", &agStyleDefault);
+		AG_ButtonNewFn(hBox, 0, "Custom theme", SetTheme, "%p", &myRoundedStyle);
+		AG_SeparatorNewVert(hBox);
+		AG_ButtonNewFn(hBox, 0, "Green", SetColorScheme, "%s", "green.acs");
+		AG_ButtonNewFn(hBox, 0, "Darker", TweakColorScheme, "%i", 1);
+		AG_ButtonNewFn(hBox, 0, "Lighter", TweakColorScheme, "%i", 0);
 	}
 
-	/*
-	 * Create an application menu if we are using a single-display
-	 * driver (e.g., sdlfb, sdlgl).
-	 */
-	if (agDriverSw != NULL) {
-		appMenu = AG_MenuNewGlobal(0);
-		m = AG_MenuNode(appMenu->root, "File", NULL);
-		{
-			AG_MenuAction(m, "Preferences...", agIconGear.s,
-			    Preferences, NULL);
+	m = AG_MenuNode(menu->root, "File", NULL);
+	{
+		AG_MenuAction(m, "Preferences...", agIconGear.s, Preferences, NULL);
 #ifdef AG_DEBUG
-			AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s,
-			    ShowGuiDebugger, NULL);
+		AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s, ShowGuiDebugger, "%p", win);
 #endif
-			AG_MenuSeparator(m);
-			AG_MenuAction(m, "Quit", agIconClose.s,
-			    Quit, NULL);
-		}
-		m = AG_MenuNode(appMenu->root, "Test", NULL);
+		AG_MenuSeparator(m);
+		AG_MenuAction(m, "Quit", agIconClose.s, Quit, NULL);
+	}
+	m = AG_MenuNode(menu->root, "Test", NULL);
+	{
+		AG_MenuNode(m, "Submenu A", NULL);
+		AG_MenuSeparator(m);
+		m = AG_MenuNode(m, "Submenu B", NULL);
 		{
-			AG_MenuNode(m, "Submenu A", NULL);
-			AG_MenuSeparator(m);
-			m = AG_MenuNode(m, "Submenu B", NULL);
 			AG_MenuNode(m, "Submenu C", NULL);
 			AG_MenuNode(m, "Submenu D", NULL);
 			AG_MenuNode(m, "Submenu E", NULL);
 		}
 	}
-
-	/* Create our test window. */
-	CreateWindow();
-	
-	/* Load our custom color scheme. */
-	if (colorFile != NULL &&
-	    AG_ColorsLoad(colorFile) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
-		    AG_GetError());
-	}
-
-	/* Use the stock event loop. */
-	AG_EventLoop();
-
-	AG_Destroy();
+	AG_WindowShow(win);
 	return (0);
 }
 
+const AG_TestCase themesTest = {
+	"themes",
+	N_("Test a variety of widgets with different themes"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	Init,
+	Destroy,
+	NULL,		/* test */
+	TestGUI
+};

@@ -8,10 +8,8 @@
  * inheritance, see demos/objsystem.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-
-#include "mywidget.h"
+#include "agartest.h"
+#include "customwidget_mywidget.h"
 
 /*
  * This is a generic constructor function. It is completely optional, but
@@ -55,7 +53,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 		 * We can use AG_TextSize() to return the dimensions of rendered
 		 * text, without rendering it.
 		 */
-		AG_TextFont(AG_FetchFont(NULL, 24, 0));
 		AG_TextSize("Custom widget!", &r->w, &r->h);
 	} else {
 		/*
@@ -83,7 +80,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	if (a->w < 5 || a->h < 5)
 		return (-1);
 	
-	printf("Allocated %dx%d pixels\n", a->w, a->h);
+	TestMsg(my->ti, "Allocated %dx%d pixels", a->w, a->h);
 	return (0);
 }
 
@@ -96,6 +93,7 @@ static void
 Draw(void *p)
 {
 	MyWidget *my = p;
+	AG_Color c;
 	
 	/*
 	 * Draw a box spanning the widget area. In order to allow themeing,
@@ -111,13 +109,23 @@ Draw(void *p)
 	 * AG_WidgetMapSurface() call involves a texture upload.
 	 */
 	if (my->mySurface == -1) {
-		AG_TextFont(AG_FetchFont(NULL, 24, 0));
+		AG_PushTextState();
 		my->mySurface = AG_WidgetMapSurface(my,
 		    AG_TextRender("Custom widget!"));
+		AG_PopTextState();
 	}
 
-	/* Blit the mapped surface at [0,0]. */
-	AG_WidgetBlitSurface(my, my->mySurface, 0, 0);
+	c = AG_ColorRGB(250, 250, 0);
+	AG_DrawLine(my, 0, 0,					my->x, my->y, c);
+	AG_DrawLine(my, AGWIDGET(my)->w, 0,			my->x, my->y, c);
+	AG_DrawLine(my, 0, AGWIDGET(my)->h,			my->x, my->y, c);
+	AG_DrawLine(my, AGWIDGET(my)->w, AGWIDGET(my)->h,	my->x, my->y, c);
+	AG_DrawCircle(my, my->x, my->y, 50, c);
+
+	/* Draw the mapped surface centered around the cursor. */
+	AG_WidgetBlitSurface(my, my->mySurface,
+	    my->x - AGWIDGET_SURFACE(my,my->mySurface)->w/2,
+	    my->y - AGWIDGET_SURFACE(my,my->mySurface)->h/2);
 }
 
 /* Mouse motion event handler */
@@ -128,7 +136,11 @@ MouseMotion(AG_Event *event)
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
-	/* ... */
+	if (x != my->x || y != my->y) {
+		AG_Redraw(my);
+	}
+	my->x = x;
+	my->y = y;
 }
 
 /* Mouse click event handler */
@@ -143,7 +155,7 @@ MouseButtonDown(AG_Event *event)
 	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
-	printf("Click at %d,%d\n", x, y);
+	TestMsg(my->ti, "Click at %d,%d", x, y);
 	AG_WidgetFocus(my);
 }
 
@@ -151,10 +163,10 @@ MouseButtonDown(AG_Event *event)
 static void
 MouseButtonUp(AG_Event *event)
 {
-	MyWidget *my = AG_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
+/*	MyWidget *my = AG_SELF(); */
+/*	int button = AG_INT(1); */
+/*	int x = AG_INT(2); */
+/*	int y = AG_INT(3); */
 
 	/* ... */
 }
@@ -165,16 +177,18 @@ KeyDown(AG_Event *event)
 {
 	MyWidget *my = AG_SELF();
 	int keysym = AG_INT(1);
+/*	int keymod = AG_INT(2); */
+	Uint32 unicode = AG_INT(3);
 
-	printf("Keystroke: 0x%x\n", keysym);
+	TestMsg(my->ti, "Keystroke: 0x%x (Uni=%x)", keysym, unicode);
 }
 
 /* Keystroke event handler */
 static void
 KeyUp(AG_Event *event)
 {
-	MyWidget *my = AG_SELF();
-	int keysym = AG_INT(1);
+/*	MyWidget *my = AG_SELF(); */
+/*	int keysym = AG_INT(1); */
 
 	/* ... */
 }
@@ -191,8 +205,13 @@ Init(void *obj)
 	/* Allow this widget to grab focus. */
 	AGWIDGET(my)->flags |= AG_WIDGET_FOCUSABLE;
 
+	/* Receive mouse motion events unconditionally. */
+	AGWIDGET(my)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
+
 	/* Initialize instance variables. */
 	my->foo = "";
+	my->x = 0;
+	my->y = 0;
 
 	/*
 	 * We'll eventually need to create and map a surface, but we cannot

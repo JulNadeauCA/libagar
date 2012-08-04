@@ -1,0 +1,29 @@
+# Public domain
+
+CONFIG_GUESS("../mk/config.guess")
+
+REGISTER_SECTION("Agar test suite options:")
+REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
+
+REQUIRE(cc)
+REQUIRE(agar, 1.4.2)
+REQUIRE(agar-dev)
+
+CHECK(agar-math)
+CHECK(agar-au)
+CHECK(agar-vg)
+CHECK(agar-rg)
+
+C_INCDIR($SRC)
+C_DEFINE(_USE_AGAR_STD)
+C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_TYPES)
+
+if [ "${enable_warnings}" = "yes" ]; then
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+	C_OPTION(-Wmissing-prototypes)
+	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
+else
+	MDEFINE(WNO_UNINITIALIZED, "")
+fi

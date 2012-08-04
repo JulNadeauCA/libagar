@@ -7,11 +7,11 @@
  * See AG_Style(3) for a list of all style functions.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
+
 #include <agar/dev.h>
 
-#include "mytheme.h"
+#include "themes_mytheme.h"
 
 #define WIDTH(wd)  AGWIDGET(wd)->w
 #define HEIGHT(wd) AGWIDGET(wd)->h

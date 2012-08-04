@@ -1,11 +1,10 @@
 /*	Public domain	*/
 /*
  * This program demonstrates the use of the file loader widget,
- * AG_FileDlg.
+ * AG_FileDlg(3).
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 #include <string.h>
 
@@ -13,9 +12,10 @@
 static void
 LoadImage(AG_Event *event)
 {
-	AG_FileDlg *fd = AG_SELF();
-	char *file = AG_STRING(1);
-	AG_FileType *ft = AG_PTR(2);
+/*	AG_FileDlg *fd = AG_SELF(); */
+	AG_Window *winParent = AG_PTR(1);
+	char *file = AG_STRING(2);
+	AG_FileType *ft = AG_PTR(3);
 	AG_Surface *s;
 	AG_Window *win;
 	AG_Scrollview *sv;
@@ -36,7 +36,9 @@ LoadImage(AG_Event *event)
 		return;
 	}
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
 
 	/* We use AG_FileOptionFoo() to retrieve per-type options. */
@@ -65,13 +67,13 @@ LoadImage(AG_Event *event)
 	AG_SurfaceFree(s);
 
 	AG_WindowSetGeometry(win, -1, -1, s->w+32, s->h+64);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
-static void
-CreateWindow(void)
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	AG_Window *win;
 	AG_FileDlg *fd;
 	AG_DirDlg *dd;
 	AG_FileType *ft[3];
@@ -79,9 +81,6 @@ CreateWindow(void)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	int i;
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar loader dialog demo");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, "Load file", AG_BOX_VERT);
@@ -101,13 +100,13 @@ CreateWindow(void)
 		 */
 		ft[0] = AG_FileDlgAddType(fd, "Windows Bitmap",
 		    "*.bmp",
-		    LoadImage, NULL);
+		    LoadImage, "%p", win);
 		ft[1] = AG_FileDlgAddType(fd, "JPEG image",
 		    "*.jpg,*.jpeg",
-		    LoadImage, NULL);
+		    LoadImage, "%p", win);
 		ft[2] = AG_FileDlgAddType(fd, "Portable Network Graphics",
 		    "*.png",
-		    LoadImage, NULL);
+		    LoadImage, "%p", win);
 
 		for (i = 0; i < 3; i++)
 			AG_FileOptionNewBool(ft[i], "Inverted", "invert", 0);
@@ -130,37 +129,17 @@ CreateWindow(void)
 	}
 
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
-	AG_WindowShow(win);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: loader [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore("agar-loader-demo", 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-	CreateWindow();
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
 
+const AG_TestCase loaderTest = {
+	"loader",
+	N_("Test the AG_FileDlg(3) file selection widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

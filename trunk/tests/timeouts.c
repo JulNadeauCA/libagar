@@ -2,73 +2,86 @@
 /*
  * This application tests the AG_Timeout(3) interface.
  */
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-AG_Timeout to1, to2;
+typedef struct {
+	AG_TestInstance _inherit;
+	AG_Timeout to1, to2;
+	AG_Window *win;
+} MyTestInstance;
 
-Uint32
+static Uint32
 Timeout1(void *obj, Uint32 ival, void *arg)
 {
-  printf("timeout 1\n");
-  return 0;
+	TestMsg(arg, "This message should appear first");
+	return (0);
 }
 
-Uint32
+static Uint32
 Timeout2(void *obj, Uint32 ival, void *arg)
 {
-  printf("timeout 2\n");
-  return 0;
+	TestMsg(arg, "This message should appear second");
+	return (0);
 }
 
-void
+static void
 ScheduleTimeouts(AG_Event *event)
 {
-  AG_Object *ob;
-  AG_Timeout *to;
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Object *ob;
+	AG_Timeout *to;
 
-  printf("schedule timeout1 ival=1000\n");
-  AG_ScheduleTimeout(NULL, &to1, 1000);
-  printf("schedule timeout2 ival=2000\n");
-  AG_ScheduleTimeout(NULL, &to2, 2000);
+	TestMsg(ti, "schedule timeout1 ival=1000");
+	AG_ScheduleTimeout(ti->win, &ti->to1, 1000);
+	TestMsg(ti, "schedule timeout2 ival=2000");
+	AG_ScheduleTimeout(ti->win, &ti->to2, 2000);
 
-  printf("timeout queue:\n");
-  /* print the timeout tailqueue */
-  AG_TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
-    printf("---- obj %s : ", ob->name);
-    AG_TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
-      char *name;
-      if (to == &to1)
-	name = "timeout1";
-      else if (to == &to2)
-	name = "timeout2";
-      else
-	name = "unknown timeout";
-      printf("-- timeout %s at %d ticks ", name, to->ticks);
-    }
-    printf("\n");
-  }
+	TestMsg(ti, "timeout queue:");
+
+	/* print the timeout tailqueue */
+	AG_TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
+		TestMsg(ti, "obj %s :", ob->name);
+		AG_TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
+			char *name;
+
+			if (to == &ti->to1) { name = "timeout1"; }
+			else if (to == &ti->to2) { name = "timeout2"; }
+			else { name = "unknown timeout"; }
+			TestMsg(ti, "-- timeout %s at %d ticks", name, to->ticks);
+		}
+	}
 }
 
-int
-main(int argc, char **argv)
+static int
+Init(void *obj)
 {
-  AG_Window *win;
-  AG_Button *btn;
+	MyTestInstance *ti = obj;
 
-  if (AG_InitCore(NULL, 0) == -1 || AG_InitGraphics(NULL) == -1) {
-    return 1;
-  }
-
-  win = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_NOMOVE);
-  btn = AG_ButtonNewFn(win, 0, "Schedule timeouts", ScheduleTimeouts, "");
-
-  AG_Expand(btn);
-  AG_WindowShow(win);
- 
-  AG_SetTimeout(&to1, Timeout1, NULL, 0);
-  AG_SetTimeout(&to2, Timeout2, NULL, 0);
- 
-  AG_EventLoop();
-  return 0;
+	ti->win = NULL;
+	AG_SetTimeout(&ti->to1, Timeout1, ti, 0);
+	AG_SetTimeout(&ti->to2, Timeout2, ti, 0);
+	return (0);
 }
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyTestInstance *ti = obj;
+
+	ti->win = win;
+	AG_LabelNewS(win, 0, "This program test the AG_Timeout(3) facility");
+	AG_ButtonNewFn(win, 0, "Schedule test timeouts", ScheduleTimeouts, "%p", ti);
+	return (0);
+}
+
+const AG_TestCase timeoutsTest = {
+	"timeouts",
+	N_("Test AG_Timeout(3) facility"),
+	"1.4.2",
+	0,
+	sizeof(MyTestInstance),
+	Init,
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

@@ -3,42 +3,20 @@
  * This application demonstrates the use of the AG_Scrollview(3) widget.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-int
-main(int argc, char *argv[])
+static void
+TestWithReactiveWidgets(AG_Event *event)
 {
-	AG_Window *win;
+	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Box *hBox;
 	AG_Scrollview *sv;
 	int x, y;
-	AG_Box *hBox;
-	char *driverSpec = NULL, *optArg;
-	int c;
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: scrollview [-d agar-driver-spec]\n");
-			return (1);
-		}
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
 	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* Test with focusable widgets. */
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Scrollview (reactive widgets)");
+	AG_LabelNewS(win, 0, "AG_Scrollview(3) with reactive widgets");
 	AG_ButtonNew(win, 0, "Foo");
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	for (y = 0; y < 20; y++) {
@@ -50,12 +28,24 @@ main(int argc, char *argv[])
 	}
 	AG_ButtonNew(win, 0, "Bar");
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 400, 300);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
+}
 
-	/* Test with passive widgets. */
-	win = AG_WindowNew(0);
+static void
+TestWithPassiveWidgets(AG_Event *event)
+{
+	AG_Window *winParent = AG_PTR(1), *win;
+	AG_Box *hBox;
+	AG_Scrollview *sv;
+	int x, y;
+
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, "Scrollview (passive widgets)");
-	AG_LabelNewS(win, 0, "Use middle mouse button to pan");
+	AG_LabelNewS(win, 0, "AG_Scrollview(3) with passive widgets");
+	AG_LabelNewS(win, 0, "Panning enabled (middle mouse button)");
 	AG_SeparatorNewHoriz(win);
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND|AG_SCROLLVIEW_BY_MOUSE);
 	for (y = 0; y < 20; y++) {
@@ -66,10 +56,29 @@ main(int argc, char *argv[])
 		}
 	}
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
-	
-	AG_EventLoop();
-	AG_Destroy();
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	AG_ButtonNewFn(win, 0, "Test with reactive widgets",
+	    TestWithReactiveWidgets, "%p", win);
+	AG_ButtonNewFn(win, 0, "Test with passive widgets",
+	    TestWithPassiveWidgets, "%p", win);
+
 	return (0);
 }
 
+const AG_TestCase scrollviewTest = {
+	"scrollview",
+	N_("Test the AG_Scrollview(3) widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

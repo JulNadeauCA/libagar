@@ -1,13 +1,12 @@
 /*	Public domain	*/
 /*
- * This application tests the Agar-AU library.
+ * Test for the Agar audio library.
  */
 
-#include <agar/config/enable_au.h>
+#include "agartest.h"
+
 #ifdef ENABLE_AU
 
-#include <agar/core.h>
-#include <agar/gui.h>
 #include <agar/au.h>
 
 #include <string.h>
@@ -97,58 +96,55 @@ CloseOut(AG_Event *event)
 	AG_TextTmsg(AG_MSG_INFO, 1000, "Closed device OK");
 }
 
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	char *driverSpec = NULL, *optArg;
-	AG_Window *win;
-	int c;
+	return AU_InitSubsystem();
+}
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: audio [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1 ||
-	    AU_InitSubsystem()) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-	AG_SetDefaultFont(AG_TextFontPct(300));
+static void
+Destroy(void *obj)
+{
+	AU_DestroySubsystem();
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
 	AG_MutexInit(&outLock);
 
-	win = AG_WindowNew(agDriverSw ? AG_WINDOW_PLAIN : 0);
-	AG_WindowSetCaption(win, "Agar-AU demo");
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Open File Out", OpenFileOut, NULL);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Open Audio Out", OpenAudioOut, NULL);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close Audio Out", CloseOut, NULL);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 200);
-	AG_WindowShow(win);
 
-	AG_EventLoop();
-	AG_Destroy();
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 200);
 	return (0);
 }
+#else /* !ENABLE_AU */
 
-#else
-
-#include <stdio.h>
-
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	printf("Agar-AU library is not available\n");
-	return (0);
+	AG_SetError("This test requires the Agar-AU library (--enable-au)");
+	return (-1);
 }
 
 #endif /* !ENABLE_AU */
+
+const AG_TestCase audioTest = {
+	"audio",
+	N_("Test the Agar audio library (ag_au)"),
+	"1.4.2",
+	AG_TEST_AUDIO,
+	sizeof(AG_TestInstance),
+	Init,
+#ifdef ENABLE_AU
+	Destroy,
+	NULL,		/* test */
+	TestGUI
+#else
+	NULL,		/* destroy */
+	NULL,		/* test */
+	NULL		/* testGUI */
+#endif
+};

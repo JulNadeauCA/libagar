@@ -3,8 +3,7 @@
  * This application demonstrates the use of a custom event loop.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 int pressedKey = 0;			/* Last pressed key */
 int xClick = 0, yClick = 0;		/* Last clicked x,y */
@@ -129,34 +128,13 @@ MyEventLoop(void)
 }
 
 int
-main(int argc, char *argv[])
+TestGUI(void *obj)
 {
 	AG_Window *win;
-	char *driverSpec = NULL, *optArg;
-	int c;
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: customeventloop [-d agar-driver-spec]\n");
-			return (1);
-		}
+	if ((win = TestWindowNew(obj, 0)) == NULL) {
+		return (-1);
 	}
-
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar custom event loop demo");
 	AG_LabelNewPolled(win, AG_LABEL_EXPAND,
 	    "Testing custom event loop\n"
 	    "Frame rate = %d\n"
@@ -168,6 +146,17 @@ main(int argc, char *argv[])
 	AG_WindowShow(win);
 
 	MyEventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase customEventLoopTest = {
+	"customEventLoop",
+	N_("Test Agar running with a user-provided event loop"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

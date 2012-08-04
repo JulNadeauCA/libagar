@@ -1,9 +1,11 @@
 /*	Public domain	*/
+/*
+ * Test modal window dialog behavior.
+ */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-void
+static void
 PopupReact(AG_Event *event)
 {
 	char s[128];
@@ -14,36 +16,24 @@ PopupReact(AG_Event *event)
 	AG_TextPromptString(s, PopupReact, "%i", count++);
 }
 
-int
-main(int argc, char *argv[])
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	AG_Window *win;
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: modalwindowhandler [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-
+	AG_LabelNew(win, 0, "Calling AG_TextPromptString(3)...");
+	AG_LabelNew(win, 0, "Select \"Cancel\" to exit loop.");
 	AG_TextPromptString("This is the first popup prompt.",
 	    PopupReact, "%i", 2);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase modalWindowHandlerTest = {
+	"modalWindowHandler",
+	N_("Test behavior of modal dialog windows"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};
