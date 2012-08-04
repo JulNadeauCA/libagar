@@ -25,7 +25,7 @@ SettingsWindow(void *obj, AG_Pane *paneHoriz, AG_Pane *paneVert)
 	AG_WindowSetCaption(win, "AG_Pane(3) settings");
 
 	AG_LabelNew(win, 0, "(Horiz. Pane) Resize action:");
-	rad = AG_RadioNewUint(win, 0, actions, &paneHoriz->resizeAction);
+	rad = AG_RadioNewUint(win, 0, actions, (void *)&paneHoriz->resizeAction);
 		
 	AG_LabelNew(win, 0, "(Horiz. Pane) Flags:");
 	AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneHoriz->flags, AG_PANE_DIV1FILL);
@@ -35,7 +35,7 @@ SettingsWindow(void *obj, AG_Pane *paneHoriz, AG_Pane *paneVert)
 	AG_SeparatorNewHoriz(win);
 
 	AG_LabelNew(win, 0, "(Vert. Pane) Resize action:");
-	rad = AG_RadioNewUint(win, 0, actions, &paneVert->resizeAction);
+	rad = AG_RadioNewUint(win, 0, actions, (void *)&paneVert->resizeAction);
 		
 	AG_LabelNew(win, 0, "(Vert. Pane) Flags:");
 	AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneVert->flags, AG_PANE_DIV1FILL);

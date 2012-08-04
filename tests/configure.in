@@ -8,11 +8,11 @@ REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REQUIRE(cc)
 REQUIRE(agar, 1.4.2)
 REQUIRE(agar-dev)
+REQUIRE(agar-math)
 
-CHECK(agar-math)
-CHECK(agar-au)
 CHECK(agar-vg)
 CHECK(agar-rg)
+CHECK(agar-au)
 
 C_INCDIR($SRC)
 C_DEFINE(_USE_AGAR_STD)
@@ -27,3 +27,11 @@ if [ "${enable_warnings}" = "yes" ]; then
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
 fi
+
+MDEFINE(SRCS_EXTRA, "")
+if [ "${HAVE_AGAR_AU}" = "yes" ]; then
+	MAPPEND(SRCS_EXTRA, "audio.c")
+fi
+
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)

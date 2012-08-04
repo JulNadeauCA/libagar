@@ -3,16 +3,15 @@ include Makefile.config
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 include ${TOP}/dev/Makefile.inc
-include ${TOP}/au/Makefile.inc
+include ${TOP}/math/Makefile.inc
 
 PROJECT=	"agartest"
 PROG_TYPE=	"GUI"
 PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
-PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${DEV_LINKS} ${AU_LINKS} ${MATH_LINKS}
+PROG_LINKS=	${CORE_LINKS} ${MATH_LINKS} ${GUI_LINKS} ${DEV_LINKS}
 
 PROG=	agartest
-SRCS=	agartest.c \
-	audio.c \
+SRCS=	agartest.c ${SRCS_EXTRA} \
 	charsets.c \
 	chinese.c \
 	compositing.c \

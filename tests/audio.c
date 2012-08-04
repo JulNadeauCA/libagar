@@ -5,8 +5,6 @@
 
 #include "agartest.h"
 
-#ifdef ENABLE_AU
-
 #include <agar/au.h>
 
 #include <string.h>
@@ -120,16 +118,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 200);
 	return (0);
 }
-#else /* !ENABLE_AU */
-
-static int
-Init(void *obj)
-{
-	AG_SetError("This test requires the Agar-AU library (--enable-au)");
-	return (-1);
-}
-
-#endif /* !ENABLE_AU */
 
 const AG_TestCase audioTest = {
 	"audio",
@@ -138,13 +126,7 @@ const AG_TestCase audioTest = {
 	AG_TEST_AUDIO,
 	sizeof(AG_TestInstance),
 	Init,
-#ifdef ENABLE_AU
 	Destroy,
 	NULL,		/* test */
 	TestGUI
-#else
-	NULL,		/* destroy */
-	NULL,		/* test */
-	NULL		/* testGUI */
-#endif
 };

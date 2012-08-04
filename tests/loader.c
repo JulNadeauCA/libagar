@@ -20,7 +20,7 @@ LoadImage(AG_Event *event)
 	AG_Window *win;
 	AG_Scrollview *sv;
 	Uint8 *pSrc;
-	int i;
+	Uint i;
 
 	if (strcmp(ft->exts[0], "*.bmp") == 0) {
 		s = AG_SurfaceFromBMP(file);
