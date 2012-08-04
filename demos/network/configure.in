@@ -1,9 +1,0 @@
-# Public domain
-
-CONFIG_GUESS("../../mk/config.guess")
-
-REQUIRE(cc)
-REQUIRE(agar, 1.4.2)
-
-C_DEFINE(_USE_AGAR_TYPES)
-
