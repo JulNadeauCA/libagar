@@ -43,6 +43,8 @@ typedef struct ag_driver_mw_class {
 	int  (*setWindowCaption)(struct ag_window *, const char *);
 	void (*setTransientFor)(struct ag_window *, struct ag_window *);
 	int  (*setOpacity)(struct ag_window *, float opacity);
+	void (*tweakAlignment)(struct ag_window *, struct ag_size_alloc *a,
+	                       Uint wMax, Uint hMax);
 } AG_DriverMwClass;
 
 typedef struct ag_driver_mw {

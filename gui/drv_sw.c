@@ -94,7 +94,7 @@ OpenGuiDebugger(AG_Event *event)
 {
 	AG_Window *win;
 
-	if ((win = AG_GuiDebugger()) != NULL)
+	if ((win = AG_GuiDebugger(NULL)) != NULL)
 		AG_WindowShow(win);
 }
 #endif /* AG_DEBUG */
