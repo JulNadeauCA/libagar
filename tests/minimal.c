@@ -1,25 +1,22 @@
 /*	Public domain	*/
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-int
-main(int argc, char *argv[])
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	AG_Window *win;
-
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Minimal!");
-	AG_WindowShow(win);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase minimalTest = {
+	"minimal",
+	N_("Display a minimal AG_Window(3)"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

@@ -1,20 +1,23 @@
 /*	Public domain	*/
 /*
- * Test the network functions in ag_core.
+ * Test the AG_Net(3) network interface.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 #include <string.h>
 
-char testHost[128], testPort[16];
-AG_Console *cons;
+typedef struct {
+	AG_TestInstance _inherit;
+	char testHost[128];
+	char testPort[16];
+	AG_Console *cons;
+} MyTestInstance;
 
 static void
 TestConnect(AG_Event *event)
 {
-	AG_Window *win;
+	MyTestInstance *ti = AG_PTR(1);
 	AG_NetSocket *ns = NULL;
 	AG_NetAddrList *nal = NULL;
 
@@ -23,8 +26,8 @@ TestConnect(AG_Event *event)
 		goto fail;
 
 	/* Resolve the hostname and port number (or service name). */
-	AG_ConsoleMsg(cons, "Resolving %s:%s...", testHost, testPort);
-	if ((nal = AG_NetResolve(testHost, testPort, 0)) == NULL) {
+	AG_ConsoleMsg(ti->cons, "Resolving %s:%s...", ti->testHost, ti->testPort);
+	if ((nal = AG_NetResolve(ti->testHost, ti->testPort, 0)) == NULL) {
 		AG_NetSocketFree(ns);
 		goto fail;
 	}
@@ -33,14 +36,14 @@ TestConnect(AG_Event *event)
 	 * Establish a connection with one of the resolved addresses.
 	 * The socket will inherit the address family of the NetAddress.
 	 */
-	AG_ConsoleMsg(cons, "Connecting...");
+	AG_ConsoleMsg(ti->cons, "Connecting...");
 	if (AG_NetConnect(ns, nal) == -1) {
 		AG_NetAddrListFree(nal);
 		AG_NetSocketFree(ns);
 		goto fail;
 	}
 
-	AG_ConsoleMsg(cons, "Connected to %s [%s]",
+	AG_ConsoleMsg(ti->cons, "Connected to %s [%s]",
 	    AG_NetAddrNumerical(ns->addrRemote),
 	    agNetAddrFamilyNames[ns->addrRemote->family]);
 
@@ -50,13 +53,14 @@ TestConnect(AG_Event *event)
 	AG_NetSocketFree(ns);
 	return;
 fail:
-	AG_ConsoleMsg(cons, "Failed: %s", AG_GetError());
+	AG_ConsoleMsg(ti->cons, "Failed: %s", AG_GetError());
 	return;
 }
 
 static void
 TestServer(AG_Event *event)
 {
+	MyTestInstance *ti = AG_PTR(1);
 	char buf[128];
 	AG_NetAddrList *ifc;
 	AG_NetAddr *na;
@@ -85,13 +89,13 @@ TestServer(AG_Event *event)
 		AG_NetSetOptionInt(ns, AG_NET_REUSEADDR, 1);
 		na->port = 3456;
 		if (AG_NetBind(ns, na) == -1) {
-			AG_ConsoleMsg(cons, "bind(%s): %s; skipping",
+			AG_ConsoleMsg(ti->cons, "bind(%s): %s; skipping",
 			    AG_NetAddrNumerical(na), AG_GetError());
 			AG_NetSocketFree(ns);
 			continue;
 		}
-		AG_ConsoleMsg(cons, "Bound to %s:%d", AG_NetAddrNumerical(na),
-		    na->port);
+		AG_ConsoleMsg(ti->cons, "Bound to %s:%d",
+		    AG_NetAddrNumerical(na), na->port);
 
 		/* Add this socket to the set for polling. */
 		ns->poll |= AG_NET_POLL_READ;
@@ -103,7 +107,7 @@ TestServer(AG_Event *event)
 	for (;;) {
 		/* Poll sockSet for read/exception conditions. */
 		if (AG_NetPoll(&sockSet, &rdSet, NULL, &exceptSet, 0) < 1) {
-			AG_ConsoleMsg(cons, "Poll: %s", AG_GetError());
+			AG_ConsoleMsg(ti->cons, "Poll: %s", AG_GetError());
 			break;
 		}
 		AG_TAILQ_FOREACH(ns, &rdSet, read) {
@@ -117,7 +121,8 @@ TestServer(AG_Event *event)
 				if ((nsNew = AG_NetAccept(ns)) == NULL) {
 					goto fail;
 				}
-				AG_ConsoleMsg(cons, "Connection on [%s:%d] from [%s]!",
+				AG_ConsoleMsg(ti->cons,
+				    "Connection on [%s:%d] from [%s]!",
 				    AG_NetAddrNumerical(ns->addrLocal),
 				    ns->addrLocal->port,
 				    AG_NetAddrNumerical(nsNew->addrRemote));
@@ -139,45 +144,52 @@ TestServer(AG_Event *event)
 					goto fail;
 				}
 				if (nRead == 0) {
-					AG_ConsoleMsg(cons,
+					AG_ConsoleMsg(ti->cons,
 					    "Closing connection to [%s]",
 					    AG_NetAddrNumerical(ns->addrRemote));
 					AG_TAILQ_REMOVE(&sockSet, ns, sockets);
 					AG_NetSocketFree(ns);
 				} else {
 					buf[nRead-1] = '\0';
-					AG_ConsoleMsg(cons, "Data from [%s]: %s",
+					AG_ConsoleMsg(ti->cons,
+					    "Data from [%s]: %s",
 					    AG_NetAddrNumerical(ns->addrRemote),
 					    buf);
 				}
 			}
 		}
 		AG_TAILQ_FOREACH(ns, &exceptSet, except) {
-			AG_ConsoleMsg(cons, "Exception on socket [%s]",
+			AG_ConsoleMsg(ti->cons, "Exception on socket [%s]",
 			    ns->addrRemote ? AG_NetAddrNumerical(ns->addrRemote) : "");
 		}
 	}
 	AG_NetSocketSetFree(&sockSet);
 	return;
 fail:
-	AG_ConsoleMsg(cons, "Failed: %s", AG_GetError());
+	AG_ConsoleMsg(ti->cons, "Failed: %s", AG_GetError());
 }
 
-static void
-CreateWindow(void)
+static int
+Init(void *obj)
 {
-	AG_Window *win;
+	MyTestInstance *ti = obj;
+
+	AG_Strlcpy(ti->testHost, "libagar.org", sizeof(ti->testHost));
+	AG_Strlcpy(ti->testPort, "80", sizeof(ti->testPort));
+	return (0);
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyTestInstance *ti = obj;
 	AG_Tlist *tl;
-	AG_TlistItem *ti;
 	AG_NetAddr *na;
 	AG_NetAddrList *ifc;
 	AG_Button *btn;
 	AG_Event *ev;
 	AG_Textbox *tb;
 	AG_Box *hBox;
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar network interface demo");
 
 	if ((ifc = AG_NetGetIfConfig()) != NULL) {
 		AG_LabelNewS(win, 0, "Local addresses:");
@@ -195,64 +207,40 @@ CreateWindow(void)
 	}
 		
 	AG_LabelNewS(win, 0, "Status:");
-	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
+	ti->cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
 		tb = AG_TextboxNewS(hBox, AG_TEXTBOX_HFILL, "Test Host: ");
-		AG_TextboxBindUTF8(tb, testHost, sizeof(testHost));
+		AG_TextboxBindUTF8(tb, ti->testHost, sizeof(ti->testHost));
 		tb = AG_TextboxNewS(hBox, 0, " Port: ");
 		AG_TextboxSizeHint(tb, "<1234>");
-		AG_TextboxBindUTF8(tb, testPort, sizeof(testPort));
+		AG_TextboxBindUTF8(tb, ti->testPort, sizeof(ti->testPort));
 	}
 
 	btn = AG_ButtonNew(win, AG_BUTTON_HFILL, "Connect (in separate thread)");
-	ev = AG_SetEvent(btn, "button-pushed", TestConnect, NULL);
+	ev = AG_SetEvent(btn, "button-pushed", TestConnect, "%p", ti);
 	ev->flags |= AG_EVENT_ASYNC;
 	
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Connect (in main thread)",
-	    TestConnect, NULL);
+	    TestConnect, "%p", ti);
 
 	btn = AG_ButtonNew(win, AG_BUTTON_HFILL, "Start test server");
-	ev = AG_SetEvent(btn, "button-pushed", TestServer, NULL);
+	ev = AG_SetEvent(btn, "button-pushed", TestServer, "%p", ti);
 	ev->flags |= AG_EVENT_ASYNC;
 
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Quit", AGWINDETACH(win));
-
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 380, 500);
-	AG_WindowShow(win);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	AG_Strlcpy(testHost, "libagar.org", sizeof(testHost));
-	AG_Strlcpy(testPort, "80", sizeof(testPort));
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: network [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-	CreateWindow();
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase networkTest = {
+	"network",
+	N_("Test the AG_Net(3) interface"),
+	"1.4.2",
+	0,
+	sizeof(MyTestInstance),
+	Init,
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

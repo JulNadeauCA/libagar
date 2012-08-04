@@ -5,10 +5,8 @@
  * inheritance under the Agar Object system.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-
-#include "animal.h"
+#include "agartest.h"
+#include "objsystem_animal.h"
 
 /*
  * Constructor function. This is optional and only a convenience for

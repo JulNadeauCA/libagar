@@ -14,8 +14,7 @@
  * and just how conveniently Agar bindings can handle the situation.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 #include <string.h>
 
@@ -35,7 +34,7 @@ MyCustomSortFn(const void *p1, const void *p2)
 static void
 MyCustomDynamicTextFn(void *p, char *s, size_t len)
 {
-	AG_TableCell *cell = p;
+/*	AG_TableCell *cell = p; */
 	
 	AG_Snprintf(s, len, "Ticks: %lu",
 	    (unsigned long)AG_GetTicks());
@@ -62,14 +61,17 @@ MyCustomSurfaceFn(void *p, int x, int y)
  * A statically constructed table.
  */
 static void
-CreateStaticTable(void)
+CreateStaticTable(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 	int i;
 
 	/* Create our window. */
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, "Example 1: Static Table");
 
 	/*
@@ -134,6 +136,7 @@ CreateStaticTable(void)
 
 	/* Display and resize our window. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 320, 240);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
@@ -167,7 +170,7 @@ UpdateTable(AG_Event *event)
 static void
 PausePolling(AG_Event *event)
 {
-	AG_Button *btn = AG_SELF();
+/*	AG_Button *btn = AG_SELF(); */
 	AG_Table *tbl = AG_PTR(1);
 	int state = AG_INT(2);
 
@@ -178,13 +181,16 @@ PausePolling(AG_Event *event)
 	}
 }
 static void
-CreatePolledTable(void)
+CreatePolledTable(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Table *table;
 
 	/* Create our window. */
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, "Example 2: Polled Table");
 
 	/* Create a polled table. */
@@ -198,6 +204,7 @@ CreatePolledTable(void)
 
 	/* Display and resize our window. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 150, 300);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
@@ -229,8 +236,9 @@ ClearAllRows(AG_Event *event)
  * Table with embedded control widgets (%[W] row element).
  */
 static void
-CreateTableWithControls(void)
+CreateTableWithControls(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	static int MyTable[20];
 	AG_Window *win;
 	AG_Table *table;
@@ -238,7 +246,9 @@ CreateTableWithControls(void)
 	int i;
 
 	/* Create our window. */
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, "Example 3: Table With Embedded Widgets");
 
 	/* Create our table. */
@@ -282,41 +292,27 @@ CreateTableWithControls(void)
 
 	/* Display and resize our window. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 200, 300);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
-int
-main(int argc, char *argv[])
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: table [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-	
-	CreateStaticTable();
-	CreatePolledTable();
-	CreateTableWithControls();
-
-	AG_EventLoop();
-	AG_Destroy();
+	AG_ButtonNewFn(win, 0, "Create static table", CreateStaticTable, "%p", win);
+	AG_ButtonNewFn(win, 0, "Create polled table", CreatePolledTable, "%p", win);
+	AG_ButtonNewFn(win, 0, "Create table with controls", CreateTableWithControls, "%p", win);
 	return (0);
 }
 
+const AG_TestCase tableTest = {
+	"table",
+	N_("Test the AG_Table(3) widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

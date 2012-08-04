@@ -3,10 +3,12 @@
  * This program tests different aspects of widget focusing behavior.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-static AG_Widget *widget1, *widget2;
+typedef struct {
+	AG_TestInstance _inherit;
+	AG_Widget *widget1, *widget2;
+} MyTestInstance;
 
 static void
 mousemotion(AG_Event *event)
@@ -63,14 +65,17 @@ buttondown(AG_Event *event)
 }
 
 static void
-TestUnfocusedMouseMotion(void)
+TestUnfocusedMotion(AG_Event *event)
 {
-	AG_Window *win;
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2), *win;
 	AG_Button *btn;
 	AG_Fixed *fx1, *fx2;
 
-	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
-	AG_WindowSetCaption(win, "Unfocused mousemotion");
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, "focusing: Unfocused mousemotion");
 	AG_LabelNew(win, 0, "Mouse hover to gain focus");
 
 	fx1 = AG_FixedNew(win, AG_FIXED_EXPAND);
@@ -86,7 +91,7 @@ TestUnfocusedMouseMotion(void)
 	AG_FixedMove(fx1, btn, 0, 64);
 	AG_FixedSize(fx1, btn, 32, 32);
 
-	widget1 = AGWIDGET(btn);
+	ti->widget1 = AGWIDGET(btn);
 
 	fx2 = AG_FixedNew(fx1, AG_FIXED_BOX);
 	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
@@ -96,28 +101,31 @@ TestUnfocusedMouseMotion(void)
 	AG_SetEvent(fx2, "key-down", keydown, NULL);
 	AG_SetEvent(fx2, "mouse-button-down", buttondown, NULL);
 
-	AG_WindowShow(win);
-	AG_WindowSetGeometry(win, 0, 0, 320, 240);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
 static void
-TestTabCycle(void)
+TestTabCycle(AG_Event *event)
 {
-	AG_Window *win;
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2), *win;
 	AG_Box *b, *b1, *b2;
 	AG_Button *btn;
 	int i;
 
-	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
-	AG_WindowSetCaption(win, "Tab cycle");
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, "focusing: Tab cycle");
 
 	AG_LabelNew(win, 0, "<TAB> = Cycle focus forward\n"
 	                    "<SHIFT+TAB> = Cycle focus backward");
 	b = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS|AG_BOX_EXPAND);
 
 	btn = AG_ButtonNew(b, AG_BUTTON_HFILL, "Foo");
-	widget2 = AGWIDGET(btn);
+	ti->widget2 = AGWIDGET(btn);
 
 	b1 = AG_BoxNewVert(b, AG_BOX_VFILL);
 	for (i = 0; i < 5; i++)
@@ -127,64 +135,69 @@ TestTabCycle(void)
 	for (i = 5; i < 10; i++)
 		AG_ButtonNew(b2, AG_BUTTON_HFILL, "#%d", i);
 
-	AG_WindowSetPosition(win, AG_WINDOW_MR, 0);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
 static void
 FocusWidget1(AG_Event *event)
 {
-	AG_WidgetFocus(widget1);
+	MyTestInstance *ti = AG_PTR(1);
+
+	if (ti->widget1 != NULL)
+		AG_WidgetFocus(ti->widget1);
 }
 
 static void
 FocusWidget2(AG_Event *event)
 {
-	AG_WidgetFocus(widget2);
+	MyTestInstance *ti = AG_PTR(1);
+	
+	if (ti->widget2 != NULL)
+		AG_WidgetFocus(ti->widget2);
 }
 
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	AG_Window *win;
-	AG_Button *btn;
-	char *optArg, *driverSpec = NULL;
-	int c;
+	MyTestInstance *ti = obj;
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: focusing [-d agar-driver-spec]\n");
-			exit(1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	TestUnfocusedMouseMotion();
-	TestTabCycle();
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar widget focusing demo");
-	AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
-	btn = AG_ButtonNewFn(win, 0, "Focus widget 1", FocusWidget1, NULL);
-	AG_WidgetSetFocusable(btn, 0);
-	btn = AG_ButtonNewFn(win, 0, "Focus widget 2", FocusWidget2, NULL);
-	AG_WidgetSetFocusable(btn, 0);
-	AG_WindowShow(win);
-
-	AG_EventLoop();
-	AG_Destroy();
+	ti->widget1 = NULL;
+	ti->widget2 = NULL;
 	return (0);
 }
 
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyTestInstance *ti = obj;
+	AG_Button *btn;
+	AG_Box *box;
+
+	AG_LabelNewS(win, 0, "Tests for widget focus states");
+	btn = AG_ButtonNewFn(win, 0, "Test unfocused mouse motion", TestUnfocusedMotion, "%p,%p", ti, win);
+	AG_WidgetSetFocusable(btn, 0);
+	btn = AG_ButtonNewFn(win, 0, "Test <tab> focus cycling", TestTabCycle, "%p,%p", ti, win);
+	AG_WidgetSetFocusable(btn, 0);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	{
+		btn = AG_ButtonNewFn(box, 0, "Focus widget 1", FocusWidget1, "%p", ti);
+		AG_WidgetSetFocusable(btn, 0);
+		btn = AG_ButtonNewFn(box, 0, "Focus widget 2", FocusWidget2, "%p", ti);
+		AG_WidgetSetFocusable(btn, 0);
+	}
+	return (0);
+}
+
+const AG_TestCase focusingTest = {
+	"focusing",
+	N_("Test widget focus state control"),
+	"1.4.2",
+	0,
+	sizeof(MyTestInstance),
+	Init,
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

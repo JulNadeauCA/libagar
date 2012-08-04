@@ -3,8 +3,7 @@
  * This application demonstrates different uses for the Textbox widget.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
 #include <agar/core/snprintf.h>
 
@@ -55,7 +54,7 @@ DupString(AG_Event *event)
 
 	if ((s = AG_TextboxDupString(textbox)) != NULL) {
 		AG_TextMsg(AG_MSG_INFO, "Duplicated string:\n\"%s\"\n", s);
-		free(s);
+		Free(s);
 	} else {
 		AG_TextMsgS(AG_MSG_INFO, "Failed");
 	}
@@ -98,15 +97,18 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 }
 
 static void
-SingleLineExample(void)
+SingleLineExample(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	AG_Text *txt;
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
 	AG_Textbox *textbox;
 
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Single-line Example");
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, "textbox: Single-line Example");
 	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_HOMOGENOUS);
 
 	/*
@@ -165,12 +167,14 @@ SingleLineExample(void)
 	DebugStuff(vBox, textbox);
 
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
 static void
-MultiLineExample(const char *title)
+MultiLineExample(AG_Event *event)
 {
+	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Textbox *textbox;
 	char *someText;
@@ -178,15 +182,17 @@ MultiLineExample(const char *title)
 	size_t size, bufSize;
 	unsigned int flags;
 
-	win = AG_WindowNew(0);
-	AG_WindowSetCaptionS(win, title);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaptionS(win, "textbox: Multi-line example");
 
 	/*
 	 * Create a multiline textbox.
 	 */
 	flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB|AG_TEXTBOX_EXPAND|
 	        AG_TEXTBOX_EXCL;
-	textbox = AG_TextboxNew(win, flags, NULL);
+	textbox = AG_TextboxNewS(win, flags, NULL);
 
 	/*
 	 * Load the contents of this file into a buffer. Make the buffer a
@@ -203,6 +209,7 @@ MultiLineExample(const char *title)
 		someText[size] = '\0';
 	} else {
 		someText = AG_Strdup("(Unable to open textbox.c)");
+		bufSize = strlen(someText)+1;
 	}
 
 	/*
@@ -226,38 +233,26 @@ MultiLineExample(const char *title)
 		    "Cursor position: %d", &textbox->ed->pos);
 	}
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
-int
-main(int argc, char *argv[])
+static int
+TestGUI(void *obj, AG_Window *win)
 {
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: textbox [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	MultiLineExample("Multiline Example");
-	SingleLineExample();
-	AG_EventLoop();
-	AG_Destroy();
+	AG_ButtonNewFn(win, 0, "Test multi-line textbox", MultiLineExample, "%p", win);
+	AG_ButtonNewFn(win, 0, "Test single-line textbox", SingleLineExample, "%p", win);
 	return (0);
 }
+
+const AG_TestCase textboxTest = {
+	"textbox",
+	N_("Test AG_Textbox(3) / AG_Editable(3) widgets"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

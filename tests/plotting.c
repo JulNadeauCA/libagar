@@ -1,49 +1,25 @@
-/*
- * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*	Public domain	*/
 
 /*
- * This program shows a practical use for the M_Plotter widget. It computes
- * an optimal velocity profile using the squared sine algorithm, and plots
+ * This program shows a practical use for the M_Plotter(3) widget.
+ * It computes an optimal "squared-sine" velocity profile, and plots
  * the derivatives.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
+
 #include <agar/math.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 
-M_Real L = 480.0;
-M_Real F = 1.0;
-M_Real Amax = 0.007;
-M_Real Jmax = 0.0001;
-M_Real uTs = 0.0;
-M_Real uTa = 0.0;
-M_Real uTo = 0.0;
+M_Real L = 480.0;			/* Length of travel */
+M_Real F = 1.0;				/* Target feed rate */
+M_Real Amax = 0.007;			/* Acceleration limit */
+M_Real Jmax = 0.0001;			/* Jerk limit */
+
+M_Real uTs = 0.0, uTa = 0.0, uTo = 0.0;
 M_Plot *plVel, *plAcc, *plJerk;
 M_PlotLabel *plblCase;
 
@@ -61,7 +37,7 @@ M_Real v1, v2, v3;
 static void
 ComputeSquaredSineConstants(void)
 {
-	const char *which;
+	const char *which = NULL;
 
 	/*
 	 * Compute the shortest amount of time needed for the squared
@@ -146,7 +122,7 @@ ComputeSquaredSineConstants(void)
 	M_PlotLabelReplace(plVel, M_LABEL_X, (unsigned)(To*L/t7), 0, "To");
 }
 
-M_Real
+static M_Real
 SquaredSineStep(M_Real t)
 {
 	if (t <= t1) {
@@ -191,43 +167,28 @@ GeneratePlot(AG_Event *event)
 	}
 }
 
-int
-main(int argc, char *argv[])
+static int
+Init(void *obj)
 {
-	AG_Window *win;
+	M_InitSubsystem();
+	return (0);
+}
+
+static void
+Destroy(void *obj)
+{
+	M_DestroySubsystem();
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
 	M_Plotter *plt;
 	AG_Pane *pane;
 	AG_Numerical *num;
 	AG_Box *box;
 	AG_Button *btn;
 	int i;
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: plotting [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	M_InitSubsystem();
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* Create a new window. */
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar plotting demo");
 
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	{
@@ -300,10 +261,17 @@ main(int argc, char *argv[])
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);
-	AG_WindowShow(win);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
 
+const AG_TestCase plottingTest = {
+	"plotting",
+	N_("Test the M_Plotter(3) widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	Init,
+	Destroy,
+	NULL,		/* test */
+	TestGUI
+};

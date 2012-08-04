@@ -9,11 +9,10 @@
  * general-purpose Agar visualization widget (SG_View).
  */
 
-#include <agar/config/have_opengl.h>
+#include "agartest.h"
+
 #ifdef HAVE_OPENGL
 
-#include <agar/core.h>
-#include <agar/gui.h>
 #include <agar/gui/opengl.h>
 
 #include <stdio.h>
@@ -21,17 +20,19 @@
 #include <math.h>
 
 const char *primitiveNames[] = { "Cube", "Sphere", NULL };
-enum { CUBE, SPHERE } primitive = SPHERE;
-
 const char *shadingNames[] = { "Flat Shading", "Smooth Shading", NULL };
-enum { FLATSHADING, SMOOTHSHADING } shading = FLATSHADING;
 
-GLfloat spin = 0.0f;
-GLdouble vz = -5.0;
-GLfloat ambient[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
-GLfloat diffuse[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
-GLfloat specular[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
-int wireframe = 0;
+typedef struct {
+	AG_TestInstance _inherit;
+	enum { CUBE, SPHERE } primitive;
+	enum { FLATSHADING, SMOOTHSHADING } shading;
+	GLfloat spin;
+	GLdouble vz;
+	GLfloat ambient[4];
+	GLfloat diffuse[4];
+	GLfloat specular[4];
+	int wireframe;
+} MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    
 #define X .525731112119133606 
@@ -63,13 +64,14 @@ MyScaleFunction(AG_Event *event)
 	glFrustum(xMin, xMax, yMin, yMax, 0.01, 100.0);
 }
 
-static void
+static __inline__ void
 Norm(GLdouble *a)
 {
-    GLdouble d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
-    a[0] /= d;
-    a[1] /= d;
-    a[2] /= d;
+	GLdouble d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+
+	a[0] /= d;
+	a[1] /= d;
+	a[2] /= d;
 }
 
 static void
@@ -102,11 +104,11 @@ DrawTriangle(GLdouble *a, GLdouble *b, GLdouble *c, int div, float r)
 static void
 MyDrawFunction(AG_Event *event)
 {
-	int i;
+	MyTestInstance *ti = AG_PTR(1);
 	GLfloat pos[4];
+	int i;
 	
 	glLoadIdentity();
-	
 	glPushAttrib(GL_POLYGON_BIT|GL_LIGHTING_BIT|GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
@@ -114,11 +116,11 @@ MyDrawFunction(AG_Event *event)
 	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
 
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_POLYGON);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
-	glShadeModel(shading == FLATSHADING ? GL_FLAT : GL_SMOOTH);
+	glPolygonMode(GL_FRONT_AND_BACK, ti->wireframe ? GL_LINE : GL_POLYGON);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ti->ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ti->diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ti->specular);
+	glShadeModel(ti->shading == FLATSHADING ? GL_FLAT : GL_SMOOTH);
 
 	pos[0] = 10.0f;
 	pos[1] = 10.0f;
@@ -132,16 +134,16 @@ MyDrawFunction(AG_Event *event)
 	glLightfv(GL_LIGHT0, GL_POSITION, pos);
 	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 10.0f);
 
-	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ti->ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, ti->diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, ti->specular);
 
 	glPushMatrix();
-	glTranslated(0.0, 0.0, vz);
-	glRotatef(spin,0.0f,1.0f,0.0f);
-	glRotatef(spin,1.0f,1.0f,1.0f);
+	glTranslated(0.0, 0.0, ti->vz);
+	glRotatef(ti->spin,0.0f,1.0f,0.0f);
+	glRotatef(ti->spin,1.0f,1.0f,1.0f);
 
-	switch (primitive) {
+	switch (ti->primitive) {
 	case CUBE:
 		glBegin(GL_QUADS);
 		glColor3f(1.0f, 0.0f, 0.0f);
@@ -185,7 +187,7 @@ MyDrawFunction(AG_Event *event)
 	glPopMatrix();
 	glPopAttrib();
 
-	if (++spin > 360.0f) { spin -= 360.0f; }
+	if (++ti->spin > 360.0f) { ti->spin -= 360.0f; }
 }
 
 /*
@@ -196,13 +198,15 @@ static void
 MyOverlayFunction(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
+	MyTestInstance *ti = AG_PTR(1);
 	AG_Surface *myText;
 
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
 	myText = AG_TextRenderf("Zoom using mouse wheel\n"
-	                        "Spin = %.0f degrees, z = %.02f", spin, vz);
+	                        "Spin = %.0f degrees, z = %.02f",
+				ti->spin, ti->vz);
 	AG_PopTextState();
 
 	/*
@@ -210,39 +214,62 @@ MyOverlayFunction(AG_Event *event)
 	 * AG_WidgetMapSurface() interface is much more efficient at this
 	 * (hardware->hardware copy), unless the text changes frequently.
 	 */
-	AG_WidgetBlit(glv, myText,
-	    0,
-	    AGWIDGET(glv)->h - agTextFontHeight*2 - 5);
-
-	AG_SurfaceFree(myText);
+	if (myText != NULL) {
+		AG_WidgetBlit(glv, myText,
+		    0,
+		    AGWIDGET(glv)->h - agTextFontHeight*2 - 5);
+		AG_SurfaceFree(myText);
+	}
 }
 
 /* Control the Z using the mouse wheel. */
 static void
 ButtonDown(AG_Event *event)
 {
-	int button = AG_INT(1);
+	MyTestInstance *ti = AG_PTR(1);
+	int button = AG_INT(2);
 
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
-		vz -= 0.1;
+		ti->vz -= 0.1;
 		break;
 	case AG_MOUSE_WHEELDOWN:
-		vz += 0.1;
+		ti->vz += 0.1;
 		break;
 	}
 }
 
-static void
-CreateMainWindow(void)
+static int
+Init(void *obj)
 {
-	AG_Window *win;
+	MyTestInstance *ti = obj;
+	int i;
+
+	ti->primitive = SPHERE;
+	ti->shading = FLATSHADING;
+	ti->spin = 0.0f;
+	ti->vz = -5.0;
+	
+	ti->ambient[0] = 0.5f;
+	ti->diffuse[0] = 0.5f;
+	ti->specular[0] = 0.5f;
+	for (i = 1; i < 4; i++) {
+		ti->ambient[i] = 1.0f;
+		ti->diffuse[i] = 1.0f;
+		ti->specular[i] = 1.0f;
+	}
+
+	ti->wireframe = 0;
+	return (0);
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyTestInstance *ti = obj;
 	AG_GLView *glv;
 	AG_Box *hb;
 	AG_HSVPal *pal;
-
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar low-level OpenGL context demo");
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
@@ -260,9 +287,9 @@ CreateMainWindow(void)
 
 			/* Set up our callback functions. */ 
 			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
-			AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
-			AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
-			AG_GLViewButtondownFn(glv, ButtonDown, NULL);
+			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
+			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
+			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
 		}
 
 		/* Edit ambient and diffuse color components. */
@@ -271,75 +298,49 @@ CreateMainWindow(void)
 			ntab = AG_NotebookAddTab(nbColor, "Amb", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
-			AG_BindFloat(pal, "RGBAv", ambient);
+			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
 			ntab = AG_NotebookAddTab(nbColor, "Dif", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
-			AG_BindFloat(pal, "RGBAv", diffuse);
+			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
 			ntab = AG_NotebookAddTab(nbColor, "Spe", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
-			AG_BindFloat(pal, "RGBAv", specular);
+			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME|AG_BOX_HFILL);
 	{
-		AG_RadioNewInt(hb, 0, primitiveNames, (int *)&primitive);
+		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
 		AG_SeparatorNewVert(hb);
-		AG_RadioNewInt(hb, 0, shadingNames, (int *)&shading);
+		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
 		AG_SeparatorNewVert(hb);
 		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe Mode",
-		    &wireframe);
+		    &ti->wireframe);
 	}
-
-	AG_WindowShow(win);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char *optArg, *driverSpec = "<OpenGL>";
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: glview [-d agar-driver-spec]\n");
-			exit(1);
-		}
-	}
-
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* Set a black background. */
-	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
-
-	CreateMainWindow();
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
 
-#else /* !HAVE_OPENGL */
-#include "../common/stub.h"
-int
-main(int argc, char *argv[])
-{
-	return DemoFail(
-	    "This demo requires OpenGL support. Please recompile Agar\n"
-	    "with the `--with-opengl' configure option\n");
-}
 #endif /* HAVE_OPENGL */
+
+const AG_TestCase glviewTest = {
+	"glView",
+	"Test the AG_GLView(3) widget (OpenGL required)",
+	"1.4.2",
+	AG_TEST_OPENGL,
+#ifdef HAVE_OPENGL
+	sizeof(MyTestInstance),
+	Init,
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+#else
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	NULL		/* testGUI */
+#endif
+};

@@ -3,24 +3,53 @@
  * This application demonstrates use of the AG_Pane container widget.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
+#include "agartest.h"
 
-int
-main(int argc, char *argv[])
+static AG_Window *
+SettingsWindow(void *obj, AG_Pane *paneHoriz, AG_Pane *paneVert)
 {
+	const char *actions[] = {
+		"EXPAND_DIV1",
+		"EXPAND_DIV2",
+		"DIVIDE_EVEN",
+		"DIVIDE_PCT",
+		NULL
+	};
 	AG_Window *win;
-	AG_Pane *paneHoriz, *paneVert;
+	AG_Radio *rad;
 
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(NULL) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
+	/* Settings window */
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
 	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
+	AG_WindowSetCaption(win, "AG_Pane(3) settings");
 
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar Pane demo");
+	AG_LabelNew(win, 0, "(Horiz. Pane) Resize action:");
+	rad = AG_RadioNewUint(win, 0, actions, &paneHoriz->resizeAction);
+		
+	AG_LabelNew(win, 0, "(Horiz. Pane) Flags:");
+	AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneHoriz->flags, AG_PANE_DIV1FILL);
+	AG_CheckboxNewFlag(win, 0, "FRAME", &paneHoriz->flags, AG_PANE_FRAME);
+	AG_CheckboxNewFlag(win, 0, "UNMOVABLE", &paneHoriz->flags, AG_PANE_UNMOVABLE);
+
+	AG_SeparatorNewHoriz(win);
+
+	AG_LabelNew(win, 0, "(Vert. Pane) Resize action:");
+	rad = AG_RadioNewUint(win, 0, actions, &paneVert->resizeAction);
+		
+	AG_LabelNew(win, 0, "(Vert. Pane) Flags:");
+	AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneVert->flags, AG_PANE_DIV1FILL);
+	AG_CheckboxNewFlag(win, 0, "FRAME", &paneVert->flags, AG_PANE_FRAME);
+	AG_CheckboxNewFlag(win, 0, "UNMOVABLE", &paneVert->flags, AG_PANE_UNMOVABLE);
+
+	return (win);
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	AG_Pane *paneHoriz, *paneVert;
+	AG_Window *winSettings;
 
 	/* Divide the window horizontally */
 	paneHoriz = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
@@ -36,49 +65,21 @@ main(int argc, char *argv[])
 	AG_WindowSetGeometry(win, -1, -1, 320, 240);
 	AG_WindowShow(win);
 
-	/* Settings window */
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Pane settings");
-	{
-		const char *actions[] = {
-			"EXPAND_DIV1",
-			"EXPAND_DIV2",
-			"DIVIDE_EVEN",
-			"DIVIDE_PCT",
-			NULL
-		};
-		AG_Radio *rad;
-
-		AG_LabelNew(win, 0, "(Horiz. Pane) Resize action:");
-		rad = AG_RadioNewUint(win, 0, actions,
-		    &paneHoriz->resizeAction);
-		
-		AG_LabelNew(win, 0, "(Horiz. Pane) Flags:");
-		AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneHoriz->flags,
-		    AG_PANE_DIV1FILL);
-		AG_CheckboxNewFlag(win, 0, "FRAME", &paneHoriz->flags,
-		    AG_PANE_FRAME);
-		AG_CheckboxNewFlag(win, 0, "UNMOVABLE", &paneHoriz->flags,
-		    AG_PANE_UNMOVABLE);
-	
-		AG_SeparatorNewHoriz(win);
-
-		AG_LabelNew(win, 0, "(Vert. Pane) Resize action:");
-		rad = AG_RadioNewUint(win, 0, actions,
-		    &paneVert->resizeAction);
-		
-		AG_LabelNew(win, 0, "(Vert. Pane) Flags:");
-		AG_CheckboxNewFlag(win, 0, "DIV1FILL", &paneVert->flags,
-		    AG_PANE_DIV1FILL);
-		AG_CheckboxNewFlag(win, 0, "FRAME", &paneVert->flags,
-		    AG_PANE_FRAME);
-		AG_CheckboxNewFlag(win, 0, "UNMOVABLE", &paneVert->flags,
-		    AG_PANE_UNMOVABLE);
-
-		AG_WindowShow(win);
+	if ((winSettings = SettingsWindow(obj, paneHoriz, paneVert)) != NULL) {
+		AG_WindowAttach(win, winSettings);
+		AG_WindowShow(winSettings);
 	}
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
+
+const AG_TestCase paneTest = {
+	"pane",
+	N_("Test the AG_Pane(3) container widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

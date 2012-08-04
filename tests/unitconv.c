@@ -3,10 +3,7 @@
  * This is a simple unit converter based on AG_Units(3).
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-
-#include <string.h>
+#include "agartest.h"
 
 double value = 0.0;
 const AG_Unit *unitGroup = agLengthUnits;
@@ -26,8 +23,8 @@ SelectCategory(AG_Event *event)
 	}
 }
 
-static void
-CreateUI(void)
+static int
+TestGUI(void *obj, AG_Window *win)
 {
 	const struct {
 		const char *name;
@@ -46,11 +43,8 @@ CreateUI(void)
 		{ "Vac", agVacuumUnits }
 	};
 	int i;
-	AG_Window *win;
 	AG_Toolbar *tb;
 
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 
 	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS|
@@ -75,41 +69,17 @@ CreateUI(void)
 	AG_NumericalSizeHint(n2, "0000.00");
 	AG_NumericalSetPrecision(n1, "g", 6);
 	AG_NumericalSetPrecision(n2, "g", 6);
-
-	AG_WindowShow(win);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: unitconv [-d agar-driver-spec]\n");
-			return (1);
-		}
-	}
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-	
-	CreateUI();
-	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(60,60,60);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
 
+const AG_TestCase unitconvTest = {
+	"unitconv",
+	N_("Test AG_Units(3) conversion"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
+	TestGUI
+};

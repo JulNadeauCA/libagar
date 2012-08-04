@@ -3,51 +3,51 @@
  * Demonstrate use of the custom widget defined in mywidget.c.
  */
 
-#include <agar/core.h>
-#include <agar/gui.h>
-#include "mywidget.h"
+#include "agartest.h"
+#include "customwidget_mywidget.h"
 
-int
-main(int argc, char *argv[])
+static int inited = 0;
+
+static int
+Init(void *obj)
 {
-	AG_Window *win;
-	MyWidget *my;
-	char *driverSpec = NULL, *optArg;
-	int c;
-
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
-		switch (c) {
-		case 'd':
-			driverSpec = optArg;
-			break;
-		case '?':
-		case 'h':
-		default:
-			printf("Usage: customwidget [-d agar-driver-spec]\n");
-			return (1);
-		}
+	if (inited++ > 0) {
+		return (0);
 	}
-
-	if (AG_InitCore(NULL, 0) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		return (1);
-	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
-
-	/* We need to register our new widget class with the object system. */
 	AG_RegisterClass(&myWidgetClass);
-
-	/* Create test window containing our widget stretched over its area. */
-	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Agar custom widget demo");
-	my = MyWidgetNew(win, "foo");
-	AG_Expand(my);
-	AG_WindowShow(win);
-
-	AG_EventLoop();
-	AG_Destroy();
 	return (0);
 }
 
+static void
+Destroy(void *obj)
+{
+	if (--inited > 0) {
+		return;
+	}
+	AG_UnregisterClass(&myWidgetClass);
+}
+
+static int
+TestGUI(void *obj, AG_Window *win)
+{
+	MyWidget *my;
+
+	my = MyWidgetNew(win, "foo");
+	my->ti = obj;
+	AG_Expand(my);
+
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+	return (0);
+}
+
+const AG_TestCase customWidgetTest = {
+	"customWidget",
+	N_("Test registering a custom Agar widget"),
+	"1.4.2",
+	0,
+	sizeof(AG_TestInstance),
+	Init,
+	Destroy,
+	NULL,		/* test */
+	TestGUI
+};
