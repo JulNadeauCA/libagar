@@ -398,16 +398,17 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
-/* Set alternate font */
+/* Change the display font */
 void
 AG_EditableSetFont(AG_Editable *ed, AG_Font *font)
 {
 	AG_ObjectLock(ed);
-	ed->font = font;
-	ed->lineSkip = (font != NULL) ? font->lineskip : agTextFontLineSkip;
-	ed->fontMaxHeight = (font != NULL) ? font->height : agTextFontHeight;
-	ed->yVis = WIDGET(ed)->h/ed->lineSkip;
+	ed->font = (font != NULL) ? font : agDefaultFont;
+	ed->lineSkip = font->lineskip;
+	ed->fontMaxHeight = font->height;
+	ed->yVis = WIDGET(ed)->h / ed->lineSkip;
 	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
 }
 
 /* Evaluate if a character is acceptable in integer-only mode. */
@@ -638,7 +639,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
     int *pos)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Font *font;
+	AG_Font *font = ed->font;
 	Uint32 ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
@@ -651,9 +652,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		*pos = 0;
 		goto out;
 	}
-	if ((font = ed->font) == NULL &&
-	    (font = AG_FetchFont(NULL, -1, -1)) == NULL)
-		goto fail;
 
 	x = 0;
 	y = 0;
@@ -776,9 +774,6 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 out:
 	AG_ObjectUnlock(ed);
 	return (0);
-fail:
-	AG_ObjectUnlock(ed);
-	return (-1);
 }
 #undef ON_LINE
 #undef ON_CHAR
@@ -872,8 +867,7 @@ Draw(void *obj)
 	AG_PushClipRect(ed, ed->r);
 
 	AG_PushTextState();
-
-	if (ed->font != NULL) { AG_TextFont(ed->font); }
+	AG_TextFont(ed->font);
 	AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
 
 	x = 0;
@@ -1840,9 +1834,9 @@ Init(void *obj)
 	ed->repeatUnicode = 0;
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
-	ed->font = NULL;
-	ed->lineSkip = agTextFontLineSkip;
+	ed->font = agDefaultFont;
 	ed->fontMaxHeight = agTextFontHeight;
+	ed->lineSkip = agTextFontLineSkip;
 	ed->pm = NULL;
 	ed->lang = AG_LANG_NONE;
 	ed->wPre = 0;

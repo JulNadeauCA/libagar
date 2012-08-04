@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -263,6 +263,7 @@ Init(void *obj)
 	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
 	lbl->rClip = AG_RECT(0,0,0,0);		/* Initialized in SizeAlloc() */
+	lbl->font = agDefaultFont;
 	SLIST_INIT(&lbl->lflags);
 	
 	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
@@ -283,6 +284,16 @@ AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
 		AG_TextSize(text, &lbl->wPre, &lbl->hPre);
 	}
 	AG_ObjectUnlock(lbl);
+}
+
+/* Configure an alternate font. */
+void
+AG_LabelSetFont(AG_Label *lbl, AG_Font *font)
+{
+	AG_ObjectLock(lbl);
+	lbl->font = (font != NULL) ? font : agDefaultFont;
+	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
 }
 
 /* Set the padding around the label in pixels. */
@@ -690,15 +701,18 @@ DrawPolled(AG_Label *lbl)
 		}
 	}
 
-	if (agTextCache) {
+	if (agTextCache && (lbl->font == agDefaultFont)) {
 		int su = AG_TextCacheGet(lbl->tCache,s);
 		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
 		AG_WidgetBlitSurface(lbl, su, x, y);
 	} else {
-		AG_Surface *su = AG_TextRender(s);
-		GetPosition(lbl, su, &x, &y);
-		AG_WidgetBlit(lbl, su, x, y);
-		AG_SurfaceFree(su);
+		AG_Surface *su;
+		
+		if ((su = AG_TextRender(s)) != NULL) {		/* XXX */
+			GetPosition(lbl, su, &x, &y);
+			AG_WidgetBlit(lbl, su, x, y);
+			AG_SurfaceFree(su);
+		}
 	}
 }
 
@@ -738,6 +752,7 @@ Draw(void *obj)
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
 	AG_TextColor(agColors[TEXT_COLOR]);
+	AG_TextFont(lbl->font);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
