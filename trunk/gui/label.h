@@ -64,6 +64,7 @@ typedef struct ag_label {
 	AG_SLIST_HEAD_(ag_label_flag) lflags;	/* Label flag descriptions */
 	struct ag_text_cache *tCache;		/* Cache for polled labels */
 	AG_Rect rClip;				/* Clipping rectangle */
+	AG_Font *font;				/* Selected font */
 } AG_Label;
 
 __BEGIN_DECLS
@@ -81,6 +82,7 @@ void      AG_LabelText(AG_Label *, const char *, ...)
                        NONNULL_ATTRIBUTE(2);
 void      AG_LabelTextS(AG_Label *, const char *);
 
+void     AG_LabelSetFont(AG_Label *, AG_Font *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 void	 AG_LabelValign(AG_Label *, enum ag_text_valign);

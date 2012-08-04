@@ -81,8 +81,8 @@ typedef struct ag_editable {
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
 	AG_Font *font;			/* Font for text rendering */
-	int lineSkip;			/* Y-increment in multiline mode */
 	int fontMaxHeight;		/* Maximum character height */
+	int lineSkip;			/* Y-increment in multiline mode */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */
 	enum ag_language lang;		/* Selected language (for AG_Text) */
 	int xScrollPx;			/* Explicit scroll request in pixels */

@@ -39,7 +39,6 @@ typedef struct ag_textbox {
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
 	AG_Rect r;			/* View area */
-	AG_Font *font;			/* Font for text entry */
 	AG_Text *text;			/* Pointer to default binding */
 } AG_Textbox;
 

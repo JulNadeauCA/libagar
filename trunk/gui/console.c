@@ -118,7 +118,7 @@ Init(void *obj)
 	cons->vBar->maxOffs = +2;
 
 	cons->r = AG_RECT(0,0,0,0);
-	cons->font = NULL;
+	cons->font = agDefaultFont;
 	cons->scrollTo = NULL;
 
 	AG_BindInt(cons->vBar, "value", &cons->rOffs);
@@ -163,8 +163,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
-	cons->rVisible = a->h / ((cons->font != NULL) ? cons->font->height :
-	                                                agTextFontHeight);
+	cons->rVisible = a->h / cons->font->height;
 	ClampVisible(cons);
 	return (0);
 }
@@ -180,16 +179,14 @@ Draw(void *p)
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
 
 	AG_PushTextState();
+	AG_TextFont(cons->font);
 
 	if (cons->scrollTo != NULL) {
 		cons->rOffs = *cons->scrollTo;
 		cons->scrollTo = NULL;
 		ClampVisible(cons);
 	}
-	if (cons->font != NULL) {
-		AG_TextFont(cons->font);
-	}
-	if (cons->nLines > 1) {
+	if (cons->nLines > 0) {
 		AG_PushClipRect(cons, cons->r);
 		rDst = cons->r;
 		for (r = cons->rOffs, rDst.y = cons->padding;
@@ -252,8 +249,8 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 	int i;
 
 	AG_ObjectLock(cons);
-	cons->font = font;
-	cons->rVisible = HEIGHT(cons) / font->height;
+	cons->font = (font != NULL) ? font : agDefaultFont;
+	cons->rVisible = HEIGHT(cons) / cons->font->height;
 
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = &cons->lines[i];
@@ -261,8 +258,8 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 		AG_WidgetUnmapSurface(cons, ln->surface);
 		ln->surface = -1;
 	}
-	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
+	AG_Redraw(cons);
 }
 
 /* Append a line to the log */
@@ -293,8 +290,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
 		cons->scrollTo = &cons->nLines;
 	}
-	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);
+	AG_Redraw(cons);
 	return (ln);
 }
 

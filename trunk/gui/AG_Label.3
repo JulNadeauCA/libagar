@@ -69,6 +69,9 @@ on rendering.
 .Fn AG_LabelTextS "AG_Label *label" "const char *s"
 .Pp
 .Ft "void"
+.Fn AG_LabelSetFont "AG_Label *label" "AG_Font *font"
+.Pp
+.Ft "void"
 .Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft "void"
@@ -123,8 +126,20 @@ The
 function changes the current label text.
 .Pp
 The
+.Fn AG_LabelSetFont
+function configures an alternate font which will be used to display the
+label.
+The
+.Fa font
+argument is not duplicated (i.e., the referenced font should remain valid
+as long as the widget exists).
+To set the font of a label back to the default Agar font, NULL can be passed.
+See
+.Xr AG_FetchFont 3
+for details on Agar fonts.
+.Pp
 .Fn AG_LabelSetPadding
-function sets the label padding parameters in pixels.
+sets the label padding parameters in pixels.
 If a parameter is -1, its current value is preserved.
 .Pp
 The
@@ -372,6 +387,7 @@ AG_LabelNewPolled(parent, 0, "%[myVec]", &v);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_FetchFont 3 ,
 .Xr AG_Pixmap 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3 ,

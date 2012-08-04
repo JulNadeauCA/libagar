@@ -136,12 +136,15 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	}
 }
 
-/* Configure alternate font */
+/* Configure an alternate font.  */
 void
 AG_TextboxSetFont(AG_Textbox *tb, AG_Font *font)
 {
 	AG_ObjectLock(tb);
-	tb->font = font;
+	if (tb->lbl != NULL) {
+		AG_LabelSetFont(tb->lbl, font);
+	}
+	AG_EditableSetFont(tb->ed, font);
 	AG_ObjectUnlock(tb);
 	AG_Redraw(tb);
 }
@@ -175,8 +178,7 @@ Draw(void *p)
 		AG_WidgetUpdate(tb);
 	}
 
-	/* Render the Editable widget, inheriting our Font. */
-	tb->ed->font = tb->font;
+	/* Render the Editable widget. */
 	AG_WidgetDraw(tb->ed);
 
 	if (tb->hBar != NULL)
@@ -422,7 +424,6 @@ Init(void *obj)
 	tb->hBar = NULL;
 	tb->vBar = NULL;
 	tb->r = AG_RECT(0,0,0,0);
-	tb->font = NULL;
 	tb->text = tb->ed->text;
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
