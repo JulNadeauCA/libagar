@@ -166,7 +166,6 @@ SingleLineExample(AG_Event *event)
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	DebugStuff(vBox, textbox);
 
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
@@ -198,7 +197,7 @@ MultiLineExample(AG_Event *event)
 	 * Load the contents of this file into a buffer. Make the buffer a
 	 * bit larger so the user can try entering text.
 	 */
-	if ((f = fopen("textbox.c", "r")) != NULL) {
+	if ((f = fopen("loss.txt", "r")) != NULL) {
 		fseek(f, 0, SEEK_END);
 		size = ftell(f);
 		fseek(f, 0, SEEK_SET);
@@ -208,7 +207,7 @@ MultiLineExample(AG_Event *event)
 		fclose(f);
 		someText[size] = '\0';
 	} else {
-		someText = AG_Strdup("(Unable to open textbox.c)");
+		someText = AG_Strdup("Failed to load loss.txt");
 		bufSize = strlen(someText)+1;
 	}
 
