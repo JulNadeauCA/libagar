@@ -28,17 +28,23 @@
 #include "au_dev_out.h"
 #include "au_wave.h"
 
+int auInitedSubsystem = 0;
+
 int
 AU_InitSubsystem(void)
 {
+	if (auInitedSubsystem++ > 0) {
+		return (0);
+	}
 	AG_RegisterNamespace("AU", "AU_", "http://libagar.org/");
-/*	AG_RegisterClass(&rgTileviewClass); */
 	return (0);
 }
 
 void
 AU_DestroySubsystem(void)
 {
-/*	AG_UnregisterClass(&rgTileviewClass); */
+	if (--auInitedSubsystem > 0) {
+		return;
+	}
+	AG_UnregisterNamespace("AU");
 }
-

@@ -139,8 +139,8 @@ void *agGUIClasses[] = {
 };
 
 int agGUI = 0;				/* GUI is initialized */
-static int initedGlobals = 0;		/* GUI globals are initialized */
 int agRenderingContext = 0;		/* In rendering context */
+static int initedGlobals = 0;		/* GUI globals are initialized */
 
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
@@ -167,10 +167,9 @@ AG_InitGUIGlobals(void)
 {
 	Uint i;
 
-	if (initedGlobals) {
+	if (initedGlobals++ > 0) {
 		return (0);
 	}
-	initedGlobals = 1;
 	agGUI = 1;
 
 	AG_RegisterClass(&agDriverClass);
@@ -227,6 +226,9 @@ void
 AG_DestroyGUIGlobals(void)
 {
 	Uint i;
+	
+	if (--initedGlobals > 0)
+		return;
 
 	AG_PixelFormatFree(agSurfaceFmt);
 	agSurfaceFmt = NULL;
@@ -247,7 +249,6 @@ AG_DestroyGUIGlobals(void)
 	
 	agRenderingContext = 0;
 	agGUI = 0;
-	initedGlobals = 0;
 }
 
 /*

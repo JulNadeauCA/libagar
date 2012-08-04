@@ -322,8 +322,8 @@ ImportObject(AG_Event *event)
 		AG_ObjectFreeDataset(ob);
 }
 
-void
-DEV_BrowserSaveTo(void *p, const char *name)
+AG_Window *
+DEV_BrowserSaveToDlg(void *p, const char *name)
 {
 	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
@@ -334,17 +334,20 @@ DEV_BrowserSaveTo(void *p, const char *name)
 	ext[1] = '.';
 	Strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile, "%p,%p", ob, win);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
+	return (win);
 }
 
-void
-DEV_BrowserLoadFrom(void *p, const char *name)
+AG_Window *
+DEV_BrowserLoadFromDlg(void *p, const char *name)
 {
 	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
@@ -355,13 +358,16 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 	ext[1] = '.';
 	Strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
-	win = AG_WindowNew(0);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p,%p", ob, win);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
+	return (win);
 }
 
 static void
@@ -369,6 +375,7 @@ ObjectOp(AG_Event *event)
 {
 	void *vfsRoot = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
+	AG_Window *win, *winParent = AG_ParentWindow(tl);
 	int op = AG_INT(3);
 	AG_TlistItem *it;
 
@@ -415,7 +422,9 @@ ObjectOp(AG_Event *event)
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				DEV_BrowserSaveTo(ob, _("Agar object file"));
+				win = DEV_BrowserSaveToDlg(ob, _("Agar object file"));
+				if (win != NULL)
+					AG_WindowAttach(winParent, win);
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -486,17 +495,27 @@ DEV_BrowserGenericLoad(AG_Event *event)
 static void
 DEV_BrowserGenericSaveTo(AG_Event *event)
 {
-	DEV_BrowserSaveTo(AG_PTR(1), _("Agar object file"));
+	void *obj = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2), *win;
+
+	win = DEV_BrowserSaveToDlg(obj, _("Agar object file"));
+	if (win != NULL)
+		AG_WindowAttach(winParent, win);
 }
 
 static void
 DEV_BrowserGenericLoadFrom(AG_Event *event)
 {
-	DEV_BrowserLoadFrom(AG_PTR(1), _("Agar object file"));
+	void *obj = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2), *win;
+
+	win = DEV_BrowserLoadFromDlg(obj, _("Agar object file"));
+	if (win != NULL)
+		AG_WindowAttach(winParent, win);
 }
 
 void
-DEV_BrowserGenericMenu(void *menup, void *obj)
+DEV_BrowserGenericMenu(void *menup, void *obj, AG_Window *winParent)
 {
 	AG_MenuItem *pitem = menup;
 
@@ -505,9 +524,9 @@ DEV_BrowserGenericMenu(void *menup, void *obj)
 	AG_MenuAction(pitem, _("Load"), agIconLoad.s,
 	    DEV_BrowserGenericLoad, "%p", obj);
 	AG_MenuAction(pitem, _("Export to..."), agIconSave.s,
-	    DEV_BrowserGenericSaveTo, "%p", obj);
+	    DEV_BrowserGenericSaveTo, "%p,%p", obj, winParent);
 	AG_MenuAction(pitem, _("Import from..."), agIconLoad.s,
-	    DEV_BrowserGenericLoadFrom, "%p", obj);
+	    DEV_BrowserGenericLoadFrom, "%p,%p", obj, winParent);
 
 	AG_MenuSeparator(pitem);
 
@@ -613,12 +632,14 @@ CreateObjectDlg(AG_Event *event)
 	AG_Window *win;
 	AG_Object *vfsRoot = AG_PTR(1);
 	AG_ObjectClass *cl = AG_PTR(2);
-	AG_Window *pwin = AG_PTR(3);
+	AG_Window *winParent = AG_PTR(3);
 	AG_Tlist *tlParents;
 	AG_Box *bo;
 	AG_Textbox *tb;
 
-	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, _("New %s object"), cl->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -661,13 +682,13 @@ CreateObjectDlg(AG_Event *event)
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
-	AG_WindowAttach(pwin, win);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
 
 static void
 GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
-    AG_Window *win)
+    AG_Window *winParent)
 {
 	AG_ObjectClass *subcls;
 	AG_MenuItem *mNode;
@@ -675,12 +696,12 @@ GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
 	mNode = AG_MenuNode(mParent, cls->name, NULL);
 
 	AG_MenuAction(mNode, _("Create instance..."), NULL,
-	    CreateObjectDlg, "%p,%p,%p", vfsRoot, cls, win);
+	    CreateObjectDlg, "%p,%p,%p", vfsRoot, cls, winParent);
 
 	if (!TAILQ_EMPTY(&cls->sub)) {
 		AG_MenuSeparator(mNode);
 		TAILQ_FOREACH(subcls, &cls->sub, subclasses)
-			GenNewObjectMenu(mNode, subcls, vfsRoot, win);
+			GenNewObjectMenu(mNode, subcls, vfsRoot, winParent);
 	}
 }
 
@@ -695,9 +716,10 @@ DEV_Browser(void *vfsRoot)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	win = AG_WindowNewNamedS(0, "DEV_Browser");
+	if ((win = AG_WindowNew(0)) == NULL) {
+		return (NULL);
+	}
 	AG_WindowSetCaptionS(win, OBJECT(vfsRoot)->name);
-	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                           AG_TLIST_EXPAND);

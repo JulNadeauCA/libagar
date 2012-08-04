@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,9 +59,14 @@ const RG_FeatureOps *feature_tbl[] = {
 };
 extern const char *rgTileSnapModes[];
 
+int rgInitedSubsystem = 0;
+
 void
 RG_InitSubsystem(void)
 {
+	if (rgInitedSubsystem++ > 0)
+		return;
+
 	AG_RegisterNamespace("RG", "RG_", "http://libagar.org/");
 	AG_RegisterClass(&rgTileviewClass);
 	AG_RegisterClass(&rgAnimviewClass);
@@ -74,10 +79,14 @@ RG_InitSubsystem(void)
 void
 RG_DestroySubsystem(void)
 {
+	if (--rgInitedSubsystem > 0) {
+		return;
+	}
 	AG_UnregisterClass(&rgTileviewClass);
 	AG_UnregisterClass(&rgAnimviewClass);
 	AG_UnregisterClass(&rgTextureSelectorClass);
 	AG_UnregisterClass(&rgTilesetClass);
+	AG_UnregisterNamespace("RG");
 }
 
 RG_Tileset *
