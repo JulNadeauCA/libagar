@@ -70,9 +70,6 @@
 # ifndef Uint64
 # define Uint64 unsigned __int64
 # endif
-# if !defined(_AGAR_INTERNAL) && !defined(off_t)
-# define off_t long
-# endif
 #else /* !_WIN32 */
 # ifndef Sint8
 # define Sint8 int8_t
