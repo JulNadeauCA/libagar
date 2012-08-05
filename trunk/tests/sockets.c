@@ -13,9 +13,17 @@ enum {
 	WEAPON_SOCKET,
 	HELMET,
 	SWORD,
-	AXE
+	AXE,
+	LAST_IMAGE
 };
-AG_Surface *pixmaps[4];
+const char *imageFiles[] = {
+	"helmet-socket",
+	"sword-socket",
+	"helmet",
+	"sword",
+	"axe"
+};
+AG_Surface *pixmaps[LAST_IMAGE];
 
 /* Callback for helmet sockets */
 static int
@@ -56,6 +64,7 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Fixed *fx;
 	AG_Label *lbl;
 	AG_Socket *sock;
@@ -67,22 +76,23 @@ TestGUI(void *obj, AG_Window *win)
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	/* Create a pixmap */
-	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
-		TestMsg(obj, "Cannot find menubg.bmp: %s", AG_GetError());
-		exit(1);
+	if (!AG_ConfigFile("load-path", "menubg", "bmp", path, sizeof(path))) {
+		if ((px = AG_PixmapFromBMP(fx, 0, path)) == NULL) {
+			TestMsg(obj, "%s: %s", path, AG_GetError());
+			exit(1);
+		}
+		AG_FixedMove(fx, px, 0, 0);
 	}
-	AG_FixedMove(fx, px, 0, 0);
 	
 	lbl = AG_LabelNew(NULL, 0, "Drag & Drop Demo");
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	/* Load some pixmaps */
-	pixmaps[HELMET_SOCKET] = AG_SurfaceFromBMP("Images/helmet-socket.bmp");
-	pixmaps[WEAPON_SOCKET] = AG_SurfaceFromBMP("Images/sword-socket.bmp");
-	pixmaps[HELMET] = AG_SurfaceFromBMP("Images/helmet.bmp");
-	pixmaps[SWORD] = AG_SurfaceFromBMP("Images/sword.bmp");
-	pixmaps[AXE] = AG_SurfaceFromBMP("Images/axe.bmp");
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < LAST_IMAGE; i++) {
+		if (AG_ConfigFile("load-path", imageFiles[i], "bmp", path, sizeof(path)) != 0) {
+			continue;
+		}
+		pixmaps[i] = AG_SurfaceFromBMP(path);
 		AG_SurfaceSetColorKey(pixmaps[i], AG_SRCCOLORKEY,
 		    AG_MapPixelRGB(pixmaps[i]->format, 0,255,0));
 	}
@@ -136,7 +146,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 640, 128);
-	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0);
+/*	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0); */
 	return (0);
 }
 

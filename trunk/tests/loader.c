@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "config/datadir.h"
+
 /* Callback routine for AG_FileDlg. */
 static void
 LoadImage(AG_Event *event)
@@ -89,10 +91,14 @@ TestGUI(void *obj, AG_Window *win)
 		fd = AG_FileDlgNew(ntab, AG_FILEDLG_EXPAND);
 	
 		/* Set some default directory. */
-		AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
+		if (strcmp(DATADIR, "NONE") != 0) {
+			AG_FileDlgSetDirectoryMRU(fd, "images-dir", DATADIR);
+		} else {
+			AG_FileDlgSetDirectoryMRU(fd, "images-dir", ".");
+		}
 	
 		/* Set some default filename. */
-		AG_FileDlgSetFilenameS(fd, "Meme.bmp");
+		AG_FileDlgSetFilenameS(fd, "agar.bmp");
 
 		/*
 		 * Register the loader functions. We can assign a set of user

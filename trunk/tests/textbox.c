@@ -173,6 +173,7 @@ SingleLineExample(AG_Event *event)
 static void
 MultiLineExample(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Textbox *textbox;
@@ -197,7 +198,8 @@ MultiLineExample(AG_Event *event)
 	 * Load the contents of this file into a buffer. Make the buffer a
 	 * bit larger so the user can try entering text.
 	 */
-	if ((f = fopen("loss.txt", "r")) != NULL) {
+	if (!AG_ConfigFile("load-path", "loss", "txt", path, sizeof(path)) &&
+	    (f = fopen(path, "r")) != NULL) {
 		fseek(f, 0, SEEK_END);
 		size = ftell(f);
 		fseek(f, 0, SEEK_SET);

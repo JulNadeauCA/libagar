@@ -7,7 +7,11 @@
 
 #include <agar/dev.h>
 
+#include <string.h>
+
+#include <agar/config/have_opengl.h>
 #include "config/have_agar_au.h"
+#include "config/datadir.h"
 
 extern const AG_TestCase audioTest;
 extern const AG_TestCase charsetsTest;
@@ -241,6 +245,14 @@ main(int argc, char *argv[])
 #ifdef AG_DEBUG
 	AG_BindGlobalKey(AG_KEY_F12, AG_KEYMOD_ANY, StartDebugger);
 #endif
+
+	if (strcmp(DATADIR, "NONE") != 0) {
+		AG_PrtString(agConfig, "load-path", "%s:.", DATADIR);
+	} else {
+		AG_SetString(agConfig, "load-path", ".");
+	}
+	(void)AG_ConfigLoad();
+
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return (1);
 	}

@@ -666,6 +666,20 @@ echo "#ifndef MANDIR" > $BLD/config/mandir.h
 echo "#define MANDIR \"$MANDIR\"" >> $BLD/config/mandir.h
 echo "#endif" >> $BLD/config/mandir.h
 echo "hdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
+if [ "${DATADIR_SPECIFIED}" != "yes" ]; then
+DATADIR="${PREFIX}/share/agartest"
+echo "#ifndef DATADIR" > $BLD/config/datadir.h
+echo "#define DATADIR \"$DATADIR\"" >> $BLD/config/datadir.h
+echo "#endif" >> $BLD/config/datadir.h
+echo "hdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
+fi;
+if [ "${LOCALEDIR_SPECIFIED}" != "yes" ]; then
+LOCALEDIR="${DATADIR}/locale"
+echo "#ifndef LOCALEDIR" > $BLD/config/localedir.h
+echo "#define LOCALEDIR \"$LOCALEDIR\"" >> $BLD/config/localedir.h
+echo "#endif" >> $BLD/config/localedir.h
+echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
+fi;
 $ECHO_N "checking for a C compiler..."
 $ECHO_N "checking for a C compiler..." >> config.log
 if [ "$CC" = "" ]; then
