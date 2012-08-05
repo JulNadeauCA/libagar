@@ -10,6 +10,16 @@ PROG_TYPE=	"GUI"
 PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
 PROG_LINKS=	${CORE_LINKS} ${MATH_LINKS} ${GUI_LINKS} ${DEV_LINKS}
 
+DATAFILES=	loss.txt \
+		agar.png agar-index.png agar.bmp \
+		axe.bmp \
+		helmet.png helmet.bmp \
+		helmet-socket.bmp \
+		menubg.bmp \
+		pepe.jpg \
+		sword-socket.bmp \
+		sword.bmp 
+
 PROG=	agartest
 SRCS=	agartest.c ${SRCS_EXTRA} \
 	charsets.c \

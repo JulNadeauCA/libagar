@@ -21,12 +21,15 @@ Changed(AG_Event *event)
 static void
 Fadein(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
 
 	win = AG_WindowNew(AG_WINDOW_FADEIN);
 	AG_WindowSetFadeIn(win, 1.0f, 0.1f);
 
-	AG_PixmapFromBMP(win, 0, "agar.bmp");
+	if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path))) {
+		AG_PixmapFromBMP(win, 0, path);
+	}
 	AG_LabelNew(win, 0, "Testing AG_WINDOW_FADEIN");
 
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close window", AGWINDETACH(win));
@@ -36,14 +39,15 @@ Fadein(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Slider *sl;
 	AG_Box *hb;
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	{
-		AG_PixmapFromBMP(hb, 0, "agar.bmp");
-		AG_PixmapFromBMP(hb, 0, "agar.bmp");
-		AG_PixmapFromBMP(hb, 0, "agar.bmp");
+	if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path))) {
+		AG_PixmapFromBMP(hb, 0, path);
+		AG_PixmapFromBMP(hb, 0, path);
+		AG_PixmapFromBMP(hb, 0, path);
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{

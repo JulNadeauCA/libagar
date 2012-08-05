@@ -55,6 +55,7 @@ SetWordWrap(AG_Event *event)
 static void
 CreateWindow(AG_Event *event)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	AG_Box *hBox, *vBox;
@@ -84,10 +85,12 @@ CreateWindow(AG_Event *event)
 	div1 = pane->div[0];
 	div2 = pane->div[1];
 	{
+		char path[AG_PATHNAME_MAX];
 		AG_Label *lbl;
 
 		/* The Pixmap widget displays a raster surface. */
-		AG_PixmapFromBMP(div1, 0, "agar.bmp");
+		if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path)))
+			AG_PixmapFromBMP(div1, 0, path);
 	
 		/*
 		 * The Label widget provides a simple static or polled label
@@ -315,7 +318,8 @@ CreateWindow(AG_Event *event)
 			 * the buffer a bit larger so the user can try
 			 * entering text.
 			 */
-			if ((f = fopen("loss.txt", "r")) != NULL) {
+			if (!AG_ConfigFile("load-path", "loss", "txt", path, sizeof(path)) &&
+			    (f = fopen(path, "r")) != NULL) {
 				size_t rv;
 
 				fseek(f, 0, SEEK_END);

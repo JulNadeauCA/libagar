@@ -11,6 +11,7 @@
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Fixed *fx;
 	AG_Label *lb1, *lb2;
 	AG_Button *btn;
@@ -25,12 +26,15 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0); */
 
-	/* Create the background pixmap from bmp file. */
-	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		exit(1);
+	/* Create some background pixmap from an image file. */
+	if (!AG_ConfigFile("load-path", "menubg", "bmp", path, sizeof(path))) {
+		if ((px = AG_PixmapFromBMP(fx, 0, path)) == NULL) {
+			AG_LabelNewS(win, 0, AG_GetError());
+			fprintf(stderr, "%s\n", AG_GetError());
+			exit(1);
+		}
+		AG_FixedMove(fx, px, 0, 0);
 	}
-	AG_FixedMove(fx, px, 0, 0);
 
 	/*
 	 * Create two labels. We don't initially attach the labels to a

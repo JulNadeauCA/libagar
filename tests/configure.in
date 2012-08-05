@@ -5,6 +5,9 @@ CONFIG_GUESS("../mk/config.guess")
 REGISTER_SECTION("Agar test suite options:")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agartest")
+DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
+
 REQUIRE(cc)
 REQUIRE(agar, 1.4.2)
 REQUIRE(agar-dev)
