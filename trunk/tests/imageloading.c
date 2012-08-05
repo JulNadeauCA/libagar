@@ -4,7 +4,6 @@
  */
 
 #include "agartest.h"
-#include "pathnames.h"
 
 #include "config/datadir.h"
 
