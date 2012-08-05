@@ -251,7 +251,7 @@ main(int argc, char *argv[])
 	} else {
 		AG_SetString(agConfig, "load-path", ".");
 	}
-	(void)AG_ConfigLoad();
+/*	(void)AG_ConfigLoad(); */
 
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return (1);
