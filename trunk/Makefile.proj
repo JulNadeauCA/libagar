@@ -12,8 +12,8 @@
 # For the list of available <OS> and <IDE> values, see build.proj.mk(5).
 # 
 
-PROJFILES=      windows:vs2005:: \
-		windows-xp:vs2005::
+PROJFILES=      windows:vs2005::--datadir=NONE \
+		windows-xp:vs2005::--datadir=NONE
 
 # Generate VS2008 project files for a "Windows XP and up" target
 #       windows-xp:vs2008::
