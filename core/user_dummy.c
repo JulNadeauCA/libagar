@@ -5,13 +5,8 @@
 static int
 GetUserByUID(AG_User *u, Uint32 uid)
 {
-	if ((u->home = TryStrdup(".")) == NULL ||
-	    (u->tmp = TryStrdup("tmp")) == NULL) {
-		return (-1);
-	}
-
-	u->flags |= AG_USER_NO_ACCOUNT;			/* Not a real user */
-	return (0);
+	AG_SetError("Operation not supported");
+	return (-1);
 }
 
 static int
