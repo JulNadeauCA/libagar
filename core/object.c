@@ -1403,10 +1403,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 #ifdef AG_OBJDEBUG
 	Debug(ob, "Loading generic data from %s\n", path);
 #endif
-	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
-		AG_SetError("%s: %s", path, AG_GetError());
+	if ((ds = AG_OpenFile(path, "rb")) == NULL)
 		goto fail_unlock;
-	}
 
 	/* Free any resident dataset in order to clear the dependencies. */
 	AG_ObjectFreeDataset(ob);
@@ -1526,7 +1524,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	Debug(ob, "Loading dataset from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
-		AG_SetError("%s: %s", path, AG_GetError());
 		*dataFound = 0;
 		goto fail_unlock;
 	}
