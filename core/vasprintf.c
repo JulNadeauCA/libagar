@@ -47,28 +47,18 @@ int
 AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
 {
 #ifndef HAVE_VASPRINTF
-	char *buf, *bufNew;
 	int size;
-	size_t buflen;
 
-	buflen = strlen(fmt) + 10240;			/* XXX */
-	if ((buf = TryMalloc(buflen)) == NULL) {
+	size = vsnprintf(NULL, 0, fmt, ap);
+	if ((*ret = TryMalloc(size+1)) == NULL) {
 		return (-1);
 	}
-	size = vsprintf(buf, fmt, ap);
-	if ((size_t)size <= buflen) {
-		*ret = buf;
-		return (size);
+	if (size == 0) {
+		(*ret)[0] = '\0';
+		return (0);
+	} else {
+		return vsprintf(*ret, fmt, ap);
 	}
-
-	if ((bufNew = TryRealloc(buf, size+1)) == NULL) {
-		Free(buf);
-		return (-1);
-	}
-	buf = bufNew;
-	size = vsprintf(buf, fmt, ap);
-	*ret = buf;
-	return (size);
 #else /* !HAVE_VASPRINTF */
 	if (vasprintf(ret, fmt, ap) == -1) {
 		AG_SetError("Out of memory");
