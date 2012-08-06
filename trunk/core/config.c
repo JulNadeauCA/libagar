@@ -73,7 +73,7 @@ AG_ConfigLoad(void)
 int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
-	char path[AG_PATHNAME_MAX];
+	char path[AG_PATHNAME_MAX], *s;
 	AG_User *sysUser;
 
 	AG_ObjectInit(cfg, &agConfigClass);
@@ -94,23 +94,17 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 		Strlcat(path, agProgName, sizeof(path));
 		AG_SetString(cfg, "save-path", path);
 
-#if !defined(_WIN32) && !defined(_WIN64)
 		if (strcmp(DATADIR, "NONE") != 0) {
 			AG_PrtString(cfg, "load-path", "%s:%s", path, DATADIR);
-		} else
-#endif
+		} else {
 			AG_SetString(cfg, "load-path", path);
-
+		}
 		AG_UserFree(sysUser);
 	} else {
 		AG_SetString(cfg, "home", "");
-		AG_SetString(cfg, "save-path", "");
-#if !defined(_WIN32) && !defined(_WIN64)
-		AG_SetString(cfg, "load-path",
-		    (strcmp(DATADIR,"NONE") != 0) ? DATADIR : "");
-#else
-		AG_SetString(cfg, "load-path", ".");
-#endif
+		s = (strcmp(DATADIR,"NONE") != 0) ? DATADIR : ".";
+		AG_SetString(cfg, "load-path", s);
+		AG_SetString(cfg, "save-path", s);
 		AG_SetString(cfg, "tmp-path", "tmp");
 	}
 
