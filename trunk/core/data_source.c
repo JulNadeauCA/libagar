@@ -272,12 +272,7 @@ static __inline__ int
 CoreLimitBounds(AG_CoreSource *cs, off_t pos, size_t sizeReq, size_t *size)
 {
 	if (pos+sizeReq > cs->size) {
-		if ((cs->size - pos) < 0) {
-			AG_SetError("Bad offset");
-			return (-1);
-		} else {
-			*size = cs->size - cs->offs;
-		}
+		*size = cs->size - cs->offs;
 	} else {
 		*size = sizeReq;
 	}
