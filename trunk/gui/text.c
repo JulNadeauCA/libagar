@@ -65,6 +65,7 @@
 
 #include <core/core.h>
 #include <core/config.h>
+#include <core/win32.h>
 
 #ifdef HAVE_FREETYPE
 #include "ttf.h"
@@ -407,30 +408,56 @@ AG_TextInit(void)
 
 	/* Set the default font search path. */
 	if (!AG_Defined(agConfig,"font-path")) {
+		char fontPath[AG_PATHNAME_MAX];
+		char path[AG_PATHNAME_MAX];
+		AG_User *sysUser = AG_GetRealUser();
+		size_t len;
+
+		AG_GetString(agConfig, "save-path", path, sizeof(path));
+		if (path[0] != '\0') {
+			Strlcpy(fontPath, path, sizeof(fontPath));
+			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
+			Strlcat(fontPath, "fonts:", sizeof(fontPath));
+		} else {
+			fontPath[0] ='\0';
+		}
+		if (strcmp(TTFDIR, "NONE") != 0) {
+			Strlcat(fontPath, TTFDIR, sizeof(fontPath));
+			Strlcat(fontPath, ":", sizeof(fontPath));
+		}
 #if defined(__APPLE__)
-# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-		char savePath[AG_PATHNAME_MAX];
-		char home[AG_PATHNAME_MAX];
-		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
-		AG_GetString(agConfig, "home", home, sizeof(home));
-		AG_PrtString(agConfig, "font-path",
-		    "%s/fonts:%s:%s/Library/Fonts:/Library/Fonts:/System/Library/Fonts",
-		    savePath, TTFDIR, home);
-# else
-		char savePath[AG_PATHNAME_MAX];
-		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
-		AG_PrtString("font-path",
-		    "%s/fonts:%s:/Library/Fonts:/System/Library/Fonts",
-		    savePath, TTFDIR);
-# endif
+		if (sysUser != NULL && sysUser->home != NULL) {
+			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
+			Strlcat(fontPath, "/Library/Fonts:", sizeof(fontPath));
+		}
+		Strlcat(fontPath, "/Library/Fonts:/System/Library/Fonts:",
+		    sizeof(fontPath));
 #elif defined(_WIN32)
-		AG_SetString(agConfig, "font-path", "fonts:.");
+		if (sysUser != NULL && sysUser->home != NULL) {
+			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
+			Strlcat(fontPath, "\\AppData\\Local\\Agar\\Fonts:",
+			    sizeof(fontPath));
+		}
+		if (GetWindowsDirectory(path, sizeof(path)) > 0) {
+			Strlcat(fontPath, path, sizeof(fontPath));
+			Strlcat(fontPath, "\\Fonts:", sizeof(fontPath));
+		}
 #else
-		char savePath[AG_PATHNAME_MAX];
-		AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
-		AG_PrtString(agConfig, "font-path", "%s/fonts:%s", savePath,
-		    TTFDIR);
+		if (sysUser != NULL && sysUser->home != NULL) {
+			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
+			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
+			Strlcat(fontPath, ".fonts:", sizeof(fontPath));
+		}
 #endif
+		if ((len = strlen(fontPath)) > 0) {
+			if (fontPath[len-1] == ':') {
+				fontPath[len-1] = '\0';
+			}
+			AG_SetString(agConfig, "font-path", fontPath);
+		}
+
+		if (sysUser != NULL)
+			AG_UserFree(sysUser);
 	}
 	
 	/* Initialize FreeType if available. */
@@ -464,7 +491,7 @@ AG_TextInit(void)
 	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
 
-	/* Initialize the state engine and cache. */
+	/* Initialize the rendering state. */
 	curState = 0;
 	agTextState = &states[0];
 	InitTextState();
