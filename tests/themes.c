@@ -124,7 +124,7 @@ CreateWindow(AG_Event *event)
 		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
-			AG_ButtonNew(hBox, 0, AG_Printf("%c", 0x41+i));
+			AG_ButtonNewS(hBox, 0, AG_Printf("%c", 0x41+i));
 	}
 
 	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);

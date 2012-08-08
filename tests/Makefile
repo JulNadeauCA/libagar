@@ -31,6 +31,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	customwidget_mywidget.c \
 	fixedres.c \
 	focusing.c \
+	fspaths.c \
 	glview.c \
 	imageloading.c \
 	keyevents.c \
