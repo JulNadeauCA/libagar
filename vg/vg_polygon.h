@@ -48,7 +48,7 @@ static __inline__ void
 VG_PolygonDelVertex(VG_Polygon *vP, Uint vtx)
 {
 	VG_Lock(VGNODE(vP)->vg);
-	if (vtx < 0 || vtx >= vP->nPts) {
+	if (vtx >= vP->nPts) {
 		goto out;
 	}
 	VG_DelRef(vP, vP->pts[vtx]);

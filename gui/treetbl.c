@@ -292,14 +292,14 @@ ClickedColumnHeader(AG_Treetbl *tt, int x1, int x2, Uint32 idx,
 		}
 	}
 	/* click on the LEFT resize line */
-	else if (idx-1 >= 0 && idx-1 < tt->n &&
+	else if (idx-1 < tt->n &&
 	         colLeft->flags & AG_TREETBL_COL_RESIZABLE &&
 		 idx > 0 &&
 		 x < x1+3) {
 		ResizeColumn(tt, idx-1, (x1 - colLeft->w));
 	}
 	/* click on the RIGHT resize line */
-	else if ((idx >= 0 && idx < tt->n) &&
+	else if (idx < tt->n &&
 	         (col->flags & AG_TREETBL_COL_RESIZABLE) &&
 		 (x > x2-3 || (idx == tt->n-1 && x < x2+3))) {
 		ResizeColumn(tt, idx, x1);
@@ -1441,7 +1441,7 @@ AG_TreetblSelectedRow(AG_Treetbl *tt)
 
 	AG_ObjectLock(tt);
 	TAILQ_FOREACH(row, &tt->children, siblings) {
-		if (row->flags |= AG_TREETBL_ROW_SELECTED) {
+		if (row->flags & AG_TREETBL_ROW_SELECTED) {
 			AG_ObjectUnlock(tt);
 			return (row);
 		}
