@@ -743,6 +743,21 @@ echo "#define INCLDIR \"$INCLDIR\"" >> $BLD/include/agar/config/incldir.h
 echo "#endif" >> $BLD/include/agar/config/incldir.h
 echo "hdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
 fi;
+if [ "${DATADIR}" = "NONE" ]
+ then
+LOCALEDIR="NONE"
+echo "#ifndef LOCALEDIR" > $BLD/include/agar/config/localedir.h
+echo "#define LOCALEDIR \"$LOCALEDIR\"" >> $BLD/include/agar/config/localedir.h
+echo "#endif" >> $BLD/include/agar/config/localedir.h
+echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
+LOCALEDIR="NONE"
+TTFDIR="NONE"
+echo "#ifndef TTFDIR" > $BLD/include/agar/config/ttfdir.h
+echo "#define TTFDIR \"$TTFDIR\"" >> $BLD/include/agar/config/ttfdir.h
+echo "#endif" >> $BLD/include/agar/config/ttfdir.h
+echo "hdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
+TTFDIR="NONE"
+fi
 $ECHO_N "checking for a C compiler..."
 $ECHO_N "checking for a C compiler..." >> config.log
 if [ "$CC" = "" ]; then
@@ -5344,12 +5359,6 @@ fi;
 if [ -e  "/usr/X11R7/lib" ]; then
 X11_LIBS="${X11_LIBS} -L/usr/X11R7/lib"
 fi;
-if [ "${X11_CFLAGS}" != "" ]; then
-echo "trying autodetected path"
-echo "trying autodetected path" >> config.log
-echo "WARNING: You should probably use --with-x=prefix"
-echo "WARNING: You should probably use --with-x=prefix" >> config.log
-fi;
 fi;
 fi;
 MK_CACHED="No"
@@ -5537,12 +5546,6 @@ fi;
 if [ -e  "/usr/X11R6/lib" ]; then
 XINERAMA_LIBS="${XINERAMA_LIBS} -L/usr/X11R6/lib"
 fi;
-if [ "${XINERAMA_CFLAGS}" != "" ]; then
-echo "trying autodetected path"
-echo "trying autodetected path" >> config.log
-echo "WARNING: You should probably use --with-xinerama=prefix"
-echo "WARNING: You should probably use --with-xinerama=prefix" >> config.log
-fi;
 fi;
 XINERAMA_LIBS="${XINERAMA_LIBS} -lXinerama"
 fi;
@@ -5646,7 +5649,7 @@ echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
  then
 $ECHO_N "checking for the Cocoa framework..."
 $ECHO_N "checking for the Cocoa framework..." >> config.log
-COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -falign-loops=16 -force_cpusubtype_ALL -fpascal-strings"
+COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -force_cpusubtype_ALL -fpascal-strings"
 COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,IOKit"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -6697,6 +6700,84 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETADDRINFO
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the SIOCGIFCONF interface..."
+$ECHO_N "checking for the SIOCGIFCONF interface..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SIOCGIFCONF" ]; then
+		HAVE_SIOCGIFCONF=`cat ${cache}/ctest-HAVE_SIOCGIFCONF`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SIOCGIFCONF`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <netdb.h>
+int
+main(int argc, char *argv[])
+{
+	char buf[4096];
+	struct ifconf conf;
+	struct ifreq *ifr;
+	int sock;
+	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+		return (1);
+	}
+	conf.ifc_len = sizeof(buf);
+	conf.ifc_buf = (caddr_t)buf;
+	if (ioctl(sock, SIOCGIFCONF, &conf) < 0) {
+		return (1);
+	}
+#if !defined(_SIZEOF_ADDR_IFREQ)
+#define _SIZEOF_ADDR_IFREQ sizeof
+#endif
+	for (ifr = (struct ifreq *)buf;
+	     (char *)ifr < &buf[conf.ifc_len];
+	     ifr = (struct ifreq *)((char *)ifr + _SIZEOF_ADDR_IFREQ(*ifr))) {
+		if (ifr->ifr_addr.sa_family == AF_INET)
+			return (1);
+	}
+	close(sock);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SIOCGIFCONF="yes"
+echo "#ifndef HAVE_SIOCGIFCONF" > $BLD/include/agar/config/have_siocgifconf.h
+echo "#define HAVE_SIOCGIFCONF \"$HAVE_SIOCGIFCONF\"" >> $BLD/include/agar/config/have_siocgifconf.h
+echo "#endif" >> $BLD/include/agar/config/have_siocgifconf.h
+echo "hdefs[\"HAVE_SIOCGIFCONF\"] = \"$HAVE_SIOCGIFCONF\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SIOCGIFCONF="no"
+echo "#undef HAVE_SIOCGIFCONF" >$BLD/include/agar/config/have_siocgifconf.h
+echo "hdefs[\"HAVE_SIOCGIFCONF\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SIOCGIFCONF" > ${cache}/ctest-HAVE_SIOCGIFCONF
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SIOCGIFCONF
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the setsockopt() interface..."
 $ECHO_N "checking for the setsockopt() interface..." >> config.log
 MK_CACHED="No"
@@ -7080,6 +7161,8 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 fi;
 $ECHO_N "checking for the WinSock interface..."
 $ECHO_N "checking for the WinSock interface..." >> config.log
+echo "no"
+echo "no" >> config.log
 HAVE_WINSOCK1="no"
 HAVE_WINSOCK2="no"
 echo "#undef HAVE_WINSOCK1" >$BLD/include/agar/config/have_winsock1.h

@@ -53,6 +53,13 @@ DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
 DEFAULT_DIR(TTFDIR, "${DATADIR}/fonts")
 DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar")
 
+if [ "${DATADIR}" = "NONE" ]; then
+	HDEFINE(LOCALEDIR, "NONE")
+	MDEFINE(LOCALEDIR, "NONE")
+	HDEFINE(TTFDIR, "NONE")
+	MDEFINE(TTFDIR, "NONE")
+fi
+
 # Tests
 CHECK(cc)
 CHECK(cc_attributes)
@@ -344,6 +351,7 @@ fi
 # Enable network interface unless requested otherwise.
 if [ "${enable_network}" != "no" ]; then
 	CHECK(getaddrinfo)
+	CHECK(siocgifconf)
 	CHECK(sockopts)
 	CHECK(winsock)
 	MDEFINE(HAVE_NETWORK, "yes")
