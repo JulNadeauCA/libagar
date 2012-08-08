@@ -43,6 +43,7 @@
 #include <OpenGL/CGLTypes.h>
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLRenderers.h>
+#include <OpenGL/gl.h>
 
 #include "drv_gl_common.h"
 #include "drv_cocoa_keymap.h"
@@ -802,12 +803,12 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 				if ((modFlags & kmEnt->keyMask) &&
 				     !(co->modFlags & kmEnt->keyMask)) {
 					AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, kmEnt->keySym, 0);
-					QueueKeyEvent(co, AG_KEY_PRESSED, kmEnt->keySym, 0);
+					QueueKeyEvent(co, AG_DRIVER_KEY_DOWN, kmEnt->keySym, 0);
 					nChanged++;
 				} else if (!(modFlags & kmEnt->keyMask) &&
 				    (co->modFlags & kmEnt->keyMask)) {
 					AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, kmEnt->keySym, 0);
-					QueueKeyEvent(co, AG_KEY_RELEASED, kmEnt->keySym, 0);
+					QueueKeyEvent(co, AG_DRIVER_KEY_UP, kmEnt->keySym, 0);
 					nChanged++;
 				}
 			}
@@ -992,16 +993,13 @@ static void
 COCOA_RenderWindow(AG_Window *win)
 {
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
+	AG_GL_Context *gl = &co->gl;
 	AG_Color C = agColors[WINDOW_BG_COLOR];
 
-	co->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE0);
-	co->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE1);
-	co->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE2);
-	co->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3);
-	glEnable(GL_CLIP_PLANE3);
+	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
+	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
+	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
+	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
 	/* Clear the clipped area with the background colour */
 	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
@@ -1193,7 +1191,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("Cannot create NSOpenGLContext");
 		goto fail;
 	}
-	if (AG_GL_InitContext(sgl, &sgl->gl) == -1)
+	COCOA_GL_MakeCurrent(co, win);
+	if (AG_GL_InitContext(co, &co->gl) == -1)
 		goto fail;
 
 	/* Set the preferred Agar pixel formats. */
@@ -1223,13 +1222,12 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	[pool release];
 	return (0);
 fail_ctx:
-	AG_GL_DestroyContext(sgl);
+	AG_GL_DestroyContext(co);
 fail:
 	[NSOpenGLContext clearCurrentContext];
 	[co->evListener close];
 	[co->evListener release];
 	[co->win close];
-	AGDRIVER_MW(co)->flags &= ~(AG_DRIVER_MW_OPEN);
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
 		drv->videoFmt = NULL;
@@ -1250,11 +1248,10 @@ COCOA_CloseWindow(AG_Window *win)
 	[[co->win contentView] removeTrackingRect:co->trackRect];
 	
 	/* Destroy our OpenGL rendering context. */
-	COCOA_GL_MakeCurrent(co, win)
+	COCOA_GL_MakeCurrent(co, win);
 	AG_GL_DestroyContext(drv);
 	[co->glCtx clearDrawable];
 	[co->glCtx release];
-	AGDRIVER_MW(co)->flags &= ~(AG_DRIVER_MW_OPEN);
 
 	/* Close the window. */
 	[co->evListener close];
