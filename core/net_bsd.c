@@ -27,6 +27,13 @@
  * Network access via standard BSD sockets.
  */
 
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE		/* For SIOCGIFCONF */
+#endif
+
+#include <core/core.h>
+#include <core/queue_close.h>		/* Avoid <sys/queue.h> conflicts */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -46,9 +53,11 @@
 #include <net/if.h>
 #include <netdb.h>
 
-#include <core/core.h>
+#include <core/queue_close.h>		/* Avoid <sys/queue.h> conflicts */
+#include <core/queue.h>
 
 #include <config/have_select.h>
+#include <config/have_siocgifconf.h>
 #include <config/have_setsockopt.h>
 #ifdef HAVE_SETSOCKOPT
 #include <config/have_so_oobinline.h>
@@ -210,7 +219,7 @@ Destroy(void)
 static int
 GetIfConfig(AG_NetAddrList *nal)
 {
-#ifdef SIOCGIFCONF
+#ifdef HAVE_SIOCGIFCONF
 	enum ag_net_addr_family af;
 	AG_NetAddr *na;
 	char buf[4096];
@@ -254,7 +263,7 @@ fail:
 #else
 	AG_SetError("GetIfConfig: SIOCGIFCONF unavailable");
 	return (-1);
-#endif /* !SIOCGIFCONF */
+#endif /* !HAVE_SIOCGIFCONF */
 }
 
 static int
