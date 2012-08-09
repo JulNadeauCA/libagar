@@ -166,7 +166,9 @@ typedef struct ag_driver_cocoa {
 	AG_GL_Context    gl;
 	AG_Mutex         lock;		/* Protect Cocoa calls */
 	Uint             modFlags;	/* Last modifier state */
-	NSTrackingRectTag trackRect;	/* For window-{enter,leave} */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+	NSTrackingArea  *trackArea;	/* For mouse motion events */
+#endif
 } AG_DriverCocoa;
 
 AG_DriverMwClass agDriverCocoa;
@@ -215,14 +217,14 @@ ConvertNSRect(NSRect *r)
 	}
 
 	[win setNextResponder:self];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
 	[win setAcceptsMouseMovedEvents:YES];
-
+#endif
 	[view setNextResponder:self];
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-	if ([view respondsToSelector:@selector(setAcceptsTouchEvents:)]) {
+	if ([view respondsToSelector:@selector(setAcceptsTouchEvents:)])
 		[view setAcceptsTouchEvents:YES];
-	}
 #endif
 }
 
@@ -382,7 +384,9 @@ Init(void *obj)
 	co->win = NULL;
 	co->glCtx = NULL;
 	co->modFlags = 0;
-	co->trackRect = -1;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+	co->trackArea = nil;
+#endif
 	AG_MutexInitRecursive(&co->lock);
 }
 
@@ -638,7 +642,7 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	win = coWin->_agarWindow;
 	drv = WIDGET(win)->drv;
 	co = (AG_DriverCocoa *)drv;
-
+	
 	switch ([event type]) {
 	case NSMouseMoved:
 	case NSLeftMouseDragged:
@@ -706,14 +710,22 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 			break;
 		}
 	case NSMouseEntered:
-		dev->type = AG_DRIVER_MOUSE_ENTER;
-		dev->win = win;
-		rv = 1;
+		if ([co->win isKeyWindow]) {
+			dev->type = AG_DRIVER_MOUSE_ENTER;
+			dev->win = win;
+			rv = 1;
+		} else {
+			rv = 0;
+		}
 		break;
 	case NSMouseExited:
-		dev->type = AG_DRIVER_MOUSE_LEAVE;
-		dev->win = win;
-		rv = 1;
+		if ([co->win isKeyWindow]) {
+			dev->type = AG_DRIVER_MOUSE_LEAVE;
+			dev->win = win;
+			rv = 1;
+		} else {
+			rv = 0;
+		}
 		break;
 	case NSKeyDown:
 		if ([event isARepeat]) {
@@ -1101,8 +1113,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		screen = [screens objectAtIndex:i];
 		scrRect = [screen frame];
 
-		if (winRect.origin.x >= scrRect .origin.x &&
-		    winRect.origin.y >= scrRect .origin.y &&
+		if (winRect.origin.x >= scrRect.origin.x &&
+		    winRect.origin.y >= scrRect.origin.y &&
 		    winRect.origin.x < scrRect.origin.x + scrRect.size.width &&
 		    winRect.origin.y < scrRect.origin.y + scrRect.size.height) {
 		    	selScreen = screen;
@@ -1111,19 +1123,20 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 			break;
 		}
 	}
-	if (selScreen == nil) {
-		AG_MutexUnlock(&co->lock);
-		[pool release];
-		AG_SetError("Failed to select screen");
-		return (-1);
-	}
-
+	
 	/* Create the window. */
-	co->win = [[AG_CocoaWindow alloc] initWithContentRect:winRect
-	                                  styleMask:winStyle
-				          backing:NSBackingStoreBuffered
-				          defer:YES
-				          screen:selScreen];
+	if (selScreen == nil) {
+		co->win = [[AG_CocoaWindow alloc] initWithContentRect:winRect
+		                                  styleMask:winStyle
+					          backing:NSBackingStoreBuffered
+					          defer:YES];
+	} else {
+		co->win = [[AG_CocoaWindow alloc] initWithContentRect:winRect
+		                                  styleMask:winStyle
+					          backing:NSBackingStoreBuffered
+					          defer:YES
+					          screen:selScreen];
+	}
 	co->win->_agarWindow = win;
 	SetBackgroundColor(co, &agColors[WINDOW_BG_COLOR]);
 
@@ -1245,8 +1258,13 @@ COCOA_CloseWindow(AG_Window *win)
 
 	AG_MutexLock(&co->lock);
 
-	[[co->win contentView] removeTrackingRect:co->trackRect];
-	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+	if (co->trackArea != nil) {
+		[[co->win contentView] removeTrackingArea:co->trackArea];
+		[co->trackArea release];
+		co->trackArea = nil;
+	}
+#endif
 	/* Destroy our OpenGL rendering context. */
 	COCOA_GL_MakeCurrent(co, win);
 	AG_GL_DestroyContext(drv);
@@ -1407,16 +1425,24 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	COCOA_GL_MakeCurrent(co, win);
 	AG_GL_SetViewport(&co->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 	/* Update the tracking rectangle. */
-	if (co->trackRect != -1) {
-		[[co->win contentView] removeTrackingRect:co->trackRect];
+	if (co->trackArea != nil) {
+		[[co->win contentView] removeTrackingArea:co->trackArea];
+		[co->trackArea release];
+		co->trackArea = nil;
 	}
 	trackRect.origin.x = 0;
 	trackRect.origin.y = 0;
 	trackRect.size.width = WIDTH(win);
 	trackRect.size.height = HEIGHT(win);
-	co->trackRect = [[co->win contentView] addTrackingRect:trackRect
-	                 owner:co->win userData:NULL assumeInside:NO];
+	co->trackArea = [[NSTrackingArea alloc] initWithRect:trackRect
+	                 options: (NSTrackingMouseEnteredAndExited|
+			           NSTrackingMouseMoved|
+				   NSTrackingActiveAlways)
+			 owner:co->win userInfo:nil];
+	[[co->win contentView] addTrackingArea:co->trackArea];
+#endif /* >= 10.5 */
 
 	AG_MutexUnlock(&co->lock);
 
