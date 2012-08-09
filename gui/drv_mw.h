@@ -58,7 +58,8 @@ typedef struct ag_driver_mw {
 #define AGDRIVER_MW_CLASS(obj) ((struct ag_driver_mw_class *)(AGOBJECT(obj)->cls))
 
 /* Flags to openWindow */
-#define AG_DRIVER_MW_ANYPOS	0x01		/* No preferred position */
+#define AG_DRIVER_MW_ANYPOS		0x01	/* Autoposition window */
+#define AG_DRIVER_MW_ANYPOS_AVAIL	0x02	/* Autopositioning supported */
 
 __BEGIN_DECLS
 extern AG_ObjectClass  agDriverMwClass;
