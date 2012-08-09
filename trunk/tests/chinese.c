@@ -20,13 +20,12 @@ TestGUI(void *obj, AG_Window *win)
 		    "\xE6\xBC\xA2\xE8\xAA\x9E\x0A");
 		AG_LabelSetFont(lbl, font);
 	} else {
-		AG_SetError(
+		AG_LabelNew(win, 0,
 		    "This demo requires the font \"%s\","
 		    "please download it from:\n"
 		    "http://vietunicode.sourceforge.net/fonts/fonts_hannom.html\n"
 		    "and place it in the current directory.", TESTFONT);
-		AG_TextMsgFromError();
-		return (-1);
+		return (0);
 	}
 	return (0);
 }

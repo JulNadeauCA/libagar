@@ -14,12 +14,27 @@ TestInitialAlign(AG_Event *event)
 	
 	AG_LabelNewS(winParent, 0, "Creating test windows...");
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 2; i++) {
+		if ((win = AG_WindowNew(0))) {
+			AG_WindowSetCaption(win, "Auto%d", i);
+			AG_LabelNew(win, 0, "Autopositioned #%d", i);
+			AG_LabelNewS(win, 0, "(AG_WINDOW_ALIGNMENT_NONE)");
+			AG_WindowAttach(winParent, win);
+			AG_WindowShow(win);
+		}
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "TL%d", i);
 			AG_LabelNew(win, 0, "Top Left #%d", i);
 			AG_LabelNewS(win, 0, "(AG_WINDOW_TL)");
 			AG_WindowSetPosition(win, AG_WINDOW_TL, 1);
+			AG_WindowAttach(winParent, win);
+			AG_WindowShow(win);
+		}
+		if ((win = AG_WindowNew(0))) {
+			AG_WindowSetCaption(win, "TC%d", i);
+			AG_LabelNew(win, 0, "Top Center #%d", i);
+			AG_LabelNewS(win, 0, "(AG_WINDOW_TC)");
+			AG_WindowSetPosition(win, AG_WINDOW_TC, 1);
 			AG_WindowAttach(winParent, win);
 			AG_WindowShow(win);
 		}
@@ -120,7 +135,6 @@ TestGUI(void *obj, AG_Window *win)
 	    TestInitialAlign, "%p", win);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test WM window attributes",
 	    TestWmAttributes, "%p", win);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 	return (0);
 }
 

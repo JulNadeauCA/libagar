@@ -157,6 +157,10 @@ RunTest(AG_Event *event)
 			ti->win = win;
 			AG_ConsoleMsg(cons, _("%s: Interactive test started"),
 			    tc->name);
+			AG_SeparatorNewHoriz(win);
+			AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
+			    TestWindowClose, "%p", ti);
+			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 			AG_WindowShow(win);
 		} else {
 			AG_ConsoleMsg(cons, _("%s: Failed to start (%s)"),
