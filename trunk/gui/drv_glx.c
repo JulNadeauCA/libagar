@@ -121,7 +121,9 @@ static void
 Init(void *obj)
 {
 	AG_DriverGLX *glx = obj;
+	AG_DriverMw *dmw = obj;
 
+	dmw->flags |= AG_DRIVER_MW_ANYPOS_AVAIL;
 	glx->w = 0;
 	AG_MutexInitRecursive(&glx->lock);
 }

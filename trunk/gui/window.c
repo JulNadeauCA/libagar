@@ -547,6 +547,7 @@ Shown(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
+	AG_DriverMw *dmw = AGDRIVER_MW(drv);
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 	int xPref, yPref;
@@ -568,14 +569,20 @@ Shown(AG_Event *event)
 			a.x = 0;
 			a.y = 0;
 		}
+		a.w = r.w;
+		a.h = r.h;
+
 		if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
 			AG_WindowComputeAlignment(win, &a);
 		} else {
-			/* Let the window manager choose a default position */
-			mwFlags |= AG_DRIVER_MW_ANYPOS;
+			if (dmw->flags & AG_DRIVER_MW_ANYPOS_AVAIL) {
+				/* Let the WM choose a default position */
+				mwFlags |= AG_DRIVER_MW_ANYPOS;
+			} else {
+				win->alignment = AG_WINDOW_MC;
+				AG_WindowComputeAlignment(win, &a);
+			}
 		}
-		a.w = r.w;
-		a.h = r.h;
 	} else {
 		a.x = WIDGET(win)->x;
 		a.y = WIDGET(win)->y;
@@ -599,13 +606,13 @@ Shown(AG_Event *event)
 			AG_ListAppend(agModalWindows, &V);
 		}
 		/* We expect the driver will call AG_WidgetUpdateCoords(). */
-		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
+		if (!(dmw->flags & AG_DRIVER_MW_OPEN)) {
 			if (AGDRIVER_MW_CLASS(drv)->openWindow(win,
 			    AG_RECT(a.x, a.y, a.w, a.h), 0,
 			    mwFlags) == -1) {
 				AG_FatalError(NULL);
 			}
-			AGDRIVER_MW(drv)->flags |= AG_DRIVER_MW_OPEN;
+			dmw->flags |= AG_DRIVER_MW_OPEN;
 		}
 		if (win->flags & AG_WINDOW_FADEIN) {
 			AG_WindowSetOpacity(win, 0.0);
