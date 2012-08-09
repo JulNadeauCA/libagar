@@ -47,8 +47,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_TextSetLangISO(myTxt, "fr");
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "AG_Text Buffer: ");
 	AG_TextboxBindText(tb, myTxt);
-
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, -1);
 	return (0);
 }
 

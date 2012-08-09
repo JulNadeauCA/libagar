@@ -57,7 +57,6 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetEvent(sl, "slider-changed", Changed, "%p", win);
 	}
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test AG_WINDOW_FADEIN", Fadein, NULL);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 380, -1);
 	return (0);
 }
 
