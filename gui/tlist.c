@@ -423,7 +423,7 @@ Draw(void *obj)
 		    AG_RECT(x + tl->icon_w + 2,
 		            y,
 			    tl->wRow - x - tl->icon_w - 3,
-			    tl->item_h),
+			    tl->item_h + 1),
 		    it->selected);
 
 		if (it->selected)
