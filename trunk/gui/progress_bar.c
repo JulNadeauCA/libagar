@@ -71,7 +71,7 @@ Init(void *obj)
 	pb->value = 0;
 	pb->min = 0;
 	pb->max = 100;
-	pb->width = 25;
+	pb->width = agTextFontHeight + 4;
 	pb->length = 300;
 	pb->pad = 2;
 	pb->tCache = agTextCache ? AG_TextCacheNew(pb, 50, 10) : NULL;

@@ -695,7 +695,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,
 		AG_GL_DrawCircle,
-		AG_GL_DrawCircle2,
+		AG_GL_DrawCircleFilled,
 		AG_GL_DrawRectFilled,
 		AG_GL_DrawRectBlended,
 		AG_GL_DrawRectDithered,

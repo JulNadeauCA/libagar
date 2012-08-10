@@ -237,19 +237,27 @@ Draw(void *obj)
 	val = AG_GetInt(rad, "value");
 	AG_PushTextState();
 	AG_PushClipRect(rad, rad->r);
-	for (i = 0; i < rad->nItems;
-	     i++, y += (rad->radius*2 + rad->ySpacing)) {
+	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
-
-		STYLE(rad)->RadioButton(rad, x, y,
-		    (i == val),
-		    (i == rad->oversel));
+	
 		if (ri->surface == -1) {
 			AG_TextColor(agColors[RADIO_TXT_COLOR]);
 			ri->surface = AG_WidgetMapSurface(rad,
 			    AG_TextRender(ri->text));
 		}
-		AG_WidgetBlitSurface(rad, ri->surface, x, y);
+		if (i == rad->oversel) {
+			AG_Rect r = AG_RECT(rad->xPadding, y,
+			    WIDGET(rad)->w - rad->xPadding*2,
+			    rad->itemHeight);
+			AG_DrawRectBlended(rad, r,
+			    AG_ColorRGBA(255,255,255,25),
+			    AG_ALPHA_SRC);
+		}
+		STYLE(rad)->RadioButton(rad, x, y,
+		    (i == val),
+		    (i == rad->oversel));
+		AG_WidgetBlitSurface(rad, ri->surface, x, y + rad->ySpacing/2);
+		y += rad->itemHeight;
 	}
 	AG_PopClipRect(rad);
 	AG_PopTextState();
@@ -272,10 +280,9 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		r->w = 0;
 		r->h = 0;
 	} else {
-		r->w = rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
+		r->w = rad->xPadding*2 + rad->radius*2 + rad->xSpacing*2 +
 		       rad->max_w;
-		r->h = rad->yPadding*2 + rad->nItems*rad->radius*2 +
-		       (rad->nItems-1)*rad->ySpacing;
+		r->h = rad->yPadding*2 + rad->nItems*rad->itemHeight;
 	}
 }
 
@@ -299,10 +306,16 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
+	int x = AG_INT(1);
 	int y = AG_INT(2) - rad->yPadding;
 	int ns;
 
-	ns = (y/(rad->radius*2 + rad->ySpacing));
+	if (x < 0 || x > WIDGET(rad)->w ||
+	    y < 0 || y > WIDGET(rad)->h) {
+		rad->oversel = -1;
+		return;
+	}
+	ns = (y / rad->itemHeight);
 	if (ns != rad->oversel) {
 		rad->oversel = ns;
 		AG_Redraw(rad);
@@ -321,7 +334,7 @@ MouseButtonDown(AG_Event *event)
 	value = AG_GetVariable(rad, "value", &sel);
 	switch (button) {
 	case AG_MOUSE_LEFT:
-		selNew = ((y - rad->yPadding)/(rad->radius*2 + rad->ySpacing));
+		selNew = ((y - rad->yPadding) / rad->itemHeight);
 		if (selNew >= rad->nItems) {
 			selNew = rad->nItems - 1;
 		} else if (selNew < 0) {
@@ -391,11 +404,12 @@ Init(void *obj)
 	rad->value = -1;
 	rad->max_w = 0;
 	rad->oversel = -1;
-	rad->xPadding = 3;
+	rad->xPadding = 4;
 	rad->yPadding = 4;
-	rad->xSpacing = 7;
-	rad->ySpacing = 2;
-	rad->radius = 6;
+	rad->xSpacing = 4;
+	rad->ySpacing = 1;
+	rad->itemHeight = agTextFontHeight + rad->ySpacing*2;
+	rad->radius = MAX(0, agTextFontHeight/2 - 1);
 	rad->items = NULL;
 	rad->nItems = 0;
 	rad->r = AG_RECT(0,0,0,0);

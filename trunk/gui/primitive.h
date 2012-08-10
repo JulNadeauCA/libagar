@@ -273,11 +273,11 @@ AG_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
 
 /* Render a circle of specified radius. */
 static __inline__ void
-AG_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
+AG_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	
-	wid->drvOps->drawCircle2(wid->drv,
+	wid->drvOps->drawCircleFilled(wid->drv,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y,
 	    r, c);

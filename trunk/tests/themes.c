@@ -138,7 +138,7 @@ CreateWindow(AG_Event *event)
 			};
 			AG_Radio *rad;
 
-			rad = AG_RadioNew(hBox, AG_RADIO_EXPAND, radioItems);
+			rad = AG_RadioNew(hBox, 0, radioItems);
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);

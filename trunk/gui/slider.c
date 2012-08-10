@@ -28,7 +28,7 @@
 #include "slider.h"
 #include "window.h"
 #include "primitive.h"
-
+#include "text.h"
 #include "gui_math.h"
 
 #define TOTSIZE(sl) (((sl)->type==AG_SLIDER_VERT) ? HEIGHT(sl) : WIDTH(sl))
@@ -649,7 +649,7 @@ Init(void *obj)
 	sl->value = 0;
 	sl->min = 0;
 	sl->max = 0;
-	sl->wControlPref = 16;
+	sl->wControlPref = agTextFontHeight;
 	sl->wControl = sl->wControlPref;
 	sl->xOffs = 0;
 	sl->rInc = 1.0;	

@@ -121,12 +121,6 @@ should be used instead.
 .Ft int
 .Fn AG_ScrollbarWidth "void"
 .Pp
-.Ft void
-.Fn AG_ScrollbarSetPrefWidth "int width"
-.Pp
-.Ft int
-.Fn AG_ScrollbarPrefWidth "void"
-.Pp
 .Ft int
 .Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
 .Pp
@@ -226,31 +220,16 @@ configures the width (i.e., thickness) of the scrollbar.
 .Fn AG_ScrollbarWidth
 returns the effective width of a scrollbar in pixels.
 .Pp
-If the width of the scrollbar is not specified on initialization,
-.Nm
-will use a default width.
-This default width can be set with
-.Fn AG_ScrollbarSetPrefWidth ,
-and retrieved with
-.Fn AG_ScrollbarPrefWidth
-(typically from the
-.Fn size_request
-or
-.Fn size_allocate
-operation of a container widget).
-.Pp
-Note: Under multithreading,
-.Fn AG_ScrollbarControlLength ,
-.Fn AG_ScrollbarWidth
+Note:
+.Fn AG_ScrollbarControlLength
 and
-.Fn AG_ScrollbarPrefWidth
-should be considered safe to invoke only in widget context (e.g.,
-event handlers,
+.Fn AG_ScrollbarWidth
+should be considered safe to invoke only in widget
 .Fn size_request ,
 .Fn size_allocate
 or
 .Fn draw
-operations)
+context.
 .Pp
 The
 .Fn AG_ScrollbarVisible

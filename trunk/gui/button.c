@@ -253,10 +253,12 @@ MouseMotion(AG_Event *event)
 		if (bu->flags & AG_BUTTON_MOUSEOVER) {
 			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
 			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 0);
+			AG_Redraw(bu);
 		}
 	} else {
 		bu->flags |= AG_BUTTON_MOUSEOVER;
 		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
+		AG_Redraw(bu);
 	}
 	AG_UnlockVariable(binding);
 }

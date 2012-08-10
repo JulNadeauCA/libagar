@@ -54,7 +54,6 @@ typedef struct ag_scrollbar {
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
-extern int agPrefScrollbarSize;
 
 AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 AG_Scrollbar *AG_ScrollbarNewInt(void *, enum ag_scrollbar_type, Uint,
@@ -85,18 +84,6 @@ void AG_ScrollbarSetIntIncrement(AG_Scrollbar *, int);
 void AG_ScrollbarSetRealIncrement(AG_Scrollbar *, double);
 
 int  AG_ScrollbarVisible(AG_Scrollbar *);
-
-/* Set and retrieve global scrollbar width preference. */
-static __inline__ void
-AG_ScrollbarSetPrefWidth(int n)
-{
-	agPrefScrollbarSize = n;
-}
-static __inline__ int
-AG_ScrollbarPrefWidth(void)
-{
-	return (agPrefScrollbarSize);
-}
 
 /* Set and retrieve scrolling control length */
 static __inline__ void

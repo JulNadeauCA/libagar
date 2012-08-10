@@ -130,6 +130,8 @@ const char *agColorNames[] = {
 	N_("Progress bar"),
 	N_("Window border"),
 	N_("Text selection"),
+	N_("Frame (mouseover)"),
+	N_("Button (mouseover)")
 };
 
 /* Initialize the standard palette. */
@@ -138,15 +140,17 @@ AG_ColorsInit(void)
 {
 	agColors[BG_COLOR] = AG_ColorRGB(0, 0, 0);
 	agColors[FRAME_COLOR] = AG_ColorRGB(125, 125, 125);
+	agColors[FRAME_MOUSEOVER_COLOR] = AG_ColorRGB(133, 133, 133);
 	agColors[LINE_COLOR] = AG_ColorRGB(55, 55, 55);
 	agColors[TEXT_COLOR] = AG_ColorRGB(250, 250, 250);
 	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(82, 82, 82);
-	agColors[WINDOW_HI_COLOR] = AG_ColorRGB(90, 90, 85);
+	agColors[WINDOW_HI_COLOR] = AG_ColorRGB(73, 73, 73);
 	agColors[WINDOW_LO_COLOR] = AG_ColorRGB(36, 36, 36);
 	agColors[TITLEBAR_FOCUSED_COLOR] = AG_ColorRGB(40, 50, 60);
 	agColors[TITLEBAR_UNFOCUSED_COLOR] = AG_ColorRGB(35, 35, 35);
 	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
 	agColors[BUTTON_COLOR] = agColors[FRAME_COLOR];
+	agColors[BUTTON_MOUSEOVER_COLOR] = agColors[FRAME_MOUSEOVER_COLOR];
 	agColors[BUTTON_TXT_COLOR] = AG_ColorRGB(240, 240, 240);
 	agColors[DISABLED_COLOR] = AG_ColorRGB(160, 160, 160);
 	agColors[CHECKBOX_COLOR] = agColors[FRAME_COLOR];
@@ -165,10 +169,10 @@ AG_ColorsInit(void)
 	agColors[NOTEBOOK_BG_COLOR] = AG_ColorRGB(63, 63, 63);
 	agColors[NOTEBOOK_SEL_COLOR] = AG_ColorRGB(117, 117, 116);
 	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[RADIO_SEL_COLOR] = AG_ColorRGB(210, 210, 210);
+	agColors[RADIO_SEL_COLOR] = AG_ColorRGB(0, 0, 0);
 	agColors[RADIO_OVER_COLOR] = AG_ColorRGB(100, 100, 100);
 	agColors[RADIO_HI_COLOR] = AG_ColorRGB(180, 180, 180);
-	agColors[RADIO_LO_COLOR] = AG_ColorRGB(80, 80, 80);
+	agColors[RADIO_LO_COLOR] = AG_ColorRGB(140, 140, 140);
 	agColors[RADIO_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[SCROLLBAR_COLOR] = AG_ColorRGB(120, 120, 120);
 	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];

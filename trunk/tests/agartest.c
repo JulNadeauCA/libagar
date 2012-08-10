@@ -108,7 +108,10 @@ RunTest(AG_Event *event)
 	AG_Console *cons = AG_PTR(2);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
-	
+
+	if (tc == NULL)
+		return;
+
 	if ((ti = TryMalloc(tc->size)) == NULL) {
 		AG_LabelTextS(status, AG_GetError());
 		return;
@@ -225,11 +228,11 @@ main(int argc, char *argv[])
 	AG_Console *cons;
 	AG_Pane *pane;
 	AG_Button *btn;
-	int c;
+	int c, i, optInd;
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, NULL)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'd':
 			driverSpec = optArg;
@@ -282,10 +285,11 @@ main(int argc, char *argv[])
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
 		AG_TlistAddPtr(tl, NULL, (*pTest)->name, (void *)*pTest);
 	}
-	btn = AG_ButtonNew(pane->div[0], AG_BUTTON_HFILL, _("Run test"));
+	btn = AG_ButtonNew(pane->div[0], AG_BUTTON_HFILL, _("Run Test"));
 	cons = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
 	
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
+	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, cons);
 	AG_SetEvent(btn, "button-pushed", RunTest, "%p,%p", tl, cons);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
@@ -294,6 +298,22 @@ main(int argc, char *argv[])
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 520, 440);
 	AG_WindowShow(win);
+	
+	for (i = optInd; i < argc; i++) {
+		AG_Event ev;
+
+		for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
+			if (strcmp((*pTest)->name, argv[i]) == 0)
+				break;
+		}
+		if (*pTest == NULL) {
+			AG_Verbose("No such test: %s\n", argv[i]);
+			continue;
+		}
+		AG_TlistSelectPtr(tl, *pTest);
+		AG_EventArgs(&ev, "%p,%p", tl, cons);
+		RunTest(&ev);
+	}
 
 	AG_EventLoop();
 	AG_Destroy();

@@ -241,7 +241,7 @@ Init(void *obj)
 	tl->selected = NULL;
 	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight+2;
-	tl->icon_w = 16;
+	tl->icon_w = tl->item_h;
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;

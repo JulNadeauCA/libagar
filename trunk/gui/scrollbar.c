@@ -34,8 +34,6 @@
 
 #define TOTSIZE(sb) (((sb)->type==AG_SCROLLBAR_VERT) ? HEIGHT(sb) : WIDTH(sb))
 
-int agPrefScrollbarSize = 16;		/* Preferred width for new scrollbars */
-
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
@@ -740,8 +738,8 @@ Init(void *obj)
 	sb->maxOffs = 0;
 	sb->visOffs = 0;
 
-	sb->wBar = agPrefScrollbarSize/2;
-	sb->width = agPrefScrollbarSize;
+	sb->wBar = agTextFontHeight/2;
+	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width*5/9;
 
 	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
