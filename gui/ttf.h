@@ -47,22 +47,19 @@ typedef struct ag_ttf_font {
 	int font_size_family;		/* For non-scalable formats */
 } AG_TTFFont;
 
-#define TTF_STYLE_NORMAL	0x00
-#define TTF_STYLE_BOLD		0x01
-#define TTF_STYLE_ITALIC	0x02
-#define TTF_STYLE_UNDERLINE	0x04
+#define AG_TTF_STYLE_NORMAL	0x00
+#define AG_TTF_STYLE_BOLD	0x01
+#define AG_TTF_STYLE_ITALIC	0x02
+#define AG_TTF_STYLE_UNDERLINE	0x04
 
 __BEGIN_DECLS
-int		 AG_TTFInit(void);
-void		 AG_TTFDestroy(void);
-AG_TTFFont	*AG_TTFOpenFont(const char *, int);
-AG_TTFFont	*AG_TTFOpenFontFromMemory(const Uint8 *, size_t, int);
-void		 AG_TTFCloseFont(AG_TTFFont *);
-int	 	 AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
-void	 	 AG_TTFSetFontStyle(AG_TTFFont *, int);
-int	 	 AG_TTFFaceFixedWidth(AG_TTFFont *);
-int		 AG_TTFGlyphMetrics(AG_TTFFont *, Uint32 , int *, int *,
-		                    int *, int *, int *);
+struct ag_font;
+
+int  AG_TTFInit(void);
+void AG_TTFDestroy(void);
+int  AG_TTFOpenFont(struct ag_font *);
+void AG_TTFCloseFont(struct ag_font *);
+int  AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

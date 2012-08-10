@@ -63,7 +63,7 @@ Bound(AG_Event *event)
 	pFont = b->data.p;
 	AG_SetPointer(fs, "font", *pFont);
 	Strlcpy(fs->curFace, OBJECT(*pFont)->name, sizeof(fs->curFace));
-	fs->curSize = (*pFont)->size;
+	fs->curSize = (*pFont)->spec.size;
 	fs->curStyle = (*pFont)->flags;
 
 	fs->tlFaces->flags |= AG_TLIST_SCROLLTOSEL;
@@ -183,7 +183,7 @@ UpdateFaces(AG_Event *event)
 	for (i = 0; i < nStdSizes; i++) {
 		ti = AG_TlistAdd(fs->tlSizes, NULL, "%d", stdSizes[i]);
 		if (*pFont != NULL &&
-		    stdSizes[i] == (*pFont)->size)
+		    stdSizes[i] == (*pFont)->spec.size)
 			ti->selected++;
 	}
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Regular"));

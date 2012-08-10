@@ -38,6 +38,7 @@ REGISTER("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
 
 REGISTER_SECTION("Options specific to GUI library:")
 REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
+REGISTER("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
 REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
 REGISTER("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
 REGISTER("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
@@ -294,6 +295,13 @@ if [ "${enable_gui}" != "no" ]; then
 		HUNDEF(HAVE_FREETYPE)
 	fi
 	
+	# Use fontconfig if available.
+	if [ "${with_fontconfig}" != "no" ]; then
+		CHECK(fontconfig, 2.6.0, ${prefix_fontconfig})
+	else
+		HUNDEF(HAVE_FONTCONFIG)
+	fi
+	
 	# Enable JPEG format support if libjpeg is found.
 	if [ "${with_jpeg}" != "no" ]; then
 		CHECK(jpeg, 0, ${prefix_jpeg})
@@ -343,6 +351,7 @@ else
 	HUNDEF(HAVE_GLX)
 	HUNDEF(HAVE_WGL)
 	HUNDEF(HAVE_FREETYPE)
+	HUNDEF(HAVE_FONTCONFIG)
 	HUNDEF(HAVE_JPEG)
 	HUNDEF(HAVE_PNG)
 	HUNDEF(HAVE_LIBPNG14)
@@ -734,10 +743,33 @@ C_INCDIR($BLD/include/agar)
 C_INCDIR_CONFIG($BLD/include/agar/config)
 
 # Generate the "foo-config" scripts.
-CONFIG_SCRIPT(agar-config, "-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}", "-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
-CONFIG_SCRIPT(agar-core-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}", "-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
-CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}")
-CONFIG_SCRIPT(agar-math-config, "-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", "-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
-CONFIG_SCRIPT(agar-rg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
-CONFIG_SCRIPT(agar-vg-config, "-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
-CONFIG_SCRIPT(agar-au-config, "-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}", "-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}")
+CONFIG_SCRIPT(agar-config,\
+	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
+	${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
+	${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
+	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
+	${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
+	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
+	${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
+	${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
+	${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
+	${ICONV_LIBS}")
+CONFIG_SCRIPT(agar-core-config,\
+	"-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
+	${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
+	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} \
+	${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
+CONFIG_SCRIPT(agar-dev-config,\
+	"-I${INCLDIR} ${GETTEXT_CFLAGS}",\
+	"-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-math-config,\
+	"-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${ALTIVEC_CFLAGS} \
+	${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
+	"-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-rg-config,\
+	"-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-vg-config,\
+	"-I${INCLDIR} ${GETTEXT_CFLAGS}", "-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}")
+CONFIG_SCRIPT(agar-au-config,\
+	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}",\
+	"-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}")

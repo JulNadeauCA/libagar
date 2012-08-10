@@ -384,41 +384,42 @@ echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
 echo "Global Agar options:"
-echo "    --enable-<library>        Build libraries (gui|vg|rg|math|dev|au) [all]"
-echo "    --enable-debug            General debugging [no]"
-echo "    --enable-legacy           Deprecated interfaces [yes]"
-echo "    --enable-threads          Thread safety [check]"
-echo "    --enable-warnings         Suggested compiler warnings [no]"
-echo "    --with-pthreads[=PREFIX]  POSIX Threads support [check]"
+echo "    --enable-<library>          Build libraries (gui|vg|rg|math|dev|au) [all]"
+echo "    --enable-debug              General debugging [no]"
+echo "    --enable-legacy             Deprecated interfaces [yes]"
+echo "    --enable-threads            Thread safety [check]"
+echo "    --enable-warnings           Suggested compiler warnings [no]"
+echo "    --with-pthreads[=PREFIX]    POSIX Threads support [check]"
 echo ""
 echo "Options specific to CORE library:"
-echo "    --enable-network          Network interface [check]"
-echo "    --enable-objdebug         Object system debugging [no]"
-echo "    --with-db4[=PREFIX]       Berkeley DB backend [check]"
-echo "    --with-mysql[=PREFIX]     MySQL backend [check]"
-echo "    --with-iconv[=PREFIX]     Character set conversion [check]"
+echo "    --enable-network            Network interface [check]"
+echo "    --enable-objdebug           Object system debugging [no]"
+echo "    --with-db4[=PREFIX]         Berkeley DB backend [check]"
+echo "    --with-mysql[=PREFIX]       MySQL backend [check]"
+echo "    --with-iconv[=PREFIX]       Character set conversion [check]"
 echo ""
 echo "Options specific to MATH library:"
-echo "    --with-altivec            AltiVec optimizations [check]"
-echo "    --with-sse                SSE optimizations [check]"
-echo "    --with-<mode>-fp          Precision (single|double|quad) [double]"
-echo "    --with-<opt>-inline       Inline ops (sse2|sse3|altivec) [no]"
+echo "    --with-altivec              AltiVec optimizations [check]"
+echo "    --with-sse                  SSE optimizations [check]"
+echo "    --with-<mode>-fp            Precision (single|double|quad) [double]"
+echo "    --with-<opt>-inline         Inline ops (sse2|sse3|altivec) [no]"
 echo ""
 echo "Options specific to AU library:"
-echo "    --with-sndfile[=PREFIX]   Enable sndfile support [check]"
-echo "    --with-portaudio[=PREFIX] Enable portaudio driver [check]"
+echo "    --with-sndfile[=PREFIX]     Enable sndfile support [check]"
+echo "    --with-portaudio[=PREFIX]   Enable portaudio driver [check]"
 echo ""
 echo "Options specific to GUI library:"
-echo "    --with-freetype[=PREFIX]  Enable FreeType support [check]"
-echo "    --with-gl[=PREFIX]        OpenGL rendering support [check]"
-echo "    --with-jpeg[=PREFIX]      Built-in JPEG image support [check]"
-echo "    --with-png[=PREFIX]       Built-in PNG image support [check]"
-echo "    --with-x[=PREFIX]         Build with X windows support [check]"
-echo "    --with-xinerama[=PREFIX]  Build with Xinerama support [check]"
-echo "    --with-glx[=PREFIX]       Enable accelerated X driver [check]"
-echo "    --with-sdl[=PREFIX]       Enable SDL 1.2 driver [check]"
-echo "    --with-wgl                Enable MS Windows driver [check]"
-echo "    --with-cocoa              Enable MacOS X Cocoa driver [check]"
+echo "    --with-freetype[=PREFIX]    Enable FreeType support [check]"
+echo "    --with-fontconfig[=PREFIX]  Enable Fontconfig support [check]"
+echo "    --with-gl[=PREFIX]          OpenGL rendering support [check]"
+echo "    --with-jpeg[=PREFIX]        Built-in JPEG image support [check]"
+echo "    --with-png[=PREFIX]         Built-in PNG image support [check]"
+echo "    --with-x[=PREFIX]           Build with X windows support [check]"
+echo "    --with-xinerama[=PREFIX]    Build with Xinerama support [check]"
+echo "    --with-glx[=PREFIX]         Enable accelerated X driver [check]"
+echo "    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]"
+echo "    --with-wgl                  Enable MS Windows driver [check]"
+echo "    --with-cocoa                Enable MacOS X Cocoa driver [check]"
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
@@ -6171,6 +6172,201 @@ echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 	fi
 	
+	if [ "${with_fontconfig}" != "no" ]
+ then
+$ECHO_N "checking for fontconfig (http://fontconfig.org/)..."
+$ECHO_N "checking for fontconfig (http://fontconfig.org/)..." >> config.log
+if [ "${prefix_fontconfig}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix fontconfig 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_fontconfig}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, fontconfig is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_fontconfig}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct fontconfig prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		FONTCONFIG_VERSION=`$PKGCONFIG fontconfig --modversion 2>/dev/null`
+	fi
+else
+	FONTCONFIG_VERSION=`$PKGCONFIG fontconfig --modversion 2>/dev/null`
+fi
+if [ "${prefix_fontconfig}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix fontconfig 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_fontconfig}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, fontconfig is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_fontconfig}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct fontconfig prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		FONTCONFIG_CFLAGS=`$PKGCONFIG fontconfig --cflags 2>/dev/null`
+	fi
+else
+	FONTCONFIG_CFLAGS=`$PKGCONFIG fontconfig --cflags 2>/dev/null`
+fi
+if [ "${prefix_fontconfig}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix fontconfig 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_fontconfig}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, fontconfig is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_fontconfig}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct fontconfig prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		FONTCONFIG_LIBS=`$PKGCONFIG fontconfig --libs 2>/dev/null`
+	fi
+else
+	FONTCONFIG_LIBS=`$PKGCONFIG fontconfig --libs 2>/dev/null`
+fi
+if [ "${FONTCONFIG_VERSION}" != "" ]; then
+if [ "${prefix_fontconfig}" != "" ]; then
+echo "yes ($FONTCONFIG_VERSION in ${prefix_fontconfig})"
+echo "yes ($FONTCONFIG_VERSION in ${prefix_fontconfig})" >> config.log
+else
+echo "yes ($FONTCONFIG_VERSION)"
+echo "yes ($FONTCONFIG_VERSION)" >> config.log
+fi;
+if [ "2.6.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$FONTCONFIG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$FONTCONFIG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$FONTCONFIG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 2 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 2 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 6 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 6 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "Version 2.6.0 or greater is required (found $FONTCONFIG_VERSION)"
+exit 1
+fi;
+fi;
+$ECHO_N "checking whether fontconfig works..."
+$ECHO_N "checking whether fontconfig works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_FONTCONFIG" ]; then
+		HAVE_FONTCONFIG=`cat ${cache}/ctest-HAVE_FONTCONFIG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FONTCONFIG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <stdio.h>
+#include <string.h>
+#include <fontconfig/fontconfig.h>
+
+int
+main(int argc, char *argv[])
+{
+	FcPattern *pattern, *fpat;
+    FcResult result = FcResultMatch;
+	const FcChar8 name[1] = { '\0' };
+    FcChar8 *file;
+    FcMatrix *mat = NULL;
+    double size;
+    int idx;
+    if (!FcInit()) { return (1); }
+    if ((pattern = FcNameParse(name)) == NULL) { return (1); }
+    if (!FcConfigSubstitute(NULL, pattern, FcMatchPattern)) { return (1); }
+    FcDefaultSubstitute(pattern);
+    if ((fpat = FcFontMatch(NULL, pattern, &result)) == NULL) { return (1); }
+    if (FcPatternGetString(fpat, FC_FILE, 0, &file) != FcResultMatch) { return (1); }
+    if (FcPatternGetInteger(fpat, FC_INDEX, 0, &idx) != FcResultMatch) { return (1); }
+    if (FcPatternGetDouble(fpat, FC_SIZE, 0, &size) != FcResultMatch) { return (1); }
+    if (FcPatternGetMatrix(fpat, FC_MATRIX, 0, &mat) != FcResultMatch) { return (1); }
+    return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest conftest.c ${FONTCONFIG_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${FONTCONFIG_CFLAGS} -o $testdir/conftest conftest.c ${FONTCONFIG_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_FONTCONFIG="yes"
+echo "#ifndef HAVE_FONTCONFIG" > $BLD/include/agar/config/have_fontconfig.h
+echo "#define HAVE_FONTCONFIG \"$HAVE_FONTCONFIG\"" >> $BLD/include/agar/config/have_fontconfig.h
+echo "#endif" >> $BLD/include/agar/config/have_fontconfig.h
+echo "hdefs[\"HAVE_FONTCONFIG\"] = \"$HAVE_FONTCONFIG\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_FONTCONFIG="no"
+echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
+echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_FONTCONFIG" > ${cache}/ctest-HAVE_FONTCONFIG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FONTCONFIG
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_FONTCONFIG}" = "yes" ]; then
+echo "#ifndef FONTCONFIG_CFLAGS" > $BLD/include/agar/config/fontconfig_cflags.h
+echo "#define FONTCONFIG_CFLAGS \"$FONTCONFIG_CFLAGS\"" >> $BLD/include/agar/config/fontconfig_cflags.h
+echo "#endif" >> $BLD/include/agar/config/fontconfig_cflags.h
+echo "hdefs[\"FONTCONFIG_CFLAGS\"] = \"$FONTCONFIG_CFLAGS\"" >>configure.lua
+echo "#ifndef FONTCONFIG_LIBS" > $BLD/include/agar/config/fontconfig_libs.h
+echo "#define FONTCONFIG_LIBS \"$FONTCONFIG_LIBS\"" >> $BLD/include/agar/config/fontconfig_libs.h
+echo "#endif" >> $BLD/include/agar/config/fontconfig_libs.h
+echo "hdefs[\"FONTCONFIG_LIBS\"] = \"$FONTCONFIG_LIBS\"" >>configure.lua
+else
+echo "#undef FONTCONFIG_CFLAGS" >$BLD/include/agar/config/fontconfig_cflags.h
+echo "hdefs[\"FONTCONFIG_CFLAGS\"] = nil" >>configure.lua
+FONTCONFIG_CFLAGS=""
+echo "#undef FONTCONFIG_LIBS" >$BLD/include/agar/config/fontconfig_libs.h
+echo "hdefs[\"FONTCONFIG_LIBS\"] = nil" >>configure.lua
+FONTCONFIG_LIBS=""
+fi;
+else
+if [ "${prefix_fontconfig}" != "" ]; then
+echo "no (not in ${prefix_fontconfig})"
+echo "no (not in ${prefix_fontconfig})" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
+echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
+fi;
+	else
+echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
+echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
+	fi
+	
 	if [ "${with_jpeg}" != "no" ]
  then
 $ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
@@ -6629,6 +6825,8 @@ echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
+echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
@@ -10164,8 +10362,8 @@ CXXFLAGS="$CXXFLAGS -I$BLD/include"
 CFLAGS="$CFLAGS -I$BLD/include/agar"
 CXXFLAGS="$CXXFLAGS -I$BLD/include/agar"
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10799,6 +10997,8 @@ echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
 echo "HAVE_UNUSED_VARIABLE_ATTRIBUTE=$HAVE_UNUSED_VARIABLE_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
+echo "FONTCONFIG_LIBS=$FONTCONFIG_LIBS" >>Makefile.config
+echo "mdefs[\"FONTCONFIG_LIBS\"] = \"$FONTCONFIG_LIBS\"" >>configure.lua
 echo "OBJCFLAGS=$OBJCFLAGS" >>Makefile.config
 echo "mdefs[\"OBJCFLAGS\"] = \"$OBJCFLAGS\"" >>configure.lua
 echo "SRCS_CORE=$SRCS_CORE" >>Makefile.config
@@ -10873,12 +11073,12 @@ echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
 echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
 echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
 echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
+echo "HAVE_SNDFILE=$HAVE_SNDFILE" >>Makefile.config
+echo "mdefs[\"HAVE_SNDFILE\"] = \"$HAVE_SNDFILE\"" >>configure.lua
 echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
 echo "HAVE_ICONV_CONST=$HAVE_ICONV_CONST" >>Makefile.config
 echo "mdefs[\"HAVE_ICONV_CONST\"] = \"$HAVE_ICONV_CONST\"" >>configure.lua
-echo "HAVE_SNDFILE=$HAVE_SNDFILE" >>Makefile.config
-echo "mdefs[\"HAVE_SNDFILE\"] = \"$HAVE_SNDFILE\"" >>configure.lua
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "mdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
@@ -10913,16 +11113,18 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+echo "FONTCONFIG_CFLAGS=$FONTCONFIG_CFLAGS" >>Makefile.config
+echo "mdefs[\"FONTCONFIG_CFLAGS\"] = \"$FONTCONFIG_CFLAGS\"" >>configure.lua
 echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
 echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
 echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
 echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
+echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
+echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 echo "PACKAGE=$PACKAGE" >>Makefile.config
 echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
@@ -10955,6 +11157,8 @@ echo "LIBTOOLOPTS_CC=$LIBTOOLOPTS_CC" >>Makefile.config
 echo "mdefs[\"LIBTOOLOPTS_CC\"] = \"$LIBTOOLOPTS_CC\"" >>configure.lua
 echo "OBJC=$OBJC" >>Makefile.config
 echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
+echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
+echo "mdefs[\"HAVE_FONTCONFIG\"] = \"$HAVE_FONTCONFIG\"" >>configure.lua
 echo "SRCS_GUI=$SRCS_GUI" >>Makefile.config
 echo "mdefs[\"SRCS_GUI\"] = \"$SRCS_GUI\"" >>configure.lua
 echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config

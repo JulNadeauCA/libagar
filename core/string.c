@@ -130,15 +130,17 @@ char *
 AG_Printf(const char *fmt, ...)
 {
 	va_list args;
-
 #ifdef AG_THREADS
+	char *newBuf;
+
+	va_start(args, fmt);
+	Vasprintf(&newBuf, fmt, args);
+	va_end(args);
 	if ((agPrintBuf[0] = (char *)AG_ThreadKeyGet(agPrintBufKey[0])) != NULL) {
 		free(agPrintBuf[0]);
 	}
-	va_start(args, fmt);
-	Vasprintf(&agPrintBuf[0], fmt, args);
-	va_end(args);
-	AG_ThreadKeySet(agPrintBufKey[0], agPrintBuf[0]);
+	AG_ThreadKeySet(agPrintBufKey[0], newBuf);
+	agPrintBuf[0] = newBuf;
 #else
 	Free(agPrintBuf[0]);
 	va_start(args, fmt);
@@ -151,15 +153,17 @@ char *
 AG_PrintfN(Uint i, const char *fmt, ...)
 {
 	va_list args;
-
 #ifdef AG_THREADS
+	char *newBuf;
+
+	va_start(args, fmt);
+	Vasprintf(&newBuf, fmt, args);
+	va_end(args);
 	if ((agPrintBuf[i] = (char *)AG_ThreadKeyGet(agPrintBufKey[i])) != NULL) {
 		free(agPrintBuf[i]);
 	}
-	va_start(args, fmt);
-	Vasprintf(&agPrintBuf[i], fmt, args);
-	va_end(args);
-	AG_ThreadKeySet(agPrintBufKey[i], agPrintBuf[i]);
+	AG_ThreadKeySet(agPrintBufKey[i], newBuf);
+	agPrintBuf[i] = newBuf;
 #else
 	Free(agPrintBuf[i]);
 	va_start(args, fmt);

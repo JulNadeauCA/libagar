@@ -88,15 +88,16 @@ void
 AG_SetError(const char *fmt, ...)
 {
 	va_list args;
-
 #ifdef AG_THREADS
+	char *newMsg;
+	va_start(args, fmt);
+	Vasprintf(&newMsg, fmt, args);
+	va_end(args);
 	if ((agErrorMsg = (char *)AG_ThreadKeyGet(agErrorMsgKey)) != NULL) {
 		free(agErrorMsg);
 	}
-	va_start(args, fmt);
-	Vasprintf(&agErrorMsg, fmt, args);
-	va_end(args);
-	AG_ThreadKeySet(agErrorMsgKey, agErrorMsg);
+	AG_ThreadKeySet(agErrorMsgKey, newMsg);
+	agErrorMsg = newMsg;
 #else
 	Free(agErrorMsg);
 	va_start(args, fmt);

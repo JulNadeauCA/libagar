@@ -54,7 +54,7 @@ Init(void *p)
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->fontSize = agGUI ? agDefaultFont->size : 12;
+	vt->fontSize = agGUI ? (int)agDefaultFont->spec.size : 12;
 	vt->fontFlags = agGUI ? agDefaultFont->flags : 0;
 	vt->fontFace[0] = '\0';
 	vt->args = NULL;
@@ -169,7 +169,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	AG_PushTextState();
 
 	if (vt->fontFace[0] != '\0' &&
-	   ((agGUI && vt->fontSize != agDefaultFont->size) ||
+	   ((agGUI && vt->fontSize != (int)agDefaultFont->spec.size) ||
 	    (agGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
