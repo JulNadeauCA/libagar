@@ -186,7 +186,7 @@ AG_TTFOpenFont(AG_Font *font)
 		if (ttf->ascent < 0) { ttf->ascent = 0; }
 	  	ttf->descent = 0;
 	  	ttf->height = face->available_sizes[fixedSize].height;
-	  	ttf->lineskip = FT_CEIL(ttf->ascent);
+	  	ttf->lineskip = ttf->height;
 	  	ttf->underline_offset = FT_FLOOR(face->underline_position);
 	  	ttf->underline_height = FT_FLOOR(face->underline_thickness);
 	}
