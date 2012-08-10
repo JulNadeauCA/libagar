@@ -92,6 +92,7 @@ static void
 Init(void *obj)
 {
 	AG_Notebook *nb = obj;
+	int ptSize;
 
 	nb->flags = 0;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
@@ -106,9 +107,9 @@ Init(void *obj)
 	nb->tabFont = NULL;
 	nb->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&nb->tabs);
-	
-	AG_NotebookSetTabFont(nb,
-	    AG_FetchFont(NULL, (int)(agDefaultFont->spec.size - 2.0), 0));
+
+	ptSize = MAX(0, (int)agDefaultFont->spec.size-2.0);
+	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, ptSize, 0));
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(nb, "widget-shown", Shown, NULL);
 }

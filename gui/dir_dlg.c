@@ -470,7 +470,8 @@ ExpandGlobResults(AG_DirDlg *dd, glob_t *gl, const char *pattern)
 	}
 
 	/* Compute geometry. */
-	w = wMax + 100 + tl->item_h+2 + agPrefScrollbarSize;
+	w = wMax + 100 + tl->item_h+2 +
+	    agTextFontHeight; /* scrollbar size */
 	h = hMax*tl->item_h + 32;
 	x = WIDGET(dd->tbInput)->rView.x2 - w;
 	y = WIDGET(dd->tbInput)->rView.y1;

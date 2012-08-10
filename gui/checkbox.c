@@ -183,11 +183,31 @@ KeyDown(AG_Event *event)
 }
 
 static void
+MouseMotion(AG_Event *event)
+{
+	AG_Checkbox *cb = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+
+	if (x >= 0 && y >= 0 && x < WIDGET(cb)->w && y < WIDGET(cb)->h) {
+		if (!cb->mouseOver) {
+			cb->mouseOver = 1;
+			AG_Redraw(cb);
+		}
+	} else {
+		if (cb->mouseOver) {
+			cb->mouseOver = 0;
+			AG_Redraw(cb);
+		}
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Checkbox *cb = obj;
 
-	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|
+	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
 	                     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(cb, "state", &cb->state);
@@ -196,11 +216,13 @@ Init(void *obj)
 	cb->flags = 0;
 	cb->state = 0;
 	cb->lbl = NULL;
-	cb->spacing = 6;
+	cb->spacing = 4;
 	cb->btnSize = agTextFontHeight;
+	cb->mouseOver = 0;
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
+	AG_SetEvent(cb, "mouse-motion", MouseMotion, NULL);
 }
 
 static void
@@ -246,6 +268,12 @@ Draw(void *obj)
 		break;
 	}
 
+	if (cb->mouseOver) {
+		AG_Rect r = AG_RECT(0,0,WIDGET(cb)->w,WIDGET(cb)->h-1);
+		AG_DrawRectBlended(cb, r,
+		    AG_ColorRGBA(255,255,255,25),
+		    AG_ALPHA_SRC);
+	}
 	STYLE(cb)->CheckboxButton(cb, state, cb->btnSize);
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);

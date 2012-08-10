@@ -73,6 +73,7 @@ void AG_GL_DrawBoxRounded(void *, AG_Rect, int, int, AG_Color [3]);
 void AG_GL_DrawBoxRoundedTop(void *, AG_Rect, int, int, AG_Color [3]);
 void AG_GL_DrawCircle(void *, int, int, int, AG_Color);
 void AG_GL_DrawCircle2(void *, int, int, int, AG_Color);
+void AG_GL_DrawCircleFilled(void *, int, int, int, AG_Color);
 void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
 void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
 void AG_GL_UpdateGlyph(void *, struct ag_glyph *);

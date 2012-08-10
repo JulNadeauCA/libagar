@@ -988,6 +988,26 @@ AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color C)
 }
 
 void
+AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color C)
+{
+	float i, nEdges = r*2;
+	
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef((float)x, (float)y, 0.0);
+	
+	glBegin(GL_POLYGON);
+	glColor3ub(C.r, C.g, C.b);
+	for (i = 0; i < nEdges; i++) {
+		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
+		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
+	}
+	glEnd();
+
+	glPopMatrix();
+}
+
+void
 AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color C)
 {
 	float i, nEdges = r*2;

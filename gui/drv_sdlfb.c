@@ -1105,24 +1105,16 @@ SDLFB_DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 }
 
 static void
-SDLFB_DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
+SDLFB_DrawCircleFilled(void *obj, int x1, int y1, int radius, AG_Color C)
 {
-	AG_DriverSDLFB *sfb = obj;
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
-	Uint32 c;
 
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
 	while (x < y) {
-		SDLFB_PutPixel32(obj, px+x,   py+y, c);
-		SDLFB_PutPixel32(obj, px+x+1, py+y, c);
-		SDLFB_PutPixel32(obj, px+x,   py-y, c);
-		SDLFB_PutPixel32(obj, px+x+1, py-y, c);
-		SDLFB_PutPixel32(obj, px-x,   py+y, c);
-		SDLFB_PutPixel32(obj, px-x-1, py+y, c);
-		SDLFB_PutPixel32(obj, px-x,   py-y, c);
-		SDLFB_PutPixel32(obj, px-x-1, py-y, c);
+		SDLFB_DrawLineV(obj, x1+x, y1+y, y1-y, C);
+		SDLFB_DrawLineV(obj, x1-x, y1+y, y1-y, C);
+
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -1131,17 +1123,10 @@ SDLFB_DrawCircle2(void *obj, int px, int py, int radius, AG_Color C)
 			v -= 2;
 		}
 		x++;
-		SDLFB_PutPixel32(obj, px+y,   py+x, c);
-		SDLFB_PutPixel32(obj, px+y+1, py+x, c);
-		SDLFB_PutPixel32(obj, px+y,   py-x, c);
-		SDLFB_PutPixel32(obj, px+y+1, py-x, c);
-		SDLFB_PutPixel32(obj, px-y,   py+x, c);
-		SDLFB_PutPixel32(obj, px-y-1, py+x, c);
-		SDLFB_PutPixel32(obj, px-y,   py-x, c);
-		SDLFB_PutPixel32(obj, px-y-1, py-x, c);
+		
+		SDLFB_DrawLineV(obj, x1+y, y1+x, y1-x, C);
+		SDLFB_DrawLineV(obj, x1-y, y1+x, y1-x, C);
 	}
-	SDLFB_PutPixel32(obj, px-radius, py, c);
-	SDLFB_PutPixel32(obj, px+radius, py, c);
 }
 
 static void
@@ -1544,7 +1529,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawBoxRounded,
 		SDLFB_DrawBoxRoundedTop,
 		SDLFB_DrawCircle,
-		SDLFB_DrawCircle2,
+		SDLFB_DrawCircleFilled,
 		SDLFB_DrawRectFilled,
 		SDLFB_DrawRectBlended,
 		SDLFB_DrawRectDithered,

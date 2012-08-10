@@ -28,6 +28,7 @@ typedef struct ag_radio {
 	int xPadding, yPadding;
 	int xSpacing, ySpacing;
 	int radius;		/* Control radius in pixels */
+	int itemHeight;
 	AG_Rect r;		/* View area */
 } AG_Radio;
 

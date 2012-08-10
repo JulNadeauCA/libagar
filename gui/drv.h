@@ -103,7 +103,7 @@ typedef struct ag_driver_class {
 	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
 	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
 	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
-	void (*drawCircle2)(void *drv, int x, int y, int r, AG_Color C);
+	void (*drawCircleFilled)(void *drv, int x, int y, int r, AG_Color C);
 	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
 	void (*drawRectBlended)(void *drv, AG_Rect r, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
 	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);

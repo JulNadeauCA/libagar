@@ -118,13 +118,16 @@ TitlebarBackground(void *tbar, int isPressed, int windowIsFocused)
 
 /* Background for Button widgets */
 static void
-ButtonBackground(void *btn, int isPressed)
+ButtonBackground(void *obj, int isPressed)
 {
+	AG_Button *btn = obj;
+
 	if (AG_WidgetEnabled(btn)) {
 		AG_DrawBox(btn,
 		    AG_RECT(0, 0, WIDTH(btn), HEIGHT(btn)),
 		    isPressed ? -1 : 1,
-		    agColors[BUTTON_COLOR]);
+		    (btn->flags & AG_BUTTON_MOUSEOVER) ?
+		    agColors[BUTTON_MOUSEOVER_COLOR] : agColors[BUTTON_COLOR]);
 	} else {
 		AG_DrawBoxDisabled(btn,
 		    AG_RECT(0, 0, WIDTH(btn), HEIGHT(btn)),
@@ -288,38 +291,22 @@ RadioGroupBackground(void *rad, AG_Rect r)
 static void
 RadioButton(AG_Radio *rad, int x, int y, int selected, int over)
 {
-	static const int highlight[18] = {
-		-5, +1,	-5,  0,	-5, -1,	-4, -2,	-4, -3,	-3, -4,	-2, -4,
-		 0, -5,	-1, -5
-	};
 	int xc = rad->xPadding + rad->radius;
-	int yc = y + rad->radius;
-	int i;
-	AG_Color cHi = agColors[RADIO_HI_COLOR];
-	AG_Color cLo = agColors[RADIO_LO_COLOR];
-
-	for (i = 0; i < 18; i+=2) {
-		AG_PutPixel(rad,
-		    xc + highlight[i],
-		    yc + highlight[i+1],
-		    cHi);
-		AG_PutPixel(rad,
-		    xc - highlight[i],
-		    yc - highlight[i+1],
-		    cLo);
-	}
+	int yc = y + rad->itemHeight/2;
+	
+	AG_DrawCircleFilled(rad, xc, yc, rad->radius, agColors[RADIO_LO_COLOR]);
+	AG_DrawCircle(rad, xc, yc,
+	    rad->radius,
+	    agColors[RADIO_HI_COLOR]);
 
 	if (selected) {
-		AG_DrawCircle(rad,
-		    rad->xPadding + rad->radius,
-		    y + rad->radius,
+		AG_DrawCircleFilled(rad, xc, yc,
 		    rad->radius/2,
 		    agColors[RADIO_SEL_COLOR]);
-	} else if (over) {
-		AG_DrawCircle(rad,
-		    rad->xPadding + rad->radius,
-		    y + rad->radius,
-		    rad->radius/2,
+	}
+	if (over) {
+		AG_DrawCircle(rad, xc, yc,
+		    rad->radius - 2,
 		    agColors[RADIO_OVER_COLOR]);
 	}
 }
