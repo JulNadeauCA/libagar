@@ -3,8 +3,7 @@ Release Notes for Agar 1.4.1
 ----------------------------
 
 Here are some of the most notable changes since Agar 1.4.0, in no
-particular order. A wikified version of this list is available at:
-http://wiki.libagar.org/wiki/Agar-1.4.1.
+particular order.
 
 - Port to Xbox (thanks Michael J. Wood!).
 - Widget code can now use the AG_Redraw() and AG_RedrawOn*() interfaces to

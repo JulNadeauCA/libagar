@@ -3,8 +3,7 @@ Release Notes for Agar 1.3.4 (Pandemonic Incantation)
 -----------------------------------------------------
 
 Here are some of the most notable changes since Agar 1.3.3, in no
-particular order. A wikified version of this list is available at:
-http://wiki.libagar.org/wiki/Agar-1.3.4.
+particular order.
 
 - Continued improvements to the API reference.
 - Overall improved handling of out-of-memory conditions.
