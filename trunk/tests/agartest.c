@@ -218,7 +218,7 @@ StartDebugger(void)
 int
 main(int argc, char *argv[])
 {
-	char *driverSpec = NULL, *optArg;
+	char *driverSpec = NULL, *fontSpec = NULL, *optArg;
 	AG_Window *win;
 	AG_Tlist *tl;
 	const AG_TestCase **pTest;
@@ -229,21 +229,30 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "?hd:", &optArg, NULL)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, NULL)) != -1) {
 		switch (c) {
 		case 'd':
 			driverSpec = optArg;
 			break;
+		case 't':
+			fontSpec = optArg;
+			break;
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-d agar-driver] [test1 test2 ...]\n");
+			printf("Usage: agartest [-d agar-driver] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
-	if (AG_InitCore("agartest", AG_VERBOSE) == -1 ||
-	    AG_InitGraphics(driverSpec) == -1) {
-		printf("Agar initialization failed: %s\n", AG_GetError());
+	if (AG_InitCore("agartest", AG_VERBOSE) == -1) {
+		printf("Agar-Core initialization failed: %s\n", AG_GetError());
+		return (1);
+	}
+	if (fontSpec != NULL) {
+		AG_TextParseFontSpec(fontSpec);
+	}
+	if (AG_InitGraphics(driverSpec) == -1) {
+		printf("Agar-GUI initialization failed: %s\n", AG_GetError());
 		return (1);
 	}
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);

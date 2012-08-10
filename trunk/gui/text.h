@@ -14,11 +14,6 @@
 struct ag_window;
 struct ag_button;
 
-enum ag_font_type {
-	AG_FONT_VECTOR,		/* Vectorial font */
-	AG_FONT_BITMAP		/* Series of pixmaps */
-};
-
 enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
@@ -37,6 +32,33 @@ enum ag_text_msg_title {
 
 struct ag_font;
 
+/* Font specification (may be obtained from fontconfig) */
+enum ag_font_type {
+	AG_FONT_VECTOR,				/* Vectorial font */
+	AG_FONT_BITMAP				/* Raw glyph pixmaps */
+};
+enum ag_font_spec_source {
+	AG_FONT_SOURCE_FILE,			/* Load from file */
+	AG_FONT_SOURCE_MEMORY			/* Read from memory */
+};
+typedef struct ag_font_spec {
+	enum ag_font_type type;
+	enum ag_font_spec_source sourceType;
+	union {
+		char file[AG_PATHNAME_MAX];	/* Font file */
+		struct {
+			const Uint8 *data;	/* Memory region */
+			size_t size;
+		} mem;
+	} source;
+	int index;				/* Font index */
+	double size;				/* Font size */
+	struct {				/* Transform matrix */
+		double xx, xy;
+		double yx, yy;
+	} matrix;
+} AG_FontSpec;
+
 /* Cached glyph surface/texture information. */
 typedef struct ag_glyph {
 	struct ag_font *font;		/* Font face */
@@ -49,15 +71,14 @@ typedef struct ag_glyph {
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
-/* Cached font */
+/* Loaded font */
 typedef struct ag_font {
 	struct ag_object obj;
-	enum ag_font_type type;		/* Class of font */
-	int size;			/* Size in points */
+	AG_FontSpec spec;		/* Input font specification */
 	Uint flags;
-#define AG_FONT_BOLD		0x01	/* Bold font */
-#define AG_FONT_ITALIC		0x02	/* Italic font */
-#define AG_FONT_UNDERLINE	0x04	/* Underlined */
+#define AG_FONT_BOLD		0x01	/* Render as bold */
+#define AG_FONT_ITALIC		0x02	/* Render as italic */
+#define AG_FONT_UNDERLINE	0x04	/* Render with underline */
 #define AG_FONT_UPPERCASE	0x08	/* Force uppercase display */
 	int height;			/* Body size in pixels */
 	int ascent;			/* Ascent (relative to baseline) */

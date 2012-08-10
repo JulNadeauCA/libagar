@@ -39,6 +39,8 @@
 
 #include <core/core.h>
 
+#include "gui.h"
+#include "text.h"
 #include "ttf.h"
 #include "gui_math.h"
 
@@ -56,14 +58,13 @@
 
 static FT_Library ftLibrary;
 
-static void FlushCache(AG_TTFFont *);
-static void FlushGlyph(AG_TTFGlyph *);
-
 int
 AG_TTFInit(void)
 {
-	if (FT_Init_FreeType(&ftLibrary) != 0) {
-		AG_SetError(_("Font engine initialization failed."));
+	FT_Error rv;
+
+	if ((rv = FT_Init_FreeType(&ftLibrary)) != 0) {
+		AG_SetError("FT_Init_FreeType failed (0x%x)", rv);
 		return (-1);
 	}
 	return (0);
@@ -75,163 +76,228 @@ AG_TTFDestroy(void)
 	FT_Done_FreeType(ftLibrary);
 }
 
-static int
-InitFontAttributes(AG_TTFFont *font, int ptsize)
-{
-	FT_Face face = font->face;
-	FT_Fixed scale;
-	
-	/* Make sure that our font face is scalable (global metrics). */
-	if (FT_IS_SCALABLE(face)) {
-	  	/* Set the character size and use default DPI (72). */
-	  	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0)) {
-			AG_SetError(_("Failed to set font size."));
-			return (-1);
-		}
-		/* Get the scalable font metrics for this font */
-		scale = face->size->metrics.y_scale;
-		font->ascent  = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
-		font->descent = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
-		font->height  = font->ascent - font->descent + /* baseline */ 1;
-		font->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
-		font->underline_offset = FT_FLOOR(FT_MulFix(
-		    face->underline_position, scale));
-		font->underline_height = FT_FLOOR(FT_MulFix(
-		    face->underline_thickness, scale));
-	} else {
-		/*
-		 * Non-scalable font case.  ptsize determines which family
-		 * or series of fonts to grab from the non-scalable format.
-		 * It is not the point size of the font.
-		 */
-		if (ptsize >= font->face->num_fixed_sizes) {
-			ptsize = font->face->num_fixed_sizes - 1;
-		}
-		font->font_size_family = ptsize;
-		FT_Set_Pixel_Sizes(face,
-		    face->available_sizes[ptsize].height,
-		    face->available_sizes[ptsize].width);
-	  	
-		/*
-		 * With non-scalale fonts, Freetype2 likes to fill many of the
-		 * font metrics with the value of 0. The size of the
-		 * non-scalable fonts must be determined differently or
-		 * sometimes cannot be determined.
-		 */
-	  	font->ascent = face->available_sizes[ptsize].height;
-	  	font->descent = 0;
-	  	font->height = face->available_sizes[ptsize].height;
-	  	font->lineskip = FT_CEIL(font->ascent);
-	  	font->underline_offset = FT_FLOOR(face->underline_position);
-	  	font->underline_height = FT_FLOOR(face->underline_thickness);
-	}
-	if (font->underline_height < 1) {
-		font->underline_height = 1;
-	}
-	font->style = TTF_STYLE_NORMAL;
-	font->glyph_overhang = face->size->metrics.y_ppem / 10;
-	font->glyph_italics = 0.207f;				/* 12 deg */
-	font->glyph_italics *= font->height;
-	return (0);
-}
-
-AG_TTFFont *
-AG_TTFOpenFont(const char *file, int ptsize)
-{
-	AG_TTFFont *font;
-	int rv;
-
-	font = Malloc(sizeof(AG_TTFFont));
-	memset(font, 0, sizeof(AG_TTFFont));
-	if ((rv = FT_New_Face(ftLibrary, file, 0, &font->face)) != 0) {
-		AG_SetError("%s: FreeType error %d", file, rv);
-		goto fail;
-	}
-	if (InitFontAttributes(font, ptsize) == -1) {
-		AG_TTFCloseFont(font);
-		goto fail;
-	}
-	return (font);
-fail:
-	Free(font);
-	return (NULL);
-}
-
-AG_TTFFont *
-AG_TTFOpenFontFromMemory(const Uint8 *data, size_t size, int ptsize)
-{
-	AG_TTFFont *font;
-	int rv;
-
-	font = Malloc(sizeof(AG_TTFFont));
-	memset(font, 0, sizeof(AG_TTFFont));
-	if ((rv = FT_New_Memory_Face(ftLibrary, data, size, 0, &font->face))
-	    != 0) {
-		AG_SetError(_("FreeType error %d"), rv);
-		goto fail;
-	}
-	if (InitFontAttributes(font, ptsize) == -1) {
-		AG_TTFCloseFont(font);
-		goto fail;
-	}
-	return (font);
-fail:
-	Free(font);
-	return (NULL);
-}
-
-void
-AG_TTFCloseFont(AG_TTFFont *font)
-{
-	FlushCache(font);
-	FT_Done_Face(font->face);
-	Free(font);
-}
-
 static void
 FlushGlyph(AG_TTFGlyph *glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
-	if (glyph->bitmap.buffer) {
-		Free(glyph->bitmap.buffer);
-		glyph->bitmap.buffer = NULL;
-	}
-	if (glyph->pixmap.buffer) {
-		Free(glyph->pixmap.buffer);
-		glyph->pixmap.buffer = NULL;
-	}
+	Free(glyph->bitmap.buffer);
+	glyph->bitmap.buffer = NULL;
+	Free(glyph->pixmap.buffer);
+	glyph->pixmap.buffer = NULL;
 	glyph->cached = 0;
 }
-	
+
+/* Flush the entire glyph cache. */
 static void
-FlushCache(AG_TTFFont *font)
+FlushCache(AG_TTFFont *ttf)
 {
-	int i, size = sizeof(font->cache) / sizeof(font->cache[0]);
+	int i, size = sizeof(ttf->cache) / sizeof(ttf->cache[0]);
 
 	for (i = 0; i < size; i++) {
-		if (font->cache[i].cached)
-			FlushGlyph(&font->cache[i]);
+		if (ttf->cache[i].cached)
+			FlushGlyph(&ttf->cache[i]);
 	}
-	if (font->scratch.cached)
-		FlushGlyph(&font->scratch);
+	if (ttf->scratch.cached)
+		FlushGlyph(&ttf->scratch);
 }
 
-static int
-LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
+/* Load a vector font (font->spec should be initialized). */
+int
+AG_TTFOpenFont(AG_Font *font)
 {
+	AG_FontSpec *spec = &font->spec;
+	AG_TTFFont *ttf;
+	FT_Error rv;
 	FT_Face face;
+	FT_Fixed scale;
+
+	if ((ttf = TryMalloc(sizeof(AG_TTFFont))) == NULL) {
+		return (-1);
+	}
+	memset(ttf, 0, sizeof(AG_TTFFont));
+
+	switch (spec->sourceType) {
+	case AG_FONT_SOURCE_FILE:
+		rv = FT_New_Face(ftLibrary, spec->source.file, spec->index,
+		    &ttf->face);
+		break;
+	case AG_FONT_SOURCE_MEMORY:
+		rv = FT_New_Memory_Face(ftLibrary, spec->source.mem.data,
+		    spec->source.mem.size, spec->index, &ttf->face);
+		break;
+	default:
+		rv = 1;
+		break;
+	}
+	if (rv) {
+		AG_SetError("FreeType error 0x%x", rv);
+		goto fail;
+	}
+	face = ttf->face;
+
+	/* Apply the tranformation matrix. */
+	if (spec->matrix.xx != 1.0 || spec->matrix.yy != 1.0 ||
+	    spec->matrix.xy != 0.0 || spec->matrix.yx != 0.0) {
+		FT_Matrix m;
+		FT_Vector vec;
+
+		m.xx = spec->matrix.xx*65536;
+		m.yy = spec->matrix.yy*65536;
+		m.xy = spec->matrix.xy*65536;
+		m.yx = spec->matrix.yx*65536;
+		vec.x = 0.0;
+		vec.y = 0.0;
+		FT_Set_Transform(face, &m, &vec);
+	}
+	  
+	if (FT_IS_SCALABLE(face)) {
+		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
+			AG_SetError("FreeType FT_Set_Char_Size failed (0x%x)", rv);
+			goto fail_face;
+		}
+		scale = face->size->metrics.y_scale;
+		ttf->ascent  = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
+		ttf->descent = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
+		ttf->height  = ttf->ascent - ttf->descent + /* baseline */ 1;
+		ttf->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
+		ttf->underline_offset = FT_FLOOR(FT_MulFix(face->underline_position, scale));
+		ttf->underline_height = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
+	} else {
+		int fixedSize = (int)spec->size;
+
+		/* Non-scalable font */
+		if (fixedSize >= face->num_fixed_sizes) {
+			fixedSize = face->num_fixed_sizes - 1;
+			spec->size = (double)fixedSize;
+		}
+		ttf->font_size_family = (int)spec->size;
+		(void)FT_Set_Pixel_Sizes(face,
+		    face->available_sizes[fixedSize].height,
+		    face->available_sizes[fixedSize].width);
+		/*
+		 * With non-scalable fonts, Freetype2 likes to fill many of the
+		 * font metrics with the value of 0. The size of the
+		 * non-scalable fonts must be determined differently or
+		 * sometimes cannot be determined.
+		 */
+		/* XXX arbitrary offset */
+	  	ttf->ascent = face->available_sizes[fixedSize].height - 4;
+		if (ttf->ascent < 0) { ttf->ascent = 0; }
+	  	ttf->descent = 0;
+	  	ttf->height = face->available_sizes[fixedSize].height;
+	  	ttf->lineskip = FT_CEIL(ttf->ascent);
+	  	ttf->underline_offset = FT_FLOOR(face->underline_position);
+	  	ttf->underline_height = FT_FLOOR(face->underline_thickness);
+	}
+	if (ttf->underline_height < 1) {
+		ttf->underline_height = 1;
+	}
+	ttf->glyph_overhang = face->size->metrics.y_ppem / 10;
+	ttf->glyph_italics = 0.207f;				/* 12 deg */
+	ttf->glyph_italics *= ttf->height;
+
+	/* Apply the standard style modifiers */
+	ttf->style = 0;
+	if (font->flags & AG_FONT_BOLD) { ttf->style |= AG_TTF_STYLE_BOLD; }
+	if (font->flags & AG_FONT_ITALIC) { ttf->style |= AG_TTF_STYLE_ITALIC; }
+	if (font->flags & AG_FONT_UNDERLINE) { ttf->style |= AG_TTF_STYLE_UNDERLINE;}
+	
+	/* The Agar font should inherit the metrics. */
+	font->height = ttf->height;
+	font->ascent = ttf->ascent;
+	font->descent = ttf->descent;
+	font->lineskip = ttf->lineskip;
+
+	font->ttf = ttf;
+	return (0);
+fail_face:
+	FT_Done_Face(ttf->face);
+fail:
+	Free(ttf);
+	return (-1);
+}
+
+void
+AG_TTFCloseFont(AG_Font *font)
+{
+	AG_TTFFont *ttf = (AG_TTFFont *)font->ttf;
+
+	if (ttf == NULL) {
+		return;
+	}
+	FlushCache(ttf);
+	FT_Done_Face(ttf->face);
+	free(ttf);
+	font->ttf = NULL;
+}
+
+/* Process the bold style. */
+static void
+ProcessBold(AG_TTFFont *ttf, FT_Bitmap *dst)
+{
+	int row, col, offset, pixel;
+	Uint8 *pixmap;
+
+	for (row = dst->rows - 1; row >= 0; --row) {
+		pixmap = (Uint8 *)dst->buffer + row*dst->pitch;
+		for (offset = 1; offset <= ttf->glyph_overhang; offset++) {
+			for (col = dst->width - 1; col > 0; --col) {
+				pixel = (pixmap[col] + pixmap[col-1]);
+				if (pixel > NUM_GRAYS - 1) {
+					pixel = NUM_GRAYS - 1;
+				}
+				pixmap[col] = (Uint8)pixel;
+			}
+		}
+	}
+}
+
+/*
+ * This special case wouldn't be here if the FT_Render_Glyph() function
+ * wasn't buggy when it tried to render a .fon font with 256 shades of
+ * gray.  Instead, it returns a black and white surface and we have to
+ * translate it back to a 256 gray shaded surface.
+ * XXX is this still needed?
+ */
+static void
+ProcessNonScalablePixmap(FT_Bitmap *src, FT_Bitmap *dst, int soffset, int doffset)
+{
+	unsigned char *srcp, *dstp;
+	unsigned char ch;
+	int j, k;
+					
+	srcp = src->buffer + soffset;
+	dstp = dst->buffer + doffset;
+
+	for (j = 0; j < src->width; j += 8) {
+		ch = *srcp++;
+		for (k = 0; k < 8; ++k) {
+			if ((ch&0x80) >> 7) {
+				*dstp++ = NUM_GRAYS-1;
+			} else {
+				*dstp++ = 0x00;
+			}
+			ch <<= 1;
+		}
+	}
+}
+
+/* Render and cache the glyph corresponding to the given Unicode character. */
+static int
+LoadGlyph(AG_TTFFont *ttf, Uint32 ch, AG_TTFGlyph *cached, int want)
+{
+	FT_Face face = ttf->face;
 	FT_GlyphSlot glyph;
 	FT_Glyph_Metrics *metrics;
 	FT_Outline *outline;
-
-	face = font->face;
+	FT_Error rv;
 
 	if (cached->index == 0) {
 		cached->index = FT_Get_Char_Index(face, ch);
 	}
-	if (FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT) != 0) {
-		AG_SetError(_("Failed to load the TTF glyph."));
+	if ((rv = FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT)) != 0) {
+		AG_SetError("FreeType FT_LoadGlyph failed (0x%x)", rv);
 		return (-1);
 	}
 
@@ -249,8 +315,6 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 			cached->maxx = cached->minx + FT_CEIL(metrics->width);
 			cached->maxy = FT_FLOOR(metrics->horiBearingY);
 			cached->miny = cached->maxy - FT_CEIL(metrics->height);
-			cached->yoffset = font->ascent - cached->maxy;
-			cached->advance = FT_CEIL(metrics->horiAdvance);
 		} else {
 			/*
 			 * Get the bounding box for non-scalable format.
@@ -260,22 +324,19 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 			 * assumptions about non-scalable formats.
 			 */
 			cached->minx = FT_FLOOR(metrics->horiBearingX);
-			cached->maxx = cached->minx +
-			    FT_CEIL(metrics->horiAdvance);
+			cached->maxx = cached->minx + FT_CEIL(metrics->horiAdvance);
 			cached->maxy = FT_FLOOR(metrics->horiBearingY);
-			cached->miny = cached->maxy -
-			    FT_CEIL(face->available_sizes
-			            [font->font_size_family].height);
-			cached->yoffset = 0;
-			cached->advance = FT_CEIL(metrics->horiAdvance);
+			cached->miny = cached->maxy - FT_CEIL(face->available_sizes[ttf->font_size_family].height);
 		}
+		cached->yoffset = ttf->ascent - cached->maxy;
+		cached->advance = FT_CEIL(metrics->horiAdvance);
 
 		/* Adjust for bold and italic text. */
-		if (font->style & TTF_STYLE_BOLD) {
-			cached->maxx += font->glyph_overhang;
+		if (ttf->style & AG_TTF_STYLE_BOLD) {
+			cached->maxx += ttf->glyph_overhang;
 		}
-		if (font->style & TTF_STYLE_ITALIC) {
-			cached->maxx += (int)Ceil(font->glyph_italics);
+		if (ttf->style & AG_TTF_STYLE_ITALIC) {
+			cached->maxx += (int)Ceil(ttf->glyph_italics);
 		}
 		cached->stored |= TTF_CACHED_METRICS;
 	}
@@ -288,29 +349,22 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 		FT_Bitmap *src, *dst;
 
 		/* Handle the italic style. */
-		if (font->style & TTF_STYLE_ITALIC) {
+		if (ttf->style & AG_TTF_STYLE_ITALIC) {
 			FT_Matrix shear;
 
 			shear.xx = 1 << 16;
-			shear.xy = (int) (font->glyph_italics * (1 << 16)) /
-			                  font->height;
+			shear.xy = (int) (ttf->glyph_italics * (1 << 16)) /
+			                  ttf->height;
 			shear.yx = 0;
 			shear.yy = 1 << 16;
 			FT_Outline_Transform(outline, &shear);
 		}
 
 		/* Render the glyph. */
-		if (mono) {
-			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
-				AG_SetError("Error glyph 0x%x", (Uint)ch);
-				return (-1);
-			}
-		} else {
-			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
-			    != 0) {
-				AG_SetError("Error norm glyph 0x%x", (Uint)ch);
-				return (-1);
-			}
+		if (FT_Render_Glyph(glyph, mono ? ft_render_mode_mono :
+		                                  ft_render_mode_normal) != 0) {
+			AG_SetError("FT_RenderGlyph(0x%x) failed", (Uint)ch);
+			return (-1);
 		}
 
 		/* Copy over information to cache. */
@@ -333,22 +387,21 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 			dst->pitch *= 8;
 
 		/* Adjust for bold and italic text. */
-		if (font->style & TTF_STYLE_BOLD) {
-			int bump = font->glyph_overhang;
-
-			dst->pitch += bump;
-			dst->width += bump;
+		if (ttf->style & AG_TTF_STYLE_BOLD) {
+			dst->pitch += ttf->glyph_overhang;
+			dst->width += ttf->glyph_overhang;
 		}
-		if (font->style & TTF_STYLE_ITALIC) {
-			int bump;
-			
-			bump = (int)Ceil(font->glyph_italics);
+		if (ttf->style & AG_TTF_STYLE_ITALIC) {
+			int bump = (int)Ceil(ttf->glyph_italics);
 			dst->pitch += bump;
 			dst->width += bump;
 		}
 
 		if (dst->rows != 0) {
-			dst->buffer = Malloc(dst->pitch*dst->rows);
+			if ((dst->buffer = TryMalloc(dst->pitch*dst->rows))
+			    == NULL) {
+				return (-1);
+			}
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {
@@ -365,84 +418,29 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 					for (j = 0; j < src->width; j += 8) {
 						unsigned char ch = *srcp++;
 
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
-						*dstp++ = (ch&0x80) >> 7;
-						ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
+						*dstp++ = (ch&0x80) >> 7; ch <<= 1;
 						*dstp++ = (ch&0x80) >> 7;
 					}
 				} else if (!FT_IS_SCALABLE(face)) {
-					/*
-					 * This special case wouldn't
-					 * be here if the FT_Render_Glyph()
-					 * function wasn't buggy when it tried
-					 * to render a .fon font with 256
-					 * shades of gray.  Instead, it
-					 * returns a black and white surface
-					 * and we have to translate it back
-					 * to a 256 gray shaded surface. 
-					 */
-					unsigned char *srcp, *dstp;
-					unsigned char ch;
-					int j, k;
-					
-					srcp = src->buffer + soffset;
-					dstp = dst->buffer + doffset;
-
-					for (j = 0; j < src->width; j += 8) {
-						ch = *srcp++;
-						for (k = 0; k < 8; ++k) {
-							if ((ch&0x80) >> 7) {
-								*dstp++ =
-								    NUM_GRAYS-1;
-							} else {
-								*dstp++ = 0x00;
-							}
-							ch <<= 1;
-						}
-					}
+					ProcessNonScalablePixmap(src, dst,
+					    soffset, doffset);
 				} else {
 					memcpy(dst->buffer+doffset,
-					       src->buffer+soffset, src->pitch);
+					       src->buffer+soffset,
+					       src->pitch);
 				}
 			}
 		}
 
 		/* Handle the bold style */
-		if (font->style & TTF_STYLE_BOLD) {
-			int row, col, offset, pixel;
-			Uint8 *pixmap;
-
-			/*
-			 * The pixmap is a little hard, we have to add and
-			 * clamp.
-			 */
-			for (row = dst->rows - 1; row >= 0; --row) {
-				pixmap = (Uint8 *)dst->buffer + row*dst->pitch;
-				for (offset = 1; offset <= font->glyph_overhang;
-				    offset++) {
-					for (col = dst->width - 1; col > 0;
-					     --col) {
-						pixel = (pixmap[col] +
-						    pixmap[col-1]);
-						if (pixel > NUM_GRAYS - 1) {
-							pixel = NUM_GRAYS - 1;
-						}
-						pixmap[col] = (Uint8)pixel;
-					}
-				}
-			}
-		}
+		if (ttf->style & AG_TTF_STYLE_BOLD)
+			ProcessBold(ttf, dst);
 
 		/* Mark that we rendered this format */
 		if (mono) {
@@ -457,6 +455,7 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 	return (0);
 }
 
+/* Load the glyph corresponding to the specified Unicode character. */
 int
 AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
 {
@@ -472,39 +471,4 @@ AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
 	    LoadGlyph(font, ch, font->current, want) :
 	    0);
 }
-
-int
-AG_TTFFaceFixedWidth(AG_TTFFont *font)
-{
-	return (FT_IS_FIXED_WIDTH(font->face));
-}
-
-int
-AG_TTFGlyphMetrics(AG_TTFFont *font, Uint32 ch, int *minx, int *maxx,
-    int *miny, int *maxy, int *advance)
-{
-	if (AG_TTFFindGlyph(font, ch, TTF_CACHED_METRICS) != 0) {
-		return (-1);
-	}
-	if (minx != NULL)
-		*minx = font->current->minx;
-	if (maxx != NULL)
-		*maxx = font->current->maxx;
-	if (miny != NULL)
-		*miny = font->current->miny;
-	if (maxy != NULL)
-		*maxy = font->current->maxy;
-	if (advance != NULL)
-		*advance = font->current->advance;
-
-	return (0);
-}
-
-void
-AG_TTFSetFontStyle(AG_TTFFont *font, int style)
-{
-	font->style = style;
-	FlushCache(font);
-}
-
 #endif /* HAVE_FREETYPE */

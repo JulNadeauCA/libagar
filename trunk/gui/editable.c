@@ -668,7 +668,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		} else if (ch == '\t') {
 			x += agTextTabWidth;
 		} else {
-			switch (font->type) {
+			switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 			case AG_FONT_VECTOR:
 			{
@@ -733,7 +733,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			continue;
 		}
 		
-		switch (font->type) {
+		switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 		case AG_FONT_VECTOR:
 		{
