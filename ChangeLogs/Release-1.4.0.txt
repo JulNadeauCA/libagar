@@ -3,8 +3,7 @@ Release Notes for Agar 1.4 (Landscapes of Frozen Methane)
 ---------------------------------------------------------
 
 Here are some of the most notable changes since Agar 1.3.4, in no
-particular order. A wikified version of this list is available at:
-http://wiki.libagar.org/wiki/Agar-1.4.
+particular order.
 
 This release preserves backward compatibility with Agar 1.3.4, but it is
 recommended to compile Agar with the `--disable-legacy' configure option,
