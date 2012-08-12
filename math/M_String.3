@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -23,13 +23,13 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 21, 2010
-.Dt M_LABEL 3
+.Dt M_STRING 3
 .Os
 .ds vT Agar-Math API Reference
 .ds oS Agar 1.4.1
 .Sh NAME
-.Nm M_Label
-.Nd Agar-Math extensions to AG_Label
+.Nm M_String
+.Nd Agar-Math extensions to AG_Printf
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,11 +38,12 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_Label.png, "The AG_Label widget")
-The
-.Xr AG_Label 3
-widget provides a "polled label" feature, which allows parts of a label to
-be updated in real-time by accessing variables of specified types.
-Once the Agar-Math library is initialized, the following specifiers
+The formatting engine used by
+.Xr AG_Printf 3
+and
+.Xr AG_PrintfP 3
+allow the registration of format string extensions.
+Once the Agar-Math library is initialized, the following format specifiers
 become available:
 .Pp
 .Bl -tag -compact -width "%[M44] "
@@ -63,4 +64,4 @@ Variable of type
 .Ft M_Matrix .
 .El
 .Sh SEE ALSO
-.Xr AG_Label 3
+.Xr AG_String 3
