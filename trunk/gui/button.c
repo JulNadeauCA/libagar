@@ -279,6 +279,7 @@ KeyUp(AG_Event *event)
 		AG_DelTimeout(bu, &bu->repeat_to);
 	}
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
+	    keysym != AG_KEY_KP_ENTER &&
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}
@@ -303,6 +304,7 @@ KeyDown(AG_Event *event)
 	if (AG_WidgetDisabled(bu))
 		return;
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
+	    keysym != AG_KEY_KP_ENTER &&
 	    keysym != AG_KEY_SPACE) {
 		return;
 	}

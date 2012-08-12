@@ -174,6 +174,7 @@ KeyDown(AG_Event *event)
 
 	switch (key) {
 	case AG_KEY_RETURN:
+	case AG_KEY_KP_ENTER:
 	case AG_KEY_SPACE:
 		AG_CheckboxToggle(cb);
 		break;
