@@ -1032,7 +1032,7 @@ Init(void *obj)
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 
 	/* Current directory label. */
-	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, _("Directory: %s"), &fd->cwd[0]);
+	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, ("Directory: %s"), &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
 
 	/* Manual file/directory entry textbox. */

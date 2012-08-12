@@ -25,8 +25,7 @@ __BEGIN_DECLS
 extern AG_WidgetClass agStatusbarClass;
 
 AG_Statusbar *AG_StatusbarNew(void *, Uint);
-AG_Label     *AG_StatusbarAddLabel(AG_Statusbar *, enum ag_label_type,
-	                           const char *, ...);
+AG_Label     *AG_StatusbarAddLabel(AG_Statusbar *, const char *, ...);
 __END_DECLS
 
 #include <agar/gui/close.h>

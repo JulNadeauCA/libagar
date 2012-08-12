@@ -58,23 +58,49 @@
 #define	_AGAR_CORE_STRING_H_
 
 #define AG_STRING_BUFFERS_MAX	8			/* For AG_Printf() */
+#define AG_STRING_POINTERS_MAX	32			/* For AG_Printf */
 
 #include <agar/core/begin.h>
+
+typedef struct ag_fmt_string {
+	char *s;				/* Format string */
+	void *p[AG_STRING_POINTERS_MAX];	/* Variable references */
+	AG_Mutex *mu[AG_STRING_POINTERS_MAX];	/* Protecting variables */
+	Uint n;
+	int curArg;				/* For internal parser use */
+} AG_FmtString;
+
+/* Extended format specifier for polled labels. */
+typedef size_t (*AG_FmtStringExtFn)(struct ag_fmt_string *, char *, size_t);
+typedef struct ag_fmt_string_ext {
+	char *fmt;
+	size_t fmtLen;
+	AG_FmtStringExtFn fn;
+} AG_FmtStringExt;
+
+#define AG_FMTSTRING_ARG(fs) ((fs)->p[fs->curArg++])
+#define AG_FMTSTRING_BUFFER_INIT 128
+#define AG_FMTSTRING_BUFFER_GROW 128
 
 __BEGIN_DECLS
 extern const unsigned char agStrcasecmpMapASCII[];
 
-char  *AG_Printf(const char *, ...);
-char  *AG_PrintfN(Uint, const char *, ...);
+char         *AG_Printf(const char *, ...);
+char         *AG_PrintfN(Uint, const char *, ...);
+AG_FmtString *AG_PrintfP(const char *, ...);
+void          AG_RegisterFmtStringExt(const char *, AG_FmtStringExtFn);
+void          AG_UnregisterFmtStringExt(const char *);
+size_t        AG_ProcessFmtString(AG_FmtString *, char *, size_t);
+
 char  *AG_Strsep(char **, const char *);
 char  *AG_Strdup(const char *);
 char  *AG_TryStrdup(const char *);
 size_t AG_Strlcpy(char *, const char *, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
 size_t AG_Strlcat(char *, const char *, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
-int    AG_StrlcpyInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
-int    AG_StrlcatInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
-int    AG_StrlcpyUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
-int    AG_StrlcatUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+size_t AG_StrlcpyInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+size_t AG_StrlcatInt(char *, int, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+size_t AG_StrlcpyUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
+size_t AG_StrlcatUint(char *, Uint, size_t) BOUNDED_ATTRIBUTE(__string__,1,3);
 
 const char *AG_Strcasestr(const char *, const char *);
 void        AG_StrReverse(char *);

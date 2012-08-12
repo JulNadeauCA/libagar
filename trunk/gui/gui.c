@@ -183,7 +183,6 @@ AG_InitGUIGlobals(void)
 		AG_RegisterClass(agDriverList[i]);
 
 	AG_InitGlobalKeys();
-	AG_LabelInitFormats();
 	AG_EditableInitClipboards();
 
 	agSurfaceFmt = AG_PixelFormatRGBA(32,
@@ -233,7 +232,6 @@ AG_DestroyGUIGlobals(void)
 	AG_PixelFormatFree(agSurfaceFmt);
 	agSurfaceFmt = NULL;
 
-	AG_LabelDestroyFormats();
 	AG_DestroyGlobalKeys();
 	AG_EditableDestroyClipboards();
 	

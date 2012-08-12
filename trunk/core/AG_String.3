@@ -100,8 +100,8 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The functions described on this manual page all manipulate C strings
-(i.e., strings with a terminating NUL character).
+The functions described on this manual page are used to manipulate C strings
+(i.e., byte strings with a terminating NUL character).
 .Sh FORMATTED OUTPUT CONVERSION
 .nr nS 1
 .Ft "char *"
@@ -110,16 +110,28 @@ The functions described on this manual page all manipulate C strings
 .Ft "char *"
 .Fn AG_PrintfN "Uint buffer" "const char *format" "..."
 .Pp
+.Ft "AG_FmtString *"
+.Fn AG_PrintfP "const char *format" "..."
+.Pp
+.Ft void
+.Fn AG_RegisterFmtStringExt "const char *fmt" "AG_FmtStringExtFn extFn"
+.Pp
+.Ft TYPE
+.Fn AG_FMTSTRING_ARG "AG_FmtString *fs"
+.Pp
+.Ft void
+.Fn AG_UnregisterFmtStringExt "const char *fmt"
+.Pp
 .nr nS 0
 The
 .Fn AG_Printf
-function performs
-.Xr printf 3
-style formatted output conversion, returning a pointer to an internally
-managed buffer.
-.Pp
-The return buffer will remain valid until the application or thread
-terminates (in multithreaded mode, thread-local storage is used).
+function performs formatted output conversion (similar to
+.Xr printf 3 ,
+with Agar-specific extensions).
+.Fn AG_Printf
+returns a pointer to an internally managed buffer, which will remain
+valid until the application or thread terminates (in multithreaded mode,
+thread-local storage is used).
 The caller must not attempt to
 .Xr free 3
 the returned pointer.
@@ -132,6 +144,100 @@ The
 argument specifies the buffer index to use (any integer up to
 .Dv AG_STRING_BUFFER_MAX
 is valid).
+.Pp
+.\" MANLINK(AG_FmtString)
+The
+.Fn AG_PrintfP
+function allocates and initializes a new
+.Ft AG_FmtString
+structure from the given format string and arguments.
+Unlike
+.Fn AG_Printf
+which accepts literal values as arguments,
+.Fn AG_PrintfP
+accepts only pointers as arguments.
+Those arguments will be accessed at a later time, whenever the string is
+to be printed or displayed.
+.Pp
+Agar's formatting engine supports the following built-in specifiers:
+.Pp
+.Bl -tag -compact -width "%llu, %llo, %llx "
+.It %d, %i
+.Ft "int"
+.It %ld, %li
+.Ft "long int"
+.It %lld, %lli
+.Ft "long long int"
+or
+.Ft "Sint64"
+.It %o, %u, %x, %X
+.Ft "unsigned int"
+.It %lu, %lo, %lx
+.Ft "long unsigned int"
+.It %llu, %llo, %llx
+.Ft "long long unsigned int"
+or
+.Ft "Uint64"
+.It %c
+.Ft "char"
+.It %s
+.Ft "char *"
+.It %f, %g
+.Ft "float *"
+.It %lf, %lg
+.Ft "double *"
+.It %llf, %llg
+.Ft "long double *"
+.It %[u8]
+.Ft "Uint8 *"
+.It %[s8]
+.Ft "Sint8 *"
+.It %[u16]
+.Ft "Uint16 *"
+.It %[s16]
+.Ft "Sint16 *"
+.It %[u32]
+.Ft "Uint32 *"
+.It %[s32]
+.Ft "Sint32 *"
+.It %[objName]
+.Ft "AG_Object *"
+(Returns object name)
+.It %[objType]
+.Ft "AG_Object *"
+(Returns class name)
+.El
+.Pp
+User-defined specifiers can be registered (arguments to user-defined
+specifiers must be pointers).
+Often, new specifiers will be registered by libraries (e.g., on
+initialization, the ag_math library will register specifiers %[V] and
+%[M] for its vector and matrix types).
+.Pp
+The
+.Fn AG_RegisterFmtStringExt
+function registers a new "%[foo]" style specifier.
+The
+.Fa extFn
+calback functions should be of the form:
+.Pp
+.Bd -literal -offset indent
+typedef size_t (*AG_FmtStringExtFn)(AG_FmtString *fs, char *dst,
+                                    size_t dstSize);
+.Ed
+.Pp
+The callback is expected to write to fixed-size buffer
+.Fa dst ,
+and return the number of characters that would have been written were
+.Fa dstSize
+unlimited.
+A generic pointer to the argument variable can be obtained from the
+.Fn AG_FMTSTRING_ARG
+macro.
+.Pp
+The
+.Fn AG_UnregisterFmtStringExt
+function removes the given extended format specifier.
 .Sh SEPARATING STRINGS
 .nr nS 1
 .Ft "char *"
@@ -181,16 +287,16 @@ returns
 .Ft "size_t"
 .Fn AG_Strlcat "char *dst" "const char *src" "size_t dst_size"
 .Pp
-.Ft "int"
+.Ft "size_t"
 .Fn AG_StrlcpyInt "char *dst" "int number" "size_t dst_size"
 .Pp
-.Ft "int"
+.Ft "size_t"
 .Fn AG_StrlcatInt "char *dst" "int number" "size_t dst_size"
 .Pp
-.Ft "int"
+.Ft "size_t"
 .Fn AG_StrlcpyUint "char *dst" "Uint number" "size_t dst_size"
 .Pp
-.Ft "int"
+.Ft "size_t"
 .Fn AG_StrlcatUint "char *dst" "Uint number" "size_t dst_size"
 .Pp
 .nr nS 0
@@ -470,13 +576,14 @@ for (i = 0; i < 10; i++) {
 The following code converts a string from LATIN-1 to Unicode, counts
 the number of Unicode characters, and exports the string to UTF-8:
 .Pp
-.Bd -literal
+.Bd -literal -offset indent
 char *dst;
 Uint32 *unicode, *s;
 int count = 0;
 size_t dstLen;
 
-if ((unicode = AG_ImportUnicode("ISO-8859-1", input, NULL)) == NULL) {
+if ((unicode = AG_ImportUnicode("ISO-8859-1", input, NULL))
+    == NULL) {
 	AG_FatalError(NULL);
 }
 for (s = &unicode[0]; *s != '\0'; s++) {
@@ -487,6 +594,27 @@ if (AG_LengthUTF8FromUCS4(unicode, &dstLen) == -1) {
 }
 dst = AG_Malloc(dstLen);
 AG_ExportUnicode("UTF-8", dst, unicode, dstLen)
+.Ed
+.Pp
+The following code fragment registers an extension to the
+.Xr AG_Printf 3
+formatting engine, and uses the new format when creating static and polled
+labels:
+.Bd -literal -offset indent
+size_t
+PrintMyVector(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	struct my_vector *my = AG_FMTSTRING_ARG(fs);
+	return AG_Snprintf(dst, dstSize, "[%f,%f]", my->x, my->y);
+}
+
+.Li ...
+
+struct my_vector v;
+
+AG_RegisterFmtStringExt("myVec", PrintMyVector);
+AG_LabelNewS(win, 0, AG_Printf("Static label: %[myVec]", &v));
+AG_LabelNewPolled(win, 0, "Polled label: %[myVec]", &v);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

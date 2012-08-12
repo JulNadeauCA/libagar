@@ -58,12 +58,10 @@ Init(void *obj)
 }
 
 AG_Label *
-AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
-    const char *fmt, ...)
+AG_StatusbarAddLabel(AG_Statusbar *sbar, const char *fmt, ...)
 {
 	AG_Label *lab;
 	va_list ap;
-	const char *p;
 
 	AG_ObjectLock(sbar);
 #ifdef AG_DEBUG
@@ -73,44 +71,13 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label));
 	lab = sbar->labels[sbar->nlabels];
 
-	if (type == AG_LABEL_STATIC) {
-		AG_ObjectInit(lab, &agLabelClass);
-		lab->type = AG_LABEL_STATIC;
-		va_start(ap, fmt);
-		Vasprintf(&lab->text, fmt, ap);
-		va_end(ap);
-	} else {
-		AG_ObjectInit(lab, &agLabelClass);
-		lab->type = AG_LABEL_POLLED;
-		lab->text = Strdup(fmt);
-	}
+	AG_ObjectInit(lab, &agLabelClass);
+	lab->type = AG_LABEL_STATIC;
+	va_start(ap, fmt);
+	Vasprintf(&lab->text, fmt, ap);
+	va_end(ap);
 	AG_ExpandHoriz(lab);
 
-	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
-		va_start(ap, fmt);
-		lab->poll.lock = (type == AG_LABEL_POLLED_MT) ?
-		                 va_arg(ap, AG_Mutex *) : NULL;
-		for (p = fmt; *p != '\0'; p++) {
-			if (*p == '%' && *(p+1) != '\0') {
-				switch (*(p+1)) {
-				case ' ':
-				case '(':
-				case ')':
-				case '%':
-					break;
-				default:
-					if (lab->poll.nptrs+1 <
-					    AG_LABEL_MAX_POLLPTRS) {
-						lab->poll.ptrs
-						    [lab->poll.nptrs++] =
-						    va_arg(ap, void *);
-					}
-					break;
-				}
-			}
-		}
-		va_end(ap);
-	}
 	AG_ObjectAttach(&sbar->box, lab);
 	lab = sbar->labels[sbar->nlabels++];
 	AG_ObjectUnlock(sbar);
