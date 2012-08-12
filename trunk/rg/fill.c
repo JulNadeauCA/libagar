@@ -142,8 +142,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 			N_("Pixmap pattern"),
 			NULL
 		};
-		AG_RadioNewUint(win, AG_RADIO_HFILL, modes,
-		    (Uint *)&f->type);
+		AG_RadioNewUint(win, AG_RADIO_HFILL, modes, (void *)&f->type);
 	}
 
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
