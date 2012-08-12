@@ -384,7 +384,7 @@ echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
 echo "Agar test suite options:"
-echo "    --enable-warnings         Suggested compiler warnings [no]"
+echo "    --enable-warnings           Suggested compiler warnings [no]"
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
@@ -1076,7 +1076,7 @@ else
 echo "yes ($AGAR_VERSION)"
 echo "yes ($AGAR_VERSION)" >> config.log
 fi;
-if [ "1.4.2" != "" ]; then
+if [ "1.5.0" != "" ]; then
 MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
 MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
 MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
@@ -1087,13 +1087,13 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 	if [ "$MK_VERSION_MINOR" = "" ]; then
 		MK_VERSION_OK="yes"
 	else
-		if [ $MK_VERSION_MINOR -gt 4 ]; then
+		if [ $MK_VERSION_MINOR -gt 5 ]; then
 			MK_VERSION_OK="yes";
-		elif [ $MK_VERSION_MINOR -eq 4 ]; then
+		elif [ $MK_VERSION_MINOR -eq 5 ]; then
 			if [ "$MK_VERSION_MICRO" = "" ]; then
 				MK_VERSION_OK="yes"
 			else
-				if [ $MK_VERSION_MICRO -ge 2 ]; then
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
 					MK_VERSION_OK="yes"
 				fi
 			fi
@@ -1101,7 +1101,7 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 	fi
 fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo "Version 1.4.2 or greater is required (found $AGAR_VERSION)"
+echo "Version 1.5.0 or greater is required (found $AGAR_VERSION)"
 exit 1
 fi;
 fi;
@@ -1264,8 +1264,8 @@ fi;
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo "* "
 echo "* " >> config.log
-echo "* This software requires agar version >= 1.4.2,"
-echo "* This software requires agar version >= 1.4.2," >> config.log
+echo "* This software requires agar version >= 1.5.0,"
+echo "* This software requires agar version >= 1.5.0," >> config.log
 echo "* please upgrade and try again."
 echo "* please upgrade and try again." >> config.log
 echo "* "

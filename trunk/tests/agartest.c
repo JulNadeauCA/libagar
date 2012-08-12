@@ -27,6 +27,7 @@ extern const AG_TestCase glviewTest;
 extern const AG_TestCase imageLoadingTest;
 extern const AG_TestCase keyEventsTest;
 extern const AG_TestCase loaderTest;
+extern const AG_TestCase mathTest;
 extern const AG_TestCase maximizedTest;
 extern const AG_TestCase minimalTest;
 extern const AG_TestCase modalWindowHandlerTest;
@@ -38,6 +39,7 @@ extern const AG_TestCase renderToSurfaceTest;
 extern const AG_TestCase scrollbarTest;
 extern const AG_TestCase scrollviewTest;
 extern const AG_TestCase socketsTest;
+extern const AG_TestCase stringTest;
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
 extern const AG_TestCase textDlgTest;
@@ -66,6 +68,7 @@ const AG_TestCase *testCases[] = {
 	&imageLoadingTest,
 	&keyEventsTest,
 	&loaderTest,
+	&mathTest,
 	&maximizedTest,
 	&minimalTest,
 	&modalWindowHandlerTest,
@@ -77,6 +80,7 @@ const AG_TestCase *testCases[] = {
 	&scrollbarTest,
 	&scrollviewTest,
 	&socketsTest,
+	&stringTest,
 	&tableTest,
 	&textboxTest,
 	&textDlgTest,
@@ -190,7 +194,7 @@ TestWindowClose(AG_Event *event)
 	free(ti);
 }
 
-/* Write a message to the test console. */
+/* Write a message to the test console (format string). */
 void
 TestMsg(void *obj, const char *fmt, ...)
 {
@@ -205,6 +209,14 @@ TestMsg(void *obj, const char *fmt, ...)
 	va_end(args);
 	AG_ConsoleMsg(ti->console, "%s: %s", ti->name, s);
 	free(s);
+}
+
+/* Write a message to the test console (C string). */
+void
+TestMsgS(void *obj, const char *s)
+{
+	AG_TestInstance *ti = obj;
+	AG_ConsoleMsg(ti->console, "%s: %s", ti->name, s);
 }
 
 #ifdef AG_DEBUG
@@ -293,8 +305,7 @@ main(int argc, char *argv[])
 	AG_SetEvent(btn, "button-pushed", RunTest, "%p,%p", tl, cons);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
-	status = AG_StatusbarAddLabel(statusBar, AG_LABEL_STATIC,
-	    _("Please select a test"));
+	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 520, 440);
 	AG_WindowShow(win);
@@ -310,7 +321,7 @@ main(int argc, char *argv[])
 			AG_Verbose("No such test: %s\n", argv[i]);
 			continue;
 		}
-		AG_TlistSelectPtr(tl, *pTest);
+		AG_TlistSelectPtr(tl, (void *)(*pTest));
 		AG_EventArgs(&ev, "%p,%p", tl, cons);
 		RunTest(&ev);
 	}

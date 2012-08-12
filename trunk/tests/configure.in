@@ -9,7 +9,7 @@ DEFAULT_DIR(DATADIR, "${PREFIX}/share/agartest")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
 
 REQUIRE(cc)
-REQUIRE(agar, 1.4.2)
+REQUIRE(agar, 1.5.0)
 REQUIRE(agar-dev)
 REQUIRE(agar-math)
 
