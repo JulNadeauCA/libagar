@@ -42,6 +42,7 @@ typedef struct ag_test_instance {
 
 void       TestWindowClose(AG_Event *);
 void       TestMsg(void *, const char *, ...);
+void       TestMsgS(void *, const char *);
 
 #include "config/enable_nls.h"
 #ifdef ENABLE_NLS

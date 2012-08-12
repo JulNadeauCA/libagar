@@ -36,6 +36,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	imageloading.c \
 	keyevents.c \
 	loader.c \
+	math.c \
 	maximized.c \
 	minimal.c \
 	modalwindowhandler.c \
@@ -49,6 +50,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	scrollbar.c \
 	scrollview.c \
 	sockets.c \
+	string.c \
 	table.c \
 	textbox.c \
 	textdlg.c \
