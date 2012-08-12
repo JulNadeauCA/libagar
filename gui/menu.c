@@ -166,8 +166,9 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 		}
 		x += WIDGET(parentWidget)->rView.x1;
 		y += WIDGET(parentWidget)->rView.y1;
-		winParent = WIDGET(parentWidget)->window;
-
+		if ((winParent = WIDGET(parentWidget)->window) == NULL) {
+			return (NULL);
+		}
 		if (WIDGET(winParent)->drv != NULL &&
 		    AGDRIVER_MULTIPLE(WIDGET(winParent)->drv)) {
 			/* Convert to absolute coordinates */
