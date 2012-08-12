@@ -42,71 +42,99 @@
 
 int mInitedSubsystem = 0;
 
-#ifdef ENABLE_GUI
-
 /*
- * Math library extensions to AG_Label(3).
+ * Math library extensions to AG_Printf(3) and AG_PrintfP(3).
  */
-static void
-PrintReal(AG_Label *lbl, char *s, size_t len, int fPos)
+static size_t
+PrintReal(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	M_Real r = AG_LABEL_ARG(lbl,M_Real);
+	M_Real *r = AG_FMTSTRING_ARG(fs);
+
 #if defined(QUAD_PRECISION)
-	Snprintf(s, len, "%llf", r);
+	return Snprintf(dst, dstSize, "%llf", *r);
 #else
-	Snprintf(s, len, "%f", r);
+	return Snprintf(dst, dstSize, "%f", *r);
 #endif
 }
-static void
-PrintTime(AG_Label *lbl, char *s, size_t len, int fPos)
+static size_t
+PrintTime(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	M_Time t = AG_LABEL_ARG(lbl,M_Time);
-	AG_UnitFormat((double)t, agTimeUnits, s, len);
+	M_Time *t = AG_FMTSTRING_ARG(fs);
+
+	return AG_UnitFormat((double)(*t), agTimeUnits, dst, dstSize);
 }
-static void
-PrintComplex(AG_Label *lbl, char *s, size_t len, int fPos)
+static size_t
+PrintComplex(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	M_Complex *c = AG_LABEL_ARG(lbl,M_Complex *);
-	Snprintf(s, len, "%f+%fi", c->r, c->i);
+	M_Complex *c = AG_FMTSTRING_ARG(fs);
+
+	return Snprintf(dst, dstSize, "[%.2g+%.2gi]", c->r, c->i);
 }
-static void
-PrintVector(AG_Label *lbl, char *s, size_t len, int fPos)
+static size_t
+PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	char num[16];
-	M_Vector *v = AG_LABEL_ARG(lbl,M_Vector *);
+	M_Vector *v = AG_FMTSTRING_ARG(fs);
+	char *pDst, *pEnd = &dst[dstSize-1];
+	size_t rv;
 	Uint i;
 
-	s[0] = '[';
-	s[1] = '\0';
+	if (dstSize < 3) {	/* "[]" + NUL */
+		return (3);
+	}
+	dst[0] = '[';
+	dst[1] = '\0';
+	pDst = &dst[1];
 	for (i = 0; i < v->m; i++) {
 		M_Real *e = M_VecGetElement(v,i);
-		Snprintf(num, sizeof(num), "%.2g", *e);
-		Strlcat(s, num, len);
-		if (i < v->m-1) { Strlcat(s, "; ", len); }
+
+		rv = Snprintf(pDst, (pEnd-pDst), "%.2g", *e);
+		if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+		if (i < (v->m - 1)) {
+			rv = Strlcpy(pDst, "; ", (pEnd-pDst));
+			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+		}
 	}
-	Strlcat(s, "]", len);
+	rv = Strlcpy(pDst, "]", (pEnd-pDst));
+	if ((pDst += rv) > pEnd) { *pEnd = '\0'; }
+out:
+	return (pDst - dst);
 }
-static void
-PrintMatrix(AG_Label *lbl, char *s, size_t len, int fPos)
+static size_t
+PrintMatrix(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	char num[16];
-	M_Matrix *M = AG_LABEL_ARG(lbl,M_Matrix *);
+	M_Matrix *M = AG_FMTSTRING_ARG(fs);
+	char *pDst, *pEnd = &dst[dstSize-1];
+	size_t rv;
 	Uint i, j;
 
-	s[0] = '[';
-	s[1] = '\0';
+	if (dstSize < 3) {	/* "[]" + NUL */
+		return (3);
+	}
+	dst[0] = '[';
+	dst[1] = '\0';
+	pDst = &dst[1];
 	for (i = 0; i < M->m; i++) {
 		for (j = 0; j < M->n; j++) {
 			M_Real *e = M_GetElement(M,i,j);
-			Snprintf(num, sizeof(num), "%.2g", *e);
-			Strlcat(s, num, len);
-			if (j < M->n-1) { Strlcat(s, ", ", len); }
+
+			rv = Snprintf(pDst, (pEnd-pDst), "%.2g", *e);
+			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+
+			if (j < (M->n - 1)) {
+				rv = Strlcpy(pDst, ", ", (pEnd-pDst));
+				if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+			}
 		}
-		if (i < M->m-1) { Strlcat(s, "; ", len); }
+		if (i < (M->m - 1)) {
+			rv = Strlcpy(pDst, "; ", (pEnd-pDst));
+			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+		}
 	}
-	Strlcat(s, "]", len);
+	rv = Strlcpy(pDst, "]", (pEnd-pDst));
+	if ((pDst += rv) > pEnd) { *pEnd = '\0'; }
+out:
+	return (pDst - dst);
 }
-#endif /* ENABLE_GUI */
 
 /* Initialize the math library. */
 void
@@ -122,14 +150,13 @@ M_InitSubsystem(void)
 	if (agGUI) {
 		AG_RegisterClass(&mPlotterClass);
 		AG_RegisterClass(&mMatviewClass);
-
-		AG_RegisterLabelFormat("R", PrintReal);
-		AG_RegisterLabelFormat("T", PrintTime);
-		AG_RegisterLabelFormat("C", PrintComplex);
-		AG_RegisterLabelFormat("V", PrintVector);
-		AG_RegisterLabelFormat("M", PrintMatrix);
 	}
 #endif
+	AG_RegisterFmtStringExt("R", PrintReal);
+	AG_RegisterFmtStringExt("T", PrintTime);
+	AG_RegisterFmtStringExt("C", PrintComplex);
+	AG_RegisterFmtStringExt("V", PrintVector);
+	AG_RegisterFmtStringExt("M", PrintMatrix);
 }
 
 /* Release resources allocated by the math library. */
@@ -143,14 +170,13 @@ M_DestroySubsystem(void)
 	if (agGUI) {
 		AG_UnregisterClass(&mPlotterClass);
 		AG_UnregisterClass(&mMatviewClass);
-
-		AG_UnregisterLabelFormat("R");
-		AG_UnregisterLabelFormat("T");
-		AG_UnregisterLabelFormat("C");
-		AG_UnregisterLabelFormat("V");
-		AG_UnregisterLabelFormat("M");
 	}
 #endif
+	AG_UnregisterFmtStringExt("R");
+	AG_UnregisterFmtStringExt("T");
+	AG_UnregisterFmtStringExt("C");
+	AG_UnregisterFmtStringExt("V");
+	AG_UnregisterFmtStringExt("M");
 }
 
 /* Unserialize a real number. */
