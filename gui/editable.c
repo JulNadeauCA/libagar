@@ -442,7 +442,7 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 	if (ks == AG_KEY_ESCAPE) {
 		return (0);
 	}
-	if (ks == AG_KEY_RETURN &&
+	if ((ks == AG_KEY_RETURN || ks == AG_KEY_KP_ENTER) &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
 		return (0);
 
@@ -1119,7 +1119,7 @@ KeyUp(AG_Event *event)
 		AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
 		AG_UnlockTimeouts(ed);
 	}
-	if (keysym == AG_KEY_RETURN &&
+	if ((keysym == AG_KEY_RETURN || keysym == AG_KEY_KP_ENTER) &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
 			AG_WidgetUnfocus(ed);
