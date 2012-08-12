@@ -97,10 +97,10 @@ option in
 .Sh TEXTURE/SURFACE MANAGEMENT
 .nr nS 1
 .Ft "void"
-.Fn AG_GL_UploadTexture "Uint *texName" "AG_Surface *suSrc" "AG_TexCoord *tc"
+.Fn AG_GL_UploadTexture "AG_Driver *drv" "Uint *texName" "AG_Surface *suSrc" "AG_TexCoord *tc"
 .Pp
 .Ft "void"
-.Fn AG_GL_UpdateTexture "Uint texName" "AG_Surface *suSrc" "AG_TexCoord *tc"
+.Fn AG_GL_UpdateTexture "AG_Driver *drv" "Uint texName" "AG_Surface *suSrc" "AG_TexCoord *tc"
 .Pp
 .Ft "void"
 .Fn AG_GL_DeleteTexture "AG_Driver *drv" "Uint texName"

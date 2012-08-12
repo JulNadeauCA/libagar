@@ -39,8 +39,8 @@ void AG_GL_StdPopClipRect(void *);
 void AG_GL_StdPushBlendingMode(void *, AG_BlendFn, AG_BlendFn);
 void AG_GL_StdPopBlendingMode(void *);
 
-void AG_GL_StdUploadTexture(Uint *, AG_Surface *, AG_TexCoord *);
-int  AG_GL_StdUpdateTexture(Uint, AG_Surface *, AG_TexCoord *);
+void AG_GL_StdUploadTexture(void *, Uint *, AG_Surface *, AG_TexCoord *);
+int  AG_GL_StdUpdateTexture(void *, Uint, AG_Surface *, AG_TexCoord *);
 void AG_GL_StdDeleteTexture(void *, Uint);
 void AG_GL_StdDeleteList(void *, Uint);
 
@@ -78,6 +78,26 @@ void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
 void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
 void AG_GL_UpdateGlyph(void *, struct ag_glyph *);
 void AG_GL_DrawGlyph(void *, const struct ag_glyph *, int, int);
+
+/* Upload a texture. */
+static __inline__ void
+AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *su, AG_TexCoord *tc)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->uploadTexture(drv, name, su, tc);
+}
+
+/* Update the contents of an existing GL texture. */
+static __inline__ int
+AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *su, AG_TexCoord *tc)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	return dc->updateTexture(drv, name, su, tc);
+}
 
 /* Queue a GL texture for deletion. */
 static __inline__ void

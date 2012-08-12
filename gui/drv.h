@@ -61,8 +61,8 @@ typedef struct ag_driver_class {
 	/* Update video region (rendering context; FB driver specific) */
 	void (*updateRegion)(void *drv, AG_Rect r);
 	/* Texture operations (GL driver specific) */
-	void (*uploadTexture)(Uint *, AG_Surface *, AG_TexCoord *);
-	int  (*updateTexture)(Uint, AG_Surface *, AG_TexCoord *);
+	void (*uploadTexture)(void *drv, Uint *, AG_Surface *, AG_TexCoord *);
+	int  (*updateTexture)(void *drv, Uint, AG_Surface *, AG_TexCoord *);
 	void (*deleteTexture)(void *drv, Uint);
 	/* Request a specific refresh rate (driver specific) */
 	int (*setRefreshRate)(void *drv, int fps);
@@ -225,19 +225,21 @@ AG_EndRendering(void *drv)
 }
 
 /* Create a texture from a surface (GL drivers). */
+/* XXX no driver arg */
 static __inline__ Uint
 AG_SurfaceTexture(AG_Surface *su, AG_TexCoord *tc)
 {
 	Uint texid;
-	agDriverOps->uploadTexture(&texid, su, tc);
+	agDriverOps->uploadTexture(NULL, &texid, su, tc);
 	return (texid);
 }
 
 /* Update texture contents from a surface (GL drivers). */
+/* XXX no driver arg */
 static __inline__ void
 AG_UpdateTexture(AG_Surface *su, int texid, AG_TexCoord *tc)
 {
-	if (agDriverOps->updateTexture((Uint)texid, su, tc) == -1)
+	if (agDriverOps->updateTexture(NULL, (Uint)texid, su, tc) == -1)
 		AG_FatalError(NULL);
 }
 
