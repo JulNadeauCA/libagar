@@ -278,7 +278,7 @@ AG_GL_StdDeleteList(void *obj, Uint list)
 }
 
 void
-AG_GL_StdUploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 {
 	AG_Surface *gsu;
 	GLuint texture;
@@ -320,8 +320,9 @@ AG_GL_StdUploadTexture(Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 	}
 	*rv = texture;
 }
+
 int
-AG_GL_StdUpdateTexture(Uint texture, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *su, AG_TexCoord *tc)
 {
 	AG_Surface *gsu;
 
@@ -365,8 +366,8 @@ AG_GL_PrepareTexture(void *obj, int s)
 		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_StdUpdateTexture(wid->textures[s], wid->surfaces[s],
-		    &wid->texcoords[s]);
+		AG_GL_StdUpdateTexture(wid->drv, wid->textures[s],
+		    wid->surfaces[s], &wid->texcoords[s]);
 	}
 }
 
@@ -1071,7 +1072,7 @@ AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
 void
 AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
-	AG_GL_StdUploadTexture(&gl->texture, gl->su, &gl->texcoords);
+	AG_GL_UploadTexture(obj, &gl->texture, gl->su, &gl->texcoords);
 }
 
 void
