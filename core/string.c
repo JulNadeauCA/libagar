@@ -70,107 +70,593 @@
 # include <iconv.h>
 #endif
 
-char        *agPrintBuf[AG_STRING_BUFFERS_MAX];	      /* AG_Printf() buffers */
+#include "string_strcasecmp.h"
+
+/* AG_Printf() buffers */
+static char        *agPrintBuf[AG_STRING_BUFFERS_MAX];
 #ifdef AG_THREADS
-AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
+static AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
 #endif
 
-/*
- * This array is designed for mapping upper and lower case letter
- * together for a case independent comparison.  The mappings are
- * based upon ASCII character sequences.
- */
-const unsigned char agStrcasecmpMapASCII[] = {
-	'\000', '\001', '\002', '\003', '\004', '\005', '\006', '\007',
-	'\010', '\011', '\012', '\013', '\014', '\015', '\016', '\017',
-	'\020', '\021', '\022', '\023', '\024', '\025', '\026', '\027',
-	'\030', '\031', '\032', '\033', '\034', '\035', '\036', '\037',
-	'\040', '\041', '\042', '\043', '\044', '\045', '\046', '\047',
-	'\050', '\051', '\052', '\053', '\054', '\055', '\056', '\057',
-	'\060', '\061', '\062', '\063', '\064', '\065', '\066', '\067',
-	'\070', '\071', '\072', '\073', '\074', '\075', '\076', '\077',
-	'\100', '\141', '\142', '\143', '\144', '\145', '\146', '\147',
-	'\150', '\151', '\152', '\153', '\154', '\155', '\156', '\157',
-	'\160', '\161', '\162', '\163', '\164', '\165', '\166', '\167',
-	'\170', '\171', '\172', '\133', '\134', '\135', '\136', '\137',
-	'\140', '\141', '\142', '\143', '\144', '\145', '\146', '\147',
-	'\150', '\151', '\152', '\153', '\154', '\155', '\156', '\157',
-	'\160', '\161', '\162', '\163', '\164', '\165', '\166', '\167',
-	'\170', '\171', '\172', '\173', '\174', '\175', '\176', '\177',
-	'\200', '\201', '\202', '\203', '\204', '\205', '\206', '\207',
-	'\210', '\211', '\212', '\213', '\214', '\215', '\216', '\217',
-	'\220', '\221', '\222', '\223', '\224', '\225', '\226', '\227',
-	'\230', '\231', '\232', '\233', '\234', '\235', '\236', '\237',
-	'\240', '\241', '\242', '\243', '\244', '\245', '\246', '\247',
-	'\250', '\251', '\252', '\253', '\254', '\255', '\256', '\257',
-	'\260', '\261', '\262', '\263', '\264', '\265', '\266', '\267',
-	'\270', '\271', '\272', '\273', '\274', '\275', '\276', '\277',
-	'\300', '\341', '\342', '\343', '\344', '\345', '\346', '\347',
-	'\350', '\351', '\352', '\353', '\354', '\355', '\356', '\357',
-	'\360', '\361', '\362', '\363', '\364', '\365', '\366', '\367',
-	'\370', '\371', '\372', '\333', '\334', '\335', '\336', '\337',
-	'\340', '\341', '\342', '\343', '\344', '\345', '\346', '\347',
-	'\350', '\351', '\352', '\353', '\354', '\355', '\356', '\357',
-	'\360', '\361', '\362', '\363', '\364', '\365', '\366', '\367',
-	'\370', '\371', '\372', '\373', '\374', '\375', '\376', '\377',
-};
+/* Formatting engine extensions */
+static AG_FmtStringExt *agFmtExtensions = NULL;
+static Uint             agFmtExtensionCount = 0;
+#ifdef AG_THREADS
+static AG_Mutex         agFmtExtensionsLock;
+#endif
+
+size_t AG_DoPrintf(char *, size_t, const char *, va_list);
 
 /*
- * Build a C string from a format string, returning a pointer to an
- * internally-managed buffer. The caller must never free() this buffer.
+ * Built-in extended format specifiers.
+ */
+static size_t
+PrintU8(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Uint8 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyUint(dst, (Uint)*val, dstSize);
+}
+static size_t
+PrintS8(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Sint8 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyInt(dst, (int)*val, dstSize);
+}
+static size_t
+PrintU16(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Uint16 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyUint(dst, (Uint)*val, dstSize);
+}
+static size_t
+PrintS16(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Sint16 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyInt(dst, (int)*val, dstSize);
+}
+static size_t
+PrintU32(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Uint32 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyUint(dst, (Uint)*val, dstSize);
+}
+static size_t
+PrintS32(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Sint32 *val = AG_FMTSTRING_ARG(fs);
+	return StrlcpyInt(dst, (int)*val, dstSize);
+}
+static size_t
+PrintOBJNAME(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	AG_Object *ob = AG_FMTSTRING_ARG(fs);
+	return Strlcpy(dst, (ob != NULL) ? ob->name : "(null)", dstSize);
+}
+static size_t
+PrintOBJTYPE(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	AG_Object *ob = AG_FMTSTRING_ARG(fs);
+	return Strlcpy(dst, (ob != NULL) ? ob->cls->name : "(null)", dstSize);
+}
+
+/* Register a new extended format specifier. */
+void
+AG_RegisterFmtStringExt(const char *fmt, AG_FmtStringExtFn fn)
+{
+	AG_FmtStringExt *fs;
+
+	AG_MutexLock(&agFmtExtensionsLock);
+	agFmtExtensions = Realloc(agFmtExtensions,
+	    (agFmtExtensionCount+1)*sizeof(AG_FmtStringExt));
+	fs = &agFmtExtensions[agFmtExtensionCount++];
+	fs->fmt = Strdup(fmt);
+	fs->fmtLen = strlen(fmt);
+	fs->fn = fn;
+	AG_MutexUnlock(&agFmtExtensionsLock);
+}
+
+/* Unregister an extended format specifier. */
+void
+AG_UnregisterFmtStringExt(const char *fmt)
+{
+	Uint i;
+
+	AG_MutexLock(&agFmtExtensionsLock);
+	for (i = 0; i < agFmtExtensionCount; i++) {
+		if (strcmp(agFmtExtensions[i].fmt, fmt) == 0)
+			break;
+	}
+	if (i < agFmtExtensionCount) {
+		Free(agFmtExtensions[i].fmt);
+		if (i < agFmtExtensionCount-1) {
+			memmove(&agFmtExtensions[i], &agFmtExtensions[i+1],
+			    (agFmtExtensionCount-1)*sizeof(AG_FmtStringExt));
+		}
+		agFmtExtensionCount--;
+	}
+	AG_MutexUnlock(&agFmtExtensionsLock);
+}
+
+/*
+ * Implementation of AG_ProcessFmtString().
+ */
+
+#undef FSARG
+#define FSARG(fs,_type) (*(_type *)(fs)->p[fs->curArg++])
+
+#ifdef HAVE_64BIT
+static size_t
+ProcessFmtString64(AG_FmtString *fs, const char *f, char *dst, size_t dstSize)
+{
+	switch (*f) {
+# ifdef HAVE_LONG_DOUBLE
+	case 'f':
+		return Snprintf(dst, dstSize, "%.2Lf", FSARG(fs,long double));
+	case 'g':
+		return Snprintf(dst, dstSize, "%.2Lg", FSARG(fs,long double));
+# endif
+	case 'd':
+	case 'i':
+		return Snprintf(dst, dstSize, "%lld", (long long)FSARG(fs,Sint64));
+	case 'o':
+		return Snprintf(dst, dstSize, "%llo", (unsigned long long)FSARG(fs,Uint64));
+	case 'u':
+		return Snprintf(dst, dstSize, "%llu", (unsigned long long)FSARG(fs,Uint64));
+	case 'x':
+		return Snprintf(dst, dstSize, "%llx", (unsigned long long)FSARG(fs,Uint64));
+	case 'X':
+		return Snprintf(dst, dstSize, "%llX", (unsigned long long)FSARG(fs,Uint64));
+	}
+	return (0);
+}
+#endif /* HAVE_64BIT */
+
+/*
+ * Construct a string from the given AG_FmtString. The arguments are
+ * dereferenced, and the resulting string is written to a fixed-size
+ * buffer dst of dstSize bytes. Returns the number of characters that
+ * would have been copied were dstSize unlimited.
+ */
+size_t
+AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	char *pDst = &dst[0];
+	char *pEnd = &dst[dstSize-1];
+	char *f;
+	size_t rv;
+	Uint i;
+
+	fs->curArg = 0;
+
+	if (dstSize < 1) {
+		return (0);
+	}
+	*pDst = '\0';
+
+	for (f = &fs->s[0]; *f != '\0'; f++) {
+		if (f[0] != '%' || f[1] == '\0') {
+			*pDst = *f;
+			if (++pDst >= pEnd) {
+				*pEnd = '\0';			/* Truncate */
+				goto out;
+			}
+			continue;
+		}
+		rv = 0;
+		switch (f[1]) {
+		case '[':
+			for (i = 0; i < agFmtExtensionCount; i++) {
+				AG_FmtStringExt *fExt = &agFmtExtensions[i];
+
+				if (strncmp(fExt->fmt, &f[2], fExt->fmtLen) != 0) {
+					continue;
+				}
+				rv = fExt->fn(fs, pDst, (pEnd-pDst));
+				f += fExt->fmtLen + 1;	/* Closing "]" */
+				break;
+			}
+			break;
+		case 'l':
+			switch (f[2]) {
+			case 'f':
+				rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,double));
+				f++;
+				break;
+			case 'g':
+				rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,double));
+				f++;
+				break;
+#ifdef HAVE_64BIT
+			case 'l':
+				rv = ProcessFmtString64(fs, &f[3], pDst, (pEnd-pDst));
+				f++;
+				break;
+#endif
+			}
+			break;
+		case 'd':
+		case 'i':
+			rv = StrlcpyInt(pDst, FSARG(fs,int), (pEnd-pDst));
+			break;
+		case 'u':
+			rv = StrlcpyUint(pDst, FSARG(fs,Uint), (pEnd-pDst));
+			break;
+		case 'f':
+			rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,float));
+			break;
+		case 'g':
+			rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,float));
+			break;
+		case 's':
+			rv = Strlcat(pDst, &FSARG(fs,char), (pEnd-pDst));
+			break;
+		case 'o':
+			rv = Snprintf(pDst, (pEnd-pDst), "%o", FSARG(fs,Uint));
+			break;
+		case 'x':
+			rv = Snprintf(pDst, (pEnd-pDst), "%x", FSARG(fs,Uint));
+			break;
+		case 'X':
+			rv = Snprintf(pDst, (pEnd-pDst), "%X", FSARG(fs,Uint));
+			break;
+		case 'c':
+			*pDst = FSARG(fs,char);
+			rv = 1;
+			break;
+		case '%':
+			*pDst = '%';
+			rv = 1;
+			break;
+		}
+		if ((pDst += rv) > pEnd) {
+			*pEnd = '\0';				/* Truncate */
+			goto out;
+		}
+		f++;
+	}
+out:
+	return (pDst - dst);
+}
+
+#undef FSARG
+
+#undef CAT_SPEC
+#define CAT_SPEC(c) \
+	if ((pSpec+2) >= pSpecEnd) { AG_FatalError("Format"); } \
+	pSpec[0] = (c); \
+	pSpec[1] = '\0'; \
+	pSpec++;
+
+/*
+ * Build a C string from a format string (see AG_String(3) for details on
+ * the format). AG_DoPrintf() writes the formatted output to a fixed-size
+ * buffer (if the buffer is too small, the string is truncated and the
+ * function returns the number of characters that would have been copied
+ * were dstSize unlimited).
+ */
+size_t
+AG_DoPrintf(char *dst, size_t dstSize, const char *fmt, va_list ap)
+{
+	char spec[32], *pSpec, *pSpecEnd = &spec[32];
+	AG_FmtString fs;
+	char *pDst = &dst[0];
+	char *pEnd = &dst[dstSize-1];
+	const char *f;
+	size_t rv;
+	Uint i;
+
+	if (dstSize < 1) {
+		return (1);
+	}
+	*pDst = '\0';
+
+	fs.s = NULL;
+
+	for (f = &fmt[0]; *f != '\0'; f++) {
+		if (f[0] != '%' || f[1] == '\0') {
+			*pDst = *f;
+			if (++pDst >= pEnd) {
+				*pEnd = '\0';			/* Truncate */
+				goto out;
+			}
+			continue;
+		}
+		spec[0] = '%';
+		spec[1] = f[1];
+		spec[2] = '\0';
+		pSpec = &spec[1];
+next_char:
+		rv = 0;
+		switch (f[1]) {
+		case '[':
+			for (i = 0; i < agFmtExtensionCount; i++) {
+				AG_FmtStringExt *fExt = &agFmtExtensions[i];
+
+				if (strncmp(fExt->fmt, &f[2], fExt->fmtLen) != 0) {
+					continue;
+				}
+				fs.curArg = 0;
+				fs.p[0] = va_arg(ap, void *);
+				rv = fExt->fn(&fs, pDst, (pEnd-pDst));
+				f += fExt->fmtLen + 1;	/* Closing "]" */
+				break;
+			}
+			break;
+		case 'd':
+		case 'i':
+			CAT_SPEC(f[1]);
+			if (pSpec == &spec[2]) {	/* Optimized (%d) */
+				rv = StrlcpyInt(pDst, va_arg(ap,int), (pEnd-pDst));
+			} else {
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,Uint));
+			}
+			break;
+		case 'u':
+			CAT_SPEC(f[1]);
+			if (pSpec == &spec[2]) {	/* Optimized (%u) */
+				rv = StrlcpyUint(pDst, va_arg(ap,Uint), (pEnd-pDst));
+			} else {
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,Uint));
+			}
+			break;
+		case 'o':
+		case 'x':
+		case 'X':
+			CAT_SPEC(f[1]);
+			rv = Snprintf(pDst, (pEnd-pDst), spec, va_arg(ap,Uint));
+			break;
+		case 'c':
+			*pDst = (char)va_arg(ap,int);
+			rv = 1;
+			break;
+		case 'f':
+		case 'g':
+			CAT_SPEC(f[1]);
+			rv = Snprintf(pDst, (pEnd-pDst), spec, va_arg(ap,double));
+			break;
+		case 's':
+			CAT_SPEC(f[1]);
+			if (pSpec == &spec[2]) {	/* Optimized (%s) */
+				rv = Strlcat(pDst, va_arg(ap,char *), (pEnd-pDst));
+			} else {
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,char *));
+			}
+			break;
+		case 'l':
+			CAT_SPEC(f[1]);
+			switch (f[2]) {
+			case 'd':
+			case 'i':
+				CAT_SPEC(f[2]);
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,long));
+				break;
+			case 'o':
+			case 'u':
+			case 'x':
+			case 'X':
+				CAT_SPEC(f[2]);
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,Ulong));
+				break;
+			case 'f':
+			case 'g':
+				CAT_SPEC(f[2]);
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    va_arg(ap,double));
+				break;
+#ifdef HAVE_64BIT
+			case 'l':
+				CAT_SPEC(f[2]);
+				switch (f[3]) {
+# ifdef HAVE_LONG_DOUBLE
+				case 'f':
+				case 'g':
+					CAT_SPEC(f[3]);
+					rv = Snprintf(pDst, (pEnd-pDst), spec,
+					    va_arg(ap,long double));
+					break;
+# endif
+				case 'd':
+				case 'i':
+					CAT_SPEC(f[3]);
+					rv = Snprintf(pDst, (pEnd-pDst), spec,
+					    (long long)va_arg(ap,Sint64));
+					break;
+				case 'o':
+				case 'u':
+				case 'x':
+				case 'X':
+					CAT_SPEC(f[3]);
+					rv = Snprintf(pDst, (pEnd-pDst), spec,
+					    (unsigned long long)va_arg(ap,Uint64));
+					break;
+				}
+				f++;
+#endif /* HAVE_64BIT */
+			}
+			f++;
+			break;
+		case '#':
+		case '0':
+		case '-':
+		case ' ':
+		case '+':
+		case '\'':
+		case '.':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			CAT_SPEC(f[1]);
+			f++;
+			goto next_char;
+		case '%':
+			*pDst = '%';
+			rv = 1;
+			break;
+		}
+		if ((pDst += rv) > pEnd) {
+			*pEnd = '\0';				/* Truncate */
+			goto out;
+		}
+		f++;
+	}
+out:
+	return (pDst - dst);
+}
+
+#undef CAT_SPEC
+
+/*
+ * AG_Printf() performs formatted output conversion and returns a pointer
+ * to an internally-managed buffer (the caller must never free() this buffer).
+ * The AG_PrintfN() variant allows a buffer index to be specified.
  *
- * AG_Printf() prints to the first buffer, AG_PrintfN() allows the
- * buffer index to be specified.
- *
- * In multi-threaded mode, the buffer is allocated as thread-local storage.
- * This buffer will remain valid until the application or thread exits
- * (or a subsequent AG_Printf() call is made, which will overwrite it).
+ * In multi-threaded mode, the AG_Printf() buffers are allocated as
+ * thread-local storage. They will remain valid until the application
+ * or thread exits (or a subsequent AG_Printf() call is made, which
+ * will overwrite it).
  */
 char *
 AG_Printf(const char *fmt, ...)
 {
-	va_list args;
-#ifdef AG_THREADS
-	char *newBuf;
+	va_list ap;
+	char *dst, *dstNew;
+	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
-	va_start(args, fmt);
-	Vasprintf(&newBuf, fmt, args);
-	va_end(args);
+	if ((dst = TryMalloc(dstSize)) == NULL) {
+		return (NULL);
+	}
+restart:
+	dst[0] = '\0';
+	va_start(ap, fmt);
+	if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
+		dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
+		if (dstNew == NULL) {
+			free(dst);
+			va_end(ap);
+			return (NULL);
+		}
+		dst = dstNew;
+		dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
+		va_end(ap);
+		goto restart;
+	}
+	va_end(ap);
+
+#ifdef AG_THREADS
 	if ((agPrintBuf[0] = (char *)AG_ThreadKeyGet(agPrintBufKey[0])) != NULL) {
 		free(agPrintBuf[0]);
 	}
-	AG_ThreadKeySet(agPrintBufKey[0], newBuf);
-	agPrintBuf[0] = newBuf;
+	AG_ThreadKeySet(agPrintBufKey[0], dst);
 #else
 	Free(agPrintBuf[0]);
-	va_start(args, fmt);
-	Vasprintf(&agPrintBuf[0], fmt, args);
-	va_end(args);
 #endif
-	return (agPrintBuf[0]);
+	agPrintBuf[0] = dst;
+	return (dst);
 }
 char *
-AG_PrintfN(Uint i, const char *fmt, ...)
+AG_PrintfN(Uint idx, const char *fmt, ...)
 {
-	va_list args;
-#ifdef AG_THREADS
-	char *newBuf;
+	va_list ap;
+	char *dst, *dstNew;
+	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
-	va_start(args, fmt);
-	Vasprintf(&newBuf, fmt, args);
-	va_end(args);
-	if ((agPrintBuf[i] = (char *)AG_ThreadKeyGet(agPrintBufKey[i])) != NULL) {
-		free(agPrintBuf[i]);
+	if ((dst = TryMalloc(dstSize)) == NULL) {
+		return (NULL);
 	}
-	AG_ThreadKeySet(agPrintBufKey[i], newBuf);
-	agPrintBuf[i] = newBuf;
+	dst[0] = '\0';
+	va_start(ap, fmt);
+	for (;;) {
+		if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
+			dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
+			if (dstNew == NULL) {
+				free(dst);
+				va_end(ap);
+				return (NULL);
+			}
+			dst = dstNew;
+			dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
+		} else {
+			break;
+		}
+	}
+	va_end(ap);
+
+#ifdef AG_THREADS
+	if ((agPrintBuf[idx] = (char *)AG_ThreadKeyGet(agPrintBufKey[idx])) != NULL) {
+		free(agPrintBuf[idx]);
+	}
+	AG_ThreadKeySet(agPrintBufKey[idx], dst);
 #else
-	Free(agPrintBuf[i]);
-	va_start(args, fmt);
-	Vasprintf(&agPrintBuf[i], fmt, args);
-	va_end(args);
+	Free(agPrintBuf[idx]);
 #endif
-	return (agPrintBuf[i]);
+	agPrintBuf[idx] = dst;
+	return (dst);
+}
+
+/*
+ * Allocate and return a new AG_FmtString (which describes a string built
+ * from arguments to be later accessed, as the string is printed).
+ *
+ * Optionally, mutexes may be associated with arguments like so:
+ *
+ * 	AG_PrintfP("My string: %m<%s>", myMutex, myString);
+ *
+ * This instructs the formatting engine to acquire myMutex before
+ * accessing the contents of myString.
+ */
+AG_FmtString *
+AG_PrintfP(const char *fmt, ...)
+{
+	const char *p;
+	AG_FmtString *fs;
+	va_list ap;
+	AG_Mutex *mu = NULL;
+
+	if ((fs = TryMalloc(sizeof(AG_FmtString))) == NULL) {
+		AG_FatalError(NULL);
+	}
+	fs->s = Strdup(fmt);
+	fs->n = 0;
+
+	va_start(ap, fmt);
+	for (p = fmt; *p != '\0'; p++) {
+		if (*p != '%') {
+			continue;
+		}
+		switch (p[1]) {
+		case '%':
+		case ' ':
+			p++;
+			break;
+		case 'm':
+			mu = (AG_Mutex *)va_arg(ap, void *);
+			break;
+		case '\0':
+			break;
+		default:
+			if (fs->n+1 >= AG_STRING_POINTERS_MAX) {
+				AG_FatalError("Too many arguments");
+			}
+			fs->p[fs->n] = va_arg(ap, void *);
+			fs->mu[fs->n] = mu;
+			fs->n++;
+			mu = NULL;
+			break;
+		}
+	}
+	va_end(ap);
+	return (fs);
 }
 
 /*
@@ -594,140 +1080,152 @@ AG_StrReverse(char *s)
 
 /*
  * Format an int (base 10) into a fixed-size buffer.
+ * XXX on truncation, this returns the size of the buffer + 1 byte
+ * (we should return the total length required instead).
  */
-int
-AG_StrlcpyInt(char *s, int val, size_t len)
+size_t
+AG_StrlcpyInt(char *s, int val, size_t size)
 {
 	static const char *digits = "0123456789";
 	int sign = (val < 0);
 	int i = 0;
 
+	if (size < 1) {
+		return (1);
+	}
 	val = (val < 0) ? -val : val;
-	if (len < 1)
-		return (-1);
-
 	do {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
 	if (sign) {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = '-';
 	}
-	if (i+1 > len) {
-		goto fail;
+	if (i+1 > size) {
+		goto trunc;
 	}
 	s[i] = '\0';
 	AG_StrReverse(s);
-	return (0);
-fail:
-	s[0] = '\0';
-	return (-1);
+	return (i);
+trunc:
+	s[size-1] = '\0';
+	AG_StrReverse(s);
+	return (i+1);
 }
 
 /*
  * Format an unsigned int (base 10) into a fixed-size buffer.
+ * XXX on truncation, this returns the size of the buffer + 1 byte
+ * (we should return the total length required instead).
  */
-int
-AG_StrlcpyUint(char *s, Uint val, size_t len)
+size_t
+AG_StrlcpyUint(char *s, Uint val, size_t size)
 {
 	static const char *digits = "0123456789";
 	int i = 0;
 
-	if (len < 1)
-		return (-1);
-
+	if (size < 1) {
+		return (1);
+	}
 	do {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
-	if (i+1 > len) {
-		goto fail;
+	if (i+1 > size) {
+		goto trunc;
 	}
 	s[i] = '\0';
 	AG_StrReverse(s);
-	return (0);
-fail:
-	s[0] = '\0';
-	return (-1);
+	return (i);
+trunc:
+	s[size-1] = '\0';
+	AG_StrReverse(s);
+	return (i+1);
 }
 
 /*
  * Format an int (base 10) into a fixed-size buffer (concatenate).
+ * XXX on truncation, this returns the size of the buffer + 1 byte
+ * (we should return the total length required instead).
  */
-int
-AG_StrlcatInt(char *s, int val, size_t len)
+size_t
+AG_StrlcatInt(char *s, int val, size_t size)
 {
 	static const char *digits = "0123456789";
 	int sign = (val < 0);
 	int i = strlen(s);
 	int iStart = i;
 
+	if (size < 1) {
+		return (1);
+	}
 	val = (val < 0) ? -val : val;
-	if (len < 1)
-		return (-1);
-
 	do {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
 	if (sign) {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = '-';
 	}
-	if (i+1 > len) {
-		goto fail;
+	if (i+1 > size) {
+		goto trunc;
 	}
 	s[i] = '\0';
 	AG_StrReverse(&s[iStart]);
-	return (0);
-fail:
-	s[0] = '\0';
-	return (-1);
+	return (i);
+trunc:
+	s[size-1] = '\0';
+	AG_StrReverse(&s[iStart]);
+	return (i+1);
 }
 
 /*
  * Format an unsigned int (base 10) into a fixed-size buffer (concatenate).
+ * XXX on truncation, this returns the size of the buffer + 1 byte
+ * (we should return the total length required instead).
  */
-int
-AG_StrlcatUint(char *s, Uint val, size_t len)
+size_t
+AG_StrlcatUint(char *s, Uint val, size_t size)
 {
 	static const char *digits = "0123456789";
 	int i = strlen(s);
 	int iStart = i;
 
-	if (len < 1)
-		return (-1);
-
+	if (size < 1) {
+		return (1);
+	}
 	do {
-		if (i+1 > len) {
-			goto fail;
+		if (i+1 > size) {
+			goto trunc;
 		}
 		s[i++] = digits[val % 10];
 	} while ((val /= 10) > 0);
 
-	if (i+1 > len) {
-		goto fail;
+	if (i+1 > size) {
+		goto trunc;
 	}
 	s[i] = '\0';
 	AG_StrReverse(&s[iStart]);
-	return (0);
-fail:
-	s[0] = '\0';
-	return (-1);
+	return (i);
+trunc:
+	s[size-1] = '\0';
+	AG_StrReverse(&s[iStart]);
+	return (i+1);
 }
 
 #ifdef AG_THREADS
@@ -739,6 +1237,7 @@ AG_InitStringSubsystem(void)
 {
 	Uint i;
 
+	/* Initialize the AG_Printf() buffers. */
 	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
 		agPrintBuf[i] = NULL;
 #ifdef AG_THREADS
@@ -748,6 +1247,18 @@ AG_InitStringSubsystem(void)
 		AG_ThreadKeySet(agPrintBufKey[i], NULL);
 #endif
 	}
+
+	/* Initialize the formatting engine extensions. */
+	AG_MutexInit(&agFmtExtensionsLock);
+	AG_RegisterFmtStringExt("u8", PrintU8);
+	AG_RegisterFmtStringExt("s8", PrintS8);
+	AG_RegisterFmtStringExt("u16", PrintU16);
+	AG_RegisterFmtStringExt("s16", PrintS16);
+	AG_RegisterFmtStringExt("u32", PrintU32);
+	AG_RegisterFmtStringExt("s32", PrintS32);
+	AG_RegisterFmtStringExt("objName", PrintOBJNAME);
+	AG_RegisterFmtStringExt("objType", PrintOBJTYPE);
+
 	return (0);
 }
 
@@ -756,10 +1267,21 @@ AG_DestroyStringSubsystem(void)
 {
 	Uint i;
 
+	/* Free the AG_Printf() buffers. */
 	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
 		Free(agPrintBuf[i]);
 #ifdef AG_THREADS
 		AG_ThreadKeyDelete(agPrintBufKey[i]);
 #endif
 	}
+	
+	/* Free the formatting engine extensions. */
+	for (i = 0; i < agFmtExtensionCount; i++) {
+		Free(agFmtExtensions[i].fmt);
+	}
+	Free(agFmtExtensions);
+	agFmtExtensions = NULL;
+	agFmtExtensionCount = 0;
+	
+	AG_MutexDestroy(&agFmtExtensionsLock);
 }

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -82,15 +82,6 @@ on rendering.
 .Pp
 .Ft "void"
 .Fn AG_LabelSizeHint "AG_Label *label" "Uint nlines" "const char *text"
-.Pp
-.Ft "void"
-.Fn AG_RegisterLabelFormat "const char *fmt" "void (*fn)(AG_Label *label, char *s, size_t len, int fPos)"
-.Pp
-.Ft "void"
-.Fn AG_UnregisterLabelFormat "const char *fmt"
-.Pp
-.Ft "void"
-.Fn AG_LABEL_ARG "AG_Label *label" "TYPE type"
 .Pp
 .nr nS 0
 The
@@ -178,123 +169,21 @@ is 0, the number of lines will be based on the contents of the text string.
 .Fn AG_LabelNewPolled
 and
 .Fn AG_LabelNewPolledMT
-may be used to display a label containing dynamically accessed elements.
-The format string argument to
+may be used to display a label containing dynamically accessed elements
+(i.e., the actual string will be compiled on rendering).
 .Fn AG_LabelNewPolled
-is similar to a printf-style format string but the subsequent arguments in
-the variable-argument list are pointers.
-The
-.Nm
-widget will display a continuously updated string, dereferencing the specified
-variables at time of rendering.
-Built-in format specifiers include:
+accepts an Agar-style format string (see
+.Xr AG_String 3
+for details).
+Subsequent arguments must be pointers (as opposed to literal data),
+and the formatting engine also provides Agar-specific extensions.
 .Pp
-.Bl -tag -compact -width "%llu, %llo, %llx "
-.It %d, %i
-.Ft "int"
-.It %ld, %li
-.Ft "long int"
-.It %lld, %lli
-.Ft "long long int"
-or
-.Ft "Sint64"
-.It %o, %u, %x, %X
-.Ft "unsigned int"
-.It %lu, %lo, %lx
-.Ft "long unsigned int"
-.It %llu, %llo, %llx
-.Ft "long long unsigned int"
-or
-.Ft "Uint64"
-.It %c
-.Ft "char"
-.It %s
-.Ft "char *"
-.It %p
-.Ft "void *"
-.It %f, %g
-.Ft "float *"
-.It %lf, %lg
-.Ft "double *"
-.It %llf, %llg
-.Ft "long double *"
-.It %[u8]
-.Ft "Uint8 *"
-.It %[s8]
-.Ft "Sint8 *"
-.It %[u16]
-.Ft "Uint16 *"
-.It %[s16]
-.Ft "Sint16 *"
-.It %[u32]
-.Ft "Uint32 *"
-.It %[s32]
-.Ft "Sint32 *"
-.It %[flags]
-.Ft "Uint *"
-.It %[flags8]
-.Ft "Uint8 *"
-.It %[flags16]
-.Ft "Uint16 *"
-.It %[flags32]
-.Ft "Uint32 *"
-.El
-.Pp
-The
-.Sq %[flags*]
-directives require that bit (or bitmask) descriptions be provided using the
-.Fn AG_LabelFlag*
-functions (see
-.Dq FLAG DESCRIPTIONS
-section below).
-.Pp
-It is possible to register custom format specifiers (%[foo]) with the
-.Fn AG_RegisterLabelFormat
-function.
-The callback function provided is expected to fill the contents
-of fixed-size buffer
-.Fa s
-with a string.
-The argument is retrieved using the
-.Fn AG_LABEL_ARG
-macro.
-.Fn AG_UnregisterLabelFormat
-removes the given format specifier.
-.Pp
-Note that the length of dynamic labels is difficult to determine automatically,
-so it is recommended to use either
+Note that the length of polled labels is difficult to determine automatically,
+so
 .Fn AG_LabelSizeHint
-or
-.Xr AG_ExpandHoriz 3
-with polled labels.
-.Sh FLAG DESCRIPTIONS
-.nr nS 1
-.Ft "void"
-.Fn AG_LabelFlag "AG_Label *label" "Uint index" "const char *descr" "Uint bitmask"
-.Pp
-.Ft "void"
-.Fn AG_LabelFlag8 "AG_Label *label" "Uint index" "const char *descr" "Uint8 bitmask"
-.Pp
-.Ft "void"
-.Fn AG_LabelFlag16 "AG_Label *label" "Uint index" "const char *descr" "Uint16 bitmask"
-.Pp
-.Ft "void"
-.Fn AG_LabelFlag32 "AG_Label *label" "Uint index" "const char *descr" "Uint32 bitmask"
-.Pp
-.nr nS 0
-The
-.Fn AG_LabelFlag ,
-.Fn AG_LabelFlag8 ,
-.Fn AG_LabelFlag16
 and
-.Fn AG_LabelFlag32
-functions register a new bit "flag" description for the variable at
-.Fa index .
-If the pointed value AND'ed with
-.Fa bitmask
-is true, the
-.Fa descr
-text will be displayed by the label.
+.Xr AG_ExpandHoriz 3
+are typically used with polled labels.
 .Sh EVENTS
 The
 .Nm
@@ -356,44 +245,38 @@ AG_Mutex myMutex = AG_MUTEX_INITIALIZER;
 AG_LabelNewPolledMT(win, 0, &myMutex, "myInt=%i", &myInt);
 .Ed
 .Pp
-It is frequently useful to display bit values in textual format.
-The following example would display
-.Sq FOO_FLAG, BAR_FLAG .
+The following code fragment defines a custom format specifier, which
+can be used in polled labels (and is also recognized by
+.Fn AG_Printf ) .
+For more details on custom format specifiers, refer to
+.Xr AG_String 3 .
 .Bd -literal -offset indent
-Uint MyFlags = FOO_FLAG|BAR_FLAG;
-AG_Label *lbl;
-
-lbl = AG_LabelNewPolled(win, 0, "MyFlags=%[flags]", &MyFlags);
-AG_LabelFlag(lbl, 0, "FOO_FLAG", FOO_FLAG);
-AG_LabelFlag(lbl, 0, "BAR_FLAG", BAR_FLAG);
-.Ed
-.Pp
-The following code fragment defines a custom format specifier for use
-in polled labels:
-.Bd -literal -offset indent
-void
-PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
+size_t
+PrintMyVector(AG_FmtString *fs, char *dst, size_t dstSize)
 {
-	struct my_vector *my = AG_LABEL_ARG(label, void *);
-	snprintf(s, len, "[%f,%f]", my->x, my->y);
+	struct my_vector *my = AG_LABEL_ARG(fs);
+	return AG_Snprintf(dst, dstSize, "[%f,%f]", my->x, my->y);
 }
 
 .Li ...
 
 struct my_vector v;
 
-AG_RegisterLabelFormat("myVec", PrintMyVector);
-AG_LabelNewPolled(parent, 0, "%[myVec]", &v);
+AG_RegisterFmtStringExt("myVec", PrintMyVector);
+
+AG_LabelNewS(parent, 0, "Static label: %[myVec]", &v);
+AG_LabelNewPolled(parent, 0, "Polled label: %[myVec]", &v);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_FetchFont 3 ,
 .Xr AG_Pixmap 3 ,
+.Xr AG_String 3 ,
 .Xr AG_Widget 3 ,
-.Xr AG_Window 3 ,
-.Xr M_Label 3 ,
-.Xr printf 3
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
 widget first appeared in Agar 1.0.
+In Agar 1.5.0, the formatting engine for "polled labels" was rewritten
+and generalized.
