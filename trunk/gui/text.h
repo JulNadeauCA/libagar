@@ -92,13 +92,17 @@ typedef struct ag_font {
 	AG_SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 
-/* State variables for text rendering. */
+/*
+ * State variables for text rendering.
+ * SYNC: AG_TextStateCompare()
+ */
 typedef struct ag_text_state {
 	AG_Font *font;			/* Font face */
 	AG_Color color;			/* Foreground text color */
 	AG_Color colorBG;		/* Background color */
 	enum ag_text_justify justify;	/* Justification mode */
 	enum ag_text_valign valign;	/* Vertical alignment mode */
+	int tabWd;			/* Width of \t in pixels */
 } AG_TextState;
 
 /* Description of font stored in data segment. */
@@ -216,7 +220,9 @@ AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 	if (s1->font == s2->font &&
 	    AG_ColorCompare(s1->color,s2->color) == 0 &&
 	    AG_ColorCompare(s1->colorBG,s2->colorBG) == 0 &&
-	    s1->justify == s2->justify) {
+	    s1->justify == s2->justify &&
+	    s1->valign == s2->valign &&
+	    s1->tabWd == s2->tabWd) {
 		return (0);
 	}
 	return (1);
@@ -382,6 +388,15 @@ AG_TextValign(enum ag_text_valign mode)
 {
 	AG_MutexLock(&agTextLock);
 	agTextState->valign = mode;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the tab width in pixels for rendering text. */
+static __inline__ void
+AG_TextTabWidth(int px)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->tabWd = px;
 	AG_MutexUnlock(&agTextLock);
 }
 
