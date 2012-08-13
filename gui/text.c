@@ -479,6 +479,7 @@ InitTextState(void)
 	agTextState->colorBG = AG_ColorRGBA(0,0,0,0);
 	agTextState->justify = AG_TEXT_LEFT;
 	agTextState->valign = AG_TEXT_TOP;
+	agTextState->tabWd = agTextTabWidth;
 }
 
 /* Initialize the font engine and configure the default font. */
@@ -863,6 +864,10 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 			x = 0;
 			continue;
 		}
+		if (*ch == '\t') {
+			x += agTextState->tabWd;
+			continue;
+		}
 		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS) != 0) {
 			continue;
 		}
@@ -1025,6 +1030,10 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			xStart = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
+		if (*ch == '\t') {
+			xStart += agTextState->tabWd;
+			continue;
+		}
 #ifdef SYMBOLS
 		if (ch[0] == '$' && agTextSymbols &&
 		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
@@ -1149,6 +1158,11 @@ TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 			tm->h += agTextState->font->lineskip;
 			continue;
 		}
+		if (*c == '\t') {
+			wLine += agTextState->tabWd;
+			tm->w += agTextState->tabWd;
+			continue;
+		}
 		wLine += sGlyph->w;
 		tm->w += sGlyph->w;
 		tm->h = MAX(tm->h, sGlyph->h);
@@ -1191,6 +1205,10 @@ TextRenderBitmap(const Uint32 *ucs)
 		if (*c == '\n') {
 			rd.y += font->lineskip;
 			rd.x = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
+			continue;
+		}
+		if (*c == '\t') {
+			rd.x += agTextState->tabWd;
 			continue;
 		}
 		sGlyph = GetBitmapGlyph(font, *c);

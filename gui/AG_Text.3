@@ -77,6 +77,9 @@ rendering attributes.
 .Fn AG_TextValign "enum ag_text_valign mode"
 .Pp
 .Ft void
+.Fn AG_TextTabWidth "int pixels"
+.Pp
+.Ft void
 .Fn AG_TextColor "AG_Color C"
 .Pp
 .Ft void
@@ -149,6 +152,9 @@ enum ag_text_valign {
 	AG_TEXT_BOTTOM
 };
 .Ed
+.Pp
+.Fn AG_TextTabWidth
+sets the width of tabs in pixels.
 .Pp
 .Fn AG_TextColor
 sets the text color (see
