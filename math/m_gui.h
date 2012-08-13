@@ -48,20 +48,8 @@
 #define M_NumericalGetTime	 	 AG_NumericalGetSint32
 
 __BEGIN_DECLS
-void	*M_EditVector3(void *, const char *, M_Vector3 *);
-void	*M_EditVector3Mp(void *, const char *, M_Vector3 *, AG_Mutex *);
-void	*M_EditVector4(void *, const char *, M_Vector4 *);
-void	*M_EditVector4Mp(void *, const char *, M_Vector4 *, AG_Mutex *);
-void	*M_EditMatrix44(void *, const char *, M_Matrix44 *);
-void	*M_EditMatrix44Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 void	*M_EditTranslate3(void *, const char *, M_Matrix44 *);
 void	*M_EditTranslate3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
-void	*M_EditTranslate4(void *, const char *, M_Matrix44 *);
-void	*M_EditTranslate4Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
-void	*M_EditScale3(void *, const char *, M_Matrix44 *);
-void	*M_EditScale3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
-void	*M_EditScale4(void *, const char *, M_Matrix44 *);
-void	*M_EditScale4Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
 __END_DECLS
 
 #include <agar/math/close.h>
