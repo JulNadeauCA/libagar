@@ -91,5 +91,6 @@ const AG_TestCase objSystemTest = {
 	Init,
 	Destroy,
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

@@ -47,8 +47,9 @@ const AG_TestCase stringTest = {
 	"1.5.0",
 	0,
 	sizeof(AG_TestInstance),
-	NULL,	/* init */
-	NULL,	/* destroy */
+	NULL,		/* init */
+	NULL,		/* destroy */
 	Test,
-	NULL	/* testGUI */
+	NULL,		/* testGUI */
+	NULL		/* bench */
 };

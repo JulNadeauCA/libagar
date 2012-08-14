@@ -35,5 +35,6 @@ const AG_TestCase modalWindowHandlerTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

@@ -199,5 +199,6 @@ const AG_TestCase focusingTest = {
 	Init,
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

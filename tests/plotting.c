@@ -273,5 +273,6 @@ const AG_TestCase plottingTest = {
 	Init,
 	Destroy,
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

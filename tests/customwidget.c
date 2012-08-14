@@ -49,5 +49,6 @@ const AG_TestCase customWidgetTest = {
 	Init,
 	Destroy,
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

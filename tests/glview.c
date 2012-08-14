@@ -335,12 +335,13 @@ const AG_TestCase glviewTest = {
 	Init,
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
 #else
 	sizeof(AG_TestInstance),
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	NULL		/* testGUI */
+	NULL,		/* testGUI */
 #endif
+	NULL		/* bench */
 };

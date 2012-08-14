@@ -128,5 +128,6 @@ const AG_TestCase audioTest = {
 	Init,
 	Destroy,
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

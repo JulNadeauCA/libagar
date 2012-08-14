@@ -105,6 +105,22 @@ SelectedTest(AG_Event *event)
 	AG_LabelText(status, "%s: %s", tc->name, tc->descr);
 }
 
+#ifdef AG_THREADS
+static void *
+RunBenchmarks(void *arg)
+{
+	AG_TestInstance *ti = arg;
+
+	if (ti->tc->bench(ti) == 0) {
+		AG_ConsoleMsg(ti->console, _("%s: Success"), ti->tc->name);
+	} else {
+		AG_ConsoleMsg(ti->console, _("%s: Failed (%s)"), ti->tc->name,
+		    AG_GetError());
+	}
+	return (NULL);
+}
+#endif
+
 static void
 RunTest(AG_Event *event)
 {
@@ -150,6 +166,22 @@ RunTest(AG_Event *event)
 			goto fail;
 		}
 	}
+	if (tc->bench != NULL) {
+#ifdef AG_THREADS
+		AG_Thread th;
+		AG_ThreadCreate(&th, RunBenchmarks, ti);
+#else
+		if (tc->bench(ti) == 0) {
+			AG_ConsoleMsg(cons, _("%s: Success"), tc->name);
+		} else {
+			AG_ConsoleMsg(cons, _("%s: Failed (%s)"), tc->name,
+			    AG_GetError());
+			AG_LabelTextS(status, AG_GetError());
+			goto fail;
+		}
+#endif
+	}
+
 	if (tc->testGUI != NULL) {
 		AG_Window *win;
 
@@ -217,6 +249,92 @@ TestMsgS(void *obj, const char *s)
 {
 	AG_TestInstance *ti = obj;
 	AG_ConsoleMsg(ti->console, "%s: %s", ti->name, s);
+}
+
+#undef RDTSC
+#if (defined(i386) || defined(__i386__) || defined(__x86_64__))
+# define RDTSC(t) __asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
+#endif
+
+/* Execute a benchmark module (called from bench() op) */
+void
+TestExecBenchmark(void *obj, AG_Benchmark *bm)
+{
+	AG_TestInstance *ti = obj;
+	Uint i, j, fIdx;
+#if defined(HAVE_64BIT)
+	Uint64 t1, t2;
+	Uint64 tTot, tRun;
+#else
+	Uint32 t1, t2;
+	Uint32 tTot, tRun;
+#endif
+
+	for (fIdx = 0; fIdx < bm->nFuncs; fIdx++) {
+		char pbuf[64];
+		AG_BenchmarkFn *bfn = &bm->funcs[fIdx];
+		AG_ConsoleLine *cl;
+
+		bfn->clksMax = 0;
+		cl = AG_ConsoleMsg(ti->console, "\t%s: ...", bfn->name);
+#ifdef RDTSC
+		if (agCPU.ext & AG_EXT_TSC) {
+			for (i = 0, tTot = 0; i < bm->runs; i++) {
+retry:
+				RDTSC(t1);
+				for (j = 0; j < bm->iterations; j++) {
+					bfn->run(ti);
+				}
+				RDTSC(t2);
+				tRun = (t2 - t1) / bm->iterations;
+				
+				Snprintf(pbuf, sizeof(pbuf),
+				    "\t%s: %lu clks [%i/%i]",
+				    bfn->name,
+				    (Ulong)tRun, i, bm->runs);
+				AG_ConsoleMsgEdit(cl, pbuf);
+
+				if (bm->maximum > 0 && tRun > bm->maximum) {
+					Snprintf(pbuf, sizeof(pbuf),
+					    "\t%s: <preempted>", bfn->name);
+					AG_ConsoleMsgEdit(cl, pbuf);
+					goto retry;
+				}
+				bfn->clksMax = AG_MAX(bfn->clksMax,tRun);
+				bfn->clksMin = (bfn->clksMin > 0) ?
+				               AG_MIN(bfn->clksMin,tRun) :
+					       tRun;
+				tTot += tRun;
+			}
+			bfn->clksAvg = (tTot / bm->runs);
+			Snprintf(pbuf, sizeof(pbuf), "\t%s: %lu clks [%i]",
+			    bfn->name, (Ulong)bfn->clksAvg, bm->runs);
+			AG_ConsoleMsgEdit(cl, pbuf);
+		} else
+#endif /* RDTSC */
+		{
+			for (i = 0, tTot = 0; i < bm->runs; i++) {
+				t1 = AG_GetTicks();
+				for (j = 0; j < bm->iterations; j++) {
+					bfn->run(ti);
+				}
+				t2 = AG_GetTicks();
+				tRun = (t2 - t1);
+				Snprintf(pbuf, sizeof(pbuf),
+				    "\t%s: %lu ticks [%i/%i]",
+				    bfn->name, (Ulong)tRun, i, bm->runs);
+				AG_ConsoleMsgEdit(cl, pbuf);
+				bfn->clksMax = AG_MAX(bfn->clksMax,tRun);
+				bfn->clksMin = (bfn->clksMin > 0) ?
+				               AG_MIN(bfn->clksMin,tRun) :
+					       tRun;
+				tTot += tRun;
+			}
+			Snprintf(pbuf, sizeof(pbuf), "\t%s: %lu ticks [%i]",
+			    bfn->name, (Ulong)bfn->clksAvg, bm->runs);
+			AG_ConsoleMsgEdit(cl, pbuf);
+		}
+	}
 }
 
 #ifdef AG_DEBUG
@@ -289,7 +407,7 @@ main(int argc, char *argv[])
 	AG_WindowSetCaptionS(win, "agartest");
 
 	pane = AG_PaneNewVert(win, AG_PANE_EXPAND);
-	AG_PaneMoveDividerPct(pane, 60);
+	AG_PaneMoveDividerPct(pane, 30);
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
@@ -307,7 +425,7 @@ main(int argc, char *argv[])
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
 	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 520, 440);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 60);
 	AG_WindowShow(win);
 	
 	for (i = optInd; i < argc; i++) {

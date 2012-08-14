@@ -16,6 +16,7 @@ REQUIRE(agar-math)
 CHECK(agar-vg)
 CHECK(agar-rg)
 CHECK(agar-au)
+CHECK(rand48)
 
 C_INCDIR($SRC)
 C_DEFINE(_USE_AGAR_STD)
