@@ -11,7 +11,6 @@ typedef struct m_matrix_ops {
 	int     (*Resize)(void *M, Uint m, Uint n);
 	void    (*FreeMatrix)(void *M);
 	void   *(*NewMatrix)(Uint m, Uint n);
-	void    (*Print)(void *M);
 	
 	void    (*SetIdentity)(void *M);
 	void    (*SetZero)(void *M);
@@ -166,7 +165,6 @@ __END_DECLS
 #define M_EntMulv		mMatOps->EntMulv
 #define M_Compare		mMatOps->Compare
 #define M_Trace			mMatOps->Trace
-#define M_MatrixPrint           mMatOps->Print
 #define M_ReadMatrix		mMatOps->Read
 #define M_WriteMatrix		mMatOps->Write
 #define M_ToFloats		mMatOps->ToFloats
@@ -231,7 +229,6 @@ __END_DECLS
 
 __BEGIN_DECLS
 void       M_MatrixInitEngine(void);
-void       M_MatrixPrint44(const M_Matrix44 *);
 M_Matrix44 M_ReadMatrix44(AG_DataSource *);
 void       M_ReadMatrix44v(AG_DataSource *, M_Matrix44 *);
 void       M_WriteMatrix44(AG_DataSource *, const M_Matrix44 *);

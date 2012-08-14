@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -43,9 +43,26 @@ interfaces implement the basic linear algebra routines.
 Both provide a consistent interface to different
 .Em backends
 allowing different numerical solvers and memory representations.
+.Pp
 Selection between multiple backends is possible at run-time, or the Agar-Math
 library can be compiled to provide inline expansions of these operations under
 a specific backend.
+.Pp
+.\" BEGIN DUP in M_Matrix(3)
+By default, Agar-Math uses SSE and AltiVec if a runtime cpuinfo check
+determines that those extensions are available (the build will still work
+on CPUs where they are unavailable).
+This compatibility comes at the cost of a function call per
+operation.
+For best performance on SSE-capable CPUs, Agar-Math should be compiled
+with "--with-sse-inline" or "--with-altivec-inline", which forces inline
+expansions of
+.Ft M_Vector3 ,
+.Ft M_Vector4
+and
+.Ft M_Matrix44
+operations (the resulting build will require a SIMD-capable CPU).
+.\" END DUP
 .Sh VECTORS IN R^N
 The following routines operate on dynamically-allocated vectors in R^n.
 Unlike
@@ -143,9 +160,6 @@ for details.
 .Ft "M_Vector *"
 .Fn M_VecFromLongDoubles "Uint n" "const long double *values"
 .Pp
-.Ft "void"
-.Fn M_VecPrint "const M_Vector *v"
-.Pp
 .nr nS 0
 .Fn M_VecGetElement
 returns a pointer to element
@@ -179,13 +193,6 @@ respectively.
 The latter function is only available on platforms where
 .Dv HAVE_LONG_DOUBLE
 is defined.
-.Pp
-.Fn M_VecPrint
-dumps the individual vector entries to the standard error output.
-It is only for debugging purposes.
-Agar GUI applications can use the provided
-.Xr M_Matview 3
-widget to display vector or matrix contents.
 .Sh VECTORS IN R^N: BASIC OPERATIONS
 .nr nS 1
 .Ft int
@@ -234,14 +241,9 @@ widget to display vector or matrix contents.
 .Fn M_VecElemPow "const M_Vector *v" "M_Real pow"
 .Pp
 .nr nS 0
-RETURN VALUES: Unless mentioned otherwise, the following functions returning a
-.Ft M_Vector
-pointer may fail returning NULL those returning an
-.Ft int
-may fail returning -1.
-.Pp
+The
 .Fn M_VecCopy
-copies the contents of vector
+routine copies the contents of vector
 .Fa vSrc
 into
 .Fa vDst .
@@ -653,22 +655,23 @@ rotations.
 The following routines operate on vectors in R^3, which are represented
 by the structure:
 .Bd -literal
-typedef struct m_vector3 {
-	M_Real x, y, z, _pad;
-} M_Vector3;
-.Ed
-.Pp
-If SSE support is available (i.e.,
-.Dv HAVE_SSE
-is defined),
-.Ft M_Vector3
-is an union:
-.Bd -literal
+#ifdef HAVE_SSE
 typedef union m_vector3 {
 	__m128 m128;
-	struct { M_Real x, y, z, _pad; };
+	struct { float x, y, z, _pad; };
 } M_Vector3;
+#else
+typedef struct m_vector3 {
+	M_Real x, y, z;
+} M_Vector3;
+#endif
 .Ed
+.Pp
+Notice that SIMD extensions force single-precision floats, regardless of
+the precision for which Agar-Math was built (if a 3-dimensional vector of
+higher precision is required, the general
+.Ft M_Vector
+type may be used).
 .Pp
 The following backends are currently available for
 .Ft M_Vector3 :
@@ -1049,26 +1052,27 @@ shorthands perform a rotation of
 .Fa theta
 radians about the basis vectors I, J or K, respectively.
 .\" MANLINK(M_Vector4)
-.Sh VECTORS IN R^3
+.Sh VECTORS IN R^4
 The following routines operate on vectors in R^4, which are represented
 by the structure:
 .Bd -literal
+#ifdef HAVE_SSE
+typedef union m_vector4 {
+	__m128 m128;
+	struct { float x, y, z, w; };
+} M_Vector4;
+#else
 typedef struct m_vector4 {
 	M_Real x, y, z, w;
 } M_Vector4;
+#endif
 .Ed
 .Pp
-If SSE support is available (i.e.,
-.Dv HAVE_SSE
-is defined),
-.Ft M_Vector4
-is an union:
-.Bd -literal
-typedef union m_vector4 {
-	__m128 m128;
-	struct { M_Real x, y, z, w; };
-} M_Vector4;
-.Ed
+Notice that SIMD extensions force single-precision floats, regardless of the
+precision for which Agar-Math was built (if a 4-dimensional vector of higher
+precision is required, the general
+.Ft M_Vector
+type may be used).
 .Pp
 The following backends are currently available for
 .Ft M_Vector4 :
@@ -1393,7 +1397,8 @@ for the given axis and angle.
 .Xr M_Real 3 ,
 .Xr M_Complex 3 ,
 .Xr M_Quaternion 3 ,
-.Xr M_Matrix 3
+.Xr M_Matrix 3 ,
+.Xr M_Matview 3
 .Sh HISTORY
 The
 .Nm

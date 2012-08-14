@@ -1,6 +1,6 @@
 /*
  * Public domain.
- * Operations on vectors in R^3 using SSE1 operations.
+ * Operations on vectors in R^3 using SSE operations.
  */
 
 #include <config/have_sse.h>
@@ -23,13 +23,13 @@ const M_VectorOps3 mVecOps3_SSE = {
 	M_VectorDot3_FPU,			/* ? */
 	M_VectorDot3p_FPU,			/* ? */
 	M_VectorDistance3_SSE,			/* -31 clks */
-	M_VectorDistance3p_SSE,		/* -27 clks */
+	M_VectorDistance3p_SSE,			/* -27 clks */
 	M_VectorNorm3_SSE,			/* -87 clks */
 	M_VectorNorm3p_SSE,			/* -54 clks */
 	M_VectorNorm3v_FPU,			/* +147 clks */
 	M_VectorCross3_FPU,			/* TODO */
 	M_VectorCross3p_FPU,			/* TODO */
-	M_VectorNormCross3_FPU,		/* TODO */
+	M_VectorNormCross3_FPU,			/* TODO */
 	M_VectorNormCross3p_FPU,		/* TODO */
 	M_VectorScale3_SSE,			/* -27 clks */
 	M_VectorScale3p_SSE,			/* -15 clks */
@@ -37,17 +37,16 @@ const M_VectorOps3 mVecOps3_SSE = {
 	M_VectorAdd3_SSE,			/* -29 clks */
 	M_VectorAdd3p_SSE,			/* -15 clks */
 	M_VectorAdd3v_FPU,			/* = */
-	M_VectorAdd3n_SSE,			/* TODO */
+	M_VectorSum3_SSE,			/* TODO */
 	M_VectorSub3_SSE,			/* -29 clks */
 	M_VectorSub3p_SSE,			/* -15 clks */
 	M_VectorSub3v_FPU,			/* = */
-	M_VectorSub3n_SSE,			/* TODO */
 	M_VectorAvg3_SSE,			/* TODO */
 	M_VectorAvg3p_SSE,			/* TODO */
 	M_VectorLERP3_SSE,			/* TODO */
 	M_VectorLERP3p_SSE,			/* TODO */
 	M_VectorElemPow3_SSE,			/* TODO */
-	M_VectorVecAngle3_SSE,		/* TODO */
+	M_VectorVecAngle3_SSE,			/* TODO */
 	M_VectorRotate3_SSE,			/* TODO */
 	M_VectorRotate3v_SSE			/* TODO */,
 	M_VectorRotateQuat3_SSE,		/* TODO */
@@ -57,38 +56,15 @@ const M_VectorOps3 mVecOps3_SSE = {
 };
 
 M_Vector3
-M_VectorAdd3n_SSE(int nvecs, ...)
+M_VectorSum3_SSE(const M_Vector3 *va, Uint count)
 {
-	M_Vector3 c, *v;
+	M_Vector3 c;
 	int i;
-	va_list ap;
 
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.m128 = v->m128;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.m128 = _mm_add_ps(c.m128, v->m128);
+	c.m128 = _mm_setzero_ps();
+	for (i = 0; i < count; i++) {
+		c.m128 = _mm_add_ps(c.m128, va[i].m128);
 	}
-	va_end(ap);
-	return (c);
-}
-
-M_Vector3
-M_VectorSub3n_SSE(int nvecs, ...)
-{
-	M_Vector3 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.m128 = v->m128;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.m128 = _mm_sub_ps(c.m128, v->m128);
-	}
-	va_end(ap);
 	return (c);
 }
 

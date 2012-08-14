@@ -1,6 +1,6 @@
 /*
  * Public domain.
- * Operations on 4x4 matrices with SSE1 operations.
+ * Operations on 4x4 matrices with SSE operations.
  */
 
 #include <config/have_sse.h>
@@ -18,17 +18,12 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixTranspose44_FPU,
 	M_MatrixTranspose44p_FPU,
 	M_MatrixTranspose44v_FPU,
-#ifdef SINGLE_PRECISION
-	M_MatrixInvert44_SSE,			/* To test */
-	M_MatrixInvert44p_SSE,			/* To test */
-#else
-	M_MatrixInvert44_FPU,
-	M_MatrixInvert44p_FPU,
-#endif
+	M_MatrixInvert44_SSE,
+	M_MatrixInvert44p_SSE,
 	M_MatrixInvertGaussJordan44v_FPU,
-	M_MatrixMult44_SSE,			/* To test */
-	M_MatrixMult44v_SSE,			/* To test */
-	M_MatrixMult44pv_SSE,			/* To test */
+	M_MatrixMult44_SSE,
+	M_MatrixMult44v_SSE,
+	M_MatrixMult44pv_SSE,
 	M_MatrixMultVector344_FPU,
 	M_MatrixMultVector344p_FPU,
 	M_MatrixMultVector344v_FPU,
@@ -57,8 +52,6 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixUniScale44_FPU,
 };
 
-#ifdef SINGLE_PRECISION
-
 M_Matrix44
 M_MatrixInvert44_SSE(M_Matrix44 A)
 {
@@ -69,7 +62,6 @@ M_MatrixInvert44_SSE(M_Matrix44 A)
 	__m128 row0, row1, row2, row3;
 	__m128 det, tmp1;
 
-	/* XXX */
 	tmp1	= _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64 *)(src)),
 	                                          (__m64 *)(src+4));
 	row1	= _mm_loadh_pi(_mm_loadl_pi(row1, (__m64 *)(src+8)),
@@ -172,7 +164,6 @@ M_MatrixInvert44p_SSE(const M_Matrix44 *A)
 	__m128 row0, row1, row2, row3;
 	__m128 det, tmp1;
 
-	/* XXX */
 	tmp1	= _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64 *)(src)),
 	                                          (__m64 *)(src+4));
 	row1	= _mm_loadh_pi(_mm_loadl_pi(row1, (__m64 *)(src+8)),
@@ -264,7 +255,5 @@ M_MatrixInvert44p_SSE(const M_Matrix44 *A)
 
 	return (Ainv);
 }
-
-#endif /* SINGLE_PRECISION */
 
 #endif /* HAVE_SSE */

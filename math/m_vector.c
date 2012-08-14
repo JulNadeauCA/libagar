@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,8 +34,6 @@ const M_VectorOps2 *mVecOps2 = NULL;
 const M_VectorOps3 *mVecOps3 = NULL;
 const M_VectorOps4 *mVecOps4 = NULL;
 
-/* #define SSE_DEBUG */
-
 void
 M_VectorInitEngine(void)
 {
@@ -52,21 +50,6 @@ M_VectorInitEngine(void)
 	if (HasSSE3())
 		mVecOps3 = &mVecOps3_SSE3;
 #endif
-
-#ifdef SSE_DEBUG
-	AG_Verbose("Vector operations: ");
-#if defined(INLINE_ALTIVEC)
-	AG_Verbose("altivec (inline)\n");
-#elif defined(INLINE_SSE3)
-	AG_Verbose("sse3 (inline)\n");
-#elif defined(INLINE_SSE2)
-	AG_Verbose("sse2 (inline)\n");
-#elif defined(INLINE_SSE)
-	AG_Verbose("sse (inline)\n");
-#else
-	AG_Verbose("%s\n", mVecOps3->name);
-#endif
-#endif /* SSE_DEBUG */
 }
 
 M_Vector2
@@ -84,9 +67,15 @@ M_RealvToVector3(const M_Real *r)
 {
 	M_Vector3 v;
 
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	v.x = (float)r[0];
+	v.y = (float)r[1];
+	v.z = (float)r[2];
+#else
 	v.x = r[0];
 	v.y = r[1];
 	v.z = r[2];
+#endif
 	return (v);
 }
 
@@ -95,10 +84,17 @@ M_RealvToVector4(const M_Real *r)
 {
 	M_Vector4 v;
 
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	v.x = (float)r[0];
+	v.y = (float)r[1];
+	v.z = (float)r[2];
+	v.w = (float)r[3];
+#else
 	v.x = r[0];
 	v.y = r[1];
 	v.z = r[2];
 	v.w = r[3];
+#endif
 	return (v);
 }
 
@@ -106,8 +102,14 @@ M_Vector2
 M_Vector3to2(M_Vector3 v)
 {
 	M_Vector2 v2;
+
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	v2.x = (M_Real)v.x;
+	v2.y = (M_Real)v.y;
+#else
 	v2.x = v.x;
 	v2.y = v.y;
+#endif
 	return (v2);
 }
 
@@ -115,8 +117,14 @@ M_Vector3
 M_Vector2to3(M_Vector2 v)
 {
 	M_Vector3 v3;
+
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	v3.x = (float)v.x;
+	v3.y = (float)v.y;
+#else
 	v3.x = v.x;
 	v3.y = v.y;
+#endif
 	v3.z = 0.0;
 	return (v3);
 }
@@ -132,85 +140,230 @@ M_Vector3to4(M_Vector3 v)
 	return (v4);
 }
 
+int
+M_ReadVector2v(AG_DataSource *ds, M_Vector2 *v)
+{
+	Uint8 type;
+
+	type = AG_ReadUint8(ds);
+	switch (type) {
+	case 21:
+		v->x = (M_Real)AG_ReadFloat(ds);
+		v->y = (M_Real)AG_ReadFloat(ds);
+		break;
+	case 22:
+		v->x = (M_Real)AG_ReadDouble(ds);
+		v->y = (M_Real)AG_ReadDouble(ds);
+		break;
+#ifdef HAVE_LONG_DOUBLE
+	case 24:
+		v->x = (M_Real)AG_ReadLongDouble(ds);
+		v->y = (M_Real)AG_ReadLongDouble(ds);
+		break;
+#endif
+	default:
+		AG_SetError("Bad vector2: %u", type);
+		return (-1);
+	}
+	return (0);
+}
+int
+M_ReadVector3v(AG_DataSource *ds, M_Vector3 *v)
+{
+	Uint8 type;
+
+	type = AG_ReadUint8(ds);
+	switch (type) {
+	case 31:
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+		v->x = AG_ReadFloat(ds);
+		v->y = AG_ReadFloat(ds);
+		v->z = AG_ReadFloat(ds);
+#else
+		v->x = (M_Real)AG_ReadFloat(ds);
+		v->y = (M_Real)AG_ReadFloat(ds);
+		v->z = (M_Real)AG_ReadFloat(ds);
+#endif
+		break;
+	case 32:
+#ifdef HAVE_SSE
+		v->x = (float)AG_ReadDouble(ds);
+		v->y = (float)AG_ReadDouble(ds);
+		v->z = (float)AG_ReadDouble(ds);
+#else
+		v->x = (M_Real)AG_ReadDouble(ds);
+		v->y = (M_Real)AG_ReadDouble(ds);
+		v->z = (M_Real)AG_ReadDouble(ds);
+#endif
+		break;
+#ifdef HAVE_LONG_DOUBLE
+	case 34:
+# ifdef HAVE_SSE
+		v->x = (float)AG_ReadLongDouble(ds);
+		v->y = (float)AG_ReadLongDouble(ds);
+		v->z = (float)AG_ReadLongDouble(ds);
+# else
+		v->x = (M_Real)AG_ReadLongDouble(ds);
+		v->y = (M_Real)AG_ReadLongDouble(ds);
+		v->z = (M_Real)AG_ReadLongDouble(ds);
+# endif
+		break;
+#endif
+	default:
+		AG_SetError("Bad vector3: %u", type);
+		return (-1);
+	}
+	return (0);
+}
+int
+M_ReadVector4v(AG_DataSource *ds, M_Vector4 *v)
+{
+	Uint8 type;
+
+	type = AG_ReadUint8(ds);
+	switch (type) {
+	case 41:
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+		v->x = AG_ReadFloat(ds);
+		v->y = AG_ReadFloat(ds);
+		v->z = AG_ReadFloat(ds);
+		v->w = AG_ReadFloat(ds);
+#else
+		v->x = (M_Real)AG_ReadFloat(ds);
+		v->y = (M_Real)AG_ReadFloat(ds);
+		v->z = (M_Real)AG_ReadFloat(ds);
+		v->w = (M_Real)AG_ReadFloat(ds);
+#endif
+		break;
+	case 42:
+#ifdef HAVE_SSE
+		v->x = (float)AG_ReadDouble(ds);
+		v->y = (float)AG_ReadDouble(ds);
+		v->z = (float)AG_ReadDouble(ds);
+		v->w = (float)AG_ReadDouble(ds);
+#else
+		v->x = (M_Real)AG_ReadDouble(ds);
+		v->y = (M_Real)AG_ReadDouble(ds);
+		v->z = (M_Real)AG_ReadDouble(ds);
+		v->w = (M_Real)AG_ReadDouble(ds);
+#endif
+		break;
+#ifdef HAVE_LONG_DOUBLE
+	case 44:
+# ifdef HAVE_SSE
+		v->x = (float)AG_ReadLongDouble(ds);
+		v->y = (float)AG_ReadLongDouble(ds);
+		v->z = (float)AG_ReadLongDouble(ds);
+		v->w = (float)AG_ReadLongDouble(ds);
+# else
+		v->x = (M_Real)AG_ReadLongDouble(ds);
+		v->y = (M_Real)AG_ReadLongDouble(ds);
+		v->z = (M_Real)AG_ReadLongDouble(ds);
+		v->w = (M_Real)AG_ReadLongDouble(ds);
+# endif
+		break;
+#endif
+	default:
+		AG_SetError("Bad vector4: %u", type);
+		return (-1);
+	}
+	return (0);
+}
+
 M_Vector2
-M_ReadVector2(AG_DataSource *buf)
+M_ReadVector2(AG_DataSource *ds)
 {
 	M_Vector2 v;
 
-	v.x = (M_Real)AG_ReadDouble(buf);
-	v.y = (M_Real)AG_ReadDouble(buf);
+	if (M_ReadVector2v(ds, &v) == -1) {
+		AG_FatalError(NULL);
+	}
 	return (v);
 }
 
 M_Vector3
-M_ReadVector3(AG_DataSource *buf)
+M_ReadVector3(AG_DataSource *ds)
 {
 	M_Vector3 v;
 
-	v.x = (M_Real)AG_ReadDouble(buf);
-	v.y = (M_Real)AG_ReadDouble(buf);
-	v.z = (M_Real)AG_ReadDouble(buf);
+	if (M_ReadVector3v(ds, &v) == -1) {
+		AG_FatalError(NULL);
+	}
 	return (v);
 }
 
 M_Vector4
-M_ReadVector4(AG_DataSource *buf)
+M_ReadVector4(AG_DataSource *ds)
 {
 	M_Vector4 v;
 
-	v.x = (M_Real)AG_ReadDouble(buf);
-	v.y = (M_Real)AG_ReadDouble(buf);
-	v.z = (M_Real)AG_ReadDouble(buf);
-	v.w = (M_Real)AG_ReadDouble(buf);
+	if (M_ReadVector4v(ds, &v) == -1) {
+		AG_FatalError(NULL);
+	}
 	return (v);
 }
 
 void
-M_ReadVector2v(AG_DataSource *buf, M_Vector2 *v)
+M_WriteVector2(AG_DataSource *ds, const M_Vector2 *v)
 {
-	v->x = (M_Real)AG_ReadDouble(buf);
-	v->y = (M_Real)AG_ReadDouble(buf);
+#if defined(SINGLE_PRECISION)
+	AG_WriteUint8(ds, 21);
+	AG_WriteFloat(ds, v->x);
+	AG_WriteFloat(ds, v->y);
+#elif defined(DOUBLE_PRECISION)
+	AG_WriteUint8(ds, 22);
+	AG_WriteDouble(ds, v->x);
+	AG_WriteDouble(ds, v->y);
+#elif defined(QUAD_PRECISION)
+	AG_WriteUint8(ds, 24);
+	AG_WriteLongDouble(ds, v->x);
+	AG_WriteLongDouble(ds, v->y);
+#endif
 }
 
 void
-M_ReadVector3v(AG_DataSource *buf, M_Vector3 *v)
+M_WriteVector3(AG_DataSource *ds, const M_Vector3 *v)
 {
-	v->x = (M_Real)AG_ReadDouble(buf);
-	v->y = (M_Real)AG_ReadDouble(buf);
-	v->z = (M_Real)AG_ReadDouble(buf);
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	AG_WriteUint8(ds, 31);
+	AG_WriteFloat(ds, v->x);
+	AG_WriteFloat(ds, v->y);
+	AG_WriteFloat(ds, v->z);
+#elif defined(DOUBLE_PRECISION)
+	AG_WriteUint8(ds, 32);
+	AG_WriteDouble(ds, v->x);
+	AG_WriteDouble(ds, v->y);
+	AG_WriteDouble(ds, v->z);
+#elif defined(QUAD_PRECISION)
+	AG_WriteUint8(ds, 34);
+	AG_WriteLongDouble(ds, v->x);
+	AG_WriteLongDouble(ds, v->y);
+	AG_WriteLongDouble(ds, v->z);
+#endif
 }
 
 void
-M_ReadVector4v(AG_DataSource *buf, M_Vector4 *v)
+M_WriteVector4(AG_DataSource *ds, const M_Vector4 *v)
 {
-	v->x = (M_Real)AG_ReadDouble(buf);
-	v->y = (M_Real)AG_ReadDouble(buf);
-	v->z = (M_Real)AG_ReadDouble(buf);
-	v->w = (M_Real)AG_ReadDouble(buf);
-}
-
-void
-M_WriteVector2(AG_DataSource *buf, const M_Vector2 *v)
-{
-	AG_WriteDouble(buf, (double)v->x);
-	AG_WriteDouble(buf, (double)v->y);
-}
-
-void
-M_WriteVector3(AG_DataSource *buf, const M_Vector3 *v)
-{
-	AG_WriteDouble(buf, (double)v->x);
-	AG_WriteDouble(buf, (double)v->y);
-	AG_WriteDouble(buf, (double)v->z);
-}
-
-void
-M_WriteVector4(AG_DataSource *buf, const M_Vector4 *v)
-{
-	AG_WriteDouble(buf, (double)v->x);
-	AG_WriteDouble(buf, (double)v->y);
-	AG_WriteDouble(buf, (double)v->z);
-	AG_WriteDouble(buf, (double)v->w);
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	AG_WriteUint8(ds, 41);
+	AG_WriteFloat(ds, v->x);
+	AG_WriteFloat(ds, v->y);
+	AG_WriteFloat(ds, v->z);
+	AG_WriteFloat(ds, v->w);
+#elif defined(DOUBLE_PRECISION)
+	AG_WriteUint8(ds, 42);
+	AG_WriteDouble(ds, v->x);
+	AG_WriteDouble(ds, v->y);
+	AG_WriteDouble(ds, v->z);
+	AG_WriteDouble(ds, v->w);
+#elif defined(QUAD_PRECISION)
+	AG_WriteUint8(ds, 44);
+	AG_WriteLongDouble(ds, v->x);
+	AG_WriteLongDouble(ds, v->y);
+	AG_WriteLongDouble(ds, v->z);
+	AG_WriteLongDouble(ds, v->w);
+#endif
 }
 
 M_Vector2 *
@@ -248,4 +401,3 @@ M_VectorDup4(const M_Vector4 *v)
 	vDup->w = v->w;
 	return (vDup);
 }
-

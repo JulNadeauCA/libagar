@@ -254,5 +254,4 @@ M_Vector *M_VectorFromDoubles_FPU(Uint, const double *);
 #ifdef HAVE_LONG_DOUBLE
 M_Vector *M_VectorFromLongDoubles_FPU(Uint, const long double *);
 #endif
-void      M_VectorPrint_FPU(const M_Vector *);
 __END_DECLS

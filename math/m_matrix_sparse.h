@@ -16,7 +16,6 @@ M_Real  M_Get_SP(void *, Uint, Uint);
 int     M_MatrixResize_SP(void *pA, Uint m, Uint n);
 void    M_MatrixFree_SP(void *pA);
 void   *M_MatrixNew_SP(Uint m, Uint n);
-void    M_MatrixPrint_SP(void *pA);
 void    M_MatrixSetZero_SP(void *pA);
 int     M_FactorizeLU_SP(void *pA);
 void    M_BacksubstLU_SP(void *pA, void *pV);

@@ -23,13 +23,13 @@ const M_VectorOps3 mVecOps3_SSE3 = {
 	M_VectorDot3_SSE3,			/* -26 clks */
 	M_VectorDot3p_SSE3,			/* -59 clks */
 	M_VectorDistance3_SSE,			/* -31 clks */
-	M_VectorDistance3p_SSE,		/* -27 clks */
+	M_VectorDistance3p_SSE,			/* -27 clks */
 	M_VectorNorm3_SSE,			/* -87 clks */
 	M_VectorNorm3p_SSE,			/* -54 clks */
 	M_VectorNorm3v_FPU,			/* +147 clks */
 	M_VectorCross3_FPU,			/* TODO */
 	M_VectorCross3p_FPU,			/* TODO */
-	M_VectorNormCross3_FPU,		/* TODO */
+	M_VectorNormCross3_FPU,			/* TODO */
 	M_VectorNormCross3p_FPU,		/* TODO */
 	M_VectorScale3_SSE,			/* -27 clks */
 	M_VectorScale3p_SSE,			/* -15 clks */
@@ -37,11 +37,10 @@ const M_VectorOps3 mVecOps3_SSE3 = {
 	M_VectorAdd3_SSE,			/* -29 clks */
 	M_VectorAdd3p_SSE,			/* -15 clks */
 	M_VectorAdd3v_FPU,			/* = */
-	M_VectorAdd3n_SSE,			/* TODO */
+	M_VectorSum3_SSE,			/* TODO */
 	M_VectorSub3_SSE,			/* -29 clks */
 	M_VectorSub3p_SSE,			/* -15 clks */
 	M_VectorSub3v_FPU,			/* = */
-	M_VectorSub3n_SSE,			/* TODO */
 	M_VectorAvg3_SSE,			/* TODO */
 	M_VectorAvg3p_SSE,			/* TODO */
 	M_VectorLERP3_SSE,			/* TODO */

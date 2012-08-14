@@ -29,11 +29,10 @@ const M_VectorOps4 mVecOps4_FPU = {
 	M_VectorAdd4_FPU,
 	M_VectorAdd4p_FPU,
 	M_VectorAdd4v_FPU,
-	M_VectorAdd4n_FPU,
+	M_VectorSum4_FPU,
 	M_VectorSub4_FPU,
 	M_VectorSub4p_FPU,
 	M_VectorSub4v_FPU,
-	M_VectorSub4n_FPU,
 	M_VectorAvg4_FPU,
 	M_VectorAvg4p_FPU,
 	M_VectorLERP4_FPU,
@@ -61,20 +60,34 @@ M_VectorGet4_FPU(M_Real x, M_Real y, M_Real z, M_Real w)
 {
 	M_Vector4 v;
 
+#ifdef HAVE_SSE
+	v.x = (float)x;
+	v.y = (float)y;
+	v.z = (float)z;
+	v.w = (float)w;
+#else
 	v.x = x;
 	v.y = y;
 	v.z = z;
 	v.w = w;
+#endif
 	return (v);
 }
 
 void
 M_VectorSet4_FPU(M_Vector4 *v, M_Real x, M_Real y, M_Real z, M_Real w)
 {
+#ifdef HAVE_SSE
+	v->x = (float)x;
+	v->y = (float)y;
+	v->z = (float)z;
+	v->w = (float)w;
+#else
 	v->x = x;
 	v->y = y;
 	v->z = z;
 	v->w = w;
+#endif
 }
 
 void
@@ -260,27 +273,22 @@ M_VectorAdd4v_FPU(M_Vector4 *r, const M_Vector4 *a)
 }
 
 M_Vector4
-M_VectorAdd4n_FPU(int nvecs, ...)
+M_VectorSum4_FPU(const M_Vector4 *va, Uint count)
 {
-	M_Vector4 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
-	c.w = v->w;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x += v->x;
-		c.y += v->y;
-		c.z += v->z;
-		c.w += v->w;
+	M_Vector4 v;
+	Uint i;
+	
+	v.x = 0.0;
+	v.y = 0.0;
+	v.z = 0.0;
+	v.w = 0.0;
+	for (i = 0; i < count; i++) {
+		v.x += va[i].x;
+		v.y += va[i].y;
+		v.z += va[i].z;
+		v.w += va[i].w;
 	}
-	va_end(ap);
-	return (c);
+	return (v);
 }
 
 M_Vector4
@@ -314,30 +322,6 @@ M_VectorSub4v_FPU(M_Vector4 *r, const M_Vector4 *a)
 	r->y -= a->y;
 	r->z -= a->z;
 	r->w -= a->w;
-}
-
-M_Vector4
-M_VectorSub4n_FPU(int nvecs, ...)
-{
-	M_Vector4 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
-	c.w = v->w;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x -= v->x;
-		c.y -= v->y;
-		c.z -= v->z;
-		c.w -= v->w;
-	}
-	va_end(ap);
-	return (c);
 }
 
 M_Vector4

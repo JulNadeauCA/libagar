@@ -39,18 +39,30 @@ M_VectorGet3_FPU(M_Real x, M_Real y, M_Real z)
 {
 	M_Vector3 v;
 
+#ifdef HAVE_SSE
+	v.x = (float)x;
+	v.y = (float)y;
+	v.z = (float)z;
+#else
 	v.x = x;
 	v.y = y;
 	v.z = z;
+#endif
 	return (v);
 }
 
 static __inline__ void
 M_VectorSet3_FPU(M_Vector3 *v, M_Real x, M_Real y, M_Real z)
 {
+#ifdef HAVE_SSE
+	v->x = (float)x;
+	v->y = (float)y;
+	v->z = (float)z;
+#else
 	v->x = x;
 	v->y = y;
 	v->z = z;
+#endif
 }
 
 static __inline__ void
@@ -303,7 +315,7 @@ static __inline__ M_Vector3
 M_VectorAvg3_FPU(M_Vector3 a, M_Vector3 b)
 {
 	M_Vector3 c;
-	
+
 	c.x = (a.x + b.x)/2.0;
 	c.y = (a.y + b.y)/2.0;
 	c.z = (a.z + b.z)/2.0;
@@ -396,9 +408,15 @@ M_VectorElemPow3_FPU(M_Vector3 v, M_Real x)
 {
 	M_Vector3 r;
 
+#ifdef HAVE_SSE
+	r.x = (float)M_Pow(v.x, x);
+	r.y = (float)M_Pow(v.y, x);
+	r.z = (float)M_Pow(v.z, x);
+#else
 	r.x = M_Pow(v.x, x);
 	r.y = M_Pow(v.y, x);
 	r.z = M_Pow(v.z, x);
+#endif
 	return (r);
 }
 __END_DECLS
@@ -406,8 +424,7 @@ __END_DECLS
 __BEGIN_DECLS
 extern const M_VectorOps3 mVecOps3_FPU;
 
-M_Vector3	M_VectorAdd3n_FPU(int, ...);
-M_Vector3	M_VectorSub3n_FPU(int, ...);
+M_Vector3	M_VectorSum3_FPU(const M_Vector3 *, Uint);
 M_Vector3	M_VectorRotate3_FPU(M_Vector3, M_Real, M_Vector3);
 void		M_VectorRotate3v_FPU(M_Vector3 *, M_Real, M_Vector3);
 M_Vector3	M_VectorRotateQuat3_FPU(M_Vector3, M_Quaternion);

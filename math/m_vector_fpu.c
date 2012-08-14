@@ -40,7 +40,6 @@ const M_VectorOps mVecOps_FPU = {
 #else
 	M_VectorFromDoubles_FPU,	/* Padding */
 #endif
-	M_VectorPrint_FPU
 };
 
 M_Vector *
@@ -116,15 +115,3 @@ M_VectorFromLongDoubles_FPU(Uint n, const long double *fv)
 	return (a);
 }
 #endif /* HAVE_LONG_DOUBLE */
-
-void
-M_VectorPrint_FPU(const M_Vector *v)
-{
-	Uint i;
-
-	fputs(" ----\n", stdout);
-	for (i = 0; i < MVECSIZE(v); i++) {
-		printf("|%.3f\n", v->v[i]);
-	}
-	fputs(" ----\n", stdout);
-}

@@ -37,24 +37,23 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure describes a color in terms of RGB values and an alpha component:
+structure describes a color in terms of RGB values and an alpha component.
+It is defined as:
 .Bd -literal
+#ifdef HAVE_SSE
+typedef union m_color {
+	__m128 m128;
+	struct { float r, g, b, a; };
+} M_Color;
+#else
 typedef struct m_color {
 	M_Real r, g, b, a;
 } M_Color;
+#endif
 .Ed
 .Pp
-If SSE support is available (i.e.,
-.Dv HAVE_SSE
-is defined),
-.Nm
-is an union:
-.Bd -literal
-typedef union m_color {
-	__m128 m128;
-	struct { M_Real r, g, b, a; };
-} M_Color;
-.Ed
+Notice that SIMD extensions force single-precision floats, regardless of
+the precision for which Agar-Math was built.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft M_Color

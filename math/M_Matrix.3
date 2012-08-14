@@ -44,9 +44,26 @@ interfaces implement the basic linear algebra routines.
 Both provide a consistent interface to different
 .Em backends ,
 allowing different numerical solvers and memory representations.
+.Pp
 Selection between multiple backends is possible at run-time, or the Agar-Math
 library can be compiled to provide inline expansions of these operations under
 a specific backend.
+.Pp
+.\" BEGIN DUP in M_Vector(3)
+By default, Agar-Math uses SSE and AltiVec if a runtime cpuinfo check
+determines that those extensions are available (the build will still work
+on CPUs where they are unavailable).
+This compatibility comes at the cost of a function call per
+operation.
+For best performance on SSE-capable CPUs, Agar-Math should be compiled
+with "--with-sse-inline" or "--with-altivec-inline", which forces inline
+expansions of
+.Ft M_Vector3 ,
+.Ft M_Vector4
+and
+.Ft M_Matrix44
+operations (the resulting build will require a SIMD-capable CPU).
+.\" END DUP
 .Sh M-BY-N MATRICES
 The following routines operate on dynamically-allocated m-by-n matrices.
 Matrix elements are not directly accessible as array members, since some
@@ -397,8 +414,8 @@ diagonal.
 .Sh 4-BY-4 MATRICES
 The following routines are optimized for 4x4 matrices, as frequently
 encountered in computer graphics.
-Contrary to m-by-n matrices, the entries are not dynamically allocated and
-are directly accessible.
+Contrary to m-by-n matrices, the entries are directly accessible as structure
+members.
 Available backends include:
 .Pp
 .Bl -tag -width "fpu " -compact
@@ -457,25 +474,26 @@ are directly accessible via the
 .Va m[4][4]
 member of the structure.
 Elements of the matrix are stored in row-major format.
-.Pp
-If SSE support is available (i.e.,
-.Dv HAVE_SSE
-is defined),
-.Ft M_Matrix44
-is an union:
+The structure is defined as:
 .Bd -literal
+#ifdef HAVE_SSE
 typedef union m_matrix44 {
 	struct { __m128 m1, m2, m3, m4; };
-	M_Real m[4][4];
+	float m[4][4];
 } M_Matrix44;
-.Ed
-.Pp
-If there is no SSE support, it is a simple structure:
-.Bd -literal
+#else
 typedef struct m_matrix44 {
 	M_Real m[4][4];
 } M_Matrix44;
+#endif
 .Ed
+.Pp
+Notice that SIMD extensions force single-precision floats, regardless of
+the precision for which Agar-Math was built (if a 4x4 matrix of higher
+precision is required,
+the general
+.Ft M_Matrix
+type may be used).
 .Pp
 The following functions convert between
 .Ft M_Matrix44

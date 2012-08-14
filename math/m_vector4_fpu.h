@@ -26,11 +26,10 @@ void		M_VectorScale4v_FPU(M_Vector4 *, M_Real);
 M_Vector4	M_VectorAdd4_FPU(M_Vector4, M_Vector4);
 M_Vector4	M_VectorAdd4p_FPU(const M_Vector4 *, const M_Vector4 *);
 void		M_VectorAdd4v_FPU(M_Vector4 *, const M_Vector4 *);
-M_Vector4	M_VectorAdd4n_FPU(int, ...);
+M_Vector4       M_VectorSum4_FPU(const M_Vector4 *, Uint);
 M_Vector4	M_VectorSub4_FPU(M_Vector4, M_Vector4);
 M_Vector4	M_VectorSub4p_FPU(const M_Vector4 *, const M_Vector4 *);
 void		M_VectorSub4v_FPU(M_Vector4 *, const M_Vector4 *);
-M_Vector4	M_VectorSub4n_FPU(int, ...);
 M_Vector4	M_VectorAvg4_FPU(M_Vector4, M_Vector4);
 M_Vector4	M_VectorAvg4p_FPU(const M_Vector4 *, const M_Vector4 *);
 void		M_VectorVecAngle4_FPU(M_Vector4, M_Vector4, M_Real *,
