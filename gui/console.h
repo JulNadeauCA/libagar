@@ -56,8 +56,11 @@ AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
                               FORMAT_ATTRIBUTE(printf, 2, 3)
                               NONNULL_ATTRIBUTE(2);
 AG_ConsoleLine *AG_ConsoleMsgS(AG_Console *, const char *);
+void            AG_ConsoleMsgEdit(AG_ConsoleLine *, const char *);
 void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
 void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
+void            AG_ConsoleMsgColor(AG_ConsoleLine *, const AG_Color *,
+                                   const AG_Color *);
 void		AG_ConsoleClear(AG_Console *);
 __END_DECLS
 

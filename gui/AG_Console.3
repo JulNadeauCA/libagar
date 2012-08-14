@@ -39,9 +39,11 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Console.png, "The AG_Console widget")
 The
 .Nm
-widget displays a set of messages in log format, where a number of
-attributes may be associated with individual messages.
-The display is automatically scrolled to display new messages.
+widget displays a scrollable list of messages in log format.
+After a message has been appended to the log, its text (and other attributes)
+can be changed.
+By default, the display automatically scrolls down to make new messages
+visible.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -67,7 +69,7 @@ Acceptable
 .Fa flags
 include:
 .Pp
-.Bl -tag -width "AG_CONSOLE_EXPAND "
+.Bl -tag -width "AG_CONSOLE_NOAUTOSCROLL "
 .It AG_CONSOLE_NOAUTOSCROLL
 Don't scroll automatically to make newly inserted lines visible.
 .It AG_CONSOLE_HFILL
@@ -99,10 +101,16 @@ messages (see
 .Fn AG_ConsoleMsgS "AG_Console *cons" "const char *text"
 .Pp
 .Ft "void"
+.Fn AG_ConsoleMsgEdit "AG_ConsoleLine *line" "const char *newText"
+.Pp
+.Ft "void"
 .Fn AG_ConsoleMsgPtr "AG_ConsoleLine *line" "void *ptr"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleMsgIcon "AG_ConsoleLine *line" "int surface"
+.Pp
+.Ft "void"
+.Fn AG_ConsoleMsgColor "AG_ConsoleLine *line" "const AG_Color *cBg" "const AG_Color *cFg"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleClear "AG_Console *cons"
@@ -110,15 +118,10 @@ messages (see
 .nr nS 0
 The
 .Fn AG_ConsoleMsg
-function appends a new message to the console log and returns a pointer to
-the newly created
+function appends a new message to the console log.
+The function returns a
 .Ft AG_ConsoleLine
-structure, useful for tweaking attributes specific to the message.
-The
-.Fn AG_ConsoleMsgS
-variant accepts a plain C string.
-Either function may fail and return NULL if there is insufficient memory
-for the new message.
+handle (or NULL if an error occured).
 .Pp
 As a special case, if a
 .Fa cons
@@ -130,15 +133,21 @@ the function prints the message with
 .Xr AG_Verbose 3
 before returning NULL.
 .Pp
+The
+.Fn AG_ConsoleMsgEdit
+routine replaces the text of an existing message.
 .Fn AG_ConsoleMsgPtr
-associates an arbitrary user pointer with the given line entry.
+associates an arbitrary user pointer with the given message.
 .Fn AG_ConsoleMsgIcon
-sets an icon to display left of the message
+sets an icon to display next to the message
 (see
 .Xr AG_IconMgr 3 ) .
+.Fn AG_ConsoleMsgColor
+sets the background and foreground color (if either argument is NULL, that
+color is preserved).
 .Pp
 .Fn AG_ConsoleClear
-removes all entries.
+clears all messages from the console.
 .Sh EVENTS
 The
 .Nm
@@ -165,30 +174,25 @@ structure:
 .It Ft char *text
 Text string.
 .It Ft size_t len
-Length of string, not including NUL.
+Length of string in characters.
 .It Ft int selected
 Line selection flag.
 .It Ft int icon
 Icon surface to display.
 .It Ft AG_Font *font
 Alternate font (if NULL, the default font is used).
-If calling
-.Fn AG_ConsoleSetFont
-is not convenient, it is legal to modify this pointer at run time (but
-due to caching, only newly entered lines will use the new font).
-.It Ft Uint32 cFg
-Foreground color (in
-.Va agDisplayFmt
-format).
-.It Ft Uint32 cBg
-Background color (in
-.Va agDisplayFmt
-format).
+Usually set with
+.Fn AG_ConsoleSetFont .
+.It Ft AG_Color cFg
+Foreground color.
+.It Ft AG_Color cBg
+Background color.
 .It Ft void *p
 User pointer
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Color 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Text 3 ,
 .Xr AG_Textbox 3 ,
