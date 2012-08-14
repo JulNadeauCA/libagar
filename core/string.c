@@ -288,7 +288,7 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
 			rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,float));
 			break;
 		case 's':
-			rv = Strlcat(pDst, &FSARG(fs,char), (pEnd-pDst));
+			rv = Strlcpy(pDst, &FSARG(fs,char), (pEnd-pDst));
 			break;
 		case 'o':
 			rv = Snprintf(pDst, (pEnd-pDst), "%o", FSARG(fs,Uint));
@@ -419,7 +419,7 @@ next_char:
 		case 's':
 			CAT_SPEC(f[1]);
 			if (pSpec == &spec[2]) {	/* Optimized (%s) */
-				rv = Strlcat(pDst, va_arg(ap,char *), (pEnd-pDst));
+				rv = Strlcpy(pDst, va_arg(ap,char *), (pEnd-pDst));
 			} else {
 				rv = Snprintf(pDst, (pEnd-pDst), spec,
 				    va_arg(ap,char *));
@@ -533,22 +533,19 @@ AG_Printf(const char *fmt, ...)
 	char *dst, *dstNew;
 	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
-	if ((dst = TryMalloc(dstSize)) == NULL) {
-		return (NULL);
-	}
+	dst = Malloc(dstSize);
 restart:
 	dst[0] = '\0';
 	va_start(ap, fmt);
 	if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
+		va_end(ap);
 		dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
 		if (dstNew == NULL) {
-			free(dst);
-			va_end(ap);
+			AG_FatalError("Out of memory for AG_Printf");
 			return (NULL);
 		}
 		dst = dstNew;
 		dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
-		va_end(ap);
 		goto restart;
 	}
 	va_end(ap);
@@ -557,11 +554,12 @@ restart:
 	if ((agPrintBuf[0] = (char *)AG_ThreadKeyGet(agPrintBufKey[0])) != NULL) {
 		free(agPrintBuf[0]);
 	}
-	AG_ThreadKeySet(agPrintBufKey[0], dst);
+	agPrintBuf[0] = dst;
+	AG_ThreadKeySet(agPrintBufKey[0], agPrintBuf[0]);
 #else
 	Free(agPrintBuf[0]);
-#endif
 	agPrintBuf[0] = dst;
+#endif
 	return (dst);
 }
 char *
@@ -571,24 +569,20 @@ AG_PrintfN(Uint idx, const char *fmt, ...)
 	char *dst, *dstNew;
 	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
-	if ((dst = TryMalloc(dstSize)) == NULL) {
-		return (NULL);
-	}
+	dst = Malloc(dstSize);
+restart:
 	dst[0] = '\0';
 	va_start(ap, fmt);
-	for (;;) {
-		if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
-			dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
-			if (dstNew == NULL) {
-				free(dst);
-				va_end(ap);
-				return (NULL);
-			}
-			dst = dstNew;
-			dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
-		} else {
-			break;
+	if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
+		va_end(ap);
+		dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
+		if (dstNew == NULL) {
+			AG_FatalError("Out of memory for AG_Printf");
+			return (NULL);
 		}
+		dst = dstNew;
+		dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
+		goto restart;
 	}
 	va_end(ap);
 
@@ -596,11 +590,12 @@ AG_PrintfN(Uint idx, const char *fmt, ...)
 	if ((agPrintBuf[idx] = (char *)AG_ThreadKeyGet(agPrintBufKey[idx])) != NULL) {
 		free(agPrintBuf[idx]);
 	}
-	AG_ThreadKeySet(agPrintBufKey[idx], dst);
+	agPrintBuf[idx] = dst;
+	AG_ThreadKeySet(agPrintBufKey[idx], agPrintBuf[idx]);
 #else
 	Free(agPrintBuf[idx]);
-#endif
 	agPrintBuf[idx] = dst;
+#endif
 	return (dst);
 }
 
