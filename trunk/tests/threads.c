@@ -208,8 +208,9 @@ const AG_TestCase threadsTest = {
 	Destroy,
 	NULL,		/* test */
 #ifdef AG_THREADS
-	TestGUI
+	TestGUI,
 #else
-	NULL		/* testGUI */
+	NULL,		/* testGUI */
 #endif
+	NULL		/* bench */
 };

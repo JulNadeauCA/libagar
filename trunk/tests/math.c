@@ -17,14 +17,123 @@
 #include <agar/config/inline_sse.h>
 #include <agar/config/inline_sse2.h>
 #include <agar/config/inline_sse3.h>
+#include <agar/config/quad_precision.h>
+#include <agar/config/double_precision.h>
+#include <agar/config/single_precision.h>
+
+#include "config/have_rand48.h"
 
 #include <string.h>
 #include <stdlib.h>
 
+#define RANDOMIZE() if (++cur >= nVecs) { cur = 0; }
+
+#define NREALS 10000
+#define NVECTORS 1000
+#define NMATRICES 100
+
+typedef struct {
+	AG_TestInstance _inherit;
+	M_Real r[NREALS];
+	M_Vector2 v2[NVECTORS];
+	M_Vector3 v3[NVECTORS];
+	M_Vector4 v4[NVECTORS];
+	M_Matrix44 m44[NMATRICES];
+	int curReal, curVec, curMat;
+} MyTestInstance;
+
+static __inline__ M_Real
+RandomReal(MyTestInstance *ti)
+{
+	if (ti->curReal+1 >= NREALS) { ti->curReal = 0; }
+	return (ti->r[ti->curReal++]);
+}
+static __inline__ M_Vector2
+RandomVector2(MyTestInstance *ti)
+{
+	if (ti->curVec+1 >= NVECTORS) { ti->curVec = 0; }
+	return (ti->v2[ti->curVec++]);
+}
+static __inline__ M_Vector3
+RandomVector3(MyTestInstance *ti)
+{
+	if (ti->curVec+1 >= NVECTORS) { ti->curVec = 0; }
+	return (ti->v3[ti->curVec++]);
+}
+static __inline__ M_Vector4
+RandomVector4(MyTestInstance *ti)
+{
+	if (ti->curVec+1 >= NVECTORS) { ti->curVec = 0; }
+	return (ti->v4[ti->curVec++]);
+}
+static __inline__ M_Matrix44
+RandomMatrix44(MyTestInstance *ti)
+{
+	if (ti->curMat+1 >= NMATRICES) { ti->curMat = 0; }
+	return (ti->m44[ti->curMat++]);
+}
+
+#include "math_bench.h"
+
 static int
 Init(void *obj)
 {
+	MyTestInstance *ti = obj;
+	int i, j;
+
 	M_InitSubsystem();
+
+	Verbose("Generating random vectors and matrices...\n");
+	ti->curReal = 0;
+	ti->curVec = 0;
+	ti->curMat = 0;
+	for (i = 0; i < NREALS ; i++) {
+#ifdef HAVE_RAND48
+		ti->r[i] = (M_Real)drand48();
+#else
+		ti->r[i] = (M_Real)i;
+#endif
+	}
+	for (i = 0; i < NVECTORS; i++) {
+#ifdef HAVE_RAND48
+		ti->v2[i] = M_VECTOR2((M_Real)drand48(), (M_Real)drand48());
+# ifdef HAVE_SSE
+		ti->v3[i] = M_VECTOR3((float)drand48(), (float)drand48(),
+		                      (float)drand48());
+		ti->v4[i] = M_VECTOR4((float)drand48(), (float)drand48(),
+		                      (float)drand48(), (float)drand48());
+# else
+		ti->v3[i] = M_VECTOR3((M_Real)drand48(), (M_Real)drand48(),
+		                      (M_Real)drand48());
+		ti->v4[i] = M_VECTOR4((M_Real)drand48(), (M_Real)drand48(),
+		                      (M_Real)drand48(), (M_Real)drand48());
+# endif
+#else
+		ti->v2[i] = M_VECTOR2((M_Real)(i+1), (M_Real)(i*i));
+# ifdef HAVE_SSE
+		ti->v3[i] = M_VECTOR3((float)(i+1), (float)(i*i), (float)(i*i*i));
+		ti->v4[i] = M_VECTOR4((float)(i+1), (float)(i*i), (float)(i*i*i),
+		                      (float)(i*i*i));
+# else
+		ti->v3[i] = M_VECTOR3((M_Real)(i+1), (M_Real)(i*i),
+		                      (M_Real)(i*i*i));
+		ti->v4[i] = M_VECTOR4((M_Real)(i+1), (M_Real)(i*i),
+		                      (M_Real)(i*i*i), (M_Real)(i*i*i));
+# endif
+#endif
+	}
+	for (i = 0; i < NMATRICES; i++) {
+		double rands[16];
+#ifdef HAVE_RAND48
+		for (j = 0; j < 16; j++)
+			rands[j] = drand48();
+#else
+		for (j = 0; j < 16; j++)
+			rands[j] = (double)(i*j + i + i*i + i*i*j + 1);
+#endif
+		M_MatFromDoubles44(&ti->m44[i], rands);
+	}
+	Verbose("Done.\n");
 	return (0);
 }
 
@@ -82,7 +191,7 @@ TestVector(AG_TestInstance *ti)
 	abDist = M_VecDistance(a, b);
 	AdotB = M_VecDot(a, b);
 
-	TestMsgS(ti, "Testing vectors routines:");
+	TestMsgS(ti, "Testing M_Vector routines:");
 	TestMsgS(ti, AG_Printf("Real=%[R], Real2=%[R]", &someReal, &someReal2));
 	TestMsgS(ti, AG_Printf("a=%[V], b=%[V]", a, b));
 	TestMsgS(ti, AG_Printf("(a*100)=%[V]", a100));
@@ -104,6 +213,18 @@ TestVector(AG_TestInstance *ti)
 }
 
 static void
+TestVector3(AG_TestInstance *ti)
+{
+	M_Vector3 a = M_VECTOR3(1.1, 2.2, 3.3);
+	M_Vector3 b = M_VECTOR3(10.0, 20.0, 30.0);
+	M_Real AdotB = M_VecDot3(a, b);
+	
+	TestMsgS(ti, "Testing M_Vector3 routines:");
+	TestMsgS(ti, AG_Printf("a=%[V3], b=%[V3]", &a, &b));
+	TestMsgS(ti, AG_Printf("(a dot b)=%[R]", &AdotB));
+}
+
+static void
 TestMatrix(AG_TestInstance *ti)
 {
 	M_Matrix *M;
@@ -111,10 +232,30 @@ TestMatrix(AG_TestInstance *ti)
 	M = M_New(5,5);
 	M_SetIdentity(M);
 
-	TestMsgS(ti, "Testing matrix routines:");
+	TestMsgS(ti, "Testing M_Matrix routines:");
 	TestMsgS(ti, AG_Printf("M=%[M]", M));
 	
 	M_Free(M);
+}
+
+static void
+TestMatrix44(AG_TestInstance *ti)
+{
+	M_Matrix44 A, B, BA, BAinv;
+
+	M_MatIdentity44v(&A);
+	M_MatIdentity44v(&B);
+	A.m[0][1] = 3.33;
+	A.m[1][0] = 2.0;
+	B.m[1][1] = 10.0;
+	BA = M_MatMult44(B, A);
+	BAinv = M_MatInvert44(BA);
+
+	TestMsgS(ti, "Testing M_Matrix44 routines:");
+	TestMsgS(ti, AG_Printf("A=%[M44]", &A));
+	TestMsgS(ti, AG_Printf("B=%[M44]", &B));
+	TestMsgS(ti, AG_Printf("BA=%[M44]", &BA));
+	TestMsgS(ti, AG_Printf("BA inverse = %[M44]", &BAinv));
 }
 
 static int
@@ -169,8 +310,42 @@ Test(void *obj)
 
 	TestComplex(ti);
 	TestVector(ti);
+	TestVector3(ti);
 	TestMatrix(ti);
+	TestMatrix44(ti);
 
+	return (0);
+}
+
+static int
+Bench(void *obj)
+{
+	AG_TestInstance *ti = obj;
+	const M_VectorOps3 *prevVecOps3 = mVecOps3;
+
+#if defined(INLINE_SSE) || defined(INLINE_SSE2) || defined(INLINE_SSE3)
+	TestMsg(ti, "M_Vector3 Microbenchmark (Inline SSE):");
+	TestExecBenchmark(obj, &mathBenchVector3);
+#else
+	TestMsg(ti, "M_Vector3 Microbenchmark (FPU):");
+	mVecOps3 = &mVecOps3_FPU;
+	TestExecBenchmark(obj, &mathBenchVector3);
+# if defined(HAVE_SSE3)
+	TestMsg(ti, "M_Vector3 Microbenchmark (SSE3):");
+	mVecOps3 = &mVecOps3_SSE3;
+	TestExecBenchmark(obj, &mathBenchVector3);
+# elif defined(HAVE_SSE2)
+	TestMsg(ti, "M_Vector3 Microbenchmark (SSE2):");
+	mVecOps3 = &mVecOps3_SSE2;
+	TestExecBenchmark(obj, &mathBenchVector3);
+# elif defined(HAVE_SSE)
+	TestMsg(ti, "M_Vector3 Microbenchmark (SSE):");
+	mVecOps3 = &mVecOps3_SSE;
+	TestExecBenchmark(obj, &mathBenchVector3);
+# endif
+#endif /* INLINE_SSE */
+
+	mVecOps3 = prevVecOps3;
 	return (0);
 }
 
@@ -179,9 +354,10 @@ const AG_TestCase mathTest = {
 	N_("Test the ag_math library"),
 	"1.4.2",
 	0,
-	sizeof(AG_TestInstance),
+	sizeof(MyTestInstance),
 	Init,
 	Destroy,
 	Test,
-	NULL	/* testGUI */
+	NULL,	/* testGUI */
+	Bench
 };

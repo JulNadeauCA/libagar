@@ -7,6 +7,7 @@
 #include <agar/gui.h>
 
 #include <agar/config/ag_debug.h>
+#include <agar/config/have_64bit.h>
 #include <agar/config/have_opengl.h>
 #include <agar/config/enable_au.h>
 #include <agar/config/enable_vg.h>
@@ -27,6 +28,7 @@ typedef struct ag_test_case {
 	void (*destroy)(void *);		/* Free instance */
 	int  (*test)(void *);			/* Non-interactive test */
 	int  (*testGUI)(void *, AG_Window *);	/* Interactive test */
+	int  (*bench)(void *);			/* Run benchmark */
 } AG_TestCase;
 
 /* Test case instance */
@@ -40,9 +42,30 @@ typedef struct ag_test_instance {
 	AG_TAILQ_ENTRY(ag_test_instance) instances;
 } AG_TestInstance;
 
+typedef struct ag_benchmark_fn {
+	char *name;
+	void (*run)(void *ti);
+#if defined(HAVE_64BIT)
+	Uint64 clksMin, clksAvg, clksMax;
+#else
+	Uint32 clksMin, clksAvg, clksMax;
+#endif
+} AG_BenchmarkFn;
+
+typedef struct ag_benchmark {
+	char *name;
+	AG_BenchmarkFn *funcs;
+	Uint           nFuncs;
+	Uint runs;			/* Number of loop cycles */
+	Uint iterations;		/* Iterations in loop */
+	Uint maximum;			/* If tests exceed value, assume
+					   preemption and retry (0=disable) */
+} AG_Benchmark;
+
 void       TestWindowClose(AG_Event *);
 void       TestMsg(void *, const char *, ...);
 void       TestMsgS(void *, const char *);
+void       TestExecBenchmark(void *, AG_Benchmark *);
 
 #include "config/enable_nls.h"
 #ifdef ENABLE_NLS

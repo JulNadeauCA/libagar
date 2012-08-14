@@ -32,5 +32,6 @@ const AG_TestCase fsPathsTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

@@ -314,5 +314,6 @@ const AG_TestCase tableTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

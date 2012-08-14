@@ -83,5 +83,6 @@ const AG_TestCase timeoutsTest = {
 	Init,
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

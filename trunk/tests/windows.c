@@ -147,5 +147,6 @@ const AG_TestCase windowsTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

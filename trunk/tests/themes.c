@@ -499,5 +499,6 @@ const AG_TestCase themesTest = {
 	Init,
 	Destroy,
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

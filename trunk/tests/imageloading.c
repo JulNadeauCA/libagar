@@ -90,5 +90,6 @@ const AG_TestCase imageLoadingTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

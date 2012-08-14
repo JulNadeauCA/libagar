@@ -242,5 +242,6 @@ const AG_TestCase networkTest = {
 	Init,
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };

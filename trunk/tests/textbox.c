@@ -255,5 +255,6 @@ const AG_TestCase textboxTest = {
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */
-	TestGUI
+	TestGUI,
+	NULL		/* bench */
 };
