@@ -268,6 +268,7 @@ Init(void *obj)
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
+	lbl->fmt = NULL;
 	lbl->text = NULL;
 	lbl->surface = -1;
 	lbl->surfaceCont = -1;
