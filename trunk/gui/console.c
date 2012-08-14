@@ -373,6 +373,22 @@ out:
 	return (ln);
 }
 
+/* Change the text of an existing line. */
+void
+AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
+{
+	AG_ObjectLock(ln->cons);
+	Free(ln->text);
+	ln->text = Strdup(s);
+	ln->len = strlen(s);
+	if (ln->surface != -1) {
+		AG_WidgetUnmapSurface(ln->cons, ln->surface);
+		ln->surface = -1;
+	}
+	AG_ObjectUnlock(ln->cons);
+	AG_Redraw(ln->cons);
+}
+
 void
 AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 {
@@ -386,6 +402,15 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 {
 	AG_ObjectLock(ln->cons);
 	ln->icon = icon;
+	AG_ObjectUnlock(ln->cons);
+}
+
+void
+AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *cBg, const AG_Color *cFg)
+{
+	AG_ObjectLock(ln->cons);
+	if (cBg != NULL) { ln->cBg = *cBg; }
+	if (cFg != NULL) { ln->cFg = *cFg; }
 	AG_ObjectUnlock(ln->cons);
 }
 
