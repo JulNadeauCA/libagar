@@ -16,7 +16,6 @@ extern const M_MatrixOps mMatOps_FPU;
 int M_MatrixCompare_FPU(const void *, const void *, M_Real *);
 int M_MatrixTrace_FPU(M_Real *, const void *);
 
-void M_MatrixPrint_FPU(void *);
 void *M_MatrixRead_FPU(AG_DataSource *);
 void  M_MatrixWrite_FPU(AG_DataSource *, const void *);
 

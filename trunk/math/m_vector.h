@@ -50,7 +50,6 @@ typedef struct m_vector_ops {
 #else /* Padding */
 	M_Vector *(*FromLongDoubles)(Uint, const double *);
 #endif
-	void	  (*Print)(const M_Vector *v);
 } M_VectorOps;
 
 /* Operations on vectors in R^2 */
@@ -80,11 +79,10 @@ typedef struct m_vector_ops2 {
 	M_Vector2 (*Add)(M_Vector2, M_Vector2);
 	M_Vector2 (*Addp)(const M_Vector2 *, const M_Vector2 *);
 	void      (*Addv)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Addn)(int, ...);
+	M_Vector2 (*Sum)(const M_Vector2 *, Uint);
 	M_Vector2 (*Sub)(M_Vector2, M_Vector2);
 	M_Vector2 (*Subp)(const M_Vector2 *, const M_Vector2 *);
 	void      (*Subv)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Subn)(int, ...);
 	M_Vector2 (*Avg)(M_Vector2, M_Vector2);
 	M_Vector2 (*Avgp)(const M_Vector2 *, const M_Vector2 *);
 	M_Vector2 (*LERP)(M_Vector2, M_Vector2, M_Real);
@@ -124,11 +122,10 @@ typedef struct m_vector_ops3 {
 	M_Vector3 (*Add)(M_Vector3, M_Vector3);
 	M_Vector3 (*Addp)(const M_Vector3 *, const M_Vector3 *);
 	void	  (*Addv)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Addn)(int, ...);
+	M_Vector3 (*Sum)(const M_Vector3 *, Uint);
 	M_Vector3 (*Sub)(M_Vector3, M_Vector3);
 	M_Vector3 (*Subp)(const M_Vector3 *, const M_Vector3 *);
 	void	  (*Subv)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Subn)(int, ...);
 	M_Vector3 (*Avg)(M_Vector3, M_Vector3);
 	M_Vector3 (*Avgp)(const M_Vector3 *, const M_Vector3 *);
 	M_Vector3 (*LERP)(M_Vector3, M_Vector3, M_Real);
@@ -168,11 +165,10 @@ typedef struct m_vector_ops4 {
 	M_Vector4 (*Add)(M_Vector4, M_Vector4);
 	M_Vector4 (*Addp)(const M_Vector4 *, const M_Vector4 *);
 	void      (*Addv)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Addn)(int, ...);
+	M_Vector4 (*Sum)(const M_Vector4 *, Uint);
 	M_Vector4 (*Sub)(M_Vector4, M_Vector4);
 	M_Vector4 (*Subp)(const M_Vector4 *, const M_Vector4 *);
 	void      (*Subv)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Subn)(int, ...);
 	M_Vector4 (*Avg)(M_Vector4, M_Vector4);
 	M_Vector4 (*Avgp)(const M_Vector4 *, const M_Vector4 *);
 	M_Vector4 (*LERP)(M_Vector4, M_Vector4, M_Real);
@@ -210,10 +206,9 @@ void       M_VectorInitEngine(void);
 M_Vector2  M_ReadVector2(AG_DataSource *);
 M_Vector3  M_ReadVector3(AG_DataSource *);
 M_Vector4  M_ReadVector4(AG_DataSource *);
-
-void	   M_ReadVector2v(AG_DataSource *, M_Vector2 *);
-void	   M_ReadVector3v(AG_DataSource *, M_Vector3 *);
-void	   M_ReadVector4v(AG_DataSource *, M_Vector4 *);
+int        M_ReadVector2v(AG_DataSource *, M_Vector2 *);
+int	   M_ReadVector3v(AG_DataSource *, M_Vector3 *);
+int	   M_ReadVector4v(AG_DataSource *, M_Vector4 *);
 
 void	   M_WriteVector2(AG_DataSource *, const M_Vector2 *);
 void	   M_WriteVector3(AG_DataSource *, const M_Vector3 *);
@@ -264,7 +259,6 @@ __END_DECLS
 #define M_VecFromFloats		mVecOps->FromFloats
 #define M_VecFromDoubles	mVecOps->FromDoubles
 #define M_VecFromLongDoubles	mVecOps->FromLongDoubles
-#define M_VecPrint		mVecOps->Print
 
 /* Simple wrappers */
 #define M_VecGet(v,i) *M_VecGetElement(v, i)
@@ -298,11 +292,10 @@ __END_DECLS
 #define M_VecAdd2		mVecOps2->Add
 #define M_VecAdd2p		mVecOps2->Addp
 #define M_VecAdd2v		mVecOps2->Addv
-#define M_VecAdd2n		mVecOps2->Addn
+#define M_VecSum2		mVecOps2->Sum
 #define M_VecSub2		mVecOps2->Sub
 #define M_VecSub2p		mVecOps2->Subp
 #define M_VecSub2v		mVecOps2->Subv
-#define M_VecSub2n		mVecOps2->Subn
 #define M_VecAvg2		mVecOps2->Avg
 #define M_VecAvg2p		mVecOps2->Avgp
 #define M_VecLERP2		mVecOps2->LERP
@@ -349,11 +342,10 @@ __END_DECLS
 # define M_VecAdd3		M_VectorAdd3_SSE
 # define M_VecAdd3p		M_VectorAdd3p_SSE
 # define M_VecAdd3v		M_VectorAdd3v_FPU
-# define M_VecAdd3n		M_VectorAdd3n_SSE
+# define M_VecSum3		M_VectorSum3_SSE
 # define M_VecSub3		M_VectorSub3_SSE
 # define M_VecSub3p		M_VectorSub3p_SSE
 # define M_VecSub3v		M_VectorSub3v_FPU
-# define M_VecSub3n		M_VectorSub3n_SSE
 # define M_VecAvg3		M_VectorAvg3_SSE
 # define M_VecAvg3p		M_VectorAvg3p_SSE
 # define M_VecLERP3		M_VectorLERP3_SSE
@@ -392,11 +384,10 @@ __END_DECLS
 # define M_VecAdd3		mVecOps3->Add
 # define M_VecAdd3p		mVecOps3->Addp
 # define M_VecAdd3v		mVecOps3->Addv
-# define M_VecAdd3n		mVecOps3->Addn
+# define M_VecSum3		mVecOps3->Sum
 # define M_VecSub3		mVecOps3->Sub
 # define M_VecSub3p		mVecOps3->Subp
 # define M_VecSub3v		mVecOps3->Subv
-# define M_VecSub3n		mVecOps3->Subn
 # define M_VecAvg3		mVecOps3->Avg
 # define M_VecAvg3p		mVecOps3->Avgp
 # define M_VecLERP3		mVecOps3->LERP
@@ -443,11 +434,10 @@ __END_DECLS
 #define M_VecAdd4		mVecOps4->Add
 #define M_VecAdd4p		mVecOps4->Addp
 #define M_VecAdd4v		mVecOps4->Addv
-#define M_VecAdd4n		mVecOps4->Addn
+#define M_VecSum4		mVecOps4->Sum
 #define M_VecSub4		mVecOps4->Sub
 #define M_VecSub4p		mVecOps4->Subp
 #define M_VecSub4v		mVecOps4->Subv
-#define M_VecSub4n		mVecOps4->Subn
 #define M_VecAvg4		mVecOps4->Avg
 #define M_VecAvg4p		mVecOps4->Avgp
 #define M_VecLERP4		mVecOps4->LERP

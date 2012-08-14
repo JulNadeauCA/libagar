@@ -88,7 +88,7 @@ M_WriteColor(AG_DataSource *buf, const M_Color *C)
 void
 M_ColorTo4fv(const M_Color *C, float *v)
 {
-#ifdef SINGLE_PRECISION
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
 	memcpy(v, C, 4*sizeof(float));
 #else
 	v[0] = (float)C->r;
@@ -101,10 +101,9 @@ M_ColorTo4fv(const M_Color *C, float *v)
 void
 M_ColorTo4dv(const M_Color *C, double *v)
 {
-#ifdef DOUBLE_PRECISION
+#if defined(DOUBLE_PRECISION) && !defined(HAVE_SSE)
 	memcpy(v, C, 4*sizeof(double));
 #else
-	/* TODO SIMD */
 	v[0] = (double)C->r;
 	v[1] = (double)C->g;
 	v[2] = (double)C->b;

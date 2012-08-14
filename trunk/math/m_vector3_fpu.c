@@ -33,11 +33,10 @@ const M_VectorOps3 mVecOps3_FPU = {
 	M_VectorAdd3_FPU,
 	M_VectorAdd3p_FPU,
 	M_VectorAdd3v_FPU,
-	M_VectorAdd3n_FPU,
+	M_VectorSum3_FPU,
 	M_VectorSub3_FPU,
 	M_VectorSub3p_FPU,
 	M_VectorSub3v_FPU,
-	M_VectorSub3n_FPU,
 	M_VectorAvg3_FPU,
 	M_VectorAvg3p_FPU,
 	M_VectorLERP3_FPU,
@@ -53,47 +52,20 @@ const M_VectorOps3 mVecOps3_FPU = {
 };
 
 M_Vector3
-M_VectorAdd3n_FPU(int nvecs, ...)
+M_VectorSum3_FPU(const M_Vector3 *va, Uint count)
 {
-	M_Vector3 c, *v;
-	int i;
-	va_list ap;
+	M_Vector3 v;
+	Uint i;
 
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x += v->x;
-		c.y += v->y;
-		c.z += v->z;
+	v.x = 0.0;
+	v.y = 0.0;
+	v.z = 0.0;
+	for (i = 0; i < count; i++) {
+		v.x += va[i].x;
+		v.y += va[i].y;
+		v.z += va[i].z;
 	}
-	va_end(ap);
-	return (c);
-}
-
-M_Vector3
-M_VectorSub3n_FPU(int nvecs, ...)
-{
-	M_Vector3 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x -= v->x;
-		c.y -= v->y;
-		c.z -= v->z;
-	}
-	va_end(ap);
-	return (c);
+	return (v);
 }
 
 M_Vector3

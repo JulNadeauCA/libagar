@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -35,10 +35,11 @@
 #include <agar/math.h>
 .Ed
 .Sh DESCRIPTION
-Real numbers in Agar-Math are described using the
+Real numbers in Agar-Math are most often described using the
 .Nm
 type.
-Depending on which precision mode the library was compiled against,
+Depending on which precision mode the library was compiled against
+(see the --with-<mode>-fp configure option),
 .Nm
 may expand to
 .Ft float
@@ -54,12 +55,31 @@ is defined) or
 .Dv QUAD_PRECISION
 is defined).
 .Pp
-The higher-level structures, such as
+Most Agar-Math structures use
+.Nm
+to represent floating-point numbers.
+The real and imaginary parts of
 .Xr M_Complex 3 ,
+and the elements of
 .Xr M_Vector 3
 and
-.Xr M_Matrix 3 ,
-all store numerical values as
+.Xr M_Matrix 3
+are all stored as
+.Nm
+values.
+Note, however, that fixed-size types such as
+.Ft M_Vector2 ,
+.Ft M_Vector3 ,
+.Ft M_Vector4 ,
+and
+.Ft M_Matrix44
+may or may not use a different precision (depending on the availability
+of SIMD instructions such as AltiVec and SSE).
+The general
+.Ft M_Vector
+and
+.Ft M_Matrix
+types are always guaranteed to use
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1

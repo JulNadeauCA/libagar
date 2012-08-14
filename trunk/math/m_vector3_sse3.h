@@ -25,35 +25,33 @@
 #ifdef HAVE_SSE3
 
 __BEGIN_DECLS
+extern const M_VectorOps3 mVecOps3_SSE3;
+
 static __inline__ M_Real
 M_VectorDot3_SSE3(M_Vector3 v1, M_Vector3 v2)
 {
+	__m128 r1, r2, r3;
 	float rv;
-	__m128 a;
 
-	a = _mm_mul_ps(v1.m128, v2.m128);
-	a = _mm_hadd_ps(a, a);
-	a = _mm_hadd_ps(a, a);
-	_mm_store_ss(&rv, a);
+	r1 = _mm_mul_ps(v1.m128, v2.m128);
+	r2 = _mm_hadd_ps(r1, r1);
+	r3 = _mm_hadd_ps(r2, r2);
+	_mm_store_ss(&rv, r3);
 	return (M_Real)(rv);
 }
 
 static __inline__ M_Real
 M_VectorDot3p_SSE3(const M_Vector3 *v1, const M_Vector3 *v2)
 {
+	__m128 r1, r2, r3;
 	float rv;
-	__m128 a;
 
-	a = _mm_mul_ps(v1->m128, v2->m128);
-	a = _mm_hadd_ps(v1->m128, v1->m128);
-	a = _mm_hadd_ps(v1->m128, v1->m128);
-	_mm_store_ss(&rv, a);
+	r1 = _mm_mul_ps(v1->m128, v2->m128);
+	r2 = _mm_hadd_ps(r1, r1);
+	r3 = _mm_hadd_ps(r2, r2);
+	_mm_store_ss(&rv, r3);
 	return (M_Real)(rv);
 }
-__END_DECLS
-
-__BEGIN_DECLS
-extern const M_VectorOps3 mVecOps3_SSE3;
 __END_DECLS
 
 #endif /* HAVE_SSE3 */

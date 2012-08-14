@@ -39,7 +39,6 @@ const M_MatrixOps mMatOps_SP = {
 	M_MatrixResize_SP,
 	M_MatrixFree_SP,
 	M_MatrixNew_SP,
-	M_MatrixPrint_FPU,	/* trick to have same output on sp and fpu */
 	NULL,			/* SetIdentity */
 	M_MatrixSetZero_SP,
 	NULL,			/* Transpose */
@@ -113,13 +112,6 @@ M_MatrixNew_SP(Uint m, Uint n)
 	MROWS(A) = m;
 	MCOLS(A) = n;
 	return (A);
-}
-
-void
-M_MatrixPrint_SP(void *pA)
-{
-	M_MatrixSP *A = pA;
-	spPrint(A->d, 0, 1, 0);
 }
 
 void

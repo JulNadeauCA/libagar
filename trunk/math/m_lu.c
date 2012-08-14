@@ -42,10 +42,9 @@ M_FactorizeLU_FPU(void *pA)
 			if (a > big) { big = a; }
 		}
 		if (Fabs(big) <= M_MACHEP) {
-			AG_SetError("Singular matrix (no pivot in column %i)",
-			    i);
-			fprintf(stderr, "Singular matrix:\n");
-			M_MatrixPrint(MMATRIX(A));
+			AG_Verbose("Singular matrix: %s\n",
+			    AG_Printf("%[M]", A));
+			AG_SetError("Singular matrix (no pivot in column %i)", i);
 			goto fail;
 		}
 		vs->v[i] = 1.0/big;

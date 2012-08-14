@@ -31,11 +31,10 @@ const M_VectorOps2 mVecOps2_FPU = {
 	M_VectorAdd2_FPU,
 	M_VectorAdd2p_FPU,
 	M_VectorAdd2v_FPU,
-	M_VectorAdd2n_FPU,
+	M_VectorSum2_FPU,
 	M_VectorSub2_FPU,
 	M_VectorSub2p_FPU,
 	M_VectorSub2v_FPU,
-	M_VectorSub2n_FPU,
 	M_VectorAvg2_FPU,
 	M_VectorAvg2p_FPU,
 	M_VectorLERP2_FPU,
@@ -244,23 +243,18 @@ M_VectorAdd2v_FPU(M_Vector2 *r, const M_Vector2 *a)
 }
 
 M_Vector2
-M_VectorAdd2n_FPU(int nvecs, ...)
+M_VectorSum2_FPU(const M_Vector2 *va, Uint count)
 {
-	M_Vector2 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x += v->x;
-		c.y += v->y;
+	M_Vector2 v;
+	Uint i;
+	
+	v.x = 0.0;
+	v.y = 0.0;
+	for (i = 0; i < count; i++) {
+		v.x += va[i].x;
+		v.y += va[i].y;
 	}
-	va_end(ap);
-	return (c);
+	return (v);
 }
 
 M_Vector2
@@ -288,26 +282,6 @@ M_VectorSub2v_FPU(M_Vector2 *r, const M_Vector2 *a)
 {
 	r->x -= a->x;
 	r->y -= a->y;
-}
-
-M_Vector2
-M_VectorSub2n_FPU(int nvecs, ...)
-{
-	M_Vector2 c, *v;
-	int i;
-	va_list ap;
-
-	va_start(ap, nvecs);
-	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	for (i = 0; i < nvecs; i++) {
-		v = va_arg(ap, void *);
-		c.x -= v->x;
-		c.y -= v->y;
-	}
-	va_end(ap);
-	return (c);
 }
 
 M_Vector2

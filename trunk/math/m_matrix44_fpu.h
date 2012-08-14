@@ -70,9 +70,6 @@ M_MatrixMult44pv_FPU(M_Matrix44 *C, const M_Matrix44 *A, const M_Matrix44 *B)
 {
 	int m, n;
 
-#ifdef AG_DEBUG
-	if (C == A) { AG_FatalError("use M_MatrixMultv() if C==A"); }
-#endif
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
 			C->m[m][n] = A->m[m][0] * B->m[0][n] +
@@ -85,8 +82,11 @@ M_MatrixMult44pv_FPU(M_Matrix44 *C, const M_Matrix44 *A, const M_Matrix44 *B)
 static __inline__ void
 M_MatrixCopy44_FPU(M_Matrix44 *mDst, const M_Matrix44 *mSrc)
 {
-	/* XXX Optimize */
-	memcpy(&mDst->m[0][0], &mSrc->m[0][0], 16*sizeof(M_Real));
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+	memcpy(mDst->m, mSrc->m, 16*sizeof(float));
+#else
+	memcpy(mDst->m, mSrc->m, 16*sizeof(M_Real));
+#endif
 }
 
 static __inline__ void
@@ -197,64 +197,60 @@ M_MatrixMultVector444v_FPU(M_Vector4 *x, const M_Matrix44 *A)
 	x->w = A->m[3][0]*xx + A->m[3][1]*xy + A->m[3][2]*xz + A->m[3][3]*xw;
 }
 
-/* XXX Optimize */
 static __inline__ void
 M_MatrixToFloats44_FPU(float *fv, const M_Matrix44 *M)
 {
-#ifdef SINGLE_PRECISION
-	memcpy(fv, &M->m[0][0], 16*sizeof(float));
-#else
 	int m, n;
+
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
 			fv[(m<<2)+n] = (float)M->m[m][n];
 	}
-#endif
 }
 
-/* XXX Optimize */
 static __inline__ void
 M_MatrixToDoubles44_FPU(double *dv, const M_Matrix44 *M)
 {
-#ifdef DOUBLE_PRECISION
-	memcpy(dv, &M->m[0][0], 16*sizeof(double));
-#else
 	int m, n;
+
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
 			dv[(m<<2)+n] = (double)M->m[m][n];
 	}
-#endif
 }
 
-/* XXX Optimize */
 static __inline__ void
 M_MatrixFromFloats44_FPU(M_Matrix44 *M, const float *fv)
 {
-#ifdef SINGLE_PRECISION
-	memcpy(&M->m[0][0], fv, 16*sizeof(float));
-#else
 	int m, n;
+
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+			M->m[m][n] = fv[(m<<2)+n];
+#elif defined(DOUBLE_PRECISION)
 			M->m[m][n] = (double)fv[(m<<2)+n];
-	}
+#elif defined(QUAD_PRECISION)
+			M->m[m][n] = (long double)fv[(m<<2)+n];
 #endif
+	}
 }
 
-/* XXX Optimize */
 static __inline__ void
 M_MatrixFromDoubles44_FPU(M_Matrix44 *M, const double *fv)
 {
-#ifdef DOUBLE_PRECISION
-	memcpy(&M->m[0][0], fv, 16*sizeof(double));
-#else
 	int m, n;
+
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
-			M->m[m][n] = (float)fv[(m<<2)+n];
-	}
+#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
+			M->m[m][n] = (double)fv[(m<<2)+n];
+#elif defined(DOUBLE_PRECISION)
+			M->m[m][n] = fv[(m<<2)+n];
+#elif defined(QUAD_PRECISION)
+			M->m[m][n] = (long double)fv[(m<<2)+n];
 #endif
+	}
 }
 
 static __inline__ void
@@ -358,7 +354,6 @@ M_MatrixTranslate344_FPU(M_Matrix44 *M, M_Real x, M_Real y, M_Real z)
 {
 	M_Matrix44 T;
 
-	/* XXX Optimize! */
 	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = x;
 	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = y;
 	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = z;
@@ -391,7 +386,6 @@ M_MatrixOrbitAxis44_FPU(M_Matrix44 *M, M_Vector3 p, M_Vector3 A, M_Real theta)
 	R.m[3][2] = 0.0;
 	R.m[3][3] = 1.0;
 
-	/* XXX Optimize! */
 	M_MatrixTranslate344_FPU(M, -p.x, -p.y, -p.z);
 	M_MatrixMult44v_FPU(M, &R);
 	M_MatrixTranslate44_FPU(M, p);
@@ -432,7 +426,6 @@ M_MatrixRotate44I_FPU(M_Matrix44 *M, M_Real theta)
 	M_Real c = M_Cos(theta);
 	M_Matrix44 R;
 
-	/* XXX Optimize! */
 	R.m[0][0] = 1.0; R.m[0][1] = 0.0; R.m[0][2] = 0.0; R.m[0][3] = 0.0;
 	R.m[1][0] = 0.0; R.m[1][1] = c;   R.m[1][2] = -s;  R.m[1][3] = 0.0;
 	R.m[2][0] = 0.0; R.m[2][1] = s;   R.m[2][2] = c;   R.m[2][3] = 0.0;
@@ -447,7 +440,6 @@ M_MatrixRotate44J_FPU(M_Matrix44 *M, M_Real theta)
 	M_Real c = M_Cos(theta);
 	M_Matrix44 R;
 
-	/* XXX Optimize! */
 	R.m[0][0] = c;   R.m[0][1] = 0.0; R.m[0][2] = s;   R.m[0][3] = 0.0;
 	R.m[1][0] = 0.0; R.m[1][1] = 1.0; R.m[1][2] = 0.0; R.m[1][3] = 0.0;
 	R.m[2][0] = -s;  R.m[2][1] = 0.0; R.m[2][2] = c;   R.m[2][3] = 0.0;
@@ -462,7 +454,6 @@ M_MatrixRotate44K_FPU(M_Matrix44 *M, M_Real theta)
 	M_Real c = M_Cos(theta);
 	M_Matrix44 R;
 
-	/* XXX Optimize! */
 	R.m[0][0] = c;   R.m[0][1] = -s;  R.m[0][2] = 0.0; R.m[0][3] = 0.0;
 	R.m[1][0] = s;   R.m[1][1] = c;   R.m[1][2] = 0.0; R.m[1][3] = 0.0;
 	R.m[2][0] = 0.0; R.m[2][1] = 0.0; R.m[2][2] = 1.0; R.m[2][3] = 0.0;
@@ -475,7 +466,6 @@ M_MatrixTranslateX44_FPU(M_Matrix44 *M, M_Real x)
 {
 	M_Matrix44 T;
 
-	/* XXX Optimize! */
 	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = x;
 	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = 0.0;
 	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = 0.0;
@@ -488,7 +478,6 @@ M_MatrixTranslateY44_FPU(M_Matrix44 *M, M_Real y)
 {
 	M_Matrix44 T;
 
-	/* XXX Optimize! */
 	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = 0.0;
 	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = y;
 	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = 0.0;
@@ -501,7 +490,6 @@ M_MatrixTranslateZ44_FPU(M_Matrix44 *M, M_Real z)
 {
 	M_Matrix44 T;
 
-	/* XXX Optimize! */
 	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = 0.0;
 	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = 0.0;
 	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = z;

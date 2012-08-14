@@ -8,7 +8,7 @@
 /* Standard math library */
 #include <agar/config/have_math.h>
 #ifdef HAVE_MATH
-#include <math.h>
+# include <math.h>
 #endif
 
 /* AltiVec extensions */
@@ -16,7 +16,7 @@
 #include <agar/config/have_altivec_h.h>
 #include <agar/config/inline_altivec.h>
 #if defined(HAVE_ALTIVEC) && defined(HAVE_ALTIVEC_H)
-#include <altivec.h>
+# include <altivec.h>
 #endif
 
 /* SSE extensions */
@@ -27,13 +27,13 @@
 #include <agar/config/inline_sse2.h>
 #include <agar/config/inline_sse3.h>
 #ifdef HAVE_SSE
-#include <xmmintrin.h>
+# include <xmmintrin.h>
 #endif
 #ifdef HAVE_SSE2
-#include <emmintrin.h>
+# include <emmintrin.h>
 #endif
 #ifdef HAVE_SSE3
-#include <pmmintrin.h>
+# include <pmmintrin.h>
 #endif
 
 /*
@@ -89,28 +89,33 @@ typedef struct m_polar { M_Real theta, r; } M_Polar;
 typedef struct m_parabolic { M_Real eta, xi, phi; } M_Parabolic;
 typedef struct m_spherical { M_Real phi, theta, r; } M_Spherical;
 typedef struct m_cylindrical { M_Real rho, phi, z; } M_Cylindrical;
-#ifdef HAVE_SSE
+
+#if defined(HAVE_SSE)
+
 typedef union m_vector3 {
 	__m128 m128;
-	struct { M_Real x, y, z, _pad; };
+	struct { float x, y, z, _pad; };
 } M_Vector3;
 typedef union m_vector4 {
 	__m128 m128;
-	struct { M_Real x, y, z, w; };
+	struct { float x, y, z, w; };
 } M_Vector4;
 typedef union m_matrix44 {
 	struct { __m128 m1, m2, m3, m4; };
-	M_Real m[4][4];
+	float m[4][4];
 } M_Matrix44;
 typedef union m_color {
 	__m128 m128;
-	struct { M_Real r, g, b, a; };
+	struct { float r, g, b, a; };
 } M_Color;
+
 #else /* !HAVE_SSE */
-typedef struct m_vector3 { M_Real x, y, z, _pad; } M_Vector3;
+
+typedef struct m_vector3 { M_Real x, y, z; } M_Vector3;
 typedef struct m_vector4 { M_Real x, y, z, w; } M_Vector4;
 typedef struct m_matrix44 { M_Real m[4][4]; } M_Matrix44;
 typedef struct m_color { M_Real r, g, b, a; } M_Color;
+
 #endif /* HAVE_SSE */
 
 /* Vector in R^n. */

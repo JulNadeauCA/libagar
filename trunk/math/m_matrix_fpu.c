@@ -14,7 +14,6 @@ const M_MatrixOps mMatOps_FPU = {
 	M_MatrixResize_FPU,
 	M_MatrixFree_FPU,
 	M_MatrixNew_FPU,
-	M_MatrixPrint_FPU,
 	M_MatrixSetIdentity_FPU,
 	M_MatrixSetZero_FPU,
 	M_MatrixTranspose_FPU,
@@ -115,7 +114,7 @@ M_MatrixToFloats_FPU(float *fv, const void *pA)
 {
 	const M_MatrixFPU *A=pA;
 #ifdef SINGLE_PRECISION
-	memcpy(fv, &A->v[0][0], MROWS(A)*MCOLS(A)*sizeof(float));
+	memcpy(fv, A->v, MROWS(A)*MCOLS(A)*sizeof(float));
 #else
 	Uint i, j;
 	for (i = 0; i < MROWS(A); i++) {
@@ -132,7 +131,7 @@ M_MatrixToDoubles_FPU(double *dv, const void *pA)
 	const M_MatrixFPU *A=pA;
 
 #ifdef DOUBLE_PRECISION
-	memcpy(dv, &A->v[0][0], MROWS(A)*MCOLS(A)*sizeof(double));
+	memcpy(dv, A->v, MROWS(A)*MCOLS(A)*sizeof(double));
 #else
 	Uint i, j;
 	for (i = 0; i < MROWS(A); i++) {
@@ -149,7 +148,7 @@ M_MatrixFromFloats_FPU(void *pA, const float *fv)
 	M_MatrixFPU *A=pA;
 
 #ifdef SINGLE_PRECISION
-	memcpy(&A->v[0][0], fv, MROWS(A)*MCOLS(A)*sizeof(float));
+	memcpy(A->v, fv, MROWS(A)*MCOLS(A)*sizeof(float));
 #else
 	Uint i, j;
 	for (i = 0; i < MROWS(A); i++) {
@@ -166,7 +165,7 @@ M_MatrixFromDoubles_FPU(void *pA, const double *fv)
 	M_MatrixFPU *A=pA;
 
 #ifdef DOUBLE_PRECISION
-	memcpy(&A->v[0][0], fv, MROWS(A)*MCOLS(A)*sizeof(double));
+	memcpy(A->v, fv, MROWS(A)*MCOLS(A)*sizeof(double));
 #else
 	Uint i, j;
 	for (i = 0; i < MROWS(A); i++) {
@@ -174,28 +173,4 @@ M_MatrixFromDoubles_FPU(void *pA, const double *fv)
 			A->v[i][j] = (float)fv[(i<<2)+j];
 	}
 #endif
-}
-
-void
-M_MatrixPrint_FPU(void *pM)
-{
-	/* Do not cast pM into M_MatrixFPU since the print function
-	 * is generic and may be used by other backends */
-	M_Matrix *M = pM;
-	Uint m, n;
-	M_Real e;
-
-	fputs(" -\n", stdout);
-	for (m = 0; m < MROWS(M); m++) {
-		fputs("| ", stdout);
-		for (n = 0; n < MCOLS(M); n++) {
-			e = M_Get(M, m, n);
-			if (e >= 0) {
-				fputc(' ', stdout);
-			}
-			printf("%.02f ", e);
-		}
-		fputs("|\n", stdout);
-	}
-	fputs(" -\n", stdout);
 }

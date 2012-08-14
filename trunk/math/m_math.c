@@ -60,15 +60,34 @@ static size_t
 PrintTime(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Time *t = AG_FMTSTRING_ARG(fs);
-
 	return AG_UnitFormat((double)(*t), agTimeUnits, dst, dstSize);
 }
 static size_t
 PrintComplex(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Complex *c = AG_FMTSTRING_ARG(fs);
-
 	return Snprintf(dst, dstSize, "[%.2g+%.2gi]", c->r, c->i);
+}
+static size_t
+PrintVector2(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	M_Vector2 *v = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize, "[%.2f,%.2f]",
+	    v->x, v->y);
+}
+static size_t
+PrintVector3(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	M_Vector3 *v = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize, "[%.2f,%.2f,%.2f]",
+	    v->x, v->y, v->z);
+}
+static size_t
+PrintVector4(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	M_Vector4 *v = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize, "[%.2f,%.2f,%.2f,%.2f]",
+	    v->x, v->y, v->z, v->w);
 }
 static size_t
 PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
@@ -90,12 +109,16 @@ PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
 		rv = Snprintf(pDst, (pEnd-pDst), "%.2g", *e);
 		if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
 		if (i < (v->m - 1)) {
-			rv = Strlcpy(pDst, "; ", (pEnd-pDst));
-			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+			if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+			pDst[0] = ',';
+			pDst[1] = '\0';
+			pDst++;
 		}
 	}
-	rv = Strlcpy(pDst, "]", (pEnd-pDst));
-	if ((pDst += rv) > pEnd) { *pEnd = '\0'; }
+	if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+	pDst[0] = ']';
+	pDst[1] = '\0';
+	pDst++;
 out:
 	return (pDst - dst);
 }
@@ -117,23 +140,44 @@ PrintMatrix(AG_FmtString *fs, char *dst, size_t dstSize)
 		for (j = 0; j < M->n; j++) {
 			M_Real *e = M_GetElement(M,i,j);
 
-			rv = Snprintf(pDst, (pEnd-pDst), "%.2g", *e);
+			rv = Snprintf(pDst, (pEnd-pDst), "%.1g", *e);
 			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
 
 			if (j < (M->n - 1)) {
-				rv = Strlcpy(pDst, ", ", (pEnd-pDst));
-				if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+				if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+				pDst[0] = ',';
+				pDst[1] = '\0';
+				pDst++;
 			}
 		}
 		if (i < (M->m - 1)) {
-			rv = Strlcpy(pDst, "; ", (pEnd-pDst));
-			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
+			if (pEnd-pDst < 3) { *pDst = '\0'; goto out; }
+			pDst[0] = ';';
+			pDst[1] = ' ';
+			pDst[2] = '\0';
+			pDst+=2;
 		}
 	}
-	rv = Strlcpy(pDst, "]", (pEnd-pDst));
-	if ((pDst += rv) > pEnd) { *pEnd = '\0'; }
+	if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+	pDst[0] = ']';
+	pDst[1] = '\0';
+	pDst++;
 out:
 	return (pDst - dst);
+}
+static size_t
+PrintMatrix44(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	M_Matrix44 *M = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize,
+	    "[%.1f,%.1f,%.1f,%.1f;"
+	    " %.1f,%.1f,%.1f,%.1f;"
+	    " %.1f,%.1f,%.1f,%.1f;"
+	    " %.1f,%.1f,%.1f,%.1f]",
+	    M->m[0][0], M->m[0][1], M->m[0][2], M->m[0][3],
+	    M->m[1][0], M->m[1][1], M->m[1][2], M->m[1][3],
+	    M->m[2][0], M->m[2][1], M->m[2][2], M->m[2][3],
+	    M->m[3][0], M->m[3][1], M->m[3][2], M->m[3][3]);
 }
 
 /* Initialize the math library. */
@@ -155,7 +199,11 @@ M_InitSubsystem(void)
 	AG_RegisterFmtStringExt("R", PrintReal);
 	AG_RegisterFmtStringExt("T", PrintTime);
 	AG_RegisterFmtStringExt("C", PrintComplex);
+	AG_RegisterFmtStringExt("V2", PrintVector2);
+	AG_RegisterFmtStringExt("V3", PrintVector3);
+	AG_RegisterFmtStringExt("V4", PrintVector4);
 	AG_RegisterFmtStringExt("V", PrintVector);
+	AG_RegisterFmtStringExt("M44", PrintMatrix44);
 	AG_RegisterFmtStringExt("M", PrintMatrix);
 }
 
@@ -175,7 +223,11 @@ M_DestroySubsystem(void)
 	AG_UnregisterFmtStringExt("R");
 	AG_UnregisterFmtStringExt("T");
 	AG_UnregisterFmtStringExt("C");
+	AG_UnregisterFmtStringExt("V2");
+	AG_UnregisterFmtStringExt("V3");
+	AG_UnregisterFmtStringExt("V4");
 	AG_UnregisterFmtStringExt("V");
+	AG_UnregisterFmtStringExt("M44");
 	AG_UnregisterFmtStringExt("M");
 }
 
@@ -188,17 +240,15 @@ M_ReadReal(AG_DataSource *ds)
 	prec = AG_ReadUint8(ds);
 	switch (prec) {
 	case 1:
-		return ((M_Real)AG_ReadFloat(ds));
+		return (M_Real)AG_ReadFloat(ds);
 	case 2:
-		return ((M_Real)AG_ReadDouble(ds));
-	case 4:
+		return (M_Real)AG_ReadDouble(ds);
 #ifdef HAVE_LONG_DOUBLE
-		return ((M_Real)AG_ReadLongDouble(ds));
-#else
-		/* XXX TODO convert */
+	case 4:
+		return (M_Real)AG_ReadLongDouble(ds);
 #endif
 	default:
-		AG_FatalError("Cannot convert real (%d)", (int)prec);
+		AG_FatalError("M_ReadReal(%u)", prec);
 	}
 	return (0.0);
 }
@@ -217,15 +267,13 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 	case 2:
 		*rv = (M_Real)AG_ReadDouble(ds);
 		break;
-	case 4:
 #ifdef HAVE_LONG_DOUBLE
+	case 4:
 		*rv = (M_Real)AG_ReadLongDouble(ds);
-#else
-		/* XXX TODO convert */
-#endif
 		break;
+#endif
 	default:
-		AG_FatalError("Cannot convert real (%d)", (int)prec);
+		AG_FatalError("M_CopyReal(%u)", prec);
 	}
 }
 
@@ -233,15 +281,15 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 void
 M_WriteReal(AG_DataSource *ds, M_Real v)
 {
-#if defined(QUAD_PRECISION)
-	AG_WriteUint8(ds, 4);
-	AG_WriteLongDouble(ds, (long double)v);
+#if defined(SINGLE_PRECISION)
+	AG_WriteUint8(ds, 1);
+	AG_WriteFloat(ds, v);
 #elif defined(DOUBLE_PRECISION)
 	AG_WriteUint8(ds, 2);
-	AG_WriteDouble(ds, (double)v);
-#else
-	AG_WriteUint8(ds, 1);
-	AG_WriteFloat(ds, (float)v);
+	AG_WriteDouble(ds, v);
+#elif defined(QUAD_PRECISION)
+	AG_WriteUint8(ds, 4);
+	AG_WriteLongDouble(ds, v);
 #endif
 }
 

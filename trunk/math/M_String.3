@@ -48,20 +48,41 @@ become available:
 .Pp
 .Bl -tag -compact -width "%[M44] "
 .It %[R]
-Variable of type
-.Ft M_Real .
+Real-number (of
+.Xr M_Real 3
+type).
 .It %[T]
-Variable of type
-.Ft M_Time .
+A time value (of
+.Xr M_Time 3
+type).
 .It %[C]
-Variable of type
-.Ft M_Complex .
+A complex number (of
+.Xr M_Complex 3
+type).
 .It %[V]
-Variable of type
-.Ft M_Vector .
+A general vector in R^n (of
+.Xr M_Vector 3
+type).
+.It %[V2]
+A vector in R^2 (of
+.Ft M_Vector2
+type).
+.It %[V3]
+A vector in R^3 (of
+.Ft M_Vector3
+type).
+.It %[V4]
+A vector in R^4 (of
+.Ft M_Vector4
+type).
 .It %[M]
-Variable of type
-.Ft M_Matrix .
+A general matrix (of
+.Xr M_Matrix 3
+type).
+.It %[M44]
+A 4x4 matrix (of
+.Ft M_Matrix44
+type).
 .El
 .Sh SEE ALSO
 .Xr AG_String 3

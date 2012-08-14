@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,6 +29,7 @@ static __inline__ M_Vector3
 M_VectorZero3_SSE(void)
 {
 	M_Vector3 v;
+
 	v.m128 = _mm_setzero_ps();
 	return (v);
 }
@@ -288,8 +289,7 @@ extern const M_VectorOps3 mVecOps3_SSE;
 M_Vector3	M_VectorRotate3_SSE(M_Vector3, M_Real, M_Vector3);
 void		M_VectorRotate3v_SSE(M_Vector3 *, M_Real, M_Vector3);
 M_Vector3	M_VectorRotateQuat3_SSE(M_Vector3, M_Quaternion);
-M_Vector3	M_VectorAdd3n_SSE(int, ...);
-M_Vector3	M_VectorSub3n_SSE(int, ...);
+M_Vector3	M_VectorSum3_SSE(const M_Vector3 *, Uint);
 __END_DECLS
 
 #endif /* HAVE_SSE */
