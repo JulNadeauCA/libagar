@@ -112,14 +112,11 @@ PageDown(AG_Event *event)
 	AG_Redraw(cons);
 }
 
-static int
+static void
 MapLine(AG_Console *cons, int yMouse, int *nLine)
 {
 	Uint sel;
 
-	if (cons->nLines == 0) {
-		return (-1);
-	}
 	if (yMouse < cons->padding) {
 		*nLine = cons->rOffs;
 	} else if (yMouse > WIDGET(cons)->h) {
@@ -132,7 +129,6 @@ MapLine(AG_Console *cons, int yMouse, int *nLine)
 			*nLine = (int)(cons->rOffs + sel);
 		}
 	}
-	return (0);
 }
 
 /* Export selected lines to a single C string. */
@@ -287,9 +283,11 @@ Select(AG_Event *event)
 		AG_PopupDestroy(cons, cons->pm);
 		cons->pm = NULL;
 	}
-	MapLine(cons, y, &cons->pos);
-	cons->sel = 0;
-	AG_Redraw(cons);
+	if (cons->nLines > 0) {
+		MapLine(cons, y, &cons->pos);
+		cons->sel = 0;
+		AG_Redraw(cons);
+	}
 }
 
 static void
@@ -323,13 +321,19 @@ MouseMotion(AG_Event *event)
 	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
 		return;
 	}
-	if (MapLine(cons, y, &newPos) == -1) {
-		return;
-	}
-	newSel = newPos - cons->pos;
-	if (newSel != cons->sel) {
-		cons->sel = newSel;
-		AG_Redraw(cons);
+	if (cons->nLines > 0) {
+		MapLine(cons, y, &newPos);
+		newSel = newPos - cons->pos;
+		if ((cons->pos + newSel) == 0) {
+			cons->pos = 0;
+			if (cons->sel != cons->nLines-1) {
+				cons->sel = cons->nLines-1;
+				AG_Redraw(cons);
+			}
+		} else if (newSel != cons->sel) {
+			cons->sel = newSel;
+			AG_Redraw(cons);
+		}
 	}
 }
 
@@ -343,7 +347,7 @@ Init(void *obj)
 	cons->flags = 0;
 	cons->padding = 4;
 	cons->lines = NULL;
-	cons->lineskip = agTextFontLineSkip;
+	cons->lineskip = agTextFontLineSkip + 1;
 	cons->nLines = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
@@ -516,7 +520,7 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 	AG_ObjectLock(cons);
 	cons->font = (font != NULL) ? font : agDefaultFont;
 	cons->rVisible = HEIGHT(cons) / cons->font->height;
-	cons->lineskip = cons->font->lineskip;
+	cons->lineskip = cons->font->lineskip + 1;
 	cons->rOffs = 0;
 
 	for (i = 0; i < cons->nLines; i++) {
