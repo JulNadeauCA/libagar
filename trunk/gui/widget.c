@@ -625,7 +625,10 @@ AG_ExecAction(void *obj, AG_Action *a)
 	return (0);
 }
 
-/* Run any action tied to a mouse-button event. */
+/*
+ * Run any action tied to a mouse-button event. Exceptionally, we pass
+ * mouse event arguments to the function.
+ */
 int
 AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
     int xCurs, int yCurs)
@@ -652,7 +655,12 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	    a == NULL) {
 		return (0);
 	}
-	return AG_ExecAction(wid, a);
+	if (a->fn != NULL) {
+		AG_PostEvent(NULL, wid, a->fn->name, "%i,%i,%i",
+		    button, xCurs, yCurs);
+		return (1);
+	}
+	return (0);
 }
 
 /* Run any action tied to a key-down event. */
