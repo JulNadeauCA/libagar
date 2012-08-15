@@ -12,12 +12,12 @@
 #define AG_CONSOLE_LINE_MAX	1024
 
 struct ag_console;
+struct ag_popup_menu;
 
 typedef struct ag_console_line {
 	char *text;			/* Line text */
 	size_t len;			/* Length not including NUL */
 	int surface;			/* Cached surface handle (or -1) */
-	int selected;			/* Row is selected */
 	int icon;			/* Icon to display */
 	AG_Color cFg;			/* Foreground color (display fmt) */
 	AG_Color cBg;			/* Background color (display fmt) */
@@ -31,18 +31,21 @@ typedef struct ag_console {
 #define AG_CONSOLE_HFILL	0x01	/* Fill available width */
 #define AG_CONSOLE_VFILL	0x02	/* Fill available height */
 #define AG_CONSOLE_NOAUTOSCROLL	0x04	/* Scroll new lines are added */
+#define AG_CONSOLE_NOPOPUP	0x08	/* Disable popup menus */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
 	AG_ConsoleLine *lines;		/* Lines in buffer */
-	int nLines;			/* Line count */
-	int rOffs;			/* Row display offset */
+	Uint nLines;			/* Line count */
+	Uint rOffs;			/* Row display offset */
 	AG_Color cBg;			/* Background color */
 	AG_Scrollbar *vBar;		/* Scrollbar */
 	AG_Rect r;			/* View area */
-	int rVisible;
+	Uint rVisible;			/* Visible line count */
 	AG_Font *font;			/* Font */
-	int *scrollTo;			/* Scrolling request */
+	Uint *scrollTo;			/* Scrolling request */
+	int pos, sel;			/* Position and selection */
+	struct ag_popup_menu *pm;
 } AG_Console;
 
 __BEGIN_DECLS
@@ -62,6 +65,7 @@ void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
 void            AG_ConsoleMsgColor(AG_ConsoleLine *, const AG_Color *,
                                    const AG_Color *);
 void		AG_ConsoleClear(AG_Console *);
+char           *AG_ConsoleExportText(AG_Console *, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
