@@ -1311,6 +1311,8 @@ AG_EditableDelete(AG_Editable *ed, AG_EditableBuffer *buf)
 	}
 	buf->len -= ed->sel;
 	ed->sel = 0;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	return (1);
 }
 
