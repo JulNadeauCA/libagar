@@ -1,12 +1,13 @@
 /*	Public domain	*/
 /*
- * This program demonstrates the use of Agar's low-level OpenGL context
- * widget, AG_GLView.
+ * This program demonstrates the use of the AG_GLView widget.
  *
- * AG_GLView is only concerned with saving/restoring visualization matrices
- * and the relevant OpenGL states. For high-level scene graph functionality,
- * you may be interested in FreeSG (http://freesg.org/), which provides a
- * general-purpose Agar visualization widget (SG_View).
+ * AG_GLView provides a low-level GL context. Under OpenGL-based Agar
+ * display drivers, all AG_GLView does is to save and restore the relevant
+ * GL matrices and states around calls to Draw().
+ *
+ * For high-level scene graph functionality, check out the Agar-based
+ * FreeSG library at http://freesg.org/.
  */
 
 #include "agartest.h"
@@ -17,6 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 
 const char *primitiveNames[] = { "Cube", "Sphere", NULL };
@@ -107,7 +109,7 @@ MyDrawFunction(AG_Event *event)
 	MyTestInstance *ti = AG_PTR(1);
 	GLfloat pos[4];
 	int i;
-	
+
 	glLoadIdentity();
 	glPushAttrib(GL_POLYGON_BIT|GL_LIGHTING_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -243,22 +245,20 @@ static int
 Init(void *obj)
 {
 	MyTestInstance *ti = obj;
+	GLfloat amb[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	GLfloat dif[4] = { 0.0f, 1.0f, 0.5f, 1.0f };
+	GLfloat spe[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
 	int i;
 
 	ti->primitive = SPHERE;
 	ti->shading = FLATSHADING;
 	ti->spin = 0.0f;
 	ti->vz = -5.0;
-	
-	ti->ambient[0] = 0.5f;
-	ti->diffuse[0] = 0.5f;
-	ti->specular[0] = 0.5f;
-	for (i = 1; i < 4; i++) {
-		ti->ambient[i] = 1.0f;
-		ti->diffuse[i] = 1.0f;
-		ti->specular[i] = 1.0f;
+	for (i = 0; i < 4; i++) {
+		ti->ambient[i] = amb[i];
+		ti->diffuse[i] = dif[i];
+		ti->specular[i] = spe[i];
 	}
-
 	ti->wireframe = 0;
 	return (0);
 }
@@ -273,15 +273,18 @@ TestGUI(void *obj, AG_Window *win)
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
+		AG_Pane *pa;
 		AG_Notebook *nb, *nbColor;
 		AG_NotebookTab *ntab;
 		int i;
 		
-		nb = AG_NotebookNew(hb, AG_NOTEBOOK_EXPAND);
+		pa = AG_PaneNewHoriz(hb, AG_PANE_EXPAND|AG_PANE_DIV1FILL);
+		AG_PaneResizeAction(pa, AG_PANE_EXPAND_DIV1);
+		nb = AG_NotebookNew(pa->div[0], AG_NOTEBOOK_EXPAND);
 
 		/* Create the AG_GLView widget. */
-		for (i = 0; i < 4; i++) {
-			ntab = AG_NotebookAddTab(nb, "Tab", AG_BOX_VERT);
+		for (i = 0; i < 2; i++) {
+			ntab = AG_NotebookAddTab(nb, "Test tab", AG_BOX_VERT);
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
 			AG_WidgetFocus(glv);
 
@@ -293,21 +296,21 @@ TestGUI(void *obj, AG_Window *win)
 		}
 
 		/* Edit ambient and diffuse color components. */
-		nbColor = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
+		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
 			ntab = AG_NotebookAddTab(nbColor, "Amb", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
 			ntab = AG_NotebookAddTab(nbColor, "Dif", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
 			ntab = AG_NotebookAddTab(nbColor, "Spe", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
-			    AG_HSVPAL_NOALPHA|AG_HSVPAL_VFILL);
+			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
 		}
 	}
