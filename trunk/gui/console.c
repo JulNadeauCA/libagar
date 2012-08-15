@@ -143,16 +143,22 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 		return (NULL);
 	}
 	dir = (cons->sel < 0) ? -1 : +1;
-	for (i = cons->pos; i >= 0 && i < cons->nLines; i += dir) {
+	for (i = cons->pos;
+	     (i >= 0 && i < cons->nLines);
+	     i += dir) {
 		AG_ConsoleLine *ln = &cons->lines[i];
 		sizeReq += ln->len + 2; /* \r\n */
+		if (i == cons->pos+cons->sel)
+			break;
 	}
 	if ((s = TryMalloc(sizeReq)) == NULL) {
 		return (NULL);
 	}
 	ps = &s[0];
 	*ps = '\0';
-	for (i = cons->pos; i >= 0 && i < cons->nLines; i += dir) {
+	for (i = cons->pos;
+	     (i >= 0 && i < cons->nLines);
+	     i += dir) {
 		AG_ConsoleLine *ln = &cons->lines[i];
 		memcpy(ps, ln->text, ln->len);
 #ifdef _WIN32
@@ -168,6 +174,8 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 			ps[ln->len+1] = '\0';
 			ps += ln->len + 1;
 		}
+		if (i == cons->pos+cons->sel)
+			break;
 	}
 	return (s);
 }
