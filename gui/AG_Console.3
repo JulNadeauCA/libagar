@@ -40,8 +40,9 @@
 The
 .Nm
 widget displays a scrollable list of messages in log format.
-After a message has been appended to the log, its text (and other attributes)
-can be changed.
+Messages may be copied to the clipboard or exported to a file.
+After a message has been appended to the log, its text (and other
+attributes) can be changed.
 By default, the display automatically scrolls down to make new messages
 visible.
 .Sh INHERITANCE HIERARCHY
@@ -72,6 +73,8 @@ include:
 .Bl -tag -width "AG_CONSOLE_NOAUTOSCROLL "
 .It AG_CONSOLE_NOAUTOSCROLL
 Don't scroll automatically to make newly inserted lines visible.
+.It AG_CONSOLE_NOPOPUP
+Disable contextual popup menus.
 .It AG_CONSOLE_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -115,6 +118,9 @@ messages (see
 .Ft "void"
 .Fn AG_ConsoleClear "AG_Console *cons"
 .Pp
+.Ft "char *"
+.Fn AG_ConsoleExportText "AG_Console *cons" "int nativeNewlines"
+.Pp
 .nr nS 0
 The
 .Fn AG_ConsoleMsg
@@ -148,6 +154,14 @@ color is preserved).
 .Pp
 .Fn AG_ConsoleClear
 clears all messages from the console.
+.Pp
+The
+.Fn AG_ConsoleExportText
+routine returns a C string containing the currently selected lines.
+The lines are joined with newlines.
+If
+.Fa nativeNewlines
+is non-zero, platform-specific newlines are used.
 .Sh EVENTS
 The
 .Nm
@@ -158,6 +172,10 @@ For the
 object:
 .Pp
 .Bl -tag -compact -width "AG_ConsoleLine *lines "
+.It Ft int pos
+Current cursor position (or -1).
+.It Ft int sel
+Selection (offset from cursor).
 .It Ft AG_Mutex lock
 Lock on buffer contents.
 .It Ft AG_ConsoleLine *lines
