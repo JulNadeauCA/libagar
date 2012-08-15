@@ -484,14 +484,10 @@ Draw(void *p)
 
 	if (bu->lbl != NULL) {
 		AG_WidgetDraw(bu->lbl);
-		return;
-	}
-
-	if (bu->surface != -1) {
-		int x = 0, y = 0, w, h;
-		
-		w = WSURFACE(bu,bu->surface)->w;
-		h = WSURFACE(bu,bu->surface)->h;
+	} else if (bu->surface != -1) {
+		int w = WSURFACE(bu,bu->surface)->w;
+		int h = WSURFACE(bu,bu->surface)->h;
+		int x = 0, y = 0;
 
 		switch (bu->justify) {
 		case AG_TEXT_LEFT:	x = bu->lPad;			break;
@@ -505,6 +501,13 @@ Draw(void *p)
 		}
 		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
 		AG_WidgetBlitSurface(bu, bu->surface, x, y);
+	}
+	if (AG_WidgetDisabled(bu)) {
+		AG_Color cOver;
+
+		cOver = AG_ColorRGBA(100,100,100,100);
+		AG_DrawRectBlended(bu, AG_RECT(0,0,WIDTH(bu),HEIGHT(bu)),
+		    cOver, AG_ALPHA_SRC);
 	}
 }
 
