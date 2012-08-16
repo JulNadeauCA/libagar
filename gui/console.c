@@ -276,17 +276,16 @@ PopupMenu(AG_Console *cons)
 }
 
 static void
-Select(AG_Event *event)
+BeginSelect(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-/*	int x = AG_INT(2); */
+	int x = AG_INT(2);
 	int y = AG_INT(3);
 
-	if (AG_WidgetDisabled(cons)) {
+	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
 		return;
 	}
 	AG_WidgetFocus(cons);
-
 	if (cons->pm != NULL) {
 		AG_PopupDestroy(cons, cons->pm);
 		cons->pm = NULL;
@@ -295,7 +294,16 @@ Select(AG_Event *event)
 		MapLine(cons, y, &cons->pos);
 		cons->sel = 0;
 		AG_Redraw(cons);
+		cons->flags |= AG_CONSOLE_SELECTING;
 	}
+}
+
+static void
+CloseSelect(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+
+	cons->flags &= ~(AG_CONSOLE_SELECTING);
 }
 
 static void
@@ -320,13 +328,10 @@ MouseMotion(AG_Event *event)
 	AG_Console *cons = AG_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
-	int buttons = AG_INT(5);
 	int newPos, newSel;
 
-	if ((buttons & AG_MOUSE_LEFT) == 0) {
-		return;
-	}
-	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
+	if (!(cons->flags & AG_CONSOLE_SELECTING) ||
+	    x < cons->r.x || x > cons->r.x+cons->r.w) {
 		return;
 	}
 	if (cons->nLines > 0) {
@@ -375,14 +380,17 @@ Init(void *obj)
 	AG_BindUint(cons->vBar, "max", &cons->nLines);
 	AG_BindUint(cons->vBar, "visible", &cons->rVisible);
 
-	AG_ActionFn(cons, "Select",	Select, NULL);
+	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
+	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
 	AG_ActionFn(cons, "ShowPopup",	ShowPopup, NULL);
 	AG_ActionFn(cons, "ScrollUp",	ScrollUp, NULL);
 	AG_ActionFn(cons, "ScrollDown",	ScrollDown, NULL);
 	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
 	AG_ActionFn(cons, "PageDown",   PageDown, NULL);
 
-	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "Select");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "BeginSelect");
+	AG_ActionOnButtonUp(cons, AG_MOUSE_LEFT, "CloseSelect");
+
 	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT, "ShowPopup");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP, "ScrollUp");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN, "ScrollDown");
