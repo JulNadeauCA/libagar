@@ -33,6 +33,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_NOAUTOSCROLL	0x04	/* Scroll new lines are added */
 #define AG_CONSOLE_NOPOPUP	0x08	/* Disable popup menus */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
+#define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
 	AG_ConsoleLine *lines;		/* Lines in buffer */
