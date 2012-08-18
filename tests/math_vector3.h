@@ -221,7 +221,7 @@ VectorNormCross3p(void *ti)
 	M_Vector3 v[4], x[3];
 	int i;
 
-	for (i = 0; i < 8; i++) { v[i] = RandomVector3(ti); }
+	for (i = 0; i < 4; i++) { v[i] = RandomVector3(ti); }
 	x[0] = M_VecNormCross3p(&v[0], &v[1]);
 	x[1] = M_VecNormCross3p(&v[1], &v[2]);
 	x[2] = M_VecNormCross3p(&v[2], &v[3]);
