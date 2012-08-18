@@ -25,8 +25,7 @@ typedef struct m_vector_ops {
 	void      (*SetZero)(M_Vector *v);
 	int       (*Resize)(M_Vector *v, Uint m);
 	void      (*FreeVector)(M_Vector *v);
-	M_Vector *(*Mirror)(const M_Vector *v);
-	int       (*Mirrorv)(M_Vector *v);
+	M_Vector *(*Flip)(const M_Vector *v);
 	M_Vector *(*Scale)(const M_Vector *v, M_Real c);
 	int       (*Scalev)(M_Vector *v, M_Real c);
 	M_Vector *(*Add)(const M_Vector *a, const M_Vector *b);
@@ -60,8 +59,7 @@ typedef struct m_vector_ops2 {
 	M_Vector2 (*Get)(M_Real, M_Real);
 	void      (*Set)(M_Vector2 *, M_Real, M_Real);
 	void      (*Copy)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Mirror)(M_Vector2, int, int);
-	M_Vector2 (*Mirrorp)(const M_Vector2 *, int, int);
+	M_Vector2 (*Flip)(M_Vector2);
 	M_Real    (*Len)(M_Vector2);
 	M_Real    (*Lenp)(const M_Vector2 *);
 	M_Real    (*Dot)(M_Vector2, M_Vector2);
@@ -89,8 +87,6 @@ typedef struct m_vector_ops2 {
 	M_Vector2 (*LERPp)(M_Vector2 *, M_Vector2 *, M_Real);
 	M_Vector2 (*ElemPow)(M_Vector2, M_Real);
 	M_Real    (*VecAngle)(M_Vector2, M_Vector2);
-	M_Vector2 (*Rotate)(M_Vector2, M_Real);
-	void      (*Rotatev)(M_Vector2 *, M_Real);
 } M_VectorOps2;
 
 /* Operations on vectors in R^3 */
@@ -101,8 +97,7 @@ typedef struct m_vector_ops3 {
 	M_Vector3 (*Get)(M_Real, M_Real, M_Real);
 	void      (*Set)(M_Vector3 *, M_Real, M_Real, M_Real);
 	void      (*Copy)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Mirror)(M_Vector3, int, int, int);
-	M_Vector3 (*Mirrorp)(const M_Vector3 *, int, int, int);
+	M_Vector3 (*Flip)(M_Vector3);
 	M_Real	  (*Len)(M_Vector3);
 	M_Real    (*Lenp)(const M_Vector3 *);
 	M_Real    (*Dot)(M_Vector3, M_Vector3);
@@ -132,12 +127,6 @@ typedef struct m_vector_ops3 {
 	M_Vector3 (*LERPp)(M_Vector3 *, M_Vector3 *, M_Real);
 	M_Vector3 (*ElemPow)(M_Vector3, M_Real);
 	void	  (*VecAngle)(M_Vector3, M_Vector3, M_Real *, M_Real *);
-	M_Vector3 (*Rotate)(M_Vector3, M_Real, M_Vector3);
-	void      (*Rotatev)(M_Vector3 *, M_Real, M_Vector3);
-	M_Vector3 (*RotateQuat)(M_Vector3, M_Quaternion);
-	M_Vector3 (*RotateI)(M_Vector3, M_Real);
-	M_Vector3 (*RotateJ)(M_Vector3, M_Real);
-	M_Vector3 (*RotateK)(M_Vector3, M_Real);
 } M_VectorOps3;
 
 /* Operations on vectors in R^4 */
@@ -148,8 +137,7 @@ typedef struct m_vector_ops4 {
 	M_Vector4 (*Get)(M_Real, M_Real, M_Real, M_Real);
 	void      (*Set)(M_Vector4 *, M_Real, M_Real, M_Real, M_Real);
 	void      (*Copy)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Mirror)(M_Vector4, int, int, int, int);
-	M_Vector4 (*Mirrorp)(const M_Vector4 *, int, int, int, int);
+	M_Vector4 (*Flip)(M_Vector4);
 	M_Real    (*Len)(M_Vector4);
 	M_Real    (*Lenp)(const M_Vector4 *);
 	M_Real    (*Dot)(M_Vector4, M_Vector4);
@@ -176,8 +164,6 @@ typedef struct m_vector_ops4 {
 	M_Vector4 (*ElemPow)(M_Vector4, M_Real);
 	void      (*VecAngle)(M_Vector4, M_Vector4, M_Real *, M_Real *,
 	                      M_Real *);
-	M_Vector4 (*Rotate)(M_Vector4, M_Real, M_Vector4);
-	void      (*Rotatev)(M_Vector4 *, M_Real, M_Vector4);
 } M_VectorOps4;
 
 __BEGIN_DECLS
@@ -198,7 +184,6 @@ __END_DECLS
 #include <agar/math/m_vector3_fpu.h>
 #include <agar/math/m_vector4_fpu.h>
 #include <agar/math/m_vector3_sse.h>
-#include <agar/math/m_vector3_sse3.h>
 
 __BEGIN_DECLS
 void       M_VectorInitEngine(void);
@@ -239,8 +224,7 @@ __END_DECLS
 #define M_VecSetZero		mVecOps->SetZero
 #define M_VecDup		mVecOps->Dup
 #define M_VecCopy		mVecOps->Copy
-#define M_VecMirror		mVecOps->Mirror
-#define M_VecMirrorv		mVecOps->Mirrorv
+#define M_VecFlip		mVecOps->Flip
 #define M_VecScale		mVecOps->Scale
 #define M_VecScalev		mVecOps->Scalev
 #define M_VecAdd		mVecOps->Add
@@ -273,8 +257,7 @@ __END_DECLS
 #define M_VecGet2		mVecOps2->Get
 #define M_VecSet2		mVecOps2->Set
 #define M_VecCopy2		mVecOps2->Copy
-#define M_VecMirror2		mVecOps2->Mirror
-#define M_VecMirror2p		mVecOps2->Mirrorp
+#define M_VecFlip2		mVecOps2->Flip
 #define M_VecLen2		mVecOps2->Len
 #define M_VecLen2p		mVecOps2->Lenp
 #define M_VecDot2		mVecOps2->Dot
@@ -302,8 +285,6 @@ __END_DECLS
 #define M_VecLERP2p		mVecOps2->LERPp
 #define M_VecElemPow2		mVecOps2->ElemPow
 #define M_VecVecAngle2		mVecOps2->VecAngle
-#define M_VecRotate2		mVecOps2->Rotate
-#define M_VecRotate2v		mVecOps2->Rotatev
 
 /*
  * Operations on vectors in R^3
@@ -311,60 +292,47 @@ __END_DECLS
 #define M_VecI3()		mVecOps3->Get(1.0,0.0,0.0)
 #define M_VecJ3()		mVecOps3->Get(0.0,1.0,0.0)
 #define M_VecK3()		mVecOps3->Get(0.0,0.0,1.0)
-#if defined(INLINE_SSE) || defined(INLINE_SSE2) || defined(INLINE_SSE3)
+#if defined(INLINE_SSE)
 # define M_VecZero3		M_VectorZero3_SSE
 # define M_VecGet3		M_VectorGet3_SSE
-# define M_VecSet3		M_VectorSet3_FPU
-# define M_VecCopy3		M_VectorCopy3_FPU
-# define M_VecMirror3		M_VectorMirror3_SSE
-# define M_VecMirror3p		M_VectorMirror3p_SSE
-# define M_VecLen3		M_VectorLen3_FPU
-# define M_VecLen3p		M_VectorLen3p_FPU
-# ifdef INLINE_SSE3
-#  define M_VecDot3		M_VectorDot3_SSE3
-#  define M_VecDot3p		M_VectorDot3p_SSE3
-# else
-#  define M_VecDot3		M_VectorDot3_FPU
-#  define M_VecDot3p		M_VectorDot3p_FPU
-# endif
+# define M_VecSet3		M_VectorSet3_SSE
+# define M_VecCopy3		M_VectorCopy3_SSE
+# define M_VecFlip3		M_VectorFlip3_SSE
+# define M_VecLen3		M_VectorLen3_SSE
+# define M_VecLen3p		M_VectorLen3p_SSE
+# define M_VecDot3		M_VectorDot3_SSE
+# define M_VecDot3p		M_VectorDot3p_SSE
 # define M_VecDistance3		M_VectorDistance3_SSE
 # define M_VecDistance3p	M_VectorDistance3p_SSE
 # define M_VecNorm3		M_VectorNorm3_SSE
 # define M_VecNorm3p		M_VectorNorm3p_SSE
-# define M_VecNorm3v		M_VectorNorm3v_FPU
-# define M_VecCross3		M_VectorCross3_FPU
-# define M_VecCross3p		M_VectorCross3p_FPU
-# define M_VecNormCross3	M_VectorNormCross3_FPU
-# define M_VecNormCross3p	M_VectorNormCross3p_FPU
+# define M_VecNorm3v		M_VectorNorm3v_SSE
+# define M_VecCross3		M_VectorCross3_SSE
+# define M_VecCross3p		M_VectorCross3p_SSE
+# define M_VecNormCross3	M_VectorNormCross3_SSE
+# define M_VecNormCross3p	M_VectorNormCross3p_SSE
 # define M_VecScale3		M_VectorScale3_SSE
 # define M_VecScale3p		M_VectorScale3p_SSE
-# define M_VecScale3v		M_VectorScale3v_FPU
+# define M_VecScale3v		M_VectorScale3v_SSE
 # define M_VecAdd3		M_VectorAdd3_SSE
 # define M_VecAdd3p		M_VectorAdd3p_SSE
-# define M_VecAdd3v		M_VectorAdd3v_FPU
+# define M_VecAdd3v		M_VectorAdd3v_SSE
 # define M_VecSum3		M_VectorSum3_SSE
 # define M_VecSub3		M_VectorSub3_SSE
 # define M_VecSub3p		M_VectorSub3p_SSE
-# define M_VecSub3v		M_VectorSub3v_FPU
+# define M_VecSub3v		M_VectorSub3v_SSE
 # define M_VecAvg3		M_VectorAvg3_SSE
 # define M_VecAvg3p		M_VectorAvg3p_SSE
 # define M_VecLERP3		M_VectorLERP3_SSE
 # define M_VecLERP3p		M_VectorLERP3p_SSE
 # define M_VecElemPow3		M_VectorElemPow3_SSE
 # define M_VecVecAngle3		M_VectorVecAngle3_SSE
-# define M_VecRotate3		M_VectorRotate3_SSE
-# define M_VecRotate3v		M_VectorRotate3v_SSE
-# define M_VecRotateQuat3	M_VectorRotateQuat3_SSE
-# define M_VecRotateI3		M_VectorRotateI3_SSE
-# define M_VecRotateJ3		M_VectorRotateJ3_SSE
-# define M_VecRotateK3		M_VectorRotateK3_SSE
-#else  /* !INLINE_SSE[123] */
+#else  /* !INLINE_SSE */
 # define M_VecZero3		mVecOps3->Zero
 # define M_VecGet3		mVecOps3->Get
 # define M_VecSet3		mVecOps3->Set
 # define M_VecCopy3		mVecOps3->Copy
-# define M_VecMirror3		mVecOps3->Mirror
-# define M_VecMirror3p		mVecOps3->Mirrorp
+# define M_VecFlip3		mVecOps3->Flip
 # define M_VecLen3		mVecOps3->Len
 # define M_VecLen3p		mVecOps3->Lenp
 # define M_VecDot3		mVecOps3->Dot
@@ -394,13 +362,7 @@ __END_DECLS
 # define M_VecLERP3p		mVecOps3->LERPp
 # define M_VecElemPow3		mVecOps3->ElemPow
 # define M_VecVecAngle3		mVecOps3->VecAngle
-# define M_VecRotate3		mVecOps3->Rotate
-# define M_VecRotate3v		mVecOps3->Rotatev
-# define M_VecRotateQuat3	mVecOps3->RotateQuat
-# define M_VecRotateI3		mVecOps3->RotateI
-# define M_VecRotateJ3		mVecOps3->RotateJ
-# define M_VecRotateK3		mVecOps3->RotateK
-#endif /* INLINE_SSE[123] */
+#endif /* INLINE_SSE */
 
 /*
  * Operations on vectors in R^4
@@ -413,8 +375,7 @@ __END_DECLS
 #define M_VecGet4		mVecOps4->Get
 #define M_VecSet4		mVecOps4->Set
 #define M_VecCopy4		mVecOps4->Copy
-#define M_VecMirror4		mVecOps4->Mirror
-#define M_VecMirror4p		mVecOps4->Mirrorp
+#define M_VecFlip4		mVecOps4->Flip
 #define M_VecLen4		mVecOps4->Len
 #define M_VecLen4p		mVecOps4->Lenp
 #define M_VecDot4		mVecOps4->Dot
@@ -444,6 +405,4 @@ __END_DECLS
 #define M_VecLERP4p		mVecOps4->LERPp
 #define M_VecElemPow4		mVecOps4->ElemPow
 #define M_VecVecAngle4		mVecOps4->VecAngle
-#define M_VecRotate4		mVecOps4->Rotate
-#define M_VecRotate4v		mVecOps4->Rotatev
 

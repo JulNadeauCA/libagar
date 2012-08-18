@@ -1,6 +1,6 @@
 /*
  * Public domain.
- * Operations on vectors in R^4 using standard FPU instructions.
+ * Operations on vectors in R^4 using scalar instructions.
  */
 
 #include <core/core.h>
@@ -12,8 +12,7 @@ const M_VectorOps4 mVecOps4_FPU = {
 	M_VectorGet4_FPU,
 	M_VectorSet4_FPU,
 	M_VectorCopy4_FPU,
-	M_VectorMirror4_FPU,
-	M_VectorMirror4p_FPU,
+	M_VectorFlip4_FPU,
 	M_VectorLen4_FPU,
 	M_VectorLen4p_FPU,
 	M_VectorDot4_FPU,
@@ -38,9 +37,7 @@ const M_VectorOps4 mVecOps4_FPU = {
 	M_VectorLERP4_FPU,
 	M_VectorLERP4p_FPU,
 	M_VectorElemPow4_FPU,
-	M_VectorVecAngle4_FPU,
-	M_VectorRotate4_FPU,
-	M_VectorRotate4v_FPU
+	M_VectorVecAngle4_FPU
 };
 
 M_Vector4
@@ -100,26 +97,14 @@ M_VectorCopy4_FPU(M_Vector4 *vDst, const M_Vector4 *vSrc)
 }
 
 M_Vector4
-M_VectorMirror4_FPU(M_Vector4 a, int x, int y, int z, int w)
+M_VectorFlip4_FPU(M_Vector4 a)
 {
 	M_Vector4 b;
 
-	b.x = x ? -a.x : a.x;
-	b.y = y ? -a.y : a.y;
-	b.z = z ? -a.z : a.z;
-	b.w = w ? -a.w : a.w;
-	return (b);
-}
-
-M_Vector4
-M_VectorMirror4p_FPU(const M_Vector4 *a, int x, int y, int z, int w)
-{
-	M_Vector4 b;
-
-	b.x = x ? -(a->x) : a->x;
-	b.y = y ? -(a->y) : a->y;
-	b.z = z ? -(a->z) : a->z;
-	b.w = w ? -(a->w) : a->w;
+	b.x = -a.x;
+	b.y = -a.y;
+	b.z = -a.z;
+	b.w = -a.w;
 	return (b);
 }
 
@@ -157,7 +142,7 @@ M_Real
 M_VectorDistance4p_FPU(const M_Vector4 *a, const M_Vector4 *b)
 {
 	return M_VectorLen4_FPU( M_VectorAdd4_FPU(*b,
-	                         M_VectorMirror4p_FPU(a,1,1,1,1)) );
+	                         M_VectorFlip4_FPU(*a)) );
 }
 
 M_Vector4
@@ -361,42 +346,6 @@ M_VectorVecAngle4_FPU(M_Vector4 vOrig, M_Vector4 vOther, M_Real *phi1,
 		*phi2 = Atan2(Sqrt(vd.w*vd.w + vd.z*vd.z),		vd.y);
 	if (phi3 != NULL)
 		*phi3 = Atan2(vd.w,					vd.z);
-}
-
-M_Vector4
-M_VectorRotate4_FPU(M_Vector4 v, M_Real theta, M_Vector4 n)
-{
-	M_Vector4 r = v;
-
-	M_VectorRotate4v_FPU(&r, theta, n);
-	return (r);
-}
-
-void
-M_VectorRotate4v_FPU(M_Vector4 *v, M_Real theta, M_Vector4 n)
-{
-	M_Real s = Sin(theta);
-	M_Real c = Cos(theta);
-	M_Real t = 1.0 - c;
-	M_Matrix44 R;
-
-	R.m[0][0] = 1.0 - (n.x*n.x)*t;
-	R.m[0][1] = -t*n.x*n.y;
-	R.m[0][2] = -t*n.x*n.z;
-	R.m[0][3] =  s*n.x;
-	R.m[1][0] = -t*n.x*n.y;
-	R.m[1][1] = 1.0 - (n.y*n.y)*t;
-	R.m[1][2] = -t*n.y*n.z;
-	R.m[1][3] =  s*n.y;
-	R.m[2][0] = -t*n.x*n.z;
-	R.m[2][1] = -t*n.y*n.z;
-	R.m[2][2] = 1.0 - (n.z*n.z)*t;
-	R.m[2][3] =  s*n.z;
-	R.m[3][0] = -s*n.x;
-	R.m[3][1] = -s*n.y;
-	R.m[3][2] = -s*n.z;
-	R.m[3][3] = c;
-	M_MatMult44Vector4v(v, &R);
 }
 
 M_Vector4

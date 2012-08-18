@@ -225,12 +225,10 @@ MultiLineExample(AG_Event *event)
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
 	{
-		AG_Label *lbl;
-
-		lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
+		AG_LabelNewPolled(win, AG_LABEL_HFILL,
 		    "Lines: %d", &textbox->ed->yMax);
 
-		lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL,
+		AG_LabelNewPolled(win, AG_LABEL_HFILL,
 		    "Cursor position: %d", &textbox->ed->pos);
 	}
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);

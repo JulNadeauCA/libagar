@@ -7,7 +7,7 @@
 
 # Version information
 PACKAGE("Agar")
-VERSION("1.4.2-beta")
+VERSION("1.5.0")
 RELEASE("A Mild Breeze Upon The Brow Of The Dead")
 
 # Register options for configure --help
@@ -27,10 +27,12 @@ REGISTER("--with-mysql[=PREFIX]",	"MySQL backend [check]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
 REGISTER_SECTION("Options specific to MATH library:")
-REGISTER("--with-altivec",		"AltiVec optimizations [check]")
-REGISTER("--with-sse",			"SSE optimizations [check]")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
-REGISTER("--with-<opt>-inline",		"Inline ops (sse2|sse3|altivec) [no]")
+REGISTER("--with-altivec",		"AltiVec-optimized routines [check]")
+REGISTER("--with-altivec-inline",	"Inline Altivec-optimized routines [no]")
+REGISTER("--with-sse",			"SSE-optimized routines [check]")
+REGISTER("--with-sse-inline",		"Inline SSE-optimized routines [no]")
+REGISTER("--without-sse[234]",		"Disable SSE2/SSE3 [check]")
 
 REGISTER_SECTION("Options specific to AU library:")
 REGISTER("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
@@ -485,62 +487,7 @@ else
 	MDEFINE(SUBDIR_math, "")
 fi
 
-#
-# Enable optional SSE optimizations if compiler supports intrinsics.
-# Note that the library performs a CPU check, so enabling SSE support
-# will not break the build on non-SSE machines (unless --with-sse-inline
-# is used, in which case the resulting build will be SSE-dependent).
-#
-if [ "${with_sse}" != "no" ]; then
-	CHECK(sse)
-	if [ "${HAVE_SSE}" != "yes" ]; then
-		if [ "${with_sse}" = "yes" ]; then
-			echo "*"
-			echo "* --with-sse was requested, but SSE "
-			echo "* intrinsics not supported by compiler"
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_SSE)
-			HUNDEF(INLINE_SSE)
-			HUNDEF(INLINE_SSE2)
-			HUNDEF(INLINE_SSE3)
-		fi
-	else
-		if [ "${with_sse_inline}" = "yes" ]; then
-			HDEFINE(INLINE_SSE, "yes")
-		else
-			HUNDEF(INLINE_SSE)
-		fi
-		if [ "${HAVE_SSE2}" = "yes" ]; then
-			if [ "${with_sse2_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE2, "yes")
-			else
-				HUNDEF(INLINE_SSE2)
-			fi
-		else
-			HUNDEF(INLINE_SSE2)
-		fi
-		if [ "${HAVE_SSE3}" = "yes" ]; then
-			if [ "${with_sse3_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE3, "yes")
-			else
-				HUNDEF(INLINE_SSE3)
-			fi
-		else
-			HUNDEF(INLINE_SSE3)
-		fi
-	fi
-else
-	HUNDEF(HAVE_SSE)
-	HUNDEF(HAVE_SSE2)
-	HUNDEF(HAVE_SSE3)
-	HUNDEF(INLINE_SSE)
-	HUNDEF(INLINE_SSE2)
-	HUNDEF(INLINE_SSE3)
-fi
-
-# Enable optional AltiVec optimizations if compiler supports intrinsics.
+# Enable AltiVec optimizations if compiler supports AltiVec.
 if [ "${with_altivec}" != "no" ]; then
 	CHECK(altivec)
 	if [ "${HAVE_ALTIVEC}" != "yes" ]; then
@@ -566,6 +513,45 @@ else
 	HUNDEF(HAVE_ALTIVEC)
 	HUNDEF(HAVE_ALTIVEC_H)
 	HUNDEF(INLINE_ALTIVEC)
+fi
+
+#
+# Enable SSE optimizations if compiler supports intrinsics. Note that the
+# library performs a CPU check, so enabling SSE will not break the build
+# on non-SSE machines (unless --with-sse-inline is used, in which case
+# the resulting build will be SSE-dependent).
+#
+if [ "${with_sse}" != "no" ]; then
+	CHECK(sse)
+	if [ "${HAVE_SSE}" != "yes" ]; then
+		if [ "${with_sse}" = "yes" ]; then
+			echo "*"
+			echo "* --with-sse was requested, but SSE "
+			echo "* intrinsics not supported by compiler"
+			echo "*"
+			exit 1
+		else
+			HUNDEF(HAVE_SSE)
+			HUNDEF(INLINE_SSE)
+		fi
+	else
+		if [ "${with_sse_inline}" = "yes" ]; then
+			HDEFINE(INLINE_SSE, "yes")
+		else
+			HUNDEF(INLINE_SSE)
+		fi
+		if [ "${with_sse2}" = "no" ]; then
+			HUNDEF(HAVE_SSE2)
+		fi
+		if [ "${with_sse3}" = "no" ]; then
+			HUNDEF(HAVE_SSE3)
+		fi
+	fi
+else
+	HUNDEF(HAVE_SSE)
+	HUNDEF(HAVE_SSE2)
+	HUNDEF(HAVE_SSE3)
+	HUNDEF(INLINE_SSE)
 fi
 
 # Specify floating-point precision to use.

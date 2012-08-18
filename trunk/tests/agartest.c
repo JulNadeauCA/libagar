@@ -95,6 +95,8 @@ const AG_TestCase *testCases[] = {
 TAILQ_HEAD_(ag_test_instance) tests;		/* Running tests */
 AG_Statusbar *statusBar;
 AG_Label *status;
+AG_Console *console;
+AG_Button *btnTest, *btnBench;
 
 static void
 SelectedTest(AG_Event *event)
@@ -103,6 +105,16 @@ SelectedTest(AG_Event *event)
 	AG_TestCase *tc = it->p1;
 
 	AG_LabelText(status, "%s: %s", tc->name, tc->descr);
+	if (tc->test != NULL || tc->testGUI != NULL) {
+		AG_WidgetEnable(btnTest);
+	} else {
+		AG_WidgetDisable(btnTest);
+	}
+	if (tc->bench != NULL) {
+		AG_WidgetEnable(btnBench);
+	} else {
+		AG_WidgetDisable(btnBench);
+	}
 }
 
 #ifdef AG_THREADS
@@ -112,76 +124,71 @@ RunBenchmarks(void *arg)
 	AG_TestInstance *ti = arg;
 
 	if (ti->tc->bench(ti) == 0) {
-		AG_ConsoleMsg(ti->console, _("%s: Success"), ti->tc->name);
+		AG_ConsoleMsg(console, _("%s: Success"), ti->tc->name);
 	} else {
-		AG_ConsoleMsg(ti->console, _("%s: Failed (%s)"), ti->tc->name,
+		AG_ConsoleMsg(console, _("%s: Failed (%s)"), ti->tc->name,
 		    AG_GetError());
 	}
 	return (NULL);
 }
 #endif
 
-static void
-RunTest(AG_Event *event)
+static AG_TestInstance *
+CreateTestInstance(AG_TestCase *tc)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	AG_Console *cons = AG_PTR(2);
-	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
 
-	if (tc == NULL)
-		return;
-
 	if ((ti = TryMalloc(tc->size)) == NULL) {
-		AG_LabelTextS(status, AG_GetError());
-		return;
+		goto fail;
 	}
 	ti->name = tc->name;
 	ti->tc = tc;
 	ti->flags = 0;
 	ti->score = 1.0;
-	ti->console = cons;
+	ti->console = console;
 	ti->win = NULL;
 
 	if (tc->init != NULL &&
 	    tc->init(ti) == -1) {
-		AG_ConsoleMsg(cons, _("%s: Failed: %s"), tc->name, AG_GetError());
-		AG_LabelTextS(status, AG_GetError());
+		AG_ConsoleMsg(console, _("%s: Failed: %s"), tc->name, AG_GetError());
 		goto fail;
 	}
+	return (ti);
+fail:
+	AG_LabelTextS(status, AG_GetError());
+	return (NULL);
+}
+
+static void
+RunTest(AG_Event *event)
+{
+	AG_Tlist *tl = AG_PTR(1);
+	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
+	AG_TestInstance *ti;
+
+	if (tc == NULL || (tc->test == NULL && tc->testGUI == NULL))
+		return;
+
+	if ((ti = CreateTestInstance(tc)) == NULL)
+		return;
+
 	if (tc->test != NULL) {
-		AG_ConsoleMsg(cons, _("Running test: %s..."), tc->name);
+		AG_ConsoleMsg(console, _("Running test: %s..."), tc->name);
 		ti->score = 100.0;
 		if (tc->test(ti) == 0) {
 			if (ti->score != 100.0) {
-				AG_ConsoleMsg(cons, _("%s: Success (%f%%)"),
+				AG_ConsoleMsg(console, _("%s: Success (%f%%)"),
 				    tc->name, ti->score);
 			} else {
-				AG_ConsoleMsg(cons, _("%s: Success"), tc->name);
+				AG_ConsoleMsg(console, _("%s: Success"), tc->name);
 			}
 		} else {
-			AG_ConsoleMsg(cons, _("%s: Failed (%s)"), tc->name,
+			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
 			    AG_GetError());
 			AG_LabelTextS(status, AG_GetError());
 			goto fail;
 		}
 	}
-	if (tc->bench != NULL) {
-#ifdef AG_THREADS
-		AG_Thread th;
-		AG_ThreadCreate(&th, RunBenchmarks, ti);
-#else
-		if (tc->bench(ti) == 0) {
-			AG_ConsoleMsg(cons, _("%s: Success"), tc->name);
-		} else {
-			AG_ConsoleMsg(cons, _("%s: Failed (%s)"), tc->name,
-			    AG_GetError());
-			AG_LabelTextS(status, AG_GetError());
-			goto fail;
-		}
-#endif
-	}
-
 	if (tc->testGUI != NULL) {
 		AG_Window *win;
 
@@ -194,7 +201,7 @@ RunTest(AG_Event *event)
 	
 		if (tc->testGUI(ti, win) == 0) {
 			ti->win = win;
-			AG_ConsoleMsg(cons, _("%s: Interactive test started"),
+			AG_ConsoleMsg(console, _("%s: Interactive test started"),
 			    tc->name);
 			AG_SeparatorNewHoriz(win);
 			AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
@@ -202,7 +209,7 @@ RunTest(AG_Event *event)
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 			AG_WindowShow(win);
 		} else {
-			AG_ConsoleMsg(cons, _("%s: Failed to start (%s)"),
+			AG_ConsoleMsg(console, _("%s: Failed to start (%s)"),
 			    tc->name, AG_GetError());
 			AG_ObjectDetach(win);
 			goto fail;
@@ -214,13 +221,46 @@ fail:
 	Free(ti);
 }
 
+static void
+RunBench(AG_Event *event)
+{
+	AG_Tlist *tl = AG_PTR(1);
+	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
+	AG_TestInstance *ti;
+
+	if (tc == NULL || tc->bench == NULL)
+		return;
+	
+	if ((ti = CreateTestInstance(tc)) == NULL)
+		return;
+
+	{
+#ifdef AG_THREADS
+		AG_Thread th;
+		AG_ThreadCreate(&th, RunBenchmarks, ti);
+#else
+		if (tc->bench(ti) == 0) {
+			AG_ConsoleMsg(console, _("%s: Success"), tc->name);
+		} else {
+			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
+			    AG_GetError());
+			AG_LabelTextS(status, AG_GetError());
+			free(ti);
+			return;
+		}
+#endif
+	}
+	TAILQ_INSERT_TAIL(&tests, ti, instances);
+	return;
+}
+
 /* Close an interactive test. */
 void
 TestWindowClose(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
 	
-	AG_ConsoleMsg(ti->console, _("Test %s: terminated"), ti->name);
+	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
 	AG_ObjectDetach(ti->win);
 	TAILQ_REMOVE(&tests, ti, instances);
 	free(ti);
@@ -239,7 +279,7 @@ TestMsg(void *obj, const char *fmt, ...)
 		return;
 	}
 	va_end(args);
-	AG_ConsoleMsg(ti->console, "%s: %s", ti->name, s);
+	AG_ConsoleMsgS(ti->console, s);
 	free(s);
 }
 
@@ -248,7 +288,7 @@ void
 TestMsgS(void *obj, const char *s)
 {
 	AG_TestInstance *ti = obj;
-	AG_ConsoleMsg(ti->console, "%s: %s", ti->name, s);
+	AG_ConsoleMsgS(ti->console, s);
 }
 
 #undef RDTSC
@@ -355,9 +395,9 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Tlist *tl;
 	const AG_TestCase **pTest;
-	AG_Console *cons;
 	AG_Pane *pane;
-	AG_Button *btn;
+	AG_Box *hBox;
+	AG_Font *font;
 	int c, i, optInd;
 
 	TAILQ_INIT(&tests);
@@ -406,8 +446,7 @@ main(int argc, char *argv[])
 	}
 	AG_WindowSetCaptionS(win, "agartest");
 
-	pane = AG_PaneNewVert(win, AG_PANE_EXPAND);
-	AG_PaneMoveDividerPct(pane, 30);
+	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 
 	AG_LabelNewS(pane->div[0], 0, _("Available tests: "));
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
@@ -415,17 +454,41 @@ main(int argc, char *argv[])
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
 		AG_TlistAddPtr(tl, NULL, (*pTest)->name, (void *)*pTest);
 	}
-	btn = AG_ButtonNew(pane->div[0], AG_BUTTON_HFILL, _("Run Test"));
-	cons = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-	
+
+	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL);
+	{
+		btnTest = AG_ButtonNew(hBox, 0, _("Run Test"));
+		btnBench = AG_ButtonNew(hBox, 0, _("Run Benchmark"));
+		AG_WidgetDisable(btnTest);
+		AG_WidgetDisable(btnBench);
+	}
+	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
+	if ((font = AG_FetchFont("Terminus-16", 16, 0)) ||
+	    (font = AG_FetchFont("Terminal-14", 14, 0))) {
+		AG_ConsoleSetFont(console, font);
+	}
+	{
+		AG_AgarVersion av;
+
+		AG_GetVersion(&av);
+		AG_ConsoleMsg(console, _("Agar Test Suite"));
+		AG_ConsoleMsg(console, _("Library version: %d.%d.%d (\"%s\")"),
+		    av.major, av.minor, av.patch, av.release);
+#ifdef AG_DEBUG
+		AG_ConsoleMsg(console,
+		    _("Debugger is available (press F12 to debug active window)"));
+#endif
+	}
+
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
-	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, cons);
-	AG_SetEvent(btn, "button-pushed", RunTest, "%p,%p", tl, cons);
+	AG_TlistSetDblClickFn(tl, RunTest, "%p", tl);
+	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl);
+	AG_SetEvent(btnBench, "button-pushed", RunBench, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
 	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 60);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
 	
 	for (i = optInd; i < argc; i++) {
@@ -436,12 +499,13 @@ main(int argc, char *argv[])
 				break;
 		}
 		if (*pTest == NULL) {
-			AG_Verbose("No such test: %s\n", argv[i]);
+			AG_ConsoleMsg(console, _("No such test: %s"), argv[i]);
 			continue;
 		}
 		AG_TlistSelectPtr(tl, (void *)(*pTest));
-		AG_EventArgs(&ev, "%p,%p", tl, cons);
+		AG_EventArgs(&ev, "%p", tl);
 		RunTest(&ev);
+		RunBench(&ev);
 	}
 
 	AG_EventLoop();

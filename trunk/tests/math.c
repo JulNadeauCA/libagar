@@ -15,8 +15,6 @@
 #include <agar/config/have_sse2.h>
 #include <agar/config/have_sse3.h>
 #include <agar/config/inline_sse.h>
-#include <agar/config/inline_sse2.h>
-#include <agar/config/inline_sse3.h>
 #include <agar/config/quad_precision.h>
 #include <agar/config/double_precision.h>
 #include <agar/config/single_precision.h>
@@ -25,8 +23,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-
-#define RANDOMIZE() if (++cur >= nVecs) { cur = 0; }
 
 #define NREALS 10000
 #define NVECTORS 1000
@@ -41,6 +37,8 @@ typedef struct {
 	M_Matrix44 m44[NMATRICES];
 	int curReal, curVec, curMat;
 } MyTestInstance;
+
+M_Real realJunk = 0.0;
 
 static __inline__ M_Real
 RandomReal(MyTestInstance *ti)
@@ -73,7 +71,8 @@ RandomMatrix44(MyTestInstance *ti)
 	return (ti->m44[ti->curMat++]);
 }
 
-#include "math_bench.h"
+#include "math_vector3.h"
+#include "math_matrix44.h"
 
 static int
 Init(void *obj)
@@ -83,7 +82,6 @@ Init(void *obj)
 
 	M_InitSubsystem();
 
-	Verbose("Generating random vectors and matrices...\n");
 	ti->curReal = 0;
 	ti->curVec = 0;
 	ti->curMat = 0;
@@ -133,7 +131,6 @@ Init(void *obj)
 #endif
 		M_MatFromDoubles44(&ti->m44[i], rands);
 	}
-	Verbose("Done.\n");
 	return (0);
 }
 
@@ -159,19 +156,19 @@ TestComplex(AG_TestInstance *ti)
 	C1plusC2 = M_ComplexAdd(C1, C2);
 	C1multC2 = M_ComplexMult(C1, C2);
 
-	TestMsgS(ti, "Testing complex number routines:");
-	TestMsgS(ti, AG_Printf("C1=%[C], C2=%[C]", &C1, &C2));
-	TestMsgS(ti, AG_Printf("C1 mult. inverse = %[C]", &C1mi));
-	TestMsgS(ti, AG_Printf("C1 modulus = %[R]", &C1mod));
-	TestMsgS(ti, AG_Printf("C1 argument = %[R]", &C1arg));
-	TestMsgS(ti, AG_Printf("C1+C2 = %[C]", &C1plusC2));
-	TestMsgS(ti, AG_Printf("C1*C2 = %[C]", &C1multC2));
+	TestMsgS(ti, AG_Printf("\tC1=%[C], C2=%[C]", &C1, &C2));
+	TestMsgS(ti, AG_Printf("\tC1 mult. inverse = %[C]", &C1mi));
+	TestMsgS(ti, AG_Printf("\tC1 modulus = %[R]", &C1mod));
+	TestMsgS(ti, AG_Printf("\tC1 argument = %[R]", &C1arg));
+	TestMsgS(ti, AG_Printf("\tC1+C2 = %[C]", &C1plusC2));
+	TestMsgS(ti, AG_Printf("\tC1*C2 = %[C]", &C1multC2));
 }
 
 static void
 TestVector(AG_TestInstance *ti)
 {
-	M_Vector *a, *b, *AplusB, *AsubB, *aNorm, *aLERP, *aPow2, *a100;
+	M_Vector *a, *b, *AplusB, *AsubB, *aNorm, *bNorm, *aLERP, *aPow2, *a2,
+	    *b2;
 	M_Real aLen, bLen, abDist, AdotB;
 	M_Real someReal = 1.234567, someReal2 = 2.345;
 
@@ -180,48 +177,55 @@ TestVector(AG_TestInstance *ti)
 	b = M_VecNew(4);
 	b->v[0] = 10.0;	b->v[1] = 20.0;	b->v[2] = 30.0;	b->v[3] = 40.0;
 
-	AplusB = M_VecAdd(a, b);
-	AsubB = M_VecSub(a, b);
-	aNorm = M_VecNorm(a);
+	aLen = M_VecLen(a);		bLen = M_VecLen(b);
+	a2 = M_VecScale(a, 2.0);	b2 = M_VecScale(b, 2.0);
+	AplusB = M_VecAdd(a, b);	AsubB = M_VecSub(a, b);
+	aNorm = M_VecNorm(a);		bNorm = M_VecNorm(b);
 	aLERP = M_VecLERP(a, b, 0.5);
 	aPow2 = M_VecElemPow(a, 2.0);
-	a100 = M_VecScale(a, 100.0);
-	aLen = M_VecLen(a);
-	bLen = M_VecLen(b);
 	abDist = M_VecDistance(a, b);
 	AdotB = M_VecDot(a, b);
 
-	TestMsgS(ti, "Testing M_Vector routines:");
-	TestMsgS(ti, AG_Printf("Real=%[R], Real2=%[R]", &someReal, &someReal2));
-	TestMsgS(ti, AG_Printf("a=%[V], b=%[V]", a, b));
-	TestMsgS(ti, AG_Printf("(a*100)=%[V]", a100));
-	TestMsgS(ti, AG_Printf("(a+b)=%[V]", AplusB));
-	TestMsgS(ti, AG_Printf("(a-b)=%[V]", AsubB));
-	TestMsgS(ti, AG_Printf("(a dot b)=%[R]", &AdotB));
-	TestMsgS(ti, AG_Printf("len(a)=%[R], len(b)=%[R]", &aLen, &bLen));
-	TestMsgS(ti, AG_Printf("dist(a,b)=%[R]", &abDist));
-	TestMsgS(ti, AG_Printf("norm(a)=%[V]", aNorm));
-	TestMsgS(ti, AG_Printf("lerp(a,b,1/2)=%[V]", aLERP));
-	TestMsgS(ti, AG_Printf("pow2(a)=%[V]", aPow2));
+	TestMsgS(ti, AG_Printf("\tReal=%[R], Real2=%[R]", &someReal, &someReal2));
+	TestMsgS(ti, AG_Printf("\ta=%[V], b=%[V]", a, b));
+	TestMsgS(ti, AG_Printf("\t2a=%[V], 2b=%[V]", a2, b2));
+	TestMsgS(ti, AG_Printf("\tlen(a)=%[R], len(b)=%[R]", &aLen, &bLen));
+	TestMsgS(ti, AG_Printf("\tnorm(a)=%[V], norm(b)=%[V]", aNorm, bNorm));
+	TestMsgS(ti, AG_Printf("\ta+b=%[V], a-b=%[V]", AplusB, AsubB));
+	TestMsgS(ti, AG_Printf("\ta dot b=%[R]", &AdotB));
+	TestMsgS(ti, AG_Printf("\tdist(a,b)=%[R]", &abDist));
+	TestMsgS(ti, AG_Printf("\tlerp(a,b,1/2)=%[V]", aLERP));
+	TestMsgS(ti, AG_Printf("\tpow2(a)=%[V]", aPow2));
 
-	M_VecFree(a); M_VecFree(b);
+	M_VecFree(a);		M_VecFree(b);
+	M_VecFree(a2);		M_VecFree(b2);
+	M_VecFree(aNorm);	M_VecFree(bNorm);
 	M_VecFree(AplusB);
-	M_VecFree(aNorm);
 	M_VecFree(aLERP);
 	M_VecFree(aPow2);
-	M_VecFree(a100);
 }
 
 static void
 TestVector3(AG_TestInstance *ti)
 {
-	M_Vector3 a = M_VECTOR3(1.1, 2.2, 3.3);
-	M_Vector3 b = M_VECTOR3(10.0, 20.0, 30.0);
+	M_Vector3 a = M_VECTOR3(1.1, 2.8, 3.7);
+	M_Vector3 b = M_VECTOR3(15.1, 52.8, 35.0);
+	M_Real aLen = M_VecLen3(a), bLen = M_VecLen3(b);
+	M_Vector3 Anorm = M_VecNorm3(a), Bnorm = M_VecNorm3(b);
 	M_Real AdotB = M_VecDot3(a, b);
+	M_Vector3 AcrossB = M_VecCross3(a, b);
+	M_Vector3 AnormcrossB = M_VecNormCross3(a, b);
+	M_Real AdistB = M_VecDistance3(a, b);
+	M_Vector3 AavgB = M_VecAvg3(a, b);
 	
-	TestMsgS(ti, "Testing M_Vector3 routines:");
-	TestMsgS(ti, AG_Printf("a=%[V3], b=%[V3]", &a, &b));
-	TestMsgS(ti, AG_Printf("(a dot b)=%[R]", &AdotB));
+	TestMsgS(ti, AG_Printf("\ta=%[V3], b=%[V3]", &a, &b));
+	TestMsgS(ti, AG_Printf("\tlen(a)=%[R], len(b)=%[R]", &aLen, &bLen));
+	TestMsgS(ti, AG_Printf("\tnorm(a)=%[V3], norm(b)=%[V3]", &Anorm, &Bnorm));
+	TestMsgS(ti, AG_Printf("\ta dot b=%[R]", &AdotB));
+	TestMsgS(ti, AG_Printf("\ta x b=%[V3]", &AcrossB));
+	TestMsgS(ti, AG_Printf("\tnorm(a x b)=%[V3]", &AnormcrossB));
+	TestMsgS(ti, AG_Printf("\tdist(a,b)=%[R]", &AdistB));
+	TestMsgS(ti, AG_Printf("\tavg(a,b)=%[V3]", &AavgB));
 }
 
 static void
@@ -232,8 +236,7 @@ TestMatrix(AG_TestInstance *ti)
 	M = M_New(5,5);
 	M_SetIdentity(M);
 
-	TestMsgS(ti, "Testing M_Matrix routines:");
-	TestMsgS(ti, AG_Printf("M=%[M]", M));
+	TestMsgS(ti, AG_Printf("\tM=%[M]", M));
 	
 	M_Free(M);
 }
@@ -241,32 +244,50 @@ TestMatrix(AG_TestInstance *ti)
 static void
 TestMatrix44(AG_TestInstance *ti)
 {
-	M_Matrix44 A, B, BA, BAinv;
+	M_Matrix44 A, B, AB, ABinv, ABt, Rot, UniScale;
+	M_Vector3 b3, Ab3;
+	M_Vector4 b4, Ab4;
 
 	M_MatIdentity44v(&A);
 	M_MatIdentity44v(&B);
-	A.m[0][1] = 3.33;
-	A.m[1][0] = 2.0;
-	B.m[1][1] = 10.0;
-	BA = M_MatMult44(B, A);
-	BAinv = M_MatInvert44(BA);
+	A.m[0][1] = 2.0;	A.m[1][0] = 3.0;	A.m[0][2] = 4.0;
+	A.m[2][0] = 5.0;	A.m[0][3] = 6.0;	A.m[3][0] = 7.0;
+	B.m[1][1] = 10.0;	B.m[1][2] = 0.1;	B.m[2][1] = 0.2;
+	AB = M_MatMult44(B, A);
+	ABinv = M_MatInvert44(AB);
+	ABt = M_MatTranspose44(AB);
+	b3 = M_VECTOR3(1,2,3);
+	Ab3 = M_MatMult44Vector3(A, b3);
+	b4 = M_VECTOR4(1,2,3,4);
+	Ab4 = M_MatMult44Vector4(A, b4);
 
-	TestMsgS(ti, "Testing M_Matrix44 routines:");
-	TestMsgS(ti, AG_Printf("A=%[M44]", &A));
-	TestMsgS(ti, AG_Printf("B=%[M44]", &B));
-	TestMsgS(ti, AG_Printf("BA=%[M44]", &BA));
-	TestMsgS(ti, AG_Printf("BA inverse = %[M44]", &BAinv));
+	Rot = M_MatIdentity44();
+	UniScale = M_MatIdentity44();
+	M_MatRotateAxis44(&Rot, M_Radians(33.0),
+	    M_VecNorm3(M_VECTOR3(11.6, 4.51, 8.5)));
+	M_MatUniScale44(&UniScale, 6.66);
+
+	TestMsgS(ti, AG_Printf("\tA=%[M44]", &A));
+	TestMsgS(ti, AG_Printf("\tB=%[M44]", &B));
+	TestMsgS(ti, AG_Printf("\tAB=%[M44]", &AB));
+	TestMsgS(ti, AG_Printf("\tinv(AB)=%[M44]", &ABinv));
+	TestMsgS(ti, AG_Printf("\ttranspose(AB)= %[M44]", &ABt));
+	TestMsgS(ti, AG_Printf("\tb3=%[V3], Ab3 = %[V3]", &b3, &Ab3));
+	TestMsgS(ti, AG_Printf("\tb4=%[V4], Ab4 = %[V4]", &b4, &Ab4));
+	TestMsgS(ti, AG_Printf("\tRot=%[M44]", &Rot));
+	TestMsgS(ti, AG_Printf("\tUniScale=%[M44]", &UniScale));
 }
 
 static int
 Test(void *obj)
 {
 	AG_TestInstance *ti = obj;
+	const M_VectorOps3 *prevVecOps3 = mVecOps3;
+	const M_MatrixOps44 *prevMatOps44 = mMatOps44;
 
-	/*
-	 * Display build settings
-	 */
-	TestMsg(ti, "Agar-Math compilation settings:");
+	TestMsg(ti, "Agar-Math settings:");
+
+	/* Standard Precision */
 #if defined(QUAD_PRECISION)
 	TestMsg(ti, "\tPrecision: Quad");
 #elif defined(DOUBLE_PRECISION)
@@ -274,46 +295,56 @@ Test(void *obj)
 #elif defined(SINGLE_PRECISION)
 	TestMsg(ti, "\tPrecision: Single");
 #endif
+
+	/* AltiVec support */
 #if defined(HAVE_ALTIVEC)
 	TestMsg(ti, "\tAltiVec support is available");
 # if defined(INLINE_ALTIVEC)
-	TestMsg(ti, "\tAltiVec extensions are compiled inline");
-# endif
-#endif
-#if defined(HAVE_SSE3)
-	TestMsg(ti, "\tSSE3 extensions are available");
-# if defined(INLINE_SSE3)
-	TestMsg(ti, "\tSSE3 extensions are compiled inline");
-# endif
-#elif defined(HAVE_SSE2)
-	TestMsg(ti, "\tSSE2 extensions are available");
-# if defined(INLINE_SSE2)
-	TestMsg(ti, "\tSSE2 extensions are compiled inline");
-# endif
-#elif defined(HAVE_SSE)
-	TestMsg(ti, "\tSSE extensions are available");
-# if defined(INLINE_SSE)
-	TestMsg(ti, "\tSSE extensions are compiled inline");
+	TestMsg(ti, "\tAltiVec extensions are compiled INLINE");
 # endif
 #endif
 
-	/*
-	 * Display runtime settings
-	 */
-	TestMsg(ti, "Agar-Math runtime settings:");
+	/* SSE support */
+#if defined(HAVE_SSE3)
+	TestMsg(ti, "\tSSE3 extensions are available");
+#elif defined(HAVE_SSE2)
+	TestMsg(ti, "\tSSE2 extensions are available");
+#elif defined(HAVE_SSE)
+	TestMsg(ti, "\tSSE extensions are available");
+#endif
+#if defined(INLINE_SSE)
+	TestMsg(ti, "\tSSE extensions are compiled INLINE");
+#endif
+
 	TestMsg(ti, "\tM_Vector engine: %s", mVecOps->name);
 	TestMsg(ti, "\tM_Vector2 engine: %s", mVecOps2->name);
 	TestMsg(ti, "\tM_Vector3 engine: %s", mVecOps3->name);
 	TestMsg(ti, "\tM_Vector4 engine: %s", mVecOps4->name);
 	TestMsg(ti, "\tM_Matrix engine: %s", mMatOps->name);
 	TestMsg(ti, "\tM_Matrix44 engine: %s", mMatOps44->name);
+	TestMsgS(ti, "");
+	
+	mVecOps3 = &mVecOps3_FPU;
+	mMatOps44 = &mMatOps44_FPU;
+	TestMsg(ti, "M_Complex Test (FPU):");	TestComplex(ti);
+	TestMsg(ti, "M_Vector Test (FPU):");	TestVector(ti);
+	TestMsg(ti, "M_Matrix Test (FPU):");	TestMatrix(ti);
+	TestMsg(ti, "M_Vector3 Test (FPU):");	TestVector3(ti);
+	TestMsg(ti, "M_Matrix44 Test (FPU):");	TestMatrix44(ti);
 
-	TestComplex(ti);
-	TestVector(ti);
-	TestVector3(ti);
-	TestMatrix(ti);
-	TestMatrix44(ti);
+#if defined(HAVE_SSE)
+	mVecOps3 = &mVecOps3_SSE;
+	mMatOps44 = &mMatOps44_SSE;
+	TestMsgS(ti, "");
+	TestMsgS(ti, "M_Complex Test (SSE):");	TestComplex(ti);
+	TestMsgS(ti, "M_Vector Test (SSE):");	TestVector(ti);
+	TestMsgS(ti, "M_Matrix Test (SSE):");	TestMatrix(ti);
+	TestMsgS(ti, "M_Vector3 Test (SSE):");	TestVector3(ti);
+	TestMsgS(ti, "M_Matrix44 Test (SSE):");	TestMatrix44(ti);
+#endif /* HAVE_SSE */
 
+	mMatOps44 = prevMatOps44;
+	mVecOps3 = prevVecOps3;
 	return (0);
 }
 
@@ -322,29 +353,29 @@ Bench(void *obj)
 {
 	AG_TestInstance *ti = obj;
 	const M_VectorOps3 *prevVecOps3 = mVecOps3;
+	const M_MatrixOps44 *prevMatOps44 = mMatOps44;
 
-#if defined(INLINE_SSE) || defined(INLINE_SSE2) || defined(INLINE_SSE3)
-	TestMsg(ti, "M_Vector3 Microbenchmark (Inline SSE):");
+#if defined(INLINE_SSE)
+	TestMsg(ti, "M_Vector3 Microbenchmark (INLINE SSE):");
 	TestExecBenchmark(obj, &mathBenchVector3);
-#else
-	TestMsg(ti, "M_Vector3 Microbenchmark (FPU):");
+#else /* !INLINE_SSE */
 	mVecOps3 = &mVecOps3_FPU;
+	mMatOps44 = &mMatOps44_FPU;
+	TestMsg(ti, "M_Vector3 Microbenchmark (FPU):");
 	TestExecBenchmark(obj, &mathBenchVector3);
-# if defined(HAVE_SSE3)
-	TestMsg(ti, "M_Vector3 Microbenchmark (SSE3):");
-	mVecOps3 = &mVecOps3_SSE3;
-	TestExecBenchmark(obj, &mathBenchVector3);
-# elif defined(HAVE_SSE2)
-	TestMsg(ti, "M_Vector3 Microbenchmark (SSE2):");
-	mVecOps3 = &mVecOps3_SSE2;
-	TestExecBenchmark(obj, &mathBenchVector3);
-# elif defined(HAVE_SSE)
-	TestMsg(ti, "M_Vector3 Microbenchmark (SSE):");
+	TestMsg(ti, "M_Matrix44 Microbenchmark (FPU):");
+	TestExecBenchmark(obj, &mathBenchMatrix44);
+# ifdef HAVE_SSE
 	mVecOps3 = &mVecOps3_SSE;
+	mMatOps44 = &mMatOps44_SSE;
+	TestMsg(ti, "M_Vector3 Microbenchmark (SSE):");
 	TestExecBenchmark(obj, &mathBenchVector3);
+	TestMsg(ti, "M_Matrix44 Microbenchmark (SSE):");
+	TestExecBenchmark(obj, &mathBenchMatrix44);
 # endif
-#endif /* INLINE_SSE */
+#endif /* !INLINE_SSE */
 
+	mMatOps44 = prevMatOps44;
 	mVecOps3 = prevVecOps3;
 	return (0);
 }

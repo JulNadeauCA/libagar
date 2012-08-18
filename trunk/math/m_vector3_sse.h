@@ -39,159 +39,336 @@ M_VectorGet3_SSE(M_Real x, M_Real y, M_Real z)
 {
 	M_Vector3 v;
 
-	v.m128 = _mm_set_ps(0.0, z, y, x);
+	v.m128 = _mm_set_ps(0.0f, z, y, x);
 	return (v);
 }
 
-/* TODO */
+static __inline__ void
+M_VectorSet3_SSE(M_Vector3 *v, M_Real x, M_Real y, M_Real z)
+{
+	v->m128 = _mm_set_ps(0.0f, z, y, x);
+}
+
+static __inline__ void
+M_VectorCopy3_SSE(M_Vector3 *vDst, const M_Vector3 *vSrc)
+{
+	vDst->m128 = vSrc->m128;
+}
+
 static __inline__ M_Vector3
-M_VectorMirror3_SSE(M_Vector3 a, int x, int y, int z)
+M_VectorFlip3_SSE(M_Vector3 a)
 {
 	M_Vector3 b;
 
-	b.x = x ? -a.x : a.x;
-	b.y = y ? -a.y : a.y;
-	b.z = z ? -a.z : a.z;
+	b.m128 = _mm_mul_ps(a.m128, _mm_set1_ps(-1.0f));
 	return (b);
 }
 
-/* TODO */
-static __inline__ M_Vector3
-M_VectorMirror3p_SSE(const M_Vector3 *a, int x, int y, int z)
+static __inline__ M_Real
+M_VectorLen3_SSE(M_Vector3 v)
 {
-	M_Vector3 b;
+	__m128 r1, r2, r3;
+	float len;
+	
+	r1 = _mm_mul_ps(v.m128, v.m128);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	_mm_store_ss(&len, r3);
+	return (M_Real)len;
+}
 
-	b.x = x ? -(a->x) : a->x;
-	b.y = y ? -(a->y) : a->y;
-	b.z = z ? -(a->z) : a->z;
-	return (b);
+static __inline__ M_Real
+M_VectorLen3p_SSE(const M_Vector3 *v)
+{
+	__m128 r1, r2, r3;
+	float len;
+	
+	r1 = _mm_mul_ps(v->m128, v->m128);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	_mm_store_ss(&len, r3);
+	return (M_Real)len;
+}
+
+static __inline__ M_Real
+M_VectorDot3_SSE(M_Vector3 a, M_Vector3 b)
+{
+#ifdef HAVE_SSE3
+	float dot;
+	__m128 r;
+
+	r = _mm_mul_ps(a.m128, b.m128);		/* [ aXbX; aYbY; aZbZ; 0] */
+	r = _mm_hadd_ps(r, r);			/* [ aXbX+aYbY; aZbZ+0; ...] */
+	r = _mm_hadd_ps(r, r);			/* [ aXbX+aYbY+aZbZ; ...] */
+	_mm_store_ss(&dot, r);
+	return (M_Real)dot;
+#else
+	return (a.x*b.x + a.y*b.y + a.z*b.z);
+#endif
+}
+static __inline__ M_Real
+M_VectorDot3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+{
+#ifdef HAVE_SSE3
+	float dot;
+	__m128 r;
+
+	r = _mm_mul_ps(a->m128, b->m128);	/* [ aXbX; aYbY; aZbZ; 0] */
+	r = _mm_hadd_ps(r, r);			/* [ aXbX+aYbY; aZbZ+0; ...] */
+	r = _mm_hadd_ps(r, r);			/* [ aXbX+aYbY+aZbZ; ...] */
+	_mm_store_ss(&dot, r);
+	return (M_Real)dot;
+#else
+	return (a->x*b->x + a->y*b->y + a->z*b->z);
+#endif
 }
 
 static __inline__ M_Vector3
 M_VectorNorm3_SSE(M_Vector3 v)
 {
-	__m128 a, b, rsqrt, lenr;
-	M_Vector3 n;
+	__m128 r1, r2, r3;
+	M_Vector3 out;
 
-	a = _mm_mul_ps(v.m128, v.m128);
-	b = _mm_add_ss(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(a,a,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(a,a,_MM_SHUFFLE(2,2,2,2))));
-	rsqrt	= _mm_rsqrt_ss(b);
-	lenr	= _mm_shuffle_ps(rsqrt, rsqrt, _MM_SHUFFLE(0,0,0,0));
-	n.m128	= _mm_mul_ps(n.m128, lenr);
-	return (n);
+	/* Compute length */
+	r1 = _mm_mul_ps(v.m128, v.m128);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	/* Divide by length */
+	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
+	out.m128 = _mm_div_ps(v.m128, r3);
+	return (out);
 }
-
 static __inline__ M_Vector3
 M_VectorNorm3p_SSE(const M_Vector3 *v)
 {
-	__m128 a, b, rsqrt, lenr;
-	M_Vector3 n;
+	__m128 r1, r2, r3;
+	M_Vector3 out;
 
-	a = _mm_mul_ps(v->m128, v->m128);
-	b = _mm_add_ss(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(a,a,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(a,a,_MM_SHUFFLE(2,2,2,2))));
-	rsqrt	= _mm_rsqrt_ss(b);
-	lenr	= _mm_shuffle_ps(rsqrt, rsqrt, _MM_SHUFFLE(0,0,0,0));
-	n.m128	= _mm_mul_ps(n.m128, lenr);
-	return (n);
+	/* Compute length */
+	r1 = _mm_mul_ps(v->m128, v->m128);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	/* Divide by length */
+	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
+	out.m128 = _mm_div_ps(v->m128, r3);
+	return (out);
+}
+static __inline__ void
+M_VectorNorm3v_SSE(M_Vector3 *v)
+{
+	__m128 r1, r2, r3;
+	
+	/* Compute length */
+	r1 = _mm_mul_ps(v->m128, v->m128);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	/* Divide by length */
+	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
+	v->m128 = _mm_div_ps(v->m128, r3);
+}
+
+static __inline__ M_Vector3
+M_VectorCross3_SSE(M_Vector3 a, M_Vector3 b)
+{
+	__m128 rA, rB, r1, r2;
+	M_Vector3 out;
+
+	rA = a.m128;
+	rB = b.m128;
+	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,1,0,2)));
+	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
+	out.m128 = _mm_sub_ps(r1, r2);
+	return (out);
+}
+static __inline__ M_Vector3
+M_VectorCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+{
+	__m128 rA, rB, r1, r2;
+	M_Vector3 out;
+
+	rA = a->m128;
+	rB = b->m128;
+	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,1,0,2)));
+	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
+	out.m128 = _mm_sub_ps(r1, r2);
+	return (out);
+}
+
+static __inline__ M_Vector3
+M_VectorNormCross3_SSE(M_Vector3 a, M_Vector3 b)
+{
+	__m128 rA, rB, r1, r2, r3;
+	M_Vector3 out;
+
+	/* Cross product */
+	rA = a.m128;
+	rB = b.m128;
+	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,1,0,2)));
+	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
+	r3 = _mm_sub_ps(r1, r2);
+	/* Normalize */
+	r1 = _mm_mul_ps(r3, r3);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r1 = _mm_sqrt_ss(r2);
+	r1 = _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0));
+	out.m128 = _mm_div_ps(r3, r1);
+	return (out);
+}
+static __inline__ M_Vector3
+M_VectorNormCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+{
+	__m128 rA, rB, r1, r2, r3;
+	M_Vector3 out;
+
+	/* Cross product */
+	rA = a->m128;
+	rB = b->m128;
+	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,1,0,2)));
+	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
+	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
+	r3 = _mm_sub_ps(r1, r2);
+	/* Normalize */
+	r1 = _mm_mul_ps(r3, r3);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r1 = _mm_sqrt_ss(r2);
+	r1 = _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0));
+	out.m128 = _mm_div_ps(r3, r1);
+	return (out);
 }
 
 static __inline__ M_Vector3
 M_VectorScale3_SSE(M_Vector3 a, M_Real c)
 {
-	M_Vector3 b;
-	__m128 vs;
-
-	vs = _mm_set1_ps(c);
-	b.m128 = _mm_mul_ps(a.m128, vs);
-	return (b);
+	M_Vector3 out;
+	out.m128 = _mm_mul_ps(a.m128, _mm_set1_ps(c));
+	return (out);
 }
-
 static __inline__ M_Vector3
 M_VectorScale3p_SSE(const M_Vector3 *a, M_Real c)
 {
-	M_Vector3 b;
-
-	b.m128 = _mm_mul_ps(a->m128, _mm_set1_ps(c));
-	return (b);
+	M_Vector3 out;
+	out.m128 = _mm_mul_ps(a->m128, _mm_set1_ps(c));
+	return (out);
+}
+static __inline__ void
+M_VectorScale3v_SSE(M_Vector3 *a, M_Real c)
+{
+	a->m128 = _mm_mul_ps(a->m128, _mm_set1_ps(c));
 }
 
 static __inline__ M_Vector3
 M_VectorAdd3_SSE(M_Vector3 a, M_Vector3 b)
 {
-	M_Vector3 c;
-
-	c.m128 = _mm_add_ps(a.m128, b.m128);
-	return (c);
+	M_Vector3 out;
+	out.m128 = _mm_add_ps(a.m128, b.m128);
+	return (out);
 }
-
 static __inline__ M_Vector3
 M_VectorAdd3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 {
-	M_Vector3 c;
-
-	c.m128 = _mm_add_ps(a->m128, b->m128);
-	return (c);
+	M_Vector3 out;
+	out.m128 = _mm_add_ps(a->m128, b->m128);
+	return (out);
+}
+static __inline__ void
+M_VectorAdd3v_SSE(M_Vector3 *r, const M_Vector3 *a)
+{
+	r->m128 = _mm_add_ps(r->m128, a->m128);
 }
 
 static __inline__ M_Vector3
 M_VectorSub3_SSE(M_Vector3 a, M_Vector3 b)
 {
-	M_Vector3 c;
-
-	c.m128 = _mm_sub_ps(a.m128, b.m128);
-	return (c);
+	M_Vector3 out;
+	out.m128 = _mm_sub_ps(a.m128, b.m128);
+	return (out);
 }
-
 static __inline__ M_Vector3
 M_VectorSub3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 {
-	M_Vector3 c;
-
-	c.m128 = _mm_sub_ps(a->m128, b->m128);
-	return (c);
+	M_Vector3 out;
+	out.m128 = _mm_sub_ps(a->m128, b->m128);
+	return (out);
+}
+static __inline__ void
+M_VectorSub3v_SSE(M_Vector3 *r, const M_Vector3 *a)
+{
+	r->m128 = _mm_sub_ps(r->m128, a->m128);
 }
 
-/* TODO */
 static __inline__ M_Real
 M_VectorDistance3_SSE(M_Vector3 a, M_Vector3 b)
 {
-	return M_VectorLen3_FPU(M_VectorSub3_SSE(a,b));
+	__m128 r1, r2, r3;
+	float dist;
+
+	r1 = _mm_sub_ps(a.m128, b.m128);
+	r1 = _mm_mul_ps(r1, r1);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	_mm_store_ss(&dist, r3);
+	return (M_Real)dist;
 }
 
-/* TODO */
 static __inline__ M_Real
 M_VectorDistance3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 {
-	return M_VectorLen3_FPU(M_VectorAdd3_SSE(*b,
-	                        M_VectorMirror3p_SSE(a,1,1,1)));
+	__m128 r1, r2, r3;
+	float dist;
+
+	r1 = _mm_sub_ps(a->m128, b->m128);
+	r1 = _mm_mul_ps(r1, r1);
+	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	r3 = _mm_sqrt_ss(r2);
+	_mm_store_ss(&dist, r3);
+	return (M_Real)dist;
 }
 
-/* TODO */
 static __inline__ M_Vector3
 M_VectorAvg3_SSE(M_Vector3 a, M_Vector3 b)
 {
-	M_Vector3 c;
+	__m128 r1;
+	M_Vector3 out;
 	
-	c.x = (a.x + b.x)/2.0;
-	c.y = (a.y + b.y)/2.0;
-	c.z = (a.z + b.z)/2.0;
-	return (c);
+	r1 = _mm_add_ps(a.m128, b.m128);
+	out.m128 = _mm_div_ps(r1, _mm_set1_ps(2.0f));
+	return (out);
 }
 
-/* TODO */
 static __inline__ M_Vector3
 M_VectorAvg3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 {
-	M_Vector3 c;
+	__m128 r1;
+	M_Vector3 out;
 	
-	c.x = (a->x + b->x)/2.0;
-	c.y = (a->y + b->y)/2.0;
-	c.z = (a->z + b->z)/2.0;
-	return (c);
+	r1 = _mm_add_ps(a->m128, b->m128);
+	out.m128 = _mm_div_ps(r1, _mm_set1_ps(2.0f));
+	return (out);
 }
 
 /* TODO */
@@ -208,42 +385,6 @@ M_VectorVecAngle3_SSE(M_Vector3 vOrig, M_Vector3 vOther, M_Real *theta,
 	if (phi != NULL) {
 		*phi = M_Atan2(M_Sqrt(vd.x*vd.x + vd.y*vd.y), vd.z);
 	}
-}
-
-/* TODO */
-static __inline__ M_Vector3
-M_VectorRotateI3_SSE(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = a.x;
-	b.y = (a.y * M_Cos(theta)) + (a.z * -M_Sin(theta));
-	b.z = (a.y * M_Sin(theta)) + (a.z *  M_Cos(theta));
-	return (b);
-}
-
-/* TODO */
-static __inline__ M_Vector3
-M_VectorRotateJ3_SSE(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = (a.x *  M_Cos(theta)) + (a.z * M_Sin(theta));
-	b.y = a.y;
-	b.z = (a.x * -M_Sin(theta)) + (a.z * M_Cos(theta));
-	return (b);
-}
-
-/* TODO */
-static __inline__ M_Vector3
-M_VectorRotateK3_SSE(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = (a.x * M_Cos(theta)) + (a.y * -M_Sin(theta));
-	b.y = (a.x * M_Sin(theta)) + (a.y *  M_Cos(theta));
-	b.z = a.z;
-	return (b);
 }
 
 /* TODO */
@@ -281,15 +422,25 @@ M_VectorElemPow3_SSE(M_Vector3 v, M_Real p)
 	r.z = M_Pow(v.z, p);
 	return (r);
 }
+
+static __inline__ M_Vector3
+M_VectorSum3_SSE(const M_Vector3 *va, Uint count)
+{
+	__m128 r1;
+	M_Vector3 out;
+	int i;
+
+	r1 = _mm_setzero_ps();
+	for (i = 0; i < count; i++) {
+		r1 = _mm_add_ps(r1, va[i].m128);
+	}
+	out.m128 = r1;
+	return (out);
+}
 __END_DECLS
 
 __BEGIN_DECLS
 extern const M_VectorOps3 mVecOps3_SSE;
-
-M_Vector3	M_VectorRotate3_SSE(M_Vector3, M_Real, M_Vector3);
-void		M_VectorRotate3v_SSE(M_Vector3 *, M_Real, M_Vector3);
-M_Vector3	M_VectorRotateQuat3_SSE(M_Vector3, M_Quaternion);
-M_Vector3	M_VectorSum3_SSE(const M_Vector3 *, Uint);
 __END_DECLS
 
 #endif /* HAVE_SSE */

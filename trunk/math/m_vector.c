@@ -41,14 +41,9 @@ M_VectorInitEngine(void)
 	mVecOps2 = &mVecOps2_FPU;
 	mVecOps3 = &mVecOps3_FPU;
 	mVecOps4 = &mVecOps4_FPU;
-
 #ifdef HAVE_SSE
-	if (HasSSE())
+	if (agCPU.ext & AG_EXT_SSE)
 		mVecOps3 = &mVecOps3_SSE;
-#endif
-#ifdef HAVE_SSE3
-	if (HasSSE3())
-		mVecOps3 = &mVecOps3_SSE3;
 #endif
 }
 
