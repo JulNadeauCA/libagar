@@ -32,6 +32,7 @@
 #include "menu.h"
 #include "editable.h"
 #include "file_dlg.h"
+#include "gui_math.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -76,7 +77,7 @@ ScrollDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 
-	if ((cons->rOffs + 1) < (cons->nLines - cons->rVisible + 2)) {
+	if ((cons->rOffs + 1) <= (cons->nLines - cons->rVisible)) {
 		cons->rOffs++;
 		AG_Redraw(cons);
 	}
@@ -86,30 +87,30 @@ static void
 PageUp(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-	
-	if (((int)cons->rOffs - (int)cons->rVisible) >= 0) {
-		cons->rOffs -= cons->rVisible;
-	} else {
-		cons->rOffs = 0;
+	int offsNew = (int)cons->rOffs - (int)cons->rVisible;
+
+	if (offsNew < 0) {
+		offsNew = 0;
 	}
-	AG_Redraw(cons);
+	if (cons->rOffs != offsNew) {
+		cons->rOffs = (Uint)offsNew;
+		AG_Redraw(cons);
+	}
 }
 
 static void
 PageDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-
-	if ((cons->rOffs + cons->rVisible) <
-	    (cons->nLines - cons->rVisible + 2)) {
-		cons->rOffs += cons->rVisible;
-	} else {
-		int v;
-		v = cons->nLines - cons->rVisible;
-		if (v < 0) { v = 0; }
-		cons->rOffs = v;
+	int offsNew = (int)cons->rOffs + (int)cons->rVisible;
+	
+	if (offsNew > (cons->nLines - cons->rVisible))  {
+		offsNew = MAX(0, cons->nLines - cons->rVisible);
 	}
-	AG_Redraw(cons);
+	if (cons->rOffs != offsNew) {
+		cons->rOffs = (Uint)offsNew;
+		AG_Redraw(cons);
+	}
 }
 
 static void
@@ -364,17 +365,18 @@ Init(void *obj)
 	cons->nLines = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
-	cons->cBg = AG_ColorRGB(0,0,0);
-	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
-	cons->vBar->maxOffs = +2;
+	cons->cBg = AG_ColorRGB(20,20,20);
 	cons->pm = NULL;
-
 	cons->pos = -1;
 	cons->sel = 0;
-
 	cons->r = AG_RECT(0,0,0,0);
 	cons->font = agDefaultFont;
 	cons->scrollTo = NULL;
+
+	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
+	    AG_SCROLLBAR_AUTOSIZE);
+/*	cons->vBar->maxOffs = +1; */
+	AG_WidgetSetFocusable(cons->vBar, 0);
 
 	AG_BindUint(cons->vBar, "value", &cons->rOffs);
 	AG_BindUint(cons->vBar, "max", &cons->nLines);
@@ -387,7 +389,6 @@ Init(void *obj)
 	AG_ActionFn(cons, "ScrollDown",	ScrollDown, NULL);
 	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
 	AG_ActionFn(cons, "PageDown",   PageDown, NULL);
-
 	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "BeginSelect");
 	AG_ActionOnButtonUp(cons, AG_MOUSE_LEFT, "CloseSelect");
 
@@ -399,7 +400,6 @@ Init(void *obj)
 	AG_ActionOnKey(cons, AG_KEY_DOWN, AG_KEYMOD_ANY, "ScrollDown");
 	AG_ActionOnKey(cons, AG_KEY_PAGEUP, AG_KEYMOD_ANY, "PageUp");
 	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
-	
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
 
 #ifdef AG_DEBUG
@@ -416,6 +416,13 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
 	r->h *= 2;
+}
+
+static void
+ComputeVisible(AG_Console *cons)
+{
+	cons->rVisible = (int)AG_Floor((float)(cons->r.h - cons->padding*2) /
+	                               (float)cons->lineskip);
 }
 
 static int
@@ -436,7 +443,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
-	cons->rVisible = a->h / cons->font->height;
+	ComputeVisible(cons);
 	ClampVisible(cons);
 	return (0);
 }
@@ -535,9 +542,9 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 
 	AG_ObjectLock(cons);
 	cons->font = (font != NULL) ? font : agDefaultFont;
-	cons->rVisible = HEIGHT(cons) / cons->font->height;
 	cons->lineskip = cons->font->lineskip + 1;
 	cons->rOffs = 0;
+	ComputeVisible(cons);
 
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = &cons->lines[i];
