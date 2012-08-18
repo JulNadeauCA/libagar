@@ -16,31 +16,30 @@ double vDbl = 1.0, minDbl = -1e6, maxDbl = 1e6, visDbl = 0.0;
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_Label *lbl;
 	AG_Scrollbar *sb;
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Int binding: %d", &vInt);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Int binding: %d", &vInt);
 	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &vInt, &minInt, &maxInt, &visInt);
 	AG_ScrollbarSetIntIncrement(sb, 100);
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Uint binding: %d", &vUint);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Uint binding: %d", &vUint);
 	sb = AG_ScrollbarNewUint(win, AG_SCROLLBAR_HORIZ, AG_LABEL_HFILL,
 	    &vUint, &minUint, &maxUint, &visUint);
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "8-bit binding: %[s8]", &v8);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "8-bit binding: %[s8]", &v8);
 	sb = AG_ScrollbarNewSint8(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &v8, &min8, &max8, &vis8);
 	
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "32-bit binding: %[u32]", &v32);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "32-bit binding: %[u32]", &v32);
 	sb = AG_ScrollbarNewUint32(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &v32, &min32, &max32, &vis32);
 
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Float binding: %f", &vFlt);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Float binding: %f", &vFlt);
 	sb = AG_ScrollbarNewFloat(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &vFlt, &minFlt, &maxFlt, &visFlt);
 	
-	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Double binding: %lf", &vDbl);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Double binding: %lf", &vDbl);
 	sb = AG_ScrollbarNewDouble(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
 	    &vDbl, &minDbl, &maxDbl, &visDbl);
 

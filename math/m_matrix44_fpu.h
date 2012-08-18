@@ -310,216 +310,6 @@ M_MatrixTranspose44v_FPU(M_Matrix44 *M)
 	M_MatrixCopy44_FPU(M, &T);
 }
 
-static __inline__ void
-M_MatrixRotateAxis44_FPU(M_Matrix44 *M, M_Real theta, M_Vector3 A)
-{
-	M_Real s = M_Sin(theta);
-	M_Real c = M_Cos(theta);
-	M_Real t = 1.0 - c;
-	M_Matrix44 R;
-
-	R.m[0][0] = t*A.x*A.x + c;
-	R.m[0][1] = t*A.x*A.y + s*A.z;
-	R.m[0][2] = t*A.x*A.z - s*A.y;
-	R.m[0][3] = 0.0;
-	R.m[1][0] = t*A.x*A.y - s*A.z;
-	R.m[1][1] = t*A.y*A.y + c;
-	R.m[1][2] = t*A.y*A.z + s*A.x;
-	R.m[1][3] = 0.0;
-	R.m[2][0] = t*A.x*A.z + s*A.y;
-	R.m[2][1] = t*A.y*A.z - s*A.x;
-	R.m[2][2] = t*A.z*A.z + c;
-	R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0;
-	R.m[3][1] = 0.0;
-	R.m[3][2] = 0.0;
-	R.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &R);
-}
-
-static __inline__ void
-M_MatrixTranslate44_FPU(M_Matrix44 *M, M_Vector3 v)
-{
-	M_Matrix44 T;
-
-	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = v.x;
-	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = v.y;
-	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = v.z;
-	T.m[3][0] = 0.0; T.m[3][1] = 0.0; T.m[3][2] = 0.0; T.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &T);
-}
-
-static __inline__ void
-M_MatrixTranslate344_FPU(M_Matrix44 *M, M_Real x, M_Real y, M_Real z)
-{
-	M_Matrix44 T;
-
-	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = x;
-	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = y;
-	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = z;
-	T.m[3][0] = 0.0; T.m[3][1] = 0.0; T.m[3][2] = 0.0; T.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &T);
-}
-
-static __inline__ void
-M_MatrixOrbitAxis44_FPU(M_Matrix44 *M, M_Vector3 p, M_Vector3 A, M_Real theta)
-{
-	M_Matrix44 R;
-	M_Real s = M_Sin(theta);
-	M_Real c = M_Cos(theta);
-	M_Real t = 1.0 - c;
-
-	R.m[0][0] = t*A.x*A.x + c;
-	R.m[0][1] = t*A.x*A.y + s*A.z;
-	R.m[0][2] = t*A.x*A.z - s*A.y;
-	R.m[0][3] = 0.0;
-	R.m[1][0] = t*A.x*A.y - s*A.z;
-	R.m[1][1] = t*A.y*A.y + c;
-	R.m[1][2] = t*A.y*A.z + s*A.x;
-	R.m[1][3] = 0.0;
-	R.m[2][0] = t*A.x*A.z + s*A.y;
-	R.m[2][1] = t*A.y*A.z - s*A.x;
-	R.m[2][2] = t*A.z*A.z + c;
-	R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0;
-	R.m[3][1] = 0.0;
-	R.m[3][2] = 0.0;
-	R.m[3][3] = 1.0;
-
-	M_MatrixTranslate344_FPU(M, -p.x, -p.y, -p.z);
-	M_MatrixMult44v_FPU(M, &R);
-	M_MatrixTranslate44_FPU(M, p);
-}
-
-static __inline__ void
-M_MatrixRotateEul44_FPU(M_Matrix44 *M, M_Real pitch, M_Real roll, M_Real yaw)
-{
-	M_Matrix44 R;
-
-	R.m[0][0] =  M_Cos(yaw)*M_Cos(roll) +
-	             M_Sin(yaw)*M_Sin(pitch)*M_Sin(roll);
-	R.m[0][1] =  M_Sin(yaw)*M_Cos(roll) -
-	             M_Cos(yaw)*M_Sin(pitch)*M_Sin(roll);
-	R.m[0][2] =  M_Cos(pitch)*M_Sin(roll);
-	R.m[0][3] =  0.0;
-	R.m[1][0] = -M_Sin(yaw)*M_Cos(pitch);
-	R.m[1][1] =  M_Cos(yaw)*M_Cos(pitch);
-	R.m[1][2] =  M_Sin(pitch);
-	R.m[1][3] =  0.0;
-	R.m[2][0] =  M_Sin(yaw)*M_Sin(pitch)*M_Cos(roll) -
-	             M_Cos(yaw)*M_Sin(roll);
-	R.m[2][1] = -M_Cos(yaw)*M_Sin(pitch)*M_Cos(roll) -
-	             M_Sin(yaw)*M_Sin(roll);
-	R.m[2][2] =  M_Cos(pitch)*M_Cos(roll);
-	R.m[2][3] =  0.0;
-	R.m[3][0] =  0.0;
-	R.m[3][1] =  0.0;
-	R.m[3][2] =  0.0;
-	R.m[3][3] =  1.0;
-	M_MatrixMult44v_FPU(M, &R);
-}
-
-static __inline__ void
-M_MatrixRotate44I_FPU(M_Matrix44 *M, M_Real theta)
-{
-	M_Real s = M_Sin(theta);
-	M_Real c = M_Cos(theta);
-	M_Matrix44 R;
-
-	R.m[0][0] = 1.0; R.m[0][1] = 0.0; R.m[0][2] = 0.0; R.m[0][3] = 0.0;
-	R.m[1][0] = 0.0; R.m[1][1] = c;   R.m[1][2] = -s;  R.m[1][3] = 0.0;
-	R.m[2][0] = 0.0; R.m[2][1] = s;   R.m[2][2] = c;   R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0; R.m[3][1] = 0.0; R.m[3][2] = 0.0; R.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &R);
-}
-
-static __inline__ void
-M_MatrixRotate44J_FPU(M_Matrix44 *M, M_Real theta)
-{
-	M_Real s = M_Sin(theta);
-	M_Real c = M_Cos(theta);
-	M_Matrix44 R;
-
-	R.m[0][0] = c;   R.m[0][1] = 0.0; R.m[0][2] = s;   R.m[0][3] = 0.0;
-	R.m[1][0] = 0.0; R.m[1][1] = 1.0; R.m[1][2] = 0.0; R.m[1][3] = 0.0;
-	R.m[2][0] = -s;  R.m[2][1] = 0.0; R.m[2][2] = c;   R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0; R.m[3][1] = 0.0; R.m[3][2] = 0.0; R.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &R);
-}
-
-static __inline__ void
-M_MatrixRotate44K_FPU(M_Matrix44 *M, M_Real theta)
-{
-	M_Real s = M_Sin(theta);
-	M_Real c = M_Cos(theta);
-	M_Matrix44 R;
-
-	R.m[0][0] = c;   R.m[0][1] = -s;  R.m[0][2] = 0.0; R.m[0][3] = 0.0;
-	R.m[1][0] = s;   R.m[1][1] = c;   R.m[1][2] = 0.0; R.m[1][3] = 0.0;
-	R.m[2][0] = 0.0; R.m[2][1] = 0.0; R.m[2][2] = 1.0; R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0; R.m[3][1] = 0.0; R.m[3][2] = 0.0; R.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &R);
-}
-
-static __inline__ void
-M_MatrixTranslateX44_FPU(M_Matrix44 *M, M_Real x)
-{
-	M_Matrix44 T;
-
-	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = x;
-	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = 0.0;
-	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = 0.0;
-	T.m[3][0] = 0.0; T.m[3][1] = 0.0; T.m[3][2] = 0.0; T.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &T);
-}
-
-static __inline__ void
-M_MatrixTranslateY44_FPU(M_Matrix44 *M, M_Real y)
-{
-	M_Matrix44 T;
-
-	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = 0.0;
-	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = y;
-	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = 0.0;
-	T.m[3][0] = 0.0; T.m[3][1] = 0.0; T.m[3][2] = 0.0; T.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &T);
-}
-
-static __inline__ void
-M_MatrixTranslateZ44_FPU(M_Matrix44 *M, M_Real z)
-{
-	M_Matrix44 T;
-
-	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0; T.m[0][3] = 0.0;
-	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0; T.m[1][3] = 0.0;
-	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0; T.m[2][3] = z;
-	T.m[3][0] = 0.0; T.m[3][1] = 0.0; T.m[3][2] = 0.0; T.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &T);
-}
-
-static __inline__ void
-M_MatrixScale44_FPU(M_Matrix44 *M, M_Real x, M_Real y, M_Real z, M_Real w)
-{
-	M_Matrix44 S;
-
-	S.m[0][0] = x;   S.m[0][1] = 0.0; S.m[0][2] = 0.0; S.m[0][3] = 0.0;
-	S.m[1][0] = 0.0; S.m[1][1] = y;   S.m[1][2] = 0.0; S.m[1][3] = 0.0;
-	S.m[2][0] = 0.0; S.m[2][1] = 0.0; S.m[2][2] = z;   S.m[2][3] = 0.0;
-	S.m[3][0] = 0.0; S.m[3][1] = 0.0; S.m[3][2] = 0.0; S.m[3][3] = w;
-	M_MatrixMult44v_FPU(M, &S);
-}
-
-static __inline__ void
-M_MatrixUniScale44_FPU(M_Matrix44 *M, M_Real r)
-{
-	M_Matrix44 S;
-
-	S.m[0][0] = r;   S.m[0][1] = 0.0; S.m[0][2] = 0.0; S.m[0][3] = 0.0;
-	S.m[1][0] = 0.0; S.m[1][1] = r;   S.m[1][2] = 0.0; S.m[1][3] = 0.0;
-	S.m[2][0] = 0.0; S.m[2][1] = 0.0; S.m[2][2] = r;   S.m[2][3] = 0.0;
-	S.m[3][0] = 0.0; S.m[3][1] = 0.0; S.m[3][2] = 0.0; S.m[3][3] = 1.0;
-	M_MatrixMult44v_FPU(M, &S);
-}
 __END_DECLS
 
 __BEGIN_DECLS
@@ -528,5 +318,17 @@ extern const M_MatrixOps44 mMatOps44_FPU;
 M_Matrix44 M_MatrixInvert44_FPU(M_Matrix44);
 M_Matrix44 M_MatrixInvert44p_FPU(const M_Matrix44 *);
 int        M_MatrixInvertGaussJordan44v_FPU(const M_Matrix44 *, M_Matrix44 *);
-void       M_MatrixDiagonalSwap44v_FPU(M_Matrix44 *);
+void       M_MatrixRotateAxis44_FPU(M_Matrix44 *, M_Real, M_Vector3);
+void       M_MatrixTranslate44_FPU(M_Matrix44 *, M_Vector3);
+void       M_MatrixTranslate344_FPU(M_Matrix44 *, M_Real, M_Real, M_Real);
+void       M_MatrixOrbitAxis44_FPU(M_Matrix44 *, M_Vector3, M_Vector3, M_Real);
+void       M_MatrixRotateEul44_FPU(M_Matrix44 *, M_Real, M_Real, M_Real);
+void       M_MatrixRotate44I_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixRotate44J_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixRotate44K_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixTranslateX44_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixTranslateY44_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixTranslateZ44_FPU(M_Matrix44 *, M_Real);
+void       M_MatrixScale44_FPU(M_Matrix44 *, M_Real, M_Real, M_Real, M_Real);
+void       M_MatrixUniScale44_FPU(M_Matrix44 *, M_Real);
 __END_DECLS

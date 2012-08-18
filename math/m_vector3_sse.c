@@ -1,6 +1,29 @@
 /*
- * Public domain.
- * Operations on vectors in R^3 using SSE operations.
+ * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Operations on vectors in R^3 using Streaming SIMD Extensions.
  */
 
 #include <config/have_sse.h>
@@ -12,105 +35,40 @@
 
 const M_VectorOps3 mVecOps3_SSE = {
 	"sse",
-	M_VectorZero3_SSE,			/* -31 clks */
-	M_VectorGet3_SSE,			/* -8 clks */
-	M_VectorSet3_FPU,			/* +8 clks */
-	M_VectorCopy3_FPU,			/* = */
-	M_VectorMirror3_SSE,			/* TODO */
-	M_VectorMirror3p_SSE,			/* TODO */
-	M_VectorLen3_FPU,			/* = */
-	M_VectorLen3p_FPU,			/* = */
-	M_VectorDot3_FPU,			/* ? */
-	M_VectorDot3p_FPU,			/* ? */
-	M_VectorDistance3_SSE,			/* -31 clks */
-	M_VectorDistance3p_SSE,			/* -27 clks */
-	M_VectorNorm3_SSE,			/* -87 clks */
-	M_VectorNorm3p_SSE,			/* -54 clks */
-	M_VectorNorm3v_FPU,			/* +147 clks */
-	M_VectorCross3_FPU,			/* TODO */
-	M_VectorCross3p_FPU,			/* TODO */
-	M_VectorNormCross3_FPU,			/* TODO */
-	M_VectorNormCross3p_FPU,		/* TODO */
+	M_VectorZero3_SSE,			/* -16 clks */
+	M_VectorGet3_SSE,			/* = (sets w=0) */
+	M_VectorSet3_SSE,			/* = (sets w=0) */
+	M_VectorCopy3_SSE,			/* = */
+	M_VectorFlip3_SSE,			/* = */
+	M_VectorLen3_SSE,			/* = */
+	M_VectorLen3p_SSE,			/* -3 clks */
+	M_VectorDot3_SSE,			/* +14 clks (SSE3) */
+	M_VectorDot3p_SSE,			/* -4 clks (SSE3) */
+	M_VectorDistance3_SSE,			/* -55 clks */
+	M_VectorDistance3p_SSE,			/* -120 clks */
+	M_VectorNorm3_SSE,			/* -105 clks */
+	M_VectorNorm3p_SSE,			/* -87 clks */
+	M_VectorNorm3v_SSE,			/* -67 clks */
+	M_VectorCross3_SSE,			/* = */
+	M_VectorCross3p_SSE,			/* -20 clks */
+	M_VectorNormCross3_SSE,			/* -42 clks */
+	M_VectorNormCross3p_SSE,		/* -40 clks */
 	M_VectorScale3_SSE,			/* -27 clks */
 	M_VectorScale3p_SSE,			/* -15 clks */
-	M_VectorScale3v_FPU,			/* = */
+	M_VectorScale3v_SSE,			/* -29 clks */
 	M_VectorAdd3_SSE,			/* -29 clks */
 	M_VectorAdd3p_SSE,			/* -15 clks */
-	M_VectorAdd3v_FPU,			/* = */
-	M_VectorSum3_SSE,			/* TODO */
+	M_VectorAdd3v_SSE,			/* -3 clks */
+	M_VectorSum3_SSE,			/* -58 clks (100 vecs) */
 	M_VectorSub3_SSE,			/* -29 clks */
 	M_VectorSub3p_SSE,			/* -15 clks */
-	M_VectorSub3v_FPU,			/* = */
-	M_VectorAvg3_SSE,			/* TODO */
-	M_VectorAvg3p_SSE,			/* TODO */
-	M_VectorLERP3_SSE,			/* TODO */
-	M_VectorLERP3p_SSE,			/* TODO */
-	M_VectorElemPow3_SSE,			/* TODO */
-	M_VectorVecAngle3_SSE,			/* TODO */
-	M_VectorRotate3_SSE,			/* TODO */
-	M_VectorRotate3v_SSE			/* TODO */,
-	M_VectorRotateQuat3_SSE,		/* TODO */
-	M_VectorRotateI3_SSE,			/* TODO */
-	M_VectorRotateJ3_SSE,			/* TODO */
-	M_VectorRotateK3_SSE,			/* TODO */
+	M_VectorSub3v_SSE,			/* -3 clks */
+	M_VectorAvg3_SSE,			/* +11 clks */
+	M_VectorAvg3p_SSE,			/* -9 clks */
+	M_VectorLERP3_SSE,			/* */
+	M_VectorLERP3p_SSE,			/* */
+	M_VectorElemPow3_SSE,			/* */
+	M_VectorVecAngle3_SSE			/* */
 };
-
-M_Vector3
-M_VectorSum3_SSE(const M_Vector3 *va, Uint count)
-{
-	M_Vector3 c;
-	int i;
-
-	c.m128 = _mm_setzero_ps();
-	for (i = 0; i < count; i++) {
-		c.m128 = _mm_add_ps(c.m128, va[i].m128);
-	}
-	return (c);
-}
-
-M_Vector3
-M_VectorRotate3_SSE(M_Vector3 v, M_Real theta, M_Vector3 n)
-{
-	M_Vector3 r = v;
-
-	M_VectorRotate3v_SSE(&r, theta, n);
-	return (r);
-}
-
-void
-M_VectorRotate3v_SSE(M_Vector3 *v, M_Real theta, M_Vector3 n)
-{
-	M_Real s = Sin(theta);
-	M_Real c = Cos(theta);
-	M_Real t = 1.0 - c;
-	M_Matrix44 R;
-
-	R.m[0][0] = t*n.x*n.x + c;
-	R.m[0][1] = t*n.x*n.y + s*n.z;
-	R.m[0][2] = t*n.x*n.z - s*n.y;
-	R.m[0][3] = 0.0;
-	R.m[1][0] = t*n.x*n.y - s*n.z;
-	R.m[1][1] = t*n.y*n.y + c;
-	R.m[1][2] = t*n.y*n.z + s*n.x;
-	R.m[1][3] = 0.0;
-	R.m[2][0] = t*n.x*n.z + s*n.y;
-	R.m[2][1] = t*n.y*n.z - s*n.x;
-	R.m[2][2] = t*n.z*n.z + c;
-	R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0;
-	R.m[3][1] = 0.0;
-	R.m[3][2] = 0.0;
-	R.m[3][3] = 1.0;
-	M_MatMult44Vector3v(v, &R);
-}
-
-M_Vector3
-M_VectorRotateQuat3_SSE(M_Vector3 V, M_Quaternion Q)
-{
-	M_Matrix44 R;
-
-	M_QuaternionToMatrix44(&R, &Q);
-	return M_MatMult44Vector3p(&R, &V);
-}
 
 #endif /* HAVE_SSE */

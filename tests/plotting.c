@@ -187,7 +187,6 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Pane *pane;
 	AG_Numerical *num;
 	AG_Box *box;
-	AG_Button *btn;
 	int i;
 
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
@@ -256,8 +255,8 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, AG_LABEL_HFILL, "To: %lf", &To);
 
-		btn = AG_ButtonNewFn(box, AG_BUTTON_HFILL,
-		    "Generate", GeneratePlot, "%p", plt);
+		AG_ButtonNewFn(box, AG_BUTTON_HFILL, "Generate",
+		    GeneratePlot, "%p", plt);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 30);

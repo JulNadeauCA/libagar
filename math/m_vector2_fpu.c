@@ -1,6 +1,6 @@
 /*
  * Public domain.
- * Operations on vectors in R^2 using standard FPU instructions.
+ * Operations on vectors in R^2 using scalar instructions.
  */
 
 #include <core/core.h>
@@ -12,8 +12,7 @@ const M_VectorOps2 mVecOps2_FPU = {
 	M_VectorGet2_FPU,
 	M_VectorSet2_FPU,
 	M_VectorCopy2_FPU,
-	M_VectorMirror2_FPU,
-	M_VectorMirror2p_FPU,
+	M_VectorFlip2_FPU,
 	M_VectorLen2_FPU,
 	M_VectorLen2p_FPU,
 	M_VectorDot2_FPU,
@@ -40,9 +39,7 @@ const M_VectorOps2 mVecOps2_FPU = {
 	M_VectorLERP2_FPU,
 	M_VectorLERP2p_FPU,
 	M_VectorElemPow2_FPU,
-	M_VectorVecAngle2_FPU,
-	M_VectorRotate2_FPU,
-	M_VectorRotate2v_FPU
+	M_VectorVecAngle2_FPU
 };
 
 M_Vector2
@@ -80,22 +77,12 @@ M_VectorCopy2_FPU(M_Vector2 *vDst, const M_Vector2 *vSrc)
 }
 
 M_Vector2
-M_VectorMirror2_FPU(M_Vector2 a, int x, int y)
+M_VectorFlip2_FPU(M_Vector2 a)
 {
 	M_Vector2 b;
 
-	b.x = x ? -a.x : a.x;
-	b.y = y ? -a.y : a.y;
-	return (b);
-}
-
-M_Vector2
-M_VectorMirror2p_FPU(const M_Vector2 *a, int x, int y)
-{
-	M_Vector2 b;
-
-	b.x = x ? -(a->x) : a->x;
-	b.y = y ? -(a->y) : a->y;
+	b.x = -a.x;
+	b.y = -a.y;
 	return (b);
 }
 
@@ -145,7 +132,7 @@ M_Real
 M_VectorDistance2p_FPU(const M_Vector2 *a, const M_Vector2 *b)
 {
 	return M_VectorLen2_FPU( M_VectorAdd2_FPU(*b,
-	                         M_VectorMirror2p_FPU(a,1,1)) );
+	                         M_VectorFlip2_FPU(*a)) );
 }
 
 M_Vector2
@@ -341,28 +328,4 @@ M_VectorVecAngle2_FPU(M_Vector2 vOrig, M_Vector2 vOther)
 	
 	vd = M_VectorSub2p_FPU(&vOther, &vOrig);
 	return (Atan2(vd.y, vd.x));
-}
-
-M_Vector2
-M_VectorRotate2_FPU(M_Vector2 v, M_Real theta)
-{
-	M_Vector2 r;
-	M_Real s = Sin(theta);
-	M_Real c = Cos(theta);
-	
-	r.x = c*v.x - s*v.y;
-	r.y = s*v.x + c*v.y;
-	return (r);
-}
-
-void
-M_VectorRotate2v_FPU(M_Vector2 *v, M_Real theta)
-{
-	M_Vector2 r;
-	M_Real s = Sin(theta);
-	M_Real c = Cos(theta);
-
-	r.x = c*v->x - s*v->y;
-	r.y = s*v->x + c*v->y;
-	M_VectorCopy2_FPU(v, &r);
 }

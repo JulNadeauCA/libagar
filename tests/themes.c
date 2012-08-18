@@ -136,9 +136,7 @@ CreateWindow(AG_Event *event)
 				"Radio2",
 				NULL
 			};
-			AG_Radio *rad;
-
-			rad = AG_RadioNew(hBox, 0, radioItems);
+			AG_RadioNew(hBox, 0, radioItems);
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);
@@ -227,7 +225,6 @@ CreateWindow(AG_Event *event)
 		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
 		AG_Scrollbar *sb;
 		AG_Slider *sl;
-		AG_ProgressBar *pb;
 
 		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
 		    AG_SCROLLBAR_HFILL,
@@ -239,7 +236,7 @@ CreateWindow(AG_Event *event)
 		    &myVal, &myMin, &myMax);
 		AG_SliderSetIntIncrement(sl, 10);
 
-		pb = AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
+		AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
 		    AG_PROGRESS_BAR_SHOW_PCT,
 		    &myVal, &myMin, &myMax);
 	}
@@ -320,14 +317,12 @@ CreateWindow(AG_Event *event)
 			 */
 			if (!AG_ConfigFile("load-path", "loss", "txt", path, sizeof(path)) &&
 			    (f = fopen(path, "r")) != NULL) {
-				size_t rv;
-
 				fseek(f, 0, SEEK_END);
 				size = ftell(f);
 				fseek(f, 0, SEEK_SET);
 				bufSize = size+1024;
 				someText = AG_Malloc(bufSize);
-				rv = fread(someText, size, 1, f);
+				(void)fread(someText, size, 1, f);
 				fclose(f);
 				someText[size] = '\0';
 			} else {

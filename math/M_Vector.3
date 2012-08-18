@@ -199,10 +199,7 @@ is defined.
 .Fn M_VecCopy "M_Vector *vDst" "const M_Vector *vSrc"
 .Pp
 .Ft "M_Vector *"
-.Fn M_VecMirror "M_Vector *v"
-.Pp
-.Ft void
-.Fn M_VecMirrorv "M_Vector *v"
+.Fn M_VecFlip "const M_Vector *v"
 .Pp
 .Ft "M_Vector *"
 .Fn M_VecScale "const M_Vector *v" "M_Real c"
@@ -250,14 +247,10 @@ into
 Both vectors must have the same size.
 .Pp
 The
-.Fn M_VecMirror
-function returns the mirror image of
+.Fn M_VecFlip
+function returns the vector
 .Fa v
-(i.e., all entries multiplied by -1).
-.Fn M_VecMirrorv
-inverts the entries of
-.Fa v
-in place.
+scaled to -1.
 .Pp
 .Fn M_VecScale
 scales the vector
@@ -404,10 +397,7 @@ for details.
 .Fn M_VecCopy2 "M_Vector2 *vDst" "const M_Vector2 *vSrc"
 .Pp
 .Ft M_Vector2
-.Fn M_VecMirror2 "M_Vector2 v" "int xFlag" "int yFlag"
-.Pp
-.Ft M_Vector2
-.Fn M_VecMirror2p "const M_Vector2 *v" "int xFlag" "int yFlag"
+.Fn M_VecFlip2 "M_Vector2 v"
 .Pp
 .Ft M_Real
 .Fn M_VecLen2 "M_Vector2 v"
@@ -460,8 +450,8 @@ for details.
 .Ft void
 .Fn M_VecAdd2v "M_Vector2 *a" "const M_Vector2 *b"
 .Pp
-.Ft void
-.Fn M_VecAdd2n "int n" "..."
+.Ft M_Vector2
+.Fn M_VecSum2 "const M_Vector2 *vs" "Uint count"
 .Pp
 .Ft M_Vector2
 .Fn M_VecSub2 "M_Vector2 a" "M_Vector2 b"
@@ -471,9 +461,6 @@ for details.
 .Pp
 .Ft void
 .Fn M_VecSub2v "M_Vector2 *a" "const M_Vector2 *b"
-.Pp
-.Ft void
-.Fn M_VecSub2n "int n" "..."
 .Pp
 .Ft M_Vector2
 .Fn M_VecAvg2 "M_Vector2 a" "M_Vector2 b"
@@ -493,12 +480,6 @@ for details.
 .Ft M_Real
 .Fn M_VecVecAngle2 "M_Vector2 a" "M_Vector2 b"
 .Pp
-.Ft M_Vector2
-.Fn M_VecRotate2 "M_Vector2 v" "M_Real theta"
-.Pp
-.Ft void
-.Fn M_VecRotate2v "M_Vector2 *v" "M_Real theta"
-.Pp
 .nr nS 0
 The
 .Fn M_VecCopy2
@@ -507,13 +488,9 @@ function copies the contents of vector
 into
 .Fa vDst .
 .Pp
-The functions
-.Fn M_VecMirror2
-and
-.Fn M_VecMirror2p
-multiply the specified entries by -1 (i.e., if
-.Fa xFlag
-is 1, the X entry is inverted) and returns the resulting vector.
+The function
+.Fn M_VecFlip2
+returns the vector scaled to -1.
 .Pp
 .Fn M_VecLen2
 and
@@ -582,11 +559,12 @@ The
 variant returns the result back into
 .Fa a .
 The
-.Fn M_VecAdd2n
-function returns the sum of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
+.Fn M_VecSum2
+function returns the vector sum of the
+.Fa count
+vectors in the
+.Fa vs
+array.
 .Pp
 .Fn M_VecSub2
 and
@@ -596,12 +574,6 @@ The
 .Fn M_VecSub2v
 variant returns the result back into
 .Fa a .
-The
-.Fn M_VecSub2n
-function returns the difference of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
 .Pp
 The
 .Fn M_VecAvg2
@@ -635,21 +607,6 @@ returns the angle (in radians) between vectors
 and
 .Fa b ,
 about the origin.
-.Pp
-.Fn M_VecRotate2
-rotates vector
-.Fa v
-about the origin by
-.Fa theta
-radians and returns the result.
-The
-.Fn M_VecRotate2v
-variant rotates the vector in-place.
-In R^2, this function is slightly faster than general
-.Xr M_Matrix 3
-or
-.Xr M_Quaternion 3
-rotations.
 .\" MANLINK(M_Vector3)
 .Sh VECTORS IN R^3
 The following routines operate on vectors in R^3, which are represented
@@ -758,10 +715,7 @@ for details.
 .Fn M_VecCopy3 "M_Vector3 *vDst" "const M_Vector3 *vSrc"
 .Pp
 .Ft M_Vector3
-.Fn M_VecMirror3 "M_Vector3 v" "int xFlag" "int yFlag" "int zFlag"
-.Pp
-.Ft M_Vector3
-.Fn M_VecMirror3p "const M_Vector3 *v" "int xFlag" "int yFlag" "int zFlag"
+.Fn M_VecFlip3 "M_Vector3 v"
 .Pp
 .Ft M_Real
 .Fn M_VecLen3 "M_Vector3 v"
@@ -820,8 +774,8 @@ for details.
 .Ft void
 .Fn M_VecAdd3v "M_Vector3 *a" "const M_Vector3 *b"
 .Pp
-.Ft void
-.Fn M_VecAdd3n "int n" "..."
+.Ft M_Vector3
+.Fn M_VecSum3 "const M_Vector3 *vs" "Uint count"
 .Pp
 .Ft M_Vector3
 .Fn M_VecSub3 "M_Vector3 a" "M_Vector3 b"
@@ -831,9 +785,6 @@ for details.
 .Pp
 .Ft void
 .Fn M_VecSub3v "M_Vector3 *a" "const M_Vector3 *b"
-.Pp
-.Ft void
-.Fn M_VecSub3n "int n" "..."
 .Pp
 .Ft M_Vector3
 .Fn M_VecAvg3 "M_Vector3 a" "M_Vector3 b"
@@ -853,24 +804,6 @@ for details.
 .Ft void
 .Fn M_VecVecAngle3 "M_Vector3 a" "M_Vector3 b" "M_Real *theta" "M_Real *phi"
 .Pp
-.Ft M_Vector3
-.Fn M_VecRotate3 "M_Vector3 v" "M_Real theta" "M_Vector3 axis"
-.Pp
-.Ft void
-.Fn M_VecRotate3v "M_Vector3 *v" "M_Real theta" "M_Vector3 axis"
-.Pp
-.Ft M_Vector3
-.Fn M_VecRotateQuat3 "M_Vector3 v" "M_Quaternion Q"
-.Pp
-.Ft M_Vector3
-.Fn M_VecRotateI3 "M_Vector3 v" "M_Real theta"
-.Pp
-.Ft M_Vector3
-.Fn M_VecRotateJ3 "M_Vector3 v" "M_Real theta"
-.Pp
-.Ft M_Vector3
-.Fn M_VecRotateK3 "M_Vector3 v" "M_Real theta"
-.Pp
 .nr nS 0
 The
 .Fn M_VecCopy3
@@ -879,13 +812,9 @@ function copies the contents of vector
 into
 .Fa vDst .
 .Pp
-The functions
-.Fn M_VecMirror3
-and
-.Fn M_VecMirror3p
-multiply the specified entries by -1 (i.e., if
-.Fa xFlag
-is 1, the X entry is inverted) and returns the resulting vector.
+The function
+.Fn M_VecFlip3
+returns the vector scaled to -1.
 .Pp
 .Fn M_VecLen3
 and
@@ -964,11 +893,12 @@ The
 variant returns the result back into
 .Fa a .
 The
-.Fn M_VecAdd3n
-function returns the sum of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
+.Fn M_VecSum3
+function returns the vector sum of the
+.Fa count
+vectors in the
+.Fa vs
+array.
 .Pp
 .Fn M_VecSub3
 and
@@ -978,12 +908,6 @@ The
 .Fn M_VecSub3v
 variant returns the result back into
 .Fa a .
-The
-.Fn M_VecSub3n
-function returns the difference of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
 .Pp
 The
 .Fn M_VecAvg3
@@ -1017,40 +941,6 @@ returns the two angles (in radians) between vectors
 and
 .Fa b ,
 about the origin.
-.Pp
-.Fn M_VecRotate3
-rotates vector
-.Fa v
-around the origin, about the
-.Fa axis
-vector, by
-.Fa theta
-radians and returns the result.
-The
-.Fn M_VecRotate3v
-variant rotates the vector in-place.
-This function is equivalent to multiplying the vector with a rotation
-matrix (see
-.Xr M_Matrix 3 )
-for the given axis and angle.
-.Pp
-.Fn M_VecRotateQuat3
-performs the rotation described by a quaternion
-.Fa Q
-on vector
-.Fa v .
-See
-.Xr M_Quaternion 3
-for details.
-.Pp
-The
-.Fn M_VecRotateI3 ,
-.Fn M_VecRotateJ3
-and
-.Fn M_VecRotateK3
-shorthands perform a rotation of
-.Fa theta
-radians about the basis vectors I, J or K, respectively.
 .\" MANLINK(M_Vector4)
 .Sh VECTORS IN R^4
 The following routines operate on vectors in R^4, which are represented
@@ -1160,10 +1050,7 @@ for details.
 .Fn M_VecCopy4 "M_Vector4 *vDst" "const M_Vector4 *vSrc"
 .Pp
 .Ft M_Vector4
-.Fn M_VecMirror4 "M_Vector4 v" "int xFlag" "int yFlag" "int zFlag" "int wFlag"
-.Pp
-.Ft M_Vector4
-.Fn M_VecMirror4p "const M_Vector4 *v" "int xFlag" "int yFlag" "int zFlag" "int wFlag"
+.Fn M_VecFlip4 "M_Vector4 v"
 .Pp
 .Ft M_Real
 .Fn M_VecLen4 "M_Vector4 v"
@@ -1210,8 +1097,8 @@ for details.
 .Ft void
 .Fn M_VecAdd4v "M_Vector4 *a" "const M_Vector4 *b"
 .Pp
-.Ft void
-.Fn M_VecAdd4n "int n" "..."
+.Ft M_Vector4
+.Fn M_VecSum4 "const M_Vector4 *vs" "Uint count"
 .Pp
 .Ft M_Vector4
 .Fn M_VecSub4 "M_Vector4 a" "M_Vector4 b"
@@ -1221,9 +1108,6 @@ for details.
 .Pp
 .Ft void
 .Fn M_VecSub4v "M_Vector4 *a" "const M_Vector4 *b"
-.Pp
-.Ft void
-.Fn M_VecSub4n "int n" "..."
 .Pp
 .Ft M_Vector4
 .Fn M_VecAvg4 "M_Vector4 a" "M_Vector4 b"
@@ -1243,12 +1127,6 @@ for details.
 .Ft void
 .Fn M_VecVecAngle4 "M_Vector4 a" "M_Vector4 b" "M_Real *phi1" "M_Real *phi2" "M_Real *phi3"
 .Pp
-.Ft M_Vector4
-.Fn M_VecRotate4 "M_Vector4 v" "M_Real theta" "M_Vector4 axis"
-.Pp
-.Ft void
-.Fn M_VecRotate4v "M_Vector4 *v" "M_Real theta" "M_Vector4 axis"
-.Pp
 .nr nS 0
 The
 .Fn M_VecCopy4
@@ -1257,13 +1135,9 @@ function copies the contents of vector
 into
 .Fa vDst .
 .Pp
-The functions
-.Fn M_VecMirror4
-and
-.Fn M_VecMirror4p
-multiply the specified entries by -1 (i.e., if
-.Fa xFlag
-is 1, the X entry is inverted) and returns the resulting vector.
+The function
+.Fn M_VecFlip4
+returns the vector scaled to -1.
 .Pp
 .Fn M_VecLen4
 and
@@ -1323,11 +1197,12 @@ The
 variant returns the result back into
 .Fa a .
 The
-.Fn M_VecAdd4n
-function returns the sum of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
+.Fn M_VecSum4
+function returns the vector sum of the
+.Fa count
+vectors in the
+.Fa vs
+array.
 .Pp
 .Fn M_VecSub4
 and
@@ -1337,12 +1212,6 @@ The
 .Fn M_VecSub4v
 variant returns the result back into
 .Fa a .
-The
-.Fn M_VecSub4n
-function returns the difference of
-.Fa n
-vectors passed as a variable argument list (following
-.Fa n ) .
 .Pp
 The
 .Fn M_VecAvg4
@@ -1376,22 +1245,6 @@ returns the three angles (in radians) between vectors
 and
 .Fa b ,
 about the origin.
-.Pp
-.Fn M_VecRotate4
-rotates vector
-.Fa v
-around the origin, about the
-.Fa axis
-vector, by
-.Fa theta
-radians and returns the result.
-The
-.Fn M_VecRotate4v
-variant rotates the vector in-place.
-This function is equivalent to multiplying the vector with a rotation
-matrix (see
-.Xr M_Matrix 4 )
-for the given axis and angle.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr M_Real 3 ,

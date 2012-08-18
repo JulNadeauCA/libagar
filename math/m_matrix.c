@@ -39,9 +39,8 @@ M_MatrixInitEngine(void)
 {
 	mMatOps = &mMatOps_FPU;
 	mMatOps44 = &mMatOps44_FPU;
-	
 #ifdef HAVE_SSE
-	if (HasSSE())
+	if (agCPU.ext & AG_EXT_SSE)
 		mMatOps44 = &mMatOps44_SSE;
 #endif
 }

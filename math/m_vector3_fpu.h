@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Operations on vectors in R^3 using scalar instructions.
+ */
+
 __BEGIN_DECLS
 static __inline__ M_Vector3
 M_VectorZero3_FPU(void)
@@ -31,6 +35,9 @@ M_VectorZero3_FPU(void)
 	v.x = 0.0;
 	v.y = 0.0;
 	v.z = 0.0;
+#ifdef HAVE_SSE
+	v._pad = 0.0;
+#endif
 	return (v);
 }
 
@@ -43,6 +50,7 @@ M_VectorGet3_FPU(M_Real x, M_Real y, M_Real z)
 	v.x = (float)x;
 	v.y = (float)y;
 	v.z = (float)z;
+	v._pad = (float)z;
 #else
 	v.x = x;
 	v.y = y;
@@ -74,24 +82,24 @@ M_VectorCopy3_FPU(M_Vector3 *vDst, const M_Vector3 *vSrc)
 }
 
 static __inline__ M_Vector3
-M_VectorMirror3_FPU(M_Vector3 a, int x, int y, int z)
+M_VectorFlip3_FPU(M_Vector3 a)
 {
 	M_Vector3 b;
 
-	b.x = x ? -a.x : a.x;
-	b.y = y ? -a.y : a.y;
-	b.z = z ? -a.z : a.z;
+	b.x = -a.x;
+	b.y = -a.y;
+	b.z = -a.z;
 	return (b);
 }
 
 static __inline__ M_Vector3
-M_VectorMirror3p_FPU(const M_Vector3 *a, int x, int y, int z)
+M_VectorFlip3p_FPU(const M_Vector3 *a)
 {
 	M_Vector3 b;
 	
-	b.x = x ? -(a->x) : a->x;
-	b.y = y ? -(a->y) : a->y;
-	b.z = z ? -(a->z) : a->z;
+	b.x = -(a->x);
+	b.y = -(a->y);
+	b.z = -(a->z);
 	return (b);
 }
 
@@ -308,7 +316,7 @@ static __inline__ M_Real
 M_VectorDistance3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
 {
 	return M_VectorLen3_FPU(M_VectorAdd3_FPU(*b,
-	                        M_VectorMirror3p_FPU(a,1,1,1)));
+	                        M_VectorFlip3p_FPU(a)));
 }
 
 static __inline__ M_Vector3
@@ -349,39 +357,6 @@ M_VectorVecAngle3_FPU(M_Vector3 vOrig, M_Vector3 vOther, M_Real *theta,
 }
 
 static __inline__ M_Vector3
-M_VectorRotateI3_FPU(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = a.x;
-	b.y = (a.y * M_Cos(theta)) + (a.z * -M_Sin(theta));
-	b.z = (a.y * M_Sin(theta)) + (a.z *  M_Cos(theta));
-	return (b);
-}
-
-static __inline__ M_Vector3
-M_VectorRotateJ3_FPU(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = (a.x *  M_Cos(theta)) + (a.z * M_Sin(theta));
-	b.y = a.y;
-	b.z = (a.x * -M_Sin(theta)) + (a.z * M_Cos(theta));
-	return (b);
-}
-
-static __inline__ M_Vector3
-M_VectorRotateK3_FPU(M_Vector3 a, M_Real theta)
-{
-	M_Vector3 b;
-
-	b.x = (a.x * M_Cos(theta)) + (a.y * -M_Sin(theta));
-	b.y = (a.x * M_Sin(theta)) + (a.y *  M_Cos(theta));
-	b.z = a.z;
-	return (b);
-}
-
-static __inline__ M_Vector3
 M_VectorLERP3_FPU(M_Vector3 v1, M_Vector3 v2, M_Real t)
 {
 	M_Vector3 v;
@@ -419,13 +394,25 @@ M_VectorElemPow3_FPU(M_Vector3 v, M_Real x)
 #endif
 	return (r);
 }
+
+static __inline__ M_Vector3
+M_VectorSum3_FPU(const M_Vector3 *va, Uint count)
+{
+	M_Vector3 v;
+	Uint i;
+
+	v.x = 0.0;
+	v.y = 0.0;
+	v.z = 0.0;
+	for (i = 0; i < count; i++) {
+		v.x += va[i].x;
+		v.y += va[i].y;
+		v.z += va[i].z;
+	}
+	return (v);
+}
 __END_DECLS
 
 __BEGIN_DECLS
 extern const M_VectorOps3 mVecOps3_FPU;
-
-M_Vector3	M_VectorSum3_FPU(const M_Vector3 *, Uint);
-M_Vector3	M_VectorRotate3_FPU(M_Vector3, M_Real, M_Vector3);
-void		M_VectorRotate3v_FPU(M_Vector3 *, M_Real, M_Vector3);
-M_Vector3	M_VectorRotateQuat3_FPU(M_Vector3, M_Quaternion);
 __END_DECLS

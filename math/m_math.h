@@ -24,8 +24,6 @@
 #include <agar/config/have_sse2.h>
 #include <agar/config/have_sse3.h>
 #include <agar/config/inline_sse.h>
-#include <agar/config/inline_sse2.h>
-#include <agar/config/inline_sse3.h>
 #ifdef HAVE_SSE
 # include <xmmintrin.h>
 #endif

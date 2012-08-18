@@ -59,7 +59,7 @@ M_VectorFree_FPU(M_Vector *v)
 }
 
 static __inline__ M_Vector *
-M_VectorMirror_FPU(const M_Vector *v)
+M_VectorFlip_FPU(const M_Vector *v)
 {
 	M_Vector *vInv;
 	Uint i;
@@ -69,17 +69,6 @@ M_VectorMirror_FPU(const M_Vector *v)
 		vInv->v[i] = -(v->v[i]);
 	}
 	return (vInv);
-}
-
-static __inline__ int
-M_VectorMirrorv_FPU(M_Vector *v)
-{
-	Uint i;
-
-	for (i = 0; i < MVECSIZE(v); i++) {
-		v->v[i] = -(v->v[i]);
-	}
-	return (0);
 }
 
 static __inline__ M_Vector *

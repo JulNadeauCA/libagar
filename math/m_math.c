@@ -51,9 +51,9 @@ PrintReal(AG_FmtString *fs, char *dst, size_t dstSize)
 	M_Real *r = AG_FMTSTRING_ARG(fs);
 
 #if defined(QUAD_PRECISION)
-	return Snprintf(dst, dstSize, "%llf", *r);
+	return Snprintf(dst, dstSize, "%.03llf", *r);
 #else
-	return Snprintf(dst, dstSize, "%f", *r);
+	return Snprintf(dst, dstSize, "%.03f", *r);
 #endif
 }
 static size_t
@@ -66,27 +66,27 @@ static size_t
 PrintComplex(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Complex *c = AG_FMTSTRING_ARG(fs);
-	return Snprintf(dst, dstSize, "[%.2g+%.2gi]", c->r, c->i);
+	return Snprintf(dst, dstSize, "[%.03f%+.03fi]", c->r, c->i);
 }
 static size_t
 PrintVector2(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Vector2 *v = AG_FMTSTRING_ARG(fs);
-	return Snprintf(dst, dstSize, "[%.2f,%.2f]",
+	return Snprintf(dst, dstSize, "[%.03f, %.03f]",
 	    v->x, v->y);
 }
 static size_t
 PrintVector3(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Vector3 *v = AG_FMTSTRING_ARG(fs);
-	return Snprintf(dst, dstSize, "[%.2f,%.2f,%.2f]",
+	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z);
 }
 static size_t
 PrintVector4(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Vector4 *v = AG_FMTSTRING_ARG(fs);
-	return Snprintf(dst, dstSize, "[%.2f,%.2f,%.2f,%.2f]",
+	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z, v->w);
 }
 static size_t
@@ -106,13 +106,14 @@ PrintVector(AG_FmtString *fs, char *dst, size_t dstSize)
 	for (i = 0; i < v->m; i++) {
 		M_Real *e = M_VecGetElement(v,i);
 
-		rv = Snprintf(pDst, (pEnd-pDst), "%.2g", *e);
+		rv = Snprintf(pDst, (pEnd-pDst), "%.03f", *e);
 		if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
 		if (i < (v->m - 1)) {
-			if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+			if (pEnd-pDst < 3) { *pDst = '\0'; goto out; }
 			pDst[0] = ',';
-			pDst[1] = '\0';
-			pDst++;
+			pDst[1] = ' ';
+			pDst[2] = '\0';
+			pDst+=2;
 		}
 	}
 	if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
@@ -140,14 +141,15 @@ PrintMatrix(AG_FmtString *fs, char *dst, size_t dstSize)
 		for (j = 0; j < M->n; j++) {
 			M_Real *e = M_GetElement(M,i,j);
 
-			rv = Snprintf(pDst, (pEnd-pDst), "%.1g", *e);
+			rv = Snprintf(pDst, (pEnd-pDst), "%.02f", *e);
 			if ((pDst += rv) > pEnd) { *pEnd = '\0'; goto out; }
 
 			if (j < (M->n - 1)) {
-				if (pEnd-pDst < 2) { *pDst = '\0'; goto out; }
+				if (pEnd-pDst < 3) { *pDst = '\0'; goto out; }
 				pDst[0] = ',';
-				pDst[1] = '\0';
-				pDst++;
+				pDst[1] = ' ';
+				pDst[2] = '\0';
+				pDst+=2;
 			}
 		}
 		if (i < (M->m - 1)) {
@@ -170,10 +172,10 @@ PrintMatrix44(AG_FmtString *fs, char *dst, size_t dstSize)
 {
 	M_Matrix44 *M = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize,
-	    "[%.1f,%.1f,%.1f,%.1f;"
-	    " %.1f,%.1f,%.1f,%.1f;"
-	    " %.1f,%.1f,%.1f,%.1f;"
-	    " %.1f,%.1f,%.1f,%.1f]",
+	    "[%.02f, %.02f, %.02f, %.02f; "
+	    " %.02f, %.02f, %.02f, %.02f; "
+	    " %.02f, %.02f, %.02f, %.02f; "
+	    " %.02f, %.02f, %.02f, %.02f]",
 	    M->m[0][0], M->m[0][1], M->m[0][2], M->m[0][3],
 	    M->m[1][0], M->m[1][1], M->m[1][2], M->m[1][3],
 	    M->m[2][0], M->m[2][1], M->m[2][2], M->m[2][3],
@@ -186,6 +188,20 @@ M_InitSubsystem(void)
 {
 	if (mInitedSubsystem++ > 0)
 		return;
+
+	/*
+	 * Base SSE support is set based on cpuinfo (unless compiled inline).
+	 * However, the SSE revision is not checked at runtime, and must match
+	 * the compiled revision.
+	 */
+#ifdef HAVE_SSE2
+	if (!(agCPU.ext & AG_EXT_SSE2))
+		AG_FatalError("CPU lacks SSE2 support (recompile Agar --without-sse2)");
+#endif
+#ifdef HAVE_SSE3
+	if (!(agCPU.ext & AG_EXT_SSE3))
+		AG_FatalError("CPU lacks SSE3 support (recompile Agar --without-sse3)");
+#endif
 
 	M_VectorInitEngine();
 	M_MatrixInitEngine();

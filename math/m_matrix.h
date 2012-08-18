@@ -78,7 +78,6 @@ typedef struct m_matrix_ops44 {
 	void      (*FromDoubles)(M_Matrix44 *A, const double *dbls);
 	void      (*GetDirection)(const M_Matrix44 *A, M_Vector3 *x,
 	                          M_Vector3 *y, M_Vector3 *z);
-	void	  (*DiagonalSwapv)(M_Matrix44 *A);
 
 	void      (*RotateAxis)(M_Matrix44 *A, M_Real theta, M_Vector3 axis);
 	void      (*OrbitAxis)(M_Matrix44 *A, M_Vector3 center, M_Vector3 axis,
@@ -213,19 +212,19 @@ __END_DECLS
 #define M_MatTranslate44Z	mMatOps44->TranslateZ
 #define M_MatScale44		mMatOps44->Scale
 #define M_MatUniScale44		mMatOps44->UniScale
-#if defined(INLINE_SSE) || defined(INLINE_SSE2) || defined(INLINE_SSE3)
+#if defined(INLINE_SSE)
 # define M_MatInvert44		M_MatrixInvert44_SSE
 # define M_MatInvert44p		M_MatrixInvert44p_SSE
 # define M_MatMult44		M_MatrixMult44_SSE
 # define M_MatMult44v		M_MatrixMult44v_SSE
 # define M_MatMult44pv		M_MatrixMult44pv_SSE
-#else  /* !INLINE_SSE[123] */
+#else  /* !INLINE_SSE */
 # define M_MatInvert44		mMatOps44->Invert
 # define M_MatInvert44p		mMatOps44->Invertp
 # define M_MatMult44		mMatOps44->Mult
 # define M_MatMult44v		mMatOps44->Multv
 # define M_MatMult44pv		mMatOps44->Multpv
-#endif /* INLINE_SSE[123] */
+#endif /* INLINE_SSE */
 
 __BEGIN_DECLS
 void       M_MatrixInitEngine(void);

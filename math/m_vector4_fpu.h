@@ -5,11 +5,10 @@ extern const M_VectorOps4 mVecOps4_FPU;
 
 M_Vector4	M_VectorZero4_FPU(void);
 M_Vector4	M_VectorGet4_FPU(M_Real, M_Real, M_Real, M_Real);
-void		M_VectorSet4_FPU(M_Vector4 *, M_Real, M_Real, M_Real,
-		                  M_Real);
+void		M_VectorSet4_FPU(M_Vector4 *, M_Real, M_Real, M_Real, M_Real);
 void		M_VectorCopy4_FPU(M_Vector4 *, const M_Vector4 *);
-M_Vector4	M_VectorMirror4_FPU(M_Vector4, int, int, int, int);
-M_Vector4	M_VectorMirror4p_FPU(const M_Vector4 *, int, int, int, int);
+M_Vector4	M_VectorFlip4_FPU(M_Vector4);
+M_Vector4	M_VectorFlip4p_FPU(const M_Vector4 *);
 M_Real		M_VectorLen4_FPU(M_Vector4);
 M_Real		M_VectorLen4p_FPU(const M_Vector4 *);
 M_Real		M_VectorDot4_FPU(M_Vector4, M_Vector4);
@@ -34,8 +33,6 @@ M_Vector4	M_VectorAvg4_FPU(M_Vector4, M_Vector4);
 M_Vector4	M_VectorAvg4p_FPU(const M_Vector4 *, const M_Vector4 *);
 void		M_VectorVecAngle4_FPU(M_Vector4, M_Vector4, M_Real *,
 		                       M_Real *, M_Real *);
-M_Vector4	M_VectorRotate4_FPU(M_Vector4, M_Real, M_Vector4);
-void		M_VectorRotate4v_FPU(M_Vector4 *, M_Real, M_Vector4);
 M_Vector4	M_VectorLERP4_FPU(M_Vector4, M_Vector4, M_Real);
 M_Vector4	M_VectorLERP4p_FPU(M_Vector4 *, M_Vector4 *, M_Real);
 M_Vector4	M_VectorElemPow4_FPU(M_Vector4, M_Real);
