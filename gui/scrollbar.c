@@ -232,15 +232,20 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
 
 #define GET_PX_COORDS(type) do {					\
 	int extent;							\
+	int max;							\
 	if ((*(type *)pMin + sb->minOffs) >=				\
 	   ((*(type *)pMax + sb->maxOffs) -				\
 	    (*(type *)pVis + sb->visOffs))) {				\
 		goto fail;						\
 	}								\
 	GET_EXTENT(type);						\
-	*x = (int)(((*(type *)pVal - (*(type *)pMin + sb->minOffs)) * extent) / \
-	           ((*(type *)pMax + sb->maxOffs) -			\
-		    (*(type *)pVis + sb->visOffs) - *(type *)pMin));	\
+	max = ((*(type *)pMax + sb->maxOffs) -				\
+	       (*(type *)pVis + sb->visOffs) - *(type *)pMin);		\
+	if (max < 1) {							\
+		goto fail;						\
+	}								\
+	*x = (int)(((*(type *)pVal -					\
+	            (*(type *)pMin + sb->minOffs)) * extent) / max);	\
 	if (len != NULL) { 						\
 		if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {		\
 			*len = (*(type *)pVis + sb->visOffs) * sb->length / \
