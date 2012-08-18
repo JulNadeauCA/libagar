@@ -279,7 +279,9 @@ Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 	hints.ai_socktype = SOCK_STREAM;
 	if (flags & AG_NET_ADDRCONFIG) { hints.ai_flags |= AI_ADDRCONFIG; }
 	if (flags & AG_NET_NUMERIC_HOST) { hints.ai_flags |= AI_NUMERICHOST; }
+#ifdef AI_NUMERICSERV
 	if (flags & AG_NET_NUMERIC_PORT) { hints.ai_flags |= AI_NUMERICSERV; }
+#endif
 
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
 		AG_SetError("%s:%s: %s", host, port, gai_strerror(rv));
