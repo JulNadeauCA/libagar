@@ -339,6 +339,13 @@ Init(void *obj)
 	vv->nGrids = 0;
 	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
 	VG_ViewSetScale(vv, 0);
+	
+	AG_SetEvent(vv, "mouse-motion", MouseMotion, NULL);
+	AG_SetEvent(vv, "mouse-button-down", MouseButtonDown, NULL);
+	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
+	AG_SetEvent(vv, "key-down", KeyDown, NULL);
+	AG_SetEvent(vv, "key-up", KeyUp, NULL);
+	AG_AddEvent(vv, "widget-shown", Shown, NULL);
 
 	AG_ActionSetInt(vv, "Enable panning",	&vv->mouse.panning, 1);
 	AG_ActionSetInt(vv, "Disable panning",	&vv->mouse.panning, 0);
@@ -359,13 +366,6 @@ Init(void *obj)
 	AG_ActionOnKeyDown(vv,    AG_KEY_2, AG_KEYMOD_ANY,	"Scale 1:2");
 	AG_ActionOnKeyDown(vv,    AG_KEY_3, AG_KEYMOD_ANY,	"Scale 1:3");
 	AG_ActionOnKeyDown(vv,    AG_KEY_9, AG_KEYMOD_ANY,	"Scale 1:9");
-
-	AG_SetEvent(vv, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(vv, "mouse-button-down", MouseButtonDown, NULL);
-	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetEvent(vv, "key-down", KeyDown, NULL);
-	AG_SetEvent(vv, "key-up", KeyUp, NULL);
-	AG_AddEvent(vv, "widget-shown", Shown, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindFloat(vv, "x", &vv->x);
