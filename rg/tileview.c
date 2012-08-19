@@ -782,7 +782,7 @@ Init(void *obj)
 	tv->menu = NULL;
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;
-	tv->tCache = agTextCache ? AG_TextCacheNew(tv, 64, 16) : NULL;
+	tv->tCache = AG_TextCacheNew(tv,64,8);
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 
@@ -1124,34 +1124,26 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 static void
 DrawStatusText(RG_Tileview *tv, const char *label)
 {
-	AG_Surface *suTmp = NULL;		/* Make compiler happy */
-	int su = -1;
+	int su;
 	int wSu, hSu;
 
 	AG_PushTextState();
 	AG_TextColor(agColors[TILEVIEW_TEXT_COLOR]);
-	if (agTextCache) {
-		su = AG_TextCacheGet(tv->tCache, label);
-		wSu = WSURFACE(tv,su)->w;
-		hSu = WSURFACE(tv,su)->h;
-	} else {
-		suTmp = AG_TextRender(label);
-		wSu = suTmp->w;
-		hSu = suTmp->h;
-	}
+	su = AG_TextCacheGet(tv->tCache, label);
 	AG_PopTextState();
+
+	if (su == -1)
+		return;
+
+	wSu = WSURFACE(tv,su)->w;
+	hSu = WSURFACE(tv,su)->h;
 
 	AG_DrawRect(tv,
 	    AG_RECT((wSu >= WIDTH(tv)) ? 0 : (WIDTH(tv)-wSu-2),
 	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
 	    agColors[TILEVIEW_TEXTBG_COLOR]);
 
-	if (agTextCache) {
-		AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
-	} else {
-		AG_WidgetBlit(tv, suTmp, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
-		AG_SurfaceFree(suTmp);
-	}
+	AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
 }
 
 void
@@ -1772,8 +1764,7 @@ Destroy(void *p)
 		ntool = TAILQ_NEXT(tool, tools);
 		FreeTool(tool);
 	}
-	if (tv->tCache != NULL)
-		AG_TextCacheDestroy(tv->tCache);
+	AG_TextCacheDestroy(tv->tCache);
 }
 
 static void

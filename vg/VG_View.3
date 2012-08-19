@@ -295,9 +295,6 @@ context.
 .Ft "void"
 .Fn VG_DrawSurface "VG_View *vv" "int x" "int y" "float degs" "int su"
 .Pp
-.Ft "void"
-.Fn VG_DrawText "VG_View *vv" "int x" "int y" "float degs" "const char *text"
-.Pp
 .nr nS 0
 The
 .Fn VG_DrawSurface
@@ -313,10 +310,6 @@ must have been previously mapped to the
 .Nm
 object (see
 .Xr AG_WidgetMapSurface 3 ) .
-.Pp
-The
-.Fn VG_DrawText
-variant renders a string of text.
 .Sh TOOL INTERFACE
 .nr nS 1
 .Ft "VG_Tool *"

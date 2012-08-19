@@ -330,7 +330,7 @@ Init(void *obj)
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
-	vv->tCache = AG_TextCacheNew(vv, 128, 16);
+	vv->tCache = AG_TextCacheNew(vv,128,16);
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	vv->r = AG_RECT(0,0,0,0);
@@ -381,8 +381,7 @@ Destroy(void *obj)
 {
 	VG_View *vv = obj;
 
-	if (vv->tCache != NULL)
-		AG_TextCacheDestroy(vv->tCache);
+	AG_TextCacheDestroy(vv->tCache);
 }
 
 /* Change the VG being displayed. */
@@ -648,11 +647,14 @@ Draw(void *obj)
 	VG_Unlock(vg);
 
 	if (vv->status[0] != '\0') {
+		AG_PushTextState();
 		AG_TextColor(agColors[TEXT_COLOR]);
-		su = AG_TextCacheGet(vv->tCache, vv->status);
-		AG_WidgetBlitSurface(vv, su,
-		    0,
-		    HEIGHT(vv) - WSURFACE(vv,su)->h);
+		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
+			AG_WidgetBlitSurface(vv, su,
+			    0,
+			    HEIGHT(vv) - WSURFACE(vv,su)->h);
+		}
+		AG_PopTextState();
 	}
 	AG_PopClipRect(vv);
 }

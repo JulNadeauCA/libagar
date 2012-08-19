@@ -158,6 +158,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
 	int x, y;
+	int su;
 
 	if (vt->vsObj != NULL) {
 		AG_VariableSubst(vt->vsObj, sIn, sSubst, sizeof(sSubst));
@@ -180,11 +181,12 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	vMid.x = v1.x + (v2.x - v1.x)/2.0f;
 	vMid.y = v1.y + (v2.y - v1.y)/2.0f;
 	VG_GetViewCoords(vv, vMid, &x, &y);
-
-	VG_DrawText(vv, x, y,
-	    VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
-	    s);
-
+	
+	if ((su = AG_TextCacheGet(vv->tCache, vt->text)) != -1) {
+		VG_DrawSurface(vv, x, y,
+		    VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
+		    su);
+	}
 	AG_PopTextState();
 }
 
@@ -240,12 +242,15 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 	VG_Vector v1, v2;
 	int su;
 
-	su = AG_TextCacheGet(vv->tCache, vt->text);
+	if ((su = AG_TextCacheGet(vv->tCache, vt->text)) == -1) {
+		a->x = 0.0f;
+		a->y = 0.0f;
+		return;
+	}
 	wText = (float)WSURFACE(vv,su)->w/vv->scale;
 	hText = (float)WSURFACE(vv,su)->h/vv->scale;
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
-	
 	a->x = MIN(v1.x,v2.x) - wText/2.0f;
 	a->y = MIN(v1.y,v2.y) - hText/2.0f;
 	b->x = MAX(v1.x,v2.x) + hText/2.0f;

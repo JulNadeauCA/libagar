@@ -87,6 +87,7 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 	Free(tc->toExpireHashes);
 }
 
+/* Expire the (nToExpire) oldest entries in the cache. */
 static void
 ExpireEntries(AG_TextCache *tc)
 {
@@ -134,15 +135,20 @@ AG_TextCacheGet(AG_TextCache *tc, const char *text)
 			break;
 	}
 	if (ct == NULL) {
+		AG_Surface *su;
 #ifdef TEXTCACHE_DEBUG
 		Debug(NULL, "MISS (ent %u)\n", tc->curEnts+1);
 #endif
-		ct = Malloc(sizeof(AG_TextCache));
+		if ((su = AG_TextRender(text)) == NULL) {
+			return (-1);
+		}
+		if ((ct = TryMalloc(sizeof(AG_CachedText))) == NULL) {
+			return (-1);
+		}
 		ct->text = Strdup(text);
-		ct->surface = AG_WidgetMapSurface(tc->widget,
-		    AG_TextRender(text));
+		ct->surface = AG_WidgetMapSurface(tc->widget, su);
 		ct->stamp = AG_GetTicks();
-		ct->state = *agTextState;
+		memcpy(&ct->state, agTextState, sizeof(AG_TextState));
 		tc->curEnts++;
 		SLIST_INSERT_HEAD(&bucket->ents, ct, ents);
 
