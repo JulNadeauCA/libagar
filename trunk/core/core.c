@@ -128,18 +128,16 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 
 	/* Select the timekeeping functions. */
-#if defined(HAVE_GETTIMEOFDAY) && !defined(HAVE_CYGWIN)
-# if defined(AG_THREADS) && defined(HAVE_CLOCK_GETTIME)
-	AG_SetTimeOps(&agTimeOps_condwait);
-# else
-#  if defined(HAVE_SELECT)
-	AG_SetTimeOps(&agTimeOps_gettimeofday);
-#  endif
-# endif
-#elif defined(_WIN32)
+	AG_SetTimeOps(&agTimeOps_dummy);
+#if defined(_WIN32)
 	AG_SetTimeOps(&agTimeOps_win32);
 #else
-	AG_SetTimeOps(&agTimeOps_dummy);
+# if defined(HAVE_GETTIMEOFDAY)
+#  if defined(AG_THREADS) && defined(HAVE_CLOCK_GETTIME)
+	AG_SetTimeOps(&agTimeOps_condwait);
+#  elif defined(HAVE_SELECT)
+	AG_SetTimeOps(&agTimeOps_gettimeofday);
+# endif
 #endif
 	
 	/* Select the network access routines. */
