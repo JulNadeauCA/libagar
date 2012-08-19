@@ -194,15 +194,6 @@ M_InitSubsystem(void)
 	 * However, the SSE revision is not checked at runtime, and must match
 	 * the compiled revision.
 	 */
-#ifdef HAVE_SSE2
-	if (!(agCPU.ext & AG_EXT_SSE2))
-		AG_FatalError("CPU lacks SSE2 support (recompile Agar --without-sse2)");
-#endif
-#ifdef HAVE_SSE3
-	if (!(agCPU.ext & AG_EXT_SSE3))
-		AG_FatalError("CPU lacks SSE3 support (recompile Agar --without-sse3)");
-#endif
-
 	M_VectorInitEngine();
 	M_MatrixInitEngine();
 
