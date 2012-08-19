@@ -26,9 +26,7 @@ AG_TAILQ_HEAD(ag_dsoq, ag_dso);
 
 __BEGIN_DECLS
 extern struct ag_dsoq agLoadedDSOs;
-#ifdef AG_THREADS
 extern AG_Mutex agDSOLock;
-#endif
 
 AG_DSO *AG_LoadDSO(const char *, Uint);
 int     AG_SymDSO(AG_DSO *, const char *, void **);

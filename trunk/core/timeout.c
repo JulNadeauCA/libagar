@@ -32,9 +32,7 @@
 
 struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
 AG_Object agTimeoutMgr;
-#ifdef AG_THREADS
 AG_Mutex agTimingLock;
-#endif
 
 void
 AG_InitTimeouts(void)

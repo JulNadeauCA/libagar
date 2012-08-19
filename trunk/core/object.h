@@ -85,15 +85,9 @@ typedef struct ag_object {
 	
 	void *parent;			/* Parent object (NULL for VFS root) */
 	void *root;			/* Pointer to VFS root */
-#ifdef AG_THREADS
-	AG_Mutex lock;			/* General object lock */
-#endif
-#ifdef AG_DEBUG
-	void (*debugFn)(void *, void *, const char *);
-	void *debugPtr;
-#endif
 	struct ag_event *attachFn;	/* Attach hook */
 	struct ag_event *detachFn;	/* Detach hook */
+	AG_Mutex lock;			/* General object lock */
 } AG_Object;
 
 /* Object archive header information. */
@@ -205,8 +199,6 @@ void	 AG_ObjectSetArchivePath(void *, const char *);
 void	 AG_ObjectGetArchivePath(void *, char *, size_t)
 	                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void	 AG_ObjectSetClass(void *, void *);
-void	 AG_ObjectSetDebugFn(void *, void (*)(void *, void *, const char *),
-                             void *);
 
 void	 AG_ObjectSetAttachFn(void *, void (*fn)(struct ag_event *), const char *, ...);
 void	 AG_ObjectSetDetachFn(void *, void (*fn)(struct ag_event *), const char *, ...);

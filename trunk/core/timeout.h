@@ -26,9 +26,7 @@ AG_SLIST_HEAD(ag_timeoutq, ag_timeout);
 __BEGIN_DECLS
 extern struct ag_objectq agTimeoutObjQ;
 extern struct ag_object agTimeoutMgr;
-#ifdef AG_THREADS
 extern AG_Mutex agTimingLock;
-#endif
 
 void	AG_InitTimeouts(void);
 void	AG_DestroyTimeouts(void);
