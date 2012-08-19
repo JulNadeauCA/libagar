@@ -40,9 +40,40 @@ M_MatrixInitEngine(void)
 	mMatOps = &mMatOps_FPU;
 	mMatOps44 = &mMatOps44_FPU;
 #ifdef HAVE_SSE
-	if (agCPU.ext & AG_EXT_SSE)
+	if (agCPU.ext & AG_EXT_SSE) {
 		mMatOps44 = &mMatOps44_SSE;
-#endif
+	}
+# ifdef INLINE_SSE
+	else {
+		AG_FatalError("Compiled for SSE, but no SSE support in CPU! "
+		              "(recompile Agar without: --with-sse-inline)");
+	}
+# endif
+# ifdef HAVE_SSE2
+	if (!(agCPU.ext & AG_EXT_SSE2)) {
+#  ifdef INLINE_SSE
+		AG_FatalError("Compiled for SSE2, but CPU only supports SSE1! "
+			      "(recompile Agar with: --without-{sse2,sse3})");
+#  else
+		AG_Verbose("Compiled for SSE2, but CPU only supports SSE1! "
+			   "(recompile Agar with: --without-{sse2,sse3})\n");
+		mMatOps44 = &mMatOps44_FPU;
+#  endif
+	}
+# endif
+# ifdef HAVE_SSE3
+	if (!(agCPU.ext & AG_EXT_SSE3)) {
+#  ifdef INLINE_SSE
+		AG_FatalError("Compiled for SSE3, but CPU only supports SSE2! "
+			      "(recompile Agar with: --without-sse3)");
+#  else
+		AG_Verbose("Compiled for SSE3, but CPU only supports SSE2! "
+			   "(recompile Agar with: --without-sse3)\n");
+		mMatOps44 = &mMatOps44_FPU;
+#  endif
+	}
+# endif
+#endif /* HAVE_SSE */
 }
 
 M_Matrix44
