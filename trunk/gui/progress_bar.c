@@ -74,7 +74,7 @@ Init(void *obj)
 	pb->width = agTextFontHeight + 4;
 	pb->length = 300;
 	pb->pad = 2;
-	pb->tCache = agTextCache ? AG_TextCacheNew(pb, 50, 10) : NULL;
+	pb->tCache = AG_TextCacheNew(pb,16,4);
 
 	AG_BindInt(pb, "value", &pb->value);
 	AG_BindInt(pb, "min", &pb->min);
@@ -90,8 +90,7 @@ Destroy(void *obj)
 {
 	AG_ProgressBar *pb = obj;
 
-	if (pb->tCache != NULL)
-		AG_TextCacheDestroy(pb->tCache);
+	AG_TextCacheDestroy(pb->tCache);
 }
 
 void
@@ -158,10 +157,28 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 }
 
 static void
+DrawPercentText(AG_ProgressBar *pb)
+{
+	char s[32];
+	int su;
+
+	StrlcpyInt(s, AG_ProgressBarPercent(pb), sizeof(s));
+	Strlcat(s, "%", sizeof(s));
+
+	AG_PushTextState();
+	AG_TextColor(agColors[TEXT_COLOR]);
+	if ((su = AG_TextCacheGet(pb->tCache, s)) != -1) {
+		AG_WidgetBlitSurface(pb, su,
+		    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
+		    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
+	}
+	AG_PopTextState();
+}
+
+static void
 Draw(void *obj)
 {
 	AG_ProgressBar *pb = obj;
-	char pctText[32];
 	AG_Rect rd;
 	int min, max, val, wAvail;
 
@@ -195,26 +212,8 @@ Draw(void *obj)
 	}
 	AG_DrawRect(pb, rd, agColors[PROGRESS_BAR_COLOR]);
 
-	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
-		StrlcpyInt(pctText, AG_ProgressBarPercent(pb), sizeof(pctText));
-		Strlcat(pctText, "%", sizeof(pctText));
-
-		AG_PushTextState();
-		AG_TextColor(agColors[TEXT_COLOR]);
-		if (agTextCache) {
-			int su = AG_TextCacheGet(pb->tCache, pctText);
-			AG_WidgetBlitSurface(pb, su,
-			    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
-			    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
-		} else {
-			AG_Surface *suTmp = AG_TextRender(pctText);
-			AG_WidgetBlit(pb, suTmp,
-			    WIDTH(pb)/2  - suTmp->w/2,
-			    HEIGHT(pb)/2 - suTmp->h/2);
-			AG_SurfaceFree(suTmp);
-		}
-		AG_PopTextState();
-	}
+	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT)
+		DrawPercentText(pb);
 }
 
 AG_WidgetClass agProgressBarClass = {

@@ -50,7 +50,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_POLLED;
-	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
+	lbl->tCache = AG_TextCacheNew(lbl,32,8);
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
@@ -111,7 +111,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_POLLED;
-	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
+	lbl->tCache = AG_TextCacheNew(lbl,32,8);
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
@@ -248,11 +248,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
 		lbl->flags |= AG_LABEL_PARTIAL;
 		if (lbl->surfaceCont == -1) {
+			AG_Surface *suDots;
+			
 			/* TODO share this between all widgets */
 			AG_PushTextState();
 			AG_TextColor(agColors[TEXT_COLOR]);
-			lbl->surfaceCont = AG_WidgetMapSurface(lbl,
-			    AG_TextRender(" ... "));
+			if ((suDots = AG_TextRender(" ... ")) != NULL) {
+				lbl->surfaceCont = AG_WidgetMapSurface(lbl,
+				    suDots);
+			}
 			AG_PopTextState();
 		}
 	} else {
@@ -390,6 +394,7 @@ DrawPolled(AG_Label *lbl)
 	size_t rv;
 	char *pollBufNew;
 	int x, y;
+	int su;
 
 	if (lbl->fmt == NULL || lbl->fmt->s[0] == '\0') {
 		return;
@@ -408,19 +413,9 @@ DrawPolled(AG_Label *lbl)
 		}
 	}
 
-	if (agTextCache) {
-		int su = AG_TextCacheGet(lbl->tCache,lbl->pollBuf);
-
+	if ((su = AG_TextCacheGet(lbl->tCache,lbl->pollBuf)) != -1) {
 		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
 		AG_WidgetBlitSurface(lbl, su, x, y);
-	} else {
-		AG_Surface *su;
-		
-		if ((su = AG_TextRender(lbl->pollBuf)) != NULL) {
-			GetPosition(lbl, su, &x, &y);
-			AG_WidgetBlit(lbl, su, x, y);
-			AG_SurfaceFree(su);
-		}
 	}
 }
 
@@ -429,13 +424,14 @@ Draw(void *obj)
 {
 	AG_Label *lbl = obj;
 	int x, y, cw = 0;			/* make compiler happy */
+	AG_Surface *suNew;
 
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl,
 		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
 		    agColors[FRAME_COLOR]);
 	
-	if (lbl->flags & AG_LABEL_PARTIAL) {
+	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
 		if (WIDTH(lbl) <= cw) {
 			AG_PushClipRect(lbl,
@@ -459,13 +455,14 @@ Draw(void *obj)
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
-		if (lbl->surface == -1) {
-			lbl->surface = (lbl->text == NULL) ? -1 :
-			    AG_WidgetMapSurface(lbl, AG_TextRender(lbl->text));
+		if (lbl->surface == -1 && lbl->text != NULL) {
+			if ((suNew = AG_TextRender(lbl->text)) != NULL) {
+				lbl->surface = AG_WidgetMapSurface(lbl, suNew);
+			}
 		} else if (lbl->flags & AG_LABEL_REGEN) {
 			if (lbl->text != NULL) {
-				AG_WidgetReplaceSurface(lbl, 0,
-				    AG_TextRender(lbl->text));
+				if ((suNew = AG_TextRender(lbl->text)) != NULL)
+					AG_WidgetReplaceSurface(lbl, 0, suNew);
 			} else {
 				lbl->surface = -1;
 			}
@@ -483,7 +480,7 @@ Draw(void *obj)
 	
 	AG_PopClipRect(lbl);
 	
-	if (lbl->flags & AG_LABEL_PARTIAL) {
+	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
 		    WIDTH(lbl) - cw,
