@@ -133,9 +133,6 @@ system.
 .Ft "void"
 .Fn AG_ObjectSetDetachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
 .Pp
-.Ft "void"
-.Fn AG_ObjectSetDebugFn "AG_Object *obj" "void (*fn)(void *obj, void *userPtr, void *msg)" "void *userPtr"
-.Pp
 .Fn AGOBJECT_FOREACH_CHILD "AG_Object *child" "AG_Object *parent" "TYPE type"
 .Pp
 .nr nS 0
@@ -343,12 +340,6 @@ The hook function is expected to insert the child object somewhere into the
 parent's
 .Va children
 list.
-.Pp
-.Fn AG_ObjectSetDebugFn
-specifies a function to process debug messages (as issued by
-.Xr AG_Debug 3 )
-for the object.
-This function is a no-op unless Agar was compiled with --enable-debug.
 .Pp
 The
 .Fn AGOBJECT_FOREACH_CHILD

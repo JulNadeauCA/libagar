@@ -81,11 +81,6 @@ AG_ObjectInit(void *p, void *cl)
 	ob->attachFn = NULL;
 	ob->detachFn = NULL;
 
-#ifdef AG_DEBUG
-	ob->debugFn = NULL;
-	ob->debugPtr = NULL;
-#endif
-
 	AG_MutexInitRecursive(&ob->lock);
 	
 	TAILQ_INIT(&ob->deps);
@@ -386,14 +381,6 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_PostEvent(nparent, child, "attached", NULL);
 	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
-#ifdef AG_OBJDEBUG
-	Debug(child, "Moving from %s to new parent %s\n",
-	    oparent->name, nparent->name);
-	Debug(oparent, "Detached object: %s (moving to %s)\n",
-	    child->name, nparent->name);
-	Debug(nparent, "Attached object: %s (originally in %s)\n",
-	    child->name, oparent->name);
-#endif
 	AG_ObjectLock(child);
 	AG_ObjectLock(nparent);
 	AG_ObjectLock(oparent);
@@ -742,9 +729,6 @@ FreeChildObject(AG_Object *obj)
 {
 	AG_Object *cob, *ncob;
 
-#ifdef AG_OBJDEBUG
-	Debug(obj, "Freeing children\n");
-#endif
 	AG_ObjectLock(obj);
 	for (cob = TAILQ_FIRST(&obj->children);
 	     cob != TAILQ_END(&obj->children);
@@ -1951,21 +1935,6 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 			*c = '_';
 	}
 	AG_ObjectUnlock(ob);
-}
-
-/* Specify a function to invoke in order to process Debug() messages. */
-void
-AG_ObjectSetDebugFn(void *pObj, void (*fn)(void *, void *, const char *),
-    void *pUser)
-{
-#ifdef DEBUG
-	AG_Object *obj = pObj;
-	
-	AG_ObjectLock(obj);
-	obj->debugFn = fn;
-	obj->debugPtr = pUser;
-	AG_ObjectUnlock(obj);
-#endif
 }
 
 /*

@@ -92,9 +92,7 @@ typedef struct ag_dso_generic {
 #endif
 
 struct ag_dsoq agLoadedDSOs = TAILQ_HEAD_INITIALIZER(agLoadedDSOs);
-#ifdef AG_THREADS
 AG_Mutex agDSOLock;
-#endif
 
 /* Load a DSO using the load_add_on() interface on BeOS. */
 #ifdef BEOS

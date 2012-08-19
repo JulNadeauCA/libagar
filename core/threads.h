@@ -241,11 +241,11 @@ AG_ThreadKeyTrySet(AG_ThreadKey k, const void *p)
 
 #else /* !AG_THREADS */
 
-typedef int AG_Mutex;
-typedef int AG_Thread;
-typedef int AG_Cond;
-typedef int AG_MutexAttr;
-typedef int AG_ThreadKey;
+typedef void *AG_Mutex;
+typedef void *AG_Thread;
+typedef void *AG_Cond;
+typedef void *AG_MutexAttr;
+typedef int   AG_ThreadKey;
 
 #define AG_MUTEX_INITIALIZER 0
 #define AG_COND_INITIALIZER 0
