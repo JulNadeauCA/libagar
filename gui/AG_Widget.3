@@ -360,12 +360,6 @@ well).
 .Fn AG_WidgetIsFocusedInWindow
 returns 1 if the widget has the focus flag set (without evaluating the
 focus state of any parent windows).
-With both functions, the
-.Xr AG_View 3
-VFS as well as the
-.Nm
-object must be locked when the call is made.
-.Pp
 .Pp
 .Fn AG_WidgetForwardFocus
 arranges automatic forwarding of the focus to a specified widget.
@@ -684,9 +678,7 @@ returns a pointer to the parent
 .Xr AG_Window 3
 for the given widget.
 If the widget is unattached, NULL is returned.
-The
-.Xr AG_View 3
-VFS must be locked when the call is made.
+The pointer is only valid as long as the widget's parent VFS is locked.
 .Pp
 The
 .Fn AG_WidgetFind
@@ -695,9 +687,8 @@ and returns a pointer to the widget, or NULL.
 .Fn AG_WidgetFind
 works differently from the generic
 .Xr AG_ObjectFind 3
-function, in that widgets not effectively attached to the
-.Xr AG_View 3
-may be included in the search (for example, widgets attached to
+function, in that widgets not effectively attached to the VFS may be
+included in the search (for example, widgets attached to
 .Xr AG_Notebook 3
 tabs).
 .Pp
@@ -717,11 +708,9 @@ The
 .Fn AG_WidgetFindRect
 variant requires that the widget enclose the specified rectangle.
 .Pp
-Under multithreading, the return value of
+The pointer returned by
 .Fn AG_WidgetFind* ,
-should be considered valid only as long as the
-.Xr AG_View 3
-VFS remains locked.
+should be considered valid only as long as the parent VFS remains locked.
 .Sh WIDGET RENDERING
 .nr nS 1
 .Ft "void"
@@ -802,6 +791,7 @@ and mouse bindings to be configured by the end-user in a standard way.
 .Xr AG_Menu 3
 also provides interfaces for working with widget actions.
 .Pp
+.\" MANLINK(AG_Action)
 .nr nS 1
 .Ft "AG_Action *"
 .Fn AG_ActionFn "AG_Widget *widget" "const char *action" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
@@ -1147,12 +1137,10 @@ and
 .Xr AG_Cursor 3 ,
 .Xr AG_KeySym 3 ,
 .Xr AG_KeyMod 3 ,
-.Xr AG_GlobalKeys 3 ,
 .Xr AG_Rect 3 ,
 .Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Variable 3 ,
-.Xr AG_View 3 ,
 .Xr AG_WidgetPrimitives 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

@@ -532,6 +532,8 @@ AG_ActionSetInt(void *obj, const char *name, int *p, int val)
 	AG_ObjectLock(w);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
+	a->widget = w;
+	a->fn = NULL;
 	a->p = (void *)p;
 	a->val = val;
 	AG_TblInsertPointer(&w->actions, name, a);
@@ -549,6 +551,8 @@ AG_ActionToggleInt(void *obj, const char *name, int *p)
 	AG_ObjectLock(w);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_INT;
+	a->widget = w;
+	a->fn = NULL;
 	a->p = (void *)p;
 	AG_TblInsertPointer(&w->actions, name, a);
 	AG_ObjectUnlock(w);
@@ -565,6 +569,8 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 	AG_ObjectLock(w);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_SET_INT;
+	a->widget = w;
+	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 	a->val = val;
@@ -583,6 +589,8 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 	AG_ObjectLock(w);
 	a = Malloc(sizeof(AG_Action));
 	a->type = AG_ACTION_TOGGLE_FLAG;
+	a->widget = w;
+	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 	AG_TblInsertPointer(&w->actions, name, a);
