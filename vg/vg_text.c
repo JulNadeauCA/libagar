@@ -182,7 +182,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	vMid.y = v1.y + (v2.y - v1.y)/2.0f;
 	VG_GetViewCoords(vv, vMid, &x, &y);
 	
-	if ((su = AG_TextCacheGet(vv->tCache, vt->text)) != -1) {
+	if ((su = AG_TextCacheGet(vv->tCache, s)) != -1) {
 		VG_DrawSurface(vv, x, y,
 		    VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
 		    su);
