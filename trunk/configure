@@ -2334,7 +2334,7 @@ main(int argc, char *argv[])
 	uid_t uid = 0;
 
 	pwd = getpwuid(uid);
-	return (pwd != NULL && pwd->pw_gecos != NULL && pwd->pw_class != NULL);
+	return (pwd != NULL && pwd->pw_dir != NULL);
 }
 
 EOT
@@ -2401,7 +2401,7 @@ main(int argc, char *argv[])
 	if (res == NULL) {
 		return (rv == 0);
 	}
-	return (pw.pw_class != NULL && pw.pw_gecos != NULL && pw.pw_dir != NULL);
+	return (pw.pw_dir != NULL);
 }
 
 EOT
