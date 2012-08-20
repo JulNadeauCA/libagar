@@ -18,8 +18,13 @@ ConvertUserData(AG_User *u, const struct passwd *pw)
 	Strlcpy(u->name, pw->pw_name, sizeof(u->name));
 	u->uid = (Uint32)pw->pw_uid;
 	u->gid = (Uint32)pw->pw_gid;
+#if 0
 	u->loginClass = TryStrdup(pw->pw_class);
 	u->gecos = TryStrdup(pw->pw_gecos);
+#else
+	u->loginClass = NULL;
+	u->gecos = NULL;
+#endif
 	u->home = TryStrdup(pw->pw_dir);
 	u->shell = TryStrdup(pw->pw_shell);
 
