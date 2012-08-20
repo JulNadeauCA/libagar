@@ -137,6 +137,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_condwait);
 #  elif defined(HAVE_SELECT)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);
+#  endif
 # endif
 #endif
 	
