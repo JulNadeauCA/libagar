@@ -408,8 +408,19 @@ next_char:
 			rv = Snprintf(pDst, (pEnd-pDst), spec, va_arg(ap,Uint));
 			break;
 		case 'c':
-			*pDst = (char)va_arg(ap,int);
-			rv = 1;
+			CAT_SPEC(f[1]);
+			if (pSpec == &spec[2]) {	/* Optimized (%c) */
+				if ((pEnd-pDst) < 2) {
+					*pEnd = '\0';		/* Truncate */
+					goto out;
+				}
+				pDst[0] = (char)va_arg(ap,int);
+				pDst[1] = '\0';
+				rv = 1;
+			} else {
+				rv = Snprintf(pDst, (pEnd-pDst), spec,
+				    (char)va_arg(ap,int));
+			}
 			break;
 		case 'f':
 		case 'g':
