@@ -98,7 +98,7 @@ AG_MenuNewGlobal(Uint flags)
 	AG_WindowSetCaptionS(win, agProgName != NULL ? agProgName : "agarapp");
 
 	m = AG_MenuNew(win, flags);
-	m->flags |= (flags|AG_MENU_GLOBAL);
+	m->style = AG_MENU_GLOBAL;
 	AG_MenuSetPadding(m, 4, 4, -1, -1);
 	AG_ExpandHoriz(m);
 
@@ -186,8 +186,20 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 		return (NULL);
 
 	win = AG_WindowNew(
-	    AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
-	    AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN);
+	    AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|AG_WINDOW_DENYFOCUS|
+	    AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN);
+
+	switch (m->style) {
+	case AG_MENU_DROPDOWN:
+		win->wmType = AG_WINDOW_WM_DROPDOWN_MENU;
+		break;
+	case AG_MENU_POPUP:
+		win->wmType = AG_WINDOW_WM_POPUP_MENU;
+		break;
+	default:
+		break;
+	}
+
 	AG_ObjectSetName(win, "_Popup-%s",
 	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
@@ -487,7 +499,7 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 		mi->iconSrc = NULL;
 	}
 	if (mi->pmenu != NULL &&
-	   (mi->pmenu->flags & AG_MENU_GLOBAL) &&
+	   (mi->pmenu->style == AG_MENU_GLOBAL) &&
 	    agDriverSw != NULL &&
 	    agAppMenuWin != NULL) {
 		Uint wMax, hMax;
@@ -528,6 +540,7 @@ Init(void *obj)
 	m->selecting = 0;
 	m->itemSel = NULL;
 	m->itemh = agTextFontHeight + m->tPadLbl + m->bPadLbl;
+	m->style = AG_MENU_DROPDOWN;
 	
 	m->root = CreateItem(NULL, NULL, NULL);
 	m->root->pmenu = m;
@@ -1212,6 +1225,7 @@ AG_PopupNew(void *pwid)
 	pm = Malloc(sizeof(AG_PopupMenu));
 	pm->widget = wid;
 	pm->menu = AG_MenuNew(NULL, 0);
+	pm->menu->style = AG_MENU_POPUP;
 	WIDGET(pm->menu)->window = wid->window;	/* For AG_MenuExpand() */
 	pm->item = AG_MenuNode(pm->menu->root, NULL, NULL);
 	pm->menu->itemSel = pm->item;
