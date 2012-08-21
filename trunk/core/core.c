@@ -35,9 +35,10 @@
 #include <config/ag_threads.h>
 #include <config/ag_network.h>
 
+#include <config/have_clock_gettime.h>
+#include <config/have_nanosleep.h>
 #include <config/have_gettimeofday.h>
 #include <config/have_select.h>
-#include <config/have_cygwin.h>
 #include <config/have_db4.h>
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
@@ -103,11 +104,11 @@ AG_InitCore(const char *progname, Uint flags)
 
 	/* Initialize the thread resources. */
 #ifdef AG_THREADS
-#ifdef _XBOX
+# ifdef _XBOX
 	ptw32_processInitialize();
-#endif
+# endif
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
-# if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
+# ifdef HAVE_PTHREAD_MUTEX_RECURSIVE_NP
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE_NP);
 # else
@@ -126,12 +127,15 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_RegisterClass(&agDbBtreeClass);
 #endif
 
-	/* Select the timekeeping functions. */
-	AG_SetTimeOps(&agTimeOps_dummy);
+	/* Select the default AG_Time(3) backend. */
 #if defined(_WIN32)
 	AG_SetTimeOps(&agTimeOps_win32);
+#elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_NANOSLEEP)
+	AG_SetTimeOps(&agTimeOps_posix);
 #elif defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);
+#else
+	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
 	
 	/* Select the network access routines. */
@@ -142,6 +146,8 @@ AG_InitCore(const char *progname, Uint flags)
 	rv = AG_InitNetworkSubsystem(&agNetOps_winsock1);
 # elif defined(HAVE_GETADDRINFO)
 	rv = AG_InitNetworkSubsystem(&agNetOps_bsd);
+# else
+	rv = AG_InitNetworkSubsystem(&agNetOps_dummy);
 # endif
 #else
 	rv = AG_InitNetworkSubsystem(&agNetOps_dummy);

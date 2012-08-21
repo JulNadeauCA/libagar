@@ -14,8 +14,9 @@ __BEGIN_DECLS
 extern const AG_TimeOps *agTimeOps;
 extern const AG_TimeOps  agTimeOps_dummy;
 extern const AG_TimeOps  agTimeOps_gettimeofday;
+extern const AG_TimeOps  agTimeOps_posix;
 extern const AG_TimeOps  agTimeOps_win32;
-extern const AG_TimeOps  agTimeOps_condwait;
+extern const AG_TimeOps  agTimeOps_renderer;
 
 void AG_SetTimeOps(const AG_TimeOps *);
 #define AG_GetTicks  agTimeOps->GetTicks

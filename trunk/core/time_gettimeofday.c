@@ -1,4 +1,8 @@
 /*	Public domain	*/
+/*
+ * Time backend for the traditional gettimeofday() interface.
+ * Delay() is implemented using the "timeout" argument of select().
+ */
 
 #include <sys/types.h>
 #include <sys/time.h>

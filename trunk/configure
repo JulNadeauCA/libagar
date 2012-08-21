@@ -4328,6 +4328,61 @@ else
 echo "#undef HAVE_CLOCK_WIN32" >$BLD/include/agar/config/have_clock_win32.h
 echo "hdefs[\"HAVE_CLOCK_WIN32\"] = nil" >>configure.lua
 fi;
+$ECHO_N "checking for the nanosleep() function..."
+$ECHO_N "checking for the nanosleep() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_NANOSLEEP" ]; then
+		HAVE_NANOSLEEP=`cat ${cache}/ctest-HAVE_NANOSLEEP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NANOSLEEP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <time.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct timespec rqtp, rmtp;
+	int rv;
+
+	rqtp.tv_sec = 1;
+	rqtp.tv_nsec = 1000000;
+	rv = nanosleep(&rqtp, &rmtp);
+	return (rv == -1);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_NANOSLEEP="yes"
+echo "#ifndef HAVE_NANOSLEEP" > $BLD/include/agar/config/have_nanosleep.h
+echo "#define HAVE_NANOSLEEP \"$HAVE_NANOSLEEP\"" >> $BLD/include/agar/config/have_nanosleep.h
+echo "#endif" >> $BLD/include/agar/config/have_nanosleep.h
+echo "hdefs[\"HAVE_NANOSLEEP\"] = \"$HAVE_NANOSLEEP\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_NANOSLEEP="no"
+echo "#undef HAVE_NANOSLEEP" >$BLD/include/agar/config/have_nanosleep.h
+echo "hdefs[\"HAVE_NANOSLEEP\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_NANOSLEEP" > ${cache}/ctest-HAVE_NANOSLEEP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NANOSLEEP
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
@@ -10176,20 +10231,22 @@ if [ "${HAVE_CLOCK_WIN32}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} time_win32.c"
 fi
-if [ "${HAVE_CYGWIN}" != "yes" ]
+if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]
  then
+	if [ "${HAVE_NANOSLEEP}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} time_posix.c"
+		if [ "${HAVE_PTHREADS}" = "yes" ]
+ then
+SRCS_CORE="${SRCS_CORE} time_renderer.c"
+		fi
+	fi
+else
 	if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]
  then
 		if [ "${HAVE_SELECT}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} time_gettimeofday.c"
-		fi
-		if [ "${HAVE_PTHREADS}" = "yes" ]
- then
-			if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]
- then
-SRCS_CORE="${SRCS_CORE} time_condwait.c"
-			fi
 		fi
 	fi
 fi

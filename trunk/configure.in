@@ -101,6 +101,7 @@ CHECK(getopt)
 CHECK(execvp)
 CHECK(clock_gettime)
 CHECK(clock_win32)
+CHECK(nanosleep)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)
@@ -652,16 +653,17 @@ fi
 if [ "${HAVE_CLOCK_WIN32}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "time_win32.c")
 fi
-if [ "${HAVE_CYGWIN}" != "yes" ]; then
-	if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]; then
-		if [ "${HAVE_SELECT}" = "yes" ]; then
-			MAPPEND(SRCS_CORE, "time_gettimeofday.c")
-		fi
-		if [ "${HAVE_PTHREADS}" = "yes" ]; then
-			if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
-				MAPPEND(SRCS_CORE, "time_condwait.c")
-			fi
-		fi
+if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
+	if [ "${HAVE_NANOSLEEP}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "time_posix.c")
+	fi
+	if [ "${HAVE_PTHREADS}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "time_renderer.c")
+	fi
+fi
+if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]; then
+	if [ "${HAVE_SELECT}" = "yes" ]; then
+		MAPPEND(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
 if [ "${HAVE_DB4}" = "yes" ]; then
