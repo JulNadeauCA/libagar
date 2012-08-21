@@ -1,4 +1,7 @@
 /*	Public domain	*/
+/*
+ * Time backend for the timeGetTime() interface on Windows platforms.
+ */
 
 #if defined(_WIN32)
 

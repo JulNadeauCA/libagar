@@ -403,8 +403,6 @@ AG_InitGraphics(const char *spec)
 		}
 	}
 	
-	Verbose(_("Selected graphics driver: %s %s\n"), dc->name, sOpts);
-
 	/* Process driver options */
 	if (sOpts[0] == '(' && sOpts[1] != '\0') {
 		char *key, *val, *ep;
@@ -553,8 +551,6 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 	if (drv->videoFmt == NULL)
 		AG_FatalError("Driver did not set video format");
 #endif
-
-	Verbose("Opened driver: %s\n", AGDRIVER_CLASS(drv)->name);
 
 	/* Generic Agar-GUI initialization. */
 	if (AG_InitGUI(0) == -1) {
