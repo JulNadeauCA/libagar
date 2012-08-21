@@ -844,9 +844,10 @@ WGL_GenericEventLoop(void *obj)
 #ifdef AG_DEBUG
 			agEventAvg++;
 #endif
-		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
-			AG_ProcessTimeouts(t2);
 		} else {
+			if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
+				AG_ProcessTimeouts(t2);
+			}
 			AG_Delay(1);
 		}
 	}
