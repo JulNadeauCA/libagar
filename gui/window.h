@@ -40,6 +40,29 @@ typedef struct ag_cursor_area {
 	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
 } AG_CursorArea;
 
+/*
+ * Used by EWMH-compliant window managers to set decoration, stacking position
+ * and other window behavior settings. 
+ * SYNC: agWindowWmTypeNames[].
+ */
+enum ag_window_wm_type {
+	AG_WINDOW_WM_NORMAL,		/* Normal, top-level window */
+	AG_WINDOW_WM_DESKTOP,		/* Desktop feature (e.g., fullscreen) */
+	AG_WINDOW_WM_DOCK,		/* Dock or panel feature */
+	AG_WINDOW_WM_TOOLBAR,		/* Toolbar "torn off" from main window */
+	AG_WINDOW_WM_MENU,		/* Pinnable menu window */
+	AG_WINDOW_WM_UTILITY,		/* Persistent utility window (e.g.,
+					   a palette or a toolbox). */
+	AG_WINDOW_WM_SPLASH,		/* Introductory splash screen */
+	AG_WINDOW_WM_DIALOG,		/* Dialog window */
+	AG_WINDOW_WM_DROPDOWN_MENU,	/* Menubar-triggered drop-down menu */
+	AG_WINDOW_WM_POPUP_MENU,	/* Contextual popup menu */
+	AG_WINDOW_WM_TOOLTIP,		/* Mouse hover triggered tooltip */
+	AG_WINDOW_WM_NOTIFICATION,	/* Notification bubble */
+	AG_WINDOW_WM_COMBO,		/* Combo-box triggered window */
+	AG_WINDOW_WM_DND		/* Draggable object */
+};
+
 /* Window instance */
 typedef struct ag_window {
 	struct ag_widget wid;
@@ -70,8 +93,6 @@ typedef struct ag_window {
 #define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Generate key{up,down} events for
                                             keypresses on modifier keys */
 #define AG_WINDOW_DETACHING	0x00800000 /* Window is being detached */
-#define AG_WINDOW_POPUP		0x01000000 /* "Popup" style (WM-dependent) */
-#define AG_WINDOW_DIALOG	0x02000000 /* "Dialog" style (WM-dependent) */
 #define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
 #define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
 #define AG_WINDOW_FADEOUT	0x10000000 /* Fade-out (compositing WMs) */
@@ -112,11 +133,13 @@ typedef struct ag_window {
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
+	enum ag_window_wm_type wmType;		/* EWMH window type */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);
 
 __BEGIN_DECLS
+extern const char *agWindowWmTypeNames[];
 extern AG_WidgetClass agWindowClass;
 extern struct ag_widgetq agWidgetDetachQ;	/* Widget pre-detach queue */
 extern struct ag_windowq agWindowDetachQ;	/* Window detach queue */
@@ -207,7 +230,7 @@ void           AG_UnmapAllCursors(AG_Window *, void *);
 /*
  * Render a window to the display (must be enclosed between calls to
  * AG_BeginRendering() and AG_EndRendering()).
- * The View VFS and Window object must be locked.
+ * The agDrivers VFS and Window object must be locked.
  */
 static __inline__ void
 AG_WindowDraw(AG_Window *win)
@@ -223,7 +246,7 @@ AG_WindowDraw(AG_Window *win)
 
 /*
  * Return the effective focus state of a widget.
- * The Widget and View VFS must be locked.
+ * The Widget and agDrivers VFS must be locked.
  */
 static __inline__ int
 AG_WidgetIsFocused(void *p)
@@ -240,7 +263,7 @@ AG_WidgetIsFocused(void *p)
  * calls made in event context, or direct modifications to the x,y,w,h
  * fields of the Widget structure.
  *
- * The View VFS and Window must be locked.
+ * The agDrivers VFS and Window must be locked.
  */
 static __inline__ void
 AG_WindowUpdate(AG_Window *win)
@@ -262,7 +285,7 @@ AG_WindowUpdate(AG_Window *win)
 
 /*
  * Return visibility status of window.
- * The View VFS and Window object must be locked.
+ * The agDrivers VFS and Window object must be locked.
  */
 static __inline__ int
 AG_WindowIsVisible(AG_Window *win)
@@ -272,7 +295,7 @@ AG_WindowIsVisible(AG_Window *win)
 
 /*
  * Test whether a window is currently selected for a given WM operation.
- * The View VFS must be locked.
+ * The agDrivers VFS must be locked.
  */
 static __inline__ int
 AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
@@ -286,7 +309,7 @@ AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
 
 /*
  * Return a pointer to a widget's parent window.
- * The View VFS must be locked.
+ * The agDrivers VFS must be locked.
  */
 static __inline__ AG_Window *
 AG_ParentWindow(void *obj)
@@ -329,6 +352,7 @@ AG_WidgetSetGeometry(void *wid, AG_Rect r)
 	AG_ObjectUnlock(wid);
 }
 
+/* Set the largest allowable window size. */
 static __inline__ void
 AG_WindowSetGeometryMax(AG_Window *win)
 {
@@ -338,13 +362,6 @@ AG_WindowSetGeometryMax(AG_Window *win)
 	AG_WindowSetGeometry(win, 0, 0, wMax, hMax);
 }
 
-#ifdef AG_LEGACY
-void	   AG_WindowSetVisibility(AG_Window *, int) DEPRECATED_ATTRIBUTE;
-AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
-void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
-void       AG_ViewDetach(AG_Window *) DEPRECATED_ATTRIBUTE;
-#endif /* AG_LEGACY */
-
 /* Request widget redraw. */
 static __inline__ void
 AG_Redraw(void *obj)
@@ -352,6 +369,15 @@ AG_Redraw(void *obj)
 	if (!agRenderingContext && AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
 }
+
+#ifdef AG_LEGACY
+#define AG_WINDOW_POPUP 0x01000000 /* "Popup" style (WM-dependent) */
+#define AG_WINDOW_DIALOG 0x02000000 /* "Dialog" style (WM-dependent) */
+void	   AG_WindowSetVisibility(AG_Window *, int) DEPRECATED_ATTRIBUTE;
+AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
+void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
+void       AG_ViewDetach(AG_Window *) DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/close.h>

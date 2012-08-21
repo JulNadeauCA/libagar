@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,24 @@ AG_Window *agWindowFocused = NULL;
 struct ag_windowq agWindowDetachQ;
 struct ag_widgetq agWidgetDetachQ;
 
+/* Map enum ag_window_wm_type to EWMH window type */
+const char *agWindowWmTypeNames[] = {
+	"_NET_WM_WINDOW_TYPE_NORMAL",
+	"_NET_WM_WINDOW_TYPE_DESKTOP",
+	"_NET_WM_WINDOW_TYPE_DOCK",
+	"_NET_WM_WINDOW_TYPE_TOOLBAR",
+	"_NET_WM_WINDOW_TYPE_MENU",
+	"_NET_WM_WINDOW_TYPE_UTILITY",
+	"_NET_WM_WINDOW_TYPE_SPLASH",
+	"_NET_WM_WINDOW_TYPE_DIALOG",
+	"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
+	"_NET_WM_WINDOW_TYPE_POPUP_MENU",
+	"_NET_WM_WINDOW_TYPE_TOOLTIP",
+	"_NET_WM_WINDOW_TYPE_NOTIFICATION",
+	"_NET_WM_WINDOW_TYPE_COMBO",
+	"_NET_WM_WINDOW_TYPE_DND"
+};
+
 void
 AG_InitWindowSystem(void)
 {
@@ -80,6 +98,10 @@ InitWindow(AG_Window *win, Uint flags)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
+#ifdef AG_LEGACY
+	if (win->flags & AG_WINDOW_POPUP) { win->wmType = AG_WINDOW_WM_POPUP_MENU; }
+	if (win->flags & AG_WINDOW_DIALOG) { win->wmType = AG_WINDOW_WM_DIALOG; }
+#endif
 
 	/* Default window "close" action should be detach/free. */
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
@@ -373,6 +395,7 @@ Init(void *obj)
 	AG_Window *win = obj;
 	AG_Event *ev;
 
+	win->wmType = AG_WINDOW_WM_NORMAL;
 	win->flags = AG_WINDOW_NOCURSORCHG;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
