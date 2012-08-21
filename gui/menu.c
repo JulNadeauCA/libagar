@@ -187,7 +187,7 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 
 	win = AG_WindowNew(
 	    AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|AG_WINDOW_DENYFOCUS|
-	    AG_WINDOW_KEEPABOVE|AG_WINDOW_FADEIN);
+	    AG_WINDOW_KEEPABOVE);
 
 	switch (m->style) {
 	case AG_MENU_DROPDOWN:
