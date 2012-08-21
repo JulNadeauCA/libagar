@@ -38,7 +38,6 @@
 #include <config/have_gettimeofday.h>
 #include <config/have_select.h>
 #include <config/have_cygwin.h>
-#include <config/have_clock_gettime.h>
 #include <config/have_db4.h>
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
@@ -131,14 +130,8 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_dummy);
 #if defined(_WIN32)
 	AG_SetTimeOps(&agTimeOps_win32);
-#else
-# if defined(HAVE_GETTIMEOFDAY)
-#  if defined(AG_THREADS) && defined(HAVE_CLOCK_GETTIME)
-	AG_SetTimeOps(&agTimeOps_condwait);
-#  elif defined(HAVE_SELECT)
+#elif defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SELECT)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);
-#  endif
-# endif
 #endif
 	
 	/* Select the network access routines. */
