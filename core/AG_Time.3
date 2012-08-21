@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -35,45 +35,67 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The
-.Nm
-interface implements useful timing-related routines.
+These functions provide a low-level interface to monotonically increasing
+time sources.
+Different time backends may be implemented (see
+.Dq INTERNAL API
+below).
+Agar provides the following backends:
+.Pp
+.Bl -tag -compact -width "agTimeOps_gettimeofday "
+.It agTimeOps_dummy
+No-op, timers will be unavailable.
+.It agTimeOps_posix
+Monotonic clock using
+.Fn clock_gettime
+interface
+.It agTimeOps_gettimeofday
+Traditional
+.Fn gettimeofday
+interface.
+.It agTimeOps_win32
+Windows winmm API.
+.It agTimeOps_renderer
+Monotonic clock which stops while graphical rendering is performed.
+This is useful for applications performing offline rendering, where the
+outcome may be influenced by different threads relying on Agar timers
+or
+.Fn AG_Delay
+calls.
+.Ed
 .Sh INTERFACE
 .nr nS 1
 .Ft "Uint32"
 .Fn AG_GetTicks "void"
 .Pp
 .Ft "void"
-.Fn AG_Delay "Uint32 ms"
+.Fn AG_Delay "Uint32 t"
 .Pp
-.nr nS 0
-The
-.Fn AG_GetTicks
-function returns the number of milliseconds elapsed since the Agar library
-initialization.
-The value wraps if the program runs for more than approximately 49 days.
-.Pp
-.Fn AG_Delay
-waits at least
-.Fa ms
-milliseconds (possibly longer depending on OS scheduling), before returning.
-using the name of the object class as a signature.
-.Sh INTERNAL INTERFACE
-Internally,
-.Fn AG_GetTicks
-and
-.Fn AG_Delay
-rely on a set of OS-dependent drivers.
-It is possible to implement new drivers using the following interface:
-.Pp
-.nr nS 1
 .Ft void
 .Fn AG_SetTimeOps "const AG_TimeOps *ops"
 .Pp
 .nr nS 0
 The
+.Fn AG_GetTicks
+function returns the current time in ticks.
+One tick usually corresponds to one millisecond.
+.Pp
+The
+.Fn AG_Delay
+function blocks the current thread, waiting at least
+.Fa t
+ticks before returning.
+The exact amount of time which
+.Fn AG_Delay
+waits is backend-dependent.
+.Pp
+The
 .Fn AG_SetTimeOps
-function accepts a pointer to the structure:
+function selects a time backend (see below).
+.Sh BACKEND INTERFACE
+The argument to
+.Fn AG_SetTimeOps
+should point to the following structure:
 .Bd -literal
 typedef struct ag_time_ops {
 	const char *name;
@@ -97,10 +119,18 @@ and
 .Fn Delay
 is the backend to
 .Fn AG_Delay .
-.Pp
-.Fn AG_SetTimeOps
-can be safely invoked multiple times to change the effective
-.Ft AG_TimeOps .
+.Sh EXAMPLES
+The following code fragment selects the rendering-aware time backend,
+.Va agTimeOps_renderer ,
+if it is available:
+.Bd -literal -offset indent
+#include <agar/config/have_clock_gettime.h>
+#include <agar/config/have_pthreads.h>
+
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+AG_SetTimeOps(&agTimeOps_renderer);
+#endif
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Timeout 3
