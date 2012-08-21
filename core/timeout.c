@@ -192,5 +192,4 @@ rescan:
 		AG_ObjectUnlock(ob);
 	}
 	AG_UnlockTiming();
-	AG_Delay(1);
 }
