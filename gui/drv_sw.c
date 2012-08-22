@@ -284,6 +284,7 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 
 	AG_PostEvent(NULL, win, "window-user-move", "%d,%d",
 	    WIDGET(win)->x, WIDGET(win)->y);
+	win->dirty = 1;
 }
 
 /* Process a window resize operation initiated by the WM. */
