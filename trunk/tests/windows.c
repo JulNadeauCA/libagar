@@ -6,14 +6,12 @@
 #include "agartest.h"
 
 static void
-TestInitialAlign(AG_Event *event)
+TestDesktopAlign(AG_Event *event)
 {
 	AG_Window *winParent = AG_PTR(1);
 	AG_Window *win;
 	int i;
 	
-	AG_LabelNewS(winParent, 0, "Creating test windows...");
-
 	for (i = 0; i < 2; i++) {
 		if ((win = AG_WindowNew(0))) {
 			AG_WindowSetCaption(win, "Auto%d", i);
@@ -84,57 +82,55 @@ TestInitialAlign(AG_Event *event)
 }
 
 static void
-TestWmAttributes(AG_Event *event)
+CreateTestWindow(AG_Event *event)
 {
-	AG_Window *winParent = AG_PTR(1);
+	AG_TestInstance *ti = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2);
+	Uint *testFlags = AG_PTR(3);
 	AG_Window *win;
 	int i;
 
-	if ((win = AG_WindowNew(AG_WINDOW_NOMOVE|AG_WINDOW_NORESIZE|
-	    AG_WINDOW_NOBUTTONS))) {
-		AG_WindowSetCaption(win, "Unmovable");
-		AG_LabelNewS(win, 0, "Unmovable window");
-		AG_WindowAttach(winParent, win);
-		AG_WindowShow(win);
+	if ((win = AG_WindowNew(*testFlags)) == NULL) {
+		TestMsg(ti, "AG_WindowNew() failed: %s", AG_GetError());
+		return;
 	}
-	
-	if ((win = AG_WindowNew(AG_WINDOW_KEEPABOVE))) {
-		AG_WindowSetCaption(win, "KEEPABOVE");
-		AG_LabelNewS(win, 0, "KEEPABOVE");
-		AG_WindowAttach(winParent, win);
-		AG_WindowShow(win);
-	}
-	if ((win = AG_WindowNew(AG_WINDOW_KEEPBELOW))) {
-		AG_WindowSetCaption(win, "KEEPBELOW");
-		AG_LabelNewS(win, 0, "KEEPBELOW");
-		AG_WindowAttach(winParent, win);
-		AG_WindowShow(win);
-	}
-	if ((win = AG_WindowNew(0))) {
-		AG_WindowSetCaption(win, "Tweaked borders");
-		AG_LabelNewS(win, 0, "Window with tweaked borders");
-		AG_WindowSetSideBorders(win, 10);
-		AG_WindowSetBottomBorder(win, 10);
-		AG_WindowAttach(winParent, win);
-		AG_WindowShow(win);
-	}
-	for (i = 0; i < 5; i++) {
-		if ((win = AG_WindowNewNamed(0, "foo"))) {
-			AG_WindowSetCaption(win, "Named");
-			AG_LabelNewS(win, 0, "Named window");
-			AG_WindowAttach(winParent, win);
-			AG_WindowShow(win);
-		}
-	}
+
+	AG_WindowSetCaption(win, "Test window");
+	AG_LabelNewS(win, 0, "This is a test window");
+	AG_LabelNew(win, 0, "Flags = 0x%x", *testFlags);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close this window",
+	    AGWINDETACH(win));
+	AG_WindowAttach(winParent, win);
+	AG_WindowShow(win);
 }
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test initial window alignment",
-	    TestInitialAlign, "%p", win);
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test WM window attributes",
-	    TestWmAttributes, "%p", win);
+	AG_FlagDescr winFlags[] = {
+		{ AG_WINDOW_MODAL,		"MODAL",	1 },
+		{ AG_WINDOW_KEEPABOVE,		"KEEPABOVE",	1 },
+		{ AG_WINDOW_KEEPBELOW,		"KEEPBELOW",	1 },
+		{ AG_WINDOW_NOTITLE,		"NOTITLE",	1 },
+		{ AG_WINDOW_NOBORDERS,		"NOBORDERS",	1 },
+		{ AG_WINDOW_NOHRESIZE,		"NOHRESIZE",	1 },
+		{ AG_WINDOW_NOVRESIZE,		"NOVRESIZE",	1 },
+		{ AG_WINDOW_NOCLOSE,		"NOCLOSE",	1 },
+		{ AG_WINDOW_NOMINIMIZE,		"NOMINIMIZE",	1 },
+		{ AG_WINDOW_NOMAXIMIZE,		"NOMAXIMIZE",	1 },
+		{ AG_WINDOW_NOBACKGROUND,	"NOBACKGROUND",	1 },
+		{ AG_WINDOW_NOMOVE,		"NOMOVE",	1 },
+		{ 0,				NULL,		0 }
+	};
+	static Uint testFlags = 0;
+
+	AG_LabelNewS(win, 0, "Create test window with flags:");
+	AG_CheckboxSetFromFlags(win, 0, &testFlags, winFlags);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create Test Window",
+	    CreateTestWindow, "%p,%p,%p", obj, win, &testFlags);
+	AG_SeparatorNewHoriz(win);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test Desktop Alignment",
+	    TestDesktopAlign, "%p", win);
 	return (0);
 }
 
