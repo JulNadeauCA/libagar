@@ -27,11 +27,6 @@
  * Driver for OpenGL graphics via the SDL 1.2 library.
  */
 
-#include <config/ag_threads.h>
-#include <config/have_gettimeofday.h>
-#include <config/have_clock_gettime.h>
-#include <config/have_cygwin.h>
-
 #include <core/core.h>
 
 #include "gui.h"
@@ -64,6 +59,13 @@ typedef struct ag_sdlgl_driver {
 static int nDrivers = 0;		/* Opened driver instances */
 static int initedSDL = 0;		/* Used SDL_Init() */
 static int initedSDLVideo = 0;		/* Used SDL_INIT_VIDEO */
+
+#include <config/have_clock_gettime.h>
+#include <config/have_pthreads.h>
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+extern AG_Cond agCondBeginRender;
+extern AG_Cond agCondEndRender;
+#endif
 
 static void
 Init(void *obj)
@@ -191,13 +193,9 @@ SDLGL_BeginRendering(void *obj)
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 
-#if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
-    defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
-	{
-		extern AG_Cond agCondBeginRender;
-		/* Suspend any AG_Delay()'ed threads. */
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer) 		/* Renderer-aware ops */
 		AG_CondBroadcast(&agCondBeginRender);
-	}
 #endif
 
 	glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|GL_LIGHTING_BIT|
@@ -309,13 +307,9 @@ SDLGL_EndRendering(void *drv)
 		else			{ glDisable(GL_CLIP_PLANE3); }
 	}
 	
-#if defined(AG_THREADS) && defined(HAVE_GETTIMEOFDAY) && \
-    defined(HAVE_CLOCK_GETTIME) && !defined(HAVE_CYGWIN)
-	{
-		extern AG_Cond agCondEndRender;
-		/* Resume any AG_Delay()'ed threads. */
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
 		AG_CondBroadcast(&agCondEndRender);
-	}
 #endif
 }
 
@@ -567,8 +561,10 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
 	
 	/* Regenerate all widget textures. */
-	AG_FOREACH_WINDOW(win, sgl)
+	AG_FOREACH_WINDOW(win, sgl) {
 		AG_WidgetRegenResourcesGL(win);
+		win->dirty = 1;
+	}
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
 		ClearBackground();
