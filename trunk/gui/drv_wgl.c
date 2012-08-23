@@ -205,10 +205,11 @@ WGL_Close(void *obj)
 static void
 WGL_GetWndStyle(AG_Window *win, DWORD *wndStyle, DWORD *wndStyleEx)
 {
-	*wndStyle = ((win->flags & AG_WINDOW_POPUP) ||
-	             (win->flags & AG_WINDOW_DIALOG) ||
-	             (win->flags & AG_WINDOW_NOTITLE)) ?
-		     WS_POPUP : WS_OVERLAPPEDWINDOW;
+	if (win->wmType == AG_WINDOW_WM_NORMAL) {
+		*wndStyle = WS_OVERLAPPEDWINDOW;
+	} else {
+		*wndStyle = WS_POPUP;
+	}
 	*wndStyleEx = 0;
 	
 	if (win->flags & AG_WINDOW_NOTITLE)
@@ -219,14 +220,20 @@ WGL_GetWndStyle(AG_Window *win, DWORD *wndStyle, DWORD *wndStyleEx)
 		(*wndStyle) &= ~(WS_MAXIMIZEBOX);
 	if (win->flags & AG_WINDOW_NORESIZE)
 		(*wndStyle) &= ~(WS_THICKFRAME);
-
 #if defined(WINVER) && (WINVER >= 0x0400)
-	if ((win->flags & AG_WINDOW_NOTITLE) || (win->flags & AG_WINDOW_POPUP))
+	if (win->wmType == AG_WINDOW_WM_TOOLBAR ||
+	    win->wmType == AG_WINDOW_WM_MENU ||
+	    win->wmType == AG_WINDOW_WM_DROPDOWN_MENU ||
+	    win->wmType == AG_WINDOW_WM_POPUP_MENU)
 		(*wndStyleEx) |= WS_EX_TOOLWINDOW;
 #endif
 #if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0500)
 	if (win->flags & AG_WINDOW_KEEPBELOW)
 		(*wndStyleEx) |= WS_EX_NOACTIVATE;
+#endif
+#if defined(WS_EX_TOPMOST)
+	if (win->flags & AG_WINDOW_KEEPABOVE)
+		(*wndStyleEx) |= WS_EX_TOPMOST;
 #endif
 }
 
