@@ -210,13 +210,6 @@ MenuRootSelectedItemBackground(void *m, AG_Rect r)
 	AG_DrawRect(m, r, agColors[MENU_SEL_COLOR]);
 }
 
-/* Background for Menu views */
-static void
-MenuBackground(void *mv, AG_Rect r)
-{
-	AG_DrawBox(mv, r, 1, agColors[MENU_UNSEL_COLOR]);
-}
-
 /* Menu separator item */
 static void
 MenuItemSeparator(void *mv, int x1, int x2, int y, int h)
@@ -710,7 +703,7 @@ AG_Style agStyleDefault = {
 	FixedPlotterBackground,
 	MenuRootBackground,
 	MenuRootSelectedItemBackground,
-	MenuBackground,
+	NULL,					/* MenuBackground (OBSOL) */
 	NULL,					/* MenuItemBackground (OBSOL) */
 	MenuItemSeparator,
 	NotebookBackground,
