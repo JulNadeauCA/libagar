@@ -384,8 +384,10 @@ Init(void *obj)
 	ptr->colors[14] = AG_ColorRGB(127, 255, 212);
 	ptr->colors[15] = AG_ColorRGB(218, 99, 4);
 	
-	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
-	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
+	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ,
+	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
+	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT,
+	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
 	AG_BindInt(ptr->hbar, "value", &ptr->xOffs);
 	AG_BindInt(ptr->hbar, "visible", &ptr->r.w);
 	AG_BindInt(ptr->hbar, "max", &ptr->xMax);
@@ -473,7 +475,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	ptr->r.h -= HEIGHT(ptr->hbar);
 
 	aBar.x = a->w - ptr->vbar->width;
-	aBar.y = ptr->vbar->width;
+	aBar.y = 0;
 	aBar.w = ptr->vbar->width;
 	aBar.h = a->h - ptr->hbar->width;
 	AG_WidgetSizeAlloc(ptr->vbar, &aBar);
@@ -493,17 +495,15 @@ Draw(void *obj)
 {
 	M_Plotter *ptr = obj;
 	AG_Driver *drv = WIDGET(ptr)->drv;
+	AG_Rect rw = AG_RECT(1, 1, WIDTH(ptr)-2, HEIGHT(ptr)-2);
 	M_Plot *pl;
 	M_PlotLabel *plbl;
 	Uint i;
 	int y0 = ptr->r.h/2;
 
-	AG_DrawBox(ptr, ptr->r, -1, agColors[GRAPH_BG_COLOR]);
+	AG_DrawBox(ptr, rw, -1, agColors[GRAPH_BG_COLOR]);
 	
-	AG_WidgetDraw(ptr->hbar);
-	AG_WidgetDraw(ptr->vbar);
-
-	AG_PushClipRect(ptr, ptr->r);
+	AG_PushClipRect(ptr, rw);
 	
 	AG_DrawLineH(ptr, 1, ptr->r.w-2, y0, ptr->colors[0]);
 	AG_DrawLineV(ptr, ptr->xMax-1, 30, ptr->r.h-30, ptr->colors[0]);
@@ -610,6 +610,9 @@ Draw(void *obj)
 	}
 
 	AG_PopClipRect(ptr);
+	
+	AG_WidgetDraw(ptr->hbar);
+	AG_WidgetDraw(ptr->vbar);
 }
 
 void
