@@ -392,7 +392,8 @@ MouseButtonDown(AG_Event *event)
 	    button != AG_MOUSE_LEFT) {
 		return;
 	}
-	AG_WidgetFocus(sock);
+	if (!AG_WidgetIsFocused(sock))
+		AG_WidgetFocus(sock);
 	
 	binding = AG_GetVariable(sock, "state", &pState);
 	if (!(sock->flags & AG_SOCKET_STICKY_STATE)) {

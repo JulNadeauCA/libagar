@@ -1448,8 +1448,9 @@ MouseButtonDown(AG_Event *event)
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
 	AG_EditableBuffer *buf;
-	
-	AG_WidgetFocus(ed);
+
+	if (!AG_WidgetIsFocused(ed))
+		AG_WidgetFocus(ed);
 
 	switch (btn) {
 	case AG_MOUSE_LEFT:

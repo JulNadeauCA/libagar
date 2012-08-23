@@ -370,7 +370,9 @@ AG_WidgetStdMouseButtonDown(AG_Event *event)
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 
-	AG_WidgetFocus(wid);
+	if (!AG_WidgetIsFocused(wid)) {
+		AG_WidgetFocus(wid);
+	}
 	AG_ExecMouseAction(wid, AG_ACTION_ON_BUTTONDOWN, btn, x, y);
 }
 

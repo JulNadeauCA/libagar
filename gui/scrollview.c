@@ -166,7 +166,9 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
 		sv->flags |= AG_SCROLLVIEW_PANNING;
-		AG_WidgetFocus(sv);
+		if (!AG_WidgetIsFocused(sv)) {
+			AG_WidgetFocus(sv);
+		}
 		break;
 	default:
 		break;

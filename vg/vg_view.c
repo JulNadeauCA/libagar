@@ -130,7 +130,9 @@ MouseButtonDown(AG_Event *event)
 	x = vCt.x;
 	y = vCt.y;
 
-	AG_WidgetFocus(vv);
+	if (!AG_WidgetIsFocused(vv)) {
+		AG_WidgetFocus(vv);
+	}
 	vv->mouse.x = x;
 	vv->mouse.y = y;
 
@@ -719,7 +721,9 @@ VG_ViewSelectToolEv(AG_Event *event)
 {
 	VG_View *vv = AG_PTR(1);
 
-	AG_WidgetFocus(vv);
+	if (!AG_WidgetIsFocused(vv)) {
+		AG_WidgetFocus(vv);
+	}
 	VG_ViewSelectTool(vv, AG_PTR(2), AG_PTR(3));
 }
 

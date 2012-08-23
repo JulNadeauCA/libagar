@@ -29,6 +29,7 @@
 #ifdef HAVE_OPENGL
 
 #include "glview.h"
+#include "window.h"
 #include "primitive.h"
 #include "opengl.h"
 
@@ -74,7 +75,8 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
 
-	AG_WidgetFocus(glv);
+	if (!AG_WidgetIsFocused(glv))
+		AG_WidgetFocus(glv);
 }
 
 static void

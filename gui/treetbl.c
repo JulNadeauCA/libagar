@@ -468,7 +468,8 @@ MouseButtonDown(AG_Event *event)
 	int coord_x = AG_INT(2);
 	int coord_y = AG_INT(3);
 
-	AG_WidgetFocus(tt);
+	if (!AG_WidgetIsFocused(tt))
+		AG_WidgetFocus(tt);
 
 	if (tt->hCol > 0 && coord_y < tt->hCol) {
 		/* a mouse down on the column header */

@@ -276,7 +276,8 @@ MouseButtonDown(AG_Event *event)
 	int sy = (y - tv->yoffs)/tv->pxsz;
 	int i;
 
-	AG_WidgetFocus(tv);
+	if (!AG_WidgetIsFocused(tv))
+		AG_WidgetFocus(tv);
 
 	switch (button) {
 	case AG_MOUSE_WHEELUP:

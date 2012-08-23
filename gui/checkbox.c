@@ -158,7 +158,9 @@ MouseButtonDown(AG_Event *event)
 		return;
 
 	if (button == AG_MOUSE_LEFT) {
-		AG_WidgetFocus(cb);
+		if (!AG_WidgetIsFocused(cb)) {
+			AG_WidgetFocus(cb);
+		}
 		AG_CheckboxToggle(cb);
 	}
 }

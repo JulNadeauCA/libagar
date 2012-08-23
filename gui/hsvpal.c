@@ -589,6 +589,9 @@ MouseButtonDown(AG_Event *event)
 	int y = AG_INT(3);
 	float r;
 
+	if (!AG_WidgetIsFocused(pal))
+		AG_WidgetFocus(pal);
+
 	switch (btn) {
 	case AG_MOUSE_LEFT:
 		if (y > pal->rAlpha.y) {
@@ -607,7 +610,6 @@ MouseButtonDown(AG_Event *event)
 				pal->state = AG_HSVPAL_SEL_SV;
 			}
 		}
-		AG_WidgetFocus(pal);
 		AG_Redraw(pal);
 		break;
 	case AG_MOUSE_MIDDLE:
