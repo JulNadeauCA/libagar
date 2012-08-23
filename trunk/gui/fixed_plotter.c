@@ -151,9 +151,11 @@ MouseButtonDown(AG_Event *event)
 	
 	if (button != AG_MOUSE_LEFT)
 		return;
+	
+	if (!AG_WidgetIsFocused(fpl))
+		AG_WidgetFocus(fpl);
 
 	fpl->flags &= ~(AG_FIXED_PLOTTER_SCROLL);
-	AG_WidgetFocus(fpl);
 }
 
 static void

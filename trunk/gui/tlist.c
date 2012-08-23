@@ -916,6 +916,9 @@ MouseButtonDown(AG_Event *event)
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
 		return;
 	
+	if (!AG_WidgetIsFocused(tl))
+		AG_WidgetFocus(tl);
+	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
 		tl->rOffs -= AG_WidgetScrollDelta(&tl->wheelTicks);
@@ -1005,7 +1008,6 @@ MouseButtonDown(AG_Event *event)
 			break;
 		}
 
-		AG_WidgetFocus(tl);
 		AG_TlistDeselectAll(tl);
 		SelectItem(tl, ti);
 
@@ -1034,8 +1036,6 @@ MouseButtonDown(AG_Event *event)
 		} else if (ti->cat != NULL) {
 			AG_TlistPopup *tp;
 	
-			AG_WidgetFocus(tl);
-		
 			if (!(tl->flags &
 			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
 			    !(AG_GetModState(tl) & (AG_KEYMOD_CTRL|AG_KEYMOD_SHIFT))) {

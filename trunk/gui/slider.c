@@ -511,7 +511,9 @@ MouseButtonDown(AG_Event *event)
 	if (GetPosition(sl, &pos) == -1)
 		return;
 
-	AG_WidgetFocus(sl);
+	if (!AG_WidgetIsFocused(sl)) {
+		AG_WidgetFocus(sl);
+	}
 	if (x >= pos && x <= (pos + sl->wControl)) {
 		/*
 		 * Click on the slider itself. We don't do anything except

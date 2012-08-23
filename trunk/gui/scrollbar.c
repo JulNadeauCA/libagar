@@ -509,7 +509,9 @@ MouseButtonDown(AG_Event *event)
 	if (button != AG_MOUSE_LEFT) {
 		return;
 	}
-	AG_WidgetFocus(sb);
+	if (!AG_WidgetIsFocused(sb)) {
+		AG_WidgetFocus(sb);
+	}
 	posFound = (GetPxCoords(sb, &pos, &len) == 0);
 	if (x < 0) {
 		/*

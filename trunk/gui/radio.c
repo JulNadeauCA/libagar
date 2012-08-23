@@ -331,6 +331,9 @@ MouseButtonDown(AG_Event *event)
 	int y = AG_INT(3);
 	int *sel, selNew = -1;
 
+	if (!AG_WidgetIsFocused(rad))
+		AG_WidgetFocus(rad);
+
 	value = AG_GetVariable(rad, "value", &sel);
 	switch (button) {
 	case AG_MOUSE_LEFT:
@@ -340,7 +343,6 @@ MouseButtonDown(AG_Event *event)
 		} else if (selNew < 0) {
 			selNew = 0;
 		}
-		AG_WidgetFocus(rad);
 		break;
 	default:
 		break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -211,7 +211,8 @@ MouseButtonDown(AG_Event *event)
 	if (AG_WidgetDisabled(bu))
 		return;
 
-	AG_WidgetFocus(bu);
+	if (!AG_WidgetIsFocused(bu))
+		AG_WidgetFocus(bu);
 
 	if (button != AG_MOUSE_LEFT)
 		return;

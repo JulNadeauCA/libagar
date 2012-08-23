@@ -1597,6 +1597,9 @@ MouseButtonDown(AG_Event *event)
 	int y = AG_INT(3);
 	int m;
 	
+	if (!AG_WidgetIsFocused(t))
+		AG_WidgetFocus(t);
+	
 	switch (button) {
 	case AG_MOUSE_WHEELUP:
 		t->mOffs -= AG_WidgetScrollDelta(&t->wheelTicks);
@@ -1618,7 +1621,7 @@ MouseButtonDown(AG_Event *event)
 			break;
 		}
 		if (t->m == 0 || t->n == 0) {
-			goto out;
+			return;
 		}
 		m = RowAtY(t, y);
 		CellLeftClick(t, m, x);
@@ -1629,7 +1632,7 @@ MouseButtonDown(AG_Event *event)
 			break;
 		}
 		if (t->m == 0 || t->n == 0) {
-			goto out;
+			return;
 		}
 		m = RowAtY(t, y);
 		CellRightClick(t, m, x,y);
@@ -1637,8 +1640,6 @@ MouseButtonDown(AG_Event *event)
 	default:
 		break;
 	}
-out:
-	AG_WidgetFocus(t);
 }
 
 static void
