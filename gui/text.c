@@ -1380,10 +1380,10 @@ AG_TextParseFontSpec(const char *fontspec)
 }
 
 /*
- * Canned dialogs.
+ * Canned notification and dialog windows.
  */
 
-/* Display a message (format string). */
+/* Display an informational message window. */
 void
 AG_TextMsg(enum ag_text_msg_title title, const char *fmt, ...)
 {
@@ -1395,8 +1395,6 @@ AG_TextMsg(enum ag_text_msg_title title, const char *fmt, ...)
 	va_end(ap);
 	AG_TextMsgS(title, s);
 }
-
-/* Display a message (C string). */
 void
 AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 {
@@ -1404,9 +1402,9 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
-			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	win->wmType = AG_WINDOW_WM_NOTIFICATION;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1432,17 +1430,15 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
 	va_end(ap);
 	AG_TextTmsgS(title, expire, s);
 }
-
-/* Display a message for a given period of time (C string). */
 void
 AG_TextTmsgS(enum ag_text_msg_title title, Uint32 expire, const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
-			   AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	win->wmType = AG_WINDOW_WM_NOTIFICATION;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1478,12 +1474,6 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 
 	AG_TextInfoS(key, s);
 }
-
-/*
- * Display an informational message with a "Don't tell me again" option.
- * The user preference is preserved in a persistent table. Unlike warnings,
- * the dialog window is not modal (C string).
- */
 void
 AG_TextInfoS(const char *key, const char *s)
 {
@@ -1501,9 +1491,9 @@ AG_TextInfoS(const char *key, const char *s)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
-			   AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_INFO]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1523,8 +1513,7 @@ AG_TextInfoS(const char *key, const char *s)
 
 /*
  * Display a warning message with a "Don't tell me again" option.
- * The user preference is preserved in a persistent table
- * (format string).
+ * The user preference is preserved in a persistent table.
  */
 void
 AG_TextWarning(const char *key, const char *fmt, ...)
@@ -1538,12 +1527,6 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 
 	AG_TextWarningS(key, s);
 }
-
-/*
- * Display a warning message with a "Don't tell me again" option.
- * The user preference is preserved in a persistent table
- * (C string).
- */
 void
 AG_TextWarningS(const char *key, const char *s)
 {
@@ -1561,9 +1544,10 @@ AG_TextWarningS(const char *key, const char *s)
 	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
-			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+			   AG_WINDOW_NOMAXIMIZE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1581,7 +1565,7 @@ AG_TextWarningS(const char *key, const char *s)
 	AG_WindowShow(win);
 }
 
-/* Display an error message (format string). */
+/* Display an error message. */
 void
 AG_TextError(const char *fmt, ...)
 {
@@ -1594,8 +1578,6 @@ AG_TextError(const char *fmt, ...)
 
 	AG_TextErrorS(s);
 }
-
-/* Display an error message (C string). */
 void
 AG_TextErrorS(const char *s)
 {
@@ -1603,9 +1585,10 @@ AG_TextErrorS(const char *s)
 	AG_VBox *vb;
 	AG_Button *btnOK;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
-			   AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+			   AG_WINDOW_NOMAXIMIZE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[AG_MSG_ERROR]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1633,8 +1616,8 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
-	                   AG_WINDOW_NOTITLE);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
@@ -1663,7 +1646,8 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
+	win = AG_WindowNew(AG_WINDOW_MODAL);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetCaptionS(win, _("Enter real number"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1700,20 +1684,20 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	Vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
-	AG_WindowSetCaptionS(win, _("Edit string"));
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	AG_LabelNewS(vb, 0, msg);
 	
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL, NULL);
-	AG_ExpandHoriz(tb);
+	vb = AG_VBoxNew(win, AG_VBOX_EXPAND);
+	tb = AG_TextboxNewS(vb, AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE, NULL);
+	AG_Expand(tb);
 	AG_TextboxBindUTF8(tb, sp, len);
 	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 
-	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL);
 	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	AG_WidgetFocus(tb);
@@ -1731,8 +1715,8 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	AG_Textbox *tb;
 	AG_Event *ev;
 
-	win = AG_WindowNew(AG_WINDOW_DIALOG|AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
-	                   AG_WINDOW_NOTITLE);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
+	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
