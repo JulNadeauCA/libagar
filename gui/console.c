@@ -65,8 +65,9 @@ static void
 ScrollUp(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
+	int newOffs = (int)cons->rOffs - 1;
 
-	if (((int)cons->rOffs - 1) >= 0) {
+	if (newOffs >= 0) {
 		cons->rOffs--;
 		AG_Redraw(cons);
 	}
@@ -76,8 +77,10 @@ static void
 ScrollDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
+	int newOffs = (int)cons->rOffs + 1;
 
-	if ((cons->rOffs + 1) <= (cons->nLines - cons->rVisible)) {
+	if (cons->nLines > cons->rVisible &&
+	    newOffs <= (cons->nLines - cons->rVisible)) {
 		cons->rOffs++;
 		AG_Redraw(cons);
 	}
@@ -87,13 +90,13 @@ static void
 PageUp(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-	int offsNew = (int)cons->rOffs - (int)cons->rVisible;
+	int newOffs = (int)cons->rOffs - (int)cons->rVisible;
 
-	if (offsNew < 0) {
-		offsNew = 0;
+	if (newOffs < 0) {
+		newOffs = 0;
 	}
-	if (cons->rOffs != offsNew) {
-		cons->rOffs = (Uint)offsNew;
+	if (cons->rOffs != newOffs) {
+		cons->rOffs = (Uint)newOffs;
 		AG_Redraw(cons);
 	}
 }
@@ -102,13 +105,17 @@ static void
 PageDown(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-	int offsNew = (int)cons->rOffs + (int)cons->rVisible;
-	
-	if (offsNew > (cons->nLines - cons->rVisible))  {
-		offsNew = MAX(0, cons->nLines - cons->rVisible);
+	int newOffs;
+
+	if (cons->nLines < cons->rVisible) {
+		return;
 	}
-	if (cons->rOffs != offsNew) {
-		cons->rOffs = (Uint)offsNew;
+	newOffs = (int)cons->rOffs + (int)cons->rVisible;
+	if (newOffs > (cons->nLines - cons->rVisible))  {
+		newOffs = MAX(0, cons->nLines - cons->rVisible);
+	}
+	if (cons->rOffs != newOffs) {
+		cons->rOffs = (Uint)newOffs;
 		AG_Redraw(cons);
 	}
 }
@@ -286,7 +293,9 @@ BeginSelect(AG_Event *event)
 	if (x < cons->r.x || x > cons->r.x+cons->r.w) {
 		return;
 	}
-	AG_WidgetFocus(cons);
+	if (!AG_WidgetIsFocused(cons)) {
+		AG_WidgetFocus(cons);
+	}
 	if (cons->pm != NULL) {
 		AG_PopupDestroy(cons, cons->pm);
 		cons->pm = NULL;
