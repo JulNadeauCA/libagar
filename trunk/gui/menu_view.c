@@ -280,9 +280,6 @@ Draw(void *obj)
 	AG_Rect r;
 	int i;
 
-	STYLE(mview)->MenuBackground(mview,
-	    AG_RECT(0, 0, WIDTH(mview), HEIGHT(mview)));
-
 	r.x = 0;
 	r.y = mview->tPad;
 	r.w = WIDTH(mview);
