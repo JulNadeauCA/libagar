@@ -41,8 +41,8 @@ typedef struct ag_cursor_area {
 } AG_CursorArea;
 
 /*
- * Used by EWMH-compliant window managers to set decoration, stacking position
- * and other window behavior settings. 
+ * Window function (used by the underlying window manager to set decoration,
+ * stacking position and other window behavior settings). Maps to EWMH types.
  * SYNC: agWindowWmTypeNames[].
  */
 enum ag_window_wm_type {
@@ -68,7 +68,7 @@ typedef struct ag_window {
 	struct ag_widget wid;
 
 	Uint flags;
-#define AG_WINDOW_MODAL		0x00000001 /* Place in foreground */
+#define AG_WINDOW_MODAL		0x00000001 /* Application-modal window */
 #define AG_WINDOW_MAXIMIZED	0x00000002 /* Window is maximized */
 #define AG_WINDOW_MINIMIZED	0x00000004 /* Window is minimized */
 #define AG_WINDOW_KEEPABOVE	0x00000008 /* Keep window above */
@@ -118,7 +118,9 @@ typedef struct ag_window {
 	AG_Rect rSaved;				/* Saved geometry */
 	int minPct;				/* For MINSIZEPCT */
 
-	struct ag_window *parent;		/* Parent window */
+	struct ag_window *parent;		/* Logical parent window */
+	struct ag_window *transientFor;		/* Transient parent window */
+
 	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
 	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
 	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
@@ -133,7 +135,7 @@ typedef struct ag_window {
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
-	enum ag_window_wm_type wmType;		/* EWMH window type */
+	enum ag_window_wm_type wmType;		/* Window function */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);
@@ -201,6 +203,7 @@ void	 AG_WindowUnminimize(AG_Window *);
 
 void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);
+void     AG_WindowMakeTransient(AG_Window *, AG_Window *);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
 void	 AG_WindowResize(AG_Window *);
