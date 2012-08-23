@@ -163,6 +163,7 @@ static void
 RunTest(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
+	AG_Window *winParent = AG_PTR(2);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
 
@@ -207,6 +208,7 @@ RunTest(AG_Event *event)
 			AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
 			    TestWindowClose, "%p", ti);
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
+			AG_WindowAttach(winParent, win);
 			AG_WindowShow(win);
 		} else {
 			AG_ConsoleMsg(console, _("%s: Failed to start (%s)"),
@@ -468,12 +470,19 @@ main(int argc, char *argv[])
 		AG_ConsoleSetFont(console, font);
 	}
 	{
+		char drvNames[256];
 		AG_AgarVersion av;
 
 		AG_GetVersion(&av);
-		AG_ConsoleMsg(console, _("Agar Test Suite"));
-		AG_ConsoleMsg(console, _("Library version: %d.%d.%d (\"%s\")"),
+		AG_ConsoleMsg(console, _("Agar %d.%d.%d (\"%s\")"),
 		    av.major, av.minor, av.patch, av.release);
+		AG_ConsoleMsg(console, _("Current Agar driver: %s (%s)"),
+		    AGWIDGET(win)->drvOps->name,
+		    (AGWIDGET(win)->drvOps->type == AG_FRAMEBUFFER) ?
+		    _("framebuffer-based") : _("vector-based"));
+		AG_ListDriverNames(drvNames, sizeof(drvNames));
+		AG_ConsoleMsg(console, _("Available Agar drivers: %s"), drvNames);
+
 #ifdef AG_DEBUG
 		AG_ConsoleMsg(console,
 		    _("Debugger is available (press F12 to debug active window)"));
@@ -481,8 +490,8 @@ main(int argc, char *argv[])
 	}
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
-	AG_TlistSetDblClickFn(tl, RunTest, "%p", tl);
-	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl);
+	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, win);
+	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl, win);
 	AG_SetEvent(btnBench, "button-pushed", RunBench, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
@@ -503,7 +512,7 @@ main(int argc, char *argv[])
 			continue;
 		}
 		AG_TlistSelectPtr(tl, (void *)(*pTest));
-		AG_EventArgs(&ev, "%p", tl);
+		AG_EventArgs(&ev, "%p,%p", tl, win);
 		RunTest(&ev);
 		RunBench(&ev);
 	}

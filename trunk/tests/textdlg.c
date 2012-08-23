@@ -51,9 +51,8 @@ TestCanned(AG_Event *event)
 	AG_TextTmsg(AG_MSG_INFO, 3000, "This is a timed message");
 	AG_TextMsg(AG_MSG_INFO, "This is an informational message");
 	AG_TextInfo("infomsg",
-	    "This is an informational message. Multiline text is "
-	    "always allowed. Text will be wrapped to multiple lines "
-	    "if it cannot be displayed properly on a single line.");
+	    "This is an informational message with \n"
+	    "multiple lines");
 }
 
 static int
