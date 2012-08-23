@@ -22,7 +22,55 @@
 
 char textBuffer[30];
 
+/* Apply a new theme to all windows. */
+static void
+SetTheme(AG_Event *event)
+{
+	AG_Style *style = AG_PTR(1);
+	AG_Driver *drv;
 
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver)
+		AG_SetStyle(drv, style);
+}
+
+/* Load a color scheme file. */
+static void
+SetColorScheme(AG_Event *event)
+{
+	char *file = AG_STRING(1);
+
+	if (AG_ColorsLoad(file) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
+		    AG_GetError());
+	}
+}
+
+/* Tweak the current color scheme. */
+static void
+TweakColorScheme(AG_Event *event)
+{
+	int darker = AG_INT(1);
+	const int inc = 10;
+	int i;
+
+	for (i = 0; i < LAST_COLOR; i++) {
+		Uint8 r, g, b, a;
+
+		AG_ColorsGetRGBA(i, &r, &g, &b, &a);
+		if (darker) {
+			r = (r - inc) > 0 ? (r - inc) : 0;
+			g = (g - inc) > 0 ? (g - inc) : 0;
+			b = (b - inc) > 0 ? (b - inc) : 0;
+		} else {
+			r = (r + inc) < 255 ? (r + inc) : 255;
+			g = (g + inc) < 255 ? (g + inc) : 255;
+			b = (b + inc) < 255 ? (b + inc) : 255;
+		}
+		AG_ColorsSetRGBA(i, r, g, b, a);
+	}
+}
+
+/* Example callback for combo-selected. */
 static void
 ComboSelected(AG_Event *event)
 {
@@ -31,16 +79,11 @@ ComboSelected(AG_Event *event)
 	AG_TextMsgS(AG_MSG_INFO, AG_Printf("Selected Item: %s", ti->text));
 }
 
+/* Show the agar-dev "Preferences" dialog. */
 static void
 Preferences(AG_Event *event)
 {
 	DEV_ConfigShow();
-}
-
-static void
-Quit(AG_Event *event)
-{
-	AG_QuitGUI();
 }
 
 static void
@@ -52,12 +95,10 @@ SetWordWrap(AG_Event *event)
 	AG_TextboxSetWordWrap(textbox, flag);
 }
 
-static void
-CreateWindow(AG_Event *event)
+static int
+TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Window *winParent = AG_PTR(1);
-	AG_Window *win;
 	AG_Box *hBox, *vBox;
 	AG_Pane *pane;
 	AG_Combo *com;
@@ -66,15 +107,6 @@ CreateWindow(AG_Event *event)
 	AG_Textbox *tbox;
 	int i;
 
-	/*
-	 * Create a new window and attach widgets to it. The Window object
-	 * acts as a container widget that packs its children vertically.
-	 */
-	if ((win = AG_WindowNew(0)) == NULL) {
-		return;
-	}
-	AG_WindowSetCaptionS(win, "themes: Some Agar-GUI widgets");
-	
 	/*
 	 * Pane provides two Box containers which can be resized using
 	 * a control placed in the middle.
@@ -251,20 +283,42 @@ CreateWindow(AG_Event *event)
 		AG_Table *table;
 		AG_Menu *menu;
 		AG_MenuItem *m;
-
+	
 		/* Create a test menu */
 		menu = AG_MenuNew(div2, AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
-		AG_MenuAction(m, "Preferences...", agIconGear.s, Preferences, NULL);
-		AG_MenuSeparator(m);
-		AG_MenuAction(m, "Quit", agIconClose.s, Quit, NULL);
+		{
+			AG_MenuAction(m, "Preferences...", agIconGear.s,
+			    Preferences, NULL);
+			AG_MenuSeparator(m);
+			AG_MenuAction(m, "Close this test", agIconClose.s,
+			    AGWINDETACH(win));
+		}
+		m = AG_MenuNode(menu->root, "Theme", NULL);
+		{
+			AG_MenuAction(m, "Default theme", NULL,
+			    SetTheme, "%p", &agStyleDefault);
+			AG_MenuAction(m, "Custom theme", NULL,
+			    SetTheme, "%p", &myRoundedStyle);
+			m = AG_MenuNode(m, "Color scheme", NULL);
+			{
+				AG_MenuAction(m, "Green (green.acs)", NULL,
+				    SetColorScheme, "%s", "green.acs");
+				AG_MenuAction(m, "Make Darker", NULL,
+				    TweakColorScheme, "%i", 1);
+				AG_MenuAction(m, "Make Lighter", NULL,
+				    TweakColorScheme, "%i", 0);
+			}
+		}
 		m = AG_MenuNode(menu->root, "Test", NULL);
-		AG_MenuNode(m, "Submenu A", NULL);
-		AG_MenuSeparator(m);
-		m = AG_MenuNode(m, "Submenu B", NULL);
-		AG_MenuNode(m, "Submenu C", NULL);
-		AG_MenuNode(m, "Submenu D", NULL);
-		AG_MenuNode(m, "Submenu E", NULL);
+		{
+			AG_MenuNode(m, "Submenu A", NULL);
+			AG_MenuSeparator(m);
+			m = AG_MenuNode(m, "Submenu B", NULL);
+			AG_MenuNode(m, "Submenu C", NULL);
+			AG_MenuNode(m, "Submenu D", NULL);
+			AG_MenuNode(m, "Submenu E", NULL);
+		}
 
 		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
@@ -344,66 +398,7 @@ CreateWindow(AG_Event *event)
 		
 		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
 	}
-
-	AG_WindowAttach(winParent, win);
-	AG_WindowShow(win);
-}
-
-#ifdef AG_DEBUG
-static void
-ShowGuiDebugger(AG_Event *event)
-{
-	AG_Window *winParent = AG_PTR(1);
-	AG_Window *win;
-
-	if ((win = AG_GuiDebugger(winParent)) != NULL)
-		AG_WindowAttach(winParent, win);
-}
-#endif
-
-static void
-SetTheme(AG_Event *event)
-{
-	AG_Style *style = AG_PTR(1);
-	AG_Driver *drv;
-
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver)
-		AG_SetStyle(drv, style);
-}
-
-static void
-SetColorScheme(AG_Event *event)
-{
-	char *file = AG_STRING(1);
-
-	if (AG_ColorsLoad(file) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
-		    AG_GetError());
-	}
-}
-
-static void
-TweakColorScheme(AG_Event *event)
-{
-	int darker = AG_INT(1);
-	const int inc = 10;
-	int i;
-
-	for (i = 0; i < LAST_COLOR; i++) {
-		Uint8 r, g, b, a;
-
-		AG_ColorsGetRGBA(i, &r, &g, &b, &a);
-		if (darker) {
-			r = (r - inc) > 0 ? (r - inc) : 0;
-			g = (g - inc) > 0 ? (g - inc) : 0;
-			b = (b - inc) > 0 ? (b - inc) : 0;
-		} else {
-			r = (r + inc) < 255 ? (r + inc) : 255;
-			g = (g + inc) < 255 ? (g + inc) : 255;
-			b = (b + inc) < 255 ? (b + inc) : 255;
-		}
-		AG_ColorsSetRGBA(i, r, g, b, a);
-	}
+	return (0);
 }
 
 static int
@@ -420,69 +415,6 @@ static void
 Destroy(void *obj)
 {
 	DEV_DestroySubsystem();
-}
-
-static int
-TestGUI(void *obj, AG_Window *win)
-{
-	extern AG_Style myRoundedStyle;
-	char drvNames[256];
-	AG_AgarVersion ver;
-	AG_Menu *menu;
-	AG_MenuItem *m;
-	AG_Label *lbl;
-	AG_Box *hBox;
-
-	menu = AG_MenuNew(win, AG_MENU_HFILL);
-
-	AG_GetVersion(&ver);
-	AG_ListDriverNames(drvNames, sizeof(drvNames));
-	lbl = AG_LabelNew(win, AG_LABEL_HFILL,
-	    "Agar Library Version: %d.%d.%d\n"
-	    "Compiled Release: %s (\"%s\")\n"
-	    "Using Graphics Driver: %s\n"
-	    "(available drivers: <%s>)",
-	    ver.major, ver.minor, ver.patch,
-	    VERSION, ver.release,
-	    AGWIDGET(win)->drvOps->name,
-	    drvNames);
-	AG_LabelJustify(lbl, AG_TEXT_CENTER);
-	
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create test window",
-	    CreateWindow, "%p", win);
-
-	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	{
-		AG_ButtonNewFn(hBox, 0, "Default theme", SetTheme, "%p", &agStyleDefault);
-		AG_ButtonNewFn(hBox, 0, "Custom theme", SetTheme, "%p", &myRoundedStyle);
-		AG_SeparatorNewVert(hBox);
-		AG_ButtonNewFn(hBox, 0, "Green", SetColorScheme, "%s", "green.acs");
-		AG_ButtonNewFn(hBox, 0, "Darker", TweakColorScheme, "%i", 1);
-		AG_ButtonNewFn(hBox, 0, "Lighter", TweakColorScheme, "%i", 0);
-	}
-
-	m = AG_MenuNode(menu->root, "File", NULL);
-	{
-		AG_MenuAction(m, "Preferences...", agIconGear.s, Preferences, NULL);
-#ifdef AG_DEBUG
-		AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s, ShowGuiDebugger, "%p", win);
-#endif
-		AG_MenuSeparator(m);
-		AG_MenuAction(m, "Quit", agIconClose.s, Quit, NULL);
-	}
-	m = AG_MenuNode(menu->root, "Test", NULL);
-	{
-		AG_MenuNode(m, "Submenu A", NULL);
-		AG_MenuSeparator(m);
-		m = AG_MenuNode(m, "Submenu B", NULL);
-		{
-			AG_MenuNode(m, "Submenu C", NULL);
-			AG_MenuNode(m, "Submenu D", NULL);
-			AG_MenuNode(m, "Submenu E", NULL);
-		}
-	}
-	AG_WindowShow(win);
-	return (0);
 }
 
 const AG_TestCase themesTest = {

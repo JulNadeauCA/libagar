@@ -18,6 +18,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNew(win, 0, "Autopositioned #%d", i);
 			AG_LabelNewS(win, 0, "(AG_WINDOW_ALIGNMENT_NONE)");
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -26,6 +27,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_TL)");
 			AG_WindowSetPosition(win, AG_WINDOW_TL, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -34,6 +36,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_TC)");
 			AG_WindowSetPosition(win, AG_WINDOW_TC, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -42,6 +45,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_TR)");
 			AG_WindowSetPosition(win, AG_WINDOW_TR, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -50,6 +54,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_MC)");
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -58,6 +63,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_BL)");
 			AG_WindowSetPosition(win, AG_WINDOW_BL, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -66,6 +72,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_BR)");
 			AG_WindowSetPosition(win, AG_WINDOW_BR, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 		if ((win = AG_WindowNew(0))) {
@@ -74,6 +81,7 @@ TestDesktopAlign(AG_Event *event)
 			AG_LabelNewS(win, 0, "(AG_WINDOW_BC)");
 			AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
 			AG_WindowAttach(winParent, win);
+			AG_WindowMakeTransient(winParent, win);
 			AG_WindowShow(win);
 		}
 	}
@@ -87,8 +95,8 @@ CreateTestWindow(AG_Event *event)
 	AG_TestInstance *ti = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2);
 	Uint *testFlags = AG_PTR(3);
+	int *makeTransient = AG_PTR(4);
 	AG_Window *win;
-	int i;
 
 	if ((win = AG_WindowNew(*testFlags)) == NULL) {
 		TestMsg(ti, "AG_WindowNew() failed: %s", AG_GetError());
@@ -101,6 +109,9 @@ CreateTestWindow(AG_Event *event)
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close this window",
 	    AGWINDETACH(win));
 	AG_WindowAttach(winParent, win);
+	if (*makeTransient) {
+		AG_WindowMakeTransient(winParent, win);
+	}
 	AG_WindowShow(win);
 }
 
@@ -120,14 +131,17 @@ TestGUI(void *obj, AG_Window *win)
 		{ AG_WINDOW_NOMAXIMIZE,		"NOMAXIMIZE",	1 },
 		{ AG_WINDOW_NOBACKGROUND,	"NOBACKGROUND",	1 },
 		{ AG_WINDOW_NOMOVE,		"NOMOVE",	1 },
+		{ AG_WINDOW_DENYFOCUS,		"DENYFOCUS",	1 },
 		{ 0,				NULL,		0 }
 	};
 	static Uint testFlags = 0;
+	static int makeTransient = 0;
 
 	AG_LabelNewS(win, 0, "Create test window with flags:");
 	AG_CheckboxSetFromFlags(win, 0, &testFlags, winFlags);
+	AG_CheckboxNewInt(win, 0, "Make transient", &makeTransient);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create Test Window",
-	    CreateTestWindow, "%p,%p,%p", obj, win, &testFlags);
+	    CreateTestWindow, "%p,%p,%p,%p", obj, win, &testFlags, &makeTransient);
 	AG_SeparatorNewHoriz(win);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test Desktop Alignment",
 	    TestDesktopAlign, "%p", win);
