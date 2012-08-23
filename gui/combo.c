@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,13 +106,16 @@ Expand(AG_Event *event)
 
 	if (expand) {
 		com->panel = AG_WindowNew(
-		    AG_WINDOW_POPUP|AG_WINDOW_NOTITLE|AG_WINDOW_DENYFOCUS|
-		    AG_WINDOW_KEEPABOVE|AG_WINDOW_MODAL);
+		    AG_WINDOW_NOTITLE|AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE|
+		    AG_WINDOW_MODAL);
+		com->panel->wmType = AG_WINDOW_WM_COMBO;
 		AG_WindowSetPadding(com->panel, 0,0,0,0);
 		AG_ObjectSetName(com->panel, "_ComboPopup");
 		AG_ObjectAttach(com->panel, com->list);
-		if (WIDGET(com)->window != NULL)
+		if (WIDGET(com)->window != NULL) {
 			AG_WindowAttach(WIDGET(com)->window, com->panel);
+			AG_WindowMakeTransient(WIDGET(com)->window, com->panel);
+		}
 
 		if (com->wSaved > 0) {
 			w = com->wSaved;
