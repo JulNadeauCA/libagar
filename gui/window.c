@@ -419,6 +419,7 @@ Init(void *obj)
 	win->icon = NULL;
 	win->nFocused = 0;
 	win->parent = NULL;
+	win->transientFor = NULL;
 	win->widExclMotion = NULL;
 	win->fadeInTime = 0.06f;
 	win->fadeInIncr = 0.2f;
@@ -465,66 +466,88 @@ Init(void *obj)
 #endif /* AG_DEBUG */
 }
 
-/* Attach a sub-window. */
+/*
+ * Make a window a logical child of the specified window. If the logical
+ * parent window is detached, its child windows will be automatically
+ * detached along with it.
+ */
 void
-AG_WindowAttach(AG_Window *win, AG_Window *subwin)
+AG_WindowAttach(AG_Window *winParent, AG_Window *winChld)
 {
-	AG_Driver *drvWin = WIDGET(win)->drv;
-
-	if (win == NULL)
+	if (winParent == NULL)
 		return;
 
 	AG_LockVFS(&agDrivers);
-	AG_ObjectLock(win);
-
-	if (subwin->parent != NULL) {			/* Reparent? */
-		if (subwin->parent == win) {
+	AG_ObjectLock(winParent);
+	AG_ObjectLock(winChld);
+	if (winChld->parent != NULL) {
+		if (winChld->parent == winParent) {
 			goto out;
 		}
-		AG_WindowDetach(subwin->parent, subwin);
+		AG_WindowDetach(winChld->parent, winChld);
 	}
-
-	/* Update the pointers */
-	subwin->parent = win;
-	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
-
-	/* Pass the "transient for" hint to window managers where supported. */
-	if (AGDRIVER_MULTIPLE(drvWin) &&
-	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
-		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, subwin);
+	winChld->parent = winParent;
+	TAILQ_INSERT_HEAD(&winParent->subwins, winChld, swins);
 out:
-	AG_ObjectUnlock(win);
+	AG_ObjectUnlock(winChld);
+	AG_ObjectUnlock(winParent);
 	AG_UnlockVFS(&agDrivers);
 }
 
-/* Detach a sub-window. */
+/* Detach a window from its logical parent. */
 void
-AG_WindowDetach(AG_Window *win, AG_Window *subwin)
+AG_WindowDetach(AG_Window *winParent, AG_Window *winChld)
 {
-	AG_Driver *drvWin;
-
-	if (win == NULL)
+	if (winParent == NULL)
 		return;
 
 	AG_LockVFS(&agDrivers);
-	AG_ObjectLock(win);
+	AG_ObjectLock(winParent);
+	AG_ObjectLock(winChld);
 
 #ifdef AG_DEBUG
-	if (subwin->parent != win)
+	if (winChld->parent != winParent)
 		AG_FatalError("Inconsistent AG_WindowDetach()");
 #endif
-	drvWin = WIDGET(win)->drv;
+	TAILQ_REMOVE(&winParent->subwins, winChld, swins);
+	winChld->parent = NULL;
 
-	/* Pass the "transient for" hint to window managers where supported. */
-	if (AGDRIVER_MULTIPLE(drvWin) &&
-	    AGDRIVER_MW_CLASS(drvWin)->setTransientFor != NULL)
-		AGDRIVER_MW_CLASS(drvWin)->setTransientFor(win, NULL);
+	AG_ObjectUnlock(winChld);
+	AG_ObjectUnlock(winParent);
+	AG_UnlockVFS(&agDrivers);
+}
 
-	/* Update the pointers */
-	TAILQ_REMOVE(&win->subwins, subwin, swins);
-	subwin->parent = NULL;
+/*
+ * Make a window a transient window of another window. The effect of
+ * this setting is WM-dependent (see AG_Window(3) for details). This
+ * should be invoked before the first call to AG_WindowShow().
+ */
+void
+AG_WindowMakeTransient(AG_Window *winParent, AG_Window *winTrans)
+{
+	AG_Driver *drv = WIDGET(winTrans)->drv;
+	
+	AG_LockVFS(&agDrivers);
+	AG_ObjectLock(winTrans);
 
-	AG_ObjectUnlock(win);
+	if (winParent == NULL) {
+		if (AGDRIVER_MULTIPLE(drv) &&
+		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
+			AGDRIVER_MW_CLASS(drv)->setTransientFor(NULL, winTrans);
+		}
+		winTrans->transientFor = NULL;
+	} else {
+		AG_ObjectLock(winParent);
+		if (AGDRIVER_MULTIPLE(drv) &&
+		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
+			AGDRIVER_MW_CLASS(drv)->setTransientFor(winParent,
+			    winTrans);
+		}
+		winTrans->transientFor = winParent;
+		AG_ObjectUnlock(winParent);
+	}
+
+	AG_ObjectUnlock(winTrans);
 	AG_UnlockVFS(&agDrivers);
 }
 

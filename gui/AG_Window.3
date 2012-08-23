@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,57 +39,40 @@
 .\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "Multiple Agar windows")
 The
 .Nm
-object describes an Agar window, the base container widget for other
-Agar widgets.
+object describes an Agar window, the base container for Agar widgets.
 The
 .Xr AG_Widget 3
 objects form a tree structure attached to a parent
-.Nm .
-.Pp
-Every
-.Nm
-is associated with an
-.Xr AG_Driver 3 ,
-which provides an interface to the low-level graphics system (the
-"Agar driver") in use.
-If the Agar driver interfaces with some type of window manager (as with
-so-called "multiple-window" drivers including "glx" and "wgl"), the
-associated
-.Ft AG_Driver
-is unique to the window.
-If there is no underlying window manager (as with so-called "single-window"
-drivers including "sdlfb" and "sdlgl"), Agar provides a simple built-in window
-manager.
+.Nm ,
+and the windows themselves are attached to some parent
+.Xr AG_Driver 3
+instance.
+The parent driver provides an interface to some underlying window system.
 .Pp
 Widgets can be attached directly to the
 .Nm
-object, and
+object, in which case
 .Nm
 will behave like a standard, vertical
 .Xr AG_Box 3 .
 .Pp
-Default Agar window dimensions are usually determined automatically
-(by a recursive query on the window's
-.Ft AG_Widget
-tree).
-The widget objects are expected to set a proper default size when
-it can be determined automatically, or otherwise provide a suitable API
-so applications can request widget-specific "size hints".
+The dimensions of new Agar windows is best determined automatically (using
+recursive widget size requests which take resolution, font sizes, etc. into
+account).
+Agar widgets are expected to set a proper default size whenever
+it can be determined automatically, or otherwise provide a suitable
+application-level API for "size hints".
 .Pp
-Other than
-.Nm
-itself, standard container widgets include
+In addition to
+.Nm ,
+other widgets in the standard toolkit which are solely designed as
+containers include
 .Xr AG_Box 3 ,
-.Xr AG_VBox 3
-and
-.Xr AG_HBox 3
-for automatic horizontal and vertical packing,
-.Xr AG_Fixed 3
-for explicit pixel-precision packing,
-.Xr AG_Pane 3
-for dual partitions and
+.Xr AG_Fixed 3 ,
+.Xr AG_Pane 3 ,
 .Xr AG_Notebook 3
-for notebook-style display.
+and
+.Xr AG_Scrollview 3 .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -184,10 +167,13 @@ for notebook-style display.
 .Fn AG_WindowUnminimize "AG_Window *win"
 .Pp
 .Ft void
-.Fn AG_WindowAttach "AG_Window *win" "AG_Window *subwin"
+.Fn AG_WindowAttach "AG_Window *winParent" "AG_Window *winChld"
 .Pp
 .Ft void
-.Fn AG_WindowDetach "AG_Window *win" "AG_Window *subwin"
+.Fn AG_WindowDetach "AG_Window *winParent" "AG_Window *winChld"
+.Pp
+.Ft void
+.Fn AG_WindowMakeTransient "AG_Window *winParent" "AG_Window *winTrans"
 .Pp
 .Ft void
 .Fn AG_WindowUpdate "AG_Window *win"
@@ -413,26 +399,30 @@ does the opposite.
 .Pp
 The
 .Fn AG_WindowAttach
-function arranges for
-.Fa pwin
-to be the logical parent window of
-.Fa win ,
-such that
-.Fa win
-is automatically destroyed when
-.Fa pwin
-is detached (through
-.Xr AG_ObjectDetach 3 ) .
-If
-.Fa win
-has been previously attached to another window, it is reparented accordingly.
+function makes
+.Fa winChld
+a logical child window of
+.Fa winParent ,
+such that whenever the parent window is destroyed, Agar will automatically
+destroy the child window as well.
+.Fn AG_WindowDetach
+detaches the window from its logical parent window.
 .Pp
 The
-.Fn AG_WindowDetach
-function removes
-.Fa win
-from its logical parent window
-.Fa pwin .
+.Fn AG_WindowMakeTransient
+function makes
+.Fa winTrans
+a "transient" window for
+.Fa winParent .
+The effects of transient window state are dependent on the underlying
+window manager.
+For example, under Motif, transient windows have no titlebar buttons.
+Under TWM, transient windows are created without requesting the initial
+size from the user.
+The
+.Fn AG_WindowMakeTransient
+call should precede the first call to
+.Fn AG_WindowShow .
 .Pp
 The
 .Fn AG_WindowUpdate
@@ -585,6 +575,11 @@ object:
 Option flags (see
 .Dq FLAGS
 section below).
+.It Ft int wmType
+Window manager hint describing window function
+(see
+.Dq WINDOW MANAGER HINTS
+below).
 .It Ft int visible
 Visibility flag (1 = visible, 0 = hidden).
 Read-only (see
@@ -627,6 +622,35 @@ Pointer to the floating
 object if we are using Agar's internal window manager, NULL otherwise.
 Read-only.
 .El
+.Sh WINDOW MANAGER HINTS
+The
+.Va wmType
+field of
+.Nm
+hints at the function of the window.
+This setting is used by underlying window managers to tweak window
+appearance and behavior details.
+The values correspond to those specified in Extended Window Manager Hints
+(EWMH) version 1.4.
+.Bd -literal
+enum ag_window_wm_type {
+	AG_WINDOW_WM_NORMAL,        /* Normal, top-level window */
+	AG_WINDOW_WM_DESKTOP,       /* Desktop feature */
+	AG_WINDOW_WM_DOCK,          /* Dock or panel feature */
+	AG_WINDOW_WM_TOOLBAR,       /* Toolbar torn off from main window */
+	AG_WINDOW_WM_MENU,          /* Pinnable menu window */
+	AG_WINDOW_WM_UTILITY,       /* Persistent utility window (e.g.,
+	                               a palette or a toolbox). */
+	AG_WINDOW_WM_SPLASH,        /* Introductory splash screen */
+	AG_WINDOW_WM_DIALOG,        /* Dialog window */
+	AG_WINDOW_WM_DROPDOWN_MENU, /* Menubar-triggered drop-down menu */
+	AG_WINDOW_WM_POPUP_MENU,    /* Contextual popup menu */
+	AG_WINDOW_WM_TOOLTIP,       /* Mouse hover triggered tooltip */
+	AG_WINDOW_WM_NOTIFICATION,  /* Notification bubble */
+	AG_WINDOW_WM_COMBO,         /* Combo-box triggered window */
+	AG_WINDOW_WM_DND            /* Draggable object */
+};
+.Ed
 .Sh FLAGS
 For the
 .Ft AG_Window
@@ -671,16 +695,18 @@ Don't fill the window background prior to rendering its contents.
 Disable automatic updating of the video region corresponding to the
 window area (applicable to framebuffer-based graphics drivers only)
 .It AG_WINDOW_NOTITLE
-Don't automatically create an
-.Xr AG_Titlebar 3
-widget.
+Create a window without a titlebar.
+Under some window managers, this option may imply
+.Dv AG_WINDOW_NOBORDERS .
 .It AG_WINDOW_NOBORDERS
 Don't draw decorative window borders.
+Under some window managers, this option may imply
+.Dv AG_WINDOW_NOTITLE .
 .It AG_WINDOW_PLAIN
-Alias for
+Create a completely undecorated window (alias for
 .Dv AG_WINDOW_NOTITLE
 and
-.Dv AG_WINDOW_NOBORDERS .
+.Dv AG_WINDOW_NOBORDERS ) .
 .It AG_WINDOW_NOHRESIZE
 Disable horizontal window resize control.
 .It AG_WINDOW_NOVRESIZE
