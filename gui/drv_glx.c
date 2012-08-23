@@ -146,6 +146,9 @@ InitGlobals(void)
 {
 	int err, ev;
 
+#ifdef AG_THREADS
+	XInitThreads();
+#endif
 	if ((agDisplay = XOpenDisplay(NULL)) == NULL) {
 		AG_SetError("Cannot open X display");
 		return (-1);
@@ -1224,31 +1227,67 @@ SetWmNormalHints(AG_Window *win, const AG_Rect *r, Uint mwFlags)
 }
 
 /*
- * Set the "functions" and "decorations" hints for Motif-compliant
- * window managers.
+ * Set the hints for Motif-compliant window managers.
  */
 struct ag_motif_wm_hints {
 	unsigned long flags;
-	unsigned long functions;
-	unsigned long decorations;
+	unsigned long fns;
+	unsigned long dec;
 	long input_mode;
 	unsigned long status;
 };
+#define AG_MWM_HINTS_FUNCTIONS   (1L << 0)
+#define AG_MWM_HINTS_DECORATIONS (1L << 1)
+#define AG_MWM_HINTS_INPUT_MODE  (1L << 2)
+#define AG_MWM_FN_ALL       (1L << 0)
+#define AG_MWM_FN_RESIZE    (1L << 1)
+#define AG_MWM_FN_MOVE      (1L << 2)
+#define AG_MWM_FN_MINIMIZE  (1L << 3)
+#define AG_MWM_FN_MAXIMIZE  (1L << 4)
+#define AG_MWM_FN_CLOSE     (1L << 5)
+#define AG_MWM_DEC_ALL      (1L << 0)
+#define AG_MWM_DEC_BORDER   (1L << 1)
+#define AG_MWM_DEC_RESIZEH  (1L << 2)
+#define AG_MWM_DEC_TITLE    (1L << 3)
+#define AG_MWM_DEC_MENU     (1L << 4)
+#define AG_MWM_DEC_MINIMIZE (1L << 5)
+#define AG_MWM_DEC_MAXIMIZE (1L << 6)
+#define AG_MWM_INPUT_MODELESS                  0L	/* Document modal */
+#define AG_MWM_INPUT_PRIMARY_APPLICATION_MODAL 1L	/* Document modal */
+#define AG_MWM_INPUT_FULL_APPLICATION_MODAL    3L	/* Application modal */
 static void
-SetMotifWmHints(AG_DriverGLX *glx)
+SetMotifWmHints(AG_Window *win)
 {
-	struct ag_motif_wm_hints undecoratedHints = {
-		(1L << 1),	/* flags */
-		0UL,		/* functions */
-		0UL,		/* decorations */
-		0L,		/* input_mode */
-		0UL		/* status */
-	};
-	struct ag_motif_wm_hints *hints = NULL;
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+	struct ag_motif_wm_hints hNew, *hints = NULL;
 	Atom type = None;
 	Ulong nItems, bytesAfter;
 	Uchar *data;
 	int format, rv;
+
+	hNew.flags = AG_MWM_HINTS_FUNCTIONS|AG_MWM_HINTS_DECORATIONS|
+	             AG_MWM_HINTS_INPUT_MODE;
+	hNew.fns = 0UL;
+	hNew.dec = 0UL;
+	hNew.input_mode = (win->flags & AG_WINDOW_MODAL) ?
+	                  AG_MWM_INPUT_FULL_APPLICATION_MODAL :
+			  AG_MWM_INPUT_MODELESS;
+	hNew.status = 0UL;
+
+	if (!(win->flags & AG_WINDOW_NOMINIMIZE)) {
+		hNew.fns |= AG_MWM_FN_MINIMIZE;
+		hNew.dec |= AG_MWM_DEC_MINIMIZE;
+	}
+	if (!(win->flags & AG_WINDOW_NOMAXIMIZE)) {
+		hNew.fns |= AG_MWM_FN_MAXIMIZE;
+		hNew.dec |= AG_MWM_DEC_MAXIMIZE;
+	}
+	if (!(win->flags & AG_WINDOW_NORESIZE))  hNew.fns |= AG_MWM_FN_RESIZE;
+	if (!(win->flags & AG_WINDOW_NOMOVE))    hNew.fns |= AG_MWM_FN_MOVE;
+	if (!(win->flags & AG_WINDOW_NOCLOSE))   hNew.fns |= AG_MWM_FN_CLOSE;
+	if (!(win->flags & AG_WINDOW_NOBORDERS)) hNew.dec |= AG_MWM_DEC_BORDER;
+	if (!(win->flags & AG_WINDOW_NOHRESIZE)) hNew.dec |= AG_MWM_DEC_RESIZEH;
+	if (!(win->flags & AG_WINDOW_NOTITLE))   hNew.dec |= AG_MWM_DEC_TITLE;
 
 	rv = XGetWindowProperty(agDisplay, glx->w, wmMotifWmHints, 0,
 	    sizeof(struct ag_motif_wm_hints)/sizeof(long), False,
@@ -1257,13 +1296,13 @@ SetMotifWmHints(AG_DriverGLX *glx)
 		return;
 
 	if (data == NULL || type != wmMotifWmHints) {
-		hints = &undecoratedHints;
+		hints = &hNew;
 	} else {
 		hints = (struct ag_motif_wm_hints *)data;
-		if (hints->flags & (1L << 0))
-			hints->functions = 0UL;
-		if (hints->flags & (1L << 1))
-			hints->decorations = 0UL;
+		hints->flags = hNew.flags;
+		hints->fns = hNew.fns;
+		hints->dec = hNew.dec;
+		hints->input_mode = hNew.input_mode;
 	}
 	XChangeProperty(agDisplay, glx->w,
 	    wmMotifWmHints, wmMotifWmHints, 32,
@@ -1272,18 +1311,14 @@ SetMotifWmHints(AG_DriverGLX *glx)
 	    sizeof(struct ag_motif_wm_hints)/sizeof(long));
 }
 
-/* Try to disable WM titlebars and decorations. */
+/* Set hints for KWM */
 static void
-SetNoDecorationHints(AG_Window *win)
+SetKwmWmHints(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	
-	/* For Motif-compliant window managers. */
-	if (wmMotifWmHints != None && 0)
-		SetMotifWmHints(glx);
 
-	/* For KWM */
-	if (wmKwmWinDecoration != None) {
+	if (win->flags & AG_WINDOW_NOTITLE ||
+	    win->flags & AG_WINDOW_NOBORDERS) {
 		long KWMHints = 0;
 
 		XChangeProperty(agDisplay, glx->w,
@@ -1292,9 +1327,16 @@ SetNoDecorationHints(AG_Window *win)
 		    (Uchar *)&KWMHints,
 		    sizeof(KWMHints)/sizeof(long));
 	}
+}
 
-	/* For GNOME */
-	if (wmWinHints != None) {
+/* Set hints for GNOME */
+static void
+SetGnomeWmHints(AG_Window *win)
+{
+	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
+
+	if (win->flags & AG_WINDOW_NOTITLE ||
+	    win->flags & AG_WINDOW_NOBORDERS) {
 		long GNOMEHints = 0;
 
 		XChangeProperty(agDisplay, glx->w,
@@ -1407,14 +1449,15 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("XCreateWindow failed");
 		goto fail_unlock;
 	}
+
+	/* Honor AG_WindowMakeTransient() */
+	if (win->transientFor != NULL)
+		GLX_SetTransientFor(win, win->transientFor);
 	
 	/*
-	 * Set transientFor and WM_NORMAL_HINTS (other WM hints will
-	 * be passed in the MapWindow() functions).
+	 * Set WM_NORMAL_HINTS now (other WM hints will be passed in
+	 * the MapWindow() function).
 	 */
-	if (win->parent != NULL) {
-		GLX_SetTransientFor(win, win->parent);
-	}
 	SetWmNormalHints(win, &r, mwFlags);
 
 	/* Create the GLX rendering context. */
@@ -1559,11 +1602,20 @@ GLX_MapWindow(AG_Window *win)
 				    (Uchar *)&wmNetWmStateSkipTaskbar, 1);
 			}
 		}
+	
+		/* Set window manager hints. */
+		if (wmMotifWmHints != None)
+			SetMotifWmHints(win);
+		if (wmKwmWinDecoration != None)
+			SetKwmWmHints(win);
+		if (wmWinHints != None)
+			SetGnomeWmHints(win);
 
-		if (win->flags & (AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE))
-			SetNoDecorationHints(win);
+		/* Set application-modal window hints. */
 		if (win->flags & AG_WINDOW_MODAL)
 			SetModalHints(win);
+	
+		/* Honor KEEPABOVE and KEEPBELOW */
 		if (win->flags & AG_WINDOW_KEEPABOVE ||
 		    win->flags & AG_WINDOW_KEEPBELOW)
 			SetAboveBelowHints(win);
