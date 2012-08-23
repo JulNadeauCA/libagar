@@ -491,7 +491,7 @@ main(int argc, char *argv[])
 
 	AG_TlistSetChangedFn(tl, SelectedTest, NULL);
 	AG_TlistSetDblClickFn(tl, RunTest, "%p,%p", tl, win);
-	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p", tl, win);
+	AG_SetEvent(btnTest, "button-pushed", RunTest, "%p,%p", tl, win);
 	AG_SetEvent(btnBench, "button-pushed", RunBench, "%p", tl);
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
