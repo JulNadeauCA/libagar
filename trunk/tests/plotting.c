@@ -201,7 +201,7 @@ TestGUI(void *obj, AG_Window *win)
 		plVel = M_PlotNew(plt, M_PLOT_LINEAR);
 		M_PlotSetLabel(plVel, "m/s");
 		M_PlotSetYoffs(plVel, -45);
-		M_PlotSetScale(plVel, 0.0, 90.0);
+		M_PlotSetScale(plVel, 0.0, 50.0);
 
 		/* Create a label we will use to show the "case". */
 		plblCase = M_PlotLabelNew(plVel, M_LABEL_OVERLAY, 0, 16, "-");
@@ -209,15 +209,14 @@ TestGUI(void *obj, AG_Window *win)
 		/* Plot the derivative of the velocity (the acceleration). */
 		plAcc = M_PlotFromDerivative(plt, M_PLOT_LINEAR, plVel);
 		M_PlotSetLabel(plAcc, "m/s^2");
-		M_PlotSetYoffs(plAcc, 42);
 		M_PlotSetScale(plAcc, 0.0, 3000.0);
 
 		/* Plot the derivative of the acceleration (the jerk). */
 		plJerk = M_PlotFromDerivative(plt, M_PLOT_LINEAR, plAcc);
 		M_PlotSetLabel(plJerk, "m/s^3");
 		M_PlotSetScale(plJerk, 0.0, 100.0);
-		M_PlotSetScale(plJerk, 0.0, 180000.0);
-		M_PlotSetYoffs(plJerk, 122);
+		M_PlotSetScale(plJerk, 0.0, 150000.0);
+		M_PlotSetYoffs(plJerk, 70);
 	}
 
 	/* Allow the user to play with the parameters. */
