@@ -131,7 +131,7 @@ TestGUI(void *obj, AG_Window *win)
 		 */
 		AG_LabelNewS(div1, 0, "This is a static label");
 
-		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME,
+		lbl = AG_LabelNewPolled(div1, AG_LABEL_FRAME|AG_LABEL_EXPAND,
 		    "This is a polled label.\n"
 		    "Window is at %i,%i (%ux%u)",
 		    &AGWIDGET(win)->x,
