@@ -5484,6 +5484,65 @@ echo "#undef X11_LIBS" >$BLD/include/agar/config/x11_libs.h
 echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
 X11_LIBS=""
 fi;
+if [ "${HAVE_X11}" = "yes" ]; then
+$ECHO_N "checking for the XKB extension..."
+$ECHO_N "checking for the XKB extension..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_XKB" ]; then
+		HAVE_XKB=`cat ${cache}/ctest-HAVE_XKB`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_XKB`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <X11/Xlib.h>
+#include <X11/XKBlib.h>
+int main(int argc, char *argv[])
+{
+	Display *disp;
+	KeyCode kc = 0;
+	KeySym ks;
+	disp = XOpenDisplay(NULL);
+	ks = XkbKeycodeToKeysym(disp, kc, 0, 0);
+	XCloseDisplay(disp);
+	return (ks != NoSymbol);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_XKB="yes"
+echo "#ifndef HAVE_XKB" > $BLD/include/agar/config/have_xkb.h
+echo "#define HAVE_XKB \"$HAVE_XKB\"" >> $BLD/include/agar/config/have_xkb.h
+echo "#endif" >> $BLD/include/agar/config/have_xkb.h
+echo "hdefs[\"HAVE_XKB\"] = \"$HAVE_XKB\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_XKB="no"
+echo "#undef HAVE_XKB" >$BLD/include/agar/config/have_xkb.h
+echo "hdefs[\"HAVE_XKB\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_XKB" > ${cache}/ctest-HAVE_XKB
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_XKB
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+else
+echo "#undef HAVE_XKB" >$BLD/include/agar/config/have_xkb.h
+echo "hdefs[\"HAVE_XKB\"] = nil" >>configure.lua
+fi;
 		if [ "${HAVE_X11}" != "yes" ]
  then
 			if [ "${with_x}" = "yes" ]
@@ -10236,18 +10295,17 @@ if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]
 	if [ "${HAVE_NANOSLEEP}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} time_posix.c"
-		if [ "${HAVE_PTHREADS}" = "yes" ]
+	fi
+	if [ "${HAVE_PTHREADS}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} time_renderer.c"
-		fi
 	fi
-else
-	if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]
+fi
+if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]
  then
-		if [ "${HAVE_SELECT}" = "yes" ]
+	if [ "${HAVE_SELECT}" = "yes" ]
  then
 SRCS_CORE="${SRCS_CORE} time_gettimeofday.c"
-		fi
 	fi
 fi
 if [ "${HAVE_DB4}" = "yes" ]
@@ -11055,6 +11113,8 @@ echo "RELEASE=$RELEASE" >>Makefile.config
 echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
 echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
+echo "HAVE_XKB=$HAVE_XKB" >>Makefile.config
+echo "mdefs[\"HAVE_XKB\"] = \"$HAVE_XKB\"" >>configure.lua
 echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
 echo "HAVE_64BIT=$HAVE_64BIT" >>Makefile.config
