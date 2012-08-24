@@ -203,13 +203,17 @@ const AG_TestCase threadsTest = {
 	N_("Test multithreaded widget creation"),
 	"1.4.2",
 	0,
+#ifdef AG_THREADS
 	sizeof(MyTestInstance),
 	Init,
 	Destroy,
 	NULL,		/* test */
-#ifdef AG_THREADS
 	TestGUI,
 #else
+	sizeof(AG_TestInstance),
+	NULL,		/* init */
+	NULL,		/* destroy */
+	NULL,		/* test */
 	NULL,		/* testGUI */
 #endif
 	NULL		/* bench */
