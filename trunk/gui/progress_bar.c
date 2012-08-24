@@ -74,7 +74,7 @@ Init(void *obj)
 	pb->width = agTextFontHeight + 4;
 	pb->length = 300;
 	pb->pad = 2;
-	pb->tCache = AG_TextCacheNew(pb,16,4);
+	pb->tCache = AG_TextCacheNew(pb, 100, 1);
 
 	AG_BindInt(pb, "value", &pb->value);
 	AG_BindInt(pb, "min", &pb->min);

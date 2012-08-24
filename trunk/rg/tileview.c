@@ -783,7 +783,7 @@ Init(void *obj)
 	tv->menu = NULL;
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;
-	tv->tCache = AG_TextCacheNew(tv,64,8);
+	tv->tCache = AG_TextCacheNew(tv, 64, 2);
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 

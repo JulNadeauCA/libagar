@@ -126,7 +126,7 @@ Init(void *obj)
 	mv->mPre = 0;
 	mv->nPre = 0;
 	mv->numFmt = "%g";
-	mv->tCache = AG_TextCacheNew(mv,64,16);
+	mv->tCache = AG_TextCacheNew(mv, 64, 2);
 	mv->r = AG_RECT(0,0,0,0);
 	
 	AG_BindInt(mv->hBar, "value", &mv->xOffs);

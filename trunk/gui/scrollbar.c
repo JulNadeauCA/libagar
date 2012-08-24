@@ -268,7 +268,7 @@ GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 	void *pMin, *pMax, *pVal, *pVis;
 
 	*x = 0;
-	if (len != NULL) { *len = 0; }
+	*len = 0;
 
 	bVal = AG_GetVariable(sb, "value", &pVal);
 	bMin = AG_GetVariable(sb, "min", &pMin);
@@ -655,10 +655,10 @@ static Uint32
 AutoHideTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Scrollbar *sb = obj;
-	int x, len;
+	int rv, x, len;
 
-	if ((GetPxCoords(sb, &x, &len) == -1 ||
-	    len == sb->length)) {
+	rv = GetPxCoords(sb, &x, &len);
+	if (rv == -1 || len == sb->length) {
 		if (AG_WidgetVisible(sb))
 			AG_WidgetHide(sb);
 	} else {
@@ -716,7 +716,8 @@ OnDetach(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	
-	AG_DelTimeout(sb, &sb->autohideTo);
+	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
+		AG_DelTimeout(sb, &sb->autohideTo);
 }
 
 static void
@@ -740,6 +741,7 @@ Init(void *obj)
 	sb->xOffs = 0;
 	sb->rInc = 1.0;	
 	sb->iInc = 1;
+	sb->length = 0;
 	sb->lenPre = 32;
 	sb->minOffs = 0;
 	sb->maxOffs = 0;
@@ -879,10 +881,10 @@ Draw(void *obj)
 int
 AG_ScrollbarVisible(AG_Scrollbar *sb)
 {
-	int rv, x;
+	int rv, x, len;
 
 	AG_ObjectLock(sb);
-	rv = (GetPxCoords(sb, &x, NULL) == -1) ? 0 : 1;
+	rv = (GetPxCoords(sb, &x, &len) == -1) ? 0 : 1;
 	AG_ObjectUnlock(sb);
 	return (rv);
 }

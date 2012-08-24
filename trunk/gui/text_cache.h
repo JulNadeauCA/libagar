@@ -8,13 +8,13 @@
 typedef struct ag_cached_text {
 	char *text;				/* Text string */
 	int surface;				/* Surface mapping */
-	Uint32 stamp;				/* Access timestamp */
 	AG_TextState state;			/* Text rendering state */
-	AG_SLIST_ENTRY(ag_cached_text) ents;
+	AG_TAILQ_ENTRY(ag_cached_text) ents;
 } AG_CachedText;
 
 typedef struct ag_text_cache_bucket {
-	AG_SLIST_HEAD_(ag_cached_text) ents;
+	AG_TAILQ_HEAD(ag_cached_textq,ag_cached_text) ents;
+	Uint nEnts;
 } AG_TextCacheBucket;
 
 struct ag_widget;
@@ -24,9 +24,7 @@ typedef struct ag_text_cache {
 	AG_TextCacheBucket *buckets;		/* Hash table */
 	Uint               nBuckets;
 	Uint               curEnts;		/* Current entries */
-	AG_CachedText    **toExpire;		/* Entries to expire */
-	Uint              *toExpireHashes;	/* Entries to expire (hashes) */
-	Uint              nToExpire;
+	Uint               nBucketEnts;	/* Target bucket utilization */
 } AG_TextCache;
 
 __BEGIN_DECLS
