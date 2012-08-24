@@ -219,6 +219,7 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 	if (winParent != NULL) {
 		AG_WindowAttach(winParent, win);
 		AG_WindowMakeTransient(winParent, win);
+		AG_WindowPin(winParent, win);
 	}
 	AG_WindowSetGeometry(win, x, y, -1,-1);
 	AG_WindowShow(win);

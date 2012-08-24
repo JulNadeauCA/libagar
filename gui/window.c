@@ -420,6 +420,7 @@ Init(void *obj)
 	win->nFocused = 0;
 	win->parent = NULL;
 	win->transientFor = NULL;
+	win->pinnedTo = NULL;
 	win->widExclMotion = NULL;
 	win->fadeInTime = 0.06f;
 	win->fadeInIncr = 0.2f;
@@ -519,8 +520,7 @@ AG_WindowDetach(AG_Window *winParent, AG_Window *winChld)
 
 /*
  * Make a window a transient window of another window. The effect of
- * this setting is WM-dependent (see AG_Window(3) for details). This
- * should be invoked before the first call to AG_WindowShow().
+ * this setting is WM-dependent (see AG_Window(3) for details).
  */
 void
 AG_WindowMakeTransient(AG_Window *winParent, AG_Window *winTrans)
@@ -548,6 +548,64 @@ AG_WindowMakeTransient(AG_Window *winParent, AG_Window *winTrans)
 	}
 
 	AG_ObjectUnlock(winTrans);
+	AG_UnlockVFS(&agDrivers);
+}
+
+/* Pin a window against another. */
+void
+AG_WindowPin(AG_Window *winParent, AG_Window *win)
+{
+#ifdef AG_DEBUG
+	if (win == winParent) { AG_FatalError("AG_WindowPin"); }
+#endif
+	AG_ObjectLock(win);
+	win->pinnedTo = winParent;
+	AG_ObjectUnlock(win);
+}
+
+/* Unpin a window. */
+void
+AG_WindowUnpin(AG_Window *win)
+{
+	AG_ObjectLock(win);
+	win->pinnedTo = NULL;
+	AG_ObjectUnlock(win);
+}
+
+static void
+MovePinnedRecursive(AG_Window *win, AG_Window *winParent, int xRel, int yRel)
+{
+	AG_Rect r;
+	AG_Window *winOther;
+	AG_Driver *drv;
+
+	r.x = WIDGET(win)->x + xRel;
+	r.y = WIDGET(win)->y + yRel;
+	r.w = WIDGET(win)->w;
+	r.h = WIDGET(win)->h;
+	AG_WindowSetGeometryRect(win, r, 0);
+	
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(winOther, drv) {
+			if (winOther->pinnedTo == win)
+				MovePinnedRecursive(winOther, win, xRel, yRel);
+		}
+	}
+}
+
+void
+AG_WindowMovePinned(AG_Window *winParent, int xRel, int yRel)
+{
+	AG_Driver *drv;
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(win, drv) {
+			if (win->pinnedTo == winParent)
+				MovePinnedRecursive(win, winParent, xRel, yRel);
+		}
+	}
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -1042,13 +1100,7 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 	}
 }
 
-/* 
- * Set window coordinates and geometry. This should be used instead of
- * a direct WidgetSizeAlloc() since extra processing is done according
- * to the current driver in use.
- *
- * If "bounded" is non-zero, the window is bounded to the display area.
- */
+/* Set the coordinates and geometry of a window. */
 int
 AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 {
@@ -1059,12 +1111,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 	int new;
 	int nw, nh;
 	int wMin, hMin;
-	Uint wDisp, hDisp;
-
-	if (AG_GetDisplaySize(drv, &wDisp, &hDisp) == -1) {
-		wDisp = 0;
-		hDisp = 0;
-	}
+	Uint wDisp = 0, hDisp = 0;
 
 	AG_ObjectLock(win);
 	rPrev = AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
@@ -1089,11 +1136,17 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 	}
 	if (nw < wMin) { nw = wMin; }
 	if (nh < hMin) { nh = hMin; }
-	if (WIDGET(win)->x == -1) {
-		WIDGET(win)->x = wDisp/2 - nw/2;
-	}
-	if (WIDGET(win)->y == -1) {
-		WIDGET(win)->y = hDisp/2 - nh/2;
+
+	if (WIDGET(win)->x == -1 ||
+	    WIDGET(win)->y == -1) {
+		if (AG_GetDisplaySize(drv, &wDisp, &hDisp) == -1) {
+			wDisp = 0;
+			hDisp = 0;
+		}
+		if (WIDGET(win)->x == -1)
+			WIDGET(win)->x = wDisp/2 - nw/2;
+		if (WIDGET(win)->y == -1)
+			WIDGET(win)->y = hDisp/2 - nh/2;
 	}
 	a.x = (r.x == -1) ? WIDGET(win)->x : r.x;
 	a.y = (r.y == -1) ? WIDGET(win)->y : r.y;
@@ -1110,9 +1163,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 	 * Resize the widgets and update their coordinates; update
 	 * the geometry of the window's Widget structure.
 	 */
-	if (AG_WidgetSizeAlloc(win, &a) == -1) {
-		goto fail;
-	}
+	AG_WidgetSizeAlloc(win, &a);
 	AG_WidgetUpdateCoords(win, a.x, a.y);
 
 	switch (AGDRIVER_CLASS(drv)->wm) {

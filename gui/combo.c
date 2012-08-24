@@ -115,6 +115,7 @@ Expand(AG_Event *event)
 		if (WIDGET(com)->window != NULL) {
 			AG_WindowAttach(WIDGET(com)->window, com->panel);
 			AG_WindowMakeTransient(WIDGET(com)->window, com->panel);
+			AG_WindowPin(WIDGET(com)->window, com->panel);
 		}
 
 		if (com->wSaved > 0) {

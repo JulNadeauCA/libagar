@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1254,18 +1254,25 @@ WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 static void
 WGL_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 {
-	int x = a->x;
-	int y = a->y;
+	AG_SizeAlloc aNew;
+	int xRel, yRel;
+	
+	xRel = a->x - WIDGET(win)->x;
+	yRel = a->y - WIDGET(win)->y;
 
-	/* Update per-widget coordinate information. */
-	a->x = 0;
-	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
+	/* Update the window coordinates. */
+	aNew.x = 0;
+	aNew.y = 0;
+	aNew.w = a->w;
+	aNew.h = a->h;
+	AG_WidgetSizeAlloc(win, &aNew);
 	AG_WidgetUpdateCoords(win, 0, 0);
+	WIDGET(win)->x = a->x;
+	WIDGET(win)->y = a->y;
+	win->dirty = 1;
 
-	/* Save the new effective window position. */
-	WIDGET(win)->x = a->x = x;
-	WIDGET(win)->y = a->y = y;
+	/* Move other windows pinned to this one. */
+	AG_WindowMovePinned(win, xRel, yRel);
 }
 
 static int
@@ -1279,7 +1286,6 @@ WGL_SetRefreshRate(void *obj, int fps)
 	rCur = 0;
 	return (0);
 }
-
 
 AG_DriverMwClass agDriverWGL = {
 	{
