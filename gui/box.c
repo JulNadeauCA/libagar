@@ -240,7 +240,8 @@ SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
 		aChld.h = (box->type==AG_BOX_VERT) ?
 		          wSize : (a->h - box->padding*2);
 
-		if (AG_WidgetSizeAlloc(chld, &aChld) == -1)
+		AG_WidgetSizeAlloc(chld, &aChld);
+		if (chld->flags & AG_WIDGET_UNDERSIZE)
 			continue;
 
 		if (OBJECT(chld) ==

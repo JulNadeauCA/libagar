@@ -1197,7 +1197,7 @@ AG_WidgetSizeReq(void *w, AG_SizeReq *r)
 	AG_ObjectUnlock(w);
 }
 
-int
+void
 AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 {
 	AG_Widget *w = obj;
@@ -1217,17 +1217,11 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 	if (WIDGET_OPS(w)->size_allocate != NULL) {
 		if (WIDGET_OPS(w)->size_allocate(w, a) == -1) {
 			w->flags |= AG_WIDGET_UNDERSIZE;
-			goto fail;
 		} else {
 			w->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
 	}
-
 	AG_ObjectUnlock(w);
-	return (0);
-fail:
-	AG_ObjectUnlock(w);
-	return (-1);
 }
 
 /*

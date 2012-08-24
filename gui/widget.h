@@ -223,7 +223,7 @@ extern AG_WidgetClass agWidgetClass;
 
 void       AG_WidgetDraw(void *);
 void       AG_WidgetSizeReq(void *, AG_SizeReq *);
-int        AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
+void       AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 void       AG_WidgetSetFocusable(void *, int);
 void       AG_WidgetForwardFocus(void *, void *);
 
