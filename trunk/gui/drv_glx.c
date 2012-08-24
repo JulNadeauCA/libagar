@@ -824,10 +824,11 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		a.y = dev->data.videoresize.y;
 		a.w = dev->data.videoresize.w;
 		a.h = dev->data.videoresize.h;
+		if (a.x != WIDGET(dev->win)->x || a.y != WIDGET(dev->win)->y) {
+			GLX_PostMoveCallback(dev->win, &a);
+		}
 		if (a.w != WIDTH(dev->win) || a.h != HEIGHT(dev->win)) {
 			GLX_PostResizeCallback(dev->win, &a);
-		} else {
-			GLX_PostMoveCallback(dev->win, &a);
 		}
 		break;
 	case AG_DRIVER_CLOSE:
@@ -1586,6 +1587,7 @@ GLX_MapWindow(AG_Window *win)
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	XEvent xev;
 	AG_SizeAlloc a;
+	int x, y;
 	
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
@@ -1655,15 +1657,25 @@ GLX_MapWindow(AG_Window *win)
 
 	XMapWindow(agDisplay, glx->w);
 	XIfEvent(agDisplay, &xev, WaitMapNotify, (char *)glx->w);
-	a.x = WIDGET(win)->x;
-	a.y = WIDGET(win)->y;
+
+	/* Update per-widget coordinate information. */
+	x = WIDGET(win)->x;
+	y = WIDGET(win)->y;
+	a.x = 0;
+	a.y = 0;
 	a.w = WIDTH(win);
 	a.h = HEIGHT(win);
-	GLX_PostResizeCallback(win, &a);
+	AG_WidgetSizeAlloc(win, &a);
+	AG_WidgetUpdateCoords(win, 0, 0);
+	WIDGET(win)->x = x;
+	WIDGET(win)->y = y;
+
+	/* Set the GL viewport. */
+	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
+	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-
 	return (0);
 }
 
@@ -1800,17 +1812,21 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
 	char kv[32];
-	int x = a->x;
-	int y = a->y;
+	AG_SizeAlloc aNew;
 	
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
-	/* Update per-widget coordinate information. */
-	a->x = 0;
-	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
+	/* Update the window size and coordinates. */
+	aNew.x = 0;
+	aNew.y = 0;
+	aNew.w = a->w;
+	aNew.h = a->h;
+	AG_WidgetSizeAlloc(win, &aNew);
 	AG_WidgetUpdateCoords(win, 0, 0);
+	WIDGET(win)->x = a->x;
+	WIDGET(win)->y = a->y;
+	win->dirty = 1;
 
 	/* Update the keyboard state. XXX */
 	XQueryKeymap(agDisplay, kv);
@@ -1822,10 +1838,6 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-
-	/* Save the new effective window position. */
-	WIDGET(win)->x = a->x = x;
-	WIDGET(win)->y = a->y = y;
 }
 
 static void
@@ -1833,22 +1845,31 @@ GLX_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	int x = a->x;
-	int y = a->y;
-
-	/* Update per-widget coordinate information. */
-	a->x = 0;
-	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
-	AG_WidgetUpdateCoords(win, 0, 0);
-
-	/* Update GLX context. */
-	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
-	AG_GL_SetViewport(&glx->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
+	AG_SizeAlloc aNew;
+	int xRel, yRel;
 	
-	/* Save the new effective window position. */
-	WIDGET(win)->x = a->x = x;
-	WIDGET(win)->y = a->y = y;
+	AG_MutexLock(&agDisplayLock);
+	AG_MutexLock(&glx->lock);
+
+	xRel = a->x - WIDGET(win)->x;
+	yRel = a->y - WIDGET(win)->y;
+
+	/* Update the window coordinates. */
+	aNew.x = 0;
+	aNew.y = 0;
+	aNew.w = a->w;
+	aNew.h = a->h;
+	AG_WidgetSizeAlloc(win, &aNew);
+	AG_WidgetUpdateCoords(win, 0, 0);
+	WIDGET(win)->x = a->x;
+	WIDGET(win)->y = a->y;
+	win->dirty = 1;
+
+	/* Move other windows pinned to this one. */
+	AG_WindowMovePinned(win, xRel, yRel);
+
+	AG_MutexUnlock(&agDisplayLock);
+	AG_MutexUnlock(&glx->lock);
 }
 
 static int
@@ -1919,21 +1940,16 @@ static int
 GLX_MoveResizeWindow(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
-	XEvent xev;
 	
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
-	/* printf("XMoveResizeWindow: %d,%d (%dx%d)\n",
-	    a->x, a->y, a->w, a->h); */
 	XMoveResizeWindow(agDisplay, glx->w,
 	    a->x, a->y,
 	    a->w, a->h);
-	XIfEvent(agDisplay, &xev, WaitConfigureNotify, (char *)glx->w);
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-
 	return (0);
 }
 

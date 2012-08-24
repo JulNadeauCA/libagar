@@ -5,6 +5,13 @@
 
 #include "agartest.h"
 
+typedef struct {
+	AG_TestInstance _inherit;
+	Uint testFlags;
+	int makeTransient;
+	int makePinned;
+} MyTestInstance;
+
 static void
 TestDesktopAlign(AG_Event *event)
 {
@@ -92,32 +99,32 @@ TestDesktopAlign(AG_Event *event)
 static void
 CreateTestWindow(AG_Event *event)
 {
-	AG_TestInstance *ti = AG_PTR(1);
+	MyTestInstance *ti = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2);
-	Uint *testFlags = AG_PTR(3);
-	int *makeTransient = AG_PTR(4);
 	AG_Window *win;
 
-	if ((win = AG_WindowNew(*testFlags)) == NULL) {
+	if ((win = AG_WindowNew(ti->testFlags)) == NULL) {
 		TestMsg(ti, "AG_WindowNew() failed: %s", AG_GetError());
 		return;
 	}
-
 	AG_WindowSetCaption(win, "Test window");
 	AG_LabelNewS(win, 0, "This is a test window");
-	AG_LabelNew(win, 0, "Flags = 0x%x", *testFlags);
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close this window",
-	    AGWINDETACH(win));
+	AG_LabelNew(win, 0, "Flags = 0x%x", ti->testFlags);
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Close this window", AGWINDETACH(win));
 	AG_WindowAttach(winParent, win);
-	if (*makeTransient) {
+
+	if (ti->makeTransient)
 		AG_WindowMakeTransient(winParent, win);
-	}
+	if (ti->makePinned)
+		AG_WindowPin(winParent, win);
+
 	AG_WindowShow(win);
 }
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	MyTestInstance *ti = obj;
 	AG_FlagDescr winFlags[] = {
 		{ AG_WINDOW_MODAL,		"MODAL",	1 },
 		{ AG_WINDOW_KEEPABOVE,		"KEEPABOVE",	1 },
@@ -134,14 +141,17 @@ TestGUI(void *obj, AG_Window *win)
 		{ AG_WINDOW_DENYFOCUS,		"DENYFOCUS",	1 },
 		{ 0,				NULL,		0 }
 	};
-	static Uint testFlags = 0;
-	static int makeTransient = 0;
+
+	ti->testFlags = 0;
+	ti->makeTransient = 0;
+	ti->makePinned = 0;
 
 	AG_LabelNewS(win, 0, "Create test window with flags:");
-	AG_CheckboxSetFromFlags(win, 0, &testFlags, winFlags);
-	AG_CheckboxNewInt(win, 0, "Make transient", &makeTransient);
+	AG_CheckboxSetFromFlags(win, 0, &ti->testFlags, winFlags);
+	AG_CheckboxNewInt(win, 0, "Make transient", &ti->makeTransient);
+	AG_CheckboxNewInt(win, 0, "Make pinned", &ti->makePinned);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Create Test Window",
-	    CreateTestWindow, "%p,%p,%p,%p", obj, win, &testFlags, &makeTransient);
+	    CreateTestWindow, "%p,%p", ti, win);
 	AG_SeparatorNewHoriz(win);
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test Desktop Alignment",
 	    TestDesktopAlign, "%p", win);
@@ -153,7 +163,7 @@ const AG_TestCase windowsTest = {
 	N_("Test various AG_Window(3) placements and options"),
 	"1.4.2",
 	0,
-	sizeof(AG_TestInstance),
+	sizeof(MyTestInstance),
 	NULL,		/* init */
 	NULL,		/* destroy */
 	NULL,		/* test */

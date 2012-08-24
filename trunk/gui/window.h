@@ -120,6 +120,7 @@ typedef struct ag_window {
 
 	struct ag_window *parent;		/* Logical parent window */
 	struct ag_window *transientFor;		/* Transient parent window */
+	struct ag_window *pinnedTo;		/* Pinned to parent window */
 
 	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
 	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
@@ -204,6 +205,9 @@ void	 AG_WindowUnminimize(AG_Window *);
 void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);
 void     AG_WindowMakeTransient(AG_Window *, AG_Window *);
+void     AG_WindowPin(AG_Window *, AG_Window *);
+void     AG_WindowUnpin(AG_Window *);
+void     AG_WindowMovePinned(AG_Window *, int, int);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
 void	 AG_WindowResize(AG_Window *);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -281,9 +281,8 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
 			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
 	}
-
-	AG_PostEvent(NULL, win, "window-user-move", "%d,%d",
-	    WIDGET(win)->x, WIDGET(win)->y);
+	
+	AG_WindowMovePinned(win, xRel, yRel);
 	win->dirty = 1;
 }
 
@@ -332,7 +331,6 @@ WM_Resize(int op, AG_Window *win, int xRel, int yRel)
 		break;
 	}
 	AG_WindowSetGeometry(win, x, y, w, h);
-	AG_PostEvent(NULL, win, "window-user-resize", "%d,%d", w, h);
 }
 
 

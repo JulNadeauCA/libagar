@@ -176,6 +176,12 @@ and
 .Fn AG_WindowMakeTransient "AG_Window *winParent" "AG_Window *winTrans"
 .Pp
 .Ft void
+.Fn AG_WindowPin "AG_Window *winParent" "AG_Window *winToPin"
+.Pp
+.Ft void
+.Fn AG_WindowUnpin "AG_Window *win"
+.Pp
+.Ft void
 .Fn AG_WindowUpdate "AG_Window *win"
 .Pp
 .Ft void
@@ -419,10 +425,17 @@ window manager.
 For example, under Motif, transient windows have no titlebar buttons.
 Under TWM, transient windows are created without requesting the initial
 size from the user.
+.Pp
 The
-.Fn AG_WindowMakeTransient
-call should precede the first call to
-.Fn AG_WindowShow .
+.Fn AG_WindowPin
+function "pins"
+.Fa winToPin
+to the parent window
+.Fa winParent .
+If the parent window is moved, the pinned window will be displaced along
+with it.
+.Fn AG_WindowUnpin
+unpins the given window.
 .Pp
 The
 .Fn AG_WindowUpdate
@@ -763,16 +776,6 @@ The window is no longer visible.
 The
 .Dv AG_WINDOW_MODAL
 flag is set and the user has clicked outside of the window area.
-.It Fn window-user-resize "int w" "int h"
-The window has been resized by the user.
-Calls to
-.Fn AG_WindowSetGeometry
-will not raise this event.
-.It Fn window-user-move "int x" "int y"
-The window has been displaced by the user.
-Calls to
-.Fn AG_WindowSetGeometry
-will not raise this event.
 .It Fn window-enter "void"
 The cursor has entered the window area.
 .It Fn window-leave "void"
