@@ -50,7 +50,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_POLLED;
-	lbl->tCache = AG_TextCacheNew(lbl,32,8);
+	lbl->tCache = AG_TextCacheNew(lbl, 32, 4);
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 
@@ -111,7 +111,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mu, const char *fmt, ...
 	AG_ObjectInit(lbl, &agLabelClass);
 
 	lbl->type = AG_LABEL_POLLED;
-	lbl->tCache = AG_TextCacheNew(lbl,32,8);
+	lbl->tCache = AG_TextCacheNew(lbl, 32, 4);
 	lbl->pollBufSize = AG_FMTSTRING_BUFFER_INIT;
 	lbl->pollBuf = Malloc(lbl->pollBufSize);
 

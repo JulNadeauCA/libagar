@@ -332,7 +332,7 @@ Init(void *obj)
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
-	vv->tCache = AG_TextCacheNew(vv,128,16);
+	vv->tCache = AG_TextCacheNew(vv, 64, 2);
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	vv->r = AG_RECT(0,0,0,0);

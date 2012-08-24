@@ -124,6 +124,7 @@ typedef struct ag_redraw_tie {
 	AG_Timeout to;				/* Polling timer */
 	Uint ival;				/* Polling interval */
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
+	int dataLastSet;
 } AG_RedrawTie;
 
 /* Widget instance structure */
