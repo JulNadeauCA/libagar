@@ -387,7 +387,11 @@ InitModifierMasks(void)
 	for (i = 3; i < 8; i++) {
 		for (j = 0; j < n; j++) {
 			KeyCode kc = xmk->modifiermap[i*n + j];
+#ifdef HAVE_XKB
+			KeySym ks = XkbKeycodeToKeysym(agDisplay, kc, 0, 0);
+#else
 			KeySym ks = XKeycodeToKeysym(agDisplay, kc, 0);
+#endif
 			Uint mask = 1<<i;
 
 #ifdef XK_MISCELLANY
