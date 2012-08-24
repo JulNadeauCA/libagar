@@ -28,6 +28,7 @@
  * driver; one context is created for each Agar window.
  */
 
+#include <config/have_xkb.h>
 #include <config/have_xinerama.h>
 
 #include <core/core.h>
@@ -36,6 +37,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
+#ifdef HAVE_XKB
+#include <X11/XKBlib.h>
+#endif
 #ifdef HAVE_XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif
@@ -307,11 +311,19 @@ static int
 LookupKeyCode(KeyCode keycode, AG_KeySym *rv)
 {
 	KeySym ks;
-	
+
+#ifdef HAVE_XKB
+	if ((ks = XkbKeycodeToKeysym(agDisplay, keycode, 0, 0)) == 0) {
+		*rv = AG_KEY_NONE;
+		return (0);
+	}
+#else
 	if ((ks = XKeycodeToKeysym(agDisplay, keycode, 0)) == 0) {
 		*rv = AG_KEY_NONE;
 		return (0);
 	}
+#endif
+
 	switch (ks>>8) {
 #ifdef XK_MISCELLANY
 	case 0xff:
