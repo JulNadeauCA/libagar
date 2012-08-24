@@ -315,6 +315,7 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
 		f++;
 	}
 out:
+	*pDst = '\0';
 	return (pDst - dst);
 }
 
@@ -410,12 +411,11 @@ next_char:
 		case 'c':
 			CAT_SPEC(f[1]);
 			if (pSpec == &spec[2]) {	/* Optimized (%c) */
-				if ((pEnd-pDst) < 2) {
+				if ((pDst+1) > pEnd) {
 					*pEnd = '\0';		/* Truncate */
 					goto out;
 				}
-				pDst[0] = (char)va_arg(ap,int);
-				pDst[1] = '\0';
+				*pDst = (char)va_arg(ap,int);
 				rv = 1;
 			} else {
 				rv = Snprintf(pDst, (pEnd-pDst), spec,
@@ -511,6 +511,10 @@ next_char:
 			f++;
 			goto next_char;
 		case '%':
+			if ((pDst+1) > pEnd) {
+				*pEnd = '\0';			/* Truncate */
+				goto out;
+			}
 			*pDst = '%';
 			rv = 1;
 			break;
@@ -522,6 +526,7 @@ next_char:
 		f++;
 	}
 out:
+	*pDst = '\0';
 	return (pDst - dst);
 }
 

@@ -113,6 +113,9 @@ The functions described on this manual page are used to manipulate C strings
 .Ft "AG_FmtString *"
 .Fn AG_PrintfP "const char *format" "..."
 .Pp
+.Ft "size_t"
+.Fn AG_ProcessFmtString "AG_FmtString *fs" "char *dst" "size_t dstSize"
+.Pp
 .Ft void
 .Fn AG_RegisterFmtStringExt "const char *fmt" "AG_FmtStringExtFn extFn"
 .Pp
@@ -153,11 +156,27 @@ function allocates and initializes a new
 structure from the given format string and arguments.
 Unlike
 .Fn AG_Printf
-which accepts literal values as arguments,
+which accepts literal values as arguments, the arguments to
 .Fn AG_PrintfP
-accepts only pointers as arguments.
-Those arguments will be accessed at a later time, whenever the string is
-to be printed or displayed.
+must be pointers to specifically typed data.
+Those arguments will be accessed only at a later time (when
+.Fn AG_ProcessFmtString
+is called).
+.Pp
+.Fn AG_ProcessFmtString
+processes a format string (previously returned by
+.Fn AG_PrintfP ) ,
+writing the formatted output to
+.Fa dst
+(which should be at least
+.Fa dstSize
+bytes in size).
+If insufficient space is available in the buffer, the output is truncated.
+.Fn AG_ProcessFmtString
+returns the number of characters that would have been copied were
+.Fa dstSize
+unlimited.
+The formatted output is always NUL-terminated.
 .Pp
 Agar's formatting engine supports the following built-in specifiers:
 .Pp
@@ -231,6 +250,8 @@ The callback is expected to write to fixed-size buffer
 and return the number of characters that would have been written were
 .Fa dstSize
 unlimited.
+The callback function can NUL-terminate the string, but it is not a
+requirement.
 A generic pointer to the argument variable can be obtained from the
 .Fn AG_FMTSTRING_ARG
 macro.
@@ -544,8 +565,8 @@ allows a buffer index to be specified:
 .Bd -literal -offset indent
 void MyFn(const char *string1, const char *string2);
 
-MyFn(AG_Printf(0, "First string"),
-     AG_Printf(1, "Second string"));
+MyFn(AG_PrintfN(0, "First string"),
+     AG_PrintfN(1, "Second string"));
 .Ed
 .Pp
 The following code uses
