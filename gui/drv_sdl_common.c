@@ -662,20 +662,6 @@ AG_SDL_GetNextEvent(void *obj, AG_DriverEvent *dev)
 	return (1);
 }
 
-/*
- * If there is a modal window, request its shutdown if a click is
- * detected outside of its area.
- */
-static int
-GenericModalClose(AG_Window *win, int x, int y)
-{
-	if (!AG_WidgetArea(win, x, y)) {
-		AG_PostEvent(NULL, win, "window-modal-close", NULL);
-		return (1);
-	}
-	return (0);
-}
-
 /* Test if the given coordinates overlap a window resize control. */
 static __inline__ int
 GenericMouseOverCtrl(AG_Window *win, int x, int y)
@@ -695,30 +681,13 @@ GenericMouseOverCtrl(AG_Window *win, int x, int y)
 
 /*
  * Process an input device event.
- * XXX TODO: a lot of this code is generic to all SW drivers.
+ * TODO: generalize this code to SW drivers.
  */
 static int
 ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win;
-
-	/* Signal any modal windows of outside clicks. */
-	if (dsw->Lmodal->n > 0) {
-		win = dsw->Lmodal->v[dsw->Lmodal->n-1].data.p;
-		switch (dev->type) {
-		case AG_DRIVER_MOUSE_BUTTON_DOWN:
-		case AG_DRIVER_MOUSE_BUTTON_UP:
-			if (GenericModalClose(win,
-			    dev->data.button.x, dev->data.button.y)) {
-				return (1);
-			}
-			break;
-		default:
-			break;
-		}
-		goto scan;		/* Skip WM events */
-	}
 
 	/* Process WM events */
 	switch (dev->type) {
@@ -732,13 +701,11 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 		break;
 	}
 
-scan:
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		AG_ObjectLock(win);
 
 		/* XXX TODO move invisible windows to different tailq! */
-		if (!win->visible || (dsw->Lmodal->n > 0 &&
-		    win != dsw->Lmodal->v[dsw->Lmodal->n-1].data.p)) {
+		if (!win->visible) {
 			AG_ObjectUnlock(win);
 			continue;
 		}
