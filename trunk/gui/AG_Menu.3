@@ -100,6 +100,9 @@ for details on event handler functions in Agar.
 .Fn AG_MenuCollapse "AG_Widget *parentWidget" "AG_MenuItem *item"
 .Pp
 .Ft void
+.Fn AG_MenuCollapseAll "AG_Menu *m"
+.Pp
+.Ft void
 .Fn AG_MenuSetPadding "AG_Menu *menu" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft void
@@ -159,13 +162,13 @@ is NULL, the coordinates are relative to the upper left corner of
 the view area).
 .Pp
 .Fn AG_MenuCollapse
-closes a window previously created by
-.Fn AG_MenuExpand .
-It is safe to invoke
+closes the window previously created by
 .Fn AG_MenuExpand
-and
-.Fn AG_MenuCollapse
-from a widget's event handler.
+for the given menu item.
+.Fn AG_MenuCollapseAll
+closes all windows created by
+.Fn AG_MenuExpand
+under the whole menu.
 .Pp
 .Fn AG_MenuSetPadding
 sets the global padding around all menu items, in pixels.

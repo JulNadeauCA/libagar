@@ -28,7 +28,7 @@ struct ag_cursor;
 enum ag_window_close_action {
 	AG_WINDOW_HIDE,
 	AG_WINDOW_DETACH,
-	AG_WINDOW_NONE
+	AG_WINDOW_IGNORE
 };
 
 /* Cursor-change area */

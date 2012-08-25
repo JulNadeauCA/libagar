@@ -65,10 +65,11 @@ enum ag_menu_style {
 typedef struct ag_menu {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_MENU_HFILL	 0x01
-#define AG_MENU_VFILL	 0x02
-#define AG_MENU_EXPAND	 (AG_MENU_HFILL|AG_MENU_VFILL)
-#define AG_MENU_GLOBAL	 0x04		/* Global application menu */
+#define AG_MENU_HFILL	 	0x01
+#define AG_MENU_VFILL	 	0x02
+#define AG_MENU_EXPAND	 	(AG_MENU_HFILL|AG_MENU_VFILL)
+#define AG_MENU_GLOBAL	 	0x04	/* Global application menu */
+#define AG_MENU_MODALCLOSED	0x08	/* Last closed by modal click */
 	enum ag_menu_style style;	/* Menu style */
 	AG_MenuItem *root;		/* Root menu item */
 	int selecting;			/* Selection in progress */

@@ -123,28 +123,19 @@ exists:
 	return (NULL);
 }
 
-#if 0
 static void
-LeaveWindow(AG_Event *event)
+ModalClose(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
 	AG_Menu *m = AG_PTR(1);
-	AG_MenuItem *mi = AG_PTR(2);
-	int expandedChildren = 0;
-	Uint i;
-	
-	if (mi->parent == m->root) {
-		return;
-	}
-	for (i = 0; i < mi->nsubitems; i++) {
-		if (mi->subitems[i].view != NULL)
-			expandedChildren = 1;
-	}
-	if (!expandedChildren) {
-		AG_MenuCollapse(m, mi);
-	}
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	AG_MenuCollapseAll(m);
+	m->itemSel = NULL;
+	m->selecting = 0;
+	if (AG_WidgetArea(m, x, y))
+		m->flags |= AG_MENU_MODALCLOSED;
 }
-#endif
 
 /* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
@@ -187,26 +178,16 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 		return (NULL);
 
 	win = AG_WindowNew(
-	    AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|AG_WINDOW_NORESIZE|
-	    AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
-
-	switch (m->style) {
-	case AG_MENU_DROPDOWN:
-		win->wmType = AG_WINDOW_WM_DROPDOWN_MENU;
-		break;
-	case AG_MENU_POPUP:
-		win->wmType = AG_WINDOW_WM_POPUP_MENU;
-		break;
-	default:
-		break;
-	}
-
+	    AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
+	    AG_WINDOW_NORESIZE|AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
+	win->wmType = (m->style == AG_MENU_DROPDOWN) ?
+	              AG_WINDOW_WM_DROPDOWN_MENU :
+		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_Popup-%s",
 	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-#if 0
-	AG_SetEvent(win, "window-leave", LeaveWindow, "%p,%p", m, mi);
-#endif
+	AG_SetEvent(win, "window-modal-close", ModalClose, "%p", m);
+
 	mv = Malloc(sizeof(AG_MenuView));
 	AG_ObjectInit(mv, &agMenuViewClass);
 	mv->pmenu = m;
@@ -321,6 +302,10 @@ MouseButtonDown(AG_Event *event)
 	if (m->root == NULL)
 		return;
 
+	if (m->flags & AG_MENU_MODALCLOSED) {
+		m->flags &= ~(AG_MENU_MODALCLOSED);
+		return;
+	}
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
 		int lbl = (item->lblMenu[1] != -1) ? item->lblMenu[1] :
@@ -356,25 +341,6 @@ MouseButtonDown(AG_Event *event)
 	}
 }
 
-#if 0
-static void
-MouseButtonUp(AG_Event *event)
-{
-	AG_Menu *m = AG_SELF();
-	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-
-	if (m->itemSel != NULL && m->sel_subitem == NULL &&
-	    x >= m->itemSel->x &&
-	    x < (m->itemSel->x + WSURFACE(m,m->itemSel->label)->w) &&
-	    y >= m->itemSel->y &&
-	    y < (m->itemSel->y + m->itemh)) {
-		m->itemSel = NULL;
-	}
-}
-#endif
-
 static void
 MouseMotion(AG_Event *event)
 {
@@ -386,11 +352,6 @@ MouseMotion(AG_Event *event)
 	if (!m->selecting || y < 0 || y >= HEIGHT(m)-1)
 		return;
 
-	if (x < 0 && m->itemSel != NULL) {
-		AG_MenuCollapse(m, m->itemSel);
-		m->itemSel = NULL;
-		return;
-	}
 	if (m->root == NULL) {
 		return;
 	}
@@ -547,9 +508,6 @@ Init(void *obj)
 	m->root->pmenu = m;
 
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
-#if 0
-	AG_SetEvent(m, "mouse-button-up", MouseButtonUp, NULL);
-#endif
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(m, "attached", Attached, NULL);
 }

@@ -280,13 +280,30 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
 }
 
 /*
- * Process a mouse-button event relative to the given window;
- * this is called from low-level event handling code.
+ * Process a mouse-button event relative to the given window; this is called
+ * from low-level event handling code. The agDrivers VFS must be locked.
  */
 void
 AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 {
 	AG_Widget *wid;
+	AG_Driver *drv;
+	AG_Window *winOther;
+
+	/* Handle modal windows. */
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(winOther, drv) {
+			if (winOther == win) {
+				continue;
+			}
+			if ((winOther->flags & AG_WINDOW_MODAL) &&
+			    (winOther->transientFor == NULL ||	/* App modal */
+			     winOther->transientFor == win)) {	/* Parent modal */
+				AG_PostEvent(NULL, winOther,
+				    "window-modal-close", "%i,%i", x, y);
+			}
+		}
+	}
 
 	WIDGET_FOREACH_CHILD(wid, win)
 		PostMouseButtonDown(win, wid, x, y, button);

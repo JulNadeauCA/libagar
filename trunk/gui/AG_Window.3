@@ -248,25 +248,30 @@ the window is destroyed.
 .Pp
 The
 .Fn AG_WindowSetCloseAction
-function specifies the action that should be performed when the user deletes
-the window through the window manager.
+function specifies the action to perform when the window is requested to
+be closed.
+Accepted arguments include:
 .Pp
-.Bl -tag -width "AG_WINDOW_DETACH "
+.Bl -tag -width "AG_WINDOW_IGNORE "
 .It AG_WINDOW_HIDE
-Window is only hidden.
+Hide the window.
 This is the default action for windows created with
 .Fn AG_WindowNewNamed .
 .It AG_WINDOW_DETACH
-Window is detached from the view and all resources allocated by it (and
-its attached widgets) are released.
+Detach and destroy the window.
 This is the default action for windows created with
 .Fn AG_WindowNew .
+.It AG_WINDOW_IGNORE
+Ignore the close request.
 .El
 .Pp
-To set an arbitrary callback routine, simply configure an
+To perform a different action, an event handler can be configured for the
 .Sq window-close
-event handler (see
-.Dq EVENTS ) .
+and
+.Sq window-modal-close
+events (see the
+.Dq EVENTS
+section).
 .Pp
 The
 .Fn AG_WindowSetPadding
@@ -692,16 +697,14 @@ Don't automatically grab focus in response to a
 .Sq mouse-button-down
 event in the window area.
 .It AG_WINDOW_MODAL
-Place window in foreground and prevent all other windows from catching events.
-Multiple modal windows are organized in a stack and the effective modal window
-is the one that was shown
-(with
-.Fn AG_WindowShow )
-the last.
-Implies
-.Dv AG_WINDOW_NOMAXIMIZE
-and
-.Dv AG_WINDOW_NOMINIMIZE .
+Place window in foreground and prevent other windows from receiving input
+events until the modal window is closed.
+If the modal window is transient (see
+.Fn AG_WindowMakeTransient ) ,
+then it is modal for its parent window, otherwise it is application-modal.
+If a click or touch event is detected outside of the window area, a
+.Sq window-modal-close
+event will be raised.
 .It AG_WINDOW_NOBACKGROUND
 Don't fill the window background prior to rendering its contents.
 .It AG_WINDOW_NOUPDATERECT
@@ -763,19 +766,20 @@ The GUI system may send
 objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
-The window's titlebar close button was pressed.
-Generated after the window is no longer visible.
-This event is configurable via the
-.Fn AG_WindowSetCloseAction
-utility function.
+The user (or window system) is requesting that this window be closed.
+By default, the window is destroyed (or hidden if it is named).
+but it is legal to ignore the request, or to create a dialog prompting
+the user for confirmation instead.
+.It Fn window-modal-close "int x" "int y"
+The window is modal (the
+.Dv AG_WINDOW_MODAL
+option is set), and a click or touch event was detected outside of its area
+(at given coordinates).
+By default, the request is ignored.
 .It Fn window-shown "void"
 The window is now visible.
 .It Fn window-hidden "void"
 The window is no longer visible.
-.It Fn window-modal-close "void"
-The
-.Dv AG_WINDOW_MODAL
-flag is set and the user has clicked outside of the window area.
 .It Fn window-enter "void"
 The cursor has entered the window area.
 .It Fn window-leave "void"
