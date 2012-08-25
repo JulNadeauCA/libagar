@@ -519,13 +519,12 @@ out:
 	return (ret);
 }
 
+/* The agDrivers VFS must be locked. */
 static int
 PostEventCallback(void *drvCaller)
 {
 	AG_Window *win;
 	AG_Driver *drv;
-
-	AG_LockVFS(&agDrivers);
 
 	if (!TAILQ_EMPTY(&agWindowDetachQ))
 		AG_FreeDetachedWindows();
@@ -561,12 +560,10 @@ PostEventCallback(void *drvCaller)
 		}
 		agWindowToFocus = NULL;
 	}
-	AG_UnlockVFS(&agDrivers);
 	return (1);
 nowindows:
 	AG_SetError("No more windows exist");
 	agTerminating = 1;
-	AG_UnlockVFS(&agDrivers);
 	return (-1);
 }
 
@@ -887,9 +884,13 @@ GLX_GenericEventLoop(void *obj)
 				AG_PerfMonUpdate(rCur);
 #endif
 		} else if (GLX_PendingEvents(NULL) != 0) {
+			AG_LockVFS(&agDrivers);
 			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
-			    GLX_ProcessEvent(NULL, &dev) == -1)
+			    GLX_ProcessEvent(NULL, &dev) == -1) {
+				AG_UnlockVFS(&agDrivers);
 				return;
+			}
+			AG_UnlockVFS(&agDrivers);
 #ifdef AG_DEBUG
 			agEventAvg++;
 #endif
@@ -1550,37 +1551,6 @@ GLX_CloseWindow(AG_Window *win)
 	AG_MutexUnlock(&agDisplayLock);
 }
 
-/*
- * Workaround a bug in the Unity window manager which requires that DOCK be
- * appended to the window type for non-normal windows to behave correctly.
- */
-static void
-WorkaroundUnityWM(AG_DriverGLX *glx)
-{
-	Ulong nItems, bytesAfter;
-	int format, rv;
-	Uchar *data = NULL;
-	Atom atom, rvAtom;
-
-	if ((atom = XInternAtom(agDisplay, "_UNITY_NET_WORKAREA_REGION", True))
-	    == None) {
-		return;
-	}
-	rv = XGetWindowProperty(agDisplay, DefaultRootWindow(agDisplay),
-	    atom, 0, 1, False, XA_CARDINAL,
-	    &rvAtom, &format, &nItems, &bytesAfter, &data);
-	if (rv == Success) {
-		atom = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE_DOCK", True);
-		if (atom == None) {
-			return;
-		}
-		XChangeProperty(agDisplay, glx->w,
-		    wmNetWmWindowType, XA_ATOM, 32,
-		    PropModeAppend,
-		    (Uchar *)&atom, 1);
-	}
-}
-
 static int
 GLX_MapWindow(AG_Window *win)
 {
@@ -1594,31 +1564,50 @@ GLX_MapWindow(AG_Window *win)
 
 	/* Set the window manager hints. */
 	if (!glx->wmHintsSet) {
-		Atom wmprot[2], wmt;
+		Atom wmprot[2], atom;
 		int nwmprot;
 		
 		glx->wmHintsSet = 1;
 	
 		/* Set EWMH-compliant window type */
-		wmt = XInternAtom(agDisplay, agWindowWmTypeNames[win->wmType], True);
-		if (wmNetWmWindowType != None &&
-		    wmt != None) {
-			XChangeProperty(agDisplay, glx->w,
-			    wmNetWmWindowType, XA_ATOM, 32,
-			    PropModeReplace,
-			    (Uchar *)&wmt, 1);
-			if (win->wmType != AG_WINDOW_WM_NORMAL) {
-				WorkaroundUnityWM(glx);
-			}
-		} else {
-			if (win->wmType != AG_WINDOW_WM_NORMAL &&
-			    wmNetWmState != None &&
-			    wmNetWmStateSkipTaskbar != None) {
+		if (wmNetWmWindowType != None) {
+			atom = XInternAtom(agDisplay,
+			    agWindowWmTypeNames[win->wmType], True);
+			if (atom != None) {
 				XChangeProperty(agDisplay, glx->w,
-				    wmNetWmState, XA_ATOM, 32,
-				    PropModeAppend,
-				    (Uchar *)&wmNetWmStateSkipTaskbar, 1);
+				    wmNetWmWindowType, XA_ATOM, 32,
+				    PropModeReplace,
+				    (Uchar *)&atom, 1);
 			}
+			if (win->wmType == AG_WINDOW_WM_DROPDOWN_MENU ||
+			    win->wmType == AG_WINDOW_WM_POPUP_MENU) {
+				atom = XInternAtom(agDisplay,
+				    "_NET_WM_WINDOW_TYPE_MENU", True);
+				if (atom != None) {
+					XChangeProperty(agDisplay, glx->w,
+					    wmNetWmWindowType, XA_ATOM, 32,
+					    PropModeAppend,
+					    (Uchar *)&atom, 1);
+				}
+			}
+			if (win->wmType != AG_WINDOW_WM_NORMAL) {
+				atom = XInternAtom(agDisplay,
+				    "_NET_WM_WINDOW_TYPE_DOCK", True);
+				if (atom != None) {
+					XChangeProperty(agDisplay, glx->w,
+					    wmNetWmWindowType, XA_ATOM, 32,
+					    PropModeAppend,
+					    (Uchar *)&atom, 1);
+				}
+			}
+		}
+		if (win->wmType != AG_WINDOW_WM_NORMAL &&
+		    wmNetWmState != None &&
+		    wmNetWmStateSkipTaskbar != None) {
+			XChangeProperty(agDisplay, glx->w,
+			    wmNetWmState, XA_ATOM, 32,
+			    PropModeAppend,
+			    (Uchar *)&wmNetWmStateSkipTaskbar, 1);
 		}
 	
 		/* Set window manager hints. */
