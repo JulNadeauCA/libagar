@@ -25,58 +25,60 @@
 
 #include "core.h"
 
+#include <string.h>
+
 const AG_VariableTypeInfo agVariableTypes[] = {
-	{ AG_VARIABLE_NULL,		0,	"NULL",		AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_NULL,		0,	"NULL",		AG_VARIABLE_NULL,		-1,	0 },
 	/*
 	 * Primitive types
 	 */
-	{ AG_VARIABLE_UINT,		0,	"Uint",		AG_VARIABLE_UINT,		0 },
-	{ AG_VARIABLE_P_UINT,		1,	"Uint *",	AG_VARIABLE_UINT,		0 },
-	{ AG_VARIABLE_INT,		0,	"int",		AG_VARIABLE_INT,		1 },
-	{ AG_VARIABLE_P_INT,		1,	"int *",	AG_VARIABLE_INT,		1 },
-	{ AG_VARIABLE_UINT8,		0,	"Uint8",	AG_VARIABLE_UINT8,		2 },
-	{ AG_VARIABLE_P_UINT8,		1,	"Uint8 *",	AG_VARIABLE_UINT8,		2 },
-	{ AG_VARIABLE_SINT8,		0,	"Sint8",	AG_VARIABLE_SINT8,		3 },
-	{ AG_VARIABLE_P_SINT8,		1,	"Sint8 *",	AG_VARIABLE_SINT8,		3 },
-	{ AG_VARIABLE_UINT16,		0,	"Uint16",	AG_VARIABLE_UINT16,		4 },
-	{ AG_VARIABLE_P_UINT16,		1,	"Uint16 *",	AG_VARIABLE_UINT16,		4 },
-	{ AG_VARIABLE_SINT16,		0,	"Sint16",	AG_VARIABLE_SINT16,		5 },
-	{ AG_VARIABLE_P_SINT16,		1,	"Sint16 *",	AG_VARIABLE_SINT16,		5 },
-	{ AG_VARIABLE_UINT32,		0,	"Uint32",	AG_VARIABLE_UINT32,		6 },
-	{ AG_VARIABLE_P_UINT32,		1,	"Uint32 *" ,	AG_VARIABLE_UINT32,		6 },
-	{ AG_VARIABLE_SINT32,		0,	"Sint32",	AG_VARIABLE_SINT32,		7 },
-	{ AG_VARIABLE_P_SINT32,		1,	"Sint32 *",	AG_VARIABLE_SINT32,		7 },
-	{ AG_VARIABLE_UINT64,		0,	"Uint64",	AG_VARIABLE_UINT64,		8 },
-	{ AG_VARIABLE_P_UINT64,		1,	"Uint64 *",	AG_VARIABLE_UINT64,		8 },
-	{ AG_VARIABLE_SINT64,		0,	"Sint64",	AG_VARIABLE_SINT64,		9 },
-	{ AG_VARIABLE_P_SINT64,		1,	"Sint64 *",	AG_VARIABLE_SINT64,		9 },
-	{ AG_VARIABLE_FLOAT,		0,	"float",	AG_VARIABLE_FLOAT,		10 },
-	{ AG_VARIABLE_P_FLOAT,		1,	"float *",	AG_VARIABLE_FLOAT,		10 },
-	{ AG_VARIABLE_DOUBLE,		0,	"double",	AG_VARIABLE_DOUBLE,		11 },
-	{ AG_VARIABLE_P_DOUBLE,		1,	"double *",	AG_VARIABLE_DOUBLE,		11 },
-	{ AG_VARIABLE_LONG_DOUBLE,	0,	"long double",	AG_VARIABLE_LONG_DOUBLE,	12 },
-	{ AG_VARIABLE_P_LONG_DOUBLE,	1,	"long double *",AG_VARIABLE_LONG_DOUBLE,	12 },
-	{ AG_VARIABLE_STRING,		0,	"Str",		AG_VARIABLE_STRING,		13 },
-	{ AG_VARIABLE_P_STRING,		1,	"Str *",	AG_VARIABLE_STRING,		13 },
-	{ AG_VARIABLE_CONST_STRING,	0,	"Const Str",	AG_VARIABLE_CONST_STRING, 	13 },
-	{ AG_VARIABLE_P_CONST_STRING,	1,	"Const Str *",	AG_VARIABLE_CONST_STRING, 	13 },
-	{ AG_VARIABLE_POINTER,		0,	"Ptr",		AG_VARIABLE_POINTER,		-1 },
-	{ AG_VARIABLE_P_POINTER,	1,	"Ptr *",	AG_VARIABLE_POINTER,		-1 },
-	{ AG_VARIABLE_CONST_POINTER,	0,	"Const Ptr",	AG_VARIABLE_CONST_POINTER,	-1 },
-	{ AG_VARIABLE_P_CONST_POINTER,	1,	"Const Ptr *",	AG_VARIABLE_CONST_POINTER,	-1 },
+	{ AG_VARIABLE_UINT,		0,	"Uint",		AG_VARIABLE_UINT,		0,	sizeof(Uint) },
+	{ AG_VARIABLE_P_UINT,		1,	"Uint *",	AG_VARIABLE_UINT,		0,	sizeof(Uint) },
+	{ AG_VARIABLE_INT,		0,	"int",		AG_VARIABLE_INT,		1,	sizeof(int) },
+	{ AG_VARIABLE_P_INT,		1,	"int *",	AG_VARIABLE_INT,		1,	sizeof(int) },
+	{ AG_VARIABLE_UINT8,		0,	"Uint8",	AG_VARIABLE_UINT8,		2,	1 },
+	{ AG_VARIABLE_P_UINT8,		1,	"Uint8 *",	AG_VARIABLE_UINT8,		2,	1 },
+	{ AG_VARIABLE_SINT8,		0,	"Sint8",	AG_VARIABLE_SINT8,		3,	1 },
+	{ AG_VARIABLE_P_SINT8,		1,	"Sint8 *",	AG_VARIABLE_SINT8,		3,	1 },
+	{ AG_VARIABLE_UINT16,		0,	"Uint16",	AG_VARIABLE_UINT16,		4,	2 },
+	{ AG_VARIABLE_P_UINT16,		1,	"Uint16 *",	AG_VARIABLE_UINT16,		4,	2 },
+	{ AG_VARIABLE_SINT16,		0,	"Sint16",	AG_VARIABLE_SINT16,		5,	2 },
+	{ AG_VARIABLE_P_SINT16,		1,	"Sint16 *",	AG_VARIABLE_SINT16,		5,	2 },
+	{ AG_VARIABLE_UINT32,		0,	"Uint32",	AG_VARIABLE_UINT32,		6,	4 },
+	{ AG_VARIABLE_P_UINT32,		1,	"Uint32 *" ,	AG_VARIABLE_UINT32,		6,	4 },
+	{ AG_VARIABLE_SINT32,		0,	"Sint32",	AG_VARIABLE_SINT32,		7,	4 },
+	{ AG_VARIABLE_P_SINT32,		1,	"Sint32 *",	AG_VARIABLE_SINT32,		7,	4 },
+	{ AG_VARIABLE_UINT64,		0,	"Uint64",	AG_VARIABLE_UINT64,		8,	sizeof(Uint64) },
+	{ AG_VARIABLE_P_UINT64,		1,	"Uint64 *",	AG_VARIABLE_UINT64,		8,	sizeof(Uint64) },
+	{ AG_VARIABLE_SINT64,		0,	"Sint64",	AG_VARIABLE_SINT64,		9,	sizeof(Sint64) },
+	{ AG_VARIABLE_P_SINT64,		1,	"Sint64 *",	AG_VARIABLE_SINT64,		9,	sizeof(Sint64) },
+	{ AG_VARIABLE_FLOAT,		0,	"float",	AG_VARIABLE_FLOAT,		10,	sizeof(float) },
+	{ AG_VARIABLE_P_FLOAT,		1,	"float *",	AG_VARIABLE_FLOAT,		10,	sizeof(float) },
+	{ AG_VARIABLE_DOUBLE,		0,	"double",	AG_VARIABLE_DOUBLE,		11,	sizeof(double) },
+	{ AG_VARIABLE_P_DOUBLE,		1,	"double *",	AG_VARIABLE_DOUBLE,		11,	sizeof(double) },
+	{ AG_VARIABLE_LONG_DOUBLE,	0,	"long double",	AG_VARIABLE_LONG_DOUBLE,	12,	sizeof(long double) },
+	{ AG_VARIABLE_P_LONG_DOUBLE,	1,	"long double *",AG_VARIABLE_LONG_DOUBLE,	12,	sizeof(long double) },
+	{ AG_VARIABLE_STRING,		0,	"Str",		AG_VARIABLE_STRING,		13,	sizeof(char *) },
+	{ AG_VARIABLE_P_STRING,		1,	"Str *",	AG_VARIABLE_STRING,		13,	sizeof(char *) },
+	{ AG_VARIABLE_CONST_STRING,	0,	"Const Str",	AG_VARIABLE_CONST_STRING, 	13,	sizeof(const char *) },
+	{ AG_VARIABLE_P_CONST_STRING,	1,	"Const Str *",	AG_VARIABLE_CONST_STRING, 	13,	sizeof(const char *) },
+	{ AG_VARIABLE_POINTER,		0,	"Ptr",		AG_VARIABLE_POINTER,		-1,	sizeof(void *) },
+	{ AG_VARIABLE_P_POINTER,	1,	"Ptr *",	AG_VARIABLE_POINTER,		-1,	sizeof(void *) },
+	{ AG_VARIABLE_CONST_POINTER,	0,	"Const Ptr",	AG_VARIABLE_CONST_POINTER,	-1,	sizeof(const void *) },
+	{ AG_VARIABLE_P_CONST_POINTER,	1,	"Const Ptr *",	AG_VARIABLE_CONST_POINTER,	-1,	sizeof(const void *) },
 	/*
 	 * Bitmask-specific types
 	 */
-	{ AG_VARIABLE_P_FLAG,		1,	"Flag *",	AG_VARIABLE_P_FLAG,		-1 },
-	{ AG_VARIABLE_P_FLAG8,		1,	"Flag8 *",	AG_VARIABLE_P_FLAG8,		-1 },
-	{ AG_VARIABLE_P_FLAG16,		1,	"Flag16 *",	AG_VARIABLE_P_FLAG16,		-1 },
-	{ AG_VARIABLE_P_FLAG32,		1,	"Flag32 *",	AG_VARIABLE_P_FLAG32,		-1 },
+	{ AG_VARIABLE_P_FLAG,		1,	"Flag *",	AG_VARIABLE_P_FLAG,		-1,	sizeof(int) },
+	{ AG_VARIABLE_P_FLAG8,		1,	"Flag8 *",	AG_VARIABLE_P_FLAG8,		-1,	1 },
+	{ AG_VARIABLE_P_FLAG16,		1,	"Flag16 *",	AG_VARIABLE_P_FLAG16,		-1,	2 },
+	{ AG_VARIABLE_P_FLAG32,		1,	"Flag32 *",	AG_VARIABLE_P_FLAG32,		-1,	4 },
 	/*
 	 * Agar-Core specific types
 	 */
-	{ AG_VARIABLE_P_OBJECT,		1,	"Object *",	AG_VARIABLE_P_OBJECT,		-1 },
-	{ AG_VARIABLE_P_TEXT,		1,	"Text *",	AG_VARIABLE_P_TEXT,		-1 },
-	{ AG_VARIABLE_P_VARIABLE,	1,	"Variable *",	AG_VARIABLE_P_VARIABLE,		-1 },
+	{ AG_VARIABLE_P_OBJECT,		1,	"Object *",	AG_VARIABLE_P_OBJECT,		-1,	sizeof(void *) },
+	{ AG_VARIABLE_P_TEXT,		1,	"Text *",	AG_VARIABLE_P_TEXT,		-1,	sizeof(void *) },
+	{ AG_VARIABLE_P_VARIABLE,	1,	"Variable *",	AG_VARIABLE_P_VARIABLE,		-1,	sizeof(void *) },
 };
 
 /*
@@ -131,7 +133,11 @@ FetchVariableNew(void *pObj, const char *name, int *newFlag)
 	return (V);
 }
 
-/* Duplicate a Variable contents. */
+/*
+ * Duplicate a Variable. Pointer references are preserved; internally
+ * allocated strings are duplicated (references to string buffers are
+ * preserved).
+ */
 int
 AG_CopyVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 {
@@ -143,6 +149,65 @@ AG_CopyVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 			return (-1);
 	}
 	return (0);
+}
+
+/*
+ * Duplicate a Variable with dereference. Pointer references are converted to
+ * immediate values and strings are duplicated unconditionally.
+ */
+int
+AG_DerefVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
+{
+	memcpy(Vdst, Vsrc, sizeof(AG_Variable));
+
+	switch (Vsrc->type) {
+	case AG_VARIABLE_P_UINT:	Vdst->type = AG_VARIABLE_UINT;		Vdst->data.u = *(Uint *)Vsrc->data.p;		break;
+	case AG_VARIABLE_P_INT:		Vdst->type = AG_VARIABLE_INT;		Vdst->data.i = *(int *)Vsrc->data.p;		break;
+	case AG_VARIABLE_P_UINT8:	Vdst->type = AG_VARIABLE_UINT8;		Vdst->data.u8 = *(Uint8 *)Vsrc->data.p;		break;
+	case AG_VARIABLE_P_SINT8:	Vdst->type = AG_VARIABLE_SINT8;		Vdst->data.s8 = *(Sint8 *)Vsrc->data.p;		break;
+	case AG_VARIABLE_P_UINT16:	Vdst->type = AG_VARIABLE_UINT16;	Vdst->data.u16 = *(Uint16 *)Vsrc->data.p;	break;
+	case AG_VARIABLE_P_SINT16:	Vdst->type = AG_VARIABLE_SINT16;	Vdst->data.s16 = *(Sint16 *)Vsrc->data.p;	break;
+	case AG_VARIABLE_P_UINT32:	Vdst->type = AG_VARIABLE_UINT32;	Vdst->data.u32 = *(Uint32 *)Vsrc->data.p;	break;
+	case AG_VARIABLE_P_SINT32:	Vdst->type = AG_VARIABLE_SINT32;	Vdst->data.s32 = *(Sint32 *)Vsrc->data.p;	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_P_UINT64:	Vdst->type = AG_VARIABLE_UINT64;	Vdst->data.u64 = *(Uint64 *)Vsrc->data.p;	break;
+	case AG_VARIABLE_P_SINT64:	Vdst->type = AG_VARIABLE_SINT64;	Vdst->data.s64 = *(Sint64 *)Vsrc->data.p;	break;
+#endif
+	case AG_VARIABLE_P_FLOAT:	Vdst->type = AG_VARIABLE_FLOAT;		Vdst->data.flt = *(float *)Vsrc->data.p;	break;
+	case AG_VARIABLE_P_DOUBLE:	Vdst->type = AG_VARIABLE_DOUBLE;	Vdst->data.dbl = *(double *)Vsrc->data.p;	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_P_LONG_DOUBLE:	Vdst->type = AG_VARIABLE_LONG_DOUBLE;	Vdst->data.ldbl = *(long double *)Vsrc->data.p;	break;
+#endif
+	case AG_VARIABLE_P_POINTER:	Vdst->type = AG_VARIABLE_POINTER;	Vdst->data.p = *(void **)Vsrc->data.p;		break;
+	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_STRING:
+		if ((Vdst->data.s = TryStrdup(Vsrc->data.s)) == NULL) {
+			return (-1);
+		}
+		Vdst->info.size = 0;
+		break;
+	default:
+		break;
+	}
+	return (0);
+}
+
+/* Compare two variables (without dereference). */
+int
+AG_CompareVariables(const AG_Variable *a, const AG_Variable *b)
+{
+	size_t size;
+
+	if (a->type != b->type) {
+		return (1);
+	}
+	size = agVariableTypes[a->type].size;
+	if (size == 0) {
+		return (1);
+	} else {
+		return memcmp((const void *)&a->data, (const void *)&b->data,
+		    agVariableTypes[a->type].size);
+	}
 }
 
 /* Evaluate the value of a variable from any associated function. */
@@ -175,8 +240,15 @@ AG_EvalVariable(void *pObj, AG_Variable *V)
 	case AG_VARIABLE_SINT16:	V->data.s16 = V->fn.fnSint16(ev);	break;
 	case AG_VARIABLE_UINT32:	V->data.u32 = V->fn.fnUint32(ev);	break;
 	case AG_VARIABLE_SINT32:	V->data.s32 = V->fn.fnSint32(ev);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	V->data.u64 = V->fn.fnUint64(ev);	break;
+	case AG_VARIABLE_SINT64:	V->data.s64 = V->fn.fnSint64(ev);	break;
+#endif
 	case AG_VARIABLE_FLOAT:		V->data.flt = V->fn.fnFloat(ev);	break;
 	case AG_VARIABLE_DOUBLE:	V->data.dbl = V->fn.fnDouble(ev);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	V->data.ldbl = V->fn.fnLongDouble(ev);	break;
+#endif
 	case AG_VARIABLE_POINTER:	V->data.p = V->fn.fnPointer(ev);	break;
 	case AG_VARIABLE_CONST_POINTER:	V->data.Cp = V->fn.fnConstPointer(ev);	break;
 	case AG_VARIABLE_STRING:
@@ -214,10 +286,17 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 	case AG_VARIABLE_P_UINT32:	Snprintf(s, len, "%lu", (Ulong)*(Uint32 *)V->data.p);	break;
 	case AG_VARIABLE_SINT32:	Snprintf(s, len, "%ld", (long)V->data.s32);		break;
 	case AG_VARIABLE_P_SINT32:	Snprintf(s, len, "%ld", (long)*(Sint32 *)V->data.p);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_SINT64:	Snprintf(s, len, "%lld", (long long)V->data.s64);		break;
+	case AG_VARIABLE_P_SINT64:	Snprintf(s, len, "%lld", (long long)*(Sint64 *)V->data.p);	break;
+#endif
 	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%.2f", V->data.flt);			break;
 	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
 	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%.2f", V->data.dbl);			break;
 	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%.2f", *(double *)V->data.p);		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_P_LONG_DOUBLE:	Snprintf(s, len, "%.2Lf", *(long double *)V->data.p);	break;
+#endif
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_CONST_STRING:
 		Strlcpy(s, V->data.s, len);
@@ -307,43 +386,6 @@ AG_GetVariableVFS(void *vfsRoot, const char *varPath)
 	if (V->fn.fnVoid != NULL) {
 		AG_EvalVariable(obj, V);
 	}
-	return (V);
-}
-
-/*
- * Set the value of the specified Object variable. If there is no variable
- * of the given name, it is created. The format string specifies the type
- * in standard argument format, followed by the relevant parameters.
- */
-AG_Variable *
-AG_Set(void *pObj, const char *name, const char *fmt, ...)
-{
-	AG_Object *obj = pObj;
-	AG_List *vList = AG_ListNew();
-	int *argSizes = NULL;
-	AG_Variable *V;
-	va_list ap;
-
-	va_start(ap, fmt);
-	AG_PARSE_VARIABLE_ARGS(ap, fmt, vList, argSizes);
-	va_end(ap);
-#ifdef DEBUG
-	if (vList->n != 1)
-		AG_FatalError("Invalid AG_Set() format");
-#endif
-	
-	AG_ObjectLock(obj);
-	V = AG_GetVariableLocked(obj, name);
-	Strlcpy(V->name, name, sizeof(V->name));
-	if (AG_CopyVariable(V, &vList->v[0]) == -1) {
-		AG_UnlockVariable(V);
-		AG_FatalError(NULL);
-	}
-	AG_UnlockVariable(V);
-	AG_ObjectUnlock(obj);
-
-	AG_ListDestroy(vList);
-	Free(argSizes);
 	return (V);
 }
 
@@ -801,6 +843,88 @@ AG_BindSint32Mp(void *obj, const char *name, Sint32 *v, AG_Mutex *mutex)
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT32);
 }
 
+#ifdef HAVE_64BIT
+/*
+ * Unsigned 64-bit integer
+ */
+static void
+GetUint64Fn(void *obj, AG_Variable *V)
+{
+	FN_VARIABLE_GETFN(u64, fnUint64);
+}
+Uint64
+AG_GetUint64(void *obj, const char *name)
+{
+	FN_VARIABLE_GET(u64, fnUint64, Uint64, GetUint64Fn);
+}
+AG_Variable *
+AG_SetUint64(void *obj, const char *name, Uint64 v)
+{
+	FN_VARIABLE_SET(u64, Uint64, AG_VARIABLE_UINT64);
+}
+void
+AG_InitUint64(AG_Variable *V, Uint64 v)
+{
+	FN_VARIABLE_INIT(AG_VARIABLE_UINT64);
+	V->data.u64 = v;
+}
+AG_Variable *
+AG_BindUint64(void *obj, const char *name, Uint64 *v)
+{
+	FN_VARIABLE_BIND(AG_VARIABLE_P_UINT64);
+}
+AG_Variable *
+AG_BindUint64Fn(void *obj, const char *name, AG_Uint64Fn fn, const char *fmt, ...)
+{
+	FN_VARIABLE_BIND_FN(fnUint64, AG_VARIABLE_UINT64);
+}
+AG_Variable *
+AG_BindUint64Mp(void *obj, const char *name, Uint64 *v, AG_Mutex *mutex)
+{
+	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_UINT64);
+}
+
+/*
+ * Signed 64-bit integer
+ */
+static void
+GetSint64Fn(void *obj, AG_Variable *V)
+{
+	FN_VARIABLE_GETFN(s64, fnSint64);
+}
+Sint64
+AG_GetSint64(void *obj, const char *name)
+{
+	FN_VARIABLE_GET(s64, fnSint64, Sint64, GetSint64Fn);
+}
+AG_Variable *
+AG_SetSint64(void *obj, const char *name, Sint64 v)
+{
+	FN_VARIABLE_SET(s64, Sint64, AG_VARIABLE_SINT64);
+}
+void
+AG_InitSint64(AG_Variable *V, Sint64 v)
+{
+	FN_VARIABLE_INIT(AG_VARIABLE_SINT64);
+	V->data.s64 = v;
+}
+AG_Variable *
+AG_BindSint64(void *obj, const char *name, Sint64 *v)
+{
+	FN_VARIABLE_BIND(AG_VARIABLE_P_SINT64);
+}
+AG_Variable *
+AG_BindSint64Fn(void *obj, const char *name, AG_Sint64Fn fn, const char *fmt, ...)
+{
+	FN_VARIABLE_BIND_FN(fnSint64, AG_VARIABLE_SINT64);
+}
+AG_Variable *
+AG_BindSint64Mp(void *obj, const char *name, Sint64 *v, AG_Mutex *mutex)
+{
+	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_SINT64);
+}
+#endif /* HAVE_64BIT */
+
 /*
  * Single-precision floating-point number.
  */
@@ -880,6 +1004,48 @@ AG_BindDoubleMp(void *obj, const char *name, double *v, AG_Mutex *mutex)
 {
 	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_DOUBLE);
 }
+
+#ifdef HAVE_LONG_DOUBLE
+/*
+ * Quad-precision floating-point number.
+ */
+static void
+GetLongDoubleFn(void *obj, AG_Variable *V)
+{
+	FN_VARIABLE_GETFN(ldbl, fnLongDouble);
+}
+long double
+AG_GetLongDouble(void *obj, const char *name)
+{
+	FN_VARIABLE_GET(ldbl, fnLongDouble, long double, GetLongDoubleFn);
+}
+AG_Variable *
+AG_SetLongDouble(void *obj, const char *name, long double v)
+{
+	FN_VARIABLE_SET(ldbl, long double, AG_VARIABLE_LONG_DOUBLE);
+}
+void
+AG_InitLongDouble(AG_Variable *V, long double v)
+{
+	FN_VARIABLE_INIT(AG_VARIABLE_LONG_DOUBLE);
+	V->data.ldbl = v;
+}
+AG_Variable *
+AG_BindLongDouble(void *obj, const char *name, long double *v)
+{
+	FN_VARIABLE_BIND(AG_VARIABLE_P_LONG_DOUBLE);
+}
+AG_Variable *
+AG_BindLongDoubleFn(void *obj, const char *name, AG_LongDoubleFn fn, const char *fmt, ...)
+{
+	FN_VARIABLE_BIND_FN(fnLongDouble, AG_VARIABLE_LONG_DOUBLE);
+}
+AG_Variable *
+AG_BindLongDoubleMp(void *obj, const char *name, long double *v, AG_Mutex *mutex)
+{
+	FN_VARIABLE_BIND_MP(AG_VARIABLE_P_LONG_DOUBLE);
+}
+#endif /* HAVE_LONG_DOUBLE */
 
 /*
  * Pointer routines.
@@ -1473,4 +1639,229 @@ AG_VariableSubst(void *obj, const char *s, char *dst, size_t len)
 		c++;
 	}
 	AG_ObjectUnlock(obj);
+}
+
+/*
+ * AG_ListSet(): Construct a list of AG_Variables from varargs arguments.
+ */
+#undef AG_VARIABLE_SETARG
+#define AG_VARIABLE_SETARG(V,t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+		} else {						\
+			(V)->data.dmemb = (dtype)va_arg(ap, vtype);	\
+		}							\
+	} while (0)
+
+#undef AG_VARIABLE_SETARG_STRING
+#define AG_VARIABLE_SETARG_STRING(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+			(V)->info.size = 0;				\
+		} else {						\
+			(V)->data.dmemb = va_arg(ap, dtype);		\
+			(V)->info.size = strlen((V)->data.dmemb)+1;	\
+		}							\
+	} while (0)
+
+#undef AG_VARIABLE_SETARG_STRING_BUFFER
+#define AG_VARIABLE_SETARG_STRING_BUFFER(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+			(V)->info.size = 0;				\
+		} else {						\
+			(V)->data.dmemb = va_arg(ap, dtype);		\
+			(V)->info.size = va_arg(ap, size_t);		\
+		}							\
+	} while (0)
+
+AG_List *
+AG_ListSet(const char *fmt, ...)
+{
+	va_list ap;
+	AG_List *L;
+	int *argSizes = NULL, *argSizesNew;
+	const char *fmtSpec;
+	int nArgs = 0;
+
+	if ((L = AG_ListNew()) == NULL) {
+		return (NULL);
+	}
+	va_start(ap, fmt);
+	for (fmtSpec = fmt; *fmtSpec != '\0'; ) {
+		const char *c;
+		int pFlag = 0, fnFlag = 0, lFlag = 0, LFlag = 0, isExtended = 0;
+		int fmtChars, inFmt = 0;
+		AG_Variable V;
+
+		for (c = &fmtSpec[0], fmtChars = 0;
+		     *c != '\0';
+		     c++) {
+			if (*c == '%') { inFmt = 1; }
+			if (inFmt) { fmtChars++; }
+			if (*c == '%') {
+				continue;
+			} else if (*c == '*' && c[1] != '\0') {
+				pFlag++;
+			} else if (*c == 'l' && c[1] != '\0') {
+				lFlag++;
+			} else if (*c == 'L' && c[1] != '\0') {
+				LFlag++;
+			} else if (*c == 'F' && c[1] != '\0') {
+				fnFlag++;
+			} else if (*c == '[' && c[1] != '\0') {
+				isExtended++;
+				break;
+			} else if (inFmt && strchr("*Csdiufgp]", *c)) {
+				break;
+			} else if (strchr(".0123456789", *c)) {
+				continue;
+			} else {
+				inFmt = 0;
+			}
+		}
+		fmtSpec += fmtChars;
+		if (*c == '\0') { break; }
+		if (!inFmt) { continue;	}
+
+		if ((argSizesNew = TryRealloc(argSizes, (nArgs+1)*sizeof(int)))
+		    == NULL) {
+			goto fail;
+		}
+		argSizes = argSizesNew;
+		argSizes[nArgs++] = fmtChars;
+
+		V.type = AG_VARIABLE_NULL;
+		V.name[0] = '\0';
+		V.mutex = NULL;
+		V.fn.fnVoid = NULL;
+		V.info.bitmask = 0;
+
+		if (pFlag) {
+			V.data.p = va_arg(ap, void *);
+		}
+		if (isExtended) {
+			c++;
+			if (c[0] == 's') {
+				if (c[1] == '3' && c[2] == '2') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_SINT32, AG_VARIABLE_P_SINT32,
+					    s32, Sint32, int, 0, fnSint32, AG_Sint32Fn);
+#ifdef HAVE_64BIT
+				} else if (c[1] == '6' && c[2] == '4') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_SINT64, AG_VARIABLE_P_SINT64,
+					    s64, Sint64, long long, 0LL, fnSint64, AG_Sint64Fn);
+#endif
+				} else if (c[1] == '1' && c[2] == '6') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_SINT16, AG_VARIABLE_P_SINT16,
+					    s16, Sint16, int, 0, fnSint16, AG_Sint16Fn);
+				} else if (c[1] == '8') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_SINT8, AG_VARIABLE_P_SINT8,
+					    s8, Sint8, int, 0, fnSint8, AG_Sint8Fn);
+				}
+			} else if (c[0] == 'u') {
+				if (c[1] == '3' && c[2] == '2') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT32, AG_VARIABLE_P_UINT32,
+					    u32, Uint32, Uint, 0, fnUint32, AG_Uint32Fn);
+#ifdef HAVE_64BIT
+				} else if (c[1] == '6' && c[2] == '4') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT64, AG_VARIABLE_P_UINT64,
+					    u64, Uint64, unsigned long long, 0ULL, fnSint64, AG_Sint64Fn);
+#endif
+				} else if (c[1] == '1' && c[2] == '6') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT16, AG_VARIABLE_P_UINT16,
+					    u16, Uint16, Uint, 0, fnUint16, AG_Uint16Fn);
+				} else if (c[1] == '8') {
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT8, AG_VARIABLE_P_UINT8,
+					    u8, Uint8, int, 0, fnUint8, AG_Uint8Fn);
+				}
+			} else if (c[0] == 'C') {
+				switch (c[1]) {
+				case 'p':
+					AG_VARIABLE_SETARG(&V, AG_VARIABLE_CONST_POINTER, AG_VARIABLE_P_CONST_POINTER,
+					    Cp, const void *, const void *, NULL, fnConstPointer, AG_ConstPointerFn);
+					break;
+				case 's':
+					AG_VARIABLE_SETARG_STRING(&V, AG_VARIABLE_CONST_STRING, AG_VARIABLE_P_CONST_STRING,
+					    Cs, const char *, NULL, fnString, AG_StringFn);
+					break;
+				}
+			} else if (c[0] == 'B') {
+				AG_VARIABLE_SETARG_STRING_BUFFER(&V, AG_VARIABLE_STRING,	AG_VARIABLE_P_STRING,
+				    s, char *, NULL, fnString, AG_StringFn);
+			}
+			break;
+		}
+		switch (c[0]) {
+		case 'p':
+			AG_VARIABLE_SETARG(&V, AG_VARIABLE_POINTER, AG_VARIABLE_P_POINTER,
+			    p, void *, void *, NULL, fnPointer, AG_PointerFn);
+			break;
+		case 's':
+			AG_VARIABLE_SETARG_STRING(&V, AG_VARIABLE_STRING, AG_VARIABLE_P_STRING,
+			    s, char *, NULL, fnString, AG_StringFn);
+			break;
+		case 't':
+			V.type = AG_VARIABLE_P_TEXT;
+			break;
+		case 'd':
+		case 'i':
+			if (lFlag == 0) {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_INT, AG_VARIABLE_P_INT,
+				    i, int, int, 0, fnInt, AG_IntFn);
+			} else {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_SINT32, AG_VARIABLE_P_SINT32,
+				    s32, Sint32, Sint32, 0, fnSint32, AG_Sint32Fn);
+			}
+			break;
+		case 'u':
+			if (lFlag == 0) {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT, AG_VARIABLE_P_UINT,
+				    u, Uint, Uint, 0, fnUint, AG_UintFn);
+			} else {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_UINT32, AG_VARIABLE_P_UINT32,
+				    u32, Uint32, Uint32, 0, fnUint32, AG_Uint32Fn);
+			}
+			break;
+		case 'f':
+		case 'g':
+			if (lFlag) {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_DOUBLE, AG_VARIABLE_P_DOUBLE,
+				    dbl, double, double, 0.0, fnDouble, AG_DoubleFn);
+#ifdef HAVE_LONG_DOUBLE
+			} else if (LFlag) {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_LONG_DOUBLE, AG_VARIABLE_P_LONG_DOUBLE,
+				    ldbl, long double, long double, 0.0L, fnLongDouble, AG_LongDoubleFn);
+#endif
+			} else {
+				AG_VARIABLE_SETARG(&V, AG_VARIABLE_FLOAT, AG_VARIABLE_P_FLOAT,
+				    flt, float, double, 0.0f, fnFloat, AG_FloatFn);
+			}
+			break;
+		default:
+			break;
+		}
+		AG_ListAppend(L, &V);
+	}
+	va_end(ap);
+	return (L);
+fail:
+	va_end(ap);
+	AG_ListDestroy(L);
+	free(argSizes);
+	return (NULL);
 }
