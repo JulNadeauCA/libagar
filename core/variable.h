@@ -54,6 +54,7 @@ typedef struct ag_variable_type_info {
 	const char *name;			/* Name string */
 	enum ag_variable_type typeTgt;		/* Pointer target type (or AG_VARIABLE_NULL) */
 	int code;				/* Numerical code (-1 = non persistent) */
+	size_t size;				/* Size in bytes (or 0) */
 } AG_VariableTypeInfo;
 
 #define AG_VARIABLE_NAME_MAX	40
@@ -70,8 +71,15 @@ typedef Uint16      (*AG_Uint16Fn)(struct ag_event *);
 typedef Sint16      (*AG_Sint16Fn)(struct ag_event *);
 typedef Uint32      (*AG_Uint32Fn)(struct ag_event *);
 typedef Sint32      (*AG_Sint32Fn)(struct ag_event *);
+#ifdef HAVE_64BIT
+typedef Uint64      (*AG_Uint64Fn)(struct ag_event *);
+typedef Sint64      (*AG_Sint64Fn)(struct ag_event *);
+#endif
 typedef float       (*AG_FloatFn)(struct ag_event *);
 typedef double      (*AG_DoubleFn)(struct ag_event *);
+#ifdef HAVE_LONG_DOUBLE
+typedef long double (*AG_LongDoubleFn)(struct ag_event *);
+#endif
 typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
@@ -87,8 +95,15 @@ union ag_variable_fn {
 	Sint16 (*fnSint16)(struct ag_event *);
 	Uint32 (*fnUint32)(struct ag_event *);
 	Sint32 (*fnSint32)(struct ag_event *);
+#ifdef HAVE_64BIT
+	Uint64 (*fnUint64)(struct ag_event *);
+	Sint64 (*fnSint64)(struct ag_event *);
+#endif
 	float (*fnFloat)(struct ag_event *);
 	double (*fnDouble)(struct ag_event *);
+#ifdef HAVE_LONG_DOUBLE
+	long double (*fnLongDouble)(struct ag_event *);
+#endif
 	size_t (*fnString)(struct ag_event *, char *, size_t);
 	void *(*fnPointer)(struct ag_event *);
 	const void *(*fnConstPointer)(struct ag_event *);
@@ -104,12 +119,19 @@ union ag_variable_data {
 	Uint u;
 	float flt;
 	double dbl;
+#ifdef HAVE_LONG_DOUBLE
+	long double ldbl;
+#endif
 	Uint8 u8;
 	Sint8 s8;
 	Uint16 u16;
 	Sint16 s16;
 	Uint32 u32;
 	Sint32 s32;
+#ifdef HAVE_64BIT
+	Uint64 u64;
+	Sint64 s64;
+#endif
 };
 
 typedef struct ag_variable {
@@ -128,263 +150,24 @@ typedef struct ag_variable {
 	union ag_variable_data data;	/* Variable-stored data */
 } AG_Variable;
 
-#undef AG_VARIABLE_SETARG
-#define AG_VARIABLE_SETARG(V,t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
-	if (pFlag) {							\
-		(V)->type = (pt);					\
-	} else {							\
-		(V)->type = (t);					\
-		if (fnFlag) {						\
-			(V)->data.dmemb = (ival);			\
-			(V)->fn.fnmemb = va_arg(ap, fntype);		\
-		} else {						\
-			(V)->data.dmemb = (dtype)va_arg(ap, vtype);	\
-		}							\
-	} while (0)
-
-#undef AG_VARIABLE_SETARG_STRING
-#define AG_VARIABLE_SETARG_STRING(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
-	if (pFlag) {							\
-		(V)->type = (pt);					\
-	} else {							\
-		(V)->type = (t);					\
-		if (fnFlag) {						\
-			(V)->data.dmemb = (ival);			\
-			(V)->fn.fnmemb = va_arg(ap, fntype);		\
-			(V)->info.size = 0;				\
-		} else {						\
-			(V)->data.dmemb = va_arg(ap, dtype);		\
-			(V)->info.size = strlen((V)->data.dmemb)+1;	\
-		}							\
-	} while (0)
-
-#undef AG_VARIABLE_SETARG_STRING_BUFFER
-#define AG_VARIABLE_SETARG_STRING_BUFFER(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
-	if (pFlag) {							\
-		(V)->type = (pt);					\
-	} else {							\
-		(V)->type = (t);					\
-		if (fnFlag) {						\
-			(V)->data.dmemb = (ival);			\
-			(V)->fn.fnmemb = va_arg(ap, fntype);		\
-			(V)->info.size = 0;				\
-		} else {						\
-			(V)->data.dmemb = va_arg(ap, dtype);		\
-			(V)->info.size = va_arg(ap, size_t);		\
-		}							\
-	} while (0)
-
-/* Parse a variable list of AG_Variable arguments. */
-#undef  AG_PARSE_VARIABLE_ARGS
-#define AG_PARSE_VARIABLE_ARGS(ap, fmtString, L, argSizes)		\
-{									\
-	const char *fmtSpec;						\
-	int nArgs = 0;							\
-									\
-	for (fmtSpec = &(fmtString)[0]; *fmtSpec != '\0'; ) {		\
-		const char *c;						\
-		int pFlag = 0, fnFlag = 0, lFlag = 0, isExtended = 0;	\
-		int fmtChars, inFmt = 0;				\
-		AG_Variable V;						\
-									\
-		for (c = &fmtSpec[0], fmtChars = 0;			\
-		     *c != '\0';					\
-		     c++) {						\
-			if (*c == '%') { inFmt = 1; }			\
-			if (inFmt) { fmtChars++; }			\
-			if (*c == '%') {				\
-				continue;				\
-			} else if (*c == '*' && c[1] != '\0') {	\
-				pFlag++;				\
-			} else if (*c == 'l' && c[1] != '\0') {	\
-				lFlag++;				\
-			} else if (*c == 'F' && c[1] != '\0') {	\
-				fnFlag++;				\
-			} else if (*c == '[' && c[1] != '\0') {	\
-				isExtended++;				\
-				break;					\
-			} else if (inFmt && strchr("*Csdiufgp]", *c)) { \
-				break;					\
-			} else if (strchr(".0123456789", *c)) {	\
-				continue;				\
-			} else {					\
-				inFmt = 0;				\
-			}						\
-		}							\
-		fmtSpec += fmtChars;					\
-		if (*c == '\0') { break; }				\
-		if (!inFmt) { continue;	}				\
-									\
-		(argSizes) = AG_Realloc((argSizes),			\
-		    (nArgs+1)*sizeof(int));				\
-		(argSizes)[nArgs++] = fmtChars;				\
-									\
-		V.type = AG_VARIABLE_NULL;				\
-		V.name[0] = '\0';					\
-		V.mutex = NULL;						\
-		V.fn.fnVoid = NULL;					\
-		V.info.bitmask = 0;					\
-									\
-		if (pFlag) {						\
-			V.data.p = va_arg(ap, void *);			\
-		}							\
-		if (isExtended) {					\
-			c++;						\
-			if (c[0] == 's') {				\
-				if (c[1] == '3' && c[2] == '2') {	\
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_SINT32,		\
-					    AG_VARIABLE_P_SINT32,	\
-					    s32, Sint32, int, 0,	\
-					    fnSint32, AG_Sint32Fn);	\
-				} else if (c[1] == '1' && c[2] == '6') { \
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_SINT16,		\
-					    AG_VARIABLE_P_SINT16,	\
-					    s16, Sint16, int, 0,	\
-					    fnSint16, AG_Sint16Fn);	\
-				} else if (c[1] == '8') {		\
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_SINT8,		\
-					    AG_VARIABLE_P_SINT8,	\
-					    s8, Sint8, int, 0,		\
-					    fnSint8, AG_Sint8Fn);	\
-				}					\
-			} else if (c[0] == 'u') {			\
-				if (c[1] == '3' && c[2] == '2') {	\
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_UINT32,		\
-					    AG_VARIABLE_P_UINT32,	\
-					    u32, Uint32, Uint, 0,	\
-					    fnUint32, AG_Uint32Fn);	\
-				} else if (c[1] == '1' && c[2] == '6') { \
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_UINT16,		\
-					    AG_VARIABLE_P_UINT16,	\
-					    u16, Uint16, Uint, 0,	\
-					    fnUint16, AG_Uint16Fn);	\
-				} else if (c[1] == '8') {		\
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_UINT8, 		\
-					    AG_VARIABLE_P_UINT8,	\
-					    u8, Uint8, int, 0,		\
-					    fnUint8, AG_Uint8Fn);	\
-				}					\
-			} else if (c[0] == 'C') {			\
-				switch (c[1]) {			\
-				case 'p':				\
-					AG_VARIABLE_SETARG(&V,		\
-					    AG_VARIABLE_CONST_POINTER,	\
-					    AG_VARIABLE_P_CONST_POINTER, \
-					    Cp, const void *, const void *, \
-					    NULL,			\
-					    fnConstPointer,		\
-					    AG_ConstPointerFn);		\
-					break;				\
-				case 's':				\
-					AG_VARIABLE_SETARG_STRING(&V,	\
-					    AG_VARIABLE_CONST_STRING,	\
-					    AG_VARIABLE_P_CONST_STRING,	\
-					    Cs, const char *, NULL,	\
-					    fnString,			\
-					    AG_StringFn);		\
-					break;				\
-				}					\
-			} else if (c[0] == 'B') {			\
-				AG_VARIABLE_SETARG_STRING_BUFFER(&V,	\
-				    AG_VARIABLE_STRING,			\
-				    AG_VARIABLE_P_STRING,		\
-				    s, char *, NULL,			\
-				    fnString, AG_StringFn);		\
-			}						\
-			break;						\
-		}							\
-									\
-		switch (c[0]) {						\
-		case 'p':						\
-			AG_VARIABLE_SETARG(&V, AG_VARIABLE_POINTER,	\
-			    AG_VARIABLE_P_POINTER,			\
-			    p, void *, void *, NULL,			\
-			    fnPointer, AG_PointerFn);			\
-			break;						\
-		case 's':						\
-			AG_VARIABLE_SETARG_STRING(&V,			\
-			    AG_VARIABLE_STRING,				\
-			    AG_VARIABLE_P_STRING,			\
-			    s, char *, NULL,				\
-			    fnString, AG_StringFn);			\
-			break;						\
-		case 't':						\
-			V.type = AG_VARIABLE_P_TEXT;			\
-			break;						\
-		case 'd':						\
-		case 'i':						\
-			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(&V, AG_VARIABLE_INT,	\
-				    AG_VARIABLE_P_INT,			\
-				    i, int, int, 0,			\
-				    fnInt, AG_IntFn);			\
-			} else {					\
-				AG_VARIABLE_SETARG(&V,			\
-				    AG_VARIABLE_SINT32,			\
-				    AG_VARIABLE_P_SINT32,		\
-				    s32, Sint32, Sint32, 0,		\
-				    fnSint32, AG_Sint32Fn);		\
-			}						\
-			break;						\
-		case 'u':						\
-			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(&V,			\
-				    AG_VARIABLE_UINT,			\
-				    AG_VARIABLE_P_UINT,			\
-				    u, Uint, Uint, 0,			\
-				    fnUint, AG_UintFn);			\
-			} else {					\
-				AG_VARIABLE_SETARG(&V,			\
-				    AG_VARIABLE_UINT32,			\
-				    AG_VARIABLE_P_UINT32,		\
-				    u32, Uint32, Uint32, 0,		\
-				    fnUint32, AG_Uint32Fn);		\
-			}						\
-			break;						\
-		case 'f':						\
-		case 'g':						\
-			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(&V,			\
-				    AG_VARIABLE_FLOAT,			\
-				    AG_VARIABLE_P_FLOAT,		\
-				    flt, float, double, 0.0f,		\
-				    fnFloat, AG_FloatFn);		\
-			} else {					\
-				AG_VARIABLE_SETARG(&V,			\
-				    AG_VARIABLE_DOUBLE,			\
-				    AG_VARIABLE_P_DOUBLE,		\
-				    dbl, double, double, 0.0,		\
-				    fnDouble, AG_DoubleFn);		\
-			}						\
-			break;						\
-		default:						\
-			break;						\
-		}							\
-		AG_ListAppend((L), &V);					\
-	}								\
-}
-
 __BEGIN_DECLS
 struct ag_list;
 extern const AG_VariableTypeInfo agVariableTypes[];
 
-int		AG_EvalVariable(void *, AG_Variable *);
-void            AG_PrintVariable(char *, size_t, AG_Variable *);
-AG_Variable    *AG_GetVariableVFS(void *, const char *)
-                    WARN_UNUSED_RESULT_ATTRIBUTE;
-AG_Variable    *AG_GetVariable(void *, const char *, ...)
-                    WARN_UNUSED_RESULT_ATTRIBUTE;
-int             AG_CopyVariable(AG_Variable *, const AG_Variable *);
-AG_Variable    *AG_Set(void *, const char *, const char *, ...);
-void		AG_Unset(void *, const char *);
-void            AG_VariableSubst(void *, const char *, char *, size_t)
-	            BOUNDED_ATTRIBUTE(__string__, 3, 4);
+int          AG_EvalVariable(void *, AG_Variable *);
+void         AG_PrintVariable(char *, size_t, AG_Variable *);
+AG_Variable *AG_GetVariableVFS(void *, const char *)
+                               WARN_UNUSED_RESULT_ATTRIBUTE;
+AG_Variable *AG_GetVariable(void *, const char *, ...)
+                            WARN_UNUSED_RESULT_ATTRIBUTE;
+int          AG_CopyVariable(AG_Variable *, const AG_Variable *);
+int          AG_DerefVariable(AG_Variable *, const AG_Variable *);
+int          AG_CompareVariables(const AG_Variable *, const AG_Variable *);
+void         AG_Unset(void *, const char *);
+void         AG_VariableSubst(void *, const char *, char *, size_t)
+                              BOUNDED_ATTRIBUTE(__string__, 3, 4);
+
+struct ag_list *AG_ListSet(const char *, ...);
 
 Uint         AG_GetUint(void *, const char *);
 void         AG_InitUint(AG_Variable *, Uint);
@@ -448,6 +231,21 @@ AG_Variable *AG_BindSint32Fn(void *, const char *, AG_Sint32Fn, const char *, ..
 AG_Variable *AG_BindSint32(void *, const char *, Sint32 *);
 AG_Variable *AG_BindSint32Mp(void *, const char *, Sint32 *, AG_Mutex *);
 
+#ifdef HAVE_64BIT
+Uint64       AG_GetUint64(void *, const char *);
+AG_Variable *AG_SetUint64(void *, const char *, Uint64);
+void         AG_InitUint64(AG_Variable *, Uint64);
+AG_Variable *AG_BindUint64Fn(void *, const char *, AG_Uint64Fn, const char *, ...);
+AG_Variable *AG_BindUint64(void *, const char *, Uint64 *);
+AG_Variable *AG_BindUint64Mp(void *, const char *, Uint64 *, AG_Mutex *);
+Sint64       AG_GetSint64(void *, const char *);
+AG_Variable *AG_SetSint64(void *, const char *, Sint64);
+void         AG_InitSint64(AG_Variable *, Sint64);
+AG_Variable *AG_BindSint64Fn(void *, const char *, AG_Sint64Fn, const char *, ...);
+AG_Variable *AG_BindSint64(void *, const char *, Sint64 *);
+AG_Variable *AG_BindSint64Mp(void *, const char *, Sint64 *, AG_Mutex *);
+#endif /* HAVE_64BIT */
+
 float        AG_GetFloat(void *, const char *);
 AG_Variable *AG_SetFloat(void *, const char *, float);
 void         AG_InitFloat(AG_Variable *, float);
@@ -461,6 +259,14 @@ void         AG_InitDouble(AG_Variable *, double);
 AG_Variable *AG_BindDoubleFn(void *, const char *, AG_DoubleFn, const char *, ...);
 AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDoubleMp(void *, const char *, double *, AG_Mutex *);
+#ifdef HAVE_LONG_DOUBLE
+long double  AG_GetLongDouble(void *, const char *);
+AG_Variable *AG_SetLongDouble(void *, const char *, long double);
+void         AG_InitLongDouble(AG_Variable *, long double);
+AG_Variable *AG_BindLongDoubleFn(void *, const char *, AG_LongDoubleFn, const char *, ...);
+AG_Variable *AG_BindLongDouble(void *, const char *, long double *);
+AG_Variable *AG_BindLongDoubleMp(void *, const char *, long double *, AG_Mutex *);
+#endif
 
 size_t       AG_GetString(void *, const char *, char *, size_t)
 	         BOUNDED_ATTRIBUTE(__string__, 3, 4);
@@ -519,24 +325,6 @@ static __inline__ int          AG_Defined(void *, const char *)
 static __inline__ AG_Variable *AG_GetVariableLocked(void *, const char *)
                                    WARN_UNUSED_RESULT_ATTRIBUTE;
 
-/* Return 1 if the named variable exists. */
-static __inline__ int
-AG_Defined(void *pObj, const char *name)
-{
-	AG_Object *obj = AGOBJECT(pObj);
-	Uint i;
-
-	AG_ObjectLock(obj);
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(name, obj->vars[i].name) == 0) {
-			AG_ObjectUnlock(obj);
-			return (1);
-		}
-	}
-	AG_ObjectUnlock(obj);
-	return (0);
-}
-
 /* Acquire any locking device associated with a variable. */
 static __inline__ void
 AG_LockVariable(AG_Variable *V)
@@ -567,34 +355,6 @@ AG_FreeVariable(AG_Variable *V)
 	default:
 		break;
 	}
-}
-
-/*
- * Lookup a variable by name and return it locked.
- * Object must be locked.
- */
-static __inline__ AG_Variable *
-AG_GetVariableLocked(void *pObj, const char *name)
-{
-	AG_Object *obj = AGOBJECT(pObj);
-	AG_Variable *V, *Vtgt;
-	Uint i;
-	
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(obj->vars[i].name, name) == 0)
-			break;
-	}
-	if (i == obj->nVars) {
-		return (NULL);
-	}
-	V = &obj->vars[i];
-	AG_LockVariable(V);
-	if (V->type == AG_VARIABLE_P_VARIABLE) {
-		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.ref.key);
-		AG_UnlockVariable(V);
-		return (Vtgt);
-	}
-	return (V);
 }
 
 #define AG_VARIABLE_TYPE(V) (agVariableTypes[(V)->type].typeTgt)
