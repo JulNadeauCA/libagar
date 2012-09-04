@@ -44,6 +44,7 @@ typedef struct ag_label {
 	AG_FmtString *fmt;		/* Polled label data */
 	char  *pollBuf;			/* Buffer for polled labels */
 	size_t pollBufSize;
+	AG_Color color, colorBG;
 } AG_Label;
 
 __BEGIN_DECLS
@@ -61,6 +62,8 @@ void      AG_LabelText(AG_Label *, const char *, ...)
 void      AG_LabelTextS(AG_Label *, const char *);
 
 void     AG_LabelSetFont(AG_Label *, AG_Font *);
+void     AG_LabelSetColor(AG_Label *, AG_Color);
+void     AG_LabelSetColorBG(AG_Label *, AG_Color);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 void	 AG_LabelValign(AG_Label *, enum ag_text_valign);

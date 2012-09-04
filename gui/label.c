@@ -289,6 +289,8 @@ Init(void *obj)
 	lbl->font = agDefaultFont;
 	lbl->pollBuf = NULL;
 	lbl->pollBufSize = 0;
+	lbl->color = agColors[TEXT_COLOR];
+	lbl->colorBG = AG_ColorRGBA(0,0,0,0);
 }
 
 /* Size the widget to accomodate the given text. */
@@ -313,6 +315,26 @@ AG_LabelSetFont(AG_Label *lbl, AG_Font *font)
 {
 	AG_ObjectLock(lbl);
 	lbl->font = (font != NULL) ? font : agDefaultFont;
+	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
+}
+
+/* Configure an alternate text color. */
+void
+AG_LabelSetColor(AG_Label *lbl, AG_Color C)
+{
+	AG_ObjectLock(lbl);
+	lbl->color = C;
+	AG_ObjectUnlock(lbl);
+	AG_Redraw(lbl);
+}
+
+/* Configure an alternate background color. */
+void
+AG_LabelSetColorBG(AG_Label *lbl, AG_Color C)
+{
+	AG_ObjectLock(lbl);
+	lbl->colorBG = C;
 	AG_ObjectUnlock(lbl);
 	AG_Redraw(lbl);
 }
@@ -450,7 +472,8 @@ Draw(void *obj)
 	AG_PushTextState();
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
-	AG_TextColor(agColors[TEXT_COLOR]);
+	AG_TextColor(lbl->color);
+	AG_TextBGColor(lbl->colorBG);
 	AG_TextFont(lbl->font);
 
 	switch (lbl->type) {
