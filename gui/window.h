@@ -132,7 +132,7 @@ typedef struct ag_window {
 	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
 	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas; /* Cursor-change areas */
 
-	AG_Timeout fadeInTo, fadeOutTo;		/* Fade timer */
+	AG_Timer fadeTo;			/* Fade timer */
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
@@ -373,7 +373,10 @@ AG_WindowSetGeometryMax(AG_Window *win)
 static __inline__ void
 AG_Redraw(void *obj)
 {
-	if (!agRenderingContext && AGWIDGET(obj)->window != NULL)
+#ifdef AG_DEBUG
+	if (agRenderingContext) { AG_FatalError("AG_Redraw() in rendering ctx"); }
+#endif
+	if (AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
 }
 
