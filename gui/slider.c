@@ -548,6 +548,21 @@ MouseMotion(AG_Event *event)
 	                    AG_INT(1):AG_INT(2)) - sl->xOffs);
 }
 
+/* Timer callback for keyboard motion. */
+static Uint32
+MoveTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Slider *sl = AG_SELF();
+	int dir = AG_INT(1);
+
+	if (dir < 0) {
+		Decrement(sl, -dir);
+	} else {
+		Increment(sl, +dir);
+	}
+	return (agKbdRepeat);
+}
+
 static void
 KeyDown(AG_Event *event)
 {
@@ -558,14 +573,12 @@ KeyDown(AG_Event *event)
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
 		Decrement(sl, 1);
-		AG_DelTimeout(sl, &sl->incTo);
-		AG_ScheduleTimeout(sl, &sl->decTo, agKbdDelay);
+		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
 		Increment(sl, 1);
-		AG_DelTimeout(sl, &sl->decTo);
-		AG_ScheduleTimeout(sl, &sl->incTo, agKbdDelay);
+		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
 		break;
 	}
 }
@@ -579,37 +592,19 @@ KeyUp(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
-		AG_DelTimeout(sl, &sl->decTo);
-		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
-		AG_DelTimeout(sl, &sl->incTo);
+		AG_DelTimer(sl, &sl->moveTo);
 		break;
 	}
-}
-
-static Uint32
-IncrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Slider *sl = obj;
-	Increment(sl, 1);
-	return (agKbdRepeat);
-}
-
-static Uint32
-DecrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Slider *sl = obj;
-	Decrement(sl, 1);
-	return (agKbdRepeat);
 }
 
 static void
 LostFocus(AG_Event *event)
 {
 	AG_Slider *sl = AG_SELF();
-	AG_DelTimeout(sl, &sl->incTo);
-	AG_DelTimeout(sl, &sl->decTo);
+
+	AG_DelTimer(sl, &sl->moveTo);
 }
 
 static void
@@ -666,9 +661,6 @@ Init(void *obj)
 	AG_AddEvent(sl, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sl, "bound", BoundValue, NULL);
 
-	AG_SetTimeout(&sl->incTo, IncrementTimeout, NULL, 0);
-	AG_SetTimeout(&sl->decTo, DecrementTimeout, NULL, 0);
-	
 	AG_BindInt(sl, "value", &sl->value);
 	AG_BindInt(sl, "min", &sl->min);
 	AG_BindInt(sl, "max", &sl->max);

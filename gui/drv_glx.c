@@ -30,6 +30,7 @@
 
 #include <config/have_xkb.h>
 #include <config/have_xinerama.h>
+#include <config/have_kqueue.h>
 
 #include <core/core.h>
 
@@ -52,6 +53,13 @@
 #include "gui_math.h"
 #include "cursors.h"
 #include "opengl.h"
+
+#ifdef HAVE_KQUEUE
+# include <sys/types.h>
+# include <sys/event.h>
+# include <sys/time.h>
+# include <errno.h>
+#endif
 
 /* #define DEBUG_XSYNC */
 
@@ -224,6 +232,21 @@ GLX_Open(void *obj, const char *spec)
 	
 	AG_MutexLock(&agDisplayLock);
 
+#ifdef HAVE_KQUEUE
+	/* Register a read event on the X file descriptor. */
+	if (agKqueue != -1) {
+		struct kevent kev;
+		
+		EV_SET(&kev, ConnectionNumber(agDisplay),
+		    EVFILT_READ, EV_ADD|EV_ENABLE,
+		    0, 0, NULL);
+		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
+			AG_SetError("kqueue: %s", AG_Strerror(errno));
+			goto fail;
+		}
+	}
+#endif /* HAVE_KQUEUE */
+
 	/* Register the core X mouse and keyboard */
 	if ((drv->mouse = AG_MouseNew(glx, "X mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(glx, "X keyboard")) == NULL)
@@ -233,9 +256,10 @@ GLX_Open(void *obj, const char *spec)
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 
 #ifdef DEBUG_XSYNC
+	/* Set up synchronous X events. */
 	XSynchronize(agDisplay, True);
 	XSetErrorHandler(HandleErrorX11);
-#endif /* DEBUG_XSYNC */
+#endif
 
 	nDrivers++;
 	AG_MutexUnlock(&agDisplayLock);
@@ -411,7 +435,7 @@ InitModifierMasks(void)
 
 /* Refresh the internal keyboard state. */
 static void
-UpdateKeyboard(AG_Keyboard *kbd, char *kv)
+UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
 {
 	int i, j;
 	Uint ms = 0;
@@ -472,7 +496,7 @@ UpdateKeyboard(AG_Keyboard *kbd, char *kv)
 
 /* Refresh the internal keyboard state for all glx driver instances. */
 static void
-UpdateKeyboardAll(char *kv)
+UpdateKeyboardAll(char kv[32])
 {
 	AG_Driver *drv;
 
@@ -575,7 +599,7 @@ GLX_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	AG_KeySym ks;
 	AG_Window *win;
 	Uint32 ucs;
-	
+
 	AG_MutexLock(&agDisplayLock);
 	XNextEvent(agDisplay, &xev);
 	AG_MutexUnlock(&agDisplayLock);
@@ -840,6 +864,7 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	return PostEventCallback(drvCaller);
 }
 
+/* Generic application event loop (using delay loops). */
 static void
 GLX_GenericEventLoop(void *obj)
 {
@@ -849,9 +874,6 @@ GLX_GenericEventLoop(void *obj)
 	AG_Window *win;
 	Uint32 t1, t2;
 
-#ifdef AG_DEBUG
-	AG_PerfMonInit();
-#endif
 	t1 = AG_GetTicks();
 	for (;;) {
 		t2 = AG_GetTicks();
@@ -879,10 +901,6 @@ GLX_GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-#ifdef AG_DEBUG
-			if (agPerfWindow->visible)
-				AG_PerfMonUpdate(rCur);
-#endif
 		} else if (GLX_PendingEvents(NULL) != 0) {
 			AG_LockVFS(&agDrivers);
 			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
@@ -891,17 +909,118 @@ GLX_GenericEventLoop(void *obj)
 				return;
 			}
 			AG_UnlockVFS(&agDrivers);
-#ifdef AG_DEBUG
-			agEventAvg++;
-#endif
 		} else {
-			if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
-				AG_ProcessTimeouts(t2);
-			}
+			AG_ProcessTimeouts(t2);
 			AG_Delay(1);
 		}
 	}
 }
+
+/* Generic application event loop (using kqueue(2) interface). */
+#ifdef HAVE_KQUEUE
+static void
+RenderDirtyWindows(void)
+{
+	AG_Driver *drv;
+	AG_DriverGLX *glx;
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (!AGDRIVER_IS_GLX(drv)) {
+			continue;
+		}
+		glx = (AG_DriverGLX *)drv;
+		AG_MutexLock(&glx->lock);
+		win = AGDRIVER_MW(drv)->win;
+		if (win->visible && win->dirty) {
+			AG_BeginRendering(drv);
+			AG_ObjectLock(win);
+			AG_WindowDraw(win);
+			AG_ObjectUnlock(win);
+			AG_EndRendering(drv);
+		}
+		AG_MutexUnlock(&glx->lock);
+	}
+	AG_UnlockVFS(&agDrivers);
+}
+static void
+GLX_GenericEventLoop_KQUEUE(void *obj)
+{
+	struct kevent kev;
+	AG_DriverEvent dev;
+	int nev, rv = 0;
+	AG_Object *ob;
+	AG_Timer *to;
+	Uint32 rvTimer;
+
+	if (agKqueue == -1) {			/* kqueue is unavailable */
+		GLX_GenericEventLoop(obj);
+		return;
+	}
+	memset(&kev, 0, sizeof(struct kevent));	/* Avoid valgrind warnings */
+	for (;;) {
+		if ((nev = kevent(agKqueue, NULL, 0, &kev, 1, NULL)) < 0) {
+			AG_SetError("kevent(): %s", AG_Strerror(errno));
+			rv = -1;
+			goto out;
+		} else if (nev < 1) {
+			continue;
+		}
+		if (kev.flags & EV_ERROR) {
+			AG_SetError("kevent: %s", AG_Strerror(kev.data));
+			rv = -1;
+			goto out;
+		}
+		switch (kev.filter) {
+		case EVFILT_READ:
+			AG_LockVFS(&agDrivers);
+			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
+			    GLX_ProcessEvent(NULL, &dev) == -1) {
+				AG_UnlockVFS(&agDrivers);
+				goto out;
+			}
+			AG_UnlockVFS(&agDrivers);
+			break;
+		case EVFILT_TIMER:
+			to = (AG_Timer *)kev.udata;
+			ob = to->obj;
+			AG_LockTimers(ob);
+			rvTimer = to->fn(to, &to->fnEvent);
+			if (rvTimer > 0) {			/* Restart */
+				if (rvTimer != to->ival) {
+					struct kevent kchg;
+
+					/* TODO: queue changelist */
+					EV_SET(&kchg, to->id, EVFILT_TIMER,
+					    EV_ADD|EV_ENABLE, 0, rvTimer, to);
+					if (kevent(agKqueue, &kchg, 1, NULL,
+					    0, NULL) == -1) {
+						AG_SetError("kqueue: %s", AG_Strerror(errno));
+						rv = -1;
+						AG_UnlockTimers(ob);
+						goto out;
+					}
+					to->ival = rvTimer;
+				}
+			} else {				/* Cancel */
+				AG_DelTimer(ob, to);
+			}
+			AG_UnlockTimers(ob);
+			break;
+		default:
+			break;
+		}
+		if (agExitGLX) {
+			goto out;
+		}
+		RenderDirtyWindows();
+	}
+out:
+	if (rv != 0)
+		Verbose("Abnormal exit: %s\n", AG_GetError());
+}
+#endif /* !HAVE_KQUEUE */
 
 static void
 GLX_Terminate(void)
@@ -1800,7 +1919,6 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverGLX *glx = (AG_DriverGLX *)drv;
-	char kv[32];
 	AG_SizeAlloc aNew;
 	
 	AG_MutexLock(&agDisplayLock);
@@ -1816,10 +1934,6 @@ GLX_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 	win->dirty = 1;
-
-	/* Update the keyboard state. XXX */
-	XQueryKeymap(agDisplay, kv);
-	UpdateKeyboard(drv->kbd, kv);
 
 	/* Update the viewport. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
@@ -2086,7 +2200,11 @@ AG_DriverMwClass agDriverGLX = {
 		GLX_PendingEvents,
 		GLX_GetNextEvent,
 		GLX_ProcessEvent,
+#ifdef HAVE_KQUEUE
+		GLX_GenericEventLoop_KQUEUE,
+#else
 		GLX_GenericEventLoop,
+#endif
 		NULL,			/* endEventProcessing */
 		GLX_Terminate,
 		GLX_BeginRendering,

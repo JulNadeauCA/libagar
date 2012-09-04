@@ -34,7 +34,6 @@ extern VG_NodeOps vgTextOps;
 
 void VG_TextString(VG_Text *, const char *);
 void VG_TextPrintf(VG_Text *, const char *, ...);
-void VG_TextPrintfPolled(VG_Text *, const char *, ...);
 
 static __inline__ VG_Text *
 VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)

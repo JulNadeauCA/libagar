@@ -95,7 +95,7 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 
 		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT,
-		    AG_SCROLLBAR_AUTOHIDE);
+		    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOHIDE);
 		AG_BindInt(tb->vBar, "value", &tb->ed->y);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
@@ -127,7 +127,7 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 		}
 		if (!flag) {
 			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
-			    AG_SCROLLBAR_AUTOHIDE);
+			    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOHIDE);
 			AG_BindInt(tb->hBar, "value", &tb->ed->x);
 			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
 			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));

@@ -33,7 +33,7 @@ typedef struct ag_slider {
 	int ctlPressed;			/* Control is pressed */
 	int wControlPref;		/* Control size (preferred) */
 	int wControl;			/* Control size (effective) */
-	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
+	AG_Timer moveTo;		/* Timer for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
 	double rInc;			/* Base increment for real bindings */

@@ -1546,7 +1546,6 @@ TileSettingsDlg(AG_Event *event)
 	AG_SetInt(msb, "yvalue", t->su->h);
 	
 	alpha_num = AG_NumericalNewS(win, 0, NULL, _("Overall alpha: "));
-	AG_NumericalSetRange(alpha_num, 0, 255);
 	AG_SetInt(alpha_num, "value", t->su->format->alpha);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);

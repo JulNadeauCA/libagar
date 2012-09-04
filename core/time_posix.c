@@ -15,13 +15,13 @@
 static struct timespec t0;
 
 static void
-Init(void)
+POSIX_Init(void)
 {
 	clock_gettime(CLOCK_MONOTONIC, &t0);
 }
 
 static Uint32
-GetTicks(void)
+POSIX_GetTicks(void)
 {
 	struct timespec t;
 
@@ -31,7 +31,7 @@ GetTicks(void)
 }
 
 static void
-Delay(Uint32 ticks)
+POSIX_Delay(Uint32 ticks)
 {
 	struct timespec tv, tvElapsed;
 
@@ -50,8 +50,8 @@ Delay(Uint32 ticks)
 
 const AG_TimeOps agTimeOps_posix = {
 	"posix",
-	Init,
+	POSIX_Init,
 	NULL,
-	GetTicks,
-	Delay
+	POSIX_GetTicks,
+	POSIX_Delay
 };

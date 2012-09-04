@@ -159,7 +159,7 @@ typedef struct ag_table {
 	int dblClickedCol;		/* For SEL_COLS */
 	int dblClickedCell;		/* For SEL_CELLS */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
+	AG_Timer moveTo;		/* Timers for keyboard motion */
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
 	AG_Color selColor;		/* Selection color */
@@ -175,7 +175,8 @@ typedef struct ag_table {
 	AG_Event *clickCellEv;		/* Cell double click callback */
 	Uint nSorting;			/* Index of sorting column
 					   (computed from flags) */
-	AG_Timeout pollTo;		/* Polled table update timeout */
+	AG_Timer pollTo;		/* For polled table update */
+	AG_Timer dblClickTo;		/* For double click */
 } AG_Table;
 
 __BEGIN_DECLS

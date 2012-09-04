@@ -34,6 +34,7 @@ typedef struct {
 	GLfloat diffuse[4];
 	GLfloat specular[4];
 	int wireframe;
+	AG_Timer toRotate;
 } MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    
@@ -188,8 +189,19 @@ MyDrawFunction(AG_Event *event)
 
 	glPopMatrix();
 	glPopAttrib();
+}
 
+static Uint32
+UpdateRotation(AG_Timer *to, AG_Event *event)
+{
+	AG_GLView *glv = AG_SELF();
+	MyTestInstance *ti = AG_PTR(1);
+
+	printf("tick\n");
 	if (++ti->spin > 360.0f) { ti->spin -= 360.0f; }
+	AG_Redraw(glv);
+
+	return (to->ival);
 }
 
 /*
@@ -282,17 +294,25 @@ TestGUI(void *obj, AG_Window *win)
 		AG_PaneResizeAction(pa, AG_PANE_EXPAND_DIV1);
 		nb = AG_NotebookNew(pa->div[0], AG_NOTEBOOK_EXPAND);
 
-		/* Create the AG_GLView widget. */
 		for (i = 0; i < 2; i++) {
 			ntab = AG_NotebookAddTab(nb, "Test tab", AG_BOX_VERT);
+		
+			/* Create the AG_GLView widget. */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
 			AG_WidgetFocus(glv);
 
+			/* Set a periodic redraw at 60fps. */
+			/* AG_RedrawOnTick(glv, 1000/60); */
+			
 			/* Set up our callback functions. */ 
 			AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
 			AG_GLViewDrawFn(glv, MyDrawFunction, "%p", ti);
 			AG_GLViewOverlayFn(glv, MyOverlayFunction, "%p", ti);
 			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
+
+			/* Set up a timer to perform rotation. */
+			AG_AddTimer(glv, &ti->toRotate, 1000/30,
+			    UpdateRotation, "%p", ti);
 		}
 
 		/* Edit ambient and diffuse color components. */

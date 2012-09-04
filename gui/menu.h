@@ -100,7 +100,7 @@ typedef struct ag_menu_view {
 	int spIconLbl;			/* Icon and label spacing */
 	int spLblArrow;			/* Label and submenu arrow spacing */
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
-	AG_Timeout submenu_to;		/* Timeout for sub-menu popup */
+	AG_Timer submenuTo;		/* For sub-menu popup delay */
 	int arrowRight;			/* Right arrow surface handle */
 } AG_MenuView;
 

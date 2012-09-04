@@ -15,13 +15,13 @@
 static struct timeval t0;
 
 static void
-Init(void)
+GTOD_Init(void)
 {
 	gettimeofday(&t0, NULL);
 }
 
 static Uint32
-GetTicks(void)
+GTOD_GetTicks(void)
 {
 	struct timeval t;
 
@@ -31,15 +31,15 @@ GetTicks(void)
 }
 
 static void
-Delay(Uint32 ticks)
+GTOD_Delay(Uint32 ticks)
 {
 	Uint32 t1, t, Telapsed, Tdelay = ticks;
 	struct timeval tv;
 	int rv;
 
-	t1 = GetTicks();
+	t1 = GTOD_GetTicks();
 	for (;;) {
-		t = GetTicks();
+		t = GTOD_GetTicks();
 		Telapsed = (t - t1);
 		t1 = t;
 		if (Telapsed >= Tdelay) {
@@ -58,8 +58,8 @@ Delay(Uint32 ticks)
 
 const AG_TimeOps agTimeOps_gettimeofday = {
 	"gettimeofday",
-	Init,
+	GTOD_Init,
 	NULL,
-	GetTicks,
-	Delay
+	GTOD_GetTicks,
+	GTOD_Delay
 };

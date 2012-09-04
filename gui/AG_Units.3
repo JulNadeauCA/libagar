@@ -1,4 +1,4 @@
-.\" Copyright (c) 2004-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -168,6 +168,12 @@ Units of electrical inductance
 .Ft "double"
 .Fn AG_Base2Unit "double n" "const AG_Unit *unit"
 .Pp
+.Ft "long double"
+.Fn AG_Unit2BaseLDBL "long double n" "const AG_Unit *unit"
+.Pp
+.Ft "long double"
+.Fn AG_Base2UnitLDBL "long double n" "const AG_Unit *unit"
+.Pp
 .Ft "double"
 .Fn AG_Unit2Unit "double n" "const AG_Unit *unit_from" "const AG_Unit *unit_to"
 .Pp
@@ -201,6 +207,16 @@ in specified units to the equivalent number of base units.
 converts
 .Fa n
 base units to the equivalent number of specified units.
+.Pp
+The
+.Fn AG_Unit2BaseLDBL
+and
+.Fn AG_Base2UnitLDBL
+variants accept a
+.Ft long double
+argument (only available if
+.Dv AG_HAVE_LONG_DOUBLE
+is defined).
 .Sh EXAMPLES
 One widget which uses this interface is 
 .Xr AG_Numerical 3 ,

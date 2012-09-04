@@ -4383,6 +4383,66 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NANOSLEEP
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the kqueue() mechanism..."
+$ECHO_N "checking for the kqueue() mechanism..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_KQUEUE" ]; then
+		HAVE_KQUEUE=`cat ${cache}/ctest-HAVE_KQUEUE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_KQUEUE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct kevent kev, chg;
+	int kq, fd = -1, nev;
+
+	if ((kq = kqueue()) == -1) { return (1); }
+	EV_SET(&kev, fd, EVFILT_READ, EV_ADD|EV_ENABLE|EV_ONESHOT, 0, 0, NULL);
+	EV_SET(&kev, 1, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0, 1000, 0);
+	nev = kevent(kq, &kev, 1, &chg, 1, NULL);
+	return (chg.flags & EV_ERROR);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_KQUEUE="yes"
+echo "#ifndef HAVE_KQUEUE" > $BLD/include/agar/config/have_kqueue.h
+echo "#define HAVE_KQUEUE \"$HAVE_KQUEUE\"" >> $BLD/include/agar/config/have_kqueue.h
+echo "#endif" >> $BLD/include/agar/config/have_kqueue.h
+echo "hdefs[\"HAVE_KQUEUE\"] = \"$HAVE_KQUEUE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_KQUEUE="no"
+echo "#undef HAVE_KQUEUE" >$BLD/include/agar/config/have_kqueue.h
+echo "hdefs[\"HAVE_KQUEUE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_KQUEUE" > ${cache}/ctest-HAVE_KQUEUE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_KQUEUE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"

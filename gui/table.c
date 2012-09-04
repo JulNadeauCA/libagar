@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,20 @@ AG_TableNew(void *parent, Uint flags)
 	return (t);
 }
 
+/* Timer callback for polling updates. */
+static Uint32
+PollTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Table *t = AG_SELF();
+
+	t->poll_ev->handler(t->poll_ev);
+	if (t->mOffs+t->mVis >= t->m) {
+		t->mOffs = MAX(0, t->m - t->mVis);
+	}
+	AG_Redraw(t);
+	return (to->ival);
+}
+
 AG_Table *
 AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
     const char *fmt, ...)
@@ -63,7 +77,7 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
-	AG_ScheduleTimeout(t, &t->pollTo, 250);
+	AG_AddTimer(t, &t->pollTo, 250, PollTimeout, NULL);
 	AG_ObjectUnlock(t);
 	return (t);
 }
@@ -73,9 +87,9 @@ AG_TableSetPollInterval(AG_Table *t, Uint ival)
 {
 	AG_ObjectLock(t);
 	if (ival == 0) {
-		AG_DelTimeout(t, &t->pollTo);
+		AG_DelTimer(t, &t->pollTo);
 	} else {
-		AG_ScheduleTimeout(t, &t->pollTo, ival);
+		AG_AddTimer(t, &t->pollTo, ival, PollTimeout, NULL);
 	}
 	AG_ObjectUnlock(t);
 }
@@ -1233,6 +1247,16 @@ ColumnLeftClickSort(AG_Table *t, AG_TableCol *tc)
 	t->flags |= AG_TABLE_NEEDSORT;
 }
 
+/* Timer callback for double click. */
+static Uint32
+DoubleClickTimeout(AG_Timer *to, AG_Event *event)
+{
+	int *which = AG_PTR(1);
+
+	*which = -1;
+	return (0);
+}
+
 /* Left click on a column header; resize or execute column action. */
 static void
 ColumnLeftClick(AG_Table *t, int px)
@@ -1270,7 +1294,7 @@ ColumnLeftClick(AG_Table *t, int px)
 				}
 				if (t->dblClickedCol != -1 &&
 				    t->dblClickedCol == n) {
-					AG_CancelEvent(t, "dblclick-col-expire");
+					AG_DelTimer(t, &t->dblClickTo);
 					if (t->dblClickColEv != NULL) {
 						AG_PostEvent(NULL, t,
 						    t->dblClickColEv->name,
@@ -1279,8 +1303,9 @@ ColumnLeftClick(AG_Table *t, int px)
 					t->dblClickedCol = -1;
 				} else {
 					t->dblClickedCol = n;
-					AG_SchedEvent(NULL, t,
-					    agMouseDblclickDelay, "dblclick-col-expire", NULL);
+					AG_AddTimer(t, &t->dblClickTo,
+					    agMouseDblclickDelay,
+					    DoubleClickTimeout, "%p", &t->dblClickedCol);
 				}
 				goto cont;
 			}
@@ -1345,7 +1370,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 			}
 			if (t->dblClickedRow != -1 &&
 			    t->dblClickedRow == mc) {
-				AG_CancelEvent(t, "dblclick-row-expire");
+				AG_DelTimer(t, &t->dblClickTo);
 				if (t->dblClickRowEv != NULL) {
 					AG_PostEvent(NULL, t,
 					    t->dblClickRowEv->name, "%i", mc);
@@ -1353,8 +1378,9 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				t->dblClickedRow = -1;
 			} else {
 				t->dblClickedRow = mc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-row-expire", NULL);
+				AG_AddTimer(t, &t->dblClickTo,
+				    agMouseDblclickDelay,
+				    DoubleClickTimeout, "%p", &t->dblClickedRow);
 			}
 		}
 		break;
@@ -1400,16 +1426,17 @@ CellLeftClick(AG_Table *t, int mc, int x)
 			}
 			if (t->dblClickedCell != -1 &&
 			    t->dblClickedCell == mc) {
-				AG_CancelEvent(t, "dblclick-cell-expire");
+				AG_DelTimer(t, &t->dblClickTo);
 				if (t->dblClickCellEv != NULL) {
 					AG_PostEvent(NULL, t,
 					    t->dblClickCellEv->name, "%i", mc);
 				}
 				t->dblClickedCell = -1;
 			} else {
-				t->dblClickedRow = mc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-cell-expire", NULL);
+				t->dblClickedCell = mc;
+				AG_AddTimer(t, &t->dblClickTo,
+				    agMouseDblclickDelay,
+				    DoubleClickTimeout, "%p", &t->dblClickedCell);
 			}
 		}
 		break;
@@ -1448,7 +1475,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 			}
 			if (t->dblClickedCol != -1 &&
 			    t->dblClickedCol == nc) {
-				AG_CancelEvent(t, "dblclick-col-expire");
+				AG_DelTimer(t, &t->dblClickTo);
 				if (t->dblClickColEv != NULL) {
 					AG_PostEvent(NULL, t,
 					    t->dblClickColEv->name, "%i", nc);
@@ -1456,8 +1483,9 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				t->dblClickedCol = -1;
 			} else {
 				t->dblClickedCol = nc;
-				AG_SchedEvent(NULL, t, agMouseDblclickDelay,
-				    "dblclick-col-expire", NULL);
+				AG_AddTimer(t, &t->dblClickTo,
+				    agMouseDblclickDelay,
+				    DoubleClickTimeout, "%p", &t->dblClickedCol);
 			}
 		}
 		break;
@@ -1658,6 +1686,21 @@ MouseButtonUp(AG_Event *event)
 	}
 }
 
+/* Timer callback for keyboard selection moving. */
+static Uint32
+MoveTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Table *t = AG_SELF();
+	int incr = AG_INT(1);
+
+	if (incr < 0) {
+		DecrementSelection(t, -incr);
+	} else {
+		IncrementSelection(t, incr);
+	}
+	return (agKbdRepeat);
+}
+
 static void
 KeyDown(AG_Event *event)
 {
@@ -1667,23 +1710,19 @@ KeyDown(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 		DecrementSelection(t, 1);
-		AG_DelTimeout(t, &t->incTo);
-		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
+		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(t, 1);
-		AG_DelTimeout(t, &t->decTo);
-		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
+		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(t, agPageIncrement);
-		AG_DelTimeout(t, &t->incTo);
-		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
+		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(t, agPageIncrement);
-		AG_DelTimeout(t, &t->decTo);
-		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
+		AG_AddTimer(t, &t->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
 		break;
 	}
 }
@@ -1719,11 +1758,9 @@ KeyUp(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_PAGEUP:
-		AG_DelTimeout(t, &t->decTo);
-		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_PAGEDOWN:
-		AG_DelTimeout(t, &t->incTo);
+		AG_DelTimer(t, &t->moveTo);
 		break;
 	}
 }
@@ -1733,11 +1770,8 @@ LostFocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
-	AG_DelTimeout(t, &t->incTo);
-	AG_DelTimeout(t, &t->decTo);
-	AG_CancelEvent(t, "dblclick-row-expire");
-	AG_CancelEvent(t, "dblclick-col-expire");
-	AG_CancelEvent(t, "dblclick-cell-expire");
+	AG_DelTimer(t, &t->moveTo);
+	AG_DelTimer(t, &t->dblClickTo);
 	if (t->nResizing >= 0)
 		t->nResizing = -1;
 }
@@ -1843,27 +1877,6 @@ AG_TableDeselectAllCols(AG_Table *t)
 	}
 	AG_ObjectUnlock(t);
 	AG_Redraw(t);
-}
-
-static void
-ExpireRowDblClick(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-	t->dblClickedRow = -1;
-}
-
-static void
-ExpireColDblClick(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-	t->dblClickedCol = -1;
-}
-
-static void
-ExpireCellDblClick(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-	t->dblClickedCell = -1;
 }
 
 int
@@ -2199,39 +2212,6 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	return (0);
 }
 
-static Uint32
-DecrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Table *t = obj;
-	int *kbd = AG_GetKeyState(t);
-
-	DecrementSelection(t, kbd[AG_KEY_PAGEUP] ? agPageIncrement : 1);
-	return (agKbdRepeat);
-}
-
-static Uint32
-IncrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Table *t = obj;
-	int *kbd = AG_GetKeyState(t);
-
-	IncrementSelection(t, kbd[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
-	return (agKbdRepeat);
-}
-
-static Uint32
-PollTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Table *t = obj;
-
-	t->poll_ev->handler(t->poll_ev);
-	if (t->mOffs+t->mVis >= t->m) {
-		t->mOffs = MAX(0, t->m - t->mVis);
-	}
-	AG_Redraw(t);
-	return (ival);
-}
-
 static void
 Init(void *obj)
 {
@@ -2309,14 +2289,7 @@ Init(void *obj)
 	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
 	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(t, "detached", LostFocus, NULL);
-	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
-	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
-	AG_SetEvent(t, "dblclick-cell-expire", ExpireCellDblClick, NULL);
 
-	AG_SetTimeout(&t->decTo, DecrementTimeout, NULL, 0);
-	AG_SetTimeout(&t->incTo, IncrementTimeout, NULL, 0);
-	AG_SetTimeout(&t->pollTo, PollTimeout, NULL, 0);
-	
 #ifdef AG_DEBUG
 	AG_BindInt(t, "hRow", &t->hRow);
 	AG_BindInt(t, "hCol", &t->hCol);

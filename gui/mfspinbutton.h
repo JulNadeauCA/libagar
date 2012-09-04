@@ -11,11 +11,13 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_MFSPINBUTTON_NOHFILL	0x01
-#define AG_MFSPINBUTTON_VFILL	0x02
 
 typedef struct ag_mfspinbutton {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_MFSPINBUTTON_NOHFILL	0x01
+#define AG_MFSPINBUTTON_VFILL	0x02
+#define AG_MFSPINBUTTON_EXCL	0x04
 	double xvalue, yvalue;		/* Default x/y value bindings */
 	double min, max;		/* Default range bindings */
 	double inc;			/* Increment for buttons */
@@ -23,11 +25,12 @@ typedef struct ag_mfspinbutton {
 	const char *sep;		/* x/y field separator */
 	const AG_Unit *unit;		/* Conversion unit */
 	int writeable;			/* 0 = read-only */
-	char inTxt[64];			/* Input text buffer */
+	char inTxt[128];		/* Input text buffer */
 	AG_Textbox *input;
 	AG_UCombo *units;
 	AG_Button *xincbu, *xdecbu;
 	AG_Button *yincbu, *ydecbu;
+	AG_Timer updateTo;
 } AG_MFSpinbutton;
 
 __BEGIN_DECLS
@@ -35,7 +38,7 @@ extern AG_WidgetClass agMFSpinbuttonClass;
 
 AG_MFSpinbutton	*AG_MFSpinbuttonNew(void *, Uint, const char *, const char *,
 		                    const char *);
-
+void    AG_MFSpinbuttonUpdate(AG_MFSpinbutton *);
 void	AG_MFSpinbuttonSetValue(AG_MFSpinbutton *, const char *, double);
 void	AG_MFSpinbuttonAddValue(AG_MFSpinbutton *, const char *, double);
 void	AG_MFSpinbuttonSetMin(AG_MFSpinbutton *, double);

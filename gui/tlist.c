@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	AG_ObjectUnlock(tl);
+	AG_RedrawOnTick(tl, 1000);
 	return (tl);
 }
 
@@ -172,12 +173,13 @@ IncrementSelection(AG_Tlist *tl, int inc)
 		ScrollToSelection(tl);
 }
 
-static void
-DoubleClickTimeout(AG_Event *event)
+static Uint32
+DoubleClickTimeout(AG_Timer *to, AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
-	tl->dblclicked = NULL;
+	tl->dblClicked = NULL;
+	return (0);
 }
 
 static void
@@ -185,9 +187,19 @@ LostFocus(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
-	AG_DelTimeout(tl, &tl->incTo);
-	AG_DelTimeout(tl, &tl->decTo);
-	AG_CancelEvent(tl, "dblclick-expire");
+	AG_DelTimer(tl, &tl->moveTo);
+	AG_DelTimer(tl, &tl->dblClickTo);
+}
+
+/* Timer for updates in AG_TLIST_POLL mode. */
+static Uint32
+PollRefreshTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+
+	tl->flags |= AG_TLIST_REFRESH;
+	AG_Redraw(tl);
+	return (to->ival);
 }
 
 static void
@@ -197,37 +209,23 @@ Shown(AG_Event *event)
 
 	if (tl->flags & AG_TLIST_POLL) {
 		tl->flags |= AG_TLIST_REFRESH;
-		AG_ScheduleTimeout(tl, &tl->refreshTo, 125);
+		AG_AddTimer(tl, &tl->refreshTo, 125, PollRefreshTimeout, NULL);
 	}
 }
 
+/* Timer for moving keyboard selection. */
 static Uint32
-DecrementTimeout(void *obj, Uint32 ival, void *arg)
+MoveTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Tlist *tl = obj;
-	int *kbd = AG_GetKeyState(tl);
+	AG_Tlist *tl = AG_SELF();
+	int incr = AG_INT(1);
 
-	DecrementSelection(tl, kbd[AG_KEY_PAGEUP] ? agPageIncrement : 1);
+	if (incr < 0) {
+		DecrementSelection(tl, -incr);
+	} else {
+		IncrementSelection(tl, incr);
+	}
 	return (agKbdRepeat);
-}
-
-static Uint32
-IncrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Tlist *tl = obj;
-	int *kbd = AG_GetKeyState(tl);
-
-	IncrementSelection(tl, kbd[AG_KEY_PAGEDOWN] ? agPageIncrement : 1);
-	return (agKbdRepeat);
-}
-
-static Uint32
-RefreshTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Tlist *tl = obj;
-
-	tl->flags |= AG_TLIST_REFRESH;
-	return (ival);
 }
 
 static void
@@ -242,7 +240,7 @@ Init(void *obj)
 	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight+2;
 	tl->icon_w = tl->item_h;
-	tl->dblclicked = NULL;
+	tl->dblClicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->compare_fn = AG_TlistComparePtrs;
@@ -258,7 +256,8 @@ Init(void *obj)
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 	
-	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_AUTOSIZE);
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT,
+	    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOSIZE);
 	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_BindInt(tl->sbar, "max", &tl->nitems);
 	AG_BindInt(tl->sbar, "visible", &tl->nvisitems);
@@ -267,17 +266,10 @@ Init(void *obj)
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
-	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
 	AG_AddEvent(tl, "widget-hidden", LostFocus, NULL);
 	AG_AddEvent(tl, "widget-shown", Shown, NULL);
 	
-	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);
-	AG_SetTimeout(&tl->incTo, IncrementTimeout, NULL, 0);
-	AG_SetTimeout(&tl->refreshTo, RefreshTimeout, NULL, 0);
-	
-	AG_RedrawOnTick(tl, 1000);
-
 	AG_BindPointer(tl, "selected", &tl->selected);
 
 #ifdef AG_DEBUG
@@ -596,9 +588,9 @@ AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 {
 	AG_ObjectLock(tl);
 	if (ms == -1) {
-		AG_DelTimeout(tl, &tl->refreshTo);
+		AG_DelTimer(tl, &tl->refreshTo);
 	} else {
-		AG_ScheduleTimeout(tl, &tl->refreshTo, ms);
+		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
 	}
 	AG_ObjectUnlock(tl);
 }
@@ -1013,18 +1005,18 @@ MouseButtonDown(AG_Event *event)
 
 		/* Handle double clicks. */
 		/* XXX compare the args as well as p1 */
-		if (tl->dblclicked != NULL && tl->dblclicked == ti->p1) {
-			AG_CancelEvent(tl, "dblclick-expire");
+		if (tl->dblClicked != NULL && tl->dblClicked == ti->p1) {
+			AG_DelTimer(tl, &tl->dblClickTo);
 			if (tl->dblClickEv != NULL) {
 				AG_PostEvent(NULL, tl, tl->dblClickEv->name,
 				    "%p", ti);
 			}
 			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti);
-			tl->dblclicked = NULL;
+			tl->dblClicked = NULL;
 		} else {
-			tl->dblclicked = ti->p1;
-			AG_SchedEvent(NULL, tl, agMouseDblclickDelay,
-			    "dblclick-expire", NULL);
+			tl->dblClicked = ti->p1;
+			AG_AddTimer(tl, &tl->dblClickTo, agMouseDblclickDelay,
+			    DoubleClickTimeout, NULL);
 		}
 		break;
 	case AG_MOUSE_RIGHT:
@@ -1064,25 +1056,22 @@ KeyDown(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 		DecrementSelection(tl, 1);
-		AG_DelTimeout(tl, &tl->incTo);
-		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
+		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
 		break;
 	case AG_KEY_DOWN:
 		IncrementSelection(tl, 1);
-		AG_DelTimeout(tl, &tl->decTo);
-		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
+		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
 		break;
 	case AG_KEY_PAGEUP:
 		DecrementSelection(tl, agPageIncrement);
-		AG_DelTimeout(tl, &tl->incTo);
-		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
+		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", -agPageIncrement);
 		break;
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
-		AG_DelTimeout(tl, &tl->decTo);
-		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
+		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
 		break;
 	}
+	tl->lastKeyDown = keysym;
 }
 
 static void
@@ -1093,12 +1082,12 @@ KeyUp(AG_Event *event)
 
 	switch (keysym) {
 	case AG_KEY_UP:
-	case AG_KEY_PAGEUP:
-		AG_DelTimeout(tl, &tl->decTo);
-		break;
 	case AG_KEY_DOWN:
+	case AG_KEY_PAGEUP:
 	case AG_KEY_PAGEDOWN:
-		AG_DelTimeout(tl, &tl->incTo);
+		if (keysym == tl->lastKeyDown) {
+			AG_DelTimer(tl, &tl->moveTo);
+		}
 		break;
 	}
 }

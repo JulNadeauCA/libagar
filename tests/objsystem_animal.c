@@ -37,15 +37,15 @@ Die(AG_Event *event)
 	printf("%s: killed by %s!\n", AGOBJECT(animal)->name, killer->name);
 }
 
-/* Example of a timer callback. */
+/* Example of a timer callback routine. */
 static Uint32
-Tick(void *obj, Uint32 ival, void *arg)
+Tick(AG_Timer *to, AG_Event *event)
 {
-	Animal *animal = obj;
+	Animal *animal = AG_SELF();
 
 	animal->age += 1.0;
 	animal->cellCount *= 2;
-	return (ival);
+	return (to->ival);
 }
 
 /* Handle the "attached" event by starting our timer. */
@@ -54,7 +54,7 @@ Attached(AG_Event *event)
 {
 	Animal *animal = AG_SELF();
 
-	AG_ScheduleTimeout(animal, &animal->time, 1000);
+	AG_AddTimer(animal, &animal->time, 1000, Tick, NULL);
 }
 
 /*
@@ -72,7 +72,6 @@ Init(void *obj)
 	/* Event handler functions and timers are usually configured here. */
 	AG_SetEvent(animal, "die", Die, NULL);
 	AG_SetEvent(animal, "attached", Attached, NULL);
-	AG_SetTimeout(&animal->time, Tick, NULL, 0);
 }
 
 /*

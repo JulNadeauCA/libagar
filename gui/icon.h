@@ -28,6 +28,7 @@ typedef struct ag_icon {
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
 	AG_Color cBackground;		/* Background fill color */
+	AG_Timer toDblClick;		/* Timer for double click */
 } AG_Icon;
 
 __BEGIN_DECLS

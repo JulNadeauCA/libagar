@@ -63,7 +63,7 @@ typedef struct ag_tlist {
 
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
-	void *dblclicked;		/* Used by double click */
+	void *dblClicked;		/* Used by double click */
 	struct ag_tlist_itemq items;	/* Current Items */
 	struct ag_tlist_itemq selitems;	/* Saved item state */
 	int nitems;			/* Current item count */
@@ -74,12 +74,14 @@ typedef struct ag_tlist {
 	AG_Event *popupEv;		/* Popup menu hook */
 	AG_Event *changedEv;		/* Selection change hook */
 	AG_Event *dblClickEv;		/* Double click hook */
-	AG_Timeout incTo, decTo;	/* Keyboard motion timers */
+	AG_Timer moveTo;		/* Timer for keyboard motion */
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	int wRow;			/* Row width */
 	AG_Rect r;			/* View area */
-	AG_Timeout refreshTo;		/* Autorefresh timer */
+	AG_Timer refreshTo;		/* Timer for polled mode updates */
 	int rOffs;			/* Row display offset */
+	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
+	int lastKeyDown;		/* For key repeat */
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \

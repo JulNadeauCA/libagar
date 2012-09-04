@@ -14,15 +14,17 @@
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 #define AGCLASS(obj) ((struct ag_object_class *)(obj))
 
-#include <agar/core/timeout.h>
+struct ag_object;
+struct ag_db;
+struct ag_dbt;
+
+#include <agar/core/text.h>
+#include <agar/core/variable.h>
+#include <agar/core/event.h>
+#include <agar/core/time.h>
 #include <agar/core/class.h>
 
 #include <agar/core/begin.h>
-
-struct ag_object;
-struct ag_event;
-struct ag_db;
-struct ag_dbt;
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
@@ -71,22 +73,24 @@ typedef struct ag_object {
 				 AG_OBJECT_REOPEN_ONLOAD|\
 				 AG_OBJECT_REMAIN_DATA)
 
-	Uint nevents;				/* Number of event handlers */
+	Uint                    nevents;	/* Event handler count */
 	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers */
-	AG_TAILQ_HEAD_(ag_timeout) timeouts;	/* Timers tied to object */
+
+	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
+	AG_TAILQ_HEAD_(ag_timer) timersChg;	/* Timers to change */
 	
 	struct ag_variable *vars;		/* Variables / bindings */
 	Uint               nVars;
 
-	AG_TAILQ_HEAD_(ag_object_dep) deps; /* Object dependencies */
-	struct ag_objectq children;	 /* Child objects */
-	AG_TAILQ_ENTRY(ag_object) cobjs; /* Entry in child object queue */
-	AG_TAILQ_ENTRY(ag_object) tobjs; /* Entry in timeout queue */
+	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
+	struct ag_objectq children;		/* Child objects */
+	AG_TAILQ_ENTRY(ag_object) cobjs;	/* Entry in parent */
+	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timer queue */
 	
 	void *parent;			/* Parent object (NULL for VFS root) */
 	void *root;			/* Pointer to VFS root */
-	struct ag_event *attachFn;	/* Attach hook */
-	struct ag_event *detachFn;	/* Detach hook */
+	AG_Event *attachFn;		/* Attach hook */
+	AG_Event *detachFn;		/* Detach hook */
 	AG_Mutex lock;			/* General object lock */
 } AG_Object;
 
@@ -164,7 +168,6 @@ void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
 int	 AG_ObjectAttachToNamed(void *, const char *, void *);
 void	 AG_ObjectDetach(void *);
-void	 AG_ObjectDelete(void *);
 
 void	 AG_ObjectInit(void *, void *);
 void	 AG_ObjectInitStatic(void *, void *);
@@ -200,8 +203,8 @@ void	 AG_ObjectGetArchivePath(void *, char *, size_t)
 	                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void	 AG_ObjectSetClass(void *, void *);
 
-void	 AG_ObjectSetAttachFn(void *, void (*fn)(struct ag_event *), const char *, ...);
-void	 AG_ObjectSetDetachFn(void *, void (*fn)(struct ag_event *), const char *, ...);
+void	 AG_ObjectSetAttachFn(void *, void (*fn)(AG_Event *), const char *, ...);
+void	 AG_ObjectSetDetachFn(void *, void (*fn)(AG_Event *), const char *, ...);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
@@ -216,7 +219,6 @@ void	 AG_ObjectFreeChildren(void *);
 void 	 AG_ObjectFreeEvents(AG_Object *);
 void	 AG_ObjectFreeDeps(AG_Object *);
 void	 AG_ObjectFreeDummyDeps(AG_Object *);
-void 	 AG_ObjectCancelTimeouts(void *, Uint);
 
 int	 AG_ObjectPageIn(void *);
 int	 AG_ObjectPageOut(void *);
@@ -261,18 +263,23 @@ void          AG_ObjectGenNamePfx(void *, const char *, char *, size_t);
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
 
-#ifdef AG_LEGACY
-void AG_ObjectMove(void *, void *)
-    DEPRECATED_ATTRIBUTE;
-#define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
-#define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
-#define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
-#define AG_ObjectFindF AG_ObjectFind
-#endif /* AG_LEGACY */
+/*
+ * Detach and destroy an object.
+ */
+static __inline__ void
+AG_ObjectDelete(void *p)
+{
+	AG_Object *obj = p;
+
+	if (obj->parent != NULL) {
+		AG_ObjectDetach(obj);
+	}
+	AG_ObjectDestroy(obj);
+}
 
 /*
  * Return a child object by name.
- * THREADS: Result valid as long as parent object's VFS remains locked.
+ * Result is valid as long as parent object's VFS is locked.
  */
 static __inline__ void *
 AG_ObjectFindChild(void *pParent, const char *name)
@@ -296,26 +303,22 @@ AG_ObjectSuperclass(const void *p)
 	return AGOBJECT(p)->cls->super;
 }
 
-/* Lock the timeouts associated with an object. */
+/* Lock/unlock the timer queue and all timers associated with an object. */
 static __inline__ void
-AG_LockTimeouts(void *p)
+AG_LockTimers(void *p)
 {
 #ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimeoutMgr;
+	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
 	AG_ObjectLock(ob);
-#endif
 	AG_LockTiming();
+#endif
 }
-
-/* Unlock the timeouts associated with an object. */
 static __inline__ void
-AG_UnlockTimeouts(void *p)
+AG_UnlockTimers(void *p)
 {
 #ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimeoutMgr;
-#endif
+	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
 	AG_UnlockTiming();
-#ifdef AG_THREADS
 	AG_ObjectUnlock(ob);
 #endif
 }
@@ -328,12 +331,98 @@ AG_ObjectGetInheritHierString(void *obj, char *buf, size_t buf_size)
 	AG_Strlcpy(buf, AGOBJECT_CLASS(obj)->hier, buf_size);
 	AG_ObjectUnlock(obj);
 }
+
+/* Evaluate whether the named object variable exists. */
+static __inline__ int
+AG_Defined(void *pObj, const char *name)
+{
+	AG_Object *obj = AGOBJECT(pObj);
+	Uint i;
+
+	AG_ObjectLock(obj);
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(name, obj->vars[i].name) == 0) {
+			AG_ObjectUnlock(obj);
+			return (1);
+		}
+	}
+	AG_ObjectUnlock(obj);
+	return (0);
+}
+
+/*
+ * Lookup an object variable by name and return a locked AG_Variable.
+ * The object must be locked.
+ */
+static __inline__ AG_Variable *
+AG_GetVariableLocked(void *pObj, const char *name)
+{
+	AG_Object *obj = AGOBJECT(pObj);
+	AG_Variable *V, *Vtgt;
+	Uint i;
+	
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(obj->vars[i].name, name) == 0)
+			break;
+	}
+	if (i == obj->nVars) {
+		return (NULL);
+	}
+	V = &obj->vars[i];
+	AG_LockVariable(V);
+	if (V->type == AG_VARIABLE_P_VARIABLE) {
+		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.ref.key);
+		AG_UnlockVariable(V);
+		return (Vtgt);
+	}
+	return (V);
+}
+
+/* Accessor routine for AG_OBJECT_NAMED() macro in AG_Event(3). */
+static __inline__ void *
+AG_GetNamedObject(AG_Event *event, const char *key, const char *classSpec)
+{
+	AG_Variable *V = AG_GetNamedEventArg(event, key);
+
+	if (!AG_OfClass((struct ag_object *)V->data.p, classSpec)) {
+		AG_FatalError("Argument %s is not a %s", key, classSpec);
+	}
+	return (V->data.p);
+}
+
+#ifdef AG_LEGACY
+# define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
+# define AG_LockTimeouts(ob) AG_LockTimers(ob)
+# define AG_UnlockTimeouts(ob) AG_UnlockTimers(ob)
+# define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
+# define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
+# define AG_ObjectFindF AG_ObjectFind
+# define AG_PropLoad AG_ObjectLoadVariables
+# define AG_PropSave AG_ObjectSaveVariables
+# define AG_PropDefined AG_Defined
+# define AG_GetStringCopy AG_GetString
+# define AG_Prop AG_Variable
+# define ag_prop ag_variable
+# define ag_prop_type ag_variable_type
+# define AG_PROP_UINT AG_VARIABLE_UINT
+# define AG_PROP_INT AG_VARIABLE_INT
+# define AG_PROP_UINT8 AG_VARIABLE_UINT8
+# define AG_PROP_SINT8 AG_VARIABLE_SINT8
+# define AG_PROP_UINT16	AG_VARIABLE_UINT16
+# define AG_PROP_SINT16	AG_VARIABLE_SINT16
+# define AG_PROP_UINT32	AG_VARIABLE_UINT32
+# define AG_PROP_SINT32	AG_VARIABLE_SINT32
+# define AG_PROP_FLOAT AG_VARIABLE_FLOAT
+# define AG_PROP_DOUBLE	AG_VARIABLE_DOUBLE
+# define AG_PROP_STRING	AG_VARIABLE_STRING
+# define AG_PROP_POINTER AG_VARIABLE_POINTER
+# define AG_PROP_BOOL AG_VARIABLE_INT
+AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...) DEPRECATED_ATTRIBUTE;
+AG_Prop	*AG_GetProp(void *, const char *, int, void *) DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/core/close.h>
-
-#include <agar/core/variable.h>
-#include <agar/core/event.h>
-#include <agar/core/prop.h>
 
 #endif /* _AGAR_CORE_OBJECT_H_ */

@@ -50,8 +50,9 @@ they are mapped or updated.
 Small animations can be efficiently displayed by mapping one surface per frame
 and invoking
 .Fn AG_PixmapSetSurface
-from a timer with
-.Xr AG_Timeout 3 .
+directly from an
+.Xr AG_Timer 3
+callback.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->

@@ -354,39 +354,33 @@ Detach(AG_Event *event)
 	AG_UnlockVFS(&agDrivers);
 }
 
+/* Timer callback for fade-in/fade-out */
 static Uint32
-FadeInTimeout(void *obj, Uint32 ival, void *arg)
+FadeTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Window *win = obj;
+	AG_Window *win = AG_SELF();
+	int dir = AG_INT(1);
 
-	if (win->fadeOpacity < 1.0) {
-		win->fadeOpacity += win->fadeInIncr;
-		AG_WindowSetOpacity(win, win->fadeOpacity);
-		return (ival);
-	} else {
-		return (0);
+	if (dir == 1) {					/* Fade in */
+		if (win->fadeOpacity < 1.0) {
+			win->fadeOpacity += win->fadeInIncr;
+			AG_WindowSetOpacity(win, win->fadeOpacity);
+			return (to->ival);
+		} else {
+			return (0);
+		}
+	} else {					/* Fade out */
+		if (win->fadeOpacity > 0.0) {
+			win->fadeOpacity -= win->fadeOutIncr;
+			AG_WindowSetOpacity(win, win->fadeOpacity);
+			return (to->ival);
+		} else {
+			win->visible = 0;
+			AG_PostEvent(NULL, win, "widget-hidden", NULL);
+			AG_WindowSetOpacity(win, 1.0);
+			return (0);
+		}
 	}
-}
-
-static Uint32
-FadeOutTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Window *win = obj;
-	Uint32 rv;
-
-	AG_ObjectLock(win);
-	if (win->fadeOpacity > 0.0) {
-		win->fadeOpacity -= win->fadeOutIncr;
-		AG_WindowSetOpacity(win, win->fadeOpacity);
-		rv = ival;
-	} else {
-		win->visible = 0;
-		AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
-		AG_WindowSetOpacity(win, 1.0);
-		rv = 0;
-	}
-	AG_ObjectUnlock(win);
-	return (rv);
 }
 
 static void
@@ -429,9 +423,6 @@ Init(void *obj)
 	win->fadeOpacity = 1.0f;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
-
-	AG_SetTimeout(&win->fadeInTo, FadeInTimeout, NULL, AG_CANCEL_ONDETACH);
-	AG_SetTimeout(&win->fadeOutTo, FadeOutTimeout, NULL, AG_CANCEL_ONDETACH);
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
@@ -745,10 +736,12 @@ Shown(AG_Event *event)
 
 	/* We can now allow cursor changes. */
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
-
-	if (win->flags & AG_WINDOW_FADEIN)
-		AG_ScheduleTimeout(win, &win->fadeInTo,
-		    (Uint32)((win->fadeInTime*1000.0)/(1.0/win->fadeInIncr)));
+	
+	if (win->flags & AG_WINDOW_FADEIN) {
+		AG_AddTimer(win, &win->fadeTo,
+		    (Uint32)((win->fadeInTime*1000.0)/(1.0/win->fadeInIncr)),
+		    FadeTimeout, "%i", 1);
+	}
 }
 
 static void
@@ -876,12 +869,12 @@ AG_WindowHide(AG_Window *win)
 	AG_ObjectLock(win);
 	if (win->visible) {
 		if (win->flags & AG_WINDOW_FADEOUT) {
-			AG_WindowSetOpacity(win, 1.0); /* XXX */
-			AG_ScheduleTimeout(win, &win->fadeOutTo,
-			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)));
+			AG_AddTimer(win, &win->fadeTo,
+			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
+			    FadeTimeout, "%i", -1);
 		} else {
 			win->visible = 0;
-			AG_PostEvent(NULL, win, "widget-hidden", NULL);	/* Hidden() */
+			AG_PostEvent(NULL, win, "widget-hidden", NULL);
 		}
 	}
 	AG_ObjectUnlock(win);
@@ -1399,6 +1392,16 @@ IconMotion(AG_Event *event)
 	}
 }
 
+/* Timer for double click on minimized icon. */
+static Uint32
+IconDoubleClickTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Icon *icon = AG_SELF();
+
+	icon->flags &= ~(AG_ICON_DBLCLICKED);
+	return (0);
+}
+
 static void
 IconButtonDown(AG_Event *event)
 {
@@ -1408,7 +1411,7 @@ IconButtonDown(AG_Event *event)
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 	if (icon->flags & AG_ICON_DBLCLICKED) {
-		AG_CancelEvent(icon, "dblclick-expire");
+		AG_DelTimer(icon, &icon->toDblClick);
 		AG_WindowUnminimize(win);
 		AG_ObjectDetach(win->icon);
 		AG_ObjectDetach(icon->wDND);
@@ -1416,8 +1419,8 @@ IconButtonDown(AG_Event *event)
 		icon->flags &= (AG_ICON_DND|AG_ICON_DBLCLICKED);
 	} else {
 		icon->flags |= (AG_ICON_DND|AG_ICON_DBLCLICKED);
-		AG_SchedEvent(NULL, icon, agMouseDblclickDelay,
-		    "dblclick-expire", NULL);
+		AG_AddTimer(icon, &icon->toDblClick, agMouseDblclickDelay,
+		    IconDoubleClickTimeout, NULL);
 	}
 }
 
@@ -1429,13 +1432,6 @@ IconButtonUp(AG_Event *event)
 	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_MOTION);
 	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
 	icon->flags &= ~(AG_ICON_DND);
-}
-
-static void
-DoubleClickTimeout(AG_Event *event)
-{
-	AG_Icon *icon = AG_SELF();
-	icon->flags &= ~(AG_ICON_DBLCLICKED);
 }
 
 /* Minimize a window */
@@ -1460,7 +1456,6 @@ AG_WindowMinimize(AG_Window *win)
 		icon->wDND = wDND;
 		icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
 
-		AG_SetEvent(icon, "dblclick-expire", DoubleClickTimeout, NULL);
 		AG_SetEvent(icon, "mouse-motion", IconMotion, NULL);
 		AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
 		AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);

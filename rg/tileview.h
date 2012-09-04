@@ -152,8 +152,8 @@ typedef struct rg_tileview {
 #define RG_TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
 #define RG_TILEVIEW_READONLY	0x40
 
-	AG_Timeout zoom_to;		/* Zoom timeout */
-	AG_Timeout redraw_to;		/* Auto redraw timeout */
+	AG_Timer zoomTo;		/* Zoom timeout */
+	AG_Timer redrawTo;		/* Auto redraw timeout */
 
 	int edit_attr;			/* Attribute being edited */
 	int edit_mode;			/* Element is being edited */

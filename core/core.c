@@ -97,7 +97,8 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 
 	if (AG_InitErrorSubsystem() == -1 ||
-	    AG_InitStringSubsystem() == -1) {
+	    AG_InitStringSubsystem() == -1 ||
+	    AG_InitEventSubsystem() == -1) {
 		return (-1);
 	}
 	AG_GetCPUInfo(&agCPU);
@@ -162,7 +163,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetUserOps(&agUserOps_dummy);
 #endif
 
-	AG_InitTimeouts();
+	AG_InitTimers();
 	AG_DataSourceInitSubsystem();
 
 	if ((agConfig = TryMalloc(sizeof(AG_Config))) == NULL) {
@@ -205,7 +206,8 @@ AG_Destroy(void)
 	AG_ObjectDestroy(agConfig);
 	AG_DataSourceDestroySubsystem();
 
-	AG_DestroyTimeouts();
+	AG_DestroyTimers();
+	AG_DestroyEventSubsystem();
 	AG_DestroyStringSubsystem();
 	AG_DestroyErrorSubsystem();
 	AG_DestroyClassTbl();

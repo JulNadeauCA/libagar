@@ -64,14 +64,15 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 	return (tt);
 }
 
-static void
-ExpireDoubleClick(AG_Event *event)
+/* Timer for detecting double clicks. */
+static Uint32
+DoubleClickTimeout(AG_Timer *to, AG_Event *event)
 {
 	AG_Treetbl *tt = AG_SELF();
 
-	/* the user hasn't clicked again, so cancel the double click */
-	tt->dblclicked = 0;
-	/* XXX - if the cursor remains in the cell, activate a click-to-edit */
+	tt->dblClicked = 0;
+	/* TODO: if the cursor remains in the cell, activate a click-to-edit */
+	return (0);
 }
 
 static void
@@ -79,8 +80,8 @@ FocusLost(AG_Event *event)
 {
 	AG_Treetbl *tt = AG_SELF();
 
-	AG_CancelEvent(tt, "dblclick-expire");
-	tt->dblclicked = 0;
+	AG_DelTimer(tt, &tt->toDblClick);
+	tt->dblClicked = 0;
 }
 
 
@@ -437,8 +438,8 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	}
 
 	/* Handle double-clicks. */
-	if (tt->dblclicked) {
-		AG_CancelEvent(tt, "dblclick-expire");
+	if (tt->dblClicked) {
+		AG_DelTimer(tt, &tt->toDblClick);
 		if(!TAILQ_EMPTY(&row->children)) {
 			if (row->flags & AG_TREETBL_ROW_EXPANDED) {
 				AG_TreetblCollapseRow(tt, row);
@@ -451,12 +452,12 @@ ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 			row->flags |= AG_TREETBL_ROW_SELECTED;
 			AG_Redraw(tt);
 		}
-		tt->dblclicked = 0;
+		tt->dblClicked = 0;
 		AG_PostEvent(NULL, tt, "treetbl-dblclick", "%p", row);
 	} else {
-		tt->dblclicked++;
-		AG_SchedEvent(NULL, tt, agMouseDblclickDelay, "dblclick-expire",
-		    NULL);
+		tt->dblClicked++;
+		AG_AddTimer(tt, &tt->toDblClick, agMouseDblclickDelay,
+		    DoubleClickTimeout, NULL);
 	}
 	return (0);
 }
@@ -494,7 +495,7 @@ Init(void *obj)
 
 	tt->hCol = agTextFontHeight;
 	tt->hRow = agTextFontHeight+2;
-	tt->dblclicked = 0;
+	tt->dblClicked = 0;
 	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, 0);
 	tt->hBar = NULL;
 
@@ -527,7 +528,6 @@ Init(void *obj)
 	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
-	AG_SetEvent(tt, "dblclick-expire", ExpireDoubleClick, NULL);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
 
@@ -1351,8 +1351,8 @@ ViewChanged(AG_Treetbl *tt)
 	Uint i;
 
 	/* cancel double clicks if what's under it changes it */
-	tt->dblclicked = 0;
-	AG_CancelEvent(tt, "dblclick-expire");
+	AG_DelTimer(tt, &tt->toDblClick);
+	tt->dblClicked = 0;
 
 	rows_per_view = tt->r.h/tt->hRow;
 	if (tt->r.h % tt->hRow)

@@ -135,7 +135,7 @@ AG_Mutex agTextLock;
 static SLIST_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
 
-static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
+static AG_Timer textMsgTo; 				/* For AG_TextTmsg() */
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -463,9 +463,9 @@ AG_SetRTL(int enable)
 }
 
 static Uint32
-TextTmsgExpire(void *obj, Uint32 ival, void *arg)
+TextTmsgExpire(AG_Timer *to, AG_Event *event)
 {
-	AG_Window *win = arg;
+	AG_Window *win = AG_SELF();
 
 	AG_ObjectDetach(win);
 	return (0);
@@ -1404,6 +1404,9 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	if (win == NULL)
+		return;
+
 	win->wmType = AG_WINDOW_WM_NOTIFICATION;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
@@ -1431,13 +1434,16 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
 	AG_TextTmsgS(title, expire, s);
 }
 void
-AG_TextTmsgS(enum ag_text_msg_title title, Uint32 expire, const char *s)
+AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
+	if (win == NULL) {
+		return;
+	}
 	win->wmType = AG_WINDOW_WM_NOTIFICATION;
 	AG_WindowSetCaptionS(win, _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
@@ -1446,15 +1452,8 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 expire, const char *s)
 	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
 
-	AG_LockTimeouts(NULL);
-	if (AG_TimeoutIsScheduled(NULL, &textMsgTo)) {
-		AG_ObjectDetach((AG_Window *)textMsgTo.arg);
-		AG_DelTimeout(NULL, &textMsgTo);
-	}
-	AG_UnlockTimeouts(NULL);
-
-	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
-	AG_ScheduleTimeout(NULL, &textMsgTo, expire);
+	AG_AddTimer(NULL, &textMsgTo, ticks,
+	    TextTmsgExpire, "%p", win);
 }
 
 /*

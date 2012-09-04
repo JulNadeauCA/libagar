@@ -55,9 +55,6 @@ The position and orientation of the label is described by two points.
 .Fn VG_TextPrintf "VG_Text *vg" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn VG_TextPrintfPolled "VG_Text *vg" "const char *fmt" "..."
-.Pp
-.Ft "void"
 .Fn VG_TextAlignment "VG_Text *vt" "enum vg_alignment alignment"
 .Pp
 .Ft "void"
@@ -88,11 +85,6 @@ and
 .Fn VG_TextPrintf
 change the text associated with the element.
 A NULL argument will result in no text being displayed.
-.Fn VG_TextPolled
-specifies a polled format string (see
-.Xr AG_Label 3
-.Dq POLLED LABELS
-for details ) .
 .Pp
 .Fn VG_TextAlignment
 specifies the alignment of the text:

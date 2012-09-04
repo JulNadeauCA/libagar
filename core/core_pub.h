@@ -20,7 +20,6 @@
 #include <agar/core/load_string.h>
 #include <agar/core/load_version.h>
 
-#include <agar/core/text.h>
 #include <agar/core/version.h>
 #include <agar/core/object.h>
 #include <agar/core/list.h>
@@ -30,7 +29,6 @@
 #include <agar/core/file.h>
 #include <agar/core/dir.h>
 #include <agar/core/dso.h>
-#include <agar/core/time.h>
 #include <agar/core/db.h>
 #include <agar/core/getopt.h>
 #include <agar/core/exec.h>

@@ -35,23 +35,23 @@
 
 #include "dev.h"
 
-static AG_Treetbl *tt = NULL;
-static AG_Timeout refresher;
+static AG_Timer refreshTblTo;
 
 static Uint32 
-UpdateTbl(void *obj, Uint32 ival, void *arg)
+RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 {
-	extern struct ag_objectq agTimeoutObjQ;
+	AG_Treetbl *tt = AG_SELF();
+	extern struct ag_objectq agTimerObjQ;
 	AG_Object *ob;
-	AG_Timeout *to;
 	int id;
 	
 	AG_TreetblClearRows(tt);
 	AG_LockTiming();
 
 	id = 0;
-	TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
+	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
 		AG_TreetblRow *objRow;
+		AG_Timer *to;
 		
 		objRow = AG_TreetblAddRow(tt, NULL, id++,
 		    "%s",
@@ -59,16 +59,16 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 		AG_TreetblExpandRow(tt, objRow);
 
 		AG_ObjectLock(ob);
-		TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
+		TAILQ_FOREACH(to, &ob->timers, timers) {
 			AG_TreetblAddRow(tt, objRow, id++,
 			    "%s,%s",
-			    0, AG_PrintfN(1,"%p",to),
-			    1, AG_PrintfN(2,"%u",(Uint)to->ticks));
+			    0, AG_PrintfN(1,"%d",to->id),
+			    1, AG_PrintfN(2,"%u",(Uint)to->ival));
 		}
 		AG_ObjectUnlock(ob);
 	}
 	AG_UnlockTiming();
-	return (ival);
+	return (refreshTo->ival);
 }
 
 static void
@@ -77,7 +77,7 @@ CloseWindow(AG_Event *event)
 	AG_Window *win = AG_SELF();
 	AG_Treetbl *tt = AG_PTR(1);
 
-	AG_DelTimeout(tt, &refresher);
+	AG_DelTimer(tt, &refreshTblTo);
 	AG_ObjectDetach(win);
 }
 
@@ -85,6 +85,7 @@ AG_Window *
 DEV_TimerInspector(void)
 {
 	AG_Window *win;
+	AG_Treetbl *tt;
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_TimerInspector")) == NULL) {
 		return (NULL);
@@ -95,9 +96,9 @@ DEV_TimerInspector(void)
 	AG_TreetblSizeHint(tt, 200, 6);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXXXXXXXXX>", _("TimerID"));
 	AG_TreetblAddCol(tt, 1, "<XXXXXXXX>", _("Ticks"));
-	
-	AG_SetTimeout(&refresher, UpdateTbl, tt, 0);
-	AG_ScheduleTimeout(tt, &refresher, 50);
+
+	AG_AddTimer(tt, &refreshTblTo, 50,
+	    RefreshTableTimeout, NULL);
 	
 	AG_SetEvent(win, "window-close", CloseWindow, "%p", tt);
 	return (win);

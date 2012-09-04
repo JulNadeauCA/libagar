@@ -20,7 +20,7 @@
 static DWORD t0;
 
 static void
-Init(void)
+WIN32_Init(void)
 {
 #ifndef _XBOX
 	timeBeginPeriod(1);
@@ -29,7 +29,7 @@ Init(void)
 }
 
 static Uint32
-GetTicks(void)
+WIN32_GetTicks(void)
 {
 	DWORD t;
 
@@ -42,17 +42,17 @@ GetTicks(void)
 }
 
 static void
-Delay(Uint32 ticks)
+WIN32_Delay(Uint32 ticks)
 {
 	Sleep(ticks);
 }
 
 const AG_TimeOps agTimeOps_win32 = {
 	"win32",
-	Init,
+	WIN32_Init,
 	NULL,
-	GetTicks,
-	Delay
+	WIN32_GetTicks,
+	WIN32_Delay
 };
 
 #endif /* _WIN32 */

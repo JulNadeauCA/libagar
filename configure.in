@@ -102,6 +102,7 @@ CHECK(execvp)
 CHECK(clock_gettime)
 CHECK(clock_win32)
 CHECK(nanosleep)
+CHECK(kqueue)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)
