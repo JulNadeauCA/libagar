@@ -904,9 +904,7 @@ AG_SDL_GenericEventLoop(void *obj)
 				agEventAvg++;
 #endif
 		} else {
-			if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
-				AG_ProcessTimeouts(Tr2);
-			}
+			AG_ProcessTimeouts(Tr2);
 			AG_Delay(1);
 		}
 	}

@@ -39,45 +39,11 @@ RG_AnimviewNew(void *parent)
 	return (av);
 }
 
-static void
-Play(AG_Event *event)
-{
-	RG_Animview *av = AG_PTR(1);
-
-	AG_ScheduleTimeout(av, &av->timer, 1);
-	AG_WidgetDisable(av->btns.play);
-	AG_WidgetEnable(av->btns.pause);
-	AG_WidgetEnable(av->btns.stop);
-}
-
-static void
-Pause(AG_Event *event)
-{
-	RG_Animview *av = AG_PTR(1);
-	
-	AG_DelTimeout(av, &av->timer);
-	AG_WidgetEnable(av->btns.play);
-	AG_WidgetDisable(av->btns.pause);
-	AG_WidgetDisable(av->btns.stop);
-}
-
-static void
-Stop(AG_Event *event)
-{
-	RG_Animview *av = AG_PTR(1);
-	
-	AG_DelTimeout(av, &av->timer);
-	av->frame = 0;
-	
-	AG_WidgetEnable(av->btns.play);
-	AG_WidgetDisable(av->btns.pause);
-	AG_WidgetDisable(av->btns.stop);
-}
-
+/* Timer for updating the current frame during playback. */
 static Uint32
-TickFrame(void *p, Uint32 ival, void *arg)
+PlayUpdateTimeout(AG_Timer *to, AG_Event *event)
 {
-	RG_Animview *av = p;
+	RG_Animview *av = AG_SELF();
 
 	if (av->anim->nframes == 0)
 		return (0);
@@ -94,6 +60,41 @@ TickFrame(void *p, Uint32 ival, void *arg)
 		av->frame = 0;
 		return (fr->delay > 0 ? fr->delay*100/av->speed: 1);
 	}
+}
+
+static void
+Play(AG_Event *event)
+{
+	RG_Animview *av = AG_PTR(1);
+
+	AG_AddTimer(av, &av->timer, 1, PlayUpdateTimeout, NULL);
+	AG_WidgetDisable(av->btns.play);
+	AG_WidgetEnable(av->btns.pause);
+	AG_WidgetEnable(av->btns.stop);
+}
+
+static void
+Pause(AG_Event *event)
+{
+	RG_Animview *av = AG_PTR(1);
+	
+	AG_DelTimer(av, &av->timer);
+	AG_WidgetEnable(av->btns.play);
+	AG_WidgetDisable(av->btns.pause);
+	AG_WidgetDisable(av->btns.stop);
+}
+
+static void
+Stop(AG_Event *event)
+{
+	RG_Animview *av = AG_PTR(1);
+	
+	AG_DelTimer(av, &av->timer);
+	av->frame = 0;
+	
+	AG_WidgetEnable(av->btns.play);
+	AG_WidgetDisable(av->btns.pause);
+	AG_WidgetDisable(av->btns.stop);
 }
 
 static void
@@ -188,7 +189,6 @@ Init(void *obj)
 	av->speed = 100;
 	av->menu = NULL;
 	av->menu_win = NULL;
-	AG_SetTimeout(&av->timer, TickFrame, av, 0);
 	
 	av->btns.play = AG_ButtonNewS(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.play, rgIconPlay.s);
@@ -279,7 +279,7 @@ Draw(void *p)
 void
 RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 {
-	AG_DelTimeout(av, &av->timer);
+	AG_DelTimer(av, &av->timer);
 	av->anim = anim;
 	av->frame = 0;
 	av->ranim.x = WIDGET(av)->w/2 - anim->w/2;

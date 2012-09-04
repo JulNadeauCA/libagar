@@ -80,9 +80,10 @@ typedef struct ag_treetbl {
 	AG_Rect r;			/* View area */
 	int hCol;			/* Header height */
 	int hRow;			/* Per-row height */
-	int dblclicked;			/* Used by double click */
+	int dblClicked;			/* Used by double click */
 	int wHint, hHint;		/* Size hint */
-	
+	AG_Timer toDblClick;
+
 	Uint n;				/* Column count */
 	AG_TreetblCol *column;		/* Column array */
 

@@ -23,7 +23,7 @@ static struct timespec t0;
 static int inited = 0;
 
 static void
-Init(void)
+RENDERER_Init(void)
 {
 	if (!inited) {
 		AG_CondInit(&agCondBeginRender);
@@ -35,7 +35,7 @@ Init(void)
 }
 
 static Uint32
-GetTicks(void)
+RENDERER_GetTicks(void)
 {
 	struct timespec t;
 
@@ -45,7 +45,7 @@ GetTicks(void)
 }
 
 static void
-Delay(Uint32 Tdelay)
+RENDERER_Delay(Uint32 Tdelay)
 {
 	struct timespec ts, tsNow;
 	int rv;
@@ -72,8 +72,8 @@ Delay(Uint32 Tdelay)
 
 const AG_TimeOps agTimeOps_renderer = {
 	"renderer",
-	Init,
+	RENDERER_Init,
 	NULL,
-	GetTicks,
-	Delay
+	RENDERER_GetTicks,
+	RENDERER_Delay
 };

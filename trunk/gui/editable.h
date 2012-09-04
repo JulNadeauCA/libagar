@@ -65,18 +65,12 @@ typedef struct ag_editable {
 	int xSelStart, ySelStart;	/* Last selection start position */
 	int xSelEnd, ySelEnd;		/* Last selection end position */
 	int xCursPref;			/* Requested cursor position */
-	AG_Timeout toDelay;		/* Pre-repeat delay timer */
-	AG_Timeout toRepeat;		/* Repeat timer */
-	AG_Timeout toCursorBlink;	/* Cursor blink timer */
 	int x;				/* Horizontal offset (px) */
 	int xMax;			/* Rightmost x of largest line (px) */
 	int y;				/* Vertical offset (lines) */
 	int yMax;			/* Lowest y (lines) */
 	int yVis;			/* Maximum visible area (lines) */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	AG_KeySym repeatKey;		/* Last keysym */
-	AG_KeyMod repeatMod;		/* Last keymod */
-	Uint32 repeatUnicode;		/* Last unicode translated key */
 	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
@@ -87,6 +81,9 @@ typedef struct ag_editable {
 	enum ag_language lang;		/* Selected language (for AG_Text) */
 	int xScrollPx;			/* Explicit scroll request in pixels */
 	int *xScrollTo, *yScrollTo;	/* Scroll to specified position */
+	AG_Timer toRepeat;		/* Key repeat timer */
+	AG_Timer toCursorBlink;		/* Cursor blink timer */
+	AG_Timer toDblClick;		/* Double click timer */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))

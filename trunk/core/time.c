@@ -36,10 +36,10 @@ AG_SetTimeOps(const AG_TimeOps *timeOps)
 {
 	if (agTimeOps == timeOps)
 		return;
-	if (agTimeOps != NULL && agTimeOps->Destroy != NULL) 
-		agTimeOps->Destroy();
+	if (agTimeOps != NULL && agTimeOps->destroy != NULL) 
+		agTimeOps->destroy();
 
 	agTimeOps = timeOps;
-	if (timeOps->Init != NULL)
-		timeOps->Init();
+	if (timeOps->init != NULL)
+		timeOps->init();
 }

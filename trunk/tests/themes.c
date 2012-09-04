@@ -217,7 +217,7 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_Numerical *num;
 		static float myFloat = 1.0;
-		static int myInt = 1;
+		static int myInt = 123;
 
 		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);

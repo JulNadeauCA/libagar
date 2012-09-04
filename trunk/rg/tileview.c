@@ -52,28 +52,25 @@ RG_TileviewNew(void *parent, RG_Tileset *ts, Uint flags)
 	return (tv);
 }
 
+/* Timeout for keyboard zoom control. */
 static Uint32
-ZoomInTimeout(void *obj, Uint32 ival, void *arg)
+ZoomTimeout(AG_Timer *to, AG_Event *event)
 {
-	RG_Tileview *tv = obj;
+	RG_Tileview *tv = AG_SELF();
+	int dir = AG_INT(1);
 
-	if (tv->zoom > 1600) {
-		return (0);
+	if (dir == +1) {					/* Zoom in */
+		if (tv->zoom > 1600) {
+			return (0);
+		}
+		RG_TileviewSetZoom(tv, tv->zoom+20, 1);
+	} else {						/* Zoom out */
+		if (tv->zoom < 100) {
+			return (0);
+		}
+		RG_TileviewSetZoom(tv, tv->zoom-20, 1);
 	}
-	RG_TileviewSetZoom(tv, tv->zoom+20, 1);
-	return (ival);
-}
-
-static Uint32
-ZoomOutTimeout(void *obj, Uint32 ival, void *arg)
-{
-	RG_Tileview *tv = obj;
-
-	if (tv->zoom < 100) {
-		return (0);
-	}
-	RG_TileviewSetZoom(tv, tv->zoom-20, 1);
-	return (ival);
+	return (10);
 }
 
 static __inline__ void
@@ -153,14 +150,10 @@ KeyDown(AG_Event *event)
 		}
 		break;
 	case AG_KEY_EQUALS:
-		AG_SetTimeout(&tv->zoom_to, ZoomInTimeout, NULL, 0);
-		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
-		ZoomInTimeout(tv, 0, NULL);
+		AG_AddTimer(tv, &tv->zoomTo, 1, ZoomTimeout, "%i", +1);
 		break;
 	case AG_KEY_MINUS:
-		AG_SetTimeout(&tv->zoom_to, ZoomOutTimeout, NULL, 0);
-		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
-		ZoomOutTimeout(tv, 0, NULL);
+		AG_AddTimer(tv, &tv->zoomTo, 1, ZoomTimeout, "%i", -1);
 		break;
 	case AG_KEY_0:
 	case AG_KEY_1:
@@ -192,7 +185,7 @@ KeyUp(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_EQUALS:
 	case AG_KEY_MINUS:
-		AG_DelTimeout(tv, &tv->zoom_to);
+		AG_DelTimer(tv, &tv->zoomTo);
 		break;
 	}
 }
@@ -708,16 +701,6 @@ MouseMotion(AG_Event *event)
 	tv->yorig = sy;
 }
 
-static Uint32
-RedrawTimeout(void *obj, Uint32 ival, void *arg)
-{
-	RG_Tileview *tv = obj;
-
-	tv->tile->flags |= RG_TILE_DIRTY;
-	AG_Redraw(tv);
-	return (ival);
-}
-
 RG_TileviewTool *
 RG_TileviewRegTool(RG_Tileview *tv, const void *p)
 {
@@ -789,8 +772,6 @@ Init(void *obj)
 
 	AG_WidgetMapSurface(tv, NULL);
 
-	AG_SetTimeout(&tv->redraw_to, RedrawTimeout, NULL, 0);
-	
 	AG_SetEvent(tv, "key-down", KeyDown, NULL);
 	AG_SetEvent(tv, "key-up", KeyUp, NULL);
 	AG_SetEvent(tv, "mouse-button-up", MouseButtonUp, NULL);
@@ -966,13 +947,25 @@ RG_TileviewDelCtrl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 	AG_Redraw(tv);
 }
 
+/* Timer for auto refresh updates. */
+static Uint32
+RedrawTimeout(AG_Timer *to, AG_Event *event)
+{
+	RG_Tileview *tv = AG_SELF();
+
+	tv->tile->flags |= RG_TILE_DIRTY;
+	AG_Redraw(tv);
+	return (to->ival);
+}
+
 void
 RG_TileviewSetAutoRefresh(RG_Tileview *tv, int ena, int rate)
 {
 	if (ena) {
-		AG_ScheduleTimeout(tv, &tv->redraw_to, rate);
+		AG_AddTimer(tv, &tv->redrawTo, rate,
+		    RedrawTimeout, NULL);
 	} else {
-		AG_DelTimeout(tv, &tv->redraw_to);
+		AG_DelTimer(tv, &tv->redrawTo);
 	}
 }
 

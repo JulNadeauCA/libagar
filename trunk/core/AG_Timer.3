@@ -1,0 +1,216 @@
+.\" Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 9, 2004
+.Dt AG_TIMER 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5
+.Sh NAME
+.Nm AG_Timer
+.Nd agar timer facility
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+.\" MANLINK(AG_Timeout)
+The
+.Nm
+structure describes a unique timer, which may or may not be associated with
+some parent
+.Xr AG_Object 3 .
+If a timer has a parent object, Agar will guarantee cancellation of any
+callbacks if the parent object is destroyed or detached.
+When a timer expires, its callback routine is executed.
+Timer callback routines should be defined as:
+.Pp
+.nr nS 1
+.Ft "Uint32"
+.Fn AG_TimerFn "AG_Timer *timer" "AG_Event *event"
+.Pp
+.nr nS 0
+The
+.Fa timer
+argument, and the list of arguments under
+.Fa event
+are those previously specified in
+.Fn AG_AddTimer .
+The current timer interval (in ticks) can be retrieved from the
+.Va ival
+member of the
+.Nm
+structure.
+The callback should return a new timer interval (if the timer is
+to be restarted), or 0 if the timer is to be cancelled.
+.Pp
+The timer's parent object is guaranteed to remain locked during the execution
+of the callback.
+The context of execution of the callback is platform-dependent.
+On platforms where 
+.Xr kqueue 2
+is available, the routine is executed in the event loop.
+On platforms where only POSIX timers are available, the routine is
+executed in a separate thread.
+On platforms which don't provide any timer interface at all, the event
+loop repeatedly calls
+.Fn AG_ProcessTimeouts
+routine to process expired timers.
+Different objects may also manage timers differently (see
+.Dq SPECIALIZED TIMERS
+below).
+.Sh INTERFACE
+.nr nS 1
+.Ft "int"
+.Fn AG_AddTimer "void *obj" "AG_Timer *timer" "Uint32 t" "Uint32 (*fn)(AG_Timer *, AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_DelTimer "void *obj" "AG_Timer *timer"
+.Pp
+.Ft "void"
+.Fn AG_LockTimers "void *obj"
+.Pp
+.Ft "void"
+.Fn AG_UnlockTimers "void *obj"
+.Pp
+.Ft "int"
+.Fn AG_TimerIsRunning "void *obj" "AG_Timer *timer"
+.Pp
+.Ft "void"
+.Fn AG_ProcessTimeouts "Uint32 ticks"
+.Pp
+.nr nS 0
+The
+.Fn AG_AddTimer
+routine creates a new timer, initializing the structure pointed to by the
+.Fa timer
+argument and returning 0 on success or -1 on failure.
+The optional
+.Fa obj
+argument specifies a parent
+.Xr AG_Object 3
+for the timer.
+The callback routine is specified as the
+.Fn fn
+argument.
+Arguments to pass to the callback may be specified under
+.Fa fmt
+(using the
+.Xr AG_Event 3
+style of argument passing).
+.Pp
+Timers created with
+.Fn AG_AddTimer
+are set to expire in
+.Fa t
+ticks.
+On expiration, the timer's callback is invoked.
+If it returns a non-zero number of ticks, the timer is restarted, otherwise
+it is cancelled.
+.Pp
+The
+.Fn AG_DelTimer
+function deletes a timer.
+The optional
+.Fa obj
+argument specifies the timer's parent object.
+The
+.Fa timer
+argument does not need to point to an initialized structure.
+If the timer is not running,
+.Fn AG_DelTimer
+is a safe no-op.
+.Pp
+It is safe to make
+.Fn AG_AddTimer
+and
+.Fn AG_DelTimer
+calls in timer callbacks.
+.Pp
+The
+.Fn AG_TimerIsRunning
+function returns 1 if the timer is active.
+For thread safety, the call should be protected by
+.Fn AG_LockTimers :
+.Pp
+.Bd -literal -offset indent
+AG_LockTimers(obj);
+if (AG_TimerIsRunning(obj, &timer)) {
+	...
+}
+AG_UnlockTimers(obj);
+.Ed
+.Pp
+The
+.Fn AG_ProcessTimeouts
+function advances the timing wheel and executes the callbacks of
+expired timers.
+Normally, this function is not used directly, but it can be useful on
+platforms without timer interfaces (i.e.,
+.Fn AG_ProcessTimeouts
+may be called repeatedly from a delay loop).
+The
+.Fa ticks
+argument is the monotonic time in ticks (usually obtained from
+.Xr AG_GetTicks 3 ) .
+.Sh SPECIALIZED TIMERS
+The
+.Nm
+interface is not tied to any specific time source.
+A timer's parent object may influence the way timers are processed.
+.Pp
+By default, the execution of timers is based on the progress of a
+monotonic system clock and one "tick" is roughly equivalent to one
+millisecond.
+However, it is possible for different parent objects to process time
+differently.
+For example, an object in a simulation application might manage its timers
+using use some software-defined time, or an offline renderer might require
+that logic time be stopped during rendering (see
+.Xr AG_Time 3 ) .
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Time 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_SchedEvent 3 ,
+.Xr AG_Object 3 ,
+.Xr AG_GetTicks 3
+.Rs
+.%T "Hashed and Hierarchical Timing Wheels: Efficient Data Structures for Implementing a Timer Facility"
+.%A "George Varghese"
+.%A "Tony Lauck"
+.%D "February 14, 1996"
+.Re
+.Sh HISTORY
+The
+.Nm
+facility first appeared in Agar 1.0 as
+.Ft AG_Timeout ,
+and was modeled after the OpenBSD
+.Xr timeout 9
+API by Artur Grabowski and Thomas Nordin.
+In Agar 1.5.0, callback routines were allowed to accept multiple arguments,
+and support for
+.Xr kqueue 2
+was added.

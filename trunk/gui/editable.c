@@ -503,41 +503,33 @@ out:
 	return (1);
 }
 
+/* Timer callback for handling key repeat */
 static Uint32
-RepeatTimeout(void *obj, Uint32 ival, void *arg)
+KeyRepeatTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Editable *ed = obj;
-
-	if (ProcessKey(ed, ed->repeatKey, ed->repeatMod, ed->repeatUnicode)
-	    == 0) {
+	AG_Editable *ed = AG_SELF();
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
+	Uint32 unicode = AG_ULONG(3);
+	
+	if (ProcessKey(ed, keysym, keymod, unicode) == 0) {
 		return (0);
 	}
-	AG_Redraw(ed);
+	ed->flags |= AG_EDITABLE_BLINK_ON;
 	return (agKbdRepeat);
 }
 
+/* Timer callback for blinking cursor */
 static Uint32
-DelayTimeout(void *obj, Uint32 ival, void *arg)
+BlinkTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Editable *ed = obj;
-
-	AG_ScheduleTimeout(ed, &ed->toRepeat, agKbdRepeat);
-	AG_DelTimeout(ed, &ed->toCursorBlink);
-	ed->flags |= AG_EDITABLE_BLINK_ON;
-	AG_Redraw(ed);
-	return (0);
-}
-
-static Uint32
-BlinkTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Editable *ed = obj;
+	AG_Editable *ed = AG_SELF();
 
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0) {
 		AG_INVFLAGS(ed->flags, AG_EDITABLE_BLINK_ON);
+		AG_Redraw(ed);
 	}
-	AG_Redraw(ed);
-	return (ival);
+	return (to->ival);
 }
 
 static void
@@ -545,13 +537,11 @@ GainedFocus(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
 
-	AG_LockTimeouts(ed);
-	
-	AG_DelTimeout(ed, &ed->toDelay);
-	AG_DelTimeout(ed, &ed->toRepeat);
-	AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
+	AG_LockTimers(ed);
+	AG_DelTimer(ed, &ed->toRepeat);
+	AG_AddTimer(ed, &ed->toCursorBlink, agTextBlinkRate, BlinkTimeout, NULL);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
-	AG_UnlockTimeouts(ed);
+	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
 }
@@ -561,14 +551,13 @@ LostFocus(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
 
-	AG_LockTimeouts(ed);
-	AG_DelTimeout(ed, &ed->toDelay);
-	AG_DelTimeout(ed, &ed->toRepeat);
-	AG_DelTimeout(ed, &ed->toCursorBlink);
+	AG_LockTimers(ed);
+	AG_DelTimer(ed, &ed->toRepeat);
+	AG_DelTimer(ed, &ed->toCursorBlink);
+	AG_DelTimer(ed, &ed->toDblClick);
 	ed->flags &= ~(AG_EDITABLE_BLINK_ON|AG_EDITABLE_CURSOR_MOVING);
-	AG_UnlockTimeouts(ed);
-	AG_CancelEvent(ed, "dblclick-expire");
-	
+	AG_UnlockTimers(ed);
+
 	AG_Redraw(ed);
 }
 
@@ -969,7 +958,7 @@ Draw(void *obj)
 			ed->x = *ed->xScrollTo - WIDTH(ed) + 10;
 		}
 		ed->xScrollTo = NULL;
-		AG_Redraw(ed);
+		WIDGET(ed)->window->dirty = 1;		/* Redraw once */
 	}
 	if (ed->yScrollTo != NULL) {
 		if ((*ed->yScrollTo - ed->y) < 0) {
@@ -980,7 +969,7 @@ Draw(void *obj)
 			ed->y = *ed->yScrollTo - ed->yVis + 1;
 		}
 		ed->yScrollTo = NULL;
-		AG_Redraw(ed);
+		WIDGET(ed)->window->dirty = 1;		/* Redraw once */
 	}
 	if (ed->xScrollPx != 0) {
 		if (ed->xCurs < ed->x - ed->xScrollPx ||
@@ -988,7 +977,7 @@ Draw(void *obj)
 			ed->x += ed->xScrollPx;
 		}
 		ed->xScrollPx = 0;
-		AG_Redraw(ed);
+		WIDGET(ed)->window->dirty = 1;		/* Redraw once */
 	}
 
 	AG_PopTextState();
@@ -1089,19 +1078,14 @@ KeyDown(AG_Event *event)
 		break;
 	}
 
-	ed->repeatKey = keysym;
-	ed->repeatMod = keymod;
-	ed->repeatUnicode = unicode;
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 
-	AG_LockTimeouts(ed);
-	AG_DelTimeout(ed, &ed->toRepeat);
 	if (ProcessKey(ed, keysym, keymod, unicode) == 1) {
-		AG_ScheduleTimeout(ed, &ed->toDelay, agKbdDelay);
+		AG_AddTimer(ed, &ed->toRepeat, agKbdDelay,
+		    KeyRepeatTimeout, "%i,%i,%lu", keysym, keymod, unicode);
 	} else {
-		AG_DelTimeout(ed, &ed->toDelay);
+		AG_DelTimer(ed, &ed->toRepeat);
 	}
-	AG_UnlockTimeouts(ed);
 
 	AG_Redraw(ed);
 }
@@ -1112,13 +1096,8 @@ KeyUp(AG_Event *event)
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
 	
-	if (ed->repeatKey == keysym) {
-		AG_LockTimeouts(ed);
-		AG_DelTimeout(ed, &ed->toRepeat);
-		AG_DelTimeout(ed, &ed->toDelay);
-		AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
-		AG_UnlockTimeouts(ed);
-	}
+	AG_DelTimer(ed, &ed->toRepeat);
+
 	if ((keysym == AG_KEY_RETURN || keysym == AG_KEY_KP_ENTER) &&
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
 		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
@@ -1126,7 +1105,6 @@ KeyUp(AG_Event *event)
 		}
 		AG_PostEvent(NULL, ed, "editable-return", NULL);
 	}
-	
 	AG_Redraw(ed);
 }
 
@@ -1136,7 +1114,7 @@ MouseDoubleClick(AG_Editable *ed)
 	AG_EditableBuffer *buf;
 	Uint32 *c;
 
-	AG_CancelEvent(ed, "dblclick-expire");
+	AG_DelTimer(ed, &ed->toDblClick);
 	ed->selDblClick = -1;
 	ed->flags |= AG_EDITABLE_WORDSELECT;
 
@@ -1440,6 +1418,16 @@ PopupMenu(AG_Editable *ed)
 	return (pm);
 }
 
+/* Timer for detecting double clicks. */
+static Uint32
+DoubleClickTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+
+	ed->selDblClick = -1;
+	return (0);
+}
+
 static void
 MouseButtonDown(AG_Event *event)
 {
@@ -1472,8 +1460,8 @@ MouseButtonDown(AG_Event *event)
 			MouseDoubleClick(ed);
 		} else {
 			ed->selDblClick = ed->pos;
-			AG_SchedEvent(NULL, ed, agMouseDblclickDelay,
-			    "dblclick-expire", NULL);
+			AG_AddTimer(ed, &ed->toDblClick, agMouseDblclickDelay,
+			    DoubleClickTimeout, NULL);
 		}
 		break;
 	case AG_MOUSE_RIGHT:
@@ -1779,13 +1767,6 @@ AG_EditableDbl(AG_Editable *ed)
 }
 
 static void
-DoubleClickTimeout(AG_Event *event)
-{
-	AG_Editable *ed = AG_SELF();
-	ed->selDblClick = -1;
-}
-
-static void
 Bound(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
@@ -1832,9 +1813,6 @@ Init(void *obj)
 	ed->yMax = 1;
 	ed->yVis = 1;
 	ed->wheelTicks = 0;
-	ed->repeatKey = 0;
-	ed->repeatMod = AG_KEYMOD_NONE;
-	ed->repeatUnicode = 0;
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
 	ed->font = agDefaultFont;
@@ -1859,12 +1837,7 @@ Init(void *obj)
 	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
 	AG_AddEvent(ed, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(ed, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(ed, "bound", Bound, NULL);
-
-	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
-	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);
-	AG_SetTimeout(&ed->toCursorBlink, BlinkTimeout, NULL, 0);
 
 	AG_BindPointer(ed, "text", (void *)ed->text);
 

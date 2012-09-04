@@ -25,7 +25,7 @@ typedef struct rg_anim_view {
 		AG_Button *pause;
 		AG_Button *stop;
 	} btns;
-	AG_Timeout timer;			/* Processing timer */
+	AG_Timer timer;			/* Timer for playback */
 	AG_Menu *menu;			/* Popup menu */
 	AG_MenuItem *menu_item;
 	AG_Window *menu_win;

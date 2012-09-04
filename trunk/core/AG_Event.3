@@ -92,12 +92,6 @@ function, see
 .Ft "int"
 .Fn AG_SchedEvent "AG_Object *sndr" "AG_Object *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
 .Pp
-.Ft "int"
-.Fn AG_ReschedEvent "AG_Object *obj" "const char *event_name" "Uint32 ticks"
-.Pp
-.Ft "int"
-.Fn AG_CancelEvent "AG_Object *obj" "const char *event_name"
-.Pp
 .Ft "void"
 .Fn AG_ForwardEvent "AG_Object *sndr" "AG_Object *rcvr" "AG_Event *event"
 .Pp
@@ -144,12 +138,7 @@ with it.
 .Pp
 The
 .Fn AG_UnsetEvent
-function removes the named event handler from the list.
-Any future execution of this event handler as scheduled by
-.Fn AG_SchedEvent
-will be cancelled.
-If this event handler is currently being executed (in the case of a multi-threaded
-timing scheme), the function waits for its termination.
+function deletes the named event handler.
 .Pp
 The
 .Fn AG_PostEvent
@@ -181,26 +170,18 @@ registered event handler for the specified event.
 .Pp
 The
 .Fn AG_SchedEvent
-function is similar to
+function provides an interface similar to
 .Fn AG_PostEvent ,
 except that the event is scheduled to occur in the given number of ticks
-(the meaning of which is specific to the timing scheme).
-It is not possible to schedule the execution of the same event handler
-multiple times.
 .Fn AG_SchedEvent
-returns 0 on success or -1 if no matching event handler was found.
-.Pp
-The
-.Fn AG_ReschedEvent
-function reschedules a previously scheduled event of the given name to
-execute in the given number of ticks, using the same argument vector.
-.Fn AG_ReschedEvent
-returns 0 on success or -1 if there was no matching event handler.
-.Pp
-.Fn AG_CancelEvent
-cancels any future execution of a previously scheduled event.
-The function returns -1 if no matching event was found, 1 if a scheduled
-event was cancelled, or 0 if there was nothing to cancel.
+returns 0 on success or -1 if the timer could not be created.
+If the object is detached or destroyed, all events scheduled for execution
+are automatically cancelled.
+A more flexible interface for implementing timers is described in
+.Xr AG_Timer 3
+(which
+.Fn AG_SchedEvent
+uses internally).
 .Pp
 The
 .Fn AG_ForwardEvent
@@ -586,10 +567,6 @@ Unless
 .Dv AG_EVENT_ASYNC
 is used, it is safe to assume that the child object's handler is executed before
 the parent's.
-.It AG_EVENT_SCHEDULED
-Event was previously scheduled for execution by
-.Fn AG_SchedEvent
-(read-only).
 .El
 .Sh EXAMPLES
 The following code fragment demonstrates a typical
@@ -655,7 +632,7 @@ SayHello(&event);
 .Xr AG_Intro 3 ,
 .Xr AG_EventLoop 3 ,
 .Xr AG_Object 3 ,
-.Xr AG_Timeout 3 ,
+.Xr AG_Timer 3 ,
 .Xr AG_Variable 3
 .Sh HISTORY
 The

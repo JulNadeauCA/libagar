@@ -160,6 +160,43 @@ OnDetach(AG_Event *event)
 	}
 }
 
+/* Timer callback for AG_RedrawOnTick(). */
+static Uint32
+RedrawOnTickTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Widget *wid = event->argv[0].data.p;
+
+	if (wid->window != NULL) {
+		wid->window->dirty = 1;
+	}
+	return (to->ival);
+}
+
+/* Timer callback for AG_RedrawOnChange(). */
+static Uint32
+RedrawOnChangeTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	AG_RedrawTie *rt = AG_PTR(1);
+	AG_Variable *V, Vd;
+	void *p;
+
+	if ((V = AG_GetVariable(wid, rt->name, &p)) == NULL) {
+		return (to->ival);
+	}
+	AG_DerefVariable(&Vd, V);
+	if (!rt->VlastInited || AG_CompareVariables(&Vd, &rt->Vlast) != 0) {
+		if (wid->window != NULL) {
+			wid->window->dirty = 1;
+		}
+		AG_CopyVariable(&rt->Vlast, &Vd);
+		rt->VlastInited = 1;
+	}
+	AG_UnlockVariable(V);
+	return (to->ival);
+}
+
+
 static void
 Shown(AG_Event *event)
 {
@@ -168,8 +205,20 @@ Shown(AG_Event *event)
 
 	wid->flags &= ~(AG_WIDGET_HIDE);
 	
-	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies)
-		AG_ScheduleTimeout(wid, &rt->to, rt->ival);
+	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+		switch (rt->type) {
+		case AG_REDRAW_ON_TICK:
+			AG_AddTimer(wid, &rt->to, rt->ival,
+			    RedrawOnTickTimeout, NULL);
+			break;
+		case AG_REDRAW_ON_CHANGE:
+			AG_AddTimer(wid, &rt->to, rt->ival,
+			    RedrawOnChangeTimeout, "%p", rt);
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 static void
@@ -180,8 +229,16 @@ Hidden(AG_Event *event)
 
 	wid->flags |= AG_WIDGET_HIDE;
 	
-	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies)
-		AG_DelTimeout(wid, &rt->to);
+	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+		switch (rt->type) {
+		case AG_REDRAW_ON_TICK:
+		case AG_REDRAW_ON_CHANGE:
+			AG_DelTimer(wid, &rt->to);
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 #ifdef AG_LEGACY
@@ -242,33 +299,6 @@ Init(void *obj)
 	TAILQ_INIT(&wid->redrawTies);
 }
 
-/* Trigger a redraw if a given binding value has changed. */
-static Uint32
-PollRedrawOnChange(void *obj, Uint32 ival, void *arg)
-{
-	AG_Widget *wid = obj;
-	AG_RedrawTie *rt = arg;
-	AG_Variable *V;
-	void *p;
-	int rv;
-
-	if ((V = AG_GetVariable(wid, rt->name, &p)) == NULL) {
-		return (ival);
-	}
-	if (memcmp(&rt->dataLast, p, sizeof(union ag_variable_data)) != 0) {
-		memcpy(&rt->dataLast, p, sizeof(union ag_variable_data));
-		rv = 1;
-	} else {
-		rv = 0;
-	}
-	if (rv != 0) {
-		if (wid->window != NULL)
-			wid->window->dirty = 1;
-	}
-	AG_UnlockVariable(V);
-	return (ival);
-}
-
 /* Arrange for a redraw whenever a given binding value changes. */
 void
 AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
@@ -284,7 +314,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 		}
 		if (rt != NULL) {
 			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
-			AG_DelTimeout(wid, &rt->to);
+			AG_DelTimer(wid, &rt->to);
 			Free(rt);
 		}
 		return;
@@ -293,22 +323,9 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	rt = Malloc(sizeof(AG_RedrawTie));
 	rt->type = AG_REDRAW_ON_CHANGE;
 	rt->ival = refresh_ms;
+	rt->VlastInited = 0;
 	Strlcpy(rt->name, name, sizeof(rt->name));
-	memset(&rt->dataLast, 0, sizeof(union ag_variable_data));
-	AG_SetTimeout(&rt->to, PollRedrawOnChange, rt, 0);
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
-}
-
-/* Trigger a redraw periodically. */
-static Uint32
-PollRedrawOnTick(void *obj, Uint32 ival, void *arg)
-{
-	AG_Widget *wid = obj;
-
-	if (wid->window != NULL) {
-		wid->window->dirty = 1;
-	}
-	return (ival);
 }
 
 /* Arrange for an unconditional redraw at a periodic interval. */
@@ -325,7 +342,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 		}
 		if (rt != NULL) {
 			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
-			AG_DelTimeout(wid, &rt->to);
+			AG_DelTimer(wid, &rt->to);
 			Free(rt);
 		}
 		return;
@@ -335,7 +352,6 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	rt->type = AG_REDRAW_ON_TICK;
 	rt->ival = refresh_ms;
 	rt->name[0] = '\0';
-	AG_SetTimeout(&rt->to, PollRedrawOnTick, rt, 0);
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
 }
 
@@ -458,11 +474,12 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
 }
 
+/* Timer callback for AG_ACTION_ON_KEYREPEAT actions. */
 static Uint32
-ActionKeyRepeat(void *obj, Uint32 ival, void *arg)
+ActionKeyRepeatTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Widget *wid = obj;
-	AG_ActionTie *at = arg;
+	AG_Widget *wid = AG_SELF();
+	AG_ActionTie *at = AG_PTR(1);
 	AG_Action *a;
 
 	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
@@ -471,16 +488,6 @@ ActionKeyRepeat(void *obj, Uint32 ival, void *arg)
 	}
 	(void)AG_ExecAction(wid, a);
 	return (agKbdRepeat);
-}
-
-static Uint32
-ActionKeyDelay(void *obj, Uint32 ival, void *arg)
-{
-	AG_ActionTie *at = arg;
-
-	at->type = AG_ACTION_ON_KEYREPEAT;
-	AG_ScheduleTimeout(obj, &at->data.key.toRepeat, agKbdRepeat);
-	return (0);
 }
 
 /* Tie an action to a key-down event, with key repeat. */
@@ -495,8 +502,6 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	AG_SetTimeout(&at->data.key.toDelay, ActionKeyDelay, at, 0);
-	AG_SetTimeout(&at->data.key.toRepeat, ActionKeyRepeat, at, 0);
 	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL &&
@@ -709,11 +714,10 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 
 	if (at->type == AG_ACTION_ON_KEYREPEAT) {
 		if (et == AG_ACTION_ON_KEYDOWN) {
-			AG_ScheduleTimeout(wid, &at->data.key.toDelay,
-			    agKbdDelay);
+			AG_AddTimer(wid, &at->data.key.toRepeat, agKbdDelay,
+			    ActionKeyRepeatTimeout, "%p", at);
 		} else {
-			AG_DelTimeout(wid, &at->data.key.toDelay);
-			AG_DelTimeout(wid, &at->data.key.toRepeat);
+			AG_DelTimer(wid, &at->data.key.toRepeat);
 		}
 	}
 	return (rv);

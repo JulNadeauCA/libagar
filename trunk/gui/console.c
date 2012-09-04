@@ -383,7 +383,7 @@ Init(void *obj)
 	cons->scrollTo = NULL;
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_AUTOSIZE);
+	    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOSIZE);
 /*	cons->vBar->maxOffs = +1; */
 	AG_WidgetSetFocusable(cons->vBar, 0);
 

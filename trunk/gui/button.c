@@ -153,19 +153,22 @@ AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
 	return (bu);
 }
 
+/* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
 static Uint32
-ExpireRepeat(void *obj, Uint32 ival, void *arg)
+ExpireRepeat(AG_Timer *to, AG_Event *event)
 {
-	AG_PostEvent(NULL, obj, "button-pushed", "%i", 1);
-	return (agMouseSpinIval);
+	AG_Button *bu = AG_SELF();
+
+	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+	return (to->ival);
 }
-
 static Uint32
-ExpireDelay(void *obj, Uint32 ival, void *arg)
+ExpireDelay(AG_Timer *to, AG_Event *event)
 {
-	AG_Button *bu = obj;
+	AG_Button *bu = AG_SELF();
+	int repeatIval = AG_INT(1);
 
-	AG_ScheduleTimeout(bu, &bu->repeat_to, agMouseSpinIval);
+	AG_AddTimer(bu, &bu->repeatTo, repeatIval, ExpireRepeat, NULL);
 	return (0);
 }
 
@@ -180,8 +183,8 @@ MouseButtonUp(AG_Event *event)
 	int y = AG_INT(3);
 		
 	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_DelTimeout(bu, &bu->delay_to);
+		AG_DelTimer(bu, &bu->repeatTo);
+		AG_DelTimer(bu, &bu->delayTo);
 	}
 	
 	if (AG_WidgetDisabled(bu) ||
@@ -228,8 +231,9 @@ MouseButtonDown(AG_Event *event)
 	AG_UnlockVariable(binding);
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ScheduleTimeout(bu, &bu->delay_to, agMouseSpinDelay);
+		AG_DelTimer(bu, &bu->repeatTo);
+		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
+		    ExpireDelay, "%i", agMouseSpinIval);
 	}
 }
 
@@ -278,8 +282,8 @@ KeyUp(AG_Event *event)
 		return;
 	}
 	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->delay_to);
-		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_DelTimer(bu, &bu->delayTo);
+		AG_DelTimer(bu, &bu->repeatTo);
 	}
 	if (keysym != AG_KEY_RETURN &&		/* TODO AG_Action */
 	    keysym != AG_KEY_KP_ENTER &&
@@ -317,8 +321,9 @@ KeyDown(AG_Event *event)
 	bu->flags |= AG_BUTTON_KEYDOWN;
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ScheduleTimeout(bu, &bu->delay_to, 800);
+		AG_DelTimer(bu, &bu->repeatTo);
+		AG_AddTimer(bu, &bu->delayTo, agKbdDelay,
+		    ExpireDelay, "%i", agKbdRepeat);
 	}
 	AG_UnlockVariable(binding);
 }
@@ -344,9 +349,6 @@ Init(void *obj)
 	bu->rPad = 4;
 	bu->tPad = 3;
 	bu->bPad = 3;
-
-	AG_SetTimeout(&bu->repeat_to, ExpireRepeat, NULL, 0);
-	AG_SetTimeout(&bu->delay_to, ExpireDelay, NULL, 0);
 
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
@@ -623,8 +625,8 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 	if (repeat) {
 		bu->flags |= (AG_BUTTON_REPEAT);
 	} else {
-		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_DelTimeout(bu, &bu->delay_to);
+		AG_DelTimer(bu, &bu->repeatTo);
+		AG_DelTimer(bu, &bu->delayTo);
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
 	AG_ObjectUnlock(bu);

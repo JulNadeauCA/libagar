@@ -8,7 +8,6 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-/* For [SU]intN types */
 #include <core/types.h>
 
 #include <config/ag_debug.h>
@@ -79,7 +78,6 @@
 #include <core/load_string.h>
 #include <core/load_version.h>
 
-#include <core/text.h>
 #include <core/version.h>
 #include <core/object.h>
 #include <core/list.h>
@@ -89,7 +87,6 @@
 #include <core/file.h>
 #include <core/dir.h>
 #include <core/dso.h>
-#include <core/time.h>
 #include <core/db.h>
 #include <core/exec.h>
 #include <core/user.h>

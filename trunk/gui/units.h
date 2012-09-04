@@ -73,6 +73,22 @@ AG_Base2Unit(double n, const AG_Unit *unit)
 {
 	return (unit->func != NULL ? unit->func(n, 0) : n/unit->divider);
 }
+
+#ifdef AG_HAVE_LONG_DOUBLE
+static __inline__ long double
+AG_Unit2BaseLDBL(long double n, const AG_Unit *unit)
+{
+	return (unit->func != NULL ? unit->func(n, 1) :
+	                             n*(long double)unit->divider);
+}
+static __inline__ long double
+AG_Base2UnitLDBL(long double n, const AG_Unit *unit)
+{
+	return (unit->func != NULL ? unit->func(n, 0) :
+	                             n/(long double)unit->divider);
+}
+#endif /* AG_HAVE_LONG_DOUBLE */
+
 static __inline__ double
 AG_Unit2Unit(double n, const AG_Unit *ufrom, const AG_Unit *uto)
 {

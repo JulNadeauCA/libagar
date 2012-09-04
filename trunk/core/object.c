@@ -86,7 +86,7 @@ AG_ObjectInit(void *p, void *cl)
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
-	TAILQ_INIT(&ob->timeouts);
+	TAILQ_INIT(&ob->timers);
 	
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
@@ -354,40 +354,6 @@ used:
 	return (1);
 }
 
-#ifdef AG_LEGACY
-/* Move an object from one parent object to another. */
-void
-AG_ObjectMove(void *childp, void *newparentp)
-{
-	AG_Object *child = childp;
-	AG_Object *oparent = child->parent;
-	AG_Object *nparent = newparentp;
-
-#ifdef AG_DEBUG
-	if (oparent->root != nparent->root)
-		AG_FatalError("Cannot move objects across VFSes");
-#endif
-	AG_LockVFS(oparent);
-	AG_ObjectLock(oparent);
-	AG_ObjectLock(nparent);
-	AG_ObjectLock(child);
-	
-	TAILQ_REMOVE(&oparent->children, child, cobjs);
-	child->parent = NULL;
-	AG_PostEvent(oparent, child, "detached", NULL);
-
-	TAILQ_INSERT_TAIL(&nparent->children, child, cobjs);
-	child->parent = nparent;
-	AG_PostEvent(nparent, child, "attached", NULL);
-	AG_PostEvent(oparent, child, "moved", "%p", nparent);
-
-	AG_ObjectLock(child);
-	AG_ObjectLock(nparent);
-	AG_ObjectLock(oparent);
-	AG_UnlockVFS(oparent);
-}
-#endif /* AG_LEGACY */
-
 /* Configure a custom "attach" function. */
 void
 AG_ObjectSetAttachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ...)
@@ -518,6 +484,7 @@ AG_ObjectDetach(void *pChld)
 	AG_Object *root = chld->root;
 #endif
 	AG_Object *parent = chld->parent;
+	AG_Timer *to, *toNext;
 
 #ifdef AG_THREADS
 	AG_LockVFS(root);
@@ -531,8 +498,21 @@ AG_ObjectDetach(void *pChld)
 		goto out;
 	}
 
-	AG_ObjectCancelTimeouts(chld, AG_CANCEL_ONDETACH);
+	/*
+	 * Cancel any running timers. This behavior can be overridden with
+	 * the AG_TIMER_SURVIVE_DETACH flag.
+	 */
+	AG_LockTiming();
+	for (to = TAILQ_FIRST(&chld->timers);
+	     to != TAILQ_END(&chld->timers);
+	     to = toNext) {
+		toNext = TAILQ_NEXT(to, timers);
+		if ((to->flags & AG_TIMER_SURVIVE_DETACH) == 0)
+			AG_DelTimer(chld, to);
+	}
+	AG_UnlockTiming();
 
+	/* Detach the object. */
 	TAILQ_REMOVE(&parent->children, chld, cobjs);
 	chld->parent = NULL;
 	chld->root = chld;
@@ -550,21 +530,6 @@ out:
 #ifdef AG_THREADS
 	AG_UnlockVFS(root);
 #endif
-}
-
-/* Shorthand for detach and destroy. */
-void
-AG_ObjectDelete(void *p)
-{
-	AG_Object *obj = p;
-	AG_Object *root = obj->root;
-
-	if (root != NULL) { AG_ObjectLock(root); }
-	if (obj->parent != NULL) {
-		AG_ObjectDetach(obj);
-	}
-	AG_ObjectDestroy(obj);
-	if (root != NULL) { AG_ObjectUnlock(root); }
 }
 
 /* Traverse the object tree using a pathname. */
@@ -655,7 +620,7 @@ AG_ObjectFind(void *vfsRoot, const char *fmt, ...)
 
 /*
  * Traverse an object's ancestry looking for parent object of the given class.
- * THREADS: Result valid as long as Object's VFS remains locked.
+ * Return value is only valid as long as VFS is locked.
  */
 void *
 AG_ObjectFindParent(void *p, const char *name, const char *t)
@@ -724,6 +689,7 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 	AG_ObjectUnlock(ob);
 }
 
+/* Detach and free all children. None of them must be in use. */
 static void
 FreeChildObject(AG_Object *obj)
 {
@@ -741,11 +707,6 @@ FreeChildObject(AG_Object *obj)
 	AG_ObjectDetach(obj);
 	AG_ObjectDestroy(obj);
 }
-
-/*
- * Detach and free all child objects under the specified object. None of
- * the child objects must currently be in use.
- */
 void
 AG_ObjectFreeChildren(void *p)
 {
@@ -763,7 +724,7 @@ AG_ObjectFreeChildren(void *p)
 	AG_ObjectUnlock(pob);
 }
 
-/* Clear an object's variable list. */
+/* Destroy the object variables. */
 void
 AG_ObjectFreeVariables(void *pObj)
 {
@@ -778,60 +739,21 @@ AG_ObjectFreeVariables(void *pObj)
 	ob->nVars = 0;
 }
 
-/*
- * Destroy the event handlers registered by an object, cancelling
- * any scheduled execution.
- */
+/* Destroy the event handler structures. */
 void
 AG_ObjectFreeEvents(AG_Object *ob)
 {
-	AG_Event *eev, *neev;
+	AG_Event *ev, *evNext;
 
 	AG_ObjectLock(ob);
-	for (eev = TAILQ_FIRST(&ob->events);
-	     eev != TAILQ_END(&ob->events);
-	     eev = neev) {
-		neev = TAILQ_NEXT(eev, events);
-	
-		if (eev->flags & AG_EVENT_SCHEDULED) {
-			AG_CancelEvent(ob, eev->name);
-		}
-		Free(eev);
+	for (ev = TAILQ_FIRST(&ob->events);
+	     ev != TAILQ_END(&ob->events);
+	     ev = evNext) {
+		evNext = TAILQ_NEXT(ev, events);
+		free(ev);
 	}
 	TAILQ_INIT(&ob->events);
 	AG_ObjectUnlock(ob);
-}
-
-/* Cancel any scheduled timeout event associated with the object. */
-void
-AG_ObjectCancelTimeouts(void *p, Uint flags)
-{
-	AG_Object *ob = p, *tob;
-	extern struct ag_objectq agTimeoutObjQ;
-	AG_Event *ev;
-
-	AG_LockTiming();
-	AG_ObjectLock(ob);
-
-	TAILQ_FOREACH(ev, &ob->events, events) {
-		if ((ev->flags & AG_EVENT_SCHEDULED) &&
-		    (ev->timeout.flags & flags)) {
-#ifdef AG_OBJDEBUG
-			Debug(ob, "Cancelling scheduled event <%s>\n",
-			    ev->name);
-#endif
-			AG_DelTimeout(ob, &ev->timeout);
-			ev->flags &= ~(AG_EVENT_SCHEDULED);
-		}
-	}
-	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
-		if (tob == ob)
-			TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
-	}
-	TAILQ_INIT(&ob->timeouts);
-
-	AG_ObjectUnlock(ob);
-	AG_UnlockTiming();
 }
 
 /*
@@ -843,6 +765,7 @@ AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
 	AG_ObjectClass **hier;
+	AG_Timer *to, *toNext;
 	int i, nHier;
 
 #ifdef AG_OBJDEBUG
@@ -852,7 +775,16 @@ AG_ObjectDestroy(void *p)
 	}
 	Debug(ob, "Destroying\n");
 #endif
-	AG_ObjectCancelTimeouts(ob, 0);
+	/* Cancel any running timers. */
+	AG_LockTiming();
+	for (to = TAILQ_FIRST(&ob->timers);
+	     to != TAILQ_END(&ob->timers);
+	     to = toNext) {
+		toNext = TAILQ_NEXT(to, timers);
+		AG_DelTimer(ob, to);
+	}
+	AG_UnlockTiming();
+
 	AG_ObjectFreeChildren(ob);
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
@@ -1376,7 +1308,6 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
-	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	if (pPath != NULL) {
 		Strlcpy(path, pPath, sizeof(path));
@@ -1492,7 +1423,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if (!OBJECT_PERSISTENT(ob)) {
 		goto out;
 	}
-	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 	*dataFound = 1;
 
 	/* Open the file. */
@@ -1708,7 +1638,6 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 	int i, nHier;
 	
 	AG_ObjectLock(ob);
-	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	/* Object header */
 	if (AG_ObjectReadHeader(ds, &oh) == -1) {

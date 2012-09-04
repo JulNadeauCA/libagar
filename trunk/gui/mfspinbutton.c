@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 	fsu = Malloc(sizeof(AG_MFSpinbutton));
 	AG_ObjectInit(fsu, &agMFSpinbuttonClass);
 	fsu->sep = sep;
-	
+	fsu->flags |= flags;
 	if (!(flags & AG_MFSPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(fsu); }
 	if (  flags & AG_MFSPINBUTTON_VFILL)	{ AG_ExpandVert(fsu); }
 
@@ -62,7 +62,7 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 }
 
 static void
-Bound(AG_Event *event)
+OnBound(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_SELF();
 	AG_Variable *binding = AG_PTR(1);
@@ -82,7 +82,127 @@ Bound(AG_Event *event)
 			break;
 		}
 	}
-	AG_Redraw(fsu);
+}
+
+static Uint32
+UpdateTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_MFSpinbutton *fsu = AG_SELF();
+	
+	if (!AG_WidgetIsFocused(fsu)) {
+		AG_MFSpinbuttonUpdate(fsu);
+	}
+	return (to->ival);
+}
+
+static void
+OnShow(AG_Event *event)
+{
+	AG_MFSpinbutton *fsu = AG_SELF();
+
+	if ((fsu->flags & AG_MFSPINBUTTON_EXCL) == 0) {
+		AG_AddTimer(fsu, &fsu->updateTo, 250, UpdateTimeout, NULL);
+	}
+	if (!AG_Defined(fsu, "xvalue")) { AG_BindDouble(fsu, "xvalue", &fsu->xvalue); }
+	if (!AG_Defined(fsu, "yvalue")) { AG_BindDouble(fsu, "yvalue", &fsu->yvalue); }
+	if (!AG_Defined(fsu, "min")) { AG_BindDouble(fsu, "min", &fsu->min); }
+	if (!AG_Defined(fsu, "max")) { AG_BindDouble(fsu, "max", &fsu->max); }
+	AG_MFSpinbuttonUpdate(fsu);
+}
+
+/* Update the input text from the binding values. */
+void
+AG_MFSpinbuttonUpdate(AG_MFSpinbutton *fsu)
+{
+	char sx[64], sy[64], s[128];
+	AG_Variable *valueb;
+	void *value;
+
+	/* Get X value */
+	valueb = AG_GetVariable(fsu, "xvalue", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
+		Snprintf(sx, sizeof(sx), fsu->format,
+		    AG_Base2Unit(*(double *)value, fsu->unit));
+		break;
+	case AG_VARIABLE_FLOAT:
+		Snprintf(sx, sizeof(sx), fsu->format,
+		    AG_Base2Unit(*(float *)value, fsu->unit));
+		break;
+	case AG_VARIABLE_INT:
+		StrlcpyInt(sx, *(int *)value, sizeof(sx));
+		break;
+	case AG_VARIABLE_UINT:
+		StrlcpyUint(sx, *(Uint *)value, sizeof(sx));
+		break;
+	case AG_VARIABLE_UINT8:
+		StrlcpyUint(sx, (unsigned)(*(Uint8 *)value), sizeof(sx));
+		break;
+	case AG_VARIABLE_SINT8:
+		StrlcpyInt(sx, (int)(*(Sint8 *)value), sizeof(sx));
+		break;
+	case AG_VARIABLE_UINT16:
+		StrlcpyUint(sx, (unsigned)(*(Uint16 *)value), sizeof(sx));
+		break;
+	case AG_VARIABLE_SINT16:
+		StrlcpyInt(sx, (int)(*(Sint16 *)value), sizeof(sx));
+		break;
+	case AG_VARIABLE_UINT32:
+		StrlcpyUint(sx, (unsigned)(*(Uint32 *)value), sizeof(sx));
+		break;
+	case AG_VARIABLE_SINT32:
+		StrlcpyInt(sx, (int)(*(Sint32 *)value), sizeof(sx));
+		break;
+	default:
+		break;
+	}
+	AG_UnlockVariable(valueb);
+	
+	/* Get Y value */
+	valueb = AG_GetVariable(fsu, "yvalue", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
+		Snprintf(sy, sizeof(sy), fsu->format,
+		    AG_Base2Unit(*(double *)value, fsu->unit));
+		break;
+	case AG_VARIABLE_FLOAT:
+		Snprintf(sy, sizeof(sy), fsu->format,
+		    AG_Base2Unit(*(float *)value, fsu->unit));
+		break;
+	case AG_VARIABLE_INT:
+		StrlcpyInt(sy, *(int *)value, sizeof(sy));
+		break;
+	case AG_VARIABLE_UINT:
+		StrlcpyUint(sy, *(Uint *)value, sizeof(sy));
+		break;
+	case AG_VARIABLE_UINT8:
+		StrlcpyUint(sy, (unsigned)(*(Uint8 *)value), sizeof(sy));
+		break;
+	case AG_VARIABLE_SINT8:
+		StrlcpyInt(sy, (int)(*(Sint8 *)value), sizeof(sy));
+		break;
+	case AG_VARIABLE_UINT16:
+		StrlcpyUint(sy, (unsigned)(*(Uint16 *)value), sizeof(sy));
+		break;
+	case AG_VARIABLE_SINT16:
+		StrlcpyInt(sy, (int)(*(Sint16 *)value), sizeof(sy));
+		break;
+	case AG_VARIABLE_UINT32:
+		StrlcpyUint(sy, (unsigned)(*(Uint32 *)value), sizeof(sy));
+		break;
+	case AG_VARIABLE_SINT32:
+		StrlcpyInt(sy, (int)(*(Sint32 *)value), sizeof(sy));
+		break;
+	default:
+		break;
+	}
+	Strlcpy(s, sx, sizeof(s));
+	Strlcat(s, fsu->sep, sizeof(s));
+	Strlcat(s, sy, sizeof(s));
+	if (strcmp(s, fsu->inTxt) != 0) {
+		AG_TextboxSetString(fsu->input, s);
+	}
+	AG_UnlockVariable(valueb);
 }
 
 static void
@@ -112,7 +232,7 @@ TextChanged(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	char inTxt[64];
+	char inTxt[128];
 	char *tp = &inTxt[0], *s;
 
 	AG_ObjectLock(fsu);
@@ -132,8 +252,8 @@ TextChanged(AG_Event *event)
 	if (unfocus)
 		AG_WidgetUnfocus(fsu->input);
 	
+	AG_MFSpinbuttonUpdate(fsu);
 	AG_ObjectUnlock(fsu);
-	AG_Redraw(fsu);
 }
 
 static void
@@ -181,6 +301,7 @@ static void
 UpdateUnitSelector(AG_MFSpinbutton *fsu)
 {
 	AG_ButtonTextS(fsu->units->button, AG_UnitAbbr(fsu->unit));
+	AG_MFSpinbuttonUpdate(fsu);
 }
 
 static void
@@ -244,14 +365,6 @@ Init(void *obj)
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
-	AG_BindDouble(fsu, "yvalue", &fsu->yvalue);
-	AG_BindDouble(fsu, "min", &fsu->min);
-	AG_BindDouble(fsu, "max", &fsu->max);
-	
-	AG_RedrawOnChange(fsu, 250, "xvalue");
-	AG_RedrawOnChange(fsu, 250, "yvalue");
-
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
@@ -260,7 +373,7 @@ Init(void *obj)
 	fsu->inTxt[0] = '\0';
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
 
-	fsu->input = AG_TextboxNewS(fsu, 0, NULL);
+	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(fsu->input, fsu->inTxt, sizeof(fsu->inTxt));
 	AG_TextboxSizeHint(fsu->input, "888.88");
 
@@ -281,7 +394,8 @@ Init(void *obj)
 		AG_WidgetSetFocusable(b[i], 0);
 	}
 
-	AG_SetEvent(fsu, "bound", Bound, NULL);
+	AG_SetEvent(fsu, "bound", OnBound, NULL);
+	AG_SetEvent(fsu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
 	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);
@@ -357,96 +471,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return (0);
 }
 
-/* Update the textbox contents from the binding value. */
-static void
-UpdateTextbox(AG_MFSpinbutton *num)
-{
-	char sx[64], sy[64];
-	AG_Variable *valueb;
-	void *value;
-
-	/* Get X value */
-	valueb = AG_GetVariable(num, "xvalue", &value);
-	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:
-		Snprintf(sx, sizeof(sx), num->format,
-		    AG_Base2Unit(*(double *)value, num->unit));
-		break;
-	case AG_VARIABLE_FLOAT:
-		Snprintf(sx, sizeof(sx), num->format,
-		    AG_Base2Unit(*(float *)value, num->unit));
-		break;
-	case AG_VARIABLE_INT:
-		StrlcpyInt(sx, *(int *)value, sizeof(sx));
-		break;
-	case AG_VARIABLE_UINT:
-		StrlcpyUint(sx, *(Uint *)value, sizeof(sx));
-		break;
-	case AG_VARIABLE_UINT8:
-		StrlcpyUint(sx, (unsigned)(*(Uint8 *)value), sizeof(sx));
-		break;
-	case AG_VARIABLE_SINT8:
-		StrlcpyInt(sx, (int)(*(Sint8 *)value), sizeof(sx));
-		break;
-	case AG_VARIABLE_UINT16:
-		StrlcpyUint(sx, (unsigned)(*(Uint16 *)value), sizeof(sx));
-		break;
-	case AG_VARIABLE_SINT16:
-		StrlcpyInt(sx, (int)(*(Sint16 *)value), sizeof(sx));
-		break;
-	case AG_VARIABLE_UINT32:
-		StrlcpyUint(sx, (unsigned)(*(Uint32 *)value), sizeof(sx));
-		break;
-	case AG_VARIABLE_SINT32:
-		StrlcpyInt(sx, (int)(*(Sint32 *)value), sizeof(sx));
-		break;
-	default:
-		break;
-	}
-	AG_UnlockVariable(valueb);
-	
-	/* Get Y value */
-	valueb = AG_GetVariable(num, "yvalue", &value);
-	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:
-		Snprintf(sy, sizeof(sy), num->format,
-		    AG_Base2Unit(*(double *)value, num->unit));
-		break;
-	case AG_VARIABLE_FLOAT:
-		Snprintf(sy, sizeof(sy), num->format,
-		    AG_Base2Unit(*(float *)value, num->unit));
-		break;
-	case AG_VARIABLE_INT:
-		StrlcpyInt(sy, *(int *)value, sizeof(sy));
-		break;
-	case AG_VARIABLE_UINT:
-		StrlcpyUint(sy, *(Uint *)value, sizeof(sy));
-		break;
-	case AG_VARIABLE_UINT8:
-		StrlcpyUint(sy, (unsigned)(*(Uint8 *)value), sizeof(sy));
-		break;
-	case AG_VARIABLE_SINT8:
-		StrlcpyInt(sy, (int)(*(Sint8 *)value), sizeof(sy));
-		break;
-	case AG_VARIABLE_UINT16:
-		StrlcpyUint(sy, (unsigned)(*(Uint16 *)value), sizeof(sy));
-		break;
-	case AG_VARIABLE_SINT16:
-		StrlcpyInt(sy, (int)(*(Sint16 *)value), sizeof(sy));
-		break;
-	case AG_VARIABLE_UINT32:
-		StrlcpyUint(sy, (unsigned)(*(Uint32 *)value), sizeof(sy));
-		break;
-	case AG_VARIABLE_SINT32:
-		StrlcpyInt(sy, (int)(*(Sint32 *)value), sizeof(sy));
-		break;
-	default:
-		break;
-	}
-	AG_TextboxPrintf(num->input, "%s%s%s", sx, num->sep, sy);
-	AG_UnlockVariable(valueb);
-}
-
 static void
 Draw(void *obj)
 {
@@ -460,9 +484,6 @@ Draw(void *obj)
 	AG_WidgetDraw(fsu->yincbu);
 	AG_WidgetDraw(fsu->xdecbu);
 	AG_WidgetDraw(fsu->ydecbu);
-
-	if (!AG_WidgetIsFocused(fsu->input))
-		UpdateTextbox(fsu);
 
 	xvalueb = AG_GetVariable(fsu, "xvalue", &xvalue);
 	yvalueb = AG_GetVariable(fsu, "yvalue", &yvalue);
@@ -509,8 +530,8 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
 	
+	AG_MFSpinbuttonUpdate(fsu);
 	AG_ObjectUnlock(fsu);
-	AG_Redraw(fsu);
 }
 
 void
@@ -547,8 +568,8 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
 	
+	AG_MFSpinbuttonUpdate(fsu);
 	AG_ObjectUnlock(fsu);
-	AG_Redraw(fsu);
 }
 
 void
@@ -609,8 +630,8 @@ AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *fsu, const char *mode,
 {
 	AG_ObjectLock(fsu);
 	Snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s", precision, mode);
+	AG_MFSpinbuttonUpdate(fsu);
 	AG_ObjectUnlock(fsu);
-	AG_Redraw(fsu);
 }
 
 void
@@ -633,7 +654,6 @@ AG_MFSpinbuttonSelectUnit(AG_MFSpinbutton *fsu, const char *uname)
 	}
 	AG_ObjectUnlock(fsu->units->list);
 	AG_ObjectUnlock(fsu);
-	AG_Redraw(fsu);
 }
 
 void

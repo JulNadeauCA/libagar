@@ -213,11 +213,11 @@ and
 events.
 Prior to detaching the object,
 .Fn AG_ObjectDetach
-cancels scheduled
-.Xr AG_Timeout 3
-events where the
-.Dv AG_CANCEL_ONDETACH
-flag is set.
+cancels any scheduled
+.Xr AG_Timer 3
+callback (unless the timer has the
+.Dv AG_TIMER_SURVIVE_DETACH
+flag).
 If
 .Fa parent
 is NULL,
@@ -1122,11 +1122,6 @@ except that the event is sent from the child to the parent.
 Same as
 .Fn detached ,
 except that the event is sent from the child to the parent.
-.It Fn moved "AG_Object *new_parent"
-The object has been moved from its current parent to
-.Fa new_parent .
-The linkage lock is held during the execution of the event handler.
-This event originates from the previous parent.
 .It Fn renamed "void"
 The object's name has changed.
 .It Fn object-post-load-data "const char *path"

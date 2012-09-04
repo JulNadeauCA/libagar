@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,20 @@
 #include "primitive.h"
 #include "icons.h"
 
+static Uint32
+SubmenuTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_MenuView *mview = AG_SELF();
+	AG_MenuItem *item = AG_PTR(1);
+
+#ifdef AG_DEBUG
+	if (item != mview->pitem->sel_subitem)
+		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
+#endif
+	AG_MenuExpand(mview, item, WIDTH(mview), item->y);
+	return (0);
+}
+
 /*
  * Sub-item selection has moved over the specified subitem. If the subitem is
  * a submenu, the submenu timer is initiated.
@@ -47,29 +61,15 @@ SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 	if (subitem != NULL) {
 		AG_MenuView *mview = mi->view;
 
-		AG_LockTimeouts(m);
-		AG_DelTimeout(mview, &mview->submenu_to);
-		if (subitem != NULL &&
-		    subitem->nsubitems > 0) {
-			AG_ScheduleTimeout(mview, &mview->submenu_to, 200);
-			mview->submenu_to.arg = subitem;
+		AG_LockTimers(mview);
+		if (subitem != NULL && subitem->nsubitems > 0) {
+			AG_AddTimer(mview, &mview->submenuTo, 200,
+			    SubmenuTimeout, "%p", subitem);
+		} else {
+			AG_DelTimer(mview, &mview->submenuTo);
 		}
-		AG_UnlockTimeouts(m);
+		AG_UnlockTimers(mview);
 	}
-}
-
-static Uint32
-SubmenuTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_MenuView *mview = obj;
-	AG_MenuItem *item = arg;
-
-#ifdef AG_DEBUG
-	if (item != mview->pitem->sel_subitem)
-		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
-#endif
-	AG_MenuExpand(mview, item, WIDTH(mview), item->y);
-	return (0);
 }
 
 static void
@@ -268,7 +268,6 @@ Init(void *obj)
 	AG_AddEvent(mview, "widget-shown", Shown, NULL);
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
-	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 }
 
 static void

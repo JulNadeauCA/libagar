@@ -114,9 +114,6 @@ Init(void *obj)
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_AddEvent(glv, "attached", OnAttach, NULL);
-
-	/* XXX TODO should make this configurable through AG_GLView. */
-	AG_RedrawOnTick(glv, 1);
 }
 
 void

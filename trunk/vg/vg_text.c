@@ -93,35 +93,6 @@ Save(void *p, AG_DataSource *ds)
 	AG_WriteString(ds, vt->text);
 }
 
-/* Specify text with polled values. */
-void
-VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
-{
-	va_list ap;
-	
-	VG_Lock(VGNODE(vt)->vg);
-
-	if (vt->args != NULL) {
-		AG_ListDestroy(vt->args);
-		vt->args = NULL;
-		Free(vt->argSizes);
-		vt->argSizes = NULL;
-	}
-	if (fmt != NULL) {
-		Strlcpy(vt->text, fmt, sizeof(vt->text));
-	} else {
-		vt->text[0] = '\0';
-		goto out;
-	}
-
-	va_start(ap, fmt);
-	vt->args = AG_ListNew();
-	AG_PARSE_VARIABLE_ARGS(ap, fmt, vt->args, vt->argSizes);
-	va_end(ap);
-out:
-	VG_Unlock(VGNODE(vt)->vg);
-}
-
 /* Specify static text (C string). */
 void
 VG_TextString(VG_Text *vt, const char *s)

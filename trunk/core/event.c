@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,70 +32,47 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include <config/have_kqueue.h>
 #include <config/ag_objdebug.h>
 
-static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
+#ifdef HAVE_KQUEUE
+# include <sys/types.h>
+# include <sys/event.h>
+# include <unistd.h>
+# include <errno.h>
+#endif
 
-/* Execute a scheduled event invocation. */
-static Uint32
-SchedEventTimeout(void *p, Uint32 ival, void *arg)
+int agKqueue = -1;			/* For kqueue(2) based event loop */
+
+/* Generate a unique event handler name. */
+static void
+GenEventName(AG_Event *ev, AG_Object *ob, const char *name)
 {
-	AG_Object *ob = p;
-	AG_Event *ev = arg;
+	AG_Event *evOther;
+	int i = ob->nevents;
 
-#ifdef AG_OBJDEBUG
-	if (agDebugLvl >= 5)
-		Debug(ob, "Event <%s> timeout (%u ticks)\n", ev->name,
-		    (Uint)ival);
-#endif
-	ev->flags &= ~(AG_EVENT_SCHEDULED);
+	for (;;) {
+		ev->name[0] = '_';
+		StrlcpyUint(&ev->name[1], i++, sizeof(ev->name));
 
-	/* Propagate event to children. */
-	if (ev->flags & AG_EVENT_PROPAGATE) {
-		AG_Object *child;
-#ifdef AG_OBJDEBUG
-		if (agDebugLvl >= 5)
-			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
-#endif
-		AG_LockVFS(ob);
-		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
-			PropagateEvent(ob, child, ev);
+		TAILQ_FOREACH(evOther, &ob->events, events) {
+			if (strcmp(evOther->name, ev->name) == 0)
+				break;
 		}
-		AG_UnlockVFS(ob);
+		if (evOther == NULL)
+			break;
 	}
-
-	/* Invoke the event handler routine. */
-	if (ev->handler != NULL) {
-		ev->handler(ev);
-	}
-	return (0);
 }
 
+/* Initialize a pointer argument. */
 static __inline__ void
-SetEventName(AG_Event *ev, AG_Object *ob, const char *name)
+InitPointerArg(AG_Variable *V, void *p)
 {
-	if (name == NULL) {
-		if (ob != NULL) {
-			ev->name[0] = '_';
-			ev->name[1] = '_';
-			ev->name[2] = '\0';
-			StrlcpyUint(ev->name, ob->nevents, sizeof(ev->name));
-		} else {
-			Strlcpy(ev->name, "noname", sizeof(ev->name));
-		}
-	} else {
-		Strlcpy(ev->name, name, sizeof(ev->name));
-	}
-}
-	
-static __inline__ void
-InitPointer(AG_Variable *V, const char *name, AG_Object *ob)
-{
+	V->name[0] = '\0';
 	V->type = AG_VARIABLE_POINTER;
 	V->fn.fnVoid = NULL;
 	V->mutex = NULL;
-	V->data.p = ob;
-	Strlcpy(V->name, name, sizeof(V->name));
+	V->data.p = p;
 }
 
 static __inline__ void
@@ -105,26 +82,26 @@ InitEvent(AG_Event *ev, AG_Object *ob)
 	ev->argc = 1;
 	ev->argc0 = 1;
 	ev->handler = NULL;
-
-	InitPointer(&ev->argv[0], "_self", ob);
-	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
+	InitPointerArg(&ev->argv[0], ob);
 }
 
+/* Initialize an AG_Event structure. */
 void
 AG_EventInit(AG_Event *ev)
 {
 	InitEvent(ev, NULL);
 }
 
-/* Construct an Event structure from the given arguments only. */
+/* Initialize an AG_Event structure with the specified arguments. */
 void
 AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 {
 	InitEvent(ev, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
 }
 
-/* Set or update the handler function for the given event. */
+/* Set (or change) the event handler function for the named event. */
 AG_Event *
 AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
@@ -143,13 +120,17 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	if (ev == NULL) {
 		ev = Malloc(sizeof(AG_Event));
 		InitEvent(ev, ob);
-		SetEventName(ev, ob, name);
+		if (name != NULL) {
+			Strlcpy(ev->name, name, sizeof(ev->name));
+		} else {
+			GenEventName(ev, ob, name);
+		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 		ob->nevents++;
 	} else {
 		InitEvent(ev, ob);
 	}
-	InitPointer(&ev->argv[0], "_self", ob);
+	InitPointerArg(&ev->argv[0], ob);
 	ev->handler = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
@@ -158,7 +139,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	return (ev);
 }
 
-/* Configure an additional handler function for the specified event. */
+/* Append an event handler function for the named event. */
 AG_Event *
 AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
@@ -169,7 +150,11 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 
 	ev = Malloc(sizeof(AG_Event));
 	InitEvent(ev, ob);
-	SetEventName(ev, ob, name);
+	if (name != NULL) {
+		Strlcpy(ev->name, name, sizeof(ev->name));
+	} else {
+		GenEventName(ev, ob, name);
+	}
 
 	ev->handler = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
@@ -182,7 +167,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	return (ev);
 }
 
-/* Remove the named event handler and cancel any scheduled execution. */
+/* Remove the named event handler. */
 void
 AG_UnsetEvent(void *p, const char *name)
 {
@@ -196,10 +181,6 @@ AG_UnsetEvent(void *p, const char *name)
 	}
 	if (ev == NULL) {
 		goto out;
-	}
-	if (ev->flags & AG_EVENT_SCHEDULED) {
-		/* XXX concurrent */
-		AG_DelTimeout(ob, &ev->timeout);
 	}
 	TAILQ_REMOVE(&ob->events, ev, events);
 	ob->nevents--;
@@ -235,6 +216,51 @@ PropagateEvent(AG_Object *sndr, AG_Object *rcvr, AG_Event *ev)
 	}
 	AG_ForwardEvent(sndr, rcvr, ev);
 }
+
+/* Timeout callback for scheduled events. */
+static Uint32
+EventTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Object *ob = AG_SELF();
+	AG_Object *obSender = AG_PTR(1);
+	char *eventName = AG_STRING(2);
+	AG_Event *ev;
+
+#ifdef AG_OBJDEBUG
+	if (agDebugLvl >= 5)
+		Debug(ob, "Event <%s> timeout (%u ticks)\n", eventName,
+		    (Uint)to->ival);
+#endif
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(eventName, ev->name) == 0)
+			break;
+	}
+	if (ev == NULL) {
+		return (0);
+	}
+	InitPointerArg(&ev->argv[ev->argc], obSender);
+
+	/* Propagate event to children. */
+	if (ev->flags & AG_EVENT_PROPAGATE) {
+		AG_Object *child;
+#ifdef AG_OBJDEBUG
+		if (agDebugLvl >= 5)
+			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
+#endif
+		AG_LockVFS(ob);
+		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
+			PropagateEvent(ob, child, ev);
+		}
+		AG_UnlockVFS(ob);
+	}
+
+	/* Invoke the event handler routine. */
+	if (ev->handler != NULL) {
+		ev->handler(ev);
+	}
+	return (0);
+}
+
 
 #ifdef AG_THREADS
 /* Invoke an event handler routine asynchronously. */
@@ -297,14 +323,17 @@ AG_QueueEvent(AG_EventQ *eq, const char *evname, const char *fmt, ...)
 	ev = &eq->events[eq->nEvents++];
 	InitEvent(ev, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
 }
 
 /*
- * Execute the event handler routine for the given event. The given arguments
- * are appended to the end of the argument vector.
+ * Raise the specified event. Configured event handler routines may be
+ * called immediately, but they may also get called from a separate
+ * thread, or queued for later execution.
  *
- * Event handler invocations may be nested. However, the event handler table
- * of the object should not be modified while in event context (XXX)
+ * The argument vector passed to the event handler function contains
+ * the AG_SetEvent() arguments, and any arguments specified here are
+ * appended to that list.
  */
 void
 AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
@@ -332,7 +361,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			evNew = Malloc(sizeof(AG_Event));
 			memcpy(evNew, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evNew, fmt);
-			InitPointer(&evNew->argv[evNew->argc], "_sender", sndr);
+			InitPointerArg(&evNew->argv[evNew->argc], sndr);
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* AG_THREADS */
@@ -341,7 +370,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
-			InitPointer(&tmpev.argv[tmpev.argc], "_sender", sndr);
+			InitPointerArg(&tmpev.argv[tmpev.argc], sndr);
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_OBJDEBUG
 				if (agDebugLvl >= 5)
@@ -362,118 +391,46 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 }
 
 /*
- * Schedule the execution of the given event in the given number of
- * ticks. The given arguments are appended to the argument vector.
+ * Schedule the execution of the named event in the given number
+ * of AG_Time(3) ticks.
+ *
+ * The argument vector passed to the event handler function contains
+ * the AG_SetEvent() arguments, and any arguments specified here are
+ * appended to that list.
  */
 int
-AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
+AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
     const char *fmt, ...)
 {
-	AG_Object *sndr = sp;
-	AG_Object *rcvr = rp;
+	AG_Object *sndr = pSndr;
+	AG_Object *rcvr = pRcvr;
 	AG_Event *ev;
+	AG_Timer *to;
 
-#ifdef AG_OBJDEBUG
-	if (agDebugLvl >= 5)
-		Debug(rcvr, "Schedule <%s> in %u ticks\n", evname, (Uint)ticks);
-#endif
+	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL)
+		return (-1);
+
 	AG_LockTiming();
 	AG_ObjectLock(rcvr);
-	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(evname, ev->name) == 0)
-			break;
-	}
-	if (ev == NULL) {
+	
+	if (AG_AddTimer(rcvr, to, ticks,
+	    EventTimeout, "%p,%s", sndr, evname) == -1) {
+		free(to);
 		goto fail;
 	}
-	if (ev->flags & AG_EVENT_SCHEDULED) {
-#ifdef AG_OBJDEBUG
-		if (agDebugLvl >= 5)
-			Debug(rcvr, "Reschedule <%s>\n", evname);
-#endif
-		AG_DelTimeout(rcvr, &ev->timeout);
-	}
-	ev->argc = ev->argc0;
+	to->flags |= AG_TIMER_AUTO_FREE;
+	ev = &to->fnEvent;
+	AG_EventInit(ev);
+	ev->argv[0].data.p = rcvr;
 	AG_EVENT_GET_ARGS(ev, fmt);
-	InitPointer(&ev->argv[ev->argc], "_sender", sndr);
-	ev->flags |= AG_EVENT_SCHEDULED;
-	AG_ScheduleTimeout(rcvr, &ev->timeout, ticks);
+	ev->argc0 = ev->argc;
+
 	AG_UnlockTiming();
 	AG_ObjectUnlock(rcvr);
 	return (0);
 fail:
 	AG_UnlockTiming();
 	AG_ObjectUnlock(rcvr);
-	return (-1);
-}
-
-int
-AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
-{
-	AG_Object *ob = p;
-	AG_Event *ev;
-
-#ifdef AG_OBJDEBUG
-	if (agDebugLvl >= 5)
-		Debug(ob, "Reschedule <%s> in %u ticks\n", evname, (Uint)ticks);
-#endif
-	AG_LockTiming();
-	AG_ObjectLock(ob);
-	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(evname, ev->name) == 0)
-			break;
-	}
-	if (ev == NULL) {
-		goto fail;
-	}
-	if (ev->flags & AG_EVENT_SCHEDULED) {
-		AG_DelTimeout(ob, &ev->timeout);
-	}
-	ev->flags |= AG_EVENT_SCHEDULED;
-	AG_ScheduleTimeout(ob, &ev->timeout, ticks);
-
-	AG_ObjectUnlock(ob);
-	AG_UnlockTiming();
-	return (0);
-fail:
-	AG_ObjectUnlock(ob);
-	AG_UnlockTiming();
-	return (-1);
-}
-
-/* Cancel any future execution of the given event. */
-int
-AG_CancelEvent(void *p, const char *evname)
-{
-	AG_Object *ob = p;
-	AG_Event *ev;
-	int rv = 0;
-
-	AG_LockTiming();
-	AG_ObjectLock(ob);
-	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(ev->name, evname) == 0)
-			break;
-	}
-	if (ev == NULL) {
-		goto fail;
-	}
-	if (ev->flags & AG_EVENT_SCHEDULED) {
-#ifdef AG_OBJDEBUG
-		if (agDebugLvl >= 5)
-			Debug(ob, "Cancelled timeout <%s> (cancel)\n", evname);
-#endif
-		AG_DelTimeout(ob, &ev->timeout);
-		rv++;
-		ev->flags &= ~(AG_EVENT_SCHEDULED);
-	}
-	/* XXX concurrent */
-	AG_ObjectUnlock(ob);
-	AG_UnlockTiming();
-	return (rv);
-fail:
-	AG_ObjectUnlock(ob);
-	AG_UnlockTiming();
 	return (-1);
 }
 
@@ -506,8 +463,8 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 			/* TODO allocate from an per-object pool */
 			evNew = Malloc(sizeof(AG_Event));
 			memcpy(evNew, ev, sizeof(AG_Event));
-			InitPointer(&evNew->argv[0], "_self", rcvr);
-			InitPointer(&evNew->argv[evNew->argc], "_sender", sndr);
+			InitPointerArg(&evNew->argv[0], rcvr);
+			InitPointerArg(&evNew->argv[evNew->argc], sndr);
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* AG_THREADS */
@@ -515,8 +472,8 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 			AG_Event tmpev;
 
 			memcpy(&tmpev, event, sizeof(AG_Event));
-			InitPointer(&tmpev.argv[0], "_self", rcvr);
-			InitPointer(&tmpev.argv[tmpev.argc], "_sender", sndr);
+			InitPointerArg(&tmpev.argv[0], rcvr);
+			InitPointerArg(&tmpev.argv[tmpev.argc], sndr);
 
 			if (ev->flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_OBJDEBUG
@@ -538,3 +495,23 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_ObjectUnlock(rcvr);
 }
 
+int
+AG_InitEventSubsystem(void)
+{
+#ifdef HAVE_KQUEUE
+	if ((agKqueue = kqueue()) == -1) {
+		AG_SetError("kqueue: %s", AG_Strerror(errno));
+		return (-1);
+	}
+#endif
+	return (0);
+}
+
+void
+AG_DestroyEventSubsystem(void)
+{
+#ifdef HAVE_KQUEUE
+	close(agKqueue);
+	agKqueue = -1;
+#endif
+}

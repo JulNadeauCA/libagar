@@ -1,27 +1,4 @@
-/*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*	Public domain	*/
 
 /*
  * LEGACY Interface to AG_Variable(3).
@@ -29,53 +6,18 @@
 
 #include <core/core.h>
 
+#ifdef AG_LEGACY
+
 #include <stdarg.h>
 #include <string.h>
-
-/*
- * Create a new property, or modify an existing one.
- * LEGACY Interface to AG_Variable(3).
- */
-AG_Prop *
-AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
-{
-	AG_Object *obj = pObj;
-	va_list ap;
-
-	AG_ObjectLock(obj);
-	va_start(ap, type);
-	switch (type) {
-	case AG_PROP_INT:	AG_SetInt(obj, key, va_arg(ap,int));		break;
-	case AG_PROP_UINT:	AG_SetUint(obj, key, va_arg(ap,Uint));		break;
-	case AG_PROP_FLOAT:	AG_SetFloat(obj, key, (float)va_arg(ap,double)); break;
-	case AG_PROP_DOUBLE:	AG_SetDouble(obj, key, va_arg(ap,double));	break;
-	case AG_PROP_STRING:	AG_SetString(obj, key, va_arg(ap,char *));	break;
-	case AG_PROP_POINTER:	AG_SetPointer(obj, key, va_arg(ap,void *));	break;
-	case AG_PROP_UINT8:	AG_SetUint8(obj, key, (Uint8)va_arg(ap,int));	break;
-	case AG_PROP_SINT8:	AG_SetSint8(obj, key, (Sint8)va_arg(ap,int));	break;
-	case AG_PROP_UINT16:	AG_SetUint16(obj, key, (Uint16)va_arg(ap,int));	break;
-	case AG_PROP_SINT16:	AG_SetSint16(obj, key, (Sint16)va_arg(ap,int));	break;
-	case AG_PROP_UINT32:	AG_SetUint32(obj, key, va_arg(ap,Uint32));	break;
-	case AG_PROP_SINT32:	AG_SetSint32(obj, key, va_arg(ap,Sint32));	break;
-	default:								break;
-	}
-	va_end(ap);
-	AG_ObjectUnlock(obj);
-
-	return AG_GetProp(obj, key, type, NULL);
-}
 
 #undef PROP_GET
 #define PROP_GET(v,type) do { \
 	if (p != NULL) *(type *)p = (type)V->data.v; \
 } while (0)
 
-/*
- * Lookup a property by name.
- * LEGACY interface to AG_Variable(3).
- */
-AG_Variable *
-AG_GetProp(void *pObj, const char *key, int t, void *p)
+static AG_Variable *
+GetProp(void *pObj, const char *key, int t, void *p)
 {
 	AG_Object *obj = pObj;
 	Uint i;
@@ -112,3 +54,40 @@ fail:
 	AG_ObjectUnlock(obj);
 	return (NULL);
 }
+
+AG_Variable *
+AG_GetProp(void *pObj, const char *key, int t, void *p)
+{
+	return GetProp(pObj, key, t, p);
+}
+
+AG_Prop *
+AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
+{
+	AG_Object *obj = pObj;
+	va_list ap;
+
+	AG_ObjectLock(obj);
+	va_start(ap, type);
+	switch (type) {
+	case AG_PROP_INT:	AG_SetInt(obj, key, va_arg(ap,int));		break;
+	case AG_PROP_UINT:	AG_SetUint(obj, key, va_arg(ap,Uint));		break;
+	case AG_PROP_FLOAT:	AG_SetFloat(obj, key, (float)va_arg(ap,double)); break;
+	case AG_PROP_DOUBLE:	AG_SetDouble(obj, key, va_arg(ap,double));	break;
+	case AG_PROP_STRING:	AG_SetString(obj, key, va_arg(ap,char *));	break;
+	case AG_PROP_POINTER:	AG_SetPointer(obj, key, va_arg(ap,void *));	break;
+	case AG_PROP_UINT8:	AG_SetUint8(obj, key, (Uint8)va_arg(ap,int));	break;
+	case AG_PROP_SINT8:	AG_SetSint8(obj, key, (Sint8)va_arg(ap,int));	break;
+	case AG_PROP_UINT16:	AG_SetUint16(obj, key, (Uint16)va_arg(ap,int));	break;
+	case AG_PROP_SINT16:	AG_SetSint16(obj, key, (Sint16)va_arg(ap,int));	break;
+	case AG_PROP_UINT32:	AG_SetUint32(obj, key, va_arg(ap,Uint32));	break;
+	case AG_PROP_SINT32:	AG_SetSint32(obj, key, va_arg(ap,Sint32));	break;
+	default:								break;
+	}
+	va_end(ap);
+	AG_ObjectUnlock(obj);
+
+	return GetProp(obj, key, type, NULL);
+}
+
+#endif /* AG_LEGACY */

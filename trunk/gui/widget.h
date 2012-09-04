@@ -103,8 +103,7 @@ typedef struct ag_action_tie {
 		struct {
 			AG_KeySym sym;		/* Matching symbol */
 			AG_KeyMod mod;		/* Matching modifier */
-			AG_Timeout toDelay;	/* Key repeat delay */
-			AG_Timeout toRepeat;	/* Key repeat interval */
+			AG_Timer toRepeat;	/* Key repeat timer */
 		} key;
 	} data;
 	char action[64];			/* Action name */
@@ -120,11 +119,11 @@ enum ag_redraw_tie_type {
 typedef struct ag_redraw_tie {
 	enum ag_redraw_tie_type type;
 	char name[AG_VARIABLE_NAME_MAX];	/* Polled variable */
-	union ag_variable_data dataLast;	/* Last accessed data */
-	AG_Timeout to;				/* Polling timer */
+	AG_Variable Vlast;			/* Last accessed data */
+	int         VlastInited;
+	AG_Timer to;				/* Polling timer */
 	Uint ival;				/* Polling interval */
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
-	int dataLastSet;
 } AG_RedrawTie;
 
 /* Widget instance structure */
