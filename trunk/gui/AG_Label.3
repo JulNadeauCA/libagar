@@ -72,6 +72,12 @@ on rendering.
 .Fn AG_LabelSetFont "AG_Label *label" "AG_Font *font"
 .Pp
 .Ft "void"
+.Fn AG_LabelSetColor "AG_Label *label" "AG_Color C"
+.Pp
+.Ft "void"
+.Fn AG_LabelSetColorBG "AG_Label *label" "AG_Color C"
+.Pp
+.Ft "void"
 .Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft "void"
@@ -128,6 +134,12 @@ To set the font of a label back to the default Agar font, NULL can be passed.
 See
 .Xr AG_FetchFont 3
 for details on Agar fonts.
+.Pp
+.Fn AG_LabelSetColor
+and
+.Fn AG_LabelSetColorBG
+configure an alternate text and background color for the label (see
+.Xr AG_Color 3 ) .
 .Pp
 .Fn AG_LabelSetPadding
 sets the label padding parameters in pixels.
