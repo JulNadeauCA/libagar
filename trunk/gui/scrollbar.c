@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,6 +143,31 @@ AG_ScrollbarNewSint32(void *parent, enum ag_scrollbar_type type, Uint flags,
 	return (sb);
 }
 
+#ifdef HAVE_64BIT
+AG_Scrollbar *
+AG_ScrollbarNewUint64(void *parent, enum ag_scrollbar_type type, Uint flags,
+    Uint64 *val, Uint64 *min, Uint64 *max, Uint64 *vis)
+{
+	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint64(sb, "value", val); }
+	if (min != NULL) { AG_BindUint64(sb, "min", min); }
+	if (max != NULL) { AG_BindUint64(sb, "max", max); }
+	if (vis != NULL) { AG_BindUint64(sb, "visible", vis); }
+	return (sb);
+}
+AG_Scrollbar *
+AG_ScrollbarNewSint64(void *parent, enum ag_scrollbar_type type, Uint flags,
+    Sint64 *val, Sint64 *min, Sint64 *max, Sint64 *vis)
+{
+	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint64(sb, "value", val); }
+	if (min != NULL) { AG_BindSint64(sb, "min", min); }
+	if (max != NULL) { AG_BindSint64(sb, "max", max); }
+	if (vis != NULL) { AG_BindSint64(sb, "visible", vis); }
+	return (sb);
+}
+#endif /* HAVE_64BIT */
+
 AG_Scrollbar *
 AG_ScrollbarNewFloat(void *parent, enum ag_scrollbar_type type, Uint flags,
     float *val, float *min, float *max, float *vis)
@@ -167,6 +192,19 @@ AG_ScrollbarNewDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
 	return (sb);
 }
 
+#ifdef HAVE_LONG_DOUBLE
+AG_Scrollbar *
+AG_ScrollbarNewLongDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
+    long double *val, long double *min, long double *max, long double *vis)
+{
+	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
+	if (val != NULL) { AG_BindLongDouble(sb, "value", val); }
+	if (min != NULL) { AG_BindLongDouble(sb, "min", min); }
+	if (max != NULL) { AG_BindLongDouble(sb, "max", max); }
+	if (vis != NULL) { AG_BindLongDouble(sb, "visible", vis); }
+	return (sb);
+}
+#endif /* HAVE_LONG_DOUBLE */
 /* Configure an initial length for the size requisition. */
 void
 AG_ScrollbarSizeHint(AG_Scrollbar *sb, int len)
@@ -280,12 +318,19 @@ GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 	case AG_VARIABLE_UINT:		GET_PX_COORDS(Uint);	break;
 	case AG_VARIABLE_FLOAT:		GET_PX_COORDS(float);	break;
 	case AG_VARIABLE_DOUBLE:	GET_PX_COORDS(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	GET_PX_COORDS(long double);	break;
+#endif
 	case AG_VARIABLE_UINT8:		GET_PX_COORDS(Uint8);	break;
 	case AG_VARIABLE_SINT8:		GET_PX_COORDS(Sint8);	break;
 	case AG_VARIABLE_UINT16:	GET_PX_COORDS(Uint16);	break;
 	case AG_VARIABLE_SINT16:	GET_PX_COORDS(Sint16);	break;
 	case AG_VARIABLE_UINT32:	GET_PX_COORDS(Uint32);	break;
 	case AG_VARIABLE_SINT32:	GET_PX_COORDS(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	GET_PX_COORDS(Uint64);	break;
+	case AG_VARIABLE_SINT64:	GET_PX_COORDS(Sint64);	break;
+#endif
 	default:						break;
 	} 
 #if 0
@@ -350,12 +395,19 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	case AG_VARIABLE_UINT:		MAP_PX_COORDS(Uint);	break;
 	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);	break;
 	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	MAP_PX_COORDS(long double);	break;
+#endif
 	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);	break;
 	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);	break;
 	case AG_VARIABLE_UINT16:	MAP_PX_COORDS(Uint16);	break;
 	case AG_VARIABLE_SINT16:	MAP_PX_COORDS(Sint16);	break;
 	case AG_VARIABLE_UINT32:	MAP_PX_COORDS(Uint32);	break;
 	case AG_VARIABLE_SINT32:	MAP_PX_COORDS(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	MAP_PX_COORDS(Uint64);	break;
+	case AG_VARIABLE_SINT64:	MAP_PX_COORDS(Sint64);	break;
+#endif
 	default:						break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -371,23 +423,27 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
  * Decrement the value by the specified amount multiplied by iInc/rInc.
  */
 #define DECREMENT_INT(type)						\
-	if ((int)(*(type *)pVal - sb->iInc) < (int)*(type *)pMin) 	\
+	if ((int)(*(type *)pVal - sb->iInc) < (int)*(type *)pMin) { 	\
 		*(type *)pVal = *(type *)pMin;				\
-	else { 								\
+		rv = 1;							\
+	} else { 							\
 		*(type *)pVal -= sb->iInc;				\
 	}
 
 #define DECREMENT_REAL(type)						\
-	if ((*(type *)pVal - sb->rInc) < *(type *)pMin) 		\
+	if ((*(type *)pVal - sb->rInc) < *(type *)pMin) { 		\
 		*(type *)pVal = *(type *)pMin;				\
-	else 								\
-		*(type *)pVal -= sb->rInc
+		rv = 1;							\
+	} else {						 	\
+		*(type *)pVal -= sb->rInc;				\
+	}
 
-static void
+static int
 Decrement(AG_Scrollbar *sb)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
+	int rv = 0;
 
 	bVal = AG_GetVariable(sb, "value", &pVal);
 	bMin = AG_GetVariable(sb, "min", &pMin);
@@ -399,12 +455,19 @@ Decrement(AG_Scrollbar *sb)
 	case AG_VARIABLE_UINT:		DECREMENT_INT(Uint);	break;
 	case AG_VARIABLE_FLOAT:		DECREMENT_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT_REAL(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT_REAL(long double);	break;
+#endif
 	case AG_VARIABLE_UINT8:		DECREMENT_INT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		DECREMENT_INT(Sint8);	break;
 	case AG_VARIABLE_UINT16:	DECREMENT_INT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
 	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	DECREMENT_INT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	DECREMENT_INT(Sint64);	break;
+#endif
 	default:						break;
 	}
 
@@ -414,6 +477,7 @@ Decrement(AG_Scrollbar *sb)
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
 	AG_Redraw(sb);
+	return (rv);
 }
 #undef DECREMENT_INT
 #undef DECREMENT_REAL
@@ -424,26 +488,31 @@ Decrement(AG_Scrollbar *sb)
 #define INCREMENT_INT(type)						\
 	if ((int)(*(type *)pVal + sb->iInc) >				\
 	    (int)((*(type *)pMax + sb->maxOffs) -			\
-	          (*(type *)pVis + sb->visOffs)))			\
+	          (*(type *)pVis + sb->visOffs))) {			\
 		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
 		                (*(type *)pVis + sb->visOffs);		\
-	else 								\
-		*(type *)pVal += sb->iInc
+		rv = 1;							\
+	} else { 							\
+		*(type *)pVal += sb->iInc;				\
+	}
 
 #define INCREMENT_REAL(type)						\
 	if ((*(type *)pVal + sb->rInc) >				\
 	    ((*(type *)pMax + sb->maxOffs) -				\
-	     (*(type *)pVis + sb->visOffs))) 				\
+	     (*(type *)pVis + sb->visOffs))) { 				\
 		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
 		                (*(type *)pVis + sb->visOffs);		\
-	else 								\
-		*(type *)pVal += sb->rInc
+		rv = 1;							\
+	} else { 							\
+		*(type *)pVal += sb->rInc;				\
+	}
 
-static void
+static int
 Increment(AG_Scrollbar *sb)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
+	int rv = 0;
 
 	bVal = AG_GetVariable(sb, "value", &pVal);
 	bMin = AG_GetVariable(sb, "min", &pMin);
@@ -455,12 +524,19 @@ Increment(AG_Scrollbar *sb)
 	case AG_VARIABLE_UINT:		INCREMENT_INT(Uint);	break;
 	case AG_VARIABLE_FLOAT:		INCREMENT_REAL(float);	break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT_REAL(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT_REAL(long double);	break;
+#endif
 	case AG_VARIABLE_UINT8:		INCREMENT_INT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		INCREMENT_INT(Sint8);	break;
 	case AG_VARIABLE_UINT16:	INCREMENT_INT(Uint16);	break;
 	case AG_VARIABLE_SINT16:	INCREMENT_INT(Sint16);	break;
 	case AG_VARIABLE_UINT32:	INCREMENT_INT(Uint32);	break;
 	case AG_VARIABLE_SINT32:	INCREMENT_INT(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	INCREMENT_INT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	INCREMENT_INT(Sint64);	break;
+#endif
 	default:					break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -469,6 +545,7 @@ Increment(AG_Scrollbar *sb)
 	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
 	AG_Redraw(sb);
+	return (rv);
 }
 #undef INCREMENT_INT
 #undef INCREMENT_REAL
@@ -478,9 +555,7 @@ MouseButtonUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
-	AG_DelTimeout(sb, &sb->scrollTo);
-	AG_DelTimeout(sb, &sb->incTo);
-	AG_DelTimeout(sb, &sb->decTo);
+	AG_DelTimer(sb, &sb->moveTo);
 
 	if (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC && sb->buttonDecFn != NULL) {
 		AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
@@ -495,6 +570,38 @@ MouseButtonUp(AG_Event *event)
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-end", NULL);
 	AG_Redraw(sb);
+}
+
+/* Timer for scrolling controlled by buttons (mouse spin setting). */
+static Uint32
+MoveButtonsTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	int dir = AG_INT(1);
+	int rv;
+
+	if (dir == -1) {
+		rv = Decrement(sb);
+	} else {
+		rv = Increment(sb);
+	}
+	return (rv != 1) ? agMouseSpinIval : 0;
+}
+
+/* Timer for scrolling controlled by keyboard (keyrepeat setting). */
+static Uint32
+MoveKbdTimeout(AG_Timer *to, AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	int dir = AG_INT(1);
+	int rv;
+
+	if (dir == -1) {
+		rv = Decrement(sb);
+	} else {
+		rv = Increment(sb);
+	}
+	return (rv != 1) ? agKbdRepeat : 0;
 }
 
 static void
@@ -522,10 +629,10 @@ MouseButtonDown(AG_Event *event)
 		if (sb->buttonDecFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
-			Decrement(sb);
-			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
-			AG_DelTimeout(sb, &sb->incTo);
-			AG_DelTimeout(sb, &sb->decTo);
+			if (Decrement(sb) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
+				    MoveButtonsTimeout, "%i", -1);
+			}
 		}
 	} else if (x > TOTSIZE(sb) - sb->width*2) {
 		/*
@@ -536,10 +643,10 @@ MouseButtonDown(AG_Event *event)
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
-			Increment(sb);
-			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
-			AG_DelTimeout(sb, &sb->incTo);
-			AG_DelTimeout(sb, &sb->decTo);
+			if (Increment(sb) != 1) {
+				AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
+				    MoveButtonsTimeout, "%i", +1);
+			}
 		}
 	} else if (!posFound || (x >= pos && x <= (pos + sb->wBar))) {
 		/*
@@ -577,24 +684,6 @@ MouseMotion(AG_Event *event)
 	                    AG_INT(1):AG_INT(2)) - sb->width - sb->xOffs);
 }
 
-static Uint32
-ScrollTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Scrollbar *sb = obj;
-
-	switch (sb->curBtn) {
-	case AG_SCROLLBAR_BUTTON_DEC:
-		Decrement(sb);
-		break;
-	case AG_SCROLLBAR_BUTTON_INC:
-		Increment(sb);
-		break;
-	default:
-		break;
-	}
-	return (agMouseSpinIval);
-}
-
 static void
 KeyDown(AG_Event *event)
 {
@@ -604,15 +693,17 @@ KeyDown(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
-		Decrement(sb);
-		AG_DelTimeout(sb, &sb->incTo);
-		AG_ScheduleTimeout(sb, &sb->decTo, agKbdDelay);
+		if (Decrement(sb) != 1) {
+			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+			    MoveKbdTimeout, "%i", -1);
+		}
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
-		Increment(sb);
-		AG_DelTimeout(sb, &sb->decTo);
-		AG_ScheduleTimeout(sb, &sb->incTo, agKbdDelay);
+		if (Increment(sb) != 1) {
+			AG_AddTimer(sb, &sb->moveTo, agKbdDelay,
+			    MoveKbdTimeout, "%i", +1);
+		}
 		break;
 	}
 }
@@ -622,39 +713,24 @@ KeyUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int keysym = AG_INT(1);
-
+	
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
-		AG_DelTimeout(sb, &sb->decTo);
-		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
-		AG_DelTimeout(sb, &sb->incTo);
+		AG_DelTimer(sb, &sb->moveTo);
+		break;
+	default:
 		break;
 	}
 }
 
+/* Timer for AG_SCROLLBAR_AUTOHIDE visibility test. */
 static Uint32
-IncrementTimeout(void *obj, Uint32 ival, void *arg)
+AutoHideTimeout(AG_Timer *to, AG_Event *event)
 {
-	AG_Scrollbar *sb = obj;
-	Increment(sb);
-	return (agKbdRepeat);
-}
-
-static Uint32
-DecrementTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Scrollbar *sb = obj;
-	Decrement(sb);
-	return (agKbdRepeat);
-}
-
-static Uint32
-AutoHideTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Scrollbar *sb = obj;
+	AG_Scrollbar *sb = AG_SELF();
 	int rv, x, len;
 
 	rv = GetPxCoords(sb, &x, &len);
@@ -665,7 +741,7 @@ AutoHideTimeout(void *obj, Uint32 ival, void *arg)
 		if (!AG_WidgetVisible(sb))
 			AG_WidgetShow(sb);
 	}
-	return (ival);
+	return (to->ival);
 }
 
 static void
@@ -673,9 +749,7 @@ LostFocus(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
-	AG_DelTimeout(sb, &sb->scrollTo);
-	AG_DelTimeout(sb, &sb->incTo);
-	AG_DelTimeout(sb, &sb->decTo);
+	AG_DelTimer(sb, &sb->moveTo);
 }
 
 static void
@@ -706,9 +780,16 @@ static void
 OnAttach(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
-	
+
+	if ((sb->flags & AG_SCROLLBAR_EXCL) == 0) {
+		/* Trigger redraw upon external changes to the bindings. */
+		AG_RedrawOnChange(sb, 250, "value");
+		AG_RedrawOnChange(sb, 250, "min");
+		AG_RedrawOnChange(sb, 250, "max");
+		AG_RedrawOnChange(sb, 250, "visible");
+	}
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
-		AG_ScheduleTimeout(sb, &sb->autohideTo, 250);
+		AG_AddTimer(sb, &sb->autoHideTo, 250, AutoHideTimeout, NULL);
 }
 
 static void
@@ -717,7 +798,7 @@ OnDetach(AG_Event *event)
 	AG_Scrollbar *sb = AG_SELF();
 	
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
-		AG_DelTimeout(sb, &sb->autohideTo);
+		AG_DelTimer(sb, &sb->autoHideTo);
 }
 
 static void
@@ -762,20 +843,10 @@ Init(void *obj)
 	AG_AddEvent(sb, "attached", OnAttach, NULL);
 	AG_AddEvent(sb, "detached", OnDetach, NULL);
 
-	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
-	AG_SetTimeout(&sb->decTo, DecrementTimeout, NULL, 0);
-	AG_SetTimeout(&sb->incTo, IncrementTimeout, NULL, 0);
-	AG_SetTimeout(&sb->autohideTo, AutoHideTimeout, NULL, 0);
-	
 	AG_BindInt(sb, "value", &sb->value);
 	AG_BindInt(sb, "min", &sb->min);
 	AG_BindInt(sb, "max", &sb->max);
 	AG_BindInt(sb, "visible", &sb->visible);
-
-	AG_RedrawOnChange(sb, 100, "value");
-	AG_RedrawOnChange(sb, 250, "min");
-	AG_RedrawOnChange(sb, 250, "max");
-	AG_RedrawOnChange(sb, 250, "visible");
 
 #ifdef AG_DEBUG
 	AG_BindInt(sb, "width", &sb->width);

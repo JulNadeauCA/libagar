@@ -94,17 +94,19 @@ should be used instead.
 .\" MANLINK(AG_ScrollbarNewUint8)
 .\" MANLINK(AG_ScrollbarNewUint16)
 .\" MANLINK(AG_ScrollbarNewUint32)
+.\" MANLINK(AG_ScrollbarNewUint64)
 .\" MANLINK(AG_ScrollbarNewSint8)
 .\" MANLINK(AG_ScrollbarNewSint16)
 .\" MANLINK(AG_ScrollbarNewSint32)
+.\" MANLINK(AG_ScrollbarNewSint64)
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNew{Int,Uint,Float,Double} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
+.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32,Uint64} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
+.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32,Sint64} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSizeHint "AG_Scrollbar *scrollbar" "int length"
@@ -180,13 +182,22 @@ Shorthand for
 .It AG_SCROLLBAR_TEXT
 Display the minimum, current and maximum values in text.
 This option is primarily useful for debugging.
+.It AG_SCROLLBAR_EXCL
+Advise that no external changes to the
+.Va value ,
+.Va min ,
+.Va max
+and
+.Va visible
+bindings are expected.
+By default, the binding values are periodically checked and the scrollbar is
+redrawn if a change is detected.
+Note that this setting only influences redraw -- external changes to the
+binding values are always safe.
 .El
 .Pp
-Alternate constructor routines
-.Fn AG_ScrollbarNew{Int,Uint,Float,Double} ,
-.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32}
-and
-.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32}
+The alternate constructor routines
+.Fn AG_ScrollbarNew* 
 create a new
 .Nm
 with
@@ -207,13 +218,13 @@ flag.
 .Pp
 The
 .Fn AG_ScrollbarSetControlLength
-function sets the length of the scrolling control (i.e., the center button),
-in pixels.
-This length is often computed from the ratio between the visible area of
-whatever is being displayed, and the total area of the content that can
-be displayed.
+function sets the length of the scrolling control (i.e., the center button)
+to an explicit length in pixels.
 .Fn AG_ScrollbarControlLength
-returns the current length of the scrolling control, in pixels.
+returns the current length in pixels.
+Note: It is almost always preferable to use the
+.Dv AG_SCROLLBAR_AUTOSIZE
+option rather than setting an explicit length.
 .Pp
 .Fn AG_ScrollbarSetWidth
 configures the width (i.e., thickness) of the scrollbar.
@@ -264,6 +275,8 @@ widget provides the following bindings:
 Single precision position/range
 .It Va double *{value,min,max,visible}
 Double precision position/range
+.It Va long double *{value,min,max,visible}
+Quad precision position/range
 .It Va int *{value,min,max,visible}
 Integer position/range
 .It Va Uint *{value,min,max,visible}
@@ -274,12 +287,16 @@ Unsigned 8-bit position/range
 Unsigned 16-bit position/range
 .It Va Uint32 *{value,min,max,visible}
 Unsigned 32-bit position/range
+.It Va Uint64 *{value,min,max,visible}
+Unsigned 64-bit position/range
 .It Va Sint8 *{value,min,max,visible}
 Signed 8-bit position/range
 .It Va Sint16 *{value,min,max,visible}
 Signed 16-bit position/range
 .It Va Sint32 *{value,min,max,visible}
 Signed 32-bit position/range
+.It Va Sint64 *{value,min,max,visible}
+Signed 64-bit position/range
 .El
 .Pp
 The scrollbar is positioned to represent
@@ -300,6 +317,13 @@ and
 .Va visible
 bindings must be of the same type as
 .Va value .
+The 64-bit types are only available if
+.Dv AG_HAVE_64BIT
+is set, and
+.Ft long double
+is only available if
+.Dv AG_HAVE_LONG_DOUBLE
+is set.
 .Sh EVENTS
 The
 .Nm
@@ -363,4 +387,5 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 The autosize feature was introduced in Agar 1.4.0.
-The constant offsets were introduced in Agar 1.4.2.
+The constant offsets, EXCL option and 64-bit types
+types were introduced in Agar 1.5.0.

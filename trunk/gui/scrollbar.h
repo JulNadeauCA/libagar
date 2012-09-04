@@ -27,6 +27,7 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_TEXT	0x08	/* Print numbers (for debugging) */
 #define AG_SCROLLBAR_AUTOSIZE	0x10	/* Automatically size control */
 #define AG_SCROLLBAR_AUTOHIDE	0x20	/* Show/hide widget based on range */
+#define AG_SCROLLBAR_EXCL	0x40	/* Has exclusive access to bindings */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
 	int value;			/* Default value binding */
@@ -40,9 +41,8 @@ typedef struct ag_scrollbar {
 	int hArrow;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
-	AG_Timeout scrollTo;		/* Timer for scrolling */
-	AG_Timeout incTo, decTo;	/* Timer for keyboard motion */
-	AG_Timeout autohideTo;		/* Timer for autohide check */
+	AG_Timer moveTo;		/* Timer for scrolling control */
+	AG_Timer autoHideTo;		/* Timer for autohide check */
 	int xOffs;			/* Cursor offset for scrolling */
 	double rInc;			/* Base increment for real bindings */
 	int    iInc;			/* Base increment for int bindings */
@@ -72,10 +72,21 @@ AG_Scrollbar *AG_ScrollbarNewUint32(void *, enum ag_scrollbar_type, Uint,
                                     Uint32 *, Uint32 *, Uint32 *, Uint32 *);
 AG_Scrollbar *AG_ScrollbarNewSint32(void *, enum ag_scrollbar_type, Uint,
                                     Sint32 *, Sint32 *, Sint32 *, Sint32 *);
+#ifdef AG_HAVE_64BIT
+AG_Scrollbar *AG_ScrollbarNewUint64(void *, enum ag_scrollbar_type, Uint,
+                                    Uint64 *, Uint64 *, Uint64 *, Uint64 *);
+AG_Scrollbar *AG_ScrollbarNewSint64(void *, enum ag_scrollbar_type, Uint,
+                                    Sint64 *, Sint64 *, Sint64 *, Sint64 *);
+#endif
 AG_Scrollbar *AG_ScrollbarNewFloat(void *, enum ag_scrollbar_type, Uint,
                                    float *, float *, float *, float *);
 AG_Scrollbar *AG_ScrollbarNewDouble(void *, enum ag_scrollbar_type, Uint,
                                     double *, double *, double *, double *);
+#ifdef AG_HAVE_LONG_DOUBLE
+AG_Scrollbar *AG_ScrollbarNewLongDouble(void *, enum ag_scrollbar_type, Uint,
+                                        long double *, long double *,
+					long double *, long double *);
+#endif
 
 void AG_ScrollbarSizeHint(AG_Scrollbar *, int);
 void AG_ScrollbarSetIncFn(AG_Scrollbar *, AG_EventFn, const char *, ...);
