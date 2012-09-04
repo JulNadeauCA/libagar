@@ -126,6 +126,22 @@ PrintS32(AG_FmtString *fs, char *dst, size_t dstSize)
 	Sint32 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyInt(dst, (int)*val, dstSize);
 }
+
+#ifdef HAVE_64BIT
+static size_t
+PrintU64(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Uint64 *val = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize, "%llu", (unsigned long long)*val);
+}
+static size_t
+PrintS64(AG_FmtString *fs, char *dst, size_t dstSize)
+{
+	Sint64 *val = AG_FMTSTRING_ARG(fs);
+	return Snprintf(dst, dstSize, "%lld", (long long)*val);
+}
+#endif /* HAVE_64BIT */
+
 static size_t
 PrintOBJNAME(AG_FmtString *fs, char *dst, size_t dstSize)
 {
@@ -269,7 +285,7 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
 #ifdef HAVE_64BIT
 			case 'l':
 				rv = ProcessFmtString64(fs, &f[3], pDst, (pEnd-pDst));
-				f++;
+				f+=2;
 				break;
 #endif
 			}
@@ -652,6 +668,9 @@ AG_PrintfP(const char *fmt, ...)
 			break;
 		case 'm':
 			mu = (AG_Mutex *)va_arg(ap, void *);
+			break;
+		case '>':
+			mu = NULL;
 			break;
 		case '\0':
 			break;
@@ -1267,6 +1286,10 @@ AG_InitStringSubsystem(void)
 	AG_RegisterFmtStringExt("s16", PrintS16);
 	AG_RegisterFmtStringExt("u32", PrintU32);
 	AG_RegisterFmtStringExt("s32", PrintS32);
+#ifdef HAVE_64BIT
+	AG_RegisterFmtStringExt("u64", PrintU64);
+	AG_RegisterFmtStringExt("s64", PrintS64);
+#endif
 	AG_RegisterFmtStringExt("objName", PrintOBJNAME);
 	AG_RegisterFmtStringExt("objType", PrintOBJTYPE);
 

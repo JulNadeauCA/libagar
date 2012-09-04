@@ -207,6 +207,7 @@ or
 .Ft "double *"
 .It %llf, %llg
 .Ft "long double *"
+(needs AG_HAVE_LONG_DOUBLE)
 .It %[u8]
 .Ft "Uint8 *"
 .It %[s8]
@@ -219,6 +220,12 @@ or
 .Ft "Uint32 *"
 .It %[s32]
 .Ft "Sint32 *"
+.It %[u64]
+.Ft "Uint64 *"
+(needs AG_HAVE_64BIT)
+.It %[s64]
+.Ft "Sint64 *"
+(needs AG_HAVE_64BIT)
 .It %[objName]
 .Ft "AG_Object *"
 (Returns object name)
