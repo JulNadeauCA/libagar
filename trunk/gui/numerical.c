@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,13 @@
 
 #include <string.h>
 
+#include <config/_mk_have_strtold.h>
+#include <config/_mk_have_strtoll.h>
+#if defined(_MK_HAVE_STRTOLD_H) || defined(_MK_HAVE_STRTOLL_H)
+# define _XOPEN_SOURCE 600
+# include <stdlib.h>
+#endif
+
 static void UnitSelected(AG_Event *);
 
 AG_Numerical *
@@ -59,11 +66,6 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 
 	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
-	if (flags & AG_NUMERICAL_INT) {
-		AG_BindInt(num, "value", &num->intValue);
-		AG_BindInt(num, "min", &num->intMin);
-		AG_BindInt(num, "max", &num->intMax);
-	}
 	if (label != NULL) {
 		AG_TextboxSetLabelS(num->input, label);
 	}
@@ -80,8 +82,7 @@ AG_NumericalNewS(void *parent, Uint flags, const char *unit, const char *label)
 }
 
 AG_Numerical *
-AG_NumericalNewDbl(void *parent, Uint flags, const char *unit,
-    const char *label, double *v)
+AG_NumericalNewDbl(void *parent, Uint flags, const char *unit, const char *label, double *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -89,20 +90,43 @@ AG_NumericalNewDbl(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewDblR(void *parent, Uint flags, const char *unit,
-    const char *label, double *v, double min, double max)
+AG_NumericalNewDblR(void *parent, Uint flags, const char *unit, const char *label, double *v, double min, double max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindDouble(num, "value", v);
-	AG_NumericalSetMinDbl(num, min);
-	AG_NumericalSetMaxDbl(num, max);
+	num->min.dbl = min;
+	num->max.dbl = max;
+	AG_BindDouble(num, "min", &num->min.dbl);
+	AG_BindDouble(num, "max", &num->max.dbl);
 	return (num);
 }
 
+#ifdef HAVE_LONG_DOUBLE
 AG_Numerical *
-AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
-    const char *label, float *v)
+AG_NumericalNewLdbl(void *parent, Uint flags, const char *unit, const char *label, long double *v)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindLongDouble(num, "value", v);
+	return (num);
+}
+AG_Numerical *
+AG_NumericalNewLdblR(void *parent, Uint flags, const char *unit, const char *label, long double *v, long double min, long double max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindLongDouble(num, "value", v);
+	num->min.ldbl = min;
+	num->max.ldbl = max;
+	AG_BindLongDouble(num, "min", &num->min.ldbl);
+	AG_BindLongDouble(num, "max", &num->max.ldbl);
+	return (num);
+}
+#endif /* HAVE_LONG_DOUBLE */
+
+AG_Numerical *
+AG_NumericalNewFlt(void *parent, Uint flags, const char *unit, const char *label, float *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -110,20 +134,20 @@ AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
-    const char *label, float *v, float min, float max)
+AG_NumericalNewFltR(void *parent, Uint flags, const char *unit, const char *label, float *v, float min, float max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindFloat(num, "value", v);
-	AG_NumericalSetMinFlt(num, min);
-	AG_NumericalSetMaxFlt(num, max);
+	num->min.flt = min;
+	num->max.flt = max;
+	AG_BindFloat(num, "min", &num->min.flt);
+	AG_BindFloat(num, "max", &num->max.flt);
 	return (num);
 }
 
 AG_Numerical *
-AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
-    const char *label, int *v)
+AG_NumericalNewInt(void *parent, Uint flags, const char *unit, const char *label, int *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -131,19 +155,19 @@ AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewIntR(void *parent, Uint flags, const char *unit,
-    const char *label, int *v, int min, int max)
+AG_NumericalNewIntR(void *parent, Uint flags, const char *unit, const char *label, int *v, int min, int max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindInt(num, "value", v);
-	AG_NumericalSetMin(num, (double)min);	/* XXX */
-	AG_NumericalSetMax(num, (double)max);
+	num->min.i = min;
+	num->max.i = max;
+	AG_BindInt(num, "min", &num->min.i);
+	AG_BindInt(num, "max", &num->max.i);
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
-    const char *label, Uint *v)
+AG_NumericalNewUint(void *parent, Uint flags, const char *unit, const char *label, Uint *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -151,20 +175,19 @@ AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewUintR(void *parent, Uint flags, const char *unit,
-    const char *label, Uint *v, Uint min, Uint max)
+AG_NumericalNewUintR(void *parent, Uint flags, const char *unit, const char *label, Uint *v, Uint min, Uint max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.u = min;
+	num->max.u = max;
+	AG_BindUint(num, "min", &num->min.u);
+	AG_BindUint(num, "max", &num->max.u);
 	return (num);
 }
-
 AG_Numerical *
-AG_NumericalNewUint8(void *parent, Uint flags, const char *unit,
-    const char *label, Uint8 *v)
+AG_NumericalNewUint8(void *parent, Uint flags, const char *unit, const char *label, Uint8 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -172,20 +195,19 @@ AG_NumericalNewUint8(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewUint8R(void *parent, Uint flags, const char *unit,
-    const char *label, Uint8 *v, Uint8 min, Uint8 max)
+AG_NumericalNewUint8R(void *parent, Uint flags, const char *unit, const char *label, Uint8 *v, Uint8 min, Uint8 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint8(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.u8 = min;
+	num->max.u8 = max;
+	AG_BindUint8(num, "min", &num->min.u8);
+	AG_BindUint8(num, "max", &num->max.u8);
 	return (num);
 }
-
 AG_Numerical *
-AG_NumericalNewSint8(void *parent, Uint flags, const char *unit,
-    const char *label, Sint8 *v)
+AG_NumericalNewSint8(void *parent, Uint flags, const char *unit, const char *label, Sint8 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -193,20 +215,19 @@ AG_NumericalNewSint8(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewSint8R(void *parent, Uint flags, const char *unit,
-    const char *label, Sint8 *v, Sint8 min, Sint8 max)
+AG_NumericalNewSint8R(void *parent, Uint flags, const char *unit, const char *label, Sint8 *v, Sint8 min, Sint8 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint8(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.s8 = min;
+	num->max.s8 = max;
+	AG_BindSint8(num, "min", &num->min.s8);
+	AG_BindSint8(num, "max", &num->max.s8);
 	return (num);
 }
-
 AG_Numerical *
-AG_NumericalNewUint16(void *parent, Uint flags, const char *unit,
-    const char *label, Uint16 *v)
+AG_NumericalNewUint16(void *parent, Uint flags, const char *unit, const char *label, Uint16 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -214,20 +235,19 @@ AG_NumericalNewUint16(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewUint16R(void *parent, Uint flags, const char *unit,
-    const char *label, Uint16 *v, Uint16 min, Uint16 max)
+AG_NumericalNewUint16R(void *parent, Uint flags, const char *unit, const char *label, Uint16 *v, Uint16 min, Uint16 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint16(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.u16 = min;
+	num->max.u16 = max;
+	AG_BindUint16(num, "min", &num->min.u16);
+	AG_BindUint16(num, "max", &num->max.u16);
 	return (num);
 }
-
 AG_Numerical *
-AG_NumericalNewSint16(void *parent, Uint flags, const char *unit,
-    const char *label, Sint16 *v)
+AG_NumericalNewSint16(void *parent, Uint flags, const char *unit, const char *label, Sint16 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -235,20 +255,20 @@ AG_NumericalNewSint16(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewSint16R(void *parent, Uint flags, const char *unit,
-    const char *label, Sint16 *v, Sint16 min, Sint16 max)
+AG_NumericalNewSint16R(void *parent, Uint flags, const char *unit, const char *label, Sint16 *v, Sint16 min, Sint16 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint16(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.s16 = min;
+	num->max.s16 = max;
+	AG_BindSint16(num, "min", &num->min.s16);
+	AG_BindSint16(num, "max", &num->max.s16);
 	return (num);
 }
 
 AG_Numerical *
-AG_NumericalNewUint32(void *parent, Uint flags, const char *unit,
-    const char *label, Uint32 *v)
+AG_NumericalNewUint32(void *parent, Uint flags, const char *unit, const char *label, Uint32 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -256,20 +276,20 @@ AG_NumericalNewUint32(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewUint32R(void *parent, Uint flags, const char *unit,
-    const char *label, Uint32 *v, Uint32 min, Uint32 max)
+AG_NumericalNewUint32R(void *parent, Uint flags, const char *unit, const char *label, Uint32 *v, Uint32 min, Uint32 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindUint32(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.u32 = min;
+	num->max.u32 = max;
+	AG_BindUint32(num, "min", &num->min.u32);
+	AG_BindUint32(num, "max", &num->max.u32);
 	return (num);
 }
 
 AG_Numerical *
-AG_NumericalNewSint32(void *parent, Uint flags, const char *unit,
-    const char *label, Sint32 *v)
+AG_NumericalNewSint32(void *parent, Uint flags, const char *unit, const char *label, Sint32 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
@@ -277,127 +297,244 @@ AG_NumericalNewSint32(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
-AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit,
-    const char *label, Sint32 *v, Sint32 min, Sint32 max)
+AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit, const char *label, Sint32 *v, Sint32 min, Sint32 max)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNewS(parent, flags, unit, label);
 	AG_BindSint32(num, "value", v);
-	AG_NumericalSetMinInt(num, (int)min);
-	AG_NumericalSetMaxInt(num, (int)max);
+	num->min.s32 = min;
+	num->max.s32 = max;
+	AG_BindSint32(num, "min", &num->min.s32);
+	AG_BindSint32(num, "max", &num->max.s32);
 	return (num);
 }
 
-static void
-Bound(AG_Event *event)
+#ifdef HAVE_64BIT
+AG_Numerical *
+AG_NumericalNewUint64(void *parent, Uint flags, const char *unit, const char *label, Uint64 *v)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindUint64(num, "value", v);
+	return (num);
+}
+AG_Numerical *
+AG_NumericalNewUint64R(void *parent, Uint flags, const char *unit, const char *label, Uint64 *v, Uint64 min, Uint64 max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindUint64(num, "value", v);
+	num->min.u64 = min;
+	num->max.u64 = max;
+	AG_BindUint64(num, "min", &num->min.u64);
+	AG_BindUint64(num, "max", &num->max.u64);
+	return (num);
+}
+
+AG_Numerical *
+AG_NumericalNewSint64(void *parent, Uint flags, const char *unit, const char *label, Sint64 *v)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindSint64(num, "value", v);
+	return (num);
+}
+AG_Numerical *
+AG_NumericalNewSint64R(void *parent, Uint flags, const char *unit, const char *label, Sint64 *v, Sint64 min, Sint64 max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNewS(parent, flags, unit, label);
+	AG_BindSint64(num, "value", v);
+	num->min.s64 = min;
+	num->max.s64 = max;
+	AG_BindSint64(num, "min", &num->min.s64);
+	AG_BindSint64(num, "max", &num->max.s64);
+	return (num);
+}
+#endif /* HAVE_64BIT */
+
+static Uint32
+UpdateTimeout(AG_Timer *to, AG_Event *event)
 {
 	AG_Numerical *num = AG_SELF();
-	AG_Variable *binding = AG_PTR(1);
-
-	if (strcmp(binding->name, "value") == 0) {
-		switch (AG_VARIABLE_TYPE(binding)) {
-		case AG_VARIABLE_DOUBLE:
-			num->min = -AG_DBL_MAX+1;
-			num->max =  AG_DBL_MAX-1;
-			AG_TextboxSetFltOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_FLOAT:
-			num->min = -AG_FLT_MAX+1;
-			num->max =  AG_FLT_MAX-1;
-			AG_TextboxSetFltOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_INT:
-			num->min = AG_INT_MIN+1;
-			num->max = AG_INT_MAX-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_UINT:
-			num->min = 0;
-			num->max = AG_UINT_MAX-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_UINT8:
-			num->min = 0;
-			num->max = 0xffU;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_SINT8:
-			num->min = -0x7f+1;
-			num->max =  0x7f-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_UINT16:
-			num->min = 0;
-			num->max = 0xffffU;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_SINT16:
-			num->min = -0x7fff+1;
-			num->max =  0x7fff-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_UINT32:
-			num->min = 0;
-			num->max = 0xffffffffU;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_VARIABLE_SINT32:
-			num->min = -0x7fffffff+1;
-			num->max =  0x7fffffff-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		default:
-			break;
-		}
+	
+	if (!AG_WidgetIsFocused(num)) {
+		AG_NumericalUpdate(num);
 	}
-	AG_Redraw(num);
+	return (to->ival);
 }
 
-/* Update the textbox contents from the binding value. */
 static void
-UpdateTextbox(AG_Numerical *num)
+OnShow(AG_Event *event)
 {
-	AG_Variable *valueb;
-	void *value;
+	AG_Numerical *num = AG_SELF();
+	AG_Variable *V;
 
-	valueb = AG_GetVariable(num, "value", &value);
-	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:
-		AG_TextboxPrintf(num->input, num->format,
-		    AG_Base2Unit(*(double *)value, num->unit));
+	if ((num->flags & AG_NUMERICAL_EXCL) == 0) {
+		AG_AddTimer(num, &num->updateTo, 250, UpdateTimeout, NULL);
+	}
+	if ((V = AG_GetVariableLocked(num, "value")) == NULL) {
+		if (num->flags & AG_NUMERICAL_INT) {
+			num->value.i = 0;
+			V = AG_BindInt(num, "value", &num->value.i);
+		} else {
+			num->value.dbl = 0.0;
+			V = AG_BindDouble(num, "value", &num->value.dbl);
+		}
+		AG_LockVariable(V);
+	}
+	switch (V->type) {
+	case AG_VARIABLE_P_FLOAT:
+		if (!AG_Defined(num,"min")) {
+			num->min.flt = -AG_FLT_MAX+1;
+			AG_BindFloat(num, "min", &num->min.flt);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.flt = +AG_FLT_MAX-1;
+			AG_BindFloat(num, "max", &num->max.flt);
+		}
 		break;
-	case AG_VARIABLE_FLOAT:
-		AG_TextboxPrintf(num->input, num->format,
-		    AG_Base2Unit(*(float *)value, num->unit));
+	case AG_VARIABLE_P_DOUBLE:
+		if (!AG_Defined(num,"min")) {
+			num->min.dbl = -AG_DBL_MAX+1;
+			AG_BindDouble(num, "min", &num->min.dbl);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.dbl = +AG_DBL_MAX-1;
+			AG_BindDouble(num, "max", &num->max.dbl);
+		}
 		break;
-	case AG_VARIABLE_INT:
-		AG_TextboxPrintf(num->input, "%d", *(int *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_P_LONG_DOUBLE:
+		if (!AG_Defined(num,"min")) {
+			num->min.ldbl = -AG_LDBL_MIN+1;
+			AG_BindLongDouble(num, "min", &num->min.ldbl);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.ldbl = +AG_LDBL_MAX-1;
+			AG_BindLongDouble(num, "max", &num->max.ldbl);
+		}
 		break;
-	case AG_VARIABLE_UINT:
-		AG_TextboxPrintf(num->input, "%u", *(Uint *)value);
+#endif
+	case AG_VARIABLE_P_INT:
+		if (!AG_Defined(num,"min")) {
+			printf("set def min for int\n");
+			num->min.i = AG_INT_MIN+1;
+			AG_BindInt(num, "min", &num->min.i);
+		}
+		if (!AG_Defined(num,"max")) {
+			printf("set def max for int\n");
+			num->max.i = AG_INT_MAX-1;
+			AG_BindInt(num, "max", &num->max.i);
+		}
 		break;
-	case AG_VARIABLE_UINT8:
-		AG_TextboxPrintf(num->input, "%u", *(Uint8 *)value);
+	case AG_VARIABLE_P_UINT:
+		if (!AG_Defined(num,"min")) {
+			num->min.u = 0U;
+			AG_BindUint(num, "min", &num->min.u);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.u = AG_UINT_MAX-1;
+			AG_BindUint(num, "max", &num->max.u);
+		}
 		break;
-	case AG_VARIABLE_SINT8:
-		AG_TextboxPrintf(num->input, "%d", *(Sint8 *)value);
+	case AG_VARIABLE_P_UINT8:
+		if (!AG_Defined(num,"min")) {
+			num->min.u8 = 0U;
+			AG_BindUint8(num, "min", &num->min.u8);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.u8 = 0xffU;
+			AG_BindUint8(num, "max", &num->max.u8);
+		}
 		break;
-	case AG_VARIABLE_UINT16:
-		AG_TextboxPrintf(num->input, "%u", *(Uint16 *)value);
+	case AG_VARIABLE_P_SINT8:
+		if (!AG_Defined(num,"min")) {
+			num->min.s8 = -0x7f+1;
+			AG_BindSint8(num, "min", &num->min.s8);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.s8 = +0x7f-1;
+			AG_BindSint8(num, "max", &num->max.s8);
+		}
 		break;
-	case AG_VARIABLE_SINT16:
-		AG_TextboxPrintf(num->input, "%d", *(Sint16 *)value);
+	case AG_VARIABLE_P_UINT16:
+		if (!AG_Defined(num,"min")) {
+			num->min.u16 = 0U;
+			AG_BindUint16(num, "min", &num->min.u16);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.u16 = 0xffffU;
+			AG_BindUint16(num, "max", &num->max.u16);
+		}
 		break;
-	case AG_VARIABLE_UINT32:
-		AG_TextboxPrintf(num->input, "%u", *(Uint32 *)value);
+	case AG_VARIABLE_P_SINT16:
+		if (!AG_Defined(num,"min")) {
+			num->min.s16 = -0x7fff+1;
+			AG_BindSint16(num, "min", &num->min.s16);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.s16 = +0x7fff-1;
+			AG_BindSint16(num, "max", &num->max.s16);
+		}
 		break;
-	case AG_VARIABLE_SINT32:
-		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
+	case AG_VARIABLE_P_UINT32:
+		if (!AG_Defined(num,"min")) {
+			num->min.u32 = 0UL;
+			AG_BindUint32(num, "min", &num->min.u32);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.u32 = 0xffffffffUL;
+			AG_BindUint32(num, "max", &num->max.u32);
+		}
 		break;
+	case AG_VARIABLE_P_SINT32:
+		if (!AG_Defined(num,"min")) {
+			num->min.s32 = -0x7fffffffL+1;
+			AG_BindSint32(num, "min", &num->min.s32);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.s32 = +0x7fffffffL-1;
+			AG_BindSint32(num, "max", &num->max.s32);
+		}
+		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_P_UINT64:
+		if (!AG_Defined(num,"min")) {
+			num->min.u64 = 0ULL;
+			AG_BindUint64(num, "min", &num->min.u64);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.u64 = 0xffffffffffffffffULL;
+			AG_BindUint64(num, "max", &num->max.u64);
+		}
+		break;
+	case AG_VARIABLE_P_SINT64:
+		if (!AG_Defined(num,"min")) {
+			num->max.s64 = -0x7fffffffffffffffLL+1;
+			AG_BindSint64(num, "min", &num->min.s64);
+		}
+		if (!AG_Defined(num,"max")) {
+			num->max.s64 = +0x7fffffffffffffffLL-1;
+			AG_BindSint64(num, "max", &num->max.s64);
+		}
+		break;
+#endif /* HAVE_64BIT */
 	default:
 		break;
 	}
-	AG_UnlockVariable(valueb);
+	switch (V->type) {
+	case AG_VARIABLE_P_FLOAT:
+	case AG_VARIABLE_P_DOUBLE:
+	case AG_VARIABLE_P_LONG_DOUBLE:
+		AG_TextboxSetFltOnly(num->input, 1);
+		break;
+	default:
+		AG_TextboxSetIntOnly(num->input, 1);
+		break;
+	}
+	AG_UnlockVariable(V);
+	AG_NumericalUpdate(num);
 }
 
 static void
@@ -408,26 +545,19 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case AG_KEY_UP:
-		AG_NumericalAddValue(num, num->inc);
+		AG_NumericalIncrement(num);
 		break;
 	case AG_KEY_DOWN:
-		AG_NumericalAddValue(num, -num->inc);
+		AG_NumericalDecrement(num);
 		break;
 	}
-}
-
-static void
-GainedFocus(AG_Event *event)
-{
-	AG_Numerical *num = AG_SELF();
-
-	UpdateTextbox(num);
 }
 
 /* Update the numerical value from the textbox. */
 static void
 UpdateFromText(AG_Event *event)
 {
+	union ag_numerical_value val;
 	AG_Numerical *num = AG_PTR(1);
 	int unfocus = AG_INT(2);
 	AG_Variable *valueb;
@@ -436,26 +566,65 @@ UpdateFromText(AG_Event *event)
 	valueb = AG_GetVariable(num, "value", &value);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:
 	case AG_VARIABLE_FLOAT:
-		AG_NumericalSetValue(num,
-		    AG_Unit2Base(strtod(num->inTxt, NULL), num->unit));
+		val.flt = (float)AG_Unit2Base(strtod(num->inTxt, NULL), num->unit);
 		break;
+	case AG_VARIABLE_DOUBLE:
+		val.dbl = AG_Unit2Base(strtod(num->inTxt, NULL), num->unit);
+		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:
+# ifdef _MK_HAVE_STRTOLD
+		val.ldbl = AG_Unit2BaseLDBL(strtold(num->inTxt, NULL), num->unit);
+# else
+		val.ldbl = AG_Unit2BaseLDBL((long double)strtod(num->inTxt, NULL), num->unit);
+# endif
+		break;
+#endif
 	case AG_VARIABLE_INT:
-	case AG_VARIABLE_UINT:
-	case AG_VARIABLE_UINT8:
-	case AG_VARIABLE_SINT8:
-	case AG_VARIABLE_UINT16:
-	case AG_VARIABLE_SINT16:
-	case AG_VARIABLE_UINT32:
-	case AG_VARIABLE_SINT32:
-		AG_NumericalSetValue(num,
-		    (double)strtol(num->inTxt, NULL, 10));
+		val.i = (int)strtol(num->inTxt, NULL, 10);
 		break;
+	case AG_VARIABLE_UINT:
+		val.u = (Uint)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_UINT8:
+		val.u8 = (Uint8)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_SINT8:
+		val.s8 = (Sint8)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_UINT16:
+		val.u16 = (Uint16)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_SINT16:
+		val.s16 = (Sint16)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_UINT32:
+		val.u32 = (Uint32)strtol(num->inTxt, NULL, 10);
+		break;
+	case AG_VARIABLE_SINT32:
+		val.s32 = (Sint32)strtol(num->inTxt, NULL, 10);
+		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:
+# ifdef _MK_HAVE_STRTOLL
+		val.u64 = (Uint64)strtoll(num->inTxt, NULL, 10);
+# else
+		val.u64 = (Uint64)strtol(num->inTxt, NULL, 10);
+# endif
+		break;
+	case AG_VARIABLE_SINT64:
+# ifdef _MK_HAVE_STRTOLL
+		val.s64 = (Sint64)strtoll(num->inTxt, NULL, 10);
+# else
+		val.s64 = (Sint64)strtol(num->inTxt, NULL, 10);
+# endif
+		break;
+#endif
 	default:
 		break;
 	}
-
+	AG_NumericalSetValue(num, val);
 	AG_UnlockVariable(valueb);
 
 	if (unfocus) {
@@ -470,7 +639,7 @@ IncrementValue(AG_Event *event)
 	AG_Numerical *num = AG_PTR(1);
 
 	AG_ObjectLock(num);
-	AG_NumericalAddValue(num, num->inc);
+	AG_NumericalIncrement(num);
 	AG_ObjectUnlock(num);
 }
 
@@ -480,7 +649,7 @@ DecrementValue(AG_Event *event)
 	AG_Numerical *num = AG_PTR(1);
 	
 	AG_ObjectLock(num);
-	AG_NumericalAddValue(num, -num->inc);
+	AG_NumericalDecrement(num);
 	AG_ObjectUnlock(num);
 }
 
@@ -488,6 +657,9 @@ static void
 UpdateUnitSelector(AG_Numerical *num)
 {
 	AG_ButtonTextS(num->units->button, AG_UnitAbbr(num->unit));
+	if (WIDGET(num)->window != NULL &&
+	    WIDGET(num)->window->visible)
+		AG_NumericalUpdate(num);
 }
 
 static void
@@ -499,7 +671,6 @@ UnitSelected(AG_Event *event)
 	AG_ObjectLock(num);
 	num->unit = (const AG_Unit *)ti->p1;
 	UpdateUnitSelector(num);
-	UpdateTextbox(num);
 	AG_ObjectUnlock(num);
 }
 
@@ -569,6 +740,45 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	return (0);
 }
 
+/* Update the input text from the binding value. */
+void
+AG_NumericalUpdate(AG_Numerical *num)
+{
+	AG_Variable *valueb;
+	void *value;
+	char s[64];
+
+	valueb = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
+		Snprintf(s, sizeof(s), num->format,
+		    AG_Base2Unit(*(double *)value, num->unit));
+		break;
+	case AG_VARIABLE_FLOAT:
+		Snprintf(s, sizeof(s), num->format,
+		    AG_Base2Unit(*(float *)value, num->unit));
+		break;
+	case AG_VARIABLE_INT:	 StrlcpyInt(s, *(int *)value, sizeof(s));	break;
+	case AG_VARIABLE_UINT:	 StrlcpyUint(s, *(Uint *)value, sizeof(s));	break;
+	case AG_VARIABLE_UINT8:	 StrlcpyUint(s, *(Uint8 *)value, sizeof(s));	break;
+	case AG_VARIABLE_SINT8:	 StrlcpyInt(s, *(Sint8 *)value, sizeof(s));	break;
+	case AG_VARIABLE_UINT16: StrlcpyUint(s, *(Uint16 *)value, sizeof(s));	break;
+	case AG_VARIABLE_SINT16: StrlcpyInt(s, *(Sint16 *)value, sizeof(s));	break;
+	case AG_VARIABLE_UINT32: StrlcpyUint(s, *(Uint32 *)value, sizeof(s));	break;
+	case AG_VARIABLE_SINT32: StrlcpyInt(s, *(Sint32 *)value, sizeof(s));	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64: Snprintf(s, sizeof(s), "%llu", (unsigned long long)*(Uint64 *)value);	break;
+	case AG_VARIABLE_SINT64: Snprintf(s, sizeof(s), "%lld", (long long)*(Sint64 *)value);		break;
+#endif
+	default:
+		break;
+	}
+	if (strcmp(num->inTxt, s) != 0) {
+		AG_TextboxSetString(num->input, s);
+	}
+	AG_UnlockVariable(valueb);
+}
+
 static void
 Init(void *obj)
 {
@@ -577,14 +787,7 @@ Init(void *obj)
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	num->value = 0.0;
-	num->min = 0.0;
-	num->max = 1.0;
-	num->intValue = 0;
-	num->intMin = 0;
-	num->intMax = 0;
-
-	num->inc = 1.0;
+	num->incr = 1.0;
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
@@ -602,27 +805,19 @@ Init(void *obj)
 	AG_ButtonSetPadding(num->incbu, 0,0,0,0);
 	AG_LabelSetPadding(num->incbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(num->incbu, 0);
+
 	num->decbu = AG_ButtonNewS(num, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(num->decbu, 0,0,0,0);
 	AG_LabelSetPadding(num->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
+	AG_SetEvent(num, "widget-shown", OnShow, NULL);
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
-	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(num, "bound", Bound, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);
 	AG_SetEvent(num->decbu, "button-pushed", DecrementValue, "%p", num);
-	AG_SetEvent(num->input, "textbox-return",
-	    UpdateFromText, "%p,%i", num, 1);
-	AG_SetEvent(num->input, "textbox-changed",
-	    UpdateFromText, "%p,%i", num, 0);
+	AG_SetEvent(num->input, "textbox-return", UpdateFromText, "%p,%i", num, 1);
+	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i", num, 0);
 	AG_WidgetForwardFocus(num, num->input);
-
-	AG_BindDouble(num, "value", &num->value);
-	AG_BindDouble(num, "min", &num->min);
-	AG_BindDouble(num, "max", &num->max);
-
-	AG_RedrawOnChange(num, 250, "value");
 }
 
 void
@@ -710,77 +905,41 @@ Draw(void *obj)
 	if (num->units != NULL) { AG_WidgetDraw(num->units); }
 	AG_WidgetDraw(num->incbu);
 	AG_WidgetDraw(num->decbu);
-
-	if (!AG_WidgetIsFocused(num->input))
-		UpdateTextbox(num);
 }
 
-#define ADD_CONVERTED(TYPE) do { \
-	n = (double)(*(TYPE *)value); \
-	if ((n+inc) < *min) { n = *min; } \
-	else if ((n+inc) > *max) { n = *(max); } \
-	else { n += inc; } \
-	*(TYPE *)value = (TYPE)n; \
+/*
+ * Type-independent increment operation.
+ */
+#undef ADD_INT
+#define ADD_INT(TYPE,_memb) do { \
+	n._memb = *(TYPE *)value; \
+	if ((n._memb + num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb + num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb += num->incr; } \
+	*(TYPE *)value = n._memb; \
 } while (0)
-#define ADD_REAL(TYPE) do { \
-	n = AG_Base2Unit(*(TYPE *)value, num->unit); \
-	if ((n+inc) < *min) { n = *min; } \
-	else if ((n+inc) > *max) { n = *(max); } \
-	else { n += inc; } \
-	*(TYPE *)value = AG_Unit2Base(n, num->unit); \
-} while (0)
-void
-AG_NumericalAddValue(AG_Numerical *num, double inc)
-{
-	AG_Variable *valueb, *minb, *maxb;
-	void *value;
-	double n;
-	double *min, *max;
-
-	AG_ObjectLock(num);
-	valueb = AG_GetVariable(num, "value", &value);
-	minb = AG_GetVariable(num, "min", &min);
-	maxb = AG_GetVariable(num, "max", &max);
-
-	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
-	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
-	case AG_VARIABLE_INT:		ADD_CONVERTED(int);	break;
-	case AG_VARIABLE_UINT:		ADD_CONVERTED(Uint);	break;
-	case AG_VARIABLE_UINT8:		ADD_CONVERTED(Uint8);	break;
-	case AG_VARIABLE_SINT8:		ADD_CONVERTED(Sint8);	break;
-	case AG_VARIABLE_UINT16:	ADD_CONVERTED(Uint16);	break;
-	case AG_VARIABLE_SINT16:	ADD_CONVERTED(Sint16);	break;
-	case AG_VARIABLE_UINT32:	ADD_CONVERTED(Uint32);	break;
-	case AG_VARIABLE_SINT32:	ADD_CONVERTED(Sint32);	break;
-	default:					break;
-	}
-	AG_PostEvent(NULL, num, "numerical-changed", NULL);
-
-	AG_UnlockVariable(valueb);
-	AG_UnlockVariable(minb);
-	AG_UnlockVariable(maxb);
-
-	UpdateTextbox(num);
-	AG_ObjectUnlock(num);
-	AG_Redraw(num);
-}
 #undef ADD_REAL
-#undef ADD_CONVERTED
-
-#define ASSIGN_VALUE(TYPE) *(TYPE *)value = nvalue < *min ? *min : \
-    nvalue > *max ? *max : nvalue
-#define CONV_VALUE(TYPE) \
-    *(TYPE *)value = nvalue < *min ? (TYPE)(*min) : \
-     nvalue > *max ? (TYPE)(*max) : (TYPE)nvalue
-
-/* TODO int types directly */
+#define ADD_REAL(TYPE,_memb) do { \
+	n._memb = AG_Base2Unit((double)*(TYPE *)value, num->unit); \
+	if ((n._memb + num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb + num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb += num->incr; } \
+	*(TYPE *)value = AG_Unit2Base((double)n._memb, num->unit); \
+} while (0)
+#undef ADD_LDBL
+#define ADD_LDBL(TYPE,_memb) do { \
+	n._memb = AG_Base2UnitLDBL((long double)*(TYPE *)value, num->unit); \
+	if ((n._memb + num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb + num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb += num->incr; } \
+	*(TYPE *)value = AG_Unit2BaseLDBL((long double)n._memb, num->unit); \
+} while (0)
 void
-AG_NumericalSetValue(AG_Numerical *num, double nvalue)
+AG_NumericalIncrement(AG_Numerical *num)
 {
+	union ag_numerical_value n;
 	AG_Variable *valueb, *minb, *maxb;
-	void *value;
-	double *min, *max;
+	void *value, *min, *max;
 
 	AG_ObjectLock(num);
 	valueb = AG_GetVariable(num, "value", &value);
@@ -788,81 +947,162 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	maxb = AG_GetVariable(num, "max", &max);
 
 	switch (AG_VARIABLE_TYPE(valueb)) {
-	case AG_VARIABLE_DOUBLE:	ASSIGN_VALUE(double);	break;
-	case AG_VARIABLE_FLOAT:		ASSIGN_VALUE(float);	break;
-	case AG_VARIABLE_INT:		CONV_VALUE(int);	break;
-	case AG_VARIABLE_UINT:		CONV_VALUE(Uint);	break;
-	case AG_VARIABLE_UINT8:		CONV_VALUE(Uint8);	break;
-	case AG_VARIABLE_SINT8:		CONV_VALUE(Sint8);	break;
-	case AG_VARIABLE_UINT16:	CONV_VALUE(Uint16);	break;
-	case AG_VARIABLE_SINT16:	CONV_VALUE(Sint16);	break;
-	case AG_VARIABLE_UINT32:	CONV_VALUE(Uint32);	break;
-	case AG_VARIABLE_SINT32:	CONV_VALUE(Sint32);	break;
-	default:					break;
+	case AG_VARIABLE_FLOAT:		ADD_REAL(float,flt);		break;
+	case AG_VARIABLE_DOUBLE:	ADD_REAL(double,dbl);		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	ADD_LDBL(long double,ldbl);	break;
+#endif
+	case AG_VARIABLE_INT:		ADD_INT(int,i);			break;
+	case AG_VARIABLE_UINT:		ADD_INT(Uint,u);		break;
+	case AG_VARIABLE_UINT8:		ADD_INT(Uint8,u8);		break;
+	case AG_VARIABLE_SINT8:		ADD_INT(Sint8,s8);		break;
+	case AG_VARIABLE_UINT16:	ADD_INT(Uint16,u16);		break;
+	case AG_VARIABLE_SINT16:	ADD_INT(Sint16,s16);		break;
+	case AG_VARIABLE_UINT32:	ADD_INT(Uint32,u32);		break;
+	case AG_VARIABLE_SINT32:	ADD_INT(Sint32,s32);		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	ADD_INT(Uint64,u64);		break;
+	case AG_VARIABLE_SINT64:	ADD_INT(Sint64,s64);		break;
+#endif
+	default:							break;
 	}
-
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
-
 	AG_UnlockVariable(valueb);
 	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
+
+	AG_NumericalUpdate(num);
 	AG_ObjectUnlock(num);
-	AG_Redraw(num);
 }
-#undef ASSIGN_VALUE
-#undef CONV_VALUE
+#undef ADD_INT
+#undef ADD_REAL
+#undef ADD_LDBL
 
+/*
+ * Type-independent decrement operation.
+ */
+#undef SUB_INT
+#define SUB_INT(TYPE,_memb) do { \
+	n._memb = *(TYPE *)value; \
+	if ((n._memb - num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb - num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb -= num->incr; } \
+	*(TYPE *)value = n._memb; \
+} while (0)
+#undef SUB_REAL
+#define SUB_REAL(TYPE,_memb) do { \
+	n._memb = AG_Base2Unit((double)*(TYPE *)value, num->unit); \
+	if ((n._memb - num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb - num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb -= num->incr; } \
+	*(TYPE *)value = AG_Unit2Base((double)n._memb, num->unit); \
+} while (0)
+#undef SUB_LDBL
+#define SUB_LDBL(TYPE,_memb) do { \
+	n._memb = AG_Base2UnitLDBL((long double)*(TYPE *)value, num->unit); \
+	if ((n._memb - num->incr) < *(TYPE *)min) { n._memb = *(TYPE *)min; } \
+	else if ((n._memb - num->incr) > *(TYPE *)max) { n._memb = *(TYPE *)max; } \
+	else { n._memb -= num->incr; } \
+	*(TYPE *)value = AG_Unit2BaseLDBL((long double)n._memb, num->unit); \
+} while (0)
 void
-AG_NumericalSetMin(AG_Numerical *num, double nmin)
+AG_NumericalDecrement(AG_Numerical *num)
 {
-	AG_Variable *minb;
-	void *min;
+	union ag_numerical_value n;
+	AG_Variable *valueb, *minb, *maxb;
+	void *value, *min, *max;
 
-	/* TODO allow integer min/max bindings */
 	AG_ObjectLock(num);
+	valueb = AG_GetVariable(num, "value", &value);
 	minb = AG_GetVariable(num, "min", &min);
-	switch (AG_VARIABLE_TYPE(minb)) {
-	case AG_VARIABLE_DOUBLE:
-		*(double *)min = nmin;
-		break;
-	case AG_VARIABLE_FLOAT:
-		*(float *)min = (float)nmin;
-		break;
-	default:
-		break;
-	}
-	AG_UnlockVariable(minb);
-	AG_ObjectUnlock(num);
-}
-
-void
-AG_NumericalSetMax(AG_Numerical *num, double nmax)
-{
-	AG_Variable *maxb;
-	void *max;
-	
-	/* TODO allow integer min/max bindings */
-	AG_ObjectLock(num);
 	maxb = AG_GetVariable(num, "max", &max);
-	switch (AG_VARIABLE_TYPE(maxb)) {
-	case AG_VARIABLE_DOUBLE:
-		*(double *)max = nmax;
-		break;
-	case AG_VARIABLE_FLOAT:
-		*(float *)max = (float)nmax;
-		break;
-	default:
-		break;
+
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_FLOAT:		SUB_REAL(float,flt);		break;
+	case AG_VARIABLE_DOUBLE:	SUB_REAL(double,dbl);		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	SUB_LDBL(long double,ldbl);	break;
+#endif
+	case AG_VARIABLE_INT:		SUB_INT(int,i);			break;
+	case AG_VARIABLE_UINT:		SUB_INT(Uint,u);		break;
+	case AG_VARIABLE_UINT8:		SUB_INT(Uint8,u8);		break;
+	case AG_VARIABLE_SINT8:		SUB_INT(Sint8,s8);		break;
+	case AG_VARIABLE_UINT16:	SUB_INT(Uint16,u16);		break;
+	case AG_VARIABLE_SINT16:	SUB_INT(Sint16,s16);		break;
+	case AG_VARIABLE_UINT32:	SUB_INT(Uint32,u32);		break;
+	case AG_VARIABLE_SINT32:	SUB_INT(Sint32,s32);		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	SUB_INT(Uint64,u64);		break;
+	case AG_VARIABLE_SINT64:	SUB_INT(Sint64,s64);		break;
+#endif
+	default:							break;
 	}
+	AG_PostEvent(NULL, num, "numerical-changed", NULL);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
 	AG_UnlockVariable(maxb);
+
+	AG_NumericalUpdate(num);
 	AG_ObjectUnlock(num);
 }
+#undef SUB_INT
+#undef SUB_REAL
+#undef SUB_LDBL
+
+/*
+ * Type-independent set operation.
+ */
+#undef SET_NUM
+#define SET_NUM(TYPE,_memb) \
+    *(TYPE *)value = newVal._memb < *(TYPE *)min ? *(TYPE *)min : \
+                     newVal._memb > *(TYPE *)max ? *(TYPE *)max : \
+		     newVal._memb 
+void
+AG_NumericalSetValue(AG_Numerical *num, union ag_numerical_value newVal)
+{
+	AG_Variable *valueb, *minb, *maxb;
+	void *value, *min, *max;
+
+	AG_ObjectLock(num);
+	valueb = AG_GetVariable(num, "value", &value);
+	minb = AG_GetVariable(num, "min", &min);
+	maxb = AG_GetVariable(num, "max", &max);
+
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_FLOAT:		SET_NUM(float,flt);		break;
+	case AG_VARIABLE_DOUBLE:	SET_NUM(double,dbl);		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	SET_NUM(long double,ldbl);	break;
+#endif
+	case AG_VARIABLE_INT:		SET_NUM(int,i);			break;
+	case AG_VARIABLE_UINT:		SET_NUM(Uint,u);		break;
+	case AG_VARIABLE_UINT8:		SET_NUM(Uint8,u8);		break;
+	case AG_VARIABLE_SINT8:		SET_NUM(Sint8,s8);		break;
+	case AG_VARIABLE_UINT16:	SET_NUM(Uint16,u16);		break;
+	case AG_VARIABLE_SINT16:	SET_NUM(Sint16,s16);		break;
+	case AG_VARIABLE_UINT32:	SET_NUM(Uint32,u32);		break;
+	case AG_VARIABLE_SINT32:	SET_NUM(Sint32,s32);		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	SET_NUM(Uint64,u64);		break;
+	case AG_VARIABLE_SINT64:	SET_NUM(Sint64,s64);		break;
+#endif
+	default:							break;
+	}
+	AG_PostEvent(NULL, num, "numerical-changed", NULL);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
+
+	AG_NumericalUpdate(num);
+	AG_ObjectUnlock(num);
+}
+#undef SET_NUM
 
 void
-AG_NumericalSetIncrement(AG_Numerical *num, double inc)
+AG_NumericalSetIncrement(AG_Numerical *num, double incr)
 {
 	AG_ObjectLock(num);
-	num->inc = inc;
+	num->incr = incr;
 	AG_ObjectUnlock(num);
 }
 
@@ -876,8 +1116,8 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode,
 	num->format[2] = '\0';
 	StrlcatInt(num->format, precision, sizeof(num->format));
 	Strlcat(num->format, mode, sizeof(num->format));
+	AG_NumericalUpdate(num);
 	AG_ObjectUnlock(num);
-	AG_Redraw(num);
 }
 
 void
@@ -900,7 +1140,6 @@ AG_NumericalSelectUnit(AG_Numerical *num, const char *uname)
 	}
 	AG_ObjectUnlock(num->units->list);
 	AG_ObjectUnlock(num);
-	AG_Redraw(num);
 }
 
 void
@@ -920,16 +1159,7 @@ AG_NumericalSetWriteable(AG_Numerical *num, int writeable)
 	AG_ObjectUnlock(num);
 }
 
-void
-AG_NumericalSetRange(AG_Numerical *num, double min, double max)
-{
-	AG_ObjectLock(num);
-	AG_NumericalSetMin(num, min);
-	AG_NumericalSetMax(num, max);
-	AG_ObjectUnlock(num);
-}
-
-/* Convert the bound value to a float and return it. */
+/* Convert the bound value to a float. */
 float
 AG_NumericalGetFlt(AG_Numerical *num)
 {
@@ -939,20 +1169,27 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	bValue = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(bValue)) {
 	case AG_VARIABLE_FLOAT:		return *(float *)value;
-	case AG_VARIABLE_DOUBLE:	return  (float)(*(double *)value);
-	case AG_VARIABLE_INT:		return  (float)(*(int *)value);
-	case AG_VARIABLE_UINT:		return  (float)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return  (float)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return  (float)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return  (float)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT8:		return  (float)(*(Sint8 *)value);
-	case AG_VARIABLE_SINT16:	return  (float)(*(Sint16 *)value);
-	case AG_VARIABLE_SINT32:	return  (float)(*(Sint32 *)value);
-	default:			return (0.0);
+	case AG_VARIABLE_DOUBLE:	return (float)(*(double *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	return (float)(*(long double *)value);
+#endif
+	case AG_VARIABLE_INT:		return (float)(*(int *)value);
+	case AG_VARIABLE_UINT:		return (float)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (float)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (float)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return (float)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return (float)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (float)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (float)(*(Sint32 *)value);
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	return (float)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:	return (float)(*(Sint64 *)value);
+#endif
+	default:			return (0.0f);
 	}
 }
 
-/* Convert the bound value to a double and return it. */
+/* Convert the bound value to a double. */
 double
 AG_NumericalGetDbl(AG_Numerical *num)
 {
@@ -961,21 +1198,58 @@ AG_NumericalGetDbl(AG_Numerical *num)
 
 	bValue = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return (double)(*(float *)value);
 	case AG_VARIABLE_DOUBLE:	return *(double *)value;
-	case AG_VARIABLE_FLOAT:		return  (double)(*(float *)value);
-	case AG_VARIABLE_INT:		return  (double)(*(int *)value);
-	case AG_VARIABLE_UINT:		return  (double)(*(Uint *)value);
-	case AG_VARIABLE_UINT8:		return  (double)(*(Uint8 *)value);
-	case AG_VARIABLE_UINT16:	return  (double)(*(Uint16 *)value);
-	case AG_VARIABLE_UINT32:	return  (double)(*(Uint32 *)value);
-	case AG_VARIABLE_SINT8:		return  (double)(*(Sint8 *)value);
-	case AG_VARIABLE_SINT16:	return  (double)(*(Sint16 *)value);
-	case AG_VARIABLE_SINT32:	return  (double)(*(Sint32 *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	return (double)(*(long double *)value);
+#endif
+	case AG_VARIABLE_INT:		return (double)(*(int *)value);
+	case AG_VARIABLE_UINT:		return (double)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (double)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (double)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return (double)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return (double)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (double)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (double)(*(Sint32 *)value);
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	return (double)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:	return (double)(*(Sint64 *)value);
+#endif
 	default:			return (0.0);
 	}
 }
 
-/* Convert the bound value to a natural integer and return it. */
+#ifdef HAVE_LONG_DOUBLE
+/* Convert the bound value to a long double. */
+long double
+AG_NumericalGetLdbl(AG_Numerical *num)
+{
+	AG_Variable *bValue;
+	void *value;
+
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return (long double)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:	return (long double)(*(double *)value);
+	case AG_VARIABLE_LONG_DOUBLE:	return *(long double *)value;
+	case AG_VARIABLE_INT:		return (long double)(*(int *)value);
+	case AG_VARIABLE_UINT:		return (long double)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (long double)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (long double)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return (long double)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return (long double)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (long double)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (long double)(*(Sint32 *)value);
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	return (long double)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:	return (long double)(*(Sint64 *)value);
+#endif
+	default:			return (0.0L);
+	}
+}
+#endif /* HAVE_LONG_DOUBLE */
+
+/* Convert the bound value to a natural integer. */
 int
 AG_NumericalGetInt(AG_Numerical *num)
 {
@@ -984,6 +1258,11 @@ AG_NumericalGetInt(AG_Numerical *num)
 
 	bValue = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return (int)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:	return (int)(*(double *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	return (int)(*(long double *)value);
+#endif
 	case AG_VARIABLE_INT:		return *(int *)value;
 	case AG_VARIABLE_UINT:		return (int)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (int)(*(Uint8 *)value);
@@ -992,13 +1271,15 @@ AG_NumericalGetInt(AG_Numerical *num)
 	case AG_VARIABLE_SINT8:		return (int)(*(Sint8 *)value);
 	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)value);
 	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)value);
-	case AG_VARIABLE_DOUBLE:	return (int)(*(double *)value);
-	case AG_VARIABLE_FLOAT:		return (int)(*(float *)value);
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	return (int)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:	return (int)(*(Sint64 *)value);
+#endif
 	default:			return (0);
 	}
 }
 
-/* Convert the bound value to a 32-bit integer and return it. */
+/* Convert the bound value to a 32-bit integer. */
 Uint32
 AG_NumericalGetUint32(AG_Numerical *num)
 {
@@ -1007,6 +1288,11 @@ AG_NumericalGetUint32(AG_Numerical *num)
 
 	bValue = AG_GetVariable(num, "value", &value);
 	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return (Uint32)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:	return (Uint32)(*(double *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	return (Uint32)(*(long double *)value);
+#endif
 	case AG_VARIABLE_INT:		return (Uint32)(*(int *)value);
 	case AG_VARIABLE_UINT:		return (Uint32)(*(Uint *)value);
 	case AG_VARIABLE_UINT8:		return (Uint32)(*(Uint8 *)value);
@@ -1015,11 +1301,55 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	case AG_VARIABLE_SINT8:		return (Uint32)(*(Sint8 *)value);
 	case AG_VARIABLE_SINT16:	return (Uint32)(*(Sint16 *)value);
 	case AG_VARIABLE_SINT32:	return (Uint32)(*(Sint32 *)value);
-	case AG_VARIABLE_DOUBLE:	return (Uint32)(*(double *)value);
-	case AG_VARIABLE_FLOAT:		return (Uint32)(*(float *)value);
-	default:			return (0);
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	return (Uint32)(*(Uint64 *)value);
+	case AG_VARIABLE_SINT64:	return (Uint32)(*(Sint64 *)value);
+#endif
+	default:			return (0UL);
 	}
 }
+
+#ifdef HAVE_64BIT
+/* Convert the bound value to a 64-bit integer. */
+Uint64
+AG_NumericalGetUint64(AG_Numerical *num)
+{
+	AG_Variable *bValue;
+	void *value;
+
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return (Uint64)(*(float *)value);
+	case AG_VARIABLE_DOUBLE:	return (Uint64)(*(double *)value);
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	return (Uint64)(*(long double *)value);
+#endif
+	case AG_VARIABLE_INT:		return (Uint64)(*(int *)value);
+	case AG_VARIABLE_UINT:		return (Uint64)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (Uint64)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (Uint64)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return (Uint64)(*(Uint32 *)value);
+	case AG_VARIABLE_UINT64:	return *(Uint64 *)value;
+	case AG_VARIABLE_SINT8:		return (Uint64)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (Uint64)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (Uint64)(*(Sint32 *)value);
+	case AG_VARIABLE_SINT64:	return (Uint64)(*(Sint64 *)value);
+	default:			return (0ULL);
+	}
+}
+#endif /* HAVE_64BIT */
+
+#ifdef AG_LEGACY
+void
+AG_NumericalSetRangeDbl(AG_Numerical *num, double min, double max)
+{ }
+void
+AG_NumericalSetRangeInt(AG_Numerical *num, int min, int max)
+{ }
+void
+AG_NumericalSetRangeFlt(AG_Numerical *num, float min, float max)
+{ }
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agNumericalClass = {
 	{

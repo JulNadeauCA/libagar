@@ -1,4 +1,4 @@
-.\" Copyright (c) 2003-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.2
 .Sh NAME
 .Nm AG_Numerical
-.Nd agar numerical entry widget
+.Nd agar numerical editor widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -39,19 +39,35 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Numerical.png, "A numerical widget bound to a distance value")
 The
 .Nm
-widget displays the value of an integer or floating-point variable, and
-allows its value to be edited by the user.
+widget allows the value of an integer or floating-point variable to be
+edited by the user.
+.Nm
+provides a
+.Va value
+binding, and optional limits may be specified as the
+.Va min
+and
+.Va max
+bindings.
 .Pp
-The widget is composed of an
+If
+.Va min
+or
+.Va max
+are undefined when the widget is first shown, default limits are
+set according to the widest numerical range that can be represented by
+the type of
+.Va value .
+.Pp
+.Nm
+is composed of an
 .Xr AG_Textbox 3 ,
 two
 .Xr AG_Button 3
 widgets to increment and decrement the value,
 and optionally an
 .Xr AG_UCombo 3
-for choosing between different units
-(see
-.Xr AG_Units 3 ) .
+for selecting units.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -66,50 +82,36 @@ for choosing between different units
 .Pp
 .\" MANLINK(AG_NumericalNewFlt)
 .\" MANLINK(AG_NumericalNewDbl)
+.\" MANLINK(AG_NumericalNewLdbl)
 .\" MANLINK(AG_NumericalNewInt)
 .\" MANLINK(AG_NumericalNewUint)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Flt,Dbl,Int,Uint} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
+.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
 .\" MANLINK(AG_NumericalNewFltR)
 .\" MANLINK(AG_NumericalNewDblR)
+.\" MANLINK(AG_NumericalNewLdblR)
 .\" MANLINK(AG_NumericalNewIntR)
 .\" MANLINK(AG_NumericalNewUintR)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}R "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
+.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint}R "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
 .Pp
 .\" MANLINK(AG_NumericalNewUint8)
 .\" MANLINK(AG_NumericalNewUint16)
 .\" MANLINK(AG_NumericalNewUint32)
+.\" MANLINK(AG_NumericalNewUint64)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Uint8,Uint16,Uint32} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
+.Fn AG_NumericalNew{Uint8,Uint16,Uint32,Uint64} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
 .\" MANLINK(AG_NumericalNewSint8)
 .\" MANLINK(AG_NumericalNewSint16)
 .\" MANLINK(AG_NumericalNewSint32)
+.\" MANLINK(AG_NumericalNewSint64)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Sint8,Sint16,Sint32} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
+.Fn AG_NumericalNew{Sint8,Sint16,Sint32,Sint64} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
 .Pp
 .Ft "void"
 .Fn AG_NumericalSizeHint "AG_Numerical *num" "const char *sizeHint"
-.Pp
-.\" MANLINK(AG_NumericalSetMinInt)
-.\" MANLINK(AG_NumericalSetMinFlt)
-.\" MANLINK(AG_NumericalSetMinDbl)
-.Ft void
-.Fn AG_NumericalSetMin{Int,Flt,Dbl} "AG_Numerical *num" "<Type> min_value"
-.Pp
-.\" MANLINK(AG_NumericalSetMaxInt)
-.\" MANLINK(AG_NumericalSetMaxFlt)
-.\" MANLINK(AG_NumericalSetMaxDbl)
-.Ft void
-.Fn AG_NumericalSetMax{Int,Flt,Dbl} "AG_Numerical *num" "<Type> max_value"
-.Pp
-.\" MANLINK(AG_NumericalSetRangeInt)
-.\" MANLINK(AG_NumericalSetRangeFlt)
-.\" MANLINK(AG_NumericalSetRangeDbl)
-.Ft void
-.Fn AG_NumericalSetRange{Int,Flt,Dbl} "AG_Numerical *num" "<Type> min" "<Type> max"
 .Pp
 .Ft void
 .Fn AG_NumericalSetIncrement "AG_Numerical *num" "double increment"
@@ -138,12 +140,12 @@ include:
 .Pp
 .Bl -tag -width "AG_NUMERICAL_EXPAND "
 .It AG_NUMERICAL_INT
-In
-.Fn AG_NumericalNew ,
-use a default variable binding of integer type (default is to use
-a floating-point type; see
-.Dq STRUCTURE DATA
-section).
+If no "value" binding has been set when the widget is first shown,
+use a built-in variable of type
+.Ft int
+(by default, a builtin variable of type
+.Ft double
+is used).
 .It AG_NUMERICAL_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -171,31 +173,13 @@ for more information.
 .Pp
 The alternate constructor routines
 .Fn AG_NumericalNew<Type>
-create a new
-.Nm
-bound to a variable of the specified type.
-The functions
-.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}
-tie the widget to a variable of type
-.Ft float ,
-.Ft double ,
-.Ft int
-and
-.Ft Uint ,
-respectively.
-.Pp
-The alternate constructor routines
-.Fn AG_NumericalNew{Flt,Dbl,Int,Uint}R
-also allow explicit limits to be specified in
+create a new widget bound to a variable of the specified type.
+.Fn AG_NumericalNew<Type>R
+also accept explicit
 .Fa min
 and
-.Fa max .
-.Pp
-The functions
-.Fn AG_NumericalNew{Uint8,Uint16,Uint32}
-bind to an unsigned 8-bit, 16-bit or 32-bit integer, respectively.
-.Fn AG_NumericalNew{Sint8,Sint16,Sint32}
-bind to a signed 8-bit, 16-bit or 32-bit integer, respectively.
+.Fa max
+arguments.
 .Pp
 .Fn AG_NumericalSizeHint
 requests that the initial geometry of the
@@ -205,24 +189,12 @@ widget be sufficient to display
 in its entirety (see
 .Xr AG_SizeSpec 3 ) .
 .Pp
-The default limits are set according to the widest numerical range that
-can be represented according to the bound variable's type.
-The functions
-.Fn AG_NumericalSetMin{Int,Flt,Dbl} ,
-.Fn AG_NumericalSetMax{Int,Flt,Dbl}
-and
-.Fn AG_NumericalSetRange{Int,Flt,Dbl}
-allow limits to be defined explicitely.
-Note that the action of setting a new
-.Va value
-binding with
-.Fn AG_Bind<Type>
-has the side-effect of overriding any limits specified by these calls.
-.Pp
 The
 .Fn AG_NumericalSetIncrement
-function defines the step value (given in selected units) for the
-"+" and "-" buttons.
+function defines the step value for the "+" and "-" buttons.
+When unit conversion is used, the step value should use the target unit
+system.
+The floating-point argument will be converted to integer if necessary.
 .Pp
 .Fn AG_NumericalSetUnitSystem
 searches all unit groups for a unit of the given name and selects it as the
@@ -245,64 +217,35 @@ enables of disables user modification
 sets the writeability flag, also accessible as the
 .Va writeable
 member of the structure.
-.Sh TYPE-INDEPENDENT VALUE MANIPULATION
+.Sh NUMERICAL OPERATIONS
 .nr nS 1
 .Ft void
-.Fn AG_NumericalSetValue "AG_Numerical *num" "double value"
+.Fn AG_NumericalIncrement "AG_Numerical *num"
 .Pp
 .Ft void
-.Fn AG_NumericalAddValue "AG_Numerical *num" "double value"
-.Pp
-.Ft void
-.Fn AG_NumericalSubValue "AG_Numerical *num" "double value"
+.Fn AG_NumericalDecrement "AG_Numerical *num"
 .Pp
 .nr nS 0
 The
-.Fn AG_NumericalSetValue
-function assigns
-.Fa value
-to the current binding, performing any conversion necessary.
-.Pp
-Similarly,
-.Fn AG_NumericalAddValue
+.Fn AG_NumericalIncrement
 and
-.Fn AG_NumericalSubValue
-increment or decrement the bound value by the specified amount, converting to
-the binding type as needed.
-.Pp
-.Fn AG_NumericalSetValue ,
-.Fn AG_NumericalAddValue
-and
-.Fn AG_NumericalSubValue
-all clamp the value according to the
-.Va min
-and
-.Va max
-bindings.
+.Fn AG_NumericalDecrement
+functions increment and decrement the current value by the interval
+specified in
+.Fn AG_NumericalSetIncrement
+(which defaults to 1).
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Numerical
 object:
 .Pp
-.Bl -tag -compact -width "double value "
-.It Ft double value
-Default binding for value.
-.It Ft double min
-Default binding for limit minimum.
-.It Ft double max
-Default binding for limit maximum.
-.It Ft int intValue
-Default binding for value (if
-.Dv AG_NUMERICAL_INT
-was given).
-.It Ft int intMin
-Default binding for limiit minimum (if
-.Dv AG_NUMERICAL_INT
-was given).
-.It Ft int intMax
-Default binding for limiit maximum (if
-.Dv AG_NUMERICAL_INT
-was given).
+.Bl -tag -compact -width "const AG_Unit *unit "
+.It Ft char *format
+Format string for printing numbers.
+.It Ft const AG_Unit *unit
+Current unit in use.
+.It Ft AG_Textbox *input
+Textbox for keyboard input.
 .El
 .Sh EVENTS
 The
@@ -320,13 +263,15 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "double *value, *min, *max "
-.It Va double *value, *min, *max
-Real number (double-precision).
+.Bl -tag -compact -width "long double *value, *min, *max "
 .It Va float *value, *min, *max
 Real number (single-precision).
+.It Va double *value, *min, *max
+Real number (double-precision).
+.It Va long double *value, *min, *max
+Real number (quad-precision).
 .It Va int *value, *min, *max
-Integer value.
+Signed integer value.
 .It Va Uint *value, *min, *max
 Unsigned integer value.
 .It Va Uint8 *value, *min, *max
@@ -335,13 +280,26 @@ Unsigned 8-bit value.
 Unsigned 16-bit value.
 .It Va Uint32 *value, *min, *max
 Unsigned 32-bit value.
+.It Va Uint64 *value, *min, *max
+Unsigned 64-bit value).
 .It Va Sint8 *value, *min, *max
 Signed 8-bit value.
 .It Va Sint16 *value, *min, *max
 Signed 16-bit value.
 .It Va Sint32 *value, *min, *max
 Signed 32-bit value.
+.It Va Sint64 *value, *min, *max
+Signed 64-bit value.
 .El
+.Pp
+The 64-bit types are only available if
+.Dv AG_HAVE_64BIT
+is defined.
+The
+.Ft long double
+type requires the
+.Dv AG_HAVE_LONG_DOUBLE
+be defined.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Button 3 ,
@@ -356,3 +314,5 @@ widget first appeared in Agar 1.2 as a replacement for
 and
 .Sq AG_FSpinbutton
 that can handle both floating-point and integer values.
+As of Agar 1.5.0, support was added for 64-bit types and
+.Ft long double .
