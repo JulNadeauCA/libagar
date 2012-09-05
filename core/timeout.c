@@ -148,15 +148,13 @@ gen_id:
 		EV_SET(&kev, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0, ival, to);
 		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
 			AG_SetError("kqueue: %s", AG_Strerror(errno));
-			goto fail;
+			AG_UnlockTimers(ob);
+			return (-1);
 		}
 	}
 #endif
 	AG_UnlockTimers(ob);
 	return (0);
-fail:
-	AG_UnlockTimers(ob);
-	return (-1);
 }
 
 /* Cancel the given timeout if it is scheduled for execution. */
