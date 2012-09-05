@@ -331,7 +331,11 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
 		f++;
 	}
 out:
-	*pDst = '\0';
+	if (pDst < pEnd) {
+		*pDst = '\0';
+	} else {
+		*pEnd = '\0';
+	}
 	return (pDst - dst);
 }
 
@@ -542,7 +546,11 @@ next_char:
 		f++;
 	}
 out:
-	*pDst = '\0';
+	if (pDst < pEnd) {
+		*pDst = '\0';
+	} else {
+		*pEnd = '\0';
+	}
 	return (pDst - dst);
 }
 
