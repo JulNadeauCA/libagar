@@ -373,9 +373,6 @@ AG_WindowSetGeometryMax(AG_Window *win)
 static __inline__ void
 AG_Redraw(void *obj)
 {
-#ifdef AG_DEBUG
-	if (agRenderingContext) { AG_FatalError("AG_Redraw() in rendering ctx"); }
-#endif
 	if (AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
 }
