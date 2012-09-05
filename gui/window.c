@@ -38,10 +38,10 @@
 #include <string.h>
 #include <stdarg.h>
 
-static void Shown(AG_Event *);
-static void Hidden(AG_Event *);
-static void GainFocus(AG_Event *);
-static void LostFocus(AG_Event *);
+static void OnShow(AG_Event *);
+static void OnHide(AG_Event *);
+static void OnFocusGain(AG_Event *);
+static void OnFocusLoss(AG_Event *);
 
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 6;
@@ -424,16 +424,16 @@ Init(void *obj)
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
 
-	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
-	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
+	AG_SetEvent(win, "window-gainfocus", OnFocusGain, NULL);
+	AG_SetEvent(win, "window-lostfocus", OnFocusLoss, NULL);
 
 	/*
 	 * Arrange for propagation of the widget-shown, widget-hidden and
 	 * detached events to attached widgets.
 	 */
-	ev = AG_SetEvent(win, "widget-shown", Shown, NULL);
+	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "widget-hidden", Hidden, NULL);
+	ev = AG_SetEvent(win, "widget-hidden", OnHide, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
@@ -638,7 +638,7 @@ Draw(void *obj)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -745,7 +745,7 @@ Shown(AG_Event *event)
 }
 
 static void
-Hidden(AG_Event *event)
+OnHide(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -839,13 +839,13 @@ WidgetLostFocus(AG_Widget *wid)
 }
 
 static void
-GainFocus(AG_Event *event)
+OnFocusGain(AG_Event *event)
 {
 	WidgetGainFocus(WIDGET(AG_SELF()));
 }
 
 static void
-LostFocus(AG_Event *event)
+OnFocusLoss(AG_Event *event)
 {
 	WidgetLostFocus(WIDGET(AG_SELF()));
 }

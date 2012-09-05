@@ -236,7 +236,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
 
@@ -265,7 +265,7 @@ Init(void *obj)
 	mview->bPad = 4;
 	mview->arrowRight = -1;
 
-	AG_AddEvent(mview, "widget-shown", Shown, NULL);
+	AG_AddEvent(mview, "widget-shown", OnShow, NULL);
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
 }

@@ -584,7 +584,7 @@ PressedCancel(AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_DirDlg *dd = AG_SELF();
 
@@ -727,7 +727,7 @@ Init(void *obj)
 	dd->okAction = NULL;
 	dd->cancelAction = NULL;
 
-	AG_AddEvent(dd, "widget-shown", Shown, NULL);
+	AG_AddEvent(dd, "widget-shown", OnShow, NULL);
 	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected, "%p", dd);
 	AG_SetEvent(dd->comLoc, "combo-selected", LocSelected, "%p", dd);
 	AG_SetEvent(dd->tbInput, "textbox-postchg", TextboxChanged, "%p", dd);

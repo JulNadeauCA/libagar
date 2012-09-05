@@ -394,8 +394,8 @@ Init(void *obj)
 		AG_WidgetSetFocusable(b[i], 0);
 	}
 
+	AG_AddEvent(fsu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fsu, "bound", OnBound, NULL);
-	AG_SetEvent(fsu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
 	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);

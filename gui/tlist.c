@@ -183,7 +183,7 @@ DoubleClickTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-LostFocus(AG_Event *event)
+OnFocusLoss(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
@@ -203,7 +203,7 @@ PollRefreshTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
@@ -263,12 +263,12 @@ Init(void *obj)
 	AG_BindInt(tl->sbar, "visible", &tl->nvisitems);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
+	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
+	AG_SetEvent(tl, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_AddEvent(tl, "widget-hidden", OnFocusLoss, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
-	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
-	AG_AddEvent(tl, "widget-hidden", LostFocus, NULL);
-	AG_AddEvent(tl, "widget-shown", Shown, NULL);
 	
 	AG_BindPointer(tl, "selected", &tl->selected);
 
