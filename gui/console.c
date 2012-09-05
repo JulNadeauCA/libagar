@@ -658,19 +658,12 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 	}
 
 	AG_ObjectLock(cons);
-	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
-		if ((ln->text = TryStrdup(s)) == NULL) {
-			FreeLines(cons);
-			ln = NULL;
-			goto out;
-		}
-		ln->len = strlen(ln->text);
+	if ((ln = AG_ConsoleAppendLine(cons, s)) != NULL) {
 		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
 			ln->text[ln->len - 1] = '\0';
 			ln->len--;
 		}
 	}
-out:
 	AG_ObjectUnlock(cons);
 	return (ln);
 }
