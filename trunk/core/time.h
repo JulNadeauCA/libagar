@@ -40,6 +40,10 @@ typedef struct ag_time_ops {
 #define AG_GetTicks		agTimeOps->getTicks
 #define AG_Delay(t)		agTimeOps->delay(t)
 
+#ifdef AG_LEGACY
+typedef AG_Timer AG_Timeout;
+#endif
+
 __BEGIN_DECLS
 extern struct ag_objectq agTimerObjQ;
 extern Uint              agTimerCount;
@@ -77,7 +81,6 @@ AG_ExecTimerFn(AG_Timer *to)
 }
 
 #ifdef AG_LEGACY
-typedef AG_Timer AG_Timeout;
 void AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *, Uint) DEPRECATED_ATTRIBUTE;
 void AG_ScheduleTimeout(void *, AG_Timeout *, Uint32) DEPRECATED_ATTRIBUTE;
 # define AG_TIMEOUT_INITIALIZER { -1, NULL, 0, 0, 0, NULL }
