@@ -77,7 +77,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Notebook *nb = AG_SELF();
 
@@ -110,8 +110,9 @@ Init(void *obj)
 
 	ptSize = MAX(0, (int)agDefaultFont->spec.size-2.0);
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, ptSize, 0));
+
+	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
-	AG_AddEvent(nb, "widget-shown", Shown, NULL);
 }
 
 static void

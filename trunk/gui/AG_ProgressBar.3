@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -90,6 +90,17 @@ include:
 .Bl -tag -width "AG_PROGRESS_BAR_SHOW_PCT "
 .It AG_PROGRESS_BAR_SHOW_PCT
 Display text showing the percentage.
+.It AG_PROGRESS_BAR_EXCL
+Advise that no external changes to the
+.Va value ,
+.Va min
+and
+.Va max
+bindings are expected.
+By default, the binding values are periodically checked and the progress bar
+is redrawn if a change is detected.
+Note that this setting only influences redraw -- external changes to the
+binding values are handled safely regardless.
 .It AG_PROGRESS_BAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .

@@ -146,6 +146,14 @@ use a built-in variable of type
 (by default, a builtin variable of type
 .Ft double
 is used).
+.It AG_NUMERICAL_EXCL
+Advise that no external changes to the
+.Va value
+binding are expected.
+By default, the value is periodically checked and the widget is redrawn if
+a change is detected.
+Note that this setting only influences redraw -- external changes to the
+binding values are handled safely regardless.
 .It AG_NUMERICAL_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .

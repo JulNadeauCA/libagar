@@ -237,7 +237,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 
@@ -342,12 +342,12 @@ Init(void *obj)
 	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
 	VG_ViewSetScale(vv, 0);
 	
+	AG_AddEvent(vv, "widget-shown", OnShow, NULL);
 	AG_SetEvent(vv, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(vv, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(vv, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(vv, "key-down", KeyDown, NULL);
 	AG_SetEvent(vv, "key-up", KeyUp, NULL);
-	AG_AddEvent(vv, "widget-shown", Shown, NULL);
 
 	AG_ActionSetInt(vv, "Enable panning",	&vv->mouse.panning, 1);
 	AG_ActionSetInt(vv, "Disable panning",	&vv->mouse.panning, 0);

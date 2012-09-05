@@ -529,7 +529,7 @@ GLX_PendingEvents(void *drvCaller)
 		goto out;
 	}
 
-	/* Block on the X connection fd */
+	/* Poll the X connection fd */
 	fd = ConnectionNumber(agDisplay);
 	FD_ZERO(&fdset);
 	FD_SET(fd, &fdset);
@@ -975,10 +975,14 @@ GLX_GenericEventLoop_KQUEUE(void *obj)
 		switch (kev.filter) {
 		case EVFILT_READ:
 			AG_LockVFS(&agDrivers);
-			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
-			    GLX_ProcessEvent(NULL, &dev) == -1) {
-				AG_UnlockVFS(&agDrivers);
-				goto out;
+			while (GLX_PendingEvents(NULL) != 0) {
+				if (GLX_GetNextEvent(NULL, &dev) != 1) {
+					break;
+				}
+				if (GLX_ProcessEvent(NULL, &dev) == -1) {
+					AG_UnlockVFS(&agDrivers);
+					goto out;
+				}
 			}
 			AG_UnlockVFS(&agDrivers);
 			break;

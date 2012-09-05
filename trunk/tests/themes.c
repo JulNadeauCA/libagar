@@ -216,13 +216,17 @@ TestGUI(void *obj, AG_Window *win)
 	 */
 	{
 		AG_Numerical *num;
-		static float myFloat = 1.0;
+		static float myFloat = 1.0f;
 		static int myInt = 123;
 
-		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
+		num = AG_NumericalNewS(div1,
+		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
+		    "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);
 
-		num = AG_NumericalNewS(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
+		num = AG_NumericalNewS(div1,
+		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
+		    NULL, "Int: ");
 		AG_BindInt(num, "value", &myInt);
 	}
 
@@ -235,13 +239,14 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Strlcpy(textBuffer, "Foo bar baz bezo", sizeof(textBuffer));
 
 		/* Create a textbox bound to a fixed-size buffer */
-		tbox = AG_TextboxNew(div1, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
+		tbox = AG_TextboxNew(div1,
+		    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 		    "Fixed text buffer: ");
 		AG_TextboxBindUTF8(tbox, textBuffer, sizeof(textBuffer));
 
 		/* Create a textbox bound to a built-in AG_Text element */
 		tbox = AG_TextboxNew(div1,
-		    AG_TEXTBOX_HFILL|AG_TEXTBOX_MULTILINGUAL,
+		    AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINGUAL|AG_TEXTBOX_HFILL,
 		    "AG_Text element: ");
 		AG_TextboxSetString(tbox, "Foo");
 	}
@@ -259,17 +264,17 @@ TestGUI(void *obj, AG_Window *win)
 		AG_Slider *sl;
 
 		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_HFILL,
+		    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_HFILL,
 		    &myVal, &myMin, &myMax, &myVisible);
 		AG_ScrollbarSetIntIncrement(sb, 10);
 
 		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_HFILL,
+		    AG_SLIDER_EXCL|AG_SLIDER_HFILL,
 		    &myVal, &myMin, &myMax);
 		AG_SliderSetIntIncrement(sl, 10);
 
 		AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
-		    AG_PROGRESS_BAR_SHOW_PCT,
+		    AG_PROGRESS_BAR_EXCL|AG_PROGRESS_BAR_SHOW_PCT,
 		    &myVal, &myMin, &myMax);
 	}
 

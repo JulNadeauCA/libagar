@@ -830,7 +830,7 @@ SelectedType(AG_Event *event)
 }
 
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 	AG_TlistItem *it;
@@ -1062,7 +1062,7 @@ Init(void *obj)
 	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
 	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 
-	AG_AddEvent(fd, "widget-shown", Shown, NULL);
+	AG_AddEvent(fd, "widget-shown", OnShow, NULL);
 }
 
 /*

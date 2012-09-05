@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -600,7 +600,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-LostFocus(AG_Event *event)
+OnFocusLoss(AG_Event *event)
 {
 	AG_Slider *sl = AG_SELF();
 
@@ -608,18 +608,25 @@ LostFocus(AG_Event *event)
 }
 
 static void
-BoundValue(AG_Event *event)
+OnShow(AG_Event *event)
+{
+	AG_Slider *sl = AG_SELF();
+
+	if ((sl->flags & AG_SLIDER_EXCL) == 0) {
+		AG_RedrawOnChange(sl, 100, "value");
+		AG_RedrawOnChange(sl, 1000, "min");
+		AG_RedrawOnChange(sl, 1000, "max");
+	}
+}
+
+static void
+OnBound(AG_Event *event)
 {
 	AG_Slider *sl = AG_SELF();
 	AG_Variable *bNew = AG_PTR(1);
 	AG_Variable *bValue;
 	void *pValue;
 
-	/*
-	 * Require that "min" and "max" be of the same binding type as
-	 * "value" to avoid derelict hell. Mixing of types could always be
-	 * implemented if some application really requires it.
-	 */
 	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max")) {
 		bValue = AG_GetVariable(sl, "value", &pValue);
 		if (bValue->type != bNew->type) {
@@ -652,23 +659,20 @@ Init(void *obj)
 	sl->rInc = 1.0;	
 	sl->iInc = 1;
 
+	AG_AddEvent(sl, "widget-shown", OnShow, NULL);
+	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
+	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_SetEvent(sl, "bound", OnBound, NULL);
 	AG_SetEvent(sl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
-	AG_SetEvent(sl, "widget-lostfocus", LostFocus, NULL);
-	AG_AddEvent(sl, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(sl, "bound", BoundValue, NULL);
 
 	AG_BindInt(sl, "value", &sl->value);
 	AG_BindInt(sl, "min", &sl->min);
 	AG_BindInt(sl, "max", &sl->max);
 	
-	AG_RedrawOnChange(sl, 100, "value");
-	AG_RedrawOnChange(sl, 250, "min");
-	AG_RedrawOnChange(sl, 250, "max");
-
 #ifdef AG_DEBUG
 	AG_BindInt(sl, "xOffs", &sl->xOffs);
 	AG_BindInt(sl, "extent", &sl->extent);

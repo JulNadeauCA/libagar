@@ -113,7 +113,7 @@ UpdatePreview(AG_FontSelector *fs)
 }
 
 static void
-UpdateFaces(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Variable *bFont;
 	AG_Font **pFont;
@@ -268,8 +268,8 @@ Init(void *obj)
 	
 	AG_BindPointer(fs, "font", (void *)&fs->font);
 	
+	AG_AddEvent(fs, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fs, "bound", Bound, NULL);
-	AG_AddEvent(fs, "widget-shown", UpdateFaces, NULL);
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
 	AG_SetEvent(fs->tlSizes, "tlist-selected", SelectedSize, "%p", fs);

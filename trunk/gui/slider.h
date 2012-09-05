@@ -22,9 +22,10 @@ enum ag_slider_button {
 typedef struct ag_slider {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_SLIDER_HFILL	0x01
-#define AG_SLIDER_VFILL	0x02
+#define AG_SLIDER_HFILL		0x01
+#define AG_SLIDER_VFILL		0x02
 #define AG_SLIDER_FOCUSABLE	0x04
+#define AG_SLIDER_EXCL		0x08	/* Exclusive access to binding */
 #define AG_SLIDER_EXPAND	(AG_SLIDER_HFILL|AG_SLIDER_VFILL)
 
 	int value;			/* Default value binding */

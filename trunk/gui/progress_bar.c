@@ -56,6 +56,18 @@ AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
 	if (max != NULL) { AG_BindInt(pb, "max", max); }
 	return (pb);
 }
+	
+static void
+OnShow(AG_Event *event)
+{
+	AG_ProgressBar *pb = AG_SELF();
+
+	if ((pb->flags & AG_PROGRESS_BAR_EXCL) == 0) {
+		AG_RedrawOnChange(pb, 250, "value");
+		AG_RedrawOnChange(pb, 1000, "min");
+		AG_RedrawOnChange(pb, 1000, "max");
+	}
+}
 
 static void
 Init(void *obj)
@@ -75,14 +87,12 @@ Init(void *obj)
 	pb->length = 300;
 	pb->pad = 2;
 	pb->tCache = AG_TextCacheNew(pb, 100, 1);
-
+	
 	AG_BindInt(pb, "value", &pb->value);
 	AG_BindInt(pb, "min", &pb->min);
 	AG_BindInt(pb, "max", &pb->max);
-
-	AG_RedrawOnChange(pb, 250, "value");
-	AG_RedrawOnChange(pb, 1000, "min");
-	AG_RedrawOnChange(pb, 1000, "max");
+	
+	AG_AddEvent(pb, "widget-shown", OnShow, NULL);
 }
 
 static void

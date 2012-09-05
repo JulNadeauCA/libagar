@@ -381,6 +381,9 @@ OnShow(AG_Event *event)
 			num->value.dbl = 0.0;
 			V = AG_BindDouble(num, "value", &num->value.dbl);
 		}
+		if (V == NULL) {
+			return;
+		}
 		AG_LockVariable(V);
 	}
 	switch (V->type) {
@@ -418,12 +421,10 @@ OnShow(AG_Event *event)
 #endif
 	case AG_VARIABLE_P_INT:
 		if (!AG_Defined(num,"min")) {
-			printf("set def min for int\n");
 			num->min.i = AG_INT_MIN+1;
 			AG_BindInt(num, "min", &num->min.i);
 		}
 		if (!AG_Defined(num,"max")) {
-			printf("set def max for int\n");
 			num->max.i = AG_INT_MAX-1;
 			AG_BindInt(num, "max", &num->max.i);
 		}
@@ -787,6 +788,7 @@ Init(void *obj)
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
+	num->flags = 0;
 	num->incr = 1.0;
 	num->writeable = 1;
 	num->wUnitSel = 0;
@@ -811,7 +813,7 @@ Init(void *obj)
 	AG_LabelSetPadding(num->decbu->lbl, 0,0,0,0);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
-	AG_SetEvent(num, "widget-shown", OnShow, NULL);
+	AG_AddEvent(num, "widget-shown", OnShow, NULL);
 	AG_SetEvent(num, "key-down", KeyDown, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);
 	AG_SetEvent(num->decbu, "button-pushed", DecrementValue, "%p", num);
