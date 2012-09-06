@@ -150,6 +150,10 @@ routine returns 1 if the specified variable
 is defined under the object
 .Fa obj ,
 otherwise it returns 0.
+The caller must lock
+.Fa obj
+before invoking
+.Fn AG_Defined .
 .Pp
 .Fn AG_GetVariable
 searches for a named variable under object

@@ -75,18 +75,13 @@ typedef struct ag_object {
 
 	Uint                    nevents;	/* Event handler count */
 	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers */
-
 	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
 	AG_TAILQ_HEAD_(ag_timer) timersChg;	/* Timers to change */
-	
-	struct ag_variable *vars;		/* Variables / bindings */
-	Uint               nVars;
-
+	AG_TAILQ_HEAD_(ag_variable) vars;	/* Named variables / bindings */
 	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
 	struct ag_objectq children;		/* Child objects */
 	AG_TAILQ_ENTRY(ag_object) cobjs;	/* Entry in parent */
 	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timer queue */
-	
 	void *parent;			/* Parent object (NULL for VFS root) */
 	void *root;			/* Pointer to VFS root */
 	AG_Event *attachFn;		/* Attach hook */
@@ -137,12 +132,6 @@ enum ag_object_checksum_alg {
 		if (!AG_OfClass(var,(subclass))) { \
 			continue; \
 		} else
-
-/* Iterate over the variables. */
-#define AGOBJECT_FOREACH_VARIABLE(var, i, obj) \
-	for ((i) = 0; \
-	    ((i) < AGOBJECT(obj)->nVars) && ((var) = &AGOBJECT(obj)->vars[i]); \
-	    (i)++)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 # define OBJECT(ob)            AGOBJECT(ob)
@@ -332,21 +321,20 @@ AG_ObjectGetInheritHierString(void *obj, char *buf, size_t buf_size)
 	AG_ObjectUnlock(obj);
 }
 
-/* Evaluate whether the named object variable exists. */
+/*
+ * Evaluate whether the named object variable exists.
+ * The object must be locked.
+ */
 static __inline__ int
 AG_Defined(void *pObj, const char *name)
 {
 	AG_Object *obj = AGOBJECT(pObj);
-	Uint i;
+	AG_Variable *V;
 
-	AG_ObjectLock(obj);
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(name, obj->vars[i].name) == 0) {
-			AG_ObjectUnlock(obj);
+	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(name, V->name) == 0)
 			return (1);
-		}
 	}
-	AG_ObjectUnlock(obj);
 	return (0);
 }
 
@@ -359,16 +347,14 @@ AG_GetVariableLocked(void *pObj, const char *name)
 {
 	AG_Object *obj = AGOBJECT(pObj);
 	AG_Variable *V, *Vtgt;
-	Uint i;
-	
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(obj->vars[i].name, name) == 0)
+
+	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(name, V->name) == 0)
 			break;
 	}
-	if (i == obj->nVars) {
+	if (V == NULL) {
 		return (NULL);
 	}
-	V = &obj->vars[i];
 	AG_LockVariable(V);
 	if (V->type == AG_VARIABLE_P_VARIABLE) {
 		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.ref.key);
