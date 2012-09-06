@@ -196,9 +196,8 @@ RedrawOnChangeTimeout(AG_Timer *to, AG_Event *event)
 	return (to->ival);
 }
 
-
 static void
-Shown(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
@@ -222,7 +221,7 @@ Shown(AG_Event *event)
 }
 
 static void
-Hidden(AG_Event *event)
+OnHide(AG_Event *event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
@@ -287,9 +286,9 @@ Init(void *obj)
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
-	ev = AG_SetEvent(wid, "widget-shown", Shown, NULL);
+	ev = AG_SetEvent(wid, "widget-shown", OnShow, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(wid, "widget-hidden", Hidden, NULL);
+	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 #ifdef AG_LEGACY
 	/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */

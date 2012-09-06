@@ -745,7 +745,7 @@ AutoHideTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-LostFocus(AG_Event *event)
+OnFocusLoss(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -753,7 +753,7 @@ LostFocus(AG_Event *event)
 }
 
 static void
-BoundValue(AG_Event *event)
+OnBound(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	AG_Variable *bNew = AG_PTR(1);
@@ -777,7 +777,7 @@ BoundValue(AG_Event *event)
 }
 
 static void
-OnAttach(AG_Event *event)
+OnShow(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -793,12 +793,14 @@ OnAttach(AG_Event *event)
 }
 
 static void
-OnDetach(AG_Event *event)
+OnHide(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	
-	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
+	if (sb->flags & AG_SCROLLBAR_AUTOHIDE) {
 		AG_DelTimer(sb, &sb->autoHideTo);
+	}
+	AG_DelTimer(sb, &sb->moveTo);
 }
 
 static void
@@ -832,16 +834,15 @@ Init(void *obj)
 	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width*5/9;
 
+	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
+	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);
+	AG_SetEvent(sb, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_SetEvent(sb, "bound", OnBound, NULL);
 	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sb, "key-down", KeyDown, NULL);
 	AG_SetEvent(sb, "key-up", KeyUp, NULL);
-	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
-	AG_AddEvent(sb, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(sb, "bound", BoundValue, NULL);
-	AG_AddEvent(sb, "attached", OnAttach, NULL);
-	AG_AddEvent(sb, "detached", OnDetach, NULL);
 
 	AG_BindInt(sb, "value", &sb->value);
 	AG_BindInt(sb, "min", &sb->min);

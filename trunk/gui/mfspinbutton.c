@@ -61,29 +61,6 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 	return (fsu);
 }
 
-static void
-OnBound(AG_Event *event)
-{
-	AG_MFSpinbutton *fsu = AG_SELF();
-	AG_Variable *binding = AG_PTR(1);
-
-	if (strcmp(binding->name, "xvalue") == 0 ||
-	    strcmp(binding->name, "yvalue") == 0) {
-		switch (AG_VARIABLE_TYPE(binding)) {
-		case AG_VARIABLE_DOUBLE:
-			fsu->min = -AG_DBL_MAX+1;
-			fsu->max =  AG_DBL_MAX-1;
-			break;
-		case AG_VARIABLE_FLOAT:
-			fsu->min = -AG_FLT_MAX+1;
-			fsu->max =  AG_FLT_MAX-1;
-			break;
-		default:
-			break;
-		}
-	}
-}
-
 static Uint32
 UpdateTimeout(AG_Timer *to, AG_Event *event)
 {
@@ -99,14 +76,54 @@ static void
 OnShow(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_SELF();
+	AG_Variable *Vx, *Vy;
 
 	if ((fsu->flags & AG_MFSPINBUTTON_EXCL) == 0) {
 		AG_AddTimer(fsu, &fsu->updateTo, 250, UpdateTimeout, NULL);
 	}
-	if (!AG_Defined(fsu, "xvalue")) { AG_BindDouble(fsu, "xvalue", &fsu->xvalue); }
-	if (!AG_Defined(fsu, "yvalue")) { AG_BindDouble(fsu, "yvalue", &fsu->yvalue); }
-	if (!AG_Defined(fsu, "min")) { AG_BindDouble(fsu, "min", &fsu->min); }
-	if (!AG_Defined(fsu, "max")) { AG_BindDouble(fsu, "max", &fsu->max); }
+	if ((Vx = AG_GetVariableLocked(fsu, "xvalue")) == NULL) {
+		fsu->xvalue = 0.0;
+		Vx = AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
+		if (Vx == NULL) {
+			return;
+		}
+		AG_LockVariable(Vx);
+	}
+	if ((Vy = AG_GetVariableLocked(fsu, "yvalue")) == NULL) {
+		fsu->yvalue = 0.0;
+		Vy = AG_BindDouble(fsu, "yvalue", &fsu->yvalue);
+		if (Vy == NULL) {
+			return;
+		}
+		AG_LockVariable(Vy);
+	}
+	if (Vx->type != Vy->type) {
+		AG_FatalError("MFSpinbutton xvalue/yvalue types disagree");
+	}
+	switch (Vx->type) {
+	case AG_VARIABLE_P_FLOAT:
+		if (!AG_Defined(fsu, "min")) {
+			fsu->minFlt = -AG_FLT_MAX+1;
+			AG_BindFloat(fsu, "min", &fsu->minFlt);
+		}
+		if (!AG_Defined(fsu, "max")) {
+			fsu->maxFlt = +AG_FLT_MAX-1;
+			AG_BindFloat(fsu, "max", &fsu->maxFlt);
+		}
+		break;
+	case AG_VARIABLE_P_DOUBLE:
+		if (!AG_Defined(fsu, "min")) {
+			fsu->min = -AG_DBL_MAX+1;
+			AG_BindDouble(fsu, "min", &fsu->min);
+		}
+		if (!AG_Defined(fsu, "max")) {
+			fsu->max = +AG_DBL_MAX-1;
+			AG_BindDouble(fsu, "max", &fsu->max);
+		}
+		break;
+	default:
+		break;
+	}
 	AG_MFSpinbuttonUpdate(fsu);
 }
 
@@ -365,8 +382,6 @@ Init(void *obj)
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	fsu->xvalue = 0.0;
-	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
 	fsu->writeable = 1;
 	fsu->sep = ",";
@@ -395,7 +410,6 @@ Init(void *obj)
 	}
 
 	AG_AddEvent(fsu, "widget-shown", OnShow, NULL);
-	AG_SetEvent(fsu, "bound", OnBound, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
 	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);
