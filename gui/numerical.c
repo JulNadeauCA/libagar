@@ -558,7 +558,7 @@ KeyDown(AG_Event *event)
 static void
 UpdateFromText(AG_Event *event)
 {
-	union ag_numerical_value val;
+	AG_NumericalValue val;
 	AG_Numerical *num = AG_PTR(1);
 	int unfocus = AG_INT(2);
 	AG_Variable *valueb;
@@ -939,7 +939,7 @@ Draw(void *obj)
 void
 AG_NumericalIncrement(AG_Numerical *num)
 {
-	union ag_numerical_value n;
+	AG_NumericalValue n;
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
 
@@ -1010,7 +1010,7 @@ AG_NumericalIncrement(AG_Numerical *num)
 void
 AG_NumericalDecrement(AG_Numerical *num)
 {
-	union ag_numerical_value n;
+	AG_NumericalValue n;
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
 
@@ -1060,7 +1060,7 @@ AG_NumericalDecrement(AG_Numerical *num)
                      newVal._memb > *(TYPE *)max ? *(TYPE *)max : \
 		     newVal._memb 
 void
-AG_NumericalSetValue(AG_Numerical *num, union ag_numerical_value newVal)
+AG_NumericalSetValue(AG_Numerical *num, AG_NumericalValue newVal)
 {
 	AG_Variable *valueb, *minb, *maxb;
 	void *value, *min, *max;
