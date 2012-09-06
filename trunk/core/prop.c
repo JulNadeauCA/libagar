@@ -20,12 +20,10 @@ static AG_Variable *
 GetProp(void *pObj, const char *key, int t, void *p)
 {
 	AG_Object *obj = pObj;
-	Uint i;
+	AG_Variable *V;
 
 	AG_ObjectLock(obj);
-	for (i = 0; i < obj->nVars; i++) {
-		AG_Variable *V = &obj->vars[i];
-
+	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if ((t >= 0 && t != V->type) || strcmp(key, V->name) != 0) {
 			continue;
 		}
