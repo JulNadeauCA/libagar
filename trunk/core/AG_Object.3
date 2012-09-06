@@ -1225,20 +1225,13 @@ structure describing active event handlers.
 List of
 .Xr AG_Timeout 3
 structure for the timers associated with the object.
-.It Ft Uint nVars
-Number of variables.
-.It Ft AG_Variable *vars
-Array of variables (and bindings).
-See
+.It Ft TAILQ(vars)
+Named variables (see
 .Xr AG_Variable 3
-for details.
-The
-.Fn AGOBJECT_FOREACH_VARIABLE
-macro may be used to iterate over this array.
+for details).
 .It Ft TAILQ(deps)
 Registered dependencies (see
-.Dq DEPENDENCIES
-section).
+.Dq DEPENDENCIES ) .
 .It Ft TAILQ(children)
 List of child objects.
 The 

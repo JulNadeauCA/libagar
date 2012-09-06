@@ -89,46 +89,46 @@ static __inline__ AG_Variable *
 FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 {
 	AG_Object *obj = pObj;
-	Uint i;
-	AG_Variable *V = NULL;
-	
-	for (i = 0; i < obj->nVars; i++) {
-		V = &obj->vars[i];
-		if (strcmp(V->name, name) == 0)
+	AG_Variable *V;
+
+rescan:
+	TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(V->name, name) == 0) {
+			if (V->type != type) {
+				AG_Unset(obj, name);
+				goto rescan;
+			}
 			break;
+		}
 	}
-	if (i == obj->nVars) {
-		obj->vars = Realloc(obj->vars, (obj->nVars+1) *
-		                               sizeof(AG_Variable));
-		V = &obj->vars[obj->nVars++];
+	if (V == NULL) {
+		V = Malloc(sizeof(AG_Variable));
 		Strlcpy(V->name, name, sizeof(V->name));
 		V->type = type;
+		TAILQ_INSERT_TAIL(&obj->vars, V, vars);
 	}
-	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
 	return (V);
 }
 
-/* Variant of FetchVariable() returning "new" flag. */
+/*
+ * Variant of FetchVariable() returning "new" flag. The type is not
+ * checked or set.
+ */
 static __inline__ AG_Variable *
 FetchVariableNew(void *pObj, const char *name, int *newFlag)
 {
 	AG_Object *obj = pObj;
-	Uint i;
 	AG_Variable *V;
-	
-	for (i = 0; i < obj->nVars; i++) {
-		V = &obj->vars[i];
+
+	TAILQ_FOREACH(V, &obj->vars, vars) {
 		if (strcmp(V->name, name) == 0) {
 			*newFlag = 0;
 			return (V);
 		}
 	}
-	obj->vars = Realloc(obj->vars, (obj->nVars+1)*sizeof(AG_Variable));
-	V = &obj->vars[obj->nVars++];
+	V = Malloc(sizeof(AG_Variable));
 	Strlcpy(V->name, name, sizeof(V->name));
-	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
+	TAILQ_INSERT_TAIL(&obj->vars, V, vars);
 	*newFlag = 1;
 	return (V);
 }
@@ -394,18 +394,15 @@ void
 AG_Unset(void *pObj, const char *name)
 {
 	AG_Object *obj = pObj;
-	Uint i;
+	AG_Variable *V;
 
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(obj->vars[i].name, name) != 0) {
-			continue;
+	TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(V->name, name) == 0) {
+			TAILQ_REMOVE(&obj->vars, V, vars);
+			AG_FreeVariable(V);
+			free(V);
+			break;
 		}
-		if (i < obj->nVars-1) {
-			memmove(&obj->vars[i], &obj->vars[i+1],
-			    (obj->nVars-1)*sizeof(AG_Variable));
-		}
-		obj->nVars--;
-		break;
 	}
 }
 
@@ -437,6 +434,8 @@ AG_Unset(void *pObj, const char *name)
 								\
 	AG_ObjectLock(obj);					\
 	V = FetchVariable(obj, name, ntype);			\
+	V->mutex = NULL;					\
+	V->fn.fnVoid = NULL;					\
 	if (agVariableTypes[V->type].indirLvl > 0) {		\
 		*(_type *)V->data.p = v;			\
 	} else {						\
@@ -461,7 +460,8 @@ AG_Unset(void *pObj, const char *name)
 								\
 	AG_ObjectLock(obj);					\
 	V = FetchVariable(obj, name, (t));			\
-	V->type = t;						\
+	V->mutex = NULL;					\
+	V->fn.fnVoid = NULL;					\
 	V->data.p = (void *)v;					\
 	AG_PostEvent(NULL, obj, "bound", "%p", V);		\
 	AG_ObjectUnlock(obj);					\
@@ -478,7 +478,7 @@ AG_Unset(void *pObj, const char *name)
 	Strlcat(evName, name, sizeof(evName));			\
 	AG_ObjectLock(obj);					\
 	V = FetchVariable(obj, name, (t));			\
-	V->type = (t);						\
+	V->mutex = NULL;					\
 	V->fn._memb = fn;					\
 	ev = AG_SetEvent(obj, evName, NULL, NULL);		\
 	AG_EVENT_GET_ARGS(ev, fmt);				\
@@ -493,9 +493,9 @@ AG_Unset(void *pObj, const char *name)
 								\
 	AG_ObjectLock(obj);					\
 	V = FetchVariable(obj, name, (t));			\
-	V->type = (t);						\
-	V->data.p = (void *)v;					\
 	V->mutex = mutex;					\
+	V->fn.fnVoid = NULL;					\
+	V->data.p = (void *)v;					\
 	AG_PostEvent(NULL, obj, "bound", "%p", V);		\
 	AG_ObjectUnlock(obj);					\
 	return (V)
@@ -1260,6 +1260,8 @@ AG_SetString(void *obj, const char *name, const char *s)
 
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, &new);
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	if (new) {
 		V->type = AG_VARIABLE_STRING;
 		V->info.size = 0;				/* Allocated */
@@ -1299,6 +1301,8 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, &new);
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	if (new) {
 		V->type = AG_VARIABLE_STRING;
 		V->info.size = 0;
@@ -1325,12 +1329,15 @@ AG_SetStringFixed(void *obj, const char *name, char *buf, size_t bufSize)
 
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, &new);
-	if (!new && V->info.size == 0) { Free(V->data.s); }
 	V->type = AG_VARIABLE_STRING;
-	V->data.s = buf;
-	V->info.size = bufSize;
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;
+
+	if (!new && V->info.size == 0) {
+		Free(V->data.s);
+	}
+	V->data.s = buf;
+	V->info.size = bufSize;
 	AG_ObjectUnlock(obj);
 	return (V);
 }
@@ -1354,7 +1361,7 @@ AG_PrtString(void *obj, const char *name, const char *fmt, ...)
 	return AG_SetStringNODUP(obj, name, s);
 }
 AG_Variable *
-AG_BindString(void *obj, const char *name, char *v, size_t size)
+AG_BindString(void *obj, const char *name, char *buf, size_t bufSize)
 {
 	AG_Variable *V;
 	int new;
@@ -1362,15 +1369,14 @@ AG_BindString(void *obj, const char *name, char *v, size_t size)
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, &new);
 	V->type = AG_VARIABLE_P_STRING;
-	if (!new) {
-		if (V->info.size == 0) {
-			Free(V->data.s);
-		}
-		V->mutex = NULL;
-		V->fn.fnVoid = NULL;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
+
+	if (!new && V->info.size == 0) {
+		Free(V->data.s);
 	}
-	V->data.p = v;
-	V->info.size = size;
+	V->data.s = buf;
+	V->info.size = bufSize;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1388,10 +1394,10 @@ AG_BindStringMp(void *obj, const char *name, char *v, size_t size,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_STRING);
-	V->type = AG_VARIABLE_P_STRING;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.size = size;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1403,7 +1409,8 @@ AG_SetConstString(void *obj, const char *name, const char *v)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_CONST_STRING);
-	V->type = AG_VARIABLE_CONST_STRING;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.Cs = v;
 	V->info.size = strlen(v)+1;
 	AG_ObjectUnlock(obj);
@@ -1416,7 +1423,8 @@ AG_BindConstString(void *obj, const char *name, const char **v)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
-	V->type = AG_VARIABLE_P_CONST_STRING;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1431,10 +1439,10 @@ AG_BindConstStringMp(void *obj, const char *name, const char **v,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
-	V->type = AG_VARIABLE_P_CONST_STRING;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1450,7 +1458,8 @@ AG_BindFlag(void *obj, const char *name, Uint *v, Uint bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG);
-	V->type = AG_VARIABLE_P_FLAG;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1465,10 +1474,10 @@ AG_BindFlagMp(void *obj, const char *name, Uint *v, Uint bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG);
-	V->type = AG_VARIABLE_P_FLAG;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1480,7 +1489,8 @@ AG_BindFlag8(void *obj, const char *name, Uint8 *v, Uint8 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG8);
-	V->type = AG_VARIABLE_P_FLAG8;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1495,10 +1505,10 @@ AG_BindFlag8Mp(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG8);
-	V->type = AG_VARIABLE_P_FLAG8;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1510,7 +1520,8 @@ AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG16);
-	V->type = AG_VARIABLE_P_FLAG16;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1525,10 +1536,10 @@ AG_BindFlag16Mp(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG16);
-	V->type = AG_VARIABLE_P_FLAG16;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1540,7 +1551,8 @@ AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG32);
-	V->type = AG_VARIABLE_P_FLAG32;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1555,10 +1567,10 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_FLAG32);
-	V->type = AG_VARIABLE_P_FLAG32;
+	V->mutex = mutex;
+	V->fn.fnVoid = NULL;
 	V->data.p = v;
 	V->info.bitmask = bitmask;
-	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
@@ -1578,6 +1590,8 @@ AG_BindVariable(void *obj, const char *name, void *tgtObj, const char *tgtKey)
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, &new);
 	V->type = AG_VARIABLE_P_VARIABLE;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	if (!new) {
 		Free(V->info.ref.key);
 	}

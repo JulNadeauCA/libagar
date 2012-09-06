@@ -76,13 +76,12 @@ AG_ObjectInit(void *p, void *cl)
 	ob->root = ob;
 	ob->flags = 0;
 	ob->nevents = 0;
-	ob->vars = NULL;
-	ob->nVars = 0;
 	ob->attachFn = NULL;
 	ob->detachFn = NULL;
 
 	AG_MutexInitRecursive(&ob->lock);
 	
+	TAILQ_INIT(&ob->vars);
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
@@ -729,14 +728,18 @@ void
 AG_ObjectFreeVariables(void *pObj)
 {
 	AG_Object *ob = pObj;
-	Uint i;
+	AG_Variable *V, *Vnext;
 
-	for (i = 0; i < ob->nVars; i++) {
-		AG_FreeVariable(&ob->vars[i]);
+	AG_ObjectLock(ob);
+	for (V = TAILQ_FIRST(&ob->vars);
+	     V != TAILQ_END(&ob->vars);
+	     V = Vnext) {
+		Vnext = TAILQ_NEXT(V, vars);
+		AG_FreeVariable(V);
+		free(V);
 	}
-	Free(ob->vars);
-	ob->vars = NULL;
-	ob->nVars = 0;
+	TAILQ_INIT(&ob->vars);
+	AG_ObjectUnlock(ob);
 }
 
 /* Destroy the event handler structures. */
@@ -1161,53 +1164,29 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 			goto fail;
 		}
 		switch (agVariableTypes[j].typeTgt) {
-		case AG_VARIABLE_UINT:
-			AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));
-			break;
-		case AG_VARIABLE_INT:
-			AG_SetInt(ob, key, (int)AG_ReadSint32(ds));
-			break;
-		case AG_VARIABLE_UINT8:
-			AG_SetBool(ob, key, AG_ReadUint8(ds));
-			break;
-		case AG_VARIABLE_SINT8:
-			AG_SetBool(ob, key, AG_ReadSint8(ds));
-			break;
-		case AG_VARIABLE_UINT16:
-			AG_SetUint16(ob, key, AG_ReadUint16(ds));
-			break;
-		case AG_VARIABLE_SINT16:
-			AG_SetSint16(ob, key, AG_ReadSint16(ds));
-			break;
-		case AG_VARIABLE_UINT32:
-			AG_SetUint32(ob, key, AG_ReadUint32(ds));
-			break;
-		case AG_VARIABLE_SINT32:
-			AG_SetSint32(ob, key, AG_ReadSint32(ds));
-			break;
-		case AG_VARIABLE_FLOAT:
-			AG_SetFloat(ob, key, AG_ReadFloat(ds));
-			break;
-		case AG_VARIABLE_DOUBLE:
-			AG_SetDouble(ob, key, AG_ReadDouble(ds));
-			break;
-		case AG_VARIABLE_STRING:
-			AG_SetStringNODUP(ob, key, AG_ReadString(ds));
-			break;
+		case AG_VARIABLE_UINT:   AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));	break;
+		case AG_VARIABLE_INT:    AG_SetInt(ob, key, (int)AG_ReadSint32(ds));	break;
+		case AG_VARIABLE_UINT8:  AG_SetUint8(ob, key, AG_ReadUint8(ds));	break;
+		case AG_VARIABLE_SINT8:  AG_SetSint8(ob, key, AG_ReadSint8(ds));	break;
+		case AG_VARIABLE_UINT16: AG_SetUint16(ob, key, AG_ReadUint16(ds));	break;
+		case AG_VARIABLE_SINT16: AG_SetSint16(ob, key, AG_ReadSint16(ds));	break;
+		case AG_VARIABLE_UINT32: AG_SetUint32(ob, key, AG_ReadUint32(ds));	break;
+		case AG_VARIABLE_SINT32: AG_SetSint32(ob, key, AG_ReadSint32(ds));	break;
+#ifdef AG_HAVE_64BIT
+		case AG_VARIABLE_UINT64: AG_SetUint64(ob, key, AG_ReadUint64(ds));	break;
+		case AG_VARIABLE_SINT64: AG_SetSint64(ob, key, AG_ReadSint64(ds));	break;
+#endif
+		case AG_VARIABLE_FLOAT:  AG_SetFloat(ob, key, AG_ReadFloat(ds));	break;
+		case AG_VARIABLE_DOUBLE: AG_SetDouble(ob, key, AG_ReadDouble(ds));	break;
+#ifdef AG_HAVE_LONG_DOUBLE
+		case AG_VARIABLE_LONG_DOUBLE: AG_SetLongDouble(ob, key, AG_ReadLongDouble(ds)); break;
+#endif
+		case AG_VARIABLE_STRING: AG_SetStringNODUP(ob, key, AG_ReadString(ds)); break;
 		default:
 			AG_SetError("Attempt to load variable of type %s",
 			    agVariableTypes[j].name);
 			goto fail;
 		}
-#if 0
-		{
-			char buf[64];
-			AG_Variable *V = AG_GetVariableLocked(ob, key);
-			AG_PrintVariable(buf, sizeof(buf), V);
-			fprintf(stderr, "%s: %s -> %s\n", ob->name, key, buf);
-			AG_UnlockVariable(V);
-		}
-#endif
 	}
 	AG_ObjectUnlock(ob);
 	return (0);
@@ -1223,15 +1202,14 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 	AG_Object *ob = pObj;
 	off_t countOffs;
 	Uint32 count = 0;
-	Uint i;
+	AG_Variable *V;
 	
 	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
 	countOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	
 	AG_ObjectLock(ob);
-	for (i = 0; i < ob->nVars; i++) {
-		AG_Variable *V = &ob->vars[i];
+	TAILQ_FOREACH(V, &ob->vars, vars) {
 		const AG_VariableTypeInfo *Vt = &agVariableTypes[V->type];
 		void *p;
 
@@ -1265,19 +1243,18 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		case AG_VARIABLE_SINT16: AG_WriteSint16(ds, *(Sint16 *)p);		break;
 		case AG_VARIABLE_UINT32: AG_WriteUint32(ds, *(Uint32 *)p);		break;
 		case AG_VARIABLE_SINT32: AG_WriteSint32(ds, *(Sint32 *)p);		break;
+#ifdef AG_HAVE_64BIT
+		case AG_VARIABLE_UINT64: AG_WriteUint64(ds, *(Uint64 *)p);		break;
+		case AG_VARIABLE_SINT64: AG_WriteSint64(ds, *(Sint64 *)p);		break;
+#endif
 		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, *(float *)p);		break;
 		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, *(double *)p);		break;
+#ifdef AG_HAVE_LONG_DOUBLE
+		case AG_VARIABLE_LONG_DOUBLE: AG_WriteLongDouble(ds, *(long double *)p);		break;
+#endif
 		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);			break;
 		default:								break;
 		}
-#if 0
-		{
-			char buf[64];
-			AG_PrintVariable(buf, sizeof(buf), V);
-			fprintf(stderr, "%s: Saving: %s: %s\n",
-			    ob->name, V->name, buf);
-		}
-#endif
 		AG_UnlockVariable(V);
 
 		count++;

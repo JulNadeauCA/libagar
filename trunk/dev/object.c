@@ -93,11 +93,10 @@ PollVariables(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
-	Uint i;
+	AG_Variable *V;
 	
 	AG_TlistClear(tl);
-	for (i = 0; i < ob->nVars; i++) {
-		AG_Variable *V = &ob->vars[i];
+	TAILQ_FOREACH(V, &ob->vars, vars) {
 		AG_TlistItem *ti;
 
 		AG_LockVariable(V);

@@ -71,13 +71,13 @@ typedef Uint16      (*AG_Uint16Fn)(struct ag_event *);
 typedef Sint16      (*AG_Sint16Fn)(struct ag_event *);
 typedef Uint32      (*AG_Uint32Fn)(struct ag_event *);
 typedef Sint32      (*AG_Sint32Fn)(struct ag_event *);
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 typedef Uint64      (*AG_Uint64Fn)(struct ag_event *);
 typedef Sint64      (*AG_Sint64Fn)(struct ag_event *);
 #endif
 typedef float       (*AG_FloatFn)(struct ag_event *);
 typedef double      (*AG_DoubleFn)(struct ag_event *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 typedef long double (*AG_LongDoubleFn)(struct ag_event *);
 #endif
 typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
@@ -95,13 +95,13 @@ union ag_variable_fn {
 	Sint16 (*fnSint16)(struct ag_event *);
 	Uint32 (*fnUint32)(struct ag_event *);
 	Sint32 (*fnSint32)(struct ag_event *);
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 	Uint64 (*fnUint64)(struct ag_event *);
 	Sint64 (*fnSint64)(struct ag_event *);
 #endif
 	float (*fnFloat)(struct ag_event *);
 	double (*fnDouble)(struct ag_event *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 	long double (*fnLongDouble)(struct ag_event *);
 #endif
 	size_t (*fnString)(struct ag_event *, char *, size_t);
@@ -119,7 +119,7 @@ union ag_variable_data {
 	Uint u;
 	float flt;
 	double dbl;
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 	long double ldbl;
 #endif
 	Uint8 u8;
@@ -128,7 +128,7 @@ union ag_variable_data {
 	Sint16 s16;
 	Uint32 u32;
 	Sint32 s32;
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 	Uint64 u64;
 	Sint64 s64;
 #endif
@@ -148,6 +148,7 @@ typedef struct ag_variable {
 	} info;
 	union ag_variable_fn fn;	/* Eval function */
 	union ag_variable_data data;	/* Variable-stored data */
+	AG_TAILQ_ENTRY(ag_variable) vars;
 } AG_Variable;
 
 __BEGIN_DECLS
@@ -231,7 +232,7 @@ AG_Variable *AG_BindSint32Fn(void *, const char *, AG_Sint32Fn, const char *, ..
 AG_Variable *AG_BindSint32(void *, const char *, Sint32 *);
 AG_Variable *AG_BindSint32Mp(void *, const char *, Sint32 *, AG_Mutex *);
 
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 Uint64       AG_GetUint64(void *, const char *);
 AG_Variable *AG_SetUint64(void *, const char *, Uint64);
 void         AG_InitUint64(AG_Variable *, Uint64);
@@ -244,7 +245,7 @@ void         AG_InitSint64(AG_Variable *, Sint64);
 AG_Variable *AG_BindSint64Fn(void *, const char *, AG_Sint64Fn, const char *, ...);
 AG_Variable *AG_BindSint64(void *, const char *, Sint64 *);
 AG_Variable *AG_BindSint64Mp(void *, const char *, Sint64 *, AG_Mutex *);
-#endif /* HAVE_64BIT */
+#endif /* AG_HAVE_64BIT */
 
 float        AG_GetFloat(void *, const char *);
 AG_Variable *AG_SetFloat(void *, const char *, float);
@@ -259,7 +260,7 @@ void         AG_InitDouble(AG_Variable *, double);
 AG_Variable *AG_BindDoubleFn(void *, const char *, AG_DoubleFn, const char *, ...);
 AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDoubleMp(void *, const char *, double *, AG_Mutex *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 long double  AG_GetLongDouble(void *, const char *);
 AG_Variable *AG_SetLongDouble(void *, const char *, long double);
 void         AG_InitLongDouble(AG_Variable *, long double);
@@ -319,11 +320,6 @@ AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
 AG_Variable *AG_BindFlag32Mp(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
 
 AG_Variable *AG_BindVariable(void *, const char *, void *, const char *);
-
-static __inline__ int          AG_Defined(void *, const char *)
-                                   WARN_UNUSED_RESULT_ATTRIBUTE;
-static __inline__ AG_Variable *AG_GetVariableLocked(void *, const char *)
-                                   WARN_UNUSED_RESULT_ATTRIBUTE;
 
 /* Acquire any locking device associated with a variable. */
 static __inline__ void
