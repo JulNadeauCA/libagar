@@ -171,10 +171,9 @@ PollVariables(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *obj = AG_PTR(1);
 	AG_Variable *V;
-	Uint i;
 
 	AG_TlistBegin(tl);
-	AGOBJECT_FOREACH_VARIABLE(V, i, obj) {
+	TAILQ_FOREACH(V, &obj->vars, vars) {
 		char val[1024];
 
 		if ((V->type == AG_VARIABLE_P_UINT ||
