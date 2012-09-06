@@ -945,6 +945,8 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	char *s;
 
 	AG_ObjectLock(fd);
+	AG_ObjectLock(agConfig);
+
 	if (AG_Defined(agConfig,key) && (s = AG_GetStringDup(agConfig,key))) {
 		AG_FileDlgSetDirectoryS(fd, s);
 		Free(s);
@@ -956,6 +958,8 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 		AG_FileDlgSetDirectoryS(fd, dflt);
 	}
 	fd->dirMRU = Strdup(key);
+	
+	AG_ObjectUnlock(agConfig);
 	AG_ObjectUnlock(fd);
 }
 

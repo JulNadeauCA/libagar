@@ -1673,6 +1673,7 @@ AG_EditableDupString(AG_Editable *ed)
 	AG_Variable *var;
 	char *sDup, *s;
 
+	AG_ObjectLock(ed);
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt;
 		var = AG_GetVariable(ed, "text", &txt);
@@ -1683,6 +1684,7 @@ AG_EditableDupString(AG_Editable *ed)
 		sDup = TryStrdup(s);
 	}
 	AG_UnlockVariable(var);
+	AG_ObjectUnlock(ed);
 	return (sDup);
 }
 
