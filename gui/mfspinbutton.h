@@ -11,15 +11,15 @@
 
 #include <agar/gui/begin.h>
 
-
 typedef struct ag_mfspinbutton {
 	struct ag_widget wid;
 	Uint flags;
 #define AG_MFSPINBUTTON_NOHFILL	0x01
 #define AG_MFSPINBUTTON_VFILL	0x02
-#define AG_MFSPINBUTTON_EXCL	0x04
-	double xvalue, yvalue;		/* Default x/y value bindings */
+#define AG_MFSPINBUTTON_EXCL	0x04	/* Exclusive binding access */
+	double xvalue, yvalue;		/* Default value bindings */
 	double min, max;		/* Default range bindings */
+	float minFlt, maxFlt;
 	double inc;			/* Increment for buttons */
 	char format[32];		/* Printing format */
 	const char *sep;		/* x/y field separator */

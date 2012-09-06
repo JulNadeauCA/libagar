@@ -92,7 +92,7 @@
 #else
 # define AG_DBL_MAX 1.7976931348623158e+308
 #endif
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 # ifdef __LDBL_MIN__
 #  define AG_LDBL_MIN __LDBL_MIN__
 # else
@@ -103,19 +103,19 @@
 # else
 #  define AG_LDBL_MAX 1.18973149535723176502e+4932l
 # endif
-#endif /* HAVE_LONG_DOUBLE */
+#endif /* AG_HAVE_LONG_DOUBLE */
 
 #ifdef _MK_HAVE_FLOAT_H
 # include <float.h>
 # define AG_FLT_EPSILON FLT_EPSILON
 # define AG_DBL_EPSILON DBL_EPSILON
-# ifdef HAVE_LONG_DOUBLE
+# ifdef AG_HAVE_LONG_DOUBLE
 #  define AG_LDBL_EPSILON LDBL_EPSILON
 # endif
 #else /* !_MK_HAVE_FLOAT_H */
 # define AG_FLT_EPSILON 1.192092896e-7f
 # define AG_DBL_EPSILON 2.2204460492503131e-16
-# ifdef HAVE_LONG_DOUBLE
+# ifdef AG_HAVE_LONG_DOUBLE
 #  define AG_LDBL_EPSILON 1.08420217248550443e-19l
 # endif
 #endif /* _MK_HAVE_FLOAT_H */

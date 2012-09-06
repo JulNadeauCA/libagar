@@ -11,7 +11,7 @@
 
 #include <agar/gui/begin.h>
 	
-union ag_numerical_value {
+typedef union ag_numerical_value {
 	int i;
 	Uint u;
 	Uint8 u8;
@@ -29,19 +29,15 @@ union ag_numerical_value {
 #ifdef AG_HAVE_LONG_DOUBLE
 	long double ldbl;
 #endif
-};
+} AG_NumericalValue;
 
 typedef struct ag_numerical {
 	struct ag_widget wid;
 	Uint flags;
 #define AG_NUMERICAL_HFILL	0x01
 #define AG_NUMERICAL_VFILL	0x02
-#define AG_NUMERICAL_INT	0x04	/* Create a default integer binding */
+#define AG_NUMERICAL_INT	0x04	/* Default binding should be int */
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
-
-	union ag_numerical_value value;	/* Default "value" binding */
-	union ag_numerical_value min;	/* Default "min" binding */
-	union ag_numerical_value max;	/* Default "max" binding */
 
 	double incr;			/* Button increment value */
 	char format[32];		/* Printing format */
@@ -52,9 +48,11 @@ typedef struct ag_numerical {
 	AG_UCombo *units;		/* Unit selector */
 	AG_Button *incbu;		/* Increment button */
 	AG_Button *decbu;		/* Decrement button */
-	int wUnitSel, hUnitSel;		/* Initial size hints */
-	int wPreUnit;
-	AG_Timer updateTo;
+	int wUnitSel, hUnitSel;		/* Size hints for entry box */
+	int wPreUnit;			/* Size hint for unit selector */
+	AG_Timer updateTo;		/* Timer for non-EXCL mode */
+	AG_NumericalValue value;	/* Default value binding */
+	AG_NumericalValue min, max;	/* Default range bindings */
 } AG_Numerical;
 
 __BEGIN_DECLS
@@ -98,7 +96,7 @@ void    AG_NumericalSizeHint(AG_Numerical *, const char *);
 
 void	AG_NumericalIncrement(AG_Numerical *);
 void	AG_NumericalDecrement(AG_Numerical *);
-void	AG_NumericalSetValue(AG_Numerical *, union ag_numerical_value);
+void	AG_NumericalSetValue(AG_Numerical *, AG_NumericalValue);
 void    AG_NumericalUpdate(AG_Numerical *);
 void	AG_NumericalSetIncrement(AG_Numerical *, double);
 void	AG_NumericalSelectUnit(AG_Numerical *, const char *);

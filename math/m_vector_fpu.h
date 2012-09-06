@@ -240,7 +240,7 @@ void      M_WriteVector_FPU(AG_DataSource *, const M_Vector *);
 M_Vector *M_VectorFromReals_FPU(Uint, const M_Real *);
 M_Vector *M_VectorFromFloats_FPU(Uint, const float *);
 M_Vector *M_VectorFromDoubles_FPU(Uint, const double *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 M_Vector *M_VectorFromLongDoubles_FPU(Uint, const long double *);
 #endif
 __END_DECLS
