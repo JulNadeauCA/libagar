@@ -101,7 +101,7 @@ AG_Swap32(Uint32 x)
 /*
  * Swap 64-bit
  */
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 # if defined(__GNUC__) && defined(__i386__)
 static __inline__ Uint64
 AG_Swap64(Uint64 x)
@@ -140,7 +140,7 @@ AG_Swap64(Uint64 x)
 	return (x);
 }
 # endif /* MD */
-#endif /* HAVE_64BIT */
+#endif /* AG_HAVE_64BIT */
 
 /*
  * Swap floating-point types.
@@ -155,7 +155,7 @@ AG_SwapFLT(float v)
 	return (u.v);
 }
 
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 static __inline__ double
 AG_SwapDBL(double v)
 {
@@ -179,7 +179,7 @@ AG_SwapDBL(double v)
 	}
 	return (uOut.v);
 }
-#endif /* HAVE_64BIT */
+#endif /* AG_HAVE_64BIT */
 
 #ifdef HAVE_LONG_DOUBLE
 static __inline__ long double

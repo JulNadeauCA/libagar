@@ -44,7 +44,7 @@ typedef struct m_vector_ops {
 	M_Vector *(*FromReals)(Uint, const M_Real *);
 	M_Vector *(*FromFloats)(Uint, const float *);
 	M_Vector *(*FromDoubles)(Uint, const double *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef AG_HAVE_LONG_DOUBLE
 	M_Vector *(*FromLongDoubles)(Uint, const long double *);
 #else /* Padding */
 	M_Vector *(*FromLongDoubles)(Uint, const double *);

@@ -89,14 +89,14 @@
 # ifndef Uint32
 # define Uint32 u_int32_t
 # endif
-# ifdef HAVE_64BIT
+# ifdef AG_HAVE_64BIT
 #  ifndef Sint64
 #  define Sint64 int64_t
 #  endif
 #  ifndef Uint64
 #  define Uint64 u_int64_t
 #  endif
-# else /* !HAVE_64BIT */
+# else /* !AG_HAVE_64BIT */
 typedef struct ag_fake_int64 { Uint32 _pad1; Uint32 _pad2; };
 #  ifndef Sint64
 #  define Sint64 struct ag_fake_int64
@@ -104,5 +104,5 @@ typedef struct ag_fake_int64 { Uint32 _pad1; Uint32 _pad2; };
 #  ifndef Uint64
 #  define Uint64 struct ag_fake_int64
 #  endif
-# endif /* HAVE_64BIT */
+# endif /* AG_HAVE_64BIT */
 #endif /* !WIN32 */

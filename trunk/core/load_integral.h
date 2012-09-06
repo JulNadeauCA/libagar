@@ -52,7 +52,7 @@ __BEGIN_DECLS
 #define	AG_WriteSint32v(ds,v)	 AG_WriteUint32v((ds),(Uint32 *)(v))
 #define	AG_WriteSint32At(ds,v,o) AG_WriteUint32At((ds),(Uint32)(v),(o))
 
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 # define AG_ReadSint64(ds)	  ((Sint64)AG_ReadUint64(ds))
 # define AG_ReadSint64v(ds,v)	  AG_ReadUint64v(ds, (Sint64 *)(v))
 # define AG_WriteSint64(ds,v)	  AG_WriteUint64((ds),(Uint64)(v))
@@ -244,7 +244,7 @@ AG_WriteUint32At(AG_DataSource *ds, Uint32 u32, off_t pos)
 		AG_DataSourceError(ds, NULL);
 }
 
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 /*
  * 64-bit integers
  */
@@ -309,7 +309,7 @@ AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
 	if (AG_WriteAt(ds, &i, sizeof(i), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
-#endif /* HAVE_64BIT */
+#endif /* AG_HAVE_64BIT */
 
 __END_DECLS
 #include <agar/core/close.h>

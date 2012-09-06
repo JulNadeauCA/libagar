@@ -51,7 +51,7 @@ enum ag_table_cell_type {
 	AG_CELL_PSINT32,
 	AG_CELL_PFLOAT,
 	AG_CELL_PDOUBLE,
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 	AG_CELL_INT64,
 	AG_CELL_UINT64,
 	AG_CELL_PINT64,
@@ -72,7 +72,7 @@ typedef struct ag_table_cell {
 		double f;
 		void *p;
 		long l;
-#ifdef HAVE_64BIT
+#ifdef AG_HAVE_64BIT
 		Uint64 u64;
 #else
 		Uint32 u64[2];	/* Padding */
