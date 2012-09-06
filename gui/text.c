@@ -495,6 +495,7 @@ AG_TextInit(void)
 	SLIST_INIT(&fonts);
 
 	/* Set the default font search path. */
+	AG_ObjectLock(agConfig);
 	if (!AG_Defined(agConfig,"font-path")) {
 		char fontPath[AG_PATHNAME_MAX];
 		char path[AG_PATHNAME_MAX];
@@ -575,6 +576,8 @@ AG_TextInit(void)
 	if (!AG_Defined(agConfig,"font.flags")) {
 		AG_SetUint(agConfig, "font.flags", 0);
 	}
+	AG_ObjectUnlock(agConfig);
+
 	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 		goto fail;
 	}
@@ -1486,9 +1489,11 @@ AG_TextInfoS(const char *key, const char *s)
 	Strlcpy(disableSw, "info.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
 
+	AG_ObjectLock(agConfig);
+
 	if (AG_Defined(agConfig,disableSw) &&
 	    AG_GetInt(agConfig,disableSw) == 1)
-		return;
+		goto out;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
@@ -1508,6 +1513,8 @@ AG_TextInfoS(const char *key, const char *s)
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
+out:
+	AG_ObjectUnlock(agConfig);
 }
 
 /*
@@ -1538,10 +1545,12 @@ AG_TextWarningS(const char *key, const char *s)
 	
 	Strlcpy(disableSw, "warn.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
+	
+	AG_ObjectLock(agConfig);
 
 	if (AG_Defined(agConfig,disableSw) &&
 	    AG_GetInt(agConfig,disableSw) == 1)
-		return;
+		goto out;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|
@@ -1562,6 +1571,8 @@ AG_TextWarningS(const char *key, const char *s)
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
+out:
+	AG_ObjectUnlock(agConfig);
 }
 
 /* Display an error message. */
