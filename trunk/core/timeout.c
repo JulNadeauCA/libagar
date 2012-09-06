@@ -85,6 +85,7 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 		if (toOther == NULL) {
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
 			newTimer = 1;
+			to->tSched = 0;		/* Unused */
 		}
 	} else
 #endif
@@ -113,7 +114,6 @@ rescan:
 
 	to->obj = ob;
 	to->flags = 0;
-	to->tSched = 0;
 	to->ival = ival;
 	to->fn = fn;
 	ev = &to->fnEvent;
