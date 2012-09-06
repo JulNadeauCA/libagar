@@ -161,21 +161,17 @@ AG_Variable *
 AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 {
 	AG_Object *obj = pObj;
-	AG_Variable *V = NULL;	/* make compiler happy */
+	AG_Variable *V;
 	va_list ap;
-	Uint i;
 
 	AG_ObjectLock(obj);
 
-	for (i = 0; i < obj->nVars; i++) {
-		V = &obj->vars[i];
-		if (strcmp(obj->vars[i].name, name) == 0)
+	TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(V->name, name) == 0)
 			break;
 	}
-	if (i == obj->nVars) {			/* Create new binding */
-		obj->vars = Realloc(obj->vars,
-		    (obj->nVars+1)*sizeof(AG_Variable));
-		V = &obj->vars[obj->nVars++];
+	if (V == NULL) {
+		V = Malloc(sizeof(AG_Variable));
 		Strlcpy(V->name, name, sizeof(V->name));
 	}
 	V->type = type;
