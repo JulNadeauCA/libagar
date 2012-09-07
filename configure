@@ -4443,6 +4443,65 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_KQUEUE
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the Linux timerfd interface..."
+$ECHO_N "checking for the Linux timerfd interface..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_TIMERFD" ]; then
+		HAVE_TIMERFD=`cat ${cache}/ctest-HAVE_TIMERFD`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_TIMERFD`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/timerfd.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct itimerspec its;
+	int fd;
+
+	if ((fd = timerfd_create(CLOCK_MONOTONIC, TFD_TIMER_ABSTIME)) != -1) {
+		its.it_interval.tv_sec = 0;
+		its.it_interval.tv_nsec = 0L;
+		its.it_value.tv_sec = 0;
+		its.it_value.tv_nsec = 0L;
+		return (timerfd_settime(fd, 0, &its, NULL) == -1);
+	}
+	return (1);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_TIMERFD="yes"
+echo "#ifndef HAVE_TIMERFD" > $BLD/include/agar/config/have_timerfd.h
+echo "#define HAVE_TIMERFD \"$HAVE_TIMERFD\"" >> $BLD/include/agar/config/have_timerfd.h
+echo "#endif" >> $BLD/include/agar/config/have_timerfd.h
+echo "hdefs[\"HAVE_TIMERFD\"] = \"$HAVE_TIMERFD\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_TIMERFD="no"
+echo "#undef HAVE_TIMERFD" >$BLD/include/agar/config/have_timerfd.h
+echo "hdefs[\"HAVE_TIMERFD\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_TIMERFD" > ${cache}/ctest-HAVE_TIMERFD
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_TIMERFD
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
