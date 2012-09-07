@@ -401,16 +401,20 @@ main(int argc, char *argv[])
 	AG_Box *hBox;
 	AG_Font *font;
 	int c, i, optInd;
+	Uint initFlags = AG_VERBOSE;
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "?hd:t:T", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'd':
 			driverSpec = optArg;
 			break;
 		case 't':
 			fontSpec = optArg;
+			break;
+		case 'T':
+			initFlags |= AG_SOFT_TIMERS;
 			break;
 		case '?':
 		case 'h':
@@ -419,7 +423,7 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	if (AG_InitCore("agartest", AG_VERBOSE) == -1) {
+	if (AG_InitCore("agartest", initFlags) == -1) {
 		printf("Agar-Core initialization failed: %s\n", AG_GetError());
 		return (1);
 	}

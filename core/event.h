@@ -190,9 +190,10 @@ typedef void (*AG_EventFn)(AG_Event *);
 	}
 
 __BEGIN_DECLS
-extern int agKqueue;			/* For kqueue(2) based event loop */
+extern int agSoftTimers;		/* Never use platform-specific timers */
+extern int agKqueue;			/* File descriptor of kqueue(2) */
 
-int       AG_InitEventSubsystem(void);
+int       AG_InitEventSubsystem(Uint);
 void      AG_DestroyEventSubsystem(void);
 void      AG_EventInit(AG_Event *);
 void      AG_EventArgs(AG_Event *, const char *, ...);

@@ -142,11 +142,13 @@ If the timer is not running,
 .Fn AG_DelTimer
 is a safe no-op.
 .Pp
-It is safe to make
+In the timer callback routine, it is safe to make
 .Fn AG_AddTimer
-and
+or
 .Fn AG_DelTimer
-calls in timer callbacks.
+calls.
+It is not safe to try and detach or destroy the timer's parent object from
+the callback routine.
 .Pp
 The
 .Fn AG_TimerIsRunning
@@ -174,6 +176,12 @@ The
 .Fa ticks
 argument is the monotonic time in ticks (usually obtained from
 .Xr AG_GetTicks 3 ) .
+For
+.Fn AG_ProcessTimeouts
+to work as expected, the
+.Dv AG_SOFT_TIMERS
+flag must be passed to
+.Xr AG_InitCore 3 .
 .Sh SPECIALIZED TIMERS
 The
 .Nm

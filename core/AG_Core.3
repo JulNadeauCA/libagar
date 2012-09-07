@@ -37,14 +37,24 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar core library (ag_core) implements the base Agar object system
+The Agar core library,
+.Nm ,
+is a compact library which implements the base Agar object system.
+It also provides cross-platform interfaces to filesystems, databases, user
+accounts, timers and network facilities.
+The
+.Nm
+library also includes utility routines for C strings and error handling
 (see
-.Xr AG_Object 3 ) .
-The ag_core library also provides light, platform-independent interfaces
-to filesystems, databases, and other resources.
+.Dq SEE ALSO
+section).
 .Pp
-Note that there are no GUI-related functions in ag_core.
-The Agar GUI system (the ag_gui library) uses ag_core, but ag_core
+Note that there are no GUI-related functions in
+.Nm .
+The Agar GUI system (the ag_gui library) uses 
+.Nm ,
+but
+.Nm
 can be used in a standalone manner by non-GUI applications.
 .Pp
 The
@@ -67,11 +77,14 @@ function should be invoked before any other Agar library call is made.
 .nr nS 0
 The
 .Fn AG_InitCore
-function initializes the ag_core library.
+function initializes the
+.Nm
+library.
 The optional
 .Fa progname
 argument sets an application name (this name may be used by ag_gui and
-ag_core to set various platform-dependent defaults).
+.Nm
+to set various platform-dependent defaults).
 .Fa progname
 may be set to NULL.
 .Pp
@@ -89,6 +102,14 @@ depend on
 For example, on POSIX platforms,
 .Pa ~/.<progname>
 would be used.
+.It AG_SOFT_TIMERS
+Specify that the application will be using a custom event loop calling
+.Xr AG_ProcessTimeouts 3
+explicitely.
+If this flag is not specified, Agar is allowed to use platform-specific timer
+interfaces (such as
+.Xr kqueue 2
+or timerfd), where they are available.
 .El
 .Pp
 The
@@ -98,12 +119,15 @@ registers a function that will be invoked automatically by
 .Pp
 .Fn AG_Quit
 terminates the application by releasing resources allocated by
-ag_core and invoking
+.Nm
+and invoking
 .Xr exit 2 .
 .Pp
 The
 .Fn AG_Destroy
-function releases all resources allocated by the ag_core library.
+function releases all resources allocated by the
+.Nm
+library.
 .Pp
 .Sh AGAR VERSION INFORMATION
 .nr nS 1
@@ -138,7 +162,16 @@ macro evaluates to true if the current Agar version is equal to, or exceeds
 the given version number.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_InitGraphics 3
+.Xr AG_Db 3 ,
+.Xr AG_Dir 3 ,
+.Xr AG_Error 3 ,
+.Xr AG_Execute 3 ,
+.Xr AG_File 3 ,
+.Xr AG_Net 3 ,
+.Xr AG_Object 3 ,
+.Xr AG_String 3 ,
+.Xr AG_Timer 3 ,
+.Xr AG_User 3 .
 .Sh HISTORY
 The
 .Fn AG_InitCore
