@@ -36,7 +36,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
-	AG_ConsoleLine *lines;		/* Lines in buffer */
+	AG_ConsoleLine **lines;		/* Lines in buffer */
 	Uint nLines;			/* Line count */
 	Uint rOffs;			/* Row display offset */
 	AG_Color cBg;			/* Background color */

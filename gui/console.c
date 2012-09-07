@@ -154,7 +154,7 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 	for (i = cons->pos;
 	     (i >= 0 && i < cons->nLines);
 	     i += dir) {
-		AG_ConsoleLine *ln = &cons->lines[i];
+		AG_ConsoleLine *ln = cons->lines[i];
 		sizeReq += ln->len + 2; /* \r\n */
 		if (i == cons->pos+cons->sel)
 			break;
@@ -167,7 +167,7 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 	for (i = cons->pos;
 	     (i >= 0 && i < cons->nLines);
 	     i += dir) {
-		AG_ConsoleLine *ln = &cons->lines[i];
+		AG_ConsoleLine *ln = cons->lines[i];
 		memcpy(ps, ln->text, ln->len);
 #ifdef _WIN32
 		if (nativeNL) {
@@ -485,7 +485,7 @@ Draw(void *p)
 	for (lnIdx = cons->rOffs;
 	     lnIdx < cons->nLines && rDst.y < WIDGET(cons)->h;
 	     lnIdx++) {
-		AG_ConsoleLine *ln = &cons->lines[lnIdx];
+		AG_ConsoleLine *ln = cons->lines[lnIdx];
 
 		if (ln->surface == -1) {
 			AG_TextColor(ln->cFg);
@@ -519,7 +519,9 @@ FreeLines(AG_Console *cons)
 	Uint i;
 	
 	for (i = 0; i < cons->nLines; i++) {
-		Free(cons->lines[i].text);
+		AG_ConsoleLine *ln = cons->lines[i];
+		Free(ln->text);
+		free(ln);
 	}
 	Free(cons->lines);
 	cons->lines = NULL;
@@ -556,7 +558,7 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 	ComputeVisible(cons);
 
 	for (i = 0; i < cons->nLines; i++) {
-		AG_ConsoleLine *ln = &cons->lines[i];
+		AG_ConsoleLine *ln = cons->lines[i];
 
 		AG_WidgetUnmapSurface(cons, ln->surface);
 		ln->surface = -1;
@@ -570,12 +572,20 @@ AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
+	AG_ConsoleLine **linesNew;
+	
+	if ((ln = TryMalloc(sizeof(AG_ConsoleLine))) == NULL)
+		return (NULL);
 
 	AG_ObjectLock(cons);
 
-	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
-				           sizeof(AG_ConsoleLine));
-	ln = &cons->lines[cons->nLines++];
+	if ((linesNew = TryRealloc(cons->lines,
+	    (cons->nLines+1)*sizeof(AG_ConsoleLine *))) == NULL) {
+		AG_ObjectUnlock(cons);
+		return (NULL);
+	}
+	cons->lines = linesNew;
+	cons->lines[cons->nLines++] = ln;
 	if (s != NULL) {
 		ln->text = Strdup(s);
 		ln->len = strlen(s);
