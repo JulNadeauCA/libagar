@@ -125,9 +125,12 @@ messages (see
 The
 .Fn AG_ConsoleMsg
 function appends a new message to the console log.
-The function returns a
+Unless an error occurs, the function returns a
 .Ft AG_ConsoleLine
-handle (or NULL if an error occured).
+handle.
+This handle remains valid until the widget is destroyed, or
+.Fn AG_ConsoleClear
+is used.
 .Pp
 As a special case, if a
 .Fa cons
@@ -178,7 +181,7 @@ Current cursor position (or -1).
 Selection (offset from cursor).
 .It Ft AG_Mutex lock
 Lock on buffer contents.
-.It Ft AG_ConsoleLine *lines
+.It Ft AG_ConsoleLine **lines
 Lines in buffer.
 .It Ft Uint nLines
 Line count.
