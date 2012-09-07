@@ -33,6 +33,7 @@
 #include <stdarg.h>
 
 #include <config/have_kqueue.h>
+#include <config/have_timerfd.h>
 #include <config/ag_objdebug.h>
 
 #ifdef HAVE_KQUEUE
@@ -42,7 +43,8 @@
 # include <errno.h>
 #endif
 
-int agKqueue = -1;			/* For kqueue(2) based event loop */
+int agSoftTimers = 0;			/* Never use platform-specific timers */
+int agKqueue = -1;			/* File descriptor of kqueue(2) */
 
 /* Generate a unique event handler name. */
 static void
@@ -496,9 +498,14 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 }
 
 int
-AG_InitEventSubsystem(void)
+AG_InitEventSubsystem(Uint flags)
 {
-#ifdef HAVE_KQUEUE
+	agSoftTimers = (flags & AG_SOFT_TIMERS);
+#if defined(HAVE_KQUEUE)
+	if (agSoftTimers) {
+		agKqueue = -1;
+		return (0);
+	}
 	if ((agKqueue = kqueue()) == -1) {
 		AG_SetError("kqueue: %s", AG_Strerror(errno));
 		return (-1);
@@ -511,7 +518,9 @@ void
 AG_DestroyEventSubsystem(void)
 {
 #ifdef HAVE_KQUEUE
-	close(agKqueue);
-	agKqueue = -1;
+	if (agKqueue != -1) {
+		close(agKqueue);
+		agKqueue = -1;
+	}
 #endif
 }

@@ -98,7 +98,7 @@ AG_InitCore(const char *progname, Uint flags)
 
 	if (AG_InitErrorSubsystem() == -1 ||
 	    AG_InitStringSubsystem() == -1 ||
-	    AG_InitEventSubsystem() == -1) {
+	    AG_InitEventSubsystem(flags) == -1) {
 		return (-1);
 	}
 	AG_GetCPUInfo(&agCPU);
