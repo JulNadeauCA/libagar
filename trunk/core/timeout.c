@@ -30,11 +30,15 @@
 #include "core.h"
 
 #include <config/have_kqueue.h>
+#include <config/have_timerfd.h>
 
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <sys/time.h>
+# include <errno.h>
+#elif defined(HAVE_TIMERFD)
+# include <sys/timerfd.h>
 # include <errno.h>
 #endif
 
@@ -62,7 +66,7 @@ int
 AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
     const char *fmt, ...)
 {
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr, *obOther;
+	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 	AG_Timer *toOther;
 	int newTimer = 0;
 	AG_Event *ev;
@@ -72,12 +76,9 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 	if (TAILQ_EMPTY(&ob->timers))
 		TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
 
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
+	/* Check if the timer is active. Order is not important. */
 	if (agKqueue != -1) {
-		/*
-		 * No need to maintain a timing wheel, this saves us the
-		 * cost of a GetTicks() call here.
-		 */
 		TAILQ_FOREACH(toOther, &ob->timers, timers) {
 			if (toOther == to)
 				break;
@@ -85,15 +86,25 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 		if (toOther == NULL) {
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
 			newTimer = 1;
-			to->tSched = 0;		/* Unused */
+			to->tSched = 0;
+		}
+	} else
+#elif defined(HAVE_TIMERFD)
+	/* Check if the timer is active. Order is not important. */
+	if (!agSoftTimers) {
+		TAILQ_FOREACH(toOther, &ob->timers, timers) {
+			if (toOther == to)
+				break;
+		}
+		if (toOther == NULL) {
+			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+			newTimer = 1;
+			to->tSched = 0;
 		}
 	} else
 #endif
+	/* Check if the timer is active. Maintain timing wheel order. */
 	{
-		/*
-		 * Add this timer to the timing wheel. If it is already
-		 * in the timing wheel, move it as appropriate.
-		 */
 		to->tSched = AG_GetTicks()+ival;
 		newTimer = 1;
 rescan:
@@ -122,38 +133,121 @@ rescan:
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
-	if (newTimer) {
-		to->id = ++agTimerCount;
-		
-		/* Check for timer ID collisions. */
+#if defined(HAVE_KQUEUE)
+	/* Create a kqueue timer with a generated unique ID. */
+	/* TODO queue the changelist, faster collision test */
+	if (agKqueue != -1) {
+		AG_Object *obOther;
+		struct kevent kev;
+	
+		if (newTimer) {
+#ifdef AG_DEBUG
+			if (agTimerCount+1 >= AG_INT_MAX)
+				AG_FatalError("agTimerCount");
+#endif
+			to->id = (int)++agTimerCount;
 gen_id:
-		TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
-			TAILQ_FOREACH(toOther, &obOther->timers, timers) {
-				if (toOther == to) {
-					continue;
-				}
-				if (toOther->id == to->id) {
-					to->id++;
-					goto gen_id;
+			TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
+				TAILQ_FOREACH(toOther, &obOther->timers, timers) {
+					if (toOther == to) { continue; }
+					if (toOther->id == to->id) {
+						to->id++;
+						goto gen_id;
+					}
 				}
 			}
 		}
-	}
-
-#ifdef HAVE_KQUEUE
-	/* Set up our kqueue event filter. TODO queue the changelist */
-	if (agKqueue != -1) {
-		struct kevent kev;
-		
 		EV_SET(&kev, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0, ival, to);
 		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
-			AG_SetError("kqueue: %s", AG_Strerror(errno));
-			AG_UnlockTimers(ob);
+			AG_SetError("kevent: %s", AG_Strerror(errno));
+			goto fail;
+		}
+	} else
+#elif defined(HAVE_TIMERFD)
+	/* Create a timerfd. Store the file descriptor as ID. */
+	if (!agSoftTimers) {
+		struct itimerspec its;
+
+		if ((to->id = timerfd_create(CLOCK_MONOTONIC, 0)) == -1) {
+			AG_SetError("timerfd_create: %s", AG_Strerror(errno));
+			goto fail;
+		}
+		its.it_value.tv_sec = ival/1000;
+		its.it_value.tv_nsec = (ival % 1000)*1000000L;
+		its.it_interval.tv_sec = its.it_value.tv_sec;
+		its.it_interval.tv_nsec = its.it_value.tv_nsec;
+		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
+			close(to->id);
+			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
+			goto fail;
+		}
+	} else
+#endif
+	/* Create a soft timer. This method does not require IDs. */
+	{
+		to->id = 0;
+	}
+
+	AG_UnlockTimers(ob);
+	return (0);
+fail:
+	to->obj = NULL;
+	TAILQ_REMOVE(&ob->timers, to, timers);
+	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
+	AG_UnlockTimers(ob);
+	return (-1);
+}
+
+/*
+ * Change the interval of a timer. The timer must be running.
+ * This is called whenever a timer callback returns a new interval.
+ */
+int
+AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
+{
+	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+
+#if defined(HAVE_KQUEUE)
+	if (agKqueue != -1) {
+		struct kevent kchg;
+
+		/* TODO: queue changelist */
+		EV_SET(&kchg, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0,
+		    ival, to);
+		if (kevent(agKqueue, &kchg, 1, NULL, 0, NULL) == -1) {
+			AG_SetError("kevent: %s", AG_Strerror(errno));
 			return (-1);
 		}
-	}
+	} else
+#elif defined(HAVE_TIMERFD)
+	if (!agSoftTimers) {
+		struct itimerspec its;
+
+		its.it_value.tv_sec = ival/1000;
+		its.it_value.tv_nsec = (ival % 1000)*1000000L;
+		its.it_interval.tv_sec = 0;
+		its.it_interval.tv_nsec = 0L;
+		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
+			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
+			return (-1);
+		}
+	} else
 #endif
-	AG_UnlockTimers(ob);
+	{
+		AG_Timer *toOther;
+
+		to->tSched = AG_GetTicks()+ival;
+		TAILQ_REMOVE(&ob->timers, to, timers);
+		TAILQ_FOREACH(toOther, &ob->timers, timers) {
+			if (to->tSched < toOther->tSched) {
+				TAILQ_INSERT_BEFORE(toOther, to, timers);
+				break;
+			}
+		}
+		if (toOther == TAILQ_END(&ob->timers))
+			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+	}
+	to->ival = ival;
 	return (0);
 }
 
@@ -170,28 +264,37 @@ AG_DelTimer(void *p, AG_Timer *to)
 		if (toOther == to)
 			break;
 	}
-	if (toOther == NULL) { 			/* Timer is not active */
+	if (toOther == NULL)  			/* Timer is not active */
 		goto out;
-	}
 
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
 	/* Remove our kqueue event filter. TODO queue the changelist */
 	if (agKqueue != -1) {
 		struct kevent kev;
 	
 		EV_SET(&kev, to->id, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
-		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1)
-			AG_FatalError("kqueue: %s", AG_Strerror(errno));
-	}
+		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
+			AG_FatalError("kevent: %s", AG_Strerror(errno));
+		}
+		to->id = -1;
+		agTimerCount--;
+	} else
+#elif defined(HAVE_TIMERFD)
+	if (!agSoftTimers) {
+# ifdef AG_DEBUG
+		if (to->id == -1) { AG_FatalError("timerfd inconsistency"); }
+# endif
+		close(to->id);
+		to->id = -1;
+	} else
 #endif
-	to->obj = NULL;
-	to->id = 0;
-	TAILQ_REMOVE(&ob->timers, to, timers);
-	if (TAILQ_EMPTY(&ob->timers)) {
-		TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
+	{
+		to->id = 0;
 	}
-	agTimerCount--;
 
+	to->obj = NULL;
+	TAILQ_REMOVE(&ob->timers, to, timers);
+	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
 	if (to->flags & AG_TIMER_AUTO_FREE)
 		free(to);
 out:
@@ -243,13 +346,15 @@ AG_TimerWait(void *p, AG_Timer *to, Uint32 timeout)
  * Execute the callback routines of expired timers using AG_GetTicks()
  * as a time source. This is used on platforms where system timers are not
  * available and delay loops are the only option.
+ *
+ * Applications calling this routine explicitely must pass AG_SOFT_TIMERS to
+ * AG_InitCore().
  */
 void
 AG_ProcessTimeouts(Uint32 t)
 {
 	AG_Timer *to, *toNext;
 	AG_Object *ob, *obNext;
-	AG_Timer *toAfter;
 	Uint32 rv;
 
 	AG_LockTiming();
@@ -269,30 +374,10 @@ rescan:
 			}
 			rv = to->fn(to, &to->fnEvent);
 			if (rv > 0) {				/* Restart */
-				to->tSched = AG_GetTicks()+rv;
-				if (to->ival != rv) {
-					to->ival = rv;
-				}
-				TAILQ_REMOVE(&ob->timers, to, timers);
-				TAILQ_FOREACH(toAfter, &ob->timers, timers) {
-					if (t < toAfter->tSched) {
-						TAILQ_INSERT_BEFORE(toAfter, to,
-						    timers);
-						break;
-					}
-				}
-				if (toAfter == TAILQ_END(&ob->timers)) {
-					TAILQ_INSERT_TAIL(&ob->timers, to,
-					    timers);
-				}
+				(void)AG_ResetTimer(ob, to, rv);
 				goto rescan;
 			} else {				/* Cancel */
-				TAILQ_REMOVE(&ob->timers, to, timers);
-				if (TAILQ_EMPTY(&ob->timers)) {
-					TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
-				}
-				to->obj = NULL;
-				agTimerCount--;
+				AG_DelTimer(ob, to);
 			}
 		}
 		AG_ObjectUnlock(ob);

@@ -3,7 +3,7 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_timer {
-	Uint id;			/* Unique identifier */
+	int id;				/* Unique identifier */
 	void *obj;			/* Parent object */
 	Uint flags;
 #define AG_TIMER_SURVIVE_DETACH	0x01	/* Don't cancel on ObjectDetach() */
@@ -62,6 +62,7 @@ void	AG_InitTimers(void);
 void	AG_DestroyTimers(void);
 
 int     AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
+int	AG_ResetTimer(void *, AG_Timer *, Uint32);
 void	AG_DelTimer(void *, AG_Timer *);
 int	AG_TimerIsRunning(void *, AG_Timer *);
 int     AG_TimerWait(void *, AG_Timer *, Uint32);

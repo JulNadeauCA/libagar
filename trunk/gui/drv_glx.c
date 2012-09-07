@@ -31,6 +31,7 @@
 #include <config/have_xkb.h>
 #include <config/have_xinerama.h>
 #include <config/have_kqueue.h>
+#include <config/have_timerfd.h>
 
 #include <core/core.h>
 
@@ -54,10 +55,13 @@
 #include "cursors.h"
 #include "opengl.h"
 
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <sys/time.h>
+# include <errno.h>
+#elif defined(HAVE_TIMERFD)
+# include <sys/select.h>
 # include <errno.h>
 #endif
 
@@ -864,60 +868,7 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	return PostEventCallback(drvCaller);
 }
 
-/* Generic application event loop (using delay loops). */
-static void
-GLX_GenericEventLoop(void *obj)
-{
-	AG_Driver *drv;
-	AG_DriverGLX *glx;
-	AG_DriverEvent dev;
-	AG_Window *win;
-	Uint32 t1, t2;
-
-	t1 = AG_GetTicks();
-	for (;;) {
-		t2 = AG_GetTicks();
-		if (agExitGLX) {
-			break;
-		} else if (t2 - t1 >= rNom) {
-			AG_LockVFS(&agDrivers);
-			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-				if (!AGDRIVER_IS_GLX(drv)) {
-					continue;
-				}
-				glx = (AG_DriverGLX *)drv;
-				AG_MutexLock(&glx->lock);
-				win = AGDRIVER_MW(drv)->win;
-				if (win->visible && win->dirty) {
-					AG_BeginRendering(drv);
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-					AG_EndRendering(drv);
-				}
-				AG_MutexUnlock(&glx->lock);
-			}
-			AG_UnlockVFS(&agDrivers);
-			t1 = AG_GetTicks();
-			rCur = rNom - (t1-t2);
-			if (rCur < 1) { rCur = 1; }
-		} else if (GLX_PendingEvents(NULL) != 0) {
-			AG_LockVFS(&agDrivers);
-			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
-			    GLX_ProcessEvent(NULL, &dev) == -1) {
-				AG_UnlockVFS(&agDrivers);
-				return;
-			}
-			AG_UnlockVFS(&agDrivers);
-		} else {
-			AG_ProcessTimeouts(t2);
-			AG_Delay(1);
-		}
-	}
-}
-
-/* Generic application event loop (using kqueue(2) interface). */
-#ifdef HAVE_KQUEUE
+/* Render any window marked dirty. */ 
 static void
 RenderDirtyWindows(void)
 {
@@ -944,6 +895,43 @@ RenderDirtyWindows(void)
 	}
 	AG_UnlockVFS(&agDrivers);
 }
+
+/* Generic application event loop (using delay loops). */
+static void
+GLX_GenericEventLoop(void *obj)
+{
+	AG_DriverEvent dev;
+	Uint32 t1, t2;
+
+	t1 = AG_GetTicks();
+	for (;;) {
+		t2 = AG_GetTicks();
+		if (agExitGLX) {
+			break;
+		} else if (t2 - t1 >= rNom) {
+			RenderDirtyWindows();
+			t1 = AG_GetTicks();
+			rCur = rNom - (t1-t2);
+			if (rCur < 1) { rCur = 1; }
+		} else if (GLX_PendingEvents(NULL) != 0) {
+			AG_LockVFS(&agDrivers);
+			if (GLX_GetNextEvent(NULL, &dev) == 1 &&
+			    GLX_ProcessEvent(NULL, &dev) == -1) {
+				AG_UnlockVFS(&agDrivers);
+				return;
+			}
+			AG_UnlockVFS(&agDrivers);
+		} else {
+			AG_ProcessTimeouts(t2);
+			AG_Delay(1);
+		}
+	}
+}
+
+#if defined(HAVE_KQUEUE)
+/*
+ * Generic application event loop (using BSD kqueue(2) interface).
+ */
 static void
 GLX_GenericEventLoop_KQUEUE(void *obj)
 {
@@ -952,10 +940,10 @@ GLX_GenericEventLoop_KQUEUE(void *obj)
 	int nev, rv = 0;
 	AG_Object *ob;
 	AG_Timer *to;
-	Uint32 rvTimer;
+	Uint32 rvt;
 
-	if (agKqueue == -1) {			/* kqueue is unavailable */
-		GLX_GenericEventLoop(obj);
+	if (agKqueue == -1) {
+		GLX_GenericEventLoop(obj);		/* Fallback */
 		return;
 	}
 	memset(&kev, 0, sizeof(struct kevent));	/* Avoid valgrind warnings */
@@ -990,22 +978,13 @@ GLX_GenericEventLoop_KQUEUE(void *obj)
 			to = (AG_Timer *)kev.udata;
 			ob = to->obj;
 			AG_LockTimers(ob);
-			rvTimer = to->fn(to, &to->fnEvent);
-			if (rvTimer > 0) {			/* Restart */
-				if (rvTimer != to->ival) {
-					struct kevent kchg;
-
-					/* TODO: queue changelist */
-					EV_SET(&kchg, to->id, EVFILT_TIMER,
-					    EV_ADD|EV_ENABLE, 0, rvTimer, to);
-					if (kevent(agKqueue, &kchg, 1, NULL,
-					    0, NULL) == -1) {
-						AG_SetError("kqueue: %s", AG_Strerror(errno));
-						rv = -1;
-						AG_UnlockTimers(ob);
-						goto out;
-					}
-					to->ival = rvTimer;
+			rvt = to->fn(to, &to->fnEvent);
+			if (rvt > 0) {				/* Restart */
+				if (rvt != to->ival &&
+				    AG_ResetTimer(ob, to, rvt) == -1) {
+					rv = -1;
+					AG_UnlockTimers(ob);
+					goto out;
 				}
 			} else {				/* Cancel */
 				AG_DelTimer(ob, to);
@@ -1024,7 +1003,107 @@ out:
 	if (rv != 0)
 		Verbose("Abnormal exit: %s\n", AG_GetError());
 }
-#endif /* !HAVE_KQUEUE */
+
+#elif defined(HAVE_TIMERFD)
+
+/*
+ * Generic application event loop (using select() and Linux timerfd).
+ */
+static void
+GLX_GenericEventLoop_TIMERFD(void *obj)
+{
+	AG_DriverEvent dev;
+	int rv = 0, rvSelect, xfd, nfds;
+	AG_Object *ob, *obNext;
+	AG_Timer *to, *toNext;
+	Uint32 rvt;
+	fd_set rfds;
+
+	if (agSoftTimers) {
+		GLX_GenericEventLoop(obj);		/* Fallback */
+		return;
+	}
+	AG_MutexLock(&agDisplayLock);
+	xfd = ConnectionNumber(agDisplay);
+	AG_MutexUnlock(&agDisplayLock);
+	for (;;) {
+		nfds = 0;
+		FD_ZERO(&rfds);
+		FD_SET(xfd, &rfds);
+		if (xfd > nfds) { nfds = xfd; }
+		AG_LockTiming();
+		TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
+			AG_ObjectLock(ob);
+			TAILQ_FOREACH(to, &ob->timers, timers) {
+				FD_SET(to->id, &rfds);
+				if (to->id > nfds) { nfds = to->id; }
+			}
+			AG_ObjectUnlock(ob);
+		}
+		AG_UnlockTiming();
+
+		rvSelect = select(nfds+1, &rfds, NULL, NULL, NULL);
+		if (rvSelect == -1) {
+			if (errno == EINTR) {
+				continue;
+			}
+			AG_SetError("select(): %s", AG_Strerror(errno));
+			rv = -1;
+			goto out;
+		}
+		if (FD_ISSET(xfd, &rfds)) {
+			AG_LockVFS(&agDrivers);
+			while (GLX_PendingEvents(NULL) != 0) {
+				if (GLX_GetNextEvent(NULL, &dev) != 1) {
+					break;
+				}
+				if (GLX_ProcessEvent(NULL, &dev) == -1) {
+					AG_UnlockVFS(&agDrivers);
+					goto out;
+				}
+			}
+			AG_UnlockVFS(&agDrivers);
+		}
+		AG_LockTiming();
+		for (ob = TAILQ_FIRST(&agTimerObjQ);
+		     ob != TAILQ_END(&agTimerObjQ);
+		     ob = obNext) {
+			obNext = TAILQ_NEXT(ob, tobjs);
+			AG_ObjectLock(ob);
+			for (to = TAILQ_FIRST(&ob->timers);
+			     to != TAILQ_END(&ob->timers);
+			     to = toNext) {
+				toNext = TAILQ_NEXT(to, timers);
+				if (!FD_ISSET(to->id, &rfds)) {
+					continue;
+				}
+				rvt = to->fn(to, &to->fnEvent);
+				if (rvt > 0) {
+					if (AG_ResetTimer(ob, to, rvt) == -1) {
+						rv = -1;
+						AG_ObjectUnlock(ob);
+						AG_UnlockTiming();
+						goto out;
+					}
+					break;
+				} else {
+					AG_DelTimer(ob, to);
+				}
+			}
+			AG_ObjectUnlock(ob);
+		}
+		AG_UnlockTiming();
+
+		if (agExitGLX) {
+			goto out;
+		}
+		RenderDirtyWindows();
+	}
+out:
+	if (rv != 0)
+		Verbose("Abnormal exit: %s\n", AG_GetError());
+}
+#endif /* HAVE_TIMERFD */
 
 static void
 GLX_Terminate(void)
@@ -2204,8 +2283,10 @@ AG_DriverMwClass agDriverGLX = {
 		GLX_PendingEvents,
 		GLX_GetNextEvent,
 		GLX_ProcessEvent,
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
 		GLX_GenericEventLoop_KQUEUE,
+#elif defined(HAVE_TIMERFD)
+		GLX_GenericEventLoop_TIMERFD,
 #else
 		GLX_GenericEventLoop,
 #endif
