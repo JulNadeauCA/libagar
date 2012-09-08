@@ -563,8 +563,8 @@ AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
 		AG_WidgetUnmapSurface(cons, ln->surface);
 		ln->surface = -1;
 	}
-	AG_ObjectUnlock(cons);
 	AG_Redraw(cons);
+	AG_ObjectUnlock(cons);
 }
 
 /* Append a line to the log */
@@ -582,6 +582,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	if ((linesNew = TryRealloc(cons->lines,
 	    (cons->nLines+1)*sizeof(AG_ConsoleLine *))) == NULL) {
 		AG_ObjectUnlock(cons);
+		free(ln);
 		return (NULL);
 	}
 	cons->lines = linesNew;
@@ -602,8 +603,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
 		cons->scrollTo = &cons->nLines;
 	}
-	AG_ObjectUnlock(cons);
 	AG_Redraw(cons);
+	AG_ObjectUnlock(cons);
 	return (ln);
 }
 
@@ -690,8 +691,8 @@ AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 		AG_WidgetUnmapSurface(ln->cons, ln->surface);
 		ln->surface = -1;
 	}
-	AG_ObjectUnlock(ln->cons);
 	AG_Redraw(ln->cons);
+	AG_ObjectUnlock(ln->cons);
 }
 
 void
@@ -707,6 +708,7 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 {
 	AG_ObjectLock(ln->cons);
 	ln->icon = icon;
+	AG_Redraw(ln->cons);
 	AG_ObjectUnlock(ln->cons);
 }
 
@@ -722,11 +724,13 @@ AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *cBg, const AG_Color *cFg)
 void
 AG_ConsoleClear(AG_Console *cons)
 {
+	AG_ObjectLock(cons);
 	FreeLines(cons);
 	cons->rOffs = 0;
 	cons->pos = -1;
 	cons->sel = 0;
 	AG_Redraw(cons);
+	AG_ObjectUnlock(cons);
 }
 
 AG_WidgetClass agConsoleClass = {
