@@ -946,7 +946,7 @@ GLX_GenericEventLoop_KQUEUE(void *obj)
 		GLX_GenericEventLoop(obj);		/* Fallback */
 		return;
 	}
-	memset(&kev, 0, sizeof(struct kevent));	/* Avoid valgrind warnings */
+	memset(&kev, 0, sizeof(struct kevent));		/* For valgrind */
 	for (;;) {
 		if ((nev = kevent(agKqueue, NULL, 0, &kev, 1, NULL)) < 0) {
 			AG_SetError("kevent(): %s", AG_Strerror(errno));
@@ -1117,6 +1117,7 @@ GLX_Terminate(void)
 			continue;
 		}
 		AG_MutexLock(&glx->lock);
+		memset(&xe, 0, sizeof(XClientMessageEvent));
 		xe.format = 32;
 		xe.data.l[0] = glx->w;
 		XSendEvent(agDisplay, glx->w, False, NoEventMask, (XEvent *)&xe);
