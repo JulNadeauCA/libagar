@@ -61,11 +61,12 @@ void    AG_SetTimeOps(const AG_TimeOps *);
 void	AG_InitTimers(void);
 void	AG_DestroyTimers(void);
 
-int     AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
-int	AG_ResetTimer(void *, AG_Timer *, Uint32);
-void	AG_DelTimer(void *, AG_Timer *);
-int	AG_TimerIsRunning(void *, AG_Timer *);
-int     AG_TimerWait(void *, AG_Timer *, Uint32);
+int       AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
+AG_Timer *AG_AddTimerAuto(void *, Uint32, AG_TimerFn, const char *, ...);
+void	  AG_DelTimer(void *, AG_Timer *);
+int	  AG_ResetTimer(void *, AG_Timer *, Uint32);
+int	  AG_TimerIsRunning(void *, AG_Timer *);
+int       AG_TimerWait(void *, AG_Timer *, Uint32);
 
 void    AG_ProcessTimeouts(Uint32);
 

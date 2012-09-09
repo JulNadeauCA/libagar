@@ -141,10 +141,10 @@ rescan:
 		struct kevent kev;
 	
 		if (newTimer) {
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 			if (agTimerCount+1 >= AG_INT_MAX)
 				AG_FatalError("agTimerCount");
-#endif
+# endif
 			to->id = (int)++agTimerCount;
 gen_id:
 			TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
@@ -196,6 +196,39 @@ fail:
 	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
 	AG_UnlockTimers(ob);
 	return (-1);
+}
+
+/*
+ * Variant of AG_AddTimer() for an auto-allocated, anonymous timer. The
+ * timer structure will be freed upon cancellation.
+ *
+ * The returned pointer is only safe to access as long as AG_LockTimers()
+ * is in effect.
+ */
+AG_Timer *
+AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
+{
+	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Timer *to;
+	AG_Event *ev;
+
+	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
+		return (NULL);
+	}
+	AG_LockTimers(ob);
+	if (AG_AddTimer(ob, to, ival, fn, NULL) == -1) {
+		goto fail;
+	}
+	to->flags |= AG_TIMER_AUTO_FREE;
+	ev = &to->fnEvent;
+	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
+	AG_UnlockTimers(ob);
+	return (to);
+fail:
+	AG_UnlockTimers(ob);
+	free(to);
+	return (NULL);
 }
 
 /*

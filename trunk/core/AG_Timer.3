@@ -85,8 +85,14 @@ below).
 .Ft "int"
 .Fn AG_AddTimer "void *obj" "AG_Timer *timer" "Uint32 t" "Uint32 (*fn)(AG_Timer *, AG_Event *)" "const char *fmt" "..."
 .Pp
+.Ft "AG_Timer *"
+.Fn AG_AddTimerAuto "void *obj" "Uint32 t" "Uint32 (*fn)(AG_Timer *, AG_Event *)" "const char *fmt" "..."
+.Pp
 .Ft "void"
 .Fn AG_DelTimer "void *obj" "AG_Timer *timer"
+.Pp
+.Ft "int"
+.Fn AG_ResetTimer "void *obj" "AG_Timer *timer" "Uint32 t"
 .Pp
 .Ft "void"
 .Fn AG_LockTimers "void *obj"
@@ -105,7 +111,10 @@ The
 .Fn AG_AddTimer
 routine creates a new timer, initializing the structure pointed to by the
 .Fa timer
-argument and returning 0 on success or -1 on failure.
+argument.
+The timer is uniquely identified by the address of the
+.Fa timer
+structure.
 The optional
 .Fa obj
 argument specifies a parent
@@ -119,15 +128,33 @@ Arguments to pass to the callback may be specified under
 (using the
 .Xr AG_Event 3
 style of argument passing).
+The
+.Fn AG_AddTimer
+function returns 0 on success or -1 if the timer could not be created.
 .Pp
 Timers created with
 .Fn AG_AddTimer
 are set to expire in
 .Fa t
-ticks.
+ticks from now.
 On expiration, the timer's callback is invoked.
 If it returns a non-zero number of ticks, the timer is restarted, otherwise
 it is cancelled.
+.Pp
+The
+.Fn AG_AddTimerAuto
+variant of
+.Fn AG_AddTimer
+allocates an anonymous
+.Ft AG_Timer
+structure which will be freed upon cancellation.
+On success, a pointer to the new timer structure is returned (it is not
+safe to dereference this pointer unless
+.Fn AG_LockTimers
+is in effect).
+On failure,
+.Fn AG_AddTimerAuto
+returns NULL.
 .Pp
 The
 .Fn AG_DelTimer
@@ -141,6 +168,17 @@ argument does not need to point to an initialized structure.
 If the timer is not running,
 .Fn AG_DelTimer
 is a safe no-op.
+.Pp
+The
+.Fn AG_ResetTimer
+function changes the interval of a running timer, such that it will expire
+in
+.Fa t
+ticks from now.
+It is illegal to invoke
+.Fn AG_ResetTimer
+on a timer that is not currently running, and the call must be protected by
+.Fn AG_LockTimers .
 .Pp
 In the timer callback routine, it is safe to make
 .Fn AG_AddTimer
