@@ -91,15 +91,9 @@ FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 	AG_Object *obj = pObj;
 	AG_Variable *V;
 
-rescan:
 	TAILQ_FOREACH(V, &obj->vars, vars) {
-		if (strcmp(V->name, name) == 0) {
-			if (V->type != type) {
-				AG_Unset(obj, name);
-				goto rescan;
-			}
+		if (strcmp(V->name, name) == 0)
 			break;
-		}
 	}
 	if (V == NULL) {
 		V = Malloc(sizeof(AG_Variable));
