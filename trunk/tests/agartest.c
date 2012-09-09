@@ -441,9 +441,11 @@ main(int argc, char *argv[])
 #endif
 
 	if (strcmp(DATADIR, "NONE") != 0) {
-		AG_PrtString(agConfig, "load-path", "%s:.", DATADIR);
-	} else {
-		AG_SetString(agConfig, "load-path", ".");
+		char path[AG_PATHNAME_MAX];
+		AG_GetString(agConfig, "load-path", path, sizeof(path));
+		AG_Strlcat(path, ":", sizeof(path));
+		AG_Strlcat(path, DATADIR, sizeof(path));
+		AG_SetString(agConfig, "load-path", path);
 	}
 /*	(void)AG_ConfigLoad(); */
 
