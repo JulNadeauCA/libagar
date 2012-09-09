@@ -1250,7 +1250,7 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, *(float *)p);		break;
 		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, *(double *)p);		break;
 #ifdef AG_HAVE_LONG_DOUBLE
-		case AG_VARIABLE_LONG_DOUBLE: AG_WriteLongDouble(ds, *(long double *)p);		break;
+		case AG_VARIABLE_LONG_DOUBLE: AG_WriteLongDouble(ds, *(long double *)p); break;
 #endif
 		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);			break;
 		default:								break;
