@@ -95,10 +95,11 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 
 		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT,
-		    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOHIDE);
-		AG_BindInt(tb->vBar, "value", &tb->ed->y);
+		    AG_SCROLLBAR_EXCL);
+		AG_SetInt(tb->vBar, "min", 0);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
+		AG_BindInt(tb->vBar, "value", &tb->ed->y);
 	}
 	
 	AG_TextboxSetExcl(tb, (flags & AG_TEXTBOX_EXCL));
@@ -127,10 +128,11 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 		}
 		if (!flag) {
 			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ,
-			    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOHIDE);
-			AG_BindInt(tb->hBar, "value", &tb->ed->x);
+			    AG_SCROLLBAR_EXCL);
+			AG_SetInt(tb->hBar, "min", 0);
 			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
 			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
+			AG_BindInt(tb->hBar, "value", &tb->ed->x);
 			AG_TextboxSizeHintLines(tb, 4);
 		}
 	}
@@ -238,7 +240,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			aSb.w = a->w - hBarSz + 1;
 			aSb.h = hBarSz;
 			AG_WidgetSizeAlloc(tb->hBar, &aSb);
-			if (AG_ScrollbarVisible(tb->hBar))
+//			if (AG_ScrollbarVisible(tb->hBar))
 				hBar = aSb.h;
 		}
 		if (tb->vBar != NULL &&
@@ -250,7 +252,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			aSb.w = wBarSz;
 			aSb.h = a->h - hBarSz + 1;
 			AG_WidgetSizeAlloc(tb->vBar, &aSb);
-			if (AG_ScrollbarVisible(tb->vBar))
+//			if (AG_ScrollbarVisible(tb->vBar))
 				wBar = aSb.w;
 		}
 
@@ -271,6 +273,12 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aEd.h = a->h - boxPadH - hBar;
 	AG_WidgetSizeAlloc(tb->ed, &aEd);
 
+	if (tb->ed->x + WIDTH(tb->ed) >= tb->ed->xMax) {
+		tb->ed->x = MAX(0, tb->ed->xMax - WIDTH(tb->ed));
+	}
+	if (tb->ed->y + tb->ed->yVis > tb->ed->yMax) {
+		tb->ed->y = MAX(0, tb->ed->yMax - tb->ed->yVis);
+	}
 	return (0);
 }
 
