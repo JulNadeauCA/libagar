@@ -384,10 +384,8 @@ Init(void *obj)
 	ptr->colors[14] = AG_ColorRGB(127, 255, 212);
 	ptr->colors[15] = AG_ColorRGB(218, 99, 4);
 	
-	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ,
-	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
-	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
+	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_BindInt(ptr->hbar, "value", &ptr->xOffs);
 	AG_BindInt(ptr->hbar, "visible", &ptr->r.w);
 	AG_BindInt(ptr->hbar, "max", &ptr->xMax);

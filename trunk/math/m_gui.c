@@ -52,10 +52,11 @@ M_EditTranslate3(void *parent, const char *label, M_Matrix44 *T)
 	for (i = 0; i < 3; i++) {
 #ifdef HAVE_SSE
 		n = AG_NumericalNewFlt(box, 0, NULL, NULL, &T->m[i][3]);
+		AG_SetFloat(n, "inc", 0.5f);
 #else
 		n = M_NumericalNewReal(box, 0, NULL, NULL, &T->m[i][3]);
+		M_SetReal(n, "inc", 0.5);
 #endif
-		AG_NumericalSetIncrement(n, 0.5);
 	}
 	return (box);
 }
@@ -77,10 +78,11 @@ M_EditTranslate3Mp(void *parent, const char *label, M_Matrix44 *T,
 		n = AG_NumericalNewS(box, 0, NULL, NULL);
 #ifdef HAVE_SSE
 		AG_BindFloatMp(n, "value", &T->m[i][3], lock);
+		AG_SetFloat(n, "inc", 0.5f);
 #else
 		M_BindRealMp(n, "value", &T->m[i][3], lock);
+		M_SetReal(n, "inc", 0.5);
 #endif
-		AG_NumericalSetIncrement(n, 0.5);
 	}
 	return (box);
 }

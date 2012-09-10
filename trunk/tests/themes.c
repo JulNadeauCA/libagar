@@ -223,11 +223,14 @@ TestGUI(void *obj, AG_Window *win)
 		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
 		    "cm", "Real: ");
 		AG_BindFloat(num, "value", &myFloat);
+		AG_SetFloat(num, "incr", 1.0f);
 
 		num = AG_NumericalNewS(div1,
 		    AG_NUMERICAL_EXCL|AG_NUMERICAL_HFILL,
 		    NULL, "Int: ");
 		AG_BindInt(num, "value", &myInt);
+		AG_SetInt(num, "min", -100);
+		AG_SetInt(num, "max", +100);
 	}
 
 	/*
@@ -262,20 +265,28 @@ TestGUI(void *obj, AG_Window *win)
 		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
 		AG_Scrollbar *sb;
 		AG_Slider *sl;
+		AG_ProgressBar *pb;
 
-		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_HFILL,
-		    &myVal, &myMin, &myMax, &myVisible);
-		AG_ScrollbarSetIntIncrement(sb, 10);
+		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
+		    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL|AG_SCROLLBAR_HFILL);
+		AG_BindInt(sb, "value", &myVal);
+		AG_BindInt(sb, "min", &myMin);
+		AG_BindInt(sb, "max", &myMax);
+		AG_BindInt(sb, "visible", &myVisible);
+		AG_SetInt(sb, "inc", 10);
 
-		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_EXCL|AG_SLIDER_HFILL,
-		    &myVal, &myMin, &myMax);
-		AG_SliderSetIntIncrement(sl, 10);
+		sl = AG_SliderNew(div1, AG_SLIDER_HORIZ,
+		    AG_SLIDER_EXCL|AG_SLIDER_HFILL);
+		AG_BindInt(sl, "value", &myVal);
+		AG_BindInt(sl, "min", &myMin);
+		AG_BindInt(sl, "max", &myMax);
+		AG_SetInt(sl, "inc", 10);
 
-		AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
-		    AG_PROGRESS_BAR_EXCL|AG_PROGRESS_BAR_SHOW_PCT,
-		    &myVal, &myMin, &myMax);
+		pb = AG_ProgressBarNew(div1, AG_PROGRESS_BAR_HORIZ,
+		    AG_PROGRESS_BAR_EXCL|AG_PROGRESS_BAR_SHOW_PCT);
+		AG_BindInt(pb, "value", &myVal);
+		AG_BindInt(pb, "min", &myMin);
+		AG_BindInt(pb, "max", &myMax);
 	}
 
 	/*

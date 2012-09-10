@@ -46,165 +46,12 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 
 	if (flags & AG_SCROLLBAR_HFILL) { AG_ExpandHoriz(sb); }
 	if (flags & AG_SCROLLBAR_VFILL) { AG_ExpandVert(sb); }
+	if (flags & AG_SCROLLBAR_NOAUTOHIDE) { sb->flags &= ~(AG_SCROLLBAR_AUTOHIDE); }
 
 	AG_ObjectAttach(parent, sb);
 	return (sb);
 }
 
-AG_Scrollbar *
-AG_ScrollbarNewInt(void *parent, enum ag_scrollbar_type type, Uint flags,
-    int *val, int *min, int *max, int *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindInt(sb, "value", val); }
-	if (min != NULL) { AG_BindInt(sb, "min", min); }
-	if (max != NULL) { AG_BindInt(sb, "max", max); }
-	if (vis != NULL) { AG_BindInt(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewUint(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint *val, Uint *min, Uint *max, Uint *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint(sb, "value", val); }
-	if (min != NULL) { AG_BindUint(sb, "min", min); }
-	if (max != NULL) { AG_BindUint(sb, "max", max); }
-	if (vis != NULL) { AG_BindUint(sb, "visible", vis); }
-	return (sb);
-}
-
-AG_Scrollbar *
-AG_ScrollbarNewUint8(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint8 *val, Uint8 *min, Uint8 *max, Uint8 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint8(sb, "value", val); }
-	if (min != NULL) { AG_BindUint8(sb, "min", min); }
-	if (max != NULL) { AG_BindUint8(sb, "max", max); }
-	if (vis != NULL) { AG_BindUint8(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewSint8(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Sint8 *val, Sint8 *min, Sint8 *max, Sint8 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint8(sb, "value", val); }
-	if (min != NULL) { AG_BindSint8(sb, "min", min); }
-	if (max != NULL) { AG_BindSint8(sb, "max", max); }
-	if (vis != NULL) { AG_BindSint8(sb, "visible", vis); }
-	return (sb);
-}
-
-AG_Scrollbar *
-AG_ScrollbarNewUint16(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint16 *val, Uint16 *min, Uint16 *max, Uint16 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint16(sb, "value", val); }
-	if (min != NULL) { AG_BindUint16(sb, "min", min); }
-	if (max != NULL) { AG_BindUint16(sb, "max", max); }
-	if (vis != NULL) { AG_BindUint16(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewSint16(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Sint16 *val, Sint16 *min, Sint16 *max, Sint16 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint16(sb, "value", val); }
-	if (min != NULL) { AG_BindSint16(sb, "min", min); }
-	if (max != NULL) { AG_BindSint16(sb, "max", max); }
-	if (vis != NULL) { AG_BindSint16(sb, "visible", vis); }
-	return (sb);
-}
-
-AG_Scrollbar *
-AG_ScrollbarNewUint32(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint32 *val, Uint32 *min, Uint32 *max, Uint32 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint32(sb, "value", val); }
-	if (min != NULL) { AG_BindUint32(sb, "min", min); }
-	if (max != NULL) { AG_BindUint32(sb, "max", max); }
-	if (vis != NULL) { AG_BindUint32(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewSint32(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Sint32 *val, Sint32 *min, Sint32 *max, Sint32 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint32(sb, "value", val); }
-	if (min != NULL) { AG_BindSint32(sb, "min", min); }
-	if (max != NULL) { AG_BindSint32(sb, "max", max); }
-	if (vis != NULL) { AG_BindSint32(sb, "visible", vis); }
-	return (sb);
-}
-
-#ifdef HAVE_64BIT
-AG_Scrollbar *
-AG_ScrollbarNewUint64(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint64 *val, Uint64 *min, Uint64 *max, Uint64 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint64(sb, "value", val); }
-	if (min != NULL) { AG_BindUint64(sb, "min", min); }
-	if (max != NULL) { AG_BindUint64(sb, "max", max); }
-	if (vis != NULL) { AG_BindUint64(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewSint64(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Sint64 *val, Sint64 *min, Sint64 *max, Sint64 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint64(sb, "value", val); }
-	if (min != NULL) { AG_BindSint64(sb, "min", min); }
-	if (max != NULL) { AG_BindSint64(sb, "max", max); }
-	if (vis != NULL) { AG_BindSint64(sb, "visible", vis); }
-	return (sb);
-}
-#endif /* HAVE_64BIT */
-
-AG_Scrollbar *
-AG_ScrollbarNewFloat(void *parent, enum ag_scrollbar_type type, Uint flags,
-    float *val, float *min, float *max, float *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindFloat(sb, "value", val); }
-	if (min != NULL) { AG_BindFloat(sb, "min", min); }
-	if (max != NULL) { AG_BindFloat(sb, "max", max); }
-	if (vis != NULL) { AG_BindFloat(sb, "visible", vis); }
-	return (sb);
-}
-
-AG_Scrollbar *
-AG_ScrollbarNewDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
-    double *val, double *min, double *max, double *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindDouble(sb, "value", val); }
-	if (min != NULL) { AG_BindDouble(sb, "min", min); }
-	if (max != NULL) { AG_BindDouble(sb, "max", max); }
-	if (vis != NULL) { AG_BindDouble(sb, "visible", vis); }
-	return (sb);
-}
-
-#ifdef HAVE_LONG_DOUBLE
-AG_Scrollbar *
-AG_ScrollbarNewLongDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
-    long double *val, long double *min, long double *max, long double *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_BindLongDouble(sb, "value", val); }
-	if (min != NULL) { AG_BindLongDouble(sb, "min", min); }
-	if (max != NULL) { AG_BindLongDouble(sb, "max", max); }
-	if (vis != NULL) { AG_BindLongDouble(sb, "visible", vis); }
-	return (sb);
-}
-#endif /* HAVE_LONG_DOUBLE */
 /* Configure an initial length for the size requisition. */
 void
 AG_ScrollbarSizeHint(AG_Scrollbar *sb, int len)
@@ -234,71 +81,39 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(sb);
 }
 
-/* Set the base increment for integer bindings. */
-void
-AG_ScrollbarSetIntIncrement(AG_Scrollbar *sb, int inc)
-{
-	AG_ObjectLock(sb);
-	sb->iInc = inc;
-	AG_ObjectUnlock(sb);
-}
-
-/* Set the base increment for real bindings. */
-void
-AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
-{
-	AG_ObjectLock(sb);
-	sb->rInc = inc;
-	AG_ObjectUnlock(sb);
-}
-
-#define GET_EXTENT(type) do {						\
-	if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {			\
-		if (((*(type *)pMax + sb->maxOffs) - 			\
-		     (*(type *)pMin + sb->minOffs)) != 0) {		\
-			extent = sb->length -				\
-			    ((*(type *)pVis + sb->visOffs) * sb->length / \
-			    ((*(type *)pMax + sb->maxOffs) - 		\
-			     (*(type *)pMin + sb->minOffs)));		\
+/*
+ * Return the the current position and size (in pixels) of the scrollbar
+ * control. Returns 0 on success, or -1 if the values are outside the range.
+ */
+#undef GET_EXTENT_PX
+#define GET_EXTENT_PX(TYPE) {						\
+	if (vis > 0) {							\
+		if ((max - min) > 0) {					\
+			extentPx = sb->length -				\
+			    (int)(vis * sb->length / (max - min));	\
 		} else {						\
-			extent = 0;					\
+			extentPx = 0;					\
 		}							\
 	} else {							\
-		extent = (sb->wBar == -1) ? 0 : (sb->length - sb->wBar); \
+		extentPx = (sb->wBar == -1) ? 0 : (sb->length - sb->wBar); \
 	}								\
-} while (0)
-
-#define GET_PX_COORDS(type) do {					\
-	int extent;							\
-	int max;							\
-	if ((*(type *)pMin + sb->minOffs) >=				\
-	   ((*(type *)pMax + sb->maxOffs) -				\
-	    (*(type *)pVis + sb->visOffs))) {				\
+}
+#define GET_PX_COORDS(TYPE) {						\
+	TYPE min = *(TYPE *)pMin;					\
+	TYPE max = *(TYPE *)pMax;					\
+	TYPE vis = *(TYPE *)pVis;					\
+	int extentPx, divPx;						\
+									\
+	if (min >= (max - vis)) {					\
 		goto fail;						\
 	}								\
-	GET_EXTENT(type);						\
-	max = ((*(type *)pMax + sb->maxOffs) -				\
-	       (*(type *)pVis + sb->visOffs) - *(type *)pMin);		\
-	if (max < 1) {							\
-		goto fail;						\
-	}								\
-	*x = (int)(((*(type *)pVal -					\
-	            (*(type *)pMin + sb->minOffs)) * extent) / max);	\
-	if (len != NULL) { 						\
-		if (sb->flags & AG_SCROLLBAR_AUTOSIZE) {		\
-			*len = (*(type *)pVis + sb->visOffs) * sb->length / \
-			       (*(type *)pMax + sb->maxOffs);		\
-		} else {						\
-			*len = (sb->wBar == -1) ? sb->length : sb->wBar; \
-		}							\
-	}								\
-} while (0)
-
-/*
- * Return the the position of the left/top edge, and the scrollbar
- * control size in pixels.
- * Returns 0 on success and -1 if the range is currently <= 0.
- */
+	GET_EXTENT_PX(TYPE);						\
+	divPx = (int)(max - vis - min);					\
+	if (divPx < 1) { goto fail; }					\
+	*x = (int)(((*(TYPE *)pVal - min) * extentPx) / divPx);		\
+	*len = (vis > 0) ? (vis * sb->length / (max - min)) :			\
+	                    (sb->wBar == -1) ? sb->length : sb->wBar;	\
+}
 static __inline__ int
 GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 {
@@ -333,11 +148,7 @@ GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 #endif
 	default:						break;
 	} 
-#if 0
-	if (sb->wBar == -1) {
-		*x = 0;
-	}
-#endif
+
 	AG_UnlockVariable(bVis);
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
@@ -353,32 +164,24 @@ fail:
 #undef GET_PX_COORDS
 
 /*
- * Set the value from a specified position in pixels.
+ * Map specified pixel coordinates to a value.
  */
-#define MAP_PX_COORDS(type) do {					\
-	int extent;							\
-	GET_EXTENT(type);						\
+#define MAP_PX_COORDS(TYPE) {						\
+	TYPE min = *(TYPE *)pMin;					\
+	TYPE max = *(TYPE *)pMax;					\
+	TYPE vis = *(TYPE *)pVis;					\
+	int extentPx;							\
+	GET_EXTENT_PX(TYPE);						\
 	if (x <= 0) {							\
-		*(type *)pVal = (*(type *)pMin + sb->minOffs);		\
-	} else if (x >= extent) {					\
-		*(type *)pVal = MAX((*(type *)pMin + sb->minOffs),	\
-		                   ((*(type *)pMax + sb->maxOffs) -	\
-				    (*(type *)pVis + sb->visOffs)));	\
+		*(TYPE *)pVal = min;					\
+	} else if (x >= (int)extentPx) {				\
+		*(TYPE *)pVal = MAX(min, (max - vis));			\
 	} else {							\
-		*(type *)pVal = x *					\
-		    ((*(type *)pMax + sb->maxOffs) -			\
-		     (*(type *)pVis + sb->visOffs) -			\
-		     (*(type *)pMin + sb->minOffs)) / extent;		\
-		*(type *)pVal += (*(type *)pMin + sb->minOffs);		\
-		if (*(type *)pVal < (*(type *)pMin + sb->minOffs)) {	\
-			*(type *)pVal = (*(type *)pMin + sb->minOffs);	\
-		}							\
-		if (*(type *)pVal > (*(type *)pMax + sb->maxOffs)) {	\
-			*(type *)pVal = (*(type *)pMax + sb->maxOffs);	\
-		}							\
+		*(TYPE *)pVal = min + x*(max-vis-min)/extentPx;		\
+		if (*(TYPE *)pVal < min) { *(TYPE *)pVal = min;	}	\
+		if (*(TYPE *)pVal > max) { *(TYPE *)pVal = max;	}	\
 	}								\
-} while (0)
-
+}
 static __inline__ void
 SeekToPxCoords(AG_Scrollbar *sb, int x)
 {
@@ -391,25 +194,26 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	bVis = AG_GetVariable(sb, "visible", &pVis);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		MAP_PX_COORDS(int);	break;
-	case AG_VARIABLE_UINT:		MAP_PX_COORDS(Uint);	break;
-	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);	break;
-	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);	break;
+	case AG_VARIABLE_INT:		MAP_PX_COORDS(int);		break;
+	case AG_VARIABLE_UINT:		MAP_PX_COORDS(Uint);		break;
+	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);		break;
+	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);		break;
 #ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	MAP_PX_COORDS(long double);	break;
 #endif
-	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);	break;
-	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);	break;
-	case AG_VARIABLE_UINT16:	MAP_PX_COORDS(Uint16);	break;
-	case AG_VARIABLE_SINT16:	MAP_PX_COORDS(Sint16);	break;
-	case AG_VARIABLE_UINT32:	MAP_PX_COORDS(Uint32);	break;
-	case AG_VARIABLE_SINT32:	MAP_PX_COORDS(Sint32);	break;
+	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);		break;
+	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);		break;
+	case AG_VARIABLE_UINT16:	MAP_PX_COORDS(Uint16);		break;
+	case AG_VARIABLE_SINT16:	MAP_PX_COORDS(Sint16);		break;
+	case AG_VARIABLE_UINT32:	MAP_PX_COORDS(Uint32);		break;
+	case AG_VARIABLE_SINT32:	MAP_PX_COORDS(Sint32);		break;
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	MAP_PX_COORDS(Uint64);	break;
-	case AG_VARIABLE_SINT64:	MAP_PX_COORDS(Sint64);	break;
+	case AG_VARIABLE_UINT64:	MAP_PX_COORDS(Uint64);		break;
+	case AG_VARIABLE_SINT64:	MAP_PX_COORDS(Sint64);		break;
 #endif
-	default:						break;
+	default:							break;
 	} 
+
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
 	AG_UnlockVariable(bVis);
 	AG_UnlockVariable(bMax);
@@ -420,135 +224,115 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 #undef MAP_PX_COORDS
 
 /*
- * Decrement the value by the specified amount multiplied by iInc/rInc.
+ * Type-independent increment/decrement operation.
  */
-#define DECREMENT_INT(type)						\
-	if ((int)(*(type *)pVal - sb->iInc) < (int)*(type *)pMin) { 	\
-		*(type *)pVal = *(type *)pMin;				\
+#undef INCREMENT
+#define INCREMENT(TYPE)	{						\
+	if ((*(TYPE *)pVal + *(TYPE *)pInc) >				\
+	    (*(TYPE *)pMax - (*(TYPE *)pVis))) {			\
+		*(TYPE *)pVal = (*(TYPE *)pMax) - (*(TYPE *)pVis);	\
 		rv = 1;							\
 	} else { 							\
-		*(type *)pVal -= sb->iInc;				\
-	}
-
-#define DECREMENT_REAL(type)						\
-	if ((*(type *)pVal - sb->rInc) < *(type *)pMin) { 		\
-		*(type *)pVal = *(type *)pMin;				\
+		*(TYPE *)pVal += *(TYPE *)pInc;				\
+	}								\
+}
+#undef DECREMENT
+#define DECREMENT(TYPE) {						\
+	if (*(TYPE *)pVal < *(TYPE *)pMin + *(TYPE *)pInc) {		\
+		*(TYPE *)pVal = *(TYPE *)pMin;				\
 		rv = 1;							\
-	} else {						 	\
-		*(type *)pVal -= sb->rInc;				\
-	}
-
+	} else { 							\
+		*(TYPE *)pVal -= *(TYPE *)pInc;				\
+	}								\
+}
 static int
-Decrement(AG_Scrollbar *sb)
+Increment(AG_Scrollbar *sb)
 {
-	AG_Variable *bMin, *bMax, *bVis, *bVal;
-	void *pMin, *pMax, *pVal, *pVis;
+	AG_Variable *bVal, *bMin, *bMax, *bInc, *bVis;
+	void *pVal, *pMin, *pMax, *pInc, *pVis;
 	int rv = 0;
 
 	bVal = AG_GetVariable(sb, "value", &pVal);
 	bMin = AG_GetVariable(sb, "min", &pMin);
 	bMax = AG_GetVariable(sb, "max", &pMax);
+	bInc = AG_GetVariable(sb, "inc", &pInc);
 	bVis = AG_GetVariable(sb, "visible", &pVis);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		DECREMENT_INT(int);	break;
-	case AG_VARIABLE_UINT:		DECREMENT_INT(Uint);	break;
-	case AG_VARIABLE_FLOAT:		DECREMENT_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	DECREMENT_REAL(double);	break;
+	case AG_VARIABLE_INT:		INCREMENT(int);		break;
+	case AG_VARIABLE_UINT:		INCREMENT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		INCREMENT(float);	break;
+	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
 #ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT_REAL(long double);	break;
+	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
 #endif
-	case AG_VARIABLE_UINT8:		DECREMENT_INT(Uint8);	break;
-	case AG_VARIABLE_SINT8:		DECREMENT_INT(Sint8);	break;
-	case AG_VARIABLE_UINT16:	DECREMENT_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
+	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	INCREMENT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	INCREMENT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	INCREMENT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	INCREMENT(Sint32);	break;
 #ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	DECREMENT_INT(Uint64);	break;
-	case AG_VARIABLE_SINT64:	DECREMENT_INT(Sint64);	break;
+	case AG_VARIABLE_UINT64:	INCREMENT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	INCREMENT(Sint64);	break;
+#endif
+	default:						break;
+	} 
+
+	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
+	AG_UnlockVariable(bVal);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bInc);
+	AG_UnlockVariable(bVis);
+	AG_Redraw(sb);
+	return (rv);
+}
+static int
+Decrement(AG_Scrollbar *sb)
+{
+	AG_Variable *bVal, *bMin, *bMax, *bInc, *bVis;
+	void *pVal, *pMin, *pMax, *pInc, *pVis;
+	int rv = 0;
+
+	bVal = AG_GetVariable(sb, "value", &pVal);
+	bMin = AG_GetVariable(sb, "min", &pMin);
+	bMax = AG_GetVariable(sb, "max", &pMax);
+	bInc = AG_GetVariable(sb, "inc", &pInc);
+	bVis = AG_GetVariable(sb, "visible", &pVis);
+
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		DECREMENT(int);		break;
+	case AG_VARIABLE_UINT:		DECREMENT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		DECREMENT(float);	break;
+	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
+#endif
+	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	DECREMENT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	DECREMENT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	DECREMENT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	DECREMENT(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	DECREMENT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	DECREMENT(Sint64);	break;
 #endif
 	default:						break;
 	}
 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
-	AG_UnlockVariable(bVis);
-	AG_UnlockVariable(bMax);
-	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bInc);
+	AG_UnlockVariable(bVis);
 	AG_Redraw(sb);
 	return (rv);
 }
-#undef DECREMENT_INT
-#undef DECREMENT_REAL
-
-/*
- * Increment the value by the specified amount multiplied by iInc/rInc.
- */
-#define INCREMENT_INT(type)						\
-	if ((int)(*(type *)pVal + sb->iInc) >				\
-	    (int)((*(type *)pMax + sb->maxOffs) -			\
-	          (*(type *)pVis + sb->visOffs))) {			\
-		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
-		                (*(type *)pVis + sb->visOffs);		\
-		rv = 1;							\
-	} else { 							\
-		*(type *)pVal += sb->iInc;				\
-	}
-
-#define INCREMENT_REAL(type)						\
-	if ((*(type *)pVal + sb->rInc) >				\
-	    ((*(type *)pMax + sb->maxOffs) -				\
-	     (*(type *)pVis + sb->visOffs))) { 				\
-		*(type *)pVal = (*(type *)pMax + sb->maxOffs) -		\
-		                (*(type *)pVis + sb->visOffs);		\
-		rv = 1;							\
-	} else { 							\
-		*(type *)pVal += sb->rInc;				\
-	}
-
-static int
-Increment(AG_Scrollbar *sb)
-{
-	AG_Variable *bMin, *bMax, *bVis, *bVal;
-	void *pMin, *pMax, *pVal, *pVis;
-	int rv = 0;
-
-	bVal = AG_GetVariable(sb, "value", &pVal);
-	bMin = AG_GetVariable(sb, "min", &pMin);
-	bMax = AG_GetVariable(sb, "max", &pMax);
-	bVis = AG_GetVariable(sb, "visible", &pVis);
-
-	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		INCREMENT_INT(int);	break;
-	case AG_VARIABLE_UINT:		INCREMENT_INT(Uint);	break;
-	case AG_VARIABLE_FLOAT:		INCREMENT_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	INCREMENT_REAL(double);	break;
-#ifdef HAVE_LONG_DOUBLE
-	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT_REAL(long double);	break;
-#endif
-	case AG_VARIABLE_UINT8:		INCREMENT_INT(Uint8);	break;
-	case AG_VARIABLE_SINT8:		INCREMENT_INT(Sint8);	break;
-	case AG_VARIABLE_UINT16:	INCREMENT_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	INCREMENT_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	INCREMENT_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	INCREMENT_INT(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_VARIABLE_UINT64:	INCREMENT_INT(Uint64);	break;
-	case AG_VARIABLE_SINT64:	INCREMENT_INT(Sint64);	break;
-#endif
-	default:					break;
-	} 
-	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
-	AG_UnlockVariable(bVis);
-	AG_UnlockVariable(bMax);
-	AG_UnlockVariable(bMin);
-	AG_UnlockVariable(bVal);
-	AG_Redraw(sb);
-	return (rv);
-}
-#undef INCREMENT_INT
-#undef INCREMENT_REAL
+#undef INCREMENT
+#undef DECREMENT
 
 static void
 MouseButtonUp(AG_Event *event)
@@ -726,7 +510,7 @@ KeyUp(AG_Event *event)
 	}
 }
 
-/* Timer for AG_SCROLLBAR_AUTOHIDE visibility test. */
+/* Timer for AUTOHIDE visibility test. */
 static Uint32
 AutoHideTimeout(AG_Timer *to, AG_Event *event)
 {
@@ -738,8 +522,10 @@ AutoHideTimeout(AG_Timer *to, AG_Event *event)
 		if (AG_WidgetVisible(sb))
 			AG_WidgetHide(sb);
 	} else {
-		if (!AG_WidgetVisible(sb))
+		if (!AG_WidgetVisible(sb)) {
 			AG_WidgetShow(sb);
+			AG_Redraw(sb);
+		}
 	}
 	return (to->ival);
 }
@@ -752,55 +538,73 @@ OnFocusLoss(AG_Event *event)
 	AG_DelTimer(sb, &sb->moveTo);
 }
 
-static void
-OnBound(AG_Event *event)
-{
-	AG_Scrollbar *sb = AG_SELF();
-	AG_Variable *bNew = AG_PTR(1);
-	AG_Variable *bValue;
-	void *pValue;
-
-	/*
-	 * Require that "min", "max" and "visible" be of the same binding
-	 * type as "value" to avoid derelict hell. Mixing of types could
-	 * always be implemented if some application really requires it.
-	 */
-	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max") ||
-	    !strcmp(bNew->name, "visible")) {
-		bValue = AG_GetVariable(sb, "value", &pValue);
-		if (bValue->type != bNew->type) {
-			AG_FatalError("Scrollbar \"%s\" binding type disagree "
-			              "with \"value\" binding", bNew->name);
-		}
-		AG_UnlockVariable(bValue);
-	}
+#undef SET_DEF
+#define SET_DEF(fn,dmin,dmax,dinc) { 					\
+	if (!AG_Defined(sb, "min")) { fn(sb, "min", dmin); }		\
+	if (!AG_Defined(sb, "max")) { fn(sb, "max", dmax); }		\
+	if (!AG_Defined(sb, "inc")) { fn(sb, "inc", dinc); }		\
+	if (!AG_Defined(sb, "visible")) { fn(sb, "visible", 0); }	\
 }
-
 static void
 OnShow(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
+	AG_Variable *V;
+
+	if ((V = AG_GetVariable(sb, "value", NULL)) == NULL) {
+		V = AG_SetInt(sb, "value", 0);
+		AG_LockVariable(V);
+	}
+	switch (AG_VARIABLE_TYPE(V)) {
+	case AG_VARIABLE_FLOAT:	 SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
+	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, 0.0l, 1.0l, 0.1l); break;
+#endif
+	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, 0, AG_INT_MAX-1, 1); break;
+	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
+	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8, 0U, 0xffU, 1U); break;
+	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8, 0, 0x7f, 1); break;
+	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U, 0xffffU, 1U); break;
+	case AG_VARIABLE_SINT16: SET_DEF(AG_SetSint16, 0, 0x7fff, 1); break;
+	case AG_VARIABLE_UINT32: SET_DEF(AG_SetUint32, 0UL, 0xffffffffUL, 1UL); break;
+	case AG_VARIABLE_SINT32: SET_DEF(AG_SetSint32, 0L, 0x7fffffffL, 1L); break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
+	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, 0LL, 0x7fffffffffffffffLL, 1LL); break;
+#endif
+	default:
+		break;
+	}
+	AG_UnlockVariable(V);
 
 	if ((sb->flags & AG_SCROLLBAR_EXCL) == 0) {
 		/* Trigger redraw upon external changes to the bindings. */
-		AG_RedrawOnChange(sb, 250, "value");
-		AG_RedrawOnChange(sb, 250, "min");
-		AG_RedrawOnChange(sb, 250, "max");
-		AG_RedrawOnChange(sb, 250, "visible");
+		AG_RedrawOnChange(sb, 500, "value");
+		AG_RedrawOnChange(sb, 500, "min");
+		AG_RedrawOnChange(sb, 500, "max");
+		AG_RedrawOnChange(sb, 500, "visible");
 	}
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
 		AG_AddTimer(sb, &sb->autoHideTo, 250, AutoHideTimeout, NULL);
 }
+#undef SET_DEF
 
 static void
 OnHide(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	
-	if (sb->flags & AG_SCROLLBAR_AUTOHIDE) {
-		AG_DelTimer(sb, &sb->autoHideTo);
-	}
 	AG_DelTimer(sb, &sb->moveTo);
+}
+
+static void
+OnDetach(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	
+	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
+		AG_DelTimer(sb, &sb->autoHideTo);
 }
 
 static void
@@ -814,40 +618,27 @@ Init(void *obj)
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
-	sb->flags = 0;
-	sb->value = 0;
-	sb->min = 0;
-	sb->max = 0;
-	sb->visible = 0;
+	sb->flags = AG_SCROLLBAR_AUTOHIDE;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
-	sb->rInc = 1.0;	
-	sb->iInc = 1;
 	sb->length = 0;
 	sb->lenPre = 32;
-	sb->minOffs = 0;
-	sb->maxOffs = 0;
-	sb->visOffs = 0;
 
 	sb->wBar = agTextFontHeight/2;
+	sb->wBarMin = 16;
 	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width*5/9;
 
 	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);
+	AG_AddEvent(sb, "detached", OnDetach, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", OnFocusLoss, NULL);
-	AG_SetEvent(sb, "bound", OnBound, NULL);
 	AG_SetEvent(sb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sb, "key-down", KeyDown, NULL);
 	AG_SetEvent(sb, "key-up", KeyUp, NULL);
-
-	AG_BindInt(sb, "value", &sb->value);
-	AG_BindInt(sb, "min", &sb->min);
-	AG_BindInt(sb, "max", &sb->max);
-	AG_BindInt(sb, "visible", &sb->visible);
 
 #ifdef AG_DEBUG
 	AG_BindInt(sb, "width", &sb->width);
@@ -956,10 +747,50 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 	int rv, x, len;
 
 	AG_ObjectLock(sb);
+	if (!AG_Defined(sb, "value") ||
+	    !AG_Defined(sb, "min") ||
+	    !AG_Defined(sb, "max") ||
+	    !AG_Defined(sb, "visible")) {
+		AG_ObjectUnlock(sb);
+		return (1);
+	}
 	rv = (GetPxCoords(sb, &x, &len) == -1) ? 0 : 1;
 	AG_ObjectUnlock(sb);
 	return (rv);
 }
+
+#ifdef AG_LEGACY
+int
+AG_ScrollbarControlLength(AG_Scrollbar *sb)
+{
+	int rv;
+
+	if (sb->wBar == -1) {
+		rv = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
+		                                       AGWIDGET(sb)->w;
+		rv -= sb->width*2;
+		if (rv < sb->wBarMin) { rv = sb->wBarMin; }
+	} else {
+		rv = MAX(sb->wBar, sb->wBarMin);
+	}
+	return (rv);
+}
+
+void
+AG_ScrollbarSetIntIncrement(AG_Scrollbar *sb, int inc)
+{
+	AG_ObjectLock(sb);
+	AG_SetInt(sb, "inc", inc);
+	AG_ObjectUnlock(sb);
+}
+void
+AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
+{
+	AG_ObjectLock(sb);
+	AG_SetDouble(sb, "inc", inc);
+	AG_ObjectUnlock(sb);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agScrollbarClass = {
 	{

@@ -57,7 +57,6 @@ const char *agUnitGroupNames[] = {
 	N_("Frequency"),
 	N_("Pressure"),
 	N_("Vacuum"),
-	N_("Human metabolic expenditure"),
 	N_("Percentage"),
 	N_("K units (MOSFET)"),
 	NULL

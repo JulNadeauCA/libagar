@@ -256,11 +256,11 @@ Init(void *obj)
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 	
-	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOSIZE);
-	AG_BindInt(tl->sbar, "value", &tl->rOffs);
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	AG_SetInt(tl->sbar, "min", 0);
 	AG_BindInt(tl->sbar, "max", &tl->nitems);
 	AG_BindInt(tl->sbar, "visible", &tl->nvisitems);
+	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);

@@ -58,7 +58,7 @@ AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
 	if (flags & AG_TREETBL_HFILL)	{ AG_ExpandHoriz(tt); }
 	if (flags & AG_TREETBL_VFILL)	{ AG_ExpandVert(tt); }
 
-	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, 0);
+	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
 
 	AG_ObjectAttach(parent, tt);
 	return (tt);
@@ -496,7 +496,7 @@ Init(void *obj)
 	tt->hCol = agTextFontHeight;
 	tt->hRow = agTextFontHeight+2;
 	tt->dblClicked = 0;
-	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, 0);
+	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	tt->hBar = NULL;
 
 	AG_SetInt(tt->vBar, "min", 0);

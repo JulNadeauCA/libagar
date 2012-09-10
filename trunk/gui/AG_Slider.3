@@ -40,16 +40,9 @@
 The
 .Nm
 widget allows the user to control an integer or floating-point value within a
-specified range, as an alternative to
-.Xr AG_Numerical 3
-and
-.Xr AG_Scrollbar 3
-(unlike
-.Ft AG_Scrollbar ,
-.Nm
-does not provide a
-.Sq visible
-binding).
+specified range.
+It can be thought as a graphical alternative to 
+.Xr AG_Numerical 3 .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -58,50 +51,6 @@ binding).
 .nr nS 1
 .Ft "AG_Slider *"
 .Fn AG_SliderNew "AG_Widget *parent" "enum ag_slider_type type" "Uint flags"
-.Pp
-.\" MANLINK(AG_SliderNewInt)
-.\" MANLINK(AG_SliderNewUint)
-.\" MANLINK(AG_SliderNewFlt)
-.\" MANLINK(AG_SliderNewDbl)
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Int,Uint,Flt,Dbl} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
-.Pp
-.\" MANLINK(AG_SliderNewIntR)
-.\" MANLINK(AG_SliderNewUintR)
-.\" MANLINK(AG_SliderNewFltR)
-.\" MANLINK(AG_SliderNewDblR)
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Int,Uint,Flt,Dbl}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
-.Pp
-.\" MANLINK(AG_SliderNewUint8)
-.\" MANLINK(AG_SliderNewUint16)
-.\" MANLINK(AG_SliderNewUint32)
-.\" MANLINK(AG_SliderNewSint8)
-.\" MANLINK(AG_SliderNewSint16)
-.\" MANLINK(AG_SliderNewSint32)
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Uint8,Uint16,Uint32} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Sint8,Sint16,Sint32} "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max"
-.Pp
-.\" MANLINK(AG_SliderNewUint8R)
-.\" MANLINK(AG_SliderNewUint16R)
-.\" MANLINK(AG_SliderNewUint32R)
-.\" MANLINK(AG_SliderNewSint8R)
-.\" MANLINK(AG_SliderNewSint16R)
-.\" MANLINK(AG_SliderNewSint32R)
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Uint8,Uint16,Uint32}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNew{Sint8,Sint16,Sint32}R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "<Type> *val" "<Type> min" "<Type> max"
-.Pp
-.Ft void
-.Fn AG_SliderSetIntIncrement "AG_Slider *slider" "int increment"
-.Pp
-.Ft void
-.Fn AG_SliderSetRealIncrement "AG_Slider *slider" "double increment"
 .Pp
 .Ft void
 .Fn AG_SliderSetControlSize "AG_Slider *slider" "int pixels"
@@ -148,56 +97,33 @@ Shorthand for
 .Dv AG_SLIDER_HFILL|AG_SLIDER_VFILL .
 .El
 .Pp
-The functions
-.Fn AG_SliderNew{Int,Uint,Flt,Dbl}
-create a new
-.Nm
-bound to the specified variables.
 The
-.Fn AG_SliderNew{Int,Uint,Flt,Dbl}R
-variants binds to the specified value, but accepts an explicit range
-.Fa min
-and
-.Fa max .
-.Pp
-.Fn AG_SliderSetIntIncrement
-and
-.Fn AG_SliderSetRealIncrement
-define by how much the value is to be incremented/decremented as a result of
-keyboard motion.
-The former is only meaningful with integer bindings, the latter is only
-meaningful with floating-point bindings.
-.Pp
 .Fn AG_SliderSetControlSize
-specifies a preferred size for the slider control, in pixels.
+function specifies a preferred size for the slider control, in pixels.
 .Sh BINDINGS
 The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *{value,min,max} "
-.It Va float *{value,min,max}
-Single precision position/range
-.It Va double *{value,min,max}
-Double precision position/range
-.It Va long double *{value,min,max}
-Quad precision position/range
-.It Va int *{value,min,max}
-Integer position/range
-.It Va Uint *{value,min,max}
-Unsigned position/range
-.It Va Uint8 *{value,min,max}
-Unsigned 8-bit position/range
-.It Va Uint16 *{value,min,max}
-Unsigned 16-bit position/range
-.It Va Uint32 *{value,min,max}
-Unsigned 32-bit position/range
-.It Va Sint8 *{value,min,max}
-Signed 8-bit position/range
-.It Va Sint16 *{value,min,max}
-Signed 16-bit position/range
-.It Va Sint32 *{value,min,max}
-Signed 32-bit position/range
+.Bl -tag -compact -width "long double *{value,min,max,inc} "
+.It Va float *{value,min,max,inc}
+Single precision number
+.It Va double *{value,min,max,inc}
+Double precision number
+.It Va long double *{value,min,max,inc}
+Quad precision number
+.It Va int *{value,min,max,inc}
+Natural integer
+.It Va Uint *{value,min,max,inc}
+Unsigned integer
+.It Va [SU]int8 *{value,min,max,inc}
+Fixed 8-bit integer
+.It Va [SU]int16 *{value,min,max,inc}
+Fixed 16-bit integer
+.It Va [SU]int32 *{value,min,max,inc}
+Fixed 32-bit integer
+.It Va [SU]int64 *{value,min,max,inc}
+Fixed 64-bit integer
 .El
 .Pp
 The slider is positioned to represent
@@ -207,12 +133,26 @@ inside of the range defined by
 and
 .Va max .
 .Pp
+The optional
+.Va inc
+binding specifies the increment effected by the buttons, or keyboard.
+If not specified, it defaults to 0.1 (for floating-point values),
+or 1 (for integer values).
+.Pp
 Note that the
-.Va min
-and
+.Va min ,
 .Va max
+and
+.Va inc
 bindings must share the same type as
 .Va value .
+The 64-bit types are only available if
+.Dv AG_HAVE_64BIT
+is set, and
+.Ft long double
+is only available if
+.Dv AG_HAVE_LONG_DOUBLE
+is set.
 .Pp
 .Sh EVENTS
 The

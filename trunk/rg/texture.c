@@ -190,6 +190,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_Textbox *tb;
+	AG_Numerical *num;
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaptionS(win, tex->name);
@@ -230,7 +231,8 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 		    &tex->blend_func);
 	}
 
-	AG_NumericalNewUint8(win, 0, NULL, _("Overall alpha: "), &tex->alpha);
+	num = AG_NumericalNew(win, 0, NULL, _("Overall alpha: "));
+	AG_BindUint8(num, "value", &tex->alpha);
 
 	AG_WidgetFocus(comTS);
 	return (win);

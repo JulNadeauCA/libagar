@@ -168,9 +168,13 @@ Edit(void *p, VG_View *vv)
 		N_("Mitered"),
 		NULL
 	};
+	AG_Numerical *num;
 
-	AG_NumericalNewUint8(box, 0, NULL, _("Thickness: "), &vl->thickness);
-	AG_NumericalNewUint16(box, 0, NULL, _("Stipple pattern: "), &vl->stipple);
+	num = AG_NumericalNew(box, 0, NULL, _("Thickness: "));
+	AG_BindUint8(num, "value", &vl->thickness);
+
+	num = AG_NumericalNew(box, 0, NULL, _("Stipple pattern: "));
+	AG_BindUint16(num, "value", &vl->stipple);
 
 	AG_LabelNew(box, 0, _("Endpoint style: "));
 	AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles, (void *)&vl->endPt);

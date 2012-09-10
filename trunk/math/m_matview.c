@@ -118,8 +118,8 @@ Init(void *obj)
 	mv->flags = 0;
 	mv->hSpacing = 2;
 	mv->vSpacing = 2;
-	mv->hBar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ, 0);
-	mv->vBar = AG_ScrollbarNew(mv, AG_SCROLLBAR_VERT, 0);
+	mv->hBar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	mv->vBar = AG_ScrollbarNew(mv, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	mv->xOffs = 0;
 	mv->yOffs = 0;
 	mv->scale = 8;

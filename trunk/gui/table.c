@@ -2238,19 +2238,19 @@ Init(void *obj)
 	t->nSorting = 0;
 
 	/* Horizontal scrollbar */
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ,
-	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	AG_SetInt(t->hbar, "min", 0);
+	AG_BindInt(t->hbar, "max", &t->wTot);
 	AG_BindInt(t->hbar, "value", &t->xOffs);
 	AG_BindInt(t->hbar, "visible", &t->r.w);
-	AG_BindInt(t->hbar, "max", &t->wTot);
 	AG_WidgetSetFocusable(t->hbar, 0);
 
 	/* Vertical scrollbar */
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_AUTOSIZE|AG_SCROLLBAR_AUTOHIDE);
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	AG_SetInt(t->vbar, "min", 0);
+	AG_BindInt(t->vbar, "max", &t->m);
 	AG_BindInt(t->vbar, "value", &t->mOffs);
 	AG_BindInt(t->vbar, "visible", &t->mVis);
-	AG_BindInt(t->vbar, "max", &t->m);
 	AG_WidgetSetFocusable(t->vbar, 0);
 
 	t->poll_ev = NULL;

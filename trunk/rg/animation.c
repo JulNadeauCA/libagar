@@ -511,9 +511,10 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	}
 
 	AG_LabelNewS(box, 0, _("Delay (ms): "));
-	sl = AG_SliderNewUintR(box, AG_SLIDER_HORIZ, AG_SLIDER_HFILL,
-	    &insn->delay, 0, 10000);
-	AG_SliderSetIntIncrement(sl, 50);
+	sl = AG_SliderNew(box, AG_SLIDER_HORIZ, AG_SLIDER_HFILL);
+	AG_BindUint(sl, "value", &insn->delay);
+	AG_SetUint(sl, "min", 0);
+	AG_SetUint(sl, "max", 10000);
 	
 	AG_WidgetUpdate(box);
 }
@@ -529,9 +530,9 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 
 	AG_PixmapFromSurfaceCopy(box, 0, AG_SurfaceDup(fr->su));
 
-	num = AG_NumericalNewUintR(box, AG_NUMERICAL_HFILL, "ms", _("Delay: "),
-	    &fr->delay, 0, 10000);
-	AG_NumericalSetIncrement(num, 50);
+	num = AG_NumericalNewUintR(box, AG_NUMERICAL_HFILL, "ms",
+	    _("Delay: "), &fr->delay, 0, 10000);
+	AG_SetUint(num, "inc", 50);
 
 	AG_WidgetUpdate(box);
 }
