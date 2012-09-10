@@ -165,9 +165,9 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 			AG_BindUint8(hsv2, "RGBAv", (Uint8 *)&f->f_gradient.c2);
 		}
 		
-		num = AG_NumericalNewUint8R(box, 0, NULL,
-		    _("Overall alpha: "), &f->alpha, 0, 255);
-		AG_NumericalSetIncrement(num, 5);
+		num = AG_NumericalNew(box, 0, NULL, _("Overall alpha: "));
+		AG_BindUint8(num, "value", &f->alpha);
+		AG_SetUint8(num, "value", 5);
 	}
 	return (win);
 }

@@ -6,58 +6,81 @@
 
 #include "agartest.h"
 
-int vInt = 50000, minInt = -100000, maxInt = 100000, visInt = 0;
-unsigned vUint = 0, minUint = 0, maxUint = 10, visUint = 0;
-Sint8 v8 = 100, min8 = -100, max8 = 100, vis8 = 0;
-Uint32 v32 = 1234, min32 = 1, max32 = 1000000, vis32 = 0;
+int vInt = 500;
+unsigned vUint = 0;
+Sint8 v8 = 50;
+Uint32 v32 = 32;
 #ifdef AG_HAVE_64BIT
-Uint64 v64 = 1234, min64 = 1, max64 = 1000000, vis64 = 0;
+Uint64 v64 = 64;
 #endif
-float vFlt = 1.0, minFlt = 0.0, maxFlt = 10.0, visFlt = 0.0;
-double vDbl = 1.0, minDbl = -1e6, maxDbl = 1e6, visDbl = 0.0;
+float vFlt = 1.0;
+double vDbl = 0.0;
 #ifdef AG_HAVE_LONG_DOUBLE
-long double vLDbl = 1.0, minLDbl = -1e6, maxLDbl = 1e6, visLDbl = 0.0;
+long double vLDbl = 1.0;
 #endif
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
 	AG_Scrollbar *sb;
+	AG_Label *lbl;
+	Uint flags = AG_SCROLLBAR_HFILL|AG_SCROLLBAR_NOAUTOHIDE;
 
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Int binding: %d", &vInt);
-	sb = AG_ScrollbarNewInt(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &vInt, &minInt, &maxInt, &visInt);
-	AG_ScrollbarSetIntIncrement(sb, 100);
+	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, "Int binding: %d", &vInt);
+	AG_LabelSizeHint(lbl, 0, "XXXXXXXXXXXXXXXXXXXX");
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindInt(sb, "value", &vInt);
+	AG_SetInt(sb, "min", -10000);
+	AG_SetInt(sb, "max", 10000);
+	AG_SetInt(sb, "inc", 1000);
 
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Uint binding: %d", &vUint);
-	sb = AG_ScrollbarNewUint(win, AG_SCROLLBAR_HORIZ, AG_LABEL_HFILL,
-	    &vUint, &minUint, &maxUint, &visUint);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Uint binding: %d (vis=1000)", &vUint);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindUint(sb, "value", &vUint);
+	AG_SetUint(sb, "min", 0);
+	AG_SetUint(sb, "max", 10000);
+	AG_SetUint(sb, "inc", 1000);
+	AG_SetUint(sb, "visible", 1000);
 
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "8-bit binding: %[s8]", &v8);
-	sb = AG_ScrollbarNewSint8(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &v8, &min8, &max8, &vis8);
-	
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "32-bit binding: %[u32]", &v32);
-	sb = AG_ScrollbarNewUint32(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &v32, &min32, &max32, &vis32);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "8-bit binding: %[s8] (vis=50)", &v8);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindSint8(sb, "value", &v8);
+	AG_SetSint8(sb, "visible", 50);
+
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "32-bit binding: %[u32] (vis=10)", &v32);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindUint32(sb, "value", &v32);
+	AG_SetUint32(sb, "min", 0);
+	AG_SetUint32(sb, "max", 100);
+	AG_SetUint32(sb, "visible", 10);
+
 #ifdef AG_HAVE_64BIT
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "64-bit binding: %[u64]", &v64);
-	sb = AG_ScrollbarNewUint64(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &v64, &min64, &max64, &vis64);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "64-bit binding: %[u64] (vis=10)", &v64);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindUint64(sb, "value", &v64);
+	AG_SetUint64(sb, "min", 0ULL);
+	AG_SetUint64(sb, "max", 100ULL);
+	AG_SetUint64(sb, "visible", 10ULL);
 #endif
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Float binding: %f", &vFlt);
-	sb = AG_ScrollbarNewFloat(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &vFlt, &minFlt, &maxFlt, &visFlt);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindFloat(sb, "value", &vFlt);
+	AG_SetFloat(sb, "min", 0.0f);
+	AG_SetFloat(sb, "max", 1.0f);
+	AG_SetFloat(sb, "inc", 0.01f);
 	
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Double binding: %lf", &vDbl);
-	sb = AG_ScrollbarNewDouble(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &vDbl, &minDbl, &maxDbl, &visDbl);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindDouble(sb, "value", &vDbl);
+	AG_SetDouble(sb, "min", -100.0);
+	AG_SetDouble(sb, "max", +100.0);
+	AG_SetDouble(sb, "inc", 1.0);
+
 #ifdef AG_HAVE_LONG_DOUBLE
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Long Double binding: %llf", &vLDbl);
-	sb = AG_ScrollbarNewLongDouble(win, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_HFILL,
-	    &vLDbl, &minLDbl, &maxLDbl, &visLDbl);
+	sb = AG_ScrollbarNew(win, AG_SCROLLBAR_HORIZ, flags);
+	AG_BindLongDouble(sb, "value", &vLDbl);
 #endif
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, -1);
 	return (0);
 }
 

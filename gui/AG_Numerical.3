@@ -96,25 +96,8 @@ for selecting units.
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint}R "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
 .Pp
-.\" MANLINK(AG_NumericalNewUint8)
-.\" MANLINK(AG_NumericalNewUint16)
-.\" MANLINK(AG_NumericalNewUint32)
-.\" MANLINK(AG_NumericalNewUint64)
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Uint8,Uint16,Uint32,Uint64} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
-.Pp
-.\" MANLINK(AG_NumericalNewSint8)
-.\" MANLINK(AG_NumericalNewSint16)
-.\" MANLINK(AG_NumericalNewSint32)
-.\" MANLINK(AG_NumericalNewSint64)
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Sint8,Sint16,Sint32,Sint64} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
-.Pp
 .Ft "void"
 .Fn AG_NumericalSizeHint "AG_Numerical *num" "const char *sizeHint"
-.Pp
-.Ft void
-.Fn AG_NumericalSetIncrement "AG_Numerical *num" "double increment"
 .Pp
 .Ft int
 .Fn AG_NumericalSetUnitSystem "AG_Numerical *num" "const char *unit"
@@ -126,7 +109,7 @@ for selecting units.
 .Fn AG_NumericalSetPrecision "AG_Numerical *num, const char *fmt" "int precision"
 .Pp
 .Ft void
-.Fn AG_NumericalSetWriteable "AG_Numerical *num" int writeable"
+.Fn AG_NumericalSetWriteable "AG_Numerical *num" "int writeable"
 .Pp
 .nr nS 0
 The
@@ -197,13 +180,6 @@ widget be sufficient to display
 in its entirety (see
 .Xr AG_SizeSpec 3 ) .
 .Pp
-The
-.Fn AG_NumericalSetIncrement
-function defines the step value for the "+" and "-" buttons.
-When unit conversion is used, the step value should use the target unit
-system.
-The floating-point argument will be converted to integer if necessary.
-.Pp
 .Fn AG_NumericalSetUnitSystem
 searches all unit groups for a unit of the given name and selects it as the
 active unit.
@@ -216,7 +192,8 @@ as the active conversion unit.
 .Pp
 The
 .Fn AG_NumericalSetPrecision
-function selects the preferred style and precision for printing.
+function selects the preferred style and precision for printing floating-point
+numbers.
 The default is
 .Sq %.2f .
 .Pp
@@ -238,10 +215,11 @@ The
 .Fn AG_NumericalIncrement
 and
 .Fn AG_NumericalDecrement
-functions increment and decrement the current value by the interval
-specified in
-.Fn AG_NumericalSetIncrement
-(which defaults to 1).
+functions increment and decrement the bound
+.Va value
+by the interval specified as the
+.Va inc
+binding (which defaults to 1).
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Numerical
@@ -249,9 +227,9 @@ object:
 .Pp
 .Bl -tag -compact -width "const AG_Unit *unit "
 .It Ft char *format
-Format string for printing numbers.
+Format string for printing floating-point numbers.
 .It Ft const AG_Unit *unit
-Current unit in use.
+Current unit system in use.
 .It Ft AG_Textbox *input
 Textbox for keyboard input.
 .El
@@ -271,34 +249,50 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *value, *min, *max "
-.It Va float *value, *min, *max
+.Bl -tag -compact -width "long double *value, *min, *max, *inc "
+.It Va float *value, *min, *max, *inc
 Real number (single-precision).
-.It Va double *value, *min, *max
+.It Va double *value, *min, *max, *inc
 Real number (double-precision).
-.It Va long double *value, *min, *max
+.It Va long double *value, *min, *max, *inc
 Real number (quad-precision).
-.It Va int *value, *min, *max
+.It Va int *value, *min, *max, *inc
 Signed integer value.
-.It Va Uint *value, *min, *max
+.It Va Uint *value, *min, *max, *inc
 Unsigned integer value.
-.It Va Uint8 *value, *min, *max
+.It Va Uint8 *value, *min, *max, *inc
 Unsigned 8-bit value.
-.It Va Uint16 *value, *min, *max
+.It Va Uint16 *value, *min, *max, *inc
 Unsigned 16-bit value.
-.It Va Uint32 *value, *min, *max
+.It Va Uint32 *value, *min, *max, *inc
 Unsigned 32-bit value.
-.It Va Uint64 *value, *min, *max
-Unsigned 64-bit value).
-.It Va Sint8 *value, *min, *max
+.It Va Uint64 *value, *min, *max, *inc
+Unsigned 64-bit value.
+.It Va Sint8 *value, *min, *max, *inc
 Signed 8-bit value.
-.It Va Sint16 *value, *min, *max
+.It Va Sint16 *value, *min, *max, *inc
 Signed 16-bit value.
-.It Va Sint32 *value, *min, *max
+.It Va Sint32 *value, *min, *max, *inc
 Signed 32-bit value.
-.It Va Sint64 *value, *min, *max
+.It Va Sint64 *value, *min, *max, *inc
 Signed 64-bit value.
 .El
+.Pp
+The
+.Va value
+binding indicates the number to display.
+The
+.Va min
+and
+.Va max
+bindings allow a range to be specified.
+The
+.Va inc
+binding specifies the increment effected by the widget's "+" and "-" buttons
+(if unit conversion is in use,
+.Va inc
+should be of the same unit system as
+.Va value ) .
 .Pp
 The 64-bit types are only available if
 .Dv AG_HAVE_64BIT

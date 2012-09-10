@@ -11,26 +11,6 @@
 
 #include <agar/gui/begin.h>
 	
-typedef union ag_numerical_value {
-	int i;
-	Uint u;
-	Uint8 u8;
-	Sint8 s8;
-	Uint16 u16;
-	Sint16 s16;
-	Uint32 u32;
-	Sint32 s32;
-#ifdef AG_HAVE_64BIT
-	Uint64 u64;
-	Sint64 s64;
-#endif
-	float flt;
-	double dbl;
-#ifdef AG_HAVE_LONG_DOUBLE
-	long double ldbl;
-#endif
-} AG_NumericalValue;
-
 typedef struct ag_numerical {
 	struct ag_widget wid;
 	Uint flags;
@@ -39,8 +19,7 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_INT	0x04	/* Default binding should be int */
 #define AG_NUMERICAL_EXCL	0x08	/* Exclusive access to bindings */
 
-	double incr;			/* Button increment value */
-	char format[32];		/* Printing format */
+	char format[32];		/* Print format (for reals) */
 	const AG_Unit *unit;		/* Conversion unit in use */
 	int writeable;			/* 0 = read-only */
 	char inTxt[64];			/* Input text buffer */
@@ -51,8 +30,6 @@ typedef struct ag_numerical {
 	int wUnitSel, hUnitSel;		/* Size hints for entry box */
 	int wPreUnit;			/* Size hint for unit selector */
 	AG_Timer updateTo;		/* Timer for non-EXCL mode */
-	AG_NumericalValue value;	/* Default value binding */
-	AG_NumericalValue min, max;	/* Default range bindings */
 } AG_Numerical;
 
 __BEGIN_DECLS
@@ -74,31 +51,12 @@ AG_Numerical *AG_NumericalNewInt(void *, Uint, const char *, const char *, int *
 AG_Numerical *AG_NumericalNewIntR(void *, Uint, const char *, const char *, int *, int, int);
 AG_Numerical *AG_NumericalNewUint(void *, Uint, const char *, const char *, Uint *);
 AG_Numerical *AG_NumericalNewUintR(void *, Uint, const char *, const char *, Uint *, Uint, Uint);
-AG_Numerical *AG_NumericalNewUint8(void *, Uint, const char *, const char *, Uint8 *);
-AG_Numerical *AG_NumericalNewUint8R(void *, Uint, const char *, const char *, Uint8 *, Uint8, Uint8);
-AG_Numerical *AG_NumericalNewSint8(void *, Uint, const char *, const char *, Sint8 *);
-AG_Numerical *AG_NumericalNewSint8R(void *, Uint, const char *, const char *, Sint8 *, Sint8, Sint8);
-AG_Numerical *AG_NumericalNewUint16(void *, Uint, const char *, const char *, Uint16 *);
-AG_Numerical *AG_NumericalNewUint16R(void *, Uint, const char *, const char *, Uint16 *, Uint16, Uint16);
-AG_Numerical *AG_NumericalNewSint16(void *, Uint, const char *, const char *, Sint16 *);
-AG_Numerical *AG_NumericalNewSint16R(void *, Uint, const char *, const char *, Sint16 *, Sint16, Sint16);
-AG_Numerical *AG_NumericalNewUint32(void *, Uint, const char *, const char *, Uint32 *);
-AG_Numerical *AG_NumericalNewUint32R(void *, Uint, const char *, const char *, Uint32 *, Uint32, Uint32);
-AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *, Sint32 *);
-AG_Numerical *AG_NumericalNewSint32R(void *, Uint, const char *, const char *, Sint32 *, Sint32, Sint32);
-#ifdef AG_HAVE_64BIT
-AG_Numerical *AG_NumericalNewUint64(void *, Uint, const char *, const char *, Uint64 *);
-AG_Numerical *AG_NumericalNewUint64R(void *, Uint, const char *, const char *, Uint64 *, Uint64, Uint64);
-AG_Numerical *AG_NumericalNewSint64(void *, Uint, const char *, const char *, Sint64 *);
-AG_Numerical *AG_NumericalNewSint64R(void *, Uint, const char *, const char *, Sint64 *, Sint64, Sint64);
-#endif
+
 void    AG_NumericalSizeHint(AG_Numerical *, const char *);
 
 void	AG_NumericalIncrement(AG_Numerical *);
 void	AG_NumericalDecrement(AG_Numerical *);
-void	AG_NumericalSetValue(AG_Numerical *, AG_NumericalValue);
 void    AG_NumericalUpdate(AG_Numerical *);
-void	AG_NumericalSetIncrement(AG_Numerical *, double);
 void	AG_NumericalSelectUnit(AG_Numerical *, const char *);
 int	AG_NumericalSetUnitSystem(AG_Numerical *, const char *);
 void	AG_NumericalSetPrecision(AG_Numerical *, const char *, int);
@@ -124,9 +82,22 @@ Uint64	AG_NumericalGetUint64(AG_Numerical *);
 #endif
 
 #ifdef AG_LEGACY
-void    AG_NumericalSetRangeDbl(AG_Numerical *, double, double) DEPRECATED_ATTRIBUTE;
-void    AG_NumericalSetRangeInt(AG_Numerical *, int, int) DEPRECATED_ATTRIBUTE;
-void    AG_NumericalSetRangeFlt(AG_Numerical *, float, float) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint8(void *, Uint, const char *, const char *, Uint8 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint8R(void *, Uint, const char *, const char *, Uint8 *, Uint8, Uint8) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint8(void *, Uint, const char *, const char *, Sint8 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint8R(void *, Uint, const char *, const char *, Sint8 *, Sint8, Sint8) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint16(void *, Uint, const char *, const char *, Uint16 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint16R(void *, Uint, const char *, const char *, Uint16 *, Uint16, Uint16) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint16(void *, Uint, const char *, const char *, Sint16 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint16R(void *, Uint, const char *, const char *, Sint16 *, Sint16, Sint16) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint32(void *, Uint, const char *, const char *, Uint32 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewUint32R(void *, Uint, const char *, const char *, Uint32 *, Uint32, Uint32) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *, Sint32 *) DEPRECATED_ATTRIBUTE;
+AG_Numerical *AG_NumericalNewSint32R(void *, Uint, const char *, const char *, Sint32 *, Sint32, Sint32) DEPRECATED_ATTRIBUTE;
+void AG_NumericalSetIncrement(AG_Numerical *, double) DEPRECATED_ATTRIBUTE;
+void AG_NumericalSetRangeDbl(AG_Numerical *, double, double) DEPRECATED_ATTRIBUTE;
+void AG_NumericalSetRangeInt(AG_Numerical *, int, int) DEPRECATED_ATTRIBUTE;
+void AG_NumericalSetRangeFlt(AG_Numerical *, float, float) DEPRECATED_ATTRIBUTE;
 #define AG_NumericalSetRange AG_NumericalSetRangeDbl
 #endif
 __END_DECLS

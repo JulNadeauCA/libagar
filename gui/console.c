@@ -383,13 +383,12 @@ Init(void *obj)
 	cons->scrollTo = NULL;
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
-	    AG_SCROLLBAR_EXCL|AG_SCROLLBAR_AUTOSIZE);
-/*	cons->vBar->maxOffs = +1; */
+	    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL);
 	AG_WidgetSetFocusable(cons->vBar, 0);
-
-	AG_BindUint(cons->vBar, "value", &cons->rOffs);
+	AG_SetUint(cons->vBar, "min", 0);
 	AG_BindUint(cons->vBar, "max", &cons->nLines);
 	AG_BindUint(cons->vBar, "visible", &cons->rVisible);
+	AG_BindUint(cons->vBar, "value", &cons->rOffs);
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);

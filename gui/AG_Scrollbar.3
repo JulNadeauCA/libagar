@@ -41,7 +41,7 @@ The
 .Nm
 widget provides a basic panning control.
 .Nm
-is almost always integrated in a widget's implementation, where the user
+is almost always used as part of a widget's implementation, where the user
 should be able to scroll over some partially visible graphics.
 The scrollbar's range and value parameters are specified by integer or
 floating-point bindings.
@@ -55,29 +55,16 @@ binding would be tied to the total line count, and
 to the index of the first line to display.
 The
 .Va visible
-binding would be tied to the number of lines that can be displayed on-screen.
-Note that the
-.Va visible
-value, being dependent on the widget's dimensions, is usually calculated in
-the widget's
-.Fn sizeAlloc
-routine.
-.Pp
-The
-.Va minOffs ,
-.Va maxOffs
-and
-.Va minOffs
-variables (see
-.Dq STRUCTURE DATA )
-can be used to add/subtract a constant value to that of the bound variables.
+binding would be tied to the number of lines that can be displayed on-screen
+(see
+.Dq BINDINGS ) .
 .Pp
 NOTE: This widget is meant only as a panning control.
-For general edition of numerical values,
+For general edition of numerical values, the simpler
 .Xr AG_Slider 3
 or
 .Xr AG_Numerical 3
-should be used instead.
+widgets should be used.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -87,35 +74,11 @@ should be used instead.
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNew "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags"
 .Pp
-.\" MANLINK(AG_ScrollbarNewInt)
-.\" MANLINK(AG_ScrollbarNewUint)
-.\" MANLINK(AG_ScrollbarNewFloat)
-.\" MANLINK(AG_ScrollbarNewDouble)
-.\" MANLINK(AG_ScrollbarNewUint8)
-.\" MANLINK(AG_ScrollbarNewUint16)
-.\" MANLINK(AG_ScrollbarNewUint32)
-.\" MANLINK(AG_ScrollbarNewUint64)
-.\" MANLINK(AG_ScrollbarNewSint8)
-.\" MANLINK(AG_ScrollbarNewSint16)
-.\" MANLINK(AG_ScrollbarNewSint32)
-.\" MANLINK(AG_ScrollbarNewSint64)
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNew{Int,Uint,Float,Double} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNew{Uint8,Uint16,Uint32,Uint64} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
-.Pp
-.Ft "AG_Scrollbar *"
-.Fn AG_ScrollbarNew{Sint8,Sint16,Sint32,Sint64} "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "<Type> *val" "<Type> *min" "<Type> *max" "<Type> *visible"
-.Pp
 .Ft void
 .Fn AG_ScrollbarSizeHint "AG_Scrollbar *scrollbar" "int length"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSetControlLength "AG_Scrollbar *scrollbar" "int length"
-.Pp
-.Ft int
-.Fn AG_ScrollbarControlLength "AG_Scrollbar *scrollbar"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSetWidth "int width"
@@ -132,12 +95,6 @@ should be used instead.
 .Ft void
 .Fn AG_ScrollbarSetDecFn "AG_Scrollbar *scrollbar" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
-.Ft void
-.Fn AG_ScrollbarSetIntIncrement "AG_Scrollbar *scrollbar" "int increment"
-.Pp
-.Ft void
-.Fn AG_ScrollbarSetRealIncrement "AG_Scrollbar *scrollbar" "double increment"
-.Pp
 .nr nS 0
 The
 .Fn AG_ScrollbarNew
@@ -148,22 +105,33 @@ The
 .Fa type
 argument should be either
 .Dv AG_SCROLLBAR_HORIZ
-or
-.Dv AG_SCROLLBAR_VERT .
+to create a horizontal scrollbar, or
+.Dv AG_SCROLLBAR_VERT
+to create a vertical scrollbar.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_SCROLLBAR_AUTOHIDE "
-.It AG_SCROLLBAR_AUTOSIZE
-Automatically determine the size of the scrollbar control based on current
+.Bl -tag -width "AG_SCROLLBAR_NOAUTOHIDE "
+.It AG_SCROLLBAR_NOAUTOHIDE
+Always display the scrollbar.
+By default, the scrollbar is automatically hidden if the values of
 .Va min ,
 .Va max
 and
 .Va visible
-values (recommended).
-.It AG_SCROLLBAR_AUTOHIDE
-Automatically hide or show the scrollbar based on the usefulness of the
-current numerical range.
+do not allow any room for scrolling.
+.It AG_SCROLLBAR_EXCL
+Advise that no external changes to the
+.Va value ,
+.Va min ,
+.Va max
+and
+.Va visible
+bindings are expected.
+By default, the binding values are periodically checked and the scrollbar is
+redrawn if a change is detected.
+Note that this setting only influences redraw -- external changes to the
+binding values are handled safely regardless.
 .It AG_SCROLLBAR_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -182,65 +150,28 @@ Shorthand for
 .It AG_SCROLLBAR_TEXT
 Display the minimum, current and maximum values in text.
 This option is primarily useful for debugging.
-.It AG_SCROLLBAR_EXCL
-Advise that no external changes to the
-.Va value ,
-.Va min ,
-.Va max
-and
-.Va visible
-bindings are expected.
-By default, the binding values are periodically checked and the scrollbar is
-redrawn if a change is detected.
-Note that this setting only influences redraw -- external changes to the
-binding values are handled safely regardless.
 .El
 .Pp
-The alternate constructor routines
-.Fn AG_ScrollbarNew* 
-create a new
-.Nm
-with
-.Va value ,
-.Va min ,
-.Va max ,
-and
-.Va visible
-bound to the variables of the specified integer or floating-point type.
-.Pp
+The
 .Fn AG_ScrollbarSizeHint
-specifies a default, preferred scrollbar length in pixels.
-It is not necessary to invoke this function when using the
+function specifies a default, preferred scrollbar length in pixels.
+This is rarely used; in practice, scrollbars almost always use
 .Dv AG_SCROLLBAR_HFILL
 or
-.Dv AG_SCROLLBAR_VFILL
-flag.
+.Dv AG_SCROLLBAR_VFILL .
 .Pp
 The
 .Fn AG_ScrollbarSetControlLength
-function sets the length of the scrolling control (i.e., the center button)
-to an explicit length in pixels.
-.Fn AG_ScrollbarControlLength
-returns the current length in pixels.
-Note: It is almost always preferable to use the
-.Dv AG_SCROLLBAR_AUTOSIZE
-option rather than setting an explicit length.
+function sets the size of the scrolling control in pixels.
+Note that this parameter is ignored if the
+.Va visible
+binding is set to a non-zero value (in which case, the optimal size of the
+control is determined automatically).
 .Pp
 .Fn AG_ScrollbarSetWidth
 configures the width (i.e., thickness) of the scrollbar.
 .Fn AG_ScrollbarWidth
 returns the effective width of a scrollbar in pixels.
-.Pp
-Note:
-.Fn AG_ScrollbarControlLength
-and
-.Fn AG_ScrollbarWidth
-should be considered safe to invoke only in widget
-.Fn size_request ,
-.Fn size_allocate
-or
-.Fn draw
-context.
 .Pp
 The
 .Fn AG_ScrollbarVisible
@@ -256,66 +187,61 @@ presses the decrement (up/left) button and the increment (down/right) buttons.
 A single
 .Ft int
 argument is passed to the callback (1 = pressed, 0 = released).
-.Pp
-.Fn AG_ScrollbarSetIntIncrement
-and
-.Fn AG_ScrollbarSetRealIncrement
-define by how much the value is to be incremented/decremented as a result of
-the user clicking on the scrollbar buttons or using the keyboard to move the
-control.
-The former is only meaningful with integer bindings, the latter is only
-meaningful with floating-point bindings.
 .Sh BINDINGS
 The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "double *{value,min,max,visible} "
-.It Va float *{value,min,max,visible}
-Single precision position/range
-.It Va double *{value,min,max,visible}
-Double precision position/range
-.It Va long double *{value,min,max,visible}
-Quad precision position/range
-.It Va int *{value,min,max,visible}
-Integer position/range
-.It Va Uint *{value,min,max,visible}
-Unsigned position/range
-.It Va Uint8 *{value,min,max,visible}
-Unsigned 8-bit position/range
-.It Va Uint16 *{value,min,max,visible}
-Unsigned 16-bit position/range
-.It Va Uint32 *{value,min,max,visible}
-Unsigned 32-bit position/range
-.It Va Uint64 *{value,min,max,visible}
-Unsigned 64-bit position/range
-.It Va Sint8 *{value,min,max,visible}
-Signed 8-bit position/range
-.It Va Sint16 *{value,min,max,visible}
-Signed 16-bit position/range
-.It Va Sint32 *{value,min,max,visible}
-Signed 32-bit position/range
-.It Va Sint64 *{value,min,max,visible}
-Signed 64-bit position/range
+.Bl -tag -compact -width "long double *{value,min,max,inc,visible} "
+.It Va float *{value,min,max,inc,visible}
+Single precision number
+.It Va double *{value,min,max,inc,visible}
+Double precision number
+.It Va long double *{value,min,max,inc,visible}
+Quad precision number
+.It Va int *{value,min,max,inc,visible}
+Natural integer
+.It Va Uint *{value,min,max,inc,visible}
+Unsigned integer
+.It Va [SU]int8 *{value,min,max,inc,visible}
+Fixed 8-bit integer
+.It Va [SU]int16 *{value,min,max,inc,visible}
+Fixed 16-bit integer
+.It Va [SU]int32 *{value,min,max,inc,visible}
+Fixed 32-bit integer
+.It Va [SU]int64 *{value,min,max,inc,visible}
+Fixed 64-bit integer
 .El
 .Pp
 The scrollbar is positioned to represent
 .Va value
-inside of the range defined by
+inside of a given range defined by
 .Va min
 and
 .Va max .
-In scrolling applications,
+The range defaults to 0.0 to 1.0 (for floating-point values),
+or 0 to the maximum representible value (for integer values).
+.Pp
+Thea optional
+.Va inc
+binding specifies the increment effected by the buttons, or keyboard.
+If not specified, it defaults to 0.1 (for floating-point values), or 1 (for
+integer values).
+.Pp
+The optional
 .Va visible
-is typically used to conveniently represent the size of the display area
-(internally, its value is simply subtracted from the range).
+binding may be set to indicate the portion of the total range which is
+currently visible on-screen.
+If this is a non-zero value, then the size of the scrolling control button
+will be set automatically.
 .Pp
 Note that the
 .Va min ,
-.Va max
+.Va max ,
+.Va inc
 and
 .Va visible
-bindings must be of the same type as
+bindings must share the same type as
 .Va value .
 The 64-bit types are only available if
 .Dv AG_HAVE_64BIT
@@ -343,49 +269,24 @@ For the
 object:
 .Pp
 .Bl -tag -compact -width "int visible "
-.It Ft int value
-Default
-.Sq value
-binding.
-.It Ft int min
-Default
-.Sq min
-binding.
-.It Ft int max
-Default
-.Sq max
-binding.
-.It Ft int visible
-Default
-.Sq visible
-binding.
-.It Ft int minOffs
-Constant integer value to add to
-.Sq min .
-.It Ft int maxOffs
-Constant integer value to add to
-.Sq max .
-.It Ft int visOffs
-Constant integer value to add to
-.Sq visible .
 .It Ft int width
 Scrollbar width in pixels.
-.It Ft int wBar
-Width of scrolling control button in pixels (ignored if
-.Dv AG_SCROLLBAR_AUTOSIZE
-is set).
 .It Ft int hArrow
 Size of "arrow" icons in pixels.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Scrollview 3 ,
+.Xr AG_Slider 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
 widget first appeared in Agar 1.0.
-The autosize feature was introduced in Agar 1.4.0.
-The constant offsets, EXCL option and 64-bit types
-types were introduced in Agar 1.5.0.
+The
+.Dv AUTOSIZE
+option was introduced in Agar 1.4.0.
+The
+.Va inc
+binding was introduced in Agar 1.5.0.

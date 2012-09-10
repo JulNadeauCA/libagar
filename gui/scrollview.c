@@ -188,19 +188,21 @@ AG_ScrollviewNew(void *parent, Uint flags)
 	if (flags & AG_SCROLLVIEW_VFILL) { AG_ExpandVert(sv); }
 
 	if (!(flags & AG_SCROLLVIEW_NOPAN_X)) {
-		sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ, 0);
-		AG_BindInt(sv->hbar, "value", &sv->xOffs);
+		sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ,
+		    AG_SCROLLBAR_EXCL);
 		AG_BindInt(sv->hbar, "min", &sv->xMin);
 		AG_BindInt(sv->hbar, "max", &sv->xMax);
 		AG_BindInt(sv->hbar, "visible", &sv->r.w);
+		AG_BindInt(sv->hbar, "value", &sv->xOffs);
 		AG_SetEvent(sv->hbar, "scrollbar-changed", PanView, "%p", sv);
 	}
 	if (!(flags & AG_SCROLLVIEW_NOPAN_Y)) {
-		sv->vbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT, 0);
-		AG_BindInt(sv->vbar, "value", &sv->yOffs);
+		sv->vbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT,
+		    AG_SCROLLBAR_EXCL);
 		AG_BindInt(sv->vbar, "min", &sv->yMin);
 		AG_BindInt(sv->vbar, "max", &sv->yMax);
 		AG_BindInt(sv->vbar, "visible", &sv->r.h);
+		AG_BindInt(sv->vbar, "value", &sv->yOffs);
 		AG_SetEvent(sv->vbar, "scrollbar-changed", PanView, "%p", sv);
 	}
 
@@ -220,8 +222,8 @@ AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
 {
 	AG_ObjectLock(sv);
 	sv->incr = incr;
-	if (sv->hbar != NULL) { AG_ScrollbarSetIntIncrement(sv->hbar, incr); }
-	if (sv->vbar != NULL) { AG_ScrollbarSetIntIncrement(sv->vbar, incr); }
+	if (sv->hbar != NULL) { AG_SetInt(sv->hbar, "inc", incr); }
+	if (sv->vbar != NULL) { AG_SetInt(sv->vbar, "inc", incr); }
 	AG_ObjectUnlock(sv);
 }
 

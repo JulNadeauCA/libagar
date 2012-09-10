@@ -93,132 +93,6 @@ AG_SliderNewUintR(void *parent, enum ag_slider_type type, Uint flags,
 }
 
 AG_Slider *
-AG_SliderNewUint8(void *parent, enum ag_slider_type type, Uint flags,
-    Uint8 *val, Uint8 *min, Uint8 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint8(sl, "value", val); }
-	if (min != NULL) { AG_BindUint8(sl, "min", min); }
-	if (max != NULL) { AG_BindUint8(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewUint8R(void *parent, enum ag_slider_type type, Uint flags,
-    Uint8 *val, Uint8 min, Uint8 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint8(sl, "value", val); }
-	AG_SetUint8(sl, "min", min);
-	AG_SetUint8(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewSint8(void *parent, enum ag_slider_type type, Uint flags,
-    Sint8 *val, Sint8 *min, Sint8 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint8(sl, "value", val); }
-	if (min != NULL) { AG_BindSint8(sl, "min", min); }
-	if (max != NULL) { AG_BindSint8(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewSint8R(void *parent, enum ag_slider_type type, Uint flags,
-    Sint8 *val, Sint8 min, Sint8 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint8(sl, "value", val); }
-	AG_SetSint8(sl, "min", min);
-	AG_SetSint8(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewUint16(void *parent, enum ag_slider_type type, Uint flags,
-    Uint16 *val, Uint16 *min, Uint16 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint16(sl, "value", val); }
-	if (min != NULL) { AG_BindUint16(sl, "min", min); }
-	if (max != NULL) { AG_BindUint16(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewUint16R(void *parent, enum ag_slider_type type, Uint flags,
-    Uint16 *val, Uint16 min, Uint16 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint16(sl, "value", val); }
-	AG_SetUint16(sl, "min", min);
-	AG_SetUint16(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewSint16(void *parent, enum ag_slider_type type, Uint flags,
-    Sint16 *val, Sint16 *min, Sint16 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint16(sl, "value", val); }
-	if (min != NULL) { AG_BindSint16(sl, "min", min); }
-	if (max != NULL) { AG_BindSint16(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewSint16R(void *parent, enum ag_slider_type type, Uint flags,
-    Sint16 *val, Sint16 min, Sint16 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint16(sl, "value", val); }
-	AG_SetSint16(sl, "min", min);
-	AG_SetSint16(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewUint32(void *parent, enum ag_slider_type type, Uint flags,
-    Uint32 *val, Uint32 *min, Uint32 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint32(sl, "value", val); }
-	if (min != NULL) { AG_BindUint32(sl, "min", min); }
-	if (max != NULL) { AG_BindUint32(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewUint32R(void *parent, enum ag_slider_type type, Uint flags,
-    Uint32 *val, Uint32 min, Uint32 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindUint32(sl, "value", val); }
-	AG_SetUint32(sl, "min", min);
-	AG_SetUint32(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewSint32(void *parent, enum ag_slider_type type, Uint flags,
-    Sint32 *val, Sint32 *min, Sint32 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint32(sl, "value", val); }
-	if (min != NULL) { AG_BindSint32(sl, "min", min); }
-	if (max != NULL) { AG_BindSint32(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewSint32R(void *parent, enum ag_slider_type type, Uint flags,
-    Sint32 *val, Sint32 min, Sint32 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_BindSint32(sl, "value", val); }
-	AG_SetSint32(sl, "min", min);
-	AG_SetSint32(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
 AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
     float *val, float *min, float *max)
 {
@@ -280,36 +154,19 @@ AG_SliderSetControlSize(AG_Slider *sl, int size)
 	AG_Redraw(sl);
 }
 
-/* Set the base increment for integer bindings. */
-void
-AG_SliderSetIntIncrement(AG_Slider *sl, int inc)
-{
-	AG_ObjectLock(sl);
-	sl->iInc = inc;
-	AG_ObjectUnlock(sl);
-}
-
-/* Set the base increment for real bindings. */
-void
-AG_SliderSetRealIncrement(AG_Slider *sl, double inc)
-{
-	AG_ObjectLock(sl);
-	sl->rInc = inc;
-	AG_ObjectUnlock(sl);
-}
-
 /*
  * Return the current position of the slider, in terms of the position of the
  * Left (or Top) edge in pixels. Returns 0 on success and -1 if the range
  * is currently <= 0.
  */
-#define GET_POSITION(type)						\
-	if (*(type *)pMin >= (*(type *)pMax)) {				\
+#define GET_POSITION(TYPE) {						\
+	TYPE min = *(TYPE *)pMin;					\
+	TYPE max = *(TYPE *)pMax;					\
+	if (min >= max) {						\
 		goto fail;						\
 	}								\
-	*x = (int)(((*(type *)pVal - *(type *)pMin) * sl->extent) /	\
-	          (*(type *)pMax - *(type *)pMin)) 
-
+	*x = (int)(((*(TYPE *)pVal - min) * sl->extent) / (max - min));	\
+}
 static __inline__ int
 GetPosition(AG_Slider *sl, int *x)
 {
@@ -321,17 +178,24 @@ GetPosition(AG_Slider *sl, int *x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		GET_POSITION(int);	break;
-	case AG_VARIABLE_UINT:		GET_POSITION(Uint);	break;
-	case AG_VARIABLE_FLOAT:		GET_POSITION(float);	break;
-	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);	break;
-	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);	break;
-	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);	break;
-	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);	break;
-	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);	break;
-	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);	break;
-	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);	break;
-	default: *x = 0;					break;
+	case AG_VARIABLE_FLOAT:		GET_POSITION(float);		break;
+	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);		break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	GET_POSITION(long double);	break;
+#endif
+	case AG_VARIABLE_INT:		GET_POSITION(int);		break;
+	case AG_VARIABLE_UINT:		GET_POSITION(Uint);		break;
+	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);		break;
+	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);		break;
+	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);		break;
+	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);		break;
+	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);		break;
+	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);		break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	GET_POSITION(Uint64);		break;
+	case AG_VARIABLE_SINT64:	GET_POSITION(Sint64);		break;
+#endif
+	default: *x = 0;						break;
 	} 
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
@@ -348,17 +212,17 @@ fail:
 /*
  * Set the value from a specified position in pixels.
  */
-#define SEEK_TO_POSITION(type)						\
+#define SEEK_TO_POSITION(TYPE) {					\
+	TYPE min = *(TYPE *)pMin;					\
+	TYPE max = *(TYPE *)pMax;					\
 	if (x <= 0) {							\
-		*(type *)pVal = *(type *)pMin;				\
+		*(TYPE *)pVal = min;					\
 	} else if (x >= sl->extent) {					\
-		*(type *)pVal = *(type *)pMax;				\
+		*(TYPE *)pVal = max;					\
 	} else {							\
-		*(type *)pVal = x *					\
-		    (*(type *)pMax - *(type *)pMin) / sl->extent;	\
-		*(type *)pVal += *(type *)pMin;				\
-	}
-
+		*(TYPE *)pVal = min + x*(max-min)/sl->extent;		\
+	}								\
+}
 static __inline__ void
 SeekToPosition(AG_Slider *sl, int x)
 {
@@ -370,18 +234,26 @@ SeekToPosition(AG_Slider *sl, int x)
 	bMax = AG_GetVariable(sl, "max", &pMax);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
-	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
 	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
 	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	SEEK_TO_POSITION(long double);	break;
+#endif
+	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
+	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
 	case AG_VARIABLE_UINT8:		SEEK_TO_POSITION(Uint8);	break;
 	case AG_VARIABLE_SINT8:		SEEK_TO_POSITION(Sint8);	break;
 	case AG_VARIABLE_UINT16:	SEEK_TO_POSITION(Uint16);	break;
 	case AG_VARIABLE_SINT16:	SEEK_TO_POSITION(Sint16);	break;
 	case AG_VARIABLE_UINT32:	SEEK_TO_POSITION(Uint32);	break;
 	case AG_VARIABLE_SINT32:	SEEK_TO_POSITION(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	SEEK_TO_POSITION(Uint64);	break;
+	case AG_VARIABLE_SINT64:	SEEK_TO_POSITION(Sint64);	break;
+#endif
 	default:							break;
 	} 
+
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
@@ -391,98 +263,100 @@ SeekToPosition(AG_Slider *sl, int x)
 #undef SEEK_TO_POSITION
 
 /*
- * Decrement the value by the specified amount multiplied by iInc/rInc.
+ * Type-independent increment/decrement operation.
  */
-#define DECREMENT_INT(type)						\
-	if ((*(type *)pVal - ((type)sl->iInc)*v) < *(type *)pMin) 	\
-		*(type *)pVal = *(type *)pMin;				\
+#define INCREMENT(TYPE) {							\
+	if ((*(TYPE *)pVal + *(TYPE *)pInc) > *(TYPE *)pMax) 		\
+		*(TYPE *)pVal = *(TYPE *)pMax;				\
 	else 								\
-		*(type *)pVal -= ((type)sl->iInc)*v
-
-#define DECREMENT_REAL(type)						\
-	if ((*(type *)pVal - ((type)v)*sl->rInc) < *(type *)pMin) 	\
-		*(type *)pVal = *(type *)pMin;				\
+		*(TYPE *)pVal += *(TYPE *)pInc;				\
+}
+#define DECREMENT(TYPE) {							\
+	if ((*(TYPE *)pVal - *(TYPE *)pInc) < *(TYPE *)pMin) 		\
+		*(TYPE *)pVal = *(TYPE *)pMin;				\
 	else 								\
-		*(type *)pVal -= ((type)v)*sl->rInc
-
+		*(TYPE *)pVal -= *(TYPE *)pInc;				\
+}
 static void
-Decrement(AG_Slider *sl, int v)
+Increment(AG_Slider *sl)
 {
-	AG_Variable *bMin, *bMax, *bVal;
-	void *pMin, *pMax, *pVal;
+	AG_Variable *bVal, *bMin, *bMax, *bInc;
+	void *pVal, *pMin, *pMax, *pInc;
 
 	bVal = AG_GetVariable(sl, "value", &pVal);
 	bMin = AG_GetVariable(sl, "min", &pMin);
 	bMax = AG_GetVariable(sl, "max", &pMax);
+	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		DECREMENT_INT(int);	break;
-	case AG_VARIABLE_UINT:		DECREMENT_INT(Uint);	break;
-	case AG_VARIABLE_FLOAT:		DECREMENT_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	DECREMENT_REAL(double);	break;
-	case AG_VARIABLE_UINT8:		DECREMENT_INT(Uint8);	break;
-	case AG_VARIABLE_SINT8:		DECREMENT_INT(Sint8);	break;
-	case AG_VARIABLE_UINT16:	DECREMENT_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
+	case AG_VARIABLE_FLOAT:		INCREMENT(float);		break;
+	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
+#endif
+	case AG_VARIABLE_INT:		INCREMENT(int);		break;
+	case AG_VARIABLE_UINT:		INCREMENT(Uint);		break;
+	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);		break;
+	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);		break;
+	case AG_VARIABLE_UINT16:	INCREMENT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	INCREMENT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	INCREMENT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	INCREMENT(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	INCREMENT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	INCREMENT(Sint64);	break;
+#endif
 	default:						break;
 	} 
+
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
-	AG_UnlockVariable(bMax);
-	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bInc);
 	AG_Redraw(sl);
 }
-#undef DECREMENT_INT
-#undef DECREMENT_REAL
-
-/*
- * Increment the value by the specified amount multiplied by iInc/rInc.
- */
-#define INCREMENT_INT(type)						\
-	if ((*(type *)pVal + ((type)sl->iInc)*v) > *(type *)pMax) 	\
-		*(type *)pVal = *(type *)pMax;				\
-	else 								\
-		*(type *)pVal += ((type)sl->iInc)*v
-
-#define INCREMENT_REAL(type)						\
-	if ((*(type *)pVal + ((type)v)*sl->rInc) > *(type *)pMax) 	\
-		*(type *)pVal = *(type *)pMax;				\
-	else 								\
-		*(type *)pVal += ((type)v)*sl->rInc
-
 static void
-Increment(AG_Slider *sl, int v)
+Decrement(AG_Slider *sl)
 {
-	AG_Variable *bMin, *bMax, *bVal;
-	void *pMin, *pMax, *pVal;
+	AG_Variable *bVal, *bMin, *bMax, *bInc;
+	void *pVal, *pMin, *pMax, *pInc;
 
 	bVal = AG_GetVariable(sl, "value", &pVal);
 	bMin = AG_GetVariable(sl, "min", &pMin);
 	bMax = AG_GetVariable(sl, "max", &pMax);
+	bInc = AG_GetVariable(sl, "inc", &pInc);
 
 	switch (AG_VARIABLE_TYPE(bVal)) {
-	case AG_VARIABLE_INT:		INCREMENT_INT(int);	break;
-	case AG_VARIABLE_UINT:		INCREMENT_INT(Uint);	break;
-	case AG_VARIABLE_FLOAT:		INCREMENT_REAL(float);	break;
-	case AG_VARIABLE_DOUBLE:	INCREMENT_REAL(double);	break;
-	case AG_VARIABLE_UINT8:		INCREMENT_INT(Uint8);	break;
-	case AG_VARIABLE_SINT8:		INCREMENT_INT(Sint8);	break;
-	case AG_VARIABLE_UINT16:	INCREMENT_INT(Uint16);	break;
-	case AG_VARIABLE_SINT16:	INCREMENT_INT(Sint16);	break;
-	case AG_VARIABLE_UINT32:	INCREMENT_INT(Uint32);	break;
-	case AG_VARIABLE_SINT32:	INCREMENT_INT(Sint32);	break;
+	case AG_VARIABLE_FLOAT:		DECREMENT(float);		break;
+	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
+#endif
+	case AG_VARIABLE_INT:		DECREMENT(int);		break;
+	case AG_VARIABLE_UINT:		DECREMENT(Uint);		break;
+	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);		break;
+	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);		break;
+	case AG_VARIABLE_UINT16:	DECREMENT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	DECREMENT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	DECREMENT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	DECREMENT(Sint32);	break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64:	DECREMENT(Uint64);	break;
+	case AG_VARIABLE_SINT64:	DECREMENT(Sint64);	break;
+#endif
 	default:						break;
 	} 
+
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
-	AG_UnlockVariable(bMax);
-	AG_UnlockVariable(bMin);
 	AG_UnlockVariable(bVal);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bInc);
 	AG_Redraw(sl);
 }
-#undef INCREMENT_INT
-#undef INCREMENT_REAL
+#undef INCREMENT
+#undef DECREMENT
 
 static void
 MouseButtonUp(AG_Event *event)
@@ -556,9 +430,9 @@ MoveTimeout(AG_Timer *to, AG_Event *event)
 	int dir = AG_INT(1);
 
 	if (dir < 0) {
-		Decrement(sl, -dir);
+		Decrement(sl);
 	} else {
-		Increment(sl, +dir);
+		Increment(sl);
 	}
 	return (agKbdRepeat);
 }
@@ -572,12 +446,12 @@ KeyDown(AG_Event *event)
 	switch (keysym) {
 	case AG_KEY_UP:
 	case AG_KEY_LEFT:
-		Decrement(sl, 1);
+		Decrement(sl);
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", -1);
 		break;
 	case AG_KEY_DOWN:
 	case AG_KEY_RIGHT:
-		Increment(sl, 1);
+		Increment(sl);
 		AG_AddTimer(sl, &sl->moveTo, agKbdDelay, MoveTimeout, "%i", +1);
 		break;
 	}
@@ -607,10 +481,44 @@ OnFocusLoss(AG_Event *event)
 	AG_DelTimer(sl, &sl->moveTo);
 }
 
+#undef SET_DEF
+#define SET_DEF(fn,dmin,dmax,dinc) { 					\
+	if (!AG_Defined(sl, "min")) { fn(sl, "min", dmin); }		\
+	if (!AG_Defined(sl, "max")) { fn(sl, "max", dmax); }		\
+	if (!AG_Defined(sl, "inc")) { fn(sl, "inc", dinc); }		\
+}
 static void
 OnShow(AG_Event *event)
 {
 	AG_Slider *sl = AG_SELF();
+	AG_Variable *V;
+	
+	if ((V = AG_GetVariable(sl, "value", NULL)) == NULL) {
+		V = AG_SetInt(sl, "value", 0);
+		AG_LockVariable(V);
+	}
+	switch (AG_VARIABLE_TYPE(V)) {
+	case AG_VARIABLE_FLOAT:  SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
+	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, 0.0l, 1.0l, 0.1l); break;
+#endif
+	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, AG_INT_MIN+1, AG_INT_MAX-1, 1); break;
+	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
+	case AG_VARIABLE_UINT8:  SET_DEF(AG_SetUint8, 0U, 0xffU, 1U); break;
+	case AG_VARIABLE_SINT8:  SET_DEF(AG_SetSint8, -0x7f, 0x7f, 1); break;
+	case AG_VARIABLE_UINT16: SET_DEF(AG_SetUint16, 0U, 0xffffU, 1U); break;
+	case AG_VARIABLE_SINT16: SET_DEF(AG_SetSint16, -0x7fff, 0x7fff, 1); break;
+	case AG_VARIABLE_UINT32: SET_DEF(AG_SetUint32, 0UL, 0xffffffffUL, 1UL); break;
+	case AG_VARIABLE_SINT32: SET_DEF(AG_SetSint32, -0x7fffffffL, 0x7fffffffL, 1L); break;
+#ifdef HAVE_64BIT
+	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
+	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, -0x7fffffffffffffffLL, 0x7fffffffffffffffLL, 1LL); break;
+#endif
+	default:
+		break;
+	}
+	AG_UnlockVariable(V);
 
 	if ((sl->flags & AG_SLIDER_EXCL) == 0) {
 		AG_RedrawOnChange(sl, 100, "value");
@@ -618,24 +526,7 @@ OnShow(AG_Event *event)
 		AG_RedrawOnChange(sl, 1000, "max");
 	}
 }
-
-static void
-OnBound(AG_Event *event)
-{
-	AG_Slider *sl = AG_SELF();
-	AG_Variable *bNew = AG_PTR(1);
-	AG_Variable *bValue;
-	void *pValue;
-
-	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max")) {
-		bValue = AG_GetVariable(sl, "value", &pValue);
-		if (bValue->type != bNew->type) {
-			AG_FatalError("Slider \"%s\" binding type disagree "
-			              "with \"value\" binding", bNew->name);
-		}
-		AG_UnlockVariable(bValue);
-	}
-}
+#undef SET_DEF
 
 static void
 Init(void *obj)
@@ -650,34 +541,22 @@ Init(void *obj)
 	sl->type = AG_SLIDER_HORIZ;
 	sl->ctlPressed = 0;
 	sl->flags = 0;
-	sl->value = 0;
-	sl->min = 0;
-	sl->max = 0;
 	sl->wControlPref = agTextFontHeight;
 	sl->wControl = sl->wControlPref;
 	sl->xOffs = 0;
-	sl->rInc = 1.0;	
-	sl->iInc = 1;
 
 	AG_AddEvent(sl, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", OnFocusLoss, NULL);
-	AG_SetEvent(sl, "bound", OnBound, NULL);
 	AG_SetEvent(sl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(sl, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
 
-	AG_BindInt(sl, "value", &sl->value);
-	AG_BindInt(sl, "min", &sl->min);
-	AG_BindInt(sl, "max", &sl->max);
-	
 #ifdef AG_DEBUG
 	AG_BindInt(sl, "xOffs", &sl->xOffs);
 	AG_BindInt(sl, "extent", &sl->extent);
-	AG_BindDouble(sl, "rInc", &sl->rInc);
-	AG_BindInt(sl, "iInc", &sl->iInc);
 #endif /* AG_DEBUG */
 }
 
@@ -732,6 +611,131 @@ Draw(void *obj)
 		break;
 	}
 }
+
+#ifdef AG_LEGACY
+void
+AG_SliderSetIntIncrement(AG_Slider *sl, int inc)
+{
+	AG_ObjectLock(sl);
+	AG_SetInt(sl, "inc", inc);
+	AG_ObjectUnlock(sl);
+}
+void
+AG_SliderSetRealIncrement(AG_Slider *sl, double inc)
+{
+	AG_ObjectLock(sl);
+	AG_SetDouble(sl, "inc", inc);
+	AG_ObjectUnlock(sl);
+}
+AG_Slider *
+AG_SliderNewUint8(void *parent, enum ag_slider_type type, Uint flags, Uint8 *val, Uint8 *min, Uint8 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint8(sl, "value", val); }
+	if (min != NULL) { AG_BindUint8(sl, "min", min); }
+	if (max != NULL) { AG_BindUint8(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUint8R(void *parent, enum ag_slider_type type, Uint flags, Uint8 *val, Uint8 min, Uint8 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint8(sl, "value", val); }
+	AG_SetUint8(sl, "min", min);
+	AG_SetUint8(sl, "max", max);
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint8(void *parent, enum ag_slider_type type, Uint flags, Sint8 *val, Sint8 *min, Sint8 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint8(sl, "value", val); }
+	if (min != NULL) { AG_BindSint8(sl, "min", min); }
+	if (max != NULL) { AG_BindSint8(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint8R(void *parent, enum ag_slider_type type, Uint flags, Sint8 *val, Sint8 min, Sint8 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint8(sl, "value", val); }
+	AG_SetSint8(sl, "min", min);
+	AG_SetSint8(sl, "max", max);
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUint16(void *parent, enum ag_slider_type type, Uint flags, Uint16 *val, Uint16 *min, Uint16 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint16(sl, "value", val); }
+	if (min != NULL) { AG_BindUint16(sl, "min", min); }
+	if (max != NULL) { AG_BindUint16(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUint16R(void *parent, enum ag_slider_type type, Uint flags, Uint16 *val, Uint16 min, Uint16 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint16(sl, "value", val); }
+	AG_SetUint16(sl, "min", min);
+	AG_SetUint16(sl, "max", max);
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint16(void *parent, enum ag_slider_type type, Uint flags, Sint16 *val, Sint16 *min, Sint16 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint16(sl, "value", val); }
+	if (min != NULL) { AG_BindSint16(sl, "min", min); }
+	if (max != NULL) { AG_BindSint16(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint16R(void *parent, enum ag_slider_type type, Uint flags, Sint16 *val, Sint16 min, Sint16 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint16(sl, "value", val); }
+	AG_SetSint16(sl, "min", min);
+	AG_SetSint16(sl, "max", max);
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUint32(void *parent, enum ag_slider_type type, Uint flags, Uint32 *val, Uint32 *min, Uint32 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint32(sl, "value", val); }
+	if (min != NULL) { AG_BindUint32(sl, "min", min); }
+	if (max != NULL) { AG_BindUint32(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUint32R(void *parent, enum ag_slider_type type, Uint flags, Uint32 *val, Uint32 min, Uint32 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindUint32(sl, "value", val); }
+	AG_SetUint32(sl, "min", min);
+	AG_SetUint32(sl, "max", max);
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint32(void *parent, enum ag_slider_type type, Uint flags, Sint32 *val, Sint32 *min, Sint32 *max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint32(sl, "value", val); }
+	if (min != NULL) { AG_BindSint32(sl, "min", min); }
+	if (max != NULL) { AG_BindSint32(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint32R(void *parent, enum ag_slider_type type, Uint flags, Sint32 *val, Sint32 min, Sint32 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_BindSint32(sl, "value", val); }
+	AG_SetSint32(sl, "min", min);
+	AG_SetSint32(sl, "max", max);
+	return (sl);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agSliderClass = {
 	{

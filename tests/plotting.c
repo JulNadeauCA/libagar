@@ -240,7 +240,7 @@ TestGUI(void *obj, AG_Window *win)
 			num = AG_NumericalNewS(box, AG_NUMERICAL_HFILL, NULL,
 			    param[i].name);
 			AG_BindDouble(num, "value", param[i].f);
-			AG_NumericalSetIncrement(num, param[i].incr);
+			AG_SetDouble(num, "inc", param[i].incr);
 			AG_SetEvent(num, "numerical-changed",
 			    GeneratePlot, "%p", plt);
 		}
