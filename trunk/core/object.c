@@ -1457,6 +1457,7 @@ out:
 fail:
 	AG_CloseFile(ds);
 fail_unlock:
+	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (-1);
 }
