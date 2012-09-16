@@ -1162,6 +1162,14 @@ AG_NumericalSetRangeDbl(AG_Numerical *num, double min, double max)
 	AG_SetDouble(num, "min", min);
 	AG_SetDouble(num, "max", max);
 }
+void AG_NumericalSetMin(AG_Numerical *num, double min)
+{
+	AG_SetDouble(num, "min", min);
+}
+void AG_NumericalSetMax(AG_Numerical *num, double max)
+{
+	AG_SetDouble(num, "max", max);
+}
 #endif /* AG_LEGACY */
 
 AG_WidgetClass agNumericalClass = {

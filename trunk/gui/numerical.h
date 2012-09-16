@@ -99,6 +99,14 @@ void AG_NumericalSetRangeDbl(AG_Numerical *, double, double) DEPRECATED_ATTRIBUT
 void AG_NumericalSetRangeInt(AG_Numerical *, int, int) DEPRECATED_ATTRIBUTE;
 void AG_NumericalSetRangeFlt(AG_Numerical *, float, float) DEPRECATED_ATTRIBUTE;
 #define AG_NumericalSetRange AG_NumericalSetRangeDbl
+void AG_NumericalSetMin(AG_Numerical *, double) DEPRECATED_ATTRIBUTE;
+#define AG_NumericalSetMinDbl(num,v) AG_NumericalSetMin((num),(v))
+#define AG_NumericalSetMinFlt(num,v) AG_NumericalSetMin((num),(float)(v))
+#define AG_NumericalSetMinInt(num,v) AG_NumericalSetMin((num),(int)(v))
+void AG_NumericalSetMax(AG_Numerical *, double) DEPRECATED_ATTRIBUTE;
+#define AG_NumericalSetMaxDbl(num,v) AG_NumericalSetMax((num),(v))
+#define AG_NumericalSetMaxFlt(num,v) AG_NumericalSetMax((num),(float)(v))
+#define AG_NumericalSetMaxInt(num,v) AG_NumericalSetMax((num),(int)(v))
 #endif
 __END_DECLS
 
