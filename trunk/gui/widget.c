@@ -127,6 +127,10 @@ OnAttach(AG_Event *event)
 			SetStyle(w, widParent->style);
 		}
 		SetParentWindow(w, widParent->window);
+		if (widParent->window != NULL &&
+		    widParent->window->visible) {
+			AG_PostEvent(NULL, w, "widget-shown", NULL);
+		}
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = (AG_Driver *)parent;
