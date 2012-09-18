@@ -112,6 +112,12 @@ processing.
 .Ft void
 .Fn AG_TextboxSetFont "AG_Textbox *textbox" "AG_Font *font"
 .Pp
+.Ft "void"
+.Fn AG_TextboxSetColor "AG_Textbox *textbox" "AG_Color C"
+.Pp
+.Ft "void"
+.Fn AG_TextboxSetColorBG "AG_Textbox *textbox" "AG_Color C" "AG_Color Cdisabled"
+.Pp
 .Ft void
 .Fn AG_TextboxSetLabel "AG_Textbox *textbox" "const char *format" "..."
 .Pp
@@ -266,6 +272,16 @@ restricts input to real numbers (see flags).
 .Fn AG_TextboxSetFont
 configures an alternate font for the input area (see
 .Xr AG_FetchFont 3 ) .
+.Pp
+The
+.Fn AG_TextboxSetColor
+function sets an alternate text color.
+.Fn AG_TextboxSetColorLabel
+sets an alternate color for the text label.
+.Fn AG_TextboxSetColorBG
+sets alternate background color for the active and disabled widget states.
+See
+.Xr AG_Color 3 .
 .Pp
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.

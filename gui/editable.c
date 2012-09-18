@@ -411,6 +411,26 @@ AG_EditableSetFont(AG_Editable *ed, AG_Font *font)
 	AG_Redraw(ed);
 }
 
+/* Configure an alternate text color. */
+void
+AG_EditableSetColor(AG_Editable *ed, AG_Color C)
+{
+	AG_ObjectLock(ed);
+	ed->color = C;
+	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
+}
+
+/* Configure an alternate background color. */
+void
+AG_EditableSetColorBG(AG_Editable *ed, AG_Color C)
+{
+	AG_ObjectLock(ed);
+	ed->colorBG = C;
+	AG_ObjectUnlock(ed);
+	AG_Redraw(ed);
+}
+
 /* Evaluate if a character is acceptable in integer-only mode. */
 static __inline__ int
 CharIsIntOnly(Uint32 c)
@@ -857,7 +877,8 @@ Draw(void *obj)
 
 	AG_PushTextState();
 	AG_TextFont(ed->font);
-	AG_TextColor(agColors[TEXTBOX_TXT_COLOR]);
+	AG_TextColor(ed->color);
+	AG_TextBGColor(ed->colorBG);
 
 	x = 0;
 	y = -ed->y * ed->lineSkip;
@@ -1808,6 +1829,8 @@ Init(void *obj)
 	ed->xScrollTo = NULL;
 	ed->yScrollTo = NULL;
 	ed->xScrollPx = 0;
+	ed->color = agColors[TEXTBOX_TXT_COLOR];
+	ed->colorBG = AG_ColorRGBA(0,0,0,0);
 
 	ed->x = 0;
 	ed->xMax = 10;

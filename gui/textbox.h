@@ -40,6 +40,7 @@ typedef struct ag_textbox {
 	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
 	AG_Rect r;			/* View area */
 	AG_Text *text;			/* Pointer to default binding */
+	AG_Color color, colorDisabled;	/* Alternate background color */
 } AG_Textbox;
 
 #define AGTEXTBOX(p) ((AG_Textbox *)(p))
@@ -64,6 +65,9 @@ void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...)
 void        AG_TextboxSetLabelS(AG_Textbox *, const char *);
 void        AG_TextboxSetWordWrap(AG_Textbox *, int);
 void        AG_TextboxSetFont(AG_Textbox *, AG_Font *);
+void        AG_TextboxSetColor(AG_Textbox *, AG_Color);
+void        AG_TextboxSetColorBG(AG_Textbox *, AG_Color, AG_Color);
+void        AG_TextboxSetColorLabel(AG_Textbox *, AG_Color);
 void        AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 
 #define     AG_TextboxSetPassword(tb,flag) AG_EditableSetPassword((tb)->ed,(flag))
