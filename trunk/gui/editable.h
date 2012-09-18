@@ -84,6 +84,7 @@ typedef struct ag_editable {
 	AG_Timer toRepeat;		/* Key repeat timer */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */
+	AG_Color color, colorBG;	/* Alternate text color */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -127,6 +128,8 @@ void         AG_EditableSetExcl(AG_Editable *, int);
 void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
 void         AG_EditableSetFont(AG_Editable *, AG_Font *);
+void         AG_EditableSetColor(AG_Editable *, AG_Color);
+void         AG_EditableSetColorBG(AG_Editable *, AG_Color);
 
 void     AG_EditableSetString(AG_Editable *, const char *);
 #define  AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)

@@ -631,20 +631,6 @@ TableRowBackground(void *wid, AG_Rect r, int isSelected)
 		AG_DrawBox(wid, r, 1, agColors[TABLEVIEW_SEL_COLOR]);
 }
 
-/* Background for textbox widgets */
-static void
-TextboxBackground(void *tbox, AG_Rect r, int isCombo)
-{
-	if (AG_WidgetDisabled(tbox)) {
-		AG_DrawBoxDisabled(tbox, r, -1,
-		    agColors[TEXTBOX_COLOR],
-		    agColors[DISABLED_COLOR]);
-	} else {
-		AG_DrawBox(tbox, r, isCombo?1:-1,
-		    agColors[TEXTBOX_COLOR]);
-	}
-}
-
 /* Background of list widgets */
 static void
 ListBackground(void *tl, AG_Rect r)
@@ -727,7 +713,7 @@ AG_Style agStyleDefault = {
 	TableColumnHeaderBackground,
 	TableSelectedColumnBackground,
 	TableRowBackground,
-	TextboxBackground,
+	NULL,					/* TextboxBackground */
 	ListBackground,
 	ListItemBackground,
 	TreeSubnodeIndicator

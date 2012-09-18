@@ -151,12 +151,52 @@ AG_TextboxSetFont(AG_Textbox *tb, AG_Font *font)
 	AG_Redraw(tb);
 }
 
+/* Configure an alternate text color. */
+void
+AG_TextboxSetColor(AG_Textbox *tb, AG_Color C)
+{
+	AG_ObjectLock(tb);
+	AG_EditableSetColor(tb->ed, C);
+	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
+}
+
+/* Configure an alternate background color. */
+void
+AG_TextboxSetColorLabel(AG_Textbox *tb, AG_Color C)
+{
+	AG_ObjectLock(tb);
+	if (tb->lbl != NULL) {
+		AG_LabelSetColor(tb->lbl, C);
+	}
+	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
+}
+
+/* Configure an alternate background color. */
+void
+AG_TextboxSetColorBG(AG_Textbox *tb, AG_Color C, AG_Color Cdisabled)
+{
+	AG_ObjectLock(tb);
+	tb->color = C;
+	tb->colorDisabled = Cdisabled;
+	AG_ObjectUnlock(tb);
+	AG_Redraw(tb);
+}
+
 static void
 Draw(void *p)
 {
 	AG_Textbox *tb = p;
-
-	STYLE(tb)->TextboxBackground(tb, tb->r, (tb->flags & AG_TEXTBOX_COMBO));
+	
+	if (AG_WidgetDisabled(tb)) {
+		AG_DrawBoxDisabled(tb, tb->r, -1,
+		    tb->color, tb->colorDisabled);
+	} else {
+		AG_DrawBox(tb, tb->r,
+		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
+		    tb->color);
+	}
 
 	if (tb->lbl != NULL)
 		AG_WidgetDraw(tb->lbl);
@@ -433,6 +473,8 @@ Init(void *obj)
 	tb->vBar = NULL;
 	tb->r = AG_RECT(0,0,0,0);
 	tb->text = tb->ed->text;
+	tb->color = agColors[TEXTBOX_COLOR];
+	tb->colorDisabled = agColors[DISABLED_COLOR];
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
