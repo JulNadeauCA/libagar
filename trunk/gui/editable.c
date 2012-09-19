@@ -536,6 +536,7 @@ KeyRepeatTimeout(AG_Timer *to, AG_Event *event)
 		return (0);
 	}
 	ed->flags |= AG_EDITABLE_BLINK_ON;
+	AG_Redraw(ed);
 	return (agKbdRepeat);
 }
 
