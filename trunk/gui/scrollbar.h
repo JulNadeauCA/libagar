@@ -31,7 +31,8 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
 	enum ag_scrollbar_type type;	/* Style of scrollbar */
-	enum ag_scrollbar_button curBtn; /* Active button */
+	enum ag_scrollbar_button curBtn;	/* Active button */
+	enum ag_scrollbar_button mouseOverBtn;	/* Mouseover button */
 	int width;			/* Scrollbar width */
 	int length;			/* Length of scrolling control area */
 	int wBar;			/* Preferred control length */
@@ -41,7 +42,7 @@ typedef struct ag_scrollbar {
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
 	AG_Timer moveTo;		/* Timer for scrolling control */
 	AG_Timer autoHideTo;		/* Timer for autohide check */
-	int xOffs;			/* Cursor offset for scrolling */
+	int xOffs, xSeek;		/* Cursor offset for scrolling */
 	Uint lenPre;			/* Preferred length size hint */
 	int minOffs, maxOffs, visOffs;	/* Constants to add to binding values */
 } AG_Scrollbar;

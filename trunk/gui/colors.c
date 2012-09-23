@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,8 @@ const char *agColorNames[] = {
 	N_("Window border"),
 	N_("Text selection"),
 	N_("Frame (mouseover)"),
-	N_("Button (mouseover)")
+	N_("Button (mouseover)"),
+	N_("Scrollbar button (mouseover)"),
 };
 
 /* Initialize the standard palette. */
@@ -176,6 +177,7 @@ AG_ColorsInit(void)
 	agColors[RADIO_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[SCROLLBAR_COLOR] = AG_ColorRGB(120, 120, 120);
 	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];
+	agColors[SCROLLBAR_BTN_MOUSEOVER_COLOR] = agColors[BUTTON_MOUSEOVER_COLOR];
 	agColors[SCROLLBAR_ARR1_COLOR] = AG_ColorRGB(200, 200, 200);
 	agColors[SCROLLBAR_ARR2_COLOR] = AG_ColorRGB(158, 158, 158);
 	agColors[SEPARATOR_LINE1_COLOR] = AG_ColorRGB(165, 165, 165);

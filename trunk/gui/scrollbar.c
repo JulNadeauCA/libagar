@@ -32,7 +32,8 @@
 
 #include "gui_math.h"
 
-#define TOTSIZE(sb) (((sb)->type==AG_SCROLLBAR_VERT) ? HEIGHT(sb) : WIDTH(sb))
+#define SBPOS(sb,x,y) (((sb)->type == AG_SCROLLBAR_HORIZ) ? (x) : (y))
+#define SBLEN(sb)     (((sb)->type == AG_SCROLLBAR_HORIZ) ? WIDTH(sb) : HEIGHT(sb))
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
@@ -369,6 +370,17 @@ MoveButtonsTimeout(AG_Timer *to, AG_Event *event)
 	} else {
 		rv = Increment(sb);
 	}
+	if (sb->xSeek != -1) {
+		int pos, len;
+		
+		if (GetPxCoords(sb, &pos, &len) == -1 ||
+		    ((dir == -1 && sb->xSeek >= pos) ||
+		     (dir == +1 && sb->xSeek <= pos+len))) {
+			sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
+			sb->xSeek = -1;
+			return (0);
+		}
+	}
 	return (rv != 1) ? agMouseSpinIval : 0;
 }
 
@@ -393,9 +405,8 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
-	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
-	        sb->width;
-	int pos, posFound, len;
+	int x = SBPOS(sb, AG_INT(2), AG_INT(3)) - sb->width;
+	int totsize = SBLEN(sb);
 
 	if (button != AG_MOUSE_LEFT) {
 		return;
@@ -403,54 +414,54 @@ MouseButtonDown(AG_Event *event)
 	if (!AG_WidgetIsFocused(sb)) {
 		AG_WidgetFocus(sb);
 	}
-	posFound = (GetPxCoords(sb, &pos, &len) == 0);
-	if (x < 0) {
-		/*
-		 * Click on DECREMENT button. Unless user provided a handler
-		 * function, we decrement once and start the timer.
-		 */
+	if (x < 0) {						/* Decrement */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
 		if (sb->buttonDecFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
 			if (Decrement(sb) != 1) {
+				sb->xSeek = -1;
 				AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
 				    MoveButtonsTimeout, "%i", -1);
 			}
 		}
-	} else if (x > TOTSIZE(sb) - sb->width*2) {
-		/*
-		 * Click on INCREMENT button. Unless user provided a handler
-		 * function, we increment once and start the timer.
-		 */
+	} else if (x > totsize - sb->width*2) {			/* Increment */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
 			if (Increment(sb) != 1) {
+				sb->xSeek = -1;
 				AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
 				    MoveButtonsTimeout, "%i", +1);
 			}
 		}
-	} else if (!posFound || (x >= pos && x <= (pos + sb->wBar))) {
-		/*
-		 * Click on the scrollbar itself. We don't do anything except
-		 * saving the cursor position which we will use in future
-		 * mousemotion events.
-		 */
-		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		sb->xOffs = posFound ? (x - pos) : x;
 	} else {
-		/*
-		 * Click outside of scrollbar. We seek to the absolute position
-		 * described by the cursor.
-		 *
-		 * XXX TODO: Provide an option to scroll progressively to the
-		 * position since many users will expect that.
-		 */
-		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		sb->xOffs = len/2;
-		SeekToPxCoords(sb, x - sb->xOffs);
+		int pos, len;
+
+		if (GetPxCoords(sb, &pos, &len) == -1) {	/* No range */
+			sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+			sb->xOffs = x;
+		} else if (x >= pos && x <= pos+len) {
+			sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+			sb->xOffs = (x - pos);
+		} else {
+			if (x < pos) {
+				sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
+				if (Decrement(sb) != 1) {
+					sb->xSeek = x;
+					AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
+					    MoveButtonsTimeout, "%i", -1);
+				}
+			} else {
+				sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
+				if (Increment(sb) != 1) {
+					sb->xSeek = x;
+					AG_AddTimer(sb, &sb->moveTo, agMouseSpinDelay,
+					    MoveButtonsTimeout, "%i", +1);
+				}
+			}
+		}
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 	AG_Redraw(sb);
@@ -460,12 +471,41 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
+	int mx = AG_INT(1);
+	int my = AG_INT(2);
+	int x = SBPOS(sb,mx,my) - sb->width;
+	enum ag_scrollbar_button mouseOverBtn;
 
-	if (sb->curBtn != AG_SCROLLBAR_BUTTON_SCROLL) {
-		return;
+	if (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) {
+		SeekToPxCoords(sb, x - sb->xOffs);
+	} else if (AG_WidgetRelativeArea(sb, mx,my)) {
+		if (x < 0) {
+			mouseOverBtn = AG_SCROLLBAR_BUTTON_DEC;
+		} else if (x > SBLEN(sb) - sb->width*2) {
+			mouseOverBtn = AG_SCROLLBAR_BUTTON_INC;
+		} else {
+			int pos, len;
+	
+			if (GetPxCoords(sb, &pos, &len) == -1 || /* No range */
+			    (x >= pos && x <= pos+len)) {
+				mouseOverBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+			} else {
+				mouseOverBtn = AG_SCROLLBAR_BUTTON_NONE;
+				if (sb->xSeek != -1)
+					sb->xSeek = x;
+			}
+		}
+		if (mouseOverBtn != sb->mouseOverBtn) {
+			sb->mouseOverBtn = mouseOverBtn;
+			AG_Redraw(sb);
+		}
+	} else {
+		if (sb->mouseOverBtn != AG_SCROLLBAR_BUTTON_NONE) {
+			sb->mouseOverBtn = AG_SCROLLBAR_BUTTON_NONE;
+			AG_Redraw(sb);
+		}
 	}
-	SeekToPxCoords(sb, ((sb->type == AG_SCROLLBAR_HORIZ) ?
-	                    AG_INT(1):AG_INT(2)) - sb->width - sb->xOffs);
+
 }
 
 static void
@@ -618,10 +658,12 @@ Init(void *obj)
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
+	sb->mouseOverBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->flags = AG_SCROLLBAR_AUTOHIDE;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
+	sb->xSeek = -1;
 	sb->length = 0;
 	sb->lenPre = 32;
 
@@ -721,7 +763,7 @@ Draw(void *obj)
 	AG_Scrollbar *sb = obj;
 	int x, len;
 
-	if (GetPxCoords(sb, &x, &len) == -1) {
+	if (GetPxCoords(sb, &x, &len) == -1) {		/* No range */
 		x = 0;
 		len = sb->length;
 	}
