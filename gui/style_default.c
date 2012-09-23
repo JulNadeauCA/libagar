@@ -403,7 +403,7 @@ ScrollbarVert(AG_Scrollbar *sb, int y, int h)
 	AG_DrawBox(sb,
 	    AG_RECT(0, 0, WIDTH(sb), sb->width),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
-	    agColors[SCROLLBAR_BTN_COLOR]);
+	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_DEC) ? agColors[SCROLLBAR_BTN_MOUSEOVER_COLOR] : agColors[SCROLLBAR_BTN_COLOR]);
 	AG_DrawArrowUp(sb,
 	    mid,
 	    sb->width/2,
@@ -416,7 +416,7 @@ ScrollbarVert(AG_Scrollbar *sb, int y, int h)
 	AG_DrawBox(sb,
 	    AG_RECT(0, y2, WIDTH(sb), sb->width),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
-	    agColors[SCROLLBAR_BTN_COLOR]);
+	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_INC) ? agColors[SCROLLBAR_BTN_MOUSEOVER_COLOR] : agColors[SCROLLBAR_BTN_COLOR]);
 	AG_DrawArrowDown(sb,
 	    mid,
 	    y2 + sb->width/2,
@@ -432,7 +432,7 @@ ScrollbarVert(AG_Scrollbar *sb, int y, int h)
 			    WIDTH(sb),
 			    MIN(h, HEIGHT(sb)-b2)),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
-		    agColors[SCROLLBAR_BTN_COLOR]);
+		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? agColors[SCROLLBAR_BTN_MOUSEOVER_COLOR] : agColors[SCROLLBAR_BTN_COLOR]);
 	} else {
 		AG_DrawBox(sb,
 		    AG_RECT(0,
@@ -440,7 +440,7 @@ ScrollbarVert(AG_Scrollbar *sb, int y, int h)
 			    WIDTH(sb),
 		            HEIGHT(sb)-b2),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
-		    agColors[SCROLLBAR_BTN_COLOR]);
+		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? agColors[SCROLLBAR_BTN_MOUSEOVER_COLOR] : agColors[SCROLLBAR_BTN_COLOR]);
 	}
 }
 
