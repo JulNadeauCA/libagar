@@ -256,9 +256,9 @@ void          AG_ObjectGenNamePfx(void *, const char *, char *, size_t);
  * Detach and destroy an object.
  */
 static __inline__ void
-AG_ObjectDelete(void *p)
+AG_ObjectDelete(void *pObj)
 {
-	AG_Object *obj = p;
+	AG_Object *obj = AGOBJECT(pObj);
 
 	if (obj->parent != NULL) {
 		AG_ObjectDetach(obj);
