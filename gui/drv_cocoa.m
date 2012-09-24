@@ -965,7 +965,7 @@ COCOA_GenericEventLoop(void *obj)
 			agEventAvg++;
 #endif
 		} else {
-			if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
+			if (!AG_TAILQ_EMPTY(&agTimerObjQ)) {
 				AG_ProcessTimeouts(t2);
 			}
 			AG_Delay(1);

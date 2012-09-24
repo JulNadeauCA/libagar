@@ -86,7 +86,7 @@ AG_ExecTimerFn(AG_Timer *to)
 void AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *, Uint) DEPRECATED_ATTRIBUTE;
 void AG_ScheduleTimeout(void *, AG_Timeout *, Uint32) DEPRECATED_ATTRIBUTE;
 # define AG_TIMEOUT_INITIALIZER { -1, NULL, 0, 0, 0, NULL }
-# define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimeoutObjQ))
+# define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimerObjQ))
 # define AG_CANCEL_ONDETACH	0x10	/* Don't cancel on ObjectDetach() */
 # define AG_CANCEL_ONLOAD	0x20	/* In queue for execution */
 # define AG_TimeoutWait(obj,to,d) AG_TimerWait((obj),(to),(d))
