@@ -30,9 +30,10 @@
 #include "core.h"
 
 #include <config/have_kqueue.h>
+#include <config/have_cocoa.h>
 #include <config/have_timerfd.h>
 
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <sys/time.h>
@@ -76,7 +77,7 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 	if (TAILQ_EMPTY(&ob->timers))
 		TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
 
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	/* Check if the timer is active. Order is not important. */
 	if (agKqueue != -1) {
 		TAILQ_FOREACH(toOther, &ob->timers, timers) {
@@ -133,7 +134,7 @@ rescan:
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	/* Create a kqueue timer with a generated unique ID. */
 	/* TODO queue the changelist, faster collision test */
 	if (agKqueue != -1) {
@@ -190,12 +191,14 @@ gen_id:
 
 	AG_UnlockTimers(ob);
 	return (0);
+#if (defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)) || defined(HAVE_TIMERFD)
 fail:
 	to->obj = NULL;
 	TAILQ_REMOVE(&ob->timers, to, timers);
 	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
 	AG_UnlockTimers(ob);
 	return (-1);
+#endif
 }
 
 /*
@@ -240,7 +243,7 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	if (agKqueue != -1) {
 		struct kevent kchg;
 
@@ -300,7 +303,7 @@ AG_DelTimer(void *p, AG_Timer *to)
 	if (toOther == NULL)  			/* Timer is not active */
 		goto out;
 
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	/* Remove our kqueue event filter. TODO queue the changelist */
 	if (agKqueue != -1) {
 		struct kevent kev;
