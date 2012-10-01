@@ -33,10 +33,11 @@
 #include <stdarg.h>
 
 #include <config/have_kqueue.h>
+#include <config/have_cocoa.h>
 #include <config/have_timerfd.h>
 #include <config/ag_objdebug.h>
 
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <unistd.h>
@@ -501,7 +502,7 @@ int
 AG_InitEventSubsystem(Uint flags)
 {
 	agSoftTimers = (flags & AG_SOFT_TIMERS);
-#if defined(HAVE_KQUEUE)
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	if (agSoftTimers) {
 		agKqueue = -1;
 		return (0);
@@ -517,7 +518,7 @@ AG_InitEventSubsystem(Uint flags)
 void
 AG_DestroyEventSubsystem(void)
 {
-#ifdef HAVE_KQUEUE
+#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	if (agKqueue != -1) {
 		close(agKqueue);
 		agKqueue = -1;
