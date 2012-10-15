@@ -325,7 +325,7 @@ CheckAccessAndChoose(AG_DirDlg *dd)
 	char *s;
 
 	for (s = &dd->cwd[0]; *s != '\0'; s++) {
-		if (!isspace(*s))
+		if (!isspace((int) *s))
 			break;
 	}
 	if (*s == '\0')
