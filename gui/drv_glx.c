@@ -162,6 +162,9 @@ InitGlobals(void)
 {
 	int err, ev;
 
+	if (nDrivers > 0)
+		return (0);
+
 #ifdef AG_THREADS
 	XInitThreads();
 #endif
@@ -197,13 +200,18 @@ InitGlobals(void)
 	return (0);
 }
 
+/* on entry the agDisplayLock must be helt */
 static void
 DestroyGlobals(void)
 {
-	AG_MutexLock(&agDisplayLock);
-	XCloseDisplay(agDisplay);
+	if (nDrivers > 0)
+		return;
+
+	if (agDisplay)
+		XCloseDisplay(agDisplay);
 	agDisplay = NULL;
 	agScreen = 0;
+
 	AG_MutexUnlock(&agDisplayLock);
 	AG_MutexDestroy(&agDisplayLock);
 }
@@ -225,16 +233,12 @@ GLX_Open(void *obj, const char *spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
-	int initedGlobals = 0;
 
-	if (agDisplay == NULL) {
-		if (InitGlobals() == -1) {
-			return (-1);
-		}
-		initedGlobals = 1;
-	}
-	
+	if (InitGlobals() == -1)
+		return -1;
+
 	AG_MutexLock(&agDisplayLock);
+	nDrivers++;
 
 #ifdef HAVE_KQUEUE
 	/* Register a read event on the X file descriptor. */
@@ -265,9 +269,9 @@ GLX_Open(void *obj, const char *spec)
 	XSetErrorHandler(HandleErrorX11);
 #endif
 
-	nDrivers++;
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
+
 fail:
 	if (drv->kbd != NULL) {
 		AG_ObjectDetach(drv->kbd);
@@ -279,8 +283,9 @@ fail:
 		AG_ObjectDestroy(drv->mouse);
 		drv->mouse = NULL;
 	}
-	if (initedGlobals) {
+	if (--nDrivers == 0) {
 		DestroyGlobals();
+		return (-1);
 	}
 	AG_MutexUnlock(&agDisplayLock);
 	return (-1);
@@ -294,16 +299,22 @@ GLX_Close(void *obj)
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
-	if (--nDrivers == 0)
+	AG_MutexLock(&agDisplayLock);
+	if (drv->kbd) {
+		AG_ObjectDetach(drv->kbd);
+		AG_ObjectDestroy(drv->kbd);
+		drv->kbd = NULL;
+	}
+	if (drv->mouse) {
+		AG_ObjectDetach(drv->mouse);
+		AG_ObjectDestroy(drv->mouse);
+		drv->mouse = NULL;
+	}
+	if (--nDrivers == 0) {
 		DestroyGlobals();
-
-	AG_ObjectDetach(drv->mouse);
-	AG_ObjectDestroy(drv->mouse);
-	AG_ObjectDetach(drv->kbd);
-	AG_ObjectDestroy(drv->kbd);
-	
-	drv->mouse = NULL;
-	drv->kbd = NULL;
+		return;
+	}
+	AG_MutexUnlock(&agDisplayLock);
 }
 
 static int
