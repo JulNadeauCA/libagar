@@ -969,7 +969,7 @@ tryname2:
 					    (np-ins_tile_name)-1, "%d", num);
 					break;
 				}
-				if (!isdigit(*np)) {
+				if (!isdigit((int) *np)) {
 					Strlcat(ins_tile_name, "_",
 					    sizeof(ins_tile_name));
 					break;
@@ -1076,7 +1076,7 @@ tryname2:
 					    (np-ins_texture_name)-1, "%d", num);
 					break;
 				}
-				if (!isdigit(*np)) {
+				if (!isdigit((int) *np)) {
 					Strlcat(ins_texture_name, "_",
 					    sizeof(ins_texture_name));
 					break;
@@ -1143,7 +1143,7 @@ tryname2:
 					    (np-ins_anim_name)-1, "%d", num);
 					break;
 				}
-				if (!isdigit(*np)) {
+				if (!isdigit((int) *np)) {
 					Strlcat(ins_anim_name, "_",
 					    sizeof(ins_anim_name));
 					break;
