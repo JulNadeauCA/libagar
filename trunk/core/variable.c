@@ -260,9 +260,17 @@ AG_EvalVariable(void *pObj, AG_Variable *V)
  * locked, and must have been previously evaluated if associated with a
  * function.
  */
+static void
+AG_PrintFlagsVariable(char *s, size_t len, Uint32 val, AG_Variable *V)
+{
+	Snprintf(s, len, "%s", (val & V->info.bitmask)?"Set":"UnSet");
+}
+
 void
 AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 {
+	Uint val;
+
 	switch (V->type) {
 	case AG_VARIABLE_UINT:		StrlcpyUint(s, V->data.u, len);				break;
 	case AG_VARIABLE_P_UINT:	StrlcpyUint(s, *(Uint *)V->data.p, len);		break;
@@ -306,6 +314,22 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 	case AG_VARIABLE_P_POINTER:
 	case AG_VARIABLE_P_CONST_POINTER:
 		Snprintf(s, len, "%p", *(void **)V->data.p);
+		break;
+	case AG_VARIABLE_P_FLAG:
+		val = *(Uint *)V->data.p;
+		AG_PrintFlagsVariable(s, len, val, V);
+		break;
+	case AG_VARIABLE_P_FLAG8:
+		val = *(Uint8 *)V->data.p;
+		AG_PrintFlagsVariable(s, len, val, V);
+		break;
+	case AG_VARIABLE_P_FLAG16:
+		val = *(Uint16 *)V->data.p;
+		AG_PrintFlagsVariable(s, len, val, V);
+		break;
+	case AG_VARIABLE_P_FLAG32:
+		val = *(Uint32 *)V->data.p;
+		AG_PrintFlagsVariable(s, len, val, V);
 		break;
 	default:
 		s[0] = '?';
