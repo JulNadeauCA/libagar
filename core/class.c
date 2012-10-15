@@ -311,7 +311,7 @@ GetClassSymbol(char *sym, size_t len, const AG_ObjectClassSpec *cs)
 		if ((l+2) >= len) {
 			goto toolong;
 		}
-		*d = inPfx ? tolower(*c) : *c;
+		*d = inPfx ? (char) tolower((int) *c) : *c;
 		d++;
 		l++;
 	}
