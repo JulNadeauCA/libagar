@@ -431,7 +431,7 @@ CheckAccessAndChoose(AG_FileDlg *fd)
 	char *s;
 
 	for (s = &fd->cfile[0]; *s != '\0'; s++) {
-		if (!isspace(*s))
+		if (!isspace((int) *s))
 			break;
 	}
 	if (*s == '\0')
