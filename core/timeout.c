@@ -158,7 +158,7 @@ gen_id:
 				}
 			}
 		}
-		EV_SET(&kev, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0, ival, to);
+		EV_SET(&kev, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0, ival, (intptr_t) to);
 		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
 			AG_SetError("kevent: %s", AG_Strerror(errno));
 			goto fail;
@@ -249,7 +249,7 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 
 		/* TODO: queue changelist */
 		EV_SET(&kchg, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0,
-		    ival, to);
+		    ival, (intptr_t) to);
 		if (kevent(agKqueue, &kchg, 1, NULL, 0, NULL) == -1) {
 			AG_SetError("kevent: %s", AG_Strerror(errno));
 			return (-1);
