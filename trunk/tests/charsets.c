@@ -40,7 +40,7 @@ TestGUI(void *obj, AG_Window *win)
 #endif
 
 	/* Bind to a multilingual AG_Text(3) element. */
-	myTxt = AG_TextNewS(NULL);
+	myTxt = AG_TextNew(0);
 	AG_TextSetEnt(myTxt, AG_LANG_FR, "Fran\xc3\xa7\x61is!");
 	AG_TextSetEnt(myTxt, AG_LANG_EN, "English!");
 	AG_TextSetEnt(myTxt, AG_LANG_NO, "Norsk!");

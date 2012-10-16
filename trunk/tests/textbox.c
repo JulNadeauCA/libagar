@@ -152,7 +152,7 @@ SingleLineExample(AG_Event *event)
 
 	/* Create a single-line Textbox bound to an AG_Text object. */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
-	txt = AG_TextNewS(NULL);
+	txt = AG_TextNew(0);
 	{
 		AG_TextSetEntS(txt, AG_LANG_EN, "Hello");
 		AG_TextSetEntS(txt, AG_LANG_FR, "Bonjour");
