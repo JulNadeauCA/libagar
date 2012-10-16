@@ -95,62 +95,47 @@ const char *agLanguageNames[] = {
 	N_("Zulu")
 };
 
-/* Allocate a new string. Optionally s to set default text entry. */
-AG_Text *
-AG_TextNewS(const char *s)
+/* Initialize a static AG_Text element. */
+void
+AG_TextInit(AG_Text *txt, size_t maxLen)
 {
-	AG_Text *txt;
 	Uint i;
+	
+	txt->flags = 0;
+	txt->lang = 0;
+	txt->maxLen = (maxLen != 0) ? maxLen : AG_INT_MAX-1;
+	AG_MutexInitRecursive(&txt->lock);
 
-	if ((txt = AG_TryMalloc(sizeof(AG_Text))) == NULL) {
-		return (NULL);
-	}
 	for (i = 0; i < AG_LANG_LAST; i++) {
 		AG_TextEnt *te = &txt->ent[i];
 		te->buf = NULL;
 		te->maxLen = 0;
 		te->len = 0;
 	}
-	txt->lang = AG_LANG_NONE;
-	txt->maxLen = AG_INT_MAX;
-	if (AG_MutexTryInitRecursive(&txt->lock) == -1) {
-		Free(txt);
-		return (NULL);
-	}
-	if (s != NULL &&
-	    AG_TextSetS(txt, s) == -1) {
-		AG_TextFree(txt);
-		return (NULL);
-	}
-	return (txt);
 }
 
-/* Allocate a new string. Optionally use format string to set default entry. */
+/* Release an AG_Text element. */
+void
+AG_TextDestroy(AG_Text *txt)
+{
+	AG_TextClear(txt);
+	AG_MutexDestroy(&txt->lock);
+}
+
+/* Create an autoallocated AG_Text element. */
 AG_Text *
-AG_TextNew(const char *fmt, ...)
+AG_TextNew(size_t maxLen)
 {
 	AG_Text *txt;
 
-	if ((txt = AG_TextNewS(NULL)) == NULL) {
+	if ((txt = AG_TryMalloc(sizeof(AG_Text))) == NULL) {
 		return (NULL);
 	}
-	if (fmt != NULL) {
-		AG_TextEnt *te = &txt->ent[AG_LANG_NONE];
-		va_list ap;
-	
-		va_start(ap, fmt);
-		if (TryVasprintf(&te->buf, fmt, ap) == -1) {
-			AG_TextFree(txt);
-			return (NULL);
-		}
-		va_end(ap);
-		te->len = strlen(te->buf);
-		te->maxLen = te->len+1;
-	}
+	AG_TextInit(txt, maxLen);
 	return (txt);
 }
 
-/* Clear all strings in an AG_Text. */
+/* Delete all string data in an AG_Text element. */
 void
 AG_TextClear(AG_Text *txt)
 {
@@ -168,20 +153,7 @@ AG_TextClear(AG_Text *txt)
 	AG_MutexUnlock(&txt->lock);
 }
 
-/* Free an AG_Text element. */
-void
-AG_TextFree(AG_Text *txt)
-{
-	int i;
-
-	for (i = 0; i < AG_LANG_LAST; i++) {
-		Free(txt->ent[i].buf);
-	}
-	AG_MutexDestroy(&txt->lock);
-	Free(txt);
-}
-
-/* Set text of current entry from format string */
+/* Set text of active AG_Text entry (format string). */
 int
 AG_TextSet(AG_Text *txt, const char *fmt, ...)
 {
@@ -214,7 +186,7 @@ AG_TextSet(AG_Text *txt, const char *fmt, ...)
 	return (0);
 }
 
-/* Set text of specified entry from format string */
+/* Set text of specified AG_Text entry (format string). */
 int
 AG_TextSetEnt(AG_Text *txt, enum ag_language lang, const char *fmt, ...)
 {
@@ -243,7 +215,7 @@ AG_TextSetEnt(AG_Text *txt, enum ag_language lang, const char *fmt, ...)
 	return (0);
 }
 
-/* Set text of specified entry from C string */
+/* Set text of specified AG_Text entry (C string). */
 int
 AG_TextSetEntS(AG_Text *txt, enum ag_language lang, const char *s)
 {
@@ -311,12 +283,14 @@ AG_TextDup(AG_Text *txtSrc)
 	AG_Text *txtDst;
 	int i;
 
-	if ((txtDst = AG_TextNewS(NULL)) == NULL) {
+	if ((txtDst = AG_TextNew(txtSrc->maxLen)) == NULL) {
 		return (NULL);
 	}
 	AG_MutexLock(&txtDst->lock);
 	AG_MutexLock(&txtSrc->lock);
 	txtDst->lang = txtSrc->lang;
+	txtDst->flags &= ~(AG_TEXT_SAVED_FLAGS);
+	txtDst->flags |= (txtSrc->flags & AG_TEXT_SAVED_FLAGS);
 	for (i = 0; i < AG_LANG_LAST; i++) {
 		AG_TextEnt *te = &txtSrc->ent[i];
 
@@ -347,7 +321,7 @@ AG_TextLoad(AG_Text *txt, AG_DataSource *ds)
 	Uint i, count;
 	enum ag_language lang;
 	AG_TextEnt *te;
-		
+	
 	count = (Uint)AG_ReadUint8(ds);
 	if (count >= AG_LANG_LAST) {
 		AG_SetError("Bad language count");
@@ -368,6 +342,8 @@ AG_TextLoad(AG_Text *txt, AG_DataSource *ds)
 		te->len = strlen(te->buf);
 		te->maxLen = te->len+1;
 	}
+	txt->flags &= ~(AG_TEXT_SAVED_FLAGS);
+	txt->flags |= (Uint)(AG_ReadUint32(ds) & AG_TEXT_SAVED_FLAGS);
 	AG_MutexUnlock(&txt->lock);
 	return (0);
 fail:
@@ -395,5 +371,6 @@ AG_TextSave(AG_DataSource *ds, AG_Text *txt)
 			AG_WriteString(ds, te->buf);
 		}
 	}
+	AG_WriteUint32(ds, (Uint32)txt->flags & AG_TEXT_SAVED_FLAGS);
 	AG_MutexUnlock(&txt->lock);
 }
