@@ -140,8 +140,8 @@ extern AG_Mutex agTextLock;
 extern AG_StaticFont *agBuiltinFonts[];
 extern const int agBuiltinFontCount;
 
-int	 AG_TextInit(void);
-void	 AG_TextDestroy(void);
+int	 AG_TextRenderInit(void);
+void	 AG_TextRenderDestroy(void);
 
 void	 AG_TextParseFontSpec(const char *);
 AG_Font	*AG_FetchFont(const char *, int, int);

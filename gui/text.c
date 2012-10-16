@@ -484,7 +484,7 @@ InitTextState(void)
 
 /* Initialize the font engine and configure the default font. */
 int
-AG_TextInit(void)
+AG_TextRenderInit(void)
 {
 	AG_Font *font;
 
@@ -603,7 +603,7 @@ fail:
 }
 
 void
-AG_TextDestroy(void)
+AG_TextRenderDestroy(void)
 {
 	AG_Font *font, *nextfont;
 	
