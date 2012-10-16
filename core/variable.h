@@ -321,6 +321,18 @@ AG_Variable *AG_BindFlag32Mp(void *, const char *, Uint32 *, Uint32, AG_Mutex *)
 
 AG_Variable *AG_BindVariable(void *, const char *, void *, const char *);
 
+/* Initialize an AG_Variable structure. */
+static __inline__ void
+AG_InitVariable(AG_Variable *V, enum ag_variable_type type)
+{
+	V->type = type;
+	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
+	V->info.size = 0;
+	V->info.ref.key = NULL;
+	V->info.ref.var = NULL;
+}
+
 /* Acquire any locking device associated with a variable. */
 static __inline__ void
 AG_LockVariable(AG_Variable *V)
