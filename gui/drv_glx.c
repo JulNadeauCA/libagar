@@ -247,7 +247,7 @@ GLX_Open(void *obj, const char *spec)
 		
 		EV_SET(&kev, ConnectionNumber(agDisplay),
 		    EVFILT_READ, EV_ADD|EV_ENABLE,
-		    0, 0, NULL);
+		    0, 0, (intptr_t) NULL);
 		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
 			AG_SetError("kqueue: %s", AG_Strerror(errno));
 			goto fail;
