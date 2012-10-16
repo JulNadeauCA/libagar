@@ -1814,7 +1814,7 @@ Init(void *obj)
 
 	ed->encoding = "UTF-8";
 
-	if ((ed->text = AG_TextNewS(NULL)) == NULL)
+	if ((ed->text = AG_TextNew(0)) == NULL)
 		AG_FatalError(NULL);
 
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
