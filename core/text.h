@@ -162,6 +162,8 @@ typedef struct ag_text {
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	enum ag_language lang;		/* Selected language */
 	size_t maxLen;			/* Maximum string length (bytes) */
+	Uint flags;
+#define AG_TEXT_SAVED_FLAGS	0
 } AG_Text;
 
 #define AGTEXT(p) ((AG_Text *)(p))
@@ -170,11 +172,12 @@ __BEGIN_DECLS
 extern const char *agLanguageCodes[];
 extern const char *agLanguageNames[];
 
-AG_Text    *AG_TextNew(const char *, ...);
-AG_Text    *AG_TextNewS(const char *);
-void        AG_TextClear(AG_Text *);
-void        AG_TextFree(AG_Text *);
+AG_Text    *AG_TextNew(size_t);
 
+void        AG_TextInit(AG_Text *, size_t);
+void        AG_TextDestroy(AG_Text *);
+
+void        AG_TextClear(AG_Text *);
 int         AG_TextSet(AG_Text *, const char *, ...)
                        FORMAT_ATTRIBUTE(__printf__, 2, 3);
 int         AG_TextSetEnt(AG_Text *, enum ag_language, const char *, ...)
@@ -279,6 +282,14 @@ AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
 	te->len += len;
 	AG_MutexUnlock(&txt->lock);
 	return (0);
+}
+
+/* Free an autoallocated AG_Text element. */
+static __inline__ void
+AG_TextFree(AG_Text *txt)
+{
+	AG_TextDestroy(txt);
+	AG_Free(txt);
 }
 __END_DECLS
 
