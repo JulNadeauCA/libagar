@@ -1871,7 +1871,8 @@ void
 AG_SetStyle(void *obj, const char *which, const char *value)
 {
 	AG_Widget *wid = obj;
-	if (family != NULL) {
+
+	if (value != NULL) {
 		AG_SetString(wid, which, value);
 	} else {
 		AG_Unset(wid, which);				/* inherit */

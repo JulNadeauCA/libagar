@@ -82,7 +82,7 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 	if (s != NULL) {
 		if (box->lbl == NULL) {
 			box->lbl = AG_LabelNewS(box, 0, s);
-			AG_SetFontSize(box->lbl, "80%");
+			AG_SetStyle(box->lbl, "font-size", "80%");
 		} else {
 			AG_LabelTextS(box->lbl, s);
 		}

@@ -281,7 +281,7 @@ AG_InitGUI(Uint flags)
 #endif
 
 	/* Initialize the font engine. */
-	if (AG_TextRenderInit() == -1)
+	if (AG_InitTextSubsystem() == -1)
 		return (-1);
 
 	/* Initialize the Window system. */
@@ -301,8 +301,7 @@ AG_DestroyGUI(void)
 	
 	/* Destroy the GUI subsystems. */
 	AG_DestroyWindowSystem();
-	AG_TextRenderDestroy();
-	AG_ColorsDestroy();
+	AG_DestroyTextSubsystem();
 
 	/* Unregister the built-in widget classes. */
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
@@ -579,8 +578,7 @@ fail:
 void
 AG_DestroyVideo(void)
 {
-	AG_TextRenderDestroy();
-	AG_ColorsDestroy();
+	AG_DestroyTextSubsystem();
 	AG_ClearGlobalKeys();
 
 	AG_DestroyGUIGlobals();

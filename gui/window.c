@@ -2068,7 +2068,7 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 		AG_ObjectUnlock(win);
 		return;
 	}
-	AG_SetFontSize(win, AG_Printf("%.02f%%", agZoomValues[zoom]));
+	AG_SetStyle(win, "font-size", AG_Printf("%.02f%%", agZoomValues[zoom]));
 	AG_WindowUpdate(win);
 	win->zoom = zoom;
 	if (WIDGET(win)->drv != NULL) {
