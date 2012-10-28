@@ -11,7 +11,6 @@
 #include <agar/gui/colors.h>
 #include <agar/gui/surface.h>
 #include <agar/gui/anim.h>
-#include <agar/gui/style.h>
 
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
@@ -19,15 +18,10 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_SIZE_SPEC_MAX		256
-#define AG_WIDGET_BINDING_NAME_MAX	16
-
-/* For AG_WidgetSizeReq() */
+/* Widget size requisition and allocation structures. */
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
 } AG_SizeReq;
-
-/* For AG_WidgetSizeAlloc() */
 typedef struct ag_size_alloc {
 	int w, h;			/* Allocated geometry in pixels */
 	int x, y;			/* Allocated position in pixels */
@@ -63,9 +57,9 @@ typedef struct ag_flag_descr {
 	int writeable;			/* User-editable */
 } AG_FlagDescr;
 
-struct ag_popup_menu;
-
-/* Type of widget action */
+/* 
+ * Registered widget action.
+ */
 typedef enum ag_action_type {
 	AG_ACTION_FN,			/* Execute function */
 	AG_ACTION_SET_INT,		/* Set an integer */
@@ -74,7 +68,6 @@ typedef enum ag_action_type {
 	AG_ACTION_TOGGLE_FLAG		/* Toggle specified bits in a word */
 } AG_ActionType;
 
-/* Registered widget action */
 typedef struct ag_action {
 	AG_ActionType type;
 	struct ag_widget *widget;	/* Back pointer to widget */
@@ -84,7 +77,6 @@ typedef struct ag_action {
 	Uint bitmask;			/* Bitmask (for SET_FLAG) */
 } AG_Action;
 
-/* Widget action type */
 typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN,	/* On mouse-button-down */
 	AG_ACTION_ON_BUTTONUP,		/* On mouse-button-up */
@@ -95,7 +87,6 @@ typedef enum ag_action_event_type {
 	AG_ACTION_ON_BUTTONDOWN		/* For mousewheel events */
 } AG_ActionEventType;
 
-/* Widget event->action tie, as registered by AG_WidgetActionOn*(). */
 typedef struct ag_action_tie {
 	AG_ActionEventType type;		/* Trigger event type */
 	union {
@@ -110,12 +101,11 @@ typedef struct ag_action_tie {
 	AG_TAILQ_ENTRY(ag_action_tie) ties;
 } AG_ActionTie;
 
+/* Widget redraw tie. */
 enum ag_redraw_tie_type {
 	AG_REDRAW_ON_CHANGE,
 	AG_REDRAW_ON_TICK
 };
-
-/* For AG_RedrawOn*() */
 typedef struct ag_redraw_tie {
 	enum ag_redraw_tie_type type;
 	char name[AG_VARIABLE_NAME_MAX];	/* Polled variable */
@@ -125,6 +115,37 @@ typedef struct ag_redraw_tie {
 	Uint ival;				/* Polling interval */
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
 } AG_RedrawTie;
+
+/*
+ * Palette of globally inheritable widget colors. Color schemes may be
+ * configured on a per-class, per-instance or per-"id"-tag basis.
+ */
+#define AG_WIDGET_NSTATES 4
+#define AG_WIDGET_NCOLORS 5
+enum ag_widget_color_state {
+	AG_DEFAULT_STATE,		/* Default state */
+	AG_DISABLED_STATE,		/* Inactive state (#disabled) */
+	AG_HOVER_STATE,			/* Mouse over state (#hover) */
+	AG_SELECTED_STATE		/* Selected item (#selected) */
+};
+enum ag_widget_color {
+	AG_COLOR = 0,			/* Background ("color") */
+	AG_TEXT_COLOR,			/* Rendered text ("text-color") */
+	AG_LINE_COLOR,			/* Line drawing ("line-color") */
+	AG_SHAPE_COLOR,			/* Filled shapes ("shape-color") */
+	AG_BORDER_COLOR			/* Decorative borders ("border-color") */
+};
+typedef struct {
+	AG_Color c[AG_WIDGET_NSTATES][AG_WIDGET_NCOLORS];
+} AG_WidgetPalette;
+#define AG_WCOLOR(wid,which)	 AGWIDGET(wid)->pal.c[AGWIDGET(wid)->cState][which]
+#define AG_WCOLOR_DEF(wid,which) AGWIDGET(wid)->pal.c[AG_DEFAULT_STATE][which]
+#define AG_WCOLOR_DIS(wid,which) AGWIDGET(wid)->pal.c[AG_DISABLED_STATE][which]
+#define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
+#define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
+
+struct ag_font;
+struct ag_popup_menu;
 
 /* Widget instance structure */
 typedef struct ag_widget {
@@ -140,6 +161,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_VFILL			0x000080 /* Expand to fill height */
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
+#define AG_WIDGET_MOUSEOVER		0x000800 /* Cursor intersects widget */
 #define AG_WIDGET_CATCH_TAB		0x001000 /* Catch tab key events */
 #define AG_WIDGET_UNDERSIZE		0x004000 /* Size allocation failed */
 #define AG_WIDGET_NOSPACING		0x008000 /* Disable spacings around widget; container-specific */
@@ -149,36 +171,38 @@ typedef struct ag_widget {
 #define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
 #define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Backup surfaces as soon as possible */
+#define AG_WIDGET_USE_TEXT		0x400000 /* Widget uses font engine */
+#define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Update MOUSEOVER flag and generate mouseover events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	AG_Rect2 rView;			/* Computed view coordinates */
-	AG_Rect2 rSens;			/* Rectangle of sensitivity (i.e., to cursor events), in view coords */
-	AG_Style *style;		/* Style (inherited from parent) */
-
+	AG_Rect2 rSens;			/* Cursor notification area */
 	AG_Surface **surfaces;		/* Registered surfaces */
-	Uint *surfaceFlags;		/* Surface flags */
+	Uint        *surfaceFlags;	/* Surface flags */
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
-	Uint nsurfaces;
-
-	Uint *textures;			/* Cached textures (driver-specific) */
+	Uint        nsurfaces;
+	Uint        *textures;		/* Cached textures (driver-specific) */
 	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
-	AG_Mutex bindings_lock;		 	/* Lock on bindings */
 	AG_SLIST_HEAD_(ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 	struct ag_window *window;		/* Back ptr to parent window */
 	struct ag_driver *drv;			/* Back ptr to driver */
 	struct ag_driver_class *drvOps;		/* Back ptr to driver class */
 
-	AG_Tbl actions;				 /* Registered actions */
-	AG_TAILQ_HEAD_(ag_action_tie) mouseActions; /* Mouse action ties */
-	AG_TAILQ_HEAD_(ag_action_tie) keyActions;   /* Keyboard action ties */
+	AG_Tbl actions;				 	/* Registered actions */
+	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
+	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
+	AG_TAILQ_ENTRY(ag_widget) detach;		/* In agWidgetDetachQ */
+	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
 
-	AG_TAILQ_ENTRY(ag_widget) detach;	  /* In agWidgetDetachQ */
-	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies; /* For AG_RedrawOn*() */
+	/* Global inheritable style attributes */
+	enum ag_widget_color_state cState;		/* Current color state */
+	struct ag_font *font;				/* Effective font */
+	AG_WidgetPalette pal;				/* Effective colors */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -189,12 +213,7 @@ typedef struct ag_widget {
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
-#define AGSTYLE(p)			 AGWIDGET(p)->style
-
-#define AGWIDGET_FOREACH_CHILD(var, ob) \
-	AGOBJECT_FOREACH_CHILD(var, ob, ag_widget)
-#define AGWIDGET_NEXT_CHILD(var) \
-	AGOBJECT_NEXT_CHILD((var),ag_widget)
+#define AGSTYLE(p)			 AGWIDGET(p)->theme
 
 #define AGWIDGET_KEYBOARD(obj)				\
     (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd :	\
@@ -202,24 +221,36 @@ typedef struct ag_widget {
      NULL)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
-#define WIDGET(wi)			AGWIDGET(wi)
-#define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
-#define WIDGET_SUPER_OPS(wi)		AGWIDGET_SUPER_OPS(wi)
-#define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
-#define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
-#define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
-#define STYLE(p)                        AGSTYLE(p)
-#define WIDTH(p)			AGWIDGET(p)->w
-#define HEIGHT(p)			AGWIDGET(p)->h
-#define WIDGET_FOREACH_CHILD(var,ob)	AGWIDGET_FOREACH_CHILD(var,ob)
-#define WIDGET_NEXT_CHILD(var)		AGWIDGET_NEXT_CHILD(var)
-#endif
+# define WIDGET(wi)			AGWIDGET(wi)
+# define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
+# define WIDGET_SUPER_OPS(wi)		AGWIDGET_SUPER_OPS(wi)
+# define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
+# define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
+# define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
+# define STYLE(p)			AGSTYLE(p)
+# define WIDTH(p)			AGWIDGET(p)->w
+# define HEIGHT(p)			AGWIDGET(p)->h
+# define WCOLOR(wid,which)		AG_WCOLOR((wid),(which))
+# define WCOLOR_DEF(wid,which)		AG_WCOLOR_DEF((wid),(which))
+# define WCOLOR_DIS(wid,which)		AG_WCOLOR_DIS((wid),(which))
+# define WCOLOR_HOV(wid,which)		AG_WCOLOR_HOV((wid),(which))
+# define WCOLOR_SEL(wid,which)		AG_WCOLOR_SEL((wid),(which))
+# define TEXT_COLOR			AG_TEXT_COLOR
+# define LINE_COLOR			AG_LINE_COLOR
+# define SHAPE_COLOR			AG_SHAPE_COLOR
+# define BORDER_COLOR			AG_BORDER_COLOR
+#endif /* _AGAR_INTERNAL or _USE_AGAR_GUI */
 
 struct ag_window;
+struct ag_font;
 AG_TAILQ_HEAD(ag_widgetq, ag_widget);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
+extern const char *agWidgetPropNames[];
+extern const char *agWidgetStateNames[];
+extern const char *agWidgetColorNames[];
+extern AG_WidgetPalette agDefaultPalette;
 
 void       AG_WidgetDraw(void *);
 void       AG_WidgetSizeReq(void *, AG_SizeReq *);
@@ -292,6 +323,13 @@ int         AG_ExecAction(void *, AG_Action *);
 
 void        AG_WidgetEnable(void *);
 void        AG_WidgetDisable(void *);
+
+void        AG_WidgetCompileStyle(void *);
+void        AG_WidgetCopyStyle(void *, void *);
+void        AG_WidgetFreeStyle(void *);
+
+void        AG_SetFont(void *, const struct ag_font *);
+void        AG_SetStyle(void *, const char *, const char *);
 
 /* Return the widget state. The Widget object must be locked. */
 static __inline__ int

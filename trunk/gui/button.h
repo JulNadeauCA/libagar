@@ -16,13 +16,13 @@ typedef struct ag_button {
 	enum ag_text_justify justify;	/* Label justification */
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
-#define AG_BUTTON_STICKY	0x002	/* Toggle state */
-#define AG_BUTTON_MOUSEOVER	0x004	/* Mouse overlaps */
-#define AG_BUTTON_REPEAT	0x008	/* Repeat button-pushed event */
-#define AG_BUTTON_HFILL		0x010	/* Fill available width */
-#define AG_BUTTON_VFILL		0x020	/* Fill available height */
-#define AG_BUTTON_INVSTATE	0x400	/* Invert value of "state" binding */
-#define AG_BUTTON_KEYDOWN	0x800	/* Got `key-down' before `key-up' */
+#define AG_BUTTON_STICKY	0x0002	/* Toggle state */
+#define AG_BUTTON_REPEAT	0x0008	/* Repeat button-pushed event */
+#define AG_BUTTON_HFILL		0x0010	/* Fill available width */
+#define AG_BUTTON_VFILL		0x0020	/* Fill available height */
+#define AG_BUTTON_INVSTATE	0x0400	/* Invert value of "state" binding */
+#define AG_BUTTON_KEYDOWN	0x0800	/* Got `key-down' before `key-up' */
+#define AG_BUTTON_EXCL		0x1000
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */

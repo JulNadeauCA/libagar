@@ -281,13 +281,12 @@ Draw(void *obj)
 	AG_FontSelector *fs = obj;
 	AG_Widget *chld;
 
-	WIDGET_FOREACH_CHILD(chld, obj)
+	OBJECT_FOREACH_CHILD(chld, obj, ag_widget) {
 		AG_WidgetDraw(chld);
-	
-	AG_DrawBox(fs, fs->rPreview, -1, agColors[FIXED_BOX_COLOR]);
+	}
+	AG_DrawBox(fs, fs->rPreview, -1, WCOLOR(fs,0));
 	if (fs->sPreview != -1) {
 		AG_Surface *su = WSURFACE(fs,fs->sPreview);
-
 		AG_WidgetBlitSurface(fs, fs->sPreview,
 		    fs->rPreview.x + fs->rPreview.w/2 - su->w/2,
 		    fs->rPreview.y + fs->rPreview.h/2 - su->h/2);

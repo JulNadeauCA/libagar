@@ -70,20 +70,29 @@ OnShow(AG_Event *event)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_ProgressBar *pb = AG_SELF();
+
+	pb->width = WIDGET(pb)->font->height+10;
+}
+
+static void
 Init(void *obj)
 {
 	AG_ProgressBar *pb = obj;
 
 	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_TABLE_EMBEDDABLE;
+			     AG_WIDGET_TABLE_EMBEDDABLE|
+			     AG_WIDGET_USE_TEXT;
 
 	pb->type = AG_PROGRESS_BAR_HORIZ;
 	pb->flags = 0;
 	pb->value = 0;
 	pb->min = 0;
 	pb->max = 100;
-	pb->width = agTextFontHeight + 4;
+	pb->width = agTextFontHeight+10;
 	pb->length = 300;
 	pb->pad = 2;
 	pb->tCache = AG_TextCacheNew(pb, 100, 1);
@@ -92,7 +101,10 @@ Init(void *obj)
 	AG_BindInt(pb, "min", &pb->min);
 	AG_BindInt(pb, "max", &pb->max);
 	
+	AG_AddEvent(pb, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(pb, "widget-shown", OnShow, NULL);
+
+	AG_SetString(pb, "font-size", "90%");
 }
 
 static void
@@ -175,14 +187,15 @@ DrawPercentText(AG_ProgressBar *pb)
 	StrlcpyInt(s, AG_ProgressBarPercent(pb), sizeof(s));
 	Strlcat(s, "%", sizeof(s));
 
-	AG_PushTextState();
-	AG_TextColor(agColors[TEXT_COLOR]);
 	if ((su = AG_TextCacheGet(pb->tCache, s)) != -1) {
-		AG_WidgetBlitSurface(pb, su,
-		    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
-		    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
+		AG_Surface *s = WSURFACE(pb,su);
+
+		if (HEIGHT(pb) >= s->h && s->w <= WIDTH(pb)) {
+			AG_WidgetBlitSurface(pb, su,
+			    WIDTH(pb)/2  - s->w/2,
+			    HEIGHT(pb)/2 - s->h/2);
+		}
 	}
-	AG_PopTextState();
 }
 
 static void
@@ -198,7 +211,9 @@ Draw(void *obj)
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
 
-	STYLE(pb)->ProgressBarBackground(pb);
+	AG_DrawBox(pb,
+	    AG_RECT(0, 0, WIDTH(pb), HEIGHT(pb)), -1,
+	    WCOLOR(pb,0));
 
 	if ((max - min) <= 0) {
 		return;
@@ -220,7 +235,7 @@ Draw(void *obj)
 		rd.h = WIDGET(pb)->h - pb->pad*2;
 		break;
 	}
-	AG_DrawRect(pb, rd, agColors[PROGRESS_BAR_COLOR]);
+	AG_DrawRect(pb, rd, WCOLOR_SEL(pb,0));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT)
 		DrawPercentText(pb);

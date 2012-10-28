@@ -231,17 +231,18 @@ Draw(void *obj)
 	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
 	int y = rad->yPadding;
 	
-	STYLE(rad)->RadioGroupBackground(rad,
-	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)));
+	AG_DrawBox(rad,
+	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)),
+	    -1,
+	    WCOLOR(rad,AG_COLOR));
 	
 	val = AG_GetInt(rad, "value");
-	AG_PushTextState();
 	AG_PushClipRect(rad, rad->r);
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
+		int xc, yc;
 	
 		if (ri->surface == -1) {
-			AG_TextColor(agColors[RADIO_TXT_COLOR]);
 			ri->surface = AG_WidgetMapSurface(rad,
 			    AG_TextRender(ri->text));
 		}
@@ -250,17 +251,37 @@ Draw(void *obj)
 			    WIDGET(rad)->w - rad->xPadding*2,
 			    rad->itemHeight);
 			AG_DrawRectBlended(rad, r,
-			    AG_ColorRGBA(255,255,255,25),
+			    WCOLOR_HOV(rad,0),
 			    AG_ALPHA_SRC);
 		}
-		STYLE(rad)->RadioButton(rad, x, y,
-		    (i == val),
-		    (i == rad->oversel));
-		AG_WidgetBlitSurface(rad, ri->surface, x, y + rad->ySpacing/2);
+
+		xc = rad->xPadding + rad->radius;
+		yc = y + rad->itemHeight/2;
+
+		AG_DrawCircleFilled(rad, xc, yc, rad->radius,
+		    WCOLOR(rad,SHAPE_COLOR));
+		AG_DrawCircle(rad, xc, yc, rad->radius,
+		    WCOLOR(rad,LINE_COLOR));
+
+		if (i == val) {
+			AG_DrawCircleFilled(rad, xc, yc,
+			    rad->radius/2,
+			    WCOLOR_SEL(rad,SHAPE_COLOR));
+		}
+		if (i == rad->oversel) {
+			AG_DrawCircle(rad, xc, yc,
+			    rad->radius - 2,
+			    WCOLOR_HOV(rad,LINE_COLOR));
+		}
+
+		if (ri->surface != -1) {
+			AG_WidgetBlitSurface(rad, ri->surface,
+			    x,
+			    y + rad->ySpacing/2);
+		}
 		y += rad->itemHeight;
 	}
 	AG_PopClipRect(rad);
-	AG_PopTextState();
 }
 
 static void
@@ -291,8 +312,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Radio *rad = obj;
 	
-	if (a->w < rad->xPadding*2 ||
-	    a->h < rad->yPadding*2) {
+	if (a->w < rad->radius*2 ||
+	    a->h < rad->radius*2) {
 		return (-1);
 	}
 	rad->r.x = rad->xPadding;
@@ -395,12 +416,38 @@ KeyDown(AG_Event *event)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_Radio *rad = AG_SELF();
+	AG_Font *font = WIDGET(rad)->font;
+	int i, w;
+
+	rad->itemHeight = font->height + rad->ySpacing*2;
+	rad->radius = MAX(0, font->height/2 - 1);
+	rad->max_w = 0;
+
+	for (i = 0; i < rad->nItems; i++) {
+		AG_RadioItem *ri = &rad->items[i];
+
+		if (ri->surface != -1) {
+			AG_WidgetUnmapSurface(rad, ri->surface);
+			ri->surface = -1;
+		}
+		AG_TextSize(ri->text, &w, NULL);
+		if (w > rad->max_w) { rad->max_w = w; }
+	}
+		if (w > rad->max_w) { rad->max_w = w; }
+}
+
+static void
 Init(void *obj)
 {
 	AG_Radio *rad = obj;
 
-	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
-	                      AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|
+	                      AG_WIDGET_UNFOCUSED_MOTION|
+			      AG_WIDGET_TABLE_EMBEDDABLE|
+			      AG_WIDGET_USE_TEXT;
 
 	rad->flags = 0;
 	rad->value = -1;
@@ -416,6 +463,7 @@ Init(void *obj)
 	rad->nItems = 0;
 	rad->r = AG_RECT(0,0,0,0);
 
+	AG_AddEvent(rad, "font-changed", OnFontChange, NULL);
 	AG_SetEvent(rad, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "key-down", KeyDown, NULL);
 	AG_SetEvent(rad, "mouse-motion", MouseMotion, NULL);

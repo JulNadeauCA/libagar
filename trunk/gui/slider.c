@@ -595,19 +595,27 @@ static void
 Draw(void *obj)
 {
 	AG_Slider *sl = obj;
-	int x;
+	int x, len;
 
 	if (GetPosition(sl, &x) == -1) {
 		return;
 	}
 	switch (sl->type) {
 	case AG_SLIDER_VERT:
-		STYLE(sl)->SliderBackgroundVert(sl);
-		STYLE(sl)->SliderControlVert(sl, x, sl->wControl);
+		len = HEIGHT(sl)/3;
+		AG_DrawBox(sl, AG_RECT(0,0,WIDTH(sl),HEIGHT(sl)), -1, WCOLOR(sl,0));
+		AG_DrawBox(sl,
+		    AG_RECT(0, x, WIDTH(sl), sl->wControl),
+		    sl->ctlPressed ? -1 : 1,
+		    WCOLOR(sl,0));
 		break;
 	case AG_SLIDER_HORIZ:
-		STYLE(sl)->SliderBackgroundHoriz(sl);
-		STYLE(sl)->SliderControlHoriz(sl, x, sl->wControl);
+		len = WIDTH(sl)/3;
+		AG_DrawBox(sl, AG_RECT(0,0,WIDTH(sl),HEIGHT(sl)), -1, WCOLOR(sl,0));
+		AG_DrawBox(sl,
+		    AG_RECT(x, 0, sl->wControl, HEIGHT(sl)),
+		    sl->ctlPressed ? -1 : 1,
+		    WCOLOR(sl,0));
 		break;
 	}
 }

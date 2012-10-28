@@ -18,8 +18,6 @@ typedef struct ag_checkbox {
 	int state;		/* Default "state" binding */
 	int spacing;		/* Spacing in pixels */
 	AG_Label *lbl;		/* Text label */
-	int btnSize;		/* Button size in pixels */
-	int mouseOver;
 } AG_Checkbox;
 
 __BEGIN_DECLS

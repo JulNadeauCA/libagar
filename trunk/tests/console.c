@@ -40,24 +40,6 @@ ClearLines(AG_Event *event)
 	AG_ConsoleClear(cons);
 }
 
-static void
-SelFont(AG_Event *event)
-{
-	AG_Console *cons = AG_PTR(1);
-	AG_Window *win;
-	AG_FontSelector *fs;
-
-	if ((win = AG_WindowNewNamedS(0, "selfont")) != NULL) {
-		/* Duplicate the default font */
-		cons->font = AG_TextFontPct(100);
-
-		AG_WindowSetCaption(win, "Select font");
-		fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
-		AG_BindPointer(fs, "font", (void *)&cons->font);
-		AG_WindowShow(win);
-	}
-}
-
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -80,7 +62,6 @@ TestGUI(void *obj, AG_Window *win)
 	{
 		AG_ButtonNewFn(box, 0, "Junk", EnterJunk, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);
-		AG_ButtonNewFn(box, 0, "Sel.Font", SelFont, "%p", cons);
 		AG_ButtonNewFlag(box, AG_BUTTON_STICKY, "Debug",
 		    &cons->vBar->flags, AG_SCROLLBAR_TEXT);
 	}

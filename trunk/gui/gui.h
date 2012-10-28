@@ -29,16 +29,19 @@
 #define AG_FOREACH_WINDOW_REVERSE(var, ob) \
 	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ag_window)
 
-__BEGIN_DECLS
-extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
+#define AG_ZOOM_RANGE	14		/* Number of default zoom settings */
+#define AG_ZOOM_DEFAULT	5		/* Initial zoom setting (1.0) */
 
+__BEGIN_DECLS
 /* Global configuration settings (bound to agConfig) */
 extern int agGUI, agRenderingContext;
 extern int agKbdDelay, agKbdRepeat;
-extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
+extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
+           agMouseScrollDelay, agMouseScrollIval;
 extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
            agTextBlinkRate, agTextSymbols, agPageIncrement;
 extern int agIdleThresh, agScreenshotQuality, agMsgDelay;
+extern double agZoomValues[AG_ZOOM_RANGE];
 
 struct ag_window;
 
@@ -58,6 +61,9 @@ void       AG_DestroyVideo(void);
 #ifdef AG_DEBUG
 struct ag_window *AG_GuiDebugger(void *);
 #endif
+void       AG_ZoomIn(void);
+void       AG_ZoomOut(void);
+void       AG_ZoomReset(void);
 __END_DECLS
 
 #include <agar/gui/close.h>

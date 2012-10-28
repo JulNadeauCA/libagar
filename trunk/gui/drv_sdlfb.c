@@ -1219,7 +1219,6 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
 	Uint32 sFlags = 0;
-	AG_Color c;
 	int newDepth;
 	Uint wDesk, hDesk;
 
@@ -1297,9 +1296,10 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
 
-	/* Fill background */
-	c = agColors[BG_COLOR];
-	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
+	/* Set background color. */
+	dsw->bgColor = AG_ColorFromString(AG_GetStringP(sfb,"bgColor"), NULL);
+	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format,
+	    dsw->bgColor.r, dsw->bgColor.g, dsw->bgColor.b));
 	SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
 
 	if (flags & AG_VIDEO_FULLSCREEN) {
@@ -1385,7 +1385,6 @@ SDLFB_VideoResize(void *obj, Uint w, Uint h)
 	Uint32 sFlags;
 	SDL_Surface *su;
 	AG_ClipRect *cr0;
-	AG_Color c;
 
 	sFlags = sfb->s->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|SDL_HWSURFACE|
 	                          SDL_ASYNCBLIT|SDL_HWPALETTE|SDL_RESIZABLE|
@@ -1408,9 +1407,8 @@ SDLFB_VideoResize(void *obj, Uint w, Uint h)
 	cr0->r.h = h;
 	/* Clear the background. */
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY)) {
-		c = agColors[BG_COLOR];
 		SDL_FillRect(sfb->s, NULL,
-		    SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
+		    SDL_MapRGB(sfb->s->format, dsw->bgColor.r, dsw->bgColor.g, dsw->bgColor.b));
 		SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
 	}
 	return (0);

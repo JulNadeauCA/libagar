@@ -255,17 +255,6 @@ MouseMotion(AG_Event *event)
 		    GetState(bu, binding, pState) == 1) {
 			SetState(bu, binding, pState, 0);
 		}
-		if (bu->flags & AG_BUTTON_MOUSEOVER) {
-			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
-			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 0);
-			AG_Redraw(bu);
-		}
-	} else {
-		if ((bu->flags & AG_BUTTON_MOUSEOVER) == 0) {
-			bu->flags |= AG_BUTTON_MOUSEOVER;
-			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
-			AG_Redraw(bu);
-		}
 	}
 	AG_UnlockVariable(binding);
 }
@@ -329,15 +318,25 @@ KeyDown(AG_Event *event)
 }
 
 static void
+OnShow(AG_Event *event)
+{
+	AG_Button *bu = AG_SELF();
+
+	if ((bu->flags & AG_BUTTON_EXCL) == 0)
+		AG_RedrawOnChange(bu, 100, "state");
+}
+
+static void
 Init(void *obj)
 {
 	AG_Button *bu = obj;
 
-	/* TODO replace the unfocused motion flag with a timer */
 	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_UNFOCUSED_BUTTONUP|
-			     AG_WIDGET_TABLE_EMBEDDABLE;
+			     AG_WIDGET_TABLE_EMBEDDABLE|
+			     AG_WIDGET_USE_TEXT|
+			     AG_WIDGET_USE_MOUSEOVER;
 
 	bu->flags = 0;
 	bu->lbl = NULL;
@@ -350,6 +349,7 @@ Init(void *obj)
 	bu->tPad = 3;
 	bu->bPad = 3;
 
+	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(bu, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(bu, "mouse-motion", MouseMotion, NULL);
@@ -357,7 +357,6 @@ Init(void *obj)
 	AG_SetEvent(bu, "key-down", KeyDown, NULL);
 
 	AG_BindInt(bu, "state", &bu->state);
-	AG_RedrawOnChange(bu, 100, "state");
 }
 
 static void
@@ -377,7 +376,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 			AG_WidgetSizeReq(bu->lbl, &rLbl);
 			r->w += rLbl.w;
 		}
-		r->h += agTextFontHeight;
+		r->h += WIDGET(bu)->font->height;
 	}
 }
 
@@ -485,7 +484,18 @@ Draw(void *p)
 	pressed = GetState(bu, binding, pState);
 	AG_UnlockVariable(binding);
 
-	STYLE(bu)->ButtonBackground(bu, pressed);
+	if (AG_WidgetEnabled(bu)) {
+		AG_DrawBox(bu,
+		    AG_RECT(0, 0, WIDTH(bu), HEIGHT(bu)),
+		    pressed ? -1 : 1,
+		    WCOLOR(bu,0));
+	} else {
+		AG_DrawBoxDisabled(bu,
+		    AG_RECT(0, 0, WIDTH(bu), HEIGHT(bu)),
+		    pressed ? -1 : 1,
+		    WCOLOR_DEF(bu,0),
+		    WCOLOR_DIS(bu,0));
+	}
 
 	if (bu->lbl != NULL) {
 		AG_WidgetDraw(bu->lbl);
@@ -504,15 +514,11 @@ Draw(void *p)
 		case AG_TEXT_MIDDLE:	y = HEIGHT(bu)/2 - h/2;		break;
 		case AG_TEXT_BOTTOM:	y = HEIGHT(bu) - h - bu->bPad;	break;
 		}
-		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
+		if (pressed) {
+			x++;
+			y++;
+		}
 		AG_WidgetBlitSurface(bu, bu->surface, x, y);
-	}
-	if (AG_WidgetDisabled(bu)) {
-		AG_Color cOver;
-
-		cOver = AG_ColorRGBA(100,100,100,100);
-		AG_DrawRectBlended(bu, AG_RECT(0,0,WIDTH(bu),HEIGHT(bu)),
-		    cOver, AG_ALPHA_SRC);
 	}
 }
 

@@ -138,64 +138,20 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	}
 }
 
-/* Configure an alternate font.  */
-void
-AG_TextboxSetFont(AG_Textbox *tb, AG_Font *font)
-{
-	AG_ObjectLock(tb);
-	if (tb->lbl != NULL) {
-		AG_LabelSetFont(tb->lbl, font);
-	}
-	AG_EditableSetFont(tb->ed, font);
-	AG_ObjectUnlock(tb);
-	AG_Redraw(tb);
-}
-
-/* Configure an alternate text color. */
-void
-AG_TextboxSetColor(AG_Textbox *tb, AG_Color C)
-{
-	AG_ObjectLock(tb);
-	AG_EditableSetColor(tb->ed, C);
-	AG_ObjectUnlock(tb);
-	AG_Redraw(tb);
-}
-
-/* Configure an alternate background color. */
-void
-AG_TextboxSetColorLabel(AG_Textbox *tb, AG_Color C)
-{
-	AG_ObjectLock(tb);
-	if (tb->lbl != NULL) {
-		AG_LabelSetColor(tb->lbl, C);
-	}
-	AG_ObjectUnlock(tb);
-	AG_Redraw(tb);
-}
-
-/* Configure an alternate background color. */
-void
-AG_TextboxSetColorBG(AG_Textbox *tb, AG_Color C, AG_Color Cdisabled)
-{
-	AG_ObjectLock(tb);
-	tb->color = C;
-	tb->colorDisabled = Cdisabled;
-	AG_ObjectUnlock(tb);
-	AG_Redraw(tb);
-}
-
 static void
 Draw(void *p)
 {
 	AG_Textbox *tb = p;
 	
 	if (AG_WidgetDisabled(tb)) {
-		AG_DrawBoxDisabled(tb, tb->r, -1,
-		    tb->color, tb->colorDisabled);
+		AG_DrawBoxDisabled(tb, tb->r,
+		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
+		    WCOLOR_DEF(tb,AG_COLOR),
+		    WCOLOR_DIS(tb,AG_COLOR));
 	} else {
 		AG_DrawBox(tb, tb->r,
 		    (tb->flags & AG_TEXTBOX_COMBO) ? 1 : -1,
-		    tb->color);
+		    WCOLOR(tb,AG_COLOR));
 	}
 
 	if (tb->lbl != NULL)
@@ -210,12 +166,12 @@ Draw(void *p)
 			d = WIDTH(tb->vBar);
 			AG_DrawBox(tb,
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    agColors[TEXTBOX_COLOR]);
+			    WCOLOR(tb,0));
 		} else if (tb->hBar != NULL && AG_ScrollbarVisible(tb->hBar)) {
 			d = HEIGHT(tb->hBar);
 			AG_DrawBox(tb,
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
-			    agColors[TEXTBOX_COLOR]);
+			    WCOLOR(tb,0));
 		}
 		AG_WidgetUpdate(tb);
 	}
@@ -236,6 +192,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Textbox *tb = obj;
 	AG_SizeReq rEd, rLbl;
+	AG_Font *font = WIDGET(tb)->font;
 
 	AG_WidgetSizeReq(tb->ed, &rEd);
 
@@ -246,7 +203,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		AG_WidgetSizeReq(tb->lbl, &rLbl);
 		r->w += rLbl.w;
 	}
-	r->h = MAX(r->h, agTextFontLineSkip);
+	r->h = MAX(r->h, font->lineskip);
 }
 
 static int
@@ -430,14 +387,6 @@ Enabled(AG_Event *event)
 	AG_WidgetEnable(tb->ed);
 }
 
-#ifdef AG_DEBUG
-static void
-Bound(AG_Event *event)
-{
-	AG_FatalError("Use AG_TextboxBindUTF8() or AG_TextboxBindASCII()");
-}
-#endif
-
 static void
 EditablePreChg(AG_Event *event)
 {
@@ -461,7 +410,9 @@ Init(void *obj)
 {
 	AG_Textbox *tb = obj;
 	
-	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE|
+	                     AG_WIDGET_USE_TEXT|
+			     AG_WIDGET_USE_MOUSEOVER;
 
 	tb->ed = AG_EditableNew(tb, 0);
 	tb->lbl = NULL;
@@ -473,8 +424,6 @@ Init(void *obj)
 	tb->vBar = NULL;
 	tb->r = AG_RECT(0,0,0,0);
 	tb->text = tb->ed->text;
-	tb->color = agColors[TEXTBOX_COLOR];
-	tb->colorDisabled = agColors[DISABLED_COLOR];
 
 	AG_SetEvent(tb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
@@ -484,9 +433,6 @@ Init(void *obj)
 	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);
 	
 	AG_WidgetForwardFocus(tb, tb->ed);
-#ifdef AG_DEBUG
-	AG_SetEvent(tb, "bound", Bound, NULL);
-#endif
 }
 
 AG_WidgetClass agTextboxClass = {

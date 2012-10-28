@@ -72,7 +72,6 @@ WarnRestart(AG_Event *event)
 	    _("Note: Save the configuration and restart %s "
 	      "for this change to take effect"), agProgName);
 }
-#endif
 
 static void
 BindSelectedColor(AG_Event *event)
@@ -97,6 +96,7 @@ SetColor(AG_Event *event)
 		AG_ColorsSetRGB(BG_COLOR, r, g, b);
 	}
 }
+#endif
 
 void
 DEV_ConfigShow(void)
@@ -112,6 +112,7 @@ DEV_ConfigShow(void)
 		AG_WindowShow(win);
 }
 
+#if 0
 static void
 LoadColorSchemeFromACS(AG_Event *event)
 {
@@ -168,6 +169,7 @@ SaveColorSchemeDlg(AG_Event *event)
 	    SaveColorSchemeToACS, NULL);
 	AG_WindowShow(win);
 }
+#endif
 
 static void
 SaveConfig(AG_Event *event)
@@ -246,17 +248,17 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),
 		    &agTextBidi);
 		
-		AG_SpacerNewHoriz(tab);
-
-		AG_NumericalNewIntR(tab, 0, "ms", _("Double click delay: "),
+		AG_SeparatorNewHoriz(tab);
+		AG_LabelNewS(tab, 0, _("Timer settings (milliseconds):"));
+		AG_NumericalNewIntR(tab, 0, NULL, _("Double click delay: "),
 		    &agMouseDblclickDelay, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Cursor spin delay: "),
+		AG_NumericalNewIntR(tab, 0, NULL, _("Cursor spin delay: "),
 		    &agMouseSpinDelay, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Cursor spin interval: "),
+		AG_NumericalNewIntR(tab, 0, NULL, _("Cursor spin interval: "),
 		    &agMouseSpinIval, 1, 10000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat delay: "),
+		AG_NumericalNewIntR(tab, 0, NULL, _("Key repeat delay: "),
 		    &agKbdDelay, 1, 1000);
-		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat interval: "),
+		AG_NumericalNewIntR(tab, 0, NULL, _("Key repeat interval: "),
 		    &agKbdRepeat, 1, 500);
 	}
 
@@ -267,6 +269,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
+		AG_TextboxSizeHint(tbox, "XXXXXXXXXXXXXXXXXXXX");
 		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "tmp-path", tbox);
 
 		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
@@ -288,7 +291,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 	}
-	
+#if 0
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
 		AG_Pane *hPane;
@@ -327,6 +330,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 			    SaveColorSchemeDlg, NULL);
 		}
 	}
+#endif
 
 #ifdef AG_DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);

@@ -739,7 +739,8 @@ Init(void *obj)
 	RG_Tileview *tv = obj;
 	
 	WIDGET(tv)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL|
-	                     AG_WIDGET_FOCUSABLE;
+	                     AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
+
 	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_TILING;
 	tv->ts = NULL;
 	tv->tile = NULL;
@@ -1122,7 +1123,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	int wSu, hSu;
 
 	AG_PushTextState();
-	AG_TextColor(agColors[TILEVIEW_TEXT_COLOR]);
+	AG_TextColor(WCOLOR(tv,TEXT_COLOR));
 	su = AG_TextCacheGet(tv->tCache, label);
 	AG_PopTextState();
 
@@ -1135,7 +1136,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	AG_DrawRect(tv,
 	    AG_RECT((wSu >= WIDTH(tv)) ? 0 : (WIDTH(tv)-wSu-2),
 	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
-	    agColors[TILEVIEW_TEXTBG_COLOR]);
+	    WCOLOR(tv,0));
 
 	AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
 }
@@ -1555,8 +1556,8 @@ Draw(void *obj)
 	if ((tv->flags & RG_TILEVIEW_NO_TILING) == 0) {
 		AG_DrawTiling(tv,
 		    AG_RECT(0, 0, WIDTH(tv), HEIGHT(tv)), 9, 0,
-		    agColors[TILEVIEW_TILE1_COLOR],
-		    agColors[TILEVIEW_TILE2_COLOR]);
+		    AG_ColorRGB(140,140,140),
+		    AG_ColorRGB(80,80,80));
 	}
 
 	rsrc.x = 0;

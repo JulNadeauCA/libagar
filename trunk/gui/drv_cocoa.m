@@ -1007,15 +1007,16 @@ COCOA_RenderWindow(AG_Window *win)
 {
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &co->gl;
-	AG_Color C = agColors[WINDOW_BG_COLOR];
+	AG_Color c = WCOLOR(win,0);
 
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
 	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
 	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
-	/* Clear the clipped area with the background colour */
-	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
+	glClearColor(c.r/255.0,
+	             c.g/255.0,
+		     c.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
@@ -1056,7 +1057,7 @@ COCOA_SetRefreshRate(void *obj, int fps)
  */
 
 static void
-SetBackgroundColor(AG_DriverCocoa *co, const AG_Color *C)
+SetBackgroundColor(AG_DriverCocoa *co, AG_Color C)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSColor *bgColor;
@@ -1139,7 +1140,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 					          screen:selScreen];
 	}
 	co->win->_agarWindow = win;
-	SetBackgroundColor(co, &agColors[WINDOW_BG_COLOR]);
+	SetBackgroundColor(co, WCOLOR(co->win,0));
 
 	/* Create an event listener. */
 	co->evListener = [[AG_CocoaListener alloc] init];

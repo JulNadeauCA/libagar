@@ -61,7 +61,7 @@ typedef struct ag_driver_sw {
 	struct ag_window *winLastKeydown; /* For keyboard processing */
 	AG_List *Lmodal;		/* Modal window stack */
 	enum ag_wm_operation winop;	/* WM operation in progress */
-	struct ag_style *style;		/* Default style for new windows */
+	struct ag_style *theme;		/* Default style for new windows */
 	int windowXOutLimit;		/* Limit past left/right boundary */
 	int windowBotOutLimit;		/* Limit past bottom boundary */
 	int windowIconWidth;		/* Preferred window icon dimensions */
@@ -70,6 +70,7 @@ typedef struct ag_driver_sw {
 	int windowCurY[AG_WINDOW_ALIGNMENT_LAST];
 	Uint rNom;			/* Nominal refresh rate (ms) */
 	int rCur;			/* Effective refresh rate (ms) */
+	AG_Color bgColor;		/* "bgColor" setting */
 } AG_DriverSw;
 
 #define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))

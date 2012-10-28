@@ -203,10 +203,11 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Label *lbl = obj;
+	AG_Font *font = WIDGET(lbl)->font;
 	
 	if (lbl->flags & AG_LABEL_NOMINSIZE) {
 		r->w = lbl->lPad + lbl->rPad;
-		r->h = agTextFontHeight + lbl->tPad + lbl->bPad;
+		r->h = font->height + lbl->tPad + lbl->bPad;
 		return;
 	}
 	switch (lbl->type) {
@@ -217,7 +218,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		break;
 	case AG_LABEL_POLLED:
 		r->w = lbl->wPre + lbl->lPad + lbl->rPad;
-		r->h = lbl->hPre + lbl->tPad + lbl->bPad;
+		r->h = lbl->hPre*font->lineskip + lbl->tPad + lbl->bPad;
 		break;
 	}
 }
@@ -251,13 +252,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			AG_Surface *suDots;
 			
 			/* TODO share this between all widgets */
-			AG_PushTextState();
-			AG_TextColor(agColors[TEXT_COLOR]);
-			if ((suDots = AG_TextRender(" ... ")) != NULL) {
+			if ((suDots = AG_TextRender(" ... ")) != NULL)
 				lbl->surfaceCont = AG_WidgetMapSurface(lbl,
 				    suDots);
-			}
-			AG_PopTextState();
 		}
 	} else {
 		lbl->flags &= ~AG_LABEL_PARTIAL;
@@ -266,9 +263,26 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_Label *lbl = AG_SELF();
+
+	if (lbl->tCache != NULL) {
+		AG_TextCacheClear(lbl->tCache);
+	}
+	if (lbl->surfaceCont != -1) {
+		AG_WidgetUnmapSurface(lbl, lbl->surfaceCont);
+		lbl->surfaceCont = -1;
+	}
+	lbl->flags |= AG_LABEL_REGEN;
+}
+
+static void
 Init(void *obj)
 {
 	AG_Label *lbl = obj;
+
+	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT;
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
@@ -281,62 +295,25 @@ Init(void *obj)
 	lbl->tPad = 0;
 	lbl->bPad = 1;
 	lbl->wPre = -1;
-	lbl->hPre = agTextFontHeight;
+	lbl->hPre = 1;
 	lbl->justify = AG_TEXT_LEFT;
 	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
 	lbl->rClip = AG_RECT(0,0,0,0);		/* Initialized in SizeAlloc() */
-	lbl->font = agDefaultFont;
 	lbl->pollBuf = NULL;
 	lbl->pollBufSize = 0;
-	lbl->color = agColors[TEXT_COLOR];
-	lbl->colorBG = AG_ColorRGBA(0,0,0,0);
+
+	AG_SetEvent(lbl, "font-changed", OnFontChange, NULL);
 }
 
-/* Size the widget to accomodate the given text. */
+/* Size the widget to accomodate the given text (with the current font). */
 void
 AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
 {
-	int hLbl;
-
 	AG_ObjectLock(lbl);
-	if (nlines > 0) {
-		AG_TextSize(text, &lbl->wPre, &hLbl);
-		lbl->hPre = nlines*hLbl + (nlines-1)*agTextFontLineSkip;
-	} else {
-		AG_TextSize(text, &lbl->wPre, &lbl->hPre);
-	}
+	AG_TextSize(text, &lbl->wPre, NULL);
+	lbl->hPre = (nlines > 0) ? nlines : 1;
 	AG_ObjectUnlock(lbl);
-}
-
-/* Configure an alternate font. */
-void
-AG_LabelSetFont(AG_Label *lbl, AG_Font *font)
-{
-	AG_ObjectLock(lbl);
-	lbl->font = (font != NULL) ? font : agDefaultFont;
-	AG_ObjectUnlock(lbl);
-	AG_Redraw(lbl);
-}
-
-/* Configure an alternate text color. */
-void
-AG_LabelSetColor(AG_Label *lbl, AG_Color C)
-{
-	AG_ObjectLock(lbl);
-	lbl->color = C;
-	AG_ObjectUnlock(lbl);
-	AG_Redraw(lbl);
-}
-
-/* Configure an alternate background color. */
-void
-AG_LabelSetColorBG(AG_Label *lbl, AG_Color C)
-{
-	AG_ObjectLock(lbl);
-	lbl->colorBG = C;
-	AG_ObjectUnlock(lbl);
-	AG_Redraw(lbl);
 }
 
 /* Set the padding around the label in pixels. */
@@ -448,11 +425,11 @@ Draw(void *obj)
 	int x, y, cw = 0;			/* make compiler happy */
 	AG_Surface *suNew;
 
-	if (lbl->flags & AG_LABEL_FRAME)
+	if (lbl->flags & AG_LABEL_FRAME) {
 		AG_DrawFrame(lbl,
 		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
-		    agColors[FRAME_COLOR]);
-	
+		    WCOLOR(lbl,0));
+	}
 	if ((lbl->flags & AG_LABEL_PARTIAL) && lbl->surfaceCont != -1) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
 		if (WIDTH(lbl) <= cw) {
@@ -469,12 +446,8 @@ Draw(void *obj)
 		AG_PushClipRect(lbl, lbl->rClip);
 	}
 	
-	AG_PushTextState();
 	AG_TextJustify(lbl->justify);
 	AG_TextValign(lbl->valign);
-	AG_TextColor(lbl->color);
-	AG_TextBGColor(lbl->colorBG);
-	AG_TextFont(lbl->font);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
@@ -509,7 +482,6 @@ Draw(void *obj)
 		    WIDTH(lbl) - cw,
 		    y);
 	}
-	AG_PopTextState();
 }
 
 static void

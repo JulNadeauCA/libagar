@@ -113,7 +113,7 @@ messages (see
 .Fn AG_ConsoleMsgIcon "AG_ConsoleLine *line" "int surface"
 .Pp
 .Ft "void"
-.Fn AG_ConsoleMsgColor "AG_ConsoleLine *line" "const AG_Color *cBg" "const AG_Color *cFg"
+.Fn AG_ConsoleMsgColor "AG_ConsoleLine *line" "const AG_Color *c"
 .Pp
 .Ft "void"
 .Fn AG_ConsoleClear "AG_Console *cons"
@@ -152,8 +152,7 @@ sets an icon to display next to the message
 (see
 .Xr AG_IconMgr 3 ) .
 .Fn AG_ConsoleMsgColor
-sets the background and foreground color (if either argument is NULL, that
-color is preserved).
+an alternate, line-specific text color.
 .Pp
 .Fn AG_ConsoleClear
 clears all messages from the console.

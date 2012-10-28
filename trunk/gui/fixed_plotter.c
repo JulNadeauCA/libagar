@@ -181,8 +181,13 @@ Draw(void *obj)
 	AG_FixedPlotterValue oval;
 
 	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
-	STYLE(fpl)->FixedPlotterBackground(fpl,
-	    (fpl->flags & AG_FIXED_PLOTTER_XAXIS), yOrigin);
+	
+	AG_DrawBox(fpl,
+	    AG_RECT(0, 0, WIDTH(fpl), HEIGHT(fpl)), 0,
+	    WCOLOR(fpl,0));
+	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS) {
+		AG_DrawLineH(fpl, 0, WIDTH(fpl)-1, yOrigin+1, WCOLOR(fpl,LINE_COLOR));
+	}
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)

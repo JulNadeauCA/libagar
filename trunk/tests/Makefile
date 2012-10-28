@@ -55,7 +55,6 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	textbox.c \
 	textdlg.c \
 	themes.c \
-	themes_mytheme.c \
 	threads.c \
 	timeouts.c \
 	unitconv.c \

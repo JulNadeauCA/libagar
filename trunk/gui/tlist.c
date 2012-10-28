@@ -203,6 +203,25 @@ PollRefreshTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_TlistItem *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->icon != -1) {
+			AG_WidgetUnmapSurface(tl, it->icon);
+			it->icon = -1;
+		}
+		if (it->label != -1) {
+			AG_WidgetUnmapSurface(tl, it->label);
+			it->label = -1;
+		}
+	}
+	AG_TlistSetItemHeight(tl, WIDGET(tl)->font->height+2);
+}
+
+static void
 OnShow(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
@@ -233,7 +252,7 @@ Init(void *obj)
 {
 	AG_Tlist *tl = obj;
 
-	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	tl->flags = 0;
 	tl->selected = NULL;
@@ -263,14 +282,23 @@ Init(void *obj)
 	AG_BindInt(tl->sbar, "value", &tl->rOffs);
 	AG_WidgetSetFocusable(tl->sbar, 0);
 
+	AG_AddEvent(tl, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(tl, "widget-shown", OnShow, NULL);
-	AG_SetEvent(tl, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_AddEvent(tl, "widget-hidden", OnFocusLoss, NULL);
+	AG_SetEvent(tl, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(tl, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "key-down", KeyDown, NULL);
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 	
 	AG_BindPointer(tl, "selected", &tl->selected);
+
+#if 0
+	AG_SetString(tl, "color",		"rgb(125,125,125)");
+	AG_SetString(tl, "color#selected",	"rgb(50,50,120)");
+	AG_SetString(tl, "text-color",		"rgb(255,255,255)");
+	AG_SetString(tl, "text-color#selected",	"rgb(255,255,230)");
+	AG_SetString(tl, "line-color",		"rgb(55,55,55)");
+#endif
 
 #ifdef AG_DEBUG
 	AG_BindInt(tl, "nitems", &tl->nitems);
@@ -387,13 +415,35 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
+DrawSubnodeIndicator(void *wid, AG_Rect r, int isExpanded)
+{
+	AG_Color C;
+
+	AG_DrawRectBlended(wid,
+	    AG_RECT(r.x-1, r.y, r.w+2, r.h),
+	    AG_ColorRGBA(0,0,0,64),
+	    AG_ALPHA_SRC);
+
+	C = AG_ColorRGBA(255,255,255,100);
+	if (isExpanded) {
+		AG_DrawMinus(wid,
+		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
+		    C, AG_ALPHA_SRC);
+	} else {
+		AG_DrawPlus(wid,
+		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
+		    C, AG_ALPHA_SRC);
+	}
+}
+
+static void
 Draw(void *obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	int y = 0, i = 0, selSeen = 0, selPos = 1;
 
-	STYLE(tl)->ListBackground(tl, tl->r);
+	AG_DrawBox(tl, tl->r, -1, WCOLOR(tl,AG_COLOR));
 	AG_WidgetDraw(tl->sbar);
 	AG_PushClipRect(tl, tl->r);
 
@@ -411,16 +461,15 @@ Draw(void *obj)
 		if (y > HEIGHT(tl) - tl->item_h)
 			break;
 
-		STYLE(tl)->ListItemBackground(tl,
-		    AG_RECT(x + tl->icon_w + 2,
-		            y,
-			    tl->wRow - x - tl->icon_w - 3,
-			    tl->item_h + 1),
-		    it->selected);
-
-		if (it->selected)
+		if (it->selected) {
+		    	AG_Rect rSel;
+			rSel.x = x + tl->icon_w + 2;
+			rSel.y = y;
+			rSel.w = tl->wRow - x - tl->icon_w - 3;
+			rSel.h = tl->item_h + 1;
+			AG_DrawRect(tl, rSel, WCOLOR_SEL(tl,AG_COLOR));
 			selSeen = 1;
-
+		}
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
 				AG_Surface *scaled = NULL;
@@ -434,7 +483,7 @@ Draw(void *obj)
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			STYLE(tl)->TreeSubnodeIndicator(tl,
+			DrawSubnodeIndicator(tl,
 			    AG_RECT(x,
 			            y,
 				    tl->icon_w,
@@ -442,7 +491,9 @@ Draw(void *obj)
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
-			AG_TextColor(agColors[TLIST_TXT_COLOR]);
+			AG_TextColor(it->selected ?
+			             WCOLOR_SEL(tl,AG_TEXT_COLOR) :
+				     WCOLOR(tl,AG_TEXT_COLOR));
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
 		}
@@ -453,7 +504,7 @@ Draw(void *obj)
 		y += tl->item_h;
 		if (y < HEIGHT(tl)-1) {
 			AG_DrawLineH(tl, 1, tl->wRow-2, y,
-			    agColors[TLIST_LINE_COLOR]);
+			    WCOLOR(tl,AG_LINE_COLOR));
 		}
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {

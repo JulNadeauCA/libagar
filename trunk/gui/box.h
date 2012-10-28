@@ -12,6 +12,8 @@ enum ag_box_type {
 	AG_BOX_VERT
 };
 
+struct ag_label;
+
 typedef struct ag_box {
 	struct ag_widget wid;
 	enum ag_box_type type;
@@ -24,9 +26,7 @@ typedef struct ag_box {
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
 	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
-	char *caption;			/* Caption text */
-	int  sCaption;			/* Caption text surface */
-	AG_Rect rCaption;		/* Caption text location */
+	struct ag_label *lbl;		/* Optional text label */
 } AG_Box;
 
 #define AGBOX(p) ((AG_Box *)(p))

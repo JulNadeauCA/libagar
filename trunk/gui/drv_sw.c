@@ -51,7 +51,6 @@ Init(void *obj)
 	dsw->winop = AG_WINOP_NONE;
 	dsw->winSelected = NULL;
 	dsw->winLastKeydown = NULL;
-	dsw->style = &agStyleDefault;
 	dsw->rNom = 20;
 	dsw->rCur = 0;
 
@@ -66,6 +65,8 @@ Init(void *obj)
 
 	if ((dsw->Lmodal = AG_ListNew()) == NULL)
 		AG_FatalError(NULL);
+	
+	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
 }
 
 static void
@@ -270,14 +271,14 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 		rFill2.w = rPrev.w;
 		rFill2.h = rPrev.y - rNew.y;
 	}
-
+	
 	if (rFill1.w > 0) {
-		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, agColors[BG_COLOR]);
+		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, dsw->bgColor);
 		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
 			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
 	}
 	if (rFill2.w > 0) {
-		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, agColors[BG_COLOR]);
+		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, dsw->bgColor);
 		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
 			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
 	}

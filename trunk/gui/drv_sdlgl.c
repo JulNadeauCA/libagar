@@ -318,11 +318,9 @@ SDLGL_EndRendering(void *drv)
  */
 
 static void
-ClearBackground(void)
+ClearBackground(AG_DriverSw *dsw)
 {
-	AG_Color c = agColors[BG_COLOR];
-
-	glClearColor(c.r, c.g, c.b, 1.0);
+	glClearColor(dsw->bgColor.r, dsw->bgColor.g, dsw->bgColor.b, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
@@ -425,6 +423,9 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	if (AG_SDL_InitDefaultCursor(sgl) == -1 ||
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
+	
+	/* Set background color. */
+	dsw->bgColor = AG_ColorFromString(AG_GetStringP(drv,"bgColor"), NULL);
 
 	/* Initialize our OpenGL context and viewport. */
 	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
@@ -433,7 +434,7 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	AG_GL_SetViewport(&sgl->gl, AG_RECT(0, 0, dsw->w, dsw->h));
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
-		ClearBackground();
+		ClearBackground(dsw);
 
 	/* Initialize the output capture buffer. */
 	Free(sgl->outBuf);
@@ -567,7 +568,7 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	}
 
 	if (!(dsw->flags & AG_DRIVER_SW_OVERLAY))
-		ClearBackground();
+		ClearBackground(dsw);
 
 	return (0);
 }

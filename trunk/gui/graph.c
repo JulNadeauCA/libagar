@@ -612,7 +612,7 @@ Draw(void *obj)
 				AG_DrawRectOutline(gf,
 				    AG_RECT(lblX-2, lblY-2,
 				            su->w+4, su->h+4),
-				    agColors[TEXT_COLOR]);
+				    WCOLOR_HOV(gf,LINE_COLOR));
 			}
 			AG_DrawRect(gf,
 			    AG_RECT(lblX, lblY, su->w, su->h),

@@ -380,14 +380,14 @@ Draw(void *p)
 	if (sv->flags & AG_SCROLLVIEW_FRAME) {
 		AG_DrawBox(sv,
 		    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
-		    agColors[FRAME_COLOR]);
+		    WCOLOR(sv,0));
 	}
 
 	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
 	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
 	
 	AG_PushClipRect(sv, sv->r);
-	WIDGET_FOREACH_CHILD(chld, sv) {
+	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
 		if (chld->flags & AG_WIDGET_HIDE ||
 		    chld == WIDGET(sv->hbar) ||
 		    chld == WIDGET(sv->vbar)) {

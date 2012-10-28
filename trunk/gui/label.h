@@ -38,13 +38,11 @@ typedef struct ag_label {
 	int lPad, rPad, tPad, bPad;	/* Label padding */
 	enum ag_text_justify justify;	/* Justification mode */
 	enum ag_text_valign valign;	/* Vertical alignment */
-	struct ag_text_cache *tCache;		/* Cache for polled labels */
-	AG_Rect rClip;				/* Clipping rectangle */
-	AG_Font *font;				/* Selected font */
+	struct ag_text_cache *tCache;	/* Cache for polled labels */
+	AG_Rect rClip;			/* Clipping rectangle */
 	AG_FmtString *fmt;		/* Polled label data */
 	char  *pollBuf;			/* Buffer for polled labels */
 	size_t pollBufSize;
-	AG_Color color, colorBG;
 } AG_Label;
 
 __BEGIN_DECLS
@@ -61,9 +59,6 @@ void      AG_LabelText(AG_Label *, const char *, ...)
                        NONNULL_ATTRIBUTE(2);
 void      AG_LabelTextS(AG_Label *, const char *);
 
-void     AG_LabelSetFont(AG_Label *, AG_Font *);
-void     AG_LabelSetColor(AG_Label *, AG_Color);
-void     AG_LabelSetColorBG(AG_Label *, AG_Color);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 void	 AG_LabelValign(AG_Label *, enum ag_text_valign);
@@ -81,6 +76,7 @@ void	 AG_LabelSizeHint(AG_Label *, Uint, const char *);
 # define AG_LabelString(lbl,s)	AG_LabelTextS((lbl),(s))
 # define AG_LabelPrescale	AG_LabelSizeHint
 # define AG_LABEL_POLLED_MT	AG_LABEL_POLLED
+# define AG_LabelSetFont        AG_SetFont
 #endif /* AG_LEGACY */
 __END_DECLS
 

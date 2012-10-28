@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,6 +132,21 @@ PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
 	AG_Widget *chld;
 
 	AG_ObjectLock(wid);
+	if (wid->flags & AG_WIDGET_USE_MOUSEOVER) {
+		if (AG_WidgetArea(wid, x,y)) {
+			if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
+				wid->flags |= AG_WIDGET_MOUSEOVER;
+				AG_PostEvent(NULL, wid, "mouse-over", NULL);
+				AG_Redraw(wid);
+			}
+		} else {
+			if (wid->flags & AG_WIDGET_MOUSEOVER) {
+				wid->flags &= ~(AG_WIDGET_MOUSEOVER);
+				AG_PostEvent(NULL, wid, "mouse-over", NULL);
+				AG_Redraw(wid);
+			}
+		}
+	}
 	if ((AG_WidgetIsFocusedInWindow(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "mouse-motion",
@@ -262,7 +277,7 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
 	}
 
 	/* Recursively post mouse-motion to all widgets. */
-	WIDGET_FOREACH_CHILD(wid, win)
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
 }
 
@@ -275,7 +290,7 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
 {
 	AG_Widget *wid;
 
-	WIDGET_FOREACH_CHILD(wid, win)
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseButtonUp(win, wid, x, y, button);
 }
 
@@ -305,7 +320,7 @@ AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 		}
 	}
 
-	WIDGET_FOREACH_CHILD(wid, win)
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseButtonDown(win, wid, x, y, button);
 }
 

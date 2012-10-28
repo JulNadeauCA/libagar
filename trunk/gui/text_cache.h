@@ -29,6 +29,7 @@ typedef struct ag_text_cache {
 
 __BEGIN_DECLS
 AG_TextCache *AG_TextCacheNew(void *, Uint, Uint);
+void          AG_TextCacheClear(AG_TextCache *);
 void          AG_TextCacheDestroy(AG_TextCache *);
 int           AG_TextCacheGet(AG_TextCache *, const char *);
 

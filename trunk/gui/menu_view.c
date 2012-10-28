@@ -248,12 +248,32 @@ OnShow(AG_Event *event)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_MenuView *mv = AG_SELF();
+	AG_MenuItem *mi = mv->pitem;
+	int i, j;
+
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuItem *msub = &mi->subitems[i];
+
+		for (j = 0; j < 2; j++) {
+			if (msub->lblView[j] != -1) {
+				AG_WidgetUnmapSurface(mv, msub->lblView[j]);
+				msub->lblView[j] = -1;
+			}
+		}
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_MenuView *mview = obj;
 
 	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
-	                        AG_WIDGET_UNFOCUSED_BUTTONUP;
+	                        AG_WIDGET_UNFOCUSED_BUTTONUP|
+				AG_WIDGET_USE_TEXT;
 
 	mview->pmenu = NULL;
 	mview->pitem = NULL;
@@ -265,9 +285,10 @@ Init(void *obj)
 	mview->bPad = 4;
 	mview->arrowRight = -1;
 
-	AG_AddEvent(mview, "widget-shown", OnShow, NULL);
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);
+	AG_AddEvent(mview, "widget-shown", OnShow, NULL);
+	AG_AddEvent(mview, "font-changed", OnFontChange, NULL);
 }
 
 static void
@@ -276,6 +297,7 @@ Draw(void *obj)
 	AG_MenuView *mview = obj;
 	AG_MenuItem *mi = mview->pitem;
 	AG_Menu *m = mview->pmenu;
+	AG_Font *font = WIDGET(mview)->font;
 	AG_Rect r;
 	int i;
 
@@ -295,7 +317,7 @@ Draw(void *obj)
 
 		/* Indicate active item selection */
 		if (item == mi->sel_subitem && item->state == 1)
-			AG_DrawRect(mview, r, agColors[MENU_SEL_COLOR]);
+			AG_DrawRect(mview, r, WCOLOR_SEL(m,0));
 
 		/* Render the menu item's icon */
 		if (item->icon == -1 &&
@@ -312,10 +334,10 @@ Draw(void *obj)
 			boolState = (item->value != -1) ? item->value :
 			            GetItemBoolValue(item);
 			if (boolState) {
+				C = AG_ColorRGB(223,207,128);
 				AG_DrawFrame(mview,
 				    AG_RECT(x, r.y+2, r.h, r.h-2),
-				    1, agColors[MENU_OPTION_COLOR]);
-				C = agColors[MENU_OPTION_COLOR];
+				    1, C);
 				C.a = 64;
 				AG_DrawRectBlended(mview,
 				    AG_RECT(x, r.y+2, r.h, r.h-2),
@@ -328,11 +350,15 @@ Draw(void *obj)
 			x += m->itemh + mview->spIconLbl;
 
 		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
-			/* Render menu separator item */
-			STYLE(mview)->MenuItemSeparator(mview,
-			    mview->lPad,
-			    WIDTH(mview) - mview->rPad - 1,
-			    r.y, m->itemh);
+			int x1 = mview->lPad;
+			int x2 = WIDTH(mview) - mview->rPad - 1;
+			AG_Color c[2];
+	
+			c[0] = AG_ColorShift(WCOLOR(mview,0), agLowColorShift);
+			c[1] = AG_ColorShift(WCOLOR(mview,0), agHighColorShift);
+
+			AG_DrawLineH(mview, x1, x2, (r.y + m->itemh/2 - 1), c[0]);
+			AG_DrawLineH(mview, x1, x2, (r.y + m->itemh/2), c[1]);
 		} else {
 			int lbl = item->state ? item->lblView[1] :
 			                        item->lblView[0];
@@ -340,7 +366,7 @@ Draw(void *obj)
 			/* Render the menu item's text string */
 			if (item->state == 1) {
 				if (item->lblView[1] == -1) {
-					AG_TextColor(agColors[MENU_TXT_COLOR]);
+					AG_TextColor(WCOLOR(m,TEXT_COLOR));
 					item->lblView[1] =
 					    (item->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(mview,
@@ -349,7 +375,7 @@ Draw(void *obj)
 				lbl = item->lblView[1];
 			} else {
 				if (item->lblView[0] == -1) {
-					AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
+					AG_TextColor(WCOLOR_DIS(m,TEXT_COLOR));
 					item->lblView[0] =
 					    (item->text == NULL) ? -1 :
 					    AG_WidgetMapSurface(mview,
@@ -359,7 +385,7 @@ Draw(void *obj)
 			}
 			AG_WidgetBlitSurface(mview, lbl,
 			    x,
-			    r.y + m->itemh/2 - agTextFontHeight/2 + 1);
+			    r.y + m->itemh/2 - font->height/2 + 1);
 			x += WSURFACE(mview,lbl)->w;
 		}
 

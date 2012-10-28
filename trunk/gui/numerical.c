@@ -662,7 +662,6 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_WidgetSizeReq(num->incbu, &rInc);
 	AG_WidgetSizeReq(num->decbu, &rDec);
 	r->w += MAX(rInc.w, rDec.w) + 4;
-	r->h += 2;
 }
 
 static int

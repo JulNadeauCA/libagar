@@ -134,9 +134,7 @@ AG_DriverClose(AG_Driver *drv)
 
 /*
  * Dump the display surface(s) to a jpeg in ~/.appname/screenshot/.
- * Typically called via AG_GlobalKeys(3).
- * This only works under single-display drivers (use AG_WidgetSurface() to
- * capture windows instead).
+ * It is customary to assign a AG_GlobalKeys(3) shortcut for this function.
  */
 void
 AG_ViewCapture(void)
@@ -152,9 +150,12 @@ AG_ViewCapture(void)
 		        "multiple-window drivers\n");
 		return;
 	}
+
+	AG_LockVFS(&agDrivers);
+
 	if (AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw, &s) == -1) {
 		Verbose("Capture failed: %s\n", AG_GetError());
-		return;
+		goto out;
 	}
 
 	/* Save to a new file. */
@@ -163,7 +164,7 @@ AG_ViewCapture(void)
 	Strlcat(dir, "screenshot", sizeof(dir));
 	if (!AG_FileExists(dir) && AG_MkPath(dir) == -1) {
 		Verbose("Capture failed: %s\n", AG_GetError());
-		return;
+		goto out;
 	}
 	pname = (agProgName != NULL) ? agProgName : "agarapp";
 	for (seq = 0; ; seq++) {
@@ -178,6 +179,8 @@ AG_ViewCapture(void)
 		Verbose("Capture failed: %s\n", AG_GetError());
 	}
 	AG_SurfaceFree(s);
+out:
+	AG_UnlockVFS(&agDrivers);
 }
 
 static void
