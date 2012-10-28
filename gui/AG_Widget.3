@@ -131,12 +131,12 @@ routine of a container widget is responsible for positioning and
 dimensioning of child widgets attached to it (by calling
 .Fn AG_WidgetSizeAlloc
 on them -- see
-.Dq WIDGET SIZING
+.Dq SIZING
 section below).
 The function should return 0 on success or -1 to flag the widget as
 "undersize", disabling further calls to
 .Fn draw .
-.Sh WIDGET SIZING
+.Sh SIZING
 .nr nS 1
 .Ft "void"
 .Fn AG_Expand "AG_Widget *widget"
@@ -533,38 +533,6 @@ and
 (and
 .Fa rs
 set to NULL).
-.Sh RENDERING AND PRIMITIVES
-These routines are provided for use in GUI widgets, exclusively in the context
-of the widget
-.Fa draw
-operation.
-A number of simple primitive drawing routines are also available via the
-.Xr AG_WidgetPrimitives 3
-interface.
-.Pp
-.nr nS 1
-.Ft void
-.Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
-.Pp
-.Ft void
-.Fn AG_PopClipRect "AG_Widget *widget"
-.Pp
-.nr nS 0
-The
-.Fn AG_PushClipRect
-function pushes a rectangle onto the stack of clipping rectangles.
-.Fn AG_PopClipRect
-pops the last entry from the clipping rectangle stack.
-The clipping rectangle is given in coordinates relative to the widget.
-.Pp
-These routines must be invoked from GUI rendering context.
-The method of clipping depends on the underlying graphics API.
-For instance, SDL drivers use
-.Xr SDL_SetClipRect 3
-and OpenGL drivers use
-.Xr glClipPlane 3 .
-In either case, the actual clipping rectangle passed to the graphics API
-is the intersection of all clipping rectangles on the stack.
 .Sh BINDINGS
 Agar widgets can be configured to directly access data of specific types.
 For example,
@@ -607,7 +575,7 @@ is drawn as a pressed button if its
 .Sq state
 binding is 1), Agar provides a built-in facility to monitor binding values
 and request a video update whenever the value changes:
-.Sh WIDGET REDRAW CONTROL
+.Sh CONTROLLING REDRAW
 .nr nS 1
 .Ft "void"
 .Fn AG_Redraw "AG_Widget *widget"
@@ -625,9 +593,7 @@ function signals that the widget must be redrawn to the video display.
 It is equivalent to setting the
 .Va dirty
 variable of the widget's parent window to 1.
-If called from rendering context (i.e., from the
-.Fn draw
-operation of a widget),
+If called from rendering context,
 .Fn AG_Redraw
 is a no-op.
 .Pp
@@ -711,8 +677,14 @@ variant requires that the widget enclose the specified rectangle.
 The pointer returned by
 .Fn AG_WidgetFind* ,
 should be considered valid only as long as the parent VFS remains locked.
-.Sh WIDGET RENDERING
+.Sh RENDERING CONTROL
 .nr nS 1
+.Ft void
+.Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
+.Pp
+.Ft void
+.Fn AG_PopClipRect "AG_Widget *widget"
+.Pp
 .Ft "void"
 .Fn AG_WidgetDraw "AG_Widget *widget"
 .Pp
@@ -734,10 +706,20 @@ should be considered valid only as long as the parent VFS remains locked.
 .Ft "AG_Surface *"
 .Fn AG_WidgetSurface "AG_Widget *widget"
 .Pp
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
-.Pp
 .nr nS 0
+The
+.Fn AG_PushClipRect
+function pushes a rectangle (in widget coordinates) onto the stack of
+clipping rectangles, and
+.Fn AG_PopClipRect
+pops the last entry from the clipping rectangle stack.
+The effective clipping rectangle will be the intersection of all rectangles
+on this stack.
+.Fn AG_PushClipRect
+and
+.Fn AG_PopClipRect
+must be invoked in rendering context.
+.Pp
 The
 .Fn AG_WidgetDraw
 routine renders a widget to the display.
@@ -752,26 +734,71 @@ invocations must be enclosed between calls to
 and
 .Fn AG_EndRendering .
 .Pp
+The
 .Fn AG_WidgetHide
 and
 .Fn AG_WidgetShow
-set the visibility of a widget.
+functions control the visibility of a widget.
 .Fn AG_WidgetVisible
-returns 1 if the widget is visible, 0 if hidden.
+returns 1 if the widget is visible.
 .Pp
 The
 .Fn AG_WidgetSurface
 routine renders the widget to a newly-allocated
 .Xr AG_Surface 3 .
 This surface should be freed after use.
+.Sh STYLE PROPERTIES
+Presentation settings such as fonts and colors are stored as named
+.Xr AG_Variable 3
+properties (e.g., "font-size", "color", "color#hover", etc.)
+Those properties should be set using the following functions:
 .Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_SetFont "AG_Widget *widget" "const AG_Font *font"
+.Pp
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *widget" "const char *which" "const char *value"
+.Pp
+.nr nS 0
+The
+.Fn AG_SetFont
+function sets the widget's default font attributes to match those of the
+specified font object.
+.Pp
+The
 .Fn AG_SetStyle
-changes the style (theme) associated with a widget.
-See
-.Xr AG_Style 3
-for more information about widget themes.
-Note that child widgets automatically inherit the theme associated with
-their parent object.
+function sets the specified style attribute to the given value.
+Accepted attributes are as follows:
+.Pp
+.Bl -tag -compact -width "font-family "
+.It font-family
+Font face specification ("Courier", "Terminal").
+.It font-size
+Font size in points ("10pts") or ratio ("50%").
+.It font-weight
+Font weight, either "bold" or "normal".
+.It font-style
+Font style, either "italic" or "normal".
+.It color
+Main color of the widget.
+Colors may be specified as unsigned 8-bit components with "rgb(r,g,b[,a])",
+or floating-point HSV parameters with "hsv(h,s,v[,a])".
+In either mode, components may be expressed as a ratio to the parent widget's
+color components by appending a "%".
+.It text-color
+Color for rendered text.
+.It line-color
+Color for line drawings.
+.It shape-color
+Color for polygons and other filled shapes.
+.It border-color
+Color for cosmetic borders.
+.El
+.Pp
+An optional selector may be appended to the attribute names.
+Accepted selectors include "#disabled", "#hover" and "#selected".
+Selectors may be interpreted differently on a per-widget basis.
 .Sh STANDARD WIDGET ACTIONS
 User-generated events such as key presses or mouse button events can be
 tied to
@@ -982,6 +1009,11 @@ The widget (or one of its parents) has been moved.
 The widget now holds focus inside its parent container.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
+.It Fn font-changed "void"
+The default font associated with the widget has changed.
+The new font may be accessed via the
+.Va font
+structure member.
 .El
 .Pp
 The following events are usually generated by input devices:
@@ -1019,6 +1051,10 @@ has been pressed.
 and
 .Fa y
 are the cursor coordinates in the widget's local coordinate system.
+.It Fn mouse-over "void"
+The cursor has entered or is leaving the widget's allocated area and the
+.Dv AG_WIDGET_USE_MOUSEOVER
+option is set.
 .It Fn key-down "int key" "int mod" "Ulong unicode"
 The widget is receiving keyboard events and
 .Fa key
@@ -1061,9 +1097,12 @@ Dimensions of the widget in pixels.
 .It Ft AG_Rect2 rView
 Absolute view coordinates of the widget (relative to the parent
 driver device).
-.It Ft AG_Rect2 rSens
-The sensitivity rectangle.
-This defines that area of the display which should respond to cursor events.
+.It Ft AG_Font *font
+Pointer to the effective font associated with the widget (see
+.Xr AG_Font 3 ) .
+This setting is read-only (use
+.Fn AG_SetFont
+to change).
 .El
 .Sh FLAGS
 The
@@ -1079,16 +1118,19 @@ to fill all remaining space.
 Hint to container widgets that in a horizontal packing, this widget can expand
 to fill all remaining space.
 .It AG_WIDGET_HIDE
-Disable rendering of this widget (does not affect widget's children).
+Disable rendering of the widget (not affecting child widgets).
 .It AG_WIDGET_DISABLED
-Meaning is widget-specific but it generally disables user input (read-only,
-set with
-.Fn AG_WidgetDisable
-and
-.Fn AG_WidgetEnable  ) .
-See
+Advise that widget is not accepting user input.
+The effect of this option is widget-dependent (read-only; see
 .Dq INPUT STATE
-section for more details.
+section).
+This flag may affect the way the widget is rendered.
+.It AG_WIDGET_MOUSEOVER
+A mouse cursor currently intersects the widget's area (read-only; updated
+internally if the
+.Dv AG_WIDGET_USE_MOUSEOVER
+flag is set).
+This flag may affect the way the widget is rendered.
 .It AG_WIDGET_FOCUSABLE
 The widget is allowed to grab the focus; normally set by
 .Fn AG_WidgetSetFocusable .
@@ -1132,13 +1174,33 @@ This flag is used by such widgets as
 .Xr AG_Titlebar 3
 and
 .Xr AG_Menu 3 .
+.It AG_WIDGET_USE_TEXT
+Advise that the widget's
+.Fn draw ,
+.Fn size_request
+or
+.Fn size_allocate
+routines will make calls such as
+.Xr AG_TextRender 3
+or
+.Xr AG_TextSize 3 .
+Prior to invoking those routines, Agar will set the font engine's state
+(using
+.Xr AG_PushTextState 3
+and
+.Xr AG_PopTextState 3 )
+according to the widget's effective style settings.
+Enables reception of the "font-changed" event.
+.It AG_WIDGET_USE_MOUSEOVER
+Detect cursor motion over the widget's area; update the
+.Dv AG_WIDGET_MOUSEOVER
+flag and generate "mouse-over" events accordingly.
 .El
 .Sh SEE ALSO
 .Xr AG_Cursor 3 ,
 .Xr AG_KeySym 3 ,
 .Xr AG_KeyMod 3 ,
 .Xr AG_Rect 3 ,
-.Xr AG_Style 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Variable 3 ,
 .Xr AG_WidgetPrimitives 3 ,

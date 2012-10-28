@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,31 +61,38 @@ AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
 	char *s;
 	va_list ap;
 
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-
-	AG_BoxSetLabelS(box, s);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vasprintf(&s, fmt, ap);
+		va_end(ap);
+		AG_BoxSetLabelS(box, s);
+		free(s);
+		box->flags |= AG_BOX_FRAME;
+	} else {
+		AG_BoxSetLabelS(box, NULL);
+		box->flags &= ~(AG_BOX_FRAME);
+	}
 }
 
 /* Set the label text (format string). */
 void
 AG_BoxSetLabelS(AG_Box *box, const char *s)
 {
-	char *captionNew;
-
-	if ((captionNew = TryStrdup(s)) == NULL) {
-		return;
-	}
 	AG_ObjectLock(box);
-	Free(box->caption);
-	box->caption = captionNew;
-	if (box->sCaption != -1) {
-		AG_WidgetUnmapSurface(box, box->sCaption);
-		box->sCaption = -1;
+	if (s != NULL) {
+		if (box->lbl == NULL) {
+			box->lbl = AG_LabelNewS(box, 0, s);
+			AG_SetFontSize(box->lbl, "80%");
+		} else {
+			AG_LabelTextS(box->lbl, s);
+		}
+	} else {
+		AG_ObjectDetach(box->lbl);
+		AG_ObjectDestroy(box->lbl);
+		box->lbl = NULL;
 	}
-	AG_ObjectUnlock(box);
 	AG_Redraw(box);
+	AG_ObjectUnlock(box);
 }
 
 static void
@@ -98,36 +105,7 @@ Init(void *obj)
 	box->depth = -1;
 	box->padding = 4;
 	box->spacing = 2;
-	box->caption = NULL;
-	box->sCaption = -1;
-	box->rCaption = AG_RECT(5, agTextFontHeight/2, 0, 0);
-}
-
-static void
-Destroy(void *obj)
-{
-	AG_Box *box = obj;
-
-	Free(box->caption);
-}
-
-static void
-DrawCaption(AG_Box *box)
-{
-	int y = agTextFontHeight/2;
-
-	if (box->sCaption == -1)  {
-		AG_Surface *sText;
-
-		sText = AG_TextRender(box->caption);
-		box->sCaption = AG_WidgetMapSurface(box, sText);
-	}
-	STYLE(box)->BoxFrame(box,
-	    AG_RECT(0, y, WIDTH(box), HEIGHT(box)-y),
-	    box->depth);
-	AG_WidgetBlitSurface(box, box->sCaption,
-	    box->rCaption.x,
-	    box->rCaption.y);
+	box->lbl = NULL;
 }
 
 static void
@@ -136,17 +114,12 @@ Draw(void *obj)
 	AG_Box *box = obj;
 	AG_Widget *chld;
 
-	if (box->caption != NULL) {
-		DrawCaption(box);
-	} else {
-		if (box->flags & AG_BOX_FRAME) {
-			STYLE(box)->BoxFrame(box,
-			    AG_RECT(0, 0, WIDTH(box), HEIGHT(box)),
-			    box->depth);
-		}
+	if (box->flags & AG_BOX_FRAME) {
+		AG_DrawBox(box,
+		    AG_RECT(0, 0, WIDTH(box), HEIGHT(box)),
+		    box->depth, WCOLOR(box,AG_COLOR));
 	}
-	
-	WIDGET_FOREACH_CHILD(chld, box)
+	OBJECT_FOREACH_CHILD(chld, box, ag_widget)
 		AG_WidgetDraw(chld);
 }
 
@@ -281,10 +254,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	int nWidgets, totFixed;
 	int wAvail, hAvail;
-	int hLabel = (box->caption != NULL) ? agTextFontHeight/2 : 0;
-
-	box->rCaption.w = a->w;
-	box->rCaption.h = a->h - box->rCaption.y;
 
 	if ((nWidgets = CountChildWidgets(box, &totFixed)) == 0) {
 		return (0);
@@ -296,9 +265,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		return (0);
 	}
 	wAvail = a->w - box->padding*2;
-	hAvail = a->h - box->padding*2 - hLabel;
+	hAvail = a->h - box->padding*2;
 	aChld.x = box->padding;
-	aChld.y = box->padding + hLabel;
+	aChld.y = box->padding;
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		switch (box->type) {
@@ -307,26 +276,32 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			          (wAvail - totFixed) : MIN(rChld.w, wAvail);
 			aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 				  hAvail : MIN(hAvail, rChld.h);
+			if (aChld.x+aChld.w > a->w) {
+				aChld.w = a->w - aChld.x;
+			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.x += aChld.w + box->spacing;
-			if (aChld.x > a->w+box->padding*2) {
+			if (aChld.w < 1 || aChld.h < 1 || aChld.x > a->w) {
 				chld->flags |= AG_WIDGET_UNDERSIZE;
 			} else {
 				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
 			}
+			aChld.x += aChld.w + box->spacing;
 			break;
 		case AG_BOX_VERT:
 			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
 			          wAvail : MIN(wAvail, rChld.w);
 			aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 			          (hAvail - totFixed) : MIN(rChld.h, hAvail);
+			if (aChld.y+aChld.h > a->h) {
+				aChld.h = a->h - aChld.y;
+			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.y += aChld.h + box->spacing;
-			if (aChld.y > a->h+box->padding*2) {
+			if (aChld.w < 1 || aChld.h < 1 || aChld.y > a->h) {
 				chld->flags |= AG_WIDGET_UNDERSIZE;
 			} else {
 				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
 			}
+			aChld.y += aChld.h + box->spacing;
 			break;
 		}
 	}
@@ -426,7 +401,7 @@ AG_WidgetClass agBoxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 #ifdef AG_DEBUG

@@ -100,26 +100,19 @@ Draw(void *obj)
 {
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
+	AG_Rect r = AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx));
 
 	if (fx->flags & AG_FIXED_BOX) {
-		AG_DrawBox(fx,
-		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    agColors[FRAME_COLOR]);
+		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_INVBOX) {
-		AG_DrawBox(fx,
-		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    agColors[FRAME_COLOR]);
+		AG_DrawBox(fx, r, -1, WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_FRAME) {
-		AG_DrawFrame(fx,
-		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
-		    agColors[FRAME_COLOR]);
+		AG_DrawFrame(fx, r, -1, WCOLOR(fx,0));
 	} else if (fx->flags & AG_FIXED_FILLBG) {
-		AG_DrawRect(fx,
-		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)),
-		    agColors[FIXED_BG_COLOR]);
+		AG_DrawRect(fx, r, WCOLOR(fx,0));
 	}
 
-	WIDGET_FOREACH_CHILD(chld, fx)
+	OBJECT_FOREACH_CHILD(chld, fx, ag_widget)
 		AG_WidgetDraw(chld);
 }
 

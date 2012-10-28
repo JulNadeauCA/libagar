@@ -187,20 +187,22 @@ AG_TableSetDefaultColWidth(AG_Table *t, int w)
 	AG_ObjectUnlock(t);
 }
 
-/*
- * If some column sizes were specified using percents, or use the FILL
- * option, expand them to their effective pixel sizes. This is only done
- * once, during initial sizing.
- */
+/* Compute the effective widths of the columns. */
 static void
 SizeColumns(AG_Table *t)
 {
 	AG_TableCol *tc, *tcFill = NULL;
-	int n;
+	AG_Rect r;
+	int n, x;
 
 	t->wTot = 0;
 	for (n = 0; n < t->n; n++) {
 		tc = &t->cols[n];
+
+		if (tc->ca != NULL) {
+			AG_UnmapCursor(t, tc->ca);
+			tc->ca = NULL;
+		}
 		if (tc->wPct != -1) {
 			tc->w = tc->wPct*t->r.w/100;
 			t->wTot += tc->w;
@@ -225,6 +227,19 @@ SizeColumns(AG_Table *t)
 			tcFill->w = t->wColMin;
 		}
 		t->wTot += tcFill->w;
+	}
+
+	/* Update the cursor change areas for column resize. */
+	r.x = 0;
+	r.y = 0;
+	r.h = t->hCol;
+	for (n = 0, x = 0; n < t->n; n++) {
+		tc = &t->cols[n];
+		
+		r.x = MAX(0, x - COLUMN_RESIZE_RANGE/2);
+		r.w = COLUMN_RESIZE_RANGE;
+		tc->ca = AG_MapStockCursor(t, r, AG_HRESIZE_CURSOR);
+		x += tc->w;
 	}
 }
 
@@ -337,8 +352,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	t->r.h = a->h - t->hCol;
 	t->r.y = t->hCol;
 
-	if (t->r.h <= 0)
+	if (t->r.h <= 0) {
 		return (-1);
+	}
 	
 	if (t->vbar && AG_WidgetVisible(t->vbar)) {
 		AG_WidgetSizeReq(t->vbar, &rBar);
@@ -494,11 +510,9 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 
 	switch (c->type) {
 	case AG_CELL_STRING:					/* Avoid copy */
-		AG_TextColor(agColors[TEXT_COLOR]);
 		c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->data.s));
 		goto blit;
 	case AG_CELL_PSTRING:					/* Avoid copy */
-		AG_TextColor(agColors[TEXT_COLOR]);
 		c->surface = AG_WidgetMapSurface(t, AG_TextRender((char *)
 		                                                  c->data.p));
 		goto blit;
@@ -518,7 +532,6 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		return;
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
-			AG_TextColor(agColors[TEXT_COLOR]);
 			c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->fmt));
 			goto blit;
 		} else {
@@ -529,12 +542,11 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		AG_TablePrintCell(c, txt, sizeof(txt));
 		break;
 	}
-	AG_TextColor(agColors[TEXT_COLOR]);
 	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
 	    rd->x,
-	    rd->y + (t->hRow>>1) - (WSURFACE(t,c->surface)->h>>1));
+	    rd->y + t->hRow/2 - WSURFACE(t,c->surface)->h/2);
 }
 
 static void
@@ -616,7 +628,7 @@ Draw(void *obj)
 	AG_Rect rCol, rCell;
 	int n, m;
 
-	STYLE(t)->TableBackground(t, t->r);
+	AG_DrawBox(t, AG_RECT(0,0,WIDTH(t),HEIGHT(t)), -1, WCOLOR(t,0));
 	
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
@@ -627,8 +639,6 @@ Draw(void *obj)
 	if (!(t->flags & AG_TABLE_NOAUTOSORT) &&
 	    t->flags & AG_TABLE_NEEDSORT)
 		AG_TableSort(t);
-
-	AG_PushTextState();
 
 	rCol.y = 0;
 	rCol.h = t->hCol + t->r.h - 2;
@@ -653,35 +663,42 @@ Draw(void *obj)
 			    rCol.x - 1,
 			    t->hCol - 1,
 			    rCol.h,
-			    agColors[TABLE_LINE_COLOR]);
+			    WCOLOR(t,LINE_COLOR));
 		}
 		
 		AG_PushClipRect(t, rCol);
 
-		STYLE(t)->TableColumnHeaderBackground(t, n,
-		    AG_RECT(rCol.x, 0, rCol.w, t->hCol),
-		    col->selected);
+		AG_DrawBox(t,
+		    RECT(rCol.x, 0, rCol.w, t->hCol),
+		    col->selected ? -1 : 1,
+		    col->selected ? WCOLOR_SEL(t,0) : WCOLOR(t,0));
 
 		/* Column header label */
-		if (col->surface != -1) {
-			AG_WidgetBlitSurface(t, col->surface,
-			    rCell.x + col->w/2 - WSURFACE(t,col->surface)->w/2,
-			    t->hCol/2 - WSURFACE(t,col->surface)->h/2);
+		if (col->name[0] != '\0') {
+			if (col->surface == -1) {
+				AG_Surface *s;
+				s = AG_TextRender(col->name);
+				col->surface = AG_WidgetMapSurface(t, s);
+			}
+			if (col->surface != -1)
+				AG_WidgetBlitSurface(t, col->surface,
+				    rCell.x + col->w/2 - WSURFACE(t,col->surface)->w/2,
+				    t->hCol/2 - WSURFACE(t,col->surface)->h/2);
 
 			if (col->flags & AG_TABLE_SORT_ASCENDING) {
 				AG_DrawArrowUp(t,
 				    rCell.x + col->w - 10,
 				    t->hCol/2,
 				    10,
-				    agColors[SCROLLBAR_ARR1_COLOR],
-				    agColors[SCROLLBAR_ARR2_COLOR]);
+				    WCOLOR(t,SHAPE_COLOR),
+				    WCOLOR(t,SHAPE_COLOR));
 			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + col->w - 10,
 				    t->hCol/2,
 				    10,
-				    agColors[SCROLLBAR_ARR1_COLOR],
-				    agColors[SCROLLBAR_ARR2_COLOR]);
+				    WCOLOR(t,SHAPE_COLOR),
+				    WCOLOR(t,SHAPE_COLOR));
 			}
 		}
 
@@ -691,8 +708,7 @@ Draw(void *obj)
 		     m++) {
 			AG_TableCell *c = &t->cells[m][n];
 
-			AG_DrawLineH(t, 0, t->r.w, rCell.y,
-			    agColors[TABLE_LINE_COLOR]);
+			AG_DrawLineH(t, 0, t->r.w, rCell.y, WCOLOR(t,LINE_COLOR));
 
 			DrawCell(t, c, &rCell);
 			if (c->selected) {
@@ -702,14 +718,15 @@ Draw(void *obj)
 			rCell.y += t->hRow;
 		}
 
-		AG_DrawLineH(t, 0, t->r.w, rCell.y,
-		    agColors[TABLE_LINE_COLOR]);
+		AG_DrawLineH(t, 0, t->r.w, rCell.y, WCOLOR(t,LINE_COLOR));
 
 		/* Indicate column selection. */
 		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
-			STYLE(t)->TableSelectedColumnBackground(t, n, rCol);
+			AG_DrawRectBlended(t, rCol,
+			    AG_ColorRGBA(0,0,250,32),
+			    AG_ALPHA_SRC);
 		}
-		
+
 		AG_PopClipRect(t);
 		rCell.x += col->w;
 	}
@@ -719,11 +736,9 @@ Draw(void *obj)
 		    rCell.x - 1,
 		    t->hCol - 1,
 		    rCol.h,
-		    agColors[TABLE_LINE_COLOR]);
+		    WCOLOR(t,LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
-
-	AG_PopTextState();
 }
 
 /* Register a new popup menu. */
@@ -1766,6 +1781,34 @@ KeyUp(AG_Event *event)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_Table *t = AG_SELF();
+	AG_Font *font = WIDGET(t)->font;
+	Uint m, n;
+	
+	t->hRow = font->height + 2;
+	t->hCol = font->height + 4;
+	
+	for (n = 0; n < t->n; n++) {
+		AG_TableCol *tc = &t->cols[n];
+
+		if (tc->surface != -1) {
+			AG_WidgetUnmapSurface(t, tc->surface);
+			tc->surface = -1;
+		}
+		for (m = 0; m < t->m; m++) {
+			AG_TableCell *c = &t->cells[m][n];
+
+			if (c->surface != -1) {
+				AG_WidgetUnmapSurface(t, c->surface);
+				c->surface = -1;
+			}
+		}
+	}
+}
+
+static void
 LostFocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
@@ -1907,12 +1950,8 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->selected = 0;
 	tc->w = 0;
 	tc->wPct = -1;
-
-	AG_PushTextState();
-	AG_TextColor(agColors[TEXT_COLOR]);
-	tc->surface = (name == NULL) ? -1 :
-	    AG_WidgetMapSurface(t, AG_TextRender(name));
-	AG_PopTextState();
+	tc->surface = -1;
+	tc->ca = NULL;
 
 	if (t->n > 0) {
 		lc = &t->cols[t->n - 1];
@@ -2220,7 +2259,8 @@ Init(void *obj)
 
 	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
 	                    AG_WIDGET_UNFOCUSED_MOTION|
-	                    AG_WIDGET_UNFOCUSED_BUTTONUP;
+	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
+			    AG_WIDGET_USE_TEXT;
 
 	t->sep = ":";
 	t->flags = 0;
@@ -2230,7 +2270,7 @@ Init(void *obj)
 	t->wColDefault = 80;
 	t->wHint = -1;				/* Use column size specs */
 	t->hHint = t->hCol + t->hRow*2;
-	t->r = AG_RECT(0,0,0,0);
+	t->r = RECT(0,0,0,0);
 	t->selMode = AG_TABLE_SEL_ROWS;
 	t->selColor = AG_ColorRGBA(0,0,250,32);
 	t->wTot = 0;
@@ -2281,14 +2321,15 @@ Init(void *obj)
 	}
 	TAILQ_INIT(&t->cPrevList);
 
+	AG_AddEvent(t, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
+	AG_AddEvent(t, "detached", LostFocus, NULL);
+	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(t, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(t, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(t, "key-down", KeyDown, NULL);
 	AG_SetEvent(t, "key-up", KeyUp, NULL);
-	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
-	AG_AddEvent(t, "widget-hidden", LostFocus, NULL);
-	AG_AddEvent(t, "detached", LostFocus, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindInt(t, "hRow", &t->hRow);

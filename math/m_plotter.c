@@ -344,7 +344,7 @@ Init(void *obj)
 {
 	M_Plotter *ptr = obj;
 
-	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	ptr->type = M_PLOT_2D;
 	ptr->flags = 0;
@@ -499,7 +499,7 @@ Draw(void *obj)
 	Uint i;
 	int y0 = ptr->r.h/2;
 
-	AG_DrawBox(ptr, rw, -1, agColors[GRAPH_BG_COLOR]);
+	AG_DrawBox(ptr, rw, -1, WCOLOR(ptr,0));
 	
 	AG_PushClipRect(ptr, rw);
 	
@@ -523,7 +523,7 @@ Draw(void *obj)
 				AG_DrawRectOutline(ptr,
 				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
 				            su->w+4, su->h+4),
-				    agColors[TEXT_COLOR]);
+				    WCOLOR(ptr,TEXT_COLOR));
 			}
 			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
 			    pl->yLabel);
@@ -572,7 +572,7 @@ Draw(void *obj)
 			int xLbl, yLbl;
 			AG_Color colBG, colLine;
 
-			colBG = agColors[GRAPH_BG_COLOR];
+			colBG = WCOLOR(ptr,0);
 			colBG.a = 200;
 			colLine = pl->color;
 			colLine.a /= 2;

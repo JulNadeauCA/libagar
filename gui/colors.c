@@ -30,14 +30,14 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include <ctype.h>
+
 #include "gui.h"
 #include "colors.h"
 #include "load_color.h"
 #include "drv.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
-
-AG_Color agColors[LAST_COLOR];
 
 Sint8  agFocusSunkColorShift[3] =	{ -10, -10, -20 };
 Sint8  agFocusRaisedColorShift[3] =	{  30,  30,  20 };
@@ -46,95 +46,7 @@ Sint8  agNofocusRaisedColorShift[3] =	{  10,  10,  10 };
 Sint8  agHighColorShift[3] =		{  40,  40,  40 };
 Sint8  agLowColorShift[3] =		{ -30, -30, -20 };
 
-const char *agColorNames[] = {
-	N_("Background"),
-	N_("Frame"),
-	N_("Line"),
-	N_("Text"),
-	N_("Window background"),
-	N_("Window highlight"),
-	N_("Window lowlight"),
-	N_("Titlebar (focused)"),
-	N_("Titlebar (unfocused)"),
-	N_("Titlebar caption"),
-	N_("Button"),
-	N_("Button text"),
-	N_("Disabled widget"),
-	N_("Checkbox"),
-	N_("Checkbox text"),
-	N_("Graph"),
-	N_("Graph X-axis"),
-	N_("HSV palette circle"),
-	N_("HSV palette tiling 1"),
-	N_("HSV palette tiling 2"),
-	N_("Menu"),
-	N_("Menu selection"),
-	N_("Menu option"),
-	N_("Menu text"),
-	N_("Menu separator 1"),
-	N_("Menu separator 2"),
-	N_("Notebook"),
-	N_("Notebook selection"),
-	N_("Notebook tab text"),
-	N_("Radio selection"),
-	N_("Radio overlap"),
-	N_("Radio highlight"),
-	N_("Radio lowlight"),
-	N_("Radio text"),
-	N_("Scrollbar"),
-	N_("Scrollbar buttons"),
-	N_("Scrollbar arrow 1"),
-	N_("Scrollbar arrow 2"),
-	N_("Separator line 1"),
-	N_("Separator line 2"),
-	N_("Tableview"),
-	N_("Tableview header"),
-	N_("Tableview header text"),
-	N_("Tableview cell text"),
-	N_("Tableview line"),
-	N_("Tableview selection"),
-	N_("Textbox"),
-	N_("Textbox text"),
-	N_("Textbox cursor"),
-	N_("Tlist text"),
-	N_("Tlist"),
-	N_("Tlist line"),
-	N_("Tlist selection"),
-	N_("Mapview grid"),
-	N_("Mapview cursor"),
-	N_("Mapview tiling 1"),
-	N_("Mapview tiling 2"),
-	N_("Mapview mouse selection"),
-	N_("Mapview effective selection"),
-	N_("Tileview tiling 1"),
-	N_("Tileview tiling 2"),
-	N_("Tileview text background"),
-	N_("Tileview text"),
-	N_("Transparent color"),
-	N_("HSV Palette bar #1"),
-	N_("HSV Palette bar #2"),
-	N_("Pane"),
-	N_("Pane (circles)"),
-	N_("Mapview noderef selection"),
-	N_("Mapview origin point"),
-	N_("Focus"),
-	N_("Table"),
-	N_("Table lines"),
-	N_("Fixed background"),
-	N_("Fixed box"),
-	N_("Text (disabled)"),
-	N_("Menu text (disabled)"),
-	N_("Socket"),
-	N_("Socket label"),
-	N_("Socket highlight"),
-	N_("Progress bar"),
-	N_("Window border"),
-	N_("Text selection"),
-	N_("Frame (mouseover)"),
-	N_("Button (mouseover)"),
-	N_("Scrollbar button (mouseover)"),
-};
-
+#if 0
 /* Initialize the standard palette. */
 void
 AG_ColorsInit(void)
@@ -316,11 +228,6 @@ AG_ColorsSaveDefault(void)
 	return (0);
 }
 
-void
-AG_ColorsDestroy(void)
-{
-}
-
 #define ASSERT_VALID_COLOR(name) \
 	do { \
 		if (name < 0 || name >= LAST_COLOR) { \
@@ -328,60 +235,88 @@ AG_ColorsDestroy(void)
 			return (-1); \
 		}; \
 	} while (0)
+#endif
 
-static __inline__ void
-UpdatedColor(int colorIdx)
+/*
+ * Parse a string color specification of the form "rgb(r,g,b[,a])" or
+ * "hsv(h,s,v[,a])". Color components may be specified as literal values
+ * or % of some parent color.
+ */
+static __inline__ double
+ColorPct(Uint8 in, double v)
 {
-	if (colorIdx == BG_COLOR &&
-	    agDriverSw != NULL) {
-		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw,
-		    agColors[colorIdx]);
+	double val;
+	val = ((double)in)*v/100.0;
+	if (val < 0.0) { return (0); }
+	if (val > 255.0) { return (255); }
+	return val;
+}
+AG_Color
+AG_ColorFromString(const char *s, const AG_Color *pColor)
+{
+	char buf[128];
+	AG_Color cIn = (pColor != NULL) ? *pColor : AG_ColorRGB(0,0,0);
+ 	AG_Color cOut = cIn;
+	double v[4];
+	int isPct[4], isHSV = 0;
+ 	char *c, *pc;
+	int i, argc;
+
+	Strlcpy(buf, s, sizeof(buf));
+	
+	for (c = &buf[0]; *c != '\0' && isspace(*c); c++) {
+		;;
 	}
-}
+	switch (*c) {
+	case 'r':		/* rgb(r,g,b[,a]) */
+		break;
+	case 'h':		/* hsv(h,s,v[,a]) */
+		isHSV = 1;
+		break;
+	default:
+		return (cOut);
+	}
+	for (; *c != '\0' && *c != '('; c++)
+		;;
+	if (*c == '\0' || c[1] == '\0') {
+		goto out;
+	}
+	pc = &c[1];
+	for (i = 0, argc = 0; i < 4; i++) {
+		char *tok, *ep;
+		if ((tok = AG_Strsep(&pc, ",")) == NULL) {
+			break;
+		}
+		v[i] = strtod(tok, &ep);
+		isPct[i] = (*ep == '%');
+		argc++;
+	}
+	if (argc < 3) {
+		goto out;
+	}
+	if (isHSV) {
+		float hue, sat, val;
 
-/* Set a color scheme entry from RGB components. */
-int
-AG_ColorsSetRGB(int name, Uint8 r, Uint8 g, Uint8 b)
-{
-	ASSERT_VALID_COLOR(name);
-	agColors[name] = AG_ColorRGB(r,g,b);
-	UpdatedColor(name);
-	return (0);
-}
-
-/* Set a color scheme entry from RGBA components. */
-int
-AG_ColorsSetRGBA(int name, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	ASSERT_VALID_COLOR(name);
-	agColors[name] = AG_ColorRGBA(r,g,b,a);
-	UpdatedColor(name);
-	return (0);
-}
-
-/* Extra a color scheme entry's RGB components. */
-int
-AG_ColorsGetRGB(int name, Uint8 *r, Uint8 *g, Uint8 *b)
-{
-	AG_Color *C = &agColors[name];
-
-	ASSERT_VALID_COLOR(name);
-	*r = C->r;
-	*g = C->g;
-	*b = C->b;
-	return (0);
-}
-
-/* Extra a color scheme entry's RGBA components. */
-int
-AG_ColorsGetRGBA(int name, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
-{
-	AG_Color *C = &agColors[name];
-
-	ASSERT_VALID_COLOR(name);
-	*r = C->r;
-	*g = C->g;
-	*b = C->b;
-	*a = C->a;
-	return (0);
+		AG_RGB2HSV(cIn.r, cIn.g, cIn.b, &hue, &sat, &val);
+		hue = isPct[0] ? ColorPct(hue, v[0]) : v[0];
+		sat = isPct[1] ? ColorPct(sat, v[1]) : v[1];
+		val = isPct[2] ? ColorPct(val, v[2]) : v[2];
+		AG_HSV2RGB(hue, sat, val, &cOut.r, &cOut.g, &cOut.b);
+		if (argc == 4) {
+			cOut.a = isPct[3] ? ColorPct(cIn.a, v[3]) : v[3];
+		} else {
+			cOut.a = cIn.a;
+		}
+	} else {
+		cOut.r = isPct[0] ? (Uint8)ColorPct(cIn.r, v[0]) : (Uint8)v[0];
+		cOut.g = isPct[1] ? (Uint8)ColorPct(cIn.g, v[1]) : (Uint8)v[1];
+		cOut.b = isPct[2] ? (Uint8)ColorPct(cIn.b, v[2]) : (Uint8)v[2];
+		if (argc == 4) {
+			cOut.a = isPct[3] ? (Uint8)ColorPct(cIn.a, v[3]) : (Uint8)v[3];
+		} else {
+			cOut.a = cIn.a;
+		}
+	}
+out:
+	return (cOut);
 }

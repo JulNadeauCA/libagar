@@ -286,6 +286,36 @@ AG_PaneResizeAction(AG_Pane *pa, enum ag_pane_resize_action ra)
 }
 
 static void
+DrawHorizDivider(AG_Pane *pa, int x, int y)
+{
+	int xMid = x + pa->wDiv/2;
+
+	AG_DrawBox(pa,
+	    AG_RECT(x+1, 0, pa->wDiv-2, HEIGHT(pa)),
+	    pa->dmoving ? -1 : 1,
+	    WCOLOR(pa,0));
+	
+	AG_PutPixel(pa, xMid, y, WCOLOR(pa,SHAPE_COLOR));
+	AG_PutPixel(pa, xMid, y-5, WCOLOR(pa,SHAPE_COLOR));
+	AG_PutPixel(pa, xMid, y+5, WCOLOR(pa,SHAPE_COLOR));
+}
+
+static void
+DrawVertDivider(AG_Pane *pa, int x, int y)
+{
+	int yMid = y + pa->wDiv/2;
+
+	AG_DrawBox(pa,
+	    AG_RECT(0, y+1, WIDTH(pa), pa->wDiv-2),
+	    pa->dmoving ? -1 : 1,
+	    WCOLOR(pa,0));
+
+	AG_PutPixel(pa, x, yMid, WCOLOR(pa,SHAPE_COLOR));
+	AG_PutPixel(pa, x-5, yMid, WCOLOR(pa,SHAPE_COLOR));
+	AG_PutPixel(pa, x+5, yMid, WCOLOR(pa,SHAPE_COLOR));
+}
+
+static void
 Draw(void *obj)
 {
 	AG_Pane *pa = obj;
@@ -296,12 +326,10 @@ Draw(void *obj)
 	if (pa->wDiv > 0) {
 		switch (pa->type) {
 		case AG_PANE_HORIZ:
-			STYLE(pa)->PaneHorizDivider(pa, pa->dx, HEIGHT(pa)/2,
-			    pa->wDiv, pa->dmoving);
+			DrawHorizDivider(pa, pa->dx, HEIGHT(pa)/2);
 			break;
 		case AG_PANE_VERT:
-			STYLE(pa)->PaneVertDivider(pa, WIDTH(pa)/2, pa->dx,
-			    pa->wDiv, pa->dmoving);
+			DrawVertDivider(pa, WIDTH(pa)/2, pa->dx);
 			break;
 		}
 	}

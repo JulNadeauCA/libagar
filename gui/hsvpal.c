@@ -899,7 +899,7 @@ Draw(void *obj)
 	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*Cos(cur_h),
 	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*Sin(cur_h),
 	    pal->selcircle_r,
-	    agColors[HSVPAL_CIRCLE_COLOR]);
+	    AG_ColorRGB(0,0,0));
 	
 	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
 	y = (int)((1.0 - cur_s) * (float)pal->triangle.h);
@@ -910,7 +910,7 @@ Draw(void *obj)
 	    pal->triangle.x + x - y/2,
 	    pal->triangle.y + y,
 	    pal->selcircle_r,
-	    agColors[HSVPAL_CIRCLE_COLOR]);
+	    AG_ColorRGB(0,0,0));
 
 	x = a*pal->rAlpha.w/255;
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
@@ -930,17 +930,17 @@ Draw(void *obj)
 		    pal->rAlpha.x + x,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    agColors[HSVPAL_BAR1_COLOR]);
+		    AG_ColorRGBA(0,0,0,0));
 		AG_DrawLineV(pal,
 		    pal->rAlpha.x + x + 1,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    agColors[HSVPAL_BAR2_COLOR]);
+		    AG_ColorRGBA(240,240,240,0));
 		AG_DrawLineV(pal,
 		    pal->rAlpha.x + x + 2,
 		    pal->rAlpha.y + 1,
 		    pal->rAlpha.y + pal->rAlpha.h,
-		    agColors[HSVPAL_BAR1_COLOR]);
+		    AG_ColorRGBA(0,0,0,0));
 	}
 
 	/* Display RGB/HSV values */

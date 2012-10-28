@@ -9,7 +9,7 @@
 #include <agar/gui/begin.h>
 
 #define AG_GLYPH_NBUCKETS 1024	/* Buckets for glyph cache table */
-#define AG_TEXT_STATES_MAX 32	/* Maximum number of saved text states */
+#define AG_TEXT_STATES_MAX 128	/* Maximum number of saved text states */
 
 struct ag_window;
 struct ag_button;
@@ -89,7 +89,8 @@ typedef struct ag_font {
 	AG_Surface **bglyphs;		/* Bitmap glyphs */
 	Uint nglyphs;			/* Bitmap glyph count */
 	Uint32 c0, c1;			/* Bitmap glyph range */
-	AG_SLIST_ENTRY(ag_font) fonts;
+	Uint nRefs;			/* Reference count */
+	AG_TAILQ_ENTRY(ag_font) fonts;
 } AG_Font;
 
 /*
@@ -140,12 +141,12 @@ extern AG_Mutex agTextLock;
 extern AG_StaticFont *agBuiltinFonts[];
 extern const int agBuiltinFontCount;
 
-int	 AG_TextRenderInit(void);
-void	 AG_TextRenderDestroy(void);
+int	 AG_InitTextSubsystem(void);
+void	 AG_DestroyTextSubsystem(void);
 
 void	 AG_TextParseFontSpec(const char *);
 AG_Font	*AG_FetchFont(const char *, int, int);
-void     AG_DestroyFont(AG_Font *);
+void     AG_UnusedFont(AG_Font *);
 void	 AG_SetDefaultFont(AG_Font *);
 void	 AG_SetRTL(int);
 
@@ -364,7 +365,7 @@ AG_TextBGColorHex(Uint32 c)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Select the font face to use in rendering text. */
+/* Select a specific font face to use in rendering text. */
 static __inline__ void
 AG_TextFont(AG_Font *font)
 {

@@ -361,25 +361,50 @@ MouseMotion(AG_Event *event)
 }
 
 static void
+ComputeVisible(AG_Console *cons)
+{
+	cons->rVisible = (int)AG_Floor((float)(cons->r.h - cons->padding*2) /
+	                               (float)cons->lineskip);
+}
+
+static void
+OnFontChange(AG_Event *event)
+{
+	AG_Console *cons = AG_SELF();
+	Uint i;
+
+	cons->lineskip = WIDGET(cons)->font->lineskip + 1;
+	cons->rOffs = 0;
+	ComputeVisible(cons);
+
+	for (i = 0; i < cons->nLines; i++) {
+		AG_ConsoleLine *ln = cons->lines[i];
+
+		if (ln->surface != -1) {
+			AG_WidgetUnmapSurface(cons, ln->surface);
+			ln->surface = -1;
+		}
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Console *cons = obj;
 
-	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	cons->flags = 0;
 	cons->padding = 4;
 	cons->lines = NULL;
-	cons->lineskip = agTextFontLineSkip + 1;
+	cons->lineskip = 0;
 	cons->nLines = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
-	cons->cBg = AG_ColorRGB(20,20,20);
 	cons->pm = NULL;
 	cons->pos = -1;
 	cons->sel = 0;
 	cons->r = AG_RECT(0,0,0,0);
-	cons->font = agDefaultFont;
 	cons->scrollTo = NULL;
 
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT,
@@ -408,7 +433,13 @@ Init(void *obj)
 	AG_ActionOnKey(cons, AG_KEY_DOWN, AG_KEYMOD_ANY, "ScrollDown");
 	AG_ActionOnKey(cons, AG_KEY_PAGEUP, AG_KEYMOD_ANY, "PageUp");
 	AG_ActionOnKey(cons, AG_KEY_PAGEDOWN, AG_KEYMOD_ANY, "PageDown");
+
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
+	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
+
+	AG_SetString(cons, "color",		"rgb(0,0,0)");
+	AG_SetString(cons, "text-color",	"rgb(240,240,240)");
 
 #ifdef AG_DEBUG
 	AG_BindUint(cons, "nLines", &cons->nLines);
@@ -424,13 +455,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
 	r->h *= 2;
-}
-
-static void
-ComputeVisible(AG_Console *cons)
-{
-	cons->rVisible = (int)AG_Floor((float)(cons->r.h - cons->padding*2) /
-	                               (float)cons->lineskip);
 }
 
 static int
@@ -464,13 +488,12 @@ Draw(void *p)
 	AG_Rect rDst;
 	Uint lnIdx;
 
-	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
-	
+	AG_DrawRect(cons,
+	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)),
+	    WCOLOR(cons,AG_COLOR));
+
 	if (cons->nLines == 0)
 		goto out;
-
-	AG_PushTextState();
-	AG_TextFont(cons->font);
 
 	if (cons->scrollTo != NULL) {
 		cons->rOffs = *cons->scrollTo;
@@ -487,9 +510,12 @@ Draw(void *p)
 		AG_ConsoleLine *ln = cons->lines[lnIdx];
 
 		if (ln->surface == -1) {
-			AG_TextColor(ln->cFg);
-			AG_TextBGColor(ln->cBg);
-			su = AG_TextRender(ln->text);
+			AG_TextColor(
+			    (ln->cAlt.a != 0) ? ln->cAlt :
+			    WCOLOR(cons,AG_TEXT_COLOR));
+			if ((su = AG_TextRender(ln->text)) == NULL) {
+				continue;
+			}
 			ln->surface = AG_WidgetMapSurface(cons, su);
 		}
 		if (cons->pos != -1) {
@@ -500,14 +526,13 @@ Draw(void *p)
 				    AG_RECT(rDst.x, rDst.y,
 				            WIDGET(cons)->w - cons->padding*2,
 				            cons->lineskip+1),
-				    agColors[TEXT_SEL_COLOR]);
+				    WCOLOR_SEL(cons,AG_COLOR));
 			}
 		}
 		AG_WidgetBlitSurface(cons, ln->surface, rDst.x, rDst.y);
 		rDst.y += cons->lineskip;
 	}
 	AG_PopClipRect(cons);
-	AG_PopTextState();
 out:
 	AG_WidgetDraw(cons->vBar);
 }
@@ -544,28 +569,6 @@ AG_ConsoleSetPadding(AG_Console *cons, int padding)
 	AG_ObjectUnlock(cons);
 }
 
-/* Configure an alternate font */
-void
-AG_ConsoleSetFont(AG_Console *cons, AG_Font *font)
-{
-	Uint i;
-
-	AG_ObjectLock(cons);
-	cons->font = (font != NULL) ? font : agDefaultFont;
-	cons->lineskip = cons->font->lineskip + 1;
-	cons->rOffs = 0;
-	ComputeVisible(cons);
-
-	for (i = 0; i < cons->nLines; i++) {
-		AG_ConsoleLine *ln = cons->lines[i];
-
-		AG_WidgetUnmapSurface(cons, ln->surface);
-		ln->surface = -1;
-	}
-	AG_Redraw(cons);
-	AG_ObjectUnlock(cons);
-}
-
 /* Append a line to the log */
 AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
@@ -596,8 +599,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->cons = cons;
 	ln->p = NULL;
 	ln->surface = -1;
-	ln->cBg = AG_ColorRGBA(0,0,0,0);
-	ln->cFg = AG_ColorRGB(250,250,230);
+	ln->cAlt = AG_ColorRGBA(0,0,0,0);
 
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
 		cons->scrollTo = &cons->nLines;
@@ -712,11 +714,10 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 }
 
 void
-AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *cBg, const AG_Color *cFg)
+AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 {
 	AG_ObjectLock(ln->cons);
-	if (cBg != NULL) { ln->cBg = *cBg; }
-	if (cFg != NULL) { ln->cFg = *cFg; }
+	ln->cAlt = (c != NULL) ? *c : AG_ColorRGBA(0,0,0,0);
 	AG_ObjectUnlock(ln->cons);
 }
 

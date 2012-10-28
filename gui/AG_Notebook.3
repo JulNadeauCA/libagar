@@ -63,9 +63,6 @@ be selected programmatically.
 .Fn AG_NotebookSetTabAlignment "AG_Notebook *nb" "enum ag_notebook_tab_alignment alignment"
 .Pp
 .Ft "void"
-.Fn AG_NotebookSetTabFont "AG_Notebook *nb" "AG_Font *font"
-.Pp
-.Ft "void"
 .Fn AG_NotebookSetTabVisibility "AG_Notebook *nb" "int flag"
 .Pp
 .nr nS 0
@@ -112,12 +109,8 @@ enum ag_notebook_tab_alignment {
 };
 .Ed
 .Pp
-The font of the text displaying the tab names can be changed with
-.Fn AG_NotebookSetTabFont .
-.Pp
-The function
 .Fn AG_NotebookSetTabVisibility
-controls the visibility of the tab header (0 = invisible, 1 = visible).
+toggles the visibility of the tab header.
 .Sh TAB MANAGEMENT
 .nr nS 1
 .Ft "AG_NotebookTab *"

@@ -4,6 +4,7 @@
 #define _AGAR_GUI_SURFACE_H_
 
 #include <agar/gui/geometry.h>
+#include <agar/gui/colors.h>
 
 #include <agar/gui/begin.h>
 
@@ -68,6 +69,7 @@ typedef enum ag_blend_func {
 #define AG_ALPHA_OPAQUE		255		/* Opaque alpha value */
 
 __BEGIN_DECLS
+extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
 extern AG_PixelFormat *agSurfaceFmt;  /* Recommended format for new surfaces */
 extern AG_PixelFormat *agTextureFmt;  /* Recommended format for textures */
 

@@ -1,9 +1,6 @@
 /*	Public domain	*/
 /*
- * This application displays a couple of standard Agar-GUI widgets. It is
- * useful for testing the GUI display and trying different themes (see
- * AG_Style(3) for details). See README file for a description of the
- * various command-line options provided.
+ * This application displays a set of standard Agar-GUI widgets.
  */
 
 #include "agartest.h"
@@ -18,57 +15,7 @@
 #include <agar/config/ag_debug.h>
 #include <agar/config/version.h>
 
-#include "themes_mytheme.h"
-
 char textBuffer[30];
-
-/* Apply a new theme to all windows. */
-static void
-SetTheme(AG_Event *event)
-{
-	AG_Style *style = AG_PTR(1);
-	AG_Driver *drv;
-
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver)
-		AG_SetStyle(drv, style);
-}
-
-/* Load a color scheme file. */
-static void
-SetColorScheme(AG_Event *event)
-{
-	char *file = AG_STRING(1);
-
-	if (AG_ColorsLoad(file) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
-		    AG_GetError());
-	}
-}
-
-/* Tweak the current color scheme. */
-static void
-TweakColorScheme(AG_Event *event)
-{
-	int darker = AG_INT(1);
-	const int inc = 10;
-	int i;
-
-	for (i = 0; i < LAST_COLOR; i++) {
-		Uint8 r, g, b, a;
-
-		AG_ColorsGetRGBA(i, &r, &g, &b, &a);
-		if (darker) {
-			r = (r - inc) > 0 ? (r - inc) : 0;
-			g = (g - inc) > 0 ? (g - inc) : 0;
-			b = (b - inc) > 0 ? (b - inc) : 0;
-		} else {
-			r = (r + inc) < 255 ? (r + inc) : 255;
-			g = (g + inc) < 255 ? (g + inc) : 255;
-			b = (b + inc) < 255 ? (b + inc) : 255;
-		}
-		AG_ColorsSetRGBA(i, r, g, b, a);
-	}
-}
 
 /* Example callback for combo-selected. */
 static void
@@ -76,7 +23,7 @@ ComboSelected(AG_Event *event)
 {
 	AG_TlistItem *ti = AG_PTR(1);
 
-	AG_TextMsgS(AG_MSG_INFO, AG_Printf("Selected Item: %s", ti->text));
+	AG_TextMsg(AG_MSG_INFO, "Selected Item: %s", ti->text);
 }
 
 /* Show the agar-dev "Preferences" dialog. */
@@ -172,6 +119,7 @@ TestGUI(void *obj, AG_Window *win)
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);
+		AG_BoxSetLabel(vBox, "Some checkboxes");
 		{
 			/*
 			 * The Checkbox widget can bind to boolean values
@@ -310,22 +258,6 @@ TestGUI(void *obj, AG_Window *win)
 			AG_MenuAction(m, "Close this test", agIconClose.s,
 			    AGWINDETACH(win));
 		}
-		m = AG_MenuNode(menu->root, "Theme", NULL);
-		{
-			AG_MenuAction(m, "Default theme", NULL,
-			    SetTheme, "%p", &agStyleDefault);
-			AG_MenuAction(m, "Custom theme", NULL,
-			    SetTheme, "%p", &myRoundedStyle);
-			m = AG_MenuNode(m, "Color scheme", NULL);
-			{
-				AG_MenuAction(m, "Green (green.acs)", NULL,
-				    SetColorScheme, "%s", "green.acs");
-				AG_MenuAction(m, "Make Darker", NULL,
-				    TweakColorScheme, "%i", 1);
-				AG_MenuAction(m, "Make Lighter", NULL,
-				    TweakColorScheme, "%i", 0);
-			}
-		}
 		m = AG_MenuNode(menu->root, "Test", NULL);
 		{
 			AG_MenuNode(m, "Submenu A", NULL);
@@ -420,9 +352,6 @@ TestGUI(void *obj, AG_Window *win)
 static int
 Init(void *obj)
 {
-	/* Initialize our custom theme. */
-	InitMyRoundedStyle(&myRoundedStyle);
-	
 	DEV_InitSubsystem(0);
 	return (0);
 }

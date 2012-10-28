@@ -74,7 +74,6 @@ typedef struct ag_editable {
 	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
 	AG_Rect r;			/* View area */
 	struct ag_cursor_area *ca;	/* For "text" cursor change */
-	AG_Font *font;			/* Font for text rendering */
 	int fontMaxHeight;		/* Maximum character height */
 	int lineSkip;			/* Y-increment in multiline mode */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */
@@ -84,7 +83,6 @@ typedef struct ag_editable {
 	AG_Timer toRepeat;		/* Key repeat timer */
 	AG_Timer toCursorBlink;		/* Cursor blink timer */
 	AG_Timer toDblClick;		/* Double click timer */
-	AG_Color color, colorBG;	/* Alternate text color */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
@@ -127,9 +125,6 @@ void         AG_EditableSetWordWrap(AG_Editable *, int);
 void         AG_EditableSetExcl(AG_Editable *, int);
 void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
-void         AG_EditableSetFont(AG_Editable *, AG_Font *);
-void         AG_EditableSetColor(AG_Editable *, AG_Color);
-void         AG_EditableSetColorBG(AG_Editable *, AG_Color);
 
 void     AG_EditableSetString(AG_Editable *, const char *);
 #define  AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)
@@ -190,6 +185,7 @@ AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
 }	
 
 #ifdef AG_LEGACY
+# define AG_EditableSetFont AG_SetFont
 # define AG_EditableSetStatic AG_EditableSetExcl
 # define AG_EDITABLE_STATIC AG_EDITABLE_EXCL
 # define AG_EDITABLE_NOWORDSEEK 0

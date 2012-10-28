@@ -110,15 +110,6 @@ processing.
 .Fn AG_TextboxSetFltOnly "AG_Textbox *textbox" "int enable"
 .Pp
 .Ft void
-.Fn AG_TextboxSetFont "AG_Textbox *textbox" "AG_Font *font"
-.Pp
-.Ft "void"
-.Fn AG_TextboxSetColor "AG_Textbox *textbox" "AG_Color C"
-.Pp
-.Ft "void"
-.Fn AG_TextboxSetColorBG "AG_Textbox *textbox" "AG_Color C" "AG_Color Cdisabled"
-.Pp
-.Ft void
 .Fn AG_TextboxSetLabel "AG_Textbox *textbox" "const char *format" "..."
 .Pp
 .Ft void
@@ -268,20 +259,6 @@ enables/disable word wrapping.
 restricts input to integers (see flags)
 .Fn AG_TextboxSetFltOnly
 restricts input to real numbers (see flags).
-.Pp
-.Fn AG_TextboxSetFont
-configures an alternate font for the input area (see
-.Xr AG_FetchFont 3 ) .
-.Pp
-The
-.Fn AG_TextboxSetColor
-function sets an alternate text color.
-.Fn AG_TextboxSetColorLabel
-sets an alternate color for the text label.
-.Fn AG_TextboxSetColorBG
-sets alternate background color for the active and disabled widget states.
-See
-.Xr AG_Color 3 .
 .Pp
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.
@@ -475,11 +452,6 @@ Pointer to the
 A call to
 .Fn AG_TextboxSetLabel
 will create a new label object.
-.It Ft AG_Font *font
-Alternate font (if NULL, the default font is used).
-Read-only (use
-.Fn AG_EditableSetFont
-to change).
 .It Ft AG_Text *text
 An initially empty
 .Xr AG_Text 3
@@ -524,7 +496,7 @@ dynamically-allocated strings:
 AG_Text *myLargeText;
 AG_Textbox *tb;
 
-myLargeText = AG_TextNew(NULL);
+myLargeText = AG_TextNew(0);
 tb = AG_TextboxNew(parent,
     AG_TEXTBOX_EXCL|AG_TEXTBOX_MULTILINE,
     NULL);

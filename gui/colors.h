@@ -1,109 +1,15 @@
 /*	Public domain	*/
-/*
- * Standard color palette for GUI elements.
- */
 
 #ifndef _AGAR_GUI_COLORS_H_
 #define _AGAR_GUI_COLORS_H_
-
-#include <agar/gui/geometry.h>
-
 #include <agar/gui/begin.h>
 
-enum {
-	BG_COLOR,
-	FRAME_COLOR,
-	LINE_COLOR,
-	TEXT_COLOR,
-	WINDOW_BG_COLOR,
-	WINDOW_HI_COLOR,
-	WINDOW_LO_COLOR,
-	TITLEBAR_FOCUSED_COLOR,
-	TITLEBAR_UNFOCUSED_COLOR,
-	TITLEBAR_CAPTION_COLOR,
-	BUTTON_COLOR,
-	BUTTON_TXT_COLOR,
-	DISABLED_COLOR,
-	CHECKBOX_COLOR,
-	CHECKBOX_TXT_COLOR,
-	GRAPH_BG_COLOR,
-	GRAPH_XAXIS_COLOR,
-	HSVPAL_CIRCLE_COLOR,
-	HSVPAL_TILE1_COLOR,
-	HSVPAL_TILE2_COLOR,
-	MENU_UNSEL_COLOR,
-	MENU_SEL_COLOR,
-	MENU_OPTION_COLOR,
-	MENU_TXT_COLOR,
-	MENU_SEP1_COLOR,
-	MENU_SEP2_COLOR,
-	NOTEBOOK_BG_COLOR,
-	NOTEBOOK_SEL_COLOR,
-	NOTEBOOK_TXT_COLOR,
-	RADIO_SEL_COLOR,
-	RADIO_OVER_COLOR,
-	RADIO_HI_COLOR,
-	RADIO_LO_COLOR,
-	RADIO_TXT_COLOR,
-	SCROLLBAR_COLOR,
-	SCROLLBAR_BTN_COLOR,
-	SCROLLBAR_ARR1_COLOR,
-	SCROLLBAR_ARR2_COLOR,
-	SEPARATOR_LINE1_COLOR,
-	SEPARATOR_LINE2_COLOR,
-	TABLEVIEW_COLOR,
-	TABLEVIEW_HEAD_COLOR,
-	TABLEVIEW_HTXT_COLOR,
-	TABLEVIEW_CTXT_COLOR,
-	TABLEVIEW_LINE_COLOR,
-	TABLEVIEW_SEL_COLOR,
-	TEXTBOX_COLOR,
-	TEXTBOX_TXT_COLOR,
-	TEXTBOX_CURSOR_COLOR,
-	TLIST_TXT_COLOR,
-	TLIST_BG_COLOR,
-	TLIST_LINE_COLOR,
-	TLIST_SEL_COLOR,
-	MAPVIEW_GRID_COLOR,
-	MAPVIEW_CURSOR_COLOR,
-	MAPVIEW_TILE1_COLOR,
-	MAPVIEW_TILE2_COLOR,
-	MAPVIEW_MSEL_COLOR,
-	MAPVIEW_ESEL_COLOR,
-	TILEVIEW_TILE1_COLOR,
-	TILEVIEW_TILE2_COLOR,
-	TILEVIEW_TEXTBG_COLOR,
-	TILEVIEW_TEXT_COLOR,
-	TRANSPARENT_COLOR,
-	HSVPAL_BAR1_COLOR,
-	HSVPAL_BAR2_COLOR,
-	PANE_COLOR,
-	PANE_CIRCLE_COLOR,
-	MAPVIEW_RSEL_COLOR,
-	MAPVIEW_ORIGIN_COLOR,
-	FOCUS_COLOR,
-	TABLE_COLOR,
-	TABLE_LINE_COLOR,
-	FIXED_BG_COLOR,
-	FIXED_BOX_COLOR,
-	TEXT_DISABLED_COLOR,
-	MENU_TXT_DISABLED_COLOR,
-	SOCKET_COLOR,
-	SOCKET_LABEL_COLOR,
-	SOCKET_HIGHLIGHT_COLOR,
-	PROGRESS_BAR_COLOR,
-	WINDOW_BORDER_COLOR,
-	TEXT_SEL_COLOR,
-	FRAME_MOUSEOVER_COLOR,
-	BUTTON_MOUSEOVER_COLOR,
-	SCROLLBAR_BTN_MOUSEOVER_COLOR,
-	LAST_COLOR
-};
+/* Color */
+typedef struct ag_color {
+	Uint8 r, g, b, a;
+} AG_Color;
 
 __BEGIN_DECLS
-extern AG_Color    agColors[LAST_COLOR];
-extern const char *agColorNames[];
-
 extern Sint8 agFocusSunkColorShift[3];
 extern Sint8 agFocusRaisedColorShift[3];
 extern Sint8 agNofocusSunkColorShift[3];
@@ -111,15 +17,54 @@ extern Sint8 agNofocusRaisedColorShift[3];
 extern Sint8 agHighColorShift[3];
 extern Sint8 agLowColorShift[3];
 
-void     AG_ColorsInit(void);
-void     AG_ColorsDestroy(void);
-int      AG_ColorsLoad(const char *);
-int      AG_ColorsSave(const char *);
-int      AG_ColorsSaveDefault(void);
-int      AG_ColorsSetRGB(int, Uint8, Uint8, Uint8);
-int      AG_ColorsSetRGBA(int, Uint8, Uint8, Uint8, Uint8);
-int      AG_ColorsGetRGB(int, Uint8 *, Uint8 *, Uint8 *);
-int      AG_ColorsGetRGBA(int, Uint8 *, Uint8 *, Uint8 *, Uint8 *);
+/* Return a Color structure for given RGB components. */
+static __inline__ AG_Color
+AG_ColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_Color c;
+	c.r = r;
+	c.g = g;
+	c.b = b;
+	c.a = 255;
+	return (c);
+}
+
+/* Return a Color structure for given RGBA components. */
+static __inline__ AG_Color
+AG_ColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_Color c;
+	c.r = r;
+	c.g = g;
+	c.b = b;
+	c.a = a;
+	return (c);
+}
+
+/* Return a Color structure from 0xRRGGBBAA format. */
+static __inline__ AG_Color
+AG_ColorHex(Uint32 h)
+{
+	AG_Color c;
+
+	c.r = (h&0xff000000) >> 24;
+	c.g = (h&0x00ff0000) >> 16;
+	c.b = (h&0x0000ff00) >> 8;
+	c.a = (h&0x000000ff);
+	return (c);
+}
+
+/* Compare two colors. */
+static __inline__ int
+AG_ColorCompare(AG_Color c1, AG_Color c2)
+{
+	return (c1.r == c2.r &&
+	        c1.g == c2.g &&
+		c1.b == c2.b &&
+		c1.a == c2.a) ? 0 : 1;
+}
+
+AG_Color AG_ColorFromString(const char *, const AG_Color *);
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -64,7 +64,7 @@ FreeCachedText(AG_TextCache *tc, AG_CachedText *ct)
 }
 
 void
-AG_TextCacheDestroy(AG_TextCache *tc)
+AG_TextCacheClear(AG_TextCache *tc)
 {
 	Uint i;
 	AG_CachedText *ct, *ctNext;
@@ -82,7 +82,15 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 			FreeCachedText(tc, ct);
 		}
 		TAILQ_INIT(&buck->ents);
+		buck->nEnts = 0;
 	}
+	tc->curEnts = 0;
+}
+
+void
+AG_TextCacheDestroy(AG_TextCache *tc)
+{
+	AG_TextCacheClear(tc);
 	Free(tc->buckets);
 }
 

@@ -102,16 +102,22 @@ static void
 Draw(void *obj)
 {
 	AG_Separator *sep = obj;
+	AG_Color c[2];
 
 	if (!sep->visible)
 		return;
-	
+
+	c[0] = AG_ColorShift(WCOLOR(sep,0), agLowColorShift);
+	c[1] = AG_ColorShift(WCOLOR(sep,0), agHighColorShift);
+
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		STYLE(sep)->SeparatorHoriz(sep);
+		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding, c[0]);
+		AG_DrawLineH(sep, 0, WIDTH(sep), sep->padding+1, c[1]);
 		break;
 	case AG_SEPARATOR_VERT:
-		STYLE(sep)->SeparatorVert(sep);
+		AG_DrawLineV(sep, sep->padding, 0, HEIGHT(sep), c[0]);
+		AG_DrawLineV(sep, sep->padding+1, 0, HEIGHT(sep), c[1]);
 		break;
 	}
 }

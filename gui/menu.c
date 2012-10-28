@@ -478,13 +478,34 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 }
 
 static void
+OnFontChange(AG_Event *event)
+{
+	AG_Menu *m = AG_SELF();
+	AG_Font *font = WIDGET(m)->font;
+	int i, j;
+
+	for (i = 0; i < m->root->nsubitems; i++) {
+		AG_MenuItem *item = &m->root->subitems[i];
+
+		for (j = 0; j < 2; j++) {
+			if (item->lblMenu[j] != -1) {
+				AG_WidgetUnmapSurface(m, item->lblMenu[j]);
+				item->lblMenu[j] = -1;
+			}
+		}
+	}
+	m->itemh = font->height + m->tPadLbl + m->bPadLbl;
+}
+
+static void
 Init(void *obj)
 {
 	AG_Menu *m = obj;
 
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                    AG_WIDGET_NOSPACING;
+	                    AG_WIDGET_NOSPACING|
+			    AG_WIDGET_USE_TEXT;
 
 	m->flags = 0;
 	m->lPad = 5;
@@ -510,6 +531,7 @@ Init(void *obj)
 	AG_SetEvent(m, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(m, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(m, "attached", Attached, NULL);
+	AG_AddEvent(m, "font-changed", OnFontChange, NULL);
 }
 
 /* Change the icon associated with a menu item. */
@@ -1035,7 +1057,9 @@ Draw(void *obj)
 	int lbl, wLbl, hLbl;
 	int i;
 
-	STYLE(m)->MenuRootBackground(m);
+	AG_DrawBox(m,
+	    AG_RECT(0, 0, WIDTH(m), HEIGHT(m)), 1,
+	    WCOLOR(m,0));
 
 	if (m->root == NULL)
 		return;
@@ -1047,7 +1071,7 @@ Draw(void *obj)
 
 		if (item->state) {
 			if (item->lblMenu[1] == -1) {
-				AG_TextColor(agColors[MENU_TXT_COLOR]);
+				AG_TextColor(WCOLOR(m,TEXT_COLOR));
 				item->lblMenu[1] = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
@@ -1055,7 +1079,7 @@ Draw(void *obj)
 			lbl = item->lblMenu[1];
 		} else {
 			if (item->lblMenu[0] == -1) {
-				AG_TextColor(agColors[MENU_TXT_DISABLED_COLOR]);
+				AG_TextColor(WCOLOR_DIS(m,TEXT_COLOR));
 				item->lblMenu[0] = (item->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
 				    AG_TextRender(item->text));
@@ -1065,11 +1089,12 @@ Draw(void *obj)
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
 		if (item == m->itemSel) {
-			STYLE(m)->MenuRootSelectedItemBackground(m,
+			AG_DrawRect(m,
 			    AG_RECT(item->x,
 			            item->y,
 	    		            m->lPadLbl + wLbl + m->rPadLbl,
-	    		            m->tPadLbl + hLbl + m->bPadLbl));
+	    		            m->tPadLbl + hLbl + m->bPadLbl),
+			    WCOLOR_SEL(m,0));
 		}
 		AG_WidgetBlitSurface(m, lbl,
 		    item->x + m->lPadLbl,

@@ -238,8 +238,28 @@ Draw(void *obj)
 	count = GetCount(binding, pBinding);
 	AG_UnlockVariable(binding);
 #endif
+	/* Draw background */
+	switch (sock->bgType) {
+	case AG_SOCKET_PIXMAP:
+		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
+		break;
+	case AG_SOCKET_RECT:
+		if (AG_WidgetEnabled(sock)) {
+			AG_DrawBox(sock,
+			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
+			    WCOLOR(sock,0));
+		} else {
+			AG_DrawBoxDisabled(sock,
+			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
+			    WCOLOR(sock,0), WCOLOR_DIS(sock,0));
+		}
+		break;
+	case AG_SOCKET_CIRCLE:
+		AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
+		    sock->bgData.circle.r, WCOLOR(sock,0));
+		break;
+	}
 
-	STYLE(sock)->SocketBackground(sock);
 	if (sock->icon != NULL) {
 		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
@@ -247,7 +267,26 @@ Draw(void *obj)
 		AG_PostEvent(NULL, sock->overlayFn, sock->overlayFn->name,
 		    NULL);
 	} else {
-		STYLE(sock)->SocketOverlay(sock, state);
+		switch (sock->bgType) {
+		case AG_SOCKET_PIXMAP:
+			/* TODO */
+		case AG_SOCKET_RECT:
+			if (state) {
+				AG_DrawRectOutline(sock,
+				    AG_RECT(sock->lPad, sock->tPad,
+				            WIDTH(sock) - sock->lPad - sock->rPad,
+					    HEIGHT(sock) - sock->tPad - sock->bPad),
+				    WCOLOR_SEL(sock,LINE_COLOR));
+			}
+			break;
+		case AG_SOCKET_CIRCLE:
+			if (state) {
+				AG_DrawCircle(sock, WIDTH(sock)/2, HEIGHT(sock)/2,
+				    sock->bgData.circle.r - sock->lPad,
+				    WCOLOR_SEL(sock,LINE_COLOR));
+			}
+			break;
+		}
 	}
 }
 

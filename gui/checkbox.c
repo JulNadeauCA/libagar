@@ -186,32 +186,15 @@ KeyDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
-{
-	AG_Checkbox *cb = AG_SELF();
-	int x = AG_INT(1);
-	int y = AG_INT(2);
-
-	if (x >= 0 && y >= 0 && x < WIDGET(cb)->w && y < WIDGET(cb)->h) {
-		if (!cb->mouseOver) {
-			cb->mouseOver = 1;
-			AG_Redraw(cb);
-		}
-	} else {
-		if (cb->mouseOver) {
-			cb->mouseOver = 0;
-			AG_Redraw(cb);
-		}
-	}
-}
-
-static void
 Init(void *obj)
 {
 	AG_Checkbox *cb = obj;
 
-	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
-	                     AG_WIDGET_TABLE_EMBEDDABLE;
+	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|
+	                     AG_WIDGET_UNFOCUSED_MOTION|
+	                     AG_WIDGET_TABLE_EMBEDDABLE|
+			     AG_WIDGET_USE_TEXT|
+			     AG_WIDGET_USE_MOUSEOVER;
 
 	AG_BindInt(cb, "state", &cb->state);
 	AG_RedrawOnChange(cb, 100, "state");
@@ -220,18 +203,16 @@ Init(void *obj)
 	cb->state = 0;
 	cb->lbl = NULL;
 	cb->spacing = 4;
-	cb->btnSize = agTextFontHeight;
-	cb->mouseOver = 0;
 	
 	AG_SetEvent(cb, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(cb, "key-down", KeyDown, NULL);
-	AG_SetEvent(cb, "mouse-motion", MouseMotion, NULL);
 }
 
 static void
 Draw(void *obj)
 {
 	AG_Checkbox *cb = obj;
+	AG_Font *font = WIDGET(cb)->font;
 	AG_Variable *stateb;
 	void *p;
 	int state;
@@ -271,13 +252,26 @@ Draw(void *obj)
 		break;
 	}
 
-	if (cb->mouseOver) {
+	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
 		AG_Rect r = AG_RECT(0,0,WIDGET(cb)->w,WIDGET(cb)->h-1);
 		AG_DrawRectBlended(cb, r,
 		    AG_ColorRGBA(255,255,255,25),
 		    AG_ALPHA_SRC);
 	}
-	STYLE(cb)->CheckboxButton(cb, state, cb->btnSize);
+
+	if (AG_WidgetEnabled(cb)) {
+		AG_DrawBox(cb,
+		    AG_RECT(0, 0, font->height, font->height),
+		    state ? -1 : 1,
+		    WCOLOR(cb,0));
+	} else {
+		AG_DrawBoxDisabled(cb,
+		    AG_RECT(0, 0, font->height, font->height),
+		    state ? -1 : 1,
+		    WCOLOR(cb,0),
+		    WCOLOR_DIS(cb,0));
+	}
+
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);
 	}
@@ -288,15 +282,16 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Checkbox *cb = obj;
+	AG_Font *font = WIDGET(cb)->font;
 	AG_SizeReq rLbl;
 
-	r->h = cb->btnSize;
-	r->w = cb->btnSize;
+	r->h = font->height;
+	r->w = font->height;
 	
 	if (cb->lbl != NULL) {
 		AG_WidgetSizeReq(cb->lbl, &rLbl);
 		r->w += cb->spacing + rLbl.w;
-		r->h = agTextFontHeight;
+		r->h = MAX(r->h, rLbl.h);
 	}
 }
 
@@ -304,13 +299,14 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Checkbox *cb = obj;
+	AG_Font *font = WIDGET(cb)->font;
 	AG_SizeAlloc aLbl;
 
-	if (a->w < cb->btnSize || a->h < cb->btnSize) {
+	if (a->w < font->height) {
 		return (-1);
 	}
 	if (cb->lbl != NULL) {
-		aLbl.x = cb->btnSize + cb->spacing;
+		aLbl.x = font->height + cb->spacing;
 		aLbl.y = 0;
 		aLbl.w = a->w - aLbl.x;
 		aLbl.h = a->h;

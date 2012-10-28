@@ -486,7 +486,7 @@ Init(void *obj)
 {
 	AG_Treetbl *tt = obj;
 	
-	WIDGET(tt)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(tt)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	tt->cellDataFn = NULL;
 	tt->sortFn = NULL;
@@ -827,8 +827,6 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 		cell->text = (data != NULL) ?
 		             Strdup((char *)data) :
 		             Strdup("(null)");
-
-		AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 		cell->image = AG_TextRender(cell->text);
 	}
 	va_end(ap);
@@ -1201,7 +1199,27 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return (0);
 }
 
-/* Render a dynamic column. */
+static void
+DrawSubnodeIndicator(void *wid, AG_Rect r, int isExpanded)
+{
+	AG_Color C;
+
+	AG_DrawRectBlended(wid,
+	    AG_RECT(r.x-1, r.y, r.w+2, r.h),
+	    AG_ColorRGBA(0,0,0,64),
+	    AG_ALPHA_SRC);
+
+	C = AG_ColorRGBA(255,255,255,100);
+	if (isExpanded) {
+		AG_DrawMinus(wid,
+		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
+		    C, AG_ALPHA_SRC);
+	} else {
+		AG_DrawPlus(wid,
+		    AG_RECT(r.x+2, r.y+2, r.w-4, r.h-4),
+		    C, AG_ALPHA_SRC);
+	}
+}
 static void
 DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
 {
@@ -1223,11 +1241,8 @@ DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
 		if (cell->image != NULL)
 			AG_SurfaceFree(cell->image);
 
-		AG_PushTextState();
-		AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 		s = tt->cellDataFn(tt, col->cid, row->rid);
 		cell->image = AG_TextRender((s != NULL) ? s : "");
-		AG_PopTextState();
 	}
 }
 
@@ -1242,17 +1257,20 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 
 	/* Render the column header. */
 	if (tt->hCol > 0) {
-		STYLE(tt)->TableColumnHeaderBackground(tt, idx,
-		    AG_RECT(x1, 0, col->w, tt->hCol),
-		    (col->flags & (AG_TREETBL_COL_SELECTED|
-		                   AG_TREETBL_COL_SORTING)));
+		if ((col->flags & (AG_TREETBL_COL_SELECTED|AG_TREETBL_COL_SORTING))) {
+			AG_DrawBox(tt,
+			    AG_RECT(x1, 0, col->w, tt->hCol),
+			    -1, WCOLOR_SEL(tt,0));
+		} else {
+			AG_DrawBox(tt,
+			    AG_RECT(x1, 0, col->w, tt->hCol),
+			    1, WCOLOR(tt,0));
+		}
 
 		if (col->label[0] != '\0') {
 			int xLbl;
 
 			if (col->labelSu == -1) {
-				AG_PushTextState();
-				AG_TextColor(agColors[TABLEVIEW_HTXT_COLOR]);
 				col->labelSu = AG_WidgetMapSurface(tt,
 				    AG_TextRender(col->label));
 			}
@@ -1280,10 +1298,9 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 
 			x += VISDEPTH(tt,j)*(tw+4);
 			if (!TAILQ_EMPTY(&VISROW(tt,j)->children)) {
-				STYLE(tt)->TreeSubnodeIndicator(tt,
+				DrawSubnodeIndicator(tt,
 				    AG_RECT(x, y+tw/2, tw, tw),
-				    (VISROW(tt,j)->flags &
-				     AG_TREETBL_ROW_EXPANDED));
+				    (VISROW(tt,j)->flags & AG_TREETBL_ROW_EXPANDED));
 			}
 			x += tw+4;
 		}
@@ -1300,8 +1317,9 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 	if (tt->hCol > 0 &&
 	    idx == tt->n-1 &&
 	    x2 < tt->r.w) {
-		STYLE(tt)->TableColumnHeaderBackground(tt, -1,
-		    AG_RECT(x2, 0, tt->r.w-x2, tt->hCol), 0);
+		AG_DrawBox(tt,
+		    AG_RECT(x2, 0, tt->r.w-x2, tt->hCol),
+		    1, WCOLOR(tt,0));
 	}
 	return (1);
 }
@@ -1409,7 +1427,7 @@ Draw(void *obj)
 	    AG_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
 		update = 1;
 	
-	STYLE(tt)->TableBackground(tt, tt->r);
+	AG_DrawBox(tt, tt->r, -1, WCOLOR(tt,0));
 	
 	AG_WidgetDraw(tt->vBar);
 	if (tt->hBar != NULL)
@@ -1421,9 +1439,11 @@ Draw(void *obj)
 		if (VISROW(tt,i) == NULL) {
 			break;
 		}
-		STYLE(tt)->TableRowBackground(tt,
-		    AG_RECT(1, y, tt->r.w-2, tt->hRow),
-		    (VISROW(tt,i)->flags & AG_TREETBL_ROW_SELECTED));
+		if (VISROW(tt,i)->flags & AG_TREETBL_ROW_SELECTED) {
+			AG_DrawBox(tt,
+			    AG_RECT(1, y, tt->r.w-2, tt->hRow),
+			    1, WCOLOR_SEL(tt,0));
+		}
 		y += tt->hRow;
 	}
 
@@ -1468,11 +1488,8 @@ AG_TreetblCellPrintf(AG_Treetbl *tt, AG_TreetblRow *row, int cid,
 	Vasprintf(&cell->text, fmt, args);
 	va_end(args);
 
-	AG_PushTextState();
-	AG_TextColor(agColors[TABLEVIEW_CTXT_COLOR]);
 	if (cell->image != NULL) { AG_SurfaceFree(cell->image); }
 	cell->image = AG_TextRender(cell->text);
-	AG_PopTextState();
 	
 	AG_ObjectUnlock(tt);
 }

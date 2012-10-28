@@ -109,15 +109,6 @@ or "Select All" functions could be implemented externally in this way).
 .Fn AG_EditableSetFltOnly "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
-.Fn AG_EditableSetFont "AG_Editable *ed" "AG_Font *font"
-.Pp
-.Ft "void"
-.Fn AG_EditableSetColor "AG_Editable *ed" "AG_Color C"
-.Pp
-.Ft "void"
-.Fn AG_EditableSetColorBG "AG_Editable *ed" "AG_Color C"
-.Pp
-.Ft void
 .Fn AG_EditableSizeHint "AG_Editable *ed" "const char *text"
 .Pp
 .Ft void
@@ -270,16 +261,6 @@ enables/disable word wrapping.
 restricts input to integers (see flags)
 .Fn AG_EditableSetFltOnly
 restricts input to real numbers (see flags).
-.Pp
-.Fn AG_EditableSetFont
-configures an alternate font (see
-.Xr AG_FetchFont 3 ) .
-.Pp
-.Fn AG_EditableSetColor
-and
-.Fn AG_EditableSetColorBG
-configure an alternate text and background color (see
-.Xr AG_Color 3 ) .
 .Pp
 .Fn AG_EditableSizeHint
 requests that the initial geometry of
@@ -554,11 +535,6 @@ value).
 .It Ft int sel
 Current selection, expressed as an offset from the cursor
 (0 = there is no selection).
-.It Ft AG_Font *font
-Alternate font (if NULL, the default font is used).
-Read-only (use
-.Fn AG_EditableSetFont
-to change).
 .It Ft AG_Text *text
 An initially empty
 .Xr AG_Text 3

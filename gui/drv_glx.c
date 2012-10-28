@@ -1154,15 +1154,16 @@ GLX_RenderWindow(AG_Window *win)
 {
 	AG_DriverGLX *glx = (AG_DriverGLX *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &glx->gl;
-	AG_Color C = agColors[WINDOW_BG_COLOR];
+	AG_Color c = WCOLOR(win,0);
 
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
 	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
 	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
-	/* clear the clipped area with the background colour */
-	glClearColor(C.r/255.0, C.g/255.0, C.b/255.0, 1.0);
+	glClearColor(c.r/255.0,
+	             c.g/255.0,
+		     c.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);

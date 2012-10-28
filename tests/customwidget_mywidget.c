@@ -96,23 +96,20 @@ Draw(void *p)
 	AG_Color c;
 	
 	/*
-	 * Draw a box spanning the widget area. In order to allow themeing,
-	 * you would generally use a STYLE() call here instead, see AG_Style(3)
-	 * for more information on styles.
+	 * Draw a box spanning the widget area. Use the widget's
+	 * default color (the "color" style property).
 	 */
 	AG_DrawBox(my,
 	    AG_RECT(0, 0, AGWIDGET(my)->w, AGWIDGET(my)->h), 1,
-	    agColors[BUTTON_COLOR]);
+	    AG_WCOLOR(my,0));
 
 	/*
-	 * Render some text into a new surface. In OpenGL mode, the
-	 * AG_WidgetMapSurface() call involves a texture upload.
+	 * Render some text onto a surface. The default text color
+	 * (the "text-color" style property) will be used.
 	 */
 	if (my->mySurface == -1) {
-		AG_PushTextState();
 		my->mySurface = AG_WidgetMapSurface(my,
 		    AG_TextRender("Custom widget!"));
-		AG_PopTextState();
 	}
 
 	c = AG_ColorRGB(250, 250, 0);
@@ -207,6 +204,12 @@ Init(void *obj)
 
 	/* Receive mouse motion events unconditionally. */
 	AGWIDGET(my)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
+
+	/* The widget will be using the font engine. */
+	AGWIDGET(my)->flags |= AG_WIDGET_USE_TEXT;
+	
+	/* The widget will react to mouse hover events. */
+	AGWIDGET(my)->flags |= AG_WIDGET_USE_MOUSEOVER;
 
 	/* Initialize instance variables. */
 	my->foo = "";

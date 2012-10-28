@@ -132,7 +132,7 @@ static const char *agTextMsgTitles[] = {
 };
 
 AG_Mutex agTextLock;
-static SLIST_HEAD(ag_fontq, ag_font) fonts;
+static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
 
 static AG_Timer textMsgTo; 				/* For AG_TextTmsg() */
@@ -174,6 +174,7 @@ FontInit(void *obj)
 	font->descent = 0;
 	font->lineskip = 0;
 	font->ttf = NULL;
+	font->nRefs = 0;
 }
 
 static void
@@ -307,7 +308,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 
 	AG_MutexLock(&agTextLock);
 
-	SLIST_FOREACH(font, &fonts, fonts) {
+	TAILQ_FOREACH(font, &fonts, fonts) {
 		if (font->spec.size == (double)ptsize &&
 		    font->flags == flags &&
 		    strcmp(OBJECT(font)->name, name) == 0)
@@ -421,8 +422,9 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		AG_SetError("Unsupported font type");
 		goto fail;
 	}
-	SLIST_INSERT_HEAD(&fonts, font, fonts);
+	TAILQ_INSERT_HEAD(&fonts, font, fonts);
 out:
+	font->nRefs++;
 	AG_MutexUnlock(&agTextLock);
 	return (font);
 fail:
@@ -431,11 +433,18 @@ fail:
 	return (NULL);
 }
 
+/* Decrement reference count on a font, delete if it reaches zero. */
 void
-AG_DestroyFont(AG_Font *font)
+AG_UnusedFont(AG_Font *font)
 {
-	if (font != agDefaultFont)
-		AG_ObjectDestroy(font);
+	AG_MutexLock(&agTextLock);
+	if (font != agDefaultFont) {
+		if (--font->nRefs == 0) {
+			TAILQ_REMOVE(&fonts, font, fonts);
+			AG_ObjectDestroy(font);
+		}
+	}
+	AG_MutexUnlock(&agTextLock);
 }
 
 void
@@ -484,15 +493,13 @@ InitTextState(void)
 
 /* Initialize the font engine and configure the default font. */
 int
-AG_TextRenderInit(void)
+AG_InitTextSubsystem(void)
 {
-	AG_Font *font;
-
 	if (agTextInitedSubsystem++ > 0)
 		return (0);
 
 	AG_MutexInitRecursive(&agTextLock);
-	SLIST_INIT(&fonts);
+	TAILQ_INIT(&fonts);
 
 	/* Set the default font search path. */
 	AG_ObjectLock(agConfig);
@@ -578,14 +585,13 @@ AG_TextRenderInit(void)
 	}
 	AG_ObjectUnlock(agConfig);
 
-	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
+	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
 		goto fail;
 	}
-	agDefaultFont = font;
-	agTextFontHeight = font->height;
-	agTextFontAscent = font->ascent;
-	agTextFontDescent = font->descent;
-	agTextFontLineSkip = font->lineskip;
+	agTextFontHeight = agDefaultFont->height;
+	agTextFontAscent = agDefaultFont->ascent;
+	agTextFontDescent = agDefaultFont->descent;
+	agTextFontLineSkip = agDefaultFont->lineskip;
 
 	/* Initialize the rendering state. */
 	curState = 0;
@@ -603,23 +609,19 @@ fail:
 }
 
 void
-AG_TextRenderDestroy(void)
+AG_DestroyTextSubsystem(void)
 {
-	AG_Font *font, *nextfont;
+	AG_Font *font, *fontNext;
 	
 	if (--agTextInitedSubsystem > 0) {
 		return;
 	}
-	for (font = SLIST_FIRST(&fonts);
-	     font != SLIST_END(&fonts);
-	     font = nextfont) {
-		nextfont = SLIST_NEXT(font, fonts);
+	for (font = TAILQ_FIRST(&fonts);
+	     font != TAILQ_END(&fonts);
+	     font = fontNext) {
+		fontNext = TAILQ_NEXT(font, fonts);
 		AG_ObjectDestroy(font);
-		if (font == agDefaultFont)
-			agDefaultFont = NULL;
 	}
-	SLIST_INIT(&fonts);
-
 #ifdef HAVE_FREETYPE
 	if (agFreetypeInited) {
 		AG_TTFDestroy();

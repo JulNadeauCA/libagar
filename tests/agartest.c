@@ -399,7 +399,6 @@ main(int argc, char *argv[])
 	const AG_TestCase **pTest;
 	AG_Pane *pane;
 	AG_Box *hBox;
-	AG_Font *font;
 	int c, i, optInd;
 	Uint initFlags = AG_VERBOSE;
 
@@ -434,10 +433,13 @@ main(int argc, char *argv[])
 		printf("Agar-GUI initialization failed: %s\n", AG_GetError());
 		return (1);
 	}
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-	AG_BindGlobalKey(AG_KEY_F8, AG_KEYMOD_ANY, AG_ViewCapture);
+	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
+	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY,	AG_QuitGUI);
+	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #ifdef AG_DEBUG
-	AG_BindGlobalKey(AG_KEY_F12, AG_KEYMOD_ANY, StartDebugger);
+	AG_BindGlobalKey(AG_KEY_F12,	AG_KEYMOD_ANY,	StartDebugger);
 #endif
 
 	if (strcmp(DATADIR, "NONE") != 0) {
@@ -471,10 +473,7 @@ main(int argc, char *argv[])
 		AG_WidgetDisable(btnBench);
 	}
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-	if ((font = AG_FetchFont("Terminus-16", 16, 0)) ||
-	    (font = AG_FetchFont("Terminal-14", 14, 0))) {
-		AG_ConsoleSetFont(console, font);
-	}
+/*	AG_SetFontFamily(console, "Terminus,Terminal"); */
 	{
 		char drvNames[256];
 		AG_AgarVersion av;
@@ -488,10 +487,9 @@ main(int argc, char *argv[])
 		    _("framebuffer-based") : _("vector-based"));
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
 		AG_ConsoleMsg(console, _("Available Agar drivers: %s"), drvNames);
-
+		AG_ConsoleMsg(console, _("Press Ctrl-[-] / Ctrl-[=] to zoom"));
 #ifdef AG_DEBUG
-		AG_ConsoleMsg(console,
-		    _("Debugger is available (press F12 to debug active window)"));
+		AG_ConsoleMsg(console, _("Press F12 to debug active window"));
 #endif
 	}
 

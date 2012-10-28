@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -236,10 +236,11 @@ The cursor is over the button area (read-only).
 Repeat mode is enabled (read-only, see
 .Fn AG_ButtonSetRepeatMode ) .
 .It AG_BUTTON_INVSTATE
-Invert the interpretation of the
-.Sq state
-binding.
+Invert the interpretation of the "state" binding.
 By default, a value of 1 causes the button to be pressed.
+.It AG_BUTTON_EXCL
+Disable the test for redrawing the button upon external changes to the
+"state" binding.
 .It AG_BUTTON_HFILL
 Expand horizontally in parent (equivalent to invoking
 .Xr AG_ExpandHoriz 3 ) .
@@ -263,9 +264,6 @@ If using
 the
 .Fa new_state
 argument indicates the new state of the button.
-.It Fn button-mouseoverlap "int overlap"
-The mouse cursor has entered/exited the button area.
-This is typically is used to display tool tips.
 .El
 .Sh BINDINGS
 The

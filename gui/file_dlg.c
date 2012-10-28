@@ -1135,7 +1135,7 @@ Draw(void *obj)
 {
 	AG_Widget *chld;
 
-	WIDGET_FOREACH_CHILD(chld, obj)
+	OBJECT_FOREACH_CHILD(chld, obj, ag_widget)
 		AG_WidgetDraw(chld);
 }
 

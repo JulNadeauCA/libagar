@@ -10,6 +10,7 @@
 #define AG_WINDOW_CAPTION_MAX 512
 
 struct ag_titlebar;
+struct ag_font;
 struct ag_icon;
 struct ag_widget;
 struct ag_cursor;
@@ -137,6 +138,7 @@ typedef struct ag_window {
 	float fadeInIncr, fadeOutIncr;		/* Fade increment */
 	float fadeOpacity;			/* Fade opacity */
 	enum ag_window_wm_type wmType;		/* Window function */
+	int zoom;				/* Effective zoom level */
 } AG_Window;
 
 AG_TAILQ_HEAD(ag_windowq, ag_window);
@@ -194,6 +196,7 @@ void     AG_WindowComputeAlignment(AG_Window *, AG_SizeAlloc *);
 int      AG_WindowSetOpacity(AG_Window *, float);
 void     AG_WindowSetFadeIn(AG_Window *, float, float);
 void     AG_WindowSetFadeOut(AG_Window *, float, float);
+void     AG_WindowSetZoom(AG_Window *, int);
 
 void	 AG_WindowSaveGeometry(AG_Window *);
 int	 AG_WindowRestoreGeometry(AG_Window *);

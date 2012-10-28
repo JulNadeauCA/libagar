@@ -398,39 +398,6 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 	AG_ObjectUnlock(ed);
 }
 
-/* Change the display font */
-void
-AG_EditableSetFont(AG_Editable *ed, AG_Font *font)
-{
-	AG_ObjectLock(ed);
-	ed->font = (font != NULL) ? font : agDefaultFont;
-	ed->lineSkip = font->lineskip;
-	ed->fontMaxHeight = font->height;
-	ed->yVis = WIDGET(ed)->h / ed->lineSkip;
-	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
-}
-
-/* Configure an alternate text color. */
-void
-AG_EditableSetColor(AG_Editable *ed, AG_Color C)
-{
-	AG_ObjectLock(ed);
-	ed->color = C;
-	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
-}
-
-/* Configure an alternate background color. */
-void
-AG_EditableSetColorBG(AG_Editable *ed, AG_Color C)
-{
-	AG_ObjectLock(ed);
-	ed->colorBG = C;
-	AG_ObjectUnlock(ed);
-	AG_Redraw(ed);
-}
-
 /* Evaluate if a character is acceptable in integer-only mode. */
 static __inline__ int
 CharIsIntOnly(Uint32 c)
@@ -554,7 +521,7 @@ BlinkTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-GainedFocus(AG_Event *event)
+OnFocusGain(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -568,7 +535,7 @@ GainedFocus(AG_Event *event)
 }
 
 static void
-LostFocus(AG_Event *event)
+OnFocusLoss(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -580,6 +547,17 @@ LostFocus(AG_Event *event)
 	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
+}
+
+static void
+OnFontChange(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	AG_Font *font = WIDGET(ed)->font;
+
+	ed->lineSkip = font->lineskip;
+	ed->fontMaxHeight = font->lineskip;
+	ed->yVis = WIDGET(ed)->h / ed->lineSkip;
 }
 
 /*
@@ -649,7 +627,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
     int *pos)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
-	AG_Font *font = ed->font;
+	AG_Font *font = WIDGET(ed)->font;
 	Uint32 ch;
 	int i, x, y, line = 0;
 	int nLines = 1;
@@ -876,11 +854,6 @@ Draw(void *obj)
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	AG_PushClipRect(ed, ed->r);
 
-	AG_PushTextState();
-	AG_TextFont(ed->font);
-	AG_TextColor(ed->color);
-	AG_TextBGColor(ed->colorBG);
-
 	x = 0;
 	y = -ed->y * ed->lineSkip;
 	ed->xMax = 10;
@@ -897,7 +870,7 @@ Draw(void *obj)
 				AG_DrawLineV(ed,
 				    x - ed->x, (y + 1),
 				    (y + ed->lineSkip - 1),
-				    agColors[TEXTBOX_CURSOR_COLOR]);
+				    WCOLOR(ed,TEXT_COLOR));
 			}
 			ed->xCurs = x;
 			if (ed->flags & AG_EDITABLE_MARKPREF) {
@@ -941,7 +914,7 @@ Draw(void *obj)
 				    AG_RECT(x - ed->x, y,
 				            agTextTabWidth+1,
 					    ed->lineSkip+1),
-				    agColors[TEXT_SEL_COLOR]);
+				    WCOLOR_SEL(ed,0));
 			}
 			x += agTextTabWidth;
 			continue;
@@ -959,7 +932,7 @@ Draw(void *obj)
 		if (inSel) {
 			AG_DrawRectFilled(ed,
 			    AG_RECT(x - ed->x, y, gl->su->w + 1, gl->su->h),
-			    agColors[TEXT_SEL_COLOR]);
+			    WCOLOR_SEL(ed,0));
 		}
 		drvOps->drawGlyph(drv, gl, dx,dy);
 		x += gl->advance;
@@ -1002,8 +975,6 @@ Draw(void *obj)
 		WIDGET(ed)->window->dirty = 1;		/* Redraw once */
 	}
 
-	AG_PopTextState();
-
 	AG_PopClipRect(ed);
 	AG_PopBlendingMode(ed);
 
@@ -1013,8 +984,11 @@ Draw(void *obj)
 void
 AG_EditableSizeHint(AG_Editable *ed, const char *text)
 {
+	int hPre;
+
 	AG_ObjectLock(ed);
-	AG_TextSize(text, &ed->wPre, &ed->hPre);
+	AG_TextSize(text, &ed->wPre, &hPre);
+	ed->hPre = MIN(1, hPre/ed->lineSkip);
 	AG_ObjectUnlock(ed);
 }
 
@@ -1023,7 +997,7 @@ AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
 {
 	AG_ObjectLock(ed);
 	ed->wPre = w;
-	ed->hPre = h;
+	ed->hPre = MIN(1, h/ed->lineSkip);
 	AG_ObjectUnlock(ed);
 }
 
@@ -1031,7 +1005,7 @@ void
 AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
 {
 	AG_ObjectLock(ed);
-	ed->hPre = nLines*ed->lineSkip;
+	ed->hPre = nLines;
 	AG_ObjectUnlock(ed);
 }
 
@@ -1041,7 +1015,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Editable *ed = obj;
 
 	r->w = ed->wPre;
-	r->h = ed->hPre;
+	r->h = ed->hPre*ed->lineSkip + 2;
 }
 
 static int
@@ -1791,7 +1765,7 @@ AG_EditableDbl(AG_Editable *ed)
 }
 
 static void
-Bound(AG_Event *event)
+OnBindingChange(AG_Event *event)
 {
 	AG_Editable *ed = AG_SELF();
 	AG_Variable *binding = AG_PTR(1);
@@ -1810,7 +1784,9 @@ Init(void *obj)
 
 	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_TABLE_EMBEDDABLE;
+			     AG_WIDGET_TABLE_EMBEDDABLE|
+			     AG_WIDGET_USE_TEXT|
+			     AG_WIDGET_USE_MOUSEOVER;
 
 	ed->encoding = "UTF-8";
 
@@ -1830,8 +1806,6 @@ Init(void *obj)
 	ed->xScrollTo = NULL;
 	ed->yScrollTo = NULL;
 	ed->xScrollPx = 0;
-	ed->color = agColors[TEXTBOX_TXT_COLOR];
-	ed->colorBG = AG_ColorRGBA(0,0,0,0);
 
 	ed->x = 0;
 	ed->xMax = 10;
@@ -1841,13 +1815,12 @@ Init(void *obj)
 	ed->wheelTicks = 0;
 	ed->r = AG_RECT(0,0,0,0);
 	ed->ca = NULL;
-	ed->font = agDefaultFont;
 	ed->fontMaxHeight = agTextFontHeight;
 	ed->lineSkip = agTextFontLineSkip;
 	ed->pm = NULL;
 	ed->lang = AG_LANG_NONE;
 	ed->wPre = 0;
-	ed->hPre = ed->lineSkip + 2;
+	ed->hPre = 1;
 
 	ed->sBuf.var = NULL;
 	ed->sBuf.s = NULL;
@@ -1855,19 +1828,26 @@ Init(void *obj)
 	ed->sBuf.maxLen = 0;
 	ed->sBuf.reallocable = 0;
 
+	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
+	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
+	AG_AddEvent(ed, "widget-hidden", OnFocusLoss, NULL);
+	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
 	AG_SetEvent(ed, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(ed, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(ed, "mouse-motion", MouseMotion, NULL);
-	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
-	AG_AddEvent(ed, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(ed, "bound", Bound, NULL);
+	AG_SetEvent(ed, "widget-gainfocus", OnFocusGain, NULL);
 
 	AG_BindPointer(ed, "text", (void *)ed->text);
 
 	AG_RedrawOnTick(ed, 1000);
+
+#if 0
+	AG_SetString(ed, "text-color", "rgb(240,240,240)");
+	AG_SetString(ed, "text-color#hover", "rgb(255,255,255)");
+	AG_SetString(ed, "text-color#disabled", "rgb(230,230,230)");
+#endif
 
 #ifdef AG_DEBUG
 	AG_BindInt(ed, "pos", &ed->pos);

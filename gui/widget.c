@@ -38,10 +38,46 @@
 #include "notebook.h"
 #include "gui_math.h"
 #include "opengl.h"
+#include "text_cache.h"
 
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+
+const char *agWidgetPropNames[] = {
+	"font-family",
+	"font-size",
+	"font-weight",
+	"font-style",
+	"color",
+	"text-color",
+	"line-color",
+	"shape-color",
+	"border-color",
+	NULL
+};
+const char *agWidgetStateNames[] = {
+	"",
+	"#disabled",
+	"#hover",
+	"#selected",
+	NULL
+};
+const char *agWidgetColorNames[] = {
+	"color",
+	"text-color",
+	"line-color",
+	"shape-color",
+	"border-color",
+	NULL
+};
+AG_WidgetPalette agDefaultPalette = {{
+	/* "color"           "text-color"        "line-color"    "shape-color"	"border-color" */
+/*def*/	{ {125,125,125,255}, {240,240,240,255},  {50,50,50,255}, {200,200,200,255},	{100,100,100,255} },
+/*dis*/	{ {160,160,160,255}, {240,240,240,255},  {70,70,70,255}, {150,150,150,255},	{100,100,100,255} },
+/*hov*/	{ {130,130,130,255}, {240,240,240,255},  {50,50,50,255}, {220,220,220,255},	{100,100,100,255} },
+/*sel*/	{ {50,50,120,255},   {255,255,255,255},  {50,50,60,255}, {50,50,50,255},	{100,100,100,255} }
+}};
 
 /* #define DEBUG_CLIPPING */
 /* #define DEBUG_RSENS */
@@ -81,17 +117,6 @@ SetParentDriver(AG_Widget *wid, AG_Driver *drv)
 		SetParentDriver(chld, drv);
 }
 
-/* Set the style pointers on a widget and its children. */
-static void
-SetStyle(AG_Widget *wid, AG_Style *style)
-{
-	AG_Widget *chld;
-
-	wid->style = style;
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		SetStyle(chld, style);
-}
-
 static void
 OnAttach(AG_Event *event)
 {
@@ -103,9 +128,6 @@ OnAttach(AG_Event *event)
 		AG_Widget *widParent = (AG_Widget *)parent;
 		Uint i;
 
-		if (widParent->style != NULL) {
-			SetStyle(w, widParent->style);
-		}
 		SetParentWindow(w, AGWINDOW(widParent));
 		if (AGWINDOW(widParent)->visible) {
 			w->flags |= AG_WIDGET_UPDATE_WINDOW;
@@ -123,9 +145,6 @@ OnAttach(AG_Event *event)
 	           AG_OfClass(w, "AG_Widget:*")) {
 		AG_Widget *widParent = (AG_Widget *)parent;
 
-		if (widParent->style != NULL) {
-			SetStyle(w, widParent->style);
-		}
 		SetParentWindow(w, widParent->window);
 		if (widParent->window != NULL &&
 		    widParent->window->visible) {
@@ -135,9 +154,6 @@ OnAttach(AG_Event *event)
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = (AG_Driver *)parent;
 
-		AG_SetStyle(w,
-		    (AGDRIVER_CLASS(drvParent)->wm == AG_WM_SINGLE) ?
-		    AGDRIVER_SW(drvParent)->style : &agStyleDefault);
 		SetParentDriver(w, drvParent);
 	} else {
 		AG_FatalError("Inconsistent widget attach");
@@ -205,9 +221,9 @@ OnShow(AG_Event *event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
-
-	wid->flags &= ~(AG_WIDGET_HIDE);
 	
+	wid->flags &= ~(AG_WIDGET_HIDE);
+
 	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
 		switch (rt->type) {
 		case AG_REDRAW_ON_TICK:
@@ -271,22 +287,23 @@ Init(void *obj)
 	wid->y = -1;
 	wid->w = -1;
 	wid->h = -1;
-	wid->style = &agStyleDefault;
 	SLIST_INIT(&wid->menus);
 	wid->focusFwd = NULL;
 	wid->window = NULL;
 	wid->drv = NULL;
 	wid->drvOps = NULL;
-
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
 	wid->surfaceFlags = NULL;
 	wid->textures = NULL;
 	wid->texcoords = NULL;
-
 	AG_TblInit(&wid->actions, 32, 0);
 	TAILQ_INIT(&wid->mouseActions);
 	TAILQ_INIT(&wid->keyActions);
+	
+	wid->cState = AG_DEFAULT_STATE;
+	wid->font = agDefaultFont;
+	wid->pal = agDefaultPalette;
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
@@ -1145,6 +1162,19 @@ AG_WidgetDraw(void *p)
 
 	AG_ObjectLock(wid);
 
+	if (wid->flags & AG_WIDGET_DISABLED) {
+		wid->cState = AG_DISABLED_STATE;
+	} else if (wid->flags & AG_WIDGET_MOUSEOVER) {
+		wid->cState = AG_HOVER_STATE;
+	} else {
+		wid->cState = AG_DEFAULT_STATE;
+	}
+	if (wid->flags & AG_WIDGET_USE_TEXT) {
+		AG_PushTextState();
+		AG_TextFont(wid->font);
+		AG_TextColor(wid->pal.c[wid->cState][AG_TEXT_COLOR]);
+	}
+
 #ifdef AG_DEBUG
 	if (wid->drv == NULL)
 		AG_FatalError("AG_WidgetDraw() on unattached widget");
@@ -1175,6 +1205,9 @@ AG_WidgetDraw(void *p)
 	}
 
 out:
+	if (wid->flags & AG_WIDGET_USE_TEXT) {
+		AG_PopTextState();
+	}
 	AG_ObjectUnlock(wid);
 }
 
@@ -1192,14 +1225,23 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 void
-AG_WidgetSizeReq(void *w, AG_SizeReq *r)
+AG_WidgetSizeReq(void *obj, AG_SizeReq *r)
 {
+	AG_Widget *w = obj;
+
 	r->w = 0;
 	r->h = 0;
 
 	AG_ObjectLock(w);
+	if (w->flags & AG_WIDGET_USE_TEXT) {
+		AG_PushTextState();
+		AG_TextFont(w->font);
+	}
 	if (WIDGET_OPS(w)->size_request != NULL) {
 		WIDGET_OPS(w)->size_request(w, r);
+	}
+	if (w->flags & AG_WIDGET_USE_TEXT) {
+		AG_PopTextState();
 	}
 	AG_ObjectUnlock(w);
 }
@@ -1211,6 +1253,10 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 
 	AG_ObjectLock(w);
 
+	if (w->flags & AG_WIDGET_USE_TEXT) {
+		AG_PushTextState();
+		AG_TextFont(w->font);
+	}
 	if (a->w <= 0 || a->h <= 0) {
 		a->w = 0;
 		a->h = 0;
@@ -1220,13 +1266,15 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 	w->y = a->y;
 	w->w = a->w;
 	w->h = a->h;
-
 	if (WIDGET_OPS(w)->size_allocate != NULL) {
 		if (WIDGET_OPS(w)->size_allocate(w, a) == -1) {
 			w->flags |= AG_WIDGET_UNDERSIZE;
 		} else {
 			w->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
+	}
+	if (w->flags & AG_WIDGET_USE_TEXT) {
+		AG_PopTextState();
 	}
 	AG_ObjectUnlock(w);
 }
@@ -1336,7 +1384,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 enum ag_widget_sizespec
 AG_WidgetParseSizeSpec(const char *input, int *w)
 {
-	char spec[AG_SIZE_SPEC_MAX], *p;
+	char spec[1024], *p;
 	size_t len;
 
 	Strlcpy(spec, input, sizeof(spec));
@@ -1571,6 +1619,9 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	AG_Widget *wid = obj;
 	int i, s = -1;
 
+	if (su == NULL)
+		return (-1);
+
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] == NULL) {
@@ -1596,7 +1647,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	return (s);
 }
 
-/* replace the contents of a mapped surface. */
+/* Replace the contents of a mapped surface. */
 void
 AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 {
@@ -1625,6 +1676,208 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 		wid->textures[s] = 0;
 	}
 	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Rebuild the effective style parameters of a widget and its descendants
+ * based on its style attributes. Any required fonts are loaded. This
+ * should be invoked on attach or whenever style attributes are changed.
+ */
+static void
+CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
+    double parentPtSize, Uint parentFlags,
+    AG_WidgetPalette parentPalette)
+{
+	char face[256];
+	double ptSize;
+	Uint flags = parentFlags;
+	AG_Widget *chld;
+	AG_Variable *V;
+	int i, j;
+
+	/* Set the font attributes. */
+	if ((V = AG_GetVariableLocked(wid, "font-family")) != NULL) {
+		Strlcpy(face, V->data.s, sizeof(face));
+		AG_UnlockVariable(V);
+	} else {
+		Strlcpy(face, parentFace, sizeof(face));
+	}
+	if ((V = AG_GetVariableLocked(wid, "font-size")) != NULL) {
+		double v;
+		char *ep;
+		v = strtod(V->data.s, &ep);
+		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
+		AG_UnlockVariable(V);
+	} else {
+		ptSize = parentPtSize;
+	}
+	if ((V = AG_GetVariableLocked(wid, "font-weight")) != NULL) {
+		if (AG_Strcasecmp(V->data.s, "bold") == 0) {
+			flags |= AG_FONT_BOLD;
+		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
+			flags &= ~(AG_FONT_BOLD);
+		}
+		AG_UnlockVariable(V);
+	}
+	if ((V = AG_GetVariableLocked(wid, "font-style")) != NULL) {
+		if (AG_Strcasecmp(V->data.s, "italic") == 0) {
+			flags |= AG_FONT_ITALIC;
+		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
+			flags &= ~(AG_FONT_ITALIC);
+		}
+		AG_UnlockVariable(V);
+	}
+	if (wid->flags & AG_WIDGET_USE_TEXT) {
+		char *pFace = face, *tok;
+		AG_Font *fontNew = NULL;
+
+		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
+			fontNew = AG_FetchFont(face, (int)ptSize, (int)flags);
+			if (fontNew != NULL)
+				break;
+		}
+		if (fontNew == NULL) {
+			fontNew = AG_FetchFont(NULL, (int)ptSize, (int)flags);
+		}
+		if (fontNew != NULL && wid->font != fontNew) {
+			if (wid->font != NULL) {
+				AG_UnusedFont(wid->font);
+			}
+			wid->font = fontNew;
+			AG_PushTextState();
+			AG_TextFont(wid->font);
+			AG_PostEvent(NULL, wid, "font-changed", NULL);
+			AG_PopTextState();
+			AG_Redraw(wid);
+		}
+	}
+
+	/* Set the global color attributes. */
+	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
+			char vName[AG_VARIABLE_NAME_MAX];
+
+			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
+			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
+			if ((V = AG_GetVariableLocked(wid, vName)) != NULL) {
+				wid->pal.c[i][j] = AG_ColorFromString(V->data.s,
+				    &parentPalette.c[i][j]);
+				AG_UnlockVariable(V);
+			} else {
+				wid->pal.c[i][j] = parentPalette.c[i][j];
+			}
+		}
+	}
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		CompileStyleRecursive(chld, face, ptSize, flags, wid->pal);
+}
+void
+AG_WidgetCompileStyle(void *obj)
+{
+	AG_Widget *wid = obj;
+	AG_Widget *parent;
+
+	AG_LockVFS(wid);
+	AG_MutexLock(&agTextLock);
+/*	AG_TextClearGlyphCache(wid->drv); */
+	if ((parent = OBJECT(wid)->parent) != NULL &&
+	    AG_OfClass(parent, "AG_Widget:*")) {
+		if (parent->font == NULL) {
+			AG_Verbose("%s: parent (%s) has font=NULL\n",
+			    OBJECT(wid)->name, OBJECT(parent)->name);
+			CompileStyleRecursive(wid,
+			    OBJECT(agDefaultFont)->name,
+			    agDefaultFont->spec.size,
+			    agDefaultFont->flags,
+			    agDefaultPalette);
+		} else {
+			CompileStyleRecursive(wid,
+			    OBJECT(parent->font)->name,
+			    parent->font->spec.size,
+			    parent->font->flags,
+			    parent->pal);
+		}
+	} else {
+		CompileStyleRecursive(wid,
+		    OBJECT(agDefaultFont)->name,
+		    agDefaultFont->spec.size,
+		    agDefaultFont->flags,
+		    agDefaultPalette);
+	}
+	AG_MutexUnlock(&agTextLock);
+	AG_UnlockVFS(wid);
+}
+
+/*
+ * Clear the style parameters of a widget and its descendants. Called
+ * on detach. The widget's VFS must be locked.
+ */
+void
+AG_WidgetFreeStyle(void *obj)
+{
+	AG_Widget *wid = obj;
+	AG_Widget *chld;
+	
+	if (wid->font != NULL) {
+		AG_UnusedFont(wid->font);
+		wid->font = NULL;
+	}
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		AG_WidgetFreeStyle(chld);
+}
+
+/* Copy all style properties from one widget to another. */
+void
+AG_WidgetCopyStyle(void *objDst, void *objSrc)
+{
+	AG_Widget *widSrc = objSrc;
+	AG_Widget *widDst = objDst;
+	AG_Variable *V;
+	const char **s;
+
+	AG_ObjectLock(widSrc);
+	AG_ObjectLock(widDst);
+	for (s = &agWidgetPropNames[0]; *s != NULL; s++) {
+		if ((V = AG_GetVariableLocked(widSrc, *s)) != NULL) {
+			AG_SetString(widDst, *s, V->data.s);
+			AG_UnlockVariable(V);
+		}
+
+	}
+	AG_ObjectUnlock(widDst);
+	AG_ObjectUnlock(widSrc);
+
+	AG_WidgetCompileStyle(widDst);
+}
+
+/*
+ * Set the default font parameters for a widget.
+ * If a NULL argument is provided, the parameter is inherited from parent.
+ */
+void
+AG_SetFont(void *obj, const AG_Font *font)
+{
+	AG_Widget *wid = obj;
+
+	AG_SetString(wid, "font-family", OBJECT(font)->name);
+	AG_SetString(wid, "font-size", AG_Printf("%.2fpts", font->spec.size));
+	AG_SetString(wid, "font-weight", (font->flags & AG_FONT_BOLD) ? "bold" : "normal");
+	AG_SetString(wid, "font-style", (font->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+	AG_WidgetCompileStyle(wid);
+	AG_Redraw(wid);
+}
+void
+AG_SetStyle(void *obj, const char *which, const char *value)
+{
+	AG_Widget *wid = obj;
+	if (family != NULL) {
+		AG_SetString(wid, which, value);
+	} else {
+		AG_Unset(wid, which);				/* inherit */
+	}
+	AG_WidgetCompileStyle(wid);
+	AG_Redraw(wid);
 }
 
 AG_WidgetClass agWidgetClass = {

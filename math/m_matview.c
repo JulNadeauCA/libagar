@@ -223,11 +223,11 @@ DrawNumerical(void *p)
 	int xOffs = -mv->xOffs*mv->wEnt + 8;
 	int yOffs = -mv->yOffs*mv->hEnt + 8;
 
-	AG_DrawBox(mv, mv->r, -1, agColors[BG_COLOR]);
+	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
 	AG_PushClipRect(mv, mv->r);
 	
 	AG_PushTextState();
-	AG_TextColor(agColors[TEXT_COLOR]);
+	AG_TextColor(WCOLOR(mv,TEXT_COLOR));
 
 	for (m = 0, y = yOffs;
 	     m < MROWS(M) && y < mv->r.h;
@@ -246,8 +246,8 @@ DrawNumerical(void *p)
 		}
 	}
 	
-	AG_DrawLineV(mv, xMin-2, 2, y, agColors[TEXT_COLOR]);
-	AG_DrawLineV(mv, xMax+4, 2, y, agColors[TEXT_COLOR]);
+	AG_DrawLineV(mv, xMin-2, 2, y, WCOLOR(mv,LINE_COLOR));
+	AG_DrawLineV(mv, xMax+4, 2, y, WCOLOR(mv,LINE_COLOR));
 
 	AG_PopTextState();
 	AG_PopClipRect(mv);
@@ -264,7 +264,7 @@ DrawGreyscale(void *p)
 	int xOffs = -mv->xOffs*mv->scale;
 	int yOffs = -mv->yOffs*mv->scale;
 
-	AG_DrawBox(mv, mv->r, -1, agColors[BG_COLOR]);
+	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
 	AG_PushClipRect(mv, mv->r);
 
 	for (m = 0; m < MROWS(A); m++) {

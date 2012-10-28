@@ -271,9 +271,10 @@ Attach(AG_Event *event)
 		WIDGET(win->icon)->drv = drv;
 		WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
 		AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
-		AG_IconSetBackgroundFill(win->icon, 1, agColors[BG_COLOR]);
+		AG_IconSetBackgroundFill(win->icon, 1,
+		    AGDRIVER_SW(drv)->bgColor);
 	}
-	
+
 	if (win->flags & AG_WINDOW_FOCUSONATTACH)
 		AG_WindowFocus(win);
 }
@@ -421,6 +422,7 @@ Init(void *obj)
 	win->fadeOutTime = 0.06f;
 	win->fadeOutIncr = 0.2f;
 	win->fadeOpacity = 1.0f;
+	win->zoom = AG_ZOOM_DEFAULT;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
 
@@ -441,6 +443,14 @@ Init(void *obj)
 	/* Custom attach/detach hooks are needed by the window stack. */
 	AG_ObjectSetAttachFn(win, Attach, NULL);
 	AG_ObjectSetDetachFn(win, Detach, NULL);
+	
+	/* Set the inheritable style defaults. */
+	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
+	AG_SetString(win, "font-size", AG_Printf("%.02fpts", agDefaultFont->spec.size));
+	AG_SetString(win, "font-weight", (agDefaultFont->flags & AG_FONT_BOLD) ? "bold" : "normal");
+	AG_SetString(win, "font-style", (agDefaultFont->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+	WIDGET(win)->font = agDefaultFont;
+	WIDGET(win)->pal = agDefaultPalette;
 
 #ifdef AG_DEBUG
 	AG_BindUint(win, "flags", &win->flags);
@@ -479,6 +489,8 @@ AG_WindowAttach(AG_Window *winParent, AG_Window *winChld)
 		AG_WindowDetach(winChld->parent, winChld);
 	}
 	winChld->parent = winParent;
+	winChld->zoom = winParent->zoom;
+	AG_WidgetCopyStyle(winChld, winParent);
 	TAILQ_INSERT_HEAD(&winParent->subwins, winChld, swins);
 out:
 	AG_ObjectUnlock(winChld);
@@ -609,7 +621,7 @@ UpdateNeeded(AG_Widget *wid)
 	if (wid->flags & AG_WIDGET_UPDATE_WINDOW) {
 		return (1);
 	}
-	WIDGET_FOREACH_CHILD(chld, wid) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		if (UpdateNeeded(chld))
 			return (1);
 	}
@@ -621,16 +633,59 @@ Draw(void *obj)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
+	AG_Rect r;
+	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
 
 	if (UpdateNeeded(WIDGET(win)))
 		AG_WindowUpdate(win);
-	
-	STYLE(win)->Window(win);
+
+	/* Render window background. */
+	if (!(win->flags & AG_WINDOW_NOBACKGROUND) &&
+	    !(WIDGET(win)->drv->flags & AG_DRIVER_WINDOW_BG)) {
+		AG_DrawRect(win,
+		    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
+		    WCOLOR(win,0));
+	}
+
+	/* Render decorative borders. */
+	if (win->wBorderBot > 0) {
+		r.x = 0;
+		r.y = HEIGHT(win) - win->wBorderBot;
+		r.h = win->wBorderBot;
+		if (!(win->flags & AG_WINDOW_NORESIZE) &&
+		    WIDTH(win) > win->wResizeCtrl*2) {
+			r.w = win->wResizeCtrl;
+			AG_DrawBox(win, r,
+			    AG_WindowSelectedWM(win,AG_WINOP_LRESIZE) ? -1 : 1,
+			    WCOLOR(win,BORDER_COLOR));
+			r.x = WIDTH(win) - win->wResizeCtrl;
+			AG_DrawBox(win, r,
+			    AG_WindowSelectedWM(win,AG_WINOP_RRESIZE) ? -1 : 1,
+			    WCOLOR(win,BORDER_COLOR));
+			r.x = win->wResizeCtrl;
+			r.w = WIDTH(win) - win->wResizeCtrl*2;
+			AG_DrawBox(win, r,
+			    AG_WindowSelectedWM(win,AG_WINOP_HRESIZE) ? -1 : 1,
+			    WCOLOR(win,BORDER_COLOR));
+		} else {
+			r.w = WIDTH(win);
+			AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
+		}
+	}
+	if (win->wBorderSide > 0) {
+		r.x = 0;
+		r.y = hBar;
+		r.w = win->wBorderSide;
+		r.h = HEIGHT(win) - win->wBorderBot - hBar;
+		AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
+		r.x = WIDTH(win) - win->wBorderSide;
+		AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
+	}
 
 	if (!(win->flags & AG_WINDOW_NOCLIPPING)) {
 		AG_PushClipRect(win, win->r);
 	}
-	WIDGET_FOREACH_CHILD(chld, win) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_WidgetDraw(chld);
 	}
 	if (!(win->flags & AG_WINDOW_NOCLIPPING))
@@ -724,6 +779,9 @@ OnShow(AG_Event *event)
 
 	if (!(win->flags & AG_WINDOW_DENYFOCUS))
 		AG_WindowFocus(win);
+	
+	/* Compile the globally inheritable style attributes. */
+	AG_WidgetCompileStyle(win);
 
 	/* Notify that the window is now visible. */
 	AG_PostEvent(NULL, win, "window-shown", NULL);
@@ -751,6 +809,9 @@ OnHide(AG_Event *event)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
 	int i;
+
+	/* Release style-related resources. */
+	AG_WidgetFreeStyle(win);
 
 	/* Cancel any pending redraw. */
 	win->dirty = 0;
@@ -784,7 +845,7 @@ OnHide(AG_Event *event)
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
 			AG_DrawRectFilled(win,
 			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)),
-			    agColors[BG_COLOR]);
+			    dsw->bgColor);
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 				AGDRIVER_CLASS(drv)->updateRegion(drv,
 				    AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
@@ -815,7 +876,7 @@ WidgetGainFocus(AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	WIDGET_FOREACH_CHILD(chld, wid) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_ObjectLock(chld);
 		WidgetGainFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -829,7 +890,7 @@ WidgetLostFocus(AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	WIDGET_FOREACH_CHILD(chld, wid) {
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_ObjectLock(chld);
 		WidgetLostFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -894,7 +955,7 @@ ListFocusableWidgets(AG_List *L, AG_Widget *wid)
 	}
 	AG_ObjectUnlock(wid);
 
-	WIDGET_FOREACH_CHILD(chld, wid)
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		ListFocusableWidgets(L, chld);
 }
 
@@ -1077,7 +1138,7 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 		r.h = 0;
 	}
 	if (r.w > 0 && r.h > 0) {
-		AGDRIVER_CLASS(drv)->fillRect(drv, r, agColors[BG_COLOR]);
+		AGDRIVER_CLASS(drv)->fillRect(drv, r, AGDRIVER_SW(drv)->bgColor);
 		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 	}
@@ -1087,7 +1148,7 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 		r.w = rPrev.w;
 		r.h = rPrev.h - HEIGHT(win);
 			
-		AGDRIVER_CLASS(drv)->fillRect(drv, r, agColors[BG_COLOR]);
+		AGDRIVER_CLASS(drv)->fillRect(drv, r, AGDRIVER_SW(drv)->bgColor);
 		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 	}
@@ -1350,7 +1411,7 @@ AG_WindowUnmaximize(AG_Window *win)
 			r.w = AGDRIVER_SW(drv)->w;
 			r.h = AGDRIVER_SW(drv)->h;
 			AGDRIVER_CLASS(drv)->fillRect(drv, r,
-			    agColors[BG_COLOR]);
+			    AGDRIVER_SW(drv)->bgColor);
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 				AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 		}
@@ -1374,7 +1435,7 @@ IconMotion(AG_Event *event)
 			r.w = AGDRIVER_SW(drv)->w;
 			r.h = AGDRIVER_SW(drv)->h;
 			AGDRIVER_CLASS(drv)->fillRect(drv, r,
-			    agColors[BG_COLOR]);
+			    AGDRIVER_SW(drv)->bgColor);
 			r = AG_Rect2ToRect(WIDGET(wDND)->rView);
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 				AGDRIVER_CLASS(drv)->updateRegion(drv, r);
@@ -1532,7 +1593,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		r->h += rTbar.h;
 	}
 	nWidgets = 0;
-	WIDGET_FOREACH_CHILD(chld, win) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		if (chld == WIDGET(win->tbar)) {
 			continue;
 		}
@@ -1570,7 +1631,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
 	totFixed = 0;
-	WIDGET_FOREACH_CHILD(chld, win) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
 			totFixed += rChld.h;
@@ -1597,7 +1658,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aChld.x = win->lPad + win->wBorderSide;
 		aChld.y = win->tPad;
 	}
-	WIDGET_FOREACH_CHILD(chld, win) {
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		if (chld == WIDGET(win->tbar)) {
 			continue;
@@ -1613,7 +1674,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			AG_WidgetSizeAlloc(chld, &aTmp);
 			aChld.y += aTmp.h;
 
-			chldNext = WIDGET_NEXT_CHILD(chld);
+			chldNext = OBJECT_NEXT_CHILD(chld, ag_widget);
 			if (chldNext == NULL ||
 			    !(chldNext->flags & AG_WIDGET_NOSPACING)) {
 				aChld.y += win->spacing;
@@ -1993,6 +2054,29 @@ AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 	AG_ObjectLock(win);
 	win->fadeOutTime = fadeTime;
 	win->fadeOutIncr = fadeIncr;
+	AG_ObjectUnlock(win);
+}
+
+/* Set the window zoom level. The scales are defined in agZoomValues[]. */
+void
+AG_WindowSetZoom(AG_Window *win, int zoom)
+{
+	AG_Window *winChld;
+
+	AG_ObjectLock(win);
+	if (zoom < 0 || zoom >= AG_ZOOM_RANGE || zoom == win->zoom) {
+		AG_ObjectUnlock(win);
+		return;
+	}
+	AG_SetFontSize(win, AG_Printf("%.02f%%", agZoomValues[zoom]));
+	AG_WindowUpdate(win);
+	win->zoom = zoom;
+	if (WIDGET(win)->drv != NULL) {
+		AG_TextClearGlyphCache(WIDGET(win)->drv);
+	}
+	TAILQ_FOREACH(winChld, &win->subwins, swins) {
+		AG_WindowSetZoom(winChld, zoom);
+	}
 	AG_ObjectUnlock(win);
 }
 

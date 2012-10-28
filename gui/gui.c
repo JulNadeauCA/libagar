@@ -147,6 +147,8 @@ int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
 int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
+int agMouseScrollDelay = 100;		/* Scrollbar increment delay */
+int agMouseScrollIval = 10;		/* Scrollbar increment interval */
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextCache = 1;			/* Dynamic text caching */
@@ -157,6 +159,11 @@ int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agIdleThresh = 20;			/* Idling threshold */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
+double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
+	30.00, 50.00, 67.00, 80.00, 90.00,
+	100.00,
+	110.00, 120.00, 133.00, 150.00, 170.00, 200.00, 240.00, 300.00
+};
 
 /*
  * Initialize the Agar-GUI globals and built-in classes. This function
@@ -256,7 +263,7 @@ AG_DestroyGUIGlobals(void)
 int
 AG_InitGUI(Uint flags)
 {
-	char path[AG_PATHNAME_MAX];
+/*	char path[AG_PATHNAME_MAX]; */
 	void **ops;
 
 	/* Register the built-in widget classes. */
@@ -264,14 +271,14 @@ AG_InitGUI(Uint flags)
 		AG_RegisterClass(*ops);
 
 	/* Initialize the GUI subsystems. */
-	AG_ColorsInit();
 	agIcon_Init();
-
+#if 0
 	/* Try to load a color scheme from the default path. */
 	AG_GetString(agConfig, "save-path", path, sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
+#endif
 
 	/* Initialize the font engine. */
 	if (AG_TextRenderInit() == -1)
@@ -579,3 +586,45 @@ AG_DestroyVideo(void)
 	AG_DestroyGUIGlobals();
 }
 
+/*
+ * Zoom in/out the GUI elements of the active window.
+ *
+ * It is customary to assign AG_GlobalKeys(3) shortcuts for
+ * Ctrl+{Plus,Minus,0} to those routines.
+ */
+void
+AG_ZoomIn(void)
+{
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	if ((win = agWindowFocused) == NULL) {
+		Verbose("No window is focused for zoom\n");
+	}
+	AG_WindowSetZoom(win, win->zoom+1);
+	AG_UnlockVFS(&agDrivers);
+}
+void
+AG_ZoomOut(void)
+{
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	if ((win = agWindowFocused) == NULL) {
+		Verbose("No window is focused for zoom\n");
+	}
+	AG_WindowSetZoom(win, win->zoom-1);
+	AG_UnlockVFS(&agDrivers);
+}
+void
+AG_ZoomReset(void)
+{
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	if ((win = agWindowFocused) == NULL) {
+		Verbose("No window is focused for zoom-in\n");
+	}
+	AG_WindowSetZoom(win, AG_ZOOM_DEFAULT);
+	AG_UnlockVFS(&agDrivers);
+}

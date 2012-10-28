@@ -200,6 +200,23 @@ are typically used with polled labels.
 The
 .Nm
 widget does not generate any event.
+.Sh STYLE PROPERTIES
+The
+.Nm
+widget recognizes the following style properties.
+Any property may be inherited from the parent widget by assigning the
+special "inherit" keyword.
+.Bl -tag -width "font-{family,size,weight,style} "
+.It Va font-family
+Comma-separated list of generic font families, specific font faces.
+.It Va font-size
+Size of the font in "pts", "px", "cm", "in".
+The size may also be specified as "%" of the parent widget's font size.
+.It Va font-weight
+Set the thickness of the characters to "normal" or "bold".
+.It Va font-style
+Set the font style to "normal", "italic" or "oblique".
+.El
 .Sh LABEL FLAGS
 The following
 .Nm
@@ -241,7 +258,7 @@ and a polled label:
 AG_Window *win;
 int myInt = 1234;
 AG_Label *myLbl;
-
+ 
 win = AG_WindowNew(0);
 AG_LabelNew(win, 0, "Foo");
 myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);

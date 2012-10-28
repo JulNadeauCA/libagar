@@ -193,8 +193,11 @@ Draw(void *obj)
 {
 	AG_Titlebar *tbar = obj;
 
-	STYLE(tbar)->TitlebarBackground(tbar, tbar->pressed,
-	    AG_WindowIsFocused(tbar->win));
+	AG_DrawBox(tbar,
+	    AG_RECT(0, 0, WIDTH(tbar), HEIGHT(tbar)),
+	    tbar->pressed ? -1 : 1,
+	    AG_WindowIsFocused(tbar->win) ? WCOLOR(tbar,0) : WCOLOR_DIS(tbar,0));
+
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
 }
 

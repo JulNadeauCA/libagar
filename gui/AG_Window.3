@@ -155,6 +155,18 @@ and
 .Fn AG_WindowSetFadeOut "AG_Window *win" "float fadeTime" "float fadeIncr"
 .Pp
 .Ft "void"
+.Fn AG_WindowSetZoom "AG_Window *win" "int zoomLvl"
+.Pp
+.Ft "void"
+.Fn AG_ZoomIn "void"
+.Pp
+.Ft "void"
+.Fn AG_ZoomOut "void"
+.Pp
+.Ft "void"
+.Fn AG_ZoomReset "void"
+.Pp
+.Ft "void"
 .Fn AG_WindowMaximize "AG_Window *win"
 .Pp
 .Ft "void"
@@ -399,6 +411,19 @@ over a total period of
 .Fa fadeTime
 (in seconds).
 .Pp
+The
+.Fn AG_WindowSetZoom
+function sets the zoom level of the window.
+The
+.Fn AG_ZoomIn ,
+.Fn AG_ZoomOut
+and
+.Fn AG_ZoomReset
+functions set the zoom level for the currently focused window.
+It is customary to assign
+.Xr AG_GlobalKeys 3
+shortcuts to these functions.
+.Pp
 .Fn AG_WindowMaximize
 and
 .Fn AG_WindowMinimize
@@ -416,6 +441,7 @@ a logical child window of
 .Fa winParent ,
 such that whenever the parent window is destroyed, Agar will automatically
 destroy the child window as well.
+Logical child windows also inherit the style properties from their parent.
 .Fn AG_WindowDetach
 detaches the window from its logical parent window.
 .Pp

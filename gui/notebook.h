@@ -36,12 +36,12 @@ typedef struct ag_notebook {
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int spacing, padding;		/* Spacing for tabs */
-	AG_Font *tabFont;		/* Font for tab labels */
 	int lblPartial;			/* "..." label */
 	int lblPartialWidth;		/* Width of "..." */
 	struct ag_notebook_tab *sel_tab;
 	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;
 	AG_Rect r;			/* View area */
+	Uint nTabs;
 } AG_Notebook;
 
 __BEGIN_DECLS
@@ -52,7 +52,6 @@ AG_Notebook *AG_NotebookNew(void *, Uint);
 void AG_NotebookSetPadding(AG_Notebook *, int);
 void AG_NotebookSetSpacing(AG_Notebook *, int);
 void AG_NotebookSetTabAlignment(AG_Notebook *, enum ag_notebook_tab_alignment);
-void AG_NotebookSetTabFont(AG_Notebook *, AG_Font *);
 void AG_NotebookSetTabVisibility(AG_Notebook *, int);
 
 AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,
@@ -65,6 +64,10 @@ AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,
 
 void AG_NotebookDelTab(AG_Notebook *, AG_NotebookTab *);
 void AG_NotebookSelectTab(AG_Notebook *, AG_NotebookTab *);
+
+#ifdef AG_LEGACY
+# define AG_NotebookSetTabFont AG_SetFont
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

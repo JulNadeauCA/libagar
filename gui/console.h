@@ -19,8 +19,7 @@ typedef struct ag_console_line {
 	size_t len;			/* Length not including NUL */
 	int surface;			/* Cached surface handle (or -1) */
 	int icon;			/* Icon to display */
-	AG_Color cFg;			/* Foreground color (display fmt) */
-	AG_Color cBg;			/* Background color (display fmt) */
+	AG_Color cAlt;			/* Alternate text color */
 	void *p;			/* User pointer */
 	struct ag_console *cons;	/* Back pointer to Console */
 } AG_ConsoleLine;
@@ -39,11 +38,9 @@ typedef struct ag_console {
 	AG_ConsoleLine **lines;		/* Lines in buffer */
 	Uint nLines;			/* Line count */
 	Uint rOffs;			/* Row display offset */
-	AG_Color cBg;			/* Background color */
 	AG_Scrollbar *vBar;		/* Scrollbar */
 	AG_Rect r;			/* View area */
 	Uint rVisible;			/* Visible line count */
-	AG_Font *font;			/* Font */
 	Uint *scrollTo;			/* Scrolling request */
 	int pos, sel;			/* Position and selection */
 	struct ag_popup_menu *pm;
@@ -63,10 +60,13 @@ AG_ConsoleLine *AG_ConsoleMsgS(AG_Console *, const char *);
 void            AG_ConsoleMsgEdit(AG_ConsoleLine *, const char *);
 void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
 void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
-void            AG_ConsoleMsgColor(AG_ConsoleLine *, const AG_Color *,
-                                   const AG_Color *);
+void            AG_ConsoleMsgColor(AG_ConsoleLine *, const AG_Color *);
 void		AG_ConsoleClear(AG_Console *);
 char           *AG_ConsoleExportText(AG_Console *, int);
+
+#ifdef AG_LEGACY
+# define AG_ConsoleSetFont(cons,font) AG_SetFont((cons),(font))
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

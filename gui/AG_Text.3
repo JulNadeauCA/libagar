@@ -389,7 +389,7 @@ widgets to display.
 .Fn AG_FetchFont "const char *face" "int size" "int flags"
 .Pp
 .Ft void
-.Fn AG_DestroyFont "AG_Font *font"
+.Fn AG_UnusedFont "AG_Font *font"
 .Pp
 .Ft void
 .Fn AG_SetDefaultFont "AG_Font *font"
@@ -403,34 +403,38 @@ widgets to display.
 .nr nS 0
 The
 .Fn AG_FetchFont
-function retrieves the specified font face, loading it from file if it's
-not currently resident.
-If
+function retrieves the font corresponding to the specified
 .Fa face
-is NULL, the default
-.Va font.face
-configuration setting is used (see
-.Xr AG_Config 3 ) .
-The font file should reside in one of the directories specified in
-.Va font-path
-setting.
-The
+and
 .Fa size
-argument is specified in points (if -1 is passed, the default configuration
-setting
-.Va font.size
-is used).
-If
+in points.
+Acceptable
 .Fa flags
-is -1, the default configuration setting
+include
+.Dv AG_FONT_BOLD
+and
+.Dv AG_FONT_ITALIC .
+The font is loaded from file if not currently resident (unless the fontconfig
+library is available, the font file should reside in one of the directories
+specified in the
+.Va font-path
+setting).
+If any the parameters are specified as NULL or -1, the
+.Xr AG_Config 3
+defaults
+.Va font.face ,
+.Va font.size
+and
 .Va font.flags
-is used.
-The function returns a pointer to the font object, or NULL if an
-error occured.
+are used.
+.Fn AG_FetchFont
+returns a pointer to the font object, incrementing its reference count.
+If the font cannot be loaded, the function returns NULL.
 .Pp
 The
-.Fn AG_DestroyFont
-function releases a font object assuming it is no longer in use.
+.Fn AG_UnusedFont
+function decrements the reference count on a font.
+If the font is no longer referenced, it is destroyed.
 .Pp
 .Fn AG_SetDefaultFont
 sets the specified font object as the default font.
