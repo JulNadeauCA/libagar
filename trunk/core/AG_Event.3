@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -561,12 +561,10 @@ This flag is only available if Agar was compiled with the
 .Dv AG_THREADS
 option.
 .It AG_EVENT_PROPAGATE
-Whenever this event is raised, automatically raise the same event for any
-child object attached to the given object.
-Unless
+Automatically forward events of this type to all attached child objects.
+If
 .Dv AG_EVENT_ASYNC
-is used, it is safe to assume that the child object's handler is executed before
-the parent's.
+is also set, the event handlers of the child objects are executed concurrently.
 .El
 .Sh EXAMPLES
 The following code fragment demonstrates a typical

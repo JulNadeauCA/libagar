@@ -130,8 +130,9 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 		ob->nevents++;
-	} else {
-		InitEvent(ev, ob);
+	} else {				/* Preserve flags */
+		ev->argc = 1;
+		ev->argc0 = 1;
 	}
 	InitPointerArg(&ev->argv[0], ob);
 	ev->handler = fn;
@@ -147,13 +148,21 @@ AG_Event *
 AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Object *ob = p;
-	AG_Event *ev;
+	AG_Event *ev, *evOther;
 
 	AG_ObjectLock(ob);
 
 	ev = Malloc(sizeof(AG_Event));
 	InitEvent(ev, ob);
+
 	if (name != NULL) {
+		TAILQ_FOREACH(evOther, &ob->events, events) {
+			if (strcmp(evOther->name, name) == 0)
+				break;
+		}
+		if (evOther != NULL) {
+			ev->flags = evOther->flags;
+		}
 		Strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
 		GenEventName(ev, ob, name);
@@ -345,6 +354,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 	AG_Object *chld;
+	int propagated = 0;
 
 #ifdef AG_OBJDEBUG
 	if (agDebugLvl >= 5)
@@ -365,6 +375,10 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(evNew, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evNew, fmt);
 			InitPointerArg(&evNew->argv[evNew->argc], sndr);
+			if (evNew->flags & AG_EVENT_PROPAGATE) { propagated = 1; }
+			if (propagated) {
+				evNew->flags &= ~(AG_EVENT_PROPAGATE);
+			}
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* AG_THREADS */
@@ -374,7 +388,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
 			InitPointerArg(&tmpev.argv[tmpev.argc], sndr);
-			if (tmpev.flags & AG_EVENT_PROPAGATE) {
+			if ((tmpev.flags & AG_EVENT_PROPAGATE) && !propagated) {
 #ifdef AG_OBJDEBUG
 				if (agDebugLvl >= 5)
 					Debug(rcvr, "Propagate <%s> (post)\n",
@@ -385,6 +399,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 					PropagateEvent(rcvr, chld, &tmpev);
 				}
 				AG_UnlockVFS(rcvr);
+				propagated = 1;
 			}
 			if (tmpev.handler != NULL)
 				tmpev.handler(&tmpev);
