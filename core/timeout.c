@@ -393,8 +393,13 @@ AG_ProcessTimeouts(Uint32 t)
 	AG_Timer *to, *toNext;
 	AG_Object *ob, *obNext;
 	Uint32 rv;
+	int agKqueueSaved, agSoftTimersSaved;
 
 	AG_LockTiming();
+
+	agKqueueSaved = agKqueue;		agKqueue = -1;
+	agSoftTimersSaved = agSoftTimers;	agSoftTimers = -1;
+
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
@@ -419,6 +424,8 @@ rescan:
 		}
 		AG_ObjectUnlock(ob);
 	}
+	agKqueue = agKqueueSaved;
+	agSoftTimers = agSoftTimersSaved;
 	AG_UnlockTiming();
 }
 
