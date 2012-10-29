@@ -273,6 +273,7 @@ WidgetSelected(AG_Event *event)
 		AG_TlistSetIconWidth(tl, 64);
 	}
 
+	AG_WidgetShownRecursive(box);
 	AG_WidgetUpdate(box);
 }
 
