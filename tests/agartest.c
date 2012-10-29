@@ -15,7 +15,6 @@
 
 extern const AG_TestCase audioTest;
 extern const AG_TestCase charsetsTest;
-extern const AG_TestCase chineseTest;
 extern const AG_TestCase compositingTest;
 extern const AG_TestCase configSettingsTest;
 extern const AG_TestCase consoleTest;
@@ -54,7 +53,6 @@ const AG_TestCase *testCases[] = {
 	&audioTest,
 #endif
 	&charsetsTest,
-	&chineseTest,
 	&compositingTest,
 	&configSettingsTest,
 	&consoleTest,
