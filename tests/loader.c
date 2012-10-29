@@ -68,7 +68,7 @@ LoadImage(AG_Event *event)
 	AG_PixmapFromSurfaceScaled(sv, 0, s, s->w, s->h);
 	AG_SurfaceFree(s);
 
-	AG_WindowSetGeometry(win, -1, -1, s->w+32, s->h+64);
+	AG_WindowSetGeometry(win, -1, -1, 320, 240);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
