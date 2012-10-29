@@ -1261,6 +1261,8 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 		a->w = 0;
 		a->h = 0;
 		w->flags |= AG_WIDGET_UNDERSIZE;
+	} else {
+		w->flags &= ~(AG_WIDGET_UNDERSIZE);
 	}
 	w->x = a->x;
 	w->y = a->y;
