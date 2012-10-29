@@ -704,6 +704,9 @@ OnShow(AG_Event *event)
 	Uint mwFlags = 0;
 	AG_Variable V;
 
+	/* Compile the globally inheritable style attributes. */
+	AG_WidgetCompileStyle(win);
+
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		/*
 		 * No explicit window geometry was provided; compute a
@@ -780,9 +783,6 @@ OnShow(AG_Event *event)
 	if (!(win->flags & AG_WINDOW_DENYFOCUS))
 		AG_WindowFocus(win);
 	
-	/* Compile the globally inheritable style attributes. */
-	AG_WidgetCompileStyle(win);
-
 	/* Notify that the window is now visible. */
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 
@@ -809,9 +809,6 @@ OnHide(AG_Event *event)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
 	int i;
-
-	/* Release style-related resources. */
-	AG_WidgetFreeStyle(win);
 
 	/* Cancel any pending redraw. */
 	win->dirty = 0;
