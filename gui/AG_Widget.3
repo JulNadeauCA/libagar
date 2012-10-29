@@ -196,6 +196,13 @@ operation of the widget and returns its size requisition into
 .Fa req .
 .Fn AG_WidgetSizeAlloc
 allocates the given position and geometry of the widget.
+If the
+.Va w
+or
+.Va h
+argument is <= 0, the
+.Dv AG_WIDGET_UNDERSIZE
+flag is set, preventing the widget from subsequent rendering.
 .Pp
 .Fn AG_WidgetSizeReq
 and
@@ -1119,6 +1126,10 @@ Hint to container widgets that in a horizontal packing, this widget can expand
 to fill all remaining space.
 .It AG_WIDGET_HIDE
 Disable rendering of the widget (not affecting child widgets).
+.It AG_WIDGET_UNDERSIZE
+The widget was determined to have a zero-valued geometry, and should not be
+rendered (read-only, set by
+.Fn AG_WidgetSizeAlloc ) .
 .It AG_WIDGET_DISABLED
 Advise that widget is not accepting user input.
 The effect of this option is widget-dependent (read-only; see
