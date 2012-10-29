@@ -113,9 +113,10 @@ SDLGL_Open(void *obj, const char *spec)
 		initedSDLVideo = 1;
 	}
 
-	/* We can use SDL's time interface. */
-	if (agTimeOps == &agTimeOps_dummy)
-		AG_SetTimeOps(&agTimeOps_SDL);
+	/* Use SDL's time interface. */
+	AG_SetTimeOps(&agTimeOps_SDL);
+	AG_DestroyEventSubsystem();
+	AG_InitEventSubsystem(AG_SOFT_TIMERS);
 
 	/* Initialize this driver instance. */
 	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
