@@ -195,14 +195,13 @@ SizeColumns(AG_Table *t)
 	AG_Rect r;
 	int n, x;
 
+	if (WIDGET(t)->window != NULL)
+		AG_UnmapAllCursors(WIDGET(t)->window, t);
+
 	t->wTot = 0;
 	for (n = 0; n < t->n; n++) {
 		tc = &t->cols[n];
 
-		if (tc->ca != NULL) {
-			AG_UnmapCursor(t, tc->ca);
-			tc->ca = NULL;
-		}
 		if (tc->wPct != -1) {
 			tc->w = tc->wPct*t->r.w/100;
 			t->wTot += tc->w;
@@ -236,7 +235,7 @@ SizeColumns(AG_Table *t)
 	for (n = 0, x = 0; n < t->n; n++) {
 		tc = &t->cols[n];
 		
-		r.x = MAX(0, x - COLUMN_RESIZE_RANGE/2);
+		r.x = x - COLUMN_RESIZE_RANGE/2;
 		r.w = COLUMN_RESIZE_RANGE;
 		tc->ca = AG_MapStockCursor(t, r, AG_HRESIZE_CURSOR);
 		x += tc->w;
@@ -1287,7 +1286,7 @@ ColumnLeftClick(AG_Table *t, int px)
 		int x2 = x1+tc->w;
 
 		if (x > x1 && x < x2) {
-			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
+			if ((x2 - x) <= COLUMN_RESIZE_RANGE) {
 				if (t->nResizing == -1) {
 					t->nResizing = n;
 				}
