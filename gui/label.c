@@ -228,6 +228,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Label *lbl = obj;
 	int wLbl, hLbl;
+	AG_Surface *s;
 	
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
@@ -242,19 +243,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	/*
 	 * If the widget area is too small to display the complete
-	 * string, draw a "..." at the end.
+	 * string, render the label partially.
 	 */
 	AG_TextSize(lbl->text, &wLbl, &hLbl);
 
 	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
 		lbl->flags |= AG_LABEL_PARTIAL;
-		if (lbl->surfaceCont == -1) {
-			AG_Surface *suDots;
-			
-			/* TODO share this between all widgets */
-			if ((suDots = AG_TextRender(" ... ")) != NULL)
-				lbl->surfaceCont = AG_WidgetMapSurface(lbl,
-				    suDots);
+		if (lbl->surfaceCont == -1 &&
+		    (s = AG_TextRender("... ")) != NULL) {
+			lbl->surfaceCont = AG_WidgetMapSurface(lbl, s);
 		}
 	} else {
 		lbl->flags &= ~AG_LABEL_PARTIAL;
