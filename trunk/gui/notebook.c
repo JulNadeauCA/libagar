@@ -60,39 +60,15 @@ MouseButtonDown(AG_Event *event)
 		int tx = SPACING;
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			AG_Surface *label = WSURFACE(nb,tab->label);
+			int wTab = (tab->lbl ? WIDTH(tab->lbl) : 0) + SPACING*2;
 
-#if 0
-			if (tx+label->w+SPACING*2 > WIDGET(nb)->w)
-				break;
-#endif
-			if (x >= tx && x < tx+(label->w + SPACING*2)) {
+			if (x >= tx && x < tx+wTab) {
 				AG_NotebookSelectTab(nb, tab);
-				AG_Redraw(nb);
 				break;
 			}
-			tx += label->w + SPACING*2;
+			tx += wTab;
 		}
 	}
-}
-
-static void
-OnFontChange(AG_Event *event)
-{
-	AG_Notebook *nb = AG_SELF();
-	AG_NotebookTab *ntab;
-
-	TAILQ_FOREACH(ntab, &nb->tabs, tabs) {
-		if (ntab->label != -1) {
-			AG_WidgetUnmapSurface(nb, ntab->label);
-			ntab->label = -1;
-		}
-	}
-	if (nb->lblPartial != -1) {
-		AG_WidgetUnmapSurface(nb, nb->lblPartial);
-		nb->lblPartial = -1;
-	}
-	
 }
 
 static void
@@ -100,11 +76,17 @@ OnShow(AG_Event *event)
 {
 	AG_Notebook *nb = AG_SELF();
 
-	if (nb->sel_tab != NULL) {
-		AG_NotebookSelectTab(nb, nb->sel_tab);
-	} else if (!TAILQ_EMPTY(&nb->tabs)) {
+	if (nb->sel_tab == NULL)
 		AG_NotebookSelectTab(nb, TAILQ_FIRST(&nb->tabs));
-	}
+}
+
+static void
+OnHide(AG_Event *event)
+{
+	AG_Notebook *nb = AG_SELF();
+
+	if (nb->sel_tab != NULL)
+		AG_NotebookSelectTab(nb, NULL);
 }
 
 static void
@@ -123,13 +105,12 @@ Init(void *obj)
 	nb->cont_h = -1;
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->lblPartial = -1;
 	nb->r = AG_RECT(0,0,0,0);
 	nb->nTabs = 0;
 	TAILQ_INIT(&nb->tabs);
 
-	AG_AddEvent(nb, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
+	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
 }
 
@@ -147,7 +128,7 @@ Draw(void *obj)
 	
 	if (nb->sel_tab != NULL) {
 		AG_PushClipRect(nb, nb->r);
-		AG_WidgetDraw(&nb->sel_tab->box);
+		AG_WidgetDraw(nb->sel_tab);
 		AG_PopClipRect(nb);
 	}
 
@@ -156,40 +137,25 @@ Draw(void *obj)
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		int isSelected = (nb->sel_tab == tab);
+		int wLbl = tab->lbl ? WIDTH(tab->lbl) : 0;
 
-		if (tab->label == -1) {
-			tab->label = AG_WidgetMapSurface(nb,
-			    AG_TextRender(tab->labelText));
-		}
 		r.x = x;
 		r.y = y;
-		r.w = WSURFACE(nb,tab->label)->w + SPACING*2;
+		r.w = wLbl + SPACING*2;
 		r.h = nb->bar_h - SPACING;
-		
+	
 		if (r.x+r.w > WIDTH(nb)) {
-			if ((r.w = WIDTH(nb) - r.x) <=
-			    nb->lblPartialWidth + SPACING*2) {
+			r.w = WIDTH(nb) - r.x;
+			if (r.w <= SPACING*4)
 				break;
-			}
-			if (nb->lblPartial == -1) {
-				nb->lblPartial = AG_WidgetMapSurface(nb,
-				    AG_TextRender("..."));
-			}
-			AG_DrawBoxRoundedTop(nb, r,
-			    isSelected ? -1 : 1, (int)(font->height/1.5),
-			    isSelected ? WCOLOR_HOV(nb,0) :
-	 		                 WCOLOR(nb,0));
-			AG_WidgetBlitSurface(nb, nb->lblPartial, x+SPACING,
-			    y+(r.h/2 - WSURFACE(nb,nb->lblPartial)->h/2));
-			break;
 		}
-
 		AG_DrawBoxRoundedTop(nb, r,
 		    isSelected ? -1 : 1, (int)(font->height/1.5),
 		    isSelected ? WCOLOR_HOV(nb,0) :
 	 	                 WCOLOR(nb,0));
-		AG_WidgetBlitSurface(nb, tab->label, x+SPACING,
-		    y+(r.h/2 - WSURFACE(nb,tab->label)->h/2));
+		if (tab->lbl != NULL) {
+			AG_WidgetDraw(tab->lbl);
+		}
 		x += r.w;
 	}
 }
@@ -216,9 +182,11 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 		nb->cont_w = MAX(nb->cont_w,rTab.w);
 		nb->cont_h = MAX(nb->cont_h,rTab.h);
-		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0)
+		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
 			nb->bar_w += SPACING*2;
-			/* + WSURFACE(nb,tab->label)->w */
+			if (tab->lbl != NULL)
+				nb->bar_w += WIDTH(tab->lbl);
+		}
 	}
 	r->h = nb->cont_h + nb->bar_h;
 	r->w = MAX(nb->cont_w, nb->bar_w);
@@ -229,10 +197,27 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
-	AG_SizeAlloc aTab;
+	AG_SizeAlloc aTab, aLbl;
+	AG_SizeReq rLbl;
+
+	int x = nb->padding+SPACING;
+	int y = nb->padding+SPACING;
 
 	if (a->h < nb->bar_h) {
 		return (-1);
+	}
+	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
+		if (tab->lbl == NULL) {
+			x += SPACING*4;
+			continue;
+		}
+		AG_WidgetSizeReq(tab->lbl, &rLbl);
+		aLbl.x = x+SPACING;
+		aLbl.y = y+SPACING;
+		aLbl.w = MIN(rLbl.w, WIDTH(nb)-SPACING-x);
+		aLbl.h = rLbl.h;
+		AG_WidgetSizeAlloc(tab->lbl, &aLbl);
+		x += aLbl.w + SPACING*2;
 	}
 	if ((tab = nb->sel_tab) != NULL) {
 		aTab.x = 0;
@@ -293,15 +278,15 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	if (nb->spacing >= 0)
 		AG_BoxSetSpacing(&tab->box, nb->spacing);
 
-	Strlcpy(tab->labelText, label, sizeof(tab->labelText));
-	tab->label = -1;
+	if (label != NULL && label[0] != '\0') {
+		tab->lbl = AG_LabelNewS(nb, 0, label);
+	} else {
+		tab->lbl = NULL;
+	}
 
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	nb->nTabs++;
 
-	if (TAILQ_FIRST(&nb->tabs) == tab)
-		AG_NotebookSelectTab(nb, tab);
-	
 	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 	return (tab);
@@ -311,9 +296,15 @@ void
 AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	AG_ObjectLock(nb);
+	if (nb->sel_tab == tab) {
+		AG_NotebookSelectTab(nb, NULL);
+	}
+	if (tab->lbl != NULL) {
+		AG_ObjectDetach(tab->lbl);
+		AG_ObjectDestroy(tab->lbl);
+	}
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
 	nb->nTabs--;
-	AG_WidgetUnmapSurface(nb, tab->label);
 	AG_ObjectDestroy(tab);
 	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
@@ -328,8 +319,10 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_LockVFS(nb);
 	AG_ObjectLock(nb);
 
-	if (nb->sel_tab != NULL) {
-		AG_WidgetFreeStyle(tab);
+	if (nb->sel_tab == tab) {
+		goto out;
+	} else if (nb->sel_tab != NULL) {
+/*		AG_WidgetFreeStyle(nb->sel_tab); */
 		AG_WidgetHiddenRecursive(nb->sel_tab);
 		AG_ObjectDetach(nb->sel_tab);
 		OBJECT(nb->sel_tab)->flags &= ~(AG_OBJECT_NAME_ONATTACH);

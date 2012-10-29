@@ -6,6 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 #include <agar/gui/text.h>
+#include <agar/gui/label.h>
 
 #define AG_NOTEBOOK_LABEL_MAX	64
 
@@ -20,8 +21,7 @@ enum ag_notebook_tab_alignment {
 
 typedef struct ag_notebook_tab {
 	struct ag_box box;
-	int label;				/* Label surface mapping */
-	char labelText[AG_NOTEBOOK_LABEL_MAX];	/* Label source text */
+	AG_Label *lbl;				/* Optional text label */
 	AG_TAILQ_ENTRY(ag_notebook_tab) tabs;
 } AG_NotebookTab;
 
@@ -36,8 +36,6 @@ typedef struct ag_notebook {
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int spacing, padding;		/* Spacing for tabs */
-	int lblPartial;			/* "..." label */
-	int lblPartialWidth;		/* Width of "..." */
 	struct ag_notebook_tab *sel_tab;
 	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;
 	AG_Rect r;			/* View area */
