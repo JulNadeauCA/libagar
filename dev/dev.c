@@ -64,28 +64,15 @@ SelectTool(AG_Event *event)
 		AG_WindowShow(win);
 }
 
-#ifdef AG_DEBUG
-static void
-ShowGuiDebugger(AG_Event *event)
-{
-	AG_WindowShow(AG_GuiDebugger(NULL));
-}
-#endif /* AG_DEBUG */
-
 void
 DEV_ToolMenu(AG_MenuItem *mi)
 {
 	const int devToolCount = sizeof(devTools) / sizeof(devTools[0]);
 	int i;
 
-	for (i = 0; i < devToolCount; i++) {
+	for (i = 0; i < devToolCount; i++)
 		AG_MenuAction(mi, _(devTools[i].name), NULL,
 		    SelectTool, "%p", &devTools[i]);
-	}
-#ifdef AG_DEBUG
-	AG_MenuSeparator(mi);
-	AG_MenuAction(mi, _("GUI Debugger"), NULL, ShowGuiDebugger, NULL);
-#endif
 }
 
 void
