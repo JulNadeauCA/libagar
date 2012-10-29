@@ -280,11 +280,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 				aChld.w = a->w - aChld.x;
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			if (aChld.w < 1 || aChld.h < 1 || aChld.x > a->w) {
-				chld->flags |= AG_WIDGET_UNDERSIZE;
-			} else {
-				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
-			}
 			aChld.x += aChld.w + box->spacing;
 			break;
 		case AG_BOX_VERT:
@@ -296,11 +291,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 				aChld.h = a->h - aChld.y;
 			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			if (aChld.w < 1 || aChld.h < 1 || aChld.y > a->h) {
-				chld->flags |= AG_WIDGET_UNDERSIZE;
-			} else {
-				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
-			}
 			aChld.y += aChld.h + box->spacing;
 			break;
 		}
