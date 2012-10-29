@@ -423,8 +423,6 @@ AG_InitGraphics(const char *spec)
 			if ((key = AG_Strsep(&tok, "=")) &&
 			    (val = AG_Strsep(&tok, "="))) {
 				AG_SetString(drv, key, val);
-			} else {
-				Verbose(_("Syntax error in driver options: %s"), sOpts);
 			}
 		}
 	}
@@ -596,10 +594,11 @@ AG_ZoomIn(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
-	if ((win = agWindowFocused) == NULL) {
+	if ((win = agWindowFocused) != NULL) {
+		AG_WindowSetZoom(win, win->zoom+1);
+	} else {
 		Verbose("No window is focused for zoom\n");
 	}
-	AG_WindowSetZoom(win, win->zoom+1);
 	AG_UnlockVFS(&agDrivers);
 }
 void
@@ -608,10 +607,11 @@ AG_ZoomOut(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
-	if ((win = agWindowFocused) == NULL) {
-		Verbose("No window is focused for zoom\n");
+	if ((win = agWindowFocused) != NULL) {
+		AG_WindowSetZoom(win, win->zoom-1);
+	} else {
+		Verbose("No window is focused for zoom-out\n");
 	}
-	AG_WindowSetZoom(win, win->zoom-1);
 	AG_UnlockVFS(&agDrivers);
 }
 void
@@ -620,9 +620,10 @@ AG_ZoomReset(void)
 	AG_Window *win;
 
 	AG_LockVFS(&agDrivers);
-	if ((win = agWindowFocused) == NULL) {
+	if ((win = agWindowFocused) != NULL) {
+		AG_WindowSetZoom(win, AG_ZOOM_DEFAULT);
+	} else {
 		Verbose("No window is focused for zoom-in\n");
 	}
-	AG_WindowSetZoom(win, AG_ZOOM_DEFAULT);
 	AG_UnlockVFS(&agDrivers);
 }
