@@ -23,7 +23,6 @@ DATAFILES=	loss.txt \
 PROG=	agartest
 SRCS=	agartest.c ${SRCS_EXTRA} \
 	charsets.c \
-	chinese.c \
 	compositing.c \
 	configsettings.c \
 	console.c \
