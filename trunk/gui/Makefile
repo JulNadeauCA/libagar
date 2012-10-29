@@ -25,7 +25,7 @@ SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
 	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
-	time_sdl.c debugger.c surface.c perfmon.c widget_legacy.c global_keys.c \
+	time_sdl.c debugger.c surface.c widget_legacy.c global_keys.c \
 	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c load_jpg.c \
 	load_png.c dir_dlg.c anim.c
 

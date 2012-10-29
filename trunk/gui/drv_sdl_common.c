@@ -33,7 +33,6 @@
 #include "window.h"
 #include "packedpixel.h"
 #include "cursors.h"
-#include "perfmon.h"
 #include "sdl.h"
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
@@ -861,9 +860,6 @@ AG_SDL_GenericEventLoop(void *obj)
 	Uint32 Tr1, Tr2 = 0;
 	AG_DriverEvent dev;
 
-#ifdef AG_DEBUG
-	AG_PerfMonInit();
-#endif
 	Tr1 = AG_GetTicks();
 	for (;;) {
 		Tr2 = AG_GetTicks();
@@ -889,10 +885,6 @@ AG_SDL_GenericEventLoop(void *obj)
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = AG_GetTicks();
 			dsw->rCur = dsw->rNom - (Tr1-Tr2);
-#ifdef AG_DEBUG
-			if (agPerfWindow->visible)
-				AG_PerfMonUpdate(dsw->rCur);
-#endif
 			if (dsw->rCur < 1) {
 				dsw->rCur = 1;
 			}
@@ -900,9 +892,6 @@ AG_SDL_GenericEventLoop(void *obj)
 			if (AG_SDL_GetNextEvent(drv, &dev) == 1 &&
 			    AG_SDL_ProcessEvent(drv, &dev) == -1)
 				return;
-#ifdef AG_DEBUG
-				agEventAvg++;
-#endif
 		} else {
 			AG_ProcessTimeouts(Tr2);
 			AG_Delay(1);
