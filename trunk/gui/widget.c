@@ -221,7 +221,10 @@ OnShow(AG_Event *event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
-	
+
+	if (wid->font == NULL)
+		AG_FatalError("%s style not compiled", OBJECT(wid)->name);
+
 	wid->flags &= ~(AG_WIDGET_HIDE);
 
 	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
@@ -1851,6 +1854,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_ObjectUnlock(widSrc);
 
 	AG_WidgetCompileStyle(widDst);
+	AG_Redraw(widDst);
 }
 
 /*
