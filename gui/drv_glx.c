@@ -50,7 +50,6 @@
 #include "drv.h"
 #include "text.h"
 #include "window.h"
-#include "perfmon.h"
 #include "gui_math.h"
 #include "cursors.h"
 #include "opengl.h"

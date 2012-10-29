@@ -33,7 +33,6 @@
 
 #include "gui.h"
 #include "window.h"
-#include "perfmon.h"
 #include "gui_math.h"
 #include "text.h"
 #include "cursors.h"
@@ -924,9 +923,6 @@ COCOA_GenericEventLoop(void *obj)
 	AG_Window *win;
 	Uint32 t1, t2;
 
-#ifdef AG_DEBUG
-	AG_PerfMonInit();
-#endif
 	t1 = AG_GetTicks();
 	for (;;) {
 		t2 = AG_GetTicks();
@@ -954,16 +950,9 @@ COCOA_GenericEventLoop(void *obj)
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
-#ifdef AG_DEBUG
-			if (agPerfWindow->visible)
-				AG_PerfMonUpdate(rCur);
-#endif
 		} else if (COCOA_GetNextEvent(NULL, &dev) == 1) {
 			if (COCOA_ProcessEvent(NULL, &dev) == -1)
 				return;
-#ifdef AG_DEBUG
-			agEventAvg++;
-#endif
 		} else {
 			if (!AG_TAILQ_EMPTY(&agTimerObjQ)) {
 				AG_ProcessTimeouts(t2);
