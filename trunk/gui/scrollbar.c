@@ -557,6 +557,10 @@ AutoHideTimeout(AG_Timer *to, AG_Event *event)
 	AG_Scrollbar *sb = AG_SELF();
 	int rv, x, len;
 
+	if (WIDGET(sb)->window != NULL &&
+	    WIDGET(sb)->window->visible == 0)
+		return (to->ival);
+
 	rv = GetPxCoords(sb, &x, &len);
 	if (rv == -1 || len == sb->length) {
 		if (AG_WidgetVisible(sb))
