@@ -68,10 +68,6 @@ Init(void *obj)
 	
 	dsw->rNom = 16;
 	dsw->rCur = 0;
-
-	AG_SetString(sfb, "width", "auto");
-	AG_SetString(sfb, "height", "auto");
-	AG_SetString(sfb, "depth", "auto");
 }
 
 static void
@@ -1214,13 +1210,11 @@ InitClipRects(AG_DriverSDLFB *sfb, int wView, int hView)
 static int
 SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
-	char buf[16];
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
 	Uint32 sFlags = 0;
 	int newDepth;
-	Uint wDesk, hDesk;
 
 	/* Set the requested display options. */
 	if (flags & AG_VIDEO_HWSURFACE) {
@@ -1241,26 +1235,9 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
 
-	/* Apply the default resolution settings. */
-	if (AG_GetDisplaySize(drv, &wDesk, &hDesk) == -1) {
-		wDesk = 320;
-		hDesk = 240;
-	}
-	if (w == 0 && AG_Defined(drv, "width")) {
-		AG_GetString(drv, "width", buf, sizeof(buf));
-		w = (buf[0] == 'a') ? wDesk : atoi(buf);
-	}
-	if (h == 0 && AG_Defined(drv, "height")) {
-		AG_GetString(drv, "height", buf, sizeof(buf));
-		h = (buf[0] == 'a') ? hDesk : atoi(buf);
-	}
-	if (depth == 0 && AG_Defined(drv, "depth")) {
-		AG_GetString(drv, "depth", buf, sizeof(buf));
-		depth = (buf[0] == 'a') ? 32 : atoi(buf);
-	}
-
 	/* Set the video mode. Force hardware palette in 8bpp. */
-	Verbose(_("SDLFB: Setting mode %dx%d (%d bpp)\n"), w, h, depth);
+	AG_SDL_GetPrefDisplaySettings(drv, &w, &h, &depth);
+	Verbose(_("SDLFB: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
 		Verbose(_("Enabling hardware palette"));

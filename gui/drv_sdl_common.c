@@ -543,6 +543,7 @@ AG_SDL_PostEventCallback(void *obj)
 	return (1);
 }
 
+/* Return the desktop display size in pixels. */
 int
 AG_SDL_GetDisplaySize(Uint *w, Uint *h)
 {
@@ -557,6 +558,46 @@ AG_SDL_GetDisplaySize(Uint *w, Uint *h)
 	*h = 240;
 #endif
 	return (0);
+}
+
+/* Apply default display settings where 0 is specified. */
+void
+AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
+{
+	char buf[16];
+	AG_Driver *drv = obj;
+	Uint wDisp, hDisp;
+
+	if (*w == 0 || *h == 0) {
+		AG_SDL_GetDisplaySize(&wDisp, &hDisp);
+	}
+	if (*w == 0) {
+		if (AG_Defined(drv, "width")) {
+			AG_GetString(drv, "width", buf, sizeof(buf));
+			*w = (buf[0] != 'a') ? atoi(buf) :
+			                       (Uint)((float)wDisp*2.0/3.0);
+		} else {
+			printf("wDisp=%u\n", wDisp);
+			*w = (Uint)((float)wDisp*2.0/3.0);
+		}
+	}
+	if (*h == 0) {
+		if (AG_Defined(drv, "height")) {
+			AG_GetString(drv, "height", buf, sizeof(buf));
+			*h = (buf[0] != 'a') ? atoi(buf) :
+			                       (Uint)((float)hDisp*2.0/3.0);
+		} else {
+			*h = (Uint)((float)hDisp*2.0/3.0);
+		}
+	}
+	if (*depth == 0) {
+		if (AG_Defined(drv, "depth")) {
+			AG_GetString(drv, "depth", buf, sizeof(buf));
+			*depth = (buf[0] == 'a') ? 32 : atoi(buf);
+		} else {
+			*depth = 32;
+		}
+	}
 }
 
 void
@@ -912,3 +953,4 @@ AG_SDL_Terminate(void)
 	nev.type = SDL_QUIT;
 	SDL_PushEvent(&nev);
 }
+
