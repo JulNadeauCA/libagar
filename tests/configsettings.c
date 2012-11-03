@@ -37,11 +37,17 @@ SaveConfig(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_TestInstance *ti = obj;
 	AG_Box *box;
 	AG_Textbox *tb;
 
 	someString[0] = '\0';
+
+	AG_GetString(agConfig, "load-path", path, sizeof(path));
+	AG_LabelNew(win, 0, "load-path: %s", path);
+	AG_GetString(agConfig, "save-path", path, sizeof(path));
+	AG_LabelNew(win, 0, "save-path: %s", path);
 
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);
