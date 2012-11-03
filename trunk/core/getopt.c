@@ -45,6 +45,8 @@ AG_Getopt(int argc, char * const argv[], const char *optstring, char **oa,
 	if (oi != NULL) { *oi = optind; }
 	return (rv);
 #else
+	if (oa != NULL) { *oa = NULL; }
+	if (oi != NULL) { *oi = 0; }
 	return (-1);
 #endif
 }
