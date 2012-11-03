@@ -404,8 +404,8 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	a.y = r.y;
 	a.w = r.w;
 	a.h = r.h;
-	if (AG_WidgetSizeAlloc(win, &a) == 0)
-		AG_WidgetUpdateCoords(win, a.x, a.y);
+	AG_WidgetSizeAlloc(win, &a);
+	AG_WidgetUpdateCoords(win, a.x, a.y);
 
 	/* Focus the window. */
 	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
@@ -1229,7 +1229,7 @@ WGL_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	/* Update per-widget coordinate information */
 	a->x = 0;
 	a->y = 0;
-	(void)AG_WidgetSizeAlloc(win, a);
+	AG_WidgetSizeAlloc(win, a);
 	AG_WidgetUpdateCoords(win, 0, 0);
 
 	/* Viewport dimensions have changed */
