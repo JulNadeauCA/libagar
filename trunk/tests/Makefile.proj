@@ -1,0 +1,36 @@
+#
+# This file defines profiles for the generation of IDE "project files",
+# for compiling on platforms where such a thing is needed.
+#
+# To create a new set of project files, simply append your desired
+# profile to ${PROJFILES} and use "make proj" (BSDBuild, perl and
+# Premake are required - see http://bsdbuild.hypertriton.com).
+#
+# The syntax for ${PROJFILES} entries is:
+# <OS>:<IDE>:<FLAVOR>:<CONFIGURE-OPTIONS>
+#
+# For the list of available <OS> and <IDE> values, see build.proj.mk(5).
+# 
+
+PROJFILES=      windows:vs2005::--datadir=NONE \
+		windows-xp:vs2005::--datadir=NONE
+
+# Generate VS2008 project files for a "Windows XP and up" target
+#       windows-xp:vs2008::
+# Generate VS2008 project files for a "Windows Vista (64-bit) and up" target
+#       windows-vista-x64:vs2008::
+
+# Generate CodeBlocks/gcc project files:
+#       windows:cb-gcc::
+# Generate CodeBlocks/Open Watcom project files:
+#       windows:cb-ow::
+
+# Build without FreeType support:
+#       windows:vs2005:-nofreetype:--without-freetype
+# Build without multithreading support:
+#       windows:vs2005:-nothreads:--disable-threads
+# Build without the SDL 1.x display drivers:
+#       windows:vs2005:-nosdl:--without-sdl
+# Build with no dependencies at all:
+#       windows:vs2005:-nofreetype,nothreads,nosdl:--without-freetype,--disable-threads,--without-sdl
+
