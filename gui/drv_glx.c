@@ -988,7 +988,9 @@ GLX_GenericEventLoop_KQUEUE(void *obj)
 			to = (AG_Timer *)kev.udata;
 			ob = to->obj;
 			AG_LockTimers(ob);
+			AG_LockVFS(&agDrivers);
 			rvt = to->fn(to, &to->fnEvent);
+			AG_UnlockVFS(&agDrivers);
 			if (rvt > 0) {				/* Restart */
 				if (rvt != to->ival &&
 				    AG_ResetTimer(ob, to, rvt) == -1) {
