@@ -474,7 +474,7 @@ AG_SetRTL(int enable)
 static Uint32
 TextTmsgExpire(AG_Timer *to, AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
+	AG_Window *win = AG_PTR(1);
 
 	AG_ObjectDetach(win);
 	return (0);
