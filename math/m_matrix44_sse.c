@@ -47,9 +47,9 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixMult44_SSE,			/* -61 clks */
 	M_MatrixMult44v_SSE,			/* -59 clks */
 	M_MatrixMult44pv_SSE,			/* -61 clks */
-	M_MatrixMultVector344_SSE,		/* = */
-	M_MatrixMultVector344p_SSE,		/* -5 clks */
-	M_MatrixMultVector344v_SSE,		/* -28 clks */
+	M_MatrixMultVector344_FPU,		/* = */
+	M_MatrixMultVector344p_FPU,		/* -5 clks */
+	M_MatrixMultVector344v_FPU,		/* -28 clks */
 	M_MatrixMultVector444_SSE,		/* -5 clks */
 	M_MatrixMultVector444p_SSE,		/* -10 clks */
 	M_MatrixMultVector444v_SSE,		/* -40 clks */
