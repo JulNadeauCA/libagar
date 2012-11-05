@@ -7616,6 +7616,10 @@ echo "#undef HAVE_GETADDRINFO" >$BLD/include/agar/config/have_getaddrinfo.h
 echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 echo "#undef HAVE_SETSOCKOPT" >$BLD/include/agar/config/have_setsockopt.h
 echo "hdefs[\"HAVE_SETSOCKOPT\"] = nil" >>configure.lua
+echo "#undef HAVE_WINSOCK1" >$BLD/include/agar/config/have_winsock1.h
+echo "hdefs[\"HAVE_WINSOCK1\"] = nil" >>configure.lua
+echo "#undef HAVE_WINSOCK2" >$BLD/include/agar/config/have_winsock2.h
+echo "hdefs[\"HAVE_WINSOCK2\"] = nil" >>configure.lua
 fi
 	
 if [ "${with_db4}" != "no" ]
