@@ -530,7 +530,7 @@ AG_SDL_SetCursorVisibility(void *obj, int flag)
 	SDL_ShowCursor(flag ? SDL_ENABLE : SDL_DISABLE);
 }
 
-int
+void
 AG_SDL_PostEventCallback(void *obj)
 {
 	if (!TAILQ_EMPTY(&agWindowDetachQ)) {
@@ -540,7 +540,6 @@ AG_SDL_PostEventCallback(void *obj)
 		AG_WM_CommitWindowFocus(agWindowToFocus);
 		agWindowToFocus = NULL;
 	}
-	return (1);
 }
 
 /* Return the desktop display size in pixels. */
@@ -886,10 +885,8 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	default:
 		break;
 	}
-	if (rv == 0) {
-		return (0);
-	}
-	return AG_SDL_PostEventCallback(drv);
+	AG_SDL_PostEventCallback(drv);
+	return (rv);
 }
 
 void
