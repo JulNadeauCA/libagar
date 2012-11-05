@@ -515,8 +515,8 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
-	r->w = 16;
-	r->h = 16;
+	r->w = 320;
+	r->h = 240;
 }
 
 static int
