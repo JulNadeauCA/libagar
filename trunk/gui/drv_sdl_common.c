@@ -871,8 +871,10 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		rv = ProcessInputEvent(drv, dev);
 		break;
 	case AG_DRIVER_VIDEORESIZE:
-		AG_ResizeDisplay(dev->data.videoresize.w,
-		    dev->data.videoresize.h);
+		if (AG_ResizeDisplay(dev->data.videoresize.w,
+		    dev->data.videoresize.h) == -1) {
+			Verbose("ResizeDisplay: %s\n", AG_GetError());
+		}
 		rv = 1;
 		break;
 	case AG_DRIVER_CLOSE:

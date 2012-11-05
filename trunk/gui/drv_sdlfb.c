@@ -1363,10 +1363,11 @@ SDLFB_VideoResize(void *obj, Uint w, Uint h)
 	SDL_Surface *su;
 	AG_ClipRect *cr0;
 
-	sFlags = sfb->s->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|SDL_HWSURFACE|
-	                          SDL_ASYNCBLIT|SDL_HWPALETTE|SDL_RESIZABLE|
-	                          SDL_OPENGL);
-
+	sFlags = sfb->s->flags & (SDL_SWSURFACE|SDL_HWSURFACE|SDL_ASYNCBLIT|
+				  SDL_ANYFORMAT|SDL_HWPALETTE|SDL_DOUBLEBUF|
+				  SDL_FULLSCREEN|SDL_OPENGL|SDL_OPENGLBLIT|
+				  SDL_RESIZABLE|SDL_NOFRAME);
+	                          
 	if ((su = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
 		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
 		    SDL_GetError());
