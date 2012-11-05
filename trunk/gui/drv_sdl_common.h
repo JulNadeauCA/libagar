@@ -41,7 +41,7 @@ void            AG_SDL_FreeCursor(void *, AG_Cursor *);
 int             AG_SDL_GetCursorVisibility(void *);
 void            AG_SDL_SetCursorVisibility(void *, int);
 
-int             AG_SDL_PostEventCallback(void *);
+void            AG_SDL_PostEventCallback(void *);
 
 int             AG_SDL_GetDisplaySize(Uint *, Uint *);
 void            AG_SDL_GetPrefDisplaySettings(void *, Uint *, Uint *, int *);
