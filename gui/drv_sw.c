@@ -192,6 +192,7 @@ AG_PostResizeDisplay(AG_DriverSw *dsw)
 			AG_WidgetSizeAlloc(win, &a);
 			AG_WindowUpdate(win);
 		}
+		win->dirty = 1;
 		AG_ObjectUnlock(win);
 	}
 	if (agVideoResizeCallback != NULL)
