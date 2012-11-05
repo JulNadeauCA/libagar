@@ -5,6 +5,8 @@
 
 #include "agartest.h"
 
+#ifdef AG_NETWORK
+
 #include <string.h>
 
 typedef struct {
@@ -245,3 +247,5 @@ const AG_TestCase networkTest = {
 	TestGUI,
 	NULL		/* bench */
 };
+
+#endif /* AG_NETWORK */

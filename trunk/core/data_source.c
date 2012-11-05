@@ -148,6 +148,8 @@ WriteAtNotSup(AG_DataSource *ds, const void *buf, size_t size, off_t pos, size_t
 	AG_SetError(_("Operation not supported"));
 	return (-1);
 }
+
+#ifdef AG_NETWORK
 static int
 ReadAtNotSup(AG_DataSource *ds, void *buf, size_t size, off_t pos, size_t *rv)
 {
@@ -165,6 +167,7 @@ SeekNotSup(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	AG_SetError(_("Seek not supported by data source"));
 	return (-1);
 }
+#endif /* AG_NETWORK */
 
 /*
  * File operations.
@@ -415,6 +418,7 @@ AG_CloseAutoCore(AG_DataSource *ds)
 	AG_DataSourceDestroy(ds);
 }
 
+#ifdef AG_NETWORK
 /*
  * Network socket operations
  */
@@ -435,6 +439,7 @@ AG_CloseNetSocket(AG_DataSource *ds)
 {
 	AG_DataSourceDestroy(ds);
 }
+#endif
 
 /* Default error handler */
 static void
@@ -581,6 +586,7 @@ AG_OpenAutoCore(void)
 	return (&cs->ds);
 }
 
+#ifdef AG_NETWORK
 /* Create a data source using a network socket. */
 AG_DataSource *
 AG_OpenNetSocket(AG_NetSocket *ns)
@@ -601,6 +607,7 @@ AG_OpenNetSocket(AG_NetSocket *ns)
 	ss->ds.close = AG_CloseNetSocket;
 	return (&ss->ds);
 }
+#endif /* AG_NETWORK */
 
 /* Select the byte order of the source. */
 void

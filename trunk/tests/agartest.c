@@ -30,7 +30,9 @@ extern const AG_TestCase mathTest;
 extern const AG_TestCase maximizedTest;
 extern const AG_TestCase minimalTest;
 extern const AG_TestCase modalWindowHandlerTest;
+#ifdef AG_NETWORK
 extern const AG_TestCase networkTest;
+#endif
 extern const AG_TestCase objSystemTest;
 extern const AG_TestCase paneTest;
 extern const AG_TestCase plottingTest;
@@ -70,7 +72,9 @@ const AG_TestCase *testCases[] = {
 	&maximizedTest,
 	&minimalTest,
 	&modalWindowHandlerTest,
+#ifdef AG_NETWORK
 	&networkTest,
+#endif
 	&objSystemTest,
 	&paneTest,
 	&plottingTest,
