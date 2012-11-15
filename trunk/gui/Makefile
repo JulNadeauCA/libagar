@@ -27,7 +27,7 @@ SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
 	time_sdl.c debugger.c surface.c widget_legacy.c global_keys.c \
 	input_device.c mouse.c keyboard.c packedpixel.c load_bmp.c load_jpg.c \
-	load_png.c dir_dlg.c anim.c
+	load_png.c dir_dlg.c anim.c stylesheet.c
 
 MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \

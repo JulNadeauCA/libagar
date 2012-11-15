@@ -304,6 +304,7 @@ Init(void *obj)
 	TAILQ_INIT(&wid->mouseActions);
 	TAILQ_INIT(&wid->keyActions);
 	
+	wid->css = NULL;
 	wid->cState = AG_DEFAULT_STATE;
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
@@ -1686,33 +1687,51 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 /*
  * Rebuild the effective style parameters of a widget and its descendants
  * based on its style attributes. Any required fonts are loaded. This
- * should be invoked on attach or whenever style attributes are changed.
+ * should be called whenever style attributes are changed.
  */
 static void
 CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
     double parentPtSize, Uint parentFlags,
     AG_WidgetPalette parentPalette)
 {
+	AG_StyleSheet *css = &agDefaultCSS;
 	char face[256];
 	double ptSize;
 	Uint flags = parentFlags;
 	AG_Widget *chld;
 	AG_Variable *V;
 	int i, j;
+	AG_Object *po;
+	char *cssData;
+	double v;
+	char *ep;
+
+	/* Select the effective style sheet for this widget. */
+	for (po = OBJECT(wid);
+	     po->parent != NULL && AG_OfClass(po->parent, "AG_Widget:*");
+	     po = po->parent) {
+		if (WIDGET(po)->css != NULL) {
+			css = WIDGET(po)->css;
+			break;
+		}
+	}
 
 	/* Set the font attributes. */
 	if ((V = AG_GetVariableLocked(wid, "font-family")) != NULL) {
 		Strlcpy(face, V->data.s, sizeof(face));
 		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
+		Strlcpy(face, cssData, sizeof(face));
 	} else {
 		Strlcpy(face, parentFace, sizeof(face));
 	}
 	if ((V = AG_GetVariableLocked(wid, "font-size")) != NULL) {
-		double v;
-		char *ep;
 		v = strtod(V->data.s, &ep);
 		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
 		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-size", &cssData)) {
+		v = strtod(cssData, &ep);
+		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
 	} else {
 		ptSize = parentPtSize;
 	}
@@ -1723,6 +1742,12 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 			flags &= ~(AG_FONT_BOLD);
 		}
 		AG_UnlockVariable(V);
+	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
+		if (AG_Strcasecmp(cssData, "bold") == 0) {
+			flags |= AG_FONT_BOLD;
+		} else if (AG_Strcasecmp(cssData, "normal") == 0) {
+			flags &= ~(AG_FONT_BOLD);
+		}
 	}
 	if ((V = AG_GetVariableLocked(wid, "font-style")) != NULL) {
 		if (AG_Strcasecmp(V->data.s, "italic") == 0) {
@@ -1732,6 +1757,28 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 		}
 		AG_UnlockVariable(V);
 	}
+	
+	/* Set the color attributes. */
+	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
+			AG_Color *parentColor = &parentPalette.c[i][j];
+			char vName[AG_VARIABLE_NAME_MAX];
+
+			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
+			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
+			if ((V = AG_GetVariableLocked(wid, vName)) != NULL) {
+				wid->pal.c[i][j] = AG_ColorFromString(V->data.s,
+				    parentColor);
+				AG_UnlockVariable(V);
+			} else if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
+				wid->pal.c[i][j] = AG_ColorFromString(cssData,
+				    parentColor);
+			} else {
+				wid->pal.c[i][j] = *parentColor;
+			}
+		}
+	}
+
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		char *pFace = face, *tok;
 		AG_Font *fontNew = NULL;
@@ -1757,22 +1804,6 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 		}
 	}
 
-	/* Set the global color attributes. */
-	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
-		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
-			char vName[AG_VARIABLE_NAME_MAX];
-
-			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
-			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
-			if ((V = AG_GetVariableLocked(wid, vName)) != NULL) {
-				wid->pal.c[i][j] = AG_ColorFromString(V->data.s,
-				    &parentPalette.c[i][j]);
-				AG_UnlockVariable(V);
-			} else {
-				wid->pal.c[i][j] = parentPalette.c[i][j];
-			}
-		}
-	}
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		CompileStyleRecursive(chld, face, ptSize, flags, wid->pal);
@@ -1785,25 +1816,17 @@ AG_WidgetCompileStyle(void *obj)
 
 	AG_LockVFS(wid);
 	AG_MutexLock(&agTextLock);
-/*	AG_TextClearGlyphCache(wid->drv); */
+
 	if ((parent = OBJECT(wid)->parent) != NULL &&
-	    AG_OfClass(parent, "AG_Widget:*")) {
-		if (parent->font == NULL) {
-			AG_Verbose("%s: parent (%s) has font=NULL\n",
-			    OBJECT(wid)->name, OBJECT(parent)->name);
-			CompileStyleRecursive(wid,
-			    OBJECT(agDefaultFont)->name,
-			    agDefaultFont->spec.size,
-			    agDefaultFont->flags,
-			    agDefaultPalette);
-		} else {
-			CompileStyleRecursive(wid,
-			    OBJECT(parent->font)->name,
-			    parent->font->spec.size,
-			    parent->font->flags,
-			    parent->pal);
-		}
+	    AG_OfClass(parent, "AG_Widget:*") &&
+	    parent->font != NULL) {
+		CompileStyleRecursive(wid,
+		    OBJECT(parent->font)->name,
+		    parent->font->spec.size,
+		    parent->font->flags,
+		    parent->pal);
 	} else {
+
 		CompileStyleRecursive(wid,
 		    OBJECT(agDefaultFont)->name,
 		    agDefaultFont->spec.size,

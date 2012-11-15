@@ -11,6 +11,7 @@
 #include <agar/gui/colors.h>
 #include <agar/gui/surface.h>
 #include <agar/gui/anim.h>
+#include <agar/gui/stylesheet.h>
 
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
@@ -200,6 +201,7 @@ typedef struct ag_widget {
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
 
 	/* Global inheritable style attributes */
+	AG_StyleSheet *css;				/* Alternate style sheet */
 	enum ag_widget_color_state cState;		/* Current color state */
 	struct ag_font *font;				/* Effective font */
 	AG_WidgetPalette pal;				/* Effective colors */
