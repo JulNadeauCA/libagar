@@ -30,6 +30,7 @@
 #include "window.h"
 #include "primitive.h"
 #include "text.h"
+#include "label.h"
 
 #ifdef AG_DEBUG
 #include "numerical.h"
