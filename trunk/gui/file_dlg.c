@@ -1019,12 +1019,14 @@ AG_FileDlgNew(void *parent, Uint flags)
 		    &fd->flags, AG_FILEDLG_MASK_EXT);
 		AG_SetEvent(fd->cbMaskExt, "checkbox-changed",
 		    MaskOptionSelected, "%p", fd);
+		AG_SetStyle(fd->cbMaskExt, "font-size", "80%");
 	
 		fd->cbMaskHidden = AG_CheckboxNewFlag(fd, 0,
 		    _("Mask hidden files"),
 		    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
 		AG_SetEvent(fd->cbMaskHidden, "checkbox-changed",
 		    MaskOptionSelected, "%p", fd);
+		AG_SetStyle(fd->cbMaskHidden, "font-size", "80%");
 	}
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
 		fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
@@ -1079,6 +1081,7 @@ Init(void *obj)
 	/* Current directory label. */
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL, ("Directory: %s"), &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1, _("Directory: XXXXXXXXXXXXX"));
+	AG_SetStyle(fd->lbCwd, "font-size", "90%");
 
 	/* Manual file/directory entry textbox. */
 	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
@@ -1168,16 +1171,16 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	r->w = rChld.w;
 	r->h = rChld.h+4;
 	AG_WidgetSizeReq(fd->lbCwd, &rChld);
-	r->h += rChld.h+1;
+	r->h += rChld.h+5;
 	AG_WidgetSizeReq(fd->tbFile, &rChld);
-	r->h += rChld.h+2;
+	r->h += rChld.h+5;
 	if (fd->comTypes != NULL) {
 		AG_WidgetSizeReq(fd->comTypes, &rChld);
 		r->h += rChld.h+4;
 	}
 	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
 		AG_WidgetSizeReq(fd->cbMaskExt, &rChld);
-		r->h += rChld.h+4;
+		r->h += rChld.h+2;
 		AG_WidgetSizeReq(fd->cbMaskHidden, &rChld);
 		r->h += rChld.h+4;
 	}
@@ -1233,13 +1236,13 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_WidgetSizeReq(fd->lbCwd, &r);
 	aChld.h = r.h;
 	AG_WidgetSizeAlloc(fd->lbCwd, &aChld);
-	aChld.y += aChld.h+1;
+	aChld.y += aChld.h+5;
 
 	/* Size entry textbox. */
 	AG_WidgetSizeReq(fd->tbFile, &r);
 	aChld.h = r.h;
 	AG_WidgetSizeAlloc(fd->tbFile, &aChld);
-	aChld.y += aChld.h+2;
+	aChld.y += aChld.h+5;
 
 	/* Size type selector */
 	if (fd->comTypes != NULL) {
@@ -1252,7 +1255,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		AG_WidgetSizeReq(fd->cbMaskExt, &r);
 		aChld.h = r.h;
 		AG_WidgetSizeAlloc(fd->cbMaskExt, &aChld);
-		aChld.y += aChld.h+4;
+		aChld.y += aChld.h+2;
 		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
 		aChld.h = r.h;
 		AG_WidgetSizeAlloc(fd->cbMaskHidden, &aChld);
