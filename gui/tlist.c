@@ -1103,6 +1103,7 @@ KeyDown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
+	void *ti;
 
 	switch (keysym) {
 	case AG_KEY_UP:
@@ -1120,6 +1121,11 @@ KeyDown(AG_Event *event)
 	case AG_KEY_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
 		AG_AddTimer(tl, &tl->moveTo, agKbdDelay, MoveTimeout, "%i", +agPageIncrement);
+		break;
+	case AG_KEY_RETURN:
+		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
+			AG_PostEvent(NULL, ti, "tlist-return", "%p", ti);
+		}
 		break;
 	}
 	tl->lastKeyDown = keysym;
