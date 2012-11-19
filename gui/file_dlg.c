@@ -54,29 +54,6 @@
 #include "file_dlg_common.h"
 
 AG_FileDlg *
-AG_FileDlgNew(void *parent, Uint flags)
-{
-	AG_FileDlg *fd;
-
-	fd = Malloc(sizeof(AG_FileDlg));
-	AG_ObjectInit(fd, &agFileDlgClass);
-	fd->flags |= flags;
-	if (flags & AG_FILEDLG_HFILL) { AG_ExpandHoriz(fd); }
-	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
-	if (flags & AG_FILEDLG_MULTI) { fd->tlFiles->flags |= AG_TLIST_MULTI; }
-
-	if (flags & AG_FILEDLG_NOBUTTONS) {
-		AG_ObjectDetach(fd->btnOk);
-		AG_ObjectDetach(fd->btnCancel);
-		fd->btnOk = NULL;
-		fd->btnCancel = NULL;
-	}
-
-	AG_ObjectAttach(parent, fd);
-	return (fd);
-}
-
-AG_FileDlg *
 AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 {
 	char savePath[AG_PATHNAME_MAX];
@@ -332,19 +309,33 @@ static void
 ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 {
 	AG_TlistItem *it;
+	AG_FileType *ft = NULL;
+	char *ext;
+	int i;
 
 	AG_ObjectLock(fd);
-	if ((it = AG_TlistSelectedItem(fd->comTypes->list)) != NULL) {
-		AG_FileType *ft = it->p1;
 
-		if (ft->action != NULL) {
-			AG_PostEvent(NULL, fd, ft->action->name, "%s,%p",
-			    fd->cfile, ft);
+	if (fd->comTypes != NULL &&
+	    (it = AG_TlistSelectedItem(fd->comTypes->list)) != NULL) {
+		ft = it->p1;
+	} else if ((ext = strrchr(fd->cfile, '.')) != NULL) {
+		TAILQ_FOREACH(ft, &fd->types, types) {
+			for (i = 0; i < ft->nexts; i++) {
+				char *s;
+				if ((s = strrchr(ft->exts[i], '.')) != NULL &&
+				    Strcasecmp(s, ext) == 0)
+					break;
+			}
+			if (i < ft->nexts)
+				break;
 		}
-		AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, ft);
-	} else {
-		AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, NULL);
 	}
+	if (ft != NULL && ft->action != NULL) {
+		AG_PostEvent(NULL, fd, ft->action->name, "%s,%p",
+		    fd->cfile, ft);
+	}
+	AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, ft);
+
 	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 /*		AG_PostEvent(NULL, pwin, "window-close", NULL); */
 		AG_ObjectDetach(pwin);
@@ -478,7 +469,7 @@ FileSelected(AG_Event *event)
 	}
 	AG_ObjectUnlock(tl);
 
-	if ((ext = strrchr(fd->cfile, '.')) != NULL) {
+	if (fd->comTypes != NULL && (ext = strrchr(fd->cfile, '.')) != NULL) {
 		AG_ObjectLock(fd->comTypes->list);
 		TAILQ_FOREACH(ti, &fd->comTypes->list->items, items) {
 			AG_FileType *ft = ti->p1;
@@ -519,7 +510,8 @@ FileDblClicked(AG_Event *event)
 		if (fd->okAction != NULL) {
 			AG_PostEvent(NULL, fd, fd->okAction->name, "%s,%p",
 			    fd->cfile,
-			    AG_TlistSelectedItemPtr(fd->comTypes->list));
+			    (fd->comTypes != NULL) ?
+			    AG_TlistSelectedItemPtr(fd->comTypes->list) : NULL);
 		} else {
 			CheckAccessAndChoose(fd);
 		}
@@ -844,14 +836,16 @@ OnShow(AG_Event *event)
 	AG_WidgetFocus(fd->tbFile);
 	RefreshListing(fd);
 	RefreshShortcuts(fd, 1);
-	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 
-	AG_COMBO_FOREACH(it, fd->comTypes) {
-		AG_TextSize(it->text, &w, NULL);
-		if (w > wMax) { wMax = w; }
-		nItems++;
+	if (fd->comTypes != NULL) {
+		AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
+		AG_COMBO_FOREACH(it, fd->comTypes) {
+			AG_TextSize(it->text, &w, NULL);
+			if (w > wMax) { wMax = w; }
+			nItems++;
+		}
+		AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
 	}
-	AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
 }
 
 /* Move to the specified directory (format string). */
@@ -1000,6 +994,48 @@ MaskOptionSelected(AG_Event *event)
 	RefreshListing(fd);
 }
 
+AG_FileDlg *
+AG_FileDlgNew(void *parent, Uint flags)
+{
+	AG_FileDlg *fd;
+
+	fd = Malloc(sizeof(AG_FileDlg));
+	AG_ObjectInit(fd, &agFileDlgClass);
+	fd->flags |= flags;
+	if (flags & AG_FILEDLG_HFILL) { AG_ExpandHoriz(fd); }
+	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
+	if (flags & AG_FILEDLG_MULTI) { fd->tlFiles->flags |= AG_TLIST_MULTI; }
+
+	/* File type selector */
+	if (!(flags & AG_FILEDLG_NOTYPESELECT)) {
+		fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
+		AG_SetEvent(fd->comTypes, "combo-selected",
+		    SelectedType, "%p", fd);
+	}
+	/* "Mask files" checkboxes. */
+	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {
+		fd->cbMaskExt = AG_CheckboxNewFlag(fd, 0,
+		    _("Mask files by extension"),
+		    &fd->flags, AG_FILEDLG_MASK_EXT);
+		AG_SetEvent(fd->cbMaskExt, "checkbox-changed",
+		    MaskOptionSelected, "%p", fd);
+	
+		fd->cbMaskHidden = AG_CheckboxNewFlag(fd, 0,
+		    _("Mask hidden files"),
+		    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
+		AG_SetEvent(fd->cbMaskHidden, "checkbox-changed",
+		    MaskOptionSelected, "%p", fd);
+	}
+	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
+		fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
+		AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
+		fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
+		AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
+	}
+	AG_ObjectAttach(parent, fd);
+	return (fd);
+}
+
 static void
 Init(void *obj)
 {
@@ -1012,6 +1048,11 @@ Init(void *obj)
 	fd->optsCtr = NULL;
 	fd->okAction = NULL;
 	fd->cancelAction = NULL;
+	fd->btnOk = NULL;
+	fd->btnCancel = NULL;
+	fd->cbMaskExt = NULL;
+	fd->cbMaskHidden = NULL;
+	fd->comTypes = NULL;
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
@@ -1043,28 +1084,6 @@ Init(void *obj)
 	fd->tbFile = AG_TextboxNewS(fd, AG_TEXTBOX_EXCL, _("File: "));
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
 	AG_SetEvent(fd->tbFile, "textbox-return", TextboxReturn, "%p", fd);
-
-	/* File type selector */
-	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
-	AG_SetEvent(fd->comTypes, "combo-selected", SelectedType, "%p", fd);
-
-	fd->cbMaskExt = AG_CheckboxNewFlag(fd, 0,
-	    _("Mask files by extension"),
-	    &fd->flags, AG_FILEDLG_MASK_EXT);
-	AG_SetEvent(fd->cbMaskExt, "checkbox-changed",
-	    MaskOptionSelected, "%p", fd);
-	
-	fd->cbMaskHidden = AG_CheckboxNewFlag(fd, 0,
-	    _("Mask hidden files"),
-	    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
-	AG_SetEvent(fd->cbMaskHidden, "checkbox-changed",
-	    MaskOptionSelected, "%p", fd);
-
-	/* OK/Cancel buttons */
-	fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));
-	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
-	fd->btnCancel = AG_ButtonNewS(fd, 0, _("Cancel"));
-	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 
 	AG_AddEvent(fd, "widget-shown", OnShow, NULL);
 }
@@ -1152,12 +1171,16 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	r->h += rChld.h+1;
 	AG_WidgetSizeReq(fd->tbFile, &rChld);
 	r->h += rChld.h+2;
-	AG_WidgetSizeReq(fd->comTypes, &rChld);
-	r->h += rChld.h+4;
-	AG_WidgetSizeReq(fd->cbMaskExt, &rChld);
-	r->h += rChld.h+4;
-	AG_WidgetSizeReq(fd->cbMaskHidden, &rChld);
-	r->h += rChld.h+4;
+	if (fd->comTypes != NULL) {
+		AG_WidgetSizeReq(fd->comTypes, &rChld);
+		r->h += rChld.h+4;
+	}
+	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
+		AG_WidgetSizeReq(fd->cbMaskExt, &rChld);
+		r->h += rChld.h+4;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &rChld);
+		r->h += rChld.h+4;
+	}
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
 		AG_WidgetSizeReq(fd->btnOk, &rOk);
 		AG_WidgetSizeReq(fd->btnCancel, &rCancel);
@@ -1192,12 +1215,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h -= r.h;
 	AG_WidgetSizeReq(fd->tbFile, &r);
 	aChld.h -= r.h;
-	AG_WidgetSizeReq(fd->comTypes, &r);
-	aChld.h -= r.h;
-	AG_WidgetSizeReq(fd->cbMaskExt, &r);
-	aChld.h -= r.h;
-	AG_WidgetSizeReq(fd->cbMaskHidden, &r);
-	aChld.h -= r.h;
+	if (fd->comTypes != NULL) {
+		AG_WidgetSizeReq(fd->comTypes, &r);
+		aChld.h -= r.h;
+	}
+	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
+		AG_WidgetSizeReq(fd->cbMaskExt, &r);
+		aChld.h -= r.h;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
+		aChld.h -= r.h;
+	}
 	aChld.h -= 8;
 	AG_WidgetSizeAlloc(fd->hPane, &aChld);
 	aChld.y += aChld.h+4;
@@ -1215,18 +1242,22 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.y += aChld.h+2;
 
 	/* Size type selector */
-	AG_WidgetSizeReq(fd->comTypes, &r);
-	aChld.h = r.h;
-	AG_WidgetSizeAlloc(fd->comTypes, &aChld);
-	aChld.y += aChld.h+4;
-	AG_WidgetSizeReq(fd->cbMaskExt, &r);
-	aChld.h = r.h;
-	AG_WidgetSizeAlloc(fd->cbMaskExt, &aChld);
-	aChld.y += aChld.h+4;
-	AG_WidgetSizeReq(fd->cbMaskHidden, &r);
-	aChld.h = r.h;
-	AG_WidgetSizeAlloc(fd->cbMaskHidden, &aChld);
-	aChld.y += aChld.h+4;
+	if (fd->comTypes != NULL) {
+		AG_WidgetSizeReq(fd->comTypes, &r);
+		aChld.h = r.h;
+		AG_WidgetSizeAlloc(fd->comTypes, &aChld);
+		aChld.y += aChld.h+4;
+	}
+	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
+		AG_WidgetSizeReq(fd->cbMaskExt, &r);
+		aChld.h = r.h;
+		AG_WidgetSizeAlloc(fd->cbMaskExt, &aChld);
+		aChld.y += aChld.h+4;
+		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
+		aChld.h = r.h;
+		AG_WidgetSizeAlloc(fd->cbMaskHidden, &aChld);
+		aChld.y += aChld.h+4;
+	}
 
 	/* Size buttons */
 	if (!(fd->flags & AG_FILEDLG_NOBUTTONS)) {
@@ -1276,10 +1307,12 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	} else {
 		ft->action = NULL;
 	}
-	it = AG_TlistAdd(fd->comTypes->list, NULL, "%s (%s)", descr, exts);
-	it->p1 = ft;
-	if (TAILQ_EMPTY(&fd->types)) {
-		AG_ComboSelectPointer(fd->comTypes, ft);
+	if (fd->comTypes != NULL) {
+		it = AG_TlistAdd(fd->comTypes->list, NULL, "%s (%s)", descr, exts);
+		it->p1 = ft;
+		if (TAILQ_EMPTY(&fd->types)) {
+			AG_ComboSelectPointer(fd->comTypes, ft);
+		}
 	}
 	TAILQ_INSERT_TAIL(&fd->types, ft, types);
 	

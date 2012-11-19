@@ -64,6 +64,8 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_NOBUTTONS	  0x0400	/* No OK/Cancel buttons */
 #define AG_FILEDLG_MASK_EXT	  0x0800	/* Mask files by extension */
 #define AG_FILEDLG_MASK_HIDDEN	  0x1000	/* Mask hidden files */
+#define AG_FILEDLG_NOMASKOPTS	  0x2000	/* No "Mask files" checkboxes */
+#define AG_FILEDLG_NOTYPESELECT	  0x4000	/* No "Type" dropbox */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
