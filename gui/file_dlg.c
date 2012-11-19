@@ -817,6 +817,7 @@ SelectedType(AG_Event *event)
 			break;
 		}
 	}
+	AG_SetStyle(fd->optsCtr, "font-size", "90%");
 	AG_ObjectUnlock(fd);
 	AG_WidgetUpdate(fd);
 }
@@ -1209,7 +1210,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		hBtn = 0;
 	}
 
-	/* Size horizontal pane */
+	/* Size horizontal pane. XXX ridiculous */
 	aChld.x = 0;
 	aChld.y = 0;
 	aChld.w = a->w;
@@ -1220,15 +1221,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	aChld.h -= r.h;
 	if (fd->comTypes != NULL) {
 		AG_WidgetSizeReq(fd->comTypes, &r);
-		aChld.h -= r.h;
+		aChld.h -= (r.h + 4);
 	}
 	if (!(fd->flags & AG_FILEDLG_NOMASKOPTS)) {
 		AG_WidgetSizeReq(fd->cbMaskExt, &r);
-		aChld.h -= r.h;
+		aChld.h -= (r.h + 2);
 		AG_WidgetSizeReq(fd->cbMaskHidden, &r);
-		aChld.h -= r.h;
+		aChld.h -= (r.h + 4);
 	}
-	aChld.h -= 8;
+	aChld.h -= 10;
 	AG_WidgetSizeAlloc(fd->hPane, &aChld);
 	aChld.y += aChld.h+4;
 

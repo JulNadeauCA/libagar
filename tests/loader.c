@@ -122,7 +122,8 @@ TestGUI(void *obj, AG_Window *win)
 		 * widgets for type specific options. We specify where those
 		 * widgets will be created here.
 		 */
-		box = AG_BoxNewVert(ntab, AG_BOX_HFILL);
+		box = AG_BoxNewVert(ntab, AG_BOX_HFILL|AG_BOX_FRAME);
+		AG_BoxSetPadding(box, 10);
 		AG_FileDlgSetOptionContainer(fd, box);
 	}
 	ntab = AG_NotebookAddTab(nb, "Select directory", AG_BOX_VERT);
