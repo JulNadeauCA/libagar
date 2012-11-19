@@ -474,7 +474,7 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
 
 	if (AG_FindEventHandler(wid, "key-down") == NULL)
 		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
@@ -492,7 +492,7 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL)
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
