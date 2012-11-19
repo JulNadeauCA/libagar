@@ -223,6 +223,7 @@ The standard built-in routines
 and
 .Fn AG_TlistComparePtrsAndClasses
 are provided.
+.\" MANLINK(AG_TlistItem)
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "AG_TlistItem *"
@@ -476,6 +477,10 @@ The user just double-clicked
 .Fa item .
 Binding to this event is equivalent to using
 .Fn AG_TlistSetDblClickFn .
+.It Fn tlist-return "AG_TlistItem *item"
+The user has selected
+.Fa item
+and pressed the return key.
 .It Fn tlist-poll "void"
 The
 .Dv AG_TLIST_POLL
