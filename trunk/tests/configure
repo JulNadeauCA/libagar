@@ -2645,11 +2645,6 @@ WNO_UNINITIALIZED="-Wno-uninitialized"
 else
 WNO_UNINITIALIZED=""
 fi
-SRCS_EXTRA=""
-if [ "${HAVE_AGAR_AU}" = "yes" ]
- then
-SRCS_EXTRA="${SRCS_EXTRA} audio.c"
-fi
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_MATH_CFLAGS=$AGAR_MATH_CFLAGS" >>Makefile.config
@@ -2710,8 +2705,6 @@ echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "AGAR_DEV_CFLAGS=$AGAR_DEV_CFLAGS" >>Makefile.config
 echo "mdefs[\"AGAR_DEV_CFLAGS\"] = \"$AGAR_DEV_CFLAGS\"" >>configure.lua
-echo "SRCS_EXTRA=$SRCS_EXTRA" >>Makefile.config
-echo "mdefs[\"SRCS_EXTRA\"] = \"$SRCS_EXTRA\"" >>configure.lua
 echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "AGAR_MATH_LIBS=$AGAR_MATH_LIBS" >>Makefile.config

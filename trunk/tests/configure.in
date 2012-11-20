@@ -32,10 +32,10 @@ else
 	MDEFINE(WNO_UNINITIALIZED, "")
 fi
 
-MDEFINE(SRCS_EXTRA, "")
-if [ "${HAVE_AGAR_AU}" = "yes" ]; then
-	MAPPEND(SRCS_EXTRA, "audio.c")
-fi
+#MDEFINE(SRCS_EXTRA, "")
+#if [ "${HAVE_AGAR_AU}" = "yes" ]; then
+#	MAPPEND(SRCS_EXTRA, "audio.c")
+#fi
 
 C_INCDIR($BLD)
 C_INCDIR_CONFIG($BLD/config)
