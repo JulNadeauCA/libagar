@@ -114,8 +114,8 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			TAILQ_INSERT_TAIL(&css->blks, cssBlk, blks);
 			continue;
 		}
-		cKey = strsep(&c, ":=");
-		cVal = strsep(&c, ":=");
+		cKey = AG_Strsep(&c, ":=");
+		cVal = AG_Strsep(&c, ":=");
 		if (cKey == NULL || cVal == NULL) {
 			continue;
 		}
