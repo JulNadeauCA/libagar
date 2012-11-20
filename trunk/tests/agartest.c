@@ -13,7 +13,6 @@
 #include "config/have_agar_au.h"
 #include "config/datadir.h"
 
-extern const AG_TestCase audioTest;
 extern const AG_TestCase charsetsTest;
 extern const AG_TestCase compositingTest;
 extern const AG_TestCase configSettingsTest;
@@ -49,11 +48,10 @@ extern const AG_TestCase threadsTest;
 extern const AG_TestCase timeoutsTest;
 extern const AG_TestCase unitconvTest;
 extern const AG_TestCase windowsTest;
+/* extern const AG_TestCase audioTest; */
 
 const AG_TestCase *testCases[] = {
-#ifdef HAVE_AGAR_AU
-	&audioTest,
-#endif
+/*	&audioTest, */
 	&charsetsTest,
 	&compositingTest,
 	&configSettingsTest,
