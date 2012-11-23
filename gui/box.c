@@ -107,6 +107,8 @@ Init(void *obj)
 	box->padding = 4;
 	box->spacing = 2;
 	box->lbl = NULL;
+	box->hAlign = AG_BOX_LEFT;
+	box->vAlign = AG_BOX_TOP;
 }
 
 static void
@@ -255,6 +257,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	int nWidgets, totFixed;
 	int wAvail, hAvail;
+	int x, y;
 
 	if ((nWidgets = CountChildWidgets(box, &totFixed)) == 0) {
 		return (0);
@@ -267,8 +270,20 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	wAvail = a->w - box->padding*2;
 	hAvail = a->h - box->padding*2;
-	aChld.x = box->padding;
-	aChld.y = box->padding;
+	x = box->padding;
+	y = box->padding;
+	if (totFixed < wAvail) {
+		switch (box->hAlign) {
+		case AG_BOX_CENTER:	x = wAvail/2 - totFixed/2;	break;
+		case AG_BOX_RIGHT:	x = wAvail - totFixed;		break;
+		default:						break;
+		}
+		switch (box->vAlign) {
+		case AG_BOX_CENTER:	y = hAvail/2 - totFixed/2;	break;
+		case AG_BOX_BOTTOM:	y = hAvail - totFixed;		break;
+		default:						break;
+		}
+	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		switch (box->type) {
@@ -277,22 +292,34 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			          (wAvail - totFixed) : MIN(rChld.w, wAvail);
 			aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 				  hAvail : MIN(hAvail, rChld.h);
+			aChld.x = x;
 			if (aChld.x+aChld.w > a->w) {
 				aChld.w = a->w - aChld.x;
 			}
+			switch (box->vAlign) {
+			case AG_BOX_TOP:	aChld.y = y;			break;
+			case AG_BOX_CENTER:	aChld.y = hAvail/2 - aChld.h/2;	break;
+			case AG_BOX_BOTTOM:	aChld.y = hAvail - aChld.h;	break;
+			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.x += aChld.w + box->spacing;
+			x += aChld.w + box->spacing;
 			break;
 		case AG_BOX_VERT:
 			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
 			          wAvail : MIN(wAvail, rChld.w);
 			aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 			          (hAvail - totFixed) : MIN(rChld.h, hAvail);
+			aChld.y = y;
 			if (aChld.y+aChld.h > a->h) {
 				aChld.h = a->h - aChld.y;
 			}
+			switch (box->hAlign) {
+			case AG_BOX_TOP:	aChld.x = x;			break;
+			case AG_BOX_CENTER:	aChld.x = wAvail/2 - aChld.w/2;	break;
+			case AG_BOX_BOTTOM:	aChld.x = wAvail - aChld.w;	break;
+			}
 			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.y += aChld.h + box->spacing;
+			y += aChld.h + box->spacing;
 			break;
 		}
 	}
@@ -347,6 +374,24 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	a.w = WIDGET(box)->w;
 	a.h = WIDGET(box)->h;
 	SizeAllocate(box, &a);
+	AG_ObjectUnlock(box);
+	AG_Redraw(box);
+}
+
+void
+AG_BoxSetHorizAlign(AG_Box *box, enum ag_box_align align)
+{
+	AG_ObjectLock(box);
+	box->hAlign = align;
+	AG_ObjectUnlock(box);
+	AG_Redraw(box);
+}
+
+void
+AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
+{
+	AG_ObjectLock(box);
+	box->vAlign = align;
 	AG_ObjectUnlock(box);
 	AG_Redraw(box);
 }

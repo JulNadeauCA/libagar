@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -79,6 +79,12 @@ widget packs its children horizontally or vertically.
 .Ft void
 .Fn AG_BoxSetDepth "AG_Box *box" "int depth"
 .Pp
+.Ft void
+.Fn AG_BoxSetHorizAlign "AG_Box *box" "enum ag_box_align align"
+.Pp
+.Ft void
+.Fn AG_BoxSetVertAlign "AG_Box *box" "enum ag_box_align align"
+.Pp
 .nr nS 0
 The
 .Fn AG_BoxNew
@@ -153,6 +159,24 @@ Assuming that the
 flag was given,
 .Fn AG_BoxSetDepth
 sets the depth of the frame.
+.Pp
+The
+.Fn AG_BoxSetHorizAlign
+and
+.Fn AG_BoxSetVertAlign
+functions specify the horizontal or vertical alignment of widgets.
+The horizontal alignment setting may be
+.Dv AG_BOX_LEFT
+(default),
+.Dv AG_BOX_CENTER
+or
+.Dv AG_BOX_RIGHT .
+The vertical alignment may be set to
+.Dv AG_BOX_TOP
+(default),
+.Dv AG_BOX_CENTER
+or
+.Dv AG_BOX_BOTTOM .
 .Sh EVENTS
 The
 .Nm
