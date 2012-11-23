@@ -107,6 +107,8 @@ TestGUI(void *obj, AG_Window *win)
 	}
 
 	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
+	AG_BoxSetHorizAlign(hBox, AG_BOX_CENTER);
+	AG_BoxSetVertAlign(hBox, AG_BOX_CENTER);
 	{
 		/* The Radio checkbox is a group of radio buttons. */
 		{
