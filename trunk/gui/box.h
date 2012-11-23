@@ -12,6 +12,15 @@ enum ag_box_type {
 	AG_BOX_VERT
 };
 
+enum ag_box_align {
+	AG_BOX_LEFT	= 0,
+	AG_BOX_TOP	= 0,
+	AG_BOX_CENTER	= 1,
+	AG_BOX_MIDDLE	= 1,
+	AG_BOX_RIGHT	= 2,
+	AG_BOX_BOTTOM	= 2
+};
+
 struct ag_label;
 
 typedef struct ag_box {
@@ -27,6 +36,7 @@ typedef struct ag_box {
 	int spacing;			/* Spacing between widgets */
 	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
 	struct ag_label *lbl;		/* Optional text label */
+	enum ag_box_align hAlign, vAlign; /* Widget alignment */
 } AG_Box;
 
 #define AGBOX(p) ((AG_Box *)(p))
@@ -43,6 +53,8 @@ void	 AG_BoxSetPadding(AG_Box *, int);
 void	 AG_BoxSetSpacing(AG_Box *, int);
 void	 AG_BoxSetDepth(AG_Box *, int);
 void	 AG_BoxSetType(AG_Box *, enum ag_box_type);
+void     AG_BoxSetHorizAlign(AG_Box *, enum ag_box_align);
+void     AG_BoxSetVertAlign(AG_Box *, enum ag_box_align);
 
 #define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
 #define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
