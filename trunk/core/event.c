@@ -516,15 +516,15 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 int
 AG_InitEventSubsystem(Uint flags)
 {
+	agKqueue = -1;
 	agSoftTimers = (flags & AG_SOFT_TIMERS);
+
 #if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	if (agSoftTimers) {
-		agKqueue = -1;
-		return (0);
-	}
-	if ((agKqueue = kqueue()) == -1) {
-		AG_SetError("kqueue: %s", AG_Strerror(errno));
-		return (-1);
+	if (flags & AG_USE_KQUEUE) {
+		if ((agKqueue = kqueue()) == -1) {
+			AG_SetError("kqueue: %s", AG_Strerror(errno));
+			return (-1);
+		}
 	}
 #endif
 	return (0);

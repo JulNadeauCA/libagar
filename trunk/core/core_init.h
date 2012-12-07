@@ -8,6 +8,7 @@
 #define AG_VERBOSE         0x01 /* Allow errors/warning output on console */
 #define AG_CREATE_DATADIR  0x02 /* Auto-create data directory on init */
 #define AG_SOFT_TIMERS     0x04 /* Never use platform-specific timers */
+#define AG_USE_KQUEUE      0x08 /* Prefer kqueue(2) timers if available */
 
 __BEGIN_DECLS
 struct ag_event;

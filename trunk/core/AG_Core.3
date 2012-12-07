@@ -110,6 +110,10 @@ If this flag is not specified, Agar is allowed to use platform-specific timer
 interfaces (such as
 .Xr kqueue 2
 or timerfd), where they are available.
+.It AG_USE_KQUEUE
+Prefer use of the
+.Xr kqueue 2
+interface, if it is available.
 .El
 .Pp
 The
