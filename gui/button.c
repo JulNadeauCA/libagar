@@ -232,6 +232,7 @@ MouseButtonDown(AG_Event *event)
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 		AG_AddTimer(bu, &bu->delayTo, agMouseSpinDelay,
 		    ExpireDelay, "%i", agMouseSpinIval);
 	}
