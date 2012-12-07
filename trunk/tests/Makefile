@@ -5,11 +5,18 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 include ${TOP}/dev/Makefile.inc
 include ${TOP}/math/Makefile.inc
+include ${TOP}/au/Makefile.inc
 
 PROJECT=	"agartest"
 PROG_TYPE=	"GUI"
 PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
-PROG_LINKS=	${CORE_LINKS} ${MATH_LINKS} ${GUI_LINKS} ${DEV_LINKS}
+
+PROG_LINKS=	${AU_LINKS_STATIC} ${AGMATH_LINKS_STATIC} ${DEV_LINKS_STATIC} \
+		${GUI_LINKS_STATIC} ${CORE_LINKS_STATIC}
+CFLAGS+=	${AGAR_AU_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_DEV_CFLAGS} \
+		${AGAR_CFLAGS}
+LIBS+=		${AGAR_AU_LIBS} ${AGAR_MATH_LIBS} ${AGAR_DEV_LIBS} \
+		${AGAR_LIBS}
 
 DATAFILES=	loss.txt \
 		agar.png agar-index.png agar.bmp \
@@ -59,9 +66,6 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	timeouts.c \
 	unitconv.c \
 	windows.c
-
-CFLAGS+=${AGAR_AU_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS}
-LIBS+=	${AGAR_AU_LIBS} ${AGAR_MATH_LIBS} ${AGAR_DEV_LIBS} ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
