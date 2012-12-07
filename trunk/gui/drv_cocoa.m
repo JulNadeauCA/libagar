@@ -1052,10 +1052,10 @@ SetBackgroundColor(AG_DriverCocoa *co, AG_Color C)
 	NSColor *bgColor;
 	CGFloat r, g, b, a;
 
-	r = (CGFloat)(C->r / 255.0);
-	g = (CGFloat)(C->g / 255.0);
-	b = (CGFloat)(C->b / 255.0);
-	a = (CGFloat)(C->a / 255.0);
+	r = (CGFloat)(C.r / 255.0);
+	g = (CGFloat)(C.g / 255.0);
+	b = (CGFloat)(C.b / 255.0);
+	a = (CGFloat)(C.a / 255.0);
 	bgColor = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
 	[co->win setBackgroundColor:bgColor];
 
