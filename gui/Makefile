@@ -12,6 +12,8 @@ LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
+CFLAGS+=	-D_AGAR_GUI_INTERNAL \
+		${CORE_CFLAGS} ${GUI_CFLAGS}
 
 SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	gui.c widget.c window.c iconmgr.c geometry.c \
@@ -44,10 +46,6 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_DriverMw.3 AG_DriverSw.3 AG_DriverGLX.3 AG_DriverWGL.3 \
 	AG_DriverSDLFB.3 AG_DriverSDLGL.3 AG_GL.3 AG_DirDlg.3 AG_Anim.3 \
 	AG_GlobalKeys.3 AG_Keyboard.3 AG_DriverCocoa.3
-
-CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	${OPENGL_CFLAGS} ${X11_CFLAGS} ${XINERAMA_CFLAGS} ${JPEG_CFLAGS} \
-	${PNG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
