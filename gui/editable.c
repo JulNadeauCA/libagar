@@ -792,6 +792,8 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 			ed->pos = buf->len;
 	}
 	rv = ed->pos;
+	ed->xScrollTo = &ed->xCurs;
+	ed->yScrollTo = &ed->yCurs;
 	AG_ObjectUnlock(ed);
 	
 	AG_Redraw(ed);
