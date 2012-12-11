@@ -267,7 +267,6 @@ GLX_Open(void *obj, const char *spec)
 	XSynchronize(agDisplay, True);
 	XSetErrorHandler(HandleErrorX11);
 #endif
-
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
 
@@ -1637,13 +1636,13 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	glxAttrs[i++] = GLX_GREEN_SIZE;	glxAttrs[i++] = 2;
 	glxAttrs[i++] = GLX_BLUE_SIZE;	glxAttrs[i++] = 2;
 	glxAttrs[i++] = GLX_DEPTH_SIZE;	glxAttrs[i++] = 16;
+	glxAttrs[i++] = GLX_DOUBLEBUFFER;
+	if (agStereo) { glxAttrs[i++] = GLX_STEREO; }
+	glxAttrs[i++] = None;
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
-	/* Try to obtain a double-buffered visual, fallback to single. */
-	glxAttrs[i++] = GLX_DOUBLEBUFFER;
-	glxAttrs[i++] = None;
 	if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs)) == NULL) {
 		glxAttrs[i-=2] = None;
 		if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs))

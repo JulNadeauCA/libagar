@@ -1179,6 +1179,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		pfAttr[i++] = depthReq;
 	}
 	pfAttr[i++] = NSOpenGLPFADoubleBuffer;
+	if (agStereo) { pfAttr[i++] = NSOpenGLPFAStereo; }
 #if 0
 	pfAttr[i++] = NSOpenGLPFAScreenMask;
 	pfAttr[i++] = CGDisplayIDToOpenGLDisplayMask(display);
