@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2010-2012 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -46,9 +46,13 @@ is usually the default driver.
 .Sh EXAMPLES
 .Bd -literal -offset indent
 AG_InitGraphics("glx");
+AG_InitGraphics("glx(stereo)");
 .Ed
 .Sh OPTIONS
-No driver options are currently defined.
+.Bl -tag -compact -width "stereo "
+.It stereo
+Request a stereoscopic visual.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_InitGraphics 3 ,

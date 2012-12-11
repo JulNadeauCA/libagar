@@ -281,6 +281,9 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	RECT wndRect;
 	AG_SizeAlloc a;
 
+	if (agStereo)
+		pixelFormatDescriptor.dwFlags |= PFD_STEREO;
+
 	/* Register Window Class */
 	AG_MutexLock(&wglClassLock);
 	sprintf(wndClassName, "agar-wgl-windowclass-%d", wndClassCount);

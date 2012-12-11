@@ -138,10 +138,11 @@ void *agGUIClasses[] = {
 	NULL
 };
 
-int agGUI = 0;				/* GUI is initialized */
-int agRenderingContext = 0;		/* In rendering context */
 static int initedGlobals = 0;		/* GUI globals are initialized */
 
+int agGUI = 0;				/* GUI is initialized */
+int agRenderingContext = 0;		/* In rendering context */
+int agStereo = 0;			/* Stereoscopic display */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
@@ -390,7 +391,7 @@ AG_InitGraphics(const char *spec)
 			}
 			if (tok == NULL) {
 				AG_SetError(_("Requested drivers (%s) are not "
-				              "available"), s);
+				              "available"), specBuf);
 				goto fail;
 			}
 		}
@@ -420,9 +421,16 @@ AG_InitGraphics(const char *spec)
 			Verbose(_("Syntax error in driver options: %s"), sOpts);
 		}
 		while ((tok = AG_Strsep(&sOpts, ":")) != NULL) {
-			if ((key = AG_Strsep(&tok, "=")) &&
-			    (val = AG_Strsep(&tok, "="))) {
-				AG_SetString(drv, key, val);
+			if ((key = AG_Strsep(&tok, "=")) != NULL) {
+				if (Strcasecmp(key, "stereo") == 0) {
+					agStereo = 1;
+					continue;
+				}
+				if ((val = AG_Strsep(&tok, "=")) != NULL) {
+					AG_SetString(drv, key, val);
+				} else {
+					AG_SetString(drv, key, "");
+				}
 			}
 		}
 	}
