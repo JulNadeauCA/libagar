@@ -433,10 +433,17 @@ main(int argc, char *argv[])
 		printf("Agar-GUI initialization failed: %s\n", AG_GetError());
 		return (1);
 	}
+#ifdef __APPLE__
+	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_META,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
+	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_META,	AG_QuitGUI);
+#else
 	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
 	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
 	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
 	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY,	AG_QuitGUI);
+#endif
 	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #ifdef AG_DEBUG
 	AG_BindGlobalKey(AG_KEY_F12,	AG_KEYMOD_ANY,	StartDebugger);
@@ -487,7 +494,11 @@ main(int argc, char *argv[])
 		    _("framebuffer-based") : _("vector-based"));
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
 		AG_ConsoleMsg(console, _("Available Agar drivers: %s"), drvNames);
-		AG_ConsoleMsg(console, _("Press Ctrl-[-] / Ctrl-[=] to zoom"));
+#ifdef __APPLE__
+		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));
+#else
+		AG_ConsoleMsg(console, _("Press Ctrl-[-] and Ctrl-[=] to zoom"));
+#endif
 #ifdef AG_DEBUG
 		AG_ConsoleMsg(console, _("Press F12 to debug active window"));
 #endif
