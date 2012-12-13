@@ -1129,7 +1129,7 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 					          screen:selScreen];
 	}
 	co->win->_agarWindow = win;
-	SetBackgroundColor(co, WCOLOR(co->win,0));
+	SetBackgroundColor(co, WCOLOR(win,0));
 
 	/* Create an event listener. */
 	co->evListener = [[AG_CocoaListener alloc] init];
