@@ -23,7 +23,7 @@ GenSine(void *p)
 {
 #define SINEBUF 4000
 	float x, out[SINEBUF*2];
-	int i, j;
+	int i;
 	double df = 0.010;
 	double k;
 	
@@ -104,24 +104,6 @@ CloseOut(AG_Event *event)
 		auOut = NULL;
 	}
 	AG_ConsoleMsg(cons, "Closed device OK");
-}
-
-static int
-Init(void *obj)
-{
-	return AU_InitSubsystem();
-}
-
-static void
-Destroy(void *obj)
-{
-	AU_DestroySubsystem();
-}
-
-static int
-TestGUI(void *obj, AG_Window *win)
-{
-	return (0);
 }
 
 int
