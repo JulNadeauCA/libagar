@@ -48,10 +48,8 @@ extern const AG_TestCase threadsTest;
 extern const AG_TestCase timeoutsTest;
 extern const AG_TestCase unitconvTest;
 extern const AG_TestCase windowsTest;
-/* extern const AG_TestCase audioTest; */
 
 const AG_TestCase *testCases[] = {
-/*	&audioTest, */
 	&charsetsTest,
 	&compositingTest,
 	&configSettingsTest,
