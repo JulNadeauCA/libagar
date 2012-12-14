@@ -27,6 +27,9 @@
  * Generic audio output interface.
  */
 
+#include <config/have_sndfile.h>
+#include <config/have_portaudio.h>
+
 #include <core/core.h>
 #include "au_init.h"
 #include "au_dev_out.h"
@@ -35,8 +38,12 @@
 extern const AU_DevOutClass auDevOut_pa;
 extern const AU_DevOutClass auDevOut_file;
 const AU_DevOutClass *auDevOutList[] = {
+#ifdef HAVE_PORTAUDIO
 	&auDevOut_pa,
+#endif
+#ifdef HAVE_SNDFILE
 	&auDevOut_file,
+#endif
 	NULL
 };
 const AU_DevOut *auDevOut = NULL;
