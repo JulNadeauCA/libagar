@@ -10171,8 +10171,8 @@ fi;
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
 fi;
-$ECHO_N "checking for PortAudio (http://www.portaudio.com/)..."
-$ECHO_N "checking for PortAudio (http://www.portaudio.com/)..." >> config.log
+$ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..."
+$ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..." >> config.log
 PORTAUDIO_VERSION=""
 if [ "${PKGCONFIG}" != "" ]; then
 if [ "${prefix_portaudio}" != "" ]; then
@@ -10312,8 +10312,8 @@ echo "Version 19.0 or greater is required (found $PORTAUDIO_VERSION)"
 exit 1
 fi;
 fi;
-$ECHO_N "checking whether PortAudio works..."
-$ECHO_N "checking whether PortAudio works..." >> config.log
+$ECHO_N "checking whether PortAudio2 works..."
+$ECHO_N "checking whether PortAudio2 works..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -10333,7 +10333,11 @@ main(int argc, char *argv[])
 	int rv;
 
 	if ((rv = Pa_Initialize()) != paNoError) {
-		return (rv);
+		if (Pa_IsFormatSupported(NULL, NULL) != 0) {
+			return (0);
+		} else {
+			return (rv);
+		}
 	} else {
 		Pa_Terminate();
 		return (0);
@@ -10689,8 +10693,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-dev-config"
-config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_dev ${GETTEXT_LIBS}"
+config_script_cflags="-I${INCLDIR}"
+config_script_libs="-L${LIBDIR} -lag_dev"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10765,8 +10769,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-math-config"
-config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS} ${GETTEXT_LIBS}"
+config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10841,8 +10845,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-rg-config"
-config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_rg ${GETTEXT_LIBS}"
+config_script_cflags="-I${INCLDIR}"
+config_script_libs="-L${LIBDIR} -lag_rg"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10917,8 +10921,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-vg-config"
-config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_vg ${GETTEXT_LIBS}"
+config_script_cflags="-I${INCLDIR}"
+config_script_libs="-L${LIBDIR} -lag_vg"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -10993,8 +10997,8 @@ while test \$# -gt 0; do
 done
 EOT
 config_script_out="agar-au-config"
-config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${SNDFILE_CFLAGS} ${PORTAUDIO_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_au ${GETTEXT_LIBS} ${SNDFILE_LIBS} ${PORTAUDIO_LIBS}"
+config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
