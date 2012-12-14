@@ -1,0 +1,27 @@
+# Public domain
+
+CONFIG_GUESS("../../mk/config.guess")
+
+REGISTER_SECTION("Test program options:")
+REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
+
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agartest")
+DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
+
+REQUIRE(cc)
+REQUIRE(agar, 1.5.0)
+REQUIRE(agar-math, 1.5.0)
+
+C_INCDIR($SRC)
+C_DEFINE(_USE_AGAR_STD)
+C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_TYPES)
+
+if [ "${enable_warnings}" = "yes" ]; then
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+	C_OPTION(-Wmissing-prototypes)
+fi
+
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)
