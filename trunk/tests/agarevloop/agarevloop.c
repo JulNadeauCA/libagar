@@ -143,17 +143,21 @@ main(int argc, char *argv[])
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: customeventloop [-d agar-driver-spec]\n");
+			printf("Usage: agarevloop [-d agar-driver-spec]\n");
 			return (1);
 		}
 	}
 
-	if (AG_InitCore("agar-customeventloop-demo", 0) == -1 ||
+	if (AG_InitCore(NULL, 0) == -1 ||
 	    AG_InitGraphics(driverSpec) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
+#ifdef __APPLE__
+	AG_BindGlobalKey(AG_KEY_Q, AG_KEYMOD_META, AG_QuitGUI);
+#else
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
+#endif
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Agar custom event loop demo");

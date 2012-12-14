@@ -21,7 +21,7 @@ main(int argc, char *argv[])
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: reinit [-d agar-driver-spec]\n");
+			printf("Usage: agarreinit [-d agar-driver-spec]\n");
 			return (1);
 		}
 	}

@@ -75,15 +75,14 @@ int
 main(int argc, char *argv[])
 {
 	AG_Window *win;
-	SDL_Surface *bmp, *tex1, *tex2, *avatar;
-	AG_Surface *agbmp, *agavatar;
+	SDL_Surface *bmp;
+	AG_Surface *agbmp;
 	Uint32 sdlFlags = 0;
 	char *optArg;
-	Uint32 rmask, gmask, bmask, amask;
 	int ivFlags = 0;
 	int c;
 
-	if (AG_InitCore("agar-sdl-demo", AG_VERBOSE) == -1) {
+	if (AG_InitCore(NULL, AG_VERBOSE) == -1) {
 		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
 		return (1);
 	}
@@ -96,7 +95,7 @@ main(int argc, char *argv[])
 			ivFlags |= AG_VIDEO_OVERLAY;
 			break;
 		default:
-			printf("Usage: %s [-g]\n", agProgName);
+			printf("Usage: agarsdl [-g]\n");
 			break;
 		}
 	}
@@ -133,7 +132,11 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		goto fail;
 	}
+#ifdef __APPLE__
+	AG_BindGlobalKey(AG_KEY_Q, AG_KEYMOD_META, AG_QuitGUI);
+#else
 	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
+#endif
 	
 	/* Display some test widgets. */
 	win = AG_WindowNew(0);
