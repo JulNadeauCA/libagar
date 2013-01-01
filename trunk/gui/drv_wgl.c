@@ -50,6 +50,7 @@ static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
 static int  agExitWGL = 0;		/* Exit event loop */
+static HKL wglKbdLayout = NULL;		/* Keyboard layout */
 
 /* Driver instance data */
 typedef struct ag_driver_wgl {
@@ -74,10 +75,9 @@ AG_DriverMwClass agDriverWGL;
 #define AGDRIVER_IS_WGL(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverWGL)
 
-struct ag_wgl_key_mapping {		/* Keymap translation table entry */
-	int kcode;			/* Scancode */
-	int kclass;			/* X keysym class (e.g., 0xff) */
-	AG_KeySym key;			/* Corresponding Agar keysym */
+struct ag_windows_key_mapping {
+	int kcode;			/* Windows VK_ virtual key */
+	AG_KeySym key;			/* Agar keysym */
 };
 #include "drv_wgl_keymaps.h"
 
@@ -148,10 +148,21 @@ WGL_Open(void *obj, const char *spec)
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 	
 	if (nDrivers == 0) {
-		InitKeymaps();
+		char kbdLayoutName[KL_NAMELENGTH];
+
+		/* Initialize globals */
 		TAILQ_INIT(&wglEventQ);
 		AG_MutexInitRecursive(&wglClassLock);
 		AG_MutexInitRecursive(&wglEventLock);
+
+		/* Set up keyboard layout */
+		GetKeyboardLayoutName(kbdLayoutName);
+		if ((wglKbdLayout = LoadKeyboardLayout("00000409",
+		    KLF_NOTELLSHELL)) == NULL) {
+			wglKbdLayout = GetKeyboardLayout(0);
+		}
+		LoadKeyboardLayout(kbdLayoutName, KLF_ACTIVATE);
+		InitKeymaps();
 	}
 	nDrivers++;
 	return (0);
@@ -173,12 +184,15 @@ static void
 WGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
+#if 0
 	AG_DriverEvent *dev, *devNext;
+#endif
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
 	if (--nDrivers == 0) {
+#if 0
 		for (dev = TAILQ_FIRST(&wglEventQ);
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
@@ -186,6 +200,7 @@ WGL_Close(void *obj)
 			Free(dev);
 		}
 		TAILQ_INIT(&wglEventQ);
+#endif
 
 		AG_MutexDestroy(&wglClassLock);
 		AG_MutexDestroy(&wglEventLock);
@@ -465,6 +480,49 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 #include "drv_wgl_prwincmd.inc"
 #endif
 
+#undef IN_KEYPAD
+#define IN_KEYPAD(scan) (scan & 0x100)
+
+/* Convert scancode to a proper index into agWindowsKeymap[]. */
+static int
+ScanToVirtualKey(int scan, Uint vKey)
+{
+	int vk = MapVirtualKeyEx(scan & 0xff, 1, wglKbdLayout);
+
+	switch (vKey) {
+	case VK_DIVIDE:
+	case VK_MULTIPLY:
+	case VK_SUBTRACT:
+	case VK_ADD:
+	case VK_LWIN:
+	case VK_RWIN:
+	case VK_APPS:
+	case VK_LCONTROL:
+	case VK_RCONTROL:
+	case VK_LSHIFT:
+	case VK_RSHIFT:
+	case VK_LMENU:
+	case VK_RMENU:
+	case VK_SNAPSHOT:
+	case VK_PAUSE:
+		return (vKey);
+	}
+	switch (vk) {
+	case VK_INSERT:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD0;
+	case VK_END:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD1;
+	case VK_DOWN:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD2;
+	case VK_NEXT:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD3;
+	case VK_LEFT:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD4;
+	case VK_CLEAR:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD5;
+	case VK_RIGHT:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD6;
+	case VK_HOME:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD7;
+	case VK_UP:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD8;
+	case VK_PRIOR:		return IN_KEYPAD(scan) ? vk : VK_NUMPAD9;
+	case VK_DELETE:		return IN_KEYPAD(scan) ? vk : VK_DECIMAL;
+	}
+	return (vk != 0) ? vk : vKey;
+}
+
 /* 
  * Window procedure. We only translate and queue events for later retrieval
  * by getNextEvent().
@@ -475,11 +533,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	AG_Driver *drv;
 	AG_Window *win;
 	AG_DriverEvent *dev;
-	AG_KeyboardAction ka;
-	HKL kLayout;
-	unsigned char kState[256];
-	unsigned short kResult = 0;
-	int x, y, ret;
+	int x, y;
 	
 	if ((win = LookupWindowByID(hWnd)) == NULL) {
 		goto fallback;
@@ -555,28 +609,51 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_KEYUP:
 	case WM_KEYDOWN:
-		if (uMsg == WM_KEYDOWN) {
-			dev->type = AG_DRIVER_KEY_DOWN;
-			ka = AG_KEY_PRESSED;
-		} else {
-			dev->type = AG_DRIVER_KEY_UP;
-			ka = AG_KEY_RELEASED;
-		}
-		kLayout = GetKeyboardLayout(0);
-		GetKeyboardState(kState);
-		ret = ToAsciiEx(wParam, HIWORD(lParam) & 0xFF, kState, 
-		    &kResult, 0, kLayout);
-		if (ret == 1) {
-			/* XXX @todo Do we have to take notice of ucs here? */
-			AG_KeyboardUpdate(drv->kbd, ka, kResult, kResult);
-			dev->data.key.ks = kResult;
-			dev->data.key.ucs = (Uint32)kResult;
-		} else {
-			/* Special keycode, search it in map */
-			AG_KeySym sym = agKeymapMisc[wParam&0xff];
-			AG_KeyboardUpdate(drv->kbd, ka, sym, sym);
-			dev->data.key.ks = sym;
-			dev->data.key.ucs = (Uint32)sym;
+		{
+			AG_KeyboardAction ka;
+			int scan = HIWORD(lParam);
+			Uint vKey = wParam;
+			Uint8 keyState[256];
+			Uint16 wc[2];
+
+			if (uMsg == WM_KEYDOWN) {
+				dev->type = AG_DRIVER_KEY_DOWN;
+				ka = AG_KEY_PRESSED;
+			} else {
+				dev->type = AG_DRIVER_KEY_UP;
+				ka = AG_KEY_RELEASED;
+			}
+			dev->data.key.ucs = 0;
+
+			switch (vKey) {
+			case VK_CONTROL:
+				vKey = (lParam & (1<<24)) ? VK_RCONTROL :
+				                            VK_LCONTROL;
+				break;
+			case VK_RETURN:
+				if (IN_KEYPAD(scan)) {
+					AG_KeyboardUpdate(drv->kbd, ka,
+					    AG_KEY_KP_ENTER, 0);
+					dev->data.key.ks = AG_KEY_KP_ENTER;
+					goto out;
+				}
+				break;
+			default:
+				break;
+			}
+
+			dev->data.key.ks =
+			    agWindowsKeymap[ScanToVirtualKey(scan,vKey)];
+
+			GetKeyboardState(keyState);
+			if ((keyState[VK_NUMLOCK] & 1) &&
+			    vKey >= VK_NUMPAD0 && vKey <= VK_NUMPAD9) {
+				dev->data.key.ucs = vKey - '0'+VK_NUMPAD0;
+			} else if (ToUnicode((UINT)vKey, scan, keyState, wc,2, 0) > 0) {
+				dev->data.key.ucs = wc[0];
+			}
+			AG_KeyboardUpdate(drv->kbd, ka, dev->data.key.ks,
+			    dev->data.key.ucs);
 		}
 		break;
 	case WM_SETFOCUS:
@@ -635,6 +712,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Free(dev);
 		goto fallback;
 	}
+out:
 	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
 	return (1);
 ret0:
