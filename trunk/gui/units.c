@@ -30,8 +30,8 @@
 
 #include <string.h>
 
-#include <config/astronomical_units.h>
-#include <config/historical_units.h>
+/* #define ASTRONOMICAL_UNITS */
+/* #define HISTORICAL_UNITS */
 
 const char *agUnitGroupNames[] = {
 	N_("Identity"),
@@ -335,10 +335,6 @@ const AG_Unit agCurrentUnits[] = {
 const AG_Unit agTemperatureUnits[] = {
 	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),   0, AG_UnitCelsius },
 	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"),0, AG_UnitFahrenheit},
-#ifdef HISTORICAL_UNITS
-	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),  0, AG_UnitRankine },
-	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),  0, AG_UnitReaumur },
-#endif
 	{ "uk", "\xc2\xb5k", "Microkelvins",			1e-6, NULL },
 	{ "mk", "", "Millikelvins",				1e-3, NULL },
 	{ "k", "", "Kelvins",					1.0, NULL },

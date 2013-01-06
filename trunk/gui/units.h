@@ -3,8 +3,6 @@
 #ifndef _AGAR_WIDGET_UNITS_H_
 #define _AGAR_WIDGET_UNITS_H_
 
-#include <agar/config/historical_units.h>
-
 #include <agar/gui/begin.h>
 
 typedef struct ag_unit {
@@ -22,10 +20,6 @@ int	   	   AG_UnitFormat(double, const AG_Unit[], char *, size_t);
 
 double	AG_UnitFahrenheit(double, int);
 double	AG_UnitCelsius(double, int);
-#ifdef HISTORICAL_UNITS
-double	AG_UnitRankine(double, int);
-double	AG_UnitReaumur(double, int);
-#endif
 
 extern const AG_Unit *agUnitGroups[];
 extern const char *agUnitGroupNames[];

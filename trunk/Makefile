@@ -7,11 +7,10 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
-INCDIR=		core gui vg rg math dev au
+INCDIR=		core gui vg math dev au
 SUBDIR=		core \
 		${SUBDIR_gui} \
 		${SUBDIR_vg} \
-		${SUBDIR_rg} \
 		${SUBDIR_math} \
 		${SUBDIR_dev} \
 		${SUBDIR_au}
@@ -19,7 +18,6 @@ CONFSCRIPTS=	agar-config \
 		agar-core-config \
 		agar-dev-config \
 		agar-math-config \
-		agar-rg-config \
 		agar-vg-config \
 		agar-au-config
 

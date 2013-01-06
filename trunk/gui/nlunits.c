@@ -1,7 +1,5 @@
 /*	Public domain	*/
 
-#include <config/historical_units.h>
-
 #include <core/core.h>
 
 #include "units.h"
@@ -25,26 +23,3 @@ AG_UnitCelsius(double n, int c2k)
 		return (n-273.15);
 	}
 }
-
-#ifdef HISTORICAL_UNITS
-double
-AG_UnitRankine(double n, int ra2k)
-{
-	if (ra2k) {
-		return (n/1.8);
-	} else {
-		return (1.8*n);
-	}
-}
-
-double
-AG_UnitReaumur(double n, int re2k)
-{
-	if (re2k) {
-		return (n*1.25 + 273.15);
-	} else {
-		return ((n-273.15)/1.25);
-	}
-}
-#endif /* HISTORICAL_UNITS */
-

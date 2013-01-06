@@ -384,7 +384,7 @@ echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
 echo "Global Agar options:"
-echo "    --enable-<library>          Build libraries (gui|vg|rg|math|dev|au) [all]"
+echo "    --enable-<library>          Build libraries (gui|vg|math|dev|au) [all]"
 echo "    --enable-debug              General debugging [no]"
 echo "    --enable-legacy             Deprecated interfaces [yes]"
 echo "    --enable-threads            Thread safety [check]"
@@ -8740,13 +8740,6 @@ CFLAGS="$CFLAGS -Wno-unused"
 CXXFLAGS="$CXXFLAGS -Wno-unused"
 	fi
 fi
-echo "#undef ASTRONOMICAL_UNITS" >$BLD/include/agar/config/astronomical_units.h
-echo "hdefs[\"ASTRONOMICAL_UNITS\"] = nil" >>configure.lua
-HISTORICAL_UNITS="yes"
-echo "#ifndef HISTORICAL_UNITS" > $BLD/include/agar/config/historical_units.h
-echo "#define HISTORICAL_UNITS \"$HISTORICAL_UNITS\"" >> $BLD/include/agar/config/historical_units.h
-echo "#endif" >> $BLD/include/agar/config/historical_units.h
-echo "hdefs[\"HISTORICAL_UNITS\"] = \"$HISTORICAL_UNITS\"" >>configure.lua
 if [ "${enable_nls}" = "yes" ]
  then
 $ECHO_N "checking for iconv() in libc..."
@@ -9962,19 +9955,6 @@ echo "#undef ENABLE_VG" >$BLD/include/agar/config/enable_vg.h
 echo "hdefs[\"ENABLE_VG\"] = nil" >>configure.lua
 SUBDIR_vg=""
 fi
-if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]
- then
-ENABLE_RG="yes"
-echo "#ifndef ENABLE_RG" > $BLD/include/agar/config/enable_rg.h
-echo "#define ENABLE_RG \"$ENABLE_RG\"" >> $BLD/include/agar/config/enable_rg.h
-echo "#endif" >> $BLD/include/agar/config/enable_rg.h
-echo "hdefs[\"ENABLE_RG\"] = \"$ENABLE_RG\"" >>configure.lua
-SUBDIR_rg="rg"
-else
-echo "#undef ENABLE_RG" >$BLD/include/agar/config/enable_rg.h
-echo "hdefs[\"ENABLE_RG\"] = nil" >>configure.lua
-SUBDIR_rg=""
-fi
 if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]
  then
 ENABLE_DEV="yes"
@@ -10844,82 +10824,6 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
-config_script_out="agar-rg-config"
-config_script_cflags="-I${INCLDIR}"
-config_script_libs="-L${LIBDIR} -lag_rg"
-# Avoid breakage with existing trees compiled before BSDBuild 2.8.
-if [ -d "$config_script_out" ]; then
-	echo "rm -fR $config_script_out"
-	rm -fR $config_script_out
-fi
-if [ "${SRC}" != "" ]; then
-	if [ -d "${SRC}/$config_script_out" ]; then
-		echo "rm -fR ${SRC}/$config_script_out"
-		rm -fR ${SRC}/$config_script_out
-	fi
-fi
-cat << EOT > $config_script_out
-#!/bin/sh
-# Generated for ${PACKAGE} by BSDBuild 3.0.
-# <http://bsdbuild.hypertriton.com>
-
-prefix="${PREFIX}"
-exec_prefix="${EXEC_PREFIX}"
-exec_prefix_set="no"
-libdir="${LIBDIR}"
-
-usage="\
-Usage: $config_script_out [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--libs]"
-
-if test \$# -eq 0; then
-	echo "\${usage}" 1>&2
-	exit 1
-fi
-
-while test \$# -gt 0; do
-	case "\$1" in
-	-*=*)
-		optarg=\`echo "\$1" | LC_ALL="C" sed 's/[-_a-zA-Z0-9]*=//'\`
-		;;
-	*)
-		optarg=
-		;;
-	esac
-
-	case \$1 in
-	--prefix=*)
-		prefix=\$optarg
-		if test \$exec_prefix_set = no ; then
-			exec_prefix=\$optarg
-		fi
-		;;
-	--prefix)
-		echo "\$prefix"
-		;;
-	--exec-prefix=*)
-		exec_prefix=\$optarg
-		exec_prefix_set=yes
-		;;
-	--exec-prefix)
-		echo "\$exec_prefix"
-		;;
-	--version)
-		echo "${VERSION}"
-		;;
-	--cflags)
-		echo "$config_script_cflags"
-		;;
-	--libs | --static-libs)
-		echo "$config_script_libs"
-		;;
-	*)
-		echo "\${usage}" 1>&2
-		exit 1
-		;;
-	esac
-	shift
-done
-EOT
 config_script_out="agar-vg-config"
 config_script_cflags="-I${INCLDIR}"
 config_script_libs="-L${LIBDIR} -lag_vg"
@@ -11232,8 +11136,6 @@ echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
 echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
-echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
-echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 echo "RELEASE=$RELEASE" >>Makefile.config
