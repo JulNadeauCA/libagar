@@ -12,7 +12,7 @@ RELEASE("A Mild Breeze Upon The Brow Of The Dead")
 
 # Register options for configure --help
 REGISTER_SECTION("Global Agar options:")
-REGISTER("--enable-<library>",		"Build libraries (gui|vg|rg|math|dev|au) [all]")
+REGISTER("--enable-<library>",		"Build libraries (gui|vg|math|dev|au) [all]")
 REGISTER("--enable-debug",		"General debugging [no]")
 REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
 REGISTER("--enable-threads",		"Thread safety [check]")
@@ -459,13 +459,6 @@ else
 	fi
 fi
 
-# Disable astronomical units (constants are too large for some compilers).
-# TODO test
-HUNDEF(ASTRONOMICAL_UNITS)
-
-# Enable conversion of historical units.
-HDEFINE(HISTORICAL_UNITS, "yes")
-
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = "yes" ]; then
 	CHECK(iconv)
@@ -609,17 +602,6 @@ else
 fi
 
 #
-# Options specific to the Agar-RG library
-#
-if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]; then
-	HDEFINE(ENABLE_RG, "yes")
-	MDEFINE(SUBDIR_rg, "rg")
-else
-	HUNDEF(ENABLE_RG)
-	MDEFINE(SUBDIR_rg, "")
-fi
-
-#
 # Options specific to the Agar-DEV library
 #
 if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]; then
@@ -758,8 +740,6 @@ CONFIG_SCRIPT(agar-math-config,\
 	"-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} \
 	${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
 	"-L${LIBDIR} -lag_math ${MATH_LIBS}")
-CONFIG_SCRIPT(agar-rg-config,\
-	"-I${INCLDIR}", "-L${LIBDIR} -lag_rg")
 CONFIG_SCRIPT(agar-vg-config,\
 	"-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
 CONFIG_SCRIPT(agar-au-config,\
