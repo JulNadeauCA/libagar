@@ -30,6 +30,9 @@
 #ifdef __APPLE__
 #define _DARWIN_C_SOURCE		/* For SIOCGIFCONF */
 #endif
+#ifdef __NetBSD__
+#define _NETBSD_SOURCE
+#endif
 
 #include <core/core.h>
 #include <core/queue_close.h>		/* Avoid <sys/queue.h> conflicts */
