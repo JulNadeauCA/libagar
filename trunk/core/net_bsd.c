@@ -277,8 +277,12 @@ Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
+#ifdef AI_ADDRCONFIG
 	if (flags & AG_NET_ADDRCONFIG) { hints.ai_flags |= AI_ADDRCONFIG; }
+#endif
+#ifdef AI_NUMERICHOST
 	if (flags & AG_NET_NUMERIC_HOST) { hints.ai_flags |= AI_NUMERICHOST; }
+#endif
 #ifdef AI_NUMERICSERV
 	if (flags & AG_NET_NUMERIC_PORT) { hints.ai_flags |= AI_NUMERICSERV; }
 #endif
