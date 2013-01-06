@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __NetBSD__
+#define _NETBSD_SOURCE
+#endif
+
 #include <core/core.h>
 
 #include "numerical.h"
