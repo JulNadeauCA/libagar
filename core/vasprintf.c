@@ -32,6 +32,9 @@
 #if (defined(__APPLE__) && !defined(_DARWIN_C_SOURCE))
 #define _DARWIN_C_SOURCE
 #endif
+#ifdef __NetBSD__
+#define _NETBSD_SOURCE
+#endif
 
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>

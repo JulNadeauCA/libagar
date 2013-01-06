@@ -33,6 +33,10 @@
 #include <gui/checkbox.h>
 #include <gui/separator.h>
 
+#ifdef __NetBSD__
+#define _NETBSD_SOURCE
+#endif
+
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
