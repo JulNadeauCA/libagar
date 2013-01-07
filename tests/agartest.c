@@ -436,15 +436,19 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
 	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
 	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_META,	AG_QuitGUI);
+# ifdef AG_DEBUG
+	AG_BindGlobalKey(AG_KEY_D,	AG_KEYMOD_ANY,	StartDebugger);
+# endif
+	AG_BindGlobalKey(AG_KEY_C,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #else
 	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
 	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
 	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
 	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY,	AG_QuitGUI);
-#endif
-	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 	AG_BindGlobalKey(AG_KEY_F12,	AG_KEYMOD_ANY,	StartDebugger);
+# endif
+	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #endif
 
 	if (strcmp(DATADIR, "NONE") != 0) {
@@ -494,11 +498,14 @@ main(int argc, char *argv[])
 		AG_ConsoleMsg(console, _("Available Agar drivers: %s"), drvNames);
 #ifdef __APPLE__
 		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));
+# ifdef AG_DEBUG
+		AG_ConsoleMsg(console, _("Press Command-D to debug active window"));
+# endif
 #else
 		AG_ConsoleMsg(console, _("Press Ctrl-[-] and Ctrl-[=] to zoom"));
-#endif
-#ifdef AG_DEBUG
+# ifdef AG_DEBUG
 		AG_ConsoleMsg(console, _("Press F12 to debug active window"));
+# endif
 #endif
 	}
 
