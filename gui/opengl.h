@@ -9,7 +9,7 @@
 # ifdef _WIN32
 #  include <agar/core/win32.h>
 # endif
-# ifdef __APPLE__
+# ifdef _USE_OPENGL_FRAMEWORK
 #  include <OpenGL/gl.h>
 # else
 #  include <GL/gl.h>
