@@ -24,6 +24,9 @@
 
 #ifdef _USE_SDL_FRAMEWORK
 # include <SDL/SDL.h>
+# ifdef main
+#  undef main
+# endif
 #else
 # include <SDL.h>
 #endif

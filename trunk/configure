@@ -4660,6 +4660,85 @@ else
 fi
 else
 case "${host}" in
+*-*-darwin*)
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+	fi
+fi
+if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
+else
+$ECHO_N "framework..."
+$ECHO_N "framework..." >> config.log
+SDL_VERSION="1.2.15"
+SDL_CFLAGS="-D_USE_SDL_FRAMEWORK"
+SDL_LIBS="-framework SDL"
+fi;
+;;
 *-*-freebsd*)
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
@@ -4803,11 +4882,6 @@ if [ "${MK_CACHED}" = "No" ]; then
 fi
 fi;
 ;;
-*-*-darwin*)
-SDL_VERSION="1.2.15"
-SDL_CFLAGS="-Wl,-framework,SDL -D_USE_SDL_FRAMEWORK"
-SDL_LIBS="-Wl,-framework,SDL"
-;;
 *)
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
@@ -4933,7 +5007,9 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #ifdef _USE_SDL_FRAMEWORK
 # include <SDL/SDL.h>
-# undef main
+# ifdef main
+#  undef main
+# endif
 #else
 # include <SDL.h>
 #endif
@@ -5003,7 +5079,9 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #ifdef _USE_SDL_FRAMEWORK
 # include <SDL/SDL.h>
-# undef main
+# ifdef main
+#  undef main
+# endif
 #else
 # include <SDL.h>
 #endif
@@ -5112,6 +5190,15 @@ GL_LIBS="${GL_LIBS} -L${prefix_gl}/lib"
 GL_FOUND="yes"
 fi;
 else
+case "${host}" in
+*-*-darwin*)
+$ECHO_N "framework..."
+$ECHO_N "framework..." >> config.log
+OPENGL_CFLAGS="-D_USE_OPENGL_FRAMEWORK"
+OPENGL_LIBS="-framework OpenGL"
+GL_FOUND="yes"
+;;
+*)
 if [ -e  "/usr/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11"
 GL_FOUND="yes"
@@ -5192,14 +5279,14 @@ if [ -e  "/usr/local/lib" ]; then
 GL_LIBS="${GL_LIBS} -L/usr/local/lib"
 GL_FOUND="yes"
 fi;
+;;
+esac
 fi;
 if [ "${GL_FOUND}" = "yes" ]; then
 echo "yes"
 echo "yes" >> config.log
 case "${host}" in
 *-*-darwin*)
-OPENGL_CFLAGS=""
-OPENGL_LIBS="-framework OpenGL"
 ;;
 *-*-cygwin* | *-*-mingw32*)
 $ECHO_N "checking whether -lopengl32 works..."
@@ -5215,10 +5302,10 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+# include <GL/gl.h>
 #endif
 int main(int argc, char *argv[]) {
 	glFlush();
@@ -5278,10 +5365,10 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+# include <GL/gl.h>
 #endif
 int main(int argc, char *argv[]) {
 	glFlush();
@@ -5341,10 +5428,10 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+# include <GL/gl.h>
 #endif
 int main(int argc, char *argv[]) {
 	glFlush();
