@@ -21,7 +21,12 @@
 #undef Sint32
 #undef Uint64
 #undef Sint64
-#include <SDL.h>
+
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL/SDL.h>
+#else
+# include <SDL.h>
+#endif
 
 #include <agar/gui/begin.h>
 

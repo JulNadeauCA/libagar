@@ -4803,6 +4803,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 fi
 fi;
 ;;
+*-*-darwin*)
+SDL_VERSION="1.2.15"
+SDL_CFLAGS="-Wl,-framework,SDL -D_USE_SDL_FRAMEWORK"
+SDL_LIBS="-Wl,-framework,SDL"
+;;
 *)
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
@@ -4926,9 +4931,12 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#include <stdio.h>
-#include <SDL.h>
-
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL/SDL.h>
+# undef main
+#else
+# include <SDL.h>
+#endif
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
 
@@ -4993,9 +5001,12 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#include <stdio.h>
-#include <SDL.h>
-
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL/SDL.h>
+# undef main
+#else
+# include <SDL.h>
+#endif
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
 
