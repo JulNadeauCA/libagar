@@ -161,93 +161,95 @@ typedef struct ag_driver_class {
 	Uint flags;				/* Flags; see below */
 
 	/* Initialization */
-	int  (*open)(void *, const char *spec);
-	void (*close)(void *);
+	int  (*open)(void *drv, const char *spec);
+	void (*close)(void *drv);
 	int  (*getDisplaySize)(Uint *w, Uint *h);
 
 	/* Event processing */
-	void (*beginEventProcessing)(void *);
-	int  (*pendingEvents)(void *);
-	int  (*getNextEvent)(void *, AG_DriverEvent *dev);
-	int  (*processEvent)(void *, AG_DriverEvent *dev);
-	void (*genericEventLoop)(void *);
-	void (*endEventProcessing)(void *);
+	void (*beginEventProcessing)(void *drv);
+	int  (*pendingEvents)(void *drv);
+	int  (*getNextEvent)(void *drv, AG_DriverEvent *dev);
+	int  (*processEvent)(void *drv, AG_DriverEvent *dev);
+	void (*genericEventLoop)(void *drv);
+	void (*endEventProcessing)(void *drv);
 	void (*terminate)(void);
 
-	/* GUI rendering related */
-	void (*beginRendering)(void *);
-	void (*renderWindow)(AG_Window *);
-	void (*endRendering)(void *);
-	void (*fillRect)(void *, AG_Rect r, AG_Color c);
-	void (*updateRegion)(void *, AG_Rect r);
-	void (*uploadTexture)(Uint *, AG_Surface *, AG_TexCoord *);
-	int  (*updateTexture)(Uint, AG_Surface *, AG_TexCoord *);
-	void (*deleteTexture)(void *, Uint);
-	int (*setRefreshRate)(void *, int fps);
+	/* Rendering and texture management */
+	void (*beginRendering)(void *drv);
+	void (*renderWindow)(AG_Window *w);
+	void (*endRendering)(void *drv);
+	void (*fillRect)(void *drv, AG_Rect r, AG_Color c);
+	void (*updateRegion)(void *drv, AG_Rect r);
+	void (*uploadTexture)(void *drv, Uint *texID, AG_Surface *su,
+	                      AG_TexCoord *tc);
+	int  (*updateTexture)(void *drv, Uint texID, AG_Surface *su,
+	                      AG_TexCoord *tc);
+	void (*deleteTexture)(void *drv, Uint texID);
+	int (*setRefreshRate)(void *drv, int fps);
 
 	/* Clipping and blending control (rendering context) */
-	void (*pushClipRect)(void *, AG_Rect r);
-	void (*popClipRect)(void *);
-	void (*pushBlendingMode)(void *, AG_BlendFn sFn, AG_BlendFn dFn);
-	void (*popBlendingMode)(void *);
+	void (*pushClipRect)(void *drv, AG_Rect r);
+	void (*popClipRect)(void *drv);
+	void (*pushBlendingMode)(void *drv, AG_BlendFn sFn, AG_BlendFn dFn);
+	void (*popBlendingMode)(void *drv);
 
 	/* Hardware cursor interface */
-	int  (*createCursor)(void *, AG_Cursor *curs);
-	void (*freeCursor)(void *, AG_Cursor *curs);
-	int  (*setCursor)(void *, AG_Cursor *curs);
-	void (*unsetCursor)(void *);
-	int  (*getCursorVisibility)(void *);
-	void (*setCursorVisibility)(void *, int flag);
+	int  (*createCursor)(void *drv, AG_Cursor *curs);
+	void (*freeCursor)(void *drv, AG_Cursor *curs);
+	int  (*setCursor)(void *drv, AG_Cursor *curs);
+	void (*unsetCursor)(void *drv);
+	int  (*getCursorVisibility)(void *drv);
+	void (*setCursorVisibility)(void *drv, int flag);
 
 	/* Widget surface operations (rendering context) */
-	void (*blitSurface)(void *, AG_Widget *wid,
+	void (*blitSurface)(void *drv, AG_Widget *wid,
 	                    AG_Surface *s, int x, int y);
-	void (*blitSurfaceFrom)(void *, AG_Widget *wid, AG_Widget *widSrc,
+	void (*blitSurfaceFrom)(void *drv, AG_Widget *wid, AG_Widget *widSrc,
 	                        int s, AG_Rect *r, int x, int y);
-	void (*blitSurfaceGL)(void *, AG_Widget *wid, AG_Surface *s,
+	void (*blitSurfaceGL)(void *drv, AG_Widget *wid, AG_Surface *s,
 	                      float w, float h);
-	void (*blitSurfaceFromGL)(void *, AG_Widget *wid, int s,
+	void (*blitSurfaceFromGL)(void *drv, AG_Widget *wid, int s,
 	                          float w, float h);
-	void (*blitSurfaceFlippedGL)(void *, AG_Widget *wid, int s,
+	void (*blitSurfaceFlippedGL)(void *drv, AG_Widget *wid, int s,
 	                             float w, float h);
-	void (*backupSurfaces)(void *, AG_Widget *wid);
-	void (*restoreSurfaces)(void *, AG_Widget *wid);
-	int  (*renderToSurface)(void *, AG_Widget *wid, AG_Surface **su);
+	void (*backupSurfaces)(void *drv, AG_Widget *wid);
+	void (*restoreSurfaces)(void *drv, AG_Widget *wid);
+	int  (*renderToSurface)(void *drv, AG_Widget *wid, AG_Surface **su);
 
 	/* Rendering operations (rendering context) */
-	void (*putPixel)(void *, int x, int y, AG_Color c);
-	void (*putPixel32)(void *, int x, int y, Uint32 c);
-	void (*putPixelRGB)(void *, int x, int y, Uint8 r, Uint8 g,
+	void (*putPixel)(void *drv, int x, int y, AG_Color c);
+	void (*putPixel32)(void *drv, int x, int y, Uint32 c);
+	void (*putPixelRGB)(void *drv, int x, int y, Uint8 r, Uint8 g,
 	                    Uint8 b);
-	void (*blendPixel)(void *, int x, int y, AG_Color c,
+	void (*blendPixel)(void *drv, int x, int y, AG_Color c,
 	                   AG_BlendFn sFn, AG_BlendFn dFn);
-	void (*drawLine)(void *, int x1, int y1, int x2, int y2,
+	void (*drawLine)(void *drv, int x1, int y1, int x2, int y2,
 	                 AG_Color C);
-	void (*drawLineH)(void *, int x1, int x2, int y, AG_Color C);
-	void (*drawLineV)(void *, int x, int y1, int y2, AG_Color C);
-	void (*drawLineBlended)(void *, int x1, int y1, int x2, int y2,
+	void (*drawLineH)(void *drv, int x1, int x2, int y, AG_Color C);
+	void (*drawLineV)(void *drv, int x, int y1, int y2, AG_Color C);
+	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2,
 	                        AG_Color C, AG_BlendFn sFn,
 				AG_BlendFn dFn);
-	void (*drawArrowUp)(void *, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowDown)(void *, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowLeft)(void *, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowRight)(void *, int x, int y, int h,
+	void (*drawArrowUp)(void *drv, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowDown)(void *drv, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowLeft)(void *drv, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowRight)(void *drv, int x, int y, int h,
 	                       AG_Color C[2]);
-	void (*drawBoxRounded)(void *, AG_Rect r, int z, int rad,
+	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad,
 	                       AG_Color C[3]);
-	void (*drawBoxRoundedTop)(void *, AG_Rect r, int z, int rad,
+	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad,
 	                          AG_Color C[3]);
-	void (*drawCircle)(void *, int x, int y, int r, AG_Color C);
-	void (*drawCircle2)(void *, int x, int y, int r, AG_Color C);
-	void (*drawRectFilled)(void *, AG_Rect r, AG_Color C);
-	void (*drawRectBlended)(void *, AG_Rect r, AG_Color C,
+	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
+	void (*drawCircle2)(void *drv, int x, int y, int r, AG_Color C);
+	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
+	void (*drawRectBlended)(void *drv, AG_Rect r, AG_Color C,
 	                        AG_BlendFn sFn, AG_BlendFn dFn);
-	void (*drawRectDithered)(void *, AG_Rect r, AG_Color C);
-	void (*updateGlyph)(void *, AG_Glyph *);
-	void (*drawGlyph)(void *, const AG_Glyph *, int x, int y);
+	void (*drawRectDithered)(void *drv, AG_Rect r, AG_Color C);
+	void (*updateGlyph)(void *drv, AG_Glyph *gl);
+	void (*drawGlyph)(void *drv, const AG_Glyph *gl, int x, int y);
 
 	/* Display list management (GL driver specific) */
-	void (*deleteList)(void *, Uint);
+	void (*deleteList)(void *drv, Uint listID);
 } AG_DriverClass;
 .Ed
 .Pp
