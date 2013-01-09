@@ -60,39 +60,39 @@ typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
 
 	/* Open/close native windows */
-	int  (*openWindow)(AG_Window *, AG_Rect r, int bpp, Uint flags);
-	void (*closeWindow)(AG_Window *);
+	int  (*openWindow)(AG_Window *w, AG_Rect r, int bpp, Uint flags);
+	void (*closeWindow)(AG_Window *w);
 
 	/* Show and hide window */
-	int (*mapWindow)(AG_Window *);
-	int (*unmapWindow)(AG_Window *);
+	int (*mapWindow)(AG_Window *w);
+	int (*unmapWindow)(AG_Window *w);
 
 	/* Configure stacking order and parenting */
-	int (*raiseWindow)(AG_Window *);
-	int (*lowerWindow)(AG_Window *);
-	int (*reparentWindow)(AG_Window *, AG_Window *winParent,
+	int (*raiseWindow)(AG_Window *w);
+	int (*lowerWindow)(AG_Window *w);
+	int (*reparentWindow)(AG_Window *w, AG_Window *winParent,
 	                      int x, int y);
 
 	/* Change and query input focus state */
-	int (*getInputFocus)(AG_Window **);
-	int (*setInputFocus)(AG_Window *);
+	int (*getInputFocus)(AG_Window **w);
+	int (*setInputFocus)(AG_Window *w);
 
 	/* Move and resize windows */
-	int  (*moveWindow)(AG_Window *, int x, int y);
-	int  (*resizeWindow)(AG_Window *, Uint w, Uint h);
-	int  (*moveResizeWindow)(AG_Window *, AG_SizeAlloc *a);
-	void (*preResizeCallback)(AG_Window *);
-	void (*postResizeCallback)(AG_Window *, AG_SizeAlloc *a);
+	int  (*moveWindow)(AG_Window *w, int x, int y);
+	int  (*resizeWindow)(AG_Window *w, Uint w, Uint h);
+	int  (*moveResizeWindow)(AG_Window *w, AG_SizeAlloc *a);
+	void (*preResizeCallback)(AG_Window *w);
+	void (*postResizeCallback)(AG_Window *w, AG_SizeAlloc *a);
 
-	/* Capture window framebuffer contents (unlike renderToSurface) */
-	int (*captureWindow)(AG_Window *, AG_Surface **s);
+	/* Capture window framebuffer contents */
+	int (*captureWindow)(AG_Window *w, AG_Surface **s);
 	
 	/* Configure window parameters */
-	int  (*setBorderWidth)(AG_Window *, Uint w);
-	int  (*setWindowCaption)(AG_Window *, const char *s);
-	void (*setTransientFor)(AG_Window *, AG_Window *winParent);
-	int  (*setOpacity)(AG_Window *, float opacity);
-	void (*tweakAlignment)(struct ag_window *, struct ag_size_alloc *a);
+	int  (*setBorderWidth)(AG_Window *w, Uint w);
+	int  (*setWindowCaption)(AG_Window *w, const char *s);
+	void (*setTransientFor)(AG_Window *w, AG_Window *winParent);
+	int  (*setOpacity)(AG_Window *w, float opacity);
+	void (*tweakAlignment)(AG_Window *w, AG_SizeAlloc *a);
 } AG_DriverMwClass;
 .Ed
 .Pp
