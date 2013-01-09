@@ -1325,7 +1325,8 @@ AG_WindowComputeAlignment(AG_Window *win, AG_SizeAlloc *a)
 		a->y = hMax/2 - h/2;
 		break;
 	}
-	if (AGDRIVER_MW_CLASS(drv)->tweakAlignment != NULL)
+	if (AGDRIVER_MULTIPLE(drv) &&
+	    AGDRIVER_MW_CLASS(drv)->tweakAlignment != NULL)
 		AGDRIVER_MW_CLASS(drv)->tweakAlignment(win, a, wMax, hMax);
 }
 
