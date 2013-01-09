@@ -190,7 +190,8 @@ typedef struct ag_driver_class {
 	/* Clipping and blending control (rendering context) */
 	void (*pushClipRect)(void *drv, AG_Rect r);
 	void (*popClipRect)(void *drv);
-	void (*pushBlendingMode)(void *drv, AG_BlendFn sFn, AG_BlendFn dFn);
+	void (*pushBlendingMode)(void *drv, AG_BlendFn sFn,
+	                         AG_BlendFn dFn);
 	void (*popBlendingMode)(void *drv);
 
 	/* Hardware cursor interface */
@@ -204,8 +205,8 @@ typedef struct ag_driver_class {
 	/* Widget surface operations (rendering context) */
 	void (*blitSurface)(void *drv, AG_Widget *wid,
 	                    AG_Surface *s, int x, int y);
-	void (*blitSurfaceFrom)(void *drv, AG_Widget *wid, AG_Widget *widSrc,
-	                        int s, AG_Rect *r, int x, int y);
+	void (*blitSurfaceFrom)(void *drv, AG_Widget *wid, AG_Widget
+	                        *widSrc, int s, AG_Rect *r, int x, int y);
 	void (*blitSurfaceGL)(void *drv, AG_Widget *wid, AG_Surface *s,
 	                      float w, float h);
 	void (*blitSurfaceFromGL)(void *drv, AG_Widget *wid, int s,
@@ -214,7 +215,8 @@ typedef struct ag_driver_class {
 	                             float w, float h);
 	void (*backupSurfaces)(void *drv, AG_Widget *wid);
 	void (*restoreSurfaces)(void *drv, AG_Widget *wid);
-	int  (*renderToSurface)(void *drv, AG_Widget *wid, AG_Surface **su);
+	int  (*renderToSurface)(void *drv, AG_Widget *wid,
+	                        AG_Surface **su);
 
 	/* Rendering operations (rendering context) */
 	void (*putPixel)(void *drv, int x, int y, AG_Color c);
@@ -231,8 +233,10 @@ typedef struct ag_driver_class {
 	                        AG_Color C, AG_BlendFn sFn,
 				AG_BlendFn dFn);
 	void (*drawArrowUp)(void *drv, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowDown)(void *drv, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowLeft)(void *drv, int x, int y, int h, AG_Color C[2]);
+	void (*drawArrowDown)(void *drv, int x, int y, int h,
+	                      AG_Color C[2]);
+	void (*drawArrowLeft)(void *drv, int x, int y, int h,
+	                      AG_Color C[2]);
 	void (*drawArrowRight)(void *drv, int x, int y, int h,
 	                       AG_Color C[2]);
 	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad,
