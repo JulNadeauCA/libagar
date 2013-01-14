@@ -79,6 +79,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 	AG_Button *bu;
 	AG_Event *ev;
 
+	if (!(flags & AG_BUTTON_NOEXCL)) { flags |= AG_BUTTON_EXCL;  }
 	bu = AG_ButtonNewS(parent, flags, caption);
 	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
@@ -349,6 +350,8 @@ Init(void *obj)
 	bu->rPad = 4;
 	bu->tPad = 3;
 	bu->bPad = 3;
+	AG_InitTimer(&bu->delayTo, "delay", 0);
+	AG_InitTimer(&bu->repeatTo, "repeat", 0);
 
 	AG_AddEvent(bu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(bu, "mouse-button-up", MouseButtonUp, NULL);

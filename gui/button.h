@@ -23,6 +23,7 @@ typedef struct ag_button {
 #define AG_BUTTON_INVSTATE	0x0400	/* Invert value of "state" binding */
 #define AG_BUTTON_KEYDOWN	0x0800	/* Got `key-down' before `key-up' */
 #define AG_BUTTON_EXCL		0x1000
+#define AG_BUTTON_NOEXCL	0x2000	/* For AG_ButtonNewFn() */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
