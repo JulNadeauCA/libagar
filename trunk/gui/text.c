@@ -135,8 +135,6 @@ AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
 
-static AG_Timer textMsgTo; 				/* For AG_TextTmsg() */
-
 /* Load an individual glyph from a bitmap font file. */
 static void
 LoadBitmapGlyph(AG_Surface *su, const char *lbl, void *p)
@@ -1443,6 +1441,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
+	AG_Timeout *to;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
@@ -1457,8 +1456,9 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 	AG_LabelNewS(vb, 0, s);
 	AG_WindowShow(win);
 
-	AG_AddTimer(NULL, &textMsgTo, ticks,
-	    TextTmsgExpire, "%p", win);
+	to = AG_AddTimerAuto(NULL, ticks, TextTmsgExpire, "%p", win);
+	if (to != NULL)
+		Strlcpy(to->name, "textTmsg", sizeof(to->name));
 }
 
 /*
