@@ -126,6 +126,13 @@ function to be executed whenever the button is pressed.
 See
 .Xr AG_Event 3
 for details on Agar event handlers.
+Since function-triggering buttons rarely make use of the "state" binding,
+.Fn AG_ButtonNewFn
+implies
+.Dv AG_BUTTON_EXCL
+(unless
+.Dv AG_BUTTON_NOEXCL
+is passed).
 .Pp
 The 
 .Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32}
