@@ -274,7 +274,11 @@ Init(void *obj)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
-	
+
+	AG_InitTimer(&tl->moveTo, "move", 0);
+	AG_InitTimer(&tl->refreshTo, "refresh", 0);
+	AG_InitTimer(&tl->dblClickTo, "dblClick", 0);
+
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
 	AG_SetInt(tl->sbar, "min", 0);
 	AG_BindInt(tl->sbar, "max", &tl->nitems);
@@ -1124,7 +1128,7 @@ KeyDown(AG_Event *event)
 		break;
 	case AG_KEY_RETURN:
 		if ((ti = AG_TlistSelectedItemPtr(tl)) != NULL) {
-			AG_PostEvent(NULL, ti, "tlist-return", "%p", ti);
+			AG_PostEvent(NULL, tl, "tlist-return", "%p", ti);
 		}
 		break;
 	}
