@@ -330,25 +330,26 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 	
-	if (refresh_ms == -1) {
-		TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
-			if (rt->type == AG_REDRAW_ON_CHANGE &&
-			    strcmp(rt->name, name) == 0)
-				break;
-		}
-		if (rt != NULL) {
-			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
-			AG_DelTimer(wid, &rt->to);
-			Free(rt);
-		}
+	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+		if (rt->type == AG_REDRAW_ON_CHANGE &&
+		    strcmp(rt->name, name) == 0 &&
+		    rt->ival == refresh_ms)
+			break;
+	}
+	if (rt != NULL) {
+		AG_ResetTimer(wid, &rt->to, refresh_ms);
 		return;
 	}
-
+	
 	rt = Malloc(sizeof(AG_RedrawTie));
 	rt->type = AG_REDRAW_ON_CHANGE;
 	rt->ival = refresh_ms;
 	rt->VlastInited = 0;
 	Strlcpy(rt->name, name, sizeof(rt->name));
+	AG_InitTimer(&rt->to, "redrawTie-", 0);
+#ifdef AG_DEBUG
+	Strlcat(rt->to.name, name, sizeof(rt->to.name));
+#endif
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
 }
 
@@ -376,6 +377,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	rt->type = AG_REDRAW_ON_TICK;
 	rt->ival = refresh_ms;
 	rt->name[0] = '\0';
+	AG_InitTimer(&rt->to, "redrawTick", 0);
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
 }
 
@@ -525,6 +527,11 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->type = AG_ACTION_ON_KEYREPEAT;
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
+	AG_InitTimer(&at->data.key.toRepeat, "actionKeyRepeat-", 0);
+#ifdef AG_DEBUG
+	Strlcat(at->data.key.toRepeat.name, action,
+	    sizeof(at->data.key.toRepeat.name));
+#endif
 	Strlcpy(at->action, action, sizeof(at->action));
 	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
 	
