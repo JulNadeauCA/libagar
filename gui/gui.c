@@ -439,6 +439,7 @@ AG_InitGraphics(const char *spec)
 	case AG_WM_MULTIPLE:
 		/* Driver instances will be created along with windows. */
 		AG_DriverClose(drv);
+		agTerminating = 0;
 		drv = NULL;
 		break;
 	case AG_WM_SINGLE:
