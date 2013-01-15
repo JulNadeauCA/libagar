@@ -645,6 +645,9 @@ routine).
 .Ft int
 .Fn AG_SDL_TranslateEvent "AG_Driver *drv" "const SDL_Event *ev" "AG_DriverEvent *dev"
 .Pp
+.Ft void
+.Fn AG_WindowProcessQueued "void"
+.Pp
 .nr nS 0
 Low-level driver events are represented by the
 .Ft AG_DriverEvent
@@ -748,6 +751,18 @@ function translates a
 structure to an Agar
 .Fn AG_DriverEvent .
 This function is only available if Agar was compiled with SDL support.
+.Pp
+The
+.Fn AG_WindowProcessQueued
+routine detaches/shows/hides queued windows (this mechanism allows
+.Xr AG_ObjectDetach 3 ,
+.Xr AG_WindowShow 3
+or
+.Xr AG_WindowHide 3
+to be safely called from different threads).
+Agar drivers should invoke this routine from the
+.Fn processEvent
+operation, at the end of each event processing cycle.
 .Pp
 The
 .Fa drv
