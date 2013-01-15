@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -533,13 +533,16 @@ AG_SDL_SetCursorVisibility(void *obj, int flag)
 void
 AG_SDL_PostEventCallback(void *obj)
 {
-	if (!TAILQ_EMPTY(&agWindowDetachQ)) {
-		AG_FreeDetachedWindows();
-	}
+	/* Effect any pending focus change. */
+	AG_LockVFS(&agDrivers);
 	if (agWindowToFocus != NULL) {
 		AG_WM_CommitWindowFocus(agWindowToFocus);
 		agWindowToFocus = NULL;
 	}
+	AG_UnlockVFS(&agDrivers);
+	
+	/* Show/hide/detach any queued windows. */
+	AG_WindowProcessQueued();
 }
 
 /* Return the desktop display size in pixels. */
@@ -720,6 +723,7 @@ GenericMouseOverCtrl(AG_Window *win, int x, int y)
 
 /*
  * Process an input device event.
+ * The agDrivers VFS must be locked.
  * TODO: generalize this code to SW drivers.
  */
 static int
@@ -840,8 +844,9 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 {
 	AG_Driver *drv = (AG_Driver *)obj;
 	AG_DriverSw *dsw = (AG_DriverSw *)obj;
-	int rv = 0;
+	int rv = 1;
 
+	AG_LockVFS(&agDrivers);
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
 		rv = ProcessInputEvent(drv, dev);
@@ -860,11 +865,10 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		}
 		break;
 	case AG_DRIVER_KEY_DOWN:
-		if (AG_ExecGlobalKeys(dev->data.key.ks, drv->kbd->modState)
-		    == 0) {
+		if (AG_ExecGlobalKeys(dev->data.key.ks, drv->kbd->modState) == 0) {
 			rv = ProcessInputEvent(drv, dev);
 		} else {
-			rv = 0;
+			rv = 1;
 		}
 		break;
 	case AG_DRIVER_KEY_UP:
@@ -875,18 +879,19 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		    dev->data.videoresize.h) == -1) {
 			Verbose("ResizeDisplay: %s\n", AG_GetError());
 		}
-		rv = 1;
 		break;
 	case AG_DRIVER_CLOSE:
 		AG_DriverClose(drv);
 		agTerminating = 1;
-		return (-1);
+		break;
 	case AG_DRIVER_EXPOSE:
-		rv = 1;
 		break;
 	default:
+		rv = 0;
 		break;
 	}
+	AG_UnlockVFS(&agDrivers);
+
 	AG_SDL_PostEventCallback(drv);
 	return (rv);
 }
@@ -904,6 +909,7 @@ AG_SDL_GenericEventLoop(void *obj)
 	for (;;) {
 		Tr2 = AG_GetTicks();
 		if (Tr2-Tr1 >= dsw->rNom) {
+			AG_LockVFS(drv);
 			AG_FOREACH_WINDOW(win, drv) {
 #ifndef _XBOX
 				if (win->dirty)
@@ -911,7 +917,6 @@ AG_SDL_GenericEventLoop(void *obj)
 					break;
 			}
 			if (win != NULL) {
-				AG_LockVFS(drv);
 				AG_BeginRendering(drv);
 				AG_FOREACH_WINDOW(win, drv) {
 					AG_ObjectLock(win);
@@ -919,8 +924,8 @@ AG_SDL_GenericEventLoop(void *obj)
 					AG_ObjectUnlock(win);
 				}
 				AG_EndRendering(drv);
-				AG_UnlockVFS(drv);
 			}
+			AG_UnlockVFS(drv);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = AG_GetTicks();
@@ -929,9 +934,11 @@ AG_SDL_GenericEventLoop(void *obj)
 				dsw->rCur = 1;
 			}
 		} else if (SDL_PollEvent(NULL) != 0) {
-			if (AG_SDL_GetNextEvent(drv, &dev) == 1 &&
-			    AG_SDL_ProcessEvent(drv, &dev) == -1)
-				return;
+			if (AG_SDL_GetNextEvent(drv, &dev) == 1) {
+				AG_SDL_ProcessEvent(drv, &dev);
+				if (agTerminating)
+					break;
+			}
 		} else {
 			AG_ProcessTimeouts(Tr2);
 			AG_Delay(1);

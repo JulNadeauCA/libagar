@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -184,15 +184,12 @@ static void
 WGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
-#if 0
 	AG_DriverEvent *dev, *devNext;
-#endif
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
 	if (--nDrivers == 0) {
-#if 0
 		for (dev = TAILQ_FIRST(&wglEventQ);
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
@@ -200,10 +197,12 @@ WGL_Close(void *obj)
 			Free(dev);
 		}
 		TAILQ_INIT(&wglEventQ);
-#endif
 
 		AG_MutexDestroy(&wglClassLock);
 		AG_MutexDestroy(&wglEventLock);
+		
+		/* XXX TODO make this behavior configurable */
+		agTerminating = 1;
 	}
 
 	AG_ObjectDetach(drv->mouse);
@@ -535,6 +534,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	AG_DriverEvent *dev;
 	int x, y;
 	
+	AG_LockVFS(&agDrivers);
+	
 	if ((win = LookupWindowByID(hWnd)) == NULL) {
 		goto fallback;
 	}
@@ -714,11 +715,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 out:
 	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	AG_UnlockVFS(&agDrivers);
 	return (1);
 ret0:
 	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	AG_UnlockVFS(&agDrivers);
 	return (0);
 fallback:
+	AG_UnlockVFS(&agDrivers);
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -754,68 +758,16 @@ get_event:
 }
 
 static int
-WGL_PostEventCallback(void *drvCaller)
-{
-	AG_Window *win;
-	AG_Driver *drv;
-	
-	AG_LockVFS(&agDrivers);
-
-	if (!TAILQ_EMPTY(&agWindowDetachQ))
-		AG_FreeDetachedWindows();
-	
-	/*
-	 * Exit when no more visible windows exist.
-	 * XXX TODO make this behavior configurable
-	 */
-	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
-		goto nowindows;
-	}
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_FOREACH_WINDOW(win, drv) {
-			if (win->visible)
-				break;
-		}
-		if (win != NULL)
-			break;
-	}
-	if (win == NULL)
-		goto nowindows;
-
-	if (agWindowToFocus != NULL) {
-		AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(agWindowToFocus)->drv;
-
-		if (wgl != NULL && AGDRIVER_IS_WGL(wgl)) {
-			WGL_RaiseWindow(agWindowToFocus);
-			WGL_SetInputFocus(agWindowToFocus);
-		}
-		agWindowToFocus = NULL;
-	}
-	AG_UnlockVFS(&agDrivers);
-	return (1);
-nowindows:
-	AG_SetError("No more windows exist");
-	agTerminating = 1;
-	AG_UnlockVFS(&agDrivers);
-	return (-1);
-}
-
-static int
 WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	AG_Driver *drv;
 	AG_SizeAlloc a;
+	int rv = 1;
 
-	if (dev->win == NULL) {
+	if (dev->win == NULL)
 		return (0);
-	}
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if (WIDGET(dev->win)->drv == drv)
-			break;
-	}
-	if (drv == NULL) {
-		return (0);
-	}
+
+	AG_LockVFS(&agDrivers);
 	drv = WIDGET(dev->win)->drv;
 
 	switch (dev->type) {
@@ -879,9 +831,27 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		dev->win->dirty = 1;
 		break;
 	default:
-		return (0);
+		rv = 0;
+		break;
 	}
-	return WGL_PostEventCallback(drvCaller);
+	
+	/* Effect any pending focus change. */
+	if (agWindowToFocus != NULL) {
+		AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(agWindowToFocus)->drv;
+
+		if (wgl != NULL && AGDRIVER_IS_WGL(wgl)) {
+			WGL_RaiseWindow(agWindowToFocus);
+			WGL_SetInputFocus(agWindowToFocus);
+		}
+		agWindowToFocus = NULL;
+	}
+	
+	AG_UnlockVFS(&agDrivers);
+	
+	/* Show/hide/detach any queued windows. */
+	AG_WindowProcessQueued();
+
+	return (rv);
 }
 
 static void
@@ -897,6 +867,7 @@ WGL_GenericEventLoop(void *obj)
 		if (agExitWGL) {
 			break;
 		} else if (t2 - t1 >= rNom) {
+			AG_LockVFS(&agDrivers);
 			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 				if (!AGDRIVER_IS_WGL(drv)) {
 					continue;
@@ -911,15 +882,17 @@ WGL_GenericEventLoop(void *obj)
 				AG_ObjectUnlock(win);
 				AG_EndRendering(drv);
 			}
+			AG_UnlockVFS(&agDrivers);
 			t1 = AG_GetTicks();
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
 		} else if (WGL_PendingEvents(NULL)) {
 			AG_DriverEvent dev;
 
-			if (WGL_GetNextEvent(NULL, &dev) == 1 &&
-			    WGL_ProcessEvent(NULL, &dev) == -1) {
-				return;
+			if (WGL_GetNextEvent(NULL, &dev) == 1)
+				WGL_ProcessEvent(NULL, &dev);
+				if (agTerminating)
+					break;
 			}
 		} else {
 			AG_ProcessTimeouts(t2);

@@ -139,17 +139,19 @@ typedef struct ag_window {
 	float fadeOpacity;			/* Fade opacity */
 	enum ag_window_wm_type wmType;		/* Window function */
 	int zoom;				/* Effective zoom level */
+	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
 } AG_Window;
 
-AG_TAILQ_HEAD(ag_windowq, ag_window);
+typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
 
 __BEGIN_DECLS
 extern const char *agWindowWmTypeNames[];
 extern AG_WidgetClass agWindowClass;
-extern struct ag_widgetq agWidgetDetachQ;	/* Widget pre-detach queue */
-extern struct ag_windowq agWindowDetachQ;	/* Window detach queue */
-extern AG_Window        *agWindowToFocus;	/* Window to focus next */
-extern AG_Window        *agWindowFocused;	/* Window holding focus */
+extern AG_WindowQ agWindowDetachQ;	/* AG_ObjectDetach() queue */
+extern AG_WindowQ agWindowShowQ;	/* AG_WindowShow() queue */
+extern AG_WindowQ agWindowHideQ;	/* AG_WindowHide() queue */
+extern AG_Window *agWindowToFocus;	/* Window to focus next */
+extern AG_Window *agWindowFocused;	/* Window holding focus */
 
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
@@ -224,8 +226,10 @@ void	 AG_WindowCycleFocus(AG_Window *, int);
 void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
-void	 AG_FreeDetachedWindows(void);
 int      AG_WindowIntersect(AG_DriverSw *, int, int);
+void     AG_WindowProcessShowQueue(void);
+void     AG_WindowProcessHideQueue(void);
+void     AG_WindowProcessDetachQueue(void);
 
 AG_CursorArea *AG_MapCursor(void *, AG_Rect, struct ag_cursor *);
 AG_CursorArea *AG_MapStockCursor(void *, AG_Rect, int);
@@ -378,6 +382,19 @@ AG_Redraw(void *obj)
 {
 	if (AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
+}
+
+/*
+ * Process windows previously queued for detach, show or hide. Usually
+ * called by drivers, at the end of the current event processing cycle.
+ * The agDrivers VFS must be locked.
+ */
+static __inline__ void
+AG_WindowProcessQueued(void)
+{
+	if (!TAILQ_EMPTY(&agWindowShowQ)) { AG_WindowProcessShowQueue(); }
+	if (!TAILQ_EMPTY(&agWindowHideQ)) { AG_WindowProcessHideQueue(); }
+	if (!TAILQ_EMPTY(&agWindowDetachQ)) { AG_WindowProcessDetachQueue(); }
 }
 
 #ifdef AG_LEGACY
