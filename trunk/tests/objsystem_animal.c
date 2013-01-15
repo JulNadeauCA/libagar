@@ -69,6 +69,8 @@ Init(void *obj)
 	animal->age = 0.0;
 	animal->cellCount = 1;
 
+	AG_InitTimer(&animal->time, "tick", 0);
+
 	/* Event handler functions and timers are usually configured here. */
 	AG_SetEvent(animal, "die", Die, NULL);
 	AG_SetEvent(animal, "attached", Attached, NULL);

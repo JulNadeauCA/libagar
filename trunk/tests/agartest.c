@@ -5,8 +5,6 @@
 
 #include "agartest.h"
 
-#include <agar/dev.h>
-
 #include <string.h>
 
 #include <agar/config/have_opengl.h>
@@ -158,6 +156,14 @@ fail:
 }
 
 static void
+RequestTestClose(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+	
+	AG_PostEvent(NULL, win, "window-close", NULL);
+}
+
+static void
 RunTest(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
@@ -204,7 +210,7 @@ RunTest(AG_Event *event)
 			    tc->name);
 			AG_SeparatorNewHoriz(win);
 			AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
-			    TestWindowClose, "%p", ti);
+			    RequestTestClose, "%p", win);
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 			AG_WindowAttach(winParent, win);
 			AG_WindowShow(win);
@@ -416,7 +422,7 @@ main(int argc, char *argv[])
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-d agar-driver] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-T] [-d agar-driver] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
@@ -476,8 +482,8 @@ main(int argc, char *argv[])
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL);
 	{
-		btnTest = AG_ButtonNew(hBox, 0, _("Run Test"));
-		btnBench = AG_ButtonNew(hBox, 0, _("Run Benchmark"));
+		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run Test"));
+		btnBench = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run Benchmark"));
 		AG_WidgetDisable(btnTest);
 		AG_WidgetDisable(btnBench);
 	}

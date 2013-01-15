@@ -34,7 +34,6 @@ typedef struct {
 	GLfloat diffuse[4];
 	GLfloat specular[4];
 	int wireframe;
-	AG_Timer toRotate;
 } MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    

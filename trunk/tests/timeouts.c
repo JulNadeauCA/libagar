@@ -6,7 +6,7 @@
 
 typedef struct {
 	AG_TestInstance _inherit;
-	AG_Timer to1, to2;
+	AG_Timer to[3], toReg;
 	AG_Window *win;
 } MyTestInstance;
 
@@ -22,31 +22,63 @@ static Uint32
 Timeout2(AG_Timer *to, AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
+	TestMsg(ti, "This message should appear second");
+	return (0);
+}
+
+static Uint32
+Timeout3(AG_Timer *to, AG_Event *event)
+{
+	MyTestInstance *ti = AG_PTR(1);
 	TestMsg(ti, "This message should appear last");
 	return (0);
 }
 
+static Uint32
+TimeoutRegular(AG_Timer *to, AG_Event *event)
+{
+	MyTestInstance *ti = AG_PTR(1);
+	TestMsg(ti, "Tick");
+	return (to->ival);
+}
+
+
 static void
-ScheduleTimers(AG_Event *event)
+TestOneShot(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Object *ob;
 	AG_Timer *to;
 
-	TestMsg(ti, "schedule one-shot timers (1s, 2s)");
-	AG_AddTimer(NULL, &ti->to1, 1000, Timeout1, "%p", ti);
-	AG_AddTimer(NULL, &ti->to2, 2000, Timeout2, "%p", ti);
-
-	TestMsg(ti, "timer queue:");
-
-	/* print the timeout tailqueue */
-	AG_TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
-		TestMsg(ti, "Object %s:", ob->name);
-		AG_TAILQ_FOREACH(to, &ob->timers, timers) {
-			TestMsg(ti, "\tTimer %d: tSched=%u, ival=%u",
-			    to->id, to->tSched, to->ival);
-		}
+	TestMsg(ti, "Testing 3 one-shot timers");
+	if (AG_AddTimer(NULL, &ti->to[0], 1000, Timeout1, "%p", ti) == -1 ||
+	    AG_AddTimer(NULL, &ti->to[1], 2000, Timeout2, "%p", ti) == -1 ||
+	    AG_AddTimer(NULL, &ti->to[2], 2100, Timeout3, "%p", ti) == -1) {
+		TestMsg(ti, "AddTimer: %s", AG_GetError());
 	}
+}
+
+static void
+StartRegular(AG_Event *event)
+{
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Object *ob;
+	AG_Timer *to;
+
+	TestMsg(ti, "Starting regular timer");
+	if (AG_AddTimer(NULL, &ti->toReg, 1000, TimeoutRegular, "%p", ti) == -1) {
+		TestMsg(ti, "AddTimer: %s", AG_GetError());
+	}
+}
+
+static void
+StopRegular(AG_Event *event)
+{
+	MyTestInstance *ti = AG_PTR(1);
+	AG_Timer *to;
+
+	TestMsg(ti, "Stopping regular timer");
+	AG_DelTimer(NULL, &ti->toReg);
 }
 
 static int
@@ -55,7 +87,22 @@ Init(void *obj)
 	MyTestInstance *ti = obj;
 
 	ti->win = NULL;
+	AG_InitTimer(&ti->to[0], "testTimer1", 0);
+	AG_InitTimer(&ti->to[1], "testTimer2", 0);
+	AG_InitTimer(&ti->to[2], "testTimer3", 0);
+	AG_InitTimer(&ti->toReg, "testTimerReg", 0);
+
 	return (0);
+}
+
+static void
+StartTimerInspector(AG_Event *event)
+{
+/*	MyTestInstance *ti = AG_PTR(1); */
+	AG_Window *win;
+
+	if ((win = DEV_TimerInspector()) != NULL)
+		AG_WindowShow(win);
 }
 
 static int
@@ -64,9 +111,18 @@ TestGUI(void *obj, AG_Window *win)
 	MyTestInstance *ti = obj;
 
 	ti->win = win;
-	AG_LabelNewS(win, 0, "This program test the AG_Timer(3) facility");
-	AG_ButtonNewFn(win, 0, "Schedule test timeouts",
-	    ScheduleTimers, "%p", ti);
+	AG_LabelNewS(win, 0, "Test for AG_Timer(3) facility");
+	AG_LabelNew(win, 0, "timeOps: %s", agTimeOps->name);
+	if (agSoftTimers != -1) {
+		AG_LabelNewS(win, 0, "Using soft timers");
+	} else {
+		if (agKqueue != -1)
+			AG_LabelNewS(win, 0, "Using kqueue(2)");
+	}
+	AG_ButtonNewFn(win, 0, "Timer Inspector", StartTimerInspector, "%p", ti);
+	AG_ButtonNewFn(win, 0, "Test One-Shot", TestOneShot, "%p", ti);
+	AG_ButtonNewFn(win, 0, "Start Regular", StartRegular, "%p", ti);
+	AG_ButtonNewFn(win, 0, "Stop Regular", StopRegular, "%p", ti);
 	return (0);
 }
 
