@@ -392,9 +392,9 @@ AG_Redraw(void *obj)
 static __inline__ void
 AG_WindowProcessQueued(void)
 {
-	if (!TAILQ_EMPTY(&agWindowShowQ)) { AG_WindowProcessShowQueue(); }
-	if (!TAILQ_EMPTY(&agWindowHideQ)) { AG_WindowProcessHideQueue(); }
-	if (!TAILQ_EMPTY(&agWindowDetachQ)) { AG_WindowProcessDetachQueue(); }
+	if (!AG_TAILQ_EMPTY(&agWindowShowQ)) { AG_WindowProcessShowQueue(); }
+	if (!AG_TAILQ_EMPTY(&agWindowHideQ)) { AG_WindowProcessHideQueue(); }
+	if (!AG_TAILQ_EMPTY(&agWindowDetachQ)) { AG_WindowProcessDetachQueue(); }
 }
 
 #ifdef AG_LEGACY
