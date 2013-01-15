@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,6 @@
 
 #include "dev.h"
 
-static AG_Timer refreshTblTo;
-
 static Uint32 
 RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 {
@@ -46,7 +44,6 @@ RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 	int id;
 	
 	AG_TreetblClearRows(tt);
-	AG_LockTiming();
 
 	id = 0;
 	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
@@ -61,13 +58,14 @@ RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 		AG_ObjectLock(ob);
 		TAILQ_FOREACH(to, &ob->timers, timers) {
 			AG_TreetblAddRow(tt, objRow, id++,
-			    "%s,%s",
-			    0, AG_PrintfN(1,"%d",to->id),
-			    1, AG_PrintfN(2,"%u",(Uint)to->ival));
+			    "%s,%s,%s,%s",
+			    0, to->name,
+			    1, AG_PrintfN(0,"%d",to->id),
+			    2, AG_PrintfN(1,"%u",(Uint)to->ival),
+			    3, AG_PrintfN(2,"%u",(Uint)to->tSched));
 		}
 		AG_ObjectUnlock(ob);
 	}
-	AG_UnlockTiming();
 	return (refreshTo->ival);
 }
 
@@ -75,9 +73,7 @@ static void
 CloseWindow(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	AG_Treetbl *tt = AG_PTR(1);
 
-	AG_DelTimer(tt, &refreshTblTo);
 	AG_ObjectDetach(win);
 }
 
@@ -86,6 +82,7 @@ DEV_TimerInspector(void)
 {
 	AG_Window *win;
 	AG_Treetbl *tt;
+	AG_Timer *to;
 
 	if ((win = AG_WindowNewNamedS(0, "DEV_TimerInspector")) == NULL) {
 		return (NULL);
@@ -94,11 +91,14 @@ DEV_TimerInspector(void)
 
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);
-	AG_TreetblAddCol(tt, 0, "<XXXXXXXXXXXXXX>", _("TimerID"));
-	AG_TreetblAddCol(tt, 1, "<XXXXXXXX>", _("Ticks"));
+	AG_TreetblAddCol(tt, 0, "<XXXXXXXXXXXXXXX>", _("Name"));
+	AG_TreetblAddCol(tt, 1, "<XXXXX>", _("ID"));
+	AG_TreetblAddCol(tt, 2, "<XXXXXXXX>", _("Ticks"));
+	AG_TreetblAddCol(tt, 3, "<XXXXXXXX>", "tSched");
 
-	AG_AddTimer(tt, &refreshTblTo, 50,
-	    RefreshTableTimeout, NULL);
+	to = AG_AddTimerAuto(tt, 10, RefreshTableTimeout, NULL);
+	if (to != NULL)
+		Strlcpy(to->name, "timerInspector", sizeof(to->name));
 	
 	AG_SetEvent(win, "window-close", CloseWindow, "%p", tt);
 	return (win);

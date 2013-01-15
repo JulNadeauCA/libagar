@@ -544,6 +544,8 @@ Init(void *obj)
 	sl->wControlPref = agTextFontHeight;
 	sl->wControl = sl->wControlPref;
 	sl->xOffs = 0;
+	
+	AG_InitTimer(&sl->moveTo, "move", 0);
 
 	AG_AddEvent(sl, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sl, "widget-hidden", OnFocusLoss, NULL);

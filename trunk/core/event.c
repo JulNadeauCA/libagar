@@ -34,7 +34,6 @@
 
 #include <config/have_kqueue.h>
 #include <config/have_cocoa.h>
-#include <config/have_timerfd.h>
 #include <config/ag_objdebug.h>
 
 #if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
@@ -425,8 +424,10 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 	AG_Event *ev;
 	AG_Timer *to;
 
-	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL)
+	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
 		return (-1);
+	}
+	AG_InitTimer(to, evname, AG_TIMER_AUTO_FREE);
 
 	AG_LockTiming();
 	AG_ObjectLock(rcvr);
@@ -436,7 +437,6 @@ AG_SchedEvent(void *pSndr, void *pRcvr, Uint32 ticks, const char *evname,
 		free(to);
 		goto fail;
 	}
-	to->flags |= AG_TIMER_AUTO_FREE;
 	ev = &to->fnEvent;
 	AG_EventInit(ev);
 	ev->argv[0].data.p = rcvr;

@@ -618,6 +618,7 @@ Init(void *obj)
 	num->hUnitSel = 0;
 	num->inTxt[0] = '\0';
 	Strlcpy(num->format, "%.02f", sizeof(num->format));
+	AG_InitTimer(&num->updateTo, "update", 0);
 	
 	num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(num->input, num->inTxt, sizeof(num->inTxt));
