@@ -182,10 +182,8 @@ GLX_ConnectionWatchProc(Display *dpy, XPointer clntData, int fd, Bool opening,
 		} else {
 			EV_SET(&kev, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		}
-		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
-			AG_SetError("kqueue: %s", AG_Strerror(errno));
-			goto fail;
-		}
+		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1)
+			Verbose("kqueue: %s; ignoring", AG_Strerror(errno));
 	} else
 #endif
 	{
