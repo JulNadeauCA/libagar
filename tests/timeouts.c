@@ -98,11 +98,13 @@ Init(void *obj)
 static void
 StartTimerInspector(AG_Event *event)
 {
-/*	MyTestInstance *ti = AG_PTR(1); */
+	MyTestInstance *ti = AG_PTR(1);
 	AG_Window *win;
 
-	if ((win = DEV_TimerInspector()) != NULL)
+	if ((win = DEV_TimerInspector()) != NULL) {
+		AG_WindowAttach(ti->win, win);
 		AG_WindowShow(win);
+	}
 }
 
 static int
