@@ -305,9 +305,11 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 	AG_UnlockTimers(ob);
 	to->ival = ival;
 	return (0);
+#if (defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)) || defined(HAVE_TIMERFD)
 fail:
 	AG_UnlockTimers(ob);
 	return (-1);
+#endif
 }
 
 /* Cancel the given timeout if it is scheduled for execution. */
