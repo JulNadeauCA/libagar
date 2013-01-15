@@ -45,10 +45,11 @@ static void OnFocusLoss(AG_Event *);
 
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 6;
-AG_Window *agWindowToFocus = NULL;
-AG_Window *agWindowFocused = NULL;
-struct ag_windowq agWindowDetachQ;
-struct ag_widgetq agWidgetDetachQ;
+AG_Window *agWindowToFocus = NULL;		/* Window to focus */
+AG_Window *agWindowFocused = NULL;		/* Window holding focus */
+AG_WindowQ agWindowHideQ;			/* Windows to hide */
+AG_WindowQ agWindowShowQ;			/* Windows to show */
+AG_WindowQ agWindowDetachQ;			/* Windows to detach */
 
 /* Map enum ag_window_wm_type to EWMH window type */
 const char *agWindowWmTypeNames[] = {
@@ -72,7 +73,8 @@ void
 AG_InitWindowSystem(void)
 {
 	TAILQ_INIT(&agWindowDetachQ);
-	TAILQ_INIT(&agWidgetDetachQ);
+	TAILQ_INIT(&agWindowShowQ);
+	TAILQ_INIT(&agWindowHideQ);
 	agWindowToFocus = NULL;
 	agWindowFocused = NULL;
 }
@@ -376,9 +378,10 @@ FadeTimeout(AG_Timer *to, AG_Event *event)
 			AG_WindowSetOpacity(win, win->fadeOpacity);
 			return (to->ival);
 		} else {
-			win->visible = 0;
-			AG_PostEvent(NULL, win, "widget-hidden", NULL);
 			AG_WindowSetOpacity(win, 1.0);
+			AG_LockVFS(&agDrivers);
+			TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
+			AG_UnlockVFS(&agDrivers);
 			return (0);
 		}
 	}
@@ -425,6 +428,8 @@ Init(void *obj)
 	win->zoom = AG_ZOOM_DEFAULT;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
+
+	AG_InitTimer(&win->fadeTo, "fade", 0);
 
 	AG_SetEvent(win, "window-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(win, "window-lostfocus", OnFocusLoss, NULL);
@@ -908,19 +913,28 @@ OnFocusLoss(AG_Event *event)
 	WidgetLostFocus(WIDGET(AG_SELF()));
 }
 
-/* Set the visibility bit of a window. */
+/* Make a window visible to the user. */
 void
 AG_WindowShow(AG_Window *win)
 {
 	AG_ObjectLock(win);
 	if (!win->visible) {
-		AG_PostEvent(NULL, win, "widget-shown", NULL);
-		win->visible++;
+#ifdef AG_THREADS
+		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
+			AG_LockVFS(&agDrivers);
+			TAILQ_INSERT_TAIL(&agWindowShowQ, win, visibility);
+			AG_UnlockVFS(&agDrivers);
+		} else
+#endif
+		{
+			AG_PostEvent(NULL, win, "widget-shown", NULL);
+			win->visible = 1;
+		}
 	}
 	AG_ObjectUnlock(win);
 }
 
-/* Clear the visibility bit of a window. */
+/* Make a window invisible to the user. */
 void
 AG_WindowHide(AG_Window *win)
 {
@@ -931,8 +945,17 @@ AG_WindowHide(AG_Window *win)
 			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
 			    FadeTimeout, "%i", -1);
 		} else {
-			win->visible = 0;
-			AG_PostEvent(NULL, win, "widget-hidden", NULL);
+#ifdef AG_THREADS
+			if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
+				AG_LockVFS(&agDrivers);
+				TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
+				AG_UnlockVFS(&agDrivers);
+			} else
+#endif
+			{
+				AG_PostEvent(NULL, win, "widget-hidden", NULL);
+				win->visible = 0;
+			}
 		}
 	}
 	AG_ObjectUnlock(win);
@@ -1847,16 +1870,50 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	AG_WindowSetCaptionS(win, s);
 }
 
-/*
- * Destroy windows queued for detach. Usually called by drivers, at the
- * end of the current event processing cycle.
- */
+/* Make windows on the show queue visible. */
 void
-AG_FreeDetachedWindows(void)
+AG_WindowProcessShowQueue(void)
+{
+	AG_Window *win, *winNext;
+
+	AG_LockVFS(&agDrivers);
+	for (win = TAILQ_FIRST(&agWindowShowQ);
+	     win != TAILQ_END(&agWindowShowQ);
+	     win = winNext) {
+		winNext = TAILQ_NEXT(win, visibility);
+		AG_PostEvent(NULL, win, "widget-shown", NULL);
+		win->visible = 1;
+	}
+	TAILQ_INIT(&agWindowShowQ);
+	AG_UnlockVFS(&agDrivers);
+}
+
+/* Make windows on the hide queue invisible. */
+void
+AG_WindowProcessHideQueue(void)
+{
+	AG_Window *win, *winNext;
+
+	AG_LockVFS(&agDrivers);
+	for (win = TAILQ_FIRST(&agWindowHideQ);
+	     win != TAILQ_END(&agWindowHideQ);
+	     win = winNext) {
+		winNext = TAILQ_NEXT(win, visibility);
+		win->visible = 0;
+		AG_PostEvent(NULL, win, "widget-hidden", NULL);
+	}
+	TAILQ_INIT(&agWindowHideQ);
+	AG_UnlockVFS(&agDrivers);
+}
+
+/* Close and destroy windows on the detach queue. */
+void
+AG_WindowProcessDetachQueue(void)
 {
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
 
+	AG_LockVFS(&agDrivers);
 	for (win = TAILQ_FIRST(&agWindowDetachQ);
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
@@ -1881,13 +1938,26 @@ AG_FreeDetachedWindows(void)
 		AG_ObjectSetDetachFn(win, NULL, NULL);
 		AG_ObjectDetach(win);
 
-		/* Free the driver instance as well in MW mode. */
-		if (AGDRIVER_MULTIPLE(drv))
+		if (AGDRIVER_MULTIPLE(drv)) {
+			/*
+			 * In multiple-window mode, free the driver instance
+			 * associated with the window. If this is the last
+			 * window, the driver will set agTerminating=1
+			 * (XXX TODO make this behavior configurable)
+			 */
+			AG_UnlockVFS(&agDrivers);
 			AG_DriverClose(drv);
-		
+			if (agTerminating) {		/* Exit immediately */
+				AG_ObjectDestroy(win);
+				TAILQ_INIT(&agWindowDetachQ);
+				return;
+			}
+			AG_LockVFS(&agDrivers);
+		}
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
+	AG_UnlockVFS(&agDrivers);
 }
 
 int

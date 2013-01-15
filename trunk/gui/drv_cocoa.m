@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -466,6 +466,9 @@ COCOA_Close(void *obj)
 			Free(dev);
 		}
 		TAILQ_INIT(&agCocoaEventQ);
+		
+		/* XXX TODO make this behavior configurable */
+		agTerminating = 1;
 	}
 
 	AG_ObjectDetach(drv->mouse);
@@ -512,55 +515,6 @@ COCOA_PendingEvents(void *drvCaller)
 
 	[pool release];
 	return (rv);
-}
-
-static int
-PostEventCallback(void *drvCaller)
-{
-	AG_Window *win;
-	AG_Driver *drv;
-
-	AG_LockVFS(&agDrivers);
-
-	if (!TAILQ_EMPTY(&agWindowDetachQ))
-		AG_FreeDetachedWindows();
-	
-	/*
-	 * Exit when no more visible windows exist.
-	 * XXX TODO make this behavior configurable
-	 */
-	if (TAILQ_EMPTY(&OBJECT(&agDrivers)->children)) {
-		goto nowindows;
-	}
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_FOREACH_WINDOW(win, drv) {
-			if (win->visible)
-				break;
-		}
-		if (win != NULL)
-			break;
-	}
-	if (win == NULL)
-		goto nowindows;
-
-	if (agWindowToFocus != NULL) {
-		AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(agWindowToFocus)->drv;
-
-		if (co != NULL && AGDRIVER_IS_COCOA(co)) {
-			AG_MutexLock(&co->lock);
-			COCOA_RaiseWindow(agWindowToFocus);
-			COCOA_SetInputFocus(agWindowToFocus);
-			AG_MutexUnlock(&co->lock);
-		}
-		agWindowToFocus = NULL;
-	}
-	AG_UnlockVFS(&agDrivers);
-	return (1);
-nowindows:
-	AG_SetError("No more windows exist");
-	agTerminating = 1;
-	AG_UnlockVFS(&agDrivers);
-	return (-1);
 }
 
 /* Convert a NSEvent mouse button number to AG_MouseButton. */
@@ -639,6 +593,8 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 		goto out;
 	}
 	win = coWin->_agarWindow;
+
+	AG_LockVFS(&agDrivers);
 	drv = WIDGET(win)->drv;
 	co = (AG_DriverCocoa *)drv;
 	
@@ -849,17 +805,12 @@ static int
 COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 {
 	AG_Driver *drv;
+	int rv = 1;
 
-	if (dev->win == NULL) {
+	if (dev->win == NULL)
 		return (0);
-	}
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if (WIDGET(dev->win)->drv == drv)
-			break;
-	}
-	if (drv == NULL) {
-		return (0);
-	}
+
+	AG_LockVFS(&agDrivers);
 	drv = WIDGET(dev->win)->drv;
 
 	switch (dev->type) {
@@ -909,9 +860,29 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		dev->win->dirty = 1;
 		break;
 	default:
+		rv = 0;
 		break;
 	}
-	return PostEventCallback(drvCaller);
+
+	/* Effect any pending focus change. */
+	if (agWindowToFocus != NULL) {
+		AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(agWindowToFocus)->drv;
+
+		if (co != NULL && AGDRIVER_IS_COCOA(co)) {
+			AG_MutexLock(&co->lock);
+			COCOA_RaiseWindow(agWindowToFocus);
+			COCOA_SetInputFocus(agWindowToFocus);
+			AG_MutexUnlock(&co->lock);
+		}
+		agWindowToFocus = NULL;
+	}
+	
+	AG_UnlockVFS(&agDrivers);
+	
+	/* Show/hide/detach any queued windows. */
+	AG_WindowProcessQueued();
+
+	return (rv);
 }
 
 static void
@@ -951,7 +922,8 @@ COCOA_GenericEventLoop(void *obj)
 			rCur = rNom - (t1-t2);
 			if (rCur < 1) { rCur = 1; }
 		} else if (COCOA_GetNextEvent(NULL, &dev) == 1) {
-			if (COCOA_ProcessEvent(NULL, &dev) == -1)
+			COCOA_ProcessEvent(NULL, &dev);
+			if (agTerminating)
 				return;
 		} else {
 			if (!AG_TAILQ_EMPTY(&agTimerObjQ)) {
