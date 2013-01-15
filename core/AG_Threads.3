@@ -198,6 +198,12 @@ All of these functions will raise a fatal condition if an error is encountered.
 .Ft void
 .Fn AG_ThreadKill "AG_Thread th" "int signal"
 .Pp
+.Ft AG_Thread
+.Fn AG_ThreadSelf "void"
+.Pp
+.Ft int
+.Fn AG_ThreadEqual "AG_Thread a" "AG_Thread b"
+.Pp
 .nr nS 0
 .Fn AG_ThreadCreate
 creates a new thread executing
@@ -229,6 +235,15 @@ is an optional user pointer.
 .Pp
 .Fn AG_ThreadKill
 sends a signal to the specified thread.
+.Pp
+.Fn AG_ThreadSelf
+returns the identifier of the current (caller's) thread.
+.Fn AG_ThreadEqual
+returns 1 if the identifiers
+.Fa a
+and
+.Fa b
+both refer to the same thread, or 0 if they differ.
 .Pp
 .Sh THREAD-SPECIFIC VARIABLES
 .nr nS 1

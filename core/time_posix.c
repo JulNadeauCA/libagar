@@ -1,7 +1,6 @@
 /*	Public domain	*/
 /*
  * Time backend for monotonically-increasing clock on POSIX platforms.
- * Delay() is implemented using the "timeout" argument of select().
  */
 
 #include <sys/types.h>

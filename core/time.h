@@ -2,6 +2,8 @@
 
 #include <agar/core/begin.h>
 
+#define AG_TIMER_NAME_MAX 16
+
 typedef struct ag_timer {
 	int id;				/* Unique identifier */
 	void *obj;			/* Parent object */
@@ -9,20 +11,18 @@ typedef struct ag_timer {
 #define AG_TIMER_SURVIVE_DETACH	0x01	/* Don't cancel on ObjectDetach() */
 #define AG_TIMER_AUTO_FREE	0x02	/* Free the timer structure on expire */
 #define AG_TIMER_EXECD		0x04	/* Callback was invoked manually */
-
+#define AG_TIMER_RESTART	0x08	/* Queue timer for restart (driver-specific) */
 	Uint32 tSched;			/* Scheduled expiration time (ticks) */
 	Uint32 ival;			/* Timer interval in ticks */
-
-	Uint32 (*fn)(struct ag_timer *, struct ag_event *);
+	Uint32 (*fn)(struct ag_timer *, AG_Event *);
 	AG_Event fnEvent;
-
 	AG_TAILQ_ENTRY(ag_timer) timers;
 	AG_TAILQ_ENTRY(ag_timer) change;
-
 #ifdef AG_LEGACY
 	Uint32 (*fnLegacy)(void *p, Uint32 ival, void *arg);
 	void   *argLegacy;
 #endif
+	char name[AG_TIMER_NAME_MAX];	/* Name string (optional) */
 } AG_Timer;
 
 typedef Uint32 (*AG_TimerFn)(AG_Timer *, AG_Event *);
@@ -61,6 +61,7 @@ void    AG_SetTimeOps(const AG_TimeOps *);
 void	AG_InitTimers(void);
 void	AG_DestroyTimers(void);
 
+void      AG_InitTimer(AG_Timer *, const char *, Uint);
 int       AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
 AG_Timer *AG_AddTimerAuto(void *, Uint32, AG_TimerFn, const char *, ...);
 void	  AG_DelTimer(void *, AG_Timer *);

@@ -284,6 +284,7 @@ Init(void *obj)
 	mview->tPad = 4;
 	mview->bPad = 4;
 	mview->arrowRight = -1;
+	AG_InitTimer(&mview->submenuTo, "submenu", 0);
 
 	AG_SetEvent(mview, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(mview, "mouse-button-up", MouseButtonUp, NULL);

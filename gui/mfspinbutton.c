@@ -409,6 +409,8 @@ Init(void *obj)
 		AG_WidgetSetFocusable(b[i], 0);
 	}
 
+	AG_InitTimer(&fsu->updateTo, "update", 0);
+
 	AG_AddEvent(fsu, "widget-shown", OnShow, NULL);
 	AG_SetEvent(fsu, "key-down", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);

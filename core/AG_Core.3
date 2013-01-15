@@ -106,10 +106,11 @@ would be used.
 Specify that the application will be using a custom event loop calling
 .Xr AG_ProcessTimeouts 3
 explicitely.
-If this flag is not specified, Agar is allowed to use platform-specific timer
-interfaces (such as
+If this flag is not specified, Agar will attempt to use the "best" available
+interface (such as
 .Xr kqueue 2
-or timerfd), where they are available.
+or
+.Xr select 2 ) .
 .It AG_USE_KQUEUE
 Prefer use of the
 .Xr kqueue 2

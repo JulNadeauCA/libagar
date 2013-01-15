@@ -1830,6 +1830,10 @@ Init(void *obj)
 	ed->sBuf.maxLen = 0;
 	ed->sBuf.reallocable = 0;
 
+	AG_InitTimer(&ed->toRepeat, "repeat", 0);
+	AG_InitTimer(&ed->toCursorBlink, "cursorBlink", 0);
+	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
+
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnFocusLoss, NULL);

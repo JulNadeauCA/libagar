@@ -125,7 +125,6 @@ rescan:
 	}
 
 	to->obj = ob;
-	to->flags = 0;
 	to->ival = ival;
 	to->fn = fn;
 	ev = &to->fnEvent;
@@ -176,8 +175,8 @@ gen_id:
 		}
 		its.it_value.tv_sec = ival/1000;
 		its.it_value.tv_nsec = (ival % 1000)*1000000L;
-		its.it_interval.tv_sec = its.it_value.tv_sec;
-		its.it_interval.tv_nsec = its.it_value.tv_nsec;
+		its.it_interval.tv_sec = 0;
+		its.it_interval.tv_nsec = 0L;
 		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
 			close(to->id);
 			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
@@ -200,6 +199,23 @@ fail:
 	AG_UnlockTimers(ob);
 	return (-1);
 #endif
+}
+
+/* Initialize a timer structure */
+void
+AG_InitTimer(AG_Timer *to, const char *name, Uint flags)
+{
+	if (name == NULL) {
+		to->name[0] = '\0';
+	} else {
+		Strlcpy(to->name, name, sizeof(to->name));
+	}
+	to->id = -1;
+	to->obj = NULL;
+	to->flags = flags;
+	to->ival = 0;
+	to->tSched = 0;
+	to->fn = NULL;
 }
 
 /*
@@ -243,6 +259,8 @@ int
 AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	
+	AG_LockTimers(ob);
 
 #if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
 	if (agKqueue != -1) {
@@ -253,7 +271,7 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 		    (int)ival, to);
 		if (kevent(agKqueue, &kchg, 1, NULL, 0, NULL) == -1) {
 			AG_SetError("kevent: %s", AG_Strerror(errno));
-			return (-1);
+			goto fail;
 		}
 	} else
 #elif defined(HAVE_TIMERFD)
@@ -266,7 +284,7 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 		its.it_interval.tv_nsec = 0L;
 		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
 			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
-			return (-1);
+			goto fail;
 		}
 	} else
 #endif
@@ -284,8 +302,12 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 		if (toOther == TAILQ_END(&ob->timers))
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
 	}
+	AG_UnlockTimers(ob);
 	to->ival = ival;
 	return (0);
+fail:
+	AG_UnlockTimers(ob);
+	return (-1);
 }
 
 /* Cancel the given timeout if it is scheduled for execution. */
@@ -294,14 +316,14 @@ AG_DelTimer(void *p, AG_Timer *to)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 	AG_Timer *toOther;
-	
+
 	AG_LockTimers(ob);
 	
 	TAILQ_FOREACH(toOther, &ob->timers, timers) {
 		if (toOther == to)
 			break;
 	}
-	if (toOther == NULL)  			/* Timer is not active */
+	if (toOther == NULL) 		/* Timer is not active */
 		goto out;
 
 #if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)

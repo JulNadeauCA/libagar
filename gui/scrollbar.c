@@ -675,6 +675,9 @@ Init(void *obj)
 	sb->wBarMin = 16;
 	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width*5/9;
+	
+	AG_InitTimer(&sb->moveTo, "move", 0);
+	AG_InitTimer(&sb->autoHideTo, "autoHide", 0);
 
 	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);

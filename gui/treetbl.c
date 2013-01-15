@@ -524,6 +524,8 @@ Init(void *obj)
 	tt->wHint = 10;
 	tt->hHint = tt->hCol + (tt->hRow * 4);
 
+	AG_InitTimer(&tt->toDblClick, "dblClick", 0);
+
 	/* private, internal events */
 	AG_SetEvent(tt, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(tt, "mouse-button-down", MouseButtonDown, NULL);

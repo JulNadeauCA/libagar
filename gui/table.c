@@ -2275,6 +2275,9 @@ Init(void *obj)
 	t->wTot = 0;
 	t->colAction = AG_TABLE_COL_SORT;
 	t->nSorting = 0;
+	AG_InitTimer(&t->moveTo, "move", 0);
+	AG_InitTimer(&t->pollTo, "poll", 0);
+	AG_InitTimer(&t->dblClickTo, "dblClick", 0);
 
 	/* Horizontal scrollbar */
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
