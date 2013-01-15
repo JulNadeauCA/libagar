@@ -30,10 +30,12 @@ typedef pthread_key_t AG_ThreadKey;
 #include <agar/core/begin.h>
 __BEGIN_DECLS
 extern pthread_mutexattr_t agRecursiveMutexAttr;
+extern AG_Thread           agEventThread;
 __END_DECLS
 #include <agar/core/close.h>
 
 #define AG_ThreadSelf()			pthread_self()
+#define AG_ThreadEqual(t1,t2)		pthread_equal((t1),(t2))
 #define AG_ThreadExit(p)		pthread_exit(p)
 #define AG_ThreadKeyGet(k)		pthread_getspecific(k)
 #define AG_ThreadSigMask(how,n,o)	pthread_sigmask((how),(n),(o))
