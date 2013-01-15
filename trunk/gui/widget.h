@@ -197,7 +197,6 @@ typedef struct ag_widget {
 	AG_Tbl actions;				 	/* Registered actions */
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
 	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
-	AG_TAILQ_ENTRY(ag_widget) detach;		/* In agWidgetDetachQ */
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
 
 	/* Global inheritable style attributes */
