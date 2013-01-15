@@ -5,6 +5,7 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/dev.h>
 
 #include <agar/config/ag_debug.h>
 #include <agar/config/have_64bit.h>
