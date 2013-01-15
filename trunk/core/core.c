@@ -65,6 +65,7 @@
 
 #ifdef AG_THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
+AG_Thread agEventThread;			/* Event-processing thread */
 #endif
 
 AG_Config *agConfig;				/* Global Agar config data */
@@ -103,6 +104,7 @@ AG_InitCore(const char *progname, Uint flags)
 
 	/* Initialize the thread resources. */
 #ifdef AG_THREADS
+	agEventThread = AG_ThreadSelf();		/* Main thread */
 # ifdef _XBOX
 	ptw32_processInitialize();
 # endif
