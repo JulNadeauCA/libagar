@@ -138,7 +138,7 @@ resized as appropriate.
 For the
 .Ft AG_DriverSw
 (driver instance) object:
-.Bl -tag -width "Uint flags"
+.Bl -tag -width "Uint winop "
 .It Ft Uint flags
 Option flags.
 Possible flags include:
@@ -153,11 +153,18 @@ background.
 The driver is currently in full-screen mode (read-only).
 .El
 .It Ft Uint rNom
-Target refresh rate in ms (only applies if
-.Xr AG_EventLoop_FixedFPS 3
-is used as the event loop).
+Nominal display refresh rate in ms.
 .It Ft int rCur
-Effective refresh rate in ms.
+Effective display refresh rate in ms.
+.It Ft Uint winop
+Modal window-manager operation in effect, may be set to
+.Dv AG_WINOP_NONE
+(normal operation),
+.Dv AG_WINOP_MOVE
+(a window is being moved)
+or
+.Dv AG_WINOP_[LRH]RESIZE
+(a window is being resized left/right/horizontally).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
