@@ -2,8 +2,7 @@ TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	agar-bench \
-	agar-disasm \
-	agarpaint
+	agar-disasm
 
 #SUBDIR+=bundlefont
 
