@@ -90,6 +90,20 @@ OnHide(AG_Event *event)
 }
 
 static void
+OnDetach(AG_Event *event)
+{
+	AG_Notebook *nb = AG_SELF();
+	AG_NotebookTab *ntab, *ntabNext;
+
+	for (ntab = TAILQ_FIRST(&nb->tabs); ntab != TAILQ_END(&nb->tabs); ntab = ntabNext) {
+		ntabNext = TAILQ_NEXT(ntab, tabs);
+		AG_ObjectDestroy(ntab);
+	}
+	TAILQ_INIT(&nb->tabs);
+	nb->sel_tab = NULL;
+}
+
+static void
 Init(void *obj)
 {
 	AG_Notebook *nb = obj;
@@ -109,6 +123,7 @@ Init(void *obj)
 	nb->nTabs = 0;
 	TAILQ_INIT(&nb->tabs);
 
+	AG_AddEvent(nb, "detached", OnDetach, NULL);
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
