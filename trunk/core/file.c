@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,11 +25,11 @@
 
 #ifdef _WIN32
 # include <core/queue_close.h>			/* Conflicts */
-#ifdef _XBOX
-#include <xtl.h>
-#else
-# include <windows.h>
-#endif
+# ifdef _XBOX
+#  include <xtl.h>
+# else
+#  include <windows.h>
+# endif
 # include <core/queue_close.h>
 # include <core/queue.h>
 #else
@@ -41,12 +41,15 @@
 #endif
 
 #include <stdio.h>
+#include <config/have_getenv.h>
+#ifdef HAVE_GETENV
+# include <stdlib.h>
+#endif
 
 #include <core/core.h>
-
 #ifdef _XBOX
-#include <core/xbox.h>
-#define INVALID_FILE_ATTRIBUTES -1
+# include <core/xbox.h>
+# define INVALID_FILE_ATTRIBUTES -1
 #endif
 
 AG_FileExtMapping *agFileExtMap = NULL;
@@ -87,11 +90,6 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	if (attrs & FILE_ATTRIBUTE_HIDDEN) i->flags |= AG_FILE_HIDDEN;
 	if (attrs & FILE_ATTRIBUTE_SYSTEM) i->flags |= AG_FILE_SYSTEM;
 	if (attrs & FILE_ATTRIBUTE_TEMPORARY) i->flags |= AG_FILE_TEMPORARY;
-#ifndef _XBOX
-	if (attrs & FILE_ATTRIBUTE_COMPRESSED) i->flags |= AG_FILE_COMPRESSED;
-	if (attrs & FILE_ATTRIBUTE_ENCRYPTED) i->flags |= AG_FILE_ENCRYPTED;
-	if (attrs & FILE_ATTRIBUTE_SPARSE_FILE) i->flags |= AG_FILE_SPARSE;
-#endif // !_XBOX
 	
 #ifdef _XBOX
 	} /* !if(path[strlen(path) -1] == '.') */
@@ -164,7 +162,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 int
 AG_GetSystemTempDir(char *buf, size_t len)
 {
-#ifdef _XBOX
+#if defined(_XBOX)
 	/* Use a cache partition if it is available */
 	if(AG_XBOX_DriveIsMounted('Z')) {
 		Strlcpy(buf, "Z:\\", len);
@@ -173,17 +171,26 @@ AG_GetSystemTempDir(char *buf, size_t len)
 	} else {
 		return (-1);
 	}
-	return (0);
 #elif defined(_WIN32)
 	if (GetTempPath((DWORD)len, buf) == 0) {
 		AG_SetError("GetTempPath() failed");
 		return (-1);
 	}
-	return (0);
 #else
-	Strlcpy(buf, "/tmp/", len);
-	return (0);
+# ifdef HAVE_GETENV
+	char *s;
+
+	if ((s = getenv("TMPDIR")) != NULL && s[0] != '\0') {
+		Strlcpy(buf, s, len);
+		if (s[strlen(s) - 1] != AG_PATHSEPCHAR)
+			Strlcat(buf, AG_PATHSEP, len);
+	} else
+# endif
+	{
+		Strlcpy(buf, "/tmp/", len);
+	}
 #endif
+	return (0);
 }
 
 int
