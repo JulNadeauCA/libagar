@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -258,8 +258,11 @@ AG_DestroyGUIGlobals(void)
 }
 
 /*
- * Initialize the Agar-GUI internals. This is invoked after the graphics
- * subsystem has been initialized.
+ * Initialize the Agar-GUI library. This is called internally by
+ * AG_InitGraphics().
+ *
+ * As an alternative to AG_InitGraphics(), applications may also invoke
+ * AG_InitGUI() directly (following one or more AG_DriverOpen() calls).
  */
 int
 AG_InitGUI(Uint flags)
@@ -309,22 +312,21 @@ AG_DestroyGUI(void)
 		AG_UnregisterClass(*ops);
 }
 
-/* Request application termination. */
+/* Break out of the event loop. */
 void
 AG_QuitGUI(void)
 {
-	if (agDriverOps != NULL &&
-	    agDriverOps->terminate != NULL) {
-		agDriverOps->terminate();
-	} else {
-		exit(0);
-	}
+	AG_Terminate(0);
 }
 
 /*
- * Initialize the graphics system. If spec is non-NULL, select the driver
+ * Initialize the Agar-GUI library. If spec is non-NULL, select the driver
  * by priority from a comma-separated list. If spec is NULL, try to match
  * the "best" driver for the current platform.
+ *
+ * Note: Instead of using AG_InitGraphics(), applications may also use the
+ * low-level AG_DriverOpen(), AG_InitGUI() and AG_DestroyGUI() interface
+ * (as is needed when creating multiple driver instances).
  */
 int
 AG_InitGraphics(const char *spec)
@@ -338,6 +340,10 @@ AG_InitGraphics(const char *spec)
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
 
+	if (agDriverMw != NULL || agDriverSw != NULL) {
+		AG_SetError(_("Root driver already initialized"));
+		goto fail;
+	}
 	if (spec != NULL && spec[0] != '\0') {
 		Strlcpy(specBuf, spec, sizeof(specBuf));
 		s = &specBuf[0];
@@ -437,165 +443,49 @@ AG_InitGraphics(const char *spec)
 
 	switch (dc->wm) {
 	case AG_WM_MULTIPLE:
-		/* Driver instances will be created along with windows. */
-		AG_DriverClose(drv);
-		agTerminating = 0;
-		drv = NULL;
+		agDriverMw = AGDRIVER_MW(drv);
 		break;
 	case AG_WM_SINGLE:
-		/* Open the video display. */
 		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0,0,
 		    AG_VIDEO_RESIZABLE) == -1) {
 			AG_SetError("%s: %s", OBJECT(drv)->name,
 			    AG_GetError());
 			goto fail_close;
 		}
-#ifdef AG_DEBUG
-		if (drv->videoFmt == NULL)
-			AG_FatalError("Driver did not set video format");
-#endif
+		agDriverSw = AGDRIVER_SW(drv);
 		break;
 	}
-
-	/* Generic Agar-GUI initialization. */
-	if (AG_InitGUI(0) == -1)
-		goto fail_close;
-
 	agDriverOps = dc;
-	agDriverSw = (dc->wm == AG_WM_SINGLE) ? AGDRIVER_SW(drv) : NULL;
-#ifdef AG_LEGACY
-	agView = drv;
-#endif
+
+	if (AG_InitGUI(0) == -1) {
+		goto fail_close;
+	}
 	return (0);
 fail_close:
 	if (drv != NULL) { AG_DriverClose(drv); }
+	agDriverOps = NULL;
+	agDriverSw = NULL;
+	agDriverMw = NULL;
 fail:
 	AG_DestroyGUIGlobals();
 	return (-1);
 }
 
-/*
- * Initialize Agar with a single-video display. Unlike AG_InitGraphics(),
- * AG_InitVideo() matches only graphics drivers without multiple-window
- * support (e.g., sdlfb, sdlgl).
- * 
- * OpenGL or SDL-only drivers may be requested with flags AG_VIDEO_OPENGL,
- * AG_VIDEO_SDL or AG_VIDEO_OPENGL_OR_SDL (this interface predates the
- * AG_InitGraphics() introduced in Agar-1.4).
- */
-int
-AG_InitVideo(int w, int h, int depth, Uint flags)
-{
-	AG_Driver *drv = NULL;
-	AG_DriverClass *dc = NULL;
-	int i;
-	
-	if (AG_InitGUIGlobals() == -1)
-		return (-1);
-
-	if (depth < 1 || w < 16 || h < 16) {
-		AG_SetError(_("The resolution is too small."));
-		goto fail;
-	}
-
-	/* Initialize the driver. */
-	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_OPENGL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
-				break;
-		}
-		if (i == agDriverListSize) {
-			if (flags & AG_VIDEO_OPENGL_OR_SDL) {
-				for (i = 0; i < agDriverListSize; i++) {
-					dc = agDriverList[i];
-					if (dc->wm == AG_WM_SINGLE &&
-					    (dc->flags & AG_DRIVER_SDL) &&
-					    (drv = AG_DriverOpen(dc)) != NULL)
-						break;
-				}
-				if (i == agDriverListSize) {
-					AG_SetError("AG_DRIVER_OPENGL_OR_SDL "
-					            "requested, but neither "
-						    "OpenGL nor SDL drivers "
-					            "are available");
-					goto fail;
-				}
-			} else {
-				AG_SetError("AG_DRIVER_OPENGL requested, but "
-				            "no OpenGL drivers available");
-				goto fail;
-			}
-		}
-	} else if (flags & AG_VIDEO_SDL) {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (dc->flags & AG_DRIVER_SDL) &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
-				break;
-		}
-		if (i == agDriverListSize) {
-			AG_SetError("AG_DRIVER_SDL was requested, but no "
-			            "SDL drivers are available");
-			goto fail;
-		}
-	} else {
-		for (i = 0; i < agDriverListSize; i++) {
-			dc = agDriverList[i];
-			if (dc->wm == AG_WM_SINGLE &&
-			    (drv = AG_DriverOpen(dc)) != NULL)
-				break;
-		}
-		if (i == agDriverListSize) {
-			AG_SetError("No graphics drivers are available");
-			goto fail;
-		}
-	}
-
-	/* Open a video display. */
-	if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, w,h, depth, flags) == -1) {
-		AG_DriverClose(drv);
-		goto fail;
-	}
-#ifdef AG_DEBUG
-	if (drv->videoFmt == NULL)
-		AG_FatalError("Driver did not set video format");
-#endif
-
-	/* Generic Agar-GUI initialization. */
-	if (AG_InitGUI(0) == -1) {
-		AG_DriverClose(drv);
-		goto fail;
-	}
-
-	agDriverOps = dc;
-	agDriverSw = AGDRIVER_SW(drv);
-#ifdef AG_LEGACY
-	agView = drv;
-#endif
-	return (0);
-fail:
-	AG_DestroyGUIGlobals();
-	return (-1);
-}
-
+/* Provided for symmetry. */
 void
-AG_DestroyVideo(void)
+AG_DestroyGraphics(void)
 {
-	AG_DestroyTextSubsystem();
-	AG_ClearGlobalKeys();
-
-	AG_DestroyGUIGlobals();
+	AG_DestroyGUI();
 }
 
 /*
- * Zoom in/out the GUI elements of the active window.
+ * Zoom in/out the GUI elements of the active window, changing
+ * the default font size accordingly. Depending on style settings,
+ * the default font size of a window may affect that of its logical
+ * child windows as well.
  *
- * It is customary to assign AG_GlobalKeys(3) shortcuts for
- * Ctrl+{Plus,Minus,0} to those routines.
+ * It is customary to assign AG_GlobalKeys(3) shortcuts to those
+ * routines. Most users will expect Ctrl+{Plus,Minus,0} to work.
  */
 void
 AG_ZoomIn(void)
@@ -636,3 +526,98 @@ AG_ZoomReset(void)
 	}
 	AG_UnlockVFS(&agDrivers);
 }
+
+#ifdef AG_LEGACY
+/*
+ * Initialize Agar with a single-window driver of specified resolution.
+ * As of Agar-1.4, this interface obsolete but kept for backward compat.
+ */
+int
+AG_InitVideo(int w, int h, int depth, Uint flags)
+{
+	AG_Driver *drv = NULL;
+	AG_DriverClass *dc = NULL;
+	int i;
+	
+	if (AG_InitGUIGlobals() == -1) {
+		return (-1);
+	}
+	if (agDriverMw != NULL || agDriverSw != NULL) {
+		AG_SetError("Root driver already initialized");
+		goto fail;
+	}
+	if (depth < 1 || w < 16 || h < 16) {
+		AG_SetError("Resolution too small");
+		goto fail;
+	}
+	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
+		for (i = 0; i < agDriverListSize; i++) {
+			dc = agDriverList[i];
+			if (dc->wm == AG_WM_SINGLE &&
+			    (dc->flags & AG_DRIVER_OPENGL) &&
+			    (drv = AG_DriverOpen(dc)) != NULL)
+				break;
+		}
+		if (i == agDriverListSize) {
+			if (flags & AG_VIDEO_OPENGL_OR_SDL) {
+				for (i = 0; i < agDriverListSize; i++) {
+					dc = agDriverList[i];
+					if (dc->wm == AG_WM_SINGLE &&
+					    (dc->flags & AG_DRIVER_SDL) &&
+					    (drv = AG_DriverOpen(dc)) != NULL)
+						break;
+				}
+				if (i == agDriverListSize) {
+					AG_SetError("SDL/GL not available");
+					goto fail;
+				}
+			} else {
+				AG_SetError("GL not available");
+				goto fail;
+			}
+		}
+	} else if (flags & AG_VIDEO_SDL) {
+		for (i = 0; i < agDriverListSize; i++) {
+			dc = agDriverList[i];
+			if (dc->wm == AG_WM_SINGLE &&
+			    (dc->flags & AG_DRIVER_SDL) &&
+			    (drv = AG_DriverOpen(dc)) != NULL)
+				break;
+		}
+		if (i == agDriverListSize) {
+			AG_SetError("SDL not available");
+			goto fail;
+		}
+	} else {
+		for (i = 0; i < agDriverListSize; i++) {
+			dc = agDriverList[i];
+			if (dc->wm == AG_WM_SINGLE &&
+			    (drv = AG_DriverOpen(dc)) != NULL)
+				break;
+		}
+		if (i == agDriverListSize) {
+			AG_SetError("No graphics drivers are available");
+			goto fail;
+		}
+	}
+	if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, w,h, depth, flags) == -1) {
+		AG_DriverClose(drv);
+		goto fail;
+	}
+	if (AG_InitGUI(0) == -1) {
+		AG_DriverClose(drv);
+		goto fail;
+	}
+	agDriverOps = dc;
+	agDriverSw = AGDRIVER_SW(drv);
+	return (0);
+fail:
+	AG_DestroyGUIGlobals();
+	return (-1);
+}
+void
+AG_DestroyVideo(void)
+{
+	AG_DestroyGUI();
+}
+#endif /* AG_LEGACY */

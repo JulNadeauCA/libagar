@@ -1,0 +1,152 @@
+.\" Copyright (c) 2010-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 18, 2010
+.Dt AG_INITVIDEOSDL 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5.0
+.Sh NAME
+.Nm AG_InitVideoSDL
+.Nd agar SDL 1.x interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+.\" IMAGE(http://libagar.org/widgets/AG_DriverSDLFB.png, "The sdlfb driver")
+If Agar has been compiled with SDL 1.x support (--with-sdl), the "sdlfb"
+and "sdlgl" driver modules become available, and the GUI system can be
+attached to an existing SDL display context.
+.Pp
+Note: If Agar is to create a new SDL display context, one should use a normal
+.Xr AG_InitGraphics 3
+call instead (using "<SDL>" as argument if a SDL-capable driver module is
+required).
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "int"
+.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Pp
+.Ft "int"
+.Fn AG_SetVideoSurfaceSDL "SDL_Surface *display"
+.Pp
+.Ft "int"
+.Fn AG_ResizeDisplay "int w" "int h"
+.Pp
+.Ft "void"
+.Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h))"
+.Pp
+.nr nS 0
+The
+.Fn AG_InitVideoSDL
+function initializes the GUI to attach to an existing SDL display surface.
+If the specified surface has the
+.Dv SDL_OPENGL
+flag, the GL-capable "sdlgl" driver module (see
+.Xr AG_DriverSDLGL 3 )
+is selected.
+Otherwise, the direct frame-buffer "sdlfb" driver (see
+.Xr AG_DriverSDLFB 3 )
+is used.
+The
+.Fn AG_InitVideoSDL
+function accepts the following
+.Fa flags
+options:
+.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
+.It AG_VIDEO_HWSURFACE
+Request a hardware frame buffer (pass
+.Dv SDL_HWSURFACE ) .
+.It AG_VIDEO_ASYNCBLIT
+Enable asynchronous blitting updates (pass
+.Dv SDL_ASYNCBLIT ) .
+.It AG_VIDEO_ANYFORMAT
+Disable emulation of surface depth (pass
+.Dv SDL_ANYFORMAT ) .
+.It AG_VIDEO_HWPALETTE
+Exclusive palette access (pass
+.Dv SDL_HWPALETTE ) .
+.It AG_VIDEO_DOUBLEBUF
+Enable double-buffering in frame buffer mode.
+.It AG_VIDEO_FULLSCREEN
+Start up application in full-screen mode
+.It AG_VIDEO_RESIZABLE
+If a window manager is available, request that the application be
+resizable.
+.It AG_VIDEO_NOFRAME
+If a window manager is available, disable window decorations.
+.It AG_VIDEO_BGPOPUPMENU
+Whenever the user right-clicks on an area not covered by an Agar window,
+display a standard pop-up menu with the list of active windows.
+.It AG_VIDEO_OPENGL
+Require OpenGL mode.
+If OpenGL is not available, initialization will fail.
+.It AG_VIDEO_OPENGL_OR_SDL
+Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
+.It AG_VIDEO_OVERLAY
+Run in OpenGL "overlay" mode.
+In this mode, Agar will never clear the background or swap GL buffers.
+Before rendering itself, Agar will also save the current OpenGL state and
+restore it completely once rendering is complete.
+Internally, this option causes the
+.Dv AG_DRIVER_SW_OVERLAY
+option to be set (see
+.Xr AG_DriverSw 3 ) .
+.El
+.Pp
+The
+.Fn AG_SetVideoSurfaceSDL
+function can be used to reattach to a different (e.g., a newly resized)
+SDL display surface without reinitializing the GUI.
+.Pp
+Note: The
+.Fn AG_InitVideoSDL
+and
+.Fn AG_SetVideoSurfaceSDL
+functions are only available if Agar has been compiled with SDL 1.x support
+(to find out, include "<agar/config/have_sdl.h>" and test
+for
+.Dv HAVE_SDL ) .
+.Pp
+The
+.Fn AG_ResizeDisplay
+function resizes the video display to the specified dimensions in pixels.
+.Fn AG_SetVideoResizeCallback
+registers a callback function which will be invoked whenever the display is
+resized.
+Both of these functions are only applicable to single-window drivers.
+.Sh SEE ALSO
+.Xr AG_InitGraphics 3 ,
+.Xr AG_DriverSDLFB 3 ,
+.Xr AG_DriverSDLGL 3 ,
+.Xr AG_Core 3 ,
+.Xr AG_Intro 3
+.Bd -literal
+http://www.libsdl.org/
+.Ed
+.Sh HISTORY
+SDL support first appeared in Agar 1.0.
+The "sdlfb" and "sdlgl" driver modules first appeared in Agar 1.4.0.
