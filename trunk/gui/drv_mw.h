@@ -63,6 +63,7 @@ typedef struct ag_driver_mw {
 
 __BEGIN_DECLS
 extern AG_ObjectClass  agDriverMwClass;
+extern AG_DriverMw    *agDriverMw;		/* Root driver instance */
 extern AG_List        *agModalWindows;		/* Modal window stack */
 extern int             agModalWindowsRefs;
 __END_DECLS

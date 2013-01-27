@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
 
 #include "window.h"
 
-AG_List *agModalWindows = NULL;		/* Modal window stack */
-int      agModalWindowsRefs = 0;
+AG_DriverMw *agDriverMw = NULL;		/* Root driver instance */
+AG_List     *agModalWindows = NULL;	/* Modal window stack */
+int          agModalWindowsRefs = 0;
 
 static void
 Init(void *obj)

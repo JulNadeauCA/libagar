@@ -37,199 +37,101 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_DriverGLX.png, "The Xorg/glx driver")
-After having called
+After having initialized the Agar-Core library with
 .Xr AG_InitCore 3 ,
-Agar-GUI applications also need to select an Agar driver and initialize the
-underlying graphics system.
-Depending on the Agar driver in use, a graphics context may or may not be
-created as part of the initialization process.
-.Sh INTERFACE
+Agar-GUI applications must initialize the GUI system and select a driver.
+.Sh AVAILABLE DRIVERS
+As of Agar-1.5.0, the driver modules included in the distribution are:
+.Pp
+.Bl -tag -width "sdlfb " -compact
+.It glx
+Native X11 interface (GL); see
+.Xr AG_DriverGLX 3 .
+.It wgl
+Native Microsoft Windows interface (GL); see
+.Xr AG_DriverWGL 3 .
+.It cocoa
+Native MacOS X Cocoa interface (GL); see
+.Xr AG_DriverCocoa 3 .
+.It sdlfb
+SDL 1.x interface (framebuffer); see
+.Xr AG_DriverSDLFB 3 .
+.It sdlgl
+SDL 1.x interface (GL); see
+.Xr AG_DriverSDLGL 3 .
+.El
+.Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
 .Fn AG_InitGraphics "const char *drivers"
 .Pp
 .Ft "void"
-.Fn AG_QuitGUI "void"
+.Fn AG_DestroyGraphics "void"
+.Pp
+.Ft "int"
+.Fn AG_InitGUI "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_DestroyGUI "void"
 .Pp
 .nr nS 0
-A typical Agar applications will use the
+The
 .Fn AG_InitGraphics
-function to initialize the graphics system.
+function initializes the Agar GUI system.
 If the
 .Fa drivers
-argument is NULL, Agar selects the "best" driver available on the current
-platform.
+argument is NULL (the usual case), Agar selects the "best" driver available
+on the current platform.
 If
 .Fa drivers
 is non-NULL, it should be a comma-separated list of drivers, in order of
-preference.
+preference (the special strings "<OpenGL>" and "<SDL>" may be used to select
+any driver with GL or SDL capability).
 The list of compiled-in drivers may be obtained by calling
 .Xr AG_ListDriverNames 3 .
-.Pp
-Driver-specific parameters may be specified as a colon-separated list between
-parentheses (those parameters are documented in the drivers' specific man
-page).
-For example, to explicitely select the "sdlfb" or "sdlgl" driver and set
-a resolution of 640x480x32, one could use:
+Driver-specific parameters (which are documented on the driver's respective
+manual page) may be specified as a colon-separated list between
+parentheses:
 .Bd -literal
 	sdlfb,sdlgl(width=640:height=480:depth=32)
-.Ed
-.Pp
-Use the wildcard expressions "<OpenGL>" or "<SDL>" to select the "best"
-drivers featuring OpenGL or SDL 1.x support, respectively:
-.Bd -literal
+	<OpenGL>(stereo=1)
 	<SDL>(width=640:height=480:depth=32)
 .Ed
 .Pp
-The preferred way to terminate an Agar application is by calling
-.Fn AG_QuitGUI .
-This results in a message being sent, leaving an opportunity for the
-termination process to be interrupted or aborted (e.g., by confirmation
-dialogs).
-.Pp
-To immediately terminate an application, use
-.Xr AG_Quit 3 .
-To shut down and release resources allocated by Agar without terminating
-an application,
-.Xr AG_Destroy 3
-can be used instead.
-.Sh AVAILABLE DRIVERS
-As of Agar-1.4.2, the built-in drivers were:
-.Pp
-.Bl -tag -width "sdlfb " -compact
-.It glx
-Native X Window System interface.
-Multiple windows and OpenGL are supported.
-See
-.Xr AG_DriverGLX 3 .
-.It wgl
-Native Microsoft Windows interface.
-Multiple windows and OpenGL are supported.
-See
-.Xr AG_DriverWGL 3 .
-.It cocoa
-Native MacOS X Cocoa interface.
-Multiple windows and OpenGL are supported.
-See
-.Xr AG_DriverCocoa 3 .
-.It sdlfb
-Framebuffer rendering via SDL 1.x library.
-Single-window display.
-See
-.Xr AG_DriverSDLFB 3 .
-.It sdlgl
-OpenGL rendering via SDL 1.x library.
-Single-window display.
-See
-.Xr AG_DriverSDLGL 3 .
-.El
-.Sh SINGLE-WINDOW DRIVER SPECIFIC INTERFACES
-.nr nS 1
-.Ft "int"
-.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
-.Pp
-.Ft "int"
-.Fn AG_SetVideoSurfaceSDL "SDL_Surface *display"
-.Pp
-.Ft "int"
-.Fn AG_ResizeDisplay "int w" "int h"
-.Pp
-.Ft "void"
-.Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h))"
-.Pp
-.nr nS 0
 The
-.Fn AG_InitVideoSDL
-function initializes the GUI to attach to an existing SDL 1.x display surface.
-Note that if the specified surface has the
-.Dv SDL_OPENGL
-flag set, the
-.Va sdlgl
-driver is selected, otherwise
-.Va sdlfb
-is used.
-The
-.Fn AG_InitVideoSDL
-function accepts the following
-.Fa flags
-options:
-.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
-.It AG_VIDEO_HWSURFACE
-Request a hardware frame buffer (pass
-.Dv SDL_HWSURFACE ) .
-.It AG_VIDEO_ASYNCBLIT
-Enable asynchronous blitting updates (pass
-.Dv SDL_ASYNCBLIT ) .
-.It AG_VIDEO_ANYFORMAT
-Disable emulation of surface depth (pass
-.Dv SDL_ANYFORMAT ) .
-.It AG_VIDEO_HWPALETTE
-Exclusive palette access (pass
-.Dv SDL_HWPALETTE ) .
-.It AG_VIDEO_DOUBLEBUF
-Enable double-buffering in frame buffer mode.
-.It AG_VIDEO_FULLSCREEN
-Start up application in full-screen mode
-.It AG_VIDEO_RESIZABLE
-If a window manager is available, request that the application be
-resizable.
-.It AG_VIDEO_NOFRAME
-If a window manager is available, disable window decorations.
-.It AG_VIDEO_BGPOPUPMENU
-Whenever the user right-clicks on an area not covered by an Agar window,
-display a standard pop-up menu with the list of active windows.
-.It AG_VIDEO_OPENGL
-Require OpenGL mode.
-If OpenGL is not available, initialization will fail.
-.It AG_VIDEO_OPENGL_OR_SDL
-Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
-.It AG_VIDEO_OVERLAY
-Run in OpenGL "overlay" mode.
-In this mode, Agar will never clear the background or swap GL buffers.
-Before rendering itself, Agar will also save the current OpenGL state and
-restore it completely once rendering is complete.
-Internally, this option causes the
-.Dv AG_DRIVER_SW_OVERLAY
-option to be set (see
-.Xr AG_DriverSw 3 ) .
-.El
+.Fn AG_DestroyGraphics
+routine shuts down and releases all resources allocated by the Agar-GUI
+library.
 .Pp
 The
-.Fn AG_SetVideoSurfaceSDL
-function can be used to reattach to a different (e.g., a newly resized)
-SDL display surface without reinitializing the GUI.
-.Pp
-Note: The
-.Fn AG_InitVideoSDL
-and
-.Fn AG_SetVideoSurfaceSDL
-functions are only available if Agar has been compiled with SDL 1.x support
-(to find out, include "<agar/config/have_sdl.h>" and test
-for
-.Dv HAVE_SDL ) .
-.Pp
-The
-.Fn AG_ResizeDisplay
-function resizes the video display to the specified dimensions in pixels.
-.Fn AG_SetVideoResizeCallback
-registers a callback function which will be invoked whenever the display is
-resized.
-Both of these functions are only applicable to single-window drivers.
+.Fn AG_InitGUI
+routine provides an alternative to
+.Fn AG_InitGraphics ,
+which does not create any driver instance on initialization.
+While
+.Fn AG_InitGraphics
+is limited to a single Agar driver instance, specialized applications may
+need to create multiple driver instances (e.g., an Agar application using
+X11 may establish multiple connections to multiple X servers).
+This may be done by calling
+.Fn AG_InitGUI ,
+and creating one or more driver instances with
+.Xr AG_DriverOpen 3 .
 .Sh SEE ALSO
+.Xr AG_EventLoop 3 ,
+.Xr AG_Driver 3 ,
+.Xr AG_InitVideoSDL 3 ,
 .Xr AG_Core 3 ,
-.Xr AG_Intro 3 ,
-.Xr AG_Widget 3 ,
-.Xr AG_Window 3
+.Xr AG_Intro 3
 .Bd -literal
-http://www.libsdl.org/
 http://www.opengl.org/
+http://www.libsdl.org/
+http://developer.apple.com/cocoa/
+http://msdn.microsoft.com/
 .Ed
 .Sh HISTORY
 The
 .Fn AG_InitVideo
-function first appeared in Agar 1.0.
-The driver system (see
-.Xr AG_Driver 3 )
-and the
-.Nm
-function first appeared in Agar 1.4.0.
+function first appeared in Agar 1.0, and was replaced by
+.Fn AG_InitGraphics
+in Agar 1.4.
