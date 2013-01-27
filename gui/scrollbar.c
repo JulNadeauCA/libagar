@@ -630,7 +630,7 @@ OnShow(AG_Event *event)
 		AG_RedrawOnChange(sb, 500, "visible");
 	}
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
-		AG_AddTimer(sb, &sb->autoHideTo, 250, AutoHideTimeout, NULL);
+		AG_AddTimer(sb, &sb->autoHideTo, 1000, AutoHideTimeout, NULL);
 }
 #undef SET_DEF
 
