@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2013 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -37,30 +37,61 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar core library,
-.Nm ,
-is a compact library which implements the base Agar object system.
-It also provides cross-platform interfaces to filesystems, databases, user
-accounts, timers and network facilities.
-The
+The Agar
 .Nm
-library also includes utility routines for C strings and error handling
-(see
-.Dq SEE ALSO
-section).
-.Pp
-Note that there are no GUI-related functions in
-.Nm .
-The Agar GUI system (the ag_gui library) uses 
-.Nm ,
-but
+library implements the base Agar object system.
+Even though the Agar-GUI library is built on top of it,
 .Nm
-can be used in a standalone manner by non-GUI applications.
+is an independent, general utility library (containing no GUI-related code),
+and may be used in any application.
+.Nm
+provides a number of interfaces:
 .Pp
+.Bl -bullet
+.It
+The standard
+.Xr AG_EventLoop 3 ,
+with the
+.Xr AG_EventSource 3
+interface for connecting generic "event sink" functions to various low-level
+event sources (such as file descriptor events, filesystem events,
+.Xr AG_Timer 3
+expirations, interrupts, etc).
+Internally, Agar uses the most efficient system interface available (such as
+.Xr kqueue 2
+or
+.Xr select 2 ) ,
+hiding all platform-specific details from the application.
+.It
 The
-.Fn AG_InitCore
-function should be invoked before any other Agar library call is made.
-.Pp
+.Xr AG_File 3
+interface provides filesystem access methods, where filesystems are available.
+.It
+The
+.Xr AG_Db 3
+interface provides access to databases of key/value pairs using various
+backends (such as "hash", "btree" and "mysql").
+.It
+The
+.Xr AG_User 3
+interface provides information about user accounts, where supported.
+.It
+The
+.Xr AG_Net 3
+system provides a portable network API.
+.It
+.Xr AG_String 3
+provides C string utility routines.
+This includes portable formatted output conversion, portable versions of
+.Xr strsep 3 ,
+.Xr strlcpy 3 ,
+etc.
+Character set conversion is also provided by
+.Xr AG_ImportUnicode 3
+and
+.Xr AG_ExportUnicode 3 .
+.El
+.Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
 .Fn AG_InitCore "const char *progname" "Uint flags"
@@ -102,19 +133,6 @@ depend on
 For example, on POSIX platforms,
 .Pa ~/.<progname>
 would be used.
-.It AG_SOFT_TIMERS
-Specify that the application will be using a custom event loop calling
-.Xr AG_ProcessTimeouts 3
-explicitely.
-If this flag is not specified, Agar will attempt to use the "best" available
-interface (such as
-.Xr kqueue 2
-or
-.Xr select 2 ) .
-.It AG_USE_KQUEUE
-Prefer use of the
-.Xr kqueue 2
-interface, if it is available.
 .El
 .Pp
 The
@@ -181,5 +199,3 @@ the given version number.
 The
 .Fn AG_InitCore
 function first appeared in Agar 1.0.
-Agar 1.4.0 saw the introduction of
-.Xr AG_InitGraphics 3 .

@@ -74,7 +74,6 @@ void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
 char *agProgName = NULL;			/* Optional application name */
 
 int agVerbose = 0;		/* Verbose console output */
-int agTerminating = 0;		/* Application is exiting */
 
 int
 AG_InitCore(const char *progname, Uint flags)

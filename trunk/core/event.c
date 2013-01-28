@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,18 +33,45 @@
 #include <stdarg.h>
 
 #include <config/have_kqueue.h>
-#include <config/have_cocoa.h>
+#include <config/have_timerfd.h>
+#include <config/have_select.h>
 #include <config/ag_objdebug.h>
 
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
+#if defined(HAVE_KQUEUE)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <unistd.h>
 # include <errno.h>
 #endif
+#if defined(HAVE_TIMERFD)
+# include <sys/timerfd.h>
+# include <errno.h>
+#endif
+#if defined(HAVE_SELECT)
+# include <sys/types.h>
+# include <sys/time.h>
+# include <sys/select.h>
+# include <unistd.h>
+#endif
 
-int agSoftTimers = 0;			/* Never use platform-specific timers */
-int agKqueue = -1;			/* File descriptor of kqueue(2) */
+AG_EventSource *agEventSource = NULL;	/* Event source (thread-local) */
+#ifdef AG_THREADS
+AG_ThreadKey    agEventSourceKey;
+#endif
+
+#ifdef HAVE_KQUEUE
+#define EVBUFSIZE 2
+typedef struct ag_event_source_kqueue {
+	struct ag_event_source _inherit;
+	int fd;					/* kqueue() fd */
+	struct kevent *changes;			/* Queued changes */
+	Uint          nChanges;
+	Uint        maxChanges;
+	struct kevent events[EVBUFSIZE];	/* Input event buffer */
+} AG_EventSourceKQUEUE;
+#endif /* HAVE_KQUEUE */
+
+/* #define DEBUG_TIMERS */
 
 /* Generate a unique event handler name. */
 static void
@@ -513,30 +540,971 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_ObjectUnlock(rcvr);
 }
 
+#ifdef HAVE_KQUEUE
+static __inline__ int
+GrowKqChangelist(AG_EventSourceKQUEUE *kq, Uint n)
+{
+	struct kevent *changesNew;
+
+	if (n <= kq->maxChanges) {
+		return (0);
+	}
+	if ((changesNew = TryRealloc(kq->changes, n*sizeof(struct kevent)))
+	    == NULL) {
+		return (-1);
+	}
+	kq->changes = changesNew;
+	kq->maxChanges = n;
+	return (0);
+}
+#endif /* HAVE_KQUEUE */
+
+/* Create a new event source. */
+static AG_EventSource *
+CreateEventSource(void)
+{
+#ifdef HAVE_KQUEUE
+	AG_EventSourceKQUEUE *kq = TryMalloc(sizeof(AG_EventSourceKQUEUE));
+	AG_EventSource *src = (AG_EventSource *)kq;
+#else
+	AG_EventSource *src = TryMalloc(sizeof(AG_EventSourceKQUEUE));
+#endif
+	if (src == NULL) {
+		return (NULL);
+	}
+	src->flags = 0;
+	src->addTimerFn = NULL;
+	src->delTimerFn = NULL;
+	TAILQ_INIT(&src->prologues);
+	TAILQ_INIT(&src->epilogues);
+	TAILQ_INIT(&src->spinners);
+	TAILQ_INIT(&src->sinks);
+	memset(src->caps, 0, sizeof(src->caps));
+
+#if defined(HAVE_KQUEUE)
+	if ((kq->fd = kqueue()) == -1) {
+		AG_SetError("kqueue: %s", AG_Strerror(errno));
+		return (NULL);
+	}
+	kq->changes = NULL;
+	kq->nChanges = 0;
+	kq->maxChanges = 0;
+	memset(kq->events, 0, EVBUFSIZE*sizeof(struct kevent));
+	src->sinkFn = AG_EventSinkKQUEUE;
+	src->addTimerFn = AG_AddTimerKQUEUE;
+	src->delTimerFn = AG_DelTimerKQUEUE;
+	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
+	src->caps[AG_SINK_READ] = 1;
+	src->caps[AG_SINK_WRITE] = 1;
+	src->caps[AG_SINK_FSEVENT] = 1;
+	src->caps[AG_SINK_PROCEVENT] = 1;
+#elif defined(HAVE_TIMERFD)
+	src->sinkFn = AG_EventSinkTIMERFD;
+	src->addTimerFn = AG_AddTimerTIMERFD;
+	src->delTimerFn = AG_DelTimerTIMERFD;
+	src->caps[AG_SINK_TIMER] = 1;		/* Provides timers internally */
+	src->caps[AG_SINK_READ] = 1;
+	src->caps[AG_SINK_WRITE] = 1;
+#elif defined(HAVE_SELECT) && !defined(AG_THREADS)
+	src->sinkFn = AG_EventSinkTIMEDSELECT;
+	src->caps[AG_SINK_READ] = 1;
+	src->caps[AG_SINK_WRITE] = 1;
+#elif defined(HAVE_SELECT) && defined(AG_THREADS)
+	src->sinkFn = AG_EventSinkSELECT;
+	src->caps[AG_SINK_READ] = 1;
+	src->caps[AG_SINK_WRITE] = 1;
+#else
+	src->sinkFn = AG_EventSinkSPINNER;
+#endif
+	return (src);
+}
+
+static void
+DestroyEventSource(void *pEventSource)
+{
+	AG_EventSource *src = pEventSource;
+	AG_EventSink *es, *esNext;
+#ifdef HAVE_KQUEUE
+	AG_EventSourceKQUEUE *kq = pEventSource;
+
+	if (kq->fd != -1) {
+		close(kq->fd);
+	}
+	Free(kq->changes);
+#endif
+	for (es = TAILQ_FIRST(&src->prologues); es != TAILQ_END(&src->prologues); es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
+		free(es);
+	}
+	for (es = TAILQ_FIRST(&src->epilogues); es != TAILQ_END(&src->epilogues); es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
+		free(es);
+	}
+	for (es = TAILQ_FIRST(&src->spinners); es != TAILQ_END(&src->spinners); es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
+		free(es);
+	}
+	for (es = TAILQ_FIRST(&src->sinks); es != TAILQ_END(&src->sinks); es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
+		free(es);
+	}
+	free(src);
+}
+
+/* Return the calling thread's effective event source. */
+AG_EventSource *
+AG_GetEventSource(void)
+{
+	AG_EventSource *src;
+
+#ifdef AG_THREADS
+	if ((src = AG_ThreadKeyGet(agEventSourceKey)) != NULL && src != NULL)
+		return (src);
+#else
+	if (agEventSource != NULL)
+		return (agEventSource);
+#endif
+	if ((src = CreateEventSource()) == NULL)
+		AG_FatalError(NULL);
+#ifdef AG_THREADS
+	AG_ThreadKeySet(agEventSourceKey, src);
+#else
+	agEventSource = src;
+#endif
+	return (src);
+}
+
 int
 AG_InitEventSubsystem(Uint flags)
 {
-	agKqueue = -1;
-	agSoftTimers = (flags & AG_SOFT_TIMERS);
-
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	if (flags & AG_USE_KQUEUE) {
-		if ((agKqueue = kqueue()) == -1) {
-			AG_SetError("kqueue: %s", AG_Strerror(errno));
-			return (-1);
-		}
-	}
+	/* Initialize the main thread's event source. */
+	agEventSource = NULL;
+#ifdef AG_THREADS
+	if (AG_ThreadKeyTryCreate(&agEventSourceKey, DestroyEventSource) == -1)
+		return (-1);
 #endif
+	if ((agEventSource = AG_GetEventSource()) == NULL) {
+		return (-1);
+	}
 	return (0);
 }
 
 void
 AG_DestroyEventSubsystem(void)
 {
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	if (agKqueue != -1) {
-		close(agKqueue);
-		agKqueue = -1;
+	if (agEventSource != NULL) {
+		DestroyEventSource(agEventSource);
+		agEventSource = NULL;
+	}
+}
+
+#ifdef HAVE_KQUEUE
+/*
+ * Routines for translating between AG_EventSink and kqueue types.
+ */
+static __inline__ enum ag_event_sink_type
+GetSinkType(int filter)
+{
+	switch (filter) {
+	case EVFILT_TIMER:	return (AG_SINK_TIMER);
+	case EVFILT_READ:	return (AG_SINK_READ);
+	case EVFILT_WRITE:	return (AG_SINK_WRITE);
+	case EVFILT_VNODE:	return (AG_SINK_FSEVENT);
+	case EVFILT_PROC:	return (AG_SINK_PROCEVENT);
+	default:		return (AG_SINK_NONE);
+	}
+}
+static Uint
+GetKqFilterFlags(Uint flags)
+{
+	Uint fflags = 0;
+	if (flags & AG_FSEVENT_DELETE) { fflags |= NOTE_DELETE; }
+	if (flags & AG_FSEVENT_WRITE)  { fflags |= NOTE_WRITE;  }
+	if (flags & AG_FSEVENT_EXTEND) { fflags |= NOTE_EXTEND; }
+	if (flags & AG_FSEVENT_ATTRIB) { fflags |= NOTE_ATTRIB; }
+	if (flags & AG_FSEVENT_LINK)   { fflags |= NOTE_LINK;   }
+	if (flags & AG_FSEVENT_RENAME) { fflags |= NOTE_RENAME; }
+	if (flags & AG_FSEVENT_REVOKE) { fflags |= NOTE_REVOKE; }
+	if (flags & AG_PROCEVENT_EXIT) { fflags |= NOTE_EXIT; }
+	if (flags & AG_PROCEVENT_FORK) { fflags |= NOTE_FORK; }
+	if (flags & AG_PROCEVENT_EXEC) { fflags |= NOTE_EXEC; }
+	return (fflags);
+}
+static Uint
+GetSinkFlags(Uint fflags)
+{
+	Uint flags = 0;
+	if (fflags & NOTE_DELETE) { fflags |= AG_FSEVENT_DELETE; }
+	if (fflags & NOTE_WRITE)  { fflags |= AG_FSEVENT_WRITE;  }
+	if (fflags & NOTE_EXTEND) { fflags |= AG_FSEVENT_EXTEND; }
+	if (fflags & NOTE_ATTRIB) { fflags |= AG_FSEVENT_ATTRIB; }
+	if (fflags & NOTE_LINK)   { fflags |= AG_FSEVENT_LINK;   }
+	if (fflags & NOTE_RENAME) { fflags |= AG_FSEVENT_RENAME; }
+	if (fflags & NOTE_REVOKE) { fflags |= AG_FSEVENT_REVOKE; }
+	if (fflags & NOTE_EXIT) { fflags |= AG_PROCEVENT_EXIT; }
+	if (fflags & NOTE_FORK) { fflags |= AG_PROCEVENT_FORK; }
+	if (fflags & NOTE_EXEC) { fflags |= AG_PROCEVENT_EXEC; }
+	return (flags);
+}
+#endif /* HAVE_KQUEUE */
+
+/*
+ * Add/remove an event processing prologue. The function will be invoked
+ * only once at the beginning of AG_EventLoop().
+ */
+AG_EventSink *
+AG_AddEventPrologue(AG_EventSinkFn fn, const char *fnArgs, ...)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es;
+
+	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
+		return (NULL);
+	}
+	es->type = AG_SINK_PROLOGUE;
+	es->fn = fn;
+	InitEvent(&es->fnArgs, NULL);
+	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	es->fnArgs.argc0 = es->fnArgs.argc;
+	TAILQ_INSERT_TAIL(&src->prologues, es, sinks);
+	return (es);
+}
+void
+AG_DelEventPrologue(AG_EventSink *es)
+{
+	AG_EventSource *src = AG_GetEventSource();
+
+#ifdef AG_DEBUG
+	if (es->type != AG_SINK_PROLOGUE)
+		AG_FatalError("AG_DelEventPrologue");
+#endif
+	TAILQ_REMOVE(&src->prologues, es, sinks);
+	free(es);
+}
+
+/*
+ * Add/remove an event sink epilogue. The function will be invoked
+ * after all incoming / queued events have been processed.
+ */
+AG_EventSink *
+AG_AddEventEpilogue(AG_EventSinkFn fn, const char *fnArgs, ...)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es;
+
+	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
+		return (NULL);
+	}
+	es->type = AG_SINK_EPILOGUE;
+	es->fn = fn;
+	InitEvent(&es->fnArgs, NULL);
+	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	es->fnArgs.argc0 = es->fnArgs.argc;
+	TAILQ_INSERT_TAIL(&src->epilogues, es, sinks);
+	return (es);
+}
+void
+AG_DelEventEpilogue(AG_EventSink *es)
+{
+	AG_EventSource *src = AG_GetEventSource();
+
+#ifdef AG_DEBUG
+	if (es->type != AG_SINK_EPILOGUE)
+		AG_FatalError("AG_DelEventEpilogue");
+#endif
+	TAILQ_REMOVE(&src->epilogues, es, sinks);
+	free(es);
+}
+
+/*
+ * Add/remove a spinning event sink. If at least one spinning sink exists,
+ * AG_EventLoop() will invoke it repeatedly and force non-blocking operation
+ * of subsequent polling methods.
+ */
+AG_EventSink *
+AG_AddEventSpinner(AG_EventSinkFn fn, const char *fnArgs, ...)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es;
+
+	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
+		return (NULL);
+	}
+	es->type = AG_SINK_SPINNER;
+	es->fn = fn;
+	InitEvent(&es->fnArgs, NULL);
+	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	es->fnArgs.argc0 = es->fnArgs.argc;
+	TAILQ_INSERT_TAIL(&src->spinners, es, sinks);
+	return (es);
+}
+void
+AG_DelEventSpinner(AG_EventSink *es)
+{
+	AG_EventSource *src = AG_GetEventSource();
+
+#ifdef AG_DEBUG
+	if (es->type != AG_SINK_SPINNER)
+		AG_FatalError("AG_DelEventSpinner");
+#endif
+	TAILQ_REMOVE(&src->spinners, es, sinks);
+	free(es);
+}
+
+/*
+ * Add/remove a low-level event sink. The function will be called
+ * whenever the specified event occurs.
+ */
+AG_EventSink *
+AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
+    AG_EventSinkFn fn, const char *fnArgs, ...)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es;
+#ifdef HAVE_KQUEUE
+	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)src;
+	struct kevent *kev;
+#endif
+	if (type >= AG_SINK_LAST || !src->caps[type]) {
+		AG_SetError("Unsupported event type: %u", (Uint)type);
+		return (NULL);
+	}
+	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
+		return (NULL);
+	}
+	es->type = type;
+	es->ident = ident;
+	es->flags = flags;
+
+#ifdef HAVE_KQUEUE
+	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+		free(es);
+		return (NULL);
+	}
+	kev = &kq->changes[kq->nChanges++];
+	switch (type) {
+	case AG_SINK_READ:
+		EV_SET(kev, ident, EVFILT_READ, EV_ADD|EV_ENABLE, 0, 0, es);
+		break;
+	case AG_SINK_WRITE:
+		EV_SET(kev, ident, EVFILT_WRITE, EV_ADD|EV_ENABLE, 0, 0, es);
+		break;
+	case AG_SINK_FSEVENT:
+		EV_SET(kev, ident, EVFILT_VNODE, EV_ADD|EV_ENABLE,
+		    GetKqFilterFlags(flags), 0, es);
+		break;
+	case AG_SINK_PROCEVENT:
+		EV_SET(kev, ident, EVFILT_PROC, EV_ADD|EV_ENABLE,
+		    GetKqFilterFlags(flags), 0, es);
+		break;
+	default:
+		kq->nChanges--;
+		break;
+	}
+#endif /* HAVE_KQUEUE */
+
+	es->fn = fn;
+	InitEvent(&es->fnArgs, NULL);
+	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
+	es->fnArgs.argc0 = es->fnArgs.argc;
+	TAILQ_INSERT_TAIL(&src->sinks, es, sinks);
+	return (es);
+}
+void
+AG_DelEventSink(AG_EventSink *es)
+{
+	AG_EventSource *src = AG_GetEventSource();
+#ifdef HAVE_KQUEUE
+	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)src;
+	struct kevent *kev;
+
+	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+		AG_FatalError(NULL);
+	}
+	kev = &kq->changes[kq->nChanges++];
+
+	switch (es->type) {
+	case AG_SINK_READ:
+		EV_SET(kev, es->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		break;
+	case AG_SINK_WRITE:
+		EV_SET(kev, es->ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+		break;
+	case AG_SINK_FSEVENT:
+		EV_SET(kev, es->ident, EVFILT_VNODE, EV_DELETE,
+		    GetKqFilterFlags(es->flags), 0, NULL);
+		break;
+	case AG_SINK_PROCEVENT:
+		EV_SET(kev, es->ident, EVFILT_PROC, EV_DELETE,
+		    GetKqFilterFlags(es->flags), 0, NULL);
+		break;
+	default:
+		kq->nChanges--;
+		break;
+	}
+#endif /* HAVE_KQUEUE */
+
+#ifdef AG_DEBUG
+	if (es->type == AG_SINK_PROLOGUE ||
+	    es->type == AG_SINK_EPILOGUE ||
+	    es->type == AG_SINK_SPINNER)
+		AG_FatalError("Bad type for AG_DelEventSink");
+#endif
+	TAILQ_REMOVE(&src->sinks, es, sinks);
+	free(es);
+}
+void
+AG_DelEventSinksByIdent(enum ag_event_sink_type type, int ident, Uint flags)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es, *esNext;
+
+	for (es = TAILQ_FIRST(&src->sinks); es != TAILQ_END(&src->sinks); es = esNext) {
+		esNext = TAILQ_NEXT(es, sinks);
+		if (es->type == type &&
+		    es->ident == ident &&
+		    es->flags == flags)
+			AG_DelEventSink(es);
+	}
+}
+
+#ifdef HAVE_KQUEUE
+/*
+ * Standard event sink using kqueue(2), commonly found on modern BSD
+ * derived operating systems. 
+ */
+int
+AG_EventSinkKQUEUE(void)
+{
+	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
+	int rv, i;
+	struct timespec timeo, *pTimeo;
+
+restart:
+	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
+		timeo.tv_sec = 0;
+		timeo.tv_nsec = 0L;
+		pTimeo = &timeo;
+	} else {
+		pTimeo = NULL;
+	}
+#ifdef DEBUG_TIMERS
+	for (i = 0; i < kq->nChanges; i++) {
+		struct kevent *chg = &kq->changes[i];
+		Verbose("changes[%d]: f=%d i=%u f=0x%x ff=0x%x u=%p\n",
+		    i, (int)chg->filter,
+		    (Uint)chg->ident, chg->flags, chg->fflags,
+		    chg->udata);
 	}
 #endif
+	rv = kevent(kq->fd, kq->changes, kq->nChanges, kq->events, EVBUFSIZE,
+	    pTimeo);
+	if (rv < 0) {
+		if (errno == EINTR) {
+			goto restart;
+		}
+		AG_SetError("kevent(): %s", AG_Strerror(errno));
+		return (-1);
+	}
+	kq->nChanges = 0;
+	AG_LockTiming();
+	/*
+	 * Process timer expirations first.
+	 */
+	for (i = 0; i < rv; i++) {
+		struct kevent *kev = &kq->events[i];
+		enum ag_event_sink_type esType = GetSinkType(kev->filter);
+		Uint32 rvt;
+		AG_Timer *to;
+
+		if (kev->flags & EV_ERROR) {
+			AG_SetError("kevent[%d]: %s", i, AG_Strerror(kev->data));
+			return (-1);
+		}
+		if (esType != AG_SINK_TIMER) {
+			continue;
+		}
+		to = (AG_Timer *)kev->udata;
+		rvt = to->fn(to, &to->fnEvent);
+		if (rvt > 0) {
+#ifdef DEBUG_TIMERS
+			Verbose("TIMER[%d] resetting t=+%u\n", to->id, (Uint)rvt);
+#endif
+			if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+				return (-1);
+			}
+			EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER,
+			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
+			to->ival = rvt;
+		} else {
+			AG_Object *ob = to->obj;
+#ifdef DEBUG_TIMERS
+			Verbose("TIMER[%d] expired\n", to->id);
+#endif
+			TAILQ_REMOVE(&ob->timers, to, timers);
+			if (TAILQ_EMPTY(&ob->timers)) {
+				TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
+			}
+			if (to->flags & AG_TIMER_AUTO_FREE) {
+				free(to);
+			} else {
+				to->ival = 0;
+				to->id = -1;
+				to->obj = NULL;
+			}
+			agTimerCount--;
+		}
+	}
+	/*
+	 * Now process other events. With this ordering, event handlers have
+	 * the last word as far as timer changes are concerned.
+	 */
+	for (i = 0; i < rv; i++) {
+		struct kevent *kev = &kq->events[i];
+		enum ag_event_sink_type esType = GetSinkType(kev->filter);
+		AG_EventSink *es;
+
+		switch (esType) {
+		case AG_SINK_READ:
+		case AG_SINK_WRITE:
+			es = (AG_EventSink *)kev->udata;
+			es->fn(es, &es->fnArgs);
+			break;
+		case AG_SINK_FSEVENT:
+		case AG_SINK_PROCEVENT:
+			es = (AG_EventSink *)kev->udata;
+			es->flagsMatched = GetSinkFlags(kev->fflags);
+			es->fn(es, &es->fnArgs);
+			break;
+		default:
+			break;
+		}
+	}
+	AG_UnlockTiming();
+	return (0);
+}
+
+/*
+ * Add/remove a kqueue(2) based timer.
+ */
+static int
+GenerateTimerID(AG_Timeout *to)
+{
+	AG_Object *obOther;
+	AG_Timeout *toOther;
+	int id;
+
+gen_id:
+#ifdef AG_DEBUG
+	if (agTimerCount+1 >= (AG_INT_MAX-1))
+		AG_FatalError("agTimerCount");
+#endif
+	id = (int)++agTimerCount;			/* XXX */
+	TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
+		TAILQ_FOREACH(toOther, &obOther->timers, timers) {
+			if (toOther == to) { continue; }
+			if (toOther->id == id) {
+				id++;
+				goto gen_id;
+			}
+		}
+	}
+	return (id);
+}
+int
+AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
+{
+	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
+	
+	/* Create a kernel-based timer with kqueue. */
+	if (newTimer) {
+		to->id = GenerateTimerID(to);
+	}
+	if (newTimer || to->ival != ival) {
+#ifdef DEBUG_TIMERS
+		Verbose("kevent: creating timer ID=%d ival=%d\n", to->id, (int)ival);
+#endif
+		if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+			return (-1);
+		}
+		EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER,
+		    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)ival, to);
+		to->ival = ival;
+	}
+	return (0);
+}
+void
+AG_DelTimerKQUEUE(AG_Timer *to)
+{
+	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
+
+	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+		AG_FatalError(NULL);
+	}
+	EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER, EV_DELETE,
+	    0, 0, NULL);
+	agTimerCount--;
+}
+
+#endif /* HAVE_KQUEUE */
+
+#ifdef HAVE_TIMERFD
+/*
+ * Standard event sink using select(2) and fd-based timers,
+ * usually available on Linux.
+ */
+int
+AG_EventSinkTIMERFD(void)
+{
+	fd_set rdFds, wrFds;
+	int i, nFds, rv;
+	AG_EventSink *es;
+	AG_Object *ob, *obNext;
+	AG_Timer *to, *toNext;
+	struct timeval timeo, *pTimeo;
+
+restart:
+	nFds = 0;
+	FD_ZERO(&rdFds);
+	FD_ZERO(&wrFds);
+	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+		switch (es->type) {
+		case AG_SINK_TIMER:
+		case AG_SINK_READ:
+			FD_SET(es->ident, &rdFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		case AG_SINK_WRITE:
+			FD_SET(es->ident, &wrFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		}
+	}
+	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
+		timeo.tv_sec = 0;
+		timeo.tv_usec = 0;
+		pTimeo = &timeo;
+	} else {
+		pTimeo = NULL;
+	}
+	rv = select(nFds+1, &rdFds, &wrFds, NULL, pTimeo);
+	if (rv == -1) {
+		if (errno == EINTR) {
+			goto restart;
+		}
+		AG_SetError("select: %s", AG_Strerror(errno));
+		return (-1);
+	}
+	
+	AG_LockTiming();
+
+	/* Process read/write events. */
+	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+		switch (es->type) {
+		case AG_SINK_READ:
+			if (FD_ISSET(es->ident, &rdFds)) {
+				es->fn(es, &es->fnArgs);
+			}
+			break;
+		case AG_SINK_WRITE:
+			if (FD_ISSET(es->ident, &wrFds)) {
+				es->fn(es, &es->fnArgs);
+			}
+			break;
+		}
+	}
+	
+	/* Process expired timers. */
+	for (ob = TAILQ_FIRST(&agTimerObjQ);
+	     ob != TAILQ_END(&agTimerObjQ);
+	     ob = obNext) {
+		obNext = TAILQ_NEXT(ob, tobjs);
+		AG_ObjectLock(ob);
+		for (to = TAILQ_FIRST(&ob->timers);
+		     to != TAILQ_END(&ob->timers);
+		     to = toNext) {
+			struct itimerspec its;
+			Uint32 rvt;
+
+			toNext = TAILQ_NEXT(to, timers);
+			if (!FD_ISSET(to->id, &rdFds)) {
+				continue;
+			}
+			rvt = to->fn(to, &to->fnEvent);
+			if (rvt > 0) {
+				its.it_value.tv_sec = rvt/1000;
+				its.it_value.tv_nsec = (rvt % 1000)*1000000L;
+				its.it_interval.tv_sec = 0;
+				its.it_interval.tv_nsec = 0L;
+				if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
+					Verbose("timerfd_settime: %s", AG_Strerror(errno));
+					FD_CLR(to->id, &rdFds);
+					AG_DelTimer(ob, to);
+				}
+			} else {
+				FD_CLR(to->id, &rdFds);
+				AG_DelTimer(ob, to);
+			}
+		}
+		AG_ObjectUnlock(ob);
+	}
+
+	AG_UnlockTiming();
+	return (0);
+}
+
+/*
+ * Add/remove a fd-based timer.
+ */
+int
+AG_AddTimerTIMERFD(AG_Timer *to, Uint32 ival, int newTimer)
+{
+	struct itimerspec its;
+
+	if (newTimer) {
+		/* Create a timerfd. Store the file descriptor as ID. */
+		if ((to->id = timerfd_create(CLOCK_MONOTONIC, 0)) == -1) {
+			AG_SetError("timerfd_create: %s", AG_Strerror(errno));
+			return (-1);
+		}
+	}
+	its.it_value.tv_sec = ival/1000;
+	its.it_value.tv_nsec = (ival % 1000)*1000000L;
+	its.it_interval.tv_sec = 0;
+	its.it_interval.tv_nsec = 0L;
+	if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
+		close(to->id);
+		AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
+		return (-1);
+	}
+	to->ival = ival;
+	return (0);
+}
+void
+AG_DelTimerTIMERFD(AG_Timer *to)
+{
+#ifdef AG_DEBUG
+	if (to->id == -1) { AG_FatalError("timerfd inconsistency"); }
+#endif
+	close(to->id);
+}
+#endif /* HAVE_TIMERFD */
+
+#if defined(HAVE_SELECT) && !defined(AG_THREADS)
+/*
+ * Standard event sink using select(2) with timers implemented using the
+ * select() timeout. Only available in single-threaded builds, since timers
+ * cannot be added, restarted or removed from different threads with this
+ * method.
+ */
+int
+AG_EventSinkTIMEDSELECT(void)
+{
+	fd_set rdFds, wrFds;
+	int i, nFds, rv;
+	AG_EventSink *es;
+	AG_Object *ob, *obNext;
+	AG_Timer *to, *toNext;
+	struct timeval timeo, *pTimeo;
+	Uint32 t, tSoonest;
+
+restart:
+	nFds = 0;
+	FD_ZERO(&rdFds);
+	FD_ZERO(&wrFds);
+	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+		switch (es->type) {
+		case AG_SINK_READ:
+			FD_SET(es->ident, &rdFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		case AG_SINK_WRITE:
+			FD_SET(es->ident, &wrFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		}
+	}
+
+	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
+		timeo.tv_sec = 0;
+		timeo.tv_usec = 0;
+	} else {
+		AG_LockTiming();
+		t = AG_GetTicks();
+		tSoonest = 0xfffffffe;
+		TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
+			TAILQ_FOREACH(to, &ob->timers, timers) {
+				if ((to->tSched - t) < tSoonest)
+					tSoonest = (to->tSched - t);
+			}
+		}
+		timeo.tv_sec = tSoonest/1000;
+		timeo.tv_usec = (tSoonest % 1000)*1000;
+		AG_UnlockTiming();
+	}
+	rv = select(nFds+1, &rdFds, &wrFds, NULL, &timeo);
+	if (rv == -1) {
+		if (errno == EINTR) {
+			goto restart;
+		}
+		AG_SetError("select: %s", AG_Strerror(errno));
+		return (-1);
+	}
+	
+	AG_LockTiming();
+	if (rv > 0) {
+		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+			switch (es->type) {
+			case AG_SINK_READ:
+				if (FD_ISSET(es->ident, &rdFds)) {
+					es->fn(es, &es->fnArgs);
+				}
+				break;
+			case AG_SINK_WRITE:
+				if (FD_ISSET(es->ident, &wrFds)) {
+					es->fn(es, &es->fnArgs);
+				}
+				break;
+			}
+		}
+	}
+	AG_ProcessTimeouts(t);
+	AG_UnlockTiming();
+	return (0);
+}
+#endif /* HAVE_SELECT and !AG_THREADS */
+
+#if defined(HAVE_SELECT) && defined(AG_THREADS)
+/*
+ * Standard event sink using non-blocking select(2) with timers implemented
+ * with a delay loop. This is inefficient, but on some platforms, it is the
+ * only thread-safe option.
+ */
+int
+AG_EventSinkSELECT(void)
+{
+	fd_set rdFds, wrFds;
+	int nFds, rv;
+	AG_EventSink *es;
+	struct timeval timeo;
+
+	nFds = 0;
+	FD_ZERO(&rdFds);
+	FD_ZERO(&wrFds);
+	
+	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+		switch (es->type) {
+		case AG_SINK_READ:
+			FD_SET(es->ident, &rdFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		case AG_SINK_WRITE:
+			FD_SET(es->ident, &wrFds);
+			if (es->ident > nFds) { nFds = es->ident; }
+			break;
+		}
+	}
+
+restart:
+	timeo.tv_sec = 0;
+	timeo.tv_usec = 0;
+	rv = select(nFds+1, &rdFds, &wrFds, NULL, &timeo);
+	if (rv == -1) {
+		if (errno == EINTR) {
+			goto restart;
+		}
+		AG_SetError("select: %s", AG_Strerror(errno));
+		return (-1);
+	}
+	
+	AG_LockTiming();
+	if (rv > 0) {
+		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+			switch (es->type) {
+			case AG_SINK_READ:
+				if (FD_ISSET(es->ident, &rdFds)) {
+					es->fn(es, &es->fnArgs);
+				}
+				break;
+			case AG_SINK_WRITE:
+				if (FD_ISSET(es->ident, &wrFds)) {
+					es->fn(es, &es->fnArgs);
+				}
+				break;
+			}
+		}
+	}
+	AG_ProcessTimeouts(AG_GetTicks());
+	AG_UnlockTiming();
+	
+	if (TAILQ_EMPTY(&agEventSource->spinners)) {
+		AG_Delay(1);
+	}
+	return (0);
+}
+#endif /* HAVE_SELECT and AG_THREADS */
+
+/*
+ * Fallback "spinning" event sink using a delay loop. This is inefficient,
+ * but is the only option on some platforms.
+ */
+int
+AG_EventSinkSPINNER(void)
+{
+	AG_ProcessTimeouts(AG_GetTicks());
+	AG_Delay(1);
+	return (0);
+}
+
+/*
+ * Standard event loop routine. We loop over the event source and invoke
+ * the related event sinks. AG_EventLoop() may be used outside of the
+ * main thread (in which case, a new event source will be created).
+ */
+int
+AG_EventLoop(void)
+{
+	AG_EventSource *src = AG_GetEventSource();
+	AG_EventSink *es;
+	
+	TAILQ_FOREACH(es, &src->prologues, sinks) {
+		es->fn(es, &es->fnArgs);
+	}
+	for (;;) {
+		TAILQ_FOREACH(es, &src->spinners, sinks) {
+			es->fn(es, &es->fnArgs);
+		}
+		if (src->sinkFn() == -1) {
+			return (1);
+		}
+		TAILQ_FOREACH(es, &src->epilogues, sinks) {
+			es->fn(es, &es->fnArgs);
+		}
+		if (src->breakReq)
+			break;
+	}
+	return (src->returnCode);
+}
+
+/* Request that we break out of AG_EventLoop(). */
+void
+AG_Terminate(int retCode)
+{
+	AG_EventSource *src = AG_GetEventSource();
+
+	src->breakReq = 1;
+	src->returnCode = retCode;
+}
+void
+AG_TerminateEv(AG_Event *ev)
+{
+	AG_EventSource *src = AG_GetEventSource();
+
+	if (ev->argc > 1 &&
+	    ev->argv[1].type == AG_VARIABLE_INT) {
+		src->returnCode = ev->argv[1].data.i;
+	} else {
+		src->returnCode = 0;
+	}
+	src->breakReq = 1;
 }
