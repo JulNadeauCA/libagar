@@ -116,6 +116,7 @@ if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Wall)
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
+	C_OPTION(-Wno-switch)
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
@@ -459,6 +460,24 @@ else
 	fi
 fi
 
+# Enable UIM input method support if detected.
+if [ "${with_uim}" != "no" ]; then
+	CHECK(uim, 1.8.0, ${prefix_uim})
+	if [ "${HAVE_UIM}" != "yes" ]; then
+		if [ "${with_uim}" = "yes" ]; then
+			echo "*"
+			echo "* --with-uim was requested, but the uim "
+			echo "* framework is not installed."
+			echo "*"
+			exit 1
+		else
+			HUNDEF(HAVE_UIM)
+		fi
+	fi
+else
+	HUNDEF(HAVE_UIM)
+fi
+	
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = "yes" ]; then
 	CHECK(iconv)
@@ -722,12 +741,12 @@ CONFIG_SCRIPT(agar-config,\
 	${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
 	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
+	${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
 	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
 	${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
 	${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
 	${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
-	${ICONV_LIBS}")
+	${UIM_LIBS} ${ICONV_LIBS}")
 CONFIG_SCRIPT(agar-core-config,\
 	"-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
