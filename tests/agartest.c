@@ -408,7 +408,7 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "?hd:t:T", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'd':
 			driverSpec = optArg;
@@ -416,13 +416,10 @@ main(int argc, char *argv[])
 		case 't':
 			fontSpec = optArg;
 			break;
-		case 'T':
-			initFlags |= AG_SOFT_TIMERS;
-			break;
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-T] [-d agar-driver] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-d agar-driver] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
@@ -466,7 +463,7 @@ main(int argc, char *argv[])
 	}
 /*	(void)AG_ConfigLoad(); */
 
-	if ((win = AG_WindowNew(0)) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 		return (1);
 	}
 	AG_WindowSetCaptionS(win, "agartest");
@@ -544,6 +541,7 @@ main(int argc, char *argv[])
 	}
 
 	AG_EventLoop();
+	AG_DestroyGraphics();
 	AG_Destroy();
 	return (0);
 }
