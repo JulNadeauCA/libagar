@@ -621,8 +621,6 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 		case AG_WIDGET_PERCENT:
 			col->w = col->w*WIDTH(tt)/100;
 			break;
-		default:
-			break;
 		}
 	} else {
 		col->w = 6;

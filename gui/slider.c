@@ -195,7 +195,7 @@ GetPosition(AG_Slider *sl, int *x)
 	case AG_VARIABLE_UINT64:	GET_POSITION(Uint64);		break;
 	case AG_VARIABLE_SINT64:	GET_POSITION(Sint64);		break;
 #endif
-	default: *x = 0;						break;
+	default:			*x = 0;				break;
 	} 
 	AG_UnlockVariable(bMax);
 	AG_UnlockVariable(bMin);
@@ -251,7 +251,6 @@ SeekToPosition(AG_Slider *sl, int x)
 	case AG_VARIABLE_UINT64:	SEEK_TO_POSITION(Uint64);	break;
 	case AG_VARIABLE_SINT64:	SEEK_TO_POSITION(Sint64);	break;
 #endif
-	default:							break;
 	} 
 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
@@ -306,7 +305,6 @@ Increment(AG_Slider *sl)
 	case AG_VARIABLE_UINT64:	INCREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	INCREMENT(Sint64);	break;
 #endif
-	default:						break;
 	} 
 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
@@ -345,7 +343,6 @@ Decrement(AG_Slider *sl)
 	case AG_VARIABLE_UINT64:	DECREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	DECREMENT(Sint64);	break;
 #endif
-	default:						break;
 	} 
 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
@@ -515,8 +512,6 @@ OnShow(AG_Event *event)
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, -0x7fffffffffffffffLL, 0x7fffffffffffffffLL, 1LL); break;
 #endif
-	default:
-		break;
 	}
 	AG_UnlockVariable(V);
 

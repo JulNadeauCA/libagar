@@ -655,8 +655,6 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					goto out;
 				}
 				break;
-			default:
-				break;
 			}
 
 			dev->data.key.ks =
@@ -1066,8 +1064,6 @@ WGL_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
 	case AG_WINDOW_BR:
 		a->y -= 100;
 		if (a->y < 0) { a->y = 0; }
-		break;
-	default:
 		break;
 	}
 }

@@ -348,8 +348,6 @@ OnShow(AG_Event *event)
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, -0x7fffffffffffffffLL, 0x7fffffffffffffffLL, 1LL); break;
 #endif
-	default:
-		break;
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_FLOAT:
@@ -441,8 +439,6 @@ UpdateFromText(AG_Event *event)
 # endif
 		break;
 #endif
-	default:
-		break;
 	}
 
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
@@ -595,8 +591,6 @@ AG_NumericalUpdate(AG_Numerical *num)
 	case AG_VARIABLE_UINT64: Snprintf(s, sizeof(s), "%llu", (unsigned long long)*(Uint64 *)value); break;
 	case AG_VARIABLE_SINT64: Snprintf(s, sizeof(s), "%lld", (long long)*(Sint64 *)value);          break;
 #endif
-	default:
-		break;
 	}
 	if (strcmp(num->inTxt, s) != 0) {
 		AG_TextboxSetString(num->input, s);
@@ -790,7 +784,6 @@ AG_NumericalIncrement(AG_Numerical *num)
 	case AG_VARIABLE_UINT64:	ADD_INT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	ADD_INT(Sint64);	break;
 #endif
-	default:						break;
 	}
 
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
@@ -864,7 +857,6 @@ AG_NumericalDecrement(AG_Numerical *num)
 	case AG_VARIABLE_UINT64:	SUB_INT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	SUB_INT(Sint64);	break;
 #endif
-	default:						break;
 	}
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
 

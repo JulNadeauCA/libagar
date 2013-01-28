@@ -1253,7 +1253,6 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		case AG_VARIABLE_LONG_DOUBLE: AG_WriteLongDouble(ds, *(long double *)p); break;
 #endif
 		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);			break;
-		default:								break;
 		}
 		AG_UnlockVariable(V);
 

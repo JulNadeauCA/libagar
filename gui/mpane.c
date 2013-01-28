@@ -143,8 +143,6 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 		AG_PaneAttachBox(dp, 1, mp->panes[3]);
 		mp->npanes = 4;
 		break;
-	default:
-		break;
 	}
 	if (mp->flags & AG_MPANE_FORCE_DIV) {
 		if (hp) {

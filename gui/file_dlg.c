@@ -817,8 +817,6 @@ SelectedType(AG_Event *event)
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
 			break;
-		default:
-			break;
 		}
 	}
 	AG_SetStyle(fd->optsCtr, "font-size", "90%");

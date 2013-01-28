@@ -200,8 +200,6 @@ AG_NetAddrDup(const AG_NetAddr *na)
 	case AG_NET_INET6:
 		memcpy(naDup->na_inet6.addr, na->na_inet6.addr, sizeof(naDup->na_inet6.addr));
 		break;
-	default:
-		break;
 	}
 	if (na->sNum != NULL) { naDup->sNum = TryStrdup(na->sNum); }
 	if (na->sName != NULL) { naDup->sName = TryStrdup(na->sName); }
@@ -232,8 +230,6 @@ AG_NetAddrCompare(const AG_NetAddr *a, const AG_NetAddr *b)
 	case AG_NET_INET6:
 		diff = (b->na_inet6.addr - a->na_inet6.addr);
 		if (diff != 0) { return (diff); }
-	default:
-		break;
 	}
 	return (0);
 }

@@ -459,8 +459,6 @@ UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
 			case AG_KEY_RALT:   ms |= AG_KEYMOD_RALT;   break;
 			case AG_KEY_LMETA:  ms |= AG_KEYMOD_LMETA;  break;
 			case AG_KEY_RMETA:  ms |= AG_KEYMOD_RMETA;  break;
-			default:
-				break;
 			}
 		}
 	}
@@ -1945,8 +1943,6 @@ GLX_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
 	case AG_WINDOW_BR:
 		a->y -= 100;
 		if (a->y < 0) { a->y = 0; }
-		break;
-	default:
 		break;
 	}
 }

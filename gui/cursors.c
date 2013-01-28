@@ -153,8 +153,6 @@ AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 				break;
 			case ' ':
 				break;
-			default:
-				break;
 			}
 		}
 	}

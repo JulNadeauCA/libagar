@@ -365,8 +365,6 @@ MouseButtonDown(AG_Event *event)
 			selNew = 0;
 		}
 		break;
-	default:
-		break;
 	}
 	if (selNew != -1 && selNew != *sel) {
 		*sel = selNew;

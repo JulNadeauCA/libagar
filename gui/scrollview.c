@@ -170,8 +170,6 @@ MouseButtonDown(AG_Event *event)
 			AG_WidgetFocus(sv);
 		}
 		break;
-	default:
-		break;
 	}
 }
 

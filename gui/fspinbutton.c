@@ -123,8 +123,6 @@ Bound(AG_Event *event)
 			fsu->max =  0x7fffffff-1;
 			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
-		default:
-			break;
 		}
 	}
 	AG_Redraw(fsu);
@@ -173,8 +171,6 @@ TextChanged(AG_Event *event)
 	case AG_VARIABLE_UINT32:
 	case AG_VARIABLE_SINT32:
 		AG_FSpinbuttonSetValue(fsu, (double)strtol(fsu->inTxt, NULL, 10));
-		break;
-	default:
 		break;
 	}
 
@@ -433,8 +429,6 @@ Draw(void *obj)
 	case AG_VARIABLE_SINT32:
 		AG_TextboxPrintf(fsu->input, "%d", *(Sint32 *)value);
 		break;
-	default:
-		break;
 	}
 	AG_UnlockVariable(valueb);
 }
@@ -476,7 +470,6 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	case AG_VARIABLE_SINT16:	ADD_CONVERTED(Sint16);	break;
 	case AG_VARIABLE_UINT32:	ADD_CONVERTED(Uint32);	break;
 	case AG_VARIABLE_SINT32:	ADD_CONVERTED(Sint32);	break;
-	default:						break;
 	}
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
 
@@ -518,7 +511,6 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	case AG_VARIABLE_SINT16:	CONV_VALUE(Sint16);	break;
 	case AG_VARIABLE_UINT32:	CONV_VALUE(Uint32);	break;
 	case AG_VARIABLE_SINT32:	CONV_VALUE(Sint32);	break;
-	default:						break;
 	}
 
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
@@ -546,8 +538,6 @@ AG_FSpinbuttonSetMin(AG_FSpinbutton *fsu, double nmin)
 	case AG_VARIABLE_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
-	default:
-		break;
 	}
 	AG_UnlockVariable(minb);
 }
@@ -566,8 +556,6 @@ AG_FSpinbuttonSetMax(AG_FSpinbutton *fsu, double nmax)
 		break;
 	case AG_VARIABLE_FLOAT:
 		*(float *)max = (float)nmax;
-		break;
-	default:
 		break;
 	}
 	AG_UnlockVariable(maxb);

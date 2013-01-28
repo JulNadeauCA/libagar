@@ -91,8 +91,6 @@ Bound(AG_Event *event)
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
 			break;
-		default:
-			break;
 		}
 	}
 	AG_Redraw(sbu);
@@ -353,8 +351,6 @@ Draw(void *obj)
 		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
 		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
 		break;
-	default:
-		break;
 	}
 	AG_UnlockVariable(xvalueb);
 	AG_UnlockVariable(yvalueb);
@@ -412,8 +408,6 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 		if (*(Sint32 *)value+inc >= *min &&
 		    *(Sint32 *)value+inc <= *max)
 			*(Sint32 *)value += inc;
-		break;
-	default:
 		break;
 	}
 
@@ -544,8 +538,6 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 				*(Sint32 *)value = i;
 			}
 		}
-		break;
-	default:
 		break;
 	}
 	va_end(ap);

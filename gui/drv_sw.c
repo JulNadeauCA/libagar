@@ -331,8 +331,6 @@ WM_Resize(int op, AG_Window *win, int xRel, int yRel)
 				h += yRel;
 		}
 		break;
-	default:
-		break;
 	}
 	AG_WindowSetGeometry(win, x, y, w, h);
 }
@@ -358,8 +356,6 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
 		break;
 	case AG_WINOP_HRESIZE:
 		WM_Resize(AG_WINOP_HRESIZE, win, xRel, yRel);
-		break;
-	default:
 		break;
 	}
 }
@@ -506,8 +502,6 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 	case AG_WINDOW_BR:
 		*x = dsw->w - w - xOffs;
 		*y = dsw->h - h - yOffs;
-		break;
-	default:
 		break;
 	}
 }

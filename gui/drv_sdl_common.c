@@ -672,6 +672,7 @@ AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	default:
 		dev->type = AG_DRIVER_UNKNOWN;
 		dev->win = NULL;
+		break;
 	}
 }
 
@@ -724,8 +725,6 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_UP:			/* Terminate WM op */
 		dsw->winop = AG_WINOP_NONE;
-		break;
-	default:
 		break;
 	}
 
@@ -815,8 +814,6 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 		case AG_DRIVER_KEY_DOWN:
 			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 			    dev->data.key.ks, dev->data.key.ucs);
-			break;
-		default:
 			break;
 		}
 		AG_ObjectUnlock(win);

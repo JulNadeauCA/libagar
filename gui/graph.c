@@ -434,8 +434,6 @@ MouseButtonDown(AG_Event *event)
 			}
 			break;
 		}
-	default:
-		break;
 	}
 }
 

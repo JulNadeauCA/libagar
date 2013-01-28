@@ -57,7 +57,7 @@ void            AG_SDL_TranslateEvent(void *, const SDL_Event *, AG_DriverEvent 
 int             AG_SDL_GetNextEvent(void *, AG_DriverEvent *);
 int             AG_SDL_ProcessEvent(void *, AG_DriverEvent *);
 int             AG_SDL_EventSink(AG_EventSink *, AG_Event *);
-void            AG_SDL_EventEpilogue(AG_EventSink *, AG_Event *);
+int             AG_SDL_EventEpilogue(AG_EventSink *, AG_Event *);
 void            AG_SDL_EndEventProcessing(void *);
 __END_DECLS
 
