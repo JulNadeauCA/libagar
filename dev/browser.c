@@ -151,13 +151,7 @@ SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
 	AG_ObjectDetach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
-
-	if (!save) {
-		agTerminating = 1;
-	}
 	AG_ObjectPageOut(oent->obj);
-
-	agTerminating = 0;
 	Free(oent);
 }
 
@@ -868,15 +862,13 @@ DEV_PageOutCallback(AG_Event *event)
 {
 	AG_Object *obj = AG_SENDER();
 	
-	if (!agTerminating)
-		if (AG_ObjectSave(obj) == -1)
-			AG_TextMsgFromError();
+	if (AG_ObjectSave(obj) == -1)
+		AG_TextMsgFromError();
 }
 
 static void
 ConfirmQuit(AG_Event *event)
 {
-	agTerminating = 0;
 	AG_QuitGUI();
 }
 
@@ -885,7 +877,6 @@ AbortQuit(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
-	agTerminating = 0;
 	AG_ObjectDetach(win);
 }
 
@@ -902,8 +893,6 @@ DEV_QuitCallback(AG_Event *event)
 	AG_Window *win;
 	AG_Box *bo;
 	
-	agTerminating = 1;
-
 	if (!AG_ObjectChangedAll(vfsRoot)) {
 		AG_QuitGUI();
 		return;
