@@ -57,10 +57,6 @@ extern AG_Driver agDriverCocoa;
 
 AG_Object         agDrivers;			/* Drivers VFS */
 AG_DriverClass   *agDriverOps = NULL;		/* Current driver class */
-AG_DriverSw      *agDriverSw = NULL;		/* Driver instance (or NULL) */
-#ifdef AG_LEGACY
-AG_Driver        *agView = NULL;  		/* Pre-1.4 */
-#endif
 
 void *agDriverList[] = {
 #if defined(HAVE_GLX)
@@ -101,7 +97,7 @@ AG_ListDriverNames(char *buf, size_t buf_len)
 	}
 }
 
-/* Create an instance of the given driver class, if it opens successfully. */
+/* Create a new driver instance. */
 AG_Driver *
 AG_DriverOpen(AG_DriverClass *dc)
 {

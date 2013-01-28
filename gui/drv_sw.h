@@ -78,7 +78,7 @@ typedef struct ag_driver_sw {
 
 __BEGIN_DECLS
 extern AG_ObjectClass    agDriverSwClass;
-extern AG_DriverSw      *agDriverSw;		/* Driver instance (or NULL) */
+extern AG_DriverSw      *agDriverSw;		/* Root driver instance */
 
 struct ag_size_alloc;
 
@@ -116,26 +116,6 @@ AG_SetRefreshRate(int fps)
 	return agDriverOps->setRefreshRate(agDriverSw, fps);
 }
 
-/* Invoke the generic event loop on the default driver (default mode). */
-static __inline__ void
-AG_EventLoop(void)
-{
-	if (agDriverSw != NULL) {
-		AGDRIVER(agDriverSw)->flags &= ~(AG_DRIVER_FIXED_FPS);
-	}
-	agDriverOps->genericEventLoop(agDriverSw);
-}
-
-/* Invoke the generic event loop on the default driver (fixed FPS mode). */
-static __inline__ void
-AG_EventLoop_FixedFPS(void)
-{
-	if (agDriverSw != NULL) {
-		AGDRIVER(agDriverSw)->flags |= AG_DRIVER_FIXED_FPS;
-	}
-	agDriverOps->genericEventLoop(agDriverSw);
-}
-
 /* Evaluate whether there are pending events to be processed. */
 static __inline__ int
 AG_PendingEvents(AG_Driver *drv)
@@ -166,17 +146,6 @@ AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
 		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
 	} else {
 		return agDriverOps->processEvent(agDriverSw, dev);
-	}
-}
-
-/* Enter the event loop for a specific driver instance. */
-static __inline__ void
-AG_EventLoop_Drv(AG_Driver *drv)
-{
-	if (drv != NULL) {
-		AGDRIVER_CLASS(drv)->genericEventLoop(drv);
-	} else {
-		agDriverOps->genericEventLoop(agDriverSw);
 	}
 }
 

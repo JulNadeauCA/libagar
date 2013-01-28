@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,9 +46,11 @@ typedef struct ag_sdlfb_driver {
 	Uint        nClipRects;
 } AG_DriverSDLFB;
 
-static int nDrivers = 0;		/* Opened driver instances */
-static int initedSDL = 0;		/* Used SDL_Init() */
-static int initedSDLVideo = 0;		/* Used SDL_INIT_VIDEO */
+static int nDrivers = 0;			/* Opened driver instances */
+static int initedSDL = 0;			/* Used SDL_Init() */
+static int initedSDLVideo = 0;			/* Used SDL_INIT_VIDEO */
+static AG_EventSink *sfbEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *sfbEventEpilogue = NULL;	/* Standard event epilogue */
 
 static void SDLFB_DrawRectFilled(void *, AG_Rect, AG_Color);
 static void SDLFB_UpdateRegion(void *, AG_Rect);
@@ -86,7 +88,6 @@ Destroy(void *obj)
 static int
 SDLFB_Open(void *obj, const char *spec)
 {
-	extern const AG_TimeOps agTimeOps_SDL;
 	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
 	
@@ -110,12 +111,12 @@ SDLFB_Open(void *obj, const char *spec)
 		}
 		initedSDLVideo = 1;
 	}
-
+#if 0
 	/* Use SDL's time interface. */
 	AG_SetTimeOps(&agTimeOps_SDL);
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
-
+#endif
 	/* Initialize the main mouse and keyboard devices. */
 	if ((drv->mouse = AG_MouseNew(sfb, "SDL mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(sfb, "SDL keyboard")) == NULL)
@@ -124,20 +125,23 @@ SDLFB_Open(void *obj, const char *spec)
 	/* Configure the window caption */
 	if (agProgName != NULL)
 		SDL_WM_SetCaption(agProgName, agProgName);
-
+	
+	/*
+	 * TODO where AG_SINK_READ capability and pipes are available,
+	 * could we create a separate thread running SDL_WaitEvent() and
+	 * sending notifications over a pipe, instead of using a spinner?
+	 */
+	if ((sfbEventSpinner = AG_AddEventSpinner(AG_SDL_EventSink, "%p", drv)) == NULL ||
+	    (sfbEventEpilogue = AG_AddEventEpilogue(AG_SDL_EventEpilogue, NULL)) == NULL) {
+		goto fail;
+	}
 	nDrivers = 1;
 	return (0);
 fail:
-	if (drv->kbd != NULL) {
-		AG_ObjectDetach(drv->kbd);
-		AG_ObjectDestroy(drv->kbd);
-		drv->kbd = NULL;
-	}
-	if (drv->mouse != NULL) {
-		AG_ObjectDetach(drv->mouse);
-		AG_ObjectDestroy(drv->mouse);
-		drv->mouse = NULL;
-	}
+	if (sfbEventSpinner != NULL) { AG_DelEventSpinner(sfbEventSpinner); sfbEventSpinner = NULL; }
+	if (sfbEventEpilogue != NULL) { AG_DelEventEpilogue(sfbEventEpilogue); sfbEventEpilogue = NULL; }
+	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
+	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
@@ -146,6 +150,9 @@ SDLFB_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
+	
+	AG_DelEventSpinner(sfbEventSpinner); sfbEventSpinner = NULL;
+	AG_DelEventEpilogue(sfbEventEpilogue); sfbEventEpilogue = NULL;
 
 #ifdef AG_DEBUG
 	if (nDrivers != 1) { AG_FatalError("Driver close without open"); }
@@ -156,12 +163,8 @@ SDLFB_Close(void *obj)
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		initedSDLVideo = 0;
 	}
-	AG_ObjectDetach(drv->mouse);
-	AG_ObjectDestroy(drv->mouse);
-	AG_ObjectDetach(drv->kbd);
-	AG_ObjectDestroy(drv->kbd);
-	drv->mouse = NULL;
-	drv->kbd = NULL;
+	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
+	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
 
 	nDrivers = 0;
 }
@@ -1441,7 +1444,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLFB",
 			sizeof(AG_DriverSDLFB),
-			{ 1,4 },
+			{ 1,5 },
 			Init,
 			NULL,	/* reinit */
 			Destroy,
@@ -1460,17 +1463,17 @@ AG_DriverSwClass agDriverSDLFB = {
 		AG_SDL_PendingEvents,
 		AG_SDL_GetNextEvent,
 		AG_SDL_ProcessEvent,
-		AG_SDL_GenericEventLoop,
-		AG_SDL_EndEventProcessing,
-		AG_SDL_Terminate,
+		NULL,				/* genericEventLoop */
+		NULL,				/* endEventProcessing */
+		NULL,				/* terminate */
 		SDLFB_BeginRendering,
 		SDLFB_RenderWindow,
 		SDLFB_EndRendering,
 		SDLFB_FillRect,
 		SDLFB_UpdateRegion,
-		NULL,			/* uploadTexture */
-		NULL,			/* updateTexture */
-		NULL,			/* deleteTexture */
+		NULL,				/* uploadTexture */
+		NULL,				/* updateTexture */
+		NULL,				/* deleteTexture */
 		AG_SDL_SetRefreshRate,
 		SDLFB_PushClipRect,
 		SDLFB_PopClipRect,
@@ -1487,8 +1490,8 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_BlitSurfaceGL,
 		SDLFB_BlitSurfaceFromGL,
 		SDLFB_BlitSurfaceFlippedGL,
-		NULL,			/* backupSurfaces */
-		NULL,			/* restoreSurfaces */
+		NULL,				/* backupSurfaces */
+		NULL,				/* restoreSurfaces */
 		SDLFB_RenderToSurface,
 		SDLFB_PutPixel,
 		SDLFB_PutPixel32,
@@ -1511,7 +1514,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_DrawRectDithered,
 		SDLFB_UpdateGlyph,
 		SDLFB_DrawGlyph,
-		NULL			/* deleteList */
+		NULL				/* deleteList */
 	},
 	0,
 	SDLFB_OpenVideo,

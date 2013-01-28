@@ -196,12 +196,6 @@ and
 .Ft void
 .Fn AG_WindowUpdate "AG_Window *win"
 .Pp
-.Ft void
-.Fn AG_WindowDraw "AG_Window *win"
-.Pp
-.Ft int
-.Fn AG_WindowIntersect "AG_DriverSw *drv" "int x" "int y"
-.Pp
 .nr nS 0
 The
 .Fn AG_WindowNew
@@ -485,28 +479,54 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
-When this function is used in the context of a widget implementation,
+Note: In widget implementation code, one should use
 .Xr AG_WidgetUpdate 3
-is preferred.
+instead of this function.
 .Pp
+.Sh DRIVER / EVENT LOOP INTERFACE
+The following functions should be called only from application-specific
+event loops, or low-level driver code.
+The standard
+.Xr AG_EventLoop 3
+invokes them internally.
+.Pp
+.nr nS 1
+.Ft void
+.Fn AG_WindowDraw "AG_Window *win"
+.Pp
+.Ft void
+.Fn AG_WindowDrawQueued "void"
+.Pp
+.Ft void
+.Fn AG_WindowProcessQueued "void"
+.Pp
+.nr nS 0
+The
 .Fn AG_WindowDraw
-renders the window to the display.
+function renders the specified window (by calling the
+.Fn renderWindow
+operation of the associated
+.Xr AG_Driver 3 ) .
 Calls to
 .Fn AG_WindowDraw
-must be made in GUI rendering context (i.e., enclosed between calls to
+must be made in GUI rendering context, between
 .Xr AG_BeginRendering 3
 and
-.Xr AG_EndRendering 3 ) .
-Typically, this happens in an event loop routine (such as the stock
-.Xr AG_EventLoop 3 ) .
+.Xr AG_EndRendering 3 .
+.Pp
+.Fn AG_WindowDrawQueued
+redraws any window marked as
+.Va dirty
+since the last redraw.
 .Pp
 The
-.Fn AG_WindowIntersect
-function tests whether the specified display coordinates intersect one
-or more Agar windows.
-The function returns the number of overlapping windows at the given
-coordinates.
-This function is only useful with single-window drivers.
+.Fn AG_WindowProcessQueued
+routine processes any queued
+.Xr AG_ObjectDetach 3 ,
+.Xr AG_WindowShow 3
+or
+.Xr AG_WindowHide 3
+operation.
 .Sh VISIBILITY
 .nr nS 1
 .Ft void
@@ -517,6 +537,9 @@ This function is only useful with single-window drivers.
 .Pp
 .Ft int
 .Fn AG_WindowIsVisible "AG_Window *win"
+.Pp
+.Ft int
+.Fn AG_WindowIntersect "AG_DriverSw *drv" "int x" "int y"
 .Pp
 .nr nS 0
 Newly created windows are invisible by default.
@@ -536,6 +559,14 @@ should be used.
 .Fn AG_WindowIsVisible
 returns the current visibility status of a window.
 A value of 0 means the window is invisible, 1 means it is visible.
+.Pp
+The
+.Fn AG_WindowIntersect
+function tests whether the specified display coordinates intersect one
+or more Agar windows.
+The function returns the number of overlapping windows at the given
+coordinates.
+This function is only useful with single-window drivers.
 .Sh FOCUS STATE
 The focus state controls the default filtering of events as well as the
 behavior and cosmetic appearance of some widgets.
@@ -733,6 +764,12 @@ If a click or touch event is detected outside of the window area, a
 event will be raised.
 .It AG_WINDOW_NOBACKGROUND
 Don't fill the window background prior to rendering its contents.
+.It AG_WINDOW_MAIN
+Break from 
+.Xr AG_EventLoop 3
+if this window gets destroyed.
+Multiple windows may set this flag, in which case the break will occur
+whenever the last window is closed.
 .It AG_WINDOW_NOUPDATERECT
 Disable automatic updating of the video region corresponding to the
 window area (applicable to framebuffer-based graphics drivers only)

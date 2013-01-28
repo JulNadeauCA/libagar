@@ -448,8 +448,7 @@ MouseButtonDown(AG_Event *event)
 		AG_Pixmap *px;
 		
 		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN|
-		                          AG_WINDOW_NOBACKGROUND|
-					  AG_WINDOW_NOUPDATERECT);
+		                          AG_WINDOW_NOBACKGROUND);
 		px = AG_PixmapFromSurfaceCopy(icon->wDND, 0,
 		    WSURFACE(icon,icon->surface));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,19 +46,20 @@ enum ag_sdlgl_out {
 
 typedef struct ag_sdlgl_driver {
 	struct ag_driver_sw _inherit;
-	SDL_Surface     *s;		/* View surface */
-	AG_GL_Context    gl;		/* Common OpenGL context data */
-
+	SDL_Surface  *s;		/* View surface */
+	AG_GL_Context gl;		/* Common OpenGL context data */
 	enum ag_sdlgl_out outMode;	/* Output capture mode */
-	char		*outPath;	/* Output capture path */
-	Uint		 outFrame;	/* Capture frame# counter */
-	Uint		 outLast;	/* Terminate after this many frames */
-	Uint8		*outBuf;	/* Output capture buffer */
+	char		 *outPath;	/* Output capture path */
+	Uint		  outFrame;	/* Capture frame# counter */
+	Uint		  outLast;	/* Terminate after this many frames */
+	Uint8		 *outBuf;	/* Output capture buffer */
 } AG_DriverSDLGL;
 
-static int nDrivers = 0;		/* Opened driver instances */
-static int initedSDL = 0;		/* Used SDL_Init() */
-static int initedSDLVideo = 0;		/* Used SDL_INIT_VIDEO */
+static int nDrivers = 0;			/* Opened driver instances */
+static int initedSDL = 0;			/* Used SDL_Init() */
+static int initedSDLVideo = 0;			/* Used SDL_INIT_VIDEO */
+static AG_EventSink *sglEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *sglEventEpilogue = NULL;	/* Standard event epilogue */
 
 #include <config/have_clock_gettime.h>
 #include <config/have_pthreads.h>
@@ -85,7 +86,6 @@ Init(void *obj)
 static int
 SDLGL_Open(void *obj, const char *spec)
 {
-	extern const AG_TimeOps agTimeOps_SDL;
 	AG_Driver *drv = obj;
 	AG_DriverSDLGL *sgl = obj;
 	
@@ -109,12 +109,12 @@ SDLGL_Open(void *obj, const char *spec)
 		}
 		initedSDLVideo = 1;
 	}
-
+#if 0
 	/* Use SDL's time interface. */
 	AG_SetTimeOps(&agTimeOps_SDL);
 	AG_DestroyEventSubsystem();
 	AG_InitEventSubsystem(AG_SOFT_TIMERS);
-
+#endif
 	/* Initialize this driver instance. */
 	if ((drv->mouse = AG_MouseNew(sgl, "SDL mouse")) == NULL ||
 	    (drv->kbd = AG_KeyboardNew(sgl, "SDL keyboard")) == NULL) {
@@ -130,19 +130,23 @@ SDLGL_Open(void *obj, const char *spec)
 	if (agProgName != NULL)
 		SDL_WM_SetCaption(agProgName, agProgName);
 
+	/*
+	 * TODO where AG_SINK_READ capability and pipes are available,
+	 * could we create a separate thread running SDL_WaitEvent() and
+	 * sending notifications over a pipe, instead of using a spinner?
+	 */
+	if ((sglEventSpinner = AG_AddEventSpinner(AG_SDL_EventSink, "%p", drv)) == NULL ||
+	    (sglEventEpilogue = AG_AddEventEpilogue(AG_SDL_EventEpilogue, NULL)) == NULL)
+		goto fail;
+
+	/* Set up event filters for standard AG_EventLoop(). */
 	nDrivers = 1;
 	return (0);
 fail:
-	if (drv->kbd != NULL) {
-		AG_ObjectDetach(drv->kbd);
-		AG_ObjectDestroy(drv->kbd);
-		drv->kbd = NULL;
-	}
-	if (drv->mouse != NULL) {
-		AG_ObjectDetach(drv->mouse);
-		AG_ObjectDestroy(drv->mouse);
-		drv->mouse = NULL;
-	}
+	if (sglEventSpinner != NULL) { AG_DelEventSpinner(sglEventSpinner); sglEventSpinner = NULL; }
+	if (sglEventEpilogue != NULL) { AG_DelEventEpilogue(sglEventEpilogue); sglEventEpilogue = NULL; }
+	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
+	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
@@ -152,6 +156,9 @@ SDLGL_Close(void *obj)
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
+	
+	AG_DelEventSpinner(sglEventSpinner); sglEventSpinner = NULL;
+	AG_DelEventEpilogue(sglEventEpilogue); sglEventEpilogue = NULL;
 
 	if (drv->gl != NULL)
 		AG_GL_DestroyContext(sgl);
@@ -169,12 +176,8 @@ SDLGL_Close(void *obj)
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		initedSDLVideo = 0;
 	}
-	AG_ObjectDetach(drv->mouse);
-	AG_ObjectDestroy(drv->mouse);
-	AG_ObjectDetach(drv->kbd);
-	AG_ObjectDestroy(drv->kbd);
-	drv->mouse = NULL;
-	drv->kbd = NULL;
+	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
+	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
 
 	if (sgl->outMode != AG_SDLGL_OUT_NONE) {
 		Free(sgl->outBuf);
@@ -264,7 +267,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 
 	if (++sgl->outFrame == sgl->outLast) {
 		Verbose("Reached last frame; terminating\n");
-		AG_SDL_Terminate();
+		AG_Terminate(0);
 	}
 	AG_SurfaceFree(s);
 	return;
@@ -615,7 +618,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLGL",
 			sizeof(AG_DriverSDLGL),
-			{ 1,4 },
+			{ 1,5 },
 			Init,
 			NULL,	/* reinit */
 			NULL,	/* destroy */
@@ -634,14 +637,14 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_SDL_PendingEvents,
 		AG_SDL_GetNextEvent,
 		AG_SDL_ProcessEvent,
-		AG_SDL_GenericEventLoop,
-		AG_SDL_EndEventProcessing,
-		AG_SDL_Terminate,
+		NULL,				/* genericEventLoop */
+		NULL,				/* endEventProcessing */
+		NULL,				/* terminate */
 		SDLGL_BeginRendering,
 		SDLGL_RenderWindow,
 		SDLGL_EndRendering,
 		AG_GL_FillRect,
-		NULL,			/* updateRegion */
+		NULL,				/* updateRegion */
 		AG_GL_StdUploadTexture,
 		AG_GL_StdUpdateTexture,
 		AG_GL_StdDeleteTexture,

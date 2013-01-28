@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #include "window.h"
 #include "menu.h"
 #include "icons.h"
+
+AG_DriverSw *agDriverSw = NULL;		/* Root driver instance */
 
 static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
 

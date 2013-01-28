@@ -77,8 +77,9 @@ rendering context, and also uses the Xlib API to manage windows.
 The part of the
 .Nm
 API that deals with low-level event processing is of particular importance
-to applications using "custom" event loops (see
-.Xr AG_EventLoop 3 ) .
+to applications using custom event loops (see
+.Xr AG_CustomEventLoop 3
+for an example).
 It is possible, in a driver-independent fashion, for an application to catch
 and process low-level events (see below).
 .Sh DRIVER INTERFACE
@@ -344,26 +345,8 @@ processes the event described by
 .Pp
 The
 .Fn genericEventLoop
-method implements the
-.Xr AG_EventLoop 3 ,
-.Xr AG_EventLoop_FixedFPS 3
-and
-.Xr AG_EventLoop_Drv 3
-routines.
-While the event loop can be driver-independent, this operation allows
-for event loops optimized for the driver.
-If invoked via
-.Xr AG_EventLoop_FixedFPS 3 ,
-the
-.Va flags
-field of the
-.Nm
-structure will have
-.Dv AG_DRIVER_FIXED_FPS
-set.
-See
-.Xr AG_EventLoop 3
-for details.
+method is obsolete as of Agar-1.5 (see
+.Xr AG_EventLoop 3 ) .
 .Pp
 The
 .Fn endEventProcessing
@@ -372,7 +355,8 @@ For most drivers, there is nothing to do here.
 .Pp
 The
 .Fn terminate
-operation requests that the application be terminated normally.
+operation is obsolete as of Agar-1.5 (see
+.Xr AG_Terminate 3 ) . 
 .Pp
 The
 .Fn beginRendering
@@ -752,17 +736,6 @@ structure to an Agar
 .Fn AG_DriverEvent .
 This function is only available if Agar was compiled with SDL support.
 .Pp
-The
-.Fn AG_WindowProcessQueued
-routine detaches/shows/hides queued windows (this mechanism allows
-.Xr AG_ObjectDetach 3 ,
-.Xr AG_WindowShow 3
-or
-.Xr AG_WindowHide 3
-to be safely called from different threads).
-Agar drivers should invoke this routine from the
-.Fn processEvent
-operation, at the end of each event processing cycle.
 .Pp
 The
 .Fa drv
@@ -804,11 +777,6 @@ while (AG_PendingEvents(NULL) > 0) {
 	}
 }
 .Ed
-.Pp
-See
-.Pa demos/customeventloop
-in the Agar distribution for an example of an application using a custom
-event loop.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_InitGraphics 3 ,
