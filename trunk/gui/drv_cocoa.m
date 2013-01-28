@@ -174,6 +174,10 @@ AG_DriverMwClass agDriverCocoa;
 #define AGDRIVER_IS_COCOA(drv) \
 	(AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverCocoa)
 
+
+static int  COCOA_PendingEvents(void *);
+static int  COCOA_GetNextEvent(void *, AG_DriverEvent *);
+static int  COCOA_ProcessEvent(void *, AG_DriverEvent *);
 static void COCOA_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static void COCOA_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int  COCOA_RaiseWindow(AG_Window *);
@@ -404,9 +408,6 @@ COCOA_EventSink(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
 
-	if (!COCOA_PendingEvents(NULL)) {
-		return (0);
-	}
 	if (COCOA_GetNextEvent(NULL, &dev) == 1) {
 		return COCOA_ProcessEvent(NULL, &dev);
 	}
@@ -476,7 +477,7 @@ COCOA_Close(void *obj)
 	if (--nDrivers == 0) {
 		AG_DriverEvent *dev, *devNext;
 		
-		AG_DelEventSink(cocEventSink); cocEventSink = NULL;
+		AG_DelEventSink(cocEventSpinner); cocEventSpinner = NULL;
 		AG_DelEventEpilogue(cocEventEpilogue); cocEventEpilogue = NULL;
 
 		for (dev = TAILQ_FIRST(&cocEventQ);
@@ -508,7 +509,7 @@ COCOA_GetDisplaySize(Uint *w, Uint *h)
 	return (0);
 }
 
-static __inline__ int
+static int
 COCOA_PendingEvents(void *drvCaller)
 {
 	NSAutoreleasePool *pool;
