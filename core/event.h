@@ -40,6 +40,9 @@
 #define AG_FLOAT_NAMED(k)	AG_GetNamedFlt(event,(k))
 #define AG_DOUBLE_NAMED(k)	AG_GetNamedDbl(event,(k))
 
+struct ag_timer;
+struct ag_event_sink;
+
 /* Event structure */
 typedef struct ag_event {
 	char name[AG_EVENT_NAME_MAX];		/* String identifier */
@@ -52,6 +55,58 @@ typedef struct ag_event {
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 	AG_TAILQ_ENTRY(ag_event) events;	/* Entry in Object */
 } AG_Event;
+
+/* Low-level event sink */
+enum ag_event_sink_type {
+	AG_SINK_NONE,
+	AG_SINK_PROLOGUE,		/* Special event loop prologue */
+	AG_SINK_EPILOGUE,		/* Special event sink epilogue */
+	AG_SINK_SPINNER,		/* Special non-blocking sink */
+	AG_SINK_TERMINATOR,		/* Quit request */
+	AG_SINK_TIMER,			/* Timer expiration */
+	AG_SINK_READ,			/* Data available on fd */
+	AG_SINK_WRITE,			/* Write buffer available on fd */
+	AG_SINK_FSEVENT,		/* Filesystem event */
+	AG_SINK_PROCEVENT,		/* Process event */
+	AG_SINK_LAST
+};
+
+typedef int (*AG_EventSinkFn)(struct ag_event_sink *, AG_Event *);
+
+typedef struct ag_event_sink {
+	enum ag_event_sink_type type;		/* Event filter type */
+	int ident;				/* Identifier / fd */
+	Uint flags, flagsMatched;
+#define AG_FSEVENT_DELETE	0x0001		/* Referenced file deleted */
+#define AG_FSEVENT_WRITE	0x0002		/* Write occured */
+#define AG_FSEVENT_EXTEND	0x0004		/* File extended */
+#define AG_FSEVENT_ATTRIB	0x0008		/* File attributes changed */
+#define AG_FSEVENT_LINK		0x0010		/* Link count changed */
+#define AG_FSEVENT_RENAME	0x0020		/* Referenced file renamed */
+#define AG_FSEVENT_REVOKE	0x0040		/* Filesystem unmount / revoke() */
+#define AG_PROCEVENT_EXIT	0x1000		/* Process exited */
+#define AG_PROCEVENT_FORK	0x2000		/* Process forked */
+#define AG_PROCEVENT_EXEC	0x4000		/* Process exec'd */
+	AG_EventSinkFn fn;			/* Sink function */
+	AG_Event fnArgs;			/* Sink function arguments */
+	AG_TAILQ_ENTRY(ag_event_sink) sinks;    /* Epilogue "sinks" */
+} AG_EventSink;
+
+/* Low-level event source */
+typedef struct ag_event_source {
+	int  caps[AG_SINK_LAST];		/* Capabilities */
+	Uint flags;
+	int  breakReq;				/* Break from event loop */
+	int  returnCode;			/* AG_EventLoop() return code */
+	int  (*sinkFn)(void);
+	int  (*addTimerFn)(struct ag_timer *, Uint32, int);
+	void (*delTimerFn)(struct ag_timer *);
+	int  (*resetTimerFn)(struct ag_timer *, Uint32, int);
+	AG_TAILQ_HEAD_(ag_event_sink) prologues;   /* Event prologues */
+	AG_TAILQ_HEAD_(ag_event_sink) epilogues;   /* Event sink epilogues */
+	AG_TAILQ_HEAD_(ag_event_sink) spinners;	   /* Spinning sinks */
+	AG_TAILQ_HEAD_(ag_event_sink) sinks;	   /* Normal event sinks */
+} AG_EventSource;
 
 /* Queue of events */
 typedef struct ag_event_queue {
@@ -163,7 +218,7 @@ typedef void (*AG_EventFn)(AG_Event *);
 	c++;								\
 	if (*c == '(' && c[1] != '\0') {				\
 		char *cEnd;						\
-		Strlcpy(V->name, &c[1], sizeof(V->name));		\
+		AG_Strlcpy(V->name, &c[1], sizeof(V->name));		\
 		for (cEnd = V->name; *cEnd != '\0'; cEnd++) {		\
 			if (*cEnd == ')') {				\
 				*cEnd = '\0';				\
@@ -190,9 +245,6 @@ typedef void (*AG_EventFn)(AG_Event *);
 	}
 
 __BEGIN_DECLS
-extern int agSoftTimers;		/* Never use platform-specific timers */
-extern int agKqueue;			/* File descriptor of kqueue(2) */
-
 int       AG_InitEventSubsystem(Uint);
 void      AG_DestroyEventSubsystem(void);
 void      AG_EventInit(AG_Event *);
@@ -211,6 +263,31 @@ int       AG_SchedEvent(void *, void *, Uint32, const char *,
                         const char *, ...);
 void      AG_ForwardEvent(void *, void *, AG_Event *);
 
+int             AG_EventLoop(void);
+AG_EventSource *AG_GetEventSource(void);
+AG_EventSink   *AG_AddEventPrologue(AG_EventSinkFn, const char *, ...);
+AG_EventSink   *AG_AddEventEpilogue(AG_EventSinkFn, const char *, ...);
+AG_EventSink   *AG_AddEventSpinner(AG_EventSinkFn, const char *, ...);
+AG_EventSink   *AG_AddEventSink(enum ag_event_sink_type, int, Uint,
+                                AG_EventSinkFn, const char *, ...);
+void            AG_DelEventPrologue(AG_EventSink *);
+void            AG_DelEventEpilogue(AG_EventSink *);
+void            AG_DelEventSpinner(AG_EventSink *);
+void            AG_DelEventSink(AG_EventSink *);
+void            AG_DelEventSinksByIdent(enum ag_event_sink_type, int, Uint);
+void            AG_Terminate(int);
+void            AG_TerminateEv(AG_Event *);
+
+int             AG_AddTimerKQUEUE(struct ag_timer *, Uint32, int);
+void            AG_DelTimerKQUEUE(struct ag_timer *);
+int             AG_AddTimerTIMERFD(struct ag_timer *, Uint32, int);
+void            AG_DelTimerTIMERFD(struct ag_timer *);
+int             AG_EventSinkKQUEUE(void);
+int             AG_EventSinkTIMERFD(void);
+int             AG_EventSinkTIMEDSELECT(void);
+int             AG_EventSinkSELECT(void);
+int             AG_EventSinkSPINNER(void);
+
 /* Execute an event handler routine without processing any arguments. */
 static __inline__ void
 AG_ExecEventFn(void *obj, AG_Event *ev)
@@ -220,51 +297,15 @@ AG_ExecEventFn(void *obj, AG_Event *ev)
 }
 
 /* Push arguments onto an Event structure. */
-static __inline__ void
-AG_EventPushPointer(AG_Event *ev, const char *key, void *val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_POINTER, key, p, val);
-}
-static __inline__ void
-AG_EventPushString(AG_Event *ev, const char *key, char *val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, key, s, val);
-}
-static __inline__ void
-AG_EventPushInt(AG_Event *ev, const char *key, int val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_INT, key, i, val);
-}
-static __inline__ void
-AG_EventPushUint(AG_Event *ev, const char *key, Uint val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT, key, i, (int)val);
-}
-static __inline__ void
-AG_EventPushLong(AG_Event *ev, const char *key, long val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_SINT32, key, s32, (Sint32)val);
-}
-static __inline__ void
-AG_EventPushUlong(AG_Event *ev, const char *key, Ulong val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT32, key, u32, (Uint32)val);
-}
-static __inline__ void
-AG_EventPushFloat(AG_Event *ev, const char *key, float val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_FLOAT, key, flt, val);
-}
-static __inline__ void
-AG_EventPushDouble(AG_Event *ev, const char *key, double val)
-{
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_DOUBLE, key, dbl, val);
-}
-static __inline__ void
-AG_EventPopArgument(AG_Event *ev)
-{
-	ev->argc--;
-}
+static __inline__ void AG_EventPushPointer(AG_Event *ev, const char *key, void *val) { AG_EVENT_INS_VAL(ev, AG_VARIABLE_POINTER, key, p, val); }
+static __inline__ void AG_EventPushString(AG_Event *ev, const char *key, char *val)  { AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, key, s, val); }
+static __inline__ void AG_EventPushInt(AG_Event *ev, const char *key, int val)       { AG_EVENT_INS_VAL(ev, AG_VARIABLE_INT, key, i, val); }
+static __inline__ void AG_EventPushUint(AG_Event *ev, const char *key, Uint val)     { AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT, key, i, (int)val); }
+static __inline__ void AG_EventPushLong(AG_Event *ev, const char *key, long val)     { AG_EVENT_INS_VAL(ev, AG_VARIABLE_SINT32, key, s32, (Sint32)val); }
+static __inline__ void AG_EventPushUlong(AG_Event *ev, const char *key, Ulong val)   { AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT32, key, u32, (Uint32)val); }
+static __inline__ void AG_EventPushFloat(AG_Event *ev, const char *key, float val)   { AG_EVENT_INS_VAL(ev, AG_VARIABLE_FLOAT, key, flt, val); }
+static __inline__ void AG_EventPushDouble(AG_Event *ev, const char *key, double val) { AG_EVENT_INS_VAL(ev, AG_VARIABLE_DOUBLE, key, dbl, val); }
+static __inline__ void AG_EventPopArgument(AG_Event *ev) { ev->argc--; }
 
 /*
  * Accessor functions for AG_FOO_NAMED() macros.

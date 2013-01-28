@@ -33,7 +33,7 @@
 #include <config/have_cocoa.h>
 #include <config/have_timerfd.h>
 
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
+#if defined(HAVE_KQUEUE)
 # include <sys/types.h>
 # include <sys/event.h>
 # include <sys/time.h>
@@ -62,11 +62,19 @@ AG_DestroyTimers(void)
 	AG_MutexDestroy(&agTimerLock);
 }
 
-/* Schedule a timeout to occur in ival ticks */
+/*
+ * Attach a timer to an object (or &agTimerMgr if object argument is NULL),
+ * and schedule the execution of a timer callback routine fn, in ival ticks.
+ *
+ * The AG_Timer structure should have been previously initialized with
+ * AG_InitTimer(). If the timer is already attached/scheduled, this function
+ * may be used to change the interval or the callback function/arguments.
+ */
 int
 AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
     const char *fmt, ...)
 {
+	AG_EventSource *src = AG_GetEventSource();
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 	AG_Timer *toOther;
 	int newTimer = 0;
@@ -74,58 +82,50 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 	
 	AG_LockTimers(ob);
 
-	if (TAILQ_EMPTY(&ob->timers))
-		TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
-
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	/* Check if the timer is active. Order is not important. */
-	if (agKqueue != -1) {
-		TAILQ_FOREACH(toOther, &ob->timers, timers) {
-			if (toOther == to)
-				break;
-		}
-		if (toOther == NULL) {
+	if (src->caps[AG_SINK_TIMER]) {		/* Unordered list */
+		if (to->obj == NULL) {
+			if (TAILQ_EMPTY(&ob->timers)) {
+				TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
+			}
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
 			newTimer = 1;
+			to->obj = ob;
 			to->tSched = 0;
+		} else if (to->obj != ob) {
+			AG_FatalError("Timer is in a different object (%s != %s)",
+			    OBJECT(to->obj)->name, ob->name);
 		}
-	} else
-#elif defined(HAVE_TIMERFD)
-	/* Check if the timer is active. Order is not important. */
-	if (!agSoftTimers) {
-		TAILQ_FOREACH(toOther, &ob->timers, timers) {
-			if (toOther == to)
-				break;
-		}
-		if (toOther == NULL) {
-			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+	} else {				/* Ordered timing wheel */
+		if (to->obj == NULL) {
 			newTimer = 1;
-			to->tSched = 0;
+			to->obj = ob;
+		} else if (to->obj != ob) {
+			AG_FatalError("Timer is in a different object (%s != %s)",
+			    OBJECT(to->obj)->name, ob->name);
 		}
-	} else
-#endif
-	/* Check if the timer is active. Maintain timing wheel order. */
-	{
+		if (TAILQ_EMPTY(&ob->timers)) {
+			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
+		}
 		to->tSched = AG_GetTicks()+ival;
-		newTimer = 1;
-rescan:
+reinsert:
 		TAILQ_FOREACH(toOther, &ob->timers, timers) {
 			if (toOther == to) {
 				newTimer = 0;
 				TAILQ_REMOVE(&ob->timers, to, timers);
-				goto rescan;
+				goto reinsert;
 			}
 			if (to->tSched < toOther->tSched) {
 				TAILQ_INSERT_BEFORE(toOther, to, timers);
 				break;
 			}
 		}
-		if (toOther == TAILQ_END(&ob->timers))
+		if (toOther == TAILQ_END(&ob->timers)) {
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+		}
+		to->ival = ival;
+		to->id = 0;				/* Not needed */
 	}
 
-	to->obj = ob;
-	to->ival = ival;
 	to->fn = fn;
 	ev = &to->fnEvent;
 	AG_EventInit(ev);
@@ -133,72 +133,18 @@ rescan:
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	/* Create a kqueue timer with a generated unique ID. */
-	/* TODO queue the changelist, faster collision test */
-	if (agKqueue != -1) {
-		AG_Object *obOther;
-		struct kevent kev;
-	
-		if (newTimer) {
-# ifdef AG_DEBUG
-			if (agTimerCount+1 >= AG_INT_MAX)
-				AG_FatalError("agTimerCount");
-# endif
-			to->id = (int)++agTimerCount;
-gen_id:
-			TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
-				TAILQ_FOREACH(toOther, &obOther->timers, timers) {
-					if (toOther == to) { continue; }
-					if (toOther->id == to->id) {
-						to->id++;
-						goto gen_id;
-					}
-				}
-			}
-		}
-		EV_SET(&kev, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0,
-		    (int)ival, to);
-		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
-			AG_SetError("kevent: %s", AG_Strerror(errno));
-			goto fail;
-		}
-	} else
-#elif defined(HAVE_TIMERFD)
-	/* Create a timerfd. Store the file descriptor as ID. */
-	if (!agSoftTimers) {
-		struct itimerspec its;
-
-		if ((to->id = timerfd_create(CLOCK_MONOTONIC, 0)) == -1) {
-			AG_SetError("timerfd_create: %s", AG_Strerror(errno));
-			goto fail;
-		}
-		its.it_value.tv_sec = ival/1000;
-		its.it_value.tv_nsec = (ival % 1000)*1000000L;
-		its.it_interval.tv_sec = 0;
-		its.it_interval.tv_nsec = 0L;
-		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
-			close(to->id);
-			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
-			goto fail;
-		}
-	} else
-#endif
-	/* Create a soft timer. This method does not require IDs. */
-	{
-		to->id = 0;
+	if (src->addTimerFn != NULL &&
+	    src->addTimerFn(to, ival, newTimer) == -1) {
+		goto fail;
 	}
-
 	AG_UnlockTimers(ob);
 	return (0);
-#if (defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)) || defined(HAVE_TIMERFD)
 fail:
 	to->obj = NULL;
 	TAILQ_REMOVE(&ob->timers, to, timers);
 	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
 	AG_UnlockTimers(ob);
 	return (-1);
-#endif
 }
 
 /* Initialize a timer structure */
@@ -235,11 +181,11 @@ AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
 	if ((to = TryMalloc(sizeof(AG_Timer))) == NULL) {
 		return (NULL);
 	}
+	AG_InitTimer(to, "auto", AG_TIMER_AUTO_FREE);
 	AG_LockTimers(ob);
 	if (AG_AddTimer(ob, to, ival, fn, NULL) == -1) {
 		goto fail;
 	}
-	to->flags |= AG_TIMER_AUTO_FREE;
 	ev = &to->fnEvent;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
@@ -258,39 +204,18 @@ fail:
 int
 AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 {
+	AG_EventSource *src = AG_GetEventSource();
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Timer *toOther;
+	int rv = 0;
 	
 	AG_LockTimers(ob);
-
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	if (agKqueue != -1) {
-		struct kevent kchg;
-
-		/* TODO: queue changelist */
-		EV_SET(&kchg, to->id, EVFILT_TIMER, EV_ADD|EV_ENABLE, 0,
-		    (int)ival, to);
-		if (kevent(agKqueue, &kchg, 1, NULL, 0, NULL) == -1) {
-			AG_SetError("kevent: %s", AG_Strerror(errno));
-			goto fail;
-		}
-	} else
-#elif defined(HAVE_TIMERFD)
-	if (!agSoftTimers) {
-		struct itimerspec its;
-
-		its.it_value.tv_sec = ival/1000;
-		its.it_value.tv_nsec = (ival % 1000)*1000000L;
-		its.it_interval.tv_sec = 0;
-		its.it_interval.tv_nsec = 0L;
-		if (timerfd_settime(to->id, 0, &its, NULL) == -1) {
-			AG_SetError("timerfd_settime: %s", AG_Strerror(errno));
-			goto fail;
-		}
-	} else
-#endif
-	{
-		AG_Timer *toOther;
-
+	if (src->addTimerFn != NULL &&
+	    src->addTimerFn(to, ival, 0) == -1) {
+		rv = -1;
+		goto out;
+	}
+	if (!src->caps[AG_SINK_TIMER]) {	/* Ordered timing wheel */
 		to->tSched = AG_GetTicks()+ival;
 		TAILQ_REMOVE(&ob->timers, to, timers);
 		TAILQ_FOREACH(toOther, &ob->timers, timers) {
@@ -302,20 +227,17 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 		if (toOther == TAILQ_END(&ob->timers))
 			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
 	}
-	AG_UnlockTimers(ob);
 	to->ival = ival;
-	return (0);
-#if (defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)) || defined(HAVE_TIMERFD)
-fail:
+out:
 	AG_UnlockTimers(ob);
-	return (-1);
-#endif
+	return (rv);
 }
 
 /* Cancel the given timeout if it is scheduled for execution. */
 void
 AG_DelTimer(void *p, AG_Timer *to)
 {
+	AG_EventSource *src = AG_GetEventSource();
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 	AG_Timer *toOther;
 
@@ -328,34 +250,16 @@ AG_DelTimer(void *p, AG_Timer *to)
 	if (toOther == NULL) 		/* Timer is not active */
 		goto out;
 
-#if defined(HAVE_KQUEUE) && !defined(HAVE_COCOA)
-	/* Remove our kqueue event filter. TODO queue the changelist */
-	if (agKqueue != -1) {
-		struct kevent kev;
-	
-		EV_SET(&kev, to->id, EVFILT_TIMER, EV_DELETE, 0, 0, 0);
-		if (kevent(agKqueue, &kev, 1, NULL, 0, NULL) == -1) {
-			AG_FatalError("kevent: %s", AG_Strerror(errno));
-		}
-		to->id = -1;
-		agTimerCount--;
-	} else
-#elif defined(HAVE_TIMERFD)
-	if (!agSoftTimers) {
-# ifdef AG_DEBUG
-		if (to->id == -1) { AG_FatalError("timerfd inconsistency"); }
-# endif
-		close(to->id);
-		to->id = -1;
-	} else
-#endif
-	{
-		to->id = 0;
+	if (src->delTimerFn != NULL) {
+		src->delTimerFn(to);
 	}
-
+	to->id = -1;
 	to->obj = NULL;
+
 	TAILQ_REMOVE(&ob->timers, to, timers);
-	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
+	if (TAILQ_EMPTY(&ob->timers))
+		TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
+
 	if (to->flags & AG_TIMER_AUTO_FREE)
 		free(to);
 out:
@@ -457,6 +361,7 @@ void
 AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
     Uint flags)
 {
+	AG_InitTimer((AG_Timer *)to, "legacy", 0);
 	to->fnLegacy = fn;
 	to->argLegacy = arg;
 }
