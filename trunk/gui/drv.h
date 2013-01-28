@@ -118,7 +118,6 @@ typedef struct ag_driver {
 	struct ag_object _inherit;
 	Uint id;			/* Numerical instance ID */
 	Uint flags;
-#define AG_DRIVER_FIXED_FPS	0x01	/* Invoked AG_EventLoop_FixedFPS() */
 #define AG_DRIVER_WINDOW_BG	0x02	/* Managed window background */
 
 	AG_Surface *sRef;		/* "Reference" surface */
@@ -191,6 +190,7 @@ extern Uint            agDriverListSize;
 
 void       AG_ListDriverNames(char *, size_t)
                               BOUNDED_ATTRIBUTE(__string__, 1, 2);
+int        AG_DriverProbe(AG_DriverClass *, const char *);
 AG_Driver *AG_DriverOpen(AG_DriverClass *);
 void       AG_DriverClose(AG_Driver *);
 void       AG_ViewCapture(void);
@@ -242,10 +242,6 @@ AG_UpdateTexture(AG_Surface *su, int texid, AG_TexCoord *tc)
 	if (agDriverOps->updateTexture(NULL, (Uint)texid, su, tc) == -1)
 		AG_FatalError(NULL);
 }
-
-#ifdef AG_LEGACY
-extern AG_Driver *agView;  	/* Pre-1.4 */
-#endif /* AG_LEGACY */
 __END_DECLS
 
 #include <agar/gui/drv_mw.h>

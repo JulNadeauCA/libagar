@@ -45,11 +45,13 @@ static void OnFocusLoss(AG_Event *);
 
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 6;
+
+/* Protected by agDrivers VFS lock */
+AG_WindowQ agWindowDetachQ;			/* Windows to detach */
+AG_WindowQ agWindowShowQ;			/* Windows to show */
+AG_WindowQ agWindowHideQ;			/* Windows to hide */
 AG_Window *agWindowToFocus = NULL;		/* Window to focus */
 AG_Window *agWindowFocused = NULL;		/* Window holding focus */
-AG_WindowQ agWindowHideQ;			/* Windows to hide */
-AG_WindowQ agWindowShowQ;			/* Windows to show */
-AG_WindowQ agWindowDetachQ;			/* Windows to detach */
 
 /* Map enum ag_window_wm_type to EWMH window type */
 const char *agWindowWmTypeNames[] = {
@@ -1870,6 +1872,26 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	AG_WindowSetCaptionS(win, s);
 }
 
+/* Commit any pending focus change. The agDrivers VFS must be locked. */
+void
+AG_WindowProcessFocusChange(void)
+{
+	AG_Driver *drv;
+
+	switch (agDriverOps->wm) {
+	case AG_WM_SINGLE:
+		AG_WM_CommitWindowFocus(agWindowToFocus);
+		break;
+	case AG_WM_MULTIPLE:
+		if ((drv = AGWIDGET(agWindowToFocus)->drv) != NULL) {
+			AGDRIVER_MW_CLASS(drv)->raiseWindow(agWindowToFocus);
+			AGDRIVER_MW_CLASS(drv)->setInputFocus(agWindowToFocus);
+		}
+		break;
+	}
+	agWindowToFocus = NULL;
+}
+
 /* Make windows on the show queue visible. */
 void
 AG_WindowProcessShowQueue(void)
@@ -1912,6 +1934,7 @@ AG_WindowProcessDetachQueue(void)
 {
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
+	int closedMain = 0;
 
 	AG_LockVFS(&agDrivers);
 	for (win = TAILQ_FIRST(&agWindowDetachQ);
@@ -1941,22 +1964,34 @@ AG_WindowProcessDetachQueue(void)
 		if (AGDRIVER_MULTIPLE(drv)) {
 			/*
 			 * In multiple-window mode, free the driver instance
-			 * associated with the window. If this is the last
-			 * window, the driver will set agTerminating=1
-			 * (XXX TODO make this behavior configurable)
+			 * associated with the window.
 			 */
 			AG_UnlockVFS(&agDrivers);
 			AG_DriverClose(drv);
-			if (agTerminating) {		/* Exit immediately */
-				AG_ObjectDestroy(win);
-				TAILQ_INIT(&agWindowDetachQ);
-				return;
-			}
 			AG_LockVFS(&agDrivers);
+		}
+		if (win->flags & AG_WINDOW_MAIN) {
+			closedMain++;
 		}
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
+
+	if (closedMain > 0) {
+		printf("closed a main window\n");
+		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+			AG_FOREACH_WINDOW(win, drv) {
+				if (win->flags & AG_WINDOW_MAIN)
+					break;
+			}
+			if (win != NULL)
+				break;
+		}
+		if (drv == NULL) {            /* Last "main" window was closed */
+			printf("last main window was closed\n");
+			AG_Terminate(0);
+		}
+	}
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -2165,7 +2200,7 @@ AG_FindWindow(const char *name)
 void
 AG_ViewAttach(struct ag_window *pWin)
 {
-	AG_ObjectAttach(agView, pWin);
+	AG_ObjectAttach(agDriverSw, pWin);
 }
 void
 AG_ViewDetach(AG_Window *win)

@@ -40,17 +40,17 @@
 #include "cursors.h"
 #include "opengl.h"
 
-static int  nDrivers = 0;		/* Drivers open */
-static Uint rNom = 16;			/* Nominal refresh rate (ms) */
-static int  rCur = 0;			/* Effective refresh rate (ms) */
-static int  wndClassCount = 1;		/* Window class counter */
-static AG_DriverEventQ wglEventQ;	/* Event queue */
+static int  nDrivers = 0;			/* Drivers open */
+static int  wndClassCount = 1;			/* Window class counter */
+static AG_DriverEventQ wglEventQ;		/* Event queue */
 #ifdef AG_THREADS
-static AG_Mutex wglClassLock;		/* Lock on wndClassCount */
-static AG_Mutex wglEventLock;		/* Lock on wglEventQ */
+static AG_Mutex wglClassLock;			/* Lock on wndClassCount */
+static AG_Mutex wglEventLock;			/* Lock on wglEventQ */
 #endif
-static int  agExitWGL = 0;		/* Exit event loop */
-static HKL wglKbdLayout = NULL;		/* Keyboard layout */
+static int  agExitWGL = 0;			/* Exit event loop */
+static HKL wglKbdLayout = NULL;			/* Keyboard layout */
+static AG_EventSink *wglEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *wglEventEpilogue = NULL;	/* Standard event epilogue */
 
 /* Driver instance data */
 typedef struct ag_driver_wgl {
@@ -59,7 +59,6 @@ typedef struct ag_driver_wgl {
 	HDC         hdc;		/* Device context */
 	HGLRC       hglrc;		/* Rendering context */
 	WNDCLASSEX  wndclass;		/* Window class */
-
 	AG_GL_Context gl;		/* Common OpenGL context data */
 } AG_DriverWGL;
 
@@ -116,7 +115,7 @@ LookupWindowByID(HWND hwnd)
 	AG_Window *win;
 	AG_DriverWGL *wgl;
 
-	/* XXX TODO portable to optimize based on numerical XIDs? */
+	/* XXX can we set a user pointer to avoid this traversal? */
 	AGOBJECT_FOREACH_CHILD(wgl, &agDrivers, ag_driver_wgl) {
 		if (!AGDRIVER_IS_WGL(wgl) ||
 		    wgl->hwnd != hwnd) {
@@ -131,6 +130,30 @@ LookupWindowByID(HWND hwnd)
 		return (win);
 	}
 	return (NULL);
+}
+
+/*
+ * Standard AG_EventLoop() event sink.
+ */
+static int
+WGL_EventSink(AG_EventSink *es, AG_Event *event)
+{
+	AG_DriverEvent dev;
+
+	if (!WGL_PendingEvents(NULL)) {
+		return (0);
+	}
+	if (WGL_GetNextEvent(NULL, &dev) == 1) {
+		return WGL_ProcessEvent(NULL, &dev);
+	}
+	return (0);
+}
+static int
+WGL_EventEpilogue(AG_EventSink *es, AG_Event *event)
+{
+	AG_WindowDrawQueued();
+	AG_WindowProcessQueued();
+	return (0);
 }
 
 static int
@@ -149,6 +172,11 @@ WGL_Open(void *obj, const char *spec)
 	
 	if (nDrivers == 0) {
 		char kbdLayoutName[KL_NAMELENGTH];
+		
+		/* Set up event filters for standard AG_EventLoop(). */
+		if ((wglEventSpinner = AG_AddEventSpinner(WGL_EventSink, NULL)) == NULL ||
+		    (wglEventEpilogue = AG_AddEventEpilogue(WGL_EventEpilogue, NULL)) == NULL)
+			goto fail;
 
 		/* Initialize globals */
 		TAILQ_INIT(&wglEventQ);
@@ -167,16 +195,10 @@ WGL_Open(void *obj, const char *spec)
 	nDrivers++;
 	return (0);
 fail:
-	if (drv->kbd != NULL) {
-		AG_ObjectDetach(drv->kbd);
-		AG_ObjectDestroy(drv->kbd);
-		drv->kbd = NULL;
-	}
-	if (drv->mouse != NULL) {
-		AG_ObjectDetach(drv->mouse);
-		AG_ObjectDestroy(drv->mouse);
-		drv->mouse = NULL;
-	}
+	if (wglEventSpinner != NULL) { AG_DelEventSpinner(wglEventSpinner); wglEventSpinner = NULL; }
+	if (wglEventEpilogue != NULL) { AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL; }
+	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
+	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
@@ -185,11 +207,15 @@ WGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverEvent *dev, *devNext;
+	AG_DriverWGL *wgl = obj;
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
 #endif
 	if (--nDrivers == 0) {
+		AG_DelEventSink(wglEventSpinner); wglEventSpinner = NULL;
+		AG_DelEventEpilogue(wglEventEpilogue); wglEventEpilogue = NULL;
+
 		for (dev = TAILQ_FIRST(&wglEventQ);
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
@@ -200,18 +226,10 @@ WGL_Close(void *obj)
 
 		AG_MutexDestroy(&wglClassLock);
 		AG_MutexDestroy(&wglEventLock);
-		
-		/* XXX TODO make this behavior configurable */
-		agTerminating = 1;
 	}
 
-	AG_ObjectDetach(drv->mouse);
-	AG_ObjectDestroy(drv->mouse);
-	AG_ObjectDetach(drv->kbd);
-	AG_ObjectDestroy(drv->kbd);
-	
-	drv->mouse = NULL;
-	drv->kbd = NULL;
+	AG_ObjectDelete(drv->mouse);	drv->mouse = NULL;
+	AG_ObjectDelete(drv->kbd);	drv->kbd = NULL;
 }
 
 /* Return suitable window style from Agar window flags. */
@@ -475,8 +493,8 @@ WGL_GetDisplaySize(Uint *w, Uint *h)
 	return (0);
 }
 
-#ifdef AGAR_DEBUG
-#include "drv_wgl_prwincmd.inc"
+#ifdef DEBUG_WGL
+# include "drv_wgl_prwincmd.inc"
 #endif
 
 #undef IN_KEYPAD
@@ -544,11 +562,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	dev->win = win;
 	drv = WIDGET(win)->drv;
-
-#ifdef AGAR_DEBUG
+#ifdef DEBUG_WGL
 	WGL_Print_WinMsg(win, uMsg, wParam, lParam);
 #endif
-
 	switch (uMsg) {
 	case WM_MOUSEMOVE:
 		dev->type = AG_DRIVER_MOUSE_MOTION;
@@ -834,78 +850,8 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		rv = 0;
 		break;
 	}
-	
-	/* Effect any pending focus change. */
-	if (agWindowToFocus != NULL) {
-		AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(agWindowToFocus)->drv;
-
-		if (wgl != NULL && AGDRIVER_IS_WGL(wgl)) {
-			WGL_RaiseWindow(agWindowToFocus);
-			WGL_SetInputFocus(agWindowToFocus);
-		}
-		agWindowToFocus = NULL;
-	}
-	
 	AG_UnlockVFS(&agDrivers);
-	
-	/* Show/hide/detach any queued windows. */
-	AG_WindowProcessQueued();
-
 	return (rv);
-}
-
-static void
-WGL_GenericEventLoop(void *obj)
-{
-	AG_Driver *drv;
-	AG_Window *win;
-	Uint32 t1, t2;
-
-	t1 = AG_GetTicks();
-	for (;;) {
-		t2 = AG_GetTicks();
-		if (agExitWGL) {
-			break;
-		} else if (t2 - t1 >= rNom) {
-			AG_LockVFS(&agDrivers);
-			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-				if (!AGDRIVER_IS_WGL(drv)) {
-					continue;
-				}
-				win = AGDRIVER_MW(drv)->win;
-				if (!win->visible || !win->dirty) {
-					continue;
-				}
-				AG_BeginRendering(drv);
-				AG_ObjectLock(win);
-				AG_WindowDraw(win);
-				AG_ObjectUnlock(win);
-				AG_EndRendering(drv);
-			}
-			AG_UnlockVFS(&agDrivers);
-			t1 = AG_GetTicks();
-			rCur = rNom - (t1-t2);
-			if (rCur < 1) { rCur = 1; }
-		} else if (WGL_PendingEvents(NULL)) {
-			AG_DriverEvent dev;
-
-			if (WGL_GetNextEvent(NULL, &dev) == 1)
-				WGL_ProcessEvent(NULL, &dev);
-				if (agTerminating)
-					break;
-			}
-		} else {
-			AG_ProcessTimeouts(t2);
-			AG_Delay(1);
-		}
-	}
-}
-
-static void
-WGL_Terminate(void)
-{
-	/* XXX TODO */
-	agExitWGL = 1;
 }
 
 static void
@@ -1319,24 +1265,12 @@ WGL_PostMoveCallback(AG_Window *win, AG_SizeAlloc *a)
 	AG_WindowMovePinned(win, xRel, yRel);
 }
 
-static int
-WGL_SetRefreshRate(void *obj, int fps)
-{
-	if (fps < 1) {
-		AG_SetError("Invalid refresh rate");
-		return (-1);
-	}
-	rNom = 1000/fps;
-	rCur = 0;
-	return (0);
-}
-
 AG_DriverMwClass agDriverWGL = {
 	{
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
-			{ 1,4 },
+			{ 1,5 },
 			NULL,	/* init */
 			NULL,	/* reinit */
 			NULL,	/* destroy */
@@ -1355,9 +1289,9 @@ AG_DriverMwClass agDriverWGL = {
 		WGL_PendingEvents,
 		WGL_GetNextEvent,
 		WGL_ProcessEvent,
-		WGL_GenericEventLoop,
+		NULL,			/* genericEventLoop */
 		NULL,			/* endEventProcessing */
-		WGL_Terminate,
+		NULL,			/* terminate */
 		WGL_BeginRendering,
 		WGL_RenderWindow,
 		WGL_EndRendering,
@@ -1366,7 +1300,7 @@ AG_DriverMwClass agDriverWGL = {
 		AG_GL_StdUploadTexture,
 		AG_GL_StdUpdateTexture,
 		AG_GL_StdDeleteTexture,
-		WGL_SetRefreshRate,
+		NULL,			/* setRefreshRate */
 		AG_GL_StdPushClipRect,
 		AG_GL_StdPopClipRect,
 		AG_GL_StdPushBlendingMode,

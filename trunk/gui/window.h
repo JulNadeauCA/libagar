@@ -70,30 +70,30 @@ typedef struct ag_window {
 
 	Uint flags;
 #define AG_WINDOW_MODAL		0x00000001 /* Application-modal window */
-#define AG_WINDOW_MAXIMIZED	0x00000002 /* Window is maximized */
-#define AG_WINDOW_MINIMIZED	0x00000004 /* Window is minimized */
-#define AG_WINDOW_KEEPABOVE	0x00000008 /* Keep window above */
-#define AG_WINDOW_KEEPBELOW	0x00000010 /* Keep window below */
-#define AG_WINDOW_DENYFOCUS	0x00000020 /* Widgets cannot gain focus */
-#define AG_WINDOW_NOTITLE	0x00000040 /* Disable the titlebar */
-#define AG_WINDOW_NOBORDERS	0x00000080 /* Disable the window borders */
-#define AG_WINDOW_NOHRESIZE	0x00000100 /* Disable horizontal resize */
-#define AG_WINDOW_NOVRESIZE	0x00000200 /* Disable vertical resize */
+#define AG_WINDOW_MAXIMIZED	0x00000002 /* Window is maximized (read-only) */
+#define AG_WINDOW_MINIMIZED	0x00000004 /* Window is minimized (read-only) */
+#define AG_WINDOW_KEEPABOVE	0x00000008 /* Keep window above others */
+#define AG_WINDOW_KEEPBELOW	0x00000010 /* Keep window below others */
+#define AG_WINDOW_DENYFOCUS	0x00000020 /* Prevent focus gain if possible */
+#define AG_WINDOW_NOTITLE	0x00000040 /* Disable titlebar */
+#define AG_WINDOW_NOBORDERS	0x00000080 /* Disable window borders */
+#define AG_WINDOW_NOHRESIZE	0x00000100 /* Disable horizontal resize ctrl */
+#define AG_WINDOW_NOVRESIZE	0x00000200 /* Disable vertical resize ctrl */
 #define AG_WINDOW_NOCLOSE	0x00000400 /* Disable close button */
 #define AG_WINDOW_NOMINIMIZE	0x00000800 /* Disable minimize button */
 #define AG_WINDOW_NOMAXIMIZE	0x00001000 /* Disable maximize button */
-#define AG_WINDOW_CASCADE	0x00002000 /* For AG_WindowSetPosition() */
-#define AG_WINDOW_MINSIZEPCT	0x00004000 /* Set minimum size in % */
+#define AG_WINDOW_CASCADE	0x00002000 /* Cascade position (read-only) */
+#define AG_WINDOW_MINSIZEPCT	0x00004000 /* Min size is in % (read-only) */
 #define AG_WINDOW_NOBACKGROUND	0x00008000 /* Don't fill the background */
-#define AG_WINDOW_NOUPDATERECT	0x00010000 /* Unused */
-#define AG_WINDOW_FOCUSONATTACH	0x00020000 /* Automatic focus on attach */
+#define AG_WINDOW_MAIN		0x00010000 /* Break from AG_EventLoop() on close */
+#define AG_WINDOW_FOCUSONATTACH	0x00020000 /* Focus on attach (read-only) */
 #define AG_WINDOW_HMAXIMIZE	0x00040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x00080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE	0x00100000 /* Disallow movement of window */
 #define AG_WINDOW_NOCLIPPING	0x00200000 /* Don't set a clipping rectangle over the window area */
 #define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Generate key{up,down} events for
                                             keypresses on modifier keys */
-#define AG_WINDOW_DETACHING	0x00800000 /* Window is being detached */
+#define AG_WINDOW_DETACHING	0x00800000 /* Being detached (read-only) */
 #define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
 #define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
 #define AG_WINDOW_FADEOUT	0x10000000 /* Fade-out (compositing WMs) */
@@ -140,6 +140,7 @@ typedef struct ag_window {
 	enum ag_window_wm_type wmType;		/* Window function */
 	int zoom;				/* Effective zoom level */
 	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
+	AG_TAILQ_ENTRY(ag_window) user;		/* In user list */
 } AG_Window;
 
 typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
@@ -147,6 +148,8 @@ typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
 __BEGIN_DECLS
 extern const char *agWindowWmTypeNames[];
 extern AG_WidgetClass agWindowClass;
+
+/* Protected by agDrivers VFS lock */
 extern AG_WindowQ agWindowDetachQ;	/* AG_ObjectDetach() queue */
 extern AG_WindowQ agWindowShowQ;	/* AG_WindowShow() queue */
 extern AG_WindowQ agWindowHideQ;	/* AG_WindowHide() queue */
@@ -227,6 +230,8 @@ void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 int      AG_WindowIntersect(AG_DriverSw *, int, int);
+
+void     AG_WindowProcessFocusChange(void);
 void     AG_WindowProcessShowQueue(void);
 void     AG_WindowProcessHideQueue(void);
 void     AG_WindowProcessDetachQueue(void);
@@ -240,6 +245,12 @@ void           AG_UnmapAllCursors(AG_Window *, void *);
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
+
+/* Window iterators. */
+#define AG_FOREACH_WINDOW(var, ob) \
+	AGOBJECT_FOREACH_CHILD(var, ob, ag_window)
+#define AG_FOREACH_WINDOW_REVERSE(var, ob) \
+	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ag_window)
 
 /*
  * Render a window to the display (must be enclosed between calls to
@@ -256,6 +267,51 @@ AG_WindowDraw(AG_Window *win)
 	}
 	AGDRIVER_CLASS(drv)->renderWindow(win);
 	win->dirty = 0;
+}
+
+/*
+ * Render all windows that need to be redrawn. This is typically invoked
+ * by the main event loop, once events have been processed.
+ */ 
+static __inline__ void
+AG_WindowDrawQueued(void)
+{
+	AG_Driver *drv;
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		switch (AGDRIVER_CLASS(drv)->wm) {
+		case AG_WM_MULTIPLE:
+			if ((win = AGDRIVER_MW(drv)->win) != NULL) {
+				AG_ObjectLock(win);
+				if (win->visible && win->dirty) {
+					AG_BeginRendering(drv);
+					AGDRIVER_CLASS(drv)->renderWindow(win);
+					AG_EndRendering(drv);
+					win->dirty = 0;
+				}
+				AG_ObjectUnlock(win);
+			}
+			break;
+		case AG_WM_SINGLE:
+			AG_FOREACH_WINDOW(win, drv) {
+				if (win->dirty)
+					break;
+			}
+			if (win != NULL) {
+				AG_BeginRendering(drv);
+				AG_FOREACH_WINDOW(win, drv) {
+					AG_ObjectLock(win);
+					AG_WindowDraw(win);
+					AG_ObjectUnlock(win);
+				}
+				AG_EndRendering(drv);
+			}
+			break;
+		}
+	}
+	AG_UnlockVFS(&agDrivers);
 }
 
 /*
@@ -385,16 +441,19 @@ AG_Redraw(void *obj)
 }
 
 /*
- * Process windows previously queued for detach, show or hide. Usually
- * called by drivers, at the end of the current event processing cycle.
- * The agDrivers VFS must be locked.
+ * Process synchronous window operations. This includes focus changes,
+ * visibility changes and the detach operation. Called from custom event
+ * loops or driver code, after all queued events have been processed.
  */
 static __inline__ void
 AG_WindowProcessQueued(void)
 {
+	AG_LockVFS(&agDrivers);
+	if (agWindowToFocus != NULL) { AG_WindowProcessFocusChange(); }
 	if (!AG_TAILQ_EMPTY(&agWindowShowQ)) { AG_WindowProcessShowQueue(); }
 	if (!AG_TAILQ_EMPTY(&agWindowHideQ)) { AG_WindowProcessHideQueue(); }
 	if (!AG_TAILQ_EMPTY(&agWindowDetachQ)) { AG_WindowProcessDetachQueue(); }
+	AG_UnlockVFS(&agDrivers);
 }
 
 #ifdef AG_LEGACY

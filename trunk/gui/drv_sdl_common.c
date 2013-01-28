@@ -118,9 +118,6 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 
 	agDriverOps = dc;
 	agDriverSw = AGDRIVER_SW(drv);
-#ifdef AG_LEGACY
-	agView = drv;
-#endif
 	return (0);
 fail:
 	AG_DestroyGUIGlobals();
@@ -530,21 +527,6 @@ AG_SDL_SetCursorVisibility(void *obj, int flag)
 	SDL_ShowCursor(flag ? SDL_ENABLE : SDL_DISABLE);
 }
 
-void
-AG_SDL_PostEventCallback(void *obj)
-{
-	/* Effect any pending focus change. */
-	AG_LockVFS(&agDrivers);
-	if (agWindowToFocus != NULL) {
-		AG_WM_CommitWindowFocus(agWindowToFocus);
-		agWindowToFocus = NULL;
-	}
-	AG_UnlockVFS(&agDrivers);
-	
-	/* Show/hide/detach any queued windows. */
-	AG_WindowProcessQueued();
-}
-
 /* Return the desktop display size in pixels. */
 int
 AG_SDL_GetDisplaySize(Uint *w, Uint *h)
@@ -579,7 +561,6 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 			*w = (buf[0] != 'a') ? atoi(buf) :
 			                       (Uint)((float)wDisp*2.0/3.0);
 		} else {
-			printf("wDisp=%u\n", wDisp);
 			*w = (Uint)((float)wDisp*2.0/3.0);
 		}
 	}
@@ -602,18 +583,21 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 	}
 }
 
+/* Standard beginEventProcessing() method for SDL drivers. */
 void
 AG_SDL_BeginEventProcessing(void *obj)
 {
 	/* Nothing to do */
 }
 
+/* Standard pendingEvents() method for SDL drivers. */
 int
 AG_SDL_PendingEvents(void *obj)
 {
 	return (SDL_PollEvent(NULL) != 0);
 }
 
+/* Translate an SDL_Event to an AG_DriverEvent. */
 void
 AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 {
@@ -691,6 +675,7 @@ AG_SDL_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 	}
 }
 
+/* Standard getNextEvent() method for SDL drivers. */
 int
 AG_SDL_GetNextEvent(void *obj, AG_DriverEvent *dev)
 {
@@ -839,6 +824,7 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 	return (0);
 }
 
+/* Standard processEvent() method for SDL drivers. */
 int
 AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 {
@@ -881,8 +867,7 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 		}
 		break;
 	case AG_DRIVER_CLOSE:
-		AG_DriverClose(drv);
-		agTerminating = 1;
+		AG_Terminate(0);
 		break;
 	case AG_DRIVER_EXPOSE:
 		break;
@@ -892,71 +877,34 @@ AG_SDL_ProcessEvent(void *obj, AG_DriverEvent *dev)
 	}
 	AG_UnlockVFS(&agDrivers);
 
-	AG_SDL_PostEventCallback(drv);
 	return (rv);
 }
 
-void
-AG_SDL_GenericEventLoop(void *obj)
+/*
+ * Standard event sink for AG_EventLoop().
+ *
+ * TODO where AG_SINK_READ capability and pipes are available,
+ * could we create a separate thread running SDL_WaitEvent() and
+ * sending notifications over a pipe, instead of using a spinner?
+ */
+int
+AG_SDL_EventSink(AG_EventSink *es, AG_Event *event)
 {
-	AG_Driver *drv = obj;
-	AG_DriverSw *dsw = obj;
-	AG_Window *win;
-	Uint32 Tr1, Tr2 = 0;
 	AG_DriverEvent dev;
+	AG_Driver *drv = AG_PTR(1);
 
-	Tr1 = AG_GetTicks();
-	for (;;) {
-		Tr2 = AG_GetTicks();
-		if (Tr2-Tr1 >= dsw->rNom) {
-			AG_LockVFS(drv);
-			AG_FOREACH_WINDOW(win, drv) {
-#ifndef _XBOX
-				if (win->dirty)
-#endif
-					break;
-			}
-			if (win != NULL) {
-				AG_BeginRendering(drv);
-				AG_FOREACH_WINDOW(win, drv) {
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-				}
-				AG_EndRendering(drv);
-			}
-			AG_UnlockVFS(drv);
-
-			/* Recalibrate the effective refresh rate. */
-			Tr1 = AG_GetTicks();
-			dsw->rCur = dsw->rNom - (Tr1-Tr2);
-			if (dsw->rCur < 1) {
-				dsw->rCur = 1;
-			}
-		} else if (SDL_PollEvent(NULL) != 0) {
-			if (AG_SDL_GetNextEvent(drv, &dev) == 1) {
-				AG_SDL_ProcessEvent(drv, &dev);
-				if (agTerminating)
-					break;
-			}
-		} else {
-			AG_ProcessTimeouts(Tr2);
-			AG_Delay(1);
-		}
+	if (SDL_PollEvent(NULL) != 0 &&
+	    AG_SDL_GetNextEvent(drv, &dev) == 1) {
+		return AG_SDL_ProcessEvent(drv, &dev);
+	} else {
+		AG_Delay(1);
+		return (0);
 	}
 }
-
-void
-AG_SDL_EndEventProcessing(void *obj)
+int
+AG_SDL_EventEpilogue(AG_EventSink *es, AG_Event *event)
 {
-	/* Nothing to do */
+	AG_WindowDrawQueued();
+	AG_WindowProcessQueued();
+	return (0);
 }
-
-void
-AG_SDL_Terminate(void)
-{
-	SDL_Event nev;
-	nev.type = SDL_QUIT;
-	SDL_PushEvent(&nev);
-}
-

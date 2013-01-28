@@ -48,10 +48,9 @@
 #include "drv_cocoa_keymap.h"
 
 static int nDrivers = 0;		/* Drivers open */
-static Uint rNom = 20;			/* Nominal refresh rate (ms) */
-static int rCur = 0;			/* Effective refresh rate (ms) */
-static int agExitCocoa = 0;
-static AG_DriverEventQ agCocoaEventQ;	/* Private event queue */
+static AG_DriverEventQ cocEventQ;	/* Private event queue */
+static AG_EventSink   *cocEventSpinner = NULL;  /* Standard event sink */
+static AG_EventSink   *cocEventEpilogue = NULL; /* Standard event epilogue */
 struct ag_driver_cocoa;
 
 /*
@@ -263,7 +262,7 @@ ConvertNSRect(NSRect *r)
 	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
 		dev->type = AG_DRIVER_CLOSE;
 		dev->win = _window;
-		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+		TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 	}
 	return NO;
 }
@@ -275,7 +274,7 @@ ConvertNSRect(NSRect *r)
 	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
 		dev->type = AG_DRIVER_EXPOSE;
 		dev->win = _window;
-		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+		TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 	}
 }
 
@@ -353,7 +352,7 @@ ConvertNSRect(NSRect *r)
 	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
 		dev->type = AG_DRIVER_FOCUS_IN;
 		dev->win = _window;
-		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+		TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 	}
 }
 
@@ -369,7 +368,7 @@ ConvertNSRect(NSRect *r)
 	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) != NULL) {
 		dev->type = AG_DRIVER_FOCUS_OUT;
 		dev->win = _window;
-		TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+		TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 	}
 }
 
@@ -398,8 +397,28 @@ Destroy(void *obj)
 }
 
 /*
- * Driver initialization
+ * Standard AG_EventLoop() event sink.
  */
+static int
+COCOA_EventSink(AG_EventSink *es, AG_Event *event)
+{
+	AG_DriverEvent dev;
+
+	if (!COCOA_PendingEvents(NULL)) {
+		return (0);
+	}
+	if (COCOA_GetNextEvent(NULL, &dev) == 1) {
+		return COCOA_ProcessEvent(NULL, &dev);
+	}
+	return (0);
+}
+static int
+COCOA_EventEpilogue(AG_EventSink *es, AG_Event *event)
+{
+	AG_WindowDrawQueued();
+	AG_WindowProcessQueued();
+	return (0);
+}
 
 static int
 COCOA_Open(void *obj, const char *spec)
@@ -408,9 +427,6 @@ COCOA_Open(void *obj, const char *spec)
 	AG_DriverCocoa *co = obj;
 	NSAutoreleasePool *pool;
 	
-	if (nDrivers == 0)
-		TAILQ_INIT(&agCocoaEventQ);
-
 	/* Driver manages rendering of window background. */
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 
@@ -431,20 +447,21 @@ COCOA_Open(void *obj, const char *spec)
 	    (drv->kbd = AG_KeyboardNew(co, "X keyboard")) == NULL) {
 		goto fail;
 	}
-    
+	if (nDrivers == 0) {
+		TAILQ_INIT(&cocEventQ);
+		
+		/* Set up event filters for standard AG_EventLoop(). */
+		if ((cocEventSpinner = AG_AddEventSpinner(COCOA_EventSink, NULL)) == NULL ||
+		    (cocEventEpilogue = AG_AddEventEpilogue(COCOA_EventEpilogue, NULL)) == NULL)
+			goto fail;
+	}
 	nDrivers++;
 	return (0);
 fail:
-	if (drv->kbd != NULL) {
-		AG_ObjectDetach(drv->kbd);
-		AG_ObjectDestroy(drv->kbd);
-		drv->kbd = NULL;
-	}
-	if (drv->mouse != NULL) {
-		AG_ObjectDetach(drv->mouse);
-		AG_ObjectDestroy(drv->mouse);
-		drv->mouse = NULL;
-	}
+	if (cocEventSpinner != NULL) { AG_DelEventSpinner(cocEventSpinner); cocEventSpinner = NULL; }
+	if (cocEventEpilogue != NULL) { AG_DelEventEpilogue(cocEventEpilogue); cocEventEpilogue = NULL; }
+	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
+	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
 	return (-1);
 }
 
@@ -458,26 +475,21 @@ COCOA_Close(void *obj)
 #endif
 	if (--nDrivers == 0) {
 		AG_DriverEvent *dev, *devNext;
+		
+		AG_DelEventSink(cocEventSink); cocEventSink = NULL;
+		AG_DelEventEpilogue(cocEventEpilogue); cocEventEpilogue = NULL;
 
-		for (dev = TAILQ_FIRST(&agCocoaEventQ);
-		     dev != TAILQ_LAST(&agCocoaEventQ, ag_driver_eventq);
+		for (dev = TAILQ_FIRST(&cocEventQ);
+		     dev != TAILQ_LAST(&cocEventQ, ag_driver_eventq);
 		     dev = devNext) {
 			devNext = TAILQ_NEXT(dev, events);
 			Free(dev);
 		}
-		TAILQ_INIT(&agCocoaEventQ);
-		
-		/* XXX TODO make this behavior configurable */
-		agTerminating = 1;
+		TAILQ_INIT(&cocEventQ);
 	}
 
-	AG_ObjectDetach(drv->mouse);
-	AG_ObjectDestroy(drv->mouse);
-	AG_ObjectDetach(drv->kbd);
-	AG_ObjectDestroy(drv->kbd);
-	
-	drv->mouse = NULL;
-	drv->kbd = NULL;
+	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
+	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
 }
 
 static int
@@ -503,7 +515,7 @@ COCOA_PendingEvents(void *drvCaller)
 	NSEvent *ev;
 	int rv;
 
-	if (!TAILQ_EMPTY(&agCocoaEventQ))
+	if (!TAILQ_EMPTY(&cocEventQ))
 		return (1);
 
 	pool = [[NSAutoreleasePool alloc] init];
@@ -560,7 +572,7 @@ QueueKeyEvent(AG_DriverCocoa *co, enum ag_driver_event_type type,
 	dev->win = AGDRIVER_MW(co)->win;
 	dev->data.key.ks = ks;
 	dev->data.key.ucs = ucs;
-	TAILQ_INSERT_TAIL(&agCocoaEventQ, dev, events);
+	TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
 }
 
 static int
@@ -575,7 +587,7 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	NSEvent *event;
 	int rv = 0;
 	
-	if (!TAILQ_EMPTY(&agCocoaEventQ))
+	if (!TAILQ_EMPTY(&cocEventQ))
 		goto out_dequeue;
 
 	pool = [[NSAutoreleasePool alloc] init];
@@ -794,8 +806,8 @@ out:
 	[pool release];
 	return (rv);
 out_dequeue:
-	devFirst = TAILQ_FIRST(&agCocoaEventQ);
-	TAILQ_REMOVE(&agCocoaEventQ, devFirst, events);
+	devFirst = TAILQ_FIRST(&cocEventQ);
+	TAILQ_REMOVE(&cocEventQ, devFirst, events);
 	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
 	Free(devFirst);
 	return (1);
@@ -863,81 +875,8 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		rv = 0;
 		break;
 	}
-
-	/* Effect any pending focus change. */
-	if (agWindowToFocus != NULL) {
-		AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(agWindowToFocus)->drv;
-
-		if (co != NULL && AGDRIVER_IS_COCOA(co)) {
-			AG_MutexLock(&co->lock);
-			COCOA_RaiseWindow(agWindowToFocus);
-			COCOA_SetInputFocus(agWindowToFocus);
-			AG_MutexUnlock(&co->lock);
-		}
-		agWindowToFocus = NULL;
-	}
-	
 	AG_UnlockVFS(&agDrivers);
-	
-	/* Show/hide/detach any queued windows. */
-	AG_WindowProcessQueued();
-
 	return (rv);
-}
-
-static void
-COCOA_GenericEventLoop(void *obj)
-{
-	AG_Driver *drv;
-	AG_DriverCocoa *co;
-	AG_DriverEvent dev;
-	AG_Window *win;
-	Uint32 t1, t2;
-
-	t1 = AG_GetTicks();
-	for (;;) {
-		t2 = AG_GetTicks();
-		if (agExitCocoa) {
-			break;
-		} else if (t2 - t1 >= rNom) {
-			AG_LockVFS(&agDrivers);
-			AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-				if (!AGDRIVER_IS_COCOA(drv)) {
-					continue;
-				}
-				co = (AG_DriverCocoa *)drv;
-				AG_MutexLock(&co->lock);
-				win = AGDRIVER_MW(drv)->win;
-				if (win->visible && win->dirty) {
-					AG_BeginRendering(drv);
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-					AG_EndRendering(drv);
-				}
-				AG_MutexUnlock(&co->lock);
-			}
-			AG_UnlockVFS(&agDrivers);
-			t1 = AG_GetTicks();
-			rCur = rNom - (t1-t2);
-			if (rCur < 1) { rCur = 1; }
-		} else if (COCOA_GetNextEvent(NULL, &dev) == 1) {
-			COCOA_ProcessEvent(NULL, &dev);
-			if (agTerminating)
-				return;
-		} else {
-			if (!AG_TAILQ_EMPTY(&agTimerObjQ)) {
-				AG_ProcessTimeouts(t2);
-			}
-			AG_Delay(1);
-		}
-	}
-}
-
-static void
-COCOA_Terminate(void)
-{
-	agExitCocoa = 1;
 }
 
 /* Select the window's OpenGL context. */
@@ -960,6 +899,7 @@ COCOA_BeginRendering(void *obj)
 {
 	AG_DriverCocoa *co = obj;
 
+	AG_MutexLock(&co->lock);
 	COCOA_GL_MakeCurrent(co, AGDRIVER_MW(co)->win);
 }
 
@@ -999,18 +939,7 @@ COCOA_EndRendering(void *obj)
 	}
 	gl->nTextureGC = 0;
 	gl->nListGC = 0;
-}
-
-static int
-COCOA_SetRefreshRate(void *obj, int fps)
-{
-	if (fps < 1) {
-		AG_SetError("Invalid refresh rate");
-		return (-1);
-	}
-	rNom = 1000/fps;
-	rCur = 0;
-	return (0);
+	AG_MutexUnlock(&co->lock);
 }
 
 /*
@@ -1607,7 +1536,7 @@ AG_DriverMwClass agDriverCocoa = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverCocoa",
 			sizeof(AG_DriverCocoa),
-			{ 1,4 },
+			{ 1,5 },
 			Init,
 			NULL,	/* reinit */
 			Destroy,
@@ -1626,9 +1555,9 @@ AG_DriverMwClass agDriverCocoa = {
 		COCOA_PendingEvents,
 		COCOA_GetNextEvent,
 		COCOA_ProcessEvent,
-		COCOA_GenericEventLoop,
+		NULL,			/* genericEventLoop */
 		NULL,			/* endEventProcessing */
-		COCOA_Terminate,
+		NULL,			/* terminate */
 		COCOA_BeginRendering,
 		COCOA_RenderWindow,
 		COCOA_EndRendering,
@@ -1637,7 +1566,7 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_StdUploadTexture,
 		AG_GL_StdUpdateTexture,
 		AG_GL_StdDeleteTexture,
-		COCOA_SetRefreshRate,
+		NULL,			/* setRefreshRate */
 		AG_GL_StdPushClipRect,
 		AG_GL_StdPopClipRect,
 		AG_GL_StdPushBlendingMode,
