@@ -169,8 +169,6 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 				Gmask = 0x0000FF00;
 				Bmask = 0x000000FF;
 				break;
-			default:
-				break;
 			}
 			break;
 		}
@@ -183,8 +181,6 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 			Rmask = AG_ReadUint32(ds);
 			Gmask = AG_ReadUint32(ds);
 			Bmask = AG_ReadUint32(ds);
-			break;
-		default:
 			break;
 		}
 		break;

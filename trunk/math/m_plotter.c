@@ -319,8 +319,6 @@ MouseButtonDown(AG_Event *event)
 			AG_Redraw(ptr);
 		}
 		break;
-	default:
-		break;
 	}
 	if (ptr->xScale <= 0.0625) { ptr->xScale = 0.0625; }
 	if (ptr->yScale <= 0.0625) { ptr->yScale = 0.0625; }
@@ -558,8 +556,6 @@ Draw(void *obj)
 				if (x > ptr->r.w) { break; }
 			}
 			break;
-		default:
-			break;
 		}
 	}
 	/* Second pass */
@@ -787,8 +783,6 @@ M_PlotterUpdate(M_Plotter *ptr)
 			break;
 		case M_PLOT_DERIVATIVE:
 			M_PlotDerivative(ptr, pl);
-			break;
-		default:
 			break;
 		}
 	}

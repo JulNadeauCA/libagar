@@ -54,8 +54,6 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 	case AG_VARIABLE_P_FLAG32:
 		Vdst->info.bitmask = Vsrc->info.bitmask;
 		break;
-	default:
-		break;
 	}
 	if (AG_VARIABLE_TYPE(Vdst) == AG_VARIABLE_STRING) {
 		Vdst->info.size = Vsrc->info.size;

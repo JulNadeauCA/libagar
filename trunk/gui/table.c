@@ -1679,8 +1679,6 @@ MouseButtonDown(AG_Event *event)
 		m = RowAtY(t, y);
 		CellRightClick(t, m, x,y);
 		break;
-	default:
-		break;
 	}
 }
 
@@ -1967,8 +1965,6 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 		case AG_WIDGET_FILL:
 			tc->flags |= AG_TABLE_COL_FILL;
 			break;
-		default:
-			break;
 		}
 	} else {
 		tc->flags |= AG_TABLE_COL_FILL;
@@ -2202,8 +2198,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		case 'p':
 			c->type = AG_CELL_POINTER;
 			c->data.p = va_arg(ap, void *);
-			break;
-		default:
 			break;
 		}
 	}

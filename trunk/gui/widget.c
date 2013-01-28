@@ -237,8 +237,6 @@ OnShow(AG_Event *event)
 			AG_AddTimer(wid, &rt->to, rt->ival,
 			    RedrawOnChangeTimeout, "%p", rt);
 			break;
-		default:
-			break;
 		}
 	}
 }
@@ -256,8 +254,6 @@ OnHide(AG_Event *event)
 		case AG_REDRAW_ON_TICK:
 		case AG_REDRAW_ON_CHANGE:
 			AG_DelTimer(wid, &rt->to);
-			break;
-		default:
 			break;
 		}
 	}
@@ -1423,8 +1419,6 @@ AG_WidgetParseSizeSpec(const char *input, int *w)
 		p[-1] = '\0';
 		*w = (int)strtol(spec, NULL, 10);
 		return (AG_WIDGET_PIXELS);
-	default:
-		break;
 	}
 syntax:
 	Verbose("Warning: Bad SizeSpec: \"%s\"\n", input);

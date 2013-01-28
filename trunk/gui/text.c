@@ -193,8 +193,6 @@ FontDestroy(void *obj)
 		}
 		Free(font->bglyphs);
 		break;
-	default:
-		break;
 	}
 }
 
@@ -698,8 +696,6 @@ AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
 #endif
 	case AG_FONT_BITMAP:
 		gl->advance = gl->su->w;
-		break;
-	default:
 		break;
 	}
 	AGDRIVER_CLASS(drv)->updateGlyph(drv, gl);
@@ -1260,8 +1256,6 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 	case AG_FONT_BITMAP:
 		TextSizeBitmap(ucs4, &tm, 0);
 		break;
-	default:
-		break;
 	}
 	if (w != NULL) { *w = tm.w; }
 	if (h != NULL) { *h = tm.h; }
@@ -1287,8 +1281,6 @@ AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
 #endif
 	case AG_FONT_BITMAP:
 		TextSizeBitmap(ucs4, &tm, 1);
-		break;
-	default:
 		break;
 	}
 	if (w != NULL) { *w = tm.w; }

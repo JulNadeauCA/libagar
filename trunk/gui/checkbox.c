@@ -180,8 +180,6 @@ KeyDown(AG_Event *event)
 	case AG_KEY_SPACE:
 		AG_CheckboxToggle(cb);
 		break;
-	default:
-		break;
 	}
 }
 
@@ -392,8 +390,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
-		break;
-	default:
 		break;
 	}
 	AG_UnlockVariable(stateb);

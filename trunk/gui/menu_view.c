@@ -141,8 +141,6 @@ GetItemBoolValue(AG_MenuItem *mi)
 	case AG_MENU_INT32_FLAGS:
 		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
 		break;
-	default:
-		break;
 	}
 	return (mi->bind_invert ? !val : val);
 }

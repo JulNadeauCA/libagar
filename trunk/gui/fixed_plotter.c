@@ -106,8 +106,6 @@ KeyDown(AG_Event *event)
 		fpl->xoffs += 10;
 		AG_Redraw(fpl);
 		break;
-	default:
-		break;
 	}
 }
 

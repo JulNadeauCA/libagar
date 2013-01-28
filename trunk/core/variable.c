@@ -162,8 +162,6 @@ AG_DerefVariable(AG_Variable *Vdst, const AG_Variable *Vsrc)
 		}
 		Vdst->info.size = 0;
 		break;
-	default:
-		break;
 	}
 	return (0);
 }
@@ -230,8 +228,6 @@ AG_EvalVariable(void *pObj, AG_Variable *V)
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_CONST_STRING:
 		V->fn.fnString(ev, V->data.s, V->info.size);
-		break;
-	default:									break;
 		break;
 	}
 	return (0);
@@ -1830,8 +1826,6 @@ AG_ListSet(const char *fmt, ...)
 				AG_VARIABLE_SETARG(&V, AG_VARIABLE_FLOAT, AG_VARIABLE_P_FLOAT,
 				    flt, float, double, 0.0f, fnFloat, AG_FloatFn);
 			}
-			break;
-		default:
 			break;
 		}
 		AG_ListAppend(L, &V);

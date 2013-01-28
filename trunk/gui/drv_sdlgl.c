@@ -261,8 +261,6 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 			goto fail;
 		}
 		break;
-	default:
-		break;
 	}
 
 	if (++sgl->outFrame == sgl->outLast) {

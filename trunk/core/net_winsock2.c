@@ -93,8 +93,6 @@ NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *
 			*saLen = sizeof(struct sockaddr_in6);
 		}
 		break;
-	default:
-		break;
 	}
 }
 		
@@ -132,8 +130,6 @@ SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
 			memcpy(na->na_inet6.addr, &sin6->sin6_addr, 16);
 			return (na);
 		}
-		break;
-	default:
 		break;
 	}
 	AG_SetError("Bad address family");

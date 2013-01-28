@@ -474,8 +474,6 @@ ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
 					goto out;
 				}
 				break;
-			default:
-				break;
 			}
 		}
 		AG_PostEvent(NULL, ed, "editable-prechg", NULL);
@@ -578,8 +576,6 @@ IsSpaceUCS4(Uint32 c)
 	case 0x3000:		/* IDEOGRAPHIC SPACE */
 	case 0xfeff:		/* ZERO WIDTH NO-BREAK SPACE */
 		return (1);
-	default:
-		break;
 	}
 	if (c >= 0x2000 && c <= 0x200b) {
 		/* EN/EM SPACES */
@@ -659,28 +655,26 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 			case AG_FONT_VECTOR:
-			{
-				AG_TTFFont *ttf = font->ttf;
-				AG_TTFGlyph *glyph;
+				{
+					AG_TTFFont *ttf = font->ttf;
+					AG_TTFGlyph *glyph;
 
-				if (AG_TTFFindGlyph(ttf, ch,
-				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-					continue;
+					if (AG_TTFFindGlyph(ttf, ch,
+					    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+						continue;
+					}
+					glyph = ttf->current;
+					x += glyph->advance;
 				}
-				glyph = ttf->current;
-				x += glyph->advance;
 				break;
-			}
 #endif /* HAVE_FREETYPE */
 			case AG_FONT_BITMAP:
-			{
-				AG_Glyph *gl;
+				{
+					AG_Glyph *gl;
 			
-				gl = AG_TextRenderGlyph(drv, ch);
-				x += gl->su->w;
-				break;
-			}
-			default:
+					gl = AG_TextRenderGlyph(drv, ch);
+					x += gl->su->w;
+				}
 				break;
 			}
 		}
@@ -724,36 +718,36 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		switch (font->spec.type) {
 #ifdef HAVE_FREETYPE
 		case AG_FONT_VECTOR:
-		{
-			AG_TTFFont *ttf = font->ttf;
-			AG_TTFGlyph *glyph;
+			{
+				AG_TTFFont *ttf = font->ttf;
+				AG_TTFGlyph *glyph;
 
-			if (AG_TTFFindGlyph(ttf, ch,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-				continue;
-			}
-			glyph = ttf->current;
+				if (AG_TTFFindGlyph(ttf, ch,
+				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+					continue;
+				}
+				glyph = ttf->current;
 
-			if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
-				*pos = (mx < x+glyph->advance/2) ? i : i+1;
-				goto out;
+				if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
+					*pos = (mx < x+glyph->advance/2) ? i : i+1;
+					goto out;
+				}
+				x += glyph->advance;
 			}
-			x += glyph->advance;
 			break;
-		}
 #endif /* HAVE_FREETYPE */
 		case AG_FONT_BITMAP:
-		{
-			AG_Glyph *gl;
+			{
+				AG_Glyph *gl;
 			
-			gl = AG_TextRenderGlyph(drv, ch);
-			if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
-				*pos = i;
-				goto out;
+				gl = AG_TextRenderGlyph(drv, ch);
+				if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
+					*pos = i;
+					goto out;
+				}
+				x += gl->su->w;
 			}
-			x += gl->su->w;
 			break;
-		}
 		default:
 			AG_FatalError("AG_Editable: Unknown font format");
 		}
@@ -1071,8 +1065,6 @@ KeyDown(AG_Event *event)
 		if (!(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB)) {
 			return;
 		}
-		break;
-	default:
 		break;
 	}
 
@@ -1483,8 +1475,6 @@ MouseButtonDown(AG_Event *event)
 			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
 		}
 		break;
-	default:
-		break;
 	}
 	
 	AG_Redraw(ed);
@@ -1501,8 +1491,6 @@ MouseButtonUp(AG_Event *event)
 		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
 		ed->flags &= ~(AG_EDITABLE_WORDSELECT);
 		AG_Redraw(ed);
-		break;
-	default:
 		break;
 	}
 }

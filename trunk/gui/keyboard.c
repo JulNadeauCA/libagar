@@ -304,8 +304,6 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 		case AG_KEY_LMETA:	ms |= AG_KEYMOD_LMETA;		break;
 		case AG_KEY_RMETA:	ms |= AG_KEYMOD_RMETA;		break;
 		case AG_KEY_MODE:	ms |= AG_KEYMOD_MODE;		break;
-		default:
-			break;
 		}
 		break;
 	case AG_KEY_RELEASED:
@@ -323,8 +321,6 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 		case AG_KEY_LMETA:	ms &= ~AG_KEYMOD_LMETA;		break;
 		case AG_KEY_RMETA:	ms &= ~AG_KEYMOD_RMETA;		break;
 		case AG_KEY_MODE:	ms &= ~AG_KEYMOD_MODE;		break;
-		default:
-			break;
 		}
 		break;
 	default:
@@ -436,8 +432,6 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 		case AG_KEY_LCTRL:
 		case AG_KEY_RCTRL:
 			return (0);
-		default:
-			break;
 		}
 	}
 

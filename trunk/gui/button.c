@@ -433,8 +433,6 @@ GetState(AG_Button *bu, AG_Variable *binding, void *p)
 	case AG_VARIABLE_P_FLAG32:
 		v = (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
 		break;
-	default:
-		break;
 	}
 	if (bu->flags & AG_BUTTON_INVSTATE) {
 		v = !v;
@@ -469,8 +467,6 @@ SetState(AG_Button *bu, AG_Variable *binding, void *p, int v)
 		break;
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
-		break;
-	default:
 		break;
 	}
 	AG_Redraw(bu);
