@@ -4514,6 +4514,8 @@ CFLAGS="$CFLAGS -Werror"
 CXXFLAGS="$CXXFLAGS -Werror"
 CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
+CFLAGS="$CFLAGS -Wno-switch"
+CXXFLAGS="$CXXFLAGS -Wno-switch"
 WNO_UNINITIALIZED="-Wno-uninitialized"
 else
 WNO_UNINITIALIZED=""
@@ -8838,6 +8840,207 @@ CFLAGS="$CFLAGS -Wno-unused"
 CXXFLAGS="$CXXFLAGS -Wno-unused"
 	fi
 fi
+if [ "${with_uim}" != "no" ]
+ then
+$ECHO_N "checking for uim framework (http://code.google.com/p/uim/)..."
+$ECHO_N "checking for uim framework (http://code.google.com/p/uim/)..." >> config.log
+if [ "${prefix_uim}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_uim}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct uim prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		UIM_VERSION=`$PKGCONFIG uim --modversion 2>/dev/null`
+	fi
+else
+	UIM_VERSION=`$PKGCONFIG uim --modversion 2>/dev/null`
+fi
+if [ "${prefix_uim}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_uim}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct uim prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		UIM_CFLAGS=`$PKGCONFIG uim --cflags 2>/dev/null`
+	fi
+else
+	UIM_CFLAGS=`$PKGCONFIG uim --cflags 2>/dev/null`
+fi
+if [ "${prefix_uim}" != "" ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
+		echo " "
+		echo "* "
+		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix (${prefix_uim}) was specified."
+		echo "* "
+		echo "* Please re-run ./configure again with the correct uim prefix"
+		echo "* (or specify no prefix at all to enable auto-detection)."
+		echo "* "
+		exit 1
+	else
+		UIM_LIBS=`$PKGCONFIG uim --libs 2>/dev/null`
+	fi
+else
+	UIM_LIBS=`$PKGCONFIG uim --libs 2>/dev/null`
+fi
+if [ "${UIM_VERSION}" != "" ]; then
+if [ "${prefix_uim}" != "" ]; then
+echo "yes ($UIM_VERSION in ${prefix_uim})"
+echo "yes ($UIM_VERSION in ${prefix_uim})" >> config.log
+else
+echo "yes ($UIM_VERSION)"
+echo "yes ($UIM_VERSION)" >> config.log
+fi;
+if [ "1.8.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 8 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 8 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "Version 1.8.0 or greater is required (found $UIM_VERSION)"
+exit 1
+fi;
+fi;
+$ECHO_N "checking whether uim works..."
+$ECHO_N "checking whether uim works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_UIM" ]; then
+		HAVE_UIM=`cat ${cache}/ctest-HAVE_UIM`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_UIM`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <uim.h>
+#include <uim-util.h>
+
+int main(int argc, char *argv[]) {
+	uim_context uimCtx;
+	const char *s;
+	int i;
+
+	uimCtx = uim_create_context(NULL, "UTF-8", NULL, NULL, uim_iconv, NULL);
+	for (i = 0; i < uim_get_nr_im(uimCtx); i++) {
+		s = uim_get_im_name(uimCtx, i);
+		if (s == NULL) { return (1); }
+	}
+	uim_release_context(uimCtx);
+
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${UIM_CFLAGS} -o $testdir/conftest conftest.c ${UIM_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${UIM_CFLAGS} -o $testdir/conftest conftest.c ${UIM_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_UIM="yes"
+echo "#ifndef HAVE_UIM" > $BLD/include/agar/config/have_uim.h
+echo "#define HAVE_UIM \"$HAVE_UIM\"" >> $BLD/include/agar/config/have_uim.h
+echo "#endif" >> $BLD/include/agar/config/have_uim.h
+echo "hdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_UIM="no"
+echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
+echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_UIM" > ${cache}/ctest-HAVE_UIM
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_UIM
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_UIM}" = "yes" ]; then
+echo "#ifndef UIM_CFLAGS" > $BLD/include/agar/config/uim_cflags.h
+echo "#define UIM_CFLAGS \"$UIM_CFLAGS\"" >> $BLD/include/agar/config/uim_cflags.h
+echo "#endif" >> $BLD/include/agar/config/uim_cflags.h
+echo "hdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
+echo "#ifndef UIM_LIBS" > $BLD/include/agar/config/uim_libs.h
+echo "#define UIM_LIBS \"$UIM_LIBS\"" >> $BLD/include/agar/config/uim_libs.h
+echo "#endif" >> $BLD/include/agar/config/uim_libs.h
+echo "hdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
+else
+echo "#undef UIM_CFLAGS" >$BLD/include/agar/config/uim_cflags.h
+echo "hdefs[\"UIM_CFLAGS\"] = nil" >>configure.lua
+UIM_CFLAGS=""
+echo "#undef UIM_LIBS" >$BLD/include/agar/config/uim_libs.h
+echo "hdefs[\"UIM_LIBS\"] = nil" >>configure.lua
+UIM_LIBS=""
+fi;
+else
+if [ "${prefix_uim}" != "" ]; then
+echo "no (not in ${prefix_uim})"
+echo "no (not in ${prefix_uim})" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
+echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+fi;
+	if [ "${HAVE_UIM}" != "yes" ]
+ then
+		if [ "${with_uim}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-uim was requested, but the uim "
+			echo "* framework is not installed."
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
+echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+		fi
+	fi
+else
+echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
+echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+fi
+	
 if [ "${enable_nls}" = "yes" ]
  then
 $ECHO_N "checking for iconv() in libc..."
@@ -10403,6 +10606,7 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+#include <stdio.h>
 #include <portaudio2/portaudio.h>
 
 int
@@ -10411,7 +10615,7 @@ main(int argc, char *argv[])
 	int rv;
 
 	if ((rv = Pa_Initialize()) != paNoError) {
-		if (Pa_IsFormatSupported(NULL, NULL) != 0) {
+		if (Pa_IsFormatSupported(NULL, NULL, 48000.0) != 0) {
 			return (0);
 		} else {
 			return (rv);
@@ -10619,8 +10823,8 @@ CXXFLAGS="$CXXFLAGS -I$BLD/include"
 CFLAGS="$CFLAGS -I$BLD/include/agar"
 CXXFLAGS="$CXXFLAGS -I$BLD/include/agar"
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
 	echo "rm -fR $config_script_out"
@@ -11094,6 +11298,8 @@ echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
 echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
+echo "UIM_CFLAGS=$UIM_CFLAGS" >>Makefile.config
+echo "mdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
 echo "SSE_CFLAGS=$SSE_CFLAGS" >>Makefile.config
@@ -11228,6 +11434,8 @@ echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
 echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
 echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
+echo "HAVE_UIM=$HAVE_UIM" >>Makefile.config
+echo "mdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
 echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
 echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
@@ -11250,6 +11458,8 @@ echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
 echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
 echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+echo "UIM_LIBS=$UIM_LIBS" >>Makefile.config
+echo "mdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
 echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
 echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
 echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
