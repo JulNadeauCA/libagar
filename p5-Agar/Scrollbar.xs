@@ -76,14 +76,14 @@ setIncrementInt(self, step)
 	Agar::Scrollbar self
 	int step
 CODE:
-	AG_ScrollbarSetIntIncrement(self, step);
+	AG_SetInt(self, "inc", step);
 
 void
 setIncrementFloat(self, step)
 	Agar::Scrollbar self
 	double step
 CODE:
-	AG_ScrollbarSetRealIncrement(self, step);
+	AG_SetFloat(self, "inc", step);
 
 void
 incAction(self, coderef)

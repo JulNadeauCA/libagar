@@ -67,7 +67,8 @@ setRangeInt(self, min, max)
 	int min
 	int max
 CODE:
-	AG_NumericalSetRangeInt(self, min, max);
+	AG_SetInt(self, "min", min);
+	AG_SetInt(self, "max", max);
 
 void
 setRangeFloat(self, min, max)
@@ -75,7 +76,8 @@ setRangeFloat(self, min, max)
 	float min
 	float max
 CODE:
-	AG_NumericalSetRangeFlt(self, min, max);
+	AG_SetFloat(self, "min", min);
+	AG_SetFloat(self, "max", max);
 
 void
 setRangeDouble(self, min, max)
@@ -83,21 +85,29 @@ setRangeDouble(self, min, max)
 	double min
 	double max
 CODE:
-	AG_NumericalSetRangeDbl(self, min, max);
+	AG_SetDouble(self, "min", min);
+	AG_SetDouble(self, "max", max);
 
 void
-setValue(self, value)
+setValueInt(self, value)
+	Agar::Numerical self
+	int value
+CODE:
+	AG_SetInt(self, "value", value);
+
+void
+setValueFloat(self, value)
+	Agar::Numerical self
+	float value
+CODE:
+	AG_SetFloat(self, "value", value);
+
+void
+setValueDouble(self, value)
 	Agar::Numerical self
 	double value
 CODE:
-	AG_NumericalSetValue(self, value);
-
-void
-setIncrement(self, step)
-	Agar::Numerical self
-	double step
-CODE:
-	AG_NumericalSetIncrement(self, step);
+	AG_SetDouble(self, "value", value);
 
 void
 setPrecision(self, format, prec)

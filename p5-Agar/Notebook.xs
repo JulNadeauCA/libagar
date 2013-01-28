@@ -112,7 +112,7 @@ setFlag(self, name)
 	Agar::Notebook self
 	const char * name
 CODE:
-	if (AP_SetNamedFlagSigned(name, flagNames, &(self->flags))) {
+	if (AP_SetNamedFlag(name, flagNames, &(self->flags))) {
 		AP_SetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
 	}
 
@@ -121,7 +121,7 @@ unsetFlag(self, name)
 	Agar::Notebook self
 	const char * name
 CODE:
-	if (AP_UnsetNamedFlagSigned(name, flagNames, &(self->flags))) {
+	if (AP_UnsetNamedFlag(name, flagNames, &(self->flags))) {
 		AP_UnsetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
 	}
 
@@ -146,14 +146,6 @@ box(self)
 	Agar::NotebookTab self
 CODE:
 	RETVAL = &(self->box);
-OUTPUT:
-	RETVAL
-
-SV *
-getLabel(self)
-	Agar::NotebookTab self
-CODE:
-	RETVAL = newSVpv(self->labelText, 0);
 OUTPUT:
 	RETVAL
 

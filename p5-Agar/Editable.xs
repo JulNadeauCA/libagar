@@ -33,17 +33,20 @@
 
 static const AP_FlagNames flagNames[] = {
 	{ "multiLine",		AG_EDITABLE_MULTILINE },
-	{ "static",		AG_EDITABLE_STATIC },
 	{ "password",		AG_EDITABLE_PASSWORD },
 	{ "abandonFocus",	AG_EDITABLE_ABANDON_FOCUS },
 	{ "intOnly",		AG_EDITABLE_INT_ONLY },
 	{ "floatOnly",		AG_EDITABLE_FLT_ONLY },
 	{ "catchTab",		AG_EDITABLE_CATCH_TAB },
-	{ "noScroll",		AG_EDITABLE_NOSCROLL },
-	{ "noScrollOnce",	AG_EDITABLE_NOSCROLL_ONCE },
+	{ "keepVisCursor",	AG_EDITABLE_KEEPVISCURSOR },
+	{ "excl",		AG_EDITABLE_EXCL },
 	{ "noEmacs",		AG_EDITABLE_NOEMACS },
-	{ "noWordSeek",		AG_EDITABLE_NOWORDSEEK },
 	{ "noLatin1",		AG_EDITABLE_NOLATIN1 },
+	{ "wordWrap",		AG_EDITABLE_WORDWRAP },
+	{ "noPopup",		AG_EDITABLE_NOPOPUP },
+	{ "wordSelect",		AG_EDITABLE_WORDSELECT },
+	{ "readOnly",		AG_EDITABLE_READONLY },
+	{ "multilingual",	AG_EDITABLE_MULTILINGUAL },
 	{ NULL,			0 }
 };
 
@@ -97,15 +100,6 @@ getCursorPos(self)
 	Agar::Editable self
 CODE:
 	RETVAL = AG_EditableGetCursorPos(self);
-OUTPUT:
-	RETVAL
-
-int
-setCursorPos(self, pos)
-	Agar::Editable self
-	int pos
-CODE:
-	RETVAL = AG_EditableSetCursorPos(self, pos);
 OUTPUT:
 	RETVAL
 

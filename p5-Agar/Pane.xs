@@ -150,7 +150,7 @@ setFlag(self, name)
 	Agar::Pane self
 	const char * name
 CODE:
-	if (AP_SetNamedFlagSigned(name, flagNames, &(self->flags))) {
+	if (AP_SetNamedFlag(name, flagNames, &(self->flags))) {
 		AP_SetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
 	}
 
@@ -159,7 +159,7 @@ unsetFlag(self, name)
 	Agar::Pane self
 	const char * name
 CODE:
-	if (AP_UnsetNamedFlagSigned(name, flagNames, &(self->flags))) {
+	if (AP_UnsetNamedFlag(name, flagNames, &(self->flags))) {
 		AP_UnsetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
 	}
 
