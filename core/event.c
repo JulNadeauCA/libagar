@@ -575,6 +575,8 @@ CreateEventSource(void)
 	src->flags = 0;
 	src->addTimerFn = NULL;
 	src->delTimerFn = NULL;
+	src->breakReq = 0;
+	src->returnCode = 0;
 	TAILQ_INIT(&src->prologues);
 	TAILQ_INIT(&src->epilogues);
 	TAILQ_INIT(&src->spinners);
