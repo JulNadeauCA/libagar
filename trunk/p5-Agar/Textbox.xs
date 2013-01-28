@@ -99,15 +99,6 @@ CODE:
 OUTPUT:
 	RETVAL
 
-int
-setCursorPos(self, pos)
-	Agar::Textbox self
-	int pos
-CODE:
-	RETVAL = AG_TextboxSetCursorPos(self, pos);
-OUTPUT:
-	RETVAL
-
 void
 setFlag(self, name)
 	Agar::Textbox self

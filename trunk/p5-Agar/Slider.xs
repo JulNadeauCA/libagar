@@ -66,7 +66,7 @@ CODE:
 	if (items == 3) {
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_SliderNew(parent, AG_SCROLLBAR_VERT, 0);
+	RETVAL = AG_SliderNew(parent, AG_SLIDER_VERT, 0);
 	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL
@@ -76,14 +76,14 @@ setIncrementInt(self, step)
 	Agar::Slider self
 	int step
 CODE:
-	AG_SliderSetIntIncrement(self, step);
+	AG_SetInt(self, "inc", step);
 
 void
 setIncrementFloat(self, step)
 	Agar::Slider self
 	double step
 CODE:
-	AG_SliderSetRealIncrement(self, step);
+	AG_SetFloat(self, "inc", step);
 
 void
 setFlag(self, name)

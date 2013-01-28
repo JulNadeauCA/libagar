@@ -46,10 +46,19 @@ static const AP_FlagNames flagNames[] = {
 	{ "noMinimize",    AG_WINDOW_NOMINIMIZE },
 	{ "noMaximize",    AG_WINDOW_NOMAXIMIZE },
 	{ "noBackground",  AG_WINDOW_NOBACKGROUND },
-	{ "noUpdateRect",  AG_WINDOW_NOUPDATERECT },
+	{ "main",          AG_WINDOW_MAIN },
 	{ "focusOnAttach", AG_WINDOW_FOCUSONATTACH },
 	{ "hMaximize",     AG_WINDOW_HMAXIMIZE },
 	{ "vMaximize",     AG_WINDOW_VMAXIMIZE },
+	{ "noMove",        AG_WINDOW_NOMOVE },
+	{ "noClipping",    AG_WINDOW_NOCLIPPING },
+	{ "modKeyEvents",  AG_WINDOW_MODKEYEVENTS },
+	{ "noCursorChg",   AG_WINDOW_NOCURSORCHG },
+	{ "fadeIn",        AG_WINDOW_FADEIN },
+	{ "fadeOut",       AG_WINDOW_FADEOUT },
+	/* Shorthands */
+	{ "noResize",      AG_WINDOW_NORESIZE },
+	{ "noButtons",     AG_WINDOW_NOBUTTONS },
 	{ "plain",         AG_WINDOW_PLAIN },
 	{ NULL,            0 }
 };

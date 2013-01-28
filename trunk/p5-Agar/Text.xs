@@ -60,9 +60,9 @@ Valign(mode)
 	const char * mode
 CODE:
 	switch (mode[0]) {
-		case 't': case 'T': AG_TextJustify(AG_TEXT_TOP); break;
-		case 'm': case 'M': AG_TextJustify(AG_TEXT_MIDDLE); break;
-		case 'b': case 'B': AG_TextJustify(AG_TEXT_BOTTOM); break;
+		case 't': case 'T': AG_TextValign(AG_TEXT_TOP); break;
+		case 'm': case 'M': AG_TextValign(AG_TEXT_MIDDLE); break;
+		case 'b': case 'B': AG_TextValign(AG_TEXT_BOTTOM); break;
 	}
 
 void
