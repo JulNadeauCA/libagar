@@ -17,16 +17,17 @@ TestWithReactiveWidgets(AG_Event *event)
 		return;
 	}
 	AG_LabelNewS(win, 0, "AG_Scrollview(3) with reactive widgets");
-	AG_ButtonNew(win, 0, "Foo");
+	AG_ButtonNew(win, AG_BUTTON_EXCL, "Foo");
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	for (y = 0; y < 20; y++) {
 		hBox = AG_BoxNewHoriz(sv, 0);
 		AG_BoxSetSpacing(hBox, 1);
 		AG_BoxSetPadding(hBox, 0);
 		for (x = 0; x < 20; x++)
-			AG_ButtonNew(hBox, 0, "Foo\n%c\n%d", (char)(0x41+x), y);
+			AG_ButtonNew(hBox, AG_BUTTON_EXCL,
+			    "Foo\n%c\n%d", (char)(0x41+x), y);
 	}
-	AG_ButtonNew(win, 0, "Bar");
+	AG_ButtonNew(win, AG_BUTTON_EXCL, "Bar");
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 400, 300);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);

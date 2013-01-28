@@ -115,12 +115,6 @@ TestGUI(void *obj, AG_Window *win)
 	ti->win = win;
 	AG_LabelNewS(win, 0, "Test for AG_Timer(3) facility");
 	AG_LabelNew(win, 0, "timeOps: %s", agTimeOps->name);
-	if (agSoftTimers != -1) {
-		AG_LabelNewS(win, 0, "Using soft timers");
-	} else {
-		if (agKqueue != -1)
-			AG_LabelNewS(win, 0, "Using kqueue(2)");
-	}
 	AG_ButtonNewFn(win, 0, "Timer Inspector", StartTimerInspector, "%p", ti);
 	AG_ButtonNewFn(win, 0, "Test One-Shot", TestOneShot, "%p", ti);
 	AG_ButtonNewFn(win, 0, "Start Regular", StartRegular, "%p", ti);
