@@ -567,7 +567,7 @@ CreateEventSource(void)
 	AG_EventSourceKQUEUE *kq = TryMalloc(sizeof(AG_EventSourceKQUEUE));
 	AG_EventSource *src = (AG_EventSource *)kq;
 #else
-	AG_EventSource *src = TryMalloc(sizeof(AG_EventSourceKQUEUE));
+	AG_EventSource *src = TryMalloc(sizeof(AG_EventSource));
 #endif
 	if (src == NULL) {
 		return (NULL);
@@ -1010,9 +1010,7 @@ restart:
 	}
 	kq->nChanges = 0;
 	AG_LockTiming();
-	/*
-	 * Process timer expirations first.
-	 */
+	/* 1. Process timer expirations. */
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
 		enum ag_event_sink_type esType = GetSinkType(kev->filter);
@@ -1057,10 +1055,7 @@ restart:
 			agTimerCount--;
 		}
 	}
-	/*
-	 * Now process other events. With this ordering, event handlers have
-	 * the last word as far as timer changes are concerned.
-	 */
+	/* 2. Process I/O and other events. */
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
 		enum ag_event_sink_type esType = GetSinkType(kev->filter);
@@ -1159,7 +1154,7 @@ int
 AG_EventSinkTIMERFD(void)
 {
 	fd_set rdFds, wrFds;
-	int i, nFds, rv;
+	int nFds, rv;
 	AG_EventSink *es;
 	AG_Object *ob, *obNext;
 	AG_Timer *to, *toNext;
@@ -1171,7 +1166,6 @@ restart:
 	FD_ZERO(&wrFds);
 	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
 		switch (es->type) {
-		case AG_SINK_TIMER:
 		case AG_SINK_READ:
 			FD_SET(es->ident, &rdFds);
 			if (es->ident > nFds) { nFds = es->ident; }
@@ -1180,6 +1174,12 @@ restart:
 			FD_SET(es->ident, &wrFds);
 			if (es->ident > nFds) { nFds = es->ident; }
 			break;
+		}
+	}
+	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
+		TAILQ_FOREACH(to, &ob->timers, timers) {
+			FD_SET(to->id, &rdFds);
+			if (to->id > nFds) { nFds = to->id; }
 		}
 	}
 	if (!TAILQ_EMPTY(&agEventSource->spinners)) {
@@ -1200,23 +1200,7 @@ restart:
 	
 	AG_LockTiming();
 
-	/* Process read/write events. */
-	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
-		switch (es->type) {
-		case AG_SINK_READ:
-			if (FD_ISSET(es->ident, &rdFds)) {
-				es->fn(es, &es->fnArgs);
-			}
-			break;
-		case AG_SINK_WRITE:
-			if (FD_ISSET(es->ident, &wrFds)) {
-				es->fn(es, &es->fnArgs);
-			}
-			break;
-		}
-	}
-	
-	/* Process expired timers. */
+	/* 1. Process timer expirations. */
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
@@ -1249,6 +1233,22 @@ restart:
 			}
 		}
 		AG_ObjectUnlock(ob);
+	}
+	
+	/* 2. Process I/O events. */
+	TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
+		switch (es->type) {
+		case AG_SINK_READ:
+			if (FD_ISSET(es->ident, &rdFds)) {
+				es->fn(es, &es->fnArgs);
+			}
+			break;
+		case AG_SINK_WRITE:
+			if (FD_ISSET(es->ident, &wrFds)) {
+				es->fn(es, &es->fnArgs);
+			}
+			break;
+		}
 	}
 
 	AG_UnlockTiming();
@@ -1354,7 +1354,10 @@ restart:
 	}
 	
 	AG_LockTiming();
+	/* 1. Process timer expirations. */
+	AG_ProcessTimeouts(t);
 	if (rv > 0) {
+		/* 2. Process I/O events */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
 			switch (es->type) {
 			case AG_SINK_READ:
@@ -1370,7 +1373,6 @@ restart:
 			}
 		}
 	}
-	AG_ProcessTimeouts(t);
 	AG_UnlockTiming();
 	return (0);
 }
@@ -1420,7 +1422,10 @@ restart:
 	}
 	
 	AG_LockTiming();
+	/* 1. Process timer expirations. */
+	AG_ProcessTimeouts(AG_GetTicks());
 	if (rv > 0) {
+		/* 2. Process I/O events. */
 		TAILQ_FOREACH(es, &agEventSource->sinks, sinks) {
 			switch (es->type) {
 			case AG_SINK_READ:
@@ -1436,7 +1441,6 @@ restart:
 			}
 		}
 	}
-	AG_ProcessTimeouts(AG_GetTicks());
 	AG_UnlockTiming();
 	
 	if (TAILQ_EMPTY(&agEventSource->spinners)) {
