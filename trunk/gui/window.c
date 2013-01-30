@@ -1978,7 +1978,6 @@ AG_WindowProcessDetachQueue(void)
 	TAILQ_INIT(&agWindowDetachQ);
 
 	if (closedMain > 0) {
-		printf("closed a main window\n");
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 			AG_FOREACH_WINDOW(win, drv) {
 				if (win->flags & AG_WINDOW_MAIN)
@@ -1988,7 +1987,6 @@ AG_WindowProcessDetachQueue(void)
 				break;
 		}
 		if (drv == NULL) {            /* Last "main" window was closed */
-			printf("last main window was closed\n");
 			AG_Terminate(0);
 		}
 	}
