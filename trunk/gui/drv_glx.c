@@ -1956,14 +1956,9 @@ GLX_EventSink(AG_EventSink *es, AG_Event *event)
 	Display *dpy = AG_PTR(1);
 	AG_DriverEvent dev;
 
-	if (!XPending(dpy)) {
-		return (0);
-	}
-	while (GLX_PendingEvents(NULL) != 0) {
-		if (GLX_GetNextEvent(NULL, &dev) != 1) {
-			break;
-		}
-		GLX_ProcessEvent(NULL, &dev);
+	while (XPending(dpy)) {
+		if (GLX_GetNextEvent(NULL, &dev) == 1)
+			GLX_ProcessEvent(NULL, &dev);
 	}
 	return (1);
 }
