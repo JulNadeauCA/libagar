@@ -1966,6 +1966,13 @@ static int
 GLX_EventEpilogue(AG_EventSink *es, AG_Event *event)
 {
 	Display *dpy = AG_PTR(1);
+	AG_DriverEvent dev;
+
+	/* Work around an apparent buffering problem in X/Xlib/XCB. */
+	while (XPending(dpy)) {
+		if (GLX_GetNextEvent(NULL, &dev) == 1)
+			GLX_ProcessEvent(NULL, &dev);
+	}
 
 	AG_WindowDrawQueued();
 	AG_WindowProcessQueued();
