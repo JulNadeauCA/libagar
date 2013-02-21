@@ -89,6 +89,7 @@ static void      WGL_PostMoveCallback(AG_Window *, AG_SizeAlloc *);
 static int       WGL_GetNextEvent(void *, AG_DriverEvent *);
 static int       WGL_ProcessEvent(void *, AG_DriverEvent *);
 static int       WGL_GetDisplaySize(Uint *, Uint *);
+static int       WGL_PendingEvents(void *drvCaller);
 
 static void
 WGL_SetWindowsError(char* errorMessage, DWORD errorCode)
