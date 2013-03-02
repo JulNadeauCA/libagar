@@ -89,6 +89,7 @@ typedef struct ag_driver_glx {
 	AG_GL_Context gl;		/* Common OpenGL context data */
 	AG_Mutex      lock;		/* Protect Xlib calls */
 	int           wmHintsSet;	/* WM hints have been set */
+	AG_Timer      toInitExpose;	/* Initial Expose */
 } AG_DriverGLX;
 
 static int modMasksInited = 0;		/* For modifier key translation */
@@ -1298,6 +1299,15 @@ SetAboveBelowHints(AG_Window *win)
 	}
 }
 
+static Uint32
+InitExposeTimeout(AG_Timer *timer, AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+
+	win->dirty = 1;
+	return (0);
+}
+
 static int
 GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 {
@@ -1396,6 +1406,10 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	    AG_InitStockCursors(drv) == -1) {
 		goto fail_ctx;
 	}
+
+	AG_InitTimer(&glx->toInitExpose, "init", 0);
+	AG_AddTimer(glx, &glx->toInitExpose, 1, InitExposeTimeout, "%p", win);
+
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 
