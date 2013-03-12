@@ -195,7 +195,7 @@ AG_Execute(const char *file, char **argv)
 
 	return (pi.dwProcessId);
 
-#elif defined(HAVE_EXECVP)
+#elif defined(HAVE_EXECVP) && !defined(_WIN32)
 	AG_ProcessID pid;
 
 	if(!file) {
@@ -263,7 +263,7 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 
 	return (pid);
 
-#elif defined(HAVE_EXECVP)
+#elif defined(HAVE_EXECVP) && !defined(_WIN32)
 	int res;
 	int status;
 	int options = 0;
