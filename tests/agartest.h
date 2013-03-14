@@ -12,7 +12,6 @@
 #include <agar/config/have_opengl.h>
 #include <agar/config/enable_au.h>
 #include <agar/config/enable_vg.h>
-#include <agar/config/enable_rg.h>
 
 /* Test case definition */
 typedef struct ag_test_case {
