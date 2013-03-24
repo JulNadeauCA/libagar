@@ -4,6 +4,7 @@
 #define _AGAR_WIDGET_PIXMAP_H_
 
 #include <agar/gui/widget.h>
+#include <agar/gui/window.h>
 
 #include <agar/gui/begin.h>
 
@@ -40,10 +41,6 @@ int	   AG_PixmapAddSurface(AG_Pixmap *, AG_Surface *);
 int	   AG_PixmapAddSurfaceFromBMP(AG_Pixmap *, const char *);
 int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, AG_Surface *);
 int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, AG_Surface *, Uint, Uint);
-#define    AG_PixmapReplaceSurface(px,name,su) \
-           AG_WidgetReplaceSurface((px),(name),(su))
-#define    AG_PixmapUpdateSurface(px,name) \
-           AG_WidgetUpdateSurface((px),(name))
 void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, int, AG_Surface *, Uint,
 		                         Uint);
 
@@ -53,6 +50,20 @@ void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, int, AG_Surface *, Uint,
         AG_PixmapReplaceSurfaceScaled((px),(px)->n,(su),(w),(h))
 #define AG_PixmapUpdateCurrentSurface(px) \
 	AG_PixmapUpdateSurface((px),(px)->n)
+
+static __inline__ void
+AG_PixmapReplaceSurface(AG_Pixmap *px, int name, AG_Surface *su)
+{
+	AG_WidgetReplaceSurface(px, name, su);
+	AG_Redraw(px);
+}
+
+static __inline__ void
+AG_PixmapUpdateSurface(AG_Pixmap *px, int name)
+{
+	AG_WidgetUpdateSurface(px, name);
+	AG_Redraw(px);
+}
 
 static __inline__ int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
