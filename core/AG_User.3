@@ -45,10 +45,11 @@ Agar provides the following backends:
 .Pp
 .Bl -tag -compact -width "agUserOps_gettimeofday "
 .It agUserOps_dummy
-No-ops, returns no useful information.
+No-op, returns no useful information.
 .It agUserOps_posix
-On Unix platforms, user
-.Xr getpwent 3 .
+On Unix platforms, use the system
+.Xr getpwent 3
+interface.
 .El
 .Sh INTERFACE
 .nr nS 1
@@ -56,16 +57,16 @@ On Unix platforms, user
 .Fn AG_UserNew "void"
 .Pp
 .Ft "AG_User *"
-.Fn AG_GetUserByName "AG_User *u" "const char *name"
+.Fn AG_GetUserByName "const char *name"
 .Pp
 .Ft "AG_User *"
-.Fn AG_GetUserByUID "AG_User *u" "Uint32 uid"
+.Fn AG_GetUserByUID "Uint32 uid"
 .Pp
-.Ft "int"
-.Fn AG_GetRealUser "AG_User *"
+.Ft "AG_User *"
+.Fn AG_GetRealUser "void"
 .Pp
-.Ft "int"
-.Fn AG_GetEffectiveUser "AG_User *"
+.Ft "AG_User *"
+.Fn AG_GetEffectiveUser "void"
 .Pp
 .Ft "void"
 .Fn AG_UserFree "AG_User *"
@@ -111,6 +112,12 @@ functions return account information for the user corresponding to
 the real or effective UID of the calling process (if available).
 .Pp
 The
+.Fn AG_UserFree
+routine releases the specified
+.Nm
+structure.
+.Pp
+The
 .Nm
 backend in use by default is determined in a platform-specific
 way.
@@ -137,6 +144,7 @@ typedef struct ag_user_ops {
 performs any necessary initialization.
 .Fn destroy
 cleans up any allocated resources.
+.Pp
 On success, the query methods
 .Fn getUserByName ,
 .Fn getUserByUID ,

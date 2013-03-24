@@ -42,25 +42,61 @@ AG_User  *AG_UserNew(void);
 void      AG_UserFree(AG_User *);
 void      AG_SetUserOps(const AG_UserOps *);
 
-static __inline__ int
-AG_GetUserByName(AG_User *u, const char *name)
+static __inline__ AG_User *
+AG_GetUserByName(const char *name)
 {
-	return agUserOps->getUserByName(u, name);
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getUserByName(u, name) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
 }
-static __inline__ int
-AG_GetUserByUID(AG_User *u, Uint32 uid)
+static __inline__ AG_User *
+AG_GetUserByUID(Uint32 uid)
 {
-	return agUserOps->getUserByUID(u, uid);
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getUserByUID(u, uid) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
 }
-static __inline__ int
-AG_GetRealUser(AG_User *u)
+static __inline__ AG_User *
+AG_GetRealUser(void)
 {
-	return agUserOps->getRealUser(u);
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getRealUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
 }
-static __inline__ int
-AG_GetEffectiveUser(AG_User *u)
+static __inline__ AG_User *
+AG_GetEffectiveUser(void)
 {
-	return agUserOps->getEffectiveUser(u);
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getEffectiveUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
 }
 __END_DECLS
 
