@@ -246,7 +246,7 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
 	s->h = h;
 
 	pitch = w*pf->BytesPerPixel;		/* 4-byte aligned */
-	switch (pf->BytesPerPixel) {
+	switch (pf->BitsPerPixel) {
 	case 1:
 		pitch = (pitch + 7)/8;
 		break;
