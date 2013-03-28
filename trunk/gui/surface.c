@@ -231,6 +231,7 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
     const AG_PixelFormat *pf, Uint flags)
 {
 	AG_Surface *s;
+	Uint pitch;
 
 	if ((s = TryMalloc(sizeof(AG_Surface))) == NULL) {
 		return (NULL);
@@ -243,7 +244,17 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
 	s->flags = flags;
 	s->w = w;
 	s->h = h;
-	s->pitch = w*pf->BytesPerPixel;
+
+	pitch = w*pf->BytesPerPixel;		/* 4-byte aligned */
+	switch (pf->BytesPerPixel) {
+	case 1:
+		pitch = (pitch + 7)/8;
+		break;
+	case 4:
+		pitch = (pitch + 1)/2;
+		break;
+	}
+	s->pitch = (pitch + 3) & ~3;
 	s->clipRect = AG_RECT(0,0,w,h);
 
 	if (h*s->pitch > 0) {
