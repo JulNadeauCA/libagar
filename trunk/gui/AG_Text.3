@@ -375,7 +375,10 @@ Once the user confirms the entry, the
 callback is invoked (see
 .Xr AG_Event 3
 for details on the argument format).
-The entered string is the last argument on the stack.
+A copy of the entered string is passed as the last argument on the stack.
+The event handler must
+.Xr free 3
+that string after use.
 .Pp
 .Fn AG_TextPromptOptions
 creates a dialog displaying a text string and an array of buttons.
