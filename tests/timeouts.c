@@ -47,8 +47,6 @@ static void
 TestOneShot(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_Object *ob;
-	AG_Timer *to;
 
 	TestMsg(ti, "Testing 3 one-shot timers");
 	if (AG_AddTimer(NULL, &ti->to[0], 1000, Timeout1, "%p", ti) == -1 ||
@@ -62,8 +60,6 @@ static void
 StartRegular(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_Object *ob;
-	AG_Timer *to;
 
 	TestMsg(ti, "Starting regular timer");
 	if (AG_AddTimer(NULL, &ti->toReg, 1000, TimeoutRegular, "%p", ti) == -1) {
@@ -75,7 +71,6 @@ static void
 StopRegular(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-	AG_Timer *to;
 
 	TestMsg(ti, "Stopping regular timer");
 	AG_DelTimer(NULL, &ti->toReg);

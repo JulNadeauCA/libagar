@@ -126,7 +126,6 @@ CreateSleepingWorker(AG_Event *event)
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Window *win;
 	AG_ProgressBar *pb;
-	AG_Thread th;
 
 	if (ti->sleeping.win != NULL ||
 	    (win = AG_WindowNew(AG_WINDOW_NOCLOSE)) == NULL) {
@@ -157,7 +156,6 @@ CreateSpinningWorker(AG_Event *event)
 	MyTestInstance *ti = AG_PTR(1);
 	AG_Window *win;
 	AG_ProgressBar *pb;
-	AG_Thread th;
 
 	if (ti->spinning.win != NULL ||
 	    (win = AG_WindowNew(AG_WINDOW_NOCLOSE)) == NULL) {
@@ -211,7 +209,6 @@ CloseTest(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	MyTestInstance *ti = AG_PTR(1);
-	AG_ConsoleLine *cl;
 	
 	ti->closeTest = 1;
 
