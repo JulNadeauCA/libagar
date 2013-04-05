@@ -30,7 +30,7 @@ Test(void *obj)
 	AG_TestInstance *ti = obj;
 	int i = -123;
 	Uint u = 123;
-	float flt = 1.234;
+	float flt = 1.234f;
 	double dbl = 2.345;
 	long l = -123456;
 	Ulong ul = 123456;
