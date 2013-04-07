@@ -541,7 +541,8 @@ AG_SurfaceBlit(const AG_Surface *ss, const AG_Rect *srcRect, AG_Surface *ds,
 
 	/* XXX TODO optimized cases */
 	for (y = 0; y < dr.h; y++) {
-		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch;
+		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch +
+		    sr.x*ss->format->BytesPerPixel;
 		pDst = (Uint8 *)ds->pixels + (dr.y+y)*ds->pitch +
 		    dr.x*ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
