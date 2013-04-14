@@ -19,24 +19,8 @@ EnteredString(AG_Event *event)
 static void
 TestPrompts(AG_Event *event)
 {
-	/* Prompt for a series of options. */
-	{
-		AG_Button *btns[3];
-
-		btns[0] = AG_ButtonNewS(NULL, 0, NULL);
-		btns[1] = AG_ButtonNewS(NULL, 0, NULL);
-		btns[2] = AG_ButtonNewS(NULL, 0, NULL);
-		AG_TextPromptOptions(btns, 3, "Multiple-choice selection: ");
-		AG_ButtonText(btns[0], "Yes");
-		AG_ButtonText(btns[1], "No");
-		AG_ButtonText(btns[2], "Maybe");
-	}
-	
 	/* Edit an existing floating-point variable. */
 	AG_TextEditFloat(&v, 0.0, 100.0, "cm", "Edit a float value: ");
-	
-	/* Prompt for a string and invoke callback on return. */
-	AG_TextPromptString("Prompt for a string: ", EnteredString, NULL);
 	
 	/* Edit a fixed-size string buffer. */
 	AG_Strlcpy(someString, "Test string", sizeof(someString));

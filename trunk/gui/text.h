@@ -197,13 +197,6 @@ void AG_TextEditString(char *, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf,3,4)
 		       NONNULL_ATTRIBUTE(3);
 
-struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
-		                       const char *, ...)
-		         	FORMAT_ATTRIBUTE(printf,3,4)
-		          	NONNULL_ATTRIBUTE(3);
-void AG_TextPromptString(const char *, void (*)(AG_Event *),
-		         const char *, ...);
-
 void      AG_TextInitGlyphCache(AG_Driver *);
 void      AG_TextClearGlyphCache(AG_Driver *);
 AG_Glyph *AG_TextRenderGlyphMiss(AG_Driver *, Uint32);

@@ -1708,52 +1708,6 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	AG_WindowShow(win);
 }
 
-/* Prompt the user for a string. */
-void
-AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
-    const char *fmt, ...)
-{
-	AG_Window *win;
-	AG_Box *bo;
-	AG_Button *btnOK;
-	AG_Textbox *tb;
-	AG_Event *ev;
-
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
-	win->wmType = AG_WINDOW_WM_DIALOG;
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_WindowSetSpacing(win, 8);
-
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	AG_LabelNewS(bo, 0, prompt);
-	
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	{
-		tb = AG_TextboxNewS(bo, AG_TEXTBOX_EXCL, NULL);
-		AG_ExpandHoriz(tb);
-		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
-		AG_EVENT_GET_ARGS(ev, fmt)
-		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
-		    Strdup(tb->text->ent[0].buf));
-		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
-	}
-
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	{
-		btnOK = AG_ButtonNewS(bo, 0, _("Ok"));
-		ev = AG_SetEvent(btnOK, "button-pushed", ok_fn, NULL);
-		AG_EVENT_GET_ARGS(ev, fmt);
-		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
-		    Strdup(tb->text->ent[0].buf));
-		AG_AddEvent(btnOK, "button-pushed", AGWINDETACH(win));
-
-		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
-	}
-
-	AG_WidgetFocus(tb);
-	AG_WindowShow(win);
-}
-
 /* Align a text surface inside a given space. */
 void
 AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
