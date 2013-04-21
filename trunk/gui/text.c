@@ -381,6 +381,8 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 				spec->matrix.yx = mat->yx;
 			}
 			spec->type = AG_FONT_VECTOR;
+			FcPatternDestroy(fpat);
+			FcPatternDestroy(pattern);
 		} else
 #endif /* HAVE_FONTCONFIG */
 		{
