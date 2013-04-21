@@ -247,18 +247,20 @@ AG_UnregisterClass(void *p)
 {
 	AG_ObjectClass *cl = p;
 	AG_ObjectClass *clSuper = cl->super;
+	Uint h = AG_TblHash(agClassTbl, cl->hier);
 
 	AG_MutexLock(&agClassLock);
+	if (AG_TblExistsHash(agClassTbl, h, cl->hier)) {
 #ifdef AG_OBJDEBUG
-	Debug(NULL, "Unregistering class: %s\n", cl->name);
+		Debug(NULL, "Unregistering class: %s\n", cl->name);
 #endif
-	/* Remove from the class tree. */
-	TAILQ_REMOVE(&clSuper->sub, cl, subclasses);
-	cl->super = NULL;
+		/* Remove from the class tree. */
+		TAILQ_REMOVE(&clSuper->sub, cl, subclasses);
+		cl->super = NULL;
 
-	/* Remove from the class table. */
-	AG_TblDelete(agClassTbl, cl->hier);
-
+		/* Remove from the class table. */
+		AG_TblDeleteHash(agClassTbl, h, cl->hier);
+	}
 	AG_MutexUnlock(&agClassLock);
 }
 
