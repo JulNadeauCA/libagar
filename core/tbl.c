@@ -173,9 +173,9 @@ AG_TblDeleteHash(AG_Tbl *tbl, Uint h, const char *key)
 	AG_FreeVariable(&buck->ents[i]);
 	if (i < buck->nEnts-1) {
 		memmove(&buck->ents[i], &buck->ents[i+1],
-		    (buck->nEnts-1)*sizeof(AG_Variable));
+		    (buck->nEnts - i - 1)*sizeof(AG_Variable));
 		memmove(&buck->keys[i], &buck->keys[i+1],
-		    (buck->nEnts-1)*sizeof(char *));
+		    (buck->nEnts - i - 1)*sizeof(char *));
 	}
 	buck->nEnts--;
 	return (0);
