@@ -196,6 +196,7 @@ void AG_TextEditFloat(double *, double, double, const char *,
 void AG_TextEditString(char *, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf,3,4)
 		       NONNULL_ATTRIBUTE(3);
+struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint, const char *, ...);
 
 void      AG_TextInitGlyphCache(AG_Driver *);
 void      AG_TextClearGlyphCache(AG_Driver *);

@@ -302,7 +302,22 @@ void
 AG_DestroyGUI(void)
 {
 	void **ops;
+	AG_Driver *drv;
 	
+	AG_LockVFS(&agDrivers);
+	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_ObjectFreeChildren(drv);
+	}
+rescan:
+	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_DriverClose(drv);
+		if (drv == (AG_Driver *)agDriverSw) { agDriverSw = NULL; }
+		if (drv == (AG_Driver *)agDriverMw) { agDriverMw = NULL; }
+		goto rescan;
+	}
+	agDriverOps = NULL;
+	AG_UnlockVFS(&agDrivers);
+
 	/* Destroy the GUI subsystems. */
 	AG_DestroyWindowSystem();
 	AG_DestroyTextSubsystem();
