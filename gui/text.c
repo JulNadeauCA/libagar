@@ -1435,7 +1435,7 @@ AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
 {
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Timeout *to;
+	AG_Timer *to;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE);
