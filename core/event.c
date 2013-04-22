@@ -1085,10 +1085,10 @@ restart:
  * Add/remove a kqueue(2) based timer.
  */
 static int
-GenerateTimerID(AG_Timeout *to)
+GenerateTimerID(AG_Timer *to)
 {
 	AG_Object *obOther;
-	AG_Timeout *toOther;
+	AG_Timer *toOther;
 	int id;
 
 gen_id:
