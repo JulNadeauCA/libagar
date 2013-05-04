@@ -296,7 +296,7 @@ AG_WindowDrawQueued(void)
 			break;
 		case AG_WM_SINGLE:
 			AG_FOREACH_WINDOW(win, drv) {
-				if (win->dirty)
+				if (win->visible && win->dirty)
 					break;
 			}
 			if (win != NULL) {
