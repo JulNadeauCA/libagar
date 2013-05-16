@@ -14,7 +14,6 @@ REQUIRE(agar-dev)
 REQUIRE(agar-math)
 
 CHECK(agar-vg)
-CHECK(agar-rg)
 CHECK(agar-au)
 CHECK(rand48)
 
