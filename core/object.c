@@ -209,20 +209,20 @@ GenerateObjectPath(void *obj, char *path, size_t path_len)
 
 	AG_ObjectLock(ob);
 
-	cur_len = strlen(path)+1;
-	name_len = strlen(ob->name)+1;
+	cur_len = strlen(path);
+	name_len = strlen(ob->name);
 	
-	if (sizeof("/")+name_len+sizeof("/")+cur_len >= path_len) {
-		AG_SetError(_("The path exceeds >= %lu bytes."),
-		    (unsigned long)path_len);
+	if (name_len+cur_len+1 > path_len) {
+		AG_SetError("Path buffer is %lu bytes (required = %lu)",
+		    path_len, name_len+cur_len+1);
 		AG_ObjectUnlock(ob);
 		return (-1);
 	}
 	
 	/* Prepend / and the object name. */
-	memmove(&path[name_len], path, cur_len);    /* Move the NUL as well */
+	memmove(&path[name_len+1], path, cur_len+1);    /* Move the NUL as well */
 	path[0] = AG_PATHSEPCHAR;
-	memcpy(&path[1], ob->name, name_len-1);	    /* Omit the NUL */
+	memcpy(&path[1], ob->name, name_len);		/* Omit the NUL */
 
 	if (ob->parent != ob->root && ob->parent != NULL) {
 		rv = GenerateObjectPath(ob->parent, path, path_len);
@@ -234,7 +234,7 @@ GenerateObjectPath(void *obj, char *path, size_t path_len)
 
 /*
  * Copy the absolute pathname of an object to a fixed-size buffer.
- * The buffer size must be >2 bytes.
+ * Buffer size must be at least 2 bytes in size.
  */
 int
 AG_ObjectCopyName(void *obj, char *path, size_t path_len)
@@ -242,6 +242,10 @@ AG_ObjectCopyName(void *obj, char *path, size_t path_len)
 	AG_Object *ob = obj;
 	int rv = 0;
 
+	if (path_len < 2) {
+		AG_SetError("Buffer too small");
+		return (-1);
+	}
 	path[0] = AG_PATHSEPCHAR;
 	path[1] = '\0';
 
