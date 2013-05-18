@@ -328,7 +328,7 @@ if [ "${enable_gui}" != "no" ]; then
 	
 	# Enable PNG format support if libpng is found.
 	if [ "${with_png}" != "no" ]; then
-		CHECK(png, 0, ${prefix_png})
+		CHECK(png, 1.5.0, ${prefix_png})
 		if [ "${HAVE_PNG}" != "yes" ]; then
 			if [ "${with_png}" = "yes" ]; then
 				echo "*"
