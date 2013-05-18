@@ -384,6 +384,7 @@ echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
 echo "Agar test suite options:"
+echo "    --with-agar[=PREFIX]        Location of Agar library [check]"
 echo "    --enable-warnings           Suggested compiler warnings [no]"
 exit 1
 fi;
@@ -1039,9 +1040,9 @@ $ECHO_N "checking for Agar (http://libagar.org/)..."
 $ECHO_N "checking for Agar (http://libagar.org/)..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_VERSION=`/bin/agar-config --version`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1069,9 +1070,9 @@ else
 	fi
 fi
 if [ "${AGAR_VERSION}" != "" ]; then
-if [ "" != "" ]; then
-echo "yes ($AGAR_VERSION in )"
-echo "yes ($AGAR_VERSION in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_VERSION in ${prefix_agar})" >> config.log
 else
 echo "yes ($AGAR_VERSION)"
 echo "yes ($AGAR_VERSION)" >> config.log
@@ -1109,9 +1110,9 @@ $ECHO_N "checking whether Agar works..."
 $ECHO_N "checking whether Agar works..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_CFLAGS=`/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1140,9 +1141,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_LIBS=`/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1239,9 +1240,9 @@ echo "hdefs[\"AGAR_LIBS\"] = nil" >>configure.lua
 AGAR_LIBS=""
 fi;
 else
-if [ "" != "" ]; then
-echo "no (not in )"
-echo "no (not in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >> config.log
 else
 echo "no"
 echo "no" >> config.log
@@ -1277,9 +1278,9 @@ $ECHO_N "checking for agar-dev (http://libagar.org/)..."
 $ECHO_N "checking for agar-dev (http://libagar.org/)..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-dev-config" ]; then
-		AGAR_DEV_VERSION=`/bin/agar-dev-config --version`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+		AGAR_DEV_VERSION=`${prefix_agar}/bin/agar-dev-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1307,16 +1308,39 @@ else
 	fi
 fi
 if [ "${AGAR_DEV_VERSION}" != "" ]; then
-if [ "" != "" ]; then
-echo "yes ($AGAR_DEV_VERSION in )"
-echo "yes ($AGAR_DEV_VERSION in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_DEV_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_DEV_VERSION in ${prefix_agar})" >> config.log
 else
 echo "yes ($AGAR_DEV_VERSION)"
 echo "yes ($AGAR_DEV_VERSION)" >> config.log
 fi;
-if [ "" != "" ]; then
+if [ "1.5.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$AGAR_DEV_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_DEV_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_DEV_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 5 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo "Version  or greater is required (found $AGAR_DEV_VERSION)"
+echo "Version 1.5.0 or greater is required (found $AGAR_DEV_VERSION)"
 exit 1
 fi;
 fi;
@@ -1324,9 +1348,9 @@ $ECHO_N "checking whether Agar-DEV works..."
 $ECHO_N "checking whether Agar-DEV works..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_CFLAGS=`/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1355,9 +1379,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_LIBS=`/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1386,9 +1410,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-dev-config" ]; then
-		AGAR_DEV_CFLAGS=`/bin/agar-dev-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+		AGAR_DEV_CFLAGS=`${prefix_agar}/bin/agar-dev-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1417,9 +1441,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-dev-config" ]; then
-		AGAR_DEV_LIBS=`/bin/agar-dev-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-dev-config" ]; then
+		AGAR_DEV_LIBS=`${prefix_agar}/bin/agar-dev-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1517,9 +1541,9 @@ echo "hdefs[\"AGAR_DEV_LIBS\"] = nil" >>configure.lua
 AGAR_DEV_LIBS=""
 fi;
 else
-if [ "" != "" ]; then
-echo "no (not in )"
-echo "no (not in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >> config.log
 else
 echo "no"
 echo "no" >> config.log
@@ -1541,13 +1565,25 @@ echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar-dev version >= 1.5.0,"
+echo "* This software requires agar-dev version >= 1.5.0," >> config.log
+echo "* please upgrade and try again."
+echo "* please upgrade and try again." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
 $ECHO_N "checking for Agar-Math library (http://libagar.org/)..."
 $ECHO_N "checking for Agar-Math library (http://libagar.org/)..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-math-config" ]; then
-		AGAR_MATH_VERSION=`/bin/agar-math-config --version`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+		AGAR_MATH_VERSION=`${prefix_agar}/bin/agar-math-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1575,16 +1611,39 @@ else
 	fi
 fi
 if [ "${AGAR_MATH_VERSION}" != "" ]; then
-if [ "" != "" ]; then
-echo "yes ($AGAR_MATH_VERSION in )"
-echo "yes ($AGAR_MATH_VERSION in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_MATH_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_MATH_VERSION in ${prefix_agar})" >> config.log
 else
 echo "yes ($AGAR_MATH_VERSION)"
 echo "yes ($AGAR_MATH_VERSION)" >> config.log
 fi;
-if [ "" != "" ]; then
+if [ "1.5.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$AGAR_MATH_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_MATH_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_MATH_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 5 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo "Version  or greater is required (found $AGAR_MATH_VERSION)"
+echo "Version 1.5.0 or greater is required (found $AGAR_MATH_VERSION)"
 exit 1
 fi;
 fi;
@@ -1592,9 +1651,9 @@ $ECHO_N "checking whether Agar-Math works..."
 $ECHO_N "checking whether Agar-Math works..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_CFLAGS=`/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1623,9 +1682,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_LIBS=`/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1654,9 +1713,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-math-config" ]; then
-		AGAR_MATH_CFLAGS=`/bin/agar-math-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+		AGAR_MATH_CFLAGS=`${prefix_agar}/bin/agar-math-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1685,9 +1744,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-math-config" ]; then
-		AGAR_MATH_LIBS=`/bin/agar-math-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-math-config" ]; then
+		AGAR_MATH_LIBS=`${prefix_agar}/bin/agar-math-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1783,9 +1842,9 @@ echo "hdefs[\"AGAR_MATH_LIBS\"] = nil" >>configure.lua
 AGAR_MATH_LIBS=""
 fi;
 else
-if [ "" != "" ]; then
-echo "no (not in )"
-echo "no (not in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >> config.log
 else
 echo "no"
 echo "no" >> config.log
@@ -1807,13 +1866,25 @@ echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires agar-math version >= 1.5.0,"
+echo "* This software requires agar-math version >= 1.5.0," >> config.log
+echo "* please upgrade and try again."
+echo "* please upgrade and try again." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
+fi;
 $ECHO_N "checking for agar-vg (http://hypertriton.com/agar-vg/)..."
 $ECHO_N "checking for agar-vg (http://hypertriton.com/agar-vg/)..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-vg-config" ]; then
-		AGAR_VG_VERSION=`/bin/agar-vg-config --version`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+		AGAR_VG_VERSION=`${prefix_agar}/bin/agar-vg-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1841,16 +1912,39 @@ else
 	fi
 fi
 if [ "${AGAR_VG_VERSION}" != "" ]; then
-if [ "" != "" ]; then
-echo "yes ($AGAR_VG_VERSION in )"
-echo "yes ($AGAR_VG_VERSION in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_VG_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_VG_VERSION in ${prefix_agar})" >> config.log
 else
 echo "yes ($AGAR_VG_VERSION)"
 echo "yes ($AGAR_VG_VERSION)" >> config.log
 fi;
-if [ "" != "" ]; then
+if [ "1.5.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$AGAR_VG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_VG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_VG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 5 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo "Version  or greater is required (found $AGAR_VG_VERSION)"
+echo "Version 1.5.0 or greater is required (found $AGAR_VG_VERSION)"
 exit 1
 fi;
 fi;
@@ -1858,9 +1952,9 @@ $ECHO_N "checking whether agar-vg works..."
 $ECHO_N "checking whether agar-vg works..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_CFLAGS=`/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1889,9 +1983,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_LIBS=`/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1920,9 +2014,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-vg-config" ]; then
-		AGAR_VG_CFLAGS=`/bin/agar-vg-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+		AGAR_VG_CFLAGS=`${prefix_agar}/bin/agar-vg-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -1951,9 +2045,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-vg-config" ]; then
-		AGAR_VG_LIBS=`/bin/agar-vg-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-vg-config" ]; then
+		AGAR_VG_LIBS=`${prefix_agar}/bin/agar-vg-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2046,9 +2140,9 @@ echo "hdefs[\"AGAR_VG_LIBS\"] = nil" >>configure.lua
 AGAR_VG_LIBS=""
 fi;
 else
-if [ "" != "" ]; then
-echo "no (not in )"
-echo "no (not in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >> config.log
 else
 echo "no"
 echo "no" >> config.log
@@ -2064,9 +2158,9 @@ $ECHO_N "checking for agar-au (http://libagar.org/)..."
 $ECHO_N "checking for agar-au (http://libagar.org/)..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-au-config" ]; then
-		AGAR_AU_VERSION=`/bin/agar-au-config --version`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+		AGAR_AU_VERSION=`${prefix_agar}/bin/agar-au-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2094,16 +2188,39 @@ else
 	fi
 fi
 if [ "${AGAR_AU_VERSION}" != "" ]; then
-if [ "" != "" ]; then
-echo "yes ($AGAR_AU_VERSION in )"
-echo "yes ($AGAR_AU_VERSION in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_AU_VERSION in ${prefix_agar})"
+echo "yes ($AGAR_AU_VERSION in ${prefix_agar})" >> config.log
 else
 echo "yes ($AGAR_AU_VERSION)"
 echo "yes ($AGAR_AU_VERSION)" >> config.log
 fi;
-if [ "" != "" ]; then
+if [ "1.5.0" != "" ]; then
+MK_VERSION_MAJOR=`echo "$AGAR_AU_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_AU_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_AU_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 5 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo "Version  or greater is required (found $AGAR_AU_VERSION)"
+echo "Version 1.5.0 or greater is required (found $AGAR_AU_VERSION)"
 exit 1
 fi;
 fi;
@@ -2111,9 +2228,9 @@ $ECHO_N "checking whether agar-au works..."
 $ECHO_N "checking whether agar-au works..." >> config.log
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_CFLAGS=`/bin/agar-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2142,9 +2259,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-config" ]; then
-		AGAR_LIBS=`/bin/agar-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-config" ]; then
+		AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2173,9 +2290,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-au-config" ]; then
-		AGAR_AU_CFLAGS=`/bin/agar-au-config --cflags`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+		AGAR_AU_CFLAGS=`${prefix_agar}/bin/agar-au-config --cflags`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2204,9 +2321,9 @@ else
 fi
 MK_EXEC_FOUND="No"
 
-if [ "" != "" ]; then
-	if [ -e "/bin/agar-au-config" ]; then
-		AGAR_AU_LIBS=`/bin/agar-au-config --libs`
+if [ "${prefix_agar}" != "" ]; then
+	if [ -e "${prefix_agar}/bin/agar-au-config" ]; then
+		AGAR_AU_LIBS=`${prefix_agar}/bin/agar-au-config --libs`
 		MK_EXEC_FOUND="Yes"
 	fi
 else
@@ -2299,9 +2416,9 @@ echo "hdefs[\"AGAR_AU_LIBS\"] = nil" >>configure.lua
 AGAR_AU_LIBS=""
 fi;
 else
-if [ "" != "" ]; then
-echo "no (not in )"
-echo "no (not in )" >> config.log
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "no (not in ${prefix_agar})" >> config.log
 else
 echo "no"
 echo "no" >> config.log

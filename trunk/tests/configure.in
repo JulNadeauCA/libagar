@@ -3,18 +3,18 @@
 CONFIG_GUESS("../mk/config.guess")
 
 REGISTER_SECTION("Agar test suite options:")
+REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agartest")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
 
 REQUIRE(cc)
-REQUIRE(agar, 1.5.0)
-REQUIRE(agar-dev)
-REQUIRE(agar-math)
-
-CHECK(agar-vg)
-CHECK(agar-au)
+REQUIRE(agar, 1.5.0, ${prefix_agar})
+REQUIRE(agar-dev, 1.5.0, ${prefix_agar})
+REQUIRE(agar-math, 1.5.0, ${prefix_agar})
+CHECK(agar-vg, 1.5.0, ${prefix_agar})
+CHECK(agar-au, 1.5.0, ${prefix_agar})
 CHECK(rand48)
 
 C_INCDIR($SRC)
