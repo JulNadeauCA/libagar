@@ -147,6 +147,7 @@ extern const AG_NetOps *agNetOps;
 extern const AG_NetOps  agNetOps_bsd;
 extern const AG_NetOps  agNetOps_winsock1;
 extern const AG_NetOps  agNetOps_winsock2;
+extern const AG_NetOps  agNetOps_dummy;
 
 extern const char *agNetAddrFamilyNames[];
 extern const char *agNetSocketTypeNames[];
