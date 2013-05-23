@@ -946,12 +946,6 @@ AG_DelEventSink(AG_EventSink *es)
 	}
 #endif /* HAVE_KQUEUE */
 
-#ifdef AG_DEBUG
-	if (es->type == AG_SINK_PROLOGUE ||
-	    es->type == AG_SINK_EPILOGUE ||
-	    es->type == AG_SINK_SPINNER)
-		AG_FatalError("Bad type for AG_DelEventSink");
-#endif
 	TAILQ_REMOVE(&src->sinks, es, sinks);
 	free(es);
 }
