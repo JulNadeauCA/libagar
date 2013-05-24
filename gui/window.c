@@ -277,6 +277,8 @@ Attach(AG_Event *event)
 		AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
 		AG_IconSetBackgroundFill(win->icon, 1,
 		    AGDRIVER_SW(drv)->bgColor);
+		AG_SetStyle(win->icon, "font-size", "80%");
+		AG_WidgetCompileStyle(win->icon);
 	}
 
 	if (win->flags & AG_WINDOW_FOCUSONATTACH)
@@ -733,7 +735,8 @@ OnShow(AG_Event *event)
 		a.h = r.h;
 
 		if (win->alignment != AG_WINDOW_ALIGNMENT_NONE) {
-			AG_WindowComputeAlignment(win, &a);
+			if (!AGDRIVER_SINGLE(drv))
+				AG_WindowComputeAlignment(win, &a);
 		} else {
 			if (dmw->flags & AG_DRIVER_MW_ANYPOS_AVAIL) {
 				/* Let the WM choose a default position */
@@ -1422,22 +1425,9 @@ AG_WindowMaximize(AG_Window *win)
 void
 AG_WindowUnmaximize(AG_Window *win)
 {
-	AG_Driver *drv = WIDGET(win)->drv;
-	AG_Rect r;
-
 	if (AG_WindowRestoreGeometry(win) == 0) {
 		win->flags &= ~(AG_WINDOW_MAXIMIZED);
-		/* XXX 1.4 */
-		if (drv != NULL && AGDRIVER_SINGLE(drv)) {
-			r.x = 0;
-			r.y = 0;
-			r.w = AGDRIVER_SW(drv)->w;
-			r.h = AGDRIVER_SW(drv)->h;
-			AGDRIVER_CLASS(drv)->fillRect(drv, r,
-			    AGDRIVER_SW(drv)->bgColor);
-			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
-				AGDRIVER_CLASS(drv)->updateRegion(drv, r);
-		}
+		win->dirty = 1;
 	}
 }
 
@@ -1544,18 +1534,19 @@ AG_WindowMinimize(AG_Window *win)
 		AG_SetEvent(icon, "mouse-button-up", IconButtonUp, NULL);
 		AG_SetEvent(icon, "mouse-button-down", IconButtonDown, "%p", win);
 
+#if 0
 		if (icon->xSaved != -1) {
 			AG_WindowShow(wDND);
 			AG_WindowSetGeometry(wDND, icon->xSaved, icon->ySaved,
 			                     icon->wSaved, icon->hSaved);
 		} else {
-			AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
-			AG_WindowShow(wDND);
-			icon->xSaved = WIDGET(wDND)->x;
-			icon->ySaved = WIDGET(wDND)->y;
-			icon->wSaved = WIDTH(wDND);
-			icon->hSaved = HEIGHT(wDND);
-		}
+#endif
+		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
+		AG_WindowShow(wDND);
+		icon->xSaved = WIDGET(wDND)->x;
+		icon->ySaved = WIDGET(wDND)->y;
+		icon->wSaved = WIDTH(wDND);
+		icon->hSaved = HEIGHT(wDND);
 	}
 	/* TODO MW: send a WM_CHANGE_STATE */
 }
@@ -1777,11 +1768,11 @@ AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
 /* Request a specific initial window position. */
 void
 AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
-    int cascade)
+    int tiling)
 {
 	AG_ObjectLock(win);
 	win->alignment = alignment;
-	AG_SETFLAGS(win->flags, AG_WINDOW_CASCADE, cascade);
+	AG_SETFLAGS(win->flags, AG_WINDOW_TILING, tiling);
 	AG_ObjectUnlock(win);
 }
 
@@ -1822,7 +1813,7 @@ static void
 UpdateIconCaption(AG_Window *win)
 {
 	AG_Icon *icon = win->icon;
-	char s[16], *c;
+	char s[20], *c;
 
 	if (Strlcpy(s, win->caption, sizeof(s)) >= sizeof(s)) {	/* Truncate */
 		for (c = &s[0]; *c != '\0'; c++) {

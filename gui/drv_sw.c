@@ -44,7 +44,6 @@ static void
 Init(void *obj)
 {
 	AG_DriverSw *dsw = obj;
-	Uint i;
 
 	dsw->w = 0;
 	dsw->h = 0;
@@ -55,11 +54,6 @@ Init(void *obj)
 	dsw->winLastKeydown = NULL;
 	dsw->rNom = 20;
 	dsw->rCur = 0;
-
-	for (i = 0; i < AG_WINDOW_ALIGNMENT_LAST; i++) {
-		dsw->windowCurX[i] = 0;
-		dsw->windowCurY[i] = 0;
-	}
 	dsw->windowXOutLimit = 32;
 	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
@@ -448,6 +442,106 @@ AG_WM_LimitWindowToView(AG_Window *win)
 #endif
 }
 
+/* Compute default positions for AG_WINDOW_TILING windows */
+static void
+GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
+{
+	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
+	AG_Window *wOther;
+	const int maxTests = 10000, dx = 16;
+	int nTest = 0;
+	int x = 0, y = 0, xo, yo, wo, ho;
+	int xd, yd;
+
+	switch (win->alignment) {
+	case AG_WINDOW_TL:	xd = 0;			yd = 0;			break;
+	case AG_WINDOW_TC:	xd = dsw->w/2 - w/2;	yd = 0;			break;
+	case AG_WINDOW_TR:	xd = dsw->w - w;	yd = 0;			break;
+	case AG_WINDOW_ML:	xd = 0;			yd = dsw->h/2 - h/2;	break;
+	case AG_WINDOW_ALIGNMENT_NONE:
+	case AG_WINDOW_MC:	xd = dsw->w/2 - w/2;	yd = dsw->h/2 - h/2;	break;
+	case AG_WINDOW_MR:	xd = dsw->w - w;	yd = dsw->h/2 - h/2;	break;
+	case AG_WINDOW_BL:	xd = 0;			yd = dsw->h - h;	break;
+	case AG_WINDOW_BC:	xd = dsw->w/2 - w/2;	yd = dsw->h - h;	break;
+	case AG_WINDOW_BR:	xd = dsw->w - w;	yd = dsw->h - h;	break;
+	}
+	x = xd;
+	y = yd;
+
+	for (;;) {
+		OBJECT_FOREACH_CHILD(wOther, dsw, ag_window) {
+			if (wOther == win ||
+			    (wOther->flags & AG_WINDOW_TILING) == 0) {
+				continue;
+			}
+			xo = WIDGET(wOther)->x;
+			yo = WIDGET(wOther)->y;
+			wo = WIDGET(wOther)->w;
+			ho = WIDGET(wOther)->h;
+			if (x <= xo+wo && x+w >= xo &&
+			    y <= yo+ho && y+h >= yo) {
+				switch (win->alignment) {
+				case AG_WINDOW_TL:
+				case AG_WINDOW_TC:
+				case AG_WINDOW_ML:
+				case AG_WINDOW_MC:
+					x += dx;
+					if (x+w > dsw->w) {
+						x = 0;
+						y += dx;
+						if (y > dsw->h)
+							goto fail;
+					}
+					break;
+				case AG_WINDOW_TR:
+				case AG_WINDOW_MR:
+					x -= dx;
+					if (x < 0) {
+						x = dsw->w - w;
+						y += dx;
+						if (y > dsw->h)
+							goto fail;
+					}
+					break;
+				case AG_WINDOW_BL:
+				case AG_WINDOW_BC:
+					x += dx;
+					if (x+w > dsw->w) {
+						x = 0;
+						y -= dx;
+						if (y < 0)
+							goto fail;
+					}
+					break;
+				case AG_WINDOW_BR:
+					x -= dx;
+					if (x < 0) {
+						x = dsw->w - w;
+						y -= dx;
+						if (y < 0)
+							goto fail;
+					}
+					break;
+				}
+				break;
+			}
+		}
+		if (wOther == NULL) {
+			goto out;
+		}
+		if (++nTest > maxTests)
+			goto fail;
+	}
+out:
+	*xDst = x;
+	*yDst = y;
+	return;
+fail:
+	Verbose("Window tiling failed\n");
+	*xDst = xd;
+	*yDst = yd;
+}
+
 /* Compute default window coordinates from requested alignment settings. */
 void
 AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
@@ -455,15 +549,9 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
 	int xOffs = 0, yOffs = 0;
 
-	if (win->flags & AG_WINDOW_CASCADE) {
-		xOffs = dsw->windowCurX[win->alignment];
-		yOffs = dsw->windowCurY[win->alignment];
-		dsw->windowCurX[win->alignment] += 16;
-		dsw->windowCurY[win->alignment] += 16;
-		if (dsw->windowCurX[win->alignment] > dsw->w)
-			dsw->windowCurX[win->alignment] = 0;
-		if (dsw->windowCurY[win->alignment] > dsw->h)
-			dsw->windowCurY[win->alignment] = 0;
+	if (win->flags & AG_WINDOW_TILING) {
+		GetTilingPosition(win, x, y, w, h);
+		return;
 	}
 	switch (win->alignment) {
 	case AG_WINDOW_TL:

@@ -82,7 +82,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOCLOSE	0x00000400 /* Disable close button */
 #define AG_WINDOW_NOMINIMIZE	0x00000800 /* Disable minimize button */
 #define AG_WINDOW_NOMAXIMIZE	0x00001000 /* Disable maximize button */
-#define AG_WINDOW_CASCADE	0x00002000 /* Cascade position (read-only) */
+#define AG_WINDOW_TILING	0x00002000 /* Subject to WM tiling */
 #define AG_WINDOW_MINSIZEPCT	0x00004000 /* Min size is in % (read-only) */
 #define AG_WINDOW_NOBACKGROUND	0x00008000 /* Don't fill the background */
 #define AG_WINDOW_MAIN		0x00010000 /* Break from AG_EventLoop() on close */
@@ -457,8 +457,9 @@ AG_WindowProcessQueued(void)
 }
 
 #ifdef AG_LEGACY
-#define AG_WINDOW_POPUP 0x01000000 /* "Popup" style (WM-dependent) */
-#define AG_WINDOW_DIALOG 0x02000000 /* "Dialog" style (WM-dependent) */
+#define AG_WINDOW_POPUP 0x01000000
+#define AG_WINDOW_DIALOG 0x02000000
+#define AG_WINDOW_CASCADE AG_WINDOW_TILING
 void	   AG_WindowSetVisibility(AG_Window *, int) DEPRECATED_ATTRIBUTE;
 AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
 void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
