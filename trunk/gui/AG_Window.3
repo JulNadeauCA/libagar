@@ -119,7 +119,7 @@ and
 .Fn AG_WindowSetBottomBorder "AG_Window *win" "int pixels"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetPosition "AG_Window *win, enum ag_window_alignment alignment" "int cascade"
+.Fn AG_WindowSetPosition "AG_Window *win, enum ag_window_alignment alignment" "int tiling"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
@@ -330,9 +330,14 @@ leaves the choice of the initial window position up to the underlying
 window manager (possibly Agar itself, or an external window manager).
 .Pp
 If the
-.Fa cascade
-argument is 1, the window position is slightly incremented or decremented at
-each call (depending on the preferred alignment).
+.Fa tiling
+argument is 1, the
+.Dv AG_WINDOW_TILING
+flag is set (see
+.Dq FLAGS
+section).
+With tiling enabled, the window manager will attempt to avoid overlap between
+existing windows.
 .Pp
 The
 .Fn AG_WindowSetGeometry
@@ -732,6 +737,12 @@ For the
 object:
 .Pp
 .Bl -tag -width "AG_WINDOW_NOUPDATERECT "
+.It AG_WINDOW_TILING
+If no explicit window position is specified, choose a default position
+using a tiling window manager algorithm.
+This method honors the preferred window alignment, and also attempts to
+avoid overlap with other tiling windows.
+Non-tiling windows are ignored in the calculation.
 .It AG_WINDOW_FADEIN
 Enable smooth fade-in for compositing window managers.
 .It AG_WINDOW_FADEOUT

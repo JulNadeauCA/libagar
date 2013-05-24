@@ -66,8 +66,6 @@ typedef struct ag_driver_sw {
 	int windowBotOutLimit;		/* Limit past bottom boundary */
 	int windowIconWidth;		/* Preferred window icon dimensions */
 	int windowIconHeight;
-	int windowCurX[AG_WINDOW_ALIGNMENT_LAST];	/* For cascading */
-	int windowCurY[AG_WINDOW_ALIGNMENT_LAST];
 	Uint rNom;			/* Nominal refresh rate (ms) */
 	int rCur;			/* Effective refresh rate (ms) */
 	AG_Color bgColor;		/* "bgColor" setting */
