@@ -888,6 +888,7 @@ AG_TableBegin(AG_Table *t)
 
 			cPrev = Malloc(sizeof(AG_TableCell));
 			memcpy(cPrev, c, sizeof(AG_TableCell));
+			cPrev->nPrev = n;
 			TAILQ_INSERT_HEAD(&tbPrev->cells, cPrev, cells);
 			TAILQ_INSERT_HEAD(&t->cPrevList, cPrev, cells_list);
 		}
@@ -1003,7 +1004,8 @@ TableRestoreRowSelections(AG_Table *t)
 			}
 			tb = &t->cPrev[HashPrevCell(t,c)];
 			TAILQ_FOREACH(cPrev, &tb->cells, cells) {
-				if (AG_TableCompareCells(c, cPrev) != 0) {
+				if (cPrev->nPrev != n ||
+				    AG_TableCompareCells(c, cPrev) != 0) {
 					continue;
 				}
 				c->surface = cPrev->surface;
@@ -2004,6 +2006,7 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 	c->tbl = t;
 	c->id = 0;
 	c->flags = 0;
+	c->nPrev = 0;
 }
 
 int
