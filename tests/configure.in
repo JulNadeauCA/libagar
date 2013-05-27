@@ -5,6 +5,7 @@ CONFIG_GUESS("../mk/config.guess")
 REGISTER_SECTION("Agar test suite options:")
 REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
+REGISTER("--enable-debug",		"General debugging [no]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agartest")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
@@ -29,6 +30,10 @@ if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
+fi
+
+if [ "${enable_debug}" = "yes" ]; then
+	MDEFINE(CFLAGS, "${CFLAGS} -g")
 fi
 
 #MDEFINE(SRCS_EXTRA, "")

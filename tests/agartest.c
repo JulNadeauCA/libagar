@@ -297,9 +297,18 @@ TestMsgS(void *obj, const char *s)
 	AG_ConsoleMsgS(ti->console, s);
 }
 
-#undef RDTSC
 #if (defined(i386) || defined(__i386__) || defined(__x86_64__))
-# define RDTSC(t) __asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
+# define HAVE_RDTSC
+static __inline__ Uint64
+rdtsc(void)
+{
+	Uint64 rv;
+
+	__asm __volatile(".byte 0x0f, 0x31" : "=A" (rv));
+	return (rv);
+}
+#else
+# undef HAVE_RDTSC
 #endif
 
 /* Execute a benchmark module (called from bench() op) */
@@ -321,19 +330,22 @@ TestExecBenchmark(void *obj, AG_Benchmark *bm)
 		AG_BenchmarkFn *bfn = &bm->funcs[fIdx];
 		AG_ConsoleLine *cl;
 
-		bfn->clksMax = 0;
+		bfn->clksMax = -1;
 		cl = AG_ConsoleMsg(ti->console, "\t%s: ...", bfn->name);
-#ifdef RDTSC
+		if (cl == NULL) {
+			continue;
+		}
+#ifdef HAVE_RDTSC
 		if (agCPU.ext & AG_EXT_TSC) {
 			for (i = 0, tTot = 0; i < bm->runs; i++) {
 retry:
-				RDTSC(t1);
+				t1 = rdtsc();
 				for (j = 0; j < bm->iterations; j++) {
 					bfn->run(ti);
 				}
-				RDTSC(t2);
+				t2 = rdtsc();
 				tRun = (t2 - t1) / bm->iterations;
-				
+			
 				Snprintf(pbuf, sizeof(pbuf),
 				    "\t%s: %lu clks [%i/%i]",
 				    bfn->name,
@@ -357,7 +369,7 @@ retry:
 			    bfn->name, (Ulong)bfn->clksAvg, bm->runs);
 			AG_ConsoleMsgEdit(cl, pbuf);
 		} else
-#endif /* RDTSC */
+#endif /* HAVE_RDTSC */
 		{
 			for (i = 0, tTot = 0; i < bm->runs; i++) {
 				t1 = AG_GetTicks();

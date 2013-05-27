@@ -386,6 +386,7 @@ echo ""
 echo "Agar test suite options:"
 echo "    --with-agar[=PREFIX]        Location of Agar library [check]"
 echo "    --enable-warnings           Suggested compiler warnings [no]"
+echo "    --enable-debug              General debugging [no]"
 exit 1
 fi;
 if [ "${show_version}" = "yes" ]; then
@@ -2505,6 +2506,10 @@ CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 WNO_UNINITIALIZED="-Wno-uninitialized"
 else
 WNO_UNINITIALIZED=""
+fi
+if [ "${enable_debug}" = "yes" ]
+ then
+CFLAGS="${CFLAGS} -g"
 fi
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
