@@ -91,6 +91,7 @@ typedef struct ag_table_cell {
 						   against backing store. */
 	AG_TAILQ_ENTRY(ag_table_cell) cells;	/* In AG_TableBucket */
 	AG_TAILQ_ENTRY(ag_table_cell) cells_list; /* In AG_Table */
+	Uint nPrev;				/* For SEL_ROWS mode */
 } AG_TableCell;
 
 typedef struct ag_table_bucket {
