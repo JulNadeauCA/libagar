@@ -75,7 +75,7 @@ Init(void *obj)
 {
 	AG_Icon *icon = obj;
 
-	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	icon->flags = 0;
 	icon->surface = -1;
@@ -144,10 +144,8 @@ Draw(void *obj)
 			icon->labelSurface = -1;
 		}
 		if (icon->labelSurface == -1) {
-			AG_PushTextState();
 			icon->labelSurface = AG_WidgetMapSurface(icon,
 			    AG_TextRender(icon->labelTxt));
-			AG_PopTextState();
 		}
 		hIcon = WSURFACE(icon,icon->surface)->h;
 		if (icon->flags & AG_ICON_BGFILL) {
