@@ -356,7 +356,7 @@ M_MatrixRotate44K_SSE(M_Matrix44 *M, M_Real theta)
 	float c = cosf((float)theta);
 	M_Matrix44 R;
 
-	R.m1 = _mm_set_ps(0.0f, 0.0f, -s,   -c);
+	R.m1 = _mm_set_ps(0.0f, 0.0f, -s,   c);
 	R.m2 = _mm_set_ps(0.0f, 0.0f, c,    s);
 	R.m3 = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f);
 	R.m4 = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);

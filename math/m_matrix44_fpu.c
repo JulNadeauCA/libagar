@@ -39,8 +39,8 @@ const M_MatrixOps44 mMatOps44_FPU = {
 	M_MatrixRotate44I_FPU,
 	M_MatrixRotate44J_FPU,
 	M_MatrixRotate44K_FPU,
+	M_MatrixTranslatev44_FPU,
 	M_MatrixTranslate44_FPU,
-	M_MatrixTranslate344_FPU,
 	M_MatrixTranslateX44_FPU,
 	M_MatrixTranslateY44_FPU,
 	M_MatrixTranslateZ44_FPU,
@@ -313,7 +313,7 @@ M_MatrixRotateAxis44_FPU(M_Matrix44 *M, M_Real theta, M_Vector3 A)
 }
 
 void
-M_MatrixTranslate44_FPU(M_Matrix44 *M, M_Vector3 v)
+M_MatrixTranslatev44_FPU(M_Matrix44 *M, M_Vector3 v)
 {
 	M_Matrix44 T;
 
@@ -325,7 +325,7 @@ M_MatrixTranslate44_FPU(M_Matrix44 *M, M_Vector3 v)
 }
 
 void
-M_MatrixTranslate344_FPU(M_Matrix44 *M, M_Real x, M_Real y, M_Real z)
+M_MatrixTranslate44_FPU(M_Matrix44 *M, M_Real x, M_Real y, M_Real z)
 {
 	M_Matrix44 T;
 
@@ -361,9 +361,9 @@ M_MatrixOrbitAxis44_FPU(M_Matrix44 *M, M_Vector3 p, M_Vector3 A, M_Real theta)
 	R.m[3][2] = 0.0;
 	R.m[3][3] = 1.0;
 
-	M_MatrixTranslate344_FPU(M, -p.x, -p.y, -p.z);
+	M_MatrixTranslate44_FPU(M, -p.x, -p.y, -p.z);
 	M_MatrixMult44v_FPU(M, &R);
-	M_MatrixTranslate44_FPU(M, p);
+	M_MatrixTranslatev44_FPU(M, p);
 }
 
 void
