@@ -17,7 +17,7 @@ struct ag_popup_menu;
 typedef struct ag_console_line {
 	char *text;			/* Line text */
 	size_t len;			/* Length not including NUL */
-	int surface;			/* Cached surface handle (or -1) */
+	int surface[2];			/* Cached surface handle (or -1) */
 	int icon;			/* Icon to display */
 	AG_Color cAlt;			/* Alternate text color */
 	void *p;			/* User pointer */
