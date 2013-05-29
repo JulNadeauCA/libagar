@@ -372,6 +372,7 @@ OnFontChange(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 	Uint i;
+	int j;
 
 	cons->lineskip = WIDGET(cons)->font->lineskip + 1;
 	cons->rOffs = 0;
@@ -380,9 +381,11 @@ OnFontChange(AG_Event *event)
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = cons->lines[i];
 
-		if (ln->surface != -1) {
-			AG_WidgetUnmapSurface(cons, ln->surface);
-			ln->surface = -1;
+		for (j = 0; j < 2; j++) {
+			if (ln->surface[j] != -1) {
+				AG_WidgetUnmapSurface(cons, ln->surface[j]);
+				ln->surface[j] = -1;
+			}
 		}
 	}
 }
@@ -438,8 +441,17 @@ Init(void *obj)
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
 
-	AG_SetString(cons, "color",		"rgb(0,0,0)");
+	AG_SetString(cons, "color",		"rgb(0,0,30)");
+	AG_SetString(cons, "color#hover",	"rgb(0,0,30)");
+	AG_SetString(cons, "color#disabled",	"rgb(0,0,30)");
+	AG_SetString(cons, "color#focused",	"rgb(0,0,30)");
+	AG_SetString(cons, "color#selected",	"rgb(0,15,80)");
 	AG_SetString(cons, "text-color",	"rgb(240,240,240)");
+	AG_SetString(cons, "text-color#selected", "rgb(250,250,250)");
+	
+	AG_SetString(cons->vBar, "color", "rgb(0,0,30)");
+	AG_SetString(cons->vBar, "color#hover", "rgb(0,0,50)");
+	AG_SetString(cons->vBar, "color#selected", "rgb(0,0,60)");
 
 #ifdef AG_DEBUG
 	AG_BindUint(cons, "nLines", &cons->nLines);
@@ -508,16 +520,9 @@ Draw(void *p)
 	     lnIdx < cons->nLines && rDst.y < WIDGET(cons)->h;
 	     lnIdx++) {
 		AG_ConsoleLine *ln = cons->lines[lnIdx];
+		AG_Color cTxt = WCOLOR(cons,AG_TEXT_COLOR);
+		int suIdx = 0;
 
-		if (ln->surface == -1) {
-			AG_TextColor(
-			    (ln->cAlt.a != 0) ? ln->cAlt :
-			    WCOLOR(cons,AG_TEXT_COLOR));
-			if ((su = AG_TextRender(ln->text)) == NULL) {
-				continue;
-			}
-			ln->surface = AG_WidgetMapSurface(cons, su);
-		}
 		if (cons->pos != -1) {
 			if ((lnIdx == cons->pos) ||
 			    ((cons->sel > 0 && lnIdx > cons->pos && lnIdx < cons->pos + cons->sel + 1) ||
@@ -527,9 +532,20 @@ Draw(void *p)
 				            WIDGET(cons)->w - cons->padding*2,
 				            cons->lineskip+1),
 				    WCOLOR_SEL(cons,AG_COLOR));
+				cTxt = WCOLOR_SEL(cons,AG_TEXT_COLOR);
+				suIdx = 1;
 			}
 		}
-		AG_WidgetBlitSurface(cons, ln->surface, rDst.x, rDst.y);
+		if (ln->surface[suIdx] == -1) {
+			AG_TextColor(
+			    (ln->cAlt.a != 0) ? ln->cAlt :
+			    cTxt);
+			if ((su = AG_TextRender(ln->text)) == NULL) {
+				continue;
+			}
+			ln->surface[suIdx] = AG_WidgetMapSurface(cons, su);
+		}
+		AG_WidgetBlitSurface(cons, ln->surface[suIdx], rDst.x, rDst.y);
 		rDst.y += cons->lineskip;
 	}
 	AG_PopClipRect(cons);
@@ -598,7 +614,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	}
 	ln->cons = cons;
 	ln->p = NULL;
-	ln->surface = -1;
+	ln->surface[0] = -1;
+	ln->surface[1] = -1;
 	ln->cAlt = AG_ColorRGBA(0,0,0,0);
 
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
@@ -684,13 +701,17 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 void
 AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 {
+	int i;
+
 	AG_ObjectLock(ln->cons);
 	Free(ln->text);
 	ln->text = Strdup(s);
 	ln->len = strlen(s);
-	if (ln->surface != -1) {
-		AG_WidgetUnmapSurface(ln->cons, ln->surface);
-		ln->surface = -1;
+	for (i = 0; i < 2; i++) {
+		if (ln->surface[i] != -1) {
+			AG_WidgetUnmapSurface(ln->cons, ln->surface[i]);
+			ln->surface[i] = -1;
+		}
 	}
 	AG_Redraw(ln->cons);
 	AG_ObjectUnlock(ln->cons);
