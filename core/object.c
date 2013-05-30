@@ -836,15 +836,9 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-#if defined(_WIN32) || defined(_XBOX)
-	for (dir = Strsep(&loadpathp, ";");
+	for (dir = Strsep(&loadpathp, AG_PATHSEPMULTI);
 	     dir != NULL;
-	     dir = Strsep(&loadpathp, ";")) {
-#else
-	for (dir = Strsep(&loadpathp, ":");
-	     dir != NULL;
-	     dir = Strsep(&loadpathp, ":")) {
-#endif
+	     dir = Strsep(&loadpathp, AG_PATHSEPMULTI)) {
 	     	Strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
 			Strlcat(path, ob->save_pfx, path_len);
@@ -884,15 +878,9 @@ AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-#ifdef _XBOX
-	for (dir = Strsep(&loadpathp, ";");
+	for (dir = Strsep(&loadpathp, AG_PATHSEPMULTI);
 	     dir != NULL;
-	     dir = Strsep(&loadpathp, ";")) {
-#else
-	for (dir = Strsep(&loadpathp, ":");
-	     dir != NULL;
-	     dir = Strsep(&loadpathp, ":")) {
-#endif
+	     dir = Strsep(&loadpathp, AG_PATHSEPMULTI)) {
 		char tmp_path[AG_PATHNAME_MAX];
 
 	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));

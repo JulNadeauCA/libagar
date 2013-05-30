@@ -95,7 +95,8 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 		AG_SetString(cfg, "save-path", path);
 
 		if (strcmp(DATADIR, "NONE") != 0) {
-			AG_PrtString(cfg, "load-path", "%s:%s", path, DATADIR);
+			AG_PrtString(cfg, "load-path", "%s%s%s",
+			    path, AG_PATHSEPMULTI, DATADIR);
 		} else {
 			AG_SetString(cfg, "load-path", path);
 		}
@@ -171,9 +172,9 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 
 	AG_GetString(agConfig, path_key, path, path_len);
 
-	for (dir = Strsep(&pathp, ":");
+	for (dir = Strsep(&pathp, AG_PATHSEPMULTI);
 	     dir != NULL;
-	     dir = Strsep(&pathp, ":")) {
+	     dir = Strsep(&pathp, AG_PATHSEPMULTI)) {
 		Strlcpy(file, dir, sizeof(file));
 
 		if (name[0] != AG_PATHSEPCHAR) {
