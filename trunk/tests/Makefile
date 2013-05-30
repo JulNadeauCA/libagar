@@ -49,6 +49,7 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	objsystem_animal.c \
 	objsystem_mammal.c \
 	pane.c \
+	palette.c \
 	plotting.c \
 	rendertosurface.c \
 	scrollbar.c \
