@@ -31,6 +31,7 @@ extern const AG_TestCase modalWindowHandlerTest;
 extern const AG_TestCase networkTest;
 #endif
 extern const AG_TestCase objSystemTest;
+extern const AG_TestCase paletteTest;
 extern const AG_TestCase paneTest;
 extern const AG_TestCase plottingTest;
 extern const AG_TestCase renderToSurfaceTest;
@@ -70,6 +71,7 @@ const AG_TestCase *testCases[] = {
 	&networkTest,
 #endif
 	&objSystemTest,
+	&paletteTest,
 	&paneTest,
 	&plottingTest,
 	&renderToSurfaceTest,
@@ -325,6 +327,7 @@ TestExecBenchmark(void *obj, AG_Benchmark *bm)
 	Uint32 tTot, tRun;
 #endif
 
+	AG_RedrawOnTick(ti->console, 1);
 	for (fIdx = 0; fIdx < bm->nFuncs; fIdx++) {
 		char pbuf[64];
 		AG_BenchmarkFn *bfn = &bm->funcs[fIdx];
@@ -393,6 +396,7 @@ retry:
 			AG_ConsoleMsgEdit(cl, pbuf);
 		}
 	}
+	AG_RedrawOnTick(ti->console, -1);
 }
 
 #ifdef AG_DEBUG
