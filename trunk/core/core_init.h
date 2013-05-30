@@ -59,12 +59,14 @@ __END_DECLS
 #define	AG_MAX3(a,b,c) AG_MAX((a),AG_MAX((b),(c)))
 #endif
 
-#ifdef _WIN32
-#define AG_PATHSEP "\\"
-#define AG_PATHSEPCHAR '\\'
+#if defined(_WIN32) || defined(_XBOX)
+# define AG_PATHSEP "\\"
+# define AG_PATHSEPCHAR '\\'
+# define AG_PATHSEPMULTI ";"
 #else
-#define AG_PATHSEP "/"
-#define AG_PATHSEPCHAR '/'
+# define AG_PATHSEP "/"
+# define AG_PATHSEPCHAR '/'
+# define AG_PATHSEPMULTI ":"
 #endif
 
 #include <agar/core/close.h>
