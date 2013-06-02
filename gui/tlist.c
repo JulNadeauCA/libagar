@@ -296,14 +296,6 @@ Init(void *obj)
 	
 	AG_BindPointer(tl, "selected", &tl->selected);
 
-#if 0
-	AG_SetString(tl, "color",		"rgb(125,125,125)");
-	AG_SetString(tl, "color#selected",	"rgb(50,50,120)");
-	AG_SetString(tl, "text-color",		"rgb(255,255,255)");
-	AG_SetString(tl, "text-color#selected",	"rgb(255,255,230)");
-	AG_SetString(tl, "line-color",		"rgb(55,55,55)");
-#endif
-
 #ifdef AG_DEBUG
 	AG_BindInt(tl, "nitems", &tl->nitems);
 	AG_BindInt(tl, "nvisitems", &tl->nvisitems);

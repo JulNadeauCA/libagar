@@ -233,15 +233,9 @@ AG_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
 	
 	AG_WidgetOffsetRect(wid, &r);
 	
-	if (AG_WidgetIsFocusedInWindow(wid)) {
-		c[0] = AG_ColorShift(cBg,
-		    (z<0) ? agFocusSunkColorShift : agFocusRaisedColorShift);
-	} else {
-		c[0] = AG_ColorShift(cBg,
-		    (z<0) ? agNofocusSunkColorShift : agNofocusRaisedColorShift);
-	}
-	c[1] = AG_ColorShift(c[0], (z<0) ? agLowColorShift:agHighColorShift);
-	c[2] = AG_ColorShift(c[0], (z<0) ? agHighColorShift:agLowColorShift);
+	c[0] = AG_ColorShift(cBg, (z<0) ? agSunkColorShift : agRaisedColorShift);
+	c[1] = AG_ColorShift(c[0], (z<0) ? agLowColorShift : agHighColorShift);
+	c[2] = AG_ColorShift(c[0], (z<0) ? agHighColorShift : agLowColorShift);
 	wid->drvOps->drawBoxRounded(wid->drv, r, z, rad, c);
 }
 
@@ -374,13 +368,7 @@ AG_DrawBox(void *obj, AG_Rect r, int z, AG_Color c)
 	AG_Driver *drv = wid->drv;
 	AG_Rect rOffs;
 
-	if (AG_WidgetIsFocusedInWindow(wid)) {
-		c = AG_ColorShift(c,
-		    (z<0)?agFocusSunkColorShift:agFocusRaisedColorShift);
-	} else {
-		c = AG_ColorShift(c,
-		    (z<0)?agNofocusSunkColorShift:agNofocusRaisedColorShift);
-	}
+	c = AG_ColorShift(c, (z < 0) ? agSunkColorShift : agRaisedColorShift);
 	rOffs = r;
 	AG_WidgetOffsetRect(wid, &rOffs);
 	if (c.a < AG_ALPHA_OPAQUE) {
@@ -399,13 +387,7 @@ AG_DrawBoxDisabled(void *obj, AG_Rect r, int z, AG_Color cBox, AG_Color cDither)
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Rect rOffs;
 
-	if (AG_WidgetIsFocusedInWindow(wid)) {
-		cDither = AG_ColorShift(cDither,
-		    (z<0) ? agFocusSunkColorShift : agFocusRaisedColorShift);
-	} else {
-		cDither = AG_ColorShift(cDither,
-		    (z<0) ? agNofocusSunkColorShift : agNofocusRaisedColorShift);
-	}
+	cDither = AG_ColorShift(cDither, (z < 0) ? agSunkColorShift : agRaisedColorShift);
 	rOffs = r;
 	AG_WidgetOffsetRect(wid, &rOffs);
 	wid->drvOps->drawRectFilled(wid->drv, rOffs, cBox);

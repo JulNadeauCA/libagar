@@ -173,6 +173,7 @@ double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
 int
 AG_InitGUIGlobals(void)
 {
+	char acsPath[AG_PATHNAME_MAX];
 	Uint i;
 
 	if (initedGlobals++ > 0) {
@@ -222,6 +223,10 @@ AG_InitGUIGlobals(void)
 	AG_BindInt(agConfig, "ag_screenshot_quality", &agScreenshotQuality);
 	AG_BindInt(agConfig, "ag_msg_delay", &agMsgDelay);
 
+	if (AG_ConfigFile("load-path","style","css", acsPath, sizeof(acsPath)) == 0) {
+		if (AG_LoadStyleSheet(NULL, acsPath) == NULL)
+			Verbose("%s: %s\n", acsPath, AG_GetError());
+	}
 	return (0);
 }
 

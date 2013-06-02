@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@ AG_DestroyStyleSheet(AG_StyleSheet *css)
 		blkNext = TAILQ_NEXT(blk, blks);
 		free(blk);
 	}
+	TAILQ_INIT(&css->blks);
 }
 
 /*
@@ -81,10 +82,11 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) { goto fail; }
 	if (AG_Seek(ds, 0, AG_SEEK_END) == -1) { goto fail_close; }
 	fileSize = AG_Tell(ds);
-	if ((buf = TryMalloc(fileSize)) == NULL) { goto fail_close; }
+	if (AG_Seek(ds, 0, AG_SEEK_SET) == -1) { goto fail_close; }
+	if ((buf = TryMalloc(fileSize+1)) == NULL) { goto fail_close; }
 	if (AG_Read(ds, buf, fileSize) != 0) { goto fail_close; }
 	AG_CloseFile(ds);
-
+	buf[fileSize] = '\0';
 	s = buf;
 	while ((line = Strsep(&s, "\n")) != NULL) {
 		char *c = &line[0], *cKey, *cVal, *t;
@@ -99,6 +101,9 @@ AG_LoadStyleSheet(void *obj, const char *path)
 				AG_SetError("Syntax error (nested block)");
 				goto fail_parse;
 			}
+			while (isspace(t[-1])) {
+				t--;
+			}
 			*t = '\0';
 			if ((cssBlk = TryMalloc(sizeof(AG_StyleBlock))) == NULL) {
 				goto fail_parse;
@@ -112,10 +117,11 @@ AG_LoadStyleSheet(void *obj, const char *path)
 				goto fail_parse;
 			}
 			TAILQ_INSERT_TAIL(&css->blks, cssBlk, blks);
+			cssBlk = NULL;
 			continue;
 		}
-		cKey = AG_Strsep(&c, ":=");
-		cVal = AG_Strsep(&c, ":=");
+		cKey = Strsep(&c, ":=");
+		cVal = Strsep(&c, ":=");
 		if (cKey == NULL || cVal == NULL) {
 			continue;
 		}
@@ -149,12 +155,12 @@ AG_LoadStyleSheet(void *obj, const char *path)
 fail_close:
 	AG_CloseFile(ds);
 fail:
-	free(css);
+	if (css != &agDefaultCSS) { free(css); }
 	return (NULL);
 fail_parse:
 	free(buf);
 	AG_DestroyStyleSheet(css);
-	free(css);
+	if (css != &agDefaultCSS) { free(css); }
 	return (NULL);
 }
 
@@ -164,18 +170,18 @@ AG_LookupStyleSheet(AG_StyleSheet *css, void *obj, const char *key, char **rv)
 {
 	AG_StyleBlock *blk;
 	AG_StyleEntry *ent;
-	char *id;
 
 	TAILQ_FOREACH(blk, &css->blks, blks) {
-		if ((id = strchr(blk->match, '.')) && id[1] != '\0') {
-			if (AG_Defined(obj, id))
-				break;
-		}
 		if (AG_OfClass(obj, blk->match))
 			break;
 	}
 	if (blk == NULL) {
-		return (0);
+		TAILQ_FOREACH(blk, &css->blks, blks) {
+			if (!Strcasecmp(AGOBJECT_CLASS(obj)->name, blk->match))
+				break;
+		}
+		if (blk == NULL)
+			return (0);
 	}
 	TAILQ_FOREACH(ent, &blk->ents, ents) {
 		if (strcmp(ent->key, key) == 0) {

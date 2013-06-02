@@ -441,18 +441,6 @@ Init(void *obj)
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
 
-	AG_SetString(cons, "color",		"rgb(0,0,30)");
-	AG_SetString(cons, "color#hover",	"rgb(0,0,30)");
-	AG_SetString(cons, "color#disabled",	"rgb(0,0,30)");
-	AG_SetString(cons, "color#focused",	"rgb(0,0,30)");
-	AG_SetString(cons, "color#selected",	"rgb(0,15,80)");
-	AG_SetString(cons, "text-color",	"rgb(240,240,240)");
-	AG_SetString(cons, "text-color#selected", "rgb(250,250,250)");
-	
-	AG_SetString(cons->vBar, "color", "rgb(0,0,30)");
-	AG_SetString(cons->vBar, "color#hover", "rgb(0,0,50)");
-	AG_SetString(cons->vBar, "color#selected", "rgb(0,0,60)");
-
 #ifdef AG_DEBUG
 	AG_BindUint(cons, "nLines", &cons->nLines);
 	AG_BindUint(cons, "rOffs", &cons->rOffs);

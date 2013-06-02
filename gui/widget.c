@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,7 @@ const char *agWidgetPropNames[] = {
 const char *agWidgetStateNames[] = {
 	"",
 	"#disabled",
+	"#focused",
 	"#hover",
 	"#selected",
 	NULL
@@ -75,8 +76,9 @@ AG_WidgetPalette agDefaultPalette = {{
 	/* "color"           "text-color"        "line-color"    "shape-color"	"border-color" */
 /*def*/	{ {125,125,125,255}, {240,240,240,255},  {50,50,50,255}, {200,200,200,255},	{100,100,100,255} },
 /*dis*/	{ {160,160,160,255}, {240,240,240,255},  {70,70,70,255}, {150,150,150,255},	{100,100,100,255} },
+/*foc*/	{ {125,125,125,255}, {240,240,240,255},  {50,50,50,255}, {200,200,200,255},	{100,100,100,255} },
 /*hov*/	{ {130,130,130,255}, {240,240,240,255},  {50,50,50,255}, {220,220,220,255},	{100,100,100,255} },
-/*sel*/	{ {50,50,120,255},   {255,255,255,255},  {50,50,60,255}, {50,50,50,255},	{100,100,100,255} }
+/*sel*/	{ {50,50,120,255},   {255,255,255,255},  {50,50,60,255}, {50,50,50,255},	{100,100,100,255} },
 }};
 
 /* #define DEBUG_CLIPPING */
@@ -225,7 +227,7 @@ OnShow(AG_Event *event)
 	if (wid->font == NULL)
 		AG_FatalError("%s style not compiled", OBJECT(wid)->name);
 
-	wid->flags &= ~(AG_WIDGET_HIDE);
+	wid->flags |= AG_WIDGET_VISIBLE;
 
 	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
 		switch (rt->type) {
@@ -247,7 +249,7 @@ OnHide(AG_Event *event)
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
 
-	wid->flags |= AG_WIDGET_HIDE;
+	wid->flags &= ~(AG_WIDGET_VISIBLE);
 	
 	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
 		switch (rt->type) {
@@ -347,6 +349,12 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	Strlcat(rt->to.name, name, sizeof(rt->to.name));
 #endif
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
+	
+	if (wid->flags & AG_WIDGET_VISIBLE) {
+		AG_AddTimer(wid, &rt->to, rt->ival, RedrawOnChangeTimeout, "%p", rt);
+	} else {
+		/* Fire from OnShow() */
+	}
 }
 
 /* Arrange for an unconditional redraw at a periodic interval. */
@@ -375,6 +383,12 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	rt->name[0] = '\0';
 	AG_InitTimer(&rt->to, "redrawTick", 0);
 	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
+	
+	if (wid->flags & AG_WIDGET_VISIBLE) {
+		AG_AddTimer(wid, &rt->to, rt->ival, RedrawOnTickTimeout, NULL);
+	} else {
+		/* Fire from OnShow() */
+	}
 }
 
 /* Default event handler for "key-down" (for widgets using Actions). */
@@ -1173,6 +1187,8 @@ AG_WidgetDraw(void *p)
 		wid->cState = AG_DISABLED_STATE;
 	} else if (wid->flags & AG_WIDGET_MOUSEOVER) {
 		wid->cState = AG_HOVER_STATE;
+	} else if (wid->flags & AG_WIDGET_FOCUSED) {
+		wid->cState = AG_FOCUSED_STATE;
 	} else {
 		wid->cState = AG_DEFAULT_STATE;
 	}
@@ -1513,7 +1529,7 @@ FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
 		if ((p = FindAtPoint(chld, type, x, y)) != NULL)
 			return (p);
 	}
-	if (!(parent->flags & AG_WIDGET_HIDE) &&
+	if ((parent->flags & AG_WIDGET_VISIBLE) &&
 	    AG_OfClass(parent, type) &&
 	    AG_WidgetArea(parent, x, y)) {
 		return (parent);

@@ -120,14 +120,16 @@ typedef struct ag_redraw_tie {
 /*
  * Palette of globally inheritable widget colors. Color schemes may be
  * configured on a per-class, per-instance or per-"id"-tag basis.
+ * Sync: agWidgetStateNames[], agWidgetColorNames[], agDefaultPalette[].
  */
-#define AG_WIDGET_NSTATES 4
+#define AG_WIDGET_NSTATES 5
 #define AG_WIDGET_NCOLORS 5
 enum ag_widget_color_state {
-	AG_DEFAULT_STATE,		/* Default state */
+	AG_DEFAULT_STATE,		/* Unfocused state */
 	AG_DISABLED_STATE,		/* Inactive state (#disabled) */
-	AG_HOVER_STATE,			/* Mouse over state (#hover) */
-	AG_SELECTED_STATE		/* Selected item (#selected) */
+	AG_FOCUSED_STATE,		/* Active / focused state (#focused) */
+	AG_HOVER_STATE,			/* "Mouse over" state (#hover) */
+	AG_SELECTED_STATE		/* "Selected" state (#selected) */
 };
 enum ag_widget_color {
 	AG_COLOR = 0,			/* Background ("color") */
@@ -158,6 +160,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNFOCUSED_MOTION	0x000004 /* All mousemotion events */
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x000008 /* All mousebuttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x000010 /* All mousebuttondown events */
+#define AG_WIDGET_VISIBLE		0x000020 /* Widget is visible */
 #define AG_WIDGET_HFILL			0x000040 /* Expand to fill width */
 #define AG_WIDGET_VFILL			0x000080 /* Expand to fill height */
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */

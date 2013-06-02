@@ -1837,12 +1837,6 @@ Init(void *obj)
 
 	AG_RedrawOnTick(ed, 1000);
 
-#if 0
-	AG_SetString(ed, "text-color", "rgb(240,240,240)");
-	AG_SetString(ed, "text-color#hover", "rgb(255,255,255)");
-	AG_SetString(ed, "text-color#disabled", "rgb(230,230,230)");
-#endif
-
 #ifdef AG_DEBUG
 	AG_BindInt(ed, "pos", &ed->pos);
 	AG_BindInt(ed, "sel", &ed->sel);
