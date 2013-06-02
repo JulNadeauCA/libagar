@@ -15,6 +15,8 @@ LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
 CFLAGS+=	-D_AGAR_GUI_INTERNAL \
 		${CORE_CFLAGS} ${GUI_CFLAGS}
 
+DATAFILES_SRC= style.css
+
 SRCS=	${SRCS_GUI} drv.c drv_sw.c drv_mw.c \
 	gui.c widget.c window.c iconmgr.c geometry.c \
 	colors.c cursors.c ttf.c text.c keymap.c keymap_latin1.c \

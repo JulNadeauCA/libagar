@@ -10,10 +10,8 @@ typedef struct ag_color {
 } AG_Color;
 
 __BEGIN_DECLS
-extern Sint8 agFocusSunkColorShift[3];
-extern Sint8 agFocusRaisedColorShift[3];
-extern Sint8 agNofocusSunkColorShift[3];
-extern Sint8 agNofocusRaisedColorShift[3];
+extern Sint8 agSunkColorShift[3];
+extern Sint8 agRaisedColorShift[3];
 extern Sint8 agHighColorShift[3];
 extern Sint8 agLowColorShift[3];
 
