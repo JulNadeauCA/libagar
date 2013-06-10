@@ -186,6 +186,7 @@ MouseButtonUp(AG_Event *event)
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimer(bu, &bu->repeatTo);
 		AG_DelTimer(bu, &bu->delayTo);
+		return;
 	}
 	
 	if (AG_WidgetDisabled(bu) ||
