@@ -458,20 +458,13 @@ static void
 IncrementValue(AG_Event *event)
 {
 	AG_Numerical *num = AG_PTR(1);
-
-	AG_ObjectLock(num);
 	AG_NumericalIncrement(num);
-	AG_ObjectUnlock(num);
 }
-
 static void
 DecrementValue(AG_Event *event)
 {
 	AG_Numerical *num = AG_PTR(1);
-	
-	AG_ObjectLock(num);
 	AG_NumericalDecrement(num);
-	AG_ObjectUnlock(num);
 }
 
 static void
