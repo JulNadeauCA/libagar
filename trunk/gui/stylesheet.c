@@ -168,26 +168,47 @@ fail_parse:
 int
 AG_LookupStyleSheet(AG_StyleSheet *css, void *obj, const char *key, char **rv)
 {
+	AG_ObjectClass **hier;
 	AG_StyleBlock *blk;
 	AG_StyleEntry *ent;
+	int nHier;
 
+	if (AG_ObjectGetInheritHier(obj, &hier, &nHier) != 0)
+		return (0);
+
+	/* Match an exact class ID */
 	TAILQ_FOREACH(blk, &css->blks, blks) {
-		if (AG_OfClass(obj, blk->match))
+		if (Strcasecmp(blk->match, AGOBJECT_CLASS(obj)->hier) == 0)
 			break;
 	}
 	if (blk == NULL) {
+		/* Match a general class hierarchy pattern */
 		TAILQ_FOREACH(blk, &css->blks, blks) {
-			if (!Strcasecmp(AGOBJECT_CLASS(obj)->name, blk->match))
+			if (AG_OfClass(obj, blk->match))
 				break;
 		}
-		if (blk == NULL)
-			return (0);
-	}
-	TAILQ_FOREACH(ent, &blk->ents, ents) {
-		if (strcmp(ent->key, key) == 0) {
-			*rv = ent->value;
-			return (1);
+		if (blk == NULL) {
+			/* Match a short class name */
+			TAILQ_FOREACH(blk, &css->blks, blks) {
+				if (Strcasecmp(hier[nHier-1]->name, blk->match) == 0)
+					break;
+			}
+ 			if (blk == NULL)
+				goto fail;
 		}
 	}
+	TAILQ_FOREACH(ent, &blk->ents, ents) {
+		if (Strcasecmp(ent->key, key) == 0) {
+			*rv = ent->value;
+			break;
+		}
+	}
+	if (ent == NULL) {
+		goto fail;
+	}
+	free(hier);
+	return (1);
+fail:
+	free(hier);
 	return (0);
 }
