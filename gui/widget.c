@@ -1791,7 +1791,13 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 				wid->pal.c[i][j] = AG_ColorFromString(cssData,
 				    parentColor);
 			} else {
-				wid->pal.c[i][j] = *parentColor;
+				Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
+				if (AG_LookupStyleSheet(css, wid, vName, &cssData)) {
+					wid->pal.c[i][j] = AG_ColorFromString(cssData,
+					    parentColor);
+				} else {
+					wid->pal.c[i][j] = *parentColor;
+				}
 			}
 		}
 	}
