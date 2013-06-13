@@ -97,6 +97,9 @@ OnDetach(AG_Event *event)
 
 	for (ntab = TAILQ_FIRST(&nb->tabs); ntab != TAILQ_END(&nb->tabs); ntab = ntabNext) {
 		ntabNext = TAILQ_NEXT(ntab, tabs);
+		if (ntab == nb->sel_tab) {
+			continue;			/* Attached */
+		}
 		AG_ObjectDestroy(ntab);
 	}
 	TAILQ_INIT(&nb->tabs);
