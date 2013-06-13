@@ -536,7 +536,7 @@ main(int argc, char *argv[])
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
 	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 50);
 	AG_WindowShow(win);
 	
 	for (i = optInd; i < argc; i++) {

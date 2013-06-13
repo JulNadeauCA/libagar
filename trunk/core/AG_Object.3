@@ -1172,7 +1172,7 @@ Set internally to the last element in inheritance hierarchy.
 Comma-separated list of modules (DSOs) which must be loaded before this
 class is used.
 Set internally when the class is registered.
-.It Ft TAILQ(sub)
+.It Ft TAILQ sub
 List of
 .Ft AG_ObjectClass
 structures representing direct subclasses of this class.
@@ -1225,14 +1225,14 @@ structure describing active event handlers.
 List of
 .Xr AG_Timeout 3
 structure for the timers associated with the object.
-.It Ft TAILQ(vars)
+.It Ft TAILQ vars
 Named variables (see
 .Xr AG_Variable 3
 for details).
-.It Ft TAILQ(deps)
+.It Ft TAILQ deps
 Registered dependencies (see
 .Dq DEPENDENCIES ) .
-.It Ft TAILQ(children)
+.It Ft TAILQ children
 List of child objects.
 The 
 .Fn AGOBJECT_FOREACH_CHILD ,
