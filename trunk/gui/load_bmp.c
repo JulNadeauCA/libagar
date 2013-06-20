@@ -22,6 +22,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+  Simple DirectMedia Layer
+  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+*/
 
 /*
  * Support for reading and writing Win32 image files in BMP format.
@@ -94,13 +114,15 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 {
 	struct ag_bmp_header bh;
 	struct ag_bmp_info_header bi;
-	Uint32 Rmask = 0, Gmask = 0, Bmask = 0;
+	Uint32 Rmask = 0, Gmask = 0, Bmask = 0, Amask = 0;
 	AG_Surface *s;
 	off_t offs;
-	Uint8 *bits;
-	int i, pitch, expandBpp = 0, pad;
+	Uint8 *pStart, *pEnd, *pDst;
+	int i, bmpPitch, expandBpp, bmpPad, topDown;
 
 	offs = AG_Tell(ds);
+	bh.magic[0] = '?';
+	bh.magic[1] = '?';
 	if (AG_Read(ds, bh.magic, 2) != 0 ||
 	    bh.magic[0] != 'B' || bh.magic[1] != 'M') {
 		AG_SetError("Not a Windows BMP file (`%c%c')",
@@ -129,8 +151,8 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 		bi.clrUsed = 0;
 		bi.clrImportant = 0;
 	} else {
-		bi.w = AG_ReadUint32(ds);
-		bi.h = AG_ReadUint32(ds);
+		bi.w = AG_ReadSint32(ds);
+		bi.h = AG_ReadSint32(ds);
 		bi.planes = AG_ReadUint16(ds);
 		bi.bitCount = AG_ReadUint16(ds);
 		bi.encoding = AG_ReadUint32(ds);
@@ -140,16 +162,24 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 		bi.clrUsed = AG_ReadUint32(ds);
 		bi.clrImportant = AG_ReadUint32(ds);
 	}
+	if (bi.h < 0) {
+		topDown = 1;
+		bi.h = -bi.h;
+	} else {
+		topDown = 0;
+	}
 	
 	/* Will convert 1bpp/4bpp to 8bpp */
 	if (bi.bitCount == 1 || bi.bitCount == 4) {
 		expandBpp = bi.bitCount;
 		bi.bitCount = 8;
+	} else {
+		expandBpp = 0;
 	}
 
 	switch (bi.encoding) {
 	case AG_BMP_RGB:
-		if (bh.offBits == (14+bi.size)) {
+		if (bh.offBits == (14 + bi.size)) {
 			switch (bi.bitCount) {
 			case 15:
 			case 16:
@@ -177,10 +207,15 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 		switch (bi.bitCount) {
 		case 15:
 		case 16:
+			Rmask = AG_ReadUint32(ds);
+			Gmask = AG_ReadUint32(ds);
+			Bmask = AG_ReadUint32(ds);
+			break;
 		case 32:
 			Rmask = AG_ReadUint32(ds);
 			Gmask = AG_ReadUint32(ds);
 			Bmask = AG_ReadUint32(ds);
+			Amask = AG_ReadUint32(ds);
 			break;
 		}
 		break;
@@ -188,13 +223,12 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 		AG_SetError("BMP compression unimplemented");
 		return (NULL);
 	}
-
-	/* Allocate Agar surface. */
-	if ((s = AG_SurfaceRGB(bi.w, bi.h, bi.bitCount, 0, Rmask, Gmask, Bmask))
-	    == NULL)
+	if ((s = AG_SurfaceRGBA(bi.w, bi.h, bi.bitCount,
+	    (Amask != 0) ? AG_SRCALPHA : 0,
+	    Rmask, Gmask, Bmask, Amask)) == NULL) {
 		return (NULL);
+	}
 
-	/* Read palette information. */
 	if (s->format->palette != NULL) {
 		if (bi.clrUsed == 0) {
 			bi.clrUsed = (1 << bi.bitCount);
@@ -216,41 +250,45 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 		s->format->palette->nColors = bi.clrUsed;
 	}
 
-	if (AG_Seek(ds, offs+bh.offBits, AG_SEEK_SET) == -1) {
+	if (AG_Seek(ds, offs+bh.offBits, AG_SEEK_SET) == -1)
 		goto fail;
-	}
-	bits = (Uint8 *)s->pixels + s->h*s->pitch;
+	
+	pStart = (Uint8 *)s->pixels;
+	pEnd = (Uint8 *)s->pixels + (s->h*s->pitch);
 	switch (expandBpp) {
 	case 1:
-		pitch = (bi.w + 7) >> 3;
-		pad = (((pitch)%4) ? (4-((pitch)%4)) : 0);
+		bmpPitch = (bi.w + 7) >> 3;
+		bmpPad = ((bmpPitch % 4) ? (4 - (bmpPitch % 4)) : 0);
 		break;
 	case 4:
-		pitch = (bi.w + 1) >> 1;
-		pad = (((pitch)%4) ? (4-((pitch)%4)) : 0);
+		bmpPitch = (bi.w + 1) >> 1;
+		bmpPad = ((bmpPitch % 4) ? (4 - (bmpPitch % 4)) : 0);
 		break;
 	default:
-		pad = ((s->pitch%4) ? (4-(s->pitch%4)) : 0);
+		bmpPad = ((s->pitch % 4) ? (4 - (s->pitch % 4)) : 0);
 		break;
 	}
-	while (bits > (Uint8 *)s->pixels) {
-		bits -= s->pitch;
+	
+	pDst = topDown ? pStart : (pEnd - s->pitch);
+	while (pDst >= pStart && pDst < pEnd) {
 		switch (expandBpp) {
 		case 1:
 		case 4:
 			{
 				Uint8 px = 0;
+                		int shift = (8 - expandBpp);
+
 				for (i = 0; i < s->w; i++) {
-					if (i%(8/expandBpp) == 0) {
+					if (i % (8/expandBpp) == 0) {
 						px = AG_ReadUint8(ds);
 					}
-					*(bits+i) = (px >> (8 - expandBpp));
+					*(pDst + i) = (px >> shift);
 					px <<= expandBpp;
 				}
 			}
 			break;
 		default:
-			if (AG_Read(ds, bits, s->pitch) != 0) {
+			if (AG_Read(ds, pDst, s->pitch) != 0) {
 				goto fail;
 			}
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -258,7 +296,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 			case 15:
 			case 16:
 				{
-				        Uint16 *px = (Uint16 *)bits;
+				        Uint16 *px = (Uint16 *)pDst;
 					for (i = 0; i < s->w; i++) {
 					        px[i] = AG_Swap16(px[i]);
 					}
@@ -266,7 +304,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 				}
 			case 32:
 				{
-					Uint32 *px = (Uint32 *)bits;
+					Uint32 *px = (Uint32 *)pDst;
 					for (i = 0; i < s->w; i++) {
 					        px[i] = AG_Swap32(px[i]);
 					}
@@ -276,9 +314,15 @@ AG_ReadSurfaceFromBMP(AG_DataSource *ds)
 #endif /* AG_BYTEORDER == AG_BIG_ENDIAN */
 			break;
 		}
-		if (pad != 0 &&
-		    AG_Seek(ds, pad, AG_SEEK_CUR) == -1)
-			goto fail;
+		if (bmpPad != 0) {
+			if (AG_Seek(ds, bmpPad, AG_SEEK_CUR) == -1)
+				goto fail;
+		}
+		if (topDown) {
+			pDst += s->pitch;
+		} else {
+			pDst -= s->pitch;
+		}
 	}
 	return (s);
 fail:
