@@ -663,7 +663,11 @@ section).
 .It Ft int w, h
 Dimensions of the surface in pixels (read-only).
 .It Ft void *pixels
-Pointer to raw pixel data.
+Pointer to raw pixel data (4-byte aligned)
+.It Ft Uint pitch
+Size of a scanline in bytes.
+.It Ft Uint padding
+Scanline padding in bytes.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

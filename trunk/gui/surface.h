@@ -46,6 +46,7 @@ typedef struct ag_surface {
 	Uint pitch;			/* Scanline size in bytes */
 	void *pixels;			/* Raw pixel data */
 	AG_Rect clipRect;		/* Clipping rect for blit as dst */
+	Uint padding;			/* Scanline end padding in bytes */
 } AG_Surface;
 
 typedef enum ag_blend_func {
