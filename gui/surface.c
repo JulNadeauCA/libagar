@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -255,6 +255,7 @@ AG_SurfaceNew(enum ag_surface_type type, Uint w, Uint h,
 		break;
 	}
 	s->pitch = (pitch + 3) & ~3;
+	s->padding = s->pitch - w*pf->BytesPerPixel;
 	s->clipRect = AG_RECT(0,0,w,h);
 
 	if (h*s->pitch > 0) {
@@ -456,23 +457,25 @@ AG_SurfaceConvert(const AG_Surface *ss, const AG_PixelFormat *pf)
 void
 AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 {
-	int w, h, x, y, skipDst, skipSrc;
+	int w, h, x, y, padDst, padSrc;
 	const Uint8 *pSrc;
 	Uint8 *pDst;
 
 	if (ds->w > ss->w) {
 		w = ss->w;
-		skipDst = (ds->w - ss->w)*ds->format->BytesPerPixel;
-		skipSrc = 0;
+		padDst = (ds->w - ss->w)*ds->format->BytesPerPixel;
+		padSrc = 0;
 	} else if (ds->w < ss->w) {
 		w = ds->w;
-		skipDst = 0;
-		skipSrc = (ss->w - ds->w)*ss->format->BytesPerPixel;
+		padDst = 0;
+		padSrc = (ss->w - ds->w)*ss->format->BytesPerPixel;
 	} else {
 		w = ds->w;
-		skipSrc = 0;
-		skipDst = 0;
+		padSrc = 0;
+		padDst = 0;
 	}
+	padSrc += ss->padding;
+	padDst += ds->padding;
 	h = MIN(ss->h, ds->h);
 
 	pSrc = (Uint8 *)ss->pixels;
@@ -481,13 +484,13 @@ AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 	if (AG_PixelFormatCompare(ss->format, ds->format) == 0) {
 		for (y = 0; y < h; y++) {
 			memcpy(pDst, pSrc, w*ds->format->BytesPerPixel);
-			pDst += w*ds->format->BytesPerPixel + skipDst;
-			pSrc += w*ss->format->BytesPerPixel + skipSrc;
+			pDst += w*ds->format->BytesPerPixel + padDst;
+			pSrc += w*ss->format->BytesPerPixel + padSrc;
 		}
 	} else {					/* Format conversion */
 		Uint32 px;
 		AG_Color C;
-		
+	
 		for (y = 0; y < h; y++) {
 			for (x = 0; x < w; x++) {
 				px = AG_GET_PIXEL(ss,pSrc);
@@ -497,8 +500,8 @@ AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
 				pSrc += ss->format->BytesPerPixel;
 				pDst += ds->format->BytesPerPixel;
 			}
-			pDst += skipDst;
-			pSrc += skipSrc;
+			pDst += padDst;
+			pSrc += padSrc;
 		}
 	}
 }
