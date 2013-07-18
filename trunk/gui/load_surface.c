@@ -119,7 +119,7 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
 }
 
 AG_Surface *
-AG_ReadSurface(AG_DataSource *ds, AG_PixelFormat *pixfmt)
+AG_ReadSurface(AG_DataSource *ds)
 {
 	AG_Surface *su;
 	Uint32 encoding;
