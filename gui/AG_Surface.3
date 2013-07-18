@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2013 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -96,6 +96,9 @@ as
 .Fn AG_SurfaceFromBMP "const char *path"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_ReadSurface "AG_DataSource *ds"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_ReadSurfaceFromPNG "AG_DataSource *ds"
 .Pp
 .Ft "AG_Surface *"
@@ -104,9 +107,9 @@ as
 .Ft "AG_Surface *"
 .Fn AG_ReadSurfaceFromBMP "AG_DataSource *ds"
 .Pp
-.Bd -literal
-/* Requires Agar compiled --with-sdl */
-.Ed
+.Ft "int"
+.Fn AG_WriteSurface "AG_DataSource *ds" "AG_Surface *surface"
+.Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceFromSDL "SDL_Surface *surface"
 .Pp
@@ -253,14 +256,22 @@ and
 .Fn AG_SurfaceFromJPEG
 will return an error unless Agar was compiled with support for libpng
 and libjpeg, respectively.
+.Pp
+The
+.Fn AG_ReadSurface
+function loads a native-format surface from the specified data source
+(see
+.Xr AG_DataSource 3 ) .
 The
 .Fn AG_ReadSurfaceFromPNG ,
 .Fn AG_ReadSurfaceFromJPEG
 and
 .Fn AG_ReadSurfaceFromBMP
-variants can be used to load an image file from an arbitrary data
-source (see
-.Xr AG_DataSource 3 ) .
+functions may be used to read PNG, JPEG and BMP encoded images from the
+data source.
+The
+.Fn AG_WriteSurface
+function saves the surface to the specified data source in native format.
 .Pp
 The
 .Fn AG_SurfaceFromSDL
@@ -269,8 +280,7 @@ function converts a
 to a newly-allocated
 .Nm
 structure.
-This function is only available if Agar was
-compiled with SDL support.
+This function is only available if Agar was compiled with SDL support.
 .Pp
 The
 .Fn AG_SurfaceSetPalette
@@ -339,9 +349,6 @@ function releases all resources allocated by the given surface.
 .Ft "int"
 .Fn AG_SurfaceExportBMP "const AG_Surface *su" "char *path"
 .Pp
-.Bd -literal
-/* Requires Agar compiled --with-sdl */
-.Ed
 .Ft "SDL_Surface *"
 .Fn AG_SurfaceExportSDL "const AG_Surface *su"
 .Pp
@@ -438,6 +445,11 @@ The value is given in percent, 100% being the highest quality (the default).
 .Fn AG_SurfaceExportBMP
 exports a BMP image file from the contents of a surface.
 If the surface has an alpha-channel, it is ignored.
+.Pp
+.Fn AG_SurfaceExportSDL
+exports an Agar surface to a newly allocated
+.Xr SDL_Surface 3 .
+This function is only available if Agar was compiled with SDL support.
 .Sh PIXEL FORMATS
 .nr nS 1
 .Ft "AG_PixelFormat *"
