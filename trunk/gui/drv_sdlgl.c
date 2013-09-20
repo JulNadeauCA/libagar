@@ -61,13 +61,6 @@ static int initedSDLVideo = 0;			/* Used SDL_INIT_VIDEO */
 static AG_EventSink *sglEventSpinner = NULL;	/* Standard event sink */
 static AG_EventSink *sglEventEpilogue = NULL;	/* Standard event epilogue */
 
-#include <config/have_clock_gettime.h>
-#include <config/have_pthreads.h>
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-extern AG_Cond agCondBeginRender;
-extern AG_Cond agCondEndRender;
-#endif
-
 static void
 Init(void *obj)
 {
@@ -194,11 +187,6 @@ SDLGL_BeginRendering(void *obj)
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-	if (agTimeOps == &agTimeOps_renderer) 		/* Renderer-aware ops */
-		AG_CondBroadcast(&agCondBeginRender);
-#endif
-
 	glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|GL_LIGHTING_BIT|
 	             GL_ENABLE_BIT);
 	
@@ -305,11 +293,6 @@ SDLGL_EndRendering(void *drv)
 		if (gl->clipStates[3])	{ glEnable(GL_CLIP_PLANE3); }
 		else			{ glDisable(GL_CLIP_PLANE3); }
 	}
-	
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
-		AG_CondBroadcast(&agCondEndRender);
-#endif
 }
 
 /*
