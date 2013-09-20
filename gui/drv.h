@@ -188,6 +188,13 @@ extern AG_DriverClass *agDriverOps;	/* Current driver class */
 extern void           *agDriverList[];	/* Available drivers (AG_DriverClass) */
 extern Uint            agDriverListSize;
 
+#include <agar/config/have_clock_gettime.h>
+#include <agar/config/have_pthreads.h>
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+extern AG_Cond agCondBeginRender;	/* For agTimeOps_render */
+extern AG_Cond agCondEndRender;
+#endif
+
 void       AG_ListDriverNames(char *, size_t)
                               BOUNDED_ATTRIBUTE(__string__, 1, 2);
 int        AG_DriverProbe(AG_DriverClass *, const char *);
@@ -212,6 +219,10 @@ AG_GetDriverByID(Uint id)
 static __inline__ void
 AG_BeginRendering(void *drv)
 {
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondBeginRender);
+#endif
 	agRenderingContext = 1;
 	AGDRIVER_CLASS(drv)->beginRendering(drv);
 }
@@ -222,6 +233,10 @@ AG_EndRendering(void *drv)
 {
 	AGDRIVER_CLASS(drv)->endRendering(drv);
 	agRenderingContext = 0;
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondEndRender);
+#endif
 }
 
 /* Create a texture from a surface (GL drivers). */

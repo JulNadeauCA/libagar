@@ -79,6 +79,7 @@ static Display  *agDisplay = NULL;	/* X display handle */
 
 AG_EventSink *glxEventSink = NULL;	/* Process X events */
 AG_EventSink *glxEventEpilogue = NULL;	/* Event sink epilogue */
+AG_EventSink *glxEventSpinner = NULL;	/* For agTimeOps_renderer */
 
 /* Driver instance data */
 typedef struct ag_driver_glx {
@@ -207,6 +208,10 @@ GLX_DestroyGlobals(void)
 		XCloseDisplay(agDisplay);
 		agDisplay = NULL;
 	}
+	if (glxEventSpinner != NULL) {
+		AG_DelEventSink(glxEventSpinner);
+		glxEventSpinner = NULL;
+	}
 	agScreen = 0;
 	AG_MutexDestroy(&agDisplayLock);
 }
@@ -222,6 +227,15 @@ HandleErrorX11(Display *disp, XErrorEvent *xev)
 	abort();
 }
 #endif /* DEBUG_XSYNC */
+
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+static int
+GLX_EventSpin(AG_EventSink *es, AG_Event *event)
+{
+	AG_Delay(1);
+	return (0);
+}
+#endif
 
 static int
 GLX_Open(void *obj, const char *spec)
@@ -242,6 +256,11 @@ GLX_Open(void *obj, const char *spec)
 	
 	/* Driver manages rendering of window background. */
 	drv->flags |= AG_DRIVER_WINDOW_BG;
+	
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)
+		glxEventSpinner = AG_AddEventSpinner(GLX_EventSpin, "%p", drv);
+#endif
 
 #ifdef DEBUG_XSYNC
 	XSynchronize(agDisplay, True);
