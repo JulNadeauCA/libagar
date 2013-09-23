@@ -37,23 +37,22 @@
 .Sh DESCRIPTION
 The
 .Ft M_Plane
-structure describes a plane in R^3 in terms of the coefficients of the
-plane equation (Ax+By+Cz+D=0):
+structure describes a plane in R^3 (Ax+By+Cz+D=0):
 .Bd -literal
 typedef struct m_plane {
-	M_Real a, b, c, d;
+	M_Vector3 n;		/* Normal vector */
+	M_Real d;		/* Distance to origin */
 } M_Plane;
 .Ed
+.Pp
+The plane satisfies the equation A(n.x) + B(n.y) + C(n.z) = d.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft M_Plane
-.Fn M_PlaneFromNormal "M_Vector3 n" "M_Real d"
-.Pp
 .Ft M_Plane
 .Fn M_PlaneFromPts "M_Vector3 p1" "M_Vector p2" "M_Vector p3"
 .Pp
 .Ft M_Plane
-.Fn M_PlaneAtDistance "M_Plane P" "M_Real d"
+.Fn M_PlaneFromParallel "M_Plane P" "M_Real d"
 .Pp
 .Ft M_Plane
 .Fn M_PlaneRead "AG_DataSource *ds"
@@ -66,24 +65,16 @@ typedef struct m_plane {
 .Pp
 .nr nS 0
 The
-.Fn M_PlaneFromNormal
-function returns an
-.Ft M_Plane
-from a normal vector
-.Fa n
-and a distance
-.Fa d
-from the origin.
 .Fn M_PlaneFromPts
-returns a plane from three (non-colinear) points
+function returns a plane from three (non-colinear) points
 .Fa p1 ,
 .Fa p2
 and
 .Fa p3 .
-.Fn M_PlaneAtDistance
-returns the plane at distance
+.Fn M_PlaneFromParallel
+returns the parallel plane at distance
 .Fa d
-from the given plane
+from the specified plane
 .Fa P .
 .Pp
 The
@@ -104,34 +95,14 @@ from the coefficients of the plane equation
 .Fa d .
 .Sh TESTS
 .nr nS 1
-.Ft void
-.Fn M_PlaneIsValid "M_Plane P"
-.Pp
-.Ft M_Vector3
-.Fn M_PlaneNorm "M_Plane P"
-.Pp
-.Ft M_Vector3
-.Fn M_PlaneNormp "const M_Plane *P"
-.Pp
 .Ft M_Real
 .Fn M_PlaneVectorAngle "M_Plane P" "M_Vector3 v"
 .Pp
 .nr nS 0
 The
-.Fn M_PlaneIsValid
-routine evaluates to 1 if the given
-.Ft M_Plane
-represents a valid plane (i.e., A, B and C are non-zero).
-.Pp
-.Fn M_PlaneNorm
-and
-.Fn M_PlaneNormp
-return the normal vector of the plane.
-.Pp
-The
 .Fn M_PlaneVectorAngle
-routine returns the angle (in radians) between the plane and a vector
-.Fa v .
+function computes the angle between the plane and specified vector,
+in radians.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,
