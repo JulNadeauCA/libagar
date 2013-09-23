@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2013 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -235,9 +235,10 @@ M_LineLineAngle3(M_Line3 L1, M_Line3 L2)
 }
 
 /* Compute intersection between two line segments in R2. */
-int
-M_LineLineIntersect2(M_Line2 L1, M_Line2 L2, M_Vector2 *pInt)
+M_GeomSet2
+M_IntersectLineLine2(M_Line2 L1, M_Line2 L2)
 {
+	M_GeomSet2 G = M_GEOM_SET_EMPTY;
 	M_Vector2 a1 = M_LineInitPt2(L1);
 	M_Vector2 a2 = M_LineTermPt2(L1);
 	M_Vector2 b1 = M_LineInitPt2(L2);
@@ -252,14 +253,15 @@ M_LineLineIntersect2(M_Line2 L1, M_Line2 L2, M_Vector2 *pInt)
 
 		if (ac >= 0 && ac <= 1 &&
 		    bc >= 0 && bc <= 1) {
-			if (pInt != NULL) {
-				*pInt = M_VecAdd2(a1,
-				    M_VecScale2(M_VecSub2(a2,a1),ac));
-			}
-			return (1);
+			M_Geom2 x;
+
+			x.type = M_POINT;
+			x.g.point = M_VecAdd2(a1,
+			    M_VecScale2(M_VecSub2(a2,a1),ac));
+			M_GeomSetAdd2(&G, &x);
 		}
 	}
-	return (0);
+	return (G);
 }
 
 /*

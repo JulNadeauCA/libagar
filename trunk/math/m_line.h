@@ -19,8 +19,8 @@ M_Real		M_LinePointDistance2(M_Line2, M_Vector2);
 M_Real		M_LinePointDistance3(M_Line3, M_Vector3);
 M_Real		M_LineLineAngle2(M_Line2, M_Line2);
 M_Real		M_LineLineAngle3(M_Line3, M_Line3);
-int             M_LineLineIntersect2(M_Line2, M_Line2, M_Vector2 *);
 int             M_LineLineShortest3(M_Line3, M_Line3, M_Line3 *);
+M_GeomSet2	M_IntersectLineLine2(M_Line2, M_Line2);
 
 /* Return the two-point representation of the given line in R2. */
 static __inline__ void
