@@ -6,7 +6,7 @@
 typedef struct m_line2 {
 	M_Vector2 p;		/* Origin point */
 	M_Vector2 d;		/* Direction vector (unit-length) */
-	M_Real t;		/* Length of line (or Inf for a halfline) */
+	M_Real t;		/* Length of line (or Inf) */
 } M_Line2;
 typedef struct m_line3 {
 	M_Vector3 p;
@@ -43,13 +43,14 @@ typedef struct m_sphere {
 #define M_SPHERE_INITIALIZER(px,py,pz,r) { { px,py,pz }, r }
 
 /*
- * Plane in R^3 and hyperplane in R^n.
+ * Plane in R^3.
  */
-typedef struct m_plane3 {
-	M_Real a, b, c, d;	/* Coefficients of plane equation */
+typedef struct m_plane {
+	M_Vector3 n;		/* Normal vector */
+	M_Real d;		/* Distance to origin */
 } M_Plane;
 
-#define M_PLANE_INITIALIZER(a,b,c,d) { a,b,c,d }
+#define M_PLANE_INITIALIZER(a,b,c,d) { {a,b,c},d }
 
 /*
  * Triangle in R^2 and R^3.
