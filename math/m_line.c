@@ -100,9 +100,8 @@ M_LineFromPts2(M_Vector2 p1, M_Vector2 p2)
 	L.p = p1;
 	L.d.x = p2.x - p1.x;
 	L.d.y = p2.y - p1.y;
-	L.t = M_VecLen2p(&L.d);
-	L.d.x /= L.t;
-	L.d.y /= L.t;
+	L.t = M_VecLen2(L.d);
+	M_VecScale2v(&L.d, 1/L.t);
 	return (L);
 }
 
@@ -114,8 +113,8 @@ M_LineFromPts3(M_Vector3 p1, M_Vector3 p2)
 	
 	L.p = p1;
 	L.d = M_VecSub3p(&p2, &p1);
-	L.t = M_VecLen3p(&L.d);
-	M_VecScale3v(&L.d, 1.0/L.t);
+	L.t = M_VecLen3(L.d);
+	M_VecScale3v(&L.d, 1/L.t);
 	return (L);
 }
 
@@ -161,11 +160,10 @@ M_LineProject2(M_Line3 L3)
 {
 	M_Line2 L2;
 
-	L2.p = M_Vector3to2(L3.p);
-	L2.d = M_Vector3to2(L3.d);
-	L2.t = M_VecLen2p(&L2.d);
-	L2.d.x /= L2.t;
-	L2.d.y /= L2.t;
+	L2.p = M_VECTOR2(L3.p.x, L3.p.y);
+	L2.d = M_VECTOR2(L3.d.x, L3.d.y);
+	L2.t = M_VecLen2(L2.d);
+	M_VecScale2v(&L2.d, 1/L2.t);		/* Normalize */
 	return (L2);
 }
 
@@ -175,12 +173,10 @@ M_LineProject3(M_Line2 L2)
 {
 	M_Line3 L3;
 
-	L3.p = M_Vector2to3(L2.p);
-	L3.d = M_Vector2to3(L2.d);
-	L3.t = M_VecLen3p(&L3.d);
-	L3.d.x /= L3.t;
-	L3.d.y /= L3.t;
-	L3.d.z /= L3.t;
+	L3.p = M_VECTOR3(L2.p.x, L2.p.y, 0);
+	L3.d = M_VECTOR3(L2.d.x, L2.d.y, 0);
+	L3.t = M_VecLen3(L3.d);
+	M_VecScale3v(&L3.d, 1/L3.t);		/* Normalize */
 	return (L3);
 }
 
@@ -231,7 +227,7 @@ M_LineLineAngle2(M_Line2 L1, M_Line2 L2)
 M_Real
 M_LineLineAngle3(M_Line3 L1, M_Line3 L2)
 {
-	return Acos(M_VecDot3(L1.d, L2.d));
+	return Acos(M_VecDot3p(&L1.d, &L2.d));
 }
 
 /* Compute intersection between two line segments in R2. */
@@ -281,30 +277,23 @@ M_LineLineShortest3(M_Line3 L1, M_Line3 L2, M_Line3 *Ls)
 	M_Real numer, denom;
 	M_Real muA, muB;
 
-	p13.x = p1.x - p3.x;
-	p13.y = p1.y - p3.y;
-	p13.z = p1.z - p3.z;
-	p43.x = p4.x - p3.x;
-	p43.y = p4.y - p3.y;
-	p43.z = p4.z - p3.z;
+	p13 = M_VecSub3(p1, p3);
+	p43 = M_VecSub3(p4, p3);
 	if (Fabs(p43.x) < M_MACHEP &&
 	    Fabs(p43.y) < M_MACHEP &&
 	    Fabs(p43.z) < M_MACHEP)
 		return (0);
 
-	p21.x = p2.x - p1.x;
-	p21.y = p2.y - p1.y;
-	p21.z = p2.z - p1.z;
+	p21 = M_VecSub3(p2, p1);
 	if (Fabs(p21.x) < M_MACHEP &&
 	    Fabs(p21.y) < M_MACHEP &&
 	    Fabs(p21.z) < M_MACHEP)
 		return (0);
 
-	d1343 = p13.x*p43.x + p13.y*p43.y + p13.z*p43.z;
-	d4321 = p43.x*p21.x + p43.y*p21.y + p43.z*p21.z;
-	d1321 = p13.x*p21.x + p13.y*p21.y + p13.z*p21.z;
-	d4343 = p43.x*p43.x + p43.y*p43.y + p43.z*p43.z;
-	d2121 = p21.x*p21.x + p21.y*p21.y + p21.z*p21.z;
+	d1343 = M_VecDot3p(&p13, &p43);
+	d4321 = M_VecDot3p(&p43, &p21);
+	d4343 = M_VecDot3p(&p43, &p43);
+	d2121 = M_VecDot3p(&p21, &p21);
 
 	denom = d2121*d4343 - d4321*d4321;
 	if (Fabs(denom) < M_MACHEP) {
@@ -317,12 +306,8 @@ M_LineLineShortest3(M_Line3 L1, M_Line3 L2, M_Line3 *Ls)
 
 	if (Ls != NULL) {
 		*Ls = M_LineFromPts3(
-		    M_VECTOR3(p1.x + muA*p21.x,
-		              p1.y + muA*p21.y,
-			      p1.z + muA*p21.z),
-		    M_VECTOR3(p3.x + muB*p43.x,
-		              p3.y + muB*p43.y,
-			      p3.z + muB*p43.z));
+		    M_VecAdd3(p1, M_VecScale3(p21,muA)),
+		    M_VecAdd3(p3, M_VecScale3(p43,muB)));
 	}
 	return (1);
 }

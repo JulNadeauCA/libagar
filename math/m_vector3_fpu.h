@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2013 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

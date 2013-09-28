@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -26,7 +26,7 @@
 .Dt M_VECTOR 3
 .Os
 .ds vT Agar-Math API Reference
-.ds oS Agar 1.3.4
+.ds oS Agar 1.5.0
 .Sh NAME
 .Nm M_Vector
 .Nd Agar-Math vector-related functions
@@ -35,39 +35,45 @@
 #include <agar/math.h>
 .Ed
 .Sh DESCRIPTION
+.\" BEGIN DUP in M_Vector(3)
 The
 .Nm
 and
 .Xr M_Matrix 3
-interfaces implement the basic linear algebra routines.
-Both provide a consistent interface to different
-.Em backends
-allowing different numerical solvers and memory representations.
-.Pp
-Selection between multiple backends is possible at run-time, or the Agar-Math
-library can be compiled to provide inline expansions of these operations under
-a specific backend.
-.Pp
-.\" BEGIN DUP in M_Matrix(3)
-By default, Agar-Math uses SSE and AltiVec if a runtime cpuinfo check
-determines that those extensions are available (the build will still work
-on CPUs where they are unavailable).
-This compatibility comes at the cost of a function call per
-operation.
-For best performance on SSE-capable CPUs, Agar-Math should be compiled
-with "--with-sse-inline" or "--with-altivec-inline", which forces inline
-expansions of
-.Ft M_Vector3 ,
-.Ft M_Vector4
+interfaces implement linear algebra operations on (real or complex valued)
+.Va n
+dimensional vectors, and
+.Va m
+by
+.Va n
+matrices.
+Optimized interfaces are provided for fixed-dimensional types (which have
+entries directly accessible as
+.Va x ,
+.Va y ,
+.Va z
 and
-.Ft M_Matrix44
-operations (the resulting build will require a SIMD-capable CPU).
+.Va w ) .
+Arbitrary-dimensional types may or may not use fixed arrays in memory.
+For example, the "sparse" backend uses a sparse matrix representation,
+and the "db" backend stores vector entries in a database.
+.Pp
+Backends can be selected at run-time, or Agar-Math can be compiled to
+provide inline expansions of all operations of a specific backend.
+Vector extensions (such as SSE and AltiVec) are used by default, if
+a runtime cpuinfo check determines that they are available (the build
+remains compatible with non-vector platforms, at the cost of extra
+function calls).
+For best performance on vector-capable platforms, all
+.Nm
+operations may be expanded inline for the target platform (using the
+Agar build options "--with-sse-inline" and "--with-altivec-inline").
 .\" END DUP
 .Sh VECTORS IN R^N
 The following routines operate on dynamically-allocated vectors in R^n.
 Unlike
 .Ft M_Matrix
-(which might use different memory representations), vector elements are always
+(which might use different memory representations), vector entries are always
 directly accessible through the
 .Va v
 array.
@@ -162,18 +168,17 @@ for details.
 .Pp
 .nr nS 0
 .Fn M_VecGetElement
-returns a pointer to element
+returns a direct pointer to entry
 .Fa i
-of vector
+in the (non-sparse) vector
 .Fa v .
-This operation is only provided for symmetry with
-.Ft M_Matrix .
-Vector elements are also directly accessible the
-.Va v
-array.
+The
 .Fn M_VecGet
-returns the value of element
-.Fa i .
+function returns the value of entry
+.Fa i
+in a vector
+.Fa v ,
+which can be a sparse vector.
 .Pp
 The
 .Fn M_VecFromReals ,
@@ -281,17 +286,16 @@ variant writes the result back into
 .Fa a .
 .Pp
 .Fn M_VecLen
-returns the real length of a vector.
+returns the Euclidean length of a vector.
 .Pp
 .Fn M_VecDot
 returns the dot product of vectors
 .Fa a
 and
-.Fa b ,
-which must be of equal size.
+.Fa b .
 .Pp
 .Fn M_VecDistance
-returns the distance between the points described by equally-sized vectors
+returns the Euclidean distance between
 .Fa a
 and
 .Fa b .
@@ -343,16 +347,22 @@ Native scalar floating point methods.
 .Fn M_VecZero2 "void"
 .Pp
 .Ft M_Vector2
-.Fn M_VECTOR2 "M_Real x" "M_Real y"
+.Fn M_VecGet2 "M_Real x" "M_Real y"
 .Pp
 .Ft M_Vector2
-.Fn M_VecGet2 "M_Real x" "M_Real y"
+.Fn M_VECTOR2 "M_Real x" "M_Real y"
 .Pp
 .Ft void
 .Fn M_VecSet2 "M_Vector2 *v" "M_Real x" "M_Real y"
 .Pp
 .Ft void
 .Fn M_VecCopy2 "M_Vector2 *vDst" "const M_Vector2 *vSrc"
+.Pp
+.Ft M_Vector2
+.Fn M_VecFromProj2 "M_Vector3 p"
+.Pp
+.Ft M_Vector3
+.Fn M_VecToProj2 "M_Vector2 v" "M_Real z"
 .Pp
 .Ft M_Vector2
 .Fn M_ReadVector2 "AG_DataSource *ds"
@@ -369,17 +379,31 @@ routines return the basis vectors [1;0] and [0;1], respectively.
 .Fn M_VecZero2
 returns the zero vector [0;0].
 .Fn M_VecGet2
-(or
-.Fn M_VECTOR2 )
 returns the vector [x,y].
+The
+.Fn M_VECTOR2
+macro expands to a static initializer for the vector [x,y].
 .Pp
 .Fn M_VecSet2
 writes the values [x,y] into vector
-.Fa v .
-It is only provided for symmetry with the other interfaces; elements are
-more efficiently accessed directly from the
+.Fa v
+(note that entries are also directly accessible via the
 .Ft M_Vector2
-structure.
+structure).
+.Pp
+.Fn M_VecFromProj2
+returns an Euclidean vector corresponding to
+.Fa p
+in projective space.
+If
+.Fa p
+is at infinity, a fatal divide-by-zero condition is raised.
+.Fn M_VecToProj2
+returns the vector in projective space corresponding to
+.Fa v
+in Euclidean space (if w=1), or
+.Fa v
+at infinity (if w=0).
 .Pp
 .Fn M_ReadVector2
 reads a
@@ -656,16 +680,22 @@ Accelerate operations using SSE3 extensions.
 .Fn M_VecZero3 "void"
 .Pp
 .Ft M_Vector3
-.Fn M_VECTOR3 "M_Real x" "M_Real y" "M_Real z"
+.Fn M_VecGet3 "M_Real x" "M_Real y" "M_Real z"
 .Pp
 .Ft M_Vector3
-.Fn M_VecGet3 "M_Real x" "M_Real y" "M_Real z"
+.Fn M_VECTOR3 "M_Real x" "M_Real y" "M_Real z"
 .Pp
 .Ft void
 .Fn M_VecSet3 "M_Vector3 *v" "M_Real x" "M_Real y" "M_Real z"
 .Pp
 .Ft void
 .Fn M_VecCopy3 "M_Vector3 *vDst" "const M_Vector3 *vSrc"
+.Pp
+.Ft M_Vector3
+.Fn M_VecFromProj3 "M_Vector4 p"
+.Pp
+.Ft M_Vector4
+.Fn M_VecToProj3 "M_Vector3 v" "M_Real w"
 .Pp
 .Ft M_Vector3
 .Fn M_ReadVector3 "AG_DataSource *ds"
@@ -683,21 +713,25 @@ routines return the basis vectors [1;0;0], [0;1;0] and [0;0;1], respectively.
 .Fn M_VecZero3
 returns the zero vector [0;0;0].
 .Fn M_VecGet3
-(or
-.Fn M_VECTOR3 )
 returns the vector [x,y,z].
 The
 .Fn M_VECTOR3
-macro is an alias for
-.Fn M_VecGet3 .
+macro expands to a static initializer for the vector [x,y,z].
 .Pp
 .Fn M_VecSet3
 writes the values [x,y,z] into vector
-.Fa v .
-It is only provided for symmetry with the other interfaces; elements are
-more efficiently accessed directly from the
+.Fa v
+(note that entries are also directly accessible via the
 .Ft M_Vector3
-structure.
+structure).
+.Pp
+.Fn M_VecFromProj3
+returns an Euclidean vector corresponding to the specified vector
+.Fa p
+in projective space.
+If
+.Fa p
+is at infinity, a fatal divide-by-zero condition is raised.
 .Pp
 .Fn M_ReadVector3
 reads a
@@ -993,10 +1027,10 @@ Accelerate operations using SSE3 extensions.
 .Fn M_VecZero4 "void"
 .Pp
 .Ft M_Vector4
-.Fn M_VECTOR4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Fn M_VecGet4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
 .Pp
 .Ft M_Vector4
-.Fn M_VecGet4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Fn M_VECTOR4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
 .Pp
 .Ft void
 .Fn M_VecSet4 "M_Vector4 *v" "M_Real x" "M_Real y" "M_Real z" "M_Real w"
@@ -1022,17 +1056,18 @@ respectively.
 .Fn M_VecZero4
 returns the zero vector [0;0;0;0].
 .Fn M_VecGet4
-(or
-.Fn M_VECTOR4 )
 returns the vector [x,y,z,w].
+The
+.Fn M_VECTOR4
+macro expands to a static initializer for the vector [x,y,z,w].
 .Pp
 .Fn M_VecSet4
 writes the values [x,y,z,w] into vector
-.Fa v .
-It is only provided for symmetry with the other interfaces; elements are
-more efficiently accessed directly from the
+.Fa v
+(note that entries are also directly accessible via the
 .Ft M_Vector4
-structure.
+structure).
+.Pp
 .Pp
 .Fn M_ReadVector4
 reads a

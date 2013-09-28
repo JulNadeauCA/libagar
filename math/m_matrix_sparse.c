@@ -59,8 +59,7 @@ const M_MatrixOps mMatOps_SP = {
 	NULL,			/* ToDoubles */
 	NULL,			/* FromFloats */
 	NULL,			/* FromDoubles */
-	NULL,			/* InvertGaussJordanv */
-	NULL,			/* InvertGaussJordan */
+	NULL,			/* GaussJordan */
 	M_FactorizeLU_SP,
 	M_BacksubstLU_SP,
 	M_MNAPreorder_SP,

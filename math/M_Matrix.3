@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2006-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2013 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -26,7 +26,7 @@
 .Dt M_MATRIX 3
 .Os
 .ds vT Agar-Math API Reference
-.ds oS Agar 1.3.3
+.ds oS Agar 1.5.0
 .Sh NAME
 .Nm M_Matrix
 .Nd Agar-Math matrix-related functions
@@ -36,47 +36,46 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/M_Matview.png, "Graphical representation of a matrix")
+.\" BEGIN DUP in M_Vector(3)
 The
 .Xr M_Vector 3
 and
 .Nm
-interfaces implement the basic linear algebra routines.
-Both provide a consistent interface to different
-.Em backends ,
-allowing different numerical solvers and memory representations.
-.Pp
-Selection between multiple backends is possible at run-time, or the Agar-Math
-library can be compiled to provide inline expansions of these operations under
-a specific backend.
-.Pp
-.\" BEGIN DUP in M_Vector(3)
-By default, Agar-Math uses SSE and AltiVec if a runtime cpuinfo check
-determines that those extensions are available (the build will still work
-on CPUs where they are unavailable).
-This compatibility comes at the cost of a function call per
-operation.
-For best performance on SSE-capable CPUs, Agar-Math should be compiled
-with "--with-sse-inline" or "--with-altivec-inline", which forces inline
-expansions of
-.Ft M_Vector3 ,
-.Ft M_Vector4
+interfaces implement linear algebra operations on (real or complex valued)
+.Va n
+dimensional vectors, and
+.Va m
+by
+.Va n
+matrices.
+Optimized interfaces are provided for fixed-dimensional types (which have
+entries directly accessible as
+.Va x ,
+.Va y ,
+.Va z
 and
-.Ft M_Matrix44
-operations (the resulting build will require a SIMD-capable CPU).
+.Va w ) .
+Arbitrary-dimensional types may or may not use fixed arrays in memory.
+For example, the "sparse" backend uses a sparse matrix representation,
+and the "db" backend stores vector entries in a database.
+.Pp
+Backends can be selected at run-time, or Agar-Math can be compiled to
+provide inline expansions of all operations of a specific backend.
+Vector extensions (such as SSE and AltiVec) are used by default, if
+a runtime cpuinfo check determines that they are available (the build
+remains compatible with non-vector platforms, at the cost of extra
+function calls).
+For best performance on vector-capable platforms, all
+.Nm
+operations may be expanded inline for the target platform (using the
+Agar build options "--with-sse-inline" and "--with-altivec-inline").
 .\" END DUP
 .Sh M-BY-N MATRICES
-The following routines operate on dynamically-allocated m-by-n matrices.
-Matrix elements are not directly accessible as array members, since some
-backends (such as
-.Em sparse )
-do not actually store matrix elements in arrays.
-The dimensions can be obtained from the
+The following routines operate on dynamically-allocated
 .Va m
-(rows) and
+by
 .Va n
-(columns) members of the
-.Nm
-structure.
+matrices:
 .Pp
 .Bl -tag -width "sparse " -compact
 .It fpu
@@ -235,7 +234,7 @@ dumps the individual matrix entries to the standard error output.
 It is only for debugging purposes. Agar GUI applications can use the provided
 .Xr M_Matview 3
 widget to display matrix contents.
-.Sh M-BY-N MATRICES: BASIC OPERATIONS
+.Sh M-BY-N MATRICES: OPERATIONS
 .nr nS 1
 .Ft "M_Matrix *"
 .Fn M_Transpose "M_Matrix *M"
@@ -263,6 +262,30 @@ widget to display matrix contents.
 .Pp
 .Ft "int"
 .Fn M_EntMulv "const M_Matrix *A" "const M_Matrix *B" "M_Matrix *AB"
+.Pp
+.Ft "void"
+.Fn M_Compare "const M_Matrix *A" "const M_Matrix *B" "M_Real *diff"
+.Pp
+.Ft "int"
+.Fn M_Trace "M_Real *trace" "const M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_IsSquare "M_Matrix *A"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_GaussJordan "const M_Matrix *A" "M_Matrix *b"
+.Pp
+.Ft "int"
+.Fn M_GaussJordanv "M_Matrix *A" "M_Matrix *b"
+.Pp
+.Ft "int"
+.Fn M_FactorizeLU "M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_BacksubstLU "M_Matrix *LU" "M_Vector *b"
+.Pp
+.Ft "void"
+.Fn M_MNAPreorder "M_Matrix *A"
 .Pp
 .nr nS 0
 The
@@ -316,20 +339,10 @@ dimensions are incorrect.
 and
 .Fn M_EntMulv
 perform entrywise multiplication as opposed to matrix multiplication.
-.Sh M-BY-N MATRICES: ANALYSIS
-.nr nS 1
-.Ft "void"
-.Fn M_Compare "const M_Matrix *A" "const M_Matrix *B" "M_Real *diff"
 .Pp
-.Ft "int"
-.Fn M_Trace "M_Real *trace" "const M_Matrix *A"
-.Pp
-.Ft "void"
-.Fn M_IsSquare "M_Matrix *A"
-.Pp
-.nr nS 0
+The
 .Fn M_Compare
-compares each entry of
+function compares each entry of
 .Fa A
 and
 .Fa B ,
@@ -337,59 +350,40 @@ returning the largest difference into
 .Fa diff .
 .Pp
 .Fn M_Trace
-returns the trace (the sum of elements on the diagonal) of
+returns the trace (the sum of elements on the diagonal) of a square matrix
 .Fa A
 into
 .Fa trace .
-If
-.Fa A
-is not a square matrix, an error is returned.
 .Pp
+The
 .Fn M_IsSquare
-returns 1 if
+function returns 1 if
 .Fa A
 is a square (n-by-n) matrix.
-.Sh M-BY-N MATRICES: SOLVING
-.nr nS 1
-.Ft "M_Matrix *"
-.Fn M_InvertGaussJordan "const M_Matrix *A" "M_Matrix *b"
 .Pp
-.Ft "int"
-.Fn M_InvertGaussJordanv "M_Matrix *A" "M_Matrix *b"
-.Pp
-.Ft "int"
-.Fn M_FactorizeLU "M_Matrix *A"
-.Pp
-.Ft "void"
-.Fn M_BacksubstLU "M_Matrix *LU" "M_Vector *b"
-.Pp
-.Ft "void"
-.Fn M_MNAPreorder "M_Matrix *A"
-.Pp
-.nr nS 0
 The
-.Fn M_InvertGaussJordan
-routine solves a system of equations using the Gauss-Jordan elimination
-process on matrix
-.Fa A
-and right-hand side
-.Fa b .
-The vector of solutions is returned into
-.Fa b .
-The
-.Fn M_InvertGaussJordanv
-variant operates in place, destroying the original contents of
-.Fa A ,
-also returning the solution vector into
+.Fn M_GaussJordan
+function solves for
+.Va x
+in
+.Va Ax = b .
+The solver replaces the contents of
+.Va A
+by its inverse, and returns the solution vector
+into
 .Fa b .
 .Pp
 The
 .Fn M_FactorizeLU
-routine computes the LU factorization of square matrix
+routine computes the
+.Va LU
+factorization of a square matrix
 .Fa A .
 If successful, the original contents of
 .Fa A
-are destroyed and replaced by the LU factorization.
+are destroyed and replaced by the
+.Va LU
+factorization.
 On error, -1 is returned.
 Partial pivoting information is recorded in the
 .Nm
@@ -408,14 +402,13 @@ The solution vector is returned into
 .Pp
 The
 .Fn M_MNAPreorder
-routine takes advantage of the structure of modified node admittance matrices
-(typically encountered in circuit simulation) to try and remove zeros from the
-diagonal.
+routine attempts to remove zeros from the diagonal, by taking into
+account the structure of modified node admittance matrices (found in
+applications such as electronic simulators).
 .Sh 4-BY-4 MATRICES
 The following routines are optimized for 4x4 matrices, as frequently
 encountered in computer graphics.
-Contrary to m-by-n matrices, the entries are directly accessible as structure
-members.
+Entries are directly accessible as structure members.
 Available backends include:
 .Pp
 .Bl -tag -width "fpu " -compact
@@ -533,7 +526,7 @@ initializes matrix
 .Fa M
 from the contents of a 4x4 array of doubles
 .Fa dbls .
-.Sh 4-BY-4 MATRICES: BASIC OPERATIONS
+.Sh 4-BY-4 MATRICES: OPERATIONS
 .nr nS 1
 .Ft "M_Matrix44"
 .Fn M_MatTranspose44 "M_Matrix44 A"
@@ -547,11 +540,8 @@ from the contents of a 4x4 array of doubles
 .Ft "M_Matrix44"
 .Fn M_MatInvert44 "M_Matrix44 A"
 .Pp
-.Ft "M_Matrix44"
-.Fn M_MatInvert44p "const M_Matrix44 *A"
-.Pp
 .Ft "int"
-.Fn M_MatInvertGaussJordan44v "const M_Matrix44 *A" "M_Matrix44 *Ainv"
+.Fn M_MatInvertElim44 "M_Matrix44 A" "M_Matrix44 *Ainv"
 .Pp
 .Ft "M_Matrix44"
 .Fn M_MatMult44 "M_Matrix44 A" "M_Matrix44 B"
@@ -562,29 +552,14 @@ from the contents of a 4x4 array of doubles
 .Ft "void"
 .Fn M_MatMult44pv "M_Matrix44 *AB" "const M_Matrix44 *A" "const M_Matrix44 *B"
 .Pp
-.Ft "M_Vector3"
-.Fn M_MatMult44Vector3 "M_Matrix44 A" "M_Vector3 x"
-.Pp
-.Ft "M_Vector3"
-.Fn M_MatMult44Vector3p "const M_Matrix44 *A" "const M_Vector3 *x"
-.Pp
-.Ft "void"
-.Fn M_MatMult44Vector3v "M_Vector3 *x" "const M_Matrix44 *A"
+.Ft "M_Vector4"
+.Fn M_MatMultVector44 "M_Matrix44 A" "M_Vector4 x"
 .Pp
 .Ft "M_Vector4"
-.Fn M_MatMult44Vector4 "M_Matrix44 A" "M_Vector4 x"
-.Pp
-.Ft "M_Vector4"
-.Fn M_MatMult44Vector4p "const M_Matrix44 *A" "const M_Vector4 *x"
+.Fn M_MatMultVector44p "const M_Matrix44 *A" "const M_Vector4 *x"
 .Pp
 .Ft "void"
-.Fn M_MatMult44Vector4v "M_Vector4 *x" "const M_Matrix44 *A"
-.Pp
-.Ft "void"
-.Fn M_MatGetDirection44 "const M_Matrix44 *A" "M_Vector3 *x" "M_Vector3 *y" "M_Vector3 *z"
-.Pp
-.Ft "void"
-.Fn M_MatDiagonalSwap44v "M_Matrix44 *A"
+.Fn M_MatMultVector44v "M_Vector4 *x" "const M_Matrix44 *A"
 .Pp
 .Ft "void"
 .Fn M_MatRotateAxis44 "M_Matrix44 *T" "M_Real theta" "M_Vector3 axis"
@@ -638,28 +613,21 @@ function compute and return the transpose of matrix
 are swapped for elements
 .Va j,i ) .
 .Pp
-The functions
+The function
 .Fn M_MatInvert44
-and
-.Fn M_MatInvert44p
-compute the inverse of the matrix
+computes the inverse of
 .Fa A
-using an optimized algorithm based on cofactors.
-The matrix must be invertible.
+using Cramer's rule and cofactors.
+If the matrix is not invertible, the return value is undefined.
 .Pp
 The
-.Fn M_MatInvertGaussJordan44v
-routine computes the inverse of
+.Fn M_MatInvertElim44
+function computes the inverse of
 .Fa A
-using simple Gauss-Jordan elimination.
-If the matrix is invertible, the function returns 0 and the inverse matrix
-is written to
-.Fa Ainv .
-If the matrix is singular to machine precision (i.e.,
-.Dv M_MACHEP ) ,
-the function returns -1 and the contents of
-.Fa Ainv
-are undefined.
+by systematic Gaussian elimination.
+If the matrix is not invertible (singular up to
+.Dv M_MACHEP
+precision), the function fails.
 .Pp
 .Fn M_MatMult44 ,
 .Fn M_MatMult44v
@@ -670,34 +638,15 @@ compute the product of matrices
 and
 .Fa B .
 .Pp
-.Fn M_MatMult44Vector3 ,
-.Fn M_MatMult44Vector3p
+The
+.Fn M_MatMultVector44 ,
+.Fn M_MatMultVector44p
 and
-.Fn M_MatMult44Vector3v
-return the product of the matrix
-.Fa A
-and vector [x,0].
-.Pp
-.Fn M_MatMult44Vector4 ,
-.Fn M_MatMult44Vector4p
-and
-.Fn M_MatMult44Vector4v
-return the product of matrix
-.Fa A
-and vector [x].
-.Pp
-.Fn M_MatGetDirection44
-retrieves the 3-dimensional direction vectors
-.Fa x ,
-.Fa y ,
-.Fa z
-from matrix
-.Fa A .
-.Pp
-.Fn M_MatDiagonalSwap44v
-swaps the elements of
-.Fa A
-about the diagonal.
+.Fn M_MatMultVector44v
+functions perform matrix-vector multiplication
+.Va Ax ,
+and returns
+.Va x .
 .Pp
 .Fn M_MatRotateAxis44
 multiplies matrix

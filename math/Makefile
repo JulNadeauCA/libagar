@@ -21,7 +21,6 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_vector.c m_vectorz.c m_vector_fpu.c \
 	m_vector2_fpu.c m_vector3_fpu.c m_vector4_fpu.c m_vector3_sse.c \
 	m_matrix.c m_matrix_fpu.c m_matrix44_fpu.c m_matrix44_sse.c \
-	m_gaussj.c m_lu.c \
 	m_gui.c m_plotter.c m_matview.c \
 	m_line.c m_circle.c m_triangle.c m_rectangle.c m_polygon.c m_plane.c \
 	m_coordinates.c m_heapsort.c m_mergesort.c m_qsort.c m_radixsort.c \

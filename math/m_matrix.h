@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 /*
- * Backend-specific Operations on m*n matrices.
+ * Operations on m*n matrices (including sparse matrices)
  */
 typedef struct m_matrix_ops {
 	const char *name;
@@ -34,8 +34,7 @@ typedef struct m_matrix_ops {
 	void    (*FromFloats)(void *M, const float *fv);
 	void    (*FromDoubles)(void *M, const double *dv);
 
-	int     (*InvertGaussJordanv)(void *A, void *b);
-	void   *(*InvertGaussJordan)(const void *A, void *b);
+	void   *(*GaussJordan)(const void *A, void *b);
 	int     (*FactorizeLU)(void *A);
 	void    (*BacksubstLU)(void *A, void *b);
 	void    (*MNAPreorder)(void *A);
@@ -43,7 +42,7 @@ typedef struct m_matrix_ops {
 } M_MatrixOps;
 
 /*
- * Backend-specific Operations on 4x4 matrices.
+ * Operations on 4x4 matrices.
  */
 typedef struct m_matrix_ops44 {
 	const char *name;
@@ -57,27 +56,19 @@ typedef struct m_matrix_ops44 {
 	void	   (*Transposev)(M_Matrix44 *A);
 
 	M_Matrix44 (*Invert)(M_Matrix44 A);
-	M_Matrix44 (*Invertp)(const M_Matrix44 *A);
-	int        (*InvertGaussJordanv)(const M_Matrix44 *A, M_Matrix44 *Ainv);
+	int        (*InvertElim)(M_Matrix44 A, M_Matrix44 *Ainv);
 	
 	M_Matrix44 (*Mult)(M_Matrix44 A, M_Matrix44 B);
 	void       (*Multv)(M_Matrix44 *A, const M_Matrix44 *B);
-	void       (*Multpv)(M_Matrix44 *AB, const M_Matrix44 *A,
-	                     const M_Matrix44 *B);
-	M_Vector3 (*MultVector3)(M_Matrix44 A, M_Vector3 x);
-	M_Vector3 (*MultVector3p)(const M_Matrix44 *A, const M_Vector3 *x);
-	void      (*MultVector3v)(M_Vector3 *x, const M_Matrix44 *A);
-	M_Vector4 (*MultVector4)(M_Matrix44 A, M_Vector4 x);
-	M_Vector4 (*MultVector4p)(const M_Matrix44 *A, const M_Vector4 *x);
-	void      (*MultVector4v)(M_Vector4 *x, const M_Matrix44 *A);
+	M_Vector4 (*MultVector)(M_Matrix44 A, M_Vector4 x);
+	M_Vector4 (*MultVectorp)(const M_Matrix44 *A, const M_Vector4 *x);
+	void      (*MultVectorv)(M_Vector4 *x, const M_Matrix44 *A);
 
 	void      (*Copy)(M_Matrix44 *dst, const M_Matrix44 *src);
 	void      (*ToFloats)(float *flts, const M_Matrix44 *A);
 	void      (*ToDoubles)(double *dbls, const M_Matrix44 *A);
 	void      (*FromFloats)(M_Matrix44 *A, const float *flts);
 	void      (*FromDoubles)(M_Matrix44 *A, const double *dbls);
-	void      (*GetDirection)(const M_Matrix44 *A, M_Vector3 *x,
-	                          M_Vector3 *y, M_Vector3 *z);
 
 	void      (*RotateAxis)(M_Matrix44 *A, M_Real theta, M_Vector3 axis);
 	void      (*OrbitAxis)(M_Matrix44 *A, M_Vector3 center, M_Vector3 axis,
@@ -170,8 +161,7 @@ __END_DECLS
 #define M_ToDoubles		mMatOps->ToDoubles
 #define M_FromFloats		mMatOps->FromFloats
 #define M_FromDoubles		mMatOps->FromDoubles
-#define M_InvertGaussJordanv	mMatOps->InvertGaussJordanv
-#define M_InvertGaussJordan	mMatOps->InvertGaussJordan
+#define M_GaussJordan		mMatOps->GaussJordan
 #define M_FactorizeLU		mMatOps->FactorizeLU
 #define M_BacksubstLU		mMatOps->BacksubstLU
 #define M_MNAPreorder           mMatOps->MNAPreorder
@@ -185,20 +175,15 @@ __END_DECLS
 #define M_MatTranspose44	mMatOps44->Transpose
 #define M_MatTranspose44p	mMatOps44->Transposep
 #define M_MatTranspose44v	mMatOps44->Transposev
-#define M_MatInvertGaussJordan44v mMatOps44->InvertGaussJordanv
-#define M_MatMult44Vector3	mMatOps44->MultVector3
-#define M_MatMult44Vector3p	mMatOps44->MultVector3p
-#define M_MatMult44Vector3v	mMatOps44->MultVector3v
-#define M_MatMult44Vector4	mMatOps44->MultVector4
-#define M_MatMult44Vector4p	mMatOps44->MultVector4p
-#define M_MatMult44Vector4v	mMatOps44->MultVector4v
+#define M_MatInvertElim44	mMatOps44->InvertElim
+#define M_MatMultVector44	mMatOps44->MultVector
+#define M_MatMultVector44p	mMatOps44->MultVectorp
+#define M_MatMultVector44v	mMatOps44->MultVectorv
 #define M_MatCopy44		mMatOps44->Copy
 #define M_MatToFloats44		mMatOps44->ToFloats
 #define M_MatToDoubles44	mMatOps44->ToDoubles
 #define M_MatFromFloats44	mMatOps44->FromFloats
 #define M_MatFromDoubles44	mMatOps44->FromDoubles
-#define M_MatGetDirection44	mMatOps44->GetDirection
-#define M_MatDiagonalSwap44v	mMatOps44->DiagonalSwapv
 #define M_MatRotateAxis44	mMatOps44->RotateAxis
 #define M_MatOrbitAxis44	mMatOps44->OrbitAxis
 #define M_MatRotateEul44	mMatOps44->RotateEul
@@ -214,16 +199,12 @@ __END_DECLS
 #define M_MatUniScale44		mMatOps44->UniScale
 #if defined(INLINE_SSE)
 # define M_MatInvert44		M_MatrixInvert44_SSE
-# define M_MatInvert44p		M_MatrixInvert44p_SSE
 # define M_MatMult44		M_MatrixMult44_SSE
 # define M_MatMult44v		M_MatrixMult44v_SSE
-# define M_MatMult44pv		M_MatrixMult44pv_SSE
 #else  /* !INLINE_SSE */
 # define M_MatInvert44		mMatOps44->Invert
-# define M_MatInvert44p		mMatOps44->Invertp
 # define M_MatMult44		mMatOps44->Mult
 # define M_MatMult44v		mMatOps44->Multv
-# define M_MatMult44pv		mMatOps44->Multpv
 #endif /* INLINE_SSE */
 
 __BEGIN_DECLS

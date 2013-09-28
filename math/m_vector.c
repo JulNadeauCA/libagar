@@ -123,48 +123,6 @@ M_RealvToVector4(const M_Real *r)
 	return (v);
 }
 
-M_Vector2
-M_Vector3to2(M_Vector3 v)
-{
-	M_Vector2 v2;
-
-#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
-	v2.x = (M_Real)v.x;
-	v2.y = (M_Real)v.y;
-#else
-	v2.x = v.x;
-	v2.y = v.y;
-#endif
-	return (v2);
-}
-
-M_Vector3
-M_Vector2to3(M_Vector2 v)
-{
-	M_Vector3 v3;
-
-#if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
-	v3.x = (float)v.x;
-	v3.y = (float)v.y;
-#else
-	v3.x = v.x;
-	v3.y = v.y;
-#endif
-	v3.z = 0.0;
-	return (v3);
-}
-
-M_Vector4
-M_Vector3to4(M_Vector3 v)
-{
-	M_Vector4 v4;
-	v4.x = v.x;
-	v4.y = v.y;
-	v4.z = v.z;
-	v4.w = 0.0;
-	return (v4);
-}
-
 int
 M_ReadVector2v(AG_DataSource *ds, M_Vector2 *v)
 {
