@@ -189,98 +189,9 @@ M_MatrixMult44v_SSE(M_Matrix44 *A, const M_Matrix44 *B)
 	A->m3 = out.m3;
 	A->m4 = out.m4;
 }
-static __inline__ void
-M_MatrixMult44pv_SSE(M_Matrix44 *C, const M_Matrix44 *A, const M_Matrix44 *B)
-{
-	__m128 r1;
-
-	r1 = A->m1;
-	C->m1 = _mm_add_ps(
-	    _mm_add_ps(_mm_add_ps(
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),B->m1),
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),B->m2)
-	    ),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2)),B->m3)),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(3,3,3,3)),B->m4)
-	);
-	r1 = A->m2;
-	C->m2 = _mm_add_ps(
-	    _mm_add_ps(_mm_add_ps(
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),B->m1),
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),B->m2)
-	    ),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2)),B->m3)),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(3,3,3,3)),B->m4)
-	);
-	r1 = A->m3;
-	C->m3 = _mm_add_ps(
-	    _mm_add_ps(_mm_add_ps(
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),B->m1),
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),B->m2)
-	    ),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2)),B->m3)),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(3,3,3,3)),B->m4)
-	);
-	r1 = A->m4;
-	C->m4 = _mm_add_ps(
-	    _mm_add_ps(_mm_add_ps(
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),B->m1),
-	     _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),B->m2)
-	    ),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2)),B->m3)),
-	    _mm_mul_ps(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(3,3,3,3)),B->m4)
-	);
-}
-
-static __inline__ M_Vector3
-M_MatrixMultVector344_SSE(M_Matrix44 A, M_Vector3 b)
-{
-#ifdef HAVE_SSE3
-	__m128 x, r1, r2;
-	M_Vector3 out;
-
-	x = _mm_set_ps(1.0f, b.z, b.y, b.x);
-	r1 = _mm_hadd_ps(_mm_mul_ps(A.m1,x), _mm_mul_ps(A.m2,x));
-	r2 = _mm_hadd_ps(_mm_mul_ps(A.m3,x), _mm_mul_ps(A.m4,x));
-	out.m128 = _mm_hadd_ps(r1, r2);
-	return (out);
-#else
-	return M_MatrixMultVector344_FPU(A, b);
-#endif
-}
-static __inline__ M_Vector3
-M_MatrixMultVector344p_SSE(const M_Matrix44 *A, const M_Vector3 *b)
-{
-#ifdef HAVE_SSE3
-	__m128 x, r1, r2;
-	M_Vector3 out;
-
-	x = _mm_set_ps(1.0f, b->z, b->y, b->x);
-	r1 = _mm_hadd_ps(_mm_mul_ps(A->m1,x), _mm_mul_ps(A->m2,x));
-	r2 = _mm_hadd_ps(_mm_mul_ps(A->m3,x), _mm_mul_ps(A->m4,x));
-	out.m128 = _mm_hadd_ps(r1, r2);
-	return (out);
-#else
-	return M_MatrixMultVector344p_FPU(A, b);
-#endif
-}
-static __inline__ void
-M_MatrixMultVector344v_SSE(M_Vector3 *b, const M_Matrix44 *A)
-{
-#ifdef HAVE_SSE3
-	__m128 x, r1, r2;
-
-	x = _mm_set_ps(1.0f, b->z, b->y, b->x);
-	r1 = _mm_hadd_ps(_mm_mul_ps(A->m1,x), _mm_mul_ps(A->m2,x));
-	r2 = _mm_hadd_ps(_mm_mul_ps(A->m3,x), _mm_mul_ps(A->m4,x));
-	b->m128 = _mm_hadd_ps(r1, r2);
-#else
-	M_MatrixMultVector344v_FPU(b, A);
-#endif
-}
 
 static __inline__ M_Vector4
-M_MatrixMultVector444_SSE(M_Matrix44 A, M_Vector4 b)
+M_MatrixMultVector44_SSE(M_Matrix44 A, M_Vector4 b)
 {
 #ifdef HAVE_SSE3
 	__m128 x, r1, r2;
@@ -292,11 +203,11 @@ M_MatrixMultVector444_SSE(M_Matrix44 A, M_Vector4 b)
 	out.m128 = _mm_hadd_ps(r1, r2);
 	return (out);
 #else
-	return M_MatrixMultVector444_FPU(A, b);
+	return M_MatrixMultVector44_FPU(A, b);
 #endif
 }
 static __inline__ M_Vector4
-M_MatrixMultVector444p_SSE(const M_Matrix44 *A, const M_Vector4 *b)
+M_MatrixMultVector44p_SSE(const M_Matrix44 *A, const M_Vector4 *b)
 {
 #ifdef HAVE_SSE3
 	__m128 x, r1, r2;
@@ -308,11 +219,11 @@ M_MatrixMultVector444p_SSE(const M_Matrix44 *A, const M_Vector4 *b)
 	out.m128 = _mm_hadd_ps(r1, r2);
 	return (out);
 #else
-	return M_MatrixMultVector444p_FPU(A, b);
+	return M_MatrixMultVector44p_FPU(A, b);
 #endif
 }
 static __inline__ void
-M_MatrixMultVector444v_SSE(M_Vector4 *b, const M_Matrix44 *A)
+M_MatrixMultVector44v_SSE(M_Vector4 *b, const M_Matrix44 *A)
 {
 #ifdef HAVE_SSE3
 	__m128 x, r1, r2;
@@ -322,7 +233,7 @@ M_MatrixMultVector444v_SSE(M_Vector4 *b, const M_Matrix44 *A)
 	r2 = _mm_hadd_ps(_mm_mul_ps(A->m3,x), _mm_mul_ps(A->m4,x));
 	b->m128 = _mm_hadd_ps(r1, r2);
 #else
-	M_MatrixMultVector444v_FPU(b, A);
+	M_MatrixMultVector44v_FPU(b, A);
 #endif
 }
 
@@ -340,7 +251,6 @@ __BEGIN_DECLS
 extern const M_MatrixOps44 mMatOps44_SSE;
 
 M_Matrix44 M_MatrixInvert44_SSE(const M_Matrix44);
-M_Matrix44 M_MatrixInvert44p_SSE(const M_Matrix44 *);
 void       M_MatrixRotateAxis44_SSE(M_Matrix44 *, M_Real, M_Vector3);
 void       M_MatrixRotate44I_SSE(M_Matrix44 *, M_Real);
 void       M_MatrixRotate44J_SSE(M_Matrix44 *, M_Real);

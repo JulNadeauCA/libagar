@@ -24,8 +24,7 @@ void M_MatrixToDoubles_FPU(double *, const void *);
 void M_MatrixFromFloats_FPU(void *, const float *);
 void M_MatrixFromDoubles_FPU(void *, const double *);
 
-int   M_InvertGaussJordanv_FPU(void *, void *);
-void *M_InvertGaussJordan_FPU(const void *, void *);
+void *M_GaussJordan_FPU(const void *, void *);
 int   M_FactorizeLU_FPU(void *);
 void  M_BacksubstLU_FPU(void *, void *);
 __END_DECLS

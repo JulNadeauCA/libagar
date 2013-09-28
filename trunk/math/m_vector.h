@@ -177,6 +177,51 @@ M_VectorInit(M_Vector *v, Uint m)
 {
 	v->m = m;
 }
+
+/*
+ * Given some vector in projective space, return its Euclidean vector,
+ * if it exists -- otherwise generate a division by zero.
+ */
+static __inline__ M_Vector2
+M_VecFromProj2(M_Vector3 Pv)
+{
+	M_Vector2 v;
+	v.x = Pv.x/Pv.z;
+	v.y = Pv.y/Pv.z;
+	return (v);
+}
+static __inline__ M_Vector3
+M_VecFromProj3(M_Vector4 Pv)
+{
+	M_Vector3 v;
+	v.x = Pv.x/Pv.w;
+	v.y = Pv.y/Pv.w;
+	v.z = Pv.z/Pv.w;
+	return (v);
+}
+
+/*
+ * Convert an Euclidean vector to a vector in projective space.
+ */
+static __inline__ M_Vector3
+M_VecToProj2(M_Vector2 v, M_Real z)
+{
+	M_Vector3 Pv;
+	Pv.x = v.x;
+	Pv.y = v.y;
+	Pv.z = z;
+	return (Pv);
+}
+static __inline__ M_Vector4
+M_VecToProj3(M_Vector3 v, M_Real w)
+{
+	M_Vector4 Pv;
+	Pv.x = v.x;
+	Pv.y = v.y;
+	Pv.z = v.z;
+	Pv.w = w;
+	return (Pv);
+}
 __END_DECLS
 
 #include <agar/math/m_vector_fpu.h>
@@ -202,9 +247,6 @@ void	   M_WriteVector4(AG_DataSource *, const M_Vector4 *);
 M_Vector2  M_RealvToVector2(const M_Real *);
 M_Vector3  M_RealvToVector3(const M_Real *);
 M_Vector4  M_RealvToVector4(const M_Real *);
-M_Vector2  M_Vector3to2(M_Vector3);
-M_Vector4  M_Vector3to4(M_Vector3);
-M_Vector3  M_Vector2to3(M_Vector2);
 M_Vector2 *M_VectorDup2(const M_Vector2 *);
 M_Vector3 *M_VectorDup3(const M_Vector3 *);
 M_Vector4 *M_VectorDup4(const M_Vector4 *);
@@ -385,10 +427,6 @@ __END_DECLS
 #define M_VecNorm4		mVecOps4->Norm
 #define M_VecNorm4p		mVecOps4->Normp
 #define M_VecNorm4v		mVecOps4->Norm4
-#define M_VecCross4		mVecOps4->Cross
-#define M_VecCross4p		mVecOps4->Crossp
-#define M_VecNormCross4 	mVecOps4->NormCross
-#define M_VecNormCross4p	mVecOps4->NormCrossp
 #define M_VecScale4		mVecOps4->Scale
 #define M_VecScale4p		mVecOps4->Scalep
 #define M_VecScale4v		mVecOps4->Scalev
