@@ -309,7 +309,7 @@ ClearBackground(AG_DriverSw *dsw)
 static int
 SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 {
-	char buf[16];
+	char buf[256];
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
