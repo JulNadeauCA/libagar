@@ -30,7 +30,6 @@
 
 #include <config/have_xkb.h>
 #include <config/have_xinerama.h>
-#include <config/have_timerfd.h>
 
 #include <core/core.h>
 

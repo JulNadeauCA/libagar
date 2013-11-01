@@ -30,7 +30,6 @@
 #include "core.h"
 
 #include <config/have_cocoa.h>
-#include <config/have_timerfd.h>
 
 struct ag_objectq agTimerObjQ = TAILQ_HEAD_INITIALIZER(agTimerObjQ);
 Uint              agTimerCount = 0;
