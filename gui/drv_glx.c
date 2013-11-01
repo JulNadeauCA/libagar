@@ -30,7 +30,6 @@
 
 #include <config/have_xkb.h>
 #include <config/have_xinerama.h>
-#include <config/have_kqueue.h>
 #include <config/have_timerfd.h>
 
 #include <core/core.h>
@@ -53,17 +52,6 @@
 #include "gui_math.h"
 #include "cursors.h"
 #include "opengl.h"
-
-#if defined(HAVE_KQUEUE)
-# include <sys/types.h>
-# include <sys/event.h>
-# include <sys/time.h>
-# include <errno.h>
-#elif defined(HAVE_TIMERFD)
-# include <sys/select.h>
-# include <sys/timerfd.h>
-# include <errno.h>
-#endif
 
 /* #define DEBUG_XSYNC */
 /* #define DEBUG_XEVENTS */
