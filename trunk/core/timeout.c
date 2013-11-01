@@ -29,19 +29,8 @@
 
 #include "core.h"
 
-#include <config/have_kqueue.h>
 #include <config/have_cocoa.h>
 #include <config/have_timerfd.h>
-
-#if defined(HAVE_KQUEUE)
-# include <sys/types.h>
-# include <sys/event.h>
-# include <sys/time.h>
-# include <errno.h>
-#elif defined(HAVE_TIMERFD)
-# include <sys/timerfd.h>
-# include <errno.h>
-#endif
 
 struct ag_objectq agTimerObjQ = TAILQ_HEAD_INITIALIZER(agTimerObjQ);
 Uint              agTimerCount = 0;
