@@ -38,6 +38,9 @@
 #include <config/ag_objdebug.h>
 
 #if defined(HAVE_KQUEUE)
+# ifdef __NetBSD__
+#   define _NETBSD_SOURCE
+# endif
 # include <sys/types.h>
 # include <sys/event.h>
 # include <unistd.h>
@@ -1021,13 +1024,15 @@ restart:
 		to = (AG_Timer *)kev->udata;
 		rvt = to->fn(to, &to->fnEvent);
 		if (rvt > 0) {
+			struct kevent *kev;
 #ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] resetting t=+%u\n", to->id, (Uint)rvt);
 #endif
 			if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 				return (-1);
 			}
-			EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER,
+			kev = &kq->changes[kq->nChanges++];
+			EV_SET(kev, to->id, EVFILT_TIMER,
 			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
 			to->ival = rvt;
 		} else {
@@ -1112,13 +1117,15 @@ AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
 		to->id = GenerateTimerID(to);
 	}
 	if (newTimer || to->ival != ival) {
+		struct kevent *kev;
 #ifdef DEBUG_TIMERS
 		Verbose("kevent: creating timer ID=%d ival=%d\n", to->id, (int)ival);
 #endif
 		if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 			return (-1);
 		}
-		EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER,
+		kev = &kq->changes[kq->nChanges++];
+		EV_SET(kev, to->id, EVFILT_TIMER,
 		    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)ival, to);
 		to->ival = ival;
 	}
@@ -1128,11 +1135,13 @@ void
 AG_DelTimerKQUEUE(AG_Timer *to)
 {
 	AG_EventSourceKQUEUE *kq = (AG_EventSourceKQUEUE *)agEventSource;
+	struct kevent *kev;
 
 	if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
 		AG_FatalError(NULL);
 	}
-	EV_SET(&kq->changes[kq->nChanges++], to->id, EVFILT_TIMER, EV_DELETE,
+	kev = &kq->changes[kq->nChanges++];
+	EV_SET(kev, to->id, EVFILT_TIMER, EV_DELETE,
 	    0, 0, NULL);
 	agTimerCount--;
 }
