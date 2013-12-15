@@ -153,6 +153,8 @@ Interface to network I/O facilities.
 The Agar object system.
 .It Xr AG_String 3
 Functions for manipulating C strings.
+.It Xr AG_TextElement 3
+Dynamically-allocated multilanguage text buffer.
 .It Xr AG_Threads 3
 Portable threads interface.
 .It Xr AG_Timer 3
@@ -178,7 +180,7 @@ performance and efficiency achievable with any given graphics system.
 To use this library, link against
 .Sq agar-config --libs .
 .Pp
-.Bl -tag -width "AG_GuiDebugger(3) " -compact
+.Bl -tag -width "AG_WidgetPrimitives(3) " -compact
 .It Xr AG_Anim 3
 Animated graphics surfaces.
 .It Xr AG_BlendFn 3
@@ -208,7 +210,7 @@ The high-level themeing API.
 .It Xr AG_Surface 3
 Graphics surfaces.
 .It Xr AG_Text 3
-Interface to font engine (i.e., FreeType or bitmap fonts).
+Interface to font engine / text rendering facilities.
 .It Xr AG_Units 3
 Conversion between different unit systems.
 .It Xr AG_Widget 3

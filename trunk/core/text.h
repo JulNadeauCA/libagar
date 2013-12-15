@@ -164,7 +164,7 @@ typedef struct ag_text {
 	size_t maxLen;			/* Maximum string length (bytes) */
 	Uint flags;
 #define AG_TEXT_SAVED_FLAGS	0
-} AG_Text;
+} AG_Text, AG_TextElement;
 
 #define AGTEXT(p) ((AG_Text *)(p))
 
