@@ -1,0 +1,212 @@
+.\" Copyright (c) 2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd December 14, 2013
+.Dt AG_TEXTELEMENT 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5.0
+.Sh NAME
+.Nm AG_TextElement
+.Nd agar dynamically-allocated multilanguage text buffer
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+(or
+.Ft AG_Text )
+structure provides a dynamically-allocated buffer for a text element,
+specified in one or more languages.
+.Pp
+Agar GUI widgets such as 
+.Xr AG_Textbox 3
+or
+.Xr AG_Editable 3
+may be bound to a
+.Nm
+(in which case they make it possible to select the language from a
+contextual menu).
+It is also possible to define an
+.Xr AG_Variable 3
+referencing an
+.Nm .
+The
+.Nm
+structure is defined as:
+.Pp
+.Bd -literal
+typedef struct ag_text {
+	AG_Mutex lock;
+	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
+	enum ag_language lang;		/* Selected language */
+	size_t maxLen;			/* Maximum string length (bytes) */
+	Uint flags;
+} AG_Text, AG_TextElement;
+.Ed
+.Pp
+The
+.Va lock
+mutex must be acquired prior to accessing any entry
+.Va ent[] .
+The
+.Va lang
+member is either
+.Dv AG_LANG_NONE
+or
+.Dv AG_LANG_xx ,
+where xx is a ISO-639 language code.
+For convenience, the
+.Dv AG_LANG_*
+enums are also valid indices into public arrays
+.Va agLanguageCodes[]
+(two-character codes) and
+.Va agLanguageNames[]
+(full language names).
+.Pp
+Per-language entries are described by the
+.NmEnt
+structure:
+.Bd -literal
+typedef struct ag_text_ent {
+	char  *buf;			/* String buffer */
+	size_t maxLen;			/* Length (allocated) */
+	size_t len;			/* Length (chars) */
+} AG_TextEnt;
+.Ed
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_Text *"
+.Fn AG_TextNew "size_t maxLen"
+.Pp
+.Ft "void"
+.Fn AG_TextInit "AG_Text *T" "size_t maxLen"
+.Pp
+.Ft void
+.Fn AG_TextSetLimit "AG_Text *T" "size_t maxLen"
+.Pp
+.Ft void
+.Fn AG_TextDestroy "AG_Text *T"
+.Pp
+.Ft void
+.Fn AG_TextClear "AG_Text *T"
+.Pp
+.Ft void
+.Fn AG_TextSetLang "AG_Text *T" "enum ag_language lang"
+.Pp
+.Ft "enum ag_language"
+.Fn AG_TextGetLang "AG_Text *T"
+.Pp
+.Ft void
+.Fn AG_TextSetLangISO "AG_Text *T" "const char *lang_code"
+.Pp
+.Ft const char *
+.Fn AG_TextGetLangISO "AG_Text *T"
+.Pp
+.Ft void
+.Fn AG_TextSet "AG_Text *T" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_TextSetS "AG_Text *T" "const char *s"
+.Pp
+.Ft void
+.Fn AG_TextSetEnt "AG_Text *T" "enum ag_language lang" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_TextSetEntS "AG_Text *T" "enum ag_language lang" "const char *fmt" "..."
+.Pp
+.Ft "AG_Text *"
+.Fn AG_TextDup "AG_Text *T"
+.Pp
+.Ft "int"
+.Fn AG_TextLoad "AG_Text *T" "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_TextSave "AG_DataSource *ds" "AG_Text *T"
+.Pp
+.nr nS 0
+The
+.Fn AG_TextNew
+function allocates and initializes a new, empty
+.Nm .
+.Fn AG_TextInit
+initializes an existing
+.Nm .
+The
+.Fa maxLen
+argument specifies a maximum string length in bytes, or 0 for no limit.
+.Fn AG_TextSetLimit
+may be used to set the effective limit.
+.Pp
+.Fn AG_TextDestroy
+frees all resources allocated by a text element.
+.Pp
+.Fn AG_TextClear
+frees and reinitializes all entries of the element.
+.Pp
+The functions
+.Fn AG_TextGetLang
+and
+.Fn AG_TextSetLang
+return or select the active language for a text element, specified as
+.Dv AG_LANG_NONE
+or
+.Dv AG_LANG_xx
+enum.
+The
+.Fn AG_TextGetLangISO
+and
+.Fn AG_TextSetLangISO
+variants accept a two-character ISO-639 code as argument.
+.Pp
+The
+.Fn AG_TextSet
+routine sets the text entry for the currently selected language.
+The
+.Fn AG_TextSetEnt
+variant sets the text entry for the specified language.
+.Pp
+The
+.Fn AG_TextDup
+routine returns a newly-allocated copy of the specified text element.
+.Pp
+The
+.Fn AG_TextLoad
+function initializes the specified text element from
+.Xr AG_DataSource 3
+data.
+.Fn AG_TextSave
+saves the text element to the given data source.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Variable 3 ,
+.Xr AG_Text 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_Editable 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.5.0
