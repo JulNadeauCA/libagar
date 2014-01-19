@@ -53,15 +53,6 @@ MatrixInvert44(void *ti)
 	for (i = 0; i < 2; i++) { Minv[i] = M_MatInvert44(M[i]); }
 	for (i = 0; i < 2; i++) { UseMatrix(&Minv[i]); }
 }
-static void
-MatrixInvert44p(void *ti)
-{
-	M_Matrix44 M[2], Minv[2];
-	int i;
-	for (i = 0; i < 2; i++) { M[i] = RandomMatrix44(ti); }
-	for (i = 0; i < 2; i++) { Minv[i] = M_MatInvert44p(&M[i]); }
-	for (i = 0; i < 2; i++) { UseMatrix(&Minv[i]); }
-}
 
 static void
 MatrixTranspose44(void *ti)
@@ -108,77 +99,6 @@ MatrixMult44v(void *ti)
 	for (i = 0; i < 3; i++) { A[i] = RandomMatrix44(ti); B[i] = RandomMatrix44(ti); }
 	for (i = 0; i < 3; i++) { M_MatMult44v(&A[i], &B[i]); }
 	for (i = 0; i < 3; i++) { UseMatrix(&A[i]); }
-}
-static void
-MatrixMult44pv(void *ti)
-{
-	M_Matrix44 A[3], B[3], AB[3];
-	int i;
-	for (i = 0; i < 3; i++) { A[i] = RandomMatrix44(ti); B[i] = RandomMatrix44(ti); }
-	for (i = 0; i < 3; i++) { M_MatMult44pv(&AB[i], &A[i], &B[i]); }
-	for (i = 0; i < 3; i++) { UseMatrix(&AB[i]); }
-}
-
-static void
-MatrixMult44Vector3(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector3 b[6], x[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector3(ti); }
-	for (i = 0; i < 6; i++) { x[i] = M_MatMult44Vector3(A[i], b[i]); }
-	for (i = 0; i < 6; i++) { realJunk = x[i].x; }
-}
-static void
-MatrixMult44Vector3p(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector3 b[6], x[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector3(ti); }
-	for (i = 0; i < 6; i++) { x[i] = M_MatMult44Vector3p(&A[i], &b[i]); }
-	for (i = 0; i < 6; i++) { realJunk = x[i].x; }
-}
-static void
-MatrixMult44Vector3v(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector3 b[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector3(ti); }
-	for (i = 0; i < 6; i++) { M_MatMult44Vector3v(&b[i], &A[i]); }
-	for (i = 0; i < 6; i++) { realJunk = b[i].x; }
-}
-
-static void
-MatrixMult44Vector4(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector4 b[6], x[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector4(ti); }
-	for (i = 0; i < 6; i++) { x[i] = M_MatMult44Vector4(A[i], b[i]); }
-	for (i = 0; i < 6; i++) { realJunk = x[i].x; }
-}
-static void
-MatrixMult44Vector4p(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector4 b[6], x[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector4(ti); }
-	for (i = 0; i < 6; i++) { x[i] = M_MatMult44Vector4p(&A[i], &b[i]); }
-	for (i = 0; i < 6; i++) { realJunk = x[i].x; }
-}
-static void
-MatrixMult44Vector4v(void *ti)
-{
-	M_Matrix44 A[6];
-	M_Vector4 b[6];
-	int i;
-	for (i = 0; i < 6; i++) { A[i] = RandomMatrix44(ti); b[i] = RandomVector4(ti); }
-	for (i = 0; i < 6; i++) { M_MatMult44Vector4v(&b[i], &A[i]); }
-	for (i = 0; i < 6; i++) { realJunk = b[i].x; }
 }
 
 static void
@@ -281,16 +201,8 @@ static struct ag_benchmark_fn mathBenchMatrix44Fns[] = {
 	{ "Transpose44p()", 	MatrixTranspose44p	},
 	{ "Transpose44v()", 	MatrixTranspose44v	},
 	{ "Invert44()", 	MatrixInvert44		},
-	{ "Invert44p()", 	MatrixInvert44p		},
 	{ "Mult44()", 		MatrixMult44		},
 	{ "Mult44v()", 		MatrixMult44v		},
-	{ "Mult44pv()", 	MatrixMult44pv		},
-	{ "Mult44Vector3()", 	MatrixMult44Vector3	},
-	{ "Mult44Vector3p()", 	MatrixMult44Vector3p	},
-	{ "Mult44Vector3v()", 	MatrixMult44Vector3v	},
-	{ "Mult44Vector4()", 	MatrixMult44Vector4	},
-	{ "Mult44Vector4p()", 	MatrixMult44Vector4p	},
-	{ "Mult44Vector4v()", 	MatrixMult44Vector4v	},
 	{ "Copy()", 		MatrixCopy44		},
 	{ "RotateAxis44()",	MatrixRotateAxis44	},
 	{ "Rotate44I()",	MatrixRotate44I		},
