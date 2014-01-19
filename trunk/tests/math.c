@@ -257,9 +257,7 @@ TestMatrix44(AG_TestInstance *ti)
 	ABinv = M_MatInvert44(AB);
 	ABt = M_MatTranspose44(AB);
 	b3 = M_VECTOR3(1,2,3);
-	Ab3 = M_MatMult44Vector3(A, b3);
 	b4 = M_VECTOR4(1,2,3,4);
-	Ab4 = M_MatMult44Vector4(A, b4);
 
 	Rot = M_MatIdentity44();
 	UniScale = M_MatIdentity44();
@@ -272,8 +270,6 @@ TestMatrix44(AG_TestInstance *ti)
 	TestMsgS(ti, AG_Printf("\tAB=%[M44]", &AB));
 	TestMsgS(ti, AG_Printf("\tinv(AB)=%[M44]", &ABinv));
 	TestMsgS(ti, AG_Printf("\ttranspose(AB)= %[M44]", &ABt));
-	TestMsgS(ti, AG_Printf("\tb3=%[V3], Ab3 = %[V3]", &b3, &Ab3));
-	TestMsgS(ti, AG_Printf("\tb4=%[V4], Ab4 = %[V4]", &b4, &Ab4));
 	TestMsgS(ti, AG_Printf("\tRot=%[M44]", &Rot));
 	TestMsgS(ti, AG_Printf("\tUniScale=%[M44]", &UniScale));
 }
