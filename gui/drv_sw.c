@@ -451,7 +451,7 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 	const int maxTests = 10000, dx = 16;
 	int nTest = 0;
 	int x = 0, y = 0, xo, yo, wo, ho;
-	int xd, yd;
+	int xd = 0, yd = 0;
 
 	switch (win->alignment) {
 	case AG_WINDOW_TL:	xd = 0;			yd = 0;			break;
