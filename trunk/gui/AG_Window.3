@@ -841,9 +841,9 @@ objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
 The user (or window system) is requesting that this window be closed.
-By default, the window is destroyed (or hidden if it is named).
-but it is legal to ignore the request, or to create a dialog prompting
-the user for confirmation instead.
+By default, named windows are hidden and unnamed windows are destroyed.
+Event handlers are free to ignore the request, or create new windows
+(e.g., confirmation dialogs) in response.
 .It Fn window-modal-close "int x" "int y"
 The window is modal (the
 .Dv AG_WINDOW_MODAL

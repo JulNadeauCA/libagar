@@ -47,7 +47,8 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_KeyMod.3 AG_Color.3 AG_MouseButton.3 AG_Driver.3 AG_InitGraphics.3 \
 	AG_DriverMw.3 AG_DriverSw.3 AG_DriverGLX.3 AG_DriverWGL.3 \
 	AG_DriverSDLFB.3 AG_DriverSDLGL.3 AG_GL.3 AG_DirDlg.3 AG_Anim.3 \
-	AG_GlobalKeys.3 AG_Keyboard.3 AG_DriverCocoa.3 AG_InitVideoSDL.3
+	AG_GlobalKeys.3 AG_Keyboard.3 AG_DriverCocoa.3 AG_InitVideoSDL.3 \
+	AG_StyleSheet.3
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
