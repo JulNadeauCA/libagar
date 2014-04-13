@@ -34,8 +34,8 @@ enum ag_net_socket_option {
 	AG_NET_BINDANY,		/* Allow binding to any address */
 	AG_NET_SNDBUF,		/* Buffer size for sending (int) */
 	AG_NET_RCVBUF,		/* Buffer size for reception (int) */
-	AG_NET_SNDLOWAT,	/* Low watermark for output (int) */
-	AG_NET_RCVLOWAT,	/* Low watermark for output (int) */
+	AG_NET_SNDLOWAT,	/* Low watermark for send (int) */
+	AG_NET_RCVLOWAT,	/* Low watermark for receive (int) */
 	AG_NET_SNDTIMEO,	/* Timeout for output in ms (Uint32) */
 	AG_NET_RCVTIMEO,	/* Timeout for input in ms (Uint32) */
 	AG_NET_BACKLOG,		/* Limit on incoming connection backlog (int) */
