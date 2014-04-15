@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2014 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,10 @@
 The
 .Nm
 interface implements a system of virtual functions for purposes of servicing
-.Em events ,
-on top of
-.Xr AG_Object 3 .
+.Em events .
+An
+.Xr AG_Object 3
+may act as an event sender, or an event receiver.
 Event handler functions are passed a list of zero or more arguments.
 Execution of event handlers can be delayed for a set amount of time, or marked
 for execution in a separate thread (where thread support is available).
@@ -66,11 +67,9 @@ structure contains the event arguments, which are most convenient retrieved
 using macros; see
 .Dq EVENT ARGUMENTS
 below for details.
-.Sh EVENT LOOP
-This manual page documents the general event system in the Agar-Core library.
-For information on the
-.Fn AG_EventLoop
-function, see
+.Pp
+NOTE: This manual page documents Agar's high-level event processing interface.
+For more information on low-level event processing, see
 .Xr AG_EventLoop 3 .
 .Sh EVENT PROCESSING
 .nr nS 1
@@ -595,25 +594,23 @@ AG_SetEvent(btn, "button-pushed", SayHello, "%s", "World");
 .Pp
 The
 .Ft AG_Button
-API also provides an alternate constructor routine,
+API provides a shorthand constructor routine,
 .Fn AG_ButtonNewFn ,
-with which you can specify the default
+which accepts the
 .Sq button-pushed
-event handler:
+event handler as argument:
 .Bd -literal -offset indent
 AG_ButtonNewFn(NULL, 0, "Say hello", SayHello, "%s", "World");
 .Ed
 .Pp
-The following code fragment does the same, specifying the arguments in
-a more explicit way:
+The following code fragment is equivalent:
 .Bd -literal -offset indent
 AG_Button *btn = AG_ButtonNew(NULL, 0, "Say hello");
 AG_Event *event = AG_SetEvent(btn, "button-pushed", SayHello, NULL);
 AG_EventPushString(event, NULL, "World");
 .Ed
 .Pp
-The following code fragment invokes an event handler routine directly,
-independently of the object system:
+The following code fragment invokes a handler routine artificially:
 .Bd -literal -offset indent
 void
 SayHello(AG_Event *event)

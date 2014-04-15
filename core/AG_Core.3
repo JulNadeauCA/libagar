@@ -49,14 +49,10 @@ provides a number of interfaces:
 .Pp
 .Bl -bullet
 .It
-The standard
+The
 .Xr AG_EventLoop 3 ,
-with the
-.Xr AG_EventSource 3
-interface for connecting generic "event sink" functions to various low-level
-event sources (such as file descriptor events, filesystem events,
-.Xr AG_Timer 3
-expirations, interrupts, etc).
+routine for processing of low-level events (events on file descriptors,
+filesystem changes, timer expirations, etc.)
 Internally, Agar uses the most efficient system interface available (such as
 .Xr kqueue 2
 or
@@ -188,6 +184,8 @@ the given version number.
 .Xr AG_Db 3 ,
 .Xr AG_Dir 3 ,
 .Xr AG_Error 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_EventLoop 3 ,
 .Xr AG_Execute 3 ,
 .Xr AG_File 3 ,
 .Xr AG_Net 3 ,
