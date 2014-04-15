@@ -1,0 +1,249 @@
+.\" Copyright (c) 2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 14, 2014
+.Dt AG_EVENTLOOP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.5
+.Sh NAME
+.Nm AG_EventLoop
+.Nd agar low-level event loop
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+routine loops, continually checking for low-level events and processing them.
+The most common type of low-level events are:
+.Pp
+.Bl -enum -compact
+.It
+Activity on a socket or file descriptor.
+.It
+Expiration of a timer.
+.It
+Kernel-event notifications (e.g.,
+.Xr kqueue 2
+events).
+This includes filesystem events and process monitoring.
+.El
+.Pp
+If thread support is available, Agar allows multiple instances of
+.Fn AG_EventLoop
+running concurrently under different threads.
+.Sh MAIN INTERFACE
+.nr nS 1
+.Ft "int"
+.Fn AG_EventLoop "void"
+.Pp
+.Ft void
+.Fn AG_Terminate "int exitCode"
+.Pp
+.Ft void
+.Fn AG_TerminateEv "AG_Event *event"
+.Pp
+.nr nS 0
+The
+.Fn AG_EventLoop
+routine blocks the current thread, waiting for low-level events, and
+processing them.
+The operation of
+.Nm
+is governed by a set of thread-specific event
+.Em sinks .
+.Pp
+Agar-based libraries such as Agar-GUI will automatically register
+event sinks as appropriate upon initialization (for example, graphics
+drivers based on the X Windows system may set up an event sink of type
+.Dv AG_SINK_READ
+to monitor activity on the X file descriptor).
+Applications are free to register their own event sinks using
+.Fn AG_AddEventSink .
+.Pp
+The
+.Fn AG_Terminate
+function requests termination of the event loop associated with the
+current thread.
+If the current thread is the main thread,
+.Fn AG_Terminate
+will terminate the application with
+.Fa exitCode
+as return code.
+The
+.Fn AG_TerminateEv
+variant accepts an
+.Ft AG_Event
+style argument instead of an
+.Ft int
+for the exit code.
+.Sh EVENT SINKS
+.nr nS 1
+.Ft "AG_EventSink *"
+.Fn AG_AddEventSink "enum ag_event_sink_type type" "int ident" "Uint flags" "AG_EventSinkFn fn" "const char *fnArgs"
+.Pp
+.Ft "void"
+.Fn AG_DelEventSink "AG_EventSink *sink"
+.Pp
+.Ft "void"
+.Fn AG_DelEventsSinkByIdent "enum ag_event_sink_type type" "int ident" "Uint flags"
+.Pp
+.Ft "AG_EventSink *"
+.Fn AG_AddEventPrologue "AG_EventSinkFn fn" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_EventSink *"
+.Fn AG_AddEventEpilogue "AG_EventSinkFn fn" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_EventSink *"
+.Fn AG_AddEventSpinner "AG_EventSinkFn fn" "const char *fnArgs" "..."
+.Pp
+.Ft "void"
+.Fn AG_DelEventPrologue "AG_EventSink *sink"
+.Pp
+.Ft "void"
+.Fn AG_DelEventEpilogue "AG_EventSink *sink"
+.Pp
+.Ft "void"
+.Fn AG_DelEventSpinner "AG_EventSink *sink"
+.Pp
+The
+.Fn AG_AddEventSink
+routine creates a new event sink under the current thread, and returns
+a pointer to a newly-allocated
+.Ft AG_EventSink
+structure.
+The
+.Fa type
+argument may be one of:
+.Pp
+.Bl -tag -width "AG_SINK_PROCEVENT "
+.It Dv AG_SINK_READ
+Data is available for reading on file referenced by
+.Fa ident .
+.It Dv AG_SINK_WRITE
+Data is available for writing on file referenced by
+.Fa ident .
+.It Dv AG_SINK_FSEVENT
+A filesystem event has occured on the file/directory
+referenced by
+.Fa ident .
+The type of event is specified in
+.Fa flags
+(see
+.Dq FILESYSTEM EVENTS
+for the accepted flags).
+.It Dv AG_SINK_PROCEVENT
+An event has occured on the monitored process
+.Fa ident .
+The type of event is specified in
+.Fa flags
+(see
+.Dq PROCESS EVENTS
+below).
+.El
+.Pp
+The
+.Fn AG_DelEventSink
+function destroys the specified event sink.
+The
+.Fn AG_DelEventSinksByIdent
+function destroys all event sinks with matching
+.Fa ident
+and
+.Fa flags.
+.Pp
+The
+.Fn AG_AddEventPrologue
+function registers a callback routine to be invoked once at the
+start of
+.Fn AG_EventLoop .
+.Fn AG_AddEventEpilogue
+registers a callback routine to be invoked on exit, before
+.Fn AG_EventLoop
+returns.
+.Fn AG_DelEventEpilogue
+and
+.Fn AG_DelEventPrologue
+destroy the specified epilogue/prologue routine.
+.Pp
+The
+.Fn AG_AddEventSpinner
+routine registers a "spinner" callback routine.
+Spinner routines are invoked repeatedly and unconditionally by
+.Fn AG_EventLoop ,
+until the event loop terminates, or
+.Fn AG_DelEventSpinner
+is invoked.
+.Sh FILESYSTEM EVENTS
+Acceptable
+.Fa flags
+for the
+.Dv AG_SINK_FSEVENT
+event sink include:
+.Pp
+.Bl -tag -width "AG_FSEVENT_DELETE " -compact
+.It Dv AG_FSEVENT_DELETE
+The file has been deleted.
+.It Dv AG_FSEVENT_WRITE
+A write has occured on the file.
+.It Dv AG_FSEVENT_EXTEND
+The file has been extended in size.
+.It Dv AG_FSEVENT_ATTRIB
+File attributes have been changed.
+.It Dv AG_FSEVENT_LINK
+The link count on the file has changed.
+.It Dv AG_FSEVENT_RENAME
+The referenced file has been renamed.
+.It Dv AG_FSEVENT_REVOKE
+Filesystem has unmount, or
+.Xr revoke 2
+called.
+.El
+.Sh PROCESS EVENTS
+Acceptable
+.Fa flags
+for the
+.Dv AG_SINK_PROCEVENT
+event sink include:
+.Pp
+.Bl -tag -width "AG_PROCEVENT_EXIT " -compact
+.It Dv AG_PROCEVENT_EXIT
+Monitored process has exited.
+.It Dv AG_PROCEVENT_FORK
+Monitored process has called
+.Xr fork 2 .
+.It Dv AG_PROCEVENT_EXEC
+Monitored process has called
+.Xr exec 3 .
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Event 3
+.Sh HISTORY
+The
+.Nm
+call first appeared in Agar 1.0.
+Event sinks first appeared in Agar 1.5.0.
