@@ -287,7 +287,7 @@ static __inline__ int
 AG_GetDisplaySize(void *drv, Uint *w, Uint *h)
 {
 	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
-	AG_DriverSw *dsw = (drv != NULL) ? drv : agDriverSw;
+	AG_DriverSw *dsw = (drv != NULL) ? (AG_DriverSw *)drv : agDriverSw;
 
 	switch (dc->wm) {
 	case AG_WM_SINGLE:
