@@ -3282,10 +3282,6 @@ rm -f conftest.c $testdir/conftest
 if [ "${HAVE_DLOPEN}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldl"
-fi;
-fi;
-TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
-TEST_HEADERS=""
 echo "#ifndef DSO_CFLAGS" > $BLD/include/agar/config/dso_cflags.h
 echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> $BLD/include/agar/config/dso_cflags.h
 echo "#endif" >> $BLD/include/agar/config/dso_cflags.h
@@ -3294,10 +3290,12 @@ echo "#ifndef DSO_LIBS" > $BLD/include/agar/config/dso_libs.h
 echo "#define DSO_LIBS \"$DSO_LIBS\"" >> $BLD/include/agar/config/dso_libs.h
 echo "#endif" >> $BLD/include/agar/config/dso_libs.h
 echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+fi;
+fi;
+TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
+TEST_HEADERS=""
 $ECHO_N "checking for dyld interface..."
 $ECHO_N "checking for dyld interface..." >> config.log
-DSO_CFLAGS=""
-DSO_LIBS=""
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
 TEST_HEADERS="Yes"
 echo > conftest.c
@@ -3449,14 +3447,6 @@ echo "hdefs[\"HAVE_DYLD_RETURN_ON_ERROR\"] = nil" >>configure.lua
 fi;
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
-echo "#ifndef DSO_CFLAGS" > $BLD/include/agar/config/dso_cflags.h
-echo "#define DSO_CFLAGS \"$DSO_CFLAGS\"" >> $BLD/include/agar/config/dso_cflags.h
-echo "#endif" >> $BLD/include/agar/config/dso_cflags.h
-echo "hdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "#ifndef DSO_LIBS" > $BLD/include/agar/config/dso_libs.h
-echo "#define DSO_LIBS \"$DSO_LIBS\"" >> $BLD/include/agar/config/dso_libs.h
-echo "#endif" >> $BLD/include/agar/config/dso_libs.h
-echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 $ECHO_N "checking for shl_load() interface..."
 $ECHO_N "checking for shl_load() interface..." >> config.log
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
@@ -3549,11 +3539,15 @@ if [ "${cache}" != "" ]; then
 fi
 rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SHL_LOAD}" = "yes" ]; then
+DSO_LIBS="$DSO_LIBS $SHL_LOAD_LIBS"
 echo "#ifndef HAVE_SHL_LOAD" > $BLD/include/agar/config/have_shl_load.h
 echo "#define HAVE_SHL_LOAD \"$HAVE_SHL_LOAD\"" >> $BLD/include/agar/config/have_shl_load.h
 echo "#endif" >> $BLD/include/agar/config/have_shl_load.h
 echo "hdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
-DSO_LIBS="$DSO_LIBS $SHL_LOAD_LIBS"
+echo "#ifndef DSO_LIBS" > $BLD/include/agar/config/dso_libs.h
+echo "#define DSO_LIBS \"$DSO_LIBS\"" >> $BLD/include/agar/config/dso_libs.h
+echo "#endif" >> $BLD/include/agar/config/dso_libs.h
+echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
 else
 echo "#undef HAVE_SHL_LOAD" >$BLD/include/agar/config/have_shl_load.h
 echo "hdefs[\"HAVE_SHL_LOAD\"] = nil" >>configure.lua
@@ -4278,7 +4272,7 @@ main(int argc, char *argv[])
 #endif
 	t0 = timeGetTime();
 	Sleep(1);
-	return (to != 0) ? 0 : 1;
+	return (t0 != 0) ? 0 : 1;
 }
 
 EOT
