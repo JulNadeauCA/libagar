@@ -4278,7 +4278,7 @@ main(int argc, char *argv[])
 #endif
 	t0 = timeGetTime();
 	Sleep(1);
-	return (t0 != 0) ? 0 : 1;
+	return (to != 0) ? 0 : 1;
 }
 
 EOT
@@ -10292,14 +10292,8 @@ echo "#undef ENABLE_DEV" >$BLD/include/agar/config/enable_dev.h
 echo "hdefs[\"ENABLE_DEV\"] = nil" >>configure.lua
 SUBDIR_dev=""
 fi
-if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]
+if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]
  then
-ENABLE_AU="yes"
-echo "#ifndef ENABLE_AU" > $BLD/include/agar/config/enable_au.h
-echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
-echo "#endif" >> $BLD/include/agar/config/enable_au.h
-echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
-SUBDIR_au="au"
 $ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..."
 $ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..." >> config.log
 if [ "${prefix_sndfile}" != "" ]; then
@@ -10475,6 +10469,14 @@ fi;
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
 fi;
+	if [ "${HAVE_SNDFILE}" != "yes" ]
+ then
+ENABLE_AU="yes"
+echo "#ifndef ENABLE_AU" > $BLD/include/agar/config/enable_au.h
+echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
+echo "#endif" >> $BLD/include/agar/config/enable_au.h
+echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
+SUBDIR_au="au"
 $ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..."
 $ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..." >> config.log
 PORTAUDIO_VERSION=""
@@ -10704,6 +10706,15 @@ echo "hdefs[\"PORTAUDIO_CFLAGS\"] = nil" >>configure.lua
 echo "#undef PORTAUDIO_LIBS" >$BLD/include/agar/config/portaudio_libs.h
 echo "hdefs[\"PORTAUDIO_LIBS\"] = nil" >>configure.lua
 fi;
+	else
+echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
+echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
+SUBDIR_au=""
+echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
+echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
+echo "#undef HAVE_PORTAUDIO" >$BLD/include/agar/config/have_portaudio.h
+echo "hdefs[\"HAVE_PORTAUDIO\"] = nil" >>configure.lua
+	fi
 else
 echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
@@ -11431,10 +11442,10 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
 echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
-echo "STATEDIR=$STATEDIR" >>Makefile.config
-echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
 echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
+echo "STATEDIR=$STATEDIR" >>Makefile.config
+echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
 echo "SNDFILE_LIBS=$SNDFILE_LIBS" >>Makefile.config
@@ -11499,10 +11510,10 @@ echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
 echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
 echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 echo "ICONV_LIBS=$ICONV_LIBS" >>Makefile.config
 echo "mdefs[\"ICONV_LIBS\"] = \"$ICONV_LIBS\"" >>configure.lua
 echo "MANDIR=$MANDIR" >>Makefile.config
