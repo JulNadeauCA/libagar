@@ -634,16 +634,30 @@ fi
 #
 # Options specific to the Agar-AU library
 #
-if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
-	HDEFINE(ENABLE_AU, "yes")
-	MDEFINE(SUBDIR_au, "au")
-
+if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]; then
 	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
-	CHECK(portaudio, 19.0, ${prefix_portaudio})
+	if [ "${HAVE_SNDFILE}" = "yes" ]; then
+		HDEFINE(ENABLE_AU, "yes")
+		MDEFINE(SUBDIR_au, "au")
+		CHECK(portaudio, 19.0, ${prefix_portaudio})
+	else
+		if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
+			echo "*"
+			echo "* --enable-au was requested, but the sndfile library"
+			echo "* (required) is not installed."
+			echo "*"
+			exit 1
+		else
+			echo "* sndfile library was not found, not compiling ag_au"
+		fi
+		HUNDEF(ENABLE_AU)
+		MDEFINE(SUBDIR_au, "")
+		HUNDEF(HAVE_SNDFILE)
+		HUNDEF(HAVE_PORTAUDIO)
+	fi
 else
 	HUNDEF(ENABLE_AU)
 	MDEFINE(SUBDIR_au, "")
-
 	HUNDEF(HAVE_SNDFILE)
 	HUNDEF(HAVE_PORTAUDIO)
 fi

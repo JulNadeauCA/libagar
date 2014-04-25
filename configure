@@ -10710,8 +10710,8 @@ fi;
 		if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]
  then
 			echo "*"
-			echo "* --enable-au was requested, but the sndfile"
-			echo "* library is not available"
+			echo "* --enable-au was requested, but the sndfile library"
+			echo "* (required) is not installed."
 			echo "*"
 			exit 1
 		else
