@@ -10469,7 +10469,7 @@ fi;
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
 fi;
-	if [ "${HAVE_SNDFILE}" != "yes" ]
+	if [ "${HAVE_SNDFILE}" = "yes" ]
  then
 ENABLE_AU="yes"
 echo "#ifndef ENABLE_AU" > $BLD/include/agar/config/enable_au.h
@@ -10707,6 +10707,16 @@ echo "#undef PORTAUDIO_LIBS" >$BLD/include/agar/config/portaudio_libs.h
 echo "hdefs[\"PORTAUDIO_LIBS\"] = nil" >>configure.lua
 fi;
 	else
+		if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]
+ then
+			echo "*"
+			echo "* --enable-au was requested, but the sndfile"
+			echo "* library is not available"
+			echo "*"
+			exit 1
+		else
+			echo "* sndfile library was not found, not compiling ag_au"
+		fi
 echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
 SUBDIR_au=""
