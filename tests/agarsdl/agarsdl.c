@@ -25,49 +25,39 @@ MyEventLoop_Overlay(int myFPS)
 	AG_DriverEvent dev;
 
 	t1 = AG_GetTicks();
+	printf("t1\n");
 	for (;;) {
 		t2 = AG_GetTicks();
+		printf("t2\n");
 
-		if (t2-t1 >= myFPS) {
-			AG_LockVFS(&agDrivers);
-			AG_FOREACH_WINDOW(win, agDriverSw) {
-				if (win->dirty)
-					break;
-			}
-			if (win != NULL) {
-				/* Arbitrary OpenGL code */
-				glClearColor(0, 0, 0.8, 1.0);
-				glClear(GL_COLOR_BUFFER_BIT);
+		if (t2-t1 >= 1000/myFPS) {
+			printf("update\n");
+			/*
+			 * Insert arbitrary OpenGL code here
+			 */
+			glClearColor(0, 0, 0.8, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT);
 
-				/* Render Agar GUI windows */
-				AG_BeginRendering(agDriverSw);
-				AG_FOREACH_WINDOW(win, agDriverSw) {
-					if (!win->visible) {
-						continue;
-					}
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-				}
-				AG_EndRendering(agDriverSw);
+			/* Render Agar GUI windows */
+			AG_WindowDrawQueued();
 
-				/* For double-buffering */
-				SDL_GL_SwapBuffers();
-			}
-			AG_UnlockVFS(&agDrivers);
+			SDL_GL_SwapBuffers();
+
 			t1 = AG_GetTicks();
-			curFPS = myFPS - (t1-t2);
+			curFPS = 1000/myFPS - (t1-t2);
 			if (curFPS < 1) { curFPS = 1; }
-		} else if (SDL_PollEvent(NULL) != 0) {
+		} else if (AG_PendingEvents(NULL)) {
+			printf("event\n");
 			if (AG_GetNextEvent(drv, &dev) == 1 &&
 			    AG_ProcessEvent(drv, &dev) == -1) {
 				return;
 			}
-		} else if (AG_TIMEOUTS_QUEUED()) {
-			AG_ProcessTimeouts(t2);
 		} else {
+			/* Expire software timers. */
+			AG_ProcessTimeouts(t2);
 			AG_Delay(1);
 		}
+		AG_WindowProcessQueued();
 	}
 }
 
@@ -82,7 +72,11 @@ main(int argc, char *argv[])
 	int ivFlags = 0;
 	int c;
 
-	if (AG_InitCore(NULL, AG_VERBOSE) == -1) {
+	/*
+	 * Note: For the AG_ProcessTimeouts() call in custom event loop to be safe,
+	 * we must request software timers with AG_SOFT_TIMERS.
+	 */
+	if (AG_InitCore(NULL, AG_VERBOSE|AG_SOFT_TIMERS) == -1) {
 		fprintf(stderr, "AG_InitCore: %s\n", AG_GetError());
 		return (1);
 	}
@@ -95,7 +89,10 @@ main(int argc, char *argv[])
 			ivFlags |= AG_VIDEO_OVERLAY;
 			break;
 		default:
-			printf("Usage: agarsdl [-g]\n");
+			printf("Usage: agarsdl [-go]\n");
+			printf("\n");
+			printf("\t[-g]: Attach to existing OpenGL context\n");
+			printf("\t[-o]: Set AG_VIDEO_OVERLAY mode\n");
 			break;
 		}
 	}
@@ -108,7 +105,7 @@ main(int argc, char *argv[])
 	}
 	if (ivFlags & AG_VIDEO_OPENGL) {
 		printf("Attaching to OpenGL context\n");
-		sdlFlags = SDL_RESIZABLE|SDL_OPENGL;
+		sdlFlags = SDL_OPENGL;
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
@@ -116,7 +113,7 @@ main(int argc, char *argv[])
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	} else {
 		printf("Attaching to software surface\n");
-		sdlFlags = SDL_RESIZABLE|SDL_SWSURFACE;
+		sdlFlags = SDL_SWSURFACE;
 	}
 	if ((screen = SDL_SetVideoMode(320, 240, 32, sdlFlags)) == NULL) {
 		fprintf(stderr, "SDL_SetVideoMode: %s\n", SDL_GetError());
@@ -132,11 +129,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		goto fail;
 	}
-#ifdef __APPLE__
-	AG_BindGlobalKey(AG_KEY_Q, AG_KEYMOD_META, AG_QuitGUI);
-#else
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-#endif
+	AG_BindStdGlobalKeys();
 	
 	/* Display some test widgets. */
 	win = AG_WindowNew(0);

@@ -126,6 +126,7 @@ To use this library, link against
 .Sq agar-core-config --libs
 to avoid the GUI library).
 .Pp
+.\" SYNC WITH AG_Core(3) "SEE ALSO"
 .Bl -tag -width "AG_DataSource(3) " -compact
 .It Xr AG_Config 3
 Manage Agar configuration settings.
@@ -140,7 +141,10 @@ Cross-platform interface to dynamic linkers.
 .It Xr AG_Error 3
 Error handling in Agar.
 .It Xr AG_Event 3
-Event handling for objects.
+Virtual functions (at the Agar object level).
+.It Xr AG_EventLoop 3
+Main application event loop.
+General event sources and sinks.
 .It Xr AG_Execute 3
 Cross-platform interface to program execution.
 .It Xr AG_File 3
@@ -194,13 +198,13 @@ Cursor configuration.
 .It Xr AG_Driver 3
 Driver (backend) interface.
 .It Xr AG_GlobalKeys 3
-Global keyboard shortcut table.
+Application-wide keyboard shortcuts.
 .It Xr AG_GL 3
 OpenGL-specific functions.
 .It Xr AG_GuiDebugger 3
 GUI debugging tool.
 .It Xr AG_KeySym 3
-Keyboard definitions.
+Keyboard key definitions.
 .It Xr AG_KeyMod 3
 Keyboard modifier definitions.
 .It Xr AG_MouseButton 3
@@ -360,31 +364,6 @@ Polygon entity.
 .It Xr VG_Text 3
 Text entity.
 .El
-.Sh AGAR-RG
-The
-.Em ag_rg
-library is useful at generating and manipulating raster graphics (either
-static or animated) by compositing a set of graphical elements.
-It implements a composite image format which allows directives,
-transformations and instancing of discrete graphical elements.
-.Pp
-To use this library, link against
-.Sq agar-rg-config --libs .
-.Pp
-.Bl -tag -width "RG_Animview (3) " -compact
-.It Xr RG 3
-Container for graphics, animations and textures.
-.It Xr RG_Tile 3
-Surface generated from a set of instructions.
-.It Xr RG_Anim 3
-Animation generated from a set of instructions.
-.It Xr RG_Pixmap 3
-Graphical surface used internally.
-.It Xr RG_Feature 3
-Generic graphical operation framework.
-.It Xr RG_Tileview 3
-Widget for graphics edition, generic tool framework with undo.
-.El
 .Sh AGAR-MATH
 .Em ag_math
 is a general-purpose math library focused on providing consistent
@@ -449,4 +428,20 @@ Routines specific to triangles in R^2 and R^3.
 Basic linear algebra routines specific to vectors.
 In addition to vectors in R^n, specialized operations are provided for
 vectors in R^2, R^3 and R^4.
+.El
+.Sh AGAR-AU
+The
+.Em ag_au
+library provides a basic cross-platform interface to audio hardware.
+.Pp
+To use this library, link against
+.Sq agar-au-config --libs .
+.Pp
+.Bl -tag -width "AU_DevOut(3) " -compact
+.It Xr AU 3
+Audio library initialization.
+.It Xr AU_Wave 3
+Structure containing an audio stream.
+.It Xr AU_DevOut 3
+Interface to audio output device.
 .El
