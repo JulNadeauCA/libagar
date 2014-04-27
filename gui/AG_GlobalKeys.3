@@ -29,7 +29,7 @@
 .ds oS Agar 1.4
 .Sh NAME
 .Nm AG_GlobalKeys
-.Nd agar global hotkey bindings
+.Nd agar application-wide keyboard shortcuts
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,14 +38,28 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface associates global keyboard shortcuts to callback functions.
-Unlike widget actions or the
+interface associates application-wide keyboard shortcuts to specified
+callback routines.
+.Pp
+Note that
+.Nm
+entirely ignores the status of Agar windows and widgets.
+To implement keyboard operations specific to a given Agar window or widget,
+one would instead use
+.Xr AG_ActionOnKeyDown 3
+or
+.Xr AG_ActionOnKeyUp 3 .
+For a more low-level interface to keyboard processing, the base
+.Xr AG_Widget 3
+class also provides the
 .Sq key-down
-event (see
-.Xr AG_Widget 3 ) ,
-these keyboard shortcuts are effective regardless of current widget focus
-state (although Agar widgets can always be configured to receive keyboard
-events unfiltered).
+and
+.Sq key-up
+event handlers.
+.Pp
+Preferably, all applications should use
+.Xr AG_BindStdGlobalKeys 3
+to set up the standard bindings for zooming and exiting the application.
 .Sh INTERFACE
 .nr nS 1
 .Ft void
@@ -54,19 +68,29 @@ events unfiltered).
 .Ft void
 .Fn AG_BindGlobalKeyEv "AG_KeySym key" "AG_KeyMod mod" "void (*fn)(AG_Event *)"
 .Pp
+.Ft void
+.Fn AG_BindStdGlobalKeys "void"
+.Pp
 .Ft int
 .Fn AG_UnbindGlobalKey "AG_KeySym key" "AG_KeyMod mod"
 .Pp
 .Ft void
 .Fn AG_ClearGlobalKeys "void"
 .Pp
-.Ft int
-.Fn AT_ExecGlobalKeys "AG_KeySym sym" "AG_KeyMod mod"
-.Pp
 .nr nS 0
 .Fn AG_BindGlobalKey
-arranges for the given function to be invoked whenever the user presses the
-given key combination, regardless of widgets.
+binds the specified routine to the given key combination.
+Keys are represented by
+.Ft AG_KeySym
+enums, and acceptable values for
+.Fa sym
+and
+.Fa mod
+arguments are listed under
+.Xr AG_KeySym 3
+and
+.Xr AG_KeyMod 3 .
+.Pp
 The
 .Fn AG_BindGlobalKeyEv
 variant accepts an
@@ -76,24 +100,38 @@ Note that arguments of
 .Dv AG_KEY_ANY
 and
 .Dv AG_KEYMOD_ANY
-are acceptable, in which case any key or key modifier will be matched (see
-.Xr AG_KeySym 3 ) .
+are acceptable, in which case any key or key modifier will be matched.
+.Pp
+The
+.Fn AG_BindStdGlobalKeys
+routine sets up the standard key bindings for zooming and exiting the
+application:
+.Pp
+.Bl -tag -width "META+EQUALS " -compact
+.It CTRL+EQUALS
+.Xr AG_ZoomIn 3
+.It CTRL+MINUS
+.Xr AG_ZoomOut 3
+.It CTRL+0
+.Xr AG_ZoomReset 3
+.It CTRL+Q
+.Xr AG_QuitGUI 3
+.El
 .Pp
 .Fn AG_UnbindGlobalKey
 removes the given key mapping.
 .Fn AG_ClearGlobalKeys
 removes all existing key mappings.
-.Pp
-.Fn AG_ExecGlobalKeys
-is usually invoked internally.
-If one or more callback routines are associated with the specified
-key / modifier, they are executed and the function returns 1.
-Otherwise, the function returns 0.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_KeySym 3 ,
+.Xr AG_KeyMod 3 ,
+.Xr AG_Keyboard 3 ,
 .Xr AG_Widget 3 ,
-.Xr AG_KeySym 3
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
 interface first appeared in Agar 1.0.
+.Fn AG_BindStdGlobalKeys
+first appeared in Agar 1.5.0.

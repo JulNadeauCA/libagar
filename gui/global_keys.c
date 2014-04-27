@@ -76,6 +76,26 @@ AG_BindGlobalKey(AG_KeySym keysym, AG_KeyMod keymod, void (*fn)(void))
 	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
+/*
+ * Set up some standard, platform-specific hotkey bindings for controlling
+ * zoom or exiting the application.
+ */
+void
+AG_BindStdGlobalKeys(void)
+{
+#ifdef __APPLE__
+	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_META,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
+	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_META, AG_QuitGUI);
+#else
+	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
+	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY,	AG_QuitGUI);
+#endif
+}
+
 /* Tie a global hotkey to a callback function (AG_Event style). */
 void
 AG_BindGlobalKeyEv(AG_KeySym keysym, AG_KeyMod keymod,

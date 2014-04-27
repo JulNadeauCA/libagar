@@ -303,6 +303,7 @@ AG_KeySym   AG_LookupKeySym(const char *);
 
 void AG_InitGlobalKeys(void);
 void AG_DestroyGlobalKeys(void);
+void AG_BindStdGlobalKeys(void);
 void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*)(void));
 void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*)(AG_Event *));
 int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
