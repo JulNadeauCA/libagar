@@ -73,13 +73,16 @@ void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
 char *agProgName = NULL;			/* Optional application name */
 
-int agVerbose = 0;		/* Verbose console output */
+int agVerbose = 0;				/* Verbose console output */
+int agSoftTimers = 0;				/* Disable hardware timers */
 
 int
 AG_InitCore(const char *progname, Uint flags)
 {
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
+	if (flags & AG_SOFT_TIMERS)
+		agSoftTimers = 1;
 
 	if (progname != NULL) {
 		if ((agProgName = TryStrdup(progname)) == NULL)

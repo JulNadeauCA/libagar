@@ -621,6 +621,11 @@ CreateEventSource(void)
 #else
 	src->sinkFn = AG_EventSinkSPINNER;
 #endif
+	if (agSoftTimers) {			/* Force soft timers */
+		src->addTimerFn = NULL;
+		src->delTimerFn = NULL;
+		src->caps[AG_SINK_TIMER] = 0;
+	}
 	return (src);
 }
 

@@ -7,12 +7,15 @@
 /* Flags for AG_InitCore() */
 #define AG_VERBOSE         0x01 /* Allow errors/warning output on console */
 #define AG_CREATE_DATADIR  0x02 /* Auto-create data directory on init */
+#define AG_SOFT_TIMERS	   0x04	/* Do not use hardware timers. A custom event
+				   loop will call AG_ProcessTimeouts(). */
 
 __BEGIN_DECLS
 struct ag_event;
 
 extern char *agProgName;	/* User program name */
 extern int agVerbose;		/* Verbose console output */
+extern int agSoftTimers;	/* Disable hardware timers */
 
 int	 AG_InitCore(const char *, Uint);
 void	 AG_AtExitFunc(void (*)(void));

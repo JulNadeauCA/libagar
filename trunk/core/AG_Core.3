@@ -39,54 +39,19 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-library implements the base Agar object system.
+library implements the base Agar object system along with portable interfaces
+to operating system services (e.g., filesystems, network, threads).
 Even though the Agar-GUI library is built on top of it,
 .Nm
-is an independent, general utility library (containing no GUI-related code),
-and may be used in any application.
-.Nm
-provides a number of interfaces:
+is an independent, general utility library containing no GUI-related code.
 .Pp
-.Bl -bullet
-.It
-The
-.Xr AG_EventLoop 3 ,
-routine for processing of low-level events (events on file descriptors,
-filesystem changes, timer expirations, etc.)
-Internally, Agar uses the most efficient system interface available (such as
-.Xr kqueue 2
-or
-.Xr select 2 ) ,
-hiding all platform-specific details from the application.
-.It
-The
-.Xr AG_File 3
-interface provides filesystem access methods, where filesystems are available.
-.It
-The
-.Xr AG_Db 3
-interface provides access to databases of key/value pairs using various
-backends (such as "hash", "btree" and "mysql").
-.It
-The
-.Xr AG_User 3
-interface provides information about user accounts, where supported.
-.It
-The
-.Xr AG_Net 3
-system provides a portable network API.
-.It
-.Xr AG_String 3
-provides C string utility routines.
-This includes portable formatted output conversion, portable versions of
-.Xr strsep 3 ,
-.Xr strlcpy 3 ,
-etc.
-Character set conversion is also provided by
-.Xr AG_ImportUnicode 3
-and
-.Xr AG_ExportUnicode 3 .
-.El
+For a complete listing of available subsystems and interfaces, see the
+.Dq AGAR-CORE
+section of the
+.Xr AG_Intro 3
+manual page, or the
+.Dq SEE ALSO
+section below.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -126,9 +91,13 @@ Create a data directory for the application.
 The exact location of the directory is platform-dependent (and may
 depend on
 .Fa progname ) .
-For example, on POSIX platforms,
-.Pa ~/.<progname>
-would be used.
+On Unix-like platforms, the default would be
+.Pa ~/.<progname> .
+.It AG_SOFT_TIMERS
+Disable use of hardware timers.
+Indicate that the application will be updating the software-based timing
+wheel using
+.Xr AG_ProcessTimeouts 3 .
 .El
 .Pp
 The
@@ -179,20 +148,29 @@ The
 .Fn AG_VERSION_ATLEAST
 macro evaluates to true if the current Agar version is equal to, or exceeds
 the given version number.
+.\" SYNC WITH AG_Intro(3) "AGAR-CORE"
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Config 3 ,
+.Xr AG_DataSource 3 ,
 .Xr AG_Db 3 ,
-.Xr AG_Dir 3 ,
+.Xr AG_DSO 3 ,
 .Xr AG_Error 3 ,
 .Xr AG_Event 3 ,
 .Xr AG_EventLoop 3 ,
 .Xr AG_Execute 3 ,
 .Xr AG_File 3 ,
+.Xr AG_Limits 3 ,
 .Xr AG_Net 3 ,
 .Xr AG_Object 3 ,
 .Xr AG_String 3 ,
+.Xr AG_TextElement 3 ,
+.Xr AG_Threads 3 ,
 .Xr AG_Timer 3 ,
-.Xr AG_User 3 .
+.Xr AG_Time 3 ,
+.Xr AG_User 3 ,
+.Xr AG_Variable 3 ,
+.Xr AG_Version 3 .
 .Sh HISTORY
 The
 .Fn AG_InitCore
