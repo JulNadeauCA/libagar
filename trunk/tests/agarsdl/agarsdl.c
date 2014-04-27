@@ -7,6 +7,7 @@
 #include <agar/config/have_opengl.h>
 
 #include <SDL.h>
+#include <math.h>
 
 #include <agar/core.h>
 #include <agar/gui.h>
@@ -14,6 +15,9 @@
 
 SDL_Surface *screen;			/* Our existing SDL display surface */
 int curFPS = 0;
+float color = 0.5;
+int Width = 320;
+int Height = 240;
 
 /* Custom event loop routine to test AG_VIDEO_OVERLAY mode. */
 static void
@@ -25,31 +29,52 @@ MyEventLoop_Overlay(int myFPS)
 	AG_DriverEvent dev;
 
 	t1 = AG_GetTicks();
-	printf("t1\n");
 	for (;;) {
 		t2 = AG_GetTicks();
-		printf("t2\n");
 
 		if (t2-t1 >= 1000/myFPS) {
-			printf("update\n");
 			/*
 			 * Insert arbitrary OpenGL code here
 			 */
-			glClearColor(0, 0, 0.8, 1.0);
-			glClear(GL_COLOR_BUFFER_BIT);
+//			glClearColor(0,0,color,1);
+//			glClear(GL_COLOR_BUFFER_BIT);
 
 			/* Render Agar GUI windows */
-			AG_WindowDrawQueued();
+			AG_FOREACH_WINDOW(win, drv) {
+				if (win->visible && win->dirty)
+					break;
+			}
+			if (win != NULL) {
+				AG_BeginRendering(drv);
+				AG_FOREACH_WINDOW(win, drv) {
+					AG_ObjectLock(win);
+					AG_WindowDraw(win);
+					AG_ObjectUnlock(win);
+				}
+				AG_EndRendering(drv);
+			}
 
 			SDL_GL_SwapBuffers();
-
+			
 			t1 = AG_GetTicks();
 			curFPS = 1000/myFPS - (t1-t2);
 			if (curFPS < 1) { curFPS = 1; }
 		} else if (AG_PendingEvents(NULL)) {
-			printf("event\n");
-			if (AG_GetNextEvent(drv, &dev) == 1 &&
-			    AG_ProcessEvent(drv, &dev) == -1) {
+			if (AG_GetNextEvent(drv, &dev) == 1) {
+				if (dev.type == AG_DRIVER_KEY_DOWN) {
+					switch (dev.data.key.ks) {
+					case AG_KEY_ESCAPE:
+						return;
+					case AG_KEY_UP:
+						color -= 0.1;
+						break;
+					case AG_KEY_DOWN:
+						color += 0.1;
+						break;
+					}
+				}
+			}
+			if (AG_ProcessEvent(drv, &dev) == -1) {
 				return;
 			}
 		} else {
@@ -115,9 +140,23 @@ main(int argc, char *argv[])
 		printf("Attaching to software surface\n");
 		sdlFlags = SDL_SWSURFACE;
 	}
-	if ((screen = SDL_SetVideoMode(320, 240, 32, sdlFlags)) == NULL) {
+	if ((screen = SDL_SetVideoMode(Width, Height, 16, sdlFlags)) == NULL) {
 		fprintf(stderr, "SDL_SetVideoMode: %s\n", SDL_GetError());
 		goto fail;
+	}
+	if (ivFlags & AG_VIDEO_OPENGL) {
+		glViewport(0, 0, Width, Height);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, Width, Height, 0, -1.0, 1.0);
+
+		glClearColor(1,0,0,1); glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapBuffers(); AG_Delay(300);
+		glClearColor(0,1,0,1); glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapBuffers(); AG_Delay(300);
+		glClearColor(0,0,1,1); glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapBuffers();
+		AG_Delay(1000);
 	}
 
 	/* Agar requires Unicode key events. */
