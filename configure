@@ -5719,13 +5719,13 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 	if [ "$MK_VERSION_MINOR" = "" ]; then
 		MK_VERSION_OK="yes"
 	else
-		if [ $MK_VERSION_MINOR -gt 5 ]; then
+		if [ $MK_VERSION_MINOR -gt 2 ]; then
 			MK_VERSION_OK="yes";
-		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+		elif [ $MK_VERSION_MINOR -eq 2 ]; then
 			if [ "$MK_VERSION_MICRO" = "" ]; then
 				MK_VERSION_OK="yes"
 			else
-				if [ $MK_VERSION_MICRO -ge 0 ]; then
+				if [ $MK_VERSION_MICRO -ge 49 ]; then
 					MK_VERSION_OK="yes"
 				fi
 			fi
@@ -5735,8 +5735,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo "*"
 echo "*" >> config.log
-echo "* Minimum required version is 1.5.0 (found $PNG_VERSION); skipping."
-echo "* Minimum required version is 1.5.0 (found $PNG_VERSION); skipping." >> config.log
+echo "* Minimum required version is 1.2.49 (found $PNG_VERSION); skipping."
+echo "* Minimum required version is 1.2.49 (found $PNG_VERSION); skipping." >> config.log
 echo "*"
 echo "*" >> config.log
 fi;
