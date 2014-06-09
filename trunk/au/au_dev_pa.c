@@ -103,6 +103,7 @@ Open(void *obj, const char *path, int rate, int channels)
 	AU_DevOut *dev = obj;
 	AU_DevOutPA *dpa = obj;
 	PaStreamParameters op;
+	const PaStreamInfo *streamInfo;
 	PaError rv;
 
 	if (dpa->stream != NULL) {
@@ -131,7 +132,12 @@ Open(void *obj, const char *path, int rate, int channels)
 		    Pa_GetErrorText(rv));
 		goto fail;
 	}
-
+	if ((streamInfo = Pa_GetStreamInfo(dpa->stream)) != NULL) {
+		dev->rate = (int)streamInfo->sampleRate;
+		if (dev->rate != rate)
+			Verbose("PortAudio: Hardware uses different rate (%d)",
+			    dev->rate);
+	}
 	dev->rate = rate;
 	dev->ch = channels;
 
