@@ -1,0 +1,104 @@
+.\"
+.\" Copyright (c) 2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 20, 2014
+.Dt AU_Wave 3
+.Os
+.ds vT Agar-AU API Reference
+.ds oS Agar-AU 1.0
+.Sh NAME
+.Nm AU_Wave
+.Nd agar audio waveform
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/au.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure stores uncompressed, multi-channel audio data.
+.Sh INTERFACE
+.nr nS 1
+.Ft "AU_Wave *"
+.Fn AU_WaveNew "void"
+.Pp
+.Ft "AU_Wave *"
+.Fn AU_WaveFromFile "const char *path"
+.Pp
+.Ft "void"
+.Fn AU_WaveFree "AU_Wave *wave"
+.Pp
+.Ft "void"
+.Fn AU_WaveFreeData "AU_Wave *wave"
+.Pp
+.Ft "int"
+.Fn AU_WaveLoad "AU_Wave *wave" "const char *path"
+.Pp
+.Ft "int"
+.Fn AU_WaveGenVisual "AU_Wave *wave" "int reduce"
+.Pp
+.nr nS 0
+The
+.Fn AU_WaveNew
+function returns a newly-allocated, empty
+.Nm
+structure.
+.Fn AU_WaveFromFile
+returns a newly-allocated
+.Nm
+with contents loaded from the specified file.
+The file may be in any format recognized by libsndfile.
+.Pp
+The
+.Fn AU_WaveFree
+routine frees the
+.Nm
+and all of its associated resources.
+.Fn AU_WaveFreeData
+frees the audio stream, reinitializing the
+.Nm
+structure to an empty stream.
+.Pp
+The
+.Fn AU_WaveLoad
+function loads an audio stream from the specified
+.Fa path .
+The file may be in any libsndfile-supported format.
+.Pp
+The
+.Fn AU_WaveGenVisual
+function generates a reduced waveform suitable for visualization purposes.
+The reduced waveform is stored in the
+.Nm
+structure itself, and is intended to be accessed by GUI visualization
+widgets.
+.Sh SEE ALSO
+.Xr AU 3
+.Sh HISTORY
+The
+.Xr AU 3
+library and the
+.Nm
+structure first appeared in Agar 1.5.0.

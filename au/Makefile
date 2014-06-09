@@ -18,7 +18,7 @@ CFLAGS+=	-D_AGAR_AU_INTERNAL \
 		${AGMATH_CFLAGS} ${AU_CFLAGS}
 
 SRCS=	${SRCS_AU} au.c au_wave.c au_dev_out.c
-MAN3=	AU.3
+MAN3=	AU.3 AU_DevOut.3 AU_Wave.3
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

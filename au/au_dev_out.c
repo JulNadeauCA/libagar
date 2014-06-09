@@ -100,8 +100,8 @@ AU_OpenOut(const char *path, int rate, int ch)
 	AG_MutexInit(&dev->lock);
 	AG_CondInit(&dev->wrRdy);
 	AG_CondInit(&dev->rdRdy);
-	dev->mix = NULL;
-	dev->nMix = 0;
+	dev->chan = NULL;
+	dev->nChan = 0;
 
 	if (dev->cls->Init != NULL) {
 		dev->cls->Init(dev);
@@ -138,7 +138,7 @@ AU_CloseOut(AU_DevOut *dev)
 	if (dev->cls->Destroy != NULL) {
 		dev->cls->Destroy(dev);
 	}
-	Free(dev->mix);
+	Free(dev->chan);
 	AG_CondDestroy(&dev->wrRdy);
 	AG_CondDestroy(&dev->rdRdy);
 	AG_MutexDestroy(&dev->lock);
@@ -146,43 +146,42 @@ AU_CloseOut(AU_DevOut *dev)
 	Free(dev);
 }
 
-/* Configure a new mixer channel. */
+/* Configure a new virtual channel. */
 int
 AU_AddChannel(AU_DevOut *dev)
 {
-	AU_Channel *mixNew, *mc;
+	AU_Channel *chanNew, *ch;
 	int rv;
 
 	AG_MutexLock(&dev->lock);
-	if ((mixNew = TryRealloc(dev->mix, (dev->nMix+1)*sizeof(AU_Channel)))
+	if ((chanNew = TryRealloc(dev->chan, (dev->nChan+1)*sizeof(AU_Channel)))
 	    == NULL) {
 		AG_MutexUnlock(&dev->lock);
 		return (-1);
 	}
-	dev->mix = mixNew;
-	mc = &dev->mix[dev->nMix++];
-	mc->vol = 1.0;
-	mc->pan = 0.5;
-	rv = dev->nMix - 1;
+	dev->chan = chanNew;
+	ch = &dev->chan[(rv = dev->nChan++)];
+	ch->vol = 1.0;
+	ch->pan = 0.5;
 	AG_MutexUnlock(&dev->lock);
 	return (rv);
 }
 
-/* Delete a mixer channel. */
+/* Delete a virtual channel. */
 int
-AU_DelChannel(AU_DevOut *dev, int mcn)
+AU_DelChannel(AU_DevOut *dev, int ch)
 {
 	AG_MutexLock(&dev->lock);
-	if (mcn < 0 || mcn >= dev->nMix) {
+	if (ch < 0 || ch >= dev->nChan) {
 		AG_SetError("No such channel");
 		AG_MutexUnlock(&dev->lock);
 		return (-1);
 	}
-	if (mcn < dev->nMix-1) {
-		memmove(&dev->mix[mcn], &dev->mix[mcn+1],
-		    (dev->nMix-1)*sizeof(AU_Channel));
+	if (ch < dev->nChan-1) {
+		memmove(&dev->chan[ch], &dev->chan[ch+1],
+		    (dev->nChan-1)*sizeof(AU_Channel));
 	}
-	dev->nMix--;
+	dev->nChan--;
 	AG_MutexUnlock(&dev->lock);
 	return (0);
 }
