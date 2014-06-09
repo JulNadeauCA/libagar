@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2011-2014 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,36 @@
 #include <agar/au.h>
 .Ed
 .Sh DESCRIPTION
-The Agar-AU library integrates a simple audio mixer with a portable
-audio interface.
+The Agar-AU library provides a portable interface to audio hardware
+and manipulation of digital audio streams.
+It aims to accomodate the constraints of real-time audio playback,
+as well as the high-quality requirements of offline rendering.
+.Pp
+The typical usage involves first opening an output audio stream (an
+.Xr AU_DevOut 3
+object), using
+.Xr AU_OpenOut 3 ,
+with a specified sample rate and number of output channels (subject to
+the limitations of the output device, where applicable).
+.Pp
+Output devices may also have any number of associated
+.Em virtual channels .
+.\" each with separate volume levels and effects chains.
+.\" Virtual channels may be added or removed at runtime.
+.\" Mixing can be performed in different ways, at different quality
+.\" levels according to the mixing policy of the output device.
+.\" Default mixing policy establishes a one-to-one correspondence between
+.\" the virtual channels and the output channels.
+.\" If number of virtual vs. output channels differs, the policy can specify
+.\" one-to-many or many-to-one correspondences.
+.Pp
+In a multithreaded application, in order that the
+.Nm
+library correctly process and mix audio generated from concurrent threads,
+virtual channels are further divided into
+.Em thread-specific
+channels which are automatically created (and may also have their own volume
+levels and effects chains).
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
