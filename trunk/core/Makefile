@@ -3,12 +3,15 @@ include ${TOP}/Makefile.config
 include ${TOP}/core/Makefile.inc
 
 LIB=		ag_core
-LIB_MAJOR=	5
-LIB_MINOR=	0
+LIB_CURRENT=	5
+LIB_REVISION=	0
+LIB_AGE=	0
+
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
 LIB_LINKS=	${CORE_LIBS}
+LIBS=		${CORE_LIBS}
 CFLAGS+=	-D_AGAR_CORE_INTERNAL ${CORE_CFLAGS}
 
 SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \

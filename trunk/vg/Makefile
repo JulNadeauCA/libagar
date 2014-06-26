@@ -5,12 +5,19 @@ include ${TOP}/gui/Makefile.inc
 include ${TOP}/vg/Makefile.inc
 
 LIB=		ag_vg
-LIB_MAJOR=	5
-LIB_MINOR=	0
+LIB_CURRENT=	5
+LIB_REVISION=	0
+LIB_AGE=	0
+
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"6d009edb-c66a-46e8-a1dd-b6f653db6327"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC} ${VG_LIBS}
+
+LIBS=		-L../gui -lag_gui \
+		${SDL_LIBS} ${OPENGL_LIBS} ${FREETYPE_LIBS} \
+		-L../core -lag_core
+
 CFLAGS+=	-D_AGAR_VG_INTERNAL \
 		${CORE_CFLAGS} ${GUI_CFLAGS} ${VG_CFLAGS}
 

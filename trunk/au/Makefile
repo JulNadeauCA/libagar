@@ -6,8 +6,10 @@ include ${TOP}/math/Makefile.inc
 include ${TOP}/au/Makefile.inc
 
 LIB=		ag_au
-LIB_MAJOR=	5
-LIB_MINOR=	0
+LIB_CURRENT=	5
+LIB_REVISION=	0
+LIB_AGE=	0
+
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"26f09743-b62e-4c74-abaf-0a4339a2b5d9"
