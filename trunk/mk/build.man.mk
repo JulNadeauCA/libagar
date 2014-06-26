@@ -287,79 +287,79 @@ clean-man:
 
 install-man-dirs:
 	@if [ "${MANS}" != "       " ]; then \
-	    if [ ! -d "${MANDIR}" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man1" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man1"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man1; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man2" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man2"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man2; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man3" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man3"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man3; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man4" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man4"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man4; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man5" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man5"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man5; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man6" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man6"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man6; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man7" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man7"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man7; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man8" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man8"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man8; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/man9" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/man9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man9"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man9; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat1" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat1"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat1; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat2" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat2"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat2; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat3" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat3"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat3; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat4" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat4"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat4; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat5" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat5"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat5; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat6" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat6"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat6; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat7" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat7"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat7; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat8" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat8"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat8; \
 	    fi; \
-	    if [ ! -d "${MANDIR}/cat9" ]; then \
+	    if [ ! -d "${DESTDIR}${MANDIR}/cat9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat9"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat9; \
 	    fi; \

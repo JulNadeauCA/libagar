@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2014 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,24 +51,25 @@ YFLAGS?=	-d
 LIB_INSTALL?=	No
 LIB_SHARED?=	No
 LIB_MODULE?=	No
-LIB_MAJOR?=	1
-LIB_MINOR?=	0
-LIB_XOBJS?=
+LIB_CURRENT?=	1
+LIB_REVISION?=	0
+LIB_AGE?=	0
 LIB_GUID?=
 
 USE_LIBTOOL?=	Yes
-LIBTOOL?=	${TOP}/mk/libtool/libtool
+LTBASE?=	${TOP}/mk/libtool
+LIBTOOL?=	${LTBASE}/libtool
 LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
-LTCONFIG?=	${TOP}/mk/libtool/ltconfig
-LTCONFIG_GUESS?=${TOP}/mk/libtool/config.guess
-LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
-LTMAIN_SH?=	${TOP}/mk/libtool/ltmain.sh
-LTCONFIG_LOG?=	./config.log
+LTCONFIG?=	${LTBASE}/configure
+LTCONFIG_DEPS?=	${LTBASE}/config.guess \
+		${LTBASE}/config.sub \
+		${LTBASE}/aclocal.m4 \
+		${LTBASE}/ltmain.sh
+LTCONFIG_LOG?=	${LTBASE}/config.log
 LIBTOOLFLAGS?=
-LIBTOOLOPTS?=	--quiet
-LIBTOOLOPTS_CC?=
-LIBTOOLOPTS_OBJC?=
-LIBTOOLOPTS_CXX?=
+LIBTOOLOPTS?=		--quiet
+LIBTOOLOPTS_SHARED?=	-no-undefined -Wl,--no-undefined -XCClinker -static-libgcc
+LIBTOOLOPTS_STATIC?=
 
 # Compat (DATADIR was formerly called SHAREDIR)
 SHARE?=none
@@ -104,7 +105,7 @@ depend: depend-subdir
 .c.o:
 	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
 	    ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -113,7 +114,7 @@ depend: depend-subdir
 .m.o:
 	${OBJC} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_OBJC} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
 	    ${OBJC} ${LIBTOOLFLAGS} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
 	${OBJC} -pg -DPROF ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -122,14 +123,14 @@ depend: depend-subdir
 .cc.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CXX} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
 	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.o:
 	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.lo: ${LIBTOOL}
-	${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CXX} --mode=compile \
+	${LIBTOOL} ${LIBTOOLOPTS} --mode=compile \
 	    ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
@@ -225,22 +226,23 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
                 done; \
-	        echo "${AR} -cru lib${LIB}.a $$_objs ${LIB_XOBJS}"; \
-	        ${AR} -cru lib${LIB}.a $$_objs ${LIB_XOBJS}; \
+	        echo "${AR} -cru lib${LIB}.a $$_objs ${LIBS}"; \
+	        ${AR} -cru lib${LIB}.a $$_objs ${LIBS}; \
 	    else \
-	        echo "${AR} -cru lib${LIB}.a ${OBJS} ${LIB_XOBJS}"; \
-	        ${AR} -cru lib${LIB}.a ${OBJS} ${LIB_XOBJS}; \
+	        echo "${AR} -cru lib${LIB}.a ${OBJS} ${LIBS}"; \
+	        ${AR} -cru lib${LIB}.a ${OBJS} ${LIBS}; \
 	    fi; \
 	    echo "${RANLIB} lib${LIB}.a"; \
 	    (${RANLIB} lib${LIB}.a || exit 0); \
 	fi
 
-# Build a Libtool version of the library.
 _lib_shobjs ${SHOBJS}: ${LIBTOOL_COOKIE}
 
+# Build a libtool version of the library.
 lib${LIB}.la: _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${SRCS}" != "none" ]; then \
+	    if [ "${LIB_MODULE}" = "Yes" ]; then export _moduleopts="-module"; else export _moduleopts=""; fi; \
 	    if [ "${SHOBJS}" = "none" ]; then \
 	        export _shobjs=""; \
 	        for F in ${SRCS}; do \
@@ -251,74 +253,59 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
 	    	    _shobjs="$$_shobjs $$F"; \
                 done; \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
+	                echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
 			    ${CC} -o lib${LIB}.la \
-			    -module \
-		            -rpath ${PREFIX}/lib \
-	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+			    ${LIBTOOLOPTS_SHARED} \
+			    -rpath ${PREFIX}/lib ${_moduleopts} \
+	                    -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
 		            ${LDFLAGS} $$_shobjs \
-		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la -module \
-		            -rpath ${PREFIX}/lib \
-		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} $$_shobjs \
-			    ${LIBS} ${LIB_XOBJS}; \
-		    else \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
+		            ${LIBS}"; \
+	                ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
 			    ${CC} -o lib${LIB}.la \
-		            -rpath ${PREFIX}/lib \
-	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+			    ${LIBTOOLOPTS_SHARED} \
+			    -rpath ${PREFIX}/lib ${_moduleopts} \
+		            -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
 		            ${LDFLAGS} $$_shobjs \
-		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la \
-		            -rpath ${PREFIX}/lib \
-		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} $$_shobjs \
-			    ${LIBS} ${LIB_XOBJS}; \
-		    fi; \
+			    ${LIBS}; \
 		else \
-	            echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
-		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} $$_shobjs \
-			${LIBS} ${LIB_XOBJS}; \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la \
+			-static ${LIBTOOLOPTS_STATIC} \
+			${LDFLAGS} $$_shobjs \
+		        ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la \
+			-static ${LIBTOOLOPTS_STATIC} \
+			${LDFLAGS} $$_shobjs \
+			${LIBS}; \
 		fi; \
 	    else \
 	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
-	    	    if [ "${LIB_MODULE}" = "Yes" ]; then \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
-	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} ${SHOBJS} \
-		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la -module -rpath ${PREFIX}/lib \
-		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} ${SHOBJS} \
-			    ${LIBS} ${LIB_XOBJS}; \
-		    else \
-	                echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	                    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} ${SHOBJS} \
-		            ${LIBS} ${LIB_XOBJS}"; \
-	                ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-			    ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-		            -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		            ${LDFLAGS} ${SHOBJS} \
-			    ${LIBS} ${LIB_XOBJS}; \
-		    fi; \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la \
+			${LIBTOOLOPTS_SHARED} \
+			-rpath ${PREFIX}/lib ${_moduleopts} \
+	                -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
+		        ${LDFLAGS} ${SHOBJS} \
+		        ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+			${CC} -o lib${LIB}.la \
+			${LIBTOOLOPTS_SHARED} \
+			-rpath ${PREFIX}/lib ${_moduleopts} \
+		        -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
+		        ${LDFLAGS} ${SHOBJS} \
+			${LIBS}; \
 	        else \
-	            echo "${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
-		        ${LIBS} ${LIB_XOBJS}"; \
-	            ${LIBTOOL} ${LIBTOOLOPTS} ${LIBTOOLOPTS_CC} --mode=link \
-		        ${CC} -o lib${LIB}.la -static ${LDFLAGS} ${SHOBJS} \
-			${LIBS} ${LIB_XOBJS}; \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la \
+			-static ${LIBTOOLOPTS_STATIC} \
+			${LDFLAGS} ${SHOBJS} \
+		        ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la \
+			-static ${LIBTOOLOPTS_STATIC} \
+			${LDFLAGS} ${SHOBJS} \
+			${LIBS}; \
 		fi; \
 	    fi; \
 	fi
@@ -520,13 +507,14 @@ deinstall-lib: ${LIBTOOL_COOKIE}
 includes:
 	(cd ${TOP} && ${MAKE} install-includes)
 
-${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
+${LIBTOOL_COOKIE}:
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${LIBTOOL_BUNDLED}" = "yes" ]; then \
-	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH} ${HOST}"; \
-	    env CC="${CC}" OBJC="${OBJC}" CXX="${CXX}" \
+	    echo "(cd ${LTBASE} && \
+	        ${SH} ./configure --build=${BUILD} --host=${HOST})"; \
+	    (cd ${LTBASE} && env CC="${CC}" OBJC="${OBJC}" CXX="${CXX}" \
 	        CFLAGS="${CFLAGS}" OBJCFLAGS="${OBJCFLAGS}" CXXFLAGS="${CXXFLAGS}" \
-		${SH} ${LTCONFIG} ${LTMAIN_SH} ${HOST}; \
+		${SH} ./configure --build=${BUILD} --host=${HOST}); \
 	    if [ $? != 0 ]; then \
 	    	echo "${LTCONFIG} failed"; \
 	    	exit 1; \
@@ -552,7 +540,7 @@ lib-tags:
 	    fi; \
 	fi
 
-${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
+${LTCONFIG} ${LTCONFIG_DEPS}:
 
 .PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
