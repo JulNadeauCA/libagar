@@ -379,7 +379,7 @@ echo "    --with-catman             Install cat files for manual pages [auto-det
 echo "    --with-ctags              Generate ctags(1) tag files [no]"
 echo "    --with-docs               Generate printable documentation [no]"
 echo "    --with-gettext            Use gettext for multi-language [auto-detect]"
-echo "    --with-libtool            Specify path to libtool [auto-detect]"
+echo "    --with-libtool            Specify path to libtool [bundled]"
 echo "    --with-manlinks           Add manual entries for every function [no]"
 echo "    --with-manpages           Generate Unix manual pages [yes]"
 echo ""
@@ -579,32 +579,12 @@ if [ "${with_ctags}" = "yes" ]; then
 	fi
 fi
 echo "CTAGS=${CTAGS}" >> Makefile.config
-if [ "${prefix_libtool}" != "" ]; then
+if [ "${prefix_libtool}" != "" -a "${prefix_libtool}" != "bundled" ]; then
 	LIBTOOL_BUNDLED="no"
 	LIBTOOL="${prefix_libtool}"
 else
-	LIBTOOL=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/glibtool" ]; then
-			LIBTOOL="${path}/glibtool"
-			break
-		fi
-		if [ -x "${path}/libtool" ]; then
-			LIBTOOL="${path}/libtool"
-			break
-		fi
-	done
-	if [ "${LIBTOOL}" = "" ]; then
-		LIBTOOL_BUNDLED="yes"
-		LIBTOOL=\${TOP}/mk/libtool/libtool
-	else
-		if [ "`libtool --version 2>/dev/null |grep GNU`" = "" ]; then
-			LIBTOOL_BUNDLED="yes"
-			LIBTOOL=\${TOP}/mk/libtool/libtool
-		else
-			LIBTOOL_BUNDLED="no"
-		fi
-	fi
+	LIBTOOL_BUNDLED="yes"
+	LIBTOOL=\${TOP}/mk/libtool/libtool
 fi
 echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
@@ -763,26 +743,31 @@ TTFDIR="NONE"
 fi
 $ECHO_N "checking for a C compiler..."
 $ECHO_N "checking for a C compiler..." >> config.log
+if [ "$CROSS_COMPILING" = "yes" ]; then
+	CROSSPFX="${host}-"
+else
+	CROSSPFX=""
+fi
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
-		if [ -x "${i}/cc" ]; then
-			if [ -f "${i}/cc" ]; then
-				CC="${i}/cc"
+		if [ -x "${i}/${CROSSPFX}cc" ]; then
+			if [ -f "${i}/${CROSSPFX}cc" ]; then
+				CC="${i}/${CROSSPFX}cc"
 				break
 			fi
-		elif [ -x "${i}/gcc" ]; then
-			if [ -f "${i}/gcc" ]; then
-				CC="${i}/gcc"
+		elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+			if [ -f "${i}/${CROSSPFX}gcc" ]; then
+				CC="${i}/${CROSSPFX}gcc"
 				break
 			fi
 		fi
 	done
 	if [ "$CC" = "" ]; then
 		echo "*"
-		echo "* Unable to find a standard C compiler in PATH. You may need"
-		echo "* to set the CC environment variable."
+		echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in default PATH."
+		echo "* You may need to set the CC environment variable."
 		echo "*"
-		echo "Unable to find a C compiler in PATH." >> config.log
+		echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
 		HAVE_CC="no"
 		echo "no"
 	else
@@ -807,8 +792,6 @@ EOT
 	    echo "no (test failed to compile)" >> config.log
 		HAVE_CC="no"
 	else
-		echo "yes"
-		echo "yes" >> config.log
 		HAVE_CC="yes"
 	fi
 
@@ -829,12 +812,19 @@ EOT
 			    fi
 			done
 			if [ "$EXECSUFFIX" != "" ]; then
-				echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+				echo "yes (it outputs $EXECSUFFIX files)"
+				echo "yes (it outputs $EXECSUFFIX files)" >> config.log
+			else
+				echo "yes"
+				echo "yes" >> config.log
 			fi
 echo "#ifndef EXECSUFFIX" > $BLD/include/agar/config/execsuffix.h
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >> $BLD/include/agar/config/execsuffix.h
 echo "#endif" >> $BLD/include/agar/config/execsuffix.h
 echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >> config.log
 		fi
 	fi
 	rm -f conftest.c conftest$EXECSUFFIX
@@ -1020,21 +1010,16 @@ echo "#undef HAVE_CYGWIN" >$BLD/include/agar/config/have_cygwin.h
 echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest
-$ECHO_N "checking for libtool --tag=CC retardation..."
-$ECHO_N "checking for libtool --tag=CC retardation..." >> config.log
-cat << EOT > conftest.c
-int main(int argc, char *argv[]) { return (0); }
-EOT
-$LIBTOOL --quiet --mode=compile --tag=CC $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest.o conftest.c 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-LIBTOOLOPTS_CC="--tag=CC"
-else
-echo "no"
-echo "no" >> config.log
 fi;
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_CC}" != "yes" ]; then
+echo "* "
+echo "* " >> config.log
+echo "* This software requires cc installed on your system."
+echo "* This software requires cc installed on your system." >> config.log
+echo "* "
+echo "* " >> config.log
+echo "configure failed!"
+exit 1
 fi;
 $ECHO_N "checking for aligned attribute..."
 $ECHO_N "checking for aligned attribute..." >> config.log
@@ -1430,6 +1415,11 @@ fi;
 rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for an Objective-C compiler..."
 $ECHO_N "checking for an Objective-C compiler..." >> config.log
+if [ "$CROSS_COMPILING" = "yes" ]; then
+	CROSSPFX="${host}-"
+else
+	CROSSPFX=""
+fi
 if [ "$OBJC" = "" ]; then
 	if [ "$CC" != "" ]; then
 		OBJC="$CC"
@@ -1437,24 +1427,24 @@ if [ "$OBJC" = "" ]; then
 		echo "using CC (${OBJC})"
 	else
 		for i in `echo $PATH |sed 's/:/ /g'`; do
-			if [ -x "${i}/cc" ]; then
-				if [ -f "${i}/cc" ]; then
-					OBJC="${i}/cc"
+			if [ -x "${i}/${CROSSPFX}cc" ]; then
+				if [ -f "${i}/${CROSSPFX}cc" ]; then
+					OBJC="${i}/${CROSSPFX}cc"
 					break
 				fi
-			elif [ -x "${i}/gcc" ]; then
-				if [ -f "${i}/gcc" ]; then
-					OBJC="${i}/gcc"
+			elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+				if [ -f "${i}/${CROSSPFX}gcc" ]; then
+					OBJC="${i}/${CROSSPFX}gcc"
 					break
 				fi
 			fi
 		done
 		if [ "$OBJC" = "" ]; then
-			echo "*"
-			echo "* Unable to find an Objective-C compiler in PATH. You may need"
-			echo "* to set the CC or OBJC environment variable."
-			echo "*"
-			echo "Unable to find an Objective-C compiler in PATH." >> config.log
+		    echo "*"
+		    echo "* Cannot find ${CROSSPFX}objc or ${CROSSPFX}gcc in default PATH."
+		    echo "* You may need to set the OBJC environment variable."
+		    echo "*"
+		    echo "Cannot find ${CROSSPFX}objc or ${CROSSPFX}gcc in PATH." >> config.log
 			HAVE_OBJC="no"
 			echo "no"
 		else
@@ -1481,8 +1471,6 @@ EOT
 	    echo "no (test failed to compile)" >> config.log
 		HAVE_OBJC="no"
 	else
-		echo "yes"
-		echo "yes" >> config.log
 		HAVE_OBJC="yes"
 	fi
 	
@@ -1503,12 +1491,19 @@ EOT
 			    fi
 			done
 			if [ "$EXECSUFFIX" != "" ]; then
-				echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+				echo "yes (it outputs $EXECSUFFIX files)"
+				echo "yes (it outputs $EXECSUFFIX files)" >> config.log
+			else
+				echo "yes"
+				echo "yes" >> config.log
 			fi
 echo "#ifndef EXECSUFFIX" > $BLD/include/agar/config/execsuffix.h
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >> $BLD/include/agar/config/execsuffix.h
 echo "#endif" >> $BLD/include/agar/config/execsuffix.h
 echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >> config.log
 		fi
 	fi
 	rm -f conftest.m conftest$EXECSUFFIX
@@ -4047,6 +4042,11 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_SDL}" = "yes" ]; then
+case "${host}" in
+*-*-mingw*)
+SDL_LIBS="-lSDL.dll -mwindows"
+;;
+esac
 echo "#ifndef SDL_CFLAGS" > $BLD/include/agar/config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> $BLD/include/agar/config/sdl_cflags.h
 echo "#endif" >> $BLD/include/agar/config/sdl_cflags.h
@@ -8937,8 +8937,6 @@ fi;
 			echo "* (required) is not installed."
 			echo "*"
 			exit 1
-		else
-			echo "* sndfile library was not found, not compiling ag_au"
 		fi
 echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
@@ -9743,10 +9741,10 @@ echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
 echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
-echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
-echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
 echo "ICONV_LIBS=$ICONV_LIBS" >>Makefile.config
 echo "mdefs[\"ICONV_LIBS\"] = \"$ICONV_LIBS\"" >>configure.lua
 echo "MANDIR=$MANDIR" >>Makefile.config
@@ -9811,8 +9809,6 @@ echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
 echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
-echo "LIBTOOLOPTS_CC=$LIBTOOLOPTS_CC" >>Makefile.config
-echo "mdefs[\"LIBTOOLOPTS_CC\"] = \"$LIBTOOLOPTS_CC\"" >>configure.lua
 echo "OBJC=$OBJC" >>Makefile.config
 echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
 echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
