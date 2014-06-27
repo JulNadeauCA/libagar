@@ -64,7 +64,7 @@ if [ "${DATADIR}" = "NONE" ]; then
 fi
 
 # Tests
-CHECK(cc)
+REQUIRE(cc)
 CHECK(cc_attributes)
 CHECK(objc)
 CHECK(sys_types)
@@ -647,8 +647,6 @@ if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]; then
 			echo "* (required) is not installed."
 			echo "*"
 			exit 1
-		else
-			echo "* sndfile library was not found, not compiling ag_au"
 		fi
 		HUNDEF(ENABLE_AU)
 		MDEFINE(SUBDIR_au, "")
