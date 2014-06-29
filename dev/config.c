@@ -27,26 +27,26 @@
  * Generic configuration settings dialog.
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
 
-#include <gui/window.h>
-#include <gui/hbox.h>
-#include <gui/label.h>
-#include <gui/button.h>
-#include <gui/checkbox.h>
-#include <gui/textbox.h>
-#include <gui/tlist.h>
-#include <gui/mspinbutton.h>
-#include <gui/notebook.h>
-#include <gui/numerical.h>
-#include <gui/hsvpal.h>
-#include <gui/separator.h>
-#include <gui/file_dlg.h>
-#include <gui/dir_dlg.h>
-#include <gui/pane.h>
+#include <agar/gui/window.h>
+#include <agar/gui/hbox.h>
+#include <agar/gui/label.h>
+#include <agar/gui/button.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/mspinbutton.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/hsvpal.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/file_dlg.h>
+#include <agar/gui/dir_dlg.h>
+#include <agar/gui/pane.h>
 
-#include "dev.h"
+#include <agar/dev/dev.h>
 
 static AG_Window *DEV_ConfigWindow(AG_Config *);
 

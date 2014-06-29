@@ -28,25 +28,24 @@
  * used by other widgets such as AG_Textbox(3).
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
-#include "editable.h"
-#include "text.h"
-#include "window.h"
-
-#include "ttf.h"
-#include "keymap.h"
-#include "primitive.h"
-#include "cursors.h"
-#include "menu.h"
-#include "icons.h"
-#include "gui_math.h"
+#include <agar/gui/editable.h>
+#include <agar/gui/text.h>
+#include <agar/gui/window.h>
+#include <agar/gui/ttf.h>
+#include <agar/gui/keymap.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/icons.h>
+#include <agar/gui/gui_math.h>
 
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 
-#include <config/have_freetype.h>
+#include <agar/config/have_freetype.h>
 
 AG_EditableClipboard agEditableClipbrd;		/* For Copy/Cut/Paste */
 AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */

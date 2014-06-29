@@ -23,16 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-#include <core/config.h>
-
-#include "console.h"
-#include "primitive.h"
-#include "window.h"
-#include "menu.h"
-#include "editable.h"
-#include "file_dlg.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/gui/console.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/window.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/editable.h>
+#include <agar/gui/file_dlg.h>
+#include <agar/gui/gui_math.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -245,7 +244,7 @@ MenuExportToFileDlg(AG_Event *event)
 	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
 	                        AG_FILEDLG_EXPAND);
 	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
+	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
 	AG_FileDlgSetDirectoryMRU(fd, "agar.console.export-dir", path);
 	
 	AG_FileDlgAddType(fd, _("Text file"), "*.txt",

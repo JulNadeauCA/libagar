@@ -55,27 +55,25 @@
 #include <sys/types.h>
 
 #ifdef _WIN32
-# include <core/queue_close.h>			/* Conflicts */
+# include <agar/core/queue_close.h>			/* Conflicts */
 #ifdef _XBOX
 # include <xtl.h>
 #else
 # include <windows.h>
 #endif
-# include <core/queue_close.h>
-# include <core/queue.h>
+# include <agar/core/queue_close.h>
+# include <agar/core/queue.h>
 #else
 # include <sys/stat.h>
 # include <dirent.h>
 # include <unistd.h>
 #endif
-
 #include <string.h>
 #include <errno.h>
 
-#include <core/core.h>
-
+#include <agar/core/core.h>
 #ifdef _XBOX
-#include <core/xbox.h>
+# include <agar/core/xbox.h>
 #endif
 
 int

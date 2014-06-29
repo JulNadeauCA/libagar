@@ -27,16 +27,14 @@
  * Visualization widget.
  */
 
-#include <core/core.h>
-
-#include <gui/gui.h>
-#include <gui/primitive.h>
-#include <gui/opengl.h>
-
-#include "vg.h"
-#include "vg_view.h"
-#include "vg_tools.h"
-#include "tools.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/opengl.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
+#include <agar/vg/vg_tools.h>
+#include <agar/vg/tools.h>
 
 #include <stdarg.h>
 #include <string.h>

@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "tlist.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/primitive.h>
 
 #include <string.h>
 #include <stdarg.h>

@@ -58,14 +58,14 @@
  * C-string related routines.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
 
-#include <config/have_iconv.h>
+#include <agar/config/have_iconv.h>
 #ifdef HAVE_ICONV
 # include <iconv.h>
 #endif

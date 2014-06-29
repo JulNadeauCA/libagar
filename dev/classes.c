@@ -27,12 +27,10 @@
  * Display registered AG_Object classes.
  */
 
-#include <core/core.h>
-
-#include <gui/window.h>
-#include <gui/table.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/table.h>
+#include <agar/dev/dev.h>
 
 static void
 GenClassTable(AG_Table *tbl, AG_ObjectClass *cls)

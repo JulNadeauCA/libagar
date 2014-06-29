@@ -34,7 +34,7 @@
  * on each element.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 AG_Tree *
 AG_TreeNew(void)

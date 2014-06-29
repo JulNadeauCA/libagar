@@ -30,16 +30,16 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #if defined(_XBOX)
-# include <core/xbox.h>
+# include <agar/core/xbox.h>
 #elif defined(_WIN32)
 # undef SLIST_ENTRY
 # include <windows.h>
 #endif
 
-#include <config/_mk_have_signal.h>
+#include <agar/config/_mk_have_signal.h>
 #ifdef _MK_HAVE_SIGNAL
 #include <signal.h>
 #endif

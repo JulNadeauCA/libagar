@@ -27,22 +27,22 @@
  * Properties dialog for AG_Object.
  */
 
-#include <core/core.h>
-#include <core/md5.h>
-#include <core/sha1.h>
-#include <core/rmd160.h>
+#include <agar/core/core.h>
+#include <agar/core/md5.h>
+#include <agar/core/sha1.h>
+#include <agar/core/rmd160.h>
 
-#include <gui/window.h>
-#include <gui/box.h>
-#include <gui/label.h>
-#include <gui/tlist.h>
-#include <gui/textbox.h>
-#include <gui/notebook.h>
-#include <gui/separator.h>
-#include <gui/checkbox.h>
-#include <gui/iconmgr.h>
+#include <agar/gui/window.h>
+#include <agar/gui/box.h>
+#include <agar/gui/label.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/iconmgr.h>
 
-#include "dev.h"
+#include <agar/dev/dev.h>
 
 const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },

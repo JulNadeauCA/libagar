@@ -27,7 +27,8 @@
  * Berkeley DB database access.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
+
 #include <db.h>
 
 typedef struct ag_db_hash_bt {

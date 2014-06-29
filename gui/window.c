@@ -23,17 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "window.h"
-#include "titlebar.h"
-#include "icon.h"
-
-#include "primitive.h"
-#include "icons.h"
-#include "cursors.h"
-#include "label.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/titlebar.h>
+#include <agar/gui/icon.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/icons.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/label.h>
 
 #include <string.h>
 #include <stdarg.h>

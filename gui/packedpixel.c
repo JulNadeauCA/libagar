@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "surface.h"
-#include "packedpixel.h"
+#include <agar/core/core.h>
+#include <agar/gui/surface.h>
+#include <agar/gui/packedpixel.h>
 
 #include <string.h>
 

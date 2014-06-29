@@ -27,12 +27,12 @@
  * Support for reading image files in JPEG format via libjpeg.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
-#include "gui.h"
-#include "surface.h"
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
 
-#include <config/have_jpeg.h>
+#include <agar/config/have_jpeg.h>
 #ifdef HAVE_JPEG
 
 #include <jpeglib.h>

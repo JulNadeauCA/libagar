@@ -27,9 +27,7 @@
  * Timer interface.
  */
 
-#include "core.h"
-
-#include <config/have_cocoa.h>
+#include <agar/core/core.h>
 
 struct ag_objectq agTimerObjQ = TAILQ_HEAD_INITIALIZER(agTimerObjQ);
 Uint              agTimerCount = 0;

@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "table.h"
-#include "primitive.h"
-#include "cursors.h"
-#include "keyboard.h"
+#include <agar/core/core.h>
+#include <agar/gui/table.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/keyboard.h>
 
 #include <string.h>
 #include <stdarg.h>

@@ -26,12 +26,11 @@
  * Operations on vectors in R^3 using Streaming SIMD Extensions.
  */
 
-#include <config/have_sse.h>
-
+#include <agar/config/have_sse.h>
 #ifdef HAVE_SSE
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_VectorOps3 mVecOps3_SSE = {
 	"sse",

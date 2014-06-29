@@ -21,8 +21,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "core.h"
-#include "sha1.h"
+#include <agar/core/core.h>
+#include <agar/core/sha1.h>
 
 #include <string.h>
 

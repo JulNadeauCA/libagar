@@ -27,14 +27,13 @@
  * Support for reading image files in PNG format via libpng.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
 
-#include "gui.h"
-#include "surface.h"
-
-#include <config/have_png.h>
+#include <agar/config/have_png.h>
 #if defined(HAVE_PNG)
-#include <config/have_libpng14.h>
+#include <agar/config/have_libpng14.h>
 
 #ifdef macintosh
 # define MACOS

@@ -29,13 +29,12 @@
  * Utility GUI routines for types defined by the math library.
  */
 
-#include <core/core.h>
-#include <gui/widget.h>
-#include <gui/box.h>
-#include <gui/numerical.h>
-
-#include "m.h"
-#include "m_gui.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/box.h>
+#include <agar/gui/numerical.h>
+#include <agar/math/m.h>
+#include <agar/math/m_gui.h>
 
 /* Edit a 3-vector matrix translation. */
 void *

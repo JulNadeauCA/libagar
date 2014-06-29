@@ -27,14 +27,13 @@
  * Keyboard input processing for AG_Editable(3).
  */
 
-#include <core/core.h>
-
-#include "widget.h"
-#include "window.h"
-#include "editable.h"
-#include "keymap.h"
-#include "text.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
+#include <agar/gui/editable.h>
+#include <agar/gui/keymap.h>
+#include <agar/gui/text.h>
+#include <agar/gui/gui_math.h>
 
 #include <ctype.h>
 #include <string.h>

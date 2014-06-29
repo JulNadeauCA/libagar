@@ -56,13 +56,13 @@
  *    acceptable.  Consider stealing from mutt or enlightenment.
  **************************************************************/
 
-#include <config/have_long_long.h>
+#include <agar/config/have_long_long.h>
 
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 
-#include "core.h"
+#include <agar/core/core.h>
 
 static void 	dopr(char *, size_t, const char *, va_list);
 static void 	fmtstr(char *, size_t *, size_t, char *, int, int, int);

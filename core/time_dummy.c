@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 static Uint32
 DUMMY_GetTicks(void)

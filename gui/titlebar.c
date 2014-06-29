@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "titlebar.h"
-#include "window.h"
-#include "primitive.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/titlebar.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/icons.h>
 
 static void
 MaximizeWindow(AG_Event *event)

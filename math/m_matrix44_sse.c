@@ -26,11 +26,11 @@
  * Operations on 4x4 matrices using Streaming SIMD Extensions.
  */
 
-#include <config/have_sse.h>
+#include <agar/config/have_sse.h>
 #ifdef HAVE_SSE
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_MatrixOps44 mMatOps44_SSE = {
 	"sse",

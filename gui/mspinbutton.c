@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "mspinbutton.h"
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/mspinbutton.h>
+#include <agar/gui/window.h>
 
 #include <stdarg.h>
 #include <string.h>

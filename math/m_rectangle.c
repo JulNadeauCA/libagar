@@ -26,8 +26,8 @@
  * Rectangle routines.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Rectangle2
 M_RectangleRead2(AG_DataSource *ds)

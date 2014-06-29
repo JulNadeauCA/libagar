@@ -27,20 +27,18 @@
  * Text entity.
  */
 
-#include <core/core.h>
-
-#include <gui/gui.h>
-#include <gui/widget.h>
-#include <gui/primitive.h>
-#include <gui/textbox.h>
-#include <gui/font_selector.h>
-#include <gui/checkbox.h>
-#include <gui/opengl.h>
-#include <gui/iconmgr.h>
-
-#include "vg.h"
-#include "vg_view.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/font_selector.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/opengl.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
+#include <agar/vg/icons.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -54,8 +52,8 @@ Init(void *p)
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->fontSize = agGUI ? (int)agDefaultFont->spec.size : 12;
-	vt->fontFlags = agGUI ? agDefaultFont->flags : 0;
+	vt->fontSize = vgGUI ? (int)agDefaultFont->spec.size : 12;
+	vt->fontFlags = vgGUI ? agDefaultFont->flags : 0;
 	vt->fontFace[0] = '\0';
 	vt->args = NULL;
 	vt->argSizes = NULL;
@@ -141,8 +139,8 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	AG_PushTextState();
 
 	if (vt->fontFace[0] != '\0' &&
-	   ((agGUI && vt->fontSize != (int)agDefaultFont->spec.size) ||
-	    (agGUI && vt->fontFlags != agDefaultFont->flags))) {
+	   ((vgGUI && vt->fontSize != (int)agDefaultFont->spec.size) ||
+	    (vgGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
 	AG_TextColor(VG_MapColorRGB(VGNODE(vt)->color));

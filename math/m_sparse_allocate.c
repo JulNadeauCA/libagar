@@ -36,9 +36,9 @@
  *  accessing global information about the matrix (size, error status, etc.).
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 const char *spcMatrixIsNotValid = "Matrix passed to Sparse is not valid";
 const char *spcErrorsMustBeCleared = "Error not cleared";

@@ -26,8 +26,8 @@
  * Basic operations on general sets of points in R^2 and R^3.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 /* Preallocate for a given number of points. */
 int

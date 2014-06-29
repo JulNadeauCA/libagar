@@ -27,18 +27,17 @@
  * Implementation of the AG_Widget(3) object.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "widget.h"
-#include "window.h"
-#include "cursors.h"
-#include "menu.h"
-#include "primitive.h"
-#include "notebook.h"
-#include "gui_math.h"
-#include "opengl.h"
-#include "text_cache.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/gui_math.h>
+#include <agar/gui/opengl.h>
+#include <agar/gui/text_cache.h>
 
 #include <stdarg.h>
 #include <string.h>

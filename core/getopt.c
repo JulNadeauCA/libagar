@@ -27,9 +27,8 @@
  * Compatibility interface for getopt(3).
  */
 
-#include "core.h"
-#include "getopt.h"
-
+#include <agar/core/core.h>
+#include <agar/core/getopt.h>
 #include <agar/config/have_getopt.h>
 
 int

@@ -1,8 +1,7 @@
 /*	Public domain	*/
 
-#include <core/core.h>
-
-#include "units.h"
+#include <agar/core/core.h>
+#include <agar/gui/units.h>
 
 double
 AG_UnitFahrenheit(double n, int f2k)

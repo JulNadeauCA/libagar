@@ -29,7 +29,7 @@
 
 #include <sys/types.h>
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #undef SLIST_ENTRY
 

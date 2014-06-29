@@ -27,16 +27,14 @@
  * This displays various parameters related to the display.
  */
 
-#include <core/core.h>
-
-#include <gui/window.h>
-#include <gui/vbox.h>
-#include <gui/button.h>
-#include <gui/tlist.h>
-#include <gui/label.h>
-#include <gui/textbox.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/vbox.h>
+#include <agar/gui/button.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/label.h>
+#include <agar/gui/textbox.h>
+#include <agar/dev/dev.h>
 
 AG_Window *
 DEV_DisplaySettings(void)

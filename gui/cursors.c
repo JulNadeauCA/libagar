@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "cursors.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/cursors.h>
 
 /* Built-in cursors */
 #include "cursors/fill.xpm"

@@ -27,7 +27,7 @@
  * Interface to user accounts.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 const AG_UserOps *agUserOps = NULL;
 

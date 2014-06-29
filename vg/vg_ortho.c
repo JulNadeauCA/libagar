@@ -27,16 +27,14 @@
  * Orthogonal restriction.
  */
 
-#include <core/core.h>
-
-#include <gui/widget.h>
-#include <gui/toolbar.h>
-#include <gui/button.h>
-#include <gui/iconmgr.h>
-
-#include "vg.h"
-#include "vg_view.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/toolbar.h>
+#include <agar/gui/button.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
+#include <agar/vg/icons.h>
 
 void
 VG_RestrictOrtho(VG_View *vv, VG_Vector *pos)

@@ -28,7 +28,7 @@
  * from archive data.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <string.h>
 #include <stdio.h>

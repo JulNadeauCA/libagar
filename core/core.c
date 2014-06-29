@@ -27,40 +27,36 @@
  * Core initialization routines.
  */
 
-#include <config/version.h>
-#include <config/release.h>
-#include <config/enable_nls.h>
-#include <config/localedir.h>
-
-#include <config/ag_threads.h>
-#include <config/ag_network.h>
-
-#include <config/have_clock_gettime.h>
-#include <config/have_nanosleep.h>
-#include <config/have_gettimeofday.h>
-#include <config/have_select.h>
-#include <config/have_db4.h>
-#include <config/have_getpwuid.h>
-#include <config/have_getuid.h>
-
-#include <config/have_getaddrinfo.h>
-#include <config/have_winsock1.h>
-#include <config/have_winsock2.h>
-
+#include <agar/config/version.h>
+#include <agar/config/release.h>
+#include <agar/config/enable_nls.h>
+#include <agar/config/localedir.h>
+#include <agar/config/ag_threads.h>
+#include <agar/config/ag_network.h>
+#include <agar/config/have_clock_gettime.h>
+#include <agar/config/have_nanosleep.h>
+#include <agar/config/have_gettimeofday.h>
+#include <agar/config/have_select.h>
+#include <agar/config/have_db4.h>
+#include <agar/config/have_getpwuid.h>
+#include <agar/config/have_getuid.h>
+#include <agar/config/have_getaddrinfo.h>
+#include <agar/config/have_winsock1.h>
+#include <agar/config/have_winsock2.h>
 #ifdef AG_THREADS
-#include <config/have_pthreads_xopen.h>
-#include <config/have_pthread_mutex_recursive.h>
-#include <config/have_pthread_mutex_recursive_np.h>
+# include <agar/config/have_pthreads_xopen.h>
+# include <agar/config/have_pthread_mutex_recursive.h>
+# include <agar/config/have_pthread_mutex_recursive_np.h>
 #endif
 
-#include "core.h"
-#include "config.h"
-#include "dso.h"
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/core/dso.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef _WIN32
-#include <unistd.h>
+# include <unistd.h>
 #endif
 
 #ifdef AG_THREADS

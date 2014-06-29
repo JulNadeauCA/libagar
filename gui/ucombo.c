@@ -23,11 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "ucombo.h"
-
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/ucombo.h>
+#include <agar/gui/primitive.h>
 
 AG_UCombo *
 AG_UComboNew(void *parent, Uint flags)

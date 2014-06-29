@@ -1,12 +1,12 @@
 /*	Public domain	*/
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <unistd.h>
 #include <pwd.h>
 
-#include <config/have_getpwnam_r.h>
-#include <config/have_getenv.h>
+#include <agar/config/have_getpwnam_r.h>
+#include <agar/config/have_getenv.h>
 
 /*
  * Access user account information on POSIX-like platforms.

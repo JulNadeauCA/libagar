@@ -27,11 +27,11 @@
  * Obtain information about architecture extensions.
  */
 
-#include <config/have_altivec.h>
-#include <config/_mk_have_signal.h>
-#include <config/_mk_have_setjmp.h>
+#include <agar/config/have_altivec.h>
+#include <agar/config/_mk_have_signal.h>
+#include <agar/config/_mk_have_setjmp.h>
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #if defined(__APPLE__) || defined(__MACOSX__)
 # include <AvailabilityMacros.h>

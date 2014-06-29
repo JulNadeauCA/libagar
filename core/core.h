@@ -8,18 +8,18 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-#include <core/types.h>
+#include <agar/core/types.h>
 
-#include <config/ag_debug.h>
-#include <config/ag_legacy.h>
-#include <config/ag_threads.h>
+#include <agar/config/ag_debug.h>
+#include <agar/config/ag_legacy.h>
+#include <agar/config/ag_threads.h>
 
 /* For inline routines */
-#include <config/_mk_have_stdlib_h.h>
+#include <agar/config/_mk_have_stdlib_h.h>
 #ifdef _MK_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <config/_mk_have_unistd_h.h>
+#include <agar/config/_mk_have_unistd_h.h>
 #ifdef _MK_HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -29,8 +29,8 @@
 /* Define AG_BYTEORDER */
 #define AG_BIG_ENDIAN 4321
 #define AG_LITTLE_ENDIAN 1234
-#include <config/_mk_big_endian.h>
-#include <config/_mk_little_endian.h>
+#include <agar/config/_mk_big_endian.h>
+#include <agar/config/_mk_little_endian.h>
 #if defined(_MK_BIG_ENDIAN)
 # define AG_BYTEORDER AG_BIG_ENDIAN
 #elif defined(_MK_LITTLE_ENDIAN)
@@ -41,17 +41,17 @@
 #undef _MK_BIG_ENDIAN
 #undef _MK_LITTLE_ENDIAN
 
-#include <core/core_init.h>
-#include <core/error.h>
-#include <core/queue.h>
-#include <core/limits.h>
-#include <core/threads.h>
+#include <agar/core/core_init.h>
+#include <agar/core/error.h>
+#include <agar/core/queue.h>
+#include <agar/core/limits.h>
+#include <agar/core/threads.h>
 
-#include <core/string.h>
-#include <core/snprintf.h>
-#include <core/vsnprintf.h>
-#include <core/vasprintf.h>
-#include <core/asprintf.h>
+#include <agar/core/string.h>
+#include <agar/core/snprintf.h>
+#include <agar/core/vsnprintf.h>
+#include <agar/core/vasprintf.h>
+#include <agar/core/asprintf.h>
 
 #ifndef MIN
 #define	MIN(a,b) (((a)<(b))?(a):(b))
@@ -72,25 +72,25 @@
 #pragma warning(disable: 4244)
 #endif
 
-#include <core/data_source.h>
-#include <core/load_integral.h>
-#include <core/load_real.h>
-#include <core/load_string.h>
-#include <core/load_version.h>
+#include <agar/core/data_source.h>
+#include <agar/core/load_integral.h>
+#include <agar/core/load_real.h>
+#include <agar/core/load_string.h>
+#include <agar/core/load_version.h>
 
-#include <core/version.h>
-#include <core/object.h>
-#include <core/list.h>
-#include <core/tree.h>
-#include <core/tbl.h>
-#include <core/cpuinfo.h>
-#include <core/file.h>
-#include <core/dir.h>
-#include <core/dso.h>
-#include <core/db.h>
-#include <core/exec.h>
-#include <core/user.h>
-#include <core/net.h>
+#include <agar/core/version.h>
+#include <agar/core/object.h>
+#include <agar/core/list.h>
+#include <agar/core/tree.h>
+#include <agar/core/tbl.h>
+#include <agar/core/cpuinfo.h>
+#include <agar/core/file.h>
+#include <agar/core/dir.h>
+#include <agar/core/dso.h>
+#include <agar/core/db.h>
+#include <agar/core/exec.h>
+#include <agar/core/user.h>
+#include <agar/core/net.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

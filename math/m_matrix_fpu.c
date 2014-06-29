@@ -3,8 +3,8 @@
  * Operations on m*n matrices (FPU version).
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 #undef SWAP
 #define SWAP(a,b) { tmp=(a); (a)=(b); (b)=tmp; }

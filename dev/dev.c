@@ -27,17 +27,13 @@
  * Generic dev tool initialization.
  */
 
-#include <config/ag_threads.h>
-#include <config/ag_debug.h>
-#include <config/have_jpeg.h>
+#include <agar/config/ag_debug.h>
 
-#include <core/core.h>
-
-#include <gui/gui.h>
-#include <gui/window.h>
-#include <gui/menu.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/menu.h>
+#include <agar/dev/dev.h>
 
 static const struct dev_tool_ent {
 	char *name;

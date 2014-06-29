@@ -29,11 +29,10 @@
  * Unicode keyboard translation is disabled for performance reasons.
  */
 
-#include <core/core.h>
-
-#include "widget.h"
-#include "editable.h"
-#include "keymap.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/editable.h>
+#include <agar/gui/keymap.h>
 
 int
 AG_KeyInputCompose(AG_Editable *ed, Uint32 key, Uint32 *ins)

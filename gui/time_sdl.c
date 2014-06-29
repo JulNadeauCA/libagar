@@ -4,11 +4,11 @@
  * SDL time interface.
  */
 
-#include <config/have_sdl.h>
+#include <agar/config/have_sdl.h>
 #ifdef HAVE_SDL
 
-#include <core/core.h>
-#include <core/types.h>
+#include <agar/core/core.h>
+#include <agar/core/types.h>
 
 static Uint32
 GetTicks(void)

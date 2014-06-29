@@ -23,14 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "scrollbar.h"
-#include "window.h"
-#include "primitive.h"
-#include "text.h"
-
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/scrollbar.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text.h>
+#include <agar/gui/gui_math.h>
 
 #define SBPOS(sb,x,y) (((sb)->type == AG_SCROLLBAR_HORIZ) ? (x) : (y))
 #define SBLEN(sb)     (((sb)->type == AG_SCROLLBAR_HORIZ) ? WIDTH(sb) : HEIGHT(sb))

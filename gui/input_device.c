@@ -28,9 +28,8 @@
  * AG_Keyboard.
  */
 
-#include <core/core.h>
-
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
 
 AG_Object agInputDevices;		/* Input devices VFS */
 

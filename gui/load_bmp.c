@@ -47,10 +47,9 @@
  * Support for reading and writing Win32 image files in BMP format.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "surface.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
 
 struct ag_bmp_header {
 	char magic[2];

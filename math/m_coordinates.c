@@ -26,8 +26,8 @@
  * Conversion between different coordinate systems.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Rectangular
 M_RectangularFromSpherical(M_Spherical s)

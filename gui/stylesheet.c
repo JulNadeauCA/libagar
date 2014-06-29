@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/gui/widget.h>
 
 #include <ctype.h>
-
-#include "widget.h"
 
 AG_StyleSheet agDefaultCSS;
 

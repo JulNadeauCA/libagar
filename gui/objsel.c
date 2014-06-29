@@ -23,14 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "objsel.h"
-
-#include "window.h"
-#include "primitive.h"
-#include "label.h"
-#include "iconmgr.h"
+#include <agar/core/core.h>
+#include <agar/gui/objsel.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/label.h>
+#include <agar/gui/iconmgr.h>
 
 #include <stdarg.h>
 #include <string.h>

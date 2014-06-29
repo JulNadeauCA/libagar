@@ -33,9 +33,9 @@
  * This file contains extra Sparse functions used in Edacious.
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 void
 spAddToReorderedDiag(spMatrix M, spREAL g)

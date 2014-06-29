@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "core.h"
+#include <agar/core/core.h>
 
 AG_Cond agCondBeginRender;
 AG_Cond agCondEndRender;

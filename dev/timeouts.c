@@ -28,12 +28,10 @@
  * through the Object system.
  */
 
-#include <core/core.h>
-
-#include <gui/window.h>
-#include <gui/treetbl.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/treetbl.h>
+#include <agar/dev/dev.h>
 
 static Uint32 
 RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)

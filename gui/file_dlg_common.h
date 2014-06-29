@@ -27,7 +27,7 @@
  * Common code between AG_FileDlg and AG_DirDlg.
  */
 
-#include <config/have_glob.h>
+#include <agar/config/have_glob.h>
 #ifdef HAVE_GLOB
 # include <glob.h>
 #endif

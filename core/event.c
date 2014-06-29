@@ -27,15 +27,15 @@
  * Implementation of the generic event system for AG_Object.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <string.h>
 #include <stdarg.h>
 
-#include <config/have_kqueue.h>
-#include <config/have_timerfd.h>
-#include <config/have_select.h>
-#include <config/ag_objdebug.h>
+#include <agar/config/have_kqueue.h>
+#include <agar/config/have_timerfd.h>
+#include <agar/config/have_select.h>
+#include <agar/config/ag_objdebug.h>
 
 #if defined(HAVE_KQUEUE)
 # ifdef __NetBSD__

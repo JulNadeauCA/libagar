@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "geometry.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/geometry.h>
 
 AG_Rect
 AG_ReadRect(AG_DataSource *ds)

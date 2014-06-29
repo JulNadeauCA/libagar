@@ -24,20 +24,19 @@
  */
 
 /*
- * Generic graphics/input driver framework.
+ * Implementation of base AG_Driver object.
  */
 
-#include <config/have_sdl.h>
-#include <config/have_opengl.h>
-#include <config/have_glx.h>
-#include <config/have_wgl.h>
-#include <config/have_cocoa.h>
+#include <agar/config/have_sdl.h>
+#include <agar/config/have_opengl.h>
+#include <agar/config/have_glx.h>
+#include <agar/config/have_wgl.h>
+#include <agar/config/have_cocoa.h>
 
-#include <core/core.h>
-#include <core/config.h>
-
-#include "window.h"
-#include "text.h"
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/gui/window.h>
+#include <agar/gui/text.h>
 
 #if defined(HAVE_GLX)
 extern AG_Driver agDriverGLX;
@@ -136,6 +135,7 @@ void
 AG_ViewCapture(void)
 {
 	AG_Surface *s;
+	AG_Config *cfg;
 	char *pname;
 	char dir[AG_PATHNAME_MAX];
 	char file[AG_PATHNAME_MAX];
@@ -155,7 +155,8 @@ AG_ViewCapture(void)
 	}
 
 	/* Save to a new file. */
-	AG_GetString(agConfig, "save-path", dir, sizeof(dir));
+	cfg = AG_ConfigObject();
+	AG_GetString(cfg, "save-path", dir, sizeof(dir));
 	Strlcat(dir, AG_PATHSEP, sizeof(dir));
 	Strlcat(dir, "screenshot", sizeof(dir));
 	if (!AG_FileExists(dir) && AG_MkPath(dir) == -1) {

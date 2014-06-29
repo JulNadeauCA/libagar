@@ -48,7 +48,6 @@ cleandir-config:
 	rm -f Makefile.config config.log configure.lua .projfiles.out .projfiles2.out
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
-	-(cd demos && ${MAKE} cleandir)
 	find . -name premake.lua -exec rm -f {} \;
 
 release:

@@ -48,10 +48,11 @@
  * visibility of symbols in shared libraries.
  * See: http://gcc.gnu.org/wiki/Visibility
  */
+#undef DECLSPEC
 #ifndef DECLSPEC
-# if defined(__BEOS__)
+# if defined(__BEOS__) || defined(__HAIKU__)
 #  if defined(__GNUC__)
-#   define DECLSPEC	__declspec(dllexport)
+#   define DECLSPEC
 #  else
 #   define DECLSPEC	__declspec(export)
 #  endif
@@ -72,6 +73,12 @@
 #   else
 #    define DECLSPEC
 #   endif
+#  elif defined (__GNUC__) && __GNUC__ < 4
+#   ifdef _AGAR_CORE_INTERNAL
+#    define DECLSPEC    __declspec(dllexport)
+#   else
+#    define DECLSPEC
+#   endif
 #  else
 #   define DECLSPEC
 #  endif
@@ -82,19 +89,16 @@
 #   define DECLSPEC
 #  endif
 # endif
-# define _AGAR_CORE_DEFINED_DECLSPEC
 #endif
 #ifdef __SYMBIAN32__ 
-# ifndef EKA2 
-#  undef DECLSPEC
-#  define DECLSPEC
-#  define _AGAR_CORE_DEFINED_DECLSPEC
-# elif !defined(__WINS__)
-#  undef DECLSPEC
-#  define DECLSPEC __declspec(dllexport)
-#  define _AGAR_CORE_DEFINED_DECLSPEC
-# endif
-#endif
+#ifndef EKA2 
+#undef DECLSPEC
+#define DECLSPEC
+#elif !defined(__WINS__)
+#undef DECLSPEC
+#define DECLSPEC __declspec(dllexport)
+#endif /* !EKA2 */
+#endif /* __SYMBIAN32__ */
 
 /*
  * Force structure packing at 4 byte alignment. This is necessary if the

@@ -27,12 +27,12 @@
  * Generic audio output interface.
  */
 
-#include <config/have_sndfile.h>
-#include <config/have_portaudio.h>
+#include <agar/config/have_sndfile.h>
+#include <agar/config/have_portaudio.h>
 
-#include <core/core.h>
-#include "au_init.h"
-#include "au_dev_out.h"
+#include <agar/core/core.h>
+#include <agar/au/au_init.h>
+#include <agar/au/au_dev_out.h>
 
 /* Available audio output drivers */
 extern const AU_DevOutClass auDevOut_pa;

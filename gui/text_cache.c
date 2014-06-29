@@ -23,11 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "text_cache.h"
-#include "widget.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/text_cache.h>
+#include <agar/gui/widget.h>
 
 /* #define TEXTCACHE_DEBUG */
 

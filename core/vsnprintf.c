@@ -56,11 +56,11 @@
  *    acceptable.  Consider stealing from mutt or enlightenment.
  **************************************************************/
 
-#include <core/core.h>
+#include <agar/core/core.h>
 #include <stdio.h>
-#include "vsnprintf.h"
+#include <agar/core/vsnprintf.h>
+#include <agar/config/have_vsnprintf.h>
 
-#include <config/have_vsnprintf.h>
 #ifndef HAVE_VSNPRINTF
 
 #include <ctype.h>

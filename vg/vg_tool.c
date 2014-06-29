@@ -27,12 +27,11 @@
  * Base tool class for VG_View.
  */
 
-#include <core/core.h>
-#include <gui/window.h>
-#include <gui/iconmgr.h>
-
-#include "vg.h"
-#include "vg_view.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
 
 #include <stdarg.h>
 

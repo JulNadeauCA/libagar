@@ -23,26 +23,26 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/enable_gui.h>
+#include <agar/config/enable_gui.h>
 #ifdef ENABLE_GUI
 
 /*
  * Graphical plotter widget.
  */
 
-#include <core/core.h>
-#include <gui/widget.h>
-#include <gui/hsvpal.h>
-#include <gui/table.h>
-#include <gui/notebook.h>
-#include <gui/separator.h>
-#include <gui/radio.h>
-#include <gui/numerical.h>
-#include <gui/primitive.h>
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/hsvpal.h>
+#include <agar/gui/table.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/primitive.h>
 
-#include "m.h"
-#include "m_plotter.h"
-#include "m_gui.h"
+#include <agar/math/m.h>
+#include <agar/math/m_plotter.h>
+#include <agar/math/m_gui.h>
 
 #include <stdarg.h>
 #include <string.h>

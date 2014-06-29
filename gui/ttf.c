@@ -33,16 +33,14 @@
  * placed under a BSD license with permission from Sam Lantinga.
  */
 
-#include <config/have_freetype.h>
-
+#include <agar/config/have_freetype.h>
 #ifdef HAVE_FREETYPE
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "text.h"
-#include "ttf.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/text.h>
+#include <agar/gui/ttf.h>
+#include <agar/gui/gui_math.h>
 
 #include <stdio.h>
 #include <string.h>

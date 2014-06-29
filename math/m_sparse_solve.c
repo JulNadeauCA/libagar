@@ -43,9 +43,9 @@
  *  the sparse matrix routines.
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 static void SolveComplexMatrix( MatrixPtr, RealVector, RealVector );
 static void SolveComplexTransposedMatrix( MatrixPtr, RealVector, RealVector );

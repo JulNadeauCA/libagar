@@ -38,9 +38,8 @@
  * only advantage over quicksort is that it requires little additional memory.
  */
 
-#include <core/core.h>
-
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 /*
  * Swap two areas of size number of bytes.  Although qsort(3) permits random

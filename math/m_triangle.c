@@ -26,8 +26,8 @@
  * Triangle routines.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Triangle2
 M_TriangleFromLines2(M_Line2 a, M_Line2 b, M_Line2 c)

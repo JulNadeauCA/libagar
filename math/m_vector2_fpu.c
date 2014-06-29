@@ -3,8 +3,8 @@
  * Operations on vectors in R^2 using scalar instructions.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_VectorOps2 mVecOps2_FPU = {
 	"fpu",

@@ -23,9 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "file_selector.h"
+#include <agar/core/core.h>
+#include <agar/gui/file_selector.h>
 
 AG_FileSelector *
 AG_FileSelectorNew(void *parent, Uint flags, const char *label)

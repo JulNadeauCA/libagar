@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 static int
 GetUserByUID(AG_User *u, Uint32 uid)

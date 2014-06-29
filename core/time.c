@@ -27,7 +27,7 @@
  * Generic time interface.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 const AG_TimeOps *agTimeOps = NULL;
 

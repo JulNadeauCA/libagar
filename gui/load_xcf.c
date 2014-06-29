@@ -29,12 +29,11 @@
  * TODO Add support for Gimp 2.x XCF images.
  */
 
-#include <config/have_ieee754.h>
-#include <core/core.h>
-
-#include "gui.h"
-#include "surface.h"
-#include "load_xcf.h"
+#include <agar/config/have_ieee754.h>
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
+#include <agar/gui/load_xcf.h>
 
 #include <string.h>
 

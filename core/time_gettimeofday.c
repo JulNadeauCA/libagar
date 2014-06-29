@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "core.h"
+#include <agar/core/core.h>
 
 static struct timeval t0;
 

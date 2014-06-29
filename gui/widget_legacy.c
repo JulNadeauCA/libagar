@@ -28,8 +28,9 @@
  * the generic AG_Variable(3) API in agar-1.3.4.
  */
 
-#include <core/core.h>
-#include "widget.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+
 #include <stdarg.h>
 
 #ifdef AG_LEGACY

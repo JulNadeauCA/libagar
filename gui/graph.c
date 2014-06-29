@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "graph.h"
-#include "primitive.h"
-#include "menu.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/graph.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/gui_math.h>
 
 #include <stdarg.h>
 #include <string.h>

@@ -26,8 +26,8 @@
  * Miscellaneous utility routines for vectors.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_VectorOps *mVecOps = NULL;
 const M_VectorOps2 *mVecOps2 = NULL;

@@ -23,13 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "slider.h"
-#include "window.h"
-#include "primitive.h"
-#include "text.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/slider.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text.h>
+#include <agar/gui/gui_math.h>
 
 #define TOTSIZE(sl) (((sl)->type==AG_SLIDER_VERT) ? HEIGHT(sl) : WIDTH(sl))
 

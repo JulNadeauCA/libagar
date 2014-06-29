@@ -31,8 +31,8 @@
  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 #define SwapCode(TYPE, parmi, parmj, n) { 		\
 	long i = (n) / sizeof (TYPE); 			\

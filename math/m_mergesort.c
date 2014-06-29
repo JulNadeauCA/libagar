@@ -37,8 +37,8 @@
  * It works for objects as small as two bytes.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 /* Best choice for natural merge cut-off */
 #define INS_THRESHOLD 16

@@ -26,8 +26,8 @@
  * Routines related to circles.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Circle2
 M_CircleRead2(AG_DataSource *ds)

@@ -27,27 +27,27 @@
  * Generic object browser.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
-#include <gui/gui.h>
-#include <gui/window.h>
-#include <gui/box.h>
-#include <gui/vbox.h>
-#include <gui/button.h>
-#include <gui/textbox.h>
-#include <gui/checkbox.h>
-#include <gui/tlist.h>
-#include <gui/menu.h>
-#include <gui/label.h>
-#include <gui/separator.h>
-#include <gui/file_dlg.h>
-#include <gui/notebook.h>
-#include <gui/icons.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/box.h>
+#include <agar/gui/vbox.h>
+#include <agar/gui/button.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/label.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/file_dlg.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/icons.h>
 
 #include <string.h>
 #include <ctype.h>
 
-#include "dev.h"
+#include <agar/dev/dev.h>
 
 struct objent {
 	AG_Object *obj;

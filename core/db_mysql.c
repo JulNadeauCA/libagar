@@ -27,8 +27,8 @@
  * MySQL database access.
  */
 
-#include <core/core.h>
-#include <db.h>
+#include <agar/core/core.h>
+
 #include <ctype.h>
 #include <mysql.h>
 

@@ -28,17 +28,16 @@
  * driver; one context is created for each Agar window.
  */
 
-#include <config/ag_threads.h>
+#include <agar/config/ag_threads.h>
 
-#include <core/core.h>
-#include <core/win32.h>
-
-#include "gui.h"
-#include "window.h"
-#include "gui_math.h"
-#include "text.h"
-#include "cursors.h"
-#include "opengl.h"
+#include <agar/core/core.h>
+#include <agar/core/win32.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/gui_math.h>
+#include <agar/gui/text.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/opengl.h>
 
 static int  nDrivers = 0;			/* Drivers open */
 static int  wndClassCount = 1;			/* Window class counter */
@@ -78,7 +77,7 @@ struct ag_windows_key_mapping {
 	int kcode;			/* Windows VK_ virtual key */
 	AG_KeySym key;			/* Agar keysym */
 };
-#include "drv_wgl_keymaps.h"
+#include <agar/gui/drv_wgl_keymaps.h>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 static int       InitDefaultCursor(AG_DriverWGL *);

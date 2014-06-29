@@ -23,15 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-
-#include "hsvpal.h"
-#include "primitive.h"
-#include "numerical.h"
-#include "gui_math.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/hsvpal.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/gui_math.h>
+#include <agar/gui/icons.h>
 
 #include <string.h>
 

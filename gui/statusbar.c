@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "statusbar.h"
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/statusbar.h>
+#include <agar/gui/window.h>
 
 #include <stdarg.h>
 

@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_db4.h>
-#include <core/core.h>
+#include <agar/config/have_db4.h>
+#include <agar/core/core.h>
 
 /* Create a new database handle for the given database backend. */
 AG_Db *
