@@ -93,8 +93,8 @@ proj:
 		    ${MAKE} proj-package-subdir; \
 		\
 		if [ "${PROJNOCLEAN}" = "no" ]; then \
-			echo "rm -f configure.tmp config.log"; \
-			rm -f configure.tmp config.log; \
+			echo "rm -f configure.tmp config.log config.status"; \
+			rm -f configure.tmp config.log config.status; \
 		fi; \
 		\
 	        echo "cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT}"; \
