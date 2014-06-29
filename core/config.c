@@ -29,12 +29,12 @@
  * (note: the "ag_" prefix is reserved for Agar settings).
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
 
 #include <string.h>
 
-#include <config/datadir.h>
+#include <agar/config/datadir.h>
 
 /* Create the "save-path" / "tmp-path" directories, if they don't exist. */
 int
@@ -200,6 +200,13 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
 	    (ext != NULL) ? ext : "", path_key, path);
 	return (-1);
+}
+
+/* Return a pointer to the global agConfig object. */
+AG_Config *
+AG_ConfigObject(void)
+{
+	return (agConfig);
 }
 
 AG_ObjectClass agConfigClass = {
