@@ -13,10 +13,7 @@ LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"6d009edb-c66a-46e8-a1dd-b6f653db6327"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC} ${VG_LIBS}
-
-LIBS=		-L../gui -lag_gui \
-		${SDL_LIBS} ${OPENGL_LIBS} ${FREETYPE_LIBS} \
-		-L../core -lag_core
+LIBS=		-L../gui -lag_gui
 
 CFLAGS+=	-D_AGAR_VG_INTERNAL \
 		${CORE_CFLAGS} ${GUI_CFLAGS} ${VG_CFLAGS}
