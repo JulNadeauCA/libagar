@@ -1,0 +1,13 @@
+# Public domain
+
+CONFIG_GUESS("../../mk/config.guess")
+
+REGISTER_SECTION("Test program options:")
+REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+
+REQUIRE(cc)
+CHECK(agar-core, 1.5.0, ${prefix_agar})
+
+C_INCDIR($SRC)
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)
