@@ -10,6 +10,7 @@ __BEGIN_DECLS
 extern AG_Config *agConfig;
 extern AG_ObjectClass agConfigClass;
 
+AG_Config *AG_ConfigObject(void);
 int  AG_ConfigInit(AG_Config *, Uint);
 int  AG_ConfigFile(const char *, const char *, const char *, char *, size_t)
 		   BOUNDED_ATTRIBUTE(__string__, 4, 5);
