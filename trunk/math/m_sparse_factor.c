@@ -42,9 +42,9 @@
  *  This file contains the routines to factor the matrix into LU form.
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 static int  FactorComplexMatrix( MatrixPtr );
 static void CountMarkowitz( MatrixPtr, RealVector, int );

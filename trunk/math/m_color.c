@@ -27,8 +27,8 @@
  * Color-related operations and conversions between different color spaces.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Color
 M_ColorHSVA(M_Real h, M_Real s, M_Real v, M_Real a)

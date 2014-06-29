@@ -23,11 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "separator.h"
-#include "window.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
 
 AG_Separator *
 AG_SeparatorNew(void *parent, enum ag_separator_type type)

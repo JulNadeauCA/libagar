@@ -27,7 +27,7 @@
  * Dummy network interface driver.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 static int
 GetIfConfig(AG_NetAddrList *nal)

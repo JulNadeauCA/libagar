@@ -27,16 +27,14 @@
  * Base vector graphics object.
  */
 
-#include <core/core.h>
-
-#include <gui/gui.h>
-#include <gui/primitive.h>
-#include <gui/iconmgr.h>
-
-#include "vg.h"
-#include "vg_view.h"
-#include "icons.h"
-#include "icons_data.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
+#include <agar/vg/icons.h>
+#include <agar/vg/icons_data.h>
 
 #include <string.h>
 
@@ -45,6 +43,7 @@ const AG_Version vgVer = { 6, 1 };
 int          vgInitedSubsystem = 0;
 VG_NodeOps **vgNodeClasses;
 Uint         vgNodeClassCount;
+int          vgGUI = 1;
 
 extern VG_NodeOps vgPointOps;
 extern VG_NodeOps vgLineOps;
@@ -75,7 +74,7 @@ VG_InitSubsystem(void)
 	vgNodeClassCount = 0;
 
 	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
-	if (agGUI) {
+	if (vgGUI) {
 		AG_RegisterClass(&vgViewClass);
 	}
 	for (vnOps = &vgBuiltinClasses[0]; *vnOps != NULL; vnOps++)
@@ -91,7 +90,7 @@ VG_DestroySubsystem(void)
 	if (!vgInitedSubsystem)
 		return;
 	
-	if (agGUI) {
+	if (vgGUI) {
 		AG_UnregisterClass(&vgViewClass);
 	}
 	Free(vgNodeClasses);

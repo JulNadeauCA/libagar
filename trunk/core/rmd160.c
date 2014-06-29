@@ -27,8 +27,8 @@
  * ftp://ftp.rsasecurity.com/pub/cryptobytes/crypto3n2.pdf
  */
 
-#include "core.h"
-#include "rmd160.h"
+#include <agar/core/core.h>
+#include <agar/core/rmd160.h>
 
 #include <string.h>
 

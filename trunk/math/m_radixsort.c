@@ -37,8 +37,8 @@
  * "Engineering Radix Sort".
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 struct sort_stack {
 	const Uint8 **sa;

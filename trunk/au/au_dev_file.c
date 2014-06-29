@@ -27,10 +27,10 @@
  * Audio file output driver.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
+#include <agar/au/au_init.h>
+#include <agar/au/au_dev_out.h>
 
-#include "au_init.h"
-#include "au_dev_out.h"
 #include <sndfile.h>
 #include <errno.h>
 #include <time.h>

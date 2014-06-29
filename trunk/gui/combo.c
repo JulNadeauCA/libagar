@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "combo.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/combo.h>
+#include <agar/gui/primitive.h>
 
 AG_Combo *
 AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)

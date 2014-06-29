@@ -27,11 +27,10 @@
  * LEGACY: Use AG_Numerical(3) instead of this widget.
  */
 
-#include <core/core.h>
-
-#include "spinbutton.h"
-#include "window.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/spinbutton.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
 
 #include <stdarg.h>
 #include <string.h>

@@ -26,8 +26,8 @@
  * Polygon routines.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 void
 M_PolygonInit(M_Polygon *P)

@@ -27,10 +27,9 @@
  * Serialization of colors in RGBA format.
  */
 
-#include <core/core.h>
-
-#include "surface.h"
-#include "load_color.h"
+#include <agar/core/core.h>
+#include <agar/gui/surface.h>
+#include <agar/gui/load_color.h>
 
 void
 AG_WriteColor(AG_DataSource *ds, AG_Color C)

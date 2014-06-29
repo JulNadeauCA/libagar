@@ -26,8 +26,8 @@
  * Basic matrix operations.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 #include <string.h>
 

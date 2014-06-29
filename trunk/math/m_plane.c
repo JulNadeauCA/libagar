@@ -26,8 +26,8 @@
  * Plane in R^3.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 /* Return a plane given three points in R^3. */
 M_Plane

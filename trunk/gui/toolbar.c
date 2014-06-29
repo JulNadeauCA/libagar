@@ -23,13 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "toolbar.h"
-
-#include "window.h"
-#include "primitive.h"
-#include "separator.h"
+#include <agar/core/core.h>
+#include <agar/gui/toolbar.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/separator.h>
 
 AG_Toolbar *
 AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)

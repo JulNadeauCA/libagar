@@ -27,14 +27,12 @@
  * Display and tweak CPU information.
  */
 
-#include <core/core.h>
-
-#include <gui/window.h>
-#include <gui/label.h>
-#include <gui/separator.h>
-#include <gui/tlist.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/label.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/tlist.h>
+#include <agar/dev/dev.h>
 	
 static AG_FlagDescr archExtns[] = {
 	{ AG_EXT_CPUID,		"CPUID Instruction",			1 },

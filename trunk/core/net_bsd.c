@@ -34,8 +34,8 @@
 #define _NETBSD_SOURCE
 #endif
 
-#include <core/core.h>
-#include <core/queue_close.h>		/* Avoid <sys/queue.h> conflicts */
+#include <agar/core/core.h>
+#include <agar/core/queue_close.h>	/* Avoid <sys/queue.h> conflicts */
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -56,19 +56,19 @@
 #include <net/if.h>
 #include <netdb.h>
 
-#include <core/queue_close.h>		/* Avoid <sys/queue.h> conflicts */
-#include <core/queue.h>
+#include <agar/core/queue_close.h>	/* Avoid <sys/queue.h> conflicts */
+#include <agar/core/queue.h>
 
-#include <config/have_select.h>
-#include <config/have_siocgifconf.h>
-#include <config/have_setsockopt.h>
+#include <agar/config/have_select.h>
+#include <agar/config/have_siocgifconf.h>
+#include <agar/config/have_setsockopt.h>
 #ifdef HAVE_SETSOCKOPT
-#include <config/have_so_oobinline.h>
-#include <config/have_so_reuseport.h>
-#include <config/have_so_timestamp.h>
-#include <config/have_so_nosigpipe.h>
-#include <config/have_so_linger.h>
-#include <config/have_so_acceptfilter.h>
+#include <agar/config/have_so_oobinline.h>
+#include <agar/config/have_so_reuseport.h>
+#include <agar/config/have_so_timestamp.h>
+#include <agar/config/have_so_nosigpipe.h>
+#include <agar/config/have_so_linger.h>
+#include <agar/config/have_so_acceptfilter.h>
 
 static int agSockOptionMap[] = {
 	0, SO_DEBUG, SO_REUSEADDR, SO_KEEPALIVE, SO_DONTROUTE, SO_BROADCAST,

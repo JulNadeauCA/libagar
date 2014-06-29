@@ -26,8 +26,8 @@
  * Routines related to lines, line segments and rays.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Line2
 M_LineRead2(AG_DataSource *ds)

@@ -23,13 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "pane.h"
-
-#include "window.h"
-#include "primitive.h"
-#include "cursors.h"
+#include <agar/core/core.h>
+#include <agar/gui/pane.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/cursors.h>
 
 AG_Pane *
 AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)

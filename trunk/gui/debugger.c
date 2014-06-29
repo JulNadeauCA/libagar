@@ -28,23 +28,23 @@
  * generic Widget and Window parameters.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #ifdef AG_DEBUG
 
-#include "gui.h"
-#include "box.h"
-#include "textbox.h"
-#include "tlist.h"
-#include "label.h"
-#include "button.h"
-#include "numerical.h"
-#include "mspinbutton.h"
-#include "checkbox.h"
-#include "separator.h"
-#include "notebook.h"
-#include "pane.h"
-#include "scrollview.h"
+#include <agar/gui/gui.h>
+#include <agar/gui/box.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/label.h>
+#include <agar/gui/button.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/mspinbutton.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/pane.h>
+#include <agar/gui/scrollview.h>
 
 #include <string.h>
 

@@ -23,11 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "widget.h"
-#include "editable.h"
-#include "keymap.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/editable.h>
+#include <agar/gui/keymap.h>
 
 /*
  * Traditional ISO-8859-1 keyboard input mapping to Unicode.

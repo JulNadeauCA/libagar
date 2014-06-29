@@ -27,17 +27,17 @@
  * Base object class.
  */
 
-#include <core/core.h>
-#include <core/md5.h>
-#include <core/sha1.h>
-#include <core/rmd160.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/md5.h>
+#include <agar/core/sha1.h>
+#include <agar/core/rmd160.h>
+#include <agar/core/config.h>
 
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
 
-#include <config/ag_objdebug.h>
+#include <agar/config/ag_objdebug.h>
 
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",

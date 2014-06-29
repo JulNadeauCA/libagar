@@ -27,15 +27,14 @@
 #define _NETBSD_SOURCE
 #endif
 
-#include <core/core.h>
-
-#include "numerical.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/primitive.h>
 
 #include <string.h>
 
-#include <config/_mk_have_strtold.h>
-#include <config/_mk_have_strtoll.h>
+#include <agar/config/_mk_have_strtold.h>
+#include <agar/config/_mk_have_strtoll.h>
 #if defined(_MK_HAVE_STRTOLD_H) || defined(_MK_HAVE_STRTOLL_H)
 # define _XOPEN_SOURCE 600
 # include <stdlib.h>

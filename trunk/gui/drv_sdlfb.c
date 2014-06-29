@@ -27,15 +27,14 @@
  * Driver for framebuffer graphics via the SDL 1.2 library.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "drv.h"
-#include "text.h"
-#include "window.h"
-#include "packedpixel.h"
-#include "cursors.h"
-#include "sdl.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/drv.h>
+#include <agar/gui/text.h>
+#include <agar/gui/window.h>
+#include <agar/gui/packedpixel.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/sdl.h>
 
 typedef struct ag_sdlfb_driver {
 	struct ag_driver_sw _inherit;

@@ -49,52 +49,36 @@
  * See: http://gcc.gnu.org/wiki/Visibility
  */
 #ifndef DECLSPEC
-# if defined(__BEOS__)
-#  if defined(__GNUC__)
-#   define DECLSPEC	__declspec(dllexport)
-#  else
-#   define DECLSPEC	__declspec(export)
-#  endif
-# elif defined(__WIN32__)
+# if defined(__WIN32__) || defined(__WINRT__)
 #  ifdef __BORLANDC__
 #   ifdef _AGAR_DEV_INTERNAL
-#    define DECLSPEC 
-#   else
-#    define DECLSPEC	__declspec(dllimport)
-#   endif
-#  else
-#   define DECLSPEC	__declspec(dllexport)
-#  endif
-# elif defined(__OS2__)
-#  ifdef __WATCOMC__
-#   ifdef _AGAR_DEV_INTERNAL
-#    define DECLSPEC	__declspec(dllexport)
-#   else
 #    define DECLSPEC
+#    define _AGAR_DEV_DEFINED_DECLSPEC
+#   else
+#    define DECLSPEC    __declspec(dllimport)
+#    define _AGAR_DEV_DEFINED_DECLSPEC
 #   endif
 #  else
-#   define DECLSPEC
+#   define DECLSPEC __declspec(dllexport)
+#   define _AGAR_DEV_DEFINED_DECLSPEC
 #  endif
 # else
 #  if defined(__GNUC__) && __GNUC__ >= 4
-#   define DECLSPEC	__attribute__ ((visibility("default")))
+#   define DECLSPEC __attribute__ ((visibility("default")))
+#   define _AGAR_DEV_DEFINED_DECLSPEC
+#  elif defined(__GNUC__) && __GNUC__ >= 2
+#   define DECLSPEC __declspec(dllexport)
+#   define _AGAR_DEV_DEFINED_DECLSPEC
 #  else
 #   define DECLSPEC
+#   define _AGAR_DEV_DEFINED_DECLSPEC
 #  endif
 # endif
-# define _AGAR_DEV_DEFINED_DECLSPEC
 #endif
-#ifdef __SYMBIAN32__ 
-# ifndef EKA2 
-#  undef DECLSPEC
-#  define DECLSPEC
-#  define _AGAR_DEV_DEFINED_DECLSPEC
-# elif !defined(__WINS__)
-#  undef DECLSPEC
-#  define DECLSPEC __declspec(dllexport)
-#  define _AGAR_DEV_DEFINED_DECLSPEC
-# endif
-#endif
+#ifdef __SYMBIAN32__
+#undef DECLSPEC
+#define DECLSPEC
+#endif /* __SYMBIAN32__ */
 
 /*
  * Force structure packing at 4 byte alignment. This is necessary if the

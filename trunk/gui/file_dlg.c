@@ -23,15 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
 
-#include "file_dlg.h"
-
-#include <gui/hbox.h>
-#include <gui/numerical.h>
-#include <gui/checkbox.h>
-#include <gui/separator.h>
+#include <agar/gui/file_dlg.h>
+#include <agar/gui/hbox.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/icons.h>
 
 #ifdef __NetBSD__
 #define _NETBSD_SOURCE
@@ -41,12 +41,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "icons.h"
-
 #ifdef _XBOX
-# include <core/xbox.h>
+# include <agar/core/xbox.h>
 #elif _WIN32
-# include <core/win32.h>
+# include <agar/core/win32.h>
 #else
 # include <sys/types.h>
 # include <sys/stat.h>
@@ -55,7 +53,7 @@
 # include <errno.h>
 #endif
 
-#include "file_dlg_common.h"
+#include <agar/gui/file_dlg_common.h>
 
 AG_FileDlg *
 AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
@@ -64,7 +62,7 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
+	AG_GetString(AG_ConfigObject(), "save-path", savePath, sizeof(savePath));
 	AG_FileDlgSetDirectoryMRU(fd, mruKey, savePath);
 	return (fd);
 }
@@ -247,7 +245,7 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 			AG_TlistAddS(tl, agIconDirectory.s, path);
 		
 		/* Add the Agar save-path or load-path */
-		AG_GetString(agConfig,
+		AG_GetString(AG_ConfigObject(),
 		    (fd->flags & AG_FILEDLG_SAVE) ? "save-path" : "load-path",
 		    path, sizeof(path));
 		while ((p = AG_Strsep(&pPath, ":")) != NULL) {
@@ -921,7 +919,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 		goto fail;
 	}
 	if (fd->dirMRU != NULL) {
-		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
+		AG_SetString(AG_ConfigObject(), fd->dirMRU, fd->cwd);
 		AG_ConfigSave();
 	}
 
@@ -939,16 +937,17 @@ fail:
 void
 AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 {
+	AG_Config *cfg = AG_ConfigObject();
 	char *s;
 
 	AG_ObjectLock(fd);
-	AG_ObjectLock(agConfig);
+	AG_ObjectLock(cfg);
 
-	if (AG_Defined(agConfig,key) && (s = AG_GetStringDup(agConfig,key))) {
+	if (AG_Defined(cfg,key) && (s = AG_GetStringDup(cfg,key))) {
 		AG_FileDlgSetDirectoryS(fd, s);
 		Free(s);
 	} else {
-		AG_SetString(agConfig, key, dflt);
+		AG_SetString(cfg, key, dflt);
 		if (AG_ConfigSave() == -1) {
 			Verbose("Saving MRU(%s): %s\n", key, AG_GetError());
 		}
@@ -956,7 +955,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	}
 	fd->dirMRU = Strdup(key);
 	
-	AG_ObjectUnlock(agConfig);
+	AG_ObjectUnlock(cfg);
 	AG_ObjectUnlock(fd);
 }
 

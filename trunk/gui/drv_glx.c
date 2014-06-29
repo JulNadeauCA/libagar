@@ -24,14 +24,14 @@
  */
 
 /*
- * Driver for OpenGL graphics via X Windows System. This is a multiple display
- * driver; one context is created for each Agar window.
+ * Driver for OpenGL graphics via X Windows System. 
+ * One GL context is created for each Agar window.
  */
 
-#include <config/have_xkb.h>
-#include <config/have_xinerama.h>
+#include <agar/config/have_xkb.h>
+#include <agar/config/have_xinerama.h>
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -44,13 +44,13 @@
 #include <X11/extensions/Xinerama.h>
 #endif
 
-#include "gui.h"
-#include "drv.h"
-#include "text.h"
-#include "window.h"
-#include "gui_math.h"
-#include "cursors.h"
-#include "opengl.h"
+#include <agar/gui/gui.h>
+#include <agar/gui/drv.h>
+#include <agar/gui/text.h>
+#include <agar/gui/window.h>
+#include <agar/gui/gui_math.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/opengl.h>
 
 /* #define DEBUG_XSYNC */
 /* #define DEBUG_XEVENTS */
@@ -91,7 +91,7 @@ struct ag_glx_key_mapping {		/* Keymap translation table entry */
 	int kclass;			/* X keysym class (e.g., 0xff) */
 	AG_KeySym key;			/* Corresponding Agar keysym */
 };
-#include "drv_glx_keymaps.h"
+#include <agar/gui/drv_glx_keymaps.h>
 
 typedef struct ag_cursor_glx {
 	XColor black;

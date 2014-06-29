@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "window.h"
-#include "scrollview.h"
-#include "primitive.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/scrollview.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/gui_math.h>
 
 #include <stdarg.h>
 #include <string.h>

@@ -23,10 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "units.h"
-#include "gui_math.h"
+#include <agar/core/core.h>
+#include <agar/gui/units.h>
+#include <agar/gui/gui_math.h>
 
 #include <string.h>
 

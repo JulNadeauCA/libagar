@@ -23,15 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-#include <core/config.h>
-
-#include "font_selector.h"
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/gui/font_selector.h>
+#include <agar/gui/icons.h>
+#include <agar/gui/primitive.h>
 
 #include <string.h>
-
-#include "icons.h"
-#include "primitive.h"
 
 AG_FontSelector *
 AG_FontSelectorNew(void *parent, Uint flags)
@@ -141,7 +139,7 @@ OnShow(AG_Event *event)
 			ti->selected++;
 	}
 
-	AG_GetString(agConfig, "font-path", fontPath, sizeof(fontPath));
+	AG_GetString(AG_ConfigObject(), "font-path", fontPath, sizeof(fontPath));
 	while ((s = AG_Strsep(&pFontPath, ":")) != NULL) {
 		AG_Dir *dir;
 		int i;

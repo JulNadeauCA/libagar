@@ -28,13 +28,11 @@
  * all the characters within that range. Useful for testing fonts.
  */
 
-#include <core/core.h>
-
-#include <gui/window.h>
-#include <gui/combo.h>
-#include <gui/treetbl.h>
-
-#include "dev.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/combo.h>
+#include <agar/gui/treetbl.h>
+#include <agar/dev/dev.h>
 
 static const struct unicode_range {
 	Uint32 start;

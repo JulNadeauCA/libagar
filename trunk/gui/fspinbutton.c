@@ -27,12 +27,10 @@
  * LEGACY: Use AG_Numerical(3) instead of this widget.
  */
 
-#include <config/_mk_have_strtoll.h>
-
-#include <core/core.h>
-
-#include "fspinbutton.h"
-#include "primitive.h"
+#include <agar/config/_mk_have_strtoll.h>
+#include <agar/core/core.h>
+#include <agar/gui/fspinbutton.h>
+#include <agar/gui/primitive.h>
 
 #include <string.h>
 

@@ -27,12 +27,11 @@
  * Icon resource object.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "surface.h"
-#include "load_xcf.h"
-#include "iconmgr.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
+#include <agar/gui/load_xcf.h>
+#include <agar/gui/iconmgr.h>
 
 /* Compile surfaces/textures for the given static icon. */
 void

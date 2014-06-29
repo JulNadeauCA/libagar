@@ -3,8 +3,8 @@
  * Operations on vectors in R^n using standard FPU instructions.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_VectorOps mVecOps_FPU = {
 	"scalar",

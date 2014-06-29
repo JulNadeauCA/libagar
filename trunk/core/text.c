@@ -27,7 +27,7 @@
  * Dynamically-allocated, multilanguage text element.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 /* Language codes (see string.h, iso639-gen.pl) */
 const char *agLanguageCodes[] = {

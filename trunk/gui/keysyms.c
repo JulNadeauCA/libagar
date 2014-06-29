@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 const char *agKeySyms[] = {
 	NULL,	

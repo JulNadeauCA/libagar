@@ -27,9 +27,8 @@
  * Generic interface to keyboards.
  */
 
-#include <core/core.h>
-
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
 
 static const struct {
 	AG_KeySym ks;

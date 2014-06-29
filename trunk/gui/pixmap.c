@@ -23,14 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 #if 0
-#include "load_xcf.h"
+#include <agar/gui/load_xcf.h>
 #endif
-#include "pixmap.h"
-#include "primitive.h"
-#include "window.h"
-#include "opengl.h"
+#include <agar/gui/pixmap.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/window.h>
+#include <agar/gui/opengl.h>
 
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)

@@ -27,13 +27,12 @@
  * Common code for SDL 1.2 drivers.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "window.h"
-#include "packedpixel.h"
-#include "cursors.h"
-#include "sdl.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/packedpixel.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/sdl.h>
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
 	((ax) < (s)->clip_rect.x ||			\

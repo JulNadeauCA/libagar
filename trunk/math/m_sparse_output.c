@@ -43,9 +43,9 @@
  *  the matrix package.
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 #if DOCUMENTATION
 

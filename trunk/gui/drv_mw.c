@@ -28,9 +28,8 @@
  * Agar window has a corresponding "native" window managed by the driver.
  */
 
-#include <core/core.h>
-
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
 
 AG_DriverMw *agDriverMw = NULL;		/* Root driver instance */
 AG_List     *agModalWindows = NULL;	/* Modal window stack */

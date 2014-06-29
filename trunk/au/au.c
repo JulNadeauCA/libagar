@@ -23,10 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-#include "au_init.h"
-#include "au_dev_out.h"
-#include "au_wave.h"
+#include <agar/core/core.h>
+#include <agar/au/au_init.h>
+#include <agar/au/au_dev_out.h>
+#include <agar/au/au_wave.h>
 
 int auInitedSubsystem = 0;
 

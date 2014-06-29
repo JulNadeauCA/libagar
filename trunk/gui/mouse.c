@@ -28,10 +28,9 @@
  * mouse object, but multiple instances are supported.
  */
 
-#include <core/core.h>
-
-#include "window.h"
-#include "cursors.h"
+#include <agar/core/core.h>
+#include <agar/gui/window.h>
+#include <agar/gui/cursors.h>
 
 AG_Mouse *
 AG_MouseNew(void *drv, const char *desc)

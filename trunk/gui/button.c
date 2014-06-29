@@ -23,11 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
-#include "button.h"
-#include "primitive.h"
-#include "window.h"
+#include <agar/gui/button.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/window.h>
 
 #include <stdarg.h>
 

@@ -132,6 +132,7 @@ typedef struct vg {
 
 extern VG_NodeOps **vgNodeClasses;
 extern Uint         vgNodeClassCount;
+extern int          vgGUI;
 
 #include <agar/vg/vg_math.h>
 

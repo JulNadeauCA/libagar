@@ -27,7 +27,7 @@
  * Routines related to error handling.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <stdarg.h>
 #include <stdio.h>

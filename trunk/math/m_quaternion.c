@@ -26,8 +26,8 @@
  * Quaternion operations.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 #define SLERP_TO_LERP_THRESH 0.001
 

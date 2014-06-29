@@ -27,12 +27,11 @@
  * Functions related to Agar object classes and namespaces.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
+#include <agar/config/ag_objdebug.h>
 
 #include <string.h>
 #include <ctype.h>
-
-#include <config/ag_objdebug.h>
 
 extern AG_ObjectClass agObjectClass;
 

@@ -27,62 +27,62 @@
  * Main Agar-GUI initialization.
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
 
-#include <config/have_opengl.h>
+#include <agar/config/have_opengl.h>
 
-#include "gui.h"
-#include "box.h"
-#include "button.h"
-#include "checkbox.h"
-#include "combo.h"
-#include "console.h"
-#include "dir_dlg.h"
-#include "editable.h"
-#include "file_dlg.h"
-#include "file_selector.h"
-#include "fixed.h"
-#include "fspinbutton.h"
-#include "fixed_plotter.h"
-#include "font_selector.h"
-#include "glview.h"
-#include "graph.h"
-#include "hsvpal.h"
-#include "icon.h"
-#include "label.h"
-#include "menu.h"
-#include "mfspinbutton.h"
-#include "mpane.h"
-#include "mspinbutton.h"
-#include "notebook.h"
-#include "numerical.h"
-#include "objsel.h"
-#include "pane.h"
-#include "pixmap.h"
-#include "progress_bar.h"
-#include "radio.h"
-#include "scrollbar.h"
-#include "scrollview.h"
-#include "separator.h"
-#include "slider.h"
-#include "socket.h"
-#include "spinbutton.h"
-#include "statusbar.h"
-#include "table.h"
-#include "treetbl.h"
-#include "textbox.h"
-#include "titlebar.h"
-#include "tlist.h"
-#include "toolbar.h"
-#include "ucombo.h"
+#include <agar/gui/gui.h>
+#include <agar/gui/box.h>
+#include <agar/gui/button.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/combo.h>
+#include <agar/gui/console.h>
+#include <agar/gui/dir_dlg.h>
+#include <agar/gui/editable.h>
+#include <agar/gui/file_dlg.h>
+#include <agar/gui/file_selector.h>
+#include <agar/gui/fixed.h>
+#include <agar/gui/fspinbutton.h>
+#include <agar/gui/fixed_plotter.h>
+#include <agar/gui/font_selector.h>
+#include <agar/gui/glview.h>
+#include <agar/gui/graph.h>
+#include <agar/gui/hsvpal.h>
+#include <agar/gui/icon.h>
+#include <agar/gui/label.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/mfspinbutton.h>
+#include <agar/gui/mpane.h>
+#include <agar/gui/mspinbutton.h>
+#include <agar/gui/notebook.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/objsel.h>
+#include <agar/gui/pane.h>
+#include <agar/gui/pixmap.h>
+#include <agar/gui/progress_bar.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/scrollbar.h>
+#include <agar/gui/scrollview.h>
+#include <agar/gui/separator.h>
+#include <agar/gui/slider.h>
+#include <agar/gui/socket.h>
+#include <agar/gui/spinbutton.h>
+#include <agar/gui/statusbar.h>
+#include <agar/gui/table.h>
+#include <agar/gui/treetbl.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/titlebar.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/toolbar.h>
+#include <agar/gui/ucombo.h>
 
-#include "colors.h"
-#include "cursors.h"
-#include "primitive.h"
-#include "icons.h"
-#include "icons_data.h"
-#include "text.h"
+#include <agar/gui/colors.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/icons.h>
+#include <agar/gui/icons_data.h>
+#include <agar/gui/text.h>
 
 void *agGUIClasses[] = {
 	&agWidgetClass,
@@ -173,6 +173,7 @@ double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
 int
 AG_InitGUIGlobals(void)
 {
+	AG_Config *cfg;
 	char acsPath[AG_PATHNAME_MAX];
 	Uint i;
 
@@ -207,21 +208,22 @@ AG_InitGUIGlobals(void)
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
 
 	/* Save GUI globals in agConfig. */
-	AG_BindInt(agConfig, "ag_kbd_delay", &agKbdDelay);
-	AG_BindInt(agConfig, "ag_kbd_repeat", &agKbdRepeat);
-	AG_BindInt(agConfig, "ag_mouse_dblclick_delay", &agMouseDblclickDelay);
-	AG_BindInt(agConfig, "ag_mouse_spin_delay", &agMouseSpinDelay);
-	AG_BindInt(agConfig, "ag_mouse_spin_interval", &agMouseSpinIval);
-	AG_BindInt(agConfig, "ag_text_composition", &agTextComposition);
-	AG_BindInt(agConfig, "ag_text_bidi", &agTextBidi);
-	AG_BindInt(agConfig, "ag_text_cache", &agTextCache);
-	AG_BindInt(agConfig, "ag_text_tab_width", &agTextTabWidth);
-	AG_BindInt(agConfig, "ag_text_blink_rate", &agTextBlinkRate);
-	AG_BindInt(agConfig, "ag_text_symbols", &agTextSymbols);
-	AG_BindInt(agConfig, "ag_page_increment", &agPageIncrement);
-	AG_BindInt(agConfig, "ag_idle_threshold", &agIdleThresh);
-	AG_BindInt(agConfig, "ag_screenshot_quality", &agScreenshotQuality);
-	AG_BindInt(agConfig, "ag_msg_delay", &agMsgDelay);
+	cfg = AG_ConfigObject();
+	AG_BindInt(cfg, "ag_kbd_delay", &agKbdDelay);
+	AG_BindInt(cfg, "ag_kbd_repeat", &agKbdRepeat);
+	AG_BindInt(cfg, "ag_mouse_dblclick_delay", &agMouseDblclickDelay);
+	AG_BindInt(cfg, "ag_mouse_spin_delay", &agMouseSpinDelay);
+	AG_BindInt(cfg, "ag_mouse_spin_interval", &agMouseSpinIval);
+	AG_BindInt(cfg, "ag_text_composition", &agTextComposition);
+	AG_BindInt(cfg, "ag_text_bidi", &agTextBidi);
+	AG_BindInt(cfg, "ag_text_cache", &agTextCache);
+	AG_BindInt(cfg, "ag_text_tab_width", &agTextTabWidth);
+	AG_BindInt(cfg, "ag_text_blink_rate", &agTextBlinkRate);
+	AG_BindInt(cfg, "ag_text_symbols", &agTextSymbols);
+	AG_BindInt(cfg, "ag_page_increment", &agPageIncrement);
+	AG_BindInt(cfg, "ag_idle_threshold", &agIdleThresh);
+	AG_BindInt(cfg, "ag_screenshot_quality", &agScreenshotQuality);
+	AG_BindInt(cfg, "ag_msg_delay", &agMsgDelay);
 
 	if (AG_ConfigFile("load-path","style","css", acsPath, sizeof(acsPath)) == 0) {
 		if (AG_LoadStyleSheet(NULL, acsPath) == NULL)
@@ -283,7 +285,7 @@ AG_InitGUI(Uint flags)
 	agIcon_Init();
 #if 0
 	/* Try to load a color scheme from the default path. */
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
+	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);

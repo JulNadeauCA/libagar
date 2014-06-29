@@ -27,8 +27,8 @@
  * Operations on integer vectors.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 #define ASSERT_LENGTH(A, B) \
 	if ((A)->n != (B)->n) \

@@ -23,20 +23,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/enable_gui.h>
+#include <agar/config/enable_gui.h>
 #ifdef ENABLE_GUI
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/button.h>
-#include <gui/primitive.h>
-#include <gui/text_cache.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
+#include <agar/gui/button.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text_cache.h>
 
-#include "m.h"
-#include "m_matview.h"
-#include "m_gui.h"
+#include <agar/math/m.h>
+#include <agar/math/m_matview.h>
+#include <agar/math/m_gui.h>
 
 M_Matview *
 M_MatviewNew(void *parent, M_Matrix *M, Uint flags)

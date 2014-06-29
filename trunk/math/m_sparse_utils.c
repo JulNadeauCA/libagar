@@ -42,9 +42,9 @@
  *  This file contains various optional utility routines.
  */
 
-#include <core/core.h>
-#include "m.h"
-#include "m_sparse.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
+#include <agar/math/m_sparse.h>
 
 static int CountTwins( MatrixPtr, int, ElementPtr*, ElementPtr* );
 static void SwapCols( MatrixPtr, ElementPtr, ElementPtr );

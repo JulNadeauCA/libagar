@@ -27,15 +27,13 @@
  * Generate plots of proximity functions for debugging purposes.
  */
 
-#include <core/core.h>
-
-#include <gui/widget.h>
-#include <gui/primitive.h>
-#include <gui/iconmgr.h>
-
-#include "vg.h"
-#include "vg_view.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_view.h>
+#include <agar/vg/icons.h>
 
 static int
 MouseButtonDown(void *t, VG_Vector v, int button)

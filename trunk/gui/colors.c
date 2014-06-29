@@ -27,15 +27,14 @@
  * Standard color palette for GUI elements.
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/colors.h>
+#include <agar/gui/load_color.h>
+#include <agar/gui/drv.h>
 
 #include <ctype.h>
-
-#include "gui.h"
-#include "colors.h"
-#include "load_color.h"
-#include "drv.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
 

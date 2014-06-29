@@ -26,18 +26,19 @@
  * Utility and I/O routines for math library.
  */
 
-#include <core/core.h>
-#include <config/enable_gui.h>
-#include <config/have_long_double.h>
+#include <agar/core/core.h>
 
-#include "m.h"
+#include <agar/config/enable_gui.h>
+#include <agar/config/have_long_double.h>
+
+#include <agar/math/m.h>
 
 #ifdef ENABLE_GUI
-# include <gui/gui.h>
-# include <gui/label.h>
-# include <gui/units.h>
-# include "m_plotter.h"
-# include "m_matview.h"
+# include <agar/gui/gui.h>
+# include <agar/gui/label.h>
+# include <agar/gui/units.h>
+# include <agar/math/m_plotter.h>
+# include <agar/math/m_matview.h>
 #endif
 
 int mInitedSubsystem = 0;

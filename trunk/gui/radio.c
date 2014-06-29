@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "radio.h"
-#include "window.h"
-#include "primitive.h"
-#include "text.h"
+#include <agar/core/core.h>
+#include <agar/gui/radio.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text.h>
 
 AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **itemText)

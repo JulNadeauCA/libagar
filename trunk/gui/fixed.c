@@ -23,12 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "fixed.h"
-
-#include "window.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/fixed.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
 
 AG_Fixed *
 AG_FixedNew(void *parent, Uint flags)

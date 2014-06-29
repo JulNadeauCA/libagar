@@ -23,18 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "box.h"
-
-#include "window.h"
-#include "primitive.h"
-#include "text.h"
-#include "label.h"
-
+#include <agar/core/core.h>
+#include <agar/gui/box.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text.h>
+#include <agar/gui/label.h>
 #ifdef AG_DEBUG
-#include "numerical.h"
-#include "checkbox.h"
+#include <agar/gui/numerical.h>
+#include <agar/gui/checkbox.h>
 #endif
 
 AG_Box *

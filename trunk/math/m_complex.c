@@ -3,8 +3,8 @@
  * Complex number arithmetic.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 static M_Real Ctans(M_Complex);
 

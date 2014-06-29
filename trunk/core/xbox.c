@@ -25,8 +25,8 @@
 
 #ifdef _XBOX
 
-#include <core/core.h>
-#include <core/xbox.h>
+#include <agar/core/core.h>
+#include <agar/core/xbox.h>
 
 #define INVALID_FILE_ATTRIBUTES -1
 

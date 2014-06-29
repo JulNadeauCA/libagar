@@ -26,8 +26,8 @@
  * Routines related to spheres.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_Sphere
 M_SphereRead(AG_DataSource *ds)

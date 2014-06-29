@@ -23,12 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "socket.h"
-#include "icon.h"
-#include "window.h"
-#include "primitive.h"
+#include <agar/core/core.h>
+#include <agar/gui/socket.h>
+#include <agar/gui/icon.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
 
 #include <stdarg.h>
 

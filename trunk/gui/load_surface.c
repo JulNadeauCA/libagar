@@ -27,12 +27,11 @@
  * Serialization functions for graphic surfaces.
  */
 
-#include <core/core.h>
-#include <core/load_version.h>
-
-#include "gui.h"
-#include "surface.h"
-#include "load_surface.h"
+#include <agar/core/core.h>
+#include <agar/core/load_version.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/surface.h>
+#include <agar/gui/load_surface.h>
 
 const AG_Version agSurfaceVer = { 0, 0 };
 

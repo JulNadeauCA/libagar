@@ -27,8 +27,8 @@
  * Audio clip structure.
  */
 
-#include <core/core.h>
-#include "au_wave.h"
+#include <agar/core/core.h>
+#include <agar/au/au_wave.h>
 
 #include <string.h>
 #include <math.h>

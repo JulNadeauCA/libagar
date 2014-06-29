@@ -23,13 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "mpane.h"
-
-#include "window.h"
-#include "cursors.h"
-#include "pane.h"
+#include <agar/core/core.h>
+#include <agar/gui/mpane.h>
+#include <agar/gui/window.h>
+#include <agar/gui/cursors.h>
+#include <agar/gui/pane.h>
 
 AG_MPane *
 AG_MPaneNew(void *parent, enum ag_mpane_layout layout, Uint flags)

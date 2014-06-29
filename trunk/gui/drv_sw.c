@@ -29,12 +29,11 @@
  * manager internally.
  */
 
-#include <core/core.h>
-
-#include "gui.h"
-#include "window.h"
-#include "menu.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/icons.h>
 
 AG_DriverSw *agDriverSw = NULL;		/* Root driver instance */
 

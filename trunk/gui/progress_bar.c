@@ -23,13 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "progress_bar.h"
-#include "window.h"
-#include "primitive.h"
-#include "text.h"
-#include "text_cache.h"
+#include <agar/core/core.h>
+#include <agar/gui/progress_bar.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/text.h>
+#include <agar/gui/text_cache.h>
 
 AG_ProgressBar *
 AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)

@@ -27,7 +27,7 @@
  * Basic I/O abstraction routines.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #include <stdio.h>
 #include <string.h>

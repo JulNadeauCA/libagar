@@ -23,13 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "menu.h"
-
-#include "primitive.h"
-#include "label.h"
-#include "button.h"
+#include <agar/core/core.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/label.h>
+#include <agar/gui/button.h>
 
 #include <stdarg.h>
 #include <string.h>

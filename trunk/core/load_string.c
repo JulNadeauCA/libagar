@@ -27,7 +27,7 @@
  * Serialization functions for strings.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 /* Allocate and read a length-encoded string. */
 char *

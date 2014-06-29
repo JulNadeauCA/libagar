@@ -60,43 +60,41 @@
  * kind permission from Sam Lantinga.
  */
 
-#include <config/have_freetype.h>
-#include <config/have_fontconfig.h>
-#include <config/ttfdir.h>
+#include <agar/config/have_freetype.h>
+#include <agar/config/have_fontconfig.h>
+#include <agar/config/ttfdir.h>
 
-#include <core/core.h>
-#include <core/config.h>
-#include <core/win32.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/core/win32.h>
 
 #ifdef HAVE_FREETYPE
-# include "ttf.h"
+# include <agar/gui/ttf.h>
 #endif
 #ifdef HAVE_FONTCONFIG
 # include <fontconfig/fontconfig.h>
 #endif
 
-#include "window.h"
-#include "vbox.h"
-#include "box.h"
-#include "label.h"
-#include "textbox.h"
-#include "button.h"
-#include "ucombo.h"
-#include "numerical.h"
-#include "keymap.h"
-#include "checkbox.h"
-
-#include "load_xcf.h"
+#include <agar/gui/window.h>
+#include <agar/gui/vbox.h>
+#include <agar/gui/box.h>
+#include <agar/gui/label.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/button.h>
+#include <agar/gui/ucombo.h>
+#include <agar/gui/numerical.h>
+#include <agar/gui/keymap.h>
+#include <agar/gui/checkbox.h>
+#include <agar/gui/load_xcf.h>
+#include <agar/gui/iconmgr.h>
+#include <agar/gui/icons.h>
+#include <agar/gui/fonts.h>
+#include <agar/gui/fonts_data.h>
+#include <agar/gui/packedpixel.h>
 
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
-
-#include "iconmgr.h"
-#include "icons.h"
-#include "fonts.h"
-#include "fonts_data.h"
-#include "packedpixel.h"
 
 /* Default fonts */
 const char *agDefaultFaceFT = "_agFontVera";
@@ -288,9 +286,10 @@ OpenBitmapFont(AG_Font *font)
 AG_Font *
 AG_FetchFont(const char *pname, int psize, int pflags)
 {
+	AG_Config *cfg = AG_ConfigObject();
 	char name[AG_OBJECT_NAME_MAX];
-	int ptsize = (psize >= 0) ? psize : AG_GetInt(agConfig,"font.size");
-	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(agConfig,"font.flags");
+	int ptsize = (psize >= 0) ? psize : AG_GetInt(cfg,"font.size");
+	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(cfg,"font.flags");
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
@@ -299,7 +298,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (pname != NULL) {
 		Strlcpy(name, pname, sizeof(name));
 	} else {
-		AG_GetString(agConfig, "font.face", name, sizeof(name));
+		AG_GetString(cfg, "font.face", name, sizeof(name));
 	}
 
 	AG_MutexLock(&agTextLock);
@@ -448,6 +447,8 @@ AG_UnusedFont(AG_Font *font)
 void
 AG_SetDefaultFont(AG_Font *font)
 {
+	AG_Config *cfg;
+
 	AG_MutexLock(&agTextLock);
 	agDefaultFont = font;
 	agTextFontHeight = font->height;
@@ -455,9 +456,10 @@ AG_SetDefaultFont(AG_Font *font)
 	agTextFontDescent = font->descent;
 	agTextFontLineSkip = font->lineskip;
 	agTextState->font = font;
-	AG_SetString(agConfig, "font.face", OBJECT(font)->name);
-	AG_SetInt(agConfig, "font.size", font->spec.size);
-	AG_SetInt(agConfig, "font.flags", font->flags);
+	cfg = AG_ConfigObject();
+	AG_SetString(cfg, "font.face", OBJECT(font)->name);
+	AG_SetInt(cfg, "font.size", font->spec.size);
+	AG_SetInt(cfg, "font.flags", font->flags);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -493,6 +495,8 @@ InitTextState(void)
 int
 AG_InitTextSubsystem(void)
 {
+	AG_Config *cfg = AG_ConfigObject();
+
 	if (agTextInitedSubsystem++ > 0)
 		return (0);
 
@@ -500,14 +504,14 @@ AG_InitTextSubsystem(void)
 	TAILQ_INIT(&fonts);
 
 	/* Set the default font search path. */
-	AG_ObjectLock(agConfig);
-	if (!AG_Defined(agConfig,"font-path")) {
+	AG_ObjectLock(cfg);
+	if (!AG_Defined(cfg,"font-path")) {
 		char fontPath[AG_PATHNAME_MAX];
 		char path[AG_PATHNAME_MAX];
 		AG_User *sysUser = AG_GetRealUser();
 		size_t len;
 
-		AG_GetString(agConfig, "save-path", path, sizeof(path));
+		AG_GetString(cfg, "save-path", path, sizeof(path));
 		if (path[0] != '\0') {
 			Strlcpy(fontPath, path, sizeof(fontPath));
 			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
@@ -547,7 +551,7 @@ AG_InitTextSubsystem(void)
 			if (fontPath[len-1] == ':') {
 				fontPath[len-1] = '\0';
 			}
-			AG_SetString(agConfig, "font-path", fontPath);
+			AG_SetString(cfg, "font-path", fontPath);
 		}
 
 		if (sysUser != NULL)
@@ -571,17 +575,17 @@ AG_InitTextSubsystem(void)
 	}
 #endif
 	/* Load the default font. */
-	if (!AG_Defined(agConfig,"font.face")) {
-		AG_SetString(agConfig, "font.face",
+	if (!AG_Defined(cfg,"font.face")) {
+		AG_SetString(cfg, "font.face",
 		    agFreetypeInited ? agDefaultFaceFT : agDefaultFaceBitmap);
 	}
-	if (!AG_Defined(agConfig,"font.size")) {
-		AG_SetInt(agConfig, "font.size", 12);
+	if (!AG_Defined(cfg,"font.size")) {
+		AG_SetInt(cfg, "font.size", 12);
 	}
-	if (!AG_Defined(agConfig,"font.flags")) {
-		AG_SetUint(agConfig, "font.flags", 0);
+	if (!AG_Defined(cfg,"font.flags")) {
+		AG_SetUint(cfg, "font.flags", 0);
 	}
-	AG_ObjectUnlock(agConfig);
+	AG_ObjectUnlock(cfg);
 
 	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
 		goto fail;
@@ -1347,6 +1351,7 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 void
 AG_TextParseFontSpec(const char *fontspec)
 {
+	AG_Config *cfg = AG_ConfigObject();
 	char buf[128];
 	char *fs, *s, *c;
 
@@ -1355,11 +1360,11 @@ AG_TextParseFontSpec(const char *fontspec)
 
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetString(agConfig, "font.face", s);
+		AG_SetString(cfg, "font.face", s);
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetInt(agConfig, "font.size", atoi(s));
+		AG_SetInt(cfg, "font.size", atoi(s));
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
@@ -1372,7 +1377,7 @@ AG_TextParseFontSpec(const char *fontspec)
 			case 'U': flags |= AG_FONT_UPPERCASE;	break;
 			}
 		}
-		AG_SetUint(agConfig, "font.flags", flags);
+		AG_SetUint(cfg, "font.flags", flags);
 	}
 }
 
@@ -1475,6 +1480,7 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 void
 AG_TextInfoS(const char *key, const char *s)
 {
+	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Window *win;
 	AG_VBox *vb;
@@ -1485,10 +1491,10 @@ AG_TextInfoS(const char *key, const char *s)
 	Strlcpy(disableSw, "info.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
 
-	AG_ObjectLock(agConfig);
+	AG_ObjectLock(cfg);
 
-	if (AG_Defined(agConfig,disableSw) &&
-	    AG_GetInt(agConfig,disableSw) == 1)
+	if (AG_Defined(cfg,disableSw) &&
+	    AG_GetInt(cfg,disableSw) == 1)
 		goto out;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1504,13 +1510,13 @@ AG_TextInfoS(const char *key, const char *s)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(agConfig,disableSw,0);
+	Vdisable = AG_SetInt(cfg,disableSw,0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 out:
-	AG_ObjectUnlock(agConfig);
+	AG_ObjectUnlock(cfg);
 }
 
 /*
@@ -1532,6 +1538,7 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 void
 AG_TextWarningS(const char *key, const char *s)
 {
+	AG_Config *cfg = AG_ConfigObject();
 	char disableSw[64];
 	AG_Window *win;
 	AG_VBox *vb;
@@ -1542,10 +1549,10 @@ AG_TextWarningS(const char *key, const char *s)
 	Strlcpy(disableSw, "warn.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
 	
-	AG_ObjectLock(agConfig);
+	AG_ObjectLock(cfg);
 
-	if (AG_Defined(agConfig,disableSw) &&
-	    AG_GetInt(agConfig,disableSw) == 1)
+	if (AG_Defined(cfg,disableSw) &&
+	    AG_GetInt(cfg,disableSw) == 1)
 		goto out;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
@@ -1562,13 +1569,13 @@ AG_TextWarningS(const char *key, const char *s)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNewS(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	Vdisable = AG_SetInt(agConfig,disableSw,0);
+	Vdisable = AG_SetInt(cfg,disableSw,0);
 	AG_BindInt(cb, "state", &Vdisable->data.i);
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 out:
-	AG_ObjectUnlock(agConfig);
+	AG_ObjectUnlock(cfg);
 }
 
 /* Display an error message. */

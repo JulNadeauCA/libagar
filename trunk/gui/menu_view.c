@@ -23,11 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include "menu.h"
-#include "primitive.h"
-#include "icons.h"
+#include <agar/core/core.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/icons.h>
 
 static Uint32
 SubmenuTimeout(AG_Timer *to, AG_Event *event)

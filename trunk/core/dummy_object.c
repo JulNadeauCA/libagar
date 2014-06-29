@@ -3,7 +3,7 @@
  * Implementation of an example Agar object class.
  */
 
-#include <agar/core.h>
+#include <agar/core/core.h>
 
 /* Optional constructor routine */
 AG_Dummy *

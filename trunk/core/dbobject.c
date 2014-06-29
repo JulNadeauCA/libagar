@@ -27,9 +27,7 @@
  * Database-bound object class.
  */
 
-#include <config/have_db4.h>
-
-#include <core/core.h>
+#include <agar/core/core.h>
 
 /* Create a new database-bound object. */
 AG_DbObject *

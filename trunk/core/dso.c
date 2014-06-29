@@ -27,15 +27,15 @@
  * Cross-platform interface to dynamic linking loader.
  */
  
-#include <config/have_dlopen.h>
-#include <config/have_dyld.h>
-#include <config/have_dyld_return_on_error.h>
-#include <config/have_shl_load.h>
-#include <config/have_dlfcn_h.h>
-#include <config/have_dl_h.h>
-#include <config/have_mach_o_dyld_h.h>
+#include <agar/config/have_dlopen.h>
+#include <agar/config/have_dyld.h>
+#include <agar/config/have_dyld_return_on_error.h>
+#include <agar/config/have_shl_load.h>
+#include <agar/config/have_dlfcn_h.h>
+#include <agar/config/have_dl_h.h>
+#include <agar/config/have_mach_o_dyld_h.h>
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #if defined(BEOS)
 # include <kernel/image.h>
@@ -45,14 +45,14 @@
 #elif defined(OS390)
 # include <dll.h>
 #elif defined(_WIN32)
-# include <core/queue_close.h>			/* Conflicts */
+# include <agar/core/queue_close.h>			/* Conflicts */
 #ifdef _XBOX
 # include <xtl.h>
 #else
 # include <windows.h>
 #endif
-# include <core/queue_close.h>
-# include <core/queue.h>
+# include <agar/core/queue_close.h>
+# include <agar/core/queue.h>
 #else
 # include <string.h>
 # include <errno.h>

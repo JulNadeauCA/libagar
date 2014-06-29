@@ -23,15 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
-
-#include <config/have_opengl.h>
+#include <agar/core/core.h>
+#include <agar/config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include "glview.h"
-#include "window.h"
-#include "primitive.h"
-#include "opengl.h"
+#include <agar/gui/glview.h>
+#include <agar/gui/window.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/opengl.h>
 
 #include <stdarg.h>
 

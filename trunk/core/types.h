@@ -23,6 +23,8 @@
 # include <agar/config/have_64bit.h>
 # define _AGAR_HAVE_64BIT_H_
 # ifdef HAVE_64BIT
+#  include <agar/config/have_int64_t.h>
+#  include <agar/config/have___int64.h>
 #  define AG_HAVE_64BIT
 # endif
 #endif
@@ -108,11 +110,19 @@
 # endif
 # ifdef AG_HAVE_64BIT
 #  ifndef Sint64
-#   define Sint64 int64_t
+#   if defined(HAVE_INT64_T)
+#    define Sint64 int64_t
+#   elif defined(HAVE___INT64)
+#    define Sint64 __int64
+#   endif
 #   define _AGAR_CORE_DEFINED_SINT64
 #  endif
 #  ifndef Uint64
-#   define Uint64 u_int64_t
+#   if defined(HAVE_INT64_T)
+#    define Uint64 u_int64_t
+#   elif defined(HAVE___INT64)
+#    define Uint64 __int64
+#   endif
 #   define _AGAR_CORE_DEFINED_UINT64
 #  endif
 # else /* !AG_HAVE_64BIT */

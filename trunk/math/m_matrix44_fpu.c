@@ -3,8 +3,8 @@
  * Operations on 4x4 matrices (FPU version).
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 const M_MatrixOps44 mMatOps44_FPU = {
 	"scalar",

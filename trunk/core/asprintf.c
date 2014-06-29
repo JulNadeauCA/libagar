@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_asprintf.h>
-#include <config/_mk_have_sys_types_h.h>
+#include <agar/config/have_asprintf.h>
+#include <agar/config/_mk_have_sys_types_h.h>
 
 #if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
@@ -36,7 +36,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "core.h"
+#include <agar/core/core.h>
 
 #ifndef HAVE_ASPRINTF
 

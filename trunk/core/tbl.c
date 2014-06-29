@@ -27,7 +27,7 @@
  * Implementation of a generic hash table of AG_Variable(3) items.
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 /* Allocate and initialize a table. */
 AG_Tbl *

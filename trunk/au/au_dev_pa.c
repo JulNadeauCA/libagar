@@ -27,10 +27,9 @@
  * PortAudio output driver.
  */
 
-#include <core/core.h>
-
-#include "au_init.h"
-#include "au_dev_out.h"
+#include <agar/core/core.h>
+#include <agar/au/au_init.h>
+#include <agar/au/au_dev_out.h>
 
 #include <portaudio2/portaudio.h>
 

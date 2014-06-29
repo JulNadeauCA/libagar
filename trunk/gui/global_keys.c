@@ -27,9 +27,8 @@
  * Application-wide hotkey bindings.
  */
 
-#include <core/core.h>
-
-#include "widget.h"
+#include <agar/core/core.h>
+#include <agar/gui/widget.h>
 
 struct ag_global_key {
 	AG_KeySym keysym;

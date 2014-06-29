@@ -4,7 +4,7 @@
  * LEGACY Interface to AG_Variable(3).
  */
 
-#include <core/core.h>
+#include <agar/core/core.h>
 
 #ifdef AG_LEGACY
 

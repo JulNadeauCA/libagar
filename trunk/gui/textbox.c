@@ -35,15 +35,13 @@
  *  - Layout padding.
  */
 
-#include <core/core.h>
-
-#include "ttf.h"
-#include "textbox.h"
-
-#include "text.h"
-#include "keymap.h"
-#include "primitive.h"
-#include "window.h"
+#include <agar/core/core.h>
+#include <agar/gui/ttf.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/text.h>
+#include <agar/gui/keymap.h>
+#include <agar/gui/primitive.h>
+#include <agar/gui/window.h>
 
 #include <string.h>
 #include <stdarg.h>

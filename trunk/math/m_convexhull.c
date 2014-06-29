@@ -26,8 +26,8 @@
  * Compute the convex hull of a set of points.
  */
 
-#include <core/core.h>
-#include "m.h"
+#include <agar/core/core.h>
+#include <agar/math/m.h>
 
 M_PointSet2
 M_ConvexHull2(M_PointSet2 *P)

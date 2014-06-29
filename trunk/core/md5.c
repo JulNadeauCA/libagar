@@ -28,8 +28,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "core.h"
-#include "md5.h"
+#include <agar/core/core.h>
+#include <agar/core/md5.h>
 
 #include <string.h>
 
