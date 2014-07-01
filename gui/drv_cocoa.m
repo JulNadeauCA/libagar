@@ -28,14 +28,14 @@
  * Cocoa window is created for each Agar window).
  */
 
-#include <core/core.h>
-#include <core/config.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
 
-#include "gui.h"
-#include "window.h"
-#include "gui_math.h"
-#include "text.h"
-#include "cursors.h"
+#include <agar/gui/gui.h>
+#include <agar/gui/window.h>
+#include <agar/gui/gui_math.h>
+#include <agar/gui/text.h>
+#include <agar/gui/cursors.h>
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <Cocoa/Cocoa.h>
@@ -44,8 +44,8 @@
 #include <OpenGL/CGLRenderers.h>
 #include <OpenGL/gl.h>
 
-#include "drv_gl_common.h"
-#include "drv_cocoa_keymap.h"
+#include <agar/gui/drv_gl_common.h>
+#include <agar/gui/drv_cocoa_keymap.h>
 
 static int nDrivers = 0;		/* Drivers open */
 static AG_DriverEventQ cocEventQ;	/* Private event queue */
