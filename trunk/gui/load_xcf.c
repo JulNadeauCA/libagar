@@ -29,7 +29,6 @@
  * TODO Add support for Gimp 2.x XCF images.
  */
 
-#include <agar/config/have_ieee754.h>
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
@@ -86,11 +85,9 @@ struct xcf_prop {
 			Sint32 x, y;		/* Layer offset in image */
 		} offset;
 		Uint8 color[3];			/* RGB triplet for color */
-#if defined(HAVE_IEEE754)
 		struct {
 			float x, y;		/* Resolution */
 		} resolution;
-#endif
 	} data;
 };
 
@@ -211,12 +208,10 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 			prop->data.guide.orientation = AG_ReadSint8(buf);
 		}
 		break;
-#if defined(HAVE_IEEE754)
 	case PROP_RESOLUTION:				 /* Image resolution */
 		prop->data.resolution.x = AG_ReadFloat(buf);
 		prop->data.resolution.y = AG_ReadFloat(buf);
 		break;
-#endif
 	case PROP_TATTOO:					/* Tattoo */
 		prop->data.tattoo_state = AG_ReadUint32(buf);
 		break;
