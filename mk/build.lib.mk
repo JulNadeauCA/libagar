@@ -68,7 +68,7 @@ LTCONFIG_DEPS?=	${LTBASE}/config.guess \
 LTCONFIG_LOG?=	${LTBASE}/config.log
 LIBTOOLFLAGS?=
 LIBTOOLOPTS?=		--quiet
-LIBTOOLOPTS_SHARED?=	-no-undefined -Wl,--no-undefined -XCClinker -static-libgcc
+LIBTOOLOPTS_SHARED?=
 LIBTOOLOPTS_STATIC?=
 
 # Compat (DATADIR was formerly called SHAREDIR)

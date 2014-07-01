@@ -837,8 +837,8 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 	TEST_CFLAGS=""
 fi
 if [ "${HAVE_CC}" = "yes" ]; then
-$ECHO_N "checking for compiler warning options..."
-$ECHO_N "checking for compiler warning options..." >> config.log
+$ECHO_N "cc: checking for compiler warning options..."
+$ECHO_N "cc: checking for compiler warning options..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
@@ -869,44 +869,8 @@ rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
-$ECHO_N "checking for IEEE754 floating point..."
-$ECHO_N "checking for IEEE754 floating point..." >> config.log
-MK_COMPILE_STATUS="OK"
-cat << EOT > conftest.c
-int
-main(int argc, char *argv[])
-{
-	float f = 1.5;
-	double d = 2.5;
-
-	return (f == 1.0 || d == 1.0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	MK_COMPILE_STATUS="FAIL($?)"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_IEEE754="yes"
-echo "#ifndef HAVE_IEEE754" > $BLD/include/agar/config/have_ieee754.h
-echo "#define HAVE_IEEE754 \"$HAVE_IEEE754\"" >> $BLD/include/agar/config/have_ieee754.h
-echo "#endif" >> $BLD/include/agar/config/have_ieee754.h
-echo "hdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_IEEE754="no"
-echo "#undef HAVE_IEEE754" >$BLD/include/agar/config/have_ieee754.h
-echo "hdefs[\"HAVE_IEEE754\"] = nil" >>configure.lua
-fi;
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for long double..."
-$ECHO_N "checking for long double..." >> config.log
+$ECHO_N "cc: checking for long double..."
+$ECHO_N "cc: checking for long double..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 int
@@ -940,8 +904,8 @@ echo "#undef HAVE_LONG_DOUBLE" >$BLD/include/agar/config/have_long_double.h
 echo "hdefs[\"HAVE_LONG_DOUBLE\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for long long..."
-$ECHO_N "checking for long long..." >> config.log
+$ECHO_N "cc: checking for long long..."
+$ECHO_N "cc: checking for long long..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 int
@@ -976,8 +940,8 @@ echo "#undef HAVE_LONG_LONG" >$BLD/include/agar/config/have_long_long.h
 echo "hdefs[\"HAVE_LONG_LONG\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for cygwin environment..."
-$ECHO_N "checking for cygwin environment..." >> config.log
+$ECHO_N "cc: checking for cygwin environment..."
+$ECHO_N "cc: checking for cygwin environment..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 #include <sys/types.h>
@@ -1016,6 +980,150 @@ echo "#undef HAVE_CYGWIN" >$BLD/include/agar/config/have_cygwin.h
 echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest
+$ECHO_N "cc: checking for -mwindows option..."
+$ECHO_N "cc: checking for -mwindows option..." >> config.log
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+#include <windows.h>
+int
+main(int argc, char *argv[]) {
+	return GetFileAttributes("foo") ? 0 : 1;
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -mwindows -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CC_MWINDOWS="yes"
+echo "#ifndef HAVE_CC_MWINDOWS" > $BLD/include/agar/config/have_cc_mwindows.h
+echo "#define HAVE_CC_MWINDOWS \"$HAVE_CC_MWINDOWS\"" >> $BLD/include/agar/config/have_cc_mwindows.h
+echo "#endif" >> $BLD/include/agar/config/have_cc_mwindows.h
+echo "hdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CC_MWINDOWS="no"
+echo "#undef HAVE_CC_MWINDOWS" >$BLD/include/agar/config/have_cc_mwindows.h
+echo "hdefs[\"HAVE_CC_MWINDOWS\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest
+if [ "${HAVE_CC_MWINDOWS}" = "yes" ]; then
+PROG_GUI_FLAGS="-mwindows"
+else
+PROG_GUI_FLAGS=""
+fi;
+$ECHO_N "cc: checking for -mconsole option..."
+$ECHO_N "cc: checking for -mconsole option..." >> config.log
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+#include <windows.h>
+int
+main(int argc, char *argv[]) {
+	return GetFileAttributes("foo") ? 0 : 1;
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -mconsole -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CC_MCONSOLE="yes"
+echo "#ifndef HAVE_CC_MCONSOLE" > $BLD/include/agar/config/have_cc_mconsole.h
+echo "#define HAVE_CC_MCONSOLE \"$HAVE_CC_MCONSOLE\"" >> $BLD/include/agar/config/have_cc_mconsole.h
+echo "#endif" >> $BLD/include/agar/config/have_cc_mconsole.h
+echo "hdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CC_MCONSOLE="no"
+echo "#undef HAVE_CC_MCONSOLE" >$BLD/include/agar/config/have_cc_mconsole.h
+echo "hdefs[\"HAVE_CC_MCONSOLE\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest
+if [ "${HAVE_CC_MCONSOLE}" = "yes" ]; then
+PROG_CLI_FLAGS="-mconsole"
+else
+PROG_CLI_FLAGS=""
+fi;
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+$ECHO_N "cc: checking for linker -no-undefined option..."
+$ECHO_N "cc: checking for linker -no-undefined option..." >> config.log
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wl,--no-undefined -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_LD_NO_UNDEFINED="yes"
+echo "#ifndef HAVE_LD_NO_UNDEFINED" > $BLD/include/agar/config/have_ld_no_undefined.h
+echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >> $BLD/include/agar/config/have_ld_no_undefined.h
+echo "#endif" >> $BLD/include/agar/config/have_ld_no_undefined.h
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_LD_NO_UNDEFINED="no"
+echo "#undef HAVE_LD_NO_UNDEFINED" >$BLD/include/agar/config/have_ld_no_undefined.h
+echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest
+if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
+fi;
+$ECHO_N "cc: checking for linker -static-libgcc option..."
+$ECHO_N "cc: checking for linker -static-libgcc option..." >> config.log
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -static-libgcc -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_LD_STATIC_LIBGCC="yes"
+echo "#ifndef HAVE_LD_STATIC_LIBGCC" > $BLD/include/agar/config/have_ld_static_libgcc.h
+echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >> $BLD/include/agar/config/have_ld_static_libgcc.h
+echo "#endif" >> $BLD/include/agar/config/have_ld_static_libgcc.h
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_LD_STATIC_LIBGCC="no"
+echo "#undef HAVE_LD_STATIC_LIBGCC" >$BLD/include/agar/config/have_ld_static_libgcc.h
+echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest
+if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
+fi;
+;;
+esac
 fi;
 if [ "${HAVE_CC}" != "yes" ]; then
 echo "* "
@@ -1516,8 +1624,8 @@ echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 	TEST_OBJCFLAGS=""
 fi
 if [ "${HAVE_OBJC}" = "yes" ]; then
-$ECHO_N "checking for compiler warning options..."
-$ECHO_N "checking for compiler warning options..." >> config.log
+$ECHO_N "objc: checking for compiler warning options..."
+$ECHO_N "objc: checking for compiler warning options..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.m
 int main(int argc, char *argv[]) { return (0); }
@@ -1547,20 +1655,6 @@ fi;
 rm -f conftest.m $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_OBJC_WARNINGS}" = "yes" ]; then
 TEST_OBJCFLAGS="-Wall -Werror"
-fi;
-$ECHO_N "checking for libtool --tag=OBJC retardation..."
-$ECHO_N "checking for libtool --tag=OBJC retardation..." >> config.log
-cat << EOT > conftest.m
-int main(int argc, char *argv[]) { return (0); }
-EOT
-$LIBTOOL --quiet --mode=compile --tag=OBJC $OBJC $CFLAGS $OBJCFLAGS $TEST_OBJCFLAGS -o $testdir/conftest.o conftest.m 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-LIBTOOLOPTS_OBJC="--tag=OBJC"
-else
-echo "no"
-echo "no" >> config.log
 fi;
 rm -f conftest.m $testdir/conftest$EXECSUFFIX
 fi;
@@ -9375,14 +9469,14 @@ echo "UIM_CFLAGS=$UIM_CFLAGS" >>Makefile.config
 echo "mdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
+echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
 echo "SSE_CFLAGS=$SSE_CFLAGS" >>Makefile.config
 echo "mdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
 echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
 echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
 echo "mdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
-echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
-echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
 echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
 echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
@@ -9399,8 +9493,6 @@ echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
 echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
 echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
 echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
-echo "LIBTOOLOPTS_OBJC=$LIBTOOLOPTS_OBJC" >>Makefile.config
-echo "mdefs[\"LIBTOOLOPTS_OBJC\"] = \"$LIBTOOLOPTS_OBJC\"" >>configure.lua
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 echo "ICONV_CFLAGS=$ICONV_CFLAGS" >>Makefile.config
@@ -9471,6 +9563,8 @@ echo "HAVE_X11=$HAVE_X11" >>Makefile.config
 echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
+echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
+echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
@@ -9479,6 +9573,8 @@ echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
 echo "mdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "LIBTOOLOPTS_SHARED=$LIBTOOLOPTS_SHARED" >>Makefile.config
+echo "mdefs[\"LIBTOOLOPTS_SHARED\"] = \"$LIBTOOLOPTS_SHARED\"" >>configure.lua
 echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
 echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
@@ -9505,6 +9601,10 @@ echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefi
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
 echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
+echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
+echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
+echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
 echo "HAVE_INT64_T=$HAVE_INT64_T" >>Makefile.config
 echo "mdefs[\"HAVE_INT64_T\"] = \"$HAVE_INT64_T\"" >>configure.lua
 echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
@@ -9517,16 +9617,18 @@ echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
 echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
-echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 echo "RELEASE=$RELEASE" >>Makefile.config
 echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
 echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
 echo "HAVE_XKB=$HAVE_XKB" >>Makefile.config
 echo "mdefs[\"HAVE_XKB\"] = \"$HAVE_XKB\"" >>configure.lua
 echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
+echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config
+echo "mdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
 echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
 echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
 echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
@@ -9585,6 +9687,8 @@ echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
 echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
+echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
+echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
 echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config

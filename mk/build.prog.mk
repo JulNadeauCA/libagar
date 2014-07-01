@@ -50,6 +50,8 @@ YFLAGS?=	-d
 PROG_INSTALL?=	Yes
 PROG_TYPE?=	"CLI"
 PROG_GUID?=
+PROG_GUI_FLAGS?=
+PROG_CLI_FLAGS?=
 
 # Compat (DATADIR was formerly called SHAREDIR)
 SHARE?=none
@@ -109,7 +111,7 @@ depend: depend-subdir
 # Compile a Lex lexer into an object file
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
 	@rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
@@ -125,7 +127,7 @@ depend: depend-subdir
 # Compile a Yacc parser into an object file
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ $@.tab.c ${LIBS}
 	@rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
@@ -183,6 +185,11 @@ _prog_pobjs:
 # Compile and link the program
 ${PROG}: _prog_objs ${OBJS}
 	@if [ "${PROG}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${PROG_TYPE}" = "GUI" ]; then \
+	    	export _prog_ldflags="${PROG_GUI_FLAGS}"; \
+	    else \
+	    	export _prog_ldflags="${PROG_CLI_FLAGS}"; \
+	    fi; \
 	    if [ "${OBJS}" = "none" ]; then \
 	        export _objs=""; \
                 for F in ${SRCS}; do \
@@ -193,23 +200,27 @@ ${PROG}: _prog_objs ${OBJS}
 	    	    _objs="$$_objs $$F"; \
                 done; \
 		if [ "${WINRES}" != "" ]; then \
-	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS} \
-		        ${WINRES}.o"; \
-	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS} \
-		        ${WINRES}.o; \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} $$_objs ${LIBS} ${WINRES}.o"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} $$_objs ${LIBS} ${WINRES}.o; \
 		else \
-	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}"; \
-	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}; \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} $$_objs ${LIBS}"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} $$_objs ${LIBS}; \
 		fi; \
 	    else \
 		if [ "${WINRES}" != "" ]; then \
-	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS} \
-		        ${WINRES}.o"; \
-	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS} \
-		        ${WINRES}.o; \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} ${OBJS} ${LIBS} ${WINRES}.o"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} ${OBJS} ${LIBS} ${WINRES}.o; \
 		else \
-	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}"; \
-	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}; \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags \
+		        -o ${PROG} ${OBJS} ${LIBS}"; \
+	            ${CC} ${CFLAGS} $$_prog_ldflags ${LDFLAGS} \
+		        -o ${PROG} ${OBJS} ${LIBS}; \
 		fi; \
 	    fi; \
 	fi
@@ -217,6 +228,11 @@ ${PROG}: _prog_objs ${OBJS}
 # Compile and link a profiled version of the program
 ${GMONOUT}: _prog_pobjs ${POBJS}
 	@if [ "${GMONOUT}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${PROG_TYPE}" = "GUI" ]; then \
+	    	export _prog_ldflags="${PROG_GUI_FLAGS}"; \
+	    else \
+	    	export _prog_ldflags="${PROG_CLI_FLAGS}"; \
+	    fi; \
 	    if [ "${POBJS}" = "none" ]; then \
 	        export _pobjs=""; \
                 for F in ${SRCS}; do \
@@ -226,13 +242,15 @@ ${GMONOUT}: _prog_pobjs ${POBJS}
 	    	    F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	    	    _pobjs="$$_pobjs $$F"; \
                 done; \
-	        echo "${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} $$_pobjs \
-		    ${LIBS}"; \
-	        ${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} $$_pobjs ${LIBS}; \
+	        echo "${CC} -pg -DPROF ${LDFLAGS} $$_prog_ldflags \
+		    -o ${GMONOUT} $$_pobjs ${LIBS}"; \
+	        ${CC} -pg -DPROF ${LDFLAGS} $$_prog_ldflags \
+		    -o ${GMONOUT} $$_pobjs ${LIBS}; \
 	    else \
-	        echo "${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} ${POBJS} \
-		    ${LIBS}"; \
-	        ${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} ${POBJS} ${LIBS}; \
+	        echo "${CC} -pg -DPROF $$_prog_ldflags ${LDFLAGS} \
+		    -o ${GMONOUT} ${POBJS} ${LIBS}"; \
+	        ${CC} -pg -DPROF ${LDFLAGS} $$_prog_ldflags \
+		    -o ${GMONOUT} ${POBJS} ${LIBS}; \
 	    fi; \
 	fi
 
