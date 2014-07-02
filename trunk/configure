@@ -3629,6 +3629,23 @@ MK_EXEC_FOUND="No"
 
 if [ "${prefix_sdl}" != "" ]; then
 	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
+		SDL_PREFIX=`${prefix_sdl}/bin/sdl-config --prefix`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	SDL_PREFIX=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl-config" ]; then
+			SDL_PREFIX=`${path}/sdl-config --prefix`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+fi
+MK_EXEC_FOUND="No"
+
+if [ "${prefix_sdl}" != "" ]; then
+	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
 		SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
 		MK_EXEC_FOUND="Yes"
 	fi
@@ -3694,6 +3711,19 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${SDL_VERSION}" != "" ]; then
 MK_EXEC_FOUND="No"
+SDL_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl-config" ]; then
+		SDL_PREFIX=`${path}/sdl-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
+fi
+MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -e "${path}/sdl-config" ]; then
@@ -3743,6 +3773,19 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${SDL_VERSION}" != "" ]; then
 MK_EXEC_FOUND="No"
+SDL_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl11-config" ]; then
+		SDL_PREFIX=`${path}/sdl11-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
+fi
+MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -e "${path}/sdl11-config" ]; then
@@ -3769,6 +3812,19 @@ if [ "${cache}" != "" ]; then
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
 fi
 else
+MK_EXEC_FOUND="No"
+SDL_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl-config" ]; then
+		SDL_PREFIX=`${path}/sdl-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
+fi
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -3811,6 +3867,19 @@ fi
 fi;
 ;;
 *)
+MK_EXEC_FOUND="No"
+SDL_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl-config" ]; then
+		SDL_PREFIX=`${path}/sdl-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
+fi
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -3951,6 +4020,16 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_SDL}" = "yes" ]; then
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+if [ -e  "${SDL_PREFIX}/include/SDL" ]; then
+SDL_CFLAGS="-I${SDL_PREFIX}/include/SDL -D_GNU_SOURCE=1"
+fi;
+if [ -e  "${SDL_PREFIX}/lib/libSDL.dll.a" ]; then
+SDL_LIBS="-L${SDL_PREFIX}/lib -lSDL.dll"
+fi;
+;;
+esac
 echo "#ifndef SDL_CFLAGS" > $BLD/include/agar/config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> $BLD/include/agar/config/sdl_cflags.h
 echo "#endif" >> $BLD/include/agar/config/sdl_cflags.h
@@ -5435,10 +5514,6 @@ $ECHO_N "checking whether libjpeg works..."
 $ECHO_N "checking whether libjpeg works..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
-#ifdef _WIN32
-#error "libjpeg conflicts with windows.h"
-#endif
-
 #include <stdio.h>
 #include <jpeglib.h>
 
