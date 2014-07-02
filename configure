@@ -469,12 +469,12 @@ echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
 
-echo -n "./configure" >> config.log
-echo -n "./configure" >> config.status
+$ECHO_N "./configure" >> config.log
+$ECHO_N "./configure" >> config.status
 for arg
 do
-	echo -n " $arg" >> config.log
-	echo -n " $arg" >> config.status
+	$ECHO_N " $arg" >> config.log
+	$ECHO_N " $arg" >> config.status
 done
 echo "" >> config.log
 echo "" >> config.status
@@ -3622,8 +3622,8 @@ echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
 SUBDIR_gui="gui"
 	if [ "${with_sdl}" != "no" ]
  then
-$ECHO_N "checking for SDL (http://www.libsdl.org)..."
-$ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
+$ECHO_N "checking for SDL..."
+$ECHO_N "checking for SDL..." >> config.log
 if [ "${prefix_sdl}" != "" ]; then
 MK_EXEC_FOUND="No"
 
@@ -4133,8 +4133,8 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 	fi
 	if [ "${with_gl}" != "no" ]
  then
-$ECHO_N "checking for OpenGL (http://www.opengl.org)..."
-$ECHO_N "checking for OpenGL (http://www.opengl.org)..." >> config.log
+$ECHO_N "checking for OpenGL..."
+$ECHO_N "checking for OpenGL..." >> config.log
 GL_CFLAGS=""
 GL_LIBS=""
 GL_FOUND=""
@@ -5094,8 +5094,8 @@ echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
 	
 	if [ "${with_freetype}" != "no" ]
  then
-$ECHO_N "checking for FreeType (http://www.freetype.org)..."
-$ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
+$ECHO_N "checking for FreeType..."
+$ECHO_N "checking for FreeType..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_freetype}" != "" ]; then
@@ -5286,8 +5286,8 @@ echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 	
 	if [ "${with_fontconfig}" != "no" ]
  then
-$ECHO_N "checking for fontconfig (http://fontconfig.org/)..."
-$ECHO_N "checking for fontconfig (http://fontconfig.org/)..." >> config.log
+$ECHO_N "checking for fontconfig..."
+$ECHO_N "checking for fontconfig..." >> config.log
 if [ "${prefix_fontconfig}" != "" ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix fontconfig 2>/dev/null`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_fontconfig}" ]; then
@@ -5473,8 +5473,8 @@ echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
 	
 	if [ "${with_jpeg}" != "no" ]
  then
-$ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
-$ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
+$ECHO_N "checking for libjpeg..."
+$ECHO_N "checking for libjpeg..." >> config.log
 JPEG_CFLAGS=""
 if [ "${prefix_jpeg}" != "" ]; then
 if [ -e  "${prefix_jpeg}/include/jpeglib.h" ]; then
@@ -5609,8 +5609,8 @@ echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 	
 	if [ "${with_png}" != "no" ]
  then
-$ECHO_N "checking for libpng (http://www.libpng.org)..."
-$ECHO_N "checking for libpng (http://www.libpng.org)..." >> config.log
+$ECHO_N "checking for libpng..."
+$ECHO_N "checking for libpng..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_png}" != "" ]; then
@@ -6529,8 +6529,8 @@ echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
 fi
 if [ "${with_mysql}" != "no" ]
  then
-$ECHO_N "checking for MySQL (http://dev.mysql.com/)..."
-$ECHO_N "checking for MySQL (http://dev.mysql.com/)..." >> config.log
+$ECHO_N "checking for MySQL..."
+$ECHO_N "checking for MySQL..." >> config.log
 MK_EXEC_FOUND="No"
 MK_CACHED="No"
 MK_EXEC_UNIQUE="No"
@@ -7277,8 +7277,8 @@ CXXFLAGS="$CXXFLAGS -Wno-unused"
 fi
 if [ "${with_uim}" != "no" ]
  then
-$ECHO_N "checking for uim framework (http://code.google.com/p/uim/)..."
-$ECHO_N "checking for uim framework (http://code.google.com/p/uim/)..." >> config.log
+$ECHO_N "checking for uim framework..."
+$ECHO_N "checking for uim framework..." >> config.log
 if [ "${prefix_uim}" != "" ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
@@ -8507,8 +8507,8 @@ SUBDIR_dev=""
 fi
 if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]
  then
-$ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..."
-$ECHO_N "checking for libsndfile (http://www.mega-nerd.com/libsndfile/)..." >> config.log
+$ECHO_N "checking for libsndfile..."
+$ECHO_N "checking for libsndfile..." >> config.log
 if [ "${prefix_sndfile}" != "" ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix sndfile 2>/dev/null`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_sndfile}" ]; then
@@ -8682,8 +8682,8 @@ echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
 echo "#endif" >> $BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
 SUBDIR_au="au"
-$ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..."
-$ECHO_N "checking for PortAudio2 (http://www.portaudio.com/)..." >> config.log
+$ECHO_N "checking for PortAudio2..."
+$ECHO_N "checking for PortAudio2..." >> config.log
 PORTAUDIO_VERSION=""
 if [ "${PKGCONFIG}" != "" ]; then
 if [ "${prefix_portaudio}" != "" ]; then
