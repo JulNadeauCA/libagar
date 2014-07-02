@@ -434,12 +434,12 @@ echo "CROSS_COMPILING=${CROSS_COMPILING}" >> Makefile.config
 echo "SRCDIR=${SRC}" >> Makefile.config
 echo "BLDDIR=${BLD}" >> Makefile.config
 
-echo -n "./configure" >> config.log
-echo -n "./configure" >> config.status
+$ECHO_N "./configure" >> config.log
+$ECHO_N "./configure" >> config.status
 for arg
 do
-	echo -n " $arg" >> config.log
-	echo -n " $arg" >> config.status
+	$ECHO_N " $arg" >> config.log
+	$ECHO_N " $arg" >> config.status
 done
 echo "" >> config.log
 echo "" >> config.status
@@ -1056,8 +1056,8 @@ echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
-$ECHO_N "checking for Agar (http://libagar.org/)..."
-$ECHO_N "checking for Agar (http://libagar.org/)..." >> config.log
+$ECHO_N "checking for Agar..."
+$ECHO_N "checking for Agar..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_agar}" != "" ]; then
@@ -1227,6 +1227,8 @@ echo "* "
 echo "* " >> config.log
 echo "* This software requires agar installed on your system."
 echo "* This software requires agar installed on your system." >> config.log
+echo "* It is available from: http://libagar.org"
+echo "* It is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
@@ -1239,13 +1241,15 @@ echo "* This software requires agar version >= 1.5.0,"
 echo "* This software requires agar version >= 1.5.0," >> config.log
 echo "* please upgrade and try again."
 echo "* please upgrade and try again." >> config.log
+echo "* agar is available from: http://libagar.org"
+echo "* agar is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
-$ECHO_N "checking for agar-dev (http://libagar.org/)..."
-$ECHO_N "checking for agar-dev (http://libagar.org/)..." >> config.log
+$ECHO_N "checking for Agar-DEV..."
+$ECHO_N "checking for Agar-DEV..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_agar}" != "" ]; then
@@ -1452,6 +1456,8 @@ echo "* "
 echo "* " >> config.log
 echo "* This software requires agar-dev installed on your system."
 echo "* This software requires agar-dev installed on your system." >> config.log
+echo "* It is available from: http://libagar.org"
+echo "* It is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
@@ -1464,13 +1470,15 @@ echo "* This software requires agar-dev version >= 1.5.0,"
 echo "* This software requires agar-dev version >= 1.5.0," >> config.log
 echo "* please upgrade and try again."
 echo "* please upgrade and try again." >> config.log
+echo "* agar-dev is available from: http://libagar.org"
+echo "* agar-dev is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
-$ECHO_N "checking for Agar-Math library (http://libagar.org/)..."
-$ECHO_N "checking for Agar-Math library (http://libagar.org/)..." >> config.log
+$ECHO_N "checking for Agar-Math..."
+$ECHO_N "checking for Agar-Math..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_agar}" != "" ]; then
@@ -1675,6 +1683,8 @@ echo "* "
 echo "* " >> config.log
 echo "* This software requires agar-math installed on your system."
 echo "* This software requires agar-math installed on your system." >> config.log
+echo "* It is available from: http://libagar.org"
+echo "* It is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
@@ -1687,13 +1697,15 @@ echo "* This software requires agar-math version >= 1.5.0,"
 echo "* This software requires agar-math version >= 1.5.0," >> config.log
 echo "* please upgrade and try again."
 echo "* please upgrade and try again." >> config.log
+echo "* agar-math is available from: http://libagar.org"
+echo "* agar-math is available from: http://libagar.org" >> config.log
 echo "* "
 echo "* " >> config.log
 echo "configure failed!"
 exit 1
 fi;
-$ECHO_N "checking for agar-vg (http://hypertriton.com/agar-vg/)..."
-$ECHO_N "checking for agar-vg (http://hypertriton.com/agar-vg/)..." >> config.log
+$ECHO_N "checking for Agar-VG..."
+$ECHO_N "checking for Agar-VG..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_agar}" != "" ]; then
@@ -1890,8 +1902,8 @@ echo "hdefs[\"AGAR_VG_CFLAGS\"] = nil" >>configure.lua
 echo "#undef AGAR_VG_LIBS" >$BLD/config/agar_vg_libs.h
 echo "hdefs[\"AGAR_VG_LIBS\"] = nil" >>configure.lua
 fi;
-$ECHO_N "checking for agar-au (http://libagar.org/)..."
-$ECHO_N "checking for agar-au (http://libagar.org/)..." >> config.log
+$ECHO_N "checking for Agar-AU..."
+$ECHO_N "checking for Agar-AU..." >> config.log
 MK_EXEC_FOUND="No"
 
 if [ "${prefix_agar}" != "" ]; then
