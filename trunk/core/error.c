@@ -181,6 +181,23 @@ AG_Debug(void *p, const char *fmt, ...)
 	
 	if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
 		va_start(args, fmt);
+# ifdef _WIN32
+		{
+			char path[AG_FILENAME_MAX];
+			FILE *f;
+
+			if (agProgName != NULL) {
+				Strlcpy(path, agProgName, sizeof(path));
+				Strlcat(path, "-debug.txt", sizeof(path));
+			} else {
+				Strlcpy(path, "debug.txt", sizeof(path));
+			}
+			if ((f = fopen(path, "a")) != NULL) {
+				vfprintf(f, fmt, args);
+				fclose(f);
+			}
+		}
+# else /* _WIN32 */
 		if (obj != NULL) {
 			if (OBJECT(obj)->name[0] != '\0') {
 				printf("%s: ", OBJECT(obj)->name);
@@ -189,6 +206,7 @@ AG_Debug(void *p, const char *fmt, ...)
 			}
 		}
 		vprintf(fmt, args);
+# endif /* !_WIN32 */
 		va_end(args);
 	}
 #endif /* AG_DEBUG */
