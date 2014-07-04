@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2014 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,17 +39,10 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface provides Agar applications control over the shape of the mouse
-cursor; usually the hardware cursor.
+interface provides Agar widgets with control over the shape of the mouse cursor.
+Specific cursors can be associated with specific rectangular areas in a widget's
+local coordinate system.
 .Sh WIDGET INTERFACE
-Agar widgets may configure alternate mouse cursors, for those platforms
-where hardware cursors are configurable.
-To prevent conflicts where multiple widgets may try to set different
-cursors,
-.Nm
-associates specific window regions with specific cursors.
-Internally, Agar will change cursors accordingly as the mouse is moved into
-those regions.
 .Pp
 .nr nS 1
 .Ft "AG_CursorArea *"
@@ -69,24 +62,29 @@ function configures a new cursor-change area described by the rectangle
 (in pixels, relative to the parent window's local coordinate system).
 When the mouse is moved within this rectangle, Agar will set the specified
 cursor
-.Fa c
-(typically obtained through
+.Fa c .
+The return value of
 .Xr AG_CursorNew 3
 or
-.Xr AG_CursorFromXPM 3 ) .
-Note that this cursor will be freed automatically when the window is
-detached (do not pass a stock cursor as the
-.Fa c
-argument).
+.Xr AG_CursorFromXPM 3
+will typically be used.
+The allocated cursor will be freed automatically by Agar when the window is
+detached.
 .Pp
-The
 .Fn AG_MapStockCursor
-variant configures a cursor-change area, associated with a stock Agar cursor.
+sets up a cursor-change area associated with a stock Agar cursor.
 See
-.Xr AG_Cursor 3
+.Dq STOCK CURSORS
 for the list of acceptable
 .Fa cursorName
 arguments.
+Since cursors are associated with window or driver-specific resources,
+.Fn AG_MapCursor
+will fail if the widget is not attached to any parent window.
+However,
+.Fn AG_MapStockCursor
+may be called by an unattached widget, and as a special case, Agar will
+defer the operation until the widget is attached to a window.
 .Pp
 .Fn AG_MapCursor
 and
@@ -151,10 +149,21 @@ creates a cursor from the contents of an XPM file.
 releases all resources allocated by a cursor.
 .Pp
 .Fn AG_GetStockCursor
-returns a pointer to a built-in cursor.
-Acceptable values for
-.Fa name
-include:
+returns a pointer to a built-in cursor (see
+.Dq STOCK CURSORS
+for a list).
+.Pp
+.Fn AG_GetActiveCursor
+returns a pointer to the currently active cursor.
+.Pp
+.Fn AG_ShowCursor
+and
+.Fn AG_HideCursor
+control the visibility of the active cursor.
+.Fn AG_CursorIsVisible
+returns 1 if the active cursor is visible, 0 otherwise.
+.Sh STOCK CURSORS
+As of this writing, Agar provides the following built-in cursors:
 .Bd -literal
 enum {
 	AG_FILL_CURSOR,
@@ -168,16 +177,6 @@ enum {
 	AG_LAST_CURSOR
 };
 .Ed
-.Pp
-.Fn AG_GetActiveCursor
-returns a pointer to the currently active cursor.
-.Pp
-.Fn AG_ShowCursor
-and
-.Fn AG_HideCursor
-control the visibility of the active cursor.
-.Fn AG_CursorIsVisible
-returns 1 if the active cursor is visible, 0 otherwise.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_CursorArea
