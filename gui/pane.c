@@ -381,6 +381,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
 	AG_SizeAlloc a1, a2;
+	AG_Rect r;
 
 	a1.x = 0;
 	a1.y = 0;
@@ -434,20 +435,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.w = a->w - pa->dx - pa->wDiv;
 		a2.h = a->h;
 
-		if (WIDGET(pa)->window != NULL &&
-		  !(WIDGET(pa)->window->flags & AG_WINDOW_NOCURSORCHG)) {
-			AG_Rect r;
-
-			r.x = pa->dx;
-			r.y = 0;
-			r.w = pa->wDiv;
-			r.h = a->h;
-			if (pa->ca == NULL) {
-				pa->ca = AG_MapStockCursor(pa, r,
-				    AG_HRESIZE_CURSOR);
-			} else {
-				pa->ca->r = r;
-			}
+		/* Set up cursor-change area */
+		r.x = pa->dx;
+		r.y = 0;
+		r.w = pa->wDiv;
+		r.h = a->h;
+		if (pa->ca == NULL) {
+			pa->ca = AG_MapStockCursor(pa, r, AG_HRESIZE_CURSOR);
+		} else {
+			pa->ca->r = r;
 		}
 		break;
 	case AG_PANE_VERT:
@@ -494,21 +490,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.y = pa->dx + pa->wDiv;
 		a2.w = a->w;
 		a2.h = a->h - pa->dx - pa->wDiv;
-		
-		if (WIDGET(pa)->window != NULL &&
-		  !(WIDGET(pa)->window->flags & AG_WINDOW_NOCURSORCHG)) {
-			AG_Rect r;
-			
-			r.x = 0;
-			r.y = pa->dx;
-			r.w = a->w;
-			r.h = pa->wDiv;
-			if (pa->ca == NULL) {
-				pa->ca = AG_MapStockCursor(pa, r,
-				    AG_VRESIZE_CURSOR);
-			} else {
-				pa->ca->r = r;
-			}
+
+		/* Set up cursor-change area */
+		r.x = 0;
+		r.y = pa->dx;
+		r.w = a->w;
+		r.h = pa->wDiv;
+		if (pa->ca == NULL) {
+			pa->ca = AG_MapStockCursor(pa, r, AG_VRESIZE_CURSOR);
+		} else {
+			pa->ca->r = r;
 		}
 		break;
 	}

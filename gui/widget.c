@@ -88,11 +88,31 @@ static void
 SetParentWindow(AG_Widget *wid, AG_Window *win)
 {
 	AG_Widget *chld;
+	AG_CursorArea *ca, *caNext;
 	
 	wid->window = win;
+
 	if (win != NULL) {
 		wid->drv = (AG_Driver *)OBJECT(win)->parent;
 		wid->drvOps = AGDRIVER_CLASS(wid->drv);
+
+		/*
+		 * Commit any previously deferred AG_MapStockCursor()
+		 * operation.
+		 */
+		for (ca = TAILQ_FIRST(&wid->cursorAreas);
+		     ca != TAILQ_END(&wid->cursorAreas);
+		     ca = caNext) {
+			caNext = TAILQ_NEXT(ca, cursorAreas);
+			if (ca->stock == -1 ||
+			    ca->stock >= wid->drv->nCursors) {
+				free(ca);
+				continue;
+			}
+			ca->c = &wid->drv->cursors[ca->stock];
+			TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+		}
+		TAILQ_INIT(&wid->cursorAreas);
 	} else {
 		wid->drv = NULL;
 		wid->drvOps = NULL;
@@ -318,6 +338,7 @@ Init(void *obj)
 #endif
 
 	TAILQ_INIT(&wid->redrawTies);
+	TAILQ_INIT(&wid->cursorAreas);
 }
 
 /* Arrange for a redraw whenever a given binding value changes. */
@@ -929,12 +950,19 @@ static void
 Destroy(void *obj)
 {
 	AG_Widget *wid = obj;
+	AG_CursorArea *ca, *caNext;
 	AG_PopupMenu *pm, *pmNext;
 	AG_RedrawTie *rt, *rtNext;
 	AG_ActionTie *at, *atNext;
 	AG_Variable *V;
 	Uint i, j;
 
+	for (ca = TAILQ_FIRST(&wid->cursorAreas);
+	     ca != TAILQ_END(&wid->cursorAreas);
+	     ca = caNext) {
+		caNext = TAILQ_NEXT(ca, cursorAreas);
+		free(ca);
+	}
 	for (pm = SLIST_FIRST(&wid->menus);
 	     pm != SLIST_END(&wid->menus);
 	     pm = pmNext) {

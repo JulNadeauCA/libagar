@@ -117,6 +117,18 @@ typedef struct ag_redraw_tie {
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
 } AG_RedrawTie;
 
+struct ag_widget;
+struct ag_cursor;
+
+/* Cursor-change area */
+typedef struct ag_cursor_area {
+	AG_Rect r;					/* Area in window */
+	struct ag_cursor *c;				/* Associated cursor */
+	struct ag_widget *wid;				/* Associated widget */
+	int stock;					/* Stock cursor? */
+	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
+} AG_CursorArea;
+
 /*
  * Palette of globally inheritable widget colors. Color schemes may be
  * configured on a per-class, per-instance or per-"id"-tag basis.
@@ -201,6 +213,8 @@ typedef struct ag_widget {
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
 	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
 	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
+	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas
+							   (not yet attached) */
 
 	/* Global inheritable style attributes */
 	AG_StyleSheet *css;				/* Alternate style sheet */

@@ -2003,21 +2003,23 @@ AG_WindowIntersect(AG_DriverSw *drv, int x, int y)
 AG_CursorArea *
 AG_MapCursor(void *obj, AG_Rect r, AG_Cursor *c)
 {
-	AG_Window *win = WIDGET(obj)->window;
+	AG_Widget *wid = obj;
+	AG_Window *win = wid->window;
 	AG_CursorArea *ca;
 
-	if (win == NULL) {
-		AG_SetError("Unattached widget");
-		return (NULL);
-	}
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
 	}
 	ca->stock = -1;
 	ca->r = r;
 	ca->c = c;
-	ca->wid = WIDGET(obj);
-	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+	ca->wid = wid;
+
+	if (win != NULL) {
+		TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+	} else {
+		TAILQ_INSERT_TAIL(&wid->cursorAreas, ca, cursorAreas);
+	}
 	return (ca);
 }
 
@@ -2025,30 +2027,32 @@ AG_MapCursor(void *obj, AG_Rect r, AG_Cursor *c)
 AG_CursorArea *
 AG_MapStockCursor(void *obj, AG_Rect r, int name)
 {
-	AG_Window *win = WIDGET(obj)->window;
-	AG_Driver *drv = WIDGET(win)->drv;
+	AG_Widget *wid = obj;
+	AG_Window *win = wid->window;
 	AG_CursorArea *ca;
 
-	if (win == NULL || drv == NULL) {
-		AG_SetError("Unattached widget");
-		return (NULL);
+	if (win != NULL) {
+		if (name < 0 || name >= WIDGET(win)->drv->nCursors) {
+			AG_SetError("No such cursor: %d", name);
+			return (NULL);
+		}
 	}
-	if (win->flags & AG_WINDOW_NOCURSORCHG) {
-		AG_SetError("Cursor changes not allowed");
-		return (NULL);
-	}
-	if (name < 0 || name >= drv->nCursors) {
-		AG_SetError("No such cursor: %d", name);
-		return (NULL);
-	}
+
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
 		return (NULL);
 	}
 	ca->stock = name;
 	ca->r = r;
 	ca->wid = WIDGET(obj);
-	ca->c = &drv->cursors[name];
-	TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+
+	if (win != NULL) {
+		ca->c = &WIDGET(win)->drv->cursors[name];
+		TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+	} else {
+		/* Will map cursor when widget is later attached. */
+		ca->c = NULL;
+		TAILQ_INSERT_TAIL(&wid->cursorAreas, ca, cursorAreas);
+	}
 	return (ca);
 }
 
@@ -2059,20 +2063,24 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 void
 AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 {
-	AG_Window *win = WIDGET(obj)->window;
-	AG_Driver *drv = WIDGET(win)->drv;
+	AG_Widget *wid = obj;
+	AG_Window *win = wid->window;
 
 	if (win == NULL) {
-		return;
-	}
-	if (ca->c == drv->activeCursor) {
-		if (ca->stock == -1) {
-			/* XXX TODO it would be safer to defer this operation */
-			AGDRIVER_CLASS(drv)->unsetCursor(drv);
-			AG_CursorFree(drv, ca->c);
+		TAILQ_REMOVE(&wid->cursorAreas, ca, cursorAreas);
+		free(ca);
+	} else {
+		AG_Driver *drv = WIDGET(win)->drv;
+
+		if (ca->c == drv->activeCursor) {
+			if (ca->stock == -1) {
+				/* XXX TODO it would be safer to defer this operation */
+				AGDRIVER_CLASS(drv)->unsetCursor(drv);
+				AG_CursorFree(drv, ca->c);
+			}
+			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+			free(ca);
 		}
-		TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
-		Free(ca);
 	}
 }
 
@@ -2104,7 +2112,7 @@ scan:
 				AG_CursorFree(drv, ca->c);
 			}
 			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
-			Free(ca);
+			free(ca);
 			goto scan;
 		}
 	}

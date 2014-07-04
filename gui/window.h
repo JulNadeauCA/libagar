@@ -32,15 +32,6 @@ enum ag_window_close_action {
 	AG_WINDOW_IGNORE
 };
 
-/* Cursor-change area */
-typedef struct ag_cursor_area {
-	AG_Rect r;					/* Area in window */
-	struct ag_cursor *c;				/* Associated cursor */
-	struct ag_widget *wid;				/* Associated widget */
-	int stock;					/* Stock Agar cursor? */
-	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
-} AG_CursorArea;
-
 /*
  * Window function (used by the underlying window manager to set decoration,
  * stacking position and other window behavior settings). Maps to EWMH types.
