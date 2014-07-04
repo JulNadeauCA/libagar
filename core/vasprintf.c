@@ -26,15 +26,13 @@
 #include <agar/config/have_vasprintf.h>
 #include <agar/config/_mk_have_sys_types_h.h>
 
-#if defined(__linux__) && !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
-#endif
 #if (defined(__APPLE__) && !defined(_DARWIN_C_SOURCE))
 #define _DARWIN_C_SOURCE
 #endif
 #ifdef __NetBSD__
 #define _NETBSD_SOURCE
 #endif
+#define _GNU_SOURCE
 
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>

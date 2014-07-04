@@ -214,7 +214,7 @@ GenerateObjectPath(void *obj, char *path, size_t path_len)
 	
 	if (name_len+cur_len+1 > path_len) {
 		AG_SetError("Path buffer is %lu bytes (required = %lu)",
-		    path_len, name_len+cur_len+1);
+		    (Ulong)path_len, (Ulong)(name_len+cur_len+1));
 		AG_ObjectUnlock(ob);
 		return (-1);
 	}
