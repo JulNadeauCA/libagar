@@ -27,9 +27,14 @@
  * Compatibility interface for getopt(3).
  */
 
+#include <agar/config/have_getopt.h>
+
+#ifdef HAVE_GETOPT
+#include <getopt.h>
+#endif
+
 #include <agar/core/core.h>
 #include <agar/core/getopt.h>
-#include <agar/config/have_getopt.h>
 
 int
 AG_Getopt(int argc, char * const argv[], const char *optstring, char **oa,
