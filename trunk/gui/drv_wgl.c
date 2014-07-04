@@ -39,6 +39,9 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
+/* Print out events in WndProc */
+/* #define DEBUG_WGL */
+
 static int  nDrivers = 0;			/* Drivers open */
 static int  wndClassCount = 1;			/* Window class counter */
 static AG_DriverEventQ wglEventQ;		/* Event queue */
@@ -46,7 +49,6 @@ static AG_DriverEventQ wglEventQ;		/* Event queue */
 static AG_Mutex wglClassLock;			/* Lock on wndClassCount */
 static AG_Mutex wglEventLock;			/* Lock on wglEventQ */
 #endif
-static int  agExitWGL = 0;			/* Exit event loop */
 static HKL wglKbdLayout = NULL;			/* Keyboard layout */
 static AG_EventSink *wglEventSpinner = NULL;	/* Standard event sink */
 static AG_EventSink *wglEventEpilogue = NULL;	/* Standard event epilogue */
@@ -59,13 +61,13 @@ typedef struct ag_driver_wgl {
 	HGLRC       hglrc;		/* Rendering context */
 	WNDCLASSEX  wndclass;		/* Window class */
 	AG_GL_Context gl;		/* Common OpenGL context data */
+	LRESULT     nchittest;		/* Result of last WM_NCHITTEST */
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
 	COLORREF black;
 	COLORREF white;
 	HCURSOR  cursor;
-	int      visible;
 } AG_CursorWGL;
 
 AG_DriverMwClass agDriverWGL;
@@ -80,7 +82,7 @@ struct ag_windows_key_mapping {
 #include <agar/gui/drv_wgl_keymaps.h>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-static int       InitDefaultCursor(AG_DriverWGL *);
+static int       InitDefaultCursors(AG_DriverWGL *);
 static void      WGL_PostResizeCallback(AG_Window *, AG_SizeAlloc *);
 static int       WGL_RaiseWindow(AG_Window *);
 static int       WGL_SetInputFocus(AG_Window *);
@@ -89,6 +91,7 @@ static int       WGL_GetNextEvent(void *, AG_DriverEvent *);
 static int       WGL_ProcessEvent(void *, AG_DriverEvent *);
 static int       WGL_GetDisplaySize(Uint *, Uint *);
 static int       WGL_PendingEvents(void *drvCaller);
+static int       WGL_SetCursor(void *, AG_Cursor *);
 
 static void
 WGL_SetWindowsError(char* errorMessage, DWORD errorCode)
@@ -207,7 +210,6 @@ WGL_Close(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverEvent *dev, *devNext;
-	AG_DriverWGL *wgl = obj;
 
 #ifdef AG_DEBUG
 	if (nDrivers == 0) { AG_FatalError("Driver close without open"); }
@@ -381,7 +383,9 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		WGL_SetWindowsError("Cannot create window", GetLastError());
 		return (-1);
 	}
-	
+
+	wgl->nchittest = 0;
+
 	/* Initialize device & rendering context */
 	if (!(wgl->hdc = GetDC(wgl->hwnd))) {
 		DestroyWindow(wgl->hwnd);
@@ -431,7 +435,7 @@ WGL_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		goto fail;
 
 	/* Create the built-in cursors */
-	if (InitDefaultCursor(wgl) == -1 || AG_InitStockCursors(drv) == -1)
+	if (InitDefaultCursors(wgl) == -1 || AG_InitStockCursors(drv) == -1)
 		goto fail;
 
 	/* Update agar's idea of the actual window coordinates. */
@@ -548,6 +552,7 @@ LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	AG_Driver *drv;
+	AG_DriverWGL *wgl;
 	AG_Window *win;
 	AG_DriverEvent *dev;
 	int x, y;
@@ -562,6 +567,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	dev->win = win;
 	drv = WIDGET(win)->drv;
+	wgl = (AG_DriverWGL *)drv;
 #ifdef DEBUG_WGL
 	WGL_Print_WinMsg(win, uMsg, wParam, lParam);
 #endif
@@ -723,12 +729,29 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		dev->type = AG_DRIVER_CLOSE;
 		dev->win = win;
 		goto ret0;
+	case WM_SETCURSOR:
+		AG_MouseGetState(drv->mouse, &x, &y);
+		AG_MouseCursorUpdate(dev->win, x, y);
+		free(dev); dev = NULL;
+		break;
+	case WM_NCHITTEST:
+		{
+			LRESULT rv;
+			rv = DefWindowProc(hWnd, uMsg, wParam, lParam);
+			wgl->nchittest = rv;
+			free(dev); dev = NULL;
+			AG_UnlockVFS(&agDrivers);
+			return (rv);
+		}
+		break;
 	default:
 		Free(dev);
 		goto fallback;
 	}
 out:
-	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	if (dev != NULL) {
+		TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
+	}
 	AG_UnlockVFS(&agDrivers);
 	return (1);
 ret0:
@@ -790,8 +813,6 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		    dev->data.motion.x, dev->data.motion.y,
 		    drv->mouse->xRel, drv->mouse->yRel,
 		    drv->mouse->btnState);
-		AG_MouseCursorUpdate(dev->win,
-		     dev->data.motion.x, dev->data.motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
 		AG_ProcessMouseButtonDown(dev->win,
@@ -1074,26 +1095,32 @@ WGL_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
 
 /* Initialize the default cursor. */
 static int
-InitDefaultCursor(AG_DriverWGL *wgl)
+InitDefaultCursors(AG_DriverWGL *wgl)
 {
 	AG_Driver *drv = AGDRIVER(wgl);
-	AG_Cursor *ac;
 	struct ag_cursor_wgl *cg;
+	const int nCursors = 1;
+	int i;
 	
-	if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL)
-		return (-1);
-	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		Free(cg);
+	if ((drv->cursors = TryMalloc(nCursors*sizeof(AG_Cursor))) == NULL) {
 		return (-1);
 	}
+	for (i = 0; i < nCursors; i++) {
+		AG_Cursor *ac = &drv->cursors[i];
 
-	ac = &drv->cursors[0];
-	drv->nCursors = 1;
-	AG_CursorInit(ac);
-	cg->cursor = LoadCursor(NULL, IDC_ARROW);
-	cg->visible = 1;
-	ac->p = cg;
+		if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL) {
+			goto fail;
+		}
+		AG_CursorInit(ac);
+		cg->cursor = LoadCursor(NULL, IDC_ARROW);
+		ac->p = cg;
+	}
+	drv->nCursors = nCursors;
 	return (0);
+fail:
+	free(drv->cursors);
+	drv->cursors = NULL;
+	return (-1);
 }
 
 static int
@@ -1134,7 +1161,6 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 	/* Create cursor */
 	if ((cg->cursor = CreateCursor(GetModuleHandle(NULL), 
 	    ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask))) {
-		cg->visible = 0;
 		ac->p = cg;
 		return (0);
 	}
@@ -1162,13 +1188,8 @@ WGL_SetCursor(void *obj, AG_Cursor *ac)
 	if (drv->activeCursor == ac) {
 		return (0);
 	}
-	if (ac == &drv->cursors[0]) {
-		SetCursor(LoadCursor(NULL, IDC_ARROW));
-	} else {
-		SetCursor(cg->cursor);
-	}
+	SetCursor(cg->cursor);
 	drv->activeCursor = ac;
-	cg->visible = 1;
 	return (0);
 }
 
@@ -1176,11 +1197,16 @@ static void
 WGL_UnsetCursor(void *obj)
 {
 	AG_Driver *drv = obj;
+	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
 	
-	if (drv->activeCursor == &drv->cursors[0]) {
-		return;
+	switch (wgl->nchittest) {
+	case HTBOTTOM:		SetCursor(LoadCursor(NULL, IDC_SIZENS));	break;
+	case HTBOTTOMLEFT:	SetCursor(LoadCursor(NULL, IDC_SIZENESW));	break;
+	case HTBOTTOMRIGHT:	SetCursor(LoadCursor(NULL, IDC_SIZENWSE));	break;
+	case HTLEFT:
+	case HTRIGHT:		SetCursor(LoadCursor(NULL, IDC_SIZEWE));	break;
+	default:		SetCursor(LoadCursor(NULL, IDC_ARROW));		break;
 	}
-	SetCursor(LoadCursor(NULL, IDC_ARROW));
 	drv->activeCursor = &drv->cursors[0];
 }
 

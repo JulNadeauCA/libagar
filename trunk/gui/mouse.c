@@ -105,8 +105,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 			break;
 	}
 	if (ca == NULL) {
-		if (drv->activeCursor != &drv->cursors[0])
-			AGDRIVER_CLASS(drv)->unsetCursor(drv);
+		AGDRIVER_CLASS(drv)->unsetCursor(drv);
 	} else if (ca->c != drv->activeCursor) {
 		AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
 	}

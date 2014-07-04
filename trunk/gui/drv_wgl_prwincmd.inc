@@ -8,13 +8,13 @@
 
 #define PVAL(a) \
 	case (a) : \
-		fprintf(stderr, "%s", #a); \
+		Debug(NULL, "%s", #a); \
 		break;
 
 static void
 WGL_Print_WinMsg(AG_Window *win, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	fprintf(stderr, "win %p, ", win);
+	Debug(NULL, "win %p, ", win);
 
 	switch (uMsg) {
 	PVAL(WM_NULL);
@@ -208,10 +208,9 @@ WGL_Print_WinMsg(AG_Window *win, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	PVAL(WM_PENWINLAST);
 	PVAL(WM_USER);
 	default:
-		fprintf(stderr, "UNKNOWN 0x%04X", uMsg);
+		Debug(NULL, "UNKNOWN 0x%04X", uMsg);
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
+	Debug(NULL, "\n");
 }
 
 #undef PVAL
