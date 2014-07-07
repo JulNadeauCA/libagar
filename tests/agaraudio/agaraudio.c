@@ -21,10 +21,11 @@ static void CloseOut(AG_Event *);
 static void *
 GenSine(void *p)
 {
-#define SINEBUF 4000
-	float x, out[SINEBUF*2];
-	int i;
-	double df = 0.010;
+	const Uint nCh = 2;
+	const Uint bufSamples = 4000;
+	const Uint bufSize = bufSamples*nCh;
+	float x, buf[bufSize];
+	int i, ch;
 	double k;
 	
 	x = 0.0;
@@ -35,53 +36,33 @@ GenSine(void *p)
 			AG_MutexUnlock(&outLock);
 			break;
 		}
-		for (i = 0; i < SINEBUF*2; i++) {
-			out[i] = sin(x)/2.0;
-			x += df;
+		for (i = 0; i < bufSamples; i++) {
+			for (ch = 0; ch < nCh; ch++)
+				buf[i+ch] = sin(x)/2.0;
 		}
-		for (k = 0.0, i = 0;
-		     k < 1.0 && i < 2000;
-		     k+=0.0005, i++) {
-			out[i] = out[i]*k;
-			out[SINEBUF*2-i] = out[SINEBUF*2-i]*k;
-		}
-		if (AU_WriteFloat(auOut, out, SINEBUF)) {
+		if (AU_WriteFloat(auOut, buf, bufSamples)) {
 			AG_ConsoleMsg(cons, "Write error (AU_WriteFloat)");
 		}
 		AG_MutexUnlock(&outLock);
-		AG_Delay(200);
-		df += 0.0001;
+
 	}
 	return (NULL);
 }
 
 static void
-OpenFileOut(AG_Event *event)
+OpenOut(AG_Event *event)
 {
-	if (auOut != NULL) {
-		return;
-	}
-	if ((auOut = AU_OpenOut("file(foo.wav)", 44100, 2)) == NULL) {
-		AG_ConsoleMsg(cons, "Failed: %s", AG_GetError());
-		return;
-	}
-	AG_ConsoleMsg(cons, "Writing to foo.wav at %dHz / %dCh",
-	    auOut->rate, auOut->ch);
-	AG_ThreadCreate(&outTh, GenSine, NULL);
-}
+	char *device = AG_STRING(1);
 
-static void
-OpenAudioOut(AG_Event *event)
-{
 	if (auOut != NULL) {
-		CloseOut(NULL);
+		return;
 	}
-	if ((auOut = AU_OpenOut("pa", 44100, 2)) == NULL) {
+	if ((auOut = AU_OpenOut(device, 44100, 2)) == NULL) {
 		AG_ConsoleMsg(cons, "Failed: %s", AG_GetError());
 		return;
 	}
-	AG_ConsoleMsg(cons, "Writing to PortAudio2 at %dHz / %dCh",
-	    auOut->rate, auOut->ch);
+	AG_ConsoleMsg(cons, "Writing to %s at %dHz / %dCh",
+	    device, auOut->rate, auOut->ch);
 	AG_ThreadCreate(&outTh, GenSine, NULL);
 }
 
@@ -132,19 +113,17 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-#ifdef __APPLE__
-	AG_BindGlobalKey(AG_KEY_Q, AG_KEYMOD_META, AG_QuitGUI);
-#else
-	AG_BindGlobalKey(AG_KEY_ESCAPE, AG_KEYMOD_ANY, AG_QuitGUI);
-#endif
-	
+	AG_BindStdGlobalKeys();
 	AG_MutexInit(&outLock);
 
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_MAIN);
 	AG_WindowSetCaption(win, "Agar audio test");
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	AG_ButtonNewFn(win, 0, "Test sndfile output", OpenFileOut, NULL);
-	AG_ButtonNewFn(win, 0, "Test portaudio output ", OpenAudioOut, NULL);
+	AG_ButtonNewFn(win, 0, "Play with PortAudio",
+	    OpenOut, "%s", "pa");
+	AG_ButtonNewFn(win, 0, "Render to out.wav",
+	    OpenOut, "%s", "file(out.wav)");
+	AG_SeparatorNewHoriz(win);
 	AG_ButtonNewFn(win, 0, "Close output", CloseOut, NULL);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 200);
 	AG_WindowShow(win);
