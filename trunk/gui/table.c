@@ -1543,6 +1543,7 @@ OverColumnHeader(AG_Table *t, int y)
 	return (y <= t->hCol);
 }
 
+#if 0
 /* Cursor is over column resize control? */
 static __inline__ int
 OverColumnResizeControl(AG_Table *t, int px)
@@ -1566,6 +1567,7 @@ OverColumnResizeControl(AG_Table *t, int px)
 	}
 	return (0);
 }
+#endif
 
 /* Return the row at the given y-coordinate. */
 static __inline__ int
