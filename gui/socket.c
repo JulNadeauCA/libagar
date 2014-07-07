@@ -201,6 +201,7 @@ GetState(AG_Variable *binding, void *p)
 	return (-1);
 }
 
+#if 0
 static __inline__ int
 GetCount(AG_Variable *binding, void *p)
 {
@@ -216,6 +217,7 @@ GetCount(AG_Variable *binding, void *p)
 	}
 	return (-1);
 }
+#endif
 
 static void
 Draw(void *obj)
