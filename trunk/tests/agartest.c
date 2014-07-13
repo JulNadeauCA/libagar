@@ -451,6 +451,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
+	/* Set up the standard shortcuts + debugger and screenshot functions */
 	AG_BindStdGlobalKeys();
 #ifdef __APPLE__
 # ifdef AG_DEBUG
@@ -464,13 +465,25 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #endif
 
+	/* Append the installed agartest datadir to load-path */
+#if !defined(_WIN32)
 	if (strcmp(DATADIR, "NONE") != 0) {
 		char path[AG_PATHNAME_MAX];
 		AG_GetString(agConfig, "load-path", path, sizeof(path));
-		AG_Strlcat(path, ":", sizeof(path));
+		AG_Strlcat(path, AG_PATHSEPMULTI, sizeof(path));
 		AG_Strlcat(path, DATADIR, sizeof(path));
 		AG_SetString(agConfig, "load-path", path);
 	}
+#else
+	{
+		char path[AG_PATHNAME_MAX];
+		AG_GetString(agConfig, "load-path", path, sizeof(path));
+		AG_Strlcat(path, AG_PATHSEPMULTI, sizeof(path));
+		AG_Strlcat(path, ".", sizeof(path));
+		AG_SetString(agConfig, "load-path", path);
+	}
+#endif /* _WIN32 */
+
 /*	(void)AG_ConfigLoad(); */
 
 	if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {

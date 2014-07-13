@@ -15,6 +15,14 @@ LoadConfig(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
 
+	if (agConfig->archivePath != NULL) {
+		TestMsg(ti, "Loading from %s", agConfig->archivePath);
+	} else {
+		char path[AG_PATHNAME_MAX];
+		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
+			TestMsg(ti, "Loading from %s", path);
+	}
+
 	if (AG_ConfigLoad() == 0) {
 		TestMsg(ti, "Loaded configuration successfully");
 	} else {
@@ -26,6 +34,14 @@ static void
 SaveConfig(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
+	
+	if (agConfig->archivePath != NULL) {
+		TestMsg(ti, "Saving to %s", agConfig->archivePath);
+	} else {
+		char path[AG_PATHNAME_MAX];
+		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
+			TestMsg(ti, "Saving to %s", path);
+	}
 
 	if (AG_ConfigSave() == 0) {
 		TestMsg(ti, "Saved configuration successfully");
