@@ -90,16 +90,23 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 
 		Strlcpy(path, sysUser->home, sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
+#ifndef _WIN32
 		Strlcat(path, ".", sizeof(path));
+#endif
 		Strlcat(path, agProgName, sizeof(path));
 		AG_SetString(cfg, "save-path", path);
 
+#ifndef _WIN32
 		if (strcmp(DATADIR, "NONE") != 0) {
 			AG_PrtString(cfg, "load-path", "%s%s%s",
 			    path, AG_PATHSEPMULTI, DATADIR);
-		} else {
+		} else
+#endif
+		{
 			AG_SetString(cfg, "load-path", path);
 		}
+
+
 		AG_UserFree(sysUser);
 	} else {
 		AG_SetString(cfg, "home", "");
