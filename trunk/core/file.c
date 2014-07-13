@@ -73,7 +73,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	else {
 #endif
 
-	if ((attrs = GetFileAttributes(path)) == INVALID_FILE_ATTRIBUTES) {
+	if ((attrs = GetFileAttributesA(path)) == INVALID_FILE_ATTRIBUTES) {
 		AG_SetError(_("%s: Failed to get information"), path);
 		return (-1);
 	}
@@ -172,7 +172,7 @@ AG_GetSystemTempDir(char *buf, size_t len)
 		return (-1);
 	}
 #elif defined(_WIN32)
-	if (GetTempPath((DWORD)len, buf) == 0) {
+	if (GetTempPathA((DWORD)len, buf) == 0) {
 		AG_SetError("GetTempPath() failed");
 		return (-1);
 	}
@@ -197,7 +197,7 @@ int
 AG_FileExists(const char *path)
 {
 #ifdef _WIN32
-	if (GetFileAttributes(path) == INVALID_FILE_ATTRIBUTES) {
+	if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES) {
 		if (GetLastError() == ERROR_FILE_NOT_FOUND ||
 		    GetLastError() == ERROR_PATH_NOT_FOUND) {
 			return (0);
@@ -230,7 +230,7 @@ int
 AG_FileDelete(const char *path)
 {
 #ifdef _WIN32
-	if (DeleteFile(path) == 0) {
+	if (DeleteFileA(path) == 0) {
 		AG_SetError(_("%s: Failed to delete file (%lu)"), path,
 		    (Ulong)GetLastError());
 		return (-1);

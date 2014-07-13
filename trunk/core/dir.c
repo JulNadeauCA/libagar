@@ -80,7 +80,7 @@ int
 AG_MkDir(const char *dir)
 {
 #ifdef _WIN32
-	if (CreateDirectory(dir, NULL)) {
+	if (CreateDirectoryA(dir, NULL)) {
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to create directory (%d)"), dir,
@@ -102,7 +102,7 @@ int
 AG_RmDir(const char *dir)
 {
 #ifdef _WIN32
-	if (RemoveDirectory(dir)) {
+	if (RemoveDirectoryA(dir)) {
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to remove directory (%d)"), dir,
@@ -127,7 +127,7 @@ AG_ChDir(const char *dir)
 	AG_SetError("Changing directories is not currently supported on Xbox");
 	return (-1);
 #elif _WIN32
-	if (SetCurrentDirectory(dir)) {
+	if (SetCurrentDirectoryA(dir)) {
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to change directory (%d)"), dir,
@@ -156,7 +156,7 @@ AG_OpenDir(const char *path)
 
 #ifdef _WIN32
 	{
-		char dpath[AG_PATHNAME_MAX];
+		char dpath[MAX_PATH];
 		HANDLE h;
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
@@ -176,7 +176,7 @@ AG_OpenDir(const char *path)
 			Strlcat(dpath, "*", sizeof(dpath));
 		}
 
-		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
+		if ((h = FindFirstFileA(dpath, &fdata))==INVALID_HANDLE_VALUE) {
 #ifndef _XBOX
 			AG_SetError(_("Invalid file handle (%d)"),
 			    (int)GetLastError());
@@ -200,11 +200,11 @@ AG_OpenDir(const char *path)
 			dir->ents = Realloc(dir->ents,
 			    (dir->nents+1)*sizeof(char *));
 			dir->ents[dir->nents++] = Strdup(fdata.cFileName);
-		} while (FindNextFile(h, &fdata) != 0);
+		} while (FindNextFileA(h, &fdata) != 0);
 		rv = GetLastError();
 		FindClose(h);
 		if (rv != ERROR_NO_MORE_FILES) {
-			AG_SetError("FindNextFileError (%lu)", rv);
+			AG_SetError("FindNextFile Error (%lu)", rv);
 			goto fail;
 		}
 	}
@@ -302,7 +302,7 @@ AG_GetCWD(char *buf, size_t len)
 #elif _WIN32
 	DWORD rv;
 
-	if ((rv = GetCurrentDirectory(len, buf)) == 0) {
+	if ((rv = GetCurrentDirectoryA(len, buf)) == 0) {
 		AG_SetError(_("Failed to get current directory (%d)"),
 		    (int)GetLastError());
 		return (-1);
