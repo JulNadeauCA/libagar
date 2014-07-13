@@ -35,8 +35,12 @@ typedef struct ag_user_ops {
 
 __BEGIN_DECLS
 extern const AG_UserOps *agUserOps;
-extern const AG_UserOps  agUserOps_posix;
+
+/* Sync this list with AG_User(3) */
 extern const AG_UserOps  agUserOps_dummy;
+extern const AG_UserOps  agUserOps_posix;
+extern const AG_UserOps  agUserOps_win32;
+extern const AG_UserOps  agUserOps_xbox;
 
 AG_User  *AG_UserNew(void);
 void      AG_UserFree(AG_User *);

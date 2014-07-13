@@ -101,6 +101,8 @@ CHECK(clock_win32)
 CHECK(nanosleep)
 CHECK(kqueue)
 CHECK(timerfd)
+CHECK(csidl)
+CHECK(xbox)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)
@@ -379,7 +381,7 @@ fi
 	
 # Enable Berkeley DB backend for AG_Db if available.
 if [ "${with_db4}" != "no" ]; then
-	CHECK(db4, ${prefix_db4})
+	CHECK(db4, 0, ${prefix_db4})
 	if [ "${HAVE_DB4}" != "yes" ]; then
 		if [ "${with_db4}" = "yes" ]; then
 			echo "*"
@@ -397,7 +399,7 @@ fi
 
 # Enable MySQL backend for AG_Db if available.
 if [ "${with_mysql}" != "no" ]; then
-	CHECK(mysql, ${prefix_mysql})
+	CHECK(mysql, 0, ${prefix_mysql})
 	if [ "${HAVE_MYSQL}" != "yes" ]; then
 		if [ "${with_mysql}" = "yes" ]; then
 			echo "*"
@@ -415,7 +417,7 @@ fi
 
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != "no" ]; then
-	CHECK(pthreads, ${prefix_pthreads})
+	CHECK(pthreads, 0, ${prefix_pthreads})
 	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
 		HDEFINE(AG_THREADS, "yes")
@@ -477,7 +479,7 @@ fi
 	
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = "yes" ]; then
-	CHECK(iconv)
+	CHECK(iconv, 0, ${prefix_iconv})
 	CHECK(gettext, 0, ${prefix_gettext})
 	if [ "${HAVE_GETTEXT}" != "yes" ]; then
 		echo "*"
@@ -700,6 +702,12 @@ if [ "${HAVE_NETWORK}" = "yes" ]; then
 fi
 if [ "${HAVE_GETPWUID}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "user_posix.c")
+fi
+if [ "${HAVE_XBOX}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "user_xbox.c xbox.c")
+fi
+if [ "${HAVE_CSIDL}" = "yes" ]; then
+	MAPPEND(SRCS_CORE, "user_win32.c")
 fi
 
 #

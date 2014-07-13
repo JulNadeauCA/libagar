@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2014 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include <agar/config/have_getaddrinfo.h>
 #include <agar/config/have_winsock1.h>
 #include <agar/config/have_winsock2.h>
+#include <agar/config/have_csidl.h>
 #ifdef AG_THREADS
 # include <agar/config/have_pthreads_xopen.h>
 # include <agar/config/have_pthread_mutex_recursive.h>
@@ -156,7 +157,11 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 	
 	/* Select the user account interface routines. */
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+#if defined(_XBOX)
+	AG_SetUserOps(&agUserOps_xbox);
+#elif defined(_WIN32) && defined(HAVE_CSIDL)
+	AG_SetUserOps(&agUserOps_win32);
+#elif defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	AG_SetUserOps(&agUserOps_posix);
 #else
 	AG_SetUserOps(&agUserOps_dummy);

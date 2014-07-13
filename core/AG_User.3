@@ -37,19 +37,32 @@
 .Sh DESCRIPTION
 .Nm
 provides a cross-platform method for accessing information about
-system-based user accounts.
+user accounts.
 Different backends may be implemented (see
 .Dq INTERNAL API
 below).
 Agar provides the following backends:
 .Pp
-.Bl -tag -compact -width "agUserOps_gettimeofday "
+.Bl -tag -compact -width "agUserOps_posix "
 .It agUserOps_dummy
 No-op, returns no useful information.
 .It agUserOps_posix
-On Unix platforms, use the system
+On Unix, use the system
 .Xr getpwent 3
 interface.
+.It agUserOps_win32
+On Windows, use CSIDL to locate a preferred
+.Pa AppData
+directory, and return it in the
+.Va home
+field.
+Also return the preferred temporary directory in the
+.Va tmp
+field.
+Other fields will contain no useful data.
+.It agUserOps_xbox
+On the Xbox console, check which drives are mounted and use
+either T:\\ or D:\\ as home.
 .El
 .Sh INTERFACE
 .nr nS 1
