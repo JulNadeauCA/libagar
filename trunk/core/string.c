@@ -66,6 +66,8 @@
 #include <ctype.h>
 
 #include <agar/config/have_iconv.h>
+#include <agar/config/have_iconv_const.h>
+
 #ifdef HAVE_ICONV
 # include <iconv.h>
 #endif
@@ -875,11 +877,30 @@ ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
 		goto fail;
 	}
 	wrPtr = (char *)ucs;
+
+#ifdef HAVE_ICONV_CONST
 	if (iconv(cd, &inPtr, &sLen, &wrPtr, &outSize) == (size_t)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		goto fail;
 	}
+#else
+	{
+		char *tmpBuf;
+		if ((tmpBuf = AG_TryStrdup(inPtr)) == NULL) {
+			iconv_close(cd);
+			goto fail;
+		}
+		if (iconv(cd, &tmpBuf, &sLen, &wrPtr, &outSize) == (size_t)-1) {
+			AG_SetError("iconv: %s", strerror(errno));
+			iconv_close(cd);
+			free(tmpBuf);
+			goto fail;
+		}
+		free(tmpBuf);
+	}
+#endif /* !HAVE_ICONV_CONST */
+
 	iconv_close(cd);
 
 	outSize = (wrPtr - (char *)ucs)/sizeof(Uint32);
@@ -1004,11 +1025,30 @@ ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
 		AG_SetError("iconv_open: %s", strerror(errno));
 		return (-1);
 	}
+
+#ifdef HAVE_ICONV_CONST
 	if (iconv(cd, &inPtr, &inSize, &wrPtr, &outSize) == (size_t)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		return (-1);
 	}
+#else
+	{
+		char *tmpBuf;
+		if ((tmpBuf = AG_TryStrdup(inPtr)) == NULL) {
+			iconv_close(cd);
+			return (-1);
+		}
+		if (iconv(cd, &tmpBuf, &inSize, &wrPtr, &outSize) == (size_t)-1) {
+			AG_SetError("iconv: %s", strerror(errno));
+			iconv_close(cd);
+			free(tmpBuf);
+			return (-1);
+		}
+		free(tmpBuf);
+	}
+#endif
+
 	iconv_close(cd);
 
 	if (outSize >= sizeof(char)) {
