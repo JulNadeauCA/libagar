@@ -207,7 +207,6 @@ Destroy(void *obj)
 static void
 CloseTest(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
 	MyTestInstance *ti = AG_PTR(1);
 	
 	ti->closeTest = 1;
