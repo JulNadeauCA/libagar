@@ -10,16 +10,16 @@ CreateWindow(AG_Event *event)
 {
 	AG_Window *win, *winParent = AG_PTR(1);
 	int count = AG_INT(2);
-	AG_Button *btn;
 
 	if ((win = AG_WindowNew(AG_WINDOW_MODAL)) == NULL) {
 		return;
 	}
-	AG_LabelNew(win, 0, "Modal window #%d", count++);
+	AG_LabelNew(win, 0, "Modal window #%d\n(Parent = %s)", count++,
+	    AGOBJECT(winParent)->name);
 	AG_ButtonNewFn(win, 0, "Create another",
 	    CreateWindow, "%p,%i", win, count++);
+	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
-
 }
 
 static int
