@@ -9,14 +9,6 @@ char someString[256];
 double v = 10.0;
 
 static void
-EnteredString(AG_Event *event)
-{
-	char *s = AG_STRING(1);
-
-	AG_TextInfo("got-string", "Got string \"%s\"", s);
-}
-
-static void
 TestPrompts(AG_Event *event)
 {
 	/* Edit an existing floating-point variable. */

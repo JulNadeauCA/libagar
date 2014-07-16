@@ -46,12 +46,6 @@ RandomReal(MyTestInstance *ti)
 	if (ti->curReal+1 >= NREALS) { ti->curReal = 0; }
 	return (ti->r[ti->curReal++]);
 }
-static __inline__ M_Vector2
-RandomVector2(MyTestInstance *ti)
-{
-	if (ti->curVec+1 >= NVECTORS) { ti->curVec = 0; }
-	return (ti->v2[ti->curVec++]);
-}
 static __inline__ M_Vector3
 RandomVector3(MyTestInstance *ti)
 {
@@ -245,8 +239,6 @@ static void
 TestMatrix44(AG_TestInstance *ti)
 {
 	M_Matrix44 A, B, AB, ABinv, ABt, Rot, UniScale;
-	M_Vector3 b3, Ab3;
-	M_Vector4 b4, Ab4;
 
 	M_MatIdentity44v(&A);
 	M_MatIdentity44v(&B);
@@ -256,8 +248,6 @@ TestMatrix44(AG_TestInstance *ti)
 	AB = M_MatMult44(B, A);
 	ABinv = M_MatInvert44(AB);
 	ABt = M_MatTranspose44(AB);
-	b3 = M_VECTOR3(1,2,3);
-	b4 = M_VECTOR4(1,2,3,4);
 
 	Rot = M_MatIdentity44();
 	UniScale = M_MatIdentity44();
