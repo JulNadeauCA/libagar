@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2003-2014 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,14 @@ $COOKIE = ".mkconcurrent_$$";
 @DIRS = ();
 $BUILD = '';
 @MKFILES = (
-	'Makefile.proj',
-	'Makefile.prog',
+	'Makefile\.(prog|proj|in)',
 	'\.mk$',
 	'\.inc$',
+	'\.m4$',
+	'^README$',
 	'^mkdep$',
 	'^install-includes.sh$',
+	'^install-sh$',
 	'^config\.(guess|sub)$',
 	'^configure$',
 	'^configure\.in$',
