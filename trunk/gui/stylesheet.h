@@ -22,8 +22,18 @@ typedef struct ag_style_sheet {
 	AG_TAILQ_HEAD_(ag_style_block) blks;		/* By widget class */
 } AG_StyleSheet;
 
+/* Description of a built-in stylesheet. */
+typedef struct ag_static_css {
+	const char *name;		/* Identifier */
+	Uint32 size;			/* Size in bytes */
+	const Uint8 *data;		/* CSS data */
+	AG_StyleSheet *css;		/* Initialized stylesheet */
+} AG_StaticCSS;
+
 __BEGIN_DECLS
 extern AG_StyleSheet agDefaultCSS;
+
+extern AG_StaticCSS agStyleDefault;
 
 void           AG_InitStyleSheet(AG_StyleSheet *);
 void           AG_DestroyStyleSheet(AG_StyleSheet *);

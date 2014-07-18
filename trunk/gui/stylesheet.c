@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2014 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,16 @@
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/widget.h>
+#include <agar/gui/style_data.h>
 
 #include <ctype.h>
 
 AG_StyleSheet agDefaultCSS;
+
+AG_StaticCSS *agBuiltinStyles[] = {
+	&agStyleDefault
+};
+const int agBuiltinStylesCount = sizeof(agBuiltinStyles)/sizeof(agBuiltinStyles[0]);
 
 void
 AG_InitStyleSheet(AG_StyleSheet *css)
@@ -52,9 +58,11 @@ AG_DestroyStyleSheet(AG_StyleSheet *css)
 }
 
 /*
- * Load a style sheet from file and apply to the specified widget/window
- * object. If the object argument is NULL, make the style sheet the global
- * default.
+ * Load a style sheet and apply to the specified widget/window object. If
+ * the object argument is NULL, make the style sheet the global default.
+ *
+ * If path begins with a "_", search for a statically-compiled stylesheet
+ * of the given name (e.g., "_agStyleDefault").
  */
 AG_StyleSheet *
 AG_LoadStyleSheet(void *obj, const char *path)
@@ -65,6 +73,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	size_t fileSize;
 	char *buf, *s, *line;
 	AG_StyleBlock *cssBlk = NULL;
+	int i;
 
 	if (tgt != NULL) {
 		if (tgt->css != NULL) {
@@ -78,20 +87,40 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	}
 	AG_InitStyleSheet(css);
 
-	if ((ds = AG_OpenFile(path, "rb")) == NULL) { goto fail; }
-	if (AG_Seek(ds, 0, AG_SEEK_END) == -1) { goto fail_close; }
-	fileSize = AG_Tell(ds);
-	if (AG_Seek(ds, 0, AG_SEEK_SET) == -1) { goto fail_close; }
+	if (path[0] == '_') {			/* Statically compiled */
+		AG_StaticCSS *builtin;
+		for (i = 0; i < agBuiltinStylesCount; i++) {
+			if (strcmp(agBuiltinStyles[i]->name, &path[1]) == 0)
+				break;
+		}
+		if (i == agBuiltinStylesCount) {
+			AG_SetError(_("No such stylesheet: %s"), path);
+			goto fail;
+		}
+		builtin = agBuiltinStyles[i];
+		if ((ds = AG_OpenConstCore(builtin->data, builtin->size)) == NULL) {
+			goto fail;
+		}
+		builtin->css = css;
+		fileSize = builtin->size;
+	} else {
+		if ((ds = AG_OpenFile(path, "rb")) == NULL) {
+			goto fail;
+		}
+		if (AG_Seek(ds, 0, AG_SEEK_END) == -1) { goto fail_close; }
+		fileSize = AG_Tell(ds);
+		if (AG_Seek(ds, 0, AG_SEEK_SET) == -1) { goto fail_close; }
+	}
 	if ((buf = TryMalloc(fileSize+1)) == NULL) { goto fail_close; }
 	if (AG_Read(ds, buf, fileSize) != 0) { goto fail_close; }
-	AG_CloseFile(ds);
+	AG_CloseDataSource(ds);
 	buf[fileSize] = '\0';
 	s = buf;
 	while ((line = Strsep(&s, "\n")) != NULL) {
 		char *c = &line[0], *cKey, *cVal, *t;
 		size_t len;
 		AG_StyleEntry *cssEnt;
-		
+	
 		while (isspace(*c)) { c++; }
 		if (*c == '\0' || *c == '#') { continue;  }
 

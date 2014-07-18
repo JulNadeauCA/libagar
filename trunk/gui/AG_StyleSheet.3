@@ -114,11 +114,17 @@ releases all resources allocated by a style sheet.
 .Pp
 The
 .Fn AG_LoadStyleSheet
-function loads a style sheet from the file specified in
+function loads a style sheet from
 .Fa path .
 On success, a newly allocated
 .Nm
 is returned.
+If
+.Fa path
+begins with a "_" character,
+.Fn AG_LoadStyleSheet
+will search for a statically-compiled stylesheet
+(i.e., "_agStyleDefault" is always available).
 .Pp
 The
 .Fn AG_LookupStyleSheet
