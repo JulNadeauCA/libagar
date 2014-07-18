@@ -66,9 +66,8 @@
 #include <ctype.h>
 
 #include <agar/config/have_iconv.h>
-#include <agar/config/have_iconv_const.h>
-
 #ifdef HAVE_ICONV
+# include <agar/config/have_iconv_const.h>
 # include <iconv.h>
 #endif
 
