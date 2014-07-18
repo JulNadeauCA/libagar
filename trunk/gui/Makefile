@@ -15,7 +15,7 @@ LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LIBS}
 
-LIBS=		../core/libag_core.la \
+LIBS=		-L../core -lag_core \
 		${GUI_LIBS}
 
 CFLAGS+=	-D_AGAR_GUI_INTERNAL \
