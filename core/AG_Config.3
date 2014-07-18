@@ -117,7 +117,7 @@ fixed-size buffer
 .Fa dst_len
 bytes).
 .Fn AG_ConfigFile
-returns 0 on success and -1 on failure.
+returns 0 if the file exists, or -1 if an error occured.
 .Sh CONFIGURATION PARAMETERS
 The following parameters are registered by Agar-Core:
 .Bl -tag -width "BOOL initial-run "

@@ -168,7 +168,10 @@ Save(void *obj, AG_DataSource *ds)
 	return (0);
 }
 
-/* Copy the full pathname of a data file to a sized buffer. */
+/*
+ * Copy the full pathname of a data file to a fixed-size buffer.
+ * Return 0 if the file exists, or -1 if an error occured.
+ */
 int
 AG_ConfigFile(const char *path_key, const char *name, const char *ext,
     char *path, size_t path_len)
