@@ -507,44 +507,47 @@ AG_InitTextSubsystem(void)
 	AG_ObjectLock(cfg);
 	if (!AG_Defined(cfg,"font-path")) {
 		char fontPath[AG_PATHNAME_MAX];
-		char path[AG_PATHNAME_MAX];
 		AG_User *sysUser = AG_GetRealUser();
 		size_t len;
 
-		AG_GetString(cfg, "save-path", path, sizeof(path));
-		if (path[0] != '\0') {
-			Strlcpy(fontPath, path, sizeof(fontPath));
-			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
-			Strlcat(fontPath, "fonts:", sizeof(fontPath));
-		} else {
-			fontPath[0] ='\0';
-		}
+		fontPath[0] ='\0';
+#if !defined(_WIN32)
 		if (strcmp(TTFDIR, "NONE") != 0) {
 			Strlcat(fontPath, TTFDIR, sizeof(fontPath));
-			Strlcat(fontPath, ":", sizeof(fontPath));
+			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
 		}
+#endif
 #if defined(__APPLE__)
 		if (sysUser != NULL && sysUser->home != NULL) {
 			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
-			Strlcat(fontPath, "/Library/Fonts:", sizeof(fontPath));
+			Strlcat(fontPath, "/Library/Fonts", sizeof(fontPath));
+			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
 		}
-		Strlcat(fontPath, "/Library/Fonts:/System/Library/Fonts:",
-		    sizeof(fontPath));
+		Strlcat(fontPath, "/Library/Fonts", sizeof(fontPath));
+		Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
+		Strlcat(fontPath, "/System/Library/Fonts", sizeof(fontPath));
+		Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
 #elif defined(_WIN32)
-		if (sysUser != NULL && sysUser->home != NULL) {
-			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
-			Strlcat(fontPath, "\\AppData\\Local\\Agar\\Fonts:",
-			    sizeof(fontPath));
+		{
+			char windir[AG_PATHNAME_MAX];
+
+			if (sysUser != NULL && sysUser->home != NULL) {
+				Strlcat(fontPath, sysUser->home, sizeof(fontPath));
+				Strlcat(fontPath, "\\Fonts", sizeof(fontPath));
+				Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
+			}
+			if (GetWindowsDirectoryA(windir, sizeof(windir)) > 0) {
+				Strlcat(fontPath, windir, sizeof(fontPath));
+				Strlcat(fontPath, "\\Fonts", sizeof(fontPath));
+				Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
+			}
 		}
-		if (GetWindowsDirectory(path, sizeof(path)) > 0) {
-			Strlcat(fontPath, path, sizeof(fontPath));
-			Strlcat(fontPath, "\\Fonts:", sizeof(fontPath));
-		}
-#else
+#else /* !WIN32 & !APPLE */
 		if (sysUser != NULL && sysUser->home != NULL) {
 			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
 			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
-			Strlcat(fontPath, ".fonts:", sizeof(fontPath));
+			Strlcat(fontPath, ".fonts", sizeof(fontPath));
+			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
 		}
 #endif
 		if ((len = strlen(fontPath)) > 0) {
