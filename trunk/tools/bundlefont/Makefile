@@ -1,5 +1,4 @@
 TOP=	../..
-include ${TOP}/Makefile.config
 
 PROG=		bundlefont
 PROG_TYPE=	"CLI"
