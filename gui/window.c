@@ -2075,7 +2075,9 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 		if (ca->c == drv->activeCursor) {
 			if (ca->stock == -1) {
 				/* XXX TODO it would be safer to defer this operation */
-				AGDRIVER_CLASS(drv)->unsetCursor(drv);
+				if (AGDRIVER_CLASS(drv)->unsetCursor != NULL) {
+					AGDRIVER_CLASS(drv)->unsetCursor(drv);
+				}
 				AG_CursorFree(drv, ca->c);
 			}
 			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
