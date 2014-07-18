@@ -174,7 +174,6 @@ int
 AG_InitGUIGlobals(void)
 {
 	AG_Config *cfg;
-	char acsPath[AG_PATHNAME_MAX];
 	Uint i;
 
 	if (initedGlobals++ > 0) {
