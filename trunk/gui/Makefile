@@ -59,3 +59,12 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
+
+fonts_data.h: ${SRCDIR}/gui/fonts/Vera.ttf ${SRCDIR}/gui/fonts/minimal.xcf ${SRCDIR}/gui/fonts/serif.xcf
+	bundlefont -o $@ -v -n agFontVera ${SRCDIR}/gui/fonts/Vera.ttf
+	bundlefont -o $@ -a -b -n agFontMinimal ${SRCDIR}/gui/fonts/minimal.xcf
+	bundlefont -o $@ -a -b -n agFontMinimalSerif ${SRCDIR}/gui/fonts/serif.xcf
+
+style_data.h: ${SRCDIR}/gui/style.css
+	bundlecss -o $@ -n agStyleDefault ${SRCDIR}/gui/style.css
+
