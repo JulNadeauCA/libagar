@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2014 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 
 static void
@@ -106,7 +107,7 @@ main(int argc, char *argv[])
 
 		fread(&d, 1, 1, fin);
 		fprintf(f, "%d,", d);
-		if (++cnt > 1024) {
+		if (++cnt > 10000) {
 			fprintf(f, "\n");
 			cnt = 0;
 		}
