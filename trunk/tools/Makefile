@@ -4,7 +4,8 @@ include ${TOP}/Makefile.config
 SUBDIR=	agar-bench \
 	agar-disasm
 
-#SUBDIR+=bundlefont
+# For regenerating gui/*_data.h.
+#SUBDIR+=bundlefont bundlecss
 
 all: all-subdir
 clean: prereq clean-subdir
