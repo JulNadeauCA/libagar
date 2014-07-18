@@ -225,9 +225,12 @@ AG_InitGUIGlobals(void)
 	AG_BindInt(cfg, "ag_screenshot_quality", &agScreenshotQuality);
 	AG_BindInt(cfg, "ag_msg_delay", &agMsgDelay);
 
-	if (AG_ConfigFile("load-path","style","css", acsPath, sizeof(acsPath)) == 0) {
-		if (AG_LoadStyleSheet(NULL, acsPath) == NULL)
-			Verbose("%s: %s\n", acsPath, AG_GetError());
+	/*
+	 * Load the default style sheet (statically compiled from
+	 * gui/style.css in the Agar sources).
+	 */
+	if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL) {
+		Verbose("_agStyleDefault: %s\n", AG_GetError());
 	}
 	return (0);
 }
