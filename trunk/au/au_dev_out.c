@@ -68,7 +68,7 @@ AU_OpenOut(const char *path, int rate, int ch)
 
 	/* Locate device class */
 	for (pDevCls = &auDevOutList[0]; *pDevCls != NULL; pDevCls++) {
-		if (strcasecmp((*pDevCls)->name, devName) == 0)
+		if (AG_Strcasecmp((*pDevCls)->name, devName) == 0)
 			break;
 	}
 	if (*pDevCls == NULL) {

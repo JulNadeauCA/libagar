@@ -118,7 +118,7 @@ Open(void *obj, const char *path, int rate, int ch)
 		df->silence[i] = 0.0;
 
 	if ((c = strrchr(path, '.')) != NULL &&		/* XXX */
-	    strcasecmp(c, ".ogg") == 0) {
+	    AG_Strcasecmp(c, ".ogg") == 0) {
 		df->info.format = SF_FORMAT_OGG|SF_FORMAT_VORBIS;
 	} else {
 		df->info.format = SF_FORMAT_WAV|SF_FORMAT_FLOAT;
