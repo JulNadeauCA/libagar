@@ -55,6 +55,7 @@
 # include <sys/time.h>
 # include <sys/select.h>
 # include <unistd.h>
+# include <errno.h>
 #endif
 
 AG_EventSource *agEventSource = NULL;	/* Event source (thread-local) */
