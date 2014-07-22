@@ -77,6 +77,12 @@ typedef struct ag_event_source_kqueue {
 
 /* #define DEBUG_TIMERS */
 
+#ifdef __NetBSD__
+# define AG_EV_SET(kevp,a,b,c,d,e,f) EV_SET((kevp),(uintptr_t)(a),(b),(c),(d),(e),(intptr_t)(f))
+#else
+# define AG_EV_SET(kevp,a,b,c,d,e,f) EV_SET((kevp),(a),(b),(c),(d),(e),(f))
+#endif
+
 /* Generate a unique event handler name. */
 static void
 GenEventName(AG_Event *ev, AG_Object *ob, const char *name)
@@ -895,17 +901,17 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	kev = &kq->changes[kq->nChanges++];
 	switch (type) {
 	case AG_SINK_READ:
-		EV_SET(kev, ident, EVFILT_READ, EV_ADD|EV_ENABLE, 0, 0, es);
+		AG_EV_SET(kev, ident, EVFILT_READ, EV_ADD|EV_ENABLE, 0, 0, es);
 		break;
 	case AG_SINK_WRITE:
-		EV_SET(kev, ident, EVFILT_WRITE, EV_ADD|EV_ENABLE, 0, 0, es);
+		AG_EV_SET(kev, ident, EVFILT_WRITE, EV_ADD|EV_ENABLE, 0, 0, es);
 		break;
 	case AG_SINK_FSEVENT:
-		EV_SET(kev, ident, EVFILT_VNODE, EV_ADD|EV_ENABLE,
+		AG_EV_SET(kev, ident, EVFILT_VNODE, EV_ADD|EV_ENABLE,
 		    GetKqFilterFlags(flags), 0, es);
 		break;
 	case AG_SINK_PROCEVENT:
-		EV_SET(kev, ident, EVFILT_PROC, EV_ADD|EV_ENABLE,
+		AG_EV_SET(kev, ident, EVFILT_PROC, EV_ADD|EV_ENABLE,
 		    GetKqFilterFlags(flags), 0, es);
 		break;
 	default:
@@ -936,17 +942,17 @@ AG_DelEventSink(AG_EventSink *es)
 
 	switch (es->type) {
 	case AG_SINK_READ:
-		EV_SET(kev, es->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		AG_EV_SET(kev, es->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		break;
 	case AG_SINK_WRITE:
-		EV_SET(kev, es->ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+		AG_EV_SET(kev, es->ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 		break;
 	case AG_SINK_FSEVENT:
-		EV_SET(kev, es->ident, EVFILT_VNODE, EV_DELETE,
+		AG_EV_SET(kev, es->ident, EVFILT_VNODE, EV_DELETE,
 		    GetKqFilterFlags(es->flags), 0, NULL);
 		break;
 	case AG_SINK_PROCEVENT:
-		EV_SET(kev, es->ident, EVFILT_PROC, EV_DELETE,
+		AG_EV_SET(kev, es->ident, EVFILT_PROC, EV_DELETE,
 		    GetKqFilterFlags(es->flags), 0, NULL);
 		break;
 	default:
@@ -1038,7 +1044,7 @@ restart:
 				return (-1);
 			}
 			kev = &kq->changes[kq->nChanges++];
-			EV_SET(kev, to->id, EVFILT_TIMER,
+			AG_EV_SET(kev, to->id, EVFILT_TIMER,
 			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
 			to->ival = rvt;
 		} else {
@@ -1131,7 +1137,7 @@ AG_AddTimerKQUEUE(AG_Timer *to, Uint32 ival, int newTimer)
 			return (-1);
 		}
 		kev = &kq->changes[kq->nChanges++];
-		EV_SET(kev, to->id, EVFILT_TIMER,
+		AG_EV_SET(kev, to->id, EVFILT_TIMER,
 		    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)ival, to);
 		to->ival = ival;
 	}
@@ -1147,7 +1153,7 @@ AG_DelTimerKQUEUE(AG_Timer *to)
 		AG_FatalError(NULL);
 	}
 	kev = &kq->changes[kq->nChanges++];
-	EV_SET(kev, to->id, EVFILT_TIMER, EV_DELETE,
+	AG_EV_SET(kev, to->id, EVFILT_TIMER, EV_DELETE,
 	    0, 0, NULL);
 	agTimerCount--;
 }
