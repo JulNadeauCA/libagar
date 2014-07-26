@@ -28,10 +28,14 @@
  */
 
 #ifdef __APPLE__
-#define _DARWIN_C_SOURCE		/* For SIOCGIFCONF */
+# ifndef _DARWIN_C_SOURCE
+# define _DARWIN_C_SOURCE		/* For SIOCGIFCONF */
+# endif
 #endif
 #ifdef __NetBSD__
-#define _NETBSD_SOURCE
+# ifndef _NETBSD_SOURCE
+# define _NETBSD_SOURCE
+# endif
 #endif
 
 #include <agar/core/core.h>
