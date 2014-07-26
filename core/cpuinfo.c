@@ -44,7 +44,8 @@
 # include <proto/exec.h>
 #endif
 
-#if defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
+#if !defined(__APPLE__) && !defined(__MACOSX__) && !defined(__ppc__) && \
+     defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
 # include <signal.h>
 # include <setjmp.h>
 static jmp_buf jmpbuf;
@@ -138,7 +139,8 @@ Conv32(char *d, unsigned int v)
 	d[3] = (v >> 24) & 0xff;
 }
 
-#if defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
+#if !defined(__APPLE__) && !defined(__MACOSX__) && !defined(__ppc__) && \
+     defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
 /* SIGILL handler for AltiVec test */
 static void
 IllegalInsn(int sig)
