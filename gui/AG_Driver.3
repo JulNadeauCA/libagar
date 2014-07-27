@@ -618,9 +618,6 @@ routine).
 .Fn AG_GetNextEvent "AG_Driver *drv" "AG_DriverEvent *dev"
 .Pp
 .Ft int
-.Fn AG_GetNextEvent "AG_Driver *drv" "AG_DriverEvent *dev"
-.Pp
-.Ft int
 .Fn AG_ProcessEvent "AG_Driver *drv" "AG_DriverEvent *dev"
 .Pp
 .Bd -literal
@@ -705,28 +702,19 @@ with its contents.
 .Fn AG_GetNextEvent
 returns 1 if the event has been successfully retrieved into
 .Fa dev .
-If the event has been removed from the queue, but no further processing
-is required,
-.Fn AG_GetNextEvent
-returns 0 .
-If an unexpected error occured,
-.Fn AG_GetNextEvent
-returns -1 .
+The function returns 0 if the event was dequeued (and no further processing
+is required), or -1 if an error occured.
 .Pp
 .Fn AG_ProcessEvent
-processes the event pointed by
+processes the event pointed to by
 .Fa dev
-in a default, generic manner.
-.Fn AG_ProcessEvent
-returns 1 if the event was successfully processed or 0 if the event has been
-ignored entirely.
-.Fn AG_ProcessEvent
-returns -1 if either a fatal error has occured.
-If the application should be terminated as a result of the last event,
-.Fn AG_ProcessEvent
-also returns -1, with the global variable
+in the default manner.
+The call returns 1 if the event was successfully processed or 0 if Agar has
+ignored the event entirely.
+If -1 is returned, an error has occured (if this is a fatal error and the
+application should be terminated, the global variable
 .Va agTerminating
-variable set to 1.
+will be set to 1).
 .Pp
 The
 .Fn AG_SDL_TranslateEvent
