@@ -97,7 +97,7 @@ deinstall: deinstall-lib deinstall-subdir
 clean: clean-lib clean-subdir
 cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
 regress: regress-subdir
-depend: depend-subdir
+depend: depend-subdir ${LIBTOOL_COOKIE}
 
 .SUFFIXES: .o .po .lo .c .cc .cpp .asm .l .y .m
 
