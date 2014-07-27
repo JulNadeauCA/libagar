@@ -222,7 +222,7 @@ WGL_Close(void *obj)
 		     dev != TAILQ_LAST(&wglEventQ, ag_driver_eventq);
 		     dev = devNext) {
 			devNext = TAILQ_NEXT(dev, events);
-			Free(dev);
+			free(dev);
 		}
 		TAILQ_INIT(&wglEventQ);
 
@@ -543,10 +543,23 @@ ScanToVirtualKey(int scan, Uint vKey)
 	}
 	return (vk != 0) ? vk : vKey;
 }
+	
+static __inline__ AG_DriverEvent *
+NewEvent(AG_Window *win, enum ag_driver_event_type type)
+{
+	AG_DriverEvent *dev;
+
+	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) == NULL) {
+		return (NULL);
+	}
+	dev->win = win;
+	dev->type = type;
+	return (dev);
+}
 
 /* 
- * Window procedure. We only translate and queue events for later retrieval
- * by getNextEvent().
+ * Window procedure. Most events are just translated to AG_DriverEvent form
+ * and queued for later retrieval by getNextEvent().
  */
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -554,18 +567,15 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	AG_Driver *drv;
 	AG_DriverWGL *wgl;
 	AG_Window *win;
-	AG_DriverEvent *dev;
+	AG_DriverEvent *dev = NULL;
 	int x, y;
+	LRESULT rv = 1;
 	
 	AG_LockVFS(&agDrivers);
 	
 	if ((win = LookupWindowByID(hWnd)) == NULL) {
 		goto fallback;
 	}
-	if ((dev = TryMalloc(sizeof(AG_DriverEvent))) == NULL) {
-		goto fallback;
-	}
-	dev->win = win;
 	drv = WIDGET(win)->drv;
 	wgl = (AG_DriverWGL *)drv;
 #ifdef DEBUG_WGL
@@ -573,7 +583,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 	switch (uMsg) {
 	case WM_MOUSEMOVE:
-		dev->type = AG_DRIVER_MOUSE_MOTION;
+		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_MOTION)) == NULL) {
+			goto fallback;
+		}
 		x = (int)LOWORD(lParam);
 		y = (int)HIWORD(lParam);
 		dev->data.motion.x = x;
@@ -584,7 +596,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_DOWN)) == NULL) {
+			goto fallback;
+		}
 		dev->data.button.which =
 		    (wParam & MK_LBUTTON) ? AG_MOUSE_LEFT :
 		    (wParam & MK_MBUTTON) ? AG_MOUSE_MIDDLE :
@@ -599,7 +613,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
-		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
+		if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_UP)) == NULL) {
+			goto fallback;
+		}
 		dev->data.button.which =
 		    (uMsg == WM_LBUTTONUP) ? AG_MOUSE_LEFT :
 		    (uMsg == WM_MBUTTONUP) ? AG_MOUSE_MIDDLE :
@@ -618,7 +634,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (move == 0) {
 				goto fallback;
 			}
-			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
+			if ((dev = NewEvent(win, AG_DRIVER_MOUSE_BUTTON_DOWN)) == NULL) {
+				goto fallback;
+			}
 			dev->data.button.which =
 			    (move > 0) ? AG_MOUSE_WHEELUP : AG_MOUSE_WHEELDOWN;
 			x = (int)LOWORD(lParam) - WIDGET(win)->x;
@@ -638,15 +656,14 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Uint vKey = wParam;
 			Uint8 keyState[256];
 			Uint16 wc[2];
-
-			if (uMsg == WM_KEYDOWN) {
-				dev->type = AG_DRIVER_KEY_DOWN;
-				ka = AG_KEY_PRESSED;
-			} else {
-				dev->type = AG_DRIVER_KEY_UP;
-				ka = AG_KEY_RELEASED;
+		
+			if ((dev = NewEvent(win, (uMsg == WM_KEYDOWN) ?
+			    AG_DRIVER_KEY_DOWN : AG_DRIVER_KEY_UP)) == NULL) {
+				goto fallback;
 			}
 			dev->data.key.ucs = 0;
+			ka = (uMsg == WM_KEYDOWN) ? AG_KEY_PRESSED :
+			                            AG_KEY_RELEASED;
 
 			switch (vKey) {
 			case VK_CONTROL:
@@ -679,36 +696,50 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SETFOCUS:
 		if (win->visible) {
-			/* SetCapture(hWnd); */
-			dev->type = AG_DRIVER_FOCUS_IN;
-			goto ret0;
+			dev = NewEvent(win, AG_DRIVER_FOCUS_IN);
+			rv = 0;
+			goto out;
 		} else {
 			goto fallback;
 		}
 	case WM_KILLFOCUS:
 		if (win->visible) {
-			dev->type = AG_DRIVER_FOCUS_OUT;
-			goto ret0;
+			dev = NewEvent(win, AG_DRIVER_FOCUS_OUT);
+			rv = 0;
+			goto out;
 		} else {
 			goto fallback;
 		}
 	case WM_SIZE:
 		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
-			dev->type = AG_DRIVER_VIDEORESIZE;
+			TAILQ_FOREACH(dev, &wglEventQ, events) {
+				if (dev->type == AG_DRIVER_VIDEORESIZE)
+					break;
+			}
+			if (dev != NULL) {
+				dev->data.videoresize.w = LOWORD(lParam);
+				dev->data.videoresize.h = HIWORD(lParam);
+				dev = NULL;
+				rv = 0;
+				goto out;
+			}
+			if ((dev = NewEvent(win, AG_DRIVER_VIDEORESIZE)) == NULL) {
+				goto fallback;
+			}
 			dev->data.videoresize.x = -1;
 			dev->data.videoresize.y = -1;
 			dev->data.videoresize.w = LOWORD(lParam);
 			dev->data.videoresize.h = HIWORD(lParam);
 		} else {
-			Free(dev);
 			goto fallback;
 		}
-		goto ret0;
+		rv = 0;
+		goto out;
 	case WM_MOVE:
-		dev->type = AG_DRIVER_UNKNOWN;
 		WIDGET(win)->x = (int)(short)LOWORD(lParam);
 		WIDGET(win)->y = (int)(short)HIWORD(lParam);
-		goto ret0;
+		rv = 0;
+		goto out;
 #if 0
 	/*
 	 * XXX TODO: use TrackMouseEvent(), translate WM_MOUSEHOVER
@@ -718,46 +749,31 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 #endif
 	case WM_MOUSELEAVE:
-		dev->type = AG_DRIVER_MOUSE_LEAVE;
-		dev->win = win;
+		dev = NewEvent(win, AG_DRIVER_MOUSE_LEAVE);
 		break;
 	case WM_ERASEBKGND:
-		dev->type = AG_DRIVER_EXPOSE;
-		dev->win = win;
-		goto ret0;
+		dev = NewEvent(win, AG_DRIVER_EXPOSE);
+		rv = 0;
+		goto out;
 	case WM_CLOSE:
-		dev->type = AG_DRIVER_CLOSE;
-		dev->win = win;
-		goto ret0;
+		dev = NewEvent(win, AG_DRIVER_CLOSE);
+		rv = 0;
+		goto out;
 	case WM_SETCURSOR:
 		AG_MouseGetState(drv->mouse, &x, &y);
-		AG_MouseCursorUpdate(dev->win, x, y);
-		free(dev); dev = NULL;
+		AG_MouseCursorUpdate(win, x, y);
 		break;
 	case WM_NCHITTEST:
-		{
-			LRESULT rv;
-			rv = DefWindowProc(hWnd, uMsg, wParam, lParam);
-			wgl->nchittest = rv;
-			free(dev); dev = NULL;
-			AG_UnlockVFS(&agDrivers);
-			return (rv);
-		}
-		break;
+		rv = DefWindowProc(hWnd, uMsg, wParam, lParam);
+		wgl->nchittest = rv;
+		goto out;
 	default:
-		Free(dev);
 		goto fallback;
 	}
 out:
-	if (dev != NULL) {
-		TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
-	}
+	if (dev != NULL) { TAILQ_INSERT_TAIL(&wglEventQ, dev, events); }
 	AG_UnlockVFS(&agDrivers);
-	return (1);
-ret0:
-	TAILQ_INSERT_TAIL(&wglEventQ, dev, events);
-	AG_UnlockVFS(&agDrivers);
-	return (0);
+	return (rv);
 fallback:
 	AG_UnlockVFS(&agDrivers);
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -790,7 +806,7 @@ get_event:
 	devFirst = TAILQ_FIRST(&wglEventQ);
 	TAILQ_REMOVE(&wglEventQ, devFirst, events);
 	memcpy(dev, devFirst, sizeof(AG_DriverEvent));
-	Free(devFirst);
+	free(devFirst);
 	return (1);
 }
 
@@ -1141,14 +1157,14 @@ WGL_CreateCursor(void *obj, AG_Cursor *ac)
 
 	/* Allocate memory for xorMask (which represents the cursor data) */
 	if ((xorMask = TryMalloc(size)) == NULL) {
-		Free(cg);
+		free(cg);
 		return (-1);
 	}
 
 	/* Allocate memory for andMask (which represents the transparence) */
 	if ((andMask = TryMalloc(size)) == NULL) {
-		Free(xorMask);
-		Free(cg);
+		free(xorMask);
+		free(cg);
 		return (-1);
 	}
 
@@ -1175,7 +1191,7 @@ WGL_FreeCursor(void *obj, AG_Cursor *ac)
 	AG_CursorWGL *cg = ac->p;
 	
 	DestroyCursor(cg->cursor);
-	Free(cg);
+	free(cg);
 	ac->p = NULL;
 }
 
