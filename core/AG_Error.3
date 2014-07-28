@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2014 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -95,6 +95,12 @@ value).
 .Ft void
 .Fn AG_Debug "AG_Object *obj" "const char *fmt" "..."
 .Pp
+.Ft void
+.Fn AG_SetVerboseCallback "int (*fn)(const char *msg)"
+.Pp
+.Ft void
+.Fn AG_SetDebugCallback "int (*fn)(const char *msg)"
+.Pp
 .nr nS 0
 These functions output a string to the debugging console used by the
 application (usually
@@ -114,13 +120,22 @@ assuming the object either has the
 flag set, or the global
 .Va agDebugLvl
 is >= 1.
-The name of the object is prefixed to the string.
+The name of the object is included in the message string.
 The
 .Fa obj
 parameter can be NULL in which case the message is output on the debug
 console when
 .Va agDebugLvl
 is >= 1.
+.Pp
+.Fn AG_SetVerboseCallback
+and
+.Fn AG_SetDebugCallback
+arrange for the specified function to be invoked by
+.Fn AG_Verbose
+and
+.Fn AG_Debug .
+If the callback routine returns 1, the message will not be printed.
 .Sh ERROR WRAPPERS
 .nr nS 1
 .Ft "void *"

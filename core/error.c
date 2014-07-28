@@ -47,8 +47,9 @@ AG_ThreadKey agErrorCodeKey;
 
 int agDebugLvl = 1;			/* Default debug level */
 
-/* Error callback for AG_FatalError() */
 static void (*agErrorCallback)(const char *) = NULL;
+static int (*agVerboseCallback)(const char *) = NULL;
+static int (*agDebugCallback)(const char *) = NULL;
 
 #ifdef AG_THREADS
 static void DestroyErrorMsg(void *msg) { Free(msg); }
@@ -179,6 +180,14 @@ AG_Debug(void *p, const char *fmt, ...)
 	AG_Object *obj = p;
 	va_list args;
 	
+	if (agDebugCallback != NULL) {
+		char *buf;
+		va_start(args, fmt);
+		Vasprintf(&buf, fmt, args);
+		va_end(args);
+		if (agDebugCallback(buf) == 1)
+			return;
+	}
 	if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
 		va_start(args, fmt);
 # ifdef _WIN32
@@ -218,8 +227,17 @@ AG_Verbose(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!agVerbose)
+	if (!agVerbose || fmt == NULL)
 		return;
+	
+	if (agVerboseCallback != NULL) {
+		char *buf;
+		va_start(args, fmt);
+		Vasprintf(&buf, fmt, args);
+		va_end(args);
+		if (agVerboseCallback(buf) == 1)
+			return;
+	}
 
 	va_start(args, fmt);
 #ifdef _WIN32
@@ -249,7 +267,7 @@ void
 AG_FatalError(const char *fmt, ...)
 {
 	va_list args;
-  char *buf;
+  	char *buf;
 
 	/* Use callback if defined. The callback must gracefully exit. */
 	if (agErrorCallback != NULL) {
@@ -278,9 +296,21 @@ AG_FatalError(const char *fmt, ...)
 }
 
 void
-AG_SetFatalCallback(void (*callback)(const char *))
+AG_SetFatalCallback(void (*fn)(const char *))
 {
-	agErrorCallback = callback;
+	agErrorCallback = fn;
+}
+
+void
+AG_SetVerboseCallback(int (*fn)(const char *))
+{
+	agVerboseCallback = fn;
+}
+
+void
+AG_SetDebugCallback(int (*fn)(const char *))
+{
+	agDebugCallback = fn;
 }
 
 /*
