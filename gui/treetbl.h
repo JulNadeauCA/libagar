@@ -43,8 +43,8 @@ typedef struct ag_treetbl_col {
 typedef AG_TAILQ_HEAD(ag_treetbl_rowq, ag_treetbl_row) AG_TreetblRowQ;
 
 typedef struct ag_treetbl_cell {
-	char *text;
-	AG_Surface *image;
+	char *text;				/* Cell text */
+	int   textSu;				/* Rendered surface or -1 */
 } AG_TreetblCell;
 
 typedef struct ag_treetbl_row {

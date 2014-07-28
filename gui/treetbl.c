@@ -82,6 +82,47 @@ FocusLost(AG_Event *event)
 	tt->dblClicked = 0;
 }
 
+static void
+FontChangedRow(AG_Treetbl *tt, AG_TreetblRow *row)
+{
+	AG_TreetblRow *chld;
+	Uint i;
+
+	for (i = 0; i < tt->n; i++) {
+		AG_TreetblCell *cell = &row->cell[i];
+
+		if (cell->textSu != -1) {
+			AG_WidgetUnmapSurface(tt, cell->textSu);
+			cell->textSu = -1;
+		}
+	}
+
+	TAILQ_FOREACH(chld, &row->children, siblings)
+		FontChangedRow(tt, chld);
+}
+
+static void
+FontChanged(AG_Event *event)
+{
+	AG_Treetbl *tt = AG_SELF();
+	AG_Font *font = WIDGET(tt)->font;
+	AG_TreetblRow *row;
+	Uint i;
+
+	for (i = 0; i < tt->n; i++) {
+		AG_TreetblCol *col = &tt->column[i];
+
+		if (col->labelSu != -1) {
+			AG_WidgetUnmapSurface(tt, col->labelSu);
+			col->labelSu = -1;
+		}
+	}
+	tt->hCol = font->height;
+	tt->hRow = font->height+2;
+
+	TAILQ_FOREACH(row, &tt->children, siblings)
+		FontChangedRow(tt, row);
+}
 
 static void
 ScrollbarChanged(AG_Event *event)
@@ -530,6 +571,7 @@ Init(void *obj)
 	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
+	AG_AddEvent(tt, "font-changed", FontChanged, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindInt(tt, "hCol", &tt->hCol);
@@ -800,7 +842,7 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 
 	for (i = 0; i < tt->n; i++) {
 		row->cell[i].text = NULL;
-		row->cell[i].image = NULL;
+		row->cell[i].textSu = -1;
 	}
 
 	/* import static data */
@@ -819,13 +861,13 @@ AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
 		}
 		cell = &row->cell[i];
 		Free(cell->text);
-		if (cell->image != NULL) {
-			AG_SurfaceFree(cell->image);
-		}
 		cell->text = (data != NULL) ?
 		             Strdup((char *)data) :
 		             Strdup("(null)");
-		cell->image = AG_TextRender(cell->text);
+		if (cell->textSu != -1) {
+			AG_WidgetUnmapSurface(tt, cell->textSu);
+			cell->textSu = -1;
+		}
 	}
 	va_end(ap);
 
@@ -859,8 +901,8 @@ DestroyRow(AG_Treetbl *tt, AG_TreetblRow *row)
 	for (i = 0; i < tt->n; i++) {
 		AG_TreetblCell *cell = &row->cell[i];
 
-		if(cell->image != NULL) {
-			AG_SurfaceFree(cell->image);
+		if (cell->textSu != -1) {
+			AG_WidgetUnmapSurface(tt, cell->textSu);
 		}
 		Free(cell->text);
 	}
@@ -1222,12 +1264,12 @@ static void
 DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
 {
 	AG_TreetblCol *col = &tt->column[idx];
-	char *s;
 	Uint i;
 
 	for (i = 0; i < tt->visible.count; i++) {
 		AG_TreetblRow *row = VISROW(tt,i);
 		AG_TreetblCell *cell;
+		char *sNew;
 
 		if (row == NULL)
 			break;
@@ -1235,12 +1277,26 @@ DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
 			continue;
 
 		cell = &row->cell[col->idx];
-
-		if (cell->image != NULL)
-			AG_SurfaceFree(cell->image);
-
-		s = tt->cellDataFn(tt, col->cid, row->rid);
-		cell->image = AG_TextRender((s != NULL) ? s : "");
+		sNew = tt->cellDataFn(tt, col->cid, row->rid);
+		if (sNew == NULL) {
+			Free(cell->text);
+			cell->text = NULL;
+			if (cell->textSu != -1) {
+				AG_WidgetUnmapSurface(tt, cell->textSu);
+				cell->textSu = -1;
+			}
+			continue;			/* Nothing to draw */
+		}
+		if (cell->text != NULL && strcmp(cell->text, sNew) == 0) {
+			free(sNew);
+			continue;			/* No change in text */
+		}
+		Free(cell->text);
+		cell->text = sNew;
+		if (cell->textSu != -1) {
+			AG_WidgetUnmapSurface(tt, cell->textSu);
+			cell->textSu = -1;
+		}
 	}
 }
 
@@ -1303,9 +1359,13 @@ DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 			x += tw+4;
 		}
 		cell = &VISROW(tt,j)->cell[col->idx];
-		if (cell->image != NULL) {
-			/* XXX XXX GL inefficient in opengl mode */
-			AG_WidgetBlit(tt, cell->image, x, y+1);
+
+		if (cell->text != NULL) {
+			if (cell->textSu == -1) {
+				cell->textSu = AG_WidgetMapSurface(tt,
+				    AG_TextRender(cell->text));
+			}
+			AG_WidgetBlitSurface(tt, cell->textSu, x, y+1);
 		}
 		y += tt->hRow;
 	}
