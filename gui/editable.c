@@ -1214,7 +1214,7 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (*c == '\n') {
 				AG_SetError(_("Cannot paste newlines here"));
-				return (0);
+				goto fail;
 			}
 		}
 	}
@@ -1222,14 +1222,14 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsIntOnly(*c)) {
 				AG_SetError(_("Non-integer input near `%c'"), *c);
-				return (0);
+				goto fail;
 			}
 		}
 	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsFltOnly(*c)) {
 				AG_SetError(_("Non-float input near `%c'"), *c);
-				return (0);
+				goto fail;
 			}
 		}
 	}
