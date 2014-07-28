@@ -62,6 +62,8 @@ void		 AG_SetError(const char *, ...)
 void		 AG_FatalError(const char *, ...)
 		     NORETURN_ATTRIBUTE;
 void		 AG_SetFatalCallback(void (*callback)(const char *));
+void		 AG_SetVerboseCallback(int (*callback)(const char *));
+void		 AG_SetDebugCallback(int (*callback)(const char *));
 void		 AG_Debug(void *, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
