@@ -93,7 +93,7 @@ const AG_TestCase *testCases[] = {
 TAILQ_HEAD_(ag_test_instance) tests;		/* Running tests */
 AG_Statusbar *statusBar;
 AG_Label *status;
-AG_Console *console;
+AG_Console *console = NULL;
 AG_Button *btnTest, *btnBench;
 
 static void
@@ -410,6 +410,24 @@ StartDebugger(void)
 }
 #endif
 
+static int
+VerboseCallback(const char *msg)
+{
+	if (console != NULL) {
+		AG_ConsoleMsgS(console, msg);
+	}
+	return (1);
+}
+
+static int
+DebugCallback(const char *msg)
+{
+	if (console != NULL) {
+		AG_ConsoleMsgS(console, msg);
+	}
+	return (1);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -450,6 +468,10 @@ main(int argc, char *argv[])
 		printf("Agar-GUI initialization failed: %s\n", AG_GetError());
 		return (1);
 	}
+
+	/* Redirect AG_Verbose() and AG_Debug() output to the AG_Console. */
+	AG_SetVerboseCallback(VerboseCallback);
+	AG_SetDebugCallback(DebugCallback);
 
 	/* Set up the standard shortcuts + debugger and screenshot functions */
 	AG_BindStdGlobalKeys();
