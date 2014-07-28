@@ -1191,7 +1191,7 @@ AG_EditableCopy(AG_Editable *ed, AG_EditableBuffer *buf, AG_EditableClipboard *c
 	AG_EditableCopyChunk(ed, cb, &buf->s[ed->pos], ed->sel);
 	return (1);
 }
-	
+
 /* Perform Paste action on buffer. */
 int
 AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
@@ -1210,31 +1210,26 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	if (cb->s == NULL)
 		goto out;
 
-	if (strcmp(ed->encoding, cb->encoding) != 0) {
-		/* TODO: charset conversion */
-		AG_SetError("Incompatible encoding: %s", cb->encoding);
-		goto fail;
-	}
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (*c == '\n') {
-				AG_SetError("Newlines in clipboard");
-				goto fail;
+				AG_SetError(_("Cannot paste newlines here"));
+				return (0);
 			}
 		}
 	}
 	if (ed->flags & AG_EDITABLE_INT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsIntOnly(*c)) {
-				AG_SetError("Non-integer input near `%c'", *c);
-				goto fail;
+				AG_SetError(_("Non-integer input near `%c'"), *c);
+				return (0);
 			}
 		}
 	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsFltOnly(*c)) {
-				AG_SetError("Non-float input near `%c'", *c);
-				goto fail;
+				AG_SetError(_("Non-float input near `%c'"), *c);
+				return (0);
 			}
 		}
 	}
