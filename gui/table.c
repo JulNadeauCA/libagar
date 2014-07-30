@@ -2034,7 +2034,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_start(ap, fmtp);
 	for (n = 0; n < t->n; n++) {
 		AG_TableCell *c = &t->cells[t->m][n];
-		char *s = AG_Strsep(&sp, ":"), *sc;
+		char *s = AG_Strsep(&sp, t->sep), *sc;
 		int ptr = 0, lflag = 0, ptr_long = 0;
 		int infmt = 0;
 
