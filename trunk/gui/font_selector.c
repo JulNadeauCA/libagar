@@ -140,7 +140,7 @@ OnShow(AG_Event *event)
 	}
 
 	AG_GetString(AG_ConfigObject(), "font-path", fontPath, sizeof(fontPath));
-	while ((s = AG_Strsep(&pFontPath, ":")) != NULL) {
+	while ((s = AG_Strsep(&pFontPath, AG_PATHSEPMULTI)) != NULL) {
 		AG_Dir *dir;
 		int i;
 

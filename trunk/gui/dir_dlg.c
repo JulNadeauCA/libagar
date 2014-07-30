@@ -215,7 +215,7 @@ RefreshShortcuts(AG_DirDlg *dd, int init)
 		AG_GetString(AG_ConfigObject(),
 		    (dd->flags & AG_DIRDLG_SAVE) ? "save-path" : "load-path",
 		    path, sizeof(path));
-		while ((p = AG_Strsep(&pPath, ":")) != NULL) {
+		while ((p = AG_Strsep(&pPath, AG_PATHSEPMULTI)) != NULL) {
 			if (!AG_FileExists(p)) {
 				continue;
 			}
