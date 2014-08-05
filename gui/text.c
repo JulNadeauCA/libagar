@@ -341,14 +341,19 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		if (agFontconfigInited) {
 			FcPattern *pattern, *fpat;
 			FcResult fres = FcResultMatch;
+			char *nameIn;
 			FcChar8 *filename;
 			FcMatrix *mat;
 
-			if ((pattern = FcNameParse((const FcChar8 *)name)) == NULL ||
+			Asprintf(&nameIn, "%s-%u", name, ptsize);
+			if ((pattern = FcNameParse((FcChar8 *)nameIn)) == NULL ||
 			    !FcConfigSubstitute(NULL, pattern, FcMatchPattern)) {
 				AG_SetError(_("Fontconfig failed to parse: %s"), name);
+				free(nameIn);
 				goto fail;
 			}
+			free(nameIn);
+
 			FcDefaultSubstitute(pattern);
 			if ((fpat = FcFontMatch(NULL, pattern, &fres)) == NULL ||
 			    fres != FcResultMatch) {
