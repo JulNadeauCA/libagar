@@ -18,6 +18,7 @@ extern const AG_TestCase consoleTest;
 extern const AG_TestCase customWidgetTest;
 extern const AG_TestCase fixedResTest;
 extern const AG_TestCase focusingTest;
+extern const AG_TestCase fontSelectorTest;
 extern const AG_TestCase fsPathsTest;
 extern const AG_TestCase glviewTest;
 extern const AG_TestCase imageLoadingTest;
@@ -56,6 +57,7 @@ const AG_TestCase *testCases[] = {
 	&customWidgetTest,
 	&fixedResTest,
 	&focusingTest,
+	&fontSelectorTest,
 	&fsPathsTest,
 #ifdef HAVE_OPENGL
 	&glviewTest,
