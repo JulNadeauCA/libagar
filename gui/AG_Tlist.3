@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2014 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -247,6 +247,9 @@ are provided.
 .Ft "void"
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
+.Ft "int"
+.Fn AG_TlistSort "AG_Tlist *tlist"
+.Pp
 .Ft "void"
 .Fn AG_TlistUniq "AG_Tlist *tlist"
 .Pp
@@ -336,10 +339,16 @@ function detaches and frees
 from its parent
 .Nm tlist .
 .Pp
+The
+.Fn AG_TlistSort
+routine lexicographically sorts the items in the list.
+The function returns 0 on success or -1 if insufficient memory is
+available for the sort.
+.Pp
 .Fn AG_TlistUniq
 scans the list for duplicates (by comparing items using the current comparison
 routine as configured by
-.Fn AG_TlistSetCompareFn ),
+.Fn AG_TlistSetCompareFn ) ,
 and removes all duplicate items.
 .Pp
 .Fn AG_TlistClear

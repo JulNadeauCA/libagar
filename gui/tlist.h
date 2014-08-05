@@ -41,7 +41,7 @@ typedef struct ag_tlist_item {
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
 } AG_TlistItem;
 
-AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item);
+typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
 
 typedef struct ag_tlist {
 	struct ag_widget wid;
@@ -64,8 +64,8 @@ typedef struct ag_tlist {
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
 	void *dblClicked;		/* Used by double click */
-	struct ag_tlist_itemq items;	/* Current Items */
-	struct ag_tlist_itemq selitems;	/* Saved item state */
+	AG_TlistItemQ items;		/* Current Items */
+	AG_TlistItemQ selitems;		/* Saved item state */
 	int nitems;			/* Current item count */
 	int nvisitems;			/* Visible item count */
 	AG_Scrollbar *sbar;		/* Vertical scrollbar */
@@ -149,6 +149,7 @@ void AG_TlistSetCompareFn(AG_Tlist *, int (*)(const AG_TlistItem *,
 int AG_TlistCompareStrings(const AG_TlistItem *, const AG_TlistItem *);
 int AG_TlistComparePtrs(const AG_TlistItem *, const AG_TlistItem *);
 int AG_TlistComparePtrsAndClasses(const AG_TlistItem *, const AG_TlistItem *);
+int AG_TlistSort(AG_Tlist *);
 
 #define AG_TlistBegin AG_TlistClear
 #define AG_TlistEnd AG_TlistRestore
