@@ -31,6 +31,12 @@
 
 #include <string.h>
 
+#include <agar/config/have_fontconfig.h>
+#ifdef HAVE_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+extern int agFontconfigInited;		/* text.c */
+#endif
+
 AG_FontSelector *
 AG_FontSelectorNew(void *parent, Uint flags)
 {
@@ -63,10 +69,10 @@ Bound(AG_Event *event)
 	Strlcpy(fs->curFace, OBJECT(*pFont)->name, sizeof(fs->curFace));
 	fs->curSize = (*pFont)->spec.size;
 	fs->curStyle = (*pFont)->flags;
-
+#if 0
 	fs->tlFaces->flags |= AG_TLIST_SCROLLTOSEL;
 	fs->tlSizes->flags |= AG_TLIST_SCROLLTOSEL;
-
+#endif
 	AG_ObjectUnlock(fs);
 }
 
@@ -139,42 +145,74 @@ OnShow(AG_Event *event)
 			ti->selected++;
 	}
 
-	AG_GetString(AG_ConfigObject(), "font-path", fontPath, sizeof(fontPath));
-	while ((s = AG_Strsep(&pFontPath, AG_PATHSEPMULTI)) != NULL) {
-		AG_Dir *dir;
-		int i;
+#ifdef HAVE_FONTCONFIG
+	if (agFontconfigInited) {
+		FcObjectSet *os;
+		FcFontSet *fset;
+		FcPattern *pat;
 
-		if ((dir = AG_OpenDir(s)) == NULL) {
-			AG_Verbose(_("Ignoring: %s\n"), AG_GetError());
-			continue;
+		pat = FcPatternCreate();
+		os = FcObjectSetBuild(FC_FAMILY, (char *)0);
+		fset = FcFontList(NULL, pat, os);
+		if (fset != NULL) {
+			for (i = 0; i < fset->nfont; i++) {
+				FcPattern *font = fset->fonts[i];
+				FcChar8 *fam;
+
+				if (FcPatternGetString(font, FC_FAMILY, 0,
+				    &fam) == FcResultMatch) {
+					ti = AG_TlistAddS(fs->tlFaces, NULL,
+					    (char *)fam);
+					if (*pFont != NULL &&
+					    strcmp((char *)fam,
+					    OBJECT(*pFont)->name) == 0)
+						ti->selected++;
+				}
+			}
+			FcFontSetDestroy(fset);
 		}
-		for (i = 0; i < dir->nents; i++) {
-			char path[AG_FILENAME_MAX];
-			AG_FileInfo info;
-			char *file = dir->ents[i], *pExt;
+		AG_TlistSort(fs->tlFaces);
+	} else
+#endif /* HAVE_FONTCONFIG */
 
-			if (file[0] == '.' ||
-			    (pExt = strrchr(file, '.')) == NULL) {
+	{
+		AG_GetString(AG_ConfigObject(), "font-path", fontPath, sizeof(fontPath));
+
+		while ((s = AG_Strsep(&pFontPath, AG_PATHSEPMULTI)) != NULL) {
+			AG_Dir *dir;
+			int i;
+
+			if ((dir = AG_OpenDir(s)) == NULL) {
+				AG_Verbose(_("Ignoring: %s\n"), AG_GetError());
 				continue;
 			}
-			if (strcmp(pExt, ".ttf") != 0 &&
-			    strcmp(pExt, ".TTF") != 0)
-				continue;
+			for (i = 0; i < dir->nents; i++) {
+				char path[AG_FILENAME_MAX];
+				AG_FileInfo info;
+				char *file = dir->ents[i], *pExt;
 
-			Strlcpy(path, s, sizeof(path));
-			Strlcat(path, AG_PATHSEP, sizeof(path));
-			Strlcat(path, file, sizeof(path));
+				if (file[0] == '.' ||
+				    (pExt = strrchr(file, '.')) == NULL) {
+					continue;
+				}
+				if (Strcasecmp(pExt, ".ttf") != 0) /* XXX */
+					continue;
 
-			if (AG_GetFileInfo(path, &info) == -1 ||
-			    info.type != AG_FILE_REGULAR) {
-				continue;
+				Strlcpy(path, s, sizeof(path));
+				Strlcat(path, AG_PATHSEP, sizeof(path));
+				Strlcat(path, file, sizeof(path));
+
+				if (AG_GetFileInfo(path, &info) == -1 ||
+				    info.type != AG_FILE_REGULAR) {
+					continue;
+				}
+				ti = AG_TlistAddS(fs->tlFaces, NULL, file);
+				if (*pFont != NULL &&
+				    strcmp(file, OBJECT(*pFont)->name) == 0)
+					ti->selected++;
 			}
-			ti = AG_TlistAddS(fs->tlFaces, NULL, file);
-			if (*pFont != NULL &&
-			    strcmp(file, OBJECT(*pFont)->name) == 0)
-				ti->selected++;
+			AG_CloseDir(dir);
 		}
-		AG_CloseDir(dir);
 	}
 
 	/* XXX */
