@@ -37,7 +37,6 @@ static void KeyUp(AG_Event *);
 static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
-static void PopupMenu(AG_Tlist *, AG_TlistPopup *, int, int);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 
 AG_Tlist *
@@ -939,6 +938,23 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 static void
+PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
+{
+	AG_Menu *m = tp->menu;
+	
+#if 0
+	if (AG_ParentWindow(tl) == NULL)
+		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
+#endif
+	if (tp->panel != NULL) {
+		AG_MenuCollapse(tl, tp->item);
+		tp->panel = NULL;
+	}
+	m->itemSel = tp->item;
+	tp->panel = AG_MenuExpand(tl, tp->item, x+4, y+4);
+}
+
+static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
@@ -1423,21 +1439,35 @@ AG_TlistScrollToEnd(AG_Tlist *tl)
 	AG_Redraw(tl);
 }
 
-static void
-PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
+static int
+CompareText(const void *p1, const void *p2)
 {
-	AG_Menu *m = tp->menu;
-	
-#if 0
-	if (AG_ParentWindow(tl) == NULL)
-		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
-#endif
-	if (tp->panel != NULL) {
-		AG_MenuCollapse(tl, tp->item);
-		tp->panel = NULL;
+	const AG_TlistItem *it1 = *(const AG_TlistItem **)p1;
+	const AG_TlistItem *it2 = *(const AG_TlistItem **)p2;
+
+	return strcoll(it1->text, it2->text);
+}
+
+int
+AG_TlistSort(AG_Tlist *tl)
+{
+	AG_TlistItem *it, **items;
+	Uint i = 0;
+
+	if ((items = TryMalloc(tl->nitems*sizeof(AG_TlistItem *))) == NULL) {
+		return (-1);
 	}
-	m->itemSel = tp->item;
-	tp->panel = AG_MenuExpand(tl, tp->item, x+4, y+4);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		items[i++] = it;
+	}
+	qsort(items, tl->nitems, sizeof(AG_TlistItem *), CompareText);
+	TAILQ_INIT(&tl->items);
+	for (i = 0; i < tl->nitems; i++) {
+		TAILQ_INSERT_TAIL(&tl->items, items[i], items);
+	}
+	free(items);
+	AG_Redraw(tl);
+	return (0);
 }
 
 AG_WidgetClass agTlistClass = {
