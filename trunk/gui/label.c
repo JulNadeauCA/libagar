@@ -278,7 +278,7 @@ Init(void *obj)
 {
 	AG_Label *lbl = obj;
 
-	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT;
+	WIDGET(lbl)->flags |= AG_WIDGET_USE_TEXT|AG_WIDGET_TABLE_EMBEDDABLE;
 
 	lbl->type = AG_LABEL_STATIC;
 	lbl->flags = 0;
