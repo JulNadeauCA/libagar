@@ -57,13 +57,17 @@ TestGUI(void *obj, AG_Window *win)
 	AG_TestInstance *ti = obj;
 	AG_Box *box;
 	AG_Textbox *tb;
+	AG_Label *lbl;
 
 	someString[0] = '\0';
 
 	AG_GetString(agConfig, "load-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "load-path: %s", path);
+	lbl = AG_LabelNew(win, 0, "load-path: %s", path);
+	AG_SetStyle(lbl, "font-size", "80%");
+
 	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "save-path: %s", path);
+	lbl = AG_LabelNew(win, 0, "save-path: %s", path);
+	AG_SetStyle(lbl, "font-size", "80%");
 
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);

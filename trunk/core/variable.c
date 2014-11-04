@@ -82,11 +82,8 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 };
 
 /*
- * Fetch a variable for modification, or create a new variable if none
- * was found.
- *
- * The Object must be locked. If a variable of same name but different
- * type exists, it is replaced.
+ * Allocate a new variable of the specified type, or return a pointer to
+ * an existing variable. The Object must be locked.
  */
 static __inline__ AG_Variable *
 FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
@@ -98,14 +95,12 @@ FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 		if (strcmp(V->name, name) == 0)
 			break;
 	}
-	if (V != NULL) {
-		AG_FreeVariable(V);
-	} else {
+	if (V == NULL) {
 		V = Malloc(sizeof(AG_Variable));
+		AG_InitVariable(V, type);
 		Strlcpy(V->name, name, sizeof(V->name));
 		TAILQ_INSERT_TAIL(&obj->vars, V, vars);
 	}
-	AG_InitVariable(V, type);
 	return (V);
 }
 
@@ -283,7 +278,7 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 		break;
 	case AG_VARIABLE_P_STRING:
 	case AG_VARIABLE_P_CONST_STRING:
-		Strlcpy(s, (char *)V->data.p, len);
+		Strlcpy(s, V->data.s, len);
 		break;
 	case AG_VARIABLE_POINTER:
 	case AG_VARIABLE_CONST_POINTER:
@@ -1251,8 +1246,9 @@ AG_GetStringP(void *pObj, const char *name)
 }
 
 /*
- * Set a string value. As a special case, if there is an existing reference
- * to a string buffer, the string is copied onto that existing buffer.
+ * Set the value of a string variable. If the variable exists as a reference
+ * to a fixed-size buffer, the string is copied to the buffer. Otherwise, the
+ * string is duplicated.
  */
 AG_Variable *
 AG_SetString(void *pObj, const char *name, const char *s)
@@ -1276,12 +1272,15 @@ AG_SetString(void *pObj, const char *name, const char *s)
 	} else {
 		switch (V->type) {
 		case AG_VARIABLE_STRING:
-			if (V->info.size == 0) { Free(V->data.s); }
+			if (V->data.s != NULL && V->info.size == 0) {
+				free(V->data.s);
+			}
 			V->data.s = Strdup(s);
+			V->info.size = 0;
 			break;
 		case AG_VARIABLE_P_STRING:
 			AG_LockVariable(V);
-			Strlcpy(*(char **)V->data.p, s, V->info.size);
+			Strlcpy(V->data.s, s, V->info.size);
 			AG_UnlockVariable(V);
 			break;
 		default:
@@ -1311,6 +1310,13 @@ AG_InitStringNODUP(AG_Variable *V, char *v)
 	V->data.s = v;
 	V->info.size = 0;
 }
+
+/*
+ * Variant of AG_SetString() where the string argument is taken to be
+ * a dynamically-allocated string buffer which does not need to be
+ * duplicated. The provided buffer will be freed automatically with
+ * the parent object.
+ */
 AG_Variable *
 AG_SetStringNODUP(void *obj, const char *name, char *s)
 {
@@ -1318,30 +1324,30 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_STRING);
-	V->info.size = 0;				/* Allocated */
-	V->data.s = s;
+	switch (V->type) {
+	case AG_VARIABLE_STRING:
+		if (V->data.s != NULL && V->info.size == 0) {
+			free(V->data.s);
+		}
+		V->data.s = s;
+		V->info.size = 0;
+		break;
+	case AG_VARIABLE_P_STRING:
+		AG_LockVariable(V);
+		Strlcpy(V->data.s, s, V->info.size);
+		AG_UnlockVariable(V);
+		break;
+	default:
+		AG_FreeVariable(V);
+		AG_InitVariable(V, AG_VARIABLE_STRING);
+		V->data.s = s;
+		V->info.size = 0;			/* Allocated */
+		break;
+	}
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-AG_Variable *
-AG_SetStringFixed(void *obj, const char *name, char *buf, size_t bufSize)
-{
-	AG_Variable *V;
 
-	AG_ObjectLock(obj);
-	V = FetchVariable(obj, name, AG_VARIABLE_STRING);
-	V->data.s = buf;
-	V->info.size = bufSize;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-void
-AG_InitStringFixed(AG_Variable *V, char *v, size_t bufSize)
-{
-	AG_InitVariable(V, AG_VARIABLE_STRING);
-	V->data.s = v;
-	V->info.size = bufSize;
-}
 AG_Variable *
 AG_PrtString(void *obj, const char *name, const char *fmt, ...)
 {
@@ -1381,7 +1387,7 @@ AG_BindStringMp(void *obj, const char *name, char *v, size_t size,
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_STRING);
 	V->mutex = mutex;
-	V->data.p = v;
+	V->data.s = v;
 	V->info.size = size;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);

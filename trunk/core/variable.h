@@ -53,7 +53,7 @@ typedef struct ag_variable_type_info {
 	int indirLvl;				/* Indirection level */
 	const char *name;			/* Name string */
 	enum ag_variable_type typeTgt;		/* Pointer target type (or AG_VARIABLE_NULL) */
-	int code;				/* Numerical code (-1 = non persistent) */
+	Sint32 code;				/* Numerical code (-1 = non persistent) */
 	size_t size;				/* Size in bytes (or 0) */
 } AG_VariableTypeInfo;
 
@@ -275,12 +275,8 @@ char        *AG_GetStringDup(void *, const char *);
 char        *AG_GetStringP(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *);
 AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
-AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
-                 BOUNDED_ATTRIBUTE(__string__, 3, 4);
 void         AG_InitString(AG_Variable *, const char *);
 void         AG_InitStringNODUP(AG_Variable *, char *);
-void         AG_InitStringFixed(AG_Variable *, char *, size_t)
-                 BOUNDED_ATTRIBUTE(__string__, 2, 3);
 AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
 AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
