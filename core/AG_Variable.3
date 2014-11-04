@@ -596,9 +596,6 @@ is defined.
 .Ft "void"
 .Fn AG_InitStringNODUP "AG_Variable *var" "const char *s"
 .Pp
-.Ft "void"
-.Fn AG_InitStringFixed "AG_Variable *var" "char *s" "size_t len"
-.Pp
 .Ft "AG_Variable *"
 .Fn AG_SetString "AG_Object *obj" "const char *name" "const char *s"
 .Pp
@@ -607,9 +604,6 @@ is defined.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_SetStringFixed "AG_Object *obj" "const char *name" "char *s" "size_t len"
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "size_t len"
@@ -675,38 +669,34 @@ The
 variant sets the
 .Fa s
 pointer without copying the string.
-The
-.Fn AG_InitStringFixed
-variant initializes a string variable to use a fixed-size buffer
-.Fa s ,
-of size
-.Fa len .
 .Pp
+The
 .Fn AG_SetString
-sets the named string variable to the given string
-.Fa s .
-The argument may be set to NULL (in which case further
+function creates or modifies a string variable.
+The
+.Fa s
+argument is a C string which will be duplicated or copied.
+If the variable exists as a reference to a fixed-size buffer (i.e.,
+it has been created by
+.Fn AG_BindString ) ,
+then the contents of
+.Fa s
+are copied to the buffer.
+If the buffer has insufficient space, the string is truncated.
+The
+.Fa s
+argument may be set to NULL (in which case further
 .Fn AG_GetString
 calls will return NULL).
 .Pp
 The
 .Fn AG_SetStringNODUP
-variant is not free-threaded, it uses the 
-.Fa s
-pointer directly without copying the string, assuming the pointer will
-remain valid for as long as the variable exists.
+variant accepts a pointer to a dynamically-allocated string buffer.
+This buffer will be freed automatically when the parent object is destroyed.
 .Pp
 The
 .Fn AG_PrtString
 variant sets a string variable from a format string argument.
-.Pp
-The
-.Fn AG_SetStringFixed
-function creates or modifies a string variable, tied to a fixed-size
-string buffer
-.Fa s ,
-of size
-.Fa len .
 .Pp
 .Fn AG_BindString
 creates or modifies a variable referencing a fixed-size string buffer
