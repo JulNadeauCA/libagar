@@ -1140,13 +1140,16 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
 		char key[64];
-		Uint32 code;
+		Sint32 code;
 
 		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
 			AG_SetError("Variable name too long: %s", key);
 			goto fail;
 		}
-		code = AG_ReadUint32(ds);
+		code = AG_ReadSint32(ds);
+#if 0
+		Verbose("%s: %s (code %d)\n", ob->name, key, (int)code);
+#endif
 		for (j = 0; j < AG_VARIABLE_TYPE_LAST; j++) {
 			if (agVariableTypes[j].code == code)
 				break;
@@ -1173,7 +1176,9 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 #ifdef AG_HAVE_LONG_DOUBLE
 		case AG_VARIABLE_LONG_DOUBLE: AG_SetLongDouble(ob, key, AG_ReadLongDouble(ds)); break;
 #endif
-		case AG_VARIABLE_STRING: AG_SetStringNODUP(ob, key, AG_ReadString(ds)); break;
+		case AG_VARIABLE_STRING:
+			AG_SetStringNODUP(ob, key, AG_ReadString(ds));
+			break;
 		default:
 			AG_SetError("Attempt to load variable of type %s",
 			    agVariableTypes[j].name);
@@ -1187,7 +1192,7 @@ fail:
 	return (-1);
 }
 
-/* Save Object variables. */
+/* Save persistent object variables. */
 void
 AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 {
@@ -1206,22 +1211,21 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		void *p;
 
 		if (Vt->code == -1) {
-			fprintf(stderr, "skipping %s (non-persistent)\n",
-			    V->name);
-			continue;			/* Nonpersistent */
+			Verbose("Save: skipping %s (non-persistent)\n", V->name);
+			continue;
 		}
 
 		AG_LockVariable(V);
 		if (V->fn.fnVoid != NULL &&
 		    AG_EvalVariable(ob, V) == -1) {
-			Debug(ob, "Failed to eval %s (%s); excluding from archive",
-			    V->name, AG_GetError());
+			Verbose("Save: eval %s failed (%s); ignoring", V->name,
+			    AG_GetError());
 			AG_UnlockVariable(V);
 			continue;
 		}
 
 		AG_WriteString(ds, (char *)V->name);
-		AG_WriteUint32(ds, Vt->code);
+		AG_WriteSint32(ds, Vt->code);
 
 		p = (agVariableTypes[V->type].indirLvl > 0) ?
 		    V->data.p : &V->data;
@@ -1258,8 +1262,8 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
  * Load an Agar object (or a virtual filesystem of Agar objects) from an
  * archive file.
  *
- * Only the generic Object information is read, datasets are skipped and
- * dependencies are left unresolved.
+ * Only the generic part is read, datasets are skipped and dependencies
+ * are left unresolved.
  */
 int
 AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
@@ -1351,7 +1355,9 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			}
 			goto fail;
 		}
-		chld = Malloc(cl->size);
+		if ((chld = TryMalloc(cl->size)) == NULL) {
+			goto fail;
+		}
 		AG_ObjectInit(chld, cl);
 		AG_ObjectSetNameS(chld, cname);
 		AG_ObjectAttach(ob, chld);
@@ -1521,7 +1527,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_WriteUint32(ds, 0);					/* Data offs */
 	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
-	/* Dependency and property tables */
+	/* Interobject dependency table */
 	countOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
@@ -1537,6 +1543,8 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		count++;
 	}
 	AG_WriteUint32At(ds, count, countOffs);
+
+	/* Persistent object variables */
 	AG_ObjectSaveVariables(ob, ds);
 	
 	/* Table of child objects */
