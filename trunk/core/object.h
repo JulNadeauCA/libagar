@@ -339,6 +339,44 @@ AG_Defined(void *pObj, const char *name)
 }
 
 /*
+ * If the named variable exists, return a pointer to it.
+ * If not, allocate a new one. The Object must be locked.
+ */
+static __inline__ AG_Variable *
+AG_FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
+{
+	AG_Object *obj = (AG_Object *)pObj;
+	AG_Variable *V;
+
+	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
+		if (strcmp(V->name, name) == 0)
+			break;
+	}
+	if (V == NULL) {
+		V = AG_Malloc(sizeof(AG_Variable));
+		AG_InitVariable(V, type);
+		AG_Strlcpy(V->name, name, sizeof(V->name));
+		AG_TAILQ_INSERT_TAIL(&obj->vars, V, vars);
+	}
+	return (V);
+}
+
+/*
+ * Variant of AG_FetchVariable(). If an existing variable of the given name
+ * exists, it is freed and reinitialized as the specified type.
+ */
+static __inline__ AG_Variable *
+AG_FetchVariableOfType(void *pObj, const char *name, enum ag_variable_type type)
+{
+	AG_Variable *V = AG_FetchVariable(pObj, name, type);
+	if (V->type != type) {
+		AG_FreeVariable(V);
+		AG_InitVariable(V, type);
+	}
+	return (V);
+}
+
+/*
  * Lookup an object variable by name and return a locked AG_Variable.
  * The object must be locked.
  */
