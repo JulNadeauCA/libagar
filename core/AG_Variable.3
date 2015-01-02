@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -26,27 +26,29 @@
 .Dt AG_VARIABLE 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.3.4
+.ds oS Agar 1.5.0
 .Sh NAME
 .Nm AG_Variable
-.Nd generic agar data item
+.Nd agar object variables
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The
-.Nm
-structure can store the following types of data:
+Every Agar
+.Xr AG_Object 3
+instance has an associated set of named variables, which are useful for storing
+primitive data as well as references to external, structured data.
+An Agar variable can store the following types of data:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
-Integers (i.e.,
+Integers (e.g.,
 .Ft int ,
 .Ft Uint ,
 .Ft Sint16 )
 .It
-Floating-point numbers (i.e.,
+Floating-point numbers (e.g.,
 .Ft float ,
 .Ft double ,
 .Ft long double )
@@ -56,17 +58,18 @@ C strings (dynamically allocated)
 Generic pointers
 .El
 .Pp
+An
 .Nm
 can also reference the following types of data:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
-Integers (i.e.,
+Integers (e.g.,
 .Ft int * ,
 .Ft Uint * ,
 .Ft Sint16 * )
 .It
-Floating-point numbers (i.e.,
+Floating-point numbers (e.g.,
 .Ft float * ,
 .Ft double * ,
 .Ft long double * )
@@ -85,19 +88,23 @@ Named Agar object variables.
 .El
 .Pp
 .Nm
-is used extensively throughout the Agar library.
-Every
-.Xr AG_Object 3
-instance contains a table of named variables for general-purpose use.
-In the Agar-GUI library, widget "bindings" are simply
+is used extensively throughout Agar and Agar-based libraries.
+In the Agar-GUI system, GUI widgets use Agar variables to reference
+external data (also known as "bindings").
+For example, the "value" variable of an
+.Xr AG_Numerical 3
+spinbutton may be tied to a fixed-size integer, a floating-point number, or
+any other type implemented by
+.Ft AG_Numerical .
+.Pp
+It is also possible to allocate anonymous
 .Nm
-elements referencing typed data.
-The event system of
+structures on the fly.
+For instance, the event system of
 .Xr AG_Object 3
-also uses the
+uses a list of
 .Nm
-structure to describe the list of arguments passed to event
-handler routines.
+elements to describe the list of arguments passed to event handler routines.
 .Sh INTERFACE
 .nr nS 1
 .Ft int
@@ -108,6 +115,12 @@ handler routines.
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_GetVariableLocked "AG_Object *obj" "const char *name"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_FetchVariable "AG_Object *obj" "const char *name" "enum ag_variable_type type"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_FetchVariableOfType "AG_Object *obj" "const char *name" "enum ag_variable_type type"
 .Pp
 .Ft "void"
 .Fn AG_LockVariable "AG_Variable *var"
@@ -155,16 +168,19 @@ The caller must lock
 before invoking
 .Fn AG_Defined .
 .Pp
+The
 .Fn AG_GetVariable
-searches for a named variable under object
+routine searches for a named variable under object
 .Fa obj
 and returns a pointer to the corresponding
 .Ft AG_Variable
-structure if found, otherwise NULL is returned.
+structure if found.
+If no such variable exists, NULL is returned.
 If the variable is tied to a function, the function is evaluated first.
-If
+If the
 .Fa data
-is non-NULL, the primitive data or pointer is copied (not valid for strings).
+argument is not NULL, a pointer to the variable's primitive data is returned
+into it (not valid for strings).
 .Pp
 .Fn AG_GetVariableLocked
 looks up the named variable under
@@ -179,6 +195,23 @@ acquires any locking devices associated with the variable.
 The caller is expected to invoke
 .Fn AG_UnlockVariable
 when done accessing the data.
+.Pp
+The
+.Fn AG_FetchVariable
+routine looks up a variable by name, returning a pointer to the corresponding
+.Ft AG_Variable
+structure.
+If no such variable exists, a new one of the specified
+.Fa type
+is allocated.
+.Pp
+The
+.Fn AG_FetchVariableOfType
+variant works like
+.Fn AG_FetchVariable ,
+except that preexisting variables of a differing type are automatically
+destroyed and recreated to match the specified
+.Fa type .
 .Pp
 .Fn AG_LockVariable
 and

@@ -327,6 +327,7 @@ AG_InitVariable(AG_Variable *V, enum ag_variable_type type)
 	V->info.size = 0;
 	V->info.ref.key = NULL;
 	V->info.ref.var = NULL;
+	V->data.s = NULL;
 }
 
 /* Acquire any locking device associated with a variable. */
