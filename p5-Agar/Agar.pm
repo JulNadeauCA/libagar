@@ -5,7 +5,7 @@ use strict;
 require DynaLoader;
 
 our @ISA = qw(DynaLoader);
-our $VERSION = '1.4.0';
+our $VERSION = '1.5.0';
 
 @Agar::Widget::ISA = qw(Agar::Object);
 @Agar::Window::ISA = qw(Agar::Widget);
@@ -122,7 +122,13 @@ UTF-8 characters.
 
 =item B<Agar::EventLoop>
 
-Agar's default event loop.
+Block the current thread, wait for low-level events and process them.
+
+=item B<Agar::Terminate($exitCode)>
+
+Request termination of the event loop associated with the current thread.
+If the current thread is the main thread, terminate the application with
+C<$exitCode> as return code.
 
 =item B<Agar::GetConfig>
 
@@ -184,14 +190,6 @@ that allows the user to ignore subsequent messages with the same key string.
 
 Creates a modal dialog box displaying some warning text, with a checkbox.
 that allows the user to ignore subsequent messages with the same key string.
-
-=item B<Agar::PromptMsg($text, $codeRef)>
-
-Creates a dialog box with a text entry widget, and calls the specified code
-reference when a value has been entered.
-
-This increments the internal reference count of the code reference, then
-decrements it again after it's been called.
 
 =item B<Agar::Quit()>
 
