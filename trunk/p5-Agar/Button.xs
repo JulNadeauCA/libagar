@@ -33,9 +33,9 @@
 
 static const AP_FlagNames flagNames[] = {
 	{ "sticky",		AG_BUTTON_STICKY },
-	{ "mouseOver",		AG_BUTTON_MOUSEOVER },
 	{ "repeat",		AG_BUTTON_REPEAT },
 	{ "invertState",	AG_BUTTON_INVSTATE },
+	{ "excl",		AG_BUTTON_EXCL },
 	{ NULL,			0 }
 };
 

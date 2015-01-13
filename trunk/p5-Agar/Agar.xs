@@ -151,8 +151,10 @@ InitCore(progName, ...)
 	const char *progName
 PREINIT:
 	const AP_FlagNames flagNames[] = {
-		{ "verbose", AG_VERBOSE },
-		{ NULL,      0 }
+		{ "verbose",		AG_VERBOSE },
+		{ "createDataDir",	AG_CREATE_DATADIR },
+		{ "softTimers",		AG_SOFT_TIMERS },
+		{ NULL,			0 }
 	};
 	Uint flags = 0;
 CODE:
@@ -203,6 +205,12 @@ void
 EventLoop()
 CODE:
 	AG_EventLoop();
+
+void
+Terminate(exitCode)
+	int exitCode
+CODE:
+	AG_Terminate(exitCode);
 
 Agar::Config
 GetConfig()
@@ -317,18 +325,6 @@ WarningMsgIgnorable(key, text)
 	const char * text
 CODE:
 	AG_TextWarningS(key, text);
-
-void
-PromptMsg(text, coderef)
-	const char * text
-	SV * coderef
-CODE:
-	if (SvTYPE(SvRV(coderef)) == SVt_PVCV) {
-		SvREFCNT_inc(coderef);
-		AG_TextPromptString(text, AP_EventHandlerDecRef, "%p", coderef);
-	} else {
-		Perl_croak(aTHX_ "Usage: Agar::PromptText(text,coderef)");
-	}
 
 void
 DESTROY()
