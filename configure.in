@@ -399,7 +399,7 @@ fi
 
 # Enable MySQL backend for AG_Db if available.
 if [ "${with_mysql}" != "no" ]; then
-	CHECK(mysql, 0, ${prefix_mysql})
+	CHECK(mysql, 5.5.8, ${prefix_mysql})
 	if [ "${HAVE_MYSQL}" != "yes" ]; then
 		if [ "${with_mysql}" = "yes" ]; then
 			echo "*"
