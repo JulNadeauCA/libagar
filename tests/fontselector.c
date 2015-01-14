@@ -5,7 +5,7 @@
 static void
 SelectedFont(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
+/*	AG_Window *win = AG_PTR(1); */
 
 	AG_SetString(agConfig, "font.face", AGOBJECT(agDefaultFont)->name);
 	AG_SetInt(agConfig, "font.size", agDefaultFont->spec.size);
