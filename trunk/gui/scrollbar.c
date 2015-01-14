@@ -169,15 +169,18 @@ fail:
 	TYPE max = *(TYPE *)pMax;					\
 	TYPE vis = *(TYPE *)pVis;					\
 	int extentPx;							\
-	GET_EXTENT_PX(TYPE);						\
-	if (x <= 0) {							\
-		*(TYPE *)pVal = min;					\
-	} else if (x >= (int)extentPx) {				\
-		*(TYPE *)pVal = MAX(min, (max - vis));			\
-	} else {							\
-		*(TYPE *)pVal = min + x*(max-vis-min)/extentPx;		\
-		if (*(TYPE *)pVal < min) { *(TYPE *)pVal = min;	}	\
-		if (*(TYPE *)pVal > max) { *(TYPE *)pVal = max;	}	\
+									\
+	if (*(TYPE *)pMax > *(TYPE *)pVis) {				\
+		GET_EXTENT_PX(TYPE);					\
+		if (x <= 0) {						\
+			*(TYPE *)pVal = min;				\
+		} else if (x >= (int)extentPx) {			\
+			*(TYPE *)pVal = MAX(min, (max - vis));		\
+		} else {						\
+			*(TYPE *)pVal = min + x*(max-vis-min)/extentPx;	\
+			if (*(TYPE *)pVal < min) { *(TYPE *)pVal = min;	} \
+			if (*(TYPE *)pVal > max) { *(TYPE *)pVal = max;	} \
+		}							\
 	}								\
 }
 static __inline__ void
@@ -225,21 +228,25 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
  */
 #undef INCREMENT
 #define INCREMENT(TYPE)	{						\
-	if ((*(TYPE *)pVal + *(TYPE *)pInc) >				\
-	    (*(TYPE *)pMax - (*(TYPE *)pVis))) {			\
-		*(TYPE *)pVal = (*(TYPE *)pMax) - (*(TYPE *)pVis);	\
-		rv = 1;							\
-	} else { 							\
-		*(TYPE *)pVal += *(TYPE *)pInc;				\
+	if (*(TYPE *)pMax > *(TYPE *)pVis) {				\
+		if ((*(TYPE *)pVal + *(TYPE *)pInc) >			\
+		    (*(TYPE *)pMax - (*(TYPE *)pVis))) {		\
+			*(TYPE *)pVal = (*(TYPE *)pMax) - (*(TYPE *)pVis); \
+			rv = 1;						\
+		} else { 						\
+			*(TYPE *)pVal += *(TYPE *)pInc;			\
+		}							\
 	}								\
 }
 #undef DECREMENT
 #define DECREMENT(TYPE) {						\
-	if (*(TYPE *)pVal < *(TYPE *)pMin + *(TYPE *)pInc) {		\
-		*(TYPE *)pVal = *(TYPE *)pMin;				\
-		rv = 1;							\
-	} else { 							\
-		*(TYPE *)pVal -= *(TYPE *)pInc;				\
+	if (*(TYPE *)pMax > *(TYPE *)pVis) {				\
+		if (*(TYPE *)pVal < *(TYPE *)pMin + *(TYPE *)pInc) {	\
+			*(TYPE *)pVal = *(TYPE *)pMin;			\
+			rv = 1;						\
+		} else { 						\
+			*(TYPE *)pVal -= *(TYPE *)pInc;			\
+		}							\
 	}								\
 }
 static int
