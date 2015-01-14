@@ -43,10 +43,10 @@ extern const AG_TestCase stringTest;
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
 extern const AG_TestCase textDlgTest;
-extern const AG_TestCase themesTest;
 extern const AG_TestCase threadsTest;
 extern const AG_TestCase timeoutsTest;
 extern const AG_TestCase unitconvTest;
+extern const AG_TestCase widgetsTest;
 extern const AG_TestCase windowsTest;
 
 const AG_TestCase *testCases[] = {
@@ -84,10 +84,10 @@ const AG_TestCase *testCases[] = {
 	&tableTest,
 	&textboxTest,
 	&textDlgTest,
-	&themesTest,
 	&threadsTest,
 	&timeoutsTest,
 	&unitconvTest,
+	&widgetsTest,
 	&windowsTest,
 	NULL
 };

@@ -60,10 +60,10 @@ SRCS=	agartest.c ${SRCS_EXTRA} \
 	table.c \
 	textbox.c \
 	textdlg.c \
-	themes.c \
 	threads.c \
 	timeouts.c \
 	unitconv.c \
+	widgets.c \
 	windows.c
 
 all: all-subdir ${PROG}
