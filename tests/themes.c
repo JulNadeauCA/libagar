@@ -254,13 +254,10 @@ TestGUI(void *obj, AG_Window *win)
 		menu = AG_MenuNew(div2, AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
 		{
-			AG_MenuAction(m, "Preferences...", agIconGear.s,
+			AG_MenuAction(m, "Agar Preferences...", agIconGear.s,
 			    Preferences, NULL);
-			AG_MenuSeparator(m);
-			AG_MenuAction(m, "Close this test", agIconClose.s,
-			    AGWINDETACH(win));
 		}
-		m = AG_MenuNode(menu->root, "Test", NULL);
+		m = AG_MenuNode(menu->root, "Test Menu", NULL);
 		{
 			AG_MenuNode(m, "Submenu A", NULL);
 			AG_MenuSeparator(m);
