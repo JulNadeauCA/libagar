@@ -361,10 +361,10 @@ Destroy(void *obj)
 	DEV_DestroySubsystem();
 }
 
-const AG_TestCase themesTest = {
-	"themes",
-	N_("Test a variety of widgets with different themes"),
-	"1.4.2",
+const AG_TestCase widgetsTest = {
+	"widgets",
+	N_("Display various standard Agar widgets"),
+	"1.5.0",
 	0,
 	sizeof(AG_TestInstance),
 	Init,
