@@ -5,19 +5,22 @@
 
 #include "agartest.h"
 
+static int count = 0;
+
 static void
 CreateWindow(AG_Event *event)
 {
-	AG_Window *win, *winParent = AG_PTR(1);
-	int count = AG_INT(2);
+	AG_Window *winParent = AG_PTR(1);
+	AG_Window *win;
 
 	if ((win = AG_WindowNew(AG_WINDOW_MODAL)) == NULL) {
 		return;
 	}
-	AG_LabelNew(win, 0, "Modal window #%d\n(Parent = %s)", count++,
+	AG_LabelNew(win, 0, "Modal window #%d,\nChild of %s",
+	    count++,
 	    AGOBJECT(winParent)->name);
-	AG_ButtonNewFn(win, 0, "Create another",
-	    CreateWindow, "%p,%i", win, count++);
+	AG_ButtonNewFn(win, 0, "Create Child Window",
+	    CreateWindow, "%p", win);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
 }
@@ -25,11 +28,9 @@ CreateWindow(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_Event ev;
-
-	AG_LabelNewS(win, 0, "Creating a test modal window...");
-	AG_EventArgs(&ev, "%p,%i", win, 1);
-	CreateWindow(&ev);
+	AG_ButtonNewFn(win, 0, "Create Modal Window",
+	    CreateWindow, "%p", win);
+	count = 0;
 	return (0);
 }
 
