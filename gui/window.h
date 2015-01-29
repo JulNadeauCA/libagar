@@ -222,6 +222,8 @@ void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 int      AG_WindowIntersect(AG_DriverSw *, int, int);
 
+void	 AG_CloseFocusedWindow(void);
+
 void     AG_WindowProcessFocusChange(void);
 void     AG_WindowProcessShowQueue(void);
 void     AG_WindowProcessHideQueue(void);

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -598,6 +598,9 @@ for details.
 .Ft "void"
 .Fn AG_WindowCycleFocus "AG_Window *win" "int reverse"
 .Pp
+.Ft "void"
+.Fn AG_CloseFocusedWindow "void"
+.Pp
 .nr nS 0
 The
 .Fn AG_WindowFocus
@@ -643,6 +646,10 @@ places the focus over the widget following (or preceeding if
 is 1) the widget currently holding focus inside of
 .Fa win .
 By default, Agar maps the "TAB" key to this function.
+.Pp
+The
+.Fn AG_CloseFocusedWindow
+routine requests closure of the currently focused window, if any.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Window

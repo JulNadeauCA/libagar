@@ -289,7 +289,7 @@ Detach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = OBJECT(win)->parent, *odrv;
-	AG_Window *subwin, *nsubwin;
+	AG_Window *subwin;
 	AG_Window *owin;
 	
 #ifdef AG_DEBUG
@@ -297,32 +297,22 @@ Detach(AG_Event *event)
 		AG_FatalError("Window is not attached to a Driver");
 #endif
 	AG_LockVFS(&agDrivers);
-	
-	/* Implicitely hide the window. */
-	if (win->visible)
-		AG_WindowHide(win);
-	
-	/* Window is being detached. */
+
+	/* Mark window detach in progress */
 	win->flags |= AG_WINDOW_DETACHING;
-
-	/* The window's titlebar and icon are no longer safe to use. */
-	if (win->tbar != NULL)
-		win->tbar = NULL;
-	if (win->icon != NULL)
-		win->icon = NULL;
 	
-	/* Cancel any planned focus change to this window. */
-	if (win == agWindowToFocus) {
-		Debug(NULL, "%s has been detached; cancelling focus change\n",
-		    OBJECT(win)->name);
-		agWindowToFocus = NULL;
-	}
-
-	/* Remove any reference from another window to this one. */
+	/*
+	 * Remove all dependencies toward this window. Child windows are
+	 * reparented to NULL and sent a `window-close' event.
+	 */
 	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(owin, odrv) {
 			if (owin == win) {
 				continue;
+			}
+			if (owin->parent == win) {
+				AG_PostEvent(NULL, owin, "window-close", NULL);
+				owin->parent = NULL;
 			}
 			TAILQ_FOREACH(subwin, &owin->subwins, swins) {
 				if (subwin == win)
@@ -333,29 +323,32 @@ Detach(AG_Event *event)
 		}
 	}
 	
+	/* Cancel any planned focus change to this window. */
+	if (win == agWindowToFocus)
+		agWindowToFocus = NULL;
+	
+	if (win->visible)
+		AG_WindowHide(win);
+
+	/* Titlebar and icons are no longer safe to reference. */
+	if (win->tbar != NULL) { win->tbar = NULL; }
+	if (win->icon != NULL) { win->icon = NULL; }
+	
 	/*
-	 * Notify the objects. This will cause the the "drv" and "drvOps"
-	 * pointers of all widgets to be reset to NULL.
+	 * Notify all child widgets of the window detach request. Widgets
+	 * acknowledge the request by resetting their drv and drvOps pointers
+	 * to NULL.
 	 */
 	AG_PostEvent(drv, win, "detached", NULL);
 
  	/*
-	 * For a window detach to be safe in event context, the window
-	 * list cannot be directly altered. We place the window in the
-	 * driver's "detach" queue, to be destroyed at the end of the
-	 * current event processing cycle.
+	 * For a window detach operation to be free-threaded and safe in event
+	 * context, the window list cannot be directly altered. We place the
+	 * window in a detach queue which will be processed at the end of the
+	 * event processing cycle.
 	 */
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
 
-	/* Implicitely queue the sub-windows for detachment as well */
-	for (subwin = TAILQ_FIRST(&win->subwins);
-	     subwin != TAILQ_END(&win->subwins);
-	     subwin = nsubwin) {
-		nsubwin = TAILQ_NEXT(subwin, swins);
-		AG_ObjectDetach(subwin);
-	}
-	TAILQ_INIT(&win->subwins);
-	
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -437,8 +430,8 @@ Init(void *obj)
 	AG_SetEvent(win, "window-lostfocus", OnFocusLoss, NULL);
 
 	/*
-	 * Arrange for propagation of the widget-shown, widget-hidden and
-	 * detached events to attached widgets.
+	 * We wish to forward incoming `widget-shown', `widget-hidden' and
+	 * `detached' events to all attached child widgets.
 	 */
 	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
@@ -1583,6 +1576,17 @@ void
 AG_WindowCloseGenEv(AG_Event *event)
 {
 	AG_PostEvent(NULL, AG_PTR(1), "window-close", NULL);
+}
+
+/* Close the actively focused window. */
+void
+AG_CloseFocusedWindow(void)
+{
+	AG_LockVFS(&agDrivers);
+	if (agWindowFocused != NULL) {
+		AG_PostEvent(NULL, agWindowFocused, "window-close", NULL);
+	}
+	AG_UnlockVFS(&agDrivers);
 }
 
 static void
