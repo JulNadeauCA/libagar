@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,10 @@ static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
+
+#ifndef AG_TLIST_PADDING
+#define AG_TLIST_PADDING 2	/* Label padding (pixels) */
+#endif
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -216,7 +220,8 @@ OnFontChange(AG_Event *event)
 			it->label = -1;
 		}
 	}
-	AG_TlistSetItemHeight(tl, WIDGET(tl)->font->height+2);
+	AG_TlistSetItemHeight(tl, WIDGET(tl)->font->height + AG_TLIST_PADDING);
+	AG_TlistSetIconWidth(tl, tl->item_h + 1);
 }
 
 static void
@@ -255,8 +260,8 @@ Init(void *obj)
 	tl->flags = 0;
 	tl->selected = NULL;
 	tl->wSpace = 4;
-	tl->item_h = agTextFontHeight+2;
-	tl->icon_w = tl->item_h;
+	tl->item_h = agTextFontHeight + AG_TLIST_PADDING;
+	tl->icon_w = tl->item_h + 1;
 	tl->dblClicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
@@ -445,6 +450,7 @@ Draw(void *obj)
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
+		AG_Surface *labelSu;
 
 		if (i++ < tl->rOffs) {
 			if (it->selected) {
@@ -491,15 +497,16 @@ Draw(void *obj)
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
 		}
+
+		if ((y + tl->item_h) < HEIGHT(tl)-1)
+			AG_DrawLineH(tl, 1, tl->wRow-2, (y + tl->item_h),
+			    WCOLOR(tl,AG_LINE_COLOR));
+
+		labelSu = WSURFACE(tl,it->label);
 		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->icon_w + tl->wSpace,
-		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2);
-
+		    y + AG_TLIST_PADDING);
 		y += tl->item_h;
-		if (y < HEIGHT(tl)-1) {
-			AG_DrawLineH(tl, 1, tl->wRow-2, y,
-			    WCOLOR(tl,AG_LINE_COLOR));
-		}
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
 		if (selPos == -1) {

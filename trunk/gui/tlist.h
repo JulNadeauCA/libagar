@@ -28,8 +28,8 @@ typedef struct ag_tlist_item {
 	const char *cat;			/* User-supplied category */
 	char text[AG_TLIST_LABEL_MAX];		/* Label text */
 	int label;				/* Cached label surface */
-	Uint8 depth;				/* Depth in tree */
-	Uint8 flags;
+	Uint depth;				/* Indent in tree display */
+	Uint flags;
 #define AG_TLIST_EXPANDED	  0x01	/* Child items visible (tree) */
 #define AG_TLIST_HAS_CHILDREN	  0x02	/* Child items exist (tree) */
 #define AG_TLIST_DYNICON	  0x04	/* Use a copy of iconsrc */
