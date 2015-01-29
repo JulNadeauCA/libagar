@@ -70,7 +70,7 @@ system and the
 interface which is the basis of widget
 .Em bindings
 (see
-.Dq BINDINGS
+.Sx BINDINGS
 section below).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
@@ -131,7 +131,7 @@ routine of a container widget is responsible for positioning and
 dimensioning of child widgets attached to it (by calling
 .Fn AG_WidgetSizeAlloc
 on them -- see
-.Dq SIZING
+.Sx SIZING
 section below).
 The function should return 0 on success or -1 to flag the widget as
 "undersize", disabling further calls to
@@ -1094,11 +1094,10 @@ for details.
 For the
 .Ft AG_Widget
 object:
-.Pp
 .Bl -tag -width "AG_Rect2 rView "
 .It Ft Uint flags
 Option flags (see
-.Dq FLAGS
+.Sx FLAGS
 section below).
 .It Ft int x, y
 Pixel coordinates of the widget relative to its parent.
@@ -1138,7 +1137,7 @@ zero-valued geometry (read-only, set by
 .It AG_WIDGET_DISABLED
 Advise that widget is not accepting user input.
 The effect of this option is widget-dependent (read-only; see
-.Dq INPUT STATE
+.Sx INPUT STATE
 section).
 This flag may affect the way the widget is rendered.
 .It AG_WIDGET_MOUSEOVER
@@ -1214,8 +1213,8 @@ flag and generate "mouse-over" events accordingly.
 .El
 .Sh SEE ALSO
 .Xr AG_Cursor 3 ,
-.Xr AG_KeySym 3 ,
 .Xr AG_KeyMod 3 ,
+.Xr AG_KeySym 3 ,
 .Xr AG_Rect 3 ,
 .Xr AG_StyleSheet 3 ,
 .Xr AG_Surface 3 ,

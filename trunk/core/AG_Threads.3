@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -220,10 +220,10 @@ If the given thread is invalid, a fatal error is raised.
 .Pp
 The
 .Fn AG_ThreadJoin
-function suspends the execution of the current thread until 
+function suspends the execution of the current thread until
 .Fa th
 terminates.
-When it does, the value passed to 
+When it does, the value passed to
 .Fn AG_ThreadExit
 is made available in
 .Fa exitVal .
@@ -244,7 +244,6 @@ returns 1 if the identifiers
 and
 .Fa b
 both refer to the same thread, or 0 if they differ.
-.Pp
 .Sh THREAD-SPECIFIC VARIABLES
 .nr nS 1
 .\" MANLINK(AG_ThreadKey)

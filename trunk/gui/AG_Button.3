@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -116,7 +116,7 @@ argument is given, it sets a default text caption.
 For the list of acceptable
 .Fa flags ,
 see
-.Dq BUTTON FLAGS
+.Sx BUTTON FLAGS
 section.
 .Pp
 The
@@ -134,7 +134,7 @@ implies
 .Dv AG_BUTTON_NOEXCL
 is passed).
 .Pp
-The 
+The
 .Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32}
 functions tie the state of the button (the
 .Sq state
@@ -187,7 +187,6 @@ bound to the button.
 .Pp
 .Fn AG_ButtonJustify
 sets the justification for the button text label (or icon):
-.Pp
 .Bd -literal
 enum ag_text_justify {
 	AG_TEXT_LEFT,
@@ -198,7 +197,6 @@ enum ag_text_justify {
 .Pp
 .Fn AG_ButtonValign
 sets the vertical alignment for the button text label (or icon):
-.Pp
 .Bd -literal
 enum ag_text_valign {
 	AG_TEXT_TOP,
@@ -226,7 +224,6 @@ If a text label currently exists, it is removed.
 .Fn AG_ButtonText
 sets the label of the button from the specified text string.
 If a surface is currently set, it is removed.
-.Pp
 .Sh BUTTON FLAGS
 The following
 .Va flags
@@ -304,7 +301,6 @@ The following code fragment creates a button and sets a handler function
 for the
 .Sq button-pushed
 event:
-.Pp
 .Bd -literal -offset indent
 void
 MyHandlerFn(AG_Event *event)
@@ -328,7 +324,6 @@ AG_ButtonNewFlag32(parent, 0, "Bit 2", &MyFlags, 0x02);
 .Pp
 The following code fragment uses a button to control an int protected
 by a mutex device:
-.Pp
 .Bd -literal -offset indent
 int MyInt = 0;
 AG_Mutex MyMutex;
@@ -339,8 +334,8 @@ btn = AG_ButtonNew(parent, 0, "Mutex-protected flag");
 AG_BindIntMp(btn, "state", &MyInt, &MyMutex);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Toolbar 3 ,
 .Xr AG_Widget 3 ,

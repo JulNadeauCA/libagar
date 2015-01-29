@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -173,12 +173,12 @@ characters).
 should point to an initialized
 .Ft AG_ObjectClass
 structure (see
-.Dq CLASSES
+.Sx CLASSES
 section).
 The
 .Fa flags
 argument specifies a default set of flags (see
-.Dq FLAGS
+.Sx FLAGS
 section).
 .Pp
 The
@@ -188,7 +188,7 @@ variant of
 implicitely sets the
 .Dv AG_OBJECT_STATIC
 flag (see
-.Dq FLAGS ) .
+.Sx FLAGS ) .
 The
 .Fn AG_ObjectInitNamed
 variant either implicitely calls
@@ -198,7 +198,7 @@ if the
 argument is non-NULL, or it sets the
 .Dv AG_OBJECT_NAME_ONATTACH
 flag if the name is NULL (see
-.Dq FLAGS
+.Sx FLAGS
 section for details).
 .Pp
 The function
@@ -429,7 +429,7 @@ The
 .Ft AG_ObjectClass
 structure also contains read-only members which are initialized internally
 by the object system (see
-.Dq STRUCTURE DATA ) .
+.Sx STRUCTURE DATA ) .
 .Pp
 Traditionally, in C, the source file for an Agar object will contain a
 static initializer for
@@ -543,7 +543,7 @@ The
 and
 .Fn save
 operations are responsible for archiving the dataset (see the
-.Dq ARCHIVING
+.Sx ARCHIVING
 section for more information).
 .Pp
 When defined, the
@@ -913,7 +913,7 @@ is passed, the dataset will be kept in memory.
 .Fn AG_ObjectPageOut "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetArchivePath "AG_Object *obj" "const char *path" 
+.Fn AG_ObjectSetArchivePath "AG_Object *obj" "const char *path"
 .Pp
 .Ft "void"
 .Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "size_t buf_len"
@@ -1104,7 +1104,6 @@ is invoked.
 The
 .Nm
 mechanism generates the following events:
-.Pp
 .Bl -tag -width 2n
 .It Fn attached "void"
 The object has been attached to another.
@@ -1141,7 +1140,7 @@ for details.
 For the
 .Ft AG_ObjectClass
 structure (see the
-.Dq CLASSES
+.Sx CLASSES
 section):
 .Pp
 .Bl -tag -compact -width "AG_ObjectClass *super "
@@ -1185,7 +1184,6 @@ This field is set internally.
 For the
 .Ft AG_Object
 structure:
-.Pp
 .Bl -tag -width "AG_ObjectClass *cls "
 .It Ft char *name
 The name string is an arbitrary string identifier which is guaranteed
@@ -1213,7 +1211,7 @@ A pointer to the
 class information structure for this object.
 .It Ft Uint flags
 Object flags (see
-.Dq FLAGS
+.Sx FLAGS
 section).
 .It Ft Uint nevents
 Count on the number of registered event handlers.
@@ -1231,10 +1229,10 @@ Named variables (see
 for details).
 .It Ft TAILQ deps
 Registered dependencies (see
-.Dq DEPENDENCIES ) .
+.Sx DEPENDENCIES ) .
 .It Ft TAILQ children
 List of child objects.
-The 
+The
 .Fn AGOBJECT_FOREACH_CHILD ,
 .Fn AGOBJECT_FOREACH_CHILD_REVERSE ,
 .Fn AGOBJECT_NEXT_CHILD ,
@@ -1248,10 +1246,10 @@ See
 .Pa tests/objsystem.c
 in the Agar source distribution.
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
-.Xr AG_Variable 3 ,
-.Xr AG_Timeout 3
+.Xr AG_Intro 3 ,
+.Xr AG_Timeout 3 ,
+.Xr AG_Variable 3
 .Sh HISTORY
 The
 .Nm

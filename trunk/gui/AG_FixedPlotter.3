@@ -52,7 +52,7 @@ in the ag_math library.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_FixedPlotter *"
-.Fn AG_FixedPlotterNew "AG_Widget *parent, enum ag_fixed_plotter_type type" "Uint flags"
+.Fn AG_FixedPlotterNew "AG_Widget *parent" "enum ag_fixed_plotter_type type" "Uint flags"
 .Pp
 .nr nS 0
 The
@@ -63,7 +63,6 @@ widget.
 The
 .Fa type
 argument is one of:
-.Pp
 .Bd -literal
 enum ag_fixed_plotter_type {
 	AG_FIXED_PLOTTER_POINTS,   /* Dots */
@@ -74,7 +73,6 @@ enum ag_fixed_plotter_type {
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_FIXED_PLOTTER_SCROLL "
 .It AG_FIXED_PLOTTER_SCROLL
 Always scroll to the end of the plot if it is not visible.
@@ -93,7 +91,7 @@ Shorthand for
 .Sh PLOTTING
 .nr nS 1
 .Ft "AG_FixedPlotterCurve *"
-.Fn AG_FixedPlotterCurve "AG_FixedPlotter *fpl, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
+.Fn AG_FixedPlotterCurve "AG_FixedPlotter *fpl" "const char *name" "Uint8 r" "Uint8 g" "Uint8 b" "Uint32 limit"
 .Pp
 .Ft void
 .Fn AG_FixedPlotterDatum "AG_FixedPlotterCurve *curve" "AG_FixedPlotterValue val"
@@ -127,7 +125,6 @@ widget does not generate any event.
 For the
 .Ft AG_FixedPlotter
 object:
-.Pp
 .Bl -tag -width "enum ag_fixed_plotter_type type "
 .It Ft enum ag_fixed_plotter_type type
 Drawing method, initially set by

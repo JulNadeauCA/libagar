@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -124,7 +124,7 @@ returns a space-separated list of available drivers for the current
 platform, into the specified buffer
 .Fa buf
 of size
-.Fa buf_len . 
+.Fa buf_len .
 .Pp
 The
 .Fn AG_UsingGL
@@ -152,7 +152,6 @@ The
 structure inherits from the base
 .Xr AG_Object 3
 class, and is defined as follows:
-.Pp
 .Bd -literal
 typedef struct ag_driver_class {
 	struct ag_object_class _inherit;
@@ -356,7 +355,7 @@ For most drivers, there is nothing to do here.
 The
 .Fn terminate
 operation is obsolete as of Agar-1.5 (see
-.Xr AG_Terminate 3 ) . 
+.Xr AG_Terminate 3 ) .
 .Pp
 The
 .Fn beginRendering
@@ -464,7 +463,7 @@ argument, and coordinate arguments are always with respect to the widget's
 local coordinate system.
 .Pp
 The
-.Fn blitSurface 
+.Fn blitSurface
 operation implements
 .Xr AG_WidgetBlit 3 ,
 which performs (or emulates) a surface blit from the given
@@ -619,7 +618,6 @@ routine).
 .Pp
 .Ft int
 .Fn AG_ProcessEvent "AG_Driver *drv" "AG_DriverEvent *dev"
-.Pp
 .Bd -literal
 /* Requires Agar compiled --with-sdl */
 .Ed
@@ -724,7 +722,6 @@ structure to an Agar
 .Fn AG_DriverEvent .
 This function is only available if Agar was compiled with SDL support.
 .Pp
-.Pp
 The
 .Fa drv
 argument
@@ -766,9 +763,9 @@ while (AG_PendingEvents(NULL) > 0) {
 }
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_InitGraphics 3 ,
 .Xr AG_GL 3 ,
+.Xr AG_InitGraphics 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

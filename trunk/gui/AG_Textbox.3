@@ -135,7 +135,6 @@ of the textbox.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_TEXTBOX_ABANDON_FOCUS "
 .It AG_TEXTBOX_MULTILINE
 Causes newlines to be entered literally into the string, and arranges for
@@ -304,7 +303,7 @@ The function returns 0 on success or -1 on failure.
 moves the text cursor to the position closest to the pixel coordinates
 .Fa mx
 and
-.Fy my .
+.Fa my .
 .Pp
 .Fn AG_TextboxGetCursorPos
 returns the current position of the cursor in the buffer.
@@ -384,7 +383,6 @@ and
 return the raw contents of the text buffer, without performing
 any character set conversion.
 .Pp
-.Pp
 The
 .Fn AG_TextboxBufferChanged
 function signals an outside change in the buffer contents.
@@ -424,7 +422,6 @@ this table map to different languages).
 The
 .Nm
 widget generates the following events:
-.Pp
 .Bl -tag -width 2n
 .It Fn textbox-return "void"
 Return was pressed and
@@ -463,7 +460,6 @@ is not used).
 The following code fragment binds an
 .Nm
 to a fixed-size buffer (which accepts UTF-8 encoding):
-.Pp
 .Bd -literal -offset indent
 char name[32];
 AG_Textbox *tb;
@@ -475,7 +471,6 @@ AG_TextboxBindUTF8(tb, name, sizeof(name));
 When no specific binding is provided (as in the following case),
 .Nm
 uses an internal, built-in text buffer:
-.Pp
 .Bd -literal -offset indent
 AG_Textbox *tb;
 char *s;
@@ -491,7 +486,6 @@ Exclusive access to an
 .Xr AG_Text 3
 element is an efficient option for editing potentially large,
 dynamically-allocated strings:
-.Pp
 .Bd -literal -offset indent
 AG_Text *myLargeText;
 AG_Textbox *tb;

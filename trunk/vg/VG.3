@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -71,7 +71,8 @@ Note: While
 is general-purpose and designed for simplicity, a more CAD oriented
 alternative,
 .Ft SK ,
-is available in the FreeSG distribution (http://freesg.org/).
+is available in the FreeSG distribution
+.Pq Lk http://freesg.org/ .
 .Ft SK
 is similar to
 .Nm ,
@@ -157,7 +158,6 @@ initializes an existing one.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "VG_NO_ANTIALIAS "
 .It VG_NO_ANTIALIAS
 Disable anti-aliasing rendering methods.
@@ -231,7 +231,7 @@ searches for a class of the specified name and return its description, or
 NULL if there is no such class.
 The
 .Ft VG_NodeOps
-structure fully describes a 
+structure fully describes a
 .Nm
 node class.
 All function pointers are optional and can be set to NULL.
@@ -240,7 +240,7 @@ typedef struct vg_node_ops {
 	const char            *name;
 	struct ag_static_icon *icon;
 	size_t                 size;
-	
+
 	void  (*init)(VG_Node *);
 	void  (*destroy)(VG_Node *);
 	int   (*load)(VG_Node *, AG_DataSource *, const AG_Version *);
@@ -652,7 +652,7 @@ see
 and
 .Fn VG_WriteVector
 are used to (de)serialize vectors (see
-.Dq MATH ROUTINES
+.Sx MATH ROUTINES
 section).
 .Pp
 .Fn VG_ReadColor
@@ -735,7 +735,6 @@ and
 .Fn VG_SetMouseOverColor
 functions configure the color which will be blended into the graphical
 rendering of entities which are selected or under the cursor, respectively.
-.Pp
 .Sh MATH ROUTINES
 .nr nS 1
 .Ft "VG_Vector"
@@ -859,13 +858,13 @@ returning the result in
 .Fa Mv .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr VG_View 3 ,
-.Xr VG_Point 3 ,
-.Xr VG_Line 3 ,
-.Xr VG_Circle 3 ,
 .Xr VG_Arc 3 ,
+.Xr VG_Circle 3 ,
+.Xr VG_Line 3 ,
+.Xr VG_Point 3 ,
 .Xr VG_Polygon 3 ,
-.Xr VG_Text 3 .
+.Xr VG_Text 3 ,
+.Xr VG_View 3
 .Sh HISTORY
 The
 .Nm

@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -42,7 +42,7 @@ The
 structure provides a dynamically-allocated buffer for a text element,
 specified in one or more languages.
 .Pp
-Agar GUI widgets such as 
+Agar GUI widgets such as
 .Xr AG_Textbox 3
 or
 .Xr AG_Editable 3
@@ -57,7 +57,6 @@ referencing an
 The
 .Nm
 structure is defined as:
-.Pp
 .Bd -literal
 typedef struct ag_text {
 	AG_Mutex lock;
@@ -201,11 +200,11 @@ data.
 .Fn AG_TextSave
 saves the text element to the given data source.
 .Sh SEE ALSO
+.Xr AG_Editable 3 ,
 .Xr AG_Intro 3 ,
-.Xr AG_Variable 3 ,
 .Xr AG_Text 3 ,
 .Xr AG_Textbox 3 ,
-.Xr AG_Editable 3
+.Xr AG_Variable 3
 .Sh HISTORY
 The
 .Nm

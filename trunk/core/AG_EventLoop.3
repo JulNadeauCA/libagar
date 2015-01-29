@@ -138,7 +138,6 @@ structure.
 The
 .Fa type
 argument may be one of:
-.Pp
 .Bl -tag -width "AG_SINK_PROCEVENT "
 .It Dv AG_SINK_READ
 Data is available for reading on file referenced by
@@ -153,7 +152,7 @@ referenced by
 The type of event is specified in
 .Fa flags
 (see
-.Dq FILESYSTEM EVENTS
+.Sx FILESYSTEM EVENTS
 for the accepted flags).
 .It Dv AG_SINK_PROCEVENT
 An event has occured on the monitored process
@@ -161,7 +160,7 @@ An event has occured on the monitored process
 The type of event is specified in
 .Fa flags
 (see
-.Dq PROCESS EVENTS
+.Sx PROCESS EVENTS
 below).
 .El
 .Pp
@@ -240,9 +239,9 @@ Monitored process has called
 .Xr exec 3 .
 .El
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_CustomEventLoop 3 ,
-.Xr AG_Event 3
+.Xr AG_Event 3 ,
+.Xr AG_Intro 3
 .Sh HISTORY
 The
 .Nm

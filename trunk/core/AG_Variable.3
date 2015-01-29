@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -129,7 +129,7 @@ elements to describe the list of arguments passed to event handler routines.
 .Fn AG_UnlockVariable "AG_Variable *var"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_GetVariableVFS "AG_Object *obj" "const char *name" 
+.Fn AG_GetVariableVFS "AG_Object *obj" "const char *name"
 .Pp
 .Ft int
 .Fn AG_EvalVariable "AG_Object *obj" "AG_Variable *var"
@@ -342,7 +342,7 @@ variant accepts an extra
 argument, which is a mutex device (i.e., an
 .Ft AG_Mutex
 or
-.Ft pthread_mutex_t ) 
+.Ft pthread_mutex_t )
 to be acquired whenever the data referenced by
 .Fa pVal
 will be accessed.
@@ -868,10 +868,10 @@ Stored data (see <core/variable.h>).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Object 3 ,
 .Xr AG_List 3 ,
-.Xr AG_Tree 3 ,
-.Xr AG_Tbl 3
+.Xr AG_Object 3 ,
+.Xr AG_Tbl 3 ,
+.Xr AG_Tree 3
 .Sh HISTORY
 The
 .Nm

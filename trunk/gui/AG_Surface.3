@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -135,7 +135,7 @@ of the specified dimensions
 is a pointer to a
 .Ft AG_PixelFormat
 structure describing the way pixels are to be encoded in memory (see
-.Dq PIXEL FORMATS
+.Sx PIXEL FORMATS
 section below).
 The pixel data is left uninitialized.
 Acceptable values for
@@ -224,7 +224,7 @@ variant adds an alpha-channel component and implicitely sets the
 flag (see
 .Fn AG_SurfaceBlit 3 ) .
 .Pp
-.Fn AG_SurfaceFromPixelsRGB 
+.Fn AG_SurfaceFromPixelsRGB
 and
 .Fn AG_SurfaceFromPixelsRGBA
 create a new surface from existing pixel data in the specified format.
@@ -351,7 +351,6 @@ function releases all resources allocated by the given surface.
 .Pp
 .Ft "SDL_Surface *"
 .Fn AG_SurfaceExportSDL "const AG_Surface *su"
-.Pp
 .nr nS 0
 .Pp
 The
@@ -662,15 +661,14 @@ is an illegal operation.
 For the
 .Ft AG_Surface
 structure:
-.Pp
 .Bl -tag -width "AG_PixelFormat *format "
 .It Ft Uint flags
 Current surface flags (read-only; see
-.Dq INITIALIZATION
+.Sx INITIALIZATION
 section).
 .It Ft AG_PixelFormat *format
 The surface's pixel encoding (read-only; see
-.Dq PIXEL FORMATS
+.Sx PIXEL FORMATS
 section).
 .It Ft int w, h
 Dimensions of the surface in pixels (read-only).
@@ -682,8 +680,8 @@ Size of a scanline in bytes.
 Scanline padding in bytes.
 .El
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Anim 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Rect 3
 .Sh HISTORY
 The
@@ -691,4 +689,5 @@ The
 structure first appeared in Agar 1.3.3.
 It is modeled after the
 .Ft SDL_Surface
-of SDL (http://libsdl.org/).
+of
+.Lk http://libsdl.org/ SDL .

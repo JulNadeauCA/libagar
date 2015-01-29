@@ -98,7 +98,9 @@ For example, the
 .Xr SG_View 3
 and
 .Xr SK_View 3
-widgets of FreeSG (http://freesg.org/) are all subclasses of
+widgets of FreeSG
+.Pq Lk http://freesg.org/
+are all subclasses of
 .Nm .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
@@ -151,7 +153,6 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_GLVIEW_EXPAND "
 .It AG_GLVIEW_BGFILL
 Clear the widget background with the specified color (see
@@ -228,7 +229,6 @@ widget does not generate any event.
 For the
 .Ft AG_GLView
 object:
-.Pp
 .Bl -tag -width "float mProjection[16] "
 .It Ft float mProjection[16]
 Projection matrix (4x4, column-major) to automatically load every time the
@@ -251,8 +251,8 @@ See
 .Pa tests/glview.c
 in the Agar source distribution.
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Color 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3 ,
 .Xr SG 3 ,

@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -65,7 +65,7 @@ The
 .Fa event
 structure contains the event arguments, which are most convenient retrieved
 using macros; see
-.Dq EVENT ARGUMENTS
+.Sx EVENT ARGUMENTS
 below for details.
 .Pp
 NOTE: This manual page documents Agar's high-level event processing interface.
@@ -107,12 +107,12 @@ variant preserves any existing event handler, such that multiple handlers
 can be invoked when the event is raised.
 The
 .Fa fn
-argument is a pointer to the event handler function, and 
+argument is a pointer to the event handler function, and
 .Fa fnArgs
 is a special kind of format string specifying a list of arguments that
 should be passed on to the event handler function.
 See
-.Dq EVENT ARGUMENTS
+.Sx EVENT ARGUMENTS
 below for details.
 .Pp
 In some circumstances it is useful to pass a NULL
@@ -258,7 +258,7 @@ Variable arguments are supported - in that case, arguments can be retrieved
 directly from the
 .Fa event
 structure (see
-.Dq STRUCTURE DATA ) .
+.Sx STRUCTURE DATA ) .
 .Pp
 .nr nS 1
 .Ft "AG_Object *"
@@ -442,7 +442,7 @@ The following functions allow such manipulations.
 .Fn AG_EventPushDouble "AG_Event *ev" "const char *key" "douvle val"
 .Pp
 .Ft void
-.Fn AG_EVENT_PUSH_ARG "va_list ap, char formatChar, AG_Event *ev"
+.Fn AG_EVENT_PUSH_ARG "va_list ap" "char formatChar" "AG_Event *ev"
 .Pp
 .Ft void
 .Fn AG_EventPopArgument "AG_Event *ev"
@@ -537,7 +537,7 @@ structure:
 String identifier for the event.
 .It Ft Uint flags
 See
-.Dq EVENT FLAGS
+.Sx EVENT FLAGS
 section below.
 .It Ft int argc
 Argument count.
@@ -551,7 +551,6 @@ Acceptable
 for the
 .Nm
 structure include:
-.Pp
 .Bl -tag -width "AG_EVENT_PROPAGATE "
 .It AG_EVENT_ASYNC
 Arrange for the event handler to execute inside a separate thread that will
@@ -624,8 +623,8 @@ AG_EventArgs(&event, "%s,%d", "Foo string", 1234);
 SayHello(&event);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_EventLoop 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
 .Xr AG_Timer 3 ,
 .Xr AG_Variable 3

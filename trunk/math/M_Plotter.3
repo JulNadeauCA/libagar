@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -48,7 +48,7 @@ The data displayed by
 can be retrieved from different types of sources.
 Currently implemented sources include:
 .Bl -tag -width "M_PLOT_FROM_VARIABLE_VFS "
-.It Dv M_PLOT_MANUALLY 
+.It Dv M_PLOT_MANUALLY
 He data will be entered explicitely via calls to
 .Fn M_PlotReal
 (see
@@ -107,7 +107,6 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "M_PLOTTER_EXPAND "
 .It M_PLOTTER_HFILL
 Expand horizontally in parent (equivalent to invoking
@@ -127,7 +126,7 @@ sets an initial preferred widget size in pixels.
 .Pp
 .Fn M_PlotterSetDefaultFont
 configures a default font face for use with plotter labels (see
-.Dq PLOT LABELS
+.Sx PLOT LABELS
 section).
 .Pp
 .Fn M_PlotterSetDefaultColor
@@ -197,7 +196,7 @@ created plots.
 creates a new plot with no label and a source type of
 .Dv M_PLOT_MANUALLY
 (see
-.Dq DESCRIPTION).
+.Sx DESCRIPTION ) .
 The
 .Fa type ,
 argument can take on the values:
@@ -360,8 +359,8 @@ Vertical scrollbar object.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Widget 3 ,
 .Xr AG_Scrollbar 3 ,
+.Xr AG_Widget 3 ,
 .Xr M_Complex 3 ,
 .Xr M_Matrix 3 ,
 .Xr M_Real 3 ,

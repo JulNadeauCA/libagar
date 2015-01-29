@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -119,7 +119,7 @@ and
 .Fn AG_WindowSetBottomBorder "AG_Window *win" "int pixels"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetPosition "AG_Window *win, enum ag_window_alignment alignment" "int tiling"
+.Fn AG_WindowSetPosition "AG_Window *win" "enum ag_window_alignment alignment" "int tiling"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
@@ -212,7 +212,7 @@ If the default driver is a multiple-window driver, a new
 .Ft AG_Driver
 object instance is created for the new window.
 See the
-.Dq FLAGS
+.Sx FLAGS
 section below for a description of the available
 .Fa flags
 options.
@@ -257,7 +257,6 @@ The
 function specifies the action to perform when the window is requested to
 be closed.
 Accepted arguments include:
-.Pp
 .Bl -tag -width "AG_WINDOW_IGNORE "
 .It AG_WINDOW_HIDE
 Hide the window.
@@ -276,7 +275,7 @@ To perform a different action, an event handler can be configured for the
 and
 .Sq window-modal-close
 events (see the
-.Dq EVENTS
+.Sx EVENTS
 section).
 .Pp
 The
@@ -290,7 +289,7 @@ function defines the space separating the widgets from each other.
 The default is 2 pixels.
 .Pp
 Note that
-.fn AG_WindowSetSpacing
+.Fn AG_WindowSetSpacing
 only affects the widgets which are directly attached to the window.
 For widgets that are attached to container widgets, it is the container
 widgets that define spacing, as well as other aspects of widget
@@ -334,7 +333,7 @@ If the
 argument is 1, the
 .Dv AG_WINDOW_TILING
 flag is set (see
-.Dq FLAGS
+.Sx FLAGS
 section).
 With tiling enabled, the window manager will attempt to avoid overlap between
 existing windows.
@@ -487,7 +486,6 @@ structure.
 Note: In widget implementation code, one should use
 .Xr AG_WidgetUpdate 3
 instead of this function.
-.Pp
 .Sh DRIVER / EVENT LOOP INTERFACE
 The following functions should be called only from application-specific
 event loops, or low-level driver code.
@@ -649,16 +647,15 @@ By default, Agar maps the "TAB" key to this function.
 For the
 .Ft AG_Window
 object:
-.Pp
 .Bl -tag -width "AG_Window *parent "
 .It Ft Uint flags
 Option flags (see
-.Dq FLAGS
+.Sx FLAGS
 section below).
 .It Ft int wmType
 Window manager hint describing window function
 (see
-.Dq WINDOW MANAGER HINTS
+.Sx WINDOW MANAGER HINTS
 below).
 .It Ft int visible
 Visibility flag (1 = visible, 0 = hidden).
@@ -735,7 +732,6 @@ enum ag_window_wm_type {
 For the
 .Ft AG_Window
 object:
-.Pp
 .Bl -tag -width "AG_WINDOW_NOUPDATERECT "
 .It AG_WINDOW_TILING
 If no explicit window position is specified, choose a default position
@@ -776,7 +772,7 @@ event will be raised.
 .It AG_WINDOW_NOBACKGROUND
 Don't fill the window background prior to rendering its contents.
 .It AG_WINDOW_MAIN
-Break from 
+Break from
 .Xr AG_EventLoop 3
 if this window gets destroyed.
 Multiple windows may set this flag, in which case the break will occur
@@ -888,9 +884,9 @@ AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 AG_WindowShow(win);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_Icon 3 ,
 .Xr AG_Cursor 3 ,
+.Xr AG_Icon 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_View 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY

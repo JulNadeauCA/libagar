@@ -74,7 +74,7 @@ widgets are more efficient alternatives to
 .Fn AG_TlistSetIconWidth "AG_Tlist *tl" "int icon_width"
 .Pp
 .Ft void
-.Fn AG_TlistSetIcon "AG_Tlist *tl, AG_TlistItem *item" "AG_Surface *icon"
+.Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "AG_Surface *icon"
 .Pp
 .Ft void
 .Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nitems"
@@ -112,7 +112,6 @@ event handler.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_TLIST_MULTITOGGLE "
 .It AG_TLIST_MULTI
 Allow the user to select multiple items while holding
@@ -239,10 +238,10 @@ are provided.
 .Fn AG_TlistAddHeadS "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtr "AG_Tlist *tlist, AG_Surface *iconsrc" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtr "AG_Tlist *tlist" "AG_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtrHead "AG_Tlist *tlist, AG_Surface *iconsrc" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtrHead "AG_Tlist *tlist" "AG_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
 .Ft "void"
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
@@ -290,7 +289,7 @@ are provided.
 .Fn AG_TlistSelectedItemPtr "AG_Tlist *tlist"
 .Pp
 .Ft "void *"
-.Fn AG_TLIST_ITEM(idx)
+.Fn AG_TLIST_ITEM "idx"
 .Pp
 .Ft "int"
 .Fn AG_TlistFindPtr "AG_Tlist *tlist" "void **p"
@@ -546,7 +545,7 @@ Depth in tree (for
 .Dv AG_TLIST_TREE ) .
 .It Ft Uint8 flags
 Item flags (see
-.Dq ITEM FLAGS
+.Sx ITEM FLAGS
 section below).
 .El
 .Sh ITEM FLAGS

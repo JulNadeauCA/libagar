@@ -84,9 +84,6 @@
 .\"	@(#)strsep.3	8.1 (Berkeley) 6/9/93
 .\" $FreeBSD: src/lib/libc/string/strsep.3,v 1.16.4.1 2011/09/23 00:51:37 kensmith Exp $
 .\"
-.Dd December 5, 2008
-.Dt STRSEP 3
-.Os
 .Dd July 28, 2012
 .Dt AG_STRING 3
 .Os
@@ -246,7 +243,6 @@ function registers a new "%[foo]" style specifier.
 The
 .Fa extFn
 calback functions should be of the form:
-.Pp
 .Bd -literal -offset indent
 typedef size_t (*AG_FmtStringExtFn)(AG_FmtString *fs, char *dst,
                                     size_t dstSize);
@@ -603,7 +599,6 @@ for (i = 0; i < 10; i++) {
 .Pp
 The following code converts a string from LATIN-1 to Unicode, counts
 the number of Unicode characters, and exports the string to UTF-8:
-.Pp
 .Bd -literal -offset indent
 char *dst;
 Uint32 *unicode, *s;
@@ -645,11 +640,11 @@ AG_LabelNewS(win, 0, AG_Printf("Static label: %[myVec]", &v));
 AG_LabelNewPolled(win, 0, "Polled label: %[myVec]", &v);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Error 3 ,
+.Xr AG_Intro 3 ,
+.Xr strcmp 3 ,
 .Xr string 3 ,
-.Xr strlen 3 ,
-.Xr strcmp 3
+.Xr strlen 3
 .Sh HISTORY
 The
 .Nm

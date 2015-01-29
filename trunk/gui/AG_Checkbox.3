@@ -93,7 +93,6 @@ event.
 Acceptable values for the
 .Fa flags
 argument include:
-.Pp
 .Bl -tag -width "AG_CHECKBOX_EXPAND "
 .It AG_CHECKBOX_SET
 Set the state to 1 on initialization.
@@ -165,7 +164,6 @@ Bits in 32-bit word
 The
 .Nm
 widget generates the following events:
-.Pp
 .Bl -tag -width 2n
 .It Fn checkbox-changed "int state"
 Checkbox state changed (1=enabled, 0=disabled).
@@ -177,7 +175,6 @@ binding remains locked during the event handler's execution.
 For the
 .Ft AG_Checkbox
 object:
-.Pp
 .Bl -tag -width "AG_Label *lbl "
 .It Ft AG_Label *lbl
 Pointer to the
@@ -189,7 +186,6 @@ The following code fragment ties an
 .Nm
 to a boolean variable represented by an
 .Ft int :
-.Pp
 .Bd -literal -offset indent
 int someOption = 0;
 
@@ -234,9 +230,9 @@ AG_CheckboxSetFromFlags(win, 0, &myWord, myFlagDescr);
 AG_WindowShow(win);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Button 3 ,
 .Xr AG_Event 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Radio 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

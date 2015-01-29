@@ -56,7 +56,6 @@ or any other interface where Agar will need to provide its own window manager).
 inherits from
 .Ft AG_DriverClass
 and is defined as follows:
-.Pp
 .Bd -literal
 typedef struct ag_driver_sw_class {
 	struct ag_driver_class _inherit;
@@ -167,10 +166,10 @@ or
 (a window is being resized left/right/horizontally).
 .El
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_InitGraphics 3 ,
 .Xr AG_Driver 3 ,
-.Xr AG_DriverMw 3
+.Xr AG_DriverMw 3 ,
+.Xr AG_InitGraphics 3 ,
+.Xr AG_Intro 3
 .Sh HISTORY
 The
 .Nm
