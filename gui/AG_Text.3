@@ -47,7 +47,7 @@ Currently, two font engines are supported:
 (for rendering simple pixmap fonts).
 .Sh RENDER SETTINGS
 A number of settings which affect the rendering functions (see
-.Dq RENDERING
+.Sx RENDERING
 section) can be modified at any time, and are organized in a stack of
 rendering attributes.
 .Pp
@@ -292,7 +292,6 @@ formatted string, and an
 button.
 .Fa title
 is one of the following:
-.Pp
 .Bd -literal
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
@@ -430,18 +429,18 @@ This function is typically called prior to
 .Fn AG_InitGraphics
 (e.g., to parse alternate fonts specified on the command line).
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Config 3 ,
 .Xr AG_Editable 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Label 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Textbox 3 ,
 .Xr AG_TextElement 3 ,
 .Xr AG_Widget 3
-.Bd -literal
-The FreeType project - http://www.freetype.org/
-Unicode home page - http://www.unicode.org/
-.Ed
+.Pp
+.Lk http://www.freetype.org/ The FreeType project
+.Pp
+.Lk http://www.unicode.org/ Unicode home page
 .Sh HISTORY
 The
 .Nm

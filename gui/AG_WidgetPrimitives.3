@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -103,16 +103,16 @@ for details.
 .Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRect "AG_Widget *widget, AG_Rect r" "AG_Color c"
+.Fn AG_DrawRect "AG_Widget *widget" "AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "AG_Color c"
+.Fn AG_DrawRectOutline "AG_Widget *widget" "AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "AG_Color c"
+.Fn AG_DrawRectFilled "AG_Widget *widget" "AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectBlended "AG_Widget *widget, AG_Rect r" "AG_Color c" "AG_BlendFn blendFn"
+.Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "AG_Color c" "AG_BlendFn blendFn"
 .Pp
 .nr nS 0
 .Fn AG_PutPixel
@@ -234,7 +234,7 @@ for details).
 .Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "AG_Color c1" "AG_Color c2"
+.Fn AG_DrawTiling "AG_Widget *widget" "AG_Rect r" "int tileSz" "int offset" "AG_Color c1" "AG_Color c2"
 .Pp
 .Ft void
 .Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
@@ -253,7 +253,7 @@ in pixels.
 .Pp
 The
 .Fn AG_DrawBoxDisabled
-variant uses a stipple pattern of 
+variant uses a stipple pattern of
 .Fa c1
 against
 .Fa c2 .
@@ -279,14 +279,13 @@ is an offset in pixels and
 .Fa c1 ,
 .Fa c2
 specify the colors of the tiles.
-.Pp
 .Sh SYMBOLS
 .nr nS 1
 .Ft void
-.Fn AG_DrawPlus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawPlus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawMinus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawMinus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
 .Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
@@ -320,15 +319,14 @@ and
 .Fa w
 specify the size of the arrow in pixels.
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_BlendFn 3 ,
 .Xr AG_Color 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
-.Xr VG 3 ,
-.Xr RG 3
-.Bd -literal
-The FreeSG library - http://freesg.org/
-.Ed
+.Xr RG 3 ,
+.Xr VG 3
+.Pp
+.Lk http://freesg.org/ The FreeSG library
 .Sh HISTORY
 Simple widget primitives first appeared in Agar 1.0.
 The basic rendering system was redesigned in Agar 1.4.

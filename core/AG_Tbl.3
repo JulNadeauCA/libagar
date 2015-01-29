@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -41,13 +41,12 @@ structure describes a hash table consisting of
 .Xr AG_Variable 3
 elements.
 It is defined as follows:
-.Pp
 .Bd -literal
 typedef struct ag_tbl_bucket {
 	AG_Variable  *ents;
 	Uint         nEnts;
 } AG_TblBucket;
- 
+
 typedef struct ag_tbl {
 	AG_TblBucket *buckets;
 	Uint         nBuckets;
@@ -182,9 +181,9 @@ with an additional
 argument.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Variable 3 ,
 .Xr AG_List 3 ,
-.Xr AG_Tree 3
+.Xr AG_Tree 3 ,
+.Xr AG_Variable 3
 .Sh HISTORY
 The
 .Nm

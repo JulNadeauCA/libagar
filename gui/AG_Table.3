@@ -143,7 +143,6 @@ style parameters that will be passed on to
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_TABLE_HIGHLIGHT_COLS "
 .It AG_TABLE_MULTI
 Allow the user to select multiple items while holding
@@ -386,7 +385,6 @@ returns 1 if the given column is selected, 0 otherwise.
 .Pp
 Note that the of the column selection flags are independent from the
 selection flag of individual cells; their meaning is application-specific.
-.Pp
 .Sh ROW FUNCTIONS
 .nr nS 1
 .Ft "int"
@@ -422,7 +420,6 @@ Note that it is possible to mix fields of differing types into a same column
 as long as the sorting function of that column can handle the combinations.
 .Pp
 Acceptable specifiers include:
-.Pp
 .Bl -tag -width "%[s8], %[s16], %[s32] "
 .It %s
 Text string
@@ -572,7 +569,6 @@ given by the
 .Fa separator
 argument.
 The function returns 0 on success, -1 on failure.
-.Pp
 .Sh EVENTS
 The
 .Nm
@@ -711,7 +707,6 @@ Embedded widget (see %[W]).
 .El
 .Sh EXAMPLES
 The following code fragment creates a table and immediately populates it:
-.Pp
 .Bd -literal -offset indent
 AG_Table *tbl;
 
@@ -727,7 +722,6 @@ The following code fragment creates a table and arranges for periodical
 update of its contents from an
 .Fn UpdateMyTable
 function:
-.Pp
 .Bd -literal -offset indent
 
 void

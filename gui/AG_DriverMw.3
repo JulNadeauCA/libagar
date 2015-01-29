@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -54,7 +54,6 @@ to interface with an existing window manager.
 inherits from
 .Ft AG_DriverClass
 and is defined as follows:
-.Pp
 .Bd -literal
 typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
@@ -86,7 +85,7 @@ typedef struct ag_driver_mw_class {
 
 	/* Capture window framebuffer contents */
 	int (*captureWindow)(AG_Window *w, AG_Surface **s);
-	
+
 	/* Configure window parameters */
 	int  (*setBorderWidth)(AG_Window *w, Uint w);
 	int  (*setWindowCaption)(AG_Window *w, const char *s);
@@ -209,10 +208,10 @@ in function of
 and
 .Va h .
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_InitGraphics 3 ,
 .Xr AG_Driver 3 ,
-.Xr AG_DriverSw 3
+.Xr AG_DriverSw 3 ,
+.Xr AG_InitGraphics 3 ,
+.Xr AG_Intro 3
 .Sh HISTORY
 The
 .Nm

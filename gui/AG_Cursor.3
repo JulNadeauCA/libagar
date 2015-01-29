@@ -43,7 +43,6 @@ interface provides Agar widgets with control over the shape of the mouse cursor.
 Specific cursors can be associated with specific rectangular areas in a widget's
 local coordinate system.
 .Sh WIDGET INTERFACE
-.Pp
 .nr nS 1
 .Ft "AG_CursorArea *"
 .Fn AG_MapCursor "AG_Widget *wid" "AG_Rect r" "AG_Cursor *c"
@@ -74,7 +73,7 @@ detached.
 .Fn AG_MapStockCursor
 sets up a cursor-change area associated with a stock Agar cursor.
 See
-.Dq STOCK CURSORS
+.Sx STOCK CURSORS
 for the list of acceptable
 .Fa cursorName
 arguments.
@@ -150,7 +149,7 @@ releases all resources allocated by a cursor.
 .Pp
 .Fn AG_GetStockCursor
 returns a pointer to a built-in cursor (see
-.Dq STOCK CURSORS
+.Sx STOCK CURSORS
 for a list).
 .Pp
 .Fn AG_GetActiveCursor
@@ -196,8 +195,8 @@ The widget responsible for the cursor (read-only).
 If set, the cursor is a stock Agar cursor (read-only).
 .El
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Driver 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

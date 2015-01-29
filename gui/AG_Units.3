@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -74,7 +74,6 @@ A set of standard conversion unit groups are defined in
 .Pa gui/units.c
 in the Agar sources.
 The standard groups are summarized below.
-.Pp
 .Sh GENERAL
 .Bl -tag -compact -width "agPercentageUnits "
 .It agPercentageUnits
@@ -218,7 +217,7 @@ argument (only available if
 .Dv AG_HAVE_LONG_DOUBLE
 is defined).
 .Sh EXAMPLES
-One widget which uses this interface is 
+One widget which uses this interface is
 .Xr AG_Numerical 3 ,
 which accepts
 .Fa unit
@@ -234,7 +233,6 @@ num = AG_NumericalNewFlt(parent, 0, "m", "Length: ", &length)
 The following code fragment prints the equivalent milliseconds for a given
 .Va n
 number of seconds:
-.Pp
 .Bd -literal -offset indent
 printf("%f seconds = %f milliseconds", n,
     AG_Base2Unit(n, AG_FindUnit("ms")));
@@ -242,7 +240,6 @@ printf("%f seconds = %f milliseconds", n,
 .Pp
 The following code fragment prints the equivalent of 27 degrees Celsius,
 in kilo Kelvins:
-.Pp
 .Bd -literal -offset indent
 const AG_Unit *degC = AG_FindUnit("degC");
 const AG_Unit *kk = AG_FindUnit("kk");
@@ -253,7 +250,6 @@ printf("27C = %fkk", AG_Unit2Unit(27.0, degC, kk));
 This code fragment displays the value of
 .Va r
 using the resistance unit most suitable to its magnitude.
-.Pp
 .Bd -literal -offset indent
 printf("Resistance = %s", AG_UnitFormat(r, agResistanceUnits));
 .Ed

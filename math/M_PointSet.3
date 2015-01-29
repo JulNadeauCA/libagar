@@ -43,7 +43,6 @@ The
 .Nm
 family of structures describe arbitrary sets of points in space.
 They are defined as follows:
-.Pp
 .Bd -literal
 /* Points in R^2 */
 typedef struct m_point_set2 {
@@ -257,7 +256,6 @@ functions sort the point sets by point coordinate.
 The
 .Fa mode
 arguments specify the sorting mode:
-.Pp
 .Bd -literal
 enum m_point_set_sort_mode2 {
 	M_POINT_SET_SORT_XY,
@@ -273,15 +271,15 @@ enum m_point_set_sort_mode3 {
 };
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_DataSource 3 ,
-.Xr M_Geometry 3 ,
+.Xr AG_Intro 3 ,
 .Xr M_Circle 3 ,
-.Xr M_Sphere 3 ,
+.Xr M_Geometry 3 ,
 .Xr M_Plane 3 ,
-.Xr M_Triangle 3 ,
-.Xr M_Rectangle 3 ,
 .Xr M_Polygon 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Triangle 3 ,
 .Xr M_Vector 3
 .Sh HISTORY
 The

@@ -97,7 +97,7 @@ of the specified dimensions
 is a pointer to a
 .Ft AG_PixelFormat
 structure describing the way pixels are to be encoded in memory (see
-.Dq PIXEL FORMATS
+.Sx PIXEL FORMATS
 section below).
 The pixel data is left uninitialized.
 Acceptable values for
@@ -195,7 +195,7 @@ The
 sets the original frame rate associated with the animation.
 The default is 30.0.
 This frame rate can be overriden under playback contexts (see
-.Dq PLAYBACK
+.Sx PLAYBACK
 section below).
 .Pp
 The
@@ -333,11 +333,10 @@ functions enable or disable looping.
 For the
 .Ft AG_Anim
 structure:
-.Pp
 .Bl -tag -width "AG_PixelFormat *format "
 .It Ft Uint flags
 Current animation flags (read-only; see
-.Dq INITIALIZATION
+.Sx INITIALIZATION
 section).
 .It Ft AG_PixelFormat *format
 The animation's pixel encoding (read-only; see the
@@ -354,7 +353,6 @@ Pointer to per-frame data.
 For the
 .Ft AG_AnimFrame
 structure:
-.Pp
 .Bl -tag -width "void *pixels "
 .It Ft void *pixels
 Raw packed pixel data for this frame.

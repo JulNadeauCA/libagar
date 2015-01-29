@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -106,11 +106,11 @@ The
 variant accepts a pointer to a mutex that will be automatically acquired
 and release as the widget accesses the referenced data.
 See the
-.Dq POLLED LABELS
+.Sx POLLED LABELS
 section for more details.
 .Pp
 See
-.Dq LABEL FLAGS
+.Sx LABEL FLAGS
 section for a the accepted
 .Fa flags
 values for
@@ -148,7 +148,6 @@ If a parameter is -1, its current value is preserved.
 The
 .Fn AG_LabelJustify
 function sets the text justification:
-.Pp
 .Bd -literal
 enum ag_text_justify {
 	AG_TEXT_LEFT,
@@ -159,7 +158,6 @@ enum ag_text_justify {
 .Pp
 .Fn AG_LabelValign
 sets the vertical text alignment:
-.Pp
 .Bd -literal
 enum ag_text_valign {
 	AG_TEXT_TOP,
@@ -236,12 +234,11 @@ Shorthand for
 .Sh EXAMPLES
 The following code snippet creates a window containing both a static label
 and a polled label:
-.Pp
 .Bd -literal -offset indent
 AG_Window *win;
 int myInt = 1234;
 AG_Label *myLbl;
- 
+
 win = AG_WindowNew(0);
 AG_LabelNew(win, 0, "Foo");
 myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
@@ -280,8 +277,8 @@ AG_LabelNewS(parent, 0, "Static label: %[myVec]", &v);
 AG_LabelNewPolled(parent, 0, "Polled label: %[myVec]", &v);
 .Ed
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_FetchFont 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Pixmap 3 ,
 .Xr AG_String 3 ,
 .Xr AG_Widget 3 ,

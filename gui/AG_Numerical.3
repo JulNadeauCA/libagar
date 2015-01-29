@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -75,10 +75,10 @@ for selecting units.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *format" "..."
+.Fn AG_NumericalNew "AG_Widget *parent" "Uint flags" "const char *unit" "const char *format" "..."
 .Pp
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewS "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
+.Fn AG_NumericalNewS "AG_Widget *parent" "Uint flags" "const char *unit" "const char *label"
 .Pp
 .\" MANLINK(AG_NumericalNewFlt)
 .\" MANLINK(AG_NumericalNewDbl)
@@ -86,7 +86,7 @@ for selecting units.
 .\" MANLINK(AG_NumericalNewInt)
 .\" MANLINK(AG_NumericalNewUint)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint} "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value"
+.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint} "AG_Widget *parent" "Uint flags" "const char *unit" "const char *label" "<Type> *value"
 .Pp
 .\" MANLINK(AG_NumericalNewFltR)
 .\" MANLINK(AG_NumericalNewDblR)
@@ -94,7 +94,7 @@ for selecting units.
 .\" MANLINK(AG_NumericalNewIntR)
 .\" MANLINK(AG_NumericalNewUintR)
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint}R "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
+.Fn AG_NumericalNew{Flt,Dbl,Ldbl,Int,Uint}R "AG_Widget *parent" "Uint flags" "const char *unit" "const char *label" "<Type> *value" "<Type> min" "<Type> max"
 .Pp
 .Ft "void"
 .Fn AG_NumericalSizeHint "AG_Numerical *num" "const char *sizeHint"
@@ -106,7 +106,7 @@ for selecting units.
 .Fn AG_NumericalSelectUnit "AG_Numerical *num" "const char *unit"
 .Pp
 .Ft void
-.Fn AG_NumericalSetPrecision "AG_Numerical *num, const char *fmt" "int precision"
+.Fn AG_NumericalSetPrecision "AG_Numerical *num" "const char *fmt" "int precision"
 .Pp
 .Ft void
 .Fn AG_NumericalSetWriteable "AG_Numerical *num" "int writeable"
@@ -120,7 +120,6 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_NUMERICAL_EXPAND "
 .It AG_NUMERICAL_INT
 If no "value" binding has been set when the widget is first shown,
@@ -151,7 +150,7 @@ Shorthand for
 .El
 .Pp
 The
-.Fa unit 
+.Fa unit
 argument is the name of the conversion unit that will be used by default
 (other conversion units in the same unit group will also be displayed in the
 unit selector).
@@ -303,8 +302,8 @@ type requires the
 .Dv AG_HAVE_LONG_DOUBLE
 be defined.
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
 .Xr AG_Button 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Textbox 3 ,
 .Xr AG_Ucombo 3 ,
 .Xr AG_Units 3

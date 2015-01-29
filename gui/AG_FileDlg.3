@@ -187,7 +187,6 @@ The
 .Fn AG_FileDlgRefresh
 function updates the displayed directory structure and current directory
 contents.
-.Pp
 .Sh OK/CANCEL ACTIONS
 By default, selecting a file will trigger the following checks:
 .Pp
@@ -240,7 +239,7 @@ The event handler will be passed a string argument containing the
 absolute path to the selected file, followed by a pointer to the
 .Ft AG_FileType
 structure for the file type selected by the user (see
-.Dq STRUCTURE DATA
+.Sx STRUCTURE DATA
 for details).
 .Pp
 .Fn AG_FileDlgCancelAction
@@ -348,7 +347,6 @@ structure for the given option name, or NULL if there is no such option.
 and
 .Fn AG_FileOptionDbl
 return the value of the given option assuming it exists.
-.Pp
 .Sh BINDINGS
 The
 .Nm
@@ -357,7 +355,6 @@ widget does not provide any bindings.
 The
 .Nm
 widget generates the following events:
-.Pp
 .Bl -tag -width 2n
 .It Fn file-chosen "char *path" "AG_FileType *type"
 User has selected the given file.

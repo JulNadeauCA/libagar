@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -68,7 +68,7 @@ to be restarted), or 0 if the timer is to be cancelled.
 The timer's parent object is guaranteed to remain locked during the execution
 of the callback.
 The context of execution of the callback is platform-dependent.
-On platforms where 
+On platforms where
 .Xr kqueue 2
 is available, the routine is executed in the event loop.
 On platforms where only POSIX timers are available, the routine is
@@ -78,7 +78,7 @@ loop repeatedly calls
 .Fn AG_ProcessTimeouts
 routine to process expired timers.
 Different objects may also manage timers differently (see
-.Dq SPECIALIZED TIMERS
+.Sx SPECIALIZED TIMERS
 below).
 .Sh INTERFACE
 .nr nS 1
@@ -212,7 +212,6 @@ The
 function returns 1 if the timer is active.
 For thread safety, the call should be protected by
 .Fn AG_LockTimers :
-.Pp
 .Bd -literal -offset indent
 AG_LockTimers(obj);
 if (AG_TimerIsRunning(obj, &timer)) {
@@ -255,12 +254,12 @@ using use some software-defined time, or an offline renderer might require
 that logic time be stopped during rendering (see
 .Xr AG_Time 3 ) .
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_Time 3 ,
 .Xr AG_Event 3 ,
-.Xr AG_SchedEvent 3 ,
+.Xr AG_GetTicks 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
-.Xr AG_GetTicks 3
+.Xr AG_SchedEvent 3 ,
+.Xr AG_Time 3
 .Rs
 .%T "Hashed and Hierarchical Timing Wheels: Efficient Data Structures for Implementing a Timer Facility"
 .%A "George Varghese"

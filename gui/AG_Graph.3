@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -75,7 +75,6 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Pp
 .Bl -tag -width "AG_GRAPH_NO_SELECT "
 .It AG_GRAPH_NO_MOVE
 User cannot move vertices.
@@ -103,7 +102,6 @@ Shorthand for
 The
 .Fn AG_GraphSizeHint
 function requests an initial widget size in pixels.
-.Pp
 .Sh VERTICES
 .nr nS 1
 .Ft "AG_GraphVertex *"
@@ -189,7 +187,7 @@ The
 .Fn AG_GraphEdgeNew
 function creates a new edge connecting vertices
 .Fa v1
-and 
+and
 .Fa v2 .
 If the two vertices are already connected by an edge, the function fails
 and returns NULL.

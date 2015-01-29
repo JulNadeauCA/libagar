@@ -9,7 +9,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 
+.\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 .\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -143,7 +143,7 @@ function opens the file at
 where
 .Fa mode
 is a
-.Xr fopen 3 
+.Xr fopen 3
 style mode string.
 .Fn AG_OpenFileHandle
 creates a new data source for a previously opened file.
@@ -425,7 +425,6 @@ specified for the data source.
 .Pp
 .Ft void
 .Fn AG_WriteSint64At "AG_DataSource *ds" "Sint64 value" "off_t offs"
-.Pp
 .nr nS 0
 .Pp
 The
@@ -683,7 +682,7 @@ calls.
 .Pp
 The
 .Va read
-operation reads 
+operation reads
 .Fa size
 bytes from the data source and into
 .Fa buf ,
@@ -714,10 +713,10 @@ moves to the specified offset and returns 0 on success and -1 on failure.
 .Va close
 closes the data source.
 .Sh SEE ALSO
+.Xr AG_ByteSwap 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Net 3 ,
-.Xr AG_Version 3 ,
-.Xr AG_ByteSwap 3
+.Xr AG_Version 3
 .Sh HISTORY
 A similar interface called
 .Sq AG_Netbuf

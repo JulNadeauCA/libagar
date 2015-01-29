@@ -64,7 +64,7 @@ widget is designed to be easily embeddable into other widgets.
 .Pp
 The API also includes methods for accessing the working buffer directly
 (see
-.Dq BUFFER ACCESS ROUTINES
+.Sx BUFFER ACCESS ROUTINES
 section below).
 This provides developers with a consistent interface for extending the
 low-level functionality of the widget (for example, the Copy/Paste/Delete
@@ -475,7 +475,7 @@ The function returns 0 on success or -1 on failure.
 moves the text cursor to the position closest to the pixel coordinates
 .Fa mx
 and
-.Fy my .
+.Fa my .
 .Pp
 .Fn AG_EditableGetCursorPos
 returns the current position of the cursor in the text.
@@ -483,7 +483,7 @@ The return value is only valid as long as the widget remains locked.
 The position can also be retrieved from the
 .Va pos
 variable (see
-.Dq STRUCTURE DATA ) .
+.Sx STRUCTURE DATA ) .
 .Pp
 .Fn AG_EditableSetCursorPos
 tries to move the cursor to the specified position in the string (bounds
@@ -511,7 +511,6 @@ this table map to different languages).
 The
 .Nm
 widget generates the following events:
-.Pp
 .Bl -tag -width 2n
 .It Fn editable-return "void"
 Return was pressed and
@@ -559,7 +558,6 @@ to change.
 The following code fragment binds a
 .Nm
 to a string contained in a fixed-size buffer:
-.Pp
 .Bd -literal -offset indent
 char name[32];
 AG_Editable *ed;
