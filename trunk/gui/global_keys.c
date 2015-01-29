@@ -28,7 +28,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
 
 struct ag_global_key {
 	AG_KeySym keysym;
@@ -91,8 +91,9 @@ AG_BindStdGlobalKeys(void)
 	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
 	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
 	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY,	AG_QuitGUI);
+	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_CTRL,	AG_QuitGUI);
 #endif
+	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY, AG_CloseFocusedWindow);
 }
 
 /* Tie a global hotkey to a callback function (AG_Event style). */

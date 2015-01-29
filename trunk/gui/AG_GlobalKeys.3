@@ -56,10 +56,6 @@ class also provides the
 and
 .Sq key-up
 event handlers.
-.Pp
-Preferably, all applications should use
-.Xr AG_BindStdGlobalKeys 3
-to set up the standard bindings for zooming and exiting the application.
 .Sh INTERFACE
 .nr nS 1
 .Ft void
@@ -104,18 +100,19 @@ are acceptable, in which case any key or key modifier will be matched.
 .Pp
 The
 .Fn AG_BindStdGlobalKeys
-routine sets up the standard key bindings for zooming and exiting the
-application:
+routine sets up the standard key bindings:
 .Pp
-.Bl -tag -width "META+EQUALS " -compact
-.It CTRL+EQUALS
+.Bl -tag -width "CTRL+EQUALS / META+EQUALS " -compact
+.It CTRL+EQUALS / META+EQUALS
 .Xr AG_ZoomIn 3
-.It CTRL+MINUS
+.It CTRL+MINUS / META+MINUS
 .Xr AG_ZoomOut 3
-.It CTRL+0
+.It CTRL+0 / META+0
 .Xr AG_ZoomReset 3
-.It CTRL+Q
+.It CTRL+Q / META+Q
 .Xr AG_QuitGUI 3
+.It ESCAPE
+.Xr AG_CloseFocusedWindow 3
 .El
 .Pp
 .Fn AG_UnbindGlobalKey
