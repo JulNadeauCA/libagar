@@ -470,6 +470,9 @@ WGL_CloseWindow(AG_Window *win)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverWGL *wgl = (AG_DriverWGL *)drv;
 
+	/* Release allocated cursors. */
+	AG_FreeCursors(drv);
+
 	/* Destroy our OpenGL context. */
 	wglMakeCurrent(wgl->hdc, wgl->hglrc);
 	AG_GL_DestroyContext(wgl);

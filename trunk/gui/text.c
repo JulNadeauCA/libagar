@@ -677,6 +677,14 @@ AG_TextClearGlyphCache(AG_Driver *drv)
 	}
 }
 
+void
+AG_TextDestroyGlyphCache(AG_Driver *drv)
+{
+	AG_TextClearGlyphCache(drv);
+	free(drv->glyphCache);
+	drv->glyphCache = NULL;
+}
+
 /* Render a glyph following a cache miss; called from AG_TextRenderGlyph(). */
 AG_Glyph *
 AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
@@ -804,15 +812,16 @@ fail:
 AG_Surface *
 AG_TextRenderf(const char *fmt, ...)
 {
-	char *text;
+	char *s;
 	va_list args;
 	AG_Surface *su;
 
 	va_start(args, fmt);
-	Vasprintf(&text, fmt, args);
+	Vasprintf(&s, fmt, args);
 	va_end(args);
-	su = AG_TextRender(text);
-	Free(text);
+
+	su = AG_TextRender(s);
+	free(s);
 	return (su);
 }
 #ifdef SYMBOLS
@@ -1403,7 +1412,9 @@ AG_TextMsg(enum ag_text_msg_title title, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_TextMsgS(title, s);
+	free(s);
 }
 void
 AG_TextMsgS(enum ag_text_msg_title title, const char *s)
@@ -1441,7 +1452,9 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_TextTmsgS(title, expire, s);
+	free(s);
 }
 void
 AG_TextTmsgS(enum ag_text_msg_title title, Uint32 ticks, const char *s)
@@ -1484,6 +1497,7 @@ AG_TextInfo(const char *key, const char *fmt, ...)
 	va_end(ap);
 
 	AG_TextInfoS(key, s);
+	free(s);
 }
 void
 AG_TextInfoS(const char *key, const char *s)
@@ -1542,6 +1556,7 @@ AG_TextWarning(const char *key, const char *fmt, ...)
 	va_end(ap);
 
 	AG_TextWarningS(key, s);
+	free(s);
 }
 void
 AG_TextWarningS(const char *key, const char *s)
@@ -1598,6 +1613,7 @@ AG_TextError(const char *fmt, ...)
 	va_end(ap);
 
 	AG_TextErrorS(s);
+	free(s);
 }
 void
 AG_TextErrorS(const char *s)

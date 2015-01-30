@@ -281,14 +281,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 AG_TextboxSetLabel(AG_Textbox *tb, const char *fmt, ...)
 {
-	char *s;
 	va_list ap;
+	char *s;
 
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_TextboxSetLabelS(tb, s);
-	Free(s);
+	free(s);
 }
 
 /* Set the textbox label (C string). */
@@ -315,8 +316,9 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
+
 	AG_EditableSetString(tb->ed, s);
-	Free(s);
+	free(s);
 }
 
 /*
