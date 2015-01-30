@@ -37,6 +37,7 @@ static void SetState(AG_Button *, AG_Variable *, void *, int);
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 {
+	AG_Button *bu;
 	va_list ap;
 	char *s;
 	
@@ -47,7 +48,9 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 	} else {
 		s = NULL;
 	}
-	return AG_ButtonNewS(parent, flags, s);
+	bu = AG_ButtonNewS(parent, flags, s);
+	Free(s);
+	return (bu);
 }
 
 AG_Button *

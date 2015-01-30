@@ -1447,6 +1447,9 @@ GLX_CloseWindow(AG_Window *win)
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
+	
+	/* Release allocated cursors. */
+	AG_FreeCursors(drv);
 
 	/* Destroy our OpenGL context. */
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);

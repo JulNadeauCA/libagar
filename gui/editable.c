@@ -1625,6 +1625,8 @@ AG_EditablePrintf(void *obj, const char *fmt, ...)
 
 		Free(buf->s);
 		buf->s = AG_ImportUnicode("UTF-8", s, &buf->len, &buf->maxLen);
+		free(s);
+
 		if (buf->s != NULL) {
 			ed->pos = buf->len;
 		} else {

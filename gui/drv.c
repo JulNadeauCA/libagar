@@ -217,7 +217,7 @@ Destroy(void *obj)
 	if (drv->videoFmt != NULL)
 		AG_PixelFormatFree(drv->videoFmt);
 
-	AG_TextClearGlyphCache(drv);
+	AG_TextDestroyGlyphCache(drv);
 }
 
 AG_ObjectClass agDriverClass = {

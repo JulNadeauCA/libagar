@@ -200,6 +200,7 @@ struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint, const char *, 
 
 void      AG_TextInitGlyphCache(AG_Driver *);
 void      AG_TextClearGlyphCache(AG_Driver *);
+void      AG_TextDestroyGlyphCache(AG_Driver *);
 AG_Glyph *AG_TextRenderGlyphMiss(AG_Driver *, Uint32);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
