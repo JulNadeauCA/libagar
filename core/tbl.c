@@ -83,6 +83,7 @@ AG_TblDestroy(AG_Tbl *t)
 		buck->keys = NULL;
 		buck->ents = NULL;
 	}
+	free(t->buckets);
 }
 
 /* Look up a named table entry. */
@@ -170,7 +171,10 @@ AG_TblDeleteHash(AG_Tbl *tbl, Uint h, const char *key)
 		AG_SetError("No such entry: %s", key);
 		return (-1);
 	}
+
+	Free(buck->keys[i]);
 	AG_FreeVariable(&buck->ents[i]);
+
 	if (i < buck->nEnts-1) {
 		memmove(&buck->ents[i], &buck->ents[i+1],
 		    (buck->nEnts - i - 1)*sizeof(AG_Variable));

@@ -94,9 +94,11 @@ AG_DestroyClassTbl(void)
 	agNamespaceTbl = NULL;
 	agNamespaceCount = 0;
 	
-	AG_TblDestroy(agClassTbl);
-	agClassTbl = NULL;
 	agClassTree = NULL;
+	
+	AG_TblDestroy(agClassTbl);
+	free(agClassTbl);
+	agClassTbl = NULL;
 	
 	AG_MutexDestroy(&agClassLock);
 }
