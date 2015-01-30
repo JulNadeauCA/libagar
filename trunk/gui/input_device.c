@@ -49,6 +49,7 @@ Destroy(void *obj)
 {
 	AG_InputDevice *id = obj;
 
+	Free(id->desc);
 	AG_FreeEventQ(&id->events);
 }
 
