@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,8 @@ typedef struct ag_sdlgl_driver {
 	Uint		  outFrame;	/* Capture frame# counter */
 	Uint		  outLast;	/* Terminate after this many frames */
 	Uint8		 *outBuf;	/* Output capture buffer */
+	Uint		  outJpegQual;	/* Quality (%) for jpeg output */
+	Uint		  outJpegFlags;
 } AG_DriverSDLGL;
 
 static int nDrivers = 0;			/* Opened driver instances */
@@ -117,7 +119,9 @@ SDLGL_Open(void *obj, const char *spec)
 	sgl->outFrame = 0;
 	sgl->outLast = 0;
 	sgl->outBuf = NULL;
-
+	sgl->outJpegQual = 100;
+	sgl->outJpegFlags = 0;
+	
 	/* Configure the window caption */
 	if (agProgName != NULL)
 		SDL_WM_SetCaption(agProgName, agProgName);
@@ -239,12 +243,13 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 
 	switch (sgl->outMode) {
 	case AG_SDLGL_OUT_JPEG:
-		if (AG_SurfaceExportJPEG(s, path) == -1) {
+		if (AG_SurfaceExportJPEG(s, path, sgl->outJpegQual,
+		    sgl->outJpegFlags) == -1) {
 			goto fail;
 		}
 		break;
 	case AG_SDLGL_OUT_PNG:
-		if (AG_SurfaceExportPNG(s, path) == -1) {
+		if (AG_SurfaceExportPNG(s, path, 0) == -1) {
 			goto fail;
 		}
 		break;
@@ -358,6 +363,21 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 				AG_GetString(drv, "outLast", buf, sizeof(buf));
 				sgl->outLast = atoi(buf);
 			}
+		}
+	}
+
+	if (AG_Defined(drv, "jpegQual")) {
+		AG_GetString(drv, "jpegQual", buf, sizeof(buf));
+		sgl->outJpegQual = atoi(buf);
+	}
+	if (AG_Defined(drv, "jpegDCT")) {
+		AG_GetString(drv, "jpegDCT", buf, sizeof(buf));
+		if (Strcasecmp(buf, "islow")) {
+			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_ISLOW;
+		} else if (Strcasecmp(buf, "ifast")) {
+			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_IFAST;
+		} else if (Strcasecmp(buf, "float")) {
+			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
 		}
 	}
 	

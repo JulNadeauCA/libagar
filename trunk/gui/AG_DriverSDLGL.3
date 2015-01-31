@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2010-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -71,21 +71,25 @@ Height in pixels (or
 Depth in bits per pixel (or
 .Sq auto ) .
 .It out
-Capture display to specified output file(s).
-Supported file formats include JPEG and PNG.
-The specified path may include a printf-style format string for a numerical
-argument.
+Dump video frames to JPEG or PNG image files.
+The filename path may include a printf-style (with frame number as argument).
 For example,
 .Sq %08d.jpg
-will output to a series of JPEG files.
+will output frames to 00000001.jpg, 00000002.jpg, etc.
 .It outFirst
-Name the first output file following this frame number.
+Override first frame number (default = 0).
 .It outLast
-Terminate the application after this many frames have been rendered.
+Terminate application after # frames have been rendered.
 .It bgColor
-Background color (see
+Background color (
 .Xr AG_Color 3 ) .
 Default is "rgb(0,0,0)".
+.It jpegQual
+If exporting to JPEG, set quality factor (100% = best).
+.It jpegDCT
+If exporting to JPEG, specify DCT method ("islow" for slow but accurate
+integer method, "ifast" for fast but less accurate integer method, or
+"float" for floating point method).
 .El
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,
