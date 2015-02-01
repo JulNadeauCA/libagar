@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,8 +49,6 @@ struct ag_jpg_sourcemgr {
 	AG_DataSource *ds;
 	Uint8 buffer[4096];
 };
-
-int agJPEGQuality = 100;		/* Quality for JPEG export */
 
 /*
  * Callbacks
@@ -128,21 +126,10 @@ AG_SurfaceFromJPEG(const char *path)
 	return (s);
 }
 
-/* Configure JPEG quality for export */
-int
-AG_SetJPEGQuality(int qual)
-{
-	if (qual < 0 || qual > 100) {
-		AG_SetError("Quality must be between 0 and 100");
-		return (-1);
-	}
-	agJPEGQuality = qual;	/* Atomic */
-	return (0);
-}
-
 /* Export a surface to a JPEG image file. */
 int
-AG_SurfaceExportJPEG(const AG_Surface *su, const char *path)
+AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
+    Uint flags)
 {
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
@@ -166,7 +153,12 @@ AG_SurfaceExportJPEG(const AG_Surface *su, const char *path)
 	jcomp.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, agJPEGQuality, TRUE);
+	jpeg_set_quality(&jcomp, quality, TRUE);
+
+	if (flags & AG_EXPORT_JPEG_JDCT_ISLOW) { jcomp.dct_method = JDCT_ISLOW; }
+	if (flags & AG_EXPORT_JPEG_JDCT_IFAST) { jcomp.dct_method = JDCT_IFAST; }
+	if (flags & AG_EXPORT_JPEG_JDCT_FLOAT) { jcomp.dct_method = JDCT_FLOAT; }
+
 	jpeg_stdio_dest(&jcomp, f);
 
 	if ((jcopybuf = TryMalloc(su->w*3)) == NULL) {
@@ -300,7 +292,8 @@ AG_SurfaceFromJPEG(const char *path)
 	return (NULL);
 }
 int
-AG_SurfaceExportJPEG(const AG_Surface *su, const char *path)
+AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
+    Uint flags)
 {
 	AG_SetError(_("Agar not compiled with JPEG support"));
 	return (-1);
