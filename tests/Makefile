@@ -23,7 +23,8 @@ DATAFILES=	loss.txt \
 		menubg.bmp \
 		pepe.jpg \
 		sword-socket.bmp \
-		sword.bmp 
+		sword.bmp \
+		axe.png
 
 PROG=	agartest
 SRCS=	agartest.c ${SRCS_EXTRA} \
