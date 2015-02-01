@@ -170,7 +170,7 @@ AG_ViewCapture(void)
 		if (!AG_FileExists(file))
 			break;			/* XXX race condition */
 	}
-	if (AG_SurfaceExportJPEG(s, file) == 0) {
+	if (AG_SurfaceExportJPEG(s, file, 100, 0) == 0) {
 		Verbose("Saved capture to: %s\n", file);
 	} else {
 		Verbose("Capture failed: %s\n", AG_GetError());
