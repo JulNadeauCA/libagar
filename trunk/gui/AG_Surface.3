@@ -87,6 +87,9 @@ as
 .Fn AG_SurfaceStdGL "Uint w" "Uint h"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_SurfaceFromFile "const char *path"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_SurfaceFromPNG "const char *path"
 .Pp
 .Ft "AG_Surface *"
@@ -245,33 +248,27 @@ The function does not use OpenGL itself and is available regardless
 of whether Agar was compiled with OpenGL support.
 .Pp
 The
-.Fn AG_SurfaceFromPNG ,
-.Fn AG_SurfaceFromJPEG
-and
-.Fn AG_SurfaceFromBMP
-functions attempt to load the contents of an image file into a
-newly-allocated surface.
-.Fn AG_SurfaceFromPNG
-and
-.Fn AG_SurfaceFromJPEG
-will return an error unless Agar was compiled with support for libpng
-and libjpeg, respectively.
+.Fn AG_SurfaceFromFile
+routine loads the contents of an image file into a newly-allocated surface.
+The image format is auto-detected.
+The
+.Fn AG_SurfaceFrom{BMP,PNG,JPEG} 
+variants will load an image only in the specified format.
 .Pp
 The
 .Fn AG_ReadSurface
-function loads a native-format surface from the specified data source
-(see
-.Xr AG_DataSource 3 ) .
+function reads an uncompressed surface (in native
+.Nm
+encoding).
 The
-.Fn AG_ReadSurfaceFromPNG ,
-.Fn AG_ReadSurfaceFromJPEG
-and
-.Fn AG_ReadSurfaceFromBMP
-functions may be used to read PNG, JPEG and BMP encoded images from the
-data source.
+.Fn AG_ReadSurfaceFrom{BMP,PNG,JPEG}
+variants will load an image only in the specified format.
+.Pp
 The
 .Fn AG_WriteSurface
-function saves the surface to the specified data source in native format.
+function saves the surface to the specified data source in native
+.Nm
+encoding.
 .Pp
 The
 .Fn AG_SurfaceFromSDL
@@ -280,7 +277,7 @@ function converts a
 to a newly-allocated
 .Nm
 structure.
-This function is only available if Agar was compiled with SDL support.
+This function is available only if Agar was compiled with SDL support.
 .Pp
 The
 .Fn AG_SurfaceSetPalette
@@ -335,16 +332,13 @@ function releases all resources allocated by the given surface.
 .Fn AG_SetAlphaPixels "AG_Surface *surface" "Uint8 alpha"
 .Pp
 .Ft "int"
-.Fn AG_SurfaceExportPNG "const AG_Surface *su" "char *path"
-.Pp
-.Ft "void"
-.Fn AG_SetPNGInterlacing "int enable"
+.Fn AG_SurfaceExportFile "const AG_Surface *su" "char *path"
 .Pp
 .Ft "int"
-.Fn AG_SurfaceExportJPEG "const AG_Surface *su" "char *path"
+.Fn AG_SurfaceExportPNG "const AG_Surface *su" "char *path" "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_SetJPEGQuality "int quality"
+.Fn AG_SurfaceExportJPEG "const AG_Surface *su" "char *path" "Uint quality" "Uint flags"
 .Pp
 .Ft "int"
 .Fn AG_SurfaceExportBMP "const AG_Surface *su" "char *path"
@@ -427,19 +421,38 @@ function changes the alpha component of all pixels with a non-zero alpha
 component.
 .Pp
 The
+.Fn AG_SurfaceExportFile
+routine exports a surface to a specified image file.
+The image format will be determined by the filename extension in
+.Fa path .
+.Pp
 .Fn AG_SurfaceExportPNG
-function exports a PNG image file from the contents of a surface.
-An error is returned if Agar was not compiled with libpng support.
-.Fn AG_SetPNGInterlacing
-enables or disables interlacing (Adam7).
+exports a surface to a PNG image file, preserving any transparency data.
+Available
+.Fa flags
+options include:
+.Bl -tag -width "AG_EXPORT_PNG_ADAM7 "
+.It AG_EXPORT_PNG_ADAM7
+Enable Adam7 interlacing.
+.El
 .Pp
 .Fn AG_SurfaceExportJPEG
-exports a JPEG image file from the contents of a surface.
+exports the surface to a file in JPEG format.
 If the surface has an alpha-channel, it is ignored.
-An error is returned if Agar was not compiled with libjpeg support.
-.Fn AG_SetJPEGQuality
-sets the quality setting for saved JPEGs.
-The value is given in percent, 100% being the highest quality (the default).
+.Fa quality
+is given in percent (100% = best).
+Available
+.Fa flags
+options include:
+.Pp
+.Bl -tag -compact -width "AG_EXPORT_JPEG_JDCT_ISLOW "
+.It AG_EXPORT_JPEG_JDCT_ISLOW
+Slow, but accurate integer DCT method.
+.It AG_EXPORT_JPEG_JDCT_IFAST
+Fast, but less accurate integer DCT method.
+.It AG_EXPORT_JPEG_JDCT_FLOAT
+Floating-point DCT method.
+.El
 .Pp
 .Fn AG_SurfaceExportBMP
 exports a BMP image file from the contents of a surface.
@@ -448,7 +461,7 @@ If the surface has an alpha-channel, it is ignored.
 .Fn AG_SurfaceExportSDL
 exports an Agar surface to a newly allocated
 .Xr SDL_Surface 3 .
-This function is only available if Agar was compiled with SDL support.
+This function is available only if Agar was compiled with SDL support.
 .Sh PIXEL FORMATS
 .nr nS 1
 .Ft "AG_PixelFormat *"

@@ -69,6 +69,14 @@ typedef enum ag_blend_func {
 #define AG_ALPHA_TRANSPARENT	0		/* Transparent alpha value */
 #define AG_ALPHA_OPAQUE		255		/* Opaque alpha value */
 
+/* Flags for AG_SurfaceExportPNG() */
+#define AG_EXPORT_PNG_ADAM7	0x01		/* Enable Adam7 interlacing */
+
+/* Flags for AG_SurfaceExportJPEG() */
+#define AG_EXPORT_JPEG_JDCT_ISLOW	0x01	/* Slow, accurate integer DCT */
+#define AG_EXPORT_JPEG_JDCT_IFAST	0x02	/* Faster, less accurate integer DCT */
+#define AG_EXPORT_JPEG_JDCT_FLOAT	0x04	/* Floating-point method */
+
 __BEGIN_DECLS
 extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
 extern AG_PixelFormat *agSurfaceFmt;  /* Recommended format for new surfaces */
@@ -103,6 +111,9 @@ void            AG_SurfaceBlit(const AG_Surface *, const AG_Rect *,
 int             AG_SurfaceResize(AG_Surface *, Uint, Uint);
 void            AG_SurfaceFree(AG_Surface *);
 
+AG_Surface     *AG_SurfaceFromFile(const char *);
+int             AG_SurfaceExportFile(const AG_Surface *, const char *);
+
 AG_Surface     *AG_SurfaceFromSDL(void *);
 void           *AG_SurfaceExportSDL(const AG_Surface *);
 
@@ -112,13 +123,11 @@ int             AG_SurfaceExportBMP(const AG_Surface *, const char *);
 
 AG_Surface     *AG_ReadSurfaceFromPNG(AG_DataSource *);
 AG_Surface     *AG_SurfaceFromPNG(const char *);
-int             AG_SurfaceExportPNG(const AG_Surface *, const char *);
-void            AG_SetPNGInterlacing(int);
+int             AG_SurfaceExportPNG(const AG_Surface *, const char *, Uint);
 
 AG_Surface     *AG_ReadSurfaceFromJPEG(AG_DataSource *);
 AG_Surface     *AG_SurfaceFromJPEG(const char *);
-int             AG_SurfaceExportJPEG(const AG_Surface *, const char *);
-int             AG_SetJPEGQuality(int);
+int             AG_SurfaceExportJPEG(const AG_Surface *, const char *, Uint, Uint);
 
 void   AG_SurfaceBlendPixel(AG_Surface *, Uint8 *, AG_Color, AG_BlendFn);
 void   AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
@@ -388,7 +397,7 @@ AG_PixelFormatCompare(const AG_PixelFormat *pf1, const AG_PixelFormat *pf2)
 	    AG_PixelFormatComparePalettes(pf1->palette, pf2->palette) != 0) {
 		return (1);
 	}
-	return !(pf1->BytesPerPixel == pf2->BytesPerPixel &&
+	return !(pf1->BitsPerPixel == pf2->BitsPerPixel &&
 	         pf1->Rmask == pf2->Rmask &&
 		 pf1->Gmask == pf2->Gmask &&
 		 pf1->Bmask == pf2->Bmask &&
