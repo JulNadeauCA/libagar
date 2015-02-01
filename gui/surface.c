@@ -38,8 +38,7 @@ const char *agBlendFuncNames[] = {
 	NULL
 };
 
-AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for new surfaces */
-AG_PixelFormat *agTextureFmt = NULL;  /* Recommended format for textures */
+AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for GUI surfaces */
 
 #define COMPUTE_SHIFTLOSS(mask, shift, loss) \
 	shift = 0; \
@@ -206,9 +205,9 @@ AG_PixelFormatFree(AG_PixelFormat *pf)
 {
 	if (pf->palette != NULL) {
 		Free(pf->palette->colors);
-		Free(pf->palette);
+		free(pf->palette);
 	}
-	Free(pf);
+	free(pf);
 }
 
 /* Compare two palettes. */
@@ -364,6 +363,53 @@ AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, int bpp,
 	return (s);
 }
 
+/* Load a surface from an image file. */
+AG_Surface *
+AG_SurfaceFromFile(const char *path)
+{
+	AG_Surface *su;
+	const char *ext;
+
+	if ((ext = strrchr(path, '.')) == NULL) {
+		AG_SetError("Invalid filename");
+		return (NULL);
+	}
+	if (Strcasecmp(ext, ".bmp") == 0) {
+		su = AG_SurfaceFromBMP(path);
+	} else if (Strcasecmp(ext, ".png") == 0) {
+		su = AG_SurfaceFromPNG(path);
+	} else if (Strcasecmp(ext, ".jpg") == 0 || Strcasecmp(ext, ".jpeg") == 0) {
+		su = AG_SurfaceFromJPEG(path);
+	} else {
+		AG_SetError(_("Unknown image extension: %s"), ext);
+		return (NULL);
+	}
+	return (su);
+}
+
+/* Export surface to an image file (format determined by extension). */
+int
+AG_SurfaceExportFile(const AG_Surface *su, const char *path)
+{
+	const char *ext;
+
+	if ((ext = strrchr(path, '.')) == NULL) {
+		AG_SetError("Invalid filename");
+		return (-1);
+	}
+	if (Strcasecmp(ext, ".bmp") == 0) {
+		return AG_SurfaceExportBMP(su, path);
+	} else if (Strcasecmp(ext, ".png") == 0) {
+		return AG_SurfaceExportPNG(su, path, 0);
+	} else if (Strcasecmp(ext, ".jpg") == 0 || Strcasecmp(ext, ".jpeg") == 0) {
+		return AG_SurfaceExportJPEG(su, path, 100, 0);
+	} else {
+		AG_SetError(_("Unknown image extension: %s"), ext);
+		return (-1);
+	}
+	return (0);
+}
+
 /*
  * Create a new surface suitable to be used as an OpenGL texture. The
  * returned surface size may be different from requested (unless the
@@ -449,9 +495,10 @@ AG_SurfaceConvert(const AG_Surface *ss, const AG_PixelFormat *pf)
 }
 
 /*
- * Copy pixel data from a source to a destination surface. Pixel formats
- * and surface dimensions of the two surfaces may differ. The destination
- * surface's clipping rectangle and alpha/colorkey settings are ignored.
+ * Copy pixel data from a source to a destination surface. Perform
+ * conversion if pixel format differs. Perform clipping if dimensions
+ * differ. Ignore the clipping rectangle and alpha/colorkey settings of
+ * the target surface.
  */
 void
 AG_SurfaceCopy(AG_Surface *ds, const AG_Surface *ss)
