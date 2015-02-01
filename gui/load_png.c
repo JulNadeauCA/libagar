@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,14 +40,6 @@
 #endif
 #include <png.h>
 
-int agPNGInterlacing = 0;		/* Save with interlacing */
-
-void
-AG_SetPNGInterlacing(int enable)
-{
-	agPNGInterlacing = enable;	/* Atomic */
-}
-
 /* Load a surface from a PNG image file. */
 AG_Surface *
 AG_SurfaceFromPNG(const char *path)
@@ -74,45 +66,19 @@ AG_PNG_ReadData(png_structp png, png_bytep buf, png_size_t size)
 	AG_Read(ds, buf, size);
 }
 
-#if 1
-static void
-SurfaceColorkeyToAlpha(AG_Surface *su)
-{
-	Uint8 *p = su->pixels;
-	int x, y;
-
-	for (y = 0; y < su->h; y++) {
-		for (x = 0; x < su->w; x++) {
-			Uint32 c = AG_GET_PIXEL(su,p);
-			AG_Color C = AG_GetColorRGBA(c, su->format);
-		
-			if (C.a == 0) {
-				c = AG_MapPixelRGBA(su->format, 0,200,0,0);
-			}
-			AG_PUT_PIXEL(su, p, c);
-			p += su->format->BytesPerPixel;
-		}
-	}
-}
-#endif
-
 /* Load a surface from PNG image data. */
 AG_Surface *
 AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 {
-	int start;
 	AG_Surface *volatile su = NULL;
 	png_structp png;
 	png_infop info;
 	png_uint_32 width, height;
-	int depth, colorType, intlaceType;
+	int depth, colorType, intlaceType, channels, start, row;
 	Uint32 Rmask = 0, Gmask = 0, Bmask = 0, Amask = 0;
-	AG_Palette *pal;
 	png_bytep *volatile pData = NULL;
-	int row, i, t;
-	volatile int ckey = -1;
+	volatile int colorKey = -1;
 	png_color_16 *transColor;
-	int channels;
 
 	start = AG_Tell(ds);
 
@@ -128,52 +94,22 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 
 	png_set_read_fn(png, ds, AG_PNG_ReadData);
 
-	/* Read PNG image information. */
 	png_read_info(png, info);
 	png_get_IHDR(png, info,
 	    &width, &height, &depth,
 	    &colorType, &intlaceType,
 	    NULL, NULL);
 
-	/* Strip the pixels with 16 bits/channel to 8 bits/channel. */
 	png_set_strip_16(png);
-
-	/*
-	 * Always expand 1/2/4-bit images to 8-bit, and expand grayscales
-	 * images of depth <8-bit to 8-bit.
-	 */
 	png_set_packing(png);
-	if (colorType == PNG_COLOR_TYPE_GRAY)
-		png_set_expand(png);
-
+	png_set_expand(png);
 	png_set_tRNS_to_alpha(png);
 
-	/* Figure out transparency information. */
+	/* Read transparency information. */
 	if (png_get_valid(png, info, PNG_INFO_tRNS)) {
 	        int num_trans;
 		Uint8 *trans;
-
 		png_get_tRNS(png, info, &trans, &num_trans, &transColor);
-		if (colorType == PNG_COLOR_TYPE_PALETTE) {
-			for (i = 0, t = -1;
-			     i < num_trans;
-			     i++) {
-				if (trans[i] == 0) {
-					if (t >= 0)
-						break;
-					t = i;
-				} else if (trans[i] != 255) {
-					break;
-				}
-			}
-			if (i == num_trans) {
-				ckey = t;
-			} else {
-				png_set_expand(png);
-			}
-		} else {
-			ckey = 0;
-		}
 	}
 
 	/* Expand grayscale to 24-bit RGB */
@@ -183,10 +119,8 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	/* Update png_info structure per our requirements. */
 	png_read_update_info(png, info);
 
-	png_get_IHDR(png, info,
-	    &width, &height, &depth,
-	    &colorType, &intlaceType,
-	    NULL, NULL);
+	png_get_IHDR(png, info, &width, &height, &depth,
+	    &colorType, &intlaceType, NULL, NULL);
 
 #ifdef HAVE_LIBPNG14
 	channels = (int)png_get_channels(png, info);
@@ -194,32 +128,30 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	channels = info->channels;
 #endif
 
-	if (colorType != PNG_COLOR_TYPE_PALETTE) {
 #if AG_BYTEORDER == AG_BIG_ENDIAN
+	{
 		int s = (channels == 4) ? 0 : 8;
 		Rmask = 0xff000000 >> s;
 		Gmask = 0x00ff0000 >> s;
 		Bmask = 0x0000ff00 >> s;
 		Amask = 0x000000ff >> s;
-#else
-		Rmask = 0x000000ff;
-		Gmask = 0x0000ff00;
-		Bmask = 0x00ff0000;
-		Amask = (channels == 4) ? 0xff000000 : 0;
-#endif
 	}
+#else
+	Rmask = 0x000000ff;
+	Gmask = 0x0000ff00;
+	Bmask = 0x00ff0000;
+	Amask = (channels == 4) ? 0xff000000 : 0;
+#endif
 	if ((su = AG_SurfaceRGBA(width, height, depth*channels, 0,
 	    Rmask, Gmask, Bmask, Amask)) == NULL)
 		goto fail;
 
-	if (ckey != -1) {
-	        if (colorType != PNG_COLOR_TYPE_PALETTE) {
-		        ckey = AG_MapPixelRGB(su->format,
-			    (Uint8)transColor->red,
-			    (Uint8)transColor->green,
-			    (Uint8)transColor->blue);
-		}
-	        AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, ckey);
+	if (colorKey != -1) {
+		colorKey = AG_MapPixelRGB(su->format,
+		    (Uint8)transColor->red,
+		    (Uint8)transColor->green,
+		    (Uint8)transColor->blue);
+	        AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, colorKey);
 	}
 
 	/* Read image data */
@@ -230,42 +162,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		pData[row] = (png_bytep)(Uint8 *)su->pixels + row*su->pitch;
 	}
 	png_read_image(png, pData);
-	SurfaceColorkeyToAlpha(su);
 
-	/* Read palette information */
-	if ((pal = su->format->palette) != NULL) {
-#ifdef HAVE_LIBPNG14
-		int numPalette;
-		png_colorp palette;
-#endif
-		if (colorType == PNG_COLOR_TYPE_GRAY) {
-			pal->nColors = 256;
-			for (i = 0; i < 256; i++) {
-				pal->colors[i].r = i;
-				pal->colors[i].g = i;
-				pal->colors[i].b = i;
-			}
-		}
-#ifdef HAVE_LIBPNG14
-		else if (png_get_PLTE(png, info, &palette, &numPalette)) {
-			pal->nColors = numPalette; 
-			for (i = 0; i < numPalette; i++) {
-				pal->colors[i].b = palette[i].blue;
-				pal->colors[i].g = palette[i].green;
-				pal->colors[i].r = palette[i].red;
-			}
-		}
-#else /* !HAVE_LIBPNG14 */
-		else if (info->num_palette > 0) {
-			pal->nColors = info->num_palette; 
-			for (i = 0; i < info->num_palette; i++) {
-				pal->colors[i].b = info->palette[i].blue;
-				pal->colors[i].g = info->palette[i].green;
-				pal->colors[i].r = info->palette[i].red;
-			}
-		}
-#endif /* HAVE_LIBPNG14 */
-	}
 	if (png != NULL) {
 		png_destroy_read_struct(&png,
 		    info ? &info : (png_infopp)0, (png_infopp)0);
@@ -285,41 +182,19 @@ fail:
 	return (NULL);
 }
 
-/* Convert to one of the supported PNG depths. */
-static __inline__ int
-GetSupportedPNGDepth(int bitsPerPixel)
-{
-	switch (bitsPerPixel) {
-	case 1:
-		return (1);
-	case 2:
-		return (2);
-	case 3:
-	case 4:
-		return (4);
-	case 5:
-	case 6:
-	case 7:
-	case 8:
-		return (8);
-	default:
-		return (16);
-	}
-}
-
 /* Save a surface to a PNG image file. */
 int
-AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
+AG_SurfaceExportPNG(const AG_Surface *su, const char *path, Uint flags)
 {
 	FILE *f;
 	png_structp png;
 	png_infop info;
-	int pngDepth, colorType;
+	int pngDepth, pngType;
 	png_colorp pngPal = NULL;
-	png_bytep pSrc;
-	AG_Surface *suPNG = NULL;
-	AG_PixelFormat *pfPNG;
-	int i, nPasses, y;
+	png_color_8 sig_bit;
+	png_byte ** rows = NULL;
+	int i, x, y;
+	Uint8 *pSrc;
 
 	if ((f = fopen(path, "wb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
@@ -327,51 +202,49 @@ AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
 	}
 	if ((png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 	    NULL, NULL, NULL)) == NULL) {
-		AG_SetError("libpng png_create_write_struct() failed");
-		goto fail_close;
+		AG_SetError("png_create_write_struct() failed");
+		fclose(f);
+		return (-1);
 	}
 	if ((info = png_create_info_struct(png)) == NULL) {
-		AG_SetError("libpng png_create_info_struct() failed");
-		png_destroy_write_struct(&png, NULL);
-		goto fail_close;
+		AG_SetError("png_create_info_struct() failed");
+		goto fail;
 	}
 
+	if (setjmp(png_jmpbuf(png))) {
+		AG_SetError("png_init_io() failed");
+		goto fail;
+	}
 	png_init_io(png, f);
 
-	/* Convert surface to one of the supported PNG formats. */
-	pngDepth = GetSupportedPNGDepth(su->format->BitsPerPixel);
 	if (su->format->palette != NULL) {
-		colorType = PNG_COLOR_TYPE_PALETTE;
-		pfPNG = AG_PixelFormatIndexed(pngDepth);
+		pngType = PNG_COLOR_TYPE_PALETTE;
+
+		if (su->format->palette->nColors > 16)     { pngDepth = 8; }
+		else if (su->format->palette->nColors > 4) { pngDepth = 4; }
+		else if (su->format->palette->nColors > 2) { pngDepth = 2; }
+		else					   { pngDepth = 1; }
 	} else {
 		if (su->format->Amask != 0) {
-			colorType = PNG_COLOR_TYPE_RGBA;
-			pfPNG = AG_PixelFormatRGBA(pngDepth,
-			    0xff000000,
-			    0x00ff0000,
-			    0x0000ff00,
-			    0x000000ff);
+			pngType = PNG_COLOR_TYPE_RGB_ALPHA;
 		} else {
-			colorType = PNG_COLOR_TYPE_RGB;
-			pfPNG = AG_PixelFormatRGB(pngDepth,
-			    0xff00000,
-			    0x00ff0000,
-			    0x0000ff00);
+			pngType = PNG_COLOR_TYPE_RGB;
 		}
+		pngDepth = 8;
 	}
-	if ((suPNG = AG_SurfaceConvert(su, pfPNG)) == NULL)
+	if (setjmp(png_jmpbuf(png))) {
+		AG_SetError("png_write_info() failed");
 		goto fail;
+	}
 
 	png_set_IHDR(png, info,
-	    suPNG->w, suPNG->h, suPNG->format->BitsPerPixel,
-	    colorType,
-	    (agPNGInterlacing ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE),
-	    PNG_COMPRESSION_TYPE_BASE,
-	    PNG_FILTER_TYPE_BASE);
+	    su->w, su->h, pngDepth, pngType,
+	    (flags & AG_EXPORT_PNG_ADAM7) ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE,
+	    PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
 	/* Write PLTE chunk if color-index mode. */
-	if (colorType == PNG_COLOR_TYPE_PALETTE) {
-		AG_Palette *pal = suPNG->format->palette;
+	if (pngType == PNG_COLOR_TYPE_PALETTE) {
+		AG_Palette *pal = su->format->palette;
 
 		pngPal = (png_colorp)TryMalloc(pal->nColors*sizeof(png_color));
 		if (pngPal == NULL) {
@@ -385,27 +258,95 @@ AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
 		png_set_PLTE(png, info, pngPal, pal->nColors);
 	}
 
-	png_write_info(png, info);
-	nPasses = png_set_interlace_handling(png);
-	for (i = 0; i < nPasses; i++) {
-		pSrc = (png_bytep)suPNG->pixels;
-		for (y = 0; y < suPNG->h; y++) {
-			png_write_row(png, pSrc);
-			pSrc += suPNG->pitch;
+	if ((rows = png_malloc(png, su->h*sizeof(png_byte *))) == NULL) {
+		AG_SetError("png_malloc rows");
+		goto fail;
+	}
+	pSrc = (Uint8 *)su->pixels;
+	if (pngType == PNG_COLOR_TYPE_RGB_ALPHA) {
+		for (y = 0; y < su->h; y++) {
+			png_byte *row;
+		
+			if ((row = png_malloc(png, su->w*4)) == NULL) {
+				for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+				png_free(png, rows);
+				AG_SetError("png_malloc row");
+				goto fail;
+			}
+			rows[y] = row;
+			for (x = 0; x < su->w; x++) {
+				AG_Color C;
+	
+				C = AG_GetColorRGBA(AG_GET_PIXEL(su,pSrc),
+				    su->format);
+				*row++ = C.r;
+				*row++ = C.g;
+				*row++ = C.b;
+				*row++ = C.a;
+				pSrc += su->format->BytesPerPixel;
+			}
+			pSrc += su->padding;
+		}
+	} else {
+		for (y = 0; y < su->h; y++) {
+			png_byte *row;
+		
+			if ((row = png_malloc(png, su->w*4)) == NULL) {
+				for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+				png_free(png, rows);
+				AG_SetError("png_malloc row");
+				goto fail;
+			}
+			rows[y] = row;
+			for (x = 0; x < su->w; x++) {
+				AG_Color C;
+	
+				C = AG_GetColorRGB(AG_GET_PIXEL(su,pSrc),
+				    su->format);
+				*row++ = C.r;
+				*row++ = C.g;
+				*row++ = C.b;
+				pSrc += su->format->BytesPerPixel;
+			}
+			for (x = 0; x < su->w; x++) {
+				*row++ = 0;
+			}
+			pSrc += su->padding;
 		}
 	}
 
+	png_write_info(png, info);
+
+	if (pngType & PNG_COLOR_MASK_COLOR) {
+		sig_bit.red = pngDepth;
+		sig_bit.green = pngDepth;
+		sig_bit.blue = pngDepth;
+	} else {
+		sig_bit.gray = pngDepth;
+	}
+	if (pngType & PNG_COLOR_MASK_ALPHA) {
+		sig_bit.alpha = pngDepth;
+	}
+	png_set_sBIT(png, info, &sig_bit);
+	
+	if (setjmp(png_jmpbuf(png))) {
+		AG_SetError("png_write_image() failed");
+		for (y = 0; y < su->h; y++) { png_free(png, rows[y]); }
+		png_free(png, rows);
+		goto fail;
+	}
+	png_write_image(png, rows);
 	png_write_end(png, info);
-	png_destroy_write_struct(&png, NULL);
-	AG_SurfaceFree(suPNG);
+
+	for (y = 0; y < su->h; y++) { png_free(png, rows[y]); }
+	png_free(png, rows);
+	png_destroy_write_struct(&png, &info);
 	Free(pngPal);
 	fclose(f);
 	return (0);
 fail:
-	if (suPNG != NULL) { AG_SurfaceFree(suPNG); }
 	png_destroy_write_struct(&png, NULL);
 	Free(pngPal);
-fail_close:
 	fclose(f);
 	return (-1);
 }
@@ -419,7 +360,7 @@ AG_SurfaceFromPNG(const char *path)
 	return (NULL);
 }
 int
-AG_SurfaceExportPNG(const AG_Surface *su, const char *path)
+AG_SurfaceExportPNG(const AG_Surface *su, const char *path, Uint flags)
 {
 	AG_SetError(_("Agar not compiled with PNG support"));
 	return (-1);
