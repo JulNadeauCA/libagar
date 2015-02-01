@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -40,19 +40,20 @@
 The
 .Nm
 widget displays an image in pixmap format.
-It is frequently used along with
+It is commonly used along with
 .Xr AG_Fixed 3
 to display interface decorations.
 .Pp
-In OpenGL mode, the image surfaces are uploaded to the texture unit as
-they are mapped or updated.
-.Pp
-Small animations can be efficiently displayed by mapping one surface per frame
-and invoking
+Multiple images may be associated with an
+.Nm
+instance.
+This allows animations to be displayed (i.e., by mapping the frames using
+.Fn AG_PixmapAddSurface
+and calling
 .Fn AG_PixmapSetSurface
-directly from an
+from an
 .Xr AG_Timer 3
-callback.
+callback or a separate thread).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -63,16 +64,16 @@ callback.
 .Fn AG_PixmapNew "AG_Widget *parent" "Uint flags" "Uint width" "Uint height"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurface "AG_Widget *parent" "Uint flags" "AG_Surface *src"
+.Fn AG_PixmapFromSurface "AG_Widget *parent" "Uint flags" "const AG_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceCopy "AG_Widget *parent" "Uint flags" "AG_Surface *src"
+.Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "const AG_Surface *src" "Uint width" "Uint height"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "AG_Surface *src" "int width" "int height"
+.Fn AG_PixmapFromSurfaceNODUP "AG_Widget *parent" "Uint flags" "AG_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromBMP "AG_Widget *parent" "Uint flags" "const char *path"
+.Fn AG_PixmapFromFile "AG_Widget *parent" "Uint flags" "const char *path"
 .Pp
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromTexture "AG_Widget *parent" "Uint flags" "GLuint texture" "int lod"
@@ -105,48 +106,48 @@ Shorthand for
 .Dv AG_PIXMAP_HFILL|AG_PIXMAP_VFILL .
 .El
 .Pp
-The following functions create a new
-.Nm
-with an image obtained from the given source.
-When using these constructors, the geometry of the widget is set to
-that of the source image.
-.Pp
+The
 .Fn AG_PixmapFromSurface
-maps an existing
-.Xr AG_Surface 3
-to surface 0.
-The surface must remain valid until the widget is destroyed.
+function creates a new
+.Nm
+widget displaying a copy of the specified surface.
+A pixel-format conversion is performed if necessary.
+If the
+.Fa src
+argument is NULL, an empty surface is displayed.
 The
-.Fn AG_PixmapFromSurfaceCopy
-variant instead creates and manages a copy of the surface.
 .Fn AG_PixmapFromSurfaceScaled
-uses rescaled copy of the surface.
+variant resizes the image to the given dimensions.
 .Pp
 The
-.Fn AG_PixmapFromBMP
-variant loads a surface from the bmp file at
-.Fa path .
+.Fn AG_PixmapFromSurfaceNODUP
+variant uses the specified surface without making a copy.
+The provided surface must remain valid as long as the widget exists, and
+it must be in a format that can be displayed directly (such as
+.Va agSurfaceFmt ) .
 .Pp
 The
+.Fn AG_PixmapFromFile
+function loads a surface from the image file at
+.Fa path
+(image type is autodetected).
+.Pp
 .Fn AG_PixmapFromTexture
-function copies the surface from an existing GL texture.
+may be used to display an active hardware texture.
 .Fa lod
 specifies the level-of-detail of the texture (level 0 is the base image
 level).
-This function is only available if Agar was compiled with OpenGL support.
+If OpenGL support is not available, an error is returned.
 .Sh CHANGING SURFACES
 .nr nS 1
 .Ft "int"
-.Fn AG_PixmapAddSurface "AG_Pixmap *pixmap" "AG_Surface *surface"
+.Fn AG_PixmapAddSurface "AG_Pixmap *pixmap" "const AG_Surface *surface"
 .Pp
 .Ft "int"
-.Fn AG_PixmapAddSurfaceCopy "AG_Pixmap *pixmap" "AG_Surface *surface"
+.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "const AG_Surface *surface" "Uint width" "Uint height"
 .Pp
 .Ft "int"
-.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "AG_Surface *surface" "int width" "int height"
-.Pp
-.Ft "int"
-.Fn AG_PixmapAddSurfaceFromBMP "AG_Pixmap *pixmap" "const char *path"
+.Fn AG_PixmapAddSurfaceFromFile "AG_Pixmap *pixmap" "const char *path"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
@@ -155,57 +156,41 @@ This function is only available if Agar was compiled with OpenGL support.
 .Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew"
 .Pp
 .Ft "void"
-.Fn AG_PixmapReplaceCurrentSurface "AG_Pixmap *pixmap" "AG_Surface *surfaceNew"
-.Pp
-.Ft "void"
-.Fn AG_PixmapReplaceSurfaceScaled "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew" "Uint width" "Uint height"
-.Pp
-.Ft "void"
-.Fn AG_PixmapReplaceCurrentSurfaceScaled "AG_Pixmap *pixmap" "AG_Surface *surfaceNew" "Uint width" "Uint height"
-.Pp
-.Ft "void"
 .Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap" "int surface_name"
-.Pp
-.Ft "void"
-.Fn AG_PixmapUpdateCurrentSurface "AG_Pixmap *pixmap"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetCoords "AG_Pixmap *pixmap" "int s" "int t"
 .Pp
 .nr nS 0
 The
-.Nm
-widget can map multiple surfaces and switch between them.
-To add a new surface, use
-.Fn AG_PixmapAddSurface ,
-.Fn AG_PixmapAddSurfaceCopy ,
+.Fn AG_PixmapAddSurface
+functions maps a copy of the specified surface.
 .Fn AG_PixmapAddSurfaceScaled
-or
-.Fn AG_PixmapAddSurfaceFromBMP .
+maps a copy of the given surface, resized to
+.Fa width
+by
+.Fa height
+pixels.
+.Fn AG_PixmapAddSurfaceFromFile
+maps a surface obtained from an image file (format is autodetected).
 .Pp
 .Fn AG_PixmapSetSurface
-changes the currently visible surface to another surface that has been
-previously mapped with
-.Fn AG_PixmapAddSurface* .
-To replace an existing mapped surface, use
-.Fn AG_PixmapReplaceSurface
-or
-.Fn AG_PixmapReplaceSurfaceScaled
-with the name of the surface.
-.Pp
-If you need to modify the contents of a previously mapped surface, it is
-necessary to call
-.Fn AG_PixmapUpdateSurface
-afterwards.
-It has no effect in direct video mode, but it causes the texture to be
-re-uploaded to the graphics hardware in OpenGL mode.
+changes the currently displayed surface (see
+.Va n
+in
+.Sx STRUCTURE DATA ) .
+The argument should be the handle of one of the surfaces previously
+mapped with
+.Fn AG_PixmapAddSurface .
 .Pp
 The
-.Fn AG_PixmapReplaceCurrentSurface ,
-.Fn AG_PixmapReplaceCurrentSurfaceScaled
-and
-.Fn AG_PixmapUpdateCurrentSurface
-variants operate on the currently selected (visible) surface.
+.Fn AG_PixmapReplaceSurface
+routine replaces the contents of the specified surface mapping.
+.Pp
+If the contents of a currently mapped surface are directly modified,
+.Fn AG_PixmapUpdateSurface
+should be called.
+This routine may or may not be a no-op depending on the graphics mode.
 .Pp
 The
 .Fn AG_PixmapSetCoords
@@ -220,6 +205,8 @@ For the
 .Ft AG_Pixmap
 object:
 .Bl -tag -width "int s, t "
+.It Ft int n
+Handle of currently displayed surface (-1 = none).
 .It Ft int s, t
 Source surface coordinates.
 Can be set using
@@ -242,16 +229,33 @@ AG_Expand(sv);
 px = AG_PixmapFromSurface(sv, 0, mySurface);
 .Ed
 .Pp
-The following code fragment displays the contents of an image in bmp format.
-It uses
-.Dv AG_PIXMAP_RESCALE
-to scale the image to fit the widget geometry:
+The following code fragment displays some image files:
 .Bd -literal -offset indent
-AG_Surface *s;
+AG_PixmapFromFile(sv, 0, "foo.png");
+AG_PixmapFromFile(sv, 0, "bar.jpg");
+.Ed
+.Pp
+The following code fragment loads 30 frames in JPEG format:
+.Bd -literal -offset indent
+char path[AG_FILENAME_MAX];
 AG_Pixmap *px;
+int frames[30];
+int i;
 
-s = AG_SurfaceFromBMP("foo.bmp");
-px = AG_PixmapFromSurface(sv, AG_PIXMAP_RESCALE, s);
+px = AG_PixmapNew(win, 0, 320,240);
+for (i = 0; i < 30; i++) {
+	AG_Snprintf(path, sizeof(path), "%08d.jpg", i);
+	frames[i] = AG_PixmapAddSurfaceFromFile(px, path);
+}
+.Ed
+.Pp
+Running from a separate thread, the following code fragment would
+play back the animation:
+.Bd -literal -offset indent
+for (i = 0; i < 30; i++) {
+	AG_PixmapSetSurface(px, frames[i]);
+	AG_Delay(10);
+}
 .Ed
 .Sh SEE ALSO
 .Xr AG_Fixed 3 ,
