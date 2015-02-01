@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -444,7 +444,7 @@ MouseButtonDown(AG_Event *event)
 		
 		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN|
 		                          AG_WINDOW_NOBACKGROUND);
-		px = AG_PixmapFromSurfaceCopy(icon->wDND, 0,
+		px = AG_PixmapFromSurface(icon->wDND, 0,
 		    WSURFACE(icon,icon->surface));
 
 		AG_ObjectLock(px);

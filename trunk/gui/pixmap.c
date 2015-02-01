@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,6 @@
  */
 
 #include <agar/core/core.h>
-#if 0
-#include <agar/gui/load_xcf.h>
-#endif
 #include <agar/gui/pixmap.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/window.h>
@@ -53,7 +50,7 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 }
 
 AG_Pixmap *
-AG_PixmapFromSurface(void *parent, Uint flags, AG_Surface *su)
+AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
 {
 	AG_Pixmap *px;
 
@@ -65,12 +62,16 @@ AG_PixmapFromSurface(void *parent, Uint flags, AG_Surface *su)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, su);
+	if (su != NULL) {
+		AG_WidgetMapSurface(px, AG_SurfaceConvert(su, agSurfaceFmt));
+	} else {
+		AG_WidgetMapSurface(px, AG_SurfaceEmpty());
+	}
 	return (px);
 }
 
 AG_Pixmap *
-AG_PixmapFromSurfaceCopy(void *parent, Uint flags, AG_Surface *su)
+AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
 {
 	AG_Pixmap *px;
 
@@ -82,16 +83,16 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, AG_Surface *su)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, AG_SurfaceDup(su));	/* XXX leak */
+	AG_WidgetMapSurfaceNODUP(px, su);
 	return (px);
 }
 
 AG_Pixmap *
-AG_PixmapFromSurfaceScaled(void *parent, Uint flags, AG_Surface *su,
+AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
     Uint w, Uint h)
 {
 	AG_Pixmap *px;
-	AG_Surface *su2 = NULL;
+	AG_Surface *suScaled = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
@@ -101,20 +102,36 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, AG_Surface *su,
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	if (AG_ScaleSurface(su, w, h, &su2) == -1) {
-		AG_FatalError(NULL);
+	if (su != NULL) {
+		if (AG_ScaleSurface(su, w, h, &suScaled) == -1) {
+			AG_FatalError(NULL);
+		}
+		AG_WidgetMapSurface(px, suScaled);
+	} else {
+		AG_WidgetMapSurface(px, AG_SurfaceEmpty());
 	}
-	AG_WidgetMapSurface(px, su2);
 	return (px);
 }
 
 AG_Pixmap *
-AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
+AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 {
 	AG_Pixmap *px;
-	AG_Surface *bmp;
+	AG_Surface *su;
+	const char *ext;
 
-	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
+	if ((ext = strrchr(file, '.')) == NULL) {
+		AG_SetError("Invalid filename");
+		return (NULL);
+	}
+	if (Strcasecmp(ext, ".bmp") == 0) {
+		su = AG_SurfaceFromBMP(file);
+	} else if (Strcasecmp(ext, ".png") == 0) {
+		su = AG_SurfaceFromPNG(file);
+	} else if (Strcasecmp(ext, ".jpg") == 0 || Strcasecmp(ext, ".jpeg") == 0) {
+		su = AG_SurfaceFromJPEG(file);
+	} else {
+		AG_SetError("Unknown image extension: %s", ext);
 		return (NULL);
 	}
 	px = Malloc(sizeof(AG_Pixmap));
@@ -125,7 +142,7 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, bmp);
+	AG_WidgetMapSurface(px, su);
 	return (px);
 }
 
@@ -176,99 +193,83 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 	return (px);
 }
 
+#else /* HAVE_OPENGL */
+
+AG_Pixmap *
+AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
+{
+	AG_SetError("Agar was not compiled with OpenGL support");
+	return (NULL);
+}
+
 #endif /* HAVE_OPENGL */
 
 /*
- * Map an existing surface. Returned surface ID is valid as long as pixmap
- * is locked.
+ * Map a copy of the specified surface.
+ * Returned surface ID is valid as long as pixmap is locked.
  */
 int
-AG_PixmapAddSurface(AG_Pixmap *px, AG_Surface *su)
+AG_PixmapAddSurface(AG_Pixmap *px, const AG_Surface *suOrig)
 {
 	int name;
+	AG_Surface *su;
 
-	AG_ObjectLock(px);
-	name = AG_WidgetMapSurfaceNODUP(px, su);
-	px->flags |= AG_PIXMAP_UPDATE;
-	AG_ObjectUnlock(px);
-	return (name);
-}
-
-/*
- * Map an existing surface from a BMP file. Returned surface ID is valid as
- * long as pixmap is locked.
- */
-int
-AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
-{
-	AG_Surface *bmp;
-	int name;
-
-	if ((bmp = AG_SurfaceFromBMP(path)) == NULL) {
+	if ((su = AG_SurfaceConvert(suOrig, agSurfaceFmt)) == NULL)
 		return (-1);
-	}
+
 	AG_ObjectLock(px);
-	name = AG_WidgetMapSurface(px, bmp);
+	name = AG_WidgetMapSurface(px, su);
 	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
 	return (name);
 }
 
 /*
- * Create a copy of a surface and map it. Returned surface ID is valid as
- * long as pixmap is locked.
+ * Map a resized copy of the specified surface.
+ * Returned surface ID is valid as long as pixmap is locked.
  */
 int
-AG_PixmapAddSurfaceCopy(AG_Pixmap *px, AG_Surface *su)
-{
-	AG_Surface *dup;
-	int name;
-
-	dup = AG_SurfaceDup(su);
-	AG_ObjectLock(px);
-	name = AG_WidgetMapSurface(px, dup);
-	px->flags |= AG_PIXMAP_UPDATE;
-	AG_ObjectUnlock(px);
-	return (name);
-}
-
-/*
- * Create a scaled version of a surface and map it. Returned surface ID
- * is valid as long as pixmap is locked.
- */
-int
-AG_PixmapAddSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
-{
-	AG_Surface *scaled = NULL;
-	int name;
-	
-	if (AG_ScaleSurface(su, w, h, &scaled) == -1) {
-		AG_FatalError(NULL);
-	}
-	AG_ObjectLock(px);
-	name = AG_WidgetMapSurface(px, scaled);
-	px->flags |= AG_PIXMAP_UPDATE;
-	AG_ObjectUnlock(px);
-	return (name);
-}
-
-/* Replace the specified surface with a scaled version of another surface. */
-void
-AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, int surface_name, AG_Surface *su,
+AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *suOrig,
     Uint w, Uint h)
 {
-	AG_Surface *scaled = NULL;
+	AG_Surface *suScaled = NULL;
+	int name;
+	
+	if (AG_ScaleSurface(suOrig, w, h, &suScaled) == -1)
+		return (-1);
 
-	if (AG_ScaleSurface(su, w, h, &scaled) == -1) {
-		AG_FatalError(NULL);
-	}
 	AG_ObjectLock(px);
-	AG_WidgetReplaceSurface(px, surface_name, scaled);
-	if (surface_name == px->n) {
-		px->flags |= AG_PIXMAP_UPDATE;
-		AG_Redraw(px);
-	}
+	name = AG_WidgetMapSurface(px, suScaled);
+	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
+	return (name);
+}
+
+/*
+ * Map a surface created from an image file (format autodetected).
+ * Returned surface ID is valid as long as pixmap is locked.
+ */
+int
+AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
+{
+	AG_Surface *suFile, *su;
+	int name;
+
+	if ((suFile = AG_SurfaceFromFile(path)) == NULL) {
+		return (-1);
+	}
+	if ((su = AG_SurfaceConvert(suFile, agSurfaceFmt)) == NULL) {
+		AG_SurfaceFree(suFile);
+		return (-1);
+	}
+	
+	AG_ObjectLock(px);
+	name = AG_WidgetMapSurface(px, su);
+	px->flags |= AG_PIXMAP_UPDATE;
+	AG_ObjectUnlock(px);
+
+	AG_SurfaceFree(suFile);
+	return (name);
 }
 
 static void
@@ -367,6 +368,19 @@ Draw(void *obj)
 		AG_PopClipRect(px);
 	}
 }
+
+#ifdef AG_LEGACY
+AG_Pixmap *
+AG_PixmapFromBMP(void *parent, Uint flags, const char *file)
+{
+	return AG_PixmapFromFile(parent, flags, file);
+}
+int
+AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
+{
+	return AG_PixmapAddSurfaceFromFile(px, path);
+}
+#endif /* AG_LEGACY */
 
 AG_WidgetClass agPixmapClass = {
 	{
