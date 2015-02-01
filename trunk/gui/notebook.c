@@ -91,6 +91,8 @@ OnHide(AG_Event *event)
 static void
 OnDetach(AG_Event *event)
 {
+	/* XXX */
+#if 0
 	AG_Notebook *nb = AG_SELF();
 	AG_NotebookTab *ntab, *ntabNext;
 
@@ -103,6 +105,7 @@ OnDetach(AG_Event *event)
 	}
 	TAILQ_INIT(&nb->tabs);
 	nb->sel_tab = NULL;
+#endif
 }
 
 static void
