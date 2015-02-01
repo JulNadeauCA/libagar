@@ -55,6 +55,8 @@ enum ag_window_wm_type {
 	AG_WINDOW_WM_DND		/* Draggable object */
 };
 
+typedef AG_TAILQ_HEAD(ag_cursor_areaq, ag_cursor_area) AG_CursorAreaQ;
+
 /* Window instance */
 typedef struct ag_window {
 	struct ag_widget wid;
@@ -122,7 +124,7 @@ typedef struct ag_window {
 	AG_Rect r;				/* View area */
 	int nFocused;				/* Widgets in focus chain */
 	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
-	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas; /* Cursor-change areas */
+	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
 
 	AG_Timer fadeTo;			/* Fade timer */
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
@@ -141,11 +143,11 @@ extern const char *agWindowWmTypeNames[];
 extern AG_WidgetClass agWindowClass;
 
 /* Protected by agDrivers VFS lock */
-extern AG_WindowQ agWindowDetachQ;	/* AG_ObjectDetach() queue */
-extern AG_WindowQ agWindowShowQ;	/* AG_WindowShow() queue */
-extern AG_WindowQ agWindowHideQ;	/* AG_WindowHide() queue */
-extern AG_Window *agWindowToFocus;	/* Window to focus next */
-extern AG_Window *agWindowFocused;	/* Window holding focus */
+extern AG_WindowQ agWindowDetachQ;		/* AG_ObjectDetach() queue */
+extern AG_WindowQ agWindowShowQ;		/* AG_WindowShow() queue */
+extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
+extern AG_Window *agWindowToFocus;		/* Window to focus next */
+extern AG_Window *agWindowFocused;		/* Window holding focus */
 
 void       AG_InitWindowSystem(void);
 void       AG_DestroyWindowSystem(void);
