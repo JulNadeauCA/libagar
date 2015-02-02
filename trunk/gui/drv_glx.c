@@ -424,8 +424,9 @@ InitModifierMasks(void)
 
 /* Refresh the internal keyboard state. */
 static void
-UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
+UpdateKeyboard(AG_Keyboard *kbd)
 {
+	char kv[32];
 	int i, j;
 	Uint ms = 0;
 	AG_KeySym key;
@@ -434,8 +435,8 @@ UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
 	Uint mask;
 	
 	AG_MutexLock(&agDisplayLock);
-
-	/* Get the keyboard modifier state. XXX */
+	
+	/* Get the keyboard modifier state. */
 	InitModifierMasks();
 	if (XQueryPointer(agDisplay, DefaultRootWindow(agDisplay),
 	    &dummy, &dummy, &x, &y, &x, &y, &mask)) {
@@ -444,6 +445,7 @@ UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
 		if (mask & modMasks.num) { ms |= AG_KEYMOD_NUMLOCK; }
 	}
 	memset(kbd->keyState, 0, kbd->keyCount);
+	XQueryKeymap(agDisplay, kv);
 	for (i = 0; i < 32; i++) {
 		if (kv[i] == 0) {
 			continue;
@@ -483,7 +485,7 @@ UpdateKeyboard(AG_Keyboard *kbd, char kv[32])
 
 /* Refresh the internal keyboard state for all glx driver instances. */
 static void
-UpdateKeyboardAll(char kv[32])
+UpdateKeyboardAll(void)
 {
 	AG_Driver *drv;
 
@@ -492,7 +494,7 @@ UpdateKeyboardAll(char kv[32])
 		if (!AGDRIVER_IS_GLX(drv)) {
 			continue;
 		}
-		UpdateKeyboard(drv->kbd, kv);
+		UpdateKeyboard(drv->kbd);
 	}
 	AG_UnlockVFS(&agDrivers);
 }
@@ -687,7 +689,7 @@ GLX_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 #ifdef DEBUG_XEVENTS
 		Debug(NULL, "KeymapNotify\n");
 #endif
-		UpdateKeyboardAll(xev.xkeymap.key_vector);
+		UpdateKeyboardAll();
 		return (0);
 	case MappingNotify:					/* Internal */
 #ifdef DEBUG_XEVENTS
