@@ -110,6 +110,9 @@ The functions described on this manual page are used to manipulate C strings
 .Ft "AG_FmtString *"
 .Fn AG_PrintfP "const char *format" "..."
 .Pp
+.Ft "void"
+.Fn AG_FreeFmtString "AG_FmtString *fs"
+.Pp
 .Ft "size_t"
 .Fn AG_ProcessFmtString "AG_FmtString *fs" "char *dst" "size_t dstSize"
 .Pp
@@ -169,6 +172,10 @@ writing the formatted output to
 .Fa dstSize
 bytes in size).
 If insufficient space is available in the buffer, the output is truncated.
+.Pp
+.Fn AG_FreeFmtString
+releases all resources allocated by a format string.
+.Pp
 .Fn AG_ProcessFmtString
 returns the number of characters that would have been copied were
 .Fa dstSize
@@ -231,11 +238,15 @@ or
 (Returns class name)
 .El
 .Pp
-User-defined specifiers can be registered (arguments to user-defined
-specifiers must be pointers).
-Often, new specifiers will be registered by libraries (e.g., on
-initialization, the ag_math library will register specifiers %[V] and
-%[M] for its vector and matrix types).
+Specifiers for user-defined formatting routines can be registered at runtime.
+For example, the ag_math library, upon initialization, registers
+%[V] for its
+.Xr M_Vector 3
+type, %[M] for its
+.Xr M_Matrix 3
+type, etc. (see
+.Xr M_String 3
+for a complete list).
 .Pp
 The
 .Fn AG_RegisterFmtStringExt

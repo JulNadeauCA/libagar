@@ -91,6 +91,7 @@ AG_FmtString *AG_PrintfP(const char *, ...);
 void          AG_RegisterFmtStringExt(const char *, AG_FmtStringExtFn);
 void          AG_UnregisterFmtStringExt(const char *);
 size_t        AG_ProcessFmtString(AG_FmtString *, char *, size_t);
+void          AG_FreeFmtString(AG_FmtString *);
 
 char  *AG_Strsep(char **, const char *);
 char  *AG_Strdup(const char *);
@@ -255,7 +256,6 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 	}
 	return i == n ? 0 : cm[us1[i]] - cm[us2[i]];
 }
-
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
