@@ -107,9 +107,9 @@ UpdatePreview(AG_FontSelector *fs)
 	}
 	s = AG_TextRender(_("The Quick Brown Fox Jumps Over The Lazy Dog"));
 	if (fs->sPreview == -1) {
-		fs->sPreview = AG_WidgetMapSurfaceNODUP(fs, s);
+		fs->sPreview = AG_WidgetMapSurface(fs, s);
 	} else {
-		AG_WidgetReplaceSurfaceNODUP(fs, fs->sPreview, s);
+		AG_WidgetReplaceSurface(fs, fs->sPreview, s);
 	}
 
 	AG_PopTextState();
@@ -172,6 +172,8 @@ OnShow(AG_Event *event)
 			FcFontSetDestroy(fset);
 		}
 		AG_TlistSort(fs->tlFaces);
+		FcObjectSetDestroy(os);
+		FcPatternDestroy(pat);
 	} else
 #endif /* HAVE_FONTCONFIG */
 
