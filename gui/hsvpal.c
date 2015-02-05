@@ -859,13 +859,10 @@ Draw(void *obj)
 	Uint8 r, g, b, a;
 	int x, y;
 
-	if (WIDTH(pal) < 16 || HEIGHT(pal) < 16)
-		return;
-
 	if (pal->surface == NULL) {
 		if ((pal->surface = AG_SurfaceStdGL(WIDTH(pal), HEIGHT(pal)))
 		    == NULL) {
-			AG_FatalError(NULL);
+			return;
 		}
 		pal->surfaceId = AG_WidgetMapSurface(pal, pal->surface);
 	}
