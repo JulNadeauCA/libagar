@@ -185,8 +185,11 @@ AG_Debug(void *p, const char *fmt, ...)
 		va_start(args, fmt);
 		Vasprintf(&buf, fmt, args);
 		va_end(args);
-		if (agDebugCallback(buf) == 1)
+		if (agDebugCallback(buf) == 1) {
+			free(buf);
 			return;
+		}
+		free(buf);
 	}
 	if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
 		va_start(args, fmt);
@@ -235,8 +238,11 @@ AG_Verbose(const char *fmt, ...)
 		va_start(args, fmt);
 		Vasprintf(&buf, fmt, args);
 		va_end(args);
-		if (agVerboseCallback(buf) == 1)
+		if (agVerboseCallback(buf) == 1) {
+			free(buf);
 			return;
+		}
+		free(buf);
 	}
 
 	va_start(args, fmt);
@@ -276,6 +282,7 @@ AG_FatalError(const char *fmt, ...)
 			Vasprintf(&buf, fmt, args);
 			va_end(args);
 			agErrorCallback(buf);
+			free(buf);
 			abort(); /* not reached */
 		} else {
 			agErrorCallback(AG_GetError());

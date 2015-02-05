@@ -194,6 +194,14 @@ AG_UnregisterFmtStringExt(const char *fmt)
 	AG_MutexUnlock(&agFmtExtensionsLock);
 }
 
+/* Release all resources allocated by a format string. */
+void
+AG_FreeFmtString(AG_FmtString *fs)
+{
+	Free(fs->s);
+	free(fs);
+}
+
 /*
  * Implementation of AG_ProcessFmtString().
  */
