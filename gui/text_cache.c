@@ -91,6 +91,7 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 {
 	AG_TextCacheClear(tc);
 	Free(tc->buckets);
+	free(tc);
 }
 
 /* Expire some of the oldest entries from the cache. */
