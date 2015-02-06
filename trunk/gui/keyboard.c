@@ -344,11 +344,6 @@ PostUnfocusedKeyUp(AG_Widget *wid, AG_KeySym ks, Uint kmod, Uint32 unicode)
 		AG_PostEvent(NULL, wid,  "key-up",
 		    "%i(key),%i(mod),%lu(unicode)",
 		    (int)ks, (int)kmod, (Ulong)unicode);
-#ifdef AG_LEGACY
-		AG_PostEvent(NULL, wid,  "window-keyup",
-		    "%i,%i,%i",
-		    (int)ks, (int)kmod, (int)unicode);
-#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		PostUnfocusedKeyUp(cwid, ks, kmod, unicode);
@@ -367,11 +362,6 @@ PostUnfocusedKeyDown(AG_Widget *wid, AG_KeySym ks, Uint kmod, Uint32 unicode)
 		AG_PostEvent(NULL, wid,  "key-down",
 		    "%i(key),%i(mod),%lu(unicode)",
 		    (int)ks, (int)kmod, (Ulong)unicode);
-#ifdef AG_LEGACY
-		AG_PostEvent(NULL, wid, "window-keydown",
-		    "%i,%i,%i",
-		    (int)ks, (int)kmod, (int)unicode);
-#endif
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		PostUnfocusedKeyDown(cwid, ks, kmod, unicode);
@@ -448,13 +438,6 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 			    "key-up" : "key-down",
 			    "%i(key),%i(mod),%lu(unicode)",
 			    (int)ks, (int)kbd->modState, (Ulong)unicode);
-#ifdef AG_LEGACY
-			AG_PostEvent(NULL, wFoc,
-			    (action == AG_KEY_RELEASED) ?
-			    "window-keyup" : "window-keydown",
-			    "%i,%i,%i",
-			    (int)ks, (int)kbd->modState, (int)unicode);
-#endif
 			if (AGDRIVER_SINGLE(drv)) {
 				/*
 				 * Ensure the keyup event is posted to
