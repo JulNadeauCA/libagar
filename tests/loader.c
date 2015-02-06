@@ -85,7 +85,7 @@ TestGUI(void *obj, AG_Window *win)
 	int i;
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
-	ntab = AG_NotebookAddTab(nb, "Load file", AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, "Load file", AG_BOX_VERT);
 	{
 		/* Create the file loader widget. */
 		fd = AG_FileDlgNew(ntab, AG_FILEDLG_EXPAND);
@@ -126,7 +126,7 @@ TestGUI(void *obj, AG_Window *win)
 		AG_BoxSetPadding(box, 10);
 		AG_FileDlgSetOptionContainer(fd, box);
 	}
-	ntab = AG_NotebookAddTab(nb, "Select directory", AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, "Select directory", AG_BOX_VERT);
 	{
 		/* Create the directory selector widget. */
 		dd = AG_DirDlgNew(ntab, AG_DIRDLG_EXPAND);

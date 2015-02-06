@@ -11,20 +11,10 @@ static int inited = 0;
 static int
 Init(void *obj)
 {
-	if (inited++ > 0) {
-		return (0);
+	if (inited++ == 0) {
+		AG_RegisterClass(&myWidgetClass);
 	}
-	AG_RegisterClass(&myWidgetClass);
 	return (0);
-}
-
-static void
-Destroy(void *obj)
-{
-	if (--inited > 0) {
-		return;
-	}
-	AG_UnregisterClass(&myWidgetClass);
 }
 
 static int
@@ -43,11 +33,11 @@ TestGUI(void *obj, AG_Window *win)
 const AG_TestCase customWidgetTest = {
 	"customWidget",
 	N_("Test registering a custom Agar widget"),
-	"1.4.2",
+	"1.5.0",
 	0,
 	sizeof(AG_TestInstance),
 	Init,
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* test */
 	TestGUI,
 	NULL		/* bench */

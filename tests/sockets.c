@@ -77,7 +77,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Create a pixmap */
 	if (!AG_ConfigFile("load-path", "menubg", "bmp", path, sizeof(path))) {
-		if ((px = AG_PixmapFromBMP(fx, 0, path)) == NULL) {
+		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
 			TestMsg(obj, "%s: %s", path, AG_GetError());
 			exit(1);
 		}
@@ -92,7 +92,7 @@ TestGUI(void *obj, AG_Window *win)
 		if (AG_ConfigFile("load-path", imageFiles[i], "bmp", path, sizeof(path)) != 0) {
 			continue;
 		}
-		pixmaps[i] = AG_SurfaceFromBMP(path);
+		pixmaps[i] = AG_SurfaceFromFile(path);
 		AG_SurfaceSetColorKey(pixmaps[i], AG_SRCCOLORKEY,
 		    AG_MapPixelRGB(pixmaps[i]->format, 0,255,0));
 	}

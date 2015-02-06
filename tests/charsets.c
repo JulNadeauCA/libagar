@@ -10,36 +10,40 @@
 
 #include <agar/config/have_iconv.h>
 
-char myASCII[20*4];
-char myUTF[30*4];
-char myLat1[30*4];
+typedef struct {
+	AG_TestInstance _inherit;
+	char myASCII[20*4];
+	char myUTF[30*4];
+	char myLat1[30*4];
+	AG_Text *myTxt;
+} MyTestInstance;
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	AG_Text *myTxt;
+	MyTestInstance *ti = obj;
 	AG_Textbox *tb;
 
 	/* Bind to a C string in US-ASCII */
-	AG_Strlcpy(myASCII, "ASCII!", sizeof(myASCII));
+	AG_Strlcpy(ti->myASCII, "ASCII!", sizeof(ti->myASCII));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "ASCII Buffer: \n(%lu bytes)", sizeof(myASCII));
-	AG_TextboxBindASCII(tb, myASCII, sizeof(myASCII));
+	    "ASCII Buffer: \n(%lu bytes)", sizeof(ti->myASCII));
+	AG_TextboxBindASCII(tb, ti->myASCII, sizeof(ti->myASCII));
 	AG_TextboxSizeHintLines(tb, 2);
 
 	/* Bind to a C string in UTF-8 */
-	AG_Strlcpy(myUTF, "\xc3\x85ngstrom!", sizeof(myUTF));
+	AG_Strlcpy(ti->myUTF, "\xc3\x85ngstrom!", sizeof(ti->myUTF));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "UTF-8 Buffer: \n(%lu bytes)", sizeof(myUTF));
-	AG_TextboxBindUTF8(tb, myUTF, sizeof(myUTF));
+	    "UTF-8 Buffer: \n(%lu bytes)", sizeof(ti->myUTF));
+	AG_TextboxBindUTF8(tb, ti->myUTF, sizeof(ti->myUTF));
 	AG_TextboxSizeHintLines(tb, 2);
 
 	/* Bind to a C string in any iconv-supported encoding */
 #ifdef HAVE_ICONV
-	AG_Strlcpy(myLat1, "Overv\xE5knign for feils\xF8king!", sizeof(myLat1));
+	AG_Strlcpy(ti->myLat1, "Overv\xE5knign for feils\xF8king!", sizeof(ti->myLat1));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "LATIN-1 Buffer: \n(%lu bytes)", sizeof(myLat1));
-	AG_TextboxBindEncoded(tb, "ISO-8859-1", myLat1, sizeof(myLat1));
+	    "LATIN-1 Buffer: \n(%lu bytes)", sizeof(ti->myLat1));
+	AG_TextboxBindEncoded(tb, "ISO-8859-1", ti->myLat1, sizeof(ti->myLat1));
 	AG_TextboxSizeHintLines(tb, 2);
 	AG_LabelNewS(win, 0, "iconv support: YES");
 #else
@@ -50,30 +54,39 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SeparatorNewHoriz(win);
 
 	/* Bind to a multilingual AG_Text(3) element. */
-	myTxt = AG_TextNew(0);
-	AG_TextSetEnt(myTxt, AG_LANG_FR, "Fran\xc3\xa7\x61is!");
-	AG_TextSetEnt(myTxt, AG_LANG_EN, "English!");
-	AG_TextSetEnt(myTxt, AG_LANG_NO, "Norsk!");
-	AG_LabelNewS(win, 0, "Multilingual AG_Text(3) buffer:");
-	tb = AG_TextboxNewS(win,
-	    AG_TEXTBOX_MULTILINGUAL|AG_TEXTBOX_EXPAND|AG_TEXTBOX_MULTILINE,
-	    NULL);
-	AG_TextboxBindText(tb, myTxt);
-	AG_TextboxSetLang(tb, AG_LANG_FR);
-	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXXXXXXX");
-	AG_TextboxSizeHintLines(tb, 5);
-	AG_TextboxSetCursorPos(tb, -1);		/* End of string */
+	if ((ti->myTxt = AG_TextNew(0)) != NULL) {
+		AG_TextSetEnt(ti->myTxt, AG_LANG_FR, "Fran\xc3\xa7\x61is!");
+		AG_TextSetEnt(ti->myTxt, AG_LANG_EN, "English!");
+		AG_TextSetEnt(ti->myTxt, AG_LANG_NO, "Norsk!");
+		AG_LabelNewS(win, 0, "Multilingual AG_Text(3) buffer:");
+		tb = AG_TextboxNewS(win,
+		    AG_TEXTBOX_MULTILINGUAL|AG_TEXTBOX_EXPAND|AG_TEXTBOX_MULTILINE,
+		    NULL);
+		AG_TextboxBindText(tb, ti->myTxt);
+		AG_TextboxSetLang(tb, AG_LANG_FR);
+		AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXXXXXXXX");
+		AG_TextboxSizeHintLines(tb, 5);
+		AG_TextboxSetCursorPos(tb, -1);		/* End of string */
+	}
 	return (0);
+}
+
+static void
+Destroy(void *obj)
+{
+	MyTestInstance *ti = obj;
+
+	AG_TextFree(ti->myTxt);
 }
 
 const AG_TestCase charsetsTest = {
 	"charsets",
 	N_("Test AG_Editable(3) bound to buffers in different character sets"),
-	"1.4.2",
+	"1.5.0",
 	0,
-	sizeof(AG_TestInstance),
+	sizeof(MyTestInstance),
 	NULL,		/* init */
-	NULL,		/* destroy */
+	Destroy,
 	NULL,		/* test */
 	TestGUI,
 	NULL		/* bench */
