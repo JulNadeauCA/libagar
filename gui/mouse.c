@@ -94,7 +94,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 	AG_Rect r;
 
 	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
-		if (ca->wid->flags & AG_WIDGET_HIDE) {
+		if (!(ca->wid->flags & AG_WIDGET_VISIBLE)) {
 			continue;
 		}
 		r.x = ca->r.x + ca->wid->rView.x1;
@@ -124,7 +124,13 @@ AG_MouseButtonUpdate(AG_Mouse *ms, AG_MouseButtonAction a, int which)
 	}
 }
 
-/* Recursively deliver a mouse-motion event to widgets. */
+/*
+ * Deliver a `mouse-motion' event to all active widgets which are
+ * either focused or have UNFOCUSED_MOTION set.
+ *
+ * Also, deliver `mouse-over' event (and update MOUSEOVER flag) to
+ * all widgets with USE_MOUSEOVER enabled.
+ */
 static void
 PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
     int yRel, Uint state)
@@ -132,41 +138,38 @@ PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
 	AG_Widget *chld;
 
 	AG_ObjectLock(wid);
-	if (wid->flags & AG_WIDGET_USE_MOUSEOVER) {
-		if (AG_WidgetArea(wid, x,y)) {
-			if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
-				wid->flags |= AG_WIDGET_MOUSEOVER;
-				AG_PostEvent(NULL, wid, "mouse-over", NULL);
-				AG_Redraw(wid);
-			}
-		} else {
-			if (wid->flags & AG_WIDGET_MOUSEOVER) {
-				wid->flags &= ~(AG_WIDGET_MOUSEOVER);
-				AG_PostEvent(NULL, wid, "mouse-over", NULL);
-				AG_Redraw(wid);
+	if ((wid->flags & AG_WIDGET_VISIBLE) &&
+	   !(wid->flags & AG_WIDGET_DISABLED)) {
+		if (wid->flags & AG_WIDGET_USE_MOUSEOVER) {
+			if (AG_WidgetArea(wid, x,y)) {
+				if ((wid->flags & AG_WIDGET_MOUSEOVER) == 0) {
+					wid->flags |= AG_WIDGET_MOUSEOVER;
+					AG_PostEvent(NULL, wid, "mouse-over",
+					    NULL);
+					AG_Redraw(wid);
+				}
+			} else {
+				if (wid->flags & AG_WIDGET_MOUSEOVER) {
+					wid->flags &= ~(AG_WIDGET_MOUSEOVER);
+					AG_PostEvent(NULL, wid, "mouse-over",
+					    NULL);
+					AG_Redraw(wid);
+				}
 			}
 		}
-	}
-	if ((AG_WidgetIsFocusedInWindow(wid)) ||
-	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
-		AG_PostEvent(NULL, wid, "mouse-motion",
-		    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
-		    x - wid->rView.x1,
-		    y - wid->rView.y1,
-		    xRel,
-		    yRel,
-		    (int)state);
-#ifdef AG_LEGACY
-		AG_PostEvent(NULL, wid, "window-mousemotion",
-		    "%i,%i,%i,%i,%i",
-		    x - wid->rView.x1,
-		    y - wid->rView.y1,
-		    xRel,
-		    yRel,
-		    (int)state);
-#endif
-		if (wid == win->widExclMotion)
-			goto out;			/* Skip other widgets */
+		if ((wid->flags & AG_WIDGET_FOCUSED) ||
+		    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
+			AG_PostEvent(NULL, wid, "mouse-motion",
+			    "%i(x),%i(y),%i(xRel),%i(yRel),%i(buttons)",
+			    x - wid->rView.x1,
+			    y - wid->rView.y1,
+			    xRel,
+			    yRel,
+			    (int)state);
+
+			if (wid == win->widExclMotion)
+				goto out;		/* Skip other widgets */
+		}
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		PostMouseMotion(win, chld, x, y, xRel, yRel, state);
@@ -175,8 +178,8 @@ out:
 }
 
 /*
- * Recursively deliver a mouse-button-up event to widgets that either hold
- * focus or have the UNFOCUSED_BUTTONUP flag set.
+ * Deliver a `mouse-button-up' event to all active widgets which are
+ * either focused or have UNFOCUSED_BUTTONUP set. 
  */
 static void
 PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
@@ -185,20 +188,16 @@ PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
 	AG_Widget *chld;
 
 	AG_ObjectLock(wid);
-	if ((AG_WidgetIsFocusedInWindow(wid)) ||
-	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
-		AG_PostEvent(NULL, wid, "mouse-button-up",
-		    "%i(button),%i(x),%i(y)",
-		    (int)button,
-		    x - wid->rView.x1,
-		    y - wid->rView.y1);
-#ifdef AG_LEGACY
-		AG_PostEvent(NULL, wid, "window-mousebuttonup",
-		    "%i,%i,%i",
-		    (int)button,
-		    x - wid->rView.x1,
-		    y - wid->rView.y1);
-#endif
+	if ((wid->flags & AG_WIDGET_VISIBLE) &&
+	   !(wid->flags & AG_WIDGET_DISABLED)) {
+		if ((wid->flags & AG_WIDGET_FOCUSED) ||
+		    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
+			AG_PostEvent(NULL, wid, "mouse-button-up",
+			    "%i(button),%i(x),%i(y)",
+			    (int)button,
+			    x - wid->rView.x1,
+			    y - wid->rView.y1);
+		}
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		PostMouseButtonUp(win, chld, x, y, button);
@@ -207,8 +206,9 @@ PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
 }
 
 /*
- * Recursively deliver a mouse-button-down event to widgets based on
- * widget sensitivity rectangles.
+ * Deliver a `mouse-button-down' event to the active widget at specified
+ * window coordinates (if multiple widgets overlap, deliver to the topmost
+ * widget which has a `mouse-button-down' handler defined).
  */
 static int
 PostMouseButtonDown(AG_Window *win, AG_Widget *wid, int x, int y,
@@ -219,38 +219,26 @@ PostMouseButtonDown(AG_Window *win, AG_Widget *wid, int x, int y,
 	
 	AG_ObjectLock(wid);
 
-	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		if (PostMouseButtonDown(win, chld, x, y, button))
 			goto match;
 	}
-	if (!AG_WidgetSensitive(wid, x, y)) {
-		goto out;
+	if ((wid->flags & AG_WIDGET_VISIBLE) &&
+	   !(wid->flags & AG_WIDGET_DISABLED) && 
+	    AG_WidgetSensitive(wid, x, y)) {
+		TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
+			if (strcmp(ev->name, "mouse-button-down") == 0)
+				break;
+		}
+		if (ev != NULL) {
+			AG_PostEvent(NULL, wid, "mouse-button-down",
+			    "%i(button),%i(x),%i(y)",
+			    (int)button,
+			    x - wid->rView.x1,
+			    y - wid->rView.y1);
+			goto match;
+		}
 	}
-	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
-		if (strcmp(ev->name, "mouse-button-down") == 0)
-			break;
-#ifdef AG_LEGACY
-		if (strcmp(ev->name, "window-mousebuttondown") == 0)
-			break;
-#endif
-	}
-	if (ev != NULL) {
-		AG_PostEvent(NULL, wid, "mouse-button-down",
-		    "%i(button),%i(x),%i(y)",
-		    (int)button,
-		    x - wid->rView.x1,
-		    y - wid->rView.y1);
-#ifdef AG_LEGACY
-		AG_PostEvent(NULL, wid, "window-mousebuttondown",
-		    "%i,%i,%i",
-		    (int)button,
-		    x - wid->rView.x1,
-		    y - wid->rView.y1);
-#endif
-		goto match;
-	}
-out:
 	AG_ObjectUnlock(wid);
 	return (0);
 match:
@@ -259,8 +247,10 @@ match:
 }
 
 /*
- * Process a mouse-motion event relative to the given window;
- * this is called from low-level event handling code.
+ * Process a `mouse-motion' event relative to the given window.
+ * 
+ * This is generally called from the event-handling section of low-level
+ * driver code. The agDrivers VFS must be locked.
  */
 void
 AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
@@ -268,7 +258,10 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
 {
 	AG_Widget *wid;
 	
-	/* Allow a widget (e.g., AG_Pane) to absorb all mousemotion events */
+	/*
+	 * If needed, we give a particular widget exclusivity over all
+	 * `mouse-motion' events. This is used notably by AG_Pane(3).
+	 */
 	if ((wid = win->widExclMotion) != NULL) {
 		AG_ObjectLock(wid);
 		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
@@ -276,14 +269,15 @@ AG_ProcessMouseMotion(AG_Window *win, int x, int y, int xRel, int yRel,
 		return;
 	}
 
-	/* Recursively post mouse-motion to all widgets. */
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseMotion(win, wid, x, y, xRel, yRel, state);
 }
 
 /*
- * Process a mouse-button event relative to the given window;
- * this is called from low-level event handling code.
+ * Process a mouse-button event relative to the given window.
+ * 
+ * This is generally called from the event-handling section of low-level
+ * driver code. The agDrivers VFS must be locked.
  */
 void
 AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
@@ -295,8 +289,10 @@ AG_ProcessMouseButtonUp(AG_Window *win, int x, int y, AG_MouseButton button)
 }
 
 /*
- * Process a mouse-button event relative to the given window; this is called
- * from low-level event handling code. The agDrivers VFS must be locked.
+ * Process a mouse-button event relative to the given window.
+ * 
+ * This is generally called from the event-handling section of low-level
+ * driver code. The agDrivers VFS must be locked.
  */
 void
 AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
