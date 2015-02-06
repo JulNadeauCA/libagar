@@ -235,13 +235,13 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
-	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Video"), AG_BOX_VERT);
 	{
 		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
 		    &agScreenshotQuality, 1, 100);
 	}
 
-	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("GUI"), AG_BOX_VERT);
 	{
 		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
 		    &agTextComposition);
@@ -262,7 +262,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		    &agKbdRepeat, 1, 500);
 	}
 
-	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Directories"), AG_BOX_VERT);
 	{
 		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
 		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Temporary file directory: "));
@@ -292,7 +292,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 	}
 #if 0
-	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Colors"), AG_BOX_VERT);
 	{
 		AG_Pane *hPane;
 		AG_HSVPal *hsv;
@@ -333,7 +333,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 #endif
 
 #ifdef AG_DEBUG
-	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
+	tab = AG_NotebookAdd(nb, _("Debug"), AG_BOX_VERT);
 	{
 		AG_NumericalNewIntR(tab, 0, NULL, _("Debug level: "),
 		    &agDebugLvl, 0, 255);

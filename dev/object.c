@@ -211,7 +211,7 @@ DEV_ObjectEdit(void *p)
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_RIGHT, 1);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
-	ntab = AG_NotebookAddTab(nb, _("Infos"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Infos"), AG_BOX_VERT);
 	{
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
@@ -255,20 +255,20 @@ DEV_ObjectEdit(void *p)
 		}
 	}
 
-	ntab = AG_NotebookAddTab(nb, _("Deps"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Deps"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSizeHint(tl, "XXXXXXXXXXXX", 6);
 		AG_SetEvent(tl, "tlist-poll", PollDeps, "%p", ob);
 	}
 	
-	ntab = AG_NotebookAddTab(nb, _("Events"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Events"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", PollEvents, "%p", ob);
 	}
 	
-	ntab = AG_NotebookAddTab(nb, _("Variables"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", PollVariables, "%p", ob);

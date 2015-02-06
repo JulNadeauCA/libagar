@@ -892,7 +892,7 @@ VG_ClearEditAreas(VG_View *vv)
 
 		AG_ObjectFreeChildren(editArea);
 		AG_WidgetUpdate(editArea);
-		AG_WidgetHiddenRecursive(editArea);
+		AG_WidgetHideAll(editArea);
 	}
 	AG_ObjectUnlock(vv);
 }
@@ -909,7 +909,7 @@ VG_EditNode(VG_View *vv, Uint editArea, VG_Node *vn)
 		AG_ObjectFreeChildren(vv->editAreas[editArea]);
 		AG_ObjectAttach(vv->editAreas[editArea], wEdit);
 		AG_WidgetUpdate(vv->editAreas[editArea]);
-		AG_WidgetShownRecursive(vv->editAreas[editArea]);
+		AG_WidgetShowAll(vv->editAreas[editArea]);
 	}
 }
 

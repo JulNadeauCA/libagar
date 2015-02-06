@@ -771,7 +771,7 @@ DEV_Browser(void *vfsRoot)
 #endif /* AG_DEBUG */
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
-	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Working copy"), AG_BOX_VERT);
 	{
 		AG_MenuItem *mi;
 

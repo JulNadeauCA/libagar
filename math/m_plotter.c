@@ -214,7 +214,7 @@ M_PlotSettings(M_Plot *pl)
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
-	ntab = AG_NotebookAddTab(nb, _("Trace"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Trace"), AG_BOX_VERT);
 	{
 		AG_RadioNewUint(ntab, 0, type_names, (void *)&pl->type);
 		M_NumericalNewReal(ntab, 0, NULL, _("X-scale: "), &pl->xScale);
@@ -223,7 +223,7 @@ M_PlotSettings(M_Plot *pl)
 		AG_NumericalNewInt(ntab, 0, "px", _("X-offset: "), &pl->xOffs);
 		AG_NumericalNewInt(ntab, 0, "px", _("Y-offset: "), &pl->yOffs);
 	}
-	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
 	{
 		AG_HSVPal *pal;
 
@@ -232,7 +232,7 @@ M_PlotSettings(M_Plot *pl)
 		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p", pl);
 		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p", pl);
 	}
-	ntab = AG_NotebookAddTab(nb, _("Table"), AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, _("Table"), AG_BOX_VERT);
 	{
 		AG_Table *tbl;
 
