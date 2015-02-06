@@ -402,7 +402,7 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 static void
 CloseMenu(AG_HSVPal *pal)
 {
-	AG_MenuCollapse(pal, pal->menu_item);
+	AG_MenuCollapse(pal->menu_item);
 	AG_ObjectDestroy(pal->menu);
 
 	pal->menu = NULL;

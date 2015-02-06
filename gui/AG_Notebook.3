@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -112,18 +112,17 @@ toggles the visibility of the tab header.
 .Sh TAB MANAGEMENT
 .nr nS 1
 .Ft "AG_NotebookTab *"
-.Fn AG_NotebookAddTab "AG_Notebook *nb" "const char *name" "enum ag_box_type type"
+.Fn AG_NotebookAdd "AG_Notebook *nb" "const char *name" "enum ag_box_type type"
 .Pp
 .Ft "void"
-.Fn AG_NotebookDelTab "AG_Notebook *nb" "AG_NotebookTab *tab"
+.Fn AG_NotebookDel "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
 .Ft "void"
-.Fn AG_NotebookSelectTab "AG_Notebook *nb" "AG_NotebookTab *tab"
+.Fn AG_NotebookSelect "AG_Notebook *nb" "AG_NotebookTab *tab"
 .Pp
 .nr nS 0
-The
-.Fn AG_NotebookAddTab
-function creates a new tabbed container.
+.Fn AG_NotebookAdd
+creates a new tabbed container.
 .Fa name
 is an arbitrary text label to be displayed on the tab header.
 The
@@ -137,19 +136,19 @@ horizontal packing, or
 for vertical packing (see
 .Xr AG_Box 3
 for details).
-.Fn AG_NotebookAddTab
+.Fn AG_NotebookAdd
 returns a pointer to the newly created
 .Ft AG_NotebookTab
-container widget (which is derived from
+container widget (a subclass of
 .Xr AG_Box 3 ) .
 .Pp
-The
-.Fn AG_NotebookDelTab
-function removes an existing tab and any widgets contained.
+.Fn AG_NotebookDel
+removes the given tabbed container, detaching and freeing all associated
+child widgets.
 .Pp
 The
-.Fn AG_NotebookSelectTab
-function selects the active tab.
+.Fn AG_NotebookSelect
+function selects the active tabbed container.
 .Sh EVENTS
 The
 .Nm
@@ -162,10 +161,10 @@ AG_Notebook *ntab;
 
 nb = AG_NotebookNew(parent, AG_NOTEBOOK_EXPAND);
 {
-	ntab = AG_NotebookAddTab(nb, "Tab #1", AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, "Tab #1", AG_BOX_VERT);
 	AG_LabelNew(ntab, 0, "This is Tab #1");
 
-	ntab = AG_NotebookAddTab(nb, "Tab #2", AG_BOX_VERT);
+	ntab = AG_NotebookAdd(nb, "Tab #2", AG_BOX_VERT);
 	AG_LabelNew(ntab, 0, "This is Tab #2");
 }
 .Ed

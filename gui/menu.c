@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,7 @@ ModalClose(AG_Event *event)
 
 /* Create a child window with a MenuView for the specified menu item. */
 AG_Window *
-AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
+AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 {
 	AG_Window *win, *winParent;
 	AG_MenuView *mv;
@@ -145,18 +145,18 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 	int x = x1;
 	int y = y1;
 
-	if (parentWidget != NULL) {
+	if (parent != NULL) {
 		/* XXX AG_Menu and AG_MenuView should share subclasses */
-		if (AG_OfClass(parentWidget, "AG_Widget:AG_MenuView")) {
-			m = ((AG_MenuView *)parentWidget)->pmenu;
-		} else if (AG_OfClass(parentWidget, "AG_Widget:AG_Menu")) {
-			m = parentWidget;
+		if (AG_OfClass(parent, "AG_Widget:AG_MenuView")) {
+			m = ((AG_MenuView *)parent)->pmenu;
+		} else if (AG_OfClass(parent, "AG_Widget:AG_Menu")) {
+			m = parent;
 		} else {
 			m = mi->pmenu;
 		}
-		x += WIDGET(parentWidget)->rView.x1;
-		y += WIDGET(parentWidget)->rView.y1;
-		if ((winParent = WIDGET(parentWidget)->window) == NULL) {
+		x += WIDGET(parent)->rView.x1;
+		y += WIDGET(parent)->rView.y1;
+		if ((winParent = WIDGET(parent)->window) == NULL) {
 			return (NULL);
 		}
 		if (WIDGET(winParent)->drv != NULL &&
@@ -172,17 +172,20 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 
 	AG_MenuUpdateItem(mi);
 
-	if (mi->nsubitems == 0)
+	if (mi->nSubItems == 0)
 		return (NULL);
 
 	win = AG_WindowNew(
 	    AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	    AG_WINDOW_NORESIZE|AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
+	if (win == NULL) {
+		return (NULL);
+	}
 	win->wmType = (m->style == AG_MENU_DROPDOWN) ?
 	              AG_WINDOW_WM_DROPDOWN_MENU :
 		      AG_WINDOW_WM_POPUP_MENU;
 	AG_ObjectSetName(win, "_Popup-%s",
-	    parentWidget != NULL ? OBJECT(parentWidget)->name : "generic");
+	    (parent != NULL) ? OBJECT(parent)->name : "generic");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_SetEvent(win, "window-modal-close", ModalClose, "%p", m);
 
@@ -206,21 +209,25 @@ AG_MenuExpand(void *parentWidget, AG_MenuItem *mi, int x1, int y1)
 }
 
 /*
- * Collapse the window displaying the contents of an item. Child windows
- * displaying subitems are recursively collapsed as well.
+ * Collapse the window displaying the specified item and its sub-menus
+ * (if any).
  */
 void
-AG_MenuCollapse(void *parentWidget, AG_MenuItem *mi)
+AG_MenuCollapse(AG_MenuItem *mi)
 {
-	Uint i, j;
+	AG_Menu *m;
+	AG_MenuItem *miSub;
+	Uint j;
 
-	if (mi == NULL || mi->view == NULL)
+	if (mi == NULL || mi->view == NULL || (m = mi->pmenu) == NULL)
 		return;
 
+	AG_ObjectLock(m);
+
 	/* Collapse any expanded submenus as well. */
-	for (i = 0; i < mi->nsubitems; i++) {
-		if (mi->subitems[i].view != NULL)
-			AG_MenuCollapse(parentWidget, &mi->subitems[i]);
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		if (miSub->view != NULL)
+			AG_MenuCollapse(miSub);
 	}
 	
 	/* Destroy the MenuView's window. */
@@ -231,26 +238,26 @@ AG_MenuCollapse(void *parentWidget, AG_MenuItem *mi)
 	mi->sel_subitem = NULL;
 
 	/* The surface handles are no longer valid. */
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *miSub = &mi->subitems[i];
-
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		for (j = 0; j < 2; j++) {
 			miSub->lblView[j] = -1;
 		}
 		miSub->icon = -1;
 	}
+	
+	AG_ObjectUnlock(m);
 }
 
 static void
 CollapseAll(AG_Menu *m, AG_MenuItem *mi)
 {
-	Uint i;
+	AG_MenuItem *miSub;
 
-	for (i = 0; i < mi->nsubitems; i++) {
-		CollapseAll(m, &mi->subitems[i]);
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		CollapseAll(m, miSub);
 	}
 	if (mi->view != NULL)
-		AG_MenuCollapse(m, mi);
+		AG_MenuCollapse(mi);
 }
 
 /*
@@ -260,9 +267,13 @@ CollapseAll(AG_Menu *m, AG_MenuItem *mi)
 void
 AG_MenuCollapseAll(AG_Menu *m)
 {
+	AG_ObjectLock(m);
+
 	CollapseAll(m, m->root);
 	m->itemSel = NULL;
 	m->selecting = 0;
+	
+	AG_ObjectUnlock(m);
 }
 
 void
@@ -295,7 +306,7 @@ MouseButtonDown(AG_Event *event)
 	AG_Menu *m = AG_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	int i;
+	AG_MenuItem *mi;
 
 	if (m->root == NULL)
 		return;
@@ -304,10 +315,9 @@ MouseButtonDown(AG_Event *event)
 		m->flags &= ~(AG_MENU_MODALCLOSED);
 		return;
 	}
-	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-		int lbl = (item->lblMenu[1] != -1) ? item->lblMenu[1] :
-			  (item->lblMenu[0] != -1) ? item->lblMenu[0] :
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
+		int lbl = (mi->lblMenu[1] != -1) ? mi->lblMenu[1] :
+			  (mi->lblMenu[0] != -1) ? mi->lblMenu[0] :
 			  -1;
 		int wLbl, hLbl;
 
@@ -315,22 +325,22 @@ MouseButtonDown(AG_Event *event)
 		wLbl = WSURFACE(m,lbl)->w + m->lPadLbl + m->rPadLbl;
 		hLbl = WSURFACE(m,lbl)->h + m->tPadLbl + m->bPadLbl;
 
-		if (x >= item->x &&
-		    x < (item->x + wLbl) &&
-		    y >= item->y &&
-		    y < (item->y + m->itemh)) {
-		    	if (m->itemSel == item) {
-				AG_MenuCollapse(m, item);
+		if (x >= mi->x &&
+		    x < (mi->x + wLbl) &&
+		    y >= mi->y &&
+		    y < (mi->y + m->itemh)) {
+		    	if (m->itemSel == mi) {
+				AG_MenuCollapse(mi);
 				m->itemSel = NULL;
 				m->selecting = 0;
 			} else {
 				if (m->itemSel != NULL) {
-					AG_MenuCollapse(m, m->itemSel);
+					AG_MenuCollapse(m->itemSel);
 				}
-				m->itemSel = item;
-				AG_MenuExpand(m, item,
-				    item->x,
-				    item->y + hLbl + m->bPad - 1);
+				m->itemSel = mi;
+				AG_MenuExpand(m, mi,
+				    mi->x,
+				    mi->y + hLbl + m->bPad - 1);
 				m->selecting = 1;
 			}
 			AG_Redraw(m);
@@ -345,7 +355,7 @@ MouseMotion(AG_Event *event)
 	AG_Menu *m = AG_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
-	int i;
+	AG_MenuItem *mi;
 
 	if (!m->selecting || y < 0 || y >= HEIGHT(m)-1)
 		return;
@@ -353,10 +363,9 @@ MouseMotion(AG_Event *event)
 	if (m->root == NULL) {
 		return;
 	}
-	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-		int lbl = (item->lblMenu[1] != -1) ? item->lblMenu[1] :
-			  (item->lblMenu[0] != -1) ? item->lblMenu[0] :
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
+		int lbl = (mi->lblMenu[1] != -1) ? mi->lblMenu[1] :
+			  (mi->lblMenu[0] != -1) ? mi->lblMenu[0] :
 			  -1;
 		int wLbl, hLbl;
 
@@ -364,29 +373,23 @@ MouseMotion(AG_Event *event)
 		wLbl = WSURFACE(m,lbl)->w + m->lPadLbl + m->rPadLbl;
 		hLbl = WSURFACE(m,lbl)->h + m->tPadLbl + m->bPadLbl;
 
-		if (x >= item->x &&
-		    x < (item->x + wLbl) &&
-		    y >= item->y &&
-		    y < (item->y + m->itemh)) {
-		    	if (item != m->itemSel) {
+		if (x >= mi->x &&
+		    x < (mi->x + wLbl) &&
+		    y >= mi->y &&
+		    y < (mi->y + m->itemh)) {
+		    	if (mi != m->itemSel) {
 				if (m->itemSel != NULL) {
-					AG_MenuCollapse(m, m->itemSel);
+					AG_MenuCollapse(m->itemSel);
 				}
-				m->itemSel = item;
-				AG_MenuExpand(m, item,
-				    item->x,
-				    item->y + hLbl + m->bPad - 1);
+				m->itemSel = mi;
+				AG_MenuExpand(m, mi,
+				    mi->x,
+				    mi->y + hLbl + m->bPad - 1);
 			}
 			AG_Redraw(m);
 			break;
 		}
 	}
-#if 0
-	if (i == m->root->nsubitems && m->itemSel != NULL) {
-		AG_MenuCollapse(m, m->itemSel);
-		m->itemSel = NULL;
-	}
-#endif
 }
 
 static void
@@ -402,32 +405,26 @@ Attached(AG_Event *event)
 
 /* Generic constructor for menu items. Menu must be locked. */
 static AG_MenuItem *
-CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
+CreateItem(AG_MenuItem *miParent, const char *text, const AG_Surface *icon)
 {
+	AG_Menu *m;
 	AG_MenuItem *mi;
+	
+	mi = Malloc(sizeof(AG_MenuItem));
+	mi->parent = miParent;
 
-	if (pitem != NULL) {
-		if (pitem->subitems == NULL) {
-			pitem->subitems = Malloc(sizeof(AG_MenuItem));
-		} else {
-			pitem->subitems = Realloc(pitem->subitems,
-					  (pitem->nsubitems+1) * 
-					  sizeof(AG_MenuItem));
-		}
-		mi = &pitem->subitems[pitem->nsubitems++];
-		mi->pmenu = pitem->pmenu;
-		mi->parent = pitem;
-		mi->y = pitem->nsubitems*mi->pmenu->itemh - mi->pmenu->itemh;
-		mi->state = mi->pmenu->curState;
+	if (miParent != NULL) {
+		m = mi->pmenu = miParent->pmenu;
+		mi->y = miParent->nSubItems*m->itemh - m->itemh;
+		mi->state = m->curState;
+
+		TAILQ_INSERT_TAIL(&miParent->subItems, mi, items);
+		miParent->nSubItems++;
 	} else {
-		mi = Malloc(sizeof(AG_MenuItem));
-		mi->pmenu = NULL;
-		mi->parent = NULL;
+		m = mi->pmenu = NULL;
 		mi->y = 0;
 		mi->state = 1;
 	}
-	mi->subitems = NULL;
-	mi->nsubitems = 0;
 	mi->view = NULL;
 	mi->sel_subitem = NULL;
 	mi->key_equiv = 0;
@@ -447,30 +444,30 @@ CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 	mi->flags = 0;
 	mi->icon = -1;
 	mi->tbButton = NULL;
+	TAILQ_INIT(&mi->subItems);
+	mi->nSubItems = 0;
 
 	if (icon != NULL) {
-		if (pitem != NULL) {
+		if (miParent != NULL) {
 			/* Request that the parent allocate space for icons. */
-			pitem->flags |= AG_MENU_ITEM_ICONS;
+			miParent->flags |= AG_MENU_ITEM_ICONS;
 		}
 		/* TODO: NODUP */
 		mi->iconSrc = AG_SurfaceDup(icon);
 	} else {
 		mi->iconSrc = NULL;
 	}
-	if (mi->pmenu != NULL &&
-	   (mi->pmenu->style == AG_MENU_GLOBAL) &&
-	    agDriverSw != NULL &&
-	    agAppMenuWin != NULL) {
-		Uint wMax, hMax;
-		AG_SizeReq rMenu;
+	if (m != NULL) {
+		if ((m->style == AG_MENU_GLOBAL) &&
+		    agDriverSw != NULL && agAppMenuWin != NULL) {
+			Uint wMax, hMax;
+			AG_SizeReq rMenu;
 
-		AG_GetDisplaySize(agDriverSw, &wMax, &hMax);
-		AG_WidgetSizeReq(mi->pmenu, &rMenu);
-		AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
-	}
-	if (mi->pmenu != NULL) {
-		AG_Redraw(mi->pmenu);
+			AG_GetDisplaySize(agDriverSw, &wMax, &hMax);
+			AG_WidgetSizeReq(m, &rMenu);
+			AG_WindowSetGeometry(agAppMenuWin, 0, 0, wMax, rMenu.h);
+		}
+		AG_Redraw(m);
 	}
 	return (mi);
 }
@@ -480,15 +477,14 @@ OnFontChange(AG_Event *event)
 {
 	AG_Menu *m = AG_SELF();
 	AG_Font *font = WIDGET(m)->font;
-	int i, j;
+	AG_MenuItem *mi;
+	int j;
 
-	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
 		for (j = 0; j < 2; j++) {
-			if (item->lblMenu[j] != -1) {
-				AG_WidgetUnmapSurface(m, item->lblMenu[j]);
-				item->lblMenu[j] = -1;
+			if (mi->lblMenu[j] != -1) {
+				AG_WidgetUnmapSurface(m, mi->lblMenu[j]);
+				mi->lblMenu[j] = -1;
 			}
 		}
 	}
@@ -534,9 +530,11 @@ Init(void *obj)
 
 /* Change the icon associated with a menu item. */
 void
-AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
+AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *iconSrc)
 {
-	AG_ObjectLock(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
 	if (mi->iconSrc != NULL) {
 		AG_SurfaceFree(mi->iconSrc);
 	}
@@ -548,8 +546,8 @@ AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *iconSrc)
 		AG_WidgetUnmapSurface(mi->parent->view, mi->icon);
 		mi->icon = -1;
 	}
-	AG_ObjectUnlock(mi->pmenu);
-	AG_Redraw(mi->pmenu);
+	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 /* Unmap cached Menu/MenuView label surfaces for the specified item. */
@@ -576,30 +574,36 @@ InvalidateLabelSurfaces(AG_MenuItem *mi)
 void
 AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 {
+	AG_Menu *m = mi->pmenu;
 	va_list ap;
 	
-	AG_ObjectLock(mi->pmenu);
+	AG_ObjectLock(m);
 
 	va_start(ap, fmt);
 	Free(mi->text);
 	Vasprintf(&mi->text, fmt, ap);
 	va_end(ap);
+
 	InvalidateLabelSurfaces(mi);
-	AG_ObjectUnlock(mi->pmenu);
-	AG_Redraw(mi->pmenu);
+
+	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 /* Change menu item text (C string). */
 void
 AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
 {
-	AG_ObjectLock(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
 
 	Free(mi->text);
 	mi->text = Strdup(s);
 	InvalidateLabelSurfaces(mi);
-	AG_ObjectUnlock(mi->pmenu);
-	AG_Redraw(mi->pmenu);
+
+	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 /* Create a menu separator. */
@@ -654,7 +658,7 @@ AG_MenuSectionS(AG_MenuItem *pitem, const char *label)
 
 /* Create a dynamically-updated menu item. */
 AG_MenuItem *
-AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -670,7 +674,7 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 
 /* Create a dynamically-updated menu item with a keyboard binding. */
 AG_MenuItem *
-AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     AG_KeySym key, AG_KeyMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -690,18 +694,20 @@ AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 void
 AG_MenuSetPollFn(AG_MenuItem *mi, AG_EventFn fn, const char *fmt, ...)
 {
-	AG_ObjectLock(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
 	if (mi->poll != NULL) {
-		AG_UnsetEvent(mi->pmenu, mi->poll->name);
+		AG_UnsetEvent(m, mi->poll->name);
 	}
-	mi->poll = AG_SetEvent(mi->pmenu, NULL, fn, NULL);
+	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
-	AG_ObjectUnlock(mi->pmenu);
+	AG_ObjectUnlock(m);
 }
 
 /* Create a menu item without any associated action. */
 AG_MenuItem *
-AG_MenuNode(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
+AG_MenuNode(AG_MenuItem *pitem, const char *text, const AG_Surface *icon)
 {
 	AG_MenuItem *node;
 
@@ -712,7 +718,7 @@ AG_MenuNode(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 }
 
 static AG_Button *
-CreateToolbarButton(AG_MenuItem *mi, AG_Surface *icon, const char *text)
+CreateToolbarButton(AG_MenuItem *mi, const AG_Surface *icon, const char *text)
 {
 	AG_Menu *m = mi->pmenu;
 	AG_Button *bu;
@@ -730,7 +736,7 @@ CreateToolbarButton(AG_MenuItem *mi, AG_Surface *icon, const char *text)
 }
 
 static __inline__ AG_Button *
-CreateToolbarButtonBool(AG_MenuItem *mi, AG_Surface *icon, const char *text,
+CreateToolbarButtonBool(AG_MenuItem *mi, const AG_Surface *icon, const char *text,
     int inv)
 {
 	AG_Button *bu;
@@ -743,7 +749,7 @@ CreateToolbarButtonBool(AG_MenuItem *mi, AG_Surface *icon, const char *text,
 
 /* Create a menu item associated with a function. */
 AG_MenuItem *
-AG_MenuAction(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuAction(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     AG_EventFn fn, const char *fmt, ...)
 {
 	AG_MenuItem *mi;
@@ -763,7 +769,7 @@ AG_MenuAction(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuActionKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuActionKb(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     AG_KeySym key, AG_KeyMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_MenuItem *mi;
@@ -787,8 +793,8 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 
 AG_MenuItem *
 AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
-    AG_Surface *icon, AG_KeySym key, AG_KeyMod kmod, void (*fn)(AG_Event *),
-    const char *fmt, ...)
+    const AG_Surface *icon, AG_KeySym key, AG_KeyMod kmod,
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_MenuItem *mi;
 	AG_Button *bu;
@@ -820,7 +826,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 }
 
 AG_MenuItem *
-AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     int *pBool, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -841,7 +847,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     Uint8 *pBool, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -862,7 +868,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     int *pFlags, int flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -885,7 +891,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     Uint8 *pFlags, Uint8 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -907,7 +913,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
+AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
     Uint16 *pFlags, Uint16 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -929,7 +935,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon, 
+AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon, 
     Uint32 *pFlags, Uint32 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -984,31 +990,55 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 	AG_ObjectUnlock(mi->pmenu);
 }
 
-/* Free the subitems of an item. */
-void
+/*
+ * Free a menu item's children.
+ * The parent AG_Menu must be locked.
+ */
+static void
 AG_MenuItemFreeChildren(AG_MenuItem *mi)
 {
-	int i;
+	AG_MenuItem *miSub, *miSubNext;
 
-	AG_ObjectLock(mi->pmenu);
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItemFree(&mi->subitems[i]);
+	for (miSub = TAILQ_FIRST(&mi->subItems);
+	     miSub != TAILQ_END(&mi->subItems);
+	     miSub = miSubNext) {
+		miSubNext = TAILQ_NEXT(miSub, items);
+		AG_MenuItemFree(miSub);
 	}
-	Free(mi->subitems);
-	mi->subitems = NULL;
-	mi->nsubitems = 0;
-	AG_ObjectUnlock(mi->pmenu);
+	TAILQ_INIT(&mi->subItems);
+	mi->nSubItems = 0;
 }
 
-/* Free an item as well as its subitems. */
+/*
+ * Free a menu item and its children.
+ * The parent AG_Menu must be locked.
+ */
 void
 AG_MenuItemFree(AG_MenuItem *mi)
 {
-	AG_ObjectLock(mi->pmenu);
 	AG_MenuItemFreeChildren(mi);
-	InvalidateLabelSurfaces(mi);
+
+	if (mi->iconSrc != NULL) {
+		AG_SurfaceFree(mi->iconSrc);
+	}
 	Free(mi->text);
-	AG_ObjectUnlock(mi->pmenu);
+	free(mi);
+}
+
+/* Delete a menu item and its children. */
+void
+AG_MenuDel(AG_MenuItem *mi)
+{
+	AG_Menu *m = mi->pmenu;
+	AG_MenuItem *miParent = mi->parent;
+
+	AG_ObjectLock(m);
+
+	TAILQ_REMOVE(&miParent->subItems, mi, items);
+	miParent->nSubItems--;
+	AG_MenuItemFree(mi);
+
+	AG_ObjectUnlock(m);
 }
 
 static void
@@ -1023,37 +1053,44 @@ Destroy(void *p)
 void
 AG_MenuUpdateItem(AG_MenuItem *mi)
 {
-	AG_ObjectLock(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
 	if (mi->poll != NULL) {
+		InvalidateLabelSurfaces(mi);
 		AG_MenuItemFreeChildren(mi);
-		AG_PostEvent(mi, mi->pmenu, mi->poll->name, NULL);
+		AG_PostEvent(mi, m, mi->poll->name, NULL);
 	}
-	AG_ObjectUnlock(mi->pmenu);
+	AG_ObjectUnlock(m);
 }
 
 void
 AG_MenuState(AG_MenuItem *mi, int state)
 {
-	AG_ObjectLock(mi->pmenu);
-	mi->pmenu->curState = state;
-	AG_ObjectUnlock(mi->pmenu);
-	AG_Redraw(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
+	m->curState = state;
+	AG_ObjectUnlock(m);
+	AG_Redraw(m);
 }
 
 void
 AG_MenuToolbar(AG_MenuItem *mi, AG_Toolbar *tb)
 {
-	AG_ObjectLock(mi->pmenu);
-	mi->pmenu->curToolbar = tb;
-	AG_ObjectUnlock(mi->pmenu);
+	AG_Menu *m = mi->pmenu;
+
+	AG_ObjectLock(m);
+	m->curToolbar = tb;
+	AG_ObjectUnlock(m);
 }
 
 static void
 Draw(void *obj)
 {
 	AG_Menu *m = obj;
+	AG_MenuItem *mi;
 	int lbl, wLbl, hLbl;
-	int i;
 
 	AG_DrawBox(m,
 	    AG_RECT(0, 0, WIDTH(m), HEIGHT(m)), 1,
@@ -1064,39 +1101,36 @@ Draw(void *obj)
 
 	AG_PushClipRect(m, m->r);
 
-	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-
-		if (item->state) {
-			if (item->lblMenu[1] == -1) {
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
+		if (mi->state) {
+			if (mi->lblMenu[1] == -1) {
 				AG_TextColor(WCOLOR(m,TEXT_COLOR));
-				item->lblMenu[1] = (item->text == NULL) ? -1 :
+				mi->lblMenu[1] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
-				    AG_TextRender(item->text));
+				        AG_TextRender(mi->text));
 			}
-			lbl = item->lblMenu[1];
+			lbl = mi->lblMenu[1];
 		} else {
-			if (item->lblMenu[0] == -1) {
+			if (mi->lblMenu[0] == -1) {
 				AG_TextColor(WCOLOR_DIS(m,TEXT_COLOR));
-				item->lblMenu[0] = (item->text == NULL) ? -1 :
+				mi->lblMenu[0] = (mi->text == NULL) ? -1 :
 				    AG_WidgetMapSurface(m,
-				    AG_TextRender(item->text));
+				        AG_TextRender(mi->text));
 			}
-			lbl = item->lblMenu[0];
+			lbl = mi->lblMenu[0];
 		}
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
-		if (item == m->itemSel) {
+		if (mi == m->itemSel) {
 			AG_DrawRect(m,
-			    AG_RECT(item->x,
-			            item->y,
+			    AG_RECT(mi->x, mi->y,
 	    		            m->lPadLbl + wLbl + m->rPadLbl,
 	    		            m->tPadLbl + hLbl + m->bPadLbl),
 			    WCOLOR_SEL(m,0));
 		}
 		AG_WidgetBlitSurface(m, lbl,
-		    item->x + m->lPadLbl,
-		    item->y + m->tPadLbl);
+		    mi->x + m->lPadLbl,
+		    mi->y + m->tPadLbl);
 	}
 
 	AG_PopClipRect(m);
@@ -1130,8 +1164,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Menu *m = obj;
 	AG_Driver *drv = WIDGET(m)->drv;
-	int i, x, y;
-	int wLbl, hLbl;
+	AG_MenuItem *mi;
+	int x, y, wLbl, hLbl;
 	Uint wView, hView;
 
 	x = m->lPad;
@@ -1144,8 +1178,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	if (m->root == NULL) {
 		return;
 	}
-	for (i = 0; i < m->root->nsubitems; i++) {
-		GetItemSize(&m->root->subitems[i], &wLbl, &hLbl);
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
+		GetItemSize(mi, &wLbl, &hLbl);
 		if (r->h == 0) {
 			r->h = m->tPad+hLbl+m->bPad;
 		}
@@ -1165,8 +1199,9 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Menu *m = obj;
+	AG_MenuItem *mi;
 	int wLbl, hLbl;
-	int x, y, i;
+	int x, y;
 	
 	if (a->w < (m->lPad + m->rPad) ||
 	    a->h < (m->tPad + m->bPad)) {
@@ -1182,15 +1217,13 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	x = m->lPad;
 	y = m->tPad;
-	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-
-		GetItemSize(item, &wLbl, &hLbl);
-		item->x = x;
-		item->y = y;
+	TAILQ_FOREACH(mi, &m->root->subItems, items) {
+		GetItemSize(mi, &wLbl, &hLbl);
+		mi->x = x;
+		mi->y = y;
 		if (x+wLbl > a->w) {
-			item->x = m->lPad;
-			item->y += hLbl;
+			mi->x = m->lPad;
+			mi->y += hLbl;
 			y += hLbl;
 		}
 		x += wLbl;
@@ -1199,9 +1232,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 AG_PopupMenu *
-AG_PopupNew(void *pwid)
+AG_PopupNew(void *obj)
 {
-	AG_Widget *wid = pwid;
+	AG_Widget *wid = obj;
 	AG_PopupMenu *pm;
 
 	pm = Malloc(sizeof(AG_PopupMenu));
@@ -1259,28 +1292,28 @@ AG_PopupHide(AG_PopupMenu *pm)
 {
 	AG_ObjectLock(pm->menu);
 	if (pm->win != NULL) {
-		AG_MenuCollapse(pm->widget, pm->item);
+		AG_MenuCollapse(pm->item);
 		pm->win = NULL;
 	}
 	AG_ObjectUnlock(pm->menu);
 }
 
 void
-AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
+AG_PopupDestroy(void *obj, AG_PopupMenu *pm)
 {
-	if (pWid != NULL) {
-		AG_ObjectLock(pWid);
-		SLIST_REMOVE(&WIDGET(pWid)->menus, pm, ag_popup_menu, menus);
-		AG_ObjectUnlock(pWid);
+	if (obj != NULL) {
+		AG_ObjectLock(obj);
+		SLIST_REMOVE(&WIDGET(obj)->menus, pm, ag_popup_menu, menus);
+		AG_ObjectUnlock(obj);
 	}
 	if (pm->menu != NULL) {
-		AG_MenuCollapse(pWid, pm->item);
+		AG_MenuCollapse(pm->item);
 		AG_ObjectDestroy(pm->menu);
 	}
 	pm->menu = NULL;
 	pm->item = NULL;
 	pm->win = NULL;
-	Free(pm);
+	free(pm);
 }
 
 AG_WidgetClass agMenuClass = {

@@ -13,6 +13,8 @@ struct ag_menu;
 struct ag_menu_view;
 struct ag_button;
 
+typedef AG_TAILQ_HEAD(ag_menu_itemq, ag_menu_item) AG_MenuItemQ;
+
 typedef struct ag_menu_item {
 	char *text;			/* Label text */
 	int lblMenu[2];			/* Cached surfaces (for AG_Menu) */
@@ -25,8 +27,6 @@ typedef struct ag_menu_item {
 	AG_KeySym key_equiv;		/* Key shortcut */
 	AG_KeyMod key_mod;
 	int x, y;			/* Position in parent view */
-	struct ag_menu_item *subitems;	/* Child items */
-	Uint nsubitems;
 	AG_Event *clickFn;		/* Raised on click */
 	AG_Event *poll;			/* Raised before the item is drawn */
 	Uint flags;
@@ -54,6 +54,10 @@ typedef struct ag_menu_item {
 	struct ag_menu_item *sel_subitem; /* Selected subitem */
 	struct ag_button *tbButton;	/* Associated toolbar button */
 	struct ag_menu_item *parent;	/* Parent MenuItem or NULL */
+
+	AG_TAILQ_ENTRY(ag_menu_item) items;	/* In parent */
+	AG_TAILQ_HEAD_(ag_menu_item) subItems;	/* Child items */
+	Uint                        nSubItems;
 } AG_MenuItem;
 
 enum ag_menu_style {
@@ -123,10 +127,10 @@ void		 AG_PopupShowAt(AG_PopupMenu *, int, int);
 void		 AG_PopupHide(AG_PopupMenu *);
 void		 AG_PopupDestroy(void *, AG_PopupMenu *);
 
+void	     AG_MenuDel(AG_MenuItem *);
 void	     AG_MenuItemFree(AG_MenuItem *);
-void	     AG_MenuItemFreeChildren(AG_MenuItem *);
 AG_Window   *AG_MenuExpand(void *, AG_MenuItem *, int, int);
-void   	     AG_MenuCollapse(void *, AG_MenuItem *);
+void   	     AG_MenuCollapse(AG_MenuItem *);
 void   	     AG_MenuCollapseAll(AG_Menu *);
 
 void	 AG_MenuSetPadding(AG_Menu *, int, int, int, int);
@@ -144,7 +148,7 @@ void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);
 #define	 AG_MenuSetLabelPaddingBottom(m,v) \
 	 AG_MenuSetLabelPadding((m),-1,-1,-1,(v))
 
-void AG_MenuSetIcon(AG_MenuItem *, AG_Surface *);
+void AG_MenuSetIcon(AG_MenuItem *, const AG_Surface *);
 void AG_MenuSetLabel(AG_MenuItem *, const char *, ...)
                      FORMAT_ATTRIBUTE(printf,2,3)
 		     NONNULL_ATTRIBUTE(2);
@@ -158,35 +162,35 @@ void	     AG_MenuState(AG_MenuItem *, int);
 
 void	     AG_MenuToolbar(AG_MenuItem *, AG_Toolbar *);
 
-AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, AG_Surface *);
+AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, const AG_Surface *);
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
 AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...)
                             FORMAT_ATTRIBUTE(printf,2,3)
 			    NONNULL_ATTRIBUTE(2);
 AG_MenuItem *AG_MenuSectionS(AG_MenuItem *, const char *);
-AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, const AG_Surface *,
 			   AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, const AG_Surface *,
                              AG_KeySym, AG_KeyMod, AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *,
-                         AG_Surface *, AG_KeySym, AG_KeyMod, AG_EventFn,
+                         const AG_Surface *, AG_KeySym, AG_KeyMod, AG_EventFn,
 			 const char *, ...);
-AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, const AG_Surface *,
                                 AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, const AG_Surface *,
                                   AG_KeySym, AG_KeyMod, AG_EventFn, const char *,
 				  ...);
-AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, const AG_Surface *,
                               int *, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, const AG_Surface *,
                                Uint8 *, int, AG_Mutex *);
-AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, const AG_Surface *,
                                int *, int, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, const AG_Surface *,
                                 Uint8 *, Uint8, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, const AG_Surface *,
                                  Uint16 *, Uint16, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
+AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, const AG_Surface *,
                                  Uint32 *, Uint32, int, AG_Mutex *);
 
 #define	AG_MenuIntBool(mi,t,i,p,inv) \

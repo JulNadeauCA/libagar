@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ MouseButtonDown(AG_Event *event)
 			int wTab = (tab->lbl ? WIDTH(tab->lbl) : 0) + SPACING*2;
 
 			if (x >= tx && x < tx+wTab) {
-				AG_NotebookSelectTab(nb, tab);
+				AG_NotebookSelect(nb, tab);
 				break;
 			}
 			tx += wTab;
@@ -76,7 +76,7 @@ OnShow(AG_Event *event)
 	AG_Notebook *nb = AG_SELF();
 
 	if (nb->sel_tab == NULL)
-		AG_NotebookSelectTab(nb, TAILQ_FIRST(&nb->tabs));
+		AG_NotebookSelect(nb, TAILQ_FIRST(&nb->tabs));
 }
 
 static void
@@ -85,27 +85,7 @@ OnHide(AG_Event *event)
 	AG_Notebook *nb = AG_SELF();
 
 	if (nb->sel_tab != NULL)
-		AG_NotebookSelectTab(nb, NULL);
-}
-
-static void
-OnDetach(AG_Event *event)
-{
-	/* XXX */
-#if 0
-	AG_Notebook *nb = AG_SELF();
-	AG_NotebookTab *ntab, *ntabNext;
-
-	for (ntab = TAILQ_FIRST(&nb->tabs); ntab != TAILQ_END(&nb->tabs); ntab = ntabNext) {
-		ntabNext = TAILQ_NEXT(ntab, tabs);
-		if (ntab == nb->sel_tab) {
-			continue;			/* Attached */
-		}
-		AG_ObjectDestroy(ntab);
-	}
-	TAILQ_INIT(&nb->tabs);
-	nb->sel_tab = NULL;
-#endif
+		AG_NotebookSelect(nb, NULL);
 }
 
 static void
@@ -128,7 +108,6 @@ Init(void *obj)
 	nb->nTabs = 0;
 	TAILQ_INIT(&nb->tabs);
 
-	AG_AddEvent(nb, "detached", OnDetach, NULL);
 	AG_AddEvent(nb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(nb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(nb, "mouse-button-down", MouseButtonDown, NULL);
@@ -281,7 +260,7 @@ AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 }
 
 AG_NotebookTab *
-AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
+AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 {
 	AG_NotebookTab *tab;
 
@@ -304,6 +283,7 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 		tab->lbl = NULL;
 	}
 
+	AG_ObjectAttach(nb, tab);
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	nb->nTabs++;
 
@@ -313,11 +293,12 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 }
 
 void
-AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
+AG_NotebookDel(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	AG_ObjectLock(nb);
+
 	if (nb->sel_tab == tab) {
-		AG_NotebookSelectTab(nb, NULL);
+		AG_NotebookSelect(nb, NULL);
 	}
 	if (tab->lbl != NULL) {
 		AG_ObjectDetach(tab->lbl);
@@ -325,13 +306,16 @@ AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	}
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
 	nb->nTabs--;
+
+	AG_ObjectDetach(tab);
 	AG_ObjectDestroy(tab);
+
 	AG_ObjectUnlock(nb);
 	AG_Redraw(nb);
 }
 
 void
-AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
+AG_NotebookSelect(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	AG_SizeReq rTab;
 	AG_SizeAlloc aTab;
@@ -342,17 +326,12 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	if (nb->sel_tab == tab) {
 		goto out;
 	} else if (nb->sel_tab != NULL) {
-/*		AG_WidgetFreeStyle(nb->sel_tab); */
-		AG_WidgetHiddenRecursive(nb->sel_tab);
-		AG_ObjectDetach(nb->sel_tab);
-		OBJECT(nb->sel_tab)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+		AG_WidgetHideAll(nb->sel_tab);
 	}
 	if (tab == NULL) {
 		nb->sel_tab = NULL;
 		goto out;
 	}
-	AG_ObjectAttach(nb, tab);
-	AG_WidgetCompileStyle(tab);
 	nb->sel_tab = tab;
 
 	AG_WidgetSizeReq(tab, &rTab);
@@ -361,7 +340,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	aTab.w = WIDGET(nb)->w;
 	aTab.h = WIDGET(nb)->h - nb->bar_h;
 	AG_WidgetSizeAlloc(tab, &aTab);
-	AG_WidgetShownRecursive(tab);
+	AG_WidgetShowAll(tab);
 
 	AG_WidgetUpdate(nb);
 /* 	AG_WidgetFocus(tab); */

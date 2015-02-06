@@ -205,7 +205,7 @@ WidgetSelected(AG_Event *event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	nTab = AG_NotebookAddTab(nb, _("General Settings"), AG_BOX_VERT);
+	nTab = AG_NotebookAdd(nb, _("General Settings"), AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",1 },
@@ -237,17 +237,17 @@ WidgetSelected(AG_Event *event)
 	}
 
 	if (AGOBJECT_CLASS(wid)->edit != NULL) {
-		nTab = AG_NotebookAddTab(nb, _("Widget-specific"), AG_BOX_VERT);
+		nTab = AG_NotebookAdd(nb, _("Widget-specific"), AG_BOX_VERT);
 		AG_ObjectAttach(nTab, AGOBJECT_CLASS(wid)->edit(wid));
 	}
 	
-	nTab = AG_NotebookAddTab(nb, _("Variables"), AG_BOX_VERT);
+	nTab = AG_NotebookAdd(nb, _("Variables"), AG_BOX_VERT);
 	{
 		AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollVariables, "%p", wid);
 	}
 
-	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
+	nTab = AG_NotebookAdd(nb, _("Geometry"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
 		AG_BindInt(msb, "xvalue", &wid->x);
@@ -265,7 +265,7 @@ WidgetSelected(AG_Event *event)
 		AG_BindInt(msb, "xvalue", &wid->rView.x2);
 		AG_BindInt(msb, "yvalue", &wid->rView.y2);
 	}
-	nTab = AG_NotebookAddTab(nb, _("Surfaces"), AG_BOX_VERT);
+	nTab = AG_NotebookAdd(nb, _("Surfaces"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
@@ -273,7 +273,7 @@ WidgetSelected(AG_Event *event)
 		AG_TlistSetIconWidth(tl, 64);
 	}
 
-	AG_WidgetShownRecursive(box);
+	AG_WidgetShowAll(box);
 	AG_WidgetUpdate(box);
 }
 

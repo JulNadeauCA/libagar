@@ -954,7 +954,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp, int x, int y)
 		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
 #endif
 	if (tp->panel != NULL) {
-		AG_MenuCollapse(tl, tp->item);
+		AG_MenuCollapse(tp->item);
 		tp->panel = NULL;
 	}
 	m->itemSel = tp->item;

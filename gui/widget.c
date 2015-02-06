@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,6 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/primitive.h>
-#include <agar/gui/notebook.h>
 #include <agar/gui/gui_math.h>
 #include <agar/gui/opengl.h>
 #include <agar/gui/text_cache.h>
@@ -80,9 +79,6 @@ AG_WidgetPalette agDefaultPalette = {{
 /*sel*/	{ {50,50,120,255},   {255,255,255,255},  {50,50,60,255}, {50,50,50,255},	{100,100,100,255} },
 }};
 
-/* #define DEBUG_CLIPPING */
-/* #define DEBUG_RSENS */
-
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
 SetParentWindow(AG_Widget *wid, AG_Window *win)
@@ -104,13 +100,25 @@ SetParentWindow(AG_Widget *wid, AG_Window *win)
 		     ca != TAILQ_END(&wid->cursorAreas);
 		     ca = caNext) {
 			caNext = TAILQ_NEXT(ca, cursorAreas);
-			if (ca->stock == -1 ||
-			    ca->stock >= wid->drv->nCursors) {
+			if (ca->stock >= 0 &&
+			    ca->stock < wid->drv->nCursors) {
+				AG_Cursor *ac;
+				int i = 0;
+
+				TAILQ_FOREACH(ac, &wid->drv->cursors, cursors) {
+					if (i++ == ca->stock)
+						break;
+				}
+				if (ac != NULL) {
+					ca->c = ac;
+					TAILQ_INSERT_TAIL(&win->cursorAreas,
+					    ca, cursorAreas);
+				} else {
+					free(ca);
+				}
+			} else {
 				free(ca);
-				continue;
 			}
-			ca->c = &wid->drv->cursors[ca->stock];
-			TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
 		}
 		TAILQ_INIT(&wid->cursorAreas);
 	} else {
@@ -784,7 +792,6 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	return (rv);
 }
 
-/* Traverse the widget tree using a pathname. */
 static void *
 WidgetFindPath(const AG_Object *parent, const char *name)
 {
@@ -815,33 +822,6 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 			}
 			return (win);
 		}
-	} else if (AG_OfClass(parent, "AG_Widget:AG_Notebook:*")) {
-		AG_Notebook *book = (AG_Notebook *)parent;
-		AG_NotebookTab *tab;
-		/*
-		 * This hack allows Notebook tabs to be treated as
-		 * separate objects, even though they are not attached
-		 * to the widget hierarchy.
-		 */
-		AG_ObjectLock(book);
-		TAILQ_FOREACH(tab, &book->tabs, tabs) {
-			if (strcmp(OBJECT(tab)->name, node_name) != 0) {
-				continue;
-			}
-			if ((s = strchr(name, '/')) != NULL) {
-				rv = WidgetFindPath(OBJECT(tab), &s[1]);
-				if (rv != NULL) {
-					AG_ObjectUnlock(book);
-					return (rv);
-				} else {
-					AG_ObjectUnlock(book);
-					return (NULL);
-				}
-			}
-			AG_ObjectUnlock(book);
-			return (tab);
-		}
-		AG_ObjectUnlock(book);
 	} else {
 		TAILQ_FOREACH(chld, &parent->children, cobjs) {
 			if (strcmp(chld->name, node_name) != 0) {
@@ -862,12 +842,9 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 }
 
 /*
- * Find a widget by name. Return value is only valid as long as the
- * Driver VFS is locked.
- *
- * This works differently than the general AG_ObjectFind() routine in
- * that the search may include widgets not effectively attached to the
- * Driver VFS, such as widgets attached to AG_Notebook(3) tabs.
+ * Find a widget by name (e.g., "Window/Widget1/Widget2"). This works
+ * similarly to the more general AG_ObjectFind(3). Return value is only
+ * valid as long as the Driver VFS is locked.
  */
 void *
 AG_WidgetFind(void *obj, const char *name)
@@ -1172,34 +1149,6 @@ fail:
 }
 
 /*
- * Evaluate whether a given widget is at least partially visible.
- * The Widget and Driver VFS must be locked.
- */
-/* TODO optimize on a per window basis */
-static __inline__ int
-OccultedWidget(AG_Widget *wid)
-{
-	AG_Window *wParent;
-	AG_Window *w;
-
-	if ((wParent = AG_ObjectFindParent(wid, NULL, "AG_Widget:AG_Window")) == NULL ||
-	    (w = OBJECT_NEXT_CHILD(wParent, ag_window)) == NULL) {
-		return (0);
-	}
-#if 1
-	for (; w != NULL; w = OBJECT_NEXT_CHILD(w, ag_window)) {
-		if (w->visible &&
-		    wid->rView.x1 > WIDGET(w)->x &&
-		    wid->rView.y1 > WIDGET(w)->y &&
-		    wid->rView.x2 < WIDGET(w)->x+WIDGET(w)->w &&
-		    wid->rView.y2 < WIDGET(w)->y+WIDGET(w)->h)
-			return (1);
-	}
-#endif
-	return (0);
-}
-
-/*
  * Render a widget to the display.
  * Must be invoked from GUI rendering context.
  */
@@ -1209,6 +1158,11 @@ AG_WidgetDraw(void *p)
 	AG_Widget *wid = p;
 
 	AG_ObjectLock(wid);
+
+	if (!(wid->flags & AG_WIDGET_VISIBLE) ||
+	     (wid->flags & AG_WIDGET_UNDERSIZE) ||
+	     WIDGET_OPS(wid)->draw == NULL)
+		goto out;
 
 	if (wid->flags & AG_WIDGET_DISABLED) {
 		wid->cState = AG_DISABLED_STATE;
@@ -1225,39 +1179,11 @@ AG_WidgetDraw(void *p)
 		AG_TextColor(wid->pal.c[wid->cState][AG_TEXT_COLOR]);
 	}
 
-#ifdef AG_DEBUG
-	if (wid->drv == NULL)
-		AG_FatalError("AG_WidgetDraw() on unattached widget");
-	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*") && wid->window == NULL)
-		AG_FatalError("Widget is not attached to a window");
-#endif
+	WIDGET_OPS(wid)->draw(wid);
 
-	if (wid->flags & AG_WIDGET_HIDE ||
-	    wid->flags & AG_WIDGET_UNDERSIZE)
-		goto out;
-
-	if (OccultedWidget(wid))
-		goto out;
-
-	if (WIDGET_OPS(wid)->draw != NULL) {
-		WIDGET_OPS(wid)->draw(wid);
-#ifdef DEBUG_RSENS
-		if (wid->flags & AG_WIDGET_DEBUG_RSENS) {
-			AG_Rect r = AG_Rect2ToRect(wid->rSens);
-
-			r.x -= wid->rView.x1;
-			r.y -= wid->rView.y1;
-			AG_DrawRectBlended(wid, r, AG_ColorRGBA(200,0,0,25),
-			    AG_ALPHA_SRC);
-			AG_DrawRectOutline(wid, r, AG_ColorRGB(100,0,0));
-		}
-#endif /* DEBUG_RSENS */
-	}
-
-out:
-	if (wid->flags & AG_WIDGET_USE_TEXT) {
+	if (wid->flags & AG_WIDGET_USE_TEXT)
 		AG_PopTextState();
-	}
+out:
 	AG_ObjectUnlock(wid);
 }
 
@@ -1364,9 +1290,12 @@ AG_WidgetFindFocused(void *p)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
-	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*") &&
-	    (wid->flags & AG_WIDGET_FOCUSED) == 0) {
-		goto fail;
+	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+		if ((wid->flags & AG_WIDGET_FOCUSED) == 0 ||
+		    (wid->flags & AG_WIDGET_VISIBLE) == 0 ||
+		    (wid->flags & AG_WIDGET_DISABLED)) {
+			goto fail;
+		}
 	}
 	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
@@ -1488,6 +1417,7 @@ AG_WidgetShow(void *obj)
 {
 	AG_Widget *wid = obj;
 
+	wid->flags &= ~(AG_WIDGET_HIDE);
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
 	AG_WindowUpdate(wid->window);
 }
@@ -1498,16 +1428,14 @@ AG_WidgetHide(void *obj)
 {
 	AG_Widget *wid = obj;
 
+	wid->flags |= AG_WIDGET_HIDE;
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
 	AG_WindowUpdate(wid->window);
 }
 
-/*
- * Raise `widget-shown' event on a widget and its children.
- * Used by containers such as Notebook.
- */
+/* Make a widget and all of its children visible. */
 void
-AG_WidgetShownRecursive(void *p)
+AG_WidgetShowAll(void *p)
 {
 	AG_Widget *wid = p;
 	AG_Widget *chld;
@@ -1516,7 +1444,7 @@ AG_WidgetShownRecursive(void *p)
 	AG_ObjectLock(wid);
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		AG_WidgetShownRecursive(chld);
+		AG_WidgetShowAll(chld);
 
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
 
@@ -1524,12 +1452,9 @@ AG_WidgetShownRecursive(void *p)
 	AG_UnlockVFS(wid);
 }
 
-/*
- * Raise `widget-hidden' event on a widget and its children.
- * Used by containers such as Notebook.
- */
+/* Make a widget and all of its children invisible. */
 void
-AG_WidgetHiddenRecursive(void *p)
+AG_WidgetHideAll(void *p)
 {
 	AG_Widget *wid = p;
 	AG_Widget *chld;
@@ -1538,7 +1463,7 @@ AG_WidgetHiddenRecursive(void *p)
 	AG_ObjectLock(wid);
 	
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		AG_WidgetHiddenRecursive(chld);
+		AG_WidgetHideAll(chld);
 
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
 	
