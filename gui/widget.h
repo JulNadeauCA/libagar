@@ -183,7 +183,6 @@ typedef struct ag_widget {
 #define AG_WIDGET_NOSPACING		0x008000 /* Disable spacings around widget; container-specific */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* All mousebuttondown events */
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* All mousebuttondown events */
-#define AG_WIDGET_DEBUG_RSENS		0x040000 /* Debug sensitivity rect */
 #define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
 #define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Backup surfaces as soon as possible */
@@ -304,8 +303,10 @@ void       *AG_WidgetFind(void *, const char *);
 
 void        AG_WidgetShow(void *);
 void        AG_WidgetHide(void *);
-void        AG_WidgetShownRecursive(void *);
-void        AG_WidgetHiddenRecursive(void *);
+void        AG_WidgetShowAll(void *);
+void        AG_WidgetHideAll(void *);
+void        AG_WidgetEnableAll(void *);
+void        AG_WidgetDisabledAll(void *);
 
 void        AG_WidgetInheritDraw(void *);
 void        AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
@@ -365,7 +366,7 @@ AG_WidgetDisabled(void *p)
 static __inline__ int
 AG_WidgetVisible(void *p)
 {
-	return !(AGWIDGET(p)->flags & AG_WIDGET_HIDE);
+	return (AGWIDGET(p)->flags & AG_WIDGET_VISIBLE);
 }
 
 /*
