@@ -591,7 +591,7 @@ AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 }
 
 void
-AG_ButtonSurface(AG_Button *bu, AG_Surface *su)
+AG_ButtonSurface(AG_Button *bu, const AG_Surface *su)
 {
 	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
 
