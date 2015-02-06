@@ -70,6 +70,8 @@
 #define	AG_WidgetBlendPixel32		AG_BlendPixel32
 #define AG_DrawPixelBlended		AG_BlendPixel32
 #define	AG_WidgetBlendPixelRGBA		AG_BlendPixelRGBA
+#define AG_WidgetShownRecursive		AG_WidgetShowAll
+#define AG_WidgetHiddenRecursive	AG_WidgetHideAll
 
 __BEGIN_DECLS
 AG_Variable *AG_WidgetBind(void *, const char *, AG_VariableType, ...)

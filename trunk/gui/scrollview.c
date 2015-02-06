@@ -53,9 +53,9 @@ ClipWidgets(AG_Scrollview *sv, AG_Widget *wt)
 
 	rx = AG_RectIntersect2(&rView, &wt->rView);
 	if (rx.w == 0 || rx.h == 0) {
-		wt->flags |= AG_WIDGET_HIDE;
+		AG_WidgetHideAll(wt);
 	} else {
-		wt->flags &= ~(AG_WIDGET_HIDE);
+		AG_WidgetShowAll(wt);
 	}
 	OBJECT_FOREACH_CHILD(chld, wt, ag_widget)
 		ClipWidgets(sv, chld);
@@ -385,7 +385,7 @@ Draw(void *p)
 	
 	AG_PushClipRect(sv, sv->r);
 	OBJECT_FOREACH_CHILD(chld, sv, ag_widget) {
-		if (chld->flags & AG_WIDGET_HIDE ||
+		if (!(chld->flags & AG_WIDGET_VISIBLE) ||
 		    chld == WIDGET(sv->hbar) ||
 		    chld == WIDGET(sv->vbar)) {
 			continue;

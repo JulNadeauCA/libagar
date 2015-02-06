@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -749,7 +749,6 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	AG_ObjectLock(t);
 	SLIST_FOREACH(tp, &t->popups, popups) {
 		if (tp->m == m && tp->n == n) {
-			AG_MenuItemFree(tp->item);
 			AG_ObjectUnlock(t);
 			return (tp->item);
 		}
@@ -1204,7 +1203,7 @@ static void
 ShowPopup(AG_Table *t, AG_TablePopup *tp, int x, int y)
 {
 	if (tp->panel != NULL) {
-		AG_MenuCollapse(t, tp->item);
+		AG_MenuCollapse(tp->item);
 		tp->panel = NULL;
 	}
 	tp->menu->itemSel = tp->item;

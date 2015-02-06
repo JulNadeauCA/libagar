@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,17 +43,15 @@ SubmenuTimeout(AG_Timer *to, AG_Event *event)
 }
 
 /*
- * Sub-item selection has moved over the specified subitem. If the subitem is
+ * Selection has moved over the specified subitem. If the subitem is
  * a submenu, the submenu timer is initiated.
  */
 static void
 SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 {
-	AG_Menu *m = mi->pmenu;
-
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->view != NULL) {
-		AG_MenuCollapse(m, mi->sel_subitem);
+		AG_MenuCollapse(mi->sel_subitem);
 	}
 	mi->sel_subitem = subitem;
 
@@ -61,7 +59,7 @@ SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 		AG_MenuView *mview = mi->view;
 
 		AG_LockTimers(mview);
-		if (subitem != NULL && subitem->nsubitems > 0) {
+		if (subitem != NULL && subitem->nSubItems > 0) {
 			AG_AddTimer(mview, &mview->submenuTo, 200,
 			    SubmenuTimeout, "%p", subitem);
 		} else {
@@ -75,34 +73,32 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *mi = mview->pitem;
+	AG_MenuItem *mi = mview->pitem, *miSub;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
-	int y = mview->tPad, i;
+	int y = mview->tPad;
 
 	if (my < 0)
 		return;
 	if (mx < 0 || mx > WIDTH(mview))
 		goto selnone;
 
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *subitem = &mi->subitems[i];
-
-		AG_MenuUpdateItem(subitem);
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		AG_MenuUpdateItem(miSub);
 
 		y += m->itemh;
 		if (my < y) {
 			if (mx > WIDTH(mview) &&
-			    subitem->nsubitems == 0) {
+			    miSub->nSubItems == 0) {
 				goto selnone;
 			}
-			if (subitem->flags & AG_MENU_ITEM_SEPARATOR) {
+			if (miSub->flags & AG_MENU_ITEM_SEPARATOR) {
 				goto selnone;
 			}
-			if (mi->sel_subitem != subitem &&
-			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
-				SelectItem(mi, subitem);
+			if (mi->sel_subitem != miSub &&
+			    (miSub->flags & AG_MENU_ITEM_NOSELECT) == 0) {
+				SelectItem(mi, miSub);
 			}
 			AG_Redraw(mview);
 			return;
@@ -110,7 +106,7 @@ MouseMotion(AG_Event *event)
 	}
 selnone:
 	if (mi->sel_subitem != NULL &&
-	    mi->sel_subitem->nsubitems == 0) {
+	    mi->sel_subitem->nSubItems == 0) {
 		AG_Redraw(mview);
 		SelectItem(mi, NULL);
 	}
@@ -193,36 +189,33 @@ static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *mi = mview->pitem;
+	AG_MenuItem *mi = mview->pitem, *miSub;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
 	int y = mview->tPad;
-	Uint i;
 
 	if (mx < 0 || mx >= WIDTH(mview) ||
 	    my < 0 || my >= HEIGHT(mview)) {
 		return;
 	}
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *item = &mi->subitems[i];
-
-		AG_MenuUpdateItem(item);
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		AG_MenuUpdateItem(miSub);
 
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
-			if (item->state == 0) {
+			if (miSub->state == 0) {
 				/* Nothing to do */
-			} else if (item->clickFn != NULL) {
+			} else if (miSub->clickFn != NULL) {
 				AG_MenuCollapseAll(m);
-				AG_ExecEventFn(m, item->clickFn);
-			} else if (item->bind_type != AG_MENU_NO_BINDING) {
-				if (item->bind_lock != NULL) {
-					AG_MutexLock(item->bind_lock);
+				AG_ExecEventFn(m, miSub->clickFn);
+			} else if (miSub->bind_type != AG_MENU_NO_BINDING) {
+				if (miSub->bind_lock != NULL) {
+					AG_MutexLock(miSub->bind_lock);
 				}
-				SetItemBoolValue(item);
-				if (item->bind_lock != NULL) {
-					AG_MutexUnlock(item->bind_lock);
+				SetItemBoolValue(miSub);
+				if (miSub->bind_lock != NULL) {
+					AG_MutexUnlock(miSub->bind_lock);
 				}
 				AG_MenuCollapseAll(m);
 			}
@@ -248,16 +241,14 @@ static void
 OnFontChange(AG_Event *event)
 {
 	AG_MenuView *mv = AG_SELF();
-	AG_MenuItem *mi = mv->pitem;
-	int i, j;
+	AG_MenuItem *mi = mv->pitem, *miSub;
+	int j;
 
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *msub = &mi->subitems[i];
-
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		for (j = 0; j < 2; j++) {
-			if (msub->lblView[j] != -1) {
-				AG_WidgetUnmapSurface(mv, msub->lblView[j]);
-				msub->lblView[j] = -1;
+			if (miSub->lblView[j] != -1) {
+				AG_WidgetUnmapSurface(mv, miSub->lblView[j]);
+				miSub->lblView[j] = -1;
 			}
 		}
 	}
@@ -293,19 +284,17 @@ static void
 Draw(void *obj)
 {
 	AG_MenuView *mview = obj;
-	AG_MenuItem *mi = mview->pitem;
+	AG_MenuItem *mi = mview->pitem, *item;
 	AG_Menu *m = mview->pmenu;
 	AG_Font *font = WIDGET(mview)->font;
 	AG_Rect r;
-	int i;
 
 	r.x = 0;
 	r.y = mview->tPad;
 	r.w = WIDTH(mview);
 	r.h = m->itemh;
 
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *item = &mi->subitems[i];
+	TAILQ_FOREACH(item, &mi->subItems, items) {
 		int x = mview->lPad;
 		AG_Color C;
 		int boolState;
@@ -388,7 +377,7 @@ Draw(void *obj)
 		}
 
 		/* Render the submenu arrow. */
-		if (item->nsubitems > 0) {
+		if (item->nSubItems > 0) {
 			x += mview->spLblArrow;
 			AG_WidgetBlitSurface(mview, mview->arrowRight,
 			    x,
@@ -403,15 +392,13 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_MenuView *mview = obj;
-	AG_MenuItem *mi = mview->pitem;
+	AG_MenuItem *mi = mview->pitem, *item;
 	AG_Menu *m = mview->pmenu;
-	int i;
 
 	r->w = 0;
 	r->h = mview->tPad + mview->bPad;
-		
-	for (i = 0; i < mi->nsubitems; i++) {
-		AG_MenuItem *item = &mi->subitems[i];
+	
+	TAILQ_FOREACH(item, &mi->subItems, items) {
 		int wReq = mview->lPad + mview->rPad;
 		int wLbl;
 	
@@ -426,7 +413,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		AG_TextSize(item->text, &wLbl, NULL);
 		wReq += wLbl;
 
-		if (item->nsubitems > 0) {
+		if (item->nSubItems > 0) {
 			wReq += mview->spLblArrow + agIconSmallArrowRight.s->w;
 		}
 		if (wReq > r->w) {
