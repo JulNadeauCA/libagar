@@ -427,11 +427,9 @@ AG_SDL_InitDefaultCursor(void *obj)
 		AG_SetError("SDL_GetCursor() returned NULL");
 		return (-1);
 	}
-	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
 		return (-1);
 	}
-	ac = &drv->cursors[0];
-	drv->nCursors = 1;
 	AG_CursorInit(ac);
 #if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
 	ac->w = (Uint)sc->area.w;
@@ -442,6 +440,9 @@ AG_SDL_InitDefaultCursor(void *obj)
     // TODO
 #endif
 	ac->p = sc;
+
+	TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
+	drv->nCursors++;
 	return (0);
 }
 
@@ -461,7 +462,7 @@ void
 AG_SDL_UnsetCursor(void *obj)
 {
 	AG_Driver *drv = obj;
-	AG_Cursor *ac0 = &drv->cursors[0];
+	AG_Cursor *ac0 = TAILQ_FIRST(&drv->cursors);
 	
 	SDL_SetCursor((SDL_Cursor *)ac0->p);
 	drv->activeCursor = ac0;
@@ -505,7 +506,7 @@ AG_SDL_FreeCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
 
-	if (ac == &drv->cursors[0])
+	if (ac == TAILQ_FIRST(&drv->cursors))
 		return;
 
 	SDL_FreeCursor((SDL_Cursor *)(ac->p));

@@ -200,11 +200,12 @@ Init(void *obj)
 	drv->videoFmt = NULL;
 	drv->kbd = NULL;
 	drv->mouse = NULL;
-	drv->cursors = NULL;
-	drv->nCursors = 0;
 	drv->activeCursor = NULL;
 	drv->gl = NULL;
 	AG_TextInitGlyphCache(drv);
+
+	TAILQ_INIT(&drv->cursors);
+	drv->nCursors = 0;
 }
 
 static void

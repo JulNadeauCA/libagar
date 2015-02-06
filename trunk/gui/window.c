@@ -925,6 +925,7 @@ AG_WindowShow(AG_Window *win)
 		{
 			AG_PostEvent(NULL, win, "widget-shown", NULL);
 			win->visible = 1;
+			WIDGET(win)->flags |= AG_WIDGET_VISIBLE;
 		}
 	}
 	AG_ObjectUnlock(win);
@@ -951,6 +952,7 @@ AG_WindowHide(AG_Window *win)
 			{
 				AG_PostEvent(NULL, win, "widget-hidden", NULL);
 				win->visible = 0;
+				WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
 			}
 		}
 	}
@@ -2033,13 +2035,17 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 {
 	AG_Widget *wid = obj;
 	AG_Window *win = wid->window;
+	AG_Cursor *ac;
 	AG_CursorArea *ca;
+	int i = 0;
 
-	if (win != NULL) {
-		if (name < 0 || name >= WIDGET(win)->drv->nCursors) {
-			AG_SetError("No such cursor: %d", name);
-			return (NULL);
-		}
+	TAILQ_FOREACH(ac, &wid->drv->cursors, cursors) {
+		if (i++ == name)
+			break;
+	}
+	if (ac == NULL) {
+		AG_SetError("No such cursor");
+		return (NULL);
 	}
 
 	if ((ca = TryMalloc(sizeof(AG_CursorArea))) == NULL) {
@@ -2050,10 +2056,10 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 	ca->wid = WIDGET(obj);
 
 	if (win != NULL) {
-		ca->c = &WIDGET(win)->drv->cursors[name];
+		ca->c = ac;
 		TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
 	} else {
-		/* Will map cursor when widget is later attached. */
+		/* Will resolve cursor name when widget is later attached. */
 		ca->c = NULL;
 		TAILQ_INSERT_TAIL(&wid->cursorAreas, ca, cursorAreas);
 	}
@@ -2105,7 +2111,7 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 			if (ca->stock == -1) {
 				AG_CursorFree(drv, ca->c);
 			}
-			Free(ca);
+			free(ca);
 		}
 		TAILQ_INIT(&win->cursorAreas);
 	} else {
