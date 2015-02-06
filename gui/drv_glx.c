@@ -765,7 +765,8 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	AG_SizeAlloc a;
 	int rv = 1;
 
-	if (dev->win == NULL)
+	if (dev->win == NULL ||
+	    dev->win->flags & AG_WINDOW_DETACHING)
 		return (0);
 
 	AG_LockVFS(&agDrivers);
@@ -925,12 +926,12 @@ GLX_CreateCursor(void *obj, AG_Cursor *ac)
 
 	size = (ac->w/8)*ac->h;
 	if ((xData = TryMalloc(size)) == NULL) {
-		Free(cg);
+		free(cg);
 		return (-1);
 	}
 	if ((xMask = TryMalloc(size)) == NULL) {
-		Free(xData);
-		Free(cg);
+		free(xData);
+		free(cg);
 		return (-1);
 	}
 	for (i = 0; i < size; i++) {
@@ -1008,7 +1009,7 @@ GLX_FreeCursor(void *obj, AG_Cursor *ac)
 	
 	XSync(agDisplay, False);
 
-	Free(cg);
+	free(cg);
 	ac->p = NULL;
 }
 
@@ -1026,7 +1027,7 @@ GLX_SetCursor(void *obj, AG_Cursor *ac)
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
-	if (ac == &drv->cursors[0]) {
+	if (ac == TAILQ_FIRST(&drv->cursors)) {
 		XUndefineCursor(agDisplay, glx->w);
 	} else {
 		XDefineCursor(agDisplay, glx->w, cg->xc);
@@ -1048,14 +1049,14 @@ GLX_UnsetCursor(void *obj)
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
 	
-	if (drv->activeCursor == &drv->cursors[0])
+	if (drv->activeCursor == TAILQ_FIRST(&drv->cursors))
 		return;
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 
 	XUndefineCursor(agDisplay, glx->w);
-	drv->activeCursor = &drv->cursors[0];
+	drv->activeCursor = TAILQ_FIRST(&drv->cursors);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -1100,21 +1101,23 @@ InitDefaultCursor(AG_DriverGLX *glx)
 {
 	AG_Driver *drv = AGDRIVER(glx);
 	AG_Cursor *ac;
-	AG_CursorGLX *cg;
+	AG_CursorGLX *cursGLX;
 	
-	if ((cg = TryMalloc(sizeof(AG_CursorGLX))) == NULL)
-		return (-1);
-	if ((drv->cursors = TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		Free(cg);
+	if ((cursGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (-1);
 	}
-
-	ac = &drv->cursors[0];
-	drv->nCursors = 1;
+	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		free(cursGLX);
+		return (-1);
+	}
 	AG_CursorInit(ac);
-	cg->xc = XCreateFontCursor(agDisplay, XC_left_ptr);
-	cg->visible = 1;
-	ac->p = cg;
+
+	cursGLX->xc = XCreateFontCursor(agDisplay, XC_left_ptr);
+	cursGLX->visible = 1;
+	ac->p = cursGLX;
+
+	TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
+	drv->nCursors++;
 	return (0);
 }
 

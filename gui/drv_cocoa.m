@@ -820,7 +820,8 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	AG_Driver *drv;
 	int rv = 1;
 
-	if (dev->win == NULL)
+	if (dev->win == NULL ||
+	    dev->win->flags & AG_WINDOW_DETACHING)
 		return (0);
 
 	AG_LockVFS(&agDrivers);

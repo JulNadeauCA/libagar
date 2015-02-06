@@ -31,6 +31,7 @@ typedef struct ag_cursor {
 	Uint8 *data, *mask;		/* Bitmap data */
 	int  xHot, yHot;		/* Hotspot */
 	void *p;			/* Driver data */
+	AG_TAILQ_ENTRY(ag_cursor) cursors;
 } AG_Cursor;
 
 __BEGIN_DECLS
@@ -56,13 +57,20 @@ AG_CursorInit(AG_Cursor *ac)
 
 /* Return a pointer to a built-in cursor. */
 static __inline__ AG_Cursor *
-AG_GetStockCursor(void *drv, int name)
+AG_GetStockCursor(void *obj, int name)
 {
-#ifdef AG_DEBUG
-	if (name < 0 || name >= AG_LAST_CURSOR)
-		AG_FatalError("No such stock cursor");
-#endif
-	return (&AGDRIVER(drv)->cursors[name]);
+	AG_Driver *drv = AGDRIVER(obj);
+	AG_Cursor *ac;
+	int i = 0;
+
+	TAILQ_FOREACH(ac, &drv->cursors, cursors) {
+		if (i++ == name)
+			break;
+	}
+	if (ac == NULL) {
+		AG_FatalError("AG_GetStockCursor");
+	}
+	return (ac);
 }
 
 /* Return a pointer to the active cursor. */

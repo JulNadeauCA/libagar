@@ -820,7 +820,8 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	AG_SizeAlloc a;
 	int rv = 1;
 
-	if (dev->win == NULL)
+	if (dev->win == NULL ||
+	    dev->win->flags & AG_WINDOW_DETACHING)
 		return (0);
 
 	AG_LockVFS(&agDrivers);
@@ -1117,29 +1118,29 @@ static int
 InitDefaultCursors(AG_DriverWGL *wgl)
 {
 	AG_Driver *drv = AGDRIVER(wgl);
-	struct ag_cursor_wgl *cg;
-	const int nCursors = 1;
+	AG_Cursor *ac;
+	const int nStockCursors = 1; /* TODO map */
 	int i;
-	
-	if ((drv->cursors = TryMalloc(nCursors*sizeof(AG_Cursor))) == NULL) {
-		return (-1);
-	}
-	for (i = 0; i < nCursors; i++) {
-		AG_Cursor *ac = &drv->cursors[i];
 
-		if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL) {
-			goto fail;
+	for (i = 0; i < nStockCursors; i++) {
+		AG_Cursor *ac;
+		struct ag_cursor_wgl *cg;
+	
+		if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+			return (-1);
 		}
-		AG_CursorInit(ac);
-		cg->cursor = LoadCursor(NULL, IDC_ARROW);
+		if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL) {
+			free(ac);
+			return (-1);
+		}
 		ac->p = cg;
+		cg->cursor = LoadCursor(NULL, IDC_ARROW);
+		AG_CursorInit(ac);
+
+		TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
+		drv->nCursors++;
 	}
-	drv->nCursors = nCursors;
 	return (0);
-fail:
-	free(drv->cursors);
-	drv->cursors = NULL;
-	return (-1);
 }
 
 static int
@@ -1226,7 +1227,7 @@ WGL_UnsetCursor(void *obj)
 	case HTRIGHT:		SetCursor(LoadCursor(NULL, IDC_SIZEWE));	break;
 	default:		SetCursor(LoadCursor(NULL, IDC_ARROW));		break;
 	}
-	drv->activeCursor = &drv->cursors[0];
+	drv->activeCursor = TAILQ_FIRST(&drv->cursors);
 }
 
 static int

@@ -126,8 +126,8 @@ typedef struct ag_driver {
 	struct ag_keyboard *kbd;	/* Main keyboard device */
 	struct ag_mouse *mouse;		/* Main mouse device */
 	struct ag_cursor *activeCursor;	/* Effective cursor */
-	struct ag_cursor *cursors;	/* Registered mouse cursors */
-	Uint             nCursors;
+	AG_TAILQ_HEAD_(ag_cursor) cursors; /* Registered cursors */
+	Uint                     nCursors;
 	struct ag_glyph_cache *glyphCache; /* Cache of rendered glyphs */
 	void *gl;			/* AG_GL_Context (for GL drivers) */
 } AG_Driver;

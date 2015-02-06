@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,18 +58,17 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
     int xHot, int yHot)
 {
 	AG_Driver *drv = obj;
-	AG_Cursor *curs, *cursNew;
+	AG_Cursor *curs;
 	Uint size = w*h;
 
-	if ((cursNew = TryRealloc(drv->cursors,
-	    (drv->nCursors+1)*sizeof(AG_Cursor))) == NULL) {
+	if ((curs = TryMalloc(sizeof(AG_Cursor))) == NULL) {
 		return (NULL);
 	}
-	drv->cursors = cursNew;
-	curs = &drv->cursors[drv->nCursors++];
-
-	if ((curs->data = TryMalloc(size)) == NULL ||
-	    (curs->mask = TryMalloc(size)) == NULL) {
+	if ((curs->data = TryMalloc(size)) == NULL) {
+		free(curs);
+		return (NULL);
+	}
+	if ((curs->mask = TryMalloc(size)) == NULL) {
 		goto fail;
 	}
 	memcpy(curs->data, data, size);
@@ -82,11 +81,13 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
 	if (AGDRIVER_CLASS(drv)->createCursor(drv, curs) == -1) {
 		goto fail;
 	}
+	TAILQ_INSERT_TAIL(&drv->cursors, curs, cursors);
+	drv->nCursors++;
 	return (curs);
 fail:
-	Free(curs->data);
-	Free(curs->mask);
-	drv->nCursors--;
+	free(curs->data);
+	free(curs->mask);
+	free(curs);
 	return (NULL);
 }
 
@@ -94,8 +95,9 @@ static __inline__ void
 FreeCursor(AG_Driver *drv, AG_Cursor *curs)
 {
 	AGDRIVER_CLASS(drv)->freeCursor(drv, curs);
-	Free(curs->data);
-	Free(curs->mask);
+	free(curs->data);
+	free(curs->mask);
+	free(curs);
 }
 
 /* Delete a registered cursor. */
@@ -103,22 +105,10 @@ void
 AG_CursorFree(void *obj, AG_Cursor *curs)
 {
 	AG_Driver *drv = obj;
-	int i;
 
-	for (i = 0; i < drv->nCursors; i++) {
-		if (&drv->cursors[i] == curs)
-			break;
-	}
-	if (i == drv->nCursors)
-		AG_FatalError("No such cursor");
-
-	FreeCursor(drv, curs);
-
-	if (i < drv->nCursors-1) {
-		memmove(&drv->cursors[i], &drv->cursors[i+1],
-		    (drv->nCursors-1)*sizeof(AG_Cursor));
-	}
+	TAILQ_REMOVE(&drv->cursors, curs, cursors);
 	drv->nCursors--;
+	FreeCursor(drv, curs);
 }
 
 /* Create a cursor from the contents of an XPM file. */
@@ -181,13 +171,16 @@ fail:
 void
 AG_FreeCursors(AG_Driver *drv)
 {
-	int i;
+	AG_Cursor *ac, *acNext;
 
-	for (i = 0; i < drv->nCursors; i++) {
-		FreeCursor(drv, &drv->cursors[i]);
+	for (ac = TAILQ_FIRST(&drv->cursors);
+	     ac != TAILQ_END(&drv->cursors);
+	     ac = acNext) {
+		acNext = TAILQ_NEXT(ac, cursors);
+		FreeCursor(drv, ac);
 	}
-	Free(drv->cursors);
-	drv->cursors = NULL;
+	TAILQ_INIT(&drv->cursors);
+	drv->nCursors = 0;
 }
 
 #ifdef AG_LEGACY
