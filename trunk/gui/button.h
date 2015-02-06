@@ -58,7 +58,7 @@ void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonInvertState(AG_Button *, int);
 void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);
 void	   AG_ButtonValign(AG_Button *, enum ag_text_valign);
-void	   AG_ButtonSurface(AG_Button *, AG_Surface *);
+void	   AG_ButtonSurface(AG_Button *, const AG_Surface *);
 void	   AG_ButtonSurfaceNODUP(AG_Button *, AG_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
 
