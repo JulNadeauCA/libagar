@@ -11,6 +11,7 @@
 #include <math.h>
 
 typedef struct {
+	AG_TestInstance _inherit;
 	AG_Object workerMgr;
 	int      nWorkers;
 	AG_Window *winParent;

@@ -15,7 +15,11 @@
 #include <agar/config/ag_debug.h>
 #include <agar/config/version.h>
 
-char textBuffer[30];
+typedef struct {
+	AG_TestInstance _inherit;
+	char textBuffer[30];
+	char *someText;
+} MyTestInstance;
 
 /* Example callback for combo-selected. */
 static void
@@ -45,6 +49,7 @@ SetWordWrap(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
+	MyTestInstance *ti = obj;
 	char path[AG_PATHNAME_MAX];
 	AG_Box *hBox, *vBox;
 	AG_Pane *pane;
@@ -67,9 +72,9 @@ TestGUI(void *obj, AG_Window *win)
 		char path[AG_PATHNAME_MAX];
 		AG_Label *lbl;
 
-		/* The Pixmap widget displays a raster surface. */
+		/* The Pixmap widget can display an image surface. */
 		if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path)))
-			AG_PixmapFromBMP(div1, 0, path);
+			AG_PixmapFromFile(div1, 0, path);
 	
 		/*
 		 * The Label widget provides a simple static or polled label
@@ -189,13 +194,13 @@ TestGUI(void *obj, AG_Window *win)
 	 * encoding.
 	 */
 	{
-		AG_Strlcpy(textBuffer, "Foo bar baz bezo", sizeof(textBuffer));
+		AG_Strlcpy(ti->textBuffer, "Foo bar baz bezo", sizeof(ti->textBuffer));
 
 		/* Create a textbox bound to a fixed-size buffer */
 		tbox = AG_TextboxNew(div1,
 		    AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 		    "Fixed text buffer: ");
-		AG_TextboxBindUTF8(tbox, textBuffer, sizeof(textBuffer));
+		AG_TextboxBindUTF8(tbox, ti->textBuffer, sizeof(ti->textBuffer));
 
 		/* Create a textbox bound to a built-in AG_Text element */
 		tbox = AG_TextboxNew(div1,
@@ -269,7 +274,7 @@ TestGUI(void *obj, AG_Window *win)
 
 		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
-		ntab = AG_NotebookAddTab(nb, "Some table", AG_BOX_VERT);
+		ntab = AG_NotebookAdd(nb, "Some table", AG_BOX_VERT);
 		{
 			float f;
 
@@ -294,9 +299,8 @@ TestGUI(void *obj, AG_Window *win)
 			}
 		}
 		
-		ntab = AG_NotebookAddTab(nb, "Some text", AG_BOX_VERT);
+		ntab = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
 		{
-			char *someText;
 			size_t size, bufSize;
 			FILE *f;
 
@@ -322,13 +326,13 @@ TestGUI(void *obj, AG_Window *win)
 				size = ftell(f);
 				fseek(f, 0, SEEK_SET);
 				bufSize = size+1024;
-				someText = AG_Malloc(bufSize);
-				(void)fread(someText, size, 1, f);
+				ti->someText = AG_Malloc(bufSize);
+				(void)fread(ti->someText, size, 1, f);
 				fclose(f);
-				someText[size] = '\0';
+				ti->someText[size] = '\0';
 			} else {
-				someText = AG_Strdup("Failed to load loss.txt");
-				bufSize = strlen(someText)+1;
+				ti->someText = AG_Strdup("Failed to load loss.txt");
+				bufSize = strlen(ti->someText)+1;
 			}
 	
 			/*
@@ -336,14 +340,14 @@ TestGUI(void *obj, AG_Window *win)
 			 * size argument to AG_TextboxBindUTF8() must include
 			 * space for the terminating NUL.
 			 */
-			AG_TextboxBindUTF8(tbox, someText, bufSize);
+			AG_TextboxBindUTF8(tbox, ti->someText, bufSize);
 	
 			/* Add a word wrapping control */
 			AG_CheckboxNewFn(ntab, 0, "Word wrapping",
 			    SetWordWrap, "%p", tbox);
 		}
 		
-		ntab = AG_NotebookAddTab(nb, "Empty tab", AG_BOX_VERT);
+		ntab = AG_NotebookAdd(nb, "Empty tab", AG_BOX_VERT);
 	}
 	return (0);
 }
@@ -351,6 +355,10 @@ TestGUI(void *obj, AG_Window *win)
 static int
 Init(void *obj)
 {
+	MyTestInstance *ti = obj;
+
+	ti->textBuffer[0] = '\0';
+	ti->someText = NULL;
 	DEV_InitSubsystem(0);
 	return (0);
 }
@@ -358,6 +366,9 @@ Init(void *obj)
 static void
 Destroy(void *obj)
 {
+	MyTestInstance *ti = obj;
+
+	Free(ti->someText);
 	DEV_DestroySubsystem();
 }
 
@@ -366,7 +377,7 @@ const AG_TestCase widgetsTest = {
 	N_("Display various standard Agar widgets"),
 	"1.5.0",
 	0,
-	sizeof(AG_TestInstance),
+	sizeof(MyTestInstance),
 	Init,
 	Destroy,
 	NULL,		/* test */

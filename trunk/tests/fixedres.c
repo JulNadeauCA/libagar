@@ -28,7 +28,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Create some background pixmap from an image file. */
 	if (!AG_ConfigFile("load-path", "menubg", "bmp", path, sizeof(path))) {
-		if ((px = AG_PixmapFromBMP(fx, 0, path)) == NULL) {
+		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
 			AG_LabelNewS(win, 0, AG_GetError());
 			fprintf(stderr, "%s\n", AG_GetError());
 			exit(1);

@@ -273,6 +273,9 @@ TestWindowClose(AG_Event *event)
 	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
 	AG_ObjectDetach(ti->win);
 	TAILQ_REMOVE(&tests, ti, instances);
+	if (ti->tc->destroy != NULL) {
+		ti->tc->destroy(ti);
+	}
 	free(ti);
 }
 

@@ -28,7 +28,7 @@ Fadein(AG_Event *event)
 	AG_WindowSetFadeIn(win, 1.0f, 0.1f);
 
 	if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path))) {
-		AG_PixmapFromBMP(win, 0, path);
+		AG_PixmapFromFile(win, 0, path);
 	}
 	AG_LabelNew(win, 0, "Testing AG_WINDOW_FADEIN");
 
@@ -45,9 +45,9 @@ TestGUI(void *obj, AG_Window *win)
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path))) {
-		AG_PixmapFromBMP(hb, 0, path);
-		AG_PixmapFromBMP(hb, 0, path);
-		AG_PixmapFromBMP(hb, 0, path);
+		AG_PixmapFromFile(hb, 0, path);
+		AG_PixmapFromFile(hb, 0, path);
+		AG_PixmapFromFile(hb, 0, path);
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{

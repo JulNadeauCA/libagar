@@ -194,7 +194,7 @@ static Uint32
 UpdateRotation(AG_Timer *to, AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
-
+	
 	if (++ti->spin > 360.0f) { ti->spin -= 360.0f; }
 	return (to->ival);
 }
@@ -290,7 +290,7 @@ TestGUI(void *obj, AG_Window *win)
 		nb = AG_NotebookNew(pa->div[0], AG_NOTEBOOK_EXPAND);
 
 		for (i = 0; i < 2; i++) {
-			ntab = AG_NotebookAddTab(nb, "Test tab", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nb, "Test tab", AG_BOX_VERT);
 		
 			/* Create the AG_GLView widget. */
 			glv = AG_GLViewNew(ntab, AG_GLVIEW_EXPAND);
@@ -305,23 +305,24 @@ TestGUI(void *obj, AG_Window *win)
 			AG_GLViewButtondownFn(glv, ButtonDown, "%p", ti);
 
 			/* Update the rotation 30 times per second. */
-			AG_AddTimerAuto(glv, 1000/30, UpdateRotation, "%p", ti);
+			AG_AddTimerAuto(win, 1000/30, 
+			    UpdateRotation, "%p", ti);
 		}
 
 		/* Edit ambient and diffuse color components. */
 		nbColor = AG_NotebookNew(pa->div[1], AG_NOTEBOOK_EXPAND);
 		{
-			ntab = AG_NotebookAddTab(nbColor, "Amb", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Amb", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
-			ntab = AG_NotebookAddTab(nbColor, "Dif", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Dif", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
-			ntab = AG_NotebookAddTab(nbColor, "Spe", AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "Spe", AG_BOX_VERT);
 			pal = AG_HSVPalNew(ntab,
 			    AG_HSVPAL_NOALPHA|AG_HSVPAL_EXPAND);
 			AG_BindFloat(pal, "RGBAv", ti->specular);
@@ -349,7 +350,7 @@ const AG_TestCase glviewTest = {
 #ifdef HAVE_OPENGL
 	sizeof(MyTestInstance),
 	Init,
-	NULL,		/* destroy */
+	NULL,
 	NULL,		/* test */
 	TestGUI,
 #else

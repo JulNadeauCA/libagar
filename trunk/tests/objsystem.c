@@ -13,6 +13,7 @@
 #include "objsystem_mammal.h"
 
 typedef struct {
+	AG_TestInstance _inherit;
 	AG_Object vfsRoot;			/* Our test VFS */
 } MyTestInstance;
 
