@@ -59,9 +59,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 
 	/* AG_LEGACY */
 	/* Build the format string */
-	if ((fs = lbl->fmt = TryMalloc(sizeof(AG_FmtString))) == NULL) {
-		AG_FatalError(NULL);
-	}
+	fs = lbl->fmt = Malloc(sizeof(AG_FmtString));
 	fs->s = Strdup(fmt);
 	fs->n = 0;
 	va_start(ap, fmt);
@@ -485,8 +483,10 @@ Destroy(void *p)
 {
 	AG_Label *lbl = p;
 
+	if (lbl->fmt != NULL) {
+		AG_FreeFmtString(lbl->fmt);
+	}
 	Free(lbl->text);
-	Free(lbl->fmt);
 	Free(lbl->pollBuf);
 
 	if (lbl->tCache != NULL)
