@@ -238,7 +238,9 @@ changes the set of accepted field-separator characters in
 .Pp
 The
 .Fn AG_TableSetPopup
-function creates a new popup menu associated with a row, column or cell.
+function creates a contextual
+.Xr AG_Menu 3
+item associated with a row, column or cell.
 If
 .Fa col
 is a valid index and
@@ -255,6 +257,9 @@ and
 .Fa row
 are both valid indices, the menu is shown when clicking on the given cell.
 If both indices are -1, the menu is shown when clicking on any cell.
+If a contextual menu already exists for the specified indices,
+.Fn AG_TableSetPopup
+returns a pointer to the existing menu item.
 .Pp
 The
 .Fn AG_TableSetRowClickFn ,
