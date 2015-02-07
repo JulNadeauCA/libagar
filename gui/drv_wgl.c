@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1118,7 +1118,6 @@ static int
 InitDefaultCursors(AG_DriverWGL *wgl)
 {
 	AG_Driver *drv = AGDRIVER(wgl);
-	AG_Cursor *ac;
 	const int nStockCursors = 1; /* TODO map */
 	int i;
 
