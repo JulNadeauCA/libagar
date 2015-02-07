@@ -450,7 +450,6 @@ Draw(void *obj)
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
-		AG_Surface *labelSu;
 
 		if (i++ < tl->rOffs) {
 			if (it->selected) {
@@ -502,7 +501,6 @@ Draw(void *obj)
 			AG_DrawLineH(tl, 1, tl->wRow-2, (y + tl->item_h),
 			    WCOLOR(tl,AG_LINE_COLOR));
 
-		labelSu = WSURFACE(tl,it->label);
 		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->icon_w + tl->wSpace,
 		    y + AG_TLIST_PADDING);
