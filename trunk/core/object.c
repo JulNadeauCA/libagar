@@ -501,17 +501,13 @@ AG_ObjectDetach(void *pChld)
 		goto out;
 	}
 
-	/*
-	 * Cancel any running timers. This behavior can be overridden with
-	 * the AG_TIMER_SURVIVE_DETACH flag.
-	 */
+	/* Cancel any running timer associated with the object. */
 	AG_LockTiming();
 	for (to = TAILQ_FIRST(&chld->timers);
 	     to != TAILQ_END(&chld->timers);
 	     to = toNext) {
 		toNext = TAILQ_NEXT(to, timers);
-		if ((to->flags & AG_TIMER_SURVIVE_DETACH) == 0)
-			AG_DelTimer(chld, to);
+		AG_DelTimer(chld, to);
 	}
 	AG_UnlockTiming();
 

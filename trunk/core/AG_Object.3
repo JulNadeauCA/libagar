@@ -215,9 +215,7 @@ Prior to detaching the object,
 .Fn AG_ObjectDetach
 cancels any scheduled
 .Xr AG_Timer 3
-callback (unless the timer has the
-.Dv AG_TIMER_SURVIVE_DETACH
-flag).
+callback.
 If
 .Fa parent
 is NULL,
