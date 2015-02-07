@@ -222,11 +222,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 	return AG_WindowNewNamedS(flags, s);
 }
 
-/*
- * Window attach function (we don't use the default Object attach function
- * because AG_WINDOW_KEEPBELOW windows have to be inserted at the head of
- * the list).
- */
+/* Special implementation of AG_ObjectAttach() for AG_Window. */
 static void
 Attach(AG_Event *event)
 {
@@ -283,14 +279,14 @@ Attach(AG_Event *event)
 		AG_WindowFocus(win);
 }
 
-/* Window detach function. */
+/* Special implementation of AG_ObjectDetach() for AG_Window. */
 static void
 Detach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = OBJECT(win)->parent, *odrv;
-	AG_Window *subwin;
-	AG_Window *owin;
+	AG_Window *owin, *subwin;
+	AG_Timer *to, *toNext;
 	
 #ifdef AG_DEBUG
 	if (drv == NULL || !AG_OfClass(drv, "AG_Driver:*"))
@@ -300,19 +296,31 @@ Detach(AG_Event *event)
 
 	/* Mark window detach in progress */
 	win->flags |= AG_WINDOW_DETACHING;
+
+	/* Cancel any planned focus change to this window. */
+	if (win == agWindowToFocus)
+		agWindowToFocus = NULL;
+
+	/* Cancel any running timer attached to the window. */
+	AG_LockTiming();
+	for (to = TAILQ_FIRST(&OBJECT(win)->timers);
+	     to != TAILQ_END(&OBJECT(win)->timers);
+	     to = toNext) {
+		toNext = TAILQ_NEXT(to, timers);
+		AG_DelTimer(win, to);
+	}
+	AG_UnlockTiming();
 	
-	/*
-	 * Remove all dependencies toward this window. Child windows are
-	 * reparented to NULL and sent a `window-close' event.
-	 */
+	if (win->visible)
+		AG_WindowHide(win);
+
 	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
 		AG_FOREACH_WINDOW(owin, odrv) {
 			if (owin == win) {
 				continue;
 			}
 			if (owin->parent == win) {
-				AG_PostEvent(NULL, owin, "window-close", NULL);
-				owin->parent = NULL;
+				AG_ObjectDetach(owin);
 			}
 			TAILQ_FOREACH(subwin, &owin->subwins, swins) {
 				if (subwin == win)
@@ -322,22 +330,17 @@ Detach(AG_Event *event)
 				TAILQ_REMOVE(&owin->subwins, subwin, swins);
 		}
 	}
-	
-	/* Cancel any planned focus change to this window. */
-	if (win == agWindowToFocus)
-		agWindowToFocus = NULL;
-	
-	if (win->visible)
-		AG_WindowHide(win);
-
-	/* Titlebar and icons are no longer safe to reference. */
-	if (win->tbar != NULL) { win->tbar = NULL; }
-	if (win->icon != NULL) { win->icon = NULL; }
+#if 1
+	goto out;
+#endif
+	/* if (AGDRIVER_SINGLE(drv)) { */
+		win->tbar = NULL;		/* No longer safe to use */
+		win->icon = NULL;
+	/* } */
 	
 	/*
-	 * Notify all child widgets of the window detach request. Widgets
-	 * acknowledge the request by resetting their drv and drvOps pointers
-	 * to NULL.
+	 * Notify all child widgets of the window detach request. Widgets will
+	 * acknowledge the request by resetting their drv and drvOps to NULL.
 	 */
 	AG_PostEvent(drv, win, "detached", NULL);
 
@@ -348,7 +351,7 @@ Detach(AG_Event *event)
 	 * event processing cycle.
 	 */
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
-
+out:
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -837,13 +840,10 @@ OnHide(AG_Event *event)
 			if (i < dsw->Lmodal->n)
 				AG_ListRemove(dsw->Lmodal, i);
 		}
-
-		/* Update the background. */
-		/* XXX XXX XXX no need for the fill rect? */
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
+			/* Update the background. */
 			AG_DrawRectFilled(win,
-			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)),
-			    dsw->bgColor);
+			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)), dsw->bgColor);
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 				AGDRIVER_CLASS(drv)->updateRegion(drv,
 				    AG_RECT(WIDGET(win)->x, WIDGET(win)->y,
@@ -937,7 +937,8 @@ AG_WindowHide(AG_Window *win)
 {
 	AG_ObjectLock(win);
 	if (win->visible) {
-		if (win->flags & AG_WINDOW_FADEOUT) {
+		if ((win->flags & AG_WINDOW_FADEOUT) &&
+		   !(win->flags & AG_WINDOW_DETACHING)) {
 			AG_AddTimer(win, &win->fadeTo,
 			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
 			    FadeTimeout, "%i", -1);
