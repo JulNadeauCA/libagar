@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,9 @@ const char *agWindowWmTypeNames[] = {
 	"_NET_WM_WINDOW_TYPE_COMBO",
 	"_NET_WM_WINDOW_TYPE_DND"
 };
+
+/* #define DEBUG_VISIBILITY */
+/* #define DEBUG_FOCUS */
 
 void
 AG_InitWindowSystem(void)
@@ -285,7 +288,7 @@ Detach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = OBJECT(win)->parent, *odrv;
-	AG_Window *owin, *subwin;
+	AG_Window *other, *subwin;
 	AG_Timer *to, *toNext;
 	
 #ifdef AG_DEBUG
@@ -297,10 +300,6 @@ Detach(AG_Event *event)
 	/* Mark window detach in progress */
 	win->flags |= AG_WINDOW_DETACHING;
 
-	/* Cancel any planned focus change to this window. */
-	if (win == agWindowToFocus)
-		agWindowToFocus = NULL;
-
 	/* Cancel any running timer attached to the window. */
 	AG_LockTiming();
 	for (to = TAILQ_FIRST(&OBJECT(win)->timers);
@@ -310,48 +309,40 @@ Detach(AG_Event *event)
 		AG_DelTimer(win, to);
 	}
 	AG_UnlockTiming();
-	
-	if (win->visible)
-		AG_WindowHide(win);
 
+	/* Implicitely detach window dependencies. */
 	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
-		AG_FOREACH_WINDOW(owin, odrv) {
-			if (owin == win) {
+		AG_FOREACH_WINDOW(other, odrv) {
+			if (other == win) {
 				continue;
 			}
-			if (owin->parent == win) {
-				AG_ObjectDetach(owin);
-			}
-			TAILQ_FOREACH(subwin, &owin->subwins, swins) {
+			AG_ObjectLock(other);
+			TAILQ_FOREACH(subwin, &other->subwins, swins) {
 				if (subwin == win)
 					break;
 			}
-			if (subwin != NULL)
-				TAILQ_REMOVE(&owin->subwins, subwin, swins);
+			if (subwin != NULL) {
+				TAILQ_REMOVE(&other->subwins, subwin, swins);
+			}
+			if (other->pinnedTo == win) {
+				AG_WindowUnpin(other);
+			}
+			if (other->parent == win ||
+			    other->transientFor == win) {
+				AG_ObjectDetach(other);
+			}
+			AG_ObjectUnlock(other);
 		}
 	}
-#if 1
-	goto out;
-#endif
-	/* if (AGDRIVER_SINGLE(drv)) { */
-		win->tbar = NULL;		/* No longer safe to use */
-		win->icon = NULL;
-	/* } */
-	
-	/*
-	 * Notify all child widgets of the window detach request. Widgets will
-	 * acknowledge the request by resetting their drv and drvOps to NULL.
-	 */
-	AG_PostEvent(drv, win, "detached", NULL);
 
  	/*
-	 * For a window detach operation to be free-threaded and safe in event
-	 * context, the window list cannot be directly altered. We place the
-	 * window in a detach queue which will be processed at the end of the
-	 * event processing cycle.
+	 * For the AG_ObjectDetach() call to be safe in (free-threaded) event
+	 * context, we must defer the actual window hide / detach operation
+	 * until the end of the current event processing cycle.
 	 */
+	TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
-out:
+
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -377,6 +368,8 @@ FadeTimeout(AG_Timer *to, AG_Event *event)
 			return (to->ival);
 		} else {
 			AG_WindowSetOpacity(win, 1.0);
+
+			/* Defer operation until AG_WindowProcessQueued(). */
 			AG_LockVFS(&agDrivers);
 			TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
 			AG_UnlockVFS(&agDrivers);
@@ -707,6 +700,12 @@ OnShow(AG_Event *event)
 	Uint mwFlags = 0;
 	AG_Variable V;
 
+#ifdef DEBUG_VISIBILITY
+	Debug(win, "Window \"%s\" now visible\n", win->caption);
+#endif
+	win->visible = 1;
+	WIDGET(win)->flags |= AG_WIDGET_VISIBLE;
+
 	/* Compile the globally inheritable style attributes. */
 	AG_WidgetCompileStyle(win);
 
@@ -750,15 +749,14 @@ OnShow(AG_Event *event)
 	
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		if (win->flags & AG_WINDOW_MODAL) {
-			/* Use the per-driver modal window stack. */
+		if (win->flags & AG_WINDOW_MODAL) {	/* Per-driver stack */
 			AG_InitPointer(&V, win);
 			AG_ListAppend(AGDRIVER_SW(drv)->Lmodal, &V);
 		}
 		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
-		if (win->flags & AG_WINDOW_MODAL) {
+		if (win->flags & AG_WINDOW_MODAL) {	/* Global stack */
 			AG_InitPointer(&V, win);
 			AG_ListAppend(agModalWindows, &V);
 		}
@@ -783,15 +781,15 @@ OnShow(AG_Event *event)
 		}
 		break;
 	}
-
-	if (!(win->flags & AG_WINDOW_DENYFOCUS))
-		AG_WindowFocus(win);
 	
-	/* Notify that the window is now visible. */
+	/* Notify widgets that the window is now visible. */
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 
-	/* Assume we gained focus. XXX */
-	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+	/* Implicit focus change. */
+	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
+		agWindowFocused = win;
+		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+	}
 
 	/* Mark for redraw */
 	win->dirty = 1;
@@ -813,16 +811,23 @@ OnHide(AG_Event *event)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
 	int i;
-
-	/* Cancel any pending redraw. */
-	win->dirty = 0;
 	
-	/* Disallow cursor changes. */
+#ifdef DEBUG_VISIBILITY
+	Debug(win, "Window \"%s\" now hidden\n", win->caption);
+#endif
+	win->visible = 0;
+	WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
+	win->dirty = 0;
 	win->flags |= AG_WINDOW_NOCURSORCHG;
-
-	/* Cancel any pending focus change to this window. */
-	if (win == agWindowToFocus)
+	
+	/* Cancel focus state or any focus change requests. */
+	if (win == agWindowToFocus) {
 		agWindowToFocus = NULL;
+	}
+	if (win == agWindowFocused) {
+		AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+		agWindowFocused = NULL;
+	}
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
@@ -831,8 +836,7 @@ OnHide(AG_Event *event)
 		if (OBJECT(drv)->parent == NULL)
 			break;
 
-		if (win->flags & AG_WINDOW_MODAL) {
-			/* Remove from per-driver modal window stack. */
+		if (win->flags & AG_WINDOW_MODAL) {	/* Per-driver stack */
 			for (i = 0; i < dsw->Lmodal->n; i++) {
 				if (dsw->Lmodal->v[i].data.p == win)
 					break;
@@ -841,7 +845,6 @@ OnHide(AG_Event *event)
 				AG_ListRemove(dsw->Lmodal, i);
 		}
 		if (AGDRIVER_CLASS(drv)->type == AG_FRAMEBUFFER) {
-			/* Update the background. */
 			AG_DrawRectFilled(win,
 			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)), dsw->bgColor);
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
@@ -851,8 +854,7 @@ OnHide(AG_Event *event)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if (win->flags & AG_WINDOW_MODAL) {
-			/* Remove from global modal window stack. */
+		if (win->flags & AG_WINDOW_MODAL) {	/* Global stack */
 			for (i = 0; i < agModalWindows->n; i++) {
 				if (agModalWindows->v[i].data.p == win)
 					break;
@@ -866,6 +868,8 @@ OnHide(AG_Event *event)
 		}
 		break;
 	}
+	
+	/* Notify widgets that the window is now hidden. */
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
 }
 
@@ -900,19 +904,30 @@ WidgetLostFocus(AG_Widget *wid)
 static void
 OnFocusGain(AG_Event *event)
 {
-	WidgetGainFocus(WIDGET(AG_SELF()));
+	AG_Window *win = AG_SELF();
+
+#ifdef DEBUG_FOCUS
+	Debug(win, "Window \"%s\" gained focus\n", win->caption);
+#endif
+	WidgetGainFocus(WIDGET(win));
 }
 
 static void
 OnFocusLoss(AG_Event *event)
 {
-	WidgetLostFocus(WIDGET(AG_SELF()));
+	AG_Window *win = AG_SELF();
+
+#ifdef DEBUG_FOCUS
+	Debug(win, "Window \"%s\" lost focus\n", win->caption);
+#endif
+	WidgetLostFocus(WIDGET(win));
 }
 
 /* Make a window visible to the user. */
 void
 AG_WindowShow(AG_Window *win)
 {
+	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
 	if (!win->visible) {
 #ifdef AG_THREADS
@@ -924,40 +939,44 @@ AG_WindowShow(AG_Window *win)
 #endif
 		{
 			AG_PostEvent(NULL, win, "widget-shown", NULL);
-			win->visible = 1;
-			WIDGET(win)->flags |= AG_WIDGET_VISIBLE;
 		}
 	}
 	AG_ObjectUnlock(win);
+	AG_UnlockVFS(&agDrivers);
 }
 
 /* Make a window invisible to the user. */
 void
 AG_WindowHide(AG_Window *win)
 {
+	AG_LockVFS(&agDrivers);
 	AG_ObjectLock(win);
-	if (win->visible) {
-		if ((win->flags & AG_WINDOW_FADEOUT) &&
-		   !(win->flags & AG_WINDOW_DETACHING)) {
-			AG_AddTimer(win, &win->fadeTo,
-			    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
-			    FadeTimeout, "%i", -1);
-		} else {
+
+	if (!win->visible) {
+		goto out;
+	}
+	if ((win->flags & AG_WINDOW_FADEOUT) &&
+	   !(win->flags & AG_WINDOW_DETACHING)) {
+		AG_AddTimer(win, &win->fadeTo,
+		    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
+		    FadeTimeout, "%i", -1);
+	} else {
 #ifdef AG_THREADS
-			if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
-				AG_LockVFS(&agDrivers);
-				TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
-				AG_UnlockVFS(&agDrivers);
-			} else
+		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
+			AG_LockVFS(&agDrivers);
+			TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
+			AG_UnlockVFS(&agDrivers);
+		} else
 #endif
-			{
-				AG_PostEvent(NULL, win, "widget-hidden", NULL);
-				win->visible = 0;
-				WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
-			}
+		{
+			AG_PostEvent(NULL, win, "widget-hidden", NULL);
+			win->visible = 0;
+			WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
 		}
 	}
+out:
 	AG_ObjectUnlock(win);
+	AG_UnlockVFS(&agDrivers);
 }
 
 /* Build an ordered list of the focusable widgets in a window. */
@@ -1040,11 +1059,8 @@ out:
 }
 
 /*
- * Give focus to a window. For single-window drivers, the operation only takes
- * effect at the end of the current event cycle. For multiple-window drivers,
- * the change takes effect immediately. If the window is not attached to a
- * driver, the operation is deferred until the next attach. If NULL is given,
- * cancel any planned focus change.
+ * Give input focus to a window. The actual focus change will take effect at
+ * the end of the current event cycle.
  */
 void
 AG_WindowFocus(AG_Window *win)
@@ -1107,8 +1123,8 @@ out:
 }
 
 /*
- * Place focus on a Window following a click at the given coordinates,
- * in the video context of a specified single-display driver.
+ * Focus the window at specified display coordinates x,y
+ * (single-window drivers only).
  *
  * Returns 1 if the focus state has changed as a result.
  */
@@ -1117,8 +1133,11 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 {
 	AG_Window *win;
 
+	AG_LockVFS(&agDrivers);
+
 	AG_ASSERT_CLASS(dsw, "AG_Driver:AG_DriverSw:*");
 	agWindowToFocus = NULL;
+
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		AG_ObjectLock(win);
 		if (!win->visible ||
@@ -1129,8 +1148,10 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 		}
 		agWindowToFocus = win;
 		AG_ObjectUnlock(win);
+		AG_UnlockVFS(&agDrivers);
 		return (1);
 	}
+	AG_UnlockVFS(&agDrivers);
 	return (0);
 }
 
@@ -1888,43 +1909,40 @@ AG_WindowProcessFocusChange(void)
 	agWindowToFocus = NULL;
 }
 
-/* Make windows on the show queue visible. */
+/*
+ * Make windows on the show queue visible.
+ * The agDrivers VFS must be locked.
+ */
 void
 AG_WindowProcessShowQueue(void)
 {
-	AG_Window *win, *winNext;
+	AG_Window *win;
 
-	AG_LockVFS(&agDrivers);
-	for (win = TAILQ_FIRST(&agWindowShowQ);
-	     win != TAILQ_END(&agWindowShowQ);
-	     win = winNext) {
-		winNext = TAILQ_NEXT(win, visibility);
+	TAILQ_FOREACH(win, &agWindowShowQ, visibility) {
 		AG_PostEvent(NULL, win, "widget-shown", NULL);
-		win->visible = 1;
 	}
 	TAILQ_INIT(&agWindowShowQ);
-	AG_UnlockVFS(&agDrivers);
 }
 
-/* Make windows on the hide queue invisible. */
+/*
+ * Make windows on the hide queue invisible.
+ * The agDrivers VFS must be locked.
+ */
 void
 AG_WindowProcessHideQueue(void)
 {
-	AG_Window *win, *winNext;
+	AG_Window *win;
 
-	AG_LockVFS(&agDrivers);
-	for (win = TAILQ_FIRST(&agWindowHideQ);
-	     win != TAILQ_END(&agWindowHideQ);
-	     win = winNext) {
-		winNext = TAILQ_NEXT(win, visibility);
-		win->visible = 0;
+	TAILQ_FOREACH(win, &agWindowHideQ, visibility) {
 		AG_PostEvent(NULL, win, "widget-hidden", NULL);
 	}
 	TAILQ_INIT(&agWindowHideQ);
-	AG_UnlockVFS(&agDrivers);
 }
 
-/* Close and destroy windows on the detach queue. */
+/*
+ * Close and destroy windows on the detach queue.
+ * The agDrivers VFS must be locked.
+ */
 void
 AG_WindowProcessDetachQueue(void)
 {
@@ -1932,38 +1950,39 @@ AG_WindowProcessDetachQueue(void)
 	AG_Driver *drv;
 	int closedMain = 0;
 
-	AG_LockVFS(&agDrivers);
 	for (win = TAILQ_FIRST(&agWindowDetachQ);
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, detach);
+		drv = WIDGET(win)->drv;
 
-		/* Cancel any planned focus change to this window. */
-		if (win == agWindowFocused)
-			agWindowFocused = NULL;
+#ifdef AG_DEBUG
+		if (win->visible) { AG_FatalError("Detach on visible window"); }
+#endif
+
+		/* Notify all widgets of the window detach. */
+		AG_PostEvent(drv, win, "detached", NULL);
 
 		/* Release the cursor areas and associated cursors. */
 		AG_UnmapAllCursors(win, NULL);
-
-		/* Close the associated window in MW mode. */
-		drv = WIDGET(win)->drv;
-		if (AGDRIVER_MULTIPLE(drv) &&
-		    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
-			AGDRIVER_MW_CLASS(drv)->closeWindow(win);
-			AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
+	
+		if (AGDRIVER_MULTIPLE(drv)) {
+			if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+				AGDRIVER_MW_CLASS(drv)->closeWindow(win);
+				AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
+			}
+		} else {
+			win->tbar = NULL;	/* No longer safe to use */
+			win->icon = NULL;
 		}
 
-		/* Remove the Window detach handler and free the object. */
+		/* We can now perform the standard AG_ObjectDetach(). */
 		AG_ObjectSetDetachFn(win, NULL, NULL);
 		AG_ObjectDetach(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
-			/*
-			 * In multiple-window mode, free the driver instance
-			 * associated with the window.
-			 */
 			AG_UnlockVFS(&agDrivers);
-			AG_DriverClose(drv);
+			AG_DriverClose(drv);	/* Free this driver instance */
 			AG_LockVFS(&agDrivers);
 		}
 		if (win->flags & AG_WINDOW_MAIN) {
@@ -1986,7 +2005,6 @@ AG_WindowProcessDetachQueue(void)
 			AG_Terminate(0);
 		}
 	}
-	AG_UnlockVFS(&agDrivers);
 }
 
 int
