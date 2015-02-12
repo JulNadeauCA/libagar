@@ -859,8 +859,10 @@ WGL_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
-		agWindowFocused = dev->win;
-		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		if (dev->win != agWindowFocused) {
+			agWindowFocused = dev->win;
+			AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
 		if (dev->win == agWindowFocused) {
