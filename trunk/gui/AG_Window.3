@@ -43,18 +43,23 @@ object describes an Agar window, the base container for Agar widgets.
 The
 .Xr AG_Widget 3
 objects form a tree structure attached to a parent
-.Nm ,
-and the windows themselves are attached to some parent
+.Nm .
+Agar windows are attached to some parent
 .Xr AG_Driver 3
-instance.
-The parent driver provides an interface to some underlying window system.
+which provides a bridge between the Agar GUI system and the user's preferred
+graphics platform / backend.
 .Pp
-Widgets can be attached directly to the
+Widgets can be attached to the
 .Nm
-object, in which case
-.Nm
-will behave like a standard, vertical
-.Xr AG_Box 3 .
+object itself (it will behave like a standard, vertical
+.Xr AG_Box 3 ) .
+Agar's standard toolkit includes a variety of other container widgets, such as
+.Xr AG_Box 3 ,
+.Xr AG_Fixed 3 ,
+.Xr AG_Pane 3 ,
+.Xr AG_Notebook 3
+and
+.Xr AG_Scrollview 3 .
 .Pp
 The dimensions of new Agar windows is best determined automatically (using
 recursive widget size requests which take resolution, font sizes, etc. into
@@ -63,16 +68,14 @@ Agar widgets are expected to set a proper default size whenever
 it can be determined automatically, or otherwise provide a suitable
 application-level API for "size hints".
 .Pp
-In addition to
-.Nm ,
-other widgets in the standard toolkit which are solely designed as
-containers include
-.Xr AG_Box 3 ,
-.Xr AG_Fixed 3 ,
-.Xr AG_Pane 3 ,
-.Xr AG_Notebook 3
-and
-.Xr AG_Scrollview 3 .
+Newly created windows (as returned by
+.Fn AG_WindowNew )
+must be made visible using
+.Fn AG_WindowShow .
+To close a window and free its allocated resources, one call to
+.Xr AG_ObjectDetach 3
+is sufficient (Agar will defer the actual destruction of the window
+until it becomes safe to do so).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -433,27 +436,35 @@ does the opposite.
 .Pp
 The
 .Fn AG_WindowAttach
-function makes
+function registers
 .Fa winChld
-a logical child window of
-.Fa winParent ,
-such that whenever the parent window is destroyed, Agar will automatically
-destroy the child window as well.
-Logical child windows also inherit the style properties from their parent.
-.Fn AG_WindowDetach
-detaches the window from its logical parent window.
-.Pp
+as a child window dependent of
+.Fa winParent .
+Detaching the parent window (using
+.Xr AG_ObjectDetach 3 )
+will cause dependent child windows to be detached implicitely.
+Child windows also inherit the style properties from their parent.
 The
+.Fn AG_WindowDetach
+function detaches the window from its parent window.
+.Pp
 .Fn AG_WindowMakeTransient
-function makes
+registers
 .Fa winTrans
-a "transient" window for
+as a dependent and transient window for
 .Fa winParent .
 The effects of transient window state are dependent on the underlying
-window manager.
-For example, under Motif, transient windows have no titlebar buttons.
-Under TWM, transient windows are created without requesting the initial
-size from the user.
+window system and window manager.
+Under Motif, transient windows have no titlebar buttons.
+Under TWM, transient windows are created without requesting that the user
+select an initial geometry.
+Detaching
+.Fa winParent
+(using
+.Xr AG_ObjectDetach 3 )
+will cause
+.Fa winTrans
+to be detached implicitely.
 .Pp
 The
 .Fn AG_WindowPin
@@ -689,13 +700,13 @@ Suggested minimum window geometyry in pixels.
 Read-only (use
 .Fn AG_WindowSetMinSize ) .
 .It Ft AG_Window *parent
-Pointer to "logical" parent window, or NULL if there isn't any.
+Pointer to parent window, or NULL if there isn't any.
 Read-only (see
 .Fn AG_WindowAttach
 and
 .Fn AG_WindowDetach ) .
 .It Ft TAILQ subwins
-List of "logical" child windows.
+List of dependent child windows.
 Read-only (see
 .Fn AG_WindowAttach
 and
