@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -666,8 +666,6 @@ GLX_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 #ifdef DEBUG_XEVENTS
 		Debug(win, "FocusIn\n");
 #endif
-		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
 		dev->type = AG_DRIVER_FOCUS_IN;
 		dev->win = win;
 		break;
@@ -678,10 +676,6 @@ GLX_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 #ifdef DEBUG_XEVENTS
 		Debug(win, "FocusOut\n");
 #endif
-		if (agWindowFocused == win) {
-			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-			agWindowFocused = NULL;
-		}
 		dev->type = AG_DRIVER_FOCUS_OUT;
 		dev->win = win;
 		break;
@@ -806,11 +800,13 @@ GLX_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 		AG_PostEvent(NULL, dev->win, "window-leave", NULL);
 		break;
 	case AG_DRIVER_FOCUS_IN:
-		agWindowFocused = dev->win;
-		AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		if (agWindowFocused != dev->win) {
+			agWindowFocused = dev->win;
+			AG_PostEvent(NULL, dev->win, "window-gainfocus", NULL);
+		}
 		break;
 	case AG_DRIVER_FOCUS_OUT:
-		if (dev->win == agWindowFocused) {
+		if (agWindowFocused == dev->win) {
 			AG_PostEvent(NULL, dev->win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
@@ -858,7 +854,7 @@ GLX_RenderWindow(AG_Window *win)
 	AG_GL_Context *gl = &glx->gl;
 	AG_Color c = WCOLOR(win,0);
 
-	if (!glx->w)
+	if (!glx->w)		/* XXX is this needed? */
 		return;
 
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
@@ -1423,7 +1419,7 @@ GLX_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-
+	
 	XFree(xvi);
 	return (0);
 fail_ctx:
