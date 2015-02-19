@@ -72,7 +72,7 @@ typedef struct ag_driver_class {
 	void (*pushBlendingMode)(void *drv, AG_BlendFn srcFn, AG_BlendFn dstFn);
 	void (*popBlendingMode)(void *drv);
 	/* Hardware cursor operations */
-	int  (*createCursor)(void *drv, struct ag_cursor *curs);
+	struct ag_cursor *(*createCursor)(void *drv, Uint w, Uint h, const Uint8 *data, const Uint8 *mask, int xHot, int yHot);
 	void (*freeCursor)(void *drv, struct ag_cursor *curs);
 	int  (*setCursor)(void *drv, struct ag_cursor *curs);
 	void (*unsetCursor)(void *drv);

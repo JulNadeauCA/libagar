@@ -484,10 +484,30 @@ AG_SDL_SetRefreshRate(void *obj, int fps)
 }
 
 /* Create a cursor. */
-int
-AG_SDL_CreateCursor(void *obj, AG_Cursor *ac)
+AG_Cursor *
+AG_SDL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
+    const Uint8 *mask, int xHot, int yHot)
 {
+	AG_Cursor *ac;
 	SDL_Cursor *sc;
+	Uint size = w*h;
+	
+	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		return (NULL);
+	}
+	if ((ac->data = TryMalloc(size)) == NULL) {
+		goto fail;
+	}
+	if ((ac->mask = TryMalloc(size)) == NULL) {
+		free(ac->data);
+		goto fail;
+	}
+	memcpy(ac->data, data, size);
+	memcpy(ac->mask, mask, size);
+	ac->w = w;
+	ac->h = h;
+	ac->xHot = xHot;
+	ac->yHot = yHot;
 
 	sc = SDL_CreateCursor(ac->data, ac->mask,
 	    ac->w, ac->h,
@@ -497,7 +517,12 @@ AG_SDL_CreateCursor(void *obj, AG_Cursor *ac)
 		return (-1);
 	}
 	ac->p = (void *)sc;
-	return (0);
+	return (ac);
+fail:
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
+	return (NULL);
 }
 
 /* Release a cursor. */
@@ -506,11 +531,13 @@ AG_SDL_FreeCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
 
-	if (ac == TAILQ_FIRST(&drv->cursors))
-		return;
+	if (ac == drv->activeCursor)
+		drv->activeCursor = NULL;
 
 	SDL_FreeCursor((SDL_Cursor *)(ac->p));
-	ac->p = NULL;
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
 }
 
 /* Retrieve cursor visibility status. */
