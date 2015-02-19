@@ -69,9 +69,6 @@ const char *agWindowWmTypeNames[] = {
 	"_NET_WM_WINDOW_TYPE_DND"
 };
 
-/* #define DEBUG_VISIBILITY */
-/* #define DEBUG_FOCUS */
-
 void
 AG_InitWindowSystem(void)
 {
@@ -342,7 +339,7 @@ Detach(AG_Event *event)
 	 */
 	TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
-
+	
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -700,9 +697,6 @@ OnShow(AG_Event *event)
 	Uint mwFlags = 0;
 	AG_Variable V;
 
-#ifdef DEBUG_VISIBILITY
-	Debug(win, "Window \"%s\" now visible\n", win->caption);
-#endif
 	win->visible = 1;
 	WIDGET(win)->flags |= AG_WIDGET_VISIBLE;
 
@@ -812,9 +806,6 @@ OnHide(AG_Event *event)
 	AG_DriverSw *dsw;
 	int i;
 	
-#ifdef DEBUG_VISIBILITY
-	Debug(win, "Window \"%s\" now hidden\n", win->caption);
-#endif
 	win->visible = 0;
 	WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
 	win->dirty = 0;
@@ -906,9 +897,6 @@ OnFocusGain(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
-#ifdef DEBUG_FOCUS
-	Debug(win, "Window \"%s\" gained focus\n", win->caption);
-#endif
 	WidgetGainFocus(WIDGET(win));
 }
 
@@ -917,9 +905,6 @@ OnFocusLoss(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
-#ifdef DEBUG_FOCUS
-	Debug(win, "Window \"%s\" lost focus\n", win->caption);
-#endif
 	WidgetLostFocus(WIDGET(win));
 }
 
@@ -1894,7 +1879,7 @@ void
 AG_WindowProcessFocusChange(void)
 {
 	AG_Driver *drv;
-
+	
 	switch (agDriverOps->wm) {
 	case AG_WM_SINGLE:
 		AG_WM_CommitWindowFocus(agWindowToFocus);
@@ -1955,11 +1940,7 @@ AG_WindowProcessDetachQueue(void)
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, detach);
 		drv = WIDGET(win)->drv;
-
-#ifdef AG_DEBUG
-		if (win->visible) { AG_FatalError("Detach on visible window"); }
-#endif
-
+	
 		/* Notify all widgets of the window detach. */
 		AG_PostEvent(drv, win, "detached", NULL);
 
@@ -1988,6 +1969,7 @@ AG_WindowProcessDetachQueue(void)
 		if (win->flags & AG_WINDOW_MAIN) {
 			closedMain++;
 		}
+		
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
