@@ -27,14 +27,14 @@ TestGUI(void *obj, AG_Window *win)
 	/* Bind to a C string in US-ASCII */
 	AG_Strlcpy(ti->myASCII, "ASCII!", sizeof(ti->myASCII));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "ASCII Buffer: \n(%lu bytes)", sizeof(ti->myASCII));
+	    "ASCII Buffer: \n(%lu bytes)", (long unsigned)sizeof(ti->myASCII));
 	AG_TextboxBindASCII(tb, ti->myASCII, sizeof(ti->myASCII));
 	AG_TextboxSizeHintLines(tb, 2);
 
 	/* Bind to a C string in UTF-8 */
 	AG_Strlcpy(ti->myUTF, "\xc3\x85ngstrom!", sizeof(ti->myUTF));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "UTF-8 Buffer: \n(%lu bytes)", sizeof(ti->myUTF));
+	    "UTF-8 Buffer: \n(%lu bytes)", (long unsigned)sizeof(ti->myUTF));
 	AG_TextboxBindUTF8(tb, ti->myUTF, sizeof(ti->myUTF));
 	AG_TextboxSizeHintLines(tb, 2);
 
@@ -42,7 +42,7 @@ TestGUI(void *obj, AG_Window *win)
 #ifdef HAVE_ICONV
 	AG_Strlcpy(ti->myLat1, "Overv\xE5knign for feils\xF8king!", sizeof(ti->myLat1));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
-	    "LATIN-1 Buffer: \n(%lu bytes)", sizeof(ti->myLat1));
+	    "LATIN-1 Buffer: \n(%lu bytes)", (long unsigned)sizeof(ti->myLat1));
 	AG_TextboxBindEncoded(tb, "ISO-8859-1", ti->myLat1, sizeof(ti->myLat1));
 	AG_TextboxSizeHintLines(tb, 2);
 	AG_LabelNewS(win, 0, "iconv support: YES");
