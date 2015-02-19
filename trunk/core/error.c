@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,15 @@ AG_ThreadKey agErrorMsgKey;
 AG_ThreadKey agErrorCodeKey;
 #endif
 
+/* Redirect Verbose() output to "foo-out.txt" file */
+/* #define VERBOSE_TO_FILE */
+
+/* Redirect Debug() output to "foo-debug.txt" file */
+/* #define DEBUG_TO_FILE */
+
+/* Use AttachConsole() on Windows */
+/* #define USE_WIN32_CONSOLE */
+
 int agDebugLvl = 1;			/* Default debug level */
 
 static void (*agErrorCallback)(const char *) = NULL;
@@ -69,12 +78,19 @@ AG_InitErrorSubsystem(void)
 	AG_ThreadKeySet(agErrorMsgKey, NULL);
 	AG_ThreadKeySet(agErrorCodeKey, NULL);
 #endif
+
+#if defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+	AttachConsole(ATTACH_PARENT_PROCESS);
+#endif
 	return (0);
 }
 
 void
 AG_DestroyErrorSubsystem(void)
 {
+#if defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+	FreeConsole();
+#endif
 	Free(agErrorMsg);
 	agErrorMsg = NULL;
 	agErrorCode = AG_EUNDEFINED;
@@ -121,7 +137,7 @@ AG_GetError(void)
 const char *
 AG_Strerror(int error) 
 {
-#if defined(_WIN32) && !defined (_XBOX)
+#if defined(_WIN32) && !defined(_XBOX)
 	static char *str = NULL;
 	char *p;
 
@@ -193,7 +209,8 @@ AG_Debug(void *p, const char *fmt, ...)
 	}
 	if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
 		va_start(args, fmt);
-# ifdef _WIN32
+# if defined(DEBUG_TO_FILE)
+		/* Redirect output to foo-debug.txt */
 		{
 			char path[AG_FILENAME_MAX];
 			FILE *f;
@@ -205,8 +222,33 @@ AG_Debug(void *p, const char *fmt, ...)
 				Strlcpy(path, "debug.txt", sizeof(path));
 			}
 			if ((f = fopen(path, "a")) != NULL) {
+				if (obj != NULL) {
+					if (OBJECT(obj)->name[0] != '\0') {
+						fprintf(f, "%s: ", OBJECT(obj)->name);
+					} else {
+						fprintf(f, "<%p>: ", obj);
+					}
+				}
 				vfprintf(f, fmt, args);
 				fclose(f);
+			}
+		}
+# elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+		{
+			HANDLE cons;
+			char *buf;
+		
+			cons = GetStdHandle(STD_ERROR_HANDLE);
+			if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
+				if (obj != NULL &&
+				    OBJECT(obj)->name[0] != '\0') {
+					WriteConsole(cons, OBJECT(obj)->name,
+					    strlen(OBJECT(obj)->name), NULL, NULL);
+					WriteConsole(cons, ": ", 2, NULL, NULL);
+				}
+				Vasprintf(&buf, fmt, args);
+				WriteConsole(cons, buf, strlen(buf), NULL, NULL);
+				free(buf);
 			}
 		}
 # else /* _WIN32 */
@@ -218,7 +260,7 @@ AG_Debug(void *p, const char *fmt, ...)
 			}
 		}
 		vprintf(fmt, args);
-# endif /* !_WIN32 */
+#endif
 		va_end(args);
 	}
 #endif /* AG_DEBUG */
@@ -246,7 +288,8 @@ AG_Verbose(const char *fmt, ...)
 	}
 
 	va_start(args, fmt);
-#ifdef _WIN32
+#if defined(VERBOSE_TO_FILE)
+	/* Redirect output to foo-out.txt */
 	{
 		char path[AG_FILENAME_MAX];
 		FILE *f;
@@ -260,6 +303,18 @@ AG_Verbose(const char *fmt, ...)
 		if ((f = fopen(path, "a")) != NULL) {
 			vfprintf(f, fmt, args);
 			fclose(f);
+		}
+	}
+#elif defined(_WIN32) && defined(USE_WIN32_CONSOLE)
+	{
+		HANDLE cons;
+		char *buf;
+		
+		cons = GetStdHandle(STD_ERROR_HANDLE);
+		if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
+			Vasprintf(&buf, fmt, args);
+			WriteConsole(cons, buf, strlen(buf), NULL, NULL);
+			free(buf);
 		}
 	}
 #else
