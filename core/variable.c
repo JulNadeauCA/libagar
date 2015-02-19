@@ -241,6 +241,8 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 #ifdef HAVE_64BIT
 	case AG_VARIABLE_SINT64:	Snprintf(s, len, "%lld", (long long)V->data.s64);		break;
 	case AG_VARIABLE_P_SINT64:	Snprintf(s, len, "%lld", (long long)*(Sint64 *)V->data.p);	break;
+	case AG_VARIABLE_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)V->data.u64);		break;
+	case AG_VARIABLE_P_UINT64:	Snprintf(s, len, "%llu", (unsigned long long)*(Sint64 *)V->data.p);	break;
 #endif
 	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%.2f", V->data.flt);			break;
 	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
