@@ -344,11 +344,11 @@ Draw(void *obj)
 		break;
 	case AG_VARIABLE_UINT32:
 		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%u%s%u",
-		    *(Uint32 *)xvalue, sbu->sep, *(Uint32 *)yvalue);
+		    (Uint)*(Uint32 *)xvalue, sbu->sep, (Uint)*(Uint32 *)yvalue);
 		break;
 	case AG_VARIABLE_SINT32:
 		Snprintf(sbu->inTxt, sizeof(sbu->inTxt), "%d%s%d",
-		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
+		    (int)*(Sint32 *)xvalue, sbu->sep, (int)*(Sint32 *)yvalue);
 		break;
 	}
 	AG_UnlockVariable(xvalueb);

@@ -1221,14 +1221,14 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	if (ed->flags & AG_EDITABLE_INT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsIntOnly(*c)) {
-				AG_SetError(_("Non-integer input near `%c'"), *c);
+				AG_SetError(_("Non-integer input near `%c'"), (char)*c);
 				goto fail;
 			}
 		}
 	} else if (ed->flags & AG_EDITABLE_FLT_ONLY) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (!CharIsFltOnly(*c)) {
-				AG_SetError(_("Non-float input near `%c'"), *c);
+				AG_SetError(_("Non-float input near `%c'"), (char)*c);
 				goto fail;
 			}
 		}
