@@ -65,6 +65,8 @@ typedef struct ag_driver_wgl {
 } AG_DriverWGL;
 
 typedef struct ag_cursor_wgl {
+	struct ag_cursor _inherit;
+	int      shared;		/* Shared cursor */
 	COLORREF black;
 	COLORREF white;
 	HCURSOR  cursor;
@@ -1125,91 +1127,114 @@ InitDefaultCursors(AG_DriverWGL *wgl)
 
 	for (i = 0; i < nStockCursors; i++) {
 		AG_Cursor *ac;
-		struct ag_cursor_wgl *cg;
+		AG_CursorWGL *acWGL;
 	
-		if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+		if ((acWGL = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
 			return (-1);
 		}
-		if ((cg = TryMalloc(sizeof(struct ag_cursor_wgl))) == NULL) {
-			free(ac);
-			return (-1);
-		}
-		ac->p = cg;
-		cg->cursor = LoadCursor(NULL, IDC_ARROW);
+		ac = (AG_Cursor *)acWGL;
+		acWGL->shared = 1;
+		acWGL->cursor = LoadCursor(NULL, IDC_ARROW);
 		AG_CursorInit(ac);
-
 		TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
 		drv->nCursors++;
 	}
 	return (0);
 }
 
-static int
-WGL_CreateCursor(void *obj, AG_Cursor *ac)
+static AG_Cursor *
+WGL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
+    int xHot, int yHot)
 {
-	AG_CursorWGL *cg;
-	int          size, i;
-	BYTE         *xorMask, *andMask;
+	AG_Cursor *ac;
+	AG_CursorWGL *acWGL;
+	int dataSize, i;
+	BYTE *xorMask, *andMask;
+	Uint size = w*h;
 
-	if ((cg = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
-		return (-1);
+	/*
+	 * Initialize generic Agar cursor part.
+	 */
+	if ((acWGL = TryMalloc(sizeof(AG_CursorWGL))) == NULL) {
+		return (NULL);
 	}
-	cg->black = RGB(0, 0, 0);
-	cg->white = RGB(0xFF, 0xFF, 0xFF);
+	ac = (AG_Cursor *)acWGL;
+
+	if ((ac->data = TryMalloc(size)) == NULL) {
+		goto fail;
+	}
+	if ((ac->mask = TryMalloc(size)) == NULL) {
+		free(ac->data);
+		goto fail;
+	}
+	memcpy(ac->data, data, size);
+	memcpy(ac->mask, mask, size);
+	ac->w = w;
+	ac->h = h;
+	ac->xHot = xHot;
+	ac->yHot = yHot;
+
+	/*
+	 * Initialize Windows-specific part.
+	 */
+	acWGL->shared = 0;
+	acWGL->black = RGB(0, 0, 0);
+	acWGL->white = RGB(0xFF, 0xFF, 0xFF);
 	
-	/* Calc size for cursor data */
-	size = (ac->w / 8) * ac->h;
-
-	/* Allocate memory for xorMask (which represents the cursor data) */
-	if ((xorMask = TryMalloc(size)) == NULL) {
-		free(cg);
-		return (-1);
+	dataSize = (ac->w / 8) * ac->h;
+	if ((xorMask = TryMalloc(dataSize)) == NULL) {
+		free(ac->data);
+		goto fail;
 	}
-
-	/* Allocate memory for andMask (which represents the transparence) */
-	if ((andMask = TryMalloc(size)) == NULL) {
+	if ((andMask = TryMalloc(dataSize)) == NULL) {
 		free(xorMask);
-		free(cg);
-		return (-1);
+		free(ac->data);
+		goto fail;
 	}
-
-	/* Copy cursor data into buffers for use with CreateCursor */
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < dataSize; i++) {
 		andMask[i] = ~ac->mask[i];
 		xorMask[i] = ~ac->data[i] ^ ~ac->mask[i];
 	}
 
-	/* Create cursor */
-	if ((cg->cursor = CreateCursor(GetModuleHandle(NULL), 
-	    ac->xHot, ac->yHot, ac->w, ac->h, andMask, xorMask))) {
-		ac->p = cg;
-		return (0);
+	acWGL->cursor = CreateCursor(GetModuleHandle(NULL), ac->xHot, ac->yHot,
+	    ac->w, ac->h, andMask, xorMask);
+	if (!acWGL->cursor) {
+		WGL_SetWindowsError("CreateCursor", GetLastError());
+		goto fail;
 	}
-	
-	WGL_SetWindowsError("CreateCursor failed!", GetLastError());
-	return (-1);
+	return (ac);
+fail:
+	free(ac);
+	return (NULL);
 }
 
 static void
 WGL_FreeCursor(void *obj, AG_Cursor *ac)
 {
-	AG_CursorWGL *cg = ac->p;
-	
-	DestroyCursor(cg->cursor);
-	free(cg);
-	ac->p = NULL;
+	AG_Driver *drv = obj;
+	AG_CursorWGL *acWGL = (AG_CursorWGL *)ac;
+
+	if (ac == drv->activeCursor) {
+		drv->activeCursor = NULL;
+	}
+	if (!acWGL->shared) {
+		DestroyCursor(acWGL->cursor);
+	}
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
 }
 
 static int
 WGL_SetCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
-	AG_CursorWGL *cg = ac->p;
+	AG_CursorWGL *acWGL = (AG_CursorWGL *)ac;
 
 	if (drv->activeCursor == ac) {
 		return (0);
 	}
-	SetCursor(cg->cursor);
+	SetCursor(acWGL->cursor);
 	drv->activeCursor = ac;
 	return (0);
 }

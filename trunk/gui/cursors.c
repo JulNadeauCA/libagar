@@ -58,57 +58,27 @@ AG_CursorNew(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
     int xHot, int yHot)
 {
 	AG_Driver *drv = obj;
-	AG_Cursor *curs;
-	Uint size = w*h;
+	AG_Cursor *ac;
 
-	if ((curs = TryMalloc(sizeof(AG_Cursor))) == NULL) {
+	ac = AGDRIVER_CLASS(drv)->createCursor(drv, w, h, data, mask,
+	    xHot, yHot);
+	if (ac == NULL) {
 		return (NULL);
 	}
-	if ((curs->data = TryMalloc(size)) == NULL) {
-		free(curs);
-		return (NULL);
-	}
-	if ((curs->mask = TryMalloc(size)) == NULL) {
-		goto fail;
-	}
-	memcpy(curs->data, data, size);
-	memcpy(curs->mask, mask, size);
-	curs->w = w;
-	curs->h = h;
-	curs->xHot = xHot;
-	curs->yHot = yHot;
-
-	if (AGDRIVER_CLASS(drv)->createCursor(drv, curs) == -1) {
-		goto fail;
-	}
-	TAILQ_INSERT_TAIL(&drv->cursors, curs, cursors);
+	TAILQ_INSERT_TAIL(&drv->cursors, ac, cursors);
 	drv->nCursors++;
-	return (curs);
-fail:
-	free(curs->data);
-	free(curs->mask);
-	free(curs);
-	return (NULL);
-}
-
-static __inline__ void
-FreeCursor(AG_Driver *drv, AG_Cursor *curs)
-{
-	AGDRIVER_CLASS(drv)->freeCursor(drv, curs);
-	free(curs->data);
-	free(curs->mask);
-	free(curs);
+	return (ac);
 }
 
 /* Delete a registered cursor. */
 void
-AG_CursorFree(void *obj, AG_Cursor *curs)
+AG_CursorFree(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
 
-	TAILQ_REMOVE(&drv->cursors, curs, cursors);
+	TAILQ_REMOVE(&drv->cursors, ac, cursors);
 	drv->nCursors--;
-	FreeCursor(drv, curs);
+	AGDRIVER_CLASS(drv)->freeCursor(drv, ac);
 }
 
 /* Create a cursor from the contents of an XPM file. */
@@ -177,7 +147,7 @@ AG_FreeCursors(AG_Driver *drv)
 	     ac != TAILQ_END(&drv->cursors);
 	     ac = acNext) {
 		acNext = TAILQ_NEXT(ac, cursors);
-		FreeCursor(drv, ac);
+		AGDRIVER_CLASS(drv)->freeCursor(drv, ac);
 	}
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;

@@ -94,6 +94,7 @@ struct ag_glx_key_mapping {		/* Keymap translation table entry */
 #include <agar/gui/drv_glx_keymaps.h>
 
 typedef struct ag_cursor_glx {
+	struct ag_cursor _inherit;
 	XColor black;
 	XColor white;
 	Cursor xc;
@@ -899,38 +900,61 @@ GLX_EndRendering(void *obj)
  * Cursor operations
  */
 
-static int
-GLX_CreateCursor(void *obj, AG_Cursor *ac)
+static AG_Cursor *
+GLX_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask,
+    int xHot, int yHot)
 {
 	AG_DriverGLX *glx = obj;
-	AG_CursorGLX *cg;
-	int i, size;
+	AG_Cursor *ac;
+	AG_CursorGLX *acGLX;
+	Uint size = w*h, dataSize;
+	int i;
 	char *xData, *xMask;
 	XGCValues gcVals;
 	GC gc;
 	XImage *dataImg, *maskImg;
 	Pixmap dataPixmap, maskPixmap;
 
-	if ((cg = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
-		return (-1);
+	/*
+	 * Initialize generic Agar cursor part.
+	 */
+	if ((ac = acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
+		return (NULL);
 	}
-	memset(&cg->black, 0, sizeof(cg->black));
-	cg->white.pixel = 0xffff;
-	cg->white.red = 0xffff;
-	cg->white.green = 0xffff;
-	cg->white.blue = 0xffff;
+	if ((ac->data = TryMalloc(size)) == NULL) {
+		free(ac);
+		return (NULL);
+	}
+	if ((ac->mask = TryMalloc(size)) == NULL) {
+		free(ac->data);
+		free(ac);
+		return (NULL);
+	}
+	memcpy(ac->data, data, size);
+	memcpy(ac->mask, mask, size);
+	ac->w = w;
+	ac->h = h;
+	ac->xHot = xHot;
+	ac->yHot = yHot;
 
-	size = (ac->w/8)*ac->h;
-	if ((xData = TryMalloc(size)) == NULL) {
-		free(cg);
-		return (-1);
+	/*
+	 * Initialize X11-specific part.
+	 */
+	memset(&acGLX->black, 0, sizeof(acGLX->black));
+	acGLX->white.pixel = 0xffff;
+	acGLX->white.red = 0xffff;
+	acGLX->white.green = 0xffff;
+	acGLX->white.blue = 0xffff;
+
+	dataSize = (ac->w / 8) * ac->h;
+	if ((xData = TryMalloc(dataSize)) == NULL) {
+		goto fail;
 	}
-	if ((xMask = TryMalloc(size)) == NULL) {
+	if ((xMask = TryMalloc(dataSize)) == NULL) {
 		free(xData);
-		free(cg);
-		return (-1);
+		goto fail;
 	}
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < dataSize; i++) {
 		xMask[i] = ac->data[i] | ac->mask[i];
 		xData[i] = ac->data[i];
 	}
@@ -973,40 +997,43 @@ GLX_CreateCursor(void *obj, AG_Cursor *ac)
 	XDestroyImage(maskImg);
 
 	/* Create the X cursor */
-	cg->xc = XCreatePixmapCursor(agDisplay, dataPixmap, maskPixmap,
-	    &cg->black, &cg->white, ac->xHot, ac->yHot);
-	cg->visible = 0;
+	acGLX->xc = XCreatePixmapCursor(agDisplay, dataPixmap, maskPixmap,
+	    &acGLX->black, &acGLX->white, ac->xHot, ac->yHot);
+	acGLX->visible = 0;
 
 	XFreePixmap(agDisplay, dataPixmap);
 	XFreePixmap(agDisplay, maskPixmap);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
-	
-	XSync(agDisplay, False);
-
-	ac->p = cg;
-	return (0);
+	return (ac);
+fail:
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
+	return (NULL);
 }
 
 static void
 GLX_FreeCursor(void *obj, AG_Cursor *ac)
 {
 	AG_DriverGLX *glx = obj;
-	AG_CursorGLX *cg = ac->p;
+	AG_CursorGLX *acGLX = (AG_CursorGLX *)ac;
 	
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
 	
-	XFreeCursor(agDisplay, cg->xc);
+	if (ac == drv->activeCursor)
+		drv->activeCursor = NULL;
+
+	XFreeCursor(agDisplay, acGLX->xc);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
 	
-	XSync(agDisplay, False);
-
-	free(cg);
-	ac->p = NULL;
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
 }
 
 static int
@@ -1016,9 +1043,8 @@ GLX_SetCursor(void *obj, AG_Cursor *ac)
 	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *cg = ac->p;
 
-	if (drv->activeCursor == ac) {
+	if (drv->activeCursor == ac)
 		return (0);
-	}
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);

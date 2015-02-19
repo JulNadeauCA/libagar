@@ -44,7 +44,7 @@ int             AG_SDL_SetRefreshRate(void *, int);
 int             AG_SDL_InitDefaultCursor(void *);
 int             AG_SDL_SetCursor(void *, AG_Cursor *);
 void            AG_SDL_UnsetCursor(void *);
-int             AG_SDL_CreateCursor(void *, AG_Cursor *);
+AG_Cursor      *AG_SDL_CreateCursor(void *, Uint, Uint, const Uint8 *, const Uint8 *, int, int);
 void            AG_SDL_FreeCursor(void *, AG_Cursor *);
 int             AG_SDL_GetCursorVisibility(void *);
 void            AG_SDL_SetCursorVisibility(void *, int);

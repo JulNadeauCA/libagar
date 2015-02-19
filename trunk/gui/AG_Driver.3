@@ -195,7 +195,9 @@ typedef struct ag_driver_class {
 	void (*popBlendingMode)(void *drv);
 
 	/* Hardware cursor interface */
-	int  (*createCursor)(void *drv, AG_Cursor *curs);
+	AG_Cursor *(*createCursor)(void *drv, Uint w, Uint h,
+	                           const Uint8 *data, const Uint8 *mask,
+				   int xHot, int yHot);
 	void (*freeCursor)(void *drv, AG_Cursor *curs);
 	int  (*setCursor)(void *drv, AG_Cursor *curs);
 	void (*unsetCursor)(void *drv);
@@ -432,9 +434,14 @@ for details on the Agar cursor control interface.
 .Pp
 The
 .Fn createCursor
-operation registers a hardware cursor for the specified
-.Ft AG_Cursor
-structure, returning 0 on success or -1 on failure.
+operation creates a hardware cursor from the bitmap data
+.Fa data
+and transparency mask
+.Fa mask .
+The hotspot coordinates are given in
+.Fa xHot ,
+.Fa yHot .
+If a hardware cursor cannot be allocated, the call should return NULL.
 .Fn freeCursor
 destroys any hardware cursor corresponding to the given
 .Ft AG_Cursor
