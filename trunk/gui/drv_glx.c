@@ -99,6 +99,7 @@ typedef struct ag_cursor_glx {
 	XColor white;
 	Cursor xc;
 	int visible;
+	int shared;
 } AG_CursorGLX;
 
 AG_DriverMwClass agDriverGLX;
@@ -918,9 +919,11 @@ GLX_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask
 	/*
 	 * Initialize generic Agar cursor part.
 	 */
-	if ((ac = acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
+	if ((acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (NULL);
 	}
+	ac = (AG_Cursor *)acGLX;
+
 	if ((ac->data = TryMalloc(size)) == NULL) {
 		free(ac);
 		return (NULL);
@@ -1000,6 +1003,7 @@ GLX_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data, const Uint8 *mask
 	acGLX->xc = XCreatePixmapCursor(agDisplay, dataPixmap, maskPixmap,
 	    &acGLX->black, &acGLX->white, ac->xHot, ac->yHot);
 	acGLX->visible = 0;
+	acGLX->shared = 0;
 
 	XFreePixmap(agDisplay, dataPixmap);
 	XFreePixmap(agDisplay, maskPixmap);
@@ -1017,6 +1021,7 @@ fail:
 static void
 GLX_FreeCursor(void *obj, AG_Cursor *ac)
 {
+	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
 	AG_CursorGLX *acGLX = (AG_CursorGLX *)ac;
 	
@@ -1025,8 +1030,8 @@ GLX_FreeCursor(void *obj, AG_Cursor *ac)
 	
 	if (ac == drv->activeCursor)
 		drv->activeCursor = NULL;
-
-	XFreeCursor(agDisplay, acGLX->xc);
+	if (!acGLX->shared)
+		XFreeCursor(agDisplay, acGLX->xc);
 	
 	AG_MutexUnlock(&glx->lock);
 	AG_MutexUnlock(&agDisplayLock);
@@ -1041,7 +1046,7 @@ GLX_SetCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
 	AG_DriverGLX *glx = obj;
-	AG_CursorGLX *cg = ac->p;
+	AG_CursorGLX *acGLX = (AG_CursorGLX *)ac;
 
 	if (drv->activeCursor == ac)
 		return (0);
@@ -1052,7 +1057,7 @@ GLX_SetCursor(void *obj, AG_Cursor *ac)
 	if (ac == TAILQ_FIRST(&drv->cursors)) {
 		XUndefineCursor(agDisplay, glx->w);
 	} else {
-		XDefineCursor(agDisplay, glx->w, cg->xc);
+		XDefineCursor(agDisplay, glx->w, acGLX->xc);
 	}
 
 	AG_MutexUnlock(&glx->lock);
@@ -1061,7 +1066,7 @@ GLX_SetCursor(void *obj, AG_Cursor *ac)
 	XSync(agDisplay, False);
 
 	drv->activeCursor = ac;
-	cg->visible = 1;
+	acGLX->visible = 1;
 	return (0);
 }
 
@@ -1123,20 +1128,17 @@ InitDefaultCursor(AG_DriverGLX *glx)
 {
 	AG_Driver *drv = AGDRIVER(glx);
 	AG_Cursor *ac;
-	AG_CursorGLX *cursGLX;
+	AG_CursorGLX *acGLX;
 	
-	if ((cursGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
+	if ((acGLX = TryMalloc(sizeof(AG_CursorGLX))) == NULL) {
 		return (-1);
 	}
-	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL) {
-		free(cursGLX);
-		return (-1);
-	}
+	ac = (AG_Cursor *)acGLX;
 	AG_CursorInit(ac);
 
-	cursGLX->xc = XCreateFontCursor(agDisplay, XC_left_ptr);
-	cursGLX->visible = 1;
-	ac->p = cursGLX;
+	acGLX->xc = XCreateFontCursor(agDisplay, XC_left_ptr);
+	acGLX->visible = 1;
+	acGLX->shared = 1;
 
 	TAILQ_INSERT_HEAD(&drv->cursors, ac, cursors);
 	drv->nCursors++;

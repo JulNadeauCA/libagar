@@ -496,11 +496,13 @@ AG_SDL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
 		return (NULL);
 	}
 	if ((ac->data = TryMalloc(size)) == NULL) {
-		goto fail;
+		free(ac);
+		return (NULL);
 	}
 	if ((ac->mask = TryMalloc(size)) == NULL) {
 		free(ac->data);
-		goto fail;
+		free(ac);
+		return (NULL);
 	}
 	memcpy(ac->data, data, size);
 	memcpy(ac->mask, mask, size);
@@ -514,7 +516,7 @@ AG_SDL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
 	    ac->xHot, ac->yHot);
 	if (sc == NULL) {
 		AG_SetError("SDL_CreateCursor failed");
-		return (-1);
+		goto fail;
 	}
 	ac->p = (void *)sc;
 	return (ac);
