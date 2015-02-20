@@ -284,14 +284,10 @@ static void
 Detach(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	AG_Driver *drv = OBJECT(win)->parent, *odrv;
+	AG_Driver *drv;
 	AG_Window *other, *subwin;
 	AG_Timer *to, *toNext;
 	
-#ifdef AG_DEBUG
-	if (drv == NULL || !AG_OfClass(drv, "AG_Driver:*"))
-		AG_FatalError("Window is not attached to a Driver");
-#endif
 	AG_LockVFS(&agDrivers);
 
 	/* Mark window detach in progress */
@@ -308,8 +304,8 @@ Detach(AG_Event *event)
 	AG_UnlockTiming();
 
 	/* Implicitely detach window dependencies. */
-	AGOBJECT_FOREACH_CHILD(odrv, &agDrivers, ag_driver) {
-		AG_FOREACH_WINDOW(other, odrv) {
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		AG_FOREACH_WINDOW(other, drv) {
 			if (other == win) {
 				continue;
 			}
