@@ -63,7 +63,7 @@ AG_GetStockCursor(void *obj, int name)
 	AG_Cursor *ac;
 	int i = 0;
 
-	TAILQ_FOREACH(ac, &drv->cursors, cursors) {
+	AG_TAILQ_FOREACH(ac, &drv->cursors, cursors) {
 		if (i++ == name)
 			break;
 	}
