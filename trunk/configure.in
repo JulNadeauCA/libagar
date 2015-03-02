@@ -22,8 +22,8 @@ REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 REGISTER_SECTION("Options specific to CORE library:")
 REGISTER("--enable-network",		"Network interface [check]")
 REGISTER("--enable-objdebug",		"Object system debugging [no]")
-REGISTER("--with-db4[=PREFIX]",		"Berkeley DB backend [check]")
-REGISTER("--with-mysql[=PREFIX]",	"MySQL backend [check]")
+REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [check]")
+REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 
 REGISTER_SECTION("Options specific to MATH library:")
@@ -50,6 +50,7 @@ REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
 REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
 REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
+REGISTER("--with-uim[=PREFIX]",		"Enable UIM input method [no]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
@@ -397,8 +398,8 @@ else
 	HUNDEF(HAVE_DB4)
 fi
 
-# Enable MySQL backend for AG_Db if available.
-if [ "${with_mysql}" != "no" ]; then
+# Enable MySQL backend for AG_Db if requested.
+if [ "${with_mysql}" = "yes" ]; then
 	CHECK(mysql, 5.5.8, ${prefix_mysql})
 	if [ "${HAVE_MYSQL}" != "yes" ]; then
 		if [ "${with_mysql}" = "yes" ]; then
@@ -459,8 +460,8 @@ else
 	fi
 fi
 
-# Enable UIM input method support if detected.
-if [ "${with_uim}" != "no" ]; then
+# Enable UIM input method support if requested.
+if [ "${with_uim}" = "yes" ]; then
 	CHECK(uim, 1.8.0, ${prefix_uim})
 	if [ "${HAVE_UIM}" != "yes" ]; then
 		if [ "${with_uim}" = "yes" ]; then
