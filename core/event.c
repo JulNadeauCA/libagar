@@ -641,13 +641,19 @@ DestroyEventSource(void *pEventSource)
 {
 	AG_EventSource *src = pEventSource;
 	AG_EventSink *es, *esNext;
-#ifdef HAVE_KQUEUE
-	AG_EventSourceKQUEUE *kq = pEventSource;
+	
+	if (agEventSource == NULL)
+		return;
 
-	if (kq->fd != -1) {
-		close(kq->fd);
+#ifdef HAVE_KQUEUE
+	{
+		AG_EventSourceKQUEUE *kq = pEventSource;
+
+		if (kq->fd != -1) {
+			close(kq->fd);
+		}
+		Free(kq->changes);
 	}
-	Free(kq->changes);
 #endif
 	for (es = TAILQ_FIRST(&src->prologues); es != TAILQ_END(&src->prologues); es = esNext) {
 		esNext = TAILQ_NEXT(es, sinks);
