@@ -1358,10 +1358,16 @@ AG_DestroyStringSubsystem(void)
 
 	/* Free the AG_Printf() buffers. */
 	for (i = 0; i < AG_STRING_BUFFERS_MAX; i++) {
-		Free(agPrintBuf[i]);
 #ifdef AG_THREADS
+		if ((agPrintBuf[i] = (char *)AG_ThreadKeyGet(agPrintBufKey[i]))
+		    != NULL) {
+			free(agPrintBuf[i]);
+		}
 		AG_ThreadKeyDelete(agPrintBufKey[i]);
+#else
+		Free(agPrintBuf[i]);
 #endif
+		agPrintBuf[i] = NULL;
 	}
 	
 	/* Free the formatting engine extensions. */
