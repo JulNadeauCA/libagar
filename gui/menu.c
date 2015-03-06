@@ -208,6 +208,29 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	return (win);
 }
 
+static void
+MenuWindowDetached(AG_Event *event)
+{
+	AG_Menu *m = AG_PTR(1);
+	AG_MenuItem *mi = AG_PTR(2);
+	AG_MenuItem *miSub;
+	Uint j;
+
+	AG_ObjectLock(m);
+
+	mi->view = NULL;
+	mi->sel_subitem = NULL;			/* Loose selection */
+
+	/* The surface handles are no longer valid. */
+	TAILQ_FOREACH(miSub, &mi->subItems, items) {
+		for (j = 0; j < 2; j++) {
+			miSub->lblView[j] = -1;
+		}
+		miSub->icon = -1;
+	}
+	AG_ObjectUnlock(m);
+}
+
 /*
  * Collapse the window displaying the specified item and its sub-menus
  * (if any).
@@ -217,7 +240,7 @@ AG_MenuCollapse(AG_MenuItem *mi)
 {
 	AG_Menu *m;
 	AG_MenuItem *miSub;
-	Uint j;
+	AG_Window *miWin;
 
 	if (mi == NULL || mi->view == NULL || (m = mi->pmenu) == NULL)
 		return;
@@ -231,19 +254,9 @@ AG_MenuCollapse(AG_MenuItem *mi)
 	}
 	
 	/* Destroy the MenuView's window. */
-	AG_ObjectDetach(WIDGET(mi->view)->window);
-	mi->view = NULL;
-
-	/* Lose the current selection. */
-	mi->sel_subitem = NULL;
-
-	/* The surface handles are no longer valid. */
-	TAILQ_FOREACH(miSub, &mi->subItems, items) {
-		for (j = 0; j < 2; j++) {
-			miSub->lblView[j] = -1;
-		}
-		miSub->icon = -1;
-	}
+	miWin = WIDGET(mi->view)->window;
+	AG_ObjectDetach(miWin);
+	AG_SetEvent(miWin, "window-detached", MenuWindowDetached, "%p,%p", m, mi);
 	
 	AG_ObjectUnlock(m);
 }
