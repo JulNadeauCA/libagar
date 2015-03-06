@@ -48,9 +48,7 @@ CreateWindowMT(void *arg)
 	AG_LabelNew(win, 0, "This window was created in a separate thread");
 
 	AG_WindowAttach(ti->winParent, win);
-	Verbose("Showing window\n");
 	AG_WindowShow(win);
-	Verbose("Window shown\n");
 	return (NULL);
 }
 
