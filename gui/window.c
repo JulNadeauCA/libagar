@@ -1965,7 +1965,7 @@ AG_WindowProcessDetachQueue(void)
 		if (win->flags & AG_WINDOW_MAIN) {
 			closedMain++;
 		}
-		
+		AG_PostEvent(drv, win, "window-detached", NULL);
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
