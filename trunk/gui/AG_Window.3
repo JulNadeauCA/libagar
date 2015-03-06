@@ -72,10 +72,14 @@ Newly created windows (as returned by
 .Fn AG_WindowNew )
 must be made visible using
 .Fn AG_WindowShow .
-To close a window and free its allocated resources, one call to
-.Xr AG_ObjectDetach 3
-is sufficient (Agar will defer the actual destruction of the window
-until it becomes safe to do so).
+.Pp
+Windows are destroyed by a single call to
+.Xr AG_ObjectDetach 3 .
+The detach operation actually places the window on a queue, and actual
+freeing will occur after the end of the current event processing cycle.
+After a window has been successfully detached, the
+.Sq window-detached
+event is raised.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -854,16 +858,20 @@ The GUI system may send
 objects the following events:
 .Bl -tag -width 2n
 .It Fn window-close "void"
-The user (or window system) is requesting that this window be closed.
-By default, named windows are hidden and unnamed windows are destroyed.
-Event handlers are free to ignore the request, or create new windows
-(e.g., confirmation dialogs) in response.
+Request to close the window (sent by the user / underlying window system).
+The default behavior is to hide named windows and detach unnamed windows.
+It is safe for an event handler to ignore the request, or to create new
+windows (e.g., a confirmation dialog) in response.
 .It Fn window-modal-close "int x" "int y"
 The window is modal (the
 .Dv AG_WINDOW_MODAL
 option is set), and a click or touch event was detected outside of its area
 (at given coordinates).
 By default, the request is ignored.
+.It Fn window-detached "void"
+The window has been successfully detached (as per a previous
+.Xr AG_ObjectDetach 3
+request).
 .It Fn window-shown "void"
 The window is now visible.
 .It Fn window-hidden "void"
