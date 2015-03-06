@@ -288,6 +288,9 @@ AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
 static __inline__ void
 AG_TextFree(AG_Text *txt)
 {
+	if (txt == NULL) {
+		return;
+	}
 	AG_TextDestroy(txt);
 	AG_Free(txt);
 }
