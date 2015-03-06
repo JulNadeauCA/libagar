@@ -213,7 +213,7 @@ RunTest(AG_Event *event)
 			AG_ConsoleMsg(console, _("%s: Interactive test started"),
 			    tc->name);
 			AG_SeparatorNewHoriz(win);
-			AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
+			ti->closeBtn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Close this test"),
 			    RequestTestClose, "%p", win);
 			AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 			AG_WindowAttach(winParent, win);
@@ -264,6 +264,18 @@ RunBench(AG_Event *event)
 	return;
 }
 
+static void
+TestWindowDetached(AG_Event *event)
+{
+	AG_TestInstance *ti = AG_PTR(1);
+	
+	TAILQ_REMOVE(&tests, ti, instances);
+	if (ti->tc->destroy != NULL) {
+		ti->tc->destroy(ti);
+	}
+	free(ti);
+}
+
 /* Close an interactive test. */
 void
 TestWindowClose(AG_Event *event)
@@ -272,11 +284,7 @@ TestWindowClose(AG_Event *event)
 	
 	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
 	AG_ObjectDetach(ti->win);
-	TAILQ_REMOVE(&tests, ti, instances);
-	if (ti->tc->destroy != NULL) {
-		ti->tc->destroy(ti);
-	}
-	free(ti);
+	AG_SetEvent(ti->win, "window-detached", TestWindowDetached, "%p", ti);
 }
 
 /* Write a message to the test console (format string). */

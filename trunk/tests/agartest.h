@@ -39,6 +39,7 @@ typedef struct ag_test_instance {
 	float score;				/* Numerical result */
 	AG_Console *console;			/* Output console */
 	AG_Window *win;				/* Main (control) window */
+	AG_Button *closeBtn;			/* "Close this test" */
 	AG_TAILQ_ENTRY(ag_test_instance) instances;
 } AG_TestInstance;
 
