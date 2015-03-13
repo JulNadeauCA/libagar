@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -203,7 +203,7 @@ ConvertNSRect(NSRect *r)
 
 	_driver = co;
 	_window = AGDRIVER_MW(co)->win;
-	
+
 	nc = [NSNotificationCenter defaultCenter];
 
 	if ([win delegate] != nil) {
@@ -236,7 +236,7 @@ ConvertNSRect(NSRect *r)
 	AG_DriverCocoa *co = _driver;
 	NSWindow *win = co->win;
 	NSView *view = [win contentView];
-
+	
 	nc = [NSNotificationCenter defaultCenter];
 
 	if ([win delegate] != self) {
@@ -652,7 +652,7 @@ COCOA_GetNextEvent(void *drvCaller, AG_DriverEvent *dev)
 	case NSRightMouseDown:
 		{
 			AG_MouseButton btn = GetMouseButton([event buttonNumber]);
-		
+			
 			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
 			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 			dev->win = win;
@@ -823,7 +823,7 @@ COCOA_ProcessEvent(void *drvCaller, AG_DriverEvent *dev)
 	if (dev->win == NULL ||
 	    dev->win->flags & AG_WINDOW_DETACHING)
 		return (0);
-
+	
 	AG_LockVFS(&agDrivers);
 	drv = WIDGET(dev->win)->drv;
 
@@ -887,10 +887,8 @@ COCOA_GL_MakeCurrent(AG_DriverCocoa *co, AG_Window *win)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-	if (win->visible) {
-		[co->glCtx setView:[co->win contentView]];
-		[co->glCtx update];
-	}
+	[co->glCtx setView:[co->win contentView]];
+	[co->glCtx update];
 	[co->glCtx makeCurrentContext];
 
 	[pool release];
@@ -911,7 +909,7 @@ COCOA_RenderWindow(AG_Window *win)
 	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
 	AG_GL_Context *gl = &co->gl;
 	AG_Color c = WCOLOR(win,0);
-
+	
 	gl->clipStates[0] = glIsEnabled(GL_CLIP_PLANE0); glEnable(GL_CLIP_PLANE0);
 	gl->clipStates[1] = glIsEnabled(GL_CLIP_PLANE1); glEnable(GL_CLIP_PLANE1);
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
@@ -931,7 +929,7 @@ COCOA_EndRendering(void *obj)
 	AG_DriverCocoa *co = obj;
 	AG_GL_Context *gl = &co->gl;
 	Uint i;
-
+	
 	[co->glCtx flushBuffer];
 
 	/* Remove textures and display lists queued for deletion. */
@@ -1047,9 +1045,6 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	/* Set our event listener. */
 	[co->evListener listen:co];
 
-	/* Get the visibility status. */
-	win->visible = [co->win isVisible];
-
 	/* Retrieve the effective style flags. */
 	winStyle = [co->win styleMask];
 	if (winStyle == NSBorderlessWindowMask) {
@@ -1083,10 +1078,6 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	}
 	pfAttr[i++] = NSOpenGLPFADoubleBuffer;
 	if (agStereo) { pfAttr[i++] = NSOpenGLPFAStereo; }
-#if 0
-	pfAttr[i++] = NSOpenGLPFAScreenMask;
-	pfAttr[i++] = CGDisplayIDToOpenGLDisplayMask(display);
-#endif
 	pfAttr[i] = 0;
 	pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:pfAttr];
 	if (pf == nil) {
@@ -1099,7 +1090,8 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 		AG_SetError("Cannot create NSOpenGLContext");
 		goto fail;
 	}
-	COCOA_GL_MakeCurrent(co, win);
+	[co->glCtx update];
+	[co->glCtx makeCurrentContext];
 	if (AG_GL_InitContext(co, &co->gl) == -1)
 		goto fail;
 
@@ -1150,6 +1142,7 @@ COCOA_CloseWindow(AG_Window *win)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 	AG_MutexLock(&co->lock);
 
@@ -1175,6 +1168,7 @@ COCOA_CloseWindow(AG_Window *win)
 	drv->videoFmt = NULL;
 
 	AG_MutexUnlock(&co->lock);
+	[pool release];
 }
 
 static int
@@ -1302,6 +1296,7 @@ COCOA_PreResizeCallback(AG_Window *win)
 static void
 COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverCocoa *co = (AG_DriverCocoa *)drv;
 	int x = a->x;
@@ -1317,7 +1312,7 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	AG_WidgetUpdateCoords(win, 0, 0);
 
 	/* The viewport coordinates have changed. */
-	COCOA_GL_MakeCurrent(co, win);
+	[co->glCtx makeCurrentContext];
 	AG_GL_SetViewport(&co->gl, AG_RECT(0, 0, WIDTH(win), HEIGHT(win)));
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
@@ -1344,6 +1339,8 @@ COCOA_PostResizeCallback(AG_Window *win, AG_SizeAlloc *a)
 	/* Save the new effective window position. */
 	WIDGET(win)->x = a->x = x;
 	WIDGET(win)->y = a->y = y;
+	
+	[pool release];
 }
 
 static void
