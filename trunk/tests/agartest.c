@@ -455,8 +455,10 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "?hd:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "p:?hd:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
+		case 'p':
+			break;
 		case 'd':
 			driverSpec = optArg;
 			break;
