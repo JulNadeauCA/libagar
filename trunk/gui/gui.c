@@ -411,6 +411,7 @@ AG_InitGraphics(const char *spec)
 					dc = agDriverList[i];
 					len = strlen(dc->name);
 					if (strncmp(dc->name, tok, len) == 0 &&
+					    (tok[len] == '\0' || tok[len] == '(') &&
 					    (drv = AG_DriverOpen(dc)) != NULL) {
 						sOpts = &tok[len];
 						break;
@@ -420,8 +421,17 @@ AG_InitGraphics(const char *spec)
 					break;
 			}
 			if (tok == NULL) {
-				AG_SetError(_("Requested drivers (%s) are not "
-				              "available"), specBuf);
+				char availDrvs[256];
+
+				for (availDrvs[0] = '\0', i = 0;
+				     i < agDriverListSize; i++) {
+					dc = agDriverList[i];
+					Strlcat(availDrvs, " ", sizeof(availDrvs));
+					Strlcat(availDrvs, dc->name, sizeof(availDrvs));
+				}
+				AG_SetError(_("Agar driver is not available: \"%s\"\n"
+				              "(compiled-in drivers: <%s >)"),
+					      specBuf, availDrvs);
 				goto fail;
 			}
 		}
