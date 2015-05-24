@@ -236,7 +236,11 @@ SizeColumns(AG_Table *t)
 		
 		r.x = x - COLUMN_RESIZE_RANGE/2;
 		r.w = COLUMN_RESIZE_RANGE;
-		tc->ca = AG_MapStockCursor(t, r, AG_HRESIZE_CURSOR);
+		if (tc->ca == NULL) {
+			tc->ca = AG_MapStockCursor(t, r, AG_HRESIZE_CURSOR);
+		} else {
+			tc->ca->r = r;
+		}
 		x += tc->w;
 	}
 }
