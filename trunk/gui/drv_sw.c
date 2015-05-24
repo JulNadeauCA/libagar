@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,9 @@ Init(void *obj)
 	dsw->winop = AG_WINOP_NONE;
 	dsw->winSelected = NULL;
 	dsw->winLastKeydown = NULL;
-	dsw->rNom = 20;
+	dsw->rNom = 1000/60;
 	dsw->rCur = 0;
+	dsw->rLast = 0;
 	dsw->windowXOutLimit = 32;
 	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
@@ -60,7 +61,7 @@ Init(void *obj)
 
 	if ((dsw->Lmodal = AG_ListNew()) == NULL)
 		AG_FatalError(NULL);
-	
+
 	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
 }
 
@@ -223,6 +224,7 @@ static void
 WM_Move(AG_Window *win, int xRel, int yRel)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
+	AG_DriverClass *dc = AGDRIVER_CLASS(dsw);
 	AG_Rect rPrev, rNew;
 	AG_Rect rFill1, rFill2;
 
@@ -237,50 +239,51 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
-	/* Update the background. */
-	/* XXX TODO Avoid drawing over KEEPABOVE windows */
-	rNew.x = WIDGET(win)->x;
-	rNew.y = WIDGET(win)->y;
-	rNew.w = WIDTH(win);
-	rNew.h = HEIGHT(win);
-	rFill1.w = 0;
-	rFill2.w = 0;
-	if (rNew.x > rPrev.x) {		/* Right */
-		rFill1.x = rPrev.x;
-		rFill1.y = rPrev.y;
-		rFill1.w = rNew.x - rPrev.x;
-		rFill1.h = rNew.h;
-	} else if (rNew.x < rPrev.x) {	/* Left */
-		rFill1.x = rNew.x + rNew.w;
-		rFill1.y = rNew.y;
-		rFill1.w = rPrev.x - rNew.x;
-		rFill1.h = rPrev.h;
+	if (dc->type == AG_FRAMEBUFFER) {
+		/* Update the background. */
+		rNew.x = WIDGET(win)->x;
+		rNew.y = WIDGET(win)->y;
+		rNew.w = WIDTH(win);
+		rNew.h = HEIGHT(win);
+		rFill1.w = 0;
+		rFill2.w = 0;
+		if (rNew.x > rPrev.x) {		/* Right */
+			rFill1.x = rPrev.x;
+			rFill1.y = rPrev.y;
+			rFill1.w = rNew.x - rPrev.x;
+			rFill1.h = rNew.h;
+		} else if (rNew.x < rPrev.x) {	/* Left */
+			rFill1.x = rNew.x + rNew.w;
+			rFill1.y = rNew.y;
+			rFill1.w = rPrev.x - rNew.x;
+			rFill1.h = rPrev.h;
+		}
+		if (rNew.y > rPrev.y) {		/* Downward */
+			rFill2.x = rPrev.x;
+			rFill2.y = rPrev.y;
+			rFill2.w = rNew.w;
+			rFill2.h = rNew.y - rPrev.y;
+		} else if (rNew.y < rPrev.y) {	/* Upward */
+			rFill2.x = rPrev.x;
+			rFill2.y = rNew.y + rNew.h;
+			rFill2.w = rPrev.w;
+			rFill2.h = rPrev.y - rNew.y;
+		}
+		if (rFill1.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, dsw->bgColor);
+			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
+		}
+		if (rFill2.w > 0) {
+			AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, dsw->bgColor);
+			if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
+				AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
+		}
 	}
-	if (rNew.y > rPrev.y) {		/* Downward */
-		rFill2.x = rPrev.x;
-		rFill2.y = rPrev.y;
-		rFill2.w = rNew.w;
-		rFill2.h = rNew.y - rPrev.y;
-	} else if (rNew.y < rPrev.y) {	/* Upward */
-		rFill2.x = rPrev.x;
-		rFill2.y = rNew.y + rNew.h;
-		rFill2.w = rPrev.w;
-		rFill2.h = rPrev.y - rNew.y;
-	}
-	
-	if (rFill1.w > 0) {
-		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill1, dsw->bgColor);
-		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill1);
-	}
-	if (rFill2.w > 0) {
-		AGDRIVER_CLASS(dsw)->fillRect(dsw, rFill2, dsw->bgColor);
-		if (AGDRIVER_CLASS(dsw)->updateRegion != NULL)
-			AGDRIVER_CLASS(dsw)->updateRegion(dsw, rFill2);
-	}
-	
-	AG_WindowMovePinned(win, xRel, yRel);
+
 	win->dirty = 1;
+
+	AG_WindowMovePinned(win, xRel, yRel);
 }
 
 /* Process a window resize operation initiated by the WM. */
@@ -328,6 +331,27 @@ WM_Resize(int op, AG_Window *win, int xRel, int yRel)
 	AG_WindowSetGeometry(win, x, y, w, h);
 }
 
+/* Start window move operation. */
+void
+AG_WM_MoveBegin(AG_Window *win)
+{
+	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
+	
+	agWindowToFocus = win;
+	dsw->winSelected = win;
+	if (!(win->flags & AG_WINDOW_NOMOVE))
+		dsw->winop = AG_WINOP_MOVE;
+}
+
+/* Terminate window move operation. */
+void
+AG_WM_MoveEnd(AG_Window *win)
+{
+	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
+
+	dsw->winop = AG_WINOP_NONE;
+	dsw->winSelected = NULL;
+}
 
 /*
  * Window-manager specific processing of mouse-motion events. This is

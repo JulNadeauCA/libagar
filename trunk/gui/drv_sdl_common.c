@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -451,6 +451,9 @@ int
 AG_SDL_SetCursor(void *obj, AG_Cursor *ac)
 {
 	AG_Driver *drv = obj;
+	
+	if (drv->activeCursor == ac)
+		return (0);
 
 	SDL_SetCursor((SDL_Cursor *)ac->p);
 	drv->activeCursor = ac;
@@ -463,6 +466,9 @@ AG_SDL_UnsetCursor(void *obj)
 {
 	AG_Driver *drv = obj;
 	AG_Cursor *ac0 = TAILQ_FIRST(&drv->cursors);
+	
+	if (drv->activeCursor == ac0)
+		return;
 	
 	SDL_SetCursor((SDL_Cursor *)ac0->p);
 	drv->activeCursor = ac0;
@@ -479,7 +485,6 @@ AG_SDL_SetRefreshRate(void *obj, int fps)
 		return (-1);
 	}
 	dsw->rNom = 1000/fps;
-	dsw->rCur = 0;
 	return (0);
 }
 
@@ -579,6 +584,7 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 {
 	char buf[16];
 	AG_Driver *drv = obj;
+	AG_DriverSw *dsw = obj;
 	Uint wDisp, hDisp;
 
 	if (*w == 0 || *h == 0) {
@@ -610,6 +616,20 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 			*depth = 32;
 		}
 	}
+	if (AG_Defined(drv, "fpsMax")) {
+		float v;
+		char *ep;
+
+		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
+		v = strtof(buf, &ep);
+		if (*ep == '\0')
+			dsw->rNom = (Uint)(1000.0/v);
+	}
+	if (AG_Defined(drv, "bgColor")) {
+		dsw->bgColor = AG_ColorFromString(AG_GetStringP(drv,"bgColor"), NULL);
+	}
+	if (AG_Defined(drv, "bgPopup"))
+		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
 }
 
 /* Standard beginEventProcessing() method for SDL drivers. */
@@ -747,13 +767,10 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win;
 
-	/* Process WM events */
 	switch (dev->type) {
-	case AG_DRIVER_MOUSE_BUTTON_DOWN:		/* Focus on window */
-		AG_WindowFocusAtPos(dsw, dev->data.button.x, dev->data.button.y);
-		break;
-	case AG_DRIVER_MOUSE_BUTTON_UP:			/* Terminate WM op */
+	case AG_DRIVER_MOUSE_BUTTON_UP:
 		dsw->winop = AG_WINOP_NONE;
+		dsw->winSelected = NULL;
 		break;
 	}
 
@@ -780,19 +797,11 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			    dev->data.motion.x, dev->data.motion.y,
 			    drv->mouse->xRel, drv->mouse->yRel,
 			    drv->mouse->btnState);
-			if (AG_WindowIsFocused(win)) {
-				AG_MouseCursorUpdate(win,
-				    dev->data.motion.x,
-				    dev->data.motion.y);
-			}
+			AG_MouseCursorUpdate(win,
+			    dev->data.motion.x,
+			    dev->data.motion.y);
 			break;
 		case AG_DRIVER_MOUSE_BUTTON_UP:
-			/* Terminate active window operations. */
-			/* XXX redundant? */
-			if (dsw->winop != AG_WINOP_NONE) {
-				dsw->winop = AG_WINOP_NONE;
-				dsw->winSelected = NULL;
-			}
 			AG_ProcessMouseButtonUp(win,
 			    dev->data.button.x, dev->data.button.y,
 			    dev->data.button.which);
@@ -808,6 +817,9 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 				AG_ObjectUnlock(win);
 				continue;
 			}
+			if (win != agWindowFocused) {
+				agWindowToFocus = win;
+			}
 			if (win->wBorderBot > 0 &&
 			    !(win->flags & AG_WINDOW_NORESIZE)) {
 				dsw->winop = GenericMouseOverCtrl(win,
@@ -821,12 +833,8 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			AG_ProcessMouseButtonDown(win,
 			    dev->data.button.x, dev->data.button.y,
 			    dev->data.button.which);
-			if (agWindowToFocus != NULL ||
-			    !TAILQ_EMPTY(&agWindowDetachQ)) {
-				AG_ObjectUnlock(win);
-				return (1);
-			}
-			break;
+			AG_ObjectUnlock(win);
+			return (1);
 		case AG_DRIVER_KEY_UP:
 			if (dsw->winLastKeydown != NULL &&
 			    dsw->winLastKeydown != win) {
@@ -918,14 +926,15 @@ AG_SDL_EventSink(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
 	AG_Driver *drv = AG_PTR(1);
+	int rv = 0;
 
-	if (SDL_PollEvent(NULL) != 0 &&
-	    AG_SDL_GetNextEvent(drv, &dev) == 1) {
-		return AG_SDL_ProcessEvent(drv, &dev);
+	if (SDL_PollEvent(NULL) != 0) {
+		while (AG_SDL_GetNextEvent(drv, &dev) == 1)
+			rv = AG_SDL_ProcessEvent(drv, &dev);
 	} else {
 		AG_Delay(1);
-		return (0);
 	}
+	return (0);
 }
 int
 AG_SDL_EventEpilogue(AG_EventSink *es, AG_Event *event)

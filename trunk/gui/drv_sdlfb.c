@@ -58,7 +58,6 @@ static void
 Init(void *obj)
 {
 	AG_DriverSDLFB *sfb = obj;
-	AG_DriverSw *dsw = obj;
 
 	sfb->s = NULL;
 	sfb->nDirty = 0;
@@ -66,9 +65,6 @@ Init(void *obj)
 	sfb->dirty = Malloc(sfb->maxDirty*sizeof(SDL_Rect));
 	sfb->clipRects = NULL;
 	sfb->nClipRects = 0;
-	
-	dsw->rNom = 16;
-	dsw->rCur = 0;
 }
 
 static void
@@ -1242,7 +1238,7 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	Verbose(_("SDLFB: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
-		Verbose(_("Enabling hardware palette"));
+		Verbose(_("SDLFB: Enabling hardware palette"));
 		sFlags |= SDL_HWPALETTE;
 	}
 	if ((sfb->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
@@ -1276,7 +1272,6 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		goto fail;
 
 	/* Set background color. */
-	dsw->bgColor = AG_ColorFromString(AG_GetStringP(sfb,"bgColor"), NULL);
 	SDL_FillRect(sfb->s, NULL, SDL_MapRGB(sfb->s->format,
 	    dsw->bgColor.r, dsw->bgColor.g, dsw->bgColor.b));
 	SDL_UpdateRect(sfb->s, 0, 0, (Sint32)w, (Sint32)h);
@@ -1436,7 +1431,6 @@ SDLFB_SetVideoContext(void *obj, void *pSurface)
 	cr0->r.h = su->h;
 	return (0);
 }
-
 
 AG_DriverSwClass agDriverSDLFB = {
 	{

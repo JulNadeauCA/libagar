@@ -135,27 +135,19 @@ MouseButtonDown(AG_Event *event)
 	
 	tbar->pressed = 1;
 
-	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv)) {
-		AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(tbar)->drv;
-		agWindowToFocus = tbar->win;
-		dsw->winSelected = tbar->win;
-		if (!(tbar->win->flags & AG_WINDOW_NOMOVE))
-			dsw->winop = AG_WINOP_MOVE;
-	}
+	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv))
+		AG_WM_MoveBegin(tbar->win);
 }
 
 static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_SELF();
-	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(tbar)->drv;
 	
 	tbar->pressed = 0;
 	
-	if (AGDRIVER_SINGLE(dsw)) {
-		dsw->winop = AG_WINOP_NONE;
-		dsw->winSelected = NULL;
-	}
+	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv))
+		AG_WM_MoveEnd(tbar->win);
 }
 
 static void

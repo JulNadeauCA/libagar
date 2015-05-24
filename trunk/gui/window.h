@@ -211,6 +211,7 @@ void     AG_WindowUnpin(AG_Window *);
 void     AG_WindowMovePinned(AG_Window *, int, int);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
+void     AG_WindowDrawQueued(void);
 void	 AG_WindowResize(AG_Window *);
 
 void	 AG_WindowFocus(AG_Window *);
@@ -262,51 +263,6 @@ AG_WindowDraw(AG_Window *win)
 	}
 	AGDRIVER_CLASS(drv)->renderWindow(win);
 	win->dirty = 0;
-}
-
-/*
- * Render all windows that need to be redrawn. This is typically invoked
- * by the main event loop, once events have been processed.
- */ 
-static __inline__ void
-AG_WindowDrawQueued(void)
-{
-	AG_Driver *drv;
-	AG_Window *win;
-
-	AG_LockVFS(&agDrivers);
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		switch (AGDRIVER_CLASS(drv)->wm) {
-		case AG_WM_MULTIPLE:
-			if ((win = AGDRIVER_MW(drv)->win) != NULL) {
-				AG_ObjectLock(win);
-				if (win->visible && win->dirty) {
-					AG_BeginRendering(drv);
-					AGDRIVER_CLASS(drv)->renderWindow(win);
-					AG_EndRendering(drv);
-					win->dirty = 0;
-				}
-				AG_ObjectUnlock(win);
-			}
-			break;
-		case AG_WM_SINGLE:
-			AG_FOREACH_WINDOW(win, drv) {
-				if (win->visible && win->dirty)
-					break;
-			}
-			if (win != NULL) {
-				AG_BeginRendering(drv);
-				AG_FOREACH_WINDOW(win, drv) {
-					AG_ObjectLock(win);
-					AG_WindowDraw(win);
-					AG_ObjectUnlock(win);
-				}
-				AG_EndRendering(drv);
-			}
-			break;
-		}
-	}
-	AG_UnlockVFS(&agDrivers);
 }
 
 /*

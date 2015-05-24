@@ -56,6 +56,7 @@ typedef struct ag_driver_sw {
 #define AG_DRIVER_SW_OVERLAY	0x01	/* "Overlay" mode */
 #define AG_DRIVER_SW_BGPOPUP	0x02	/* Enable generic background popup */
 #define AG_DRIVER_SW_FULLSCREEN	0x04	/* Currently in full-screen mode */
+#define AG_DRIVER_SW_REDRAW	0x08	/* Global redraw request */
 
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
 	struct ag_window *winLastKeydown; /* For keyboard processing */
@@ -69,6 +70,7 @@ typedef struct ag_driver_sw {
 	Uint rNom;			/* Nominal refresh rate (ms) */
 	int rCur;			/* Effective refresh rate (ms) */
 	AG_Color bgColor;		/* "bgColor" setting */
+	Uint rLast;			/* Refresh rate timestamp */
 } AG_DriverSw;
 
 #define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))
@@ -91,6 +93,8 @@ void AG_WM_LimitWindowToView(struct ag_window *);
 void AG_WM_LimitWindowToDisplaySize(AG_Driver *, struct ag_size_alloc *);
 void AG_WM_GetPrefPosition(struct ag_window *, int *, int *, int, int);
 
+void AG_WM_MoveBegin(struct ag_window *);
+void AG_WM_MoveEnd(struct ag_window *);
 void AG_WM_MouseMotion(AG_DriverSw *, struct ag_window *, int, int);
 
 /* Blank the display background. */
