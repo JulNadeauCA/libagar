@@ -53,7 +53,7 @@ typedef struct ag_sdlgl_driver {
 	Uint		  outLast;	/* Terminate after this many frames */
 	Uint8		 *outBuf;	/* Output capture buffer */
 	Uint		  outJpegQual;	/* Quality (%) for jpeg output */
-	Uint		  outJpegFlags;
+	Uint		  outJpegFlags;	/* DCT options */
 } AG_DriverSDLGL;
 
 static int nDrivers = 0;			/* Opened driver instances */
@@ -65,12 +65,9 @@ static AG_EventSink *sglEventEpilogue = NULL;	/* Standard event epilogue */
 static void
 Init(void *obj)
 {
-	AG_DriverSw *dsw = obj;
 	AG_DriverSDLGL *sgl = obj;
 
 	sgl->s = NULL;
-	dsw->rNom = 16;
-	dsw->rCur = 0;
 }
 
 /*
@@ -256,7 +253,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 	}
 
 	if (++sgl->outFrame == sgl->outLast) {
-		Verbose("Reached last frame; terminating\n");
+		Verbose("SDLGL: Reached last frame; terminating\n");
 		AG_Terminate(0);
 	}
 	AG_SurfaceFree(s);
@@ -264,7 +261,7 @@ SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
 fail:
 	AG_SurfaceFree(s);
 fail_disable:
-	AG_Verbose("%s; disabling capture\n", AG_GetError());
+	Verbose("SDLGL: %s; disabling capture\n", AG_GetError());
 	sgl->outMode = AG_SDLGL_OUT_NONE;
 }
 
@@ -303,10 +300,12 @@ SDLGL_EndRendering(void *drv)
  * Operations specific to single-display drivers.
  */
 
-static void
+static __inline__ void
 ClearBackground(AG_DriverSw *dsw)
 {
-	glClearColor(dsw->bgColor.r, dsw->bgColor.g, dsw->bgColor.b, 1.0);
+	glClearColor(dsw->bgColor.r/255.0,
+	             dsw->bgColor.g/255.0,
+		     dsw->bgColor.b/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
@@ -332,8 +331,7 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 		dsw->flags |= AG_DRIVER_SW_OVERLAY;
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		dsw->flags |= AG_DRIVER_SW_BGPOPUP;
-
-	/* Apply the output capture settings. */
+	
 	if (AG_Defined(drv, "out")) {
 		char *ext;
 
@@ -364,20 +362,19 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 				sgl->outLast = atoi(buf);
 			}
 		}
-	}
-
-	if (AG_Defined(drv, "jpegQual")) {
-		AG_GetString(drv, "jpegQual", buf, sizeof(buf));
-		sgl->outJpegQual = atoi(buf);
-	}
-	if (AG_Defined(drv, "jpegDCT")) {
-		AG_GetString(drv, "jpegDCT", buf, sizeof(buf));
-		if (Strcasecmp(buf, "islow")) {
-			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_ISLOW;
-		} else if (Strcasecmp(buf, "ifast")) {
-			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_IFAST;
-		} else if (Strcasecmp(buf, "float")) {
-			sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
+		if (AG_Defined(drv, "jpegQual")) {
+			AG_GetString(drv, "jpegQual", buf, sizeof(buf));
+			sgl->outJpegQual = atoi(buf);
+		}
+		if (AG_Defined(drv, "jpegDCT")) {
+			AG_GetString(drv, "jpegDCT", buf, sizeof(buf));
+			if (Strcasecmp(buf, "islow")) {
+				sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_ISLOW;
+			} else if (Strcasecmp(buf, "ifast")) {
+				sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_IFAST;
+			} else if (Strcasecmp(buf, "float")) {
+				sgl->outJpegFlags = AG_EXPORT_JPEG_JDCT_FLOAT;
+			}
 		}
 	}
 	
@@ -386,7 +383,7 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	Verbose(_("SDLGL: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
-		Verbose(_("Enabling hardware palette"));
+		Verbose(_("SDLGL: Enabling hardware palette"));
 		sFlags |= SDL_HWPALETTE;
 	}
 	if ((sgl->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
@@ -412,9 +409,6 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	    AG_InitStockCursors(drv) == -1)
 		goto fail;
 	
-	/* Set background color. */
-	dsw->bgColor = AG_ColorFromString(AG_GetStringP(drv,"bgColor"), NULL);
-
 	/* Initialize our OpenGL context and viewport. */
 	if (AG_GL_InitContext(sgl, &sgl->gl) == -1) {
 		goto fail;
@@ -427,7 +421,7 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	/* Initialize the output capture buffer. */
 	Free(sgl->outBuf);
 	if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
-		AG_Verbose("Out of memory for buffer; disabling capture\n");
+		Verbose("SDLGL: Out of memory; disabling capture\n");
 		sgl->outMode = AG_SDLGL_OUT_NONE;
 	}
 	
@@ -543,7 +537,7 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	if (sgl->outBuf != NULL) {
 		Free(sgl->outBuf);
 		if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
-			AG_Verbose("Out of memory for buffer; disabling capture\n");
+			Verbose("SDLGL: Out of memory; disabling capture\n");
 			sgl->outMode = AG_SDLGL_OUT_NONE;
 		}
 	}
@@ -584,8 +578,7 @@ SDLGL_VideoCapture(void *obj, AG_Surface **sp)
 static void
 SDLGL_VideoClear(void *obj, AG_Color c)
 {
-	glClearColor(c.r, c.g, c.b, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	ClearBackground(obj);
 }
 
 static int

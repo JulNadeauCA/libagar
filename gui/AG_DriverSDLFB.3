@@ -62,10 +62,14 @@ Height in pixels (or
 .It depth
 Depth in bits per pixel (or
 .Sq auto ) .
+.It fpsMax
+Limit GUI refresh rate in frames/second (default = 60fps).
 .It bgColor
-Background color (see
-.Xr AG_Color 3 ) .
+Solid background color (see
+.Xr AG_ColorFromString 3 ) .
 Default is "rgb(0,0,0)".
+.It bgPopup
+Show popup menu upon middle / right-button click in the background.
 .El
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,

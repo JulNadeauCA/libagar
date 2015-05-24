@@ -960,6 +960,67 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
+/*
+ * Render all windows that need to be redrawn. This is typically invoked
+ * by the main event loop, once events have been processed.
+ */ 
+void
+AG_WindowDrawQueued(void)
+{
+	AG_Driver *drv;
+	AG_Window *win;
+
+	AG_LockVFS(&agDrivers);
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		switch (AGDRIVER_CLASS(drv)->wm) {
+		case AG_WM_MULTIPLE:
+			if ((win = AGDRIVER_MW(drv)->win) != NULL) {
+				AG_ObjectLock(win);
+				if (win->visible && win->dirty) {
+					AG_BeginRendering(drv);
+					AGDRIVER_CLASS(drv)->renderWindow(win);
+					AG_EndRendering(drv);
+					win->dirty = 0;
+				}
+				AG_ObjectUnlock(win);
+			}
+			break;
+		case AG_WM_SINGLE:
+			{
+				AG_DriverSw *dsw = (AG_DriverSw *)drv;
+				Uint32 t;
+
+				t = AG_GetTicks();
+				if ((t - dsw->rLast) < dsw->rNom) {
+					AG_Delay(1);
+					goto out;
+				}
+				dsw->rLast = t;
+				
+				AG_FOREACH_WINDOW(win, drv) {
+					if (win->visible && win->dirty)
+						break;
+				}
+				if (win != NULL ||
+				    (dsw->flags & AG_DRIVER_SW_REDRAW)) {
+					dsw->flags &= ~(AG_DRIVER_SW_REDRAW);
+					AG_BeginRendering(drv);
+					AG_FOREACH_WINDOW(win, drv) {
+						AG_ObjectLock(win);
+						AG_WindowDraw(win);
+						AG_ObjectUnlock(win);
+					}
+					AG_EndRendering(drv);
+				}
+			}
+			break;
+		}
+	}
+out:
+	AG_UnlockVFS(&agDrivers);
+}
+
+
 /* Build an ordered list of the focusable widgets in a window. */
 static void
 ListFocusableWidgets(AG_List *L, AG_Widget *wid)
@@ -1180,6 +1241,7 @@ int
 AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 	AG_SizeReq rWin;
 	AG_SizeAlloc a;
 	AG_Rect rPrev;
@@ -1243,7 +1305,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
-		if (win->visible && !new) {
+		if (dc->type == AG_FRAMEBUFFER && win->visible && !new) {
 			UpdateWindowBG(win, rPrev);
 		}
 		break;
@@ -1949,7 +2011,10 @@ AG_WindowProcessDetachQueue(void)
 				AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
 			}
 		} else {
-			win->tbar = NULL;	/* No longer safe to use */
+			AG_DriverSw *dsw = (AG_DriverSw *)drv;
+
+			dsw->flags |= AG_DRIVER_SW_REDRAW;
+			win->tbar = NULL;		/* No longer safe */
 			win->icon = NULL;
 		}
 
