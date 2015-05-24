@@ -1017,27 +1017,20 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Editable *ed = obj;
+	AG_Rect r;
 
 	if (a->w < 2 || a->h < 2) {
-		if (WIDGET(ed)->window != NULL &&
-		    ed->ca != NULL) {
-			AG_UnmapCursor(ed, ed->ca);
-			ed->ca = NULL;
-		}
 		return (-1);
 	}
 	ed->yVis = a->h/ed->lineSkip;
 	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
 
-	if (WIDGET(ed)->window != NULL &&
-	   !(WIDGET(ed)->window->flags & AG_WINDOW_NOCURSORCHG)) {
-		AG_Rect r = AG_RECT(0, 0, a->w, a->h);
-
-		if (ed->ca == NULL) {
-			ed->ca = AG_MapStockCursor(ed, r, AG_TEXT_CURSOR);
-		} else {
-			ed->ca->r = r;
-		}
+	/* Map cursor-change area */
+	r = AG_RECT(0, 0, a->w, a->h);
+	if (ed->ca == NULL) {
+		ed->ca = AG_MapStockCursor(ed, r, AG_TEXT_CURSOR);
+	} else {
+		ed->ca->r = r;
 	}
 	return (0);
 }
