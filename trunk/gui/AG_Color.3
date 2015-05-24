@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -84,11 +84,21 @@ structure from an argument of the form 0xRRGGBBAA.
 .Pp
 The
 .Fn AG_ColorFromString
-function parses a color specification of the form "rgb(r,g,b[,a])" or
-"hsv(h,s,v[,a])", returning the corresponding color.
-If
+function converts a text-based color representation to an
+.Nm .
+The following formats are allowed:
+.Bd -literal
+	"#RRGGBB"
+	"r:g:b[:a]"
+	"r,g,b[,a]"
+	"rgb(r,g,b[,a])"
+	"hsv(h,s,v[,a])"
+.Ed
+.Pp
+If components are given with a terminating "%" character, they are
+interpreted as a percentage of the corresponding component in
 .Fa parentColor
-is non-NULL, the components may be expressed as percent ratios.
+(assuming the argument is non-NULL).
 .Pp
 The
 .Fn AG_ColorCompare

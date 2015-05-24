@@ -44,9 +44,16 @@ Sint8  agHighColorShift[3] = {  40,  40,  40 };
 Sint8  agLowColorShift[3] = { -30, -30, -20 };
 
 /*
- * Parse a string color specification of the form "rgb(r,g,b[,a])" or
- * "hsv(h,s,v[,a])". Color components may be specified as literal values
- * or % of some parent color.
+ * Parse a string color specification string. Acceptable forms include:
+ *
+ * 	r,g,b[,a]
+ * 	r:g:b[:a]
+ * 	rgb(r,g,b[,a])
+ * 	hsv(h,s,v[,a])
+ *      #rrggbb
+ * 
+ * If components are specified with a terminating "%" sign, they may be
+ * interpreted as percent of some parent color.
  */
 static __inline__ double
 ColorPct(Uint8 in, double v)
@@ -74,23 +81,39 @@ AG_ColorFromString(const char *s, const AG_Color *pColor)
 		;;
 	}
 	switch (*c) {
-	case 'r':		/* rgb(r,g,b[,a]) */
+	case 'r':		/* "rgb(r,g,b[,a])" */
 		break;
-	case 'h':		/* hsv(h,s,v[,a]) */
+	case 'h':		/* "hsv(h,s,v[,a])" */
 		isHSV = 1;
 		break;
-	default:
-		return (cOut);
+	case '#':		/* "#rrggbb" */
+		{
+			Uint32 hexVal;
+
+			memmove(&c[2], &c[1], strlen(&c[1])+1);
+			c[0] = '0';
+			c[1] = 'x';
+			hexVal = (Uint32)strtoul(c, NULL, 16);
+			cOut.r = (Uint8)((hexVal >> 16) & 0xff);
+			cOut.g = (Uint8)((hexVal >> 8) & 0xff);
+			cOut.b = (Uint8)((hexVal) & 0xff);
+			return (cOut);
+		}
+		break;
 	}
-	for (; *c != '\0' && *c != '('; c++)
-		;;
-	if (*c == '\0' || c[1] == '\0') {
-		goto out;
+	if (*c == 'r' || *c == 'h') {
+		for (; *c != '\0' && *c != '('; c++)
+			;;
+		if (*c == '\0' || c[1] == '\0') {
+			goto out;
+		}
+		pc = &c[1];
+	} else {
+		pc = &c[0];	/* Just "r,g,b[,a]" */
 	}
-	pc = &c[1];
 	for (i = 0, argc = 0; i < 4; i++) {
 		char *tok, *ep;
-		if ((tok = AG_Strsep(&pc, ",")) == NULL) {
+		if ((tok = AG_Strsep(&pc, ",:")) == NULL) {
 			break;
 		}
 		v[i] = strtod(tok, &ep);
