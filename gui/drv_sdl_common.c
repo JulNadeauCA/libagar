@@ -765,7 +765,7 @@ static int
 ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
-	AG_Window *win;
+	AG_Window *win, *winTop = NULL;
 
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_BUTTON_UP:
@@ -797,9 +797,14 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			    dev->data.motion.x, dev->data.motion.y,
 			    drv->mouse->xRel, drv->mouse->yRel,
 			    drv->mouse->btnState);
-			AG_MouseCursorUpdate(win,
-			    dev->data.motion.x,
-			    dev->data.motion.y);
+			if (winTop == NULL &&
+			    AG_WidgetArea(win, dev->data.motion.x,
+			    dev->data.motion.y)) {
+				winTop = win;
+				AG_MouseCursorUpdate(win,
+				    dev->data.motion.x,
+				    dev->data.motion.y);
+			}
 			break;
 		case AG_DRIVER_MOUSE_BUTTON_UP:
 			AG_ProcessMouseButtonUp(win,
