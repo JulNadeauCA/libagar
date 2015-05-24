@@ -104,12 +104,10 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 		if (AG_RectInside(&r, x,y))
 			break;
 	}
-	if (ca == NULL) {
-		if (AGDRIVER_CLASS(drv)->unsetCursor != NULL)
-			AGDRIVER_CLASS(drv)->unsetCursor(drv);
+	if (ca == NULL && drv->activeCursor != TAILQ_FIRST(&drv->cursors)) {
+		AGDRIVER_CLASS(drv)->unsetCursor(drv);
 	} else if (ca->c != drv->activeCursor) {
-		if (AGDRIVER_CLASS(drv)->setCursor != NULL)
-			AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
+		AGDRIVER_CLASS(drv)->setCursor(drv, ca->c);
 	}
 }
 
