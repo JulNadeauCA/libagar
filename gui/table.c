@@ -194,9 +194,6 @@ SizeColumns(AG_Table *t)
 	AG_Rect r;
 	int n, x;
 
-	if (WIDGET(t)->window != NULL)
-		AG_UnmapAllCursors(WIDGET(t)->window, t);
-
 	t->wTot = 0;
 	for (n = 0; n < t->n; n++) {
 		tc = &t->cols[n];
@@ -228,7 +225,6 @@ SizeColumns(AG_Table *t)
 	}
 
 	/* Update the cursor change areas for column resize. */
-	r.x = 0;
 	r.y = 0;
 	r.h = t->hCol;
 	for (n = 0, x = 0; n < t->n; n++) {
@@ -236,11 +232,7 @@ SizeColumns(AG_Table *t)
 		
 		r.x = x - COLUMN_RESIZE_RANGE/2;
 		r.w = COLUMN_RESIZE_RANGE;
-		if (tc->ca == NULL) {
-			tc->ca = AG_MapStockCursor(t, r, AG_HRESIZE_CURSOR);
-		} else {
-			tc->ca->r = r;
-		}
+		AG_SetStockCursor(t, &tc->ca, r, AG_HRESIZE_CURSOR);
 		x += tc->w;
 	}
 }

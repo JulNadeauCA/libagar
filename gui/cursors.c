@@ -152,8 +152,3 @@ AG_FreeCursors(AG_Driver *drv)
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;
 }
-
-#ifdef AG_LEGACY
-void AG_SetCursor(int builtin) { }
-void AG_UnsetCursor(void) { }
-#endif /* AG_LEGACY */

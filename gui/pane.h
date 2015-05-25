@@ -8,8 +8,6 @@
 
 #include <agar/gui/begin.h>
 
-struct ag_cursor_area;
-
 enum ag_pane_type {
 	AG_PANE_HORIZ,
 	AG_PANE_VERT
@@ -48,7 +46,7 @@ typedef struct ag_pane {
 	int	rx;			/* Requested divider position */
 	int     rxPct;			/* Requested position in % */
 	int	wDiv;			/* Divider width */
-	struct ag_cursor_area *ca;	/* Cursor-change area in divider */
+	AG_CursorArea *ca;		/* Divider cursor-change area */
 	enum ag_pane_resize_action resizeAction;	/* Resize action */
 } AG_Pane;
 

@@ -125,6 +125,7 @@ typedef struct ag_window {
 	int nFocused;				/* Widgets in focus chain */
 	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
 	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
+	AG_CursorArea *caResize[5];		/* Window-resize areas */
 
 	AG_Timer fadeTo;			/* Fade timer */
 	float fadeInTime, fadeOutTime;		/* Fade time (s) */
@@ -390,6 +391,30 @@ AG_Redraw(void *obj)
 	if (AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
 }
+
+/*
+ * Alternate interface to AG_MapCursor(). Create a new mapping or
+ * update the rectangle of an existing one.
+ */
+static __inline__ void
+AG_SetCursor(void *obj, AG_CursorArea **ca, AG_Rect r, struct ag_cursor *c)
+{
+	if (*ca == NULL) {
+		*ca = AG_MapCursor(obj, r, c);
+	} else {
+		(*ca)->r = r;
+	}
+}
+static __inline__ void
+AG_SetStockCursor(void *obj, AG_CursorArea **ca, AG_Rect r, int cName)
+{
+	if (*ca == NULL) {
+		*ca = AG_MapStockCursor(obj, r, cName);
+	} else {
+		(*ca)->r = r;
+	}
+}
+
 
 /*
  * Process synchronous window operations. This includes focus changes,

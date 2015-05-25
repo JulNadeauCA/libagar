@@ -1027,11 +1027,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	/* Map cursor-change area */
 	r = AG_RECT(0, 0, a->w, a->h);
-	if (ed->ca == NULL) {
-		ed->ca = AG_MapStockCursor(ed, r, AG_TEXT_CURSOR);
-	} else {
-		ed->ca->r = r;
-	}
+	AG_SetStockCursor(ed, &ed->ca, r, AG_TEXT_CURSOR);
 	return (0);
 }
 

@@ -8,7 +8,6 @@
 
 #include <agar/gui/begin.h>
 
-struct ag_cursor_area;
 struct ag_popup_menu;
 
 /* Working UCS-4 text buffer for internal use */
@@ -73,7 +72,7 @@ typedef struct ag_editable {
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	AG_EditableBuffer sBuf;		/* Working buffer (for STATIC) */
 	AG_Rect r;			/* View area */
-	struct ag_cursor_area *ca;	/* For "text" cursor change */
+	AG_CursorArea *ca;		/* Text cursor-change area */
 	int fontMaxHeight;		/* Maximum character height */
 	int lineSkip;			/* Y-increment in multiline mode */
 	struct ag_popup_menu *pm;	/* Right-click popup menu */

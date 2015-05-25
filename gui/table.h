@@ -113,7 +113,7 @@ typedef struct ag_table_col {
 	int wPct;			/* Width (percent or -1) */
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
-	struct ag_cursor_area *ca;	/* For column resize */
+	AG_CursorArea *ca;		/* Column resize cursor-change area */
 } AG_TableCol;
 
 typedef struct ag_table {
