@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,12 @@ local coordinate system.
 .Fn AG_MapStockCursor "AG_Widget *wid" "AG_Rect r" "int cursorName"
 .Pp
 .Ft "void"
+.Fn AG_SetCursor "AG_Widget *wid" "AG_CursorArea **cursorArea" "AG_Rect r" "AG_Cursor *c"
+.Pp
+.Ft "void"
+.Fn AG_SetStockCursor "AG_Widget *wid" "AG_CursorArea **cursorArea" "AG_Rect r" "int cursorName"
+.Pp
+.Ft "void"
 .Fn AG_UnmapCursor "AG_Widget *wid" "AG_CursorArea *cursorArea"
 .Pp
 .nr nS 0
@@ -91,6 +97,20 @@ and
 both return a pointer to the
 .Ft AG_CursorArea
 structure describing the cursor-change area, or NULL if an error has occured.
+.Pp
+The
+.Fn AG_SetCursor
+and
+.Fn AG_SetStockCursor
+routines provide an alternate interface to
+.Fn AG_MapCursor
+and
+.Fn AG_MapStockCursor .
+If the pointer at
+.Fa cursorArea
+is NULL, a new cursor area is mapped and returned into it.
+Otherwise, the rectangle of the existing cursor area is updated from
+.Fa r .
 .Pp
 .Fn AG_UnmapCursor
 removes the specified cursor-change area.

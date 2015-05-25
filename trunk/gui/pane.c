@@ -440,11 +440,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = 0;
 		r.w = pa->wDiv;
 		r.h = a->h;
-		if (pa->ca == NULL) {
-			pa->ca = AG_MapStockCursor(pa, r, AG_HRESIZE_CURSOR);
-		} else {
-			pa->ca->r = r;
-		}
+		AG_SetStockCursor(pa, &pa->ca, r, AG_HRESIZE_CURSOR);
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
@@ -496,11 +492,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = pa->dx;
 		r.w = a->w;
 		r.h = pa->wDiv;
-		if (pa->ca == NULL) {
-			pa->ca = AG_MapStockCursor(pa, r, AG_VRESIZE_CURSOR);
-		} else {
-			pa->ca->r = r;
-		}
+		AG_SetStockCursor(pa, &pa->ca, r, AG_VRESIZE_CURSOR);
 		break;
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);

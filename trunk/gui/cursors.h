@@ -96,11 +96,6 @@ AG_HideCursor(void *drv)
 {
 	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 0);
 }
-
-#ifdef AG_LEGACY
-void AG_SetCursor(int)		DEPRECATED_ATTRIBUTE;
-void AG_UnsetCursor(void)	DEPRECATED_ATTRIBUTE;
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

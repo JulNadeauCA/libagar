@@ -42,7 +42,7 @@ static void OnFocusGain(AG_Event *);
 static void OnFocusLoss(AG_Event *);
 
 int agWindowSideBorderDefault = 0;
-int agWindowBotBorderDefault = 6;
+int agWindowBotBorderDefault = 8;
 
 /* Protected by agDrivers VFS lock */
 AG_WindowQ agWindowDetachQ;			/* Windows to detach */
@@ -376,6 +376,7 @@ Init(void *obj)
 {
 	AG_Window *win = obj;
 	AG_Event *ev;
+	int i;
 
 	win->wmType = AG_WINDOW_WM_NORMAL;
 	win->flags = AG_WINDOW_NOCURSORCHG;
@@ -412,6 +413,8 @@ Init(void *obj)
 	win->zoom = AG_ZOOM_DEFAULT;
 	TAILQ_INIT(&win->subwins);
 	TAILQ_INIT(&win->cursorAreas);
+	for (i = 0; i < 5; i++)
+		win->caResize[i] = NULL;
 
 	AG_InitTimer(&win->fadeTo, "fade", 0);
 
@@ -1706,6 +1709,30 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	int wAvail, hAvail;
 	int totFixed;
 	int nWidgets;
+	AG_Rect r;
+
+	if (win->wBorderSide > 0) {
+		r.x = 0;
+		r.y = 0;
+		r.w = win->wBorderSide;
+		r.h = a->h - win->wBorderBot;
+		AG_SetStockCursor(win, &win->caResize[0], r, AG_HRESIZE_CURSOR);
+		r.x = a->w - win->wBorderSide;
+		AG_SetStockCursor(win, &win->caResize[4], r, AG_HRESIZE_CURSOR);
+	}
+	if (win->wBorderBot > 0) {
+		r.x = 0;
+		r.y = a->h - win->wBorderBot;
+		r.w = win->wResizeCtrl;
+		r.h = win->wBorderBot;
+		AG_SetStockCursor(win, &win->caResize[1], r, AG_LRDIAG_CURSOR);
+		r.x = win->wResizeCtrl;
+		r.w = a->w - win->wResizeCtrl*2;
+		AG_SetStockCursor(win, &win->caResize[2], r, AG_VRESIZE_CURSOR);
+		r.x = a->w - win->wResizeCtrl;
+		r.w = win->wResizeCtrl;
+		AG_SetStockCursor(win, &win->caResize[3], r, AG_LLDIAG_CURSOR);
+	}
 
 	/* Calculate total space available for widgets. */
 	wAvail = a->w - win->lPad - win->rPad - win->wBorderSide*2;
