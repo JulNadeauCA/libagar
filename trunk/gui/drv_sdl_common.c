@@ -830,6 +830,7 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 				dsw->winop = GenericMouseOverCtrl(win,
 				    dev->data.button.x, dev->data.button.y);
 				if (dsw->winop != AG_WINOP_NONE) {
+					win->dirty = 1;
 					dsw->winSelected = win;
 					AG_ObjectUnlock(win);
 					return (1);
@@ -859,6 +860,13 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			break;
 		}
 		AG_ObjectUnlock(win);
+	}
+	switch (dev->type) {
+	case AG_DRIVER_MOUSE_MOTION:
+		if (winTop == NULL) {
+			AGDRIVER_CLASS(drv)->unsetCursor(drv);
+		}
+		break;
 	}
 	return (0);
 }
