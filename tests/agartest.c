@@ -172,11 +172,31 @@ RunTest(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2);
+	AG_Driver *drv = AGWIDGET(winParent)->drv;
+	AG_DriverClass *drvClass = AGDRIVER_CLASS(drv);
 	AG_TestCase *tc = AG_TlistSelectedItemPtr(tl);
 	AG_TestInstance *ti;
 
 	if (tc == NULL || (tc->test == NULL && tc->testGUI == NULL))
 		return;
+	if (tc->flags & AG_TEST_OPENGL) {
+		if (!(drvClass->flags & AG_DRIVER_OPENGL)) {
+			AG_TextMsg(AG_MSG_ERROR,
+			    _("The `%s' test requires OpenGL.\n"
+			      "Current driver (%s) has no GL support"),
+			      tc->name, drvClass->name);
+			return;
+		}
+	}
+	if (tc->flags & AG_TEST_SDL) {
+		if (!(drvClass->flags & AG_DRIVER_SDL)) {
+			AG_TextMsg(AG_MSG_ERROR,
+			    _("The `%s' test requires SDL.\n"
+			      "Current driver (%s) has no SDL support"),
+			      tc->name, drvClass->name);
+			return;
+		}
+	}
 
 	if ((ti = CreateTestInstance(tc)) == NULL)
 		return;
