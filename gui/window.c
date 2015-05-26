@@ -779,10 +779,8 @@ OnShow(AG_Event *event)
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 
 	/* Implicit focus change. */
-	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
-		agWindowFocused = win;
-		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
-	}
+	if (!(win->flags & AG_WINDOW_DENYFOCUS))
+		agWindowToFocus = win;
 
 	/* Mark for redraw */
 	win->dirty = 1;
@@ -804,29 +802,39 @@ OnHide(AG_Event *event)
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_DriverSw *dsw;
 	int i;
-	
+
 	win->visible = 0;
 	WIDGET(win)->flags &= ~(AG_WIDGET_VISIBLE);
 	win->dirty = 0;
 	win->flags |= AG_WINDOW_NOCURSORCHG;
 	
 	/* Cancel focus state or any focus change requests. */
-	if (win == agWindowToFocus) {
+	if (win == agWindowToFocus)
 		agWindowToFocus = NULL;
-	}
-	if (win == agWindowFocused) {
-		AG_PostEvent(NULL, win, "window-lostfocus", NULL);
-		agWindowFocused = NULL;
-	}
 
 	switch (AGDRIVER_CLASS(drv)->wm) {
 	case AG_WM_SINGLE:
 		dsw = (AG_DriverSw *)drv;
+#ifdef AG_DEBUG	
+		if (OBJECT(drv)->parent == NULL) 
+			AG_FatalError("NULL parent");
+#endif
+		if (win == agWindowFocused) {
+			AG_Window *wOther;
 
-		if (OBJECT(drv)->parent == NULL)
-			break;
+			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		
+			AG_FOREACH_WINDOW_REVERSE(wOther, dsw) {
+				if (wOther->visible &&
+				  !(wOther->flags & AG_WINDOW_DENYFOCUS))
+					break;
+			}
+			if (wOther != NULL)
+				agWindowToFocus = wOther;
+		}
 
-		if (win->flags & AG_WINDOW_MODAL) {	/* Per-driver stack */
+		if (win->flags & AG_WINDOW_MODAL) {
 			for (i = 0; i < dsw->Lmodal->n; i++) {
 				if (dsw->Lmodal->v[i].data.p == win)
 					break;
@@ -844,7 +852,11 @@ OnHide(AG_Event *event)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if (win->flags & AG_WINDOW_MODAL) {	/* Global stack */
+		if (win == agWindowFocused) {
+			AG_PostEvent(NULL, win, "window-lostfocus", NULL);
+			agWindowFocused = NULL;
+		}
+		if (win->flags & AG_WINDOW_MODAL) {
 			for (i = 0; i < agModalWindows->n; i++) {
 				if (agModalWindows->v[i].data.p == win)
 					break;
@@ -896,6 +908,7 @@ OnFocusGain(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
+/*	Verbose("%s (\"%s\"): Gained Focus\n", OBJECT(win)->name, win->caption); */
 	WidgetGainFocus(WIDGET(win));
 }
 
@@ -904,6 +917,7 @@ OnFocusLoss(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
+/*	Verbose("%s (\"%s\"): Lost Focus\n", OBJECT(win)->name, win->caption); */
 	WidgetLostFocus(WIDGET(win));
 }
 

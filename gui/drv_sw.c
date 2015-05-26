@@ -337,7 +337,9 @@ AG_WM_MoveBegin(AG_Window *win)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
 	
-	agWindowToFocus = win;
+	if (!(win->flags & AG_WINDOW_DENYFOCUS)) {
+		agWindowToFocus = win;
+	}
 	dsw->winSelected = win;
 	if (!(win->flags & AG_WINDOW_NOMOVE))
 		dsw->winop = AG_WINOP_MOVE;
@@ -384,6 +386,10 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
 void
 AG_WM_CommitWindowFocus(AG_Window *win)
 {
+#ifdef AG_DEBUG
+	if (win->flags & AG_WINDOW_DENYFOCUS)
+		AG_FatalError("Window is not focusable");
+#endif
 	if (agWindowFocused != NULL) {
 		if (win != NULL &&
 		    win == agWindowFocused) {		/* Nothing to do */
@@ -397,8 +403,9 @@ AG_WM_CommitWindowFocus(AG_Window *win)
 			AG_ObjectMoveToTail(win);
 		}
 		agWindowFocused = win;
-		AG_ObjectUnlock(win);
 		AG_PostEvent(NULL, win, "window-gainfocus", NULL);
+		win->dirty = 1;
+		AG_ObjectUnlock(win);
 	} else {
 		agWindowFocused = NULL;
 	}

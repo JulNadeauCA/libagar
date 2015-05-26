@@ -798,8 +798,7 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			    drv->mouse->xRel, drv->mouse->yRel,
 			    drv->mouse->btnState);
 			if (winTop == NULL &&
-			    AG_WidgetArea(win, dev->data.motion.x,
-			    dev->data.motion.y)) {
+			    AG_WidgetArea(win, dev->data.motion.x, dev->data.motion.y)) {
 				winTop = win;
 				AG_MouseCursorUpdate(win,
 				    dev->data.motion.x,
@@ -822,7 +821,8 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 				AG_ObjectUnlock(win);
 				continue;
 			}
-			if (win != agWindowFocused) {
+			if (win != agWindowFocused &&
+			    !(win->flags & AG_WINDOW_DENYFOCUS)) {
 				agWindowToFocus = win;
 			}
 			if (win->wBorderBot > 0 &&
