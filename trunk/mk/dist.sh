@@ -5,8 +5,7 @@ PROJ=agar
 VER=`perl mk/get-version.pl`
 REL=`perl mk/get-release.pl`
 DISTNAME=${PROJ}-${VER}
-RHOST=resin.csoft.net
-RUSER=vedge
+RHOST=resin
 MAKE=make
 
 if [ "$1" != "" ]; then
@@ -56,8 +55,7 @@ rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
 # ZIP: Prepare IDE "project files", README.txt and friends.
 (cd ${DISTNAME} && ${MAKE} proj)
-(cd ${DISTNAME}/demos && ${MAKE} proj)
-(cd ${DISTNAME}/tools/agarpaint && touch Makefile.config && ${MAKE} proj)
+(cd ${DISTNAME}/tests && ${MAKE} proj)
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
 (cd ${DISTNAME} && rm -f README RELEASE-${VER})
 
@@ -66,32 +64,31 @@ zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}
 
 echo "Updating checksums"
 openssl md5 ${DISTNAME}.tar.gz > ${DISTNAME}.tar.gz.md5
-openssl rmd160 ${DISTNAME}.tar.gz >> ${DISTNAME}.tar.gz.md5
-openssl sha1 ${DISTNAME}.tar.gz >> ${DISTNAME}.tar.gz.md5
+openssl sha256 ${DISTNAME}.tar.gz >> ${DISTNAME}.tar.gz.md5
 openssl md5 ${DISTNAME}.zip > ${DISTNAME}.zip.md5
-openssl rmd160 ${DISTNAME}.zip >> ${DISTNAME}.zip.md5
-openssl sha1 ${DISTNAME}.zip >> ${DISTNAME}.zip.md5
+openssl sha256 ${DISTNAME}.zip >> ${DISTNAME}.zip.md5
 
 echo "Updating signatures"
 gpg -ab ${DISTNAME}.tar.gz
 gpg -ab ${DISTNAME}.zip
 
-if [ "$NOUPLOAD" != "Yes" ]; then
-	echo "Uploading to ${RHOST}"
-	scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${RHOST}:${REMOTEDIR}
+if [ "$NOUPLOAD" = "" ]; then
+	echo "Upload to ${RHOST}?"
+	read FOO
+	if [ "$FOO" != "no" ]; then
+		scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RHOST}:${REMOTEDIR}
+	fi
 fi
 
 if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"
 	echo "TODO:"
-	echo "- Make sure core/version.h is up to date"
-	echo "- Make sure shared library versions are consistent"
+	echo "- Double check core/version.h and build.lib.mk versions"
 	echo " "
 	echo "- Create http://wiki.libagar.org/wiki/Agar-${VER}"
 	echo "- Update http://wiki.libagar.org/wiki/Main_Page"
 	echo "- Update http://sourceforge.net/projects/agar/"
-	echo "- Update http://freshmeat.net/projects/agar/"
 	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
-	echo "- Notify Twitter"
+	echo "- Notify @libAgar"
 	echo "*********************************************************"
 fi
