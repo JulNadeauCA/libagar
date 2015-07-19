@@ -300,7 +300,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Pixmap *px = obj;
 
-	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
+	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0 && px->n >= 0) {
 		r->w = WSURFACE(px,px->n)->w;
 		r->h = WSURFACE(px,px->n)->h;
 	} else {
