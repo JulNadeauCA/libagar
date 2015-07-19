@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2011 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,29 +23,29 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Preformat and install manual pages from nroff sources.
+# Preformat and install manual pages from mandoc sources.
 #
 
-NROFF?=nroff
+MANDOC?=
 PAGER?=more
-MAN1?=""
-MAN2?=""
-MAN3?=""
-MAN4?=""
-MAN5?=""
-MAN6?=""
-MAN7?=""
-MAN8?=""
-MAN9?=""
-CATMAN1?=""
-CATMAN2?=""
-CATMAN3?=""
-CATMAN4?=""
-CATMAN5?=""
-CATMAN6?=""
-CATMAN7?=""
-CATMAN8?=""
-CATMAN9?=""
+MAN1?=
+MAN2?=
+MAN3?=
+MAN4?=
+MAN5?=
+MAN6?=
+MAN7?=
+MAN8?=
+MAN9?=
+CATMAN1?=
+CATMAN2?=
+CATMAN3?=
+CATMAN4?=
+CATMAN5?=
+CATMAN6?=
+CATMAN7?=
+CATMAN8?=
+CATMAN9?=
 MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 MANLINKS?=
 NOMAN?=
@@ -53,7 +53,7 @@ NOCATMAN?=
 NOMANLINKS?=
 CLEANFILES?=
 
-all: all-subdir preformat-man
+all: all-subdir all-catman
 install: install-man-dirs install-man install-subdir
 deinstall: deinstall-subdir
 clean: clean-man clean-subdir
@@ -61,25 +61,45 @@ cleandir: clean-man clean-subdir cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
-.SUFFIXES: .1 .2 .3 .4 .5 .6 .7 .8 .9 .cat1 .cat2 .cat3 .cat4 .cat5 .cat6 .cat7 .cat8 .cat9 .ps1 .ps2 .ps3 .ps4 .ps5 .ps6 .ps7 .ps8 .ps9
+.SUFFIXES: .1 .2 .3 .4 .5 .6 .7 .8 .9 .cat1 .cat2 .cat3 .cat4 .cat5 .cat6 .cat7 .cat8 .cat9 .ps .pdf .html
 
 .1.cat1 .2.cat2 .3.cat3 .4.cat4 .5.cat5 .6.cat6 .7.cat7 .8.cat8 .9.cat9:
-	@echo "${NROFF} -Tascii -mandoc $< > $@"
+	@echo "${MANDOC} -Tascii $< > $@"
 	@(cat $< | \
 	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
 	  sed 's,\$$PREFIX,${PREFIX},' | \
 	  sed 's,\$$DATADIR,${DATADIR},' | \
-	  ${NROFF} -Tascii -mandoc > $@) || (rm -f $@; true)
+	  ${MANDOC} -Tascii > $@) || (rm -f $@; true)
 
-.1.ps1 .2.ps2 .3.ps3 .4.ps4 .5.ps5 .6.ps6 .7.ps7 .8.ps8 .9.ps9:
-	@echo "${NROFF} -Tps -mandoc $< > $@"
+.1.ps .2.ps .3.ps .4.ps .5.ps .6.ps .7.ps .8.ps .9.ps:
+	@if [ "${HAVE_MANDOC}" != "yes" ]; then echo "Requires mandoc"; exit 1; fi
+	@echo "${MANDOC} -Tps $< > $@"
 	@(cat $< | \
 	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
 	  sed 's,\$$PREFIX,${PREFIX},' | \
 	  sed 's,\$$DATADIR,${DATADIR},' | \
-	  ${NROFF} -Tps -mandoc > $@) || (rm -f $@; true)
+	  ${MANDOC} -Tps > $@) || (rm -f $@; true)
 
-preformat-man:
+.1.pdf .2.pdf .3.pdf .4.pdf .5.pdf .6.pdf .7.pdf .8.pdf .9.pdf:
+	@if [ "${HAVE_MANDOC}" != "yes" ]; then echo "Requires mandoc"; exit 1; fi
+	@echo "${MANDOC} -Tpdf $< > $@"
+	@(cat $< | \
+	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
+	  sed 's,\$$PREFIX,${PREFIX},' | \
+	  sed 's,\$$DATADIR,${DATADIR},' | \
+	  ${MANDOC} -Tpdf > $@) || (rm -f $@; true)
+
+.1.html .2.html .3.html .4.html .5.html .6.html .7.html .8.html .9.html:
+	@if [ "${HAVE_MANDOC}" != "yes" ]; then echo "Requires mandoc"; exit 1; fi
+	@echo "${MANDOC} -Thtml $< > $@"
+	@(cat $< | \
+	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
+	  sed 's,\$$PREFIX,${PREFIX},' | \
+	  sed 's,\$$DATADIR,${DATADIR},' | \
+	  ${MANDOC} -Thtml > $@) || (rm -f $@; true)
+
+all-catman:
+	@if [ "${HAVE_MANDOC}" != "yes" ]; then exit 0; fi
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN1}" = "" ]; then \
 	        CATLIST=""; \
@@ -492,8 +512,8 @@ install-manlinks:
 
 man:
 	@if [ "${MAN}" != "" ]; then \
-		echo "${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}"; \
-		${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}; \
+		echo "${MANDOC} -Tascii ${MAN} | ${PAGER}"; \
+		${MANDOC} -Tascii ${MAN} | ${PAGER}; \
 	else \
 		echo "Usage: ${MAKE} man MAN=(manpage)"; \
 		exit 1; \
@@ -590,8 +610,23 @@ man2wiki: Makefile
 		done; \
 	fi
 
+lint:
+	@if [ "${HAVE_MANDOC}" != "yes" ]; then \
+		echo "Cannot find mandoc (re-run ./configure?)"; \
+		exit 1; \
+	fi
+	@if [ "${MAN1}" != "" ]; then for F in ${MAN1}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN2}" != "" ]; then for F in ${MAN2}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN3}" != "" ]; then for F in ${MAN3}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN4}" != "" ]; then for F in ${MAN4}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN5}" != "" ]; then for F in ${MAN5}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN6}" != "" ]; then for F in ${MAN6}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN7}" != "" ]; then for F in ${MAN7}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN8}" != "" ]; then for F in ${MAN8}; do ${MANDOC} -Tlint $$F; done; fi
+	@if [ "${MAN9}" != "" ]; then for F in ${MAN9}; do ${MANDOC} -Tlint $$F; done; fi
+
 .PHONY: install deinstall clean cleandir regress depend
-.PHONY: install-man install-manlinks clean-man
-.PHONY: man preformat-man install-man-dirs manlinks all-manlinks man2wiki
+.PHONY: install-man install-manlinks clean-man 
+.PHONY: man all-catman install-man-dirs manlinks all-manlinks man2wiki
 
 include ${TOP}/mk/build.common.mk
