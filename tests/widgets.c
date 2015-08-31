@@ -369,7 +369,6 @@ Destroy(void *obj)
 	MyTestInstance *ti = obj;
 
 	Free(ti->someText);
-	DEV_DestroySubsystem();
 }
 
 const AG_TestCase widgetsTest = {

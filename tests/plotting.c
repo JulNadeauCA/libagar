@@ -174,12 +174,6 @@ Init(void *obj)
 	return (0);
 }
 
-static void
-Destroy(void *obj)
-{
-	M_DestroySubsystem();
-}
-
 static int
 TestGUI(void *obj, AG_Window *win)
 {
@@ -269,7 +263,7 @@ const AG_TestCase plottingTest = {
 	0,
 	sizeof(AG_TestInstance),
 	Init,
-	Destroy,
+	NULL,		/* destroy */
 	NULL,		/* test */
 	TestGUI,
 	NULL		/* bench */

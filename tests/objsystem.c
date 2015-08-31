@@ -53,8 +53,6 @@ Destroy(void *obj)
 		/* Unregister our classes for a complete cleanup. */
 		AG_UnregisterClass(&AnimalClass);
 		AG_UnregisterClass(&MammalClass);
-
-		DEV_DestroySubsystem();
 	}
 }
 
