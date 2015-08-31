@@ -17,12 +17,6 @@ Init(void *obj)
 	return (0);
 }
 
-static void
-Destroy(void *obj)
-{
-	M_DestroySubsystem();
-}
-
 static int
 Test(void *obj)
 {
@@ -89,7 +83,7 @@ const AG_TestCase stringTest = {
 	0,
 	sizeof(AG_TestInstance),
 	Init,
-	Destroy,
+	NULL,		/* destroy */
 	Test,
 	NULL,		/* testGUI */
 	NULL		/* bench */

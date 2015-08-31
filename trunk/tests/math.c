@@ -129,12 +129,6 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
-{
-	M_DestroySubsystem();
-}
-
-static void
 TestComplex(AG_TestInstance *ti)
 {
 	M_Complex C1, C2, C1mi, C1plusC2, C1multC2;
@@ -373,7 +367,7 @@ const AG_TestCase mathTest = {
 	0,
 	sizeof(MyTestInstance),
 	Init,
-	Destroy,
+	NULL,	/* destroy */
 	Test,
 	NULL,	/* testGUI */
 	Bench
