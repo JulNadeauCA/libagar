@@ -90,15 +90,13 @@ AG_InitClassTbl(void)
 void
 AG_DestroyClassTbl(void)
 {
-	Free(agNamespaceTbl);
-	agNamespaceTbl = NULL;
+	free(agNamespaceTbl); agNamespaceTbl = NULL;
 	agNamespaceCount = 0;
 	
 	agClassTree = NULL;
 	
 	AG_TblDestroy(agClassTbl);
-	free(agClassTbl);
-	agClassTbl = NULL;
+	free(agClassTbl); agClassTbl = NULL;
 	
 	AG_MutexDestroy(&agClassLock);
 }
@@ -441,14 +439,13 @@ AG_UnregisterNamespace(const char *name)
 		if (strcmp(agNamespaceTbl[i].name, name) == 0)
 			break;
 	}
-	if (i == agNamespaceCount) {
-		return;
+	if (i < agNamespaceCount) {
+		if (i < agNamespaceCount-1) {
+			memmove(&agNamespaceTbl[i], &agNamespaceTbl[i+1],
+			    (agNamespaceCount-i-1)*sizeof(AG_Namespace));
+		}
+		agNamespaceCount--;
 	}
-	if (i < agNamespaceCount-1) {
-		memmove(&agNamespaceTbl[i], &agNamespaceTbl[i+1],
-		    (agNamespaceCount-1)*sizeof(AG_Namespace));
-	}
-	agNamespaceCount--;
 }
 
 /* Register a new module directory path. */
@@ -474,15 +471,14 @@ AG_UnregisterModuleDirectory(const char *path)
 		if (strcmp(agModuleDirs[i], path) == 0)
 			break;
 	}
-	if (i == agModuleDirCount) {
-		return;
+	if (i < agModuleDirCount) {
+		free(agModuleDirs[i]);
+		if (i < agModuleDirCount-1) {
+			memmove(&agModuleDirs[i], &agModuleDirs[i+1],
+			    (agModuleDirCount-i-1)*sizeof(char *));
+		}
+		agModuleDirCount--;
 	}
-	Free(agModuleDirs[i]);
-	if (i < agModuleDirCount-1) {
-		memmove(&agModuleDirs[i], &agModuleDirs[i+1],
-		    (agModuleDirCount-1)*sizeof(char *));
-	}
-	agModuleDirCount--;
 }
 
 /* General case fallback for AG_ClassIsNamed() */

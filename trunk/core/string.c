@@ -184,10 +184,10 @@ AG_UnregisterFmtStringExt(const char *fmt)
 			break;
 	}
 	if (i < agFmtExtensionCount) {
-		Free(agFmtExtensions[i].fmt);
+		free(agFmtExtensions[i].fmt);
 		if (i < agFmtExtensionCount-1) {
 			memmove(&agFmtExtensions[i], &agFmtExtensions[i+1],
-			    (agFmtExtensionCount-1)*sizeof(AG_FmtStringExt));
+			    (agFmtExtensionCount-i-1)*sizeof(AG_FmtStringExt));
 		}
 		agFmtExtensionCount--;
 	}

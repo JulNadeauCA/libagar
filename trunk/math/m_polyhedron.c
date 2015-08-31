@@ -165,15 +165,15 @@ M_PolyhedronAddVertex(M_Polyhedron *P, M_Vector3 v)
 
 /* Remove a vertex from a polyhedron. Vertex must not be in use. */
 void
-M_PolyhedronDelVertex(M_Polyhedron *P, Uint v)
+M_PolyhedronDelVertex(M_Polyhedron *P, Uint i)
 {
-	if (v >= P->nv) {
-		return;
+	if (i < P->nv) {
+		if (i < P->nv - 1) {
+			memmove(&P->v[i], &P->v[i+1],
+			    (P->nv - i - 1)*sizeof(M_Vector3));
+		}
+		P->nv--;
 	}
-	if (v < P->nv-1) {
-		memmove(&P->v[v], &P->v[v+1], (P->nv - 1)*sizeof(M_Vector3));
-	}
-	P->nv--;
 }
 
 /*
@@ -207,15 +207,15 @@ M_PolyhedronAddEdge(M_Polyhedron *P, int v1, int v2)
 void
 M_PolyhedronDelEdge(M_Polyhedron *P, Uint e)
 {
-	Uint eHead = (P->e[e].oe < e) ? P->e[e].oe : e;
+	Uint i = (P->e[e].oe < e) ? P->e[e].oe : e;	/* Pick head HE */
  
-	if (e >= P->ne)
-		return;
-
-	if (eHead < P->ne-2) {
-		memmove(&P->e[eHead], &P->e[eHead+2], (P->ne-2)*sizeof(M_Halfedge));
+	if (i < P->ne) {
+		if (i < P->ne - 2) {
+			memmove(&P->e[i], &P->e[i+2],
+			    (P->ne - i - 2)*sizeof(M_Halfedge));
+		}
+		P->ne--;
 	}
-	P->ne--;
 }
 
 /*
@@ -245,15 +245,14 @@ M_PolyhedronAddFacet(M_Polyhedron *P, Uint n, const Uint *e)
 
 /* Remove a facet from a polyhedron. */
 void
-M_PolyhedronDelFacet(M_Polyhedron *P, Uint f)
+M_PolyhedronDelFacet(M_Polyhedron *P, Uint i)
 {
-	if (f >= P->nv) {
-		return;
+	if (i < P->nv) {
+		Free(P->f[i].e);
+		if (i < P->nf - 1) {
+			memmove(&P->f[i], &P->f[i+1],
+			    (P->nf - i - 1)*sizeof(M_Facet));
+		}
+		P->nf--;
 	}
-	Free(P->f[f].e);
-
-	if (f < P->nf-1) {
-		memmove(&P->f[f], &P->f[f+1], (P->nf-1)*sizeof(M_Facet));
-	}
-	P->nf--;
 }

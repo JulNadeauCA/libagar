@@ -237,7 +237,7 @@ VG_UnregisterClass(VG_NodeOps *vnOps)
 	}
 	if (i < vgNodeClassCount-1) {
 		memmove(&vgNodeClasses[i], &vgNodeClasses[i+1],
-		    (vgNodeClassCount-1)*sizeof(VG_NodeOps *));
+		    (vgNodeClassCount-i-1)*sizeof(VG_NodeOps *));
 	}
 	vgNodeClassCount--;
 }
@@ -350,7 +350,7 @@ VG_DelRef(void *pVn, void *pRef)
 	}
 	if (i < vn->nRefs-1) {
 		memmove(&vn->refs[i], &vn->refs[i+1],
-		    (vn->nRefs-1)*sizeof(VG_Node *));
+		    (vn->nRefs-i-1)*sizeof(VG_Node *));
 	}
 	vn->nRefs--;
 	newDeps = (--VGNODE(pRef)->nDeps);
