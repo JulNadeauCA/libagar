@@ -179,7 +179,7 @@ AU_DelChannel(AU_DevOut *dev, int ch)
 	}
 	if (ch < dev->nChan-1) {
 		memmove(&dev->chan[ch], &dev->chan[ch+1],
-		    (dev->nChan-1)*sizeof(AU_Channel));
+		    (dev->nChan - ch - 1)*sizeof(AU_Channel));
 	}
 	dev->nChan--;
 	AG_MutexUnlock(&dev->lock);

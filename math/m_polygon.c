@@ -210,14 +210,14 @@ M_PolygonAddLine(M_Polygon *P, M_Line2 L)
 
 /* Remove a vertex from a polygon. */
 int
-M_PolygonDelVertex(M_Polygon *P, int v)
+M_PolygonDelVertex(M_Polygon *P, int i)
 {
-	if (v < 0 || v >= P->n) {
+	if (i < 0 || i >= P->n) {
 		AG_SetError("Bad vertex");
 		return (-1);
 	}
-	if (v < P->n-1) {
-		memmove(&P->v[v], &P->v[v+1], (P->n - 1)*sizeof(M_Vector2));
+	if (i < P->n - 1) {
+		memmove(&P->v[i], &P->v[i+1], (P->n - i - 1)*sizeof(M_Vector2));
 	}
 	P->n--;
 	return (0);

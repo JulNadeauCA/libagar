@@ -48,16 +48,14 @@ static __inline__ void
 VG_PolygonDelVertex(VG_Polygon *vP, Uint vtx)
 {
 	VG_Lock(VGNODE(vP)->vg);
-	if (vtx >= vP->nPts) {
-		goto out;
+	if (vtx < vP->nPts) {
+		VG_DelRef(vP, vP->pts[vtx]);
+		if (vtx < vP->nPts-1) {
+			memmove(&vP->pts[vtx], &vP->pts[vtx+1],
+			    (vP->nPts - vtx - 1)*sizeof(VG_Point *));
+		}
+		vP->nPts--;
 	}
-	VG_DelRef(vP, vP->pts[vtx]);
-	if (vtx < vP->nPts-1) {
-		memmove(&vP->pts[vtx], &vP->pts[vtx+1],
-		    (vP->nPts - 1)*sizeof(VG_Point *));
-	}
-	vP->nPts--;
-out:
 	VG_Unlock(VGNODE(vP)->vg);
 }
 __END_DECLS
