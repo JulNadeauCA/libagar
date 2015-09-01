@@ -60,7 +60,10 @@ InitClass(AG_ObjectClass *cl, const char *hier, const char *libs)
 	TAILQ_INIT(&cl->sub);
 }
 
-/* Initialize the object class description table. */
+/*
+ * Initialize the object class description table.
+ * Invoked internally by AG_InitCore().
+ */
 void
 AG_InitClassTbl(void)
 {
@@ -86,13 +89,23 @@ AG_InitClassTbl(void)
 	AG_MutexInitRecursive(&agClassLock);
 }
 
-/* Release the object class description table. */
+/*
+ * Release the object class description table.
+ * Invoked internally by AG_Destroy().
+ */
 void
 AG_DestroyClassTbl(void)
 {
+	int i;
+
 	free(agNamespaceTbl); agNamespaceTbl = NULL;
 	agNamespaceCount = 0;
-	
+
+	for (i = 0; i < agModuleDirCount; i++) { free(agModuleDirs[i]); }
+	free(agModuleDirs);
+	agModuleDirs = NULL;
+	agModuleDirCount = 0;
+
 	agClassTree = NULL;
 	
 	AG_TblDestroy(agClassTbl);
