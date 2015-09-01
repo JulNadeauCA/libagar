@@ -175,7 +175,11 @@ M_VectorDot_FPU(const M_Vector *a, const M_Vector *b)
 static __inline__ M_Real
 M_VectorDistance_FPU(const M_Vector *a, const M_Vector *b)
 {
-	return M_VectorLen_FPU( M_VectorSub_FPU(a,b) );
+	M_Real len;
+	M_Vector *d = M_VectorSub_FPU(a,b);
+	len = M_VectorLen_FPU(d);
+	M_VectorFree_FPU(d);
+	return (len);
 }
 
 static __inline__ M_Vector *
