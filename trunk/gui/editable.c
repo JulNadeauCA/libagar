@@ -1202,8 +1202,8 @@ AG_EditablePaste(AG_Editable *ed, AG_EditableBuffer *buf,
 	if (!(ed->flags & AG_EDITABLE_MULTILINE)) {
 		for (c = &cb->s[0]; *c != '\0'; c++) {
 			if (*c == '\n') {
-				AG_SetError(_("Cannot paste newlines here"));
-				goto fail;
+				*c = '\0';
+				break;
 			}
 		}
 	}
