@@ -209,13 +209,23 @@ AG_Destroy(void)
 
 	AG_ObjectDestroy(agConfig);
 	AG_DataSourceDestroySubsystem();
-
 	AG_DestroyTimers();
+	if (agUserOps != NULL && agUserOps->destroy != NULL) {
+		agUserOps->destroy();
+		agUserOps = NULL;
+	}
+#ifdef AG_NETWORK
+	AG_DestroyNetworkSubsystem();
+#endif
+	AG_DestroyClassTbl();
+#ifdef AG_THREADS
+	pthread_mutexattr_destroy(&agRecursiveMutexAttr);
+	AG_MutexDestroy(&agDSOLock);
+#endif
 	AG_DestroyEventSubsystem();
 	AG_DestroyStringSubsystem();
 	AG_DestroyErrorSubsystem();
-	AG_DestroyClassTbl();
-	Free(agProgName);
+	Free(agProgName); agProgName = NULL;
 }
 
 void

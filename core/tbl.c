@@ -39,7 +39,7 @@ AG_TblNew(Uint nBuckets, Uint flags)
 		return (NULL);
 	}
 	if (AG_TblInit(t, nBuckets, flags) == -1) {
-		Free(t);
+		free(t);
 		return (NULL);
 	}
 	return (t);
@@ -75,13 +75,11 @@ AG_TblDestroy(AG_Tbl *t)
 		AG_TblBucket *buck = &t->buckets[i];
 
 		for (j = 0; j < buck->nEnts; j++) {
-			Free(buck->keys[j]);
+			free(buck->keys[j]);
 			AG_FreeVariable(&buck->ents[j]);
 		}
-		Free(buck->keys);
-		Free(buck->ents);
-		buck->keys = NULL;
-		buck->ents = NULL;
+		free(buck->keys);
+		free(buck->ents);
 	}
 	free(t->buckets);
 }
@@ -145,7 +143,7 @@ AG_TblInsertHash(AG_Tbl *tbl, Uint h, const char *key, const AG_Variable *V)
 	}
 	if ((keysNew = TryRealloc(buck->keys,
 	    (buck->nEnts+1)*sizeof(char *))) == NULL) {
-		Free(entsNew);
+		free(entsNew);
 		return (-1);
 	}
 	buck->ents = entsNew;
@@ -172,7 +170,7 @@ AG_TblDeleteHash(AG_Tbl *tbl, Uint h, const char *key)
 		return (-1);
 	}
 
-	Free(buck->keys[i]);
+	free(buck->keys[i]);
 	AG_FreeVariable(&buck->ents[i]);
 
 	if (i < buck->nEnts-1) {

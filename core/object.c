@@ -92,7 +92,7 @@ AG_ObjectInit(void *p, void *cl)
 			if (hier[i]->init != NULL)
 				hier[i]->init(ob);
 		}
-		Free(hier);
+		free(hier);
 	} else {
 		AG_FatalError("AG_ObjectInit: %s", AG_GetError());
 	}
@@ -185,7 +185,7 @@ AG_ObjectFreeDataset(void *p)
 			if (hier[i]->reinit != NULL)
 				hier[i]->reinit(ob);
 		}
-		Free(hier);
+		free(hier);
 	} else {
 		AG_FatalError("AG_ObjectFreeDataset: %s: %s", ob->name,
 		    AG_GetError());
@@ -656,7 +656,7 @@ AG_ObjectFreeDeps(AG_Object *ob)
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
 		ndep = TAILQ_NEXT(dep, deps);
-		Free(dep);
+		free(dep);
 	}
 	TAILQ_INIT(&ob->deps);
 	AG_ObjectUnlock(ob);
@@ -679,7 +679,7 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 		ndep = TAILQ_NEXT(dep, deps);
 		if (dep->count == 0) {
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			Free(dep);
+			free(dep);
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
@@ -797,7 +797,7 @@ AG_ObjectDestroy(void *p)
 			if (hier[i]->destroy != NULL)
 				hier[i]->destroy(ob);
 		}
-		Free(hier);
+		free(hier);
 	} else {
 		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
@@ -808,7 +808,7 @@ AG_ObjectDestroy(void *p)
 	Free(ob->archivePath);
 	
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
-		Free(ob);
+		free(ob);
 }
 
 /*
@@ -1008,8 +1008,7 @@ AG_ObjectResolveDeps(void *p)
 		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
 		    dep->obj->name);
 #endif
-		Free(dep->path);
-		dep->path = NULL;
+		free(dep->path); dep->path = NULL;
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
@@ -1087,7 +1086,7 @@ ReadDependencyTable(AG_DataSource *ds, AG_Object *ob)
 			goto fail;
 		}
 		if ((dep->path = AG_ReadString(ds)) == NULL) {
-			Free(dep);
+			free(dep);
 			goto fail;
 		}
 		dep->obj = NULL;
@@ -1441,11 +1440,11 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		if (hier[i]->load(ob, ds, &ver) == -1) {
 			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds),
 			    AG_GetError());
-			Free(hier);
+			free(hier);
 			goto fail;
 		}
 	}
-	Free(hier);
+	free(hier);
 
 	AG_CloseFile(ds);
 	AG_PostEvent(ob, ob->root, "object-post-load-data", "%s", path);
@@ -1584,11 +1583,11 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		if (hier[i]->save == NULL)
 			continue;
 		if (hier[i]->save(ob, ds) == -1) {
-			Free(hier);
+			free(hier);
 			goto fail;
 		}
 	}
-	Free(hier);
+	free(hier);
 
 	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
 		AG_SetSourceDebug(ds, 0);
@@ -1655,11 +1654,11 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
 			AG_SetError("<0x%x>:%s", (Uint)AG_Tell(ds), AG_GetError());
-			Free(hier);
+			free(hier);
 			goto fail;
 		}
 	}
-	Free(hier);
+	free(hier);
 
 	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
 		AG_SetSourceDebug(ds, 0);
@@ -1999,7 +1998,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	if ((dep->count-1) == 0) {
 		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			Free(dep);
+			free(dep);
 		} else {
 			dep->count = 0;
 		}
