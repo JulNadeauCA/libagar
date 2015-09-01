@@ -1137,6 +1137,7 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 	for (i = 0; i < count; i++) {
 		char key[64];
 		Sint32 code;
+		char *s;
 
 		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
 			AG_SetError("Variable name too long: %s", key);
@@ -1173,7 +1174,12 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 		case AG_VARIABLE_LONG_DOUBLE: AG_SetLongDouble(ob, key, AG_ReadLongDouble(ds)); break;
 #endif
 		case AG_VARIABLE_STRING:
-			AG_SetStringNODUP(ob, key, AG_ReadString(ds));
+			if ((s = AG_ReadString(ds)) != NULL) {
+				AG_SetString(ob, key, s);
+				free(s);
+			} else {
+				AG_SetString(ob, key, "");
+			}
 			break;
 		default:
 			AG_SetError("Attempt to load variable of type %s",
