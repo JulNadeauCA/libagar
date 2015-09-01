@@ -187,8 +187,8 @@ TestVector(AG_TestInstance *ti)
 
 	M_VecFree(a);		M_VecFree(b);
 	M_VecFree(a2);		M_VecFree(b2);
+	M_VecFree(AplusB);	M_VecFree(AsubB);
 	M_VecFree(aNorm);	M_VecFree(bNorm);
-	M_VecFree(AplusB);
 	M_VecFree(aLERP);
 	M_VecFree(aPow2);
 }

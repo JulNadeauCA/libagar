@@ -126,9 +126,9 @@ RunBenchmarks(void *arg)
 	if (ti->tc->bench(ti) == 0) {
 		AG_ConsoleMsg(console, _("%s: Success"), ti->tc->name);
 	} else {
-		AG_ConsoleMsg(console, _("%s: Failed (%s)"), ti->tc->name,
-		    AG_GetError());
+		AG_ConsoleMsg(console, _("%s: Failed (%s)"), ti->tc->name, AG_GetError());
 	}
+	free(ti);
 	return (NULL);
 }
 #endif
@@ -244,11 +244,13 @@ RunTest(AG_Event *event)
 			AG_ObjectDetach(win);
 			goto fail;
 		}
+		TAILQ_INSERT_TAIL(&tests, ti, instances);
+	} else {
+		free(ti);
 	}
-	TAILQ_INSERT_TAIL(&tests, ti, instances);
 	return;
 fail:
-	Free(ti);
+	free(ti);
 }
 
 static void
@@ -267,21 +269,18 @@ RunBench(AG_Event *event)
 	{
 #ifdef AG_THREADS
 		AG_Thread th;
+
 		AG_ThreadCreate(&th, RunBenchmarks, ti);
 #else
 		if (tc->bench(ti) == 0) {
 			AG_ConsoleMsg(console, _("%s: Success"), tc->name);
 		} else {
-			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
-			    AG_GetError());
+			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name, AG_GetError());
 			AG_LabelTextS(status, AG_GetError());
-			free(ti);
-			return;
 		}
+		free(ti);
 #endif
 	}
-	TAILQ_INSERT_TAIL(&tests, ti, instances);
-	return;
 }
 
 static void
@@ -303,8 +302,8 @@ TestWindowClose(AG_Event *event)
 	AG_TestInstance *ti = AG_PTR(1);
 	
 	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
-	AG_ObjectDetach(ti->win);
 	AG_SetEvent(ti->win, "window-detached", TestWindowDetached, "%p", ti);
+	AG_ObjectDetach(ti->win);
 }
 
 /* Write a message to the test console (format string). */

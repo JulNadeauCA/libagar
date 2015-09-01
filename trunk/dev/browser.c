@@ -543,7 +543,7 @@ PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	if (OBJECT_RESIDENT(pob)) {
 		Strlcat(label, _(" (resident)"), sizeof(label));
 	}
-	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);
+	it = AG_TlistAddPtr(tl, NULL, label, pob);
 	it->depth = depth;
 	it->cat = "object";
 

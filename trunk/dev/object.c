@@ -82,7 +82,7 @@ PollDeps(AG_Event *event)
 			Snprintf(label, sizeof(label), "%s (%u)", path,
 			    (Uint)dep->count);
 		}
-		AG_TlistAddPtr(tl, AG_ObjectIcon(dep->obj), label, dep);
+		AG_TlistAddPtr(tl, NULL, label, dep);
 	}
 	AG_UnlockVFS(ob);
 	AG_TlistRestore(tl);
