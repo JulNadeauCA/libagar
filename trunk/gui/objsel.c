@@ -80,7 +80,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 		}
 	}
 
-	it = AG_TlistAddS(tl, AG_ObjectIcon(pob), pob->name);
+	it = AG_TlistAddS(tl, NULL, pob->name);
 	it->depth = depth;
 	it->cat = "object";
 	it->p1 = pob;

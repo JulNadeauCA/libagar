@@ -17,7 +17,7 @@ typedef struct ag_static_icon {
 
 __BEGIN_DECLS
 void        AG_InitStaticIcon(AG_StaticIcon *);
-AG_Surface *AG_ObjectIcon(void *);
+void        AG_FreeStaticIcon(AG_StaticIcon *);
 __END_DECLS
 
 #include <agar/gui/close.h>

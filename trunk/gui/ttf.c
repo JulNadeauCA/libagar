@@ -79,10 +79,8 @@ FlushGlyph(AG_TTFGlyph *glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
-	Free(glyph->bitmap.buffer);
-	glyph->bitmap.buffer = NULL;
-	Free(glyph->pixmap.buffer);
-	glyph->pixmap.buffer = NULL;
+	Free(glyph->bitmap.buffer);	glyph->bitmap.buffer = NULL;
+	Free(glyph->pixmap.buffer);	glyph->pixmap.buffer = NULL;
 	glyph->cached = 0;
 }
 

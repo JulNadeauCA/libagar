@@ -47,11 +47,18 @@ void
 AG_DestroyStyleSheet(AG_StyleSheet *css)
 {
 	AG_StyleBlock *blk, *blkNext;
+	AG_StyleEntry *ent, *entNext;
 
 	for (blk = TAILQ_FIRST(&css->blks);
 	     blk != TAILQ_END(&css->blks);
 	     blk = blkNext) {
 		blkNext = TAILQ_NEXT(blk, blks);
+		for (ent = TAILQ_FIRST(&blk->ents);
+		     ent != TAILQ_END(&blk->ents);
+		     ent = entNext) {
+			entNext = TAILQ_NEXT(ent, ents);
+			free(ent);
+		}
 		free(blk);
 	}
 	TAILQ_INIT(&css->blks);

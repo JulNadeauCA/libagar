@@ -30,7 +30,6 @@
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
-#include <agar/gui/load_xcf.h>
 #include <agar/gui/iconmgr.h>
 
 /* Compile surfaces/textures for the given static icon. */
@@ -58,10 +57,9 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 	}
 }
 
-/* Return the icon associated with an object class, if any. */
-AG_Surface *
-AG_ObjectIcon(void *p)
+void
+AG_FreeStaticIcon(AG_StaticIcon *icon)
 {
-	/* TODO */
-	return (NULL);
+	AG_SurfaceFree(icon->s);
+	icon->s = NULL;
 }

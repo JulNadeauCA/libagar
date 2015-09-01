@@ -69,3 +69,29 @@ agIcon_Init(void)
 	AG_InitStaticIcon(&agIconDocImport);
 	AG_InitStaticIcon(&agIconWindow);
 }
+
+static __inline__ void
+agIcon_Destroy(void)
+{
+	AG_FreeStaticIcon(&agIconLeftButton);
+	AG_FreeStaticIcon(&agIconMidButton);
+	AG_FreeStaticIcon(&agIconRightButton);
+	AG_FreeStaticIcon(&agIconCtrlKey);
+	AG_FreeStaticIcon(&agIconLoad);
+	AG_FreeStaticIcon(&agIconSave);
+	AG_FreeStaticIcon(&agIconUp);
+	AG_FreeStaticIcon(&agIconDown);
+	AG_FreeStaticIcon(&agIconTrash);
+	AG_FreeStaticIcon(&agIconClose);
+	AG_FreeStaticIcon(&agIconDoc);
+	AG_FreeStaticIcon(&agIconSymLink);
+	AG_FreeStaticIcon(&agIconDirectory);
+	AG_FreeStaticIcon(&agIconSmallArrowRight);
+	AG_FreeStaticIcon(&agIconWinClose);
+	AG_FreeStaticIcon(&agIconWinMinimize);
+	AG_FreeStaticIcon(&agIconWinMaximize);
+	AG_FreeStaticIcon(&agIconMagnifier);
+	AG_FreeStaticIcon(&agIconGear);
+	AG_FreeStaticIcon(&agIconDocImport);
+	AG_FreeStaticIcon(&agIconWindow);
+}

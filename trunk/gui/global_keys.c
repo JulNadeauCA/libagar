@@ -124,8 +124,8 @@ AG_UnbindGlobalKey(AG_KeySym keysym, AG_KeyMod keymod)
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if (gk->keysym == keysym && gk->keymod == keymod) {
 			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
+			free(gk);
 			AG_MutexUnlock(&agGlobalKeysLock);
-			Free(gk);
 			return (0);
 		}
 	}
@@ -145,7 +145,7 @@ AG_ClearGlobalKeys(void)
 	     gk != SLIST_END(&agGlobalKeys);
 	     gk = gkNext) {
 		gkNext = SLIST_NEXT(gk, gkeys);
-		Free(gk);
+		free(gk);
 	}
 	SLIST_INIT(&agGlobalKeys);
 	AG_MutexUnlock(&agGlobalKeysLock);
