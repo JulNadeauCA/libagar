@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,38 @@
 #include <agar/gui/icons_data.h>
 #include <agar/gui/text.h>
 
-void *agGUIClasses[] = {
+static struct {
+	const char *key;
+	int *p;
+} agGUIOptions[] = {
+	{ "ag_kbd_delay",		&agKbdDelay		},
+	{ "ag_kbd_repeat",		&agKbdRepeat		},
+	{ "ag_mouse_dblclick_delay",	&agMouseDblclickDelay	},
+	{ "ag_mouse_spin_delay",	&agMouseSpinDelay	},
+	{ "ag_mouse_spin_interval",	&agMouseSpinIval	},
+	{ "ag_text_composition",	&agTextComposition	},
+	{ "ag_text_bidi",		&agTextBidi		},
+	{ "ag_text_cache",		&agTextCache		},
+	{ "ag_text_tab_width",		&agTextTabWidth		},
+	{ "ag_text_blink_rate",		&agTextBlinkRate	},
+	{ "ag_text_symbols",		&agTextSymbols		},
+	{ "ag_page_increment",		&agPageIncrement	},
+	{ "ag_idle_threshold",		&agIdleThresh		},
+	{ "ag_screenshot_quality",	&agScreenshotQuality	},
+	{ "ag_msg_delay",		&agMsgDelay		}
+};
+const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
+
+void *agStdClasses[] = {
+	&agDriverClass,
+	&agDriverSwClass,
+	&agDriverMwClass,
+	&agInputDeviceClass,
+	&agMouseClass,
+	&agKeyboardClass,
+	NULL
+};
+void *agStdWidgets[] = {
 	&agWidgetClass,
 	&agWindowClass,
 	&agFontClass,
@@ -174,20 +205,16 @@ int
 AG_InitGUIGlobals(void)
 {
 	AG_Config *cfg;
+	void **cl;
 	Uint i;
 
 	if (initedGlobals++ > 0) {
 		return (0);
 	}
 	agGUI = 1;
-
-	AG_RegisterClass(&agDriverClass);
-	AG_RegisterClass(&agDriverSwClass);
-	AG_RegisterClass(&agDriverMwClass);
-	AG_RegisterClass(&agInputDeviceClass);
-	AG_RegisterClass(&agMouseClass);
-	AG_RegisterClass(&agKeyboardClass);
-
+	
+	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
+		AG_RegisterClass(*cl);
 	for (i = 0; i < agDriverListSize; i++)
 		AG_RegisterClass(agDriverList[i]);
 
@@ -206,31 +233,11 @@ AG_InitGUIGlobals(void)
 	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
 
-	/* Save GUI globals in agConfig. */
 	cfg = AG_ConfigObject();
-	AG_BindInt(cfg, "ag_kbd_delay", &agKbdDelay);
-	AG_BindInt(cfg, "ag_kbd_repeat", &agKbdRepeat);
-	AG_BindInt(cfg, "ag_mouse_dblclick_delay", &agMouseDblclickDelay);
-	AG_BindInt(cfg, "ag_mouse_spin_delay", &agMouseSpinDelay);
-	AG_BindInt(cfg, "ag_mouse_spin_interval", &agMouseSpinIval);
-	AG_BindInt(cfg, "ag_text_composition", &agTextComposition);
-	AG_BindInt(cfg, "ag_text_bidi", &agTextBidi);
-	AG_BindInt(cfg, "ag_text_cache", &agTextCache);
-	AG_BindInt(cfg, "ag_text_tab_width", &agTextTabWidth);
-	AG_BindInt(cfg, "ag_text_blink_rate", &agTextBlinkRate);
-	AG_BindInt(cfg, "ag_text_symbols", &agTextSymbols);
-	AG_BindInt(cfg, "ag_page_increment", &agPageIncrement);
-	AG_BindInt(cfg, "ag_idle_threshold", &agIdleThresh);
-	AG_BindInt(cfg, "ag_screenshot_quality", &agScreenshotQuality);
-	AG_BindInt(cfg, "ag_msg_delay", &agMsgDelay);
+	for (i = 0; i < agGUIOptionCount; i++)
+		AG_BindInt(cfg, agGUIOptions[i].key, agGUIOptions[i].p);
 
-	/*
-	 * Load the default style sheet (statically compiled from
-	 * gui/style.css in the Agar sources).
-	 */
-	if (AG_LoadStyleSheet(NULL, "_agStyleDefault") == NULL) {
-		Verbose("_agStyleDefault: %s\n", AG_GetError());
-	}
+	AG_LoadStyleSheet(NULL, "_agStyleDefault");
 	return (0);
 }
 
@@ -241,27 +248,31 @@ AG_InitGUIGlobals(void)
 void
 AG_DestroyGUIGlobals(void)
 {
+	AG_Config *cfg;
+	void **cl;
 	Uint i;
 	
 	if (--initedGlobals > 0)
 		return;
 
-	AG_PixelFormatFree(agSurfaceFmt);
-	agSurfaceFmt = NULL;
-
-	AG_DestroyGlobalKeys();
-	AG_EditableDestroyClipboards();
+	AG_DestroyStyleSheet(&agDefaultCSS);
 	
-	AG_UnregisterClass(&agDriverClass);
-	AG_UnregisterClass(&agDriverSwClass);
-	AG_UnregisterClass(&agDriverMwClass);
-	AG_UnregisterClass(&agInputDeviceClass);
-	AG_UnregisterClass(&agMouseClass);
-	AG_UnregisterClass(&agKeyboardClass);
+	cfg = AG_ConfigObject();
+	for (i = 0; i < agGUIOptionCount; i++)
+		AG_Unset(cfg, agGUIOptions[i].key);
+
+	AG_ObjectDestroy(&agInputDevices);
+	AG_ObjectDestroy(&agDrivers);
+
+	AG_PixelFormatFree(agSurfaceFmt); agSurfaceFmt = NULL;
+	AG_EditableDestroyClipboards();
+	AG_DestroyGlobalKeys();
 	
 	for (i = 0; i < agDriverListSize; i++)
 		AG_UnregisterClass(agDriverList[i]);
-	
+	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
+		AG_UnregisterClass(*cl);
+
 	agRenderingContext = 0;
 	agGUI = 0;
 }
@@ -276,28 +287,16 @@ AG_DestroyGUIGlobals(void)
 int
 AG_InitGUI(Uint flags)
 {
-/*	char path[AG_PATHNAME_MAX]; */
 	void **ops;
 
-	/* Register the built-in widget classes. */
-	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
+	for (ops = &agStdWidgets[0]; *ops != NULL; ops++) {
 		AG_RegisterClass(*ops);
-
-	/* Initialize the GUI subsystems. */
+	}
 	agIcon_Init();
-#if 0
-	/* Try to load a color scheme from the default path. */
-	AG_GetString(AG_ConfigObject(), "save-path", path, sizeof(path));
-	Strlcat(path, AG_PATHSEP, sizeof(path));
-	Strlcat(path, "gui-colors.acs", sizeof(path));
-	(void)AG_ColorsLoad(path);
-#endif
-
-	/* Initialize the font engine. */
-	if (AG_InitTextSubsystem() == -1)
+	
+	if (AG_InitTextSubsystem() == -1) {
 		return (-1);
-
-	/* Initialize the Window system. */
+	}
 	AG_InitWindowSystem();
 	AG_InitAppMenu();
 	return (0);
@@ -327,13 +326,15 @@ rescan:
 	agDriverOps = NULL;
 	AG_UnlockVFS(&agDrivers);
 
-	/* Destroy the GUI subsystems. */
+	AG_DestroyAppMenu();
 	AG_DestroyWindowSystem();
 	AG_DestroyTextSubsystem();
+	agIcon_Destroy();
 
-	/* Unregister the built-in widget classes. */
-	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
+	for (ops = &agStdWidgets[0]; *ops != NULL; ops++)
 		AG_UnregisterClass(*ops);
+	
+	AG_DestroyGUIGlobals();
 }
 
 /* Break out of the event loop. */
