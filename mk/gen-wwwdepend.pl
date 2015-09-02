@@ -20,6 +20,8 @@ sub Scan ($)
 		$incl =~ s/__FILE/$file/g;
 		$incl =~ s/__LANG/en/g;
 		$incl =~ s/__BASE_DIR/$ENV{'BASEDIR'}/g;
+		$incl =~ s/__TEMPLATE/$ENV{'TEMPLATE'}/g;
+		$incl =~ s/__CSS_TEMPLATE/$ENV{'CSS_TEMPLATE'}/g;
 		if ($incl eq $ENV{'BASEDIR'}.'/base.htm') {
 			next;
 		}
