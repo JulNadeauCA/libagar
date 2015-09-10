@@ -44,7 +44,7 @@ typedef struct ag_file_type {
 	const char *descr;			/* Description */
 	char **exts;				/* Filename extensions */
 	Uint nexts;
-	AG_Event *action;			  /* Action (save/load) */
+	AG_Function *action;			  /* Action (save/load) */
 	AG_TAILQ_HEAD_(ag_file_type_option) opts; /* Type-specific options */
 	AG_TAILQ_ENTRY(ag_file_type) types;
 } AG_FileType;
@@ -109,9 +109,8 @@ int AG_FileDlgCheckReadAccess(AG_FileDlg *);
 int AG_FileDlgCheckWriteAccess(AG_FileDlg *);
 void AG_FileDlgRefresh(AG_FileDlg *);
 
-AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
-			       const char *, void (*)(AG_Event *),
-			       const char *, ...);
+AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *, const char *,
+                               AG_IntFn, const char *, ...);
 			       
 AG_FileOption *AG_FileOptionNewBool(AG_FileType *, const char *, const char *,
                                  int);

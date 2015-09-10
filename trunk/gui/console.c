@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <errno.h>
 
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
@@ -186,6 +187,7 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 	}
 	return (s);
 }
+
 static void
 MenuCopy(AG_Event *event)
 {
@@ -203,7 +205,14 @@ MenuCopy(AG_Event *event)
 	}
 	free(s);
 }
-static void
+static int
+MenuCopyActive(AG_Event *event)
+{
+	AG_Console *cons = AG_PTR(1);
+	return (cons->pos != -1) ? 1 : 0;
+}
+
+static int
 MenuExportToFileTXT(AG_Event *event)
 {
 	AG_Console *cons = AG_PTR(1);
@@ -212,21 +221,17 @@ MenuExportToFileTXT(AG_Event *event)
 	FILE *f;
 
 	if ((s = AG_ConsoleExportText(cons, 1)) == NULL) {
-		return;
+		return (-1);
 	}
 	if ((f = fopen(path, "wb")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, _("Unable to open %s"), path);
-		goto out;
+		AG_SetError("%s: %s", path, AG_Strerror(errno));
+		free(s);
+		return (-1);
 	}
-	if (fwrite(s, strlen(s), 1, f) != 1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Write error"));
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000, _("Successfully saved to %s"),
-		    path);
-	}
+	fwrite(s, strlen(s), 1, f);
 	fclose(f);
-out:
 	free(s);
+	return (0);
 }
 static void
 MenuExportToFileDlg(AG_Event *event)
@@ -249,6 +254,7 @@ MenuExportToFileDlg(AG_Event *event)
 	
 	AG_FileDlgAddType(fd, _("Text file"), "*.txt",
 	    MenuExportToFileTXT, "%p", cons);
+
 	AG_WindowShow(win);
 }
 
@@ -259,27 +265,7 @@ MenuSelectAll(AG_Event *event)
 
 	cons->pos = 0;
 	cons->sel = cons->nLines-1;
-}
-
-static AG_PopupMenu *
-PopupMenu(AG_Console *cons)
-{
-	AG_PopupMenu *pm;
-	AG_MenuItem *m;
-
-	if ((pm = AG_PopupNew(cons)) == NULL) {
-		return (NULL);
-	}
-	m = AG_MenuAction(pm->item, _("Copy"), NULL,
-	    MenuCopy, "%p", cons);
-	m->state = (cons->pos != -1);
-	m = AG_MenuAction(pm->item, _("Export to file..."), NULL,
-	    MenuExportToFileDlg, "%p", cons);
-	m->state = (cons->pos != -1);
-	AG_MenuSeparator(pm->item);
-	AG_MenuAction(pm->item, _("Select All"), NULL,
-	    MenuSelectAll, "%p", cons);
-	return (pm);
+	AG_Redraw(cons);
 }
 
 static void
@@ -296,8 +282,7 @@ BeginSelect(AG_Event *event)
 		AG_WidgetFocus(cons);
 	}
 	if (cons->pm != NULL) {
-		AG_PopupDestroy(cons, cons->pm);
-		cons->pm = NULL;
+		AG_PopupHide(cons->pm);
 	}
 	if (cons->nLines > 0) {
 		MapLine(cons, y, &cons->pos);
@@ -311,24 +296,40 @@ static void
 CloseSelect(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
-
 	cons->flags &= ~(AG_CONSOLE_SELECTING);
 }
 
 static void
-ShowPopup(AG_Event *event)
+PopupMenu(AG_Event *event)
 {
 	AG_Console *cons = AG_SELF();
 	int x = AG_INT(2);
 	int y = AG_INT(3);
+	AG_PopupMenu *pm;
+	AG_MenuItem *mi;
 		
-	if ((cons->flags & AG_CONSOLE_NOPOPUP) == 0) {
-		if (cons->pm != NULL) {
-			AG_PopupDestroy(cons, cons->pm);
-		}
-		if ((cons->pm = PopupMenu(cons)) != NULL)
-			AG_PopupShowAt(cons->pm, x, y);
+	if (cons->flags & AG_CONSOLE_NOPOPUP)
+		return;
+
+	if (cons->pm != NULL) {
+		AG_PopupShowAt(cons->pm, x, y);
+		return;
 	}
+	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL) {
+		return;
+	}
+	mi = AG_MenuAction(pm->item, _("Copy"), NULL, MenuCopy, "%p", cons);
+	mi->stateFn = AG_SetIntFn(pm->menu, MenuCopyActive, "%p", cons);
+
+	AG_MenuAction(pm->item, _("Export to file..."), NULL,
+	    MenuExportToFileDlg, "%p", cons);
+
+	AG_MenuSeparator(pm->item);
+
+	AG_MenuAction(pm->item, _("Select All"), NULL,
+	    MenuSelectAll, "%p", cons);
+
+	AG_PopupShowAt(pm, x, y);
 }
 
 static void
@@ -419,7 +420,7 @@ Init(void *obj)
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
-	AG_ActionFn(cons, "ShowPopup",	ShowPopup, NULL);
+	AG_ActionFn(cons, "PopupMenu",	PopupMenu, NULL);
 	AG_ActionFn(cons, "ScrollUp",	ScrollUp, NULL);
 	AG_ActionFn(cons, "ScrollDown",	ScrollDown, NULL);
 	AG_ActionFn(cons, "PageUp",	PageUp, NULL);
@@ -427,7 +428,7 @@ Init(void *obj)
 	AG_ActionOnButtonDown(cons, AG_MOUSE_LEFT, "BeginSelect");
 	AG_ActionOnButtonUp(cons, AG_MOUSE_LEFT, "CloseSelect");
 
-	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT, "ShowPopup");
+	AG_ActionOnButtonDown(cons, AG_MOUSE_RIGHT, "PopupMenu");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELUP, "ScrollUp");
 	AG_ActionOnButtonDown(cons, AG_MOUSE_WHEELDOWN, "ScrollDown");
 
@@ -560,6 +561,9 @@ Destroy(void *p)
 {
 	AG_Console *cons = p;
 
+	if (cons->pm != NULL) {
+		AG_PopupDestroy(cons->pm);
+	}
 	FreeLines(cons);
 }
 

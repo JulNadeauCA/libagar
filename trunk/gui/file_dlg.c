@@ -333,8 +333,7 @@ ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 		}
 	}
 	if (ft != NULL && ft->action != NULL) {
-		AG_PostEvent(NULL, fd, ft->action->name, "%s,%p",
-		    fd->cfile, ft);
+		AG_PostEventByPtr(NULL, fd, ft->action, "%s,%p", fd->cfile, ft);
 	}
 	AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, ft);
 
@@ -510,10 +509,9 @@ FileDblClicked(AG_Event *event)
 		AG_FileDlgSetFilenameS(fd, itFile->text);
 
 		if (fd->okAction != NULL) {
-			AG_PostEvent(NULL, fd, fd->okAction->name, "%s,%p",
+			AG_PostEventByPtr(NULL, fd, fd->okAction, "%s,%p",
 			    fd->cfile,
-			    (fd->comTypes != NULL) ?
-			    AG_TlistSelectedItemPtr(fd->comTypes->list) : NULL);
+			    fd->comTypes ? AG_TlistSelectedItemPtr(fd->comTypes->list) : NULL);
 		} else {
 			CheckAccessAndChoose(fd);
 		}
@@ -529,7 +527,7 @@ PressedOK(AG_Event *event)
 
 	AG_ObjectLock(fd);
 	if (fd->okAction != NULL) {
-		AG_PostEvent(NULL, fd, fd->okAction->name, "%s", fd->cfile);
+		AG_PostEventByPtr(NULL, fd, fd->okAction, "%s", fd->cfile);
 	} else {
 		CheckAccessAndChoose(fd);
 	}
@@ -753,7 +751,7 @@ PressedCancel(AG_Event *event)
 
 	AG_ObjectLock(fd);
 	if (fd->cancelAction != NULL) {
-		AG_PostEvent(NULL, fd, fd->cancelAction->name, NULL);
+		AG_PostEventByPtr(NULL, fd, fd->cancelAction, NULL);
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 		if ((pwin = AG_ParentWindow(fd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
@@ -1280,7 +1278,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 /* Register a new file type. */
 AG_FileType *
 AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
-    void (*fn)(AG_Event *), const char *fmt, ...)
+    AG_IntFn fn, const char *fmt, ...)
 {
 	AG_FileType *ft;
 	char *dexts, *ds, *ext;
@@ -1303,7 +1301,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	AG_ObjectLock(fd);
 
 	if (fn != NULL) {
-		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
+		ft->action = AG_SetIntFn(fd, fn, NULL);
 		AG_EVENT_GET_ARGS(ft->action, fmt);
 #ifdef AG_THREADS
 		if (fd->flags & AG_FILEDLG_ASYNC)
