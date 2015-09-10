@@ -73,7 +73,7 @@ AG_DataSourceError(AG_DataSource *ds, const char *fmt, ...)
 	}
 	
 	AG_ObjectLock(&errorMgr);
-	AG_PostEvent(NULL, &errorMgr, ds->errorFn->name, "%s", msg);
+	AG_PostEventByPtr(NULL, &errorMgr, ds->errorFn, "%s", msg);
 	AG_ObjectUnlock(&errorMgr);
 }
 

@@ -198,6 +198,16 @@ AG_Debug(void *p, const char *fmt, ...)
 	
 	if (agDebugCallback != NULL) {
 		char *buf;
+
+		if (obj != NULL) {
+			if (obj->name[0] != '\0') {
+				Asprintf(&buf, "%s: ", obj->name);
+			} else {
+				Asprintf(&buf, "<%p>: ", obj);
+			}
+			agDebugCallback(buf);
+			free(buf);
+		}
 		va_start(args, fmt);
 		Vasprintf(&buf, fmt, args);
 		va_end(args);
@@ -207,7 +217,7 @@ AG_Debug(void *p, const char *fmt, ...)
 		}
 		free(buf);
 	}
-	if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
+	if (agDebugLvl >= 1) {
 		va_start(args, fmt);
 # if defined(DEBUG_TO_FILE)
 		/* Redirect output to foo-debug.txt */
@@ -223,8 +233,8 @@ AG_Debug(void *p, const char *fmt, ...)
 			}
 			if ((f = fopen(path, "a")) != NULL) {
 				if (obj != NULL) {
-					if (OBJECT(obj)->name[0] != '\0') {
-						fprintf(f, "%s: ", OBJECT(obj)->name);
+					if (obj->name[0] != '\0') {
+						fprintf(f, "%s: ", obj->name);
 					} else {
 						fprintf(f, "<%p>: ", obj);
 					}
@@ -240,10 +250,8 @@ AG_Debug(void *p, const char *fmt, ...)
 		
 			cons = GetStdHandle(STD_ERROR_HANDLE);
 			if (cons != NULL && cons != INVALID_HANDLE_VALUE) {
-				if (obj != NULL &&
-				    OBJECT(obj)->name[0] != '\0') {
-					WriteConsole(cons, OBJECT(obj)->name,
-					    strlen(OBJECT(obj)->name), NULL, NULL);
+				if (obj != NULL && obj->name[0] != '\0') {
+					WriteConsole(cons, obj->name, strlen(obj->name), NULL, NULL);
 					WriteConsole(cons, ": ", 2, NULL, NULL);
 				}
 				Vasprintf(&buf, fmt, args);
@@ -253,8 +261,8 @@ AG_Debug(void *p, const char *fmt, ...)
 		}
 # else /* _WIN32 */
 		if (obj != NULL) {
-			if (OBJECT(obj)->name[0] != '\0') {
-				printf("%s: ", OBJECT(obj)->name);
+			if (obj->name[0] != '\0') {
+				printf("%s: ", obj->name);
 			} else {
 				printf("<%p>: ", obj);
 			}

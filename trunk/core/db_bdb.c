@@ -108,7 +108,7 @@ Close(void *obj)
 	int rv;
 	
 	if ((rv = db->pDB->close(db->pDB, 0)) != 0)
-		AG_Verbose("db_close: %s; ignoring", db_strerror(rv));
+		AG_Verbose("db_close: %s; ignoring\n", db_strerror(rv));
 }
 
 static int

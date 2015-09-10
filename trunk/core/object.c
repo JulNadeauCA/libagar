@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <agar/config/ag_objdebug.h>
+#include <agar/config/ag_debug_core.h>
 
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",
@@ -75,7 +75,6 @@ AG_ObjectInit(void *p, void *cl)
 	ob->parent = NULL;
 	ob->root = ob;
 	ob->flags = 0;
-	ob->nevents = 0;
 	ob->attachFn = NULL;
 	ob->detachFn = NULL;
 
@@ -412,7 +411,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	
 	/* Call the attach function if one is defined. */
 	if (chld->attachFn != NULL)  {
-		chld->attachFn->handler(chld->attachFn);
+		chld->attachFn->fn.fnVoid(chld->attachFn);
 		goto out;
 	}
 
@@ -429,10 +428,18 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	AG_PostEvent(parent, chld, "attached", NULL);
 	AG_PostEvent(chld, parent, "child-attached", NULL);
 
-#ifdef AG_OBJDEBUG
-	Debug(parent, "Attached child object: %s\n", chld->name);
-	Debug(chld, "Attached to new parent: %s\n", parent->name);
-#endif
+#ifdef AG_DEBUG_CORE
+	if (chld->name[0] != '\0') {
+		Debug(parent, "Attached child: %s\n", chld->name);
+	} else {
+		Debug(parent, "Attached child: <%p>\n", chld);
+	}
+	if (parent->name[0] != '\0') {
+		Debug(chld, "New parent: %s\n", parent->name);
+	} else {
+		Debug(chld, "New parent: <%p>\n", parent);
+	}
+#endif /* AG_DEBUG_CORE */
 
 out:
 	AG_ObjectUnlock(chld);
@@ -497,7 +504,7 @@ AG_ObjectDetach(void *pChld)
 
 	/* Call the detach function if one is defined. */
 	if (chld->detachFn != NULL) {
-		chld->detachFn->handler(chld->detachFn);
+		chld->detachFn->fn.fnVoid(chld->detachFn);
 		goto out;
 	}
 
@@ -518,10 +525,16 @@ AG_ObjectDetach(void *pChld)
 	AG_PostEvent(parent, chld, "detached", NULL);
 	AG_PostEvent(chld, parent, "child-detached", NULL);
 
-#ifdef AG_OBJDEBUG
-	Debug(parent, "Detached child object %s\n", chld->name);
-	Debug(chld, "Detached from parent %s\n", parent->name);
-#endif
+#ifdef AG_DEBUG_CORE
+	if (chld->name[0] != '\0') {
+		Debug(parent, "Detached child: %s\n", chld->name);
+	} else {
+		Debug(parent, "Detached child: <%p>\n", chld);
+	}
+	if (parent->name[0] != '\0') {
+		Debug(chld, "New parent: NULL\n");
+	}
+#endif /* AG_DEBUG_CORE */
 
 out:
 	AG_ObjectUnlock(chld);
@@ -703,6 +716,13 @@ FreeChildObject(AG_Object *obj)
 	}
 	AG_ObjectUnlock(obj);
 
+#ifdef AG_DEBUG_CORE
+	if (obj->name[0] != '\0') {
+		Debug(NULL, "Freeing: %s\n", obj->name);
+	} else {
+		Debug(NULL, "Freeing: <%p>\n", obj);
+	}
+#endif
 	AG_ObjectDetach(obj);
 	AG_ObjectDestroy(obj);
 }
@@ -771,7 +791,7 @@ AG_ObjectDestroy(void *p)
 	AG_Timer *to, *toNext;
 	int i, nHier;
 
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 	if (ob->parent != NULL) {
 		AG_FatalError("AG_ObjectDestroy: %s still attached to %p",
 		    ob->name, ob->parent);
@@ -993,9 +1013,6 @@ AG_ObjectResolveDeps(void *p)
 	AG_ObjectLock(ob);
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-#ifdef AG_OBJDEBUG
-		Debug(ob, "Resolving dependency: %s\n", dep->path);
-#endif
 		if (dep->obj != NULL) {
 			continue;
 		}
@@ -1004,9 +1021,8 @@ AG_ObjectResolveDeps(void *p)
 			    ob->name, dep->path);
 			goto fail;
 		}
-#ifdef AG_OBJDEBUG
-		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
-		    dep->obj->name);
+#ifdef AG_DEBUG_CORE
+		Debug(ob, "Dependency: %p (%s)\n", dep->obj, dep->obj->name);
 #endif
 		free(dep->path); dep->path = NULL;
 	}
@@ -1093,9 +1109,6 @@ ReadDependencyTable(AG_DataSource *ds, AG_Object *ob)
 		dep->count = 0;
 		dep->persistent = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-#ifdef AG_OBJDEBUG
-		Debug(ob, "Dependency: %s\n", dep->path);
-#endif
 	}
 	return (0);
 fail:
@@ -1219,7 +1232,7 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		AG_LockVariable(V);
 		if (V->fn.fnVoid != NULL &&
 		    AG_EvalVariable(ob, V) == -1) {
-			Verbose("Save: eval %s failed (%s); ignoring", V->name,
+			Verbose("Save: eval %s failed (%s); ignoring\n", V->name,
 			    AG_GetError());
 			AG_UnlockVariable(V);
 			continue;
@@ -1288,7 +1301,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		if (GetDatafile(path, ob) == -1)
 			goto fail_unlock;
 	}
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 	Debug(ob, "Loading generic data from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL)
@@ -1347,7 +1360,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		if ((cl = AG_LoadClass(hier)) == NULL) {
 			AG_SetError("%s: %s", ob->name, AG_GetError());
 			if (agObjectIgnoreUnknownObjs) {
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 				Debug(ob, "%s; ignoring\n", AG_GetError());
 #endif
 				continue;
@@ -1409,7 +1422,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			goto fail_unlock;
 		}
 	}
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 	Debug(ob, "Loading dataset from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
@@ -1432,7 +1445,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_ObjectFreeDataset(ob);
 
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1577,7 +1590,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 		Debug(ob, "Saving as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->save == NULL)
@@ -1647,7 +1660,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1720,7 +1733,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 	Debug(ob, "Saving object to %s\n", path);
 #endif
 	if (agObjectBackups) {

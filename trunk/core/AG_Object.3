@@ -491,9 +491,6 @@ If the optional
 string exists, it specifies a comma-separated list of dynamically-linked
 library (modules) accessible from
 .Xr AG_DSO 3 .
-It is implied that
-.Ft AG_Object
-is the "root class", so there is no need to specify it in the string.
 .Pp
 The
 .Va size
@@ -1147,13 +1144,13 @@ Full class name / inheritance hierarchy.
 .It Ft size_t size
 Size of instance structure (in bytes).
 .It Ft AG_Version ver
-Version major and minor (see
+Versioning information (see
 .Xr AG_Version 3 ) .
-This field is only useful with object data archiving.
 .It Ft void (*init)
-Object data initialization routine.
+Initialization routine.
 .It Ft void (*reinit)
-Object data re-initialization routine.
+Cleanup routine (for
+.Fn AG_ObjectFreeDataset ) .
 .It Ft void (*destroy)
 Final cleanup routine.
 .It Ft int (*load)
@@ -1161,7 +1158,7 @@ Dataset loading function (unserialization).
 .It Ft int (*save)
 Dataset archiving function (serialization).
 .It Ft void *(*edit)
-Optional GUI-specific edition call.
+Interface-specific editor entry point.
 .It Ft char *name
 Short class name.
 Set internally to the last element in inheritance hierarchy.
@@ -1211,12 +1208,13 @@ class information structure for this object.
 Object flags (see
 .Sx FLAGS
 section).
-.It Ft Uint nevents
-Count on the number of registered event handlers.
 .It Ft TAILQ events
 List of
 .Xr AG_Event 3
-structure describing active event handlers.
+items describing registered event handlers (as set by
+.Fn AG_SetEvent ) ,
+as well as virtual functions (as set by
+.Fn AG_Set<Type>Fn ) .
 .It Ft TAILQ timeouts
 List of
 .Xr AG_Timeout 3
