@@ -97,6 +97,7 @@ AG_Statusbar *statusBar;
 AG_Label *status;
 AG_Console *console = NULL;
 AG_Button *btnTest, *btnBench;
+char consoleBuf[2048];
 
 static void
 SelectedTest(AG_Event *event)
@@ -442,22 +443,34 @@ StartDebugger(void)
 }
 #endif
 
+/* Redirect AG_Debug() and AG_Verbose() to the AG_Console. */
 static int
-VerboseCallback(const char *msg)
+ConsoleWrite(const char *msg)
 {
-	if (console != NULL) {
-		AG_ConsoleMsgS(console, msg);
+	if (console == NULL) {
+		return (0);
+	}
+	AG_Strlcat(consoleBuf, msg, sizeof(consoleBuf));
+	if (strchr(msg, '\n') != NULL) {
+		char *line, *pBuf = consoleBuf;
+
+		while ((line = AG_Strsep(&pBuf, "\n")) != NULL) {
+			if (line[0] == '\0') {
+				continue;
+			}
+			AG_ConsoleMsgS(console, line);
+		}
+		consoleBuf[0] = '\0';
 	}
 	return (1);
 }
 
-static int
-DebugCallback(const char *msg)
+static void
+ConsoleWindowDetached(AG_Event *event)
 {
-	if (console != NULL) {
-		AG_ConsoleMsgS(console, msg);
-	}
-	return (1);
+	AG_SetVerboseCallback(NULL);
+	AG_SetDebugCallback(NULL);
+	console = NULL;
 }
 
 int
@@ -504,8 +517,9 @@ main(int argc, char *argv[])
 	}
 
 	/* Redirect AG_Verbose() and AG_Debug() output to the AG_Console. */
-	AG_SetVerboseCallback(VerboseCallback);
-	AG_SetDebugCallback(DebugCallback);
+	consoleBuf[0] = '\0';
+	AG_SetVerboseCallback(ConsoleWrite);
+	AG_SetDebugCallback(ConsoleWrite);
 
 	/* Set up the standard shortcuts + debugger and screenshot functions */
 	AG_BindStdGlobalKeys();
@@ -598,8 +612,10 @@ main(int argc, char *argv[])
 
 	statusBar = AG_StatusbarNew(win, AG_STATUSBAR_HFILL);
 	status = AG_StatusbarAddLabel(statusBar, _("Please select a test"));
+	
+	AG_SetEvent(win, "window-detached", ConsoleWindowDetached, NULL);
 
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 50);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 800, 300);
 	AG_WindowShow(win);
 	
 	for (i = optInd; i < argc; i++) {
