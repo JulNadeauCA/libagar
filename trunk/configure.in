@@ -20,8 +20,8 @@ REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 
 REGISTER_SECTION("Options specific to CORE library:")
+REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 REGISTER("--enable-network",		"Network interface [check]")
-REGISTER("--enable-objdebug",		"Object system debugging [no]")
 REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [check]")
 REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
@@ -39,6 +39,7 @@ REGISTER("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
 REGISTER("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
 
 REGISTER_SECTION("Options specific to GUI library:")
+REGISTER("--enable-debug-gui",		"Expensive GUI debugging [no]")
 REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
 REGISTER("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
 REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
@@ -128,10 +129,15 @@ if [ "${enable_debug}" = "yes" ]; then
 else
 	HUNDEF(AG_DEBUG)
 fi
-if [ "${enable_objdebug}" = "yes" ]; then
-	HDEFINE(AG_OBJDEBUG, "yes")
+if [ "${enable_debug_core}" = "yes" ]; then
+	HDEFINE(AG_DEBUG_CORE, "yes")
 else
-	HUNDEF(AG_OBJDEBUG)
+	HUNDEF(AG_DEBUG_CORE)
+fi
+if [ "${enable_debug_gui}" = "yes" ]; then
+	HDEFINE(AG_DEBUG_GUI, "yes")
+else
+	HUNDEF(AG_DEBUG_GUI)
 fi
 if [ "${enable_legacy}" != "no" ]; then
 	HDEFINE(AG_LEGACY, "yes")
