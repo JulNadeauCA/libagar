@@ -84,7 +84,7 @@ widget may be used instead.
 .Fn AG_FileDlgSetFilenameS "AG_FileDlg *file_dlg" "const char *filename"
 .Pp
 .Ft "AG_FileType *"
-.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "void (*fn)(AG_Event *)" "const char *fnArgs" "..."
+.Fn AG_FileDlgAddType "AG_FileDlg *file_dlg" "const char *descr" "const char *exts" "int (*fn)(AG_Event *)" "const char *fnArgs" "..."
 .Pp
 .Ft "void"
 .Fn AG_FileDlgRefresh "AG_FileDlg *file_dlg"

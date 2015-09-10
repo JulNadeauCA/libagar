@@ -11,7 +11,7 @@
 #include "config/datadir.h"
 
 /* Callback routine for AG_FileDlg. */
-static void
+static int
 LoadImage(AG_Event *event)
 {
 /*	AG_FileDlg *fd = AG_SELF(); */
@@ -31,15 +31,15 @@ LoadImage(AG_Event *event)
 	} else if (strcmp(ft->exts[0], "*.png") == 0) {
 		s = AG_SurfaceFromPNG(file);
 	} else {
-		return;
+		AG_SetError("Unrecognized format: %s", ft->exts[0]);
+		return (-1);
 	}
-	if (s == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, AG_GetError());
-		return;
-	}
+	if (s == NULL)
+		return (-1);
 
 	if ((win = AG_WindowNew(0)) == NULL) {
-		return;
+		AG_SurfaceFree(s);
+		return (-1);
 	}
 	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
 
@@ -71,6 +71,8 @@ LoadImage(AG_Event *event)
 	AG_WindowSetGeometry(win, -1, -1, 320, 240);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
+
+	return (0);
 }
 
 static int
@@ -104,15 +106,9 @@ TestGUI(void *obj, AG_Window *win)
 		 * Register the loader functions. We can assign a set of user
 		 * specified options to specific types as well.
 		 */
-		ft[0] = AG_FileDlgAddType(fd, "Windows Bitmap",
-		    "*.bmp",
-		    LoadImage, "%p", win);
-		ft[1] = AG_FileDlgAddType(fd, "JPEG image",
-		    "*.jpg,*.jpeg",
-		    LoadImage, "%p", win);
-		ft[2] = AG_FileDlgAddType(fd, "Portable Network Graphics",
-		    "*.png",
-		    LoadImage, "%p", win);
+		ft[0] = AG_FileDlgAddType(fd, "Windows Bitmap", "*.bmp",		LoadImage, "%p", win);
+		ft[1] = AG_FileDlgAddType(fd, "JPEG image", "*.jpg,*.jpeg",		LoadImage, "%p", win);
+		ft[2] = AG_FileDlgAddType(fd, "Portable Network Graphics", "*.png",	LoadImage, "%p", win);
 
 		for (i = 0; i < 3; i++)
 			AG_FileOptionNewBool(ft[i], "Inverted", "invert", 0);
@@ -142,7 +138,7 @@ TestGUI(void *obj, AG_Window *win)
 const AG_TestCase loaderTest = {
 	"loader",
 	N_("Test the AG_FileDlg(3) file selection widget"),
-	"1.4.2",
+	"1.5.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */
