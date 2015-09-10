@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -79,6 +79,57 @@ For more information on low-level event processing, see
 .Ft "AG_Event *"
 .Fn AG_AddEvent "AG_Object *obj" "const char *event_name" "void (*fn)(AG_Event *event)" "const char *fnArgs" "..."
 .Pp
+.Ft "AG_Function *"
+.Fn AG_SetVoidFn "AG_Object *obj" "void (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetIntFn "AG_Object *obj" "int (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetUint8Fn "AG_Object *obj" "Uint8 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetSint8Fn "AG_Object *obj" "Sint8 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetUint16Fn "AG_Object *obj" "Uint16 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetSint16Fn "AG_Object *obj" "Sint16 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetUint32Fn "AG_Object *obj" "Uint32 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetSint32Fn "AG_Object *obj" "Sint32 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetUint64Fn "AG_Object *obj" "Uint64 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetSint64Fn "AG_Object *obj" "Sint64 (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetFloatFn "AG_Object *obj" "float (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetDoubleFn "AG_Object *obj" "double (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetLongDoubleFn "AG_Object *obj" "long double (*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetStringFn "AG_Object *obj" "size_t (*fn)(AG_Event *event, char *buf, size_f buf_size)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetPointerFn "AG_Object *obj" "void *(*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetConstPointerFn "AG_Object *obj" "const void *(*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
+.Ft "AG_Function *"
+.Fn AG_SetTextFn "AG_Object *obj" "AG_Text *(*fn)(AG_Event *event)" "const char *fnArgs" "..."
+.Pp
 .Ft "AG_Event *"
 .Fn AG_FindEventHandler "AG_Object *obj" "const char *name"
 .Pp
@@ -87,6 +138,9 @@ For more information on low-level event processing, see
 .Pp
 .Ft "int"
 .Fn AG_PostEvent "AG_Object *sndr" "AG_Object *rcvr" "const char *event_name" "const char *fmt" "..."
+.Pp
+.Ft "int"
+.Fn AG_PostEventByPtr "AG_Object *sndr" "AG_Object *rcvr" "AG_Event *event" "const char *fmt" "..."
 .Pp
 .Ft "int"
 .Fn AG_SchedEvent "AG_Object *sndr" "AG_Object *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
@@ -115,25 +169,27 @@ See
 .Sx EVENT ARGUMENTS
 below for details.
 .Pp
-In some circumstances it is useful to pass a NULL
-.Fa name
-argument to
-.Fn AG_SetEvent
-or
-.Fn AG_AddEvent
-and instead reference the event handler using the returned
-.Ft "AG_Event *"
-pointer returned by the function.
-This is useful when implementing custom interfaces accepting
-.Fa fnArgs
-style arguments.
+The
+.Fn AG_Set<TYPE>Fn
+family of functions create a virtual function with a return value of the
+specified TYPE.
+By default, virtual functions are unnamed (and referenced by the returned
+.Fn AG_Function
+handle).
+Names can still be assigned to virtual functions by setting the
+.Va name
+field.
+Since event handlers and virtual functions are implemented
+identically, the
+.Fn AG_Function
+type is just an alias for
+.Fn AG_Event .
 .Pp
 The
 .Fn AG_FindEventHandler
-function returns the
+function searches for an event handler by name, returning a pointer to the
 .Nm
-structure for the specified event, or NULL if there are no handlers associated
-with it.
+element on success or NULL if there is no match.
 .Pp
 The
 .Fn AG_UnsetEvent
@@ -166,6 +222,12 @@ The
 .Fn AG_PostEvent
 function returns 1 if an event handler was invoked, or 0 if there is no
 registered event handler for the specified event.
+.Pp
+The
+.Fn AG_PostEventByPtr
+variant accepts a pointer to an
+.Nm
+element, as opposed to looking up the event handler by name.
 .Pp
 The
 .Fn AG_SchedEvent
