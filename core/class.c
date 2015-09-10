@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/config/ag_objdebug.h>
+#include <agar/config/ag_debug_core.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -228,7 +228,7 @@ AG_RegisterClass(void *p)
 	}
 	InitClass(cl, cs.hier, cs.libs);
 	
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
 	    cs.libs);
 #endif
@@ -263,7 +263,7 @@ AG_UnregisterClass(void *p)
 
 	AG_MutexLock(&agClassLock);
 	if (AG_TblExistsHash(agClassTbl, h, cl->hier)) {
-#ifdef AG_OBJDEBUG
+#ifdef AG_DEBUG_CORE
 		Debug(NULL, "Unregistering class: %s\n", cl->name);
 #endif
 		/* Remove from the class tree. */
@@ -379,9 +379,11 @@ AG_LoadClass(const char *classSpec)
 	for (i = 0, s = cs.libs;
 	    (lib = Strsep(&s, ", ")) != NULL;
 	    i++) {
+#ifdef AG_DEBUG_CORE
+		Debug(NULL, "<%s>: Linking %s...", classSpec, lib);
+#endif
 		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
-			AG_SetError("Loading <%s>: %s", classSpec,
-			    AG_GetError());
+			AG_SetError("Loading <%s>: %s", classSpec, AG_GetError());
 			goto fail;
 		}
 		/* Look up "pfxFooClass" in the first library. */
@@ -395,6 +397,9 @@ AG_LoadClass(const char *classSpec)
 				goto fail;
 			}
 		}
+#ifdef AG_DEBUG_CORE
+		Debug(NULL, "OK\n");
+#endif
 	}
 	if (pClass == NULL) {
 		AG_SetError("Loading <%s>: No library specified", classSpec);
@@ -405,6 +410,9 @@ AG_LoadClass(const char *classSpec)
 	AG_MutexUnlock(&agClassLock);
 	return (pClass);
 fail:
+#ifdef AG_DEBUG_CORE
+	Debug(NULL, "%s\n", AG_GetError());
+#endif
 	AG_MutexUnlock(&agClassLock);
 	return (pClass);
 }

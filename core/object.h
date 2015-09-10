@@ -73,10 +73,8 @@ typedef struct ag_object {
 				 AG_OBJECT_REOPEN_ONLOAD|\
 				 AG_OBJECT_REMAIN_DATA)
 
-	Uint                    nevents;	/* Event handler count */
-	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers */
+	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers / virtual fns */
 	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
-	AG_TAILQ_HEAD_(ag_timer) timersChg;	/* Timers to change */
 	AG_TAILQ_HEAD_(ag_variable) vars;	/* Named variables / bindings */
 	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
 	struct ag_objectq children;		/* Child objects */

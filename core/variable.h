@@ -85,29 +85,29 @@ typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 typedef AG_Text    *(*AG_TextFn)(struct ag_event *);
 
-union ag_variable_fn {
-	void (*fnVoid)(struct ag_event *);
-	Uint (*fnUint)(struct ag_event *);
-	int (*fnInt)(struct ag_event *);
-	Uint8 (*fnUint8)(struct ag_event *);
-	Sint8 (*fnSint8)(struct ag_event *);
-	Uint16 (*fnUint16)(struct ag_event *);
-	Sint16 (*fnSint16)(struct ag_event *);
-	Uint32 (*fnUint32)(struct ag_event *);
-	Sint32 (*fnSint32)(struct ag_event *);
+union ag_function {
+	AG_VoidFn	fnVoid;
+	AG_UintFn	fnUint;
+	AG_IntFn	fnInt;
+	AG_Uint8Fn	fnUint8;
+	AG_Sint8Fn	fnSint8;
+	AG_Uint16Fn	fnUint16;
+	AG_Sint16Fn	fnSint16;
+	AG_Uint32Fn	fnUint32;
+	AG_Sint32Fn	fnSint32;
 #ifdef AG_HAVE_64BIT
-	Uint64 (*fnUint64)(struct ag_event *);
-	Sint64 (*fnSint64)(struct ag_event *);
+	AG_Uint64Fn	fnUint64;
+	AG_Sint64Fn	fnSint64;
 #endif
-	float (*fnFloat)(struct ag_event *);
-	double (*fnDouble)(struct ag_event *);
+	AG_FloatFn	fnFloat;
+	AG_DoubleFn	fnDouble;
 #ifdef AG_HAVE_LONG_DOUBLE
-	long double (*fnLongDouble)(struct ag_event *);
+	AG_LongDoubleFn	fnLongDouble;
 #endif
-	size_t (*fnString)(struct ag_event *, char *, size_t);
-	void *(*fnPointer)(struct ag_event *);
-	const void *(*fnConstPointer)(struct ag_event *);
-	AG_Text *(*fnText)(struct ag_event *);
+	AG_StringFn	fnString;
+	AG_PointerFn	fnPointer;
+	AG_ConstPointerFn fnConstPointer;
+	AG_TextFn	fnText;
 };
 	
 union ag_variable_data {
@@ -146,7 +146,7 @@ typedef struct ag_variable {
 			struct ag_variable *var;
 		} ref;
 	} info;
-	union ag_variable_fn fn;	/* Eval function */
+	union ag_function fn;		/* Eval function */
 	union ag_variable_data data;	/* Variable-stored data */
 	AG_TAILQ_ENTRY(ag_variable) vars;
 } AG_Variable;
