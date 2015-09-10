@@ -43,18 +43,17 @@
 struct ag_timer;
 struct ag_event_sink;
 
-/* Event structure */
+/* Event handler / virtual function */
 typedef struct ag_event {
 	char name[AG_EVENT_NAME_MAX];		/* String identifier */
 	Uint flags;
 #define	AG_EVENT_ASYNC     0x01			/* Service in separate thread */
 #define AG_EVENT_PROPAGATE 0x02			/* Forward to child objs */
-	void (*handler)(struct ag_event *);
-	int argc;				/* Argument count */
-	int argc0;				/* Arg. count (by SetEvent) */
+	union ag_function fn;			/* Callback function */
+	int argc, argc0;			/* Argument count & offset */
 	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 	AG_TAILQ_ENTRY(ag_event) events;	/* Entry in Object */
-} AG_Event;
+} AG_Event, AG_Function;
 
 /* Low-level event sink */
 enum ag_event_sink_type {
@@ -249,10 +248,36 @@ int       AG_InitEventSubsystem(Uint);
 void      AG_DestroyEventSubsystem(void);
 void      AG_EventInit(AG_Event *);
 void      AG_EventArgs(AG_Event *, const char *, ...);
+
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
 AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
+
+AG_Function *AG_SetVoidFn(void *, AG_VoidFn, const char *, ...);
+AG_Function *AG_SetIntFn(void *, AG_IntFn, const char *, ...);
+AG_Function *AG_SetUintFn(void *, AG_UintFn, const char *, ...);
+AG_Function *AG_SetUint8Fn(void *, AG_Uint8Fn, const char *, ...);
+AG_Function *AG_SetSint8Fn(void *, AG_Sint8Fn, const char *, ...);
+AG_Function *AG_SetUint16Fn(void *, AG_Uint16Fn, const char *, ...);
+AG_Function *AG_SetSint16Fn(void *, AG_Sint16Fn, const char *, ...);
+AG_Function *AG_SetUint32Fn(void *, AG_Uint32Fn, const char *, ...);
+AG_Function *AG_SetSint32Fn(void *, AG_Sint32Fn, const char *, ...);
+#ifdef AG_HAVE_64BIT
+AG_Function *AG_SetUint64Fn(void *, AG_Uint64Fn, const char *, ...);
+AG_Function *AG_SetSint64Fn(void *, AG_Sint64Fn, const char *, ...);
+#endif
+AG_Function *AG_SetFloatFn(void *, AG_FloatFn, const char *, ...);
+AG_Function *AG_SetDoubleFn(void *, AG_DoubleFn, const char *, ...);
+#ifdef AG_HAVE_LONG_DOUBLE
+AG_Function *AG_SetLongDoubleFn(void *, AG_LongDoubleFn, const char *, ...);
+#endif
+AG_Function *AG_SetStringFn(void *, AG_StringFn, const char *, ...);
+AG_Function *AG_SetPointerFn(void *, AG_PointerFn, const char *, ...);
+AG_Function *AG_SetConstPointerFn(void *, AG_ConstPointerFn, const char *, ...);
+AG_Function *AG_SetTextFn(void *, AG_TextFn, const char *, ...);
+
 void      AG_UnsetEvent(void *, const char *);
 void      AG_PostEvent(void *, void *, const char *, const char *, ...);
+void      AG_PostEventByPtr(void *, void *, AG_Event *, const char *, ...);
 AG_Event *AG_FindEventHandler(void *, const char *);
 
 void      AG_InitEventQ(AG_EventQ *);
@@ -287,14 +312,6 @@ int             AG_EventSinkTIMERFD(void);
 int             AG_EventSinkTIMEDSELECT(void);
 int             AG_EventSinkSELECT(void);
 int             AG_EventSinkSPINNER(void);
-
-/* Execute an event handler routine without processing any arguments. */
-static __inline__ void
-AG_ExecEventFn(void *obj, AG_Event *ev)
-{
-	if (ev->handler != NULL)
-		AG_PostEvent(NULL, obj, ev->name, NULL);
-}
 
 /* Push arguments onto an Event structure. */
 static __inline__ void AG_EventPushPointer(AG_Event *ev, const char *key, void *val) { AG_EVENT_INS_VAL(ev, AG_VARIABLE_POINTER, key, p, val); }
