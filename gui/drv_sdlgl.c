@@ -172,10 +172,9 @@ SDLGL_Close(void *obj)
 	AG_ObjectDelete(drv->mouse); drv->mouse = NULL;
 	AG_ObjectDelete(drv->kbd); drv->kbd = NULL;
 
-	if (sgl->outMode != AG_SDLGL_OUT_NONE) {
-		Free(sgl->outBuf);
+	if (sgl->outBuf != NULL) {
+		free(sgl->outBuf);
 		sgl->outBuf = NULL;
-		sgl->outMode = AG_SDLGL_OUT_NONE;
 	}
 
 	nDrivers = 0;
@@ -383,7 +382,7 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	Verbose(_("SDLGL: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
-		Verbose(_("SDLGL: Enabling hardware palette"));
+		Verbose(_("SDLGL: Using hardware palette\n"));
 		sFlags |= SDL_HWPALETTE;
 	}
 	if ((sgl->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
@@ -420,9 +419,11 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 
 	/* Initialize the output capture buffer. */
 	Free(sgl->outBuf);
-	if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
-		Verbose("SDLGL: Out of memory; disabling capture\n");
-		sgl->outMode = AG_SDLGL_OUT_NONE;
+	if (sgl->outMode != AG_SDLGL_OUT_NONE) {
+		if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
+			Verbose("SDLGL: Out of memory; disabling capture\n");
+			sgl->outMode = AG_SDLGL_OUT_NONE;
+		}
 	}
 	
 	if (flags & AG_VIDEO_FULLSCREEN) {
@@ -535,7 +536,7 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 
 	/* Resize the output capture buffer. */
 	if (sgl->outBuf != NULL) {
-		Free(sgl->outBuf);
+		free(sgl->outBuf);
 		if ((sgl->outBuf = AG_TryMalloc(dsw->w*dsw->h*4)) == NULL) {
 			Verbose("SDLGL: Out of memory; disabling capture\n");
 			sgl->outMode = AG_SDLGL_OUT_NONE;
