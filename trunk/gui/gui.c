@@ -31,6 +31,7 @@
 #include <agar/core/config.h>
 
 #include <agar/config/have_opengl.h>
+#include <agar/config/ag_debug_gui.h>
 
 #include <agar/gui/gui.h>
 #include <agar/gui/box.h>
@@ -231,7 +232,9 @@ AG_InitGUIGlobals(void)
 	
 	agRenderingContext = 0;
 	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
+	AG_ObjectSetName(&agDrivers, "agDrivers");
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
+	AG_ObjectSetName(&agInputDevices, "agInputDevices");
 
 	cfg = AG_ConfigObject();
 	for (i = 0; i < agGUIOptionCount; i++)
@@ -310,19 +313,40 @@ void
 AG_DestroyGUI(void)
 {
 	void **ops;
-	AG_Driver *drv;
+	AG_Object *drv, *drvNext;
+	AG_Window *win;
 	
 	AG_LockVFS(&agDrivers);
-	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_ObjectFreeChildren(drv);
+
+	/* Destroy all windows */
+#ifdef AG_DEBUG_GUI
+	Debug(NULL, "AG_DestroyGUI()\n");
+#endif
+	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_object) {
+		OBJECT_FOREACH_CHILD(win, drv, ag_window) {
+#ifdef AG_DEBUG_GUI
+			Debug(drv, "Freeing Window %s (\"%s\")\n", OBJECT(win)->name, win->caption);
+#endif
+			AG_ObjectDetach(win);
+		}
 	}
-rescan:
-	OBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		AG_DriverClose(drv);
-		if (drv == (AG_Driver *)agDriverSw) { agDriverSw = NULL; }
-		if (drv == (AG_Driver *)agDriverMw) { agDriverMw = NULL; }
-		goto rescan;
+	while (!TAILQ_EMPTY(&agWindowDetachQ)) {
+		AG_WindowProcessDetachQueue();
 	}
+
+	for (drv = TAILQ_FIRST(&agDrivers.children);
+	     drv != TAILQ_END(&agDrivers.children);
+	     drv = drvNext) {
+		drvNext = TAILQ_NEXT(drv, cobjs);
+#ifdef AG_DEBUG_GUI
+		Debug(drv, "Freeing Driver %s\n", OBJECT(drv)->name);
+#endif
+		TAILQ_INIT(&drv->children);
+		AG_DriverClose((AG_Driver *)drv);
+	}
+
+	agDriverSw = NULL;
+	agDriverMw = NULL;
 	agDriverOps = NULL;
 	AG_UnlockVFS(&agDrivers);
 
@@ -459,7 +483,7 @@ AG_InitGraphics(const char *spec)
 		if ((ep = strrchr(sOpts, ')')) != NULL) {
 			*ep = '\0';
 		} else {
-			Verbose(_("Syntax error in driver options: %s"), sOpts);
+			Verbose(_("Syntax error in driver options: %s\n"), sOpts);
 		}
 		while ((tok = AG_Strsep(&sOpts, ":")) != NULL) {
 			if ((key = AG_Strsep(&tok, "=")) != NULL) {
