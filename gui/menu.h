@@ -22,7 +22,9 @@ typedef struct ag_menu_item {
 	int icon;			/* Icon surface mapping */
 	AG_Surface *iconSrc;		/* Icon surface source */
 	int value;			/* Default bool value binding */
-	int state;			/* Default state flag binding */
+
+	int          state;		/* State flag */
+	AG_Function *stateFn;		/* State function (overrides flag) */
 
 	AG_KeySym key_equiv;		/* Key shortcut */
 	AG_KeyMod key_mod;
@@ -72,7 +74,6 @@ typedef struct ag_menu {
 #define AG_MENU_HFILL	 	0x01
 #define AG_MENU_VFILL	 	0x02
 #define AG_MENU_EXPAND	 	(AG_MENU_HFILL|AG_MENU_VFILL)
-#define AG_MENU_MODALCLOSED	0x08	/* Last closed by modal click */
 	enum ag_menu_style style;	/* Menu style */
 	AG_MenuItem *root;		/* Root menu item */
 	int selecting;			/* Selection in progress */
@@ -89,11 +90,13 @@ typedef struct ag_menu {
 } AG_Menu;
 
 typedef struct ag_popup_menu {
-	AG_Widget *widget;			/* Parent widget */
-	AG_Menu *menu;				/* Menu (allocated) */
-	AG_MenuItem *item;			/* Root item (allocated) */
-	AG_Window *win;				/* Expanded window */
-	AG_SLIST_ENTRY(ag_popup_menu) menus;
+	AG_Widget *widget;		/* Parent widget */
+	AG_Menu *menu;			/* Menu (allocated) */
+	AG_MenuItem *root;		/* Alias for menu->root */
+	AG_Window *win;			/* Expanded window */
+#ifdef AG_LEGACY
+	AG_MenuItem *item;
+#endif
 } AG_PopupMenu;
 
 typedef struct ag_menu_view {
@@ -125,7 +128,7 @@ AG_PopupMenu	*AG_PopupNew(void *);
 void		 AG_PopupShow(AG_PopupMenu *);
 void		 AG_PopupShowAt(AG_PopupMenu *, int, int);
 void		 AG_PopupHide(AG_PopupMenu *);
-void		 AG_PopupDestroy(void *, AG_PopupMenu *);
+void		 AG_PopupDestroy(AG_PopupMenu *);
 
 void	     AG_MenuDel(AG_MenuItem *);
 void	     AG_MenuItemFree(AG_MenuItem *);
@@ -227,7 +230,6 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *, int *, int, AG_Mutex *);
         AG_MenuSetIntBoolMp((mi),(p),(fl),(inv),(mtx))
 
 void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
-
 #ifdef AG_LEGACY
 # define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 #endif /* AG_LEGACY */

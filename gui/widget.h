@@ -160,7 +160,6 @@ typedef struct {
 #define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
 
 struct ag_font;
-struct ag_popup_menu;
 
 /* Widget instance structure */
 typedef struct ag_widget {
@@ -202,7 +201,6 @@ typedef struct ag_widget {
 	Uint        *textures;		/* Cached textures (driver-specific) */
 	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
-	AG_SLIST_HEAD_(ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 	struct ag_window *window;		/* Back ptr to parent window */
 	struct ag_driver *drv;			/* Back ptr to driver */

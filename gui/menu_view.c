@@ -189,7 +189,7 @@ static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
-	AG_MenuItem *mi = mview->pitem, *miSub;
+	AG_MenuItem *miRoot = mview->pitem, *mi;
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
@@ -199,23 +199,25 @@ MouseButtonUp(AG_Event *event)
 	    my < 0 || my >= HEIGHT(mview)) {
 		return;
 	}
-	TAILQ_FOREACH(miSub, &mi->subItems, items) {
-		AG_MenuUpdateItem(miSub);
+	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
+		AG_MenuUpdateItem(mi);
 
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
-			if (miSub->state == 0) {
+			int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
+			                                mi->state;
+			if (!activeState) {
 				/* Nothing to do */
-			} else if (miSub->clickFn != NULL) {
+			} else if (mi->clickFn != NULL) {
 				AG_MenuCollapseAll(m);
-				AG_ExecEventFn(m, miSub->clickFn);
-			} else if (miSub->bind_type != AG_MENU_NO_BINDING) {
-				if (miSub->bind_lock != NULL) {
-					AG_MutexLock(miSub->bind_lock);
+				mi->clickFn->fn.fnVoid(mi->clickFn);
+			} else if (mi->bind_type != AG_MENU_NO_BINDING) {
+				if (mi->bind_lock != NULL) {
+					AG_MutexLock(mi->bind_lock);
 				}
-				SetItemBoolValue(miSub);
-				if (miSub->bind_lock != NULL) {
-					AG_MutexUnlock(miSub->bind_lock);
+				SetItemBoolValue(mi);
+				if (mi->bind_lock != NULL) {
+					AG_MutexUnlock(mi->bind_lock);
 				}
 				AG_MenuCollapseAll(m);
 			}
@@ -283,103 +285,101 @@ Init(void *obj)
 static void
 Draw(void *obj)
 {
-	AG_MenuView *mview = obj;
-	AG_MenuItem *mi = mview->pitem, *item;
-	AG_Menu *m = mview->pmenu;
-	AG_Font *font = WIDGET(mview)->font;
+	AG_MenuView *mv = obj;
+	AG_MenuItem *miRoot = mv->pitem, *mi;
+	AG_Menu *m = mv->pmenu;
+	AG_Font *font = WIDGET(mv)->font;
 	AG_Rect r;
 
 	r.x = 0;
-	r.y = mview->tPad;
-	r.w = WIDTH(mview);
+	r.y = mv->tPad;
+	r.w = WIDTH(mv);
 	r.h = m->itemh;
 
-	TAILQ_FOREACH(item, &mi->subItems, items) {
-		int x = mview->lPad;
+	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
+		int x = mv->lPad;
 		AG_Color C;
 		int boolState;
+		int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
+		                                mi->state;
 
 		/* Update dynamic item if needed. */
-		AG_MenuUpdateItem(item);
+		AG_MenuUpdateItem(mi);
 
 		/* Indicate active item selection */
-		if (item == mi->sel_subitem && item->state == 1)
-			AG_DrawRect(mview, r, WCOLOR_SEL(m,0));
+		if (mi == miRoot->sel_subitem && activeState)
+			AG_DrawRect(mv, r, WCOLOR_SEL(mv,0));
 
 		/* Render the menu item's icon */
-		if (item->icon == -1 &&
-		    item->iconSrc != NULL) {
-			item->icon = AG_WidgetMapSurface(mview,
-			    AG_SurfaceDup(item->iconSrc));
+		if (mi->icon == -1 && mi->iconSrc != NULL) {
+			mi->icon = AG_WidgetMapSurface(mv, AG_SurfaceDup(mi->iconSrc));
 		}
-		if (item->icon != -1) {
-			AG_WidgetBlitSurface(mview, item->icon,
-			    x   + (r.h/2 - item->iconSrc->w/2),
-			    r.y + (r.h/2 - item->iconSrc->h/2) + 1);
+		if (mi->icon != -1) {
+			AG_WidgetBlitSurface(mv, mi->icon,
+			    x   + (r.h/2 - mi->iconSrc->w/2),
+			    r.y + (r.h/2 - mi->iconSrc->h/2) + 1);
 
 			/* Indicate boolean state */
-			boolState = (item->value != -1) ? item->value :
-			            GetItemBoolValue(item);
+			boolState = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
 			if (boolState) {
 				C = AG_ColorRGB(223,207,128);
-				AG_DrawFrame(mview,
+				AG_DrawFrame(mv,
 				    AG_RECT(x, r.y+2, r.h, r.h-2),
 				    1, C);
 				C.a = 64;
-				AG_DrawRectBlended(mview,
+				AG_DrawRectBlended(mv,
 				    AG_RECT(x, r.y+2, r.h, r.h-2),
 				    C, AG_ALPHA_SRC);
 			}
 		}
 
 		/* Keep columns aligned if there are icons. */
-		if (mi->flags & AG_MENU_ITEM_ICONS)
-			x += m->itemh + mview->spIconLbl;
+		if (miRoot->flags & AG_MENU_ITEM_ICONS)
+			x += m->itemh + mv->spIconLbl;
 
-		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
-			int x1 = mview->lPad;
-			int x2 = WIDTH(mview) - mview->rPad - 1;
+		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
+			int x1 = mv->lPad;
+			int x2 = WIDTH(mv) - mv->rPad - 1;
 			AG_Color c[2];
 	
-			c[0] = AG_ColorShift(WCOLOR(mview,0), agLowColorShift);
-			c[1] = AG_ColorShift(WCOLOR(mview,0), agHighColorShift);
+			c[0] = AG_ColorShift(WCOLOR(mv,0), agLowColorShift);
+			c[1] = AG_ColorShift(WCOLOR(mv,0), agHighColorShift);
 
-			AG_DrawLineH(mview, x1, x2, (r.y + m->itemh/2 - 1), c[0]);
-			AG_DrawLineH(mview, x1, x2, (r.y + m->itemh/2), c[1]);
+			AG_DrawLineH(mv, x1, x2, (r.y + m->itemh/2 - 1), c[0]);
+			AG_DrawLineH(mv, x1, x2, (r.y + m->itemh/2), c[1]);
 		} else {
-			int lbl = item->state ? item->lblView[1] :
-			                        item->lblView[0];
+			int lbl = activeState ? mi->lblView[1] : mi->lblView[0];
 
 			/* Render the menu item's text string */
-			if (item->state == 1) {
-				if (item->lblView[1] == -1) {
-					AG_TextColor(WCOLOR(m,TEXT_COLOR));
-					item->lblView[1] =
-					    (item->text == NULL) ? -1 :
-					    AG_WidgetMapSurface(mview,
-					    AG_TextRender(item->text));
+			if (activeState) {
+				if (mi->lblView[1] == -1) {
+					AG_TextColor(WCOLOR(mv,TEXT_COLOR));
+					mi->lblView[1] =
+					    (mi->text == NULL) ? -1 :
+					    AG_WidgetMapSurface(mv,
+					    AG_TextRender(mi->text));
 				}
-				lbl = item->lblView[1];
+				lbl = mi->lblView[1];
 			} else {
-				if (item->lblView[0] == -1) {
-					AG_TextColor(WCOLOR_DIS(m,TEXT_COLOR));
-					item->lblView[0] =
-					    (item->text == NULL) ? -1 :
-					    AG_WidgetMapSurface(mview,
-					    AG_TextRender(item->text));
+				if (mi->lblView[0] == -1) {
+					AG_TextColor(WCOLOR_DIS(mv,TEXT_COLOR));
+					mi->lblView[0] =
+					    (mi->text == NULL) ? -1 :
+					    AG_WidgetMapSurface(mv,
+					    AG_TextRender(mi->text));
 				}
-				lbl = item->lblView[0];
+				lbl = mi->lblView[0];
 			}
-			AG_WidgetBlitSurface(mview, lbl,
+			AG_WidgetBlitSurface(mv, lbl,
 			    x,
 			    r.y + m->itemh/2 - font->height/2 + 1);
-			x += WSURFACE(mview,lbl)->w;
+			x += WSURFACE(mv,lbl)->w;
 		}
 
 		/* Render the submenu arrow. */
-		if (item->nSubItems > 0) {
-			x += mview->spLblArrow;
-			AG_WidgetBlitSurface(mview, mview->arrowRight,
+		if (mi->nSubItems > 0) {
+			x += mv->spLblArrow;
+			AG_WidgetBlitSurface(mv, mv->arrowRight,
 			    x,
 			    r.y + m->itemh/2 - agIconSmallArrowRight.s->h/2 -1);
 		}
