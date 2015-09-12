@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,8 +143,8 @@ MouseButtonDown(AG_Event *event)
 			return;
 	}
 	if (vv->btndown_ev != NULL)
-		AG_PostEvent(NULL, vv, vv->btndown_ev->name,
-		    "%i,%f,%f", button, x, y);
+		AG_PostEventByPtr(NULL, vv, vv->btndown_ev, "%i,%f,%f",
+		    button, x, y);
 }
 
 static void
@@ -175,7 +175,7 @@ MouseButtonUp(AG_Event *event)
 			return;
 	}
 	if (vv->btnup_ev != NULL) {
-		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f",
+		AG_PostEventByPtr(NULL, vv, vv->btnup_ev, "%i,%f,%f",
 		    button, x, y);
 		AG_Redraw(vv);
 	}
@@ -207,7 +207,7 @@ KeyDown(AG_Event *event)
 	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
 		if (cmd->kSym == sym &&
 		    (cmd->kMod == AG_KEYMOD_NONE || mod & cmd->kMod)) {
-			AG_PostEvent(NULL, tool->vgv, cmd->fn->name, "%p", tool);
+			AG_PostEventByPtr(NULL, tool->vgv, cmd->fn, "%p", tool);
 			AG_Redraw(vv);
 		}
 	}
@@ -445,7 +445,7 @@ void
 VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->draw_ev = AG_SetEvent(vv, NULL, fn, NULL);
+	vv->draw_ev = AG_SetVoidFn(vv, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->draw_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -455,7 +455,7 @@ void
 VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->scale_ev = AG_SetEvent(vv, NULL, fn, NULL);
+	vv->scale_ev = AG_SetVoidFn(vv, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->scale_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -485,7 +485,7 @@ void
 VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->btndown_ev = AG_SetEvent(vv, NULL, fn, NULL);
+	vv->btndown_ev = AG_SetVoidFn(vv, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btndown_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -637,7 +637,7 @@ Draw(void *obj)
 		vv->curtool->ops->predraw(vv->curtool, vv);
 	}
 	if (vv->draw_ev != NULL) {
-		vv->draw_ev->handler(vv->draw_ev);
+		vv->draw_ev->fn.fnVoid(vv->draw_ev);
 	}
 	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL) {
 		vv->curtool->ops->postdraw(vv->curtool, vv);
