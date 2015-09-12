@@ -235,7 +235,7 @@ AG_GLViewReshape(AG_GLView *glv)
 	glMatrixMode(GL_PROJECTION);	glPushMatrix(); glLoadIdentity();
 
 	if (glv->scale_ev != NULL) {
-		glv->scale_ev->handler(glv->scale_ev);
+		glv->scale_ev->fn.fnVoid(glv->scale_ev);
 	}
 	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
 	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
@@ -288,7 +288,7 @@ AG_GLViewDraw(void *obj)
 		    glv->bgColor);
 	}
 	if (glv->underlay_ev != NULL)
-		glv->underlay_ev->handler(glv->underlay_ev);
+		glv->underlay_ev->fn.fnVoid(glv->underlay_ev);
 
 	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT);
 
@@ -330,7 +330,7 @@ AG_GLViewDraw(void *obj)
 	glDisable(GL_CLIP_PLANE3);
 	
 	if (glv->draw_ev != NULL)
-		glv->draw_ev->handler(glv->draw_ev);
+		glv->draw_ev->fn.fnVoid(glv->draw_ev);
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
@@ -344,7 +344,7 @@ AG_GLViewDraw(void *obj)
 
 	if (glv->overlay_ev != NULL) {
 		glPushAttrib(GL_TRANSFORM_BIT);
-		glv->overlay_ev->handler(glv->overlay_ev);
+		glv->overlay_ev->fn.fnVoid(glv->overlay_ev);
 		glPopAttrib();
 	}
 }

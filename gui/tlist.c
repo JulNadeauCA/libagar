@@ -911,7 +911,7 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 	if (!it->selected) {
 		it->selected = 1;
 		if (tl->changedEv != NULL) {
-			AG_PostEvent(NULL, tl, tl->changedEv->name, "%p,%i",
+			AG_PostEventByPtr(NULL, tl, tl->changedEv, "%p,%i",
 			    it, 1);
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
@@ -933,7 +933,7 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 	if (it->selected) {
 		it->selected = 0;
 		if (tl->changedEv != NULL) {
-			AG_PostEvent(NULL, tl, tl->changedEv->name, "%p,%i",
+			AG_PostEventByPtr(NULL, tl, tl->changedEv, "%p,%i",
 			    it, 0);
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
@@ -1075,7 +1075,7 @@ MouseButtonDown(AG_Event *event)
 		if (tl->dblClicked != NULL && tl->dblClicked == ti->p1) {
 			AG_DelTimer(tl, &tl->dblClickTo);
 			if (tl->dblClickEv != NULL) {
-				AG_PostEvent(NULL, tl, tl->dblClickEv->name,
+				AG_PostEventByPtr(NULL, tl, tl->dblClickEv,
 				    "%p", ti);
 			}
 			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti);
@@ -1091,7 +1091,7 @@ MouseButtonDown(AG_Event *event)
 			return;
 		}
 		if (tl->popupEv != NULL) {
-			AG_PostEvent(NULL, tl, tl->popupEv->name, NULL);
+			AG_PostEventByPtr(NULL, tl, tl->popupEv, NULL);
 		} else if (ti->cat != NULL) {
 			AG_TlistPopup *tp;
 	
@@ -1380,29 +1380,28 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 }
 
 void
-AG_TlistSetDblClickFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt,
-    ...)
+AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->dblClickEv = AG_SetEvent(tl, NULL, ev, NULL);
+	tl->dblClickEv = AG_SetVoidFn(tl, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->dblClickEv, fmt);
 	AG_ObjectUnlock(tl);
 }
 
 void
-AG_TlistSetPopupFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
+AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->popupEv = AG_SetEvent(tl, NULL, ev, NULL);
+	tl->popupEv = AG_SetVoidFn(tl, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
 	AG_ObjectUnlock(tl);
 }
 
 void
-AG_TlistSetChangedFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
+AG_TlistSetChangedFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->changedEv = AG_SetEvent(tl, NULL, ev, NULL);
+	tl->changedEv = AG_SetVoidFn(tl, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->changedEv, fmt);
 	AG_ObjectUnlock(tl);
 }

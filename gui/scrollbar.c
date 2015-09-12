@@ -344,10 +344,10 @@ MouseButtonUp(AG_Event *event)
 	AG_DelTimer(sb, &sb->moveTo);
 
 	if (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC && sb->buttonDecFn != NULL) {
-		AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
+		AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 0);
 	}
 	if (sb->curBtn == AG_SCROLLBAR_BUTTON_INC && sb->buttonIncFn != NULL) {
-		AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 0);
+		AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 0);
 	}
 
 	if (sb->curBtn != AG_SCROLLBAR_BUTTON_NONE) {
@@ -418,7 +418,7 @@ MouseButtonDown(AG_Event *event)
 	if (x < 0) {						/* Decrement */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
 		if (sb->buttonDecFn != NULL) {
-			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
+			AG_PostEventByPtr(NULL, sb, sb->buttonDecFn, "%i", 1);
 		} else {
 			if (Decrement(sb) != 1) {
 				sb->xSeek = -1;
@@ -429,7 +429,7 @@ MouseButtonDown(AG_Event *event)
 	} else if (x > totsize - sb->width*2) {			/* Increment */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn != NULL) {
-			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
+			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 1);
 		} else {
 			if (Increment(sb) != 1) {
 				sb->xSeek = -1;

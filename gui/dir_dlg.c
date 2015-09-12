@@ -359,7 +359,7 @@ PressedOK(AG_Event *event)
 
 	AG_ObjectLock(dd);
 	if (dd->okAction != NULL) {
-		AG_PostEvent(NULL, dd, dd->okAction->name, "%s", dd->cwd);
+		AG_PostEventByPtr(NULL, dd, dd->okAction, "%s", dd->cwd);
 	} else {
 		CheckAccessAndChoose(dd);
 	}
@@ -574,7 +574,7 @@ PressedCancel(AG_Event *event)
 
 	AG_ObjectLock(dd);
 	if (dd->cancelAction != NULL) {
-		AG_PostEvent(NULL, dd, dd->cancelAction->name, NULL);
+		AG_PostEventByPtr(NULL, dd, dd->cancelAction, NULL);
 	} else if (dd->flags & AG_DIRDLG_CLOSEWIN) {
 		if ((pwin = AG_ParentWindow(dd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */

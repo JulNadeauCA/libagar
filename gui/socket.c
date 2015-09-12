@@ -134,10 +134,7 @@ void
 AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sock);
-	if (sock->overlayFn != NULL) {
-		AG_UnsetEvent(sock->overlayFn, sock->overlayFn->name);
-	}
-	sock->overlayFn = AG_SetEvent(sock, NULL, fn, NULL);
+	sock->overlayFn = AG_SetVoidFn(sock, fn, NULL);
 	AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
 	AG_ObjectUnlock(sock);
 }
@@ -261,8 +258,7 @@ Draw(void *obj)
 		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
 	if (sock->overlayFn != NULL) {
-		AG_PostEvent(NULL, sock->overlayFn, sock->overlayFn->name,
-		    NULL);
+		AG_PostEventByPtr(NULL, sock, sock->overlayFn, NULL);
 	} else {
 		switch (sock->bgType) {
 		case AG_SOCKET_PIXMAP:
