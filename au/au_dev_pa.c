@@ -134,7 +134,7 @@ Open(void *obj, const char *path, int rate, int channels)
 	if ((streamInfo = Pa_GetStreamInfo(dpa->stream)) != NULL) {
 		dev->rate = (int)streamInfo->sampleRate;
 		if (dev->rate != rate)
-			Verbose("PortAudio: Hardware uses different rate (%d)",
+			Verbose("PortAudio: Hardware uses different rate (%d)\n",
 			    dev->rate);
 	}
 	dev->rate = rate;
