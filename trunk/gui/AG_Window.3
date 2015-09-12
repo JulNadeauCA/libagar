@@ -556,9 +556,6 @@ operation.
 .Ft int
 .Fn AG_WindowIsVisible "AG_Window *win"
 .Pp
-.Ft int
-.Fn AG_WindowIntersect "AG_DriverSw *drv" "int x" "int y"
-.Pp
 .nr nS 0
 Newly created windows are invisible by default.
 The
@@ -577,14 +574,6 @@ should be used.
 .Fn AG_WindowIsVisible
 returns the current visibility status of a window.
 A value of 0 means the window is invisible, 1 means it is visible.
-.Pp
-The
-.Fn AG_WindowIntersect
-function tests whether the specified display coordinates intersect one
-or more Agar windows.
-The function returns the number of overlapping windows at the given
-coordinates.
-This function is only useful with single-window drivers.
 .Sh FOCUS STATE
 The focus state controls the default filtering of events as well as the
 behavior and cosmetic appearance of some widgets.

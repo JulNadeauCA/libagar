@@ -224,7 +224,6 @@ void	 AG_WindowCycleFocus(AG_Window *, int);
 void	 AG_WindowDetachGenEv(AG_Event *);
 void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
-int      AG_WindowIntersect(AG_DriverSw *, int, int);
 
 void	 AG_CloseFocusedWindow(void);
 
@@ -415,7 +414,6 @@ AG_SetStockCursor(void *obj, AG_CursorArea **ca, AG_Rect r, int cName)
 	}
 }
 
-
 /*
  * Process synchronous window operations. This includes focus changes,
  * visibility changes and the detach operation. Called from custom event
@@ -436,10 +434,11 @@ AG_WindowProcessQueued(void)
 #define AG_WINDOW_POPUP 0x01000000
 #define AG_WINDOW_DIALOG 0x02000000
 #define AG_WINDOW_CASCADE AG_WINDOW_TILING
-void	   AG_WindowSetVisibility(AG_Window *, int) DEPRECATED_ATTRIBUTE;
-AG_Window *AG_FindWindow(const char *) DEPRECATED_ATTRIBUTE;
-void       AG_ViewAttach(AG_Window *) DEPRECATED_ATTRIBUTE;
-void       AG_ViewDetach(AG_Window *) DEPRECATED_ATTRIBUTE;
+AG_Window *AG_FindWindow(const char *)			DEPRECATED_ATTRIBUTE;
+void       AG_ViewAttach(AG_Window *)			DEPRECATED_ATTRIBUTE;
+void       AG_ViewDetach(AG_Window *)			DEPRECATED_ATTRIBUTE;
+void	   AG_WindowSetVisibility(AG_Window *, int)	DEPRECATED_ATTRIBUTE;
+int        AG_WindowIntersect(AG_DriverSw *, int, int)	DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 __END_DECLS
 
