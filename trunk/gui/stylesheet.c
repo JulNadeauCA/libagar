@@ -105,7 +105,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			goto fail;
 		}
 		builtin = agBuiltinStyles[i];
-		if ((ds = AG_OpenConstCore(builtin->data, builtin->size)) == NULL) {
+		if ((ds = AG_OpenConstCore(*builtin->data, builtin->size)) == NULL) {
 			goto fail;
 		}
 		builtin->css = css;
