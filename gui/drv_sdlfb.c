@@ -1238,7 +1238,7 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	Verbose(_("SDLFB: Setting mode %ux%u (%d bpp)\n"), w, h, depth);
 	newDepth = SDL_VideoModeOK(w, h, depth, sFlags);
 	if (newDepth == 8) {
-		Verbose(_("SDLFB: Enabling hardware palette"));
+		Verbose(_("SDLFB: Using hardware palette\n"));
 		sFlags |= SDL_HWPALETTE;
 	}
 	if ((sfb->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
