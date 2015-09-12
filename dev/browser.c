@@ -254,66 +254,60 @@ fail:
 	return;
 }
 
-static void
+static int
 SaveObjectToFile(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(3);
 	int loadedTmp = 0;
 	int dataFound;
+	int rv = 0;
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (dataFound) {
-				AG_TextMsg(AG_MSG_ERROR,
-				    _("%s: Loading failed (non-resident): %s"),
-				    ob->name, AG_GetError());
-				return;
-			}
+			if (dataFound)
+				return (-1);
 		}
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
 	if (AG_ObjectSaveToFile(ob, path) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000,
-		    _("Object `%s' was exported successfully."), ob->name);
+		AG_SetError("%s: %s", ob->name, AG_GetError());
+		rv = -1;
 	}
-	if (loadedTmp)
+	if (loadedTmp) {
 		AG_ObjectFreeDataset(ob);
+	}
+	return (rv);
 }
 
-static void
+static int
 ImportObject(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(3);
 	int loadedTmp = 0;
 	int dataFound;
+	int rv = 0;
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (dataFound) {
-				AG_TextMsg(AG_MSG_ERROR,
-				    _("%s: Loading failed (non-resident): %s"),
-				    ob->name, AG_GetError());
-				return;
-			}
+			if (dataFound)
+				return (-1);
 		}
 		loadedTmp = 1;
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
 	if (AG_ObjectLoadFromFile(ob, path) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
-	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000,
-		    _("Object `%s' was imported successfully."), ob->name);
+		AG_SetError("%s: %s", ob->name, AG_GetError());
+		rv = -1;
 	}
-	if (loadedTmp)
+	if (loadedTmp) {
 		AG_ObjectFreeDataset(ob);
+	}
+	return (0);
 }
 
 AG_Window *
