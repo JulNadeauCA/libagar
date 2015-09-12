@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -157,7 +157,7 @@ VG_ToolCommandExec(void *obj, const char *name, const char *fmt, ...)
 	Debug(tool->vgv, "%s: CMD: <%s>\n", tool->ops->name, name);
 	AG_EventInit(&evPost);
 	AG_EVENT_GET_ARGS(&evPost, fmt);
-	cmd->fn->handler(&evPost);
+	cmd->fn->fn.fnVoid(&evPost);
 
 	AG_ObjectUnlock(tool->vgv);
 	return (0);
