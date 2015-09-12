@@ -150,7 +150,7 @@ QuitApp(AG_Event *event)
 	AG_Quit();
 }
 
-static void
+static int
 SaveToCSV(AG_Event *event)
 {
 	struct test_ops *test = AG_PTR(1);
@@ -160,8 +160,8 @@ SaveToCSV(AG_Event *event)
 	FILE *f;
 
 	if ((f = fopen(path, "w")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "Unable to open %s", path);
-		return;
+		AG_SetError("%s: Unable to open", AG_Strerror(errno));
+		return (-1);
 	}
 	fprintf(f, "Benchmark for Agar %d.%d.%d\n", AGAR_MAJOR_VERSION,
 	    AGAR_MINOR_VERSION, AGAR_PATCHLEVEL);
@@ -171,6 +171,7 @@ SaveToCSV(AG_Event *event)
 	fprintf(f, "Iterations: %u x %u\n\n", test->runs, test->iterations);
 	AG_TableSaveASCII(t, f, ':');
 	fclose(f);
+	return (0);
 }
 
 static void
