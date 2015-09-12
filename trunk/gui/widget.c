@@ -32,7 +32,6 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
 #include <agar/gui/cursors.h>
-#include <agar/gui/menu.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/gui_math.h>
 #include <agar/gui/opengl.h>
@@ -315,7 +314,6 @@ Init(void *obj)
 	wid->y = -1;
 	wid->w = -1;
 	wid->h = -1;
-	SLIST_INIT(&wid->menus);
 	wid->focusFwd = NULL;
 	wid->window = NULL;
 	wid->drv = NULL;
@@ -681,7 +679,7 @@ AG_ExecAction(void *obj, AG_Action *a)
 	switch (a->type) {
 	case AG_ACTION_FN:
 		if (a->fn != NULL) {
-			AG_ExecEventFn(obj, a->fn);
+			a->fn->fn.fnVoid(a->fn);
 			return (1);
 		}
 		return (0);
@@ -740,8 +738,8 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 		return (0);
 	}
 	if (a->fn != NULL) {
-		AG_PostEvent(NULL, wid, a->fn->name, "%i,%i,%i",
-		    button, xCurs, yCurs);
+		AG_PostEventByPtr(NULL, wid, a->fn, "%i,%i,%i", button,
+		    xCurs, yCurs);
 		return (1);
 	}
 	return (0);
@@ -928,7 +926,6 @@ Destroy(void *obj)
 {
 	AG_Widget *wid = obj;
 	AG_CursorArea *ca, *caNext;
-	AG_PopupMenu *pm, *pmNext;
 	AG_RedrawTie *rt, *rtNext;
 	AG_ActionTie *at, *atNext;
 	AG_Variable *V;
@@ -939,12 +936,6 @@ Destroy(void *obj)
 	     ca = caNext) {
 		caNext = TAILQ_NEXT(ca, cursorAreas);
 		free(ca);
-	}
-	for (pm = SLIST_FIRST(&wid->menus);
-	     pm != SLIST_END(&wid->menus);
-	     pm = pmNext) {
-		pmNext = SLIST_NEXT(pm, menus);
-		AG_PopupDestroy(NULL, pm);
 	}
 	for (rt = TAILQ_FIRST(&wid->redrawTies);
 	     rt != TAILQ_END(&wid->redrawTies);

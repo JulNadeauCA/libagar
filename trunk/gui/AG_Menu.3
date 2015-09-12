@@ -418,7 +418,7 @@ This association will cause the popup menu to be automatically freed when the
 given widget is destroyed.
 .Pp
 Once a popup menu is created, new items can be inserted using the
-.Va item
+.Va root
 member of the
 .Ft AG_PopupMenu
 structure as parent.
@@ -460,7 +460,7 @@ Selection is in progress if set to 1 (read-only).
 For the
 .Ft AG_MenuItem
 structure:
-.Bl -tag -width "AG_MenuItem *subitems "
+.Bl -tag -width "int (*stateFn)(AG_Event *)"
 .It Ft char *text
 Displayed text for the menu item (read-only, set by
 .Fn AG_MenuSetLabel ) .
@@ -477,14 +477,48 @@ or
 .Fn AG_MenuSetIntBool ) ,
 this value is ignored.
 .It Ft int state
-If this flag is set (the default), the item is "enabled".
-Otherwise, the user is not allowed to select the item.
+Make item clickable (1) or disabled (0).
+.It Ft int (*stateFn)(AG_Event *)
+Evaluate function to determine if item is active.
+Overrides the
+.Va state
+flag.
 .It Ft AG_Menu *pmenu
 Back pointer to the parent
 .Ft AG_Menu
 (read-only).
 .El
 .Sh EXAMPLES
+The following code fragment creates a popup menu with a disabled item:
+.Bd -literal -offset indent
+AG_PopupMenu *pm;
+AG_MenuItem *mi;
+
+pm = AG_PopupNew(myParentWidget);
+AG_MenuAction(pm->root, "Copy", NULL, DoCopy, NULL);
+mi = AG_MenuAction(pm->root, "Paste", NULL, DoPaste, NULL);
+mi->state = (myClipboard->contents > 0);
+.Ed
+.Pp
+The following code fragment creates a popup menu with a dynamically
+determined "disabled" state:
+.Bd -literal -offset indent
+static int
+PasteActive(AG_Event *event)
+{
+	Clipboard *C = AG_PTR(1);
+	return (C->contents > 0);
+}
+
+AG_PopupMenu *pm;
+AG_MenuItem *mi;
+
+pm = AG_PopupNew(myParentWidget);
+AG_MenuAction(pm->root, "Copy", NULL, DoCopy, NULL);
+mi = AG_MenuAction(pm->root, "Paste", NULL, DoPaste, NULL);
+mi->stateFn = AG_SetIntFn(pm->menu, PasteActive, "%p", myClipboard);
+.Ed
+.Pp
 The following code fragment associates a menu with an
 .Xr AG_Toolbar 3 .
 Buttons and menu entries are created for the same actions.

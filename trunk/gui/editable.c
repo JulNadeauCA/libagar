@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -544,6 +544,17 @@ OnFocusLoss(AG_Event *event)
 	AG_UnlockTimers(ed);
 
 	AG_Redraw(ed);
+}
+
+static void
+OnHide(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+
+	if (ed->pm != NULL) {
+		AG_PopupHide(ed->pm);
+	}
+	OnFocusLoss(event);
 }
 
 static void
@@ -1292,6 +1303,13 @@ MenuCut(AG_Event *event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+static int
+MenuCutActive(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
+}
+
 static void
 MenuCopy(AG_Event *event)
 {
@@ -1303,6 +1321,13 @@ MenuCopy(AG_Event *event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+static int
+MenuCopyActive(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	return (ed->sel != 0);
+}
+
 static void
 MenuPaste(AG_Event *event)
 {
@@ -1316,6 +1341,13 @@ MenuPaste(AG_Event *event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+static int
+MenuPasteActive(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	return !AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0;
+}
+
 static void
 MenuDelete(AG_Event *event)
 {
@@ -1329,6 +1361,13 @@ MenuDelete(AG_Event *event)
 		ReleaseBuffer(ed, buf);
 	}
 }
+static int
+MenuDeleteActive(AG_Event *event)
+{
+	AG_Editable *ed = AG_PTR(1);
+	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
+}
+
 static void
 MenuSelectAll(AG_Event *event)
 {
@@ -1352,31 +1391,34 @@ static AG_PopupMenu *
 PopupMenu(AG_Editable *ed)
 {
 	AG_PopupMenu *pm;
-	AG_MenuItem *m;
+	AG_MenuItem *mi;
 	AG_Variable *vText;
 	AG_Text *txt;
 
 	if ((pm = AG_PopupNew(ed)) == NULL) {
 		return (NULL);
 	}
-	m = AG_MenuAction(pm->item, _("Cut"), NULL, MenuCut, "%p", ed);
-	m->state = (!AG_EditableReadOnly(ed) && ed->sel != 0);
-	m = AG_MenuAction(pm->item, _("Copy"), NULL, MenuCopy, "%p", ed);
-	m->state = (ed->sel != 0);
-	m = AG_MenuAction(pm->item, _("Paste"), NULL, MenuPaste, "%p", ed);
-	m->state = (!AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0);
-	m = AG_MenuAction(pm->item, _("Delete"), NULL, MenuDelete, "%p", ed);
-	m->state = (!AG_EditableReadOnly(ed) && ed->sel != 0);
-	AG_MenuSeparator(pm->item);
-	AG_MenuAction(pm->item, _("Select All"), NULL, MenuSelectAll, "%p", ed);
+	mi = AG_MenuAction(pm->root, _("Cut"), NULL, MenuCut, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, MenuCutActive, "%p", ed);
+	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, MenuCopyActive, "%p", ed);
+	mi = AG_MenuAction(pm->root, _("Paste"), NULL, MenuPaste, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, MenuPasteActive, "%p", ed);
+	mi = AG_MenuAction(pm->root, _("Delete"), NULL, MenuDelete, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, MenuDeleteActive, "%p", ed);
+
+	AG_MenuSeparator(pm->root);
+
+	AG_MenuAction(pm->root, _("Select All"), NULL, MenuSelectAll, "%p", ed);
+
 	if ((ed->flags & AG_EDITABLE_MULTILINGUAL) &&
 	    AG_Defined(ed, "text") &&
 	    (vText = AG_GetVariable(ed, "text", &txt)) != NULL) {
 		AG_MenuItem *mLang;
 		int i;
 		
-		AG_MenuSeparator(pm->item);
-		mLang = AG_MenuNode(pm->item, _("Select Language"), NULL);
+		AG_MenuSeparator(pm->root);
+		mLang = AG_MenuNode(pm->root, _("Select Language"), NULL);
 		for (i = 0; i < AG_LANG_LAST; i++) {
 			AG_TextEnt *te = &txt->ent[i];
 
@@ -1416,8 +1458,7 @@ MouseButtonDown(AG_Event *event)
 	switch (btn) {
 	case AG_MOUSE_LEFT:
 		if (ed->pm != NULL) {
-			AG_PopupDestroy(ed, ed->pm);
-			ed->pm = NULL;
+			AG_PopupHide(ed->pm);
 		}
 		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
 		mx += ed->x;
@@ -1440,10 +1481,11 @@ MouseButtonDown(AG_Event *event)
 	case AG_MOUSE_RIGHT:
 		if ((ed->flags & AG_EDITABLE_NOPOPUP) == 0) {
 			if (ed->pm != NULL) {
-				AG_PopupDestroy(ed, ed->pm);
+				AG_PopupShowAt(ed->pm, mx, my);
+			} else {
+				if ((ed->pm = PopupMenu(ed)) != NULL)
+					AG_PopupShowAt(ed->pm, mx,my);
 			}
-			if ((ed->pm = PopupMenu(ed)) != NULL)
-				AG_PopupShowAt(ed->pm, mx,my);
 		}
 		break;
 	case AG_MOUSE_WHEELUP:
@@ -1809,7 +1851,7 @@ Init(void *obj)
 
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
-	AG_AddEvent(ed, "widget-hidden", OnFocusLoss, NULL);
+	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);
 	AG_SetEvent(ed, "key-down", KeyDown, NULL);
 	AG_SetEvent(ed, "key-up", KeyUp, NULL);
@@ -1841,9 +1883,12 @@ Destroy(void *obj)
 {
 	AG_Editable *ed = obj;
 
+	if (ed->pm != NULL) {
+		AG_PopupDestroy(ed->pm);
+	}
 	if (ed->flags & AG_EDITABLE_EXCL)
 		Free(ed->sBuf.s);
-	
+
 	AG_TextFree(ed->text);
 }
 

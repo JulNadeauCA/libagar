@@ -318,15 +318,15 @@ PopupMenu(AG_Event *event)
 	if ((pm = cons->pm = AG_PopupNew(cons)) == NULL) {
 		return;
 	}
-	mi = AG_MenuAction(pm->item, _("Copy"), NULL, MenuCopy, "%p", cons);
+	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
 	mi->stateFn = AG_SetIntFn(pm->menu, MenuCopyActive, "%p", cons);
 
-	AG_MenuAction(pm->item, _("Export to file..."), NULL,
+	AG_MenuAction(pm->root, _("Export to file..."), NULL,
 	    MenuExportToFileDlg, "%p", cons);
 
-	AG_MenuSeparator(pm->item);
+	AG_MenuSeparator(pm->root);
 
-	AG_MenuAction(pm->item, _("Select All"), NULL,
+	AG_MenuAction(pm->root, _("Select All"), NULL,
 	    MenuSelectAll, "%p", cons);
 
 	AG_PopupShowAt(pm, x, y);
