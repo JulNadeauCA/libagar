@@ -28,6 +28,13 @@ AG_Menu {
 	text-color#selected: rgb(230,230,230);
 	text-color#disabled: rgb(170,170,170);
 }
+AG_MenuView {
+	color: rgb(70,70,70);
+	color#selected: rgb(40,40,110);
+	color#disabled: rgb(40,40,110);
+	text-color#selected: rgb(230,230,230);
+	text-color#disabled: rgb(170,170,170);
+}
 AG_Notebook {
 	color#selected: rgb(117,117,117);
 }
