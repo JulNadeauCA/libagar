@@ -26,7 +26,7 @@ typedef struct ag_style_sheet {
 typedef struct ag_static_css {
 	const char *name;		/* Identifier */
 	Uint32 size;			/* Size in bytes */
-	const Uint8 *data;		/* CSS data */
+	const char **data;		/* CSS data */
 	AG_StyleSheet *css;		/* Initialized stylesheet */
 } AG_StaticCSS;
 
