@@ -153,7 +153,7 @@ Agar::MenuItem
 rootItem(self)
 	Agar::PopupMenu self
 CODE:
-	RETVAL = self->item;
+	RETVAL = self->root;
 OUTPUT:
 	RETVAL
 
