@@ -57,7 +57,7 @@ PollTimeout(AG_Timer *to, AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
-	t->poll_ev->handler(t->poll_ev);
+	t->poll_ev->fn.fnVoid(t->poll_ev);
 	if (t->mOffs+t->mVis >= t->m) {
 		t->mOffs = MAX(0, t->m - t->mVis);
 	}
