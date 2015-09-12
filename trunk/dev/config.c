@@ -113,17 +113,12 @@ DEV_ConfigShow(void)
 }
 
 #if 0
-static void
+static int
 LoadColorSchemeFromACS(AG_Event *event)
 {
 	char *file = AG_STRING(1);
 
-	if (AG_ColorsLoad(file) == 0) {
-		AG_TextTmsg(AG_MSG_INFO, 1000,
-		    _("Color scheme loaded from %s."), file);
-	} else {
-		AG_TextMsgFromError();
-	}
+	return AG_ColorsLoad(file);
 }
 
 static void
@@ -131,12 +126,7 @@ SaveColorSchemeToACS(AG_Event *event)
 {
 	char *file = AG_STRING(1);
 
-	if (AG_ColorsSave(file) == 0) {
-		AG_TextTmsg(AG_MSG_INFO, 1000, _("Color scheme saved to %s."),
-		    file);
-	} else {
-		AG_TextMsgFromError();
-	}
+	return AG_ColorsSave(file);
 }
 
 static void
