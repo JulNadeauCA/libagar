@@ -24,6 +24,7 @@
  */
 
 #include <agar/core/core.h>
+
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
 #include <agar/gui/titlebar.h>
@@ -32,6 +33,8 @@
 #include <agar/gui/icons.h>
 #include <agar/gui/cursors.h>
 #include <agar/gui/label.h>
+
+#include <agar/config/ag_debug_gui.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -246,20 +249,16 @@ Attach(AG_Event *event)
 	
 	if (AGDRIVER_SINGLE(drv)) {
 		/*
-		 * Initialize the built-in window titlebar and icon now that
-		 * we have an attached driver. We could not do this earlier
-		 * because surface operations are involved.
+		 * Initialize the built-in AG_Titlebar and dekstop AG_Icon now
+		 * that we have an attached driver (we could not do this
+		 * earlier because surface operations are involved).
 		 */
-		if (win->tbar == NULL &&
-		    !(win->flags & AG_WINDOW_NOTITLE)) {
+		if (win->tbar == NULL && !(win->flags & AG_WINDOW_NOTITLE)) {
 			Uint titlebarFlags = 0;
 
-			if (win->flags & AG_WINDOW_NOCLOSE)
-				titlebarFlags |= AG_TITLEBAR_NO_CLOSE;
-			if (win->flags & AG_WINDOW_NOMINIMIZE)
-				titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE;
-			if (win->flags & AG_WINDOW_NOMAXIMIZE)
-				titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
+			if (win->flags & AG_WINDOW_NOCLOSE) { titlebarFlags |= AG_TITLEBAR_NO_CLOSE; }
+			if (win->flags & AG_WINDOW_NOMINIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE; }
+			if (win->flags & AG_WINDOW_NOMAXIMIZE) { titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE; }
 
 			win->tbar = AG_TitlebarNew(win, titlebarFlags);
 		}
@@ -269,8 +268,7 @@ Attach(AG_Event *event)
 		WIDGET(win->icon)->drv = drv;
 		WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
 		AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
-		AG_IconSetBackgroundFill(win->icon, 1,
-		    AGDRIVER_SW(drv)->bgColor);
+		AG_IconSetBackgroundFill(win->icon, 1, AGDRIVER_SW(drv)->bgColor);
 		AG_SetStyle(win->icon, "font-size", "80%");
 		AG_WidgetCompileStyle(win->icon);
 	}
@@ -287,7 +285,12 @@ Detach(AG_Event *event)
 	AG_Driver *drv;
 	AG_Window *other, *subwin;
 	AG_Timer *to, *toNext;
-	
+
+#ifdef AG_DEBUG_GUI
+	Debug(NULL, "AG_ObjectDetach(Window %s, \"%s\")\n", OBJECT(win)->name,
+	    win->caption);
+#endif
+
 	AG_LockVFS(&agDrivers);
 
 	/* Mark window detach in progress */
@@ -333,8 +336,21 @@ Detach(AG_Event *event)
 	 * context, we must defer the actual window hide / detach operation
 	 * until the end of the current event processing cycle.
 	 */
-	TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
 	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
+
+	/* Queued Show/Hide operations would be redundant. */
+	TAILQ_FOREACH(other, &agWindowHideQ, visibility) {
+		if (other == win) {
+			TAILQ_REMOVE(&agWindowHideQ, win, visibility);
+			break;
+		}
+	}
+	TAILQ_FOREACH(other, &agWindowShowQ, visibility) {
+		if (other == win) {
+			TAILQ_REMOVE(&agWindowShowQ, win, visibility);
+			break;
+		}
+	}
 	
 	AG_UnlockVFS(&agDrivers);
 }
@@ -535,8 +551,7 @@ AG_WindowMakeTransient(AG_Window *winParent, AG_Window *winTrans)
 		AG_ObjectLock(winParent);
 		if (AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
-			AGDRIVER_MW_CLASS(drv)->setTransientFor(winParent,
-			    winTrans);
+			AGDRIVER_MW_CLASS(drv)->setTransientFor(winParent, winTrans);
 		}
 		winTrans->transientFor = winParent;
 		AG_ObjectUnlock(winParent);
@@ -2032,14 +2047,46 @@ AG_WindowProcessDetachQueue(void)
 {
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
-	int closedMain = 0;
+	int closedMain = 0, nHidden = 0;
+
+#ifdef AG_DEBUG_GUI
+	Debug(NULL, "AG_WindowProcessDetachQueue() Begin\n");
+#endif
+	TAILQ_FOREACH(win, &agWindowDetachQ, detach) {
+		if (!win->visible) {
+			continue;
+		}
+#ifdef AG_DEBUG_GUI
+		Debug(NULL, "Hiding: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
+#endif
+		/*
+		 * Note: `widget-hidden' event handlers may cause new windows
+		 * to be added to agWindowDetachQ.
+		 */
+		AG_PostEvent(NULL, win, "widget-hidden", NULL);
+		nHidden++;
+	}
+	if (nHidden > 0) {
+		/*
+		 * Windows were hidden - defer detach operation until the next
+		 * event cycle, just in case the underlying WM cannot hide and
+		 * unmap a window in the same event cycle.
+		 */
+#ifdef AG_DEBUG_GUI
+		Debug(NULL, "Defer Detach (%d windows hidden)\n", nHidden);
+#endif
+		return;
+	}
 
 	for (win = TAILQ_FIRST(&agWindowDetachQ);
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
 		winNext = TAILQ_NEXT(win, detach);
 		drv = WIDGET(win)->drv;
-	
+		
+#ifdef AG_DEBUG_GUI
+		Debug(NULL, "Detach: %s (\"%s\")\n", OBJECT(win)->name, win->caption);
+#endif
 		/* Notify all widgets of the window detach. */
 		AG_PostEvent(drv, win, "detached", NULL);
 
@@ -2052,30 +2099,33 @@ AG_WindowProcessDetachQueue(void)
 				AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
 			}
 		} else {
-			AG_DriverSw *dsw = (AG_DriverSw *)drv;
-
-			dsw->flags |= AG_DRIVER_SW_REDRAW;
-			win->tbar = NULL;		/* No longer safe */
-			win->icon = NULL;
+			win->tbar = NULL;
+			if (win->icon != NULL) {
+				AG_ObjectDestroy(win->icon);
+				win->icon = NULL;
+			}
+			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
-		/* We can now perform the standard AG_ObjectDetach(). */
+		/* Do a standard AG_ObjectDetach(). */
 		AG_ObjectSetDetachFn(win, NULL, NULL);
 		AG_ObjectDetach(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
+			/* Destroy the AG_Driver object. */
 			AG_UnlockVFS(&agDrivers);
-			AG_DriverClose(drv);	/* Free this driver instance */
+			AG_DriverClose(drv);
 			AG_LockVFS(&agDrivers);
 		}
 		if (win->flags & AG_WINDOW_MAIN) {
 			closedMain++;
 		}
-		AG_PostEvent(drv, win, "window-detached", NULL);
+		AG_PostEvent(NULL, win, "window-detached", NULL);
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agWindowDetachQ);
-
+	
+	/* Terminate if the last AG_WINDOW_MAIN window was closed. */
 	if (closedMain > 0) {
 		AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 			AG_FOREACH_WINDOW(win, drv) {
@@ -2085,24 +2135,20 @@ AG_WindowProcessDetachQueue(void)
 			if (win != NULL)
 				break;
 		}
-		if (drv == NULL) {            /* Last "main" window was closed */
+		if (drv == NULL) {
+#ifdef AG_DEBUG_GUI
+			Debug(NULL, "AG_WindowProcessDetachQueue() Exit Normally\n");
+#endif
 			AG_Terminate(0);
 		}
+#ifdef AG_DEBUG_GUI
+		Debug(NULL, "AG_WindowProcessDetachQueue() End (MAIN window remains)\n");
+#endif
+	} else {
+#ifdef AG_DEBUG_GUI
+		Debug(NULL, "AG_WindowProcessDetachQueue() End\n");
+#endif
 	}
-}
-
-int
-AG_WindowIntersect(AG_DriverSw *drv, int x, int y)
-{
-	AG_Window *win;
-	int rv = 0;
-
-	AG_FOREACH_WINDOW(win, drv) {
-		if (win->visible &&
-		    AG_WidgetArea(win, x, y))
-			rv++;
-	}
-	return (rv);
 }
 
 /*
@@ -2317,7 +2363,6 @@ AG_ViewDetach(AG_Window *win)
 {
 	AG_ObjectDetach(win);
 }
-
 void
 AG_WindowSetVisibility(AG_Window *win, int flag)
 {
@@ -2328,6 +2373,19 @@ AG_WindowSetVisibility(AG_Window *win, int flag)
 		AG_WindowShow(win);
 	}
 	AG_ObjectUnlock(win);
+}
+int
+AG_WindowIntersect(AG_DriverSw *drv, int x, int y)
+{
+	AG_Window *win;
+	int rv = 0;
+
+	AG_FOREACH_WINDOW(win, drv) {
+		if (win->visible &&
+		    AG_WidgetArea(win, x, y))
+			rv++;
+	}
+	return (rv);
 }
 #endif /* AG_LEGACY */
 
