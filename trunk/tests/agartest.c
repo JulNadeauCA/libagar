@@ -525,9 +525,9 @@ main(int argc, char *argv[])
 	AG_BindStdGlobalKeys();
 #ifdef __APPLE__
 # ifdef AG_DEBUG
-	AG_BindGlobalKey(AG_KEY_D,	AG_KEYMOD_ANY,	StartDebugger);
+	AG_BindGlobalKey(AG_KEY_D,	AG_KEYMOD_META,	StartDebugger);
 # endif
-	AG_BindGlobalKey(AG_KEY_C,	AG_KEYMOD_ANY,	AG_ViewCapture);
+	AG_BindGlobalKey(AG_KEY_C,	AG_KEYMOD_META,	AG_ViewCapture);
 #else
 # ifdef AG_DEBUG
 	AG_BindGlobalKey(AG_KEY_F12,	AG_KEYMOD_ANY,	StartDebugger);
