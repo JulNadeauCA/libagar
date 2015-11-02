@@ -1032,6 +1032,9 @@ COCOA_OpenWindow(AG_Window *win, AG_Rect r, int depthReq, Uint mwFlags)
 	co->win->_agarWindow = win;
 	SetBackgroundColor(co, WCOLOR(win,0));
 
+	if (win->flags & AG_WINDOW_MAIN)
+		[co->win makeMainWindow];
+
 	/* Create an event listener. */
 	co->evListener = [[AG_CocoaListener alloc] init];
 
