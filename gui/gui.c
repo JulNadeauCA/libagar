@@ -265,7 +265,9 @@ AG_DestroyGUIGlobals(void)
 		AG_Unset(cfg, agGUIOptions[i].key);
 
 	AG_ObjectDestroy(&agInputDevices);
+#ifndef __APPLE__ /* XXX mutex issue */
 	AG_ObjectDestroy(&agDrivers);
+#endif
 
 	AG_PixelFormatFree(agSurfaceFmt); agSurfaceFmt = NULL;
 	AG_EditableDestroyClipboards();
