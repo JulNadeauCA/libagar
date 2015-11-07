@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2003-2015 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ CLEANFILES?=
 .SUFFIXES: .c .po .pox .mo
 
 all: all-subdir ${DOMAIN}.pot ${MOS}
-install: install-po install-subdir
+install: all install-po install-subdir
 deinstall: deinstall-po deinstall-subdir
 clean: clean-po clean-subdir
 cleandir: clean-po clean-subdir cleandir-subdir

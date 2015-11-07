@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ PS2PDFFLAGS?=
 CLEANFILES?=
 
 all: all-subdir ${DOCPS} ${DOCPDF}
-install: install-doc-dirs install-doc install-subdir
+install: all install-doc-dirs install-doc install-subdir
 deinstall: deinstall-subdir
 clean: clean-doc clean-subdir
 cleandir: clean-doc clean-subdir cleandir-subdir

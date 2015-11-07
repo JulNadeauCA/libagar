@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,22 @@ PROG_GUID?=
 PROG_GUI_FLAGS?=
 PROG_CLI_FLAGS?=
 
+PROG_BUNDLE?=
+PROG_DISPLAY_NAME?=	"${PROG}"
+PROG_IDENTIFIER?=	com.hypertriton.${PROG}
+PROG_VERSION?=		1.0
+PROG_CATEGORY?=
+PROG_COPYRIGHT?=	"Copyright (c) 2015 Hypertriton Inc."
+
+PROG_PRINCIPAL_CLASS?=		AG_AppDelegate
+PROG_SYS_VERSION?=		10.3.0
+PROG_INFO_EXTRA?=
+PROG_REQUIRED_CAPABILITIES?=
+# accelerometer armv6 armv7 arm64 auto-focus-camera bluetooth-le
+# camera-flash front-facing-camera gamekit gps gyroscope healthkit
+# location-services magnetometer metal microphone opengles-1 opengles-2
+# opengles-3 peer-peer sms still-camera telephony video-camera wifi
+
 # Compat (DATADIR was formerly called SHAREDIR)
 SHARE?=none
 SHARESRC?=none
@@ -73,7 +89,7 @@ CTAGSFLAGS?=
 DPADD+=prog-tags
 
 all: all-subdir ${PROG}
-install: install-prog install-subdir
+install: all install-prog install-subdir
 deinstall: deinstall-prog deinstall-subdir
 clean: clean-prog clean-subdir
 cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir
@@ -222,6 +238,20 @@ ${PROG}: _prog_objs ${OBJS}
 	            ${CC} ${CFLAGS} $$_prog_ldflags ${LDFLAGS} \
 		        -o ${PROG} ${OBJS} ${LIBS}; \
 		fi; \
+	    fi; \
+	    if [ "${PROG_BUNDLE}" != "" ]; then \
+		echo "perl ${TOP}/mk/gen-bundle.pl prog ${PROG_BUNDLE}"; \
+		env PROG=${PROG} INSTALL_PROG="${INSTALL_PROG}" \
+		PROG_DISPLAY_NAME=${PROG_DISPLAY_NAME} \
+		PROG_IDENTIFIER=${PROG_IDENTIFIER} \
+		PROG_SYS_VERSION=${PROG_SYS_VERSION} \
+		PROG_PRINCIPAL_CLASS=${PROG_PRINCIPAL_CLASS} \
+		PROG_COPYRIGHT=${PROG_COPYRIGHT} \
+		PROG_VERSION=${PROG_VERSION} \
+		PROG_CATEGORY=${PROG_CATEGORY} \
+		PROG_REQUIRED_CAPABILITIES=${PROG_REQUIRED_CAPABILITIES} \
+		PROG_INFO_EXTRA=${PROG_INFO_EXTRA} \
+		perl ${TOP}/mk/gen-bundle.pl prog ${PROG_BUNDLE}; \
 	    fi; \
 	fi
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2014 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -91,8 +91,10 @@ CTAGS?=
 CTAGSFLAGS?=
 DPADD+=lib-tags
 
+LIB_BUNDLE?=
+
 all: all-subdir lib${LIB}.a lib${LIB}.la
-install: install-lib install-subdir
+install: all install-lib install-subdir
 deinstall: deinstall-lib deinstall-subdir
 clean: clean-lib clean-subdir
 cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
@@ -307,6 +309,10 @@ lib${LIB}.la: _lib_shobjs ${SHOBJS}
 			${LDFLAGS} ${SHOBJS} \
 			${LIBS}; \
 		fi; \
+	    fi; \
+	    if [ "${LIB_BUNDLE}" != "" ]; then \
+	        echo "perl ${TOP}/mk/gen-bundle.pl lib ${LIB_BUNDLE}"; \
+	        perl ${TOP}/mk/gen-bundle.pl lib ${LIB_BUNDLE}; \
 	    fi; \
 	fi
 
@@ -544,7 +550,7 @@ ${LTCONFIG} ${LTCONFIG_DEPS}:
 
 .PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
-.PHONY: _lib_objs _lib_shobjs lib-tags none
+.PHONY: _lib_objs _lib_shobjs lib-tags none bundle
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk

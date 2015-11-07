@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Public domain.
 # Scan Makefiles for "include .depend" and generate empty ".depend" files,
 # such that make can be run prior to an initial "make depend".

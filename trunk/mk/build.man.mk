@@ -54,7 +54,7 @@ NOMANLINKS?=
 CLEANFILES?=
 
 all: all-subdir all-catman
-install: install-man-dirs install-man install-subdir
+install: all install-man-dirs install-man install-subdir
 deinstall: deinstall-subdir
 clean: clean-man clean-subdir
 cleandir: clean-man clean-subdir cleandir-subdir
