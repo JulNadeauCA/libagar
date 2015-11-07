@@ -1,5 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+#
 # Public domain
+#
 
 my $found = 0;
 open(CONFIG, "configure.in") || die "configure.in: $!";

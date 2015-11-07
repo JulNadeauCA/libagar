@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # Copyright (c) 2003-2014 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
@@ -48,9 +48,10 @@ $BUILD = '';
 	'^hstrip\.pl$',
 	'^cmpfiles\.pl$',
 	'^cleanfiles\.pl$',
+	'^gen-bundle\.pl$',
+	'^gen-declspecs\.pl$',
 	'^gen-includes\.pl$',
 	'^gen-includelinks\.pl$',
-	'^gen-declspecs\.pl$',
 	'^install-manpages\.sh$',
 );
 my %V = ();
