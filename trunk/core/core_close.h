@@ -1,8 +1,8 @@
 /*	Public domain	*/
 
-#undef AG_DEBUG
-#undef AG_LEGACY
-#undef AG_THREADS
+/* #undef AG_DEBUG */
+/* #undef AG_LEGACY */
+/* #undef AG_THREADS */
 
 #ifdef _AGAR_HAVE_64BIT_H_
 # undef _AGAR_HAVE_64BIT_H_
