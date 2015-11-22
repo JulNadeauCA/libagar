@@ -465,7 +465,10 @@ AG_SurfaceSetPalette(AG_Surface *su, AG_Color *c, Uint offs, Uint count)
 	return (0);
 }
 
-/* Return a newly-allocated duplicate of a surface. */
+/*
+ * Return a newly-allocated duplicate of a surface.
+ * The source surface must be locked.
+ */
 AG_Surface *
 AG_SurfaceDup(const AG_Surface *ss)
 {
