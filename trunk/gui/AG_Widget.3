@@ -1021,13 +1021,13 @@ objects the following events:
 .Bl -tag -compact -width 2n
 .It Fn widget-shown "void"
 The widget is now visible.
-Exceptionally, user-defined handlers for this event should be set using
+NOTE: Handlers for this event should be set using
 .Xr AG_AddEvent 3
 as opposed to
 .Xr AG_SetEvent 3 .
 .It Fn widget-hidden "void"
 The widget is no longer visible.
-Exceptionally, user-defined handlers for this event should be set using
+NOTE: Handlers for this event should be set using
 .Xr AG_AddEvent 3
 as opposed to
 .Xr AG_SetEvent 3 .
@@ -1043,6 +1043,24 @@ The widget (or one of its parents) has been moved.
 The widget now holds focus inside its parent container.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
+.It Fn widget-reshape "void"
+Widget size has changed and
+.Dv USE_OPENGL
+is set (and the
+.Dv GL_PROJECTION
+or
+.Dv GL_MODELVIEW
+matrices may need to be updated).
+.It Fn widget-overlay "void"
+Invoked following the
+.Fn draw
+operation; requires
+.Dv USE_OPENGL .
+.It Fn widget-underlay "void"
+Invoked prior to the
+.Fn draw
+operation; requires
+.Dv USE_OPENGL .
 .It Fn font-changed "void"
 The default font associated with the widget has changed.
 The new font may be accessed via the
@@ -1207,29 +1225,37 @@ Without this flag,
 .Dv TAB
 is used to change the focus to the next widget.
 .It AG_WIDGET_NOSPACING
-Advise parent container widgets to avoid applying spacing and padding rules
-to this widget.
-This flag is used by such widgets as
-.Xr AG_Titlebar 3
-and
-.Xr AG_Menu 3 .
+Advise parent container to disable spacing and padding (per standard box model),
+for this widget.
 .It AG_WIDGET_USE_TEXT
-Advise that the widget's
+Allow
 .Fn draw ,
 .Fn size_request
-or
-.Fn size_allocate
-routines will make calls such as
-.Xr AG_TextRender 3
-or
-.Xr AG_TextSize 3 .
-Prior to invoking those routines, Agar will set the font engine's state
-(using
-.Xr AG_PushTextState 3
 and
-.Xr AG_PopTextState 3 )
-according to the widget's effective style settings.
+.Fn size_allocate
+to use
+.Xr AG_TextRender 3
+and
+.Xr AG_TextSize 3 .
+Agar will automatically save/restore the font engine state according to the
+widget's computed style settings.
 Enables reception of the "font-changed" event.
+.It AG_WIDGET_USE_OPENGL
+Establish a separate OpenGL context for the widget.
+Before the
+.Fn draw
+routine is invoked, Agar will automatically save/restore the
+.Dv GL_PROJECTION ,
+.Dv GL_MODELVIEW
+and
+.Dv GL_TEXTURE
+matrices along with GL attributes
+.Dv GL_TRANSFORM_BIT ,
+.Dv GL_VIEWPORT_BIT
+and
+.Dv GL_TEXTURE_BIT .
+Enables reception of "widget-reshape", "widget-overlay" and "widget-underlay"
+events.
 .It AG_WIDGET_USE_MOUSEOVER
 Detect cursor motion over the widget's area; update the
 .Dv AG_WIDGET_MOUSEOVER
@@ -1252,4 +1278,7 @@ interface first appeared in Agar 1.0.
 Widget-level variable bindings have been replaced by generic
 .Xr AG_Variable 3
 pointers in Agar 1.3.4.
-The widget "actions" interface first appeared in Agar 1.4.
+The Actions interface first appeared in Agar 1.4.
+The
+.Dv AG_WIDGET_USE_OPENGL
+feature first appeared in Agar 1.5.

@@ -12,14 +12,17 @@
 #include <agar/gui/surface.h>
 #include <agar/gui/anim.h>
 #include <agar/gui/stylesheet.h>
-
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
 #include <agar/gui/drv.h>
 
 #include <agar/gui/begin.h>
 
-/* Widget size requisition and allocation structures. */
+struct ag_widget;
+struct ag_cursor;
+struct ag_font;
+
+/* Widget size requisition and allocation. */
 typedef struct ag_size_req {
 	int w, h;			/* Requested geometry in pixels */
 } AG_SizeReq;
@@ -28,7 +31,7 @@ typedef struct ag_size_alloc {
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 
-/* Widget class description structure. */
+/* Widget class description. */
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;
 	void (*draw)(void *);
@@ -38,20 +41,20 @@ typedef struct ag_widget_class {
 
 /* Relative size specification of visual element. */
 typedef enum ag_widget_sizespec {
-	AG_WIDGET_BAD_SPEC,	/* Parser error */
-	AG_WIDGET_PIXELS,	/* Pixel count */
-	AG_WIDGET_PERCENT,	/* % of available space */
-	AG_WIDGET_STRINGLEN,	/* Width of given string */
-	AG_WIDGET_FILL		/* Fill remaining space */
+	AG_WIDGET_BAD_SPEC,		/* Parser error */
+	AG_WIDGET_PIXELS,		/* Pixel count */
+	AG_WIDGET_PERCENT,		/* % of available space */
+	AG_WIDGET_STRINGLEN,		/* Width of given string */
+	AG_WIDGET_FILL			/* Fill remaining space */
 } AG_SizeSpec;
 
-/* Container widget "packing mode" specification. */
+/* Packing mode (i.e., for container widgets). */
 enum ag_widget_packing {
 	AG_PACK_HORIZ,
 	AG_PACK_VERT
 };
 
-/* Flag description (e.g., for AG_Checkbox(3)) */
+/* Flag description (i.e., for AG_Checkbox(3)) */
 typedef struct ag_flag_descr {
 	Uint bitmask;			/* Bitmask */
 	const char *descr;		/* Bit(s) description */
@@ -59,7 +62,7 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 
 /* 
- * Registered widget action.
+ * Widget Actions
  */
 typedef enum ag_action_type {
 	AG_ACTION_FN,			/* Execute function */
@@ -102,7 +105,7 @@ typedef struct ag_action_tie {
 	AG_TAILQ_ENTRY(ag_action_tie) ties;
 } AG_ActionTie;
 
-/* Widget redraw tie. */
+/* Redraw tie (for AG_RedrawOn*() feature). */
 enum ag_redraw_tie_type {
 	AG_REDRAW_ON_CHANGE,
 	AG_REDRAW_ON_TICK
@@ -117,9 +120,6 @@ typedef struct ag_redraw_tie {
 	AG_TAILQ_ENTRY(ag_redraw_tie) redrawTies; /* In widget */
 } AG_RedrawTie;
 
-struct ag_widget;
-struct ag_cursor;
-
 /* Cursor-change area */
 typedef struct ag_cursor_area {
 	AG_Rect r;					/* Area in window */
@@ -130,9 +130,9 @@ typedef struct ag_cursor_area {
 } AG_CursorArea;
 
 /*
- * Palette of globally inheritable widget colors. Color schemes may be
- * configured on a per-class, per-instance or per-"id"-tag basis.
- * Sync: agWidgetStateNames[], agWidgetColorNames[], agDefaultPalette[].
+ * Standard widget colors (CSS-defined, state-dependent, globally-inheritable).
+ *
+ * SYNC: agWidgetStateNames[], agWidgetColorNames[], agDefaultPalette[].
  */
 #define AG_WIDGET_NSTATES 5
 #define AG_WIDGET_NCOLORS 5
@@ -159,33 +159,33 @@ typedef struct {
 #define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
 #define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
 
-struct ag_font;
-
-/* Widget instance structure */
+/* Base Agar widget */
 typedef struct ag_widget {
 	struct ag_object obj;
 
 	Uint flags;
 #define AG_WIDGET_FOCUSABLE		0x000001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x000002 /* Holds focus (optimization) */
+#define AG_WIDGET_FOCUSED		0x000002 /* Holds focus (computed) */
 #define AG_WIDGET_UNFOCUSED_MOTION	0x000004 /* All mousemotion events */
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x000008 /* All mousebuttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x000010 /* All mousebuttondown events */
-#define AG_WIDGET_VISIBLE		0x000020 /* Widget is visible */
+#define AG_WIDGET_VISIBLE		0x000020 /* Widget is visible (computed) */
 #define AG_WIDGET_HFILL			0x000040 /* Expand to fill width */
 #define AG_WIDGET_VFILL			0x000080 /* Expand to fill height */
+#define AG_WIDGET_USE_OPENGL		0x000100 /* Set up separate GL context */
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
-#define AG_WIDGET_MOUSEOVER		0x000800 /* Cursor intersects widget */
+#define AG_WIDGET_MOUSEOVER		0x000800 /* Mouseover state (computed) */
 #define AG_WIDGET_CATCH_TAB		0x001000 /* Catch tab key events */
-#define AG_WIDGET_UNDERSIZE		0x004000 /* Size allocation failed */
-#define AG_WIDGET_NOSPACING		0x008000 /* Disable spacings around widget; container-specific */
+#define AG_WIDGET_GL_RESHAPE		0x002000 /* Pending GL view reshape */
+#define AG_WIDGET_UNDERSIZE		0x004000 /* Size alloc failed (computed) */
+#define AG_WIDGET_NOSPACING		0x008000 /* No box model (container-specific) */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* All mousebuttondown events */
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* All mousebuttondown events */
 #define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
 #define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
-#define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Backup surfaces as soon as possible */
-#define AG_WIDGET_USE_TEXT		0x400000 /* Widget uses font engine */
+#define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Must backup surfaces ASAP */
+#define AG_WIDGET_USE_TEXT		0x400000 /* Use Agar's font engine */
 #define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Update MOUSEOVER flag and generate mouseover events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
@@ -213,11 +213,15 @@ typedef struct ag_widget {
 	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas
 							   (not yet attached) */
 
-	/* Global inheritable style attributes */
-	AG_StyleSheet *css;				/* Alternate style sheet */
-	enum ag_widget_color_state cState;		/* Current color state */
-	struct ag_font *font;				/* Effective font */
-	AG_WidgetPalette pal;				/* Effective colors */
+	AG_StyleSheet *css;			/* Alternate style sheet */
+	enum ag_widget_color_state cState;	/* Current CSS color state */
+	struct ag_font *font;			/* Computed font reference */
+	AG_WidgetPalette pal;			/* Computed color palette */
+
+	struct {
+		float mProjection[16];		/* Projection matrix */
+		float mModelview[16];		/* Modelview matrix */
+	} gl;
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))

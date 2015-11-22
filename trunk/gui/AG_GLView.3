@@ -37,6 +37,14 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(http://libagar.org/widgets/AG_GLView.png, "The AG_GLView widget (with an OverlayFn)")
+NOTE: As of version 1.5.0,
+.Nm
+has been superceded by the
+.Dv AG_WIDGET_USE_OPENGL
+feature of the base
+.Xr AG_Widget 3
+class.
+.Pp
 The
 .Nm
 widget provides a low-level OpenGL context.
@@ -44,23 +52,17 @@ In order to be useful, two callbacks should be implemented:
 .Fn scale
 and
 .Fn draw .
-.Pp
 The
 .Fn scale
 function is expected to set the projection matrix.
-The typical scale function may be a simple call to
+For example, the scale function may be a simple call to
 .Xr glOrtho 3 .
-When the
-.Fn scaled
-routine is invoked, the OpenGL current matrix is set to the projection matrix,
-and the matrix is initialized to identity.
 .Pp
 The
-.Em draw
+.Fn draw
 function renders the scene to the display.
-Before calling the
-.Em draw
-function,
+Before calling
+.Fn draw ,
 .Nm
 calls
 .Xr glViewport 3 .
@@ -84,24 +86,6 @@ configuring a periodic update interval using
 .Xr AG_RedrawOnTick 3 ,
 or a conditional update using
 .Xr AG_RedrawOnChange 3 .
-.Pp
-In OpenGL mode, the Agar GUI elements are rendered using GL primitives, so
-it is the responsibility of the caller to save and restore all GL state
-(except for the matrices and clipping plane states), in the
-.Em draw
-function.
-.Pp
-Typically,
-.Nm
-is used as a base class to implement more specific scene-rendering widgets.
-For example, the
-.Xr SG_View 3
-and
-.Xr SK_View 3
-widgets of FreeSG
-.Pq Lk http://freesg.org/
-are all subclasses of
-.Nm .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -229,22 +213,13 @@ widget does not generate any event.
 For the
 .Ft AG_GLView
 object:
-.Bl -tag -width "float mProjection[16] "
+.Bl -tag -compact -width "float mProjection[16] "
 .It Ft float mProjection[16]
-Projection matrix (4x4, column-major) to automatically load every time the
-.Nm
-is drawn.
-Defaults to identity.
+Saved Projection matrix (4x4, column-major).
 .It Ft float mModelview[16]
-Modelview matrix (4x4, column-major) to automatically load every time the
-.Nm
-is drawn.
-Defaults to identity.
+Saved Modelview matrix.
 .It Ft float mTexture[16]
-Texture matrix (4x4, column-major) to automatically load every time the
-.Nm
-is drawn.
-Defaults to identity.
+Saved Texture matrix.
 .El
 .Sh EXAMPLES
 See
@@ -261,3 +236,7 @@ in the Agar source distribution.
 The
 .Nm
 widget first appeared in Agar 1.2.
+As of Agar 1.5.0, it has been superceded by the
+.Dv AG_WIDGET_USE_OPENGL
+feature of
+.Xr AG_Widget 3 .

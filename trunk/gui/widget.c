@@ -156,6 +156,8 @@ OnAttach(AG_Event *event)
 		AG_Widget *widParent = (AG_Widget *)parent;
 		Uint i;
 
+		Debug(w, "Attach to window (%s)\n", OBJECT(parent)->name);
+
 		SetParentWindow(w, AGWINDOW(widParent));
 		if (AGWINDOW(widParent)->visible) {
 			w->flags |= AG_WIDGET_UPDATE_WINDOW;
@@ -172,6 +174,9 @@ OnAttach(AG_Event *event)
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
 	           AG_OfClass(w, "AG_Widget:*")) {
 		AG_Widget *widParent = (AG_Widget *)parent;
+		
+		Debug(w, "Attach to widget (%s in %s)\n", OBJECT(parent)->name,
+		    widParent->window != NULL ? OBJECT(widParent->window)->name : "NULL");
 
 		SetParentWindow(w, widParent->window);
 		if (widParent->window != NULL &&
@@ -182,6 +187,7 @@ OnAttach(AG_Event *event)
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = (AG_Driver *)parent;
 
+		Debug(w, "Attach to driver (%s)\n", OBJECT(parent)->name);
 		SetParentDriver(w, drvParent);
 	} else {
 		AG_FatalError("Inconsistent widget attach");
@@ -287,17 +293,6 @@ OnHide(AG_Event *event)
 	}
 }
 
-#ifdef AG_LEGACY
-/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
-static void
-Bound(AG_Event *event)
-{
-	AG_Widget *wid = AG_SELF();
-	AG_Variable *V = AG_PTR(1);
-	AG_PostEvent(NULL, wid, "widget-bound", "%p", V);
-}
-#endif /* AG_LEGACY */
-
 static void
 Init(void *obj)
 {
@@ -338,10 +333,6 @@ Init(void *obj)
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-#ifdef AG_LEGACY
-	/* "widget-bound" event; replaced by AG_Variable(3) in 1.3.4. */
-	AG_SetEvent(wid, "bound", Bound, NULL);
-#endif
 
 	TAILQ_INIT(&wid->redrawTies);
 	TAILQ_INIT(&wid->cursorAreas);
@@ -398,7 +389,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 		if (rt != NULL) {
 			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
 			AG_DelTimer(wid, &rt->to);
-			Free(rt);
+			free(rt);
 		}
 		return;
 	}
@@ -941,19 +932,19 @@ Destroy(void *obj)
 	     rt != TAILQ_END(&wid->redrawTies);
 	     rt = rtNext) {
 		rtNext = TAILQ_NEXT(rt, redrawTies);
-		Free(rt);
+		free(rt);
 	}
 	for (at = TAILQ_FIRST(&wid->mouseActions);
 	     at != TAILQ_END(&wid->mouseActions);
 	     at = atNext) {
 		atNext = TAILQ_NEXT(at, ties);
-		Free(at);
+		free(at);
 	}
 	for (at = TAILQ_FIRST(&wid->keyActions);
 	     at != TAILQ_END(&wid->keyActions);
 	     at = atNext) {
 		atNext = TAILQ_NEXT(at, ties);
-		Free(at);
+		free(at);
 	}
 
 	/* Free the action tables. */
@@ -1139,6 +1130,72 @@ fail:
 	return (0);
 }
 
+#ifdef HAVE_OPENGL
+
+static void
+DrawPrologueGL_Reshape(AG_Widget *wid)
+{
+	glMatrixMode(GL_PROJECTION); glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
+
+	AG_PostEvent(NULL, wid, "widget-reshape", NULL);
+	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
+		
+	glGetFloatv(GL_PROJECTION, wid->gl.mProjection);
+	glGetFloatv(GL_MODELVIEW, wid->gl.mModelview);
+		
+	glMatrixMode(GL_PROJECTION); glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);  glPopMatrix();
+}
+
+static void
+DrawPrologueGL(AG_Widget *wid)
+{
+	Uint hView;
+
+	AG_PostEvent(NULL, wid, "widget-underlay", NULL);
+
+	glPushAttrib(GL_TRANSFORM_BIT | GL_VIEWPORT_BIT | GL_TEXTURE_BIT);
+
+	if (wid->flags & AG_WIDGET_GL_RESHAPE)
+		DrawPrologueGL_Reshape(wid);
+
+	hView = AGDRIVER_SINGLE(wid->drv) ? AGDRIVER_SW(wid->drv)->h :
+	                                    HEIGHT(wid->window);
+	glViewport(wid->rView.x1, (hView - wid->rView.y2),
+	           WIDTH(wid), HEIGHT(wid));
+
+	glMatrixMode(GL_TEXTURE);
+	glPushMatrix();
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadMatrixf(wid->gl.mProjection);
+		
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadMatrixf(wid->gl.mModelview);
+
+	glDisable(GL_CLIP_PLANE0);
+	glDisable(GL_CLIP_PLANE1);
+	glDisable(GL_CLIP_PLANE2);
+	glDisable(GL_CLIP_PLANE3);
+}
+
+static void
+DrawEpilogueGL(AG_Widget *wid)
+{
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);	glPopMatrix();
+
+	glPopAttrib(); /* GL_TRANSFORM_BIT | GL_VIEWPORT_BIT */
+	
+	AG_PostEvent(NULL, wid, "widget-overlay", NULL);
+}
+#endif /* HAVE_OPENGL */
+
 /*
  * Render a widget to the display.
  * Must be invoked from GUI rendering context.
@@ -1155,23 +1212,27 @@ AG_WidgetDraw(void *p)
 	     WIDGET_OPS(wid)->draw == NULL)
 		goto out;
 
-	if (wid->flags & AG_WIDGET_DISABLED) {
-		wid->cState = AG_DISABLED_STATE;
-	} else if (wid->flags & AG_WIDGET_MOUSEOVER) {
-		wid->cState = AG_HOVER_STATE;
-	} else if (wid->flags & AG_WIDGET_FOCUSED) {
-		wid->cState = AG_FOCUSED_STATE;
-	} else {
-		wid->cState = AG_DEFAULT_STATE;
-	}
+	if (wid->flags & AG_WIDGET_DISABLED) {       wid->cState = AG_DISABLED_STATE; }
+	else if (wid->flags & AG_WIDGET_MOUSEOVER) { wid->cState = AG_HOVER_STATE; }
+	else if (wid->flags & AG_WIDGET_FOCUSED) {   wid->cState = AG_FOCUSED_STATE; }
+	else {                                       wid->cState = AG_DEFAULT_STATE; }
+
 	if (wid->flags & AG_WIDGET_USE_TEXT) {
 		AG_PushTextState();
 		AG_TextFont(wid->font);
 		AG_TextColor(wid->pal.c[wid->cState][AG_TEXT_COLOR]);
 	}
+#ifdef HAVE_OPENGL
+	if (wid->flags & AG_WIDGET_USE_OPENGL)
+		DrawPrologueGL(wid);
+#endif
 
 	WIDGET_OPS(wid)->draw(wid);
-
+	
+#ifdef HAVE_OPENGL
+	if (wid->flags & AG_WIDGET_USE_OPENGL)
+		DrawEpilogueGL(wid);
+#endif
 	if (wid->flags & AG_WIDGET_USE_TEXT)
 		AG_PopTextState();
 out:
@@ -1245,6 +1306,9 @@ AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 	if (w->flags & AG_WIDGET_USE_TEXT) {
 		AG_PopTextState();
 	}
+#ifdef HAVE_OPENGL
+	w->flags |= AG_WIDGET_GL_RESHAPE;
+#endif
 	AG_ObjectUnlock(w);
 }
 
@@ -1341,6 +1405,9 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 
 	if (AG_RectCompare2(&wid->rView, &rPrev) != 0) {
 		AG_PostEvent(NULL, wid, "widget-moved", NULL);
+#ifdef HAVE_OPENGL
+		wid->flags |= AG_WIDGET_GL_RESHAPE;
+#endif
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_WidgetUpdateCoords(chld,

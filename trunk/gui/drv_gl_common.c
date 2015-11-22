@@ -293,8 +293,8 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)su->w / gsu->w;
-		tc->h = (float)su->h / gsu->h;
+		tc->w = (float)su->w / (float)gsu->w;
+		tc->h = (float)su->h / (float)gsu->h;
 	}
 	
 	/* Upload as an OpenGL texture. */
@@ -336,8 +336,8 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *su, AG_TexCoord *tc)
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)gsu->w / su->w;
-		tc->h = (float)gsu->h / su->h;
+		tc->w = (float)gsu->w / (float)su->w;
+		tc->h = (float)gsu->h / (float)su->h;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
@@ -359,19 +359,19 @@ void
 AG_GL_PrepareTexture(void *obj, int s)
 {
 	AG_Widget *wid = obj;
+	AG_Driver *drv = wid->drv;
 
 	if (wid->textures[s] == 0) {
-		wid->textures[s] = AG_SurfaceTexture(wid->surfaces[s],
+		AG_GL_UploadTexture(drv, &wid->textures[s], wid->surfaces[s],
 		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_StdUpdateTexture(wid->drv, wid->textures[s],
+		AG_GL_UpdateTexture(drv, wid->textures[s],
 		    wid->surfaces[s], &wid->texcoords[s]);
 	}
 }
 
 /* Generic emulated BlitSurface() for GL drivers. */
-/* XXX inefficient */
 void
 AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 {
@@ -382,7 +382,7 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	AG_ASSERT_CLASS(obj, "AG_Driver:*");
 	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
-	texture = AG_SurfaceTexture(s, &tc);
+	AG_GL_UploadTexture(drv, &texture, s, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -458,7 +458,7 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	float w2 = w/2.0f;
 	float h2 = h/2.0f;
 
-	texture = AG_SurfaceTexture(s, &tc);
+	AG_GL_UploadTexture(drv, &texture, s, &tc);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
@@ -588,8 +588,8 @@ AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nsurfaces; i++)  {
 		if (wid->surfaces[i] != NULL) {
-			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
-			    &wid->texcoords[i]);
+			AG_GL_UploadTexture(wid->drv, &wid->textures[i],
+			    wid->surfaces[i], &wid->texcoords[i]);
 		} else {
 			wid->textures[i] = 0;
 		}
