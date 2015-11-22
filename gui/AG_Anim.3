@@ -70,7 +70,7 @@ indexed format.
 .Fn AG_AnimFromJPEGs "const char *path"
 .Pp
 .Ft "AG_Anim *"
-.Fn AG_AnimDup "AG_Anim *src"
+.Fn AG_AnimDup "const AG_Anim *src"
 .Pp
 .Ft "void"
 .Fn AG_AnimSetOrigFPS "AG_Anim *anim" "double fps"
@@ -189,6 +189,7 @@ The
 .Fn AG_AnimDup
 function returns a duplicate of the specified animation, or NULL if
 insufficient memory is available.
+The source animation must be locked (src->lock).
 .Pp
 The
 .Fn AG_AnimSetOrigFPS

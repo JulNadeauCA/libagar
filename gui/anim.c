@@ -181,19 +181,19 @@ fail:
 	return (-1);
 }
 
-/* Return a newly-allocated duplicate of an animation. */
+/*
+ * Return a newly-allocated duplicate of an animation.
+ * The source animation must be locked.
+ */
 AG_Anim *
-AG_AnimDup(AG_Anim *sa)
+AG_AnimDup(const AG_Anim *sa)
 {
 	AG_Anim *a;
 	int i;
 
-	AG_MutexLock(&sa->lock);
-
 	a = AG_AnimNew(sa->type, sa->w, sa->h, sa->format,
 	    (sa->flags & AG_SAVED_ANIM_FLAGS));
 	if (a == NULL) {
-		AG_MutexUnlock(&sa->lock);
 		return (NULL);
 	}
 	if ((a->f = TryMalloc(sa->n*sizeof(AG_AnimFrame))) == NULL) {
@@ -208,10 +208,8 @@ AG_AnimDup(AG_Anim *sa)
 		memcpy(af->pixels, sa->f[i].pixels, sa->h*sa->pitch);
 		a->n++;
 	}
-	AG_MutexUnlock(&sa->lock);
 	return (a);
 fail:
-	AG_MutexUnlock(&sa->lock);
 	AG_AnimFree(a);
 	return (NULL);
 }
