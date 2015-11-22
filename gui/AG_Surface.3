@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2015 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -395,6 +395,7 @@ returns a newly allocated surface containing a copy of
 If there is insufficient memory,
 .Fn AG_SurfaceDup
 will fail returning NULL.
+The source surface must be locked (src->lock).
 .Pp
 .Fn AG_SurfaceConvert
 is similar to
