@@ -59,7 +59,7 @@ AG_Anim    *AG_AnimRGBA(Uint, Uint, int, Uint, Uint32, Uint32, Uint32, Uint32);
 AG_Anim    *AG_AnimFromPNGs(const char *);
 AG_Anim    *AG_AnimFromJPEGs(const char *);
 int         AG_AnimSetPalette(AG_Anim *, AG_Color *, Uint, Uint);
-AG_Anim    *AG_AnimDup(AG_Anim *);
+AG_Anim    *AG_AnimDup(const AG_Anim *);
 int         AG_AnimResize(AG_Anim *, Uint, Uint);
 void        AG_AnimFree(AG_Anim *);
 
