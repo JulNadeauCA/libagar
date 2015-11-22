@@ -238,25 +238,6 @@ AG_EndRendering(void *drv)
 		AG_CondBroadcast(&agCondEndRender);
 #endif
 }
-
-/* Create a texture from a surface (GL drivers). */
-/* XXX no driver arg */
-static __inline__ Uint
-AG_SurfaceTexture(AG_Surface *su, AG_TexCoord *tc)
-{
-	Uint texid;
-	agDriverOps->uploadTexture(NULL, &texid, su, tc);
-	return (texid);
-}
-
-/* Update texture contents from a surface (GL drivers). */
-/* XXX no driver arg */
-static __inline__ void
-AG_UpdateTexture(AG_Surface *su, int texid, AG_TexCoord *tc)
-{
-	if (agDriverOps->updateTexture(NULL, (Uint)texid, su, tc) == -1)
-		AG_FatalError(NULL);
-}
 __END_DECLS
 
 #include <agar/gui/drv_mw.h>
