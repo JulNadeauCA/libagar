@@ -714,12 +714,8 @@ is required), or -1 if an error occured.
 processes the event pointed to by
 .Fa dev
 in the default manner.
-The call returns 1 if the event was successfully processed or 0 if Agar has
-ignored the event entirely.
-If -1 is returned, an error has occured (if this is a fatal error and the
-application should be terminated, the global variable
-.Va agTerminating
-will be set to 1).
+The call returns 1 if the event was successfully, 0 if Agar has ignored the event entirely,
+or -1 if an error occured.
 .Pp
 The
 .Fn AG_SDL_TranslateEvent
