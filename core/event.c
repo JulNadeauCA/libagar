@@ -688,6 +688,7 @@ CreateEventSource(void)
 	src->caps[AG_SINK_WRITE] = 1;
 	src->caps[AG_SINK_FSEVENT] = 1;
 	src->caps[AG_SINK_PROCEVENT] = 1;
+	GrowKqChangelist(kq, 64);		/* Preallocate */
 #elif defined(HAVE_TIMERFD)
 	src->sinkFn = AG_EventSinkTIMERFD;
 	src->addTimerFn = AG_AddTimerTIMERFD;
@@ -1102,40 +1103,46 @@ restart:
 		return (-1);
 	}
 	kq->nChanges = 0;
-	AG_LockTiming();
+
 	/* 1. Process timer expirations. */
+	AG_LockTiming();
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
 		enum ag_event_sink_type esType = GetSinkType(kev->filter);
 		Uint32 rvt;
 		AG_Timer *to;
+		AG_Object *ob;
 
 		if (kev->flags & EV_ERROR) {
-			AG_SetError("kevent[%d]: %s", i, AG_Strerror(kev->data));
-			return (-1);
-		}
-		if (esType != AG_SINK_TIMER) {
+			Verbose("kevent (%ld,%d): %s\n", kev->ident, kev->filter,
+			    AG_Strerror((int)kev->data));
 			continue;
 		}
-		to = (AG_Timer *)kev->udata;
+		if (esType != AG_SINK_TIMER ||
+		    (to = (AG_Timer *)kev->udata) == NULL) {
+			continue;
+		}
 		rvt = to->fn(to, &to->fnEvent);
-		if (rvt > 0) {
+		if (rvt > 0) {				/* Restart timer */
 			struct kevent *kev;
 #ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] resetting t=+%u\n", to->id, (Uint)rvt);
 #endif
 			if (GrowKqChangelist(kq, kq->nChanges+1) == -1) {
+				AG_UnlockTiming();
 				return (-1);
 			}
 			kev = &kq->changes[kq->nChanges++];
 			AG_EV_SET(kev, to->id, EVFILT_TIMER,
 			    EV_ADD|EV_ENABLE|EV_ONESHOT, 0, (int)rvt, to);
 			to->ival = rvt;
-		} else {
-			AG_Object *ob = to->obj;
+		} else {				/* Expire */
 #ifdef DEBUG_TIMERS
 			Verbose("TIMER[%d] expired\n", to->id);
 #endif
+			if ((ob = to->obj) == NULL) {
+				continue;
+			}
 			TAILQ_REMOVE(&ob->timers, to, timers);
 			if (TAILQ_EMPTY(&ob->timers)) {
 				TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
@@ -1150,6 +1157,8 @@ restart:
 			agTimerCount--;
 		}
 	}
+	AG_UnlockTiming();
+
 	/* 2. Process I/O and other events. */
 	for (i = 0; i < rv; i++) {
 		struct kevent *kev = &kq->events[i];
@@ -1172,7 +1181,6 @@ restart:
 			break;
 		}
 	}
-	AG_UnlockTiming();
 	return (0);
 }
 
