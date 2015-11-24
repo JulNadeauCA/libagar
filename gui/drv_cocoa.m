@@ -84,12 +84,12 @@ struct ag_driver_cocoa;
 @implementation AG_CocoaWindow
 - (BOOL)canBecomeKeyWindow
 {
-	return (YES);
+	return (_agarWindow->flags & AG_WINDOW_DENYFOCUS) ? NO : YES;
 }
 
 - (BOOL)canBecomeMainWindow
 {
-	return (YES);
+	return (_agarWindow->flags & AG_WINDOW_MAIN) ? YES : NO;
 }
 @end
 
@@ -1221,9 +1221,17 @@ COCOA_RaiseWindow(AG_Window *win)
 static int
 COCOA_LowerWindow(AG_Window *win)
 {
-	/* TODO */
-	AG_SetError("Lower window not implemented");
-	return (-1);
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	AG_DriverCocoa *co = (AG_DriverCocoa *)WIDGET(win)->drv;
+	
+	AG_MutexLock(&co->lock);
+	if (![co->win isMiniaturized]) {
+		[co->win orderBack:nil];
+	}
+	AG_MutexUnlock(&co->lock);
+
+	[pool release];
+	return (0);
 }
 
 static int
