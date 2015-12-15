@@ -567,7 +567,7 @@ main(int argc, char *argv[])
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXX", 5);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-		AG_TlistAddPtr(tl, NULL, (*pTest)->name, (void *)*pTest);
+		AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name, (void *)*pTest);
 	}
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL);
