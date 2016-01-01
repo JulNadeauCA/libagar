@@ -38,7 +38,7 @@ InsertHelmet(AG_Socket *sock, AG_Icon *icon)
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
-		printf("Not a helmet!\n");
+		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a helmet!");
 	}
 	return (1);
 }
@@ -56,7 +56,7 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 		}
 		AG_SocketInsertIcon(sock, icon);
 	} else {
-		printf("Not a weapon!\n");
+		AG_TextTmsg(AG_MSG_ERROR, 1000, "Not a weapon!");
 	}
 	return (1);
 }
@@ -71,6 +71,11 @@ TestGUI(void *obj, AG_Window *win)
 	AG_Pixmap *px;
 	AG_Icon *helmet, *sword, *axe;
 	int i;
+
+	if (agDriverOps->wm != AG_WM_SINGLE) {
+		AG_SetError("Test is only applicable to single-window drivers");
+		return (-1);
+	}
 
 	/* Create a fixed widget container */
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
@@ -93,8 +98,6 @@ TestGUI(void *obj, AG_Window *win)
 			continue;
 		}
 		pixmaps[i] = AG_SurfaceFromFile(path);
-		AG_SurfaceSetColorKey(pixmaps[i], AG_SRCCOLORKEY,
-		    AG_MapPixelRGB(pixmaps[i]->format, 0,255,0));
 	}
 
 	/*
@@ -145,8 +148,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SocketInsertIcon(sock, axe);
 
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 640, 128);
-/*	agColors[WINDOW_BG_COLOR] = AG_ColorRGB(0,0,0); */
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 640, 128+64);
 	return (0);
 }
 
