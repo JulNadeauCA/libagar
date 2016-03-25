@@ -61,10 +61,10 @@ install-includes:
 	@(cd include/agar && for DIR in ${INCDIR} config; do \
 	    echo "mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
+	      DESTDIR="${DESTDIR}" \
 	      INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	      INSTALL_INCL="${INSTALL_INCL}" \
-	      ${SH} ${SRCDIR}/mk/install-includes.sh \
-	        $$DIR ${DESTDIR}${INCLDIR}/agar; \
+	      ${SH} ${SRCDIR}/mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
 	done)
 	@for INC in ${INCDIR}; do \
 		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
