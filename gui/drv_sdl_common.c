@@ -621,7 +621,7 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 		char *ep;
 
 		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
-		v = strtof(buf, &ep);
+		v = (float)strtod(buf, &ep);
 		if (*ep == '\0')
 			dsw->rNom = (Uint)(1000.0/v);
 	}
