@@ -8,7 +8,7 @@
 # Version information
 PACKAGE("Agar")
 VERSION("1.5.0")
-RELEASE("A Mild Breeze Upon The Brow Of The Dead")
+RELEASE("A Mild Breeze upon the Brow of the Dead")
 
 # Register options for configure --help
 REGISTER_SECTION("Global Agar options:")
@@ -382,8 +382,15 @@ else
 	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO)
 	HUNDEF(HAVE_SETSOCKOPT)
+	 HUNDEF(HAVE_SO_OOBINLINE)
+	 HUNDEF(HAVE_SO_REUSEPORT)
+	 HUNDEF(HAVE_SO_TIMESTAMP)
+	 HUNDEF(HAVE_SO_NOSIGPIPE)
+	 HUNDEF(HAVE_SO_LINGER)
+	 HUNDEF(HAVE_SO_ACCEPTFILTER)
 	HUNDEF(HAVE_WINSOCK1)
 	HUNDEF(HAVE_WINSOCK2)
+	HUNDEF(HAVE_SIOCGIFCONF)
 fi
 	
 # Enable Berkeley DB backend for AG_Db if available.
