@@ -388,9 +388,10 @@ install-man-dirs:
 install-man:
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN1}" CATMAN="${CATMAN1}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man1" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat1" \
+		MANDIR="${MANDIR}/man1" \
+	        CATMANDIR="${MANDIR}/cat1" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -399,9 +400,10 @@ install-man:
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN2}" CATMAN="${CATMAN2}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man2" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat2" \
+		MANDIR="${MANDIR}/man2" \
+	        CATMANDIR="${MANDIR}/cat2" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -410,9 +412,10 @@ install-man:
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN3}" CATMAN="${CATMAN3}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man3" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat3" \
+		MANDIR="${MANDIR}/man3" \
+	        CATMANDIR="${MANDIR}/cat3" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -421,9 +424,10 @@ install-man:
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN4}" CATMAN="${CATMAN4}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man4" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat4" \
+		MANDIR="${MANDIR}/man4" \
+	        CATMANDIR="${MANDIR}/cat4" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -432,9 +436,10 @@ install-man:
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN5}" CATMAN="${CATMAN5}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man5" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat5" \
+		MANDIR="${MANDIR}/man5" \
+	        CATMANDIR="${MANDIR}/cat5" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -443,9 +448,10 @@ install-man:
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN6}" CATMAN="${CATMAN6}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man6" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat6" \
+		MANDIR="${MANDIR}/man6" \
+	        CATMANDIR="${MANDIR}/cat6" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -454,9 +460,10 @@ install-man:
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN7}" CATMAN="${CATMAN7}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man7" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat7" \
+		MANDIR="${MANDIR}/man7" \
+	        CATMANDIR="${MANDIR}/cat7" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -465,9 +472,10 @@ install-man:
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN8}" CATMAN="${CATMAN8}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man8" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat8" \
+		MANDIR="${MANDIR}/man8" \
+	        CATMANDIR="${MANDIR}/cat8" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -476,9 +484,10 @@ install-man:
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    ${SUDO} env MAN="${MAN9}" CATMAN="${CATMAN9}" NOCATMAN="${NOCATMAN}" \
+	        DESTDIR="${DESTDIR}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${DESTDIR}${MANDIR}/man9" \
-	        CATMANDIR="${DESTDIR}${MANDIR}/cat9" \
+		MANDIR="${MANDIR}/man9" \
+	        CATMANDIR="${MANDIR}/cat9" \
 	        ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \

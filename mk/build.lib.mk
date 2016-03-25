@@ -418,7 +418,7 @@ install-lib: ${LIBTOOL_COOKIE}
 	fi
 	@if [ "${DATAFILES}" != "none" ]; then \
             if [ ! -d "${DESTDIR}${DATADIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${DIR}"; \
+                echo "${INSTALL_DATA_DIR} ${DATADIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${DATADIR}; \
             fi; \
             for F in ${DATAFILES}; do \
@@ -550,7 +550,7 @@ ${LTCONFIG} ${LTCONFIG_DEPS}:
 
 .PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
-.PHONY: _lib_objs _lib_shobjs lib-tags none bundle
+.PHONY: _lib_objs _lib_shobjs lib-tags none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
