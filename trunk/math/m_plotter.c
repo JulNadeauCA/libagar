@@ -554,6 +554,8 @@ Draw(void *obj)
 				if (x > ptr->r.w) { break; }
 			}
 			break;
+		default:
+			break;
 		}
 	}
 	/* Second pass */

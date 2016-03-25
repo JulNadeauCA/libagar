@@ -77,6 +77,8 @@ GetAlpha8(AG_HSVPal *pal)
 	case AG_VARIABLE_UINT8:
 		a = (int)((*(Uint8 *)p));
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(bAlpha);
 	return (a);
@@ -101,6 +103,8 @@ SetAlpha8(AG_HSVPal *pal, Uint8 a)
 		break;
 	case AG_VARIABLE_UINT8:
 		*(Uint8 *)pAlpha = (Uint8)a;
+		break;
+	default:
 		break;
 	}
 	AG_UnlockVariable(bAlpha);
@@ -143,6 +147,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 			((Uint8 *)v)[1] = g;
 			((Uint8 *)v)[2] = b;
 			break;
+		default:
+			break;
 		}
 		AG_UnlockVariable(bv);
 	}
@@ -171,6 +177,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 			((Uint8 *)v)[1] = g;
 			((Uint8 *)v)[2] = b;
 			((Uint8 *)v)[3] = a;
+			break;
+		default:
 			break;
 		}
 		AG_UnlockVariable(bv);
@@ -391,6 +399,8 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 	case AG_VARIABLE_UINT8:
 		*(Uint8 *)pAlpha = (Uint8)(x/pal->rAlpha.w);
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(bAlpha);
 
@@ -473,6 +483,8 @@ EditNumValues(AG_Event *event)
 			AG_NumericalSetRange(num, 0.0, 255.0);
 			AG_NumericalSetIncrement(num, 1.0);
 			AG_NumericalSetPrecision(num, "f", 0);
+			break;
+		default:
 			break;
 		}
 		AG_UnlockVariable(bAlpha);
@@ -635,6 +647,8 @@ MouseMotion(AG_Event *event)
 		break;
 	case AG_HSVPAL_SEL_A:
 		UpdateAlpha(pal, x);
+		break;
+	default:
 		break;
 	}
 }

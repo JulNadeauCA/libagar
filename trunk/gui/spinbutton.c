@@ -93,6 +93,8 @@ Bound(AG_Event *event)
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
 			break;
+		default:
+			break;
 		}
 	}
 	AG_Redraw(sbu);
@@ -110,6 +112,8 @@ KeyDown(AG_Event *event)
 		break;
 	case AG_KEY_DOWN:
 		AG_SpinbuttonAddValue(sbu, -sbu->incr);
+		break;
+	default:
 		break;
 	}
 }
@@ -243,6 +247,8 @@ Draw(void *obj)
 	case AG_VARIABLE_SINT32:
 		AG_TextboxPrintf(sbu->input, "%d", *(Sint32 *)p);
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(value);
 }
@@ -348,6 +354,8 @@ AG_SpinbuttonAddValue(AG_Spinbutton *sbu, int inc)
 		                   *(Sint32 *)value+inc > *max ? *max :
 			  	   *(Sint32 *)value+inc;
 		break;
+	default:
+		break;
 	}
 
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
@@ -445,6 +453,8 @@ AG_SpinbuttonSetValue(AG_Spinbutton *sbu, ...)
 			                   i > (Sint32)*max ? (Sint32)*max :
 					   i;
 		}
+		break;
+	default:
 		break;
 	}
 	va_end(ap);
