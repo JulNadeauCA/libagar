@@ -120,6 +120,8 @@ OnShow(AG_Event *event)
 			AG_BindDouble(fsu, "max", &fsu->max);
 		}
 		break;
+	default:
+		break;
 	}
 	AG_MFSpinbuttonUpdate(fsu);
 }
@@ -167,6 +169,8 @@ AG_MFSpinbuttonUpdate(AG_MFSpinbutton *fsu)
 	case AG_VARIABLE_SINT32:
 		StrlcpyInt(sx, (int)(*(Sint32 *)value), sizeof(sx));
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(valueb);
 	
@@ -205,6 +209,8 @@ AG_MFSpinbuttonUpdate(AG_MFSpinbutton *fsu)
 	case AG_VARIABLE_SINT32:
 		StrlcpyInt(sy, (int)(*(Sint32 *)value), sizeof(sy));
 		break;
+	default:
+		break;
 	}
 	Strlcpy(s, sx, sizeof(s));
 	Strlcat(s, fsu->sep, sizeof(s));
@@ -233,6 +239,8 @@ KeyDown(AG_Event *event)
 		break;
 	case AG_KEY_DOWN:
 		AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
+		break;
+	default:
 		break;
 	}
 }
@@ -530,6 +538,8 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 		                  *(float *)value+inc > *max ? *max :
 				  *(float *)value+inc;
 		break;
+	default:
+		break;
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
 
@@ -566,6 +576,8 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 		                  nvalue > *max ? *max :
 				  (float)nvalue;
 		break;
+	default:
+		break;
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
 
@@ -592,6 +604,8 @@ AG_MFSpinbuttonSetMin(AG_MFSpinbutton *fsu, double nmin)
 	case AG_VARIABLE_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(minb);
 	AG_ObjectUnlock(fsu);
@@ -611,6 +625,8 @@ AG_MFSpinbuttonSetMax(AG_MFSpinbutton *fsu, double nmax)
 		break;
 	case AG_VARIABLE_FLOAT:
 		*(float *)max = (float)nmax;
+		break;
+	default:
 		break;
 	}
 	AG_UnlockVariable(maxb);

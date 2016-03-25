@@ -80,6 +80,7 @@ AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
 	case AG_PROP_SINT16:	AG_SetSint16(obj, key, (Sint16)va_arg(ap,int));	break;
 	case AG_PROP_UINT32:	AG_SetUint32(obj, key, va_arg(ap,Uint32));	break;
 	case AG_PROP_SINT32:	AG_SetSint32(obj, key, va_arg(ap,Sint32));	break;
+	default:								break;
 	}
 	va_end(ap);
 	AG_ObjectUnlock(obj);

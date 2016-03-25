@@ -136,6 +136,8 @@ GetItemBoolValue(AG_MenuItem *mi)
 	case AG_MENU_INT32_FLAGS:
 		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
 		break;
+	default:
+		break;
 	}
 	return (mi->bind_invert ? !val : val);
 }
@@ -144,8 +146,6 @@ static void
 SetItemBoolValue(AG_MenuItem *mi)
 {
 	switch (mi->bind_type) {
-	case AG_MENU_NO_BINDING:
-		break;
 	case AG_MENU_INT_BOOL:
 		{
 			int *boolp = (int *)mi->bind_p;
@@ -181,6 +181,9 @@ SetItemBoolValue(AG_MenuItem *mi)
 			Uint32 *flags = (Uint32 *)mi->bind_p;
 			AG_INVFLAGS(*flags, mi->bind_flags);
 		}
+		break;
+	case AG_MENU_NO_BINDING:
+	default:
 		break;
 	}
 }

@@ -376,6 +376,8 @@ AG_WM_MouseMotion(AG_DriverSw *dsw, AG_Window *win, int xRel, int yRel)
 	case AG_WINOP_HRESIZE:
 		WM_Resize(AG_WINOP_HRESIZE, win, xRel, yRel);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -488,12 +490,13 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 	case AG_WINDOW_TC:	xd = dsw->w/2 - w/2;	yd = 0;			break;
 	case AG_WINDOW_TR:	xd = dsw->w - w;	yd = 0;			break;
 	case AG_WINDOW_ML:	xd = 0;			yd = dsw->h/2 - h/2;	break;
-	case AG_WINDOW_ALIGNMENT_NONE:
-	case AG_WINDOW_MC:	xd = dsw->w/2 - w/2;	yd = dsw->h/2 - h/2;	break;
 	case AG_WINDOW_MR:	xd = dsw->w - w;	yd = dsw->h/2 - h/2;	break;
 	case AG_WINDOW_BL:	xd = 0;			yd = dsw->h - h;	break;
 	case AG_WINDOW_BC:	xd = dsw->w/2 - w/2;	yd = dsw->h - h;	break;
 	case AG_WINDOW_BR:	xd = dsw->w - w;	yd = dsw->h - h;	break;
+	default:
+	case AG_WINDOW_ALIGNMENT_NONE:
+	case AG_WINDOW_MC:	xd = dsw->w/2 - w/2;	yd = dsw->h/2 - h/2;	break;
 	}
 	x = xd;
 	y = yd;
@@ -515,6 +518,7 @@ GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
 				case AG_WINDOW_TC:
 				case AG_WINDOW_ML:
 				case AG_WINDOW_MC:
+				default:
 					x += dx;
 					if (x+w > dsw->w) {
 						x = 0;
@@ -600,6 +604,7 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 		*x = xOffs;
 		*y = dsw->h/2 - h/2 + yOffs;
 		break;
+	default:
 	case AG_WINDOW_ALIGNMENT_NONE:
 	case AG_WINDOW_MC:
 		*x = dsw->w/2 - w/2 + xOffs;

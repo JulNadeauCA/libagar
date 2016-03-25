@@ -657,11 +657,8 @@ AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
 
 	/* Set the default column width. */
 	if (width != NULL) {
-		switch (AG_WidgetParseSizeSpec(width, &col->w)) {
-		case AG_WIDGET_PERCENT:
+		if (AG_WidgetParseSizeSpec(width, &col->w) == AG_WIDGET_PERCENT)
 			col->w = col->w*WIDTH(tt)/100;
-			break;
-		}
 	} else {
 		col->w = 6;
 		col->flags |= AG_TREETBL_COL_FILL;

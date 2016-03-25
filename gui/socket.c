@@ -194,8 +194,10 @@ GetState(AG_Variable *binding, void *p)
 		return (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
 	case AG_VARIABLE_P_FLAG32:
 		return (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+	default:
+		return (0);
 	}
-	return (-1);
+	return (0);
 }
 
 #if 0
@@ -211,6 +213,7 @@ GetCount(AG_Variable *binding, void *p)
 	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)p);
 	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)p);
 	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)p);
+	default:
 	}
 	return (-1);
 }
@@ -310,6 +313,8 @@ SetState(AG_Socket *sock, AG_Variable *binding, void *p, int v)
 		break;
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		break;
+	default:
 		break;
 	}
 	AG_Redraw(sock);

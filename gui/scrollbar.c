@@ -145,6 +145,7 @@ GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 	case AG_VARIABLE_UINT64:	GET_PX_COORDS(Uint64);	break;
 	case AG_VARIABLE_SINT64:	GET_PX_COORDS(Sint64);	break;
 #endif
+	default:						break;
 	} 
 
 	AG_UnlockVariable(bVis);
@@ -212,6 +213,7 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	case AG_VARIABLE_UINT64:	MAP_PX_COORDS(Uint64);		break;
 	case AG_VARIABLE_SINT64:	MAP_PX_COORDS(Sint64);		break;
 #endif
+	default:							break;
 	} 
 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -280,6 +282,7 @@ Increment(AG_Scrollbar *sb)
 	case AG_VARIABLE_UINT64:	INCREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	INCREMENT(Sint64);	break;
 #endif
+	default:						break;
 	} 
 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -322,6 +325,7 @@ Decrement(AG_Scrollbar *sb)
 	case AG_VARIABLE_UINT64:	DECREMENT(Uint64);	break;
 	case AG_VARIABLE_SINT64:	DECREMENT(Sint64);	break;
 #endif
+	default:						break;
 	}
 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -616,6 +620,7 @@ OnShow(AG_Event *event)
 	case AG_VARIABLE_UINT64: SET_DEF(AG_SetUint64, 0ULL, 0xffffffffffffffffULL, 1ULL); break;
 	case AG_VARIABLE_SINT64: SET_DEF(AG_SetSint64, 0LL, 0x7fffffffffffffffLL, 1LL); break;
 #endif
+	default: break;
 	}
 	AG_UnlockVariable(V);
 

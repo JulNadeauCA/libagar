@@ -273,10 +273,12 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		switch (box->hAlign) {
 		case AG_BOX_CENTER:	x = wAvail/2 - totFixed/2;	break;
 		case AG_BOX_RIGHT:	x = wAvail - totFixed;		break;
+		default:						break;
 		}
 		switch (box->vAlign) {
 		case AG_BOX_CENTER:	y = hAvail/2 - totFixed/2;	break;
 		case AG_BOX_BOTTOM:	y = hAvail - totFixed;		break;
+		default:						break;
 		}
 	}
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {

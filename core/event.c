@@ -1513,6 +1513,8 @@ AG_EventSinkSELECT(void)
 			FD_SET(es->ident, &wrFds);
 			if (es->ident > nFds) { nFds = es->ident; }
 			break;
+		default:
+			break;
 		}
 	}
 

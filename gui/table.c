@@ -973,6 +973,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		/* XXX TODO hooks */
 		return (1);
 	case AG_CELL_NULL:
+	default:
 		return (0);
 	}
 	return (1);
@@ -1962,6 +1963,8 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 			break;
 		case AG_WIDGET_FILL:
 			tc->flags |= AG_TABLE_COL_FILL;
+			break;
+		default:
 			break;
 		}
 	} else {

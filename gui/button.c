@@ -410,7 +410,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 static int
 GetState(AG_Button *bu, AG_Variable *binding, void *p)
 {
-	int v = 0;
+	int v;
 
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -436,6 +436,9 @@ GetState(AG_Button *bu, AG_Variable *binding, void *p)
 		break;
 	case AG_VARIABLE_P_FLAG32:
 		v = (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+		break;
+	default:
+		v = 0;
 		break;
 	}
 	if (bu->flags & AG_BUTTON_INVSTATE) {
@@ -471,6 +474,8 @@ SetState(AG_Button *bu, AG_Variable *binding, void *p, int v)
 		break;
 	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		break;
+	default:
 		break;
 	}
 	AG_Redraw(bu);

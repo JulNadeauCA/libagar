@@ -75,6 +75,7 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 
 	switch (layout) {
 	case AG_MPANE1:
+	default:
 		AG_ObjectAttach(mp, mp->panes[0]);
 		WIDGET(mp->panes[0])->flags |= AG_WIDGET_EXPAND;
 		mp->npanes = 1;

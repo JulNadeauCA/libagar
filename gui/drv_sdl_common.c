@@ -767,13 +767,10 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win, *winTop = NULL;
 
-	switch (dev->type) {
-	case AG_DRIVER_MOUSE_BUTTON_UP:
+	if (dev->type == AG_DRIVER_MOUSE_BUTTON_UP) {
 		dsw->winop = AG_WINOP_NONE;
 		dsw->winSelected = NULL;
-		break;
 	}
-
 	AG_FOREACH_WINDOW_REVERSE(win, dsw) {
 		AG_ObjectLock(win);
 
@@ -858,15 +855,14 @@ ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
 			AG_ProcessKey(drv->kbd, win, AG_KEY_PRESSED,
 			    dev->data.key.ks, dev->data.key.ucs);
 			break;
+		default:
+			break;
 		}
 		AG_ObjectUnlock(win);
 	}
-	switch (dev->type) {
-	case AG_DRIVER_MOUSE_MOTION:
-		if (winTop == NULL) {
-			AGDRIVER_CLASS(drv)->unsetCursor(drv);
-		}
-		break;
+	if (dev->type == AG_DRIVER_MOUSE_MOTION &&
+	    winTop == NULL) {
+		AGDRIVER_CLASS(drv)->unsetCursor(drv);
 	}
 	return (0);
 }

@@ -389,6 +389,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
+	default:
+		break;
 	}
 	AG_UnlockVariable(stateb);
 	AG_ObjectUnlock(cb);
