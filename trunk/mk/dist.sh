@@ -27,7 +27,7 @@ echo "*"
 #
 # Prepare Source TAR.GZ.
 #
-echo "Building tar.gz"
+echo "* Building tar.gz"
 if [ -e "${DISTNAME}" ]; then
 	echo "* Existing directory: ${DISTNAME}; remove first"
 	exit 1
@@ -45,38 +45,44 @@ gzip -f ${DISTNAME}.tar
 #
 # Prepare Source ZIP.
 #
-echo "Building zip"
+echo "* Building zip"
 rm -fr ${DISTNAME}
 cp -fRp ${PROJ} ${DISTNAME}
 rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
 # ZIP: Preprocess header files.
+echo "* Building zip: Preprocessing headers"
 (cd ${DISTNAME} && ${MAKE} includes)
 
 # ZIP: Prepare IDE "project files", README.txt and friends.
+echo "* Building zip: make proj"
 (cd ${DISTNAME} && ${MAKE} proj)
+echo "* Building zip: make proj (in tests)"
 (cd ${DISTNAME}/tests && ${MAKE} proj)
+echo "* Building zip: make pre-package"
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
 (cd ${DISTNAME} && rm -f README RELEASE-${VER})
 
 # ZIP: Compress archive
+echo "* Building zip: Compressing: ${DISTNAME}.zip"
 zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}
 
-echo "Updating checksums"
+echo "* Updating checksums"
 openssl md5 ${DISTNAME}.tar.gz > ${DISTNAME}.tar.gz.md5
 openssl sha256 ${DISTNAME}.tar.gz >> ${DISTNAME}.tar.gz.md5
 openssl md5 ${DISTNAME}.zip > ${DISTNAME}.zip.md5
 openssl sha256 ${DISTNAME}.zip >> ${DISTNAME}.zip.md5
 
-echo "Updating signatures"
+echo "* Updating signatures"
 gpg -ab ${DISTNAME}.tar.gz
 gpg -ab ${DISTNAME}.zip
 
 if [ "$NOUPLOAD" = "" ]; then
-	echo "Upload to ${RHOST}?"
+	echo "* Upload to ${RHOST}?"
 	read FOO
 	if [ "$FOO" != "no" ]; then
-		scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RHOST}:${REMOTEDIR}
+		ls -l ${DISTNAME}.*
+		scp ${DISTNAME}.* ${RHOST}:${REMOTEDIR}
 	fi
 fi
 
@@ -85,8 +91,6 @@ if [ "$PHASE" = "stable" ]; then
 	echo "TODO:"
 	echo "- Double check core/version.h and build.lib.mk versions"
 	echo " "
-	echo "- Create http://wiki.libagar.org/wiki/Agar-${VER}"
-	echo "- Update http://wiki.libagar.org/wiki/Main_Page"
 	echo "- Update http://sourceforge.net/projects/agar/"
 	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
 	echo "- Notify @libAgar"

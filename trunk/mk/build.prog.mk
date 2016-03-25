@@ -54,16 +54,27 @@ PROG_GUI_FLAGS?=
 PROG_CLI_FLAGS?=
 
 PROG_BUNDLE?=
+PROG_SIGNATURE?=	hytr
 PROG_DISPLAY_NAME?=	"${PROG}"
 PROG_IDENTIFIER?=	com.hypertriton.${PROG}
 PROG_VERSION?=		1.0
-PROG_CATEGORY?=
 PROG_COPYRIGHT?=	"Copyright (c) 2015 Hypertriton Inc."
+PROG_CATEGORY?=		public.app-category.utilities
+#
+# business developer-tools education entertainment finance games graphics-design
+# healthcare-fitness lifestyle medical music news photography productivity
+# reference social-networking sports travel utilities video weather
+# action-games adventure-games arcade-games board-games card-games casino-games
+# dice-games educational-games family-games kids-games music-games puzzle-games
+# racing-games role-playing-games simulation-games sports-games strategy-games
+# trivial-games word-games
 
 PROG_PRINCIPAL_CLASS?=		AG_AppDelegate
-PROG_SYS_VERSION?=		10.3.0
+PROG_OSX_VERSION?=		10.3.0
 PROG_INFO_EXTRA?=
+
 PROG_REQUIRED_CAPABILITIES?=
+#
 # accelerometer armv6 armv7 arm64 auto-focus-camera bluetooth-le
 # camera-flash front-facing-camera gamekit gps gyroscope healthkit
 # location-services magnetometer metal microphone opengles-1 opengles-2
@@ -242,9 +253,10 @@ ${PROG}: _prog_objs ${OBJS}
 	    if [ "${PROG_BUNDLE}" != "" ]; then \
 		echo "perl ${TOP}/mk/gen-bundle.pl prog ${PROG_BUNDLE}"; \
 		env PROG=${PROG} INSTALL_PROG="${INSTALL_PROG}" \
+		PROG_SIGNATURE=${PROG_SIGNATURE} \
 		PROG_DISPLAY_NAME=${PROG_DISPLAY_NAME} \
 		PROG_IDENTIFIER=${PROG_IDENTIFIER} \
-		PROG_SYS_VERSION=${PROG_SYS_VERSION} \
+		PROG_OSX_VERSION=${PROG_OSX_VERSION} \
 		PROG_PRINCIPAL_CLASS=${PROG_PRINCIPAL_CLASS} \
 		PROG_COPYRIGHT=${PROG_COPYRIGHT} \
 		PROG_VERSION=${PROG_VERSION} \

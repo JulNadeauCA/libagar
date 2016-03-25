@@ -97,13 +97,11 @@ if ($tgt eq 'OSX' || $tgt eq 'iOS') {
 <plist version="1.0">
 <dict>
 EOF
-	my $InfoSignature = $ENV{'INFO_SIGNATURE'};
-	unless ($InfoSignature) {
-		if ($prog =~ /^(\w{4})/) {
-			$InfoSignature = $1;
-		} else {
-			$InfoSignature = 'aaaa';
-		}
+	my $InfoSignature = $ENV{'PROG_SIGNATURE'};
+	if ($prog =~ /^(\w{4})/) {
+		$InfoSignature = $1;
+	} else {
+		$InfoSignature = 'xxxx';
 	}
 
 	my $ProgDisplayName = $ENV{'PROG_DISPLAY_NAME'};
@@ -127,7 +125,7 @@ EOF
 EOF
 
 	if ($tgt eq 'OSX') {
-		my $ProgSysVersion = $ENV{'PROG_SYS_VERSION'};
+		my $ProgSysVersion = $ENV{'PROG_OSX_VERSION'};
 		my $PrincipalClass = $ENV{'PROG_PRINCIPAL_CLASS'};
 		my $Copyright = $ENV{'PROG_COPYRIGHT'};
 		my $ProgVersion = $ENV{'PROG_VERSION'};
@@ -142,6 +140,8 @@ EOF
   <string>$prog $ProgVersion</string>
   <key>CFBundleShortVersionString</key>
   <string>1.0.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>$ProgCategory</string>
   <key>LSMinimumSystemVersion</key>
   <string>$ProgSysVersion</string>
   <key>NSHumanReadableCopyright</key>
