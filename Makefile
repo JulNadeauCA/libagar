@@ -102,11 +102,11 @@ pre-package:
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
 		echo "VisualC.html" >> ${PROJFILELIST}; \
 		V=`perl mk/get-version.pl`; \
-		cat README                       |sed "s/$/`echo -e \\\r`/" >README.txt; \
-		cat INSTALL.txt                  |sed "s/$/`echo -e \\\r`/" >INSTALL-Windows.txt; \
-		cat ChangeLogs/Release-$$V.txt   |sed "s/$/`echo -e \\\r`/" >RELEASE-$$V.txt; \
-		cat mk/LICENSE.txt               |sed "s/$/`echo -e \\\r`/" >LICENSE.txt; \
-		cat gui/fonts/Vera-Copyright.txt |sed "s/$/`echo -e \\\r`/" >LICENSE-Vera.txt; \
+		cat README                       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
+		cat INSTALL.txt                  |sed "s/$$/`echo -e \\\r`/" >INSTALL-Windows.txt; \
+		cat ChangeLogs/Release-$$V.txt   |sed "s/$$/`echo -e \\\r`/" >RELEASE-$$V.txt; \
+		cat mk/LICENSE.txt               |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
+		cat gui/fonts/Vera-Copyright.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE-Vera.txt; \
 		cp -f mk/agar-logo.png Logo.png; \
 		echo "README.txt"          >> ${PROJFILELIST}; \
 		echo "INSTALL-Windows.txt" >> ${PROJFILELIST}; \
