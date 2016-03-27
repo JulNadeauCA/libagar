@@ -146,6 +146,7 @@ do
 	    ;;
 	esac
 done
+
 if [ -e "/bin/echo" ]; then
     /bin/echo -n ""
     if [ $? = 0 ]; then
@@ -156,20 +157,44 @@ if [ -e "/bin/echo" ]; then
 else
     ECHO_N="echo -n"
 fi
+
+if [ "${PATH_SEPARATOR+set}" != set ]; then
+  echo "#!/bin/sh" > conftest$$.sh
+  echo  "exit 0" >> conftest$$.sh
+  chmod +x conftest$$.sh
+  if (PATH="/nonexistent;."; conftest$$.sh) >/dev/null 2>&1; then
+    PATH_SEPARATOR=';'
+  else
+    PATH_SEPARATOR=:
+  fi
+  rm -f conf$$.sh
+fi
+
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+
 PERL=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+for path in $PATH; do
 	if [ -x "${path}/perl" ]; then
 		PERL="${path}/perl"
+		break
+	elif [ -e "${path}/perl.exe" ]; then
+		PERL="${path}/perl.exe"
 		break
 	fi
 done
 PKGCONFIG=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+for path in $PATH; do
 	if [ -x "${path}/pkg-config" ]; then
 		PKGCONFIG="${path}/pkg-config"
 		break
+	elif [ -e "${path}/pkg-config.exe" ]; then
+		PKGCONFIG="${path}/pkg-config.exe"
+		break
 	fi
 done
+
+IFS=$bb_save_IFS
 if [ "${prefix}" != "" ]; then
     PREFIX="$prefix"
 else
@@ -495,12 +520,21 @@ EOT
 
 HAVE_MANDOC="no"
 MANDOC=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -x "${path}/mandoc" ]; then
 		cat conftest.1 | ${path}/mandoc -Tascii >/dev/null
 		if [ "$?" = "0" ]; then
 			HAVE_MANDOC="yes"
 			MANDOC="${path}/mandoc"
+			break;
+		fi
+	elif [ -e "${path}/mandoc.exe" ]; then
+		cat conftest.1 | ${path}/mandoc.exe -Tascii >/dev/null
+		if [ "$?" = "0" ]; then
+			HAVE_MANDOC="yes"
+			MANDOC="${path}/mandoc.exe"
 			break;
 		fi
 	elif [ -x "${path}/nroff" ]; then
@@ -510,8 +544,17 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 			MANDOC="${path}/nroff -Tmandoc"
 			break;
 		fi
+	elif [ -e "${path}/nroff.exe" ]; then
+		cat conftest.1 | ${path}/nroff.exe -Tmandoc >/dev/null
+		if [ "$?" = "0" ]; then
+			HAVE_MANDOC="yes"
+			MANDOC="${path}/nroff.exe -Tmandoc"
+			break;
+		fi
 	fi
 done
+IFS=$bb_save_IFS
+
 rm -f conftest.1
 
 if [ "${HAVE_MANDOC}" = "no" ]; then
@@ -564,12 +607,19 @@ echo "#define ENABLE_NLS \"$ENABLE_NLS\"" >> $BLD/include/agar/config/enable_nls
 echo "#endif" >> $BLD/include/agar/config/enable_nls.h
 echo "hdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 msgfmt=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -x "${path}/msgfmt" ]; then
 		msgfmt=${path}/msgfmt
 		break
+	elif [ -e "${path}/msgfmt.exe" ]; then
+		msgfmt=${path}/msgfmt.exe
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${msgfmt}" != "" ]; then
 	HAVE_GETTEXT="yes"
 else
@@ -586,22 +636,31 @@ echo "#undef ENABLE_NLS" >$BLD/include/agar/config/enable_nls.h
 echo "hdefs[\"ENABLE_NLS\"] = nil" >>configure.lua
 fi;
 CTAGS=""
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
 if [ "${with_ctags}" = "yes" ]; then
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	for path in $PATH; do
 		if [ -x "${path}/ectags" ]; then
 			CTAGS="${path}/ectags"
+			break
+		elif [ -e "${path}/ectags.exe" ]; then
+			CTAGS="${path}/ectags.exe"
 			break
 		fi
 	done
 	if [ "${CTAGS}" = "" ]; then
-		for path in `echo $PATH | sed 's/:/ /g'`; do
+		for path in $PATH; do
 			if [ -x "${path}/ctags" ]; then
 				CTAGS="${path}/ctags"
+				break
+			elif [ -e "${path}/ctags.exe" ]; then
+				CTAGS="${path}/ctags.exe"
 				break
 			fi
 		done
 	fi
 fi
+IFS=$bb_save_IFS
 echo "CTAGS=${CTAGS}" >> Makefile.config
 if [ "${prefix_libtool}" != "" -a "${prefix_libtool}" != "bundled" ]; then
 	LIBTOOL_BUNDLED="no"
@@ -773,7 +832,9 @@ else
 	CROSSPFX=""
 fi
 if [ "$CC" = "" ]; then
-	for i in `echo $PATH |sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for i in $PATH; do
 		if [ -x "${i}/${CROSSPFX}cc" ]; then
 			CC="${i}/${CROSSPFX}cc"
 			break
@@ -783,17 +844,19 @@ if [ "$CC" = "" ]; then
 		elif [ -x "${i}/${CROSSPFX}clang" ]; then
 			CC="${i}/${CROSSPFX}clang"
 			break
-		elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+		elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
 			CC="${i}/${CROSSPFX}cc.exe"
 			break
-		elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+		elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
 			CC="${i}/${CROSSPFX}gcc.exe"
 			break
-		elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+		elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
 			CC="${i}/${CROSSPFX}clang.exe"
 			break
 		fi
 	done
+	IFS=$bb_save_IFS
+
 	if [ "$CC" = "" ]; then
 		echo "*"
 		echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in default PATH."
@@ -1568,7 +1631,9 @@ if [ "$OBJC" = "" ]; then
 		HAVE_OBJC="yes"
 		echo "using CC (${OBJC})"
 	else
-		for i in `echo $PATH |sed 's/:/ /g'`; do
+		bb_save_IFS=$IFS
+		IFS=$PATH_SEPARATOR
+		for i in $PATH; do
 			if [ -x "${i}/${CROSSPFX}cc" ]; then
 				if [ -f "${i}/${CROSSPFX}cc" ]; then
 					OBJC="${i}/${CROSSPFX}cc"
@@ -1579,8 +1644,19 @@ if [ "$OBJC" = "" ]; then
 					OBJC="${i}/${CROSSPFX}gcc"
 					break
 				fi
+			elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
+				if [ -f "${i}/${CROSSPFX}cc.exe" ]; then
+					OBJC="${i}/${CROSSPFX}cc.exe"
+					break
+				fi
+			elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
+				if [ -f "${i}/${CROSSPFX}gcc.exe" ]; then
+					OBJC="${i}/${CROSSPFX}gcc.exe"
+					break
+				fi
 			fi
 		done
+		IFS=$bb_save_IFS
 		if [ "$OBJC" = "" ]; then
 		    echo "*"
 		    echo "* Cannot find ${CROSSPFX}objc or ${CROSSPFX}gcc in default PATH."
@@ -3774,16 +3850,26 @@ if [ "${prefix_sdl}" != "" ]; then
 	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
 		SDL_PREFIX=`${prefix_sdl}/bin/sdl-config --prefix`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_sdl}/bin/sdl-config.exe" ]; then
+		SDL_PREFIX=`${prefix_sdl}/bin/sdl-config.exe --prefix`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	SDL_PREFIX=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/sdl-config" ]; then
 			SDL_PREFIX=`${path}/sdl-config --prefix`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/sdl-config.exe" ]; then
+			SDL_PREFIX=`${path}/sdl-config.exe --prefix`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -3791,16 +3877,26 @@ if [ "${prefix_sdl}" != "" ]; then
 	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
 		SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_sdl}/bin/sdl-config.exe" ]; then
+		SDL_VERSION=`${prefix_sdl}/bin/sdl-config.exe --version`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	SDL_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/sdl-config" ]; then
 			SDL_VERSION=`${path}/sdl-config --version`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/sdl-config.exe" ]; then
+			SDL_VERSION=`${path}/sdl-config.exe --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -3808,16 +3904,26 @@ if [ "${prefix_sdl}" != "" ]; then
 	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
 		SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config --cflags`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_sdl}/bin/sdl-config.exe" ]; then
+		SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	SDL_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/sdl-config" ]; then
 			SDL_CFLAGS=`${path}/sdl-config --cflags`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/sdl-config.exe" ]; then
+			SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -3825,29 +3931,47 @@ if [ "${prefix_sdl}" != "" ]; then
 	if [ -e "${prefix_sdl}/bin/sdl-config" ]; then
 		SDL_LIBS=`${prefix_sdl}/bin/sdl-config --libs`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_sdl}/bin/sdl-config.exe" ]; then
+		SDL_LIBS=`${prefix_sdl}/bin/sdl-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	SDL_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/sdl-config" ]; then
 			SDL_LIBS=`${path}/sdl-config --libs`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/sdl-config.exe" ]; then
+			SDL_LIBS=`${path}/sdl-config.exe --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 else
 case "${host}" in
 *-*-darwin*)
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_VERSION=`${path}/sdl-config.exe --version`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
@@ -3855,39 +3979,63 @@ fi
 if [ "${SDL_VERSION}" != "" ]; then
 MK_EXEC_FOUND="No"
 SDL_PREFIX=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_PREFIX=`${path}/sdl-config --prefix`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_PREFIX=`${path}/sdl-config.exe --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
 fi
 MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 fi
 MK_EXEC_FOUND="No"
 SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_LIBS=`${path}/sdl-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
@@ -3903,13 +4051,21 @@ fi;
 *-*-freebsd*)
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl11-config" ]; then
 		SDL_VERSION=`${path}/sdl11-config --version`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl11-config.exe" ]; then
+		SDL_VERSION=`${path}/sdl11-config.exe --version`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
@@ -3917,39 +4073,63 @@ fi
 if [ "${SDL_VERSION}" != "" ]; then
 MK_EXEC_FOUND="No"
 SDL_PREFIX=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl11-config" ]; then
 		SDL_PREFIX=`${path}/sdl11-config --prefix`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl11-config.exe" ]; then
+		SDL_PREFIX=`${path}/sdl11-config.exe --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
 fi
 MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl11-config" ]; then
 		SDL_CFLAGS=`${path}/sdl11-config --cflags`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl11-config.exe" ]; then
+		SDL_CFLAGS=`${path}/sdl11-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 fi
 MK_EXEC_FOUND="No"
 SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl11-config" ]; then
 		SDL_LIBS=`${path}/sdl11-config --libs`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl11-config.exe" ]; then
+		SDL_LIBS=`${path}/sdl11-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
@@ -3957,52 +4137,84 @@ fi
 else
 MK_EXEC_FOUND="No"
 SDL_PREFIX=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_PREFIX=`${path}/sdl-config --prefix`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_PREFIX=`${path}/sdl-config.exe --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
 fi
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_VERSION=`${path}/sdl-config.exe --version`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 fi
 MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 fi
 MK_EXEC_FOUND="No"
 SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_LIBS=`${path}/sdl-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
@@ -4012,52 +4224,84 @@ fi;
 *)
 MK_EXEC_FOUND="No"
 SDL_PREFIX=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_PREFIX=`${path}/sdl-config --prefix`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_PREFIX=`${path}/sdl-config.exe --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_PREFIX" > ${cache}/exec-SDL_PREFIX
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_PREFIX
 fi
 MK_EXEC_FOUND="No"
 SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_VERSION=`${path}/sdl-config.exe --version`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 fi
 MK_EXEC_FOUND="No"
 SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 fi
 MK_EXEC_FOUND="No"
 SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/sdl-config.exe" ]; then
+		SDL_LIBS=`${path}/sdl-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
@@ -5396,16 +5640,26 @@ if [ "${prefix_freetype}" != "" ]; then
 	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
 		FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config --version`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_freetype}/bin/freetype-config.exe" ]; then
+		FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config.exe --version`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	FREETYPE_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/freetype-config" ]; then
 			FREETYPE_VERSION=`${path}/freetype-config --version`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/freetype-config.exe" ]; then
+			FREETYPE_VERSION=`${path}/freetype-config.exe --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -5413,16 +5667,26 @@ if [ "${prefix_freetype}" != "" ]; then
 	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
 		FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config --cflags`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_freetype}/bin/freetype-config.exe" ]; then
+		FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	FREETYPE_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/freetype-config" ]; then
 			FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/freetype-config.exe" ]; then
+			FREETYPE_CFLAGS=`${path}/freetype-config.exe --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -5430,16 +5694,26 @@ if [ "${prefix_freetype}" != "" ]; then
 	if [ -e "${prefix_freetype}/bin/freetype-config" ]; then
 		FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config --libs`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_freetype}/bin/freetype-config.exe" ]; then
+		FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	FREETYPE_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/freetype-config" ]; then
 			FREETYPE_LIBS=`${path}/freetype-config --libs`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/freetype-config.exe" ]; then
+			FREETYPE_LIBS=`${path}/freetype-config.exe --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 case "${host}" in
 *-*-irix*)
@@ -5911,16 +6185,26 @@ if [ "${prefix_png}" != "" ]; then
 	if [ -e "${prefix_png}/bin/libpng-config" ]; then
 		PNG_VERSION=`${prefix_png}/bin/libpng-config --version`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_png}/bin/libpng-config.exe" ]; then
+		PNG_VERSION=`${prefix_png}/bin/libpng-config.exe --version`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	PNG_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/libpng-config" ]; then
 			PNG_VERSION=`${path}/libpng-config --version`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/libpng-config.exe" ]; then
+			PNG_VERSION=`${path}/libpng-config.exe --version`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -5928,16 +6212,26 @@ if [ "${prefix_png}" != "" ]; then
 	if [ -e "${prefix_png}/bin/libpng-config" ]; then
 		PNG_CFLAGS=`${prefix_png}/bin/libpng-config --cflags`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_png}/bin/libpng-config.exe" ]; then
+		PNG_CFLAGS=`${prefix_png}/bin/libpng-config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	PNG_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/libpng-config" ]; then
 			PNG_CFLAGS=`${path}/libpng-config --cflags`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/libpng-config.exe" ]; then
+			PNG_CFLAGS=`${path}/libpng-config.exe --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -5945,16 +6239,26 @@ if [ "${prefix_png}" != "" ]; then
 	if [ -e "${prefix_png}/bin/libpng-config" ]; then
 		PNG_LOPTS=`${prefix_png}/bin/libpng-config --L_opts`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_png}/bin/libpng-config.exe" ]; then
+		PNG_LOPTS=`${prefix_png}/bin/libpng-config.exe --L_opts`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	PNG_LOPTS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/libpng-config" ]; then
 			PNG_LOPTS=`${path}/libpng-config --L_opts`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/libpng-config.exe" ]; then
+			PNG_LOPTS=`${path}/libpng-config.exe --L_opts`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 MK_EXEC_FOUND="No"
 
@@ -5962,16 +6266,26 @@ if [ "${prefix_png}" != "" ]; then
 	if [ -e "${prefix_png}/bin/libpng-config" ]; then
 		PNG_LIBS=`${prefix_png}/bin/libpng-config --libs`
 		MK_EXEC_FOUND="Yes"
+	elif [ -e "${prefix_png}/bin/libpng-config.exe" ]; then
+		PNG_LIBS=`${prefix_png}/bin/libpng-config.exe --libs`
+		MK_EXEC_FOUND="Yes"
 	fi
 else
 	PNG_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
+	bb_save_IFS=$IFS
+	IFS=$PATH_SEPARATOR
+	for path in $PATH; do
 		if [ -e "${path}/libpng-config" ]; then
 			PNG_LIBS=`${path}/libpng-config --libs`
 			MK_EXEC_FOUND="Yes"
 			break
+		elif [ -e "${path}/libpng-config.exe" ]; then
+			PNG_LIBS=`${path}/libpng-config.exe --libs`
+			MK_EXEC_FOUND="Yes"
+			break
 		fi
 	done
+	IFS=$bb_save_IFS
 fi
 PNG_LIBS="${PNG_LOPTS} ${PNG_LIBS}"
 if [ "${PNG_VERSION}" != "" ]; then
@@ -6837,19 +7151,36 @@ MK_CACHED="No"
 MK_EXEC_UNIQUE="No"
 MK_EXEC_FOUND_PATH=""
 MYSQL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/mysql_config" ]; then
 		if [ "$MK_EXEC_FOUND" = "Yes" ]; then
 			echo "yes."
-			echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-			echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+			if [ "$MK_EXEC_FOUND_PATH" != "${path}/mysql_config" ]; then
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+			fi
 			break
 		fi
 		MYSQL_VERSION=`${path}/mysql_config --version`
 		MK_EXEC_FOUND="Yes"
 		MK_EXEC_FOUND_PATH="${path}/mysql_config"
+	elif [ -e "${path}/mysql_config.exe" ]; then
+		if [ "$MK_EXEC_FOUND" = "Yes" ]; then
+			echo "yes."
+			if [ "$MK_EXEC_FOUND_PATH" != "${path}/mysql_config" ]; then
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+				echo "* Warning: Multiple 'mysql_config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+			fi
+			break
+		fi
+		MYSQL_VERSION=`${path}/mysql_config.exe --version`
+		MK_EXEC_FOUND="Yes"
+		MK_EXEC_FOUND_PATH="${path}/mysql_config.exe"
 	fi
 done
+IFS=$bb_save_IFS
 if [ "${MYSQL_VERSION}" != "" ]; then
 if [ "${prefix_mysql}" != "" ]; then
 echo "yes ($MYSQL_VERSION in ${prefix_mysql})"
@@ -6904,26 +7235,42 @@ $ECHO_N "checking whether MySQL works..."
 $ECHO_N "checking whether MySQL works..." >> config.log
 MK_EXEC_FOUND="No"
 MYSQL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/mysql_config" ]; then
 		MYSQL_CFLAGS=`${path}/mysql_config --cflags`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/mysql_config.exe" ]; then
+		MYSQL_CFLAGS=`${path}/mysql_config.exe --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$MYSQL_CFLAGS" > ${cache}/exec-MYSQL_CFLAGS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-MYSQL_CFLAGS
 fi
 MK_EXEC_FOUND="No"
 MYSQL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
 	if [ -e "${path}/mysql_config" ]; then
 		MYSQL_LIBS=`${path}/mysql_config --libs`
 		MK_EXEC_FOUND="Yes"
 		break
+	elif [ -e "${path}/mysql_config.exe" ]; then
+		MYSQL_LIBS=`${path}/mysql_config.exe --libs`
+		MK_EXEC_FOUND="Yes"
+		break
 	fi
 done
+IFS=$bb_save_IFS
+
 if [ "${cache}" != "" ]; then
 	echo "$MYSQL_LIBS" > ${cache}/exec-MYSQL_LIBS
 	echo $MK_EXEC_FOUND > ${cache}/exec-found-MYSQL_LIBS
@@ -9830,304 +10177,306 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
-echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
-echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
-echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
-echo "OBJC=$OBJC" >>Makefile.config
-echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
-echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
-echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
-echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
-echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
-echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "HAVE___INT64=$HAVE___INT64" >>Makefile.config
+echo "mdefs[\"HAVE___INT64\"] = \"$HAVE___INT64\"" >>configure.lua
+echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
+echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
+echo "PACKAGE=$PACKAGE" >>Makefile.config
+echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "SNDFILE_LIBS=$SNDFILE_LIBS" >>Makefile.config
 echo "mdefs[\"SNDFILE_LIBS\"] = \"$SNDFILE_LIBS\"" >>configure.lua
-echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
-echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
-echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
-echo "mdefs[\"HAVE_FONTCONFIG\"] = \"$HAVE_FONTCONFIG\"" >>configure.lua
-echo "SUBDIR_au=$SUBDIR_au" >>Makefile.config
-echo "mdefs[\"SUBDIR_au\"] = \"$SUBDIR_au\"" >>configure.lua
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
-echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
-echo "STATEDIR=$STATEDIR" >>Makefile.config
-echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
-echo "INCLDIR=$INCLDIR" >>Makefile.config
-echo "mdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
-echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
-echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
-echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
-echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
+echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
+echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
+echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
+echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
+echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+echo "SNDFILE_CFLAGS=$SNDFILE_CFLAGS" >>Makefile.config
+echo "mdefs[\"SNDFILE_CFLAGS\"] = \"$SNDFILE_CFLAGS\"" >>configure.lua
+echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
+echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
+echo "SRCS_AU=$SRCS_AU" >>Makefile.config
+echo "mdefs[\"SRCS_AU\"] = \"$SRCS_AU\"" >>configure.lua
 echo "HAVE_ICONV=$HAVE_ICONV" >>Makefile.config
 echo "mdefs[\"HAVE_ICONV\"] = \"$HAVE_ICONV\"" >>configure.lua
+echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
 echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
-echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
-echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
+echo "SRCS_CORE=$SRCS_CORE" >>Makefile.config
+echo "mdefs[\"SRCS_CORE\"] = \"$SRCS_CORE\"" >>configure.lua
+echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
+echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
+echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
+echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
+echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
+echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
+echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
+echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "LIBTOOLOPTS_SHARED=$LIBTOOLOPTS_SHARED" >>Makefile.config
+echo "mdefs[\"LIBTOOLOPTS_SHARED\"] = \"$LIBTOOLOPTS_SHARED\"" >>configure.lua
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
+echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
+echo "RELEASE=$RELEASE" >>Makefile.config
+echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
+echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
+echo "mdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
+echo "UIM_LIBS=$UIM_LIBS" >>Makefile.config
+echo "mdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
+echo "SSE_CFLAGS=$SSE_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
+echo "BINDIR=$BINDIR" >>Makefile.config
+echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
+echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
+echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
+echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
+echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
+echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
+echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
+echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
+echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
+echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
+echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
+echo "INCLDIR=$INCLDIR" >>Makefile.config
+echo "mdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
+echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
+echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
+echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
+echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
+echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
+echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
+echo "PORTAUDIO_CFLAGS=$PORTAUDIO_CFLAGS" >>Makefile.config
+echo "mdefs[\"PORTAUDIO_CFLAGS\"] = \"$PORTAUDIO_CFLAGS\"" >>configure.lua
+echo "HAVE_NORETURN_ATTRIBUTE=$HAVE_NORETURN_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+echo "STATEDIR=$STATEDIR" >>Makefile.config
+echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
+echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
+echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
+echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
+echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
+echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
+echo "ICONV_CFLAGS=$ICONV_CFLAGS" >>Makefile.config
+echo "mdefs[\"ICONV_CFLAGS\"] = \"$ICONV_CFLAGS\"" >>configure.lua
+echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
+echo "LIBDIR=$LIBDIR" >>Makefile.config
+echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
+echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
+echo "OBJCFLAGS=$OBJCFLAGS" >>Makefile.config
+echo "mdefs[\"OBJCFLAGS\"] = \"$OBJCFLAGS\"" >>configure.lua
+echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
+echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
+echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_X11=$HAVE_X11" >>Makefile.config
+echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 echo "UIM_CFLAGS=$UIM_CFLAGS" >>Makefile.config
 echo "mdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
-echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
-echo "mdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
-echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
-echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
-echo "SSE3_CFLAGS=$SSE3_CFLAGS" >>Makefile.config
-echo "mdefs[\"SSE3_CFLAGS\"] = \"$SSE3_CFLAGS\"" >>configure.lua
-echo "RELEASE=$RELEASE" >>Makefile.config
-echo "mdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
-echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
-echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
-echo "SRCS_AU=$SRCS_AU" >>Makefile.config
-echo "mdefs[\"SRCS_AU\"] = \"$SRCS_AU\"" >>configure.lua
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
-echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
-echo "mdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
-echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
-echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
-echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
-echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
-echo "CC=$CC" >>Makefile.config
-echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
-echo "LIBDIR=$LIBDIR" >>Makefile.config
-echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
-echo "OBJCFLAGS=$OBJCFLAGS" >>Makefile.config
-echo "mdefs[\"OBJCFLAGS\"] = \"$OBJCFLAGS\"" >>configure.lua
-echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
-echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
-echo "UIM_LIBS=$UIM_LIBS" >>Makefile.config
-echo "mdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
-echo "SNDFILE_CFLAGS=$SNDFILE_CFLAGS" >>Makefile.config
-echo "mdefs[\"SNDFILE_CFLAGS\"] = \"$SNDFILE_CFLAGS\"" >>configure.lua
-echo "MODULEDIR=$MODULEDIR" >>Makefile.config
-echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
-echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
-echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
-echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
-echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
-echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
-echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
-echo "LIBTOOLOPTS_SHARED=$LIBTOOLOPTS_SHARED" >>Makefile.config
-echo "mdefs[\"LIBTOOLOPTS_SHARED\"] = \"$LIBTOOLOPTS_SHARED\"" >>configure.lua
-echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
-echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
-echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
-echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
-echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
-echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
-echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
-echo "HAVE_NETWORK=$HAVE_NETWORK" >>Makefile.config
-echo "mdefs[\"HAVE_NETWORK\"] = \"$HAVE_NETWORK\"" >>configure.lua
-echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
-echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
-echo "HAVE_NORETURN_ATTRIBUTE=$HAVE_NORETURN_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
-echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
-echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
-echo "HAVE_UNUSED_VARIABLE_ATTRIBUTE=$HAVE_UNUSED_VARIABLE_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
-echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
-echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
-echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
-echo "HAVE_INT64_T=$HAVE_INT64_T" >>Makefile.config
-echo "mdefs[\"HAVE_INT64_T\"] = \"$HAVE_INT64_T\"" >>configure.lua
-echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
-echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
-echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
-echo "mdefs[\"PNG_LIBS\"] = \"$PNG_LIBS\"" >>configure.lua
-echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
-echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
-echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
-echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
-echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
-echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
-echo "MYSQL_LIBS=$MYSQL_LIBS" >>Makefile.config
-echo "mdefs[\"MYSQL_LIBS\"] = \"$MYSQL_LIBS\"" >>configure.lua
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
-echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
-echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config
-echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
-echo "HAVE_UIM=$HAVE_UIM" >>Makefile.config
-echo "mdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
-echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
-echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
-echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
-echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
-echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
-echo "FONTCONFIG_CFLAGS=$FONTCONFIG_CFLAGS" >>Makefile.config
-echo "mdefs[\"FONTCONFIG_CFLAGS\"] = \"$FONTCONFIG_CFLAGS\"" >>configure.lua
-echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
-echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
-echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
-echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
-echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
-echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
-echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
-echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
-echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
-echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
-echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
-echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
-echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
-echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
-echo "SRCS_GUI=$SRCS_GUI" >>Makefile.config
-echo "mdefs[\"SRCS_GUI\"] = \"$SRCS_GUI\"" >>configure.lua
-echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
-echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
-echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
-echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
-echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
-echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
-echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
-echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
-echo "HAVE_CSIDL=$HAVE_CSIDL" >>Makefile.config
-echo "mdefs[\"HAVE_CSIDL\"] = \"$HAVE_CSIDL\"" >>configure.lua
-echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
-echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
-echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
-echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
-echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
-echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
-echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
-echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
-echo "MANDIR=$MANDIR" >>Makefile.config
-echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
-echo "ICONV_LIBS=$ICONV_LIBS" >>Makefile.config
-echo "mdefs[\"ICONV_LIBS\"] = \"$ICONV_LIBS\"" >>configure.lua
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
-echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
-echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
-echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
-echo "MATH_C99_LIBS=$MATH_C99_LIBS" >>Makefile.config
-echo "mdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
-echo "DATADIR=$DATADIR" >>Makefile.config
-echo "mdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
-echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
-echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
-echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
-echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
-echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
-echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
-echo "HAVE_ICONV_CONST=$HAVE_ICONV_CONST" >>Makefile.config
-echo "mdefs[\"HAVE_ICONV_CONST\"] = \"$HAVE_ICONV_CONST\"" >>configure.lua
-echo "XINERAMA_LIBS=$XINERAMA_LIBS" >>Makefile.config
-echo "mdefs[\"XINERAMA_LIBS\"] = \"$XINERAMA_LIBS\"" >>configure.lua
-echo "TTFDIR=$TTFDIR" >>Makefile.config
-echo "mdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
-echo "HAVE_X11=$HAVE_X11" >>Makefile.config
-echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
-echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
-echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
-echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
-echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
-echo "mdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
-echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
-echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
-echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
-echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
-echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
-echo "BINDIR=$BINDIR" >>Makefile.config
-echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
-echo "VERSION=$VERSION" >>Makefile.config
-echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
-echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
-echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
-echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
-echo "HAVE___INT64=$HAVE___INT64" >>Makefile.config
-echo "mdefs[\"HAVE___INT64\"] = \"$HAVE___INT64\"" >>configure.lua
-echo "SRCS_CORE=$SRCS_CORE" >>Makefile.config
-echo "mdefs[\"SRCS_CORE\"] = \"$SRCS_CORE\"" >>configure.lua
-echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
-echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
-echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
-echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
-echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
-echo "mdefs[\"CLOCK_LIBS\"] = \"$CLOCK_LIBS\"" >>configure.lua
-echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
-echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
-echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
-echo "PACKAGE=$PACKAGE" >>Makefile.config
-echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config
-echo "mdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
-echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
-echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
-echo "FONTCONFIG_LIBS=$FONTCONFIG_LIBS" >>Makefile.config
-echo "mdefs[\"FONTCONFIG_LIBS\"] = \"$FONTCONFIG_LIBS\"" >>configure.lua
-echo "HAVE_CLOCK_GETTIME=$HAVE_CLOCK_GETTIME" >>Makefile.config
-echo "mdefs[\"HAVE_CLOCK_GETTIME\"] = \"$HAVE_CLOCK_GETTIME\"" >>configure.lua
-echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
-echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
-echo "HAVE_XKB=$HAVE_XKB" >>Makefile.config
-echo "mdefs[\"HAVE_XKB\"] = \"$HAVE_XKB\"" >>configure.lua
-echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
-echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
-echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
-echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
-echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
-echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
-echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
-echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
-echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
-echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
-echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
-echo "mdefs[\"HAVE_PNG\"] = \"$HAVE_PNG\"" >>configure.lua
-echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
-echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
-echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
-echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
-echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
-echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
-echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
-echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
-echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
-echo "ICONV_CFLAGS=$ICONV_CFLAGS" >>Makefile.config
-echo "mdefs[\"ICONV_CFLAGS\"] = \"$ICONV_CFLAGS\"" >>configure.lua
-echo "X11_LIBS=$X11_LIBS" >>Makefile.config
-echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
-echo "HAVE_PORTAUDIO=$HAVE_PORTAUDIO" >>Makefile.config
-echo "mdefs[\"HAVE_PORTAUDIO\"] = \"$HAVE_PORTAUDIO\"" >>configure.lua
-echo "HAVE_SNDFILE=$HAVE_SNDFILE" >>Makefile.config
-echo "mdefs[\"HAVE_SNDFILE\"] = \"$HAVE_SNDFILE\"" >>configure.lua
-echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
-echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
 echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
-echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
-echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
+echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
+echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
-echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
-echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
-echo "SSE_CFLAGS=$SSE_CFLAGS" >>Makefile.config
-echo "mdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
+echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
+echo "mdefs[\"HAVE_FONTCONFIG\"] = \"$HAVE_FONTCONFIG\"" >>configure.lua
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "MANDIR=$MANDIR" >>Makefile.config
+echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+echo "HAVE_UIM=$HAVE_UIM" >>Makefile.config
+echo "mdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
+echo "SUBDIR_au=$SUBDIR_au" >>Makefile.config
+echo "mdefs[\"SUBDIR_au\"] = \"$SUBDIR_au\"" >>configure.lua
+echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_COCOA=$HAVE_COCOA" >>Makefile.config
+echo "mdefs[\"HAVE_COCOA\"] = \"$HAVE_COCOA\"" >>configure.lua
+echo "MATH_C99_LIBS=$MATH_C99_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
+echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
+echo "mdefs[\"COCOA_LIBS\"] = \"$COCOA_LIBS\"" >>configure.lua
+echo "TTFDIR=$TTFDIR" >>Makefile.config
+echo "mdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
+echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
-echo "HAVE_CLOCK_WIN32=$HAVE_CLOCK_WIN32" >>Makefile.config
-echo "mdefs[\"HAVE_CLOCK_WIN32\"] = \"$HAVE_CLOCK_WIN32\"" >>configure.lua
+echo "GLX_CFLAGS=$GLX_CFLAGS" >>Makefile.config
+echo "mdefs[\"GLX_CFLAGS\"] = \"$GLX_CFLAGS\"" >>configure.lua
+echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
+echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_XKB=$HAVE_XKB" >>Makefile.config
+echo "mdefs[\"HAVE_XKB\"] = \"$HAVE_XKB\"" >>configure.lua
+echo "HAVE_CSIDL=$HAVE_CSIDL" >>Makefile.config
+echo "mdefs[\"HAVE_CSIDL\"] = \"$HAVE_CSIDL\"" >>configure.lua
+echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
+echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
+echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
+echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
+echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
+echo "HAVE_XINERAMA=$HAVE_XINERAMA" >>Makefile.config
+echo "mdefs[\"HAVE_XINERAMA\"] = \"$HAVE_XINERAMA\"" >>configure.lua
+echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
+echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
+echo "mdefs[\"HAVE_CC_MWINDOWS\"] = \"$HAVE_CC_MWINDOWS\"" >>configure.lua
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
+echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
+echo "HAVE_WARN_UNUSED_RESULT_ATTRIBUTE=$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+echo "CC=$CC" >>Makefile.config
+echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
+echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
+echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
+echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
+echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+echo "ICONV_LIBS=$ICONV_LIBS" >>Makefile.config
+echo "mdefs[\"ICONV_LIBS\"] = \"$ICONV_LIBS\"" >>configure.lua
+echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
+echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
+echo "HAVE_SHL_LOAD=$HAVE_SHL_LOAD" >>Makefile.config
+echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
+echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
+echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
+echo "FONTCONFIG_CFLAGS=$FONTCONFIG_CFLAGS" >>Makefile.config
+echo "mdefs[\"FONTCONFIG_CFLAGS\"] = \"$FONTCONFIG_CFLAGS\"" >>configure.lua
+echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
+echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
+echo "HAVE_NETWORK=$HAVE_NETWORK" >>Makefile.config
+echo "mdefs[\"HAVE_NETWORK\"] = \"$HAVE_NETWORK\"" >>configure.lua
+echo "HAVE_UNUSED_VARIABLE_ATTRIBUTE=$HAVE_UNUSED_VARIABLE_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
+echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
+echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
+echo "OBJC=$OBJC" >>Makefile.config
+echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
+echo "X11_LIBS=$X11_LIBS" >>Makefile.config
+echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
+echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
+echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
+echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
+echo "mdefs[\"COCOA_CFLAGS\"] = \"$COCOA_CFLAGS\"" >>configure.lua
+echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+echo "GLX_LIBS=$GLX_LIBS" >>Makefile.config
+echo "mdefs[\"GLX_LIBS\"] = \"$GLX_LIBS\"" >>configure.lua
+echo "HAVE_ICONV_CONST=$HAVE_ICONV_CONST" >>Makefile.config
+echo "mdefs[\"HAVE_ICONV_CONST\"] = \"$HAVE_ICONV_CONST\"" >>configure.lua
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
+echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
+echo "FONTCONFIG_LIBS=$FONTCONFIG_LIBS" >>Makefile.config
+echo "mdefs[\"FONTCONFIG_LIBS\"] = \"$FONTCONFIG_LIBS\"" >>configure.lua
+echo "HAVE_SNDFILE=$HAVE_SNDFILE" >>Makefile.config
+echo "mdefs[\"HAVE_SNDFILE\"] = \"$HAVE_SNDFILE\"" >>configure.lua
+echo "VERSION=$VERSION" >>Makefile.config
+echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
+echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
+echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
+echo "XINERAMA_CFLAGS=$XINERAMA_CFLAGS" >>Makefile.config
+echo "mdefs[\"XINERAMA_CFLAGS\"] = \"$XINERAMA_CFLAGS\"" >>configure.lua
+echo "HAVE_INT64_T=$HAVE_INT64_T" >>Makefile.config
+echo "mdefs[\"HAVE_INT64_T\"] = \"$HAVE_INT64_T\"" >>configure.lua
+echo "DATADIR=$DATADIR" >>Makefile.config
+echo "mdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
+echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
+echo "mdefs[\"MYSQL_CFLAGS\"] = \"$MYSQL_CFLAGS\"" >>configure.lua
+echo "MODULEDIR=$MODULEDIR" >>Makefile.config
+echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
+echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config
+echo "mdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
+echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
+echo "HAVE_PORTAUDIO=$HAVE_PORTAUDIO" >>Makefile.config
+echo "mdefs[\"HAVE_PORTAUDIO\"] = \"$HAVE_PORTAUDIO\"" >>configure.lua
+echo "SRCS_GUI=$SRCS_GUI" >>Makefile.config
+echo "mdefs[\"SRCS_GUI\"] = \"$SRCS_GUI\"" >>configure.lua
+echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
+echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
+echo "mdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
+echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
+echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
+echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
+echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
+echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
+echo "mdefs[\"CLOCK_CFLAGS\"] = \"$CLOCK_CFLAGS\"" >>configure.lua
+echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
+echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
+echo "SSE3_CFLAGS=$SSE3_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE3_CFLAGS\"] = \"$SSE3_CFLAGS\"" >>configure.lua
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
+echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
+echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
+echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
 if [ "${srcdir}" != "" ]; then
 	$ECHO_N "* Source is in ${srcdir}. Generating Makefiles..."
 	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
