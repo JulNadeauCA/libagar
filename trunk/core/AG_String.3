@@ -1,4 +1,4 @@
-.\" Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2012-2016 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -97,8 +97,9 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The functions described on this manual page are used to manipulate C strings
-(i.e., byte strings with a terminating NUL character).
+The functions described here are used to construct and manipulate C strings
+(byte strings with a terminating NUL character), and convert text between
+different character encodings.
 .Sh FORMATTED OUTPUT CONVERSION
 .nr nS 1
 .Ft "char *"
@@ -405,25 +406,16 @@ plus
 the length of
 .Fa src .
 .Pp
-The
 .Fn AG_StrlcpyInt ,
 .Fn AG_StrlcpyUint ,
 .Fn AG_StrlcatInt ,
 and
 .Fn AG_StrlcatUint
-functions efficiently convert a numerical integer to a string and respectively
-copy or concatenate that string to the given buffer, in the same manner as
-.Fn AG_Strlcpy
-and
-.Fn AG_Strlcat .
-Whenever possible, constructing a string using only
-.Fn AG_Strlcpy ,
-.Fn AG_Strlcat
-and
-.Fn AG_StrlcatInt
-is always more efficient than using the standard
+convert an integer to a string representation (equivalent to a
 .Xr printf 3
-formatting engine.
+"%d" or "%u").
+The resulting string is copied to (or concatenated against) the destination
+buffer.
 .Sh UNICODE OPERATIONS
 .nr nS 1
 .Ft "Uint32 *"
@@ -515,7 +507,7 @@ The
 .Fn AG_CharLengthUTF8FromUCS4
 function returns the number of bytes that would be needed to encode the
 given UCS-4 character as an UTF-8 character sequence.
-.Sh MISCELLANEOUS STRING OPERATIONS
+.Sh STRING OPERATIONS
 .nr nS 1
 .Ft "int"
 .Fn AG_Strcasecmp "const char *s1" "const char *s2"
@@ -534,20 +526,15 @@ The
 .Fn AG_Strcasecmp
 and
 .Fn AG_Strncasecmp
-functions peforms comparison between two C strings
+functions peforms case-insensitive comparison between two C strings
 .Fa s1
 and
-.Fa s2
-like the standard
-.Xr strcmp 3
-and
-.Xr strncmp 3 ,
-except that the comparison is done in a case-insensitive way.
-Returns an integer greater than, equal to, or less than 0, depending on whether
+.Fa s2 .
+The return value is greater than, equal to, or less than 0 depending
+on whether
 .Fa s1
 is lexicographically greater than, equal to, or less than
-.Fa s2
-after translation of each corresponding character to lower-case.
+.Fa s2 .
 .Pp
 The
 .Fn AG_Strcasestr
@@ -561,7 +548,8 @@ string.
 .Pp
 The
 .Fn AG_StrReverse
-function reverses the characters in the given C string.
+function reverses all characters in the C string
+.Fa s .
 .Sh EXAMPLES
 The following Agar-GUI code creates an
 .Xr AG_Label 3 ,
@@ -596,8 +584,7 @@ while ((token = AG_Strsep(&string, ",")) != NULL) {
 free(pString);
 .Ed
 .Pp
-The following code efficiently constructs a string from a substring and
-an integer:
+The following code constructs a string and appends a formatted number to it:
 .Bd -literal -offset indent
 char myBuffer[30];
 int i = 0;
@@ -608,16 +595,16 @@ for (i = 0; i < 10; i++) {
 }
 .Ed
 .Pp
-The following code converts a string from LATIN-1 to Unicode, counts
-the number of Unicode characters, and exports the string to UTF-8:
+The following code converts a string from LATIN-1 (iso-8859-1)
+encoding to Unicode, counts the number of characters, and exports
+the string to UTF-8 encoding:
 .Bd -literal -offset indent
 char *dst;
 Uint32 *unicode, *s;
 int count = 0;
 size_t dstLen;
 
-if ((unicode = AG_ImportUnicode("ISO-8859-1", input, NULL))
-    == NULL) {
+if ((unicode = AG_ImportUnicode("LATIN1", input, NULL)) == NULL) {
 	AG_FatalError(NULL);
 }
 for (s = &unicode[0]; *s != '\0'; s++) {
@@ -630,7 +617,7 @@ dst = AG_Malloc(dstLen);
 AG_ExportUnicode("UTF-8", dst, unicode, dstLen)
 .Ed
 .Pp
-The following code fragment registers an extension to the
+The following GUI code fragment registers an extension to the
 .Xr AG_Printf 3
 formatting engine, and uses the new format when creating static and polled
 labels:
