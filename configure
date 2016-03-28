@@ -17,6 +17,16 @@ PACKAGE="Untitled"
 VERSION=""
 RELEASE=""
 
+case "test" in
+*)
+	bb_sed_test=`echo foo-.bar |sed 's/[-.]/_/g'`
+	if [ "$bb_sed_test" != "foo__bar" ]; then
+		echo "The sed command (or $SHELL) is not working correctly."
+		exit 1
+	fi
+esac
+
+
 bb_cr_letters='abcdefghijklmnopqrstuvwxyz'
 bb_cr_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 bb_cr_Letters=$bb_cr_letters$bb_cr_LETTERS
@@ -93,12 +103,10 @@ do
 	    option=`echo $option | sed 's/[-.]/_/g'`
 	    case "$arg" in
 	        *=*)
-	    	    echo "Enable $option ($optarg)" >>config.log
 	            eval "enable_${option}='$optarg'"
 	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
-	    	    echo "Enable $option" >>config.log
 	            eval "enable_${option}=yes"
 		    ;;
 	    esac
@@ -109,7 +117,6 @@ do
 	        { echo "Invalid option name: $option" >&2
 	        { (exit 1); exit 1; }; }
 	    option=`echo $option | sed 's/[-.]/_/g'`
-	    echo "Disable $option" >>config.log
 	    eval "enable_${option}=no"
 	    ;;
 	--with-*)
@@ -120,12 +127,10 @@ do
     	    option=`echo $option | sed 's/[-.]/_/g'`
 	    case "$arg" in
 	        *=*)
-	    	    echo "With $option ($optarg)" >>config.log
 	            eval "with_${option}='$optarg'"
 	            eval "prefix_${option}='$optarg'"
 		    ;;
 		*)
-	    	    echo "With $option" >>config.log
 	            eval "with_${option}=yes"
 		    ;;
 	    esac
@@ -136,7 +141,6 @@ do
 	        { echo "Invalid option name: $option" >&2
 	        { (exit 1); exit 1; }; }
 	    option=`echo $option | sed 's/-/_/g'`
-	    echo "Without $option" >>config.log
 	    eval "with_${option}=no"
 	    ;;
 	--x-includes=*)
