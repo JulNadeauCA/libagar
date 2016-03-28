@@ -500,7 +500,7 @@ AG_InitNetworkSubsystem(const AG_NetOps *ops)
 void
 AG_DestroyNetworkSubsystem(void)
 {
-	if (agNetOps != NULL) {
+	if (agNetOps != NULL && agNetOps->destroy != NULL) {
 		agNetOps->destroy();
 	}
 	agNetOps = NULL;
