@@ -177,11 +177,15 @@ do
 	    ;;
 	esac
 done
-echo -n ""
-if [ $? = 0 ]; then
-	ECHO_N="echo -n"
+if [ -e "/bin/echo" ]; then
+    /bin/echo -n ""
+    if [ $? = 0 ]; then
+    	ECHO_N="/bin/echo -n"
+    else
+    	ECHO_N="echo -n"
+    fi
 else
-	ECHO_N="echo"
+    ECHO_N="echo -n"
 fi
 
 if [ "${PATH_SEPARATOR+set}" != set ]; then
