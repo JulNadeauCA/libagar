@@ -163,11 +163,11 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_SDL)
+				HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
 			fi
 		fi
 	else
-		HUNDEF(HAVE_SDL)
+		HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
@@ -183,11 +183,11 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_OPENGL)
+				HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
 			fi
 		fi
 	else
-		HUNDEF(HAVE_OPENGL)
+		HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
 	fi
 	
 	# Enable X Windows support if Xlib is found.
@@ -201,7 +201,7 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_X11)
+				HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
 			fi
 		fi
 		if [ "${with_xinerama}" != "no" ]; then
@@ -214,14 +214,15 @@ if [ "${enable_gui}" != "no" ]; then
 					echo "*"
 					exit 1
 				else
-					HUNDEF(HAVE_XINERAMA)
+					HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
 				fi
 			fi
 		else
-			HUNDEF(HAVE_XINERAMA)
+			HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
 		fi
 	else
-		HUNDEF(HAVE_X11)
+		HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
+		HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
 	fi
 	
 	# Enable MacOS X / Cocoa support if Cocoa is found.
@@ -235,11 +236,11 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_COCOA)
+				HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
 			fi
 		fi
 	else
-		HUNDEF(HAVE_COCOA)
+		HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
 	fi
 
 	#
@@ -257,11 +258,11 @@ if [ "${enable_gui}" != "no" ]; then
 					echo "*"
 					exit 1
 				else
-					HUNDEF(HAVE_GLX)
+					HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
 				fi
 			fi
 		else
-			HUNDEF(HAVE_GLX)
+			HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
 		fi
 		
 		# Enable WGL support on Windows.
@@ -282,8 +283,7 @@ if [ "${enable_gui}" != "no" ]; then
 			HUNDEF(HAVE_WGL)
 		fi
 	else
-		HUNDEF(HAVE_WGL)
-		HUNDEF(HAVE_GLX)
+		HUNDEF(HAVE_WGL, HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
 	fi
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
@@ -304,14 +304,14 @@ if [ "${enable_gui}" != "no" ]; then
 			exit 1
 		fi
 	else
-		HUNDEF(HAVE_FREETYPE)
+		HUNDEF(HAVE_FREETYPE, FREETYPE_CFLAGS, FREETYPE_LIBS)
 	fi
 	
 	# Use fontconfig if available.
 	if [ "${with_fontconfig}" != "no" ]; then
 		CHECK(fontconfig, 2.6.0, ${prefix_fontconfig})
 	else
-		HUNDEF(HAVE_FONTCONFIG)
+		HUNDEF(HAVE_FONTCONFIG, FONTCONFIG_CFLAGS, FONTCONFIG_LIBS)
 	fi
 	
 	# Enable JPEG format support if libjpeg is found.
@@ -325,11 +325,11 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_JPEG)
+				HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
 			fi
 		fi
 	else
-		HUNDEF(HAVE_JPEG)
+		HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
 	fi
 	
 	# Enable PNG format support if libpng is found.
@@ -343,30 +343,28 @@ if [ "${enable_gui}" != "no" ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_PNG)
-				HUNDEF(HAVE_LIBPNG14)
+				HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
 			fi
 		fi
 	else
-		HUNDEF(HAVE_PNG)
-		HUNDEF(HAVE_LIBPNG14)
+		HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
 	fi
 
 else
 	HUNDEF(ENABLE_GUI)
 	MDEFINE(SUBDIR_gui, "")
 
-	HUNDEF(HAVE_SDL)
-	HUNDEF(HAVE_X11)
-	HUNDEF(HAVE_COCOA)
-	HUNDEF(HAVE_OPENGL)
-	HUNDEF(HAVE_GLX)
+	HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
+	HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
+	HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
+	HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
+	HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
+	HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
 	HUNDEF(HAVE_WGL)
-	HUNDEF(HAVE_FREETYPE)
-	HUNDEF(HAVE_FONTCONFIG)
-	HUNDEF(HAVE_JPEG)
-	HUNDEF(HAVE_PNG)
-	HUNDEF(HAVE_LIBPNG14)
+	HUNDEF(HAVE_FREETYPE, FREETYPE_CFLAGS, FREETYPE_LIBS)
+	HUNDEF(HAVE_FONTCONFIG, FONTCONFIG_CFLAGS, FONTCONFIG_LIBS)
+	HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
+	HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
 fi
 
 # Enable network interface unless requested otherwise.
@@ -380,17 +378,10 @@ if [ "${enable_network}" != "no" ]; then
 else
 	MDEFINE(HAVE_NETWORK, "no")
 	HUNDEF(AG_NETWORK)
-	HUNDEF(HAVE_GETADDRINFO)
-	HUNDEF(HAVE_SETSOCKOPT)
-	 HUNDEF(HAVE_SO_OOBINLINE)
-	 HUNDEF(HAVE_SO_REUSEPORT)
-	 HUNDEF(HAVE_SO_TIMESTAMP)
-	 HUNDEF(HAVE_SO_NOSIGPIPE)
-	 HUNDEF(HAVE_SO_LINGER)
-	 HUNDEF(HAVE_SO_ACCEPTFILTER)
-	HUNDEF(HAVE_WINSOCK1)
-	HUNDEF(HAVE_WINSOCK2)
-	HUNDEF(HAVE_SIOCGIFCONF)
+	HUNDEF(HAVE_GETADDRINFO, HAVE_SETSOCKOPT, HAVE_SO_OOBINLINE)
+	HUNDEF(HAVE_SO_REUSEPORT, HAVE_SO_TIMESTAMP, HAVE_SO_NOSIGPIPE)
+	HUNDEF(HAVE_SO_LINGER, HAVE_SO_ACCEPTFILTER, HAVE_SIOCGIFCONF)
+	HUNDEF(HAVE_WINSOCK1, HAVE_WINSOCK2)
 fi
 	
 # Enable Berkeley DB backend for AG_Db if available.
@@ -461,9 +452,7 @@ if [ "${enable_threads}" != "no" ]; then
 		fi
 	fi
 else
-	HUNDEF(AG_THREADS)
-	HUNDEF(HAVE_PTHREADS)
-	HUNDEF(HAVE_PTHREADS_XOPEN)
+	HUNDEF(AG_THREADS, HAVE_PTHREADS, HAVE_PTHREADS_XOPEN)
 	#
 	# Lock macros expand to no-ops when compiled !AG_THREADS, which may
 	# result in unused variables in some places.
@@ -484,11 +473,11 @@ if [ "${with_uim}" = "yes" ]; then
 			echo "*"
 			exit 1
 		else
-			HUNDEF(HAVE_UIM)
+			HUNDEF(HAVE_UIM, UIM_CFLAGS, UIM_LIBS)
 		fi
 	fi
 else
-	HUNDEF(HAVE_UIM)
+	HUNDEF(HAVE_UIM, UIM_CFLAGS, UIM_LIBS)
 fi
 	
 # Enable NLS if requested explicitely.
@@ -502,8 +491,8 @@ if [ "${enable_nls}" = "yes" ]; then
 		exit 1
 	fi
 else
-	HUNDEF(HAVE_ICONV)
-	HUNDEF(HAVE_GETTEXT)
+	HUNDEF(HAVE_ICONV, ICONV_CFLAGS, ICONV_LIBS)
+	HUNDEF(HAVE_GETTEXT, GETTEXT_CFLAGS, GETTEXT_LIBS)
 fi
 
 #
@@ -528,9 +517,7 @@ if [ "${with_altivec}" != "no" ]; then
 			echo "*"
 			exit 1
 		else
-			HUNDEF(HAVE_ALTIVEC)
-			HUNDEF(HAVE_ALTIVEC_H)
-			HUNDEF(INLINE_ALTIVEC)
+			HUNDEF(HAVE_ALTIVEC, HAVE_ALTIVEC_H, INLINE_ALTIVEC)
 		fi
 	else
 		if [ "${with_altivec_inline}" = "yes" ]; then
@@ -540,9 +527,7 @@ if [ "${with_altivec}" != "no" ]; then
 		fi
 	fi
 else
-	HUNDEF(HAVE_ALTIVEC)
-	HUNDEF(HAVE_ALTIVEC_H)
-	HUNDEF(INLINE_ALTIVEC)
+	HUNDEF(HAVE_ALTIVEC, HAVE_ALTIVEC_H, INLINE_ALTIVEC)
 fi
 
 #
@@ -561,8 +546,7 @@ if [ "${with_sse}" != "no" ]; then
 			echo "*"
 			exit 1
 		else
-			HUNDEF(HAVE_SSE)
-			HUNDEF(INLINE_SSE)
+			HUNDEF(HAVE_SSE, INLINE_SSE)
 		fi
 	else
 		if [ "${with_sse_inline}" = "yes" ]; then
@@ -578,10 +562,7 @@ if [ "${with_sse}" != "no" ]; then
 		fi
 	fi
 else
-	HUNDEF(HAVE_SSE)
-	HUNDEF(HAVE_SSE2)
-	HUNDEF(HAVE_SSE3)
-	HUNDEF(INLINE_SSE)
+	HUNDEF(HAVE_SSE, HAVE_SSE2, HAVE_SSE3, INLINE_SSE)
 fi
 
 # Specify floating-point precision to use.
@@ -661,16 +642,12 @@ if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]; then
 			echo "*"
 			exit 1
 		fi
-		HUNDEF(ENABLE_AU)
 		MDEFINE(SUBDIR_au, "")
-		HUNDEF(HAVE_SNDFILE)
-		HUNDEF(HAVE_PORTAUDIO)
+		HUNDEF(ENABLE_AU, HAVE_SNDFILE, HAVE_PORTAUDIO)
 	fi
 else
-	HUNDEF(ENABLE_AU)
 	MDEFINE(SUBDIR_au, "")
-	HUNDEF(HAVE_SNDFILE)
-	HUNDEF(HAVE_PORTAUDIO)
+	HUNDEF(ENABLE_AU, HAVE_SNDFILE, HAVE_PORTAUDIO)
 fi
 
 #
