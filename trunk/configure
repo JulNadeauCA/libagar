@@ -3862,6 +3862,7 @@ echo "#ifndef ENABLE_GUI" > $BLD/include/agar/config/enable_gui.h
 echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> $BLD/include/agar/config/enable_gui.h
 echo "#endif" >> $BLD/include/agar/config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
+ENABLE_GUI_LIBS="-L../gui -lag_gui"
 SUBDIR_gui="gui"
 	if [ "${with_sdl}" != "no" ]
  then
@@ -6569,6 +6570,7 @@ echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
 else
 echo "#undef ENABLE_GUI" >$BLD/include/agar/config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
+ENABLE_GUI_LIBS=""
 SUBDIR_gui=""
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
@@ -10372,6 +10374,8 @@ echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
 echo "mdefs[\"DSO_CFLAGS\"] = \"$DSO_CFLAGS\"" >>configure.lua
 echo "DSO_LIBS=$DSO_LIBS" >>Makefile.config
 echo "mdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+echo "ENABLE_GUI_LIBS=$ENABLE_GUI_LIBS" >>Makefile.config
+echo "mdefs[\"ENABLE_GUI_LIBS\"] = \"$ENABLE_GUI_LIBS\"" >>configure.lua
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config

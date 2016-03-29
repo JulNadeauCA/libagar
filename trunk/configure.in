@@ -150,6 +150,7 @@ fi
 #
 if [ "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_GUI, "yes")
+	MDEFINE(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
 	MDEFINE(SUBDIR_gui, "gui")
 
 	# Enable SDL support if the SDL library is found.
@@ -352,6 +353,7 @@ if [ "${enable_gui}" != "no" ]; then
 
 else
 	HUNDEF(ENABLE_GUI)
+	MDEFINE(ENABLE_GUI_LIBS, "")
 	MDEFINE(SUBDIR_gui, "")
 
 	HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
