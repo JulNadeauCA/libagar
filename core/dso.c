@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2016 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,9 @@
 # include <xtl.h>
 #else
 # include <windows.h>
+# if !defined(__CYGWIN__) && defined(__MINGW32__) && !defined(__MINGW64__)
+#  include <dlfcn.h>					/* bug #219 */
+# endif
 #endif
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
