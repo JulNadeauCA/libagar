@@ -4536,11 +4536,19 @@ fi;
 			else
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef SDL_CFLAGS" >$BLD/include/agar/config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >$BLD/include/agar/config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 	else
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef SDL_CFLAGS" >$BLD/include/agar/config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >$BLD/include/agar/config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 	fi
 	if [ "${with_gl}" != "no" ]
  then
@@ -4827,11 +4835,19 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 			else
 echo "#undef HAVE_OPENGL" >$BLD/include/agar/config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+echo "#undef OPENGL_CFLAGS" >$BLD/include/agar/config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef OPENGL_LIBS" >$BLD/include/agar/config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 	else
 echo "#undef HAVE_OPENGL" >$BLD/include/agar/config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+echo "#undef OPENGL_CFLAGS" >$BLD/include/agar/config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef OPENGL_LIBS" >$BLD/include/agar/config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_x}" != "no" ]
@@ -5219,6 +5235,10 @@ fi;
 			else
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+echo "#undef X11_CFLAGS" >$BLD/include/agar/config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+echo "#undef X11_LIBS" >$BLD/include/agar/config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 		if [ "${with_xinerama}" != "no" ]
@@ -5401,15 +5421,33 @@ fi;
 				else
 echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
 echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+echo "#undef XINERAMA_CFLAGS" >$BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef XINERAMA_LIBS" >$BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = nil" >>configure.lua
 				fi
 			fi
 		else
 echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
 echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+echo "#undef XINERAMA_CFLAGS" >$BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef XINERAMA_LIBS" >$BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = nil" >>configure.lua
 		fi
 	else
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+echo "#undef X11_CFLAGS" >$BLD/include/agar/config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+echo "#undef X11_LIBS" >$BLD/include/agar/config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
+echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+echo "#undef XINERAMA_CFLAGS" >$BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef XINERAMA_LIBS" >$BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_cocoa}" != "no" ]
@@ -5476,11 +5514,19 @@ fi;
 			else
 echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
 echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+echo "#undef COCOA_CFLAGS" >$BLD/include/agar/config/cocoa_cflags.h
+echo "hdefs[\"COCOA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef COCOA_LIBS" >$BLD/include/agar/config/cocoa_libs.h
+echo "hdefs[\"COCOA_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 	else
 echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
 echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+echo "#undef COCOA_CFLAGS" >$BLD/include/agar/config/cocoa_cflags.h
+echo "hdefs[\"COCOA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef COCOA_LIBS" >$BLD/include/agar/config/cocoa_libs.h
+echo "hdefs[\"COCOA_LIBS\"] = nil" >>configure.lua
 	fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
@@ -5568,11 +5614,19 @@ fi;
 				else
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+echo "#undef GLX_CFLAGS" >$BLD/include/agar/config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GLX_LIBS" >$BLD/include/agar/config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
 				fi
 			fi
 		else
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+echo "#undef GLX_CFLAGS" >$BLD/include/agar/config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GLX_LIBS" >$BLD/include/agar/config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
 		fi
 		
 		if [ "${with_wgl}" != "no" ]
@@ -5652,6 +5706,10 @@ echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+echo "#undef GLX_CFLAGS" >$BLD/include/agar/config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GLX_LIBS" >$BLD/include/agar/config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_freetype}" != "no" ]
@@ -5874,6 +5932,10 @@ fi;
 	else
 echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+echo "#undef FREETYPE_CFLAGS" >$BLD/include/agar/config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FREETYPE_LIBS" >$BLD/include/agar/config/freetype_libs.h
+echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_fontconfig}" != "no" ]
@@ -6061,6 +6123,10 @@ fi;
 	else
 echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
 echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
+echo "#undef FONTCONFIG_CFLAGS" >$BLD/include/agar/config/fontconfig_cflags.h
+echo "hdefs[\"FONTCONFIG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FONTCONFIG_LIBS" >$BLD/include/agar/config/fontconfig_libs.h
+echo "hdefs[\"FONTCONFIG_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_jpeg}" != "no" ]
@@ -6192,11 +6258,19 @@ fi;
 			else
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+echo "#undef JPEG_CFLAGS" >$BLD/include/agar/config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef JPEG_LIBS" >$BLD/include/agar/config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 	else
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+echo "#undef JPEG_CFLAGS" >$BLD/include/agar/config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef JPEG_LIBS" >$BLD/include/agar/config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
 	fi
 	
 	if [ "${with_png}" != "no" ]
@@ -6476,6 +6550,10 @@ echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
 echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
+echo "#undef PNG_CFLAGS" >$BLD/include/agar/config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef PNG_LIBS" >$BLD/include/agar/config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
 			fi
 		fi
 	else
@@ -6483,6 +6561,10 @@ echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
 echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
+echo "#undef PNG_CFLAGS" >$BLD/include/agar/config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef PNG_LIBS" >$BLD/include/agar/config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
 	fi
 else
 echo "#undef ENABLE_GUI" >$BLD/include/agar/config/enable_gui.h
@@ -6490,26 +6572,68 @@ echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
 SUBDIR_gui=""
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef SDL_CFLAGS" >$BLD/include/agar/config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >$BLD/include/agar/config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
+echo "#undef X11_CFLAGS" >$BLD/include/agar/config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+echo "#undef X11_LIBS" >$BLD/include/agar/config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
+echo "#undef HAVE_XINERAMA" >$BLD/include/agar/config/have_xinerama.h
+echo "hdefs[\"HAVE_XINERAMA\"] = nil" >>configure.lua
+echo "#undef XINERAMA_CFLAGS" >$BLD/include/agar/config/xinerama_cflags.h
+echo "hdefs[\"XINERAMA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef XINERAMA_LIBS" >$BLD/include/agar/config/xinerama_libs.h
+echo "hdefs[\"XINERAMA_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
 echo "hdefs[\"HAVE_COCOA\"] = nil" >>configure.lua
+echo "#undef COCOA_CFLAGS" >$BLD/include/agar/config/cocoa_cflags.h
+echo "hdefs[\"COCOA_CFLAGS\"] = nil" >>configure.lua
+echo "#undef COCOA_LIBS" >$BLD/include/agar/config/cocoa_libs.h
+echo "hdefs[\"COCOA_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_OPENGL" >$BLD/include/agar/config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+echo "#undef OPENGL_CFLAGS" >$BLD/include/agar/config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef OPENGL_LIBS" >$BLD/include/agar/config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_GLX" >$BLD/include/agar/config/have_glx.h
 echo "hdefs[\"HAVE_GLX\"] = nil" >>configure.lua
+echo "#undef GLX_CFLAGS" >$BLD/include/agar/config/glx_cflags.h
+echo "hdefs[\"GLX_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GLX_LIBS" >$BLD/include/agar/config/glx_libs.h
+echo "hdefs[\"GLX_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_WGL" >$BLD/include/agar/config/have_wgl.h
 echo "hdefs[\"HAVE_WGL\"] = nil" >>configure.lua
 echo "#undef HAVE_FREETYPE" >$BLD/include/agar/config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+echo "#undef FREETYPE_CFLAGS" >$BLD/include/agar/config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FREETYPE_LIBS" >$BLD/include/agar/config/freetype_libs.h
+echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_FONTCONFIG" >$BLD/include/agar/config/have_fontconfig.h
 echo "hdefs[\"HAVE_FONTCONFIG\"] = nil" >>configure.lua
+echo "#undef FONTCONFIG_CFLAGS" >$BLD/include/agar/config/fontconfig_cflags.h
+echo "hdefs[\"FONTCONFIG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FONTCONFIG_LIBS" >$BLD/include/agar/config/fontconfig_libs.h
+echo "hdefs[\"FONTCONFIG_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_JPEG" >$BLD/include/agar/config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+echo "#undef JPEG_CFLAGS" >$BLD/include/agar/config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef JPEG_LIBS" >$BLD/include/agar/config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_PNG" >$BLD/include/agar/config/have_png.h
 echo "hdefs[\"HAVE_PNG\"] = nil" >>configure.lua
 echo "#undef HAVE_LIBPNG14" >$BLD/include/agar/config/have_libpng14.h
 echo "hdefs[\"HAVE_LIBPNG14\"] = nil" >>configure.lua
+echo "#undef PNG_CFLAGS" >$BLD/include/agar/config/png_cflags.h
+echo "hdefs[\"PNG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef PNG_LIBS" >$BLD/include/agar/config/png_libs.h
+echo "hdefs[\"PNG_LIBS\"] = nil" >>configure.lua
 fi
 if [ "${enable_network}" != "no" ]
  then
@@ -6944,12 +7068,12 @@ echo "#undef HAVE_SO_LINGER" >$BLD/include/agar/config/have_so_linger.h
 echo "hdefs[\"HAVE_SO_LINGER\"] = nil" >>configure.lua
 echo "#undef HAVE_SO_ACCEPTFILTER" >$BLD/include/agar/config/have_so_acceptfilter.h
 echo "hdefs[\"HAVE_SO_ACCEPTFILTER\"] = nil" >>configure.lua
+echo "#undef HAVE_SIOCGIFCONF" >$BLD/include/agar/config/have_siocgifconf.h
+echo "hdefs[\"HAVE_SIOCGIFCONF\"] = nil" >>configure.lua
 echo "#undef HAVE_WINSOCK1" >$BLD/include/agar/config/have_winsock1.h
 echo "hdefs[\"HAVE_WINSOCK1\"] = nil" >>configure.lua
 echo "#undef HAVE_WINSOCK2" >$BLD/include/agar/config/have_winsock2.h
 echo "hdefs[\"HAVE_WINSOCK2\"] = nil" >>configure.lua
-echo "#undef HAVE_SIOCGIFCONF" >$BLD/include/agar/config/have_siocgifconf.h
-echo "hdefs[\"HAVE_SIOCGIFCONF\"] = nil" >>configure.lua
 fi
 	
 if [ "${with_db4}" != "no" ]
@@ -8149,11 +8273,19 @@ fi;
 		else
 echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
 echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+echo "#undef UIM_CFLAGS" >$BLD/include/agar/config/uim_cflags.h
+echo "hdefs[\"UIM_CFLAGS\"] = nil" >>configure.lua
+echo "#undef UIM_LIBS" >$BLD/include/agar/config/uim_libs.h
+echo "hdefs[\"UIM_LIBS\"] = nil" >>configure.lua
 		fi
 	fi
 else
 echo "#undef HAVE_UIM" >$BLD/include/agar/config/have_uim.h
 echo "hdefs[\"HAVE_UIM\"] = nil" >>configure.lua
+echo "#undef UIM_CFLAGS" >$BLD/include/agar/config/uim_cflags.h
+echo "hdefs[\"UIM_CFLAGS\"] = nil" >>configure.lua
+echo "#undef UIM_LIBS" >$BLD/include/agar/config/uim_libs.h
+echo "hdefs[\"UIM_LIBS\"] = nil" >>configure.lua
 fi
 	
 if [ "${enable_nls}" = "yes" ]
@@ -8658,8 +8790,16 @@ fi;
 else
 echo "#undef HAVE_ICONV" >$BLD/include/agar/config/have_iconv.h
 echo "hdefs[\"HAVE_ICONV\"] = nil" >>configure.lua
+echo "#undef ICONV_CFLAGS" >$BLD/include/agar/config/iconv_cflags.h
+echo "hdefs[\"ICONV_CFLAGS\"] = nil" >>configure.lua
+echo "#undef ICONV_LIBS" >$BLD/include/agar/config/iconv_libs.h
+echo "hdefs[\"ICONV_LIBS\"] = nil" >>configure.lua
 echo "#undef HAVE_GETTEXT" >$BLD/include/agar/config/have_gettext.h
 echo "hdefs[\"HAVE_GETTEXT\"] = nil" >>configure.lua
+echo "#undef GETTEXT_CFLAGS" >$BLD/include/agar/config/gettext_cflags.h
+echo "hdefs[\"GETTEXT_CFLAGS\"] = nil" >>configure.lua
+echo "#undef GETTEXT_LIBS" >$BLD/include/agar/config/gettext_libs.h
+echo "hdefs[\"GETTEXT_LIBS\"] = nil" >>configure.lua
 fi
 if [ "${enable_math}" != "no" ]
  then
@@ -9593,18 +9733,18 @@ fi;
 			echo "*"
 			exit 1
 		fi
+SUBDIR_au=""
 echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
-SUBDIR_au=""
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
 echo "#undef HAVE_PORTAUDIO" >$BLD/include/agar/config/have_portaudio.h
 echo "hdefs[\"HAVE_PORTAUDIO\"] = nil" >>configure.lua
 	fi
 else
+SUBDIR_au=""
 echo "#undef ENABLE_AU" >$BLD/include/agar/config/enable_au.h
 echo "hdefs[\"ENABLE_AU\"] = nil" >>configure.lua
-SUBDIR_au=""
 echo "#undef HAVE_SNDFILE" >$BLD/include/agar/config/have_sndfile.h
 echo "hdefs[\"HAVE_SNDFILE\"] = nil" >>configure.lua
 echo "#undef HAVE_PORTAUDIO" >$BLD/include/agar/config/have_portaudio.h
