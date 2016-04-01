@@ -19,20 +19,10 @@ install:
 		(cd $$D && ${MAKE} install); \
 	done
 
-configure:
-	if [ ! -e ".cache" ]; then \
-		echo "mkdir .cache"; \
-		mkdir .cache; \
-	fi
-	for D in ${SUBDIR}; do \
-		echo "==> $$D"; \
-		(cd $$D && ./configure --cache=../.cache); \
-	done
-
 cleandir-cache:
 	rm -fR .cache
 
-configure-scripts:
+configure:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
 		(cd $$D && ${MAKE} configure); \
@@ -50,7 +40,7 @@ proj:
 		(cd $$D && touch Makefile.config && ${MAKE} proj); \
 	done
 
-.PHONY: clean cleandir cleandir-cache install deinstall depend configure configure-scripts prereq proj
+.PHONY: clean cleandir cleandir-cache install deinstall depend configure prereq proj
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
