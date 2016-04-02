@@ -1,8 +1,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	agar-bench \
-	agar-disasm
+SUBDIR=	agar-disasm
 
 # For regenerating gui/*_data.h.
 #SUBDIR+=bundlefont bundlecss
