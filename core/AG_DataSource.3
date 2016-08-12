@@ -563,16 +563,22 @@ The encoding may or may not include a terminating NUL.
 .Fn AG_CopyString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft size_t
+.Fn AG_CopyStringPadded "char *buf" "AG_DataSource *ds" "size buf_size"
+.Pp
+.Ft size_t
 .Fn AG_CopyNulString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft void
 .Fn AG_SkipString "AG_DataSource *ds"
 .Pp
 .Ft void
+.Fn AG_SkipStringPadded "AG_DataSource *ds"
+.Pp
+.Ft void
 .Fn AG_WriteString "AG_DataSource *ds" "const char *s"
 .Pp
-.Ft int
-.Fn AG_WriteStringv "AG_DataSource *ds" "const char *s"
+.Ft void
+.Fn AG_WriteStringPadded "AG_DataSource *ds" "const char *s" "size_t len"
 .Pp
 .nr nS 0
 The
@@ -628,12 +634,24 @@ routine skips over the string at the current position in the buffer.
 .Pp
 The
 .Fn AG_WriteString
-function writes a string to a data source, where the encoding is not
-NUL-terminated.
-If an error occurs, a data source exception is raised.
+function writes a C string to a data source, in a variable-length encoding.
+The encoding is a 32-bit
+.Xr strlen 3
+followed by the string itself (NUL is not included).
+.Pp
 The
-.Fn AG_WriteStringv
-variant returns 0 on success and -1 on failure, without raising exceptions.
+.Fn AG_WriteStringPadded
+function writes a C string to a data source, in a fixed-length encoding.
+The encoding is a 32-bit
+.Xr strlen 3
+followed by the string itself (NUL is not included), and possibly extra
+padding such that the encoding is guaranteed to be
+.Fa length
+bytes + 4.
+.Pp
+On failure, the
+.Fn AG_WriteString
+routines raise a data source exception.
 .Sh INTERNAL DATA SOURCE API
 New sources can be implementing by defining a new structure inheriting from
 .Va AG_DataSource .

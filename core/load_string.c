@@ -66,8 +66,8 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 	AG_UnlockDataSource(ds);
 	return (s);
 fail:
-	AG_DataSourceError(ds, NULL);
 	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 	return (NULL);
 }
 
@@ -131,7 +131,6 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 	char *s;
 
 	AG_LockDataSource(ds);
-
 	if (AG_ReadUint32v(ds, &len) == -1) {
 		AG_SetError("String length: %s", AG_GetError());
 		goto fail;
@@ -155,101 +154,253 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 	AG_UnlockDataSource(ds);
 	return (s);
 fail:
-	AG_DataSourceError(ds, NULL);
 	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 	return (NULL);
 }
 
-/* Write a length-encoded string. */
+/* Write a variable-length string. */
 void
 AG_WriteString(AG_DataSource *ds, const char *s)
 {
-	size_t len;
+	Uint32 encLen;
+	size_t slen;
+	int rv;
 
-	if (ds->debug)
-		AG_WriteTypeCode(ds, AG_SOURCE_STRING);
-
-	if (s == NULL || s[0] == '\0') {
-		AG_WriteUint32(ds, 0);
+	if (s == NULL || *s == '\0') {
+		s = "";
+		slen = 0;
+		encLen = 0;
 	} else {
-		len = strlen(s);
-		AG_WriteUint32(ds, (Uint32)len);
-		if (AG_Write(ds, s, len) != 0)
-			AG_DataSourceError(ds, NULL);
+		slen = strlen(s);
+		encLen = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(slen) :
+		                                               AG_SwapLE32(slen);
 	}
+
+	AG_LockDataSource(ds);
+	/* Header */
+	if (ds->debug) {
+		AG_WriteTypeCode(ds, AG_SOURCE_STRING);
+	}
+	if ((rv = ds->write(ds, &encLen, sizeof(encLen), &ds->wrLast)) != 0) {
+		goto fail;
+	}
+	ds->wrTotal += ds->wrLast;
+	
+	/* String */
+	if (slen > 0) {
+		if ((rv = ds->write(ds, s, slen, &ds->wrLast)) != 0) {
+			goto fail;
+		}
+		ds->wrTotal += ds->wrLast;
+	}
+	AG_UnlockDataSource(ds);
+	return;
+fail:
+	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 }
 
-/* Write a length-encoded string (no exceptions). */
-int
-AG_WriteStringv(AG_DataSource *ds, const char *s)
+/* Write a C string encoded as a fixed-length record. */
+void
+AG_WriteStringPadded(AG_DataSource *ds, const char *s, size_t lenPadded)
 {
-	Uint32 len = (s != NULL && s[0] != '\0') ? strlen(s) : 0;
+	size_t slen, padLen, chunkLen;
+	Uint32 encLen[2];
+	int rv;
+
+	if (s == NULL) {
+		s = "";
+		slen = 0;
+	} else {
+		if ((slen = strlen(s)) > lenPadded) {
+			AG_DataSourceError(ds, NULL);
+			return;
+		}
+	}
+
+	encLen[0] = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(slen) :
+	                                                  AG_SwapLE32(slen);
+	encLen[1] = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(lenPadded) :
+	                                                  AG_SwapLE32(lenPadded);
+
+	AG_LockDataSource(ds);
+
+	/* Header */
+	if (ds->debug) {
+		AG_WriteTypeCode(ds, AG_SOURCE_STRING_PAD);
+	}
+	if ((rv = ds->write(ds, encLen, sizeof(encLen), &ds->wrLast)) != 0) {
+		goto fail;
+	}
+	ds->wrTotal += ds->wrLast;
+
+	/* String */
+	if (slen > 0) {
+		if ((rv = ds->write(ds, s, slen, &ds->wrLast)) != 0) {
+			goto fail;
+		}
+		ds->wrTotal += ds->wrLast;
+	}
 	
-	if (ds->debug &&
-	    AG_WriteTypeCodeE(ds, AG_SOURCE_STRING) == -1) {
-		return (-1);
+	/* Padding */
+	padLen = lenPadded - slen;
+	while (padLen > 0) {
+		static char zeroBuf[1024];
+	
+		chunkLen = AG_MIN(padLen, sizeof(zeroBuf));
+		if ((rv = ds->write(ds, zeroBuf, chunkLen, &ds->wrLast)) != 0) {
+			goto fail;
+		}
+		ds->wrTotal += ds->wrLast;
+		padLen -= ds->wrLast;
 	}
-	if (AG_WriteUint32v(ds, &len) == -1) {
-		return (-1);
-	}
-	return (len > 0) ? AG_Write(ds, s, len) : 0;
+out:
+	AG_UnlockDataSource(ds);
+	return;
+fail:
+	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 }
 
 /*
- * Copy at most dst_size bytes from a length-encoded string to a fixed-size
- * buffer, returning the number of bytes that would have been copied were
- * dst_size unlimited. The function NUL-terminates the string.
+ * Copy at most dst_size bytes from a variable-length string into the
+ * destination fixed-size buffer.
+ *
+ * Return the number of bytes that would have been copied were dst_size
+ * unlimited. The returned C string is always NUL-terminated.
  */
 size_t
 AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 {
-	size_t rv;
+	size_t rvLen;
 	Uint32 len;
+	int rv;
 
 	AG_LockDataSource(ds);
-	
+
+	/* Header */
 	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
+	if ((rv = ds->read(ds, &len, sizeof(len), &ds->rdLast)) != 0) {
 		goto fail;
+	}
+	ds->rdTotal += ds->rdLast;
+	if (ds->rdLast < sizeof(len)) {
+		AG_SetError("String header");
+		goto fail;
+	}
+	len = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(len) :
+	                                            AG_SwapLE32(len);
+	if (len > (Uint32)(dst_size-1)) {
+#ifdef AG_DEBUG
+		Verbose("ds(%x): %luB string truncated to fit %luB buffer\n",
+		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
+#endif
+		rvLen = (size_t)len+1;	/* Save the intended length */
+		len = dst_size-1;
+	} else {
+		rvLen = (size_t)len;
+	}
+	if (len == 0) {
+		*dst = '\0';
+	} else {
+		if ((rv = ds->read(ds, dst, len, &ds->rdLast)) != 0) {
+			goto fail;
+		}
+		ds->rdTotal += ds->rdLast;
+		if (ds->rdLast < len) {
+			AG_SetError("Reading string");
+			goto fail;
+		}
+		dst[ds->rdLast] = '\0';
+	}
+	AG_UnlockDataSource(ds);
+	return (rvLen);			/* Count does not include NUL */
+fail:
+	*dst = '\0';
+	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
+	return (0);
+}
+
+/* Variant of AG_CopyString() for fixed-length records. */
+size_t
+AG_CopyStringPadded(char *dst, AG_DataSource *ds, size_t dst_size)
+{
+	size_t rvLen, len, lenPadded, lenPadding;
+	Uint32 encLen[2];
+	int rv;
+
+	AG_LockDataSource(ds);
+
+	/* Header */
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1) {
+		goto fail;
+	}
+	if ((rv = ds->read(ds, encLen, sizeof(encLen), &ds->rdLast)) != 0) {
+		goto fail;
+	}
+	if (ds->rdLast < sizeof(encLen)) {
+		AG_SetError("Padded string header");
+		goto fail;
+	}
+	ds->rdTotal += ds->rdLast;
+	if (ds->byte_order == AG_BYTEORDER_BE) {
+		len = AG_SwapBE32(encLen[0]);
+		lenPadded = AG_SwapBE32(encLen[1]);
+	} else {
+		len = AG_SwapLE32(encLen[0]);
+		lenPadded = AG_SwapLE32(encLen[1]);
 	}
 	if (len > (Uint32)(dst_size-1)) {
 #ifdef AG_DEBUG
 		Verbose("0x%x: %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif
-		rv = (size_t)len+1;		/* Save the intended length */
+		rvLen = (size_t)len+1;		/* Save the intended length */
 		len = dst_size-1;
 	} else {
-		rv = (size_t)len;
+		rvLen = (size_t)len;
 	}
+
+	/* String */
 	if (len == 0) {
-		dst[0] = '\0';
+		*dst = '\0';
 	} else {
-		if (AG_Read(ds, dst, (size_t)len) != 0) {
+		if ((rv = ds->read(ds, dst, len, &ds->rdLast)) != 0) {
+			goto fail;
+		}
+		ds->rdTotal += ds->rdLast;
+		if (ds->rdLast < len) {
+			AG_SetError("Padded string");
 			goto fail;
 		}
 		dst[ds->rdLast] = '\0';
 	}
+
+	/* Padding */
+	if ((lenPadding = (size_t)(lenPadded-len)) > 0 &&
+	    AG_Seek(ds, lenPadding, AG_SEEK_CUR) == -1) {	/* Skip over */
+		goto fail;
+	}
 	AG_UnlockDataSource(ds);
-	return (rv);				/* Count does not include NUL */
+	return (rvLen);				/* Count does not include NUL */
 fail:
-	AG_DataSourceError(ds, NULL);
 	AG_UnlockDataSource(ds);
 	dst[0] = '\0';
+	AG_DataSourceError(ds, NULL);
 	return (0);
 }
 
-/* Skip over a length-encoded string. */
+/* Skip over a variable-length string. */
 void
 AG_SkipString(AG_DataSource *ds)
 {
 	Uint32 len;
 
 	AG_LockDataSource(ds);
-	
 	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
 		goto fail;
 	}
@@ -257,14 +408,39 @@ AG_SkipString(AG_DataSource *ds)
 		AG_SetError("String length: %s", AG_GetError());
 		goto fail;
 	}
-	if (AG_Seek(ds, (size_t)len, AG_SEEK_CUR) == -1)
+	if (AG_Seek(ds, (size_t)len, AG_SEEK_CUR) == -1) {
 		goto fail;
-
+	}
 	AG_UnlockDataSource(ds);
 	return;
 fail:
-	AG_DataSourceError(ds, NULL);
 	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
+}
+
+/* Skip over a fixed-length string. */
+void
+AG_SkipStringPadded(AG_DataSource *ds)
+{
+	Uint32 len, lenPadded;
+
+	AG_LockDataSource(ds);
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1) {
+		goto fail;
+	}
+	if (AG_ReadUint32v(ds, &len) == -1 ||
+	    AG_ReadUint32v(ds, &lenPadded) == -1) {
+		AG_SetError("Padded length: %s", AG_GetError());
+		goto fail;
+	}
+	if (AG_Seek(ds, (size_t)lenPadded, AG_SEEK_CUR) == -1) {
+		goto fail;
+	}
+	AG_UnlockDataSource(ds);
+	return;
+fail:
+	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 }
 
 /*
@@ -300,8 +476,8 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 	AG_UnlockDataSource(ds);
 	return (rv-1);			/* Count does not include NUL */
 fail:
-	AG_DataSourceError(ds, NULL);
 	dst[0] = '\0';
 	AG_UnlockDataSource(ds);
+	AG_DataSourceError(ds, NULL);
 	return (0);
 }
