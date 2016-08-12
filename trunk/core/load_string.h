@@ -16,10 +16,13 @@ int	 AG_ReadStringLenv(AG_DataSource *, size_t, char **);
 	 AG_ReadStringLenv((nb),AG_LOAD_STRING_MAX,(s))
 
 void	 AG_WriteString(AG_DataSource *, const char *);
-int	 AG_WriteStringv(AG_DataSource *, const char *);
+void	 AG_WriteStringPadded(AG_DataSource *, const char *, size_t);
 size_t	 AG_CopyString(char *, AG_DataSource *, size_t)
                        BOUNDED_ATTRIBUTE(__string__, 1, 3);
+size_t	 AG_CopyStringPadded(char *, AG_DataSource *, size_t)
+                             BOUNDED_ATTRIBUTE(__string__, 1, 3);
 void	 AG_SkipString(AG_DataSource *);
+void	 AG_SkipStringPadded(AG_DataSource *);
 
 char	*AG_ReadNulStringLen(AG_DataSource *, size_t);
 size_t	 AG_CopyNulString(char *, AG_DataSource *, size_t);
