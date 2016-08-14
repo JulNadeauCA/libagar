@@ -255,7 +255,6 @@ AG_WriteStringPadded(AG_DataSource *ds, const char *s, size_t lenPadded)
 		ds->wrTotal += ds->wrLast;
 		padLen -= ds->wrLast;
 	}
-out:
 	AG_UnlockDataSource(ds);
 	return;
 fail:
