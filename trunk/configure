@@ -3827,7 +3827,7 @@ WNO_UNINITIALIZED=""
 fi
 if [ "${enable_debug}" = 'yes' ]
  then
-AG_DEBUG="'yes'"
+AG_DEBUG="yes"
 echo '#ifndef AG_DEBUG' > $BLD/include/agar/config/ag_debug.h
 echo "#define AG_DEBUG \"$AG_DEBUG\"" >> $BLD/include/agar/config/ag_debug.h
 echo '#endif' >> $BLD/include/agar/config/ag_debug.h
@@ -3839,7 +3839,7 @@ echo 'hdefs["AG_DEBUG"] = nil' >>configure.lua
 fi
 if [ "${enable_debug_core}" = 'yes' ]
  then
-AG_DEBUG_CORE="'yes'"
+AG_DEBUG_CORE="yes"
 echo '#ifndef AG_DEBUG_CORE' > $BLD/include/agar/config/ag_debug_core.h
 echo "#define AG_DEBUG_CORE \"$AG_DEBUG_CORE\"" >> $BLD/include/agar/config/ag_debug_core.h
 echo '#endif' >> $BLD/include/agar/config/ag_debug_core.h
@@ -3850,7 +3850,7 @@ echo 'hdefs["AG_DEBUG_CORE"] = nil' >>configure.lua
 fi
 if [ "${enable_debug_gui}" = 'yes' ]
  then
-AG_DEBUG_GUI="'yes'"
+AG_DEBUG_GUI="yes"
 echo '#ifndef AG_DEBUG_GUI' > $BLD/include/agar/config/ag_debug_gui.h
 echo "#define AG_DEBUG_GUI \"$AG_DEBUG_GUI\"" >> $BLD/include/agar/config/ag_debug_gui.h
 echo '#endif' >> $BLD/include/agar/config/ag_debug_gui.h
@@ -3861,7 +3861,7 @@ echo 'hdefs["AG_DEBUG_GUI"] = nil' >>configure.lua
 fi
 if [ "${enable_legacy}" != 'no' ]
  then
-AG_LEGACY="'yes'"
+AG_LEGACY="yes"
 echo '#ifndef AG_LEGACY' > $BLD/include/agar/config/ag_legacy.h
 echo "#define AG_LEGACY \"$AG_LEGACY\"" >> $BLD/include/agar/config/ag_legacy.h
 echo '#endif' >> $BLD/include/agar/config/ag_legacy.h
@@ -3872,7 +3872,7 @@ echo 'hdefs["AG_LEGACY"] = nil' >>configure.lua
 fi
 if [ "${enable_gui}" != 'no' ]
  then
-ENABLE_GUI="'yes'"
+ENABLE_GUI="yes"
 echo '#ifndef ENABLE_GUI' > $BLD/include/agar/config/enable_gui.h
 echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> $BLD/include/agar/config/enable_gui.h
 echo '#endif' >> $BLD/include/agar/config/enable_gui.h
@@ -7059,14 +7059,14 @@ echo '#undef HAVE_WINSOCK1' >$BLD/include/agar/config/have_winsock1.h
 echo 'hdefs["HAVE_WINSOCK1"] = nil' >>configure.lua
 echo '#undef HAVE_WINSOCK2' >$BLD/include/agar/config/have_winsock2.h
 echo 'hdefs["HAVE_WINSOCK2"] = nil' >>configure.lua
-HAVE_NETWORK="'yes'"
-AG_NETWORK="'yes'"
+HAVE_NETWORK="yes"
+AG_NETWORK="yes"
 echo '#ifndef AG_NETWORK' > $BLD/include/agar/config/ag_network.h
 echo "#define AG_NETWORK \"$AG_NETWORK\"" >> $BLD/include/agar/config/ag_network.h
 echo '#endif' >> $BLD/include/agar/config/ag_network.h
 echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
 else
-HAVE_NETWORK="'no'"
+HAVE_NETWORK="no"
 echo '#undef AG_NETWORK' >$BLD/include/agar/config/ag_network.h
 echo 'hdefs["AG_NETWORK"] = nil' >>configure.lua
 echo '#undef HAVE_GETADDRINFO' >$BLD/include/agar/config/have_getaddrinfo.h
@@ -8054,7 +8054,7 @@ echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi;
 	if [ "${HAVE_PTHREADS}" = 'yes' ]
 	then
-AG_THREADS="'yes'"
+AG_THREADS="yes"
 echo '#ifndef AG_THREADS' > $BLD/include/agar/config/ag_threads.h
 echo "#define AG_THREADS \"$AG_THREADS\"" >> $BLD/include/agar/config/ag_threads.h
 echo '#endif' >> $BLD/include/agar/config/ag_threads.h
@@ -8820,7 +8820,7 @@ echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
 fi
 if [ "${enable_math}" != 'no' ]
  then
-ENABLE_MATH="'yes'"
+ENABLE_MATH="yes"
 echo '#ifndef ENABLE_MATH' > $BLD/include/agar/config/enable_math.h
 echo "#define ENABLE_MATH \"$ENABLE_MATH\"" >> $BLD/include/agar/config/enable_math.h
 echo '#endif' >> $BLD/include/agar/config/enable_math.h
@@ -8974,7 +8974,7 @@ echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 	else
 		if [ "${with_altivec_inline}" = 'yes' ]
  then
-INLINE_ALTIVEC="'yes'"
+INLINE_ALTIVEC="yes"
 echo '#ifndef INLINE_ALTIVEC' > $BLD/include/agar/config/inline_altivec.h
 echo "#define INLINE_ALTIVEC \"$INLINE_ALTIVEC\"" >> $BLD/include/agar/config/inline_altivec.h
 echo '#endif' >> $BLD/include/agar/config/inline_altivec.h
@@ -9225,7 +9225,7 @@ echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
 	else
 		if [ "${with_sse_inline}" = 'yes' ]
  then
-INLINE_SSE="'yes'"
+INLINE_SSE="yes"
 echo '#ifndef INLINE_SSE' > $BLD/include/agar/config/inline_sse.h
 echo "#define INLINE_SSE \"$INLINE_SSE\"" >> $BLD/include/agar/config/inline_sse.h
 echo '#endif' >> $BLD/include/agar/config/inline_sse.h
@@ -9265,7 +9265,7 @@ if [ "${with_single_fp}" = 'yes' ]
 		echo "*"
 		exit 1
 	fi
-SINGLE_PRECISION="'yes'"
+SINGLE_PRECISION="yes"
 echo '#ifndef SINGLE_PRECISION' > $BLD/include/agar/config/single_precision.h
 echo "#define SINGLE_PRECISION \"$SINGLE_PRECISION\"" >> $BLD/include/agar/config/single_precision.h
 echo '#endif' >> $BLD/include/agar/config/single_precision.h
@@ -9276,7 +9276,7 @@ echo 'hdefs["SINGLE_PRECISION"] = nil' >>configure.lua
 fi
 if [ "${with_double_fp}" != 'no' ]
  then
-DOUBLE_PRECISION="'yes'"
+DOUBLE_PRECISION="yes"
 echo '#ifndef DOUBLE_PRECISION' > $BLD/include/agar/config/double_precision.h
 echo "#define DOUBLE_PRECISION \"$DOUBLE_PRECISION\"" >> $BLD/include/agar/config/double_precision.h
 echo '#endif' >> $BLD/include/agar/config/double_precision.h
@@ -9303,7 +9303,7 @@ if [ "${with_quad_fp}" = 'yes' ]
 		echo "*"
 		exit 1
 	fi
-QUAD_PRECISION="'yes'"
+QUAD_PRECISION="yes"
 echo '#ifndef QUAD_PRECISION' > $BLD/include/agar/config/quad_precision.h
 echo "#define QUAD_PRECISION \"$QUAD_PRECISION\"" >> $BLD/include/agar/config/quad_precision.h
 echo '#endif' >> $BLD/include/agar/config/quad_precision.h
@@ -9314,7 +9314,7 @@ echo 'hdefs["QUAD_PRECISION"] = nil' >>configure.lua
 fi
 if [ "${enable_vg}" != 'no' -a "${enable_gui}" != 'no' ]
  then
-ENABLE_VG="'yes'"
+ENABLE_VG="yes"
 echo '#ifndef ENABLE_VG' > $BLD/include/agar/config/enable_vg.h
 echo "#define ENABLE_VG \"$ENABLE_VG\"" >> $BLD/include/agar/config/enable_vg.h
 echo '#endif' >> $BLD/include/agar/config/enable_vg.h
@@ -9327,7 +9327,7 @@ SUBDIR_vg=""
 fi
 if [ "${enable_dev}" != 'no' -a "${enable_gui}" != 'no' ]
  then
-ENABLE_DEV="'yes'"
+ENABLE_DEV="yes"
 echo '#ifndef ENABLE_DEV' > $BLD/include/agar/config/enable_dev.h
 echo "#define ENABLE_DEV \"$ENABLE_DEV\"" >> $BLD/include/agar/config/enable_dev.h
 echo '#endif' >> $BLD/include/agar/config/enable_dev.h
@@ -9509,7 +9509,7 @@ echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
 fi;
 	if [ "${HAVE_SNDFILE}" = 'yes' ]
  then
-ENABLE_AU="'yes'"
+ENABLE_AU="yes"
 echo '#ifndef ENABLE_AU' > $BLD/include/agar/config/enable_au.h
 echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
 echo '#endif' >> $BLD/include/agar/config/enable_au.h

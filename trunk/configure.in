@@ -124,23 +124,23 @@ else
 fi
 
 if [ "${enable_debug}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG, 'yes')
+	HDEFINE(AG_DEBUG, "yes")
 	MDEFINE(CFLAGS, "${CFLAGS} -g")
 else
 	HUNDEF(AG_DEBUG)
 fi
 if [ "${enable_debug_core}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG_CORE, 'yes')
+	HDEFINE(AG_DEBUG_CORE, "yes")
 else
 	HUNDEF(AG_DEBUG_CORE)
 fi
 if [ "${enable_debug_gui}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG_GUI, 'yes')
+	HDEFINE(AG_DEBUG_GUI, "yes")
 else
 	HUNDEF(AG_DEBUG_GUI)
 fi
 if [ "${enable_legacy}" != 'no' ]; then
-	HDEFINE(AG_LEGACY, 'yes')
+	HDEFINE(AG_LEGACY, "yes")
 else
 	HUNDEF(AG_LEGACY)
 fi
@@ -149,7 +149,7 @@ fi
 # Options specific to the Agar-GUI library.
 #
 if [ "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_GUI, 'yes')
+	HDEFINE(ENABLE_GUI, "yes")
 	MDEFINE(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
 	MDEFINE(SUBDIR_gui, "gui")
 
@@ -375,10 +375,10 @@ if [ "${enable_network}" != 'no' ]; then
 	CHECK(siocgifconf)
 	CHECK(sockopts)
 	CHECK(winsock)
-	MDEFINE(HAVE_NETWORK, 'yes')
-	HDEFINE(AG_NETWORK, 'yes')
+	MDEFINE(HAVE_NETWORK, "yes")
+	HDEFINE(AG_NETWORK, "yes")
 else
-	MDEFINE(HAVE_NETWORK, 'no')
+	MDEFINE(HAVE_NETWORK, "no")
 	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO, HAVE_SETSOCKOPT, HAVE_SO_OOBINLINE)
 	HUNDEF(HAVE_SO_REUSEPORT, HAVE_SO_TIMESTAMP, HAVE_SO_NOSIGPIPE)
@@ -427,7 +427,7 @@ if [ "${enable_threads}" != 'no' ]; then
 	CHECK(pthreads, 0, ${prefix_pthreads})
 	if [ "${HAVE_PTHREADS}" = 'yes' ];
 	then
-		HDEFINE(AG_THREADS, 'yes')
+		HDEFINE(AG_THREADS, "yes")
 		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = 'no' ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = 'no' ]; then
@@ -501,7 +501,7 @@ fi
 # Options specific to the Agar-Math library
 #
 if [ "${enable_math}" != 'no' ]; then
-	HDEFINE(ENABLE_MATH, 'yes')
+	HDEFINE(ENABLE_MATH, "yes")
 	MDEFINE(SUBDIR_math, "math")
 else
 	HUNDEF(ENABLE_MATH)
@@ -523,7 +523,7 @@ if [ "${with_altivec}" != 'no' ]; then
 		fi
 	else
 		if [ "${with_altivec_inline}" = 'yes' ]; then
-			HDEFINE(INLINE_ALTIVEC, 'yes')
+			HDEFINE(INLINE_ALTIVEC, "yes")
 		else
 			HUNDEF(INLINE_ALTIVEC)
 		fi
@@ -552,7 +552,7 @@ if [ "${with_sse}" != 'no' ]; then
 		fi
 	else
 		if [ "${with_sse_inline}" = 'yes' ]; then
-			HDEFINE(INLINE_SSE, 'yes')
+			HDEFINE(INLINE_SSE, "yes")
 		else
 			HUNDEF(INLINE_SSE)
 		fi
@@ -576,12 +576,12 @@ if [ "${with_single_fp}" = 'yes' ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(SINGLE_PRECISION, 'yes')
+	HDEFINE(SINGLE_PRECISION, "yes")
 else
 	HUNDEF(SINGLE_PRECISION)
 fi
 if [ "${with_double_fp}" != 'no' ]; then
-	HDEFINE(DOUBLE_PRECISION, 'yes')
+	HDEFINE(DOUBLE_PRECISION, "yes")
 else
 	HUNDEF(DOUBLE_PRECISION)
 fi
@@ -600,7 +600,7 @@ if [ "${with_quad_fp}" = 'yes' ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(QUAD_PRECISION, 'yes')
+	HDEFINE(QUAD_PRECISION, "yes")
 else
 	HUNDEF(QUAD_PRECISION)
 fi
@@ -609,7 +609,7 @@ fi
 # Options specific to the Agar-VG library
 #
 if [ "${enable_vg}" != 'no' -a "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_VG, 'yes')
+	HDEFINE(ENABLE_VG, "yes")
 	MDEFINE(SUBDIR_vg, "vg")
 else
 	HUNDEF(ENABLE_VG)
@@ -620,7 +620,7 @@ fi
 # Options specific to the Agar-DEV library
 #
 if [ "${enable_dev}" != 'no' -a "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_DEV, 'yes')
+	HDEFINE(ENABLE_DEV, "yes")
 	MDEFINE(SUBDIR_dev, "dev")
 else
 	HUNDEF(ENABLE_DEV)
@@ -633,7 +633,7 @@ fi
 if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]; then
 	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
 	if [ "${HAVE_SNDFILE}" = 'yes' ]; then
-		HDEFINE(ENABLE_AU, 'yes')
+		HDEFINE(ENABLE_AU, "yes")
 		MDEFINE(SUBDIR_au, "au")
 		CHECK(portaudio, 19.0, ${prefix_portaudio})
 	else
