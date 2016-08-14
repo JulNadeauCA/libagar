@@ -113,7 +113,7 @@ C_NO_SECURE_WARNINGS()
 #C_EXTRA_WARNINGS()
 #C_FATAL_WARNINGS()
 
-if [ "${enable_warnings}" = "yes" ]; then
+if [ "${enable_warnings}" = 'yes' ]; then
 	C_OPTION(-Wall)
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
@@ -123,24 +123,24 @@ else
 	MDEFINE(WNO_UNINITIALIZED, "")
 fi
 
-if [ "${enable_debug}" = "yes" ]; then
-	HDEFINE(AG_DEBUG, "yes")
+if [ "${enable_debug}" = 'yes' ]; then
+	HDEFINE(AG_DEBUG, 'yes')
 	MDEFINE(CFLAGS, "${CFLAGS} -g")
 else
 	HUNDEF(AG_DEBUG)
 fi
-if [ "${enable_debug_core}" = "yes" ]; then
-	HDEFINE(AG_DEBUG_CORE, "yes")
+if [ "${enable_debug_core}" = 'yes' ]; then
+	HDEFINE(AG_DEBUG_CORE, 'yes')
 else
 	HUNDEF(AG_DEBUG_CORE)
 fi
-if [ "${enable_debug_gui}" = "yes" ]; then
-	HDEFINE(AG_DEBUG_GUI, "yes")
+if [ "${enable_debug_gui}" = 'yes' ]; then
+	HDEFINE(AG_DEBUG_GUI, 'yes')
 else
 	HUNDEF(AG_DEBUG_GUI)
 fi
-if [ "${enable_legacy}" != "no" ]; then
-	HDEFINE(AG_LEGACY, "yes")
+if [ "${enable_legacy}" != 'no' ]; then
+	HDEFINE(AG_LEGACY, 'yes')
 else
 	HUNDEF(AG_LEGACY)
 fi
@@ -148,16 +148,16 @@ fi
 #
 # Options specific to the Agar-GUI library.
 #
-if [ "${enable_gui}" != "no" ]; then
-	HDEFINE(ENABLE_GUI, "yes")
+if [ "${enable_gui}" != 'no' ]; then
+	HDEFINE(ENABLE_GUI, 'yes')
 	MDEFINE(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
 	MDEFINE(SUBDIR_gui, "gui")
 
 	# Enable SDL support if the SDL library is found.
-	if [ "${with_sdl}" != "no" ]; then
+	if [ "${with_sdl}" != 'no' ]; then
 		CHECK(sdl, 1.2.0, ${prefix_sdl})
-		if [ "${HAVE_SDL}" != "yes" ]; then
-			if [ "${with_sdl}" = "yes" ]; then
+		if [ "${HAVE_SDL}" != 'yes' ]; then
+			if [ "${with_sdl}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-sdl was requested, but the SDL "
 				echo "* library was not found."
@@ -172,12 +172,12 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
-	if [ "${with_gl}" != "no" ]; then
+	if [ "${with_gl}" != 'no' ]; then
 		CHECK(opengl, 0, ${prefix_gl})
-		if [ "${HAVE_OPENGL}" = "yes" ]; then
+		if [ "${HAVE_OPENGL}" = 'yes' ]; then
 			MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
 		else
-			if [ "${with_gl}" = "yes" ]; then
+			if [ "${with_gl}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-gl was requested, but no OpenGL"
 				echo "* library was found."
@@ -192,10 +192,10 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 	
 	# Enable X Windows support if Xlib is found.
-	if [ "${with_x}" != "no" ]; then
+	if [ "${with_x}" != 'no' ]; then
 		CHECK(x11, 0, ${prefix_x})
-		if [ "${HAVE_X11}" != "yes" ]; then
-			if [ "${with_x}" = "yes" ]; then
+		if [ "${HAVE_X11}" != 'yes' ]; then
+			if [ "${with_x}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-x was requested, but Xlib "
 				echo "* was not found."
@@ -205,10 +205,10 @@ if [ "${enable_gui}" != "no" ]; then
 				HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
 			fi
 		fi
-		if [ "${with_xinerama}" != "no" ]; then
+		if [ "${with_xinerama}" != 'no' ]; then
 			CHECK(xinerama, 0, ${prefix_xinerama})
-			if [ "${HAVE_XINERAMA}" != "yes" ]; then
-				if [ "${with_xinerama}" = "yes" ]; then
+			if [ "${HAVE_XINERAMA}" != 'yes' ]; then
+				if [ "${with_xinerama}" = 'yes' ]; then
 					echo "*"
 					echo "* --with-xinerama was requested, but the "
 					echo "* Xinerama extension was not found."
@@ -227,10 +227,10 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 	
 	# Enable MacOS X / Cocoa support if Cocoa is found.
-	if [ "${with_cocoa}" != "no" ]; then
+	if [ "${with_cocoa}" != 'no' ]; then
 		CHECK(cocoa, 0)
-		if [ "${HAVE_COCOA}" != "yes" ]; then
-			if [ "${with_cocoa}" = "yes" ]; then
+		if [ "${HAVE_COCOA}" != 'yes' ]; then
+			if [ "${with_cocoa}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-cocoa was requested, but the "
 				echo "* Cocoa framework was not found."
@@ -247,12 +247,12 @@ if [ "${enable_gui}" != "no" ]; then
 	#
 	# Platform-specific OpenGL APIs
 	#
-	if [ "${HAVE_OPENGL}" = "yes" ]; then
+	if [ "${HAVE_OPENGL}" = 'yes' ]; then
 		# Enable GLX support if the GLX library is found.
-		if [ "${with_glx}" != "no" ]; then
+		if [ "${with_glx}" != 'no' ]; then
 			CHECK(glx, 1.4, ${prefix_glx})
-			if [ "${HAVE_GLX}" != "yes" ]; then
-				if [ "${with_glx}" = "yes" ]; then
+			if [ "${HAVE_GLX}" != 'yes' ]; then
+				if [ "${with_glx}" = 'yes' ]; then
 					echo "*"
 					echo "* --with-glx was requested, but no"
 					echo "* compatible GLX library was found."
@@ -267,10 +267,10 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 		
 		# Enable WGL support on Windows.
-		if [ "${with_wgl}" != "no" ]; then
+		if [ "${with_wgl}" != 'no' ]; then
 			CHECK(wgl, 0)
-			if [ "${HAVE_WGL}" != "yes" ]; then
-				if [ "${with_wgl}" = "yes" ]; then
+			if [ "${HAVE_WGL}" != 'yes' ]; then
+				if [ "${with_wgl}" = 'yes' ]; then
 					echo "*"
 					echo "* --with-wgl was requested, but the"
 					echo "* WGL test has failed."
@@ -289,9 +289,9 @@ if [ "${enable_gui}" != "no" ]; then
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
-	if [ "${with_freetype}" != "no" ]; then
+	if [ "${with_freetype}" != 'no' ]; then
 		CHECK(freetype, 7.0.1, ${prefix_freetype})
-		if [ "${HAVE_FREETYPE}" != "yes" ]; then
+		if [ "${HAVE_FREETYPE}" != 'yes' ]; then
 			echo "*"
 			echo "* The FreeType library was not found, aborting!"
 			echo "*"
@@ -309,17 +309,17 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 	
 	# Use fontconfig if available.
-	if [ "${with_fontconfig}" != "no" ]; then
+	if [ "${with_fontconfig}" != 'no' ]; then
 		CHECK(fontconfig, 2.6.0, ${prefix_fontconfig})
 	else
 		HUNDEF(HAVE_FONTCONFIG, FONTCONFIG_CFLAGS, FONTCONFIG_LIBS)
 	fi
 	
 	# Enable JPEG format support if libjpeg is found.
-	if [ "${with_jpeg}" != "no" ]; then
+	if [ "${with_jpeg}" != 'no' ]; then
 		CHECK(jpeg, 0, ${prefix_jpeg})
-		if [ "${HAVE_JPEG}" != "yes" ]; then
-			if [ "${with_jpeg}" = "yes" ]; then
+		if [ "${HAVE_JPEG}" != 'yes' ]; then
+			if [ "${with_jpeg}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-jpeg was requested, but libjpeg"
 				echo "* was not found."
@@ -334,10 +334,10 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 	
 	# Enable PNG format support if libpng is found.
-	if [ "${with_png}" != "no" ]; then
+	if [ "${with_png}" != 'no' ]; then
 		CHECK(png, 1.2.49, ${prefix_png})
-		if [ "${HAVE_PNG}" != "yes" ]; then
-			if [ "${with_png}" = "yes" ]; then
+		if [ "${HAVE_PNG}" != 'yes' ]; then
+			if [ "${with_png}" = 'yes' ]; then
 				echo "*"
 				echo "* --with-png was requested, but libpng"
 				echo "* was not found."
@@ -370,15 +370,15 @@ else
 fi
 
 # Enable network interface unless requested otherwise.
-if [ "${enable_network}" != "no" ]; then
+if [ "${enable_network}" != 'no' ]; then
 	CHECK(getaddrinfo)
 	CHECK(siocgifconf)
 	CHECK(sockopts)
 	CHECK(winsock)
-	MDEFINE(HAVE_NETWORK, "yes")
-	HDEFINE(AG_NETWORK, "yes")
+	MDEFINE(HAVE_NETWORK, 'yes')
+	HDEFINE(AG_NETWORK, 'yes')
 else
-	MDEFINE(HAVE_NETWORK, "no")
+	MDEFINE(HAVE_NETWORK, 'no')
 	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO, HAVE_SETSOCKOPT, HAVE_SO_OOBINLINE)
 	HUNDEF(HAVE_SO_REUSEPORT, HAVE_SO_TIMESTAMP, HAVE_SO_NOSIGPIPE)
@@ -387,10 +387,10 @@ else
 fi
 	
 # Enable Berkeley DB backend for AG_Db if available.
-if [ "${with_db4}" != "no" ]; then
+if [ "${with_db4}" != 'no' ]; then
 	CHECK(db4, 0, ${prefix_db4})
-	if [ "${HAVE_DB4}" != "yes" ]; then
-		if [ "${with_db4}" = "yes" ]; then
+	if [ "${HAVE_DB4}" != 'yes' ]; then
+		if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-db4 was requested, but Berkeley DB"
 			echo "* was not found."
@@ -405,10 +405,10 @@ else
 fi
 
 # Enable MySQL backend for AG_Db if requested.
-if [ "${with_mysql}" = "yes" ]; then
+if [ "${with_mysql}" = 'yes' ]; then
 	CHECK(mysql, 5.5.8, ${prefix_mysql})
-	if [ "${HAVE_MYSQL}" != "yes" ]; then
-		if [ "${with_mysql}" = "yes" ]; then
+	if [ "${HAVE_MYSQL}" != 'yes' ]; then
+		if [ "${with_mysql}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-mysql was requested, but libmysqlclient"
 			echo "* was not found."
@@ -423,16 +423,16 @@ else
 fi
 
 # Enable threads support if POSIX threads are available.
-if [ "${enable_threads}" != "no" ]; then
+if [ "${enable_threads}" != 'no' ]; then
 	CHECK(pthreads, 0, ${prefix_pthreads})
-	if [ "${HAVE_PTHREADS}" = "yes" ];
+	if [ "${HAVE_PTHREADS}" = 'yes' ];
 	then
-		HDEFINE(AG_THREADS, "yes")
-		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]; then
-		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]; then
-		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]; then
+		HDEFINE(AG_THREADS, 'yes')
+		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]; then
+		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = 'no' ]; then
+		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = 'no' ]; then
 			HUNDEF(AG_THREADS)
-			if [ "${enable_threads}" = "yes" ]; then
+			if [ "${enable_threads}" = 'yes' ]; then
 				echo "*"
 				echo "* --enable-threads was given, but your"
 				echo "* pthreads library seems to lack support"
@@ -445,7 +445,7 @@ if [ "${enable_threads}" != "no" ]; then
 		fi
 	else
 		HUNDEF(AG_THREADS)
-		if [ "${enable_threads}" = "yes" ]; then
+		if [ "${enable_threads}" = 'yes' ]; then
 			echo "*"
 			echo "* --enable-threads was given, but no pthreads"
 			echo "* library was found on your system."
@@ -459,16 +459,16 @@ else
 	# Lock macros expand to no-ops when compiled !AG_THREADS, which may
 	# result in unused variables in some places.
 	#
-	if [ "${enable_warnings}" = "yes" ]; then
+	if [ "${enable_warnings}" = 'yes' ]; then
 		C_OPTION(-Wno-unused)
 	fi
 fi
 
 # Enable UIM input method support if requested.
-if [ "${with_uim}" = "yes" ]; then
+if [ "${with_uim}" = 'yes' ]; then
 	CHECK(uim, 1.8.0, ${prefix_uim})
-	if [ "${HAVE_UIM}" != "yes" ]; then
-		if [ "${with_uim}" = "yes" ]; then
+	if [ "${HAVE_UIM}" != 'yes' ]; then
+		if [ "${with_uim}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-uim was requested, but the uim "
 			echo "* framework is not installed."
@@ -483,10 +483,10 @@ else
 fi
 	
 # Enable NLS if requested explicitely.
-if [ "${enable_nls}" = "yes" ]; then
+if [ "${enable_nls}" = 'yes' ]; then
 	CHECK(iconv, 0, ${prefix_iconv})
 	CHECK(gettext, 0, ${prefix_gettext})
-	if [ "${HAVE_GETTEXT}" != "yes" ]; then
+	if [ "${HAVE_GETTEXT}" != 'yes' ]; then
 		echo "*"
 		echo "* --enable-nls was given but gettext was not found."
 		echo "*"
@@ -500,8 +500,8 @@ fi
 #
 # Options specific to the Agar-Math library
 #
-if [ "${enable_math}" != "no" ]; then
-	HDEFINE(ENABLE_MATH, "yes")
+if [ "${enable_math}" != 'no' ]; then
+	HDEFINE(ENABLE_MATH, 'yes')
 	MDEFINE(SUBDIR_math, "math")
 else
 	HUNDEF(ENABLE_MATH)
@@ -509,10 +509,10 @@ else
 fi
 
 # Enable AltiVec optimizations if compiler supports AltiVec.
-if [ "${with_altivec}" != "no" ]; then
+if [ "${with_altivec}" != 'no' ]; then
 	CHECK(altivec)
-	if [ "${HAVE_ALTIVEC}" != "yes" ]; then
-		if [ "${with_altivec}" = "yes" ]; then
+	if [ "${HAVE_ALTIVEC}" != 'yes' ]; then
+		if [ "${with_altivec}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-altivec was requested, but "
 			echo "* AltiVec is not supported by compiler"
@@ -522,8 +522,8 @@ if [ "${with_altivec}" != "no" ]; then
 			HUNDEF(HAVE_ALTIVEC, HAVE_ALTIVEC_H, INLINE_ALTIVEC)
 		fi
 	else
-		if [ "${with_altivec_inline}" = "yes" ]; then
-			HDEFINE(INLINE_ALTIVEC, "yes")
+		if [ "${with_altivec_inline}" = 'yes' ]; then
+			HDEFINE(INLINE_ALTIVEC, 'yes')
 		else
 			HUNDEF(INLINE_ALTIVEC)
 		fi
@@ -538,10 +538,10 @@ fi
 # on non-SSE machines (unless --with-sse-inline is used, in which case
 # the resulting build will be SSE-dependent).
 #
-if [ "${with_sse}" != "no" ]; then
+if [ "${with_sse}" != 'no' ]; then
 	CHECK(sse)
-	if [ "${HAVE_SSE}" != "yes" ]; then
-		if [ "${with_sse}" = "yes" ]; then
+	if [ "${HAVE_SSE}" != 'yes' ]; then
+		if [ "${with_sse}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-sse was requested, but SSE "
 			echo "* intrinsics not supported by compiler"
@@ -551,15 +551,15 @@ if [ "${with_sse}" != "no" ]; then
 			HUNDEF(HAVE_SSE, INLINE_SSE)
 		fi
 	else
-		if [ "${with_sse_inline}" = "yes" ]; then
-			HDEFINE(INLINE_SSE, "yes")
+		if [ "${with_sse_inline}" = 'yes' ]; then
+			HDEFINE(INLINE_SSE, 'yes')
 		else
 			HUNDEF(INLINE_SSE)
 		fi
-		if [ "${with_sse2}" = "no" ]; then
+		if [ "${with_sse2}" = 'no' ]; then
 			HUNDEF(HAVE_SSE2)
 		fi
-		if [ "${with_sse3}" = "no" ]; then
+		if [ "${with_sse3}" = 'no' ]; then
 			HUNDEF(HAVE_SSE3)
 		fi
 	fi
@@ -568,39 +568,39 @@ else
 fi
 
 # Specify floating-point precision to use.
-if [ "${with_single_fp}" = "yes" ]; then
-	if [ "${HAVE_MATH_C99}" != "yes" ]; then
+if [ "${with_single_fp}" = 'yes' ]; then
+	if [ "${HAVE_MATH_C99}" != 'yes' ]; then
 		echo "*"
 		echo "* --with-single-fp was requested, but your compiler does"
 		echo "* not support the C99 math routines (sinf(), etc)."
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(SINGLE_PRECISION, "yes")
+	HDEFINE(SINGLE_PRECISION, 'yes')
 else
 	HUNDEF(SINGLE_PRECISION)
 fi
-if [ "${with_double_fp}" != "no" ]; then
-	HDEFINE(DOUBLE_PRECISION, "yes")
+if [ "${with_double_fp}" != 'no' ]; then
+	HDEFINE(DOUBLE_PRECISION, 'yes')
 else
 	HUNDEF(DOUBLE_PRECISION)
 fi
-if [ "${with_quad_fp}" = "yes" ]; then
-	if [ "${HAVE_LONG_DOUBLE}" != "yes" ]; then
+if [ "${with_quad_fp}" = 'yes' ]; then
+	if [ "${HAVE_LONG_DOUBLE}" != 'yes' ]; then
 		echo "*"
 		echo "* --with-quad-fp was requested, but your compiler"
 		echo "* does not support the C99 long double type."
 		echo "*"
 		exit 1
 	fi
-	if [ "${HAVE_MATH_C99}" != "yes" ]; then
+	if [ "${HAVE_MATH_C99}" != 'yes' ]; then
 		echo "*"
 		echo "* --with-quad-fp was requested, but the C99 math"
 		echo "* routines (sinl(), etc.) are not available."
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(QUAD_PRECISION, "yes")
+	HDEFINE(QUAD_PRECISION, 'yes')
 else
 	HUNDEF(QUAD_PRECISION)
 fi
@@ -608,8 +608,8 @@ fi
 #
 # Options specific to the Agar-VG library
 #
-if [ "${enable_vg}" != "no" -a "${enable_gui}" != "no" ]; then
-	HDEFINE(ENABLE_VG, "yes")
+if [ "${enable_vg}" != 'no' -a "${enable_gui}" != 'no' ]; then
+	HDEFINE(ENABLE_VG, 'yes')
 	MDEFINE(SUBDIR_vg, "vg")
 else
 	HUNDEF(ENABLE_VG)
@@ -619,8 +619,8 @@ fi
 #
 # Options specific to the Agar-DEV library
 #
-if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]; then
-	HDEFINE(ENABLE_DEV, "yes")
+if [ "${enable_dev}" != 'no' -a "${enable_gui}" != 'no' ]; then
+	HDEFINE(ENABLE_DEV, 'yes')
 	MDEFINE(SUBDIR_dev, "dev")
 else
 	HUNDEF(ENABLE_DEV)
@@ -630,14 +630,14 @@ fi
 #
 # Options specific to the Agar-AU library
 #
-if [ "${enable_au}" != "no" -a "${enable_audio}" != "no" ]; then
+if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]; then
 	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
-	if [ "${HAVE_SNDFILE}" = "yes" ]; then
-		HDEFINE(ENABLE_AU, "yes")
+	if [ "${HAVE_SNDFILE}" = 'yes' ]; then
+		HDEFINE(ENABLE_AU, 'yes')
 		MDEFINE(SUBDIR_au, "au")
 		CHECK(portaudio, 19.0, ${prefix_portaudio})
 	else
-		if [ "${enable_au}" = "yes" -o "${enable_audio}" = "yes" ]; then
+		if [ "${enable_au}" = 'yes' -o "${enable_audio}" = 'yes' ]; then
 			echo "*"
 			echo "* --enable-au was requested, but the sndfile library"
 			echo "* (required) is not installed."
@@ -656,50 +656,50 @@ fi
 # Conditionally compiled sources in Agar-Core
 #
 MDEFINE(SRCS_CORE, "")
-if [ "${HAVE_SNPRINTF}" != "yes" ]; then
+if [ "${HAVE_SNPRINTF}" != 'yes' ]; then
 	MAPPEND(SRCS_CORE, "snprintf.c")
 fi
-if [ "${HAVE_CLOCK_WIN32}" = "yes" ]; then
+if [ "${HAVE_CLOCK_WIN32}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "time_win32.c")
 fi
-if [ "${HAVE_CLOCK_GETTIME}" = "yes" ]; then
-	if [ "${HAVE_NANOSLEEP}" = "yes" ]; then
+if [ "${HAVE_CLOCK_GETTIME}" = 'yes' ]; then
+	if [ "${HAVE_NANOSLEEP}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "time_posix.c")
 	fi
-	if [ "${HAVE_PTHREADS}" = "yes" ]; then
+	if [ "${HAVE_PTHREADS}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "time_renderer.c")
 	fi
 fi
-if [ "${HAVE_GETTIMEOFDAY}" = "yes" ]; then
-	if [ "${HAVE_SELECT}" = "yes" ]; then
+if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]; then
+	if [ "${HAVE_SELECT}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
-if [ "${HAVE_DB4}" = "yes" ]; then
+if [ "${HAVE_DB4}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "db_bdb.c")
 fi
-if [ "${HAVE_MYSQL}" = "yes" ]; then
+if [ "${HAVE_MYSQL}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "db_mysql.c")
 fi
-if [ "${HAVE_NETWORK}" = "yes" ]; then
+if [ "${HAVE_NETWORK}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "net.c net_dummy.c")
-	if [ "${HAVE_WINSOCK1}" = "yes" ]; then
+	if [ "${HAVE_WINSOCK1}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "net_winsock1.c")
 	fi
-	if [ "${HAVE_WINSOCK2}" = "yes" ]; then
+	if [ "${HAVE_WINSOCK2}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "net_winsock2.c")
 	fi
-	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
+	if [ "${HAVE_GETADDRINFO}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "net_bsd.c")
 	fi
 fi
-if [ "${HAVE_GETPWUID}" = "yes" ]; then
+if [ "${HAVE_GETPWUID}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "user_posix.c")
 fi
-if [ "${HAVE_XBOX}" = "yes" ]; then
+if [ "${HAVE_XBOX}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "user_xbox.c xbox.c")
 fi
-if [ "${HAVE_CSIDL}" = "yes" ]; then
+if [ "${HAVE_CSIDL}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "user_win32.c")
 fi
 
@@ -707,22 +707,22 @@ fi
 # Conditionally compiled sources in Agar-GUI
 #
 MDEFINE(SRCS_GUI, "")
-if [ "${HAVE_SDL}" = "yes" ]; then
+if [ "${HAVE_SDL}" = 'yes' ]; then
 	MAPPEND(SRCS_GUI, "drv_sdl_common.c drv_sdlfb.c")
-	if [ "${HAVE_OPENGL}" = "yes" ]; then
+	if [ "${HAVE_OPENGL}" = 'yes' ]; then
 		MAPPEND(SRCS_GUI, "drv_sdlgl.c")
 	fi
 fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
+if [ "${HAVE_OPENGL}" = 'yes' ]; then
 	MAPPEND(SRCS_GUI, "drv_gl_common.c")
-	if [ "${HAVE_GLX}" = "yes" ]; then
+	if [ "${HAVE_GLX}" = 'yes' ]; then
 		MAPPEND(SRCS_GUI, "drv_glx.c")
 	fi
-	if [ "${HAVE_WGL}" = "yes" ]; then
+	if [ "${HAVE_WGL}" = 'yes' ]; then
 		MAPPEND(SRCS_GUI, "drv_wgl.c")
 	fi
 fi
-if [ "${HAVE_COCOA}" = "yes" ]; then
+if [ "${HAVE_COCOA}" = 'yes' ]; then
 	MAPPEND(SRCS_GUI, "drv_cocoa.m")
 fi
 
@@ -730,11 +730,11 @@ fi
 # Conditionally compiled sources in Agar-AU
 #
 MDEFINE(SRCS_AU, "")
-if [ "${AG_THREADS}" = "yes" ]; then
-	if [ "${HAVE_SNDFILE}" = "yes" ]; then
+if [ "${AG_THREADS}" = 'yes' ]; then
+	if [ "${HAVE_SNDFILE}" = 'yes' ]; then
 		MAPPEND(SRCS_AU, "au_dev_file.c")
 	fi
-	if [ "${HAVE_PORTAUDIO}" = "yes" ]; then
+	if [ "${HAVE_PORTAUDIO}" = 'yes' ]; then
 		MAPPEND(SRCS_AU, "au_dev_pa.c")
 	fi
 fi
