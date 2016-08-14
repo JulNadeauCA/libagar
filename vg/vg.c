@@ -74,7 +74,7 @@ VG_InitSubsystem(void)
 	vgNodeClassCount = 0;
 
 	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
-	if (vgGUI) {
+	if (agGUI && vgGUI) {
 		AG_RegisterClass(&vgViewClass);
 	}
 	for (vnOps = &vgBuiltinClasses[0]; *vnOps != NULL; vnOps++)
@@ -90,7 +90,7 @@ VG_DestroySubsystem(void)
 	if (!vgInitedSubsystem)
 		return;
 	
-	if (vgGUI) {
+	if (agGUI && vgGUI) {
 		AG_UnregisterClass(&vgViewClass);
 	}
 	Free(vgNodeClasses);
