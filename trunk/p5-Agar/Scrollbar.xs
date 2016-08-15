@@ -49,7 +49,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ScrollbarNew(parent, AG_SCROLLBAR_HORIZ, 0);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -67,7 +67,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ScrollbarNew(parent, AG_SCROLLBAR_VERT, 0);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

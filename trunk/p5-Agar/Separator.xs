@@ -49,7 +49,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_SeparatorNewHoriz(parent);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -67,7 +67,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_SeparatorNewVert(parent);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -85,7 +85,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_SpacerNewHoriz(parent);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -103,7 +103,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_SpacerNewVert(parent);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

@@ -67,7 +67,7 @@ PREINIT:
 	AG_Event *event;
 CODE:
 	event = AG_FindEventHandler(self, event_name);
-	if (event == NULL || event->handler == NULL) {
+	if (event == NULL || event->fn.fnVoid == NULL) {
 		XSRETURN_UNDEF;
 	} else if ((RETVAL = AP_RetrieveEventPV(event)) == NULL) {
 		XSRETURN_NO;

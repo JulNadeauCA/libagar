@@ -55,7 +55,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ProgressBarNewHoriz(parent, flags);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -74,7 +74,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ProgressBarNewVert(parent, flags);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

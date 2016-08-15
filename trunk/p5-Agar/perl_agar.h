@@ -1,5 +1,7 @@
 /*	Public domain	*/
 
+#undef XS_APIVERSION_BOOTCHECK	/* Segfaults */
+
 typedef struct ap_flag_names {
 	const char *name;
 	Uint bitmask;
@@ -49,6 +51,7 @@ AP_GetNamedFlag(const char *str, const AP_FlagNames *map, Uint flags, Uint *flag
 {
 	int i;
 	for (i = 0; map[i].name != NULL; i++) {
+		printf("compare: %s,%s\n", str, map[i].name);
 		if (strEQ(str, map[i].name)) {
 			*flag = flags & map[i].bitmask;
 			return 0;
@@ -90,16 +93,24 @@ extern void AP_DecRefEventPV(AG_Event *event);
 
 /* Flags used by all widget types. */
 static const AP_FlagNames AP_WidgetFlagNames[] = {
-	{ "hFill",		AG_WIDGET_HFILL },
-	{ "vFill",		AG_WIDGET_VFILL },
-	{ "hide",		AG_WIDGET_HIDE },
-	{ "disabled",		AG_WIDGET_DISABLED },
-	{ "focusable",		AG_WIDGET_FOCUSABLE },
-	{ "unfocusedMotion",	AG_WIDGET_UNFOCUSED_MOTION },
-	{ "unfocusedButtonUp",	AG_WIDGET_UNFOCUSED_BUTTONUP },
-	{ "unfocusedButtonDown",AG_WIDGET_UNFOCUSED_BUTTONDOWN },
 	{ "catchTab",		AG_WIDGET_CATCH_TAB },
-	{ "noSpacing",		AG_WIDGET_NOSPACING }
+	{ "disabled",		AG_WIDGET_DISABLED },
+	{ "expand",		AG_WIDGET_EXPAND },
+	{ "focusable",		AG_WIDGET_FOCUSABLE },
+	{ "hFill",		AG_WIDGET_HFILL },
+	{ "hide",		AG_WIDGET_HIDE },
+	{ "noSpacing",		AG_WIDGET_NOSPACING },
+	{ "unfocusedButtonDown",AG_WIDGET_UNFOCUSED_BUTTONDOWN },
+	{ "unfocusedButtonUp",	AG_WIDGET_UNFOCUSED_BUTTONUP },
+	{ "unfocusedMotion",	AG_WIDGET_UNFOCUSED_MOTION },
+	{ "unfocusedKeyDown",	AG_WIDGET_UNFOCUSED_KEYDOWN },
+	{ "unfocusedKeyUp",	AG_WIDGET_UNFOCUSED_KEYUP },
+	{ "useMouseOver",	AG_WIDGET_USE_MOUSEOVER },
+	{ "useOpenGL",		AG_WIDGET_USE_OPENGL },
+	{ "useText",		AG_WIDGET_USE_TEXT },
+	{ "vFill",		AG_WIDGET_VFILL },
+	{ "tableEmbeddable",	AG_WIDGET_TABLE_EMBEDDABLE },
+	{ NULL,			0 },
 };
 
 typedef AG_Object * Agar__Object;
