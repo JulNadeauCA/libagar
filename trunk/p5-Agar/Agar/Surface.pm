@@ -22,7 +22,8 @@ Agar::Surface - Graphical surface object
       [%options]);
   my $sIndexed = Agar::Surface->newIndexed(10,10, 32);
   my $sEmpty = Agar::Surface->newEmpty();
-  my $sBitmap = Agar::Surface->newFromBMP('foo.bmp');
+  my $sImage = Agar::Surface->newFromPNG('foo.png');
+  my $sPhoto = Agar::Surface->newFromJPEG('foo.jpg');
 
 =head1 DESCRIPTION
 
@@ -71,11 +72,19 @@ is determined by $bpp, which is given in bits per pixel.
 
 =item B<$surface = Agar::Surface-E<gt>newEmpty>
 
-Create a new, empty surface. Blitting an empty surface is essentially a no-op.
+Create a new, empty surface.
 
 =item B<$surface = Agar::Surface-E<gt>newFromBMP($path)>
 
-Create a new surface from the given bmp file. Returns undef on failure.
+Create a new surface from the given bitmap file. Returns undef on failure.
+
+=item B<$surface = Agar::Surface-E<gt>newFromPNG($path)>
+
+Create a new surface from the given PNG file. Returns undef on failure.
+
+=item B<$surface = Agar::Surface-E<gt>newFromJPEG($path)>
+
+Create a new surface from the given JPEG file. Returns undef on failure.
 
 =back
 
@@ -85,12 +94,12 @@ Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008 Hypertriton, Inc. All rights reserved.
+Copyright (c) 2008-2016 Hypertriton, Inc. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Surface>
+L<Agar>, L<Agar::PixelFormat>, L<Agar::Surface>
 
 =cut

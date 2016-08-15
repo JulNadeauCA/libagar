@@ -16,7 +16,7 @@ Agar::Label - a simple text label widget
   use Agar;
   use Agar::Label;
   
-  Agar::Label->new($parent);
+  Agar::Label->new($parent, $text);
 
 =head1 DESCRIPTION
 
@@ -64,13 +64,11 @@ Z<>
 
 Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
-=head1 MAINTAINER
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2009 Hypertriton, Inc. All rights reserved.
+Copyright (c) 2009-2016 Hypertriton, Inc. All rights reserved.
 This program is free software. You can redistribute it and/or modify it
 under the same terms as Perl itself.
 
