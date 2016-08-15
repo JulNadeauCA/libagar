@@ -50,7 +50,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_PixmapFromSurfaceCopy(parent, 0, surface);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -71,7 +71,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(5)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_PixmapFromSurfaceScaled(parent, 0, surface, w, h);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

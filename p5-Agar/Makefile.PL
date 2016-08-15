@@ -12,6 +12,7 @@ if ($? != 0) {
 }
 chomp($cflags);
 chomp($libs);
+$libs =~ s/-pthread//g;
 
 my %Makefile = (
 	'AUTHOR'	=> 'Julien Nadeau <vedge@hypertriton.com>, ' .
@@ -22,7 +23,7 @@ my %Makefile = (
 	'PREREQ_PM'	=> { },
 	'LIBS'		=> $libs,
 	'DEFINE'	=> ' ',
-	'INC'		=> $cflags,
+	'INC'		=> $cflags.' -g',
 	'CCFLAGS'	=> '-D_USE_AGAR_STD -D_USE_AGAR_QUEUE -D_USE_AGAR_TYPES '.
 	                   '-Wall -Wno-unused -Werror',
 	'OBJECT'	=> q/$(O_FILES)/,

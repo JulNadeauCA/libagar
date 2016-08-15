@@ -77,7 +77,7 @@ CODE:
 	else if (strEQ(layout, "3t1b"))	{ layout_enum = AG_MPANE3T1B; }
 	else if (strEQ(layout, "1t3b"))	{ layout_enum = AG_MPANE1T3B; }
 	RETVAL = AG_MPaneNew(parent, layout_enum, flags);
-	AGWIDGET(&(RETVAL->box))->flags |= wflags;
+	if (RETVAL) { AGWIDGET(&(RETVAL->box))->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

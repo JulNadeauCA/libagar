@@ -3,7 +3,6 @@ Agar.xs
 Agar/Box.pm
 Agar/Button.pm
 Agar/Checkbox.pm
-Agar/Colors.pm
 Agar/Combo.pm
 Agar/Config.pm
 Agar/Console.pm
@@ -43,7 +42,6 @@ agardemo.pl
 Box.xs
 Button.xs
 Checkbox.xs
-Colors.xs
 Combo.xs
 Config.xs
 Console.xs

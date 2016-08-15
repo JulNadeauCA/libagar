@@ -50,7 +50,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_NumericalNewS(parent, 0, NULL, label);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

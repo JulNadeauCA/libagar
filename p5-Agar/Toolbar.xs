@@ -58,7 +58,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ToolbarNew(parent, AG_TOOLBAR_HORIZ, numRows, flags);
-	AGWIDGET(&(RETVAL->box))->flags |= wflags;
+	if (RETVAL) { AGWIDGET(&(RETVAL->box))->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -78,7 +78,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_ToolbarNew(parent, AG_TOOLBAR_VERT, numRows, flags);
-	AGWIDGET(&(RETVAL->box))->flags |= wflags;
+	if (RETVAL) { AGWIDGET(&(RETVAL->box))->flags |= wflags; }
 OUTPUT:
 	RETVAL
 

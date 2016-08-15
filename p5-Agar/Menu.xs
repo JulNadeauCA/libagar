@@ -49,7 +49,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(2)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_MenuNew(parent, 0);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -66,7 +66,7 @@ CODE:
 		AP_MapHashToFlags(SvRV(ST(1)), AP_WidgetFlagNames, &wflags);
 	}
 	RETVAL = AG_MenuNewGlobal(0);
-	AGWIDGET(RETVAL)->flags |= wflags;
+	if (RETVAL) { AGWIDGET(RETVAL)->flags |= wflags; }
 OUTPUT:
 	RETVAL
 
@@ -90,11 +90,10 @@ CODE:
 	AG_MenuExpand(self, item, x, y);
 
 void
-collapseItem(self, item)
-	Agar::Widget self
+collapseItem(item)
 	Agar::MenuItem item
 CODE:
-	AG_MenuCollapse(self, item);
+	AG_MenuCollapse(item);
 
 void
 setPadding(self, l, r, t, b)
@@ -130,7 +129,13 @@ OUTPUT:
 	RETVAL
 
 void
-show(self, x, y)
+show(self)
+	Agar::PopupMenu self
+CODE:
+	AG_PopupShow(self);
+
+void
+showAt(self, x, y)
 	Agar::PopupMenu self
 	int x
 	int y
@@ -147,7 +152,7 @@ void
 destroy(self)
 	Agar::PopupMenu self
 CODE:
-	AG_PopupDestroy(AGOBJECT(self->menu)->parent, self);
+	AG_PopupDestroy(self);
 
 Agar::MenuItem
 rootItem(self)

@@ -44,7 +44,6 @@ extern XS(boot_Agar__Surface);
 extern XS(boot_Agar__Window);
 extern XS(boot_Agar__Config);
 extern XS(boot_Agar__Font);
-extern XS(boot_Agar__Colors);
 extern XS(boot_Agar__Text);
 extern XS(boot_Agar__Box);
 extern XS(boot_Agar__Button);
@@ -74,6 +73,7 @@ extern XS(boot_Agar__UCombo);
 
 MODULE = Agar		PACKAGE = Agar		PREFIX = AG_
 PROTOTYPES: DISABLE
+VERSIONCHECK: DISABLE
 
 BOOT:
 boot_Agar__Object(aTHX_ cv);
@@ -84,7 +84,6 @@ boot_Agar__Surface(aTHX_ cv);
 boot_Agar__Window(aTHX_ cv);
 boot_Agar__Config(aTHX_ cv);
 boot_Agar__Font(aTHX_ cv);
-boot_Agar__Colors(aTHX_ cv);
 boot_Agar__Text(aTHX_ cv);
 boot_Agar__Box(aTHX_ cv);
 boot_Agar__Button(aTHX_ cv);
