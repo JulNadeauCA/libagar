@@ -25,10 +25,15 @@ B<Agar::Object>.
 
 =over 4
 
-=item B<$widget-E<gt>draw()>
+=item B<$widget-E<gt>setStyle($attribute, $value)>
 
-Causes the widget to draw itself and all its children. You shouldn't usually
-need to call this.
+Change the specified CSS attribute for the widget (and those of its children
+which inherit this attribute as well). The relevant widgets will be redrawn
+implicitely.
+
+See the L<STYLE ATTRIBUTES> section for some of the available attributes.
+An optional selector may be appended to the attribute names.
+Standard selectors include: "#disabled", "#hover" and "#selected"
 
 =item B<$widget-E<gt>enable()>
 
@@ -203,17 +208,61 @@ to it.
 
 =back
 
+=head1 STYLE ATTRIBUTES
+
+=over 4
+
+=item B<font-family>
+
+Font face specification (e.g., "Courier", "Terminal").
+
+=item B<font-size>
+
+Font size in points (e.g., "10pts") or ratio relative to parent (e.g., "50%").
+
+=item B<font-weight>
+
+Font weight ("bold" or "normal").
+
+=item B<font-style>
+
+Font style ("italic" or "normal").
+
+=item B<color>
+
+Primary color for the widget.
+Colors may be specified as unsigned 8-bit components with "rgb(r,g,b[,a])",
+or floating-point HSV parameters with "hsv(h,s,v[,a])".
+In either mode, components may be expressed as a ratio to the parent widget's
+color components by appending a "%".
+
+=item B<text-color>
+
+Default color for text.
+
+=item B<line-color>
+
+Default color for lines.
+
+=item B<shape-color>
+
+Default color for filled shapes.
+
+=item B<border-color>
+
+Primary color for decorative borders.
+
+=back
+
 =head1 AUTHOR
 
 Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
-=head1 MAINTAINER
 
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2009 Hypertriton, Inc. All rights reserved.
+Copyright (c) 2009-2016 Hypertriton, Inc. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
