@@ -125,6 +125,14 @@ CODE:
 	AG_WidgetSizeReq(self, &sizereq);
 
 void
+setStyle(self, attr, value)
+	Agar::Widget self
+	const char *attr
+	const char *value
+CODE:
+	AG_SetStyle(self, attr, value);
+
+void
 setSize(self, w, h)
 	Agar::Widget self
 	int w
