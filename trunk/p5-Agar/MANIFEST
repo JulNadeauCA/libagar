@@ -50,6 +50,7 @@ Event.xs
 FileDlg.xs
 Fixed.xs
 Font.xs
+hello.pl
 INSTALL
 Label.xs
 Makefile.PL
