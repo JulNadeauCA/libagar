@@ -18,8 +18,11 @@ Agar::Widget - base type for all Agar widgets
 
 =head1 DESCRIPTION
 
-B<Agar::Widget> is the base type for all of Agar's widget types. It extends
-B<Agar::Object>.
+B<Agar::Widget> is the base type for all Agar GUI elements.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> B<Agar::Widget>
 
 =head1 METHODS
 
@@ -153,10 +156,11 @@ in milliseconds (specify an interval of -1 to disable).
 
 =back
 
-=head1 BASE FLAGS
+=head1 BASE OPTIONS
 
-The following flags may be passed in the constructor of the Widget subclass
-being instantiated, in addition to any flags which the subclass might define.
+The following option flags may be passed in the constructor of the Widget
+subclass being instantiated, in addition to any options defined by the
+subclass itself.
 
 =over 4
 
@@ -256,9 +260,9 @@ Primary color for decorative borders.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -268,6 +272,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Object>, L<Agar::Window>
+L<Agar(3)>, L<Agar::Object(3)>, L<Agar::Window(3)>
 
 =cut

@@ -20,21 +20,25 @@ Agar::Toolbar - a widget containing row(s) of Buttons
 
 =head1 DESCRIPTION
 
-Extends Agar::Widget and Agar::Object. Please see AG_Toolbar(3) for a
+Please see AG_Toolbar(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::Toolbar>
 
 =head1 METHODS
 
 =over 4
 
-=item B<$widget = Agar::Toolbar-E<gt>newHoriz($parent,$numRows,{flags})>
+=item B<$widget = Agar::Toolbar-E<gt>newHoriz($parent,$numRows,[%options])>
 
-=item B<$widget = Agar::Toolbar-E<gt>newVert($parent,$numRows,{flags})>
+=item B<$widget = Agar::Toolbar-E<gt>newVert($parent,$numRows,[%options])>
 
 Constructors.
 
-Recognised flags include:
+Recognised options include:
 
 =over 4
 
@@ -70,9 +74,9 @@ Z<>
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -82,6 +86,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_Toolbar(3)>, L<Agar::Button>
+L<Agar(3)>, L<Agar::Button(3)>, L<Agar::Menu(3)>
 
 =cut

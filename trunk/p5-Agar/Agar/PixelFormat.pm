@@ -100,6 +100,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Surface>
+L<Agar(3)>, L<Agar::Surface(3)>
 
 =cut

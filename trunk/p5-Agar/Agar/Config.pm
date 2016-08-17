@@ -9,7 +9,7 @@ __END__
 
 =head1 NAME
 
-Agar::Config - interface to Agar's AG_Prop property collections
+Agar::Config - interface to Agar's configuration interface
 
 =head1 SYNOPSIS
 
@@ -25,6 +25,10 @@ Agar::Config - interface to Agar's AG_Prop property collections
 
 This class provides access to AG_Prop(3), which is used for global
 configuration parameters and also the properties of individual objects.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> B<Agar::Config>
 
 =head1 METHODS
 
@@ -98,9 +102,9 @@ These methods set and get the values of properties of different types.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -110,6 +114,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Object>, L<AG_Config(3)>
+L<Agar(3)>
 
 =cut

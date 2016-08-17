@@ -20,25 +20,31 @@ Agar::ProgressBar - a progress bar widget
 
 =head1 DESCRIPTION
 
-Extends Agar::Widget and Agar::Object. Please see AG_ProgressBar(3) for a
+Please see AG_ProgressBar(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::ProgressBar>
 
 =head1 METHODS
 
 =over 4
 
-=item B<$widget = Agar::ProgressBar-E<gt>newHoriz($parent,{flags})>
+=item B<$widget = Agar::ProgressBar-E<gt>newHoriz($parent,[%options])>
 
-=item B<$widget = Agar::ProgressBar-E<gt>newVert($parent,{flags})>
+=item B<$widget = Agar::ProgressBar-E<gt>newVert($parent,[%options])>
 
 Constructors.
 
-Recognised flags include:
+Recognised options include:
 
 =over 4
 
 =item C<showPercent>
+
+Display a text label with the percentage.
 
 Z<>
 
@@ -52,9 +58,9 @@ Z<>
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -64,6 +70,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_ProgressBar(3)>
+L<Agar(3)>
 
 =cut

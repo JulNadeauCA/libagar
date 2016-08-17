@@ -17,8 +17,17 @@ Agar::Object - Agar's general base class
 
 =head1 DESCRIPTION
 
-This is the class used as the base class for all widgets and several other
-components. Therefore the methods listed here can be used on widgets.
+This is the root class for all Agar objects. It provides useful non-GUI specific
+features such as event processing / virtual functions, portable serialization,
+and a virtual filesystem.
+
+The Agar object system is implemented in the (non-GUI specific) ag_core
+library. Agar GUI classes such as L<Agar::Widget(3)> all inherit from
+B<Agar::Object>.
+
+=head1 INHERITANCE HIERARCHY
+
+B<Agar::Object>
 
 =head1 METHODS
 
@@ -94,9 +103,9 @@ Agar::Object::findChild, for example.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -106,6 +115,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Event>
+L<Agar(3)>, L<Agar::Event(3)>
 
 =cut
