@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009 Julien Nadeau (vedge@hypertriton.com)
+ * Copyright (c) 2008-2016 Julien Nadeau (vedge@hypertriton.com)
  * Copyright (c) 2009 Mat Sutcliffe (oktal@gmx.co.uk)
  * All rights reserved.
  *
@@ -146,8 +146,7 @@ OUTPUT:
 	RETVAL
 
 int
-InitCore(progName, ...)
-	const char *progName
+InitCore(...)
 PREINIT:
 	const AP_FlagNames flagNames[] = {
 		{ "verbose",		AG_VERBOSE },
@@ -155,15 +154,16 @@ PREINIT:
 		{ "softTimers",		AG_SOFT_TIMERS },
 		{ NULL,			0 }
 	};
+	const char *progName = NULL;
 	Uint flags = 0;
 CODE:
 	if (items == 2) {
 		if (SvTYPE(SvRV(ST(1))) != SVt_PVHV) {
-			Perl_croak(aTHX_ "Usage: Agar::InitCore(progName,[{opts}])");
+			Perl_croak(aTHX_ "Usage: Agar::InitCore([progName],[{opts}])");
 		}
 		AP_MapHashToFlags(SvRV(ST(1)), flagNames, &flags);
-	} else if (items != 1) {
-		Perl_croak(aTHX_ "Usage: Agar::InitCore(progName,[{opts}])");
+	} else if (items == 1) {
+		progName = SvPV_nolen(ST(0));
 	}
 	RETVAL = (AG_InitCore(progName, flags) == 0);
 OUTPUT:
