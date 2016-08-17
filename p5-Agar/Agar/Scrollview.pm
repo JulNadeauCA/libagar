@@ -9,7 +9,7 @@ __END__
 
 =head1 NAME
 
-Agar::Scrollview - a Box widget with Scrollbars
+Agar::Scrollview - a scrollable Box widget
 
 =head1 SYNOPSIS
 
@@ -20,19 +20,23 @@ Agar::Scrollview - a Box widget with Scrollbars
 
 =head1 DESCRIPTION
 
-Extends Agar::Widget and Agar::Object. Please see AG_Scrollview(3) for a
+Please see AG_Scrollview(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::Scrollview>
 
 =head1 METHODS
 
 =over 4
 
-=item B<$widget = Agar::Scrollview-E<gt>new($parent, { flags })>
+=item B<$widget = Agar::Scrollview-E<gt>new($parent, [%options])>
 
 Constructor.
 
-Recognised flags include:
+Recognised options include:
 
 =over 4
 
@@ -58,9 +62,9 @@ Z<>
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -70,6 +74,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_Scrollview(3)>
+L<Agar(3)>, L<Agar::Box(3)>, L<Agar::Fixed(3)>, L<Agar::Pane(3)>,
+L<Agar::Scrollbar(3)>, L<Agar::Window(3)>
 
 =cut

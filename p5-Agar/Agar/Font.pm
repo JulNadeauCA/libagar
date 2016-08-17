@@ -39,9 +39,9 @@ Cause the font to be used as the default for all text rendering.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -51,6 +51,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Text>
+L<Agar(3)>, L<Agar::Editable(3)>, L<Agar::Label(3)>, L<Agar::Text(3)>,
+L<Agar::Textbox(3)>
 
 =cut

@@ -20,19 +20,23 @@ Agar::UCombo - a more configurable drop-down list widget
 
 =head1 DESCRIPTION
 
-Extends Agar::Widget and Agar::Object. Please see AG_UCombo(3) for a
+Please see AG_UCombo(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::UCombo>
 
 =head1 METHODS
 
 =over 4
 
-=item B<$widget = Agar::UCombo-E<gt>new($parent, { flags })>
+=item B<$widget = Agar::UCombo-E<gt>new($parent, [%options])>
 
 Constructor.
 
-Recognised flags include:
+Recognised options include:
 
 =over 4
 
@@ -54,9 +58,9 @@ Z<>
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -66,7 +70,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_UCombo(3)>, L<Agar::Tlist>,
-L<Agar::Button>
+L<Agar(3)>, L<Agar::Button(3)>, L<Agar::Combo(3)>, L<Agar::Tlist(3)>
 
 =cut

@@ -9,7 +9,7 @@ __END__
 
 =head1 NAME
 
-Agar::Text - interface to Agar's text rendering engine
+Agar::Text - text rendering functions for Agar widgets
 
 =head1 SYNOPSIS
 
@@ -18,8 +18,9 @@ Agar::Text - interface to Agar's text rendering engine
 
 =head1 DESCRIPTION
 
-The main purpose of this class is configuring the default text appearance in
-the Agar GUI.
+These methods are useful when implementing Agar widgets which need to
+render text. They must be called from the rendering context (draw
+routine) of an L<Agar::Widget(3)>.
 
 =head1 METHODS
 
@@ -82,9 +83,9 @@ using the current font.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -94,6 +95,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Font>, L<Agar::Colors>
+L<Agar(3)>, L<Agar::Font(3)>, L<Agar::Widget(3)>
 
 =cut

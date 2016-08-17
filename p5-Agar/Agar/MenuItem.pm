@@ -18,6 +18,6 @@ This manual page is a stub. Please see the page for Agar::Menu instead.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Menu>, L<AG_Menu(3)>
+L<Agar(3)>, L<Agar::Menu(3)>
 
 =cut

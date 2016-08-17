@@ -1,7 +1,5 @@
 /*	Public domain	*/
 
-#undef XS_APIVERSION_BOOTCHECK	/* Segfaults */
-
 typedef struct ap_flag_names {
 	const char *name;
 	Uint bitmask;

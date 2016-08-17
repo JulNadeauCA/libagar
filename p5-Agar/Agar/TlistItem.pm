@@ -18,6 +18,6 @@ This manual page is a stub. Please see the page for Agar::Tlist instead.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Tlist>, L<AG_Tlist(3)>
+L<Agar(3)>, L<Agar::Tlist(3)>
 
 =cut

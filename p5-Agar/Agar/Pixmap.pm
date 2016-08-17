@@ -20,9 +20,13 @@ Agar::Pixmap - a widget for displaying an Agar::Surface
 
 =head1 DESCRIPTION
 
-Extends Agar::Widget and Agar::Object. Please see AG_Pixmap(3) for a
+Please see AG_Pixmap(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::Pixmap>
 
 =head1 METHODS
 
@@ -40,9 +44,9 @@ Constructors.
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -52,6 +56,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_Pixmap(3)>, L<Agar::Surface>
+L<Agar(3)>, L<Agar::PixelFormat(3)>, L<Agar::Surface(3)>
 
 =cut

@@ -27,10 +27,15 @@ Agar::Surface - Graphical surface object
 
 =head1 DESCRIPTION
 
-The B<Agar::Surface> object is a standard graphical surface for I<packed-pixel>
-formats which encode pixels in 32-bit or less and allow components to be
-retrieved by bitmasks. It also supports I<indexed> (or I<palletized>) pixel
-formats. Pixel formats are represented by the L<Agar::PixelFormat> object.
+B<Agar::Surface> represents a graphical surface which supports packed-pixel
+formats (allowing components to be retrieved by bitmasks), as well as
+I<indexed> (or I<palletized>) pixel formats.
+
+Pixel formats are represented by the L<Agar::PixelFormat> object.
+
+=head1 INHERITANCE HIERARCHY
+
+B<Agar::Surface>
 
 =head1 METHODS
 
@@ -100,6 +105,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::PixelFormat>, L<Agar::Surface>
+L<Agar(3)>, L<Agar::PixelFormat(3)>, L<Agar::Pixmap(3)>
 
 =cut

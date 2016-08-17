@@ -24,15 +24,19 @@ Extends Agar::Widget and Agar::Object. Please see AG_Button(3) for a
 full explanation of what its methods do and what bindings and events
 it defines, if any.
 
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::Button>
+
 =head1 METHODS
 
 =over 4
 
-=item B<$widget = Agar::Button-E<gt>new($parent, { flags })>
+=item B<$widget = Agar::Button-E<gt>new($parent, [%options])>
 
 Constructor.
 
-Recognised flags include:
+Recognised options include:
 
 =over 4
 
@@ -62,9 +66,9 @@ Z<>
 
 =head1 AUTHOR
 
-Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
-
 Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
+
+Mat Sutcliffe E<lt>F<oktal@gmx.co.uk>E<gt>
 
 =head1 COPYRIGHT
 
@@ -74,6 +78,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Widget>, L<Agar::Object>, L<AG_Button(3)>
+L<Agar(3)>, L<Agar::Label(3)>
 
 =cut

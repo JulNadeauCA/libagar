@@ -18,6 +18,6 @@ This manual page is a stub. Please see the page for Agar::Notebook.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Notebook>, L<AG_Notebook(3)>
+L<Agar(3)>, L<Agar::Notebook(3)>
 
 =cut

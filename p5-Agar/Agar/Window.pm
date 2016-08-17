@@ -25,16 +25,25 @@ Agar::Window - Agar GUI window
 
 =head1 DESCRIPTION
 
-The B<Agar::Window> object is the basic container of the Agar GUI. It extends
-B<Agar::Widget>.
+The B<Agar::Window> object is the basic container of the Agar GUI system.
+
+If the active Agar driver (see L<Agar::InitGraphics(3)>) interfaces with
+an external window system, then the B<Agar::Window> object also represents
+the window which will be created in the underlying window system.
+
+=head1 INHERITANCE HIERARCHY
+
+L<Agar::Object(3)> -> L<Agar::Widget(3)> -> B<Agar::Window>
 
 =head1 METHODS
 
 =over 4
 
-=item B<$win = Agar::Window-E<gt>new([\%options])>
+=item B<$win = Agar::Window-E<gt>new([%options])>
 
-Create a new, unnamed window. Available %options include:
+Create a new, unnamed window.
+
+Available options include:
 
 =over 4
 
@@ -106,16 +115,18 @@ Disable the "maximize window" button in the titlebar.
 =item C<hMaximize>
 
 Arrange for the width of the window to always match the width of the
-display.
+display (and set the window in a horizontally-maximized state, if such
+a state is defined by the underlying window system).
 
 =item C<vMaximize>
 
 Arrange for the height of the window to always match the height of the
-display.
+display (and set the window in a vertically-maximized state, if such
+a state is defined by the underlying window system).
 
 =back
 
-=item B<$win = Agar::Window-E<gt>newNamed($name, [\%options])>
+=item B<$win = Agar::Window-E<gt>newNamed($name, [%options])>
 
 Same as the B<new> constructor, except that a name is associated with the
 window. If an already existing window has the given name, the constructor
@@ -184,6 +195,7 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Surface>, L<Agar::Widget>
+L<Agar(3)>, L<Agar::Box(3)>, L<Agar::Fixed(3)>, L<Agar::Pane(3)>,
+L<Agar::Scrollview(3)>, L<Agar::Widget(3)>
 
 =cut
