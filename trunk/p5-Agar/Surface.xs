@@ -105,6 +105,28 @@ CODE:
 OUTPUT:
 	RETVAL
 
+Agar::Surface
+newFromPNG(package, path)
+	const char *package
+	const char *path
+CODE:
+	if ((RETVAL = AG_SurfaceFromPNG(path)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
+
+Agar::Surface
+newFromJPEG(package, path)
+	const char *package
+	const char *path
+CODE:
+	if ((RETVAL = AG_SurfaceFromJPEG(path)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
+
 void
 DESTROY(s)
 	Agar::Surface s
