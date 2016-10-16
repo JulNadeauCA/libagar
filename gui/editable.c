@@ -1470,7 +1470,7 @@ MouseButtonDown(AG_Event *event)
 		ed->flags |= AG_EDITABLE_MARKPREF;
 
 		if (ed->selDblClick != -1 &&
-		    Fabs(ed->selDblClick - ed->pos) <= 1) {
+		    abs(ed->selDblClick - ed->pos) <= 1) {
 			MouseDoubleClick(ed);
 		} else {
 			ed->selDblClick = ed->pos;

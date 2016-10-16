@@ -200,7 +200,7 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 	va_list ap;
 
 	AG_ObjectLock(icon);
-	if (fmt == NULL || fmt[0] == '\0') {
+	if (fmt[0] == '\0') {
 		AG_WidgetUnmapSurface(icon, icon->labelSurface);
 		icon->labelSurface = -1;
 		icon->labelTxt[0] = '\0';

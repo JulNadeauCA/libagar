@@ -1929,7 +1929,7 @@ UpdateTitlebar(AG_Window *win)
 	AG_Titlebar *tbar = win->tbar;
 
 	AG_ObjectLock(tbar);
-	AG_LabelTextS(tbar->label, (win->caption != NULL) ? win->caption : "");
+	AG_LabelTextS(tbar->label, win->caption);
 	AG_ObjectUnlock(tbar);
 }
 

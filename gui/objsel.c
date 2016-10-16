@@ -37,6 +37,7 @@ AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
 {
+	char label[AG_LABEL_MAX];
 	AG_ObjectSelector *os;
 	va_list ap;
 
@@ -46,14 +47,12 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	os->pobj = pobj;
 	os->root = root;
 	
-	if (fmt != NULL) {
-		char label[AG_LABEL_MAX];
 
-		va_start(ap, fmt);
-		Vsnprintf(label, sizeof(label), fmt, ap);
-		va_end(ap);
-		AG_TextboxSetLabelS(os->com.tbox, label);
-	}
+	va_start(ap, fmt);
+	Vsnprintf(label, sizeof(label), fmt, ap);
+	va_end(ap);
+	AG_TextboxSetLabelS(os->com.tbox, label);
+
 	AG_ObjectAttach(parent, os);
 	return (os);
 }

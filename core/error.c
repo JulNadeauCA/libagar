@@ -280,7 +280,7 @@ AG_Verbose(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!agVerbose || fmt == NULL)
+	if (!agVerbose)
 		return;
 	
 	if (agVerboseCallback != NULL) {
