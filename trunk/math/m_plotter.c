@@ -161,7 +161,7 @@ M_PlotUpdateLabel(M_Plot *pl)
 	}
 	AG_TextFont(ptr->font);
 	AG_TextColor(pl->color);
-	pl->label = (pl->label_txt == NULL) ? -1 :
+	pl->label = (pl->label_txt[0] != '\0') ? -1 :
 	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
 	AG_Redraw(ptr);
 }

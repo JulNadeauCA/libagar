@@ -134,7 +134,7 @@ AG_BestUnit(const AG_Unit ugroup[], double n)
 	}
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		if (n/unit->divider >= 1.0) {
-			diff = Fabs(n-unit->divider);
+			diff = Fabs((float)(n - unit->divider));
 			if (diff < smallest) {
 				smallest = diff;
 				bestunit = unit;

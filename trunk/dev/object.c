@@ -132,7 +132,7 @@ PollEvents(AG_Event *event)
 			AG_Variable *V = &ev->argv[i];
 
 			AG_LockVariable(V);
-			if (V->name != NULL && V->name[0] != '\0') {
+			if (V->name[0] != '\0') {
 				Strlcat(args, V->name, sizeof(args));
 				Strlcat(args, "=", sizeof(args));
 			}

@@ -601,8 +601,7 @@ int
 AG_TlistCompareStrings(const AG_TlistItem *it1,
     const AG_TlistItem *it2)
 {
-	return (it1->text != NULL && it2->text != NULL &&
-	        strcmp(it1->text, it2->text) == 0);
+	return (strcmp(it1->text, it2->text) == 0);
 }
 
 /* Generic pointer compare routine. */

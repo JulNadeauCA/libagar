@@ -900,7 +900,7 @@ AG_MapPixelIndexedRGB(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b)
 	for (i = 0; i < pf->palette->nColors; i++) {
 		AG_Color *C = &pf->palette->colors[i];
 
-		err = Fabs(C->r - r) + Fabs(C->g - g) + Fabs(C->b - b);
+		err = abs(C->r - r) + abs(C->g - g) + abs(C->b - b);
 		if (err < errMin) {
 			errMin = err;
 			iMin = i;
@@ -920,8 +920,8 @@ AG_MapPixelIndexedRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b,
 	for (i = 0; i < pf->palette->nColors; i++) {
 		AG_Color *C = &pf->palette->colors[i];
 
-		err = Fabs(C->r - r) + Fabs(C->g - g) + Fabs(C->b - b) +
-		      Fabs(C->a - a);
+		err = abs(C->r - r) + abs(C->g - g) + abs(C->b - b) +
+		      abs(C->a - a);
 		if (err < errMin) {
 			errMin = err;
 			iMin = i;
