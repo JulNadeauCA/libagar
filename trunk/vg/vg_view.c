@@ -304,7 +304,7 @@ Init(void *obj)
 {
 	VG_View *vv = obj;
 
-	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_USE_TEXT;
 
 	vv->flags = 0;
 	vv->vg = NULL;
@@ -648,7 +648,7 @@ Draw(void *obj)
 
 	if (vv->status[0] != '\0') {
 		AG_PushTextState();
-		AG_TextColor(WCOLOR(vg,TEXT_COLOR));
+		AG_TextColor(WCOLOR(vv,TEXT_COLOR));
 		if ((su = AG_TextCacheGet(vv->tCache, vv->status)) != -1) {
 			AG_WidgetBlitSurface(vv, su,
 			    0,
