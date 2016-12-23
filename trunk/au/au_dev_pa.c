@@ -54,8 +54,10 @@ Init(void *obj)
 	dpa->stream = NULL;
 	dpa->wrPos = 0;
 	
-	if ((rv = Pa_Initialize()) != paNoError)
-		AG_FatalError("Pa_Initialize: %s", Pa_GetErrorText(rv));
+	if ((rv = Pa_Initialize()) != paNoError) {
+		AG_Verbose("Pa_Initialize: %s", Pa_GetErrorText(rv));
+		AG_FatalError("PortAudio Init Failed");
+	}
 }
 
 static void *
