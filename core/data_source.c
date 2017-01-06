@@ -258,68 +258,53 @@ FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	}
 	return (0);
 }
-void
-AG_CloseFile(AG_DataSource *ds)
-{
-	AG_FileSource *fs = AG_FILE_SOURCE(ds);
-
-	fclose(fs->file);
-	Free(fs->path);
-	AG_DataSourceDestroy(ds);
-}
 
 /*
- * Memory operations.
+ * Memory operations. Core operates on fixed-length memory. AutoCore operates
+ * on dynamically-reallocated memory.
  */
-static __inline__ int
-CoreLimitBounds(AG_CoreSource *cs, off_t pos, size_t sizeReq, size_t *size)
+static int
+CoreRead(AG_DataSource *ds, void *buf, size_t len, size_t *rv)
 {
-	if (pos+sizeReq > cs->size) {
-		*size = cs->size - cs->offs;
-	} else {
-		*size = sizeReq;
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+
+	if (cs->offs+len > cs->size) {
+		AG_SetError("Out of bounds (%lu+%lu > %lu)", cs->offs, len,
+		    cs->size);
+		return (-1);
 	}
+	memcpy(buf, &cs->data[cs->offs], len);
+	*rv = len;
+	cs->offs += len;
 	return (0);
 }
 static int
-CoreRead(AG_DataSource *ds, void *buf, size_t sizeReq, size_t *rv)
+CoreReadAt(AG_DataSource *ds, void *buf, size_t len, off_t pos, size_t *rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
-	size_t size;
 
-	if (CoreLimitBounds(cs, cs->offs, sizeReq, &size) == -1) {
+	if (pos+len > cs->size) {
+		AG_SetError("Out of bounds (@%lu+%lu > %lu)", pos, len,
+		    cs->size);
 		return (-1);
 	}
-	memcpy(buf, &cs->data[cs->offs], size);
-	*rv = size;
-	cs->offs += size;
+	memcpy(buf, &cs->data[pos], len);
+	*rv = len;
 	return (0);
 }
 static int
-CoreReadAt(AG_DataSource *ds, void *buf, size_t sizeReq, off_t pos, size_t *rv)
+CoreWrite(AG_DataSource *ds, const void *buf, size_t len, size_t *rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
-	size_t size;
 
-	if (CoreLimitBounds(cs, pos, sizeReq, &size) == -1) {
+	if (cs->offs+len > cs->size) {
+		AG_SetError("Out of bounds (>%lu+%lu > %lu)", cs->offs, len,
+		    cs->size);
 		return (-1);
 	}
-	memcpy(buf, &cs->data[pos], size);
-	*rv = size;
-	return (0);
-}
-static int
-CoreWrite(AG_DataSource *ds, const void *buf, size_t sizeReq, size_t *rv)
-{
-	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
-	size_t size;
-
-	if (CoreLimitBounds(cs, cs->offs, sizeReq, &size) == -1) {
-		return (-1);
-	}
-	memcpy(&cs->data[cs->offs], buf, size);
-	*rv = size;
-	cs->offs += size;
+	memcpy(&cs->data[cs->offs], buf, len);
+	*rv = len;
+	cs->offs += len;
 	return (0);
 }
 static int
@@ -341,21 +326,22 @@ CoreAutoWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
 	return (0);
 }
 static int
-CoreWriteAt(AG_DataSource *ds, const void *buf, size_t sizeReq, off_t pos,
+CoreWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
     size_t *rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
-	size_t size;
 
-	if (CoreLimitBounds(cs, pos, sizeReq, &size) == -1) {
+	if (pos+len > cs->size) {
+		AG_SetError("Out of bounds (>@%lu+%lu > %lu)", pos, len,
+		    cs->size);
 		return (-1);
 	}
-	memcpy(&cs->data[pos], buf, size);
-	*rv = size;
+	memcpy(&cs->data[pos], buf, len);
+	*rv = len;
 	return (0);
 }
 static int
-CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t size, off_t pos,
+CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
     size_t *rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
@@ -365,15 +351,15 @@ CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t size, off_t pos,
 		AG_SetError("Bad offset");
 		return (-1);
 	}
-	if (pos+size > cs->size) {
-		if ((dataNew = TryRealloc(cs->data, (pos+size))) == NULL) {
+	if (pos+len > cs->size) {
+		if ((dataNew = TryRealloc(cs->data, pos+len)) == NULL) {
 			return (-1);
 		}
 		cs->data = dataNew;
-		cs->size = pos+size;
+		cs->size = pos+len;
 	}
-	memcpy(&cs->data[pos], buf, size);
-	*rv = size;
+	memcpy(&cs->data[pos], buf, len);
+	*rv = len;
 	return (0);
 }
 static off_t
@@ -439,13 +425,14 @@ AG_CloseNetSocket(AG_DataSource *ds)
 {
 	AG_DataSourceDestroy(ds);
 }
-#endif
+#endif /* AG_NETWORK */
 
 /* Default error handler */
 static void
 ErrorDefault(AG_Event *event)
 {
-	AG_FatalError("Data source error: %s", AG_GetError());
+	AG_SetError("AG_DataSource: %s", AG_GetError());
+	AG_FatalError(NULL);
 }
 
 /* Initialize the data source structure. */
@@ -469,22 +456,6 @@ AG_DataSourceInit(AG_DataSource *ds)
 	AG_DataSourceSetErrorFn(ds, ErrorDefault, "%p", ds);
 }
 
-/* Close a data source of any type. */
-void
-AG_CloseDataSource(AG_DataSource *ds)
-{
-	ds->close(ds);
-}
-
-/* Release the resources allocated by the data source structure. */
-void
-AG_DataSourceDestroy(AG_DataSource *ds)
-{
-	AG_MutexDestroy(&ds->lock);
-	Free(ds);
-}
-
-/* Create a data source from a stdio file handle. */
 AG_DataSource *
 AG_OpenFileHandle(FILE *f)
 {
@@ -500,7 +471,7 @@ AG_OpenFileHandle(FILE *f)
 	fs->ds.write_at = FileWriteAt;
 	fs->ds.tell = FileTell;
 	fs->ds.seek = FileSeek;
-	fs->ds.close = AG_CloseFile;
+	fs->ds.close = AG_CloseFileHandle;
 	return (&fs->ds);
 }
 
@@ -508,13 +479,25 @@ AG_OpenFileHandle(FILE *f)
 AG_DataSource *
 AG_OpenFile(const char *path, const char *mode)
 {
+	AG_FileSource *fs;
 	FILE *f;
 
 	if ((f = fopen(path, mode)) == NULL) {
 		AG_SetError(_("Unable to open %s"), path);
 		return (NULL);
 	}
-	return AG_OpenFileHandle(f);
+	fs = Malloc(sizeof(AG_FileSource));
+	AG_DataSourceInit(&fs->ds);
+	fs->path = TryStrdup(path);
+	fs->file = f;
+	fs->ds.read = FileRead;
+	fs->ds.read_at = FileReadAt;
+	fs->ds.write = FileWrite;
+	fs->ds.write_at = FileWriteAt;
+	fs->ds.tell = FileTell;
+	fs->ds.seek = FileSeek;
+	fs->ds.close = AG_CloseFile;
+	return (&fs->ds);
 }
 
 /* Create a data source from a specified chunk of memory. */
@@ -627,7 +610,7 @@ AG_SetSourceDebug(AG_DataSource *ds, int enable)
 	AG_MutexUnlock(&ds->lock);
 }
 
-/* Low-level read operation. */
+/* Standard read operation (read complete size or fail). */
 int
 AG_Read(AG_DataSource *ds, void *ptr, size_t size)
 {
@@ -643,7 +626,7 @@ AG_Read(AG_DataSource *ds, void *ptr, size_t size)
 	return (rv);
 }
 
-/* Low-level read operation (partial reads allowed). */
+/* Standard read operation (partial reads allowed). */
 int
 AG_ReadP(AG_DataSource *ds, void *ptr, size_t size, size_t *nRead)
 {
@@ -656,7 +639,7 @@ AG_ReadP(AG_DataSource *ds, void *ptr, size_t size, size_t *nRead)
 	return (rv);
 }
 
-/* Low-level read-at-offset operation. */
+/* Read data from a particular offset (read complete or fail). */
 int
 AG_ReadAt(AG_DataSource *ds, void *ptr, size_t size, off_t pos)
 {
@@ -672,7 +655,7 @@ AG_ReadAt(AG_DataSource *ds, void *ptr, size_t size, off_t pos)
 	return (rv);
 }
 
-/* Low-level read-at-offset operation (partial reads allowed). */
+/* Read data from a particular offset (partial reads allowed). */
 int
 AG_ReadAtP(AG_DataSource *ds, void *ptr, size_t size, off_t pos, size_t *nRead)
 {
@@ -685,7 +668,7 @@ AG_ReadAtP(AG_DataSource *ds, void *ptr, size_t size, off_t pos, size_t *nRead)
 	return (rv);
 }
 
-/* Low-level write operation. */
+/* Standard write operation (write complete or fail). */
 int
 AG_Write(AG_DataSource *ds, const void *ptr, size_t size)
 {
@@ -701,7 +684,7 @@ AG_Write(AG_DataSource *ds, const void *ptr, size_t size)
 	return (rv);
 }
 
-/* Low-level write operation (partial writes allowed). */
+/* Standard write operation (partial writes allowed). */
 int
 AG_WriteP(AG_DataSource *ds, const void *ptr, size_t size, size_t *nWrote)
 {
@@ -714,7 +697,7 @@ AG_WriteP(AG_DataSource *ds, const void *ptr, size_t size, size_t *nWrote)
 	return (rv);
 }
 
-/* Low-level write-at-offset operation. */
+/* Write data at particular offset (write complete or fail). */
 int
 AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, off_t pos)
 {
@@ -730,7 +713,7 @@ AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, off_t pos)
 	return (rv);
 }
 
-/* Low-level write-at-offset operation (partial writes allowed) */
+/* Write data at particular offset (partial writes allowed). */
 int
 AG_WriteAtP(AG_DataSource *ds, const void *ptr, size_t size, off_t pos, size_t *nWrote)
 {

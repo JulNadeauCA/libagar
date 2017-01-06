@@ -65,6 +65,7 @@ void      AG_InitTimer(AG_Timer *, const char *, Uint);
 int       AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
 AG_Timer *AG_AddTimerAuto(void *, Uint32, AG_TimerFn, const char *, ...);
 void	  AG_DelTimer(void *, AG_Timer *);
+void	  AG_DelTimers(void *);
 int	  AG_ResetTimer(void *, AG_Timer *, Uint32);
 int	  AG_TimerIsRunning(void *, AG_Timer *);
 int       AG_TimerWait(void *, AG_Timer *, Uint32);

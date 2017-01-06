@@ -100,6 +100,25 @@ AG_DestroyErrorSubsystem(void)
 #endif
 }
 
+/* Set the error message string (C string). */
+void
+AG_SetErrorS(const char *msg)
+{
+	char *newMsg;
+	
+	if ((newMsg = TryStrdup(msg)) == NULL)
+		return;
+#ifdef AG_THREADS
+	if ((agErrorMsg = (char *)AG_ThreadKeyGet(agErrorMsgKey)) != NULL) {
+		free(agErrorMsg);
+	}
+	AG_ThreadKeySet(agErrorMsgKey, newMsg);
+#else
+	Free(agErrorMsg);
+#endif
+	agErrorMsg = newMsg;
+}
+
 /* Set the error message string. */
 void
 AG_SetError(const char *fmt, ...)
@@ -333,36 +352,22 @@ AG_Verbose(const char *fmt, ...)
 
 /* Raise a fatal error condition. */
 void
-AG_FatalError(const char *fmt, ...)
+AG_FatalError(const char *msg)
 {
-	va_list args;
-  	char *buf;
-
 	/* Use callback if defined. The callback must gracefully exit. */
 	if (agErrorCallback != NULL) {
-		if (fmt != NULL) {
-			va_start(args, fmt);
-			Vasprintf(&buf, fmt, args);
-			va_end(args);
-			agErrorCallback(buf);
-			free(buf);
-			abort(); /* not reached */
-		} else {
-			agErrorCallback(AG_GetError());
-			abort(); /* not reached */
-		}
+		agErrorCallback(msg ? msg : AG_GetError());
+		abort(); /* not reached */
 	} else {
-		fprintf(stderr, "Fatal error: ");
-		if (fmt != NULL) {
-			va_start(args, fmt);
-			vfprintf(stderr, fmt, args);
-			va_end(args);
+		fputs("AG_FatalError: ", stderr);
+		if (msg != NULL) {
+			fputs(msg, stderr);
 		} else {
-			fprintf(stderr, "%s", AG_GetError());
+			fputs(AG_GetError(), stderr);
 		}
-		fprintf(stderr, "\n");
+		fputc('\n', stderr);
 		abort();
-  }
+	}
 }
 
 void
@@ -408,6 +413,6 @@ AG_FloatMismatch(void)
 void *
 AG_ObjectMismatch(const char *t1, const char *t2)
 {
-	AG_FatalError("Object type mismatch (%s != %s)", t1, t2);
+	AG_FatalError("Object Mismatch");
 	return (NULL);
 }

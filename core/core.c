@@ -65,7 +65,7 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 AG_Thread agEventThread;			/* Event-processing thread */
 #endif
 
-AG_Config *agConfig;				/* Global Agar config data */
+AG_Config *agConfig = NULL;			/* Global Agar config data */
 void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
 char *agProgName = NULL;			/* Optional application name */
@@ -76,6 +76,10 @@ int agSoftTimers = 0;				/* Disable hardware timers */
 int
 AG_InitCore(const char *progname, Uint flags)
 {
+	if (agConfig != NULL) {
+		AG_SetError("AG_Core already initialized");
+		return (-1);
+	}
 	if (flags & AG_VERBOSE)
 		agVerbose = 1;
 	if (flags & AG_SOFT_TIMERS)
@@ -170,10 +174,8 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitTimers();
 	AG_DataSourceInitSubsystem();
 
-	if ((agConfig = TryMalloc(sizeof(AG_Config))) == NULL) {
-		return (-1);
-	}
-	if (AG_ConfigInit(agConfig, flags) == -1) {
+	if ((agConfig = TryMalloc(sizeof(AG_Config))) == NULL ||
+	    AG_ConfigInit(agConfig, flags) == -1) {
 		return (-1);
 	}
 	return (0);
@@ -204,20 +206,31 @@ AG_Quit(void)
 void
 AG_Destroy(void)
 {
+	if (agConfig == NULL)
+		return;
+
 	if (agAtexitFunc != NULL) { agAtexitFunc(); }
 	if (agAtexitFuncEv != NULL) { agAtexitFuncEv(NULL); }
-
-	AG_ObjectDestroy(agConfig);
-	AG_DataSourceDestroySubsystem();
-	AG_DestroyTimers();
 	if (agUserOps != NULL && agUserOps->destroy != NULL) {
 		agUserOps->destroy();
 		agUserOps = NULL;
 	}
+
+	AG_ObjectDestroy(agConfig);
+	agConfig = NULL;
+
+	AG_DataSourceDestroySubsystem();
+	AG_DestroyTimers();
+
 #ifdef AG_NETWORK
-	AG_DestroyNetworkSubsystem();
+	if (agNetOps != NULL && agNetOps->destroy != NULL) {
+		agNetOps->destroy();
+	}
+	agNetOps = NULL;
 #endif
+
 	AG_DestroyClassTbl();
+
 #ifdef AG_THREADS
 	pthread_mutexattr_destroy(&agRecursiveMutexAttr);
 	AG_MutexDestroy(&agDSOLock);
