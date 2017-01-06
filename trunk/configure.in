@@ -22,9 +22,11 @@ REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 REGISTER_SECTION("Options specific to CORE library:")
 REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 REGISTER("--enable-network",		"Network interface [check]")
+REGISTER("--enable-web",		"Web application server [no]")
 REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [check]")
 REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
+REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
 
 REGISTER_SECTION("Options specific to MATH library:")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
@@ -385,7 +387,22 @@ else
 	HUNDEF(HAVE_SO_LINGER, HAVE_SO_ACCEPTFILTER, HAVE_SIOCGIFCONF)
 	HUNDEF(HAVE_WINSOCK1, HAVE_WINSOCK2)
 fi
-	
+
+# Enable web application server if requested
+if [ "${enable_web}" = 'yes' ]; then
+	CHECK(zlib, 0, ${prefix_z})
+	CHECK_HEADER(sys/uio.h)
+	CHECK_HEADER(sys/param.h)
+	MDEFINE(HAVE_WEB, "yes")
+	HDEFINE(AG_WEB, "yes")
+else
+	HUNDEF(HAVE_ZLIB, ZLIB_CFLAGS, ZLIB_LIBS)
+	HUNDEF(HAVE_SYS_UIO_H)
+	HUNDEF(HAVE_SYS_PARAM_H)
+	MDEFINE(HAVE_WEB, "no")
+	HUNDEF(AG_WEB)
+fi
+
 # Enable Berkeley DB backend for AG_Db if available.
 if [ "${with_db4}" != 'no' ]; then
 	CHECK(db4, 0, ${prefix_db4})
@@ -702,6 +719,9 @@ fi
 if [ "${HAVE_CSIDL}" = 'yes' ]; then
 	MAPPEND(SRCS_CORE, "user_win32.c")
 fi
+if [ "${HAVE_WEB}" = 'yes' ]; then
+	MAPPEND(SRCS_CORE, "web.c web_auth.c web_var.c")
+fi
 
 #
 # Conditionally compiled sources in Agar-GUI
@@ -750,17 +770,18 @@ CONFIG_SCRIPT(agar-config,\
 	${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
 	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
+	${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
 	${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
 	${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
 	${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
-	${UIM_LIBS} ${ICONV_LIBS}")
+	${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 CONFIG_SCRIPT(agar-core-config,\
 	"-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
+	${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} \
-	${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}")
+	${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} \
+	${ZLIB_LIBS}")
 CONFIG_SCRIPT(agar-dev-config,\
 	"-I${INCLDIR}",\
 	"-L${LIBDIR} -lag_dev")
