@@ -9,7 +9,7 @@
 
 __BEGIN_DECLS
 char	*AG_ReadStringLen(AG_DataSource *, size_t);
-int	 AG_ReadStringLenv(AG_DataSource *, size_t, char **);
+int	 AG_ReadStringLenv(AG_DataSource *, size_t, char **, size_t *);
 #define	 AG_ReadString(nb) \
 	 AG_ReadStringLen((nb),AG_LOAD_STRING_MAX)
 #define	 AG_ReadStringv(nb,s) \

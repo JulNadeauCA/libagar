@@ -153,7 +153,6 @@ extern const char *agNetAddrFamilyNames[];
 extern const char *agNetSocketTypeNames[];
 
 int             AG_InitNetworkSubsystem(const AG_NetOps *);
-void		AG_DestroyNetworkSubsystem(void);
 
 AG_NetSocket   *AG_NetSocketNew(enum ag_net_addr_family,
                                 enum ag_net_socket_type, int);

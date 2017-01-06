@@ -181,7 +181,7 @@ typedef void (*AG_EventFn)(AG_Event *);
 			    u32,unsigned long);				\
 			break;						\
 		default:						\
-			AG_FatalError("Bad AG_Event(3) arguments");	\
+			AG_FatalError("Bad AG_Event(3) args");		\
 			continue;					\
 		}							\
 		c++;							\
@@ -199,7 +199,7 @@ typedef void (*AG_EventFn)(AG_Event *);
 			    Cp,const void *);				\
 			break;						\
 		default:						\
-			AG_FatalError("Bad AG_Event(3) arguments");	\
+			AG_FatalError("Bad AG_Event(3) args");		\
 			continue;					\
 		}							\
 		c++;							\
@@ -210,7 +210,8 @@ typedef void (*AG_EventFn)(AG_Event *);
 		c++;							\
 		continue;						\
 	default:							\
-		AG_FatalError("Bad AG_Event(3) argument: `%c'", *c);	\
+		AG_SetError("Bad AG_Event(3) format: %c", *c);		\
+		AG_FatalError(NULL);					\
 		c++;							\
 		continue;						\
 	}								\
@@ -336,7 +337,8 @@ AG_GetNamedEventArg(AG_Event *ev, const char *key)
 		if (strcmp(ev->argv[i].name, key) == 0)
 			return (&ev->argv[i]);
 	}
-	AG_FatalError("No such AG_Event argument: \"%s\"", key);
+	AG_SetError("Bad AG_Event arg: %s", key);
+	AG_FatalError(NULL);
 	return (NULL);
 }
 static __inline__ void *

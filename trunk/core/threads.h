@@ -52,7 +52,7 @@ AG_ThreadCreate(AG_Thread *th, void *(*fn)(void *), void *arg)
 {
 	int rv;
 	if ((rv = pthread_create(th, NULL, fn, arg)) != 0)
-		AG_FatalError("pthread_create (%d)", rv);
+		AG_FatalError("pthread_create");
 }
 static __inline__ int
 AG_ThreadTryCreate(AG_Thread *th, void *(*fn)(void *), void *arg)

@@ -44,8 +44,10 @@ typedef struct ag_object_class {
 
 #ifdef AG_DEBUG
 # define AG_ASSERT_CLASS(obj,class) \
-	if (!AG_OfClass((obj),(class))) \
-		AG_FatalError("%s is not a %s", AGOBJECT(obj)->name, class)
+	if (!AG_OfClass((obj),(class))) { \
+		AG_SetError("%s is not a %s", AGOBJECT(obj)->name, class); \
+		AG_FatalError(NULL); \
+	}
 #else
 # define AG_ASSERT_CLASS(obj,class)
 #endif

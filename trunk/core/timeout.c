@@ -78,16 +78,14 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 			to->obj = ob;
 			to->tSched = 0;
 		} else if (to->obj != ob) {
-			AG_FatalError("Timer is in a different object (%s != %s)",
-			    OBJECT(to->obj)->name, ob->name);
+			AG_FatalError("to->obj != ob");
 		}
 	} else {				/* Ordered timing wheel */
 		if (to->obj == NULL) {
 			newTimer = 1;
 			to->obj = ob;
 		} else if (to->obj != ob) {
-			AG_FatalError("Timer is in a different object (%s != %s)",
-			    OBJECT(to->obj)->name, ob->name);
+			AG_FatalError("to->obj != ob");
 		}
 		if (TAILQ_EMPTY(&ob->timers)) {
 			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
@@ -252,6 +250,24 @@ out:
 	AG_UnlockTimers(ob);
 }
 
+/* Cancel all running timers tied to the given object. */
+void
+AG_DelTimers(void *obj)
+{
+	AG_Object *ob = obj;
+	AG_Timer *to, *toNext;
+	
+	AG_LockTiming();
+	for (to = TAILQ_FIRST(&ob->timers);
+	     to != TAILQ_END(&ob->timers);
+	     to = toNext) {
+		toNext = TAILQ_NEXT(to, timers);
+		AG_DelTimer(ob, to);
+	}
+	TAILQ_INIT(&ob->timers);
+	AG_UnlockTiming();
+}
+
 /*
  * Evaluate whether a timer is running.
  * The caller should use AG_LockTimers().
@@ -357,6 +373,6 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 ival)
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 
 	if (AG_AddTimer(ob, to, ival, LegacyTimerCallback, NULL) == -1)
-		AG_FatalError("ScheduleTimeout: %s", AG_GetError());
+		AG_FatalError(NULL);
 }
 #endif /* AG_LEGACY */

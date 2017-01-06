@@ -93,7 +93,7 @@ AG_ObjectInit(void *p, void *cl)
 		}
 		free(hier);
 	} else {
-		AG_FatalError("AG_ObjectInit: %s", AG_GetError());
+		AG_FatalError(NULL);
 	}
 }
 
@@ -186,8 +186,7 @@ AG_ObjectFreeDataset(void *p)
 		}
 		free(hier);
 	} else {
-		AG_FatalError("AG_ObjectFreeDataset: %s: %s", ob->name,
-		    AG_GetError());
+		AG_FatalError(NULL);
 	}
 	if (!preserveDeps) {
 		ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
@@ -586,8 +585,10 @@ AG_ObjectFindS(void *vfsRoot, const char *name)
 	void *rv;
 
 #ifdef AG_DEBUG
-	if (name[0] != AG_PATHSEPCHAR)
-		AG_FatalError("AG_ObjectFindS: Not an absolute path: %s", name);
+	if (name[0] != AG_PATHSEPCHAR) {
+		AG_SetError("Not an absolute path: %s", name);
+		AG_FatalError(NULL);
+	}
 #endif
 	if (name[0] == AG_PATHSEPCHAR && name[1] == '\0')
 		return (vfsRoot);
@@ -617,8 +618,10 @@ AG_ObjectFind(void *vfsRoot, const char *fmt, ...)
 	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
 #ifdef AG_DEBUG
-	if (path[0] != AG_PATHSEPCHAR)
-		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", path);
+	if (path[0] != AG_PATHSEPCHAR) {
+		AG_SetError("Bad path: %s", path);
+		AG_FatalError(NULL);
+	}
 #endif
 	AG_LockVFS(vfsRoot);
 	rv = FindObjectByName(vfsRoot, &path[1]);
@@ -788,26 +791,14 @@ AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
 	AG_ObjectClass **hier;
-	AG_Timer *to, *toNext;
 	int i, nHier;
 
 #ifdef AG_DEBUG_CORE
 	if (ob->parent != NULL) {
-		AG_FatalError("AG_ObjectDestroy: %s still attached to %p",
-		    ob->name, ob->parent);
+		AG_FatalError("ob still attached to ob->parent");
 	}
 	Debug(ob, "Destroying\n");
 #endif
-	/* Cancel any running timers. */
-	AG_LockTiming();
-	for (to = TAILQ_FIRST(&ob->timers);
-	     to != TAILQ_END(&ob->timers);
-	     to = toNext) {
-		toNext = TAILQ_NEXT(to, timers);
-		AG_DelTimer(ob, to);
-	}
-	AG_UnlockTiming();
-
 	AG_ObjectFreeChildren(ob);
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
@@ -819,7 +810,7 @@ AG_ObjectDestroy(void *p)
 		}
 		free(hier);
 	} else {
-		AG_FatalError("%s: %s", ob->name, AG_GetError());
+		AG_FatalError(NULL);
 	}
 	
 	AG_ObjectFreeVariables(ob);
@@ -1982,8 +1973,8 @@ AG_ObjectEncodeName(void *p, const void *depobjp)
 			return (i);
 		}
 	}
-	AG_FatalError("AG_ObjectEncodeName: %s: No such dep", depobj->name);
 	AG_ObjectUnlock(ob);
+	AG_FatalError("Bad dependency");
 	return (0);
 }
 
@@ -2017,7 +2008,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			dep->count = 0;
 		}
 	} else if (dep->count == 0) {
-		AG_FatalError("AG_ObjectDelDep: Negative refcount");
+		AG_FatalError("Bad refcount");
 	} else {
 		dep->count--;
 	}

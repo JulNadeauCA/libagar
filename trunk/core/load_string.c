@@ -72,14 +72,15 @@ fail:
 }
 
 /*
- * Read a length-encoded string (no exceptions) and return its contents
- * in newly-allocated memory.
+ * Read a length-encoded string and return its contents into newly allocated
+ * (or reallocated) memory.
  *
- * If s is non-NULL, *s is taken to be an existing, valid buffer which will
- * be reallocated to fit the new string size.
+ * If s is NULL, auto-allocate memory for the string. If s is non-NULL, it
+ * should point to an existing, valid buffer which will be reallocated to
+ * fit the string.
  */
 int
-AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
+AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s, size_t *newLen)
 {
 	Uint32 len;
 	char *sp;
@@ -98,7 +99,12 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((sp = TryRealloc(*s, (size_t)len+1)) == NULL) {
+	if (*s == NULL) {
+		sp = TryMalloc((size_t)len+1);
+	} else {
+		sp = TryRealloc(*s, (size_t)len+1);
+	}
+	if (sp == NULL) {
 		goto fail;
 	}
 	*s = sp;
@@ -111,7 +117,9 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 		}
 		sp[len] = '\0';
 	}
-
+	if (newLen) {
+		*newLen = len;
+	}
 	AG_UnlockDataSource(ds);
 	return (0);
 fail:

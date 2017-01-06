@@ -491,17 +491,9 @@ AG_InitNetworkSubsystem(const AG_NetOps *ops)
 		return (0);
 	}
 	if (agNetOps != NULL && agNetOps->destroy != NULL) {
-		AG_DestroyNetworkSubsystem();
+		agNetOps->destroy();
 	}
 	agNetOps = ops;
 	return (ops->init != NULL) ? ops->init() : 0;
 }
 
-void
-AG_DestroyNetworkSubsystem(void)
-{
-	if (agNetOps != NULL && agNetOps->destroy != NULL) {
-		agNetOps->destroy();
-	}
-	agNetOps = NULL;
-}
