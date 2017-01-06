@@ -72,6 +72,8 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
+	echo "${INSTALL_INCL} include/agar/core/web.h ${INCLDIR}/agar/web.h"; \
+	${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h; \
 
 deinstall-includes:
 	@echo "rm -fR ${INCLDIR}/agar"
