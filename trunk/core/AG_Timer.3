@@ -94,6 +94,9 @@ below).
 .Ft "void"
 .Fn AG_DelTimer "void *obj" "AG_Timer *timer"
 .Pp
+.Ft "void"
+.Fn AG_DelTimers "void *obj"
+.Pp
 .Ft "int"
 .Fn AG_ResetTimer "void *obj" "AG_Timer *timer" "Uint32 t"
 .Pp
@@ -177,7 +180,11 @@ returns NULL.
 .Pp
 The
 .Fn AG_DelTimer
-function deletes a timer.
+function cancels the execution of a timer and frees all resources
+allocated by it.
+If the given timer is not active,
+.Fn AG_DelTimer
+does nothing.
 The optional
 .Fa obj
 argument specifies the timer's parent object.

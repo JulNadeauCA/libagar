@@ -101,14 +101,12 @@ void AG_DataSourceInitSubsystem(void);
 void AG_DataSourceDestroySubsystem(void);
 
 void AG_DataSourceInit(AG_DataSource *);
-void AG_DataSourceDestroy(AG_DataSource *);
 void AG_DataSourceSetDebug(AG_DataSource *, int);
 void AG_DataSourceSetErrorFn(AG_DataSource *, void (*)(struct ag_event *),
                              const char *, ...);
 void AG_DataSourceError(AG_DataSource *, const char *, ...);
 void AG_SetByteOrder(AG_DataSource *, enum ag_byte_order);
 void AG_SetSourceDebug(AG_DataSource *, int);
-void AG_CloseDataSource(AG_DataSource *);
 
 AG_DataSource *AG_OpenFile(const char *, const char *);
 AG_DataSource *AG_OpenFileHandle(FILE *);
@@ -133,8 +131,6 @@ int     AG_WriteP(AG_DataSource *, const void *, size_t, size_t *)
 int     AG_WriteAt(AG_DataSource *, const void *, size_t, off_t);
 int     AG_WriteAtP(AG_DataSource *, const void *, size_t, off_t, size_t *);
 
-void    AG_CloseFile(AG_DataSource *);
-#define AG_CloseFileHandle(ds) AG_CloseFile(ds)
 void    AG_CloseCore(AG_DataSource *);
 #define AG_CloseConstCore(ds) AG_CloseCore(ds)
 void    AG_CloseAutoCore(AG_DataSource *);
@@ -186,6 +182,39 @@ AG_Seek(AG_DataSource *ds, off_t pos, enum ag_seek_mode mode)
 	rv = ds->seek(ds, pos, mode);
 	AG_MutexUnlock(&ds->lock);
 	return (rv);
+}
+
+/* Close a datasource of any type. */
+static __inline__ void
+AG_CloseDataSource(AG_DataSource *ds)
+{
+	ds->close(ds);
+}
+
+static __inline__ void
+AG_DataSourceDestroy(AG_DataSource *ds)
+{
+	AG_MutexDestroy(&ds->lock);
+	AG_Free(ds);
+}
+
+/* Close file handle created by AG_OpenFile() */
+static __inline__ void
+AG_CloseFile(AG_DataSource *ds)
+{
+	AG_FileSource *fs = AG_FILE_SOURCE(ds);
+	fclose(fs->file);
+	AG_Free(fs->path);
+	AG_DataSourceDestroy(ds);
+}
+
+/* Close file handle created by AG_OpenFileHandle() */
+static __inline__ void
+AG_CloseFileHandle(AG_DataSource *ds)
+{
+	AG_FileSource *fs = AG_FILE_SOURCE(ds);
+	fdclose(fs->file, NULL);
+	AG_DataSourceDestroy(ds);
 }
 __END_DECLS
 

@@ -407,7 +407,8 @@ AG_GetNamedObject(AG_Event *event, const char *key, const char *classSpec)
 	AG_Variable *V = AG_GetNamedEventArg(event, key);
 
 	if (!AG_OfClass((struct ag_object *)V->data.p, classSpec)) {
-		AG_FatalError("Argument %s is not a %s", key, classSpec);
+		AG_SetError("Argument %s is not a %s", key, classSpec);
+		AG_FatalError(NULL);
 	}
 	return (V->data.p);
 }
