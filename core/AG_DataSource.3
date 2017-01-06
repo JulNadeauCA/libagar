@@ -542,10 +542,10 @@ The encoding may or may not include a terminating NUL.
 .Pp
 .nr nS 1
 .Ft "char *"
-.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxsize"
+.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxLen"
 .Pp
 .Ft "int"
-.Fn AG_ReadStringLenv "AG_DataSource *ds" "size_t maxsize" "char **s"
+.Fn AG_ReadStringLenv "AG_DataSource *ds" "size_t maxLen" "char **s" "size_t *newLen"
 .Pp
 .Ft "char *"
 .Fn AG_ReadString "AG_DataSource *ds"
@@ -554,7 +554,7 @@ The encoding may or may not include a terminating NUL.
 .Fn AG_ReadStringv "AG_DataSource *ds" "char **s"
 .Pp
 .Ft "char *"
-.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxsize"
+.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxLen"
 .Pp
 .Ft "char *"
 .Fn AG_ReadNulString "AG_DataSource *ds"
@@ -584,7 +584,7 @@ The encoding may or may not include a terminating NUL.
 The
 .Fn AG_ReadStringLen
 function reads a string of up to
-.Fa maxsize
+.Fa maxLen
 bytes and returns a dynamically allocated, NUL-terminated copy of the string.
 .Fn AG_ReadString
 implicitely limits the string to
@@ -600,6 +600,8 @@ variants accept a pointer
 .Fa s
 to an existing, valid string buffer which will be reallocated to fit the
 new string.
+If non-NULL, the length of the string will be returned to
+.Fa newLen .
 Both functions will return -1 (without raising a data source exception)
 on failure.
 If a low-level I/O error occurs after the buffer is reallocated, the
