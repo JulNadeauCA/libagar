@@ -43,14 +43,15 @@ printusage(void)
 int
 main(int argc, char *argv[])
 {
+	char *bindHost = "localhost", *bindPort = "4124";
 	const char *outfile, *cssName = "myCSS", *infile;
 	extern char *optarg;
 	extern int optind;
-	int c;
 	FILE *f, *fin;
 	long i, sizeIn, sizeOut, offs, inComment = 0;
 	int append = 0;
 	char ch;
+	int c;
 
 	while ((c = getopt(argc, argv, "?ao:n:")) != -1) {
 		switch (c) {

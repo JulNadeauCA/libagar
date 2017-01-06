@@ -112,7 +112,7 @@ AG_ToolbarRow(AG_Toolbar *bar, int row)
 	AG_ObjectLock(bar);
 #ifdef AG_DEBUG
 	if (row < 0 || row >= bar->nRows)
-		AG_FatalError("no such row %d", row);
+		AG_FatalError("Bad row");
 #endif
 	bar->curRow = row;
 	AG_ObjectUnlock(bar);

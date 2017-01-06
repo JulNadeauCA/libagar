@@ -59,8 +59,8 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 	M_MatrixFPU *MFPU = (void *)M;
 
 	if (strcmp(M->ops->name, "scalar") != 0) {
-		AG_FatalError("Cannot display %s matrices",
-		    M->ops->name);
+		AG_TextError("Cannot display %s matrices", M->ops->name);
+		return;
 	}
 	AG_ObjectLock(mv);
 	mv->matrix = MMATRIX(MFPU);

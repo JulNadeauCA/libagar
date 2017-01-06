@@ -257,7 +257,7 @@ OnShow(AG_Event *event)
 	AG_RedrawTie *rt;
 
 	if (wid->font == NULL)
-		AG_FatalError("%s style not compiled", OBJECT(wid)->name);
+		AG_FatalError("Bad style state");
 
 	wid->flags |= AG_WIDGET_VISIBLE;
 

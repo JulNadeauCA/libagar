@@ -245,7 +245,7 @@ InitUnitSystem(AG_FSpinbutton *fsu, const char *unit_key)
 			break;
 	}
 	if (!found) {
-		AG_FatalError("AG_FSpinbutton: No such unit: %s", unit_key);
+		AG_FatalError("Bad units");
 	}
 	fsu->unit = unit;
 	UpdateUnitButton(fsu);
