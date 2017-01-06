@@ -196,7 +196,7 @@ AG_WindowNewNamedS(Uint flags, const char *name)
 #ifdef AG_DEBUG
 	const char *p;
 	if ((p = strchr(name, '/')) != NULL)
-		AG_FatalError("Window names cannot contain `/' (near \"%s\")", p);
+		AG_FatalError("Bad Window name");
 #endif
 
 	AG_LockVFS(&agDrivers);

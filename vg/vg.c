@@ -150,7 +150,7 @@ VG_NodeDestroy(void *p)
 
 #ifdef AG_DEBUG
 	if (vn->vg != NULL || vn->parent != NULL)
-		AG_FatalError("VG_NodeDetach() must precede VG_NodeDestroy()");
+		AG_FatalError("Attempt to destroy attached node");
 #endif
 
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);
@@ -267,8 +267,7 @@ VG_Delete(void *pVn)
 
 #ifdef AG_DEBUG
 	if (vg == NULL)
-		AG_FatalError("VG_Delete() on unattached node %s%d",
-		    vn->ops->name, vn->handle);
+		AG_FatalError("Unattached node");
 #endif
 	VG_Lock(vg);
 	if (vn->nDeps > 0) {
@@ -443,7 +442,7 @@ VG_NodeDetach(void *p)
 
 #ifdef AG_DEBUG
 	if (vg == NULL)
-		AG_FatalError("VG_NodeDetach() on unattached node");
+		AG_FatalError("Unattached node");
 #endif
 	VG_Lock(vg);
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);

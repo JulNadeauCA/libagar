@@ -263,7 +263,7 @@ M_ReadReal(AG_DataSource *ds)
 		return (M_Real)AG_ReadLongDouble(ds);
 #endif
 	default:
-		AG_FatalError("M_ReadReal(%u)", prec);
+		AG_FatalError("Bad real prec");
 	}
 	return (0.0);
 }
@@ -288,7 +288,7 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 		break;
 #endif
 	default:
-		AG_FatalError("M_CopyReal(%u)", prec);
+		AG_FatalError("Bad real prec");
 	}
 }
 

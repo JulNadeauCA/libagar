@@ -561,8 +561,7 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 		    &h);
 
 		if ((su = AG_SurfaceStdGL(w, h)) == NULL) {
-			AG_FatalError("Backup texture: %s",
-			    AG_GetError());
+			AG_FatalError("AG_SurfaceStdGL");
 		}
 		glGetTexImage(GL_TEXTURE_2D, 0,
 		    GL_RGBA,

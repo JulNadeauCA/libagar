@@ -153,7 +153,7 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		x += WIDGET(parent)->rView.x1;
 		y += WIDGET(parent)->rView.y1;
 		if ((winParent = WIDGET(parent)->window) == NULL) {
-			AG_FatalError("AG_MenuExpand: %s has no window", OBJECT(parent)->name);
+			AG_FatalError("AG_MenuExpand: No parent window");
 		}
 		if (WIDGET(winParent)->drv != NULL &&
 		    AGDRIVER_MULTIPLE(WIDGET(winParent)->drv)) {
