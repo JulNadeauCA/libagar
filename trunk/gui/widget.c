@@ -843,7 +843,7 @@ AG_WidgetFind(void *obj, const char *name)
 
 #ifdef AG_DEBUG
 	if (name[0] != '/')
-		AG_FatalError("WidgetFind: Not an absolute path: %s", name);
+		AG_FatalError("WidgetFind: Bad path");
 #endif
 	AG_LockVFS(drv);
 	rv = WidgetFindPath(OBJECT(drv), &name[1]);
