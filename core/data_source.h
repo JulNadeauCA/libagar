@@ -131,6 +131,8 @@ int     AG_WriteP(AG_DataSource *, const void *, size_t, size_t *)
 int     AG_WriteAt(AG_DataSource *, const void *, size_t, off_t);
 int     AG_WriteAtP(AG_DataSource *, const void *, size_t, off_t, size_t *);
 
+void    AG_CloseFile(AG_DataSource *);
+void    AG_CloseFileHandle(AG_DataSource *);
 void    AG_CloseCore(AG_DataSource *);
 #define AG_CloseConstCore(ds) AG_CloseCore(ds)
 void    AG_CloseAutoCore(AG_DataSource *);
@@ -196,25 +198,6 @@ AG_DataSourceDestroy(AG_DataSource *ds)
 {
 	AG_MutexDestroy(&ds->lock);
 	AG_Free(ds);
-}
-
-/* Close file handle created by AG_OpenFile() */
-static __inline__ void
-AG_CloseFile(AG_DataSource *ds)
-{
-	AG_FileSource *fs = AG_FILE_SOURCE(ds);
-	fclose(fs->file);
-	AG_Free(fs->path);
-	AG_DataSourceDestroy(ds);
-}
-
-/* Close file handle created by AG_OpenFileHandle() */
-static __inline__ void
-AG_CloseFileHandle(AG_DataSource *ds)
-{
-	AG_FileSource *fs = AG_FILE_SOURCE(ds);
-	fdclose(fs->file, NULL);
-	AG_DataSourceDestroy(ds);
 }
 __END_DECLS
 

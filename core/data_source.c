@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2017 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  */
 
 #include <agar/core/core.h>
+#include <agar/config/have_fdclose.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -473,6 +474,31 @@ AG_OpenFileHandle(FILE *f)
 	fs->ds.seek = FileSeek;
 	fs->ds.close = AG_CloseFileHandle;
 	return (&fs->ds);
+}
+
+/* Close file handle created by AG_OpenFileHandle() */
+void
+AG_CloseFileHandle(AG_DataSource *ds)
+{
+	AG_FileSource *fs = AG_FILE_SOURCE(ds);
+
+#ifdef HAVE_FDCLOSE
+	fdclose(fs->file, NULL);
+#else
+	fflush(fs->file);
+#endif
+	AG_DataSourceDestroy(ds);
+}
+
+/* Close file handle created by AG_OpenFile() */
+void
+AG_CloseFile(AG_DataSource *ds)
+{
+	AG_FileSource *fs = AG_FILE_SOURCE(ds);
+
+	fclose(fs->file);
+	AG_Free(fs->path);
+	AG_DataSourceDestroy(ds);
 }
 
 /* Create a data source from a specified file path. */

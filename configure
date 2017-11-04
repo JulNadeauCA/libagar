@@ -2215,6 +2215,42 @@ echo '#undef MATH_C99_LIBS' >$BLD/include/agar/config/math_c99_libs.h
 echo 'hdefs["MATH_C99_LIBS"] = nil' >>configure.lua
 MATH_C99_LIBS=""
 fi;
+$ECHO_N 'checking for a fdclose() function...'
+$ECHO_N 'checking for a fdclose() function...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	FILE *f = fopen("/dev/null","r");
+	int fdp;
+	return fdclose(f, &fdp);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_FDCLOSE='yes'
+echo '#ifndef HAVE_FDCLOSE' > $BLD/include/agar/config/have_fdclose.h
+echo "#define HAVE_FDCLOSE \"$HAVE_FDCLOSE\"" >> $BLD/include/agar/config/have_fdclose.h
+echo '#endif' >> $BLD/include/agar/config/have_fdclose.h
+echo "hdefs[\"HAVE_FDCLOSE\"] = \"$HAVE_FDCLOSE\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_FDCLOSE='no'
+echo '#undef HAVE_FDCLOSE' >$BLD/include/agar/config/have_fdclose.h
+echo 'hdefs["HAVE_FDCLOSE"] = nil' >>configure.lua
+fi;
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 $ECHO_N 'checking for a getpwuid() function...'
 $ECHO_N 'checking for a getpwuid() function...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -3811,6 +3847,8 @@ fi;
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
+CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
+CXXFLAGS="$CXXFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
 CXXFLAGS="$CXXFLAGS -D_BSD_SOURCE"
 if [ "${enable_warnings}" = 'yes' ]
@@ -8473,57 +8511,10 @@ fi
 	
 if [ "${enable_nls}" = 'yes' ]
  then
-$ECHO_N 'checking for iconv() in libc...'
-$ECHO_N 'checking for iconv() in libc...' >> config.log
+$ECHO_N 'checking for iconv()...'
+$ECHO_N 'checking for iconv()...' >> config.log
 ICONV_CFLAGS=""
 ICONV_LIBS=""
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iconv.h>
-
-int main(int argc, char *argv[])
-{
-	char *inbuf = "foo";
-	size_t inlen = strlen(inbuf), rv;
-	char *outbuf = malloc(3);
-	size_t outbuflen = 3;
-	iconv_t cd;
-
-	cd = iconv_open("ISO-8859-1", "UTF-8");
-	rv = iconv(cd, &inbuf, &inlen, &outbuf, &outbuflen);
-	iconv_close(cd);
-	return ((rv == (size_t)-1));
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest conftest.c ${ICONV_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_ICONV='yes'
-echo '#ifndef HAVE_ICONV' > $BLD/include/agar/config/have_iconv.h
-echo "#define HAVE_ICONV \"$HAVE_ICONV\"" >> $BLD/include/agar/config/have_iconv.h
-echo '#endif' >> $BLD/include/agar/config/have_iconv.h
-echo "hdefs[\"HAVE_ICONV\"] = \"$HAVE_ICONV\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_ICONV='no'
-echo '#undef HAVE_ICONV' >$BLD/include/agar/config/have_iconv.h
-echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
-fi;
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-if [ "${HAVE_ICONV}" = "no" ]; then
-$ECHO_N 'checking for iconv() in -liconv...'
-$ECHO_N 'checking for iconv() in -liconv...' >> config.log
 if [ "${prefix_iconv}" != "" ]; then
 if [ -e  "${prefix_iconv}/include/iconv.h" ]; then
 ICONV_CFLAGS="-I${prefix_iconv}/include"
@@ -8595,102 +8586,7 @@ echo '#undef HAVE_ICONV' >$BLD/include/agar/config/have_iconv.h
 echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
 fi;
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-if [ "${HAVE_ICONV}" = "no" ]; then
-$ECHO_N 'checking for iconv() in -liconv (const)...'
-$ECHO_N 'checking for iconv() in -liconv (const)...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iconv.h>
-
-int main(int argc, char *argv[])
-{
-	const char *inbuf = "foo";
-	size_t inlen = strlen(inbuf), rv;
-	char *outbuf = malloc(3);
-	size_t outbuflen = 3;
-	iconv_t cd;
-
-	cd = iconv_open("ISO-8859-1", "UTF-8");
-	rv = iconv(cd, &inbuf, &inlen, &outbuf, &outbuflen);
-	iconv_close(cd);
-	return ((rv == (size_t)-1));
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest conftest.c ${ICONV_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_ICONV='yes'
-echo '#ifndef HAVE_ICONV' > $BLD/include/agar/config/have_iconv.h
-echo "#define HAVE_ICONV \"$HAVE_ICONV\"" >> $BLD/include/agar/config/have_iconv.h
-echo '#endif' >> $BLD/include/agar/config/have_iconv.h
-echo "hdefs[\"HAVE_ICONV\"] = \"$HAVE_ICONV\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_ICONV='no'
-echo '#undef HAVE_ICONV' >$BLD/include/agar/config/have_iconv.h
-echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
-fi;
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi;
-else
-$ECHO_N 'checking for iconv() with const...'
-$ECHO_N 'checking for iconv() with const...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iconv.h>
-
-int main(int argc, char *argv[])
-{
-	const char *inbuf = "foo";
-	size_t inlen = strlen(inbuf), rv;
-	char *outbuf = malloc(3);
-	size_t outbuflen = 3;
-	iconv_t cd;
-
-	cd = iconv_open("ISO-8859-1", "UTF-8");
-	rv = iconv(cd, &inbuf, &inlen, &outbuf, &outbuflen);
-	iconv_close(cd);
-	return ((rv == (size_t)-1));
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest conftest.c ${ICONV_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wno-cast-qual -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_ICONV='yes'
-echo '#ifndef HAVE_ICONV' > $BLD/include/agar/config/have_iconv.h
-echo "#define HAVE_ICONV \"$HAVE_ICONV\"" >> $BLD/include/agar/config/have_iconv.h
-echo '#endif' >> $BLD/include/agar/config/have_iconv.h
-echo "hdefs[\"HAVE_ICONV\"] = \"$HAVE_ICONV\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_ICONV='no'
-echo '#undef HAVE_ICONV' >$BLD/include/agar/config/have_iconv.h
-echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
-fi;
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi;
+if [ "${HAVE_ICONV}" = "yes" ]; then
 echo '#ifndef ICONV_CFLAGS' > $BLD/include/agar/config/iconv_cflags.h
 echo "#define ICONV_CFLAGS \"$ICONV_CFLAGS\"" >> $BLD/include/agar/config/iconv_cflags.h
 echo '#endif' >> $BLD/include/agar/config/iconv_cflags.h
@@ -8699,56 +8595,13 @@ echo '#ifndef ICONV_LIBS' > $BLD/include/agar/config/iconv_libs.h
 echo "#define ICONV_LIBS \"$ICONV_LIBS\"" >> $BLD/include/agar/config/iconv_libs.h
 echo '#endif' >> $BLD/include/agar/config/iconv_libs.h
 echo "hdefs[\"ICONV_LIBS\"] = \"$ICONV_LIBS\"" >>configure.lua
-if [ "${HAVE_ICONV}" = "yes" ]; then
-$ECHO_N 'checking whether iconv() is const-correct...'
-$ECHO_N 'checking whether iconv() is const-correct...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iconv.h>
-
-int main(int argc, char *argv[])
-{
-	const char *inbuf = "foo";
-	size_t inlen = strlen(inbuf), rv;
-	char *outbuf = malloc(3);
-	size_t outbuflen = 3;
-	iconv_t cd;
-
-	cd = iconv_open("ISO-8859-1", "UTF-8");
-	rv = iconv(cd, &inbuf, &inlen, &outbuf, &outbuflen);
-	iconv_close(cd);
-	return ((rv == (size_t)-1));
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wcast-qual -Werror -o $testdir/conftest conftest.c ${ICONV_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ICONV_CFLAGS} -Wcast-qual -Werror -o $testdir/conftest$$ conftest$$.c ${ICONV_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_ICONV_CONST='yes'
-echo '#ifndef HAVE_ICONV_CONST' > $BLD/include/agar/config/have_iconv_const.h
-echo "#define HAVE_ICONV_CONST \"$HAVE_ICONV_CONST\"" >> $BLD/include/agar/config/have_iconv_const.h
-echo '#endif' >> $BLD/include/agar/config/have_iconv_const.h
-echo "hdefs[\"HAVE_ICONV_CONST\"] = \"$HAVE_ICONV_CONST\"" >>configure.lua
 else
-echo 'no'
-echo 'no' >> config.log
-HAVE_ICONV_CONST='no'
-echo '#undef HAVE_ICONV_CONST' >$BLD/include/agar/config/have_iconv_const.h
-echo 'hdefs["HAVE_ICONV_CONST"] = nil' >>configure.lua
-fi;
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-else
-echo '#undef HAVE_ICONV_CONST' >$BLD/include/agar/config/have_iconv_const.h
-echo 'hdefs["HAVE_ICONV_CONST"] = nil' >>configure.lua
+echo '#undef ICONV_CFLAGS' >$BLD/include/agar/config/iconv_cflags.h
+echo 'hdefs["ICONV_CFLAGS"] = nil' >>configure.lua
+ICONV_CFLAGS=""
+echo '#undef ICONV_LIBS' >$BLD/include/agar/config/iconv_libs.h
+echo 'hdefs["ICONV_LIBS"] = nil' >>configure.lua
+ICONV_LIBS=""
 fi;
 $ECHO_N 'checking for a gettext library in libc...'
 $ECHO_N 'checking for a gettext library in libc...' >> config.log
@@ -10625,8 +10478,6 @@ echo "HAVE_GLX=$HAVE_GLX" >>Makefile.config
 echo "mdefs[\"HAVE_GLX\"] = \"$HAVE_GLX\"" >>configure.lua
 echo "HAVE_ICONV=$HAVE_ICONV" >>Makefile.config
 echo "mdefs[\"HAVE_ICONV\"] = \"$HAVE_ICONV\"" >>configure.lua
-echo "HAVE_ICONV_CONST=$HAVE_ICONV_CONST" >>Makefile.config
-echo "mdefs[\"HAVE_ICONV_CONST\"] = \"$HAVE_ICONV_CONST\"" >>configure.lua
 echo "HAVE_INT64_T=$HAVE_INT64_T" >>Makefile.config
 echo "mdefs[\"HAVE_INT64_T\"] = \"$HAVE_INT64_T\"" >>configure.lua
 echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config

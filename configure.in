@@ -78,6 +78,7 @@ CHECK(limits_h)
 CHECK(float_h)
 CHECK(math)
 CHECK(math_c99)
+CHECK(fdclose)
 CHECK(getpwuid)
 CHECK(getpwnam_r)
 CHECK(getenv)
@@ -110,7 +111,9 @@ CHECK(xbox)
 
 # C compiler options
 C_DEFINE(_AGAR_INTERNAL)
+C_DEFINE(_DEFAULT_SOURCE)
 C_DEFINE(_BSD_SOURCE)
+
 C_NO_SECURE_WARNINGS()
 #C_EXTRA_WARNINGS()
 #C_FATAL_WARNINGS()
