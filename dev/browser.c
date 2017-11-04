@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2017 Julien Nadeau <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -289,7 +289,6 @@ ImportObject(AG_Event *event)
 	char *path = AG_STRING(3);
 	int loadedTmp = 0;
 	int dataFound;
-	int rv = 0;
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
@@ -302,7 +301,6 @@ ImportObject(AG_Event *event)
 	}
 	if (AG_ObjectLoadFromFile(ob, path) == -1) {
 		AG_SetError("%s: %s", ob->name, AG_GetError());
-		rv = -1;
 	}
 	if (loadedTmp) {
 		AG_ObjectFreeDataset(ob);

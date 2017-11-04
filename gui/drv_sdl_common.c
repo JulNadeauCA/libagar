@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2017 Julien Nadeau <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -935,11 +935,10 @@ AG_SDL_EventSink(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
 	AG_Driver *drv = AG_PTR(1);
-	int rv = 0;
 
 	if (SDL_PollEvent(NULL) != 0) {
 		while (AG_SDL_GetNextEvent(drv, &dev) == 1)
-			rv = AG_SDL_ProcessEvent(drv, &dev);
+			(void)AG_SDL_ProcessEvent(drv, &dev);
 	} else {
 		AG_Delay(1);
 	}

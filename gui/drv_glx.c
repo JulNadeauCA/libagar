@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2017 Julien Nadeau <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -181,7 +181,6 @@ GLX_DestroyGlobals(void)
 
 	if (agDisplay) {
 		int *intFds, nIntFds, i;
-		int xfd;
 		
 		AG_DelEventSink(glxEventSink); glxEventSink = NULL;
 		AG_DelEventEpilogue(glxEventEpilogue); glxEventEpilogue = NULL;
@@ -193,7 +192,7 @@ GLX_DestroyGlobals(void)
 			}
 			XFree(intFds);
 		}
-		xfd = XConnectionNumber(agDisplay);
+		(void)XConnectionNumber(agDisplay);
 		XCloseDisplay(agDisplay);
 		agDisplay = NULL;
 	}
