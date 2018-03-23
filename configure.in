@@ -7,8 +7,8 @@
 
 # Version information
 PACKAGE("Agar")
-VERSION("1.5.0")
-RELEASE("A Mild Breeze upon the Brow of the Dead")
+VERSION("1.5.1")
+RELEASE("Organic Hallucination")
 
 # Register options for configure --help
 REGISTER_SECTION("Global Agar options:")

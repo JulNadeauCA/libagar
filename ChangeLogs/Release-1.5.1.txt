@@ -1,0 +1,18 @@
+
+Release Notes for Agar 1.5.1 (Organic Hallucination)
+----------------------------------------------------
+
+Here are some of the most notable changes since Agar 1.5.0, in no
+particular order.
+
+This release preserves backward compatibility with Agar 1.4.x, but it is
+recommended to compile Agar with the `--disable-legacy' configure option,
+ensuring that existing applications are not using deprecated calls.
+
+- WEB: Introduce Agar HTTP/1.1 application server interface. Agar-WEB provides
+  a modular, multiprocess, privilege-separated environment for implementing
+  high-performance web applications. Agar-WEB handles authentication & session
+  management, input parsing and validation (URL/FORMDATA/JSON/Binary BLOBs),
+  Push events and built-in Zlib compression. Agar-WEB also provides a HTML
+  template engine (variable substitution) with multilanguage capabilities.
+

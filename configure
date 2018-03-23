@@ -812,12 +812,12 @@ echo '#ifndef PACKAGE' > $BLD/include/agar/config/package.h
 echo "#define PACKAGE \"$PACKAGE\"" >> $BLD/include/agar/config/package.h
 echo '#endif' >> $BLD/include/agar/config/package.h
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.5.0"
+VERSION="1.5.1"
 echo '#ifndef VERSION' > $BLD/include/agar/config/version.h
 echo "#define VERSION \"$VERSION\"" >> $BLD/include/agar/config/version.h
 echo '#endif' >> $BLD/include/agar/config/version.h
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="A Mild Breeze upon the Brow of the Dead"
+RELEASE="Organic Hallucination"
 echo '#ifndef RELEASE' > $BLD/include/agar/config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> $BLD/include/agar/config/release.h
 echo '#endif' >> $BLD/include/agar/config/release.h
