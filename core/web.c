@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017 Julien Nadeau <vedge@hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2662,9 +2662,9 @@ WEB_SetError(const char *fmt, ...)
 	    "<center><div class='alert alert-danger alert-dismissible' "
 	     "role='alert'>"
 	      "%s: <strong>%s</strong>"
-	      "<a class='close' data-dismiss='alert'>&times;</a>"
+	      " <a class='close' data-dismiss='alert' title='%s'>&times;</a>"
 	    "</div></center>",
-	    _("Error"), htmlMsg);
+	    _("Error"), htmlMsg, _("Dismiss"));
 }
 void
 WEB_SetErrorS(const char *msg)
@@ -2676,9 +2676,9 @@ WEB_SetErrorS(const char *msg)
 	    "<center><div class='alert alert-danger alert-dismissible' "
 	     "role='alert'>"
 	      "%s: <strong>%s</strong>"
-	      "<a class='close' data-dismiss='alert'>&times;</a>"
+	      " <a class='close' data-dismiss='alert' title='%s'>&times;</a>"
 	    "</div></center>",
-	    _("Error"), htmlMsg);
+	    _("Error"), htmlMsg, _("Dismiss"));
 }
 
 /* Set a dismissible success message. */
@@ -2695,9 +2695,9 @@ WEB_SetSuccess(const char *fmt, ...)
 	Set("_error",
 	    "<div class='alert alert-success alert-dismissible' role='alert'>"
 	      "<span class='sr-only'>%s: </span>%s"
-	      "<a class='close' data-dismiss='alert'>&times;</a>"
+	      " <a class='close' data-dismiss='alert' title='%s'>&times;</a>"
 	    "</div>",
-	     _("Success: "), htmlMsg);
+	     _("Success: "), htmlMsg, _("Dismiss"));
 }
 
 static __inline__ int
