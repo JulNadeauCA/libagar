@@ -145,7 +145,9 @@ WGL_EventSink(AG_EventSink *es, AG_Event *event)
 {
 	AG_DriverEvent dev;
 
-	if (!WGL_PendingEvents(NULL)) {
+	/* expand WGL_PendingEvents(): */
+	if ((TAILQ_EMPTY(&wglEventQ) &&
+	     GetQueueStatus(QS_ALLINPUT) == 0)) {
 		return (0);
 	}
 	if (WGL_GetNextEvent(NULL, &dev) == 1) {
@@ -784,7 +786,7 @@ fallback:
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-static __inline__ int
+static int
 WGL_PendingEvents(void *drvCaller)
 {
 	return (!TAILQ_EMPTY(&wglEventQ) ||
