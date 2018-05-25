@@ -5,7 +5,7 @@ include ${TOP}/gui/Makefile.inc
 include ${TOP}/math/Makefile.inc
 
 LIB=		ag_math
-LIB_CURRENT=	5
+LIB_CURRENT=	6
 LIB_REVISION=	0
 LIB_AGE=	0
 

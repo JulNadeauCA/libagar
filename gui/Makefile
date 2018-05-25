@@ -6,7 +6,7 @@ include ${TOP}/gui/Makefile.inc
 SUBDIR=	fonts
 
 LIB=		ag_gui
-LIB_CURRENT=	5
+LIB_CURRENT=	6
 LIB_REVISION=	0
 LIB_AGE=	0
 

@@ -9,10 +9,22 @@ This release preserves backward compatibility with Agar 1.4.x, but it is
 recommended to compile Agar with the `--disable-legacy' configure option,
 ensuring that existing applications are not using deprecated calls.
 
-- WEB: Introduce Agar HTTP/1.1 application server interface. Agar-WEB provides
-  a modular, multiprocess, privilege-separated environment for implementing
-  high-performance web applications. Agar-WEB handles authentication & session
-  management, input parsing and validation (URL/FORMDATA/JSON/Binary BLOBs),
-  Push events and built-in Zlib compression. Agar-WEB also provides a HTML
-  template engine (variable substitution) with multilanguage capabilities.
+- Fix some compiler warnings. Set _DEFAULT_SOURCE to accommodate glibc whims.
+- Fix build issue and warnings under Cygwin host.
+- Fix missing include for 32-bit MSYS build. Thanks varialus!
+- CORE: Introduce AG_{Copy,Write,Skip}StringPadded() for fixed-length records.
+- CORE: Introduce AG_DelTimers().
+- CORE: Introduce AG_Web(3), the Agar HTTP/1.1 application server. This tiny
+  library can be used to create multiprocess, privilege-separated application
+  servers. It handles authentication, sessions, compression and push events.
+  It provides a template engine, input parsing and validation routines for URL,
+  FORMDATA, JSON and binary BLOB data.
+- CORE: Add AG_SetErrorS() variant; avoid printf use by AG_FatalError().
+- CORE: Remove unnecessary locks in AG_WriteString().
+- CORE: AG_ReadStringLenv() now returns encoded length.
+- CORE: Prevent redundant AG_InitCore() or AG_Destroy() calls.
+- CORE: Document AG_Db(3) API.
+- VG: Fix invalid access under GUI-less operation.
+- VG: Fix invalid access in VG_View(3).
+- Manual page improvements (clarity, wording, added more examples).
 

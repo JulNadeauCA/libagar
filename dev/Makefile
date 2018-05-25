@@ -4,7 +4,7 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_dev
-LIB_CURRENT=	5
+LIB_CURRENT=	6
 LIB_REVISION=	0
 LIB_AGE=	0
 
