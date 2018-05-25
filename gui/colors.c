@@ -77,7 +77,7 @@ AG_ColorFromString(const char *s, const AG_Color *pColor)
 
 	Strlcpy(buf, s, sizeof(buf));
 	
-	for (c = &buf[0]; *c != '\0' && isspace(*c); c++) {
+	for (c = &buf[0]; *c != '\0' && isspace((int)*c); c++) {
 		;;
 	}
 	switch (*c) {

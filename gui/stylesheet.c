@@ -128,7 +128,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		size_t len;
 		AG_StyleEntry *cssEnt;
 	
-		while (isspace(*c)) { c++; }
+		while (isspace((int)*c)) { c++; }
 		if (*c == '\0' || *c == '#') { continue;  }
 
 		if ((t = strchr(c, '{')) != NULL) {
@@ -136,7 +136,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 				AG_SetError("Syntax error (nested block)");
 				goto fail_parse;
 			}
-			while (isspace(t[-1])) {
+			while (isspace((int)t[-1])) {
 				t--;
 			}
 			*t = '\0';
@@ -160,17 +160,17 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		if (cKey == NULL || cVal == NULL) {
 			continue;
 		}
-		while (isspace(*cKey)) { cKey++; }
-		while (isspace(*cVal)) { cVal++; }
+		while (isspace((int)*cKey)) { cKey++; }
+		while (isspace((int)*cVal)) { cVal++; }
 		len = strlen(cKey)-1;
 		for (;;) {
-			if (!isspace(cKey[len])) { break; }
+			if (!isspace((int)cKey[len])) { break; }
 			cKey[len] = '\0';
 			len--;
 		}
 		len = strlen(cVal)-1;
 		for (;;) {
-			if (!isspace(cVal[len])) { break; }
+			if (!isspace((int)cVal[len])) { break; }
 			cVal[len] = '\0';
 			len--;
 		}
