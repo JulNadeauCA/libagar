@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,48 @@
 The Agar object system provides object-oriented programming functionality
 (e.g., inheritance, virtual functions) to applications written in
 different languages (currently C, C++, Objective C, Perl and Ada).
-Agar objects can be organized into a virtual filesystem (VFS), and the
-process of archiving (serialization) is tightly integrated in the object
-system.
+.Pp
+Agar objects can be organized into a tree or virtual filesystem (VFS).
+Any
+.Nm
+can become the root of a VFS.
+A VFS can be made persistent to the degree required by the application.
+Agar object data is typically serialized to a machine-independent binary
+format (using
+.Xr AG_DataSource 3
+calls in their
+.Fn load
+and
+.Fn save
+operations).
+While the VFS metadata (which include
+.Va name
+and
+.Va flags )
+must stay in memory, the data of any object in the VFS can be saved to disk
+and paged in on demand.
+Practical examples includes:
+.Bl -bullet
+.It
+The Agar GUI's
+.Xr AG_Window 3
+(VFS of
+.Xr AG_Widget 3
+objects).
+.It
+FreeSG (http://freesg.org/) represents a scene graph by a VFS of
+.Xr SG_Node 3
+objects.
+Unused nodes can be paged out until needed.
+.It
+Edacious (http://edacious.org/) represents a circuit and its attached
+components as a VFS in memory, but saves to a single binary file which
+includes both the serialized data of the circuit object and its components.
+Edacious circuit files may also include saved states of third-party component
+models which may require extra libraries (in which case, Agar will attempt to
+load DSOs which the object metadata indicates are needed to implement a
+particular Agar object class).
+.El
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Object *"
@@ -187,25 +226,24 @@ variant of
 .Fn AG_ObjectInit
 implicitely sets the
 .Dv AG_OBJECT_STATIC
-flag (see
-.Sx FLAGS ) .
+flag, indicating that the object's structure statically allocated (or allocated
+through a facility other than
+.Xr malloc 3 ) .
 The
 .Fn AG_ObjectInitNamed
-variant either implicitely calls
+variant either sets the object name with
 .Fn AG_ObjectSetNameS
 if the
 .Fa name
-argument is non-NULL, or it sets the
+argument is non-NULL, or it implicitely sets the
 .Dv AG_OBJECT_NAME_ONATTACH
-flag if the name is NULL (see
-.Sx FLAGS
-section for details).
+flag if the name is NULL.
 .Pp
 The function
 .Fn AG_ObjectAttach
-attaches an object to a new parent and
+attaches an object to a new parent object and
 .Fn AG_ObjectDetach
-detaches an object from its current parent.
+detaches an object from its current parent object.
 These operations raise
 .Sq attached
 and
@@ -215,7 +253,7 @@ Prior to detaching the object,
 .Fn AG_ObjectDetach
 cancels any scheduled
 .Xr AG_Timer 3
-callback.
+callback execution.
 If
 .Fa parent
 is NULL,
@@ -287,12 +325,11 @@ and the list of child objects
 which are all considered part of the virtual filesystem and are instead
 protected by
 .Fn AG_LockVFS .
-In most cases, it is best to use the
+The
 .Fn AG_ObjectLock
-mutex as a general-purpose locking device for subclasses of
-.Nm ,
-because it is guaranteed to be held during processing of events posted to the
-object, or object operations such as
+mutex can be used as a general-purpose locking device for the object.
+This mutex is guaranteed to be held during processing of all events posted to
+the object, as well as during object operations such as
 .Fn load
 and
 .Fn save .
@@ -304,12 +341,12 @@ and
 functions acquire or release the lock protecting the layout of the entire
 virtual system which the given object is part of.
 .Pp
-Note that all lock/unlock functions are turned to no-ops if Agar is compiled
-without threads support.
+Note that all lock/unlock routines above become no-ops if Agar is compiled
+with --disable-threads.
 .Pp
 .Fn AG_ObjectSetName
-changes the name of the given object.
-If the object is attached to a VFS, it is assumed to be locked.
+updates the name of the given object.
+If the object is attached to a VFS, the VFS must locked.
 .Pp
 .Fn AG_ObjectGenName
 generates an object name string unique to the specified parent object
@@ -321,20 +358,20 @@ of the given size
 .Fa len .
 In a multithreaded context, the name is only guaranteed to remain unique as
 long as the parent object's VFS is locked.
-Similarly,
+The
 .Fn AG_ObjectGenNamePfx
-generates a name using the specified prefix instead of the class name.
+variant generates a name using the specified prefix instead of the class name.
 .Pp
 .Fn AG_ObjectSetAttachFn
 and
 .Fn AG_ObjectSetDetachFn
 allow custom "attach" and "detach" hooks to be registered.
-These hooks are used where it is necessary to control the order of the
-child objects (for example, in the
+This is useful where it is necessary to control the order of the child objects
+(for example, in the
 .Xr AG_Window 3
 system of Agar-GUI, the ordering of window objects is important as it
 determines the order of rendering).
-The hook function is expected to insert the child object somewhere into the
+The hook function must insert/remove the child object directly from the
 parent's
 .Va children
 list.
@@ -427,7 +464,8 @@ The
 .Ft AG_ObjectClass
 structure also contains read-only members which are initialized internally
 by the object system (see
-.Sx STRUCTURE DATA ) .
+.Sx STRUCTURE DATA
+section).
 .Pp
 Traditionally, in C, the source file for an Agar object will contain a
 static initializer for
@@ -1225,7 +1263,8 @@ Named variables (see
 for details).
 .It Ft TAILQ deps
 Registered dependencies (see
-.Sx DEPENDENCIES ) .
+.Sx DEPENDENCIES
+section).
 .It Ft TAILQ children
 List of child objects.
 The
