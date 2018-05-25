@@ -69,12 +69,14 @@ typedef struct vg_view {
 
 	VG_Tool *curtool;			/* Selected tool */
 	VG_Tool *deftool;			/* Default tool if any */
-	AG_TAILQ_HEAD_(vg_tool) tools;		/* Map edition tools */
+	AG_TAILQ_HEAD_(vg_tool) tools;		/* Edition tools */
 
 	char status[128];			/* Status text buffer */
 	AG_TextCache *tCache;			/* Text cache for VG_Text */
-	AG_Widget **editAreas;			/* User-specified container */
-	Uint nEditAreas;
+
+	AG_Widget **editAreas;			/* User-specified containers */
+	Uint       nEditAreas;
+
 	int pointSelRadius;			/* Point selection threshold */
 	AG_Rect r;				/* View area */
 } VG_View;
