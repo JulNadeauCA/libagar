@@ -10,28 +10,29 @@ Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
 microbiological work. Agar is also the name of an open source GUI toolkit.
 
-Agar is designed to work with any graphics system, under any platform. The
-interface between Agar and the underlying OS is implemented as a modular
-"driver". Some Agar drivers are designed to work with a native window
-system (e.g., "glx", "wgl" and "cocoa"). Other Agar drivers (such as
-"sdlfb" and "sdlgl") work with a single display, with Agar providing a
-built-in window manager. Since Agar provides a consistent programming
-interface, developers need not to be aware of the underlying platform.
+Agar works with a wide variety of platforms and graphics systems, from modern
+OpenGL-capable desktops to classic consoles and embedded devices. Using the
+AG_Driver(3) interface, developers can easily port Agar to new systems
+and graphics APIs. Some Agar drivers are designed to work with a native
+window system (e.g., "glx", "wgl" and "cocoa"). Others (such as "sdlfb"
+and "sdlgl") work with a single display, with Agar providing a built-in
+window manager. Since Agar provides a consistent programming interface,
+developers need not to be aware of the underlying platform.
 
-A set of general-purpose widgets are included in the Agar-GUI library.
-Agar is designed such that new widgets can be easily implemented as part
-of a separate third-party library or application. The appearance of Agar
-GUI elements is configurable both programmatically and parametrically.
+A set of general-purpose widgets are included in the Agar distribution.
+Agar's class registration interface allows new widgets to be implemented
+as part of an application or third-party library. The appearance of Agar
+GUI elements is configurable programmatically and parametrically using
+simple CSS-style attributes.
 
 The Agar-Core library provides various utility and portability interfaces,
-as well as the object system used by Agar, AG_Object(3). The object system
-implements inheritance, serialization, virtual functions, timers, threads,
-and variable bindings. Agar-Core contains no GUI-related code; applications
-may link to Agar-Core without linking to Agar-GUI.
+as well as Agar's object system, AG_Object(3). The object system implements
+inheritance, serialization, virtual functions, timers and more. Agar-Core
+contains no GUI-related code; applications may link to Agar-Core without
+linking to Agar-GUI.
 
-Agar is entirely thread-safe when built with thread support. Thread-safety
-considerations are documented in the API reference; see AG_Threads(3) for
-details.
+Agar is thread-safe when built with threads support. See the API reference
+and AG_Threads(3) for more information about thread safety.
 
 Documentation
 -------------
