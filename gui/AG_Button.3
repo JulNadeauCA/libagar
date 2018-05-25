@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,10 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Button.png, "A row of buttons")
 The
 .Nm
-widget implements a simple push-button displaying an image or a text label.
+widget implements a simple push-button containing a text label or an image.
 .Nm
-can be used to trigger events, or control a boolean value.
+can trigger events and/or control a boolean value (which can be
+an integer or one or more bits in an integer).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -72,6 +73,9 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "<Type> bitmask"
 .Pp
 .Ft void
+.Fn AG_ButtonInvertState "AG_Button *button" "int flag"
+.Pp
+.Ft void
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
 .Pp
 .Ft void
@@ -79,9 +83,6 @@ can be used to trigger events, or control a boolean value.
 .Pp
 .Ft void
 .Fn AG_ButtonSetSticky "AG_Button *button" "int flag"
-.Pp
-.Ft void
-.Fn AG_ButtonInvertState "AG_Button *button" "int flag"
 .Pp
 .Ft void
 .Fn AG_ButtonJustify "AG_Button *button" "enum ag_text_justify justify"
@@ -136,23 +137,21 @@ is passed).
 .Pp
 The
 .Fn AG_ButtonNew{Int,Uint8,Uint16,Uint32}
-functions tie the state of the button (the
+functions tie the boolean state of the button (the
 .Sq state
-binding) with the given integer variable, where 1 = True and 0 = False.
+binding) to a specified integer, where 1 is true and 0 is false.
 .Pp
 The
 .Fn AG_ButtonNew{Flag,Flag8,Flag16,Flag32} ,
-functions tie the state of the button with the state of the bits
-described by
-.Fa bitmask
-in the specified integer variable.
-.Fn AG_ButtonNewFlag
-binds to an
-.Ft int ,
-.Fn AG_ButtonNewFlag8
-binds to an
-.Ft Uint8 ,
-etc.
+functions tie the boolean state of the button to the bits described by
+.Fa bitmask ,
+within the specified integer.
+.Pp
+To invert the boolean interpretation of the tied value, the button can be
+initialized with
+.Dv AG_BUTTON_INVSTATE ,
+or a parameter of 1 can be passed to
+.Fn AG_ButtonInvertState .
 .Pp
 The
 .Fn AG_ButtonSetPadding
@@ -179,11 +178,6 @@ Under sticky mode, the button will not spring back to its previous state
 following a click event.
 This mode is mostly useful when the button's state is bound to a boolean
 variable.
-.Pp
-The
-.Fn AG_ButtonInvertState
-function defines whether to invert the meaning of the boolean variable
-bound to the button.
 .Pp
 .Fn AG_ButtonJustify
 sets the justification for the button text label (or icon):
