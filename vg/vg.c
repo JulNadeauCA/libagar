@@ -43,7 +43,7 @@ const AG_Version vgVer = { 6, 1 };
 int          vgInitedSubsystem = 0;
 VG_NodeOps **vgNodeClasses;
 Uint         vgNodeClassCount;
-int          vgGUI = 1;
+int          vgGUI = 0;			/* Implies agGUI */
 
 extern VG_NodeOps vgPointOps;
 extern VG_NodeOps vgLineOps;
@@ -74,8 +74,9 @@ VG_InitSubsystem(void)
 	vgNodeClassCount = 0;
 
 	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
-	if (agGUI && vgGUI) {
+	if (agGUI) {
 		AG_RegisterClass(&vgViewClass);
+		vgGUI = 1;
 	}
 	for (vnOps = &vgBuiltinClasses[0]; *vnOps != NULL; vnOps++)
 		VG_RegisterClass(*vnOps);
@@ -90,7 +91,7 @@ VG_DestroySubsystem(void)
 	if (!vgInitedSubsystem)
 		return;
 	
-	if (agGUI && vgGUI) {
+	if (vgGUI) {
 		AG_UnregisterClass(&vgViewClass);
 	}
 	Free(vgNodeClasses);
