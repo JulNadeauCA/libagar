@@ -27,17 +27,21 @@
  * User information on Windows platforms.
  */
 
+#include <agar/config/have_cygwin.h>
+
 #include <agar/core/core.h>
 #include <agar/core/win32.h>
-
 #include <agar/core/queue_close.h>
+#ifndef HAVE_CYGWIN
 #include <shlobj.h>
+#endif
 #include <agar/core/queue_close.h>
 #include <agar/core/queue.h>
 
 static int
 GetUserByUID(AG_User *u, Uint32 uid)
 {
+#ifndef HAVE_CYGWIN
 	char appdata[MAX_PATH];
 	char tmpdir[MAX_PATH];
 
@@ -56,7 +60,7 @@ GetUserByUID(AG_User *u, Uint32 uid)
 	}
 	if ((u->tmp = TryStrdup(tmpdir)) == NULL)
 		return (-1);
-
+#endif
 	u->flags |= AG_USER_NO_ACCOUNT;			/* Not a real user */
 	return (0);
 }
