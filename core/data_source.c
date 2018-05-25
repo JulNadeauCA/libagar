@@ -270,8 +270,8 @@ CoreRead(AG_DataSource *ds, void *buf, size_t len, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
 	if (cs->offs+len > cs->size) {
-		AG_SetError("Out of bounds (%lu+%lu > %lu)", cs->offs, len,
-		    cs->size);
+		AG_SetError("Out of bounds (%lu+%lu > %lu)", (Ulong)cs->offs,
+		    len, cs->size);
 		return (-1);
 	}
 	memcpy(buf, &cs->data[cs->offs], len);
@@ -285,7 +285,7 @@ CoreReadAt(AG_DataSource *ds, void *buf, size_t len, off_t pos, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
 	if (pos+len > cs->size) {
-		AG_SetError("Out of bounds (@%lu+%lu > %lu)", pos, len,
+		AG_SetError("Out of bounds (@%lu+%lu > %lu)", (Ulong)pos, len,
 		    cs->size);
 		return (-1);
 	}
@@ -299,8 +299,8 @@ CoreWrite(AG_DataSource *ds, const void *buf, size_t len, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
 	if (cs->offs+len > cs->size) {
-		AG_SetError("Out of bounds (>%lu+%lu > %lu)", cs->offs, len,
-		    cs->size);
+		AG_SetError("Out of bounds (>%lu+%lu > %lu)", (Ulong)cs->offs,
+		    len, cs->size);
 		return (-1);
 	}
 	memcpy(&cs->data[cs->offs], buf, len);
@@ -333,7 +333,7 @@ CoreWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
 	if (pos+len > cs->size) {
-		AG_SetError("Out of bounds (>@%lu+%lu > %lu)", pos, len,
+		AG_SetError("Out of bounds (>@%lu+%lu > %lu)", (Ulong)pos, len,
 		    cs->size);
 		return (-1);
 	}
