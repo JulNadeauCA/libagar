@@ -9273,6 +9273,12 @@ echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
 echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
 echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi
 if [ "${with_single_fp}" = 'yes' ]
  then
