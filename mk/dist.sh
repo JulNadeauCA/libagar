@@ -91,6 +91,7 @@ if [ "$PHASE" = "stable" ]; then
 	echo "TODO:"
 	echo "- Double check core/version.h and build.lib.mk versions"
 	echo " "
+	echo "- Update https://github.com/JulNadeauCA/libagar/"
 	echo "- Update http://sourceforge.net/projects/agar/"
 	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
 	echo "- Notify @libAgar"
