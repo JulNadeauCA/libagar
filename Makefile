@@ -107,7 +107,7 @@ pre-package:
 		cat README                       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
 		cat INSTALL.txt                  |sed "s/$$/`echo -e \\\r`/" >INSTALL-Windows.txt; \
 		cat ChangeLogs/Release-$$V.txt   |sed "s/$$/`echo -e \\\r`/" >RELEASE-$$V.txt; \
-		cat mk/LICENSE.txt               |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
+		cat LICENSE                      |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
 		cat gui/fonts/Vera-Copyright.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE-Vera.txt; \
 		cp -f mk/agar-logo.png Logo.png; \
 		echo "README.txt"          >> ${PROJFILELIST}; \
@@ -119,7 +119,6 @@ pre-package:
 	else \
 		V=`perl mk/get-version.pl`; \
 		cp ChangeLogs/Release-$$V.txt RELEASE-$$V; \
-		cp mk/LICENSE.txt LICENSE; \
 		cp gui/fonts/Vera-Copyright.txt LICENSE-Vera; \
 		cp mk/agar-logo.png Logo.png; \
 	fi
@@ -129,7 +128,7 @@ post-package:
 		rm -f install-sdk.exe README.txt INSTALL-Windows.txt VisualC.html; \
 		rm -f RELEASE-*.txt LICENSE.txt LICENSE-*.txt Logo.png; \
 	else \
-		rm -f Release-* ChangeLog-* LICENSE LICENSE-* Logo.png; \
+		rm -f Release-* ChangeLog-* LICENSE-* Logo.png; \
 	fi
 
 function-list:
