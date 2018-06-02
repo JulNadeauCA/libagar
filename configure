@@ -225,6 +225,7 @@ for path in $PATH; do
 		break
 	fi
 done
+
 PKGCONFIG=''
 for path in $PATH; do
 	if [ -x "${path}/pkg-config" ]; then
@@ -235,7 +236,6 @@ for path in $PATH; do
 		break
 	fi
 done
-
 IFS=$bb_save_IFS
 if [ "${prefix}" != '' ]; then
     PREFIX="$prefix"
@@ -713,6 +713,18 @@ fi
 echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 echo "PREFIX?=${PREFIX}" >> Makefile.config
+echo "LDFLAGS?=${LDFLAGS}" >> Makefile.config
+
+if [ "${PKGCONFIG}" != "" ]; then
+	case "${host}" in
+	*-*-freebsd* | *-*-dragonfly*)
+		PKGCONFIG_LIBDIR="\${PREFIX}/libdata/pkgconfig"
+		;;
+	*)
+		PKGCONFIG_LIBDIR="\${PREFIX}/lib/pkgconfig"
+		;;
+	esac
+fi
 echo '#ifndef PREFIX' > $BLD/include/agar/config/prefix.h
 echo "#define PREFIX \"$PREFIX\"" >> $BLD/include/agar/config/prefix.h
 echo '#endif' >> $BLD/include/agar/config/prefix.h
@@ -4580,6 +4592,11 @@ echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
 echo '#undef SDL_LIBS' >$BLD/include/agar/config/sdl_libs.h
 echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
 fi;
+if [ "${HAVE_SDL}" = "yes" ]; then
+SDL_PC="sdl"
+else
+SDL_PC=""
+fi;
 		if [ "${HAVE_SDL}" != 'yes' ]
  then
 			if [ "${with_sdl}" = 'yes' ]
@@ -4876,6 +4893,11 @@ fi;
 else
 echo 'no'
 echo 'no' >> config.log
+fi;
+if [ "${HAVE_OPENGL}" = "yes" ]; then
+OPENGL_PC="gl"
+else
+OPENGL_PC=""
 fi;
 		if [ "${HAVE_OPENGL}" = 'yes' ]
  then
@@ -5235,6 +5257,7 @@ echo 'hdefs["X11_LIBS"] = nil' >>configure.lua
 X11_LIBS=""
 fi;
 if [ "${HAVE_X11}" = "yes" ]; then
+X11_PC="x11"
 $ECHO_N 'checking for the XKB extension...'
 $ECHO_N 'checking for the XKB extension...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -5276,6 +5299,7 @@ echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 fi;
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 else
+X11_PC=""
 echo '#undef HAVE_XKB' >$BLD/include/agar/config/have_xkb.h
 echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 fi;
@@ -5464,6 +5488,11 @@ XINERAMA_CFLAGS=""
 echo '#undef XINERAMA_LIBS' >$BLD/include/agar/config/xinerama_libs.h
 echo 'hdefs["XINERAMA_LIBS"] = nil' >>configure.lua
 XINERAMA_LIBS=""
+fi;
+if [ "${HAVE_XINERAMA}" = "yes" ]; then
+XINERAMA_PC="xinerama"
+else
+XINERAMA_PC=""
 fi;
 			if [ "${HAVE_XINERAMA}" != 'yes' ]
  then
@@ -5971,6 +6000,11 @@ else
 echo '#undef HAVE_FREETYPE' >$BLD/include/agar/config/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
 fi;
+if [ "${HAVE_FREETYPE}" = "yes" ]; then
+FREETYPE_PC="freetype2"
+else
+FREETYPE_PC=""
+fi;
 		if [ "${HAVE_FREETYPE}" != 'yes' ]
  then
 			echo "*"
@@ -6302,6 +6336,11 @@ echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
 echo 'no'
 echo 'no' >> config.log
 fi;
+if [ "${HAVE_JPEG}" = "yes" ]; then
+JPEG_PC="libjpeg"
+else
+JPEG_PC=""
+fi;
 		if [ "${HAVE_JPEG}" != 'yes' ]
  then
 			if [ "${with_jpeg}" = 'yes' ]
@@ -6591,6 +6630,11 @@ echo '#undef PNG_LIBS' >$BLD/include/agar/config/png_libs.h
 echo 'hdefs["PNG_LIBS"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
 echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
+fi;
+if [ "${HAVE_PNG}" = "yes" ]; then
+PNG_PC="libpng"
+else
+PNG_PC=""
 fi;
 		if [ "${HAVE_PNG}" != 'yes' ]
  then
@@ -8482,6 +8526,11 @@ else
 echo '#undef HAVE_UIM' >$BLD/include/agar/config/have_uim.h
 echo 'hdefs["HAVE_UIM"] = nil' >>configure.lua
 fi;
+if [ "${HAVE_UIM}" = "yes" ]; then
+UIM_PC="uim"
+else
+UIM_PC=""
+fi;
 	if [ "${HAVE_UIM}" != 'yes' ]
  then
 		if [ "${with_uim}" = 'yes' ]
@@ -9532,6 +9581,11 @@ else
 echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
 echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
 fi;
+if [ "${HAVE_SNDFILE}" = "yes" ]; then
+SNDFILE_PC="sndfile"
+else
+SNDFILE_PC=""
+fi;
 	if [ "${HAVE_SNDFILE}" = 'yes' ]
  then
 ENABLE_AU="yes"
@@ -9765,6 +9819,11 @@ echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
 echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
 echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+fi;
+if [ "${HAVE_PORTAUDIO}" = "yes" ]; then
+PORTAUDIO_PC="portaudio-2.0"
+else
+PORTAUDIO_PC=""
 fi;
 	else
 		if [ "${enable_au}" = 'yes' -o "${enable_audio}" = 'yes' ]
@@ -10010,8 +10069,33 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
+pkgconfig_module_out="agar"
+pkgconfig_module_desc="Agar cross-platform GUI toolkit"
+pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_gui -lag_core"
+pkgconfig_module_libs_pvt="-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
 config_script_out="agar-core-config"
-config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}"
 # Avoid breakage with existing trees compiled before BSDBuild 2.8.
 if [ -d "$config_script_out" ]; then
@@ -10085,6 +10169,31 @@ while test \$# -gt 0; do
 	esac
 	shift
 done
+EOT
+pkgconfig_module_out="agar-core"
+pkgconfig_module_desc="Agar object system and base library"
+pkgconfig_module_requires=""""
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_core"
+pkgconfig_module_libs_pvt="-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS} ${ZLIB_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
 EOT
 config_script_out="agar-dev-config"
 config_script_cflags="-I${INCLDIR}"
@@ -10162,6 +10271,31 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
+pkgconfig_module_out="agar-dev"
+pkgconfig_module_desc="Agar interface builder and developer tools"
+pkgconfig_module_requires="agar"
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar"
+pkgconfig_module_libs="-L\${libdir} -lag_dev"
+pkgconfig_module_libs_pvt="-lag_dev"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
 config_script_out="agar-math-config"
 config_script_cflags="-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_math ${MATH_LIBS}"
@@ -10237,6 +10371,37 @@ while test \$# -gt 0; do
 	esac
 	shift
 done
+EOT
+if [ "${enable_gui}" != 'no' ]
+ then
+	AGAR_MATH_REQUIRES="agar"
+else
+	AGAR_MATH_REQUIRES="agar-core"
+fi
+pkgconfig_module_out="agar-math"
+pkgconfig_module_desc="Agar math library"
+pkgconfig_module_requires="${AGAR_MATH_REQUIRES}"
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_math ${MATH_LIBS}"
+pkgconfig_module_libs_pvt="-lag_math ${MATH_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
 EOT
 config_script_out="agar-vg-config"
 config_script_cflags="-I${INCLDIR}"
@@ -10314,6 +10479,31 @@ while test \$# -gt 0; do
 	shift
 done
 EOT
+pkgconfig_module_out="agar-vg"
+pkgconfig_module_desc="Agar vector graphics library"
+pkgconfig_module_requires="agar"
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar ${MATH_CFLAGS}"
+pkgconfig_module_libs="-L\${libdir} -lag_vg ${MATH_LIBS}"
+pkgconfig_module_libs_pvt="-lag_vg ${MATH_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
+EOT
 config_script_out="agar-au-config"
 config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
 config_script_libs="-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}"
@@ -10389,6 +10579,31 @@ while test \$# -gt 0; do
 	esac
 	shift
 done
+EOT
+pkgconfig_module_out="agar-au"
+pkgconfig_module_desc="Agar audio library"
+pkgconfig_module_requires="agar ${PORTAUDIO_PC} ${SNDFILE_PC}"
+pkgconfig_module_conflicts=""""
+pkgconfig_module_cflags="-I\${includedir}/agar"
+pkgconfig_module_libs="-L\${libdir} -lag_au"
+pkgconfig_module_libs_pvt="-lag_au ${MATH_LIBS}"
+cat << EOT > $pkgconfig_module_out.pc
+# ${PACKAGE} pkg-config source file.
+# Generated by BSDBuild 3.2 <http://bsdbuild.hypertriton.com>.
+
+prefix=${PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: $pkgconfig_module_out
+Description: $pkgconfig_module_desc
+Version: ${VERSION}
+Requires: $pkgconfig_module_requires
+Conflicts: $pkgconfig_module_conflicts
+Libs: $pkgconfig_module_libs
+Libs.private: $pkgconfig_module_libs_pvt
+Cflags: $pkgconfig_module_cflags
 EOT
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
@@ -10612,6 +10827,10 @@ echo "PACKAGE=$PACKAGE" >>Makefile.config
 echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
 echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
+echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
+echo "mdefs[\"PKGCONFIG\"] = \"$PKGCONFIG\"" >>configure.lua
+echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
+echo "mdefs[\"PKGCONFIG_LIBDIR\"] = \"$PKGCONFIG_LIBDIR\"" >>configure.lua
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "mdefs[\"PNG_CFLAGS\"] = \"$PNG_CFLAGS\"" >>configure.lua
 echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config

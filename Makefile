@@ -14,12 +14,18 @@ SUBDIR=		core \
 		${SUBDIR_math} \
 		${SUBDIR_dev} \
 		${SUBDIR_au}
-CONFSCRIPTS=	agar-config \
+CFG_SCRIPTS=	agar-config \
 		agar-core-config \
 		agar-dev-config \
 		agar-math-config \
 		agar-vg-config \
 		agar-au-config
+PC_MODULES=	agar.pc \
+		agar-core.pc \
+		agar-dev.pc \
+		agar-math.pc \
+		agar-vg.pc \
+		agar-au.pc
 
 all: all-subdir
 clean: clean-subdir
@@ -80,20 +86,32 @@ deinstall-includes:
 	@${SUDO} rm -fR ${DESTDIR}${INCLDIR}/agar
 
 install-config:
-	@for PROG in ${CONFSCRIPTS}; do \
+	@for PROG in ${CFG_SCRIPTS}; do \
 		echo "${INSTALL_PROG} $$PROG ${BINDIR}"; \
 		${SUDO} ${INSTALL_PROG} $$PROG ${DESTDIR}${BINDIR}; \
 	done
+	@if [ "${PKGCONFIG}" != "" ]; then \
+		for F in ${PC_MODULES}; do \
+			echo "${INSTALL_DATA} $$F ${PKGCONFIG_LIBDIR}"; \
+			${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${PKGCONFIG_LIBDIR}; \
+		done; \
+	fi
 	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
 	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 
 deinstall-config:
-	@for PROG in ${CONFSCRIPTS}; do \
+	@for PROG in ${CFG_SCRIPTS}; do \
 		echo "${DEINSTALL_PROG} ${BINDIR}/$$PROG"; \
 		${SUDO} ${DEINSTALL_PROG} ${DESTDIR}${BINDIR}/$$PROG; \
 	done
+	@if [ "${PKGCONFIG}" != "" ]; then \
+		for F in ${PC_MODULES}; do \
+			echo "${DEINSTALL_DATA} ${PKGCONFIG_LIBDIR}/$$F"; \
+			${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PKGCONFIG_LIBDIR}/$$F; \
+		done; \
+	fi
 	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
 	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
 

@@ -771,30 +771,78 @@ C_INCDIR_CONFIG($BLD/include/agar/config)
 # Generate the "foo-config" scripts.
 CONFIG_SCRIPT(agar-config,\
 	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
-	${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
-	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
+	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
+	 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
+	 ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
+	 ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
-	${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
-	${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
-	${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
-	${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
+	 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
+	 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
+	 ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+
+PKGCONFIG_MODULE(agar, "Agar cross-platform GUI toolkit", \
+	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
+	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
+	"", \
+	"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
+	 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
+	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	"-L\${libdir} -lag_gui -lag_core", \
+	"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
+	 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
+	 ${ICONV_LIBS} ${ZLIB_LIBS}")
+
 CONFIG_SCRIPT(agar-core-config,\
-	"-I${INCLDIR} ${MATH_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
+	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
+	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} \
-	${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} \
-	${ZLIB_LIBS}")
-CONFIG_SCRIPT(agar-dev-config,\
-	"-I${INCLDIR}",\
-	"-L${LIBDIR} -lag_dev")
+	 ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} \
+	 ${ZLIB_LIBS}")
+PKGCONFIG_MODULE(agar-core, "Agar object system and base library", "", "", \
+	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
+	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} \
+	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	"-L\${libdir} -lag_core", \
+	"-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+	 ${DB4_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
+	 ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
+
+CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
+PKGCONFIG_MODULE(agar-dev, "Agar interface builder and developer tools", \
+	"agar", "", \
+	"-I\${includedir}/agar", "-L\${libdir} -lag_dev", "-lag_dev")
+
 CONFIG_SCRIPT(agar-math-config,\
 	"-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} \
 	${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
 	"-L${LIBDIR} -lag_math ${MATH_LIBS}")
+
+if [ "${enable_gui}" != 'no' ]; then
+	AGAR_MATH_REQUIRES="agar"
+else
+	AGAR_MATH_REQUIRES="agar-core"
+fi
+PKGCONFIG_MODULE(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
+	"", \
+	"-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} \
+	 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
+	"-L\${libdir} -lag_math ${MATH_LIBS}", \
+	"-lag_math ${MATH_LIBS}")
+
 CONFIG_SCRIPT(agar-vg-config,\
 	"-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
+PKGCONFIG_MODULE(agar-vg, "Agar vector graphics library", "agar", "", \
+	"-I\${includedir}/agar ${MATH_CFLAGS}", \
+	"-L\${libdir} -lag_vg ${MATH_LIBS}", \
+	"-lag_vg ${MATH_LIBS}")
+
 CONFIG_SCRIPT(agar-au-config,\
 	"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
 	"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
+PKGCONFIG_MODULE(agar-au, "Agar audio library", \
+	"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
+	"-I\${includedir}/agar", \
+	"-L\${libdir} -lag_au", \
+	"-lag_au ${MATH_LIBS}")
+
