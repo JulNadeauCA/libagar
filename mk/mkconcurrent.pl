@@ -38,6 +38,7 @@ $BUILD = '';
 	'^README$',
 	'^mkdep$',
 	'^install-includes.sh$',
+	'^deinstall-includes.sh$',
 	'^install-sh$',
 	'^config\.(guess|sub)$',
 	'^configure$',

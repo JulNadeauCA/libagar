@@ -62,10 +62,12 @@ release:
 	sh mk/dist.sh stable
 
 install-includes:
-	${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
-	${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
+	@echo ${INSTALL_INCL_DIR} ${INCLDIR}
+	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
+	@echo ${INSTALL_INCL_DIR} ${INCLDIR}/agar
+	@${SUDO} ${INSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
 	@(cd include/agar && for DIR in ${INCDIR} config; do \
-	    echo "mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
+	    echo "${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      DESTDIR="${DESTDIR}" \
 	      INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
@@ -73,17 +75,31 @@ install-includes:
 	      ${SH} ${SRCDIR}/mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
 	done)
 	@for INC in ${INCDIR}; do \
-		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
-		    ${INCLDIR}/agar/$${INC}.h"; \
-		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
-		    ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
+		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${INCLDIR}/agar/$${INC}.h"; \
+		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
-	echo "${INSTALL_INCL} include/agar/core/web.h ${INCLDIR}/agar/web.h"; \
-	${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h; \
+	@echo "${INSTALL_INCL} include/agar/core/web.h ${INCLDIR}/agar/web.h"
+	@${SUDO} ${INSTALL_INCL} include/agar/core/web.h ${DESTDIR}${INCLDIR}/agar/web.h
 
 deinstall-includes:
-	@echo "rm -fR ${INCLDIR}/agar"
-	@${SUDO} rm -fR ${DESTDIR}${INCLDIR}/agar
+	@-(cd include/agar && for DIR in ${INCDIR} config; do \
+	    echo "${SH} mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar"; \
+	    ${SUDO} env \
+	      DESTDIR="${DESTDIR}" \
+	      DEINSTALL_INCL_DIR="${DEINSTALL_INCL_DIR}" \
+	      DEINSTALL_INCL="${DEINSTALL_INCL}" \
+	      ${SH} ${SRCDIR}/mk/deinstall-includes.sh $$DIR ${INCLDIR}/agar; \
+	done)
+	@for INC in ${INCDIR}; do \
+		echo "${DEINSTALL_INCL} ${INCLDIR}/agar/$${INC}.h"; \
+		${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
+	done
+	@echo "${DEINSTALL_INCL} ${INCLDIR}/agar/web.h"
+	@${SUDO} ${DEINSTALL_INCL} ${DESTDIR}${INCLDIR}/agar/web.h
+	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}/agar"
+	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}/agar
+	@echo "${DEINSTALL_INCL_DIR} ${INCLDIR}"
+	@-${SUDO} ${DEINSTALL_INCL_DIR} ${DESTDIR}${INCLDIR}
 
 install-config:
 	@for PROG in ${CFG_SCRIPTS}; do \
@@ -91,13 +107,19 @@ install-config:
 		${SUDO} ${INSTALL_PROG} $$PROG ${DESTDIR}${BINDIR}; \
 	done
 	@if [ "${PKGCONFIG}" != "" ]; then \
+		if [ ! -e "${DESTDIR}${PKGCONFIG_LIBDIR}" ]; then \
+			echo "${INSTALL_DATA_DIR} ${PKGCONFIG_LIBDIR}"; \
+			${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PKGCONFIG_LIBDIR}; \
+		fi; \
 		for F in ${PC_MODULES}; do \
 			echo "${INSTALL_DATA} $$F ${PKGCONFIG_LIBDIR}"; \
 			${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${PKGCONFIG_LIBDIR}; \
 		done; \
 	fi
-	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
-	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
+	@if [ ! -e "${DESTDIR}${PREFIX}/share/aclocal" ]; then \
+		echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"; \
+		${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal; \
+	fi
 	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
 	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 
