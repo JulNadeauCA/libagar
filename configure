@@ -9959,7 +9959,7 @@ if [ ! -e "$BLD/include/agar" ]; then
 	mkdir -p "$BLD/include/agar"
 fi
 if [ "${includes}" = "link" ]; then
-	$ECHO_N "* Linking C include files..."
+	$ECHO_N "linking header files..."
 	if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 		(cd ${SRCDIR} && ${PERL} mk/gen-includelinks.pl "${SRCDIR}" "$BLD/include/agar" 1>>${BLDDIR}/config.log 2>&1)
 	else
@@ -9979,7 +9979,7 @@ else
 		echo '*'
 		exit 1
 	fi
-	$ECHO_N "* Preprocessing C include files..."
+	$ECHO_N "preprocessing header files..."
 	if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 		(cd ${SRCDIR} && ${PERL} mk/gen-includes.pl "$BLD/include/agar" 1>>${BLDDIR}/config.log 2>&1)
 	else
@@ -10928,14 +10928,18 @@ echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.l
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
 if [ "${srcdir}" != '' ]; then
-	$ECHO_N "* Source is in ${srcdir}. Generating Makefiles..."
+	$ECHO_N "preparing build environment (source in ${srcdir})..."
 	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
 		exit 1;
 	fi
-	echo 'done'
+	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Use "make depend all" to compile,'
-echo '* and "make install" to install this software under $PREFIX.'
+echo '* Configuration successful. Compile with "make depend all" and use'
+ '* "make install" to install under '
+ 
+ ' (or '
+ 
+echo ').'
 echo '*'
