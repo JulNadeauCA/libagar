@@ -10937,9 +10937,9 @@ if [ "${srcdir}" != '' ]; then
 fi
 echo '*'
 echo '* Configuration successful. Compile with "make depend all" and use'
- '* "make install" to install under '
- 
- ' (or '
- 
+$ECHO_N '* "make install" to install under '
+$ECHO_N 
+$ECHO_N ' (or $DESTDIR'
+$ECHO_N 
 echo ').'
 echo '*'
