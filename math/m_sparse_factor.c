@@ -555,13 +555,13 @@ BOOLEAN *DoRealDirect, *DoCmplxDirect;
     if (Mode == spDIRECT_PARTITION)
     {   for (Step = 1; Step <= Size; Step++)
             DoRealDirect[Step] = YES;
-            DoCmplxDirect[Step] = YES;
+        DoCmplxDirect[Step] = YES;
         return;
     }
     else if (Mode == spINDIRECT_PARTITION)
     {   for (Step = 1; Step <= Size; Step++)
             DoRealDirect[Step] = NO;
-            DoCmplxDirect[Step] = NO;
+        DoCmplxDirect[Step] = NO;
         return;
     }
     else vASSERT( Mode == spAUTO_PARTITION, "Invalid partition code" );;
