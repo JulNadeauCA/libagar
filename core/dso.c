@@ -281,6 +281,21 @@ LoadDSO_DLOPEN(const char *path)
 }
 #endif /* HAVE_DLOPEN */
 
+/* Lookup a loaded DSO by name */
+AG_DSO *
+AG_LookupDSO(const char *name)
+{
+	AG_DSO *dso;
+
+	AG_LockDSO();
+	AG_TAILQ_FOREACH(dso, &agLoadedDSOs, dsos) {
+		if (strcmp(dso->name, name) == 0)
+			break;
+	}
+	AG_UnlockDSO();
+	return (dso);
+}
+
 /*
  * Load the specified module into the process address space. If it already
  * exists, return the existing structure incrementing its reference count.
