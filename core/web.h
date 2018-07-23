@@ -121,6 +121,8 @@ typedef struct web_variable {
 	AG_TAILQ_ENTRY(web_variable) vars;
 } WEB_Variable;
 
+AG_TAILQ_HEAD(web_variableq, web_variable);
+
 /* Argument to script (key=value pair). */
 typedef struct web_argument {
 	enum web_argument_type {
@@ -192,10 +194,11 @@ typedef struct web_query {
 	Uchar *data;			  	/* Raw response entity-body */
 	size_t dataSize, dataLen;
 
-	char lang[4];				/* Negotiated language */
-	void *sess;				/* Session object (or NULL) */
-	int sock;				/* Client socket (or -1) */
-	char date[32];				/* HTTP time */
+	char lang[4];		/* Negotiated language */
+	void *sess;		/* Session object (or NULL) */
+	void *mod;		/* WEB_Module executing op (or NULL) */
+	int sock;		/* Client socket (or -1) */
+	char date[32];		/* HTTP time */
 } WEB_Query;
 
 /* Control command sent to running Frontend process. */
@@ -242,36 +245,14 @@ enum web_loglvl {
 	WEB_LOG_EVENT
 };
 
-/* Global application server data */
-typedef struct web_application {
-	const char *name;			/* Description */
-	const char *copyright;			/* Copyright notice */
-	const char *availLangs[WEB_LANGS_MAX];	/* Available languages */
-	const char *homeOp;			/* Default operation */
-	Uint flags;				/* Option flags */
+typedef int (*WEB_CommandFn)(WEB_Query *q);
 
-	void	(*destroyFn)(void);
-	void	(*logFn)(enum web_loglvl, const char *s);
-
-	/* Private */
-	Uint clusterID;					/* Frontend instance */
-	AG_TAILQ_HEAD_(web_variable) vars;		/* Subst. variables */
-	Uint queryCount;				/* Queries served */
-	AG_TAILQ_HEAD_(web_session_socket) workSockets;	/* Frontend->Worker */
-	int   frontSockets[WEB_MAXWORKERSOCKETS];	/* Worker->Frontend */
-	Uint nFrontSockets;
-	int   ctrlSock;					/* Local control socket */
-	char  paddr[256];				/* Peer address */
-	int   eventSource;				/* Is an event source */
-} WEB_Application;
-
-typedef int (*WEB_CommandFn)(WEB_Query *);
-
-/* Map URL to operation (authenticated) */
+/* Map an URL-specified op to a module method */
 typedef struct web_command {
-	char *name;				/* Command name */
-	WEB_CommandFn fn;			/* Function */
-	const char *type;			/* MIME type (or NULL) */
+	char *name;		/* Command name */
+	WEB_CommandFn fn;	/* Function */
+	const char *type;	/* Content-type (or NULL) */
+	const char *flags;	/* Flags ("P"=public, "i"=index) */
 } WEB_Command;
 
 /* Map URL to operation (pre-auth) */
@@ -281,26 +262,30 @@ typedef struct web_command_pre_auth {
 	const char *type;		/* Default Content-type or NULL */
 } WEB_CommandPreAuth;
 
-typedef struct web_module_section {
-	const char *name;		/* Section name */
-	const char *cmd;		/* Op name */
-} WEB_Section;
+/* Entry in per-module menu section table. */
+typedef struct web_menu_section {
+	const char *name;		/* Display name (translated) */
+	const char *cmd;		/* Target op */
+} WEB_MenuSection;
 
 /* Application server module */
+typedef struct web_module_class {
+	struct ag_object_class _inherit;
+	char *name;		 	/* Short name */
+	char *icon;		 	/* Icon HTML */
+	char *lname;		 	/* Long name (HTML ok) */
+	char *desc;		 	/* Description (HTML ok) */
+	int  (*workerInit)(void *mod, void *sess);
+	void (*workerDestroy)(void *mod);
+	int  (*sessOpen)(void *mod, void *sess);
+	void (*sessClose)(void *mod, void *sess);
+	void (*menu)(void *mod, WEB_Query *q, WEB_Variable *V);
+	WEB_MenuSection *menuSections;
+	WEB_Command *commands;
+} WEB_ModuleClass;
+
 typedef struct web_module {
-	char *name;			/* Short name */
-	char *icon;			/* Icon (HTML) */
-	char *lname;			/* Long name (HTML) */
-	char *desc;			/* Description (HTML) */
-	int  (*init)(void *sess);	/* App initialization */
-	void (*destroy)(void);		/* App cleanup */
-	int  (*sessOpen)(void *sess);	/* Session opened */
-	void (*sessClose)(void *sess);	/* Session closed */
-	int (*indexFn)(WEB_Query *q);	/* Default op */
-	void (*menu)(WEB_Query *q,	/* Menu override */
-	             WEB_Variable *V);
-	WEB_Command *commands;		/* Command map */
-	WEB_Section *sections;		/* Menu sections */
+	struct ag_object _inherit;	/* AG_Object -> WEB_Module */
 } WEB_Module;
 
 /* Session manager interface */
@@ -352,6 +337,8 @@ typedef struct web_session_socket {
 	AG_TAILQ_ENTRY(web_session_socket) sockets;
 } WEB_SessionSocket;
 
+AG_TAILQ_HEAD(web_session_socketq, web_session_socket);
+
 /* Session Instance */
 typedef struct web_session {
 	const WEB_SessionOps *ops;		/* Operations */
@@ -363,8 +350,10 @@ typedef struct web_session {
 	Uint nEvents;				/* Event counter */
 } WEB_Session;
 
-typedef int  (*WEB_LanguageFn)(const char *, void *);
-typedef void (*WEB_MenuFn)(WEB_Query *, WEB_Variable *, void *);
+typedef int  (*WEB_LanguageFn)(const char *lang, void *arg);
+typedef void (*WEB_MenuFn)(WEB_Query *q, WEB_Variable *var, void *arg);
+typedef void (*WEB_DestroyFn)(void);
+typedef void (*WEB_LogFn)(enum web_loglvl, const char *s);
 
 #define WEB_TRIM_WHITESPACE(s,end)			\
 	while (isspace(*s)) { s++; }			\
@@ -376,35 +365,38 @@ typedef void (*WEB_MenuFn)(WEB_Query *, WEB_Variable *, void *);
 		}					\
 	}
 
-AG_TAILQ_HEAD(web_sessionq, web_session);
-
-typedef int (*WEB_SessionAuthFn)(void *, WEB_Query *, const char *, const char *);
 typedef int (*WEB_EventFilterFn)(char *sessID, char *user, char *langCode,
                                  const void *arg);
 
 __BEGIN_DECLS
-extern WEB_Application *webApp;
-extern WEB_Module     **webModules;
-extern int             nWebModules;
-extern const WEB_MethodOps webMethods[];
+extern AG_ObjectClass webModuleClass;
+extern WEB_Module **webModules;
+extern Uint         webModuleCount;
+extern char **webLangs;
+extern Uint   webLangCount;
 extern char webWorkerUser[WEB_USERNAME_MAX];
+extern char webHomeOp[WEB_OPNAME_MAX];
+extern const WEB_MethodOps webMethods[];
+extern struct web_variableq webVars;
 
 /* Init */
-void  WEB_Init(WEB_Application *, int, int);
+void  WEB_Init(Uint, int);
 void  WEB_Destroy(void);
 void  WEB_CheckSignals(void);
-void  WEB_RegisterModule(WEB_Module *);
+void  WEB_RegisterModule(WEB_ModuleClass *);
 void  WEB_SetLogFile(const char *);
+void  WEB_SetLogFn(WEB_LogFn);
 void  WEB_Exit(int, const char *, ...);
 void  WEB_SetLanguageFn(WEB_LanguageFn, void *);
 void  WEB_SetMenuFn(WEB_MenuFn, void *);
+void  WEB_SetDestroyFn(WEB_DestroyFn);
 
 /* Query processing */
 int   WEB_WorkerMain(const WEB_SessionOps *, WEB_Query *, const char *,
                      const char *, const char *, int [2], int);
 void  WEB_QueryLoop(const char *, const char *, const WEB_SessionOps *);
-int   WEB_ControlCommand(int, const WEB_ControlCmd *);
-int   WEB_ControlCommandS(int, const char *);
+int   WEB_ControlCommand(Uint, const WEB_ControlCmd *);
+int   WEB_ControlCommandS(Uint, const char *);
 void  WEB_QueryInit(WEB_Query *, const char *);
 void  WEB_QueryDestroy(WEB_Query *);
 int   WEB_QueryLoad(WEB_Query *, const void *, size_t);
@@ -430,7 +422,7 @@ const char *WEB_GetTrim(WEB_Query *, const char *, size_t);
 int         WEB_GetInt(WEB_Query *, const char *, int *);
 int         WEB_GetUint(WEB_Query *, const char *, Uint *);
 int         WEB_GetIntR(WEB_Query *, const char *, int *, int, int);
-int         WEB_GetUintR(WEB_Query *, const char *, Uint *, Uint);
+int         WEB_GetUintR(WEB_Query *, const char *, Uint *, Uint, Uint);
 int         WEB_GetIntRange(WEB_Query *, const char *, int *, const char *, int *);
 int         WEB_GetUint64(WEB_Query *, const char *, Uint64 *);
 int         WEB_GetSint64(WEB_Query *, const char *, Sint64 *);
@@ -483,8 +475,6 @@ void	WEB_SetErrorS(const char *) NONNULL_ATTRIBUTE(1);
 void	WEB_SetSuccess(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
 
 /* Auth */
-int     WEB_SessionMgrInit(void);
-void    WEB_SessionMgrDestroy(void);
 void    WEB_SessionInit(WEB_Session *, const WEB_SessionOps *);
 void    WEB_SessionDestroy(WEB_Session *);
 void    WEB_CloseSession(WEB_Session *);
@@ -507,6 +497,19 @@ int     WEB_PostEventS(const char *, WEB_EventFilterFn, const void *,
 int     WEB_PostEvent(const char *, WEB_EventFilterFn, const void *,
 	              const char *, const char *, ...)
 		      FORMAT_ATTRIBUTE(__printf__,5,6);
+
+static __inline__ void
+WEB_SetHomeOp(const char *op)
+{
+	AG_Strlcpy(webHomeOp, op, sizeof(webHomeOp));
+}
+
+static __inline__ void
+WEB_AddLanguage(const char *lang)
+{
+	webLangs = Realloc(webLangs, (webLangCount+1)*sizeof(char *));
+	webLangs[webLangCount++] = Strdup(lang);
+}
 
 static __inline__ void
 WEB_SessionFree(WEB_Session *S)
@@ -623,7 +626,7 @@ WEB_VAR_CatJS_NoHTML_NODUP(WEB_Variable *V, char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatN(WEB_Variable *V, const char *s, size_t len)
+WEB_VAR_CatN(WEB_Variable *V, const void *s, size_t len)
 {
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len);
@@ -632,20 +635,19 @@ WEB_VAR_CatN(WEB_Variable *V, const char *s, size_t len)
 }
 
 static __inline__ void
-WEB_VAR_CatN_NoNUL(WEB_Variable *V, const char *s, size_t len)
+WEB_VAR_CatN_NoNUL(WEB_Variable *V, const void *s, size_t len)
 {
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len);
 	V->len += len;
 }
 
-/* TODO: Hash */
 static __inline__ char *
 WEB_VAR_Get(const char *key)
 {
 	WEB_Variable *V;
 
-	AG_TAILQ_FOREACH(V, &webApp->vars, vars) {
+	AG_TAILQ_FOREACH(V, &webVars, vars) {
 		if (V->key[0] != '\0' &&
 		    strcmp(V->key, key) == 0)
 			break;
@@ -822,9 +824,9 @@ WEB_SetCode(WEB_Query *q, const char *code)
 	char *head = q->head, *cEnd;
 	size_t oldLen, newLen;
 
-	Strlcpy(httpCode, "HTTP/1.0 ", sizeof(httpCode));
-	Strlcat(httpCode, code, sizeof(httpCode));
-	Strlcat(httpCode, "\r\n", sizeof(httpCode));
+	AG_Strlcpy(httpCode, "HTTP/1.0 ", sizeof(httpCode));
+	AG_Strlcat(httpCode, code, sizeof(httpCode));
+	AG_Strlcat(httpCode, "\r\n", sizeof(httpCode));
 	cEnd = strchrnul(head, '\n');
 	newLen = strlen(httpCode);
 	oldLen = (cEnd-head)+1;
@@ -853,10 +855,10 @@ WEB_AppendHeaderS(WEB_Query *q, const char *key, const char *value)
 	if (q->headLineCount+1 >= WEB_HTTP_MAXHEADERS) {
 		AG_FatalError("Too many headers");
 	}
-	Strlcpy(newLine, key, sizeof(newLine));
-	Strlcat(newLine, ": ", sizeof(newLine));
-	Strlcat(newLine, value, sizeof(newLine));
-	Strlcat(newLine, "\r\n", sizeof(newLine));
+	AG_Strlcpy(newLine, key, sizeof(newLine));
+	AG_Strlcat(newLine, ": ", sizeof(newLine));
+	AG_Strlcat(newLine, value, sizeof(newLine));
+	AG_Strlcat(newLine, "\r\n", sizeof(newLine));
 	newLen = strlen(newLine);
 	if ((q->headLen + newLen + 1) >= sizeof(q->head)-2) {
 		AG_FatalError("Header too big");

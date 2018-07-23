@@ -33,6 +33,7 @@
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
+#include <agar/core/web.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -43,13 +44,13 @@ privilege-separated HTTP/1.1 application server in C.
 is included in the Agar-Core library if compiled with
 .Sq --enable-web .
 .Pp
-For a typical application, a pure web application using
+An HTTP application server using
 .Nm
 might be deployed as a set of instances running behind an external facing
 HTTP server (such as Apache httpd with mod_proxy_balancer).
-Another scenario would be the integration of
 .Nm
-in an existing application in need of an HTTP interface.
+may also be integrated into an existing application in need of an HTTP
+interface.
 .Pp
 .Nm
 spawns (and expires) one worker process per authenticated session.
@@ -198,8 +199,8 @@ typedef struct web_module {
 	int (*indexFn)(WEB_Query *q);   /* Default op */
 	void (*menu)(WEB_Query *q,      /* Menu override */
 	             WEB_Variable *V);
+	WEB_MenuSection *menuSections;  /* Menu sections or NULL */
 	WEB_Command *commands;          /* Command map */
-	WEB_Section *sections;          /* Menu sections */
 } WEB_Module;
 .Ed
 .Pp
@@ -262,9 +263,9 @@ The
 table maps method names to a module's functions:
 .Bd -literal
 typedef struct web_command {
-	char *name;              /* Method name */
-	int (*fn)(WEB_Query *);  /* Function */
-	const char *type;        /* MIME type (or NULL) */
+	char *name;                         /* Method name */
+	int (*fn)(void *mod, WEB_Query *q); /* Function */
+	const char *type;                   /* MIME type (or NULL) */
 } WEB_Command;
 .Ed
 .Pp
@@ -272,18 +273,18 @@ typedef struct web_command {
 is the full method name (the matching "op" argument).
 .Va fn
 is a pointer to the function implementing the method.
+If
 .Va type
-is the MIME type of content returned by the method (used to set the default
-Content-Type header).
+is not NULL, it indicates the Content-Type of the data returned by the method.
 For example:
 .Bd -literal
 static WEB_Command mymodCommands[] = {
-	{ "mymod_hello",	mymod_hello,	"text/html" },
-	{ "mymod_image",	mymod_image,	"image/png" },
-	{ "mymod_json",		mymod_json,	"[json]" },
-	{ "mymod_status",	mymod_status,	"[json-status]" },
-	{ "mymod_customtype",	mymod_custtype,	NULL },
-	{ NULL,			NULL,		NULL }
+	{ "mymod_hello",	mymod_hello,	"text/html",     "Pi" },
+	{ "mymod_image",	mymod_image,	"image/png",     "" },
+	{ "mymod_json",		mymod_json,	"[json]",        "" },
+	{ "mymod_status",	mymod_status,	"[json-status]", "" },
+	{ "mymod_customtype",	mymod_custtype,	NULL,            "" },
+	{ NULL,			NULL,		NULL,            "" }
 };
 .Ed
 .Pp
@@ -316,6 +317,22 @@ using
 .Fn WEB_SetHeader
 or
 .Fn WEB_SetHeaderS .
+.Pp
+The
+.Va flags
+string defines per-method options.
+It may contain characters:
+.Bl -tag -width "`P' "
+.It Sq P
+Public method.
+Make accessible to both authenticated and non-authenticated clients
+(in the latter case,
+.Va q->sess
+will be NULL).
+.It Sq i
+Index method.
+Invoke by default when no specific "op" given.
+.El
 .Pp
 .Fn WEB_CheckSignals
 handles a previous SIGTERM, SIGPIPE and SIGCHLD.
@@ -1399,8 +1416,6 @@ automatically adds and increments the "id" field.
 It also generates "ping" events at regular intervals.
 .Sh SEE ALSO
 .Xr AG_Intro 3
-.Pp
-.Lk http://httpd.apache.org/ Apache HTTP Server
 .Sh HISTORY
 The
 .Nm

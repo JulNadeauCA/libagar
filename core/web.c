@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau <vedge@hypertriton.com>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -105,22 +105,34 @@
 #include <zlib.h>
 #endif
 
-WEB_Application *webApp;		/* Application info */
-char webLogFile[FILENAME_MAX];		/* Logfile path */
+char webLogFile[FILENAME_MAX];			/* Logfile path */
 
-WEB_Module **webModules = NULL;		/* Modules */
-int         nWebModules = 0;
+WEB_Module   **webModules = NULL;		/* Module instances */
+Uint           webModuleCount = 0;	
+char         **webLangs = NULL;			/* Supported language list */
+Uint           webLangCount = 0;
+WEB_LanguageFn webLanguageFn = NULL;		/* Language switch callback */
+void          *webLanguageFnArg = NULL;		/* webLanguageFn() argument */
+char           webHomeOp[WEB_OPNAME_MAX];	/* Default operation */
+WEB_MenuFn     webMenuFn = NULL;		/* Menu constructor routine */
+void          *webMenuFnArg = NULL;		/* webMenuFn() argument */
+WEB_LogFn      webLogFn = NULL;
+WEB_DestroyFn  webDestroyFn = NULL;
 
-WEB_LanguageFn webLanguageFn = NULL;	/* Language switch callback */
-void          *webLanguageFnArg = NULL;	/* webLanguageFn() user argument */
-
-WEB_MenuFn webMenuFn = NULL;		/* Menu constructor routine */
-void      *webMenuFnArg = NULL;		/* webMenuFn() user argument */
-
-char webWorkerSess[WEB_SESSID_MAX];	/* Session ID (in Worker) */
-char webWorkerUser[WEB_USERNAME_MAX];	/* Username (in Worker) */
+char webWorkerSess[WEB_SESSID_MAX];		/* Session ID (in Worker) */
+char webWorkerUser[WEB_USERNAME_MAX];		/* Username (in Worker) */
+struct web_variableq webVars;			/* Template variables */
 
 static volatile sig_atomic_t termFlag=0, chldFlag=0, pipeFlag=0;
+
+static Uint webQueryCount;			   /* Query counter */
+static int  webEventSource;			   /* Is an event source */
+static Uint webClusterID;			   /* Server instance no */
+static int  webFrontSockets[WEB_MAXWORKERSOCKETS]; /* Worker->Frontend */
+static Uint webFrontSocketCount;
+static int  webCtrlSock;			   /* Local control socket */
+static char webPeerAddress[256];		   /* Peer address */
+static struct web_session_socketq webWorkSockets;  /* Frontend->Worker sockets */
 
 static const int   webLogLvlNameLength = 6;
 static const char *webLogLvlNames[] = {
@@ -182,7 +194,7 @@ ParseURL(WEB_Query *q, const char *s)
 			return (-1);
 		}
 	}
-	WEB_SetS(q, "op", (path[0] != '\0') ? path : webApp->homeOp);
+	WEB_SetS(q, "op", (path[0] != '\0') ? path : webHomeOp);
 
 	if (pathArgs[0] != '\0') {
 		if (strchr(pathArgs,'=')) {
@@ -239,7 +251,7 @@ static int
 ParseAcceptLanguage(WEB_Query *q, char *s)
 {
 	char *sp = s, *t;
-	const char **sAvail;
+	char **lang;
 	Uint i;
 
 	q->nAcceptLangs = 0;
@@ -253,12 +265,12 @@ ParseAcceptLanguage(WEB_Query *q, char *s)
 		}
 		Strlcpy(q->acceptLangs[q->nAcceptLangs++], t, WEB_LANG_CODE_MAX);
 	}
-	for (sAvail = &webApp->availLangs[0]; *sAvail != NULL; sAvail++) {
+	for (lang = &webLangs[0]; *lang != NULL; lang++) {
 		for (i = 0; i < q->nAcceptLangs; i++) {
-			if (strcasecmp(q->acceptLangs[i], *sAvail) != 0) {
+			if (strcasecmp(q->acceptLangs[i], *lang) != 0) {
 				continue;
 			}
-			Strlcpy(q->lang, *sAvail, sizeof(q->lang));
+			Strlcpy(q->lang, *lang, sizeof(q->lang));
 			break;
 		}
 		if (i < q->nAcceptLangs)
@@ -278,7 +290,7 @@ WEB_InitFrontQuery(WEB_Query *q, WEB_Method meth, int sock, const char *url)
 	time_t t = time(NULL);
 	struct tm tm;
 
-	WEB_QueryInit(q, webApp->availLangs[0]);
+	WEB_QueryInit(q, webLangs[0]);
 	q->method = meth;
 	q->sock = sock;
 	if (ParseURL(q, url) == -1) {
@@ -288,11 +300,11 @@ WEB_InitFrontQuery(WEB_Query *q, WEB_Method meth, int sock, const char *url)
 		strftime(q->date, sizeof(q->date), "%a, %d %h %Y %T %Z", &tm);
 		WEB_SetHeaderS(q, "Date", q->date);
 	}
-	WEB_SetHeaderS(q, "Server", webApp->name);
+	WEB_SetHeaderS(q, "Server", agProgName);
 	return (0);
 }
 
-/* Parse and preliminarly validate a Range request */
+/* Parse Range request header */
 static int
 ParseRange(WEB_Query *q, char *s)
 {
@@ -434,9 +446,10 @@ fail:
 }
 
 static int
-WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdBufLen,
+WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rdBufLen,
     const WEB_SessionOps *Sops)
 {
+	char *rdBuf = pRdBuf;
 	char *headers = pHeaders, *s, *cEnd;
 	WEB_Query q;
 	int rv = 0;
@@ -606,10 +619,15 @@ const WEB_MethodOps webMethods[] = {
 };
 
 void
-WEB_RegisterModule(WEB_Module *mod)
+WEB_RegisterModule(WEB_ModuleClass *modC)
 {
-	webModules = Realloc(webModules, (nWebModules+1)*sizeof(WEB_Module *));
-	webModules[nWebModules++] = mod;
+	AG_ObjectClass *objC = (AG_ObjectClass *)modC;
+	WEB_Module *mod;
+
+	mod = Malloc(objC->size);
+	AG_ObjectInit(mod, objC);
+	webModules = Realloc(webModules, (webModuleCount+1)*sizeof(WEB_Module *));
+	webModules[webModuleCount++] = mod;
 }
 
 /* Escape characters as described in RFC1738. */
@@ -957,6 +975,13 @@ WEB_SetMenuFn(WEB_MenuFn fn, void *p)
 	webMenuFnArg = p;
 }
 
+/* Set cleanup routine to be called on application server exit. */
+void
+WEB_SetDestroyFn(WEB_DestroyFn fn)
+{
+	webDestroyFn = fn;
+}
+
 /* Initialize a WEB_Query structure. */
 void
 WEB_QueryInit(WEB_Query *q, const char *lang)
@@ -1067,7 +1092,7 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 	if ((op = WEB_Get(q, "op", WEB_OPNAME_MAX)) != NULL) {
 		SetS("op", op);
 	} else {
-		SetS("op", webApp->homeOp);
+		SetS("op", webHomeOp);
 	}
 
 	/* Generate the navigation menu. */
@@ -1076,37 +1101,38 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 		webMenuFn(q, v, webMenuFnArg);
 		return;
 	}
-	for (i = 0; i < nWebModules; i++) {
+	for (i = 0; i < webModuleCount; i++) {
 		WEB_Module *mod = webModules[i];
-		WEB_Section *sec;
+		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+		WEB_MenuSection *sec;
 
-		if (mod->menu != NULL) {
-			mod->menu(q, v);
-		} else if (mod->sections == NULL) {
+		if (modC->menu != NULL) {
+			modC->menu(mod, q, v);
+		} else if (modC->menuSections == NULL) {
 #ifdef ENABLE_NLS
 			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
-			    mod->name, mod->icon, gettext(mod->lname));
+			    modC->name, modC->icon, gettext(modC->lname));
 #else
 			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
-			    mod->name, mod->icon, mod->lname);
+			    modC->name, modC->icon, modC->lname);
 #endif
 		} else {
-			if (mod->sections[0].name != NULL) {
+			if (modC->menuSections[0].name != NULL) {
 				CatS(v,
 				    "<li class='dropdown'>"
 				      "<a href='#' class='dropdown-toggle' "
 				       "data-toggle='dropdown' role='button' "
 				       "aria-haspopup='true' aria-expanded='false'>");
-				CatS(v, mod->icon);
+				CatS(v, modC->icon);
 #ifdef ENABLE_NLS
-				CatS(v, gettext(mod->lname));
+				CatS(v, gettext(modC->lname));
 #else
-				CatS(v, mod->lname);
+				CatS(v, modC->lname);
 #endif
 
 				CatS(v, "<span class='caret'></span></a>"
 				        "<ul class='dropdown-menu'>");
-				for (sec = &mod->sections[0];
+				for (sec = &modC->menuSections[0];
 				     sec->name != NULL;
 				     sec++) {
 					Cat(v,
@@ -1301,7 +1327,7 @@ WEB_ExecWorkerQuery(WEB_Query *q, const WEB_SessionOps *Sops)
 {
 	const char *op, *c;
 	const WEB_Argument *opArg;
-	WEB_Module *mod = NULL;				/* compiler happy */
+	WEB_ModuleClass *modC = NULL;
 	WEB_Command *cmd;
 	int i;
 
@@ -1317,7 +1343,7 @@ WEB_ExecWorkerQuery(WEB_Query *q, const WEB_SessionOps *Sops)
 				goto fail;
 			}
 	} else {
-		op = webApp->homeOp;
+		op = webHomeOp;
 	}
 
 	if (strcmp(op, "logout") == 0) {
@@ -1325,26 +1351,19 @@ WEB_ExecWorkerQuery(WEB_Query *q, const WEB_SessionOps *Sops)
 		WEB_CloseSession(q->sess);
 		return (1);
 	}
-	for (i = 0; i < nWebModules; i++) {
-		mod = webModules[i];
-		if (strncmp(mod->name, op, strlen(mod->name)) == 0)
+	for (i = 0; i < webModuleCount; i++) {
+		q->mod = webModules[i];
+		modC = (void *)AGOBJECT(q->mod)->cls;
+		if (strncmp(modC->name, op, strlen(modC->name)) == 0)
 			break;
 	}
-	if (i == nWebModules) {
+	if (i == webModuleCount) {
 		WEB_SetCode(q, "404 Not Found");
 		goto fail;
 	}
 	AG_SetErrorS("Missing argument");	/* Fallback error message */
 
-	if (strcmp(mod->name, op) == 0 && mod->indexFn != NULL) {
-		for (cmd = mod->commands; cmd->name != NULL; cmd++) {
-			if (cmd->fn == mod->indexFn) {
-				op = cmd->name;
-				break;
-			}
-		}
-	}
-	for (cmd = mod->commands; cmd->name != NULL; cmd++) {
+	for (cmd = modC->commands; cmd->name != NULL; cmd++) {
 		if (strcmp(cmd->name, op) != 0) {
 			continue;
 		}
@@ -1483,7 +1502,7 @@ WEB_GetInt(WEB_Query *q, const char *key, int *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing Argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1513,7 +1532,7 @@ WEB_GetUint(WEB_Query *q, const char *key, Uint *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1522,7 +1541,7 @@ WEB_GetUint(WEB_Query *q, const char *key, Uint *pRet)
 		AG_SetError("%s: Not a number", key);
 		return (-1);
 	}
-	if (errno == ERANGE && rv == ULONG_MAX) {
+	if (errno == ERANGE && rv == UINT_MAX) {
 		AG_SetError("%s: Out of range", key);
 		return (-1);
 	}
@@ -1541,7 +1560,7 @@ WEB_GetUint64(WEB_Query *q, const char *key, Uint64 *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1569,7 +1588,7 @@ WEB_GetSint64(WEB_Query *q, const char *key, Sint64 *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1599,7 +1618,7 @@ WEB_GetIntR(WEB_Query *q, const char *key, int *pRet, int min, int max)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1621,7 +1640,7 @@ WEB_GetIntR(WEB_Query *q, const char *key, int *pRet, int min, int max)
 	return (0);
 }
 int
-WEB_GetUintR(WEB_Query *q, const char *key, Uint *pRet, Uint max)
+WEB_GetUintR(WEB_Query *q, const char *key, Uint *pRet, Uint min, Uint max)
 {
 	WEB_Argument *arg;
 	char *ep;
@@ -1632,7 +1651,7 @@ WEB_GetUintR(WEB_Query *q, const char *key, Uint *pRet, Uint max)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1645,8 +1664,8 @@ WEB_GetUintR(WEB_Query *q, const char *key, Uint *pRet, Uint max)
 		AG_SetError("%s: Out of range", key);
 		return (-1);
 	}
-	if (rv > max) {
-		AG_SetError("%s: Out of range (0-%d)", key, max);
+	if (rv < min || rv > max) {
+		AG_SetError("%s: Out of range (%d-%d)", key, min, max);
 		return (-1);
 	}
 	*pRet = (Uint)rv;
@@ -1671,7 +1690,7 @@ WEB_GetIntRange(WEB_Query *q, const char *key, int *pMin, const char *sep,
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	val = arg->value;
@@ -1717,7 +1736,7 @@ WEB_GetEnum(WEB_Query *q, const char *key, Uint *pRet, Uint last)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1726,13 +1745,9 @@ WEB_GetEnum(WEB_Query *q, const char *key, Uint *pRet, Uint last)
 		AG_SetError("%s: Not a number", key);
 		return (-1);
 	}
-	if ((errno == ERANGE) && ((rv == LONG_MAX || rv == LONG_MIN) ||
-	     (rv > INT_MAX || rv < INT_MIN))) {
+	if (((errno == ERANGE) && ((rv == LONG_MAX || rv == LONG_MIN))) ||
+	    rv > INT_MAX || rv < 0 || rv >= last) {
 		AG_SetError("%s: Out of range", key);
-		return (-1);
-	}
-	if (rv < 0 || rv > last) {
-		AG_SetError("%s: Out of range (last=%u)", key, last-1);
 		return (-1);
 	}
 	*pRet = (Uint)rv;
@@ -1752,7 +1767,7 @@ WEB_GetFloat(WEB_Query *q, const char *key, float *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1782,7 +1797,7 @@ WEB_GetDouble(WEB_Query *q, const char *key, double *pRet)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (-1);
 	}
 	errno = 0;
@@ -1867,7 +1882,7 @@ WEB_Set(WEB_Query *q, const char *key, const char *fmt, ...)
 	}
 }
 
-/* Remove the given argument. */
+/* Delete the given web argument if it exists. */
 int
 WEB_Unset(WEB_Query *q, const char *key)
 {
@@ -1878,7 +1893,6 @@ WEB_Unset(WEB_Query *q, const char *key)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("%s: No such argument", key);
 		return (-1);
 	}
 	TAILQ_REMOVE(&q->args, arg, args);
@@ -1903,12 +1917,12 @@ WEB_Get(WEB_Query *q, const char *key, size_t len)
 			break;
 	}
 	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (NULL);
 	}
 	if (arg->len > len) {
-		AG_SetError("Argument \"%s\": Exceeds %lu characters", key,
-		    (unsigned long)len);
+		AG_SetError("Argument too long \"%s\" (exceeds %lu bytes)",
+		    key, (unsigned long)len);
 		return (NULL);
 	}
 	return (arg->value);
@@ -1929,13 +1943,13 @@ WEB_GetTrim(WEB_Query *q, const char *key, size_t len)
 			break;
 	}
 	if (arg == NULL || (s = arg->value) == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
+		AG_SetError("Missing argument \"%s\"", key);
 		return (NULL);
 	}
 	WEB_TRIM_WHITESPACE(s, end);
 	if (strlen(s) >= len) {
-		AG_SetError("Argument \"%s\": Exceeds %lu characters", key,
-		    (unsigned long)len);
+		AG_SetError("Argument too long \"%s\" (exceeds %lu bytes)",
+		    key, (unsigned long)len);
 		return (NULL);
 	}
 	return (s);
@@ -1981,7 +1995,7 @@ WEB_QueryDestroy(WEB_Query *q)
 	Free(q->data);
 }
 
-/* Write serialized WEB_Query data. Include a 32-bit length. */
+/* Serialize WEB_Query data (+ 32-bit data offset) to fd. */
 int
 WEB_QuerySave(int fd, const WEB_Query *q)
 {
@@ -1993,7 +2007,7 @@ WEB_QuerySave(int fd, const WEB_Query *q)
 	Uint32 length;
 	Uint i;
 
-	if ((ds = AG_OpenCore(&buf[4], sizeof(buf)-4)) == NULL)
+	if (!(ds = AG_OpenCore(&buf[4], sizeof(buf)-4))) /* Skip data offset */
 		return (-1);
 
 	AG_WriteUint8(ds, (Uint8)q->method);
@@ -2026,7 +2040,8 @@ WEB_QuerySave(int fd, const WEB_Query *q)
 
 	cs = AG_CORE_SOURCE(ds);
 	length = cs->offs;
-	memcpy(&buf[0], &length, sizeof(Uint32));
+	memcpy(&buf[0], &length, sizeof(Uint32));	/* Write data offset */
+
 	if (WEB_SYS_Write(fd, buf, length+4) == -1) {
 		if (errno == EPIPE) {
 			AG_SetErrorS("EPIPE");
@@ -2062,8 +2077,6 @@ WEB_QueryLoad(WEB_Query *q, const void *data, size_t dataLen)
 	AG_CopyString(q->userIP, ds, sizeof(q->userIP));
 	AG_CopyString(q->userHost, ds, sizeof(q->userHost));
 	AG_CopyString(q->userAgent, ds, sizeof(q->userAgent));
-
-	/* Note: We don't copy q->lang since Worker overrides it. */
 
 	if ((count = AG_ReadUint8(ds)) >= WEB_LANGS_MAX) {	/* Languages */
 		AG_SetErrorS("Too many languages");
@@ -2177,7 +2190,7 @@ WEB_CheckSignals(void)
 			cmd.data.workerQuit.pid = pid;
 			cmd.data.workerQuit.status = status;
 			for (i = 1; ; i++) {
-				if (i == webApp->clusterID) {	/* Self */
+				if (i == webClusterID) {	/* Self */
 					continue;
 				}
 				if ((rv = WEB_ControlCommand(i, &cmd)) == 1) {
@@ -2206,26 +2219,31 @@ WEB_CheckSignals(void)
 	}
 }
 
-/* Initialize the web application server framework. */
+/* Initialize the HTTP application server. */
 void
-WEB_Init(WEB_Application *pWebApp, int clusterID, int eventSource)
+WEB_Init(Uint clusterID, int eventSource)
 {
 	struct sigaction sa;
 
-	webApp = pWebApp;
+	AG_RegisterNamespace("Web", "WEB_", "http://libagar.org/");
+	AG_RegisterClass(&webModuleClass);
+
 	Strlcpy(webLogFile, agProgName, sizeof(webLogFile));
 	Strlcat(webLogFile, ".log", sizeof(webLogFile));
 
-	TAILQ_INIT(&webApp->vars);
-	TAILQ_INIT(&webApp->workSockets);
-	webApp->nFrontSockets = 0;
-	webApp->ctrlSock = -1;
-	webApp->queryCount = 0;
-	webApp->clusterID = clusterID;
-	webApp->paddr[0] = '\0';
-	webApp->eventSource = eventSource;
+	webFrontSocketCount = 0;
+	webCtrlSock = -1;
+	webQueryCount = 0;
+	webClusterID = clusterID;
+	webPeerAddress[0] = '\0';
+	webEventSource = eventSource;
 	
+	TAILQ_INIT(&webVars);
+	TAILQ_INIT(&webWorkSockets);
 	SetGlobalS("_progname", agProgName);
+	SetGlobal("WEB_USERNAME_MAX", "%d", WEB_USERNAME_MAX);
+	SetGlobal("WEB_PASSWORD_MAX", "%d", WEB_PASSWORD_MAX);
+	SetGlobal("WEB_EMAIL_MAX", "%d", WEB_EMAIL_MAX);
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
@@ -2250,11 +2268,13 @@ WEB_Init(WEB_Application *pWebApp, int clusterID, int eventSource)
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGQUIT, &sa, NULL);
 	sigaction(SIGTERM, &sa, NULL);
-	
-	WEB_SessionMgrInit();
 
+	webHomeOp[0] = '\0';
 	webWorkerSess[0] = '\0';
 	webWorkerUser[0] = '\0';
+	
+	if (mkdir(WEB_PATH_SESSIONS, 0700) == -1 && errno != EEXIST)
+		WEB_Log(WEB_LOG_EMERG, "%s: %s", WEB_PATH_SESSIONS, AG_GetError());
 }
 
 void
@@ -2263,34 +2283,39 @@ WEB_Destroy(void)
 	VAR *V, *Vnext;
 	WEB_SessionSocket *sock, *sockNext;
 	
-	if (webApp->destroyFn != NULL)
-		webApp->destroyFn();
+	if (webDestroyFn != NULL)
+		webDestroyFn();
 
-	for (V = TAILQ_FIRST(&webApp->vars);
-	     V != TAILQ_END(&webApp->vars);
+	for (V = TAILQ_FIRST(&webVars);
+	     V != TAILQ_END(&webVars);
 	     V = Vnext) {
 		Vnext = TAILQ_NEXT(V, vars);
 		Free(V->value);
 		Free(V);
 	}
-	TAILQ_INIT(&webApp->vars);
-	
-	for (sock = TAILQ_FIRST(&webApp->workSockets);
-	     sock != TAILQ_END(&webApp->workSockets);
+	for (sock = TAILQ_FIRST(&webWorkSockets);
+	     sock != TAILQ_END(&webWorkSockets);
 	     sock = sockNext) {
 		sockNext = TAILQ_NEXT(sock, sockets);
 		free(sock);
 	}
-	TAILQ_INIT(&webApp->workSockets);
-	webApp->nFrontSockets = 0;
-
-	WEB_SessionMgrDestroy();
+	
+	AG_UnregisterClass(&webModuleClass);
+	AG_UnregisterNamespace("WEB");
 }
 
+/* Set output log file path */
 void
 WEB_SetLogFile(const char *path)
 {
 	Strlcpy(webLogFile, path, sizeof(webLogFile));
+}
+
+/* Set callback routine for WEB_Log() */
+void
+WEB_SetLogFn(WEB_LogFn fn)
+{
+	webLogFn = fn;
 }
 
 /*
@@ -2378,8 +2403,8 @@ WEB_Log(enum web_loglvl level, const char *fmt, ...)
 	vsnprintf(msg, sizeof(msg), fmt, ap);
 	va_end(ap);
 	
-	if (webApp->logFn != NULL) {
-		webApp->logFn(level, msg);
+	if (webLogFn != NULL) {
+		webLogFn(level, msg);
 		return;
 	}
 	WEB_LogToFile(level, msg);
@@ -2387,8 +2412,8 @@ WEB_Log(enum web_loglvl level, const char *fmt, ...)
 void
 WEB_LogS(enum web_loglvl level, const char *s)
 {
-	if (webApp->logFn != NULL) {
-		webApp->logFn(level, s);
+	if (webLogFn != NULL) {
+		webLogFn(level, s);
 		return;
 	}
 	WEB_LogToFile(level, s);
@@ -2887,7 +2912,7 @@ CloseWorkSocket(WEB_SessionSocket *sock)
 	if (sock->fd != -1) {
 		close(sock->fd);
 	}
-	TAILQ_REMOVE(&webApp->workSockets, sock, sockets);
+	TAILQ_REMOVE(&webWorkSockets, sock, sockets);
 	free(sock);
 }
 
@@ -2923,8 +2948,8 @@ try_accept:
 			 * Close all open sockets associated with the
 			 * given Worker PID.
 			 */
-			for (sock = TAILQ_FIRST(&webApp->workSockets);
-			     sock != TAILQ_END(&webApp->workSockets);
+			for (sock = TAILQ_FIRST(&webWorkSockets);
+			     sock != TAILQ_END(&webWorkSockets);
 			     sock = sockNext) {
 				sockNext = TAILQ_NEXT(sock, sockets);
 				if (sock->workerPID == cmd.data.workerQuit.pid)
@@ -2938,7 +2963,7 @@ try_accept:
 			Strlcpy(cmd.data.shutdown.reason, "SHUTDOWN",
 			    sizeof(cmd.data.shutdown.reason));
 		}
-		TAILQ_FOREACH(ss, &webApp->workSockets, sockets) {
+		TAILQ_FOREACH(ss, &webWorkSockets, sockets) {
 			if (!ss->workerIsMyChld) {
 				continue;
 			}
@@ -3094,11 +3119,11 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 		FD_ZERO(&rdFds);
 		FD_SET(evSock, &rdFds);
 		FD_SET(q->sock, &rdFds);
-		FD_SET(webApp->ctrlSock, &rdFds);
+		FD_SET(webCtrlSock, &rdFds);
 
 		if (evSock > maxFd) { maxFd = evSock; }
 		if (q->sock > maxFd) { maxFd = q->sock; }
-		if (webApp->ctrlSock > maxFd) { maxFd = webApp->ctrlSock; }
+		if (webCtrlSock > maxFd) { maxFd = webCtrlSock; }
 
 		if (select(maxFd+1, &rdFds, NULL, NULL, &tv) < -1) {
 			if (errno == EINTR || errno == EAGAIN) {
@@ -3111,8 +3136,8 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 		}
 		
 		/* Control socket event? */
-		if (FD_ISSET(webApp->ctrlSock, &rdFds)) {
-			if (WEB_HandleControlCmd(webApp->ctrlSock) == -1)
+		if (FD_ISSET(webCtrlSock, &rdFds)) {
+			if (WEB_HandleControlCmd(webCtrlSock) == -1)
 				WEB_LogErr("Control socket (in ev): %s", AG_GetError());
 		}
 
@@ -3417,7 +3442,7 @@ CreateWorkSocket(struct sockaddr_un *sun, const char *sessID)
 	sock->fd = -1;
 	sock->workerPID = 0;
 	sock->workerIsMyChld = 0;
-	TAILQ_INSERT_TAIL(&webApp->workSockets, sock, sockets);
+	TAILQ_INSERT_TAIL(&webWorkSockets, sock, sockets);
 	return (sock);
 }
 
@@ -3484,7 +3509,7 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 	pass[0] = '\0';
 	sun.sun_path[0] = '\0';
 
-	if (webApp->eventSource) {				/* Ev. source */
+	if (webEventSource) {				    /* Event source */
 		op = "events";
 	} else {						/* Frontend */
 		if (!(op = WEB_Get(q, "op", WEB_OPNAME_MAX)))
@@ -3517,7 +3542,7 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 
 	if ((sessArg = WEB_GetCookie(q, "sess")) != NULL &&
 	     ValidSessionID(sessArg)) {
-		TAILQ_FOREACH(sock, &webApp->workSockets, sockets) {
+		TAILQ_FOREACH(sock, &webWorkSockets, sockets) {
 			if (strcmp(sock->sessID, sessArg) == 0)
 				break;
 		}
@@ -3555,7 +3580,7 @@ spawn_worker:
 		sock->fd = -1;
 		sock->workerPID = pid;
 		sock->workerIsMyChld = 1;
-		TAILQ_INSERT_TAIL(&webApp->workSockets, sock, sockets);
+		TAILQ_INSERT_TAIL(&webWorkSockets, sock, sockets);
 		WEB_LogInfo(
 		    "%s: Spawned Worker (%s, %s, pid %d, ip %s (%s), agent \"%s\")",
 		    user, sessID, q->lang, (int)pid, q->userIP, q->userHost,
@@ -3945,16 +3970,16 @@ fail_data:
 static __inline__ void
 CloseFrontSocket(Uint i)
 {
-	if (i >= webApp->nFrontSockets) {
+	if (i >= webFrontSocketCount) {
 		return;
 	}
-	close(webApp->frontSockets[i]);
+	close(webFrontSockets[i]);
 
-	if (i < webApp->nFrontSockets - 1) {
-		memmove(&webApp->frontSockets[i], &webApp->frontSockets[i+1],
-		    (webApp->nFrontSockets-i-1)*sizeof(int));
+	if (i < webFrontSocketCount - 1) {
+		memmove(&webFrontSockets[i], &webFrontSockets[i+1],
+		    (webFrontSocketCount-i-1)*sizeof(int));
 	}
-	webApp->nFrontSockets--;
+	webFrontSocketCount--;
 }
 
 /*
@@ -3971,7 +3996,7 @@ WEB_WorkerMain(const WEB_SessionOps *Sops, WEB_Query *qFront,
     const char *user, const char *pass, const char *sessID,
     int pp[2], int nRestoreAttempts)
 {
-	const char *lang = webApp->availLangs[0];
+	const char *lang = webLangs[0];
 	char sessPath[FILENAME_MAX];
 	WEB_Session *S;
 	struct sigaction sa;
@@ -4018,12 +4043,16 @@ WEB_WorkerMain(const WEB_SessionOps *Sops, WEB_Query *qFront,
 			lang = s;
 			webLanguageFn(lang, webLanguageFnArg);
 		}
-		for (i = 0; i < nWebModules; i++) {
-			if (webModules[i]->init != NULL &&
-			    webModules[i]->init(S) != 0) {
+		for (i = 0; i < webModuleCount; i++) {
+			WEB_Module *mod = webModules[i];
+			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+
+			if (modC->workerInit &&
+			    modC->workerInit(mod, S) != 0) {
 				for (i--; i >= 0; i--) {
-					if (webModules[i]->destroy)
-						webModules[i]->destroy();
+					WEB_Module *mod = webModules[i];
+					WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+					if (modC->workerDestroy) { modC->workerDestroy(mod); }
 				}
 				rv = EX_SOFTWARE;
 				goto fail;
@@ -4064,21 +4093,28 @@ regen_id:
 			lang = s;
 			webLanguageFn(s, webLanguageFnArg);
 		}
-		for (i = 0; i < nWebModules; i++) {
-			if (webModules[i]->init &&
-			    webModules[i]->init(S) != 0) {
+		for (i = 0; i < webModuleCount; i++) {
+			WEB_Module *mod = webModules[i];
+			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+
+			if (modC->workerInit &&
+			    modC->workerInit(mod, S) != 0) {
 				for (i--; i >= 0; i--) {
-					if (webModules[i]->destroy)
-						webModules[i]->destroy();
+					WEB_Module *mod = webModules[i];
+					WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+					if (modC->workerDestroy) { modC->workerDestroy(mod); }
 				}
-				nWebModules = 0;
+				webModuleCount = 0;
 				close(fd);
 				goto fail_close;
 			}
 		}
-		for (i = 0; i < nWebModules; i++) {
-			if (webModules[i]->sessOpen &&
-			    webModules[i]->sessOpen(S) != 0) {
+		for (i = 0; i < webModuleCount; i++) {
+			WEB_Module *mod = webModules[i];
+			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+
+			if (modC->sessOpen &&
+			    modC->sessOpen(mod, S) != 0) {
 				WEB_LogWorker("%s: %s; aborting session", S->id,
 				    AG_GetError());
 				close(fd);
@@ -4154,10 +4190,10 @@ regen_id:
 		FD_ZERO(&rdFds);
 		FD_SET(sockUn, &rdFds);
 		if (sockUn > maxFd) { maxFd = sockUn; }
-		for (i = 0; i < webApp->nFrontSockets; i++) {
-			FD_SET(webApp->frontSockets[i], &rdFds);
-			if (webApp->frontSockets[i] > maxFd)
-				maxFd = webApp->frontSockets[i];
+		for (i = 0; i < webFrontSocketCount; i++) {
+			FD_SET(webFrontSockets[i], &rdFds);
+			if (webFrontSockets[i] > maxFd)
+				maxFd = webFrontSockets[i];
 		}
 
 		if (select(maxFd+1, &rdFds, NULL, 0, &tv) < 0) {
@@ -4182,16 +4218,16 @@ regen_id:
 					goto fail_close;
 				}
 			}
-			if (webApp->nFrontSockets+1 > WEB_MAXWORKERSOCKETS) {
+			if (webFrontSocketCount+1 > WEB_MAXWORKERSOCKETS) {
 				WEB_LogWorker("Too many sockets: %u > %u; "
 				              "closing %d",
-					      webApp->nFrontSockets+1,
+					      webFrontSocketCount+1,
 					      WEB_MAXWORKERSOCKETS,
 					      sNew);
 				close(sNew);
 				continue;
 			}
-/*			WEB_LogWorker("Adding sock%u: %d", webApp->nFrontSockets,
+/*			WEB_LogWorker("Adding sock%u: %d", webFrontSocketCount,
 			    sNew); */
 			/*
 			 * Write the PID of this Worker (so the calling
@@ -4202,14 +4238,14 @@ regen_id:
 			if (WEB_SYS_Write(sNew, &pid, sizeof(pid)) == -1) {
 				close(sNew);
 			}
-			webApp->frontSockets[webApp->nFrontSockets++] = sNew;
+			webFrontSockets[webFrontSocketCount++] = sNew;
 			continue;
 		}
-		for (i = 0; i < webApp->nFrontSockets; i++) {
-			if (FD_ISSET(webApp->frontSockets[i], &rdFds))
+		for (i = 0; i < webFrontSocketCount; i++) {
+			if (FD_ISSET(webFrontSockets[i], &rdFds))
 				break;
 		}
-		if (i < webApp->nFrontSockets) {
+		if (i < webFrontSocketCount) {
 			char queryData[WEB_QUERY_MAX];
 			Uint32 queryLen;
 			WEB_Cookie *ck;
@@ -4217,7 +4253,7 @@ regen_id:
 			struct tm *tmExpire;
 			
 			/* Read serialized Query from front-end. */
-			if (WEB_SYS_Read(webApp->frontSockets[i], &queryLen,
+			if (WEB_SYS_Read(webFrontSockets[i], &queryLen,
 			    sizeof(Uint32)) == -1) {
 				if (strcmp(AG_GetError(), "EOF") == 0) {
 					WEB_LogWorker("EOF before Query; "
@@ -4232,7 +4268,7 @@ regen_id:
 				WEB_LogErr("Query (%u) too big", queryLen);
 				goto fail_close;
 			}
-			if (WEB_SYS_Read(webApp->frontSockets[i], queryData,
+			if (WEB_SYS_Read(webFrontSockets[i], queryData,
 			    queryLen) == -1) {
 				if (strcmp(AG_GetError(), "EOF") == 0) {
 					WEB_LogNotice("EOF mid-Query"
@@ -4249,7 +4285,7 @@ regen_id:
 			if (WEB_QueryLoad(&q, queryData, queryLen) == -1)
 				goto fail_close;
 			
-			q.sock = webApp->frontSockets[i];
+			q.sock = webFrontSockets[i];
 			q.sess = S;
 			tLastQuery = time(NULL);
 			tExpire = tLastQuery + Sops->sessTimeout;
@@ -4292,24 +4328,28 @@ regen_id:
 		WEB_CheckSignals();
 	}
 
-	for (i = 0; i < nWebModules; i++) {
-		if (webModules[i]->destroy) { webModules[i]->destroy(); }
+	for (i = 0; i < webModuleCount; i++) {
+		WEB_Module *mod = webModules[i];
+		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+		if (modC->workerDestroy) { modC->workerDestroy(mod); }
 	}
 	if (sockUn != -1) { close(sockUn); }
-	for (i = 0; i < webApp->nFrontSockets; i++) {
-		close(webApp->frontSockets[i]);
+	for (i = 0; i < webFrontSocketCount; i++) {
+		close(webFrontSockets[i]);
 	}
 	unlink(sun.sun_path);
 	WEB_SessionFree(S);
 	return (0);
 fail_close:
-	for (i = 0; i < nWebModules; i++) {
-		if (webModules[i]->destroy) { webModules[i]->destroy(); }
+	for (i = 0; i < webModuleCount; i++) {
+		WEB_Module *mod = webModules[i];
+		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+		if (modC->workerDestroy) { modC->workerDestroy(mod); }
 	}
 	rv = EX_SOFTWARE;
 	if (sockUn != -1) { close(sockUn); }
-	for (i = 0; i < webApp->nFrontSockets; i++) {
-		close(webApp->frontSockets[i]);
+	for (i = 0; i < webFrontSocketCount; i++) {
+		close(webFrontSockets[i]);
 	}
 	unlink(sun.sun_path);
 	unlink(sessPath);
@@ -4336,14 +4376,14 @@ fail:
  * Return 0 on success, -1 on failure and 1 if clusterID doesn't exist.
  */
 int
-WEB_ControlCommand(int clusterID, const WEB_ControlCmd *cmd)
+WEB_ControlCommand(Uint clusterID, const WEB_ControlCmd *cmd)
 {
 	struct sockaddr_un sun;
 	socklen_t sunLen;
 	struct stat sb;
 	int fd, status;
 	
-	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s%d.ctrl",
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s%u.ctrl",
 	    WEB_PATH_SOCKETS, clusterID);
 
 	if (stat(sun.sun_path, &sb) != 0) {
@@ -4384,7 +4424,7 @@ fail:
 
 /* Send a control command to a Frontend process. */
 int
-WEB_ControlCommandS(int clusterID, const char *s)
+WEB_ControlCommandS(Uint clusterID, const char *s)
 {
 	WEB_ControlCmd cmd;
 
@@ -4422,9 +4462,12 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 	char *c, *cEnd, *uriEnd;
 	struct stat sb;
 
-	WEB_LogNotice("Starting %s #%d%s (%s; agar %s) on %s:%s", webApp->name,
-	    webApp->clusterID,
-	    webApp->eventSource ? "<Ev>" : "",
+	if (webLangCount == 0)
+		WEB_AddLanguage("en");		/* Needs at least 1 */
+
+	WEB_LogNotice("Starting %s #%u%s (%s; agar %s) on %s:%s", agProgName,
+	    webClusterID,
+	    webEventSource ? "<Ev>" : "",
 	    agProgName, VERSION, hostname, port);
 
 	if (stat(WEB_PATH_SESSIONS,&sb) != 0 && mkdir(WEB_PATH_SESSIONS, 0700) != 0) {
@@ -4481,21 +4524,21 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 	freeaddrinfo(res0);
 	
 	/* Listen on control socket */
-	if ((webApp->ctrlSock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+	if ((webCtrlSock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 		AG_SetError("socket(AF_UNIX): %s", strerror(errno));
 		goto fail;
 	}
 	sun.sun_family = AF_UNIX;
-	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s%d.ctrl",
-	    WEB_PATH_SOCKETS, webApp->clusterID);
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s%u.ctrl",
+	    WEB_PATH_SOCKETS, webClusterID);
 	sun.sun_len = strlen(sun.sun_path)+1;
 	sunLen = sun.sun_len + sizeof(sun.sun_family);
 	unlink(sun.sun_path);
-	if (bind(webApp->ctrlSock, (struct sockaddr *)&sun, sunLen) == -1) {
+	if (bind(webCtrlSock, (struct sockaddr *)&sun, sunLen) == -1) {
 		AG_SetError("bind(%s): %s", sun.sun_path, strerror(errno));
 		goto fail;
 	}
-	if (listen(webApp->ctrlSock, 10) == -1) {
+	if (listen(webCtrlSock, 10) == -1) {
 		AG_SetError("listen: %s", strerror(errno));
 		goto fail;
 	}
@@ -4511,8 +4554,8 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 		WEB_Method meth;
 		fd_set readFds = httpSockFDs;
 
-		FD_SET(webApp->ctrlSock, &readFds);
-		if (webApp->ctrlSock > maxFd) { maxFd = webApp->ctrlSock; }
+		FD_SET(webCtrlSock, &readFds);
+		if (webCtrlSock > maxFd) { maxFd = webCtrlSock; }
 
 		rv = select(maxFd+1, &readFds, NULL, NULL, NULL);
 		if (rv == -1) {
@@ -4524,8 +4567,8 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 				goto fail;
 			}
 		}
-		if (FD_ISSET(webApp->ctrlSock, &readFds)) {
-			if (WEB_HandleControlCmd(webApp->ctrlSock) == -1)
+		if (FD_ISSET(webCtrlSock, &readFds)) {
+			if (WEB_HandleControlCmd(webCtrlSock) == -1)
 				WEB_LogErr("Control socket (in main): %s",
 				    AG_GetError());
 		}
@@ -4547,9 +4590,9 @@ try_accept:
 		if (i == nHttpSocks) {
 			continue;
 		}
-		if (getnameinfo(&paddr, paddrLen, webApp->paddr,
-		    sizeof(webApp->paddr), NULL, 0, NI_NUMERICHOST) != 0)
-			webApp->paddr[0] = '\0';
+		if (getnameinfo(&paddr, paddrLen, webPeerAddress,
+		    sizeof(webPeerAddress), NULL, 0, NI_NUMERICHOST) != 0)
+			webPeerAddress[0] = '\0';
 read_header:
 		/* Read HTTP request header */
 		header[0] = '\0';
@@ -4624,26 +4667,38 @@ read_header:
 		}
 		c = uriEnd;
 		if (webMethods[meth].fn(sock, uri, c, rdBuf, rdBufLen, Sops)==1) {
-			webApp->queryCount++;
+			webQueryCount++;
 			WEB_CheckSignals();
 			goto read_header;		/* Keep-alive */
 		}
 		WEB_LogDebug("[%s]: Closing connection", uri);
 finish:
 		close(sock);
-		webApp->queryCount++;
+		webQueryCount++;
 		WEB_CheckSignals();
 	}
 
 	for (i = 0; i < nHttpSocks; i++) { close(httpSocks[i]); }
-	close(webApp->ctrlSock);
+	close(webCtrlSock);
 	unlink(sun.sun_path);
 	return;
 fail:
 	for (i = 0; i < nHttpSocks; i++) { close(httpSocks[i]); }
-	if (webApp->ctrlSock != -1) {
-		close(webApp->ctrlSock);
+	if (webCtrlSock != -1) {
+		close(webCtrlSock);
 		unlink(sun.sun_path);
 	}
 	WEB_LogErr("WEB_QueryLoop: %s; exiting", AG_GetError());
 }
+
+AG_ObjectClass webModuleClass = {
+	"Web(Module)",
+	sizeof(WEB_Module),
+	{ 0, 0 },
+	NULL,	/* init */
+	NULL,	/* reset */
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL,	/* save */
+	NULL	/* edit */
+};
