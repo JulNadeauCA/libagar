@@ -28,9 +28,6 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/md5.h>
-#include <agar/core/sha1.h>
-#include <agar/core/rmd160.h>
 
 #include <agar/gui/window.h>
 #include <agar/gui/box.h>
@@ -168,32 +165,6 @@ RenameObject(AG_Event *event)
 	AG_PostEvent(NULL, ob, "renamed", NULL);
 }
 
-static void
-RefreshSums(AG_Event *event)
-{
-	char checksum[128];
-	AG_Object *ob = AG_PTR(1);
-	AG_Textbox *tbMD5 = AG_PTR(2);
-	AG_Textbox *tbSHA1 = AG_PTR(3);
-	AG_Textbox *tbRMD160 = AG_PTR(4);
-
-	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, checksum) > 0) {
-		AG_TextboxSetString(tbMD5, checksum);
-	} else {
-		AG_TextboxPrintf(tbMD5, "(%s)", AG_GetError());
-	}
-	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, checksum) > 0) {
-		AG_TextboxSetString(tbSHA1, checksum);
-	} else {
-		AG_TextboxPrintf(tbSHA1, "(%s)", AG_GetError());
-	}
-	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, checksum) > 0) {
-		AG_TextboxSetString(tbRMD160, checksum);
-	} else {
-		AG_TextboxPrintf(tbRMD160, "(%s)", AG_GetError());
-	}
-}
-
 void *
 DEV_ObjectEdit(void *p)
 {
@@ -203,8 +174,6 @@ DEV_ObjectEdit(void *p)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_Tlist *tl;
-	AG_Box *box;
-	AG_Button *btn;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
@@ -213,8 +182,6 @@ DEV_ObjectEdit(void *p)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAdd(nb, _("Infos"), AG_BOX_VERT);
 	{
-		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
-
 		tbox = AG_TextboxNewS(ntab, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_WidgetFocus(tbox);
@@ -230,29 +197,6 @@ DEV_ObjectEdit(void *p)
 #endif
 		AG_LabelNew(ntab, 0, _("Save prefix: %s"),
 		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
-
-		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-
-		tbMD5 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "MD5: ");
-		tbSHA1 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "SHA1: ");
-		tbRMD160 = AG_TextboxNewS(ntab, AG_TEXTBOX_READONLY, "RMD160: ");
-		
-		AG_TextboxSizeHint(tbMD5, "888888888888888888888888888888888");
-		AG_WidgetDisable(tbMD5);
-		AG_WidgetDisable(tbSHA1);
-		AG_WidgetDisable(tbRMD160);
-		AG_ExpandHoriz(tbMD5);
-		AG_ExpandHoriz(tbSHA1);
-		AG_ExpandHoriz(tbRMD160);
-
-		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
-					            AG_BOX_HFILL);
-		{
-			btn = AG_ButtonNewFn(box, 0, _("Refresh checksums"),
-			    RefreshSums, "%p,%p,%p,%p", ob,
-			    tbMD5, tbSHA1, tbRMD160);
-			AG_PostEvent(NULL, btn, "button-pushed", NULL);
-		}
 	}
 
 	ntab = AG_NotebookAdd(nb, _("Deps"), AG_BOX_VERT);

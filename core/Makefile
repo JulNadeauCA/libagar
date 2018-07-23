@@ -17,9 +17,8 @@ CFLAGS+=	-D_AGAR_CORE_INTERNAL ${CORE_CFLAGS}
 SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \
 	prop.c timeout.c class.c cpuinfo.c data_source.c \
 	load_string.c load_version.c vsnprintf.c vasprintf.c asprintf.c \
-	dir.c md5.c sha1.c rmd160.c file.c string.c dso.c tree.c \
-	time.c time_dummy.c db.c tbl.c getopt.c exec.c text.c user.c \
-	user_dummy.c
+	dir.c file.c string.c dso.c tree.c time.c time_dummy.c db.c tbl.c \
+	getopt.c exec.c text.c user.c user_dummy.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Db.3 AG_Event.3 AG_Object.3 AG_Timer.3 \
 	AG_Config.3 AG_Version.3 AG_DataSource.3 AG_Error.3 AG_Threads.3 \
