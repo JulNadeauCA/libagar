@@ -1382,7 +1382,7 @@ void
 AG_TlistSetDblClickFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->dblClickEv = AG_SetVoidFn(tl, fn, NULL);
+	tl->dblClickEv = AG_SetVoidFn(tl, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->dblClickEv, fmt);
 	AG_ObjectUnlock(tl);
 }
@@ -1391,7 +1391,7 @@ void
 AG_TlistSetPopupFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->popupEv = AG_SetVoidFn(tl, fn, NULL);
+	tl->popupEv = AG_SetVoidFn(tl, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
 	AG_ObjectUnlock(tl);
 }
@@ -1400,7 +1400,7 @@ void
 AG_TlistSetChangedFn(AG_Tlist *tl, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(tl);
-	tl->changedEv = AG_SetVoidFn(tl, fn, NULL);
+	tl->changedEv = AG_SetVoidFn(tl, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(tl->changedEv, fmt);
 	AG_ObjectUnlock(tl);
 }

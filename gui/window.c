@@ -301,7 +301,7 @@ Detach(AG_Event *event)
 	for (to = TAILQ_FIRST(&OBJECT(win)->timers);
 	     to != TAILQ_END(&OBJECT(win)->timers);
 	     to = toNext) {
-		toNext = TAILQ_NEXT(to, timers);
+		toNext = TAILQ_NEXT(to, pvt.timers);
 		AG_DelTimer(win, to);
 	}
 	AG_UnlockTiming();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1439,7 +1439,7 @@ AG_DriverSwClass agDriverSDLFB = {
 			sizeof(AG_DriverSDLFB),
 			{ 1,5 },
 			Init,
-			NULL,	/* reinit */
+			NULL,	/* reset */
 			Destroy,
 			NULL,	/* load */
 			NULL,	/* save */

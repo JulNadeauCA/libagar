@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1342,7 +1342,7 @@ AG_DriverMwClass agDriverWGL = {
 			sizeof(AG_DriverWGL),
 			{ 1,5 },
 			NULL,	/* init */
-			NULL,	/* reinit */
+			NULL,	/* reset */
 			NULL,	/* destroy */
 			NULL,	/* load */
 			NULL,	/* save */

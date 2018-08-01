@@ -1399,13 +1399,13 @@ PopupMenu(AG_Editable *ed)
 		return (NULL);
 	}
 	mi = AG_MenuAction(pm->root, _("Cut"), NULL, MenuCut, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, MenuCutActive, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCutActive, "%p", ed);
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, MenuCopyActive, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCopyActive, "%p", ed);
 	mi = AG_MenuAction(pm->root, _("Paste"), NULL, MenuPaste, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, MenuPasteActive, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuPasteActive, "%p", ed);
 	mi = AG_MenuAction(pm->root, _("Delete"), NULL, MenuDelete, "%p", ed);
-	mi->stateFn = AG_SetIntFn(pm->menu, MenuDeleteActive, "%p", ed);
+	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuDeleteActive, "%p", ed);
 
 	AG_MenuSeparator(pm->root);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -634,7 +634,7 @@ AG_ObjectClass agDriverSwClass = {
 	sizeof(AG_DriverSw),
 	{ 1,4 },
 	Init,
-	NULL,		/* reinit */
+	NULL,		/* reset */
 	Destroy,
 	NULL,		/* load */
 	NULL,		/* save */

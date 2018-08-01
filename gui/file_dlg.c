@@ -1301,7 +1301,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	AG_ObjectLock(fd);
 
 	if (fn != NULL) {
-		ft->action = AG_SetIntFn(fd, fn, NULL);
+		ft->action = AG_SetIntFn(fd, NULL, fn, NULL);
 		AG_EVENT_GET_ARGS(ft->action, fmt);
 #ifdef AG_THREADS
 		if (fd->flags & AG_FILEDLG_ASYNC)

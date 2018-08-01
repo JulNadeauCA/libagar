@@ -134,7 +134,7 @@ void
 AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sock);
-	sock->overlayFn = AG_SetVoidFn(sock, fn, NULL);
+	sock->overlayFn = AG_SetVoidFn(sock, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
 	AG_ObjectUnlock(sock);
 }

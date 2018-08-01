@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2017 Julien Nadeau <vedge@hypertriton.com>.
+ * Copyright (c) 2009-2018 Julien Nadeau <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2100,7 +2100,7 @@ AG_DriverMwClass agDriverGLX = {
 			sizeof(AG_DriverGLX),
 			{ 1,5 },
 			Init,
-			NULL,	/* reinit */
+			NULL,	/* reset */
 			Destroy,
 			NULL,	/* load */
 			NULL,	/* save */

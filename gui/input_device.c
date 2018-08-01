@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@ AG_ObjectClass agInputDeviceClass = {
 	sizeof(AG_InputDevice),
 	{ 0,0 },
 	Init,
-	NULL,		/* reinit */
+	NULL,		/* reset */
 	Destroy,
 	NULL,		/* load */
 	NULL,		/* save */

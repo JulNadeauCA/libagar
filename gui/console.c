@@ -319,7 +319,7 @@ PopupMenu(AG_Event *event)
 		return;
 	}
 	mi = AG_MenuAction(pm->root, _("Copy"), NULL, MenuCopy, "%p", cons);
-	mi->stateFn = AG_SetIntFn(pm->menu, MenuCopyActive, "%p", cons);
+	mi->stateFn = AG_SetIntFn(pm->menu, NULL, MenuCopyActive, "%p", cons);
 
 	AG_MenuAction(pm->root, _("Export to file..."), NULL,
 	    MenuExportToFileDlg, "%p", cons);
