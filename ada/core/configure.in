@@ -1,0 +1,51 @@
+# Public domain
+
+PACKAGE("Agar-Ada-Core")
+VERSION("1.5.1")
+
+CONFIG_GUESS("../../mk/config.guess")
+
+REGISTER_SECTION("Options for Agar-Ada-Core bindings:")
+REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
+REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
+REGISTER("--enable-debug",		"General debugging [no]")
+
+DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar/ada")
+DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar/ada")
+
+REQUIRE(cc)
+REQUIRE(ada)
+REQUIRE(agar-core, 1.5.1, ${prefix_agar})
+REQUIRE(agar-core.types, 1.5.1, ${prefix_agar})
+
+C_INCDIR($SRC)
+C_DEFINE(_USE_AGAR_STD)
+C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_TYPES)
+
+ADA_OPTION(-fstack-check)
+ADA_OPTION(-gnatVa)
+ADA_OPTION(-gnato)
+ADA_OPTION(-gnatE)
+
+if [ "${enable_warnings}" = "yes" ]; then
+	ADA_OPTION(-gnatwaleF)
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+fi
+if [ "${enable_debug}" = "yes" ]; then
+	ADA_OPTION(-g)
+	C_OPTION(-g)
+fi
+
+C_INCDIR($BLD)
+C_INCDIR_CONFIG($BLD/config)
+
+#
+# Generate an agar-ada-core-config script and a pkgconfig pc(5) module.
+#
+CONFIG_SCRIPT(agar-ada-core-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_ada_core")
+PKGCONFIG_MODULE(agar-ada-core, "Agar-Core Ada bindings", "agar-core", "", \
+                 "-I\${includedir}/agar/ada", \
+		 "-L\${libdir} -lag_ada_core", \
+		 "-lag_ada_core")

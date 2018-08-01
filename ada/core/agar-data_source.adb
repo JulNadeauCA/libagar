@@ -1,0 +1,181 @@
+------------------------------------------------------------------------------
+--                            AGAR CORE LIBRARY                             --
+--                     A G A R . D A T A _ S O U R C E                      --
+--                                 B o d y                                  --
+--                                                                          --
+-- Copyright (c) 2018, Julien Nadeau Carriere (vedge@hypertriton.com)       --
+-- Copyright (c) 2010, coreland (mark@coreland.ath.cx)                      --
+--                                                                          --
+-- Permission to use, copy, modify, and/or distribute this software for any --
+-- purpose with or without fee is hereby granted, provided that the above   --
+-- copyright notice and this permission notice appear in all copies.        --
+--                                                                          --
+-- THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES --
+-- WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF         --
+-- MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR  --
+-- ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES   --
+-- WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN    --
+-- ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF  --
+-- OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.           --
+------------------------------------------------------------------------------
+package body Agar.Data_Source is
+  use type C.size_t;
+
+  procedure Open_File
+    (Path   : in     String;
+     Mode   : in     String;
+     Source :    out Data_Source_Access_t)
+  is
+    Ch_Path : aliased C.char_array := C.To_C (Path);
+    Ch_Mode : aliased C.char_array := C.To_C (Mode);
+  begin
+    Source := AG_OpenFile
+      (Path => To_Chars_Ptr(Ch_Path'Unchecked_Access),
+       Mode => To_Chars_Ptr(Ch_Mode'Unchecked_Access));
+  end;
+
+  package body IO is
+
+    Element_Bytes : constant C.size_t := Element_Type'Size / System.Storage_Unit;
+
+    procedure Read
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Buffer :    out Element_Array_Type;
+       Read   :    out Element_Count_Type;
+       Status :    out IO_Status_t) is
+    begin
+      Status := AG_Read
+        (Source  => Source,
+         Buffer  => Buffer (Buffer'First)'Address,
+         Size    => Element_Bytes,
+         Members => Buffer'Length);
+      if Status = Success then
+        Read := Buffer'Length;
+      end if;
+    end Read;
+
+    procedure Read_At_Offset
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Offset : in     Byte_Offset_t;
+       Buffer :    out Element_Array_Type;
+       Read   :    out Element_Count_Type;
+       Status :    out IO_Status_t) is
+    begin
+      Status := AG_ReadAt
+        (Source  => Source,
+         Buffer  => Buffer (Buffer'First)'Address,
+         Size    => Element_Bytes,
+         Members => Buffer'Length,
+         Offset  => C.size_t (Offset));
+      if Status = Success then
+        Read := Buffer'Length;
+      end if;
+    end Read_At_Offset;
+
+    procedure Write
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Buffer : in     Element_Array_Type;
+       Wrote  :    out Element_Count_Type;
+       Status :    out IO_Status_t) is
+    begin
+      Status := AG_Write
+        (Source  => Source,
+         Buffer  => Buffer (Buffer'First)'Address,
+         Size    => Element_Bytes,
+         Members => Buffer'Length);
+      if Status = Success then
+        Wrote := Buffer'Length;
+      end if;
+    end;
+
+    procedure Write_At_Offset
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Offset : in     Byte_Offset_t;
+       Buffer : in     Element_Array_Type;
+       Wrote  :    out Element_Count_Type;
+       Status :    out IO_Status_t) is
+    begin
+      Status := AG_WriteAt
+        (Source  => Source,
+         Buffer  => Buffer (Buffer'First)'Address,
+         Size    => Element_Bytes,
+         Offset  => C.size_t (Offset),
+         Members => Buffer'Length);
+      if Status = Success then
+        Wrote := Buffer'Length;
+      else
+        Wrote := 0;
+      end if;
+    end;
+
+  end IO;
+  
+  function Read_String
+    (Source : in Data_Source_Access_t) return String
+  is
+    Result : chars_ptr;
+  begin
+    Result := AG_ReadStringLen(Source, C.size_t(LOAD_STRING_MAX));
+    if Result = Null_Ptr then
+      raise Program_Error with ERR.Get_Error;
+    end if;
+    -- XXX FIXME leak
+    return C.To_Ada(Value(Result));
+  end;
+  
+  function Read_String
+    (Source         : in Data_Source_Access_t;
+     Max_Length     : in Natural) return String
+  is
+    Result : chars_ptr;
+  begin
+    Result := AG_ReadStringLen(Source, C.size_t(Max_Length));
+    if Result = Null_Ptr then
+      raise Program_Error with ERR.Get_Error;
+    end if;
+    -- XXX FIXME leak
+    return C.To_Ada(Value(Result));
+  end;
+  
+  function Read_Padded_String
+    (Source : in Data_Source_Access_t;
+     Length : in Natural) return String
+  is
+    Ch_Name : aliased C.char_array := (1 .. C.size_t(Length) => C.nul);
+    Result  : C.size_t;
+  begin
+    Result := AG_CopyStringPadded
+      (Buffer => To_Chars_Ptr(Ch_Name'Unchecked_Access),
+       Source => Source,
+       Size   => Ch_Name'Length);
+    if Integer(Result) = 0 then
+      raise Program_Error with ERR.Get_Error;
+    end if;
+    return C.To_Ada(Ch_Name);
+  end;
+
+  procedure Write_String
+    (Source : in Data_Source_Access_t;
+     Data   : in String)
+  is
+    Ch_Data : aliased C.char_array := C.To_C(Data);
+  begin
+    AG_WriteString
+      (Source => Source,
+       Data   => To_Chars_Ptr(Ch_Data'Unchecked_Access));
+  end;
+  
+  procedure Write_Padded_String
+    (Source : in Data_Source_Access_t;
+     Data   : in String;
+     Length : in Natural)
+  is
+    Ch_Data : aliased C.char_array := C.To_C(Data);
+  begin
+    AG_WriteStringPadded
+      (Source => Source,
+       Data   => To_Chars_Ptr(Ch_Data'Unchecked_Access),
+       Length => C.size_t(Length));
+  end;
+
+end Agar.Data_Source;

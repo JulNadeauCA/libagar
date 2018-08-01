@@ -1,0 +1,1338 @@
+------------------------------------------------------------------------------
+--                            AGAR CORE LIBRARY                             --
+--                          A G A R . O B J E C T                           --
+--                                 S p e c                                  --
+------------------------------------------------------------------------------
+with Agar.Data_Source;
+with Agar.Event;
+with Agar.Timer;
+with Interfaces;
+with Interfaces.C;
+with Interfaces.C.Strings;
+with System;
+
+--
+-- Interface to the Agar Object System. This defines the base type, Object_t
+-- (which maps transparently to AG_Object(3) in C). This allows new Agar object
+-- classes to be written in Ada.
+--
+-- Agar object instances are limited records derived from Object_t. Similarly,
+-- class-wide data is represented by limited records derived from Class_t.
+--
+
+package Agar.Object is
+  package C renames Interfaces.C;
+  package CS renames Interfaces.C.Strings;
+  package DS renames Agar.Data_Source;
+  package EV renames Agar.Event;
+  package TMR renames Agar.Timer;
+  
+  NAME_MAX      : constant Natural := %%const(AG_OBJECT_NAME_MAX)%%;
+  HIERARCHY_MAX : constant Natural := %%const(AG_OBJECT_HIER_MAX)%%;
+  TYPE_MAX      : constant Natural := %%const(AG_OBJECT_TYPE_MAX)%%;
+  LIBRARIES_MAX : constant Natural := %%const(AG_OBJECT_LIBS_MAX)%%;
+
+  ----------------
+  -- Base Types --
+  ----------------
+  type Signed_8 is range -127 .. 127 with Convention => C;
+  for Signed_8'Size use 8;
+  type Signed_16 is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
+  for Signed_16'Size use 16;
+  type Signed_32 is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
+  for Signed_32'Size use 32;
+  type Signed_64 is range -(2 **63) .. +(2 **63 - 1) with Convention => C;
+  for Signed_64'Size use 64;
+  
+  subtype Unsigned_8  is Interfaces.Unsigned_8;
+  subtype Unsigned_16 is Interfaces.Unsigned_16;
+  subtype Unsigned_32 is Interfaces.Unsigned_32;
+  subtype Unsigned_64 is Interfaces.Unsigned_64;
+  subtype Float       is Interfaces.C.C_float;
+  subtype Double      is Interfaces.C.double;
+  subtype Long_Double is Interfaces.C.long_double;
+
+  --------------------------
+  -- Agar Object variable --
+  --------------------------
+  type Variable_t is array (1 .. %%sizeof(AG_Variable)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Variable_t'Size use %%sizeof(AG_Variable)%% * System.Storage_Unit;
+
+  type Variable_Access_t             is access all Variable_t with Convention => C;
+  subtype Variable_Not_Null_Access_t is not null Variable_Access_t;
+  
+  -------------------------------
+  -- Serialized Object version --
+  -------------------------------
+  type Version_t is record
+    Major : Interfaces.Unsigned_32;
+    Minor : Interfaces.Unsigned_32;
+  end record
+    with Convention => C;
+  type Version_Access_t is access all Version_t
+    with Convention => C;
+  
+  --------------------------
+  -- Agar Object Instance --
+  --------------------------
+  type Object_t;
+  type Object_Access_t             is access all Object_t with Convention => C;
+  subtype Object_Not_Null_Access_t is not null Object_Access_t;
+  
+  type Name_t is array (1 .. NAME_MAX) of aliased c.char with Convention => C;
+  type Name_Access_t is access all Name_t                with Convention => C;
+  
+  type Class_t;
+  type Class_Access_t is access all Class_t with Convention => C;
+  subtype Class_Not_Null_Access_t is not null Class_Access_t;
+
+  type Dependency_t is array (1 .. %%sizeof(AG_ObjectDep)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Dependency_t'Size use %%sizeof(AG_ObjectDep)%% * System.Storage_Unit;
+  type Dependency_Access_t is access all Dependency_t with Convention => C;
+  subtype Dependency_Not_Null_Access_t is not null Dependency_Access_t;
+
+  type Dependency_List_t is limited record
+    First : Dependency_Access_t;
+    Last  : access Dependency_Access_t;
+  end record
+    with Convention => C;
+  type Event_List_t is limited record
+    First : EV.Event_Access_t;
+    Last  : access EV.Event_Access_t;
+  end record
+    with Convention => C;
+  type Timer_List_t is limited record
+    First : TMR.Timer_Access_t;
+    Last  : access TMR.Timer_Access_t;
+  end record
+    with Convention => C;
+  type Variable_List_t is limited record
+    First : Variable_Access_t;
+    Last  : access Variable_Access_t;
+  end record
+    with Convention => C;
+  type Children_List_t is limited record
+    First : Object_Access_t;
+    Last  : access Object_Access_t;
+  end record
+    with Convention => C;
+  type Entry_in_Parent_t is limited record
+    Next : Object_Access_t;
+    Prev : access Object_Access_t;
+  end record
+    with Convention => C;
+
+  type Object_Private_t is array (1 .. %%sizeof(AG_ObjectPvt)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Object_Private_t'Size use %%sizeof(AG_ObjectPvt)%% * System.Storage_Unit;
+
+  type Object_t is limited record
+    Name            : Name_t;
+    Archive_Path    : CS.chars_ptr;
+    Save_Prefix     : CS.chars_ptr;
+    Class           : Class_Not_Null_Access_t;
+    Flags           : C.unsigned;
+    Events          : Event_List_t;
+    Timers          : Timer_List_t;
+    Variables       : Variable_List_t;
+    Dependencies    : Dependency_List_t;
+    Children        : Children_List_t;
+    Entry_in_Parent : Entry_in_Parent_t;
+    Parent          : Object_Access_t;
+    Root            : Object_Access_t;
+    Private_Data    : Object_Private_t;
+  end record
+    with Convention => C;
+    
+  -------------------------------------
+  -- Accesses to Base Object Methods --
+  -------------------------------------
+  type Init_Func_Access_t is access procedure (Object : Object_Access_t)
+    with Convention => C;
+  type Reset_Func_Access_t is access procedure (Object : Object_Access_t)
+    with Convention => C;
+  type Destroy_Func_Access_t is access procedure (Object : Object_Access_t)
+    with Convention => C;
+  type Load_Func_Access_t is access function
+    (Object  : Object_Access_t;
+     Source  : DS.Data_Source_Access_t;
+     Version : Version_Access_t) return C.int with Convention => C;
+  type Save_Func_Access_t is access function
+    (Object : Object_Access_t;
+     Dest   : DS.Data_Source_Access_t) return C.int with Convention => C;
+  type Edit_Func_Access_t is access function
+    (Object : Object_Access_t) return System.Address with Convention => C;
+
+  ------------------------------
+  -- Object Class Description --
+  ------------------------------
+  type Class_Name_t is array (1 .. TYPE_MAX) of aliased c.char
+    with Convention => C;
+  type Class_Hierarchy_t is array (1 .. HIERARCHY_MAX) of aliased c.char
+    with Convention => C;
+  type Class_Private_t is array (1 .. %%sizeof(AG_ObjectClassPvt)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Class_Private_t'Size use %%sizeof(AG_ObjectClassPvt)%% * System.Storage_Unit;
+  type Class_Private_Access_t is access all Class_Private_t with Convention => C;
+
+  type Class_t is limited record
+    Hierarchy    : Class_Hierarchy_t;
+    Size         : C.size_t;
+    Version      : Version_t;
+    Init_Func    : Init_Func_Access_t;
+    Reset_Func   : Reset_Func_Access_t;
+    Destroy_Func : Destroy_Func_Access_t;
+    Load_Func    : Load_Func_Access_t;
+    Save_Func    : Save_Func_Access_t;
+    Edit_Func    : Edit_Func_Access_t;
+    -- Generated fields --
+    Name         : Class_Name_t;
+    Superclass   : Class_Access_t;
+    Private_Data : Class_Private_t;
+  end record
+    with Convention => C;
+ 
+  ------------------------------------------
+  -- Serialized Object Header Description --
+  ------------------------------------------
+  type Header_t is array (1 .. %%sizeof(AG_ObjectHeader)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Header_t'Size use %%sizeof(AG_ObjectHeader)%% * System.Storage_Unit;
+  type Header_Access_t             is access all Header_t with Convention => C;
+  subtype Header_Not_Null_Access_t is not null Header_Access_t;
+  
+  --
+  -- Create a new instance of Class under Parent with the given name. Fail
+  -- and return null if an object of the same name already exists.
+  --
+  function New_Object
+    (Parent : in Object_Access_t;
+     Name   : in String;
+     Class  : in Class_Not_Null_Access_t) return Object_Access_t;
+  --
+  -- Create a new instance of Class under Parent, without naming the object.
+  --
+  function New_Object
+    (Parent : in Object_Access_t;
+     Class  : in Class_Not_Null_Access_t) return Object_Access_t;
+  --
+  -- Create a new instance of Class not attached to any parent.
+  --
+  function New_Object
+    (Class : in Class_Not_Null_Access_t) return Object_Access_t;
+   
+  --
+  -- Initialize an Agar Object. Used internally by New_Object. Static should be
+  -- set unless Object points to auto-allocated and Agar-freeable memory.
+  --
+  procedure Init_Object
+    (Object : in Object_Not_Null_Access_t;
+     Class  : in Class_Not_Null_Access_t;
+     Static : in Boolean := False);
+
+  --
+  -- Make Object a child of Parent (via parent access)
+  --
+  procedure Attach
+    (Parent : in Object_Access_t;
+     Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectAttach";
+
+  --
+  -- Make Object a child of Parent (via parent name).
+  --
+  procedure Attach
+    (Root   : in Object_Not_Null_Access_t;
+     Parent : in String;
+     Object : in Object_Access_t);
+  -- Make Object a child of Parent by name.
+
+  --
+  -- Detach Object from its current Parent (if any).
+  --
+  procedure Detach (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectDetach";
+
+  --
+  -- Change an object's position within its parent's list of child objects.
+  -- This list is ordered and the order is preserved by serialization.
+  --
+  procedure Move_Up (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectMoveUp";
+  procedure Move_Down (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectMoveDown";
+  procedure Move_To_Head (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectMoveToHead";
+  procedure Move_To_Tail (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectMoveToTail";
+
+  -- Shorthand for Detach and Destroy.
+  --procedure Delete (Object : in Object_Not_Null_Access_t)
+  --  with Import, Convention => C, Link_Name => "AG_ObjectDelete";
+
+  --
+  -- Return the root object of the VFS that Object is part of.
+  -- May return the Object itself if Object is the VFS root.
+  --
+  function Root (Object : in Object_Not_Null_Access_t) return Object_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectRoot";
+
+  --
+  -- Return an access to the Parent of an Object (which can be Null).
+  --
+  function Parent (Object : in Object_Not_Null_Access_t) return Object_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectParent";
+
+  --
+  -- Lookup an object using an absolute path name (relative to the root of
+  -- the VFS which has object Root as its root).
+  --
+  function Find
+    (Root : in Object_Not_Null_Access_t;
+     Path : in String) return Object_Access_t;
+
+  --
+  -- Search for a parent object matching Name and Object_Type.
+  --
+  function Find_Parent
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in String;
+     Class  : in String) return Object_Access_t;
+
+  --
+  -- Return Parent's first immediate child object called Name.
+  --
+  function Find_Child
+    (Parent : in Object_Not_Null_Access_t;
+     Name   : in String) return Object_Access_t;
+
+  --
+  -- Return the fully qualified path name of Object (within its parent VFS).
+  -- The "/" character is used as path separator.
+  --
+  function Get_Name (Object : in Object_Not_Null_Access_t) return String;
+  
+  --
+  -- Acquire or release the general-purpose mutex lock protecting Object's data.
+  -- This lock is always held implicitely during event processing.
+  --
+  procedure Lock (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectLock";
+  procedure Unlock (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectUnlock";
+ 
+  --
+  -- Acquire or release the mutex lock protecting the entire VFS.
+  --
+  procedure Lock_VFS (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "ag_lock_vfs";
+  procedure Unlock_VFS(Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "ag_unlock_vfs";
+
+  --
+  -- Rename the object. Does not check for potential conflict.
+  --
+  procedure Set_Name
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in String);
+
+  --
+  -- Return a unique (relative to its Parent) name for the Object.
+  -- With a class argument, use the form : "<Class name> #123"
+  -- With a Prefix string, use the form  : "<Prefix> #123"
+  --
+  function Generate_Name
+    (Object : in Object_Not_Null_Access_t;
+     Class  : in Class_Not_Null_Access_t) return String;
+  function Generate_Name
+    (Object : in Object_Not_Null_Access_t;
+     Prefix : in String) return String;
+
+  --
+  -- Register a new class by providing an initialized Class_t as argument.
+  --
+  procedure Register_Class (Class : Class_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_RegisterClass";
+
+  --
+  -- Delete an existing class.
+  --
+  procedure Unregister_Class (Class : Class_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_UnregisterClass";
+
+  --
+  -- Register a new Agar object class.
+  --
+  function Create_Class
+    (Hierarchy    : in String;
+     Object_Size  : in Natural;
+     Class_Size   : in Natural;
+     Major        : in Natural := 1;
+     Minor        : in Natural := 0;
+     Init_Func    : in Init_Func_Access_t := null;
+     Reset_Func   : in Reset_Func_Access_t := null;
+     Destroy_Func : in Destroy_Func_Access_t := null;
+     Load_Func    : in Load_Func_Access_t := null;
+     Save_Func    : in Save_Func_Access_t := null;
+     Edit_Func    : in Edit_Func_Access_t := null) return Class_Not_Null_Access_t;
+ 
+  --
+  -- Remove and deallocate an Agar object class.
+  --
+  procedure Destroy_Class (Class : Class_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_DestroyClass";
+
+  --
+  -- Modify the initialization procedure of a class.
+  --
+  procedure Class_Set_Init
+    (Class     : in Class_Not_Null_Access_t;
+     Init_Func : in Init_Func_Access_t);
+  function Class_Set_Init
+    (Class     : in Class_Not_Null_Access_t;
+     Init_Func : in Init_Func_Access_t) return Init_Func_Access_t;
+
+  --
+  -- Modify the reset procedure of a class.
+  --
+  procedure Class_Set_Reset
+    (Class      : in Class_Not_Null_Access_t;
+     Reset_Func : in Reset_Func_Access_t);
+  function Class_Set_Reset
+    (Class      : in Class_Not_Null_Access_t;
+     Reset_Func : in Reset_Func_Access_t) return Reset_Func_Access_t;
+  
+  --
+  -- Modify the finalization procedure of a class.
+  --
+  procedure Class_Set_Destroy
+    (Class        : in Class_Not_Null_Access_t;
+     Destroy_Func : in Destroy_Func_Access_t);
+  function Class_Set_Destroy
+    (Class        : in Class_Not_Null_Access_t;
+     Destroy_Func : in Destroy_Func_Access_t) return Destroy_Func_Access_t;
+  
+  --
+  -- Modify the deserialization function of a class.
+  --
+  procedure Class_Set_Load
+    (Class     : in Class_Not_Null_Access_t;
+     Load_Func : in Load_Func_Access_t);
+  function Class_Set_Load
+    (Class     : in Class_Not_Null_Access_t;
+     Load_Func : in Load_Func_Access_t) return Load_Func_Access_t;
+
+  --
+  -- Modify the serialization function of a class.
+  --
+  procedure Class_Set_Save
+    (Class     : in Class_Not_Null_Access_t;
+     Save_Func : in Save_Func_Access_t);
+  function Class_Set_Save
+    (Class     : in Class_Not_Null_Access_t;
+     Save_Func : in Save_Func_Access_t) return Save_Func_Access_t;
+  
+  --
+  -- Modify the (application-specific) edit function of a class.
+  --
+  procedure Class_Set_Edit
+    (Class     : in Class_Not_Null_Access_t;
+     Edit_Func : in Edit_Func_Access_t);
+  function Class_Set_Edit
+    (Class     : in Class_Not_Null_Access_t;
+     Edit_Func : in Edit_Func_Access_t) return Edit_Func_Access_t;
+
+  --
+  -- Register a new namespace and prefix. This is used for expanding inheritance
+  -- hierarchy strings such as "Agar(Foo:Bar)" to "AG_Foo:AG_Bar".
+  -- For example, ("Agar", "AG_", "http://libagar.org/").
+  --
+  procedure Register_Namespace
+    (Name   : in String;
+     Prefix : in String;
+     URL    : in String);
+  procedure Unregister_Namespace
+    (Name : in String);
+  
+  --
+  -- Return access to the registered class described by a hierarchy string.
+  --
+  function Lookup_Class (Class : in String) return Class_Access_t;
+
+  --
+  -- Load any module (and register any class) required to satisfy the given
+  -- inheritance hierarchy. Modules are specified as a comma-separated list
+  -- following '@'. For example: "MySuper:MySubclass@mymodule" specifies
+  -- that Load_Class should scan the registered Module Directories for a DSO
+  -- such as mymodule.so. If found, it expects to find a symbol "mySubclass"
+  -- pointing to an initialized Class_t describing MySubclass.
+  --
+  function Load_Class (Class : in String) return Class_Access_t;
+
+  --
+  -- Add or remove directories to the search path used by Load_Class.
+  --
+  procedure Register_Module_Directory (Path : in String);
+  procedure Unregister_Module_Directory (Path : in String);
+
+  --
+  -- Test if Object is a member of the class described by a String pattern.
+  -- Pattern describes an inheritance hierarchy with possible wildcards ("*").
+  -- "Vehicle:Car"   <= True if this is a Car (but not a subclass of Car).
+  -- "Vehicle:Car:*" <= True if this is a Car (or a subclass of Car).
+  --
+  function Is_Of_Class
+    (Object  : in Object_Not_Null_Access_t;
+     Pattern : in String) return Boolean;
+
+  --
+  -- Test if an object is being referenced by another object in the same VFS.
+  --
+  function In_Use (Object : in Object_Not_Null_Access_t) return Boolean;
+
+  --
+  -- Add Dependency to Object's dependency table. If Persistent is True,
+  -- mark the reference as serializable.
+  --
+  function Add_Dependency
+    (Object     : in Object_Not_Null_Access_t;
+     Dependency : in Object_Not_Null_Access_t;
+     Persistent : in Boolean := False) return Dependency_Access_t;
+
+  --
+  -- Remove Dependency from Object's dependency table.
+  --
+  procedure Delete_Dependency
+    (Object     : in Object_Not_Null_Access_t;
+     Dependency : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectDelDep";
+
+  --
+  -- Return a serializable handle uniquely identifying the entry corresponding
+  -- to the object Dependency within Object's dependency table.
+  --
+  function Encode_Dependency
+    (Object     : in Object_Not_Null_Access_t;
+     Dependency : in Object_Not_Null_Access_t) return Interfaces.Unsigned_32
+    with Import, Convention => C, Link_Name => "AG_ObjectEncodeName";
+
+  --
+  -- Resolve a dependency handle previously generated by Encode_Dependency. If
+  -- successful, return access to the resolved Object in Pointer.
+  --
+  function Find_Dependency
+    (Object  : in Object_Not_Null_Access_t;
+     Index   : in Interfaces.Unsigned_32;
+     Pointer : access Object_Not_Null_Access_t) return Boolean;
+
+  --
+  -- Free an Object instance from memory.
+  --
+  procedure Destroy (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectDestroy";
+
+  --
+  -- Restore the Object to an initial state. Invoked by both Load and Destroy.
+  --
+  procedure Reset (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectReset";
+
+  --
+  -- Clear the registered event handlers, Variables and Dependencies.
+  --
+  procedure Free_Events (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectFreeEvents";
+  procedure Free_Variables (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectFreeVariables";
+  procedure Free_Dependencies (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectFreeDeps";
+
+  --
+  -- Remove any dependencies with a reference count of 0.
+  --
+  procedure Clean_Up_Dependencies (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectFreeDummyDeps";
+
+  --
+  -- Detach and Destroy all child objects.
+  --
+  procedure Free_Children (Object : in Object_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectFreeChildren";
+
+  --
+  -- Load the state of an object from serialized storage.
+  --
+  -- If File is not given, load from the application's default data directory
+  -- (see: Agar.Init.Init_Core arguments Program_Name, Create_Directory).
+  --
+  function Load (Object : in Object_Not_Null_Access_t) return Boolean;
+  function Load
+    (Object : in Object_Not_Null_Access_t;
+     File   : in String) return Boolean;
+
+  --
+  -- Load an Object's data part only (ignoring the generic Object part).
+  --
+  function Load_Data (Object : in Object_Not_Null_Access_t) return Boolean;
+  function Load_Data
+    (Object : in Object_Not_Null_Access_t;
+     File   : in String) return Boolean;
+
+  --
+  -- Load an Object's generic part only (ignoring its data part).
+  --
+  function Load_Generic (Object : in Object_Not_Null_Access_t) return Boolean;
+  function Load_Generic
+    (Object : in Object_Not_Null_Access_t;
+     File   : in String) return Boolean;
+
+  --
+  -- Save the state of an object to serialized storage.
+  --
+  -- If File is not given, save to the application's default data directory
+  -- (see: Agar.Init.Init_Core arguments Program_Name, Create_Directory).
+  --
+  function Save (Object : in Object_Not_Null_Access_t) return Boolean;
+  function Save
+    (Object : in Object_Not_Null_Access_t;
+     File   : in String) return Boolean;
+
+  --
+  -- Save the state of an Object and all of its descendants to the default
+  -- data directory.
+  --
+  function Save_All (Object : in Object_Not_Null_Access_t) return Boolean;
+
+  --
+  -- Transfer a serialized representation of an object from/to an Agar data
+  -- source (which could be a file, memory, network stream, etc).
+  --
+  function Serialize
+    (Object : in Object_Not_Null_Access_t;
+     Source : in DS.Data_Source_Not_Null_Access_t) return Boolean;
+  function Unserialize
+    (Object : in Object_Not_Null_Access_t;
+     Source : in DS.Data_Source_Not_Null_Access_t) return Boolean;
+
+  --
+  -- Try reading an Agar object signature from a data source. If successful
+  -- (True), return signature information in Header.
+  --
+  function Read_Header
+    (Source : in DS.Data_Source_Not_Null_Access_t;
+     Header : in Header_Access_t) return Boolean;
+
+  --
+  -- Page the data of an object in or out of serialized storage.
+  --
+  function Page_In (Object : in Object_Not_Null_Access_t) return Boolean;
+  function Page_Out (Object : in Object_Not_Null_Access_t) return Boolean;
+
+  --
+  -- Set a callback routine for handling an event. The function forms
+  -- returns an Event_t access which can be used to specify arguments
+  -- (see Agar.Event). Set_Event does not allow more than one callback
+  -- per event.
+  --
+  -- Async     => True : Process events in a separate thread.
+  -- Propagate => True : Broadcast events to all child objects.
+  --
+  function Set_Event
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in String;
+     Func      : in EV.Event_Func_Access_t;
+     Async     : in Boolean := False;
+     Propagate : in Boolean := False) return EV.Event_Not_Null_Access_t;
+  procedure Set_Event
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in String;
+     Func      : in EV.Event_Func_Access_t;
+     Async     : in Boolean := False;
+     Propagate : in Boolean := False);
+  
+  --
+  -- Variant of Set_Event which allows more than one callback per Event.
+  -- Instead of replacing an existing Event, Add_Event appends the callback
+  -- the list. All registered callbacks will be invoked by Post_Event.
+  --
+  function Add_Event
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in String;
+     Func      : in EV.Event_Func_Access_t;
+     Async     : in Boolean := False;
+     Propagate : in Boolean := False) return EV.Event_Not_Null_Access_t;
+  procedure Add_Event
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in String;
+     Func      : in EV.Event_Func_Access_t;
+     Async     : in Boolean := False;
+     Propagate : in Boolean := False);
+
+  --
+  -- Post an Event to a Target object.
+  -- Message-passing style with specified Source object.
+  --
+  procedure Post_Event
+    (Source : in Object_Access_t;
+     Target : in Object_Not_Null_Access_t;
+     Event  : in String);
+  procedure Post_Event
+    (Source : in Object_Access_t;
+     Target : in Object_Not_Null_Access_t;
+     Event  : in EV.Event_Not_Null_Access_t);
+  
+  --
+  -- Post an Event to a Target object.
+  -- Anonymous style without specified Source.
+  --
+  procedure Post_Event
+    (Target : in Object_Not_Null_Access_t;
+     Event  : in String);
+  procedure Post_Event
+    (Target : in Object_Not_Null_Access_t;
+     Event  : in EV.Event_Not_Null_Access_t);
+ 
+  --
+  -- Log object name and message to the console for debugging purposes.
+  --
+  procedure Debug
+    (Object  : in Object_Access_t;
+     Message : in String);
+  
+  --
+  -- Attach an initialized timer to an object and activate it. The callback
+  -- routine will be executed after the timer expires in Interval milliseconds.
+  -- Timer will be restarted or deleted based on the callback's return value.
+  --
+  function Add_Timer
+    (Object   : in Object_Access_t;
+     Timer    : in TMR.Timer_not_null_Access_t;
+     Interval : in Interfaces.Unsigned_32;
+     Func     : in TMR.Timer_Callback_t) return Boolean;
+  
+  --
+  -- Auto-allocated alternative to Init_Timer and Add_Timer. The timer structure
+  -- will be auto allocated and freed implicitely.
+  --
+  function Add_Timer
+    (Object   : in Object_Access_t;
+     Interval : in Interfaces.Unsigned_32;
+     Func     : in TMR.Timer_Callback_t) return TMR.Timer_Access_t;
+ 
+  --
+  -- Cancel and delete an active timer.
+  --
+  procedure Delete_Timer
+    (Object : in Object_not_null_Access_t;
+     Timer  : in TMR.Timer_not_null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_DelTimer";
+
+  --
+  -- Evaluate whether a variable is set.
+  --
+  function Defined
+    (Object   : in Object_not_null_Access_t;
+     Variable : in String) return Boolean;
+
+  private
+
+  --
+  -- AG_Object(3)
+  --
+
+  function AG_ObjectNew
+    (Parent : in System.Address;
+     Name   : in CS.chars_ptr;
+     Class  : in Class_Not_Null_Access_t) return Object_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectNew";
+  
+  procedure AG_ObjectInit
+    (Object : in Object_Not_Null_Access_t;
+     Class  : in Class_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectInit";
+  
+  procedure AG_ObjectInitStatic
+    (Object : in Object_Not_Null_Access_t;
+     Class  : in Class_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectInitStatic";
+  
+  procedure AG_ObjectAttachToNamed
+    (Root   : in Object_Not_Null_Access_t;
+     Parent : in CS.chars_ptr;
+     Object : in Object_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectAttachToNamed";
+  
+  function AG_ObjectFindS
+    (Root : in Object_Not_Null_Access_t;
+     Path : in CS.chars_ptr) return Object_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectFindS";
+  
+  function AG_ObjectFindParent
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr;
+     Class  : in CS.chars_ptr) return Object_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectFindParent";
+    
+  function AG_ObjectFindChild
+    (Parent : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr) return Object_Access_t
+    with Import, Convention => C, Link_Name => "ag_object_find_child";
+  
+  function AG_ObjectCopyName
+    (Object : in Object_Not_Null_Access_t;
+     Buffer : in System.Address;
+     Size   : in C.size_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectCopyName";
+
+  procedure AG_ObjectSetNameS
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_ObjectSetNameS";
+
+  procedure AG_ObjectGenName
+    (Object : in Object_Not_Null_Access_t;
+     Class  : in Class_Not_Null_Access_t;
+     Buffer : in System.Address;
+     Size   : in C.size_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectGenName";
+
+  procedure AG_ObjectGenNamePfx
+    (Object : in Object_Not_Null_Access_t;
+     Prefix : in CS.chars_ptr;
+     Buffer : in System.Address;
+     Size   : in C.size_t)
+    with Import, Convention => C, Link_Name => "AG_ObjectGenNamePfx";
+
+  function AG_CreateClass
+    (Hierarchy   : in CS.chars_ptr;
+     Object_Size : in C.size_t;
+     Class_Size  : in C.size_t;
+     Major       : in C.unsigned;
+     Minor       : in C.unsigned) return Class_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_CreateClass";
+  
+  procedure AG_ClassSetInit
+    (Class     : in Class_Not_Null_Access_t;
+     Init_Func : in Init_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetInit";
+  function AG_ClassSetInit
+    (Class     : in Class_Not_Null_Access_t;
+     Init_Func : in Init_Func_Access_t) return Init_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetInit";
+  
+  procedure AG_ClassSetReset
+    (Class      : in Class_Not_Null_Access_t;
+     Reset_Func : in Reset_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetReset";
+  function AG_ClassSetReset
+    (Class      : in Class_Not_Null_Access_t;
+     Reset_Func : in Reset_Func_Access_t) return Reset_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetReset";
+    
+  procedure AG_ClassSetDestroy
+    (Class        : in Class_Not_Null_Access_t;
+     Destroy_Func : in Destroy_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetDestroy";
+  function AG_ClassSetDestroy
+    (Class        : in Class_Not_Null_Access_t;
+     Destroy_Func : in Destroy_Func_Access_t) return Destroy_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetDestroy";
+    
+  procedure AG_ClassSetLoad
+    (Class     : in Class_Not_Null_Access_t;
+     Load_Func : in Load_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetLoad";
+  function AG_ClassSetLoad
+    (Class     : in Class_Not_Null_Access_t;
+     Load_Func : in Load_Func_Access_t) return Load_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetLoad";
+    
+  procedure AG_ClassSetSave
+    (Class     : in Class_Not_Null_Access_t;
+     Save_Func : in Save_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetSave";
+  function AG_ClassSetSave
+    (Class     : in Class_Not_Null_Access_t;
+     Save_Func : in Save_Func_Access_t) return Save_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetSave";
+    
+  procedure AG_ClassSetEdit
+    (Class     : in Class_Not_Null_Access_t;
+     Edit_Func : in Edit_Func_Access_t)
+    with Import, Convention => C, Link_Name => "AG_ClassSetEdit";
+  function AG_ClassSetEdit
+    (Class     : in Class_Not_Null_Access_t;
+     Edit_Func : in Edit_Func_Access_t) return Edit_Func_Access_t
+    with Import, Convention => C, Link_Name => "AG_ClassSetEdit";
+  
+  procedure AG_RegisterNamespace
+    (Name   : in CS.chars_ptr;
+     Prefix : in CS.chars_ptr;
+     URL    : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_RegisterNamespace";
+
+  procedure AG_UnregisterNamespace (Name : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_UnregisterNamespace";
+
+  function AG_LookupClass (Class : in CS.chars_ptr) return Class_Access_t
+    with Import, Convention => C, Link_Name => "AG_LookupClass";
+
+  function AG_LoadClass (Class : in CS.chars_ptr) return Class_Access_t
+    with Import, Convention => C, Link_Name => "AG_LoadClass";
+
+  procedure AG_RegisterModuleDirectory (Path : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_RegisterModuleDirectory";
+
+  procedure AG_UnregisterModuleDirectory (Path : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_UnregisterModuleDirectory";
+
+  function AG_OfClass
+    (Object  : in Object_Not_Null_Access_t;
+     Pattern : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "ag_of_class";
+
+  function AG_ObjectInUse (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectInUse";
+
+  function AG_ObjectAddDep
+    (Object     : in Object_Not_Null_Access_t;
+     Dependency : in Object_Not_Null_Access_t;
+     Persistent : in C.int) return Dependency_Access_t
+    with Import, Convention => C, Link_Name => "AG_ObjectAddDep";
+  
+  function AG_ObjectFindDep
+    (Object  : in Object_Not_Null_Access_t;
+     Index   : in Interfaces.Unsigned_32;
+     Pointer : access Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectFindDep";
+
+  function AG_ObjectLoad (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoad";
+
+  function AG_ObjectLoadFromFile
+    (Object : in Object_Not_Null_Access_t;
+     File   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoadFromFile";
+
+  function AG_ObjectLoadData (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoadData";
+
+  function AG_ObjectLoadDataFromFile
+    (Object : in Object_Not_Null_Access_t;
+     File   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoadDataFromFile";
+
+  function AG_ObjectLoadGeneric (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoadGeneric";
+
+  function AG_ObjectLoadGenericFromFile
+    (Object : in Object_Not_Null_Access_t;
+     File   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectLoadGenericFromFile";
+
+  function AG_ObjectSave (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectSave";
+
+  function AG_ObjectSaveAll (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectSaveAll";
+
+  function AG_ObjectSaveToFile
+    (Object : in Object_Not_Null_Access_t;
+     File   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectSaveToFile";
+
+  function AG_ObjectSerialize
+    (Object : in Object_Not_Null_Access_t;
+     Source : in DS.Data_Source_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectSerialize";
+
+  function AG_ObjectUnserialize
+    (Object : in Object_Not_Null_Access_t;
+     Source : in DS.Data_Source_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectUnserialize";
+
+  function AG_ObjectReadHeader
+    (Object : in DS.Data_Source_Not_Null_Access_t;
+     Header : in Header_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectReadHeader";
+
+  function AG_ObjectPageIn (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectPageIn";
+
+  function AG_ObjectPageOut (Object : in Object_Not_Null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_ObjectPageOut";
+  
+  procedure AG_Debug
+    (Object  : in Object_Access_t;
+     Format  : in CS.chars_ptr;
+     Message : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_Debug";
+  
+  --
+  -- AG_Event(3)
+  --
+  
+  function AG_SetEvent
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in CS.chars_ptr;
+     Func      : in EV.Event_Func_Access_t;
+     Format    : in CS.chars_ptr) return EV.Event_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetEvent";
+  
+  procedure AG_SetEvent
+    (Object    : in Object_Not_Null_Access_t;
+     Event     : in CS.chars_ptr;
+     Func      : in EV.Event_Func_Access_t;
+     Format    : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_SetEvent";
+  
+  function AG_AddEvent
+    (Object : in Object_Not_Null_Access_t;
+     Event  : in CS.chars_ptr;
+     Func   : in EV.Event_Func_Access_t;
+     Format : in CS.chars_ptr) return EV.Event_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_AddEvent";
+  procedure AG_AddEvent
+    (Object : in Object_Not_Null_Access_t;
+     Event  : in CS.chars_ptr;
+     Func   : in EV.Event_Func_Access_t;
+     Format : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_AddEvent";
+  
+  function AG_PostEvent
+    (Source : in Object_Access_t;
+     Target : in Object_Not_Null_Access_t;
+     Event  : in CS.chars_ptr;
+     Format : in CS.chars_ptr) return EV.Event_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_PostEvent";
+  procedure AG_PostEvent
+    (Source : in Object_Access_t;
+     Target : in Object_Not_Null_Access_t;
+     Event  : in CS.chars_ptr;
+     Format : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_PostEvent";
+  
+  procedure AG_PostEventByPtr
+    (Source : in Object_Access_t;
+     Target : in Object_Not_Null_Access_t;
+     Event  : in EV.Event_Access_t;
+     Format : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_PostEventByPtr";
+  
+  --
+  -- AG_Timer(3)
+  --
+  
+  function AG_AddTimer
+    (Object   : in Object_Access_t;
+     Timer    : in TMR.Timer_not_null_Access_t;
+     Interval : in Interfaces.Unsigned_32;
+     Func     : in TMR.Timer_Callback_t;
+     Flags    : in C.unsigned;
+     Format   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_AddTimer";
+  
+  function AG_AddTimerAuto
+    (Object   : in Object_Access_t;
+     Interval : in Interfaces.Unsigned_32;
+     Func     : in TMR.Timer_Callback_t;
+     Format   : in CS.chars_ptr) return TMR.Timer_Access_t
+    with Import, Convention => C, Link_Name => "AG_AddTimerAuto";
+
+  --------------------
+  -- AG_Variable(3) --
+  --------------------
+
+  function AG_Defined
+    (Object : in Object_not_null_Access_t;
+     Name   : in CS.chars_ptr) return C.int
+    with Import, Convention => C, Link_Name => "AG_Defined";
+
+  function AG_EvalVariable
+    (Object   : in Object_not_null_Access_t;
+     Variable : in Variable_not_null_Access_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_EvalVariable";
+
+  procedure AG_CopyVariable
+    (Destination : in Variable_Not_Null_Access_t;
+     Source      : in Variable_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CopyVariable";
+
+  procedure AG_Unset
+    (Object : in Object_not_null_Access_t;
+     Name   : in System.Address)
+    with Import, Convention => C, Link_Name => "AG_Unset";
+
+  procedure AG_GetUint8
+    (Object : in Object_not_null_Access_t;
+     Name   : in System.Address)
+    with Import, Convention => C, Link_Name => "AG_GetUint8";
+
+  function AG_SetUint8
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Interfaces.Unsigned_8) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetUint8";
+
+  function AG_BindUint8
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Interfaces.Unsigned_8) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindUint8";
+
+  function AG_GetSint8
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetSint8";
+
+  function AG_SetSint8
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Signed_8) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetSint8";
+
+  function AG_BindSint8
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Signed_8) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindSint8";
+
+  procedure AG_GetUint16
+    (Object : in System.Address;
+     Name   : in System.Address)
+    with Import, Convention => C, Link_Name => "AG_GetUint16";
+
+  function AG_SetUint16
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Interfaces.Unsigned_16) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetUint16";
+
+  function AG_BindUint16
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Interfaces.Unsigned_16) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindUint16";
+
+  function AG_GetSint16
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetSint16";
+
+  function AG_SetSint16
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Signed_16) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetSint16";
+
+  function AG_BindSint16
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Signed_16) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindSint16";
+
+  procedure AG_GetUint32
+    (Object : in System.Address;
+     Name   : in System.Address)
+    with Import, Convention => C, Link_Name => "AG_GetUint32";
+
+  function AG_SetUint32
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Interfaces.Unsigned_32) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetUint32";
+
+  function AG_BindUint32
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Interfaces.Unsigned_32) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindUint32";
+
+  function AG_GetSint32
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetSint32";
+
+  function AG_SetSint32
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Signed_32) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetSint32";
+
+  function AG_BindSint32
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Signed_32) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindSint32";
+
+  procedure AG_GetUint64
+    (Object : in System.Address;
+     Name   : in System.Address)
+    with Import, Convention => C, Link_Name => "AG_GetUint64";
+
+  function AG_SetUint64
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Interfaces.Unsigned_64) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetUint64";
+
+  function AG_BindUint64
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Interfaces.Unsigned_64) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindUint64";
+
+  function AG_GetSint64
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetSint64";
+
+  function AG_SetSint64
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Signed_64) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetSint64";
+
+  function AG_BindSint64
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Signed_64) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindSint64";
+
+  function AG_GetFloat
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetFloat";
+
+  function AG_SetFloat
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Float) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetFloat";
+
+  function AG_BindFloat
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Float) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindFloat";
+
+  function AG_GetDouble
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetDouble";
+
+  function AG_SetDouble
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Double) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetDouble";
+
+  function AG_BindDouble
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Double) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindDouble";
+  
+  function AG_GetLongDouble
+    (Object : in System.Address;
+     Name   : in System.Address) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_GetLongDouble";
+
+  function AG_SetLongDouble
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : in Long_Double) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetLongDouble";
+
+  function AG_BindLongDouble
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : access Long_Double) return Variable_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindLongDouble";
+
+  function AG_GetString
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Buffer : in System.Address;
+     Size   : in C.size_t) return C.size_t
+    with Import, Convention => C, Link_Name => "AG_GetString";
+
+  function AG_GetStringDup
+    (Object : in System.Address;
+     Name   : in System.Address) return System.Address
+    with Import, Convention => C, Link_Name => "AG_GetStringDup";
+
+  function AG_SetString
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : in System.Address) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetString";
+
+  function AG_SetStringFixed
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : in System.Address;
+     Size     : in C.size_t) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetStringFixed";
+
+  function AG_BindString
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : in System.Address;
+     Size     : in C.size_t) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindString";
+
+  function AG_GetPointer
+    (Object : in System.Address;
+     Name   : in System.Address) return System.Address
+    with Import, Convention => C, Link_Name => "AG_GetPointer";
+
+  function AG_SetPointer
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : in System.Address) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetPointer";
+
+  function AG_BindPointer
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : access System.Address) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindPointer";
+  
+  function AG_SetConstPointer
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : in System.Address) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetConstPointer";
+
+  function AG_BindConstPointer
+    (Variable : in Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Data     : access System.Address) return Variable_Access_t
+    with Import, Convention => C, Link_Name => "AG_BindConstPointer";
+  
+  function AG_SetVoidFn
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr;
+     Func   : in EV.Pointer_Func_Access_t;
+     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetVoidFn";
+  
+  function AG_SetIntFn
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr;
+     Func   : in EV.Integer_Func_Access_t;
+     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetIntFn";
+  
+  function AG_SetUintFn
+    (Object : in Object_Not_Null_Access_t;
+     Name   : in CS.chars_ptr;
+     Func   : in EV.Unsigned_Func_Access_t;
+     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+    with Import, Convention => C, Link_Name => "AG_SetUintFn";
+  
+  
+end Agar.Object;

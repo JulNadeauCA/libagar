@@ -1,0 +1,414 @@
+------------------------------------------------------------------------------
+--                            AGAR CORE LIBRARY                             --
+--                           A G A R . E V E N T                            --
+--                                 S p e c                                  --
+------------------------------------------------------------------------------
+with System;
+with Interfaces.C;
+with Interfaces.C.Strings;
+with Agar.Variable;
+
+--
+-- Argument passing and retrieval for event handler routines (and virtual
+-- functions of Agar objects in general). The list of arguments is a stack of
+-- typed data items (a stack of Variable_t). Items can be pushed on the stack
+-- with or without a (case-insensitive) name string. Data can then be later
+-- retrieved either by index or by name.
+--
+-- Agar enforces run-time type safety if compiled with --enable-type-safety.
+--
+
+package Agar.Event is
+  package C renames Interfaces.C;
+  package CS renames Interfaces.C.Strings;
+  package AV renames Agar.Variable;
+
+  ARGS_MAX : constant Natural := %%const(AG_EVENT_ARGS_MAX)%%;
+  NAME_MAX : constant Natural := %%const(AG_EVENT_NAME_MAX)%%;
+
+  type Event_t is array (1 .. %%sizeof(AG_Event)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Event_t'Size use %%sizeof(AG_Event)%% * System.Storage_Unit;
+
+  type Event_Access_t             is access all Event_t with Convention => C;
+  subtype Event_Not_Null_Access_t is not null Event_Access_t;
+  type Function_Access_t             is access all Event_t with Convention => C;
+  subtype Function_Not_Null_Access_t is not null Event_Access_t;
+
+  ----------------------------
+  -- Virtual Function Types --
+  ----------------------------
+  type Event_Func_Access_t is not null access procedure
+    (Event : Event_Access_t)
+    with Convention => C;
+  type Unsigned_Func_Access_t is not null access function
+    (Event : Event_Access_t) return C.unsigned
+    with Convention => C;
+  type Integer_Func_Access_t is not null access function
+    (Event : Event_Access_t) return C.int
+    with Convention => C;
+  type Unsigned_8_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Unsigned_8
+    with Convention => C;
+  type Signed_8_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Signed_8
+    with Convention => C;
+  type Unsigned_16_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Unsigned_16
+    with Convention => C;
+  type Signed_16_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Signed_16
+    with Convention => C;
+  type Unsigned_32_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Unsigned_32
+    with Convention => C;
+  type Signed_32_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Signed_32
+    with Convention => C;
+  type Unsigned_64_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Unsigned_64
+    with Convention => C;
+  type Signed_64_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Signed_64
+    with Convention => C;
+  type Float_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Float
+    with Convention => C;
+  type Double_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Double
+    with Convention => C;
+  type Long_Double_Func_Access_t is not null access function
+    (Event : Event_Access_t) return AV.Long_Double
+    with Convention => C;
+  type String_Func_Access_t is not null access function
+    (Event  : Event_Access_t;
+     Buffer : C.char_array;
+     Size   : C.size_t) return C.size_t
+    with Convention => C;
+  type Pointer_Func_Access_t is not null access function
+    (Event : Event_Access_t) return System.Address
+    with Convention => C;
+  type Const_Pointer_Func_Access_t is not null access function
+    (Event : Event_Access_t) return System.Address
+    with Convention => C;
+
+  --
+  -- Initialize an existing Event_t.
+  --
+  procedure Init (Event : in Event_Not_Null_Access_t)
+    with Import, Convention => C, Link_Name => "AG_EventInit";
+
+  --
+  -- Push a tagged Event argument.
+  --
+  procedure Push_Address
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in System.Address);
+  procedure Push_String
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in String);
+  procedure Push_Integer
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Integer);
+  procedure Push_Natural
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Natural);
+  procedure Push_Long_Integer
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Integer);
+  procedure Push_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Float);
+  procedure Push_Long_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Float);
+  procedure Push_Long_Long_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Long_Float);
+  
+  --
+  -- Push an untagged Event argument.
+  --
+  procedure Push_Address
+    (Event : in Event_Not_Null_Access_t; Value : in System.Address);
+  procedure Push_String
+    (Event : in Event_Not_Null_Access_t; Value : in String);
+  procedure Push_Integer
+    (Event : in Event_Not_Null_Access_t; Value : in Integer);
+  procedure Push_Natural
+    (Event : in Event_Not_Null_Access_t; Value : in Natural);
+  procedure Push_Long_Integer
+    (Event : in Event_Not_Null_Access_t; Value : in Long_Integer);
+  procedure Push_Float
+    (Event : in Event_Not_Null_Access_t; Value : in Float);
+  procedure Push_Long_Float
+    (Event : in Event_Not_Null_Access_t; Value : in Long_Float);
+  procedure Push_Long_Long_Float
+    (Event : in Event_Not_Null_Access_t; Value : in Long_Long_Float);
+
+  --
+  -- Extract an argument by index.
+  --
+  function Get_Address
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return System.Address;
+  function Get_String
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return String;
+  function Get_Integer
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Integer;
+  function Get_Natural
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Natural;
+  function Get_Long_Integer
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Integer;
+  function Get_Float
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Float;
+  function Get_Long_Float
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Float;
+  function Get_Long_Long_Float
+    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Long_Float;
+  
+  --
+  -- Extract an argument by tag.
+  --
+  function Get_Address
+    (Event : in Event_Not_Null_Access_t; Name : in String) return System.Address;
+  function Get_String
+    (Event : in Event_Not_Null_Access_t; Name : in String) return String;
+  function Get_Integer
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Integer;
+  function Get_Natural
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Natural;
+  function Get_Long_Integer
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Integer;
+  function Get_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Float;
+  function Get_Long_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Float;
+  function Get_Long_Long_Float
+    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Long_Float;
+
+  generic
+  type Element_Type        is private;
+  type Element_Access_Type is access Element_Type;
+  procedure Push_Access
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in String;
+     Value : in Element_Access_Type);
+  
+  private
+
+  --
+  -- Push argument
+  --
+
+  procedure ag_event_push_ptr
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in System.Address)
+    with Import, Convention => C;
+  
+  procedure ag_event_push_string
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in CS.chars_ptr)
+    with Import, Convention => C;
+  
+  procedure ag_event_push_int
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.int)
+    with Import, Convention => C;
+
+  procedure ag_event_push_uint
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.unsigned)
+    with Import, Convention => C;
+
+  procedure ag_event_push_long
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.long)
+    with Import, Convention => C;
+
+  procedure ag_event_push_float
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.C_float)
+    with Import, Convention => C;
+
+  procedure ag_event_push_double
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.double)
+    with Import, Convention => C;
+  
+  procedure ag_event_push_long_double
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr;
+     Value : in C.long_double)
+    with Import, Convention => C;
+  
+  --
+  -- Extract argument by index
+  --
+
+  function ag_event_get_ptr
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return System.Address
+    with Import, Convention => C;
+  
+  function ag_event_get_string
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return CS.chars_ptr
+    with Import, Convention => C;
+  
+  function ag_event_get_int
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.int
+    with Import, Convention => C;
+  
+  function ag_event_get_uint
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.unsigned
+    with Import, Convention => C;
+  
+  function ag_event_get_long
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.long
+    with Import, Convention => C;
+  
+  function ag_event_get_float
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.C_float
+    with Import, Convention => C;
+  
+  function ag_event_get_double
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.double
+    with Import, Convention => C;
+  
+  function ag_event_get_long_double
+    (Event : in Event_Not_Null_Access_t;
+     Index : in C.unsigned) return C.long_double
+    with Import, Convention => C;
+  
+  --
+  -- Extract argument by name
+  --
+
+  function ag_event_get_ptr_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return System.Address
+    with Import, Convention => C;
+  
+  function ag_event_get_string_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return CS.chars_ptr
+    with Import, Convention => C;
+  
+  function ag_event_get_int_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.int
+    with Import, Convention => C;
+  
+  function ag_event_get_uint_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.unsigned
+    with Import, Convention => C;
+
+  function ag_event_get_long_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.long
+    with Import, Convention => C;
+  
+  function ag_event_get_float_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.C_float
+    with Import, Convention => C;
+  
+  function ag_event_get_double_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.double
+    with Import, Convention => C;
+  
+  function ag_event_get_long_double_named
+    (Event : in Event_Not_Null_Access_t;
+     Name  : in CS.chars_ptr) return C.long_double
+    with Import, Convention => C;
+
+  --
+  -- Create a virtual function
+  --
+  function AG_BindUint8Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Unsigned_8_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  function AG_Bind_Sint8Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Signed_8_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+
+  function AG_BindUint16Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Unsigned_16_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  function AG_BindSint16Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Signed_16_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+
+  function AG_BindUint32Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Unsigned_32_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  function AG_BindSint32Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Signed_32_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+
+  function AG_BindUint64Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Unsigned_64_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  function AG_BindSint64Fn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Signed_64_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  
+  function AG_BindFloatFn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Float_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+
+  function AG_BindDoubleFn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Double_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+  
+  function AG_BindLongDoubleFn
+    (Object : in System.Address;
+     Name   : in System.Address;
+     Value  : Long_Double_Func_Access_t) return AV.Variable_Not_Null_Access_t
+    with Import, Convention => C;
+
+  function AG_BindStringFn
+    (Variable : in AV.Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Callback : in String_Func_Access_t) return AV.Variable_Access_t
+    with Import, Convention => C;
+
+  function AG_BindPointerFn
+    (Variable : in AV.Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Callback : in Pointer_Func_Access_t) return AV.Variable_Access_t
+    with Import, Convention => C;
+  
+  function AG_BindConstPointerFn
+    (Variable : in AV.Variable_Not_Null_Access_t;
+     Name     : in System.Address;
+     Callback : in Const_Pointer_Func_Access_t) return AV.Variable_Access_t
+    with Import, Convention => C;
+
+end Agar.Event;

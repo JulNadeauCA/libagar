@@ -1,2 +1,0 @@
-install-check: instchk conf-sosuffix
-	./instchk

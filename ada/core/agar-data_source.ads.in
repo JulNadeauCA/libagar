@@ -1,0 +1,436 @@
+------------------------------------------------------------------------------
+--                            AGAR CORE LIBRARY                             --
+--                     A G A R . D A T A _ S O U R C E                      --
+--                                 S p e c                                  --
+------------------------------------------------------------------------------
+with System;
+with Interfaces;
+with Interfaces.C;
+with Interfaces.C.Strings; use Interfaces.C.Strings;
+with Agar.Error;
+with Agar.Variable; use Agar.Variable;
+
+--
+-- Data_Source provides basic I/O routines for serializing data to file,
+-- memory or network streams.
+--
+
+package Agar.Data_Source is
+  package C renames Interfaces.C;
+  package CS renames Interfaces.C.Strings;
+  package ERR renames Agar.Error;
+  
+  LOAD_STRING_MAX : constant Natural := %%const(AG_LOAD_STRING_MAX)%%;
+
+  type Data_Source_t is array (1 .. %%sizeof(AG_DataSource)%%) of
+    aliased Interfaces.Unsigned_8 with Convention => C;
+  for Data_Source_t'Size use %%sizeof(AG_DataSource)%% * System.Storage_Unit;
+
+  type Data_Source_Access_t             is access all Data_Source_t with Convention => C;
+  subtype Data_Source_Not_Null_Access_t is not null Data_Source_Access_t;
+  subtype Byte_Offset_t is Interfaces.Unsigned_64;
+
+  type IO_Status_t is (Success, EOF, Error, Unavailable) with Convention => C;
+  for IO_Status_t use
+    (Success     => 0,
+     EOF         => 1,
+     Error       => 2,
+     Unavailable => 3);
+  for IO_Status_t'Size use C.unsigned'Size;
+
+  type Seek_Mode_t is (Seek_Set, Seek_Current, Seek_End) with Convention => C;
+  for Seek_Mode_t use
+    (Seek_Set     => 0,
+     Seek_Current => 1,
+     Seek_End     => 2);
+  for Seek_Mode_t'Size use C.unsigned'Size;
+
+  type Byte_Order_t is (Big_Endian, Little_Endian) with Convention => C;
+  for Byte_Order_t use
+    (Big_Endian    => 0,
+     Little_Endian => 1);
+  for Byte_Order_t'Size use C.unsigned'Size;
+  
+  procedure Open_File
+    (Path   : in     String;
+     Mode   : in     String;
+     Source :    out Data_Source_Access_t);
+  --
+  -- Create a new Data_Source by opening a file. Modes include "r" (reading),
+  -- "w" (writing) and "a" (writing at end of file).
+
+  function Open_Core
+    (Core : in System.Address;
+     Size : in C.size_t) return Data_Source_Access_t
+    with Import, Convention => C, Link_Name => "AG_OpenCore";
+  --
+  -- Create a Data_Source to access Size bytes of data at address Core.
+
+  function Open_Constant_Core
+    (Core : in System.Address;
+     Size : in C.size_t) return Data_Source_Access_t
+    with Import, Convention => C, Link_Name => "AG_OpenConstCore";
+  --
+  -- Create a Data_Source to access Size bytes of data (read-only) at Core.
+
+  function Open_Auto_Core return Data_Source_Access_t
+    with Import, Convention => C, Link_Name => "AG_OpenAutoCore";
+  --
+  -- Create a Data_Source with a dynamically-allocated buffer which will be
+  -- made to grow implicitely by Write operations.
+  
+  procedure Close_Data_Source (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CloseDataSource";
+  procedure Close_File (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CloseFile";
+  procedure Close_Core (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CloseCore";
+  procedure Close_Constant_Core (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CloseConstCore";
+  procedure Close_Auto_Core (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_CloseAutoCore";
+  --
+  -- Close a Data_Source. Close_Data_Source closes any type of Data_Source.
+  -- The Close_* procedures are only provided for symmetry.
+
+  function Tell (Source : in Data_Source_Access_t) return C.size_t
+    with Import, Convention => C, Link_Name => "AG_Tell";
+  --
+  -- Return the current position in the Data_Source.
+
+  function Seek
+    (Source : in Data_Source_Access_t;
+     Offset : in C.size_t;
+     Mode   : in Seek_Mode_t) return C.int
+    with Import, Convention => C, Link_Name => "AG_Seek";
+  --
+  -- Seek to specified position in the Data_Source. Mode can be Seek_Set
+  -- (relative to 0), Seek_Current (relative to current position) and
+  -- Seek_End (relative to end of data).
+
+  procedure Lock (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_LockDataSource";
+  procedure Unlock (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_UnlockDataSource";
+  --
+  -- Acquire/release the mutex protecting access to a Data_Source.
+
+  procedure Set_Byte_Order
+    (Source     : in Data_Source_Access_t;
+     Byte_Order : in Byte_Order_t)
+    with Import, Convention => C, Link_Name => "AG_SetByteOrder";
+  --
+  -- Select the preferred byte order for serialized integers.
+  -- Big endian is the default.
+
+  procedure Set_Source_Debug
+    (Source : in Data_Source_Access_t;
+     Enable : in C.int)
+    with Import, Convention => C, Link_Name => "AG_SetSourceDebug";
+  --
+  -- Embed serialization markers to enforce low-level type safety checks.
+  -- A type signature will precede every data item. Note: Serialized data with
+  -- debug is not compatible with serialized data produced without debug.
+
+  procedure Init (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_DataSourceInit";
+  procedure Destroy (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_DataSourceDestroy";
+  --
+  -- Initialize, free a Data_Source. Invoked internally by Open_*.
+  -- Public so that new Data_Source types may be derived.
+
+  -- XXX TODO
+  -- type Error_Func_Access_t is not null access procedure (Event : Event_Access_t);
+  -- procedure Set_Error_Func
+  --  (Source : in Data_Source_Access_t;
+  --   Func   : in Event_Func_Access_t);
+  -- pragma Import (C, Destroy, "AG_DataSourceSetErrorFn");
+
+  -----------------
+  -- Integer I/O --
+  -----------------
+
+  function Read_Unsigned_8
+    (Source : in Data_Source_Access_t) return Interfaces.Unsigned_8
+    with Import, Convention => C, Link_Name => "ag_read_uint8";
+  function Read_Signed_8 (Source : in Data_Source_Access_t) return Signed_8
+    with Import, Convention => C, Link_Name => "ag_read_sint8";
+
+  procedure Write_Unsigned_8
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_8)
+    with Import, Convention => C, Link_Name => "ag_write_uint8";
+  procedure Write_Signed_8
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_8)
+    with Import, Convention => C, Link_Name => "ag_write_sint8";
+  procedure Write_Unsigned_8_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_8;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_uint8_at";
+  procedure Write_Signed_8_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_8;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_sint8_at";
+
+  function Read_Unsigned_16
+    (Source : in Data_Source_Access_t) return Interfaces.Unsigned_16
+    with Import, Convention => C, Link_Name => "ag_read_uint16";
+  function Read_Signed_16
+    (Source : in Data_Source_Access_t) return Signed_16
+    with Import, Convention => C, Link_Name => "ag_read_sint16";
+  procedure Write_Unsigned_16
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_16)
+    with Import, Convention => C, Link_Name => "ag_write_uint16";
+  procedure Write_Signed_16
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_16)
+    with Import, Convention => C, Link_Name => "ag_write_sint16";
+  procedure Write_Unsigned_16_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_16;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_uint16_at";
+  procedure Write_Signed_16_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_16;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_sint16_at";
+
+  function Read_Unsigned_32
+    (Source : in Data_Source_Access_t) return Interfaces.Unsigned_32
+    with Import, Convention => C, Link_Name => "ag_read_uint32";
+  function Read_Signed_32
+    (Source : in Data_Source_Access_t) return Signed_32
+    with Import, Convention => C, Link_Name => "ag_read_sint32";
+  procedure Write_Unsigned_32
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_32)
+    with Import, Convention => C, Link_Name => "ag_write_uint32";
+  procedure Write_Signed_32
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_32)
+    with Import, Convention => C, Link_Name => "ag_write_sint32";
+  procedure Write_Unsigned_32_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_32;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_uint32_at";
+  procedure Write_Signed_32_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_32;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_sint32_at";
+
+  function Read_Unsigned_64
+    (Source : in Data_Source_Access_t) return Interfaces.Unsigned_64
+    with Import, Convention => C, Link_Name => "ag_read_uint64";
+  function Read_Signed_64
+    (Source : in Data_Source_Access_t) return Signed_64
+    with Import, Convention => C, Link_Name => "ag_read_sint64";
+  procedure Write_Unsigned_64
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_64)
+    with Import, Convention => C, Link_Name => "ag_write_uint64";
+  procedure Write_Signed_64
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_64)
+    with Import, Convention => C, Link_Name => "ag_write_sint64";
+  procedure Write_Unsigned_64_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Interfaces.Unsigned_64;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_uint64_at";
+  procedure Write_Signed_64_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Signed_64;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_sint64_at";
+  
+  ------------------------
+  -- Floating-point I/O --
+  ------------------------
+
+  function Read_Float
+    (Source : in Data_Source_Access_t) return Float
+    with Import, Convention => C, Link_Name => "ag_read_float";
+
+  procedure Write_Float
+    (Source : in Data_Source_Access_t;
+     Value  : in Float)
+    with Import, Convention => C, Link_Name => "ag_write_float";
+
+  procedure Write_Float_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Float;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_float_at";
+
+  function Read_Double
+    (Source : in Data_Source_Access_t) return Double
+    with Import, Convention => C, Link_Name => "ag_read_double";
+
+  procedure Write_Double
+    (Source : in Data_Source_Access_t;
+     Value  : in Double)
+    with Import, Convention => C, Link_Name => "ag_write_double";
+
+  procedure Write_Double_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Double;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_double_at";
+
+  function Read_Long_Double
+    (Source : in Data_Source_Access_t) return Long_Double
+    with Import, Convention => C, Link_Name => "ag_read_long_double";
+
+  procedure Write_Long_Double
+    (Source : in Data_Source_Access_t;
+     Value  : in Long_Double)
+    with Import, Convention => C, Link_Name => "ag_write_long_double";
+
+  procedure Write_Long_Double_At
+    (Source : in Data_Source_Access_t;
+     Value  : in Long_Double;
+     Offset : in C.size_t)
+    with Import, Convention => C, Link_Name => "ag_write_long_double_at";
+  
+  ----------------
+  -- String I/O --
+  ----------------
+  
+  function Read_String
+    (Source : in Data_Source_Access_t) return String;
+  
+  function Read_String
+    (Source     : in Data_Source_Access_t;
+     Max_Length : in Natural) return String;
+  
+  function Read_Padded_String
+    (Source : in Data_Source_Access_t;
+     Length : in Natural) return String;
+  
+  procedure Write_String
+    (Source : in Data_Source_Access_t;
+     Data   : in String);
+  
+  procedure Write_Padded_String
+    (Source : in Data_Source_Access_t;
+     Data   : in String;
+     Length : in Natural);
+
+  procedure Skip_String
+    (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_SkipString";
+  
+  procedure Skip_Padded_String
+    (Source : in Data_Source_Access_t)
+    with Import, Convention => C, Link_Name => "AG_SkipStringPadded";
+
+  -----------------
+  -- Generic I/O --
+  -----------------
+
+  generic
+
+  type Element_Type             is private;
+  type Element_Count_Type       is range <>;
+  type Element_Array_Index_Type is (<>);
+  type Element_Array_Type       is array (Element_Array_Index_Type range <>) of Element_Type;
+
+  package IO is
+    procedure Read
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Buffer :    out Element_Array_Type;
+       Read   :    out Element_Count_Type;
+       Status :    out IO_Status_t);
+    procedure Read_At_Offset
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Offset : in     Byte_Offset_t;
+       Buffer :    out Element_Array_Type;
+       Read   :    out Element_Count_Type;
+       Status :    out IO_Status_t);
+    procedure Write
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Buffer : in     Element_Array_Type;
+       Wrote  :    out Element_Count_Type;
+       Status :    out IO_Status_t);
+    procedure Write_At_Offset
+      (Source : in     Data_Source_Not_Null_Access_t;
+       Offset : in     Byte_Offset_t;
+       Buffer : in     Element_Array_Type;
+       Wrote  :    out Element_Count_Type;
+       Status :    out IO_Status_t);
+  end IO;
+
+  private
+
+  function AG_OpenFile
+    (Path : in CS.chars_ptr;
+     Mode : in CS.chars_ptr) return Data_Source_Access_t
+    with Import, Convention => C, Link_Name => "AG_OpenFile";
+  
+  function AG_Read
+    (Source  : in Data_Source_Access_t;
+     Buffer  : in System.Address;
+     Size    : in C.size_t;
+     Members : in C.size_t) return IO_Status_t
+    with Import, Convention => C, Link_Name => "AG_Read";
+
+  function AG_ReadAt
+    (Source  : in Data_Source_Access_t;
+     Buffer  : in System.Address;
+     Size    : in C.size_t;
+     Members : in C.size_t;
+     Offset  : in C.size_t) return IO_Status_t
+    with Import, Convention => C, Link_Name => "AG_ReadAt";
+
+  function AG_Write
+    (Source  : in Data_Source_Access_t;
+     Buffer  : in System.Address;
+     Size    : in C.size_t;
+     Members : in C.size_t) return IO_Status_t
+    with Import, Convention => C, Link_Name => "AG_Write";
+
+  function AG_WriteAt
+    (Source  : in Data_Source_Access_t;
+     Buffer  : in System.Address;
+     Size    : in C.size_t;
+     Members : in C.size_t;
+     Offset  : in C.size_t) return IO_Status_t
+    with Import, Convention => C, Link_Name => "AG_WriteAt";
+  
+  function AG_ReadStringLen
+    (Source : in Data_Source_Access_t;
+     Max_Size : in C.size_t) return CS.chars_ptr
+    with Import, Convention => C, Link_Name => "AG_ReadStringLen";
+
+  function AG_CopyString
+    (Buffer : in CS.chars_ptr;
+     Source : in Data_Source_Access_t;
+     Size   : in C.size_t) return C.size_t
+    with Import, Convention => C, Link_Name => "AG_CopyString";
+  
+  function AG_CopyStringPadded
+    (Buffer : in CS.chars_ptr;
+     Source : in Data_Source_Access_t;
+     Size   : in C.size_t) return C.size_t
+    with Import, Convention => C, Link_Name => "AG_CopyStringPadded";
+
+  procedure AG_WriteString
+    (Source : in Data_Source_Access_t;
+     Data   : in CS.chars_ptr)
+    with Import, Convention => C, Link_Name => "AG_WriteString";
+  
+  procedure AG_WriteStringPadded
+    (Source : in Data_Source_Access_t;
+     Data   : in CS.chars_ptr;
+     Length : in C.size_t)
+    with Import, Convention => C, Link_Name => "AG_WriteStringPadded";
+
+end Agar.Data_Source;

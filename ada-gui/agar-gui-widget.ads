@@ -668,8 +668,6 @@ private
     r_view           : agar.gui.rect.rect2_t;
     r_sens           : agar.gui.rect.rect2_t;
 
-    style            : agar.core.types.void_ptr_t; -- XXX: style_access_t
-
     surfaces         : access agar.gui.surface.surface_access_t;
     surface_flags    : access c.unsigned;
     nsurfaces        : c.unsigned;

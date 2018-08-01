@@ -1,0 +1,30 @@
+# Public domain
+
+PACKAGE("agar-ada-core-demo")
+VERSION("1.0")
+
+CONFIG_GUESS("../../../mk/config.guess")
+
+REGISTER_SECTION("Options specific to agar-ada-core-demo:")
+REGISTER("--with-agar-core[=PREFIX]",     "Location of Agar-Core library [check]")
+REGISTER("--with-agar-ada-core[=PREFIX]", "Location of Agar-Core Ada bindings [check]")
+REGISTER("--enable-warnings",             "Suggested compiler warnings [no]")
+REGISTER("--enable-debug",		  "Enable debugging [no]")
+
+REQUIRE(cc)
+REQUIRE(ada)
+REQUIRE(agar-core, 1.5.1, ${prefix_agar_core})
+REQUIRE(agar-ada-core, 1.5.1, ${prefix_agar_ada_core})
+
+ADA_OPTION(-fstack-check)
+ADA_OPTION(-gnatVa)
+ADA_OPTION(-gnato)
+ADA_OPTION(-gnatE)
+
+if [ "${enable_warnings}" = "yes" ]; then
+	ADA_OPTION(-gnatwaleF)
+fi
+if [ "${enable_debug}" = "yes" ]; then
+	ADA_OPTION(-g)
+	C_OPTION(-g)
+fi

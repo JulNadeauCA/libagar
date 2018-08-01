@@ -3,10 +3,11 @@
 default: all
 
 all:\
-demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
-keyevent_callbacks.o slider slider.ali slider.o slider_callbacks.ali \
-slider_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
-winicon_callbacks.o
+agarcore agarcore.ali agarcore.o \
+demo.ali demo.o \
+keyevent keyevent.ali keyevent.o keyevent_callbacks.ali keyevent_callbacks.o \
+slider slider.ali slider.o slider_callbacks.ali slider_callbacks.o \
+winicon winicon.ali winicon.o winicon_callbacks.ali winicon_callbacks.o
 
 # -- SYSDEPS start
 flags-agar-core-ada:
@@ -48,7 +49,6 @@ libs-sdl:
 _sysinfo.h:
 	@echo SYSDEPS sysinfo run create _sysinfo.h 
 	@(cd SYSDEPS/modules/sysinfo && ./run)
-
 
 agar-core-ada-flags_clean:
 	@echo SYSDEPS agar-core-ada-flags clean flags-agar-core-ada 
@@ -218,6 +218,18 @@ ada-compile slider_callbacks.adb slider_callbacks.ads
 slider_callbacks.o:\
 slider_callbacks.ali
 
+agarcore:\
+ada-bind ada-link agarcore.ald agarcore.ali
+	./ada-bind agarcore.ali
+	./ada-link agarcore agarcore.ali
+
+agarcore.ali:\
+ada-compile agarcore.adb
+	./ada-compile agarcore.adb
+
+agarcore.o:\
+agarcore.ali
+
 winicon:\
 ada-bind ada-link winicon.ald winicon.ali winicon_callbacks.ali demo.ali
 	./ada-bind winicon.ali
@@ -243,7 +255,8 @@ obj_clean:
 	rm -f demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
 	keyevent_callbacks.o slider slider.ali slider.o slider_callbacks.ali \
 	slider_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
-	winicon_callbacks.o
+	winicon_callbacks.o \
+	agarcore agarcore.ali agarcore.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-systype mk-ctxt
 

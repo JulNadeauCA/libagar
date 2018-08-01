@@ -1,6 +1,0 @@
-local:\
-flags-agar-core libs-agar-core flags-c_string libs-c_string-S
-	./check-deps
-
-local_pre:
-local_clean:
