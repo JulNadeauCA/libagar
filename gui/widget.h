@@ -191,8 +191,8 @@ typedef struct ag_widget {
 
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
-	AG_Rect2 rView;			/* Computed view coordinates */
-	AG_Rect2 rSens;			/* Cursor notification area */
+	AG_Rect2 rView;			/* Effective view coordinates */
+	AG_Rect2 rSens;			/* Effective sensitivity rectangle */
 	AG_Surface **surfaces;		/* Registered surfaces */
 	Uint        *surfaceFlags;	/* Surface flags */
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
@@ -202,9 +202,9 @@ typedef struct ag_widget {
 	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
-	struct ag_window *window;		/* Back ptr to parent window */
-	struct ag_driver *drv;			/* Back ptr to driver */
-	struct ag_driver_class *drvOps;		/* Back ptr to driver class */
+	struct ag_window *window;		/* Parent window (if any) */
+	struct ag_driver *drv;			/* Parent driver instance */
+	struct ag_driver_class *drvOps;		/* Parent driver class */
 
 	AG_Tbl actions;				 	/* Registered actions */
 	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
@@ -218,7 +218,7 @@ typedef struct ag_widget {
 	struct ag_font *font;			/* Computed font reference */
 	AG_WidgetPalette pal;			/* Computed color palette */
 
-	struct {
+	struct {				/* For AG_WIDGET_USE_OPENGL: */
 		float mProjection[16];		/* Projection matrix */
 		float mModelview[16];		/* Modelview matrix */
 	} gl;
