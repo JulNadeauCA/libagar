@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003-2015 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2003-2016 Julien Nadeau <vedge@hypertriton.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@ MSGMERGE_FLAGS?=--no-location
 MSGFMT?=	msgfmt
 DOMAIN?=	untitled
 POTFILES?=	POTFILES
+POTFILES_CMD?=	find . -name *.\[ch\] -or -name \*.js
 SRC?=		..
 POS?=
 MOS?=
@@ -68,9 +69,8 @@ depend: depend-subdir
 
 ${POTFILES}:
 	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
-		echo "(cd ${SRC} && find . -name \*.c > ${POTFILES})"; \
-		(cwd=`pwd`; cd ${SRC} && find . -name \*.c > \
-		    $$cwd/${POTFILES}); \
+		echo "(cd ${SRC} && ${POTFILES_CMD} > ${POTFILES})"; \
+		(cwd=`pwd`; cd ${SRC} && ${POTFILES_CMD} > $$cwd/${POTFILES}); \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
@@ -96,31 +96,31 @@ clean-po:
 		rm -f ${POTFILES} ${MOS}; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
-	    echo "rm -f ${CLEANFILES}"; \
-	    rm -f ${CLEANFILES}; \
+		echo "rm -f ${CLEANFILES}"; \
+		rm -f ${CLEANFILES}; \
 	fi
 
 install-po:
 	@export _mos="${MOS}"; \
 	if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" \
 	     -a "$$_mos" != "" ]; then \
-            if [ ! -d "${DESTDIR}${LOCALEDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}; \
-            fi; \
-            for F in $$_mos; do \
-	        _lang=`echo $$F | sed 's,\.mo,,'`; \
-                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang; \
-                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
-		cp -f $$F ${DOMAIN}.mo; \
-                echo "${INSTALL_DATA} ${DOMAIN}.mo \
-		    ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
-                ${SUDO} ${INSTALL_DATA} ${DOMAIN}.mo \
-		    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
-		rm -f ${DOMAIN}.mo; \
-            done; \
+		if [ ! -d "${DESTDIR}${LOCALEDIR}" ]; then \
+			echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
+			${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}; \
+		fi; \
+		for F in $$_mos; do \
+			_lang=`echo $$F | sed 's,\.mo,,'`; \
+			echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang"; \
+			${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang; \
+			echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
+			${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+			cp -f $$F ${DOMAIN}.mo; \
+			echo "${INSTALL_DATA} ${DOMAIN}.mo \
+			    ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
+			${SUDO} ${INSTALL_DATA} ${DOMAIN}.mo \
+			    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+			rm -f ${DOMAIN}.mo; \
+  		done; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
@@ -128,13 +128,13 @@ install-po:
 deinstall-po:
 	@export _mos="${MOS}"; \
         if [ "${HAVE_GETTEXT}" = "yes" -a "$$_mos" != "" ]; then \
-            for F in $$_mos; do \
-	        _lang=`echo $$F | sed 's,\.mo,,'`; \
-                echo "${DEINSTALL_DATA} \
-		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo"; \
-                ${SUDO} ${DEINSTALL_DATA} \
-		    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
-            done; \
+		for F in $$_mos; do \
+			_lang=`echo $$F | sed 's,\.mo,,'`; \
+  			echo "${DEINSTALL_DATA} \
+			    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo"; \
+ 			${SUDO} ${DEINSTALL_DATA} \
+			    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
+		done; \
 	fi
 
 count:

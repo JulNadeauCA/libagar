@@ -26,6 +26,8 @@
 # Generic defines common to all BSDBuild libraries.
 #
 
+BSDBUILD_VERSION=3.2
+
 PREFIX?=	/usr/local
 DESTDIR?=
 STATEDIR?=	${PREFIX}/var
@@ -41,6 +43,7 @@ SUDO?=
 SH?=		sh
 FIND?=		find
 AWK?=		awk
+LN?=		ln
 
 INSTALL_PROG=	install -c -m 755
 INSTALL_LIB=	install -c -m 644

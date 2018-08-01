@@ -505,8 +505,8 @@ install-manlinks:
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
-		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
-		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
+		echo "${LN} -fs $$MPG man$$MS/$$MLNK"; \
+		${SUDO} ${LN} -fs $$MPG man$$MS/$$MLNK; \
 	    done)
 	@if [ "${NOCATMAN}" != "yes" ]; then \
 	    (cd ${DESTDIR}${MANDIR} && \
@@ -514,8 +514,8 @@ install-manlinks:
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
-		echo "ln -fs $$MPG $$MS/$$MLNK"; \
-		${SUDO} ln -fs $$MPG $$MS/$$MLNK; \
+		echo "${LN} -fs $$MPG $$MS/$$MLNK"; \
+		${SUDO} ${LN} -fs $$MPG $$MS/$$MLNK; \
 	    done); \
 	fi
 

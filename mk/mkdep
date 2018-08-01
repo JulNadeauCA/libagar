@@ -71,16 +71,21 @@ while :
 done
 
 ccargs=""
+ccargs_files=""
 for arg
 do
 	case "${arg}" in
-	-I*|-D*|-m*|*.c*)
+	-m*|*.c*)
+		ccargs="${ccargs} ${arg}"
+		ccargs_files="${ccargs_files} ${arg}"
+		;;
+	-I*|-D*)
 		ccargs="${ccargs} ${arg}"
 		;;
 	esac
 done
 
-if [ "${ccargs}" = "" ]; then
+if [ "${ccargs_files}" = "" ]; then
 	echo 'mkdep: nothing to do'
 	exit 0
 fi
