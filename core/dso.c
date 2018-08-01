@@ -729,48 +729,50 @@ AG_GetDSOList(Uint *count)
 	*count = 0;
 	
 	for (i = 0; i < agModuleDirCount; i++) {
-		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
-			for (j = 0; j < dir->nents; j++) {
-				char file[AG_FILENAME_MAX];
-				char *pStart, *s;
-
-				Strlcpy(file, dir->ents[j], sizeof(file));
-				if (file[0] == '.')
-					continue;
-#if defined(__AMIGAOS4__)
-				if ((s = (char *)Strcasestr(file, ".ixlibrary")) == NULL ||
-				    s[10] != '\0') {
-					continue;
-				}
-				pStart = s;
-#elif defined(HPUX)
-				if ((s = (char *)Strcasestr(file, ".sl")) == NULL ||
-				    s[3] != '\0') {
-					continue;
-				}
-				pStart = s;
-#elif defined(_WIN32) || defined(OS2)
-				if ((s = (char *)Strcasestr(file, ".dll")) == NULL ||
-				    s[4] != '\0') {
-					continue;
-				}
-				pStart = s;
-#else
-				if (strncmp(file, "lib", 3) != 0 ||
-				   (s = (char *)Strcasestr(file, ".so")) == NULL ||
-				   s[3] != '\0') {
-					continue;
-				}
-				pStart = &file[3];
-#endif
-				*s = '\0';
-
-				list = Realloc(list, ((*count)+1)*sizeof(char *));
-				list[(*count)++] = Strdup(pStart);
-			}
-			AG_CloseDir(dir);
+		if ((dir = AG_OpenDir(agModuleDirs[i])) == NULL) {
+			continue;
 		}
+		for (j = 0; j < dir->nents; j++) {
+			char file[AG_FILENAME_MAX];
+			char *pStart, *s;
+
+			Strlcpy(file, dir->ents[j], sizeof(file));
+			if (file[0] == '.')
+				continue;
+#if defined(__AMIGAOS4__)
+			if ((s = (char *)Strcasestr(file, ".ixlibrary")) == NULL ||
+			    s[10] != '\0') {
+				continue;
+			}
+			pStart = s;
+#elif defined(HPUX)
+			if ((s = (char *)Strcasestr(file, ".sl")) == NULL ||
+			    s[3] != '\0') {
+				continue;
+			}
+			pStart = s;
+#elif defined(_WIN32) || defined(OS2)
+			if ((s = (char *)Strcasestr(file, ".dll")) == NULL ||
+			    s[4] != '\0') {
+				continue;
+			}
+			pStart = s;
+#else
+			if (strncmp(file, "lib", 3) != 0 ||
+			   (s = (char *)Strcasestr(file, ".so")) == NULL ||
+			   s[3] != '\0') {
+				continue;
+			}
+			pStart = &file[3];
+#endif
+			*s = '\0';
+
+			list = Realloc(list, ((*count)+1)*sizeof(char *));
+			list[(*count)++] = Strdup(pStart);
+		}
+		AG_CloseDir(dir);
 	}
+	list[(*count)] = NULL;				/* NULL-terminated */
 	return (list);
 }
 
