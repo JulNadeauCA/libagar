@@ -187,6 +187,7 @@ Init(void *obj)
 	AG_TextboxSizeHint(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "bound", Bound, NULL);
+	OBJECT(sbu)->flags |= AG_OBJECT_BOUND_EVENTS;
 	AG_SetEvent(sbu, "key-down", KeyDown, NULL);
 
 	sbu->incbu = AG_ButtonNewS(sbu, AG_BUTTON_REPEAT, _("+"));

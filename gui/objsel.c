@@ -174,7 +174,9 @@ Init(void *obj)
 
 	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
+	
 	AG_SetEvent(os, "bound", Bound, NULL);
+	OBJECT(os)->flags |= AG_OBJECT_BOUND_EVENTS;
 }
 
 void

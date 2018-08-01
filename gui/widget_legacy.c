@@ -62,7 +62,9 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 		Vdst->info.size = Vsrc->info.size;
 	}
 
-	AG_PostEvent(NULL, wDst, "bound", "%p", Vdst);
+	if (OBJECT(wDst)->flags & AG_OBJECT_BOUND_EVENTS) {
+		AG_PostEvent(NULL, wDst, "bound", "%p", Vdst);
+	}
 	AG_UnlockVariable(Vdst);
 	return (0);
 }
@@ -202,7 +204,9 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	}
 	va_end(ap);
 
-	AG_PostEvent(NULL, obj, "bound", "%p", V);
+	if (obj->flags & AG_OBJECT_BOUND_EVENTS) {
+		AG_PostEvent(NULL, obj, "bound", "%p", V);
+	}
 	AG_ObjectUnlock(obj);
 	return (V);
 }

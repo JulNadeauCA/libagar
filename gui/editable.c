@@ -1850,6 +1850,7 @@ Init(void *obj)
 	AG_InitTimer(&ed->toDblClick, "dblClick", 0);
 
 	AG_SetEvent(ed, "bound", OnBindingChange, NULL);
+	OBJECT(ed)->flags |= AG_OBJECT_BOUND_EVENTS;
 	AG_AddEvent(ed, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(ed, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(ed, "widget-lostfocus", OnFocusLoss, NULL);

@@ -307,7 +307,9 @@ Init(void *obj)
 	AG_BindPointer(fs, "font", (void *)&fs->font);
 	
 	AG_AddEvent(fs, "widget-shown", OnShow, NULL);
+
 	AG_SetEvent(fs, "bound", Bound, NULL);
+	OBJECT(fs)->flags |= AG_OBJECT_BOUND_EVENTS;
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
 	AG_SetEvent(fs->tlSizes, "tlist-selected", SelectedSize, "%p", fs);

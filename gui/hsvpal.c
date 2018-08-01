@@ -733,6 +733,7 @@ Init(void *obj)
 /*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
 	
 	AG_SetEvent(pal, "bound", Bound, NULL);
+	OBJECT(pal)->flags |= AG_OBJECT_BOUND_EVENTS;
 	AG_AddEvent(pal, "attached", OnAttach, NULL);
 }
 
