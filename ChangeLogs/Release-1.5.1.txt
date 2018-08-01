@@ -9,16 +9,17 @@ This release preserves backward compatibility with Agar 1.4.x, but it is
 recommended to compile Agar with the `--disable-legacy' configure option,
 ensuring that existing applications are not using deprecated calls.
 
+- CORE: Updated Ada bindings (ada/core). Overloading and class registration
+  now allows pure Ada implementations of new Agar object classes.
+- CORE: Added --enable-type-safety option (implied by --enable-debug).
 - Fix some compiler warnings. Set _DEFAULT_SOURCE to accommodate glibc whims.
 - Fix build issue and warnings under Cygwin host.
 - Fix missing include for 32-bit MSYS build. Thanks varialus!
 - CORE: Introduce AG_{Copy,Write,Skip}StringPadded() for fixed-length records.
 - CORE: Introduce AG_DelTimers().
-- CORE: Introduce AG_Web(3), the Agar HTTP/1.1 application server. This tiny
-  library can be used to create multiprocess, privilege-separated application
-  servers. It handles authentication, sessions, compression and push events.
-  It provides a template engine, input parsing and validation routines for URL,
-  FORMDATA, JSON and binary BLOB data.
+- CORE: Introduce AG_Web(3), a multiprocess HTTP/1.1 application server. It
+  handles authentication, session/process management, push events and templates.
+  Not enabled by default (must compile with --enable-web).
 - CORE: Add AG_SetErrorS() variant; avoid printf use by AG_FatalError().
 - CORE: Remove unnecessary locks in AG_WriteString().
 - CORE: AG_ReadStringLenv() now returns encoded length.
