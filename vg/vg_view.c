@@ -445,7 +445,7 @@ void
 VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->draw_ev = AG_SetVoidFn(vv, fn, NULL);
+	vv->draw_ev = AG_SetVoidFn(vv, "Draw", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->draw_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -455,7 +455,7 @@ void
 VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->scale_ev = AG_SetVoidFn(vv, fn, NULL);
+	vv->scale_ev = AG_SetVoidFn(vv, "Scale", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->scale_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
@@ -485,7 +485,7 @@ void
 VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(vv);
-	vv->btndown_ev = AG_SetVoidFn(vv, fn, NULL);
+	vv->btndown_ev = AG_SetVoidFn(vv, "ButtonDown", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btndown_ev, fmt);
 	AG_ObjectUnlock(vv);
 }
