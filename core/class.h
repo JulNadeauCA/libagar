@@ -4,9 +4,8 @@
 
 struct ag_tbl;
 struct ag_object;
-struct ag_object_class_spec;
 
-/* Agar class specification. */
+/* Object class specification */
 typedef struct ag_object_class_spec {
 	char hier[AG_OBJECT_HIER_MAX];		/* Inheritance hierarchy */
 	char libs[AG_OBJECT_LIBS_MAX];		/* Library list */
@@ -14,32 +13,43 @@ typedef struct ag_object_class_spec {
 	char name[AG_OBJECT_NAME_MAX];		/* Short name */
 } AG_ObjectClassSpec;
 
-/* Agar namespace specification. */
+/* Global name space registration */
 typedef struct ag_namespace {
 	const char *name;			/* Name string */
 	const char *pfx;			/* Prefix string */
 	const char *url;			/* URL of package */
 } AG_Namespace;
 
+typedef void  (*AG_ObjectInitFn)(void *);
+typedef void  (*AG_ObjectResetFn)(void *);
+typedef void  (*AG_ObjectDestroyFn)(void *);
+typedef int   (*AG_ObjectLoadFn)(void *, AG_DataSource *, const AG_Version *);
+typedef int   (*AG_ObjectSaveFn)(void *, AG_DataSource *);
+typedef void *(*AG_ObjectEditFn)(void *);
+
+/* Object class description (generated part) */
+typedef struct ag_object_class_pvt {
+	char libs[AG_OBJECT_LIBS_MAX];              /* List of required modules */
+	AG_TAILQ_HEAD_(ag_object_class) sub;        /* Direct subclasses */
+	AG_TAILQ_ENTRY(ag_object_class) subclasses; /* Subclass entry */
+} AG_ObjectClassPvt;
+
 /* Object class description. */
 typedef struct ag_object_class {
-	char hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy */
-	size_t size;			/* Structure size */
-	AG_Version ver;			/* Version numbers */
-	void (*init)(void *);
-	void (*reinit)(void *);
-	void (*destroy)(void *);
-	int (*load)(void *, AG_DataSource *, const AG_Version *); 
-	int (*save)(void *, AG_DataSource *);
-	void *(*edit)(void *);
-	/*
-	 * Private
-	 */
-	char name[AG_OBJECT_TYPE_MAX];			/* Short name */
-	char libs[AG_OBJECT_LIBS_MAX];			/* Required modules */
-	AG_TAILQ_HEAD_(ag_object_class) sub;		/* Direct subclasses */
-	AG_TAILQ_ENTRY(ag_object_class) subclasses;	/* Subclass entry */
-	struct ag_object_class *super;			/* Superclass */
+	char       hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy */
+	size_t     size;			/* Structure size */
+	AG_Version ver;				/* Data version */
+
+	AG_ObjectInitFn    init;		/* Initialization routine */
+	AG_ObjectResetFn   reset;		/* Reset state for load */
+	AG_ObjectDestroyFn destroy;		/* Release data */
+	AG_ObjectLoadFn    load;		/* Deserialize */
+	AG_ObjectSaveFn    save;		/* Serialize */
+	AG_ObjectEditFn    edit;		/* User-defined edit callback */
+
+	char name[AG_OBJECT_TYPE_MAX];		/* Short name of this class */
+	struct ag_object_class *super;		/* Direct superclass */
+	AG_ObjectClassPvt pvt;			/* Private data */
 } AG_ObjectClass;
 
 #ifdef AG_DEBUG
@@ -63,17 +73,28 @@ extern AG_Mutex	        agClassLock;		/* Lock on class table */
 
 void            AG_InitClassTbl(void);
 void            AG_DestroyClassTbl(void);
-AG_ObjectClass *AG_LookupClass(const char *);
-AG_ObjectClass *AG_LoadClass(const char *);
-void            AG_UnloadClass(AG_ObjectClass *);
-AG_Namespace   *AG_RegisterNamespace(const char *, const char *, const char *);
-void            AG_UnregisterNamespace(const char *);
 
-void AG_RegisterModuleDirectory(const char *);
-void AG_UnregisterModuleDirectory(const char *);
-void AG_RegisterClass(void *);
-void AG_UnregisterClass(void *);
-int  AG_ParseClassSpec(struct ag_object_class_spec *, const char *);
+AG_ObjectClass *AG_LoadClass(const char *);
+AG_ObjectClass *AG_LookupClass(const char *);
+void            AG_UnloadClass(AG_ObjectClass *);
+
+AG_Namespace *AG_RegisterNamespace(const char *, const char *, const char *);
+void          AG_UnregisterNamespace(const char *);
+void          AG_RegisterModuleDirectory(const char *);
+void          AG_UnregisterModuleDirectory(const char *);
+void          AG_RegisterClass(void *);
+void          AG_UnregisterClass(void *);
+
+void              *AG_CreateClass(const char *, size_t, size_t, Uint, Uint);
+AG_ObjectInitFn    AG_ClassSetInit(void *, AG_ObjectInitFn);
+AG_ObjectResetFn   AG_ClassSetReset(void *, AG_ObjectResetFn);
+AG_ObjectDestroyFn AG_ClassSetDestroy(void *, AG_ObjectDestroyFn);
+AG_ObjectLoadFn    AG_ClassSetLoad(void *, AG_ObjectLoadFn);
+AG_ObjectSaveFn    AG_ClassSetSave(void *, AG_ObjectSaveFn);
+AG_ObjectEditFn    AG_ClassSetEdit(void *, AG_ObjectEditFn);
+void               AG_DestroyClass(void *);
+
+int  AG_ParseClassSpec(AG_ObjectClassSpec *, const char *);
 int  AG_OfClassGeneral(const struct ag_object *, const char *);
 int  AG_ClassIsNamedGeneral(const AG_ObjectClass *, const char *);
 int  AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
@@ -107,7 +128,7 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 	}
 	if (nwild == 0) {
 		return (strcmp(cls->hier, pat) == 0);
-	} else if (nwild == 1) {
+	} else if (nwild == 1) {			/* Optimized case */
 		if (pat[strlen(pat)-1] == '*') {
 			for (c = &pat[0]; *c != '\0'; c++) {
 				if (c[0] != ':' || c[1] != '*' || c[2] != '\0')

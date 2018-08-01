@@ -2,6 +2,10 @@
 
 #include <agar/core/begin.h>
 
+#ifndef AG_VARIABLE_NAME_MAX
+#define AG_VARIABLE_NAME_MAX 24
+#endif
+
 typedef enum ag_variable_type {
 	AG_VARIABLE_NULL,		/* No data */
 	AG_VARIABLE_UINT,		/* Unsigned int */
@@ -20,51 +24,57 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
 	AG_VARIABLE_SINT32,		/* Signed 32-bit */
 	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
-	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (optional) */
-	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (optional) */
-	AG_VARIABLE_SINT64,		/* Signed 64-bit (optional) */
-	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (optional) */
-	AG_VARIABLE_FLOAT,		/* Single-precision float */
-	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
-	AG_VARIABLE_DOUBLE,		/* Double-precision float */
-	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
-	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (optional) */
-	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (optional) */
+	AG_VARIABLE_UINT64,		/* Unsigned 64-bit */
+	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 */
+	AG_VARIABLE_SINT64,		/* Signed 64-bit */
+	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 */
+	AG_VARIABLE_FLOAT,		/* Single-precision real number */
+	AG_VARIABLE_P_FLOAT,		/* Pointer to single-precision real */
+	AG_VARIABLE_DOUBLE,		/* Double-precision real number */
+	AG_VARIABLE_P_DOUBLE,		/* Pointer to double-precision real */
+	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float */
+	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to quad-precision real */
 	AG_VARIABLE_STRING,		/* C string */
 	AG_VARIABLE_P_STRING,		/* Pointer to C string */
-	AG_VARIABLE_CONST_STRING,	/* C string (const) */
-	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
-	AG_VARIABLE_POINTER,		/* C pointer */
-	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
-	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
-	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
-	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
-	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
-	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
-	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
-	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object(3) */
-	AG_VARIABLE_P_TEXT,		/* Pointer to AG_Text(3) */
-	AG_VARIABLE_P_VARIABLE,		/* Reference to an AG_Variable(3) */
+	AG_VARIABLE_CONST_STRING,	/* C string (read-only) */
+	AG_VARIABLE_P_CONST_STRING,	/* Pointer to read-only C string */
+	AG_VARIABLE_POINTER,		/* Generic C pointer */
+	AG_VARIABLE_P_POINTER,		/* Reference to a generic pointer */
+	AG_VARIABLE_CONST_POINTER,	/* Pointer to read-only memory */
+	AG_VARIABLE_P_CONST_POINTER, 	/* Reference to a read-only pointer */
+	AG_VARIABLE_P_FLAG,		/* Bit(s) in an int (per given mask) */
+	AG_VARIABLE_P_FLAG8,		/* Bit(s) in an int8 (per given mask) */
+	AG_VARIABLE_P_FLAG16,		/* Bit(s) in an int16 (per given mask) */
+	AG_VARIABLE_P_FLAG32,		/* Bit(s) in an int32 (per given mask) */
+	AG_VARIABLE_P_OBJECT,		/* Serializable reference to an Object
+					   (and hard dependency) */
+	AG_VARIABLE_P_VARIABLE,		/* Serializable reference to specific
+					   Object Variable (by name) */
+	AG_VARIABLE_ULONG,		/* Natural unsigned long integer */
+	AG_VARIABLE_P_ULONG,		/* Pointer to unsigned long */
+	AG_VARIABLE_LONG,		/* Natural long integer */
+	AG_VARIABLE_P_LONG,		/* Pointer to long */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
 
-typedef struct ag_variable_type_info {
-	enum ag_variable_type type;		/* Variable type */
-	int indirLvl;				/* Indirection level */
-	const char *name;			/* Name string */
-	enum ag_variable_type typeTgt;		/* Pointer target type (or AG_VARIABLE_NULL) */
-	Sint32 code;				/* Numerical code (-1 = non persistent) */
-	size_t size;				/* Size in bytes (or 0) */
-} AG_VariableTypeInfo;
+#define AG_VARIABLE_BOOL AG_VARIABLE_INT
 
-#define AG_VARIABLE_NAME_MAX	40
-#define AG_VARIABLE_BOOL	AG_VARIABLE_INT
+typedef struct ag_variable_type_info {
+	enum ag_variable_type type;	/* Variable type */
+	int indirLvl;			/* Indirection level */
+	const char *name;		/* Name string */
+	enum ag_variable_type typeTgt;	/* Pointer target type (or AG_VARIABLE_NULL) */
+	Sint32 code;			/* Numerical code (-1 = non persistent) */
+	size_t size;			/* Size in bytes (or 0) */
+} AG_VariableTypeInfo;
 
 struct ag_event;
 
 typedef void        (*AG_VoidFn)(struct ag_event *);
 typedef Uint        (*AG_UintFn)(struct ag_event *);
 typedef int         (*AG_IntFn)(struct ag_event *);
+typedef Ulong       (*AG_UlongFn)(struct ag_event *);
+typedef long        (*AG_LongFn)(struct ag_event *);
 typedef Uint8       (*AG_Uint8Fn)(struct ag_event *);
 typedef Sint8       (*AG_Sint8Fn)(struct ag_event *);
 typedef Uint16      (*AG_Uint16Fn)(struct ag_event *);
@@ -83,31 +93,27 @@ typedef long double (*AG_LongDoubleFn)(struct ag_event *);
 typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
-typedef AG_Text    *(*AG_TextFn)(struct ag_event *);
 
 union ag_function {
-	AG_VoidFn	fnVoid;
-	AG_UintFn	fnUint;
-	AG_IntFn	fnInt;
-	AG_Uint8Fn	fnUint8;
-	AG_Sint8Fn	fnSint8;
-	AG_Uint16Fn	fnUint16;
-	AG_Sint16Fn	fnSint16;
-	AG_Uint32Fn	fnUint32;
-	AG_Sint32Fn	fnSint32;
+	AG_VoidFn   fnVoid;
+	AG_UintFn   fnUint;
+	AG_IntFn    fnInt;
+	AG_UlongFn  fnUlong;
+	AG_LongFn   fnLong;
+	AG_Uint8Fn  fnUint8;   AG_Sint8Fn  fnSint8;
+	AG_Uint16Fn fnUint16;  AG_Sint16Fn fnSint16;
+	AG_Uint32Fn fnUint32;  AG_Sint32Fn fnSint32;
 #ifdef AG_HAVE_64BIT
-	AG_Uint64Fn	fnUint64;
-	AG_Sint64Fn	fnSint64;
+	AG_Uint64Fn fnUint64;  AG_Sint64Fn fnSint64;
 #endif
-	AG_FloatFn	fnFloat;
-	AG_DoubleFn	fnDouble;
+	AG_FloatFn        fnFloat;
+	AG_DoubleFn       fnDouble;
 #ifdef AG_HAVE_LONG_DOUBLE
-	AG_LongDoubleFn	fnLongDouble;
+	AG_LongDoubleFn   fnLongDouble;
 #endif
-	AG_StringFn	fnString;
-	AG_PointerFn	fnPointer;
+	AG_StringFn       fnString;
+	AG_PointerFn      fnPointer;
 	AG_ConstPointerFn fnConstPointer;
-	AG_TextFn	fnText;
 };
 	
 union ag_variable_data {
@@ -117,10 +123,14 @@ union ag_variable_data {
 	const char *Cs;
 	int i;
 	Uint u;
+	long li;
+	Ulong uli;
 	float flt;
 	double dbl;
 #ifdef AG_HAVE_LONG_DOUBLE
 	long double ldbl;
+#else
+        Uint8 ldbl[16];
 #endif
 	Uint8 u8;
 	Sint8 s8;
@@ -131,20 +141,21 @@ union ag_variable_data {
 #ifdef AG_HAVE_64BIT
 	Uint64 u64;
 	Sint64 s64;
+#else
+	Uint8 u64[8];
+	Sint8 s64[8];
 #endif
 };
 
 typedef struct ag_variable {
-	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
-	AG_VariableType type;	 	 /* Variable type */
-	AG_Mutex *mutex;		 /* Lock protecting data (or NULL) */
+	char name[AG_VARIABLE_NAME_MAX];/* Variable name */
+	AG_VariableType type;	 	/* Variable type */
+	AG_Mutex *mutex;	 	/* Lock protecting the data (or NULL) */
 	union {
-		Uint32 bitmask;		/* Bitmask (P_FLAG_*) */
-		size_t size;		/* Length / Buffer size (STRING_*) */
-		struct {		/* For P_VARIABLE type */
-			char *key;
-			struct ag_variable *var;
-		} ref;
+		Uint32 bitmask;		/* Bitmask (for P_FLAG_*) */
+		size_t size;		/* Length / Buffer size (for STRING_*) */
+		char *varName;		/* Variable name (for P_VARIABLE) */
+		char *objName;		/* Unresolved path (for P_OBJECT) */
 	} info;
 	union ag_function fn;		/* Eval function */
 	union ag_variable_data data;	/* Variable-stored data */
@@ -152,7 +163,6 @@ typedef struct ag_variable {
 } AG_Variable;
 
 __BEGIN_DECLS
-struct ag_list;
 extern const AG_VariableTypeInfo agVariableTypes[];
 
 int          AG_EvalVariable(void *, AG_Variable *);
@@ -167,8 +177,6 @@ int          AG_CompareVariables(const AG_Variable *, const AG_Variable *);
 void         AG_Unset(void *, const char *);
 void         AG_VariableSubst(void *, const char *, char *, size_t)
                               BOUNDED_ATTRIBUTE(__string__, 3, 4);
-
-struct ag_list *AG_ListSet(const char *, ...);
 
 Uint         AG_GetUint(void *, const char *);
 void         AG_InitUint(AG_Variable *, Uint);
@@ -189,6 +197,20 @@ AG_Variable *AG_BindIntMp(void *, const char *, int *, AG_Mutex *);
 #define      AG_BindBool	AG_BindInt
 #define      AG_BindBoolFn	AG_BindIntFn
 #define      AG_BindBoolMp	AG_BindIntMp
+
+Ulong        AG_GetUlong(void *, const char *);
+void         AG_InitUlong(AG_Variable *, Ulong);
+AG_Variable *AG_SetUlong(void *, const char *, Ulong);
+AG_Variable *AG_BindUlong(void *, const char *, Ulong *);
+AG_Variable *AG_BindUlongFn(void *, const char *, AG_UlongFn, const char *, ...);
+AG_Variable *AG_BindUlongMp(void *, const char *, Ulong *, AG_Mutex *);
+
+long         AG_GetLong(void *, const char *);
+AG_Variable *AG_SetLong(void *, const char *, long);
+void         AG_InitLong(AG_Variable *, long);
+AG_Variable *AG_BindLong(void *, const char *, long *);
+AG_Variable *AG_BindLongFn(void *, const char *, AG_LongFn, const char *, ...);
+AG_Variable *AG_BindLongMp(void *, const char *, long *, AG_Mutex *);
 
 Uint8        AG_GetUint8(void *, const char *);
 AG_Variable *AG_SetUint8(void *, const char *, Uint8);
@@ -299,13 +321,6 @@ AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
 AG_Variable *AG_BindConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
 AG_Variable *AG_BindConstPointerMp(void *, const char *, const void **, AG_Mutex *);
 
-AG_Text     *AG_GetText(void *, const char *);
-AG_Variable *AG_SetText(void *, const char *, AG_Text *);
-void         AG_InitText(AG_Variable *, AG_Text *);
-AG_Variable *AG_BindText(void *, const char *, AG_Text *);
-AG_Variable *AG_BindTextFn(void *, const char *, AG_TextFn, const char *, ...);
-AG_Variable *AG_BindTextMp(void *, const char *, AG_Text *, AG_Mutex *);
-
 AG_Variable *AG_BindFlag(void *, const char *, Uint *, Uint);
 AG_Variable *AG_BindFlagMp(void *, const char *, Uint *, Uint, AG_Mutex *);
 AG_Variable *AG_BindFlag8(void *, const char *, Uint8 *, Uint8);
@@ -315,6 +330,7 @@ AG_Variable *AG_BindFlag16Mp(void *, const char *, Uint16 *, Uint16, AG_Mutex *)
 AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
 AG_Variable *AG_BindFlag32Mp(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
 
+AG_Variable *AG_BindObject(void *, const char *, void *);
 AG_Variable *AG_BindVariable(void *, const char *, void *, const char *);
 
 /* Initialize an AG_Variable structure. */
@@ -325,8 +341,7 @@ AG_InitVariable(AG_Variable *V, enum ag_variable_type type)
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;
 	V->info.size = 0;
-	V->info.ref.key = NULL;
-	V->info.ref.var = NULL;
+	V->info.varName = NULL;
 	V->data.s = NULL;
 }
 
@@ -355,7 +370,7 @@ AG_FreeVariable(AG_Variable *V)
 		}
 		break;
 	case AG_VARIABLE_P_VARIABLE:
-		AG_Free(V->info.ref.key);
+		AG_Free(V->info.varName);
 		break;
 	default:
 		break;

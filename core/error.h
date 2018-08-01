@@ -1,5 +1,6 @@
 /*	Public domain	*/
 
+
 #ifndef	_AGAR_CORE_ERROR_H_
 #define	_AGAR_CORE_ERROR_H_
 
@@ -51,31 +52,41 @@ typedef enum ag_error_code {
 __BEGIN_DECLS
 extern int agDebugLvl;
 
-int		 AG_InitErrorSubsystem(void);
-void		 AG_DestroyErrorSubsystem(void);
-AG_ErrorCode	 AG_GetErrorCode(void);
-const char	*AG_GetError(void);
-void		 AG_SetErrorCode(AG_ErrorCode);
-void		 AG_SetError(const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 1, 2)
-		     NONNULL_ATTRIBUTE(1);
-void             AG_SetErrorS(const char *);
-void		 AG_FatalError(const char *)
-		     NORETURN_ATTRIBUTE;
-void		 AG_SetFatalCallback(void (*callback)(const char *));
-void		 AG_SetVerboseCallback(int (*callback)(const char *));
-void		 AG_SetDebugCallback(int (*callback)(const char *));
-void		 AG_Debug(void *, const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 2, 3)
-		     NONNULL_ATTRIBUTE(2);
-void		 AG_Verbose(const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 1, 2)
-		     NONNULL_ATTRIBUTE(1);
-void		*AG_PtrMismatch(void);
-void		*AG_ObjectMismatch(const char *, const char *);
-int		 AG_IntMismatch(void);
-float		 AG_FloatMismatch(void);
-const char	*AG_Strerror(int);
+int           AG_InitErrorSubsystem(void);
+void          AG_DestroyErrorSubsystem(void);
+AG_ErrorCode  AG_GetErrorCode(void);
+const char   *AG_GetError(void);
+void          AG_SetErrorCode(AG_ErrorCode);
+const char   *AG_Strerror(int);
+
+void AG_SetError(const char *, ...)
+                 FORMAT_ATTRIBUTE(printf, 1, 2)
+                 NONNULL_ATTRIBUTE(1);
+void AG_SetErrorS(const char *);
+void AG_FatalError(const char *)
+                   NORETURN_ATTRIBUTE;
+void AG_SetFatalCallback(void (*callback)(const char *));
+void AG_SetVerboseCallback(int (*callback)(const char *));
+void AG_SetDebugCallback(int (*callback)(const char *));
+void AG_Debug(void *, const char *, ...)
+              FORMAT_ATTRIBUTE(printf, 2, 3)
+              NONNULL_ATTRIBUTE(2);
+void AG_Verbose(const char *, ...)
+                FORMAT_ATTRIBUTE(printf, 1, 2)
+                NONNULL_ATTRIBUTE(1);
+
+#ifdef AG_TYPE_SAFETY
+void  *AG_PtrMismatch(void);
+char  *AG_StringMismatch(void);
+void  *AG_ObjectMismatch(void);
+int    AG_IntMismatch(void);
+long   AG_LongMismatch(void);
+float  AG_FloatMismatch(void);
+double AG_DoubleMismatch(void);
+# ifdef AG_HAVE_LONG_DOUBLE
+long double AG_LongDoubleMismatch(void);
+# endif
+#endif /* AG_TYPE_SAFETY */
 
 /* Malloc wrapper (failure is fatal) */
 static __inline__ void *

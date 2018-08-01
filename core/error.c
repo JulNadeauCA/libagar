@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -389,30 +389,56 @@ AG_SetDebugCallback(int (*fn)(const char *))
 }
 
 /*
- * Raise fatal error condition due to a type access mismatch in an event
- * handler routine.
+ * Raise fatal error condition due to a runtime type checking error
+ * (if compiled with either --enable-debug or --enable-type-safety).
  */
 void *
 AG_PtrMismatch(void)
 {
-	AG_FatalError("AG_PTR mismatch");
+	AG_FatalError("Illegal AG_PTR() access");
+	return (NULL);
+}
+char *
+AG_StringMismatch(void)
+{
+	AG_FatalError("Illegal AG_STRING() access");
 	return (NULL);
 }
 int
 AG_IntMismatch(void)
 {
-	AG_FatalError("AG_INT mismatch");
+	AG_FatalError("Illegal AG_[U]INT() access");
+	return (0);
+}
+long
+AG_LongMismatch(void)
+{
+	AG_FatalError("Illegal AG_[U]LONG() access");
 	return (0);
 }
 float
 AG_FloatMismatch(void)
 {
-	AG_FatalError("AG_FLOAT mismatch");
+	AG_FatalError("Illegal AG_FLOAT() access");
+	return (0.0f);
+}
+double
+AG_DoubleMismatch(void)
+{
+	AG_FatalError("Illegal AG_DOUBLE() access");
 	return (0.0);
 }
-void *
-AG_ObjectMismatch(const char *t1, const char *t2)
+#ifdef AG_HAVE_LONG_DOUBLE
+long double
+AG_LongDoubleMismatch(void)
 {
-	AG_FatalError("Object Mismatch");
+	AG_FatalError("Illegal AG_LONG_DOUBLE() access");
+	return (0.0L);
+}
+#endif /* AG_HAVE_LONG_DOUBLE */
+void *
+AG_ObjectMismatch(void)
+{
+	AG_FatalError("Illegal AG_OBJECT() access");
 	return (NULL);
 }

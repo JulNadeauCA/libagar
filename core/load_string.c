@@ -72,62 +72,6 @@ fail:
 }
 
 /*
- * Read a length-encoded string and return its contents into newly allocated
- * (or reallocated) memory.
- *
- * If s is NULL, auto-allocate memory for the string. If s is non-NULL, it
- * should point to an existing, valid buffer which will be reallocated to
- * fit the string.
- */
-int
-AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s, size_t *newLen)
-{
-	Uint32 len;
-	char *sp;
-
-	AG_LockDataSource(ds);
-
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
-		goto fail;
-	}
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
-		goto fail;
-	}
-	if (len > (Uint32)maxlen) {
-		AG_SetError("String (%luB): Exceeds %luB limit", (Ulong)len,
-		    (Ulong)maxlen);
-		goto fail;
-	}
-	if (*s == NULL) {
-		sp = TryMalloc((size_t)len+1);
-	} else {
-		sp = TryRealloc(*s, (size_t)len+1);
-	}
-	if (sp == NULL) {
-		goto fail;
-	}
-	*s = sp;
-	if (len > 0) {
-	  	if (AG_Read(ds, sp, len) != 0) {
-			AG_SetError("String (%luB): %s", (Ulong)len,
-			    AG_GetError());
-			sp[0] = '\0';
-			goto fail;
-		}
-		sp[len] = '\0';
-	}
-	if (newLen) {
-		*newLen = len;
-	}
-	AG_UnlockDataSource(ds);
-	return (0);
-fail:
-	AG_DataSourceError(ds, NULL);
-	return (-1);
-}
-
-/*
  * Allocate and read a length-encoded string with NUL-termination.
  * Type checking is never done; this function is useful when reading
  * non-Agar generated datasets.
@@ -151,13 +95,11 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 	if ((s = TryMalloc((size_t)len)) == NULL) {
 		goto fail;
 	}
-	if (len > 0) {
-		if (AG_Read(ds, s, (size_t)len) != 0) {
-			AG_SetError("String (%luB): %s", (Ulong)len,
-			    AG_GetError());
-			Free(s);
-			goto fail;
-		}
+	if (len > 0 &&
+	    AG_Read(ds, s, (size_t)len) != 0) {
+		AG_SetError("String (%luB): %s", (Ulong)len, AG_GetError());
+		free(s);
+		goto fail;
 	}
 	AG_UnlockDataSource(ds);
 	return (s);
@@ -399,6 +341,22 @@ fail:
 	dst[0] = '\0';
 	AG_DataSourceError(ds, NULL);
 	return (0);
+}
+
+/* Variant of AG_ReadString() for fixed-length records. */
+char *
+AG_ReadStringPadded(AG_DataSource *ds, size_t maxlen)
+{
+	char *s;
+
+	if ((s = TryMalloc(maxlen+1)) == NULL) {
+		return (NULL);
+	}
+	if (AG_CopyStringPadded(s, ds, maxlen) == 0) {
+		free(s);
+		return (NULL);
+	}
+	return (s);
 }
 
 /* Skip over a variable-length string. */

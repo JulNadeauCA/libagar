@@ -9,11 +9,12 @@
 
 __BEGIN_DECLS
 char	*AG_ReadStringLen(AG_DataSource *, size_t);
-int	 AG_ReadStringLenv(AG_DataSource *, size_t, char **, size_t *);
+char    *AG_ReadStringPadded(AG_DataSource *, size_t);
+char	*AG_ReadNulStringLen(AG_DataSource *, size_t);
 #define	 AG_ReadString(nb) \
 	 AG_ReadStringLen((nb),AG_LOAD_STRING_MAX)
-#define	 AG_ReadStringv(nb,s) \
-	 AG_ReadStringLenv((nb),AG_LOAD_STRING_MAX,(s))
+#define	 AG_ReadNulString(nb) \
+	 AG_ReadNulStringLen((nb),AG_LOAD_STRING_MAX)
 
 void	 AG_WriteString(AG_DataSource *, const char *);
 void	 AG_WriteStringPadded(AG_DataSource *, const char *, size_t);
@@ -21,13 +22,11 @@ size_t	 AG_CopyString(char *, AG_DataSource *, size_t)
                        BOUNDED_ATTRIBUTE(__string__, 1, 3);
 size_t	 AG_CopyStringPadded(char *, AG_DataSource *, size_t)
                              BOUNDED_ATTRIBUTE(__string__, 1, 3);
+size_t	 AG_CopyNulString(char *, AG_DataSource *, size_t);
+
 void	 AG_SkipString(AG_DataSource *);
 void	 AG_SkipStringPadded(AG_DataSource *);
 
-char	*AG_ReadNulStringLen(AG_DataSource *, size_t);
-size_t	 AG_CopyNulString(char *, AG_DataSource *, size_t);
-#define	 AG_ReadNulString(nb) \
-	 AG_ReadNulStringLen((nb),AG_LOAD_STRING_MAX)
 __END_DECLS
 
 #include <agar/core/close.h>

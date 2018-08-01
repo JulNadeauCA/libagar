@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,20 +44,19 @@ int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;			/* Lock on class table */
 
 static void
-InitClass(AG_ObjectClass *cl, const char *hier, const char *libs)
+InitClass(AG_ObjectClass *C, const char *hier, const char *libs)
 {
 	const char *c;
 
-	Strlcpy(cl->hier, hier, sizeof(cl->hier));
-	Strlcpy(cl->libs, libs, sizeof(cl->libs));
+	Strlcpy(C->hier, hier, sizeof(C->hier));
+	Strlcpy(C->pvt.libs, libs, sizeof(C->pvt.libs));
 
 	if ((c = strrchr(hier, ':')) != NULL && c[1] != '\0') {
-		Strlcpy(cl->name, &c[1], sizeof(cl->name));
+		Strlcpy(C->name, &c[1], sizeof(C->name));
 	} else {
-		Strlcpy(cl->name, hier, sizeof(cl->name));
+		Strlcpy(C->name, hier, sizeof(C->name));
 	}
-
-	TAILQ_INIT(&cl->sub);
+	TAILQ_INIT(&C->pvt.sub);
 }
 
 /*
@@ -217,16 +216,16 @@ AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 void
 AG_RegisterClass(void *p)
 {
-	AG_ObjectClass *cl = p;
+	AG_ObjectClass *C = p;
 	AG_ObjectClassSpec cs;
 	AG_Variable V;
 	char *s;
 	
 	/* Parse the class specification. */
-	if (AG_ParseClassSpec(&cs, cl->hier) == -1) {
+	if (AG_ParseClassSpec(&cs, C->hier) == -1) {
 		AG_FatalError(NULL);
 	}
-	InitClass(cl, cs.hier, cs.libs);
+	InitClass(C, cs.hier, cs.libs);
 	
 #ifdef AG_DEBUG_CORE
 	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
@@ -238,16 +237,16 @@ AG_RegisterClass(void *p)
 	/* Insert into the class tree. */
 	if ((s = strrchr(cs.hier, ':')) != NULL) {
 		*s = '\0';
-		if ((cl->super = AG_LookupClass(cs.hier)) == NULL)
+		if ((C->super = AG_LookupClass(cs.hier)) == NULL)
 			AG_FatalError(NULL);
 	} else {
-		cl->super = agClassTree;			/* Root */
+		C->super = agClassTree;			/* Root */
 	}
-	TAILQ_INSERT_TAIL(&cl->super->sub, cl, subclasses);
+	TAILQ_INSERT_TAIL(&C->super->pvt.sub, C, pvt.subclasses);
 
 	/* Insert into the class table. */
-	AG_InitPointer(&V, cl);
-	if (AG_TblInsert(agClassTbl, cl->hier, &V) == -1)
+	AG_InitPointer(&V, C);
+	if (AG_TblInsert(agClassTbl, C->hier, &V) == -1)
 		AG_FatalError(NULL);
 
 	AG_MutexUnlock(&agClassLock);
@@ -257,23 +256,72 @@ AG_RegisterClass(void *p)
 void
 AG_UnregisterClass(void *p)
 {
-	AG_ObjectClass *cl = p;
-	AG_ObjectClass *clSuper = cl->super;
-	Uint h = AG_TblHash(agClassTbl, cl->hier);
+	AG_ObjectClass *C = p;
+	AG_ObjectClass *Csuper = C->super;
+	Uint h = AG_TblHash(agClassTbl, C->hier);
 
 	AG_MutexLock(&agClassLock);
-	if (AG_TblExistsHash(agClassTbl, h, cl->hier)) {
+	if (AG_TblExistsHash(agClassTbl, h, C->hier)) {
 #ifdef AG_DEBUG_CORE
-		Debug(NULL, "Unregistering class: %s\n", cl->name);
+		Debug(NULL, "Unregistering class: %s\n", C->name);
 #endif
 		/* Remove from the class tree. */
-		TAILQ_REMOVE(&clSuper->sub, cl, subclasses);
-		cl->super = NULL;
+		TAILQ_REMOVE(&Csuper->pvt.sub, C, pvt.subclasses);
+		C->super = NULL;
 
 		/* Remove from the class table. */
-		AG_TblDeleteHash(agClassTbl, h, cl->hier);
+		AG_TblDeleteHash(agClassTbl, h, C->hier);
 	}
 	AG_MutexUnlock(&agClassLock);
+}
+
+/*
+ * Allocate, initialize and zero an AG_ObjectClass (or derivative thereof).
+ *
+ * This gives an alternative to passing a statically-initialized AG_ObjectClass
+ * to AG_RegisterClass(). Here we auto-allocate it instead,
+ * and the methods can be set using AG_ClassSet{Init,Reset,Destroy,...}().
+ */
+void *
+AG_CreateClass(const char *hier, size_t objectSize, size_t classSize,
+    Uint major, Uint minor)
+{
+	AG_ObjectClass *C;
+
+	if ((C = TryMalloc(classSize)) == NULL) {
+		return (NULL);
+	}
+	memset(C, 0, classSize);
+	Strlcpy(C->hier, hier, sizeof(C->hier));
+	C->size = objectSize;
+	C->ver.major = major;
+	C->ver.minor = minor;
+	AG_RegisterClass(C);
+	return (C);
+}
+
+/* Set Object class operations procedurally. */
+#define AG_CLASS_SET_FN_BODY(fnName, fnType, op) \
+fnType fnName (void *Cp, fnType fn) { \
+	AG_ObjectClass *C = (AG_ObjectClass *)Cp; \
+	fnType fnOrig = C->op; \
+	C->op = fn; \
+	return (fnOrig); \
+}
+AG_CLASS_SET_FN_BODY(AG_ClassSetInit,    AG_ObjectInitFn,    init);
+AG_CLASS_SET_FN_BODY(AG_ClassSetReset,   AG_ObjectResetFn,   reset);
+AG_CLASS_SET_FN_BODY(AG_ClassSetDestroy, AG_ObjectDestroyFn, destroy);
+AG_CLASS_SET_FN_BODY(AG_ClassSetLoad,    AG_ObjectLoadFn,    load);
+AG_CLASS_SET_FN_BODY(AG_ClassSetSave,    AG_ObjectSaveFn,    save);
+AG_CLASS_SET_FN_BODY(AG_ClassSetEdit,    AG_ObjectEditFn,    edit);
+#undef AG_CLASS_SET_FN_BODY
+
+/* Unregister and free an auto-allocated AG_ObjectClass (or derivative thereof) */
+void
+AG_DestroyClass(void *C)
+{
+	AG_UnregisterClass(C);
+	free(C);
 }
 
 /*
@@ -352,7 +400,7 @@ AG_ObjectClass *
 AG_LoadClass(const char *classSpec)
 {
 	AG_ObjectClassSpec cs;
-	AG_ObjectClass *cl;
+	AG_ObjectClass *C;
 	char *s, *lib;
 	char sym[AG_OBJECT_HIER_MAX];
 	AG_DSO *dso;
@@ -365,9 +413,9 @@ AG_LoadClass(const char *classSpec)
 	
 	AG_MutexLock(&agClassLock);
 
-	if ((cl = AG_LookupClass(cs.hier)) != NULL) {
+	if ((C = AG_LookupClass(cs.hier)) != NULL) {
 		AG_MutexUnlock(&agClassLock);
-		return (cl);
+		return (C);
 	}
 	if (cs.libs[0] == '\0') {
 		AG_SetError("Class %s not found (and no modules specified)",
@@ -422,14 +470,14 @@ fail:
  * related dynamically-linked libraries.
  */
 void
-AG_UnloadClass(AG_ObjectClass *cl)
+AG_UnloadClass(AG_ObjectClass *C)
 {
 	char *s, *lib;
 	AG_DSO *dso;
 	
-	AG_UnregisterClass(cl);
+	AG_UnregisterClass(C);
 
-	for (s = cl->libs; (lib = Strsep(&s, ", ")) != NULL; ) {
+	for (s = C->pvt.libs; (lib = Strsep(&s, ", ")) != NULL; ) {
 		if ((dso = AG_LookupDSO(lib)) != NULL)
 			AG_UnloadDSO(dso);
 	}
@@ -504,13 +552,13 @@ AG_UnregisterModuleDirectory(const char *path)
 
 /* General case fallback for AG_ClassIsNamed() */
 int
-AG_ClassIsNamedGeneral(const AG_ObjectClass *cl, const char *cn)
+AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
 {
 	char cname[AG_OBJECT_HIER_MAX], *cp, *c;
 	char nname[AG_OBJECT_HIER_MAX], *np, *s;
 
 	Strlcpy(cname, cn, sizeof(cname));
-	Strlcpy(nname, cl->hier, sizeof(nname));
+	Strlcpy(nname, C->hier, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = Strsep(&cp, ":")) != NULL &&
@@ -532,7 +580,7 @@ int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 {
 	char cname[AG_OBJECT_HIER_MAX], *c;
-	AG_ObjectClass *cl;
+	AG_ObjectClass *C;
 	int i, stop = 0;
 
 	if (AGOBJECT(obj)->cls->hier[0] == '\0') {
@@ -556,12 +604,12 @@ AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 		} else {
 			*c = '\0';
 		}
-		if ((cl = AG_LookupClass(cname)) == NULL) {
+		if ((C = AG_LookupClass(cname)) == NULL) {
 			Free(*hier);
 			return (-1);
 		}
 		*c = ':';
-		(*hier)[i++] = cl;
+		(*hier)[i++] = C;
 		
 		if (stop)
 			break;

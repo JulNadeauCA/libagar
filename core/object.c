@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,6 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/md5.h>
-#include <agar/core/sha1.h>
-#include <agar/core/rmd160.h>
 #include <agar/core/config.h>
 
 #include <stdarg.h>
@@ -44,7 +41,7 @@ AG_ObjectClass agObjectClass = {
 	sizeof(AG_Object),
 	{ 7, 2 },
 	NULL,	/* init */
-	NULL,	/* reinit */
+	NULL,	/* reset */
 	NULL,	/* destroy */
 	NULL,	/* load */
 	NULL,	/* save */
@@ -75,10 +72,10 @@ AG_ObjectInit(void *p, void *cl)
 	ob->parent = NULL;
 	ob->root = ob;
 	ob->flags = 0;
-	ob->attachFn = NULL;
-	ob->detachFn = NULL;
 
-	AG_MutexInitRecursive(&ob->lock);
+	ob->pvt.attachFn = NULL;
+	ob->pvt.detachFn = NULL;
+	AG_MutexInitRecursive(&ob->pvt.lock);
 	
 	TAILQ_INIT(&ob->vars);
 	TAILQ_INIT(&ob->deps);
@@ -111,9 +108,9 @@ AG_ObjectInitNamed(void *obj, void *cl, const char *name)
 
 /* Initialize an AG_Object instance (static variant). */
 void
-AG_ObjectInitStatic(void *obj, void *cl)
+AG_ObjectInitStatic(void *obj, void *C)
 {
-	AG_ObjectInit(obj, cl);
+	AG_ObjectInit(obj, C);
 	OBJECT(obj)->flags |= AG_OBJECT_STATIC;
 }
 
@@ -122,13 +119,13 @@ AG_ObjectInitStatic(void *obj, void *cl)
  * class.
  */
 void *
-AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
+AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *C)
 {
 	char nameGen[AG_OBJECT_NAME_MAX];
 	AG_Object *obj;
 
 	if (name == NULL) {
-		AG_ObjectGenName(parent, cl, nameGen, sizeof(nameGen));
+		AG_ObjectGenName(parent, C, nameGen, sizeof(nameGen));
 	} else {
 		if (parent != NULL &&
 		    AG_ObjectFindChild(parent, name) != NULL) {
@@ -138,10 +135,10 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 		}
 	}
 	
-	if ((obj = TryMalloc(cl->size)) == NULL) {
+	if ((obj = TryMalloc(C->size)) == NULL) {
 		return (NULL);
 	}
-	AG_ObjectInit(obj, cl);
+	AG_ObjectInit(obj, C);
 	AG_ObjectSetNameS(obj, (name != NULL) ? name : nameGen);
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, obj);
@@ -165,11 +162,11 @@ AG_ObjectRemain(void *p, Uint flags)
 }
 
 /*
- * Free an object's dataset. Dependencies are preserved, but they are all
- * assumed to have reference counts of 0.
+ * Restore an object to an initial state prior to deserialization or release.
+ * Dependencies are preserved, but are all assumed to have 0 refcounts.
  */
 void
-AG_ObjectFreeDataset(void *p)
+AG_ObjectReset(void *p)
 {
 	AG_Object *ob = p;
 	int preserveDeps;
@@ -181,8 +178,8 @@ AG_ObjectFreeDataset(void *p)
 	ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = nHier-1; i >= 0; i--) {
-			if (hier[i]->reinit != NULL)
-				hier[i]->reinit(ob);
+			if (hier[i]->reset != NULL)
+				hier[i]->reset(ob);
 		}
 		free(hier);
 	} else {
@@ -363,10 +360,10 @@ AG_ObjectSetAttachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ..
 
 	AG_ObjectLock(obj);
 	if (fn != NULL) {
-		obj->attachFn = AG_SetEvent(obj, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(obj->attachFn, fmt);
+		obj->pvt.attachFn = AG_SetEvent(obj, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(obj->pvt.attachFn, fmt);
 	} else {
-		obj->attachFn = NULL;
+		obj->pvt.attachFn = NULL;
 	}
 	AG_ObjectUnlock(obj);
 }
@@ -379,10 +376,10 @@ AG_ObjectSetDetachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ..
 
 	AG_ObjectLock(obj);
 	if (fn != NULL) {
-		obj->detachFn = AG_SetEvent(obj, NULL, fn, NULL);
-		AG_EVENT_GET_ARGS(obj->detachFn, fmt);
+		obj->pvt.detachFn = AG_SetEvent(obj, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(obj->pvt.detachFn, fmt);
 	} else {
-		obj->detachFn = NULL;
+		obj->pvt.detachFn = NULL;
 	}
 	AG_ObjectUnlock(obj);
 }
@@ -409,8 +406,8 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	chld->root = parent->root;
 	
 	/* Call the attach function if one is defined. */
-	if (chld->attachFn != NULL)  {
-		chld->attachFn->fn.fnVoid(chld->attachFn);
+	if (chld->pvt.attachFn != NULL)  {
+		chld->pvt.attachFn->fn.fnVoid(chld->pvt.attachFn);
 		goto out;
 	}
 
@@ -502,8 +499,8 @@ AG_ObjectDetach(void *pChld)
 	AG_ObjectLock(chld);
 
 	/* Call the detach function if one is defined. */
-	if (chld->detachFn != NULL) {
-		chld->detachFn->fn.fnVoid(chld->detachFn);
+	if (chld->pvt.detachFn != NULL) {
+		chld->pvt.detachFn->fn.fnVoid(chld->pvt.detachFn);
 		goto out;
 	}
 
@@ -512,7 +509,7 @@ AG_ObjectDetach(void *pChld)
 	for (to = TAILQ_FIRST(&chld->timers);
 	     to != TAILQ_END(&chld->timers);
 	     to = toNext) {
-		toNext = TAILQ_NEXT(to, timers);
+		toNext = TAILQ_NEXT(to, pvt.timers);
 		AG_DelTimer(chld, to);
 	}
 	AG_UnlockTiming();
@@ -800,7 +797,7 @@ AG_ObjectDestroy(void *p)
 	Debug(ob, "Destroying\n");
 #endif
 	AG_ObjectFreeChildren(ob);
-	AG_ObjectFreeDataset(ob);
+	AG_ObjectReset(ob);
 	AG_ObjectFreeDeps(ob);
 
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
@@ -815,7 +812,7 @@ AG_ObjectDestroy(void *p)
 	
 	AG_ObjectFreeVariables(ob);
 	AG_ObjectFreeEvents(ob);
-	AG_MutexDestroy(&ob->lock);
+	AG_MutexDestroy(&ob->pvt.lock);
 	Free(ob->archivePath);
 	
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
@@ -956,7 +953,7 @@ AG_ObjectPageOut(void *p)
 				goto fail;
 		}
 		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0) {
-			AG_ObjectFreeDataset(ob);
+			AG_ObjectReset(ob);
 			ob->flags &= ~(AG_OBJECT_RESIDENT);
 		}
 	}
@@ -989,6 +986,21 @@ fail:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (-1);
+}
+
+int
+AG_ObjectLoad(void *p)
+{
+	return AG_ObjectLoadFromFile(p, NULL);
+}
+int
+AG_ObjectLoadData(void *p, int *dataFound)
+{
+	return AG_ObjectLoadDataFromFile(p, dataFound, NULL);
+}
+int AG_ObjectLoadGeneric(void *p)
+{
+	return AG_ObjectLoadGenericFromFile(p, NULL);
 }
 
 /*
@@ -1128,6 +1140,7 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 	Uint32 i, count;
 	Uint j;
 
+	/* XXX redundant signature */
 	if (AG_ReadVersion(ds, "AG_PropTbl", &agPropTblVer, NULL) == -1)
 		return (-1);
 
@@ -1161,6 +1174,8 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 		switch (agVariableTypes[j].typeTgt) {
 		case AG_VARIABLE_UINT:   AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));	break;
 		case AG_VARIABLE_INT:    AG_SetInt(ob, key, (int)AG_ReadSint32(ds));	break;
+		case AG_VARIABLE_ULONG:  AG_SetUlong(ob, key, (Ulong)AG_ReadUint64(ds)); break;
+		case AG_VARIABLE_LONG:   AG_SetLong(ob, key, (long)AG_ReadSint64(ds));	break;
 		case AG_VARIABLE_UINT8:  AG_SetUint8(ob, key, AG_ReadUint8(ds));	break;
 		case AG_VARIABLE_SINT8:  AG_SetSint8(ob, key, AG_ReadSint8(ds));	break;
 		case AG_VARIABLE_UINT16: AG_SetUint16(ob, key, AG_ReadUint16(ds));	break;
@@ -1178,8 +1193,7 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 #endif
 		case AG_VARIABLE_STRING:
 			if ((s = AG_ReadString(ds)) != NULL) {
-				AG_SetString(ob, key, s);
-				free(s);
+				AG_SetStringNODUP(ob, key, s);
 			} else {
 				AG_SetString(ob, key, "");
 			}
@@ -1205,7 +1219,8 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 	off_t countOffs;
 	Uint32 count = 0;
 	AG_Variable *V;
-	
+
+	/* XXX redundant signature */
 	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
 	countOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
@@ -1238,6 +1253,8 @@ AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 		switch (AG_VARIABLE_TYPE(V)) {
 		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)*(Uint *)p);	break;
 		case AG_VARIABLE_INT:	 AG_WriteSint32(ds, (Sint32)*(int *)p);		break;
+		case AG_VARIABLE_ULONG:	 AG_WriteUint64(ds, (Uint64)*(Ulong *)p);	break;
+		case AG_VARIABLE_LONG:	 AG_WriteSint64(ds, (Sint64)*(long *)p);	break;
 		case AG_VARIABLE_UINT8:	 AG_WriteUint8(ds, *(Uint8 *)p);		break;
 		case AG_VARIABLE_SINT8:	 AG_WriteSint8(ds, *(Sint8 *)p);		break;
 		case AG_VARIABLE_UINT16: AG_WriteUint16(ds, *(Uint16 *)p);		break;
@@ -1300,7 +1317,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		goto fail_unlock;
 
 	/* Free any resident dataset in order to clear the dependencies. */
-	AG_ObjectFreeDataset(ob);
+	AG_ObjectReset(ob);
 	AG_ObjectFreeDeps(ob);
 
 	/* Object header */
@@ -1322,7 +1339,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		char cname[AG_OBJECT_NAME_MAX];
 		char hier[AG_OBJECT_HIER_MAX];
 		AG_Object *chld;
-		AG_ObjectClass *cl;
+		AG_ObjectClass *C;
 
 	 	/* TODO check that there are no duplicate names. */
 		AG_CopyString(cname, ds, sizeof(cname));
@@ -1349,7 +1366,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		}
 
 		/* Create a new child object. */
-		if ((cl = AG_LoadClass(hier)) == NULL) {
+		if ((C = AG_LoadClass(hier)) == NULL) {
 			AG_SetError("%s: %s", ob->name, AG_GetError());
 			if (agObjectIgnoreUnknownObjs) {
 #ifdef AG_DEBUG_CORE
@@ -1361,10 +1378,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			}
 			goto fail;
 		}
-		if ((chld = TryMalloc(cl->size)) == NULL) {
+		if ((chld = TryMalloc(C->size)) == NULL) {
 			goto fail;
 		}
-		AG_ObjectInit(chld, cl);
+		AG_ObjectInit(chld, C);
 		AG_ObjectSetNameS(chld, cname);
 		AG_ObjectAttach(ob, chld);
 		if (AG_ObjectLoadGeneric(chld) == -1)
@@ -1376,7 +1393,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	AG_UnlockVFS(ob);
 	return (0);
 fail:
-	AG_ObjectFreeDataset(ob);
+	AG_ObjectReset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_CloseFile(ds);
 fail_unlock:
@@ -1434,7 +1451,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1)
 		goto fail;
 
-	AG_ObjectFreeDataset(ob);
+	AG_ObjectReset(ob);
 
 	for (i = 0; i < nHier; i++) {
 #ifdef AG_DEBUG_CORE
@@ -1528,7 +1545,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	/* Header */
 	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
 	AG_WriteString(ds, ob->cls->hier);
-	AG_WriteString(ds, ob->cls->libs);
+	AG_WriteString(ds, ob->cls->pvt.libs);
 	dataOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);					/* Data offs */
 	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
@@ -1674,7 +1691,7 @@ fail:
 	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
 		AG_SetSourceDebug(ds, 0);
 	}
-	AG_ObjectFreeDataset(ob);
+	AG_ObjectReset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_ObjectUnlock(ob);
 	return (-1);
@@ -1750,6 +1767,9 @@ fail_unlock:
 	AG_UnlockVFS(ob);
 	return (-1);
 }
+
+/* Shorthand for AG_ObjectSaveToFile() */
+int AG_ObjectSave(void *p) { return AG_ObjectSaveToFile(p, NULL); }
 
 /* Load an object from an AG_Db database entry. */
 int
@@ -1875,11 +1895,11 @@ AG_ObjectSetArchivePath(void *p, const char *path)
 	AG_ObjectUnlock(ob);
 }
 
-/* Change an object's class. This is thread unsafe and should not be used. */
+/* Change an object's class (thread-unsafe). */
 void
-AG_ObjectSetClass(void *p, void *cl)
+AG_ObjectSetClass(void *p, void *C)
 {
-	OBJECT(p)->cls = cl;
+	OBJECT(p)->cls = C;
 }
 
 /* Add a new dependency or increment the reference count on one. */
@@ -1947,8 +1967,8 @@ AG_ObjectFindDep(void *p, Uint32 ind, void **objp)
 }
 
 /*
- * Encode an object dependency. The values 0 and 1 are reserved, 0 is a
- * NULL value and 1 is the parent object itself.
+ * Encode an object dependency as a serializable 32-bit integer. The
+ * values 0 and 1 are reserved, 0 is a NULL value and 1 is the object itself.
  */
 Uint32
 AG_ObjectEncodeName(void *p, const void *depobjp)
@@ -2118,107 +2138,6 @@ AG_ObjectUnlinkDatafiles(void *p)
 }
 
 /*
- * Return a cryptographic digest of an object's most recent archive. The
- * digest is accurate as long as the object is locked.
- */
-size_t
-AG_ObjectCopyChecksum(void *p, enum ag_object_checksum_alg alg,
-    char *digest)
-{
-	AG_Object *ob = p;
-	char path[AG_PATHNAME_MAX];
-	Uchar buf[AG_BUFFER_MAX];
-	FILE *f;
-	size_t totlen = 0;
-	size_t rv;
-
-	AG_ObjectLock(ob);
-
-	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
-		goto fail;
-	}
-	/* TODO locking */
-	if ((f = fopen(path, "r")) == NULL) {
-		AG_SetError("Unable to open %s", path);
-		goto fail;
-	}
-	switch (alg) {
-	case AG_OBJECT_MD5:
-		{
-			AG_MD5_CTX ctx;
-
-			AG_MD5Init(&ctx);
-			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				AG_MD5Update(&ctx, buf, (Uint)rv);
-				totlen += rv;
-			}
-			AG_MD5End(&ctx, digest);
-		}
-		break;
-	case AG_OBJECT_SHA1:
-		{
-			AG_SHA1_CTX ctx;
-
-			AG_SHA1Init(&ctx);
-			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				AG_SHA1Update(&ctx, buf, (Uint)rv);
-				totlen += rv;
-			}
-			AG_SHA1End(&ctx, digest);
-		}
-		break;
-	case AG_OBJECT_RMD160:
-		{
-			AG_RMD160_CTX ctx;
-
-			AG_RMD160Init(&ctx);
-			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				AG_RMD160Update(&ctx, buf, (Uint)rv);
-				totlen += rv;
-			}
-			AG_RMD160End(&ctx, digest);
-		}
-		break;
-	}
-	fclose(f);
-
-	AG_ObjectUnlock(ob);
-	return (totlen);
-fail:
-	AG_ObjectUnlock(ob);
-	return (0);
-}
-
-/*
- * Return a set of cryptographic digests for an object's most recent archive.
- * The digests are accurate as long as the object is locked.
- */
-int
-AG_ObjectCopyDigest(void *ob, size_t *len, char *digest)
-{
-	char md5[AG_MD5_DIGEST_STRING_LENGTH];
-	char sha1[AG_SHA1_DIGEST_STRING_LENGTH];
-	char rmd160[AG_RMD160_DIGEST_STRING_LENGTH];
-
-	AG_ObjectLock(ob);
-	if ((*len = AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, md5)) == 0 ||
-	    AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, sha1) == 0 ||
-	    AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, rmd160) == 0) {
-		goto fail;
-	}
-	if (Snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
-	    md5, sha1, rmd160) >= AG_OBJECT_DIGEST_MAX) {
-		AG_SetError(_("String overflow"));
-		goto fail;
-	}
-	AG_ObjectUnlock(ob);
-	return (0);
-fail:
-	AG_ObjectUnlock(ob);
-	return (-1);
-}
-
-/*
  * Check whether the dataset of the given object or any of its children are
  * different with respect to the last archive. The result is only valid as
  * long as the object and VFS are locked, and this assumes that no other
@@ -2326,14 +2245,14 @@ changed:
  * object are locked. The class name is used as prefix.
  */
 void
-AG_ObjectGenName(void *p, AG_ObjectClass *cl, char *name, size_t len)
+AG_ObjectGenName(void *p, AG_ObjectClass *C, char *name, size_t len)
 {
 	AG_Object *pobj = p;
 	Uint i = 0;
 	AG_Object *ch;
 
 tryname:
-	Strlcpy(name, cl->name, len);
+	Strlcpy(name, C->name, len);
 	Strlcat(name, " #", len);
 	StrlcatUint(name, i, len);
 	if (pobj != NULL) {

@@ -26,7 +26,6 @@ void	 AG_Destroy(void);
 #ifdef AG_LEGACY
 # define AG_InitInput(flags)
 # define AG_CORE_VERBOSE AG_VERBOSE
-# define AG_NO_CFG_AUTOLOAD 0x04	/* Former AG_InitCore() option */
 #endif /* AG_LEGACY */
 __END_DECLS
 

@@ -3,6 +3,7 @@
 #include <agar/config/ag_debug.h>
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_threads.h>
+#include <agar/config/ag_type_safety.h>
 
 #include <agar/core/error.h>
 #include <agar/core/threads.h>

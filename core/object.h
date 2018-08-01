@@ -3,12 +3,24 @@
 #ifndef _AGAR_CORE_OBJECT_H_
 #define _AGAR_CORE_OBJECT_H_
 
-#define AG_OBJECT_HIER_MAX 256
+#ifndef AG_OBJECT_NAME_MAX
+#define AG_OBJECT_NAME_MAX 64
+#endif
+#ifndef AG_OBJECT_TYPE_MAX
 #define AG_OBJECT_TYPE_MAX 48
-#define AG_OBJECT_NAME_MAX 128
+#endif
+#ifndef AG_OBJECT_HIER_MAX
+#define AG_OBJECT_HIER_MAX 128
+#endif
+#ifndef AG_OBJECT_PATH_MAX
 #define AG_OBJECT_PATH_MAX 1024
-#define AG_OBJECT_LIBS_MAX 128
-#define AG_OBJECT_DIGEST_MAX 170
+#endif
+#ifndef AG_OBJECT_LIBS_MAX
+#define AG_OBJECT_LIBS_MAX 64
+#endif
+#ifndef AG_OBJECT_DEP_MAX
+#define AG_OBJECT_DEP_MAX (0xffffffff-2)
+#endif
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
@@ -28,63 +40,75 @@ struct ag_dbt;
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
-/* Entry in object dependency table. */
+/* Entry in dependency table. */
 typedef struct ag_object_dep {
-	int persistent;			/* Include in archives */
-	char *path;			/* Unresolved object path */
-	struct ag_object *obj;		/* Resolved object */
-	Uint32 count;			/* Reference count */
-#define AG_OBJECT_DEP_MAX (0xffffffff-2)
+	int persistent;				/* Serialize this entry? */
+	char *path;				/* Unresolved object path */
+	struct ag_object *obj;			/* Resolved object */
+	Uint32 count;				/* Reference count */
 	AG_TAILQ_ENTRY(ag_object_dep) deps;
 } AG_ObjectDep;
 
-/* Object instance data. */
+/* Object private data */
+typedef struct ag_object_pvt {
+	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in agTimerObjQ */
+	/* TODO 1.6: store these as AG_Variables */
+	AG_Event *attachFn;			/* Attach hook */
+	AG_Event *detachFn;			/* Detach hook */
+	AG_Mutex lock;				/* General object lock */
+} AG_ObjectPvt;
+
+/* Object instance */
 typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
-	char *archivePath;		/* Path to archive (app-specific) */
+	/*
+	 * TODO 1.6: store archivePath and save_pfx as AG_Variables.
+	 */
+	char *archivePath;		/* Application-specific archive path */
 	char *save_pfx;			/* Prefix for default save paths */
-	AG_ObjectClass *cls;		/* Object class data */
+	AG_ObjectClass *cls;		/* Class description */
 	Uint flags;
-#define AG_OBJECT_FLOATING_VARS	 0x00001	/* Clear variables before load */
-#define AG_OBJECT_NON_PERSISTENT 0x00002	/* Never include in saves */
-#define AG_OBJECT_INDESTRUCTIBLE 0x00004	/* Not destructible (advisory) */
-#define AG_OBJECT_RESIDENT	 0x00008	/* Data part is resident */
-#define AG_OBJECT_PRESERVE_DEPS	 0x00010	/* Preserve cnt=0 dependencies */
-#define AG_OBJECT_STATIC	 0x00020	/* Don't free() after detach */
-#define AG_OBJECT_READONLY	 0x00040	/* Disallow edition (advisory) */
-#define AG_OBJECT_WAS_RESIDENT	 0x00080	/* Used internally by ObjectLoad() */
-#define AG_OBJECT_REOPEN_ONLOAD	 0x00200	/* Recreate editor UI on ObjectLoad() */
-#define AG_OBJECT_REMAIN_DATA	 0x00400	/* Keep user data resident */
-#define AG_OBJECT_DEBUG		 0x00800	/* Enable debugging */
-#define AG_OBJECT_NAME_ONATTACH	 0x01000	/* Generate name on attach */
-#define AG_OBJECT_CHLD_AUTOSAVE	 0x02000	/* Include child obj data in archive */
-#define AG_OBJECT_DEBUG_DATA	 0x04000	/* Datafiles contain debug info */
-#define AG_OBJECT_INATTACH	 0x08000	/* In AG_ObjectAttach() */
-#define AG_OBJECT_INDETACH	 0x10000	/* In AG_ObjectDetach() */
+#define AG_OBJECT_FLOATING_VARS	 0x00001  /* Clear variables before load */
+#define AG_OBJECT_NON_PERSISTENT 0x00002  /* Never include in saves */
+#define AG_OBJECT_INDESTRUCTIBLE 0x00004  /* Not destructible (advisory) */
+#define AG_OBJECT_RESIDENT	 0x00008  /* Data part is resident */
+#define AG_OBJECT_PRESERVE_DEPS	 0x00010  /* Preserve cnt=0 dependencies */
+#define AG_OBJECT_STATIC	 0x00020  /* Don't free() after detach */
+#define AG_OBJECT_READONLY	 0x00040  /* Disallow edition (advisory) */
+#define AG_OBJECT_WAS_RESIDENT	 0x00080  /* Used internally by ObjectLoad() */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x00200  /* Recreate editor UI on ObjectLoad() */
+#define AG_OBJECT_REMAIN_DATA	 0x00400  /* Keep user data resident */
+#define AG_OBJECT_DEBUG		 0x00800  /* Enable debugging */
+#define AG_OBJECT_NAME_ONATTACH	 0x01000  /* Generate name on attach */
+#define AG_OBJECT_CHLD_AUTOSAVE	 0x02000  /* Include child obj data in archive */
+#define AG_OBJECT_DEBUG_DATA	 0x04000  /* Datafiles contain debug info */
+#define AG_OBJECT_INATTACH	 0x08000  /* In AG_ObjectAttach() */
+#define AG_OBJECT_INDETACH	 0x10000  /* In AG_ObjectDetach() */
+#define AG_OBJECT_BOUND_EVENTS	 0x20000  /* Generate "bound" events whenever
+					     AG_Bind*() is invoked */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_FLOATING_VARS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
 				 AG_OBJECT_READONLY|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
 				 AG_OBJECT_REMAIN_DATA|\
-				 AG_OBJECT_DEBUG)
-#define AG_OBJECT_DUPED_FLAGS	(AG_OBJECT_SAVED_FLAGS|\
-				 AG_OBJECT_NON_PERSISTENT|\
-				 AG_OBJECT_REOPEN_ONLOAD|\
-				 AG_OBJECT_REMAIN_DATA)
+				 AG_OBJECT_DEBUG|\
+				 AG_OBJECT_BOUND_EVENTS)
 
-	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers / virtual fns */
-	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers */
+	AG_TAILQ_HEAD_(ag_event) events;	/* Event handlers/virtual fns */
+	AG_TAILQ_HEAD_(ag_timer) timers;	/* Running timers (read-only or
+						   R/W under AG_LockTiming()) */
 	AG_TAILQ_HEAD_(ag_variable) vars;	/* Named variables / bindings */
+	/*
+	 * TODO 1.6: represent deps as AG_Variables (of P_OBJECT type) and
+	 * remove this list entirely.
+	 */
 	AG_TAILQ_HEAD_(ag_object_dep) deps;	/* Object dependencies */
 	struct ag_objectq children;		/* Child objects */
 	AG_TAILQ_ENTRY(ag_object) cobjs;	/* Entry in parent */
-	AG_TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timer queue */
-	void *parent;			/* Parent object (NULL for VFS root) */
-	void *root;			/* Pointer to VFS root */
-	AG_Event *attachFn;		/* Attach hook */
-	AG_Event *detachFn;		/* Detach hook */
-	AG_Mutex lock;			/* General object lock */
+	void *parent;				/* Parent object (NULL = is VFS root) */
+	void *root;				/* Pointer to VFS root */
+	AG_ObjectPvt pvt;			/* Private data */
 } AG_Object;
 
 /* Object archive header information. */
@@ -94,13 +118,6 @@ typedef struct ag_object_header {
 	AG_Version ver;				/* AG_Object version */
 	Uint flags;				/* Object flags */
 } AG_ObjectHeader;
-
-/* Checksum method for ObjectCopyChecksum(). */
-enum ag_object_checksum_alg {
-	AG_OBJECT_MD5,
-	AG_OBJECT_SHA1,
-	AG_OBJECT_RMD160
-};
 
 /* Iterate over the direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
@@ -132,21 +149,19 @@ enum ag_object_checksum_alg {
 		} else
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
-# define OBJECT(ob)            AGOBJECT(ob)
-# define OBJECT_CLASS(ob)      AGOBJECT_CLASS(ob)
-# define CLASS(ob)             AGCLASS(ob)
-
-# define OBJECT_RESIDENT(ob)   (AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
+# define OBJECT(ob)              AGOBJECT(ob)
+# define OBJECT_CLASS(ob)        AGOBJECT_CLASS(ob)
+# define CLASS(ob)               AGCLASS(ob)
+# define OBJECT_RESIDENT(ob)    (AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
 # define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
-# define OBJECT_DEBUG(ob)      (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
+# define OBJECT_DEBUG(ob)       (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
-# define OBJECT_FOREACH_CHILD(var,ob,t)			AGOBJECT_FOREACH_CHILD((var),(ob),t)
-# define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t)		AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
-# define OBJECT_FOREACH_CLASS(var,ob,t,subclass)	AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
-# define OBJECT_NEXT_CHILD(var,t)			AGOBJECT_NEXT_CHILD((var),t)
-# define OBJECT_LAST_CHILD(var,t)			AGOBJECT_LAST_CHILD((var),t)
-
-#endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
+# define OBJECT_FOREACH_CHILD(var,ob,t)          AGOBJECT_FOREACH_CHILD((var),(ob),t)
+# define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t)  AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
+# define OBJECT_FOREACH_CLASS(var,ob,t,subclass) AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
+# define OBJECT_NEXT_CHILD(var,t)                AGOBJECT_NEXT_CHILD((var),t)
+# define OBJECT_LAST_CHILD(var,t)                AGOBJECT_LAST_CHILD((var),t)
+#endif /* _AGAR_INTERNAL or _USE_AGAR_CORE */
 
 __BEGIN_DECLS
 extern AG_ObjectClass   agObjectClass;		/* Generic Object class */
@@ -159,7 +174,7 @@ void	 AG_ObjectDetach(void *);
 void	 AG_ObjectInit(void *, void *);
 void	 AG_ObjectInitStatic(void *, void *);
 void	 AG_ObjectInitNamed(void *, void *, const char *);
-void	 AG_ObjectFreeDataset(void *);
+void	 AG_ObjectReset(void *);
 void	 AG_ObjectRemain(void *, Uint);
 char    *AG_ObjectGetName(void *);
 int	 AG_ObjectCopyName(void *, char *, size_t)
@@ -168,8 +183,6 @@ int	 AG_ObjectCopyDirname(void *, char *, size_t)
 	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_ObjectCopyFilename(void *, char *, size_t)
 	                       BOUNDED_ATTRIBUTE(__string__, 2, 3);
-size_t	 AG_ObjectCopyChecksum(void *, enum ag_object_checksum_alg, char *);
-int	 AG_ObjectCopyDigest(void *, size_t *, char *);
 int	 AG_ObjectChanged(void *);
 int	 AG_ObjectChangedAll(void *);
 
@@ -211,20 +224,21 @@ int	 AG_ObjectPageIn(void *);
 int	 AG_ObjectPageOut(void *);
 int	 AG_ObjectSerialize(void *, AG_DataSource *);
 int	 AG_ObjectUnserialize(void *, AG_DataSource *);
+int	 AG_ObjectSave(void *);
 int	 AG_ObjectSaveToFile(void *, const char *);
-#define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
 void	 AG_ObjectSaveVariables(void *, AG_DataSource *);
 int      AG_ObjectLoadFromDB(void *, struct ag_db *, const struct ag_dbt *);
 int	 AG_ObjectSaveToDB(void *, struct ag_db *, const struct ag_dbt *);
 
-#define	 AG_ObjectLoad(p) AG_ObjectLoadFromFile((p),NULL)
-#define	 AG_ObjectLoadData(o,f) AG_ObjectLoadDataFromFile((o),(f),NULL)
-#define	 AG_ObjectLoadGeneric(p) AG_ObjectLoadGenericFromFile((p),NULL)
+int	 AG_ObjectLoad(void *);
 int	 AG_ObjectLoadFromFile(void *, const char *);
-int	 AG_ObjectLoadGenericFromFile(void *, const char *);
-int	 AG_ObjectResolveDeps(void *);
+int	 AG_ObjectLoadData(void *, int *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
+int	 AG_ObjectLoadGeneric(void *);
+int	 AG_ObjectLoadGenericFromFile(void *, const char *);
+
+int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectReadHeader(AG_DataSource *, AG_ObjectHeader *);
 int	 AG_ObjectLoadVariables(void *, AG_DataSource *);
 
@@ -239,8 +253,8 @@ void          AG_ObjectGenNamePfx(void *, const char *, char *, size_t);
 #define AG_OfClass(obj,cspec) AG_ClassIsNamed(AGOBJECT(obj)->cls,(cspec))
 
 #ifdef AG_THREADS
-# define AG_ObjectLock(ob) AG_MutexLock(&AGOBJECT(ob)->lock)
-# define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->lock)
+# define AG_ObjectLock(ob) AG_MutexLock(&AGOBJECT(ob)->pvt.lock)
+# define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->pvt.lock)
 # define AG_LockVFS(ob) AG_ObjectLock(AGOBJECT(ob)->root)
 # define AG_UnlockVFS(ob) AG_ObjectUnlock(AGOBJECT(ob)->root)
 #else /* !AG_THREADS */
@@ -283,7 +297,7 @@ AG_ObjectFindChild(void *pParent, const char *name)
 	return (cObj);
 }
 
-/* Return the description of the superclass of a given object. */
+/* Return a pointer to the description of the superclass an object. */
 static __inline__ AG_ObjectClass *
 AG_ObjectSuperclass(const void *p)
 {
@@ -308,15 +322,6 @@ AG_UnlockTimers(void *p)
 	AG_UnlockTiming();
 	AG_ObjectUnlock(ob);
 #endif
-}
-
-/* Return the inheritance hierarchy of an object in string form. */
-static __inline__ void
-AG_ObjectGetInheritHierString(void *obj, char *buf, size_t buf_size)
-{
-	AG_ObjectLock(obj);
-	AG_Strlcpy(buf, AGOBJECT_CLASS(obj)->hier, buf_size);
-	AG_ObjectUnlock(obj);
 }
 
 /*
@@ -360,8 +365,8 @@ AG_FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 }
 
 /*
- * Variant of AG_FetchVariable(). If an existing variable of the given name
- * exists, it is freed and reinitialized as the specified type.
+ * Mutating variant of AG_FetchVariable(). If the named variable exists,
+ * reinitialize it as a variable of the specified type.
  */
 static __inline__ AG_Variable *
 AG_FetchVariableOfType(void *pObj, const char *name, enum ag_variable_type type)
@@ -393,7 +398,7 @@ AG_GetVariableLocked(void *pObj, const char *name)
 	}
 	AG_LockVariable(V);
 	if (V->type == AG_VARIABLE_P_VARIABLE) {
-		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.ref.key);
+		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.varName);
 		AG_UnlockVariable(V);
 		return (Vtgt);
 	}
@@ -414,6 +419,7 @@ AG_GetNamedObject(AG_Event *event, const char *key, const char *classSpec)
 }
 
 #ifdef AG_LEGACY
+# define AG_ObjectFreeDataset(ob) AG_ObjectReset(ob)
 # define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
 # define AG_LockTimeouts(ob) AG_LockTimers(ob)
 # define AG_UnlockTimeouts(ob) AG_UnlockTimers(ob)

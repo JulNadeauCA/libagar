@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,16 +46,14 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	if (AG_Read(ds, nbuf, sizeof(nbuf)) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
-		AG_SetError("%s: Bad magic (\"%s\" != %s)", name, nbuf,
-		    name);
+		AG_SetError("Bad magic (\"%s\" != \"%s\")", name, nbuf);
 		return (-1);
 	}
 	if (AG_ReadUint32v(ds, &major) == -1 ||
 	    AG_ReadUint32v(ds, &minor) == -1) {
-		AG_SetError("Reading version numbers: %s", AG_GetError());
+		AG_SetError("Reading version number: %s", AG_GetError());
 		return (-1);
 	}
-
 	if (rver != NULL) {
 		rver->major = major;
 		rver->minor = minor;
@@ -103,13 +101,13 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 int
 AG_ReadObjectVersion(AG_DataSource *ds, void *p, AG_Version *pver)
 {
-	AG_ObjectClass *cl = OBJECT(p)->cls;
-	return AG_ReadVersion(ds, cl->name, &cl->ver, pver);
+	AG_ObjectClass *C = OBJECT(p)->cls;
+	return AG_ReadVersion(ds, C->name, &C->ver, pver);
 }
 
 void
 AG_WriteObjectVersion(AG_DataSource *ds, void *p)
 {
-	AG_ObjectClass *cl = OBJECT(p)->cls;
-	AG_WriteVersion(ds, cl->name, &cl->ver);
+	AG_ObjectClass *C = OBJECT(p)->cls;
+	AG_WriteVersion(ds, C->name, &C->ver);
 }
