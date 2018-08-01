@@ -44,7 +44,7 @@ RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 	AG_TreetblClearRows(tt);
 
 	id = 0;
-	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
+	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
 		AG_TreetblRow *objRow;
 		AG_Timer *to;
 		
@@ -54,7 +54,7 @@ RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 		AG_TreetblExpandRow(tt, objRow);
 
 		AG_ObjectLock(ob);
-		TAILQ_FOREACH(to, &ob->timers, timers) {
+		TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 			AG_TreetblAddRow(tt, objRow, id++,
 			    "%s,%s,%s,%s",
 			    0, to->name,

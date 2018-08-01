@@ -33,17 +33,17 @@
 #include <agar/dev/dev.h>
 
 static void
-GenClassTable(AG_Table *tbl, AG_ObjectClass *cls)
+GenClassTable(AG_Table *tbl, AG_ObjectClass *C)
 {
-	AG_ObjectClass *subcls;
+	AG_ObjectClass *Csub;
 	
 	AG_TableAddRow(tbl, "%s:%d:%s:%s",
-	    cls->name, cls->size,
-	    cls->libs[0] != '\0' ? cls->libs : "(none)",
-	    cls->hier);
+	    C->name, C->size,
+	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "(none)",
+	    C->hier);
 
-	TAILQ_FOREACH(subcls, &cls->sub, subclasses)
-		GenClassTable(tbl, subcls);
+	TAILQ_FOREACH(Csub, &C->pvt.sub, pvt.subclasses)
+		GenClassTable(tbl, Csub);
 }
 
 static void

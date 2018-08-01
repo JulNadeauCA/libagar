@@ -684,9 +684,9 @@ GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
 	AG_MenuAction(mNode, _("Create instance..."), NULL,
 	    CreateObjectDlg, "%p,%p,%p", vfsRoot, cls, winParent);
 
-	if (!TAILQ_EMPTY(&cls->sub)) {
+	if (!TAILQ_EMPTY(&cls->pvt.sub)) {
 		AG_MenuSeparator(mNode);
-		TAILQ_FOREACH(subcls, &cls->sub, subclasses)
+		TAILQ_FOREACH(subcls, &cls->pvt.sub, pvt.subclasses)
 			GenNewObjectMenu(mNode, subcls, vfsRoot, winParent);
 	}
 }
