@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2016 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,21 +41,6 @@
 #include <unistd.h>
 #include <dirent.h>
 
-/* Initialize the session manager. */
-int
-WEB_SessionMgrInit(void)
-{
-	SetGlobal("WEB_USERNAME_MAX", "%d", WEB_USERNAME_MAX);
-	SetGlobal("WEB_PASSWORD_MAX", "%d", WEB_PASSWORD_MAX);
-	SetGlobal("WEB_EMAIL_MAX", "%d", WEB_EMAIL_MAX);
-
-	if (mkdir(WEB_PATH_SESSIONS, 0700) == -1 && errno != EEXIST) {
-		WEB_Log(WEB_LOG_EMERG, "%s: %s", WEB_PATH_SESSIONS, AG_GetError());
-		return (-1);
-	}
-	return (0);
-}
-
 /* Initialize a session instance. */
 void
 WEB_SessionInit(WEB_Session *S, const WEB_SessionOps *Sops)
@@ -89,13 +74,6 @@ WEB_SessionDestroy(WEB_Session *S)
 	}
 }
 
-/* Free resources allocated by the session manager. */
-void
-WEB_SessionMgrDestroy(void)
-{
-	/* Nothing to do */
-}
-
 /* Terminate a session gracefully. */
 void
 WEB_CloseSession(WEB_Session *S)
@@ -106,10 +84,12 @@ WEB_CloseSession(WEB_Session *S)
 	if (S->ops->sessClose != NULL) {
 		S->ops->sessClose(S);
 	}
-	for (i = 0; i < nWebModules; i++) {
+	for (i = 0; i < webModuleCount ; i++) {
 		WEB_Module *mod = webModules[i];
-		if (mod->sessClose != NULL)
-			mod->sessClose(S);
+		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+
+		if (modC->sessClose != NULL)
+			modC->sessClose(mod, S);
 	}
 
 	Strlcpy(path, WEB_PATH_SESSIONS, sizeof(path));

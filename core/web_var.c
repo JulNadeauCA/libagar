@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2016 Julien Nadeau <vedge@hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ WEB_VAR_Set(const char *key, const char *fmt, ...)
 	VAR *V;
 
 	if (key != NULL) {
-		TAILQ_FOREACH(V, &webApp->vars, vars) {
+		TAILQ_FOREACH(V, &webVars, vars) {
 			if (strcmp(V->key, key) == 0)
 				break;
 		}
@@ -66,7 +66,7 @@ WEB_VAR_Set(const char *key, const char *fmt, ...)
 		} else {
 			V->key[0] = '\0';
 		}
-		TAILQ_INSERT_HEAD(&webApp->vars, V, vars);
+		TAILQ_INSERT_HEAD(&webVars, V, vars);
 	} else {
 		free(V->value);
 	}
@@ -100,7 +100,7 @@ WEB_VAR_SetS(const char *key, const char *s)
 	VAR *V;
 
 	if (key != NULL) {
-		TAILQ_FOREACH(V, &webApp->vars, vars) {
+		TAILQ_FOREACH(V, &webVars, vars) {
 			if (strcmp(V->key, key) == 0)
 				break;
 		}
@@ -114,7 +114,7 @@ WEB_VAR_SetS(const char *key, const char *s)
 		} else {
 			V->key[0] = '\0';
 		}
-		TAILQ_INSERT_HEAD(&webApp->vars, V, vars);
+		TAILQ_INSERT_HEAD(&webVars, V, vars);
 	} else {
 		free(V->value);
 	}
@@ -139,7 +139,7 @@ WEB_VAR_SetS_NODUP(const char *key, char *s)
 	VAR *V;
 
 	if (key != NULL) {
-		TAILQ_FOREACH(V, &webApp->vars, vars) {
+		TAILQ_FOREACH(V, &webVars, vars) {
 			if (strcmp(V->key, key) == 0)
 				break;
 		}
@@ -153,7 +153,7 @@ WEB_VAR_SetS_NODUP(const char *key, char *s)
 		} else {
 			V->key[0] = '\0';
 		}
-		TAILQ_INSERT_HEAD(&webApp->vars, V, vars);
+		TAILQ_INSERT_HEAD(&webVars, V, vars);
 	} else {
 		free(V->value);
 	}
@@ -192,14 +192,14 @@ WEB_VAR_SetGlobal(const char *key, const char *fmt, ...)
 {
 	VAR *V;
 
-	TAILQ_FOREACH(V, &webApp->vars, vars) {
+	TAILQ_FOREACH(V, &webVars, vars) {
 		if (strcmp(V->key, key) == 0)
 			break;
 	}
 	if (V == NULL) {
 		V = Malloc(sizeof(VAR));
 		Strlcpy(V->key, key, sizeof(V->key));
-		TAILQ_INSERT_HEAD(&webApp->vars, V, vars);
+		TAILQ_INSERT_HEAD(&webVars, V, vars);
 	} else {
 		free(V->value);
 	}
@@ -232,14 +232,14 @@ WEB_VAR_SetGlobalS(const char *key, const char *s)
 {
 	VAR *V;
 
-	TAILQ_FOREACH(V, &webApp->vars, vars) {
+	TAILQ_FOREACH(V, &webVars, vars) {
 		if (strcmp(V->key, key) == 0)
 			break;
 	}
 	if (V == NULL) {
 		V = Malloc(sizeof(VAR));
 		Strlcpy(V->key, key, sizeof(V->key));
-		TAILQ_INSERT_HEAD(&webApp->vars, V, vars);
+		TAILQ_INSERT_HEAD(&webVars, V, vars);
 	} else {
 		free(V->value);
 	}
@@ -262,12 +262,12 @@ WEB_VAR_Unset(const char *key)
 {
 	VAR *V;
 
-	TAILQ_FOREACH(V, &webApp->vars, vars) {
+	TAILQ_FOREACH(V, &webVars, vars) {
 		if (strcmp(V->key, key) == 0)
 			break;
 	}
 	if (V != NULL) {
-		TAILQ_REMOVE(&webApp->vars, V, vars);
+		TAILQ_REMOVE(&webVars, V, vars);
 		WEB_VAR_Free(V);
 	}
 }
@@ -277,7 +277,7 @@ WEB_VAR_Wipe(const char *key)
 {
 	VAR *V;
 
-	TAILQ_FOREACH(V, &webApp->vars, vars) {
+	TAILQ_FOREACH(V, &webVars, vars) {
 		if (strcmp(V->key, key) == 0)
 			break;
 	}
@@ -290,7 +290,7 @@ WEB_VAR_Defined(const char *key)
 {
 	VAR *V;
 
-	TAILQ_FOREACH(V, &webApp->vars, vars) {
+	TAILQ_FOREACH(V, &webVars, vars) {
 		if (strcmp(V->key, key) == 0)
 			return (1);
 	}
@@ -300,7 +300,7 @@ WEB_VAR_Defined(const char *key)
 void
 WEB_VAR_Free(VAR *V)
 {
-	TAILQ_REMOVE(&webApp->vars, V, vars);
+	TAILQ_REMOVE(&webVars, V, vars);
 	Free(V->value);
 	free(V);
 }
