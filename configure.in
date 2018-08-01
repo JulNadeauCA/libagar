@@ -13,13 +13,14 @@ RELEASE("Organic Hallucination")
 # Register options for configure --help
 REGISTER_SECTION("Global Agar options:")
 REGISTER("--enable-<library>",		"Build libraries (gui|vg|math|dev|au) [all]")
-REGISTER("--enable-debug",		"General debugging [no]")
+REGISTER("--enable-debug",		"Debug build (implies type-safety) [no]")
 REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
 REGISTER("--enable-threads",		"Thread safety [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 
 REGISTER_SECTION("Options specific to CORE library:")
+REGISTER("--enable-type-safety",	"Runtime AG_Event type checks [no]")
 REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 REGISTER("--enable-network",		"Network interface [check]")
 REGISTER("--enable-web",		"Web application server [no]")
@@ -130,10 +131,17 @@ fi
 
 if [ "${enable_debug}" = 'yes' ]; then
 	HDEFINE(AG_DEBUG, "yes")
+	HDEFINE(AG_TYPE_SAFETY, "yes")
 	MDEFINE(CFLAGS, "${CFLAGS} -g")
 else
 	HUNDEF(AG_DEBUG)
+	if [ "${enable_type_safety}" = 'yes' ]; then
+		HDEFINE(AG_TYPE_SAFETY, "yes")
+	else
+		HUNDEF(AG_TYPE_SAFETY)
+	fi
 fi
+
 if [ "${enable_debug_core}" = 'yes' ]; then
 	HDEFINE(AG_DEBUG_CORE, "yes")
 else
@@ -768,7 +776,9 @@ C_INCPREP($BLD/include/agar)
 C_INCDIR($BLD/include)
 C_INCDIR_CONFIG($BLD/include/agar/config)
 
-# Generate the "foo-config" scripts.
+#
+# Generate the "agar-config" scripts and pkg-config pc(5) modules.
+#
 CONFIG_SCRIPT(agar-config,\
 	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
