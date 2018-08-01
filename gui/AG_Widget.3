@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,42 @@
 .Dt AG_WIDGET 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.4
+.ds oS Agar 1.5
 .Sh NAME
 .Nm AG_Widget
-.Nd agar widget framework
+.Nd agar GUI base widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-An Agar graphical user interface is described as a tree of widgets
-(i.e., structures derived from
-.Nm ) .
-.Pp
-A widget object is always attached (via
-.Xr AG_ObjectAttach 3 )
-to a parent
-.Em container
-widget.
-Some container widgets (such as
-.Xr AG_Box 3
-or
-.Xr AG_Window 3 )
-are designed as general-purpose container widgets.
-Other widgets (such as
-.Xr AG_FileDlg 3 )
-will internally create, attach and position a specific set of child widgets
-to create a complex, easily re-usable dialog (Agar developers are encouraged
-to create custom widgets using this technique).
-.Pp
-The
 .Nm
-structure is derived from
-.Xr AG_Object 3 .
-Using Agar's Object system, custom widgets are easily implemented (or derived
-from existing widget classes) as part of user applications.
-Agar widgets are extensively re-used.
-The Object system also provides the
+is the base class for GUI widgets (and windows) in Agar GUI.
+Instances of
+.Nm
+can be attached (using
+.Xr AG_ObjectAttach 3 )
+to any other
+.Nm
+(known as the
+.Em container
+widget).
+General-purpose container widgets include
+.Xr AG_Window 3
+and
+.Xr AG_Box 3 .
+.Pp
+The class registration interface of
+.Xr AG_Object 3
+allows new widgets to be implemented (or derived from existing classes).
+Widgets use the object system's
 .Xr AG_Event 3
-system and the
+to handle (and deliver) events.
 .Xr AG_Variable 3
-interface which is the basis of widget
-.Em bindings
-(see
+provides the basis for memory bindings (see
 .Sx BINDINGS
-section below).
+section).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -88,54 +78,45 @@ typedef struct ag_widget_class {
 } AG_WidgetClass;
 .Ed
 .Pp
-The
 .Fn draw
-operation renders the widget to the display.
-Throughout the documentation, the
+renders the widget to the graphics display.
+The code under
 .Fn draw
-operation is referred to as the
-.Sq rendering context ,
-and some functions (such as
+is referred to as the
+.Dq Rendering Context .
+Some functions (such as
 .Fn AG_WidgetBlitSurface )
-are not safe to invoke in any other context.
+are unsafe to call outside Rendering Context.
 .Pp
-The
 .Fn size_request
-option queries the widget for an initial, preferred geometry, without any
-guarantee that the request will be satisfied.
-For example, a
-.Xr AG_Label 3
-widget might return the expected size in pixels of the rendered label's text.
+should return an initial, preferred geometry in px (without any guarantee
+that the request will be satisfied).
+For example, an
+.Xr AG_Label 3 ,
+might return the expected size of a rendered text label.
 .Pp
-The
 .Fn size_allocate
-function is called whenever the widget has been allocated a new size
-or position within its parent container.
-The
-.Ft AG_SizeAlloc
-parameter specifies the new allocation.
-It is also safe to assume that when
-.Fa size_allocate
-is invoked, the
+is called once the widget has been successfully allocated a new size
+or position within its parent (as described by the
 .Va w ,
 .Va h ,
-.Va x ,
+.Va x
+and
 .Va y
 members of the
-.Nm
-structure are already set to the new allocated position and size.
+.Ft AG_SizeAlloc
+argument).
+Container widgets allocate the position and size of their children in
+.Fn size_allocate .
 .Pp
-The
 .Fn size_allocate
-routine of a container widget is responsible for positioning and
-dimensioning of child widgets attached to it (by calling
-.Fn AG_WidgetSizeAlloc
-on them -- see
-.Sx SIZING
-section below).
-The function should return 0 on success or -1 to flag the widget as
-"undersize", disabling further calls to
-.Fn draw .
+should return 0 on success and -1 if the allocation is not satisfactory for
+.Fn draw
+to work at all (in which case the
+.Dv UNDERSIZE
+flag will be set and
+.Fn draw
+will not run).
 .Sh SIZING
 .nr nS 1
 .Ft "void"
@@ -166,31 +147,27 @@ The function should return 0 on success or -1 to flag the widget as
 .Fn AG_WidgetUpdate "AG_Widget *widget"
 .Pp
 .nr nS 0
-The
 .Fn AG_Expand
-function arranges for the widget to expand, filling all available area
-in its parent container widget.
+makes the widget fill all available space in the parent.
 .Fn AG_ExpandHoriz
 and
 .Fn AG_ExpandVert
-cause the widget to expand to fill available space horizontally or vertically.
+makes the widget fill the available space horizontally or vertically.
 .Pp
-Note that most widget constructors recognize
-.Dv AG_FOO_EXPAND ,
-.Dv AG_FOO_HFILL
+Note: Most widget constructors accept
+.Dv EXPAND ,
+.Dv HFILL
 and
-.Dv AG_FOO_VFILL
-option flags.
-Setting these flags is equivalent to calling
+.Dv VFILL
+as option flags.
+Setting them is equivalent to calling
 .Fn AG_Expand ,
 .Fn AG_ExpandHoriz
 and
-.Fn AG_ExpandVert ,
-respectively.
+.Fn AG_ExpandVert .
 .Pp
-The
 .Fn AG_WidgetSizeReq
-function invokes the
+invokes the
 .Fn size_request
 operation of the widget and returns its size requisition into
 .Fa req .
@@ -397,13 +374,13 @@ The
 .Fn AG_WidgetRelativeArea
 variant accepts widget coordinates.
 .Sh BLITTING SURFACES
-These functions manage blitting of graphical surfaces.
-They are designed specifically for use in GUI widgets.
-The
-.Fn AG_WidgetBlit*
-routines must all be invoked from rendering context (i.e., the
-.Fa draw
-operation of widgets), and may not be used in any other context.
+These routines allow graphical surfaces to be managed (mapped in hardware or
+software) and efficiently copied.
+They must be called from Rendering Context (i.e., the
+.Fn draw
+operation of
+.Nm )
+only.
 .Pp
 .nr nS 1
 .Ft void
@@ -440,7 +417,7 @@ function performs a software->hardware blit from the surface
 .Fa src
 to the video display at the given widget coordinates.
 .Fn AG_WidgetBlit
-must invoked in rendering context.
+must invoked in Rendering Context.
 See
 .Xr AG_Surface 3
 for more information on the Agar surface structure.
@@ -507,7 +484,7 @@ and
 will not immediately delete any previous texture associated with the previous
 surface.
 Instead, it will queue the delete operation for future execution from
-rendering context, as required by thread safety.
+Rendering Context, as required by thread safety.
 .Pp
 The
 .Fn AG_WidgetUpdateSurface
@@ -527,7 +504,7 @@ onto the destination widget
 at coordinates
 .Fa x ,
 .Fa y .
-This function must be invoked in rendering context.
+This function must be invoked in Rendering Context.
 .Pp
 The
 .Fn AG_WidgetBlitSurface
@@ -541,47 +518,64 @@ and
 .Fa rs
 set to NULL).
 .Sh BINDINGS
-Agar widgets can be configured to directly access data of specific types.
-For example,
-.Xr AG_Slider 3
-provides a binding called
-.Sq value ,
-which (in the current implementation) supports the standard integer and
-floating-point types.
-Connecting
-.Sq value
-to an integer or floating point variable allows the user to directly set the
-value of the variable with the need for tedious callback routines.
-Similarly,
-.Xr AG_Textbox 3
-connects to a text buffer.
-It is also possible to configure
-.Sq function
-bindings such that the value is evaluated from a provided function every time
-the variable is retrieved.
-.Pp
-Widget bindings are established using the
-.Fn AG_BindFoo ,
-.Fn AG_BindFooFn
-and
-.Fn AG_BindFooMp
-functions, see
-.Xr AG_Variable 3
-for more information.
-.Pp
-Bindings are specifically documented in the API reference.
-Manual pages for standard Agar widgets include a
-.Dq BINDINGS
-section with a list of bindings supported by each widget, their supported
-data types and effects.
-.Pp
-Since the value of bindings associated with a widget often dictates the
-way the widget is rendered (e.g.,
+Widget states can be bound to memory locations containing data in a
+supported format.
+For example, the "state" binding of
 .Xr AG_Button 3
-is drawn as a pressed button if its
-.Sq state
-binding is 1), Agar provides a built-in facility to monitor binding values
-and request a video update whenever the value changes:
+can be tied to an integer (or bits in an integer), such that the user pressing
+the button directly manipulates the integer value in memory.
+.Pp
+Bindings are documented under the
+.Dq BINDINGS
+section of the widget's manual page.
+For instance,
+.Xr AG_Slider 3
+mentions "value" bindings to integers.
+Therefore, to control a byte of memory, one might use:
+.Bd -literal
+	static Uint8 myByte = 0;
+
+	AG_Slider *slider = AG_SliderNew(window, AG_SLIDER_HORIZ, 0);
+	AG_BindUint8(slider, "value", &myByte);
+.Ed
+.Pp
+Or alternatively, using a shorthand constructor:
+.Bd -literal
+	AG_SliderNewUint8(window, AG_SLIDER_HORIZ, 0, &myByte, NULL, NULL);
+.Ed
+.Pp
+This method is not limited to primitive data types.
+For example,
+.Xr AG_Textbox 3
+can bind to a fixed-size memory buffer containing a C string in ASCII,
+UTF-8 or other supported encoding.
+.Pp
+The
+.Fn AG_Bind<Type>
+family of functions bind widget states to memory data.
+The
+.Fn AG_Bind<Type>Mp
+variants accept a pointer to a mutex which will be acquired prior to accessing
+the data.
+The
+.Fn AG_Bind<Type>Fn
+variants accept a pointer to a function instead of a memory location
+(the widget state will then be obtained by evaluating that function).
+.Pp
+Note: The
+.Xr AG_Variable 3
+API is actually part of
+.Xr AG_Object 3 ,
+and is not GUI-specific.
+It can be useful in non-GUI applications as well.
+.Pp
+Since the state of a widget can influence its appearance
+(e.g.,
+.Xr AG_Button 3
+is drawn as a pressed button if its "state" is 1), it may be necessary to
+monitor the value and redraw when it changes.
+.Fn AG_RedrawOnChange
+arranges for this to occur automatically (see below).
 .Sh CONTROLLING REDRAW
 .nr nS 1
 .Ft "void"
@@ -600,7 +594,7 @@ function signals that the widget must be redrawn to the video display.
 It is equivalent to setting the
 .Va dirty
 variable of the widget's parent window to 1.
-If called from rendering context,
+If called from Rendering Context,
 .Fn AG_Redraw
 is a no-op.
 .Pp
@@ -634,56 +628,65 @@ call is disabled.
 .Fn AG_ParentWindow "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
-.Fn AG_WidgetFind "AG_Display *view" "const char *name"
+.Fn AG_WidgetFind "AG_Driver *drv" "const char *path"
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
 .Ft "AG_Widget *"
-.Fn AG_WidgetFindPoint "const char *classMask" "int x" "int y"
+.Fn AG_WidgetFindPoint "const char *className" "int x" "int y"
 .Pp
 .Ft "AG_Widget *"
-.Fn AG_WidgetFindRect "const char *classMask" "int x" "int y" "int w" "int h"
+.Fn AG_WidgetFindRect "const char *className" "int x" "int y" "int w" "int h"
 .Pp
 .nr nS 0
 .Fn AG_ParentWindow
 returns a pointer to the parent
 .Xr AG_Window 3
-for the given widget.
-If the widget is unattached, NULL is returned.
-The pointer is only valid as long as the widget's parent VFS is locked.
+for the given widget instance.
+The pointer is valid only as long as the parent VFS remains locked.
+If the widget is not attached, NULL is returned.
 .Pp
-The
 .Fn AG_WidgetFind
-function searches for a given widget by name, given an absolute path,
-and returns a pointer to the widget, or NULL.
-.Fn AG_WidgetFind
-works differently from the generic
-.Xr AG_ObjectFind 3
-function, in that widgets not effectively attached to the VFS may be
-included in the search (for example, widgets attached to
-.Xr AG_Notebook 3
-tabs).
+locates a widget instance by name, where
+.Fa path
+is a
+.Sq /
+separated path name relative to the
+.Xr AG_Driver 3
+VFS root, for example: "My Window/Box #1/My button".
+If the widget exists, the function returns a pointer to the
+.Nm
+instance.
+The returned pointer is valid only as long as the parent VFS remains locked.
 .Pp
 .Fn AG_WidgetFindFocused
-recursively searches
-.Fa win
-for a widget holding focus.
-Where multiple widgets may be holding focus, widgets found deepest in the
-tree have priority over their parents.
-.Fn AG_WidgetFindFocused
-returns NULL if no widget is focused.
+returns the top-most focused widget under
+.Fa win .
 .Pp
 .Fn AG_WidgetFindPoint
-searches for a widget matching the given class mask enclosing the point
-specified in display (pixel) coordinates.
+returns the top-most widget at display coordinates
+.Fa x ,
+.Fa y ,
+which also is an instance of a the given
+.Fa className
+(see
+.Xr AG_ObjectClass 3 ,
+.Xr AG_OfClass 3 ) .
 The
 .Fn AG_WidgetFindRect
-variant requires that the widget enclose the specified rectangle.
+variant requires that the widget enclose the whole given rectangle.
 .Pp
-The pointer returned by
-.Fn AG_WidgetFind* ,
-should be considered valid only as long as the parent VFS remains locked.
+Similarly to
+.Fn AG_WidgetFind ,
+the
+.Nm
+pointer returned by
+.Fn AG_WidgetFindFocused ,
+.Fn AG_WidgetFindPoint
+and
+.Fn AG_WidgetFindRect
+should be considered valid only for as long as the parent VFS is locked.
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void
@@ -731,7 +734,7 @@ on this stack.
 .Fn AG_PushClipRect
 and
 .Fn AG_PopClipRect
-must be invoked in rendering context.
+must be invoked in Rendering Context.
 .Pp
 The
 .Fn AG_WidgetDraw

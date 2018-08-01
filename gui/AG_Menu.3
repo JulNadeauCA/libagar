@@ -516,7 +516,7 @@ AG_MenuItem *mi;
 pm = AG_PopupNew(myParentWidget);
 AG_MenuAction(pm->root, "Copy", NULL, DoCopy, NULL);
 mi = AG_MenuAction(pm->root, "Paste", NULL, DoPaste, NULL);
-mi->stateFn = AG_SetIntFn(pm->menu, PasteActive, "%p", myClipboard);
+mi->stateFn = AG_SetIntFn(pm->menu, NULL, PasteActive, "%p", myClipboard);
 .Ed
 .Pp
 The following code fragment associates a menu with an

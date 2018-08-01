@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1548,7 +1548,7 @@ AG_DriverMwClass agDriverCocoa = {
 			sizeof(AG_DriverCocoa),
 			{ 1,5 },
 			Init,
-			NULL,	/* reinit */
+			NULL,	/* reset */
 			Destroy,
 			NULL,	/* load */
 			NULL,	/* save */
