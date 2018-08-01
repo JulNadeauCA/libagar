@@ -4,6 +4,15 @@
 
 #define AG_TIMER_NAME_MAX 16
 
+typedef struct ag_timer_pvt {
+	AG_TAILQ_ENTRY(ag_timer) timers;
+	AG_TAILQ_ENTRY(ag_timer) change;
+#ifdef AG_LEGACY
+	Uint32 (*fnLegacy)(void *p, Uint32 ival, void *arg);
+	void   *argLegacy;
+#endif
+} AG_TimerPvt;
+
 typedef struct ag_timer {
 	int id;				/* Unique identifier */
 	void *obj;			/* Parent object */
@@ -16,13 +25,8 @@ typedef struct ag_timer {
 	Uint32 ival;			/* Timer interval in ticks */
 	Uint32 (*fn)(struct ag_timer *, AG_Event *);
 	AG_Event fnEvent;
-	AG_TAILQ_ENTRY(ag_timer) timers;
-	AG_TAILQ_ENTRY(ag_timer) change;
-#ifdef AG_LEGACY
-	Uint32 (*fnLegacy)(void *p, Uint32 ival, void *arg);
-	void   *argLegacy;
-#endif
 	char name[AG_TIMER_NAME_MAX];	/* Name string (optional) */
+	AG_TimerPvt pvt;		/* Private data */
 } AG_Timer;
 
 typedef Uint32 (*AG_TimerFn)(AG_Timer *, AG_Event *);

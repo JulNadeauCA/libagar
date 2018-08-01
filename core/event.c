@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -200,47 +200,50 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 }
 
 /*
- * Anonymous Function Constructors
+ * AG_Set<Type>Fn() creates a typed virtual function with optional name
+ * and optional arguments.
  */
 #undef  AG_SET_TYPED_FN
-#define AG_SET_TYPED_FN(memb)				\
-	AG_Object *ob = p;				\
-	AG_Event *ev;					\
-							\
-	ev = Malloc(sizeof(AG_Event));			\
-	InitEvent(ev, ob);				\
-	ev->name[0] = '\0';				\
-	ev->fn.memb = fn;				\
-	InitPointerArg(&ev->argv[0], ob);		\
-	AG_EVENT_GET_ARGS(ev, fmt);			\
-							\
-	AG_ObjectLock(ob);				\
-	TAILQ_INSERT_TAIL(&ob->events, ev, events);	\
-	ev->argc0 = ev->argc;				\
-	AG_ObjectUnlock(ob);				\
+#define AG_SET_TYPED_FN(memb)					\
+	AG_Object *ob = p;					\
+	AG_Event *ev;						\
+								\
+	ev = Malloc(sizeof(AG_Event));				\
+	InitEvent(ev, ob);					\
+	if (name != NULL) {					\
+		AG_Strlcpy(ev->name, name, sizeof(ev->name));	\
+	} else {						\
+		ev->name[0] = '\0';				\
+	}							\
+	ev->fn.memb = fn;					\
+	InitPointerArg(&ev->argv[0], ob);			\
+	AG_EVENT_GET_ARGS(ev, fmt);				\
+	AG_ObjectLock(ob);					\
+	TAILQ_INSERT_TAIL(&ob->events, ev, events);		\
+	ev->argc0 = ev->argc;					\
+	AG_ObjectUnlock(ob);					\
 	return (AG_Function *)ev
 
-AG_Function *AG_SetVoidFn(void *p, AG_VoidFn fn, const char *fmt, ...)		{ AG_SET_TYPED_FN(fnVoid);	}
-AG_Function *AG_SetIntFn(void *p, AG_IntFn fn, const char *fmt, ...)		{ AG_SET_TYPED_FN(fnInt);	}
-AG_Function *AG_SetUint8Fn(void *p, AG_Uint8Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnUint8);	}
-AG_Function *AG_SetSint8Fn(void *p, AG_Sint8Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnSint8);	}
-AG_Function *AG_SetUint16Fn(void *p, AG_Uint16Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnUint16);	}
-AG_Function *AG_SetSint16Fn(void *p, AG_Sint16Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnSint16);	}
-AG_Function *AG_SetUint32Fn(void *p, AG_Uint32Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnUint32);	}
-AG_Function *AG_SetSint32Fn(void *p, AG_Sint32Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnSint32);	}
+AG_Function *AG_SetVoidFn(void *p, const char *name, AG_VoidFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnVoid); }
+AG_Function *AG_SetIntFn(void *p, const char *name, AG_IntFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnInt); }
+AG_Function *AG_SetUint8Fn(void *p, const char *name, AG_Uint8Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint8); }
+AG_Function *AG_SetSint8Fn(void *p, const char *name, AG_Sint8Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint8); }
+AG_Function *AG_SetUint16Fn(void *p, const char *name, AG_Uint16Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint16); }
+AG_Function *AG_SetSint16Fn(void *p, const char *name, AG_Sint16Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint16); }
+AG_Function *AG_SetUint32Fn(void *p, const char *name, AG_Uint32Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint32); }
+AG_Function *AG_SetSint32Fn(void *p, const char *name, AG_Sint32Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint32); }
 #ifdef AG_HAVE_64BIT
-AG_Function *AG_SetUint64Fn(void *p, AG_Uint64Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnUint64);	}
-AG_Function *AG_SetSint64Fn(void *p, AG_Sint64Fn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnSint64);	}
+AG_Function *AG_SetUint64Fn(void *p, const char *name, AG_Uint64Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnUint64); }
+AG_Function *AG_SetSint64Fn(void *p, const char *name, AG_Sint64Fn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnSint64); }
 #endif
-AG_Function *AG_SetFloatFn(void *p, AG_FloatFn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnFloat);	}
-AG_Function *AG_SetDoubleFn(void *p, AG_DoubleFn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnDouble);	}
+AG_Function *AG_SetFloatFn(void *p, const char *name, AG_FloatFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnFloat); }
+AG_Function *AG_SetDoubleFn(void *p, const char *name, AG_DoubleFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnDouble); }
 #ifdef AG_HAVE_LONG_DOUBLE
-AG_Function *AG_SetLongDoubleFn(void *p, AG_LongDoubleFn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnLongDouble); }
+AG_Function *AG_SetLongDoubleFn(void *p, const char *name, AG_LongDoubleFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnLongDouble); }
 #endif
-AG_Function *AG_SetStringFn(void *p, AG_StringFn fn, const char *fmt, ...)		{ AG_SET_TYPED_FN(fnString);	}
-AG_Function *AG_SetPointerFn(void *p, AG_PointerFn fn, const char *fmt, ...)		{ AG_SET_TYPED_FN(fnPointer);	}
-AG_Function *AG_SetConstPointerFn(void *p, AG_ConstPointerFn fn, const char *fmt, ...)	{ AG_SET_TYPED_FN(fnConstPointer); }
-AG_Function *AG_SetTextFn(void *p, AG_TextFn fn, const char *fmt, ...)			{ AG_SET_TYPED_FN(fnText);	}
+AG_Function *AG_SetStringFn(void *p, const char *name, AG_StringFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnString); }
+AG_Function *AG_SetPointerFn(void *p, const char *name, AG_PointerFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnPointer); }
+AG_Function *AG_SetConstPointerFn(void *p, const char *name, AG_ConstPointerFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnConstPointer); }
 
 #undef AG_SET_TYPED_FN
 
@@ -1143,9 +1146,9 @@ restart:
 			if ((ob = to->obj) == NULL) {
 				continue;
 			}
-			TAILQ_REMOVE(&ob->timers, to, timers);
+			TAILQ_REMOVE(&ob->timers, to, pvt.timers);
 			if (TAILQ_EMPTY(&ob->timers)) {
-				TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
+				TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs);
 			}
 			if (to->flags & AG_TIMER_AUTO_FREE) {
 				free(to);
@@ -1200,8 +1203,8 @@ gen_id:
 		AG_FatalError("agTimerCount");
 #endif
 	id = (int)++agTimerCount;			/* XXX */
-	TAILQ_FOREACH(obOther, &agTimerObjQ, tobjs) {
-		TAILQ_FOREACH(toOther, &obOther->timers, timers) {
+	TAILQ_FOREACH(obOther, &agTimerObjQ, pvt.tobjs) {
+		TAILQ_FOREACH(toOther, &obOther->timers, pvt.timers) {
 			if (toOther == to) { continue; }
 			if (toOther->id == id) {
 				id++;
@@ -1283,8 +1286,8 @@ restart:
 			break;
 		}
 	}
-	TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
-		TAILQ_FOREACH(to, &ob->timers, timers) {
+	TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
+		TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 			FD_SET(to->id, &rdFds);
 			if (to->id > nFds) { nFds = to->id; }
 		}
@@ -1311,7 +1314,7 @@ restart:
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
-		obNext = TAILQ_NEXT(ob, tobjs);
+		obNext = TAILQ_NEXT(ob, pvt.tobjs);
 		AG_ObjectLock(ob);
 		for (to = TAILQ_FIRST(&ob->timers);
 		     to != TAILQ_END(&ob->timers);
@@ -1319,7 +1322,7 @@ restart:
 			struct itimerspec its;
 			Uint32 rvt;
 
-			toNext = TAILQ_NEXT(to, timers);
+			toNext = TAILQ_NEXT(to, pvt.timers);
 			if (!FD_ISSET(to->id, &rdFds)) {
 				continue;
 			}
@@ -1441,8 +1444,8 @@ restart:
 		AG_LockTiming();
 		t = AG_GetTicks();
 		tSoonest = 0xfffffffe;
-		TAILQ_FOREACH(ob, &agTimerObjQ, tobjs) {
-			TAILQ_FOREACH(to, &ob->timers, timers) {
+		TAILQ_FOREACH(ob, &agTimerObjQ, pvt.tobjs) {
+			TAILQ_FOREACH(to, &ob->timers, pvt.timers) {
 				if ((to->tSched - t) < tSoonest)
 					tSoonest = (to->tSched - t);
 			}

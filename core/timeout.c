@@ -71,9 +71,9 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 	if (src->caps[AG_SINK_TIMER]) {		/* Unordered list */
 		if (to->obj == NULL) {
 			if (TAILQ_EMPTY(&ob->timers)) {
-				TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
+				TAILQ_INSERT_TAIL(&agTimerObjQ, ob, pvt.tobjs);
 			}
-			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+			TAILQ_INSERT_TAIL(&ob->timers, to, pvt.timers);
 			newTimer = 1;
 			to->obj = ob;
 			to->tSched = 0;
@@ -88,23 +88,23 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
 			AG_FatalError("to->obj != ob");
 		}
 		if (TAILQ_EMPTY(&ob->timers)) {
-			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, tobjs);
+			TAILQ_INSERT_TAIL(&agTimerObjQ, ob, pvt.tobjs);
 		}
 		to->tSched = AG_GetTicks()+ival;
 reinsert:
-		TAILQ_FOREACH(toOther, &ob->timers, timers) {
+		TAILQ_FOREACH(toOther, &ob->timers, pvt.timers) {
 			if (toOther == to) {
 				newTimer = 0;
-				TAILQ_REMOVE(&ob->timers, to, timers);
+				TAILQ_REMOVE(&ob->timers, to, pvt.timers);
 				goto reinsert;
 			}
 			if (to->tSched < toOther->tSched) {
-				TAILQ_INSERT_BEFORE(toOther, to, timers);
+				TAILQ_INSERT_BEFORE(toOther, to, pvt.timers);
 				break;
 			}
 		}
 		if (toOther == TAILQ_END(&ob->timers)) {
-			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+			TAILQ_INSERT_TAIL(&ob->timers, to, pvt.timers);
 		}
 		to->ival = ival;
 		to->id = 0;				/* Not needed */
@@ -125,8 +125,8 @@ reinsert:
 	return (0);
 fail:
 	to->obj = NULL;
-	TAILQ_REMOVE(&ob->timers, to, timers);
-	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, tobjs); }
+	TAILQ_REMOVE(&ob->timers, to, pvt.timers);
+	if (TAILQ_EMPTY(&ob->timers)) { TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs); }
 	AG_UnlockTimers(ob);
 	return (-1);
 }
@@ -201,15 +201,15 @@ AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 	}
 	if (!src->caps[AG_SINK_TIMER]) {	/* Ordered timing wheel */
 		to->tSched = AG_GetTicks()+ival;
-		TAILQ_REMOVE(&ob->timers, to, timers);
-		TAILQ_FOREACH(toOther, &ob->timers, timers) {
+		TAILQ_REMOVE(&ob->timers, to, pvt.timers);
+		TAILQ_FOREACH(toOther, &ob->timers, pvt.timers) {
 			if (to->tSched < toOther->tSched) {
-				TAILQ_INSERT_BEFORE(toOther, to, timers);
+				TAILQ_INSERT_BEFORE(toOther, to, pvt.timers);
 				break;
 			}
 		}
 		if (toOther == TAILQ_END(&ob->timers))
-			TAILQ_INSERT_TAIL(&ob->timers, to, timers);
+			TAILQ_INSERT_TAIL(&ob->timers, to, pvt.timers);
 	}
 	to->ival = ival;
 out:
@@ -227,7 +227,7 @@ AG_DelTimer(void *p, AG_Timer *to)
 
 	AG_LockTimers(ob);
 	
-	TAILQ_FOREACH(toOther, &ob->timers, timers) {
+	TAILQ_FOREACH(toOther, &ob->timers, pvt.timers) {
 		if (toOther == to)
 			break;
 	}
@@ -240,9 +240,9 @@ AG_DelTimer(void *p, AG_Timer *to)
 	to->id = -1;
 	to->obj = NULL;
 
-	TAILQ_REMOVE(&ob->timers, to, timers);
+	TAILQ_REMOVE(&ob->timers, to, pvt.timers);
 	if (TAILQ_EMPTY(&ob->timers))
-		TAILQ_REMOVE(&agTimerObjQ, ob, tobjs);
+		TAILQ_REMOVE(&agTimerObjQ, ob, pvt.tobjs);
 
 	if (to->flags & AG_TIMER_AUTO_FREE)
 		free(to);
@@ -261,7 +261,7 @@ AG_DelTimers(void *obj)
 	for (to = TAILQ_FIRST(&ob->timers);
 	     to != TAILQ_END(&ob->timers);
 	     to = toNext) {
-		toNext = TAILQ_NEXT(to, timers);
+		toNext = TAILQ_NEXT(to, pvt.timers);
 		AG_DelTimer(ob, to);
 	}
 	TAILQ_INIT(&ob->timers);
@@ -278,7 +278,7 @@ AG_TimerIsRunning(void *p, AG_Timer *to)
 	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
 	AG_Timer *toRunning;
 
-	TAILQ_FOREACH(toRunning, &ob->timers, timers) {
+	TAILQ_FOREACH(toRunning, &ob->timers, pvt.timers) {
 		if (toRunning == to)
 			break;
 	}
@@ -329,13 +329,13 @@ AG_ProcessTimeouts(Uint32 t)
 	for (ob = TAILQ_FIRST(&agTimerObjQ);
 	     ob != TAILQ_END(&agTimerObjQ);
 	     ob = obNext) {
-		obNext = TAILQ_NEXT(ob, tobjs);
+		obNext = TAILQ_NEXT(ob, pvt.tobjs);
 		AG_ObjectLock(ob);
 rescan:
 		for (to = TAILQ_FIRST(&ob->timers);
 		     to != TAILQ_END(&ob->timers);
 		     to = toNext) {
-			toNext = TAILQ_NEXT(to, timers);
+			toNext = TAILQ_NEXT(to, pvt.timers);
 
 			if ((int)(to->tSched - t) > 0) {
 				continue;
@@ -357,15 +357,15 @@ rescan:
 static Uint32
 LegacyTimerCallback(AG_Timer *to, AG_Event *event)
 {
-	return to->fnLegacy(to->obj, to->ival, to->argLegacy);
+	return to->pvt.fnLegacy(to->obj, to->ival, to->pvt.argLegacy);
 }
 void
 AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
     Uint flags)
 {
 	AG_InitTimer((AG_Timer *)to, "legacy", 0);
-	to->fnLegacy = fn;
-	to->argLegacy = arg;
+	to->pvt.fnLegacy = fn;
+	to->pvt.argLegacy = arg;
 }
 void
 AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 ival)
