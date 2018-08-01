@@ -157,7 +157,7 @@ The Agar object system.
 .It Xr AG_String 3
 Functions for manipulating C strings.
 .It Xr AG_TextElement 3
-Dynamically-allocated multilanguage text buffer.
+Multilanguage dynamic text buffer.
 .It Xr AG_Threads 3
 Portable threads interface.
 .It Xr AG_Timer 3
@@ -169,7 +169,10 @@ Cross-platform interface to user accounts.
 .It Xr AG_Variable 3
 Primitive data variables and bindings.
 .It Xr AG_Version 3
-Datafile versioning functions.
+Datafile versioning.
+.It Xr AG_Web 3
+HTTP/1.1 application server (needs
+.Sq --enable-web ) .
 .El
 .Sh AGAR-GUI
 The
@@ -323,23 +326,21 @@ Alternate interface to
 .Sh AGAR-VG
 The
 .Em ag_vg
-library is a simple 2D vector graphics library which allows developers
-to specify hierarchical sketches consisting of elements such as lines, curves
-and text.
-It uses linear transformations to define the placement of geometrical
-entities, which the best approach for most applications.
+library is a simple 2D vector graphics library which allows users to view and
+edit hierarchical sketches consisting of elements with attributes
+such as lines, curves and text.
+It uses linear transformations to define the placement of geometrical entities.
 .Pp
-Following the same design philosophy as the Agar-GUI,
+Following the Agar design philosophy, the
 .Em ag_vg
-only provides the
-entity classes (e.g., lines, arcs) useful to the widest range of applications,
-and allows specialized and application-specific entities to be implemented
-easily in separate libraries.
-For specialized applications such as CAD systems, the placement of entities
-might be best described through geometrical constraints (e.g., distances and
-angles) as opposed to linear transformations.
-This functionality is implemented, notably, by
-.Lk http://freesg.org/ the FreeSG library .
+library only includes the most basic, generic entity classes (e.g., lines,
+arcs, text) as built-in types, but allows user and application-specific vector
+graphics entities through its class-registration interface.
+.Pp
+Recommendation: For vector graphics applications such as CAD systems,
+where placement of entities is best described using geometrical constraints
+(e.g., distances and angles), check out the Agar-based FreeSG library
+(http://freesg.org/).
 .Pp
 To use this library, link against
 .Sq agar-vg-config --libs .

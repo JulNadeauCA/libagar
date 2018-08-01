@@ -35,50 +35,49 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar object system provides object-oriented programming functionality
-(e.g., inheritance, virtual functions) to applications written in
-different languages (currently C, C++, Objective C, Perl and Ada).
+The Agar object system provides object-oriented programming capabilities
+including inheritance and virtual functions, as well as high-level features
+such as serialization, timers, VFS and abstracted data types.
+It is implemented in C and provides bindings to other languages.
 .Pp
 Agar objects can be organized into a tree or virtual filesystem (VFS).
 Any
 .Nm
 can become the root of a VFS.
 A VFS can be made persistent to the degree required by the application.
-Agar object data is typically serialized to a machine-independent binary
-format (using
+Object data is serialized to a machine-independent binary format (using
 .Xr AG_DataSource 3
 calls in their
 .Fn load
 and
 .Fn save
 operations).
-While the VFS metadata (which include
+While an object's metadata (including the
 .Va name
-and
-.Va flags )
-must stay in memory, the data of any object in the VFS can be saved to disk
-and paged in on demand.
-Practical examples includes:
+field) must always remain in memory, class-specific data can be serialized
+to storage and deserialized on demand.
+Examples include:
 .Bl -bullet
 .It
-The Agar GUI's
+Agar GUI's
 .Xr AG_Window 3
-(VFS of
+is a VFS of
 .Xr AG_Widget 3
-objects).
+instances.
 .It
-FreeSG (http://freesg.org/) represents a scene graph by a VFS of
-.Xr SG_Node 3
-objects.
-Unused nodes can be paged out until needed.
+FreeSG (http://freesg.org/)'s scene graph
+.Xr SG 3
+is a VFS of
+.Xr SG_Node 3 .
+Non-visible nodes can be paged out, saving memory.
 .It
-Edacious (http://edacious.org/) represents a circuit and its attached
-components as a VFS in memory, but saves to a single binary file which
-includes both the serialized data of the circuit object and its components.
-Edacious circuit files may also include saved states of third-party component
-models which may require extra libraries (in which case, Agar will attempt to
-load DSOs which the object metadata indicates are needed to implement a
-particular Agar object class).
+Edacious (http://edacious.org/) represents circuits, components and simulation
+data using an in-memory VFS.
+Circuits are saved to a flat binary file which embeds the circuit's serialized
+data with that of its sub-components (which may include third-party components,
+in which case
+.Nm
+will autoload any required DSOs).
 .El
 .Sh INITIALIZATION
 .nr nS 1
@@ -430,9 +429,6 @@ AGOBJECT_FOREACH_CHILD(chld, parent, my_class) {
 .Ft "int"
 .Fn AG_ObjectGetInheritHier "AG_Object *obj" "AG_ObjectClass **pHier" "int *nHier"
 .Pp
-.Ft "void"
-.Fn AG_ObjectGetInheritHierString "AG_Object *obj" "char *buf" "size_t buf_len"
-.Pp
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child" "AG_Object *parent" "TYPE type" "const char *pattern"
 .Pp
 .nr nS 0
@@ -440,44 +436,33 @@ The
 .Fn AG_RegisterClass
 function registers a new object class.
 .\" MANLINK(AG_ObjectClass)
-The
 .Fa classInfo
-argument should point to an
+should be an initialized
 .Ft AG_ObjectClass
-structure, with the following members initialized:
+structure:
 .Bd -literal
 typedef struct ag_object_class {
-	char hier[AG_OBJECT_HIER_MAX];	/* Full class name */
+	char hier[AG_OBJECT_HIER_MAX];	/* Full inheritance hierarchy */
 	size_t size;             	/* Size of instance structure */
 	AG_Version ver;          	/* Version numbers */
-
 	void (*init)(void *obj);
-	void (*reinit)(void *obj);
+	void (*reset)(void *obj);
 	void (*destroy)(void *obj);
-	int  (*load)(void *obj, AG_DataSource *buf, const AG_Version *ver);
-	int  (*save)(void *obj, AG_DataSource *buf);
+	int  (*load)(void *obj, AG_DataSource *ds, const AG_Version *ver);
+	int  (*save)(void *obj, AG_DataSource *ds);
 	void *(*edit)(void *obj);
+	/* ... */
 } AG_ObjectClass;
 .Ed
 .Pp
-The
-.Ft AG_ObjectClass
-structure also contains read-only members which are initialized internally
-by the object system (see
-.Sx STRUCTURE DATA
-section).
-.Pp
-Traditionally, in C, the source file for an Agar object will contain a
-static initializer for
-.Fa AG_ObjectClass
-at the end of the file, like so:
+For example:
 .Bd -literal
-AG_ObjectClass MySomethingClass = {
-	"MySomething",
-	sizeof(MySomething),
+AG_ObjectClass MyClass = {
+	"MyClass",
+	sizeof(MyClass),
 	{ 0,0 },
 	Init,
-	NULL,	/* reinit */
+	NULL,	/* reset */
 	NULL,	/* destroy */
 	Load,
 	Save,
@@ -485,16 +470,23 @@ AG_ObjectClass MySomethingClass = {
 };
 .Ed
 .Pp
-Note that it is customary to "overload"
-.Ft AG_ObjectClass
-structure.
-For example, the
+We can define new operations (or other class-specific data) by overloading
+.Ft AG_ObjectClass .
+The
 .Ft AG_WidgetClass
-structure of the Agar-GUI library augments
+class in Agar-GUI, for instance, overloads
 .Ft AG_ObjectClass
-with widget-specific operations, and the
-.Ft AG_ObjectClass
-initializer for a typical Agar widget will look like:
+and adds 3 new methods:
+.Bd -literal
+typedef struct ag_widget_class {
+	struct ag_object_class _inherit;
+	void (*draw)(void *);
+	void (*size_request)(void *, AG_SizeReq *);
+	int  (*size_allocate)(void *, const AG_SizeAlloc *);
+} AG_WidgetClass;
+.Ed
+.Pp
+For example:
 .Bd -literal
 AG_WidgetClass agButtonClass = {
 	{
@@ -502,7 +494,7 @@ AG_WidgetClass agButtonClass = {
 		sizeof(AG_Button),
 		{ 0,0 },
 		Init,
-		NULL,	/* free */
+		NULL,	/* reset */
 		NULL,	/* destroy */
 		NULL,	/* load */
 		NULL,	/* save */
@@ -516,19 +508,20 @@ AG_WidgetClass agButtonClass = {
 .Pp
 The
 .Va hier
-member of
+field of
 .Ft AG_ObjectClass
-specifies the full class name, in the form
-.Dq AG_Superclass:AG_Subclass ,
-or alternatively,
-.Dq Namespace(Superclass:Subclass)
-or
-.Dq Namespace(Superclass:Subclass)@modules .
-If the optional
-.Sq @modules
-string exists, it specifies a comma-separated list of dynamically-linked
-library (modules) accessible from
-.Xr AG_DSO 3 .
+specifies a inheritance hierarchy, in the form "MY_Superclass:MY_Subclass",
+or "MyNamespace(Superclass:Subclass)" .
+If implementing the class requires specific libraries available as dynamically
+loaded modules via
+.Xr AG_DSO 3 ,
+they may be appended to
+.Va hier
+as a comma-separated list of library names preceded by "@".
+For example:
+.Bd -literal
+MyNamespace(Superclass:Subclass)@module1,module2
+.Ed
 .Pp
 The
 .Va size
@@ -538,68 +531,66 @@ The
 member specifies an optional datafile version number (see
 .Xr AG_Version 3 ) .
 .Pp
-The
 .Fn init
-operation is responsible for initializing a new
-.Nm
-instance.
+initializes a new object instance.
+It is called after successful allocation of a new object by
+.Fn AG_ObjectNew
+or
+.Fn AG_ObjectInit .
 .Pp
-The optional
-.Fn reinit
-function is expected to free any data that was dynamically allocated by the
+.Fn reset
+restores the state of the object to an initial state.
+.Fn AG_ObjectLoad
+invokes
+.Fn reset
+implicitely prior to the
 .Fn load
-routine.
-The
-.Fn reinit
-operation is automatically invoked prior to
-.Fn load ,
-and before
-.Fn destroy .
-.Pp
-The
-.Fn destroy
-operation is called from
+operation.
 .Fn AG_ObjectDestroy
-to release any resources which are not handled by
-.Fn reinit
-(typically, resources that were allocated in
-.Fn init ) .
-Note that
+also invokes
+.Fn reset
+implicitely prior to the
 .Fn destroy
-must not free the
-.Nm
-structure itself as this is already done in
-.Fn AG_ObjectDestroy .
+operation.
 .Pp
-The
+.Fn destroy
+frees all resources allocated by
+.Fn init
+(excluding any resources already freed by
+.Fn reset ) .
+.Pp
 .Fn load
+reads the serialized state of object
+.Fa obj
+from data source
+.Fa ds .
+It must return 0 on success or -1 if an error has occured.
+See:
+.Xr AG_DataSource 3
 and
-.Fn save
-operations are responsible for archiving the dataset (see the
-.Sx ARCHIVING
-section for more information).
+.Sx SERIALIZATION
+section.
 .Pp
-When defined, the
+.Fn save
+saves the state of
+.Fa obj
+to data source
+.Fa ds .
+It must return 0 on success or -1 if an error has occured.
+See:
+.Xr AG_DataSource 3
+and
+.Sx SERIALIZATION
+section.
+.Pp
 .Fn edit
-operation generates user interface elements allowing the user to edit
-the object's dataset.
-It is a generic operation, not dependent on any particular GUI library.
-If using the Agar-GUI for example,
+is a user-defined / application-specific callback.
+In a typical GUI application, for example,
 .Fn edit
-is expected to create a
+may be expected to create and return an
 .Xr AG_Window 3
-or a container widget such as
+or an
 .Xr AG_Box 3 .
-.Pp
-Note that whenever the
-.Fn init ,
-.Fn reinit ,
-.Fn load ,
-.Fn save
-and
-.Fn destroy
-operations are used, they are invoked for every class in the inheritance
-hierarchy of the given object.
 .Pp
 .Fn AG_UnregisterClass
 removes the specified object class.
@@ -718,18 +709,6 @@ no longer in use.
 returns 0 on success or -1 if there is insufficient memory.
 .Pp
 The
-.Fn AG_ObjectGetInheritHierString
-function returns into
-.Fa buf
-a string (of the form "MyClass:MySubclass:...") representing the inheritance
-hierarchy of an object.
-It is equivalent to copying the
-.Fa hier
-string of the
-.Fa AG_ObjectClass
-structure.
-.Pp
-The
 .Fn AGOBJECT_FOREACH_CLASS
 macro iterates
 .Fa child
@@ -764,7 +743,7 @@ AGOBJECT_FOREACH_CLASS(chld, parent, my_class, "MyClass") {
 .Fn AG_ObjectEncodeName "AG_Object *obj" "AG_Object *depobj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectFindDep "AG_Object *obj" "Uint32 ind" "AG_Object **objp"
+.Fn AG_ObjectFindDep "AG_Object *obj" "Uint32 ind" "AG_Object **pObject"
 .Pp
 .nr nS 0
 .Fn AG_ObjectInUse
@@ -786,21 +765,30 @@ and removes the dependency if the count reaches zero (unless the object has the
 flag set).
 .Pp
 .Fn AG_ObjectEncodeName
-returns a 32-bit integer identifier for the dependency, suitable for writing
-into data files.
-It may return the special values 0 (NULL reference) and 1 (self-reference),
-the meaning of which is object-specific.
+returns a serializable 32-bit handle representing the dependency between
+.Fa obj
+and
+.Fa depobj .
+It reserves the special values 0 (NULL reference) and 1 (self reference).
+The value of the handle corresponds to the index of
+.Fa depobj
+in the dependency table of
+.Fa obj
+plus 2.
 .Pp
 .Fn AG_ObjectFindDep
-tries to resolve the given 32-bit dependency identifier, return 0 on success
-and -1 on failure.
+resolves a dependency handle (previously generated by
+.Fn AG_ObjectEncodeName ) .
+On success, a pointer to the object is returned in
+.Fa pObject
+and the function returns 0.
 .Sh RELEASING RESOURCES
 .nr nS 1
 .Ft "void"
 .Fn AG_ObjectDestroy "AG_Object *obj"
 .Pp
 .Ft void
-.Fn AG_ObjectFreeDataset "AG_Object *obj"
+.Fn AG_ObjectReset "AG_Object *obj"
 .Pp
 .Ft "void"
 .Fn AG_ObjectFreeEvents "AG_Object *obj"
@@ -822,28 +810,26 @@ and -1 on failure.
 .Pp
 .nr nS 0
 The
-.Fn AG_ObjectFreeDataset
-function frees any dynamically allocated resources by invoking the
-.Fn reinit
-of every class in the inheritance hierachy.
-Contrary to the
-.Fn destroy
-operation,
-.Fn reinit
-must leave the data structures in a consistent state (e.g., for a subsequent
+.Fn AG_ObjectReset
+function restores the state of an object to some initial state.
+It invokes the object's
+.Fn reset
+method.
+.Fn reset
+is expected to bring the object to a consistent state prior to deserialization
+(before the
 .Fn load
-operation).
+method is invoked).
 .Pp
 The
 .Fn AG_ObjectDestroy
 function frees all resources reserved by the given object (and any of its
 children that is not being referenced).
-.Fn AG_ObjectDestroy
-invokes the
-.Fn reinit
+It invokes
+.Fn reset
 and
 .Fn destroy
-operations of every class in the inheritance hierarchy.
+for each class in the inheritance hierarchy.
 Note that
 .Fn AG_ObjectDestroy
 also cancels any
@@ -853,9 +839,8 @@ Unless the
 .Dv AG_OBJECT_STATIC
 flag is set,
 .Fn AG_ObjectDestroy
-invokes
-.Xr free 3
-on the structure.
+frees the structure with
+.Xr free 3 .
 .Pp
 Internally,
 .Fn AG_ObjectDestroy
@@ -864,38 +849,31 @@ invokes
 .Fn AG_ObjectFreeVariables ,
 .Fn AG_ObjectFreeDeps
 and
-.Fn AG_ObjectFreeChildren ,
-but these functions may be called directly in order to destroy and reinitialize
-the event handler list, the
+.Fn AG_ObjectFreeChildren .
+These functions may be used to explicitely reinitialize the event
+handler table (cancelling any scheduled timed event), clear the
 .Xr AG_Variable 3
-table and destroy the child objects,
-respectively.
-.Pp
-In addition to reinitializing the event handler table,
-.Fn AG_ObjectFreeEvents
-also cancels scheduled events.
+table, or destroy all attached child objects.
 .Pp
 .Fn AG_ObjectFreeChildren
-releases all resources allocated by child objects, under the specified parent
-object.
-The function assumes that none of the child objects are currently in use.
+releases all resources allocated by the child objects of a given parent.
+The assumes that none of the child objects are currently in use.
 .Pp
 .Fn AG_ObjectFreeDummyDeps
-removes entries in the dependency table where the reference count is zero
-(which occur in objects that have the
+cleans up the dependency table, removing any entry with a reference count
+of zero (which occurs in objects with
 .Dv AG_OBJECT_PRESERVE_DEPS
-flag set).
+set).
 .Pp
-The
 .Fn AG_ObjectRemain
-function specifies the behavior of
+specifies the behavior of
 .Fn AG_ObjectPageOut
-once a dataset is no longer in use.
-The default behavior is to free the dataset.
+once the object's data is no longer in use.
+The default behavior is to free the data.
 If an argument of
 .Dv AG_OBJECT_REMAIN_DATA
-is passed, the dataset will be kept in memory.
-.Sh ARCHIVING
+is passed, the data will be kept in memory.
+.Sh SERIALIZATION
 .nr nS 1
 .Ft "int"
 .Fn AG_ObjectLoad "AG_Object *obj"
@@ -937,7 +915,7 @@ is passed, the dataset will be kept in memory.
 .Fn AG_ObjectUnserialize "AG_Object *obj" "AG_DataSource *ds"
 .Pp
 .Ft "int"
-.Fn AG_ObjectReadHeader "AG_Object *obj" "AG_ObjectHeader *header"
+.Fn AG_ObjectReadHeader "AG_DataSource *ds" "AG_ObjectHeader *header"
 .Pp
 .Ft "int"
 .Fn AG_ObjectPageIn "AG_Object *obj"
@@ -952,9 +930,9 @@ is passed, the dataset will be kept in memory.
 .Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "size_t buf_len"
 .Pp
 .nr nS 0
-These functions implement archiving (or "serialization") of the state of an
+These functions implement serialization, or archiving of the state of an
 .Nm
-instance to machine-independent binary format.
+to a flat, machine-independent binary format.
 .Pp
 The
 .Fn AG_ObjectLoad*
@@ -962,10 +940,10 @@ family of functions load the state of an Agar object from some binary data
 source.
 The generic
 .Nm
-state is loaded first, followed by the object's dataset (which is read
+state is loaded first, followed by the object's serialized data (which is read
 by invoking the
 .Fn load
-operation for every class in the object's inheritance hierarchy).
+function of every class in the inheritance hierarchy).
 The
 .Fn AG_ObjectLoad ,
 .Fn AG_ObjectLoadGeneric
@@ -992,10 +970,10 @@ The
 family of functions serialize and save the state of the given object.
 The generic
 .Nm
-state is written first, followed by the object's dataset (which is written
-by invoking the
+state is written first, followed by the object's serialized data
+(which is written by invoking the
 .Fn save
-operation for every class in the object's inheritance hierarchy).
+function of every class in the inheritance hierarchy).
 The
 .Fn AG_ObjectSave
 function creates an archive of the given object in the default location
@@ -1023,8 +1001,10 @@ reads an archive of the given object.
 .Pp
 The
 .Fn AG_ObjectReadHeader
-routine decodes a standard Agar object archive header.
-On success, it returns 0 and writes the information to the
+routine attempts to read the header of a serialized Agar object from a
+.Xr AG_DataSource 3
+and returns 0 on success or -1 if no valid header could be read.
+On success, header information is returned into the
 .Fa header
 structure:
 .Bd -literal
@@ -1040,25 +1020,26 @@ typedef struct ag_object_header {
 .Pp
 The
 .Fn AG_ObjectPageIn
-function loads an object's dataset into memory and sets the
+function loads an object's data into memory and sets the
 .Dv AG_OBJECT_RESIDENT
 flag.
 .Fn AG_ObjectPageOut
 checks whether an object is referenced by another object and if that is
-not the case, the dataset is archived to storage, freed from memory and
-the
+not the case, the data is serialized to permanent storage, freed from
+memory and
 .Dv AG_OBJECT_RESIDENT
-flag is cleared.
+is cleared.
 Both functions return 0 on success or -1 if an error occured.
 .Pp
-The
 .Fn AG_ObjectSetArchivePath
+sets the application-specific Archive Path attribute.
+For example, the "Save" feature of an editor application might use the
+Archive Path to remember an object's last successful Save or Export location,
 and
 .Fn AG_ObjectGetArchivePath
-functions respectively set or retrieve the object's application-specific
-archive path.
-In an editor application, for example, the archive path would be useful
-in remembering the last successful save location for a "Save" function.
+to later retrieve it.
+The Archive Path is a run-time attribute ignored by
+.Fn AG_ObjectSave .
 .Sh FLAGS
 The following public
 .Nm
@@ -1079,59 +1060,50 @@ becomes a no-op and
 .Fn AG_ObjectLoad
 calls will fail.
 .It AG_OBJECT_INDESTRUCTIBLE
-This is an advisory, application-specific flag indicating that the
-object should be protected from deletion.
+Application-specific advisory flag.
 .It AG_OBJECT_RESIDENT
+The object's data exists in memory.
 Set by
 .Fn AG_ObjectPageIn
 and
-.Fn AG_ObjectPageOut
-to keep track of whether an object's data is resident in memory.
+.Fn AG_ObjectPageOut .
 .It AG_OBJECT_PRESERVE_DEPS
-Disable automatic removal of object dependencies when reference counts
-reach 0.
+Don't remove entries in the dependency table when their reference count
+reaches 0.
 .It AG_OBJECT_STATIC
-Indicates that this object is either statically-allocated (or allocated
-through another facility than
+Object is statically allocated (or allocated via a facility other than
 .Xr malloc 3 ) .
-The
-.Fn AG_ObjectDestroy
-operation will not call
+Disable use of
 .Xr free 3
-on the structure.
+by
+.Fn AG_ObjectDestroy .
 .It AG_OBJECT_READONLY
-This is an advisory and application-specific flag indicating that the
-object is in "read-only" mode.
+Application-specific advisory flag.
 .It AG_OBJECT_REOPEN_ONLOAD
-If the object has a
-.Sq edit
-operation, arrange for all graphical interface elements (as returned by
-.Sq edit )
-to be automatically destroyed and recreated after any
+If an
+.Fn edit
+operation is defined, indicate that elements associated with its return
+value (such as GUI windows or elements in the case of a GUI application)
+should be recreated whenever
 .Fn AG_ObjectLoad
-call.
-This flag is useful for complex objects where the graphical interface
-references elements of the dataset.
+is used.
 .It AG_OBJECT_REMAIN_DATA
-Prevent the object's dataset from being automatically freed (with
-.Fn AG_ObjectFreeDataset )
-as a result of an
+Prevent the object's data from being freed by
+.Fn AG_ObjectReset
+when a
 .Fn AG_ObjectPageOut
-call, when the reference count reaches zero.
-Also see
+call is made and the reference count reaches zero.
+This is set by
 .Fn AG_ObjectRemain .
 .It AG_OBJECT_DEBUG
-Enable per-object debugging; application-specific.
+Application-specific debugging flag.
 .It AG_OBJECT_NAME_ONATTACH
-Request that
+Automatically generate a unique name for the object as soon as
 .Fn AG_ObjectAttach
-calls automatically generates a name for the child object being attached.
-The name will be unique in the parent.
+occurs.
 .It AG_OBJECT_CHLD_AUTOSAVE
-Arrange for child objects to be automatically saved along with the object
-when
-.Fn AG_ObjectSave*
-is invoked.
+Serialize the object's children in
+.Fn AG_ObjectSerialize .
 .El
 .Sh EVENTS
 The
@@ -1172,13 +1144,13 @@ for details.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_ObjectClass
-structure (see the
+structure (see
 .Sx CLASSES
 section):
 .Pp
-.Bl -tag -compact -width "AG_ObjectClass *super "
+.Bl -tag -compact -width "void (*destroy) "
 .It Ft char *hier
-Full class name / inheritance hierarchy.
+Full inheritance hierarchy.
 .It Ft size_t size
 Size of instance structure (in bytes).
 .It Ft AG_Version ver
@@ -1186,86 +1158,75 @@ Versioning information (see
 .Xr AG_Version 3 ) .
 .It Ft void (*init)
 Initialization routine.
-.It Ft void (*reinit)
+.It Ft void (*reset)
 Cleanup routine (for
-.Fn AG_ObjectFreeDataset ) .
+.Fn AG_ObjectReset ) .
 .It Ft void (*destroy)
 Final cleanup routine.
 .It Ft int (*load)
-Dataset loading function (unserialization).
+Deserialization routine.
 .It Ft int (*save)
-Dataset archiving function (serialization).
+Serialization routine.
 .It Ft void *(*edit)
-Interface-specific editor entry point.
+Application-specific entry point.
+.El
+.Pp
+The following read-only members are initialized internally:
+.Pp
+.Bl -tag -compact -width "TAILQ(AG_ObjectClass) sub "
 .It Ft char *name
-Short class name.
-Set internally to the last element in inheritance hierarchy.
+The name for this class only.
 .It Ft char *libs
-Comma-separated list of modules (DSOs) which must be loaded before this
-class is used.
-Set internally when the class is registered.
-.It Ft TAILQ sub
-List of
-.Ft AG_ObjectClass
-structures representing direct subclasses of this class.
-This list is generated internally.
+Comma-separated list of DSO modules.
 .It Ft AG_ObjectClass *super
-Pointer to the superclass of this class.
-This field is set internally.
+Pointer to the superclass.
+.It Ft TAILQ(AG_ObjectClass) sub
+Direct subclasses of this class.
 .El
 .Pp
 For the
 .Ft AG_Object
 structure:
-.Bl -tag -width "AG_ObjectClass *cls "
-.It Ft char *name
-The name string is an arbitrary string identifier which is guaranteed
-to be unique relative to the object's parent.
-The name string is limited to
-.Dv AG_OBJECT_NAME_MAX
-bytes, and should not contain
-.Sq /
-characters.
+.Bl -tag -width "char name[AG_OBJECT_NAME_MAX] "
+.It Ft char name[AG_OBJECT_NAME_MAX]
+Unique (in parent) identifier for this object instance.
+May not contain
+.Sq / .
 .It Ft char *archivePath
-This is an optional, application-specific path name, which should be set
-with
-.Fn AG_ObjectSetArchivePath
-and retrieved with
-.Fn AG_ObjectGetArchivePath .
-In an editor application, for example, the archive path would be useful
-in remembering the last successful save location for a "Save" function.
+Application-specific path accessed by
+.Fn AG_Object{Get,Set}ArchivePath .
+Typical application: Remember the last successful location for an editor's
+"Save" function.
 .It Ft char *save_pfx
-When the object is saved, this string will be prepended to the effective
-path name of the save file on disk (after the save directory path, and
-before the filename).
+Path name prefix when saving to disk (after
+.Pa dir/
+and before filename).
 .It Ft AG_ObjectClass *cls
 A pointer to the
 .Ft AG_ObjectClass
-class information structure for this object.
+for this object's class
+(see
+.Sx CLASSES
+section).
 .It Ft Uint flags
-Object flags (see
+Option flags for this object instance (see
 .Sx FLAGS
 section).
-.It Ft TAILQ events
-List of
-.Xr AG_Event 3
-items describing registered event handlers (as set by
-.Fn AG_SetEvent ) ,
-as well as virtual functions (as set by
+.It Ft TAILQ(AG_Event) events
+Table of registered event handlers (set by
+.Xr AG_SetEvent 3 )
+and virtual functions (set by
 .Fn AG_Set<Type>Fn ) .
-.It Ft TAILQ timeouts
-List of
-.Xr AG_Timeout 3
-structure for the timers associated with the object.
-.It Ft TAILQ vars
+.It Ft TAILQ(AG_Timer) timers
+List of active timers (see
+.Xr AG_Timer 3 ) .
+.It Ft TAILQ(AG_Variable) vars
 Named variables (see
-.Xr AG_Variable 3
-for details).
-.It Ft TAILQ deps
-Registered dependencies (see
-.Sx DEPENDENCIES
-section).
-.It Ft TAILQ children
+.Xr AG_Variable 3 ) .
+.It Ft TAILQ(AG_ObjectDep) deps
+Dependency table (see
+.Sx DEPENDENCIES ) .
+.It Ft TAILQ(AG_Object) children
 List of child objects.
 The
 .Fn AGOBJECT_FOREACH_CHILD ,
@@ -1274,7 +1235,7 @@ The
 .Fn AGOBJECT_LAST_CHILD
 and
 .Fn AGOBJECT_FOREACH_CLASS
-macros may be used to iterate over this list.
+macros can be used to iterate over this list.
 .El
 .Sh EXAMPLES
 See

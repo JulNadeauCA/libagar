@@ -35,76 +35,94 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-Every Agar
+In the Agar object system, every
 .Xr AG_Object 3
-instance has an associated set of named variables, which are useful for storing
-primitive data as well as references to external, structured data.
-An Agar variable can store the following types of data:
+instance has a set of typed variables.
+Variables can be named (accessed by a string key), or anonymous
+(accessed by a
+.Nm
+pointer).
+Basic types are supported:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
 Integers (e.g.,
 .Ft int ,
 .Ft Uint ,
-.Ft Sint16 )
+.Ft long ,
+.Ft Sint16 ,
+.Ft Uint64 )
 .It
 Floating-point numbers (e.g.,
 .Ft float ,
 .Ft double ,
 .Ft long double )
 .It
-C strings (dynamically allocated)
+Unbounded C strings (auto-allocated)
+.It
+Constant C strings
 .It
 Generic pointers
 .El
 .Pp
-An
-.Nm
-can also reference the following types of data:
+"Pointer" variables can also reference typed data.
+Optionally, pointer variables can be configured to acquire a
+.Xr AG_Mutex 3
+locking device prior to accessing the data.
+Supported reference types include:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
 Integers (e.g.,
 .Ft int * ,
+.Ft long * ,
 .Ft Uint * ,
-.Ft Sint16 * )
+.Ft Sint16 * ,
+.Ft Uint64 * )
 .It
 Floating-point numbers (e.g.,
 .Ft float * ,
 .Ft double * ,
 .Ft long double * )
 .It
-C strings (in fixed-size buffers)
+Bits in a fixed-size word (per given bitmask)
 .It
-Agar text elements (see
-.Xr AG_Text 3 )
+Bounded C strings (in fixed-size buffer)
 .It
-Generic pointers
+Constant C strings
 .It
 Agar objects (pointer to
 .Xr AG_Object 3 )
 .It
-Named Agar object variables.
+Proxy for a named
+.Nm
+in an external
+.Xr AG_Object 3
 .El
 .Pp
+There are other uses for
 .Nm
-is used extensively throughout Agar and Agar-based libraries.
-In the Agar-GUI system, GUI widgets use Agar variables to reference
-external data (also known as "bindings").
-For example, the "value" variable of an
-.Xr AG_Numerical 3
-spinbutton may be tied to a fixed-size integer, a floating-point number, or
-any other type implemented by
-.Ft AG_Numerical .
-.Pp
-It is also possible to allocate anonymous
-.Nm
-structures on the fly.
-For instance, the event system of
+besides representing
 .Xr AG_Object 3
-uses a list of
+variables.
+For instance,
 .Nm
-elements to describe the list of arguments passed to event handler routines.
+is used to represent arguments passed to
+.Xr AG_Event 3
+callback functions.
+In Agar-GUI, widgets use Agar variables to reference data in memory
+(also known as "bindings").
+For example, the "value" of an
+.Xr AG_Numerical 3
+spinbutton can be tied to an
+.Ft int ,
+a
+.Ft float
+a mutex-protected
+.Ft Uint32 ,
+etc.
+See the "BINDINGS" section of a widget's manual page for the list of bindings
+and types supported.
 .Sh INTERFACE
 .nr nS 1
 .Ft int
@@ -740,29 +758,6 @@ The
 .Fn AG_BindStringFn
 variant ties the variable to a function
 .Fa fn .
-.Sh TEXT OBJECTS
-.nr nS 1
-.Ft "AG_Text *"
-.Fn AG_GetText "AG_Object *obj" "const char *name"
-.Pp
-.Ft "void"
-.Fn AG_InitText "AG_Variable *var" "AG_Text *txt"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_SetText "AG_Object *obj" "const char *name" "AG_Text *txt"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindText "AG_Object *obj" "const char *name" "AG_Text *txt"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindTextMp "AG_Object *obj" "const char *name" "AG_Text *txt" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindTextFn "AG_Object *obj" "const char *name" "AG_Text *(*fn)(AG_Event *)"
-.Pp
-.nr nS 0
-These functions provide an interface to Agar text objects (see
-.Xr AG_Text 3 ) .
 .Sh GENERIC POINTERS
 .nr nS 1
 .Ft "void *"
@@ -834,31 +829,68 @@ These functions provide an interface for binding to specific bits in integers.
 They follow the standard form, with an extra
 .Fa bitmask
 argument.
-.Sh NAMED VARIABLE REFERENCES
+.Sh OBJECT-TO-OBJECT REFERENCES
 .nr nS 1
+.Ft "AG_Variable *"
+.Fn AG_BindObject "AG_Object *obj" "const char *name" "AG_Object *varObj"
+.Pp
 .Ft "AG_Variable *"
 .Fn AG_BindVariable "AG_Object *obj" "const char *name" "AG_Object *varObj" "const char *varKey"
 .Pp
 .nr nS 0
 The
+.Fn AG_BindObject
+function creates an Object->Object reference and hard dependency to an
+external object
+.Fa varObj
+and return a
+.Dv P_OBJECT
+type Variable on success.
+A hard dependency implies that if both
+.Fa obj
+and
+.Fa varObj
+share the same VFS, Agar will not allow
+.Fa varObj
+to be released from memory (or detached from the VFS) for as long as the
+reference exists.
+.Pp
+The
 .Fn AG_BindVariable
-function creates a reference to a variable named
-.Fa varKey ,
-under the target object
-.Fa varObj .
-Whenever
-.Fn AG_GetVariable
+function creates an Object->Variable reference to the variable called
+.Fa varKey
+under an external object
+.Fa varObj ,
+returning a
+.Dv P_VARIABLE
+type Variable on success.
+Accessing a
+.Dv P_VARIABLE
+implies locking the external object and returning a copy of its variable named
+.Fa varKey .
+.Pp
+.Fn AG_BindVariable
+implicitely creates an anonymous Object->Object reference to
+.Fa varObj
+(which is also removed implicitely by
+.Fn AG_Unset
 or
-.Fn AG_GetVariableLocked
-finds a reference variable, the target variable is looked up and returned.
+.Xr AG_ObjectFreeVariables 3
+when no more Object->Variable references make use of the object).
+.Pp
+.Fn AG_BindObject
+and
+.Fn AG_BindVariable
+may fail and return NULL if an attempt to create a circular dependency
+is detected.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Variable
 structure:
 .Pp
-.Bl -tag -compact -width "union ag_variable_data data "
-.It Ft char *name
-Variable name string.
+.Bl -tag -compact -width "char name[AG_VARIABLE_NAME_MAX] "
+.It Ft char name[AG_VARIABLE_NAME_MAX]
+Variable name (or "" = anonymous).
 .It Ft AG_VariableType type
 Variable type (see <core/variable.h>).
 .It Ft AG_Mutex *mutex
@@ -868,10 +900,10 @@ Stored data (see <core/variable.h>).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Event 3 ,
 .Xr AG_List 3 ,
 .Xr AG_Object 3 ,
-.Xr AG_Tbl 3 ,
-.Xr AG_Tree 3
+.Xr AG_Tbl 3
 .Sh HISTORY
 The
 .Nm

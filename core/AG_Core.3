@@ -37,21 +37,23 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar
+The
 .Nm
-library implements the base Agar object system along with portable interfaces
-to operating system services (e.g., filesystems, network, threads).
-Even though the Agar-GUI library is built on top of it,
+library implements the Agar
+.Xr AG_Object 3
+system and provides interfaces to common operating system services
+(filesystems, network APIs, threads).
+The Agar-GUI library is based on
+.Nm ,
+but
 .Nm
-is an independent, general utility library containing no GUI-related code.
+itself contains no GUI-related code and can be installed independently.
 .Pp
+.\" XXX list subsystems here as well
 For a complete listing of available subsystems and interfaces, see the
 .Dq AGAR-CORE
-section of the
-.Xr AG_Intro 3
-manual page, or the
-.Sx SEE ALSO
-section below.
+section of
+.Xr AG_Intro 3 .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -72,13 +74,15 @@ The
 function initializes the
 .Nm
 library.
-The optional
 .Fa progname
-argument sets an application name (this name may be used by ag_gui and
-.Nm
-to set various platform-dependent defaults).
+is an optional identifier for the program.
+This name may be used to construct platform-specific directory paths.
+Unless the
+.Dv AG_CREATE_DATADIR
+.Fa flags
+option is set, the
 .Fa progname
-may be set to NULL.
+argument can be NULL.
 .Pp
 Available
 .Fa flags
@@ -87,17 +91,22 @@ options include:
 .It AG_VERBOSE
 Allow errors/warnings on the standard error output.
 .It AG_CREATE_DATADIR
-Create a data directory for the application.
-The exact location of the directory is platform-dependent (and may
-depend on
-.Fa progname ) .
-On Unix-like platforms, the default would be
-.Pa ~/.<progname> .
+Check that the application's run-time data directory exists,
+create it if necessary, and fail if it cannot be created.
+This directory contains the state of objects saved with
+.Xr AG_ObjectSave 3 .
+The default is
+.Fa $HOME/.<progname>
+on Unix, and platform-dependent on other platforms.
 .It AG_SOFT_TIMERS
-Disable use of hardware timers.
-Indicate that the application will be updating the software-based timing
-wheel using
-.Xr AG_ProcessTimeouts 3 .
+Don't use operating-system provided timer mechanisms such as BSD
+.Xr kqueue 2 ,
+Linux timerfd or POSIX
+.Xr select 2 .
+The processing of timers will be handled either by explicit updating
+of software-based timing wheel (e.g., by calling
+.Xr AG_ProcessTimeouts 3 ) ,
+or some other mechanism.
 .El
 .Pp
 The

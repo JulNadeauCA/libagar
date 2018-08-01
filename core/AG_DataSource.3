@@ -280,7 +280,7 @@ can be retrieved using
 .Dv AG_SELF ,
 and the error message is retrieved using
 .Dv AG_STRING(1) .
-The default exception handler simply calls
+The default exception handler calls
 .Xr AG_FatalError 3 .
 .Pp
 The
@@ -534,36 +534,31 @@ functions are available only if
 .Dv HAVE_LONG_DOUBLE
 is defined.
 .Sh STRING OPERATIONS
-The following functions read and write arbitrary strings, and are commonly
-used for text.
-The encoding of the strings is simply an unsigned 32-bit integer byte count,
-followed by the string.
-The encoding may or may not include a terminating NUL.
+The following functions read and write C strings.
+The serialized representation includes an unsigned 32-bit count followed
+by the (possibly padded or NUL-terminated) string of characters itself.
 .Pp
 .nr nS 1
 .Ft "char *"
-.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxLen"
-.Pp
-.Ft "int"
-.Fn AG_ReadStringLenv "AG_DataSource *ds" "size_t maxLen" "char **s" "size_t *newLen"
-.Pp
-.Ft "char *"
 .Fn AG_ReadString "AG_DataSource *ds"
 .Pp
-.Ft "int"
-.Fn AG_ReadStringv "AG_DataSource *ds" "char **s"
-.Pp
 .Ft "char *"
-.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxLen"
-.Pp
-.Ft "char *"
-.Fn AG_ReadNulString "AG_DataSource *ds"
+.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxLen"
 .Pp
 .Ft size_t
 .Fn AG_CopyString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
+.Ft "char *"
+.Fn AG_ReadStringPadded "AG_DataSource *ds" "size_t len"
+.Pp
 .Ft size_t
 .Fn AG_CopyStringPadded "char *buf" "AG_DataSource *ds" "size buf_size"
+.Pp
+.Ft "char *"
+.Fn AG_ReadNulString "AG_DataSource *ds"
+.Pp
+.Ft "char *"
+.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxLen"
 .Pp
 .Ft size_t
 .Fn AG_CopyNulString "char *buf" "AG_DataSource *ds" "size buf_size"
@@ -581,54 +576,52 @@ The encoding may or may not include a terminating NUL.
 .Fn AG_WriteStringPadded "AG_DataSource *ds" "const char *s" "size_t len"
 .Pp
 .nr nS 0
-The
-.Fn AG_ReadStringLen
-function reads a string of up to
-.Fa maxLen
-bytes and returns a dynamically allocated, NUL-terminated copy of the string.
 .Fn AG_ReadString
-implicitely limits the string to
+reads a string of up to
 .Dv AG_LOAD_STRING_MAX
-bytes.
-Both functions will raise a data source exception on error.
-.Pp
-The
-.Fn AG_ReadStringLenv
-and
-.Fn AG_ReadStringv
-variants accept a pointer
-.Fa s
-to an existing, valid string buffer which will be reallocated to fit the
-new string.
-If non-NULL, the length of the string will be returned to
-.Fa newLen .
-Both functions will return -1 (without raising a data source exception)
-on failure.
-If a low-level I/O error occurs after the buffer is reallocated, the
-string at
-.Fa s
-will be truncated to zero-length.
+bytes from
+.Fa ds .
+On success, a newly-allocated, NUL-terminated copy of string is returned.
+.Fn AG_ReadStringLen
+reads a string of up to
+.Fa maxLen
+bytes in length.
 .Pp
 .Fn AG_CopyString
-copies the string directly into a fixed-size buffer
+reads an encoded string and returns its contents into a fixed-size buffer
 .Fa buf
 of
-.Fa buf_size
-bytes and NUL-terminates it.
+.Fa buf_size .
 .Fn AG_CopyString
 returns the number of bytes that would have been copied were
 .Fa buf_size
 unlimited.
-If an error occurs, a data source exception is raised.
+.Pp
+.Fn AG_ReadStringPadded
+reads a fixed-length string record of
+.Fa len
+bytes in length.
+.Fn AG_CopyStringPadded
+reads a fixed-length string record and copies the NUL-terminated result into
+a fixed-size buffer
+.Fa buf
+of
+.Fa buf_size .
+
+The
+.Fn AG_ReadStringPadded
+and
+.Fn AG_CopyStringPadded
+variants 
+
 .Pp
 The
 .Fn AG_ReadNulString ,
 .Fn AG_ReadNulStringLen
 and
 .Fn AG_CopyNulString
-variants handle strings where the encoding includes the NUL-termination.
-These functions do not perform type checking are mostly useful when
-reading non-Agar generated data files.
+routines read a serialized, 32-bit length-encoded string which includes the
+NUL termination in the encoding.
 .Pp
 The
 .Fn AG_SkipString
@@ -637,19 +630,18 @@ routine skips over the string at the current position in the buffer.
 The
 .Fn AG_WriteString
 function writes a C string to a data source, in a variable-length encoding.
-The encoding is a 32-bit
+The encoding is a 32-bit representation of
 .Xr strlen 3
-followed by the string itself (NUL is not included).
+followed by the string itself.
 .Pp
-The
 .Fn AG_WriteStringPadded
-function writes a C string to a data source, in a fixed-length encoding.
-The encoding is a 32-bit
+serializes a string into a fixed-length record composed of a 32-bit
+representation of
 .Xr strlen 3
-followed by the string itself (NUL is not included), and possibly extra
-padding such that the encoding is guaranteed to be
+followed by the string plus extra padding such that the serialized record
+is always guaranteed to be
 .Fa length
-bytes + 4.
+bytes + 4 in size.
 .Pp
 On failure, the
 .Fn AG_WriteString
