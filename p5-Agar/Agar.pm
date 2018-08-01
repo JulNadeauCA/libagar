@@ -3,7 +3,7 @@ package Agar;
 use 5.6.1;
 require DynaLoader;
 
-our $VERSION = '1.50';
+our $VERSION = '1.51';
 #our $XS_VERSION = '1.50';
 our @ISA = qw(DynaLoader);
 
@@ -86,23 +86,20 @@ Initialize Agar's (non-GUI specific) utility library, Agar-Core.
 
 =item B<Agar::InitGraphics([$driver_spec])>
 
-Initialize the Agar GUI system. If C<$driver_spec> is not specified, Agar
-selects the "best" graphics driver for the current platform.
-The special "<OpenGL>" string requests a driver with OpenGL capability or
-fails if none is found. Similarly, "<SDL>" requires a driver based on the
-SDL library.
+Initialize the Agar GUI system. If no C<$driver_spec> is given, Agar will
+selects the "best" graphics driver for the current platform. Otherwise,
+C<$driver_spec> is taken to be a comma-separated list of drivers and
+driver options. The first successfully initialized driver will be used.
 
-A comma-separated list of specific drivers may be passed as C<$driver_spec>.
-See L<AG_InitVideo(3)> for a list of available drivers.
+The special string "<OpenGL>" requests any driver with OpenGL capability,
+failing if OpenGL is unavailable. "<SDL>" requests a driver based on the
+SDL library (and fail if SDL is unavailable).
+
+See L<AG_InitGraphics(3)> for the list of available drivers.
 
 =item B<Agar::ResizeDisplay($x,$h)>
 
-Change the display size.
-
-=item B<Agar::SetRefreshRate($fps)>
-
-Set an advisory video refresh rate in updates per second. This setting is
-only used by some video drivers, such as "sdlfb".
+Change the display size in pixels (single-window drivers only).
 
 =item B<Agar::Version>
 
@@ -115,17 +112,18 @@ Return the codename of the installed Agar release.
 
 =item B<Agar::SetError($string)>
 
-Set the Agar error string. When Agar is compiled for multithreading,
-this is actually a thread-specific value.
+Set the Agar error string.
+
+If threads support is enabled, the string uses thread-local storage.
 
 =item B<Agar::GetError>
 
-Return the Agar error string. This is a scalar value which can contain
-UTF-8 characters.
+Return the Agar error string.
 
 =item B<Agar::EventLoop>
 
-Block the current thread, wait for low-level events and process them.
+Enter the standard Agar event loop (see L<AG_EventLoop(3)>,
+L<AG_CustomEventLoop(3)>).
 
 =item B<Agar::Terminate($exitCode)>
 
