@@ -675,7 +675,7 @@ package body Agar.Object is
     Ch_Name : aliased C.char_array := C.To_C(Variable);
   begin
     return 1 = AG_Defined
-      (Object => Object;
+      (Object => Object,
        Name   => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access));
   end;
 

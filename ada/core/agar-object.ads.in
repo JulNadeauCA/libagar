@@ -200,9 +200,69 @@ package Agar.Object is
   type Header_t is array (1 .. %%sizeof(AG_ObjectHeader)%%) of
     aliased Interfaces.Unsigned_8 with Convention => C;
   for Header_t'Size use %%sizeof(AG_ObjectHeader)%% * System.Storage_Unit;
-  type Header_Access_t             is access all Header_t with Convention => C;
+  type Header_Access_t is access all Header_t with Convention => C;
   subtype Header_Not_Null_Access_t is not null Header_Access_t;
   
+  -----------------------------
+  -- Typed Virtual Functions --
+  -----------------------------
+  type Function_Access_t is access all EV.Event_t with Convention => C;
+  subtype Function_Not_Null_Access_t is not null Function_Access_t;
+  
+  type Event_Func_Access_t is not null access procedure
+    (Event : EV.Event_Access_t)
+    with Convention => C;
+  type Unsigned_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return C.unsigned
+    with Convention => C;
+  type Integer_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return C.int
+    with Convention => C;
+  type Unsigned_8_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Unsigned_8
+    with Convention => C;
+  type Signed_8_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Signed_8
+    with Convention => C;
+  type Unsigned_16_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Unsigned_16
+    with Convention => C;
+  type Signed_16_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Signed_16
+    with Convention => C;
+  type Unsigned_32_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Unsigned_32
+    with Convention => C;
+  type Signed_32_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Signed_32
+    with Convention => C;
+  type Unsigned_64_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Unsigned_64
+    with Convention => C;
+  type Signed_64_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Signed_64
+    with Convention => C;
+  type Float_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Float
+    with Convention => C;
+  type Double_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Double
+    with Convention => C;
+  type Long_Double_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return Long_Double
+    with Convention => C;
+  type String_Func_Access_t is not null access function
+    (Event  : EV.Event_Access_t;
+     Buffer : C.char_array;
+     Size   : C.size_t) return C.size_t
+    with Convention => C;
+  type Pointer_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return System.Address
+    with Convention => C;
+  type Const_Pointer_Func_Access_t is not null access function
+    (Event : EV.Event_Access_t) return System.Address
+    with Convention => C;
+
   --
   -- Create a new instance of Class under Parent with the given name. Fail
   -- and return null if an object of the same name already exists.
@@ -642,13 +702,13 @@ package Agar.Object is
   function Set_Event
     (Object    : in Object_Not_Null_Access_t;
      Event     : in String;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Async     : in Boolean := False;
      Propagate : in Boolean := False) return EV.Event_Not_Null_Access_t;
   procedure Set_Event
     (Object    : in Object_Not_Null_Access_t;
      Event     : in String;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Async     : in Boolean := False;
      Propagate : in Boolean := False);
   
@@ -660,13 +720,13 @@ package Agar.Object is
   function Add_Event
     (Object    : in Object_Not_Null_Access_t;
      Event     : in String;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Async     : in Boolean := False;
      Propagate : in Boolean := False) return EV.Event_Not_Null_Access_t;
   procedure Add_Event
     (Object    : in Object_Not_Null_Access_t;
      Event     : in String;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Async     : in Boolean := False;
      Propagate : in Boolean := False);
 
@@ -977,27 +1037,27 @@ package Agar.Object is
   function AG_SetEvent
     (Object    : in Object_Not_Null_Access_t;
      Event     : in CS.chars_ptr;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Format    : in CS.chars_ptr) return EV.Event_Not_Null_Access_t
     with Import, Convention => C, Link_Name => "AG_SetEvent";
   
   procedure AG_SetEvent
     (Object    : in Object_Not_Null_Access_t;
      Event     : in CS.chars_ptr;
-     Func      : in EV.Event_Func_Access_t;
+     Func      : in Event_Func_Access_t;
      Format    : in CS.chars_ptr)
     with Import, Convention => C, Link_Name => "AG_SetEvent";
   
   function AG_AddEvent
     (Object : in Object_Not_Null_Access_t;
      Event  : in CS.chars_ptr;
-     Func   : in EV.Event_Func_Access_t;
+     Func   : in Event_Func_Access_t;
      Format : in CS.chars_ptr) return EV.Event_Not_Null_Access_t
     with Import, Convention => C, Link_Name => "AG_AddEvent";
   procedure AG_AddEvent
     (Object : in Object_Not_Null_Access_t;
      Event  : in CS.chars_ptr;
-     Func   : in EV.Event_Func_Access_t;
+     Func   : in Event_Func_Access_t;
      Format : in CS.chars_ptr)
     with Import, Convention => C, Link_Name => "AG_AddEvent";
   
@@ -1048,7 +1108,7 @@ package Agar.Object is
   function AG_Defined
     (Object : in Object_not_null_Access_t;
      Name   : in CS.chars_ptr) return C.int
-    with Import, Convention => C, Link_Name => "AG_Defined";
+    with Import, Convention => C, Link_Name => "ag_defined";
 
   function AG_EvalVariable
     (Object   : in Object_not_null_Access_t;
@@ -1316,22 +1376,22 @@ package Agar.Object is
   function AG_SetVoidFn
     (Object : in Object_Not_Null_Access_t;
      Name   : in CS.chars_ptr;
-     Func   : in EV.Pointer_Func_Access_t;
-     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+     Func   : in Pointer_Func_Access_t;
+     Format : in CS.chars_ptr) return Function_Not_Null_Access_t
     with Import, Convention => C, Link_Name => "AG_SetVoidFn";
   
   function AG_SetIntFn
     (Object : in Object_Not_Null_Access_t;
      Name   : in CS.chars_ptr;
-     Func   : in EV.Integer_Func_Access_t;
-     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+     Func   : in Integer_Func_Access_t;
+     Format : in CS.chars_ptr) return Function_Not_Null_Access_t
     with Import, Convention => C, Link_Name => "AG_SetIntFn";
   
   function AG_SetUintFn
     (Object : in Object_Not_Null_Access_t;
      Name   : in CS.chars_ptr;
-     Func   : in EV.Unsigned_Func_Access_t;
-     Format : in CS.chars_ptr) return EV.Function_Not_Null_Access_t
+     Func   : in Unsigned_Func_Access_t;
+     Format : in CS.chars_ptr) return Function_Not_Null_Access_t
     with Import, Convention => C, Link_Name => "AG_SetUintFn";
   
   

@@ -8,7 +8,6 @@ with Interfaces;
 with Interfaces.C;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 with Agar.Error;
-with Agar.Variable; use Agar.Variable;
 
 --
 -- Data_Source provides basic I/O routines for serializing data to file,
@@ -50,6 +49,25 @@ package Agar.Data_Source is
     (Big_Endian    => 0,
      Little_Endian => 1);
   for Byte_Order_t'Size use C.unsigned'Size;
+  
+  ----------------
+  -- Base Types --
+  ----------------
+  type Signed_8 is range -127 .. 127 with Convention => C;
+  for Signed_8'Size use 8;
+  type Signed_16 is range -(2 **15) .. +(2 **15 - 1) with Convention => C;
+  for Signed_16'Size use 16;
+  type Signed_32 is range -(2 **31) .. +(2 **31 - 1) with Convention => C;
+  for Signed_32'Size use 32;
+  type Signed_64 is range -(2 **63) .. +(2 **63 - 1) with Convention => C;
+  for Signed_64'Size use 64;
+  subtype Unsigned_8  is Interfaces.Unsigned_8;
+  subtype Unsigned_16 is Interfaces.Unsigned_16;
+  subtype Unsigned_32 is Interfaces.Unsigned_32;
+  subtype Unsigned_64 is Interfaces.Unsigned_64;
+  subtype Float       is Interfaces.C.C_float;
+  subtype Double      is Interfaces.C.double;
+  subtype Long_Double is Interfaces.C.long_double;
   
   procedure Open_File
     (Path   : in     String;

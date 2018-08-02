@@ -5,10 +5,10 @@ VERSION("1.5.1")
 
 CONFIG_GUESS("../../mk/config.guess")
 
-REGISTER_SECTION("Options for Agar-Ada-Core bindings:")
-REGISTER("--with-agar[=PREFIX]",	"Location of Agar library [check]")
-REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
-REGISTER("--enable-debug",		"General debugging [no]")
+REGISTER_SECTION("Options for Agar-Core Ada bindings:")
+REGISTER("--with-agar[=PREFIX]", "Location of Agar library [check]")
+REGISTER("--enable-warnings",    "Suggested compiler warnings [no]")
+REGISTER("--enable-debug",       "General debugging [no]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar/ada")
 DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar/ada")
