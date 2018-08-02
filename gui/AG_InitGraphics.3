@@ -103,20 +103,16 @@ The
 routine shuts down and releases all resources allocated by the Agar-GUI
 library.
 .Pp
-The
+Alternatively, the
 .Fn AG_InitGUI
-routine provides an alternative to
-.Fn AG_InitGraphics ,
-which does not create any driver instance on initialization.
-While
-.Fn AG_InitGraphics
-is limited to a single Agar driver instance, specialized applications may
-need to create multiple driver instances (e.g., an Agar application using
-X11 may establish multiple connections to multiple X servers).
-This may be done by calling
-.Fn AG_InitGUI ,
-and creating one or more driver instances with
-.Xr AG_DriverOpen 3 .
+function initializes the Agar GUI system, but does not create a driver instance
+upon initialization.
+The caller may invoke
+.Xr AG_DriverOpen 3
+to create one or more driver instances.
+For example, an X11 application that can talk to multiple X11 servers might call
+.Fn AG_DriverOpen
+for each X11 connection.
 .Sh SEE ALSO
 .Xr AG_Core 3 ,
 .Xr AG_CustomEventLoop 3 ,
@@ -124,14 +120,6 @@ and creating one or more driver instances with
 .Xr AG_EventLoop 3 ,
 .Xr AG_InitVideoSDL 3 ,
 .Xr AG_Intro 3
-.Pp
-.Lk http://www.opengl.org/ OpenGL
-.Pp
-.Lk https://www.libsdl.org/ Simple DirectMedia Layer
-.Pp
-.Lk https://developer.apple.com/cocoa/ Apple Developer: Cocoa Frameworks
-.Pp
-.Lk http://msdn.microsoft.com/ Microsoft Developer Network
 .Sh HISTORY
 The
 .Fn AG_InitVideo
