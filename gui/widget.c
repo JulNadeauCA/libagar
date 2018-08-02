@@ -855,14 +855,17 @@ AG_WidgetFind(void *obj, const char *name)
 }
 
 /* Set the FOCUSABLE flag on a widget. */
-void
-AG_WidgetSetFocusable(void *obj, int flag)
+int
+AG_WidgetSetFocusable(void *obj, int enable)
 {
 	AG_Widget *wid = obj;
+	int prev;
 
 	AG_ObjectLock(wid);
-	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, flag);
+	prev = (wid->flags & AG_WIDGET_FOCUSABLE);
+	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, enable);
 	AG_ObjectUnlock(wid);
+	return (prev);
 }
 
 /* Set widget to "enabled" state for input. */
@@ -1323,6 +1326,7 @@ AG_WidgetSensitive(void *obj, int x, int y)
 	AG_Widget *wtParent = wt;
 	AG_Rect2 rx = wt->rSens;
 
+	/* XXX why not use widget's window pointer? */
 	while ((wtParent = OBJECT(wtParent)->parent) != NULL) {
 		if (AG_OfClass(wtParent, "AG_Widget:AG_Window:*")) {
 			break;
@@ -1716,9 +1720,8 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 }
 
 /*
- * Rebuild the effective style parameters of a widget and its descendants
- * based on its style attributes. Any required fonts are loaded. This
- * should be called whenever style attributes are changed.
+ * Apply the style attributes of a widget and its descendants. Creates the
+ * effective color palettes. Loads any required fonts in the process.
  */
 static void
 CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
@@ -1953,7 +1956,7 @@ AG_WidgetClass agWidgetClass = {
 		sizeof(AG_Widget),
 		{ 0,0 },
 		Init,
-		NULL,		/* free */
+		NULL,		/* reset */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

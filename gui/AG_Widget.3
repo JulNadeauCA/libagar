@@ -296,7 +296,7 @@ unfiltered as well using the
 options).
 .Pp
 .nr nS 1
-.Ft "void"
+.Ft "int"
 .Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
 .Pp
 .Ft "int"
@@ -316,26 +316,20 @@ options).
 .Pp
 .nr nS 0
 .Fn AG_WidgetSetFocusable
-specifies whether the widget should be allowed to receive focus (1 = accept
-focus, 0 = reject focus).
-The default is to reject focus.
-Further
-.Fn AG_WidgetFocus
-calls on a widget rejecting focus will return 0.
-.Pp
-The
-.Fn AG_WidgetFocus
-function gives focus to the given widget (and all of its parent widgets,
-up to the parent window if there is one).
-.Fn AG_WidgetFocus
-returns 1 on success and 0 if the widget cannot gain focus (i.e.,
+sets the
 .Dv AG_WIDGET_FOCUSABLE
-is not set).
-If the widget is already focused, the function is a no-op and returns 1.
+flag which allows the widget to receive focus (0 = ignore, 1 = accept focus).
+Returns the previous setting.
+.Pp
+.Fn AG_WidgetFocus
+gives focus to the specified widget and all of its parent widgets including
+the parent
+.Xr AG_Window 3 .
+Returns 1 on success and 0 if the widget is not accepting focus.
 .Pp
 .Fn AG_WidgetUnfocus
-removes the focus state from the given widget and its children (but not
-the parent window if any).
+removes the focus state from the given widget (including its child widgets,
+if any).
 .Pp
 .Fn AG_WidgetIsFocused
 returns 1 if the widget is currently holding focus (i.e., the widget

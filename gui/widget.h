@@ -274,7 +274,7 @@ extern AG_WidgetPalette agDefaultPalette;
 void       AG_WidgetDraw(void *);
 void       AG_WidgetSizeReq(void *, AG_SizeReq *);
 void       AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
-void       AG_WidgetSetFocusable(void *, int);
+int        AG_WidgetSetFocusable(void *, int);
 void       AG_WidgetForwardFocus(void *, void *);
 
 int        AG_WidgetFocus(void *);
