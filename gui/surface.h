@@ -56,7 +56,8 @@ typedef enum ag_blend_func {
 	AG_ALPHA_DST,
 	AG_ALPHA_ONE_MINUS_DST,
 	AG_ALPHA_ONE_MINUS_SRC,
-	AG_ALPHA_OVERLAY
+	AG_ALPHA_OVERLAY,
+	AG_ALPHA_LAST
 } AG_BlendFn;
 
 /* Clipping test for pixel at ax,ay in surface s (as dst) */
@@ -192,6 +193,18 @@ Uint32 AG_MapPixelIndexedRGBA(const AG_PixelFormat *, Uint8, Uint8, Uint8,
 		    AG_ColorRGBA((r),(g),(b),(a)),(fn));				\
 	}								\
 } while (0)
+
+/* Convert between RGB and HSV color representations (lossy as S->0). */
+static __inline__ void
+AG_Color2HSV(const AG_Color *C, float *h, float *s, float *v)
+{
+	AG_RGB2HSV(C->r, C->g, C->b, h,s,v);
+}
+static __inline__ void
+AG_HSV2Color(float h, float s, float v, AG_Color *C)
+{
+	AG_HSV2RGB(h,s,v, &C->r, &C->g, &C->b);
+}
 
 /* Compose a pixel value from RGB components. */
 static __inline__ Uint32

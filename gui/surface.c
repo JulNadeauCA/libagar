@@ -30,11 +30,13 @@
 #include <string.h>
 
 const char *agBlendFuncNames[] = {
-	"dst+src",
+	"zero",
+	"one",
 	"src",
 	"dst",
 	"1-dst",
 	"1-src",
+	"overlay",
 	NULL
 };
 

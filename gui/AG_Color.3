@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,12 @@ of 0 is fully transparent and 255 is fully opaque.
 .Ft AG_Color
 .Fn AG_ColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
+.Ft void
+.Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *C"
+.Pp
+.Ft void
+.Fn AG_Color2HSV "const AG_Color *C" "float *hue" "float *sat" "float *val"
+.Pp
 .Ft AG_Color
 .Fn AG_ColorHex "Uint32 hex"
 .Pp
@@ -76,6 +82,13 @@ The alpha component is initialized to 255 (opaque).
 .Pp
 .Fn AG_ColorRGBA
 accepts an explicit alpha component.
+.Pp
+.Fn AG_HSV2Color
+maps a color in HSV space to the closest approximation in RGB space, and
+copies the A component as-is.
+The inverse operation is performed by
+.Fn AG_Color2HSV .
+Note: H and V become increasingly lossy as S->0.
 .Pp
 .Fn AG_ColorHex
 returns an
