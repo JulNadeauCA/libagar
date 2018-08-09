@@ -295,10 +295,18 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	    \
 	    case "$$_linker_type" in \
 	    ADA) \
-	        echo "${ADABIND} ${ADABFLAGS} ${CFLAGS} ${PROG}"; \
-	        ${ADABIND} ${ADABFLAGS} ${CFLAGS} ${PROG}; \
-	        echo "${ADALINK} ${LDFLAGS} ${ADALFLAGS} ${CFLAGS} $$_prog_ldflags ${PROG} ${LIBS}"; \
-	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} ${CFLAGS} $$_prog_ldflags ${PROG} ${LIBS}; \
+	        _ada_cflags=""; \
+	        for F in ${CFLAGS}; do \
+	            case "$$F" in \
+	            -I*) \
+	                _ada_cflags="$$_ada_cflags $$F"; \
+	                ;; \
+	            esac; \
+	        done; \
+	        echo "${ADABIND} ${ADABFLAGS} $$_ada_cflags ${PROG}"; \
+	        ${ADABIND} ${ADABFLAGS} $$_ada_cflags ${PROG}; \
+	        echo "${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}"; \
+	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}; \
 		;; \
 	    C) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
