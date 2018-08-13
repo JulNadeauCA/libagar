@@ -484,11 +484,15 @@ main(int argc, char *argv[])
 	AG_Box *hBox;
 	int c, i, optInd;
 	Uint initFlags = AG_VERBOSE;
+	int noConsoleRedir = 0;
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "p:?hd:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "Cp:?hd:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
+		case 'C':
+			noConsoleRedir = 1;
+			break;
 		case 'p':
 			break;
 		case 'd':
@@ -500,7 +504,7 @@ main(int argc, char *argv[])
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-d agar-driver] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-C] [-d agar-driver] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
@@ -518,8 +522,10 @@ main(int argc, char *argv[])
 
 	/* Redirect AG_Verbose() and AG_Debug() output to the AG_Console. */
 	consoleBuf[0] = '\0';
-	AG_SetVerboseCallback(ConsoleWrite);
-	AG_SetDebugCallback(ConsoleWrite);
+	if (!noConsoleRedir) {
+		AG_SetVerboseCallback(ConsoleWrite);
+		AG_SetDebugCallback(ConsoleWrite);
+	}
 
 	/* Set up the standard shortcuts + debugger and screenshot functions */
 	AG_BindStdGlobalKeys();

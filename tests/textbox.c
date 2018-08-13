@@ -77,9 +77,9 @@ DebugStuff(AG_Box *win, AG_Textbox *textbox)
 	AG_Box *hBox;
 
 	AG_SeparatorNewHoriz(win);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Cursor at: %i", &textbox->ed->pos);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "Selection: %i", &textbox->ed->sel);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->lock, "x: %i", &textbox->ed->x);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "Cursor at: %i", &textbox->ed->pos);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "Selection: %i", &textbox->ed->sel);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "x: %i", &textbox->ed->x);
 	AG_SeparatorNewHoriz(win);
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFlag(win, 0, "Read-only", &textbox->ed->flags, AG_EDITABLE_READONLY);
