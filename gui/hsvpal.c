@@ -125,7 +125,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 		   AG_GetFloat(pal, "value"), &r, &g, &b);
 	a = GetAlpha8(pal);
 	
-	if ((bv = AG_GetVariable(pal, "RGBv", &v)) != NULL) {
+	if ((bv = AG_AccessVariable(pal, "RGBv")) != NULL) {
+		v = bv->data.p;
 		switch (AG_VARIABLE_TYPE(bv)) {
 		case AG_VARIABLE_FLOAT:
 			((float *)v)[0] = (float)r/255.0;
@@ -152,7 +153,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 		}
 		AG_UnlockVariable(bv);
 	}
-	if ((bv = AG_GetVariable(pal, "RGBAv", &v)) != NULL) {
+	if ((bv = AG_AccessVariable(pal, "RGBAv")) != NULL) {
+		v = bv->data.p;
 		switch (AG_VARIABLE_TYPE(bv)) {
 		case AG_VARIABLE_FLOAT:
 			((float *)v)[0] = (float)r/255.0;
@@ -185,7 +187,9 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	}
 	
 	bFormat = AG_GetVariable(pal, "pixel-format", &pFormat);
-	AG_SetUint32(pal, "pixel", AG_MapPixelRGBA(*pFormat, r,g,b,a));
+	if (*pFormat != NULL) {
+		AG_SetUint32(pal, "pixel", AG_MapPixelRGBA(*pFormat, r,g,b,a));
+	}
 	AG_UnlockVariable(bFormat);
 
 	bColor = AG_GetVariable(pal, "color", &pColor);
@@ -207,12 +211,14 @@ UpdateHSVFromPixel(AG_HSVPal *hsv, Uint32 pixel)
 	AG_PixelFormat **pFormat;
 	
 	bFormat = AG_GetVariable(hsv, "pixel-format", &pFormat);
-	AG_GetPixelRGBA(pixel, *pFormat, &r,&g,&b,&a);
-	AG_RGB2HSV(r, g, b, &h,&s,&v);
-	AG_SetFloat(hsv, "hue", h);
-	AG_SetFloat(hsv, "saturation", s);
-	AG_SetFloat(hsv, "value", v);
-	SetAlpha8(hsv, a);
+	if (*pFormat != NULL) {
+		AG_GetPixelRGBA(pixel, *pFormat, &r,&g,&b,&a);
+		AG_RGB2HSV(r, g, b, &h,&s,&v);
+		AG_SetFloat(hsv, "hue", h);
+		AG_SetFloat(hsv, "saturation", s);
+		AG_SetFloat(hsv, "value", v);
+		SetAlpha8(hsv, a);
+	}
 	AG_UnlockVariable(bFormat);
 	AG_Redraw(hsv);
 }
@@ -413,7 +419,6 @@ static void
 CloseMenu(AG_HSVPal *pal)
 {
 	AG_MenuCollapse(pal->menu_item);
-	AG_ObjectDestroy(pal->menu);
 
 	pal->menu = NULL;
 	pal->menu_item = NULL;
