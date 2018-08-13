@@ -7,7 +7,9 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_WINDOW_CAPTION_MAX 512
+#ifndef AG_WINDOW_CAPTION_MAX
+#define AG_WINDOW_CAPTION_MAX 96
+#endif
 
 struct ag_titlebar;
 struct ag_font;
