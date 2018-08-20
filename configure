@@ -5975,6 +5975,62 @@ echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for FreeType...'
 $ECHO_N 'checking for FreeType...' >> config.log
+if [ "${PKGCONFIG}" != '' -a "`${PKGCONFIG} --variable=prefix freetype2 2>/dev/null`" != '' ]; then
+if [ "${prefix_freetype}" != '' ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix freetype2 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_freetype}" ]; then
+		echo ' '
+		echo '* '
+		echo "* ERROR: According to pkg-config, freetype2 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_freetype} was given."
+		echo '* '
+		echo "* Please re-run ./configure again with the correct freetype2 prefix,"
+		echo '* or omit the prefix to trigger auto-detection.'
+		echo '* '
+		exit 1
+	else
+		FREETYPE_VERSION=`$PKGCONFIG freetype2 --modversion 2>/dev/null`
+	fi
+else
+	FREETYPE_VERSION=`$PKGCONFIG freetype2 --modversion 2>/dev/null`
+fi
+if [ "${prefix_freetype}" != '' ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix freetype2 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_freetype}" ]; then
+		echo ' '
+		echo '* '
+		echo "* ERROR: According to pkg-config, freetype2 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_freetype} was given."
+		echo '* '
+		echo "* Please re-run ./configure again with the correct freetype2 prefix,"
+		echo '* or omit the prefix to trigger auto-detection.'
+		echo '* '
+		exit 1
+	else
+		FREETYPE_CFLAGS=`$PKGCONFIG freetype2 --cflags 2>/dev/null`
+	fi
+else
+	FREETYPE_CFLAGS=`$PKGCONFIG freetype2 --cflags 2>/dev/null`
+fi
+if [ "${prefix_freetype}" != '' ]; then
+	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix freetype2 2>/dev/null`
+	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_freetype}" ]; then
+		echo ' '
+		echo '* '
+		echo "* ERROR: According to pkg-config, freetype2 is installed in prefix: "
+		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_freetype} was given."
+		echo '* '
+		echo "* Please re-run ./configure again with the correct freetype2 prefix,"
+		echo '* or omit the prefix to trigger auto-detection.'
+		echo '* '
+		exit 1
+	else
+		FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
+	fi
+else
+	FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
+fi
+else
 MK_EXEC_FOUND='No'
 
 if [ "${prefix_freetype}" != '' ]; then
@@ -6056,6 +6112,7 @@ else
 	done
 	IFS=$bb_save_IFS
 fi
+fi;
 case "${host}" in
 *-*-irix*)
 if [ -e  "/usr/freeware/include" ]; then

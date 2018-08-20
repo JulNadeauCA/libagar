@@ -308,7 +308,7 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	        echo "${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}"; \
 	        ${ADALINK} ${LDFLAGS} ${ADALFLAGS} $$_ada_cflags $$_prog_ldflags ${PROG} ${LIBS}; \
 		;; \
-	    C) \
+	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
 	        ${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}; \
 		;; \
