@@ -649,6 +649,10 @@ AG_SurfaceResize(AG_Surface *s, Uint w, Uint h)
 void
 AG_SurfaceFree(AG_Surface *s)
 {
+#ifdef AG_DEBUG
+	if (s->flags & AG_SURFACE_MAPPED)
+		AG_FatalError("AG_SurfaceFree: in use");
+#endif
 	AG_PixelFormatFree(s->format);
 	Free(s->pixels);
 	Free(s);

@@ -460,7 +460,6 @@ Init(void *obj)
 	gf->pyMin = 0;
 	gf->pyMax = 0;
 	gf->r = AG_RECT(0,0,0,0);
-
 #if 0
 	gf->hbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_HORIZ, 0);
 	gf->vbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_VERT, 0);
@@ -474,20 +473,18 @@ Init(void *obj)
 	AG_BindInt(gf->vbar, "max", &gf->yMax);
 	AG_BindInt(gf->vbar, "visible", &WIDGET(gf)->h);
 #endif
-
 	AG_SetEvent(gf, "key-down", KeyDown, NULL);
 	AG_SetEvent(gf, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(gf, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(gf, "mouse-motion", MouseMotion, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(gf, "xOffs", &gf->xOffs);
 	AG_BindInt(gf, "yOffs", &gf->yOffs);
 	AG_BindInt(gf, "xMin", &gf->xMin);
 	AG_BindInt(gf, "yMin", &gf->yMin);
 	AG_BindInt(gf, "xMax", &gf->xMax);
 	AG_BindInt(gf, "yMax", &gf->yMax);
-#endif /* AG_DEBUG */
+#endif
 }
 
 void

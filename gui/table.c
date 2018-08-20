@@ -2269,8 +2269,28 @@ Init(void *obj)
 	t->selMode = AG_TABLE_SEL_ROWS;
 	t->selColor = AG_ColorRGBA(0,0,250,32);
 	t->wTot = 0;
+	t->xOffs = 0;
+	t->mOffs = 0;
+	t->mVis = 0;
 	t->colAction = AG_TABLE_COL_SORT;
 	t->nSorting = 0;
+	t->poll_ev = NULL;
+	t->nResizing = -1;
+	t->cols = NULL;
+	t->cells = NULL;
+	t->n = 0;
+	t->m = 0;
+	t->clickRowEv = NULL;
+	t->clickColEv = NULL;
+	t->clickCellEv = NULL;
+	t->dblClickRowEv = NULL;
+	t->dblClickColEv = NULL;
+	t->dblClickCellEv = NULL;
+	t->dblClickedRow = -1;
+	t->dblClickedCol = -1;
+	t->wheelTicks = 0;
+	SLIST_INIT(&t->popups);
+
 	AG_InitTimer(&t->moveTo, "move", 0);
 	AG_InitTimer(&t->pollTo, "poll", 0);
 	AG_InitTimer(&t->dblClickTo, "dblClick", 0);
@@ -2291,26 +2311,6 @@ Init(void *obj)
 	AG_BindInt(t->vbar, "visible", &t->mVis);
 	AG_WidgetSetFocusable(t->vbar, 0);
 
-	t->poll_ev = NULL;
-	t->nResizing = -1;
-	t->cols = NULL;
-	t->cells = NULL;
-	t->n = 0;
-	t->m = 0;
-	t->mVis = 0;
-	t->mOffs = 0;
-	t->xOffs = 0;
-	t->clickRowEv = NULL;
-	t->clickColEv = NULL;
-	t->clickCellEv = NULL;
-	t->dblClickRowEv = NULL;
-	t->dblClickColEv = NULL;
-	t->dblClickCellEv = NULL;
-	t->dblClickedRow = -1;
-	t->dblClickedCol = -1;
-	t->wheelTicks = 0;
-	SLIST_INIT(&t->popups);
-
 	t->nPrevBuckets = 256;
 	t->cPrev = Malloc(t->nPrevBuckets*sizeof(AG_TableBucket));
 	for (i = 0; i < t->nPrevBuckets; i++) {
@@ -2328,8 +2328,7 @@ Init(void *obj)
 	AG_SetEvent(t, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(t, "key-down", KeyDown, NULL);
 	AG_SetEvent(t, "key-up", KeyUp, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(t, "hRow", &t->hRow);
 	AG_BindInt(t, "hCol", &t->hCol);
 	AG_BindInt(t, "xOffs", &t->xOffs);
@@ -2338,7 +2337,7 @@ Init(void *obj)
 	AG_BindInt(t, "m", &t->m);
 	AG_BindInt(t, "mVis", &t->mVis);
 	AG_BindInt(t, "wTot", &t->wTot);
-#endif /* AG_DEBUG */
+#endif
 }
 
 static void

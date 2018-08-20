@@ -156,7 +156,8 @@ OnAttach(AG_Event *event)
 		AG_Widget *widParent = (AG_Widget *)parent;
 		Uint i;
 
-		Debug(w, "Attach to window (%s)\n", OBJECT(parent)->name);
+		Debug(w, "Attach to %s window (\"%s\")\n",
+		    OBJECT(parent)->name, AGWINDOW(parent)->caption);
 
 		SetParentWindow(w, AGWINDOW(widParent));
 		if (AGWINDOW(widParent)->visible) {
@@ -174,9 +175,10 @@ OnAttach(AG_Event *event)
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
 	           AG_OfClass(w, "AG_Widget:*")) {
 		AG_Widget *widParent = (AG_Widget *)parent;
-		
-		Debug(w, "Attach to widget (%s in %s)\n", OBJECT(parent)->name,
-		    widParent->window != NULL ? OBJECT(widParent->window)->name : "NULL");
+
+		Debug(w, "Attach to %s in %s\n",
+		    OBJECT_CLASS(parent)->name,
+		    widParent->window ? OBJECT(widParent->window)->name : "<>");
 
 		SetParentWindow(w, widParent->window);
 		if (widParent->window != NULL &&
@@ -187,10 +189,12 @@ OnAttach(AG_Event *event)
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = (AG_Driver *)parent;
 
-		Debug(w, "Attach to driver (%s)\n", OBJECT(parent)->name);
+		Debug(w, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
+		   OBJECT(parent)->name);
+
 		SetParentDriver(w, drvParent);
 	} else {
-		AG_FatalError("Inconsistent widget attach");
+		AG_FatalError("Can only attach to AG_{Widget,Driver}");
 	}
 }
 
@@ -235,9 +239,7 @@ RedrawOnChangeTimeout(AG_Timer *to, AG_Event *event)
 	AG_Variable *V, Vd;
 	void *p;
 
-	if ((V = AG_GetVariable(wid, rt->name, &p)) == NULL) {
-		return (to->ival);
-	}
+	V = AG_GetVariable(wid, rt->name, &p);
 	AG_DerefVariable(&Vd, V);
 	if (!rt->VlastInited || AG_CompareVariables(&Vd, &rt->Vlast) != 0) {
 		if (wid->window != NULL) {
@@ -793,7 +795,7 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
 	}
-	if (AG_OfClass(parent, "AG_View:*")) {
+	if (AG_OfClass(parent, "AG_Driver:*")) {
 		AG_Driver *drv = AGDRIVER(parent);
 		AG_Window *win;
 
@@ -834,6 +836,8 @@ WidgetFindPath(const AG_Object *parent, const char *name)
  * Find a widget by name (e.g., "Window/Widget1/Widget2"). This works
  * similarly to the more general AG_ObjectFind(3). Return value is only
  * valid as long as the Driver VFS is locked.
+ *
+ * XXX how does this differ from AG_ObjectFind() now?
  */
 void *
 AG_WidgetFind(void *obj, const char *name)
@@ -961,8 +965,12 @@ Destroy(void *obj)
 	 * any associated resources.
 	 */
 	for (i = 0; i < wid->nsurfaces; i++) {
-		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
-			AG_SurfaceFree(wid->surfaces[i]);
+		AG_Surface *su;
+
+		if ((su = wid->surfaces[i]) != NULL && !WSURFACE_NODUP(wid,i)) {
+			su->flags &= ~(AG_SURFACE_MAPPED);
+			AG_SurfaceFree(su);
+		}
 	}
 	Free(wid->surfaces);
 	Free(wid->surfaceFlags);
@@ -970,33 +978,38 @@ Destroy(void *obj)
 	Free(wid->texcoords);
 }
 
-#ifdef HAVE_OPENGL
 /*
- * Variants of AG_WidgetBlit*() without explicit source or destination
- * rectangle parameter (for OpenGL-only widgets).
+ * Coordinate-free variants of AG_WidgetBlit*() for OpenGL-only widgets.
+ * Rely on GL transformations instead of coordinates.
  */
 void
 AG_WidgetBlitGL(void *obj, AG_Surface *su, float w, float h)
 {
+#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceGL(wid->drv, wid, su, w, h);
+#endif
 }
 void
 AG_WidgetBlitSurfaceGL(void *obj, int name, float w, float h)
 {
+#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceFromGL(wid->drv, wid, name, w, h);
+#endif
 }
 void
 AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 {
+#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj;
 	wid->drvOps->blitSurfaceFlippedGL(wid->drv, wid, name, w, h);
+#endif
 }
 
 /*
- * Release/backup and regenerate the GL resources associated with a widget
- * and its descendents.
+ * Backup and regenerate all GL resources associated with a widget
+ * (and any of its children).
  *
  * If some textures exist without a corresponding surface, allocate a
  * software surface and copy their contents to be later restored. These
@@ -1005,6 +1018,7 @@ AG_WidgetBlitSurfaceFlippedGL(void *obj, int name, float w, float h)
 void
 AG_WidgetFreeResourcesGL(void *obj)
 {
+#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj, *cwid;
 
 	if (wid->drvOps->backupSurfaces != NULL) {
@@ -1012,10 +1026,12 @@ AG_WidgetFreeResourcesGL(void *obj)
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetFreeResourcesGL(cwid);
+#endif
 }
 void
 AG_WidgetRegenResourcesGL(void *obj)
 {
+#ifdef HAVE_OPENGL
 	AG_Widget *wid = obj, *cwid;
 
 	if (wid->drvOps->restoreSurfaces != NULL) {
@@ -1023,8 +1039,8 @@ AG_WidgetRegenResourcesGL(void *obj)
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetRegenResourcesGL(cwid);
+#endif
 }
-#endif /* HAVE_OPENGL */
 
 /* Acquire widget focus */
 static __inline__ void
@@ -1653,7 +1669,16 @@ AG_WidgetSurface(void *obj)
 	return (rv == 0) ? su : NULL;
 }
 
-/* Map a new AG_Surface(3) with a widget; return the new surface handle. */
+/*
+ * Attach an AG_Surface(3) to a widget, such that:
+ *
+ *   1) It is freed automatically when the widget is destroyed.
+ *   2) A hardware texture is generated automatically for it
+ *      (where supported by the graphics backend).
+ *
+ * Returned handle is unique to the widget (and is index into surfaces[],
+ * surfaceFlags[], textures[] and texcoords[]).
+ */
 int
 AG_WidgetMapSurface(void *obj, AG_Surface *su)
 {
@@ -1684,24 +1709,32 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	wid->surfaces[s] = su;
 	wid->surfaceFlags[s] = 0;
 	wid->textures[s] = 0;
+	su->flags |= AG_SURFACE_MAPPED;
 	AG_ObjectUnlock(wid);
 	return (s);
 }
 
-/* Replace the contents of a mapped surface. */
+/*
+ * Replace the contents of a mapped surface. Passing su => NULL is equivalent
+ * to calling AG_WidgetUnmapSurface().
+ */
 void
 AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
+	AG_Surface *suPrev;
 
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
 	if (s < 0 || s >= wid->nsurfaces)
 		AG_FatalError("Invalid surface handle");
 #endif
-	if (wid->surfaces[s] != NULL) {
-		if (!WSURFACE_NODUP(wid,s))
-			AG_SurfaceFree(wid->surfaces[s]);
+	if ((suPrev = wid->surfaces[s]) != NULL && !WSURFACE_NODUP(wid,s)) {
+		suPrev->flags &= ~(AG_SURFACE_MAPPED);
+		AG_SurfaceFree(suPrev);
+	}
+	if (su != NULL) {
+		su->flags |= AG_SURFACE_MAPPED;
 	}
 	wid->surfaces[s] = su;
 	wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_NODUP);
@@ -1751,7 +1784,7 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 	}
 
 	/* Set the font attributes. */
-	if ((V = AG_GetVariableLocked(wid, "font-family")) != NULL) {
+	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
 		Strlcpy(face, V->data.s, sizeof(face));
 		AG_UnlockVariable(V);
 	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
@@ -1759,7 +1792,7 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 	} else {
 		Strlcpy(face, parentFace, sizeof(face));
 	}
-	if ((V = AG_GetVariableLocked(wid, "font-size")) != NULL) {
+	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
 		v = strtod(V->data.s, &ep);
 		ptSize = (*ep == '%') ? parentPtSize*(v/100.0) : v;
 		AG_UnlockVariable(V);
@@ -1769,7 +1802,7 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 	} else {
 		ptSize = parentPtSize;
 	}
-	if ((V = AG_GetVariableLocked(wid, "font-weight")) != NULL) {
+	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
 		if (AG_Strcasecmp(V->data.s, "bold") == 0) {
 			flags |= AG_FONT_BOLD;
 		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
@@ -1783,7 +1816,7 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 			flags &= ~(AG_FONT_BOLD);
 		}
 	}
-	if ((V = AG_GetVariableLocked(wid, "font-style")) != NULL) {
+	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
 		if (AG_Strcasecmp(V->data.s, "italic") == 0) {
 			flags |= AG_FONT_ITALIC;
 		} else if (AG_Strcasecmp(V->data.s, "normal") == 0) {
@@ -1800,7 +1833,7 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 
 			Strlcpy(vName, agWidgetColorNames[j], sizeof(vName));
 			Strlcat(vName, agWidgetStateNames[i], sizeof(vName));
-			if ((V = AG_GetVariableLocked(wid, vName)) != NULL) {
+			if ((V = AG_AccessVariable(wid, vName)) != NULL) {
 				wid->pal.c[i][j] = AG_ColorFromString(V->data.s,
 				    parentColor);
 				AG_UnlockVariable(V);
@@ -1843,7 +1876,6 @@ CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
 			AG_Redraw(wid);
 		}
 	}
-
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		CompileStyleRecursive(chld, face, ptSize, flags, wid->pal);
@@ -1907,7 +1939,7 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 	AG_ObjectLock(widSrc);
 	AG_ObjectLock(widDst);
 	for (s = &agWidgetPropNames[0]; *s != NULL; s++) {
-		if ((V = AG_GetVariableLocked(widSrc, *s)) != NULL) {
+		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
 			AG_UnlockVariable(V);
 		}

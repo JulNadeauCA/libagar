@@ -271,17 +271,17 @@ Init(void *obj)
 	
 	WIDGET(fsu)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 	
-	AG_BindDouble(fsu, "value", &fsu->value);
-	AG_BindDouble(fsu, "min", &fsu->min);
-	AG_BindDouble(fsu, "max", &fsu->max);
-	
-	AG_RedrawOnChange(fsu, 250, "value");
-
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
 	fsu->writeable = 1;
 	fsu->inTxt[0] = '\0';
 	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
+	
+	AG_BindDouble(fsu, "value", &fsu->value);
+	AG_BindDouble(fsu, "min", &fsu->min);
+	AG_BindDouble(fsu, "max", &fsu->max);
+	
+	AG_RedrawOnChange(fsu, 250, "value");
 
 	fsu->input = AG_TextboxNewS(fsu, AG_TEXTBOX_FLT_ONLY|AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(fsu->input, fsu->inTxt, sizeof(fsu->inTxt));

@@ -209,8 +209,7 @@ Init(void *obj)
 	AG_SetEvent(pa, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(pa, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(pa, "mouse-motion", MouseMotion, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(pa, "dmoving", &pa->dmoving);
 	AG_BindInt(pa, "dx", &pa->dx);
 	AG_BindInt(pa, "rx", &pa->rx);

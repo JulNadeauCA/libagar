@@ -245,15 +245,14 @@ Init(void *obj)
 	sv->pack = AG_PACK_VERT;
 	sv->r = AG_RECT(0,0,0,0);
 	sv->incr = 10;
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(sv, "xOffs", &sv->xOffs);
 	AG_BindInt(sv, "yOffs", &sv->yOffs);
 	AG_BindInt(sv, "xMin", &sv->xMin);
 	AG_BindInt(sv, "yMin", &sv->yMin);
 	AG_BindInt(sv, "xMax", &sv->xMax);
 	AG_BindInt(sv, "yMax", &sv->yMax);
-#endif /* AG_DEBUG */
+#endif
 }
 
 void

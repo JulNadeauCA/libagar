@@ -147,7 +147,7 @@ include:
 .Pp
 .Bl -tag -compact -width "AG_SURFACE_INDEXED "
 .It AG_SURFACE_PACKED
-Packed-pixel format (e.g., RGBA)
+Packed-pixel format (RGB, RGBA, BGR, etc.)
 .It AG_SURFACE_INDEXED
 Color-index format (per-surface palette)
 .El
@@ -170,15 +170,20 @@ In
 .Fn AG_SurfaceBlit ,
 this option enables blending of pixels in the source and destination surfaces
 based on the alpha component of the source pixel.
-.Fn AG_SetAlpha
-controls this flag.
+See
+.Fn AG_SetAlpha .
 .It AG_SURFACE_GLTEXTURE
-Surface is suitable to be uploaded directly as an OpenGL texture without
-format conversion.
-This flag is recognized by
-.Xr AG_GL_UploadTexture 3
-and
+Surface can be uploaded as an OpenGL texture without the need for pixel format
+conversion.
+See
+.Xr AG_GL_UploadTexture 3 ,
 .Xr AG_GL_UpdateTexture 3 .
+.It AG_SURFACE_MAPPED
+Surface is attached to an
+.Xr AG_Widget 3 ,
+so calls to
+.Xr AG_SurfaceFree 3
+are not allowed.
 .El
 .Pp
 The

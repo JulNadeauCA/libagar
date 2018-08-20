@@ -80,20 +80,14 @@ OnShow(AG_Event *event)
 	if ((fsu->flags & AG_MFSPINBUTTON_EXCL) == 0) {
 		AG_AddTimer(fsu, &fsu->updateTo, 250, UpdateTimeout, NULL);
 	}
-	if ((Vx = AG_GetVariableLocked(fsu, "xvalue")) == NULL) {
+	if ((Vx = AG_AccessVariable(fsu, "xvalue")) == NULL) {
 		fsu->xvalue = 0.0;
 		Vx = AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
-		if (Vx == NULL) {
-			return;
-		}
 		AG_LockVariable(Vx);
 	}
-	if ((Vy = AG_GetVariableLocked(fsu, "yvalue")) == NULL) {
+	if ((Vy = AG_AccessVariable(fsu, "yvalue")) == NULL) {
 		fsu->yvalue = 0.0;
 		Vy = AG_BindDouble(fsu, "yvalue", &fsu->yvalue);
-		if (Vy == NULL) {
-			return;
-		}
 		AG_LockVariable(Vy);
 	}
 	if (Vx->type != Vy->type) {
@@ -124,6 +118,9 @@ OnShow(AG_Event *event)
 		break;
 	}
 	AG_MFSpinbuttonUpdate(fsu);
+
+	AG_UnlockVariable(Vy);
+	AG_UnlockVariable(Vx);
 }
 
 /* Update the input text from the binding values. */

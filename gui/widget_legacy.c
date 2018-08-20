@@ -94,8 +94,6 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 		break;
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_CONST_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
 		p = (void *)va_arg(ap, char *);
 		size = va_arg(ap, size_t);
 		break;
@@ -146,7 +144,6 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 		V = AG_BindFlag32(wid, name, (Uint32 *)p, (Uint32)bitmask);
 		break;
 	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
 		V = AG_BindString(wid, name, (char *)p, size);
 		break;
 	default:
@@ -192,8 +189,6 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 		break;
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_CONST_STRING:
-	case AG_VARIABLE_P_CONST_STRING:
 		V->data.p = va_arg(ap, char *);
 		V->info.size = va_arg(ap, size_t);
 		break;

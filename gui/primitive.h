@@ -164,64 +164,50 @@ AG_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 	    C, fnSrc, AG_ALPHA_ZERO);
 }
 
-/* Render an arrow pointing up. */
+/*
+ * Render an arrow.
+ */
 static __inline__ void
 AG_DrawArrowUp(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[2]; 
 
-	c[0] = c1;
-	c[1] = c2;
-	wid->drvOps->drawArrowUp(wid->drv,
+	wid->drvOps->drawArrow(wid->drv,
+	    0.0f,
 	    wid->rView.x1 + x0,
 	    wid->rView.y1 + y0,
-	    h, c);
+	    h, c1,c2);
 }
-
-/* Render an arrow pointing down. */
 static __inline__ void
 AG_DrawArrowDown(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[2];
 
-	c[0] = c1;
-	c[1] = c2;
-	wid->drvOps->drawArrowDown(wid->drv,
+	wid->drvOps->drawArrow(wid->drv,
+	    180.0f,
 	    wid->rView.x1 + x0,
 	    wid->rView.y1 + y0,
-	    h, c);
+	    h, c1,c2);
 }
-
-/* Render an arrow pointing left. */
 static __inline__ void
 AG_DrawArrowLeft(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[2];
 
-	c[0] = c1;
-	c[1] = c2;
-	wid->drvOps->drawArrowLeft(wid->drv,
+	wid->drvOps->drawArrow(wid->drv, 270.0f,
 	    wid->rView.x1 + x0,
 	    wid->rView.y1 + y0,
-	    h, c);
+	    h, c1,c2);
 }
-
-/* Render an arrow pointing right. */
 static __inline__ void
 AG_DrawArrowRight(void *obj, int x0, int y0, int h, AG_Color c1, AG_Color c2)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Color c[2];
 
-	c[0] = c1;
-	c[1] = c2;
-	wid->drvOps->drawArrowRight(wid->drv,
+	wid->drvOps->drawArrow(wid->drv, 90.0f,
 	    wid->rView.x1 + x0,
 	    wid->rView.y1 + y0,
-	    h, c);
+	    h, c1,c2);
 }
 
 /* Render a 3D-style box with rounded edges. */
@@ -236,7 +222,7 @@ AG_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
 	c[0] = AG_ColorShift(cBg, (z<0) ? agSunkColorShift : agRaisedColorShift);
 	c[1] = AG_ColorShift(c[0], (z<0) ? agLowColorShift : agHighColorShift);
 	c[2] = AG_ColorShift(c[0], (z<0) ? agHighColorShift : agLowColorShift);
-	wid->drvOps->drawBoxRounded(wid->drv, r, z, rad, c);
+	wid->drvOps->drawBoxRounded(wid->drv, r, z, rad, c[0], c[1], c[2]);
 }
 
 /* Render a 3D-style box with rounded top edges. */
@@ -250,7 +236,7 @@ AG_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color cBg)
 	c[0] = cBg;
 	c[1] = AG_ColorShift(c[0], (z<0)?agLowColorShift:agHighColorShift);
 	c[2] = AG_ColorShift(c[0], (z<0)?agHighColorShift:agLowColorShift);
-	wid->drvOps->drawBoxRoundedTop(wid->drv, r, z, rad, c);
+	wid->drvOps->drawBoxRoundedTop(wid->drv, r, z, rad, c[0], c[1], c[2]);
 }
 
 /* Render a circle of specified radius. */

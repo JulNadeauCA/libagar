@@ -1865,7 +1865,7 @@ Init(void *obj)
 
 	AG_RedrawOnTick(ed, 1000);
 
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(ed, "pos", &ed->pos);
 	AG_BindInt(ed, "sel", &ed->sel);
 	AG_BindInt(ed, "xCurs", &ed->xCurs);
@@ -1876,7 +1876,7 @@ Init(void *obj)
 	AG_BindInt(ed, "y", &ed->y);
 	AG_BindInt(ed, "yMax", &ed->yMax);
 	AG_BindInt(ed, "yVis", &ed->yVis);
-#endif /* AG_DEBUG */
+#endif
 }
 
 static void

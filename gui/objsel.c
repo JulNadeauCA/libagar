@@ -164,6 +164,7 @@ Init(void *obj)
 	com->flags |= AG_COMBO_POLL;
 	com->list->flags |= AG_TLIST_POLL|AG_TLIST_TREE;
 	
+	os->object = NULL;
 	os->flags = 0;
 	os->pobj = NULL;
 	os->root = NULL;

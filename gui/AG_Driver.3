@@ -234,17 +234,12 @@ typedef struct ag_driver_class {
 	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2,
 	                        AG_Color C, AG_BlendFn sFn,
 				AG_BlendFn dFn);
-	void (*drawArrowUp)(void *drv, int x, int y, int h, AG_Color C[2]);
-	void (*drawArrowDown)(void *drv, int x, int y, int h,
-	                      AG_Color C[2]);
-	void (*drawArrowLeft)(void *drv, int x, int y, int h,
-	                      AG_Color C[2]);
-	void (*drawArrowRight)(void *drv, int x, int y, int h,
-	                       AG_Color C[2]);
+	void (*drawArrow)(void *drv, float angle, int x, int y, int h,
+	                  AG_Color c1, AG_Color c2);
 	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad,
-	                       AG_Color C[3]);
+	                       AG_Color c1, AG_Color c2);
 	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad,
-	                          AG_Color C[3]);
+	                          AG_Color c1, AG_Color c2, AG_Color c3);
 	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
 	void (*drawCircle2)(void *drv, int x, int y, int r, AG_Color C);
 	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
@@ -552,16 +547,15 @@ renders a vertical line.
 renders a line with transparency (see
 .Xr AG_BlendFn 3 ) .
 .Pp
-.Fn drawArrowUp ,
-.Fn drawArrowDown ,
-.Fn drawArrowLeft
-and
-.Fn drawArrowRight
-render an arrow of length
-.Fa h ,
+.Fn drawArrow
+renders an arrow of length
+.Fa h
 at coordinates
 .Fa x ,
-.Fa y .
+.Fa y
+and clockwise rotation
+.Fa angle
+(0=up, 90=right, 180=down, 270=left).
 .Pp
 .Fn drawBoxRounded
 renders a 3D-style box of depth

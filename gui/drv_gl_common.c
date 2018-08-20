@@ -747,67 +747,35 @@ AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 }
 
 void
-AG_GL_DrawArrowUp(void *obj, int x, int y, int h, AG_Color C[2])
+AG_GL_DrawArrow(void *obj, float angle, int x, int y, int h, AG_Color c1,
+    AG_Color c2)
 {
-	int h2 = h>>1;
+	int mid = h/2;
 
-	/* XXX c2 */
+	if (angle != 0.0f) {
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glRotatef(angle, 0.0, 0.0, 1.0);
+	}
+
 	glBegin(GL_POLYGON);
 	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(x,		y - h2);
-		glVertex2i(x - h2,	y + h2);
-		glVertex2i(x + h2,	y + h2);
+		glColor3ub(c1.r, c1.g, c1.b);
+		glVertex2i(x,		y - mid);
+		glVertex2i(x - mid,	y + mid);
+		glVertex2i(x + mid,	y + mid);
 	}
-	glEnd();
-}
-
-void
-AG_GL_DrawArrowDown(void *obj, int x, int y, int h, AG_Color C[2])
-{
-	int h2 = h>>1;
-
-	/* XXX c2 */
-	glBegin(GL_POLYGON);
+	glBegin(GL_LINES);
 	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(x - h2,	y - h2);
-		glVertex2i(x + h2,	y - h2);
-		glVertex2i(x,		y + h2);
+		glColor3ub(c2.r, c2.g, c2.b);
+		glVertex2i(x,		y - mid);
+		glVertex2i(x - mid,	y + mid);
+		glVertex2i(x + mid,	y + mid);
 	}
 	glEnd();
-}
 
-void
-AG_GL_DrawArrowLeft(void *obj, int x, int y, int h, AG_Color C[2])
-{
-	int h2 = h>>1;
-
-	/* XXX c2 */
-	glBegin(GL_POLYGON);
-	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(x - h2,	y);
-		glVertex2i(x + h2,	y + h2);
-		glVertex2i(x + h2,	y - h2);
-	}
-	glEnd();
-}
-
-void
-AG_GL_DrawArrowRight(void *obj, int x, int y, int h, AG_Color C[2])
-{
-	int h2 = h>>1;
-
-	/* XXX c2 */
-	glBegin(GL_POLYGON);
-	{
-		glColor3ub(C[0].r, C[0].g, C[0].b);
-		glVertex2i(x + h2,	y);
-		glVertex2i(x - h2,	y + h2);
-		glVertex2i(x - h2,	y - h2);
-	}
-	glEnd();
+	if (angle != 0.0f)
+		glPopMatrix();
 }
 
 /* Generic FillRect() operation for GL drivers. */
@@ -827,7 +795,7 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 }
 
 void
-AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
+AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
@@ -837,13 +805,14 @@ AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 	glEnable(GL_POLYGON_STIPPLE);
 	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
 	glPolygonStipple((GLubyte *)gl->dither);
-	AG_GL_DrawRectFilled(obj, r, C);
+	AG_GL_DrawRectFilled(obj, r, c);
 	glPopAttrib();
 	if (!stipplePrev) { glDisable(GL_POLYGON_STIPPLE); }
 }
 
 void
-AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
+AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
+    AG_Color c2, AG_Color c3)
 {
 	float rad = (float)radius;
 	float i, nFull = 10.0, nQuart = nFull/4.0;
@@ -852,11 +821,10 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 	glPushMatrix();
 
 	glTranslatef((float)r.x + rad,
-	             (float)r.y + rad,
-		     0.0);
+	             (float)r.y + rad, 0.0f);
 
 	glBegin(GL_POLYGON);
-	glColor3ub(C[0].r, C[0].g, C[0].b);
+	glColor3ub(c1.r, c1.g, c1.b);
 	{
 		for (i = 0.0; i < nQuart; i++) {
 			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
@@ -879,7 +847,7 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		glColor3ub(C[1].r, C[1].g, C[1].b);
+		glColor3ub(c2.r, c2.g, c2.b);
 		for (i = 0.0; i < nQuart; i++) {
 			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
 			           -rad*Sin((2.0*AG_PI*i)/nFull));
@@ -887,7 +855,7 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
 		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
 
-		glColor3ub(C[2].r, C[2].g, C[2].b);
+		glColor3ub(c3.r, c3.g, c3.b);
 		for (i = nQuart-1; i > 0.0; i--) {
 			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
 			                       - rad*Sin((2.0*AG_PI*i)/nFull));
@@ -900,7 +868,7 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 			glVertex2f(            - rad*Cos((2.0*AG_PI*i)/nFull),
 			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
 		}
-		glColor3ub(C[1].r, C[1].g, C[1].b);
+		glColor3ub(c2.r, c2.g, c2.b);
 		glVertex2f(-rad, 0.0);
 	}
 	glEnd();
@@ -909,7 +877,8 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 }
 
 void
-AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
+AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
+    AG_Color c2, AG_Color c3)
 {
 	float rad = (float)radius;
 	float i, nFull = 10.0, nQuart = nFull/4.0;
@@ -918,11 +887,10 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 	glPushMatrix();
 
 	glTranslatef((float)r.x + rad,
-	             (float)r.y + rad,
-		     0.0);
+	             (float)r.y + rad, 0.0f);
 
 	glBegin(GL_POLYGON);
-	glColor3ub(C[0].r, C[0].g, C[0].b);
+	glColor3ub(c1.r, c1.g, c1.b);
 	{
 		glVertex2f(-rad, (float)r.h - rad);
 
@@ -943,7 +911,7 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		glColor3ub(C[1].r, C[1].g, C[1].b);
+		glColor3ub(c2.r, c2.g, c2.b);
 		glVertex2i(-rad, r.h-rad);
 		for (i = 0.0; i < nQuart; i++) {
 			glVertex2f(-(float)rad*Cos((2.0*AG_PI*i)/nFull),
@@ -953,7 +921,7 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color C[3])
 		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
 		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
 
-		glColor3ub(C[2].r, C[2].g, C[2].b);
+		glColor3ub(c3.r, c3.g, c3.b);
 		for (i = nQuart-1; i > 0.0; i--) {
 			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
 			                       - rad*Sin((2.0*AG_PI*i)/nFull));
@@ -973,7 +941,7 @@ AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color C)
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef((float)x, (float)y, 0.0);
+	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(C.r, C.g, C.b);
@@ -993,7 +961,7 @@ AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color C)
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef((float)x, (float)y, 0.0);
+	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_POLYGON);
 	glColor3ub(C.r, C.g, C.b);
@@ -1013,7 +981,7 @@ AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color C)
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef((float)x, (float)y, 0.0);
+	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(C.r, C.g, C.b);

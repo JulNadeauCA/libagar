@@ -169,18 +169,17 @@ Init(void *obj)
 	
 	WIDGET(sbu)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindInt(sbu, "value", &sbu->value);
-	AG_BindInt(sbu, "min", &sbu->min);
-	AG_BindInt(sbu, "max", &sbu->max);
-	
-	AG_RedrawOnChange(sbu, 250, "value");
-
 	sbu->value = 0;
 	sbu->incr = 1;
 	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
 	sbu->inTxt[0] = '\0';
+	
+	AG_BindInt(sbu, "min", &sbu->min);
+	AG_BindInt(sbu, "max", &sbu->max);
+	AG_BindInt(sbu, "value", &sbu->value);
+	AG_RedrawOnChange(sbu, 250, "value");
 
 	sbu->input = AG_TextboxNewS(sbu, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));

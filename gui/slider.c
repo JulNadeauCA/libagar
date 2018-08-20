@@ -553,11 +553,10 @@ Init(void *obj)
 	AG_SetEvent(sl, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sl, "key-down", KeyDown, NULL);
 	AG_SetEvent(sl, "key-up", KeyUp, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(sl, "xOffs", &sl->xOffs);
 	AG_BindInt(sl, "extent", &sl->extent);
-#endif /* AG_DEBUG */
+#endif
 }
 
 static void

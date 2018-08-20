@@ -598,9 +598,8 @@ OnShow(AG_Event *event)
 	AG_Scrollbar *sb = AG_SELF();
 	AG_Variable *V;
 
-	if ((V = AG_GetVariable(sb, "value", NULL)) == NULL) {
-		V = AG_SetInt(sb, "value", 0);
-		AG_LockVariable(V);
+	if ((V = AG_AccessVariable(sb, "value")) == NULL) {
+		AG_FatalError("Scrollbar \"value\" is undefined");
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_FLOAT:	 SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
@@ -690,13 +689,12 @@ Init(void *obj)
 	AG_SetEvent(sb, "mouse-motion", MouseMotion, NULL);
 	AG_SetEvent(sb, "key-down", KeyDown, NULL);
 	AG_SetEvent(sb, "key-up", KeyUp, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(sb, "width", &sb->width);
 	AG_BindInt(sb, "length", &sb->length);
 	AG_BindInt(sb, "wBar", &sb->wBar);
 	AG_BindInt(sb, "xOffs", &sb->xOffs);
-#endif /* AG_DEBUG */
+#endif
 }
 
 static void

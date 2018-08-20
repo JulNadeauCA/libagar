@@ -440,8 +440,7 @@ Init(void *obj)
 	AG_SetEvent(cons, "mouse-motion", MouseMotion, NULL);
 	AG_AddEvent(cons, "font-changed", OnFontChange, NULL);
 	AG_AddEvent(cons, "widget-shown", OnFontChange, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindUint(cons, "nLines", &cons->nLines);
 	AG_BindUint(cons, "rOffs", &cons->rOffs);
 	AG_BindUint(cons, "rVisible", &cons->rVisible);

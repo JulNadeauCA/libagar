@@ -318,14 +318,11 @@ OnShow(AG_Event *event)
 	if ((num->flags & AG_NUMERICAL_EXCL) == 0) {
 		AG_AddTimer(num, &num->updateTo, 250, UpdateTimeout, NULL);
 	}
-	if ((V = AG_GetVariableLocked(num, "value")) == NULL) {
+	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		if (num->flags & AG_NUMERICAL_INT) {
 			V = AG_SetInt(num, "value", 0);
 		} else {
 			V = AG_SetDouble(num, "value", 0.0);
-		}
-		if (V == NULL) {
-			return;
 		}
 		AG_LockVariable(V);
 	}
@@ -360,6 +357,7 @@ OnShow(AG_Event *event)
 		break;
 	}
 	AG_UnlockVariable(V);
+
 	AG_NumericalUpdate(num);
 }
 
@@ -1113,7 +1111,7 @@ AG_NumericalSetIncrement(AG_Numerical *num, double inc)
 
 	AG_ObjectLock(num);
 
-	if ((V = AG_GetVariableLocked(num, "value")) == NULL) {
+	if ((V = AG_AccessVariable(num, "value")) == NULL) {
 		goto out;
 	}
 	switch (AG_VARIABLE_TYPE(V)) {

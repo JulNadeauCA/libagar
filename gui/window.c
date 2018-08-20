@@ -413,7 +413,11 @@ Init(void *obj)
 	win->wResizeCtrl = 16;
 	win->rSaved = AG_RECT(-1,-1,-1,-1);
 	win->r = AG_RECT(0,0,0,0);
+#ifdef AG_DEBUG
+	memset(win->caption, 0, sizeof(win->caption));
+#else
 	win->caption[0] = '\0';
+#endif
 	win->tbar = NULL;
 	win->icon = NULL;
 	win->nFocused = 0;
@@ -459,8 +463,7 @@ Init(void *obj)
 	AG_SetString(win, "font-style", (agDefaultFont->flags & AG_FONT_ITALIC) ? "italic" : "normal");
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindUint(win, "flags", &win->flags);
 	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
 	AG_BindInt(win, "visible", &win->visible);
@@ -473,7 +476,7 @@ Init(void *obj)
 	AG_BindInt(win, "r.y", &win->r.y);
 	AG_BindInt(win, "r.w", &win->r.w);
 	AG_BindInt(win, "r.h", &win->r.h);
-#endif /* AG_DEBUG */
+#endif
 }
 
 /*

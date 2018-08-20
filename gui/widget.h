@@ -290,13 +290,11 @@ void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
 	 AG_WidgetReplaceSurface((w),(n),NULL)
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
-#ifdef HAVE_OPENGL
 void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
 void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
 void	 AG_WidgetFreeResourcesGL(void *);
 void	 AG_WidgetRegenResourcesGL(void *);
-#endif
 
 int         AG_WidgetSensitive(void *, int, int);
 AG_SizeSpec AG_WidgetParseSizeSpec(const char *, int *);

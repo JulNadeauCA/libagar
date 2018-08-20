@@ -298,11 +298,10 @@ Init(void *obj)
 	AG_SetEvent(tl, "key-up", KeyUp, NULL);
 	
 	AG_BindPointer(tl, "selected", &tl->selected);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(tl, "nitems", &tl->nitems);
 	AG_BindInt(tl, "nvisitems", &tl->nvisitems);
-#endif /* AG_DEBUG */
+#endif
 }
 
 void

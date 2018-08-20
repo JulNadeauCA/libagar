@@ -572,15 +572,14 @@ Init(void *obj)
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_AddEvent(tt, "widget-hidden", FocusLost, NULL);
 	AG_AddEvent(tt, "font-changed", FontChanged, NULL);
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(tt, "hCol", &tt->hCol);
 	AG_BindInt(tt, "hRow", &tt->hRow);
 	AG_BindUint(tt, "n", &tt->n);
 	AG_BindUint(tt, "sortMode", &tt->sortMode);
 	AG_BindInt(tt, "nExpandedRows", &tt->nExpandedRows);
 	AG_BindUint(tt, "visible.count", &tt->visible.count);
-#endif /* AG_DEBUG */
+#endif
 }
 
 void

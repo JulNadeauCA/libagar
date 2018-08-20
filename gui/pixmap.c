@@ -287,8 +287,7 @@ Init(void *obj)
 	px->pre_h = 64;
 	px->rClip = AG_RECT(0,0,0,0);
 	px->sScaled = -1;
-
-#ifdef AG_DEBUG
+#if 0
 	AG_BindInt(px, "n", &px->n);
 	AG_BindInt(px, "s", &px->s);
 	AG_BindInt(px, "t", &px->t);

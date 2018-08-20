@@ -192,11 +192,11 @@ Init(void *obj)
 			     AG_WIDGET_USE_TEXT|
 			     AG_WIDGET_USE_MOUSEOVER;
 
+	cb->state = 0;
 	AG_BindInt(cb, "state", &cb->state);
 	AG_RedrawOnChange(cb, 100, "state");
 
 	cb->flags = 0;
-	cb->state = 0;
 	cb->lbl = NULL;
 	cb->spacing = 4;
 	

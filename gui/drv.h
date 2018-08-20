@@ -72,18 +72,26 @@ typedef struct ag_driver_class {
 	void (*pushBlendingMode)(void *drv, AG_BlendFn srcFn, AG_BlendFn dstFn);
 	void (*popBlendingMode)(void *drv);
 	/* Hardware cursor operations */
-	struct ag_cursor *(*createCursor)(void *drv, Uint w, Uint h, const Uint8 *data, const Uint8 *mask, int xHot, int yHot);
+	struct ag_cursor *(*createCursor)(void *drv, Uint w, Uint h,
+	                                  const Uint8 *data, const Uint8 *mask,
+	                                  int xHot, int yHot);
 	void (*freeCursor)(void *drv, struct ag_cursor *curs);
 	int  (*setCursor)(void *drv, struct ag_cursor *curs);
 	void (*unsetCursor)(void *drv);
 	int  (*getCursorVisibility)(void *drv);
 	void (*setCursorVisibility)(void *drv, int flag);
 	/* Widget surface operations (rendering context) */
-	void (*blitSurface)(void *drv, struct ag_widget *wid, AG_Surface *s, int x, int y);
-	void (*blitSurfaceFrom)(void *drv, struct ag_widget *wid, struct ag_widget *widSrc, int s, AG_Rect *r, int x, int y);
-	void (*blitSurfaceGL)(void *drv, struct ag_widget *wid, AG_Surface *s, float w, float h);
-	void (*blitSurfaceFromGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
-	void (*blitSurfaceFlippedGL)(void *drv, struct ag_widget *wid, int s, float w, float h);
+	void (*blitSurface)(void *drv, struct ag_widget *wid, AG_Surface *s,
+	                    int x, int y);
+	void (*blitSurfaceFrom)(void *drv, struct ag_widget *wid,
+	                        struct ag_widget *widSrc, int s, AG_Rect *r,
+				int x, int y);
+	void (*blitSurfaceGL)(void *drv, struct ag_widget *wid, AG_Surface *s,
+	                      float w, float h);
+	void (*blitSurfaceFromGL)(void *drv, struct ag_widget *wid, int s,
+	                          float w, float h);
+	void (*blitSurfaceFlippedGL)(void *drv, struct ag_widget *wid, int s,
+	                             float w, float h);
 	void (*backupSurfaces)(void *drv, struct ag_widget *wid);
 	void (*restoreSurfaces)(void *drv, struct ag_widget *wid);
 	int  (*renderToSurface)(void *drv, struct ag_widget *wid, AG_Surface **su);
@@ -91,17 +99,19 @@ typedef struct ag_driver_class {
 	void (*putPixel)(void *drv, int x, int y, AG_Color c);
 	void (*putPixel32)(void *drv, int x, int y, Uint32 c);
 	void (*putPixelRGB)(void *drv, int x, int y, Uint8 r, Uint8 g, Uint8 b);
-	void (*blendPixel)(void *drv, int x, int y, AG_Color c, AG_BlendFn fnSrc, AG_BlendFn fnDst);
+	void (*blendPixel)(void *drv, int x, int y, AG_Color c,
+	                   AG_BlendFn fnSrc, AG_BlendFn fnDst);
 	void (*drawLine)(void *drv, int x1, int y1, int x2, int y2, AG_Color C);
 	void (*drawLineH)(void *drv, int x1, int x2, int y, AG_Color C);
 	void (*drawLineV)(void *drv, int x, int y1, int y2, AG_Color C);
-	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2, AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
-	void (*drawArrowUp)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowDown)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowLeft)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawArrowRight)(void *drv, int x0, int y0, int h, AG_Color C[2]);
-	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
-	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad, AG_Color C[3]);
+	void (*drawLineBlended)(void *drv, int x1, int y1, int x2, int y2,
+	                        AG_Color C, AG_BlendFn fnSrc, AG_BlendFn fnDst);
+	void (*drawArrow)(void *drv, float angle, int x, int y, int h,
+	                  AG_Color c1, AG_Color c2);
+	void (*drawBoxRounded)(void *drv, AG_Rect r, int z, int rad,
+	                       AG_Color c1, AG_Color c2, AG_Color c3);
+	void (*drawBoxRoundedTop)(void *drv, AG_Rect r, int z, int rad,
+	                          AG_Color c1, AG_Color c2, AG_Color c3);
 	void (*drawCircle)(void *drv, int x, int y, int r, AG_Color C);
 	void (*drawCircleFilled)(void *drv, int x, int y, int r, AG_Color C);
 	void (*drawRectFilled)(void *drv, AG_Rect r, AG_Color C);
@@ -197,7 +207,6 @@ extern AG_Cond agCondEndRender;
 
 void       AG_ListDriverNames(char *, size_t)
                               BOUNDED_ATTRIBUTE(__string__, 1, 2);
-int        AG_DriverProbe(AG_DriverClass *, const char *);
 AG_Driver *AG_DriverOpen(AG_DriverClass *);
 void       AG_DriverClose(AG_Driver *);
 void       AG_ViewCapture(void);

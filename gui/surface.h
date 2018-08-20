@@ -41,6 +41,7 @@ typedef struct ag_surface {
 #define AG_SRCCOLORKEY		0x01	/* Enable color key for blit as src */
 #define AG_SRCALPHA		0x02	/* Enable alpha for blit as src */
 #define AG_SURFACE_GLTEXTURE	0x04	/* Use directly as OpenGL texture */
+#define AG_SURFACE_MAPPED	0x08	/* Disallow AG_SurfaceFree() */
 #define AG_SAVED_SURFACE_FLAGS	(AG_SRCCOLORKEY|AG_SRCALPHA|AG_SURFACE_GLTEXTURE)
 	Uint w, h;			/* Size in pixels */
 	Uint pitch;			/* Scanline size in bytes */

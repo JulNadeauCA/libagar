@@ -209,11 +209,6 @@ Init(void *obj)
 	AG_Button *b[4];
 	int i;
 
-	AG_BindInt(sbu, "xvalue", &sbu->xvalue);
-	AG_BindInt(sbu, "yvalue", &sbu->yvalue);
-	AG_BindInt(sbu, "min", &sbu->min);
-	AG_BindInt(sbu, "max", &sbu->max);
-
 	sbu->xvalue = 0;
 	sbu->yvalue = 0;
 	sbu->min = 0;
@@ -222,6 +217,11 @@ Init(void *obj)
 	sbu->writeable = 0;
 	sbu->sep = ",";
 	sbu->inTxt[0] = '\0';
+	
+	AG_BindInt(sbu, "xvalue", &sbu->xvalue);
+	AG_BindInt(sbu, "yvalue", &sbu->yvalue);
+	AG_BindInt(sbu, "min", &sbu->min);
+	AG_BindInt(sbu, "max", &sbu->max);
 	
 	sbu->input = AG_TextboxNewS(sbu, 0, NULL);
 	AG_TextboxBindASCII(sbu->input, sbu->inTxt, sizeof(sbu->inTxt));
