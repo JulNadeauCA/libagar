@@ -258,10 +258,13 @@ static int
 SaveObjectToFile(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
-	char *path = AG_STRING(3);
+	char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
 	int rv = 0;
+
+	Verbose("Saving <%s> %s to %s...", OBJECT_CLASS(ob)->name,
+	    OBJECT(ob)->name, (path[0] != '\0') ? path : "VFS");
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
@@ -276,6 +279,9 @@ SaveObjectToFile(AG_Event *event)
 		AG_SetError("%s: %s", ob->name, AG_GetError());
 		rv = -1;
 	}
+
+	Verbose("OK\n");
+
 	if (loadedTmp) {
 		AG_ObjectFreeDataset(ob);
 	}
@@ -286,9 +292,12 @@ static int
 ImportObject(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
-	char *path = AG_STRING(3);
+	char *path = AG_STRING(2);
 	int loadedTmp = 0;
 	int dataFound;
+	
+	Verbose("Loading <%s> %s from %s...", OBJECT_CLASS(ob)->name,
+	    OBJECT(ob)->name, path);
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!OBJECT_RESIDENT(ob)) {
@@ -302,6 +311,8 @@ ImportObject(AG_Event *event)
 	if (AG_ObjectLoadFromFile(ob, path) == -1) {
 		AG_SetError("%s: %s", ob->name, AG_GetError());
 	}
+	Verbose("OK\n");
+
 	if (loadedTmp) {
 		AG_ObjectFreeDataset(ob);
 	}
@@ -326,7 +337,7 @@ DEV_BrowserSaveToDlg(void *p, const char *name)
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile, "%p,%p", ob, win);
+	AG_FileDlgAddType(fd, name, ext, SaveObjectToFile, "%p", ob);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 	return (win);
@@ -350,7 +361,7 @@ DEV_BrowserLoadFromDlg(void *p, const char *name)
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p,%p", ob, win);
+	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p", ob);
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 	return (win);
@@ -374,6 +385,9 @@ ObjectOp(AG_Event *event)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->cls->edit != NULL) {
+				Verbose("Invoking <%s> %s -> edit",
+				    OBJECT_CLASS(ob)->name,
+				    OBJECT(ob)->name);
 				DEV_BrowserOpenData(ob);
 			} else {
 				AG_TextTmsg(AG_MSG_ERROR, 750,
@@ -385,6 +399,9 @@ ObjectOp(AG_Event *event)
 			DEV_BrowserOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
+			Verbose("Invoking <%s> %s -> load",
+			    OBJECT_CLASS(ob)->name,
+			    OBJECT(ob)->name);
 			if (AG_ObjectLoad(ob) == -1) {
 				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
 				    AG_GetError());
@@ -398,7 +415,7 @@ ObjectOp(AG_Event *event)
 
 				AG_EventInit(&ev);
 				AG_EventPushPointer(&ev, "", ob);
-				AG_EventPushString(&ev, "", ob->archivePath);
+				AG_EventPushString(&ev, "", ob->archivePath ? ob->archivePath : "");
 				SaveObjectToFile(&ev);
 			}
 			break;
@@ -442,6 +459,9 @@ ObjectOp(AG_Event *event)
 				    ob->name);
 				continue;
 			}
+			Verbose("Destroying <%s> %s", OBJECT_CLASS(ob)->name,
+			    OBJECT(ob)->name);
+
 			AG_ObjectDetach(ob);
 			AG_ObjectUnlinkDatafiles(ob);
 			AG_ObjectDestroy(ob);
