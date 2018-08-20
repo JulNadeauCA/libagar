@@ -98,6 +98,11 @@ InitPointerArg(AG_Variable *V, void *p)
 static __inline__ void
 InitEvent(AG_Event *ev, AG_Object *ob)
 {
+#ifdef AG_DEBUG
+	memset(ev->name, '\0', sizeof(ev->name));
+#else
+	ev->name[0] = '\0';
+#endif
 	ev->flags = 0;
 	ev->argc = 1;
 	ev->argc0 = 1;
@@ -243,7 +248,6 @@ AG_Function *AG_SetLongDoubleFn(void *p, const char *name, AG_LongDoubleFn fn, c
 #endif
 AG_Function *AG_SetStringFn(void *p, const char *name, AG_StringFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnString); }
 AG_Function *AG_SetPointerFn(void *p, const char *name, AG_PointerFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnPointer); }
-AG_Function *AG_SetConstPointerFn(void *p, const char *name, AG_ConstPointerFn fn, const char *fmt, ...) { AG_SET_TYPED_FN(fnConstPointer); }
 
 #undef AG_SET_TYPED_FN
 

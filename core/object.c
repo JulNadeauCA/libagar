@@ -61,7 +61,11 @@ AG_ObjectInit(void *p, void *cl)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
+#ifdef AG_DEBUG
+	memset(ob->name, '\0', sizeof(ob->name));
+#else
 	ob->name[0] = '\0';
+#endif
 #if defined(_WIN32) || defined(_XBOX)
 	ob->save_pfx = "\\world";
 #else

@@ -8,10 +8,16 @@
 
 typedef enum ag_variable_type {
 	AG_VARIABLE_NULL,		/* No data */
+
 	AG_VARIABLE_UINT,		/* Unsigned int */
 	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
 	AG_VARIABLE_INT,		/* Natural int */
 	AG_VARIABLE_P_INT,		/* Pointer to int */
+	AG_VARIABLE_ULONG,		/* Natural unsigned long integer */
+	AG_VARIABLE_P_ULONG,		/* Pointer to unsigned long */
+	AG_VARIABLE_LONG,		/* Natural long integer */
+	AG_VARIABLE_P_LONG,		/* Pointer to long */
+
 	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
 	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
 	AG_VARIABLE_SINT8,		/* Signed 8-bit */
@@ -28,20 +34,18 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 */
 	AG_VARIABLE_SINT64,		/* Signed 64-bit */
 	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 */
+
 	AG_VARIABLE_FLOAT,		/* Single-precision real number */
 	AG_VARIABLE_P_FLOAT,		/* Pointer to single-precision real */
 	AG_VARIABLE_DOUBLE,		/* Double-precision real number */
 	AG_VARIABLE_P_DOUBLE,		/* Pointer to double-precision real */
 	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float */
 	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to quad-precision real */
+
 	AG_VARIABLE_STRING,		/* C string */
 	AG_VARIABLE_P_STRING,		/* Pointer to C string */
-	AG_VARIABLE_CONST_STRING,	/* C string (read-only) */
-	AG_VARIABLE_P_CONST_STRING,	/* Pointer to read-only C string */
 	AG_VARIABLE_POINTER,		/* Generic C pointer */
 	AG_VARIABLE_P_POINTER,		/* Reference to a generic pointer */
-	AG_VARIABLE_CONST_POINTER,	/* Pointer to read-only memory */
-	AG_VARIABLE_P_CONST_POINTER, 	/* Reference to a read-only pointer */
 	AG_VARIABLE_P_FLAG,		/* Bit(s) in an int (per given mask) */
 	AG_VARIABLE_P_FLAG8,		/* Bit(s) in an int8 (per given mask) */
 	AG_VARIABLE_P_FLAG16,		/* Bit(s) in an int16 (per given mask) */
@@ -50,12 +54,25 @@ typedef enum ag_variable_type {
 					   (and hard dependency) */
 	AG_VARIABLE_P_VARIABLE,		/* Serializable reference to specific
 					   Object Variable (by name) */
-	AG_VARIABLE_ULONG,		/* Natural unsigned long integer */
-	AG_VARIABLE_P_ULONG,		/* Pointer to unsigned long */
-	AG_VARIABLE_LONG,		/* Natural long integer */
-	AG_VARIABLE_P_LONG,		/* Pointer to long */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
+
+#ifdef AG_LEGACY
+#define AG_VARIABLE_CONST_STRING	AG_VARIABLE_STRING
+#define AG_VARIABLE_P_CONST_STRING	AG_VARIABLE_P_STRING
+#define AG_VARIABLE_CONST_POINTER	AG_VARIABLE_POINTER
+#define AG_VARIABLE_P_CONST_POINTER	AG_VARIABLE_P_POINTER
+#define AG_SetConstString(o,n,v)	AG_SetString((o),(n),(char *)(v))
+#define AG_BindConstString		AG_BindString
+#define AG_BindConstStringMp		AG_BindStringMp
+#define AG_BindConstStringFn		AG_BindStringFn
+#define AG_GetConstPointer(o,x)		((const void *)AG_GetPointer((o),(x)))
+#define AG_SetConstPointer(o,n,v)	AG_SetPointer((o),(n),(void *)(v))
+#define AG_InitConstPointer(var,v)	AG_InitPointer((var),(void *)(v))
+#define AG_BindConstPointer		AG_BindPointer
+#define AG_BindConstPointerFn		AG_BindPointerFn
+#define AG_BindConstPointerMp		AG_BindPointerMp
+#endif /* AG_LEGACY */
 
 #define AG_VARIABLE_BOOL AG_VARIABLE_INT
 
@@ -92,7 +109,6 @@ typedef long double (*AG_LongDoubleFn)(struct ag_event *);
 #endif
 typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
-typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 
 union ag_function {
 	AG_VoidFn   fnVoid;
@@ -113,7 +129,6 @@ union ag_function {
 #endif
 	AG_StringFn       fnString;
 	AG_PointerFn      fnPointer;
-	AG_ConstPointerFn fnConstPointer;
 };
 	
 union ag_variable_data {
@@ -303,9 +318,6 @@ AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
 AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
 AG_Variable *AG_BindStringMp(void *, const char *, char *, size_t, AG_Mutex *);
-AG_Variable *AG_SetConstString(void *, const char *, const char *);
-AG_Variable *AG_BindConstString(void *, const char *, const char **);
-AG_Variable *AG_BindConstStringMp(void *, const char *, const char **, AG_Mutex *);
 
 void        *AG_GetPointer(void *, const char *);
 AG_Variable *AG_SetPointer(void *, const char *, void *);
@@ -313,13 +325,6 @@ void         AG_InitPointer(AG_Variable *, void *);
 AG_Variable *AG_BindPointer(void *, const char *, void **);
 AG_Variable *AG_BindPointerFn(void *, const char *, AG_PointerFn, const char *, ...);
 AG_Variable *AG_BindPointerMp(void *, const char *, void **, AG_Mutex *);
-
-const void  *AG_GetConstPointer(void *, const char *);
-AG_Variable *AG_SetConstPointer(void *, const char *, const void *);
-void         AG_InitConstPointer(AG_Variable *, const void *);
-AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
-AG_Variable *AG_BindConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
-AG_Variable *AG_BindConstPointerMp(void *, const char *, const void **, AG_Mutex *);
 
 AG_Variable *AG_BindFlag(void *, const char *, Uint *, Uint);
 AG_Variable *AG_BindFlagMp(void *, const char *, Uint *, Uint, AG_Mutex *);
@@ -335,8 +340,16 @@ AG_Variable *AG_BindVariable(void *, const char *, void *, const char *);
 
 /* Initialize an AG_Variable structure. */
 static __inline__ void
-AG_InitVariable(AG_Variable *V, enum ag_variable_type type)
+AG_InitVariable(AG_Variable *V, enum ag_variable_type type, const char *name)
 {
+#ifdef AG_DEBUG
+	memset(V->name, '\0', sizeof(V->name));
+#endif
+	if (name[0] != '\0') {
+		AG_Strlcpy(V->name, name, sizeof(V->name));
+	} else {
+		V->name[0] = '\0';
+	}
 	V->type = type;
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;

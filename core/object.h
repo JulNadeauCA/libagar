@@ -357,8 +357,7 @@ AG_FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 	}
 	if (V == NULL) {
 		V = AG_Malloc(sizeof(AG_Variable));
-		AG_InitVariable(V, type);
-		AG_Strlcpy(V->name, name, sizeof(V->name));
+		AG_InitVariable(V, type, name);
 		AG_TAILQ_INSERT_TAIL(&obj->vars, V, vars);
 	}
 	return (V);
@@ -369,12 +368,16 @@ AG_FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
  * reinitialize it as a variable of the specified type.
  */
 static __inline__ AG_Variable *
-AG_FetchVariableOfType(void *pObj, const char *name, enum ag_variable_type type)
+AG_FetchVariableOfType(void *obj, const char *name, enum ag_variable_type type)
 {
-	AG_Variable *V = AG_FetchVariable(pObj, name, type);
+	AG_Variable *V = AG_FetchVariable(obj, name, type);
+
 	if (V->type != type) {
+		AG_Debug(obj, "Mutating \"%s\": From (%s) to (%s)\n", name,
+		    agVariableTypes[V->type].name,
+		    agVariableTypes[type].name);
 		AG_FreeVariable(V);
-		AG_InitVariable(V, type);
+		AG_InitVariable(V, type, name);
 	}
 	return (V);
 }
@@ -384,7 +387,7 @@ AG_FetchVariableOfType(void *pObj, const char *name, enum ag_variable_type type)
  * The object must be locked.
  */
 static __inline__ AG_Variable *
-AG_GetVariableLocked(void *pObj, const char *name)
+AG_AccessVariable(void *pObj, const char *name)
 {
 	AG_Object *obj = AGOBJECT(pObj);
 	AG_Variable *V, *Vtgt;
@@ -398,7 +401,11 @@ AG_GetVariableLocked(void *pObj, const char *name)
 	}
 	AG_LockVariable(V);
 	if (V->type == AG_VARIABLE_P_VARIABLE) {
-		Vtgt = AG_GetVariableLocked(AGOBJECT(V->data.p), V->info.varName);
+		AG_Debug(obj, "Aliasing \"%s\" -> %s<%s>:\"%s\"", name,
+		    AGOBJECT(V->data.p)->name,
+		    AGOBJECT_CLASS(V->data.p)->name,
+		    V->info.varName);
+		Vtgt = AG_AccessVariable(AGOBJECT(V->data.p), V->info.varName);
 		AG_UnlockVariable(V);
 		return (Vtgt);
 	}
@@ -448,6 +455,7 @@ AG_GetNamedObject(AG_Event *event, const char *key, const char *classSpec)
 # define AG_PROP_BOOL AG_VARIABLE_INT
 AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...) DEPRECATED_ATTRIBUTE;
 AG_Prop	*AG_GetProp(void *, const char *, int, void *) DEPRECATED_ATTRIBUTE;
+AG_Variable *AG_GetVariableLocked(void *, const char *) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 
 __END_DECLS

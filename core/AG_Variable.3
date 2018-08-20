@@ -35,13 +35,10 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-In the Agar object system, every
+In the Agar object system, each
 .Xr AG_Object 3
 instance has a set of typed variables.
-Variables can be named (accessed by a string key), or anonymous
-(accessed by a
-.Nm
-pointer).
+Variables can be named (accessed by a string key), or anonymous (by pointer).
 Basic types are supported:
 .Pp
 .Bl -bullet -compact -offset indent
@@ -59,8 +56,6 @@ Floating-point numbers (e.g.,
 .Ft long double )
 .It
 Unbounded C strings (auto-allocated)
-.It
-Constant C strings
 .It
 Generic pointers
 .El
@@ -88,8 +83,6 @@ Floating-point numbers (e.g.,
 Bits in a fixed-size word (per given bitmask)
 .It
 Bounded C strings (in fixed-size buffer)
-.It
-Constant C strings
 .It
 Agar objects (pointer to
 .Xr AG_Object 3 )
@@ -123,7 +116,7 @@ a mutex-protected
 etc.
 See the "BINDINGS" section of a widget's manual page for the list of bindings
 and types supported.
-.Sh INTERFACE
+.Sh GENERIC INTERFACE
 .nr nS 1
 .Ft int
 .Fn AG_Defined "AG_Object *obj" "const char *name"
@@ -132,7 +125,7 @@ and types supported.
 .Fn AG_GetVariable "AG_Object *obj" "const char *name" "void **data"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_GetVariableLocked "AG_Object *obj" "const char *name"
+.Fn AG_AccessVariable "AG_Object *obj" "const char *name"
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_FetchVariable "AG_Object *obj" "const char *name" "enum ag_variable_type type"
@@ -147,7 +140,7 @@ and types supported.
 .Fn AG_UnlockVariable "AG_Variable *var"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_GetVariableVFS "AG_Object *obj" "const char *name"
+.Fn AG_GetVariableVFS "AG_Object *obj" "const char *path"
 .Pp
 .Ft int
 .Fn AG_EvalVariable "AG_Object *obj" "AG_Variable *var"
@@ -174,62 +167,82 @@ and types supported.
 .Fn AG_VariableSubst "AG_Object *obj" "const char *s" "char *dst" "size_t dst_len"
 .Pp
 .nr nS 0
-The
 .Fn AG_Defined
-routine returns 1 if the specified variable
+returns 1 if the variable
 .Fa name
 is defined under the object
 .Fa obj ,
 otherwise it returns 0.
-The caller must lock
+The object
 .Fa obj
-before invoking
-.Fn AG_Defined .
+must be locked.
 .Pp
 The
 .Fn AG_GetVariable
-routine searches for a named variable under object
-.Fa obj
-and returns a pointer to the corresponding
+function searches for a variable
+.Fa name
+under
+.Fa obj ,
+and returns the matching
 .Ft AG_Variable
-structure if found.
-If no such variable exists, NULL is returned.
-If the variable is tied to a function, the function is evaluated first.
-If the
+in a locked condition (or NULL if undefined).
+If the variable is virtual function then it is evaluated implicitely.
+The caller must use
+.Fn AG_UnlockVariable
+when finished accessing the variable data.
+A pointer to the data is also returned in the
 .Fa data
-argument is not NULL, a pointer to the variable's primitive data is returned
-into it (not valid for strings).
+argument if it is not NULL.
+If the variable is undefined, a fatal exception is raised.
 .Pp
-.Fn AG_GetVariableLocked
-looks up the named variable under
-.Fa obj
-and returns a pointer to the corresponding
+The
+.Fn AG_AccessVariable
+function searches for a variable by
+.Fa name
+and returns the matching
 .Ft AG_Variable
-structure if found, otherwise NULL is returned.
-If the variable is tied to a function, the function is not evaluated internally.
-Before returning,
-.Fn AG_GetVariableLocked
-acquires any locking devices associated with the variable.
-The caller is expected to invoke
+in a locked condition.
+The caller must use
 .Fn AG_UnlockVariable
 when done accessing the data.
+Unlike
+.Fn AG_GetVariable ,
+.Fn AG_AccessVariable
+does not evaluate virtual functions, and returns NULL if the variable is
+undefined.
 .Pp
 The
 .Fn AG_FetchVariable
-routine looks up a variable by name, returning a pointer to the corresponding
-.Ft AG_Variable
-structure.
-If no such variable exists, a new one of the specified
+function searches for a variable by
+.Fa name
+and
+.Fa type .
+If found, return the corresponding
+.Ft AG_Variable .
+If the variable is undefined then a new one of the specified
 .Fa type
-is allocated.
+is automatically created and returned.
+Raises an exception if insufficient memory is available.
 .Pp
 The
 .Fn AG_FetchVariableOfType
 variant works like
 .Fn AG_FetchVariable ,
-except that preexisting variables of a differing type are automatically
-destroyed and recreated to match the specified
-.Fa type .
+except that if the variable exists and is of a different type, then it is
+implicitely mutated into
+.Fa type
+and returned.
+.Pp
+Note: Unlike
+.Fn AG_GetVariable
+and
+.Fn AG_AccessVariable ,
+.Fn AG_FetchVariable
+and
+.Fn AG_FetchVariableOfType
+do not return the
+.Ft AG_Variable
+locked.
 .Pp
 .Fn AG_LockVariable
 and
@@ -238,24 +251,30 @@ acquire and release any locking device associated with the
 specified variable.
 .Pp
 .Fn AG_GetVariableVFS
-searches an
+searches through the VFS of
 .Xr AG_Object 3
-VFS for a variable from a string of the form
-.Sq object:variable .
-.Pp
+(which has
+.Fa obj
+as its root) for a variable by name.
 The
+.Fa path 
+argument is a string of the form
+"<object-path>:<variable-name>".
+If found, then the
+.Ft AG_Variable
+is returned in a locked condition.
+The caller must use
+.Fn AG_UnlockVariable
+when done accessing the variable's data.
+.Pp
 .Fn AG_EvalVariable
-function evaluates the value of a variable tied to a function.
-The corresponding function is invoked and the value is returned into the
+evaluates a virtual function and copies the return value into the
 .Va data
-union.
-Note that internally,
+field.
+Return 0 on success or -1 if the virtual function is undefined.
+Note:
 .Fn AG_GetVariable
-calls
-.Fn AG_EvalVariable ,
-but
-.Fn AG_GetVariableLocked
-does not.
+calls this implicitely.
 .Pp
 .Fn AG_PrintVariable
 returns a string representation of the value of variable
@@ -272,9 +291,7 @@ copies the contents of a variable from
 to
 .Fa Vdst.
 Pointer references are preserved.
-For
-.Dv AG_VARIABLE_STRING
-variable types, internally-allocated strings are duplicated.
+Discrete strings are duplicated.
 .Pp
 .Fn AG_DerefVariable
 copies the contents of
@@ -282,9 +299,8 @@ copies the contents of
 to
 .Fa Vdst ,
 converting pointer references to immediate values.
-For
-.Dv AG_VARIABLE_STRING
-variable types, strings are duplicated unconditionally.
+Discrete strings are duplicated, and pointers to strings are turned into
+discrete strings.
 .Pp
 The
 .Fn AG_CompareVariables
@@ -317,44 +333,44 @@ The substituted string is returned into fixed-size buffer
 of size
 .Fa dst_size .
 .Sh TYPE-SPECIFIC INTERFACES
-The following functions are used to retrieve or set variables of
-specific types.
+The following functions get and set variables of specific types.
 .Pp
-The
-.Fn AG_GetFoo
-functions return the value of variable
+.Fn AG_Get<Type>
+returns the value of variable
 .Fa name
-(under object
-.Fa obj ) .
-If the variable is a pointer type, it is dereferenced.
-If it is tied to a function, the function is evaluated first.
+under object
+.Fa obj
+with implicit dereferencing.
+If the variable is a pointer type then the value referenced by it is returned.
+If the variable is a virtual function, it is evaluated first.
 .Pp
 The
-.Fn AG_InitFoo
+.Fn AG_Init<Type>
 functions initialize an
-.Nm
+.Ft AG_Variable
 structure
 .Fa var
 with the specified value
 .Fa val .
 .Pp
 The
-.Fn AG_SetFoo
+.Fn AG_Set<Type>
 functions set the value of variable
 .Fa name
 to the specified value
 .Fa val .
+Implicit dereferencing is done.
 If the variable does not exist, it is created.
 .Pp
 The
-.Fn AG_BindFoo
+.Fn AG_Bind<Type>
 functions create or modify a typed pointer variable.
 The argument
 .Fa pVal
 is a pointer to the actual value.
 .Pp
 The
-.Fn AG_BindFooMp
+.Fn AG_Bind<Type>Mp
 variant accepts an extra
 .Fa lock
 argument, which is a mutex device (i.e., an
@@ -365,16 +381,15 @@ to be acquired whenever the data referenced by
 .Fa pVal
 will be accessed.
 .Pp
-The
-.Fn AG_BindFooFn
-variants create or modify a variable, tying the variable to a function
+.Fn AG_Bind<Type>Fn
+creates or modifies a variable, tying the variable to a virtual function
 .Fa fn ,
 which will be evaluated whenever the variable is read.
-A list of optional
+Following the
+.F fn
+argument is a variable list of optional
 .Xr AG_Event 3
-style arguments follow the
-.Fa fn
-argument.
+style arguments to pass to the virtual function.
 .Sh INTEGERS
 .nr nS 1
 .Ft "Uint"
@@ -665,19 +680,10 @@ is defined.
 .Ft "AG_Variable *"
 .Fn AG_BindStringFn "AG_Object *obj" "const char *name" "size_t (*fn)(AG_Event *, char *, size_t)"
 .Pp
-.Ft "AG_Variable *"
-.Fn AG_SetConstString "AG_Object *obj" "const char *name" "const char *s"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindConstString "AG_Object *obj" "const char *name" "const char **s"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindConstStringMp "AG_Object *obj" "const char *name" "const char **s" "AG_Mutex *lock"
-.Pp
 .nr nS 0
 These functions provide an interface to C strings.
-A string variable can either contain a dynamically-allocated buffer,
-or reference an external, fixed-size buffer.
+A string variable may contain an unbounded string, or reference an external
+fixed-size buffer.
 .Pp
 .Fn AG_GetString
 returns the contents of a string variable.
@@ -685,7 +691,7 @@ The string is safely copied to fixed-size buffer
 .Fa dst ,
 of size
 .Fa dst_size .
-The return value is the number of bytes that would have been copied, were
+Return the number of bytes that would have been copied were
 .Fa dst_size
 unlimited.
 .Pp
@@ -693,26 +699,21 @@ unlimited.
 returns a newly-allocated copy of the string variable.
 If the string cannot be allocated, NULL is returned.
 .Pp
-The
 .Fn AG_GetStringP
-function returns a direct pointer to the buffer containing the string.
-If the given variable is function-defined (i.e., it was set by
-.Fn AG_BindStringFn ) ,
-the value generated by the last
-.Fn AG_EvalVariable
-operation is returned.
-Note that
+returns a direct pointer to the buffer containing the string.
+If the variable is a virtual function, it is not evaluated.
+Warning:
 .Fn AG_GetStringP
-is not free-threaded, so calls to this function should be protected by
+is not free-threaded, so the object must be locked and calls should be
+protected by
 .Fn AG_LockVariable
-(as an exception, dynamically-allocated strings set by
+(exceptionally, discrete strings set by
 .Fn AG_SetString
-are safe to access without locking, as long as the variable's parent object
-is locked).
+are safe to access without locking if the variable's parent object is locked).
 .Pp
 .Fn AG_InitString
 initializes a
-.Nm
+.Ft AG_Variable
 structure with the given string, which is copied from
 .Fa s .
 The
@@ -745,9 +746,10 @@ The
 variant accepts a pointer to a dynamically-allocated string buffer.
 This buffer will be freed automatically when the parent object is destroyed.
 .Pp
-The
 .Fn AG_PrtString
-variant sets a string variable from a format string argument.
+sets a string variable from a
+.Xr printf 3 
+style format.
 .Pp
 .Fn AG_BindString
 creates or modifies a variable referencing a fixed-size string buffer
@@ -777,24 +779,6 @@ variant ties the variable to a function
 .Pp
 .Ft "AG_Variable *"
 .Fn AG_BindPointerFn "AG_Object *obj" "const char *name" "void *(*fn)(AG_Event *)"
-.Pp
-.Ft "const void *"
-.Fn AG_GetConstPointer "AG_Object *obj" "const char *name"
-.Pp
-.Ft "void"
-.Fn AG_InitConstPointer "AG_Variable *var" "const void *val"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_SetConstPointer "AG_Object *obj" "const char *name" "const void *val"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindConstPointer "AG_Object *obj" "const char *name" "const void **pVal"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindConstPointerMp "AG_Object *obj" "const char *name" "const void **pVal" "AG_Mutex *lock"
-.Pp
-.Ft "AG_Variable *"
-.Fn AG_BindConstPointerFn "AG_Object *obj" "const char *name" "const void *(*fn)(AG_Event *)"
 .Pp
 .nr nS 0
 These functions provide an interface to generic pointer types.
@@ -850,7 +834,7 @@ A hard dependency implies that if both
 .Fa obj
 and
 .Fa varObj
-share the same VFS, Agar will not allow
+share the same VFS then Agar will not allow
 .Fa varObj
 to be released from memory (or detached from the VFS) for as long as the
 reference exists.
@@ -864,10 +848,11 @@ under an external object
 returning a
 .Dv P_VARIABLE
 type Variable on success.
-Accessing a
-.Dv P_VARIABLE
-implies locking the external object and returning a copy of its variable named
-.Fa varKey .
+Whenever this Variable is accessed, the external object will be locked and a
+copy of its variable
+.Fa varKey
+will be returned implicitely.
+Note: Circular references must be avoided.
 .Pp
 .Fn AG_BindVariable
 implicitely creates an anonymous Object->Object reference to
@@ -881,8 +866,7 @@ when no more Object->Variable references make use of the object).
 .Fn AG_BindObject
 and
 .Fn AG_BindVariable
-may fail and return NULL if an attempt to create a circular dependency
-is detected.
+may fail and return NULL.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Variable

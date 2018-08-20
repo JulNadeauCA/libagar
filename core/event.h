@@ -10,10 +10,10 @@
 #endif
 
 #ifdef AG_TYPE_SAFETY
-# define AG_OBJECT(v,t)    ((v < event->argc && event->argv[v].type==AG_VARIABLE_POINTER \
-                            && AG_OfClass(event->argv[v].data.p, (t))) ? \
-			    event->argv[v].data.p : AG_ObjectMismatch())
-# define AG_PTR(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_POINTER) ? event->argv[v].data.p   : AG_PtrMismatch())
+# define AG_OBJECT(v,t)   ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER \
+                           && AG_OfClass(event->argv[v].data.p, (t))) ? \
+			   event->argv[v].data.p : AG_ObjectMismatch())
+# define AG_PTR(v)        ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER) ? event->argv[v].data.p   : AG_PtrMismatch())
 # define AG_STRING(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING)  ? event->argv[v].data.s   : AG_StringMismatch())
 # define AG_INT(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT)     ? event->argv[v].data.i   : AG_IntMismatch())
 # define AG_UINT(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT)    ? event->argv[v].data.u   : (Uint)AG_IntMismatch())
@@ -225,21 +225,6 @@ typedef void (*AG_EventFn)(AG_Event *);
 	  }								\
 	  c++;								\
 	  break;							\
-	case 'C':							\
-	  switch (c[1]) {						\
-	  case 's':							\
-	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_CONST_STRING, Cs,	\
-	        const char *);						\
-	    break;							\
-	  case 'p':							\
-	    AG_EVENT_INS_ARG((ev), ap, AG_VARIABLE_CONST_POINTER, Cp,	\
-	        const void *);						\
-	    break;							\
-	  default:							\
-	    AG_FatalError("AG_Event: Bad format (C[sp]?)");		\
-	  }								\
-	  c++;								\
-	  break;							\
 	case ' ':							\
 	case ',':							\
 	case '%':							\
@@ -307,7 +292,6 @@ AG_Function *AG_SetLongDoubleFn(void *, const char *, AG_LongDoubleFn, const cha
 #endif
 AG_Function *AG_SetStringFn(void *, const char *, AG_StringFn, const char *, ...);
 AG_Function *AG_SetPointerFn(void *, const char *, AG_PointerFn, const char *, ...);
-AG_Function *AG_SetConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
 
 void      AG_UnsetEvent(void *, const char *);
 void      AG_PostEvent(void *, void *, const char *, const char *, ...);
@@ -346,7 +330,7 @@ int  AG_EventSinkSELECT(void);
 int  AG_EventSinkSPINNER(void);
 
 static __inline__ void AG_EventPushPointer(AG_Event *ev, const char *name, void *val) { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_POINTER, name, p, val); }
-static __inline__ void AG_EventPushString(AG_Event *ev, const char *name, char *val)  { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_STRING, name, s, val); }
+static __inline__ void AG_EventPushString(AG_Event *ev, const char *name, char *val)  { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_STRING, name, s, AG_Strdup(val)); }
 static __inline__ void AG_EventPushInt(AG_Event *ev, const char *name, int val)       { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_INT, name, i, val); }
 static __inline__ void AG_EventPushUint(AG_Event *ev, const char *name, Uint val)     { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_UINT, name, i, val); }
 static __inline__ void AG_EventPushLong(AG_Event *ev, const char *name, long val)     { AG_EVENT_PUSH_FN(ev, AG_VARIABLE_LONG, name, li, val); }

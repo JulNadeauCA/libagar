@@ -88,4 +88,10 @@ AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
 	return GetProp(obj, key, type, NULL);
 }
 
+AG_Variable *
+AG_GetVariableLocked(void *obj, const char *name)
+{
+	return AG_AccessVariable(obj, name);
+}
+
 #endif /* AG_LEGACY */
