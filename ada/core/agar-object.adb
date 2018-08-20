@@ -25,9 +25,9 @@ package body Agar.Object is
   use Agar.Event;
 
   function New_Object
-    (Parent : in Object_Access_t;
+    (Parent : in Object_Access;
      Name   : in String;
-     Class  : in Class_Not_Null_Access_t) return Object_Access_t
+     Class  : in Class_Not_Null_Access) return Object_Access
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
   begin
@@ -38,9 +38,9 @@ package body Agar.Object is
   end;
   
   function New_Object
-    (Parent : in Object_Access_t;
-     Class  : in Class_Not_Null_Access_t) return Object_Access_t
-  is begin
+    (Parent : in Object_Access;
+     Class  : in Class_Not_Null_Access) return Object_Access is
+  begin
     return AG_ObjectNew
       (Parent => Parent.all'Address,
        Name   => CS.Null_Ptr,
@@ -48,8 +48,8 @@ package body Agar.Object is
   end;
   
   function New_Object
-    (Class : in Class_Not_Null_Access_t) return Object_Access_t
-  is begin
+    (Class : in Class_Not_Null_Access) return Object_Access is
+  begin
     return AG_ObjectNew
       (Parent => System.Null_Address,
        Name   => CS.Null_Ptr,
@@ -57,10 +57,10 @@ package body Agar.Object is
   end;
 
   procedure Init_Object
-    (Object : in Object_Not_Null_Access_t;
-     Class  : in Class_Not_Null_Access_t;
-     Static : in Boolean := False)
-  is begin
+    (Object : in Object_Not_Null_Access;
+     Class  : in Class_Not_Null_Access;
+     Static : in Boolean := False) is
+  begin
     if Static then
     	AG_ObjectInitStatic (Object, Class);
     else
@@ -69,9 +69,9 @@ package body Agar.Object is
   end;
   
   procedure Attach
-    (Root   : in Object_Not_Null_Access_t;
+    (Root   : in Object_Not_Null_Access;
      Parent : in String;
-     Object : in Object_Access_t)
+     Object : in Object_Access)
   is
     Ch_Parent : aliased C.char_array := C.To_C(Parent);
   begin
@@ -82,8 +82,8 @@ package body Agar.Object is
   end;
 
   function Find
-    (Root : in Object_Not_Null_Access_t;
-     Path : in String) return Object_Access_t
+    (Root : in Object_Not_Null_Access;
+     Path : in String) return Object_Access
   is
     Ch_Path : aliased C.char_array := C.To_C(Path);
   begin
@@ -93,9 +93,9 @@ package body Agar.Object is
   end;
 
   function Find_Parent
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      Name   : in String;
-     Class  : in String) return Object_Access_t
+     Class  : in String) return Object_Access
   is
     Ch_Name  : aliased C.char_array := C.To_C(Name);
     Ch_Class : aliased C.char_array := C.To_C(Class);
@@ -107,8 +107,8 @@ package body Agar.Object is
   end;
 
   function Find_Child
-    (Parent : in Object_Not_Null_Access_t;
-     Name   : in String) return Object_Access_t
+    (Parent : in Object_Not_Null_Access;
+     Name   : in String) return Object_Access
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
   begin
@@ -117,7 +117,7 @@ package body Agar.Object is
        Name   => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access));
   end;
 
-  function Get_Name (Object : in Object_Not_Null_Access_t) return String
+  function Get_Name (Object : in Object_Not_Null_Access) return String
   is
     Ch_Name : aliased C.char_array (0 .. C.size_t(HIERARCHY_MAX));
     Result  : C.int;
@@ -133,7 +133,7 @@ package body Agar.Object is
   end;
 
   procedure Set_Name
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      Name   : in String)
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -144,8 +144,8 @@ package body Agar.Object is
   end;
 
   function Generate_Name
-    (Object : in Object_Not_Null_Access_t;
-     Class  : in Class_Not_Null_Access_t) return String
+    (Object : in Object_Not_Null_Access;
+     Class  : in Class_Not_Null_Access) return String
   is
     Ch_Name : aliased C.char_array (0 .. C.size_t(NAME_MAX));
   begin
@@ -158,7 +158,7 @@ package body Agar.Object is
   end;
   
   function Generate_Name
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      Prefix : in String) return String
   is
     Ch_Name   : aliased C.char_array (0 .. C.size_t(NAME_MAX));
@@ -201,15 +201,15 @@ package body Agar.Object is
      Class_Size   : in Natural;
      Major        : in Natural := 1;
      Minor        : in Natural := 0;
-     Init_Func    : in Init_Func_Access_t := null;
-     Reset_Func   : in Reset_Func_Access_t := null;
-     Destroy_Func : in Destroy_Func_Access_t := null;
-     Load_Func    : in Load_Func_Access_t := null;
-     Save_Func    : in Save_Func_Access_t := null;
-     Edit_Func    : in Edit_Func_Access_t := null) return Class_Not_Null_Access_t
+     Init_Func    : in Init_Func_Access := null;
+     Reset_Func   : in Reset_Func_Access := null;
+     Destroy_Func : in Destroy_Func_Access := null;
+     Load_Func    : in Load_Func_Access := null;
+     Save_Func    : in Save_Func_Access := null;
+     Edit_Func    : in Edit_Func_Access := null) return Class_Not_Null_Access
   is
     Ch_Hierarchy : aliased C.char_array := C.To_C(Hierarchy);
-    Class        : Class_Access_t;
+    Class        : Class_Access;
   begin
     Class := AG_CreateClass
       (Hierarchy   => CS.To_Chars_Ptr(Ch_Hierarchy'Unchecked_Access),
@@ -230,89 +230,89 @@ package body Agar.Object is
   end Create_Class;
   
   procedure Class_Set_Init
-    (Class     : in Class_Not_Null_Access_t;
-     Init_Func : in Init_Func_Access_t)
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Init_Func : in Init_Func_Access) is
+  begin
     AG_ClassSetInit(Class, Init_Func);
   end;
 
   function Class_Set_Init
-    (Class     : in Class_Not_Null_Access_t;
-     Init_Func : in Init_Func_Access_t) return Init_Func_Access_t
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Init_Func : in Init_Func_Access) return Init_Func_Access is
+  begin
     return AG_ClassSetInit(Class, Init_Func);
   end;
   
   procedure Class_Set_Reset
-    (Class      : in Class_Not_Null_Access_t;
-     Reset_Func : in Reset_Func_Access_t)
-  is begin
+    (Class      : in Class_Not_Null_Access;
+     Reset_Func : in Reset_Func_Access) is
+  begin
     AG_ClassSetReset(Class, Reset_Func);
   end;
   
   function Class_Set_Reset
-    (Class      : in Class_Not_Null_Access_t;
-     Reset_Func : in Reset_Func_Access_t) return Reset_Func_Access_t
-  is begin
+    (Class      : in Class_Not_Null_Access;
+     Reset_Func : in Reset_Func_Access) return Reset_Func_Access is
+  begin
     return AG_ClassSetReset(Class, Reset_Func);
   end;
   
   procedure Class_Set_Destroy
-    (Class        : in Class_Not_Null_Access_t;
-     Destroy_Func : in Destroy_Func_Access_t)
-  is begin
+    (Class        : in Class_Not_Null_Access;
+     Destroy_Func : in Destroy_Func_Access) is
+  begin
     AG_ClassSetDestroy(Class, Destroy_Func);
   end;
   
   function Class_Set_Destroy
-    (Class        : in Class_Not_Null_Access_t;
-     Destroy_Func : in Destroy_Func_Access_t) return Destroy_Func_Access_t
-  is begin
+    (Class        : in Class_Not_Null_Access;
+     Destroy_Func : in Destroy_Func_Access) return Destroy_Func_Access is
+  begin
     return AG_ClassSetDestroy(Class, Destroy_Func);
   end;
   
   procedure Class_Set_Load
-    (Class     : in Class_Not_Null_Access_t;
-     Load_Func : in Load_Func_Access_t)
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Load_Func : in Load_Func_Access) is
+  begin
     AG_ClassSetLoad(Class, Load_Func);
   end;
   
   function Class_Set_Load
-    (Class     : in Class_Not_Null_Access_t;
-     Load_Func : in Load_Func_Access_t) return Load_Func_Access_t
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Load_Func : in Load_Func_Access) return Load_Func_Access is
+  begin
     return AG_ClassSetLoad(Class, Load_Func);
   end;
   
   procedure Class_Set_Save
-    (Class     : in Class_Not_Null_Access_t;
-     Save_Func : in Save_Func_Access_t)
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Save_Func : in Save_Func_Access) is
+  begin
     AG_ClassSetSave(Class, Save_Func);
   end;
   function Class_Set_Save
-    (Class     : in Class_Not_Null_Access_t;
-     Save_Func : in Save_Func_Access_t) return Save_Func_Access_t
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Save_Func : in Save_Func_Access) return Save_Func_Access is
+  begin
     return AG_ClassSetSave(Class, Save_Func);
   end;
   
   procedure Class_Set_Edit
-    (Class     : in Class_Not_Null_Access_t;
-     Edit_Func : in Edit_Func_Access_t)
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Edit_Func : in Edit_Func_Access) is
+  begin
     AG_ClassSetEdit(Class, Edit_Func);
   end;
   function Class_Set_Edit
-    (Class     : in Class_Not_Null_Access_t;
-     Edit_Func : in Edit_Func_Access_t) return Edit_Func_Access_t
-  is begin
+    (Class     : in Class_Not_Null_Access;
+     Edit_Func : in Edit_Func_Access) return Edit_Func_Access is
+  begin
     return AG_ClassSetEdit(Class, Edit_Func);
   end;
   
   function Lookup_Class
-    (Class : in String) return Class_Access_t
+    (Class : in String) return Class_Access
   is
     Ch_Class : aliased C.char_array := C.To_C(Class);
   begin
@@ -321,7 +321,7 @@ package body Agar.Object is
   end;
 
   function Load_Class
-    (Class : in String) return Class_Access_t
+    (Class : in String) return Class_Access
   is
     Ch_Class : aliased C.char_array := C.To_C(Class);
   begin
@@ -348,7 +348,7 @@ package body Agar.Object is
   end;
 
   function Is_Of_Class
-    (Object  : in Object_Not_Null_Access_t;
+    (Object  : in Object_Not_Null_Access;
      Pattern : in String) return Boolean
   is
     Ch_Pattern : aliased C.char_array := C.To_C(Pattern);
@@ -358,17 +358,16 @@ package body Agar.Object is
        Pattern => CS.To_Chars_Ptr(Ch_Pattern'Unchecked_Access)) = 1;
   end;
 
-  function In_Use
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function In_Use (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectInUse(Object) = 1;
   end;
 
   function Add_Dependency
-    (Object     : in Object_Not_Null_Access_t;
-     Dependency : in Object_Not_Null_Access_t;
-     Persistent : in Boolean := False) return Dependency_Access_t
-  is begin
+    (Object     : in Object_Not_Null_Access;
+     Dependency : in Object_Not_Null_Access;
+     Persistent : in Boolean := False) return Dependency_Access is
+  begin
     return AG_ObjectAddDep
       (Object     => Object,
        Dependency => Dependency,
@@ -376,10 +375,10 @@ package body Agar.Object is
   end;
 
   function Find_Dependency
-    (Object  : in Object_Not_Null_Access_t;
+    (Object  : in Object_Not_Null_Access;
      Index   : in Interfaces.Unsigned_32;
-     Pointer : access Object_Not_Null_Access_t) return Boolean
-  is begin
+     Pointer : access Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectFindDep
       (Object  => Object,
        Index   => Index,
@@ -390,14 +389,13 @@ package body Agar.Object is
   -- Serialization --
   -------------------
 
-  function Load
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function Load (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectLoad(Object) = 0;
   end;
 
   function Load
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      File   : in String) return Boolean
   is
     Ch_File : aliased C.char_array := C.To_C(File);
@@ -407,14 +405,13 @@ package body Agar.Object is
        File   => CS.To_Chars_Ptr(Ch_File'Unchecked_Access)) = 0;
   end;
 
-  function Load_Data
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function Load_Data (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectLoadData(Object) = 0;
   end;
 
   function Load_Data
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      File   : in String) return Boolean
   is
     Ch_File : aliased C.char_array := C.To_C(File);
@@ -424,14 +421,13 @@ package body Agar.Object is
        File   => CS.To_Chars_Ptr(Ch_File'Unchecked_Access)) = 0;
   end;
 
-  function Load_Generic
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function Load_Generic (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectLoadGeneric(Object) = 0;
   end;
 
   function Load_Generic
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      File   : in String) return Boolean
   is
     Ch_File : aliased C.char_array := C.To_C(File);
@@ -441,14 +437,13 @@ package body Agar.Object is
        File   => CS.To_Chars_Ptr(Ch_File'Unchecked_Access)) = 0;
   end;
 
-  function Save
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function Save (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectSave(Object) = 0;
   end;
   
   function Save
-    (Object : in Object_Not_Null_Access_t;
+    (Object : in Object_Not_Null_Access;
      File   : in String) return Boolean
   is
     Ch_File : aliased C.char_array := C.To_C(File);
@@ -458,42 +453,41 @@ package body Agar.Object is
        File   => CS.To_Chars_Ptr(Ch_File'Unchecked_Access)) = 0;
   end;
 
-  function Save_All
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+  function Save_All (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectSaveAll(Object) = 0;
   end;
 
   function Serialize
-    (Object : in Object_Not_Null_Access_t;
-     Source : in Data_Source.Data_Source_Not_Null_Access_t) return Boolean
-  is begin
+    (Object : in Object_Not_Null_Access;
+     Source : in DS.Data_Source_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectSerialize(Object, Source) = 0;
   end;
 
   function Unserialize
-    (Object : in Object_Not_Null_Access_t;
-     Source : in Data_Source.Data_Source_Not_Null_Access_t) return Boolean
-  is begin
+    (Object : in Object_Not_Null_Access;
+     Source : in DS.Data_Source_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectUnserialize(Object, Source) = 0;
   end;
 
   function Read_Header
-    (Source : in DS.Data_Source_Not_Null_Access_t;
-     Header : in Header_Access_t) return Boolean
-  is begin
+    (Source : in DS.Data_Source_Not_Null_Access;
+     Header : in Header_Access) return Boolean is
+  begin
     return AG_ObjectReadHeader (Source, Header) = 0;
   end;
 
   function Page_In
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+    (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectPageIn (Object) = 0;
   end;
 
   function Page_Out
-    (Object : in Object_Not_Null_Access_t) return Boolean
-  is begin
+    (Object : in Object_Not_Null_Access) return Boolean is
+  begin
     return AG_ObjectPageOut (Object) = 0;
   end;
   
@@ -502,14 +496,14 @@ package body Agar.Object is
   ------------
   
   function Set_Event
-    (Object    : in Object_Not_Null_Access_t;
+    (Object    : in Object_Not_Null_Access;
      Event     : in String;
-     Func      : in Event_Func_Access_t;
+     Func      : in Event_Func_Access;
      Async     : in Boolean := False;
-     Propagate : in Boolean := False) return Event_Not_Null_Access_t
+     Propagate : in Boolean := False) return Event_Not_Null_Access
   is
     Ch_Event : aliased C.char_array := C.To_C(Event);
-    Result   : constant Event_Not_Null_Access_t := AG_SetEvent
+    Result   : constant Event_Not_Null_Access := AG_SetEvent
       (Object => Object,
        Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
        Func   => Func,
@@ -520,9 +514,9 @@ package body Agar.Object is
   end;
   
   procedure Set_Event
-    (Object    : in Object_Not_Null_Access_t;
+    (Object    : in Object_Not_Null_Access;
      Event     : in String;
-     Func      : in Event_Func_Access_t;
+     Func      : in Event_Func_Access;
      Async     : in Boolean := False;
      Propagate : in Boolean := False)
   is
@@ -536,14 +530,14 @@ package body Agar.Object is
   end;
   
   function Add_Event
-    (Object    : in Object_Not_Null_Access_t;
+    (Object    : in Object_Not_Null_Access;
      Event     : in String;
-     Func      : in Event_Func_Access_t;
+     Func      : in Event_Func_Access;
      Async     : in Boolean := False;
-     Propagate : in Boolean := False) return Event_Not_Null_Access_t
+     Propagate : in Boolean := False) return Event_Not_Null_Access
   is
     Ch_Event : aliased C.char_array := C.To_C(Event);
-    Result   : constant Event_Not_Null_Access_t := AG_AddEvent
+    Result   : constant Event_Not_Null_Access := AG_AddEvent
       (Object => Object,
        Event  => CS.To_Chars_Ptr(Ch_Event'Unchecked_Access),
        Func   => Func,
@@ -553,9 +547,9 @@ package body Agar.Object is
   end;
   
   procedure Add_Event
-    (Object    : in Object_Not_Null_Access_t;
+    (Object    : in Object_Not_Null_Access;
      Event     : in String;
-     Func      : in Event_Func_Access_t;
+     Func      : in Event_Func_Access;
      Async     : in Boolean := False;
      Propagate : in Boolean := False)
   is
@@ -569,8 +563,8 @@ package body Agar.Object is
   end;
   
   procedure Post_Event
-    (Source : in Object_Access_t;
-     Target : in Object_Not_Null_Access_t;
+    (Source : in Object_Access;
+     Target : in Object_Not_Null_Access;
      Event  : in String)
   is
     Ch_Event  : aliased C.char_array := C.To_C(Event);
@@ -583,9 +577,9 @@ package body Agar.Object is
   end;
   
   procedure Post_Event
-    (Source : in Object_Access_t;
-     Target : in Object_Not_Null_Access_t;
-     Event  : in Event_Not_Null_Access_t) is
+    (Source : in Object_Access;
+     Target : in Object_Not_Null_Access;
+     Event  : in Event_Not_Null_Access) is
   begin
     AG_PostEventByPtr
       (Source => Source,
@@ -595,7 +589,7 @@ package body Agar.Object is
   end;
   
   procedure Post_Event
-    (Target : in Object_Not_Null_Access_t;
+    (Target : in Object_Not_Null_Access;
      Event  : in String)
   is
     Ch_Event  : aliased C.char_array := C.To_C(Event);
@@ -608,8 +602,8 @@ package body Agar.Object is
   end;
 
   procedure Post_Event
-    (Target : in Object_Not_Null_Access_t;
-     Event  : in Event_Not_Null_Access_t) is
+    (Target : in Object_Not_Null_Access;
+     Event  : in Event_Not_Null_Access) is
   begin
     AG_PostEventByPtr
       (Source => Null,
@@ -619,7 +613,7 @@ package body Agar.Object is
   end;
   
   procedure Debug
-    (Object  : in Object_Access_t;
+    (Object  : in Object_Access;
      Message : in String)
   is
     Ch_Format  : aliased C.char_array := C.To_C("%s");
@@ -636,10 +630,10 @@ package body Agar.Object is
   ------------
 
   function Add_Timer
-    (Object   : in Object_Access_t;
-     Timer    : in TMR.Timer_not_null_Access_t;
+    (Object   : in Object_Access;
+     Timer    : in TMR.Timer_not_null_Access;
      Interval : in Interfaces.Unsigned_32;
-     Func     : in TMR.Timer_Callback_t) return Boolean
+     Func     : in TMR.Timer_Callback) return Boolean
   is
   begin
     return 0 = AG_AddTimer
@@ -652,9 +646,9 @@ package body Agar.Object is
   end;
   
   function Add_Timer
-    (Object   : in Object_Access_t;
+    (Object   : in Object_Access;
      Interval : in Interfaces.Unsigned_32;
-     Func     : in TMR.Timer_Callback_t) return TMR.Timer_Access_t
+     Func     : in TMR.Timer_Callback) return TMR.Timer_Access
   is
   begin
     return AG_AddTimerAuto
@@ -669,14 +663,28 @@ package body Agar.Object is
   ---------------
 
   function Defined
-    (Object   : in Object_not_null_Access_t;
+    (Object   : in Object_not_null_Access;
      Variable : in String) return Boolean
   is
     Ch_Name : aliased C.char_array := C.To_C(Variable);
+    Result  : C.int;
   begin
-    return 1 = AG_Defined
+    Lock(Object);
+    Result := AG_Defined
       (Object => Object,
        Name   => CS.To_Chars_Ptr(Ch_Name'Unchecked_Access));
+    Unlock(Object);
+    return Result = 1;
+  end;
+
+  --
+  -- Compare two variables with no dereference. Discrete types are compared
+  -- by value. Strings are compared case-sensitively. Reference types are
+  -- compared by their pointer value.
+  --
+  function "=" (Left, Right : in Variable_not_null_Access) return Boolean is
+  begin
+    return 0 = AG_CompareVariables (Left, Right);
   end;
 
 end Agar.Object;

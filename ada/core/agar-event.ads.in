@@ -9,12 +9,12 @@ with Interfaces.C.Strings;
 
 --
 -- Argument passing and retrieval for event handler routines (and virtual
--- functions of Agar objects in general). The list of arguments is a stack of
--- typed data items (a stack of Variable_t). Items can be pushed on the stack
--- with or without a (case-insensitive) name string. Data can then be later
--- retrieved either by index or by name.
+-- functions of Agar objects in general). Arguments are of type Agar.Variable,
+-- which includes discrete and pointer types. Arguments can be tagged and
+-- accessed by index or name.
 --
--- Agar enforces run-time type safety if compiled with --enable-type-safety.
+-- NOTE: Agar enforces run-time type safety only when it is compiled with
+--       the configure option --enable-type-safety.
 --
 
 package Agar.Event is
@@ -24,104 +24,153 @@ package Agar.Event is
   ARGS_MAX : constant Natural := %%const(AG_EVENT_ARGS_MAX)%%;
   NAME_MAX : constant Natural := %%const(AG_EVENT_NAME_MAX)%%;
   
-  type Event_t is array (1 .. %%sizeof(AG_Event)%%) of
+  type Event is array (1 .. %%sizeof(AG_Event)%%) of
     aliased Interfaces.Unsigned_8 with Convention => C;
-  for Event_t'Size use %%sizeof(AG_Event)%% * System.Storage_Unit;
+  for Event'Size use %%sizeof(AG_Event)%% * System.Storage_Unit;
 
-  type Event_Access_t             is access all Event_t with Convention => C;
-  subtype Event_Not_Null_Access_t is not null Event_Access_t;
+  type Event_Access             is access all Event with Convention => C;
+  subtype Event_not_null_Access is not null Event_Access;
+
+  type Event_Queue is limited record
+    Count  : C.unsigned;
+    Events : Event_Access;
+  end record
+    with Convention => C;
+
+  type Event_Queue_Access is access all Event_Queue with Convention => C;
+  subtype Event_Queue_not_null_Access is not null Event_Queue_Access;
 
   --
-  -- Initialize an existing Event_t.
+  -- Initialize an existing Event.
   --
-  procedure Init (Event : in Event_Not_Null_Access_t)
+  procedure Init (Event : in Event_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_EventInit";
 
   --
   -- Push a tagged Event argument.
   --
   procedure Push_Address
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in System.Address);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in System.Address);
   procedure Push_String
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in String);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in String);
   procedure Push_Integer
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Integer);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Integer);
   procedure Push_Natural
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Natural);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Natural);
   procedure Push_Long_Integer
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Integer);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Long_Integer);
   procedure Push_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Float);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Float);
   procedure Push_Long_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Float);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Long_Float);
   procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String; Value : in Long_Long_Float);
+    (Event : in Event_not_null_Access;
+     Name  : in String;
+     Value : in Long_Long_Float);
   
   --
   -- Push an untagged Event argument.
   --
   procedure Push_Address
-    (Event : in Event_Not_Null_Access_t; Value : in System.Address);
+    (Event : in Event_not_null_Access;
+     Value : in System.Address);
   procedure Push_String
-    (Event : in Event_Not_Null_Access_t; Value : in String);
+    (Event : in Event_not_null_Access;
+     Value : in String);
   procedure Push_Integer
-    (Event : in Event_Not_Null_Access_t; Value : in Integer);
+    (Event : in Event_not_null_Access;
+     Value : in Integer);
   procedure Push_Natural
-    (Event : in Event_Not_Null_Access_t; Value : in Natural);
+    (Event : in Event_not_null_Access;
+     Value : in Natural);
   procedure Push_Long_Integer
-    (Event : in Event_Not_Null_Access_t; Value : in Long_Integer);
+    (Event : in Event_not_null_Access;
+     Value : in Long_Integer);
   procedure Push_Float
-    (Event : in Event_Not_Null_Access_t; Value : in Float);
+    (Event : in Event_not_null_Access;
+     Value : in Float);
   procedure Push_Long_Float
-    (Event : in Event_Not_Null_Access_t; Value : in Long_Float);
+    (Event : in Event_not_null_Access;
+     Value : in Long_Float);
   procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t; Value : in Long_Long_Float);
+    (Event : in Event_not_null_Access;
+     Value : in Long_Long_Float);
 
   --
   -- Extract an argument by index.
   --
   function Get_Address
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return System.Address;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return System.Address;
   function Get_String
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return String;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return String;
   function Get_Integer
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Integer;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Integer;
   function Get_Natural
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Natural;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Natural;
   function Get_Long_Integer
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Integer;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Long_Integer;
   function Get_Float
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Float;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Float;
   function Get_Long_Float
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Float;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Long_Float;
   function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t; Index : in Natural) return Long_Long_Float;
+    (Event : in Event_not_null_Access;
+     Index : in Natural) return Long_Long_Float;
   
   --
   -- Extract an argument by tag.
   --
   function Get_Address
-    (Event : in Event_Not_Null_Access_t; Name : in String) return System.Address;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return System.Address;
   function Get_String
-    (Event : in Event_Not_Null_Access_t; Name : in String) return String;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return String;
   function Get_Integer
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Integer;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Integer;
   function Get_Natural
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Natural;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Natural;
   function Get_Long_Integer
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Integer;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Long_Integer;
   function Get_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Float;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Float;
   function Get_Long_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Float;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Long_Float;
   function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t; Name : in String) return Long_Long_Float;
+    (Event : in Event_not_null_Access;
+     Name  : in String) return Long_Long_Float;
 
   generic
   type Element_Type        is private;
   type Element_Access_Type is access Element_Type;
   procedure Push_Access
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in String;
      Value : in Element_Access_Type);
   
@@ -132,49 +181,49 @@ package Agar.Event is
   --
 
   procedure ag_event_push_ptr
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in System.Address)
     with Import, Convention => C;
   
   procedure ag_event_push_string
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in CS.chars_ptr)
     with Import, Convention => C;
   
   procedure ag_event_push_int
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.int)
     with Import, Convention => C;
 
   procedure ag_event_push_uint
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.unsigned)
     with Import, Convention => C;
 
   procedure ag_event_push_long
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.long)
     with Import, Convention => C;
 
   procedure ag_event_push_float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.C_float)
     with Import, Convention => C;
 
   procedure ag_event_push_double
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.double)
     with Import, Convention => C;
   
   procedure ag_event_push_long_double
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr;
      Value : in C.long_double)
     with Import, Convention => C;
@@ -184,42 +233,42 @@ package Agar.Event is
   --
 
   function ag_event_get_ptr
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return System.Address
     with Import, Convention => C;
   
   function ag_event_get_string
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return CS.chars_ptr
     with Import, Convention => C;
   
   function ag_event_get_int
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.int
     with Import, Convention => C;
   
   function ag_event_get_uint
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.unsigned
     with Import, Convention => C;
   
   function ag_event_get_long
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.long
     with Import, Convention => C;
   
   function ag_event_get_float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.C_float
     with Import, Convention => C;
   
   function ag_event_get_double
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.double
     with Import, Convention => C;
   
   function ag_event_get_long_double
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Index : in C.unsigned) return C.long_double
     with Import, Convention => C;
   
@@ -228,42 +277,42 @@ package Agar.Event is
   --
 
   function ag_event_get_ptr_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return System.Address
     with Import, Convention => C;
   
   function ag_event_get_string_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return CS.chars_ptr
     with Import, Convention => C;
   
   function ag_event_get_int_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.int
     with Import, Convention => C;
   
   function ag_event_get_uint_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.unsigned
     with Import, Convention => C;
 
   function ag_event_get_long_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.long
     with Import, Convention => C;
   
   function ag_event_get_float_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.C_float
     with Import, Convention => C;
   
   function ag_event_get_double_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.double
     with Import, Convention => C;
   
   function ag_event_get_long_double_named
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_not_null_Access;
      Name  : in CS.chars_ptr) return C.long_double
     with Import, Convention => C;
 

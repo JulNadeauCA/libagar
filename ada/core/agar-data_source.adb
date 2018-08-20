@@ -24,7 +24,7 @@ package body Agar.Data_Source is
   procedure Open_File
     (Path   : in     String;
      Mode   : in     String;
-     Source :    out Data_Source_Access_t)
+     Source :    out Data_Source_Access)
   is
     Ch_Path : aliased C.char_array := C.To_C (Path);
     Ch_Mode : aliased C.char_array := C.To_C (Mode);
@@ -39,10 +39,10 @@ package body Agar.Data_Source is
     Element_Bytes : constant C.size_t := Element_Type'Size / System.Storage_Unit;
 
     procedure Read
-      (Source : in     Data_Source_Not_Null_Access_t;
+      (Source : in     Data_Source_Not_Null_Access;
        Buffer :    out Element_Array_Type;
        Read   :    out Element_Count_Type;
-       Status :    out IO_Status_t) is
+       Status :    out IO_Status) is
     begin
       Status := AG_Read
         (Source  => Source,
@@ -55,11 +55,11 @@ package body Agar.Data_Source is
     end Read;
 
     procedure Read_At_Offset
-      (Source : in     Data_Source_Not_Null_Access_t;
-       Offset : in     Byte_Offset_t;
+      (Source : in     Data_Source_Not_Null_Access;
+       Offset : in     Byte_Offset;
        Buffer :    out Element_Array_Type;
        Read   :    out Element_Count_Type;
-       Status :    out IO_Status_t) is
+       Status :    out IO_Status) is
     begin
       Status := AG_ReadAt
         (Source  => Source,
@@ -73,10 +73,10 @@ package body Agar.Data_Source is
     end Read_At_Offset;
 
     procedure Write
-      (Source : in     Data_Source_Not_Null_Access_t;
+      (Source : in     Data_Source_Not_Null_Access;
        Buffer : in     Element_Array_Type;
        Wrote  :    out Element_Count_Type;
-       Status :    out IO_Status_t) is
+       Status :    out IO_Status) is
     begin
       Status := AG_Write
         (Source  => Source,
@@ -89,11 +89,11 @@ package body Agar.Data_Source is
     end;
 
     procedure Write_At_Offset
-      (Source : in     Data_Source_Not_Null_Access_t;
-       Offset : in     Byte_Offset_t;
+      (Source : in     Data_Source_Not_Null_Access;
+       Offset : in     Byte_Offset;
        Buffer : in     Element_Array_Type;
        Wrote  :    out Element_Count_Type;
-       Status :    out IO_Status_t) is
+       Status :    out IO_Status) is
     begin
       Status := AG_WriteAt
         (Source  => Source,
@@ -110,8 +110,7 @@ package body Agar.Data_Source is
 
   end IO;
   
-  function Read_String
-    (Source : in Data_Source_Access_t) return String
+  function Read_String (Source : in Data_Source_Access) return String
   is
     Result : chars_ptr;
   begin
@@ -124,8 +123,8 @@ package body Agar.Data_Source is
   end;
   
   function Read_String
-    (Source         : in Data_Source_Access_t;
-     Max_Length     : in Natural) return String
+    (Source     : in Data_Source_Access;
+     Max_Length : in Natural) return String
   is
     Result : chars_ptr;
   begin
@@ -138,7 +137,7 @@ package body Agar.Data_Source is
   end;
   
   function Read_Padded_String
-    (Source : in Data_Source_Access_t;
+    (Source : in Data_Source_Access;
      Length : in Natural) return String
   is
     Ch_Name : aliased C.char_array := (1 .. C.size_t(Length) => C.nul);
@@ -155,7 +154,7 @@ package body Agar.Data_Source is
   end;
 
   procedure Write_String
-    (Source : in Data_Source_Access_t;
+    (Source : in Data_Source_Access;
      Data   : in String)
   is
     Ch_Data : aliased C.char_array := C.To_C(Data);
@@ -166,7 +165,7 @@ package body Agar.Data_Source is
   end;
   
   procedure Write_Padded_String
-    (Source : in Data_Source_Access_t;
+    (Source : in Data_Source_Access;
      Data   : in String;
      Length : in Natural)
   is

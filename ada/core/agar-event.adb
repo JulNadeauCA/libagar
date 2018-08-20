@@ -24,7 +24,7 @@ package body Agar.Event is
   -- Push Event Argument with tag --
   ----------------------------------
   procedure Push_Address
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in System.Address)
   is
@@ -37,7 +37,7 @@ package body Agar.Event is
   end Push_Address;
   
   procedure Push_Access
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Element_Access_Type) is
   begin
@@ -48,7 +48,7 @@ package body Agar.Event is
   end Push_Access;
   
   procedure Push_String
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in String)
   is
@@ -62,7 +62,7 @@ package body Agar.Event is
   end Push_String;
 
   procedure Push_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Integer)
   is
@@ -75,7 +75,7 @@ package body Agar.Event is
   end Push_Integer;
 
   procedure Push_Natural
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Natural)
   is
@@ -88,7 +88,7 @@ package body Agar.Event is
   end Push_Natural;
 
   procedure Push_Long_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Long_Integer)
   is
@@ -101,7 +101,7 @@ package body Agar.Event is
   end Push_Long_Integer;
 
   procedure Push_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Float)
   is
@@ -114,7 +114,7 @@ package body Agar.Event is
   end Push_Float;
 
   procedure Push_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Long_Float)
   is
@@ -127,7 +127,7 @@ package body Agar.Event is
   end Push_Long_Float;
   
   procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String;
      Value : in Long_Long_Float)
   is
@@ -143,7 +143,7 @@ package body Agar.Event is
   -- Push untagged Event argument --
   ----------------------------------
   procedure Push_Address
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in System.Address)
   is begin
     ag_event_push_ptr
@@ -153,7 +153,7 @@ package body Agar.Event is
   end Push_Address;
   
   procedure Push_String
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in String)
   is
     Ch_Value : aliased C.char_array := C.To_C(Value);
@@ -165,7 +165,7 @@ package body Agar.Event is
   end Push_String;
 
   procedure Push_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Integer)
   is begin
     ag_event_push_int
@@ -175,7 +175,7 @@ package body Agar.Event is
   end Push_Integer;
 
   procedure Push_Natural
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Natural)
   is begin
     ag_event_push_uint
@@ -185,7 +185,7 @@ package body Agar.Event is
   end Push_Natural;
 
   procedure Push_Long_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Long_Integer)
   is begin
     ag_event_push_long
@@ -195,7 +195,7 @@ package body Agar.Event is
   end Push_Long_Integer;
 
   procedure Push_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Float)
   is begin
     ag_event_push_float
@@ -205,7 +205,7 @@ package body Agar.Event is
   end Push_Float;
 
   procedure Push_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Long_Float)
   is begin
     ag_event_push_double
@@ -215,7 +215,7 @@ package body Agar.Event is
   end Push_Long_Float;
   
   procedure Push_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Value : in Long_Long_Float)
   is begin
     ag_event_push_long_double
@@ -229,7 +229,7 @@ package body Agar.Event is
   ----------------------------
   
   function Get_Address
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return System.Address
   is begin
     return ag_event_get_ptr
@@ -238,7 +238,7 @@ package body Agar.Event is
   end Get_Address;
 
   function Get_Address
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return System.Address
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -249,7 +249,7 @@ package body Agar.Event is
   end Get_Address;
   
   function Get_String
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return String
   is
     Result : CS.chars_ptr;
@@ -261,7 +261,7 @@ package body Agar.Event is
   end Get_String;
   
   function Get_String
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return String
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -274,7 +274,7 @@ package body Agar.Event is
   end Get_String;
   
   function Get_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Integer
   is begin
     return Integer
@@ -284,7 +284,7 @@ package body Agar.Event is
   end Get_Integer;
   
   function Get_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Integer
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -296,7 +296,7 @@ package body Agar.Event is
   end Get_Integer;
   
   function Get_Natural
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Natural
   is begin
     return Natural
@@ -306,7 +306,7 @@ package body Agar.Event is
   end Get_Natural;
   
   function Get_Natural
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Natural
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -318,7 +318,7 @@ package body Agar.Event is
   end Get_Natural;
   
   function Get_Long_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Long_Integer
   is begin
     return Long_Integer
@@ -328,7 +328,7 @@ package body Agar.Event is
   end Get_Long_Integer;
 
   function Get_Long_Integer
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Long_Integer
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -340,7 +340,7 @@ package body Agar.Event is
   end Get_Long_Integer;
   
   function Get_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Float
   is begin
     return Float
@@ -350,7 +350,7 @@ package body Agar.Event is
   end Get_Float;
 
   function Get_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Float
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -362,7 +362,7 @@ package body Agar.Event is
   end Get_Float;
   
   function Get_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Long_Float
   is begin
     return Long_Float
@@ -372,7 +372,7 @@ package body Agar.Event is
   end Get_Long_Float;
 
   function Get_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Long_Float
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -384,7 +384,7 @@ package body Agar.Event is
   end Get_Long_Float;
   
   function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Index : in Natural) return Long_Long_Float
   is begin
     return Long_Long_Float
@@ -394,7 +394,7 @@ package body Agar.Event is
   end Get_Long_Long_Float;
 
   function Get_Long_Long_Float
-    (Event : in Event_Not_Null_Access_t;
+    (Event : in Event_Not_Null_Access;
      Name  : in String) return Long_Long_Float
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);

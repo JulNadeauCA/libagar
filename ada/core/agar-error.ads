@@ -21,18 +21,17 @@ package Agar.Error is
 
   procedure Fatal_Error (Message : in String);
   
-  type    Error_Callback_t          is access procedure (Message : in String);
-  subtype Error_Callback_Not_Null_t is not null Error_Callback_t;
+  type Error_Callback_Access is access procedure (Message : in String);
 
-  procedure Set_Fatal_Callback
-    (Callback : Error_Callback_Not_Null_t);
+  procedure Set_Fatal_Callback (Callback : Error_Callback_Access);
 
   private
   
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
 
-  type Callback_t is not null access procedure (Message : in CS.chars_ptr)
+  type Fatal_Callback_Func_Access is not null access procedure
+    (Message : in CS.chars_ptr)
     with Convention => C;
 
   procedure AG_SetErrorS
@@ -46,7 +45,7 @@ package Agar.Error is
   function AG_GetError return CS.chars_ptr
     with Import, Convention => C, Link_Name => "AG_GetError";
 
-  procedure AG_SetFatalCallback (Callback : Callback_t)
+  procedure AG_SetFatalCallback (Callback : Fatal_Callback_Func_Access)
     with Import, Convention => C, Link_Name => "AG_SetFatalCallback";
 
 end Agar.Error;

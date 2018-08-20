@@ -22,24 +22,28 @@ package Animal is
   Success : constant C.int := 0;
   Error   : constant C.int := -1;
 
-  ------------------------------
-  -- Object Class Description --
-  ------------------------------
+  -----------------------
+  -- Class Description --
+  -----------------------
+
   type Ecological_Group_t is
     (Undefined, Carnivore, Herbivore, Omnivore, Detritivore, Parasite);
-  type Animal_Class_t is limited record
-    Class            : OBJ.Class_t;             -- Agar(Object) -> Animal
+
+  type Animal_Class is limited record
+    Class            : OBJ.Class;             -- Agar(Object) -> Animal
     -- more fields --
     Ecological_Group : Ecological_Group_t;
     Description      : String (1 .. 200);
-  end record                                              with Convention => C;
-  type Animal_Class_Access_t is access all Animal_Class_t with Convention => C;
+  end record
+    with Convention => C;
+  type Animal_Class_Access is access all Animal_Class
+    with Convention => C;
 
   ---------------------
   -- Object Instance --
   ---------------------
-  type Animal_t is limited record
-    Object : OBJ.Object_t;                      -- Agar(Object) -> Animal
+  type Animal is limited record
+    Object : OBJ.Object;                      -- Agar(Object) -> Animal
     -- more fields --
     Age    : Interfaces.Unsigned_8;
     Exp    : Interfaces.Unsigned_16;
@@ -48,25 +52,29 @@ package Animal is
     X      : C.double;
     Y      : C.double;
     Z      : C.double;
-  end record                                  with Convention => C;
-  type Animal_Access_t is access all Animal_t with Convention => C;
+  end record
+    with Convention => C;
+
+  type Animal_Access is access all Animal with Convention => C;
   
-  package C_cls is new System.Address_To_Access_Conversions (Animal_Class_t);
-  Object_Class : OBJ.Class_Access_t   := null;    -- Generic class description
-  Animal_Class : C_cls.Object_Pointer := null;    -- Our derived description
+  package C_cls is new System.Address_To_Access_Conversions (Animal_Class);
+
+  Generic_Object_Class : OBJ.Class_Access := null;
+  Animal_Object_Class  : C_cls.Object_Pointer := null;
   
-  function Create_Class return OBJ.Class_Not_Null_Access_t;
+  function Create_Class return OBJ.Class_Not_Null_Access;
   procedure Destroy_Class;
 
-  procedure Init (Object : OBJ.Object_Access_t)     with Convention => C;
-  procedure Destroy (Object : OBJ.Object_Access_t)  with Convention => C;
+  procedure Init (Object : OBJ.Object_Access)     with Convention => C;
+  procedure Destroy (Object : OBJ.Object_Access)  with Convention => C;
 
   function Load
-    (Object  : OBJ.Object_Access_t;
-     Source  : DS.Data_Source_Access_t;
-     Version : OBJ.Version_Access_t) return C.int   with Convention => C;
+    (Object  : OBJ.Object_Access;
+     Source  : DS.Data_Source_Access;
+     Version : OBJ.Version_Access) return C.int   with Convention => C;
+
   function Save
-    (Object : OBJ.Object_Access_t;
-     Dest   : DS.Data_Source_Access_t) return C.int with Convention => C;
+    (Object : OBJ.Object_Access;
+     Dest   : DS.Data_Source_Access) return C.int with Convention => C;
  
 end Animal;

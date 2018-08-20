@@ -23,8 +23,7 @@ with Ada.Unchecked_Conversion;
 package body Agar.DSO is
   use type C.int;
 
-  function Load
-    (Name : in String) return DSO_Access_t
+  function Load (Name : in String) return DSO_Access
   is
     Ch_Name : aliased C.char_array := C.To_C (Name);
   begin
@@ -33,28 +32,26 @@ package body Agar.DSO is
        Flags => 0);
   end Load;
 
-  function Unload
-    (DSO : DSO_Not_Null_Access_t) return Boolean
+  function Unload (DSO : DSO_Not_Null_Access) return Boolean
   is begin
     return 1 = AG_UnloadDSO (DSO);
   end Unload;
 
-  function Lookup
-    (Name : in String) return DSO_Access_t
+  function Lookup (Name : in String) return DSO_Access
   is
     Ch_Name : aliased C.char_array := C.To_C (Name);
   begin
     return AG_LookupDSO (CS.To_Chars_Ptr (Ch_Name'Unchecked_Access));
   end Lookup;
   
-  function Get_List return DSO_List_t
+  function Get_List return DSO_List
   is
     use type C.unsigned;
     use DSO_List_To_Strings;
 
     Count  : aliased C.unsigned := 0;
     Result : DSO_List_To_Strings.Pointer := AG_GetDSOList (Count'Access);
-    Output : DSO_List_t;
+    Output : DSO_List;
   begin
     pragma Assert (Result /= null);
 
@@ -76,7 +73,7 @@ package body Agar.DSO is
   end Get_List;
 
   function Symbol_Lookup
-    (DSO    : in DSO_Not_Null_Access_t;
+    (DSO    : in DSO_Not_Null_Access;
      Symbol : in String) return Subprogram_Access_Type
   is
     Ch_Symbol : aliased C.char_array := C.To_C (Symbol);

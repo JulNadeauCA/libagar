@@ -2,11 +2,11 @@ with Ada.Text_IO;
 
 package body myeventhandler is
   
-  procedure Ping (Event : EV.Event_Access_t) is begin
+  procedure Ping (Event : EV.Event_Access) is begin
     Ada.Text_IO.Put_Line ("Ping");
   end;
 
-  procedure Some_Event (Event : EV.Event_Access_t) is
+  procedure Some_Event (Event : EV.Event_Access) is
     My_String  : constant String  := EV.Get_String (Event, 1);       -- by index
     My_Float   : constant Float   := EV.Get_Float  (Event, 2);
     Width      : constant Natural := EV.Get_Natural(Event, "width");  -- by name

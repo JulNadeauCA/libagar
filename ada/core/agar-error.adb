@@ -19,6 +19,7 @@
 -- OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.           --
 ------------------------------------------------------------------------------
 package body Agar.Error is
+
   function Get_Error return String is
   begin
     return C.To_Ada (CS.Value (AG_GetError));
@@ -42,22 +43,21 @@ package body Agar.Error is
   -- Proxy procedure to call error callback from C code.
   --
 
-  Error_Callback : Error_Callback_t := null;
+  Error_Callback_Fn : Error_Callback_Access := null;
 
-  procedure Caller (Message : CS.chars_ptr) with Convention => C;
+  procedure Error_Callback_Proxy (Message : CS.chars_ptr) with Convention => C;
 
-  procedure Caller (Message : in CS.chars_ptr) is
+  procedure Error_Callback_Proxy (Message : CS.chars_ptr) is
   begin
-    if Error_Callback /= null then
-      Error_Callback.all (C.To_Ada (CS.Value (Message)));
+    if Error_Callback_Fn /= null then
+      Error_Callback_Fn.all (C.To_Ada (CS.Value (Message)));
     end if;
   end;
 
-  procedure Set_Fatal_Callback
-    (Callback : Error_Callback_Not_Null_t) is
+  procedure Set_Fatal_Callback (Callback : Error_Callback_Access) is
   begin
-    Error_Callback := Callback;
-    AG_SetFatalCallback (Caller'Access);
+    Error_Callback_Fn := Callback;
+    AG_SetFatalCallback (Error_Callback_Proxy'Access);
   end;
 
 end Agar.Error;

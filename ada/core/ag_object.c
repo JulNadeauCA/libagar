@@ -5,4 +5,5 @@ void *ag_object_find_child(void *p, const char *n) { return AG_ObjectFindChild(p
 void  ag_lock_vfs(void *o) { AG_LockVFS(o); }
 void  ag_unlock_vfs(void *o) { AG_UnlockVFS(o); }
 int   ag_defined(void *o, const char *n) { return AG_Defined(o, n); }
-
+void  ag_object_lock(void *o) { AG_ObjectLock(o); }
+void  ag_object_unlock(void *o) { AG_ObjectUnlock(o); }

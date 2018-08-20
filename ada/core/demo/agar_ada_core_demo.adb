@@ -23,12 +23,12 @@ procedure agar_ada_core_demo is
   Minor : Natural;
   Patch : Natural;
 
-  My_Parent    : Object_Access_t;
-  My_Child_1   : Object_Access_t;
-  My_Child_2   : Object_Access_t;
-  Animal_Class : Class_Access_t;
-  Cow          : Object_Access_t;
-  Event        : EV.Event_Access_t;
+  My_Parent    : Object_Access;
+  My_Child_1   : Object_Access;
+  My_Child_2   : Object_Access;
+  Animal_Class : Class_Access;
+  Cow          : Object_Access;
+  Event        : EV.Event_Access;
   Epoch        : constant RT.Time := RT.Clock;
 
 begin
@@ -55,7 +55,7 @@ begin
 
   -- Register the Agar object class "Animal" specified in animal.ads.
   T_IO.Put_Line("Registering Animal class (" &
-    Natural'Image(Animal.Animal_t'Size / System.Storage_Unit) & " bytes)");
+    Natural'Image(Animal.Animal'Size / System.Storage_Unit) & " bytes)");
   Animal_Class := Animal.Create_Class;
 
   -- Create an instance the Animal class.
@@ -149,7 +149,7 @@ begin
   -- Register a module directory and list all available DSOs.
   Agar.Object.Register_Module_Directory ("/tmp/dsotest");
   declare
-    DSO_List : constant Agar.DSO.DSO_List_t := Agar.DSO.Get_List;
+    DSO_List : constant Agar.DSO.DSO_List := Agar.DSO.Get_List;
   begin
     for DSO of DSO_List loop
       T_IO.Put("Available DSO: ");

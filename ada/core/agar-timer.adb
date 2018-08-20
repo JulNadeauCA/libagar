@@ -21,7 +21,7 @@ package body Agar.Timer is
   use type C.int;
 
   procedure Init_Timer
-    (Timer : in Timer_not_null_Access_t;
+    (Timer : in Timer_not_null_Access;
      Name  : in String)
   is
     Ch_Name : aliased C.char_array := C.To_C(Name);
@@ -33,9 +33,9 @@ package body Agar.Timer is
   end;
   
   function Add_Timer
-    (Timer    : in Timer_not_null_Access_t;
+    (Timer    : in Timer_not_null_Access;
      Interval : in Interfaces.Unsigned_32;
-     Func     : in Timer_Callback_t) return Boolean
+     Func     : in Timer_Callback) return Boolean
   is
   begin
     return 0 = AG_AddTimer
@@ -49,7 +49,7 @@ package body Agar.Timer is
   
   function Add_Timer
     (Interval : in Interfaces.Unsigned_32;
-     Func     : in Timer_Callback_t) return Boolean
+     Func     : in Timer_Callback) return Boolean
   is
   begin
     return null /= AG_AddTimerAuto

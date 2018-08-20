@@ -5,51 +5,50 @@ with Ada.Text_IO;
 ----------------------------
 
 --
--- Ada implementation of the Agar object class "Animal". We derive both
--- Object_t into Animal_t and Class_t into Animal_Class_t.
+-- Ada implementation of the Agar object class "Animal".
 --
 
 package body Animal is
-  package C_obj is new System.Address_To_Access_Conversions (Animal_t);
+  package C_obj is new System.Address_To_Access_Conversions (Animal);
   package T_IO renames Ada.Text_IO;
 
-  function Create_Class return OBJ.Class_Not_Null_Access_t is
+  function Create_Class return OBJ.Class_Not_Null_Access is
   begin
     --
     -- Register our "Animal" class with the Agar object system.
     --
-    Object_Class := OBJ.Create_Class
+    Generic_Object_Class := OBJ.Create_Class
       (Hierarchy    => "Animal",
-       Object_Size  => Animal.Animal_t'Size,
-       Class_Size   => Animal.Animal_Class_t'Size,
+       Object_Size  => Animal'Size,
+       Class_Size   => Animal_Class'Size,
        Major        => 1,
        Minor        => 2,
-       Init_Func    => Animal.Init'Access,
-       Destroy_Func => Animal.Destroy'Access,
-       Load_Func    => Animal.Load'Access,
-       Save_Func    => Animal.Save'Access);
+       Init_Func    => Init'Access,
+       Destroy_Func => Destroy'Access,
+       Load_Func    => Load'Access,
+       Save_Func    => Save'Access);
     --
     -- Initialize our derived class description structure. This will be
-    -- shared between all instances of Animal_t.
+    -- shared between all instances of Animal.
     --
-    Animal_Class := C_cls.To_Pointer(Object_Class.all'Address);
-    Animal_Class.Ecological_Group := Undefined;
-    Animal_Class.Description := (others => '_');
+    Animal_Object_Class := C_cls.To_Pointer(Generic_Object_Class.all'Address);
+    Animal_Object_Class.Ecological_Group := Undefined;
+    Animal_Object_Class.Description := (others => '_');
 
-    return Object_Class;
+    return Generic_Object_Class;
   end;
 
   procedure Destroy_Class is
   begin
-    OBJ.Destroy_Class (Object_Class);
-    Object_Class := null;
-    Animal_Class := null;
+    OBJ.Destroy_Class (Generic_Object_Class);
+    Generic_Object_Class := null;
+    Animal_Object_Class := null;
   end;
 
   --
-  -- Initialize an instance of the Animal_t class.
+  -- Initialize an instance of the Animal class.
   --
-  procedure Init (Object : OBJ.Object_Access_t)
+  procedure Init (Object : OBJ.Object_Access)
   is
     Ani : constant C_obj.Object_Pointer := C_obj.To_Pointer(Object.all'Address);
   begin
@@ -64,19 +63,19 @@ package body Animal is
   end;
 
   --
-  -- Release all resources allocated by an instance of Animal_t.
+  -- Release all resources allocated by an instance of Animal.
   --
-  procedure Destroy (Object : OBJ.Object_Access_t)
+  procedure Destroy (Object : OBJ.Object_Access)
   is begin
     T_IO.Put_Line("Animal destroy");
   end;
   
   --
-  -- Serialize an Animal_t to a machine-independent format.
+  -- Serialize an Animal to a machine-independent format.
   --
   function Save
-    (Object : OBJ.Object_Access_t;
-     Dest   : DS.Data_Source_Access_t) return C.int
+    (Object : OBJ.Object_Access;
+     Dest   : DS.Data_Source_Access) return C.int
   is
     Ani : constant C_obj.Object_Pointer := C_obj.To_Pointer(Object.all'Address);
   begin
@@ -92,12 +91,12 @@ package body Animal is
   end;
 
   --
-  -- Deserialize an Animal_t from machine-independent format.
+  -- Deserialize an Animal from machine-independent format.
   --
   function Load
-    (Object  : OBJ.Object_Access_t;
-     Source  : DS.Data_Source_Access_t;
-     Version : OBJ.Version_Access_t) return C.int
+    (Object  : OBJ.Object_Access;
+     Source  : DS.Data_Source_Access;
+     Version : OBJ.Version_Access) return C.int
   is
     Ani : constant C_obj.Object_Pointer := C_obj.To_Pointer(Object.all'Address);
   begin

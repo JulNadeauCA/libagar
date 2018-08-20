@@ -21,17 +21,17 @@
 package body Agar.Init is
 
   procedure Get_Version
-    (Major   : out Natural;
-     Minor   : out Natural;
-     Patch   : out Natural)
+    (Major : out Natural;
+     Minor : out Natural;
+     Patch : out Natural)
   is
-    Version : aliased Agar_Version_t;
+    Version : aliased Agar_Version;
   begin
     AG_GetVersion (Version'Unchecked_Access);
 
-    Major   := Natural (Version.Major);
-    Minor   := Natural (Version.Minor);
-    Patch   := Natural (Version.Patch);
+    Major := Natural (Version.Major);
+    Minor := Natural (Version.Minor);
+    Patch := Natural (Version.Patch);
   end Get_Version;
   
   function Init_Core
@@ -69,25 +69,24 @@ package body Agar.Init is
   end;
 
   --
-  -- Proxy procedure to call 'Exit_Callback' from C.
+  -- Proxy procedure to call 'Atexit_Callback' from C.
   --
 
-  procedure At_Exit_Caller with Convention => C;
+  procedure At_Exit_Proxy with Convention => C;
 
-  Exit_Callback : Exit_Procedure_t := null;
+  Atexit_Callback : Atexit_Func_Access := null;
 
-  procedure At_Exit_Caller is
+  procedure At_Exit_Proxy is
   begin
-    if Exit_Callback /= null then
-      Exit_Callback.all;
+    if Atexit_Callback /= null then
+      Atexit_Callback.all;
     end if;
-  end At_Exit_Caller;
+  end At_Exit_Proxy;
 
-  procedure At_Exit
-    (Callback : Exit_Procedure_Not_Null_t) is
+  procedure At_Exit (Callback : Atexit_Func_Access) is
   begin
-    Exit_Callback := Callback;
-    AG_AtExitFunc (At_Exit_Caller'Access);
+    Atexit_Callback := Callback;
+    AG_AtExitFunc (At_Exit_Proxy'Access);
   end At_Exit;
 
 end Agar.Init;
