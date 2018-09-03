@@ -292,6 +292,7 @@ M_LineLineShortest3(M_Line3 L1, M_Line3 L2, M_Line3 *Ls)
 
 	d1343 = M_VecDot3p(&p13, &p43);
 	d4321 = M_VecDot3p(&p43, &p21);
+	d1321 = M_VecDot3p(&p13, &p21);
 	d4343 = M_VecDot3p(&p43, &p43);
 	d2121 = M_VecDot3p(&p21, &p21);
 
