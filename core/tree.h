@@ -1,37 +1,33 @@
-/*
- * Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*	Public domain	*/
 
 /*
- * General-purpose tree structure (not to confuse with binary trees as in
- * btree.h).
+ * Generically-accessible, ordered tree of opaque data elements.
  *
- * Compared to the AG_Queue(3) macro package, using this interface to
- * implement a tree structure has the advantage of the tree being directly
- * traversable (e.g., by a GUI widget such as AG_TreeView(3)), in a generic
- * fashion. However, this comes at the cost of an extra level of indirection
- * on each element.
+ * Traversal of linked-list based trees (e.g., structures which use AG_Queue(3)
+ * to represent nodes) normally requires knowledge about the structure of the
+ * node data (i.e., the location of the next pointers). AG_Tree provides a very
+ * simple container which allows opaque data to be encapsulated.
+ *
+ * GUI widgets such as AG_Tlist(3) normally require a user-provided population
+ * routine which must traverse the entire tree (culling any non-expanded items).
+ * AG_Tlist(3) then compares the new items against its cache of previous items
+ * in order to restore user selections (and reuse potential hardware assets).
+ *
+ * AG_Tree provides a safer, generically-accessible tree structure which
+ * encapsulates opaque data items and separates linkage from node data.
+ *
+ * Cons:
+ *   1) One extra level of indirection.
+ *   2) About 44-88 bytes per node of memory footprint.
+ *
+ * Pros:
+ *   1) Improved safety, because data corruption of a node item is more likely
+ *      to crash in an expected context (say an accessor function) as opposed
+ *      to unpredictable behavior due to bad linkage pointers being followed.
+ *   2) Simplified GUI code. AG_TreeView(3) can access an AG_Tree directly, the
+ *      only code needed being an accessor function to render node to graphics.
+ *   3) A flat, redundant linked list allows non-recursive global iterators
+ *      AGTREE_FOREACH_ITEM() and AGTREE_FOREACH_DATA().
  */
 
 #ifndef _AGAR_CORE_TREE_H_
@@ -44,18 +40,18 @@ struct ag_tree_item;
 AG_TAILQ_HEAD(ag_tree_itemq, ag_tree_item);
 
 typedef struct ag_tree_item {
-	void *p;				/* User pointer */
-	void *privData;				/* Private data (or NULL) */
+	void *_Nullable p;			/* User pointer */
+	void *_Nullable privData;		/* Private data */
 	size_t privDataSize;			/* Private data size */
 	struct ag_tree_itemq chldItems;		/* Child items */
 	AG_TAILQ_ENTRY(ag_tree_item) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(ag_tree_item) list;	/* Entre in list */
-	struct ag_tree *parentTree;		/* Parent tree */
-	struct ag_tree_item *parentItem;	/* Parent item */
+	struct ag_tree *_Nonnull parentTree;		/* Parent tree */
+	struct ag_tree_item *_Nullable parentItem;	/* Parent item */
 } AG_TreeItem;
 
 typedef struct ag_tree {
-	AG_TreeItem *root;
+	AG_TreeItem *_Nullable root;
 	struct ag_tree_itemq list;
 } AG_Tree;
 
@@ -91,11 +87,11 @@ typedef struct ag_tree {
 #endif
 
 __BEGIN_DECLS
-AG_Tree   *AG_TreeNew(void);
-void       AG_TreeDestroy(AG_Tree *);
+AG_Tree *_Nonnull AG_TreeNew(void); /* _Malloc_Like_Attribute */
+void              AG_TreeDestroy(AG_Tree *_Nonnull);
 
-static __inline__ AG_TreeItem *
-AG_TreeItemNew(void *p, size_t privDataSize)
+static __inline__ AG_TreeItem *_Nonnull
+AG_TreeItemNew(void *_Nullable p, size_t privDataSize)
 {
 	AG_TreeItem *ti;
 
@@ -110,7 +106,7 @@ AG_TreeItemNew(void *p, size_t privDataSize)
 }
 
 static __inline__ void
-AG_TreeItemDestroy(AG_TreeItem *ti)
+AG_TreeItemDestroy(AG_TreeItem *_Nonnull ti)
 {
 #ifdef DEBUG
 	if (ti->parentItem != NULL || ti->parentTree != NULL)
@@ -121,7 +117,7 @@ AG_TreeItemDestroy(AG_TreeItem *ti)
 }
 
 static __inline__ void
-AG_TreeAttach(AG_TreeItem *tiParent, AG_TreeItem *ti)
+AG_TreeAttach(AG_TreeItem *_Nonnull tiParent, AG_TreeItem *_Nonnull ti)
 {
 	ti->parentTree = tiParent->parentTree;
 	ti->parentItem = tiParent;
@@ -130,7 +126,7 @@ AG_TreeAttach(AG_TreeItem *tiParent, AG_TreeItem *ti)
 }
 
 static __inline__ void
-AG_TreeDetach(AG_Tree *t, AG_TreeItem *ti)
+AG_TreeDetach(AG_Tree *_Nonnull t, AG_TreeItem *_Nonnull ti)
 {
 	if (ti->parentItem != NULL) {
 		AG_TAILQ_REMOVE(&ti->parentItem->chldItems, ti, tree);
@@ -142,8 +138,9 @@ AG_TreeDetach(AG_Tree *t, AG_TreeItem *ti)
 	ti->parentTree = NULL;
 }
 
-static __inline__ AG_TreeItem *
-AG_TreeInsert(AG_Tree *t, AG_TreeItem *tiParent, void *p, size_t privDataSize)
+static __inline__ AG_TreeItem *_Nonnull
+AG_TreeInsert(AG_Tree *_Nonnull t, AG_TreeItem *_Nullable tiParent,
+    void *_Nullable p, size_t privDataSize)
 {
 	AG_TreeItem *ti;
 
@@ -160,14 +157,14 @@ AG_TreeInsert(AG_Tree *t, AG_TreeItem *tiParent, void *p, size_t privDataSize)
 }
 
 static __inline__ void
-AG_TreeRemove(AG_Tree *t, AG_TreeItem *ti)
+AG_TreeRemove(AG_Tree *_Nonnull t, AG_TreeItem *_Nonnull ti)
 {
 	AG_TreeDetach(t, ti);
 	AG_TreeItemDestroy(ti);
 }
 
 static __inline__ void
-AG_TreeClear(AG_Tree *t)
+AG_TreeClear(AG_Tree *_Nonnull t)
 {
 	AG_TreeItem *ti, *tiNext;
 
