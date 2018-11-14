@@ -1,0 +1,7 @@
+#!/bin/sh
+
+SUBDIR=`make -V SUBDIR`
+for D in ${SUBDIR}; do \
+	echo "==> $D"; \
+	(cd $D && ./configure $@); \
+done

@@ -430,11 +430,11 @@ echo '    --with-catman              Install cat files for manual pages [auto-de
 echo '    --with-ctags               Generate ctags tag files [no]'
 echo '    --with-docs                Generate printable documentation [no]'
 echo '    --with-gettext             Use gettext for multi-language [auto-detect]'
-echo '    --with-libtool             Specify path to libtool [bundled]'
+echo '    --with-libtool=STRING      Use GNU libtool [path or "bundled"]'
 echo '    --with-manlinks            Add manual entries for every function [no]'
 echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
-echo 'Options for Agar-Ada-Core bindings:'
+echo 'Options for Agar-Core Ada bindings:'
 echo '    --with-agar[=PREFIX]        Location of Agar library [check]'
 echo '    --enable-warnings           Suggested compiler warnings [no]'
 echo '    --enable-debug              General debugging [no]'
@@ -493,6 +493,7 @@ if [ "${with_bundles}" != "no" ]; then
 		;;
 	esac
 fi
+host_machine=`echo ${host} | cut -d- -f 1`
 if [ -e "Makefile.config" ]; then
 	echo '* Overwriting existing Makefile.config'
 fi
@@ -680,15 +681,20 @@ if [ "${with_ctags}" = 'yes' ]; then
 fi
 IFS=$bb_save_IFS
 echo "CTAGS=${CTAGS}" >> Makefile.config
-if [ "${prefix_libtool}" != '' -a "${prefix_libtool}" != 'bundled' ]; then
-	LIBTOOL_BUNDLED='no'
-	LIBTOOL="${prefix_libtool}"
+if [ "${with_libtool}" = "yes" ]; then
+	if [ "${prefix_libtool}" != '' -a "${prefix_libtool}" != 'bundled' ]; then
+		LIBTOOL_BUNDLED='no'
+		LIBTOOL="${prefix_libtool}"
+	else
+		LIBTOOL_BUNDLED='yes'
+		LIBTOOL=\${TOP}/mk/libtool/libtool
+	fi
+	echo "USE_LIBTOOL=Yes" >> Makefile.config
+	echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
+	echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 else
-	LIBTOOL_BUNDLED='yes'
-	LIBTOOL=\${TOP}/mk/libtool/libtool
+	echo "USE_LIBTOOL=No" >> Makefile.config
 fi
-echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
-echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "LDFLAGS?=${LDFLAGS}" >> Makefile.config
 
@@ -801,7 +807,7 @@ echo '#ifndef PACKAGE' > $BLD/config/package.h
 echo "#define PACKAGE \"$PACKAGE\"" >> $BLD/config/package.h
 echo '#endif' >> $BLD/config/package.h
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.5.1"
+VERSION="1.6.0"
 echo '#ifndef VERSION' > $BLD/config/version.h
 echo "#define VERSION \"$VERSION\"" >> $BLD/config/version.h
 echo '#endif' >> $BLD/config/version.h
@@ -827,38 +833,73 @@ if [ "$CROSS_COMPILING" = "yes" ]; then
 else
 	CROSSPFX=''
 fi
+HAVE_CC65="no"
 if [ "$CC" = '' ]; then
-	bb_save_IFS=$IFS
-	IFS=$PATH_SEPARATOR
-	for i in $PATH; do
-		if [ -x "${i}/${CROSSPFX}cc" ]; then
-			CC="${i}/${CROSSPFX}cc"
-			break
-		elif [ -x "${i}/${CROSSPFX}clang" ]; then
-			CC="${i}/${CROSSPFX}clang"
-			break
-		elif [ -x "${i}/${CROSSPFX}gcc" ]; then
-			CC="${i}/${CROSSPFX}gcc"
-			break
-		elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
-			CC="${i}/${CROSSPFX}cc.exe"
-			break
-		elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
-			CC="${i}/${CROSSPFX}clang.exe"
-			break
-		elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
-			CC="${i}/${CROSSPFX}gcc.exe"
-			break
-		fi
-	done
-	IFS=$bb_save_IFS
+	case "${host}" in
+	apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+		bb_save_IFS=$IFS
+		IFS=$PATH_SEPARATOR
+		for i in $PATH; do
+			if [ -x "${i}/cc65" ]; then
+				if ${i}/cc65 -V | grep ^cc65; then
+					CC="${i}/cc65"
+					HAVE_CC65="yes"
+					CROSS_COMPILING="yes"
+					break
+				fi
+			elif [ -x "${i}/cc65.exe" ]; then
+				if ${i}/cc65.exe -V | grep ^cc65; then
+					CC="${i}/cc65"
+					HAVE_CC65="yes"
+					CROSS_COMPILING="yes"
+					break
+				fi
+			fi
+		done
+		IFS=$bb_save_IFS
+		;;
+	*)
+		bb_save_IFS=$IFS
+		IFS=$PATH_SEPARATOR
+		for i in $PATH; do
+			if [ -x "${i}/${CROSSPFX}cc" ]; then
+				CC="${i}/${CROSSPFX}cc"
+				break
+			elif [ -x "${i}/${CROSSPFX}clang" ]; then
+				CC="${i}/${CROSSPFX}clang"
+				break
+			elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+				CC="${i}/${CROSSPFX}gcc"
+				break
+			elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
+				CC="${i}/${CROSSPFX}cc.exe"
+				break
+			elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
+				CC="${i}/${CROSSPFX}clang.exe"
+				break
+			elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
+				CC="${i}/${CROSSPFX}gcc.exe"
+				break
+			fi
+		done
+		IFS=$bb_save_IFS
+		;;
+	esac
 
 	if [ "$CC" = '' ]; then
-		echo "*"
-		echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in default PATH."
-		echo "* You may need to set the CC environment variable."
-		echo "*"
-		echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >> config.log
+		else
+			echo "*"
+			echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH."
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
+		fi
 		HAVE_CC="no"
 		echo "no"
 	else
@@ -868,7 +909,13 @@ if [ "$CC" = '' ]; then
 	fi
 else
 	HAVE_CC="yes"
-	echo "using ${CC}"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+	fi
 fi
 
 if [ "${HAVE_CC}" = "yes" ]; then
@@ -958,6 +1005,46 @@ fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N 'cc: checking for float and double...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_FLOAT='yes'
+echo '#ifndef HAVE_FLOAT' > $BLD/config/have_float.h
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >> $BLD/config/have_float.h
+echo '#endif' >> $BLD/config/have_float.h
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_FLOAT='no'
+echo '#undef HAVE_FLOAT' >$BLD/config/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'cc: checking for long double...'
 $ECHO_N 'cc: checking for long double...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -969,7 +1056,7 @@ main(int argc, char *argv[])
 	long double ld = 0.1;
 
 	printf("%Lf", ld);
-	return (ld == 1.0);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
 }
 
 EOT
@@ -1229,6 +1316,50 @@ LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
 fi;
 ;;
 esac
+echo '#ifndef HAVE_CC' > $BLD/config/have_cc.h
+echo "#define HAVE_CC \"$HAVE_CC\"" >> $BLD/config/have_cc.h
+echo '#endif' >> $BLD/config/have_cc.h
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+echo '#ifndef HAVE_CC65' > $BLD/config/have_cc65.h
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >> $BLD/config/have_cc65.h
+echo '#endif' >> $BLD/config/have_cc65.h
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+else
+CC_COMPILE="-c"
+fi;
+else
+HAVE_CC="no"
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+CC=""
+CFLAGS=""
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+LIBTOOLOPTS_SHARED=""
+echo '#undef HAVE_CC' >$BLD/config/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$BLD/config/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$BLD/config/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$BLD/config/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$BLD/config/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$BLD/config/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$BLD/config/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_CC_MWINDOWS' >$BLD/config/have_cc_mwindows.h
+echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_MCONSOLE' >$BLD/config/have_cc_mconsole.h
+echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$BLD/config/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$BLD/config/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_CC}" != "yes" ]; then
 echo '* '
@@ -1566,23 +1697,23 @@ fi
 if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
 echo 'yes'
 echo 'yes' >> config.log
-HAVE_LD_NO_UNDEFINED='yes'
-echo '#ifndef HAVE_LD_NO_UNDEFINED' > $BLD/config/have_ld_no_undefined.h
-echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >> $BLD/config/have_ld_no_undefined.h
-echo '#endif' >> $BLD/config/have_ld_no_undefined.h
-echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
+HAVE_ADA_LD_NO_UNDEFINED='yes'
+echo '#ifndef HAVE_ADA_LD_NO_UNDEFINED' > $BLD/config/have_ada_ld_no_undefined.h
+echo "#define HAVE_ADA_LD_NO_UNDEFINED \"$HAVE_ADA_LD_NO_UNDEFINED\"" >> $BLD/config/have_ada_ld_no_undefined.h
+echo '#endif' >> $BLD/config/have_ada_ld_no_undefined.h
+echo "hdefs[\"HAVE_ADA_LD_NO_UNDEFINED\"] = \"$HAVE_ADA_LD_NO_UNDEFINED\"" >>configure.lua
 else
 echo 'no'
 echo 'no' >> config.log
-HAVE_LD_NO_UNDEFINED='no'
-echo '#undef HAVE_LD_NO_UNDEFINED' >$BLD/config/have_ld_no_undefined.h
-echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+HAVE_ADA_LD_NO_UNDEFINED='no'
+echo '#undef HAVE_ADA_LD_NO_UNDEFINED' >$BLD/config/have_ada_ld_no_undefined.h
+echo 'hdefs["HAVE_ADA_LD_NO_UNDEFINED"] = nil' >>configure.lua
 fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest.adb conftest.ali conftest.o conftest$EXECSUFFIX
 	rm -f "b~conftest.adb" "b~conftest.ads"
 fi
-if [ "${HAVE_LD_NO_UNDEFINED}" = "yes" ]; then
+if [ "${HAVE_ADA_LD_NO_UNDEFINED}" = "yes" ]; then
 LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -no-undefined -Wl,--no-undefined"
 fi;
 $ECHO_N 'ada: checking for linker -static-libgcc option...'
@@ -1612,27 +1743,42 @@ fi
 if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
 echo 'yes'
 echo 'yes' >> config.log
-HAVE_LD_STATIC_LIBGCC='yes'
-echo '#ifndef HAVE_LD_STATIC_LIBGCC' > $BLD/config/have_ld_static_libgcc.h
-echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >> $BLD/config/have_ld_static_libgcc.h
-echo '#endif' >> $BLD/config/have_ld_static_libgcc.h
-echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
+HAVE_ADA_LD_STATIC_LIBGCC='yes'
+echo '#ifndef HAVE_ADA_LD_STATIC_LIBGCC' > $BLD/config/have_ada_ld_static_libgcc.h
+echo "#define HAVE_ADA_LD_STATIC_LIBGCC \"$HAVE_ADA_LD_STATIC_LIBGCC\"" >> $BLD/config/have_ada_ld_static_libgcc.h
+echo '#endif' >> $BLD/config/have_ada_ld_static_libgcc.h
+echo "hdefs[\"HAVE_ADA_LD_STATIC_LIBGCC\"] = \"$HAVE_ADA_LD_STATIC_LIBGCC\"" >>configure.lua
 else
 echo 'no'
 echo 'no' >> config.log
-HAVE_LD_STATIC_LIBGCC='no'
-echo '#undef HAVE_LD_STATIC_LIBGCC' >$BLD/config/have_ld_static_libgcc.h
-echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
+HAVE_ADA_LD_STATIC_LIBGCC='no'
+echo '#undef HAVE_ADA_LD_STATIC_LIBGCC' >$BLD/config/have_ada_ld_static_libgcc.h
+echo 'hdefs["HAVE_ADA_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest.adb conftest.ali conftest.o conftest$EXECSUFFIX
 	rm -f "b~conftest.adb" "b~conftest.ads"
 fi
-if [ "${HAVE_LD_STATIC_LIBGCC}" = "yes" ]; then
+if [ "${HAVE_ADA_LD_STATIC_LIBGCC}" = "yes" ]; then
 LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
 fi;
 ;;
 esac
+else
+HAVE_ADA="no"
+ADA=""
+ADAFLAGS=""
+ADABIND=""
+ADABFLAGS=""
+ADALINK=""
+ADALFLAGS=""
+ADAMKDEP=""
+echo '#undef HAVE_ADA' >$BLD/config/have_ada.h
+echo 'hdefs["HAVE_ADA"] = nil' >>configure.lua
+echo '#undef HAVE_ADA_LD_NO_UNDEFINED' >$BLD/config/have_ada_ld_no_undefined.h
+echo 'hdefs["HAVE_ADA_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_ADA_LD_STATIC_LIBGCC' >$BLD/config/have_ada_ld_static_libgcc.h
+echo 'hdefs["HAVE_ADA_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_ADA}" != "yes" ]; then
 echo '* '
@@ -1691,13 +1837,13 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 	if [ "$MK_VERSION_MINOR" = '' ]; then
 		MK_VERSION_OK='yes'
 	else
-		if [ $MK_VERSION_MINOR -gt 5 ]; then
+		if [ $MK_VERSION_MINOR -gt 6 ]; then
 			MK_VERSION_OK='yes';
-		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+		elif [ $MK_VERSION_MINOR -eq 6 ]; then
 			if [ "$MK_VERSION_MICRO" = '' ]; then
 				MK_VERSION_OK='yes'
 			else
-				if [ $MK_VERSION_MICRO -ge 1 ]; then
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
 					MK_VERSION_OK='yes'
 				fi
 			fi
@@ -1707,8 +1853,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '*' >> config.log
-echo "* Minimum required version is 1.5.1 (found $AGAR_CORE_VERSION); skipping."
-echo "* Minimum required version is 1.5.1 (found $AGAR_CORE_VERSION); skipping." >> config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION); skipping."
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION); skipping." >> config.log
 echo '*'
 echo '*' >> config.log
 fi;
@@ -1788,7 +1934,7 @@ AG_ObjectClass FooClass = {
 	sizeof(AG_Object),
 	{ 0,0 },
 	NULL,		/* init */
-	NULL,		/* reinit */
+	NULL,		/* reset */
 	NULL,		/* destroy */
 	NULL,		/* load */
 	NULL,		/* save */
@@ -1851,6 +1997,8 @@ echo 'hdefs["AGAR_CORE_LIBS"] = nil' >>configure.lua
 AGAR_CORE_LIBS=""
 fi;
 else
+echo '#undef HAVE_AGAR_CORE' >$BLD/config/have_agar_core.h
+echo 'hdefs["HAVE_AGAR_CORE"] = nil' >>configure.lua
 echo '#undef AGAR_CORE_CFLAGS' >$BLD/config/agar_core_cflags.h
 echo 'hdefs["AGAR_CORE_CFLAGS"] = nil' >>configure.lua
 echo '#undef AGAR_CORE_LIBS' >$BLD/config/agar_core_libs.h
@@ -1871,8 +2019,8 @@ fi;
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '* ' >> config.log
-echo '* This software requires agar-core version >= 1.5.1,'
-echo '* This software requires agar-core version >= 1.5.1,' >> config.log
+echo '* This software requires agar-core version >= 1.6.0,'
+echo '* This software requires agar-core version >= 1.6.0,' >> config.log
 echo '* please upgrade and try again.'
 echo '* please upgrade and try again.' >> config.log
 echo '* agar-core should be available from: http://libagar.org'
@@ -1929,13 +2077,13 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 	if [ "$MK_VERSION_MINOR" = '' ]; then
 		MK_VERSION_OK='yes'
 	else
-		if [ $MK_VERSION_MINOR -gt 5 ]; then
+		if [ $MK_VERSION_MINOR -gt 6 ]; then
 			MK_VERSION_OK='yes';
-		elif [ $MK_VERSION_MINOR -eq 5 ]; then
+		elif [ $MK_VERSION_MINOR -eq 6 ]; then
 			if [ "$MK_VERSION_MICRO" = '' ]; then
 				MK_VERSION_OK='yes'
 			else
-				if [ $MK_VERSION_MICRO -ge 1 ]; then
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
 					MK_VERSION_OK='yes'
 				fi
 			fi
@@ -1945,8 +2093,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '*' >> config.log
-echo "* Minimum required version is 1.5.1 (found $AGAR_CORE_VERSION); skipping."
-echo "* Minimum required version is 1.5.1 (found $AGAR_CORE_VERSION); skipping." >> config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION); skipping."
+echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION); skipping." >> config.log
 echo '*'
 echo '*' >> config.log
 fi;
@@ -2179,8 +2327,8 @@ echo '#undef HAVE_AGAR_CORE_TYPES' >$BLD/config/have_agar_core_types.h
 echo 'hdefs["HAVE_AGAR_CORE_TYPES"] = nil' >>configure.lua
 fi;
 else
-echo 'no, compile failed'
-echo 'no, compile failed' >> config.log
+echo 'no'
+echo 'no' >> config.log
 MK_RUN_STATUS="FAIL \$?"
 HAVE_AGAR_CORE_TYPES='no'
 echo '#undef HAVE_AGAR_CORE_TYPES' >$BLD/config/have_agar_core_types.h
@@ -2189,6 +2337,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+else
+HAVE_AGAR_CORE_TYPES="no"
+echo '#undef HAVE_AGAR_CORE_TYPES' >$BLD/config/have_agar_core_types.h
+echo 'hdefs["HAVE_AGAR_CORE_TYPES"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_AGAR_CORE_TYPES}" != "yes" ]; then
 echo '* '
@@ -2205,8 +2357,8 @@ fi;
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '* ' >> config.log
-echo '* This software requires agar-core.types version >= 1.5.1,'
-echo '* This software requires agar-core.types version >= 1.5.1,' >> config.log
+echo '* This software requires agar-core.types version >= 1.6.0,'
+echo '* This software requires agar-core.types version >= 1.6.0,' >> config.log
 echo '* please upgrade and try again.'
 echo '* please upgrade and try again.' >> config.log
 echo '* agar-core.types should be available from: http://libagar.org'
@@ -2364,6 +2516,8 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
+echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
+echo "mdefs[\"CC_COMPILE\"] = \"$CC_COMPILE\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
@@ -2374,6 +2528,10 @@ echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
 echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+echo "HAVE_ADA_LD_NO_UNDEFINED=$HAVE_ADA_LD_NO_UNDEFINED" >>Makefile.config
+echo "mdefs[\"HAVE_ADA_LD_NO_UNDEFINED\"] = \"$HAVE_ADA_LD_NO_UNDEFINED\"" >>configure.lua
+echo "HAVE_ADA_LD_STATIC_LIBGCC=$HAVE_ADA_LD_STATIC_LIBGCC" >>Makefile.config
+echo "mdefs[\"HAVE_ADA_LD_STATIC_LIBGCC\"] = \"$HAVE_ADA_LD_STATIC_LIBGCC\"" >>configure.lua
 echo "HAVE_ADA_MCONSOLE=$HAVE_ADA_MCONSOLE" >>Makefile.config
 echo "mdefs[\"HAVE_ADA_MCONSOLE\"] = \"$HAVE_ADA_MCONSOLE\"" >>configure.lua
 echo "HAVE_ADA_MWINDOWS=$HAVE_ADA_MWINDOWS" >>Makefile.config
@@ -2382,6 +2540,10 @@ echo "HAVE_AGAR_CORE=$HAVE_AGAR_CORE" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE\"] = \"$HAVE_AGAR_CORE\"" >>configure.lua
 echo "HAVE_AGAR_CORE_TYPES=$HAVE_AGAR_CORE_TYPES" >>Makefile.config
 echo "mdefs[\"HAVE_AGAR_CORE_TYPES\"] = \"$HAVE_AGAR_CORE_TYPES\"" >>configure.lua
+echo "HAVE_CC=$HAVE_CC" >>Makefile.config
+echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
+echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
 echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
@@ -2420,8 +2582,12 @@ echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
 echo "mdefs[\"PKGCONFIG_LIBDIR\"] = \"$PKGCONFIG_LIBDIR\"" >>configure.lua
 echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
 echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
+echo "PROG_CLI_CFLAGS=$PROG_CLI_CFLAGS" >>Makefile.config
+echo "mdefs[\"PROG_CLI_CFLAGS\"] = \"$PROG_CLI_CFLAGS\"" >>configure.lua
 echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
+echo "PROG_GUI_CFLAGS=$PROG_GUI_CFLAGS" >>Makefile.config
+echo "mdefs[\"PROG_GUI_CFLAGS\"] = \"$PROG_GUI_CFLAGS\"" >>configure.lua
 echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "PROG_PREFIX=$PROG_PREFIX" >>Makefile.config
@@ -2445,10 +2611,6 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Compile with "make depend all" and use'
-$ECHO_N '* "make install" to install under '
-$ECHO_N $PREFIX
-$ECHO_N ' (or $DESTDIR'
-$ECHO_N $PREFIX
-echo ').'
+echo '* Configuration successful. Use the "make" command to compile,'
+echo '* and complete the installation using "make install".'
 echo '*'

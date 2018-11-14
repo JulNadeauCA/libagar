@@ -1,7 +1,7 @@
 # Public domain
 
 PACKAGE("Agar-Ada-Core")
-VERSION("1.5.1")
+VERSION("1.6.0")
 
 CONFIG_GUESS("../../mk/config.guess")
 
@@ -15,8 +15,8 @@ DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar/ada")
 
 REQUIRE(cc)
 REQUIRE(ada)
-REQUIRE(agar-core, 1.5.1, ${prefix_agar})
-REQUIRE(agar-core.types, 1.5.1, ${prefix_agar})
+REQUIRE(agar-core, 1.6.0, ${prefix_agar})
+REQUIRE(agar-core.types, 1.6.0, ${prefix_agar})
 
 C_INCDIR($SRC)
 C_DEFINE(_USE_AGAR_STD)
