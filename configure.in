@@ -1,30 +1,33 @@
 # Public domain
+# ex:syn=sh
 #
-# This is a BSDBuild configure script source. The ./configure script is
-# generated from this file via mkconfigure(1). For more information, see:
-# http://bsdbuild.hypertriton.com/.
+# This is a BSDBuild configure script source. The final configure script is
+# generated using BSDBuild's mkconfigure(1) utility. BSDBuild is freely
+# available from: http://bsdbuild.hypertriton.com/.
 #
 
-# Version information
 PACKAGE("Agar")
-VERSION("1.5.1")
-RELEASE("Organic Hallucination")
+VERSION("1.6.0")
+RELEASE("Nullability Complete")
 
-# Register options for configure --help
 REGISTER_SECTION("Global Agar options:")
+REGISTER("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
+REGISTER("--with-float",		"Floating-point support [auto]")
 REGISTER("--enable-<library>",		"Build libraries (gui|vg|math|dev|au) [all]")
+REGISTER("--enable-shared",		"Build shared libraries [check]")
+REGISTER("--enable-type-safety",	"Run-time type safety checks [no]")
 REGISTER("--enable-debug",		"Debug build (implies type-safety) [no]")
 REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
 REGISTER("--enable-threads",		"Thread safety [check]")
 REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
 REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
+REGISTER("--with-attributes",		"Compiler attributes and annotations [yes]")
 
 REGISTER_SECTION("Options specific to CORE library:")
-REGISTER("--enable-type-safety",	"Runtime AG_Event type checks [no]")
 REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 REGISTER("--enable-network",		"Network interface [check]")
 REGISTER("--enable-web",		"Web application server [no]")
-REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [check]")
+REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [no]")
 REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
@@ -35,7 +38,7 @@ REGISTER("--with-altivec",		"AltiVec-optimized routines [check]")
 REGISTER("--with-altivec-inline",	"Inline Altivec-optimized routines [no]")
 REGISTER("--with-sse",			"SSE-optimized routines [check]")
 REGISTER("--with-sse-inline",		"Inline SSE-optimized routines [no]")
-REGISTER("--without-sse[234]",		"Disable SSE2/SSE3 [check]")
+REGISTER("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
 
 REGISTER_SECTION("Options specific to AU library:")
 REGISTER("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
@@ -54,7 +57,6 @@ REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
 REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
 REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
-REGISTER("--with-uim[=PREFIX]",		"Enable UIM input method [no]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
@@ -68,11 +70,114 @@ if [ "${DATADIR}" = "NONE" ]; then
 	MDEFINE(TTFDIR, "NONE")
 fi
 
-# Tests
+echo '    _       _       _     ___'
+echo '  / _ \   / _ \   / _ \  |  _ \'
+echo ' | |_| | | (_| | | |_| | | |_) |'
+echo ' |_| |_|  \__, | |_| |_| |_| |_|'
+echo '          |___/                 '
+	
+if [ "${with_memory_model}" = '' ]; then
+	case "${host}" in
+	amd64-* | hppa64-* | ia64-* | mips64-* | ppc64*-* | sh64-* | sparc64-* | x86_64-*)
+	    with_memory_model="L"
+	    ;;
+	c64 | c128 | geos | nes)
+	    with_memory_model="S"
+	    ;;
+	*)
+	    with_memory_model="M"
+	    ;;
+	esac
+fi
+case "${with_memory_model}" in
+S* | s*)
+	HDEFINE_UNQUOTED(AG_MODEL, "AG_SMALL")
+	MDEFINE(MEMORY_MODEL, "SMALL")
+	;;
+M* | m*)
+	HDEFINE_UNQUOTED(AG_MODEL, "AG_MEDIUM")
+	MDEFINE(MEMORY_MODEL, "MEDIUM")
+	;;
+L* | l*)
+	HDEFINE_UNQUOTED(AG_MODEL, "AG_LARGE")
+	MDEFINE(MEMORY_MODEL, "LARGE")
+	;;
+*)
+	echo "No such memory model: ${with_memory_model} (use: SMALL, MEDIUM or LARGE)"
+	exit 1
+esac
+echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
+echo ""
+
+# Require a C compiler.
 REQUIRE(cc)
-CHECK(cc_attributes)
-CHECK(objc)
+
+case "${host}" in
+c64 | c128 | geos | nes)
+	# Static, integer-only build using CC65.
+	DISABLE(objc)
+	with_attributes="no"
+	enable_shared="no"
+	with_float="no"
+	echo "checking for byte order...little-endian (${host})"
+	MDEFINE(_MK_BYTE_ORDER, "LE")
+	HDEFINE(_MK_LITTLE_ENDIAN, "yes")
+	HUNDEF(_MK_BIG_ENDIAN)
+	;;
+*-darwin*)
+	# The native Cocoa driver requires Objective C.
+	CHECK(objc)
+	;;
+*)
+	DISABLE(objc)
+	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]; then
+		echo "disabling floating-point support"
+		MDEFINE(HAVE_FLOAT, "no")
+		MDEFINE(HAVE_LONG_DOUBLE, "no")
+		HUNDEF(HAVE_FLOAT)
+		HUNDEF(HAVE_LONG_DOUBLE)
+	fi
+	if [ "${CROSS_COMPILING}" = "yes" ]; then
+		if [ "${byte_order}" = "" ]; then
+			echo "*"
+			echo "* Cannot guess the byte order of ${host}."
+			echo "* Please use --byte-order=LE or --byte-order=BE"
+			echo "*"
+			exit 1
+		fi
+		echo "checking for byte order...${byte_order} (given)"
+	else
+		CHECK(byte_order)
+	fi
+	;;
+esac
+
+# Force a static build if requested.
+if [ "${enable_shared}" != "no" ]; then
+	MDEFINE(LIB_SHARED, "Yes")
+else
+	MDEFINE(LIB_SHARED, "No")
+fi
+
+#
+# Determine available C compiler attributes. We have to assume that the compiler
+# used to build an Agar application on a given system will have at least the
+# same attributes available to it as the compiler that was used to build the
+# Agar library itself. If not, --without-attributes should be used.
+#
+if [ "${with_attributes}" != "no" ]; then
+	CHECK(cc_attributes)
+else
+	DISABLE(cc_attributes)
+fi
+if [ "${with_attributes}" != 'no' ]; then
+	HDEFINE(AG_USE_ATTRIBUTES, "yes")
+else
+	HUNDEF(AG_USE_ATTRIBUTES)
+fi
+
 CHECK(sys_types)
+CHECK(sys_stat)
 CHECK(stdlib_h)
 CHECK(unistd_h)
 CHECK(limits_h)
@@ -93,7 +198,6 @@ CHECK(signal)
 CHECK(setjmp)
 CHECK(strtoll)
 CHECK(strtold)
-CHECK(byte_order)
 CHECK(dlopen)
 CHECK(dyld)
 CHECK(shl_load)
@@ -114,19 +218,13 @@ CHECK(xbox)
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_DEFAULT_SOURCE)
 C_DEFINE(_BSD_SOURCE)
-
 C_NO_SECURE_WARNINGS()
-#C_EXTRA_WARNINGS()
-#C_FATAL_WARNINGS()
 
 if [ "${enable_warnings}" = 'yes' ]; then
 	C_OPTION(-Wall)
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
 	C_OPTION(-Wno-switch)
-	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
-else
-	MDEFINE(WNO_UNINITIALIZED, "")
 fi
 
 if [ "${enable_debug}" = 'yes' ]; then
@@ -158,6 +256,7 @@ else
 	HUNDEF(AG_LEGACY)
 fi
 
+
 #
 # Options specific to the Agar-GUI library.
 #
@@ -176,12 +275,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "* library was not found."
 				echo "*"
 				exit 1
-			else
-				HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
 			fi
+			DISABLE(sdl)
 		fi
 	else
-		HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
+		DISABLE(sdl)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
@@ -196,12 +294,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "* library was found."
 				echo "*"
 				exit 1
-			else
-				HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
 			fi
+			DISABLE(opengl)
 		fi
 	else
-		HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
+		DISABLE(opengl)
 	fi
 	
 	# Enable X Windows support if Xlib is found.
@@ -215,7 +312,7 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			else
-				HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
+				DISABLE(x11)
 			fi
 		fi
 		if [ "${with_xinerama}" != 'no' ]; then
@@ -227,16 +324,15 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "* Xinerama extension was not found."
 					echo "*"
 					exit 1
-				else
-					HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
 				fi
+				DISABLE(xinerama)
 			fi
 		else
-			HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
+			DISABLE(xinerama)
 		fi
 	else
-		HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
-		HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
+		DISABLE(x11)
+		DISABLE(xinerama)
 	fi
 	
 	# Enable MacOS X / Cocoa support if Cocoa is found.
@@ -249,12 +345,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "* Cocoa framework was not found."
 				echo "*"
 				exit 1
-			else
-				HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
 			fi
+			DISABLE(cocoa)
 		fi
 	else
-		HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
+		DISABLE(cocoa)
 	fi
 
 	#
@@ -271,12 +366,11 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "* compatible GLX library was found."
 					echo "*"
 					exit 1
-				else
-					HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
 				fi
+				DISABLE(glx)
 			fi
 		else
-			HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
+			DISABLE(glx)
 		fi
 		
 		# Enable WGL support on Windows.
@@ -289,15 +383,15 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "* WGL test has failed."
 					echo "*"
 					exit 1
-				else
-					HUNDEF(HAVE_WGL)
 				fi
+				DISABLE(wgl)
 			fi
 		else
-			HUNDEF(HAVE_WGL)
+			DISABLE(wgl)
 		fi
 	else
-		HUNDEF(HAVE_WGL, HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
+		DISABLE(glx)
+		DISABLE(wgl)
 	fi
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
@@ -318,14 +412,14 @@ if [ "${enable_gui}" != 'no' ]; then
 			exit 1
 		fi
 	else
-		HUNDEF(HAVE_FREETYPE, FREETYPE_CFLAGS, FREETYPE_LIBS)
+		DISABLE(freetype)
 	fi
 	
 	# Use fontconfig if available.
 	if [ "${with_fontconfig}" != 'no' ]; then
 		CHECK(fontconfig, 2.6.0, ${prefix_fontconfig})
 	else
-		HUNDEF(HAVE_FONTCONFIG, FONTCONFIG_CFLAGS, FONTCONFIG_LIBS)
+		DISABLE(fontconfig)
 	fi
 	
 	# Enable JPEG format support if libjpeg is found.
@@ -338,12 +432,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "* was not found."
 				echo "*"
 				exit 1
-			else
-				HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
 			fi
+			DISABLE(jpeg)
 		fi
 	else
-		HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
+		DISABLE(jpeg)
 	fi
 	
 	# Enable PNG format support if libpng is found.
@@ -356,12 +449,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "* was not found."
 				echo "*"
 				exit 1
-			else
-				HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
 			fi
+			DISABLE(png)
 		fi
 	else
-		HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
+		DISABLE(png)
 	fi
 
 else
@@ -369,17 +461,17 @@ else
 	MDEFINE(ENABLE_GUI_LIBS, "")
 	MDEFINE(SUBDIR_gui, "")
 
-	HUNDEF(HAVE_SDL, SDL_CFLAGS, SDL_LIBS)
-	HUNDEF(HAVE_X11, X11_CFLAGS, X11_LIBS)
-	HUNDEF(HAVE_XINERAMA, XINERAMA_CFLAGS, XINERAMA_LIBS)
-	HUNDEF(HAVE_COCOA, COCOA_CFLAGS, COCOA_LIBS)
-	HUNDEF(HAVE_OPENGL, OPENGL_CFLAGS, OPENGL_LIBS)
-	HUNDEF(HAVE_GLX, GLX_CFLAGS, GLX_LIBS)
-	HUNDEF(HAVE_WGL)
-	HUNDEF(HAVE_FREETYPE, FREETYPE_CFLAGS, FREETYPE_LIBS)
-	HUNDEF(HAVE_FONTCONFIG, FONTCONFIG_CFLAGS, FONTCONFIG_LIBS)
-	HUNDEF(HAVE_JPEG, JPEG_CFLAGS, JPEG_LIBS)
-	HUNDEF(HAVE_PNG, HAVE_LIBPNG14, PNG_CFLAGS, PNG_LIBS)
+	DISABLE(sdl)
+	DISABLE(x11)
+	DISABLE(xinerama)
+	DISABLE(cocoa)
+	DISABLE(opengl)
+	DISABLE(glx)
+	DISABLE(wgl)
+	DISABLE(freetype)
+	DISABLE(fontconfig)
+	DISABLE(jpeg)
+	DISABLE(png)
 fi
 
 # Enable network interface unless requested otherwise.
@@ -391,12 +483,12 @@ if [ "${enable_network}" != 'no' ]; then
 	MDEFINE(HAVE_NETWORK, "yes")
 	HDEFINE(AG_NETWORK, "yes")
 else
+	DISABLE(getaddrinfo)
+	DISABLE(siocgifconf)
+	DISABLE(sockopts)
+	DISABLE(winsock)
 	MDEFINE(HAVE_NETWORK, "no")
 	HUNDEF(AG_NETWORK)
-	HUNDEF(HAVE_GETADDRINFO, HAVE_SETSOCKOPT, HAVE_SO_OOBINLINE)
-	HUNDEF(HAVE_SO_REUSEPORT, HAVE_SO_TIMESTAMP, HAVE_SO_NOSIGPIPE)
-	HUNDEF(HAVE_SO_LINGER, HAVE_SO_ACCEPTFILTER, HAVE_SIOCGIFCONF)
-	HUNDEF(HAVE_WINSOCK1, HAVE_WINSOCK2)
 fi
 
 # Enable web application server if requested
@@ -407,7 +499,7 @@ if [ "${enable_web}" = 'yes' ]; then
 	MDEFINE(HAVE_WEB, "yes")
 	HDEFINE(AG_WEB, "yes")
 else
-	HUNDEF(HAVE_ZLIB, ZLIB_CFLAGS, ZLIB_LIBS)
+	DISABLE(zlib);
 	HUNDEF(HAVE_SYS_UIO_H)
 	HUNDEF(HAVE_SYS_PARAM_H)
 	MDEFINE(HAVE_WEB, "no")
@@ -415,21 +507,20 @@ else
 fi
 
 # Enable Berkeley DB backend for AG_Db if available.
-if [ "${with_db4}" != 'no' ]; then
+if [ "${with_db4}" = 'yes' ]; then
 	CHECK(db4, 0, ${prefix_db4})
 	if [ "${HAVE_DB4}" != 'yes' ]; then
 		if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
-			echo "* --with-db4 was requested, but Berkeley DB"
-			echo "* was not found."
+			echo "* --with-db4 was requested, but DB4 missing"
 			echo "*"
 			exit 1
 		else
-			HUNDEF(HAVE_DB4)
+			DISABLE(db4)
 		fi
 	fi
 else
-	HUNDEF(HAVE_DB4)
+	DISABLE(db4)
 fi
 
 # Enable MySQL backend for AG_Db if requested.
@@ -442,24 +533,21 @@ if [ "${with_mysql}" = 'yes' ]; then
 			echo "* was not found."
 			echo "*"
 			exit 1
-		else
-			HUNDEF(HAVE_MYSQL)
 		fi
+		DISABLE(mysql)
 	fi
 else
-	HUNDEF(HAVE_MYSQL)
+	DISABLE(mysql)
 fi
 
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != 'no' ]; then
 	CHECK(pthreads, 0, ${prefix_pthreads})
-	if [ "${HAVE_PTHREADS}" = 'yes' ];
-	then
-		HDEFINE(AG_THREADS, "yes")
+
+	if [ "${HAVE_PTHREADS}" = 'yes' ]; then
 		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = 'no' ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = 'no' ]; then
-			HUNDEF(AG_THREADS)
 			if [ "${enable_threads}" = 'yes' ]; then
 				echo "*"
 				echo "* --enable-threads was given, but your"
@@ -468,11 +556,12 @@ if [ "${enable_threads}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
+			HUNDEF(AG_THREADS)
 		fi
 		fi
 		fi
+		HDEFINE(AG_THREADS, "yes")
 	else
-		HUNDEF(AG_THREADS)
 		if [ "${enable_threads}" = 'yes' ]; then
 			echo "*"
 			echo "* --enable-threads was given, but no pthreads"
@@ -480,36 +569,22 @@ if [ "${enable_threads}" != 'no' ]; then
 			echo "*"
 			exit 1
 		fi
+		HUNDEF(AG_THREADS)
 	fi
 else
-	HUNDEF(AG_THREADS, HAVE_PTHREADS, HAVE_PTHREADS_XOPEN)
-	#
-	# Lock macros expand to no-ops when compiled !AG_THREADS, which may
-	# result in unused variables in some places.
-	#
+	DISABLE(pthreads)
+
+	HUNDEF(AG_THREADS)
+
 	if [ "${enable_warnings}" = 'yes' ]; then
+		#
+		# Lock macros expand to no-ops when compiled !AG_THREADS,
+		# which may result in unused variables.
+		#
 		C_OPTION(-Wno-unused)
 	fi
 fi
 
-# Enable UIM input method support if requested.
-if [ "${with_uim}" = 'yes' ]; then
-	CHECK(uim, 1.8.0, ${prefix_uim})
-	if [ "${HAVE_UIM}" != 'yes' ]; then
-		if [ "${with_uim}" = 'yes' ]; then
-			echo "*"
-			echo "* --with-uim was requested, but the uim "
-			echo "* framework is not installed."
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_UIM, UIM_CFLAGS, UIM_LIBS)
-		fi
-	fi
-else
-	HUNDEF(HAVE_UIM, UIM_CFLAGS, UIM_LIBS)
-fi
-	
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = 'yes' ]; then
 	CHECK(iconv, 0, ${prefix_iconv})
@@ -521,8 +596,8 @@ if [ "${enable_nls}" = 'yes' ]; then
 		exit 1
 	fi
 else
-	HUNDEF(HAVE_ICONV, ICONV_CFLAGS, ICONV_LIBS)
-	HUNDEF(HAVE_GETTEXT, GETTEXT_CFLAGS, GETTEXT_LIBS)
+	DISABLE(iconv)
+	DISABLE(gettext)
 fi
 
 #
@@ -547,7 +622,8 @@ if [ "${with_altivec}" != 'no' ]; then
 			echo "*"
 			exit 1
 		else
-			HUNDEF(HAVE_ALTIVEC, HAVE_ALTIVEC_H, INLINE_ALTIVEC)
+			DISABLE(altivec)
+			HUNDEF(INLINE_ALTIVEC)
 		fi
 	else
 		if [ "${with_altivec_inline}" = 'yes' ]; then
@@ -557,7 +633,8 @@ if [ "${with_altivec}" != 'no' ]; then
 		fi
 	fi
 else
-	HUNDEF(HAVE_ALTIVEC, HAVE_ALTIVEC_H, INLINE_ALTIVEC)
+	DISABLE(altivec)
+	HUNDEF(INLINE_ALTIVEC)
 fi
 
 #
@@ -575,9 +652,8 @@ if [ "${with_sse}" != 'no' ]; then
 			echo "* intrinsics not supported by compiler"
 			echo "*"
 			exit 1
-		else
-			HUNDEF(HAVE_SSE, INLINE_SSE)
 		fi
+		DISABLE(sse)
 	else
 		if [ "${with_sse_inline}" = 'yes' ]; then
 			HDEFINE(INLINE_SSE, "yes")
@@ -592,8 +668,7 @@ if [ "${with_sse}" != 'no' ]; then
 		fi
 	fi
 else
-	HUNDEF(HAVE_SSE, HAVE_SSE2, HAVE_SSE3, INLINE_SSE)
-	HUNDEF(SSE_CFLAGS, SSE2_CFLAGS, SSE3_CFLAGS)
+	DISABLE(sse)
 fi
 
 # Specify floating-point precision to use.
@@ -673,12 +748,18 @@ if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]; then
 			echo "*"
 			exit 1
 		fi
+		DISABLE(sndfile)
+		DISABLE(portaudio)
+
 		MDEFINE(SUBDIR_au, "")
-		HUNDEF(ENABLE_AU, HAVE_SNDFILE, HAVE_PORTAUDIO)
+		HUNDEF(ENABLE_AU)
 	fi
 else
+	DISABLE(sndfile)
+	DISABLE(portaudio)
+
 	MDEFINE(SUBDIR_au, "")
-	HUNDEF(ENABLE_AU, HAVE_SNDFILE, HAVE_PORTAUDIO)
+	HUNDEF(ENABLE_AU)
 fi
 
 #

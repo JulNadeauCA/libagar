@@ -430,24 +430,28 @@ echo '    --with-catman              Install cat files for manual pages [auto-de
 echo '    --with-ctags               Generate ctags tag files [no]'
 echo '    --with-docs                Generate printable documentation [no]'
 echo '    --with-gettext             Use gettext for multi-language [auto-detect]'
-echo '    --with-libtool             Specify path to libtool [bundled]'
+echo '    --with-libtool=STRING      Use GNU libtool [path or "bundled"]'
 echo '    --with-manlinks            Add manual entries for every function [no]'
 echo '    --with-manpages            Generate Unix manual pages [yes]'
 echo ''
 echo 'Global Agar options:'
+echo '    --with-memory-model=(S|M|L) Select Agar memory model [auto]'
+echo '    --with-float                Floating-point support [auto]'
 echo '    --enable-<library>          Build libraries (gui|vg|math|dev|au) [all]'
+echo '    --enable-shared             Build shared libraries [check]'
+echo '    --enable-type-safety        Run-time type safety checks [no]'
 echo '    --enable-debug              Debug build (implies type-safety) [no]'
 echo '    --enable-legacy             Deprecated interfaces [yes]'
 echo '    --enable-threads            Thread safety [check]'
 echo '    --enable-warnings           Suggested compiler warnings [no]'
 echo '    --with-pthreads[=PREFIX]    POSIX Threads support [check]'
+echo '    --with-attributes           Compiler attributes and annotations [yes]'
 echo ''
 echo 'Options specific to CORE library:'
-echo '    --enable-type-safety        Runtime AG_Event type checks [no]'
 echo '    --enable-debug-core         Expensive AG_Object debugging [no]'
 echo '    --enable-network            Network interface [check]'
 echo '    --enable-web                Web application server [no]'
-echo '    --with-db4[=PREFIX]         AG_Db: Berkeley DB backend [check]'
+echo '    --with-db4[=PREFIX]         AG_Db: Berkeley DB backend [no]'
 echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
 echo '    --with-z[=PREFIX]           zlib compression library [check]'
@@ -458,7 +462,7 @@ echo '    --with-altivec              AltiVec-optimized routines [check]'
 echo '    --with-altivec-inline       Inline Altivec-optimized routines [no]'
 echo '    --with-sse                  SSE-optimized routines [check]'
 echo '    --with-sse-inline           Inline SSE-optimized routines [no]'
-echo '    --without-sse[234]          Disable SSE2/SSE3 [check]'
+echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
 echo 'Options specific to AU library:'
 echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
@@ -477,7 +481,6 @@ echo '    --with-glx[=PREFIX]         Enable accelerated X driver [check]'
 echo '    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]'
 echo '    --with-wgl                  Enable MS Windows driver [check]'
 echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
-echo '    --with-uim[=PREFIX]         Enable UIM input method [no]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -526,6 +529,7 @@ if [ "${with_bundles}" != "no" ]; then
 		;;
 	esac
 fi
+host_machine=`echo ${host} | cut -d- -f 1`
 if [ -e "Makefile.config" ]; then
 	echo '* Overwriting existing Makefile.config'
 fi
@@ -713,15 +717,20 @@ if [ "${with_ctags}" = 'yes' ]; then
 fi
 IFS=$bb_save_IFS
 echo "CTAGS=${CTAGS}" >> Makefile.config
-if [ "${prefix_libtool}" != '' -a "${prefix_libtool}" != 'bundled' ]; then
-	LIBTOOL_BUNDLED='no'
-	LIBTOOL="${prefix_libtool}"
+if [ "${with_libtool}" = "yes" ]; then
+	if [ "${prefix_libtool}" != '' -a "${prefix_libtool}" != 'bundled' ]; then
+		LIBTOOL_BUNDLED='no'
+		LIBTOOL="${prefix_libtool}"
+	else
+		LIBTOOL_BUNDLED='yes'
+		LIBTOOL=\${TOP}/mk/libtool/libtool
+	fi
+	echo "USE_LIBTOOL=Yes" >> Makefile.config
+	echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
+	echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 else
-	LIBTOOL_BUNDLED='yes'
-	LIBTOOL=\${TOP}/mk/libtool/libtool
+	echo "USE_LIBTOOL=No" >> Makefile.config
 fi
-echo "LIBTOOL_BUNDLED=${LIBTOOL_BUNDLED}" >> Makefile.config
-echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "LDFLAGS?=${LDFLAGS}" >> Makefile.config
 
@@ -834,12 +843,12 @@ echo '#ifndef PACKAGE' > $BLD/include/agar/config/package.h
 echo "#define PACKAGE \"$PACKAGE\"" >> $BLD/include/agar/config/package.h
 echo '#endif' >> $BLD/include/agar/config/package.h
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.5.1"
+VERSION="1.6.0"
 echo '#ifndef VERSION' > $BLD/include/agar/config/version.h
 echo "#define VERSION \"$VERSION\"" >> $BLD/include/agar/config/version.h
 echo '#endif' >> $BLD/include/agar/config/version.h
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="Organic Hallucination"
+RELEASE="Nullability Complete"
 echo '#ifndef RELEASE' > $BLD/include/agar/config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> $BLD/include/agar/config/release.h
 echo '#endif' >> $BLD/include/agar/config/release.h
@@ -887,6 +896,57 @@ echo '#endif' >> $BLD/include/agar/config/ttfdir.h
 echo "hdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
 TTFDIR="NONE"
 fi
+echo '    _       _       _     ___'
+echo '  / _ \   / _ \   / _ \  |  _ \'
+echo ' | |_| | | (_| | | |_| | | |_) |'
+echo ' |_| |_|  \__, | |_| |_| |_| |_|'
+echo '          |___/                 '
+	
+if [ "${with_memory_model}" = '' ]
+ then
+	case "${host}" in
+	amd64-* | hppa64-* | ia64-* | mips64-* | ppc64*-* | sh64-* | sparc64-* | x86_64-*)
+	    with_memory_model="L"
+	    ;;
+	c64 | c128 | geos | nes)
+	    with_memory_model="S"
+	    ;;
+	*)
+	    with_memory_model="M"
+	    ;;
+	esac
+fi
+case "${with_memory_model}" in
+S* | s*)
+AG_MODEL="AG_SMALL"
+echo '#ifndef AG_MODEL' > $BLD/include/agar/config/ag_model.h
+echo "#define AG_MODEL $AG_MODEL" >> $BLD/include/agar/config/ag_model.h
+echo '#endif' >> $BLD/include/agar/config/ag_model.h
+echo "hdefs[\"AG_MODEL\"] = $AG_MODEL" >>configure.lua
+MEMORY_MODEL="SMALL"
+	;;
+M* | m*)
+AG_MODEL="AG_MEDIUM"
+echo '#ifndef AG_MODEL' > $BLD/include/agar/config/ag_model.h
+echo "#define AG_MODEL $AG_MODEL" >> $BLD/include/agar/config/ag_model.h
+echo '#endif' >> $BLD/include/agar/config/ag_model.h
+echo "hdefs[\"AG_MODEL\"] = $AG_MODEL" >>configure.lua
+MEMORY_MODEL="MEDIUM"
+	;;
+L* | l*)
+AG_MODEL="AG_LARGE"
+echo '#ifndef AG_MODEL' > $BLD/include/agar/config/ag_model.h
+echo "#define AG_MODEL $AG_MODEL" >> $BLD/include/agar/config/ag_model.h
+echo '#endif' >> $BLD/include/agar/config/ag_model.h
+echo "hdefs[\"AG_MODEL\"] = $AG_MODEL" >>configure.lua
+MEMORY_MODEL="LARGE"
+	;;
+*)
+	echo "No such memory model: ${with_memory_model} (use: SMALL, MEDIUM or LARGE)"
+	exit 1
+esac
+echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
+echo ""
 $ECHO_N 'checking for a C compiler...'
 $ECHO_N 'checking for a C compiler...' >> config.log
 if [ "$CROSS_COMPILING" = "yes" ]; then
@@ -894,38 +954,73 @@ if [ "$CROSS_COMPILING" = "yes" ]; then
 else
 	CROSSPFX=''
 fi
+HAVE_CC65="no"
 if [ "$CC" = '' ]; then
-	bb_save_IFS=$IFS
-	IFS=$PATH_SEPARATOR
-	for i in $PATH; do
-		if [ -x "${i}/${CROSSPFX}cc" ]; then
-			CC="${i}/${CROSSPFX}cc"
-			break
-		elif [ -x "${i}/${CROSSPFX}clang" ]; then
-			CC="${i}/${CROSSPFX}clang"
-			break
-		elif [ -x "${i}/${CROSSPFX}gcc" ]; then
-			CC="${i}/${CROSSPFX}gcc"
-			break
-		elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
-			CC="${i}/${CROSSPFX}cc.exe"
-			break
-		elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
-			CC="${i}/${CROSSPFX}clang.exe"
-			break
-		elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
-			CC="${i}/${CROSSPFX}gcc.exe"
-			break
-		fi
-	done
-	IFS=$bb_save_IFS
+	case "${host}" in
+	apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+		bb_save_IFS=$IFS
+		IFS=$PATH_SEPARATOR
+		for i in $PATH; do
+			if [ -x "${i}/cc65" ]; then
+				if ${i}/cc65 -V | grep ^cc65; then
+					CC="${i}/cc65"
+					HAVE_CC65="yes"
+					CROSS_COMPILING="yes"
+					break
+				fi
+			elif [ -x "${i}/cc65.exe" ]; then
+				if ${i}/cc65.exe -V | grep ^cc65; then
+					CC="${i}/cc65"
+					HAVE_CC65="yes"
+					CROSS_COMPILING="yes"
+					break
+				fi
+			fi
+		done
+		IFS=$bb_save_IFS
+		;;
+	*)
+		bb_save_IFS=$IFS
+		IFS=$PATH_SEPARATOR
+		for i in $PATH; do
+			if [ -x "${i}/${CROSSPFX}cc" ]; then
+				CC="${i}/${CROSSPFX}cc"
+				break
+			elif [ -x "${i}/${CROSSPFX}clang" ]; then
+				CC="${i}/${CROSSPFX}clang"
+				break
+			elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+				CC="${i}/${CROSSPFX}gcc"
+				break
+			elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
+				CC="${i}/${CROSSPFX}cc.exe"
+				break
+			elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
+				CC="${i}/${CROSSPFX}clang.exe"
+				break
+			elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
+				CC="${i}/${CROSSPFX}gcc.exe"
+				break
+			fi
+		done
+		IFS=$bb_save_IFS
+		;;
+	esac
 
 	if [ "$CC" = '' ]; then
-		echo "*"
-		echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in default PATH."
-		echo "* You may need to set the CC environment variable."
-		echo "*"
-		echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
+		if [ "$HAVE_CC65" = "yes" ]; then
+			echo "*"
+			echo "* Cannot find cc65 in PATH. You may need to set CC."
+			echo "* You can download cc65 from: https://www.cc65.org/."
+			echo "*"
+			echo "Cannot find cc65 in PATH." >> config.log
+		else
+			echo "*"
+			echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH."
+			echo "* You may need to set the CC environment variable."
+			echo "*"
+			echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
+		fi
 		HAVE_CC="no"
 		echo "no"
 	else
@@ -935,7 +1030,13 @@ if [ "$CC" = '' ]; then
 	fi
 else
 	HAVE_CC="yes"
-	echo "using ${CC}"
+	if ${CC} -V 2>&1 |grep -q ^cc65; then
+		echo "using cc65 (${CC})"
+		HAVE_CC65="yes"
+		CROSS_COMPILING="yes"
+	else
+		echo "using ${CC}"
+	fi
 fi
 
 if [ "${HAVE_CC}" = "yes" ]; then
@@ -1025,6 +1126,46 @@ fi
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
+$ECHO_N 'cc: checking for float and double...'
+$ECHO_N 'cc: checking for float and double...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1f;
+	double d = 0.2;
+
+	printf("%f", f);
+	return ((double)f + d) > 0.2 ? 1 : 0;
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_FLOAT='yes'
+echo '#ifndef HAVE_FLOAT' > $BLD/include/agar/config/have_float.h
+echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >> $BLD/include/agar/config/have_float.h
+echo '#endif' >> $BLD/include/agar/config/have_float.h
+echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_FLOAT='no'
+echo '#undef HAVE_FLOAT' >$BLD/include/agar/config/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'cc: checking for long double...'
 $ECHO_N 'cc: checking for long double...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -1036,7 +1177,7 @@ main(int argc, char *argv[])
 	long double ld = 0.1;
 
 	printf("%Lf", ld);
-	return (ld == 1.0);
+	return (ld + 0.1) > 0.2 ? 1 : 0;
 }
 
 EOT
@@ -1296,6 +1437,50 @@ LIBTOOLOPTS_SHARED="${LIBTOOLOPTS_SHARED} -XCClinker -static-libgcc"
 fi;
 ;;
 esac
+echo '#ifndef HAVE_CC' > $BLD/include/agar/config/have_cc.h
+echo "#define HAVE_CC \"$HAVE_CC\"" >> $BLD/include/agar/config/have_cc.h
+echo '#endif' >> $BLD/include/agar/config/have_cc.h
+echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+echo '#ifndef HAVE_CC65' > $BLD/include/agar/config/have_cc65.h
+echo "#define HAVE_CC65 \"$HAVE_CC65\"" >> $BLD/include/agar/config/have_cc65.h
+echo '#endif' >> $BLD/include/agar/config/have_cc65.h
+echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
+else
+CC_COMPILE="-c"
+fi;
+else
+HAVE_CC="no"
+HAVE_CC65="no"
+HAVE_CC_WARNINGS="no"
+CC=""
+CFLAGS=""
+PROG_GUI_FLAGS=""
+PROG_CLI_FLAGS=""
+LIBTOOLOPTS_SHARED=""
+echo '#undef HAVE_CC' >$BLD/include/agar/config/have_cc.h
+echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
+echo '#undef HAVE_CC65' >$BLD/include/agar/config/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
+echo '#undef HAVE_CC_WARNINGS' >$BLD/include/agar/config/have_cc_warnings.h
+echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
+echo '#undef HAVE_FLOAT' >$BLD/include/agar/config/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$BLD/include/agar/config/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_LONG' >$BLD/include/agar/config/have_long_long.h
+echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
+echo '#undef HAVE_CYGWIN' >$BLD/include/agar/config/have_cygwin.h
+echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
+echo '#undef HAVE_CC_MWINDOWS' >$BLD/include/agar/config/have_cc_mwindows.h
+echo 'hdefs["HAVE_CC_MWINDOWS"] = nil' >>configure.lua
+echo '#undef HAVE_CC_MCONSOLE' >$BLD/include/agar/config/have_cc_mconsole.h
+echo 'hdefs["HAVE_CC_MCONSOLE"] = nil' >>configure.lua
+echo '#undef HAVE_LD_NO_UNDEFINED' >$BLD/include/agar/config/have_ld_no_undefined.h
+echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
+echo '#undef HAVE_LD_STATIC_LIBGCC' >$BLD/include/agar/config/have_ld_static_libgcc.h
+echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_CC}" != "yes" ]; then
 echo '* '
@@ -1307,422 +1492,34 @@ echo '* ' >> config.log
 echo "configure failed!"
 exit 1
 fi;
-$ECHO_N 'checking for aligned attribute...'
-$ECHO_N 'checking for aligned attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int main(int argc, char *argv[])
-{
-	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_ALIGNED_ATTRIBUTE='yes'
-echo '#ifndef HAVE_ALIGNED_ATTRIBUTE' > $BLD/include/agar/config/have_aligned_attribute.h
-echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_aligned_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_aligned_attribute.h
-echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_ALIGNED_ATTRIBUTE='no'
-echo '#undef HAVE_ALIGNED_ATTRIBUTE' >$BLD/include/agar/config/have_aligned_attribute.h
-echo 'hdefs["HAVE_ALIGNED_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for __bounded__ attribute...'
-$ECHO_N 'checking for __bounded__ attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-void foostring(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
-void foostring(char *a, int c) { }
-void foobuffer(void *, int) __attribute__ ((__bounded__(__buffer__,1,2)));
-void foobuffer(void *a, int c) { }
-int main(void)
-{
-	char buf[32];
-	foostring(buf, sizeof(buf));
-	foobuffer(buf, sizeof(buf));
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_BOUNDED_ATTRIBUTE='yes'
-echo '#ifndef HAVE_BOUNDED_ATTRIBUTE' > $BLD/include/agar/config/have_bounded_attribute.h
-echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_bounded_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_bounded_attribute.h
-echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_BOUNDED_ATTRIBUTE='no'
-echo '#undef HAVE_BOUNDED_ATTRIBUTE' >$BLD/include/agar/config/have_bounded_attribute.h
-echo 'hdefs["HAVE_BOUNDED_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for const attribute...'
-$ECHO_N 'checking for const attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int foo(int) __attribute__ ((const));
-int foo(int x) { return (x*x); }
-int main(int argc, char *argv[])
-{
-	int x = foo(1);
-	return (x);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_CONST_ATTRIBUTE='yes'
-echo '#ifndef HAVE_CONST_ATTRIBUTE' > $BLD/include/agar/config/have_const_attribute.h
-echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> $BLD/include/agar/config/have_const_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_const_attribute.h
-echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_CONST_ATTRIBUTE='no'
-echo '#undef HAVE_CONST_ATTRIBUTE' >$BLD/include/agar/config/have_const_attribute.h
-echo 'hdefs["HAVE_CONST_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for deprecated attribute...'
-$ECHO_N 'checking for deprecated attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-void foo(void) __attribute__ ((deprecated));
-void foo(void) { }
-
-int main(int argc, char *argv[])
-{
-/*	foo(); */
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_DEPRECATED_ATTRIBUTE='yes'
-echo '#ifndef HAVE_DEPRECATED_ATTRIBUTE' > $BLD/include/agar/config/have_deprecated_attribute.h
-echo "#define HAVE_DEPRECATED_ATTRIBUTE \"$HAVE_DEPRECATED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_deprecated_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_deprecated_attribute.h
-echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_DEPRECATED_ATTRIBUTE='no'
-echo '#undef HAVE_DEPRECATED_ATTRIBUTE' >$BLD/include/agar/config/have_deprecated_attribute.h
-echo 'hdefs["HAVE_DEPRECATED_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for __format__ attribute...'
-$ECHO_N 'checking for __format__ attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <stdarg.h>
-void foo1(char *, ...)
-     __attribute__((__format__ (printf, 1, 2)));
-void foo2(char *, ...)
-     __attribute__((__format__ (__printf__, 1, 2)))
-     __attribute__((__nonnull__ (1)));
-void foo1(char *a, ...) {}
-void foo2(char *a, ...) {}
-int main(int argc, char *argv[])
-{
-	foo1("foo %s", "bar");
-	foo2("foo %d", 1);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_FORMAT_ATTRIBUTE='yes'
-echo '#ifndef HAVE_FORMAT_ATTRIBUTE' > $BLD/include/agar/config/have_format_attribute.h
-echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_format_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_format_attribute.h
-echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_FORMAT_ATTRIBUTE='no'
-echo '#undef HAVE_FORMAT_ATTRIBUTE' >$BLD/include/agar/config/have_format_attribute.h
-echo 'hdefs["HAVE_FORMAT_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for __nonnull__ attribute...'
-$ECHO_N 'checking for __nonnull__ attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-void foo(char *) __attribute__((__nonnull__ (1)));
-void foo(char *a) { }
-int main(int argc, char *argv[])
-{
-	foo("foo");
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_NONNULL_ATTRIBUTE='yes'
-echo '#ifndef HAVE_NONNULL_ATTRIBUTE' > $BLD/include/agar/config/have_nonnull_attribute.h
-echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> $BLD/include/agar/config/have_nonnull_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_nonnull_attribute.h
-echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_NONNULL_ATTRIBUTE='no'
-echo '#undef HAVE_NONNULL_ATTRIBUTE' >$BLD/include/agar/config/have_nonnull_attribute.h
-echo 'hdefs["HAVE_NONNULL_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for noreturn attribute...'
-$ECHO_N 'checking for noreturn attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <unistd.h>
-#include <stdlib.h>
-void foo(void) __attribute__ ((noreturn));
-void foo(void) { _exit(0); }
-int main(int argc, char *argv[])
-{
-	foo();
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_NORETURN_ATTRIBUTE='yes'
-echo '#ifndef HAVE_NORETURN_ATTRIBUTE' > $BLD/include/agar/config/have_noreturn_attribute.h
-echo "#define HAVE_NORETURN_ATTRIBUTE \"$HAVE_NORETURN_ATTRIBUTE\"" >> $BLD/include/agar/config/have_noreturn_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_noreturn_attribute.h
-echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_NORETURN_ATTRIBUTE='no'
-echo '#undef HAVE_NORETURN_ATTRIBUTE' >$BLD/include/agar/config/have_noreturn_attribute.h
-echo 'hdefs["HAVE_NORETURN_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for packed attribute...'
-$ECHO_N 'checking for packed attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int main(int argc, char *argv[])
-{
-	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_PACKED_ATTRIBUTE='yes'
-echo '#ifndef HAVE_PACKED_ATTRIBUTE' > $BLD/include/agar/config/have_packed_attribute.h
-echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_packed_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_packed_attribute.h
-echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_PACKED_ATTRIBUTE='no'
-echo '#undef HAVE_PACKED_ATTRIBUTE' >$BLD/include/agar/config/have_packed_attribute.h
-echo 'hdefs["HAVE_PACKED_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for pure attribute...'
-$ECHO_N 'checking for pure attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int foo(int) __attribute__ ((pure));
-int foo(int x) { return (x*x); }
-int main(int argc, char *argv[])
-{
-	int x = foo(1);
-	return (x);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_PURE_ATTRIBUTE='yes'
-echo '#ifndef HAVE_PURE_ATTRIBUTE' > $BLD/include/agar/config/have_pure_attribute.h
-echo "#define HAVE_PURE_ATTRIBUTE \"$HAVE_PURE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_pure_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_pure_attribute.h
-echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_PURE_ATTRIBUTE='no'
-echo '#undef HAVE_PURE_ATTRIBUTE' >$BLD/include/agar/config/have_pure_attribute.h
-echo 'hdefs["HAVE_PURE_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for warn_unused_result attribute...'
-$ECHO_N 'checking for warn_unused_result attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int foo(void) __attribute__ ((warn_unused_result));
-int foo(void) { return (1); }
-int main(int argc, char *argv[])
-{
-	int rv = foo();
-	return (rv);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE='yes'
-echo '#ifndef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' > $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "#define HAVE_WARN_UNUSED_RESULT_ATTRIBUTE \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_WARN_UNUSED_RESULT_ATTRIBUTE='no'
-echo '#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' >$BLD/include/agar/config/have_warn_unused_result_attribute.h
-echo 'hdefs["HAVE_WARN_UNUSED_RESULT_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for unused variable attribute...'
-$ECHO_N 'checking for unused variable attribute...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-int main(int argc, char *argv[])
-{
-	int __attribute__ ((unused)) variable;
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_UNUSED_VARIABLE_ATTRIBUTE='yes'
-echo '#ifndef HAVE_UNUSED_VARIABLE_ATTRIBUTE' > $BLD/include/agar/config/have_unused_variable_attribute.h
-echo "#define HAVE_UNUSED_VARIABLE_ATTRIBUTE \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_unused_variable_attribute.h
-echo '#endif' >> $BLD/include/agar/config/have_unused_variable_attribute.h
-echo "hdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_UNUSED_VARIABLE_ATTRIBUTE='no'
-echo '#undef HAVE_UNUSED_VARIABLE_ATTRIBUTE' >$BLD/include/agar/config/have_unused_variable_attribute.h
-echo 'hdefs["HAVE_UNUSED_VARIABLE_ATTRIBUTE"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-$ECHO_N 'checking for an Objective-C compiler...'
-$ECHO_N 'checking for an Objective-C compiler...' >> config.log
+case "${host}" in
+c64 | c128 | geos | nes)
+echo 'not enabling Objective-C compiler'
+echo 'not enabling Objective-C compiler' >> config.log
+HAVE_OBJC="no"
+HAVE_OBJC_WARNINGS="no"
+OBJC=""
+OBJCFLAGS=""
+echo '#undef HAVE_OBJC' >$BLD/include/agar/config/have_objc.h
+echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
+echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
+echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
+	with_attributes="no"
+	enable_shared="no"
+	with_float="no"
+	echo "checking for byte order...little-endian (${host})"
+_MK_BYTE_ORDER="LE"
+_MK_LITTLE_ENDIAN="yes"
+echo '#ifndef _MK_LITTLE_ENDIAN' > $BLD/include/agar/config/_mk_little_endian.h
+echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> $BLD/include/agar/config/_mk_little_endian.h
+echo '#endif' >> $BLD/include/agar/config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo '#undef _MK_BIG_ENDIAN' >$BLD/include/agar/config/_mk_big_endian.h
+echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
+	;;
+*-darwin*)
+$ECHO_N 'checking for Objective-C compiler...'
+$ECHO_N 'checking for Objective-C compiler...' >> config.log
 if [ "$CROSS_COMPILING" = "yes" ]; then
 	CROSSPFX="${host}-"
 else
@@ -1867,17 +1664,640 @@ fi
 if [ "${HAVE_OBJC_WARNINGS}" = "yes" ]; then
 TEST_OBJCFLAGS="-Wall -Werror"
 fi;
+echo '#ifndef HAVE_OBJC' > $BLD/include/agar/config/have_objc.h
+echo "#define HAVE_OBJC \"$HAVE_OBJC\"" >> $BLD/include/agar/config/have_objc.h
+echo '#endif' >> $BLD/include/agar/config/have_objc.h
+echo "hdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
 rm -f conftest.m $testdir/conftest$EXECSUFFIX
+else
+HAVE_OBJC="no"
+HAVE_OBJC_WARNINGS="no"
+OBJC=""
+OBJCFLAGS=""
+echo '#undef HAVE_OBJC' >$BLD/include/agar/config/have_objc.h
+echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
+echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
+echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 fi;
+	;;
+*)
+echo 'not enabling Objective-C compiler'
+echo 'not enabling Objective-C compiler' >> config.log
+HAVE_OBJC="no"
+HAVE_OBJC_WARNINGS="no"
+OBJC=""
+OBJCFLAGS=""
+echo '#undef HAVE_OBJC' >$BLD/include/agar/config/have_objc.h
+echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
+echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
+echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
+	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]
+ then
+		echo "disabling floating-point support"
+HAVE_FLOAT="no"
+HAVE_LONG_DOUBLE="no"
+echo '#undef HAVE_FLOAT' >$BLD/include/agar/config/have_float.h
+echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
+echo '#undef HAVE_LONG_DOUBLE' >$BLD/include/agar/config/have_long_double.h
+echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
+	fi
+	if [ "${CROSS_COMPILING}" = "yes" ]
+ then
+		if [ "${byte_order}" = "" ]
+ then
+			echo "*"
+			echo "* Cannot guess the byte order of ${host}."
+			echo "* Please use --byte-order=LE or --byte-order=BE"
+			echo "*"
+			exit 1
+		fi
+		echo "checking for byte order...${byte_order} (given)"
+	else
+$ECHO_N 'checking for byte order...'
+$ECHO_N 'checking for byte order...' >> config.log
+if [ "${byte_order}" != "" ]; then
+if [ "${byte_order}" = "LE" ]; then
+_MK_BYTE_ORDER="LE"
+else
+if [ "${byte_order}" = "BE" ]; then
+_MK_BYTE_ORDER="BE"
+else
+echo "Usage: --byte-order=[LE|BE]"
+exit 1
+fi;
+fi;
+else
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/param.h>
+int
+main(int argc, char *argv[])
+{
+#if BYTE_ORDER == BIG_ENDIAN
+	static volatile char *bo = "BiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiAN";
+#else
+	static volatile char *bo = "LiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiAN";
+#endif
+	int c = 0;
+	volatile char *p = bo;
+	while (*p != '\0') { c *= (int)*p; }
+	return (c>123?c:456);
+}
+
+EOT
+echo "$CC $CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "Failed to compile test for byte order, code $?"
+	echo "Failed to compile test for byte order, code $?" >> config.log
+	exit 1
+fi
+rm -f conftest.c
+
+_MK_BYTE_ORDER=''
+_MK_BYTE_ORDER_LESTRING='LiTTLeEnD'
+_MK_BYTE_ORDER_BESTRING='BiGEnDiAN'
+od -tc $testdir/conftest$EXECSUFFIX | sed 's/ //g' > $testdir/conftest.dump
+
+if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
+	_MK_BYTE_ORDER="LE"
+	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
+		echo '*'
+		echo '* Unable to auto-determine host byte order. Please re-run ./configure'
+		echo '* with --byte-order=LE or --byte-order=BE.'
+		echo '*'
+		exit 1
+	fi
+else
+	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
+		_MK_BYTE_ORDER="BE"
+		if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
+			echo '*'
+			echo '* Unable to auto-determine host byte order. Please re-run ./configure'
+			echo '* with --byte-order=LE or --byte-order=BE.'
+			echo '*'
+			exit 1
+		fi
+	fi
+fi
+rm -f conftest.c $testdir/conftest $testdir/conftest.dump
+fi;
+if [ "$_MK_BYTE_ORDER" = "LE" ]; then
+echo 'little-endian'
+echo 'little-endian' >> config.log
+_MK_LITTLE_ENDIAN="yes"
+echo '#ifndef _MK_LITTLE_ENDIAN' > $BLD/include/agar/config/_mk_little_endian.h
+echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> $BLD/include/agar/config/_mk_little_endian.h
+echo '#endif' >> $BLD/include/agar/config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo '#undef _MK_BIG_ENDIAN' >$BLD/include/agar/config/_mk_big_endian.h
+echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
+else
+echo 'big-endian'
+echo 'big-endian' >> config.log
+_MK_BIG_ENDIAN="yes"
+echo '#ifndef _MK_BIG_ENDIAN' > $BLD/include/agar/config/_mk_big_endian.h
+echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> $BLD/include/agar/config/_mk_big_endian.h
+echo '#endif' >> $BLD/include/agar/config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo '#undef _MK_LITTLE_ENDIAN' >$BLD/include/agar/config/_mk_little_endian.h
+echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
+fi;
+	fi
+	;;
+esac
+if [ "${enable_shared}" != "no" ]
+ then
+LIB_SHARED="Yes"
+else
+LIB_SHARED="No"
+fi
+if [ "${with_attributes}" != "no" ]
+ then
+$ECHO_N 'checking for C compiler attributes...'
+$ECHO_N 'checking for C compiler attributes...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+int main(int argc, char *argv[])
+{
+	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_ALIGNED_ATTRIBUTE='yes'
+echo '#ifndef HAVE_ALIGNED_ATTRIBUTE' > $BLD/include/agar/config/have_aligned_attribute.h
+echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_aligned_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_ALIGNED_ATTRIBUTE='no'
+echo '#undef HAVE_ALIGNED_ATTRIBUTE' >$BLD/include/agar/config/have_aligned_attribute.h
+echo 'hdefs["HAVE_ALIGNED_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_ALIGNED_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'aligned '
+$ECHO_N 'aligned ' >> config.log
+else
+$ECHO_N '!aligned '
+$ECHO_N '!aligned ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+void foostring(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
+void foostring(char *a, int c) { }
+void foobuffer(void *, int) __attribute__ ((__bounded__(__buffer__,1,2)));
+void foobuffer(void *a, int c) { }
+int main(void)
+{
+	char buf[32];
+	foostring(buf, sizeof(buf));
+	foobuffer(buf, sizeof(buf));
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_BOUNDED_ATTRIBUTE='yes'
+echo '#ifndef HAVE_BOUNDED_ATTRIBUTE' > $BLD/include/agar/config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_bounded_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_BOUNDED_ATTRIBUTE='no'
+echo '#undef HAVE_BOUNDED_ATTRIBUTE' >$BLD/include/agar/config/have_bounded_attribute.h
+echo 'hdefs["HAVE_BOUNDED_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_BOUNDED_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'bounded '
+$ECHO_N 'bounded ' >> config.log
+else
+$ECHO_N '!bounded '
+$ECHO_N '!bounded ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+int foo(int) __attribute__ ((const));
+int foo(int x) { return (x*x); }
+int main(int argc, char *argv[])
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_CONST_ATTRIBUTE='yes'
+echo '#ifndef HAVE_CONST_ATTRIBUTE' > $BLD/include/agar/config/have_const_attribute.h
+echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> $BLD/include/agar/config/have_const_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_CONST_ATTRIBUTE='no'
+echo '#undef HAVE_CONST_ATTRIBUTE' >$BLD/include/agar/config/have_const_attribute.h
+echo 'hdefs["HAVE_CONST_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_CONST_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'const '
+$ECHO_N 'const ' >> config.log
+else
+$ECHO_N '!const '
+$ECHO_N '!const ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+void foo(void) __attribute__ ((deprecated));
+void foo(void) { }
+
+int main(int argc, char *argv[])
+{
+/*	foo(); */
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_DEPRECATED_ATTRIBUTE='yes'
+echo '#ifndef HAVE_DEPRECATED_ATTRIBUTE' > $BLD/include/agar/config/have_deprecated_attribute.h
+echo "#define HAVE_DEPRECATED_ATTRIBUTE \"$HAVE_DEPRECATED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_deprecated_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_DEPRECATED_ATTRIBUTE='no'
+echo '#undef HAVE_DEPRECATED_ATTRIBUTE' >$BLD/include/agar/config/have_deprecated_attribute.h
+echo 'hdefs["HAVE_DEPRECATED_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_DEPRECATED_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'deprecated '
+$ECHO_N 'deprecated ' >> config.log
+else
+$ECHO_N '!deprecated '
+$ECHO_N '!deprecated ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdarg.h>
+void foo1(char *, ...)
+     __attribute__((__format__ (printf, 1, 2)));
+void foo2(char *, ...)
+     __attribute__((__format__ (__printf__, 1, 2)));
+void foo1(char *a, ...) {}
+void foo2(char *a, ...) {}
+int main(int argc, char *argv[])
+{
+	foo1("foo %s", "bar");
+	foo2("foo %d", 1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_FORMAT_ATTRIBUTE='yes'
+echo '#ifndef HAVE_FORMAT_ATTRIBUTE' > $BLD/include/agar/config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_format_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_FORMAT_ATTRIBUTE='no'
+echo '#undef HAVE_FORMAT_ATTRIBUTE' >$BLD/include/agar/config/have_format_attribute.h
+echo 'hdefs["HAVE_FORMAT_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_FORMAT_ATTRIBUTE}" = "yes" ]; then
+echo 'format'
+echo 'format' >> config.log
+else
+echo '!format'
+echo '!format' >> config.log
+fi;
+$ECHO_N 'checking for C compiler attributes...'
+$ECHO_N 'checking for C compiler attributes...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdio.h>
+#include <stdlib.h>
+
+void *myalloc(size_t len) __attribute__ ((__malloc__));
+void *myalloc(size_t len) { return (NULL); }
+int main(int argc, char *argv[])
+{
+	void *p = myalloc(10);
+	return (p != NULL);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_MALLOC_ATTRIBUTE='yes'
+echo '#ifndef HAVE_MALLOC_ATTRIBUTE' > $BLD/include/agar/config/have_malloc_attribute.h
+echo "#define HAVE_MALLOC_ATTRIBUTE \"$HAVE_MALLOC_ATTRIBUTE\"" >> $BLD/include/agar/config/have_malloc_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_malloc_attribute.h
+echo "hdefs[\"HAVE_MALLOC_ATTRIBUTE\"] = \"$HAVE_MALLOC_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_MALLOC_ATTRIBUTE='no'
+echo '#undef HAVE_MALLOC_ATTRIBUTE' >$BLD/include/agar/config/have_malloc_attribute.h
+echo 'hdefs["HAVE_MALLOC_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_MALLOC_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'malloc '
+$ECHO_N 'malloc ' >> config.log
+else
+$ECHO_N '!malloc '
+$ECHO_N '!malloc ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <unistd.h>
+#include <stdlib.h>
+void foo(void) __attribute__ ((noreturn));
+void foo(void) { _exit(0); }
+int main(int argc, char *argv[])
+{
+	foo();
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_NORETURN_ATTRIBUTE='yes'
+echo '#ifndef HAVE_NORETURN_ATTRIBUTE' > $BLD/include/agar/config/have_noreturn_attribute.h
+echo "#define HAVE_NORETURN_ATTRIBUTE \"$HAVE_NORETURN_ATTRIBUTE\"" >> $BLD/include/agar/config/have_noreturn_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_noreturn_attribute.h
+echo "hdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_NORETURN_ATTRIBUTE='no'
+echo '#undef HAVE_NORETURN_ATTRIBUTE' >$BLD/include/agar/config/have_noreturn_attribute.h
+echo 'hdefs["HAVE_NORETURN_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_NORETURN_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'noreturn '
+$ECHO_N 'noreturn ' >> config.log
+else
+$ECHO_N '!noreturn '
+$ECHO_N '!noreturn ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+int main(int argc, char *argv[])
+{
+	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_PACKED_ATTRIBUTE='yes'
+echo '#ifndef HAVE_PACKED_ATTRIBUTE' > $BLD/include/agar/config/have_packed_attribute.h
+echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> $BLD/include/agar/config/have_packed_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_PACKED_ATTRIBUTE='no'
+echo '#undef HAVE_PACKED_ATTRIBUTE' >$BLD/include/agar/config/have_packed_attribute.h
+echo 'hdefs["HAVE_PACKED_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_PACKED_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'packed '
+$ECHO_N 'packed ' >> config.log
+else
+$ECHO_N '!packed '
+$ECHO_N '!packed ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+volatile int glo = 1234;
+int foo(int) __attribute__ ((pure));
+int foo(int x) { return (x*x + glo); }
+int main(int argc, char *argv[])
+{
+	int x = foo(1);
+	glo = 2345;
+	x = foo(2);
+	return (x);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_PURE_ATTRIBUTE='yes'
+echo '#ifndef HAVE_PURE_ATTRIBUTE' > $BLD/include/agar/config/have_pure_attribute.h
+echo "#define HAVE_PURE_ATTRIBUTE \"$HAVE_PURE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_pure_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_pure_attribute.h
+echo "hdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_PURE_ATTRIBUTE='no'
+echo '#undef HAVE_PURE_ATTRIBUTE' >$BLD/include/agar/config/have_pure_attribute.h
+echo 'hdefs["HAVE_PURE_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_PURE_ATTRIBUTE}" = "yes" ]; then
+$ECHO_N 'pure '
+$ECHO_N 'pure ' >> config.log
+else
+$ECHO_N '!pure '
+$ECHO_N '!pure ' >> config.log
+fi;
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+int main(int argc, char *argv[])
+{
+	int __attribute__ ((unused)) variable;
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_UNUSED_VARIABLE_ATTRIBUTE='yes'
+echo '#ifndef HAVE_UNUSED_VARIABLE_ATTRIBUTE' > $BLD/include/agar/config/have_unused_variable_attribute.h
+echo "#define HAVE_UNUSED_VARIABLE_ATTRIBUTE \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >> $BLD/include/agar/config/have_unused_variable_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_unused_variable_attribute.h
+echo "hdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_UNUSED_VARIABLE_ATTRIBUTE='no'
+echo '#undef HAVE_UNUSED_VARIABLE_ATTRIBUTE' >$BLD/include/agar/config/have_unused_variable_attribute.h
+echo 'hdefs["HAVE_UNUSED_VARIABLE_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_UNUSED_VARIABLE_ATTRIBUTE}" = "yes" ]; then
+echo 'unused'
+echo 'unused' >> config.log
+else
+echo '!unused'
+echo '!unused' >> config.log
+fi;
+$ECHO_N 'checking for C compiler attributes...'
+$ECHO_N 'checking for C compiler attributes...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+int foo(void) __attribute__ ((warn_unused_result));
+int foo(void) { return (1); }
+int main(int argc, char *argv[])
+{
+	int rv = foo();
+	return (rv);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE='yes'
+echo '#ifndef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' > $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "#define HAVE_WARN_UNUSED_RESULT_ATTRIBUTE \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo '#endif' >> $BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo "hdefs[\"HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"] = \"$HAVE_WARN_UNUSED_RESULT_ATTRIBUTE\"" >>configure.lua
+else
+HAVE_WARN_UNUSED_RESULT_ATTRIBUTE='no'
+echo '#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' >$BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo 'hdefs["HAVE_WARN_UNUSED_RESULT_ATTRIBUTE"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_WARN_UNUSED_RESULT_ATTRIBUTE}" = "yes" ]; then
+echo 'warn_unused_result '
+echo 'warn_unused_result ' >> config.log
+else
+echo '!warn_unused_result '
+echo '!warn_unused_result ' >> config.log
+fi;
+else
+echo 'not enabling C compiler attributes'
+echo 'not enabling C compiler attributes' >> config.log
+echo '#undef HAVE_ALIGNED_ATTRIBUTE' >$BLD/include/agar/config/have_aligned_attribute.h
+echo 'hdefs["HAVE_ALIGNED_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_BOUNDED_ATTRIBUTE' >$BLD/include/agar/config/have_bounded_attribute.h
+echo 'hdefs["HAVE_BOUNDED_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_CONST_ATTRIBUTE' >$BLD/include/agar/config/have_const_attribute.h
+echo 'hdefs["HAVE_CONST_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_DEPRECATED_ATTRIBUTE' >$BLD/include/agar/config/have_deprecated_attribute.h
+echo 'hdefs["HAVE_DEPRECATED_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_FORMAT_ATTRIBUTE' >$BLD/include/agar/config/have_format_attribute.h
+echo 'hdefs["HAVE_FORMAT_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_MALLOC_ATTRIBUTE' >$BLD/include/agar/config/have_malloc_attribute.h
+echo 'hdefs["HAVE_MALLOC_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_NORETURN_ATTRIBUTE' >$BLD/include/agar/config/have_noreturn_attribute.h
+echo 'hdefs["HAVE_NORETURN_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_PACKED_ATTRIBUTE' >$BLD/include/agar/config/have_packed_attribute.h
+echo 'hdefs["HAVE_PACKED_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_PURE_ATTRIBUTE' >$BLD/include/agar/config/have_pure_attribute.h
+echo 'hdefs["HAVE_PURE_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_UNUSED_VARIABLE_ATTRIBUTE' >$BLD/include/agar/config/have_unused_variable_attribute.h
+echo 'hdefs["HAVE_UNUSED_VARIABLE_ATTRIBUTE"] = nil' >>configure.lua
+echo '#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' >$BLD/include/agar/config/have_warn_unused_result_attribute.h
+echo 'hdefs["HAVE_WARN_UNUSED_RESULT_ATTRIBUTE"] = nil' >>configure.lua
+fi
+if [ "${with_attributes}" != 'no' ]
+ then
+AG_USE_ATTRIBUTES="yes"
+echo '#ifndef AG_USE_ATTRIBUTES' > $BLD/include/agar/config/ag_use_attributes.h
+echo "#define AG_USE_ATTRIBUTES \"$AG_USE_ATTRIBUTES\"" >> $BLD/include/agar/config/ag_use_attributes.h
+echo '#endif' >> $BLD/include/agar/config/ag_use_attributes.h
+echo "hdefs[\"AG_USE_ATTRIBUTES\"] = \"$AG_USE_ATTRIBUTES\"" >>configure.lua
+else
+echo '#undef AG_USE_ATTRIBUTES' >$BLD/include/agar/config/ag_use_attributes.h
+echo 'hdefs["AG_USE_ATTRIBUTES"] = nil' >>configure.lua
+fi
 $ECHO_N 'checking for <sys/types.h>...'
 $ECHO_N 'checking for <sys/types.h>...' >> config.log
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
-	size_t len = 1;
-	len++;
-	return (0);
+	int8_t s8 = 2;
+	u_int8_t u8 = 2;
+	int32_t s32 = 1234;
+	u_int32_t u32 = 5678;
+	return (s8+u8 == 4 && s32+u32 > 6000 ? 0 : 1);
 }
 
 EOT
@@ -1901,6 +2321,44 @@ echo 'no' >> config.log
 _MK_HAVE_SYS_TYPES_H='no'
 echo '#undef _MK_HAVE_SYS_TYPES_H' >$BLD/include/agar/config/_mk_have_sys_types_h.h
 echo 'hdefs["_MK_HAVE_SYS_TYPES_H"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'checking for <stdint.h>...'
+$ECHO_N 'checking for <stdint.h>...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdint.h>
+int main(int argc, char *argv[]) {
+	int8_t s8 = 2;
+	uint8_t u8 = 2;
+	int32_t s32 = 1234;
+	uint32_t u32 = 5678;
+	return (s8+u8 == 4 && s32+u32 > 6000 ? 0 : 1);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+_MK_HAVE_STDINT_H='yes'
+echo '#ifndef _MK_HAVE_STDINT_H' > $BLD/include/agar/config/_mk_have_stdint_h.h
+echo "#define _MK_HAVE_STDINT_H \"$_MK_HAVE_STDINT_H\"" >> $BLD/include/agar/config/_mk_have_stdint_h.h
+echo '#endif' >> $BLD/include/agar/config/_mk_have_stdint_h.h
+echo "hdefs[\"_MK_HAVE_STDINT_H\"] = \"$_MK_HAVE_STDINT_H\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+_MK_HAVE_STDINT_H='no'
+echo '#undef _MK_HAVE_STDINT_H' >$BLD/include/agar/config/_mk_have_stdint_h.h
+echo 'hdefs["_MK_HAVE_STDINT_H"] = nil' >>configure.lua
 fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -2000,9 +2458,143 @@ echo 'hdefs["HAVE_64BIT"] = nil' >>configure.lua
 fi;
 fi;
 else
+if [ "${_MK_HAVE_STDINT_H}" = "yes" ]; then
+$ECHO_N 'checking for int64_t type...'
+$ECHO_N 'checking for int64_t type...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdint.h>
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+	int64_t i64 = 0;
+	u_int64_t u64 = 0;
+	printf("%lld %llu", (long long)i64, (unsigned long long)u64);
+	return (i64 != 0 || u64 != 0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_INT64_T='yes'
+echo '#ifndef HAVE_INT64_T' > $BLD/include/agar/config/have_int64_t.h
+echo "#define HAVE_INT64_T \"$HAVE_INT64_T\"" >> $BLD/include/agar/config/have_int64_t.h
+echo '#endif' >> $BLD/include/agar/config/have_int64_t.h
+echo "hdefs[\"HAVE_INT64_T\"] = \"$HAVE_INT64_T\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_INT64_T='no'
+echo '#undef HAVE_INT64_T' >$BLD/include/agar/config/have_int64_t.h
+echo 'hdefs["HAVE_INT64_T"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'checking for __int64 type...'
+$ECHO_N 'checking for __int64 type...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <stdint.h>
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+	__int64 i64 = 0;
+	printf("%lld", (long long)i64);
+	return (i64 != 0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE___INT64='yes'
+echo '#ifndef HAVE___INT64' > $BLD/include/agar/config/have___int64.h
+echo "#define HAVE___INT64 \"$HAVE___INT64\"" >> $BLD/include/agar/config/have___int64.h
+echo '#endif' >> $BLD/include/agar/config/have___int64.h
+echo "hdefs[\"HAVE___INT64\"] = \"$HAVE___INT64\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE___INT64='no'
+echo '#undef HAVE___INT64' >$BLD/include/agar/config/have___int64.h
+echo 'hdefs["HAVE___INT64"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_INT64_T}" = "yes" ]; then
+HAVE_64BIT="yes"
+echo '#ifndef HAVE_64BIT' > $BLD/include/agar/config/have_64bit.h
+echo "#define HAVE_64BIT \"$HAVE_64BIT\"" >> $BLD/include/agar/config/have_64bit.h
+echo '#endif' >> $BLD/include/agar/config/have_64bit.h
+echo "hdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
+else
+if [ "${HAVE___INT64}" = "yes" ]; then
+HAVE_64BIT="yes"
+echo '#ifndef HAVE_64BIT' > $BLD/include/agar/config/have_64bit.h
+echo "#define HAVE_64BIT \"$HAVE_64BIT\"" >> $BLD/include/agar/config/have_64bit.h
+echo '#endif' >> $BLD/include/agar/config/have_64bit.h
+echo "hdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
+else
 echo '#undef HAVE_64BIT' >$BLD/include/agar/config/have_64bit.h
 echo 'hdefs["HAVE_64BIT"] = nil' >>configure.lua
 fi;
+fi;
+else
+echo '#undef HAVE_64BIT' >$BLD/include/agar/config/have_64bit.h
+echo 'hdefs["HAVE_64BIT"] = nil' >>configure.lua
+fi;
+fi;
+$ECHO_N 'checking for <sys/stat.h>...'
+$ECHO_N 'checking for <sys/stat.h>...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <sys/types.h>
+#include <sys/stat.h>
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	uid_t uid;
+	if (stat("/tmp/foo", &sb) != 0) { return (1); }
+	return ((uid = sb.st_uid) == (uid_t)0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+_MK_HAVE_SYS_STAT_H='yes'
+echo '#ifndef _MK_HAVE_SYS_STAT_H' > $BLD/include/agar/config/_mk_have_sys_stat_h.h
+echo "#define _MK_HAVE_SYS_STAT_H \"$_MK_HAVE_SYS_STAT_H\"" >> $BLD/include/agar/config/_mk_have_sys_stat_h.h
+echo '#endif' >> $BLD/include/agar/config/_mk_have_sys_stat_h.h
+echo "hdefs[\"_MK_HAVE_SYS_STAT_H\"] = \"$_MK_HAVE_SYS_STAT_H\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+_MK_HAVE_SYS_STAT_H='no'
+echo '#undef _MK_HAVE_SYS_STAT_H' >$BLD/include/agar/config/_mk_have_sys_stat_h.h
+echo 'hdefs["_MK_HAVE_SYS_STAT_H"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 $ECHO_N 'checking for <stdlib.h>...'
 $ECHO_N 'checking for <stdlib.h>...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -2043,12 +2635,16 @@ $ECHO_N 'checking for <unistd.h>...'
 $ECHO_N 'checking for <unistd.h>...' >> config.log
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 int main(int argc, char *argv[]) {
-	uid_t uid = getuid();
-	pid_t pid = getpid();
-	return (pid == 0 || uid == 0);
+	char buf;
+	int rv, fdout=1;
+
+	if ((rv = write(fdout, (void *)&buf, 1)) < 1) { return (1); }
+	if ((rv = read(0, (void *)&buf, 1)) < 1) { return (1); }
+	if (unlink("/tmp/foo") != 0) { return (1); }
+	return (0);
 }
 
 EOT
@@ -2552,8 +3148,8 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
-$ECHO_N 'checking for an asprintf() function...'
-$ECHO_N 'checking for an asprintf() function...' >> config.log
+$ECHO_N 'checking for asprintf()...'
+$ECHO_N 'checking for asprintf()...' >> config.log
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -2917,96 +3513,6 @@ echo '#undef _MK_HAVE_STRTOLD' >$BLD/include/agar/config/_mk_have_strtold.h
 echo 'hdefs["_MK_HAVE_STRTOLD"] = nil' >>configure.lua
 echo 'skipping (no long double)'
 echo 'skipping (no long double)' >> config.log
-fi;
-$ECHO_N 'checking for byte order...'
-$ECHO_N 'checking for byte order...' >> config.log
-if [ "${byte_order}" != "" ]; then
-if [ "${byte_order}" = "LE" ]; then
-_MK_BYTE_ORDER="LE"
-else
-if [ "${byte_order}" = "BE" ]; then
-_MK_BYTE_ORDER="BE"
-else
-echo "Usage: --byte-order=[LE|BE]"
-exit 1
-fi;
-fi;
-else
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sys/param.h>
-int
-main(int argc, char *argv[])
-{
-#if BYTE_ORDER == BIG_ENDIAN
-	static volatile char *bo = "BiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiANBiGEnDiAN";
-#else
-	static volatile char *bo = "LiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiANLiTTLeEnDiAN";
-#endif
-	int c = 0;
-	volatile char *p = bo;
-	while (*p != '\0') { c *= (int)*p; }
-	return (c>123?c:456);
-}
-
-EOT
-echo "$CC $CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "Failed to compile test for byte order, code $?"
-	echo "Failed to compile test for byte order, code $?" >> config.log
-	exit 1
-fi
-rm -f conftest.c
-
-_MK_BYTE_ORDER=''
-_MK_BYTE_ORDER_LESTRING='LiTTLeEnD'
-_MK_BYTE_ORDER_BESTRING='BiGEnDiAN'
-od -tc $testdir/conftest$EXECSUFFIX | sed 's/ //g' > $testdir/conftest.dump
-
-if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
-	_MK_BYTE_ORDER="LE"
-	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
-		echo '*'
-		echo '* Unable to auto-determine host byte order. Please re-run ./configure'
-		echo '* with --byte-order=LE or --byte-order=BE.'
-		echo '*'
-		exit 1
-	fi
-else
-	if grep "$_MK_BYTE_ORDER_BESTRING" $testdir/conftest.dump >/dev/null; then
-		_MK_BYTE_ORDER="BE"
-		if grep "$_MK_BYTE_ORDER_LESTRING" $testdir/conftest.dump >/dev/null; then
-			echo '*'
-			echo '* Unable to auto-determine host byte order. Please re-run ./configure'
-			echo '* with --byte-order=LE or --byte-order=BE.'
-			echo '*'
-			exit 1
-		fi
-	fi
-fi
-rm -f conftest.c $testdir/conftest $testdir/conftest.dump
-fi;
-if [ "$_MK_BYTE_ORDER" = "LE" ]; then
-echo 'little-endian'
-echo 'little-endian' >> config.log
-_MK_LITTLE_ENDIAN="yes"
-echo '#ifndef _MK_LITTLE_ENDIAN' > $BLD/include/agar/config/_mk_little_endian.h
-echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> $BLD/include/agar/config/_mk_little_endian.h
-echo '#endif' >> $BLD/include/agar/config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo '#undef _MK_BIG_ENDIAN' >$BLD/include/agar/config/_mk_big_endian.h
-echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
-else
-echo 'big-endian'
-echo 'big-endian' >> config.log
-_MK_BIG_ENDIAN="yes"
-echo '#ifndef _MK_BIG_ENDIAN' > $BLD/include/agar/config/_mk_big_endian.h
-echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> $BLD/include/agar/config/_mk_big_endian.h
-echo '#endif' >> $BLD/include/agar/config/_mk_big_endian.h
-echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-echo '#undef _MK_LITTLE_ENDIAN' >$BLD/include/agar/config/_mk_little_endian.h
-echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
 fi;
 $ECHO_N 'checking for dlopen() interface...'
 $ECHO_N 'checking for dlopen() interface...' >> config.log
@@ -4009,9 +4515,6 @@ CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 CFLAGS="$CFLAGS -Wno-switch"
 CXXFLAGS="$CXXFLAGS -Wno-switch"
-WNO_UNINITIALIZED="-Wno-uninitialized"
-else
-WNO_UNINITIALIZED=""
 fi
 if [ "${enable_debug}" = 'yes' ]
  then
@@ -4741,12 +5244,18 @@ SDL_LIBS=""
 fi;
 fi;
 else
-echo '#undef HAVE_SDL' >$BLD/include/agar/config/have_sdl.h
-echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
-echo '#undef SDL_CFLAGS' >$BLD/include/agar/config/sdl_cflags.h
-echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
-echo '#undef SDL_LIBS' >$BLD/include/agar/config/sdl_libs.h
-echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_SDL}" = "yes" ]; then
 SDL_PC="sdl"
@@ -4762,16 +5271,21 @@ fi;
 				echo "* library was not found."
 				echo "*"
 				exit 1
-			else
+			fi
+echo 'not enabling SDL'
+echo 'not enabling SDL' >> config.log
+SDL_PC=""
 echo '#undef HAVE_SDL' >$BLD/include/agar/config/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 echo '#undef SDL_CFLAGS' >$BLD/include/agar/config/sdl_cflags.h
 echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
 echo '#undef SDL_LIBS' >$BLD/include/agar/config/sdl_libs.h
 echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
-			fi
 		fi
 	else
+echo 'not enabling SDL'
+echo 'not enabling SDL' >> config.log
+SDL_PC=""
 echo '#undef HAVE_SDL' >$BLD/include/agar/config/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 echo '#undef SDL_CFLAGS' >$BLD/include/agar/config/sdl_cflags.h
@@ -5072,16 +5586,25 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 				echo "* library was found."
 				echo "*"
 				exit 1
-			else
+			fi
+echo 'not enabling OpenGL'
+echo 'not enabling OpenGL' >> config.log
+OPENGL_PC=""
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
 echo '#undef HAVE_OPENGL' >$BLD/include/agar/config/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$BLD/include/agar/config/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$BLD/include/agar/config/opengl_libs.h
 echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
-			fi
 		fi
 	else
+echo 'not enabling OpenGL'
+echo 'not enabling OpenGL' >> config.log
+OPENGL_PC=""
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
 echo '#undef HAVE_OPENGL' >$BLD/include/agar/config/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$BLD/include/agar/config/opengl_cflags.h
@@ -5465,9 +5988,18 @@ if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 else
-X11_PC=""
-echo '#undef HAVE_XKB' >$BLD/include/agar/config/have_xkb.h
-echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 		if [ "${HAVE_X11}" != 'yes' ]
  then
@@ -5479,8 +6011,15 @@ fi;
 				echo "*"
 				exit 1
 			else
+echo 'not enabling the X window system'
+echo 'not enabling the X window system' >> config.log
+X11_PC=""
+X11_CFLAGS=""
+X11_LIBS=""
 echo '#undef HAVE_X11' >$BLD/include/agar/config/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
+echo '#undef HAVE_XKB' >$BLD/include/agar/config/have_xkb.h
+echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$BLD/include/agar/config/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$BLD/include/agar/config/x11_libs.h
@@ -5671,16 +6210,25 @@ fi;
 					echo "* Xinerama extension was not found."
 					echo "*"
 					exit 1
-				else
+				fi
+echo 'not enabling the Xinerama extension'
+echo 'not enabling the Xinerama extension' >> config.log
+XINERAMA_PC=""
+XINERAMA_CFLAGS=""
+XINERAMA_LIBS=""
 echo '#undef HAVE_XINERAMA' >$BLD/include/agar/config/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 echo '#undef XINERAMA_CFLAGS' >$BLD/include/agar/config/xinerama_cflags.h
 echo 'hdefs["XINERAMA_CFLAGS"] = nil' >>configure.lua
 echo '#undef XINERAMA_LIBS' >$BLD/include/agar/config/xinerama_libs.h
 echo 'hdefs["XINERAMA_LIBS"] = nil' >>configure.lua
-				fi
 			fi
 		else
+echo 'not enabling the Xinerama extension'
+echo 'not enabling the Xinerama extension' >> config.log
+XINERAMA_PC=""
+XINERAMA_CFLAGS=""
+XINERAMA_LIBS=""
 echo '#undef HAVE_XINERAMA' >$BLD/include/agar/config/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 echo '#undef XINERAMA_CFLAGS' >$BLD/include/agar/config/xinerama_cflags.h
@@ -5689,12 +6237,24 @@ echo '#undef XINERAMA_LIBS' >$BLD/include/agar/config/xinerama_libs.h
 echo 'hdefs["XINERAMA_LIBS"] = nil' >>configure.lua
 		fi
 	else
+echo 'not enabling the X window system'
+echo 'not enabling the X window system' >> config.log
+X11_PC=""
+X11_CFLAGS=""
+X11_LIBS=""
 echo '#undef HAVE_X11' >$BLD/include/agar/config/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
+echo '#undef HAVE_XKB' >$BLD/include/agar/config/have_xkb.h
+echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$BLD/include/agar/config/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$BLD/include/agar/config/x11_libs.h
 echo 'hdefs["X11_LIBS"] = nil' >>configure.lua
+echo 'not enabling the Xinerama extension'
+echo 'not enabling the Xinerama extension' >> config.log
+XINERAMA_PC=""
+XINERAMA_CFLAGS=""
+XINERAMA_LIBS=""
 echo '#undef HAVE_XINERAMA' >$BLD/include/agar/config/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 echo '#undef XINERAMA_CFLAGS' >$BLD/include/agar/config/xinerama_cflags.h
@@ -5766,16 +6326,25 @@ fi;
 				echo "* Cocoa framework was not found."
 				echo "*"
 				exit 1
-			else
+			fi
+echo 'not enabling the Cocoa framework'
+echo 'not enabling the Cocoa framework' >> config.log
+HAVE_COCOA="no"
+COCOA_CFLAGS=""
+COCOA_LIBS=""
 echo '#undef HAVE_COCOA' >$BLD/include/agar/config/have_cocoa.h
 echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
 echo '#undef COCOA_CFLAGS' >$BLD/include/agar/config/cocoa_cflags.h
 echo 'hdefs["COCOA_CFLAGS"] = nil' >>configure.lua
 echo '#undef COCOA_LIBS' >$BLD/include/agar/config/cocoa_libs.h
 echo 'hdefs["COCOA_LIBS"] = nil' >>configure.lua
-			fi
 		fi
 	else
+echo 'not enabling the Cocoa framework'
+echo 'not enabling the Cocoa framework' >> config.log
+HAVE_COCOA="no"
+COCOA_CFLAGS=""
+COCOA_LIBS=""
 echo '#undef HAVE_COCOA' >$BLD/include/agar/config/have_cocoa.h
 echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
 echo '#undef COCOA_CFLAGS' >$BLD/include/agar/config/cocoa_cflags.h
@@ -5868,22 +6437,21 @@ fi;
 					echo "* compatible GLX library was found."
 					echo "*"
 					exit 1
-				else
+				fi
+echo 'not enabling the GLX interface'
+echo 'not enabling the GLX interface' >> config.log
+GLX_CFLAGS=""
+GLX_LIBS=""
 echo '#undef HAVE_GLX' >$BLD/include/agar/config/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo '#undef GLX_CFLAGS' >$BLD/include/agar/config/glx_cflags.h
-echo 'hdefs["GLX_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLX_LIBS' >$BLD/include/agar/config/glx_libs.h
-echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
-				fi
 			fi
 		else
+echo 'not enabling the GLX interface'
+echo 'not enabling the GLX interface' >> config.log
+GLX_CFLAGS=""
+GLX_LIBS=""
 echo '#undef HAVE_GLX' >$BLD/include/agar/config/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo '#undef GLX_CFLAGS' >$BLD/include/agar/config/glx_cflags.h
-echo 'hdefs["GLX_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLX_LIBS' >$BLD/include/agar/config/glx_libs.h
-echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
 		fi
 		
 		if [ "${with_wgl}" != 'no' ]
@@ -5951,24 +6519,29 @@ fi;
 					echo "* WGL test has failed."
 					echo "*"
 					exit 1
-				else
+				fi
+echo 'not enabling the WGL interface'
+echo 'not enabling the WGL interface' >> config.log
 echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
-				fi
 			fi
 		else
+echo 'not enabling the WGL interface'
+echo 'not enabling the WGL interface' >> config.log
 echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 		fi
 	else
-echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
-echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
+echo 'not enabling the GLX interface'
+echo 'not enabling the GLX interface' >> config.log
+GLX_CFLAGS=""
+GLX_LIBS=""
 echo '#undef HAVE_GLX' >$BLD/include/agar/config/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo '#undef GLX_CFLAGS' >$BLD/include/agar/config/glx_cflags.h
-echo 'hdefs["GLX_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLX_LIBS' >$BLD/include/agar/config/glx_libs.h
-echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
+echo 'not enabling the WGL interface'
+echo 'not enabling the WGL interface' >> config.log
+echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
+echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 	fi
 	
 	if [ "${with_freetype}" != 'no' ]
@@ -6230,8 +6803,18 @@ echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 FREETYPE_LIBS=""
 fi;
 else
-echo '#undef HAVE_FREETYPE' >$BLD/include/agar/config/have_freetype.h
-echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 FREETYPE_PC="freetype2"
@@ -6253,10 +6836,15 @@ fi;
 			exit 1
 		fi
 	else
+echo 'not enabling FreeType'
+echo 'not enabling FreeType' >> config.log
+FREETYPE_CFLAGS=""
+FREETYPE_LIBS=""
+FREETYPE_PC=""
 echo '#undef HAVE_FREETYPE' >$BLD/include/agar/config/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
-echo '#undef FREETYPE_CFLAGS' >$BLD/include/agar/config/freetype_cflags.h
-echo 'hdefs["FREETYPE_CFLAGS"] = nil' >>configure.lua
+echo '#undef FREETYPE_CFFLAGS' >$BLD/include/agar/config/freetype_cfflags.h
+echo 'hdefs["FREETYPE_CFFLAGS"] = nil' >>configure.lua
 echo '#undef FREETYPE_LIBS' >$BLD/include/agar/config/freetype_libs.h
 echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 	fi
@@ -6442,10 +7030,24 @@ echo 'hdefs["FONTCONFIG_LIBS"] = nil' >>configure.lua
 FONTCONFIG_LIBS=""
 fi;
 else
-echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
-echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 	else
+echo 'not enabling fontconfig'
+echo 'not enabling fontconfig' >> config.log
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
 echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
 echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
 echo '#undef FONTCONFIG_CFLAGS' >$BLD/include/agar/config/fontconfig_cflags.h
@@ -6564,14 +7166,20 @@ echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
 JPEG_LIBS=""
 fi;
 else
-echo '#undef HAVE_JPEG' >$BLD/include/agar/config/have_jpeg.h
-echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
-echo '#undef JPEG_CFLAGS' >$BLD/include/agar/config/jpeg_cflags.h
-echo 'hdefs["JPEG_CFLAGS"] = nil' >>configure.lua
-echo '#undef JPEG_LIBS' >$BLD/include/agar/config/jpeg_libs.h
-echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
 echo 'no'
 echo 'no' >> config.log
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_JPEG}" = "yes" ]; then
 JPEG_PC="libjpeg"
@@ -6587,16 +7195,25 @@ fi;
 				echo "* was not found."
 				echo "*"
 				exit 1
-			else
+			fi
+echo 'not enabling libjpeg'
+echo 'not enabling libjpeg' >> config.log
+JPEG_CFLAGS=""
+JPEG_LIBS=""
+JPEG_PC=""
 echo '#undef HAVE_JPEG' >$BLD/include/agar/config/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 echo '#undef JPEG_CFLAGS' >$BLD/include/agar/config/jpeg_cflags.h
 echo 'hdefs["JPEG_CFLAGS"] = nil' >>configure.lua
 echo '#undef JPEG_LIBS' >$BLD/include/agar/config/jpeg_libs.h
 echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
-			fi
 		fi
 	else
+echo 'not enabling libjpeg'
+echo 'not enabling libjpeg' >> config.log
+JPEG_CFLAGS=""
+JPEG_LIBS=""
+JPEG_PC=""
 echo '#undef HAVE_JPEG' >$BLD/include/agar/config/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 echo '#undef JPEG_CFLAGS' >$BLD/include/agar/config/jpeg_cflags.h
@@ -6861,14 +7478,18 @@ echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
 echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 fi;
 else
-echo '#undef HAVE_PNG' >$BLD/include/agar/config/have_png.h
-echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
-echo '#undef PNG_CFLAGS' >$BLD/include/agar/config/png_cflags.h
-echo 'hdefs["PNG_CFLAGS"] = nil' >>configure.lua
-echo '#undef PNG_LIBS' >$BLD/include/agar/config/png_libs.h
-echo 'hdefs["PNG_LIBS"] = nil' >>configure.lua
-echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
-echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_PNG}" = "yes" ]; then
 PNG_PC="libpng"
@@ -6884,7 +7505,14 @@ fi;
 				echo "* was not found."
 				echo "*"
 				exit 1
-			else
+			fi
+echo 'not enabling libpng'
+echo 'not enabling libpng' >> config.log
+HAVE_PNG="no"
+HAVE_LIBPNG14="no"
+PNG_CFLAGS=""
+PNG_LIBS=""
+PNG_PC=""
 echo '#undef HAVE_PNG' >$BLD/include/agar/config/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
@@ -6893,9 +7521,15 @@ echo '#undef PNG_CFLAGS' >$BLD/include/agar/config/png_cflags.h
 echo 'hdefs["PNG_CFLAGS"] = nil' >>configure.lua
 echo '#undef PNG_LIBS' >$BLD/include/agar/config/png_libs.h
 echo 'hdefs["PNG_LIBS"] = nil' >>configure.lua
-			fi
 		fi
 	else
+echo 'not enabling libpng'
+echo 'not enabling libpng' >> config.log
+HAVE_PNG="no"
+HAVE_LIBPNG14="no"
+PNG_CFLAGS=""
+PNG_LIBS=""
+PNG_PC=""
 echo '#undef HAVE_PNG' >$BLD/include/agar/config/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
@@ -6910,62 +7544,110 @@ echo '#undef ENABLE_GUI' >$BLD/include/agar/config/enable_gui.h
 echo 'hdefs["ENABLE_GUI"] = nil' >>configure.lua
 ENABLE_GUI_LIBS=""
 SUBDIR_gui=""
+echo 'not enabling SDL'
+echo 'not enabling SDL' >> config.log
+SDL_PC=""
 echo '#undef HAVE_SDL' >$BLD/include/agar/config/have_sdl.h
 echo 'hdefs["HAVE_SDL"] = nil' >>configure.lua
 echo '#undef SDL_CFLAGS' >$BLD/include/agar/config/sdl_cflags.h
 echo 'hdefs["SDL_CFLAGS"] = nil' >>configure.lua
 echo '#undef SDL_LIBS' >$BLD/include/agar/config/sdl_libs.h
 echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
+echo 'not enabling the X window system'
+echo 'not enabling the X window system' >> config.log
+X11_PC=""
+X11_CFLAGS=""
+X11_LIBS=""
 echo '#undef HAVE_X11' >$BLD/include/agar/config/have_x11.h
 echo 'hdefs["HAVE_X11"] = nil' >>configure.lua
+echo '#undef HAVE_XKB' >$BLD/include/agar/config/have_xkb.h
+echo 'hdefs["HAVE_XKB"] = nil' >>configure.lua
 echo '#undef X11_CFLAGS' >$BLD/include/agar/config/x11_cflags.h
 echo 'hdefs["X11_CFLAGS"] = nil' >>configure.lua
 echo '#undef X11_LIBS' >$BLD/include/agar/config/x11_libs.h
 echo 'hdefs["X11_LIBS"] = nil' >>configure.lua
+echo 'not enabling the Xinerama extension'
+echo 'not enabling the Xinerama extension' >> config.log
+XINERAMA_PC=""
+XINERAMA_CFLAGS=""
+XINERAMA_LIBS=""
 echo '#undef HAVE_XINERAMA' >$BLD/include/agar/config/have_xinerama.h
 echo 'hdefs["HAVE_XINERAMA"] = nil' >>configure.lua
 echo '#undef XINERAMA_CFLAGS' >$BLD/include/agar/config/xinerama_cflags.h
 echo 'hdefs["XINERAMA_CFLAGS"] = nil' >>configure.lua
 echo '#undef XINERAMA_LIBS' >$BLD/include/agar/config/xinerama_libs.h
 echo 'hdefs["XINERAMA_LIBS"] = nil' >>configure.lua
+echo 'not enabling the Cocoa framework'
+echo 'not enabling the Cocoa framework' >> config.log
+HAVE_COCOA="no"
+COCOA_CFLAGS=""
+COCOA_LIBS=""
 echo '#undef HAVE_COCOA' >$BLD/include/agar/config/have_cocoa.h
 echo 'hdefs["HAVE_COCOA"] = nil' >>configure.lua
 echo '#undef COCOA_CFLAGS' >$BLD/include/agar/config/cocoa_cflags.h
 echo 'hdefs["COCOA_CFLAGS"] = nil' >>configure.lua
 echo '#undef COCOA_LIBS' >$BLD/include/agar/config/cocoa_libs.h
 echo 'hdefs["COCOA_LIBS"] = nil' >>configure.lua
+echo 'not enabling OpenGL'
+echo 'not enabling OpenGL' >> config.log
+OPENGL_PC=""
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
 echo '#undef HAVE_OPENGL' >$BLD/include/agar/config/have_opengl.h
 echo 'hdefs["HAVE_OPENGL"] = nil' >>configure.lua
 echo '#undef OPENGL_CFLAGS' >$BLD/include/agar/config/opengl_cflags.h
 echo 'hdefs["OPENGL_CFLAGS"] = nil' >>configure.lua
 echo '#undef OPENGL_LIBS' >$BLD/include/agar/config/opengl_libs.h
 echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
+echo 'not enabling the GLX interface'
+echo 'not enabling the GLX interface' >> config.log
+GLX_CFLAGS=""
+GLX_LIBS=""
 echo '#undef HAVE_GLX' >$BLD/include/agar/config/have_glx.h
 echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
-echo '#undef GLX_CFLAGS' >$BLD/include/agar/config/glx_cflags.h
-echo 'hdefs["GLX_CFLAGS"] = nil' >>configure.lua
-echo '#undef GLX_LIBS' >$BLD/include/agar/config/glx_libs.h
-echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
+echo 'not enabling the WGL interface'
+echo 'not enabling the WGL interface' >> config.log
 echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
+echo 'not enabling FreeType'
+echo 'not enabling FreeType' >> config.log
+FREETYPE_CFLAGS=""
+FREETYPE_LIBS=""
+FREETYPE_PC=""
 echo '#undef HAVE_FREETYPE' >$BLD/include/agar/config/have_freetype.h
 echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
-echo '#undef FREETYPE_CFLAGS' >$BLD/include/agar/config/freetype_cflags.h
-echo 'hdefs["FREETYPE_CFLAGS"] = nil' >>configure.lua
+echo '#undef FREETYPE_CFFLAGS' >$BLD/include/agar/config/freetype_cfflags.h
+echo 'hdefs["FREETYPE_CFFLAGS"] = nil' >>configure.lua
 echo '#undef FREETYPE_LIBS' >$BLD/include/agar/config/freetype_libs.h
 echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
+echo 'not enabling fontconfig'
+echo 'not enabling fontconfig' >> config.log
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
 echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
 echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
 echo '#undef FONTCONFIG_CFLAGS' >$BLD/include/agar/config/fontconfig_cflags.h
 echo 'hdefs["FONTCONFIG_CFLAGS"] = nil' >>configure.lua
 echo '#undef FONTCONFIG_LIBS' >$BLD/include/agar/config/fontconfig_libs.h
 echo 'hdefs["FONTCONFIG_LIBS"] = nil' >>configure.lua
+echo 'not enabling libjpeg'
+echo 'not enabling libjpeg' >> config.log
+JPEG_CFLAGS=""
+JPEG_LIBS=""
+JPEG_PC=""
 echo '#undef HAVE_JPEG' >$BLD/include/agar/config/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 echo '#undef JPEG_CFLAGS' >$BLD/include/agar/config/jpeg_cflags.h
 echo 'hdefs["JPEG_CFLAGS"] = nil' >>configure.lua
 echo '#undef JPEG_LIBS' >$BLD/include/agar/config/jpeg_libs.h
 echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
+echo 'not enabling libpng'
+echo 'not enabling libpng' >> config.log
+HAVE_PNG="no"
+HAVE_LIBPNG14="no"
+PNG_CFLAGS=""
+PNG_LIBS=""
+PNG_PC=""
 echo '#undef HAVE_PNG' >$BLD/include/agar/config/have_png.h
 echo 'hdefs["HAVE_PNG"] = nil' >>configure.lua
 echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
@@ -6977,8 +7659,8 @@ echo 'hdefs["PNG_LIBS"] = nil' >>configure.lua
 fi
 if [ "${enable_network}" != 'no' ]
  then
-$ECHO_N 'checking for the getaddrinfo() function...'
-$ECHO_N 'checking for the getaddrinfo() function...' >> config.log
+$ECHO_N 'checking for getaddrinfo()...'
+$ECHO_N 'checking for getaddrinfo()...' >> config.log
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -7389,11 +8071,24 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+else
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 $ECHO_N 'checking for the WinSock interface...'
 $ECHO_N 'checking for the WinSock interface...' >> config.log
-echo 'no'
-echo 'no' >> config.log
+echo 'not checking'
+echo 'not checking' >> config.log
 HAVE_WINSOCK1="no"
 HAVE_WINSOCK2="no"
 echo '#undef HAVE_WINSOCK1' >$BLD/include/agar/config/have_winsock1.h
@@ -7407,11 +8102,25 @@ echo "#define AG_NETWORK \"$AG_NETWORK\"" >> $BLD/include/agar/config/ag_network
 echo '#endif' >> $BLD/include/agar/config/ag_network.h
 echo "hdefs[\"AG_NETWORK\"] = \"$AG_NETWORK\"" >>configure.lua
 else
-HAVE_NETWORK="no"
-echo '#undef AG_NETWORK' >$BLD/include/agar/config/ag_network.h
-echo 'hdefs["AG_NETWORK"] = nil' >>configure.lua
+echo 'not enabling getaddrinfo()'
+echo 'not enabling getaddrinfo()' >> config.log
+HAVE_GETADDRINFO="no"
 echo '#undef HAVE_GETADDRINFO' >$BLD/include/agar/config/have_getaddrinfo.h
 echo 'hdefs["HAVE_GETADDRINFO"] = nil' >>configure.lua
+echo 'not enabling the SIOCGIFCONF interface'
+echo 'not enabling the SIOCGIFCONF interface' >> config.log
+HAVE_SIOCGIFCONF="no"
+echo '#undef HAVE_SIOCGIFCONF' >$BLD/include/agar/config/have_siocgifconf.h
+echo 'hdefs["HAVE_SIOCGIFCONF"] = nil' >>configure.lua
+echo 'not enabling the setsockopt() interface'
+echo 'not enabling the setsockopt() interface' >> config.log
+HAVE_SETSOCKOPT="no"
+HAVE_SO_OOBINLINE="no"
+HAVE_SO_REUSEPORT="no"
+HAVE_SO_TIMESTAMP="no"
+HAVE_SO_NOSIGPIPE="no"
+HAVE_SO_LINGER="no"
+HAVE_SO_ACCEPTFILTER="no"
 echo '#undef HAVE_SETSOCKOPT' >$BLD/include/agar/config/have_setsockopt.h
 echo 'hdefs["HAVE_SETSOCKOPT"] = nil' >>configure.lua
 echo '#undef HAVE_SO_OOBINLINE' >$BLD/include/agar/config/have_so_oobinline.h
@@ -7426,12 +8135,17 @@ echo '#undef HAVE_SO_LINGER' >$BLD/include/agar/config/have_so_linger.h
 echo 'hdefs["HAVE_SO_LINGER"] = nil' >>configure.lua
 echo '#undef HAVE_SO_ACCEPTFILTER' >$BLD/include/agar/config/have_so_acceptfilter.h
 echo 'hdefs["HAVE_SO_ACCEPTFILTER"] = nil' >>configure.lua
-echo '#undef HAVE_SIOCGIFCONF' >$BLD/include/agar/config/have_siocgifconf.h
-echo 'hdefs["HAVE_SIOCGIFCONF"] = nil' >>configure.lua
+echo 'not enabling the WinSock interface'
+echo 'not enabling the WinSock interface' >> config.log
+HAVE_WINSOCK1="no"
+HAVE_WINSOCK2="no"
 echo '#undef HAVE_WINSOCK1' >$BLD/include/agar/config/have_winsock1.h
 echo 'hdefs["HAVE_WINSOCK1"] = nil' >>configure.lua
 echo '#undef HAVE_WINSOCK2' >$BLD/include/agar/config/have_winsock2.h
 echo 'hdefs["HAVE_WINSOCK2"] = nil' >>configure.lua
+HAVE_NETWORK="no"
+echo '#undef AG_NETWORK' >$BLD/include/agar/config/ag_network.h
+echo 'hdefs["AG_NETWORK"] = nil' >>configure.lua
 fi
 if [ "${enable_web}" = 'yes' ]
  then
@@ -7514,8 +8228,18 @@ echo 'hdefs["ZLIB_LIBS"] = nil' >>configure.lua
 ZLIB_LIBS=""
 fi;
 else
-echo '#undef HAVE_ZLIB' >$BLD/include/agar/config/have_zlib.h
-echo 'hdefs["HAVE_ZLIB"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 echo 'no'
 echo 'no' >> config.log
 fi;
@@ -7590,6 +8314,11 @@ echo "#define AG_WEB \"$AG_WEB\"" >> $BLD/include/agar/config/ag_web.h
 echo '#endif' >> $BLD/include/agar/config/ag_web.h
 echo "hdefs[\"AG_WEB\"] = \"$AG_WEB\"" >>configure.lua
 else
+echo 'not enabling zlib'
+echo 'not enabling zlib' >> config.log
+HAVE_ZLIB="no"
+ZLIB_CFLAGS=""
+ZLIB_LIBS=""
 echo '#undef HAVE_ZLIB' >$BLD/include/agar/config/have_zlib.h
 echo 'hdefs["HAVE_ZLIB"] = nil' >>configure.lua
 echo '#undef ZLIB_CFLAGS' >$BLD/include/agar/config/zlib_cflags.h
@@ -7604,7 +8333,7 @@ HAVE_WEB="no"
 echo '#undef AG_WEB' >$BLD/include/agar/config/ag_web.h
 echo 'hdefs["AG_WEB"] = nil' >>configure.lua
 fi
-if [ "${with_db4}" != 'no' ]
+if [ "${with_db4}" = 'yes' ]
  then
 $ECHO_N 'checking for Berkeley DB 4.x...'
 $ECHO_N 'checking for Berkeley DB 4.x...' >> config.log
@@ -7799,24 +8528,43 @@ echo 'hdefs["DB4_LIBS"] = nil' >>configure.lua
 DB4_LIBS=""
 fi;
 else
-echo '#undef HAVE_DB4' >$BLD/include/agar/config/have_db4.h
-echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 	if [ "${HAVE_DB4}" != 'yes' ]
  then
 		if [ "${with_db4}" = 'yes' ]
  then
 			echo "*"
-			echo "* --with-db4 was requested, but Berkeley DB"
-			echo "* was not found."
+			echo "* --with-db4 was requested, but DB4 missing"
 			echo "*"
 			exit 1
 		else
+echo 'not enabling Berkeley DB 4.x'
+echo 'not enabling Berkeley DB 4.x' >> config.log
+HAVE_DB4="no"
+DB4_CFLAGS=""
+DB4_LIBS=""
 echo '#undef HAVE_DB4' >$BLD/include/agar/config/have_db4.h
 echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
 		fi
 	fi
 else
+echo 'not enabling Berkeley DB 4.x'
+echo 'not enabling Berkeley DB 4.x' >> config.log
+HAVE_DB4="no"
+DB4_CFLAGS=""
+DB4_LIBS=""
 echo '#undef HAVE_DB4' >$BLD/include/agar/config/have_db4.h
 echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
 fi
@@ -8009,10 +8757,18 @@ echo 'hdefs["MYSQL_LIBS"] = nil' >>configure.lua
 MYSQL_LIBS=""
 fi;
 else
-echo '#undef MYSQL_CFLAGS' >$BLD/include/agar/config/mysql_cflags.h
-echo 'hdefs["MYSQL_CFLAGS"] = nil' >>configure.lua
-echo '#undef MYSQL_LIBS' >$BLD/include/agar/config/mysql_libs.h
-echo 'hdefs["MYSQL_LIBS"] = nil' >>configure.lua
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
 	if [ "${HAVE_MYSQL}" != 'yes' ]
  then
@@ -8023,14 +8779,31 @@ fi;
 			echo "* was not found."
 			echo "*"
 			exit 1
-		else
+		fi
+echo 'not enabling MySQL'
+echo 'not enabling MySQL' >> config.log
+HAVE_MYSQL="no"
+MYSQL_CFLAGS=""
+MYSQL_LIBS=""
 echo '#undef HAVE_MYSQL' >$BLD/include/agar/config/have_mysql.h
 echo 'hdefs["HAVE_MYSQL"] = nil' >>configure.lua
-		fi
+echo '#undef MYSQL_CFLAGS' >$BLD/include/agar/config/mysql_cflags.h
+echo 'hdefs["MYSQL_CFLAGS"] = nil' >>configure.lua
+echo '#undef MYSQL_LIBS' >$BLD/include/agar/config/mysql_libs.h
+echo 'hdefs["MYSQL_LIBS"] = nil' >>configure.lua
 	fi
 else
+echo 'not enabling MySQL'
+echo 'not enabling MySQL' >> config.log
+HAVE_MYSQL="no"
+MYSQL_CFLAGS=""
+MYSQL_LIBS=""
 echo '#undef HAVE_MYSQL' >$BLD/include/agar/config/have_mysql.h
 echo 'hdefs["HAVE_MYSQL"] = nil' >>configure.lua
+echo '#undef MYSQL_CFLAGS' >$BLD/include/agar/config/mysql_cflags.h
+echo 'hdefs["MYSQL_CFLAGS"] = nil' >>configure.lua
+echo '#undef MYSQL_LIBS' >$BLD/include/agar/config/mysql_libs.h
+echo 'hdefs["MYSQL_LIBS"] = nil' >>configure.lua
 fi
 if [ "${enable_threads}" != 'no' ]
  then
@@ -8582,20 +9355,13 @@ echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$BLD/include/agar/config/have_pth
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi;
 	if [ "${HAVE_PTHREADS}" = 'yes' ]
-	then
-AG_THREADS="yes"
-echo '#ifndef AG_THREADS' > $BLD/include/agar/config/ag_threads.h
-echo "#define AG_THREADS \"$AG_THREADS\"" >> $BLD/include/agar/config/ag_threads.h
-echo '#endif' >> $BLD/include/agar/config/ag_threads.h
-echo "hdefs[\"AG_THREADS\"] = \"$AG_THREADS\"" >>configure.lua
+ then
 		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]
  then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = 'no' ]
  then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = 'no' ]
  then
-echo '#undef AG_THREADS' >$BLD/include/agar/config/ag_threads.h
-echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
 			if [ "${enable_threads}" = 'yes' ]
  then
 				echo "*"
@@ -8605,12 +9371,17 @@ echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
 				echo "*"
 				exit 1
 			fi
-		fi
-		fi
-		fi
-	else
 echo '#undef AG_THREADS' >$BLD/include/agar/config/ag_threads.h
 echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
+		fi
+		fi
+		fi
+AG_THREADS="yes"
+echo '#ifndef AG_THREADS' > $BLD/include/agar/config/ag_threads.h
+echo "#define AG_THREADS \"$AG_THREADS\"" >> $BLD/include/agar/config/ag_threads.h
+echo '#endif' >> $BLD/include/agar/config/ag_threads.h
+echo "hdefs[\"AG_THREADS\"] = \"$AG_THREADS\"" >>configure.lua
+	else
 		if [ "${enable_threads}" = 'yes' ]
  then
 			echo "*"
@@ -8619,228 +9390,44 @@ echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
 			echo "*"
 			exit 1
 		fi
-	fi
-else
 echo '#undef AG_THREADS' >$BLD/include/agar/config/ag_threads.h
 echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
+	fi
+else
+echo 'not enabling POSIX threads'
+echo 'not enabling POSIX threads' >> config.log
+HAVE_PTHREADS="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE="no"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
+HAVE_PTHREADS_XOPEN="no"
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS=""
+PTHREADS_XOPEN_CFLAGS=""
+PTHREADS_XOPEN_LIBS=""
 echo '#undef HAVE_PTHREADS' >$BLD/include/agar/config/have_pthreads.h
 echo 'hdefs["HAVE_PTHREADS"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE' >$BLD/include/agar/config/have_pthread_mutex_recursive.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$BLD/include/agar/config/have_pthread_mutex_recursive_np.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREADS_XOPEN' >$BLD/include/agar/config/have_pthreads_xopen.h
 echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
+echo '#undef PTHREADS_CFLAGS' >$BLD/include/agar/config/pthreads_cflags.h
+echo 'hdefs["PTHREADS_CFLAGS"] = nil' >>configure.lua
+echo '#undef PTHREADS_LIBS' >$BLD/include/agar/config/pthreads_libs.h
+echo 'hdefs["PTHREADS_LIBS"] = nil' >>configure.lua
+echo '#undef PTHREADS_XOPEN_CFLAGS' >$BLD/include/agar/config/pthreads_xopen_cflags.h
+echo 'hdefs["PTHREADS_XOPEN_CFLAGS"] = nil' >>configure.lua
+echo '#undef PTHREADS_XOPEN_LIBS' >$BLD/include/agar/config/pthreads_xopen_libs.h
+echo 'hdefs["PTHREADS_XOPEN_LIBS"] = nil' >>configure.lua
+echo '#undef AG_THREADS' >$BLD/include/agar/config/ag_threads.h
+echo 'hdefs["AG_THREADS"] = nil' >>configure.lua
 	if [ "${enable_warnings}" = 'yes' ]
  then
 CFLAGS="$CFLAGS -Wno-unused"
 CXXFLAGS="$CXXFLAGS -Wno-unused"
 	fi
 fi
-if [ "${with_uim}" = 'yes' ]
- then
-$ECHO_N 'checking for uim framework...'
-$ECHO_N 'checking for uim framework...' >> config.log
-if [ "${prefix_uim}" != '' ]; then
-	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
-	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
-		echo ' '
-		echo '* '
-		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
-		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_uim} was given."
-		echo '* '
-		echo "* Please re-run ./configure again with the correct uim prefix,"
-		echo '* or omit the prefix to trigger auto-detection.'
-		echo '* '
-		exit 1
-	else
-		UIM_VERSION=`$PKGCONFIG uim --modversion 2>/dev/null`
-	fi
-else
-	UIM_VERSION=`$PKGCONFIG uim --modversion 2>/dev/null`
-fi
-if [ "${prefix_uim}" != '' ]; then
-	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
-	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
-		echo ' '
-		echo '* '
-		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
-		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_uim} was given."
-		echo '* '
-		echo "* Please re-run ./configure again with the correct uim prefix,"
-		echo '* or omit the prefix to trigger auto-detection.'
-		echo '* '
-		exit 1
-	else
-		UIM_CFLAGS=`$PKGCONFIG uim --cflags 2>/dev/null`
-	fi
-else
-	UIM_CFLAGS=`$PKGCONFIG uim --cflags 2>/dev/null`
-fi
-if [ "${prefix_uim}" != '' ]; then
-	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix uim 2>/dev/null`
-	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_uim}" ]; then
-		echo ' '
-		echo '* '
-		echo "* ERROR: According to pkg-config, uim is installed in prefix: "
-		echo "* $MK_EXEC_PKGPREFIX, but the prefix ${prefix_uim} was given."
-		echo '* '
-		echo "* Please re-run ./configure again with the correct uim prefix,"
-		echo '* or omit the prefix to trigger auto-detection.'
-		echo '* '
-		exit 1
-	else
-		UIM_LIBS=`$PKGCONFIG uim --libs 2>/dev/null`
-	fi
-else
-	UIM_LIBS=`$PKGCONFIG uim --libs 2>/dev/null`
-fi
-if [ "${UIM_VERSION}" != "" ]; then
-if [ "${prefix_uim}" != "" ]; then
-echo "yes ($UIM_VERSION in ${prefix_uim})"
-echo "yes ($UIM_VERSION in ${prefix_uim})" >> config.log
-else
-echo "yes ($UIM_VERSION)"
-echo "yes ($UIM_VERSION)" >> config.log
-fi;
-MK_VERSION_MAJOR=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_MICRO=`echo "$UIM_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
-MK_VERSION_OK='no'
-if [ $MK_VERSION_MAJOR -gt 1 ]; then
-	MK_VERSION_OK='yes';
-elif [ $MK_VERSION_MAJOR -eq 1 ]; then
-	if [ "$MK_VERSION_MINOR" = '' ]; then
-		MK_VERSION_OK='yes'
-	else
-		if [ $MK_VERSION_MINOR -gt 8 ]; then
-			MK_VERSION_OK='yes';
-		elif [ $MK_VERSION_MINOR -eq 8 ]; then
-			if [ "$MK_VERSION_MICRO" = '' ]; then
-				MK_VERSION_OK='yes'
-			else
-				if [ $MK_VERSION_MICRO -ge 0 ]; then
-					MK_VERSION_OK='yes'
-				fi
-			fi
-		fi
-	fi
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '*' >> config.log
-echo "* Minimum required version is 1.8.0 (found $UIM_VERSION); skipping."
-echo "* Minimum required version is 1.8.0 (found $UIM_VERSION); skipping." >> config.log
-echo '*'
-echo '*' >> config.log
-fi;
-else
-if [ "${prefix_uim}" != "" ]; then
-echo "no (not in ${prefix_uim})"
-echo "no (not in ${prefix_uim})" >> config.log
-else
-echo 'no'
-echo 'no' >> config.log
-fi;
-MK_VERSION_OK="no"
-fi;
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether uim works...'
-$ECHO_N 'checking whether uim works...' >> config.log
-MK_COMPILE_STATUS='OK'
-cat << EOT > conftest$$.c
-#include <uim.h>
-#include <uim-util.h>
-
-int main(int argc, char *argv[]) {
-	uim_context uimCtx;
-	const char *s;
-	int i;
-
-	uimCtx = uim_create_context(NULL, "UTF-8", NULL, NULL, uim_iconv, NULL);
-	for (i = 0; i < uim_get_nr_im(uimCtx); i++) {
-		s = uim_get_im_name(uimCtx, i);
-		if (s == NULL) { return (1); }
-	}
-	uim_release_context(uimCtx);
-
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${UIM_CFLAGS} -o $testdir/conftest conftest.c ${UIM_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${UIM_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${UIM_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo ": failed, code $?" >> config.log
-	MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
-echo 'yes'
-echo 'yes' >> config.log
-HAVE_UIM='yes'
-echo '#ifndef HAVE_UIM' > $BLD/include/agar/config/have_uim.h
-echo "#define HAVE_UIM \"$HAVE_UIM\"" >> $BLD/include/agar/config/have_uim.h
-echo '#endif' >> $BLD/include/agar/config/have_uim.h
-echo "hdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
-else
-echo 'no'
-echo 'no' >> config.log
-HAVE_UIM='no'
-echo '#undef HAVE_UIM' >$BLD/include/agar/config/have_uim.h
-echo 'hdefs["HAVE_UIM"] = nil' >>configure.lua
-fi;
-if [ "${keep_conftest}" != "yes" ]; then
-	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_UIM}" = "yes" ]; then
-echo '#ifndef UIM_CFLAGS' > $BLD/include/agar/config/uim_cflags.h
-echo "#define UIM_CFLAGS \"$UIM_CFLAGS\"" >> $BLD/include/agar/config/uim_cflags.h
-echo '#endif' >> $BLD/include/agar/config/uim_cflags.h
-echo "hdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
-echo '#ifndef UIM_LIBS' > $BLD/include/agar/config/uim_libs.h
-echo "#define UIM_LIBS \"$UIM_LIBS\"" >> $BLD/include/agar/config/uim_libs.h
-echo '#endif' >> $BLD/include/agar/config/uim_libs.h
-echo "hdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
-else
-echo '#undef UIM_CFLAGS' >$BLD/include/agar/config/uim_cflags.h
-echo 'hdefs["UIM_CFLAGS"] = nil' >>configure.lua
-UIM_CFLAGS=""
-echo '#undef UIM_LIBS' >$BLD/include/agar/config/uim_libs.h
-echo 'hdefs["UIM_LIBS"] = nil' >>configure.lua
-UIM_LIBS=""
-fi;
-else
-echo '#undef HAVE_UIM' >$BLD/include/agar/config/have_uim.h
-echo 'hdefs["HAVE_UIM"] = nil' >>configure.lua
-fi;
-if [ "${HAVE_UIM}" = "yes" ]; then
-UIM_PC="uim"
-else
-UIM_PC=""
-fi;
-	if [ "${HAVE_UIM}" != 'yes' ]
- then
-		if [ "${with_uim}" = 'yes' ]
- then
-			echo "*"
-			echo "* --with-uim was requested, but the uim "
-			echo "* framework is not installed."
-			echo "*"
-			exit 1
-		else
-echo '#undef HAVE_UIM' >$BLD/include/agar/config/have_uim.h
-echo 'hdefs["HAVE_UIM"] = nil' >>configure.lua
-echo '#undef UIM_CFLAGS' >$BLD/include/agar/config/uim_cflags.h
-echo 'hdefs["UIM_CFLAGS"] = nil' >>configure.lua
-echo '#undef UIM_LIBS' >$BLD/include/agar/config/uim_libs.h
-echo 'hdefs["UIM_LIBS"] = nil' >>configure.lua
-		fi
-	fi
-else
-echo '#undef HAVE_UIM' >$BLD/include/agar/config/have_uim.h
-echo 'hdefs["HAVE_UIM"] = nil' >>configure.lua
-echo '#undef UIM_CFLAGS' >$BLD/include/agar/config/uim_cflags.h
-echo 'hdefs["UIM_CFLAGS"] = nil' >>configure.lua
-echo '#undef UIM_LIBS' >$BLD/include/agar/config/uim_libs.h
-echo 'hdefs["UIM_LIBS"] = nil' >>configure.lua
-fi
-	
 if [ "${enable_nls}" = 'yes' ]
  then
 $ECHO_N 'checking for iconv()...'
@@ -9164,12 +9751,22 @@ fi;
 		exit 1
 	fi
 else
+echo 'not enabling iconv()'
+echo 'not enabling iconv()' >> config.log
+HAVE_ICONV="no"
+ICONV_CFLAGS=""
+ICONV_LIBS=""
 echo '#undef HAVE_ICONV' >$BLD/include/agar/config/have_iconv.h
 echo 'hdefs["HAVE_ICONV"] = nil' >>configure.lua
 echo '#undef ICONV_CFLAGS' >$BLD/include/agar/config/iconv_cflags.h
 echo 'hdefs["ICONV_CFLAGS"] = nil' >>configure.lua
 echo '#undef ICONV_LIBS' >$BLD/include/agar/config/iconv_libs.h
 echo 'hdefs["ICONV_LIBS"] = nil' >>configure.lua
+echo 'not enabling a gettext library in libc'
+echo 'not enabling a gettext library in libc' >> config.log
+HAVE_GETTEXT="no"
+GETTEXT_CFLAGS=""
+GETTEXT_LIBS=""
 echo '#undef HAVE_GETTEXT' >$BLD/include/agar/config/have_gettext.h
 echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
 echo '#undef GETTEXT_CFLAGS' >$BLD/include/agar/config/gettext_cflags.h
@@ -9327,10 +9924,17 @@ fi;
 			echo "*"
 			exit 1
 		else
-echo '#undef HAVE_ALTIVEC' >$BLD/include/agar/config/have_altivec.h
-echo 'hdefs["HAVE_ALTIVEC"] = nil' >>configure.lua
-echo '#undef HAVE_ALTIVEC_H' >$BLD/include/agar/config/have_altivec_h.h
-echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
+echo 'not enabling AltiVec (with <altivec.h>)'
+echo 'not enabling AltiVec (with <altivec.h>)' >> config.log
+HAVE_GETTEXT="no"
+GETTEXT_CFLAGS=""
+GETTEXT_LIBS=""
+echo '#undef HAVE_GETTEXT' >$BLD/include/agar/config/have_gettext.h
+echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
+echo '#undef GETTEXT_CFLAGS' >$BLD/include/agar/config/gettext_cflags.h
+echo 'hdefs["GETTEXT_CFLAGS"] = nil' >>configure.lua
+echo '#undef GETTEXT_LIBS' >$BLD/include/agar/config/gettext_libs.h
+echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
 echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
@@ -9348,10 +9952,17 @@ echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
 	fi
 else
-echo '#undef HAVE_ALTIVEC' >$BLD/include/agar/config/have_altivec.h
-echo 'hdefs["HAVE_ALTIVEC"] = nil' >>configure.lua
-echo '#undef HAVE_ALTIVEC_H' >$BLD/include/agar/config/have_altivec_h.h
-echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
+echo 'not enabling AltiVec (with <altivec.h>)'
+echo 'not enabling AltiVec (with <altivec.h>)' >> config.log
+HAVE_GETTEXT="no"
+GETTEXT_CFLAGS=""
+GETTEXT_LIBS=""
+echo '#undef HAVE_GETTEXT' >$BLD/include/agar/config/have_gettext.h
+echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
+echo '#undef GETTEXT_CFLAGS' >$BLD/include/agar/config/gettext_cflags.h
+echo 'hdefs["GETTEXT_CFLAGS"] = nil' >>configure.lua
+echo '#undef GETTEXT_LIBS' >$BLD/include/agar/config/gettext_libs.h
+echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
 echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 fi
@@ -9414,8 +10025,8 @@ echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
 echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
 fi;
 else
-echo 'no, compile failed'
-echo 'no, compile failed' >> config.log
+echo 'no'
+echo 'no' >> config.log
 MK_RUN_STATUS="FAIL \$?"
 HAVE_SSE='no'
 echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
@@ -9484,8 +10095,8 @@ echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
 echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
 fi;
 else
-echo 'no, compile failed'
-echo 'no, compile failed' >> config.log
+echo 'no'
+echo 'no' >> config.log
 MK_RUN_STATUS="FAIL \$?"
 HAVE_SSE2='no'
 echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
@@ -9556,8 +10167,8 @@ echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
 echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 fi;
 else
-echo 'no, compile failed'
-echo 'no, compile failed' >> config.log
+echo 'no'
+echo 'no' >> config.log
 MK_RUN_STATUS="FAIL \$?"
 HAVE_SSE3='no'
 echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
@@ -9585,12 +10196,30 @@ fi;
 			echo "* intrinsics not supported by compiler"
 			echo "*"
 			exit 1
-		else
+		fi
+echo 'not enabling SSE extensions'
+echo 'not enabling SSE extensions' >> config.log
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
 echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
 echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
 echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
-		fi
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 	else
 		if [ "${with_sse_inline}" = 'yes' ]
  then
@@ -9615,6 +10244,15 @@ echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
 		fi
 	fi
 else
+echo 'not enabling SSE extensions'
+echo 'not enabling SSE extensions' >> config.log
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
 echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
 echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
 echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
@@ -10139,22 +10777,64 @@ fi;
 			echo "*"
 			exit 1
 		fi
+echo 'not enabling libsndfile'
+echo 'not enabling libsndfile' >> config.log
+HAVE_SNDFILE="no"
+SNDFILE_CFLAGS=""
+SNDFILE_LIBS=""
+echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
+echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
+echo '#undef SNDFILE_CFLAGS' >$BLD/include/agar/config/sndfile_cflags.h
+echo 'hdefs["SNDFILE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SNDFILE_LIBS' >$BLD/include/agar/config/sndfile_libs.h
+echo 'hdefs["SNDFILE_LIBS"] = nil' >>configure.lua
+echo 'not enabling PortAudio2'
+echo 'not enabling PortAudio2' >> config.log
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 SUBDIR_au=""
 echo '#undef ENABLE_AU' >$BLD/include/agar/config/enable_au.h
 echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
-echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
-echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
 	fi
 else
+echo 'not enabling libsndfile'
+echo 'not enabling libsndfile' >> config.log
+HAVE_SNDFILE="no"
+SNDFILE_CFLAGS=""
+SNDFILE_LIBS=""
+echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
+echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
+echo '#undef SNDFILE_CFLAGS' >$BLD/include/agar/config/sndfile_cflags.h
+echo 'hdefs["SNDFILE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SNDFILE_LIBS' >$BLD/include/agar/config/sndfile_libs.h
+echo 'hdefs["SNDFILE_LIBS"] = nil' >>configure.lua
+echo 'not enabling PortAudio2'
+echo 'not enabling PortAudio2' >> config.log
+HAVE_PORTAUDIO="no"
+PORTAUDIO_CFLAGS=""
+PORTAUDIO_LIBS=""
+PORTAUDIO_PC=""
+echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
+echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
+echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
+echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
+echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
+echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 SUBDIR_au=""
 echo '#undef ENABLE_AU' >$BLD/include/agar/config/enable_au.h
 echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
-echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
-echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
 fi
 SRCS_CORE=""
 if [ "${HAVE_SNPRINTF}" != 'yes' ]
@@ -10878,6 +11558,8 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "CC=$CC" >>Makefile.config
 echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
+echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
+echo "mdefs[\"CC_COMPILE\"] = \"$CC_COMPILE\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
@@ -10930,6 +11612,10 @@ echo "HAVE_ASPRINTF=$HAVE_ASPRINTF" >>Makefile.config
 echo "mdefs[\"HAVE_ASPRINTF\"] = \"$HAVE_ASPRINTF\"" >>configure.lua
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_CC=$HAVE_CC" >>Makefile.config
+echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
+echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 echo "HAVE_CC_MCONSOLE=$HAVE_CC_MCONSOLE" >>Makefile.config
 echo "mdefs[\"HAVE_CC_MCONSOLE\"] = \"$HAVE_CC_MCONSOLE\"" >>configure.lua
 echo "HAVE_CC_MWINDOWS=$HAVE_CC_MWINDOWS" >>Makefile.config
@@ -10954,6 +11640,8 @@ echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
+echo "HAVE_FLOAT=$HAVE_FLOAT" >>Makefile.config
+echo "mdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
 echo "HAVE_FONTCONFIG=$HAVE_FONTCONFIG" >>Makefile.config
 echo "mdefs[\"HAVE_FONTCONFIG\"] = \"$HAVE_FONTCONFIG\"" >>configure.lua
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
@@ -10978,6 +11666,10 @@ echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 echo "HAVE_LIBPNG14=$HAVE_LIBPNG14" >>Makefile.config
 echo "mdefs[\"HAVE_LIBPNG14\"] = \"$HAVE_LIBPNG14\"" >>configure.lua
+echo "HAVE_LONG_DOUBLE=$HAVE_LONG_DOUBLE" >>Makefile.config
+echo "mdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
+echo "HAVE_MALLOC_ATTRIBUTE=$HAVE_MALLOC_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_MALLOC_ATTRIBUTE\"] = \"$HAVE_MALLOC_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
 echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
 echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
@@ -10986,10 +11678,10 @@ echo "HAVE_MYSQL=$HAVE_MYSQL" >>Makefile.config
 echo "mdefs[\"HAVE_MYSQL\"] = \"$HAVE_MYSQL\"" >>configure.lua
 echo "HAVE_NETWORK=$HAVE_NETWORK" >>Makefile.config
 echo "mdefs[\"HAVE_NETWORK\"] = \"$HAVE_NETWORK\"" >>configure.lua
-echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
-echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_NORETURN_ATTRIBUTE=$HAVE_NORETURN_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_NORETURN_ATTRIBUTE\"] = \"$HAVE_NORETURN_ATTRIBUTE\"" >>configure.lua
+echo "HAVE_OBJC=$HAVE_OBJC" >>Makefile.config
+echo "mdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
 echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
@@ -11026,8 +11718,6 @@ echo "HAVE_SYS_PARAM_H=$HAVE_SYS_PARAM_H" >>Makefile.config
 echo "mdefs[\"HAVE_SYS_PARAM_H\"] = \"$HAVE_SYS_PARAM_H\"" >>configure.lua
 echo "HAVE_SYS_UIO_H=$HAVE_SYS_UIO_H" >>Makefile.config
 echo "mdefs[\"HAVE_SYS_UIO_H\"] = \"$HAVE_SYS_UIO_H\"" >>configure.lua
-echo "HAVE_UIM=$HAVE_UIM" >>Makefile.config
-echo "mdefs[\"HAVE_UIM\"] = \"$HAVE_UIM\"" >>configure.lua
 echo "HAVE_UNUSED_VARIABLE_ATTRIBUTE=$HAVE_UNUSED_VARIABLE_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_UNUSED_VARIABLE_ATTRIBUTE\"] = \"$HAVE_UNUSED_VARIABLE_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
@@ -11064,6 +11754,8 @@ echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
 echo "mdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
 echo "LIBTOOLOPTS_SHARED=$LIBTOOLOPTS_SHARED" >>Makefile.config
 echo "mdefs[\"LIBTOOLOPTS_SHARED\"] = \"$LIBTOOLOPTS_SHARED\"" >>configure.lua
+echo "LIB_SHARED=$LIB_SHARED" >>Makefile.config
+echo "mdefs[\"LIB_SHARED\"] = \"$LIB_SHARED\"" >>configure.lua
 echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
 echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 echo "MANDIR=$MANDIR" >>Makefile.config
@@ -11076,6 +11768,8 @@ echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
 echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
 echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
+echo "MEMORY_MODEL=$MEMORY_MODEL" >>Makefile.config
+echo "mdefs[\"MEMORY_MODEL\"] = \"$MEMORY_MODEL\"" >>configure.lua
 echo "MODULEDIR=$MODULEDIR" >>Makefile.config
 echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 echo "MYSQL_CFLAGS=$MYSQL_CFLAGS" >>Makefile.config
@@ -11108,8 +11802,12 @@ echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
 echo "mdefs[\"PORTAUDIO_LIBS\"] = \"$PORTAUDIO_LIBS\"" >>configure.lua
 echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
 echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
+echo "PROG_CLI_CFLAGS=$PROG_CLI_CFLAGS" >>Makefile.config
+echo "mdefs[\"PROG_CLI_CFLAGS\"] = \"$PROG_CLI_CFLAGS\"" >>configure.lua
 echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
+echo "PROG_GUI_CFLAGS=$PROG_GUI_CFLAGS" >>Makefile.config
+echo "mdefs[\"PROG_GUI_CFLAGS\"] = \"$PROG_GUI_CFLAGS\"" >>configure.lua
 echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
 echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "PROG_PREFIX=$PROG_PREFIX" >>Makefile.config
@@ -11164,14 +11862,8 @@ echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
 echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
 echo "TTFDIR=$TTFDIR" >>Makefile.config
 echo "mdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
-echo "UIM_CFLAGS=$UIM_CFLAGS" >>Makefile.config
-echo "mdefs[\"UIM_CFLAGS\"] = \"$UIM_CFLAGS\"" >>configure.lua
-echo "UIM_LIBS=$UIM_LIBS" >>Makefile.config
-echo "mdefs[\"UIM_LIBS\"] = \"$UIM_LIBS\"" >>configure.lua
 echo "VERSION=$VERSION" >>Makefile.config
 echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
-echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
 echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
 echo "X11_LIBS=$X11_LIBS" >>Makefile.config
@@ -11184,12 +11876,18 @@ echo "ZLIB_CFLAGS=$ZLIB_CFLAGS" >>Makefile.config
 echo "mdefs[\"ZLIB_CFLAGS\"] = \"$ZLIB_CFLAGS\"" >>configure.lua
 echo "ZLIB_LIBS=$ZLIB_LIBS" >>Makefile.config
 echo "mdefs[\"ZLIB_LIBS\"] = \"$ZLIB_LIBS\"" >>configure.lua
+echo "_MK_BYTE_ORDER=$_MK_BYTE_ORDER" >>Makefile.config
+echo "mdefs[\"_MK_BYTE_ORDER\"] = \"$_MK_BYTE_ORDER\"" >>configure.lua
 echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
 echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
+echo "_MK_HAVE_STDINT_H=$_MK_HAVE_STDINT_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_STDINT_H\"] = \"$_MK_HAVE_STDINT_H\"" >>configure.lua
 echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
+echo "_MK_HAVE_SYS_STAT_H=$_MK_HAVE_SYS_STAT_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_SYS_STAT_H\"] = \"$_MK_HAVE_SYS_STAT_H\"" >>configure.lua
 echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
@@ -11203,10 +11901,6 @@ if [ "${srcdir}" != '' ]; then
 	echo 'ok'
 fi
 echo '*'
-echo '* Configuration successful. Compile with "make depend all" and use'
-$ECHO_N '* "make install" to install under '
-$ECHO_N $PREFIX
-$ECHO_N ' (or $DESTDIR'
-$ECHO_N $PREFIX
-echo ').'
+echo '* Configuration successful. Use the "make" command to compile,'
+echo '* and complete the installation using "make install".'
 echo '*'
