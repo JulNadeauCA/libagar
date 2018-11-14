@@ -5,76 +5,62 @@
 
 #ifndef	_AGAR_CORE_LOAD_REAL_H_
 #define	_AGAR_CORE_LOAD_REAL_H_
-
-#include <agar/config/have_long_double.h>
-#include <agar/core/byteswap.h>
-
 #include <agar/core/begin.h>
+#ifdef AG_HAVE_FLOAT
 
 __BEGIN_DECLS
-
 /*
  * single-precision floats
  */
 static __inline__ float
-AG_ReadFloat(AG_DataSource *ds)
+AG_ReadFloat(AG_DataSource *_Nonnull ds)
 {
 	float f;
-	
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_FLOAT) == -1) {
+
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_FLOAT) == -1)
 		return (0.0f);
-	}
-	if (AG_Read(ds, &f, sizeof(f)) != 0) {
+#endif
+	if (AG_Read(ds, &f, sizeof(float)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0.0f);
 	}
-	return ((ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEFLT(f) :
-	                                              AG_SwapLEFLT(f));
+	return (f);
 }
 static __inline__ int
-AG_ReadFloatv(AG_DataSource *ds, float *fv)
+AG_ReadFloatv(AG_DataSource *_Nonnull ds, float *_Nonnull x)
 {
-	float f;
-
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_FLOAT) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_FLOAT) == -1)
 		return (-1);
-	}
-	if (AG_Read(ds, &f, sizeof(f)) != 0) {
-		return (-1);
-	}
-	*fv = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEFLT(f) :
-	                                            AG_SwapLEFLT(f);
-	return (0);
+#endif
+	return AG_Read(ds, x, sizeof(float));
 }
 static __inline__ void
-AG_WriteFloat(AG_DataSource *ds, float fv)
+AG_WriteFloat(AG_DataSource *_Nonnull ds, float x)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEFLT(fv) :
-	                                                AG_SwapLEFLT(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_FLOAT); }
-	if (AG_Write(ds, &f, sizeof(f)) != 0)
+#endif
+	if (AG_Write(ds, &x, sizeof(float)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
-AG_WriteFloatv(AG_DataSource *ds, float *fv)
+AG_WriteFloatv(AG_DataSource *_Nonnull ds, float *_Nonnull x)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEFLT(*fv) :
-	                                                AG_SwapLEFLT(*fv);
-
-	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_FLOAT) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_FLOAT) == -1)
 		return (-1);
-	}
-	return AG_Write(ds, &f, sizeof(f));
+#endif
+	return AG_Write(ds, x, sizeof(float));
 }
 static __inline__ void
-AG_WriteFloatAt(AG_DataSource *ds, float fv, off_t pos)
+AG_WriteFloatAt(AG_DataSource *_Nonnull ds, float x, AG_Offset pos)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEFLT(fv) :
-	                                                AG_SwapLEFLT(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_FLOAT, pos); }
-	if (AG_WriteAt(ds, &f, sizeof(f), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
+#endif
+	if (AG_WriteAt(ds, &x, sizeof(float), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 
@@ -82,64 +68,57 @@ AG_WriteFloatAt(AG_DataSource *ds, float fv, off_t pos)
  * double-precision floats
  */
 static __inline__ double
-AG_ReadDouble(AG_DataSource *ds)
+AG_ReadDouble(AG_DataSource *_Nonnull ds)
 {
 	double f;
 
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_DOUBLE) == -1)
 		return (0.0);
-	}
+#endif
 	if (AG_Read(ds, &f, sizeof(f)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0.0);
 	}
-	return ((ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(f) :
-	                                              AG_SwapLEDBL(f));
+	return (f);
 }
 static __inline__ int
-AG_ReadDoublev(AG_DataSource *ds, double *fv)
+AG_ReadDoublev(AG_DataSource *_Nonnull ds, double *_Nonnull x)
 {
-	double f;
-
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_DOUBLE) == -1)
+		return (-1);
+#endif
+	if (AG_Read(ds, x, sizeof(double)) != 0) {
 		return (-1);
 	}
-	if (AG_Read(ds, &f, sizeof(f)) != 0) {
-		return (-1);
-	}
-	*fv = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(f) :
-	                                            AG_SwapLEDBL(f);
 	return (0);
 }
 static __inline__ void
-AG_WriteDouble(AG_DataSource *ds, double fv)
+AG_WriteDouble(AG_DataSource *_Nonnull ds, double x)
 {
-	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
-	                                                AG_SwapLEDBL(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_DOUBLE); }
-	if (AG_Write(ds, &f, sizeof(f)) != 0)
+#endif
+	if (AG_Write(ds, &x, sizeof(double)) != 0)
 		AG_DataSourceError(ds, NULL); 
 }
 static __inline__ int
-AG_WriteDoublev(AG_DataSource *ds, double *fv)
+AG_WriteDoublev(AG_DataSource *_Nonnull ds, double *_Nonnull x)
 {
-	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(*fv) :
-	                                                 AG_SwapLEDBL(*fv);
-
-	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_DOUBLE) == -1)
 		return (-1);
-	}
-	return AG_Write(ds, &f, sizeof(f));
+#endif
+	return AG_Write(ds, x, sizeof(double));
 }
 static __inline__ void
-AG_WriteDoubleAt(AG_DataSource *ds, double fv, off_t pos)
+AG_WriteDoubleAt(AG_DataSource *_Nonnull ds, double x, AG_Offset pos)
 {
-	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
-	                                                 AG_SwapLEDBL(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_DOUBLE, pos); }
-	if (AG_WriteAt(ds, &f, sizeof(f), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
+#endif
+	if (AG_WriteAt(ds, &x, sizeof(double), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 
@@ -148,69 +127,60 @@ AG_WriteDoubleAt(AG_DataSource *ds, double fv, off_t pos)
  * quad-precision floats
  */
 static __inline__ long double
-AG_ReadLongDouble(AG_DataSource *ds)
+AG_ReadLongDouble(AG_DataSource *_Nonnull ds)
 {
 	long double f;
 
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_LONG_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_LONG_DOUBLE) == -1)
 		return (0.0l);
-	}
+#endif
 	if (AG_Read(ds, &f, sizeof(f)) != 0) {
 		AG_DataSourceError(ds, NULL);
 		return (0.0l);
 	}
-	return ((ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBELDBL(f) :
-	                                              AG_SwapLELDBL(f));
+	return (f);
 }
 static __inline__ int
-AG_ReadLongDoublev(AG_DataSource *ds, long double *fv)
+AG_ReadLongDoublev(AG_DataSource *_Nonnull ds, long double *_Nonnull x)
 {
-	long double f;
-
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_LONG_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_LONG_DOUBLE) == -1)
 		return (-1);
-	}
-	if (AG_Read(ds, &f, sizeof(f)) != 0) {
-		return (-1);
-	}
-	*fv = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBELDBL(f) :
-	                                            AG_SwapLELDBL(f);
-	return (0);
+#endif
+	return AG_Read(ds, &x, sizeof(long double));
 }
 static __inline__ void
-AG_WriteLongDouble(AG_DataSource *ds, long double fv)
+AG_WriteLongDouble(AG_DataSource *_Nonnull ds, long double x)
 {
-	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
-	                                                    AG_SwapLELDBL(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCode(ds, AG_SOURCE_LONG_DOUBLE); }
-	if (AG_Write(ds, &f, sizeof(f)) != 0)
+#endif
+	if (AG_Write(ds, &x, sizeof(long double)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 static __inline__ int
-AG_WriteLongDoublev(AG_DataSource *ds, long double *fv)
+AG_WriteLongDoublev(AG_DataSource *_Nonnull ds, long double *_Nonnull x)
 {
-	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(*fv) :
-	                                                    AG_SwapLELDBL(*fv);
-
-	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_LONG_DOUBLE) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_WriteTypeCodeE(ds, AG_SOURCE_LONG_DOUBLE) == -1)
 		return (-1);
-	}
-	return AG_Write(ds, &f, sizeof(f));
+#endif
+	return AG_Write(ds, &x, sizeof(long double));
 }
 static __inline__ void
-AG_WriteLongDoubleAt(AG_DataSource *ds, long double fv, off_t pos)
+AG_WriteLongDoubleAt(AG_DataSource *_Nonnull ds, long double x, AG_Offset pos)
 {
-	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
-	                                                    AG_SwapLELDBL(fv);
-
+#ifdef AG_DEBUG
 	if (ds->debug) { AG_WriteTypeCodeAt(ds, AG_SOURCE_LONG_DOUBLE, pos); }
-	if (AG_WriteAt(ds, &f, sizeof(f), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
+#endif
+	if (AG_WriteAt(ds, &x, sizeof(long double), AG_WRITEAT_DEBUGOFFS(ds,pos)) != 0)
 		AG_DataSourceError(ds, NULL);
 }
 #endif /* AG_HAVE_LONG_DOUBLE */
 
 __END_DECLS
-#include <agar/core/close.h>
+#endif /* AG_HAVE_FLOAT */
 
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_LOAD_REAL_H_ */

@@ -48,15 +48,6 @@ They are useful when reading or writing data of a specific endianness.
 .Ft "Uint64"
 .Fn AG_Swap64 "Uint64 value"
 .Pp
-.Ft "float"
-.Fn AG_SwapFLT "float value"
-.Pp
-.Ft "double"
-.Fn AG_SwapDBL "double value"
-.Pp
-.Ft "long double"
-.Fn AG_SwapLDBL "long double value"
-.Pp
 .Ft "Uint16"
 .Fn AG_SwapLE16 "Uint16 value"
 .Pp
@@ -65,15 +56,6 @@ They are useful when reading or writing data of a specific endianness.
 .Pp
 .Ft "Uint64"
 .Fn AG_SwapLE64 "Uint64 value"
-.Pp
-.Ft "float"
-.Fn AG_SwapLEFLT "float value"
-.Pp
-.Ft "double"
-.Fn AG_SwapLEDBL "double value"
-.Pp
-.Ft "long double"
-.Fn AG_SwapLELDBL "long double value"
 .Pp
 .Ft "Uint16"
 .Fn AG_SwapBE16 "Uint16 value"
@@ -84,60 +66,36 @@ They are useful when reading or writing data of a specific endianness.
 .Ft "Uint64"
 .Fn AG_SwapBE64 "Uint64 value"
 .Pp
-.Ft "float"
-.Fn AG_SwapBEFLT "float value"
-.Pp
-.Ft "double"
-.Fn AG_SwapBEDBL "double value"
-.Pp
-.Ft "long double"
-.Fn AG_SwapBELDBL "long double value"
-.Pp
 .nr nS 0
-The functions
+The
 .Fn AG_Swap16 ,
-.Fn AG_Swap32 ,
-.Fn AG_Swap64 ,
-.Fn AG_SwapFLT ,
-.Fn AG_SwapDBL
+.Fn AG_Swap32
 and
-.Fn AG_SwapLDBL
-return the given value with the byte order reversed.
+.Fn AG_Swap64
+functions return the parameter's value with the byte order reversed.
 .Pp
 .Fn AG_SwapLE16 ,
 .Fn AG_SwapLE32 ,
-.Fn AG_SwapLE64 ,
-.Fn AG_SwapLEFLT ,
-.Fn AG_SwapLEDBL
 and
-.Fn AG_SwapLELDBL
-returns the given value with the byte order reversed if the current
+.Fn AG_SwapLE64
+return the given value with the byte order reversed if the current
 architecture is big-endian.
 On little-endian machines, these functions return the value unchanged.
 .Pp
 .Fn AG_SwapBE16 ,
-.Fn AG_SwapBE32 ,
-.Fn AG_SwapBE64 ,
-.Fn AG_SwapBEFLT ,
-.Fn AG_SwapBEDBL
+.Fn AG_SwapBE32
 and
-.Fn AG_SwapBELDBL
-returns the given value with the byte order reversed if the current
+.Fn AG_SwapBE64
+return the given value with the byte order reversed if the current
 architecture is little-endian.
 On big-endian machines, these functions return the value unchanged.
 .Pp
-If 64-bit types are not supported,
+If 64-bit types are not supported (!AG_HAVE_64BIT), then
 .Fn AG_Swap64 ,
 .Fn AG_SwapLE64
 and
 .Fn AG_SwapBE64
-are not defined.
-If quad-precision arithmetic is not supported,
-.Fn AG_SwapLDBL ,
-.Fn AG_SwapLELDBL
-and
-.Fn AG_SwapBELDBL
-are not defined.
+are undefined.
 .Sh SEE ALSO
 .Xr AG_DataSource 3 ,
 .Xr AG_Intro 3
