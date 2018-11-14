@@ -17,19 +17,19 @@ and graphics APIs. Some Agar drivers are designed to work with a native
 window system (e.g., "glx", "wgl" and "cocoa"). Others (such as "sdlfb"
 and "sdlgl") work with a single display, with Agar providing a built-in
 window manager. Since Agar provides a consistent programming interface,
-developers need not to be aware of the underlying platform.
+developers need not necessarily be aware of the underlying platform.
 
 A set of general-purpose widgets are included in the Agar distribution.
 Agar's class registration interface allows new widgets to be implemented
-as part of an application or third-party library. The appearance of Agar
-GUI elements is configurable programmatically and parametrically using
-simple CSS-style attributes.
+as part of an application or library. The appearance of GUI elements can
+be set using a CSS-style syntax (see gui/style.css).
 
-The Agar-Core library provides various utility and portability interfaces,
-as well as Agar's object system, AG_Object(3). The object system implements
-inheritance, serialization, virtual functions, timers and more. Agar-Core
-contains no GUI-related code; applications may link to Agar-Core without
-linking to Agar-GUI.
+The ag_core library implements Agar's object system, AG_Object(3), as well
+as several cross-platform interfaces for accessing operating system services
+such as files, dynamic library loading, network services, etc. The object
+system provides inheritance, serialization, virtual filesystems and timer
+functionality. The core library contains no GUI-related code. Non-graphical
+applications can link to ag_core without using ag_gui.
 
 Agar is thread-safe when built with threads support. See the API reference
 and AG_Threads(3) for more information about thread safety.
