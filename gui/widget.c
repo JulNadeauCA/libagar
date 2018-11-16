@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,17 +70,42 @@ const char *agWidgetColorNames[] = {
 	NULL
 };
 AG_WidgetPalette agDefaultPalette = {{
-	/* "color"           "text-color"        "line-color"    "shape-color"	"border-color" */
-/*def*/	{ {125,125,125,255}, {240,240,240,255},  {50,50,50,255}, {200,200,200,255},	{100,100,100,255} },
-/*dis*/	{ {160,160,160,255}, {240,240,240,255},  {70,70,70,255}, {150,150,150,255},	{100,100,100,255} },
-/*foc*/	{ {125,125,125,255}, {240,240,240,255},  {50,50,50,255}, {200,200,200,255},	{100,100,100,255} },
-/*hov*/	{ {130,130,130,255}, {240,240,240,255},  {50,50,50,255}, {220,220,220,255},	{100,100,100,255} },
-/*sel*/	{ {50,50,120,255},   {255,255,255,255},  {50,50,60,255}, {50,50,50,255},	{100,100,100,255} },
+#if AG_MODEL == AG_SMALL
+# if defined(__C64__) || defined(__C128__)
+      /* Color    Text     Line     Shape    Border */
+/*def*/	{{0x777f},{0xffff},{0x333f},{0xbbbf},{0x640f}},
+/*dis*/	{{0xbbbf},{0xffff},{0x333f},{0xbbbf},{0xd85f}},
+/*foc*/	{{0xee7f},{0xffff},{0x333f},{0xbbbf},{0xd85f}},
+/*hov*/	{{0xee7f},{0xffff},{0x333f},{0xbbbf},{0x0c5f}},
+/*sel*/	{{0x00af},{0xffff},{0xaf6f},{0xee7f},{0xff7f}},
+# else
+      /* Color    Text     Line     Shape    Border */
+/*def*/	{{0x777f},{0xeeef},{0x333f},{0xcccf},{0x666f}},
+/*dis*/	{{0x999f},{0xeeef},{0x444f},{0x999f},{0x777f}},
+/*foc*/	{{0x777f},{0xeeef},{0x333f},{0xcccf},{0x666f}},
+/*hov*/	{{0x889f},{0xeeef},{0x333f},{0xdddf},{0x556f}},
+/*sel*/	{{0x337f},{0xffff},{0x334f},{0x333f},{0x667f}},
+# endif
+#elif AG_MODEL == AG_MEDIUM
+      /* Color             Text              Line           Shape             Border */
+/*def*/	{{125,125,125,255},{240,240,240,255},{50,50,50,255},{200,200,200,255},{100,100,100,255}},
+/*dis*/	{{160,160,160,255},{240,240,240,255},{70,70,70,255},{150,150,150,255},{100,100,100,255}},
+/*foc*/	{{125,125,125,255},{240,240,240,255},{50,50,50,255},{200,200,200,255},{100,100,100,255}},
+/*hov*/	{{130,130,130,255},{240,240,240,255},{50,50,50,255},{220,220,220,255},{100,100,100,255}},
+/*sel*/	{{ 50, 50,120,255},{255,255,255,255},{50,50,60,255},{ 50, 50, 50,255},{100,100,100,255}},
+#elif AG_MODEL == AG_LARGE
+      /* Color                         Text                          Line                          Shape                         Border */
+/*def*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xc8c8,0xc8c8,0xc8c8,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+/*dis*/	{{0xa0a0,0xa0a0,0xa0a0,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x4646,0x4646,0x4646,0xffff},{0x9696,0x9696,0x9696,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+/*foc*/	{{0x7d7d,0x7d7d,0x7d7d,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xc8c8,0xc8c8,0xc8c8,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+/*hov*/	{{0x8282,0x8282,0x8282,0xffff},{0xf0f0,0xf0f0,0xf0f0,0xffff},{0x3232,0x3232,0x3232,0xffff},{0xdcdc,0xdcdc,0xdcdc,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+/*sel*/	{{0x3232,0x3232,0x7878,0xffff},{0xffff,0xffff,0xffff,0xffff},{0x3232,0x3232,0x3c3c,0xffff},{0x3232,0x3232,0x3232,0xffff},{0x6464,0x6464,0x6464,0xffff}},
+#endif
 }};
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
-SetParentWindow(AG_Widget *wid, AG_Window *win)
+SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
 {
 	AG_Widget *chld;
 	AG_CursorArea *ca, *caNext;
@@ -95,8 +120,8 @@ SetParentWindow(AG_Widget *wid, AG_Window *win)
 		 * Commit any previously deferred AG_MapStockCursor()
 		 * operation.
 		 */
-		for (ca = TAILQ_FIRST(&wid->cursorAreas);
-		     ca != TAILQ_END(&wid->cursorAreas);
+		for (ca = TAILQ_FIRST(&wid->pvt.cursorAreas);
+		     ca != TAILQ_END(&wid->pvt.cursorAreas);
 		     ca = caNext) {
 			caNext = TAILQ_NEXT(ca, cursorAreas);
 			if (ca->stock >= 0 &&
@@ -110,7 +135,7 @@ SetParentWindow(AG_Widget *wid, AG_Window *win)
 				}
 				if (ac != NULL) {
 					ca->c = ac;
-					TAILQ_INSERT_TAIL(&win->cursorAreas,
+					TAILQ_INSERT_TAIL(&win->pvt.cursorAreas,
 					    ca, cursorAreas);
 				} else {
 					free(ca);
@@ -119,7 +144,7 @@ SetParentWindow(AG_Widget *wid, AG_Window *win)
 				free(ca);
 			}
 		}
-		TAILQ_INIT(&wid->cursorAreas);
+		TAILQ_INIT(&wid->pvt.cursorAreas);
 	} else {
 		wid->drv = NULL;
 		wid->drvOps = NULL;
@@ -130,7 +155,7 @@ SetParentWindow(AG_Widget *wid, AG_Window *win)
 
 /* Set the parent driver pointers on a widget and its children. */
 static void
-SetParentDriver(AG_Widget *wid, AG_Driver *drv)
+SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nullable drv)
 {
 	AG_Widget *chld;
 
@@ -146,7 +171,7 @@ SetParentDriver(AG_Widget *wid, AG_Driver *drv)
 }
 
 static void
-OnAttach(AG_Event *event)
+OnAttach(AG_Event *_Nonnull event)
 {
 	void *parent = AG_SENDER();
 	AG_Widget *w = AG_SELF();
@@ -169,7 +194,7 @@ OnAttach(AG_Event *event)
 		 * Widget may have previously been detached from another
 		 * driver; textures may need regenerating.
 		 */
-		for (i = 0; i < w->nsurfaces; i++) {
+		for (i = 0; i < w->nSurfaces; i++) {
 			w->textures[i] = 0;
 		}
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
@@ -199,7 +224,7 @@ OnAttach(AG_Event *event)
 }
 
 static void
-OnDetach(AG_Event *event)
+OnDetach(AG_Event *_Nonnull event)
 {
 	void *parent = AG_SENDER();
 	AG_Widget *w = AG_SELF();
@@ -220,7 +245,7 @@ OnDetach(AG_Event *event)
 
 /* Timer callback for AG_RedrawOnTick(). */
 static Uint32
-RedrawOnTickTimeout(AG_Timer *to, AG_Event *event)
+RedrawOnTickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = event->argv[0].data.p;
 
@@ -232,7 +257,7 @@ RedrawOnTickTimeout(AG_Timer *to, AG_Event *event)
 
 /* Timer callback for AG_RedrawOnChange(). */
 static Uint32
-RedrawOnChangeTimeout(AG_Timer *to, AG_Event *event)
+RedrawOnChangeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt = AG_PTR(1);
@@ -253,17 +278,17 @@ RedrawOnChangeTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
 
-	if (wid->font == NULL)
-		AG_FatalError("Bad style state");
-
+#ifdef AG_DEBUG
+	if (wid->font == NULL) { AG_FatalError("wid->font == NULL"); }
+#endif
 	wid->flags |= AG_WIDGET_VISIBLE;
 
-	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		switch (rt->type) {
 		case AG_REDRAW_ON_TICK:
 			AG_AddTimer(wid, &rt->to, rt->ival,
@@ -278,14 +303,14 @@ OnShow(AG_Event *event)
 }
 
 static void
-OnHide(AG_Event *event)
+OnHide(AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_RedrawTie *rt;
 
 	wid->flags &= ~(AG_WIDGET_VISIBLE);
 	
-	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		switch (rt->type) {
 		case AG_REDRAW_ON_TICK:
 		case AG_REDRAW_ON_CHANGE:
@@ -296,7 +321,7 @@ OnHide(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 	AG_Event *ev;
@@ -315,14 +340,14 @@ Init(void *obj)
 	wid->window = NULL;
 	wid->drv = NULL;
 	wid->drvOps = NULL;
-	wid->nsurfaces = 0;
+	wid->nSurfaces = 0;
 	wid->surfaces = NULL;
 	wid->surfaceFlags = NULL;
 	wid->textures = NULL;
 	wid->texcoords = NULL;
-	AG_TblInit(&wid->actions, 32, 0);
-	TAILQ_INIT(&wid->mouseActions);
-	TAILQ_INIT(&wid->keyActions);
+	AG_TblInit(&wid->pvt.actions, 32, 0);
+	TAILQ_INIT(&wid->pvt.mouseActions);
+	TAILQ_INIT(&wid->pvt.keyActions);
 	
 	wid->css = NULL;
 	wid->cState = AG_DEFAULT_STATE;
@@ -336,8 +361,8 @@ Init(void *obj)
 	ev = AG_SetEvent(wid, "widget-hidden", OnHide, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 
-	TAILQ_INIT(&wid->redrawTies);
-	TAILQ_INIT(&wid->cursorAreas);
+	TAILQ_INIT(&wid->pvt.redrawTies);
+	TAILQ_INIT(&wid->pvt.cursorAreas);
 }
 
 /* Arrange for a redraw whenever a given binding value changes. */
@@ -347,7 +372,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
 	
-	TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+	TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 		if (rt->type == AG_REDRAW_ON_CHANGE &&
 		    strcmp(rt->name, name) == 0 &&
 		    rt->ival == refresh_ms)
@@ -367,7 +392,7 @@ AG_RedrawOnChange(void *obj, int refresh_ms, const char *name)
 #ifdef AG_DEBUG
 	Strlcat(rt->to.name, name, sizeof(rt->to.name));
 #endif
-	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
+	TAILQ_INSERT_TAIL(&wid->pvt.redrawTies, rt, redrawTies);
 	
 	if (wid->flags & AG_WIDGET_VISIBLE) {
 		AG_AddTimer(wid, &rt->to, rt->ival, RedrawOnChangeTimeout, "%p", rt);
@@ -384,12 +409,12 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	AG_RedrawTie *rt;
 
 	if (refresh_ms == -1) {
-		TAILQ_FOREACH(rt, &wid->redrawTies, redrawTies) {
+		TAILQ_FOREACH(rt, &wid->pvt.redrawTies, redrawTies) {
 			if (rt->type == AG_REDRAW_ON_TICK)
 				break;
 		}
 		if (rt != NULL) {
-			TAILQ_REMOVE(&wid->redrawTies, rt, redrawTies);
+			TAILQ_REMOVE(&wid->pvt.redrawTies, rt, redrawTies);
 			AG_DelTimer(wid, &rt->to);
 			free(rt);
 		}
@@ -401,7 +426,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	rt->ival = refresh_ms;
 	rt->name[0] = '\0';
 	AG_InitTimer(&rt->to, "redrawTick", 0);
-	TAILQ_INSERT_TAIL(&wid->redrawTies, rt, redrawTies);
+	TAILQ_INSERT_TAIL(&wid->pvt.redrawTies, rt, redrawTies);
 	
 	if (wid->flags & AG_WIDGET_VISIBLE) {
 		AG_AddTimer(wid, &rt->to, rt->ival, RedrawOnTickTimeout, NULL);
@@ -470,7 +495,7 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 	at->type = AG_ACTION_ON_BUTTONDOWN;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 
 	if (AG_FindEventHandler(wid, "mouse-button-down") == NULL)
 		AG_SetEvent(wid, "mouse-button-down", AG_WidgetStdMouseButtonDown, NULL);
@@ -487,7 +512,7 @@ AG_ActionOnButtonUp(void *obj, int button, const char *action)
 	at->type = AG_ACTION_ON_BUTTONUP;
 	at->data.button = (AG_MouseButton)button;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->mouseActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->pvt.mouseActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "mouse-button-up") == NULL)
 		AG_SetEvent(wid, "mouse-button-up", AG_WidgetStdMouseButtonUp, NULL);
@@ -505,7 +530,7 @@ AG_ActionOnKeyDown(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 
 	if (AG_FindEventHandler(wid, "key-down") == NULL)
 		AG_SetEvent(wid, "key-down", AG_WidgetStdKeyDown, NULL);
@@ -523,7 +548,7 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	at->data.key.sym = sym;
 	at->data.key.mod = mod;
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL)
 		AG_SetEvent(wid, "key-up", AG_WidgetStdKeyUp, NULL);
@@ -531,13 +556,13 @@ AG_ActionOnKeyUp(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 
 /* Timer callback for AG_ACTION_ON_KEYREPEAT actions. */
 static Uint32
-ActionKeyRepeatTimeout(AG_Timer *to, AG_Event *event)
+ActionKeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Widget *wid = AG_SELF();
 	AG_ActionTie *at = AG_PTR(1);
 	AG_Action *a;
 
-	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
 	    a == NULL) {
 		return (0);
 	}
@@ -562,7 +587,7 @@ AG_ActionOnKey(void *obj, AG_KeySym sym, AG_KeyMod mod, const char *action)
 	    sizeof(at->data.key.toRepeat.name));
 #endif
 	Strlcpy(at->action, action, sizeof(at->action));
-	TAILQ_INSERT_TAIL(&wid->keyActions, at, ties);
+	TAILQ_INSERT_TAIL(&wid->pvt.keyActions, at, ties);
 	
 	if (AG_FindEventHandler(wid, "key-up") == NULL &&
 	    AG_FindEventHandler(wid, "key-down") == NULL) {
@@ -584,7 +609,7 @@ AG_ActionFn(void *obj, const char *name, AG_EventFn fn, const char *fnArgs,...)
 	a->widget = w;
 	a->fn = AG_SetEvent(w, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(a->fn, fnArgs);
-	AG_TblInsertPointer(&w->actions, name, a);
+	AG_TblInsertPointer(&w->pvt.actions, name, a);
 	AG_ObjectUnlock(w);
 	return (a);
 }
@@ -603,7 +628,7 @@ AG_ActionSetInt(void *obj, const char *name, int *p, int val)
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->val = val;
-	AG_TblInsertPointer(&w->actions, name, a);
+	AG_TblInsertPointer(&w->pvt.actions, name, a);
 	AG_ObjectUnlock(w);
 	return (a);
 }
@@ -621,7 +646,7 @@ AG_ActionToggleInt(void *obj, const char *name, int *p)
 	a->widget = w;
 	a->fn = NULL;
 	a->p = (void *)p;
-	AG_TblInsertPointer(&w->actions, name, a);
+	AG_TblInsertPointer(&w->pvt.actions, name, a);
 	AG_ObjectUnlock(w);
 	return (a);
 }
@@ -641,7 +666,7 @@ AG_ActionSetFlag(void *obj, const char *name, Uint *p, Uint bitmask, int val)
 	a->p = (void *)p;
 	a->bitmask = bitmask;
 	a->val = val;
-	AG_TblInsertPointer(&w->actions, name, a);
+	AG_TblInsertPointer(&w->pvt.actions, name, a);
 	AG_ObjectUnlock(w);
 	return (a);
 }
@@ -660,7 +685,7 @@ AG_ActionToggleFlag(void *obj, const char *name, Uint *p, Uint bitmask)
 	a->fn = NULL;
 	a->p = (void *)p;
 	a->bitmask = bitmask;
-	AG_TblInsertPointer(&w->actions, name, a);
+	AG_TblInsertPointer(&w->pvt.actions, name, a);
 	AG_ObjectUnlock(w);
 	return (a);
 }
@@ -717,7 +742,7 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	    et != AG_ACTION_ON_BUTTONUP)
 		AG_FatalError("Invalid type arg to AG_ExecMouseAction()");
 #endif
-	TAILQ_FOREACH(at, &wid->mouseActions, ties) {
+	TAILQ_FOREACH(at, &wid->pvt.mouseActions, ties) {
 		if (at->type == et &&
 		    ((button == at->data.button) ||
 		     (at->data.button == AG_MOUSE_ANY)))
@@ -726,7 +751,7 @@ AG_ExecMouseAction(void *obj, AG_ActionEventType et, int button,
 	if (at == NULL) {
 		return (0);
 	}
-	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
 	    a == NULL) {
 		return (0);
 	}
@@ -752,7 +777,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	    et != AG_ACTION_ON_KEYUP)
 		AG_FatalError("AG_ExecKeyAction() type");
 #endif
-	TAILQ_FOREACH(at, &wid->keyActions, ties) {
+	TAILQ_FOREACH(at, &wid->pvt.keyActions, ties) {
 		if (at->type != et &&
 		    at->type != AG_ACTION_ON_KEYREPEAT) {
 			continue;
@@ -766,7 +791,7 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	if (at == NULL) {
 		return (0);
 	}
-	if (AG_TblLookupPointer(&wid->actions, at->action, (void *)&a) == -1 ||
+	if (AG_TblLookupPointer(&wid->pvt.actions, at->action, (void *)&a) == -1 ||
 	    a == NULL)
 		return (0);
 
@@ -783,8 +808,8 @@ AG_ExecKeyAction(void *obj, AG_ActionEventType et, AG_KeySym sym, AG_KeyMod mod)
 	return (rv);
 }
 
-static void *
-WidgetFindPath(const AG_Object *parent, const char *name)
+static void *_Nullable
+WidgetFindPath(const AG_Object *_Nonnull parent, const char *_Nonnull name)
 {
 	char node_name[AG_OBJECT_PATH_MAX];
 	void *rv;
@@ -920,7 +945,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Widget *wid = obj;
 	AG_CursorArea *ca, *caNext;
@@ -929,42 +954,42 @@ Destroy(void *obj)
 	AG_Variable *V;
 	Uint i, j;
 
-	for (ca = TAILQ_FIRST(&wid->cursorAreas);
-	     ca != TAILQ_END(&wid->cursorAreas);
+	for (ca = TAILQ_FIRST(&wid->pvt.cursorAreas);
+	     ca != TAILQ_END(&wid->pvt.cursorAreas);
 	     ca = caNext) {
 		caNext = TAILQ_NEXT(ca, cursorAreas);
 		free(ca);
 	}
-	for (rt = TAILQ_FIRST(&wid->redrawTies);
-	     rt != TAILQ_END(&wid->redrawTies);
+	for (rt = TAILQ_FIRST(&wid->pvt.redrawTies);
+	     rt != TAILQ_END(&wid->pvt.redrawTies);
 	     rt = rtNext) {
 		rtNext = TAILQ_NEXT(rt, redrawTies);
 		free(rt);
 	}
-	for (at = TAILQ_FIRST(&wid->mouseActions);
-	     at != TAILQ_END(&wid->mouseActions);
+	for (at = TAILQ_FIRST(&wid->pvt.mouseActions);
+	     at != TAILQ_END(&wid->pvt.mouseActions);
 	     at = atNext) {
 		atNext = TAILQ_NEXT(at, ties);
 		free(at);
 	}
-	for (at = TAILQ_FIRST(&wid->keyActions);
-	     at != TAILQ_END(&wid->keyActions);
+	for (at = TAILQ_FIRST(&wid->pvt.keyActions);
+	     at != TAILQ_END(&wid->pvt.keyActions);
 	     at = atNext) {
 		atNext = TAILQ_NEXT(at, ties);
 		free(at);
 	}
 
 	/* Free the action tables. */
-	AG_TBL_FOREACH(V, i,j, &wid->actions) {
+	AG_TBL_FOREACH(V, i,j, &wid->pvt.actions) {
 		Free(V->data.p);
 	}
-	AG_TblDestroy(&wid->actions);
+	AG_TblDestroy(&wid->pvt.actions);
 
 	/*
 	 * Free surfaces. We can assume that drivers have already deleted
 	 * any associated resources.
 	 */
-	for (i = 0; i < wid->nsurfaces; i++) {
+	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *su;
 
 		if ((su = wid->surfaces[i]) != NULL && !WSURFACE_NODUP(wid,i)) {
@@ -1044,7 +1069,7 @@ AG_WidgetRegenResourcesGL(void *obj)
 
 /* Acquire widget focus */
 static __inline__ void
-FocusWidget(AG_Widget *w)
+FocusWidget(AG_Widget *_Nonnull w)
 {
 	w->flags |= AG_WIDGET_FOCUSED;
 	if (w->window != NULL) {
@@ -1059,7 +1084,7 @@ FocusWidget(AG_Widget *w)
 
 /* Give up widget focus */
 static __inline__ void
-UnfocusWidget(AG_Widget *w)
+UnfocusWidget(AG_Widget *_Nonnull w)
 {
 	w->flags &= ~(AG_WIDGET_FOCUSED);
 	if (w->window != NULL) {
@@ -1152,23 +1177,26 @@ fail:
 #ifdef HAVE_OPENGL
 
 static void
-DrawPrologueGL_Reshape(AG_Widget *wid)
+DrawPrologueGL_Reshape(AG_Widget *_Nonnull wid)
 {
 	glMatrixMode(GL_PROJECTION); glPushMatrix();
 	glMatrixMode(GL_MODELVIEW);  glPushMatrix();
 
 	AG_PostEvent(NULL, wid, "widget-reshape", NULL);
 	wid->flags &= ~(AG_WIDGET_GL_RESHAPE);
-		
-	glGetFloatv(GL_PROJECTION, wid->gl.mProjection);
-	glGetFloatv(GL_MODELVIEW, wid->gl.mModelview);
+
+	if (wid->gl == NULL) {
+		wid->gl = Malloc(sizeof(AG_WidgetGL));
+	}
+	glGetFloatv(GL_PROJECTION, wid->gl->mProjection);
+	glGetFloatv(GL_MODELVIEW, wid->gl->mModelview);
 		
 	glMatrixMode(GL_PROJECTION); glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);  glPopMatrix();
 }
 
 static void
-DrawPrologueGL(AG_Widget *wid)
+DrawPrologueGL(AG_Widget *_Nonnull wid)
 {
 	Uint hView;
 
@@ -1188,13 +1216,16 @@ DrawPrologueGL(AG_Widget *wid)
 	glPushMatrix();
 	glLoadIdentity();
 
+#ifdef AG_DEBUG
+	if (wid->gl == NULL) { AG_FatalError("wid->gl == NULL"); }
+#endif
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadMatrixf(wid->gl.mProjection);
+	glLoadMatrixf(wid->gl->mProjection);
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadMatrixf(wid->gl.mModelview);
+	glLoadMatrixf(wid->gl->mModelview);
 
 	glDisable(GL_CLIP_PLANE0);
 	glDisable(GL_CLIP_PLANE1);
@@ -1203,7 +1234,7 @@ DrawPrologueGL(AG_Widget *wid)
 }
 
 static void
-DrawEpilogueGL(AG_Widget *wid)
+DrawEpilogueGL(AG_Widget *_Nonnull wid)
 {
 	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);	glPopMatrix();
@@ -1259,14 +1290,14 @@ out:
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	r->w = 0;
 	r->h = 0;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	return (0);
 }
@@ -1553,8 +1584,8 @@ AG_WidgetHideAll(void *p)
 	AG_UnlockVFS(wid);
 }
 
-static void *
-FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
+static void *_Nullable
+FindAtPoint(AG_Widget *_Nonnull parent, const char *_Nonnull type, int x, int y)
 {
 	AG_Widget *chld;
 	void *p;
@@ -1572,8 +1603,8 @@ FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
 }
 
 /* Search for widgets of the specified class enclosing the given point. */
-void *
-AG_WidgetFindPoint(const char *type, int x, int y)
+void *_Nullable
+AG_WidgetFindPoint(const char *_Nonnull type, int x, int y)
 {
 	AG_Driver *drv;
 	AG_Window *win;
@@ -1592,8 +1623,9 @@ AG_WidgetFindPoint(const char *type, int x, int y)
 	return (NULL);
 }
 
-static void *
-FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
+static void *_Nullable
+FindRectOverlap(AG_Widget *_Nonnull parent, const char *_Nonnull type,
+    int x, int y, int w, int h)
 {
 	AG_Widget *chld;
 	void *p;
@@ -1664,7 +1696,12 @@ AG_WidgetSurface(void *obj)
 	int rv;
 
 	AG_LockVFS(wid);
-	rv = wid->drvOps->renderToSurface(wid->drv, wid, &su);
+	if (wid->drvOps->renderToSurface == NULL) {
+		AG_SetError("renderToSurface not supported by driver");
+		rv = -1;
+	} else {
+		rv = wid->drvOps->renderToSurface(wid->drv, wid, &su);
+	}
 	AG_UnlockVFS(wid);
 	return (rv == 0) ? su : NULL;
 }
@@ -1685,31 +1722,30 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	AG_Widget *wid = obj;
 	int i, s = -1;
 
-	if (su == NULL)
-		return (-1);
-
 	AG_ObjectLock(wid);
-	for (i = 0; i < wid->nsurfaces; i++) {
+	for (i = 0; i < wid->nSurfaces; i++) {
 		if (wid->surfaces[i] == NULL) {
 			s = i;
 			break;
 		}
 	}
-	if (i == wid->nsurfaces) {
+	if (i == wid->nSurfaces) {
 		wid->surfaces = Realloc(wid->surfaces,
-		    (wid->nsurfaces+1)*sizeof(AG_Surface *));
+		    (wid->nSurfaces+1)*sizeof(AG_Surface *));
 		wid->surfaceFlags = Realloc(wid->surfaceFlags,
-		    (wid->nsurfaces+1)*sizeof(Uint));
+		    (wid->nSurfaces+1)*sizeof(Uint8));
 		wid->textures = Realloc(wid->textures,
-		    (wid->nsurfaces+1)*sizeof(Uint));
+		    (wid->nSurfaces+1)*sizeof(Uint));
 		wid->texcoords = Realloc(wid->texcoords,
-		    (wid->nsurfaces+1)*sizeof(AG_TexCoord));
-		s = wid->nsurfaces++;
+		    (wid->nSurfaces+1)*sizeof(AG_TexCoord));
+		s = wid->nSurfaces++;
 	}
 	wid->surfaces[s] = su;
 	wid->surfaceFlags[s] = 0;
 	wid->textures[s] = 0;
-	su->flags |= AG_SURFACE_MAPPED;
+	if (su != NULL) {
+		su->flags |= AG_SURFACE_MAPPED;
+	}
 	AG_ObjectUnlock(wid);
 	return (s);
 }
@@ -1726,7 +1762,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
-	if (s < 0 || s >= wid->nsurfaces)
+	if (s < 0 || s >= wid->nSurfaces)
 		AG_FatalError("Invalid surface handle");
 #endif
 	if ((suPrev = wid->surfaces[s]) != NULL && !WSURFACE_NODUP(wid,s)) {
@@ -1757,7 +1793,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
  * effective color palettes. Loads any required fonts in the process.
  */
 static void
-CompileStyleRecursive(AG_Widget *wid, const char *parentFace,
+CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
     double parentPtSize, Uint parentFlags,
     AG_WidgetPalette parentPalette)
 {
@@ -1892,19 +1928,18 @@ AG_WidgetCompileStyle(void *obj)
 	if ((parent = OBJECT(wid)->parent) != NULL &&
 	    AG_OfClass(parent, "AG_Widget:*") &&
 	    parent->font != NULL) {
-		CompileStyleRecursive(wid,
-		    OBJECT(parent->font)->name,
+		CompileStyleRecursive(wid, OBJECT(parent->font)->name,
 		    parent->font->spec.size,
 		    parent->font->flags,
 		    parent->pal);
 	} else {
 
-		CompileStyleRecursive(wid,
-		    OBJECT(agDefaultFont)->name,
+		CompileStyleRecursive(wid, OBJECT(agDefaultFont)->name,
 		    agDefaultFont->spec.size,
 		    agDefaultFont->flags,
 		    agDefaultPalette);
 	}
+
 	AG_MutexUnlock(&agTextLock);
 	AG_UnlockVFS(wid);
 }

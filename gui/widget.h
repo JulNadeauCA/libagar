@@ -10,7 +10,6 @@
 #include <agar/gui/geometry.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/surface.h>
-#include <agar/gui/anim.h>
 #include <agar/gui/stylesheet.h>
 #include <agar/gui/mouse.h>
 #include <agar/gui/keyboard.h>
@@ -34,9 +33,9 @@ typedef struct ag_size_alloc {
 /* Widget class description. */
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;
-	void (*draw)(void *);
-	void (*size_request)(void *, AG_SizeReq *);
-	int  (*size_allocate)(void *, const AG_SizeAlloc *);
+	void (*_Nullable draw)(void *_Nonnull);
+	void (*_Nullable size_request)(void *_Nonnull, AG_SizeReq *_Nonnull);
+	int  (*_Nullable size_allocate)(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
 } AG_WidgetClass;
 
 /* Relative size specification of visual element. */
@@ -57,7 +56,7 @@ enum ag_widget_packing {
 /* Flag description (i.e., for AG_Checkbox(3)) */
 typedef struct ag_flag_descr {
 	Uint bitmask;			/* Bitmask */
-	const char *descr;		/* Bit(s) description */
+	const char *_Nonnull descr;	/* Description (UTF-8) */
 	int writeable;			/* User-editable */
 } AG_FlagDescr;
 
@@ -74,11 +73,11 @@ typedef enum ag_action_type {
 
 typedef struct ag_action {
 	AG_ActionType type;
-	struct ag_widget *widget;	/* Back pointer to widget */
-	AG_Event *fn;			/* Callback function */
-	void *p;			/* Target (for SET_*) */
-	int val;			/* Value (for SET_*) */
-	Uint bitmask;			/* Bitmask (for SET_FLAG) */
+	struct ag_widget *_Nonnull widget;	/* Back pointer to widget */
+	AG_Event *_Nullable fn;			/* Callback function */
+	void *_Nullable p;			/* Target (for SET_*) */
+	int val;				/* Value (for SET_*) */
+	Uint bitmask;				/* Bitmask (for SET_FLAG) */
 } AG_Action;
 
 typedef enum ag_action_event_type {
@@ -123,15 +122,14 @@ typedef struct ag_redraw_tie {
 /* Cursor-change area */
 typedef struct ag_cursor_area {
 	AG_Rect r;					/* Area in window */
-	struct ag_cursor *c;				/* Associated cursor */
-	struct ag_widget *wid;				/* Associated widget */
+	struct ag_cursor *_Nullable c;			/* Associated cursor */
+	struct ag_widget *_Nonnull wid;			/* Associated widget */
 	int stock;					/* Stock cursor? */
 	AG_TAILQ_ENTRY(ag_cursor_area) cursorAreas;
 } AG_CursorArea;
 
 /*
- * Standard widget colors (CSS-defined, state-dependent, globally-inheritable).
- *
+ * Widget's color palette. Generated from CSS style attributes.
  * SYNC: agWidgetStateNames[], agWidgetColorNames[], agDefaultPalette[].
  */
 #define AG_WIDGET_NSTATES 5
@@ -159,9 +157,23 @@ typedef struct {
 #define AG_WCOLOR_HOV(wid,which) AGWIDGET(wid)->pal.c[AG_HOVER_STATE][which]
 #define AG_WCOLOR_SEL(wid,which) AGWIDGET(wid)->pal.c[AG_SELECTED_STATE][which]
 
-/* Base Agar widget */
+/* Saved OpenGL context (for WIDGET_USE_OPENGL) */
+typedef struct ag_widget_gl {
+	float mProjection[16];				/* Projection matrix */
+	float mModelview[16];				/* Modelview matrix */
+} AG_WidgetGL;
+
+typedef struct ag_widget_pvt {
+	AG_Tbl actions;				 	/* Registered actions */
+	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
+	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
+	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
+	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas */
+} AG_WidgetPvt;
+
+/* Agar widget instance */
 typedef struct ag_widget {
-	struct ag_object obj;
+	struct ag_object obj;			/* Object -> Widget */
 
 	Uint flags;
 #define AG_WIDGET_FOCUSABLE		0x000001 /* Can grab focus */
@@ -176,52 +188,45 @@ typedef struct ag_widget {
 #define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
 #define AG_WIDGET_MOUSEOVER		0x000800 /* Mouseover state (computed) */
-#define AG_WIDGET_CATCH_TAB		0x001000 /* Catch tab key events */
+#define AG_WIDGET_CATCH_TAB		0x001000 /* Receive focus-cycling key events */
 #define AG_WIDGET_GL_RESHAPE		0x002000 /* Pending GL view reshape */
 #define AG_WIDGET_UNDERSIZE		0x004000 /* Size alloc failed (computed) */
 #define AG_WIDGET_NOSPACING		0x008000 /* No box model (container-specific) */
-#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* All mousebuttondown events */
-#define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* All mousebuttondown events */
-#define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
-#define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
+#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* Receive keydowns w/o focus */
+#define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* Receive keyups w/o focus */
+#define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Can be used in a polled AG_Table(3) */
+#define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request AG_WindowUpdate() ASAP */
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Must backup surfaces ASAP */
 #define AG_WIDGET_USE_TEXT		0x400000 /* Use Agar's font engine */
-#define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Update MOUSEOVER flag and generate mouseover events */
+#define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Generate mouseover events (and maintain MOUSEOVER flag) */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	AG_Rect2 rView;			/* Effective view coordinates */
 	AG_Rect2 rSens;			/* Effective sensitivity rectangle */
-	AG_Surface **surfaces;		/* Registered surfaces */
-	Uint        *surfaceFlags;	/* Surface flags */
-#define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
-#define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
-	Uint        nsurfaces;
-	Uint        *textures;		/* Cached textures (driver-specific) */
-	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
-	struct ag_widget *focusFwd;		/* For ForwardFocus() */
-	struct ag_window *window;		/* Parent window (if any) */
-	struct ag_driver *drv;			/* Parent driver instance */
-	struct ag_driver_class *drvOps;		/* Parent driver class */
+	AG_Surface *_Nullable *_Nullable surfaces;     /* Mapped surfaces */
+	Uint8 *_Nullable                 surfaceFlags; /* Mapped surface flags: */
+#define AG_WIDGET_SURFACE_NODUP	0x01                   /* Don't auto-free */
+#define AG_WIDGET_SURFACE_REGEN	0x02                   /* Regenerate textures */
+	Uint nSurfaces;
 
-	AG_Tbl actions;				 	/* Registered actions */
-	AG_TAILQ_HEAD_(ag_action_tie) mouseActions;	/* Mouse action ties */
-	AG_TAILQ_HEAD_(ag_action_tie) keyActions;	/* Kbd action ties */
-	AG_TAILQ_HEAD_(ag_redraw_tie) redrawTies;	/* For AG_RedrawOn*() */
-	AG_TAILQ_HEAD_(ag_cursor_area) cursorAreas;	/* Cursor-change areas
-							   (not yet attached) */
+	Uint        *_Nullable textures;       /* Cached hardware textures */
+	AG_TexCoord *_Nullable texcoords;      /* Cached texture coordinates */
 
-	AG_StyleSheet *css;			/* Alternate style sheet */
-	enum ag_widget_color_state cState;	/* Current CSS color state */
-	struct ag_font *font;			/* Computed font reference */
-	AG_WidgetPalette pal;			/* Computed color palette */
+	struct ag_widget *_Nullable focusFwd;     /* For ForwardFocus() */
+	struct ag_window *_Nullable window;       /* Parent window (or null) */
+	struct ag_driver *_Nullable drv;          /* Parent driver instance (null = no parent window) */
+	struct ag_driver_class *_Nullable drvOps; /* Parent driver class (null = no parent window) */
 
-	struct {				/* For AG_WIDGET_USE_OPENGL: */
-		float mProjection[16];		/* Projection matrix */
-		float mModelview[16];		/* Modelview matrix */
-	} gl;
+	AG_StyleSheet *_Nullable css;      /* Style sheet (null = use default) */
+	enum ag_widget_color_state cState; /* Current CSS color state */
+	struct ag_font *_Nullable font;    /* Computed font reference */
+	AG_WidgetPalette pal;              /* Computed color palette */
+
+	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
+	AG_WidgetPvt pvt;               /* Private data */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -232,7 +237,6 @@ typedef struct ag_widget {
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
-#define AGSTYLE(p)			 AGWIDGET(p)->theme
 
 #define AGWIDGET_KEYBOARD(obj)				\
     (((obj) != NULL) ? AGWIDGET(obj)->drv->kbd :	\
@@ -246,7 +250,6 @@ typedef struct ag_widget {
 # define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
 # define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
 # define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
-# define STYLE(p)			AGSTYLE(p)
 # define WIDTH(p)			AGWIDGET(p)->w
 # define HEIGHT(p)			AGWIDGET(p)->h
 # define WCOLOR(wid,which)		AG_WCOLOR((wid),(which))
@@ -266,105 +269,110 @@ AG_TAILQ_HEAD(ag_widgetq, ag_widget);
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
-extern const char *agWidgetPropNames[];
-extern const char *agWidgetStateNames[];
-extern const char *agWidgetColorNames[];
+extern const char *_Nullable agWidgetPropNames[];
+extern const char *_Nullable agWidgetStateNames[];
+extern const char *_Nullable agWidgetColorNames[];
 extern AG_WidgetPalette agDefaultPalette;
 
-void       AG_WidgetDraw(void *);
-void       AG_WidgetSizeReq(void *, AG_SizeReq *);
-void       AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
-int        AG_WidgetSetFocusable(void *, int);
-void       AG_WidgetForwardFocus(void *, void *);
+void AG_WidgetDraw(void *_Nonnull);
+void AG_WidgetSizeReq(void *_Nonnull, AG_SizeReq *_Nonnull);
+void AG_WidgetSizeAlloc(void *_Nonnull, AG_SizeAlloc *_Nonnull);
+int  AG_WidgetSetFocusable(void *_Nonnull, int);
+void AG_WidgetForwardFocus(void *_Nonnull, void *_Nonnull);
+int  AG_WidgetFocus(void *_Nonnull);
+void AG_WidgetUnfocus(void *_Nonnull);
 
-int        AG_WidgetFocus(void *);
-void       AG_WidgetUnfocus(void *);
-AG_Widget *AG_WidgetFindFocused(void *);
-void      *AG_WidgetFindPoint(const char *, int, int);
-void      *AG_WidgetFindRect(const char *, int, int, int, int);
-void       AG_WidgetUpdateCoords(void *, int, int);
+AG_Widget *_Nullable AG_WidgetFindFocused(void *_Nonnull);
+void      *_Nullable AG_WidgetFindPoint(const char *_Nonnull, int,int);
+void      *_Nullable AG_WidgetFindRect(const char *_Nonnull, int,int, int,int);
 
-int	 AG_WidgetMapSurface(void *, AG_Surface *);
-void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
-#define	 AG_WidgetUnmapSurface(w, n) \
-	 AG_WidgetReplaceSurface((w),(n),NULL)
-#define  AG_WidgetBlitSurface(p,n,x,y) \
-	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
-void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
-void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
-void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
-void	 AG_WidgetFreeResourcesGL(void *);
-void	 AG_WidgetRegenResourcesGL(void *);
+void AG_WidgetUpdateCoords(void *_Nonnull, int,int);
+int  AG_WidgetMapSurface(void *_Nonnull, AG_Surface *_Nullable);
+void AG_WidgetReplaceSurface(void *_Nonnull, int, AG_Surface *_Nullable);
 
-int         AG_WidgetSensitive(void *, int, int);
-AG_SizeSpec AG_WidgetParseSizeSpec(const char *, int *);
-int         AG_WidgetScrollDelta(Uint32 *);
-void       *AG_WidgetFind(void *, const char *);
+#define AG_WidgetUnmapSurface(w, n)   AG_WidgetReplaceSurface((w),(n),NULL)
+#define AG_WidgetBlitSurface(p,n,x,y) AG_WidgetBlitFrom((p),(n),NULL,(x),(y))
 
-void        AG_WidgetShow(void *);
-void        AG_WidgetHide(void *);
-void        AG_WidgetShowAll(void *);
-void        AG_WidgetHideAll(void *);
-void        AG_WidgetEnableAll(void *);
-void        AG_WidgetDisabledAll(void *);
+void AG_WidgetBlitGL(void *_Nonnull, AG_Surface *_Nonnull, float,float);
+void AG_WidgetBlitSurfaceGL(void *_Nonnull, int, float,float);
+void AG_WidgetBlitSurfaceFlippedGL(void *_Nonnull, int, float,float);
+void AG_WidgetFreeResourcesGL(void *_Nonnull);
+void AG_WidgetRegenResourcesGL(void *_Nonnull);
 
-void        AG_WidgetInheritDraw(void *);
-void        AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
-int         AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
-AG_Surface *AG_WidgetSurface(void *);
+int         AG_WidgetSensitive(void *_Nonnull, int,int);
+AG_SizeSpec AG_WidgetParseSizeSpec(const char *_Nonnull, int *_Nonnull);
+int         AG_WidgetScrollDelta(Uint32 *_Nonnull);
 
-void        AG_RedrawOnChange(void *, int, const char *);
-void        AG_RedrawOnTick(void *, int);
+void *_Nullable AG_WidgetFind(void *_Nonnull, const char *_Nonnull);
 
-void        AG_WidgetStdKeyDown(AG_Event *);
-void        AG_WidgetStdKeyUp(AG_Event *);
-void        AG_WidgetStdMouseButtonDown(AG_Event *);
-void        AG_WidgetStdMouseButtonUp(AG_Event *);
+void AG_WidgetShow(void *_Nonnull);
+void AG_WidgetHide(void *_Nonnull);
+void AG_WidgetShowAll(void *_Nonnull);
+void AG_WidgetHideAll(void *_Nonnull);
 
-AG_Action  *AG_ActionFn(void *, const char *, AG_EventFn, const char *, ...);
-AG_Action  *AG_ActionSetInt(void *, const char *, int *, int);
-AG_Action  *AG_ActionToggleInt(void *, const char *, int *);
-AG_Action  *AG_ActionSetFlag(void *, const char *, Uint *, Uint, int);
-AG_Action  *AG_ActionToggleFlag(void *, const char *, Uint *, Uint);
+void AG_WidgetInheritDraw(void *_Nonnull);
+void AG_WidgetInheritSizeRequest(void *_Nonnull, AG_SizeReq *_Nonnull);
+int  AG_WidgetInheritSizeAllocate(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
 
-void        AG_ActionOnButtonDown(void *, int, const char *);
-void        AG_ActionOnButtonUp(void *, int, const char *);
-#define     AG_ActionOnButton(w,b,a) \
-            AG_ActionOnButtonDown((w),(b),(a))
+AG_Surface *_Nullable AG_WidgetSurface(void *_Nonnull);
 
-void        AG_ActionOnKey(void *, AG_KeySym, AG_KeyMod, const char *);
-void        AG_ActionOnKeyDown(void *, AG_KeySym, AG_KeyMod, const char *);
-void        AG_ActionOnKeyUp(void *, AG_KeySym, AG_KeyMod, const char *);
+void AG_RedrawOnChange(void *_Nonnull, int, const char *_Nonnull);
+void AG_RedrawOnTick(void *_Nonnull, int);
 
-int         AG_ExecMouseAction(void *, AG_ActionEventType, int, int, int);
-int         AG_ExecKeyAction(void *, AG_ActionEventType, AG_KeySym, AG_KeyMod);
-int         AG_ExecAction(void *, AG_Action *);
+void AG_WidgetStdKeyDown(AG_Event *_Nonnull);
+void AG_WidgetStdKeyUp(AG_Event *_Nonnull);
+void AG_WidgetStdMouseButtonDown(AG_Event *_Nonnull);
+void AG_WidgetStdMouseButtonUp(AG_Event *_Nonnull);
 
-void        AG_WidgetEnable(void *);
-void        AG_WidgetDisable(void *);
+AG_Action *_Nonnull AG_ActionFn(void *_Nonnull, const char *_Nonnull,
+                                _Nonnull AG_EventFn,
+				const char *_Nullable, ...);
+AG_Action *_Nonnull AG_ActionSetInt(void *_Nonnull, const char *_Nonnull,
+                                    int *_Nonnull, int);
+AG_Action *_Nonnull AG_ActionToggleInt(void *_Nonnull, const char *_Nonnull,
+                                       int *_Nonnull);
+AG_Action *_Nonnull AG_ActionSetFlag(void *_Nonnull, const char *_Nonnull,
+				     Uint *_Nonnull, Uint, int);
+AG_Action *_Nonnull AG_ActionToggleFlag(void *_Nonnull, const char *_Nonnull,
+					Uint *_Nonnull, Uint);
 
-void        AG_WidgetCompileStyle(void *);
-void        AG_WidgetCopyStyle(void *, void *);
-void        AG_WidgetFreeStyle(void *);
+void AG_ActionOnButtonDown(void  *_Nonnull, int, const char *_Nonnull);
+void AG_ActionOnButtonUp(void *_Nonnull, int, const char *_Nonnull);
+#define AG_ActionOnButton(w,b,a) AG_ActionOnButtonDown((w),(b),(a))
 
-void        AG_SetFont(void *, const struct ag_font *);
-void        AG_SetStyle(void *, const char *, const char *);
+void AG_ActionOnKey(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
+void AG_ActionOnKeyDown(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
+void AG_ActionOnKeyUp(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
+
+int AG_ExecMouseAction(void *_Nonnull, AG_ActionEventType, int, int, int);
+int AG_ExecKeyAction(void *_Nonnull, AG_ActionEventType, AG_KeySym, AG_KeyMod);
+int AG_ExecAction(void *_Nonnull, AG_Action *_Nonnull);
+
+void AG_WidgetEnable(void *_Nonnull);
+void AG_WidgetDisable(void *_Nonnull);
+
+void AG_WidgetCompileStyle(void *_Nonnull);
+void AG_WidgetCopyStyle(void *_Nonnull, void *_Nonnull);
+void AG_WidgetFreeStyle(void *_Nonnull);
+
+void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
+void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);
 
 /* Return the widget state. The Widget object must be locked. */
-static __inline__ int
-AG_WidgetEnabled(void *p)
+static __inline__ int _Pure_Attribute
+AG_WidgetEnabled(void *_Nonnull p)
 {
 	return !(AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
 }
-static __inline__ int
-AG_WidgetDisabled(void *p)
+static __inline__ int _Pure_Attribute
+AG_WidgetDisabled(void *_Nonnull p)
 {
 	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
 }
 
 /* Return the widget's visibility state. The Widget object must be locked. */
-static __inline__ int
-AG_WidgetVisible(void *p)
+static __inline__ int _Pure_Attribute
+AG_WidgetVisible(void *_Nonnull p)
 {
 	return (AGWIDGET(p)->flags & AG_WIDGET_VISIBLE);
 }
@@ -373,15 +381,15 @@ AG_WidgetVisible(void *p)
  * Return the focus state of the widget inside of its parent window (not
  * necessarily the effective focus). The Widget object must be locked.
  */
-static __inline__ int
-AG_WidgetIsFocusedInWindow(void *p)
+static __inline__ int _Pure_Attribute
+AG_WidgetIsFocusedInWindow(void *_Nonnull p)
 {
 	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
 }
 
 /* Test whether view coordinates x,y lie in widget's allocated space. */
-static __inline__ int
-AG_WidgetArea(void *p, int x, int y)
+static __inline__ int _Pure_Attribute
+AG_WidgetArea(void *_Nonnull p, int x, int y)
 {
 	AG_Widget *wid = AGWIDGET(p);
 
@@ -390,8 +398,8 @@ AG_WidgetArea(void *p, int x, int y)
 }
 
 /* Test whether widget coordinates x,y lie in widget's allocated space. */
-static __inline__ int
-AG_WidgetRelativeArea(void *p, int x, int y)
+static __inline__ int _Pure_Attribute
+AG_WidgetRelativeArea(void *_Nonnull p, int x, int y)
 {
 	AG_Widget *wid = AGWIDGET(p);
 
@@ -403,21 +411,21 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 
 /* Expand widget to fill available space in parent container. */
 static __inline__ void
-AG_Expand(void *wid)
+AG_Expand(void *_Nonnull wid)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_EXPAND;
 	AG_ObjectUnlock(wid);
 }
 static __inline__ void
-AG_ExpandHoriz(void *wid)
+AG_ExpandHoriz(void *_Nonnull wid)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_HFILL;
 	AG_ObjectUnlock(wid);
 }
 static __inline__ void
-AG_ExpandVert(void *wid)
+AG_ExpandVert(void *_Nonnull wid)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
@@ -439,7 +447,7 @@ AG_ExpandVert(void *wid)
  * be currently attached to a window at the time the call is made.
  */
 static __inline__ void
-AG_WidgetUpdate(void *obj)
+AG_WidgetUpdate(void *_Nonnull obj)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
@@ -453,7 +461,7 @@ AG_WidgetUpdate(void *obj)
  * Must be invoked from GUI rendering context.
  */
 static __inline__ void
-AG_PushClipRect(void *obj, AG_Rect pr)
+AG_PushClipRect(void *_Nonnull obj, AG_Rect pr)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Rect r;
@@ -470,7 +478,7 @@ AG_PushClipRect(void *obj, AG_Rect pr)
  * Must be invoked from GUI rendering context.
  */
 static __inline__ void
-AG_PopClipRect(void *obj)
+AG_PopClipRect(void *_Nonnull obj)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
@@ -479,7 +487,7 @@ AG_PopClipRect(void *obj)
 
 /* Set the blending mode, pushing the current mode on a stack. */
 static __inline__ void
-AG_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+AG_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
@@ -488,7 +496,7 @@ AG_PushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 
 /* Restore the last blending mode. */
 static __inline__ void
-AG_PopBlendingMode(void *obj)
+AG_PopBlendingMode(void *_Nonnull obj)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	
@@ -497,7 +505,8 @@ AG_PopBlendingMode(void *obj)
 
 /* Offset the coordinates of an AG_Rect per widget coordinates. */
 static __inline__ void
-AG_WidgetOffsetRect(void *obj, AG_Rect *r)
+AG_WidgetOffsetRect(void *_Nonnull obj,
+    AG_Rect *_Nonnull r)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
@@ -510,7 +519,8 @@ AG_WidgetOffsetRect(void *obj, AG_Rect *r)
  * the surface is not freed by the widget.
  */
 static __inline__ int
-AG_WidgetMapSurfaceNODUP(void *obj, AG_Surface *su)
+AG_WidgetMapSurfaceNODUP(void *_Nonnull obj,
+    AG_Surface *_Nonnull su)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	int name;
@@ -525,13 +535,14 @@ AG_WidgetMapSurfaceNODUP(void *obj, AG_Surface *su)
 
 /* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
 static __inline__ void
-AG_WidgetReplaceSurfaceNODUP(void *obj, int name, AG_Surface *su)
+AG_WidgetReplaceSurfaceNODUP(void *_Nonnull obj, int name,
+    AG_Surface *_Nullable su)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
 	AG_ObjectLock(wid);
 #ifdef AG_DEBUG
-	if (name < 0 || name >= (int)wid->nsurfaces)
+	if (name < 0 || name >= (int)wid->nSurfaces)
 		AG_FatalError("Bad surface handle");
 #endif
 	AG_WidgetReplaceSurface(wid, name, su);
@@ -545,7 +556,7 @@ AG_WidgetReplaceSurfaceNODUP(void *obj, int name, AG_Surface *su)
  * to drawing of mapped surfaces, since a software->hardware copy is done.
  */
 static __inline__ void
-AG_WidgetBlit(void *obj, AG_Surface *s, int x, int y)
+AG_WidgetBlit(void *_Nonnull obj, AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
@@ -559,15 +570,15 @@ AG_WidgetBlit(void *obj, AG_Surface *s, int x, int y)
  * at coordinates relative to the widget, using clipping.
  */
 static __inline__ void
-AG_WidgetBlitFrom(void *obj, void *objSrc, int s, AG_Rect *r, int x, int y)
+AG_WidgetBlitFrom(void *_Nonnull obj, int s, AG_Rect *_Nullable r,
+    int x, int y)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Widget *widSrc = (AG_Widget *)objSrc;
 	
-	if (s == -1 || widSrc->surfaces[s] == NULL)
+	if (s == -1 || wid->surfaces[s] == NULL)
 		return;
 
-	wid->drvOps->blitSurfaceFrom(wid->drv, wid, widSrc, s, r,
+	wid->drvOps->blitSurfaceFrom(wid->drv, wid, s, r,
 	    wid->rView.x1 + x,
 	    wid->rView.y1 + y);
 }
@@ -576,32 +587,32 @@ AG_WidgetBlitFrom(void *obj, void *objSrc, int s, AG_Rect *r, int x, int y)
  * Routines for direct access to keyboard key and modifier state
  * from widget code.
  */
-static __inline__ int *
-AG_GetKeyState(void *obj)
+static __inline__ int *_Nonnull _Pure_Attribute
+AG_GetKeyState(void *_Nonnull obj)
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
 	return (kbd->keyState);
 }
 static __inline__ void
-AG_SetKeyState(void *obj, int *ks)
+AG_SetKeyState(void *_Nonnull obj, int *_Nonnull ks)
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
 	memcpy(kbd->keyState, ks, kbd->keyCount*sizeof(int));
 }
-static __inline__ int
-AG_GetKeyCount(void *obj)
+static __inline__ int _Pure_Attribute
+AG_GetKeyCount(void *_Nonnull obj)
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
 	return (kbd->keyCount);
 }
-static __inline__ Uint
-AG_GetModState(void *obj)
+static __inline__ Uint _Pure_Attribute
+AG_GetModState(void *_Nonnull obj)
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
 	return (kbd->modState);
 }
 static __inline__ void
-AG_SetModState(void *obj, Uint ms)
+AG_SetModState(void *_Nonnull obj, Uint ms)
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
 	kbd->modState = ms;
