@@ -170,4 +170,4 @@ AG_XBOX_GetLogicalDrives()
 	return d;
 }
 
-#endif
+#endif /* _XBOX */

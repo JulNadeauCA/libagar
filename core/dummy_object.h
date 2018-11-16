@@ -10,5 +10,5 @@ typedef struct ag_dummy {
 
 extern AG_ObjectClass agDummyClass;
 
-AG_Dummy *AG_DummyNew(void);
+AG_Dummy *_Nullable AG_DummyNew(void);
 

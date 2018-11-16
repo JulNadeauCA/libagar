@@ -13,12 +13,11 @@ typedef struct ag_dbobject {
 __BEGIN_DECLS
 extern AG_ObjectClass agDbObjectClass;
 
-AG_DbObject *AG_DbObjectNew(void);
-AG_List     *AG_DbObjectList(AG_Db *);
-int          AG_DbObjectLoad(void *, AG_Db *, const char *);
-int          AG_DbObjectSave(void *, AG_Db *);
-int          AG_DbObjectInsert(AG_Db *, void *);
-int          AG_DbObjectDelete(AG_Db *, const char *);
+AG_DbObject *_Nullable AG_DbObjectNew(void);
+int AG_DbObjectLoad(void *_Nonnull, AG_Db *_Nonnull, const char *_Nonnull);
+int AG_DbObjectSave(void *_Nonnull, AG_Db *_Nonnull);
+int AG_DbObjectInsert(AG_Db *_Nonnull, void *_Nonnull);
+int AG_DbObjectDelete(AG_Db *_Nonnull, const char *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>

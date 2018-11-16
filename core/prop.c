@@ -16,8 +16,8 @@
 	if (p != NULL) *(type *)p = (type)V->data.v; \
 } while (0)
 
-static AG_Variable *
-GetProp(void *pObj, const char *key, int t, void *p)
+static AG_Variable *_Nullable
+GetProp(void *_Nonnull pObj, const char *_Nonnull key, int t, void *_Nullable p)
 {
 	AG_Object *obj = pObj;
 	AG_Variable *V;

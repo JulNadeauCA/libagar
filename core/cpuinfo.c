@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,12 +56,12 @@ struct cpuid_regs {
 	Uint32 b;
 	Uint32 c;
 	Uint32 d;
-} PACKED_ATTRIBUTE;
+} _Packed_Attribute;
 
 AG_CPUInfo agCPU;
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(i386) || defined(__x86_64__))
-static int
+static int /* _Pure_Attribute */
 X86_HaveCPUID(void)
 {
 	int rv = 0;
@@ -104,7 +104,7 @@ X86_HaveCPUID(void)
 	return (rv);
 }
 
-static struct cpuid_regs
+static struct cpuid_regs /* _Pure_Attribute */
 X86_GetCPUID(int fn)
 {
 	struct cpuid_regs regs;
@@ -129,29 +129,29 @@ X86_GetCPUID(int fn)
 }
 #endif /* __GNUC__ && (__i386__ || __x86_64__) */
 
-/* For decoding vendor ID string */
+#if defined(__i386__) || defined(i386) || defined(__x86_64__)
 static __inline__ void
-Conv32(char *d, unsigned int v)
+Conv32_x86(char *_Nonnull d, unsigned int v)
 {
 	d[0] =  v        & 0xff;
 	d[1] = (v >>  8) & 0xff;
 	d[2] = (v >> 16) & 0xff;
 	d[3] = (v >> 24) & 0xff;
 }
+#endif /* x86 */
 
 #if !defined(__APPLE__) && !defined(__MACOSX__) && !defined(__ppc__) && \
      defined(HAVE_ALTIVEC) && defined(_MK_HAVE_SIGNAL) && defined(_MK_HAVE_SETJMP)
-/* SIGILL handler for AltiVec test */
 static void
-IllegalInsn(int sig)
+IllegalInsn_Altivec(int sig)
 {
     longjmp(jmpbuf, 1);
 }
-#endif
+#endif /* Altivec */
 
 /* Initialize the CPUInfo structure. */
 void
-AG_GetCPUInfo(AG_CPUInfo *cpu)
+AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 {
 #if defined(__i386__) || defined(i386) || defined(__x86_64__)
 	struct cpuid_regs r, rExt;
@@ -167,6 +167,10 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	cpu->arch = "amd64";
 #elif defined(__arm__) || defined(__arm32__)
 	cpu->arch = "arm";
+#elif defined(__c64__)
+	cpu->arch = "c64";
+#elif defined(__c128__)
+	cpu->arch = "c128";
 #elif defined(__hppa64__)
 	cpu->arch = "hppa64";
 #elif defined(__hppa__)
@@ -183,6 +187,8 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	cpu->arch = "mips64";
 #elif defined(__mips__)
 	cpu->arch = "mips";
+#elif defined(__nes__)
+	cpu->arch = "nes";
 #elif defined(__ns32k__)
 	cpu->arch = "ns32k";
 #elif defined(__ppc__) || defined(__macppc__) || defined(__powerpc__)
@@ -208,9 +214,9 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	/* Standard Level 0 */
 	r = X86_GetCPUID(0x00000000);
 	maxFns = (Uint)r.a;		/* Maximum supported standard level */
-	Conv32(&cpu->vendorID[0], r.b);
-	Conv32(&cpu->vendorID[4], r.d);
-	Conv32(&cpu->vendorID[8], r.c);
+	Conv32_x86(&cpu->vendorID[0], r.b);
+	Conv32_x86(&cpu->vendorID[4], r.d);
+	Conv32_x86(&cpu->vendorID[8], r.c);
 	cpu->vendorID[12] = '\0';
 
 	/* Extended Level */
@@ -286,7 +292,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 		volatile int hasAltiVec = 0;
 		void (*fn)(int);
 
-		fn = signal(SIGILL, IllegalInsn);
+		fn = signal(SIGILL, IllegalInsn_Altivec);
 		if (setjmp(jmpbuf) == 0) {
 			__asm volatile (
 				"mtspr 256, %0	\n"

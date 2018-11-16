@@ -5,18 +5,18 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_dir {
-	char **ents;
-	int nents;
+	char *_Nullable *_Nonnull ents;
+	Uint                     nents;
 } AG_Dir;
 
 __BEGIN_DECLS
-int	   AG_MkDir(const char *);
-int	   AG_RmDir(const char *);
-int	   AG_ChDir(const char *);
-AG_Dir	  *AG_OpenDir(const char *);
-void	   AG_CloseDir(AG_Dir *);
-int	   AG_MkPath(const char *);
-int	   AG_GetCWD(char *, size_t);
+int     AG_MkDir(const char *_Nonnull);
+int     AG_RmDir(const char *_Nonnull);
+int     AG_ChDir(const char *_Nonnull);
+AG_Dir *_Nullable AG_OpenDir(const char *_Nonnull);
+void    AG_CloseDir(AG_Dir *_Nonnull);
+int     AG_MkPath(const char *_Nonnull);
+int     AG_GetCWD(char *_Nonnull, AG_Size);
 __END_DECLS
 
 #include <agar/core/close.h>

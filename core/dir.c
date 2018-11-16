@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -284,7 +284,7 @@ fail:
 }
 
 int
-AG_GetCWD(char *buf, size_t len)
+AG_GetCWD(char *buf, AG_Size len)
 {
 #ifdef _XBOX
 	if(buf == NULL) {

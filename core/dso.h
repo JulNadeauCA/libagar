@@ -4,11 +4,13 @@
 #define _AGAR_CORE_DSO_H_
 #include <agar/core/begin.h>
 
-#define AG_DSONAME_MAX 128
+#ifndef AG_DSONAME_MAX
+#define AG_DSONAME_MAX AG_MODEL
+#endif
 
 typedef struct ag_dso_sym {
-	char *sym;
-	void *p;
+	char *_Nonnull sym;              /* Symbol name */
+	void *_Nullable p;               /* Address */
 	AG_TAILQ_ENTRY(ag_dso_sym) syms;
 } AG_DSOSym;
 
@@ -26,16 +28,21 @@ AG_TAILQ_HEAD(ag_dsoq, ag_dso);
 
 __BEGIN_DECLS
 extern struct ag_dsoq agLoadedDSOs;
-extern AG_Mutex agDSOLock;
+extern _Nonnull AG_Mutex agDSOLock;
 
-AG_DSO *AG_LookupDSO(const char *);
-AG_DSO *AG_LoadDSO(const char *, Uint);
-int     AG_SymDSO(AG_DSO *, const char *, void **);
-int     AG_UnloadDSO(AG_DSO *);
-#define AG_LockDSO() AG_MutexLock(&agDSOLock)
+AG_DSO *_Nullable AG_LookupDSO(const char *_Nonnull)
+                              _Pure_Attribute_If_Unthreaded;
+
+AG_DSO *_Nullable AG_LoadDSO(const char *_Nonnull, Uint);
+
+int AG_SymDSO(AG_DSO *_Nonnull, const char *_Nonnull, void *_Nonnull *_Nullable);
+int AG_UnloadDSO(AG_DSO *_Nonnull);
+
+#define AG_LockDSO()   AG_MutexLock(&agDSOLock)
 #define AG_UnlockDSO() AG_MutexUnlock(&agDSOLock)
-char  **AG_GetDSOList(Uint *);
-void    AG_FreeDSOList(char **, Uint);
+
+char *_Nonnull *_Nullable AG_GetDSOList(Uint *_Nonnull);
+void                      AG_FreeDSOList(char *_Nonnull *_Nullable, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>

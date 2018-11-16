@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,8 +99,8 @@ AG_Mutex agDSOLock;
 
 /* Load a DSO using the load_add_on() interface on BeOS. */
 #ifdef BEOS
-static AG_DSO *
-LoadDSO_BEOS(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_BEOS(const char *_Nonnull path)
 {
 	AG_DSO_BeOS *d;
 	image_id handle;
@@ -117,8 +117,8 @@ LoadDSO_BEOS(const char *path)
 
 /* Load a DSO using the DosLoadModule() interface on OS/2. */
 #ifdef OS2
-static AG_DSO *
-LoadDSO_OS2(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_OS2(const char *_Nonnull path)
 {
 	AG_DSO_OS2 *d;
 	char failedMod[256];
@@ -138,8 +138,8 @@ LoadDSO_OS2(const char *path)
 
 /* Load a DSO using the dllload() interface on OS/390. */
 #ifdef OS390
-static AG_DSO *
-LoadDSO_OS390(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_OS390(const char *_Nonnull path)
 {
 	AG_DSO_Generic *d;
 	
@@ -155,8 +155,8 @@ LoadDSO_OS390(const char *path)
 
 /* Load a DSO using the LoadLibraryExW() interface on Windows. */
 #if defined(_WIN32) && !defined (_XBOX)
-static AG_DSO *
-LoadDSO_WIN32(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_WIN32(const char *_Nonnull path)
 {
 	AG_DSO_Generic *d;
 	char buf[AG_PATHNAME_MAX], *p;
@@ -185,8 +185,8 @@ LoadDSO_WIN32(const char *path)
 
 /* Load a DSO using the HP-UX shl_load() interface. */
 #ifdef HAVE_SHL_LOAD
-static AG_DSO *
-LoadDSO_SHL(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_SHL(const char *_Nonnull path)
 {
 	AG_DSO_Generic *d;
 
@@ -203,8 +203,8 @@ LoadDSO_SHL(const char *path)
 /* Load a DSO using the dyld NSLinkModule() interface. */
 #ifdef HAVE_DYLD
 #define DYLD_LIBRARY_HANDLE ((void *)-1)
-static AG_DSO *
-LoadDSO_DYLD(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_DYLD(const char *_Nonnull path)
 {
 	AG_DSO_Generic *d;
 	NSObjectFileImage image;
@@ -260,8 +260,8 @@ fail:
 
 /* Load a DSO using the standard dlopen() interface. */
 #ifdef HAVE_DLOPEN
-static AG_DSO *
-LoadDSO_DLOPEN(const char *path)
+static AG_DSO *_Nullable
+LoadDSO_DLOPEN(const char *_Nonnull path)
 {
 	AG_DSO_Generic *d;
 	int flags = RTLD_NOW|RTLD_GLOBAL;
@@ -527,7 +527,8 @@ out:
 #ifdef BEOS
 /* Look up a symbol using the BeOS get_image_symbol() interface. */
 static int
-SymDSO_BeOS(AG_DSO_BeOS *d, const char *sym, void **p)
+SymDSO_BeOS(AG_DSO_BeOS *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	AG_DSO_BeOS *d = (AG_DSO_BeOS *)dso;
 	int rv;
@@ -544,7 +545,8 @@ SymDSO_BeOS(AG_DSO_BeOS *d, const char *sym, void **p)
 #ifdef OS2
 /* Look up a symbol using the OS/2 DosQueryProcAddr() interface. */
 static int
-SymDSO_OS2(AG_DSO_OS2 *d, const char *sym, void **p)
+SymDSO_OS2(AG_DSO_OS2 *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	PFN fn;
 
@@ -561,7 +563,8 @@ SymDSO_OS2(AG_DSO_OS2 *d, const char *sym, void **p)
 #ifdef OS390
 /* Look up a symbol using the OS/390 dllqueryvar() interface. */
 static int
-SymDSO_OS390(AG_DSO_Generic *d, const char *sym, void **p)
+SymDSO_OS390(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	if ((*p = dllqueryfn(d->handle, sym)) != NULL ||
 	    (*p = dllqueryvar(d->handle, sym)) != NULL) {
@@ -575,7 +578,8 @@ SymDSO_OS390(AG_DSO_Generic *d, const char *sym, void **p)
 #if defined(_WIN32) && !defined(_XBOX)
 /* Look up a symbol using the Windows GetProcAddress() interface. */
 static int
-SymDSO_WIN32(AG_DSO_Generic *d, const char *sym, void **p)
+SymDSO_WIN32(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	*p = (void *)GetProcAddress(d->handle, sym);
 	/* XXX no way to determine error */
@@ -586,7 +590,8 @@ SymDSO_WIN32(AG_DSO_Generic *d, const char *sym, void **p)
 #ifdef HAVE_SHL_LOAD
 /* Look up a symbol using the shl_findsym() interface. */
 static int
-SymDSO_SHL(AG_DSO_Generic *d, const char *sym, void **p)
+SymDSO_SHL(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	int rv;
 
@@ -612,7 +617,8 @@ notfound:
 #ifdef HAVE_DYLD
 /* Look up a symbol using the dyld interface. */
 static int
-SymDSO_DYLD(AG_DSO_Generic *d, const char *sym, void **p)
+SymDSO_DYLD(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	int rv;
 	NSSymbol symbol;
@@ -645,7 +651,8 @@ SymDSO_DYLD(AG_DSO_Generic *d, const char *sym, void **p)
 #ifdef HAVE_DLOPEN
 /* Look up a symbol using the standard dlopen() interface. */
 static int
-SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
+SymDSO_DLOPEN(AG_DSO_Generic *_Nonnull d, const char *_Nonnull sym,
+    void *_Nonnull *_Nullable p)
 {
 	char *error;
 
@@ -784,5 +791,5 @@ AG_FreeDSOList(char **list, Uint count)
 	for (i = 0; i < count; i++) {
 		Free(list[i]);
 	}
-	Free(list);
+	free(list);
 }

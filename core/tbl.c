@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,34 +35,27 @@ AG_TblNew(Uint nBuckets, Uint flags)
 {
 	AG_Tbl *t;
 
-	if ((t = TryMalloc(sizeof(AG_Tbl))) == NULL) {
-		return (NULL);
-	}
-	if (AG_TblInit(t, nBuckets, flags) == -1) {
-		free(t);
-		return (NULL);
-	}
+	t = Malloc(sizeof(AG_Tbl));
+	AG_TblInit(t, nBuckets, flags);
 	return (t);
 }
 
 /* Initialize a table structure. */
-int
+void
 AG_TblInit(AG_Tbl *tbl, Uint nBuckets, Uint flags)
 {
 	Uint i;
 
 	tbl->nBuckets = nBuckets;
 	tbl->flags = flags;
-	if ((tbl->buckets = TryMalloc(nBuckets*sizeof(AG_TblBucket))) == NULL) {
-		return (-1);
-	}
+	tbl->buckets = Malloc(nBuckets*sizeof(AG_TblBucket));
+
 	for (i = 0; i < nBuckets; i++) {
 		AG_TblBucket *buck = &tbl->buckets[i];
 		buck->keys = NULL;
 		buck->ents = NULL;
 		buck->nEnts = 0;
 	}
-	return (0);
 }
 
 /* Release the resources allocated by a table. */
@@ -96,7 +89,6 @@ AG_TblLookupHash(AG_Tbl *tbl, Uint h, const char *key)
 			break;
 	}
 	if (i == buck->nEnts) {
-		AG_SetError("No such entry: %s", key);
 		return (NULL);
 	}
 	return (&buck->ents[i]);

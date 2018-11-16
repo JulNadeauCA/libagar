@@ -24,9 +24,9 @@ typedef int AG_ProcessID;
 #endif
 
 __BEGIN_DECLS
-AG_ProcessID AG_Execute(const char *, char **);
+AG_ProcessID AG_Execute(const char *_Nullable, char *_Nullable *_Nullable);
 AG_ProcessID AG_WaitOnProcess(AG_ProcessID, enum ag_exec_wait_type);
-int AG_Kill(AG_ProcessID);
+int          AG_Kill(AG_ProcessID);
 __END_DECLS
 
 #include <agar/core/close.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

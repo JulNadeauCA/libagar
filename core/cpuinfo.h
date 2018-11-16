@@ -5,7 +5,7 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_cpuinfo {
-	const char *arch;		/* Architecture name */
+	const char *_Nonnull arch;	/* Architecture name */
 	char vendorID[13];		/* CPU Vendor ID string */
 	Uint32 ext;			/* Architecture extensions
 					   (relevant to user-mode) */
@@ -40,7 +40,7 @@ typedef struct ag_cpuinfo {
 
 __BEGIN_DECLS
 extern AG_CPUInfo agCPU;
-void AG_GetCPUInfo(AG_CPUInfo *);
+void AG_GetCPUInfo(AG_CPUInfo *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>

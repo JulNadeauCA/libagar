@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,7 +124,7 @@ AG_DbObjectDelete(AG_Db *db, const char *name)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	/* Nothing to do */
 }

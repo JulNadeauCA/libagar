@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2014-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@
 #include <agar/core/queue.h>
 
 static int
-GetUserByUID(AG_User *u, Uint32 uid)
+GetUserByUID(AG_User *_Nonnull u, Uint32 uid)
 {
 #ifndef HAVE_CYGWIN
 	char appdata[MAX_PATH];
@@ -66,19 +66,19 @@ GetUserByUID(AG_User *u, Uint32 uid)
 }
 
 static int
-GetUserByName(AG_User *u, const char *name)
+GetUserByName(AG_User *_Nonnull u, const char *_Nonnull name)
 {
 	return GetUserByUID(u, 0);
 }
 
 static int
-GetRealUser(AG_User *u)
+GetRealUser(AG_User *_Nonnull u)
 {
 	return GetUserByUID(u, 0);
 }
 
 static int
-GetEffectiveUser(AG_User *u)
+GetEffectiveUser(AG_User *_Nonnull u)
 {
 	return GetUserByUID(u, 0);
 }

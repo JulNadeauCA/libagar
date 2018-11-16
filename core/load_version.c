@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,14 +99,15 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 }
 
 int
-AG_ReadObjectVersion(AG_DataSource *ds, void *p, AG_Version *pver)
+AG_ReadObjectVersion(AG_DataSource *_Nonnull ds, void *_Nonnull p,
+    AG_Version *_Nullable pver)
 {
 	AG_ObjectClass *C = OBJECT(p)->cls;
 	return AG_ReadVersion(ds, C->name, &C->ver, pver);
 }
 
 void
-AG_WriteObjectVersion(AG_DataSource *ds, void *p)
+AG_WriteObjectVersion(AG_DataSource *_Nonnull ds, void *_Nonnull p)
 {
 	AG_ObjectClass *C = OBJECT(p)->cls;
 	AG_WriteVersion(ds, C->name, &C->ver);

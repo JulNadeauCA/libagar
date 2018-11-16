@@ -5,19 +5,23 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_version {
-	Uint32	 major;
-	Uint32	 minor;
+	Uint32 major;
+	Uint32 minor;
 } AG_Version;
 
+/* TODO 2.0: shorten this */
 #define AG_VERSION_NAME_MAX	48
 #define AG_VERSION_MAX		(AG_VERSION_NAME_MAX+8)
 
 __BEGIN_DECLS
-int	AG_ReadVersion(AG_DataSource *, const char *, const AG_Version *,
-	               AG_Version *);
-int	AG_WriteVersion(AG_DataSource *, const char *, const AG_Version *);
-int	AG_ReadObjectVersion(AG_DataSource *, void *, AG_Version *);
-void	AG_WriteObjectVersion(AG_DataSource *, void *);
+int AG_ReadVersion(AG_DataSource *_Nonnull, const char *_Nonnull,
+                   const AG_Version *_Nonnull, AG_Version *_Nullable);
+int AG_WriteVersion(AG_DataSource *_Nonnull, const char *_Nonnull,
+                    const AG_Version *_Nonnull);
+
+int  AG_ReadObjectVersion(AG_DataSource *_Nonnull, void *_Nonnull,
+                          AG_Version *_Nullable);
+void AG_WriteObjectVersion(AG_DataSource *_Nonnull, void *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>

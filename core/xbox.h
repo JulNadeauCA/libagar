@@ -65,11 +65,11 @@ typedef struct {
 
 #include <agar/core/begin.h>
 __BEGIN_DECLS
-DWORD AG_XBOX_GetXbeTitleId(const char *xbePath);
-char* AG_XBOX_GetDeviceFromLogicalDrive(const char *drive);
-BOOL AG_XBOX_DriveIsMounted(const char driveLetter);
-BOOL AG_XBOX_PathIsValid(const char *path);
-DWORD AG_XBOX_GetLogicalDrives();
+DWORD           AG_XBOX_GetXbeTitleId(const char *_Nullable);
+char *_Nullable AG_XBOX_GetDeviceFromLogicalDrive(const char *_Nullable);
+BOOL            AG_XBOX_DriveIsMounted(const char);
+BOOL            AG_XBOX_PathIsValid(const char *_Nullable);
+DWORD           AG_XBOX_GetLogicalDrives();
 __END_DECLS
 #include <agar/core/close.h>
 

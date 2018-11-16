@@ -86,11 +86,11 @@
  */
 #define AG_SLIST_HEAD(name, t)						\
 struct name {								\
-	struct t *slh_first;	/* first element */			\
+	struct t *_Nullable slh_first;					\
 }
 #define AG_SLIST_HEAD_(t)						\
 struct {								\
-	struct t *slh_first;	/* first element */			\
+	struct t *_Nullable slh_first;					\
 }
  
 #define	AG_SLIST_HEAD_INITIALIZER(head)					\
@@ -98,7 +98,7 @@ struct {								\
  
 #define AG_SLIST_ENTRY(t)						\
 struct {								\
-	struct t *sle_next;	/* next element */			\
+	struct t *_Nullable sle_next;					\
 }
  
 /*
@@ -153,11 +153,11 @@ struct {								\
  */
 #define AG_LIST_HEAD(name, t)						\
 struct name {								\
-	struct t *lh_first;	/* first element */			\
+	struct t *_Nullable lh_first;					\
 }
 #define AG_LIST_HEAD_(t)						\
 struct {								\
-	struct t *lh_first;	/* first element */			\
+	struct t *_Nullable lh_first;					\
 }
 
 #define AG_LIST_HEAD_INITIALIZER(head)					\
@@ -165,8 +165,8 @@ struct {								\
 
 #define AG_LIST_ENTRY(t)						\
 struct {								\
-	struct t *le_next;	/* next element */			\
-	struct t **le_prev;	/* address of previous next element */	\
+	struct t *_Nullable le_next;					\
+	struct t *_Nullable *_Nullable le_prev;				\
 }
 
 /*
@@ -231,13 +231,13 @@ struct {								\
  */
 #define AG_SIMPLEQ_HEAD(name, t)					\
 struct name {								\
-	struct t *sqh_first;	/* first element */			\
-	struct t **sqh_last;	/* addr of last next element */		\
+	struct t *_Nullable sqh_first;					\
+	struct t *_Nullable *_Nullable sqh_last;			\
 }
 #define AG_SIMPLEQ_HEAD_(t)						\
 struct {								\
-	struct t *sqh_first;	/* first element */			\
-	struct t **sqh_last;	/* addr of last next element */		\
+	struct t *_Nullable sqh_first;					\
+	struct t *_Nullable *_Nullable sqh_last;			\
 }
 
 #define AG_SIMPLEQ_HEAD_INITIALIZER(head)				\
@@ -245,7 +245,7 @@ struct {								\
 
 #define AG_SIMPLEQ_ENTRY(t)						\
 struct {								\
-	struct t *sqe_next;	/* next element */			\
+	struct t *_Nullable sqe_next;					\
 }
 
 /*
@@ -297,13 +297,13 @@ struct {								\
  */
 #define AG_TAILQ_HEAD(name, t)						\
 struct name {								\
-	struct t *tqh_first;	/* first element */			\
-	struct t **tqh_last;	/* addr of last next element */		\
+	struct t *_Nullable tqh_first;	/* first element */			\
+	struct t *_Nullable *_Nullable tqh_last; /* addr of last next element */		\
 }
 #define AG_TAILQ_HEAD_(t)						\
 struct {								\
-	struct t *tqh_first;	/* first element */			\
-	struct t **tqh_last;	/* addr of last next element */		\
+	struct t *_Nullable tqh_first;	/* first element */			\
+	struct t *_Nullable *_Nullable tqh_last; /* addr of last next element */		\
 }
 
 #define AG_TAILQ_HEAD_INITIALIZER(head)					\
@@ -311,8 +311,8 @@ struct {								\
 
 #define AG_TAILQ_ENTRY(t)						\
 struct {								\
-	struct t *tqe_next;	/* next element */			\
-	struct t **tqe_prev;	/* address of previous next element */	\
+	struct t *_Nullable tqe_next;	         /* next element */			\
+	struct t *_Nullable *_Nullable tqe_prev; /* address of previous next element */	\
 }
 #define AG_TAILQ_ENTRY_INITIALIZER { NULL, NULL }
 
@@ -322,11 +322,13 @@ struct {								\
 #define	AG_TAILQ_FIRST(head)		((head)->tqh_first)
 #define	AG_TAILQ_END(head)		NULL
 #define	AG_TAILQ_NEXT(elm, field)	((elm)->field.tqe_next)
+
 #define AG_TAILQ_LAST(head, headname)					\
 	(*(((struct headname *)((head)->tqh_last))->tqh_last))
-/* XXX */
+
 #define AG_TAILQ_PREV(elm, headname, field)				\
 	(*(((struct headname *)((elm)->field.tqe_prev))->tqh_last))
+
 #define	AG_TAILQ_EMPTY(head)						\
 	(AG_TAILQ_FIRST(head) == AG_TAILQ_END(head))
 
@@ -406,13 +408,13 @@ struct {								\
  */
 #define AG_CIRCLEQ_HEAD(name, t)					\
 struct name {								\
-	struct t *cqh_first;		/* first element */		\
-	struct t *cqh_last;		/* last element */		\
+	struct t *_Nullable cqh_first;					\
+	struct t *_Nullable cqh_last;					\
 }
 #define AG_CIRCLEQ_HEAD_(t)						\
 struct {								\
-	struct t *cqh_first;		/* first element */		\
-	struct t *cqh_last;		/* last element */		\
+	struct t *_Nullable cqh_first;					\
+	struct t *_Nullable cqh_last;					\
 }
 
 #define AG_CIRCLEQ_HEAD_INITIALIZER(head)				\
@@ -420,8 +422,8 @@ struct {								\
 
 #define AG_CIRCLEQ_ENTRY(t)						\
 struct {								\
-	struct t *cqe_next;		/* next element */		\
-	struct t *cqe_prev;		/* previous element */		\
+	struct t *_Nullable cqe_next;					\
+	struct t *_Nullable cqe_prev;					\
 }
 
 /*
@@ -567,25 +569,28 @@ struct {								\
 #define SIMPLEQ_INSERT_AFTER		AG_SIMPLEQ_INSERT_AFTER
 #define SIMPLEQ_REMOVE_HEAD		AG_SIMPLEQ_REMOVE_HEAD
 
-#define TAILQ_HEAD			AG_TAILQ_HEAD
-#define TAILQ_HEAD_			AG_TAILQ_HEAD_
-#define TAILQ_HEAD_INITIALIZER		AG_TAILQ_HEAD_INITIALIZER
-#define TAILQ_ENTRY			AG_TAILQ_ENTRY
-#define TAILQ_FIRST			AG_TAILQ_FIRST
-#define TAILQ_END			AG_TAILQ_END
-#define TAILQ_NEXT			AG_TAILQ_NEXT
-#define TAILQ_LAST			AG_TAILQ_LAST
-#define TAILQ_PREV			AG_TAILQ_PREV
-#define TAILQ_EMPTY			AG_TAILQ_EMPTY
-#define TAILQ_FOREACH			AG_TAILQ_FOREACH
-#define TAILQ_FOREACH_REVERSE		AG_TAILQ_FOREACH_REVERSE
-#define TAILQ_INIT			AG_TAILQ_INIT
-#define TAILQ_INSERT_HEAD		AG_TAILQ_INSERT_HEAD
-#define TAILQ_INSERT_TAIL		AG_TAILQ_INSERT_TAIL
-#define TAILQ_INSERT_AFTER		AG_TAILQ_INSERT_AFTER
-#define TAILQ_INSERT_BEFORE		AG_TAILQ_INSERT_BEFORE
-#define TAILQ_REMOVE			AG_TAILQ_REMOVE
-#define TAILQ_REPLACE			AG_TAILQ_REPLACE
+#define TAILQ_HEAD(name,t)		AG_TAILQ_HEAD(name,t)
+#define TAILQ_HEAD_(t)			AG_TAILQ_HEAD_(t)
+#define TAILQ_HEAD_INITIALIZER(head)	AG_TAILQ_HEAD_INITIALIZER(head)
+#define TAILQ_ENTRY(t)			AG_TAILQ_ENTRY(t)
+#define TAILQ_FIRST(head)		AG_TAILQ_FIRST(head)
+#define TAILQ_END(head)			AG_TAILQ_END(head)
+#define TAILQ_NEXT(elm,field)		AG_TAILQ_NEXT(elm,field)
+#define TAILQ_LAST(head,headname)	AG_TAILQ_LAST(head,headname)
+#define TAILQ_PREV(elm,headname,field)	AG_TAILQ_PREV(elm,headname,field)
+#define TAILQ_EMPTY(head)		AG_TAILQ_EMPTY(head)
+
+#define TAILQ_FOREACH(var,head,field)	AG_TAILQ_FOREACH(var,head,field)
+#define TAILQ_FOREACH_REVERSE(var,head,headname,field) \
+	AG_TAILQ_FOREACH_REVERSE(var,head,headname,field)
+
+#define TAILQ_INIT(head)                           AG_TAILQ_INIT(head)
+#define TAILQ_INSERT_HEAD(head,elm,field)          AG_TAILQ_INSERT_HEAD(head,elm,field)
+#define TAILQ_INSERT_TAIL(head,elm,field)          AG_TAILQ_INSERT_TAIL(head,elm,field)
+#define TAILQ_INSERT_AFTER(head,listelm,elm,field) AG_TAILQ_INSERT_AFTER(head,listelm,elm,field)
+#define TAILQ_INSERT_BEFORE(listelm,elm,field)     AG_TAILQ_INSERT_BEFORE(listelm,elm,field)
+#define TAILQ_REMOVE(head,elm,field)               AG_TAILQ_REMOVE(head,elm,field)
+#define TAILQ_REPLACE(head,elm,elm2,field)         AG_TAILQ_REPLACE(head,elm,elm2,field)
 
 #define CIRCLEQ_HEAD			AG_CIRCLEQ_HEAD
 #define CIRCLEQ_HEAD_			AG_CIRCLEQ_HEAD_

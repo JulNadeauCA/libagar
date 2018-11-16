@@ -8,14 +8,15 @@ typedef struct ag_timer_pvt {
 	AG_TAILQ_ENTRY(ag_timer) timers;
 	AG_TAILQ_ENTRY(ag_timer) change;
 #ifdef AG_LEGACY
-	Uint32 (*fnLegacy)(void *p, Uint32 ival, void *arg);
-	void   *argLegacy;
+	Uint32 (*_Nullable fnLegacy)(void *_Nonnull p, Uint32 ival,
+	                             void *_Nullable arg);
+	void    *_Nullable argLegacy;
 #endif
 } AG_TimerPvt;
 
 typedef struct ag_timer {
 	int id;				/* Unique identifier */
-	void *obj;			/* Parent object */
+	void *_Nullable obj;		/* Parent object */
 	Uint flags;
 #define AG_TIMER_SURVIVE_DETACH	0x01	/* Don't cancel on ObjectDetach() */
 #define AG_TIMER_AUTO_FREE	0x02	/* Free the timer structure on expire */
@@ -23,20 +24,22 @@ typedef struct ag_timer {
 #define AG_TIMER_RESTART	0x08	/* Queue timer for restart (driver-specific) */
 	Uint32 tSched;			/* Scheduled expiration time (ticks) */
 	Uint32 ival;			/* Timer interval in ticks */
-	Uint32 (*fn)(struct ag_timer *, AG_Event *);
+	Uint32 (*_Nullable fn) (struct ag_timer *_Nonnull _Restrict,
+	                        AG_Event        *_Nonnull _Restrict);
 	AG_Event fnEvent;
 	char name[AG_TIMER_NAME_MAX];	/* Name string (optional) */
 	AG_TimerPvt pvt;		/* Private data */
 } AG_Timer;
 
-typedef Uint32 (*AG_TimerFn)(AG_Timer *, AG_Event *);
+typedef Uint32 (*AG_TimerFn)(AG_Timer *_Nonnull, AG_Event *_Nonnull);
 
 typedef struct ag_time_ops {
-	const char *name;
-	void   (*init)(void);
-	void   (*destroy)(void);
-	Uint32 (*getTicks)(void);
-	void   (*delay)(Uint32);
+	const char *_Nonnull name;
+
+	void   (*_Nullable init) (void);
+	void   (*_Nullable destroy) (void);
+	Uint32 (*_Nonnull getTicks) (void);
+	void   (*_Nonnull delay) (Uint32);
 } AG_TimeOps;
 
 #define AG_LockTiming()		AG_MutexLock(&agTimerLock)
@@ -52,33 +55,42 @@ __BEGIN_DECLS
 extern struct ag_objectq agTimerObjQ;
 extern Uint              agTimerCount;
 extern struct ag_object  agTimerMgr;
-extern AG_Mutex          agTimerLock;
+extern _Nonnull AG_Mutex agTimerLock;
 
-extern const AG_TimeOps *agTimeOps;
+extern const AG_TimeOps *_Nullable agTimeOps;
 extern const AG_TimeOps  agTimeOps_dummy;
 extern const AG_TimeOps  agTimeOps_gettimeofday;
 extern const AG_TimeOps  agTimeOps_posix;
 extern const AG_TimeOps  agTimeOps_win32;
 extern const AG_TimeOps  agTimeOps_renderer;
 
-void    AG_SetTimeOps(const AG_TimeOps *);
-void	AG_InitTimers(void);
-void	AG_DestroyTimers(void);
+void AG_SetTimeOps(const AG_TimeOps *_Nullable);
+void AG_InitTimers(void);
+void AG_DestroyTimers(void);
 
-void      AG_InitTimer(AG_Timer *, const char *, Uint);
-int       AG_AddTimer(void *, AG_Timer *, Uint32, AG_TimerFn, const char *, ...);
-AG_Timer *AG_AddTimerAuto(void *, Uint32, AG_TimerFn, const char *, ...);
-void	  AG_DelTimer(void *, AG_Timer *);
-void	  AG_DelTimers(void *);
-int	  AG_ResetTimer(void *, AG_Timer *, Uint32);
-int	  AG_TimerIsRunning(void *, AG_Timer *);
-int       AG_TimerWait(void *, AG_Timer *, Uint32);
+void AG_InitTimer(AG_Timer *_Nonnull, const char *_Nonnull, Uint);
 
-void    AG_ProcessTimeouts(Uint32);
+int  AG_AddTimer(void *_Nullable, AG_Timer *_Nonnull, Uint32,
+                 _Nonnull AG_TimerFn,
+		 const char *_Nullable, ...);
+
+AG_Timer *_Nullable AG_AddTimerAuto(void *_Nullable, Uint32,
+                                    _Nonnull AG_TimerFn,
+				    const char *_Nullable, ...);
+
+void AG_DelTimer(void *_Nullable, AG_Timer *_Nonnull);
+void AG_DelTimers(void *_Nonnull);
+int  AG_ResetTimer(void *_Nullable, AG_Timer *_Nonnull, Uint32);
+
+int  AG_TimerIsRunning(void *_Nullable, AG_Timer *_Nonnull)
+                      _Pure_Attribute;
+
+int  AG_TimerWait(void *_Nullable, AG_Timer *_Nonnull, Uint32);
+void AG_ProcessTimeouts(Uint32);
 
 /* Execute a timer's associated callback routine. */
 static __inline__ Uint32
-AG_ExecTimerFn(AG_Timer *to)
+AG_ExecTimerFn(AG_Timer *_Nonnull to)
 {
 	Uint32 rv;
 
@@ -89,8 +101,8 @@ AG_ExecTimerFn(AG_Timer *to)
 }
 
 #ifdef AG_LEGACY
-void AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *, Uint) DEPRECATED_ATTRIBUTE;
-void AG_ScheduleTimeout(void *, AG_Timeout *, Uint32) DEPRECATED_ATTRIBUTE;
+void AG_SetTimeout(AG_Timeout *_Nonnull, Uint32 (*_Nonnull)(void *_Nonnull, Uint32, void *_Nullable), void *_Nullable, Uint) DEPRECATED_ATTRIBUTE;
+void AG_ScheduleTimeout(void *_Nullable, AG_Timeout *_Nonnull, Uint32) DEPRECATED_ATTRIBUTE;
 # define AG_TIMEOUT_INITIALIZER { -1, NULL, 0, 0, 0, NULL }
 # define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimerObjQ))
 # define AG_CANCEL_ONDETACH	0x10	/* Don't cancel on ObjectDetach() */

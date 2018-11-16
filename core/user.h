@@ -9,14 +9,14 @@ typedef struct ag_user {
 	char	 name[AG_USER_NAME_MAX];	/* User name */
 	Uint     flags;
 #define AG_USER_NO_ACCOUNT	0x01		/* Not a real user account */
-	char    *passwd;			/* Encrypted password */
+	char    *_Nullable passwd;		/* Encrypted password */
 	Uint32   uid;				/* User ID */
 	Uint32   gid;				/* Group ID */
-	char    *loginClass;			/* Login class */
-	char    *gecos;				/* Honeywell login info */
-	char    *home;				/* Home directory */
-	char    *shell;				/* Default shell */
-	char    *tmp;				/* Temp. directory */
+	char    *_Nullable loginClass;		/* Login class */
+	char    *_Nullable gecos;		/* Honeywell login info */
+	char    *_Nullable home;		/* Home directory */
+	char    *_Nullable shell;		/* Default shell */
+	char    *_Nullable tmp;			/* Temp. directory */
 	AG_TAILQ_ENTRY(ag_user) users;
 } AG_User;
 
@@ -24,30 +24,32 @@ typedef struct ag_user {
 typedef AG_TAILQ_HEAD(ag_user_list, ag_user) AG_UserList;
 
 typedef struct ag_user_ops {
-	const char *name;
-	void     (*init)(void);
-	void     (*destroy)(void);
-	int      (*getUserByName)(AG_User *, const char *);
-	int      (*getUserByUID)(AG_User *, Uint32);
-	int      (*getRealUser)(AG_User *);
-	int      (*getEffectiveUser)(AG_User *);
+	const char *_Nonnull name;
+	void (*_Nullable init) (void);
+	void (*_Nullable destroy) (void);
+	int  (*_Nonnull getUserByName) (AG_User    *_Nonnull _Restrict,
+	                                const char *_Nonnull _Restrict);
+	int  (*_Nonnull getUserByUID) (AG_User *_Nonnull, Uint32);
+	int  (*_Nonnull getRealUser) (AG_User *_Nonnull);
+	int  (*_Nonnull getEffectiveUser) (AG_User *_Nonnull);
 } AG_UserOps;
 
 __BEGIN_DECLS
-extern const AG_UserOps *agUserOps;
+extern const AG_UserOps *_Nullable agUserOps;
 
 /* Sync this list with AG_User(3) */
-extern const AG_UserOps  agUserOps_dummy;
-extern const AG_UserOps  agUserOps_posix;
-extern const AG_UserOps  agUserOps_win32;
-extern const AG_UserOps  agUserOps_xbox;
+extern const AG_UserOps agUserOps_dummy;
+extern const AG_UserOps agUserOps_posix;
+extern const AG_UserOps agUserOps_win32;
+extern const AG_UserOps agUserOps_xbox;
 
-AG_User  *AG_UserNew(void);
-void      AG_UserFree(AG_User *);
-void      AG_SetUserOps(const AG_UserOps *);
+AG_User *_Nullable AG_UserNew(void); /* _Malloc_Like_Attribute; */
+void               AG_UserFree(AG_User *_Nonnull);
 
-static __inline__ AG_User *
-AG_GetUserByName(const char *name)
+void AG_SetUserOps(const AG_UserOps *_Nonnull);
+
+static __inline__ AG_User *_Nullable
+AG_GetUserByName(const char *_Nonnull name)
 {
 	AG_User *u;
 
@@ -60,7 +62,7 @@ AG_GetUserByName(const char *name)
 	}
 	return (u);
 }
-static __inline__ AG_User *
+static __inline__ AG_User *_Nullable
 AG_GetUserByUID(Uint32 uid)
 {
 	AG_User *u;
@@ -74,7 +76,7 @@ AG_GetUserByUID(Uint32 uid)
 	}
 	return (u);
 }
-static __inline__ AG_User *
+static __inline__ AG_User *_Nullable
 AG_GetRealUser(void)
 {
 	AG_User *u;
@@ -88,7 +90,7 @@ AG_GetRealUser(void)
 	}
 	return (u);
 }
-static __inline__ AG_User *
+static __inline__ AG_User *_Nullable
 AG_GetEffectiveUser(void)
 {
 	AG_User *u;

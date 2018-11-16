@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ AG_AddTimer(void *p, AG_Timer *to, Uint32 ival, AG_TimerFn fn,
     const char *fmt, ...)
 {
 	AG_EventSource *src = AG_GetEventSource();
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	AG_Timer *toOther;
 	int newTimer = 0;
 	AG_Event *ev;
@@ -158,7 +158,7 @@ AG_InitTimer(AG_Timer *to, const char *name, Uint flags)
 AG_Timer *
 AG_AddTimerAuto(void *p, Uint32 ival, AG_TimerFn fn, const char *fmt, ...)
 {
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	AG_Timer *to;
 	AG_Event *ev;
 
@@ -189,7 +189,7 @@ int
 AG_ResetTimer(void *p, AG_Timer *to, Uint32 ival)
 {
 	AG_EventSource *src = AG_GetEventSource();
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	AG_Timer *toOther;
 	int rv = 0;
 	
@@ -222,7 +222,7 @@ void
 AG_DelTimer(void *p, AG_Timer *to)
 {
 	AG_EventSource *src = AG_GetEventSource();
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	AG_Timer *toOther;
 
 	AG_LockTimers(ob);
@@ -275,7 +275,7 @@ AG_DelTimers(void *obj)
 int
 AG_TimerIsRunning(void *p, AG_Timer *to)
 {
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	AG_Timer *toRunning;
 
 	TAILQ_FOREACH(toRunning, &ob->timers, pvt.timers) {
@@ -294,7 +294,7 @@ AG_TimerIsRunning(void *p, AG_Timer *to)
 int
 AG_TimerWait(void *p, AG_Timer *to, Uint32 timeout)
 {
-	AG_Object *ob = (p != NULL) ? p : &agTimerMgr;
+	AG_Object *ob = (p != NULL) ? OBJECT(p) : &agTimerMgr;
 	Uint32 elapsed = 0;
 
 	for (;;) {
@@ -355,7 +355,7 @@ rescan:
 
 #ifdef AG_LEGACY
 static Uint32
-LegacyTimerCallback(AG_Timer *to, AG_Event *event)
+LegacyTimerCallback(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	return to->pvt.fnLegacy(to->obj, to->ival, to->pvt.argLegacy);
 }

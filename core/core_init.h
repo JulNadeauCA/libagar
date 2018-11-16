@@ -13,15 +13,17 @@
 __BEGIN_DECLS
 struct ag_event;
 
-extern char *agProgName;	/* User program name */
-extern int agVerbose;		/* Verbose console output */
-extern int agSoftTimers;	/* Disable hardware timers */
+extern char *_Nullable agProgName;	/* User program name */
+extern int agVerbose;			/* Verbose console output */
+extern int agSoftTimers;		/* Disable hardware timers */
 
-int	 AG_InitCore(const char *, Uint);
-void	 AG_AtExitFunc(void (*)(void));
-void	 AG_AtExitFuncEv(void (*)(struct ag_event *));
-void	 AG_Quit(void) NORETURN_ATTRIBUTE;
-void	 AG_Destroy(void);
+int  AG_InitCore(const char *_Nullable, Uint);
+
+void AG_AtExitFunc(void (*_Nullable)(void));
+void AG_AtExitFuncEv(void (*_Nullable)(struct ag_event *_Nonnull));
+
+void AG_Quit(void) _Noreturn_Attribute;
+void AG_Destroy(void);
 
 #ifdef AG_LEGACY
 # define AG_InitInput(flags)

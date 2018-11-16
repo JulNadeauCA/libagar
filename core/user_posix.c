@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2014-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include <agar/config/have_getenv.h>
 
 static void
-ConvertUserData(AG_User *u, const struct passwd *pw)
+ConvertUserData(AG_User *_Nonnull u, const struct passwd *_Nonnull pw)
 {
 	Strlcpy(u->name, pw->pw_name, sizeof(u->name));
 	u->uid = (Uint32)pw->pw_uid;
@@ -66,7 +66,7 @@ ConvertUserData(AG_User *u, const struct passwd *pw)
 }
 
 static int
-GetUserByName(AG_User *u, const char *name)
+GetUserByName(AG_User *_Nonnull u, const char *_Nonnull name)
 {
 #ifdef HAVE_GETPWNAM_R
 	struct passwd pwStorage, *pwRes;
@@ -103,19 +103,19 @@ GetUserByName(AG_User *u, const char *name)
 }
 
 static int
-GetUserByUID(AG_User *u, Uint32 uid)
+GetUserByUID(AG_User *_Nonnull u, Uint32 uid)
 {
 #ifdef HAVE_GETPWNAM_R
 	struct passwd pwStorage, *pwRes;
 	char *buf;
-	size_t bufSize;
+	long bufSize;
 	int rv;
 
 	bufSize = sysconf(_SC_GETPW_R_SIZE_MAX);
 	if (bufSize == -1) {
 		bufSize = 16384;
 	}
-	if ((buf = TryMalloc(bufSize)) == NULL) {
+	if ((buf = TryMalloc((AG_Size)bufSize)) == NULL) {
 		return (-1);
 	}
 	rv = getpwuid_r((uid_t)uid, &pwStorage, buf, bufSize, &pwRes);
@@ -140,13 +140,13 @@ GetUserByUID(AG_User *u, Uint32 uid)
 }
 
 static int
-GetRealUser(AG_User *u)
+GetRealUser(AG_User *_Nonnull u)
 {
 	return GetUserByUID(u, (Uint32)getuid());
 }
 
 static int
-GetEffectiveUser(AG_User *u)
+GetEffectiveUser(AG_User *_Nonnull u)
 {
 	return GetUserByUID(u, (Uint32)geteuid());
 }

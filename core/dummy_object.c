@@ -19,7 +19,7 @@ AG_DummyNew(void)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Dummy *d = obj;
 
@@ -27,7 +27,8 @@ Init(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
+    const AG_Version *_Nonnull ver)
 {
 	AG_Dummy *d = obj;
 
@@ -36,7 +37,7 @@ Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static int
-Save(void *obj, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
 	AG_Dummy *d = obj;
 
