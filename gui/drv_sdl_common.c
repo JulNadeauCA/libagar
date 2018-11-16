@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2017 Julien Nadeau <vedge@hypertriton.com>.
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,10 @@
 #include <agar/gui/sdl.h>
 
 #define AG_SDL_CLIPPED_PIXEL(s, ax, ay)			\
-	((ax) < (s)->clip_rect.x ||			\
-	 (ax) >= (s)->clip_rect.x+(s)->clip_rect.w ||	\
-	 (ay) < (s)->clip_rect.y ||			\
-	 (ay) >= (s)->clip_rect.y+(s)->clip_rect.h)
+	((ax) <  (s)->clip_rect.x ||			\
+	 (ax) >= (s)->clip_rect.x + (s)->clip_rect.w ||	\
+	 (ay) <  (s)->clip_rect.y ||			\
+	 (ay) >= (s)->clip_rect.y + (s)->clip_rect.h)
 
 /*
  * Initialize Agar with an existing SDL display. If the display surface has
@@ -142,103 +142,163 @@ AG_SetVideoSurfaceSDL(void *pDisplay)
 	return (0);
 }
 
-/* Return the corresponding Agar PixelFormat structure for a SDL_Surface. */
+/* Return the Agar pixel format corresponding to that of an SDL surface. */
 AG_PixelFormat *
-AG_SDL_GetPixelFormat(SDL_Surface *su)
+AG_SDL_GetPixelFormat(const SDL_Surface *s)
 {
-	switch (su->format->BytesPerPixel) {
-	case 1:
-		return AG_PixelFormatIndexed(su->format->BitsPerPixel);
-	case 2:
-	case 3:
-	case 4:
-		if (su->format->Amask != 0) {
-			return AG_PixelFormatRGBA(su->format->BitsPerPixel,
-			                          su->format->Rmask,
-			                          su->format->Gmask,
-			                          su->format->Bmask,
-						  su->format->Amask);
-		} else {
-			return AG_PixelFormatRGB(su->format->BitsPerPixel,
-			                         su->format->Rmask,
-			                         su->format->Gmask,
-			                         su->format->Bmask);
+	AG_PixelFormat *pf = Malloc(sizeof(AG_PixelFormat));
+	SDL_Palette *sp;
+	int i;
+
+	if ((sp = s->format->palette) != NULL) {
+		AG_PixelFormatIndexed(pf, s->format->BitsPerPixel);
+
+		for (i = 0; i < sp->ncolors; i++) {
+			AG_Color *c = &pf->palette->colors[i];
+
+			c->r = AG_8toH(sp->colors[i].r);
+			c->g = AG_8toH(sp->colors[i].g);
+			c->b = AG_8toH(sp->colors[i].b);
+			c->a = AG_OPAQUE;
 		}
+	} else {
+		AG_PixelFormatRGBA(pf, s->format->BitsPerPixel,
+		    s->format->Rmask,
+		    s->format->Gmask,
+		    s->format->Bmask,
+		    s->format->Amask);
+	}
+	return (pf);
+}
+
+/* Return a 32-bit representation of the pixel at p in an SDL surface. */
+static __inline__ Uint32
+AG_SDL_GetPixel(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		return *(Uint32 *)p;
+	case 3:
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		return (p[0] << 16) +
+		       (p[1] << 8) +
+		        p[2];
+#else
+		return (p[0] +
+		       (p[1] << 8) +
+		       (p[2] << 16));
+#endif
+	case 2:
+		return *(Uint16 *)p;
 	default:
-		AG_SetError("Unsupported pixel depth (%d bpp)",
-		    (int)su->format->BitsPerPixel);
-		return (NULL);
+		return *p;
+	}
+}
+
+/* Write the pixel at p in an SDL surface. */
+static __inline__ void
+AG_SDL_PutPixel(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p, Uint32 px)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)p = px;
+		break;
+	case 3:
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		p[0] = (px >> 16) & 0xff;
+		p[1] = (px >> 8)  & 0xff;
+		p[2] = (px)       & 0xff;
+#else
+		p[0] = (px >> 16) & 0xff;
+		p[1] = (px >> 8)  & 0xff;
+		p[2] = (px)       & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)p = px;
+		break;
+	default:
+		*p = px;
+		break;
 	}
 }
 
 /*
- * Blend the specified components with the pixel at s:[x,y], using the
- * given alpha function. No clipping is done. The surface must be locked.
+ * Blend an AG_Color c against the pixel at p in an SDL_Surface.
+ * The surface must be locked.
  */
 static void
-AG_SDL_SurfaceBlendPixel(SDL_Surface *s, Uint8 *pDst, AG_Color Cnew,
-    AG_BlendFn fn)
+AG_SDL_SurfaceBlend(SDL_Surface *_Nonnull s, Uint8 *_Nonnull p, AG_Color c,
+    AG_AlphaFn fn)
 {
-	Uint32 px, pxDst;
-	AG_Color Cdst;
-	Uint8 a;
+	Uint32 px = AG_SDL_GetPixel(s,p);
+	Uint8 r = AG_Hto8(c.r);
+	Uint8 g = AG_Hto8(c.g);
+	Uint8 b = AG_Hto8(c.b);
+	Uint8 a = AG_Hto8(c.a);
+	Uint8 R,G,B,A;
 
-	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, pxDst, pDst);
 #if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
-	if ((s->flags & SDL_SRCCOLORKEY) && (pxDst == s->format->colorkey)) {
-		px = SDL_MapRGBA(s->format, Cnew.r, Cnew.g, Cnew.b, Cnew.a);
-	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, px);
-	} else 
-#endif
-	{
-		SDL_GetRGBA(pxDst, s->format, &Cdst.r, &Cdst.g, &Cdst.b,
-		    &Cdst.a);
-		switch (fn) {
-		case AG_ALPHA_DST:
-			a = Cdst.a;
-			break;
-		case AG_ALPHA_SRC:
-			a = Cnew.a;
-			break;
-		case AG_ALPHA_ZERO:
-			a = 0;
-			break;
-		case AG_ALPHA_OVERLAY:
-			a = (Uint8)((Cdst.a+Cnew.a) > 255) ? 255 :
-			            (Cdst.a+Cnew.a);
-			break;
-		case AG_ALPHA_ONE_MINUS_DST:
-			a = 255-Cdst.a;
-			break;
-		case AG_ALPHA_ONE_MINUS_SRC:
-			a = 255-Cnew.a;
-			break;
-		case AG_ALPHA_ONE:
-		default:
-			a = 255;
-			break;
-		}
-		px = SDL_MapRGBA(s->format,
-		    (((Cnew.r - Cdst.r)*Cnew.a) >> 8) + Cdst.r,
-		    (((Cnew.g - Cdst.g)*Cnew.a) >> 8) + Cdst.g,
-		    (((Cnew.b - Cdst.b)*Cnew.a) >> 8) + Cdst.b,
-		    a);
-		AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, px);
+	if ((s->flags & SDL_SRCCOLORKEY) &&           /* Replace transparent */
+	    (px == s->format->colorkey)) {
+		AG_SDL_PutPixel(s, p, SDL_MapRGBA(s->format, r,g,b,a));
+		return;
 	}
+#endif
+	SDL_GetRGBA(px, s->format, &R,&G,&B,&A);
+	
+	switch (fn) {
+	case AG_ALPHA_OVERLAY:
+		a = (Uint8)((A+a) > 255) ? 255 : (A+a);
+		break;
+	case AG_ALPHA_DST:           a = A;     break;
+	case AG_ALPHA_SRC:        /* a = a; */  break;
+	case AG_ALPHA_ZERO:          a = 0;     break;
+	case AG_ALPHA_ONE_MINUS_DST: a = 255-A; break;
+	case AG_ALPHA_ONE_MINUS_SRC: a = 255-a; break;
+	case AG_ALPHA_ONE:
+	default:                     a = 255;   break;
+	}
+
+	AG_SDL_PutPixel(s, p,
+	    SDL_MapRGBA(s->format,
+	        R+(((r - R)*a) >> 8),
+	        G+(((g - G)*a) >> 8),
+	        B+(((b - B)*a) >> 8), a));
 }
 
-/* Blit an AG_Surface to a target SDL_Surface. */
+/* Return the intersection of two SDL_Rect's (or a zero-size rect) */
+static __inline__ SDL_Rect
+AG_SDL_RectIntersect(const SDL_Rect *_Nonnull a, const SDL_Rect *_Nonnull b)
+{
+	SDL_Rect x;
+
+	x.x = AG_MAX(a->x, b->x);
+	x.y = AG_MAX(a->y, b->y);
+	x.w = AG_MIN((a->x + a->w), (b->x + b->w)) - x.x;
+	x.h = AG_MIN((a->y + a->h), (b->y + b->h)) - x.y;
+	if (x.w < 0) { x.w = 0; }
+	if (x.h < 0) { x.h = 0; }
+	return (x);
+}
+
+/*
+ * Blit an AG_Surface directly to an SDL_Surface.
+ * If the formats of the two surfaces may differ, convert implicitely.
+ * The source surface must be locked. Locks the target SDL surface if needed.
+ */
+/* XXX TODO optimized cases, indexed, grayscale, per-surface alpha */
 void
 AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
     SDL_Surface *ds, int xDst, int yDst)
 {
-	AG_Rect sr, dr;
-	AG_Color C;
-	Uint32 px;
+	AG_Rect sr;
+	SDL_Rect dr;
+	AG_Color c;
+	AG_Pixel px;
 	int x, y;
 	Uint8 *pSrc, *pDst;
 
-	/* Compute the effective source and destination rectangles. */
 	if (srcRect != NULL) {
 		sr = *srcRect;
 		if (sr.x < 0) { sr.x = 0; }
@@ -251,42 +311,42 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 		sr.w = ss->w;
 		sr.h = ss->h;
 	}
-	dr.x = MAX(xDst, ds->clip_rect.x);
-	dr.y = MAX(yDst, ds->clip_rect.y);
-	dr.w = (dr.x+sr.w > ds->clip_rect.x+ds->clip_rect.w) ?
-	        (ds->clip_rect.x+ds->clip_rect.w - dr.x) : sr.w;
-	dr.h = (dr.y+sr.h > ds->clip_rect.y+ds->clip_rect.h) ?
-	        (ds->clip_rect.y+ds->clip_rect.h - dr.y) : sr.h;
+	dr.x = (Sint16)xDst;
+	dr.y = (Sint16)yDst;
+	dr.w = (Uint16)sr.w;
+	dr.h = (Uint16)sr.h;
+	dr = AG_SDL_RectIntersect(&dr, &ds->clip_rect);
 
-	/* XXX TODO optimized cases */
-	/* XXX TODO per-surface alpha */
 	if (SDL_MUSTLOCK(ds)) {
 		SDL_LockSurface(ds);
 	}
 	for (y = 0; y < dr.h; y++) {
-		pSrc = (Uint8 *)ss->pixels + (sr.y+y)*ss->pitch +
-		    sr.x*ss->format->BytesPerPixel;
-		pDst = (Uint8 *)ds->pixels + (dr.y+y)*ds->pitch +
-		    dr.x*ds->format->BytesPerPixel;
+		pSrc = ss->pixels +
+		   (sr.y + y)*ss->pitch +
+		    sr.x * ss->format.BytesPerPixel;
+		pDst = (Uint8 *)ds->pixels +
+		   (dr.y + y)*ds->pitch +
+		    dr.x * ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
-			AG_PACKEDPIXEL_GET(ss->format->BytesPerPixel, px, pSrc);
-			if ((ss->flags & AG_SRCCOLORKEY) &&
-			    (ss->format->colorkey == px)) {
-				pSrc += ss->format->BytesPerPixel;
+			px = AG_SurfaceGet_At(ss,pSrc);
+			if ((ss->flags & AG_SURFACE_COLORKEY) &&
+			    (ss->colorkey == px)) {
+				pSrc += ss->format.BytesPerPixel;
 				pDst += ds->format->BytesPerPixel;
 				continue;
 			}
-			C = AG_GetColorRGBA(px, ss->format);
-			if ((C.a != AG_ALPHA_OPAQUE) &&
-			    (ss->flags & AG_SRCALPHA)) {
-				AG_SDL_SurfaceBlendPixel(ds, pDst, C,
-				    AG_ALPHA_SRC);
+			c = AG_GetColor(px, &ss->format);
+			if ((c.a < AG_ALPHA_OPAQUE) &&
+			    (ss->flags & AG_SURFACE_ALPHA)) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_OVERLAY);
 			} else {
-				px = SDL_MapRGB(ds->format, C.r, C.g, C.b);
-				AG_PACKEDPIXEL_PUT(ds->format->BytesPerPixel,
-				    pDst, px);
+				AG_SDL_PutPixel(ds, pDst,
+				    SDL_MapRGB(ds->format,
+				        AG_Hto8(c.r),
+				        AG_Hto8(c.g),
+				        AG_Hto8(c.b)));
 			}
-			pSrc += ss->format->BytesPerPixel;
+			pSrc += ss->format.BytesPerPixel;
 			pDst += ds->format->BytesPerPixel;
 		}
 	}
@@ -294,125 +354,96 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 		SDL_UnlockSurface(ds);
 }
 
-#if 0
-#define AG_SDL_GET_PIXEL_COMPONENT(rv, mask, shift, loss)		\
-	tmp = (pc & mask) >> shift;					\
-	(rv) = (tmp << loss) + (tmp >> (8 - (loss << 1)));
-
-/* Decompose a pixel value to an AG_Color (honor any alpha). */
-static __inline__ AG_Color
-AG_SDL_GetColorRGBA(Uint32 pc, const SDL_PixelFormat *pf)
-{
-	AG_Color C;
-	Uint tmp;
-
-	if (pf->palette != NULL) {
-		SDL_Color sc = pf->palette->colors[(Uint)pc % pf->palette->ncolors];
-		C.r = sc.r;
-		C.g = sc.g;
-		C.b = sc.b;
-		return (C);
-	}
-	AG_SDL_GET_PIXEL_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss);
-	AG_SDL_GET_PIXEL_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss);
-	AG_SDL_GET_PIXEL_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss);
-	if (pf->Amask != 0) {
-		AG_SDL_GET_PIXEL_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss);
-	} else {
-		C.a = AG_ALPHA_OPAQUE;
-	}
-	return (C);
-}
-#endif
-
-/* Convert a SDL_Surface to an AG_Surface. */
+/*
+ * Import an SDL surface into a newly allocated AG_Surface (of the same
+ * pixel format so the pixel data can be block copied).
+ * For indexed surfaces, convert the SDL_Palette to an AG_Palette.
+ * Inherit SDL_SRCCOLORKEY -> AG_SURFACE_COLORKEY flag and colorkey value.
+ * Inherit SDL_SRCALPHA -> AG_SURFACE_ALPHA and per-surface alpha.
+ */
 AG_Surface *
 AG_SDL_ImportSurface(SDL_Surface *ss)
 {
-	AG_PixelFormat *pf;
+	AG_PixelFormat pf;
 	AG_Surface *ds;
-	Uint8 *pSrc, *pDst;
-	int y;
-#if 0
-	Uint32 px;
-	AG_Color C;
-	int x;
+	const SDL_Palette *sp;
+	int i;
+
+	if ((sp = ss->format->palette) != NULL) {
+		AG_PixelFormatIndexed(&pf, ss->format->BitsPerPixel);
+#ifdef AG_DEBUG
+		if (sp->ncolors != pf.palette->nColors)
+			AG_FatalError("nColors");
 #endif
+		for (i = 0; i < sp->ncolors; i++) {
+			const SDL_Color *sc = &sp->colors[i];
+			AG_Color *c = &pf.palette->colors[i];
 
-	if ((pf = AG_SDL_GetPixelFormat(ss)) == NULL) {
-		return (NULL);
+			c->r = AG_8toH(sc->r);
+			c->g = AG_8toH(sc->g);
+			c->b = AG_8toH(sc->b);
+			c->a = AG_OPAQUE;
+		}
+	} else {
+		AG_PixelFormatRGBA(&pf, ss->format->BitsPerPixel,
+		    ss->format->Rmask,
+		    ss->format->Gmask,
+		    ss->format->Bmask,
+		    ss->format->Amask);
 	}
-	if (pf->palette != NULL) {
-		AG_SetError("Indexed formats not supported");
-		AG_PixelFormatFree(pf);
-		return (NULL);
-	}
-
-	if ((ds = AG_SurfaceNew(AG_SURFACE_PACKED, ss->w, ss->h, pf, 0))
-	    == NULL) {
+	if ((ds = AG_SurfaceNew(&pf, ss->w, ss->h, 0)) == NULL) {
 		goto out;
 	}
-	if (ss->flags & SDL_SRCCOLORKEY) { ds->flags |= AG_SRCCOLORKEY; }
-	if (ss->flags & SDL_SRCALPHA) { ds->flags |= AG_SRCALPHA; }
+	if (ss->flags & SDL_SRCCOLORKEY) {
+		ds->flags |= AG_SURFACE_COLORKEY;
+		ds->colorkey = ss->format->colorkey;
+	}
+	if (ss->flags & SDL_SRCALPHA)    {
+		ds->flags |= AG_SURFACE_ALPHA;
+		ds->alpha = ss->format->alpha;
+	}
 	
-	if (SDL_MUSTLOCK(ss)) {
-		SDL_LockSurface(ss);
-	}
-	pSrc = (Uint8 *)ss->pixels;
-	pDst = (Uint8 *)ds->pixels;
-	for (y = 0; y < ss->h; y++) {
-		memcpy(pDst, pSrc, ss->pitch);
-		pSrc += ss->pitch;
-		pDst += ds->pitch;
-	}
-#if 0
-	for (y = 0; y < ss->h; y++) {
-		for (x = 0; x < ss->w; x++) {
-			AG_PACKEDPIXEL_GET(ss->format->BytesPerPixel, px, pSrc);
-			C = AG_SDL_GetColorRGBA(px, ss->format);
-			AG_PUT_PIXEL(ds,pDst,
-			    AG_MapColorRGBA(ds->format, C));
-			pSrc += ss->format->BytesPerPixel;
-			pDst += ds->format->BytesPerPixel;
-		}
-	}
-#endif
-	if (SDL_MUSTLOCK(ss))
-		SDL_UnlockSurface(ss);
+	if (SDL_MUSTLOCK(ss)) { SDL_LockSurface(ss); }
 
+	memcpy(ds->pixels, (Uint8 *)ss->pixels, ss->h * ss->pitch);
+
+	if (SDL_MUSTLOCK(ss)) { SDL_UnlockSurface(ss); }
 out:
-	AG_PixelFormatFree(pf);
+	AG_PixelFormatFree(&pf);
 	return (ds);
 }
 
 /* Convert a SDL surface to Agar surface. */
 AG_Surface *
-AG_SurfaceFromSDL(void *p)
+AG_SurfaceFromSDL(void *_Nonnull p)
 {
 	return AG_SDL_ImportSurface((SDL_Surface *)p);
 }
 
-/* Convert an Agar surface to an SDL surface. */
+/* Export an AG_Surface to a newly-created SDL_Surface. */
 void *
-AG_SurfaceExportSDL(const AG_Surface *ss)
+AG_SurfaceExportSDL(const AG_Surface * _Nonnull ss)
 {
 	Uint32 sdlFlags = SDL_SWSURFACE;
 	SDL_Surface *ds;
 
-	if (ss->flags & AG_SRCCOLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
-	if (ss->flags & AG_SRCALPHA) { sdlFlags |= SDL_SRCALPHA; }
+	if (ss->flags & AG_SURFACE_COLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
+	if (ss->flags & AG_SURFACE_ALPHA)    { sdlFlags |= SDL_SRCALPHA; }
+
+	/* TODO INDEXED->INDEXED & GRAYSCALE->PACKED */
+
 	ds = SDL_CreateRGBSurface(sdlFlags, ss->w, ss->h,
-	    ss->format->BitsPerPixel,
-	    ss->format->Rmask,
-	    ss->format->Gmask,
-	    ss->format->Bmask,
-	    ss->format->Amask);
+	    ss->format.BitsPerPixel,
+	    ss->format.Rmask,
+	    ss->format.Gmask,
+	    ss->format.Bmask,
+	    ss->format.Amask);
 	if (ds == NULL) {
 		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
 	}
 	AG_SDL_BlitSurface(ss, NULL, ds, 0,0);
-	return (void *)(ds);
+	return (void *)ds;
 }
 
 /* Initialize the default cursor. */
@@ -593,19 +624,17 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 	if (*w == 0) {
 		if (AG_Defined(drv, "width")) {
 			AG_GetString(drv, "width", buf, sizeof(buf));
-			*w = (buf[0] != 'a') ? atoi(buf) :
-			                       (Uint)((float)wDisp*2.0/3.0);
+			*w = (buf[0] != 'a') ? atoi(buf) : wDisp*2/3;
 		} else {
-			*w = (Uint)((float)wDisp*2.0/3.0);
+			*w = wDisp*2/3;
 		}
 	}
 	if (*h == 0) {
 		if (AG_Defined(drv, "height")) {
 			AG_GetString(drv, "height", buf, sizeof(buf));
-			*h = (buf[0] != 'a') ? atoi(buf) :
-			                       (Uint)((float)hDisp*2.0/3.0);
+			*h = (buf[0] != 'a') ? atoi(buf) : hDisp*2/3;
 		} else {
-			*h = (Uint)((float)hDisp*2.0/3.0);
+			*h = hDisp*2/3;
 		}
 	}
 	if (*depth == 0) {
@@ -617,13 +646,18 @@ AG_SDL_GetPrefDisplaySettings(void *obj, Uint *w, Uint *h, int *depth)
 		}
 	}
 	if (AG_Defined(drv, "fpsMax")) {
-		float v;
 		char *ep;
-
+#ifdef HAVE_FLOAT
+		float v;
 		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
 		v = (float)strtod(buf, &ep);
-		if (*ep == '\0')
-			dsw->rNom = (Uint)(1000.0/v);
+		if (*ep == '\0') { dsw->rNom = (Uint)(1000.0f/v); }
+#else
+		Uint v;
+		AG_GetString(drv, "fpsMax", buf, sizeof(buf));
+		v = (Uint)strtoul(buf, &ep, 10);
+		if (*ep == '\0') { dsw->rNom = 1000/v; }
+#endif /* !HAVE_FLOAT */
 	}
 	if (AG_Defined(drv, "bgColor")) {
 		dsw->bgColor = AG_ColorFromString(AG_GetStringP(drv,"bgColor"), NULL);
@@ -741,7 +775,7 @@ AG_SDL_GetNextEvent(void *obj, AG_DriverEvent *dev)
 
 /* Test if the given coordinates overlap a window resize control. */
 static __inline__ int
-GenericMouseOverCtrl(AG_Window *win, int x, int y)
+GenericMouseOverCtrl(AG_Window *_Nonnull win, int x, int y)
 {
 	if ((y - WIDGET(win)->y) > (HEIGHT(win) - win->wBorderBot)) {
 		int xRel = x - WIDGET(win)->x;
@@ -762,7 +796,7 @@ GenericMouseOverCtrl(AG_Window *win, int x, int y)
  * TODO: generalize this code to SW drivers.
  */
 static int
-ProcessInputEvent(AG_Driver *drv, AG_DriverEvent *dev)
+ProcessInputEvent(AG_Driver *_Nonnull drv, AG_DriverEvent *_Nonnull dev)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)drv;
 	AG_Window *win, *winTop = NULL;

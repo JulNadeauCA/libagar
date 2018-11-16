@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,20 @@
 #include <agar/gui/packedpixel.h>
 #include <agar/gui/opengl.h>
 
+#if AG_MODEL == AG_LARGE
+# define GL_Color3uH(r,g,b)   glColor3us((r),(g),(b))
+# define GL_Color4uH(r,g,b,a) glColor4us((r),(g),(b),(a))
+#else
+# define GL_Color3uH(r,g,b)   glColor3ub((r),(g),(b))
+# define GL_Color4uH(r,g,b,a) glColor4ub((r),(g),(b),(a))
+#endif
+
 /*
  * Initialize an OpenGL context for Agar GUI rendering.
  *
- * This routine is usually invoked once when initially creating a window,
- * but single-window drivers such as "sdlgl" may Init/Destroy the context
- * during rendering (i.e., to implement the AG_DRIVER_SW_OVERLAY mode).
+ * This is usually called initially when creating a window, but AG_DriverSw(3)
+ * type drivers may Init or Destroy the context during rendering (i.e., using
+ * AG_DRIVER_SW_OVERLAY). Agar must be resilient against GL context loss.
  */
 int
 AG_GL_InitContext(void *obj, AG_GL_Context *gl)
@@ -161,9 +169,7 @@ AG_GL_DestroyContext(void *obj)
 	drv->gl = NULL;
 }
 
-/*
- * Standard clipping rectangle operations.
- */
+/* Push/pop clipping rectangle, setting GL_CLIP_PLANE[0-3]. */
 void
 AG_GL_StdPushClipRect(void *obj, AG_Rect r)
 {
@@ -220,11 +226,24 @@ AG_GL_StdPopClipRect(void *obj)
 	glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 }
 
-/*
- * Standard blending control operations.
- */
+static __inline__ GLenum
+AG_GL_GetBlendingFunc(AG_AlphaFn fn)
+{
+	switch (fn) {
+	case AG_ALPHA_ONE:		return (GL_ONE);
+	case AG_ALPHA_ZERO:		return (GL_ZERO);
+	case AG_ALPHA_SRC:		return (GL_SRC_ALPHA);
+	case AG_ALPHA_DST:		return (GL_DST_ALPHA);
+	case AG_ALPHA_ONE_MINUS_DST:	return (GL_ONE_MINUS_DST_ALPHA);
+	case AG_ALPHA_ONE_MINUS_SRC:	return (GL_ONE_MINUS_SRC_ALPHA);
+	case AG_ALPHA_OVERLAY:		return (GL_ONE);	/* XXX */
+	default:			return (GL_ONE);
+	}
+}
+
+/* Push/pop alpha blending mode. Set GL_BLEND and GL_BLEND_{SRC,DST}. */
 void
-AG_GL_StdPushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+AG_GL_StdPushBlendingMode(void *obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
@@ -237,7 +256,12 @@ AG_GL_StdPushBlendingMode(void *obj, AG_BlendFn fnSrc, AG_BlendFn fnDst)
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glEnable(GL_BLEND);
-	glBlendFunc(AG_GL_GetBlendingFunc(fnSrc), AG_GL_GetBlendingFunc(fnDst));
+	if (fnSrc == AG_ALPHA_OVERLAY || fnDst == AG_ALPHA_OVERLAY) {
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	} else {
+		glBlendFunc(AG_GL_GetBlendingFunc(fnSrc),
+		            AG_GL_GetBlendingFunc(fnDst));
+	}
 }
 void
 AG_GL_StdPopBlendingMode(void *obj)
@@ -254,9 +278,7 @@ AG_GL_StdPopBlendingMode(void *obj)
 	glBlendFunc(gl->bs[0].srcFactor, gl->bs[0].dstFactor);
 }
 
-/*
- * Standard texture management operations.
- */
+/* Delete a texture by name */
 void
 AG_GL_StdDeleteTexture(void *obj, Uint texture)
 {
@@ -266,6 +288,8 @@ AG_GL_StdDeleteTexture(void *obj, Uint texture)
 	gl->textureGC = Realloc(gl->textureGC, (gl->nTextureGC+1)*sizeof(Uint));
 	gl->textureGC[gl->nTextureGC++] = texture;
 }
+
+/* Delete a display list by name */
 void
 AG_GL_StdDeleteList(void *obj, Uint list)
 {
@@ -276,25 +300,44 @@ AG_GL_StdDeleteList(void *obj, Uint list)
 	gl->listGC[gl->nListGC++] = list;
 }
 
-void
-AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
+/* Return the corresponding OpenGL type argument for an AG_Surface. */
+static __inline__ GLenum
+AG_GL_SurfaceType(const AG_Surface *S)
 {
-	AG_Surface *gsu;
+#if AG_MODEL == AG_LARGE
+	if (S->format.BitsPerPixel == 64) {
+		return (GL_UNSIGNED_SHORT);
+	} else
+#endif
+	{
+		return (GL_UNSIGNED_BYTE);
+	}
+}
+
+/*
+ * Create a hardware texture from the given AG_Surface.
+ *
+ * If needed, convert the surface to the required format.
+ * Fill in texture coordinates in tc if not NULL.
+ * Return new texture ID in rv.
+ */
+void
+AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *s, AG_TexCoord *tc)
+{
+	AG_Surface *sGL;
 	GLuint texture;
 
-	if (su->flags & AG_SURFACE_GLTEXTURE) {
-		gsu = su;
+	if (s->flags & AG_SURFACE_GL_TEXTURE) {
+		sGL = s;
 	} else {
-		if ((gsu = AG_SurfaceStdGL(su->w, su->h)) == NULL) {
-			AG_FatalError(NULL);
-		}
-		AG_SurfaceCopy(gsu, su);
+		sGL = AG_SurfaceStdGL(s->w, s->h);
+		AG_SurfaceCopy(sGL, s);
 	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)su->w / (float)gsu->w;
-		tc->h = (float)su->h / (float)gsu->h;
+		tc->w = (float)s->w / (float)sGL->w;
+		tc->h = (float)s->h / (float)sGL->h;
 	}
 	
 	/* Upload as an OpenGL texture. */
@@ -308,70 +351,61 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 #endif
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-	    gsu->w, gsu->h, 0,
+	    sGL->w, sGL->h, 0,
 	    GL_RGBA,
-	    GL_UNSIGNED_BYTE,
-	    gsu->pixels);
+	    AG_GL_SurfaceType(sGL),
+	    sGL->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(su->flags & AG_SURFACE_GLTEXTURE)) {
-		AG_SurfaceFree(gsu);
+	if (!(s->flags & AG_SURFACE_GL_TEXTURE)) {
+		AG_SurfaceFree(sGL);
 	}
 	*rv = texture;
 }
 
+/*
+ * Replace the contents of an existing texture with those of an AG_Surface.
+ *
+ * If needed, convert the surface to the required format.
+ * Fill in texture coordinates in tc if not NULL.
+ * Return 0 on success or -1 on failure.
+ */
 int
-AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *s, AG_TexCoord *tc)
 {
-	AG_Surface *gsu;
+	AG_Surface *sGL;
 
-	if (su->flags & AG_SURFACE_GLTEXTURE) {
-		gsu = su;
+	if (s->flags & AG_SURFACE_GL_TEXTURE) {
+		sGL = s;
 	} else {
-		if ((gsu = AG_SurfaceStdGL(su->w, su->h)) == NULL) {
-			return (-1);
-		}
-		AG_SurfaceCopy(gsu, su);
+		sGL = AG_SurfaceStdGL(s->w, s->h);
+		AG_SurfaceCopy(sGL, s);
 	}
 	if (tc != NULL) {
 		tc->x = 0.0f;
 		tc->y = 0.0f;
-		tc->w = (float)gsu->w / (float)su->w;
-		tc->h = (float)gsu->h / (float)su->h;
+		tc->w = (float)sGL->w / (float)s->w;
+		tc->h = (float)sGL->h / (float)s->h;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-	    gsu->w, gsu->h, 0,
+	    sGL->w, sGL->h, 0,
 	    GL_RGBA,
-	    GL_UNSIGNED_BYTE,
-	    gsu->pixels);
+	    AG_GL_SurfaceType(sGL),
+	    sGL->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (!(su->flags & AG_SURFACE_GLTEXTURE)) {
-		AG_SurfaceFree(gsu);
+	if (!(s->flags & AG_SURFACE_GL_TEXTURE)) {
+		AG_SurfaceFree(sGL);
 	}
 	return (0);
 }
 
-/* Prepare a widget-bound texture for rendering. */
-void
-AG_GL_PrepareTexture(void *obj, int s)
-{
-	AG_Widget *wid = obj;
-	AG_Driver *drv = wid->drv;
-
-	if (wid->textures[s] == 0) {
-		AG_GL_UploadTexture(drv, &wid->textures[s], wid->surfaces[s],
-		    &wid->texcoords[s]);
-	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
-		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(drv, wid->textures[s],
-		    wid->surfaces[s], &wid->texcoords[s]);
-	}
-}
-
-/* Generic emulated BlitSurface() for GL drivers. */
+/*
+ * Perform a software image transfer from an AG_Surface to a textured
+ * polygon at widget coordinates x,y.
+ */
 void
 AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 {
@@ -391,10 +425,13 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
 	{
-		glTexCoord2f(tc.x, tc.y);	glVertex2i(x,      y);
-		glTexCoord2f(tc.w, tc.y);	glVertex2i(x+s->w, y);
-		glTexCoord2f(tc.w, tc.h);	glVertex2i(x+s->w, y+s->h);
-		glTexCoord2f(tc.x, tc.h);	glVertex2i(x,      y+s->h);
+		int w = s->w;
+		int h = s->h;
+
+		glTexCoord2f(tc.x, tc.y);  glVertex2i(x,   y);
+		glTexCoord2f(tc.w, tc.y);  glVertex2i(x+w, y);
+		glTexCoord2f(tc.w, tc.h);  glVertex2i(x+w, y+h);
+		glTexCoord2f(tc.x, tc.h);  glVertex2i(x,   y+h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -404,59 +441,64 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *s, int x, int y)
 }
 
 /*
- * Generic BlitSurfaceFrom() for GL drivers. We simply render a rectangle
- * bound to the corresponding texture.
+ * Perform an accelerated image transfer from a mapped surface (by name)
+ * to target widget coordinates x,y.
  */
 void
-AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s,
-    AG_Rect *r, int x, int y)
+AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
+    int x, int y)
 {
 	AG_Driver *drv = obj;
-	AG_Surface *su = widSrc->surfaces[s];
-	AG_TexCoord tcTmp, *tc;
+	AG_Surface *s = wid->surfaces[name];
+	AG_TexCoord tc;
 	
 	AG_ASSERT_CLASS(obj, "AG_Driver:*");
 	AG_ASSERT_CLASS(wid, "AG_Widget:*");
-	AG_ASSERT_CLASS(widSrc, "AG_Widget:*");
 
-	AG_GL_PrepareTexture(widSrc, s);
-
-	if (r == NULL) {
-		tc = &widSrc->texcoords[s];
-	} else {
-		tc = &tcTmp;
-		tcTmp.x = (float)r->x/PowOf2i(r->x);
-		tcTmp.y = (float)r->y/PowOf2i(r->y);
-		tcTmp.w = (float)r->w/PowOf2i(r->w);
-		tcTmp.h = (float)r->h/PowOf2i(r->h);
-	}
+	/* XXX move this call past pushBlendingMode? */
+	AG_GL_PrepareTexture(wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
 	    AG_ALPHA_ONE_MINUS_SRC);
 
-	glBindTexture(GL_TEXTURE_2D, widSrc->textures[s]);
+	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
-		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
-		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
-		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
+		int x2 = x + s->w;
+		int y2 = y + s->h;
+
+		if (r != NULL) {
+			tc.x = (float)r->x/PowOf2i(r->x); /* XXX */
+			tc.y = (float)r->y/PowOf2i(r->y);
+			tc.w = (float)r->w/PowOf2i(r->w);
+			tc.h = (float)r->h/PowOf2i(r->h);
+		} else {
+			tc = wid->texcoords[name];
+		}
+		glTexCoord2f(tc.x, tc.y);  glVertex2i(x,  y);
+		glTexCoord2f(tc.w, tc.y);  glVertex2i(x2, y);
+		glTexCoord2f(tc.w, tc.h);  glVertex2i(x2, y2);
+		glTexCoord2f(tc.x, tc.h);  glVertex2i(x,  y2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
 
-/* Generic BlitSurfaceGL() operation for GL drivers. */
+/*
+ * Perform a software image transfer from an AG_Surface to a textured
+ * rectangle of explicit size w,h in GL coordinates.
+ */
 void
 AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 {
 	AG_Driver *drv = obj;
 	GLuint texture;
 	AG_TexCoord tc;
-	float w2 = w/2.0f;
-	float h2 = h/2.0f;
+	
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
 	AG_GL_UploadTexture(drv, &texture, s, &tc);
 
@@ -467,10 +509,13 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_POLYGON);
 	{
-		glTexCoord2f(tc.x, tc.y);	glVertex2f( w2,  h2);
-		glTexCoord2f(tc.w, tc.y);	glVertex2f(-w2,  h2);
-		glTexCoord2f(tc.w, tc.h);	glVertex2f(-w2, -h2);
-		glTexCoord2f(tc.x, tc.h);	glVertex2f( w2, -h2);
+		float w_2 = w/2.0f;
+		float h_2 = h/2.0f;
+
+		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
+		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
+		glTexCoord2f(tc.w, tc.h);  glVertex2f(-w_2, -h_2);
+		glTexCoord2f(tc.x, tc.h);  glVertex2f( w_2, -h_2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -479,57 +524,36 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *s, float w, float h)
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
 
-/* Generic BlitSurfaceFromGL() operation for GL drivers. */
+/*
+ * Perform an accelerated image transfer from a mapped surface wid:s,
+ * to a textured rectangle of explicit size w,h in GL coordinates.
+ */
 void
-AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
+AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
-	AG_TexCoord *tc;
-	float w2 = w/2.0f;
-	float h2 = h/2.0f;
 	
-	AG_GL_PrepareTexture(wid, s);
-	tc = &wid->texcoords[s];
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	
+	/* XXX move this call past pushBlendingMode? */
+	AG_GL_PrepareTexture(wid, name);
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
 	    AG_ALPHA_SRC,
 	    AG_ALPHA_ONE_MINUS_SRC);
 	
-	glBindTexture(GL_TEXTURE_2D, wid->textures[s]);
+	glBindTexture(GL_TEXTURE_2D, wid->textures[name]);
 	glBegin(GL_POLYGON);
 	{
-		glTexCoord2f(tc->x, tc->y);	glVertex2f( w2,  h2);
-		glTexCoord2f(tc->w, tc->y);	glVertex2f(-w2,  h2);
-		glTexCoord2f(tc->w, tc->h);	glVertex2f(-w2, -h2);
-		glTexCoord2f(tc->x, tc->h);	glVertex2f( w2, -h2);
-	}
-	glEnd();
-	glBindTexture(GL_TEXTURE_2D, 0);
+		AG_TexCoord tc = wid->texcoords[name];
+		float w_2 = w/2.0f;
+		float h_2 = h/2.0f;
 
-	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
-}
-
-/* Generic BlitSurfaceFlippedGL() operation for GL drivers. */
-void
-AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
-{
-	AG_Driver *drv = obj;
-	AG_TexCoord *tc;
-	
-	AG_GL_PrepareTexture(wid, s);
-	tc = &wid->texcoords[s];
-
-	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
-	    AG_ALPHA_SRC,
-	    AG_ALPHA_ONE_MINUS_SRC);
-	
-	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[s]);
-	glBegin(GL_POLYGON);
-	{
-		glTexCoord2f(tc->w, tc->y);	glVertex2f(0.0, 0.0);
-		glTexCoord2f(tc->x, tc->y);	glVertex2f(w,   0.0);
-		glTexCoord2f(tc->x, tc->h);	glVertex2f(w,   h);
-		glTexCoord2f(tc->w, tc->h);	glVertex2f(0.0, h);
+		glTexCoord2f(tc.x, tc.y);  glVertex2f( w_2,  h_2);
+		glTexCoord2f(tc.w, tc.y);  glVertex2f(-w_2,  h_2);
+		glTexCoord2f(tc.w, tc.h);  glVertex2f(-w_2, -h_2);
+		glTexCoord2f(tc.x, tc.h);  glVertex2f( w_2, -h_2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -538,54 +562,88 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int s, float w, float h)
 }
 
 /*
- * Generic BackupSurfaces() operation for GL drivers. We simply copy the
- * textures back to software surfaces, where necessary, using glGetTexImage().
+ * Perform an accelerated image transfer from a mapped surface wid:s,
+ * to a textured rectangle of explicit size w,h in (flipped) GL coordinates.
+ */
+void
+AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h)
+{
+	AG_Driver *drv = obj;
+	
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
+	
+	/* XXX move this call past pushBlendingMode? */
+	AG_GL_PrepareTexture(wid, name);
+
+	AGDRIVER_CLASS(drv)->pushBlendingMode(drv,
+	    AG_ALPHA_SRC,
+	    AG_ALPHA_ONE_MINUS_SRC);
+	
+	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[name]);
+	glBegin(GL_POLYGON);
+	{
+		AG_TexCoord tc = wid->texcoords[name];
+
+		glTexCoord2f(tc.w, tc.y);  glVertex2f(0.0f, 0.0f);
+		glTexCoord2f(tc.x, tc.y);  glVertex2f(w,    0.0f);
+		glTexCoord2f(tc.x, tc.h);  glVertex2f(w,    h);
+		glTexCoord2f(tc.w, tc.h);  glVertex2f(0.0f, h);
+	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
+}
+
+/*
+ * Back up every mapped GL texture to a software surface, so that textures
+ * can be restored automatically following a possible loss of GL context.
  */
 void
 AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 {
-	AG_Surface *su;
+	AG_Surface *s;
 	GLint w, h;
 	Uint i;
+	
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
-	for (i = 0; i < wid->nsurfaces; i++)  {
+	for (i = 0; i < wid->nSurfaces; i++)  {
 		if (wid->textures[i] == 0 ||
 		    wid->surfaces[i] != NULL) {
 			continue;
 		}
 		glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[i]);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,
-		    &w);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT,
-		    &h);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
-		if ((su = AG_SurfaceStdGL(w, h)) == NULL) {
-			AG_FatalError("AG_SurfaceStdGL");
-		}
+		s = AG_SurfaceStdGL(w, h);
 		glGetTexImage(GL_TEXTURE_2D, 0,
 		    GL_RGBA,
 		    GL_UNSIGNED_BYTE,
-		    su->pixels);
+		    s->pixels);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		wid->surfaces[i] = su;
+		wid->surfaces[i] = s;
 	}
-	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
-	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
+	glDeleteTextures(wid->nSurfaces, (GLuint *)wid->textures);
+	memset(wid->textures, 0, wid->nSurfaces*sizeof(Uint));
 	AG_ObjectUnlock(wid);
 }
 
-/*
- * Generic RestoreSurfaces() operation for GL drivers. We recreate
- * corresponding textures for all surfaces.
- */
+/* Re-upload previously saved textures following loss of GL context. */
 void
 AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 {
 	Uint i;
+	
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
 	AG_ObjectLock(wid);
-	for (i = 0; i < wid->nsurfaces; i++)  {
+	for (i = 0; i < wid->nSurfaces; i++)  {
 		if (wid->surfaces[i] != NULL) {
 			AG_GL_UploadTexture(wid->drv, &wid->textures[i],
 			    wid->surfaces[i], &wid->texcoords[i]);
@@ -597,8 +655,9 @@ AG_GL_RestoreSurfaces(void *obj, AG_Widget *wid)
 }
 
 /*
- * Generic RenderToSurface() operation for GL drivers.
- * XXX XXX TODO render to offscreen buffer instead of display!
+ * Render the specified widget to an AG_Surface.
+ * XXX TODO render to offscreen buffer instead of display
+ * XXX TODO handle 16-bit depth
  */
 int
 AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
@@ -606,6 +665,9 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **s)
 	AG_Driver *drv = obj;
 	Uint8 *pixels;
 	int visiblePrev;
+	
+	AG_ASSERT_CLASS(obj, "AG_Driver:*");
+	AG_ASSERT_CLASS(wid, "AG_Widget:*");
 
 	AG_BeginRendering(drv);
 	visiblePrev = wid->window->visible;
@@ -648,137 +710,228 @@ fail:
 	return (-1);
 }
 
+/* Put pixel of color c at x,y. */
+void
+AG_GL_PutPixel(void *obj, int x, int y, AG_Color c)
+{
+	glBegin(GL_POINTS);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(x, y);
+	glEnd();
+}
+
+/* Put a 32-bit pixel (in videoFmt) px at x,y. */
+void
+AG_GL_PutPixel32(void *obj, int x, int y, Uint32 px)
+{
+	AG_Driver *drv = obj;
+	Uint8 r,g,b;
+
+	AG_GetColor32_RGB8(px, drv->videoFmt, &r,&g,&b);
+	glBegin(GL_POINTS);
+	glColor3ub(r,g,b);
+	glVertex2i(x,y);
+	glEnd();
+}
+
+/* Put a pixel of color r,g,b (as 8-bit components) at x,y. */
+void
+AG_GL_PutPixelRGB8(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+	glBegin(GL_POINTS);
+	glColor3ub(r,g,b);
+	glVertex2i(x,y);
+	glEnd();
+}
+
+#if AG_MODEL == AG_LARGE
+
+/* Put a 64-bit pixel (in videoFmt) px at x,y. */
+void
+AG_GL_PutPixel64(void *obj, int x, int y, Uint64 px)
+{
+	AG_Driver *drv = obj;
+	Uint16 r,g,b;
+
+	AG_GetColor64_RGB16(px, drv->videoFmt, &r,&g,&b);
+	glBegin(GL_POINTS);
+	glColor3us(r,g,b);
+	glVertex2i(x,y);
+	glEnd();
+}
+
+/* Put a pixel of color r,g,b (as 16-bit components) at x,y. */
+void
+AG_GL_PutPixelRGB16(void *obj, int x, int y, Uint16 r, Uint16 g, Uint16 b)
+{
+	glBegin(GL_POINTS);
+	glColor3us(r,g,b);
+	glVertex2i(x,y);
+	glEnd();
+}
+
+#endif /* AG_LARGE */
+
 /*
- * Generic GL rendering operations (rendering context)
+ * Blend the pixel at x,y against color c, given the specified source and
+ * destination blending factors.
  */
-
 void
-AG_GL_PutPixel(void *obj, int x, int y, AG_Color C)
-{
-	glBegin(GL_POINTS);
-	glColor3ub(C.r, C.g, C.b);
-	glVertex2i(x, y);
-	glEnd();
-}
-
-void
-AG_GL_PutPixel32(void *obj, int x, int y, Uint32 c)
-{
-	AG_Driver *drv = obj;
-	Uint8 r, g, b;
-
-	AG_GetPixelRGB(c, drv->videoFmt, &r,&g,&b);
-	glBegin(GL_POINTS);
-	glColor3ub(r, g, b);
-	glVertex2i(x, y);
-	glEnd();
-}
-
-void
-AG_GL_PutPixelRGB(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
-{
-	glBegin(GL_POINTS);
-	glColor3ub(r, g, b);
-	glVertex2i(x, y);
-	glEnd();
-}
-
-void
-AG_GL_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
-    AG_BlendFn fnDst)
+AG_GL_BlendPixel(void *obj, int x, int y, AG_Color c, AG_AlphaFn fnSrc,
+    AG_AlphaFn fnDst)
 {
 	AG_Driver *drv = obj;
 
-	/* XXX inefficient */
+	/* XXX use own blending routine here to avoid blending moe push/pop? */
 
 	AGDRIVER_CLASS(drv)->pushBlendingMode(drv, fnSrc, fnDst);
+
 	glBegin(GL_POINTS);
-	glColor4ub(C.r, C.g, C.b, C.a);
-	glVertex2i(x, y);
+	GL_Color4uH(c.r, c.g, c.b, c.a);
+	glVertex2i(x,y);
 	glEnd();
+
 	AGDRIVER_CLASS(drv)->popBlendingMode(drv);
 }
 
+/* Draw a solid line from (x1,y1) to (x2,y2) */
 void
-AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
+AG_GL_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color c)
 {
 	glBegin(GL_LINES);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
 }
 
+/* Draw a solid horizontal line from (x1,y) to (x2,y). */
 void
-AG_GL_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
+AG_GL_DrawLineH(void *obj, int x1, int x2, int y, AG_Color c)
 {
 	glBegin(GL_LINES);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2s(x1, y);
 	glVertex2s(x2, y);
 	glEnd();
 }
 
+/* Draw a solid vertical line from (x,y1) to (x,y2). */
 void
-AG_GL_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
+AG_GL_DrawLineV(void *obj, int x, int y1, int y2, AG_Color c)
 {
 	glBegin(GL_LINES);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2s(x, y1);
 	glVertex2s(x, y2);
 	glEnd();
 }
 
+/* Draw a alpha-blended line from (x1,y1) to (x2,y2). */
 void
-AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
-    AG_BlendFn fnSrc, AG_BlendFn fnDst)
+AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color c,
+    AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	if (C.a < 255)
+	if (c.a < AG_ALPHA_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_LINES);
-	glColor4ub(C.r, C.g, C.b, C.a);
+	GL_Color4uH(c.r, c.g, c.b, c.a);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
 	
-	if (C.a < 255)
+	if (c.a < AG_ALPHA_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
 void
-AG_GL_DrawArrow(void *obj, float angle, int x, int y, int h, AG_Color c1,
-    AG_Color c2)
+AG_GL_DrawTriangle(void *_Nonnull obj, AG_Pt v1, AG_Pt v2, AG_Pt v3, AG_Color c)
 {
-	int mid = h/2;
-
-	if (angle != 0.0f) {
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glRotatef(angle, 0.0, 0.0, 1.0);
-	}
-
-	glBegin(GL_POLYGON);
-	{
-		glColor3ub(c1.r, c1.g, c1.b);
-		glVertex2i(x,		y - mid);
-		glVertex2i(x - mid,	y + mid);
-		glVertex2i(x + mid,	y + mid);
-	}
-	glBegin(GL_LINES);
-	{
-		glColor3ub(c2.r, c2.g, c2.b);
-		glVertex2i(x,		y - mid);
-		glVertex2i(x - mid,	y + mid);
-		glVertex2i(x + mid,	y + mid);
-	}
+	glBegin(GL_TRIANGLES);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(v1.x, v1.y);
+	glVertex2i(v2.x, v2.y);
+	glVertex2i(v3.x, v3.y);
 	glEnd();
-
-	if (angle != 0.0f)
-		glPopMatrix();
 }
 
-/* Generic FillRect() operation for GL drivers. */
+static void
+AG_GL_DrawArrow_Up(int x, int y, int h, AG_Color c)
+{
+	int h_2 = h >> 1;
+
+	glBegin(GL_TRIANGLES);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(x - 1,       y - h_2);
+	glVertex2i(x - h_2 - 1, y - h_2 + h + 1);
+	glVertex2i(x + h_2 - 1, y - h_2 + h + 1);
+	glEnd();
+}
+
+static void
+AG_GL_DrawArrow_Right(int x, int y, int h, AG_Color c)
+{
+	int h_2 = (h >> 1);
+	int x1 = x - h_2 - 1;
+	int x2 = x1 + h + 1;
+
+	glBegin(GL_TRIANGLES);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(x2, y);
+	glVertex2i(x1, y-h_2);
+	glVertex2i(x1, y+h_2);
+	glEnd();
+}
+
+static void
+AG_GL_DrawArrow_Down(int x, int y, int h, AG_Color c)
+{
+	int h_2 = (h >> 1);
+	int x1 = x - 1;
+	int y1 = y - h_2;
+	int y2 = y1 + h + 1;
+
+	glBegin(GL_TRIANGLES);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(x1,     y2);
+	glVertex2i(x1+h_2, y1);
+	glVertex2i(x1-h_2, y1);
+	glEnd();
+}
+
+static void
+AG_GL_DrawArrow_Left(int x, int y, int h, AG_Color c)
+{
+	int h_2 = (h >> 1);
+	int x1 = x - h_2 - 1;
+	int x2 = x1 + h;
+
+	glBegin(GL_TRIANGLES);
+	GL_Color3uH(c.r, c.g, c.b);
+	glVertex2i(x1, y);
+	glVertex2i(x2, y+h_2);
+	glVertex2i(x2, y-h_2);
+	glEnd();
+}
+
+/* Draw an arrow of height h at (x,y), rotated by a given angle. */
+void
+AG_GL_DrawArrow(void *obj, Uint8 angle, int x0, int y0, int h, AG_Color c)
+{
+	static void (*pf[])(int,int, int, AG_Color) = {
+		AG_GL_DrawArrow_Up,
+		AG_GL_DrawArrow_Right,
+		AG_GL_DrawArrow_Down,
+		AG_GL_DrawArrow_Left,
+	};
+#ifdef AG_DEBUG
+	if (angle >= 4) { AG_FatalError("Bad angle"); }
+#endif
+	pf[angle](x0,y0, h, c);
+}
+
+/* Solid rectangle fill with color c. */
 void
 AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 {
@@ -786,7 +939,7 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 	int y2 = r.y + r.h - 1;
 
 	glBegin(GL_POLYGON);
-	glColor3ub(c.r, c.g, c.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2i(r.x, r.y);
 	glVertex2i(x2, r.y);
 	glVertex2i(x2, y2);
@@ -794,6 +947,7 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 	glEnd();
 }
 
+/* Solid rectangle fill with color c + dithering. */
 void
 AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
 {
@@ -810,12 +964,13 @@ AG_GL_DrawRectDithered(void *obj, AG_Rect r, AG_Color c)
 	if (!stipplePrev) { glDisable(GL_POLYGON_STIPPLE); }
 }
 
+/* Draw a box with all rounded corners. */
 void
-AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
-    AG_Color c2, AG_Color c3)
+AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius,
+    AG_Color c1, AG_Color c2, AG_Color c3)
 {
-	float rad = (float)radius;
-	float i, nFull = 10.0, nQuart = nFull/4.0;
+	float rad = (float)radius, rad2 = 2.0f*rad;
+	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -824,64 +979,71 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
 	             (float)r.y + rad, 0.0f);
 
 	glBegin(GL_POLYGON);
-	glColor3ub(c1.r, c1.g, c1.b);
+	GL_Color3uH(c1.r, c1.g, c1.b);
 	{
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
-			           -rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(-rad*Cos(t), -rad*Sin(t));
 		}
-		for (i = nQuart-1; i > 0.0; i--) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = nQuart-1; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad2 + rad*Cos(t/nFull),
+			           -rad*Sin(t/nFull));
 		}
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad2 + rad*Cos(t),
+			           r.h - rad2 + rad*Sin(t));
 		}
-		for (i = nQuart; i > 0.0; i--) {
-			glVertex2f(            - rad*Cos((2.0*AG_PI*i)/nFull),
-			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = nQuart; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(- rad*Cos(t),
+			           r.h - rad2 + rad*Sin(t));
 		}
 	}
 	glEnd();
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		glColor3ub(c2.r, c2.g, c2.b);
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
-			           -rad*Sin((2.0*AG_PI*i)/nFull));
+		GL_Color3uH(c2.r, c2.g, c2.b);
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(-rad*Cos(t),
+			           -rad*Sin(t));
 		}
-		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
-		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
+		t = 2.0f*AG_PI*nQuart;
+		glVertex2f((r.w - rad2 + rad*Cos(t/nFull)),
+		           -rad*Sin(t/nFull));
 
-		glColor3ub(c3.r, c3.g, c3.b);
-		for (i = nQuart-1; i > 0.0; i--) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		GL_Color3uH(c3.r, c3.g, c3.b);
+		for (i = nQuart-1; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad2 + rad*Cos(t), -rad*Sin(t));
 		}
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad2 + rad*Cos(t),
+			           r.h - rad2 + rad*Sin(t));
 		}
-		for (i = nQuart; i > 0.0; i--) {
-			glVertex2f(            - rad*Cos((2.0*AG_PI*i)/nFull),
-			           r.h - rad*2 + rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = nQuart; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(-rad*Cos(t),
+			           r.h - rad2 + rad*Sin(t));
 		}
-		glColor3ub(c2.r, c2.g, c2.b);
-		glVertex2f(-rad, 0.0);
+		GL_Color3uH(c2.r, c2.g, c2.b);
+		glVertex2f(-rad, 0.0f);
 	}
 	glEnd();
-
 	glPopMatrix();
 }
 
+/* Draw a box with top rounded corners. */
 void
-AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
-    AG_Color c2, AG_Color c3)
+AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius,
+    AG_Color c1, AG_Color c2, AG_Color c3)
 {
 	float rad = (float)radius;
-	float i, nFull = 10.0, nQuart = nFull/4.0;
+	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -890,19 +1052,19 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
 	             (float)r.y + rad, 0.0f);
 
 	glBegin(GL_POLYGON);
-	glColor3ub(c1.r, c1.g, c1.b);
+	GL_Color3uH(c1.r, c1.g, c1.b);
 	{
 		glVertex2f(-rad, (float)r.h - rad);
-
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(-rad*Cos((2.0*AG_PI*i)/nFull),
-			           -rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(-rad*Cos(t), -rad*Sin(t));
 		}
-		glVertex2f(0.0, -rad);
+		glVertex2f(0.0f, -rad);
 
-		for (i = nQuart; i > 0.0; i--) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = nQuart; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad*2.0f + rad*Cos(t),
+			           -rad*Sin(t));
 		}
 		glVertex2f((float)r.w - rad,
 		           (float)r.h - rad);
@@ -911,99 +1073,111 @@ AG_GL_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int radius, AG_Color c1,
 	
 	glBegin(GL_LINE_STRIP);
 	{
-		glColor3ub(c2.r, c2.g, c2.b);
+		GL_Color3uH(c2.r, c2.g, c2.b);
 		glVertex2i(-rad, r.h-rad);
-		for (i = 0.0; i < nQuart; i++) {
-			glVertex2f(-(float)rad*Cos((2.0*AG_PI*i)/nFull),
-			           -(float)rad*Sin((2.0*AG_PI*i)/nFull));
+		for (i = 0.0f; i < nQuart; i++) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(-(float)rad*Cos(t), -(float)rad*Sin(t));
 		}
-		glVertex2f(0.0, -rad);
-		glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*nQuart)/nFull),
-		                       - rad*Sin((2.0*AG_PI*nQuart)/nFull));
+		glVertex2f(0.0f, -rad);
+		t = (2.0f*AG_PI*nQuart)/nFull;
+		glVertex2f(r.w - rad*2 + rad*Cos(t), -rad*Sin(t));
 
-		glColor3ub(c3.r, c3.g, c3.b);
-		for (i = nQuart-1; i > 0.0; i--) {
-			glVertex2f(r.w - rad*2 + rad*Cos((2.0*AG_PI*i)/nFull),
-			                       - rad*Sin((2.0*AG_PI*i)/nFull));
+		GL_Color3uH(c3.r, c3.g, c3.b);
+		for (i = nQuart-1; i > 0.0f; i--) {
+			t = (2.0f*AG_PI*i)/nFull;
+			glVertex2f(r.w - rad*2 + rad*Cos(t), -rad*Sin(t));
 		}
 		glVertex2f((float)r.w - rad,
 		           (float)r.h - rad);
 	}
 	glEnd();
-
 	glPopMatrix();
 }
 
+/* Draw (an approximation of) a circle of radius r centered at x,y. */
 void
-AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color C)
+AG_GL_DrawCircle(void *obj, int x, int y, int r, AG_Color c)
 {
 	float i, nEdges = r*2;
+	float R = (float)r;
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	for (i = 0; i < nEdges; i++) {
-		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
-		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
+		float t = (2.0f * AG_PI * i)/nEdges;
+
+		glVertex2f(R * Cos(t),
+		           R * Sin(t));
 	}
 	glEnd();
 
 	glPopMatrix();
 }
 
+/* Draw (an approximation of) a filled circle of radius r centered at x,y. */
 void
-AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color C)
+AG_GL_DrawCircleFilled(void *obj, int x, int y, int r, AG_Color c)
 {
 	float i, nEdges = r*2;
+	float R = (float)r;
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_POLYGON);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	for (i = 0; i < nEdges; i++) {
-		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
-		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
+		float t = (2.0f * AG_PI * i)/nEdges;
+
+		glVertex2f(R * Cos(t),
+		           R * Sin(t));
 	}
 	glEnd();
 
 	glPopMatrix();
 }
 
+/* Variant of AG_GL_DrawCircle() */
 void
-AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color C)
+AG_GL_DrawCircle2(void *obj, int x, int y, int r, AG_Color c)
 {
 	float i, nEdges = r*2;
+	float R = (float)r;
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef((float)x, (float)y, 0.0f);
 	
 	glBegin(GL_LINE_LOOP);
-	glColor3ub(C.r, C.g, C.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	for (i = 0; i < nEdges; i++) {
-		glVertex2f((float)r*Cos((2.0*AG_PI*i)/nEdges),
-		           (float)r*Sin((2.0*AG_PI*i)/nEdges));
-		glVertex2f(((float)r + 1.0)*Cos((2.0*AG_PI*i)/nEdges),
-		           ((float)r + 1.0)*Sin((2.0*AG_PI*i)/nEdges));
+		float t = (2.0f * AG_PI * i)/nEdges;
+
+		glVertex2f(R * Cos(t),
+		           R * Sin(t));
+		glVertex2f((R + 1.0f)*Cos(t),
+		           (R + 1.0f)*Sin(t));
 	}
 	glEnd();
 
 	glPopMatrix();
 }
 
+/* Draw a rectangle r filled with solid color c (ignore any alpha) */
 void
-AG_GL_DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
+AG_GL_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
 {
 	int x2 = r.x + r.w - 1;
 	int y2 = r.y + r.h - 1;
 
 	glBegin(GL_POLYGON);
-	glColor3ub(C.r, C.g, C.b);
+	glColor3us(c.r, c.g, c.b);
 	glVertex2i(r.x, r.y);
 	glVertex2i(x2, r.y);
 	glVertex2i(x2, y2);
@@ -1011,49 +1185,55 @@ AG_GL_DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
 	glEnd();
 }
 
+/* Draw a rectangle r filled with color c (blend according to c's alpha). */
 void
-AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
-    AG_BlendFn fnDst)
+AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_AlphaFn fnSrc,
+    AG_AlphaFn fnDst)
 {
 	int x1 = r.x;
 	int y1 = r.y;
 	int x2 = x1+r.w;
 	int y2 = y1+r.h;
 
-	if (C.a < 255)
+	if (c.a < AG_ALPHA_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_POLYGON);
-	glColor4ub(C.r, C.g, C.b, C.a);
+	glColor4us(c.r, c.g, c.b, c.a);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
 	glVertex2i(x2, y2);
 	glVertex2i(x1, y2);
 	glEnd();
 	
-	if (C.a < 255)
+	if (c.a < AG_ALPHA_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
+/* Prepare for rendering an AG_Text(3) glyph. */
 void
 AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
 	AG_GL_UploadTexture(obj, &gl->texture, gl->su, &gl->texcoords);
 }
 
+/* Render an AG_Text(3) glyph at x,y. */
 void
 AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 {
-	AG_Surface *su = gl->su;
-	const AG_TexCoord *tc = &gl->texcoords;
+	AG_Surface *s = gl->su;
 
 	glBindTexture(GL_TEXTURE_2D, gl->texture);
 	glBegin(GL_POLYGON);
 	{
-		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
-		glTexCoord2f(tc->w, tc->y);	glVertex2i(x+su->w, y);
-		glTexCoord2f(tc->w, tc->h);	glVertex2i(x+su->w, y+su->h);
-		glTexCoord2f(tc->x, tc->h);	glVertex2i(x,       y+su->h);
+		const AG_TexCoord tc = gl->texcoords;
+		int w = s->w;
+		int h = s->h;
+
+		glTexCoord2f(tc.x, tc.y);  glVertex2i(x,   y);
+		glTexCoord2f(tc.w, tc.y);  glVertex2i(x+w, y);
+		glTexCoord2f(tc.w, tc.h);  glVertex2i(x+w, y+h);
+		glTexCoord2f(tc.x, tc.h);  glVertex2i(x,   y+h);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);

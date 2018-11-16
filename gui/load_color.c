@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,31 +29,66 @@
 
 #include <agar/core/core.h>
 #include <agar/gui/surface.h>
-#include <agar/gui/load_color.h>
 
 void
 AG_WriteColor(AG_DataSource *ds, AG_Color C)
 {
-	if (ds->debug) {
+#ifdef AG_DEBUG
+	if (ds->debug)
 		AG_WriteTypeCode(ds, AG_SOURCE_COLOR_RGBA);
-	}
+#endif
+#if AG_MODEL == AG_LARGE
+	AG_WriteUint8(ds, 16);
+	AG_WriteUint16(ds, C.r);
+	AG_WriteUint16(ds, C.g);
+	AG_WriteUint16(ds, C.b);
+	AG_WriteUint16(ds, C.a);
+#else
+	AG_WriteUint8(ds, 8);
 	AG_WriteUint8(ds, C.r);
 	AG_WriteUint8(ds, C.g);
 	AG_WriteUint8(ds, C.b);
 	AG_WriteUint8(ds, C.a);
+#endif
 }
 
 AG_Color
 AG_ReadColor(AG_DataSource *ds)
 {
 	AG_Color C;
+	Uint8 depth;
 
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_COLOR_RGBA) == -1) {
-		return AG_ColorRGB(255,0,0);
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_COLOR_RGBA) == -1)
+		AG_FatalError("Not COLOR_RGBA");
+#endif
+	depth = AG_ReadUint8(ds);
+	if (depth == 16) {
+#if AG_MODEL == AG_LARGE
+		C.r = AG_ReadUint16(ds);
+		C.g = AG_ReadUint16(ds);
+		C.b = AG_ReadUint16(ds);
+		C.a = AG_ReadUint16(ds);
+#else
+		C.r = AG_16to8(AG_ReadUint16(ds));
+		C.g = AG_16to8(AG_ReadUint16(ds));
+		C.b = AG_16to8(AG_ReadUint16(ds));
+		C.a = AG_16to8(AG_ReadUint16(ds));
+#endif
+	} else if (depth == 8) {
+#if AG_MODEL == AG_LARGE
+		C.r = AG_8to16(AG_ReadUint8(ds));
+		C.g = AG_8to16(AG_ReadUint8(ds));
+		C.b = AG_8to16(AG_ReadUint8(ds));
+		C.a = AG_8to16(AG_ReadUint8(ds));
+#else
+		C.r = AG_ReadUint8(ds);
+		C.g = AG_ReadUint8(ds);
+		C.b = AG_ReadUint8(ds);
+		C.a = AG_ReadUint8(ds);
+#endif
+	} else {
+		AG_FatalError("Bad depth");
 	}
-	C.r = AG_ReadUint8(ds);
-	C.g = AG_ReadUint8(ds);
-	C.b = AG_ReadUint8(ds);
-	C.a = AG_ReadUint8(ds);
 	return (C);
 }

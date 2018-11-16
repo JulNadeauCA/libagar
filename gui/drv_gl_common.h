@@ -17,68 +17,80 @@ typedef struct ag_gl_blending_state {
 
 /* Common OpenGL context data */
 typedef struct ag_gl_context {
-	int              clipStates[4];	/* Clipping rectangles enabled state */
-	AG_ClipRect     *clipRects;	/* Clipping rectangle coordinates */
-	Uint            nClipRects;
-	Uint            *textureGC;	/* Textures queued for deletion */
-	Uint            nTextureGC;
-	Uint            *listGC;	/* Display lists queued for deletion */
-	Uint            nListGC;
-	AG_GL_BlendState bs[1];		/* Saved blending states */
-	Uint8            dither[128];	/* Dithering stipple pattern */
+	AG_ClipRect *_Nullable clipRects; /* Clipping rectangle coords */
+	Uint                  nClipRects;
+	int clipStates[4];		  /* Clipping states */
+	AG_GL_BlendState bs[1];		  /* Alpha blending states */
+	Uint *_Nullable textureGC;	  /* Textures queued for deletion */
+	Uint           nTextureGC;
+	Uint *_Nullable listGC;           /* Display lists queued for deletion */
+	Uint           nListGC;
+	Uint8 dither[128];		  /* 32x32 stipple pattern */
 } AG_GL_Context;
 
 __BEGIN_DECLS
+int  AG_GL_InitContext(void *_Nonnull, AG_GL_Context *_Nonnull);
+void AG_GL_SetViewport(AG_GL_Context *_Nonnull, AG_Rect);
+void AG_GL_DestroyContext(void *_Nonnull);
 
-int  AG_GL_InitContext(void *, AG_GL_Context *);
-void AG_GL_SetViewport(AG_GL_Context *, AG_Rect);
-void AG_GL_DestroyContext(void *);
+void AG_GL_StdPushClipRect(void *_Nonnull, AG_Rect);
+void AG_GL_StdPopClipRect(void *_Nonnull);
+void AG_GL_StdPushBlendingMode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_StdPopBlendingMode(void *_Nonnull);
 
-void AG_GL_StdPushClipRect(void *, AG_Rect);
-void AG_GL_StdPopClipRect(void *);
-void AG_GL_StdPushBlendingMode(void *, AG_BlendFn, AG_BlendFn);
-void AG_GL_StdPopBlendingMode(void *);
+void AG_GL_StdUploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,
+                            AG_TexCoord *_Nullable);
+int  AG_GL_StdUpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
+                            AG_TexCoord *_Nullable);
 
-void AG_GL_StdUploadTexture(void *, Uint *, AG_Surface *, AG_TexCoord *);
-int  AG_GL_StdUpdateTexture(void *, Uint, AG_Surface *, AG_TexCoord *);
-void AG_GL_StdDeleteTexture(void *, Uint);
-void AG_GL_StdDeleteList(void *, Uint);
+void AG_GL_StdDeleteTexture(void *_Nonnull, Uint);
+void AG_GL_StdDeleteList(void *_Nonnull, Uint);
 
-void AG_GL_PrepareTexture(void *, int);
+void AG_GL_BlitSurface(void *_Nonnull, AG_Widget *_Nonnull,
+                       AG_Surface *_Nonnull, int,int);
 
-void AG_GL_BlitSurface(void *, AG_Widget *, AG_Surface *, int, int);
-void AG_GL_BlitSurfaceFrom(void *, AG_Widget *, AG_Widget *, int, AG_Rect *, int, int);
-void AG_GL_BlitSurfaceGL(void *, AG_Widget *, AG_Surface *, float, float);
-void AG_GL_BlitSurfaceFromGL(void *, AG_Widget *, int, float, float);
-void AG_GL_BlitSurfaceFlippedGL(void *, AG_Widget *, int, float, float);
-void AG_GL_BackupSurfaces(void *, AG_Widget *);
-void AG_GL_RestoreSurfaces(void *, AG_Widget *);
-int  AG_GL_RenderToSurface(void *, AG_Widget *, AG_Surface **);
+void AG_GL_BlitSurfaceFrom(void *_Nonnull, AG_Widget *_Nonnull, int,
+                           const AG_Rect *_Nullable, int,int);
+void AG_GL_BlitSurfaceGL(void *_Nonnull, AG_Widget *_Nonnull,
+                         AG_Surface *_Nonnull, float,float);
+void AG_GL_BlitSurfaceFromGL(void *_Nonnull, AG_Widget *_Nonnull, int,
+                             float,float);
+void AG_GL_BlitSurfaceFlippedGL(void *_Nonnull, AG_Widget *_Nonnull, int,
+                                float,float);
+void AG_GL_BackupSurfaces(void *_Nonnull, AG_Widget *_Nonnull);
+void AG_GL_RestoreSurfaces(void *_Nonnull, AG_Widget *_Nonnull);
+int  AG_GL_RenderToSurface(void *_Nonnull, AG_Widget *_Nonnull,
+                           AG_Surface *_Nonnull *_Nullable);
 
-void AG_GL_FillRect(void *, AG_Rect, AG_Color);
-void AG_GL_PutPixel(void *, int, int, AG_Color);
-void AG_GL_PutPixel32(void *, int, int, Uint32);
-void AG_GL_PutPixelRGB(void *, int, int, Uint8, Uint8, Uint8);
-void AG_GL_BlendPixel(void *, int, int, AG_Color, AG_BlendFn, AG_BlendFn);
-void AG_GL_DrawLine(void *, int, int, int, int, AG_Color);
-void AG_GL_DrawLineH(void *, int, int, int, AG_Color);
-void AG_GL_DrawLineV(void *, int, int, int, AG_Color);
-void AG_GL_DrawLineBlended(void *, int, int, int, int, AG_Color, AG_BlendFn, AG_BlendFn);
-void AG_GL_DrawArrow(void *, float, int, int, int, AG_Color, AG_Color);
-void AG_GL_DrawRectDithered(void *, AG_Rect, AG_Color);
-void AG_GL_DrawBoxRounded(void *, AG_Rect, int, int, AG_Color, AG_Color, AG_Color);
-void AG_GL_DrawBoxRoundedTop(void *, AG_Rect, int, int, AG_Color, AG_Color, AG_Color);
-void AG_GL_DrawCircle(void *, int, int, int, AG_Color);
-void AG_GL_DrawCircle2(void *, int, int, int, AG_Color);
-void AG_GL_DrawCircleFilled(void *, int, int, int, AG_Color);
-void AG_GL_DrawRectFilled(void *, AG_Rect, AG_Color);
-void AG_GL_DrawRectBlended(void *, AG_Rect, AG_Color, AG_BlendFn, AG_BlendFn);
-void AG_GL_UpdateGlyph(void *, struct ag_glyph *);
-void AG_GL_DrawGlyph(void *, const struct ag_glyph *, int, int);
+void AG_GL_FillRect(void *_Nonnull, AG_Rect, AG_Color);
+void AG_GL_PutPixel(void *_Nonnull, int,int, AG_Color);
+void AG_GL_PutPixel32(void *_Nonnull, int,int, Uint32);
+void AG_GL_PutPixel64(void *_Nonnull, int,int, Uint64);
+void AG_GL_PutPixelRGB8(void *_Nonnull, int,int, Uint8,Uint8,Uint8);
+void AG_GL_PutPixelRGB16(void *_Nonnull, int,int, Uint16,Uint16,Uint16);
+void AG_GL_BlendPixel(void *_Nonnull, int,int, AG_Color, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_DrawLine(void *_Nonnull, int,int, int,int, AG_Color);
+void AG_GL_DrawLineH(void *_Nonnull, int,int, int, AG_Color);
+void AG_GL_DrawLineV(void *_Nonnull, int, int,int, AG_Color);
+void AG_GL_DrawLineBlended(void *_Nonnull, int,int, int,int, AG_Color,
+                           AG_AlphaFn, AG_AlphaFn);
+void AG_GL_DrawTriangle(void *_Nonnull, AG_Pt,AG_Pt,AG_Pt, AG_Color);
+void AG_GL_DrawArrow(void *_Nonnull, Uint8, int,int, int, AG_Color);
+void AG_GL_DrawRectDithered(void *_Nonnull, AG_Rect, AG_Color);
+void AG_GL_DrawBoxRounded(void *_Nonnull, AG_Rect, int, int, AG_Color,AG_Color,AG_Color);
+void AG_GL_DrawBoxRoundedTop(void *_Nonnull, AG_Rect, int, int, AG_Color,AG_Color,AG_Color);
+void AG_GL_DrawCircle(void *_Nonnull, int,int, int, AG_Color);
+void AG_GL_DrawCircle2(void *_Nonnull, int,int, int, AG_Color);
+void AG_GL_DrawCircleFilled(void *_Nonnull, int,int, int, AG_Color);
+void AG_GL_DrawRectFilled(void *_Nonnull, AG_Rect, AG_Color);
+void AG_GL_DrawRectBlended(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn, AG_AlphaFn);
+void AG_GL_UpdateGlyph(void *_Nonnull, struct ag_glyph *_Nonnull);
+void AG_GL_DrawGlyph(void *_Nonnull, const struct ag_glyph *_Nonnull, int,int);
 
 /* Upload a texture. */
 static __inline__ void
-AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_UploadTexture(void *_Nonnull obj, Uint *_Nonnull name,
+    AG_Surface *_Nonnull su, AG_TexCoord *_Nullable tc)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
@@ -88,7 +100,8 @@ AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *su, AG_TexCoord *tc)
 
 /* Update the contents of an existing GL texture. */
 static __inline__ int
-AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_UpdateTexture(void *_Nonnull obj, Uint name, AG_Surface *_Nonnull su,
+    AG_TexCoord *_Nullable tc)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
@@ -96,9 +109,31 @@ AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *su, AG_TexCoord *tc)
 	return dc->updateTexture(drv, name, su, tc);
 }
 
+/*
+ * Make sure that the named texture is available for hardware rendering.
+ * Upload or update hardware textures if needed.
+ */
+static __inline__ void
+AG_GL_PrepareTexture(void *_Nonnull obj, int name)
+{
+	AG_Widget *wid = obj;
+	AG_Driver *drv = wid->drv;
+
+	if (wid->textures[name] == 0) {
+		AG_GL_UploadTexture(drv, &wid->textures[name],
+		                          wid->surfaces[name],
+		                         &wid->texcoords[name]);
+	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
+		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
+		AG_GL_UpdateTexture(drv, wid->textures[name],
+		                         wid->surfaces[name],
+					&wid->texcoords[name]);
+	}
+}
+
 /* Queue a GL texture for deletion. */
 static __inline__ void
-AG_GL_DeleteTexture(void *obj, Uint name)
+AG_GL_DeleteTexture(void *_Nonnull obj, Uint name)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
@@ -108,30 +143,14 @@ AG_GL_DeleteTexture(void *obj, Uint name)
 
 /* Queue a GL display list for deletion. */
 static __inline__ void
-AG_GL_DeleteList(void *obj, Uint name)
+AG_GL_DeleteList(void *_Nonnull obj, Uint name)
 {
 	AG_Driver *drv = obj;
 	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
 
-	dc->deleteList(drv, name);
+	if (dc->deleteList != NULL)
+		dc->deleteList(drv, name);
 }
-
-/* Get corresponding GL blending function */
-static __inline__ GLenum
-AG_GL_GetBlendingFunc(AG_BlendFn fn)
-{
-	switch (fn) {
-	case AG_ALPHA_ONE:		return (GL_ONE);
-	case AG_ALPHA_ZERO:		return (GL_ZERO);
-	case AG_ALPHA_SRC:		return (GL_SRC_ALPHA);
-	case AG_ALPHA_DST:		return (GL_DST_ALPHA);
-	case AG_ALPHA_ONE_MINUS_DST:	return (GL_ONE_MINUS_DST_ALPHA);
-	case AG_ALPHA_ONE_MINUS_SRC:	return (GL_ONE_MINUS_SRC_ALPHA);
-	case AG_ALPHA_OVERLAY:		return (GL_ONE);	/* XXX */
-	default:			return (GL_ONE);
-	}
-}
-
 __END_DECLS
 
 #include <agar/gui/close.h>

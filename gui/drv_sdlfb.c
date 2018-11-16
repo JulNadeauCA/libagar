@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,37 +38,40 @@
 
 typedef struct ag_sdlfb_driver {
 	struct ag_driver_sw _inherit;
-	SDL_Surface *s;			/* View surface */
-	SDL_Rect    *dirty;		/* Video regions queued for update */
-	Uint        nDirty, maxDirty;
+
+	SDL_Surface *_Nullable s;	/* Display surface */
+	SDL_Rect *_Nonnull dirty;	/* Video regions to update */
+	Uint              nDirty;
+	Uint            maxDirty;
+
 	AG_ClipRect *clipRects;		/* Clipping rectangle stack */
 	Uint        nClipRects;
 } AG_DriverSDLFB;
 
-static int nDrivers = 0;			/* Opened driver instances */
-static int initedSDL = 0;			/* Used SDL_Init() */
-static int initedSDLVideo = 0;			/* Used SDL_INIT_VIDEO */
-static AG_EventSink *sfbEventSpinner = NULL;	/* Standard event sink */
-static AG_EventSink *sfbEventEpilogue = NULL;	/* Standard event epilogue */
+static int nDrivers = 0;				/* Opened driver instances */
+static int initedSDL = 0;				/* Used SDL_Init() */
+static int initedSDLVideo = 0;				/* Used SDL_INIT_VIDEO */
+static AG_EventSink *_Nullable sfbEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *_Nullable sfbEventEpilogue = NULL;	/* Standard event epilogue */
 
-static void SDLFB_DrawRectFilled(void *, AG_Rect, AG_Color);
-static void SDLFB_UpdateRegion(void *, AG_Rect);
+static void SDLFB_DrawRectFilled(void *_Nonnull, AG_Rect, AG_Color);
+static void SDLFB_UpdateRegion(void *_Nonnull, AG_Rect);
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 
 	sfb->s = NULL;
 	sfb->nDirty = 0;
+	sfb->dirty = Malloc(4*sizeof(SDL_Rect));
 	sfb->maxDirty = 4;
-	sfb->dirty = Malloc(sfb->maxDirty*sizeof(SDL_Rect));
 	sfb->clipRects = NULL;
 	sfb->nClipRects = 0;
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 
@@ -81,7 +84,7 @@ Destroy(void *obj)
  */
 
 static int
-SDLFB_Open(void *obj, const char *spec)
+SDLFB_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -141,7 +144,7 @@ fail:
 }
 
 static void
-SDLFB_Close(void *obj)
+SDLFB_Close(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -165,7 +168,7 @@ SDLFB_Close(void *obj)
 }
 
 static void
-SDLFB_BeginRendering(void *obj)
+SDLFB_BeginRendering(void *_Nonnull obj)
 {
 //	AG_DriverSDLFB *sfb = obj;
 
@@ -173,7 +176,7 @@ SDLFB_BeginRendering(void *obj)
 }
 
 static void
-SDLFB_RenderWindow(struct ag_window *win)
+SDLFB_RenderWindow(struct ag_window *_Nonnull win)
 {
 	AG_WidgetDraw(win);
 	SDLFB_UpdateRegion(WIDGET(win)->drv,
@@ -182,7 +185,7 @@ SDLFB_RenderWindow(struct ag_window *win)
 }
 
 static void
-SDLFB_EndRendering(void *obj)
+SDLFB_EndRendering(void *_Nonnull obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 
@@ -198,7 +201,7 @@ SDLFB_EndRendering(void *obj)
 }
 
 static void
-SDLFB_FillRect(void *obj, AG_Rect r, AG_Color c)
+SDLFB_FillRect(void *_Nonnull obj, AG_Rect r, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Rect sr;
@@ -212,7 +215,7 @@ SDLFB_FillRect(void *obj, AG_Rect r, AG_Color c)
 }
 
 static void
-SDLFB_UpdateRegion(void *obj, AG_Rect rp)
+SDLFB_UpdateRegion(void *_Nonnull obj, AG_Rect rp)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -245,7 +248,7 @@ SDLFB_UpdateRegion(void *obj, AG_Rect rp)
  */
 
 static void
-SDLFB_PushClipRect(void *obj, AG_Rect r)
+SDLFB_PushClipRect(void *_Nonnull obj, AG_Rect r)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_ClipRect *cr, *crPrev;
@@ -255,7 +258,7 @@ SDLFB_PushClipRect(void *obj, AG_Rect r)
 	                                         sizeof(AG_ClipRect));
 	crPrev = &sfb->clipRects[sfb->nClipRects-1];
 	cr = &sfb->clipRects[sfb->nClipRects++];
-	cr->r = AG_RectIntersect(&crPrev->r, &r);
+	cr->r = AG_RectIntersect(crPrev->r, r);
 
 	sr.x = (Sint16)cr->r.x;
 	sr.y = (Sint16)cr->r.y;
@@ -265,7 +268,7 @@ SDLFB_PushClipRect(void *obj, AG_Rect r)
 }
 
 static void
-SDLFB_PopClipRect(void *obj)
+SDLFB_PopClipRect(void *_Nonnull obj)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_ClipRect *cr;
@@ -286,12 +289,12 @@ SDLFB_PopClipRect(void *obj)
 }
 
 static void
-SDLFB_PushBlendingMode(void *drv, AG_BlendFn fnSrc, AG_BlendFn fnDst)
+SDLFB_PushBlendingMode(void *_Nonnull drv, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
 static void
-SDLFB_PopBlendingMode(void *drv)
+SDLFB_PopBlendingMode(void *_Nonnull drv)
 {
 	/* No-op (handle blending on a per-blit basis) */
 }
@@ -301,7 +304,8 @@ SDLFB_PopBlendingMode(void *drv)
  */
 
 static void
-SDLFB_BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
+SDLFB_BlitSurface(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 
@@ -309,34 +313,38 @@ SDLFB_BlitSurface(void *drv, AG_Widget *wid, AG_Surface *s, int x, int y)
 }
 
 static void
-SDLFB_BlitSurfaceFrom(void *drv, AG_Widget *wid, AG_Widget *widSrc, int s,
-    AG_Rect *rSrc, int x, int y)
+SDLFB_BlitSurfaceFrom(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    int s, const AG_Rect *_Nullable rSrc, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 
-	AG_SDL_BlitSurface(widSrc->surfaces[s], rSrc, sfb->s, x,y);
+	AG_SDL_BlitSurface(wid->surfaces[s], rSrc, sfb->s, x,y);
 }
 
 static void
-SDLFB_BlitSurfaceGL(void *drv, AG_Widget *wid, AG_Surface *s, float w, float h)
+SDLFB_BlitSurfaceGL(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    AG_Surface *_Nonnull s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static void
-SDLFB_BlitSurfaceFromGL(void *drv, AG_Widget *wid, int s, float w, float h)
+SDLFB_BlitSurfaceFromGL(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    int s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static void
-SDLFB_BlitSurfaceFlippedGL(void *drv, AG_Widget *wid, int s, float w, float h)
+SDLFB_BlitSurfaceFlippedGL(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    int s, float w, float h)
 {
 	/* Not applicable */
 }
 
 static int
-SDLFB_RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
+SDLFB_RenderToSurface(void *_Nonnull drv, AG_Widget *_Nonnull wid,
+    AG_Surface *_Nonnull *_Nullable s)
 {
 	AG_DriverSDLFB *sfb = drv;
 	int visiblePrev;
@@ -380,28 +388,31 @@ SDLFB_RenderToSurface(void *drv, AG_Widget *wid, AG_Surface **s)
 
 /* Clipping test against active clipping rectangle of an SDL surface */
 static __inline__ int
-ClippedPixel(SDL_Surface *s, int x, int y)
+ClippedPixel(SDL_Surface *_Nonnull s, int x, int y)
 {
 	return (x < s->clip_rect.x || x >= s->clip_rect.x+s->clip_rect.w ||
 	        y < s->clip_rect.y || y >= s->clip_rect.y+s->clip_rect.h);
 }
 
 static void
-SDLFB_PutPixel(void *obj, int x, int y, AG_Color c)
+SDLFB_PutPixel(void *_Nonnull obj, int x, int y, AG_Color c)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
 	Uint8 *p = (Uint8 *)s->pixels + y*s->pitch + x*s->format->BytesPerPixel;
+	Uint8 r = AG_Hto8(c.r);
+	Uint8 g = AG_Hto8(c.g);
+	Uint8 b = AG_Hto8(c.b);
 
 	if (ClippedPixel(s, x,y)) {
 		return;
 	}
 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, p,
-	    SDL_MapRGB(s->format, c.r, c.g, c.b));
+	    SDL_MapRGB(s->format, r,g,b));
 }
 
 static void
-SDLFB_PutPixel32(void *obj, int x, int y, Uint32 c)
+SDLFB_PutPixel32(void *_Nonnull obj, int x, int y, Uint32 px)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
@@ -410,20 +421,54 @@ SDLFB_PutPixel32(void *obj, int x, int y, Uint32 c)
 	if (ClippedPixel(s, x,y)) {
 		return;
 	}
-	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, p, c);
+	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, p, px);
 }
 
 static void
-SDLFB_PutPixelRGB(void *obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+SDLFB_PutPixelRGB8(void *_Nonnull obj, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_DriverSDLFB *sfb = obj;
 
 	SDLFB_PutPixel32(obj, x,y, SDL_MapRGB(sfb->s->format, r,g,b));
 }
 
+#if AG_MODEL == AG_LARGE
+
 static void
-SDLFB_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
-    AG_BlendFn fnDst)
+SDLFB_PutPixel64(void *_Nonnull obj, int x, int y, Uint64 px)
+{
+	AG_Driver *drv = obj;
+	AG_DriverSDLFB *sfb = obj;
+	SDL_Surface *s = sfb->s;
+	Uint8 *p = (Uint8 *)s->pixels + y*s->pitch + x*s->format->BytesPerPixel;
+	Uint16 r,g,b;
+	Uint32 px32;
+
+	if (ClippedPixel(s, x,y)) {
+		return;
+	}
+	AG_GetColor64_RGB16(px, drv->videoFmt, &r,&g,&b);
+	px32 = AG_MapPixel32_RGB16(drv->videoFmt, r,g,b);
+	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, p, px32);
+}
+
+static void
+SDLFB_PutPixelRGB16(void *_Nonnull obj, int x, int y, Uint16 r, Uint16 g, Uint16 b)
+{
+	AG_DriverSDLFB *sfb = obj;
+
+	SDLFB_PutPixel32(obj, x,y,
+	    SDL_MapRGB(sfb->s->format,
+	        AG_16to8(r),
+	        AG_16to8(g),
+	        AG_16to8(b)));
+}
+
+#endif /* AG_LARGE */
+
+static void
+SDLFB_BlendPixel(void *_Nonnull obj, int x, int y, AG_Color C, AG_AlphaFn fnSrc,
+    AG_AlphaFn fnDst)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
@@ -441,39 +486,38 @@ SDLFB_BlendPixel(void *obj, int x, int y, AG_Color C, AG_BlendFn fnSrc,
 	AG_PACKEDPIXEL_GET(s->format->BytesPerPixel, pxDst, pDst);
 
 #if SDL_COMPILEDVERSION < SDL_VERSIONNUM(1,3,0)
-	/* If the target pixel is colorkey-masked, put the pixel as-is. */
-	if ((s->flags & SDL_SRCCOLORKEY) &&
-	    (pxDst == s->format->colorkey)) {
-		pxNew = SDL_MapRGBA(s->format, C.r, C.g, C.b, C.a);
+	if ((s->flags & SDL_SRCCOLORKEY) && (pxDst == s->format->colorkey)) {
+		pxNew = SDL_MapRGBA(s->format, AG_Hto8(C.r), AG_Hto8(C.g),
+		                               AG_Hto8(C.b), AG_Hto8(C.a));
 	 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 		return;
 	}
-#endif
+#endif /* SDL<1.3 */
 
 	/* Blend the components and write the computed pixel value. */
 	SDL_GetRGBA(pxDst, s->format, &dR, &dG, &dB, &dA);
 	switch (fnSrc) {
-	case AG_ALPHA_ZERO:		alpha = 0;		break;
-	case AG_ALPHA_OVERLAY:		alpha = dA+C.a;		break;
-	case AG_ALPHA_SRC:		alpha = C.a;		break;
-	case AG_ALPHA_DST:		alpha = dA;		break;
-	case AG_ALPHA_ONE_MINUS_DST:	alpha = 1-dA;		break;
-	case AG_ALPHA_ONE_MINUS_SRC:	alpha = 1-C.a;		break;
+	case AG_ALPHA_OVERLAY:		alpha = dA + AG_Hto8(C.a);	break;
+	case AG_ALPHA_SRC:		alpha = AG_Hto8(C.a);		break;
+	case AG_ALPHA_DST:		alpha = dA;			break;
+	case AG_ALPHA_ONE_MINUS_DST:	alpha = 1 - dA;			break;
+	case AG_ALPHA_ONE_MINUS_SRC:	alpha = 1 - AG_Hto8(C.a);	break;
+	case AG_ALPHA_ZERO:		alpha = 0;			break;
 	default:
-	case AG_ALPHA_ONE:		alpha = 255;		break;
+	case AG_ALPHA_ONE:		alpha = 255;			break;
 	}
-	/* XXX fnDst */
+
 	pxNew = SDL_MapRGBA(s->format,
-	    (((C.r - dR)*C.a) >> 8) + dR,
-	    (((C.g - dG)*C.a) >> 8) + dG,
-	    (((C.b - dB)*C.a) >> 8) + dB,
-	    (Uint8)(alpha<0)?0 : (alpha>255)?255 : alpha);
+	    dR + (((AG_Hto8(C.r) - dR)*C.a) >> 8),
+	    dG + (((AG_Hto8(C.g) - dG)*C.a) >> 8),
+	    dB + (((AG_Hto8(C.b) - dB)*C.a) >> 8),
+	    (alpha < 0) ? 0 : (alpha > 255) ? 255 : alpha);
 
 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 }
 
 static void
-SDLFB_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
+SDLFB_DrawLine(void *_Nonnull obj, int x1, int y1, int x2, int y2, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int dx, dy;
@@ -485,7 +529,7 @@ SDLFB_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 	
 	/* XXX XXX TODO per-line clipping */
 
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
+	c = SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b));
 	dx = abs(x2 - x1);
 	dy = abs(y2 - y1);
 
@@ -573,7 +617,8 @@ SDLFB_DrawLine(void *obj, int x1, int y1, int x2, int y2, AG_Color C)
 }
 
 static __inline__ int
-ClipHorizLine(AG_DriverSDLFB *sfb, int *x1, int *x2, int *y, int *dx)
+ClipHorizLine(AG_DriverSDLFB *_Nonnull sfb, int *_Nonnull x1, int *_Nonnull x2,
+    int *_Nonnull y, int *_Nonnull dx)
 {
 	SDL_Rect *rd = &sfb->s->clip_rect;
 
@@ -595,7 +640,8 @@ ClipHorizLine(AG_DriverSDLFB *sfb, int *x1, int *x2, int *y, int *dx)
 	return (*dx <= 0);
 }
 static __inline__ int
-ClipVertLine(AG_DriverSDLFB *sfb, int *x, int *y1, int *y2, int *dy)
+ClipVertLine(AG_DriverSDLFB *_Nonnull sfb, int *_Nonnull x,
+    int *_Nonnull y1, int *_Nonnull y2, int *_Nonnull dy)
 {
 	SDL_Rect *rd = &sfb->s->clip_rect;
 
@@ -618,7 +664,7 @@ ClipVertLine(AG_DriverSDLFB *sfb, int *x, int *y1, int *y2, int *dy)
 }
 
 static void
-SDLFB_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
+SDLFB_DrawLineH(void *_Nonnull obj, int x1, int x2, int y, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	Uint8 *pDst, *pEnd;
@@ -628,7 +674,7 @@ SDLFB_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
 	if (ClipHorizLine(sfb, &x1, &x2, &y, &dx))
 		return;
 
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
+	c = SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b));
 	switch (sfb->s->format->BytesPerPixel) {
 	case 4:
 		pDst = (Uint8 *)sfb->s->pixels + y*sfb->s->pitch + x1*4;
@@ -671,7 +717,7 @@ SDLFB_DrawLineH(void *obj, int x1, int x2, int y, AG_Color C)
 }
 
 static void
-SDLFB_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
+SDLFB_DrawLineV(void *_Nonnull obj, int x, int y1, int y2, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	Uint8 *pDst, *pEnd;
@@ -681,7 +727,7 @@ SDLFB_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
 	if (ClipVertLine(sfb, &x, &y1, &y2, &dy))
 		return;
 
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
+	c = SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b));
 	switch (sfb->s->format->BytesPerPixel) {
 	case 4:
 		pDst = (Uint8 *)sfb->s->pixels + y1*sfb->s->pitch + x*4;
@@ -727,8 +773,8 @@ SDLFB_DrawLineV(void *obj, int x, int y1, int y2, AG_Color C)
 }
 
 static void
-SDLFB_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
-    AG_BlendFn fnSrc, AG_BlendFn fnDst)
+SDLFB_DrawLineBlended(void *_Nonnull obj, int x1, int y1, int x2, int y2,
+    AG_Color C, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	int dx, dy;
 	int inc1, inc2;
@@ -823,78 +869,177 @@ SDLFB_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color C,
 }
 
 static void
-SDLFB_DrawArrow(void *obj, float angle, int x0, int y0, int h, AG_Color c1,
-    AG_Color c2)
+SDLFB_DrawTriangle_FlatBot(void *_Nonnull obj, AG_Pt v1, AG_Pt v2, AG_Pt v3,
+    AG_Color c)
 {
-	AG_DriverSDLFB *sfb = obj;
-	Uint32 c[2];
-	int x, y;
+	float invslope1 = (v2.x - v1.x) / (v2.y - v1.y);
+	float invslope2 = (v3.x - v1.x) / (v3.y - v1.y);
+	float x1 = v1.x;
+	float x2 = v1.x;
+	int y;
 
-	c[0] = SDL_MapRGB(sfb->s->format, c1.r, c1.g, c1.b);
-	c[1] = SDL_MapRGB(sfb->s->format, c2.r, c2.g, c2.b);
-
-	if (angle == 0.0f) {					/* Up */
-		int y1 = y0 - h/2;
-		int y2 = y1 + h - 1;
-		int xs = x0, xe = xs;
-
-		for (y = y1; y < y2; y+=2) {
-			for (x = xs; x <= xe; x++) {
-				SDLFB_PutPixel32(obj, x,y,
-				    (x == xs || x == xe) ? c[1] : c[0]);
-				SDLFB_PutPixel32(obj, x,y+1, c[0]);
-			}
-			xs--;
-			xe++;
-		}
-	} else if (angle == 90.0f) {				/* Right */
-		int x1 = x0 - h/2;
-		int x2 = x1+h-1;
-		int ys = y0, ye = ys;
-	
-		for (x = x2; x > x1; x-=2) {
-			for (y = ys; y <= ye; y++) {
-				SDLFB_PutPixel32(obj, x-1,y, c[0]);
-				SDLFB_PutPixel32(obj, x,y,
-				    (y == ys || y == ye) ? c[1] : c[0]);
-			}
-			ys--;
-			ye++;
-		}
-	} else if (angle == 180.0f) {				/* Down */
-		int y1 = y0 - h/2;
-		int y2 = y1+h-1;
-		int xs = x0, xe = xs;
-	
-		for (y = y2; y > y1; y-=2) {
-			for (x = xs; x <= xe; x++) {
-				SDLFB_PutPixel32(obj, x,y,
-				    (x == xs || x == xe) ? c[1] : c[0]);
-				SDLFB_PutPixel32(obj, x,y-1, c[0]);
-			}
-			xs--;
-			xe++;
-		}
-	} else if (angle == 270.0f) {				/* Left */
-		int x1 = x0 - h/2;
-		int x2 = x1+h-1;
-		int ys = y0, ye = ys;
-	
-		for (x = x1; x < x2; x+=2) {
-			for (y = ys; y <= ye; y++) {
-				SDLFB_PutPixel32(obj, x+1,y, c[0]);
-				SDLFB_PutPixel32(obj, x,y,
-				    (y == ys || y == ye) ? c[1] : c[0]);
-			}
-			ys--;
-			ye++;
-		}
+	for (y = v1.y; y <= v2.y; y++) {
+		SDLFB_DrawLineH(obj, x1,x2, y, c);
+		x1 += invslope1;
+		x2 += invslope2;
 	}
 }
 
 static void
-SDLFB_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color c1,
-   AG_Color c2, AG_Color c3)
+SDLFB_DrawTriangle_FlatTop(void *_Nonnull obj, AG_Pt v1, AG_Pt v2, AG_Pt v3,
+    AG_Color c)
+{
+	float invslope1 = (v3.x - v1.x) / (v3.y - v1.y);
+	float invslope2 = (v3.x - v2.x) / (v3.y - v2.y);
+	float x1 = v3.x;
+	float x2 = v3.x;
+	int y;
+
+	for (y = v3.y; y <= v1.y; y--) {
+		SDLFB_DrawLineH(obj, x1,x2, y, c);
+		x1 -= invslope1;
+		x2 -= invslope2;
+	}
+}
+
+static void
+SDLFB_DrawTriangle(void *_Nonnull obj, AG_Pt v1, AG_Pt v2, AG_Pt v3, AG_Color c)
+{
+	AG_Pt V1, V2, V3;
+
+	/* Sort the three vertices by y coordinate ascending. */
+	if (v3.y > v2.y &&
+	    v3.y > v1.y) {
+		V3 = v3;
+		if (v2.y > v1.y) {
+			V2=v2; V1=v1;
+		} else {
+			V2=v1; V1=v2;
+		}
+	} else if (v2.y > v1.y &&
+	           v2.y > v3.y) {
+		V3 = v2;
+		if (v3.y > v1.y) {
+			V2=v3; V1=v1;
+		} else {
+			V2=v1; V1=v3;
+		}
+	} else {
+		V3 = v1;
+		if (v3.y > v2.y) {
+			V2=v3; V1=v2;
+		} else {
+			V2=v2; V1=v3;
+		}
+	}
+	v1 = V1;
+	v2 = V2;
+	v3 = V3;
+
+	if (v2.y == v3.y) {
+		SDLFB_DrawTriangle_FlatBot(obj, v1,v2,v3, c);
+	} else if (v1.y == v2.y) {
+		SDLFB_DrawTriangle_FlatTop(obj, v1,v2,v3, c);
+	} else {
+		AG_Pt v4;
+
+		v4.x = (int)(v1.x + ((float)(v2.y - v1.y) /
+		                     (float)(v3.y - v1.y)) * (v3.x - v1.x));
+		v4.y = v2.y;
+		SDLFB_DrawTriangle_FlatBot(obj, v1,v2,v4, c);
+		SDLFB_DrawTriangle_FlatTop(obj, v2,v4,v3, c);
+	}
+}
+
+static void
+SDLFB_DrawArrow_Up(void *_Nonnull obj, int x0, int y0, int h, Uint32 px)
+{
+	int y1 = y0 - (h >> 1) + 1;
+	int y2 = y1 + h-2;
+	int xs = x0, xe = xs;
+	int x, y;
+
+	for (y = y1; y < y2; ++y) {
+		for (x = xs; x <= xe; x++) {
+			SDLFB_PutPixel32(obj, x,y, px);
+		}
+		xs--;
+		xe++;
+	}
+}
+		
+static void
+SDLFB_DrawArrow_Right(void *_Nonnull obj, int x0, int y0, int h, Uint32 px)
+{
+	int x1 = x0 - (h >> 1) + 1;
+	int x2 = x1 + h-2;
+	int ys = y0, ye = ys;
+	int x, y;
+	
+	for (x = x2; x > x1; --x) {
+		for (y = ys; y <= ye; y++) {
+			SDLFB_PutPixel32(obj, x,y, px);
+		}
+		ys--;
+		ye++;
+	}
+}
+
+static void
+SDLFB_DrawArrow_Down(void *_Nonnull obj, int x0, int y0, int h, Uint32 px)
+{
+	int y1 = y0 - (h >> 1) + 1;
+	int y2 = y1 + h-2;
+	int xs = x0, xe = xs;
+	int x, y;
+	
+	for (y = y2; y > y1; --y) {
+		for (x = xs; x <= xe; x++) {
+			SDLFB_PutPixel32(obj, x,y, px);
+		}
+		xs--;
+		xe++;
+	}
+}
+		
+static void
+SDLFB_DrawArrow_Left(void *_Nonnull obj, int x0, int y0, int h, Uint32 px)
+{
+	int x1 = x0 - (h >> 1) + 1;
+	int x2 = x1 + h-2;
+	int ys = y0, ye = ys;
+	int x, y;
+	
+	for (x = x1; x < x2; ++x) {
+		for (y = ys; y <= ye; y++) {
+			SDLFB_PutPixel32(obj, x,y, px);
+		}
+		ys--;
+		ye++;
+	}
+}
+
+static void
+SDLFB_DrawArrow(void *_Nonnull obj, Uint8 angle, int x0, int y0, int h,
+    AG_Color c)
+{
+	AG_DriverSDLFB *sfb = obj;
+	static void (*pf[])(void *_Nonnull, int,int, int, Uint32) = {
+		SDLFB_DrawArrow_Up,
+		SDLFB_DrawArrow_Right,
+		SDLFB_DrawArrow_Down,
+		SDLFB_DrawArrow_Left,
+	};
+	Uint32 px = SDL_MapRGB(sfb->s->format, c.r, c.g, c.b);
+#ifdef AG_DEBUG
+	if (angle >= 4) { AG_FatalError("Bad angle"); }
+#endif
+	pf[angle](obj, x0,y0, h, px);
+}
+
+static void
+SDLFB_DrawBoxRoundedTop(void *_Nonnull obj, AG_Rect r, int z, int rad,
+    AG_Color c1, AG_Color c2, AG_Color c3)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Rect rd;
@@ -961,8 +1106,8 @@ SDLFB_DrawBoxRoundedTop(void *obj, AG_Rect r, int z, int rad, AG_Color c1,
 }
 
 static void
-SDLFB_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color c1,
-    AG_Color c2, AG_Color c3)
+SDLFB_DrawBoxRounded(void *_Nonnull obj, AG_Rect r, int z, int rad,
+    AG_Color c1, AG_Color c2, AG_Color c3)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_Rect rd;
@@ -1051,7 +1196,7 @@ SDLFB_DrawBoxRounded(void *obj, AG_Rect r, int z, int rad, AG_Color c1,
 }
 
 static void
-SDLFB_DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
+SDLFB_DrawCircle(void *_Nonnull obj, int x1, int y1, int radius, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int v = 2*radius - 1;
@@ -1059,7 +1204,7 @@ SDLFB_DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 	int x = 0, y = radius;
 	Uint32 c;
 
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
+	c = SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b));
 	while (x < y) {
 		SDLFB_PutPixel32(obj, x1+x, y1+y, c);
 		SDLFB_PutPixel32(obj, x1+x, y1-y, c);
@@ -1083,7 +1228,7 @@ SDLFB_DrawCircle(void *obj, int x1, int y1, int radius, AG_Color C)
 }
 
 static void
-SDLFB_DrawCircleFilled(void *obj, int x1, int y1, int radius, AG_Color C)
+SDLFB_DrawCircleFilled(void *_Nonnull obj, int x1, int y1, int radius, AG_Color C)
 {
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
@@ -1108,7 +1253,7 @@ SDLFB_DrawCircleFilled(void *obj, int x1, int y1, int radius, AG_Color C)
 }
 
 static void
-SDLFB_DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
+SDLFB_DrawRectFilled(void *_Nonnull obj, AG_Rect r, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Rect rd;
@@ -1118,12 +1263,12 @@ SDLFB_DrawRectFilled(void *obj, AG_Rect r, AG_Color C)
 	rd.w = (Uint16)r.w;
 	rd.h = (Uint16)r.h;
 	SDL_FillRect(sfb->s, &rd,
-	    SDL_MapRGB(sfb->s->format, C.r, C.g, C.b));
+	    SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b)));
 }
 
 static void
-SDLFB_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
-    AG_BlendFn fnDst)
+SDLFB_DrawRectBlended(void *_Nonnull obj, AG_Rect r, AG_Color C,
+    AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int x, y;
@@ -1139,7 +1284,7 @@ SDLFB_DrawRectBlended(void *obj, AG_Rect r, AG_Color C, AG_BlendFn fnSrc,
 }
 
 static void
-SDLFB_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
+SDLFB_DrawRectDithered(void *_Nonnull obj, AG_Rect r, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 	int x, y;
@@ -1147,7 +1292,7 @@ SDLFB_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 	Uint32 c;
 	
 	/* XXX inefficient */
-	c = SDL_MapRGB(sfb->s->format, C.r, C.g, C.b);
+	c = SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b));
 	for (y = r.y; y < r.y+r.h-2; y++) {
 		flag = !flag;
 		for (x = r.x+1+flag; x < r.x+r.w-2; x+=2)
@@ -1156,13 +1301,13 @@ SDLFB_DrawRectDithered(void *obj, AG_Rect r, AG_Color C)
 }
 
 static void
-SDLFB_UpdateGlyph(void *drv, AG_Glyph *gl)
+SDLFB_UpdateGlyph(void *_Nonnull drv, AG_Glyph *_Nonnull gl)
 {
 	/* Nothing to do */
 }
 
 static void
-SDLFB_DrawGlyph(void *drv, const AG_Glyph *gl, int x, int y)
+SDLFB_DrawGlyph(void *_Nonnull drv, const AG_Glyph *_Nonnull gl, int x, int y)
 {
 	AG_DriverSDLFB *sfb = drv;
 	
@@ -1171,7 +1316,7 @@ SDLFB_DrawGlyph(void *drv, const AG_Glyph *gl, int x, int y)
 
 /* Initialize the clipping rectangle stack. */
 static int
-InitClipRects(AG_DriverSDLFB *sfb, int wView, int hView)
+InitClipRects(AG_DriverSDLFB *_Nonnull sfb, int wView, int hView)
 {
 	AG_ClipRect *cr;
 
@@ -1190,7 +1335,7 @@ InitClipRects(AG_DriverSDLFB *sfb, int wView, int hView)
  */
 
 static int
-SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
+SDLFB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
@@ -1240,12 +1385,20 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 	dsw->h = sfb->s->h;
 	dsw->depth = (Uint)drv->videoFmt->BitsPerPixel;
 
-	Verbose(_("SDLFB: New display (%dbpp; %08x,%08x,%08x)\n"),
-	     (int)drv->videoFmt->BitsPerPixel, 
-	     (Uint)drv->videoFmt->Rmask,
-	     (Uint)drv->videoFmt->Gmask,
-	     (Uint)drv->videoFmt->Bmask);
-	
+#if AG_MODEL == AG_LARGE
+	Verbose(_("SDLFB: New display (%d-bpp; %08lx,%08lx,%08lx)\n"),
+	     drv->videoFmt->BitsPerPixel, 
+	     drv->videoFmt->Rmask,
+	     drv->videoFmt->Gmask,
+	     drv->videoFmt->Bmask);
+#else
+	Verbose(_("SDLFB: New display (%d-bpp; %04x,%04x,%04x)\n"),
+	     drv->videoFmt->BitsPerPixel, 
+	     drv->videoFmt->Rmask,
+	     drv->videoFmt->Gmask,
+	     drv->videoFmt->Bmask);
+#endif
+
 	/* Initialize clipping rectangles. */
 	if (InitClipRects(sfb, dsw->w, dsw->h) == -1)
 		goto fail;
@@ -1268,13 +1421,14 @@ SDLFB_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 fail:
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	return (-1);
 }
 
 static int
-SDLFB_OpenVideoContext(void *obj, void *ctx, Uint flags)
+SDLFB_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_DriverSw *dsw = obj;
@@ -1295,11 +1449,19 @@ SDLFB_OpenVideoContext(void *obj, void *ctx, Uint flags)
 	dsw->h = sfb->s->h;
 	dsw->depth = (Uint)drv->videoFmt->BitsPerPixel;
 
-	Verbose(_("SDLFB: Using existing display (%dbpp; %08x,%08x,%08x)\n"),
+#if AG_MODEL == AG_LARGE
+	Verbose(_("SDLFB: Using existing display (%d-bpp; %08lx,%08lx,%08lx)\n"),
 	     (int)drv->videoFmt->BitsPerPixel, 
-	     (Uint)drv->videoFmt->Rmask,
-	     (Uint)drv->videoFmt->Gmask,
-	     (Uint)drv->videoFmt->Bmask);
+	     drv->videoFmt->Rmask,
+	     drv->videoFmt->Gmask,
+	     drv->videoFmt->Bmask);
+#else
+	Verbose(_("SDLFB: Using existing display (%d-bpp; %04x,%04x,%04x)\n"),
+	     (int)drv->videoFmt->BitsPerPixel, 
+	     drv->videoFmt->Rmask,
+	     drv->videoFmt->Gmask,
+	     drv->videoFmt->Bmask);
+#endif
 
 	/* Initialize clipping rectangles. */
 	if (InitClipRects(sfb, dsw->w, dsw->h) == -1)
@@ -1314,13 +1476,14 @@ SDLFB_OpenVideoContext(void *obj, void *ctx, Uint flags)
 fail:
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	return (-1);
 }
 
 static void
-SDLFB_CloseVideo(void *obj)
+SDLFB_CloseVideo(void *_Nonnull obj)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -1336,7 +1499,7 @@ SDLFB_CloseVideo(void *obj)
 }
 
 static int
-SDLFB_VideoResize(void *obj, Uint w, Uint h)
+SDLFB_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 {
 	AG_DriverSw *dsw = obj;
 	AG_DriverSDLFB *sfb = obj;
@@ -1373,31 +1536,26 @@ SDLFB_VideoResize(void *obj, Uint w, Uint h)
 	return (0);
 }
 
-static int
-SDLFB_VideoCapture(void *obj, AG_Surface **ds)
+static AG_Surface *
+SDLFB_VideoCapture(void *_Nonnull obj)
 {
 	AG_DriverSDLFB *sfb = obj;
-	AG_Surface *s;
 
-	if ((s = AG_SDL_ImportSurface(sfb->s)) == NULL) {
-		return (-1);
-	}
-	*ds = s;
-	return (0);
+	return AG_SDL_ImportSurface(sfb->s);
 }
 
 static void
-SDLFB_VideoClear(void *obj, AG_Color c)
+SDLFB_VideoClear(void *_Nonnull obj, AG_Color C)
 {
 	AG_DriverSDLFB *sfb = obj;
 
 	SDL_FillRect(sfb->s, NULL,
-	    SDL_MapRGB(sfb->s->format, c.r, c.g, c.b));
+	    SDL_MapRGB(sfb->s->format, AG_Hto8(C.r), AG_Hto8(C.g), AG_Hto8(C.b)));
 	SDL_UpdateRect(sfb->s, 0, 0, sfb->s->w, sfb->s->h);
 }
 
 static int
-SDLFB_SetVideoContext(void *obj, void *pSurface)
+SDLFB_SetVideoContext(void *_Nonnull obj, void *_Nonnull pSurface)
 {
 	AG_DriverSDLFB *sfb = obj;
 	AG_DriverSw *dsw = obj;
@@ -1421,7 +1579,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLFB",
 			sizeof(AG_DriverSDLFB),
-			{ 1,5 },
+			{ 1,6 },
 			Init,
 			NULL,	/* reset */
 			Destroy,
@@ -1472,12 +1630,17 @@ AG_DriverSwClass agDriverSDLFB = {
 		SDLFB_RenderToSurface,
 		SDLFB_PutPixel,
 		SDLFB_PutPixel32,
-		SDLFB_PutPixelRGB,
+		SDLFB_PutPixelRGB8,
+#if AG_MODEL == AG_LARGE
+		SDLFB_PutPixel64,
+		SDLFB_PutPixelRGB16,
+#endif
 		SDLFB_BlendPixel,
 		SDLFB_DrawLine,
 		SDLFB_DrawLineH,
 		SDLFB_DrawLineV,
 		SDLFB_DrawLineBlended,
+		SDLFB_DrawTriangle,
 		SDLFB_DrawArrow,
 		SDLFB_DrawBoxRounded,
 		SDLFB_DrawBoxRoundedTop,

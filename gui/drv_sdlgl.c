@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,25 +45,27 @@ enum ag_sdlgl_out {
 
 typedef struct ag_sdlgl_driver {
 	struct ag_driver_sw _inherit;
-	SDL_Surface  *s;		/* View surface */
+
+	SDL_Surface *_Nullable s;	/* Display surface */
 	AG_GL_Context gl;		/* Common OpenGL context data */
+
 	enum ag_sdlgl_out outMode;	/* Output capture mode */
-	char		 *outPath;	/* Output capture path */
-	Uint		  outFrame;	/* Capture frame# counter */
-	Uint		  outLast;	/* Terminate after this many frames */
-	Uint8		 *outBuf;	/* Output capture buffer */
-	Uint		  outJpegQual;	/* Quality (%) for jpeg output */
-	Uint		  outJpegFlags;	/* DCT options */
+	char *_Nullable   outPath;	/* Output capture path */
+	Uint              outFrame;	/* Capture frame# counter */
+	Uint              outLast;	/* Terminate after this many frames */
+	Uint8 *_Nullable  outBuf;	/* Output capture buffer */
+	Uint              outJpegQual;	/* Quality (%) for jpeg output */
+	Uint              outJpegFlags;	/* DCT options */
 } AG_DriverSDLGL;
 
-static int nDrivers = 0;			/* Opened driver instances */
-static int initedSDL = 0;			/* Used SDL_Init() */
-static int initedSDLVideo = 0;			/* Used SDL_INIT_VIDEO */
-static AG_EventSink *sglEventSpinner = NULL;	/* Standard event sink */
-static AG_EventSink *sglEventEpilogue = NULL;	/* Standard event epilogue */
+static int nDrivers = 0;				/* Opened driver instances */
+static int initedSDL = 0;				/* Used SDL_Init() */
+static int initedSDLVideo = 0;				/* Used SDL_INIT_VIDEO */
+static AG_EventSink *_Nullable sglEventSpinner = NULL;	/* Standard event sink */
+static AG_EventSink *_Nullable sglEventEpilogue = NULL;	/* Standard event epilogue */
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverSDLGL *sgl = obj;
 
@@ -75,7 +77,7 @@ Init(void *obj)
  */
 
 static int
-SDLGL_Open(void *obj, const char *spec)
+SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSDLGL *sgl = obj;
@@ -144,7 +146,7 @@ fail:
 }
 
 static void
-SDLGL_Close(void *obj)
+SDLGL_Close(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
@@ -181,7 +183,7 @@ SDLGL_Close(void *obj)
 }
 
 static void
-SDLGL_BeginRendering(void *obj)
+SDLGL_BeginRendering(void *_Nonnull obj)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
@@ -212,13 +214,13 @@ SDLGL_BeginRendering(void *obj)
 }
 
 static void
-SDLGL_RenderWindow(struct ag_window *win)
+SDLGL_RenderWindow(struct ag_window *_Nonnull win)
 {
 	AG_WidgetDraw(win);
 }
 
 static void
-SDLGL_CaptureOutput(AG_DriverSDLGL *sgl)
+SDLGL_CaptureOutput(AG_DriverSDLGL *_Nonnull sgl)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_DriverSw *dsw = (AG_DriverSw *)sgl;
@@ -267,7 +269,7 @@ fail_disable:
 }
 
 static void
-SDLGL_EndRendering(void *drv)
+SDLGL_EndRendering(void *_Nonnull drv)
 {
 	AG_DriverSDLGL *sgl = drv;
 	AG_GL_Context *gl = &sgl->gl;
@@ -302,16 +304,17 @@ SDLGL_EndRendering(void *drv)
  */
 
 static __inline__ void
-ClearBackground(AG_DriverSw *dsw)
+ClearBackground(AG_DriverSw *_Nonnull dsw)
 {
-	glClearColor(dsw->bgColor.r/255.0,
-	             dsw->bgColor.g/255.0,
-		     dsw->bgColor.b/255.0, 1.0);
+	glClearColor(dsw->bgColor.r/AG_COLOR_LASTF,
+	             dsw->bgColor.g/AG_COLOR_LASTF,
+		     dsw->bgColor.b/AG_COLOR_LASTF, 1.0);
+
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
 static int
-SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
+SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 {
 	char buf[256];
 	AG_Driver *drv = obj;
@@ -436,13 +439,14 @@ SDLGL_OpenVideo(void *obj, Uint w, Uint h, int depth, Uint flags)
 fail:
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	return (-1);
 }
 
 static int
-SDLGL_OpenVideoContext(void *obj, void *ctx, Uint flags)
+SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_DriverSw *dsw = obj;
@@ -487,13 +491,14 @@ SDLGL_OpenVideoContext(void *obj, void *ctx, Uint flags)
 fail:
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	return (-1);
 }
 
 static void
-SDLGL_CloseVideo(void *obj)
+SDLGL_CloseVideo(void *_Nonnull obj)
 {
 	if (initedSDLVideo) {
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -502,7 +507,7 @@ SDLGL_CloseVideo(void *obj)
 }
 
 static int
-SDLGL_VideoResize(void *obj, Uint w, Uint h)
+SDLGL_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 {
 	AG_Driver *drv = obj;
 	AG_DriverSw *dsw = obj;
@@ -560,32 +565,26 @@ SDLGL_VideoResize(void *obj, Uint w, Uint h)
 	return (0);
 }
 
-static int
-SDLGL_VideoCapture(void *obj, AG_Surface **sp)
+static AG_Surface *
+SDLGL_VideoCapture(void *_Nonnull obj)
 {
 #if 0
 	AG_DriverSDLGL *sgl = obj;
-	AG_Surface *s;
-
-	if ((s = AG_SurfaceDup(sgl->s)) == NULL) {
-		return (-1);
-	}
-	*sp = s;
-	return (0);
+	return (sgl->s);
 #endif
-	/* XXX TODO */
-	AG_SetError("Operation not implemented");
-	return (-1);
+	/* TODO */
+	AG_SetErrorS("Capture not implemented");
+	return (NULL);
 }
 
 static void
-SDLGL_VideoClear(void *obj, AG_Color c)
+SDLGL_VideoClear(void *_Nonnull obj, AG_Color c)
 {
 	ClearBackground(obj);
 }
 
 static int
-SDLGL_SetVideoContext(void *obj, void *pSurface)
+SDLGL_SetVideoContext(void *_Nonnull obj, void *_Nonnull pSurface)
 {
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
@@ -614,7 +613,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLGL",
 			sizeof(AG_DriverSDLGL),
-			{ 1,5 },
+			{ 1,6 },
 			Init,
 			NULL,	/* reset */
 			NULL,	/* destroy */
@@ -665,12 +664,17 @@ AG_DriverSwClass agDriverSDLGL = {
 		AG_GL_RenderToSurface,
 		AG_GL_PutPixel,
 		AG_GL_PutPixel32,
-		AG_GL_PutPixelRGB,
+		AG_GL_PutPixelRGB8,
+#if AG_MODEL == AG_LARGE
+		AG_GL_PutPixel64,
+		AG_GL_PutPixelRGB16,
+#endif
 		AG_GL_BlendPixel,
 		AG_GL_DrawLine,
 		AG_GL_DrawLineH,
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
+		AG_GL_DrawTriangle,
 		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,

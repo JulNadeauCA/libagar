@@ -36,52 +36,95 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-Many functions in Agar accept
-.Fa AG_Color
-parameters.
-This structure describes a color in terms of its red, green and blue and
-alpha components:
+The
+.Nm
+structure describes a color in terms of
+.Em Red ,
+.Em Green ,
+.Em Blue ,
+and
+.Em Alpha
+components.
+The
+.Nm
+structure is declared as:
 .Bd -literal
 typedef struct ag_color {
-	Uint8 r, g, b, a;
+#if AG_MODEL == AG_LARGE
+	Uint16 r,g,b,a;
+#else
+	Uint8  r,g,b,a;
+#endif
 } AG_Color;
 .Ed
 .Pp
-The alpha component may or may not be used in a particular context; a value
-of 0 is fully transparent and 255 is fully opaque.
+Support for 16-bit component depth requires the
+.Dv AG_LARGE
+memory model which can handle 64-bit wide pixels.
+.Pp
+The alpha component may or may not be used in a given context.
+A value of 0 (or
+.Dv AG_TRANSPARENT
+or
+.Dv AG_COLOR_FIRST )
+is fully transparent, while
+.Dv AG_OPAQUE
+(or
+.Dv AG_COLOR_LAST )
+is fully opaque.
 .Sh INTERFACE
 .nr nS 1
 .Ft AG_Color
-.Fn AG_ColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
+.Fn AG_ColorRGB_8 "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft AG_Color
-.Fn AG_ColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Fn AG_ColorRGBA_8 "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft AG_Color
+.Fn AG_ColorRGB_16 "Uint16 r" "Uint16 g" "Uint16 b"
+.Pp
+.Ft AG_Color
+.Fn AG_ColorRGBA_16 "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft void
 .Fn AG_HSV2Color "float hue" "float sat" "float val" "AG_Color *C"
 .Pp
 .Ft void
-.Fn AG_Color2HSV "const AG_Color *C" "float *hue" "float *sat" "float *val"
+.Fn AG_Color2HSV "AG_Color c" "float *hue" "float *sat" "float *val"
 .Pp
 .Ft AG_Color
-.Fn AG_ColorHex "Uint32 hex"
+.Fn AG_ColorHex16 "Uint16 hex"
+.Pp
+.Ft AG_Color
+.Fn AG_ColorHex32 "Uint32 hex"
+.Pp
+.Ft AG_Color
+.Fn AG_ColorHex64 "Uint64 hex"
 .Pp
 .Ft AG_Color
 .Fn AG_ColorFromString "const char *spec" "const AG_Color *parentColor"
+.Pp
+.Ft AG_Color
+.Fn AG_ColorAdd "AG_Color c" "AG_ColorOffset offs"
 .Pp
 .Ft int
 .Fn AG_ColorCompare "AG_Color a" "AG_Color b"
 .Pp
 .nr nS 0
-The
-.Fn AG_ColorRGB
-routine returns an
+.Fn AG_ColorRGB_8
+and
+.Fn AG_ColorRGB_16
+return an
 .Ft AG_Color
-from the given red, green and blue components.
-The alpha component is initialized to 255 (opaque).
+from 8- or 16-bit red, green and blue components
+(with alpha set to fully opaque).
 .Pp
-.Fn AG_ColorRGBA
-accepts an explicit alpha component.
+.Fn AG_ColorRGBA_8
+and
+.Fn AG_ColorRGBA_16
+return an
+.Ft AG_Color
+from 8- or 16-bit RGB and alpha components.
 .Pp
 .Fn AG_HSV2Color
 maps a color in HSV space to the closest approximation in RGB space, and
@@ -90,32 +133,59 @@ The inverse operation is performed by
 .Fn AG_Color2HSV .
 Note: H and V become increasingly lossy as S->0.
 .Pp
-.Fn AG_ColorHex
-returns an
-.Nm
-structure from an argument of the form 0xRRGGBBAA.
-.Pp
 The
+.Fn AG_ColorHex16 ,
+.Fn AG_ColorHex32
+and
+.Fn AG_ColorHex64
+routines convert a color packed into
+.Em 0xRGBA
+(4-bit components),
+.Em 0xRRGGBBAA
+(8-bit components), or
+.Em 0xRRRRGGGGBBBBAAAA
+(16-bit components) into an
+.Nm .
+.Pp
 .Fn AG_ColorFromString
-function converts a text-based color representation to an
+converts a text-based color representation to an
 .Nm .
 The following formats are allowed:
 .Bd -literal
 	"#RRGGBB"
+	"#RRRRGGGGBBBBAAAA" (if AG_LARGE)
 	"r:g:b[:a]"
 	"r,g,b[,a]"
 	"rgb(r,g,b[,a])"
-	"hsv(h,s,v[,a])"
+	"hsv(h,s,v[,a])"    (if HAVE_FLOAT)
 .Ed
 .Pp
-If components are given with a terminating "%" character, they are
-interpreted as a percentage of the corresponding component in
+Components with a terminating "%" character are interpreted as a percentage
+of the corresponding component in
 .Fa parentColor
-(assuming the argument is non-NULL).
+(if non-NULL).
 .Pp
+.Fn AG_ColorAdd
+adds the components of a color
+.Fa c
+to the signed components of
+.Fa offs
+and returns the clamped result.
 The
+.Ft AG_ColorOffset
+structure is declared as:
+.Bd -literal
+typedef struct ag_color_offset {
+#if AG_MODEL == AG_LARGE
+	Sint16 r,g,b,a;
+#else
+	Sint8  r,g,b,a;
+#endif
+} AG_ColorOffset;
+.Ed
+.Pp
 .Fn AG_ColorCompare
-function returns non-zero if the two given colors differ.
+returns non-zero if the two colors differ.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_MapColorRGB 3 ,
@@ -124,7 +194,8 @@ function returns non-zero if the two given colors differ.
 .Xr AG_MapPixelRGBA 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
-Colors in Agar were originally described as 32-bit packed pixel values.
-This was replaced by the
 .Nm
-structure in Agar 1.4.
+was introduced in Agar 1.4 (previously only 32-bit packed pixel values in a
+reference surface format were used).
+Agar 1.6 added support for 16-bit component depth under the AG_LARGE memory
+model, and increased the maximum packed-pixel width to 64-bit.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -915,9 +915,9 @@ COCOA_RenderWindow(AG_Window *win)
 	gl->clipStates[2] = glIsEnabled(GL_CLIP_PLANE2); glEnable(GL_CLIP_PLANE2);
 	gl->clipStates[3] = glIsEnabled(GL_CLIP_PLANE3); glEnable(GL_CLIP_PLANE3);
 
-	glClearColor(c.r/255.0,
-	             c.g/255.0,
-		     c.b/255.0, 1.0);
+	glClearColor((float)c.r/AG_COLOR_LASTF,
+	             (float)c.g/AG_COLOR_LASTF,
+		     (float)c.b/AG_COLOR_LASTF, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	AG_WidgetDraw(win);
@@ -947,16 +947,15 @@ COCOA_EndRendering(void *obj)
  */
 
 static void
-SetBackgroundColor(AG_DriverCocoa *co, AG_Color C)
+SetBackgroundColor(AG_DriverCocoa *co, AG_Color c)
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	CGFloat r = (CGFloat)(c.r / AG_COLOR_LASTF);
+	CGFloat g = (CGFloat)(c.g / AG_COLOR_LASTF);
+	CGFloat b = (CGFloat)(c.b / AG_COLOR_LASTF);
+	CGFloat a = (CGFloat)(c.a / AG_COLOR_LASTF);
 	NSColor *bgColor;
-	CGFloat r, g, b, a;
 
-	r = (CGFloat)(C.r / 255.0);
-	g = (CGFloat)(C.g / 255.0);
-	b = (CGFloat)(C.b / 255.0);
-	a = (CGFloat)(C.a / 255.0);
 	bgColor = [NSColor colorWithCalibratedRed:r green:g blue:b alpha:a];
 	[co->win setBackgroundColor:bgColor];
 
@@ -1133,6 +1132,7 @@ fail:
 	[co->win close];
 	if (drv->videoFmt) {
 		AG_PixelFormatFree(drv->videoFmt);
+		free(drv->videoFmt);
 		drv->videoFmt = NULL;
 	}
 	AG_MutexUnlock(&co->lock);
@@ -1168,6 +1168,7 @@ COCOA_CloseWindow(AG_Window *win)
 	[co->win close];
 
 	AG_PixelFormatFree(drv->videoFmt);
+	free(drv->videoFmt);
 	drv->videoFmt = NULL;
 
 	AG_MutexUnlock(&co->lock);
@@ -1541,12 +1542,83 @@ COCOA_TweakAlignment(AG_Window *win, AG_SizeAlloc *a, Uint wMax, Uint hMax)
 	}
 }
 
+static AG_Cursor *
+COCOA_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
+    const Uint8 *mask, int xHot, int yHot)
+{
+	AG_Cursor *ac;
+
+	if ((ac = TryMalloc(sizeof(AG_Cursor))) == NULL)
+		return (NULL);
+	if ((ac->data = TryMalloc(size)) == NULL)
+		goto fail;
+	if ((ac->mask = TryMalloc(size)) == NULL) {
+		free(ac->data);
+		goto fail;
+	}
+	memcpy(ac->data, data, size);
+	memcpy(ac->mask, mask, size);
+	ac->w = w;
+	ac->h = h;
+	ac->xHot = xHot;
+	ac->yHot = yHot;
+
+	/* TODO COCOA stuff here */
+	return (NULL);
+fail:
+	free(ac);
+	return (NULL);
+}
+
+static void
+COCOA_FreeCursor(void *obj, AG_Cursor *ac)
+{
+	if (ac == drv->activeCursor) {
+		drv->activeCursor = NULL;
+		/* TODO COCOA stuff here */
+	}
+	free(ac->data);
+	free(ac->mask);
+	free(ac);
+}
+
+static int
+COCOA_SetCursor(void *obj, AG_Cursor *ac)
+{
+	drv->activeCursor = ac;
+	/* TODO COCOA stuff here */
+	return (0);
+}
+
+static void
+COCOA_UnsetCursor(void *obj)
+{
+	if (drv->activeCursor == TAILQ_FIRST(&drv->cursors))
+		return;
+	
+	/* TODO COCOA stuff here */
+	drv->activeCursor = TAILQ_FIRST(&drv->cursors);		/* Default */
+}
+
+static int
+COCOA_GetCursorVisibility(void *obj)
+{
+	/* TODO */
+	return (1);
+}
+
+static void
+COCOA_SetCursorVisibility(void *obj, int flag)
+{
+	/* TODO */
+}
+
 AG_DriverMwClass agDriverCocoa = {
 	{
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverCocoa",
 			sizeof(AG_DriverCocoa),
-			{ 1,5 },
+			{ 1,6 },
 			Init,
 			NULL,	/* reset */
 			Destroy,
@@ -1581,12 +1653,12 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_StdPopClipRect,
 		AG_GL_StdPushBlendingMode,
 		AG_GL_StdPopBlendingMode,
-		NULL,			/* createCursor */
-		NULL,			/* freeCursor */
-		NULL,			/* setCursor */
-		NULL,			/* unsetCursor */
-		NULL,			/* getCursorVisibility */
-		NULL,			/* setCursorVisibility */
+		COCOA_CreateCursor,
+		COCOA_FreeCursor,
+		COCOA_SetCursor,
+		COCOA_UnsetCursor,
+		COCOA_GetCursorVisibility,
+		COCOA_SetCursorVisibility,
 		AG_GL_BlitSurface,
 		AG_GL_BlitSurfaceFrom,
 		AG_GL_BlitSurfaceGL,
@@ -1603,10 +1675,8 @@ AG_DriverMwClass agDriverCocoa = {
 		AG_GL_DrawLineH,
 		AG_GL_DrawLineV,
 		AG_GL_DrawLineBlended,
-		AG_GL_DrawArrowUp,
-		AG_GL_DrawArrowDown,
-		AG_GL_DrawArrowLeft,
-		AG_GL_DrawArrowRight,
+		AG_GL_DrawTriangle,
+		AG_GL_DrawArrow,
 		AG_GL_DrawBoxRounded,
 		AG_GL_DrawBoxRoundedTop,
 		AG_GL_DrawCircle,
@@ -1632,7 +1702,6 @@ AG_DriverMwClass agDriverCocoa = {
 	COCOA_MoveResizeWindow,
 	COCOA_PreResizeCallback,
 	COCOA_PostResizeCallback,
-	NULL,				/* captureWindow */
 	COCOA_SetBorderWidth,
 	COCOA_SetWindowCaption,
 	NULL,				/* setTransientFor */
