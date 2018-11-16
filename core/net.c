@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -273,7 +273,7 @@ AG_NetAddrList *
 AG_NetResolve(const char *host, const char *port, Uint flags)
 {
 	AG_NetAddrList *nal;
-	
+
 	if ((nal = AG_NetAddrListNew()) == NULL) {
 		return (NULL);
 	}
@@ -438,7 +438,7 @@ AG_NetAccept(AG_NetSocket *ns)
 
 /* Read data from a socket. */
 int
-AG_NetRead(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
+AG_NetRead(AG_NetSocket *ns, void *p, AG_Size size, AG_Size *nRead)
 {
 	int rv;
 
@@ -450,7 +450,7 @@ AG_NetRead(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
 
 /* Write data to a socket. */
 int
-AG_NetWrite(AG_NetSocket *ns, const void *p, size_t size, size_t *nWrote)
+AG_NetWrite(AG_NetSocket *ns, const void *p, AG_Size size, AG_Size *nWrote)
 {
 	int rv;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ typedef struct ag_db_mysql {
 } AG_DbMySQL;
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DbMySQL *db = obj;
 
@@ -69,7 +69,7 @@ Init(void *obj)
 }
 
 static int
-Open(void *obj, const char *path, Uint flags)
+Open(void *_Nonnull obj, const char *_Nonnull path, Uint flags)
 {
 	char dbName[128];
 	AG_DbMySQL *db = obj;
@@ -132,7 +132,7 @@ Open(void *obj, const char *path, Uint flags)
 }
 
 static void
-Close(void *obj)
+Close(void *_Nonnull obj)
 {
 	AG_DbMySQL *db = obj;
 
@@ -140,50 +140,50 @@ Close(void *obj)
 	db->my = NULL;
 }
 
-static __inline__ char *
-EncodeKey(const AG_Dbt *key)
+static __inline__ char *_Nonnull
+EncodeKey(const AG_Dbt *_Nonnull key)
 {
 	/* XXX: TODO */
 	return Strdup(key->data);
 }
 
 static int
-Exists(void *obj, const AG_Dbt *key)
+Exists(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 {
 	AG_DbMySQL *db = obj;
 	char *ks, *q;
 
 	ks = EncodeKey(key);
 	Asprintf(&q, AG_GetStringP(db,"get-cmd"), ks);
-	Free(ks);
+	free(ks);
 	if (mysql_query(db->my, q) != 0) {
 		AG_SetError("Get: %s", mysql_error(db->my));
 		return (-1);
 	}
-	Free(q);
+	free(q);
 	return (mysql_field_count(db->my) > 0) ? 1 : 0;
 }
 
 static int
-Get(void *obj, const AG_Dbt *key, AG_Dbt *val)
+Get(void *_Nonnull obj, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
 {
 	return (-1);
 }
 		
 static int
-Put(void *obj, const AG_Dbt *key, const AG_Dbt *val)
+Put(void *_Nonnull obj, const AG_Dbt *_Nonnull key, const AG_Dbt *_Nonnull val)
 {
 	return (-1);
 }
 
 static int
-Del(void *obj, const AG_Dbt *key)
+Del(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 {
 	return (-1);
 }
 
 static int
-Iterate(void *obj, AG_DbIterateFn fn, void *arg)
+Iterate(void *_Nonnull obj, AG_DbIterateFn fn, void *_Nullable arg)
 {
 	return (-1);
 }

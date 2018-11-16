@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ static int agSockOptionMap[] = {
 #endif /* HAVE_SETSOCKOPT */
 
 /* Convert an AF_* value to an enum ag_net_addr_family. */
-static __inline__ enum ag_net_addr_family
+static __inline__ enum ag_net_addr_family _Const_Attribute
 GetAddrFamily(int family)
 {
 	switch (family) {
@@ -95,7 +95,9 @@ GetAddrFamily(int family)
 
 /* Convert an AG_NetAddr to a struct sockaddr. */
 static void
-NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *saLen)
+NetAddrToSockAddr(const AG_NetAddr *_Nonnull na,
+    struct sockaddr_storage        *_Nonnull sa,
+    socklen_t                      *_Nonnull saLen)
 {
 	memset(sa, 0, sizeof(struct sockaddr_storage));
 
@@ -134,8 +136,8 @@ NetAddrToSockAddr(const AG_NetAddr *na, struct sockaddr_storage *sa, socklen_t *
 }
 		
 /* Convert a struct sockaddr to AG_NetAddr. */
-static AG_NetAddr *
-SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
+static AG_NetAddr *_Nullable
+SockAddrToNetAddr(enum ag_net_addr_family af, const void *_Nonnull sa)
 {
 	AG_NetAddr *na;
 
@@ -179,7 +181,7 @@ SockAddrToNetAddr(enum ag_net_addr_family af, const void *sa)
 
 /* Convert a 32-bit millisecond value to a timeval. */
 static void
-GetTimeval(struct timeval *tv, Uint32 ms)
+GetTimeval(struct timeval *_Nonnull tv, Uint32 ms)
 {
 	tv->tv_sec = (ms/1000);
 	tv->tv_usec = (ms % 1000)*1000;
@@ -199,7 +201,7 @@ Init(void)
 #endif
 	if ((fn = signal(SIGPIPE, SIG_IGN)) != SIG_DFL)
 		signal(SIGPIPE, fn);
-	
+
 	/* Sanity check the sockaddr lengths. */
 	if (sizeof(sin.sin_addr.s_addr) != 4) {
 		AG_SetError("Bad sockaddr_in size");
@@ -224,7 +226,7 @@ Destroy(void)
 }
 
 static int
-GetIfConfig(AG_NetAddrList *nal)
+GetIfConfig(AG_NetAddrList *_Nonnull nal)
 {
 #ifdef HAVE_SIOCGIFCONF
 	enum ag_net_addr_family af;
@@ -274,7 +276,10 @@ fail:
 }
 
 static int
-Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
+Resolve(AG_NetAddrList *_Nonnull nal,
+    const char *_Nonnull host,
+    const char *_Nonnull port,
+    Uint flags)
 {
 	struct addrinfo hints, *res, *res0;
 	enum ag_net_addr_family af;
@@ -309,8 +314,8 @@ Resolve(AG_NetAddrList *nal, const char *host, const char *port, Uint flags)
 	return (0);
 }
 
-static char *
-GetAddrNumerical(AG_NetAddr *na)
+static char *_Nullable
+GetAddrNumerical(AG_NetAddr *_Nonnull na)
 {
 	const char *s;
 
@@ -345,7 +350,7 @@ GetAddrNumerical(AG_NetAddr *na)
 }
 
 static int
-InitSocket(AG_NetSocket *ns)
+InitSocket(AG_NetSocket *_Nonnull ns)
 {
 	int sockDomain, sockType;
 
@@ -375,7 +380,7 @@ InitSocket(AG_NetSocket *ns)
 }
 
 static void
-DestroySocket(AG_NetSocket *ns)
+DestroySocket(AG_NetSocket *_Nonnull ns)
 {
 	if (ns->fd != -1) {
 		close(ns->fd);
@@ -384,7 +389,7 @@ DestroySocket(AG_NetSocket *ns)
 }
 
 static int
-Connect(AG_NetSocket *ns, const AG_NetAddr *na)
+Connect(AG_NetSocket *_Nonnull ns, const AG_NetAddr *_Nonnull na)
 {
 	struct sockaddr_storage sa;
 	socklen_t saLen = 0;
@@ -403,7 +408,7 @@ Connect(AG_NetSocket *ns, const AG_NetAddr *na)
 }
 
 static int
-Bind(AG_NetSocket *ns, const AG_NetAddr *na)
+Bind(AG_NetSocket *_Nonnull ns, const AG_NetAddr *_Nonnull na)
 {
 	struct sockaddr_storage sa;
 	socklen_t saLen = 0;
@@ -427,7 +432,8 @@ Bind(AG_NetSocket *ns, const AG_NetAddr *na)
 }
 
 static int
-GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
+GetOption(AG_NetSocket *_Nonnull ns, enum ag_net_socket_option so,
+    void *_Nonnull p)
 {
 #ifdef HAVE_SETSOCKOPT
 	socklen_t optLen;
@@ -532,7 +538,8 @@ GetOption(AG_NetSocket *ns, enum ag_net_socket_option so, void *p)
 }
 
 static int
-SetOption(AG_NetSocket *ns, enum ag_net_socket_option so, const void *p)
+SetOption(AG_NetSocket *_Nonnull ns, enum ag_net_socket_option so,
+    const void *_Nonnull p)
 {
 #ifdef HAVE_SETSOCKOPT
 	int rv = 0;
@@ -626,7 +633,8 @@ SetOption(AG_NetSocket *ns, enum ag_net_socket_option so, const void *p)
 }
 
 static int
-Read(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
+Read(AG_NetSocket *_Nonnull ns, void *_Nonnull p, AG_Size size,
+    AG_Size *_Nullable nRead)
 {
 	ssize_t rv;
 
@@ -635,12 +643,13 @@ Read(AG_NetSocket *ns, void *p, size_t size, size_t *nRead)
 		AG_SetError("read: %s", strerror(errno));
 		return (-1);
 	}
-	if (nRead != NULL) { *nRead = (size_t)rv; }
+	if (nRead != NULL) { *nRead = (AG_Size)rv; }
 	return (0);
 }
 
 static int
-Write(AG_NetSocket *ns, const void *p, size_t size, size_t *nWrote)
+Write(AG_NetSocket *_Nonnull ns, const void *_Nonnull p, AG_Size size,
+    AG_Size *_Nullable nWrote)
 {
 	ssize_t rv;
 
@@ -649,12 +658,12 @@ Write(AG_NetSocket *ns, const void *p, size_t size, size_t *nWrote)
 		AG_SetError("write: %s", strerror(errno));
 		return (-1);
 	}
-	if (nWrote != NULL) { *nWrote = (size_t)rv; }
+	if (nWrote != NULL) { *nWrote = (AG_Size)rv; }
 	return (0);
 }
 
 static void
-Close(AG_NetSocket *ns)
+Close(AG_NetSocket *_Nonnull ns)
 {
 	if (ns->fd != -1) {
 		close(ns->fd);
@@ -665,8 +674,9 @@ Close(AG_NetSocket *ns)
 }
 
 static int
-Poll(AG_NetSocketSet *nsInput, AG_NetSocketSet *nsRead, AG_NetSocketSet *nsWrite,
-    AG_NetSocketSet *nsExcept, Uint32 timeout)
+Poll(AG_NetSocketSet *_Nonnull nsInput, AG_NetSocketSet *_Nullable nsRead,
+    AG_NetSocketSet *_Nullable nsWrite, AG_NetSocketSet *_Nullable nsExcept,
+    Uint32 timeout)
 {
 #ifdef HAVE_SELECT
 	fd_set readFds, writeFds, exceptFds;
@@ -730,8 +740,8 @@ poll:
 #endif /* !HAVE_SELECT */
 }
 
-static AG_NetSocket *
-Accept(AG_NetSocket *ns)
+static AG_NetSocket *_Nullable
+Accept(AG_NetSocket *_Nonnull ns)
 {
 	struct sockaddr_storage sa;
 	AG_NetSocket *nsNew;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -165,7 +165,7 @@ static const char *webKillEvent = "event: KILL\n"
 
 /* Parse HTTP request URL (with optional arguments). */
 static int
-ParseURL(WEB_Query *q, const char *s)
+ParseURL(WEB_Query *_Nonnull q, const char *_Nonnull s)
 {
 	char path[WEB_URL_MAX];
 	char *c, *pathArgs, *pc;
@@ -212,7 +212,7 @@ ParseURL(WEB_Query *q, const char *s)
 
 /* Parse the HTTP "Cookie:" header. */
 static int
-ParseCookie(WEB_Query *q, char *s)
+ParseCookie(WEB_Query *_Nonnull q, char *_Nonnull s)
 {
 	WEB_Cookie *ck;
 	char *sp = s, *t, *end;
@@ -248,7 +248,7 @@ ParseCookie(WEB_Query *q, char *s)
 
 /* Parse the HTTP "Accept-Language:" header and negotiate the default. */
 static int
-ParseAcceptLanguage(WEB_Query *q, char *s)
+ParseAcceptLanguage(WEB_Query *_Nonnull q, char *_Nonnull s)
 {
 	char *sp = s, *t;
 	char **lang;
@@ -285,7 +285,8 @@ ParseAcceptLanguage(WEB_Query *q, char *s)
 
 /* Common in all HTTP frontend methods. */
 static __inline__ int
-WEB_InitFrontQuery(WEB_Query *q, WEB_Method meth, int sock, const char *url)
+WEB_InitFrontQuery(WEB_Query *_Nonnull q, WEB_Method meth, int sock,
+    const char *_Nonnull url)
 {
 	time_t t = time(NULL);
 	struct tm tm;
@@ -306,7 +307,7 @@ WEB_InitFrontQuery(WEB_Query *q, WEB_Method meth, int sock, const char *url)
 
 /* Parse Range request header */
 static int
-ParseRange(WEB_Query *q, char *s)
+ParseRange(WEB_Query *_Nonnull q, char *_Nonnull s)
 {
 	char *from, *to;
 	const char *err;
@@ -329,7 +330,7 @@ fail_416:
 
 /* Parse HTTP headers common to all methods. */
 static __inline__ int
-WEB_ParseHeader(WEB_Query *q, char *s)
+WEB_ParseHeader(WEB_Query *_Nonnull q, char *_Nonnull s)
 {
 	if (strcasecmp(s, "Connection: keep-alive") == 0) {
 		q->flags |= WEB_QUERY_KEEPALIVE;
@@ -357,7 +358,7 @@ WEB_ParseHeader(WEB_Query *q, char *s)
 
 /* Maintain keep-alive if requested. */
 static __inline__ int
-WEB_KeepAlive(WEB_Query *q)
+WEB_KeepAlive(WEB_Query *_Nonnull q)
 {
 	if (q->flags & WEB_QUERY_KEEPALIVE) {
 		WEB_SetHeaderS(q, "Connection", "keep-alive");
@@ -370,8 +371,8 @@ WEB_KeepAlive(WEB_Query *q)
 }
 
 static int
-WEB_FrontGET(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdBufLen,
-    const WEB_SessionOps *Sops)
+WEB_FrontGET(int sock, const char *_Nonnull url, char *_Nonnull pHeaders,
+    void *_Nonnull rdBuf, AG_Size rdBufLen, const WEB_SessionOps *_Nonnull Sops)
 {
 	char *headers = pHeaders, *s, *cEnd;
 	WEB_Query q;
@@ -379,7 +380,7 @@ WEB_FrontGET(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdBu
 	
 	WEB_Log(WEB_LOG_QUERY,
 	    "GET: url=%s, headers=[%s], rdBufLen=%lu", url,
-	    pHeaders, rdBufLen);
+	    pHeaders, (Ulong)rdBufLen);
 
 	if (WEB_InitFrontQuery(&q, WEB_METHOD_GET, sock, url) == -1) {
 		goto fail;
@@ -408,8 +409,8 @@ fail:
 }
 
 static int
-WEB_FrontHEAD(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdBufLen,
-    const WEB_SessionOps *Sops)
+WEB_FrontHEAD(int sock, const char *_Nonnull url, char *_Nonnull pHeaders,
+    void *_Nonnull rdBuf, AG_Size rdBufLen, const WEB_SessionOps *_Nonnull Sops)
 {
 	char *headers = pHeaders, *s, *cEnd;
 	WEB_Query q;
@@ -417,7 +418,7 @@ WEB_FrontHEAD(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdB
 
 	WEB_Log(WEB_LOG_QUERY,
 	    "HEAD: url=%s, headers=[%lu], rdBufLen=%lu", url,
-	    strlen(pHeaders), rdBufLen);
+	    strlen(pHeaders), (Ulong)rdBufLen);
 
 	if (WEB_InitFrontQuery(&q, WEB_METHOD_HEAD, sock, url) == -1) {
 		goto fail;
@@ -446,8 +447,8 @@ fail:
 }
 
 static int
-WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rdBufLen,
-    const WEB_SessionOps *Sops)
+WEB_FrontPOST(int sock, const char *_Nonnull url, char *_Nonnull pHeaders,
+    void *_Nonnull pRdBuf, AG_Size rdBufLen, const WEB_SessionOps *_Nonnull Sops)
 {
 	char *rdBuf = pRdBuf;
 	char *headers = pHeaders, *s, *cEnd;
@@ -456,7 +457,7 @@ WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rd
 	
 	WEB_Log(WEB_LOG_QUERY,
 	    "POST: url=%s, headers=[%s], rdBufLen=%lu", url,
-	    pHeaders, rdBufLen);
+	    pHeaders, (Ulong)rdBufLen);
 
 	if (WEB_InitFrontQuery(&q, WEB_METHOD_POST, sock, url) == -1) {
 		goto fail;
@@ -468,7 +469,7 @@ WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rd
 		if (strncasecmp(s, "Content-Type: ",14)==0) {
 			Strlcpy(q.contentType, &s[14], sizeof(q.contentType));
 		} else if (strncasecmp(s, "Content-Length: ",16)==0) {
-			q.contentLength = (size_t)strtol(&s[16], NULL, 10);
+			q.contentLength = (AG_Size)strtol(&s[16], NULL, 10);
 		} else if (WEB_ParseHeader(&q, s) == -1) {
 			goto fail;
 		}
@@ -483,7 +484,7 @@ WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rd
 		if (q.contentLength > WEB_FRONTEND_RDBUFSIZE-rdBufLen-1) {
 			WEB_SetCode(&q, "400 Bad Request");
 			AG_SetError("Urlenc body too large (max %lu)",
-			    WEB_FRONTEND_RDBUFSIZE-rdBufLen);
+			    (Ulong)(WEB_FRONTEND_RDBUFSIZE - rdBufLen));
 			goto fail;
 		}
 		if (WEB_SYS_Read(sock, &rdBuf[rdBufLen], q.contentLength - rdBufLen) == -1) {
@@ -492,7 +493,7 @@ WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rd
 		}
 		((char *)rdBuf)[q.contentLength] = '\0';
 		WEB_LogDebug("URLENCODED: Parsing %lu bytes (\"%s\")",
-		    q.contentLength, (char *)rdBuf);
+		    (Ulong)q.contentLength, (char *)rdBuf);
 		if (WEB_ParseFormUrlEncoded(&q, rdBuf, WEB_POST_ARGUMENT) == -1) {
 			WEB_SetCode(&q, "400 Bad Request");
 			goto fail;
@@ -500,10 +501,10 @@ WEB_FrontPOST(int sock, const char *url, char *pHeaders, void *pRdBuf, size_t rd
 		q.flags |= WEB_QUERY_CONTENT_READ;
 	} else if (strncmp(q.contentType, "multipart/form-data",19) == 0 &&
 	           q.contentLength > 0) {
-		WEB_LogDebug("FORMDATA: Reading %lu bytes", q.contentLength);
+		WEB_LogDebug("FORMDATA: Reading %lu bytes", (Ulong)q.contentLength);
 		if (q.contentLength > WEB_FORMDATA_MAX) {
 			WEB_LogErr("Client Content-Length: %luK > %uK",
-			    q.contentLength/1024, WEB_FORMDATA_MAX/1024);
+			    (Ulong)(q.contentLength/1024), WEB_FORMDATA_MAX/1024);
 			WEB_SetCode(&q, "400 Bad Request");
 			goto fail;
 		}
@@ -528,8 +529,8 @@ fail:
 }
 
 static int
-WEB_FrontOPTIONS(int sock, const char *url, char *pHeaders, void *rdBuf,
-    size_t rdBufLen, const WEB_SessionOps *Sops)
+WEB_FrontOPTIONS(int sock, const char *_Nonnull url, char *_Nonnull pHeaders,
+    void *_Nonnull rdBuf, AG_Size rdBufLen, const WEB_SessionOps *_Nonnull Sops)
 {
 	char *headers = pHeaders, *s, *cEnd;
 	WEB_Query q;
@@ -537,7 +538,7 @@ WEB_FrontOPTIONS(int sock, const char *url, char *pHeaders, void *rdBuf,
 
 	WEB_Log(WEB_LOG_QUERY,
 	    "OPTIONS : url=%s, headers=[%lu], rdBufLen=%lu", url,
-	    strlen(pHeaders), rdBufLen);
+	    strlen(pHeaders), (Ulong)rdBufLen);
 
 	if (url[0] == '*') {
 		url = "/";
@@ -552,7 +553,7 @@ WEB_FrontOPTIONS(int sock, const char *url, char *pHeaders, void *rdBuf,
 		if (strncasecmp(s, "Content-Type: ",14)==0) {
 			Strlcpy(q.contentType, &s[14], sizeof(q.contentType));
 		} else if (strncasecmp(s, "Content-Length: ",16)==0) {
-			q.contentLength = (size_t)strtol(&s[16], NULL, 10);
+			q.contentLength = (AG_Size)strtol(&s[16], NULL, 10);
 		} else if (WEB_ParseHeader(&q, s) == -1) {
 			rv = 0;
 			goto fail;
@@ -591,8 +592,9 @@ fail:
 }
 
 static int
-WEB_MethodNotAllowed(int sock, const char *url, char *pHeaders, void *rdBuf, size_t rdBufLen,
-    const WEB_SessionOps *Sops)
+WEB_MethodNotAllowed(int sock, const char *_Nonnull url,
+    char *_Nonnull pHeaders, void *_Nonnull rdBuf, AG_Size rdBufLen,
+    const WEB_SessionOps *_Nonnull Sops)
 {
 	WEB_Query q;
 
@@ -684,9 +686,7 @@ WEB_UnescapeURL(WEB_Query *q, const char *url)
 	char *dst, *dp;
 	Uint n;
 
-	if ((dp = dst = TryMalloc(strlen(url)+2)) == NULL) {
-		return (NULL);
-	}
+	dp = dst = Malloc(strlen(url) + 2);
 	hex[2] = '\0';
 	for (sp = url; *sp != '\0'; dp++, sp++) {
 		if (sp[0] == '%' && isxdigit(sp[1]) && isxdigit(sp[2])) {
@@ -913,7 +913,7 @@ fail:
 }
 
 /* Set a cookie value. */
-WEB_Cookie *
+WEB_Cookie *_Nonnull
 WEB_SetCookieS(WEB_Query *q, const char *name, const char *value)
 {
 	WEB_Cookie *ck;
@@ -1014,7 +1014,7 @@ WEB_QueryInit(WEB_Query *q, const char *lang)
 
 /* Prepare for processing a Frontend or a Worker query. */
 static __inline__ void
-WEB_BeginQueryCommon(WEB_Query *q)
+WEB_BeginQueryCommon(WEB_Query *_Nonnull q)
 {
 	if (q->data == NULL) {
 		q->data = Malloc(WEB_DATA_BUFSIZE);
@@ -1154,7 +1154,7 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 
 #ifdef HAVE_ZLIB
 static void
-WEB_FlushQuery_DEFLATE(WEB_Query *q)
+WEB_FlushQuery_DEFLATE(WEB_Query *_Nonnull q)
 {
 	Uint8 out[WEB_DATA_BUFSIZE];
 	size_t nRead=0, nWrote=0, nGzipped;
@@ -1214,7 +1214,8 @@ WEB_FlushQuery_DEFLATE(WEB_Query *q)
 				size_t chunkHeadLen;
 
 				chunkHeadLen = snprintf(chunkHead,
-				    sizeof(chunkHead), "%lx\r\n", nGzipped);
+				    sizeof(chunkHead), "%lx\r\n",
+				    (Ulong)nGzipped);
 				if (chunkHeadLen >= sizeof(chunkHead)) {
 					AG_FatalError("chunkHeadLen");
 				}
@@ -1236,7 +1237,8 @@ WEB_FlushQuery_DEFLATE(WEB_Query *q)
 
 	deflateEnd(&strm);
 	WEB_LogDebug("DEFLATE: %lu -> %lu bytes (%.0f%% saving)",
-	    q->dataLen, nWrote, ((float)q->dataLen/(float)nWrote)*100.0f);
+	    (Ulong)q->dataLen, (Ulong)nWrote,
+	    ((float)q->dataLen/(float)nWrote)*100.0f);
 
 	if (q->method != WEB_METHOD_HEAD) {
 		WEB_SYS_Write(q->sock, "0\r\n\r\n",5);
@@ -1249,12 +1251,12 @@ WEB_FlushQuery_DEFLATE(WEB_Query *q)
 
 /* Validate and process a Range request. */
 static void
-WEB_FlushQuery_RANGE(WEB_Query *q)
+WEB_FlushQuery_RANGE(WEB_Query *_Nonnull q)
 {
 	Uint rangeLen;
 	
 	WEB_LogDebug("FlushQuery_RANGE(head=%lu, range=%d-%d/%lu)",
-	    q->headLen, q->rangeFrom, q->rangeTo, q->dataLen);
+	    (Ulong)q->headLen, q->rangeFrom, q->rangeTo, (Ulong)q->dataLen);
 
 	if (q->rangeFrom > q->rangeTo ||
 	    q->rangeTo > q->dataLen ||
@@ -1283,7 +1285,7 @@ fail_416:
 }
 
 static __inline__ void
-WEB_ClearQuery(WEB_Query *q)
+WEB_ClearQuery(WEB_Query *_Nonnull q)
 {
 	free(q->data);
 	q->data = NULL;
@@ -1323,7 +1325,7 @@ WEB_FlushQuery(WEB_Query *q)
 
 /* Execute a module query (in Worker process). */
 int
-WEB_ExecWorkerQuery(WEB_Query *q, const WEB_SessionOps *Sops)
+WEB_ExecWorkerQuery(WEB_Query *q)
 {
 	const char *op, *c;
 	const WEB_Argument *opArg;
@@ -1908,7 +1910,7 @@ WEB_Unset(WEB_Query *q, const char *key)
  * argument is undefined or exceeds len-1 bytes.
  */
 const char *
-WEB_Get(WEB_Query *q, const char *key, size_t len)
+WEB_Get(WEB_Query *q, const char *key, AG_Size len)
 {
 	WEB_Argument *arg;
 
@@ -1933,7 +1935,7 @@ WEB_Get(WEB_Query *q, const char *key, size_t len)
  * the value of the argument. Size checking is performed on the trimmed string.
  */
 const char *
-WEB_GetTrim(WEB_Query *q, const char *key, size_t len)
+WEB_GetTrim(WEB_Query *q, const char *key, AG_Size len)
 {
 	WEB_Argument *arg;
 	char *s, *end;
@@ -2059,7 +2061,7 @@ fail:
 
 /* Read serialized WEB_Query data. */
 int
-WEB_QueryLoad(WEB_Query *q, const void *data, size_t dataLen)
+WEB_QueryLoad(WEB_Query *q, const void *data, AG_Size dataLen)
 {
 	AG_DataSource *ds;
 	Uint count;
@@ -2145,7 +2147,7 @@ WEB_QueryLoad(WEB_Query *q, const void *data, size_t dataLen)
 
 	/* Client-supplied content */
 	AG_CopyString(q->contentType, ds, sizeof(q->contentType));
-	q->contentLength = (size_t)AG_ReadUint32(ds);
+	q->contentLength = (AG_Size)AG_ReadUint32(ds);
 
 	AG_CloseConstCore(ds);
 	return (0);
@@ -2351,13 +2353,12 @@ WEB_SetProcTitle(const char *fmt, ...)
 #endif /* !HAVE_SETPROCTITLE */
 
 static __inline__ void
-WEB_LogToFile(enum web_loglvl level, const char *s)
+WEB_LogToFile(enum web_loglvl level, const char *_Nonnull s)
 {
 	char buf[WEB_ERROR_MAX], *p = buf;
-	size_t hlen, alen, slen;
+	size_t hlen, alen, slen, rem;
 	char pid[10];
 	const char *c;
-	size_t rem;
 	FILE *f;
 
 	snprintf(pid, sizeof(pid), "%d", getpid());
@@ -2519,13 +2520,13 @@ WEB_Printf(WEB_Query *q, const char *fmt, ...)
 
 /* Make a message HTML-safe */
 static __inline__ void
-MessageToHTML(char *htmlMsg, size_t htmlMsgLen, const char *msg)
+MessageToHTML(char *_Nonnull h, AG_Size hLen, const char *_Nonnull msg)
 {
 	const char *c;
 	char *d;
 
-	for (c = &msg[0], d = &htmlMsg[0];
-	    *c != '\0' && d < &htmlMsg[htmlMsgLen - 5];
+	for (c = &msg[0], d = &h[0];
+	    *c != '\0' && d < &h[hLen-5];
 	     c++) {
 		if      (*c == '<') { strncpy(d, "&lt;", 4); d+=4; }
 		else if (*c == '>') { strncpy(d, "&gt;", 4); d+=4; }
@@ -2539,8 +2540,8 @@ MessageToHTML(char *htmlMsg, size_t htmlMsgLen, const char *msg)
 
 /* Find the named HTML document and copy its absolute path into dst. */
 static int
-FindDoc(WEB_Query *q, const char *name, char *dst, size_t dst_len,
-    off_t *docLen)
+FindDoc(WEB_Query *_Nonnull q, const char *_Nonnull name,
+    char *_Nonnull dst, AG_Size dst_len, AG_Offset *_Nonnull docLen)
 {
 	char path[FILENAME_MAX];
 	struct stat sb;
@@ -2569,7 +2570,7 @@ WEB_OutputHTML(WEB_Query *q, const char *name)
 	char path[FILENAME_MAX];
 	AG_DataSource *ds;
 	char *data;
-	off_t len;
+	AG_Offset len;
 
 	/* XXX inefficient */
 	/* TODO: memory cache */
@@ -2615,7 +2616,7 @@ WEB_PutJSON_HTML(WEB_Query *q, const char *key, const char *name)
 	char path[FILENAME_MAX];
 	AG_DataSource *ds;
 	char *data;
-	off_t len;
+	AG_Offset len;
 
 	WEB_PutC(q, '"');
 	WEB_PutS(q, key);
@@ -2725,8 +2726,9 @@ WEB_SetSuccess(const char *fmt, ...)
 	     _("Success: "), htmlMsg, _("Dismiss"));
 }
 
+/* Return 1 if session ID is a valid, running session */
 static __inline__ int
-ValidSessionID(const char *sessID)
+ValidSessionID(const char *_Nonnull sessID)
 {
 	char path[FILENAME_MAX];
 	struct stat sb;
@@ -2753,8 +2755,9 @@ fail:
 	return (0);
 }
 
+/* Send a KILL message to an active push event listener */
 static int
-KillListener(struct sockaddr_un *sun, socklen_t sunLen)
+KillListener(struct sockaddr_un *_Nonnull sun, socklen_t sunLen)
 {
 	int fd, status;
 
@@ -2906,7 +2909,7 @@ WEB_PostEvent(const char *match, WEB_EventFilterFn filterFn,
 }
 
 static __inline__ void
-CloseWorkSocket(WEB_SessionSocket *sock)
+CloseWorkSocket(WEB_SessionSocket *_Nonnull sock)
 {
 	WEB_LogDebug("CloseWorkSocket(%p, %d)", sock, sock->fd);
 	if (sock->fd != -1) {
@@ -3008,8 +3011,8 @@ fail:
  * to the client as text/event-stream.
  */
 static int
-WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
-    const char *username)
+WEB_EventListener(WEB_Query *_Nonnull q, const WEB_SessionOps *_Nonnull Sops,
+    const char *_Nonnull sessID, const char *_Nonnull username)
 {
 	int evSock, clntSock, status=0;
 	struct sockaddr_un sun;
@@ -3017,7 +3020,6 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 	socklen_t sunLen;
 	struct stat sb;
 	WEB_Session *S;
-	ssize_t rv;
 	int try;
 		
 	if (WEB_GetInt(q, "try", &try) == -1) {
@@ -3084,12 +3086,10 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 		goto fail;
 	
 	if ((S = TryMalloc(Sops->size)) == NULL) {
-		rv = EX_OSERR;
 		goto fail;
 	}
 	WEB_SessionInit(S, Sops);
 	if (WEB_SessionLoad(S, sessID) == -1) {
-		rv = EX_OSFILE;
 		goto fail_sess;
 	}
 	WEB_LogEvent("Attached to session %s (%s), nEvents=%u",
@@ -3143,6 +3143,8 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 
 		/* Client has closed connection? */
 		if (FD_ISSET(q->sock, &rdFds)) {
+			ssize_t rv;
+
 			if ((rv = read(q->sock, NULL, 0)) == -1) {
 				if (errno == EINTR || errno == EAGAIN) {
 					WEB_CheckSignals();
@@ -3175,6 +3177,8 @@ WEB_EventListener(WEB_Query *q, const WEB_SessionOps *Sops, const char *sessID,
 				}
 			}
 			for (nRead=0; nRead < sizeof(buf); ) {
+				ssize_t rv;
+
 				/* TODO: WEB_EVENT_READ_TIMEOUT */
 				rv = read(clntSock, &buf[nRead], sizeof(buf)-nRead);
 				WEB_LogEvent("%ld-byte message", rv);
@@ -3334,9 +3338,10 @@ fail:
  * that we can re-authenticate automatically.
  */
 static int
-GetSessionCredentials(const WEB_SessionOps *Sops, const char *sessID,
-    char *user, size_t userSize,
-    char *pass, size_t passSize)
+GetSessionCredentials(const WEB_SessionOps *_Nonnull Sops,
+    const char *_Nonnull sessID,
+    char *_Nonnull  user, size_t userSize,
+    char *_Nullable pass, size_t passSize)
 {
 	const char *userArg, *passArg;
 	WEB_Session *S;
@@ -3368,9 +3373,12 @@ fail:
  * on success, or an error code on failure.
  */
 static int
-CreateWorker(const WEB_SessionOps *Sops, WEB_Query *q, const char *user,
-    const char *pass, char *sessID, size_t sessIdSize, Uint nRestoreAttempts,
-    pid_t *pid)
+CreateWorker(const WEB_SessionOps *_Nonnull Sops,
+    WEB_Query  *_Nonnull q,
+    const char *_Nonnull user,
+    const char *_Nonnull pass,
+    char       *_Nonnull sessID, size_t sessIdSize, Uint nRestoreAttempts,
+    pid_t      *_Nonnull pid)
 {
 	int pp[2];
 	pid_t pidNew;
@@ -3419,8 +3427,9 @@ CreateWorker(const WEB_SessionOps *Sops, WEB_Query *q, const char *user,
 	return (0);
 }
 
-static WEB_SessionSocket *
-CreateWorkSocket(struct sockaddr_un *sun, const char *sessID)
+/* Create a new session-bound Frontend<->Worker socket. */
+static WEB_SessionSocket *_Nullable
+CreateWorkSocket(struct sockaddr_un *_Nonnull sun, const char *_Nonnull sessID)
 {
 	WEB_SessionSocket *sock;
 	struct stat sb;
@@ -3488,7 +3497,7 @@ CreateWorkSocket(struct sockaddr_un *sun, const char *sessID)
  */
 int
 WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
-    size_t rdBufLen)
+    AG_Size rdBufLen)
 {
 	char head[WEB_HTTP_HEADER_MAX], *cHeadEnd, *pHead = head, *s;
 	char buf[WEB_DATA_BUFSIZE];
@@ -3500,7 +3509,7 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 	socklen_t sunLen;
 	const char *op, *sessArg;
 	int nRestoreAttempts=0, detChunked;
-	size_t headLen, nRead, nWrote, detContentLen;
+	AG_Size headLen, nRead, nWrote, detContentLen;
 	WEB_SessionSocket *sock;
 	ssize_t rv;
 	
@@ -3702,7 +3711,7 @@ try_connect:
 	 */
 	if (q->contentLength > 0 && !(q->flags & WEB_QUERY_CONTENT_READ)) {
 		WEB_LogDebug("Feed worker %lu bytes of %s data (got %lu)",
-		    q->contentLength, q->contentType, rdBufLen);
+		    (Ulong)q->contentLength, q->contentType, (Ulong)rdBufLen);
 
 		if (rdBufLen > 0 && WEB_SYS_Write(sock->fd, rdBuf, rdBufLen) == -1) {
 			WEB_LogErr("Write to worker: %s", AG_GetError());
@@ -3809,7 +3818,7 @@ read_resp_head:
 		if (strcmp(s, "Transfer-Encoding: chunked")==0) {
 			detChunked = 1;
 		} else if (strncmp(s, "Content-Length: ",16)==0) {
-			detContentLen = (size_t)strtol(&s[16], NULL, 10);
+			detContentLen = (AG_Size)strtol(&s[16], NULL, 10);
 		}
 	}
 	
@@ -3871,7 +3880,7 @@ read_resp_head:
 			/* Write Chunk Data */
 			nWrote = 0;
 			while (nWrote < chunk+2) {
-				size_t nRemain = chunk+2 - nWrote;
+				AG_Size nRemain = chunk+2 - nWrote;
 
 				if (nRead < MIN(nRemain, sizeof(buf))) {
 					REFILL_BUFFER_MIN(nRemain);
@@ -3907,7 +3916,7 @@ read_resp_head:
 #endif
 		nWrote = 0;
 		while (nWrote < detContentLen) {
-			size_t nRemain = detContentLen-nWrote;
+			AG_Size nRemain = detContentLen-nWrote;
 			if (nRead < MIN(nRemain, sizeof(buf))) {
 				REFILL_BUFFER_MIN(nRemain);
 				if (rv == 0) {
@@ -3923,7 +3932,7 @@ read_resp_head:
 		}
 		if (nWrote < detContentLen) {
 			AG_SetError("EOF at %lu (Content-Length: %lu)",
-			    nWrote, detContentLen);
+			    (Ulong)nWrote, (Ulong)detContentLen);
 			goto fail_data;
 		}
 	}
@@ -4309,7 +4318,7 @@ regen_id:
 			}
 
 			WEB_BeginWorkerQuery(&q);
-			if (WEB_ExecWorkerQuery(&q, Sops) == 1) {
+			if (WEB_ExecWorkerQuery(&q) == 1) {
 				/* Terminate (e.g., /logout op). */
 				WEB_LogWorker("Terminating by request");
 				WEB_QueryDestroy(&q);
@@ -4550,7 +4559,7 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 		char uri[MAXPATHLEN];
 		struct sockaddr paddr;
 		socklen_t paddrLen = sizeof(paddr);
-		size_t headerLen, rdBufLen;
+		AG_Size headerLen, rdBufLen;
 		WEB_Method meth;
 		fd_set readFds = httpSockFDs;
 
@@ -4636,7 +4645,7 @@ read_header:
 		*cEnd = '\0';
 
 		for (meth=0; meth < WEB_METHOD_LAST; meth++) {
-			size_t nameLen;
+			AG_Size nameLen;
 
 			if (strcmp(header, webMethods[meth].name) != 0) {
 				continue;

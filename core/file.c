@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,7 +160,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 #endif /* _WIN32 */
 
 int
-AG_GetSystemTempDir(char *buf, size_t len)
+AG_GetSystemTempDir(char *buf, AG_Size len)
 {
 #if defined(_XBOX)
 	/* Use a cache partition if it is available */

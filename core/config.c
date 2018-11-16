@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,7 +124,7 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull p, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
 #ifdef AG_DEBUG
 	agDebugLvl = AG_ReadUint8(ds);
@@ -147,7 +147,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static int
-Save(void *obj, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
 	AG_Config *cfg = obj;
 	char buf[30];
@@ -170,11 +170,11 @@ Save(void *obj, AG_DataSource *ds)
 
 /*
  * Copy the full pathname of a data file to a fixed-size buffer.
- * Return 0 if the file exists, or -1 if an error occured.
+ * Return 0 if the file exists, or -1 if an error has occurred.
  */
 int
 AG_ConfigFile(const char *path_key, const char *name, const char *ext,
-    char *path, size_t path_len)
+    char *path, AG_Size path_len)
 {
 	char file[AG_PATHNAME_MAX];
 	char *dir, *pathp = path;
@@ -208,7 +208,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	}
 	AG_GetString(agConfig, path_key, path, path_len);
 	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
-	    (ext != NULL) ? ext : "", path_key, path);
+	    (ext != NULL) ? (char *)ext : "", path_key, path);
 	return (-1);
 }
 

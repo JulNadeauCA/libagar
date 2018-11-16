@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,7 @@ const char *agLanguageNames[] = {
 
 /* Initialize a static AG_Text element. */
 void
-AG_TextInit(AG_Text *txt, size_t maxLen)
+AG_TextInit(AG_Text *txt, AG_Size maxLen)
 {
 	Uint i;
 	
@@ -124,13 +124,9 @@ AG_TextDestroy(AG_Text *txt)
 
 /* Create an autoallocated AG_Text element. */
 AG_Text *
-AG_TextNew(size_t maxLen)
+AG_TextNew(AG_Size maxLen)
 {
-	AG_Text *txt;
-
-	if ((txt = AG_TryMalloc(sizeof(AG_Text))) == NULL) {
-		return (NULL);
-	}
+	AG_Text *txt = Malloc(sizeof(AG_Text));
 	AG_TextInit(txt, maxLen);
 	return (txt);
 }

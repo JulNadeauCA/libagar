@@ -64,11 +64,11 @@ typedef struct ag_list {
 .Ft int
 .Fn AG_ListPrepend "AG_List *L" "const AG_Variable *V"
 .Pp
-.Ft int
-.Fn AG_ListInsert "AG_List *L" "int idx" "const AG_Variable *V"
+.Ft Uint
+.Fn AG_ListInsert "AG_List *L" "Uint idx" "const AG_Variable *V"
 .Pp
-.Ft int
-.Fn AG_ListRemove "AG_List *L" "int idx"
+.Ft void
+.Fn AG_ListRemove "AG_List *L" "Uint idx"
 .Pp
 .Ft int
 .Fn AG_ListClear "AG_List *L"
@@ -78,11 +78,11 @@ The
 .Fn AG_ListNew
 function allocates and initializes a new, empty
 .Nm .
-.Fn AG_ListNew
-returns a pointer to the new list or NULL on failure.
 .Fn AG_ListDup
 duplicates an existing list
 .Fa L .
+If insufficient memory is available, both routines raise an exception.
+.Pp
 .Fn AG_ListDestroy
 frees all resources allocated by a list.
 .Pp
@@ -99,12 +99,14 @@ inserts at a specified position
 .Fn AG_ListPrepend
 and
 .Fn AG_ListInsert
-return the index of the new list entry or -1 on failure.
+return the index of the new list entry.
+If insufficient memory is available then an exception is raised.
 .Pp
 .Fn AG_ListRemove
 removes the element at index
 .Fa idx
-from the list, returning 1 on success or -1 if the given index is invalid.
+from the list.
+If the index is invalid, an exception is raised.
 .Fn AG_ListClear
 removes all elements from the list.
 .Sh SEE ALSO

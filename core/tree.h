@@ -42,7 +42,7 @@ AG_TAILQ_HEAD(ag_tree_itemq, ag_tree_item);
 typedef struct ag_tree_item {
 	void *_Nullable p;			/* User pointer */
 	void *_Nullable privData;		/* Private data */
-	size_t privDataSize;			/* Private data size */
+	AG_Size privDataSize;			/* Private data size */
 	struct ag_tree_itemq chldItems;		/* Child items */
 	AG_TAILQ_ENTRY(ag_tree_item) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(ag_tree_item) list;	/* Entre in list */
@@ -91,7 +91,7 @@ AG_Tree *_Nonnull AG_TreeNew(void); /* _Malloc_Like_Attribute */
 void              AG_TreeDestroy(AG_Tree *_Nonnull);
 
 static __inline__ AG_TreeItem *_Nonnull
-AG_TreeItemNew(void *_Nullable p, size_t privDataSize)
+AG_TreeItemNew(void *_Nullable p, AG_Size privDataSize)
 {
 	AG_TreeItem *ti;
 
@@ -140,7 +140,7 @@ AG_TreeDetach(AG_Tree *_Nonnull t, AG_TreeItem *_Nonnull ti)
 
 static __inline__ AG_TreeItem *_Nonnull
 AG_TreeInsert(AG_Tree *_Nonnull t, AG_TreeItem *_Nullable tiParent,
-    void *_Nullable p, size_t privDataSize)
+    void *_Nullable p, AG_Size privDataSize)
 {
 	AG_TreeItem *ti;
 

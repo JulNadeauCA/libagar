@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ implemented differently under different platforms).
 .Fn AG_GetFileInfo "const char *path" "AG_FileInfo *fileInfo"
 .Pp
 .Ft "int"
-.Fn AG_GetSystemTempDir "char *dst" "size_t dstLen"
+.Fn AG_GetSystemTempDir "char *dst" "AG_Size dstLen"
 .Pp
 .Ft "int"
 .Fn AG_FileExists "const char *path"
@@ -129,7 +129,7 @@ File is marked as temporary
 .Fn AG_ChDir "const char *path"
 .Pp
 .Ft "void"
-.Fn AG_GetCWD "char *dst" "size_t dstLen"
+.Fn AG_GetCWD "char *dst" "AG_Size dstLen"
 .Pp
 .Ft "AG_Dir *"
 .Fn AG_OpenDir "const char *path"

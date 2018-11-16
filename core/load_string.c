@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,16 @@
 
 /* Allocate and read a length-encoded string. */
 char *
-AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
+AG_ReadStringLen(AG_DataSource *ds, AG_Size maxlen)
 {
 	Uint32 len;
 	char *s;
 
 	AG_LockDataSource(ds);
-
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1)
 		goto fail;
-	}
+#endif
 	if (AG_ReadUint32v(ds, &len) == -1) {
 		AG_SetError("String length: %s", AG_GetError());
 		goto fail;
@@ -50,7 +50,7 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = TryMalloc((size_t)len+1)) == NULL) {
+	if ((s = TryMalloc((AG_Size)len+1)) == NULL) {
 		goto fail;
 	}
 	if (len > 0) {
@@ -77,7 +77,7 @@ fail:
  * non-Agar generated datasets.
  */
 char *
-AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
+AG_ReadNulStringLen(AG_DataSource *ds, AG_Size maxlen)
 {
 	Uint32 len;
 	char *s;
@@ -92,11 +92,11 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = TryMalloc((size_t)len)) == NULL) {
+	if ((s = TryMalloc((AG_Size)len)) == NULL) {
 		goto fail;
 	}
 	if (len > 0 &&
-	    AG_Read(ds, s, (size_t)len) != 0) {
+	    AG_Read(ds, s, (AG_Size)len) != 0) {
 		AG_SetError("String (%luB): %s", (Ulong)len, AG_GetError());
 		free(s);
 		goto fail;
@@ -114,7 +114,7 @@ void
 AG_WriteString(AG_DataSource *ds, const char *s)
 {
 	Uint32 encLen;
-	size_t slen;
+	AG_Size slen;
 	int rv;
 
 	if (s == NULL || *s == '\0') {
@@ -128,10 +128,10 @@ AG_WriteString(AG_DataSource *ds, const char *s)
 	}
 
 	AG_LockDataSource(ds);
-	/* Header */
-	if (ds->debug) {
+#ifdef AG_DEBUG
+	if (ds->debug)
 		AG_WriteTypeCode(ds, AG_SOURCE_STRING);
-	}
+#endif
 	if ((rv = ds->write(ds, &encLen, sizeof(encLen), &ds->wrLast)) != 0) {
 		goto fail;
 	}
@@ -153,9 +153,9 @@ fail:
 
 /* Write a C string encoded as a fixed-length record. */
 void
-AG_WriteStringPadded(AG_DataSource *ds, const char *s, size_t lenPadded)
+AG_WriteStringPadded(AG_DataSource *ds, const char *s, AG_Size lenPadded)
 {
-	size_t slen, padLen, chunkLen;
+	AG_Size slen, padLen, chunkLen;
 	Uint32 encLen[2];
 	int rv;
 
@@ -176,10 +176,10 @@ AG_WriteStringPadded(AG_DataSource *ds, const char *s, size_t lenPadded)
 
 	AG_LockDataSource(ds);
 
-	/* Header */
-	if (ds->debug) {
+#ifdef AG_DEBUG
+	if (ds->debug)
 		AG_WriteTypeCode(ds, AG_SOURCE_STRING_PAD);
-	}
+#endif
 	if ((rv = ds->write(ds, encLen, sizeof(encLen), &ds->wrLast)) != 0) {
 		goto fail;
 	}
@@ -219,19 +219,19 @@ fail:
  * Return the number of bytes that would have been copied were dst_size
  * unlimited. The returned C string is always NUL-terminated.
  */
-size_t
-AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
+AG_Size
+AG_CopyString(char *dst, AG_DataSource *ds, AG_Size dst_size)
 {
-	size_t rvLen;
+	AG_Size rvLen;
 	Uint32 len;
 	int rv;
 
 	AG_LockDataSource(ds);
 
-	/* Header */
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1)
 		goto fail;
-	}
+#endif
 	if ((rv = ds->read(ds, &len, sizeof(len), &ds->rdLast)) != 0) {
 		goto fail;
 	}
@@ -247,10 +247,10 @@ AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 		Verbose("ds(%x): %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif
-		rvLen = (size_t)len+1;	/* Save the intended length */
+		rvLen = (AG_Size)len+1;	/* Save the intended length */
 		len = dst_size-1;
 	} else {
-		rvLen = (size_t)len;
+		rvLen = (AG_Size)len;
 	}
 	if (len == 0) {
 		*dst = '\0';
@@ -275,19 +275,19 @@ fail:
 }
 
 /* Variant of AG_CopyString() for fixed-length records. */
-size_t
-AG_CopyStringPadded(char *dst, AG_DataSource *ds, size_t dst_size)
+AG_Size
+AG_CopyStringPadded(char *dst, AG_DataSource *ds, AG_Size dst_size)
 {
-	size_t rvLen, len, lenPadded, lenPadding;
+	AG_Size rvLen, len, lenPadded, lenPadding;
 	Uint32 encLen[2];
 	int rv;
 
 	AG_LockDataSource(ds);
 
-	/* Header */
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1)
 		goto fail;
-	}
+#endif
 	if ((rv = ds->read(ds, encLen, sizeof(encLen), &ds->rdLast)) != 0) {
 		goto fail;
 	}
@@ -308,10 +308,10 @@ AG_CopyStringPadded(char *dst, AG_DataSource *ds, size_t dst_size)
 		Verbose("0x%x: %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif
-		rvLen = (size_t)len+1;		/* Save the intended length */
+		rvLen = (AG_Size)len+1;		/* Save the intended length */
 		len = dst_size-1;
 	} else {
-		rvLen = (size_t)len;
+		rvLen = (AG_Size)len;
 	}
 
 	/* String */
@@ -330,7 +330,7 @@ AG_CopyStringPadded(char *dst, AG_DataSource *ds, size_t dst_size)
 	}
 
 	/* Padding */
-	if ((lenPadding = (size_t)(lenPadded-len)) > 0 &&
+	if ((lenPadding = (AG_Size)(lenPadded-len)) > 0 &&
 	    AG_Seek(ds, lenPadding, AG_SEEK_CUR) == -1) {	/* Skip over */
 		goto fail;
 	}
@@ -345,7 +345,7 @@ fail:
 
 /* Variant of AG_ReadString() for fixed-length records. */
 char *
-AG_ReadStringPadded(AG_DataSource *ds, size_t maxlen)
+AG_ReadStringPadded(AG_DataSource *ds, AG_Size maxlen)
 {
 	char *s;
 
@@ -366,14 +366,15 @@ AG_SkipString(AG_DataSource *ds)
 	Uint32 len;
 
 	AG_LockDataSource(ds);
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1)
 		goto fail;
-	}
+#endif
 	if (AG_ReadUint32v(ds, &len) == -1) {
 		AG_SetError("String length: %s", AG_GetError());
 		goto fail;
 	}
-	if (AG_Seek(ds, (size_t)len, AG_SEEK_CUR) == -1) {
+	if (AG_Seek(ds, (AG_Size)len, AG_SEEK_CUR) == -1) {
 		goto fail;
 	}
 	AG_UnlockDataSource(ds);
@@ -390,15 +391,16 @@ AG_SkipStringPadded(AG_DataSource *ds)
 	Uint32 len, lenPadded;
 
 	AG_LockDataSource(ds);
-	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1) {
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1)
 		goto fail;
-	}
+#endif
 	if (AG_ReadUint32v(ds, &len) == -1 ||
 	    AG_ReadUint32v(ds, &lenPadded) == -1) {
 		AG_SetError("Padded length: %s", AG_GetError());
 		goto fail;
 	}
-	if (AG_Seek(ds, (size_t)lenPadded, AG_SEEK_CUR) == -1) {
+	if (AG_Seek(ds, (AG_Size)lenPadded, AG_SEEK_CUR) == -1) {
 		goto fail;
 	}
 	AG_UnlockDataSource(ds);
@@ -413,10 +415,10 @@ fail:
  * to a fixed-size buffer, returning the number of bytes that would have been
  * copied were dst_size unlimited. Type checking is never done.
  */
-size_t
-AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
+AG_Size
+AG_CopyNulString(char *dst, AG_DataSource *ds, AG_Size dst_size)
 {
-	size_t rv;
+	AG_Size rv;
 	Uint32 len;
 
 	AG_LockDataSource(ds);
@@ -430,12 +432,12 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 		Verbose("0x%x: %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif
-		rv = (size_t)len;		/* Save the intended length */
+		rv = (AG_Size)len;		/* Save the intended length */
 		len = dst_size;
 	} else {
-		rv = (size_t)len;
+		rv = (AG_Size)len;
 	}
-	if (AG_Read(ds, dst, (size_t)len) != 0)
+	if (AG_Read(ds, dst, (AG_Size)len) != 0)
 		goto fail;
 	
 	AG_UnlockDataSource(ds);

@@ -65,11 +65,11 @@
 
 #include <ctype.h>
 
-static void 	dopr(char *, size_t, const char *, va_list);
-static void 	fmtstr(char *, size_t *, size_t, char *, int, int, int);
-static void 	fmtint(char *, size_t *, size_t, long, int, int, int, int);
-static void 	fmtfp(char *, size_t *, size_t, long double, int, int, int);
-static void	dopr_outch(char *, size_t *, size_t, char);
+static void dopr(char *_Nonnull, AG_Size, const char *_Nonnull, va_list);
+static void fmtstr(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char *_Nonnull, int, int, int);
+static void fmtint(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long, int, int, int, int);
+static void fmtfp(char *_Nonnull, AG_Size *_Nonnull, AG_Size, long double, int, int, int);
+static voiddopr_outch(char *_Nonnull, AG_Size *_Nonnull, AG_Size, char);
 
 /*
  * dopr(): poor man's version of doprintf
@@ -104,7 +104,8 @@ static void	dopr_outch(char *, size_t *, size_t, char);
 #define abs_val(p) (p < 0 ? -p : p)
 
 static void 
-dopr(char *buffer, size_t maxlen, const char *format, va_list args)
+dopr(char *_Nonnull buffer, AG_Size maxlen, const char *_Nonnull format,
+    va_list args)
 {
 	char *strvalue;
 	char ch;
@@ -115,7 +116,7 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 	int state = DP_S_DEFAULT;
 	int flags = 0;
 	int cflags = 0;
-	size_t currlen = 0;
+	AG_Size currlen = 0;
   
 	ch = *format++;
 
@@ -386,8 +387,8 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 }
 
 static void
-fmtstr(char *buffer, size_t *currlen, size_t maxlen, char *value, int flags,
-    int min, int max)
+fmtstr(char *_Nonnull buffer, AG_Size *_Nonnull currlen, AG_Size maxlen,
+    char *_Nonnull value, int flags, int min, int max)
 {
 	int padlen, strln;     /* amount to pad */
 	int cnt = 0;
@@ -421,8 +422,8 @@ fmtstr(char *buffer, size_t *currlen, size_t maxlen, char *value, int flags,
 /* Have to handle DP_F_NUM (ie 0x and 0 alternates) */
 
 static void 
-fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
-    int min, int max, int flags)
+fmtint(char *_Nonnull buffer, AG_Size *_Nonnull currlen, AG_Size maxlen,
+    long value, int base, int min, int max, int flags)
 {
 	unsigned long uvalue;
 	char convert[20];
@@ -506,6 +507,7 @@ fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
 
 static long double 
 vsnprintf_pow10(int exp)
+    _Const_Attribute
 {
 	long double result = 1;
 
@@ -518,6 +520,7 @@ vsnprintf_pow10(int exp)
 
 static long 
 vsnprintf_round(long double value)
+    _Const_Attribute
 {
 	long intpart = value;
 
@@ -529,8 +532,8 @@ vsnprintf_round(long double value)
 }
 
 static void 
-fmtfp(char *buffer, size_t *currlen, size_t maxlen, long double fvalue, 
-    int min, int max, int flags)
+fmtfp(char *_Nonnull buffer, AG_Size *_Nonnull currlen, AG_Size maxlen,
+    long double fvalue, int min, int max, int flags)
 {
 	char iconvert[20];
 	char fconvert[20];
@@ -651,14 +654,15 @@ fmtfp(char *buffer, size_t *currlen, size_t maxlen, long double fvalue,
 }
 
 static void 
-dopr_outch(char *buffer, size_t *currlen, size_t maxlen, char c)
+dopr_outch(char *_Nonnull buffer, AG_Size *_Nonnull currlen, AG_Size maxlen,
+    char c)
 {
 	if (*currlen < maxlen)
 		buffer[(*currlen)++] = c;
 }
 
 int 
-AG_TryVsnprintf(char *str, size_t count, const char *fmt, va_list ap)
+AG_TryVsnprintf(char *str, AG_Size count, const char *fmt, va_list ap)
 {
 	str[0] = 0;
 	dopr(str, count, fmt, ap);
@@ -668,7 +672,7 @@ AG_TryVsnprintf(char *str, size_t count, const char *fmt, va_list ap)
 #else /* !HAVE_VSNPRINTF */
 
 int 
-AG_TryVsnprintf(char *str, size_t count, const char *fmt, va_list ap)
+AG_TryVsnprintf(char *str, AG_Size count, const char *fmt, va_list ap)
 {
 	int rv;
 #ifdef _XBOX

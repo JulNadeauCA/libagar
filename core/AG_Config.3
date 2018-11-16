@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ a parameter value to be specified as a pointer to an external piece of data.
 .Fn AG_ConfigSave "void"
 .Pp
 .Ft "int"
-.Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "size_t dst_len"
+.Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "AG_Size dst_len"
 .Pp
 .nr nS 0
 The
@@ -117,7 +117,7 @@ fixed-size buffer
 .Fa dst_len
 bytes).
 .Fn AG_ConfigFile
-returns 0 if the file exists, or -1 if an error occured.
+returns 0 if the file exists, or -1 if an error has occurred.
 .Sh CONFIGURATION PARAMETERS
 The following parameters are registered by Agar-Core:
 .Bl -tag -width "BOOL initial-run "

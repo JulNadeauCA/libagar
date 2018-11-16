@@ -69,7 +69,7 @@ typedef struct ag_net_addr {
 	int port;				/* Port number (if any) */
 	union {
 		struct {
-			char  *path;		/* Unix socket path */
+			char *_Nullable path;	/* Unix socket path */
 		} local;
 		struct {
 			Uint32 addr;		/* IPv4 address */
@@ -83,8 +83,8 @@ typedef struct ag_net_addr {
 # define na_inet4 data.inet4
 # define na_inet6 data.inet6
 #endif
-	char *sNum;				/* Numerical form */
-	char *sName;				/* Reverse DNS (UTF-8) */
+	char *_Nullable sNum;			/* Numerical form */
+	char *_Nullable sName;			/* Reverse DNS (UTF-8) */
 	AG_TAILQ_ENTRY(ag_net_addr) addrs;
 } AG_NetAddr;
 
@@ -96,7 +96,7 @@ typedef struct ag_net_socket {
 	enum ag_net_addr_family family;		/* Address family */
 	enum ag_net_socket_type type;		/* Socket type */
 	int proto;				/* Socket protocol number */
-	AG_Mutex lock;
+	_Nonnull AG_Mutex lock;
 	Uint flags;
 #define AG_NET_SOCKET_BOUND	0x01		/* Bound to a local address */
 #define AG_NET_SOCKET_CONNECTED	0x02		/* Connection established */
@@ -105,11 +105,11 @@ typedef struct ag_net_socket {
 #define AG_NET_POLL_WRITE	0x02		/* Poll write condition */
 #define AG_NET_POLL_EXCEPTIONS	0x04		/* Poll exceptions */
 
-	AG_NetAddr *addrLocal;			/* Bound local address */
-	AG_NetAddr *addrRemote;			/* Connected remote address */
+	AG_NetAddr *_Nullable addrLocal;	/* Bound local address */
+	AG_NetAddr *_Nullable addrRemote;	/* Connected remote address */
 	int fd;					/* File descriptor (if any) */
 	int listenBacklog;			/* For AG_NET_BACKLOG */
-	void *p;				/* User pointer */
+	void *_Nullable p;			/* User pointer */
 
 	AG_TAILQ_ENTRY(ag_net_socket) sockets;
 	AG_TAILQ_ENTRY(ag_net_socket) read;	/* Poll read results */
@@ -121,73 +121,106 @@ typedef struct ag_net_socket {
 typedef AG_TAILQ_HEAD(ag_net_socket_set, ag_net_socket) AG_NetSocketSet;
 
 typedef struct ag_net_ops {
-	const char *name;
+	const char *_Nonnull name;
 
-	int           (*init)(void);
-	void          (*destroy)(void);
-	int           (*getIfConfig)(AG_NetAddrList *);
-	int           (*resolve)(AG_NetAddrList *, const char *, const char *, Uint);
-	char         *(*getAddrNumerical)(AG_NetAddr *);
-	int           (*initSocket)(AG_NetSocket *);
-	void          (*destroySocket)(AG_NetSocket *);
-	int           (*connect)(AG_NetSocket *, const AG_NetAddr *);
-	int           (*bind)(AG_NetSocket *, const AG_NetAddr *);
-	int           (*getOption)(AG_NetSocket *, enum ag_net_socket_option, void *);
-	int           (*setOption)(AG_NetSocket *, enum ag_net_socket_option, const void *);
-	int           (*poll)(AG_NetSocketSet *, AG_NetSocketSet *,
-	                      AG_NetSocketSet *, AG_NetSocketSet *, Uint32);
-	AG_NetSocket *(*accept)(AG_NetSocket *);
-	int           (*read)(AG_NetSocket *, void *, size_t, size_t *);
-	int           (*write)(AG_NetSocket *, const void *, size_t, size_t *);
-	void          (*close)(AG_NetSocket *);
+	int  (*_Nullable init)(void);
+	void (*_Nullable destroy)(void);
+
+	int  (*_Nonnull getIfConfig)(AG_NetAddrList *_Nonnull);
+	int  (*_Nonnull resolve)(AG_NetAddrList *_Nonnull, const char *_Nonnull,
+	                         const char *_Nonnull, Uint);
+
+	char *_Nonnull (*_Nonnull getAddrNumerical)(AG_NetAddr *_Nonnull);
+
+	int  (*_Nullable initSocket)(AG_NetSocket *_Nonnull);
+	void (*_Nullable destroySocket)(AG_NetSocket *_Nonnull);
+
+	int (*_Nonnull connect)(AG_NetSocket *_Nonnull,
+	                        const AG_NetAddr *_Nonnull);
+	int (*_Nonnull bind)(AG_NetSocket *_Nonnull,
+	                     const AG_NetAddr *_Nonnull);
+
+	int (*_Nonnull getOption)(AG_NetSocket *_Nonnull,
+	                          enum ag_net_socket_option, void *_Nonnull);
+	int (*_Nonnull setOption)(AG_NetSocket *_Nonnull,
+	                          enum ag_net_socket_option, const void *_Nonnull);
+
+	int (*_Nonnull poll)(AG_NetSocketSet *_Nonnull,
+	                     AG_NetSocketSet *_Nullable,
+	                     AG_NetSocketSet *_Nullable,
+	                     AG_NetSocketSet *_Nullable, Uint32);
+
+	AG_NetSocket *_Nullable (*_Nonnull accept)(AG_NetSocket *_Nonnull);
+
+	int (*_Nonnull read)(AG_NetSocket *_Nonnull, void *_Nonnull, AG_Size,
+			     AG_Size *_Nullable);
+	int (*_Nonnull write)(AG_NetSocket *_Nonnull, const void *_Nonnull, AG_Size,
+			      AG_Size *_Nonnull);
+
+	void (*_Nonnull close)(AG_NetSocket *_Nonnull);
 } AG_NetOps;
 
 __BEGIN_DECLS
-extern const AG_NetOps *agNetOps;
-extern const AG_NetOps  agNetOps_bsd;
-extern const AG_NetOps  agNetOps_winsock1;
-extern const AG_NetOps  agNetOps_winsock2;
-extern const AG_NetOps  agNetOps_dummy;
+extern const AG_NetOps *_Nullable agNetOps;
+extern const AG_NetOps agNetOps_bsd;
+extern const AG_NetOps agNetOps_winsock1;
+extern const AG_NetOps agNetOps_winsock2;
+extern const AG_NetOps agNetOps_dummy;
 
-extern const char *agNetAddrFamilyNames[];
-extern const char *agNetSocketTypeNames[];
+extern const char *_Nonnull agNetAddrFamilyNames[];
+extern const char *_Nonnull agNetSocketTypeNames[];
 
-int             AG_InitNetworkSubsystem(const AG_NetOps *);
+int AG_InitNetworkSubsystem(const AG_NetOps *_Nonnull);
 
-AG_NetSocket   *AG_NetSocketNew(enum ag_net_addr_family,
-                                enum ag_net_socket_type, int);
-void            AG_NetSocketFree(AG_NetSocket *);
-void            AG_NetSocketSetInit(AG_NetSocketSet *);
-void            AG_NetSocketSetClear(AG_NetSocketSet *);
-#define         AG_NetSocketSetFree(nss) AG_NetSocketSetClear(nss)
+AG_NetSocket *_Nullable AG_NetSocketNew(enum ag_net_addr_family,
+                                        enum ag_net_socket_type, int);
 
-AG_NetAddr     *AG_NetAddrNew(void);
-AG_NetAddr     *AG_NetAddrDup(const AG_NetAddr *);
-int             AG_NetAddrCompare(const AG_NetAddr *, const AG_NetAddr *);
-int             AG_NetAddrIsAny(const AG_NetAddr *);
-void		AG_NetAddrFree(AG_NetAddr *);
-const char     *AG_NetAddrNumerical(AG_NetAddr *);
+void AG_NetSocketFree(AG_NetSocket *_Nonnull);
 
-AG_NetAddrList *AG_NetAddrListNew(void);
-void            AG_NetAddrListClear(AG_NetAddrList *);
-void            AG_NetAddrListFree(AG_NetAddrList *);
+void    AG_NetSocketSetInit(AG_NetSocketSet *_Nonnull);
+void    AG_NetSocketSetClear(AG_NetSocketSet *_Nonnull);
+#define AG_NetSocketSetFree(nss) AG_NetSocketSetClear(nss)
 
-AG_NetAddrList *AG_NetResolve(const char *, const char *, Uint);
-AG_NetAddrList *AG_NetGetIfConfig(void);
-int             AG_NetConnect(AG_NetSocket *, const AG_NetAddrList *);
-int             AG_NetBind(AG_NetSocket *, const AG_NetAddr *);
-int             AG_NetGetOption(AG_NetSocket *, enum ag_net_socket_option, void *);
-int             AG_NetGetOptionInt(AG_NetSocket *, enum ag_net_socket_option, int *);
-int             AG_NetSetOption(AG_NetSocket *, enum ag_net_socket_option, const void *);
-int             AG_NetSetOptionInt(AG_NetSocket *, enum ag_net_socket_option, int);
-int             AG_NetPoll(AG_NetSocketSet *, AG_NetSocketSet *, AG_NetSocketSet *,
-                           AG_NetSocketSet *, Uint32);
-AG_NetSocket   *AG_NetAccept(AG_NetSocket *);
-int             AG_NetRead(AG_NetSocket *, void *, size_t , size_t *)
-                           BOUNDED_ATTRIBUTE(__buffer__,2,3);
-int             AG_NetWrite(AG_NetSocket *, const void *, size_t , size_t *)
-                            BOUNDED_ATTRIBUTE(__buffer__,2,3);
-void            AG_NetClose(AG_NetSocket *);
+AG_NetAddr *_Nullable AG_NetAddrNew(void); /* _Malloc_Like_Attribute; */
+AG_NetAddr *_Nullable AG_NetAddrDup(const AG_NetAddr *_Nonnull);
+
+int  AG_NetAddrCompare(const AG_NetAddr *_Nonnull, const AG_NetAddr *_Nonnull)
+                      _Pure_Attribute;
+int  AG_NetAddrIsAny(const AG_NetAddr *_Nonnull)
+                    _Pure_Attribute;
+void AG_NetAddrFree(AG_NetAddr *_Nonnull);
+
+const char *_Nonnull AG_NetAddrNumerical(AG_NetAddr *_Nonnull);
+
+AG_NetAddrList *_Nullable AG_NetAddrListNew(void); /* _Malloc_Like_Attribute */
+void                      AG_NetAddrListClear(AG_NetAddrList *_Nonnull);
+void                      AG_NetAddrListFree(AG_NetAddrList *_Nonnull);
+
+AG_NetAddrList *_Nullable AG_NetGetIfConfig(void);
+AG_NetAddrList *_Nullable AG_NetResolve(const char *_Nonnull,
+                                        const char *_Nonnull, Uint);
+
+int AG_NetConnect(AG_NetSocket *_Nonnull, const AG_NetAddrList *_Nonnull);
+int AG_NetBind(AG_NetSocket *_Nonnull, const AG_NetAddr *_Nonnull);
+
+int AG_NetGetOption(AG_NetSocket *_Nonnull, enum ag_net_socket_option, void *_Nonnull);
+int AG_NetSetOption(AG_NetSocket *_Nonnull, enum ag_net_socket_option, const void *_Nonnull);
+int AG_NetGetOptionInt(AG_NetSocket *_Nonnull, enum ag_net_socket_option, int *_Nonnull);
+int AG_NetSetOptionInt(AG_NetSocket *_Nonnull, enum ag_net_socket_option, int);
+
+int AG_NetPoll(AG_NetSocketSet *_Nonnull,
+               AG_NetSocketSet *_Nullable,
+               AG_NetSocketSet *_Nullable,
+               AG_NetSocketSet *_Nullable, Uint32);
+
+AG_NetSocket *_Nullable AG_NetAccept(AG_NetSocket *_Nonnull);
+
+int AG_NetRead(AG_NetSocket *_Nonnull, void *_Nonnull, AG_Size,
+               AG_Size *_Nonnull);
+int AG_NetWrite(AG_NetSocket *_Nonnull, const void *_Nonnull, AG_Size,
+                AG_Size *_Nonnull);
+
+void AG_NetClose(AG_NetSocket *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>

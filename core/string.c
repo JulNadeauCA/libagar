@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,6 +23,21 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*
+ * Copyright (c) 1998, 2015 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+/*
  * Copyright (c) 1987 Regents of the University of California.
  * All rights reserved.
  *
@@ -37,21 +52,6 @@
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- */
-/*
- * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND TODD C. MILLER DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL TODD C. MILLER BE LIABLE
- * FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 /*
@@ -71,86 +71,88 @@
 # include <iconv.h>
 #endif
 
-#include "string_strcasecmp.h"
-
 /* AG_Printf() buffers */
-static char        *agPrintBuf[AG_STRING_BUFFERS_MAX];
+static char *_Nullable agPrintBuf[AG_STRING_BUFFERS_MAX];
 #ifdef AG_THREADS
 static AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
 #endif
 
 /* Formatting engine extensions */
-static AG_FmtStringExt *agFmtExtensions = NULL;
-static Uint             agFmtExtensionCount = 0;
+static AG_FmtStringExt *_Nullable agFmtExtensions = NULL;
+static Uint agFmtExtensionCount = 0;
 #ifdef AG_THREADS
-static AG_Mutex         agFmtExtensionsLock;
+static _Nullable AG_Mutex agFmtExtensionsLock;
 #endif
 
-size_t AG_DoPrintf(char *, size_t, const char *, va_list);
+#include "string_strcasecmp.h"
+
+/* Import inlines into the library */
+#define ag_inline
+#include "inline_string.h"
 
 /*
  * Built-in extended format specifiers.
  */
-static size_t
-PrintU8(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintU8(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Uint8 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyUint(dst, (Uint)*val, dstSize);
 }
-static size_t
-PrintS8(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintS8(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Sint8 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyInt(dst, (int)*val, dstSize);
 }
-static size_t
-PrintU16(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintU16(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Uint16 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyUint(dst, (Uint)*val, dstSize);
 }
-static size_t
-PrintS16(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintS16(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Sint16 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyInt(dst, (int)*val, dstSize);
 }
-static size_t
-PrintU32(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintU32(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Uint32 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyUint(dst, (Uint)*val, dstSize);
 }
-static size_t
-PrintS32(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintS32(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Sint32 *val = AG_FMTSTRING_ARG(fs);
 	return StrlcpyInt(dst, (int)*val, dstSize);
 }
 
 #ifdef HAVE_64BIT
-static size_t
-PrintU64(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintU64(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Uint64 *val = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "%llu", (unsigned long long)*val);
 }
-static size_t
-PrintS64(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintS64(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	Sint64 *val = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "%lld", (long long)*val);
 }
 #endif /* HAVE_64BIT */
 
-static size_t
-PrintOBJNAME(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintOBJNAME(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	AG_Object *ob = AG_FMTSTRING_ARG(fs);
 	return Strlcpy(dst, (ob != NULL) ? ob->name : "(null)", dstSize);
 }
-static size_t
-PrintOBJTYPE(AG_FmtString *fs, char *dst, size_t dstSize)
+static AG_Size
+PrintOBJTYPE(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	AG_Object *ob = AG_FMTSTRING_ARG(fs);
 	return Strlcpy(dst, (ob != NULL) ? ob->cls->name : "(null)", dstSize);
@@ -210,8 +212,9 @@ AG_FreeFmtString(AG_FmtString *fs)
 #define FSARG(fs,_type) (*(_type *)(fs)->p[fs->curArg++])
 
 #ifdef HAVE_64BIT
-static size_t
-ProcessFmtString64(AG_FmtString *fs, const char *f, char *dst, size_t dstSize)
+static AG_Size
+ProcessFmtString64(AG_FmtString *_Nonnull fs, const char *_Nonnull f,
+    char *_Nonnull dst, AG_Size dstSize)
 {
 	switch (*f) {
 # ifdef HAVE_LONG_DOUBLE
@@ -242,13 +245,13 @@ ProcessFmtString64(AG_FmtString *fs, const char *f, char *dst, size_t dstSize)
  * buffer dst of dstSize bytes. Returns the number of characters that
  * would have been copied were dstSize unlimited.
  */
-size_t
-AG_ProcessFmtString(AG_FmtString *fs, char *dst, size_t dstSize)
+AG_Size
+AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 {
 	char *pDst = &dst[0];
 	char *pEnd = &dst[dstSize-1];
 	char *f;
-	size_t rv;
+	AG_Size rv;
 	Uint i;
 
 	fs->curArg = 0;
@@ -364,15 +367,16 @@ out:
  * function returns the number of characters that would have been copied
  * were dstSize unlimited).
  */
-size_t
-AG_DoPrintf(char *dst, size_t dstSize, const char *fmt, va_list ap)
+static AG_Size
+AG_DoPrintf(char *_Nonnull dst, AG_Size dstSize, const char *_Nonnull fmt,
+    va_list ap)
 {
 	char spec[32], *pSpec, *pSpecEnd = &spec[32];
 	AG_FmtString fs;
 	char *pDst = &dst[0];
 	char *pEnd = &dst[dstSize-1];
 	const char *f;
-	size_t rv;
+	AG_Size rv;
 	Uint i;
 
 	if (dstSize < 1) {
@@ -580,7 +584,7 @@ AG_Printf(const char *fmt, ...)
 {
 	va_list ap;
 	char *dst, *dstNew;
-	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
+	AG_Size dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
 	dst = Malloc(dstSize);
 restart:
@@ -589,10 +593,7 @@ restart:
 	if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
 		va_end(ap);
 		dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
-		if (dstNew == NULL) {
-			AG_FatalError("Out of memory for AG_Printf");
-			return (NULL);
-		}
+		if (dstNew == NULL) { AG_FatalError(NULL); }
 		dst = dstNew;
 		dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
 		goto restart;
@@ -616,7 +617,7 @@ AG_PrintfN(Uint idx, const char *fmt, ...)
 {
 	va_list ap;
 	char *dst, *dstNew;
-	size_t dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
+	AG_Size dstSize = AG_FMTSTRING_BUFFER_INIT, rv;
 
 	dst = Malloc(dstSize);
 restart:
@@ -625,10 +626,7 @@ restart:
 	if ((rv = AG_DoPrintf(dst, dstSize, fmt, ap)) >= dstSize) {
 		va_end(ap);
 		dstNew = TryRealloc(dst, (rv+AG_FMTSTRING_BUFFER_GROW));
-		if (dstNew == NULL) {
-			AG_FatalError("Out of memory for AG_Printf");
-			return (NULL);
-		}
+		if (dstNew == NULL) { AG_FatalError(NULL); }
 		dst = dstNew;
 		dstSize = (rv+AG_FMTSTRING_BUFFER_GROW);
 		goto restart;
@@ -659,8 +657,8 @@ restart:
  * This instructs the formatting engine to acquire myMutex before
  * accessing the contents of myString.
  */
-AG_FmtString *
-AG_PrintfP(const char *fmt, ...)
+AG_FmtString *_Nonnull
+AG_PrintfP(const char *_Nonnull fmt, ...)
 {
 	const char *p;
 	AG_FmtString *fs;
@@ -711,31 +709,29 @@ AG_PrintfP(const char *fmt, ...)
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
-size_t
-AG_Strlcpy(char *dst, const char *src, size_t siz)
+AG_Size
+AG_Strlcpy(char *dst, const char *src, AG_Size dsize)
 {
-	char *d = dst;
-	const char *s = src;
-	size_t n = siz;
+	const char *osrc = src;
+	AG_Size nleft = dsize;
 
-	/* Copy as many bytes as will fit */
-	if (n != 0 && --n != 0) {
-		do {
-			if ((*d++ = *s++) == 0) {
+	/* Copy as many bytes as will fit. */
+	if (nleft != 0) {
+		while (--nleft != 0) {
+			if ((*dst++ = *src++) == '\0')
 				break;
-			}
-		} while (--n != 0);
+		}
 	}
 
-	/* Not enough room in dst, add NUL and traverse rest of src */
-	if (n == 0) {
-		if (siz != 0)
-			*d = '\0';		/* NUL-terminate dst */
-		while (*s++)
+	/* Not enough room in dst, add NUL and traverse rest of src. */
+	if (nleft == 0) {
+		if (dsize != 0)
+			*dst = '\0';		/* NUL-terminate dst */
+		while (*src++)
 			;
 	}
 
-	return (s - src - 1);	/* count does not include NUL */
+	return (src - osrc - 1);	/* count does not include NUL */
 }
 
 /*
@@ -745,33 +741,34 @@ AG_Strlcpy(char *dst, const char *src, size_t siz)
  * Returns strlen(src) + MIN(siz, strlen(initial dst)).
  * If retval >= siz, truncation occurred.
  */
-size_t
-AG_Strlcat(char *dst, const char *src, size_t siz)
+AG_Size
+AG_Strlcat(char *dst, const char *src, AG_Size dsize)
 {
-	char *d = dst;
-	const char *s = src;
-	size_t dlen, n = siz;
+	const char *odst = dst;
+	const char *osrc = src;
+	AG_Size n = dsize;
+	AG_Size dlen;
 
-	/* Find the end of dst and adjust bytes left but don't go past end */
-	while (n-- != 0 && *d != '\0') {
-		d++;
+	/* Find the end of dst and adjust bytes left but don't go past end. */
+	while (n-- != 0 && *dst != '\0') {
+		dst++;
 	}
-	dlen = d - dst;
-	n = siz - dlen;
+	dlen = dst - odst;
+	n = dsize - dlen;
 
-	if (n == 0) {
-		return (dlen + strlen(s));
+	if (n-- == 0) {
+		return (dlen + strlen(src));
 	}
-	while (*s != '\0') {
-		if (n != 1) {
-			*d++ = *s;
+	while (*src != '\0') {
+		if (n != 0) {
+			*dst++ = *src;
 			n--;
 		}
-		s++;
+		src++;
 	}
-	*d = '\0';
+	*dst = '\0';
 
-	return (dlen + (s - src));	/* count does not include NUL */
+	return (dlen + (src - osrc));	/* count does not include NUL */
 }
 
 /*
@@ -817,7 +814,7 @@ AG_Strsep(char **stringp, const char *delim)
 char *
 AG_Strdup(const char *s)
 {
-	size_t buflen;
+	AG_Size buflen;
 	char *ns;
 	
 	buflen = strlen(s)+1;
@@ -830,7 +827,7 @@ AG_Strdup(const char *s)
 char *
 AG_TryStrdup(const char *s)
 {
-	size_t buflen;
+	AG_Size buflen;
 	char *ns;
 	
 	buflen = strlen(s)+1;
@@ -848,7 +845,7 @@ const char *
 AG_Strcasestr(const char *s, const char *find)
 {
 	char c, sc;
-	size_t len;
+	AG_Size len;
 
 	if ((c = *find++) != 0) {
 		c = (char)tolower((unsigned char)c);
@@ -866,14 +863,16 @@ AG_Strcasestr(const char *s, const char *find)
 
 #ifdef HAVE_ICONV
 
-static Uint32 *
-ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
-    size_t *pOutLen, size_t *pOutSize)
+static Uint32 *_Nullable
+ImportUnicodeICONV(const char *_Nonnull encoding,
+    const char *_Nonnull s, AG_Size sLen,
+    AG_Size *_Nullable pOutLen,
+    AG_Size *_Nullable pOutSize)
 {
 	Uint32 *ucs, *ucsNew;
-	const char *inPtr = s;
+	const char *inPtr;
 	char *wrPtr;
-	size_t outSize = (sLen+1)*sizeof(Uint32);
+	AG_Size outSize = (sLen+1)*sizeof(Uint32);
 	iconv_t cd;
 
 	if ((ucs = TryMalloc(outSize)) == NULL) {
@@ -885,8 +884,9 @@ ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
 	}
 	wrPtr = (char *)ucs;
 
+	inPtr = s;
 #ifdef HAVE_ICONV_CONST
-	if (iconv(cd, &inPtr, &sLen, &wrPtr, &outSize) == (size_t)-1) {
+	if (iconv(cd, &inPtr, &sLen, &wrPtr, &outSize) == (AG_Size)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		goto fail;
@@ -898,7 +898,7 @@ ImportUnicodeICONV(const char *encoding, const char *s, size_t sLen,
 			iconv_close(cd);
 			goto fail;
 		}
-		if (iconv(cd, &tmpBuf, &sLen, &wrPtr, &outSize) == (size_t)-1) {
+		if (iconv(cd, &tmpBuf, &sLen, &wrPtr, &outSize) == (AG_Size)-1) {
 			AG_SetError("iconv: %s", strerror(errno));
 			iconv_close(cd);
 			free(tmpBuf);
@@ -935,18 +935,16 @@ fail:
  * pOutLen, and allocated buffer size in pOutSize.
  */
 Uint32 *
-AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutLen,
-    size_t *pOutSize)
+AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,
+    AG_Size *pOutSize)
 {
 	Uint32 *ucs;
-	size_t i, j;
-	size_t sLen = strlen(s);
-	size_t bufLen, utf8len;
+	AG_Size i, j;
+	AG_Size sLen = strlen(s);
+	AG_Size bufLen, utf8len;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
-		if (AG_LengthUTF8(s, &utf8len) == -1) {
-			return (NULL);
-		}
+		utf8len = AG_LengthUTF8(s);
 		bufLen = (utf8len + 1)*sizeof(Uint32);
 		if ((ucs = TryMalloc(bufLen)) == NULL) {
 			return (NULL);
@@ -1019,13 +1017,13 @@ AG_ImportUnicode(const char *encoding, const char *s, size_t *pOutLen,
 #ifdef HAVE_ICONV
 
 static int
-ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
-    size_t dstSize)
+ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
+    const Uint32 *_Nonnull ucs, AG_Size dstSize)
 {
 	const char *inPtr = (const char *)ucs;
-	size_t inSize = AG_LengthUCS4(ucs)*sizeof(Uint32);
+	AG_Size inSize = AG_LengthUCS4(ucs)*sizeof(Uint32);
 	char *wrPtr = dst;
-	size_t outSize = dstSize;
+	AG_Size outSize = dstSize;
 	iconv_t cd;
 	
 	if ((cd = iconv_open(encoding, "UCS-4-INTERNAL")) == (iconv_t)-1) {
@@ -1034,7 +1032,7 @@ ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
 	}
 
 #ifdef HAVE_ICONV_CONST
-	if (iconv(cd, &inPtr, &inSize, &wrPtr, &outSize) == (size_t)-1) {
+	if (iconv(cd, &inPtr, &inSize, &wrPtr, &outSize) == (AG_Size)-1) {
 		AG_SetError("iconv: %s", strerror(errno));
 		iconv_close(cd);
 		return (-1);
@@ -1046,7 +1044,7 @@ ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
 			iconv_close(cd);
 			return (-1);
 		}
-		if (iconv(cd, &tmpBuf, &inSize, &wrPtr, &outSize) == (size_t)-1) {
+		if (iconv(cd, &tmpBuf, &inSize, &wrPtr, &outSize) == (AG_Size)-1) {
 			AG_SetError("iconv: %s", strerror(errno));
 			iconv_close(cd);
 			free(tmpBuf);
@@ -1077,9 +1075,9 @@ ExportUnicodeICONV(const char *encoding, char *dst, const Uint32 *ucs,
  */
 int
 AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
-    size_t dstSize)
+    AG_Size dstSize)
 {
-	size_t len;
+	AG_Size len;
 
 	if (strcmp(encoding, "UTF-8") == 0) {
 		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
@@ -1168,8 +1166,8 @@ AG_StrReverse(char *s)
  * XXX on truncation, this returns the size of the buffer + 1 byte
  * (we should return the total length required instead).
  */
-size_t
-AG_StrlcpyInt(char *s, int val, size_t size)
+AG_Size
+AG_StrlcpyInt(char *s, int val, AG_Size size)
 {
 	static const char *digits = "0123456789";
 	int sign = (val < 0);
@@ -1209,8 +1207,8 @@ trunc:
  * XXX on truncation, this returns the size of the buffer + 1 byte
  * (we should return the total length required instead).
  */
-size_t
-AG_StrlcpyUint(char *s, Uint val, size_t size)
+AG_Size
+AG_StrlcpyUint(char *s, Uint val, AG_Size size)
 {
 	static const char *digits = "0123456789";
 	int i = 0;
@@ -1242,8 +1240,8 @@ trunc:
  * XXX on truncation, this returns the size of the buffer + 1 byte
  * (we should return the total length required instead).
  */
-size_t
-AG_StrlcatInt(char *s, int val, size_t size)
+AG_Size
+AG_StrlcatInt(char *s, int val, AG_Size size)
 {
 	static const char *digits = "0123456789";
 	int sign = (val < 0);
@@ -1284,8 +1282,8 @@ trunc:
  * XXX on truncation, this returns the size of the buffer + 1 byte
  * (we should return the total length required instead).
  */
-size_t
-AG_StrlcatUint(char *s, Uint val, size_t size)
+AG_Size
+AG_StrlcatUint(char *s, Uint val, AG_Size size)
 {
 	static const char *digits = "0123456789";
 	int i = strlen(s);
@@ -1314,7 +1312,7 @@ trunc:
 }
 
 #ifdef AG_THREADS
-static void DestroyPrintBuffer(void *buf) { Free(buf); }
+static void DestroyPrintBuffer(void *_Nullable buf) { Free(buf); }
 #endif /* AG_THREADS */
 
 int

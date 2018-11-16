@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,8 @@ int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;			/* Lock on class table */
 
 static void
-InitClass(AG_ObjectClass *C, const char *hier, const char *libs)
+InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier,
+    const char *_Nonnull libs)
 {
 	const char *c;
 
@@ -283,7 +284,7 @@ AG_UnregisterClass(void *p)
  * and the methods can be set using AG_ClassSet{Init,Reset,Destroy,...}().
  */
 void *
-AG_CreateClass(const char *hier, size_t objectSize, size_t classSize,
+AG_CreateClass(const char *hier, AG_Size objectSize, AG_Size classSize,
     Uint major, Uint minor)
 {
 	AG_ObjectClass *C;
@@ -356,12 +357,13 @@ AG_LookupClass(const char *inSpec)
 
 /* Convert "PFX_Foo" to "pfxFooClass". */
 static int
-GetClassSymbol(char *sym, size_t len, const AG_ObjectClassSpec *cs)
+GetClassSymbol(char *_Nonnull sym, AG_Size len,
+    const AG_ObjectClassSpec *_Nonnull cs)
 {
 	char *d;
 	const char *c;
 	int inPfx = 1;
-	size_t l = 0;
+	AG_Size l = 0;
 
 	for (c = &cs->name[0], d = &sym[0];
 	     *c != '\0';
@@ -561,6 +563,10 @@ AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
 	Strlcpy(nname, C->hier, sizeof(nname));
 	cp = cname;
 	np = nname;
+	/*
+	 * TODO: eliminating this strsep usage would allow AG_OfClass()
+	 * to be made _Pure_Attribute_If_Unthreaded.
+	 */
 	while ((c = Strsep(&cp, ":")) != NULL &&
 	       (s = Strsep(&np, ":")) != NULL) {
 		if (c[0] == '*' && c[1] == '\0')

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ typedef struct ag_db_hash_bt {
 } AG_DbHashBT;
 
 static const struct {
-	const char *name;
+	const char *_Nonnull name;
 	Uint32 mask;
 } bdbOptions[] = {
 	{ "db-create",			DB_CREATE },
@@ -176,7 +176,7 @@ Get(void *obj, const AG_Dbt *key, AG_Dbt *val)
 }
 		
 static int
-Put(void *obj, const AG_Dbt *key, const AG_Dbt *val)
+Put(void *_Nonnull obj, const AG_Dbt *_Nonnull key, const AG_Dbt *_Nonnull val)
 {
 	AG_DbHashBT *db = obj;
 	DBT dbKey, dbVal;
@@ -206,7 +206,7 @@ Put(void *obj, const AG_Dbt *key, const AG_Dbt *val)
 }
 
 static int
-Del(void *obj, const AG_Dbt *key)
+Del(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 {
 	AG_DbHashBT *db = obj;
 	DBT dbKey;
@@ -227,7 +227,7 @@ Del(void *obj, const AG_Dbt *key)
 }
 
 static int
-Iterate(void *obj, AG_DbIterateFn fn, void *arg)
+Iterate(void *_Nonnull obj, AG_DbIterateFn fn, void *_Nullable arg)
 {
 	AG_DbHashBT *db = obj;
 	DBC *c;

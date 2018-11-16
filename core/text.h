@@ -5,7 +5,7 @@
 #include <agar/core/begin.h>
 
 /* Language code (see iso639-gen.pl) */
-enum ag_language {
+typedef enum ag_language {
 	AG_LANG_NONE,	/* Undefined */
 	AG_LANG_AA,	/* Afar */
 	AG_LANG_AB,	/* Abkhazian */
@@ -147,21 +147,21 @@ enum ag_language {
 	AG_LANG_ZH,	/* Chinese */
 	AG_LANG_ZU,	/* Zulu */
 	AG_LANG_LAST
-};
+} AG_Language;
 
 /* Text entry */
 typedef struct ag_text_ent {
-	char  *buf;			/* String buffer */
-	size_t maxLen;			/* Length (allocated) */
-	size_t len;			/* Length (chars) */
+	char  *_Nullable buf;		/* String buffer */
+	AG_Size maxLen;			/* Length (allocated) */
+	AG_Size len;			/* Length (chars) */
 } AG_TextEnt;
 
 /* Text object */
 typedef struct ag_text {
-	AG_Mutex lock;
+	_Nonnull AG_Mutex lock;
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
-	enum ag_language lang;		/* Selected language */
-	size_t maxLen;			/* Maximum string length (bytes) */
+	AG_Language lang;		/* Selected language */
+	AG_Size maxLen;			/* Maximum string length (bytes) */
 	Uint flags;
 #define AG_TEXT_SAVED_FLAGS	0
 } AG_Text, AG_TextElement;
@@ -169,73 +169,82 @@ typedef struct ag_text {
 #define AGTEXT(p) ((AG_Text *)(p))
 
 __BEGIN_DECLS
-extern const char *agLanguageCodes[];
-extern const char *agLanguageNames[];
+extern const char *_Nonnull agLanguageCodes[];
+extern const char *_Nonnull agLanguageNames[];
 
-AG_Text    *AG_TextNew(size_t);
+AG_Text *_Nonnull AG_TextNew(AG_Size);
 
-void        AG_TextInit(AG_Text *, size_t);
-void        AG_TextDestroy(AG_Text *);
+void AG_TextInit(AG_Text *_Nonnull, AG_Size);
+void AG_TextDestroy(AG_Text *_Nonnull);
+void AG_TextClear(AG_Text *_Nonnull);
 
-void        AG_TextClear(AG_Text *);
-int         AG_TextSet(AG_Text *, const char *, ...)
-                       FORMAT_ATTRIBUTE(__printf__, 2, 3);
-int         AG_TextSetEnt(AG_Text *, enum ag_language, const char *, ...)
-                          FORMAT_ATTRIBUTE(__printf__, 3, 4);
-int         AG_TextSetEntS(AG_Text *, enum ag_language, const char *);
+int  AG_TextSet(AG_Text *_Nonnull, const char *_Nullable, ...)
+               FORMAT_ATTRIBUTE(__printf__,2,3);
 
-int         AG_TextSetLangISO(AG_Text *, const char *);
-const char *AG_TextGetLangISO(AG_Text *);
-AG_Text    *AG_TextDup(AG_Text *);
-int         AG_TextLoad(AG_Text *, AG_DataSource *);
-void        AG_TextSave(AG_DataSource *, AG_Text *);
+int  AG_TextSetEnt(AG_Text *_Nonnull, AG_Language,
+                   const char *_Nonnull, ...)
+                  FORMAT_ATTRIBUTE(__printf__,3,4);
 
-/* Set text of current entry from C string */
+int  AG_TextSetEntS(AG_Text *_Nonnull, AG_Language, const char *_Nonnull);
+
+int                  AG_TextSetLangISO(AG_Text *_Nonnull, const char *_Nonnull);
+const char *_Nonnull AG_TextGetLangISO(AG_Text *_Nonnull);
+
+AG_Text *_Nullable AG_TextDup(AG_Text *_Nonnull);
+
+int  AG_TextLoad(AG_Text *_Nonnull, AG_DataSource *_Nonnull);
+void AG_TextSave(AG_DataSource *_Nonnull, AG_Text *_Nonnull);
+
+/* Set the text of an element (in its active language) */
 static __inline__ int
-AG_TextSetS(AG_Text *txt, const char *s)
+AG_TextSetS(AG_Text *_Nonnull txt, const char *_Nonnull s)
 {
 	int rv;
+
 	AG_MutexLock(&txt->lock);
 	rv = AG_TextSetEntS(txt, txt->lang, s);
 	AG_MutexUnlock(&txt->lock);
 	return (rv);
 }
 
-/* Set the size limit on strings. */
+/* Set a dynamically-enforced size limit on a text element */
 static __inline__ void
-AG_TextSetLimit(AG_Text *txt, size_t maxLen)
+AG_TextSetLimit(AG_Text *_Nonnull txt, AG_Size maxLen)
 {
 	AG_MutexLock(&txt->lock);
 	txt->maxLen = maxLen;
 	AG_MutexUnlock(&txt->lock);
 }
 
-/* Select the active language. */
+/* Select the active language of a text element. */
 static __inline__ void
-AG_TextSetLang(AG_Text *txt, enum ag_language lang)
+AG_TextSetLang(AG_Text *_Nonnull txt, AG_Language lang)
 {
 	AG_MutexLock(&txt->lock);
 	txt->lang = lang;
 	AG_MutexUnlock(&txt->lock);
 }
 
-/* Get the active language. */
-static __inline__ enum ag_language
-AG_TextGetLang(AG_Text *txt)
+/* Get the active language of a text element. */
+static __inline__ AG_Language
+AG_TextGetLang(AG_Text *_Nonnull txt)
+    _Pure_Attribute_If_Unthreaded
 {
 	enum ag_language lang;
+
 	AG_MutexLock(&txt->lock);
 	lang = txt->lang;
 	AG_MutexUnlock(&txt->lock);
 	return (lang);
 }
 
-/* Reallocate entry's buffer to size in bytes. */
+/* Resize the buffer associated with a text element. */
 static __inline__ int
-AG_TextRealloc(AG_TextEnt *te, size_t maxLenNew)
+AG_TextRealloc(AG_TextEnt *_Nonnull te, AG_Size maxLenNew)
 {
 	if (maxLenNew >= te->maxLen) {
 		char *bufNew;
+
 		bufNew = (char *)AG_TryRealloc(te->buf, maxLenNew);
 		if (bufNew == NULL) {
 			return (-1);
@@ -246,12 +255,12 @@ AG_TextRealloc(AG_TextEnt *te, size_t maxLenNew)
 	return (0);
 }
 
-/* Append a valid C string to the current buffer. */
+/* Concatenate the contents of the active text element against s. */
 static __inline__ int
-AG_TextCatS(AG_Text *txt, const char *s)
+AG_TextCatS(AG_Text *_Nonnull txt, const char *_Nonnull s)
 {
 	AG_TextEnt *te;
-	size_t len;
+	AG_Size len;
 	
 	len = strlen(s);
 
@@ -266,9 +275,13 @@ AG_TextCatS(AG_Text *txt, const char *s)
 	AG_MutexUnlock(&txt->lock);
 	return (0);
 }
-/* Append an arbitrary block of bytes to the current buffer. */
+
+/*
+ * Concatenate the contents of the active text element against a
+ * block of unchecked bytes.
+ */
 static __inline__ int
-AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
+AS_StringCatBytes(AG_Text *_Nonnull txt, const char *_Nonnull s, AG_Size len)
 {
 	AG_TextEnt *te;
 
@@ -284,9 +297,9 @@ AS_StringCatBytes(AG_Text *txt, const char *s, size_t len)
 	return (0);
 }
 
-/* Free an autoallocated AG_Text element. */
+/* Release an autoallocated AG_Text element. */
 static __inline__ void
-AG_TextFree(AG_Text *txt)
+AG_TextFree(AG_Text *_Nullable txt)
 {
 	if (txt == NULL) {
 		return;

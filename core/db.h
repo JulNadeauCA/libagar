@@ -8,16 +8,18 @@ struct ag_db;
 
 /* Database data item (e.g., key or value) */
 typedef struct ag_dbt {
-	void *data;
-	size_t size;
+	void *_Nonnull data;
+	AG_Size        size;
 } AG_Dbt;
 
-typedef int (*AG_DbIterateFn)(const AG_Dbt *key, const AG_Dbt *val, void *arg);
+typedef int (*AG_DbIterateFn)(const AG_Dbt *_Nonnull,
+                              const AG_Dbt *_Nonnull,
+			      void         *_Nullable arg);
 
 typedef struct ag_db_class {
 	struct ag_object_class _inherit;
-	const char *name;			/* Database method name */
-	const char *descr;			/* Short description */
+	const char *_Nonnull name;	/* Database method name */
+	const char *_Nonnull descr;	/* Short description */
 	enum ag_db_key_mode {
 		AG_DB_KEY_DATA,		/* Variable-length data */
 		AG_DB_KEY_NUMBER,	/* Logical record number */
@@ -27,14 +29,17 @@ typedef struct ag_db_class {
 		AG_DB_REC_VARIABLE,	/* Variable-length records */
 		AG_DB_REC_FIXED		/* Fixed-length records */
 	} recMode;
-	int  (*open)(void *, const char *, Uint);
-	void (*close)(void *);
-	int  (*sync)(void *);
-	int  (*exists)(void *, const AG_Dbt *);
-	int  (*get)(void *, const AG_Dbt *, AG_Dbt *);
-	int  (*put)(void *, const AG_Dbt *, const AG_Dbt *);
-	int  (*del)(void *, const AG_Dbt *);
-	int  (*iterate)(void *, AG_DbIterateFn, void *);
+	int  (*_Nullable open)(void *_Nonnull, const char *_Nonnull, Uint);
+	void (*_Nullable close)(void *_Nonnull);
+	int  (*_Nullable sync)(void *_Nonnull);
+	int  (*_Nonnull  exists)(void *_Nonnull, const AG_Dbt *_Nonnull);
+	int  (*_Nonnull  get)(void *_Nonnull, const AG_Dbt *_Nonnull,
+	                      AG_Dbt *_Nonnull);
+	int  (*_Nonnull  put)(void *_Nonnull, const AG_Dbt *_Nonnull,
+	                      const AG_Dbt *_Nonnull);
+	int  (*_Nonnull  del)(void *_Nonnull, const AG_Dbt *_Nonnull);
+	int  (*_Nullable iterate)(void *_Nonnull, _Nonnull AG_DbIterateFn,
+	                          void *_Nullable);
 } AG_DbClass;
 
 #define AGDB_CLASS(db) ((AG_DbClass *)AGOBJECT(db)->cls)
@@ -54,14 +59,14 @@ extern AG_DbClass agDbHashClass;
 extern AG_DbClass agDbBtreeClass;
 extern AG_DbClass agDbMySQLClass;
 
-AG_Db       *AG_DbNew(const char *);
-int          AG_DbOpen(AG_Db *, const char *, Uint);
-void         AG_DbClose(AG_Db *);
-int          AG_DbSync(AG_Db *);
+AG_Db *_Nullable AG_DbNew(const char *_Nonnull);
+int              AG_DbOpen(AG_Db *_Nonnull, const char *_Nonnull, Uint);
+void             AG_DbClose(AG_Db *_Nonnull);
+int              AG_DbSync(AG_Db *_Nonnull);
 
 /* Test for existence of a key. */
 static __inline__ int
-AG_DbExists(AG_Db *db, AG_Dbt *key)
+AG_DbExists(AG_Db *_Nonnull db, AG_Dbt *_Nonnull key)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
@@ -74,7 +79,7 @@ AG_DbExists(AG_Db *db, AG_Dbt *key)
 
 /* Retrieve a database entry. */
 static __inline__ int
-AG_DbGet(AG_Db *db, const AG_Dbt *key, AG_Dbt *val)
+AG_DbGet(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
@@ -87,7 +92,8 @@ AG_DbGet(AG_Db *db, const AG_Dbt *key, AG_Dbt *val)
 
 /* Write a database entry. */
 static __inline__ int
-AG_DbPut(AG_Db *db, const AG_Dbt *key, const AG_Dbt *val)
+AG_DbPut(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key,
+    const AG_Dbt *_Nonnull val)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
@@ -100,7 +106,7 @@ AG_DbPut(AG_Db *db, const AG_Dbt *key, const AG_Dbt *val)
 
 /* Delete a database entry. */
 static __inline__ int
-AG_DbDel(AG_Db *db, const AG_Dbt *key)
+AG_DbDel(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;
@@ -113,7 +119,8 @@ AG_DbDel(AG_Db *db, const AG_Dbt *key)
 
 /* Iterate over all entries. */
 static __inline__ int
-AG_DbIterate(AG_Db *db, AG_DbIterateFn fn, void *arg)
+AG_DbIterate(AG_Db *_Nonnull db, _Nonnull AG_DbIterateFn fn,
+    void *_Nullable arg)
 {
 	AG_DbClass *dbc = AGDB_CLASS(db);
 	int rv;

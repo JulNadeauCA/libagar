@@ -8,10 +8,10 @@ struct ag_event;
 struct ag_net_socket;
 
 /* Data source byte order */
-enum ag_byte_order {
+typedef enum ag_byte_order {
 	AG_BYTEORDER_BE,		/* Big-endian */
 	AG_BYTEORDER_LE			/* Little-endian */
-};
+} AG_ByteOrder;
 
 /* Mode for seek() operation */
 enum ag_seek_mode {
@@ -21,8 +21,8 @@ enum ag_seek_mode {
 };
 
 /*
- * Signatures for type-safety checks.
- * The range 0x41470000 - 0x4147ffff is reserved by Agar.
+ * Signatures for serialization markers (DEBUG mode only).
+ * Range 0x41470000 - 0x4147ffff is reserved by ag_core.
  */
 enum ag_data_source_type {
 	AG_SOURCE_UINT8 =	0x41470001,
@@ -43,51 +43,60 @@ enum ag_data_source_type {
 
 /* Generic data source object */
 typedef struct ag_data_source {
-	AG_Mutex lock;				/* Lock on all operations */
+	_Nonnull AG_Mutex lock;			/* Lock on all operations */
 	int debug;
-	struct ag_event *errorFn;		/* Exception handler */
-	enum ag_byte_order byte_order;		/* Byte order of source */
-	size_t wrLast;				/* Last write count (bytes) */
-	size_t rdLast;				/* Last read count (bytes) */
-	size_t wrTotal;				/* Total write count (bytes) */
-	size_t rdTotal;				/* Total read count (bytes) */
+	struct ag_event *_Nullable errorFn;	/* Exception handler */
+	AG_ByteOrder byte_order;		/* Effective byte order */
+	AG_Size wrLast;				/* Last write count (bytes) */
+	AG_Size rdLast;				/* Last read count (bytes) */
+	AG_Size wrTotal;				/* Total write count (bytes) */
+	AG_Size rdTotal;				/* Total read count (bytes) */
 
-	int   (*read)(struct ag_data_source *, void *, size_t, size_t *);
-	int   (*read_at)(struct ag_data_source *, void *, size_t, off_t, size_t *);
-	int   (*write)(struct ag_data_source *, const void *, size_t, size_t *);
-	int   (*write_at)(struct ag_data_source *, const void *, size_t, off_t, size_t *);
-	off_t (*tell)(struct ag_data_source *);
-	int   (*seek)(struct ag_data_source *, off_t, enum ag_seek_mode);
-	void  (*close)(struct ag_data_source *);
+	int   (*_Nullable read)(struct ag_data_source *_Nonnull,
+	                        void *_Nonnull, AG_Size,
+				AG_Size *_Nonnull);
+	int   (*_Nullable read_at)(struct ag_data_source *_Nonnull,
+	                           void *_Nonnull, AG_Size, AG_Offset,
+				   AG_Size *_Nonnull);
+	int   (*_Nullable write)(struct ag_data_source *_Nonnull,
+	                         const void *_Nonnull, AG_Size,
+				 AG_Size *_Nonnull);
+	int   (*_Nullable write_at)(struct ag_data_source *_Nonnull,
+	                            const void *_Nonnull, AG_Size,
+				    AG_Offset, AG_Size *_Nonnull);
+	AG_Offset (*_Nullable tell)(struct ag_data_source *_Nonnull);
+	int   (*_Nullable seek)(struct ag_data_source *_Nonnull, AG_Offset,
+	                        enum ag_seek_mode);
+	void  (*_Nullable close)(struct ag_data_source *_Nonnull);
 } AG_DataSource;
 
 /* File */
 typedef struct ag_file_source {
 	struct ag_data_source ds;
-	char *path;			/* Open file path (or NULL) */
-	FILE *file;			/* Opened file */
+	char *_Nullable path;		/* Open file path */
+	FILE *_Nonnull file;		/* Opened file */
 } AG_FileSource;
 
 /* Memory region */
 typedef struct ag_core_source {
 	struct ag_data_source ds;
-	Uint8 *data;			/* Pointer to data */
-	size_t size;			/* Current size */
-	off_t  offs;			/* Current position */
+	Uint8 *_Nonnull data;		/* Pointer to data */
+	AG_Size size;			/* Current size */
+	AG_Offset  offs;			/* Current position */
 } AG_CoreSource;
 
 /* Memory region (const) */
 typedef struct ag_const_core_source {
 	struct ag_data_source ds;
-	const Uint8 *data;		/* Pointer to data */
-	size_t size;			/* Current size */
-	off_t  offs;			/* Current position */
+	const Uint8 *_Nonnull data;	/* Pointer to data */
+	AG_Size size;			/* Current size */
+	AG_Offset  offs;			/* Current position */
 } AG_ConstCoreSource;
 
 /* Network socket */
 typedef struct ag_net_socket_source {
 	struct ag_data_source ds;
-	struct ag_net_socket *sock;	/* Network socket */
+	struct ag_net_socket *_Nonnull sock;	/* Network socket */
 } AG_NetSocketSource;
 
 #define AG_DATA_SOURCE(ds) ((AG_DataSource *)(ds))
@@ -100,48 +109,47 @@ __BEGIN_DECLS
 void AG_DataSourceInitSubsystem(void);
 void AG_DataSourceDestroySubsystem(void);
 
-void AG_DataSourceInit(AG_DataSource *);
-void AG_DataSourceSetDebug(AG_DataSource *, int);
-void AG_DataSourceSetErrorFn(AG_DataSource *, void (*)(struct ag_event *),
-                             const char *, ...);
-void AG_DataSourceError(AG_DataSource *, const char *, ...);
-void AG_SetByteOrder(AG_DataSource *, enum ag_byte_order);
-void AG_SetSourceDebug(AG_DataSource *, int);
+void AG_DataSourceInit(AG_DataSource *_Nonnull);
+void AG_DataSourceSetDebug(AG_DataSource *_Nonnull, int);
+void AG_DataSourceSetErrorFn(AG_DataSource *_Nonnull,
+                             void (*_Nullable)(struct ag_event *_Nonnull),
+                             const char *_Nullable, ...);
+void AG_DataSourceError(AG_DataSource *_Nonnull, const char *_Nullable, ...);
 
-AG_DataSource *AG_OpenFile(const char *, const char *);
-AG_DataSource *AG_OpenFileHandle(FILE *);
-AG_DataSource *AG_OpenCore(void *, size_t)
-                           BOUNDED_ATTRIBUTE(__buffer__,1,2);
-AG_DataSource *AG_OpenConstCore(const void *, size_t)
-                                BOUNDED_ATTRIBUTE(__buffer__,1,2);
-AG_DataSource *AG_OpenAutoCore(void);
-AG_DataSource *AG_OpenNetSocket(struct ag_net_socket *);
+AG_ByteOrder AG_SetByteOrder(AG_DataSource *_Nonnull, AG_ByteOrder);
+int          AG_SetSourceDebug(AG_DataSource *_Nonnull, int);
 
-int     AG_Read(AG_DataSource *, void *, size_t)
-                BOUNDED_ATTRIBUTE(__buffer__,2,3);
-int     AG_ReadP(AG_DataSource *, void *, size_t, size_t *)
-                 BOUNDED_ATTRIBUTE(__buffer__,2,3);
-int     AG_ReadAt(AG_DataSource *, void *, size_t, off_t);
-int     AG_ReadAtP(AG_DataSource *, void *, size_t, off_t, size_t *);
+AG_DataSource *_Nullable AG_OpenFile(const char *_Nonnull, const char *_Nonnull)
+                                     _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenFileHandle(FILE *_Nonnull) _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenCore(void *_Nonnull, AG_Size) _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenConstCore(const void *_Nonnull, AG_Size) _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenAutoCore(void) _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenNetSocket(struct ag_net_socket *_Nonnull) _Warn_Unused_Result;
 
-int     AG_Write(AG_DataSource *, const void *, size_t)
-                 BOUNDED_ATTRIBUTE(__buffer__,2,3);
-int     AG_WriteP(AG_DataSource *, const void *, size_t, size_t *)
-                  BOUNDED_ATTRIBUTE(__buffer__,2,3);
-int     AG_WriteAt(AG_DataSource *, const void *, size_t, off_t);
-int     AG_WriteAtP(AG_DataSource *, const void *, size_t, off_t, size_t *);
+int AG_Read(AG_DataSource *_Nonnull, void *_Nonnull, AG_Size);
+int AG_ReadP(AG_DataSource *_Nonnull, void *_Nonnull, AG_Size, AG_Size *_Nonnull);
+int AG_ReadAt(AG_DataSource *_Nonnull, void *_Nonnull, AG_Size, AG_Offset);
+int AG_ReadAtP(AG_DataSource *_Nonnull, void *_Nonnull, AG_Size, AG_Offset,
+	       AG_Size *_Nullable);
 
-void    AG_CloseFile(AG_DataSource *);
-void    AG_CloseFileHandle(AG_DataSource *);
-void    AG_CloseCore(AG_DataSource *);
+int AG_Write(AG_DataSource *_Nonnull, const void *_Nonnull, AG_Size);
+int AG_WriteP(AG_DataSource *_Nonnull, const void *_Nonnull, AG_Size, AG_Size *_Nullable);
+int AG_WriteAt(AG_DataSource *_Nonnull, const void *_Nonnull, AG_Size, AG_Offset);
+int AG_WriteAtP(AG_DataSource *_Nonnull, const void *_Nonnull, AG_Size, AG_Offset,
+                AG_Size *_Nullable);
+
+void    AG_CloseFile(AG_DataSource *_Nonnull);
+void    AG_CloseFileHandle(AG_DataSource *_Nonnull);
+void    AG_CloseCore(AG_DataSource *_Nonnull);
 #define AG_CloseConstCore(ds) AG_CloseCore(ds)
-void    AG_CloseAutoCore(AG_DataSource *);
-void    AG_CloseNetSocket(AG_DataSource *);
+void    AG_CloseAutoCore(AG_DataSource *_Nonnull);
+void    AG_CloseNetSocket(AG_DataSource *_Nonnull);
 
-void    AG_WriteTypeCode(AG_DataSource *, Uint32);
-void    AG_WriteTypeCodeAt(AG_DataSource *, Uint32, off_t);
-int     AG_WriteTypeCodeE(AG_DataSource *, Uint32);
-int     AG_CheckTypeCode(AG_DataSource *, Uint32);
+void    AG_WriteTypeCode(AG_DataSource *_Nonnull, Uint32);
+void    AG_WriteTypeCodeAt(AG_DataSource *_Nonnull, Uint32, AG_Offset);
+int     AG_WriteTypeCodeE(AG_DataSource *_Nonnull, Uint32);
+int     AG_CheckTypeCode(AG_DataSource *_Nonnull, Uint32);
 
 #define AG_LockDataSource(ds) AG_MutexLock(&(ds)->lock);
 #define AG_UnlockDataSource(ds) AG_MutexUnlock(&(ds)->lock);
@@ -151,7 +159,7 @@ int     AG_CheckTypeCode(AG_DataSource *, Uint32);
 
 /* Reallocate the buffer of a dynamically-allocated memory source. */
 static __inline__ int
-AG_DataSourceRealloc(void *obj, size_t size)
+AG_DataSourceRealloc(void *_Nonnull obj, AG_Size size)
 {
 	AG_CoreSource *cs = (AG_CoreSource *)obj;
 	Uint8 *dataNew;
@@ -165,10 +173,10 @@ AG_DataSourceRealloc(void *obj, size_t size)
 }
 
 /* Return current position. */
-static __inline__ off_t
-AG_Tell(AG_DataSource *ds)
+static __inline__ AG_Offset
+AG_Tell(AG_DataSource *_Nonnull ds)
 {
-	off_t pos;
+	AG_Offset pos;
 	AG_MutexLock(&ds->lock);
 	pos = (ds->tell != NULL) ? ds->tell(ds) : 0;
 	AG_MutexUnlock(&ds->lock);
@@ -177,7 +185,7 @@ AG_Tell(AG_DataSource *ds)
 
 /* Seek to position. */
 static __inline__ int
-AG_Seek(AG_DataSource *ds, off_t pos, enum ag_seek_mode mode)
+AG_Seek(AG_DataSource *_Nonnull ds, AG_Offset pos, enum ag_seek_mode mode)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
@@ -188,13 +196,13 @@ AG_Seek(AG_DataSource *ds, off_t pos, enum ag_seek_mode mode)
 
 /* Close a datasource of any type. */
 static __inline__ void
-AG_CloseDataSource(AG_DataSource *ds)
+AG_CloseDataSource(AG_DataSource *_Nonnull ds)
 {
 	ds->close(ds);
 }
 
 static __inline__ void
-AG_DataSourceDestroy(AG_DataSource *ds)
+AG_DataSourceDestroy(AG_DataSource *_Nonnull ds)
 {
 	AG_MutexDestroy(&ds->lock);
 	AG_Free(ds);

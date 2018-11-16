@@ -29,24 +29,24 @@ typedef struct ag_file_info {
 } AG_FileInfo;
 
 typedef struct ag_file_ext_mapping {
-	const char *ext;			/* Extension */
-	const char *descr;			/* Type description */
-	void *cls;				/* Related Agar class */
+	const char *_Nonnull ext;		/* Extension */
+	const char *_Nonnull descr;		/* Type description */
+	void *_Nullable cls;			/* Related Agar class */
 	int editDirect;				/* Directly editable */
 } AG_FileExtMapping;
 
 __BEGIN_DECLS
-extern AG_FileExtMapping *agFileExtMap;
-extern Uint               agFileExtCount;
+extern AG_FileExtMapping *_Nullable agFileExtMap;
+extern Uint                         agFileExtCount;
 
-int AG_GetFileInfo(const char *, AG_FileInfo *);
-int AG_GetSystemTempDir(char *, size_t)
-        BOUNDED_ATTRIBUTE(__string__, 1, 2);
-int AG_FileExists(const char *);
-int AG_FileDelete(const char *);
-const char *AG_ShortFilename(const char *);
+int AG_GetFileInfo(const char *_Nonnull, AG_FileInfo *_Nonnull);
+int AG_GetSystemTempDir(char *_Nonnull, AG_Size);
+int AG_FileExists(const char *_Nonnull);
+int AG_FileDelete(const char *_Nonnull);
 
-void AG_RegisterFileExtMappings(const AG_FileExtMapping *, Uint);
+const char *_Nonnull AG_ShortFilename(const char *_Nonnull);
+
+void AG_RegisterFileExtMappings(const AG_FileExtMapping *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/core/close.h>

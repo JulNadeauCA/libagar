@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -169,7 +169,7 @@ void
 WEB_VAR_Cat(VAR *V, const char *fmt, ...)
 {
 	char *s;
-	size_t len;
+	AG_Size len;
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -320,7 +320,7 @@ VarNameChar(const char c)
  * Return results without further transformation. 
  */
 void
-WEB_VAR_FilterDocument(WEB_Query *q, const char *src, size_t srcLen)
+WEB_VAR_FilterDocument(WEB_Query *q, const char *src, AG_Size srcLen)
 {
 	char vName[VAR_GETTEXT_MAX];
 	enum web_varsubst_mode mode;
@@ -425,9 +425,9 @@ WEB_VAR_FilterDocument(WEB_Query *q, const char *src, size_t srcLen)
  * Ignore contents outside of <body></body>.
  */
 static __inline__ void
-WEB_VAR_WriteJSON(WEB_Query *q, const char *s, size_t len)
+WEB_VAR_WriteJSON(WEB_Query *_Nonnull q, const char *_Nonnull s, AG_Size len)
 {
-	size_t i;
+	AG_Size i;
 	const char *c;
 	
 	for (i=0, c=s; i < len; i++, c++) {
@@ -439,7 +439,7 @@ WEB_VAR_WriteJSON(WEB_Query *q, const char *s, size_t len)
 	}
 }
 void
-WEB_VAR_FilterFragment(WEB_Query *q, const char *src, size_t srcLen)
+WEB_VAR_FilterFragment(WEB_Query *q, const char *src, AG_Size srcLen)
 {
 	char vName[VAR_GETTEXT_MAX];
 	enum web_varsubst_mode mode;

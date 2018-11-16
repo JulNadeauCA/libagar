@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,7 @@ For event loops and low-level event processing, see
 .Fn AG_SetLongDoubleFn "AG_Object *obj" "const char *name" "long double (*fn)(AG_Event *event)" "const char *fnArgs" "..."
 .Pp
 .Ft "AG_Function *"
-.Fn AG_SetStringFn "AG_Object *obj" "const char *name" "size_t (*fn)(AG_Event *event, char *buf, size_f buf_size)" "const char *fnArgs" "..."
+.Fn AG_SetStringFn "AG_Object *obj" "const char *name" "AG_Size (*fn)(AG_Event *event, char *buf, AG_Size buf_size)" "const char *fnArgs" "..."
 .Pp
 .Ft "AG_Function *"
 .Fn AG_SetPointerFn "AG_Object *obj" "const char *name" "void *(*fn)(AG_Event *event)" "const char *fnArgs" "..."

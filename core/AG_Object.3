@@ -139,7 +139,7 @@ will autoload any required DSOs).
 .Fn AG_ObjectGetName "AG_Object *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectCopyName "AG_Object *obj" "char *pathbuf" "size_t pathbuf_len"
+.Fn AG_ObjectCopyName "AG_Object *obj" "char *pathbuf" "AG_Size pathbuf_len"
 .Pp
 .Ft "void"
 .Fn AG_ObjectLock "AG_Object *obj"
@@ -160,10 +160,10 @@ will autoload any required DSOs).
 .Fn AG_ObjectSetNameS "AG_Object *obj" "const char *name"
 .Pp
 .Ft "void"
-.Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "size_t len"
+.Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "AG_Size len"
 .Pp
 .Ft "void"
-.Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "size_t len"
+.Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "AG_Size len"
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetAttachFn "AG_Object *obj" "void (*fn)(struct ag_event *)" "const char *fmt" "..."
@@ -443,7 +443,7 @@ structure:
 .Bd -literal
 typedef struct ag_object_class {
 	char hier[AG_OBJECT_HIER_MAX];	/* Full inheritance hierarchy */
-	size_t size;             	/* Size of instance structure */
+	AG_Size size;             	/* Size of instance structure */
 	AG_Version ver;          	/* Version numbers */
 	void (*init)(void *obj);
 	void (*reset)(void *obj);
@@ -564,7 +564,7 @@ reads the serialized state of object
 .Fa obj
 from data source
 .Fa ds .
-It must return 0 on success or -1 if an error has occured.
+It must return 0 on success or -1 if an error has occurred.
 See:
 .Xr AG_DataSource 3
 and
@@ -576,7 +576,7 @@ saves the state of
 .Fa obj
 to data source
 .Fa ds .
-It must return 0 on success or -1 if an error has occured.
+It must return 0 on success or -1 if an error has occurred.
 See:
 .Xr AG_DataSource 3
 and
@@ -927,7 +927,7 @@ is passed, the data will be kept in memory.
 .Fn AG_ObjectSetArchivePath "AG_Object *obj" "const char *path"
 .Pp
 .Ft "void"
-.Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "size_t buf_len"
+.Fn AG_ObjectGetArchivePath "AG_Object *obj" "char *buf" "AG_Size buf_len"
 .Pp
 .nr nS 0
 These functions implement serialization, or archiving of the state of an
@@ -1029,7 +1029,7 @@ not the case, the data is serialized to permanent storage, freed from
 memory and
 .Dv AG_OBJECT_RESIDENT
 is cleared.
-Both functions return 0 on success or -1 if an error occured.
+Both functions return 0 on success or -1 if an error has occurred.
 .Pp
 .Fn AG_ObjectSetArchivePath
 sets the application-specific Archive Path attribute.
@@ -1151,7 +1151,7 @@ section):
 .Bl -tag -compact -width "void (*destroy) "
 .It Ft char *hier
 Full inheritance hierarchy.
-.It Ft size_t size
+.It Ft AG_Size size
 Size of instance structure (in bytes).
 .It Ft AG_Version ver
 Versioning information (see

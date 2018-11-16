@@ -114,8 +114,8 @@ different character encodings.
 .Ft "void"
 .Fn AG_FreeFmtString "AG_FmtString *fs"
 .Pp
-.Ft "size_t"
-.Fn AG_ProcessFmtString "AG_FmtString *fs" "char *dst" "size_t dstSize"
+.Ft "AG_Size"
+.Fn AG_ProcessFmtString "AG_FmtString *fs" "char *dst" "AG_Size dstSize"
 .Pp
 .Ft void
 .Fn AG_RegisterFmtStringExt "const char *fmt" "AG_FmtStringExtFn extFn"
@@ -256,8 +256,8 @@ The
 .Fa extFn
 calback functions should be of the form:
 .Bd -literal -offset indent
-typedef size_t (*AG_FmtStringExtFn)(AG_FmtString *fs, char *dst,
-                                    size_t dstSize);
+typedef AG_Size (*AG_FmtStringExtFn)(AG_FmtString *fs, char *dst,
+                                    AG_Size dstSize);
 .Ed
 .Pp
 The callback is expected to write to fixed-size buffer
@@ -317,23 +317,23 @@ returns
 .Ft "char *"
 .Fn AG_TryStrdup "const char *s"
 .Pp
-.Ft "size_t"
-.Fn AG_Strlcpy "char *dst" "const char *src" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_Strlcpy "char *dst" "const char *src" "AG_Size dst_size"
 .Pp
-.Ft "size_t"
-.Fn AG_Strlcat "char *dst" "const char *src" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_Strlcat "char *dst" "const char *src" "AG_Size dst_size"
 .Pp
-.Ft "size_t"
-.Fn AG_StrlcpyInt "char *dst" "int number" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_StrlcpyInt "char *dst" "int number" "AG_Size dst_size"
 .Pp
-.Ft "size_t"
-.Fn AG_StrlcatInt "char *dst" "int number" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_StrlcatInt "char *dst" "int number" "AG_Size dst_size"
 .Pp
-.Ft "size_t"
-.Fn AG_StrlcpyUint "char *dst" "Uint number" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_StrlcpyUint "char *dst" "Uint number" "AG_Size dst_size"
 .Pp
-.Ft "size_t"
-.Fn AG_StrlcatUint "char *dst" "Uint number" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_StrlcatUint "char *dst" "Uint number" "AG_Size dst_size"
 .Pp
 .nr nS 0
 The
@@ -419,24 +419,24 @@ buffer.
 .Sh UNICODE OPERATIONS
 .nr nS 1
 .Ft "Uint32 *"
-.Fn AG_ImportUnicode "const char *encoding" "const char *src" "size_t *pOutLen" "size_t *pOutSize"
+.Fn AG_ImportUnicode "const char *encoding" "const char *src" "AG_Size *pOutLen" "AG_Size *pOutSize"
 .Pp
 .Ft "int"
-.Fn AG_ExportUnicode "const char *encoding" "char *dst" "const Uint32 *src" "size_t dstSize"
+.Fn AG_ExportUnicode "const char *encoding" "char *dst" "const Uint32 *src" "AG_Size dstSize"
 .Pp
 .Ft "int"
-.Fn AG_LengthUTF8 "const char *s" "size_t *rv"
+.Fn AG_LengthUTF8 "const char *s" "AG_Size *rv"
 .Pp
 .Ft "int"
 .Fn AG_CharLengthUTF8 "unsigned char byte"
 .Pp
-.Ft "size_t"
+.Ft "AG_Size"
 .Fn AG_LengthUCS4 "const Uint32 *ucs"
 .Pp
 .Ft "int"
-.Fn AG_LengthUTF8FromUCS4 "const Uint32 *ucs" "size_t *rv"
+.Fn AG_LengthUTF8FromUCS4 "const Uint32 *ucs" "AG_Size *rv"
 .Pp
-.Ft "size_t"
+.Ft "AG_Size"
 .Fn AG_CharLengthUTF8FromUCS4 "Uint32 ch"
 .Pp
 .nr nS 0
@@ -513,7 +513,7 @@ given UCS-4 character as an UTF-8 character sequence.
 .Fn AG_Strcasecmp "const char *s1" "const char *s2"
 .Pp
 .Ft "int"
-.Fn AG_Strncasecmp "const char *s1" "const char *s2" "size_t n"
+.Fn AG_Strncasecmp "const char *s1" "const char *s2" "AG_Size n"
 .Pp
 .Ft "const char *"
 .Fn AG_Strcasestr "const char *big" "const char *little"
@@ -602,7 +602,7 @@ the string to UTF-8 encoding:
 char *dst;
 Uint32 *unicode, *s;
 int count = 0;
-size_t dstLen;
+AG_Size dstLen;
 
 if ((unicode = AG_ImportUnicode("LATIN1", input, NULL)) == NULL) {
 	AG_FatalError(NULL);
@@ -622,8 +622,8 @@ The following GUI code fragment registers an extension to the
 formatting engine, and uses the new format when creating static and polled
 labels:
 .Bd -literal -offset indent
-size_t
-PrintMyVector(AG_FmtString *fs, char *dst, size_t dstSize)
+AG_Size
+PrintMyVector(AG_FmtString *fs, char *dst, AG_Size dstSize)
 {
 	struct my_vector *my = AG_FMTSTRING_ARG(fs);
 	return AG_Snprintf(dst, dstSize, "[%f,%f]", my->x, my->y);

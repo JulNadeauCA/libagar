@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2014 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -139,16 +139,16 @@ If the callback routine returns 1, the message will not be printed.
 .Sh ERROR WRAPPERS
 .nr nS 1
 .Ft "void *"
-.Fn AG_Malloc "size_t len"
+.Fn AG_Malloc "AG_Size len"
 .Pp
 .Ft "void *"
-.Fn AG_TryMalloc "size_t len"
+.Fn AG_TryMalloc "AG_Size len"
 .Pp
 .Ft "void *"
-.Fn AG_Realloc "void *p" "size_t len"
+.Fn AG_Realloc "void *p" "AG_Size len"
 .Pp
 .Ft "void *"
-.Fn AG_TryRealloc "void *p" "size_t len"
+.Fn AG_TryRealloc "void *p" "AG_Size len"
 .Pp
 .Ft void
 .Fn AG_Free "void *p"

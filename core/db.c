@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,8 @@
 #include <agar/core/core.h>
 
 /* Create a new database handle for the given database backend. */
-AG_Db *
-AG_DbNew(const char *backend)
+AG_Db *_Nullable
+AG_DbNew(const char *_Nonnull backend)
 {
 	AG_Db *db;
 	AG_DbClass *dbc = NULL;
@@ -106,7 +106,7 @@ AG_DbSync(AG_Db *db)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Db *db = obj;
 
@@ -135,5 +135,6 @@ AG_DbClass agDbClass = {
 	NULL,			/* exists */
 	NULL,			/* get */
 	NULL,			/* put */
-	NULL			/* del */
+	NULL,			/* del */
+	NULL			/* iterate */
 };

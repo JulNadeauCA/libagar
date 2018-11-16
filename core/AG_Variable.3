@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,7 @@ and types supported.
 .Fn AG_EvalVariable "AG_Object *obj" "AG_Variable *var"
 .Pp
 .Ft void
-.Fn AG_PrintVariable "char *dst" "size_t len" "AG_Variable *var"
+.Fn AG_PrintVariable "char *dst" "AG_Size len" "AG_Variable *var"
 .Pp
 .Ft void
 .Fn AG_CopyVariable "AG_Variable *Vdst" "const AG_Variable *Vsrc"
@@ -164,7 +164,7 @@ and types supported.
 .Fn AG_Unset "AG_Object *obj" "const char *name"
 .Pp
 .Ft void
-.Fn AG_VariableSubst "AG_Object *obj" "const char *s" "char *dst" "size_t dst_len"
+.Fn AG_VariableSubst "AG_Object *obj" "const char *s" "char *dst" "AG_Size dst_len"
 .Pp
 .nr nS 0
 .Fn AG_Defined
@@ -647,8 +647,8 @@ functions are only available if
 is defined.
 .Sh C STRINGS
 .nr nS 1
-.Ft "size_t"
-.Fn AG_GetString "AG_Object *obj" "const char *name" "char *dst" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_GetString "AG_Object *obj" "const char *name" "char *dst" "AG_Size dst_size"
 .Pp
 .Ft "char *"
 .Fn AG_GetStringDup "AG_Object *obj" "const char *name"
@@ -672,13 +672,13 @@ is defined.
 .Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "size_t len"
+.Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "AG_Size len"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_BindStringMp "AG_Object *obj" "const char *name" "char *s" "size_t len" "AG_Mutex *lock"
+.Fn AG_BindStringMp "AG_Object *obj" "const char *name" "char *s" "AG_Size len" "AG_Mutex *lock"
 .Pp
 .Ft "AG_Variable *"
-.Fn AG_BindStringFn "AG_Object *obj" "const char *name" "size_t (*fn)(AG_Event *, char *, size_t)"
+.Fn AG_BindStringFn "AG_Object *obj" "const char *name" "AG_Size (*fn)(AG_Event *, char *, AG_Size)"
 .Pp
 .nr nS 0
 These functions provide an interface to C strings.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include <windows.h>
 #endif
 
-char         *agErrorMsg = NULL;		/* Error message */
+char         *_Nullable agErrorMsg = NULL;	/* Error message */
 AG_ErrorCode  agErrorCode = AG_EUNDEFINED; 	/* Error code */
 #ifdef AG_THREADS
 AG_ThreadKey agErrorMsgKey;
@@ -56,13 +56,17 @@ AG_ThreadKey agErrorCodeKey;
 
 int agDebugLvl = 1;			/* Default debug level */
 
-static void (*agErrorCallback)(const char *) = NULL;
-static int (*agVerboseCallback)(const char *) = NULL;
-static int (*agDebugCallback)(const char *) = NULL;
+static void (*_Nullable agErrorCallback)(const char *_Nonnull) = NULL;
+static int  (*_Nullable agVerboseCallback)(const char *_Nonnull) = NULL;
+static int  (*_Nullable agDebugCallback)(const char *_Nonnull) = NULL;
 
 #ifdef AG_THREADS
-static void DestroyErrorMsg(void *msg) { Free(msg); }
-#endif /* AG_THREADS */
+static void
+DestroyErrorMsg(void *_Nullable msg)
+{
+	Free(msg);
+}
+#endif
 
 int
 AG_InitErrorSubsystem(void)
@@ -145,6 +149,7 @@ AG_SetError(const char *fmt, ...)
 /* Retrieve the error message string. */
 const char *
 AG_GetError(void)
+    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return ((const char *)AG_ThreadKeyGet(agErrorMsgKey));
@@ -199,6 +204,7 @@ AG_SetErrorCode(AG_ErrorCode code)
 /* Retrieve the symbolic error code. */
 AG_ErrorCode
 AG_GetErrorCode(void)
+    _Pure_Attribute_If_Unthreaded
 {
 #ifdef AG_THREADS
 	return (AG_ErrorCode)AG_ThreadKeyGet(agErrorCodeKey);
@@ -392,53 +398,13 @@ AG_SetDebugCallback(int (*fn)(const char *))
  * Raise fatal error condition due to a runtime type checking error
  * (if compiled with either --enable-debug or --enable-type-safety).
  */
-void *
-AG_PtrMismatch(void)
-{
-	AG_FatalError("Illegal AG_PTR() access");
-	return (NULL);
-}
-char *
-AG_StringMismatch(void)
-{
-	AG_FatalError("Illegal AG_STRING() access");
-	return (NULL);
-}
-int
-AG_IntMismatch(void)
-{
-	AG_FatalError("Illegal AG_[U]INT() access");
-	return (0);
-}
-long
-AG_LongMismatch(void)
-{
-	AG_FatalError("Illegal AG_[U]LONG() access");
-	return (0);
-}
-float
-AG_FloatMismatch(void)
-{
-	AG_FatalError("Illegal AG_FLOAT() access");
-	return (0.0f);
-}
-double
-AG_DoubleMismatch(void)
-{
-	AG_FatalError("Illegal AG_DOUBLE() access");
-	return (0.0);
-}
+void  *AG_PtrMismatch(void)    { AG_FatalError("Illegal AG_PTR() access"); }
+char  *AG_StringMismatch(void) { AG_FatalError("Illegal AG_STRING() access"); }
+int    AG_IntMismatch(void)    { AG_FatalError("Illegal AG_[U]INT() access"); }
+long   AG_LongMismatch(void)   { AG_FatalError("Illegal AG_[U]LONG() access"); }
+float  AG_FloatMismatch(void)  { AG_FatalError("Illegal AG_FLOAT() access"); }
+double AG_DoubleMismatch(void) { AG_FatalError("Illegal AG_DOUBLE() access"); }
 #ifdef AG_HAVE_LONG_DOUBLE
-long double
-AG_LongDoubleMismatch(void)
-{
-	AG_FatalError("Illegal AG_LONG_DOUBLE() access");
-	return (0.0L);
-}
-#endif /* AG_HAVE_LONG_DOUBLE */
-void *
-AG_ObjectMismatch(void)
-{
-	AG_FatalError("Illegal AG_OBJECT() access");
-	return (NULL);
-}
+long double AG_LongDoubleMismatch(void) { AG_FatalError("Illegal AG_LONG_DOUBLE() access"); }
+#endif
+void  *AG_ObjectMismatch(void) { AG_FatalError("Illegal AG_OBJECT() access"); }

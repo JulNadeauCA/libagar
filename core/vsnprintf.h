@@ -11,12 +11,13 @@
 #include <agar/core/begin.h>
 __BEGIN_DECLS
 
-int AG_TryVsnprintf(char *, size_t, const char *, va_list);
+int AG_TryVsnprintf(char *_Nonnull, AG_Size, const char *_Nonnull, va_list);
 
 static __inline__ void
-AG_Vsnprintf(char *msg, size_t len, const char *fmt, va_list args)
+AG_Vsnprintf(char *_Nonnull s, AG_Size len, const char *_Nonnull fmt, va_list args)
+    /* _Printf_Like_Attribute(3,0) */
 {
-	if (AG_TryVsnprintf(msg, len, fmt, args) == -1)
+	if (AG_TryVsnprintf(s, len, fmt, args) == -1)
 		AG_FatalError(NULL);
 }
 

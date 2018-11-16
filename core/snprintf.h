@@ -23,7 +23,7 @@
 #else
 # include <agar/core/begin.h>
 __BEGIN_DECLS
-size_t AG_Snprintf(char *, size_t, const char *, ...);
+AG_Size AG_Snprintf(char *_Nonnull, AG_Size, const char *_Nonnull, ...);
 __END_DECLS
 # include <agar/core/close.h>
 #endif /* !HAVE_SNPRINTF */

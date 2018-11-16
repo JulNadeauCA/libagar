@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,8 @@ AG_DataSourceDestroySubsystem(void)
 
 /* Assign an error callback routine to a data source. */
 void
-AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn, const char *fmt, ...)
+AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn,
+    const char *_Nullable fmt, ...)
 {
 	AG_ObjectLock(&errorMgr);
 	ds->errorFn = AG_SetEvent(&errorMgr, NULL, fn, NULL);
@@ -98,7 +99,7 @@ AG_WriteTypeCode(AG_DataSource *ds, Uint32 type)
 
 /* Write type identifier for type safety checks (offset). */
 void
-AG_WriteTypeCodeAt(AG_DataSource *ds, Uint32 type, off_t offs)
+AG_WriteTypeCodeAt(AG_DataSource *ds, Uint32 type, AG_Offset offs)
 {
 	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(type) :
 	                                                 AG_SwapLE32(type);
@@ -138,34 +139,37 @@ AG_CheckTypeCode(AG_DataSource *ds, Uint32 type)
  * No-ops
  */
 static int
-WriteNotSup(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
+WriteNotSup(AG_DataSource *_Nonnull ds, const void *_Nonnull buf,
+    AG_Size size, AG_Size *_Nonnull rv)
 {
-	AG_SetError(_("Operation not supported"));
+	AG_SetErrorS(_("Operation not supported"));
 	return (-1);
 }
 static int
-WriteAtNotSup(AG_DataSource *ds, const void *buf, size_t size, off_t pos, size_t *rv)
+WriteAtNotSup(AG_DataSource *_Nonnull ds, const void *_Nonnull buf,
+    AG_Size size, AG_Offset pos, AG_Size *_Nonnull rv)
 {
-	AG_SetError(_("Operation not supported"));
+	AG_SetErrorS(_("Operation not supported"));
 	return (-1);
 }
 
 #ifdef AG_NETWORK
 static int
-ReadAtNotSup(AG_DataSource *ds, void *buf, size_t size, off_t pos, size_t *rv)
+ReadAtNotSup(AG_DataSource *_Nonnull ds, void *_Nonnull buf,
+    AG_Size size, AG_Offset pos, AG_Size *_Nonnull rv)
 {
-	AG_SetError(_("Operation not supported"));
+	AG_SetErrorS(_("Operation not supported"));
 	return (-1);
 }
-static off_t
-TellNotSup(AG_DataSource *ds)
+static AG_Offset
+TellNotSup(AG_DataSource *_Nonnull ds)
 {
 	return (0);
 }
 static int
-SeekNotSup(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
+SeekNotSup(AG_DataSource *_Nonnull ds, AG_Offset offs, enum ag_seek_mode mode)
 {
-	AG_SetError(_("Seek not supported by data source"));
+	AG_SetErrorS(_("Seek not supported by data source"));
 	return (-1);
 }
 #endif /* AG_NETWORK */
@@ -174,20 +178,22 @@ SeekNotSup(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
  * File operations.
  */
 static int
-FileRead(AG_DataSource *ds, void *buf, size_t size, size_t *rv)
+FileRead(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size size,
+    AG_Size *_Nonnull rv)
 {
 	FILE *f = AG_FILE_SOURCE(ds)->file;
 
 	clearerr(f);
 	*rv = fread(buf, 1, size, f);
 	if (*rv < size && ferror(f)) {
-		AG_SetError(_("Read error"));
+		AG_SetErrorS(_("Read error"));
 		return (-1);
 	}
 	return (0);
 }
 static int
-FileReadAt(AG_DataSource *ds, void *buf, size_t size, off_t pos, size_t *rv)
+FileReadAt(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size size,
+    AG_Offset pos, AG_Size *_Nonnull rv)
 {
 	FILE *f = AG_FILE_SOURCE(ds)->file;
 	long savedPos = ftell(f);
@@ -197,31 +203,32 @@ FileReadAt(AG_DataSource *ds, void *buf, size_t size, off_t pos, size_t *rv)
 	*rv = fread(buf, 1, size, f);
 	if (*rv < size && ferror(f)) {
 		if (fseek(f, savedPos, SEEK_SET) == -1) { goto fail_seek; }
-		AG_SetError(_("Read Error"));
+		AG_SetErrorS(_("Read Error"));
 		return (-1);
 	}
 	if (fseek(f, savedPos, SEEK_SET) == -1) { goto fail_seek; }
 	return (0);
 fail_seek:
-	AG_SetError("fseek failed");
+	AG_SetErrorS("fseek failed");
 	return (-1);
 }
 static int
-FileWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
+FileWrite(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size size,
+    AG_Size *_Nonnull rv)
 {
 	FILE *f = AG_FILE_SOURCE(ds)->file;
 
 	clearerr(f);
 	*rv = fwrite(buf, 1, size, f);
 	if (*rv < size && ferror(f)) {
-		AG_SetError(_("Write error"));
+		AG_SetErrorS(_("Write error"));
 		return (-1);
 	}
 	return (0);
 }
 static int
-FileWriteAt(AG_DataSource *ds, const void *buf, size_t size, off_t pos,
-    size_t *rv)
+FileWriteAt(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size size,
+    AG_Offset pos, AG_Size *_Nonnull rv)
 {
 	FILE *f = AG_FILE_SOURCE(ds)->file;
 	long savedPos = ftell(f);
@@ -231,22 +238,22 @@ FileWriteAt(AG_DataSource *ds, const void *buf, size_t size, off_t pos,
 	*rv = fwrite(buf, 1, size, f);
 	if (*rv < size && ferror(f)) {
 		if (fseek(f, savedPos, SEEK_SET) == -1) { goto fail_seek; }
-		AG_SetError(_("Write Error"));
+		AG_SetErrorS(_("Write Error"));
 		return (-1);
 	}
 	if (fseek(f, savedPos, SEEK_SET) == -1) { goto fail_seek; }
 	return (0);
 fail_seek:
-	AG_SetError("fseek failed");
+	AG_SetErrorS("fseek failed");
 	return (-1);
 }
-static off_t
-FileTell(AG_DataSource *ds)
+static AG_Offset
+FileTell(AG_DataSource *_Nonnull ds)
 {
 	return ftell(AG_FILE_SOURCE(ds)->file);
 }
 static int
-FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
+FileSeek(AG_DataSource *_Nonnull ds, AG_Offset offs, enum ag_seek_mode mode)
 {
 	FILE *f = AG_FILE_SOURCE(ds)->file;
 
@@ -254,7 +261,7 @@ FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	    (mode == AG_SEEK_SET) ? SEEK_SET :
 	    (mode == AG_SEEK_CUR) ? SEEK_CUR :
 	    SEEK_END) == -1) {
-		AG_SetError("fseek failed");
+		AG_SetErrorS("fseek failed");
 		return (-1);
 	}
 	return (0);
@@ -265,7 +272,8 @@ FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
  * on dynamically-reallocated memory.
  */
 static int
-CoreRead(AG_DataSource *ds, void *buf, size_t len, size_t *rv)
+CoreRead(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size len,
+    AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
@@ -280,7 +288,8 @@ CoreRead(AG_DataSource *ds, void *buf, size_t len, size_t *rv)
 	return (0);
 }
 static int
-CoreReadAt(AG_DataSource *ds, void *buf, size_t len, off_t pos, size_t *rv)
+CoreReadAt(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size len,
+    AG_Offset pos, AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
@@ -294,7 +303,8 @@ CoreReadAt(AG_DataSource *ds, void *buf, size_t len, off_t pos, size_t *rv)
 	return (0);
 }
 static int
-CoreWrite(AG_DataSource *ds, const void *buf, size_t len, size_t *rv)
+CoreWrite(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size len,
+    AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
@@ -309,7 +319,8 @@ CoreWrite(AG_DataSource *ds, const void *buf, size_t len, size_t *rv)
 	return (0);
 }
 static int
-CoreAutoWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
+CoreAutoWrite(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size size,
+    AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	Uint8 *dataNew;
@@ -327,8 +338,8 @@ CoreAutoWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
 	return (0);
 }
 static int
-CoreWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
-    size_t *rv)
+CoreWriteAt(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size len,
+    AG_Offset pos, AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 
@@ -342,14 +353,14 @@ CoreWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
 	return (0);
 }
 static int
-CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
-    size_t *rv)
+CoreAutoWriteAt(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size len,
+    AG_Offset pos, AG_Size *_Nonnull rv)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	Uint8 *dataNew;
 
 	if (pos < 0) {
-		AG_SetError("Bad offset");
+		AG_SetErrorS("Bad offset");
 		return (-1);
 	}
 	if (pos+len > cs->size) {
@@ -363,16 +374,16 @@ CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t len, off_t pos,
 	*rv = len;
 	return (0);
 }
-static off_t
-CoreTell(AG_DataSource *ds)
+static AG_Offset
+CoreTell(AG_DataSource *_Nonnull ds)
 {
 	return AG_CORE_SOURCE(ds)->offs;
 }
 static int
-CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
+CoreSeek(AG_DataSource *_Nonnull ds, AG_Offset offs, enum ag_seek_mode mode)
 {
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
-	off_t nOffs;
+	AG_Offset nOffs;
 
 	switch (mode) {
 	case AG_SEEK_SET:
@@ -394,12 +405,12 @@ CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	return (0);
 }
 void
-AG_CloseCore(AG_DataSource *ds)
+AG_CloseCore(AG_DataSource *_Nonnull ds)
 {
 	AG_DataSourceDestroy(ds);
 }
 void
-AG_CloseAutoCore(AG_DataSource *ds)
+AG_CloseAutoCore(AG_DataSource *_Nonnull ds)
 {
 	Free(AG_CORE_SOURCE(ds)->data);
 	AG_DataSourceDestroy(ds);
@@ -410,19 +421,21 @@ AG_CloseAutoCore(AG_DataSource *ds)
  * Network socket operations
  */
 static int
-NetSocketRead(AG_DataSource *ds, void *buf, size_t size, size_t *rv)
+NetSocketRead(AG_DataSource *_Nonnull ds, void *_Nonnull buf, AG_Size size,
+    AG_Size *_Nonnull rv)
 {
 	AG_NetSocketSource *nss = AG_NET_SOCKET_SOURCE(ds);
 	return AG_NetRead(nss->sock, buf, size, rv);
 }
 static int
-NetSocketWrite(AG_DataSource *ds, const void *buf, size_t size, size_t *rv)
+NetSocketWrite(AG_DataSource *_Nonnull ds, const void *_Nonnull buf, AG_Size size,
+    AG_Size *_Nonnull rv)
 {
 	AG_NetSocketSource *nss = AG_NET_SOCKET_SOURCE(ds);
 	return AG_NetWrite(nss->sock, buf, size, rv);
 }
 void
-AG_CloseNetSocket(AG_DataSource *ds)
+AG_CloseNetSocket(AG_DataSource *_Nonnull ds)
 {
 	AG_DataSourceDestroy(ds);
 }
@@ -438,9 +451,11 @@ ErrorDefault(AG_Event *event)
 
 /* Initialize the data source structure. */
 void
-AG_DataSourceInit(AG_DataSource *ds)
+AG_DataSourceInit(AG_DataSource *_Nonnull ds)
 {
+	AG_MutexInitRecursive(&ds->lock);
 	ds->debug = 0;
+	ds->errorFn = NULL;
 	ds->byte_order = AG_BYTEORDER_BE;
 	ds->rdLast = 0;
 	ds->wrLast = 0;
@@ -453,12 +468,11 @@ AG_DataSourceInit(AG_DataSource *ds)
 	ds->tell = NULL;
 	ds->seek = NULL;
 	ds->close = NULL;
-	AG_MutexInitRecursive(&ds->lock);
 	AG_DataSourceSetErrorFn(ds, ErrorDefault, "%p", ds);
 }
 
 AG_DataSource *
-AG_OpenFileHandle(FILE *f)
+AG_OpenFileHandle(FILE *_Nonnull f)
 {
 	AG_FileSource *fs;
 
@@ -478,7 +492,7 @@ AG_OpenFileHandle(FILE *f)
 
 /* Close file handle created by AG_OpenFileHandle() */
 void
-AG_CloseFileHandle(AG_DataSource *ds)
+AG_CloseFileHandle(AG_DataSource *_Nonnull ds)
 {
 	AG_FileSource *fs = AG_FILE_SOURCE(ds);
 
@@ -492,7 +506,7 @@ AG_CloseFileHandle(AG_DataSource *ds)
 
 /* Close file handle created by AG_OpenFile() */
 void
-AG_CloseFile(AG_DataSource *ds)
+AG_CloseFile(AG_DataSource *_Nonnull ds)
 {
 	AG_FileSource *fs = AG_FILE_SOURCE(ds);
 
@@ -503,7 +517,7 @@ AG_CloseFile(AG_DataSource *ds)
 
 /* Create a data source from a specified file path. */
 AG_DataSource *
-AG_OpenFile(const char *path, const char *mode)
+AG_OpenFile(const char *_Nonnull path, const char *_Nonnull mode)
 {
 	AG_FileSource *fs;
 	FILE *f;
@@ -528,7 +542,7 @@ AG_OpenFile(const char *path, const char *mode)
 
 /* Create a data source from a specified chunk of memory. */
 AG_DataSource *
-AG_OpenCore(void *data, size_t size)
+AG_OpenCore(void *_Nonnull data, AG_Size size)
 {
 	AG_CoreSource *cs;
 
@@ -551,7 +565,7 @@ AG_OpenCore(void *data, size_t size)
 
 /* Create a data source from a specified chunk of memory (read-only). */
 AG_DataSource *
-AG_OpenConstCore(const void *data, size_t size)
+AG_OpenConstCore(const void *_Nonnull data, AG_Size size)
 {
 	AG_ConstCoreSource *cs;
 
@@ -598,7 +612,7 @@ AG_OpenAutoCore(void)
 #ifdef AG_NETWORK
 /* Create a data source using a network socket. */
 AG_DataSource *
-AG_OpenNetSocket(AG_NetSocket *ns)
+AG_OpenNetSocket(AG_NetSocket *_Nonnull ns)
 {
 	AG_NetSocketSource *ss;
 
@@ -618,34 +632,49 @@ AG_OpenNetSocket(AG_NetSocket *ns)
 }
 #endif /* AG_NETWORK */
 
-/* Select the byte order of the source. */
-void
-AG_SetByteOrder(AG_DataSource *ds, enum ag_byte_order order)
+/*
+ * Select the byte order of a data source. Return the previous setting.
+ *
+ * The byte order can be switched while a data stream is being read or
+ * written. Library routines must be careful to restore previous byte
+ * order before returning.
+ */
+AG_ByteOrder
+AG_SetByteOrder(AG_DataSource *_Nonnull ds, AG_ByteOrder order)
 {
+	AG_ByteOrder orderPrev;
+
 	AG_MutexLock(&ds->lock);
+	orderPrev = ds->byte_order;
 	ds->byte_order = order;
 	AG_MutexUnlock(&ds->lock);
+
+	return (orderPrev);
 }
 
-/* Toggle encoding/decoding of debugging data. */
-void
-AG_SetSourceDebug(AG_DataSource *ds, int enable)
+/* Toggle encoding/decoding of debugging data. Return previous setting. */
+int
+AG_SetSourceDebug(AG_DataSource *_Nonnull ds, int enable)
 {
+	int debugPrev;
+
 	AG_MutexLock(&ds->lock);
+	debugPrev = ds->debug;
 	ds->debug = enable;
 	AG_MutexUnlock(&ds->lock);
+	return (debugPrev);
 }
 
 /* Standard read operation (read complete size or fail). */
 int
-AG_Read(AG_DataSource *ds, void *ptr, size_t size)
+AG_Read(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
 	rv = ds->read(ds, ptr, size, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
 	if (ds->rdLast < size) {
-		AG_SetError("Short read");
+		AG_SetErrorS("Short read");
 		rv = -1;
 	}
 	AG_MutexUnlock(&ds->lock);
@@ -654,7 +683,8 @@ AG_Read(AG_DataSource *ds, void *ptr, size_t size)
 
 /* Standard read operation (partial reads allowed). */
 int
-AG_ReadP(AG_DataSource *ds, void *ptr, size_t size, size_t *nRead)
+AG_ReadP(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size,
+    AG_Size *nRead)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
@@ -667,14 +697,14 @@ AG_ReadP(AG_DataSource *ds, void *ptr, size_t size, size_t *nRead)
 
 /* Read data from a particular offset (read complete or fail). */
 int
-AG_ReadAt(AG_DataSource *ds, void *ptr, size_t size, off_t pos)
+AG_ReadAt(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size, AG_Offset pos)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
 	rv = ds->read_at(ds, ptr, size, pos, &ds->rdLast);
 	ds->rdTotal += ds->rdLast;
 	if (ds->rdLast < size) {
-		AG_SetError("Short read");
+		AG_SetErrorS("Short read");
 		rv = -1;
 	}
 	AG_MutexUnlock(&ds->lock);
@@ -683,7 +713,8 @@ AG_ReadAt(AG_DataSource *ds, void *ptr, size_t size, off_t pos)
 
 /* Read data from a particular offset (partial reads allowed). */
 int
-AG_ReadAtP(AG_DataSource *ds, void *ptr, size_t size, off_t pos, size_t *nRead)
+AG_ReadAtP(AG_DataSource *_Nonnull ds, void *_Nonnull ptr, AG_Size size, AG_Offset pos,
+    AG_Size *nRead)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
@@ -696,14 +727,14 @@ AG_ReadAtP(AG_DataSource *ds, void *ptr, size_t size, off_t pos, size_t *nRead)
 
 /* Standard write operation (write complete or fail). */
 int
-AG_Write(AG_DataSource *ds, const void *ptr, size_t size)
+AG_Write(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
 	rv = ds->write(ds, ptr, size, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
 	if (ds->wrLast < size) {
-		AG_SetError("Short write");
+		AG_SetErrorS("Short write");
 		rv = -1;
 	}
 	AG_MutexUnlock(&ds->lock);
@@ -712,7 +743,8 @@ AG_Write(AG_DataSource *ds, const void *ptr, size_t size)
 
 /* Standard write operation (partial writes allowed). */
 int
-AG_WriteP(AG_DataSource *ds, const void *ptr, size_t size, size_t *nWrote)
+AG_WriteP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
+    AG_Size *nWrote)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
@@ -725,14 +757,15 @@ AG_WriteP(AG_DataSource *ds, const void *ptr, size_t size, size_t *nWrote)
 
 /* Write data at particular offset (write complete or fail). */
 int
-AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, off_t pos)
+AG_WriteAt(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr,
+    AG_Size size, AG_Offset pos)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);
 	rv = ds->write_at(ds, ptr, size, pos, &ds->wrLast);
 	ds->wrTotal += ds->wrLast;
 	if (ds->wrLast < size) {
-		AG_SetError("Short write");
+		AG_SetErrorS("Short write");
 		rv = -1;
 	}
 	AG_MutexUnlock(&ds->lock);
@@ -741,7 +774,8 @@ AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, off_t pos)
 
 /* Write data at particular offset (partial writes allowed). */
 int
-AG_WriteAtP(AG_DataSource *ds, const void *ptr, size_t size, off_t pos, size_t *nWrote)
+AG_WriteAtP(AG_DataSource *_Nonnull ds, const void *_Nonnull ptr, AG_Size size,
+    AG_Offset pos, AG_Size *nWrote)
 {
 	int rv;
 	AG_MutexLock(&ds->lock);

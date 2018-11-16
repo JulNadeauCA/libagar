@@ -7,8 +7,11 @@
 #include <agar/core/begin.h>
 __BEGIN_DECLS
 
-void AG_Asprintf(char **, const char *, ...);
-int  AG_TryAsprintf(char **, const char *, ...);
+void AG_Asprintf(char *_Nonnull *_Nonnull, const char *_Nonnull, ...)
+                FORMAT_ATTRIBUTE(printf,2,3);
+
+int  AG_TryAsprintf(char *_Nonnull *_Nonnull, const char *_Nonnull, ...)
+                   FORMAT_ATTRIBUTE(printf,2,3);
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
 # define Asprintf AG_Asprintf

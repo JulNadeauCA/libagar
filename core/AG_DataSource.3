@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -35,26 +35,20 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The
 .Nm
-structure provides a generic interface to different data sources.
-Built-in sources include
+provides a generic interface to different types of data sources such as
 .Ft AG_FileSource
 for files,
 .Ft AG_CoreSource
 for fixed-size memory,
 .Ft AG_AutoCoreSource
-for automatically-allocated memory and
+for autoallocated memory,
 .Ft AG_ConstCoreSource
-for read-only memory.
+for read-only memory and
 .Ft AG_NetSocketSource
 for
 .Xr AG_Net 3
 sockets.
-.Pp
-New data sources can be implemented by overloading the
-.Nm
-structure.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_DataSource *"
@@ -64,10 +58,10 @@ structure.
 .Fn AG_OpenFileHandle "FILE *f"
 .Pp
 .Ft "AG_DataSource *"
-.Fn AG_OpenCore "void *p" "size_t size"
+.Fn AG_OpenCore "void *p" "AG_Size size"
 .Pp
 .Ft "AG_DataSource *"
-.Fn AG_OpenConstCore "const void *p" "size_t size"
+.Fn AG_OpenConstCore "const void *p" "AG_Size size"
 .Pp
 .Ft "AG_DataSource *"
 .Fn AG_OpenAutoCore "void"
@@ -79,34 +73,34 @@ structure.
 .Fn AG_CloseDataSource "AG_DataSource *ds"
 .Pp
 .Ft "int"
-.Fn AG_Read "AG_DataSource *ds" "void *buf" "size_t size"
+.Fn AG_Read "AG_DataSource *ds" "void *buf" "AG_Size size"
 .Pp
 .Ft "int"
-.Fn AG_ReadAt "AG_DataSource *ds" "void *buf" "size_t size" "off_t pos"
+.Fn AG_ReadAt "AG_DataSource *ds" "void *buf" "AG_Size size" "AG_Offset pos"
 .Pp
 .Ft "int"
-.Fn AG_Write "AG_DataSource *ds" "const void *buf" "size_t size"
+.Fn AG_Write "AG_DataSource *ds" "const void *buf" "AG_Size size"
 .Pp
 .Ft "int"
-.Fn AG_WriteAt "AG_DataSource *ds" "const void *buf" "size_t size" "off_t pos"
+.Fn AG_WriteAt "AG_DataSource *ds" "const void *buf" "AG_Size size" "AG_Offset pos"
 .Pp
 .Ft "int"
-.Fn AG_ReadP "AG_DataSource *ds" "void *buf" "size_t size" "size_t *nRead"
+.Fn AG_ReadP "AG_DataSource *ds" "void *buf" "AG_Size size" "AG_Size *nRead"
 .Pp
 .Ft "int"
-.Fn AG_ReadAtP "AG_DataSource *ds" "void *buf" "size_t size" "off_t pos" "size_t *nRead"
+.Fn AG_ReadAtP "AG_DataSource *ds" "void *buf" "AG_Size size" "AG_Offset pos" "AG_Size *nRead"
 .Pp
 .Ft "int"
-.Fn AG_WriteP "AG_DataSource *ds" "const void *buf" "size_t size" "size_t *nWrote"
+.Fn AG_WriteP "AG_DataSource *ds" "const void *buf" "AG_Size size" "AG_Size *nWrote"
 .Pp
 .Ft "int"
-.Fn AG_WriteAtP "AG_DataSource *ds" "const void *buf" "size_t size" "off_t pos" "size_t *nWrote"
+.Fn AG_WriteAtP "AG_DataSource *ds" "const void *buf" "AG_Size size" "AG_Offset pos" "AG_Size *nWrote"
 .Pp
-.Ft "off_t"
+.Ft "AG_Offset"
 .Fn AG_Tell "AG_DataSource *ds"
 .Pp
 .Ft "int"
-.Fn AG_Seek "AG_DataSource *ds" "off_t offs" "enum ag_seek_mode mode"
+.Fn AG_Seek "AG_DataSource *ds" "AG_Offset offs" "enum ag_seek_mode mode"
 .Pp
 .Ft "void"
 .Fn AG_LockDataSource "AG_DataSource *ds"
@@ -114,10 +108,10 @@ structure.
 .Ft "void"
 .Fn AG_UnlockDataSource "AG_DataSource *ds"
 .Pp
-.Ft "void"
-.Fn AG_SetByteOrder "AG_DataSource *ds" "enum ag_byte_order order"
+.Ft "AG_ByteOrder"
+.Fn AG_SetByteOrder "AG_DataSource *ds" "AG_ByteOrder order"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_SetSourceDebug "AG_DataSource *ds" "int enable"
 .Pp
 .Ft "void"
@@ -133,7 +127,7 @@ structure.
 .Fn AG_DataSourceError "AG_DataSource *ds" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_DataSourceRealloc "AG_CoreSource *dsCore" "size_t size"
+.Fn AG_DataSourceRealloc "AG_CoreSource *dsCore" "AG_Size size"
 .Pp
 .nr nS 0
 The
@@ -195,7 +189,7 @@ to the destination data source.
 and
 .Fn AG_WriteAt
 allow a source/target position (byte offset) to be specified.
-These functions all return 0 on success or -1 if an error has occured.
+If an error has occurred, return -1 with an error message, otherwise 0 on success.
 Partial transfers are treated as errors.
 .Pp
 The
@@ -238,25 +232,35 @@ functions acquire and release the exclusive lock protecting this data
 source, and are no-ops if thread support is disabled.
 .Pp
 .Fn AG_SetByteOrder
-configures the byte order to be used by integer read/write operations.
-Accepted parameters are
+sets the effective byte order of the stream.
+Integer read/write operations must honor this setting.
+Byte orders are
 .Dv AG_BYTEORDER_BE
 for big-endian and
 .Dv AG_BYTEORDER_LE
 for little-endian.
-To determine the byte order of the current architecture, you can use the
-standard
+To determine the byte order of the current architecture, use macro
 .Dv AG_BYTEORDER
-define (which evaluates to
+macro (which evaluates to either
 .Dv AG_BIG_ENDIAN
 or
 .Dv AG_LITTLE_ENDIAN ) .
 .Pp
 .Fn AG_SetSourceDebug
-enables or disables the inclusion of debugging information in the archive.
-Debugging information allows type-safety checking at the primitive data
-level, at the cost of an increased archive size due to the additional
-metadata that must be encoded.
+enables (1) or disables (0) the inclusion and checking of serialization
+markers on a data source.
+When enabled, typed I/O routines such as
+.Fn AG_WriteUint8
+will always write a marker (type code) before every byte, and
+.Fn AG_ReadUint8
+will always expect a type code (and verify that it matches, or raise an exception).
+.Fn AG_SetSourceDebug
+returns the previous setting.
+Serialization markers are enabled implicitely for
+.Xr AG_Object 3
+with
+.Dv AG_OBJECT_DEBUG_DATA .
+Available only with AG_DEBUG, no-op otherwise.
 .Pp
 The
 .Fn AG_DataSourceInit
@@ -403,28 +407,28 @@ specified for the data source.
 .Fn AG_WriteSint64v "AG_DataSource *ds" "const Sint64 *value"
 .Pp
 .Ft void
-.Fn AG_WriteUint8At "AG_DataSource *ds" "Uint8 value" "off_t offs"
+.Fn AG_WriteUint8At "AG_DataSource *ds" "Uint8 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteSint8At "AG_DataSource *ds" "Sint8 value" "off_t offs"
+.Fn AG_WriteSint8At "AG_DataSource *ds" "Sint8 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteUint16At "AG_DataSource *ds" "Uint16 value" "off_t offs"
+.Fn AG_WriteUint16At "AG_DataSource *ds" "Uint16 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteSint16At "AG_DataSource *ds" "Sint16 value" "off_t offs"
+.Fn AG_WriteSint16At "AG_DataSource *ds" "Sint16 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteUint32At "AG_DataSource *ds" "Uint32 value" "off_t offs"
+.Fn AG_WriteUint32At "AG_DataSource *ds" "Uint32 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteSint32At "AG_DataSource *ds" "Sint32 value" "off_t offs"
+.Fn AG_WriteSint32At "AG_DataSource *ds" "Sint32 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteUint64At "AG_DataSource *ds" "Uint64 value" "off_t offs"
+.Fn AG_WriteUint64At "AG_DataSource *ds" "Uint64 value" "AG_Offset offs"
 .Pp
 .Ft void
-.Fn AG_WriteSint64At "AG_DataSource *ds" "Sint64 value" "off_t offs"
+.Fn AG_WriteSint64At "AG_DataSource *ds" "Sint64 value" "AG_Offset offs"
 .nr nS 0
 .Pp
 The
@@ -445,16 +449,11 @@ The
 .Fn AG_Write[SU]intNAt
 variants write the integer to the specified position in the data source.
 .Pp
-All
+The error-checking forms
 .Fn AG_Read*v
-functions return 0 on success and -1 on failure, without raising any
-exceptions.
-The other functions will raise a data source exception if an failuer (e.g.,
-an I/O error) occured.
-.Pp
-The 64-bit types are only available if
-.Dv HAVE_64BIT
-is defined.
+all return 0 on success and -1 on failure (without raising any exceptions).
+With the procedural forms, I/O errors will cause data source exceptions to
+be raised.
 .Sh FLOATING POINT OPERATIONS
 The following routines read and write floating-point numbers in IEEE.754
 representation.
@@ -485,7 +484,7 @@ representation.
 .Fn AG_WriteFloatv "AG_DataSource *ds" "float *f"
 .Pp
 .Ft "void"
-.Fn AG_WriteFloatAt "AG_DataSource *ds" "float f" "off_t pos"
+.Fn AG_WriteFloatAt "AG_DataSource *ds" "float f" "AG_Offset pos"
 .Pp
 .Ft "void"
 .Fn AG_WriteDouble "AG_DataSource *ds" "double f"
@@ -494,7 +493,7 @@ representation.
 .Fn AG_WriteDoublev "AG_DataSource *ds" "double *f"
 .Pp
 .Ft "void"
-.Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "off_t pos"
+.Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "AG_Offset pos"
 .Pp
 .Ft "void"
 .Fn AG_WriteLongDouble "AG_DataSource *ds" "long double f"
@@ -503,7 +502,7 @@ representation.
 .Fn AG_WriteLongDoublev "AG_DataSource *ds" "long double *f"
 .Pp
 .Ft "void"
-.Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "off_t pos"
+.Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "AG_Offset pos"
 .Pp
 .nr nS 0
 .Fn AG_ReadFloat ,
@@ -543,24 +542,24 @@ by the (possibly padded or NUL-terminated) string of characters itself.
 .Fn AG_ReadString "AG_DataSource *ds"
 .Pp
 .Ft "char *"
-.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxLen"
+.Fn AG_ReadStringLen "AG_DataSource *ds" "AG_Size maxLen"
 .Pp
-.Ft size_t
+.Ft AG_Size
 .Fn AG_CopyString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft "char *"
-.Fn AG_ReadStringPadded "AG_DataSource *ds" "size_t len"
+.Fn AG_ReadStringPadded "AG_DataSource *ds" "AG_Size len"
 .Pp
-.Ft size_t
+.Ft AG_Size
 .Fn AG_CopyStringPadded "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft "char *"
 .Fn AG_ReadNulString "AG_DataSource *ds"
 .Pp
 .Ft "char *"
-.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxLen"
+.Fn AG_ReadNulStringLen "AG_DataSource *ds" "AG_Size maxLen"
 .Pp
-.Ft size_t
+.Ft AG_Size
 .Fn AG_CopyNulString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft void
@@ -573,7 +572,7 @@ by the (possibly padded or NUL-terminated) string of characters itself.
 .Fn AG_WriteString "AG_DataSource *ds" "const char *s"
 .Pp
 .Ft void
-.Fn AG_WriteStringPadded "AG_DataSource *ds" "const char *s" "size_t len"
+.Fn AG_WriteStringPadded "AG_DataSource *ds" "const char *s" "AG_Size len"
 .Pp
 .nr nS 0
 .Fn AG_ReadString
@@ -607,13 +606,6 @@ a fixed-size buffer
 .Fa buf
 of
 .Fa buf_size .
-
-The
-.Fn AG_ReadStringPadded
-and
-.Fn AG_CopyStringPadded
-variants 
-
 .Pp
 The
 .Fn AG_ReadNulString ,
@@ -657,21 +649,21 @@ structure include:
 typedef struct ag_data_source {
 	AG_Mutex lock;			/* Lock on all operations */
 	enum ag_byte_order byte_order;	/* Byte order of source */
-	size_t wrLast;			/* Last write count (bytes) */
-	size_t rdLast;			/* Last read count (bytes) */
-	size_t wrTotal;			/* Total write count (bytes) */
-	size_t rdTotal;			/* Total read count (bytes) */
+	AG_Size wrLast;			/* Last write count (bytes) */
+	AG_Size rdLast;			/* Last read count (bytes) */
+	AG_Size wrTotal;			/* Total write count (bytes) */
+	AG_Size rdTotal;			/* Total read count (bytes) */
 
 	AG_IOStatus (*read)(struct ag_data_source *, void *buf,
-	                    size_t size, size_t *rv);
+	                    AG_Size size, AG_Size *rv);
 	AG_IOStatus (*read_at)(struct ag_data_source *, void *buf,
-	                       size_t size, off_t pos, size_t *rv);
+	                       AG_Size size, AG_Offset pos, AG_Size *rv);
 	AG_IOStatus (*write)(struct ag_data_source *, const void *buf,
-	                     size_t size, size_t *rv);
+	                     AG_Size size, AG_Size *rv);
 	AG_IOStatus (*write_at)(struct ag_data_source *, const void *buf,
-	                        size_t size, off_t pos, size_t *rv);
-	off_t       (*tell)(struct ag_data_source *);
-	int         (*seek)(struct ag_data_source *, off_t offs,
+	                        AG_Size size, AG_Offset pos, AG_Size *rv);
+	AG_Offset   (*tell)(struct ag_data_source *);
+	int         (*seek)(struct ag_data_source *, AG_Offset offs,
 	                    enum ag_seek_mode mode);
 	void        (*close)(struct ag_data_source *);
 } AG_DataSource;
@@ -693,19 +685,18 @@ incremented by the generic
 calls.
 .Pp
 The
-.Va read
+.Fn read
 operation reads
 .Fa size
 bytes from the data source and into
 .Fa buf ,
 returning the total number of bytes read into
 .Fa rv .
-The
-.Va read_at
-variant reads data at a specified offset.
+.Fn read_at
+reads data at a specified offset.
 .Pp
 The
-.Va write
+.Fn write
 operation writes
 .Fa size
 bytes from
@@ -713,16 +704,16 @@ bytes from
 to the data source, returning the total number of bytes written into
 .Fa rv .
 The
-.Va write_at
+.Fn write_at
 variant writes the data at a specified offset.
 .Pp
-.Va tell
+.Fn tell
 returns the current offset.
 .Pp
-.Va seek
+.Fn seek
 moves to the specified offset and returns 0 on success and -1 on failure.
 .Pp
-.Va close
+.Fn close
 closes the data source.
 .Sh SEE ALSO
 .Xr AG_ByteSwap 3 ,
