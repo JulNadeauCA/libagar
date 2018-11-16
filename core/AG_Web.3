@@ -482,10 +482,10 @@ deletes the cookie identified by
 .Sh HTTP ARGUMENT PARSING
 .nr nS 1
 .Ft "const char *"
-.Fn WEB_Get "WEB_Query *q" "const char *key" "size_t maxLength"
+.Fn WEB_Get "WEB_Query *q" "const char *key" "AG_Size maxLength"
 .Pp
 .Ft "const char *"
-.Fn WEB_GetTrim "WEB_Query *q" "const char *key" "size_t maxLength"
+.Fn WEB_GetTrim "WEB_Query *q" "const char *key" "AG_Size maxLength"
 .Pp
 .Ft "void"
 .Fn WEB_Set "WEB_Query *q" "const char *key" "const char *value" "..."
@@ -747,7 +747,7 @@ log level.
 .Sh HTTP RESPONSE OUTPUT
 .nr nS 1
 .Ft "void"
-.Fn WEB_Write "WEB_Query *q" "const char *data" "size_t len"
+.Fn WEB_Write "WEB_Query *q" "const char *data" "AG_Size len"
 .Pp
 .Ft "void"
 .Fn WEB_PutC "WEB_Query *q" "char c"
@@ -789,7 +789,7 @@ log level.
 .Fn WEB_VAR_New "const char *key"
 .Pp
 .Ft "void"
-.Fn WEB_VAR_Grow "WEB_Variable *v" "size_t newLen"
+.Fn WEB_VAR_Grow "WEB_Variable *v" "AG_Size newLen"
 .Pp
 .Ft "WEB_Variable *"
 .Fn WEB_VAR_Set "const char *key" "const char *value" "..."
@@ -822,10 +822,10 @@ log level.
 .Fn WEB_VAR_CatC "WEB_Variable *v" "const char c"
 .Pp
 .Ft void
-.Fn WEB_VAR_CatN "WEB_Variable *v" "const void *src" "size_t len"
+.Fn WEB_VAR_CatN "WEB_Variable *v" "const void *src" "AG_Size len"
 .Pp
 .Ft void
-.Fn WEB_VAR_CatN_NoNUL "WEB_Variable *v" "const void *src" "size_t len"
+.Fn WEB_VAR_CatN_NoNUL "WEB_Variable *v" "const void *src" "AG_Size len"
 .Pp
 .Ft void
 .Fn WEB_VAR_CatJS "WEB_Variable *v" "const char *value"
@@ -931,8 +931,8 @@ except for globals which remain persistent across queries.
 typedef struct web_variable {
 	char	 key[WEB_VAR_NAME_MAX]; /* Name ("\\0" = anonymous) */
 	char	*value;                 /* Value (C string) */
-	size_t	 len;                   /* Content length (characters) */
-	size_t	 bufSize;               /* Buffer size */
+	AG_Size	 len;                   /* Content length (characters) */
+	AG_Size	 bufSize;               /* Buffer size */
 	int	 global;                /* Persistent across queries */
 	AG_TAILQ_ENTRY(web_variable) vars;
 } WEB_Variable;
@@ -1079,7 +1079,7 @@ structure:
 .Bd -literal
 typedef struct web_session_ops {
 	const char *name;             /* Session class name */
-	size_t size;                  /* Structure size */
+	AG_Size size;                 /* Structure size */
 	Uint flags;
 #define WEB_SESSION_PREFORK_AUTH 0x01 /* Call auth() before fork() */
 	time_t sessTimeout;           /* Session inactivity (s) */

@@ -62,7 +62,7 @@ typedef struct ag_text {
 	AG_Mutex lock;
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	enum ag_language lang;		/* Selected language */
-	size_t maxLen;			/* Maximum string length (bytes) */
+	AG_Size maxLen;			/* Maximum string length (bytes) */
 	Uint flags;
 } AG_Text, AG_TextElement;
 .Ed
@@ -92,20 +92,20 @@ structure:
 .Bd -literal
 typedef struct ag_text_ent {
 	char  *buf;			/* String buffer */
-	size_t maxLen;			/* Length (allocated) */
-	size_t len;			/* Length (chars) */
+	AG_Size maxLen;			/* Length (allocated) */
+	AG_Size len;			/* Length (chars) */
 } AG_TextEnt;
 .Ed
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_Text *"
-.Fn AG_TextNew "size_t maxLen"
+.Fn AG_TextNew "AG_Size maxLen"
 .Pp
 .Ft "void"
-.Fn AG_TextInit "AG_Text *T" "size_t maxLen"
+.Fn AG_TextInit "AG_Text *T" "AG_Size maxLen"
 .Pp
 .Ft void
-.Fn AG_TextSetLimit "AG_Text *T" "size_t maxLen"
+.Fn AG_TextSetLimit "AG_Text *T" "AG_Size maxLen"
 .Pp
 .Ft void
 .Fn AG_TextDestroy "AG_Text *T"

@@ -146,7 +146,7 @@ Data is available for reading on file referenced by
 Data is available for writing on file referenced by
 .Fa ident .
 .It Dv AG_SINK_FSEVENT
-A filesystem event has occured on the file/directory
+A filesystem event has occurred on the file/directory
 referenced by
 .Fa ident .
 The type of event is specified in
@@ -155,7 +155,7 @@ The type of event is specified in
 .Sx FILESYSTEM EVENTS
 for the accepted flags).
 .It Dv AG_SINK_PROCEVENT
-An event has occured on the monitored process
+An event has occurred on the monitored process
 .Fa ident .
 The type of event is specified in
 .Fa flags
@@ -207,9 +207,9 @@ event sink include:
 .It Dv AG_FSEVENT_DELETE
 The file has been deleted.
 .It Dv AG_FSEVENT_WRITE
-A write has occured on the file.
+The file was written to.
 .It Dv AG_FSEVENT_EXTEND
-The file has been extended in size.
+The file was extended in size.
 .It Dv AG_FSEVENT_ATTRIB
 File attributes have been changed.
 .It Dv AG_FSEVENT_LINK

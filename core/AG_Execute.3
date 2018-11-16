@@ -55,8 +55,7 @@ The
 .Fn AG_Execute
 function executes the specified file with the given arguments, returning an
 integer process ID.
-If an error occured, the function returns -1 and sets an error message
-accordingly.
+If an error has occurred, the function returns -1 with an error message.
 .Pp
 .Fn AG_WaitOnProcess
 checks for status or waits until the specified process terminates.
@@ -71,7 +70,7 @@ Block the calling thread until the process has exited.
 .El
 .Pp
 The function returns the PID of the terminated process, -1 if an error
-occured, or 0 if
+has occurred, or 0 if
 .Fa wait_type
 is
 .Dv AG_EXEC_WAIT_IMMEDIATE
