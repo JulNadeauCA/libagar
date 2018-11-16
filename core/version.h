@@ -5,14 +5,14 @@
 #include <agar/core/begin.h>
 
 #define AGAR_MAJOR_VERSION	1
-#define AGAR_MINOR_VERSION	5
-#define AGAR_PATCHLEVEL		1
+#define AGAR_MINOR_VERSION	6
+#define AGAR_PATCHLEVEL		0
 
 typedef struct ag_agar_version {
 	int major;
 	int minor;
 	int patch;
-	const char *release;
+	const char *_Nullable release;
 } AG_AgarVersion;
 
 #define AG_VERSION_NUM(X,Y,Z) ((X)*1000 + (Y)*100 + (Z))
@@ -22,7 +22,7 @@ typedef struct ag_agar_version {
 	(AG_COMPILED_VERSION >= AG_VERSION_NUM(X, Y, Z))
 
 __BEGIN_DECLS
-void  AG_GetVersion(AG_AgarVersion *);
+void  AG_GetVersion(AG_AgarVersion *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>
