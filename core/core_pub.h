@@ -4,6 +4,7 @@
 #define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
+#include <agar/core/types.h>
 #include <agar/core/core_init.h>
 #include <agar/core/string.h>
 
@@ -15,6 +16,7 @@
 #endif
 
 #include <agar/core/data_source.h>
+#include <agar/core/byteswap.h>
 #include <agar/core/load_integral.h>
 #include <agar/core/load_real.h>
 #include <agar/core/load_string.h>
