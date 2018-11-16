@@ -113,11 +113,11 @@ typedef enum web_method {
 
 /* Web variable */
 typedef struct web_variable {
-	char	 key[WEB_VAR_NAME_MAX];	/* Name */
-	char	*value;			/* Value */
-	size_t	 len;			/* Content length (characters) */
-	size_t	 bufSize;		/* Buffer size */
-	int	 global;		/* 1 = Persistent across queries */
+	char key[WEB_VAR_NAME_MAX];		/* Name */
+	char *_Nullable value;			/* Value */
+	AG_Size len;				/* Content length (characters) */
+	AG_Size bufSize;				/* Buffer size */
+	int    global;				/* 1 = Persist across queries */
 	AG_TAILQ_ENTRY(web_variable) vars;
 } WEB_Variable;
 
@@ -130,10 +130,10 @@ typedef struct web_argument {
 		WEB_POST_ARGUMENT,		/* HTTP POST method */
 		WEB_ARGUMENT_LAST
 	} type;
-	char	 key[WEB_ARG_KEY_MAX];		/* Key */
-	char	*value;				/* Value data (allocated) */
-	size_t   len;				/* Value length in bytes */
-	char     contentType[32];		/* Content-Type or "" */
+	char key[WEB_ARG_KEY_MAX];		/* Key */
+	char *_Nullable value;			/* Value data (allocated) */
+	AG_Size len;				/* Value length in bytes */
+	char contentType[32];			/* Content-Type or "" */
 	AG_TAILQ_ENTRY(web_argument) args;
 } WEB_Argument;
 
@@ -153,8 +153,8 @@ typedef struct web_cookie {
 
 /* Computed, satisfiable Range request */
 typedef struct web_range_req {
-	size_t first[WEB_RANGE_MAXRANGES];		/* First byte pos */
-	size_t last[WEB_RANGE_MAXRANGES];		/* Last byte pos */
+	AG_Size first[WEB_RANGE_MAXRANGES];		/* First byte pos */
+	AG_Size last[WEB_RANGE_MAXRANGES];		/* Last byte pos */
 	Uint nRanges;
 } WEB_RangeReq;
 
@@ -179,7 +179,7 @@ typedef struct web_query {
 	Uint nCookies;
 
 	char   contentType[128];		/* Client Content-Type (+attrs) */
-	size_t contentLength;			/* Client Content-Length */
+	AG_Size contentLength;			/* Client Content-Length */
 	int    rangeFrom, rangeTo;		/* Range request */
 
 	char userIP[64];			/* Client IP address */
@@ -190,13 +190,13 @@ typedef struct web_query {
 	char   head[WEB_HTTP_HEADER_MAX];	/* HTTP response headers */
 	Uint   headLine[WEB_HTTP_MAXHEADERS];	/* Line start offsets */
 	Uint   headLineCount;
-	size_t headLen;
-	Uchar *data;			  	/* Raw response entity-body */
-	size_t dataSize, dataLen;
+	AG_Size headLen;
+	Uchar *_Nullable data;			/* Raw response entity-body */
+	AG_Size dataSize, dataLen;
 
 	char lang[4];		/* Negotiated language */
-	void *sess;		/* Session object (or NULL) */
-	void *mod;		/* WEB_Module executing op (or NULL) */
+	void *_Nullable sess;	/* Session object */
+	void *_Nullable mod;	/* WEB_Module executing op */
 	int sock;		/* Client socket (or -1) */
 	char date[32];		/* HTTP time */
 } WEB_Query;
@@ -224,10 +224,10 @@ typedef struct web_control_cmd {
 /* Description of user-provided option flags */
 typedef struct web_flag_descr {
 	Uint bitmask;
-	const char *name;
-	const char *permsRD;
-	const char *permsWR;
-	const char *descr;
+	const char *_Nonnull name;
+	const char *_Nonnull permsRD;
+	const char *_Nonnull permsWR;
+	const char *_Nonnull descr;
 } WEB_FlagDescr;
 
 /* Log levels; sync with webLogLvlNames[] */
@@ -245,43 +245,47 @@ enum web_loglvl {
 	WEB_LOG_EVENT
 };
 
-typedef int (*WEB_CommandFn)(WEB_Query *q);
+typedef int (*WEB_CommandFn)(WEB_Query *_Nonnull q);
 
 /* Map an URL-specified op to a module method */
 typedef struct web_command {
-	char *name;		/* Command name */
-	WEB_CommandFn fn;	/* Function */
-	const char *type;	/* Content-type (or NULL) */
-	const char *flags;	/* Flags ("P"=public, "i"=index) */
+	char *_Nullable name;		/* Name (NULL = list terminator) */
+	_Nullable WEB_CommandFn fn;	/* Callback function */
+	const char *_Nullable type;	/* Content-type (NULL = fn-defined) */
+	const char *_Nullable flags;	/* Flags ("P"=public, "i"=index) */
 } WEB_Command;
 
 /* Map URL to operation (pre-auth) */
 typedef struct web_command_pre_auth {
-	const char *name;		/* Op name */
-	void (*fn)(WEB_Query *q);	/* Function */
-	const char *type;		/* Default Content-type or NULL */
+	const char *_Nullable name;      /* Op name (NULL = list terminator) */
+	void (*_Nullable fn)(WEB_Query *_Nonnull q);    /* Callback function */
+	const char *_Nullable type;      /* Content-Type (NULL = fn-defined) */
 } WEB_CommandPreAuth;
 
 /* Entry in per-module menu section table. */
 typedef struct web_menu_section {
-	const char *name;		/* Display name (translated) */
-	const char *cmd;		/* Target op */
+	const char *_Nullable name;  /* Display name (NULL = list terminator) */
+	const char *_Nullable cmd;   /* Target op */
 } WEB_MenuSection;
 
 /* Application server module */
 typedef struct web_module_class {
 	struct ag_object_class _inherit;
-	char *name;		 	/* Short name */
-	char *icon;		 	/* Icon HTML */
-	char *lname;		 	/* Long name (HTML ok) */
-	char *desc;		 	/* Description (HTML ok) */
-	int  (*workerInit)(void *mod, void *sess);
-	void (*workerDestroy)(void *mod);
-	int  (*sessOpen)(void *mod, void *sess);
-	void (*sessClose)(void *mod, void *sess);
-	void (*menu)(void *mod, WEB_Query *q, WEB_Variable *V);
-	WEB_MenuSection *menuSections;
-	WEB_Command *commands;
+
+	char *_Nonnull name;	 	/* Module class name */
+	char *_Nonnull icon;	 	/* Icon HTML */
+	char *_Nonnull lname;		/* Long name (HTML ok) */
+	char *_Nonnull desc;	 	/* Description (HTML ok) */
+
+	int  (*_Nullable workerInit)(void *_Nonnull, void *_Nonnull);
+	void (*_Nullable workerDestroy)(void *_Nonnull);
+	int  (*_Nullable sessOpen)(void *_Nonnull, void *_Nonnull);
+	void (*_Nullable sessClose)(void *_Nonnull, void *_Nonnull);
+	void (*_Nullable menu)(void *_Nonnull, WEB_Query *_Nonnull,
+	                       WEB_Variable *_Nonnull);
+
+	WEB_MenuSection *_Nullable menuSections;
+	WEB_Command     *_Nonnull commands;
 } WEB_ModuleClass;
 
 typedef struct web_module {
@@ -290,35 +294,44 @@ typedef struct web_module {
 
 /* Session manager interface */
 typedef struct web_session_ops {
-	const char *name;		/* Session class name */
-	size_t size;			/* Structure size */
+	const char *_Nonnull name;	/* Session class name */
+	AG_Size size;			/* Structure size */
+
 	Uint flags;
 #define WEB_SESSION_PREFORK_AUTH 0x01	/* Call auth() before fork() */
 	time_t sessTimeout;		/* Session inactivity timeout (s) */
 	time_t workerTimeout;		/* Worker inactivity timeout (s) */
 
-	void (*init)(void *);
-	void (*destroy)(void *);
-	int  (*load)(void *, AG_DataSource *);
-	void (*save)(void *, AG_DataSource *);
-	int  (*auth)(void *, const char *u, const char *p);
+	void (*_Nullable init)(void *_Nonnull);
+	void (*_Nullable destroy)(void *_Nonnull);
+	int  (*_Nullable load)(void *_Nonnull, AG_DataSource *_Nonnull);
+	void (*_Nullable save)(void *_Nonnull, AG_DataSource *_Nonnull);
+	int  (*_Nullable auth)(void *_Nullable, const char *_Nonnull,
+	                       const char *_Nonnull);
+
 	WEB_CommandPreAuth preAuthCmds[10];
-	int  (*sessOpen)(void *s, const char *user);
-	void (*sessRestored)(void *s, const char *user);
-	void (*sessClose)(void *s);
-	void (*sessExpired)(void *s);
-	void (*beginFrontQuery)(WEB_Query *q, const char *op);
-	void (*loginPage)(WEB_Query *q);
-	void (*logout)(WEB_Query *q);
-	void (*addSelectFDs)(void *s, fd_set *rd, fd_set *wr, int *maxfds);
-	void (*procSelectFDs)(void *s, fd_set *rd, fd_set *wr);
+
+	int  (*_Nullable sessOpen)(void *_Nonnull, const char *_Nonnull);
+	void (*_Nullable sessRestored)(void *_Nonnull, const char *_Nonnull);
+	void (*_Nullable sessClose)(void *_Nonnull);
+	void (*_Nullable sessExpired)(void *_Nonnull);
+	void (*_Nullable beginFrontQuery)(WEB_Query *_Nonnull,
+	                                  const char *_Nonnull);
+	void (*_Nonnull  loginPage)(WEB_Query *_Nonnull);
+	void (*_Nonnull  logout)(WEB_Query *_Nonnull);
+
+	void (*_Nullable addSelectFDs)(void *_Nonnull, fd_set *_Nullable,
+	                               fd_set *_Nullable, int *_Nonnull);
+	void (*_Nullable procSelectFDs)(void *_Nonnull, fd_set *_Nullable,
+	                                fd_set *_Nullable);
 } WEB_SessionOps;
 
 /* HTTP method */
 typedef struct web_method_ops {
-	const char *name;
-	int (*fn)(int sock, const char *url, char *header, void *rdBuf,
-	          size_t rdBufLen, const WEB_SessionOps *Sops);
+	const char *_Nonnull name;
+	int (*_Nonnull fn)(int, const char *_Nonnull, char *_Nonnull,
+	                   void *_Nonnull, AG_Size rdBufLen,
+	                   const WEB_SessionOps *_Nonnull Sops);
 } WEB_MethodOps;
 
 /* Session variable */
@@ -341,7 +354,7 @@ AG_TAILQ_HEAD(web_session_socketq, web_session_socket);
 
 /* Session Instance */
 typedef struct web_session {
-	const WEB_SessionOps *ops;		/* Operations */
+	const WEB_SessionOps *_Nonnull ops;	/* Operations */
 	char id[WEB_SESSID_MAX];		/* Session identifier */
 	AG_TAILQ_HEAD_(web_session_var) vars;	/* Session variables */
 	Uint                           nVars;
@@ -350,10 +363,11 @@ typedef struct web_session {
 	Uint nEvents;				/* Event counter */
 } WEB_Session;
 
-typedef int  (*WEB_LanguageFn)(const char *lang, void *arg);
-typedef void (*WEB_MenuFn)(WEB_Query *q, WEB_Variable *var, void *arg);
+typedef int  (*WEB_LanguageFn)(const char *_Nonnull, void *_Nullable);
+typedef void (*WEB_MenuFn)(WEB_Query *_Nonnull, WEB_Variable *_Nonnull,
+                           void *_Nullable);
 typedef void (*WEB_DestroyFn)(void);
-typedef void (*WEB_LogFn)(enum web_loglvl, const char *s);
+typedef void (*WEB_LogFn)(enum web_loglvl, const char *_Nonnull);
 
 #define WEB_TRIM_WHITESPACE(s,end)			\
 	while (isspace(*s)) { s++; }			\
@@ -365,167 +379,236 @@ typedef void (*WEB_LogFn)(enum web_loglvl, const char *s);
 		}					\
 	}
 
-typedef int (*WEB_EventFilterFn)(char *sessID, char *user, char *langCode,
-                                 const void *arg);
+typedef int (*WEB_EventFilterFn)(char *_Nonnull, char *_Nonnull, char *_Nonnull,
+                                 const void *_Nullable);
 
 __BEGIN_DECLS
-extern AG_ObjectClass webModuleClass;
-extern WEB_Module **webModules;
-extern Uint         webModuleCount;
-extern char **webLangs;
-extern Uint   webLangCount;
+extern AG_ObjectClass                  webModuleClass;
+extern WEB_Module *_Nullable *_Nonnull webModules;
+extern Uint                            webModuleCount;
+
+extern char *_Nullable *_Nullable webLangs;
+extern Uint                       webLangCount;
+
 extern char webWorkerUser[WEB_USERNAME_MAX];
 extern char webHomeOp[WEB_OPNAME_MAX];
+
 extern const WEB_MethodOps webMethods[];
 extern struct web_variableq webVars;
 
-/* Init */
+/*
+ * Initialization
+ */
 void  WEB_Init(Uint, int);
 void  WEB_Destroy(void);
 void  WEB_CheckSignals(void);
-void  WEB_RegisterModule(WEB_ModuleClass *);
-void  WEB_SetLogFile(const char *);
-void  WEB_SetLogFn(WEB_LogFn);
-void  WEB_Exit(int, const char *, ...);
-void  WEB_SetLanguageFn(WEB_LanguageFn, void *);
-void  WEB_SetMenuFn(WEB_MenuFn, void *);
-void  WEB_SetDestroyFn(WEB_DestroyFn);
+void  WEB_RegisterModule(WEB_ModuleClass *_Nonnull);
+void  WEB_SetLogFile(const char *_Nonnull);
+void  WEB_SetLogFn(_Nullable WEB_LogFn);
+void  WEB_Exit(int, const char *_Nullable, ...);
+void  WEB_SetLanguageFn(_Nullable WEB_LanguageFn, void *_Nullable);
+void  WEB_SetMenuFn(_Nullable WEB_MenuFn, void *_Nullable);
+void  WEB_SetDestroyFn(_Nullable WEB_DestroyFn);
 
-/* Query processing */
-int   WEB_WorkerMain(const WEB_SessionOps *, WEB_Query *, const char *,
-                     const char *, const char *, int [2], int);
-void  WEB_QueryLoop(const char *, const char *, const WEB_SessionOps *);
-int   WEB_ControlCommand(Uint, const WEB_ControlCmd *);
-int   WEB_ControlCommandS(Uint, const char *);
-void  WEB_QueryInit(WEB_Query *, const char *);
-void  WEB_QueryDestroy(WEB_Query *);
-int   WEB_QueryLoad(WEB_Query *, const void *, size_t);
-int   WEB_QuerySave(int, const WEB_Query *);
-int   WEB_QueryReadHTTP(WEB_Query *);
-void  WEB_BeginFrontQuery(WEB_Query *, const char *, const WEB_SessionOps *);
-void  WEB_BeginWorkerQuery(WEB_Query *);
-int   WEB_ExecWorkerQuery(WEB_Query *, const WEB_SessionOps *);
-void  WEB_FlushQuery(WEB_Query *);
-int   WEB_ProcessQuery(WEB_Query *, const WEB_SessionOps *, void *, size_t);
+/*
+ * Query processing
+ */
+int   WEB_WorkerMain(const WEB_SessionOps *_Nonnull, WEB_Query *_Nonnull,
+                     const char *_Nonnull, const char *_Nonnull,
+		     const char *_Nonnull, int [_Nonnull 2], int);
+void  WEB_QueryLoop(const char *_Nonnull,
+                    const char *_Nonnull,
+                    const WEB_SessionOps *_Nonnull);
+int   WEB_ControlCommand(Uint, const WEB_ControlCmd *_Nonnull);
+int   WEB_ControlCommandS(Uint, const char *_Nonnull);
+void  WEB_QueryInit(WEB_Query *_Nonnull, const char *_Nonnull);
+void  WEB_QueryDestroy(WEB_Query *_Nonnull);
+int   WEB_QueryLoad(WEB_Query *_Nonnull, const void *_Nonnull, AG_Size);
+int   WEB_QuerySave(int, const WEB_Query *_Nonnull);
+void  WEB_BeginFrontQuery(WEB_Query *_Nonnull, const char *_Nonnull,
+                          const WEB_SessionOps *_Nonnull);
+void  WEB_BeginWorkerQuery(WEB_Query *_Nonnull);
+int   WEB_ExecWorkerQuery(WEB_Query *_Nonnull);
+void  WEB_FlushQuery(WEB_Query *_Nonnull);
+int   WEB_ProcessQuery(WEB_Query *_Nonnull, const WEB_SessionOps *_Nonnull,
+                       void *_Nonnull, AG_Size);
+/*
+ * HTTP Headers
+ */
+void WEB_EditHeader(WEB_Query *_Nonnull, char *_Nonnull, const char *_Nonnull);
 
-/* Headers */
-void        WEB_EditHeader(WEB_Query *, char *, const char *);
-WEB_Cookie *WEB_SetCookie(WEB_Query *, const char *, const char *, ...);
-WEB_Cookie *WEB_SetCookieS(WEB_Query *, const char *, const char *);
-void        WEB_DelCookie(WEB_Query *, const char *);
+WEB_Cookie *_Nonnull WEB_SetCookie(WEB_Query *_Nonnull, const char *_Nonnull,
+                                   const char *_Nonnull, ...)
+				  FORMAT_ATTRIBUTE(printf,3,4);
 
-/* Form and argument parsing */
-int         WEB_ParseFormUrlEncoded(WEB_Query *, char *, enum web_argument_type);
-int         WEB_ReadFormData(WEB_Query *, int);
-const char *WEB_Get(WEB_Query *, const char *, size_t);
-const char *WEB_GetTrim(WEB_Query *, const char *, size_t);
-int         WEB_GetInt(WEB_Query *, const char *, int *);
-int         WEB_GetUint(WEB_Query *, const char *, Uint *);
-int         WEB_GetIntR(WEB_Query *, const char *, int *, int, int);
-int         WEB_GetUintR(WEB_Query *, const char *, Uint *, Uint, Uint);
-int         WEB_GetIntRange(WEB_Query *, const char *, int *, const char *, int *);
-int         WEB_GetUint64(WEB_Query *, const char *, Uint64 *);
-int         WEB_GetSint64(WEB_Query *, const char *, Sint64 *);
-int         WEB_GetEnum(WEB_Query *, const char *, Uint *, Uint);
-int         WEB_GetFloat(WEB_Query *, const char *, float *);
-int         WEB_GetDouble(WEB_Query *, const char *, double *);
-int         WEB_GetBool(WEB_Query *, const char *);
-void        WEB_Set(WEB_Query *, const char *, const char *, ...);
-void        WEB_SetS(WEB_Query *, const char *, const char *);
-int         WEB_Unset(WEB_Query *, const char *);
-char       *WEB_EscapeURL(WEB_Query *, const char *);
-char       *WEB_UnescapeURL(WEB_Query *, const char *);
+WEB_Cookie *_Nonnull WEB_SetCookieS(WEB_Query *_Nonnull, const char *_Nonnull,
+                                    const char *_Nonnull);
 
-/* Logging */
-void	 WEB_Log(enum web_loglvl, const char *, ...) FORMAT_ATTRIBUTE(__printf__,2,3) NONNULL_ATTRIBUTE(2);
-void	 WEB_LogS(enum web_loglvl, const char *) NONNULL_ATTRIBUTE(2);
-void	 WEB_LogErr(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogWarn(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogInfo(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogNotice(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogDebug(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogWorker(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	 WEB_LogEvent(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
+void WEB_DelCookie(WEB_Query *_Nonnull, const char *_Nonnull);
 
-/* Formatted output */
-void          WEB_Printf(WEB_Query *, const char *, ...) FORMAT_ATTRIBUTE(__printf__,2,3) NONNULL_ATTRIBUTE(2);
-void          WEB_PutJSON(WEB_Query *, const char *, const char *, ...) FORMAT_ATTRIBUTE(__printf__, 3, 4) NONNULL_ATTRIBUTE(3);
-int           WEB_PutJSON_HTML(WEB_Query *, const char *, const char *) NONNULL_ATTRIBUTE(2) NONNULL_ATTRIBUTE(3);
-void          WEB_VAR_FilterDocument(WEB_Query *, const char *, size_t);
-void          WEB_VAR_FilterFragment(WEB_Query *, const char *, size_t);
-WEB_Variable *WEB_VAR_Set(const char *, const char *, ...) FORMAT_ATTRIBUTE(__printf__, 2, 3);
-WEB_Variable *WEB_VAR_SetS(const char *, const char *);
-WEB_Variable *WEB_VAR_SetS_NODUP(const char *, char *) NONNULL_ATTRIBUTE(2);
-WEB_Variable *WEB_VAR_SetGlobal(const char *, const char *, ...) FORMAT_ATTRIBUTE(__printf__, 2, 3);
-WEB_Variable *WEB_VAR_SetGlobalS(const char *, const char *);
-void          WEB_VAR_Cat(WEB_Variable *, const char *, ...) FORMAT_ATTRIBUTE(__printf__, 2, 3) NONNULL_ATTRIBUTE(2);
-void          WEB_VAR_Unset(const char *) NONNULL_ATTRIBUTE(1);
-void          WEB_VAR_Wipe(const char *) NONNULL_ATTRIBUTE(1);
-int           WEB_VAR_Defined(const char *);
-void          WEB_VAR_Free(WEB_Variable *);
+/*
+ * Form and argument parsing
+ */
+int WEB_ParseFormUrlEncoded(WEB_Query *_Nonnull, char *_Nonnull,
+                            enum web_argument_type);
+int WEB_ReadFormData(WEB_Query *_Nonnull, int);
 
-static __inline__ void WEB_VAR_CatS(WEB_Variable *, const char *) NONNULL_ATTRIBUTE(2);
-static __inline__ void WEB_VAR_CatS_NoHTML(WEB_Variable *, const char *) NONNULL_ATTRIBUTE(2);
-static __inline__ void WEB_VAR_CatS_NODUP(WEB_Variable *, char *) NONNULL_ATTRIBUTE(2);
+const char *_Nullable WEB_Get(WEB_Query *_Nonnull, const char *_Nonnull, AG_Size);
+const char *_Nullable WEB_GetTrim(WEB_Query *_Nonnull, const char *_Nonnull, AG_Size);
 
-int	WEB_OutputHTML(WEB_Query *, const char *);
-void	WEB_OutputError(WEB_Query *, const char *);
-void	WEB_SetError(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
-void	WEB_SetErrorS(const char *) NONNULL_ATTRIBUTE(1);
-void	WEB_SetSuccess(const char *, ...) FORMAT_ATTRIBUTE(__printf__,1,2) NONNULL_ATTRIBUTE(1);
+int   WEB_GetInt(WEB_Query *_Nonnull, const char *_Nonnull, int *_Nonnull);
+int   WEB_GetUint(WEB_Query *_Nonnull, const char *_Nonnull, Uint *_Nonnull);
+int   WEB_GetIntR(WEB_Query *_Nonnull, const char *_Nonnull, int *_Nonnull,
+                  int, int);
+int   WEB_GetUintR(WEB_Query *_Nonnull, const char *_Nonnull, Uint *_Nonnull,
+                   Uint, Uint);
+int   WEB_GetIntRange(WEB_Query *_Nonnull, const char *_Nonnull, int *_Nonnull,
+                      const char *_Nonnull, int *_Nonnull);
+int   WEB_GetUint64(WEB_Query *_Nonnull, const char *_Nonnull, Uint64 *_Nonnull);
+int   WEB_GetSint64(WEB_Query *_Nonnull, const char *_Nonnull, Sint64 *_Nonnull);
 
-/* Auth */
-void    WEB_SessionInit(WEB_Session *, const WEB_SessionOps *);
-void    WEB_SessionDestroy(WEB_Session *);
-void    WEB_CloseSession(WEB_Session *);
-int     WEB_SessionLoad(void *, const char *);
-int     WEB_SessionSaveToFD(void *, int);
+int   WEB_GetEnum(WEB_Query *_Nonnull, const char *_Nonnull, Uint *_Nonnull,
+                  Uint);
+
+int   WEB_GetFloat(WEB_Query *_Nonnull, const char *_Nonnull, float *_Nonnull);
+int   WEB_GetDouble(WEB_Query *_Nonnull, const char *_Nonnull, double *_Nonnull);
+int   WEB_GetBool(WEB_Query *_Nonnull, const char *_Nonnull);
+
+void  WEB_SetS(WEB_Query *_Nonnull, const char *_Nonnull, const char *_Nullable);
+void  WEB_Set(WEB_Query *_Nonnull, const char *_Nonnull, const char *_Nullable,
+              ...);
+int   WEB_Unset(WEB_Query *_Nonnull, const char *_Nonnull);
+
+char *_Nonnull WEB_EscapeURL(WEB_Query *_Nonnull, const char *_Nonnull);
+char *_Nonnull WEB_UnescapeURL(WEB_Query *_Nonnull, const char *_Nonnull);
+
+/*
+ * Logging
+ */
+void WEB_LogS(enum web_loglvl, const char *_Nonnull);
+void WEB_Log(enum web_loglvl, const char *_Nonnull, ...)
+             FORMAT_ATTRIBUTE(__printf__,2,3);
+void WEB_LogErr(const char *_Nonnull, ...)    FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogWarn(const char *_Nonnull, ...)   FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogInfo(const char *_Nonnull, ...)   FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogNotice(const char *_Nonnull, ...) FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogDebug(const char *_Nonnull, ...)  FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogWorker(const char *_Nonnull, ...) FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_LogEvent(const char *_Nonnull, ...)  FORMAT_ATTRIBUTE(__printf__,1,2);
+
+/*
+ * Formatted output
+ */
+void WEB_Printf(WEB_Query *_Nonnull, const char *_Nonnull, ...)
+               FORMAT_ATTRIBUTE(__printf__,2,3);
+
+void WEB_PutJSON(WEB_Query  *_Nonnull,
+                 const char *_Nonnull,
+                 const char *_Nonnull, ...)
+                FORMAT_ATTRIBUTE(__printf__,3,4);
+
+int  WEB_PutJSON_HTML(WEB_Query *_Nonnull, const char *_Nonnull,
+                      const char *_Nonnull);
+
+void WEB_VAR_FilterDocument(WEB_Query *_Nonnull, const char *_Nonnull, AG_Size);
+void WEB_VAR_FilterFragment(WEB_Query *_Nonnull, const char *_Nonnull, AG_Size);
+
+WEB_Variable *_Nonnull WEB_VAR_Set(const char *_Nullable,
+                                   const char *_Nullable, ...)
+                                  FORMAT_ATTRIBUTE(__printf__, 2,3);
+
+WEB_Variable *_Nonnull WEB_VAR_SetS(const char *_Nullable,
+                                    const char *_Nullable);
+
+WEB_Variable *_Nonnull WEB_VAR_SetS_NODUP(const char *_Nullable,
+                                          char       *_Nonnull);
+
+WEB_Variable *_Nonnull WEB_VAR_SetGlobal(const char *_Nonnull,
+                                         const char *_Nullable, ...)
+                                        FORMAT_ATTRIBUTE(__printf__,2,3);
+
+WEB_Variable *_Nonnull WEB_VAR_SetGlobalS(const char *_Nonnull,
+                                          const char *_Nonnull);
+
+void WEB_VAR_Cat(WEB_Variable *_Nonnull, const char *_Nonnull, ...)
+                FORMAT_ATTRIBUTE(__printf__,2,3);
+
+void WEB_VAR_Unset(const char *_Nonnull);
+void WEB_VAR_Wipe(const char *_Nonnull);
+int  WEB_VAR_Defined(const char *_Nonnull) _Pure_Attribute;
+void WEB_VAR_Free(WEB_Variable *_Nonnull);
+
+int  WEB_OutputHTML(WEB_Query *_Nonnull, const char *_Nonnull);
+void WEB_OutputError(WEB_Query *_Nonnull, const char *_Nonnull);
+
+void WEB_SetErrorS(const char *_Nonnull);
+void WEB_SetError(const char *_Nonnull, ...) FORMAT_ATTRIBUTE(__printf__,1,2);
+void WEB_SetSuccess(const char *_Nonnull, ...) FORMAT_ATTRIBUTE(__printf__,1,2);
+
+/*
+ * Authentication and Session Management
+ */
+void    WEB_SessionInit(WEB_Session *_Nonnull, const WEB_SessionOps *_Nonnull);
+void    WEB_SessionDestroy(WEB_Session *_Nonnull);
+void    WEB_CloseSession(WEB_Session *_Nonnull);
+int     WEB_SessionLoad(void *_Nonnull, const char *_Nonnull);
+int     WEB_SessionSaveToFD(void *_Nonnull, int);
 #define WEB_SessionSave(sess) WEB_SessionSaveToFD((sess),-1)
-int     WEB_SetSV_ALL(const WEB_SessionOps *, const char *, const char *, const char *);
-void    WEB_SetSV(void *, const char *, const char *, ...);
-void    WEB_SetSV_S(void *, const char *, const char *);
+
+void  WEB_SetSV_S(void *_Nonnull, const char *_Nonnull, const char *_Nonnull);
+void  WEB_SetSV(void *_Nonnull, const char *_Nonnull, const char *_Nonnull, ...)
+               FORMAT_ATTRIBUTE(__printf__,3,4);
+
+int   WEB_SetSV_ALL(const WEB_SessionOps *_Nonnull, const char *_Nonnull,
+                    const char *_Nonnull, const char *_Nonnull);
 
 #ifdef HAVE_SETPROCTITLE
 #define WEB_SetProcTitle setproctitle
 #else
-void    WEB_SetProcTitle(const char *, ...)
+void    WEB_SetProcTitle(const char *_Nonnull, ...)
 		         FORMAT_ATTRIBUTE(__printf__,1,2);
 #endif
 
-int     WEB_PostEventS(const char *, WEB_EventFilterFn, const void *,
-	               const char *, const char *);
-int     WEB_PostEvent(const char *, WEB_EventFilterFn, const void *,
-	              const char *, const char *, ...)
-		      FORMAT_ATTRIBUTE(__printf__,5,6);
+/*
+ * Push Events
+ */
+int WEB_PostEventS(const char *_Nullable, _Nullable WEB_EventFilterFn,
+                   const void *_Nullable, const char *_Nonnull,
+                   const char *_Nonnull);
+
+int WEB_PostEvent(const char *_Nullable, _Nullable WEB_EventFilterFn,
+                  const void *_Nullable, const char *_Nonnull,
+                  const char *_Nonnull, ...)
+                 FORMAT_ATTRIBUTE(__printf__,5,6);
 
 static __inline__ void
-WEB_SetHomeOp(const char *op)
+WEB_SetHomeOp(const char *_Nonnull op)
 {
 	AG_Strlcpy(webHomeOp, op, sizeof(webHomeOp));
 }
 
 static __inline__ void
-WEB_AddLanguage(const char *lang)
+WEB_AddLanguage(const char *_Nonnull lang)
 {
 	webLangs = Realloc(webLangs, (webLangCount+1)*sizeof(char *));
 	webLangs[webLangCount++] = Strdup(lang);
 }
 
 static __inline__ void
-WEB_SessionFree(WEB_Session *S)
+WEB_SessionFree(WEB_Session *_Nonnull S)
 {
 	WEB_SessionDestroy(S);
 	free(S);
 }
 
-static __inline__ WEB_Variable *
-WEB_VAR_New(const char *key)
+static __inline__ WEB_Variable *_Nonnull
+WEB_VAR_New(const char *_Nullable key)
 {
 	return WEB_VAR_SetS(key, NULL);
 }
 
 static __inline__ void
-WEB_VAR_Grow(WEB_Variable *V, size_t len)
+WEB_VAR_Grow(WEB_Variable *_Nonnull V, AG_Size len)
 {
 	if (V->len+len >= V->bufSize) {
 		V->bufSize = V->len + len + WEB_VAR_BUF_GROW;
@@ -534,7 +617,7 @@ WEB_VAR_Grow(WEB_Variable *V, size_t len)
 }
 
 static __inline__ void
-WEB_VAR_CatC(WEB_Variable *V, const char c)
+WEB_VAR_CatC(WEB_Variable *_Nonnull V, const char c)
 {
 	WEB_VAR_Grow(V, 1);
 	V->value[V->len] = c;
@@ -543,9 +626,9 @@ WEB_VAR_CatC(WEB_Variable *V, const char c)
 }
 
 static __inline__ void
-WEB_VAR_CatS(WEB_Variable *V, const char *s)
+WEB_VAR_CatS(WEB_Variable *_Nonnull V, const char *_Nonnull s)
 {
-	size_t len;
+	AG_Size len;
 
 	len = strlen(s);
 	WEB_VAR_Grow(V, len+1);
@@ -554,7 +637,7 @@ WEB_VAR_CatS(WEB_Variable *V, const char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatS_NoHTML(WEB_Variable *V, const char *s)
+WEB_VAR_CatS_NoHTML(WEB_Variable *_Nonnull V, const char *_Nonnull s)
 {
 	const char *c;
 
@@ -569,9 +652,9 @@ WEB_VAR_CatS_NoHTML(WEB_Variable *V, const char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatS_NODUP(WEB_Variable *V, char *s)
+WEB_VAR_CatS_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 {
-	size_t len = strlen(s);
+	AG_Size len = strlen(s);
 
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len+1);
@@ -580,7 +663,7 @@ WEB_VAR_CatS_NODUP(WEB_Variable *V, char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatJS(WEB_Variable *V, const char *s)
+WEB_VAR_CatJS(WEB_Variable *_Nonnull V, const char *_Nonnull s)
 {
 	const char *c;
 
@@ -595,14 +678,14 @@ WEB_VAR_CatJS(WEB_Variable *V, const char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatJS_NODUP(WEB_Variable *V, char *s)
+WEB_VAR_CatJS_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 {
 	WEB_VAR_CatJS(V, s);
 	free(s);
 }
 
 static __inline__ void
-WEB_VAR_CatJS_NoHTML(WEB_Variable *V, const char *s)
+WEB_VAR_CatJS_NoHTML(WEB_Variable *_Nonnull V, const char *_Nonnull s)
 {
 	const char *c;
 
@@ -619,14 +702,14 @@ WEB_VAR_CatJS_NoHTML(WEB_Variable *V, const char *s)
 }
 
 static __inline__ void
-WEB_VAR_CatJS_NoHTML_NODUP(WEB_Variable *V, char *s)
+WEB_VAR_CatJS_NoHTML_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 {
 	WEB_VAR_CatJS_NoHTML(V, s);
 	free(s);
 }
 
 static __inline__ void
-WEB_VAR_CatN(WEB_Variable *V, const void *s, size_t len)
+WEB_VAR_CatN(WEB_Variable *_Nonnull V, const void *_Nonnull s, AG_Size len)
 {
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len);
@@ -635,15 +718,15 @@ WEB_VAR_CatN(WEB_Variable *V, const void *s, size_t len)
 }
 
 static __inline__ void
-WEB_VAR_CatN_NoNUL(WEB_Variable *V, const void *s, size_t len)
+WEB_VAR_CatN_NoNUL(WEB_Variable *_Nonnull V, const void *_Nonnull s, AG_Size len)
 {
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len);
 	V->len += len;
 }
 
-static __inline__ char *
-WEB_VAR_Get(const char *key)
+static __inline__ char *_Nullable _Pure_Attribute
+WEB_VAR_Get(const char *_Nonnull key)
 {
 	WEB_Variable *V;
 
@@ -656,8 +739,8 @@ WEB_VAR_Get(const char *key)
 }
 
 /* Set an integer range (and collapse to a single integer if min=max). */
-static __inline__ WEB_Variable *
-WEB_VAR_SetIntRange(const char *key, int min, int max)
+static __inline__ WEB_Variable *_Nonnull
+WEB_VAR_SetIntRange(const char *_Nullable key, int min, int max)
 {
 	WEB_Variable *V;
 
@@ -670,8 +753,8 @@ WEB_VAR_SetIntRange(const char *key, int min, int max)
 }
 
 /* Set a float range (and collapse to a single number if min=max). */
-static __inline__ WEB_Variable *
-WEB_VAR_SetFloatRange(const char *key, float min, float max)
+static __inline__ WEB_Variable *_Nonnull
+WEB_VAR_SetFloatRange(const char *_Nullable key, float min, float max)
 {
 	WEB_Variable *V;
 
@@ -684,8 +767,8 @@ WEB_VAR_SetFloatRange(const char *key, float min, float max)
 }
 
 /* Set a double range (and collapse to a single number if min=max). */
-static __inline__ WEB_Variable *
-WEB_VAR_SetDoubleRange(const char *key, double min, double max)
+static __inline__ WEB_Variable *_Nonnull
+WEB_VAR_SetDoubleRange(const char *_Nullable key, double min, double max)
 {
 	WEB_Variable *V;
 
@@ -698,8 +781,8 @@ WEB_VAR_SetDoubleRange(const char *key, double min, double max)
 }
 
 /* Get a pointer to the named argument. Return NULL if undefined. */
-static __inline__ const WEB_Argument *
-WEB_GetArgument(const WEB_Query *q, const char *key)
+static __inline__ const WEB_Argument *_Nullable _Pure_Attribute
+WEB_GetArgument(const WEB_Query *_Nonnull q, const char *_Nonnull key)
 {
 	const WEB_Argument *arg;
 
@@ -707,18 +790,15 @@ WEB_GetArgument(const WEB_Query *q, const char *key)
 		if (strcmp(arg->key, key) == 0)
 			break;
 	}
-	if (arg == NULL) {
-		AG_SetError("Argument \"%s\" is missing", key);
-	}
 	return (arg);
 }
 
 /* Standard read loop. Read up to len bytes while checking signals. */
 static __inline__ int
-WEB_SYS_Read(int fd, void *data, size_t len)
+WEB_SYS_Read(int fd, void *_Nonnull data, AG_Size len)
 {
-	size_t nread;
-	ssize_t rv;
+	AG_Size nread;
+	AG_Size rv;
 	
 	for (nread=0; nread < len; ) {
 		rv = read(fd, data+nread, len-nread);
@@ -741,10 +821,10 @@ WEB_SYS_Read(int fd, void *data, size_t len)
 
 /* Standard write loop. Write up to len bytes while checking signals. */
 static __inline__ int
-WEB_SYS_Write(int fd, const void *data, size_t len)
+WEB_SYS_Write(int fd, const void *_Nonnull data, AG_Size len)
 {
-	size_t nwrote;
-	ssize_t rv;
+	AG_Size nwrote;
+	AG_Size rv;
 
 	for (nwrote = 0; nwrote < len; ) {
 		rv = write(fd, data+nwrote, len-nwrote);
@@ -766,9 +846,9 @@ WEB_SYS_Write(int fd, const void *data, size_t len)
 }
 
 static __inline__ void
-WEB_ClearHeaders(WEB_Query *q, const char *status)
+WEB_ClearHeaders(WEB_Query *_Nonnull q, const char *_Nonnull status)
 {
-	size_t len = strlen(status);
+	AG_Size len = strlen(status);
 
 	memcpy(q->head, status, len+1);
 	q->headLen = len;
@@ -777,11 +857,12 @@ WEB_ClearHeaders(WEB_Query *q, const char *status)
 }
 
 static __inline__ int
-WEB_WriteHeaders(int fd, WEB_Query *q)
+WEB_WriteHeaders(int fd, WEB_Query *_Nonnull q)
 {
 	q->head[q->headLen  ] = '\r';
 	q->head[q->headLen+1] = '\n';
 	q->head[q->headLen+2] = '\0';
+
 	return WEB_SYS_Write(fd, q->head, q->headLen+2);
 }
 
@@ -789,7 +870,7 @@ WEB_WriteHeaders(int fd, WEB_Query *q)
 
 /* Add data to the query response buffer. */
 static __inline__ void
-WEB_Write(WEB_Query *q, const void *data, size_t len)
+WEB_Write(WEB_Query *_Nonnull q, const void *_Nonnull data, AG_Size len)
 {
 	if (q->dataLen+len > q->dataSize) {
 		q->dataSize += len+WEB_DATA_BUFSIZE;
@@ -801,7 +882,7 @@ WEB_Write(WEB_Query *q, const void *data, size_t len)
 
 /* Recalculate header line offsets. */
 static void
-WEB_UpdateHeaderLines(WEB_Query *q)
+WEB_UpdateHeaderLines(WEB_Query *_Nonnull q)
 {
 	char *c;
 
@@ -818,11 +899,11 @@ WEB_UpdateHeaderLines(WEB_Query *q)
 
 /* Prepare to return the specified HTTP response code. */
 static __inline__ void
-WEB_SetCode(WEB_Query *q, const char *code)
+WEB_SetCode(WEB_Query *_Nonnull q, const char *_Nonnull code)
 {
 	char httpCode[64];
 	char *head = q->head, *cEnd;
-	size_t oldLen, newLen;
+	AG_Size oldLen, newLen;
 
 	AG_Strlcpy(httpCode, "HTTP/1.0 ", sizeof(httpCode));
 	AG_Strlcat(httpCode, code, sizeof(httpCode));
@@ -846,11 +927,12 @@ WEB_SetCode(WEB_Query *q, const char *code)
  * Existing headers are ignored. Duplicate headers are allowed.
  */
 static __inline__ void
-WEB_AppendHeaderS(WEB_Query *q, const char *key, const char *value)
+WEB_AppendHeaderS(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull value)
 {
 	char newLine[WEB_HTTP_PER_HEADER_MAX];
 	char *cEnd;
-	size_t newLen;
+	AG_Size newLen;
 
 	if (q->headLineCount+1 >= WEB_HTTP_MAXHEADERS) {
 		AG_FatalError("Too many headers");
@@ -874,9 +956,10 @@ WEB_AppendHeaderS(WEB_Query *q, const char *key, const char *value)
  * Existing headers are updated.
  */
 static __inline__ void
-WEB_SetHeaderS(WEB_Query *q, const char *key, const char *value)
+WEB_SetHeaderS(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull value)
 {
-	size_t keyLen = strlen(key);
+	AG_Size keyLen = strlen(key);
 	char *cLine;
 	Uint i;
 
@@ -895,10 +978,12 @@ WEB_SetHeaderS(WEB_Query *q, const char *key, const char *value)
 }
 
 static __inline__ void
-WEB_SetHeader(WEB_Query *q, const char *key, const char *fmt, ...)
+WEB_SetHeader(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull fmt, ...)
 {
 	char value[WEB_HTTP_PER_HEADER_MAX];
 	va_list ap;
+
 	va_start(ap, fmt);
 	vsnprintf(value, sizeof(value), fmt, ap);
 	va_end(ap);
@@ -906,10 +991,12 @@ WEB_SetHeader(WEB_Query *q, const char *key, const char *fmt, ...)
 }
 
 static __inline__ void
-WEB_AppendHeader(WEB_Query *q, const char *key, const char *fmt, ...)
+WEB_AppendHeader(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull fmt, ...)
 {
 	char value[WEB_HTTP_PER_HEADER_MAX];
 	va_list ap;
+
 	va_start(ap, fmt);
 	vsnprintf(value, sizeof(value), fmt, ap);
 	va_end(ap);
@@ -918,7 +1005,7 @@ WEB_AppendHeader(WEB_Query *q, const char *key, const char *fmt, ...)
 
 /* Set the preferred compression level. */
 static __inline__ void
-WEB_SetCompression(WEB_Query *q, int enable, int level)
+WEB_SetCompression(WEB_Query *_Nonnull q, int enable, int level)
 {
 	if (enable) {
 		q->flags &= ~(WEB_QUERY_NOCOMPRESSION);
@@ -929,17 +1016,18 @@ WEB_SetCompression(WEB_Query *q, int enable, int level)
 }
 
 static __inline__ void
-WEB_PutC(WEB_Query *q, char c)
+WEB_PutC(WEB_Query *_Nonnull q, char c)
 {
 	WEB_Write(q, &c, 1);
 }
 static __inline__ void
-WEB_PutS(WEB_Query *q, const char *s)
+WEB_PutS(WEB_Query *_Nonnull q, const char *_Nonnull s)
 {
 	WEB_Write(q, s, strlen(s));
 }
 static __inline__ void
-WEB_PutJSON_S(WEB_Query *q, const char *key, const char *val)
+WEB_PutJSON_S(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull val)
 {
 	const char *c;
 
@@ -957,7 +1045,8 @@ WEB_PutJSON_S(WEB_Query *q, const char *key, const char *val)
 	WEB_PutS(q, "\",");
 }
 static __inline__ void
-WEB_PutJSON_NoHTML_S(WEB_Query *q, const char *key, const char *val)
+WEB_PutJSON_NoHTML_S(WEB_Query *_Nonnull q, const char *_Nonnull key,
+    const char *_Nonnull val)
 {
 	const char *c;
 
@@ -976,9 +1065,9 @@ WEB_PutJSON_NoHTML_S(WEB_Query *q, const char *key, const char *val)
 	WEB_PutS(q, "\",");
 }
 
-/* Lookup a cookie by name. */
-static __inline__ char *
-WEB_GetCookie(WEB_Query *q, const char *name)
+/* Return the named cookie's value */
+static __inline__ char *_Nullable _Pure_Attribute
+WEB_GetCookie(WEB_Query *_Nonnull q, const char *_Nonnull name)
 {
 	WEB_Cookie *ck;
 
@@ -988,8 +1077,10 @@ WEB_GetCookie(WEB_Query *q, const char *name)
 	}
 	return (NULL);
 }
-static __inline__ WEB_Cookie *
-WEB_LookupCookie(WEB_Query *q, const char *name)
+
+/* Return a pointer to the named cookie */
+static __inline__ WEB_Cookie *_Nullable _Pure_Attribute
+WEB_LookupCookie(WEB_Query *_Nonnull q, const char *_Nonnull name)
 {
 	WEB_Cookie *ck;
 
@@ -1001,8 +1092,8 @@ WEB_LookupCookie(WEB_Query *q, const char *name)
 }
 
 /* Return the value of a session variable (or "" if it doesn't exists) */
-static __inline__ const char *
-WEB_GetSV(void *sess, const char *key)
+static __inline__ const char *_Nonnull _Pure_Attribute
+WEB_GetSV(void *_Nonnull sess, const char *_Nonnull key)
 {
 	WEB_Session *S = sess;
 	WEB_SessionVar *SV;
