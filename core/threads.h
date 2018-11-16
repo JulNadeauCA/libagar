@@ -264,9 +264,24 @@ typedef int   AG_ThreadKey;
 #define AG_CondWait(cd,m)
 #define AG_CondTimedWait(cd,m,t)
 
-static __inline__ int AG_MutexTryInit(AG_Mutex *mu) { return (0); }
-static __inline__ int AG_MutexTryInitRecursive(AG_Mutex *mu) { return (0); }
-static __inline__ int AG_MutexTryLock(AG_Mutex *mu) { return (0); }
+static __inline__ int AG_MutexTryInit(AG_Mutex *mu) {
+#ifdef __CC65__
+	if (mu != NULL) { /* Unused */ }
+#endif
+	return (0);
+}
+static __inline__ int AG_MutexTryInitRecursive(AG_Mutex *mu) {
+#ifdef __CC65__
+	if (mu != NULL) { /* Unused */ }
+#endif
+	return (0);
+}
+static __inline__ int AG_MutexTryLock(AG_Mutex *mu) {
+#ifdef __CC65__
+	if (mu != NULL) { /* Unused */ }
+#endif
+	return (0);
+}
 
 #undef HAVE_PTHREADS
 #endif /* AG_THREADS */
