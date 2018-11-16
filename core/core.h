@@ -74,6 +74,7 @@
 #endif
 
 #include <agar/core/data_source.h>
+#include <agar/core/byteswap.h>
 #include <agar/core/load_integral.h>
 #include <agar/core/load_real.h>
 #include <agar/core/load_string.h>
