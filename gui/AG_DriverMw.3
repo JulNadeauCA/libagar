@@ -83,9 +83,6 @@ typedef struct ag_driver_mw_class {
 	void (*preResizeCallback)(AG_Window *w);
 	void (*postResizeCallback)(AG_Window *w, AG_SizeAlloc *a);
 
-	/* Capture window framebuffer contents */
-	int (*captureWindow)(AG_Window *w, AG_Surface **s);
-
 	/* Configure window parameters */
 	int  (*setBorderWidth)(AG_Window *w, Uint w);
 	int  (*setWindowCaption)(AG_Window *w, const char *s);
@@ -163,15 +160,9 @@ as the
 .Fa a
 argument).
 .Pp
-The
-.Fn captureWindow
-operation captures the window's visual rendering to an
-.Xr AG_Surface 3 ,
-returning 0 on success or -1 on failure.
-.Pp
 .Fn setBorderWidth
 configures a window border size in pixels, returning 0 on success or -1
-if the operation is unsupported or an error occured.
+if the operation is unsupported or an error has occurred.
 .Pp
 .Fn setWindowCaption
 sets the associated window caption text, if supported by the window system.

@@ -260,8 +260,8 @@ can be used in polled labels (and is also recognized by
 For more details on custom format specifiers, refer to
 .Xr AG_String 3 .
 .Bd -literal -offset indent
-size_t
-PrintMyVector(AG_FmtString *fs, char *dst, size_t dstSize)
+AG_Size
+PrintMyVector(AG_FmtString *fs, char *dst, AG_Size dstSize)
 {
 	struct my_vector *my = AG_LABEL_ARG(fs);
 	return AG_Snprintf(dst, dstSize, "[%f,%f]", my->x, my->y);
