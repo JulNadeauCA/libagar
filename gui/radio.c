@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -226,16 +226,18 @@ static void
 Draw(void *obj)
 {
 	AG_Radio *rad = obj;
-	int i, val;
-	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
+	int xPadding = rad->xPadding;
+	int radius = rad->radius, radius_2 = (radius >> 1);
+	int x = xPadding + (rad->radius << 1) + rad->xSpacing;
 	int y = rad->yPadding;
+	int itemHeight = rad->itemHeight, itemHeight_2 = (itemHeight >> 1);
+	int ySpacing_2 = (rad->ySpacing >> 1);
+	int value, i;
 	
-	AG_DrawBox(rad,
-	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)),
-	    -1,
+	AG_DrawBox(rad, AG_RECT(0,0,WIDTH(rad),HEIGHT(rad)), -1,
 	    WCOLOR(rad,AG_COLOR));
 	
-	val = AG_GetInt(rad, "value");
+	value = AG_GetInt(rad, "value");
 	AG_PushClipRect(rad, rad->r);
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
@@ -246,39 +248,29 @@ Draw(void *obj)
 			    AG_TextRender(ri->text));
 		}
 		if (i == rad->oversel) {
-			AG_Rect r = AG_RECT(rad->xPadding, y,
-			    WIDGET(rad)->w - rad->xPadding*2,
-			    rad->itemHeight);
-			AG_DrawRectBlended(rad, r,
-			    WCOLOR_HOV(rad,0),
+			AG_Rect r = AG_RECT(xPadding, y,
+			                    WIDGET(rad)->w - (xPadding << 1),
+					    itemHeight);
+			AG_DrawRectBlended(rad, r, WCOLOR_HOV(rad,0),
 			    AG_ALPHA_SRC);
 		}
 
-		xc = rad->xPadding + rad->radius;
-		yc = y + rad->itemHeight/2;
+		xc = xPadding + radius;
+		yc = y + itemHeight_2;
 
-		AG_DrawCircleFilled(rad, xc, yc, rad->radius,
-		    WCOLOR(rad,SHAPE_COLOR));
-		AG_DrawCircle(rad, xc, yc, rad->radius,
-		    WCOLOR(rad,LINE_COLOR));
+		AG_DrawCircleFilled(rad, xc, yc, radius, WCOLOR(rad,SHAPE_COLOR));
+		AG_DrawCircle(rad, xc, yc, radius, WCOLOR(rad,LINE_COLOR));
 
-		if (i == val) {
-			AG_DrawCircleFilled(rad, xc, yc,
-			    rad->radius/2,
+		if (i == value) {
+			AG_DrawCircleFilled(rad, xc, yc, radius_2,
 			    WCOLOR_SEL(rad,SHAPE_COLOR));
 		}
 		if (i == rad->oversel) {
-			AG_DrawCircle(rad, xc, yc,
-			    rad->radius - 2,
+			AG_DrawCircle(rad, xc, yc, radius-2,
 			    WCOLOR_HOV(rad,LINE_COLOR));
 		}
-
-		if (ri->surface != -1) {
-			AG_WidgetBlitSurface(rad, ri->surface,
-			    x,
-			    y + rad->ySpacing/2);
-		}
-		y += rad->itemHeight;
+		AG_WidgetBlitSurface(rad, ri->surface, x, y+ySpacing_2);
+		y += itemHeight;
 	}
 	AG_PopClipRect(rad);
 }
@@ -311,8 +303,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Radio *rad = obj;
 	
-	if (a->w < rad->radius*2 ||
-	    a->h < rad->radius*2) {
+	if (a->w < rad->radius) {
 		return (-1);
 	}
 	rad->r.x = rad->xPadding;
