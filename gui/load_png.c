@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Support for reading image files in PNG format via libpng.
+ * Loader for PNG images via libpng.
  */
 
 #include <agar/core/core.h>
@@ -40,7 +40,7 @@
 #endif
 #include <png.h>
 
-/* Load a surface from a PNG image file. */
+/* Load a single surface from a PNG file. */
 AG_Surface *
 AG_SurfaceFromPNG(const char *path)
 {
@@ -59,11 +59,68 @@ AG_SurfaceFromPNG(const char *path)
 	return (s);
 }
 
+/*
+ * Construct an animated surface from a series of PNG files.
+ *
+ * The pattern must be a printf(3)-like format string for a single integer
+ * argument for the frame number. E.g., "%08d.jpg" loads "00000001.jpg",
+ * "00000002.jpg", etc.
+ *
+ * first is the index of the first frame. last is the last frame or -1.
+ * When last != -1, fail if a frame is not found (otherwise, keep loading
+ * frames as long as the files are found and break out successfully).
+ */
+AG_Surface *
+AG_SurfaceFromPNGs(const char *pattern, int first, int last,
+    AG_AnimDispose afDispose, Uint afDelay, Uint afFlags)
+{
+	AG_Surface *Sanim;
+	char path[AG_PATHNAME_MAX];
+	int i;
+
+	for (i = first; ; i++) {
+		AG_Surface *Sframe;
+
+		if (last != -1 && i == last)
+			break;
+
+		Snprintf(path, sizeof(path), pattern, i);
+		if (!AG_FileExists(path)) {
+			if (i == 0) {
+				continue;
+			} else {
+				if (last != -1) {
+					goto fail;
+				}
+				break;
+			}
+		}
+		if ((Sframe = AG_SurfaceFromPNG(path)) == NULL) {
+			break;
+		}
+		if (Sanim == NULL) {
+			Sanim = AG_SurfaceNew(&Sframe->format, Sframe->w, Sframe->h,
+			    (Sframe->flags & (AG_SURFACE_COLORKEY|AG_SURFACE_ALPHA))
+			    | AG_SURFACE_ANIMATED);
+		}
+		if (AG_SurfaceAddFrame(Sanim, Sframe, NULL,
+		    afDispose, afDelay, afFlags) == -1) {
+			goto fail;
+		}
+		AG_SurfaceFree(Sframe);
+	}
+	return (Sanim);
+fail:
+	AG_SurfaceFree(Sanim);
+	return (NULL);
+}
+
 static void
 AG_PNG_ReadData(png_structp png, png_bytep buf, png_size_t size)
 {
-	AG_DataSource *ds = (AG_DataSource*)png_get_io_ptr(png);
-	AG_Read(ds, buf, size);
+	AG_DataSource *ds = (AG_DataSource *)png_get_io_ptr(png);
+
+	(void)AG_Read(ds, buf, size);
 }
 
 /* Load a surface from PNG image data. */
@@ -77,18 +134,16 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	int depth, colorType, intlaceType, channels, start, row;
 	Uint32 Rmask = 0, Gmask = 0, Bmask = 0, Amask = 0;
 	png_bytep *volatile pData = NULL;
-	volatile int colorKey = -1;
-	png_color_16 *transColor;
 
 	start = AG_Tell(ds);
 
 	if ((png = png_create_read_struct(PNG_LIBPNG_VER_STRING,
 	    NULL, NULL, NULL)) == NULL) {
-		AG_SetError("Out of memory (libpng)");
+		AG_SetErrorS("Out of memory (libpng)");
 		goto fail;
 	}
 	if ((info = png_create_info_struct(png)) == NULL) {
-		AG_SetError("png_create_info_struct() failed");
+		AG_SetErrorS("png_create_info_struct() failed");
 		goto fail;
 	}
 
@@ -107,12 +162,21 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 
 	/* Read transparency information. */
 	if (png_get_valid(png, info, PNG_INFO_tRNS)) {
-	        int num_trans;
+		png_color_16 *transColor;
 		Uint8 *trans;
-		png_get_tRNS(png, info, &trans, &num_trans, &transColor);
+		AG_Pixel colorkey;
+	        int nTrans;
+
+		png_get_tRNS(png, info, &trans, &nTrans, &transColor);
+		colorkey = AG_MapPixel_RGB16(&su->format,
+		    transColor->red, 
+		    transColor->green,
+		    transColor->blue);
+	        AG_SurfaceSetColorKey(su, AG_SURFACE_COLORKEY, colorkey);
 	}
 
 	/* Expand grayscale to 24-bit RGB */
+	/* XXX TODO grayscale */
 	if (colorType == PNG_COLOR_TYPE_GRAY_ALPHA)
 		png_set_gray_to_rgb(png);
 
@@ -146,20 +210,12 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	    Rmask, Gmask, Bmask, Amask)) == NULL)
 		goto fail;
 
-	if (colorKey != -1) {
-		colorKey = AG_MapPixelRGB(su->format,
-		    (Uint8)transColor->red,
-		    (Uint8)transColor->green,
-		    (Uint8)transColor->blue);
-	        AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY, colorKey);
-	}
-
 	/* Read image data */
 	if ((pData = TryMalloc(sizeof(png_bytep)*height)) == NULL) {
 		goto fail;
 	}
 	for (row = 0; row < (int)height; row++) {
-		pData[row] = (png_bytep)(Uint8 *)su->pixels + row*su->pitch;
+		pData[row] = (png_bytep)su->pixels + row*su->pitch;
 	}
 	png_read_image(png, pData);
 
@@ -167,7 +223,7 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		png_destroy_read_struct(&png,
 		    info ? &info : (png_infopp)0, (png_infopp)0);
 	}
-	Free(pData);
+	free(pData);
 	return (su); 
 fail:
 	if (png != NULL) {
@@ -178,22 +234,22 @@ fail:
 	if (su) {
 		AG_SurfaceFree(su);
 	}
-	AG_Seek(ds, start, AG_SEEK_SET);
 	return (NULL);
 }
 
-/* Save a surface to a PNG image file. */
+/* Export a surface to a PNG image file. */
 int
-AG_SurfaceExportPNG(const AG_Surface *su, const char *path, Uint flags)
+AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 {
 	FILE *f;
 	png_structp png;
 	png_infop info;
-	int pngDepth, pngType;
-	png_colorp pngPal = NULL;
+	int depth, BytesPerPixel, SrcBytesPerPixel, pngType;
+	png_colorp plte = NULL;
 	png_color_8 sig_bit;
-	png_byte ** rows = NULL;
-	int i, x, y;
+	png_byte **rows = NULL, *row;
+	AG_Palette *pal = S->format.palette;
+	int i, x,y, w,h;
 	Uint8 *pSrc;
 
 	if ((f = fopen(path, "wb")) == NULL) {
@@ -202,151 +258,235 @@ AG_SurfaceExportPNG(const AG_Surface *su, const char *path, Uint flags)
 	}
 	if ((png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 	    NULL, NULL, NULL)) == NULL) {
-		AG_SetError("png_create_write_struct() failed");
+		AG_SetErrorS("png_create_write_struct() failed");
 		fclose(f);
 		return (-1);
 	}
 	if ((info = png_create_info_struct(png)) == NULL) {
-		AG_SetError("png_create_info_struct() failed");
+		AG_SetErrorS("png_create_info_struct() failed");
 		goto fail;
 	}
 
 	if (setjmp(png_jmpbuf(png))) {
-		AG_SetError("png_init_io() failed");
+		AG_SetErrorS("png_init_io() failed");
 		goto fail;
 	}
 	png_init_io(png, f);
 
-	if (su->format->palette != NULL) {
+	if (S->format.mode == AG_SURFACE_INDEXED) {
 		pngType = PNG_COLOR_TYPE_PALETTE;
-
-		if (su->format->palette->nColors > 16)     { pngDepth = 8; }
-		else if (su->format->palette->nColors > 4) { pngDepth = 4; }
-		else if (su->format->palette->nColors > 2) { pngDepth = 2; }
-		else					   { pngDepth = 1; }
+#ifdef AG_DEBUG
+		if (pal == NULL) { AG_FatalError("pal=NULL"); }
+#endif
+		if (S->format.BitsPerPixel > 8) {
+			AG_SetErrorS("Indexed PNG images must be <= 8 bpp");
+			goto fail;
+		}
+		if (pal->nColors > 16)     { depth = 8; }
+		else if (pal->nColors > 4) { depth = 4; }
+		else if (pal->nColors > 2) { depth = 2; }
+		else                       { depth = 1; }
 	} else {
-		if (su->format->Amask != 0) {
+		if (S->format.Amask != 0) {
 			pngType = PNG_COLOR_TYPE_RGB_ALPHA;
 		} else {
 			pngType = PNG_COLOR_TYPE_RGB;
+		
 		}
-		pngDepth = 8;
+		if (S->format.BitsPerPixel == 64) {
+#if AG_MODEL == AG_LARGE
+			depth = 16;
+#else
+			AG_SetErrorS("64-bpp mode requires AG_LARGE");
+			goto fail;
+#endif
+		} else {
+			depth = 8;
+		}
 	}
+	w = S->w;
+	h = S->h;
+
 	if (setjmp(png_jmpbuf(png))) {
-		AG_SetError("png_write_info() failed");
+		AG_SetErrorS("png_write_info() failed");
 		goto fail;
 	}
-
 	png_set_IHDR(png, info,
-	    su->w, su->h, pngDepth, pngType,
+	    w, h, depth, pngType,
 	    (flags & AG_EXPORT_PNG_ADAM7) ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE,
 	    PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-	/* Write PLTE chunk if color-index mode. */
-	if (pngType == PNG_COLOR_TYPE_PALETTE) {
-		AG_Palette *pal = su->format->palette;
+	if ((rows = png_malloc(png, h*sizeof(png_byte *))) == NULL) {
+		AG_SetErrorS("png_malloc rows");
+		goto fail;
+	}
+	/* TODO: zero-copy optimized cases (i.e., surfaces in RGBA or RGB). */
+	
+	BytesPerPixel = (depth >> 3) * sizeof(png_byte);
+	SrcBytesPerPixel = S->format.BytesPerPixel;
 
-		pngPal = (png_colorp)TryMalloc(pal->nColors*sizeof(png_color));
-		if (pngPal == NULL) {
+	switch (pngType) {
+	case PNG_COLOR_TYPE_RGB_ALPHA:
+		Debug(NULL, "Saving %ux%u %dbpp surface to %s [RGBA]\n",
+		    w,h, S->format.BitsPerPixel, path);
+		for (y=0, pSrc=S->pixels; y < h; y++) {
+			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
+				goto fail_row;
+			}
+			rows[y] = row;
+			switch (depth) {
+			case 16:
+				for (x = 0; x < w; x++) {
+					AG_GetColor_RGBA8(
+					    AG_SurfaceGet_At(S,pSrc),
+                                            &S->format,
+					    &row[0],	/* <- r */
+					    &row[2],	/* <- g */
+					    &row[4],	/* <- b */
+					    &row[6]);	/* <- a */
+					row += 8;
+					pSrc += SrcBytesPerPixel;
+				}
+				break;
+			case 32:
+			default:
+				for (x = 0; x < w; x++) {
+					AG_GetColor_RGBA8(
+					    AG_SurfaceGet_At(S,pSrc),
+					    &S->format,
+					    &row[0],	/* <- r */
+					    &row[1],	/* <- g */
+					    &row[2],	/* <- b */
+					    &row[3]);	/* <- a */
+					row += 4;
+					pSrc += SrcBytesPerPixel;
+				}
+			}
+			pSrc += S->padding;
+		}
+		break;
+	case PNG_COLOR_TYPE_RGB:
+		Debug(NULL, "Saving %ux%u %dbpp surface to %s [RGB]\n",
+		    w,h, S->format.BitsPerPixel, path);
+		for (y = 0; y < h; y++) {
+			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
+				goto fail_row;
+			}
+			rows[y] = row;
+			switch (depth) {
+			case 16:
+				for (x = 0; x < w; x++) {
+					AG_GetColor_RGB8(
+					    AG_SurfaceGet_At(S,pSrc),
+					    &S->format,
+					    &row[0],	/* <- r */
+					    &row[2],	/* <- g */
+					    &row[4]);	/* <- b */
+					row += 6;
+					pSrc += SrcBytesPerPixel;
+				}
+				break;
+			case 32:
+			default:
+				for (x = 0; x < w; x++) {
+					AG_GetColor_RGB8(
+					    AG_SurfaceGet_At(S,pSrc),
+					    &S->format,
+					    &row[0],	/* <- r */
+					    &row[1],	/* <- g */
+					    &row[2]);	/* <- b */
+					row += 3;
+					pSrc += SrcBytesPerPixel;
+				}
+				break;
+			}
+			pSrc += S->padding;
+		}
+		break;
+	case PNG_COLOR_TYPE_PALETTE:				/* Use PLTE */
+		Debug(NULL, "Saving %ux%u %dbpp surface to %s [%u-color PLTE]\n",
+		    w,h, S->format.BitsPerPixel, path, pal->nColors);
+		plte = (png_colorp)TryMalloc(pal->nColors * sizeof(png_color));
+		if (plte == NULL) {
 			goto fail;
 		}
 		for (i = 0; i < pal->nColors; i++) {
-			pngPal[i].red = pal->colors[i].r;
-			pngPal[i].green = pal->colors[i].g;
-			pngPal[i].blue = pal->colors[i].b;
+			plte[i].red   = pal->colors[i].r;
+			plte[i].green = pal->colors[i].g;
+			plte[i].blue  = pal->colors[i].b;
 		}
-		png_set_PLTE(png, info, pngPal, pal->nColors);
-	}
+		png_set_PLTE(png, info, plte, pal->nColors);
 
-	if ((rows = png_malloc(png, su->h*sizeof(png_byte *))) == NULL) {
-		AG_SetError("png_malloc rows");
-		goto fail;
-	}
-	pSrc = (Uint8 *)su->pixels;
-	if (pngType == PNG_COLOR_TYPE_RGB_ALPHA) {
-		for (y = 0; y < su->h; y++) {
+		for (y = 0; y < h; y++) {
 			png_byte *row;
-		
-			if ((row = png_malloc(png, su->w*4)) == NULL) {
-				for (y--; y >= 0; y--) { png_free(png, rows[y]); }
-				png_free(png, rows);
-				AG_SetError("png_malloc row");
-				goto fail;
+			size_t len;
+
+			if (S->format.BitsPerPixel < 8) {
+				len = w*sizeof(png_byte)/S->format.PixelsPerByte; 
+				/* TODO zero copy */
+				if ((row = png_malloc(png, len)) == NULL) {
+					for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+					png_free(png, rows);
+					AG_SetErrorS("png_malloc row");
+					goto fail;
+				}
+				rows[y] = row;
+				memcpy(row, pSrc, len);
+				pSrc += len;
+			} else {
+				/* TODO zero copy */
+				len = w*sizeof(png_byte);
+				row = png_malloc(png, w*sizeof(png_byte));
+				if (row == NULL) {
+					for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+					png_free(png, rows);
+					AG_SetErrorS("png_malloc row");
+					goto fail;
+				}
+				rows[y] = row;
+				memcpy(row, pSrc, w*sizeof(png_byte));
+				pSrc += w*sizeof(png_byte);
 			}
-			rows[y] = row;
-			for (x = 0; x < su->w; x++) {
-				AG_Color C;
-	
-				C = AG_GetColorRGBA(AG_GET_PIXEL(su,pSrc),
-				    su->format);
-				*row++ = C.r;
-				*row++ = C.g;
-				*row++ = C.b;
-				*row++ = C.a;
-				pSrc += su->format->BytesPerPixel;
-			}
-			pSrc += su->padding;
 		}
-	} else {
-		for (y = 0; y < su->h; y++) {
-			png_byte *row;
-		
-			if ((row = png_malloc(png, su->w*4)) == NULL) {
-				for (y--; y >= 0; y--) { png_free(png, rows[y]); }
-				png_free(png, rows);
-				AG_SetError("png_malloc row");
-				goto fail;
-			}
-			rows[y] = row;
-			for (x = 0; x < su->w; x++) {
-				AG_Color C;
-	
-				C = AG_GetColorRGB(AG_GET_PIXEL(su,pSrc),
-				    su->format);
-				*row++ = C.r;
-				*row++ = C.g;
-				*row++ = C.b;
-				pSrc += su->format->BytesPerPixel;
-			}
-			for (x = 0; x < su->w; x++) {
-				*row++ = 0;
-			}
-			pSrc += su->padding;
-		}
+		break;
 	}
 
 	png_write_info(png, info);
 
 	if (pngType & PNG_COLOR_MASK_COLOR) {
-		sig_bit.red = pngDepth;
-		sig_bit.green = pngDepth;
-		sig_bit.blue = pngDepth;
+		sig_bit.red   = S->format.BitsPerPixel;
+		sig_bit.green = S->format.BitsPerPixel;
+		sig_bit.blue  = S->format.BitsPerPixel;
 	} else {
-		sig_bit.gray = pngDepth;
+		sig_bit.gray  = S->format.BitsPerPixel;
 	}
 	if (pngType & PNG_COLOR_MASK_ALPHA) {
-		sig_bit.alpha = pngDepth;
+		sig_bit.alpha = S->format.BitsPerPixel;
 	}
 	png_set_sBIT(png, info, &sig_bit);
-	
+
 	if (setjmp(png_jmpbuf(png))) {
-		AG_SetError("png_write_image() failed");
-		for (y = 0; y < su->h; y++) { png_free(png, rows[y]); }
+		AG_SetErrorS("png_write_image() failed");
+		for (y = 0; y < h; y++) { png_free(png, rows[y]); }
 		png_free(png, rows);
 		goto fail;
 	}
 	png_write_image(png, rows);
 	png_write_end(png, info);
 
-	for (y = 0; y < su->h; y++) { png_free(png, rows[y]); }
+	for (y = 0; y < h; y++) { png_free(png, rows[y]); }
 	png_free(png, rows);
 	png_destroy_write_struct(&png, &info);
-	Free(pngPal);
+	Free(plte);
 	fclose(f);
 	return (0);
+fail_row:
+	for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+	png_free(png, rows);
+	AG_SetErrorS("png_malloc row");
 fail:
 	png_destroy_write_struct(&png, NULL);
-	Free(pngPal);
+	Free(plte);
 	fclose(f);
 	return (-1);
 }
@@ -356,19 +496,26 @@ fail:
 AG_Surface *
 AG_SurfaceFromPNG(const char *path)
 {
-	AG_SetError(_("Agar not compiled with PNG support"));
+	AG_SetErrorS(_("No PNG support (need libpng)"));
+	return (NULL);
+}
+AG_Surface *
+AG_SurfaceFromPNGs(const char *pattern, int first, int last,
+    AG_AnimDispose afDispose, Uint afDelay, Uint afFlags)
+{
+	AG_SetErrorS(_("No PNG support (need libpng)"));
 	return (NULL);
 }
 int
 AG_SurfaceExportPNG(const AG_Surface *su, const char *path, Uint flags)
 {
-	AG_SetError(_("Agar not compiled with PNG support"));
+	AG_SetErrorS(_("No PNG support (need libpng)"));
 	return (-1);
 }
 AG_Surface *
 AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 {
-	AG_SetError(_("Agar not compiled with PNG support"));
+	AG_SetErrorS(_("No PNG support (need libpng)"));
 	return (NULL);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Support for reading image files in JPEG format via libjpeg.
+ * Loader for JPEG images via libjpeg.
  */
 
 #include <agar/core/core.h>
@@ -62,7 +62,7 @@ static int
 AG_JPG_FillInputBuffer(j_decompress_ptr cinfo)
 {
 	struct ag_jpg_sourcemgr *sm = (struct ag_jpg_sourcemgr *)cinfo->src;
-	size_t rv;
+	AG_Size rv;
 
 	if (AG_ReadP(sm->ds, sm->buffer, sizeof(sm->buffer), &rv) == -1) {
 		return (FALSE);
@@ -86,8 +86,8 @@ AG_JPG_SkipInputData(j_decompress_ptr cinfo, long len)
 			len -= (long)sm->pub.bytes_in_buffer;
 			sm->pub.fill_input_buffer(cinfo);
 		}
-		sm->pub.next_input_byte += (size_t)len;
-		sm->pub.bytes_in_buffer -= (size_t)len;
+		sm->pub.next_input_byte += (AG_Size)len;
+		sm->pub.bytes_in_buffer -= (AG_Size)len;
 	}
 }
 static void
@@ -109,7 +109,7 @@ AG_JPG_OutputMessage(j_common_ptr cinfo)
 
 /* Load a surface from a JPEG image file. */
 AG_Surface *
-AG_SurfaceFromJPEG(const char *path)
+AG_SurfaceFromJPEG(const char *_Nonnull path)
 {
 	AG_DataSource *ds;
 	AG_Surface *s;
@@ -128,14 +128,15 @@ AG_SurfaceFromJPEG(const char *path)
 
 /* Export a surface to a JPEG image file. */
 int
-AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
-    Uint flags)
+AG_SurfaceExportJPEG(const AG_Surface *_Nonnull S, const char *_Nonnull path,
+    int quality, Uint8 flags)
 {
+	const Uint BytesPerPixel = S->format.BytesPerPixel;
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
+	JSAMPROW row[1];
 	Uint8 *jcopybuf;
 	FILE *f;
-	JSAMPROW row[1];
 	int x;
 
 	if ((f = fopen(path, "wb")) == NULL) {
@@ -147,8 +148,8 @@ AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
 
 	jpeg_create_compress(&jcomp);
 
-	jcomp.image_width = su->w;
-	jcomp.image_height = su->h;
+	jcomp.image_width = S->w;
+	jcomp.image_height = S->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
 
@@ -161,25 +162,28 @@ AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
 
 	jpeg_stdio_dest(&jcomp, f);
 
-	if ((jcopybuf = TryMalloc(su->w*3)) == NULL) {
+	if ((jcopybuf = TryMalloc(S->w * 3)) == NULL) {
 		jpeg_destroy_compress(&jcomp);
 		fclose(f);
 		return (-1);
 	}
+	
+	/* TODO block copiable and optimized cases */
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {
-		Uint8 *pSrc = (Uint8 *)su->pixels +
-		    jcomp.next_scanline*su->pitch;
-		Uint8 *pDst = jcopybuf;
-		AG_Color C;
+		Uint8 *p = S->pixels + jcomp.next_scanline*S->pitch;
+		Uint8 *jp = jcopybuf;
 
-		for (x = 0; x < su->w; x++) {
-			C = AG_GetColorRGB(AG_GET_PIXEL(su,pSrc), su->format);
-			*pDst++ = C.r;
-			*pDst++ = C.g;
-			*pDst++ = C.b;
-			pSrc += su->format->BytesPerPixel;
+		for (x = 0; x < S->w; x++) {
+			AG_Color c;
+			
+			c = AG_GetColor(AG_SurfaceGet_At(S,p), &S->format);
+			*jp++ = c.r;
+			*jp++ = c.g;
+			*jp++ = c.b;
+
+			p += BytesPerPixel;
 		}
 		row[0] = jcopybuf;
 		jpeg_write_scanlines(&jcomp, row, 1);
@@ -198,8 +202,8 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 {
 	struct jpeg_decompress_struct cinfo;
 	JSAMPROW rowptr[1];
-	AG_Surface *volatile su = NULL;
-	off_t start = AG_Tell(ds);
+	AG_Surface *volatile S = NULL;
+	AG_Offset start = AG_Tell(ds);
 	struct ag_jpg_errmgr jerrmgr;
 	struct ag_jpg_sourcemgr *sm;
 
@@ -208,8 +212,8 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 	jerrmgr.errmgr.output_message = AG_JPG_OutputMessage;
 	if (setjmp(jerrmgr.escape)) {
 		jpeg_destroy_decompress(&cinfo);
-		if (su != NULL) {
-			AG_SurfaceFree(su);
+		if (S != NULL) {
+			AG_SurfaceFree(S);
 		}
 		AG_SetError("Error loading JPEG file");
 		goto fail;
@@ -241,7 +245,7 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		cinfo.quantize_colors = FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
 
-		su = AG_SurfaceRGBA(cinfo.output_width, cinfo.output_height,
+		S = AG_SurfaceRGBA(cinfo.output_width, cinfo.output_height,
 		    32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		    0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff
@@ -254,7 +258,7 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 		cinfo.quantize_colors = FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
 
-		su = AG_SurfaceRGB(cinfo.output_width, cinfo.output_height,
+		S = AG_SurfaceRGB(cinfo.output_width, cinfo.output_height,
 		    24, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		    0xff0000, 0x00ff00, 0x0000ff
@@ -263,21 +267,20 @@ AG_ReadSurfaceFromJPEG(AG_DataSource *ds)
 #endif
 		    );
 	}
-	if (su == NULL) {
+	if (S == NULL) {
 		jpeg_destroy_decompress(&cinfo);
-		AG_SetError("Out of memory");
 		goto fail;
 	}
 
 	jpeg_start_decompress(&cinfo);
 	while (cinfo.output_scanline < cinfo.output_height) {
-		rowptr[0] = (JSAMPROW)(Uint8 *)su->pixels +
-		                               cinfo.output_scanline*su->pitch;
+		rowptr[0] = (JSAMPROW)S->pixels +
+		    cinfo.output_scanline * S->pitch;
 		jpeg_read_scanlines(&cinfo, rowptr, (JDIMENSION) 1);
 	}
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
-	return (su);
+	return (S);
 fail:
 	AG_Seek(ds, start, AG_SEEK_SET);
 	return (NULL);
@@ -292,8 +295,8 @@ AG_SurfaceFromJPEG(const char *path)
 	return (NULL);
 }
 int
-AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, Uint quality,
-    Uint flags)
+AG_SurfaceExportJPEG(const AG_Surface *su, const char *path, int quality,
+    Uint8 flags)
 {
 	AG_SetError(_("Agar not compiled with JPEG support"));
 	return (-1);

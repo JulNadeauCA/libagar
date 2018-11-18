@@ -1,30 +1,9 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Loader for Windows BMP image files.
  */
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2012 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2017 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -44,287 +23,678 @@
 */
 
 /*
- * Support for reading and writing Win32 image files in BMP format.
- */
+   Code to load and save surfaces in Windows BMP format.
+
+   Why support BMP format?  Well, it's a native format for Windows, and
+   most image processing programs can read and write it.  It would be nice
+   to be able to have at least one image format that we can natively load
+   and save, and since PNG is so complex that it would bloat the library,
+   BMP is a good alternative.
+
+   This code currently supports Win32 DIBs in uncompressed 8 and 24 bpp.
+*/
 
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/surface.h>
 
-struct ag_bmp_header {
-	char magic[2];
-	Uint32 size;
-	Uint16 resv[2];
-	Uint32 offBits;
-};
+#define SAVE_32BIT_BMP
 
-struct ag_bmp_info_header {
-	Uint32 size;
-	Sint32 w, h;
-	Uint16 planes;
-	Uint16 bitCount;
-	enum {
-		AG_BMP_RGB		= 0,
-		AG_BMP_RLE8		= 1,
-		AG_BMP_RLE4		= 2,
-		AG_BMP_BITFIELDS	= 3
-	} encoding;
-	Uint32 sizeImage;
-	Sint32 XPelsPerMeter, YPelsPerMeter;
-	Uint32 clrUsed, clrImportant;
-};
+/* Compression encodings for BMP files */
+#ifndef BI_RGB
+# define BI_RGB		0
+# define BI_RLE8	1
+# define BI_RLE4	2
+# define BI_BITFIELDS	3
+#endif
 
-/* Load a surface from a given bmp file. */
+/* Logical color space values for BMP files */
+#ifndef LCS_WINDOWS_COLOR_SPACE
+# define LCS_WINDOWS_COLOR_SPACE    0x57696E20	/* "Win " */
+#endif
+
+/*
+ * Scan a 32bpp RGB surface for a pixel with non-zero alpha.
+ * If all pixels have alpha=0, then set their alpha to 0xffff (fully opaque).
+ */
+static void
+CorrectAlphaChannel_32RGB(AG_Surface *S)
+{
+	int hasAlpha = 0;
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+	const int alphaChannelOffset = 0;
+#else
+	const int alphaChannelOffset = 3;
+#endif
+	Uint8 *alpha = ((Uint8 *)S->pixels) + alphaChannelOffset;
+	Uint8 *end = alpha + (S->h * S->pitch);
+
+	while (alpha < end) {
+		if (*alpha != 0) {
+			hasAlpha = 1;
+			break;
+		}
+		alpha += 4;
+	}
+	if (!hasAlpha) {
+		alpha = ((Uint8 *)S->pixels) + alphaChannelOffset;
+		while (alpha < end) {
+ 			*alpha = 0xff;		/* Opaque */
+			alpha += 4;
+		}
+	}
+}
+
+/* Load a surface from a BMP file */
 AG_Surface *
-AG_SurfaceFromBMP(const char *path)
+AG_SurfaceFromBMP(const char *_Nonnull path)
 {
 	AG_DataSource *ds;
-	AG_Surface *s;
+	AG_Surface *S;
 
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		return (NULL);
 	}
-	if ((s = AG_ReadSurfaceFromBMP(ds)) == NULL) {
+	if ((S = AG_ReadSurfaceFromBMP(ds)) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		AG_CloseFile(ds);
 		return (NULL);
 	}
 	AG_CloseFile(ds);
-	return (s);
+	return (S);
 }
 
-/* Save a surface to a BMP file. */
-int
-AG_SurfaceExportBMP(const AG_Surface *su, const char *path)
+/* Load colormap from an Indexed BMP file. */
+static int
+ReadPaletteFromBMP(AG_Surface *S, AG_DataSource *_Nonnull ds, Uint32 biSize,
+    Uint16 biBitCount, Uint biClrUsed)
 {
-	/* TODO */
-	AG_SetError("Unimplemented");
-	return (-1);
+	AG_Palette *pal = S->format.palette;
+	Uint8 b,g,r;
+	Uint i;
+
+#ifdef AG_DEBUG
+	if (pal == NULL) { AG_FatalError("pal=NULL"); }
+#endif
+	if (biClrUsed == 0) {
+		biClrUsed = 1 << biBitCount;
+	}
+	if (biClrUsed > pal->nColors) {
+		AG_Color *colors;
+		Uint nColors = biClrUsed;
+
+		colors = AG_TryRealloc(pal->colors, nColors * sizeof(AG_Color));
+		if (colors == NULL) {
+			return (-1);
+		}
+		pal->nColors = nColors;
+		pal->colors = colors;
+	} else if (biClrUsed < pal->nColors) {
+		pal->nColors = biClrUsed;
+	}
+	if (biSize == 12) {
+		for (i = 0; i < biClrUsed; ++i) {
+			b = AG_ReadUint8(ds);
+			g = AG_ReadUint8(ds);
+			r = AG_ReadUint8(ds);
+			pal->colors[i].r = AG_8toH(r);
+			pal->colors[i].g = AG_8toH(g);
+			pal->colors[i].b = AG_8toH(b);
+			pal->colors[i].a = AG_OPAQUE;
+		}
+	} else {
+		for (i = 0; i < biClrUsed; ++i) {
+			b = AG_ReadUint8(ds);
+			g = AG_ReadUint8(ds);
+			r = AG_ReadUint8(ds);
+			/*
+			 * According to Microsoft documentation, the 
+			 * fourth element is reserved and must be zero,
+			 * so we shouldn't treat it as alpha.
+			 */
+			(void)AG_ReadUint8(ds);
+			
+			pal->colors[i].r = AG_8toH(r);
+			pal->colors[i].g = AG_8toH(g);
+			pal->colors[i].b = AG_8toH(b);
+			pal->colors[i].a = AG_OPAQUE;
+		}
+	}
+	return (0);
 }
 
-/*
- * Load surface contents from a Windows BMP file.
- *
- * Code for expanding 1bpp and 4bpp to 8bpp depth was shamefully
- * stolen from SDL.
- */
+/* Read a BMP image from a data source. */
 AG_Surface *
-AG_ReadSurfaceFromBMP(AG_DataSource *ds)
+AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 {
-	struct ag_bmp_header bh;
-	struct ag_bmp_info_header bi;
-	Uint32 Rmask = 0, Gmask = 0, Bmask = 0, Amask = 0;
-	AG_Surface *s;
-	off_t offs;
-	Uint8 *pStart, *pEnd, *pDst;
-	int i, bmpPitch, expandBpp, bmpPad, topDown;
+	AG_Surface *S;
+	int i, pad, topDown, expandBMP, bmpPitch;
+	AG_ByteOrder orderSaved;
+	AG_Offset bmpHeaderOffset;
+	Uint32 Rmask = 0;
+	Uint32 Gmask = 0;
+	Uint32 Bmask = 0;
+	Uint32 Amask = 0;
+	Uint8 *bits, *top, *end;
+	int haveRGBMasks=0, haveAlphaMask=0, willCorrectAlpha=0;
+	/* The Win32 BMP file header (14 bytes) */
+	char magic[2];
+	/* Uint32 bfSize = 0; */
+	/* Uint16 bfReserved1 = 0; */
+	/* Uint16 bfReserved2 = 0; */
+	Uint32 bfOffBits = 0;
+	/* The Win32 BITMAPINFOHEADER struct (40 bytes) */
+	Uint32 biSize = 0;
+	Sint32 biWidth = 0;
+	Sint32 biHeight = 0;
+	/* Uint16 biPlanes = 0; */
+	Uint16 biBitCount = 0;
+	Uint32 biCompression = 0;
+	/* Uint32 biSizeImage = 0; */
+	/* Sint32 biXPelsPerMeter = 0; */
+	/* Sint32 biYPelsPerMeter = 0; */
+	Uint32 biClrUsed = 0;
+	/* Uint32 biClrImportant = 0; */
 
-	offs = AG_Tell(ds);
-	bh.magic[0] = '?';
-	bh.magic[1] = '?';
-	if (AG_Read(ds, bh.magic, 2) != 0 ||
-	    bh.magic[0] != 'B' || bh.magic[1] != 'M') {
-		AG_SetError("Not a Windows BMP file (`%c%c')",
-		bh.magic[0], bh.magic[1]);
+	/* Read in the BMP file header */
+	bmpHeaderOffset = AG_Tell(ds);
+	if (AG_Read(ds, magic, 2) != 0 || magic[0] != 'B' || magic[1] != 'M') {
+		AG_SetErrorS("Not a Windows BMP file");
 		return (NULL);
 	}
 
-	/* Uses little-endian byte order */
-	AG_SetByteOrder(ds, AG_BYTEORDER_LE);
+	orderSaved = AG_SetByteOrder(ds, AG_BYTEORDER_LE);   /* Little Endian */
 
-	bh.size = AG_ReadUint32(ds);
-	bh.resv[0] = AG_ReadUint16(ds);
-	bh.resv[1] = AG_ReadUint16(ds);
-	bh.offBits = AG_ReadUint32(ds);
+	/* bfSize      = */ AG_ReadUint32(ds);
+	/* bfReserved1 = */ AG_ReadUint16(ds);
+	/* bfReserved2 = */ AG_ReadUint16(ds);
+	bfOffBits      =    AG_ReadUint32(ds);
 
-	bi.size = AG_ReadUint32(ds);
-	if (bi.size == 12) {
-		bi.w = (Uint32)AG_ReadUint16(ds);
-		bi.h = (Uint32)AG_ReadUint16(ds);
-		bi.planes = AG_ReadUint16(ds);
-		bi.bitCount = AG_ReadUint16(ds);
-		bi.encoding = AG_BMP_RGB;
-		bi.sizeImage = 0;
-		bi.XPelsPerMeter = 0;
-		bi.YPelsPerMeter = 0;
-		bi.clrUsed = 0;
-		bi.clrImportant = 0;
-	} else {
-		bi.w = AG_ReadSint32(ds);
-		bi.h = AG_ReadSint32(ds);
-		bi.planes = AG_ReadUint16(ds);
-		bi.bitCount = AG_ReadUint16(ds);
-		bi.encoding = AG_ReadUint32(ds);
-		bi.sizeImage = AG_ReadUint32(ds);
-		bi.XPelsPerMeter = AG_ReadUint32(ds);
-		bi.YPelsPerMeter = AG_ReadUint32(ds);
-		bi.clrUsed = AG_ReadUint32(ds);
-		bi.clrImportant = AG_ReadUint32(ds);
+	/* Read the Win32 BITMAPINFOHEADER */
+	biSize = AG_ReadUint32(ds);
+	if (biSize == 12) {                    /* really old BITMAPCOREHEADER */
+		biWidth  = (Uint32)AG_ReadUint16(ds);
+		biHeight = (Uint32)AG_ReadUint16(ds);
+		/* biPlanes = */ AG_ReadUint16(ds);
+		biBitCount = AG_ReadUint16(ds);
+		biCompression = BI_RGB;
+	} else if (biSize >= 40) {        /* some version of BITMAPINFOHEADER */
+		Uint32 headerSize;
+
+		biWidth = AG_ReadUint32(ds);
+		biHeight = AG_ReadUint32(ds);
+		/* biPlanes = */ AG_ReadUint16(ds);
+		biBitCount = AG_ReadUint16(ds);
+		biCompression = AG_ReadUint16(ds);
+		/* biSizeImage     = */ AG_ReadUint32(ds);
+		/* biXPelsPerMeter = */ AG_ReadUint32(ds);
+		/* biYPelsPerMeter = */ AG_ReadUint32(ds);
+		biClrUsed = AG_ReadUint32(ds);
+ 		/* biClrImportant = */ AG_ReadUint32(ds);
+
+		/*
+		 * 64 == BITMAPCOREHEADER2, an incompatible OS/2 2.x extension.
+		 * Skip this stuff for now.
+		 */
+		if (biSize == 64) {
+ 			/* Ignore these extra fields. */
+			if (biCompression == BI_BITFIELDS) {
+				/*
+				 * This value is actually Huffman compression
+				 * in this variant.
+				 */
+				AG_SetErrorS("Compressed BMP not supported");
+				goto fail;
+			}
+		} else {
+			/*
+			 * This is complicated. If compression is BI_BITFIELDS,
+			 * then we have 3 DWORDS that specify the RGB masks.
+			 * This is either stored here in an BITMAPV2INFOHEADER
+			 * (which only differs in that it adds these RGB masks)
+			 * and biSize >= 52, or we've got these masks stored in
+			 * the exact same place, but strictly speaking, this
+			 * is the bmiColors field in BITMAPINFO immediately
+			 * following legacy v1 info header, just past biSize.
+			 */
+			if (biCompression == BI_BITFIELDS) {
+				haveRGBMasks = 1;
+				Rmask = AG_ReadUint32(ds);
+				Gmask = AG_ReadUint32(ds);
+				Bmask = AG_ReadUint32(ds);
+
+				if (biSize >= 56) {     /* BITMAPV3INFOHEADER */
+					haveAlphaMask = 1;
+					Amask = AG_ReadUint32(ds);
+				}
+			} else {
+				/*
+				 * The mask fields are ignored for v2+ headers
+				 * if not BI_BITFIELD.
+				 */
+				if (biSize >= 52) {     /* BITMAPV2INFOHEADER */
+					/*Rmask = */ AG_ReadUint32(ds);
+					/*Gmask = */ AG_ReadUint32(ds);
+					/*Bmask = */ AG_ReadUint32(ds);
+				}
+				if (biSize >= 56) {     /* BITMAPV3INFOHEADER */
+					/*Amask = */ AG_ReadUint32(ds);
+				}
+			}
+
+			/*
+			 * Insert other fields here; Wikipedia and MSDN say
+			 * we're up to v5 of this header, but we ignore those
+			 * for now (they add gamma, color spaces, etc).
+			 * Ignoring the weird OS/2 2.x format, we currently
+			 * parse up to v3 correctly (hopefully!).
+			 */
+		}
+
+		/* Skip any header bytes we didn't handle... */
+		headerSize = (Uint32) (AG_Tell(ds) - (bmpHeaderOffset + 14));
+		if (biSize > headerSize)
+			AG_Seek(ds, (biSize - headerSize), AG_SEEK_CUR);
 	}
-	if (bi.h < 0) {
+	if (biHeight < 0) {
 		topDown = 1;
-		bi.h = -bi.h;
+		biHeight = -biHeight;
 	} else {
 		topDown = 0;
 	}
-	
-	/* Will convert 1bpp/4bpp to 8bpp */
-	if (bi.bitCount == 1 || bi.bitCount == 4) {
-		expandBpp = bi.bitCount;
-		bi.bitCount = 8;
-	} else {
-		expandBpp = 0;
+
+	/* Expand 1 and 4 bit bitmaps to 8 bits per pixel */
+	/*
+	 * XXX TODO remove this since agar's 1- and 4-bit modes should work.
+	 */
+	switch (biBitCount) {
+	case 1:
+	case 4:
+		expandBMP = biBitCount;
+		biBitCount = 8;
+		break;
+	default:
+		expandBMP = 0;
+		break;
 	}
 
-	switch (bi.encoding) {
-	case AG_BMP_RGB:
-		if (bh.offBits == (14 + bi.size)) {
-			switch (bi.bitCount) {
-			case 15:
-			case 16:
-				Rmask = 0x7C00;
-				Gmask = 0x03E0;
-				Bmask = 0x001F;
-				break;
-			case 24:
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-			        Rmask = 0x000000FF;
-			        Gmask = 0x0000FF00;
-			        Bmask = 0x00FF0000;
-				break;
-#endif
-			case 32:
-				Rmask = 0x00FF0000;
-				Gmask = 0x0000FF00;
-				Bmask = 0x000000FF;
-				break;
-			}
-			break;
+	/* We don't support any BMP compression right now */
+	switch (biCompression) {
+	case BI_RGB:
+		if (haveRGBMasks || haveAlphaMask) {
+			AG_SetErrorS("Unexpected masks");
+			goto fail;
 		}
-		/* FALLTHROUGH */
-	case AG_BMP_BITFIELDS:
-		switch (bi.bitCount) {
+		/* Default values for the BMP format */
+		switch (biBitCount) {
 		case 15:
 		case 16:
-			Rmask = AG_ReadUint32(ds);
-			Gmask = AG_ReadUint32(ds);
-			Bmask = AG_ReadUint32(ds);
+			Rmask = 0x7C00;
+			Gmask = 0x03E0;
+			Bmask = 0x001F;
+			break;
+		case 24:
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			Rmask = 0x000000FF;
+			Gmask = 0x0000FF00;
+			Bmask = 0x00FF0000;
+#else
+			Rmask = 0x00FF0000;
+			Gmask = 0x0000FF00;
+			Bmask = 0x000000FF;
+#endif
 			break;
 		case 32:
-			Rmask = AG_ReadUint32(ds);
-			Gmask = AG_ReadUint32(ds);
-			Bmask = AG_ReadUint32(ds);
-			Amask = AG_ReadUint32(ds);
-			break;
-		}
-		break;
-	default:
-		AG_SetError("BMP compression unimplemented");
-		return (NULL);
-	}
-	if ((s = AG_SurfaceRGBA(bi.w, bi.h, bi.bitCount,
-	    (Amask != 0) ? AG_SRCALPHA : 0,
-	    Rmask, Gmask, Bmask, Amask)) == NULL) {
-		return (NULL);
-	}
-
-	if (s->format->palette != NULL) {
-		if (bi.clrUsed == 0) {
-			bi.clrUsed = (1 << bi.bitCount);
-		}
-		if (bi.size == 12) {
-			for (i = 0; i < bi.clrUsed; i++) {
-				s->format->palette->colors[i].b = AG_ReadUint8(ds);
-				s->format->palette->colors[i].g = AG_ReadUint8(ds);
-				s->format->palette->colors[i].r = AG_ReadUint8(ds);
-			}	
-		} else {
-			for (i = 0; i < bi.clrUsed; i++) {
-				s->format->palette->colors[i].b = AG_ReadUint8(ds);
-				s->format->palette->colors[i].g = AG_ReadUint8(ds);
-				s->format->palette->colors[i].r = AG_ReadUint8(ds);
-				(void)AG_ReadUint8(ds); /* unused */
-			}	
-		}
-		s->format->palette->nColors = bi.clrUsed;
-	}
-
-	if (AG_Seek(ds, offs+bh.offBits, AG_SEEK_SET) == -1)
-		goto fail;
-	
-	pStart = (Uint8 *)s->pixels;
-	pEnd = (Uint8 *)s->pixels + (s->h*s->pitch);
-	switch (expandBpp) {
-	case 1:
-		bmpPitch = (bi.w + 7) >> 3;
-		bmpPad = ((bmpPitch % 4) ? (4 - (bmpPitch % 4)) : 0);
-		break;
-	case 4:
-		bmpPitch = (bi.w + 1) >> 1;
-		bmpPad = ((bmpPitch % 4) ? (4 - (bmpPitch % 4)) : 0);
-		break;
-	default:
-		bmpPad = ((s->pitch % 4) ? (4 - (s->pitch % 4)) : 0);
-		break;
-	}
-	
-	pDst = topDown ? pStart : (pEnd - s->pitch);
-	while (pDst >= pStart && pDst < pEnd) {
-		switch (expandBpp) {
-		case 1:
-		case 4:
-			{
-				Uint8 px = 0;
-                		int shift = (8 - expandBpp);
-
-				for (i = 0; i < s->w; i++) {
-					if (i % (8/expandBpp) == 0) {
-						px = AG_ReadUint8(ds);
-					}
-					*(pDst + i) = (px >> shift);
-					px <<= expandBpp;
-				}
-			}
+			/* We don't know if this has alpha channel or not */
+			willCorrectAlpha = 1;
+			Amask = 0xFF000000;
+			Rmask = 0x00FF0000;
+			Gmask = 0x0000FF00;
+			Bmask = 0x000000FF;
 			break;
 		default:
-			if (AG_Read(ds, pDst, s->pitch) != 0) {
-				goto fail;
-			}
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-			switch (bi.bitCount) {
-			case 15:
-			case 16:
-				{
-				        Uint16 *px = (Uint16 *)pDst;
-					for (i = 0; i < s->w; i++) {
-					        px[i] = AG_Swap16(px[i]);
-					}
-					break;
-				}
-			case 32:
-				{
-					Uint32 *px = (Uint32 *)pDst;
-					for (i = 0; i < s->w; i++) {
-					        px[i] = AG_Swap32(px[i]);
-					}
-					break;
-				}
-			}
-#endif /* AG_BYTEORDER == AG_BIG_ENDIAN */
 			break;
 		}
-		if (bmpPad != 0) {
-			if (AG_Seek(ds, bmpPad, AG_SEEK_CUR) == -1)
-				goto fail;
+		break;
+	case BI_BITFIELDS:
+		break;              /* we handled this in the info header. */
+	default:
+		AG_SetErrorS("Compressed BMP files not supported");
+		goto fail;
+	}
+
+	switch (biBitCount) {
+	case 1:
+	case 4:
+	case 8:
+		S = AG_SurfaceIndexed(biWidth, biHeight, biBitCount, 0);
+		break;
+	default:
+		S = AG_SurfaceRGBA(biWidth, biHeight, biBitCount, 0,
+		                   Rmask, Gmask, Bmask, Amask);
+		break;
+	}
+	if (S == NULL)
+		goto fail;
+
+	/* Read the color palette in Indexed mode. */
+	if (S->format.mode == AG_SURFACE_INDEXED &&
+	    ReadPaletteFromBMP(S, ds, biSize, biBitCount, biClrUsed) == -1) {
+		goto fail;
+	}
+
+	/* Read the surface pixels.  Note that the bmp image is upside down */
+	if (AG_Seek(ds, bmpHeaderOffset+bfOffBits, AG_SEEK_SET) == -1) {
+		goto fail_surf;
+	}
+	top = S->pixels;
+	end = S->pixels + (S->h * S->pitch);
+	switch (expandBMP) {
+	case 1:
+		bmpPitch = (biWidth + 7) >> 3;
+		pad = (((bmpPitch) % 4) ? (4 - ((bmpPitch) % 4)) : 0);
+		break;
+	case 4:
+		bmpPitch = (biWidth + 1) >> 1;
+		pad = (((bmpPitch) % 4) ? (4 - ((bmpPitch) % 4)) : 0);
+		break;
+	default:
+		pad = ((S->pitch % 4) ? (4 - (S->pitch % 4)) : 0);
+		break;
+	}
+	if (topDown) {
+		bits = top;
+	} else {
+		bits = end - S->pitch;
+	}
+	while (bits >= top && bits < end) {
+		switch (expandBMP) {
+		case 1:
+		case 4: {
+			Uint8 px = 0;
+			int shift = (8 - expandBMP);
+
+	  		for (i = 0; i < S->w; ++i) {
+				if (i % (8 / expandBMP) == 0) {
+					if (AG_Read(ds, &px, 1) != 0)
+						goto fail_surf;
+				}
+				*(bits + i) = (px >> shift);
+				px <<= expandBMP;
+			}
+			break;
+		}
+		default:
+			if (AG_Read(ds, bits, S->pitch) != 0) {
+				goto fail_surf;
+			}
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			/*
+			 * Byte-swap the pixels if needed. Note that the 24bpp
+			 * case has already been taken care of above.
+			 */
+			switch (biBitCount) {
+			case 15:
+			case 16: {
+				Uint16 *px = (Uint16 *)bits;
+				for (i = 0; i < S->w; i++) {
+					px[i] = AG_Swap16(px[i]);
+				}
+				break;
+			}
+			case 32: {
+				Uint32 *px = (Uint32 *)bits;
+				for (i = 0; i < S->w; i++) {
+					px[i] = AG_Swap32(px[i]);
+				}
+				break;
+			}
+#endif /* BE */
+			break;
+		}
+	        /* Skip padding bytes, ugh */
+		if (pad) {
+			Uint8 padbyte;
+			for (i = 0; i < pad; ++i) {
+				if (AG_Read(ds, &padbyte, 1) == -1)
+					goto fail_surf;
+			}
 		}
 		if (topDown) {
-			pDst += s->pitch;
+			bits += S->pitch;
 		} else {
-			pDst -= s->pitch;
+			bits -= S->pitch;
 		}
 	}
-	return (s);
+	if (willCorrectAlpha) {
+		CorrectAlphaChannel_32RGB(S);
+	}
+	AG_SetByteOrder(ds, orderSaved);        /* Restore stream's byte order */
+	return (S);
+fail_surf:
+	AG_SurfaceFree(S);
 fail:
-	AG_SurfaceFree(s);
+	AG_SetByteOrder(ds, orderSaved);
+	AG_Seek(ds, bmpHeaderOffset, AG_SEEK_SET);
 	return (NULL);
+}
+
+/* Export a surface to a BMP image */
+int
+AG_WriteSurfaceToBMP(AG_DataSource *ds, const AG_Surface *Sarg, Uint8 flags)
+{
+	AG_Offset offset;
+	int i, pitch, pad;
+	const AG_Surface *S;
+	AG_Palette *pal;
+	Uint8 *bits;
+	int save32bit = 0;
+	AG_ByteOrder orderSaved;
+	/* The Win32 BMP file header (14 bytes) */
+	char magic[2] = { 'B','M' };
+	Uint32 bfSize;
+	Uint16 bfReserved1, bfReserved2;
+	Uint32 bfOffBits;
+	/* The Win32 BITMAPINFOHEADER struct (40 bytes) */
+	Uint32 biSize;
+	Sint32 biWidth, biHeight, biPlanes;
+	Uint16 biBitCount;
+	Uint32 biCompression, biSizeImage;
+	Sint32 biXPelsPerMeter, biYPelsPerMeter;
+	Uint32 biClrUsed, biClrImportant;
+	/* Additional members from BITMAPV4HEADER (108 bytes in total) */
+	Uint32 bV4RedMask=0, bV4GreenMask=0, bV4BlueMask=0, bV4AlphaMask=0;
+	Uint32 bV4CSType=0;
+	Sint32 bV4Endpoints[3*3]={0};
+	Uint32 bV4GammaRed=0, bV4GammaGreen=0, bV4GammaBlue=0;
+
+	if (!(flags & AG_EXPORT_BMP_NO_32BIT) &&
+	    Sarg->format.BitsPerPixel >= 8 &&
+	    Sarg->format.Amask != 0) {
+		save32bit = 1;
+	}
+	if (Sarg->format.mode == AG_SURFACE_INDEXED && !save32bit) {
+		if (Sarg->format.BitsPerPixel != 8) {
+			AG_SetError("%u bpp BMP files not supported",
+			    Sarg->format.BitsPerPixel);
+			return (-1);
+		}
+		S = Sarg;
+	} else if ((Sarg->format.BitsPerPixel == 24) && !save32bit &&
+#if AG_BYTEORDER == AG_LITTLE_ENDIAN
+	           (Sarg->format.Rmask == 0x00FF0000) &&
+	           (Sarg->format.Gmask == 0x0000FF00) &&
+		   (Sarg->format.Bmask == 0x000000FF)
+#else
+		   (Sarg->format.Rmask == 0x000000FF) &&
+		   (Sarg->format.Gmask == 0x0000FF00) &&
+		   (Sarg->format.Bmask == 0x00FF0000)
+#endif
+	   ) {
+		S = Sarg;
+	} else {
+		AG_PixelFormat pf;
+
+		/*
+		 * If the surface has a colorkey or alpha channel we'll save a
+		 * 32-bit BMP with alpha channel, otherwise save a 24-bit BMP.
+		 */
+		if (save32bit) {
+			AG_PixelFormatRGBA(&pf, 32,		/* BGRA32 */
+			    0x000000ff,
+			    0x0000ff00,
+			    0x00ff0000,
+			    0xff000000);
+		} else {
+			AG_PixelFormatRGB(&pf, 24,		/* BGR24 */
+			    0x000000ff,
+			    0x0000ff00,
+			    0x00ff0000);
+		}
+		if ((S = AG_SurfaceConvert(Sarg, &pf)) == NULL)
+			return (-1);
+	}
+	
+	orderSaved = AG_SetByteOrder(ds, AG_BYTEORDER_LE);   /* Little Endian */
+
+	bfSize = 0;                       /* We'll write this when we're done */
+	bfReserved1 = 0;
+	bfReserved2 = 0;
+	bfOffBits = 0;                    /* We'll write this when we're done */
+
+	/* Write the BMP file header values */
+	offset = AG_Tell(ds);
+	AG_Write(ds, magic, 2);
+	AG_WriteUint32(ds, bfSize);
+	AG_WriteUint16(ds, bfReserved1);
+	AG_WriteUint16(ds, bfReserved2);
+	AG_WriteUint32(ds, bfOffBits);
+
+	/* Set the BMP info values */
+	biSize = 40;
+	biWidth = S->w;
+	biHeight = S->h;
+	biPlanes = 1;
+	biBitCount = S->format.BitsPerPixel;
+	biCompression = BI_RGB;
+	biSizeImage = S->h * S->pitch;
+	biXPelsPerMeter = 0;
+	biYPelsPerMeter = 0;
+
+	biClrUsed = (S->format.mode == AG_SURFACE_INDEXED) ?
+	             S->format.palette->nColors : 0;
+	biClrImportant = 0;
+
+	/* Set the BMP info values for the version 4 header */
+	if (save32bit && !(flags & AG_EXPORT_BMP_LEGACY)) {
+		biSize = 108;
+		biCompression = BI_BITFIELDS;
+		/* The BMP format is always little endian, these masks stay the same */
+		bV4RedMask   = 0x00ff0000;
+		bV4GreenMask = 0x0000ff00;
+		bV4BlueMask  = 0x000000ff;
+		bV4AlphaMask = 0xff000000;
+		bV4CSType = LCS_WINDOWS_COLOR_SPACE;
+		bV4GammaRed = 0;
+		bV4GammaGreen = 0;
+		bV4GammaBlue = 0;
+	}
+
+	/* Write the BMP info values */
+	AG_WriteUint32(ds, biSize);
+	AG_WriteUint32(ds, biWidth);
+	AG_WriteUint32(ds, biHeight);
+	AG_WriteUint16(ds, biPlanes);
+	AG_WriteUint16(ds, biBitCount);
+	AG_WriteUint32(ds, biCompression);
+	AG_WriteUint32(ds, biSizeImage);
+	AG_WriteUint32(ds, biXPelsPerMeter);
+	AG_WriteUint32(ds, biYPelsPerMeter);
+	AG_WriteUint32(ds, biClrUsed);
+	AG_WriteUint32(ds, biClrImportant);
+
+	/* Write the BMP info values for the version 4 header */
+	if (save32bit && !(flags & AG_EXPORT_BMP_LEGACY)) {
+		AG_WriteUint32(ds, bV4RedMask);
+		AG_WriteUint32(ds, bV4GreenMask);
+		AG_WriteUint32(ds, bV4BlueMask);
+		AG_WriteUint32(ds, bV4AlphaMask);
+		AG_WriteUint32(ds, bV4CSType);
+		for (i = 0; i < 3*3; i++) {
+			AG_WriteUint32(ds, bV4Endpoints[i]);
+		}
+		AG_WriteUint32(ds, bV4GammaRed);
+		AG_WriteUint32(ds, bV4GammaGreen);
+		AG_WriteUint32(ds, bV4GammaBlue);
+	}
+
+	/* Write the palette (in BGR color order) */
+	if ((pal = S->format.palette) != NULL) {
+		for (i = 0; i < pal->nColors; ++i) {
+			AG_WriteUint8(ds, pal->colors[i].b);
+			AG_WriteUint8(ds, pal->colors[i].g);
+			AG_WriteUint8(ds, pal->colors[i].r);
+			AG_WriteUint8(ds, pal->colors[i].a);
+		}
+	}
+
+	/* Write the bitmap offset */
+	bfOffBits = (Uint32)(AG_Tell(ds) - offset);
+	if (AG_Seek(ds, offset + 10, AG_SEEK_SET) == -1) {
+		goto fail;
+	}
+	AG_WriteUint32(ds, bfOffBits);
+	if (AG_Seek(ds, offset + bfOffBits, AG_SEEK_SET) == -1)
+		goto fail;
+
+	/* Write the bitmap image upside down */
+	bits = S->pixels + (S->h * S->pitch);
+	pitch = (S->w * S->format.BytesPerPixel);
+	pad = ((pitch % 4) ? (4 - (pitch % 4)) : 0);
+	while (bits > S->pixels) {
+		bits -= S->pitch;
+		if (AG_Write(ds, bits, pitch) != 0) {
+			break;
+		}
+		if (pad) {
+			const Uint8 padbyte = 0;
+			for (i = 0; i < pad; ++i) {
+				AG_Write(ds, &padbyte, 1);
+			}
+		}
+	}
+
+	/* Write the BMP file size */
+	bfSize = (Uint32)(AG_Tell(ds) - offset);
+	if (AG_Seek(ds, offset + 2, AG_SEEK_SET) == -1) { goto fail; }
+	AG_WriteUint32(ds, bfSize);
+	if (AG_Seek(ds, offset + bfSize, AG_SEEK_SET) == -1) { goto fail; }
+
+	if (S != Sarg) {
+		AG_SurfaceFree((AG_Surface *)S);
+	}
+	AG_SetByteOrder(ds, orderSaved);       /* Restore stream's byte order */
+	return (0);
+fail:
+	AG_SetByteOrder(ds, orderSaved);
+	return (-1);
+}
+
+/* Export a surface to a BMP file */
+int
+AG_SurfaceExportBMP(const AG_Surface *_Nonnull S, const char *_Nonnull path,
+    Uint8 flags)
+{
+	AG_DataSource *ds;
+
+	if ((ds = AG_OpenFile(path, "wb")) == NULL) {
+		return (-1);
+	}
+	if (AG_WriteSurfaceToBMP(ds, S, flags) == -1) {
+		AG_SetError("%s: %s", path, AG_GetError());
+		AG_CloseFile(ds);
+		return (-1);
+	}
+	AG_CloseFile(ds);
+	return (0);
 }

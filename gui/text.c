@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,6 @@ int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
 int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
-int agGlyphGC = 0;			/* Enable glyph garbage collector */
 int agFreetypeInited = 0;		/* Initialized Freetype library */
 int agFontconfigInited = 0;		/* Initialized Fontconfig library */
 int agRTL = 0;				/* Right-to-left mode */
@@ -129,15 +128,16 @@ static const char *agTextMsgTitles[] = {
 	N_("Information")
 };
 
-AG_Mutex agTextLock;
+_Nonnull AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
-AG_Font *agDefaultFont = NULL;
+AG_Font *_Nullable agDefaultFont = NULL;
 
 /* Load an individual glyph from a bitmap font file. */
 static void
-LoadBitmapGlyph(AG_Surface *su, const char *lbl, void *p)
+LoadBitmapGlyph(AG_Surface *_Nonnull su, const char *_Nonnull lbl,
+    void *_Nonnull pFont)
 {
-	AG_Font *font = p;
+	AG_Font *font = pFont;
 
 	if (font->nglyphs == 0) {
 		Strlcpy(font->bspec, lbl, sizeof(font->bspec));
@@ -148,7 +148,7 @@ LoadBitmapGlyph(AG_Surface *su, const char *lbl, void *p)
 }
 
 static void
-FontInit(void *obj)
+FontInit(void *_Nonnull obj)
 {
 	AG_Font *font = obj;
 
@@ -174,7 +174,7 @@ FontInit(void *obj)
 }
 
 static void
-FontDestroy(void *obj)
+FontDestroy(void *_Nonnull obj)
 {
 	AG_Font *font = obj;
 	int i;
@@ -195,7 +195,8 @@ FontDestroy(void *obj)
 }
 
 static int
-GetFontTypeFromSignature(const char *path, enum ag_font_type *pType)
+GetFontTypeFromSignature(const char *_Nonnull path,
+    enum ag_font_type *_Nonnull pType)
 {
 	char buf[13];
 	FILE *f;
@@ -219,7 +220,7 @@ GetFontTypeFromSignature(const char *path, enum ag_font_type *pType)
 
 /* Load a bitmap font. */
 static int
-OpenBitmapFont(AG_Font *font)
+OpenBitmapFont(AG_Font *_Nonnull font)
 {
 	char *s;
 	char *msig, *c0, *c1;
@@ -284,10 +285,10 @@ OpenBitmapFont(AG_Font *font)
  * given specifications.
  */
 AG_Font *
-AG_FetchFont(const char *pname, int psize, int pflags)
+AG_FetchFont(const char *pname, int psize, Uint pflags)
 {
-	AG_Config *cfg = AG_ConfigObject();
 	char name[AG_OBJECT_NAME_MAX];
+	AG_Config *cfg = AG_ConfigObject();
 	int ptsize = (psize >= 0) ? psize : AG_GetInt(cfg,"font.size");
 	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(cfg,"font.flags");
 	AG_StaticFont *builtin = NULL;
@@ -477,7 +478,7 @@ AG_SetRTL(int enable)
 }
 
 static Uint32
-TextTmsgExpire(AG_Timer *to, AG_Event *event)
+TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 
@@ -588,7 +589,7 @@ AG_InitTextSubsystem(void)
 		    agFreetypeInited ? agDefaultFaceFT : agDefaultFaceBitmap);
 	}
 	if (!AG_Defined(cfg,"font.size")) {
-		AG_SetInt(cfg, "font.size", 12);
+		AG_SetInt(cfg, "font.size", 14);
 	}
 	if (!AG_Defined(cfg,"font.flags")) {
 		AG_SetUint(cfg, "font.flags", 0);
@@ -663,15 +664,15 @@ void
 AG_TextClearGlyphCache(AG_Driver *drv)
 {
 	int i;
-	AG_Glyph *gl, *ngl;
+	AG_Glyph *G, *Gnext;
 
 	for (i = 0; i < AG_GLYPH_NBUCKETS; i++) {
-		for (gl = SLIST_FIRST(&drv->glyphCache[i].glyphs);
-		     gl != SLIST_END(&drv->glyphCache[i].glyphs);
-		     gl = ngl) {
-			ngl = SLIST_NEXT(gl, glyphs);
-			AG_SurfaceFree(gl->su);
-			Free(gl);
+		for (G = SLIST_FIRST(&drv->glyphCache[i].glyphs);
+		     G != SLIST_END(&drv->glyphCache[i].glyphs);
+		     G = Gnext) {
+			Gnext = SLIST_NEXT(G, glyphs);
+			AG_SurfaceFree(G->su);
+			free(G);
 		}
 		SLIST_INIT(&drv->glyphCache[i].glyphs);
 	}
@@ -689,39 +690,39 @@ AG_TextDestroyGlyphCache(AG_Driver *drv)
 AG_Glyph *
 AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
 {
-	AG_Glyph *gl;
+	AG_Glyph *G;
 	Uint32 ucs[2];
 
-	gl = Malloc(sizeof(AG_Glyph));
-	gl->font = agTextState->font;
-	gl->color = agTextState->color;
-	gl->ch = ch;
+	G = Malloc(sizeof(AG_Glyph));
+	G->font = agTextState->font;
+	G->color = agTextState->color;
+	G->ch = ch;
 	ucs[0] = ch;
 	ucs[1] = '\0';
-	gl->su = AG_TextRenderUCS4(ucs);
+	G->su = AG_TextRenderUCS4(ucs);
 
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
 		{
-			AG_TTFGlyph *gt;
+			AG_TTFGlyph *Gttf;
 
 			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
 			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) == 0) {
-				gt = ((AG_TTFFont *)agTextState->font->ttf)->current;
-				gl->advance = gt->advance;
+				Gttf = ((AG_TTFFont *)agTextState->font->ttf)->current;
+				G->advance = Gttf->advance;
 			} else {
-				gl->advance = gl->su->w;
+				G->advance = G->su->w;
 			}
 		}
 		break;
 #endif
 	case AG_FONT_BITMAP:
-		gl->advance = gl->su->w;
+		G->advance = G->su->w;
 		break;
 	}
-	AGDRIVER_CLASS(drv)->updateGlyph(drv, gl);
-	return (gl);
+	AGDRIVER_CLASS(drv)->updateGlyph(drv, G);
+	return (G);
 }
 
 /* Save the current text rendering state. */
@@ -825,7 +826,7 @@ AG_TextRenderf(const char *fmt, ...)
 	return (su);
 }
 #ifdef SYMBOLS
-static __inline__ AG_Surface *
+static __inline__ AG_Surface *_Nullable _Pure_Attribute
 GetSymbolSurface(Uint32 ch)
 {
 	switch (ch) {
@@ -839,7 +840,7 @@ GetSymbolSurface(Uint32 ch)
 #endif /* SYMBOLS */
 
 static __inline__ void
-InitMetrics(AG_TextMetrics *tm)
+InitMetrics(AG_TextMetrics *_Nonnull tm)
 {
 	tm->w = 0;
 	tm->h = 0;
@@ -848,7 +849,7 @@ InitMetrics(AG_TextMetrics *tm)
 }
 
 static __inline__ void
-FreeMetrics(AG_TextMetrics *tm)
+FreeMetrics(AG_TextMetrics *_Nonnull tm)
 {
 	Free(tm->wLines);
 }
@@ -860,11 +861,11 @@ FreeMetrics(AG_TextMetrics *tm)
  * is returned into wLines, and the number of lines into nLines.
  */
 static void
-TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
+TextSizeFT(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended)
 {
 	AG_Font *font = agTextState->font;
 	AG_TTFFont *ftFont = font->ttf;
-	AG_TTFGlyph *glyph;
+	AG_TTFGlyph *G;
 	const Uint32 *ch;
 	int xMin=0, xMax=0, yMin=0, yMax;
 	int xMinLine=0, xMaxLine=0;
@@ -893,22 +894,22 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS) != 0) {
 			continue;
 		}
-		glyph = ftFont->current;
+		G = ftFont->current;
 
-		z = x + glyph->minx;
+		z = x + G->minx;
 		if (xMin > z) { xMin = z; }
 		if (xMinLine > z) { xMinLine = z; }
 
 		if (ftFont->style & AG_TTF_STYLE_BOLD) {
 			x += ftFont->glyph_overhang;
 		}
-		z = x + MAX(glyph->advance,glyph->maxx);
+		z = x + MAX(G->advance, G->maxx);
 		if (xMax < z) { xMax = z; }
 		if (xMaxLine < z) { xMaxLine = z; }
-		x += glyph->advance;
+		x += G->advance;
 
-		if (glyph->miny < yMin) { yMin = glyph->miny; }
-		if (glyph->maxy > yMax) { yMax = glyph->maxy; }
+		if (G->miny < yMin) { yMin = G->miny; }
+		if (G->maxy > yMax) { yMax = G->maxy; }
 	}
 	if (*ch != '\n' && extended) {
 		if (tm->nLines > 0) {
@@ -923,27 +924,29 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 }
 
 # ifdef SYMBOLS
-
 static int
-TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
+TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_Surface *sym;
+	Uint64 symColorkey;
+	Uint BytesPerPixel;
 	int row;
 
 	if ((sym = GetSymbolSurface(ch)) == NULL) {
 		return (0);
 	}
+	symColorkey = sym->colorkey;
+	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*su->pitch +
-		                                   (x+2);
-		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
+		Uint8 *dst = s->pixels + (y + row)*s->pitch + (x+2);
+		Uint8 *src = sym->pixels + row*sym->pitch;
 		int col;
 
 		for (col = 0; col < sym->w; col++) {
-			if (AG_GET_PIXEL(sym,src) != sym->format->colorkey) {
+			if (AG_SurfaceGet64(sym,src) != symColorkey) {
 				*dst = 1;
 			}
-			src += sym->format->BytesPerPixel;
+			src += BytesPerPixel;
 			dst++;
 		}
 	}
@@ -951,28 +954,30 @@ TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
 }
 
 static int
-TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y)
+TextRenderSymbol_Blended(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_Surface *sym;
-	Uint32 alpha;
+	Uint64 symColorkey;
+	Uint BytesPerPixel;
 	int row;
 
 	if ((sym = GetSymbolSurface(ch)) == NULL) {
 		return (0);
 	}
+	symColorkey = sym->colorkey;
+	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*(su->pitch/4) + (x+2);
+		Uint8 *dst = s->pixels + (y + row)*(s->pitch/4) + (x+2);
 		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
 		int col;
 
 		for (col = 0; col < sym->w; col++) {
-			alpha = *src;
-			if (AG_GET_PIXEL(sym,src) != sym->format->colorkey) {
+			if (AG_SurfaceGet64(sym,src) != symColorkey) {
 				dst[0] = 0xff;
 				dst[1] = 0xff;
 				dst[2] = 0xff;
 			}
-			src += sym->format->BytesPerPixel;
+			src += BytesPerPixel;
 			dst += 3;
 		}
 	}
@@ -983,68 +988,72 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y)
 /* Underline rendered text. */
 /* XXX does not handle multiline/alignment properly */
 static void
-TextRenderFT_Blended_Underline(AG_TTFFont *ftFont, AG_Surface *su, int nLines)
+TextRenderFT_Blended_Underline(AG_TTFFont *_Nonnull ftFont,
+    AG_Surface *_Nonnull s, int nLines)
 {
-	AG_Color C = agTextState->color;
-	Uint32 pixel;
-	Uint8 *pDst;
+	AG_Color c = agTextState->color;
 	int x, y, line;
+	Uint8 *pDst;
+	Uint32 px = AG_MapPixel32(&s->format, c);
 
-	pixel = AG_MapPixelRGBA(su->format, C.r, C.g, C.b, 255);
 	for (line = 0; line < nLines; line++) {
 		y = ftFont->ascent - ftFont->underline_offset - 1;
 		y *= (line+1);
-		if (y >= su->h) {
-			y = (su->h - 1) - ftFont->underline_height;
+		if (y >= s->h) {
+			y = (s->h - 1) - ftFont->underline_height;
 		}
-		pDst = (Uint8 *)su->pixels + y*su->pitch;
+		pDst = s->pixels + y*s->pitch;
 		for (y = 0; y < ftFont->underline_height; y++) {
-			for (x = 0; x < su->w; x++) {
-				AG_PACKEDPIXEL_PUT(su->format->BytesPerPixel,
-				    pDst, pixel);
-				pDst += su->format->BytesPerPixel;
+			for (x = 0; x < s->w; x++) {
+				AG_PACKEDPIXEL_PUT(s->format.BytesPerPixel,
+				    pDst, px);
+				pDst += s->format.BytesPerPixel;
 			}
 		}
 	}
 }
 
-static AG_Surface *
-TextRenderFT_Blended(const Uint32 *ucs)
+/* Render text to a surface with alpha blending. */
+/*
+ * TODO use a separate routine for transparent vs. non-transparent
+ * agTextState->colorBG.
+ */
+static AG_Surface *_Nonnull
+TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
-	AG_Color C = agTextState->color;
+	AG_Color cBg, c;
 	AG_TTFFont *ftFont = font->ttf;
-	AG_TTFGlyph *glyph;
+	AG_TTFGlyph *G;
 	const Uint32 *ch;
-	int xStart, yStart;
-	int line;
 	AG_Surface *su;
-	Uint32 pixel;
 	Uint8 *src, *dst;
-	int x, y;
 	FT_UInt prev_index = 0;
-	int w;
+	int xStart, yStart, line, x, y;
+	int w, BytesPerPixel;
 
 	InitMetrics(&tm);
 	TextSizeFT(ucs, &tm, 1);
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL) {
-		Verbose("TextRenderFT_Blended: %s\n", AG_GetError());
-		goto empty;
-	}
+	su = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
 
 	/* Load and render each character */
  	line = 0;
  	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
  	yStart = 0;
 
-	AG_FillRect(su, NULL, agTextState->colorBG);
-	if (agTextState->colorBG.a == AG_ALPHA_TRANSPARENT)
-		AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
-		    AG_MapColorRGBA(su->format, agTextState->colorBG));
+	cBg = agTextState->colorBG;
+	AG_FillRect(su, NULL, cBg);
+	if (cBg.a == AG_ALPHA_TRANSPARENT) {
+		AG_SurfaceSetColorKey(su, AG_SURFACE_COLORKEY,
+		    AG_MapPixel(&su->format, cBg));
+	}
+
+	c = agTextState->color;
+	BytesPerPixel = su->format.BytesPerPixel;
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
@@ -1070,69 +1079,64 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			AG_SurfaceFree(su);
 			goto empty;
 		}
-		glyph = ftFont->current;
+		G = ftFont->current;
 		/*
 		 * Ensure the width of the pixmap is correct. On some cases,
 		 * freetype may report a larger pixmap than possible.
 		 * XXX is this test necessary?
 		 */
-		w = glyph->pixmap.width;
-		if (w > glyph->maxx - glyph->minx) {
-			w = glyph->maxx - glyph->minx;
+		w = G->pixmap.width;
+		if (w > G->maxx - G->minx) {
+			w = G->maxx - G->minx;
 		}
 		if (FT_HAS_KERNING(ftFont->face) && prev_index &&
-		    glyph->index) {
+		    G->index) {
 			FT_Vector delta; 
 
-			FT_Get_Kerning(ftFont->face, prev_index, glyph->index,
+			FT_Get_Kerning(ftFont->face, prev_index, G->index,
 			    ft_kerning_default, &delta); 
 			xStart += delta.x >> 6;
 		}
 		
 		/* Prevent texture wrapping with first glyph. */
-		if ((ch == &ucs[0]) && (glyph->minx < 0))
-			xStart -= glyph->minx;
+		if ((ch == &ucs[0]) && (G->minx < 0))
+			xStart -= G->minx;
 
-		for (y = 0; y < glyph->pixmap.rows; y++) {
-			if (y+glyph->yoffset < 0 ||
-			    y+glyph->yoffset >= su->h) {
+		for (y = 0; y < G->pixmap.rows; y++) {
+			if (y + G->yoffset < 0 ||
+			    y + G->yoffset >= su->h) {
 				continue;
 			}
-			dst = (Uint8 *)su->pixels +
-			    (yStart + y + glyph->yoffset)*su->pitch +
-			    (xStart + glyph->minx)*su->format->BytesPerPixel;
+			dst = su->pixels +
+			    (yStart + y + G->yoffset)*su->pitch +
+			    (xStart + G->minx)*BytesPerPixel;
 
 			/* Adjust src for pixmaps to account for pitch. */
-			src = (Uint8 *)(glyph->pixmap.buffer +
-			                glyph->pixmap.pitch*y);
-	
-			if (agTextState->colorBG.a == AG_ALPHA_TRANSPARENT) {
-				for (x = 0; x < w; x++) {
-					Uint32 alpha = *src++;
+			src = (Uint8 *)(G->pixmap.buffer +
+			                G->pixmap.pitch*y);
 
-					pixel = AG_MapPixelRGBA(su->format,
-					    C.r, C.g, C.b, alpha);
-					AG_PACKEDPIXEL_PUT(
-					    su->format->BytesPerPixel,
-					    dst, pixel);
-					dst += su->format->BytesPerPixel;
+			/* XXX TODO separate routine to avoid branch */
+			if (cBg.a == AG_ALPHA_TRANSPARENT) {
+				for (x = 0; x < w; x++) {
+					c.a = AG_8toH(*src++);
+					AG_SurfacePut_At(su, dst,
+					    AG_MapPixel(&su->format, c));
+					dst += BytesPerPixel;
 				}
 			} else {
 				for (x = 0; x < w; x++) {
-					Uint32 alpha = *src++;
-
-					AG_BLEND_RGBA(su, dst,
-					    C.r, C.g, C.b, alpha,
+					c.a = AG_8toH(*src++);
+					AG_SurfaceBlend_At(su, dst, c,
 					    AG_ALPHA_SRC);
-					dst += su->format->BytesPerPixel;
+					dst += BytesPerPixel;
 				}
 			}
 		}
-		xStart += glyph->advance;
+		xStart += G->advance;
 		if (ftFont->style & AG_TTF_STYLE_BOLD) {
 			xStart += ftFont->glyph_overhang;
 		}
-		prev_index = glyph->index;
+		prev_index = G->index;
 	}
 	if (ftFont->style & AG_TTF_STYLE_UNDERLINE) {
 		TextRenderFT_Blended_Underline(ftFont, su, tm.nLines);
@@ -1146,8 +1150,8 @@ empty:
 
 #endif /* HAVE_FREETYPE */
 
-static __inline__ AG_Surface *
-GetBitmapGlyph(AG_Font *font, Uint32 c)
+static __inline__ AG_Surface *_Nonnull
+GetBitmapGlyph(AG_Font *_Nonnull font, Uint32 c)
 {
 	if ((font->flags & AG_FONT_UPPERCASE) &&
 	    (isalpha(c) && islower(c))) {
@@ -1161,12 +1165,13 @@ GetBitmapGlyph(AG_Font *font, Uint32 c)
 
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
 static __inline__ void
-TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
+TextSizeBitmap(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm,
+    int extended)
 {
 	AG_Font *font = agTextState->font;
 	const Uint32 *c;
 	AG_Surface *sGlyph;
-	int wLine = 0;
+	int wLine = 0, lineSkip = font->lineskip;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		sGlyph = GetBitmapGlyph(font, *c);
@@ -1177,7 +1182,7 @@ TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 				tm->wLines[tm->nLines++] = wLine;
 				wLine = 0;
 			}
-			tm->h += agTextState->font->lineskip;
+			tm->h += lineSkip;
 			continue;
 		}
 		if (*c == '\t') {
@@ -1200,24 +1205,21 @@ TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 }
 
 /* Render UCS-4 text to a new surface using a bitmap font. */
-/* TODO: blend colors */
-static AG_Surface *
-TextRenderBitmap(const Uint32 *ucs)
+static AG_Surface *_Nonnull
+TextRenderBitmap(const Uint32 *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
+	AG_Surface *sGlyph, *s;
 	AG_Rect rd;
-	int line;
 	const Uint32 *c;
-	AG_Surface *sGlyph, *su;
+	int line;
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL) {
-		AG_FatalError(NULL);
-	}
-	AG_FillRect(su, NULL, AG_ColorRGBA(0,0,0,0));
+	s = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
+	AG_FillRect(s, NULL, AG_ColorRGBA(0,0,0,0));
 
 	line = 0;
 	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
@@ -1235,16 +1237,17 @@ TextRenderBitmap(const Uint32 *ucs)
 		}
 		sGlyph = GetBitmapGlyph(font, *c);
 		if (*c != ' ') {
-			AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
+			AG_SurfaceBlit(sGlyph, NULL, s, rd.x, rd.y);
 		}
 		rd.x += sGlyph->w;
 	}
-	AG_SurfaceSetColorKey(su, AG_SRCCOLORKEY,
-	    AG_MapPixelRGBA(su->format, 0,0,0,0));
-	AG_SurfaceSetAlpha(su, AG_SRCALPHA, font->bglyphs[0]->format->alpha);
+	AG_SurfaceSetColorKey(s, AG_SURFACE_COLORKEY,
+	    AG_MapPixel_RGBA(&s->format, 0,0,0,0));
+	AG_SurfaceSetAlpha(s, AG_SURFACE_ALPHA,
+	    font->bglyphs[0]->alpha);
 
 	FreeMetrics(&tm);
-	return (su);
+	return (s);
 }
 
 /* Render an UCS-4 text string onto a new 8-bit surface. */
@@ -1352,7 +1355,7 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 
 	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) != NULL) {
 		AG_TextSizeMultiUCS4(ucs, w, h, wLines, nLines);
-		Free(ucs);
+		free(ucs);
 	} else {
 		*w = 0;
 		*h = 0;
@@ -1653,7 +1656,10 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|AG_WINDOW_NORESIZE);
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+	                        AG_WINDOW_NORESIZE)) == NULL) {
+		AG_FatalError(NULL);
+	}
 	win->wmType = AG_WINDOW_WM_DIALOG;
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
@@ -1709,7 +1715,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 
 /* Create a dialog to edit a string value. */
 void
-AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
+AG_TextEditString(char *sp, AG_Size len, const char *msgfmt, ...)
 {
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;

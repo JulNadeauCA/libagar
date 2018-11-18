@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Serialization functions for graphic surfaces.
+ * Serialization functions for uncompressed graphic surfaces.
  */
 
 #include <agar/core/core.h>
@@ -33,191 +33,215 @@
 #include <agar/gui/surface.h>
 #include <agar/gui/load_surface.h>
 
-const AG_Version agSurfaceVer = { 0, 0 };
-
-enum {
-	RAW_ENCODING,
-	RLE_ENCODING,
-	PNG_ENCODING,
-	JPEG_ENCODING,
-	TIFF_ENCODING
-};
+const AG_Version agSurfaceVer = { 1, 0 };
 
 void
-AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
+AG_WritePalette(AG_DataSource *ds, const AG_Palette *pal)
 {
-	Uint8 *src;
-	int x, y;
+	int i;
+
+	AG_WriteUint16(ds, pal->nColors);
+	for (i = 0; i < pal->nColors; i++)
+		AG_WriteColor(ds, pal->colors[i]);
+}
+
+int
+AG_ReadPalette(AG_Palette *pal, AG_DataSource *ds)
+{
+	Uint16 nColors;
+	int i;
+
+	if ((nColors = AG_ReadUint16(ds)) != pal->nColors) {
+		AG_SetErrorS("Bad color count");
+		return (-1);
+	}
+	for (i = 0; i < pal->nColors; i++) {
+		pal->colors[i] = AG_ReadColor(ds);
+	}
+	return (0);
+}
+
+void
+AG_WriteSurface(AG_DataSource *ds, AG_Surface *s)
+{
+	const AG_PixelFormat *pf = &s->format;
 
 	AG_WriteVersion(ds, "AG_Surface", &agSurfaceVer);
-	AG_WriteUint32(ds, RAW_ENCODING);
+	AG_WriteUint16(ds, s->flags & AG_SAVED_SURFACE_FLAGS);
+	AG_WriteUint16(ds, s->w);
+	AG_WriteUint16(ds, s->h);
+	AG_WriteUint8(ds, pf->mode);
+	AG_WriteUint8(ds, pf->BitsPerPixel);
 
-	AG_WriteUint32(ds, su->flags&(AG_SRCCOLORKEY|AG_SRCALPHA));
-	AG_WriteUint16(ds, su->w);
-	AG_WriteUint16(ds, su->h);
-	AG_WriteUint8(ds, su->format->BitsPerPixel);
-	AG_WriteUint8(ds, 0);				/* TODO grayscale */
-	AG_WriteUint32(ds, su->format->Rmask);
-	AG_WriteUint32(ds, su->format->Gmask);
-	AG_WriteUint32(ds, su->format->Bmask);
-	AG_WriteUint32(ds, su->format->Amask);
-	AG_WriteUint8(ds, su->format->alpha);
-	AG_WriteUint32(ds, su->format->colorkey);
-#if 0
-	printf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
-	    su->format->BitsPerPixel,
-	    (su->flags & AG_SRCALPHA) ? " alpha" : "",
-	    (su->flags & AG_SRCCOLORKEY) ? " colorkey" : "");
-	printf("masks: %08x,%08x,%08x,%08x\n", su->format->Rmask,
-	    su->format->Gmask, su->format->Bmask, su->format->Amask);
-	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
-	    su->format->alpha);
-#endif
-	if (su->format->BitsPerPixel == 8) {
-		int i;
-
-		AG_WriteUint32(ds, su->format->palette->nColors);
-		for (i = 0; i < su->format->palette->nColors; i++) {
-			AG_WriteUint8(ds, su->format->palette->colors[i].r);
-			AG_WriteUint8(ds, su->format->palette->colors[i].g);
-			AG_WriteUint8(ds, su->format->palette->colors[i].b);
+	switch (pf->mode) {
+	case AG_SURFACE_PACKED:
+#if AG_MODEL == AG_LARGE
+		if (pf->Rmask > 0xffffffff ||
+		    pf->Gmask > 0xffffffff ||
+		    pf->Bmask > 0xffffffff ||
+		    pf->Amask > 0xffffffff) {
+			AG_WriteUint8(ds, 64);
+			AG_WriteUint64(ds, pf->Rmask);
+			AG_WriteUint64(ds, pf->Gmask);
+			AG_WriteUint64(ds, pf->Bmask);
+			AG_WriteUint64(ds, pf->Amask);
+		} else
+#else /* !LARGE */
+		{
+			AG_WriteUint8(ds, 32);
+			AG_WriteUint32(ds, pf->Rmask);
+			AG_WriteUint32(ds, pf->Gmask);
+			AG_WriteUint32(ds, pf->Bmask);
+			AG_WriteUint32(ds, pf->Amask);
 		}
+#endif
+		break;
+	case AG_SURFACE_INDEXED:
+		AG_WritePalette(ds, pf->palette);
+		break;
+	case AG_SURFACE_GRAYSCALE:
+		AG_WriteUint8(ds, pf->graymode);
+		break;
 	}
 
-	src = (Uint8 *)su->pixels;
-	for (y = 0; y < su->h; y++) {
-		for (x = 0; x < su->w; x++) {
-			switch (su->format->BytesPerPixel) {
-			case 4:
-				AG_WriteUint32(ds, *(Uint32 *)src);
-				break;
-			case 3:
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-				AG_WriteUint32(ds,
-				    (src[0] << 16) +
-				    (src[1] << 8) +
-				     src[2]);
-#else
-				AG_WriteUint32(ds,
-				    (src[2] << 16) +
-				    (src[1] << 8) +
-				     src[0]);
+	AG_WriteRect(ds, s->clipRect);
+
+#if AG_MODEL == AG_LARGE
+	if (s->colorkey > 0xffffffff) {
+		AG_WriteUint8(ds, 64);
+		AG_WriteUint64(ds, s->colorkey);
+	} else
 #endif
-				break;
-			case 2:
-				AG_WriteUint16(ds, *(Uint16 *)src);
-				break;
-			case 1:
-				/* XXX do one big write */
-				AG_WriteUint8(ds, *src);
-				break;
-			}
-			src += su->format->BytesPerPixel;
-		}
+	{
+		AG_WriteUint8(ds, 32);
+		AG_WriteUint32(ds, s->colorkey);
 	}
+#if AG_MODEL == AG_LARGE
+	if (s->alpha > 0xff) {
+		AG_WriteUint8(ds, 16);
+		AG_WriteUint16(ds, s->alpha);
+	} else
+#endif
+	{
+		AG_WriteUint8(ds, 8);
+		AG_WriteUint8(ds, s->alpha);
+	}
+
+	AG_WriteUint16(ds, s->pitch);
+	AG_Write(ds, s->pixels, (s->pitch * s->h));
+
+	/* TODO serialize animation frames */
+	AG_WriteUint32(ds, 0); /* s->n */
 }
 
 AG_Surface *
 AG_ReadSurface(AG_DataSource *ds)
 {
-	AG_Surface *su;
-	Uint32 encoding;
-	Uint32 flags;
-	Uint16 w, h;
-	Uint8 depth, grayscale;
-	Uint32 Rmask, Gmask, Bmask, Amask;
-	Uint8 *dst;
-	int x, y;
+	AG_PixelFormat pf;
+	AG_Surface *s;
+	AG_SurfaceMode mode;
+	Uint w,h, flags;
+	int BitsPerPixel;
+	Uint8 size;
 
-	if (AG_ReadVersion(ds, "AG_Surface", &agSurfaceVer, NULL) != 0)
-		return (NULL);
-
-	encoding = AG_ReadUint32(ds);
-	if (encoding != RAW_ENCODING) {
-		AG_SetError(_("Unsupported surface encoding: %u"),
-		    (unsigned int)encoding);
+	if (AG_ReadVersion(ds, "AG_Surface", &agSurfaceVer, NULL) != 0) {
 		return (NULL);
 	}
-	flags = AG_ReadUint32(ds);
+	flags = (AG_ReadUint16(ds) & AG_SAVED_SURFACE_FLAGS);
 	w = AG_ReadUint16(ds);
 	h = AG_ReadUint16(ds);
-	depth = AG_ReadUint8(ds);
-	grayscale = AG_ReadUint8(ds);
-	Rmask = AG_ReadUint32(ds);
-	Gmask = AG_ReadUint32(ds);
-	Bmask = AG_ReadUint32(ds);
-	Amask = AG_ReadUint32(ds);
+	mode = (AG_SurfaceMode)AG_ReadUint8(ds);
+	BitsPerPixel = AG_ReadUint8(ds);
 
-	su = AG_SurfaceRGBA(w, h, depth, flags, Rmask,Gmask,Bmask,Amask);
-	su->format->alpha = AG_ReadUint8(ds);
-	su->format->colorkey = AG_ReadUint32(ds);
-#if 0	
-	printf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
-	    grayscale ? " grayscale" : "",
-	    (flags & AG_SRCALPHA) ? " alpha" : "",
-	    (flags & AG_SRCCOLORKEY) ? " colorkey" : "");
-	printf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
-	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
-	    su->format->alpha);
+	if (!AG_PixelFormatIsSupported(mode, BitsPerPixel)) {
+		AG_SetErrorS("Bad mode/bpp combination");
+		return (NULL);
+	}
+	switch (pf.mode) {
+	case AG_SURFACE_PACKED:
+		if ((size = AG_ReadUint8(ds)) == 64) {
+#if AG_MODEL == AG_LARGE
+			Uint64 Rmask = AG_ReadUint64(ds);
+			Uint64 Gmask = AG_ReadUint64(ds);
+			Uint64 Bmask = AG_ReadUint64(ds);
+			Uint64 Amask = AG_ReadUint64(ds);
+
+			AG_PixelFormatRGBA(&pf, BitsPerPixel,
+			    Rmask, Gmask, Bmask, Amask);
+#else
+			AG_SetErrorS("64bpp surfaces require AG_LARGE");
+			return (NULL);
 #endif
-	if (depth == 8) {
-		AG_Color *colors;
-		Uint32 i, ncolors;
+		} else if (size == 32) {
+			Uint32 Rmask = AG_ReadUint32(ds);
+			Uint32 Gmask = AG_ReadUint32(ds);
+			Uint32 Bmask = AG_ReadUint32(ds);
+			Uint32 Amask = AG_ReadUint32(ds);
 
-		ncolors = AG_ReadUint32(ds);
-		colors = Malloc(ncolors*sizeof(AG_Color));
-
-		if (grayscale) {
-			for (i = 0; i < ncolors; i++) {
-				colors[i].r = i;
-				colors[i].g = i;
-				colors[i].b = i;
-			}
+			AG_PixelFormatRGBA(&pf, BitsPerPixel,
+			    Rmask, Gmask, Bmask, Amask);
 		} else {
-			for (i = 0; i < ncolors; i++) {
-				colors[i].r = AG_ReadUint8(ds);
-				colors[i].g = AG_ReadUint8(ds);
-				colors[i].b = AG_ReadUint8(ds);
-			}
-		}
-		if (AG_SurfaceSetPalette(su, colors, 0, ncolors) == -1) {
-			/* XXX leak */
+			AG_SetErrorS("Bad mask size");
 			return (NULL);
 		}
-		Free(colors);
-	}
-	
-	dst = (Uint8 *)su->pixels;
-	for (y = 0; y < su->h; y++) {
-		for (x = 0; x < su->w; x++) {
-			switch (su->format->BytesPerPixel) {
-			case 4:
-				*(Uint32 *)dst = AG_ReadUint32(ds);
-				break;
-			case 3:
-				{
-					Uint32 c = AG_ReadUint32(ds);
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-					dst[0] = (c >> 16) & 0xff;
-					dst[1] = (c >> 8) & 0xff;
-					dst[2] = c & 0xff;
-#else
-					dst[2] = (c >> 16) & 0xff;
-					dst[1] = (c >> 8) & 0xff;
-					dst[0] = c & 0xff;
-#endif
-				}
-				break;
-			case 2:
-				*(Uint16 *)dst = AG_ReadUint16(ds);
-				break;
-			case 1:
-				/* XXX do one big read */
-				*dst = AG_ReadUint8(ds);
-				break;
-			}
-			dst += su->format->BytesPerPixel;
+		break;
+	case AG_SURFACE_INDEXED:
+		AG_PixelFormatIndexed(&pf, BitsPerPixel);
+		if (AG_ReadPalette(pf.palette, ds) == -1) {
+			return (NULL);
 		}
+		break;
+	case AG_SURFACE_GRAYSCALE:
+		AG_PixelFormatGrayscale(&pf, BitsPerPixel);
+		pf.graymode = AG_ReadUint8(ds);
+		break;
 	}
-	return (su);
+	if ((s = AG_SurfaceNew(&pf, w,h, flags)) == NULL) {
+		return (NULL);
+	}
+	s->clipRect = AG_ReadRect(ds);
+
+	if ((size = AG_ReadUint8(ds)) == 64) {
+#if AG_MODEL == AG_LARGE
+		s->colorkey = AG_ReadUint64(ds);
+#else
+		AG_SetErrorS("64bpp colorkey needs AG_LARGE");
+		goto fail;
+#endif
+	} else if (size == 32) {
+		s->colorkey = AG_ReadUint32(ds);
+	} else {
+		AG_SetErrorS("Bad colorkey size");
+		goto fail;
+	}
+
+	if ((size = AG_ReadUint8(ds)) == 16) {
+#if AG_MODEL == AG_LARGE
+		s->alpha = AG_ReadUint16(ds);
+#else
+		s->alpha = AG_16to8(AG_ReadUint16(ds));
+#endif
+	} else if (size == 8) {
+#if AG_MODEL == AG_LARGE
+		s->alpha = AG_8to16(AG_ReadUint8(ds));
+#else
+		s->alpha = AG_ReadUint8(ds);
+#endif
+	} else {
+		AG_SetErrorS("Bad alpha size");
+		goto fail;
+	}
+
+	if (s->pitch != AG_ReadUint16(ds)) {
+		AG_SetErrorS("Bad pitch");
+		goto fail;
+	}
+	if (AG_Read(ds, s->pixels, (h * s->pitch)) != 0) {
+		goto fail;
+	}
+	(void)AG_ReadUint32(ds); /* s->n; TODO */
+	return (s);
+fail:
+	AG_SurfaceFree(s);
+	return (NULL);
 }

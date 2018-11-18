@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+.\" Copyright (c) 2006-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,35 +38,32 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure describes a raster-based software graphics surface.
-It supports all
-.Em packed
-pixel formats which encode pixels in 32-bit or less and allow components to be
-retrieved by bitmasks.
-.Em Indexed
-(or
-.Sq palletized )
-pixel formats up to 8-bit per pixel are also supported.
+structure describes a graphics surface in one of:
 .Pp
-.Nm
-supports colorkey and alpha-blending (with an alpha channel or per-surface
-alpha setting).
-Surfaces may define destination clipping rectangles for operations such
-as
-.Fn AG_SurfaceBlit .
+.Bl -tag -width "Grayscale Mode "
+.It Packed Mode
+.\" SYNC packed
+8- or 16-bit RGBA components packed in any order
+into 8-, 16-, 24-, 32- or 64-bit wide pixels.
+.It Indexed Mode
+.\" SYNC indexed
+1-, 2-, 4- or 8-bit per pixel palettized mode.
+.It Grayscale Mode
+.\" SYNC grayscale
+16- or 32-bit grayscale with alpha packed into 32- or 64-bit wide pixels.
+.El
+.Pp
+Image transfers work across all modes and support alpha blending according
+to an alpha channel (if one is defined) and/or a per-surface overall alpha.
+Simple colorkey based transparency is also supported.
+Image transfers honor a settable per-surface clipping rectangle.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Surface *"
-.Fn AG_SurfaceNew "enum ag_surface_type type" "Uint w" "Uint h" "const AG_PixelFormat *fmt" "Uint flags"
+.Fn AG_SurfaceNew "const AG_PixelFormat *pf" "Uint w" "Uint h" "Uint flags"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceEmpty "void"
-.Pp
-.Ft "AG_Surface *"
-.Fn AG_SurfaceStdRGB "Uint w" "Uint h"
-.Pp
-.Ft "AG_Surface *"
-.Fn AG_SurfaceStdRGBA "Uint w" "Uint h"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceIndexed "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
@@ -117,7 +114,10 @@ as
 .Fn AG_SurfaceFromSDL "SDL_Surface *surface"
 .Pp
 .Ft "int"
-.Fn AG_SurfaceSetPalette "AG_Surface *su" "AG_Color *colors" "Uint offs" "Uint count"
+.Fn AG_SurfaceSetColors "AG_Surface *surface" "AG_Color *colors" "Uint offs" "Uint count"
+.Pp
+.Ft "int"
+.Fn AG_SurfaceSetPalette "AG_Surface *surface" "const AG_Palette *palette"
 .Pp
 .Ft "int"
 .Fn AG_SurfaceResize "AG_Surface *surface" "Uint w" "Uint h"
@@ -126,53 +126,67 @@ as
 .Fn AG_SurfaceFree "AG_Surface *surface"
 .Pp
 .nr nS 0
-The
 .Fn AG_SurfaceNew
-function allocates and initializes a new
-.Nm
-of the specified dimensions
+allocates and initializes a new graphics surface of size
 .Fa w ,
 .Fa h
-(given in pixels).
-.Fa fmt
-is a pointer to a
+in pixels.
+The
+.Fa pf
+argument is the
 .Ft AG_PixelFormat
-structure describing the way pixels are to be encoded in memory (see
-.Sx PIXEL FORMATS
-section below).
-The pixel data is left uninitialized.
+describing the type of surface (Packed / Palettized / Grayscale),
+and the way pixels are to be encoded in memory (see
+.Sx PIXEL FORMATS ) .
+If
+.Fa pf
+is NULL, the
+.Va format
+field is left uninitialized (the caller can later use
+.Fn AG_PixelFormat*
+to initialize it).
+If the global
+.Va agSurfaceFmt
+is passed under
+.Va format ,
+then Agar will select the "best" available mode closest to the native display.
 Acceptable values for
 .Fa type
 include:
 .Pp
-.Bl -tag -compact -width "AG_SURFACE_INDEXED "
+.Bl -tag -width "AG_SURFACE_GRAYSCALE "
 .It AG_SURFACE_PACKED
-Packed-pixel format (RGB, RGBA, BGR, etc.)
+.\" SYNC packed
+8- or 16-bit RGBA components packed into 8-, 16-, 24-, 32- or 64-bit wide pixels.
 .It AG_SURFACE_INDEXED
-Color-index format (per-surface palette)
+.\" SYNC indexed
+1-, 2-, 4- or 8-bit per pixel palettized mode.
+.It AG_SURFACE_GRAYSCALE
+.\" SYNC grayscale
+16- or 32-bit grayscale with alpha packed into 32- or 64-bit wide pixels.
 .El
 .Pp
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_SURFACE_GLTEXTURE "
-.It AG_SRCCOLORKEY
-Enable colorkeying.
+.Bl -tag -width "AG_SURFACE_GL_TEXTURE "
+.It AG_SURFACE_COLORKEY
+Enable colorkey.
 In
 .Fn AG_SurfaceBlit ,
 this option inhibits the copy of all pixels matching the source surface's
 colorkey setting.
 .Fn AG_SurfaceSetColorKey
 controls this flag.
-.It AG_SRCALPHA
+.It AG_SURFACE_ALPHA
 Enable alpha blending.
 In
 .Fn AG_SurfaceBlit ,
 this option enables blending of pixels in the source and destination surfaces
-based on the alpha component of the source pixel.
+based on the alpha component of the source pixel (and the per-surface alpha).
 See
 .Fn AG_SetAlpha .
-.It AG_SURFACE_GLTEXTURE
+.It AG_SURFACE_GL_TEXTURE
 Surface can be uploaded as an OpenGL texture without the need for pixel format
 conversion.
 See
@@ -180,10 +194,10 @@ See
 .Xr AG_GL_UpdateTexture 3 .
 .It AG_SURFACE_MAPPED
 Surface is attached to an
-.Xr AG_Widget 3 ,
-so calls to
+.Xr AG_Widget 3
+(so any calls to
 .Xr AG_SurfaceFree 3
-are not allowed.
+are disallowed).
 .El
 .Pp
 The
@@ -191,31 +205,21 @@ The
 function creates a new 0x0 pixel surface.
 Blitting such an empty surface is a no-op.
 .Pp
-.Fn AG_SurfaceStdRGB
-and
-.Fn AG_SurfaceStdRGBA
-create a surface in the recommended
-.Sq standard
-format, as determined by Agar on initialization time.
-Usually, this is a packed-pixel format with an alpha component.
-.Pp
-The
 .Fn AG_SurfaceIndexed
-function creates a new surface of
+creates a new surface of
 .Fa w
 by
 .Fa h
-pixels using indexed pixel format.
-This involves the allocation of a palette.
+pixels using an indexed pixel format with palette.
 The size of this palette is determined by
-.Fa bitsPerPixel.
-All entries in the palette are initialized to black, except in the 2-bpp
-case, where color 0 is initialized to white and color 1 is initialized to
-black.
+.Fa bitsPerPixel .
+Entries in the palette are initialized to black except in monochrome (1-bpp)
+mode where colors (0,1) are initialized to (white,black).
 .Pp
-The
 .Fn AG_SurfaceRGB
-function creates a new surface of
+and
+.Fn AG_SurfaceRGBA
+creates a new surface of
 .Fa w
 by
 .Fa h
@@ -224,30 +228,28 @@ In memory, pixels are encoded as contiguous blocks of
 .Fa bitsPerPixel
 bits, and the bitmasks specified in
 .Fa [RGB]mask
-are used to retrieve the individual red, green and blue components.
-The
+are used to retrieve the individual 8-bit red, green, blue and alpha components.
 .Fn AG_SurfaceRGBA
-variant adds an alpha-channel component and implicitely sets the
-.Dv AG_SRCALPHA
-flag (see
-.Fn AG_SurfaceBlit 3 ) .
+implicitely sets the
+.Dv AG_SURFACE_ALPHA
+flag by default.
 .Pp
 .Fn AG_SurfaceFromPixelsRGB
 and
 .Fn AG_SurfaceFromPixelsRGBA
-create a new surface from existing pixel data in the specified format.
-The
+create and initialize a new surface by copying existing pixel data in the
+given format.
 .Fn AG_SurfaceFromPixelsRGBA
-function also sets the
-.Dv AG_SRCALPHA
-flag.
+also sets
+.Dv AG_SURFACE_ALPHA
+implicitely.
 .Pp
 The
 .Fn AG_SurfaceStdGL
 function creates a surface in an optimal format for OpenGL textures
-(packed, 32 bits per pixel with native RGB masks).
+(packed, 32 bits per pixel with native-endian RGB masks).
 It also sets the
-.Dv AG_SURFACE_GLTEXTURE
+.Dv AG_SURFACE_GL_TEXTURE
 flag on the new surface.
 The function does not use OpenGL itself and is available regardless
 of whether Agar was compiled with OpenGL support.
@@ -284,18 +286,14 @@ to a newly-allocated
 structure.
 This function is available only if Agar was compiled with SDL support.
 .Pp
-The
+.Fn AG_SurfaceSetColors
+sets contiguous entries in the colormap of a palettized surface from a
+given array of
+.Xr AG_Color 3 .
+.Pp
 .Fn AG_SurfaceSetPalette
-function copies
-.Fa count
-color entries from the
-.Fa colors
-array, to
-.Fa count
-slots (starting at
-.Fa offs )
-in the palette of indexed surface
-.Fa su .
+sets the entire colormap of a palettized surface from the given
+.Ft AG_Palette .
 .Pp
 .Fn AG_SurfaceResize
 attempts to resize a surface to the specified dimensions.
@@ -321,6 +319,9 @@ function releases all resources allocated by the given surface.
 .Ft void
 .Fn AG_GetClipRect "const AG_Surface *s" "AG_Rect *r"
 .Pp
+.Ft int
+.Fn AG_SurfaceClipped "const AG_Surface *s" "int x" "int y"
+.Pp
 .Ft void
 .Fn AG_SurfaceCopy "AG_Surface *dest" "const AG_Surface *src"
 .Pp
@@ -330,11 +331,8 @@ function releases all resources allocated by the given surface.
 .Ft "AG_Surface *"
 .Fn AG_SurfaceConvert "const AG_Surface *src" "const AG_PixelFormat *newFmt"
 .Pp
-.Ft "int"
-.Fn AG_ScaleSurface "const AG_Surface *src" "Uint16 width" "Uint16 height" "AG_Surface **dst"
-.Pp
-.Ft "void"
-.Fn AG_SetAlphaPixels "AG_Surface *surface" "Uint8 alpha"
+.Ft "AG_Surface *"
+.Fn AG_SurfaceScale "const AG_Surface *src" "Uint w" "Uint h"
 .Pp
 .Ft "int"
 .Fn AG_SurfaceExportFile "const AG_Surface *su" "char *path"
@@ -352,79 +350,86 @@ function releases all resources allocated by the given surface.
 .Fn AG_SurfaceExportSDL "const AG_Surface *su"
 .nr nS 0
 .Pp
-The
 .Fn AG_FillRect
-routine fills the rectangle
+fills the rectangle
 .Fa r
-with the specified color.
-If the target surface has an alpha channel, the alpha component is copied as-is.
-If the rectangle lies outside of the surface's clipping rectangle, it is
-clipped accordingly.
+(or rather the intersection of
+.Fa r
+with the surface's clipping rectangle) against a color
+.Fa c .
+.Fn AG_FillRect
+does not perform alpha blending and the alpha component of target pixels
+(when surface has an alpha channel) are replaced by that of
+.Fa c .
 .Pp
 .Fn AG_SurfaceBlit
-copies the contents of a surface (or a region within a surface if
-.Fa rSrc
-is non-NULL), to a given target position
+performs an image transfer from one surface (or rectangular region
+of pixels in a surface) to coordinates
 .Fa x ,
 .Fa y
-within surface
+in surface
 .Fa dst .
-The clipping rectangle of
-.Fa dst
-(see below) applies.
+Honors the target surface's clipping rectangle.
+If a colorkey is set, matching transparent pixels are skipped.
+If the source surface has an alpha channel then blend the source pixel against
+the destination (if destination surface has an alpha channel, sum the alpha of
+both pixels and clamp to maximum opacity).
 .Pp
 .Fn AG_SetClipRect
-sets the clipping rectangle of the surface.
-The clipping rectangle will apply to surface operations such as
-.Fn AG_SurfaceBlit ,
-as well as pixel manipulation macros which perform clipping tests (
-.Fn AG_PUT_PIXEL2_CLIPPED ,
-.Fn AG_BLEND_RGBA2_CLIPPED ) .
-.Fn AG_GetClipRect
-returns the current clipping rectangle of a surface.
-If the source or destination rectangles lie outside of the surface area,
-they are clipped accordingly.
+sets the clipping rectangle of surface
+.Fa s .
+The default clipping rectangle is (0, 0, s->w, s->h).
+The clipping rectangle is used by operations such as
+.Fn AG_SurfaceBlit
+and
+.Fn AG_FillRect ,
+but it is ignored by functions which accept
+.Em unchecked
+coordinates, such as
+.Fn AG_SurfaceGet
+or
+.Fn AG_SurfacePut .
 .Pp
 The
+.Fn AG_SurfaceClipped
+test returns 1 if the pixel at
+.Fa x ,
+.Fa y
+should be clipped away according to the clipping rectangle of
+.Fa s ,
+otherwise it returns 0.
+.Pp
+.Fn AG_GetClipRect
+returns the current clipping rectangle of
+.Fa s .
+.Pp
 .Fn AG_SurfaceCopy
-function copies the contents of surface
+copies the contents of surface
 .Fa src
 onto another, existing surface
 .Fa dst .
-The raw pixel data is copied, so alpha and colorkey parameters are ignored.
-Clipping is done if the surfaces have different sizes.
+Colorkey and alpha parameters are ignored.
+Pixel data is block copied (if the formats allow it), simply copied, or
+otherwise converted if the formats differ.
+If the two surfaces have different sizes then padding and/or clipping is done.
 .Pp
 .Fn AG_SurfaceDup
 returns a newly allocated surface containing a copy of
 .Fa src .
-If there is insufficient memory,
-.Fn AG_SurfaceDup
-will fail returning NULL.
-The source surface must be locked (src->lock).
 .Pp
 .Fn AG_SurfaceConvert
-is similar to
-.Fn AG_SurfaceDup ,
-except that the surface is converted to the specified pixel format
-.Fa newFmt .
+returns a newly allocated copy of the surface, but in the given format
+.Fa pf .
+Conversion is performed if the pixel formats differ.
 .Pp
-.Fn AG_ScaleSurface
-returns a copy of surface
+.Fn AG_SurfaceScale
+returns a copy of the surface
 .Fa src
-scaled to the given size in pixels into
-.Fa dst ,
-which must be either NULL or a pointer to an existing surface.
-If
-.Fa dst
-is NULL, a new surface is allocated.
-If there is insufficient memory for the rescaled surface,
-.Fn AG_ScaleSurface
-will fail returning -1.
-.Pp
-The
-.Fn AG_SetAlphaPixels
-function changes the alpha component of all pixels with a non-zero alpha
-component.
+scaled to
+.Fa w
+by
+.Fa h
+pixels (or NULL if an error occurred).
 .Pp
 The
 .Fn AG_SurfaceExportFile
@@ -469,12 +474,50 @@ exports an Agar surface to a newly allocated
 .Xr SDL_Surface 3 .
 This function is available only if Agar was compiled with SDL support.
 .Sh PIXEL FORMATS
+The
+.Ft AG_PixelFormat
+structure describes how pixels are encoded in memory:
+.Bd -literal
+                               /* Bits per pixel: | 1 2 4 8 16 24 32 64 |*/
+typedef enum ag_surface_mode { /* --------------- |---------------------|*/
+	AG_SURFACE_PACKED,     /* Packed RGB(A)   |       X X  X  X  LG |*/
+	AG_SURFACE_INDEXED,    /* Palettized      | X X X X             |*/
+	AG_SURFACE_GRAYSCALE   /* Grayscale+Alpha |               X  LG |*/
+} AG_SurfaceMode;
+
+typedef struct ag_pixel_format {
+	AG_SurfaceMode mode;     /* Image type */
+	int BitsPerPixel;        /* Depth (in bits/pixel) */
+	int BytesPerPixel;       /* Depth (in bytes/pixel) */
+	int PixelsPerByte;       /* Pixels per byte (or 0 if >8bpp) */
+	union {
+		AG_Palette *palette;       /* Colormap for Indexed */
+		AG_GrayscaleMode graymode; /* Grayscale-RGB method */
+		struct {
+			/*
+			 * Number of bits lost by packing each component
+			 * into our native representation.
+			 */
+			Uint8 Rloss, Gloss, Bloss, Aloss;
+			/*
+			 * Number of bits at the right of each component.
+			 */
+			Uint8 Rshift, Gshift, Bshift, Ashift;
+			/*
+			 * Pixel-wide mask over each component.
+			 */
+			AG_Pixel Rmask, Gmask, Bmask, Amask;
+		};
+	};
+} AG_PixelFormat;
+.Pp
+.Ed
 .nr nS 1
 .Ft "AG_PixelFormat *"
-.Fn AG_PixelFormatRGB "Uint8 bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Fn AG_PixelFormatRGB "Uint8 bitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask"
 .Pp
 .Ft "AG_PixelFormat *"
-.Fn AG_PixelFormatRGBA "Uint8 bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Fn AG_PixelFormatRGBA "Uint8 bitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask" "AG_Pixel Amask"
 .Pp
 .Ft "AG_PixelFormat *"
 .Fn AG_PixelFormatIndexed "Uint8 bitsPerPixel"
@@ -487,24 +530,6 @@ This function is available only if Agar was compiled with SDL support.
 .Pp
 .nr nS 0
 .\" MANLINK(AG_PixelFormat)
-The
-.Ft AG_PixelFormat
-structure describes a general indexed or packed-pixel surface
-format.
-It is defined as follows:
-.Bd -literal
-typedef struct ag_pixel_format {
-	AG_Palette *palette;                 /* For indexed formats */
-
-	Uint8   BitsPerPixel;                /* Depth (bits/pixel) */
-	Uint8   BytesPerPixel;               /* Depth (bytes/pixel) */
-	Uint8   Rloss, Gloss, Bloss, Aloss;
-	Uint8   Rshift, Gshift, Bshift, Ashift;
-	Uint32  Rmask, Gmask, Bmask, Amask;
-	Uint32  colorkey;                    /* Color key pixel */
-	Uint8   alpha;                       /* Per-surface alpha value */
-} AG_PixelFormat;
-.Ed
 .Pp
 The
 .Fn AG_PixelFormatRGB
@@ -523,12 +548,8 @@ This involves allocating a new palette.
 The size of this palette is determined by
 .Fa bitsPerPixel ,
 and all palette entries are initialized to black.
-If 2 bpp is given, the first entry is initialized to white (255,255,255) and
-the second entry to black (0,0,0).
-.Pp
-If no memory is available,
-.Fn AG_PixelFormat*
-fail returning NULL.
+If 2 bpp is given, the first palette entry is initialized to white and the
+second entry is initialized to black.
 .Pp
 .Fn AG_PixelFormatCompare
 compares two pixel formats.
@@ -537,176 +558,312 @@ two formats differ.
 When comparing color-index formats, the two palettes are compared as well.
 .Pp
 .Fn AG_PixelFormatFree
-releases all resources allocated by an
-.Ft AG_PixelFormat
-structure.
-.Sh PACKED-PIXEL SURFACE OPERATIONS
-The following routines operate on surfaces in packed-pixel format exclusively.
-.Pp
+frees all resources allocated by an
+.Ft AG_PixelFormat .
+.Sh PIXEL ACCESS
 .nr nS 1
-.Ft "Uint32"
-.Fn AG_GET_PIXEL "const AG_Surface *s" "const Uint8 *p"
+.Ft "AG_Pixel"
+.Fn AG_SurfaceGet "const AG_Surface *s" "int x" "int y"
+.Pp
+.Ft "Uint8"
+.Fn AG_SurfaceGet8 "const AG_Surface *s" "int x" "int y"
 .Pp
 .Ft "Uint32"
-.Fn AG_GET_PIXEL2 "const AG_Surface *s" "int x" "int y"
+.Fn AG_SurfaceGet32 "const AG_Surface *s" "int x" "int y"
+.Pp
+.Ft "Uint64"
+.Fn AG_SurfaceGet64 "const AG_Surface *s" "int x" "int y"
+.Pp
+.Ft "AG_Pixel"
+.Fn AG_SurfaceGet_At "const AG_Surface *s" "Uint8 *p"
+.Pp
+.Ft "Uint32"
+.Fn AG_SurfaceGet32_At "const AG_Surface *s" "const Uint8 *p"
+.Pp
+.Ft "Uint64"
+.Fn AG_SurfaceGet64_At "const AG_Surface *s" "const Uint8 *p"
 .Pp
 .Ft "void"
-.Fn AG_PUT_PIXEL "AG_Surface *s" "Uint8 *p" "Uint32 c"
+.Fn AG_SurfacePut "AG_Surface *s" "int x" "int y" "AG_Pixel px"
 .Pp
 .Ft "void"
-.Fn AG_PUT_PIXEL2 "AG_Surface *s" "int x" "int y" "Uint32 c"
+.Fn AG_SurfacePut8 "AG_Surface *s" "int x" "int y" "Uint8 px"
 .Pp
 .Ft "void"
-.Fn AG_BLEND_RGBA "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
+.Fn AG_SurfacePut32 "AG_Surface *s" "int x" "int y" "Uint32 px"
 .Pp
 .Ft "void"
-.Fn AG_BLEND_RGBA2 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
+.Fn AG_SurfacePut64 "AG_Surface *s" "int x" "int y" "Uint64 px"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlendPixel "AG_Surface *s" "Uint8 *p" "AG_Color C" "AG_BlendFn fn"
+.Fn AG_SurfacePut_At "AG_Surface *s" "Uint8 *p" "AG_Pixel px"
 .Pp
 .Ft "void"
-.Fn AG_PUT_PIXEL2_CLIPPED "AG_Surface *s" "int x" "int y" "Uint32 c"
+.Fn AG_SurfacePut32_At "AG_Surface *s" "Uint8 *p" "Uint32 px"
 .Pp
 .Ft "void"
-.Fn AG_BLEND_RGBA2_CLIPPED "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
+.Fn AG_SurfacePut64_At "AG_Surface *s" "Uint8 *p" "Uint64 px"
 .Pp
-.Ft void
-.Fn AG_GetPixelRGB "Uint32 pixel" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b"
+.Ft "void"
+.Fn AG_SurfaceBlend "AG_Surface *s" "int x" "int y" "AG_Color c" "AG_AlphaFn fn"
 .Pp
-.Ft void
-.Fn AG_GetPixelRGBA "Uint32 pixel" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Ft "void"
+.Fn AG_SurfaceBlend_At "AG_Surface *s" "Uint8 *p" "AG_Color c" "AG_AlphaFn fn"
 .Pp
-.Ft Uint32
-.Fn AG_MapPixelRGB "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uing8 b"
+.Ft "void"
+.Fn AG_SurfaceBlendRGB8 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "AG_AlphaFn fn"
 .Pp
-.Ft Uint32
-.Fn AG_MapPixelRGBA "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uing8 b" "Uint8 a"
+.Ft "void"
+.Fn AG_SurfaceBlendRGB8_At "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "AG_AlphaFn fn"
+.Pp
+.Ft "void"
+.Fn AG_SurfaceBlendRGB16 "AG_Surface *s" "int x" "int y" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a" "AG_AlphaFn fn"
+.Pp
+.Ft "void"
+.Fn AG_SurfaceBlendRGB16_At "AG_Surface *s" "Uint8 *p" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a" "AG_AlphaFn fn"
 .Pp
 .Ft AG_Color
-.Fn AG_GetColorRGB "Uint32 pixel" "const AG_PixelFormat *pf"
+.Fn AG_GetColor "AG_Pixel px" "const AG_PixelFormat *pf"
 .Pp
 .Ft AG_Color
-.Fn AG_GetColorRGBA "Uint32 pixel" "const AG_PixelFormat *pf"
+.Fn AG_GetColor32 "Uint32 px" "const AG_PixelFormat *pf"
+.Pp
+.Ft AG_Color
+.Fn AG_GetColor64 "Uint64 px" "const AG_PixelFormat *pf"
+.Pp
+.Ft void
+.Fn AG_GetColor_RGB8 "AG_Pixel px" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Pp
+.Ft void
+.Fn AG_GetColor_RGB16 "AG_Pixel px" "const AG_PixelFormat *pf" "Uint16 *r" "Uint16 *g" "Uint16 *b" "Uint16 *a"
+.Pp
+.Ft void
+.Fn AG_GetColor32_RGB8 "Uint32 px" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Pp
+.Ft void
+.Fn AG_GetColor32_RGB16 "Uint32 px" "const AG_PixelFormat *pf" "Uint16 *r" "Uint16 *g" "Uint16 *b" "Uint16 *a"
+.Pp
+.Ft void
+.Fn AG_GetColor64_RGB8 "Uint64 px" "const AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Pp
+.Ft void
+.Fn AG_GetColor64_RGB16 "Uint64 px" "const AG_PixelFormat *pf" "Uint16 *r" "Uint16 *g" "Uint16 *b" "Uint16 *a"
+.Pp
+.Ft AG_Pixel
+.Fn AG_MapPixel "const AG_PixelFormat *pf" "AG_Color c"
 .Pp
 .Ft Uint32
-.Fn AG_MapColorRGB "const AG_PixelFormat *pf" "AG_Color color"
+.Fn AG_MapPixel32 "const AG_PixelFormat *pf" "AG_Color c"
+.Pp
+.Ft Uint64
+.Fn AG_MapPixel64 "const AG_PixelFormat *pf" "AG_Color c"
+.Pp
+.Ft AG_Pixel
+.Fn AG_MapPixel_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft AG_Pixel
+.Fn AG_MapPixel_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft Uint32
-.Fn AG_MapColorRGBA "const AG_PixelFormat *pf" "AG_Color color"
+.Fn AG_MapPixel32_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft Uint32
+.Fn AG_MapPixel32_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
+.Pp
+.Ft Uint64
+.Fn AG_MapPixel64_RGB8 "const AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft Uint64
+.Fn AG_MapPixel64_RGB16 "const AG_PixelFormat *pf" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .nr nS 0
-The
-.Fn AG_GET_PIXEL
-macro returns a packed 32-bit representation of the pixel at the given
-location
-.Fa p
-in the surface
+.Fn AG_SurfaceGet8
+returns the value (color index) of the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in an 1- to 8-bpp indexed surface
 .Fa s .
-.Fn AG_GET_PIXEL2
-variant locates the pixel in the surface using x,y coordinates.
+.Pp
+.Fn AG_SurfaceGet32
+returns a 32-bit representation of the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in a 1- to 64-bpp surface
+.Fa s .
+If the surface is 48- or 64-bpp,
+.Fn AG_SurfaceGet32
+returns a compressed 32-bit approximation.
+The
+.Fn AG_SurfaceGet32_At
+form returns a 32-bit representation of the pixel at address
+.Fa p
+in an 8- to 64-bpp surface
+.Fa s .
+.Pp
+.Fn AG_SurfaceGet64
+returns a 64-bit representation of the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in an 1- to 64-bpp surface
+.Fa s .
+The
+.Fn AG_SurfaceGet64_At
+form returns a 64-bit representation of the pixel at address
+.Fa p
+in an 8- to 64-bpp surface
+.Fa s .
 .Pp
 The
-.Fn AG_PUT_PIXEL
-and
-.Fn AG_PUT_PIXEL2
-write the color
+.Fn AG_SurfacePut8
+procedure writes to the pixel at
+.Fa x ,
+.Fa y
+in a 1- to 8-bpp indexed surface
+.Fa s .
+.Pp
+.Fn AG_SurfacePut32
+writes to the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in a 1- to 64- surface
+.Fa s .
+If the surface is 48- or 64-bpp,
+.Fn AG_SurfacePut32
+writes a decompressed approximation.
+The
+.Fn AG_SurfacePut32_At
+form writes to the pixel at address
+.Fa p
+in an 8- to 64-bpp surface
+.Fa s .
+.Pp
+.Fn AG_SurfacePut64
+writes to the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in a 1- to 64-bpp surface
+.Fa s .
+The
+.Fn AG_SurfacePut64_At
+form writes to the pixel at address
+.Fa p
+in an 8- to 64-bpp surface
+.Fa s .
+.Pp
+The
+.Fn AG_SurfaceBlend
+function performs alpha blending of a color
 .Fa c
-to the pixel at the given location.
+against the pixel at unchecked coordinates
+.Fa x ,
+.Fa y
+in a surface
+.Fa s .
+The alpha component of the resulting pixel is determined by the
+.Fa fn
+argument:
+.Bd -literal
+typedef enum ag_alpha_fn {
+	AG_ALPHA_ZERO,          /* dst.a = 0 */
+	AG_ALPHA_ONE,           /* dst.a = 1 */
+	AG_ALPHA_SRC,           /* dst.a = src.a */
+	AG_ALPHA_DST,           /* dst.a = dst.a */
+	AG_ALPHA_ONE_MINUS_DST, /* dst.a = (1 - dst.a) */
+	AG_ALPHA_ONE_MINUS_SRC, /* dst.a = (1 - src.a) */
+	AG_ALPHA_OVERLAY        /* dst.a = min(src.a + dst.a, 1) */
+} AG_AlphaFn;
+.Ed
 .Pp
 The
-.Fn AG_BLEND_RGBA
-and
-.Fn AG_BLEND_RGBA2
-routines perform alpha-blending of the destination pixel against the
-specified color, where
-.Fa func
-specifies the blending formula (see
-.Xr AG_BlendFn 3 ) .
-The
-.Fn AG_SurfaceBlendPixel
-function accepts an
-.Xr AG_Color 3
-argument and performs no clipping tests.
+.Fn AG_SurfaceBlend_At
+variant performs alpha blending of a color
+.Fa c
+against the pixel at byte address
+.Fa p
+in surface
+.Fa s
+(minimum 8-bpp).
 .Pp
 The
-.Fn AG_PUT_PIXEL2_CLIPPED
+.Fn AG_SurfaceBlendRGB{8,16}
 and
-.Fn AG_BLEND_RGBA2_CLIPPED
-variants of these macros first tests the given coordinates against the
-clipping rectangle of the surface (see
-.Xr AG_SetClipRect 3 ) .
-If the pixel lies outside of the rectangle, the operation is a no-op.
+.Fn AG_SurfaceBlendRGB{8,16}_At
+forms accept discrete 8- and 16-bit components instead of an
+.Xr AG_Color 3 .
 .Pp
-The
-.Fn AG_GetPixelRGB
-and
-.Fn AG_GetPixelRGBA
-functions extract the RGB / RGBA components of a pixel value
-.Fa pixel ,
-in pixel format
-.Fa pf .
-The
-.Fn AG_MapPixelRGB
-and
-.Fn AG_MapPixelRGBA
-functions perform the inverse operation, returning the pixel value (in pixel
-format
-.Fa pf )
-for the specified RGB / RGBA component values.
+.Fn AG_GetColor32
+extracts RGBA components from a 32-bit pixel in specified format and
+returns the corresponding
+.Xr AG_Color 3 .
+The procedural forms
+.Fn AG_GetColor32_RGB{8,16} ,
+return the color components into separate arguments.
 .Pp
-The
-.Fn AG_GetColor*
-and
-.Fn AG_MapColor*
-functions are equivalent to
-.Fn AG_GetPixel*
-and
-.Fn AG_MapPixel*
-except that they accept
-.Xr AG_Color 3
-arguments instead of separate component values.
+.Fn AG_GetColor64
+extracts RGBA components from a 64-bit pixel in specified format and returns
+the corresponding
+.Xr AG_Color 3 .
+The procedural forms
+.Fn AG_GetColor64_RGB{8,16}
+return the color components into separate arguments.
 .Pp
-Note that the preceding routines are only for use against surfaces in
-packed RGB/RGBA pixel formats.
-Passing a color-index format to
-.Fn AG_GetPixel* ,
-.Fn AG_GetColor* ,
-.Fn AG_MapPixel*
-or
-.Fn AG_MapColor*
-is an illegal operation.
+.Fn AG_MapPixel32
+returns a 32-bit representation of the color
+.Fa c .
+The
+.Fn AG_MapPixel32_RGB{8,16}
+forms accept individual components as separate arguments.
+.Pp
+.Fn AG_MapPixel64
+returns a 64-bit representation of the color
+.Fa c .
+The
+.Fn AG_MapPixel64_RGB{8,16}
+forms accept individual components as separate arguments.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Surface
 structure:
-.Bl -tag -width "AG_PixelFormat *format "
+.Pp
+.Bl -tag -compact -width "AG_PixelFormat format "
+.It Ft AG_PixelFormat format
+Pixel encoding format (see
+.Sx PIXEL FORMATS ) .
 .It Ft Uint flags
-Current surface flags (read-only; see
-.Sx INITIALIZATION
-section).
-.It Ft AG_PixelFormat *format
-The surface's pixel encoding (read-only; see
-.Sx PIXEL FORMATS
-section).
-.It Ft int w, h
+Option flags (see
+.Sx INITIALIZATION ) .
+.It Ft Uint w, h
 Dimensions of the surface in pixels (read-only).
-.It Ft void *pixels
-Pointer to raw pixel data (4-byte aligned)
+.It Ft Uint8 *pixels
+Pixel data. Packed (1- to 4-bpp), 4-byte aligned (8- to 32-bpp),
+or 8-byte aligned (AG_LARGE).
 .It Ft Uint pitch
 Size of a scanline in bytes.
 .It Ft Uint padding
-Scanline padding in bytes.
+Scanline end padding in bytes.
+.It Ft AG_Rect clipRect
+Clipping rectangle (default to cover surface).
+.It Ft AG_Pixel colorkey
+Transparency color key (for
+.Dv AG_SURFACE_COLORKEY
+option).
+.It Ft AG_Component alpha
+Per-surface overall alpha.
 .El
 .Sh SEE ALSO
-.Xr AG_Anim 3 ,
 .Xr AG_Intro 3 ,
+.Xr AG_Color 3 ,
 .Xr AG_Rect 3
 .Sh HISTORY
 The
 .Nm
 structure first appeared in Agar 1.3.3.
-It is modeled after the
+It was first modeled after the
 .Ft SDL_Surface
 of
 .Lk http://libsdl.org/ SDL .
+Agar 1.6 introduced support for 48- and 64-bit color (16-bit per
+.Ft AG_Color
+component precision).
+Agar 1.6 also added support for grayscale+alpha and
+true 1-, 2-, and 4-bpp palettized modes.

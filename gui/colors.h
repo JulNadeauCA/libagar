@@ -16,7 +16,6 @@ typedef Uint16 AG_Component;
 typedef Sint16 AG_ComponentOffset;
 typedef Uint32 AG_GrayComponent;
 typedef Uint64 AG_Pixel;
-typedef Uint64 AG_Mask;
 #else
 # define AG_COMPONENT_BITS 8
 # define AG_COLOR_LAST  0xff
@@ -29,7 +28,6 @@ typedef Uint8  AG_Component;
 typedef Sint8  AG_ComponentOffset;
 typedef Uint16 AG_GrayComponent;
 typedef Uint32 AG_Pixel;
-typedef Uint32 AG_Mask;
 #endif /* SMALL or MEDIUM */
 
 #define AG_COLOR_FIRST 0

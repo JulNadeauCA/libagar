@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,50 +36,54 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-Agar provides a few primitive rendering routines designed specifically for
-the rendering of GUI elements, as opposed to general-purpose graphics (look
-into other libraries, such as the included
-.Xr VG 3
-and
-.Xr RG 3
-for this).
-.Pp
-It is illegal to invoke the following routines outside of
-.Xr AG_Widget 3
-rendering context (e.g., the widget
+Agar provides a set of basic rendering operations designed for rendering GUI
+elements efficiently (as opposed to general-purpose graphics, as would be
+handled by libraries such as OpenGL or
+.Xr VG 3 ) .
+It is illegal to invoke these routines outside of the
 .Fn draw
-operation).
-The coordinates for all
-.Fn AG_Draw*
-functions are given in pixels, in the widget's local coordinate system.
+method of an
+.Xr AG_Widget 3
+(what we refer to as
+.Sq rendering context ) .
+.Pp
 The
-.Ft AG_Color
+.Fa x
 and
-.Ft AG_BlendFn
-types are commonly used to specify colors and blending modes, see
-.Xr AG_Color 3
-and
-.Xr AG_BlendFn 3
-for details.
+.Fa y
+coordinates for the
+.Fn AG_Draw*
+routines are given in pixels in the
+.Fa widget
+argument's local coordinate system.
 .Sh PRIMITIVES
 .nr nS 1
 .Ft void
 .Fn AG_PutPixel "AG_Widget *widget" "int x" "int y" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_PutPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Fn AG_PutPixelRGB "AG_Widget *widget" "int x" "int y" "AG_Component r" "AG_Component g" "AG_Component b"
 .Pp
 .Ft void
-.Fn AG_PutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c"
+.Fn AG_PutPixelRGB_8 "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
-.Fn AG_BlendPixel "AG_Widget *widget" "int x" "int y" "AG_Color c" "AG_BlendFn blendFn"
+.Fn AG_PutPixelRGB_16 "AG_Widget *widget" "int x" "int y" "Uint16 r" "Uint16 g" "Uint16 b"
 .Pp
 .Ft void
-.Fn AG_BlendPixelRGBA "AG_Widget *widget" "int x" "int y" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_PutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 px"
 .Pp
 .Ft void
-.Fn AG_BlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c" "AG_BlendFn blendFn"
+.Fn AG_PutPixel64 "AG_Widget *widget" "int x" "int y" "Uint64 px"
+.Pp
+.Ft void
+.Fn AG_BlendPixel "AG_Widget *widget" "int x" "int y" "AG_Color c" "AG_AlphaFn blendFn"
+.Pp
+.Ft void
+.Fn AG_BlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 c" "AG_AlphaFn blendFn"
+.Pp
+.Ft void
+.Fn AG_BlendPixel64 "AG_Widget *widget" "int x" "int y" "Uint64 c" "AG_AlphaFn blendFn"
 .Pp
 .Ft void
 .Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "AG_Color c"
@@ -94,7 +98,7 @@ for details.
 .Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_AlphaFn blendFn"
 .Pp
 .Ft void
 .Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "AG_Color c"
@@ -112,52 +116,48 @@ for details.
 .Fn AG_DrawRectFilled "AG_Widget *widget" "AG_Rect r" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "AG_Color c" "AG_BlendFn blendFn"
+.Fn AG_DrawRectBlended "AG_Widget *widget" "AG_Rect r" "AG_Color c" "AG_AlphaFn blendFn"
 .Pp
 .nr nS 0
 .Fn AG_PutPixel
-writes a single pixel at the specified coordinates.
+sets the pixel at
+.Fa x ,
+.Fa y
+to the native display color that most closely matches the given
+.Xr AG_Color 3 .
 The
-.Fn AG_PutPixelRGB
-variant accepts individual red, green and blue color arguments.
+.Fn AG_PutPixelRGB ,
+.Fn AG_PutPixelRGB_8 ,
+and
+.Fn AG_PutPixelRGB_16
+forms accept component values as separate arguments.
 .Pp
 The
 .Fn AG_PutPixel32
-variant accepts a 32-bit pixel value such that no conversion is necessary
-when writing the pixel to the framebuffer.
-Conversion may be achieved using
-.Xr AG_MapPixelRGB
-with the
-.Va videoFmt
-member of the widget's associated
-.Xr AG_Driver 3
-structure.
+form accept an 8- to 32-bit wide pixel already in native display format.
+Under
+.Dv AG_LARGE ,
+the
+.Fn AG_PutPixel64
+form also allows 48- and 64-bit wide pixel values.
 .Pp
 The
 .Fn AG_BlendPixel
-function writes a pixel at the specified coordinates, using alpha blending
-with the specified blending function.
-The
-.Fn AG_BlendPixelRGBA
-variant accepts an array of red, green, blue and alpha arguments.
+function blends an existing pixel against a given
+.Xr AG_Color 3 ,
+overwriting the pixel with the best native-display approximation of the result.
 .Pp
-The
 .Fn AG_BlendPixel32
-variant accepts a 32-bit packed-pixel value such that minimal conversion is
-necessary when writing to the framebuffer.
-Conversion may be achieved using
-.Xr AG_MapPixelRGB
-with the global
-.Va agSurfaceFmt .
+and
+.Fn AG_BlendPixel64
+accept a 32- and 64-bit pixel value.
 .Pp
-Note that active clipping rectangles (see
-.Xr AG_Widget 3 )
-apply to
+Coordinates to
 .Fn AG_PutPixel*
 and
-.Fn AG_BlendPixel* .
-These operations are also safe to use when underlying graphics driver is not
-framebuffer-based.
+.Fn AG_BlendPixel*
+are checked, and intersected against active clipping rectangles (see
+.Xr AG_Widget 3 ) .
 .Pp
 .Fn AG_DrawFrame
 draws a 3D-style frame.
@@ -217,7 +217,7 @@ differs from
 in that it accepts an explicit blending mode
 .Fa blendFn
 (see
-.Xr AG_BlendFn 3
+.Xr AG_AlphaFn 3
 for details).
 .Sh SIMPLE GRAPHICAL ELEMENTS
 .nr nS 1
@@ -240,12 +240,12 @@ for details).
 .Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "AG_Color c"
 .Pp
 .Ft void
-.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
 .Pp
 .nr nS 0
 The
 .Fn AG_DrawBox
-routine draws a simple 3D-style "box".
+routine draws a simple 3D-style box.
 .Fa z
 specifies the apparent 3D
 .Sq depth ,
@@ -282,10 +282,13 @@ specify the colors of the tiles.
 .Sh SYMBOLS
 .nr nS 1
 .Ft void
-.Fn AG_DrawPlus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawPlus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
 .Pp
 .Ft void
-.Fn AG_DrawMinus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Fn AG_DrawMinus "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_AlphaFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawTriangle "AG_Widget *widget" "AG_Pt v1" "AG_Pt v2" "AG_Pt v3" "AG_Color c"
 .Pp
 .Ft void
 .Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "AG_Color c1" "AG_Color c2"
@@ -308,6 +311,15 @@ routines render plus ("+") or minus ("-") signs spanning rectangle
 .Fa r
 using the specified color and blending function.
 .Pp
+.Fn AG_DrawTriangle
+renders a triangle of color
+.Fa c
+given three unordered vertices
+.Fa v1 ,
+.Fa v2 ,
+and
+.Fa v3 .
+.Pp
 .Fn AG_DrawArrowUp ,
 .Fn AG_DrawArrowDown ,
 .Fn AG_DrawArrowLeft
@@ -319,14 +331,13 @@ and
 .Fa w
 specify the size of the arrow in pixels.
 .Sh SEE ALSO
-.Xr AG_BlendFn 3 ,
+.Xr AG_AlphaFn 3 ,
 .Xr AG_Color 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr RG 3 ,
 .Xr VG 3
-.Pp
-.Lk http://freesg.org/ The FreeSG library
 .Sh HISTORY
 Simple widget primitives first appeared in Agar 1.0.
 The basic rendering system was redesigned in Agar 1.4.
+64-bit pixel access routines were added in Agar 1.6.
