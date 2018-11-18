@@ -638,40 +638,48 @@ bytes + 4 in size.
 On failure, the
 .Fn AG_WriteString
 routines raise a data source exception.
-.Sh INTERNAL DATA SOURCE API
-New sources can be implementing by defining a new structure inheriting from
-.Va AG_DataSource .
-.Pp
-Public members of the
+.Sh EXTENDING THE API
+New types of data sources can be implemented by deriving the
 .Nm
-structure include:
+structure:
 .Bd -literal
 typedef struct ag_data_source {
-	AG_Mutex lock;			/* Lock on all operations */
-	enum ag_byte_order byte_order;	/* Byte order of source */
-	AG_Size wrLast;			/* Last write count (bytes) */
-	AG_Size rdLast;			/* Last read count (bytes) */
-	AG_Size wrTotal;			/* Total write count (bytes) */
-	AG_Size rdTotal;			/* Total read count (bytes) */
+	AG_Mutex lock;                  /* Lock on all operations */
+
+	enum ag_byte_order byte_order;  /* Byte order of source */
+
+	AG_Size wrLast;                 /* Last write count (bytes) */
+	AG_Size rdLast;                 /* Last read count (bytes) */
+	AG_Size wrTotal;                /* Total write count (bytes) */
+	AG_Size rdTotal;                /* Total read count (bytes) */
 
 	AG_IOStatus (*read)(struct ag_data_source *, void *buf,
 	                    AG_Size size, AG_Size *rv);
+
 	AG_IOStatus (*read_at)(struct ag_data_source *, void *buf,
 	                       AG_Size size, AG_Offset pos, AG_Size *rv);
+
 	AG_IOStatus (*write)(struct ag_data_source *, const void *buf,
 	                     AG_Size size, AG_Size *rv);
+
 	AG_IOStatus (*write_at)(struct ag_data_source *, const void *buf,
 	                        AG_Size size, AG_Offset pos, AG_Size *rv);
+
 	AG_Offset   (*tell)(struct ag_data_source *);
+
 	int         (*seek)(struct ag_data_source *, AG_Offset offs,
 	                    enum ag_seek_mode mode);
+
 	void        (*close)(struct ag_data_source *);
 } AG_DataSource;
 .Ed
 .Pp
 The
 .Va byte_order
-setting affects integer read operations.
+field is set by
+.Fn AG_SetByteOrder
+and controls the endianness of integer serialization operations such as
+.Fn AG_ReadUint32 .
 .Pp
 The
 .Va wrLast ,
@@ -680,9 +688,8 @@ The
 and
 .Va rdTotal
 fields keep count of the read/written bytes, and are automatically
-incremented by the generic
-.Nm
-calls.
+incremented by serialization operations such as
+.Fn AG_ReadUint32 .
 .Pp
 The
 .Fn read
