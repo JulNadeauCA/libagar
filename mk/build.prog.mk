@@ -42,6 +42,7 @@ ADABIND?=	gnatbind
 ADALINK?=	gnatlink
 ASM?=		nasm
 CC?=		cc
+CC_COMPILE?=	-c
 CXX?=		c++
 LEX?=		lex
 LN?=		ln
@@ -53,7 +54,7 @@ YACC?=		yacc
 ADAFLAGS?=
 ADABFLAGS?=
 ASMFLAGS?=	-g -w-orphan-labels
-CFLAGS?=	-O2 -g
+CFLAGS?=	-O -g
 CPPFLAGS?=
 CXXFLAGS?=
 LFLAGS?=
@@ -125,8 +126,8 @@ regress: regress-subdir
 .c.o:
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $<"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $<
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $<"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $<
 
 # Compile C++ code into an object file
 .cc.o .cpp.o:
@@ -154,8 +155,8 @@ regress: regress-subdir
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.yy.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
@@ -171,8 +172,8 @@ regress: regress-subdir
 	${YACC} ${YFLAGS} -b $@ $<
 	@_cflags=""; \
 	if [ "${PROG_PROFILE}" = "Yes" ]; then _cflags="-pg -DPROF"; fi; \
-	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c"; \
-	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ -c $@.tab.c
+	echo "${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c"; \
+	${CC} ${CFLAGS} $$_cflags ${CPPFLAGS} -o $@ ${CC_COMPILE} $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -204,7 +205,6 @@ depend:	prog-tags depend-subdir
 	    else \
 	        export _mkdep_cflags="${CFLAGS}"; \
 	    fi; \
-	    echo "srcs_c=$$_srcs_c"; \
 	    if [ "$$_srcs_c" != "" ]; then \
 	        echo "${MKDEP} $$_mkdep_cflags $$_srcs_c"; \
 	        env CC=${CC} ${MKDEP} $$_mkdep_cflags $$_srcs_c; \
@@ -213,7 +213,6 @@ depend:	prog-tags depend-subdir
 	            env CC=${CC} ${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c; \
 	        fi; \
 	    fi; \
-	    echo "srcs_ada=$$_srcs_ada"; \
 	    if [ "$$_srcs_ada" != "" ]; then \
 	        echo "${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada >>.depend"; \
 	        env ADA=${ADA} ${MKDEP_ADA} ${MKDEP_ADAFLAGS} ${CFLAGS} $$_srcs_ada 1>.ada_depend 2>.ada_errors; \

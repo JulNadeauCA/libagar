@@ -24,13 +24,15 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+use strict;
 use Cwd;
 #use Errno qw(EEXIST);
 
-$COOKIE = ".mkconcurrent_$$";
-@DIRS = ();
-$BUILD = '';
-@MKFILES = (
+my $SRC = '';
+my $COOKIE = ".mkconcurrent_$$";
+my @DIRS = ();
+my $BUILD = '';
+my @MKFILES = (
 	'Makefile\.(prog|proj|in)',
 	'\.mk$',
 	'\.inc$',
@@ -56,6 +58,8 @@ $BUILD = '';
 	'^typesubst\.sh$',
 );
 my %V = ();
+my $line = '';
+my %CachedRules = ();
 
 sub Debug
 {
@@ -121,6 +125,38 @@ sub ProcessedMakefile ($$)
 	return (@lines);
 }
 
+sub MakeRule
+{
+	my ($lib, $rule) = @_;
+	my $path = $SRC.'/mk/'.$lib;
+	my $inside = 0;
+	my $out = '';
+
+	if (exists($CachedRules{$lib.' '.$rule}) && $CachedRules{$lib.' '.$rule}) {
+		return $CachedRules{$lib.' '.$rule};
+	}
+	open(LIB, $path) || die "$path: $!";
+	foreach my $l (<LIB>) {
+		chop($l);
+		if ($l =~ /^([\w\-\.\s]+):$/) {
+			my @items = split(' ', $1);
+			if (grep { $_ eq $rule } @items) {
+				$inside = 1;
+				next;
+			} elsif ($inside) {
+				$inside = 0;
+				last;
+			}
+		}
+		if ($inside) {
+			$out .= $l."\n";
+		}
+	}
+	close(LIB);
+	$CachedRules{$lib.' '.$rule} = $out;
+	return ($out);
+}
+
 sub ConvertMakefile
 {
 	my ($dir, $ndir, $ent) = @_;
@@ -152,24 +188,36 @@ EOF
 	my @shobjs = ();
 	my %catman;
 	my %psman;
-	my $libtool = 1;
-	my $shared = 0;
-	my $static = 1;
-	my $module = 1;
+	my $libtool = 0;
 	my $isProg = 0;
 	my $isLib = 0;
+	my $objExt = 'o';
+	my $bbLib;
+	my $lineNo = 1;
 
 	foreach $_ (@lines) {
 		my @srcs = ();
 
-		if (/^\s*PROG\s*=/) { $isProg = 1; }
-		if (/^\s*LIB\s*=/) { $isLib = 1; }
-		if (/^\s*USE_LIBTOOL\s*=\s*No\s*$/) { $libtool = 0; }
-		if (/^\s*LIB_SHARED\s*=\s*Yes\s*$/) { $shared = 1; }
-		if (/^\s*LIB_STATIC\s*=\s*No\s*$/) { $static = 0; }
-		if (/^\s*LIB_MODULE\s*=\s*Yes\s*$/) { $module = 1; }
+		if (/^\s*PROG\s*=/) {
+			$isProg = 1;
+			$bbLib = 'build.prog.mk';
+			push @deps, "# Using <build.prog.mk> (Makefile:$lineNo)";
+		}
+		if (/^\s*LIB\s*=/) {
+			$isLib = 1;
+			$bbLib = 'build.lib.mk';
+			push @deps, "# Using <build.lib.mk> (Makefile:$lineNo)";
+		}
+		if (/^\s*USE_LIBTOOL\s*=\s*Yes\s*$/) {		# XXX
+			$libtool = 1;
+			$objExt = 'lo';
+			push @deps, "# Using libtool (Makefile:$lineNo)";
+		}
 		if (/^\s*(SRCS|MAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
+
+			push @deps, "# Generating " . int(split(/\s/, $2)) .
+			            " entries from $type (Makefile:$lineNo)";
 
 			foreach my $src (split(/\s/, $2)) {
 				unless ($src) {
@@ -180,13 +228,13 @@ EOF
 
 				if ($type eq 'SRCS') {
 					if ($isLib && $libtool) {
-						$shobj =~
-						    s/\.(c|cc|l|y|m)$/\.lo/;
-						push @shobjs, $shobj;
+						$shobj =~ s/\.(c|cc|l|y|m)$/\.lo/;
 					} else {
-						$obj =~ s/\.(c|cc|l|y|m)$/\.o/;
-						push @objs, $obj;
+						$shobj =~ s/\.(c|cc|l|y|m)$/\.o/;
 					}
+					push @shobjs, $shobj;
+					$obj =~ s/\.(c|cc|l|y|m)$/\.o/;
+					push @objs, $obj;
 				} elsif ($type =~ /MAN(\d)/) {
 					$obj =~ s/\.(\d)$//;
 					$catman{$1} .= " $obj.cat$1";
@@ -195,92 +243,21 @@ EOF
 					$src =~ s/\.mo$/\.po/g;
 				}
 
-				# SYNC with build.{prog,lib}.mk
-				if ($src =~ /\.ad[bs]$/) {		# Ada
-					if ($isLib && $libtool) {
-						push @deps,
-						    "$shobj: $SRC/$ndir/$src";
-						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${ADA} ${LIBTOOLFLAGS} ${ADAFLAGS} -c $<
-EOF
-					} else {
-						push @deps,
-						    "$obj: $SRC/$ndir/$src";
-						push @deps, << 'EOF',
-	${ADA} ${ADAFLAGS} -c $<
-EOF
-					}
-				} elsif ($src =~ /\.[cly]$/) {	   # C/Lex/Yacc
-					if ($isLib && $libtool) {
-						push @deps,
-						    "$shobj: $SRC/$ndir/$src";
-						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -c $<
-EOF
-					} else {
-						push @deps,
-						    "$obj: $SRC/$ndir/$src";
-						push @deps, << 'EOF',
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
-EOF
-					}
-				} elsif ($src =~ /\.cc$/) {		# C++
-					if ($isLib && $libtool) {
-						push @deps,
-						    "$shobj: $SRC/$ndir/$src";
-						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${CXX} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -c $<
-EOF
-					} else {
-						push @deps,
-						    "$obj: $SRC/$ndir/$src";
-						push @deps, << 'EOF',
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
-EOF
-					}
-				} elsif ($src =~ /\.m$/) {	# Objective C
-					if ($isLib && $libtool) {
-						push @deps,
-						    "$shobj: $SRC/$ndir/$src";
-						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${OBJC} ${LIBTOOLFLAGS} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -c $<
-EOF
-					} else {
-						push @deps,
-						    "$obj: $SRC/$ndir/$src";
-						push @deps, << 'EOF',
-	${OBJC} ${CFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -c $<
-EOF
-					}
+				if ($src =~ /\.(adb|ads|asm)$/) {
+					push @deps, "$obj: $SRC/$ndir/$src";
+					push @deps, MakeRule($bbLib,".$1.o");
+				} elsif ($src =~ /\.(c|cc|l|m|y)$/) {
+					push @deps, "$shobj: $SRC/$ndir/$src";
+					push @deps, MakeRule($bbLib, ".$1.$objExt");
 				} elsif ($type =~ /MAN(\d)/) {
-					# Nroff -> ASCII
-					# -> Sync with build.man.mk.
-					push @deps,
-					    "$obj.cat$1: $SRC/$ndir/$src";
-					push @deps, << 'EOF';
-	@echo "${MANDOC} -Tascii $< > $@"
-	@(cat $< | sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | sed 's,\$$PREFIX,${PREFIX},' | sed 's,\$$DATADIR,${DATADIR},' | \
-	  ${MANDOC} -Tascii > $@) || (rm -f $@; true)
-EOF
+					push @deps, "$obj.cat$1: $SRC/$ndir/$src";
+					push @deps, MakeRule('build.man.mk', ".$1.cat$1");
 					foreach my $fmt ('ps', 'pdf', 'html') {
-						push @deps,
-						    "$obj.$fmt$1: $SRC/$ndir/$src";
-						push @deps, << "EOF";
-	@echo "\${MANDOC} -T$fmt \$< > \$@"
-	@(cat \$< | sed 's,\$\$SYSCONFDIR,\${SYSCONFDIR},' | sed 's,\$\$PREFIX,\${PREFIX},' | sed 's,\$\$DATADIR,\${DATADIR},' | \
-	  ${MANDOC} -T$fmt > \$@) || (rm -f \$@; true)
-EOF
+						push @deps, "$obj.$fmt$1: $SRC/$ndir/$src";
+						push @deps, MakeRule('build.man.mk', ".$1.$fmt");
 					}
 				} elsif ($type =~ /MOS/) {
-					# Portable object -> machine object
-					# -> Sync with build.po.mk.
-					push @deps, "$obj: $SRC/$ndir/$src";
-					push @deps, << 'EOF';
-	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
-		echo "${MSGFMT} -o $@ $<"; \
-		${MSGFMT} -o $@ $<; \
-	fi
-EOF
+					push @deps, MakeRule('build.po.mk', '.po.mo');
 				}
 			}
 		}
@@ -330,7 +307,7 @@ EOF
 			}
 			print DSTMAKEFILE $_, "\n";
 		}
-
+		$lineNo++;
 	}
 	
 	if (@deps) {
@@ -387,10 +364,9 @@ sub Scan
 }
 
 $SRC = $ARGV[0];
-
 unless ($SRC) {
 	print STDERR "Usage: $0 [source-directory-path]\n";
-	exit (0);
+	exit (1);
 }
 
 unless (-d $SRC) {
