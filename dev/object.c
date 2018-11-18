@@ -142,7 +142,7 @@ PollEvents(AG_Event *event)
 		}
 		Strlcat(args, ")", sizeof(args));
 
-		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev,
+		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev->name,
 		    (ev->flags & AG_EVENT_ASYNC) ? " <async>" : "",
 		    (ev->flags & AG_EVENT_PROPAGATE) ? " <propagate>" : "",
 		    args);
