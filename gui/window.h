@@ -8,7 +8,7 @@
 #include <agar/gui/begin.h>
 
 #ifndef AG_WINDOW_CAPTION_MAX
-#define AG_WINDOW_CAPTION_MAX 96
+#define AG_WINDOW_CAPTION_MAX (AG_MODEL+32)
 #endif
 
 struct ag_titlebar;
@@ -59,6 +59,19 @@ enum ag_window_wm_type {
 
 typedef AG_TAILQ_HEAD(ag_cursor_areaq, ag_cursor_area) AG_CursorAreaQ;
 
+typedef struct ag_window_pvt {
+	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
+	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
+	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
+	AG_TAILQ_ENTRY(ag_window) swins;	/* Entry in logical parent window */
+	AG_Timer fadeTo;			/* Fade timer */
+	float fadeInTime, fadeOutTime;		/* Fade time (s) */
+	float fadeInIncr, fadeOutIncr;		/* Fade increment */
+	float fadeOpacity;			/* Fade opacity */
+	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
+	AG_CursorArea *_Nullable caResize[5];	/* Window-resize areas */
+} AG_WindowPvt;
+
 /* Window instance */
 typedef struct ag_window {
 	struct ag_widget wid;
@@ -86,8 +99,7 @@ typedef struct ag_window {
 #define AG_WINDOW_VMAXIMIZE	0x00080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE	0x00100000 /* Disallow movement of window */
 #define AG_WINDOW_NOCLIPPING	0x00200000 /* Don't set a clipping rectangle over the window area */
-#define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Generate key{up,down} events for
-                                            keypresses on modifier keys */
+#define AG_WINDOW_MODKEYEVENTS	0x00400000 /* Mod keys generate key{up,down} */
 #define AG_WINDOW_DETACHING	0x00800000 /* Being detached (read-only) */
 #define AG_WINDOW_NOCURSORCHG	0x04000000 /* Inhibit any cursor change */
 #define AG_WINDOW_FADEIN	0x08000000 /* Fade-in (compositing WMs) */
@@ -102,7 +114,9 @@ typedef struct ag_window {
 	int visible;				/* Window is visible */
 	int dirty;				/* Window needs redraw */
 
-	struct ag_titlebar *tbar;		/* Titlebar (if any) */
+	struct ag_titlebar *_Nullable tbar;	/* Titlebar (or NULL) */
+	struct ag_icon *_Nullable     icon;	/* Window icon (internal WM) */
+
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
 	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
@@ -111,121 +125,110 @@ typedef struct ag_window {
 	int wBorderBot;				/* Bottom border size (px) */
 	int wBorderSide;			/* Side border size (px) */
 	int wResizeCtrl;			/* Resize controls size (px) */
-	AG_Rect rSaved;				/* Saved geometry */
-	int minPct;				/* For MINSIZEPCT */
-
-	struct ag_window *parent;		/* Logical parent window */
-	struct ag_window *transientFor;		/* Transient parent window */
-	struct ag_window *pinnedTo;		/* Pinned to parent window */
-
-	AG_TAILQ_HEAD_(ag_window) subwins;	/* For AG_WindowAttach() */
-	AG_TAILQ_ENTRY(ag_window) swins;	/* In parent's subwins */
-	AG_TAILQ_ENTRY(ag_window) detach;	/* In agWindowDetachQ */
-
-	struct ag_icon *icon;			/* Window icon (for internal WM) */
 	AG_Rect r;				/* View area */
-	int nFocused;				/* Widgets in focus chain */
-	AG_Widget *widExclMotion;		/* Widget exclusively receiving mousemotion */
-	AG_CursorAreaQ cursorAreas;		/* Cursor-change areas */
-	AG_CursorArea *caResize[5];		/* Window-resize areas */
+	AG_Rect rSaved;				/* Saved geometry */
 
-	AG_Timer fadeTo;			/* Fade timer */
-	float fadeInTime, fadeOutTime;		/* Fade time (s) */
-	float fadeInIncr, fadeOutIncr;		/* Fade increment */
-	float fadeOpacity;			/* Fade opacity */
+	int minPct;				/* For MINSIZEPCT */
+	int nFocused;				/* Widgets in focus chain */
+	AG_Widget *_Nullable widExclMotion;	/* Hog all mousemotion events */
 	enum ag_window_wm_type wmType;		/* Window function */
 	int zoom;				/* Effective zoom level */
-	AG_TAILQ_ENTRY(ag_window) visibility;	/* In agWindow{Show,Hide}Q */
+	
+	struct ag_window *_Nullable parent;	  /* Logical parent window */
+	struct ag_window *_Nullable transientFor; /* Transient parent window */
+	struct ag_window *_Nullable pinnedTo;	  /* Pinned to parent window */
+
 	AG_TAILQ_ENTRY(ag_window) user;		/* In user list */
+
+	AG_WindowPvt pvt;			/* Private data */
 } AG_Window;
 
 typedef AG_TAILQ_HEAD(ag_windowq, ag_window) AG_WindowQ;
 
 __BEGIN_DECLS
-extern const char *agWindowWmTypeNames[];
+extern const char *_Nonnull agWindowWmTypeNames[];
 extern AG_WidgetClass agWindowClass;
 
 /* Protected by agDrivers VFS lock */
 extern AG_WindowQ agWindowDetachQ;		/* AG_ObjectDetach() queue */
 extern AG_WindowQ agWindowShowQ;		/* AG_WindowShow() queue */
 extern AG_WindowQ agWindowHideQ;		/* AG_WindowHide() queue */
-extern AG_Window *agWindowToFocus;		/* Window to focus next */
-extern AG_Window *agWindowFocused;		/* Window holding focus */
+extern AG_Window *_Nullable agWindowToFocus;	/* Window to focus next */
+extern AG_Window *_Nullable agWindowFocused;	/* Window holding focus */
 
-void       AG_InitWindowSystem(void);
-void       AG_DestroyWindowSystem(void);
-AG_Window *AG_WindowNew(Uint);
-AG_Window *AG_WindowNewSw(void *, Uint);
-AG_Window *AG_WindowNewNamedS(Uint, const char *);
-AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
-			     FORMAT_ATTRIBUTE(printf,2,3);
+void AG_InitWindowSystem(void);
+void AG_DestroyWindowSystem(void);
 
-void	 AG_WindowSetCaptionS(AG_Window *, const char *);
-void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
-			     FORMAT_ATTRIBUTE(printf,2,3)
-			     NONNULL_ATTRIBUTE(2);
+AG_Window *_Nullable AG_WindowNew(Uint);
+AG_Window *_Nullable AG_WindowNewSw(void *_Nonnull, Uint);
+AG_Window *_Nullable AG_WindowNewNamedS(Uint, const char *_Nonnull);
+AG_Window *_Nullable AG_WindowNewNamed(Uint, const char *_Nonnull, ...)
+			              FORMAT_ATTRIBUTE(printf,2,3);
 
-void	 AG_WindowUpdateCaption(AG_Window *);
+void AG_WindowSetCaptionS(AG_Window *_Nonnull, const char *_Nonnull);
+void AG_WindowSetCaption(AG_Window *_Nonnull, const char *_Nonnull, ...)
+                        FORMAT_ATTRIBUTE(printf,2,3);
+
 #define  AG_WindowSetIcon(win,su) AG_IconSetSurface((win)->icon,(su))
 #define  AG_WindowSetIconNODUP(win,su) AG_IconSetSurfaceNODUP((win)->icon,(su))
 
-void	 AG_WindowSetSpacing(AG_Window *, int);
-void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
+void	 AG_WindowSetSpacing(AG_Window *_Nonnull, int);
+void	 AG_WindowSetPadding(AG_Window *_Nonnull, int,int,int,int);
 #define	 AG_WindowSetPaddingLeft(w,p)   AG_WindowSetPadding((w),(p),-1,-1,-1)
 #define	 AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
 #define	 AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
 #define	 AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
-void     AG_WindowSetSideBorders(AG_Window *, int);
-void     AG_WindowSetBottomBorder(AG_Window *, int);
+void     AG_WindowSetSideBorders(AG_Window *_Nonnull, int);
+void     AG_WindowSetBottomBorder(AG_Window *_Nonnull, int);
 
-void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
-void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
+void	 AG_WindowSetPosition(AG_Window *_Nonnull, enum ag_window_alignment, int);
+void	 AG_WindowSetCloseAction(AG_Window *_Nonnull, enum ag_window_close_action);
 
-void	 AG_WindowSetMinSize(AG_Window *, int, int);
-void	 AG_WindowSetMinSizePct(AG_Window *, int);
-int	 AG_WindowSetGeometryRect(AG_Window *, AG_Rect, int);
-int	 AG_WindowSetGeometryAligned(AG_Window *, enum ag_window_alignment,
-                                     int, int);
-int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
-                                        int, int);
+void	 AG_WindowSetMinSize(AG_Window *_Nonnull, int, int);
+void	 AG_WindowSetMinSizePct(AG_Window *_Nonnull, int);
+int	 AG_WindowSetGeometryRect(AG_Window *_Nonnull, AG_Rect, int);
+int	 AG_WindowSetGeometryAligned(AG_Window *_Nonnull,
+	                             enum ag_window_alignment, int, int);
+int	 AG_WindowSetGeometryAlignedPct(AG_Window *_Nonnull,
+	                                enum ag_window_alignment, int, int);
 #define  AG_WindowSetGeometry(win,x,y,w,h) \
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),0)
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
 	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
-void     AG_WindowComputeAlignment(AG_Window *, AG_SizeAlloc *);
+void     AG_WindowComputeAlignment(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 
-int      AG_WindowSetOpacity(AG_Window *, float);
-void     AG_WindowSetFadeIn(AG_Window *, float, float);
-void     AG_WindowSetFadeOut(AG_Window *, float, float);
-void     AG_WindowSetZoom(AG_Window *, int);
+int      AG_WindowSetOpacity(AG_Window *_Nonnull, float);
+void     AG_WindowSetFadeIn(AG_Window *_Nonnull, float, float);
+void     AG_WindowSetFadeOut(AG_Window *_Nonnull, float, float);
+void     AG_WindowSetZoom(AG_Window *_Nonnull, int);
 
-void	 AG_WindowSaveGeometry(AG_Window *);
-int	 AG_WindowRestoreGeometry(AG_Window *);
-void	 AG_WindowMaximize(AG_Window *);
-void	 AG_WindowUnmaximize(AG_Window *);
-void	 AG_WindowMinimize(AG_Window *);
-void	 AG_WindowUnminimize(AG_Window *);
+void	 AG_WindowSaveGeometry(AG_Window *_Nonnull);
+int	 AG_WindowRestoreGeometry(AG_Window *_Nonnull);
+void	 AG_WindowMaximize(AG_Window *_Nonnull);
+void	 AG_WindowUnmaximize(AG_Window *_Nonnull);
+void	 AG_WindowMinimize(AG_Window *_Nonnull);
+void	 AG_WindowUnminimize(AG_Window *_Nonnull);
 
-void	 AG_WindowAttach(AG_Window *, AG_Window *);
-void	 AG_WindowDetach(AG_Window *, AG_Window *);
-void     AG_WindowMakeTransient(AG_Window *, AG_Window *);
-void     AG_WindowPin(AG_Window *, AG_Window *);
-void     AG_WindowUnpin(AG_Window *);
-void     AG_WindowMovePinned(AG_Window *, int, int);
-void	 AG_WindowShow(AG_Window *);
-void	 AG_WindowHide(AG_Window *);
+void	 AG_WindowAttach(AG_Window *_Nullable, AG_Window *_Nonnull);
+void	 AG_WindowDetach(AG_Window *_Nullable, AG_Window *_Nonnull);
+void     AG_WindowMakeTransient(AG_Window *_Nullable, AG_Window *_Nonnull);
+void     AG_WindowPin(AG_Window *_Nonnull, AG_Window *_Nonnull);
+void     AG_WindowUnpin(AG_Window *_Nonnull);
+void     AG_WindowMovePinned(AG_Window *_Nonnull, int, int);
+void	 AG_WindowShow(AG_Window *_Nonnull);
+void	 AG_WindowHide(AG_Window *_Nonnull);
 void     AG_WindowDrawQueued(void);
-void	 AG_WindowResize(AG_Window *);
+void	 AG_WindowResize(AG_Window *_Nonnull);
 
-void	 AG_WindowFocus(AG_Window *);
-int      AG_WindowFocusAtPos(AG_DriverSw *, int, int);
-int	 AG_WindowFocusNamed(const char *);
-void	 AG_WindowCycleFocus(AG_Window *, int);
+void	 AG_WindowFocus(AG_Window *_Nonnull);
+int      AG_WindowFocusAtPos(AG_DriverSw *_Nonnull, int, int);
+int	 AG_WindowFocusNamed(const char *_Nonnull);
+void	 AG_WindowCycleFocus(AG_Window *_Nonnull, int);
 #define  AG_WindowFindFocused() agWindowFocused
 #define  AG_WindowIsFocused(win) (agWindowFocused == win)
-void	 AG_WindowDetachGenEv(AG_Event *);
-void	 AG_WindowHideGenEv(AG_Event *);
-void	 AG_WindowCloseGenEv(AG_Event *);
+void	 AG_WindowDetachGenEv(AG_Event *_Nonnull);
+void	 AG_WindowHideGenEv(AG_Event *_Nonnull);
+void	 AG_WindowCloseGenEv(AG_Event *_Nonnull);
 
 void	 AG_CloseFocusedWindow(void);
 
@@ -234,19 +237,20 @@ void     AG_WindowProcessShowQueue(void);
 void     AG_WindowProcessHideQueue(void);
 void     AG_WindowProcessDetachQueue(void);
 
-AG_CursorArea *AG_MapCursor(void *, AG_Rect, struct ag_cursor *);
-AG_CursorArea *AG_MapStockCursor(void *, AG_Rect, int);
-void           AG_UnmapCursor(void *, AG_CursorArea *);
-void           AG_UnmapAllCursors(AG_Window *, void *);
+AG_CursorArea *_Nullable AG_MapCursor(void *_Nonnull, AG_Rect,
+                                      struct ag_cursor *_Nonnull);
+AG_CursorArea *_Nullable AG_MapStockCursor(void *_Nonnull, AG_Rect, int);
+void                     AG_UnmapCursor(void *_Nonnull, AG_CursorArea *_Nonnull);
+void                     AG_UnmapAllCursors(AG_Window *_Nonnull, void *_Nullable);
 
 #define AGWINDOW(win)        ((AG_Window *)(win))
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
 
-/* Window iterators. */
 #define AG_FOREACH_WINDOW(var, ob) \
 	AGOBJECT_FOREACH_CHILD(var, ob, ag_window)
+
 #define AG_FOREACH_WINDOW_REVERSE(var, ob) \
 	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ag_window)
 
@@ -256,7 +260,7 @@ void           AG_UnmapAllCursors(AG_Window *, void *);
  * The agDrivers VFS and Window object must be locked.
  */
 static __inline__ void
-AG_WindowDraw(AG_Window *win)
+AG_WindowDraw(AG_Window *_Nonnull win)
 {
 	AG_Driver *drv = AGWIDGET(win)->drv;
 
@@ -272,7 +276,7 @@ AG_WindowDraw(AG_Window *win)
  * The Widget and agDrivers VFS must be locked.
  */
 static __inline__ int
-AG_WidgetIsFocused(void *p)
+AG_WidgetIsFocused(void *_Nonnull p)
 {
 	AG_Widget *wid = (AG_Widget *)p;
 
@@ -289,13 +293,10 @@ AG_WidgetIsFocused(void *p)
  * The agDrivers VFS and Window must be locked.
  */
 static __inline__ void
-AG_WindowUpdate(AG_Window *win)
+AG_WindowUpdate(AG_Window *_Nonnull win)
 {
 	AG_SizeAlloc a;
 	
-	if (win == NULL) {
-		return;
-	}
 	if (AGWIDGET(win)->x != -1 && AGWIDGET(win)->y != -1) {
 		a.x = AGWIDGET(win)->x;
 		a.y = AGWIDGET(win)->y;
@@ -310,8 +311,8 @@ AG_WindowUpdate(AG_Window *win)
  * Return visibility status of window.
  * The agDrivers VFS and Window object must be locked.
  */
-static __inline__ int
-AG_WindowIsVisible(AG_Window *win)
+static __inline__ int _Pure_Attribute
+AG_WindowIsVisible(AG_Window *_Nonnull win)
 {
 	return (win->visible);
 }
@@ -320,8 +321,8 @@ AG_WindowIsVisible(AG_Window *win)
  * Test whether a window is currently selected for a given WM operation.
  * The agDrivers VFS must be locked.
  */
-static __inline__ int
-AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
+static __inline__ int _Pure_Attribute
+AG_WindowSelectedWM(AG_Window *_Nonnull win, enum ag_wm_operation op)
 {
 	AG_Driver *drv = AGWIDGET(win)->drv;
 
@@ -334,15 +335,15 @@ AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
  * Return a pointer to a widget's parent window.
  * The agDrivers VFS must be locked.
  */
-static __inline__ AG_Window *
-AG_ParentWindow(void *obj)
+static __inline__ AG_Window *_Nullable
+AG_ParentWindow(void *_Nonnull obj)
 {
 	return (AGWIDGET(obj)->window);
 }
 
 /* Set an explicit widget position in pixels. */
 static __inline__ void
-AG_WidgetSetPosition(void *wid, int x, int y)
+AG_WidgetSetPosition(void *_Nonnull wid, int x, int y)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->x = x;
@@ -353,7 +354,7 @@ AG_WidgetSetPosition(void *wid, int x, int y)
 
 /* Set an explicit widget geometry in pixels. */
 static __inline__ void
-AG_WidgetSetSize(void *wid, int w, int h)
+AG_WidgetSetSize(void *_Nonnull wid, int w, int h)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->w = w;
@@ -364,7 +365,7 @@ AG_WidgetSetSize(void *wid, int w, int h)
 
 /* Set an explicit widget geometry from an AG_Rect argument. */
 static __inline__ void
-AG_WidgetSetGeometry(void *wid, AG_Rect r)
+AG_WidgetSetGeometry(void *_Nonnull wid, AG_Rect r)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->x = r.x;
@@ -377,7 +378,7 @@ AG_WidgetSetGeometry(void *wid, AG_Rect r)
 
 /* Set the largest allowable window size. */
 static __inline__ void
-AG_WindowSetGeometryMax(AG_Window *win)
+AG_WindowSetGeometryMax(AG_Window *_Nonnull win)
 {
 	Uint wMax, hMax;
 
@@ -387,7 +388,7 @@ AG_WindowSetGeometryMax(AG_Window *win)
 
 /* Request widget redraw. */
 static __inline__ void
-AG_Redraw(void *obj)
+AG_Redraw(void *_Nonnull obj)
 {
 	if (AGWIDGET(obj)->window != NULL)
 		AGWIDGET(obj)->window->dirty = 1;
@@ -398,7 +399,8 @@ AG_Redraw(void *obj)
  * update the rectangle of an existing one.
  */
 static __inline__ void
-AG_SetCursor(void *obj, AG_CursorArea **ca, AG_Rect r, struct ag_cursor *c)
+AG_SetCursor(void *_Nonnull obj, AG_CursorArea *_Nonnull *_Nullable ca,
+    AG_Rect r, struct ag_cursor *_Nonnull c)
 {
 	if (*ca == NULL) {
 		*ca = AG_MapCursor(obj, r, c);
@@ -407,7 +409,8 @@ AG_SetCursor(void *obj, AG_CursorArea **ca, AG_Rect r, struct ag_cursor *c)
 	}
 }
 static __inline__ void
-AG_SetStockCursor(void *obj, AG_CursorArea **ca, AG_Rect r, int cName)
+AG_SetStockCursor(void *_Nonnull obj, AG_CursorArea *_Nonnull *_Nullable ca,
+    AG_Rect r, int cName)
 {
 	if (*ca == NULL) {
 		*ca = AG_MapStockCursor(obj, r, cName);
@@ -433,14 +436,12 @@ AG_WindowProcessQueued(void)
 }
 
 #ifdef AG_LEGACY
-#define AG_WINDOW_POPUP 0x01000000
-#define AG_WINDOW_DIALOG 0x02000000
-#define AG_WINDOW_CASCADE AG_WINDOW_TILING
-AG_Window *AG_FindWindow(const char *)			DEPRECATED_ATTRIBUTE;
-void       AG_ViewAttach(AG_Window *)			DEPRECATED_ATTRIBUTE;
-void       AG_ViewDetach(AG_Window *)			DEPRECATED_ATTRIBUTE;
-void	   AG_WindowSetVisibility(AG_Window *, int)	DEPRECATED_ATTRIBUTE;
-int        AG_WindowIntersect(AG_DriverSw *, int, int)	DEPRECATED_ATTRIBUTE;
+# define AG_WINDOW_CASCADE AG_WINDOW_TILING
+AG_Window *_Nullable AG_FindWindow(const char *_Nonnull) DEPRECATED_ATTRIBUTE;
+void AG_ViewAttach(AG_Window *_Nonnull)                  DEPRECATED_ATTRIBUTE;
+void AG_ViewDetach(AG_Window *_Nonnull)                  DEPRECATED_ATTRIBUTE;
+void AG_WindowSetVisibility(AG_Window *_Nonnull, int)    DEPRECATED_ATTRIBUTE;
+int AG_WindowIntersect(AG_DriverSw *_Nonnull, int, int)  DEPRECATED_ATTRIBUTE _Pure_Attribute;
 #endif /* AG_LEGACY */
 __END_DECLS
 

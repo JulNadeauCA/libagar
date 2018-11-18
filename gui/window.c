@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -103,10 +103,6 @@ InitWindow(AG_Window *win, Uint flags)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
-#ifdef AG_LEGACY
-	if (win->flags & AG_WINDOW_POPUP) { win->wmType = AG_WINDOW_WM_POPUP_MENU; }
-	if (win->flags & AG_WINDOW_DIALOG) { win->wmType = AG_WINDOW_WM_DIALOG; }
-#endif
 
 	/* Default window "close" action should be detach/free. */
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
@@ -143,13 +139,8 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 }
 
 /*
- * Create a generic window using the default window driver; return
- * a pointer to the newly-allocated window, or NULL on failure.
- *
- * - With single-window drivers, all Window objects are attached to
- *   the main Driver object.
- * - With multiple-window drivers: A parent Driver object is created
- *   for every Window object.
+ * Create a new Agar window. On success return a pointer to the newly
+ * allocated window. If not successful, fail and return NULL.
  */
 AG_Window *
 AG_WindowNew(Uint flags)
@@ -187,24 +178,24 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
-/* Create a named window (C string). */
+/*
+ * Create a new, uniquely named Agar window (string name).
+ * On success return a pointer to the new window.
+ * If the named window exists, focus the existing window and return NULL.
+ */
 AG_Window *
 AG_WindowNewNamedS(Uint flags, const char *name)
 {
 	AG_Window *win;
-
-#ifdef AG_DEBUG
-	const char *p;
-	if ((p = strchr(name, '/')) != NULL)
-		AG_FatalError("Bad Window name");
-#endif
 
 	AG_LockVFS(&agDrivers);
 	if (AG_WindowFocusNamed(name)) {
 		win = NULL;
 		goto out;
 	}
-	win = AG_WindowNew(flags);
+	if ((win = AG_WindowNew(flags)) == NULL) {
+		AG_FatalError(NULL);
+	}
 	AG_ObjectSetNameS(win, name);
 	AG_SetEvent(win, "window-close", AGWINHIDE(win));
 out:
@@ -212,7 +203,11 @@ out:
 	return (win);
 }
 
-/* Create a named window (format string). */
+/*
+ * Create a new, uniquely named Agar window (format string name).
+ * On success return a pointer to the new window.
+ * If the named window exists, focus the existing window and return NULL.
+ */
 AG_Window *
 AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 {
@@ -313,12 +308,12 @@ Detach(AG_Event *event)
 				continue;
 			}
 			AG_ObjectLock(other);
-			TAILQ_FOREACH(subwin, &other->subwins, swins) {
+			TAILQ_FOREACH(subwin, &other->pvt.subwins, pvt.swins) {
 				if (subwin == win)
 					break;
 			}
 			if (subwin != NULL) {
-				TAILQ_REMOVE(&other->subwins, subwin, swins);
+				TAILQ_REMOVE(&other->pvt.subwins, subwin, pvt.swins);
 			}
 			if (other->pinnedTo == win) {
 				AG_WindowUnpin(other);
@@ -336,18 +331,18 @@ Detach(AG_Event *event)
 	 * context, we must defer the actual window hide / detach operation
 	 * until the end of the current event processing cycle.
 	 */
-	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, detach);
+	TAILQ_INSERT_TAIL(&agWindowDetachQ, win, pvt.detach);
 
 	/* Queued Show/Hide operations would be redundant. */
-	TAILQ_FOREACH(other, &agWindowHideQ, visibility) {
+	TAILQ_FOREACH(other, &agWindowHideQ, pvt.visibility) {
 		if (other == win) {
-			TAILQ_REMOVE(&agWindowHideQ, win, visibility);
+			TAILQ_REMOVE(&agWindowHideQ, win, pvt.visibility);
 			break;
 		}
 	}
-	TAILQ_FOREACH(other, &agWindowShowQ, visibility) {
+	TAILQ_FOREACH(other, &agWindowShowQ, pvt.visibility) {
 		if (other == win) {
-			TAILQ_REMOVE(&agWindowShowQ, win, visibility);
+			TAILQ_REMOVE(&agWindowShowQ, win, pvt.visibility);
 			break;
 		}
 	}
@@ -363,24 +358,24 @@ FadeTimeout(AG_Timer *to, AG_Event *event)
 	int dir = AG_INT(1);
 
 	if (dir == 1) {					/* Fade in */
-		if (win->fadeOpacity < 1.0) {
-			win->fadeOpacity += win->fadeInIncr;
-			AG_WindowSetOpacity(win, win->fadeOpacity);
+		if (win->pvt.fadeOpacity < 1.0) {
+			win->pvt.fadeOpacity += win->pvt.fadeInIncr;
+			AG_WindowSetOpacity(win, win->pvt.fadeOpacity);
 			return (to->ival);
 		} else {
 			return (0);
 		}
 	} else {					/* Fade out */
-		if (win->fadeOpacity > 0.0) {
-			win->fadeOpacity -= win->fadeOutIncr;
-			AG_WindowSetOpacity(win, win->fadeOpacity);
+		if (win->pvt.fadeOpacity > 0.0) {
+			win->pvt.fadeOpacity -= win->pvt.fadeOutIncr;
+			AG_WindowSetOpacity(win, win->pvt.fadeOpacity);
 			return (to->ival);
 		} else {
 			AG_WindowSetOpacity(win, 1.0);
 
 			/* Defer operation until AG_WindowProcessQueued(). */
 			AG_LockVFS(&agDrivers);
-			TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
+			TAILQ_INSERT_TAIL(&agWindowHideQ, win, pvt.visibility);
 			AG_UnlockVFS(&agDrivers);
 			return (0);
 		}
@@ -425,18 +420,18 @@ Init(void *obj)
 	win->transientFor = NULL;
 	win->pinnedTo = NULL;
 	win->widExclMotion = NULL;
-	win->fadeInTime = 0.06f;
-	win->fadeInIncr = 0.2f;
-	win->fadeOutTime = 0.06f;
-	win->fadeOutIncr = 0.2f;
-	win->fadeOpacity = 1.0f;
+	win->pvt.fadeInTime = 0.06f;
+	win->pvt.fadeInIncr = 0.2f;
+	win->pvt.fadeOutTime = 0.06f;
+	win->pvt.fadeOutIncr = 0.2f;
+	win->pvt.fadeOpacity = 1.0f;
 	win->zoom = AG_ZOOM_DEFAULT;
-	TAILQ_INIT(&win->subwins);
-	TAILQ_INIT(&win->cursorAreas);
+	TAILQ_INIT(&win->pvt.subwins);
+	TAILQ_INIT(&win->pvt.cursorAreas);
 	for (i = 0; i < 5; i++)
-		win->caResize[i] = NULL;
+		win->pvt.caResize[i] = NULL;
 
-	AG_InitTimer(&win->fadeTo, "fade", 0);
+	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
 
 	AG_SetEvent(win, "window-gainfocus", OnFocusGain, NULL);
 	AG_SetEvent(win, "window-lostfocus", OnFocusLoss, NULL);
@@ -457,10 +452,15 @@ Init(void *obj)
 	AG_ObjectSetDetachFn(win, Detach, NULL);
 	
 	/* Set the inheritable style defaults. */
-	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
-	AG_SetString(win, "font-size", AG_Printf("%.02fpts", agDefaultFont->spec.size));
-	AG_SetString(win, "font-weight", (agDefaultFont->flags & AG_FONT_BOLD) ? "bold" : "normal");
-	AG_SetString(win, "font-style", (agDefaultFont->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+	AG_SetString(win, "font-family",
+	    OBJECT(agDefaultFont)->name);
+	AG_SetString(win, "font-size",
+	    AG_Printf("%.02fpts", agDefaultFont->spec.size));
+	AG_SetString(win, "font-weight",
+	    (agDefaultFont->flags & AG_FONT_BOLD) ? "bold" : "normal");
+	AG_SetString(win, "font-style",
+	    (agDefaultFont->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;
 #if 0
@@ -502,7 +502,7 @@ AG_WindowAttach(AG_Window *winParent, AG_Window *winChld)
 	winChld->parent = winParent;
 	winChld->zoom = winParent->zoom;
 	AG_WidgetCopyStyle(winChld, winParent);
-	TAILQ_INSERT_HEAD(&winParent->subwins, winChld, swins);
+	TAILQ_INSERT_HEAD(&winParent->pvt.subwins, winChld, pvt.swins);
 out:
 	AG_ObjectUnlock(winChld);
 	AG_ObjectUnlock(winParent);
@@ -524,7 +524,7 @@ AG_WindowDetach(AG_Window *winParent, AG_Window *winChld)
 	if (winChld->parent != winParent)
 		AG_FatalError("Inconsistent AG_WindowDetach()");
 #endif
-	TAILQ_REMOVE(&winParent->subwins, winChld, swins);
+	TAILQ_REMOVE(&winParent->pvt.subwins, winChld, pvt.swins);
 	winChld->parent = NULL;
 
 	AG_ObjectUnlock(winChld);
@@ -533,34 +533,34 @@ AG_WindowDetach(AG_Window *winParent, AG_Window *winChld)
 }
 
 /*
- * Make a window a transient window of another window. The effect of
+ * Make a window a transient window for another window. The effect of
  * this setting is WM-dependent (see AG_Window(3) for details).
  */
 void
-AG_WindowMakeTransient(AG_Window *winParent, AG_Window *winTrans)
+AG_WindowMakeTransient(AG_Window *forParent, AG_Window *win)
 {
-	AG_Driver *drv = WIDGET(winTrans)->drv;
+	AG_Driver *drv = WIDGET(win)->drv;
 	
 	AG_LockVFS(&agDrivers);
-	AG_ObjectLock(winTrans);
+	AG_ObjectLock(win);
 
-	if (winParent == NULL) {
+	if (forParent == NULL) {
 		if (AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
-			AGDRIVER_MW_CLASS(drv)->setTransientFor(NULL, winTrans);
+			AGDRIVER_MW_CLASS(drv)->setTransientFor(win, NULL);
 		}
-		winTrans->transientFor = NULL;
+		win->transientFor = NULL;
 	} else {
-		AG_ObjectLock(winParent);
+		AG_ObjectLock(forParent);
 		if (AGDRIVER_MULTIPLE(drv) &&
 		    AGDRIVER_MW_CLASS(drv)->setTransientFor != NULL) {
-			AGDRIVER_MW_CLASS(drv)->setTransientFor(winParent, winTrans);
+			AGDRIVER_MW_CLASS(drv)->setTransientFor(win, forParent);
 		}
-		winTrans->transientFor = winParent;
-		AG_ObjectUnlock(winParent);
+		win->transientFor = forParent;
+		AG_ObjectUnlock(forParent);
 	}
 
-	AG_ObjectUnlock(winTrans);
+	AG_ObjectUnlock(win);
 	AG_UnlockVFS(&agDrivers);
 }
 
@@ -807,8 +807,9 @@ OnShow(AG_Event *event)
 	win->flags &= ~(AG_WINDOW_NOCURSORCHG);
 	
 	if (win->flags & AG_WINDOW_FADEIN) {
-		AG_AddTimer(win, &win->fadeTo,
-		    (Uint32)((win->fadeInTime*1000.0)/(1.0/win->fadeInIncr)),
+		AG_AddTimer(win, &win->pvt.fadeTo,
+		    (Uint32)((win->pvt.fadeInTime*1000.0) /
+		             (1.0/win->pvt.fadeInIncr)),
 		    FadeTimeout, "%i", 1);
 	}
 }
@@ -949,7 +950,7 @@ AG_WindowShow(AG_Window *win)
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
 			AG_LockVFS(&agDrivers);
-			TAILQ_INSERT_TAIL(&agWindowShowQ, win, visibility);
+			TAILQ_INSERT_TAIL(&agWindowShowQ, win, pvt.visibility);
 			AG_UnlockVFS(&agDrivers);
 		} else
 #endif
@@ -973,14 +974,15 @@ AG_WindowHide(AG_Window *win)
 	}
 	if ((win->flags & AG_WINDOW_FADEOUT) &&
 	   !(win->flags & AG_WINDOW_DETACHING)) {
-		AG_AddTimer(win, &win->fadeTo,
-		    (Uint32)((win->fadeOutTime*1000.0)/(1.0/win->fadeOutIncr)),
+		AG_AddTimer(win, &win->pvt.fadeTo,
+		    (Uint32)((win->pvt.fadeOutTime * 1000.0) /
+		             (1.0 / win->pvt.fadeOutIncr)),
 		    FadeTimeout, "%i", -1);
 	} else {
 #ifdef AG_THREADS
 		if (!AG_ThreadEqual(AG_ThreadSelf(), agEventThread)) {
 			AG_LockVFS(&agDrivers);
-			TAILQ_INSERT_TAIL(&agWindowHideQ, win, visibility);
+			TAILQ_INSERT_TAIL(&agWindowHideQ, win, pvt.visibility);
 			AG_UnlockVFS(&agDrivers);
 		} else
 #endif
@@ -1748,22 +1750,22 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		r.y = 0;
 		r.w = win->wBorderSide;
 		r.h = a->h - win->wBorderBot;
-		AG_SetStockCursor(win, &win->caResize[0], r, AG_HRESIZE_CURSOR);
+		AG_SetStockCursor(win, &win->pvt.caResize[0], r, AG_HRESIZE_CURSOR);
 		r.x = a->w - win->wBorderSide;
-		AG_SetStockCursor(win, &win->caResize[4], r, AG_HRESIZE_CURSOR);
+		AG_SetStockCursor(win, &win->pvt.caResize[4], r, AG_HRESIZE_CURSOR);
 	}
 	if (win->wBorderBot > 0) {
 		r.x = 0;
 		r.y = a->h - win->wBorderBot;
 		r.w = win->wResizeCtrl;
 		r.h = win->wBorderBot;
-		AG_SetStockCursor(win, &win->caResize[1], r, AG_LRDIAG_CURSOR);
+		AG_SetStockCursor(win, &win->pvt.caResize[1], r, AG_LRDIAG_CURSOR);
 		r.x = win->wResizeCtrl;
 		r.w = a->w - win->wResizeCtrl*2;
-		AG_SetStockCursor(win, &win->caResize[2], r, AG_VRESIZE_CURSOR);
+		AG_SetStockCursor(win, &win->pvt.caResize[2], r, AG_VRESIZE_CURSOR);
 		r.x = a->w - win->wResizeCtrl;
 		r.w = win->wResizeCtrl;
-		AG_SetStockCursor(win, &win->caResize[3], r, AG_LLDIAG_CURSOR);
+		AG_SetStockCursor(win, &win->pvt.caResize[3], r, AG_LLDIAG_CURSOR);
 	}
 
 	/* Calculate total space available for widgets. */
@@ -2020,7 +2022,7 @@ AG_WindowProcessShowQueue(void)
 {
 	AG_Window *win;
 
-	TAILQ_FOREACH(win, &agWindowShowQ, visibility) {
+	TAILQ_FOREACH(win, &agWindowShowQ, pvt.visibility) {
 		AG_PostEvent(NULL, win, "widget-shown", NULL);
 	}
 	TAILQ_INIT(&agWindowShowQ);
@@ -2035,7 +2037,7 @@ AG_WindowProcessHideQueue(void)
 {
 	AG_Window *win;
 
-	TAILQ_FOREACH(win, &agWindowHideQ, visibility) {
+	TAILQ_FOREACH(win, &agWindowHideQ, pvt.visibility) {
 		AG_PostEvent(NULL, win, "widget-hidden", NULL);
 	}
 	TAILQ_INIT(&agWindowHideQ);
@@ -2055,7 +2057,7 @@ AG_WindowProcessDetachQueue(void)
 #ifdef AG_DEBUG_GUI
 	Debug(NULL, "AG_WindowProcessDetachQueue() Begin\n");
 #endif
-	TAILQ_FOREACH(win, &agWindowDetachQ, detach) {
+	TAILQ_FOREACH(win, &agWindowDetachQ, pvt.detach) {
 		if (!win->visible) {
 			continue;
 		}
@@ -2084,7 +2086,7 @@ AG_WindowProcessDetachQueue(void)
 	for (win = TAILQ_FIRST(&agWindowDetachQ);
 	     win != TAILQ_END(&agWindowDetachQ);
 	     win = winNext) {
-		winNext = TAILQ_NEXT(win, detach);
+		winNext = TAILQ_NEXT(win, pvt.detach);
 		drv = WIDGET(win)->drv;
 		
 #ifdef AG_DEBUG_GUI
@@ -2174,9 +2176,9 @@ AG_MapCursor(void *obj, AG_Rect r, AG_Cursor *c)
 	ca->wid = wid;
 
 	if (win != NULL) {
-		TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+		TAILQ_INSERT_TAIL(&win->pvt.cursorAreas, ca, cursorAreas);
 	} else {
-		TAILQ_INSERT_TAIL(&wid->cursorAreas, ca, cursorAreas);
+		TAILQ_INSERT_TAIL(&wid->pvt.cursorAreas, ca, cursorAreas);
 	}
 	return (ca);
 }
@@ -2209,11 +2211,11 @@ AG_MapStockCursor(void *obj, AG_Rect r, int name)
 
 	if (win != NULL) {
 		ca->c = ac;
-		TAILQ_INSERT_TAIL(&win->cursorAreas, ca, cursorAreas);
+		TAILQ_INSERT_TAIL(&win->pvt.cursorAreas, ca, cursorAreas);
 	} else {
 		/* Will resolve cursor name when widget is later attached. */
 		ca->c = NULL;
-		TAILQ_INSERT_TAIL(&wid->cursorAreas, ca, cursorAreas);
+		TAILQ_INSERT_TAIL(&wid->pvt.cursorAreas, ca, cursorAreas);
 	}
 	return (ca);
 }
@@ -2229,7 +2231,7 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 	AG_Window *win = wid->window;
 
 	if (win == NULL) {
-		TAILQ_REMOVE(&wid->cursorAreas, ca, cursorAreas);
+		TAILQ_REMOVE(&wid->pvt.cursorAreas, ca, cursorAreas);
 		free(ca);
 	} else {
 		AG_Driver *drv = WIDGET(win)->drv;
@@ -2242,13 +2244,16 @@ AG_UnmapCursor(void *obj, AG_CursorArea *ca)
 				}
 				AG_CursorFree(drv, ca->c);
 			}
-			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+			TAILQ_REMOVE(&win->pvt.cursorAreas, ca, cursorAreas);
 			free(ca);
 		}
 	}
 }
 
-/* Destroy all cursors (or all cursors associated with a given widget). */
+/*
+ * Destroy all cursors associated with a widget wid
+ * (or all cursors altogether if wid is NULL).
+ */
 void
 AG_UnmapAllCursors(AG_Window *win, void *wid)
 {
@@ -2256,8 +2261,8 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 	AG_CursorArea *ca, *caNext;
 
 	if (wid == NULL) {
-		for (ca = TAILQ_FIRST(&win->cursorAreas);
-		     ca != TAILQ_END(&win->cursorAreas);
+		for (ca = TAILQ_FIRST(&win->pvt.cursorAreas);
+		     ca != TAILQ_END(&win->pvt.cursorAreas);
 		     ca = caNext) {
 			caNext = TAILQ_NEXT(ca, cursorAreas);
 			if (ca->stock == -1) {
@@ -2265,17 +2270,17 @@ AG_UnmapAllCursors(AG_Window *win, void *wid)
 			}
 			free(ca);
 		}
-		TAILQ_INIT(&win->cursorAreas);
+		TAILQ_INIT(&win->pvt.cursorAreas);
 	} else {
 scan:
-		TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+		TAILQ_FOREACH(ca, &win->pvt.cursorAreas, cursorAreas) {
 			if (ca->wid != wid) {
 				continue;
 			}
 			if (ca->stock == -1) {
 				AG_CursorFree(drv, ca->c);
 			}
-			TAILQ_REMOVE(&win->cursorAreas, ca, cursorAreas);
+			TAILQ_REMOVE(&win->pvt.cursorAreas, ca, cursorAreas);
 			free(ca);
 			goto scan;
 		}
@@ -2290,11 +2295,11 @@ AG_WindowSetOpacity(AG_Window *win, float f)
 	int rv = -1;
 
 	AG_ObjectLock(win);
-	win->fadeOpacity = (f > 1.0) ? 1.0 : f;
+	win->pvt.fadeOpacity = (f > 1.0) ? 1.0 : f;
 
 	if (AGDRIVER_MULTIPLE(drv) &&
 	    AGDRIVER_MW_CLASS(drv)->setOpacity != NULL)
-		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->fadeOpacity);
+		rv = AGDRIVER_MW_CLASS(drv)->setOpacity(win, win->pvt.fadeOpacity);
 	
 	/* TODO: support compositing under single-window drivers. */
 	AG_ObjectUnlock(win);
@@ -2306,16 +2311,16 @@ void
 AG_WindowSetFadeIn(AG_Window *win, float fadeTime, float fadeIncr)
 {
 	AG_ObjectLock(win);
-	win->fadeInTime = fadeTime;
-	win->fadeInIncr = fadeIncr;
+	win->pvt.fadeInTime = fadeTime;
+	win->pvt.fadeInIncr = fadeIncr;
 	AG_ObjectUnlock(win);
 }
 void
 AG_WindowSetFadeOut(AG_Window *win, float fadeTime, float fadeIncr)
 {
 	AG_ObjectLock(win);
-	win->fadeOutTime = fadeTime;
-	win->fadeOutIncr = fadeIncr;
+	win->pvt.fadeOutTime = fadeTime;
+	win->pvt.fadeOutIncr = fadeIncr;
 	AG_ObjectUnlock(win);
 }
 
@@ -2336,7 +2341,7 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 	if (WIDGET(win)->drv != NULL) {
 		AG_TextClearGlyphCache(WIDGET(win)->drv);
 	}
-	TAILQ_FOREACH(winChld, &win->subwins, swins) {
+	TAILQ_FOREACH(winChld, &win->pvt.subwins, pvt.swins) {
 		AG_WindowSetZoom(winChld, zoom);
 	}
 	AG_ObjectUnlock(win);
