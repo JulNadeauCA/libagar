@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -84,19 +84,19 @@ typedef struct ag_rect2 {
 .Fn AG_RectToRect2 "AG_Rect r"
 .Pp
 .Ft AG_Rect
-.Fn AG_RectIntersect "const AG_Rect *a" "const AG_Rect *b"
+.Fn AG_RectIntersect "AG_Rect a" "AG_Rect b"
 .Pp
 .Ft AG_Rect2
 .Fn AG_RectIntersect2 "const AG_Rect2 *a" "const AG_Rect2 *b"
 .Pp
 .Ft int
-.Fn AG_RectInside "const AG_Rect *r" "int x" "int y"
+.Fn AG_RectInside "AG_Rect r" "int x" "int y"
 .Pp
 .Ft int
 .Fn AG_RectInside2 "const AG_Rect2 *r" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_RectCompare "const AG_Rect *a" "const AG_Rect *b"
+.Fn AG_RectCompare "AG_Rect a" "AG_Rect b"
 .Pp
 .Ft int
 .Fn AG_RectCompare2 "const AG_Rect2 *a" "const AG_Rect2 *b"

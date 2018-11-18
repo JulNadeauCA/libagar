@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -79,13 +79,13 @@ or "Select All" functions could be implemented externally in this way).
 .Fn AG_EditableNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindUTF8 "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindUTF8 "AG_Editable *ed" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
-.Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "size_t bufferSize"
+.Fn AG_EditableBindEncoded "AG_Editable *ed" "const char *encoding" "char *buffer" "AG_Size bufferSize"
 .Pp
 .Ft "void"
 .Fn AG_EditableBindText "AG_Editable *ed" "AG_Text *txt"
@@ -287,8 +287,8 @@ accepts a line count.
 .Ft "char *"
 .Fn AG_EditableDupString "AG_Editable *ed"
 .Pp
-.Ft "size_t"
-.Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "size_t dst_size"
+.Ft "AG_Size"
+.Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "AG_Size dst_size"
 .Pp
 .Ft int
 .Fn AG_EditableInt "AG_Editable *ed"
@@ -329,7 +329,7 @@ Returns the number of bytes that would have been copied were
 .Fa dst_size
 unlimited (i.e., if the return value is >=
 .Fa dst_size ,
-truncation occured).
+truncation has occurred).
 Both
 .Fn AG_EditableDupString
 and
@@ -364,7 +364,7 @@ for editing numbers.
 .Fn AG_EditableClearBuffer "AG_Editable *ed" "AG_EditableBuffer *buf"
 .Pp
 .Ft "int"
-.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "Uint32 *ins" "size_t nIns"
+.Fn AG_EditableGrowBuffer "AG_Editable *ed" "AG_EditableBuffer *buf" "Uint32 *ins" "AG_Size nIns"
 .Pp
 .Ft "int"
 .Fn AG_EditableCut "AG_Editable *ed" "AG_EditableBuffer *buf" "AG_EditableClipboard *cb"
@@ -396,8 +396,8 @@ The buffer structure is defined as follows:
 typedef struct ag_editable_buffer {
 	AG_Variable *var;            /* Variable binding (if any) */
 	Uint32 *s;                   /* String buffer (UCS-4 encoding) */
-	size_t len;                  /* String length (chars) */
-	size_t maxLen;               /* Available buffer size (bytes) */
+	AG_Size len;                 /* String length (chars) */
+	AG_Size maxLen;              /* Available buffer size (bytes) */
 	int reallocable;             /* Buffer can be realloc'd */
 } AG_EditableBuffer;
 .Ed

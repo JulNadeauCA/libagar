@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -498,9 +498,8 @@ calls made in event context, or manual modifications of the
 fields of the
 .Nm
 structure.
-Note: In widget implementation code, one should use
-.Xr AG_WidgetUpdate 3
-instead of this function.
+Also see:
+.Xr AG_WidgetUpdate 3 .
 .Sh DRIVER / EVENT LOOP INTERFACE
 The following functions should be called only from application-specific
 event loops, or low-level driver code.
@@ -616,7 +615,7 @@ The focus change may not be immediate depending on the underlying graphics
 system.
 A
 .Sq window-gainfocus
-event is posted to the window object after the focus change has occured.
+event is posted to the window object after the focus change has occurred.
 If an argument of NULL is passed to
 .Fn AG_WindowFocus ,
 any planned change in focus is cancelled.

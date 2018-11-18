@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -280,7 +280,7 @@ and the width in pixels of each line in the array
 .Fn AG_TextEditFloat "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_TextEditString "char *buf" "size_t len" "const char *format" "..."
+.Fn AG_TextEditString "char *buf" "AG_Size len" "const char *format" "..."
 .Pp
 .nr nS 0
 The
@@ -362,7 +362,7 @@ is the size of the buffer.
 .Sh FONT SELECTION
 .nr nS 1
 .Ft "AG_Font *"
-.Fn AG_FetchFont "const char *face" "int size" "int flags"
+.Fn AG_FetchFont "const char *face" "int size" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_UnusedFont "AG_Font *font"
@@ -438,9 +438,9 @@ This function is typically called prior to
 .Xr AG_TextElement 3 ,
 .Xr AG_Widget 3
 .Pp
-.Lk http://www.freetype.org/ The FreeType project
+.Lk http://www.freetype.org/ FreeType
 .Pp
-.Lk http://www.unicode.org/ Unicode home page
+.Lk http://www.unicode.org/ Unicode
 .Sh HISTORY
 The
 .Nm
