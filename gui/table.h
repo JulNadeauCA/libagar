@@ -5,13 +5,17 @@
 
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/menu.h>
-
 #include <agar/gui/begin.h>
 
-#define AG_TABLE_TXT_MAX	128	/* Length of fixed text cells */
-#define AG_TABLE_FMT_MAX	16	/* Length of cell specifier string */
-#define AG_TABLE_COL_NAME_MAX	48	/* Column name string */
-#define AG_TABLE_HASHBUF_MAX	64	/* Buffer used in hash function */
+#ifndef AG_TABLE_TXT_MAX
+#define AG_TABLE_TXT_MAX (AG_MODEL*2)  /* Length of fixed text cells */
+#endif
+#ifndef AG_TABLE_COL_NAME_MAX
+#define AG_TABLE_COL_NAME_MAX (AG_MODEL)  /* Length of column label */
+#endif
+
+#define AG_TABLE_FMT_MAX     16		/* Length of cell specifier string */
+#define AG_TABLE_HASHBUF_MAX 64		/* Buffer used in hash function */
 
 struct ag_table;
 	
@@ -23,9 +27,9 @@ enum ag_table_selmode {
 
 typedef struct ag_table_popup {
 	int m, n;				/* Row/column (-1 = all) */
-	AG_Menu *menu;
-	AG_MenuItem *item;
-	AG_Window *panel;
+	AG_Menu     *_Nonnull  menu;		/* Popup menu */
+	AG_MenuItem *_Nonnull  item;		/* Popup menu root item */
+	AG_Window   *_Nullable panel;		/* Expanded window */
 	AG_SLIST_ENTRY(ag_table_popup) popups;
 } AG_TablePopup;
 
@@ -70,7 +74,7 @@ typedef struct ag_table_cell {
 		char s[AG_TABLE_TXT_MAX];
 		int i;
 		double f;
-		void *p;
+		void *_Nullable p;
 		long l;
 #ifdef AG_HAVE_64BIT
 		Uint64 u64;
@@ -79,12 +83,15 @@ typedef struct ag_table_cell {
 #endif
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
-	AG_Surface *(*fnSu)(void *, int, int);  /* For AG_CELL_FN_SU */
-	void (*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TXT */
-	AG_Widget *widget;			/* For AG_CELL_WIDGET */
+
+	AG_Surface *_Nonnull (*_Nullable fnSu)(void *_Nullable, int,int);
+	void                 (*_Nullable fnTxt)(void *_Nullable, char *_Nonnull,
+	                                        AG_Size);
+
+	AG_Widget *_Nullable widget;		/* For AG_CELL_WIDGET */
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
-	struct ag_table *tbl;			/* Back pointer to Table */
+	struct ag_table *_Nonnull tbl;		/* Back pointer to Table */
 	Uint id;				/* Optional user-specified ID */
 	Uint flags;
 #define AG_TABLE_CELL_NOCOMPARE	0x01		/* Ignore when comparing cells
@@ -100,7 +107,7 @@ typedef struct ag_table_bucket {
 
 typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
-	int (*sortFn)(const void *, const void *);
+	int (*_Nullable sortFn)(const void *_Nonnull, const void *_Nonnull);
 	Uint flags;
 #define AG_TABLE_COL_FILL	 0x01
 #define AG_TABLE_SORT_ASCENDING	 0x02
@@ -113,7 +120,7 @@ typedef struct ag_table_col {
 	int wPct;			/* Width (percent or -1) */
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
-	AG_CursorArea *ca;		/* Column resize cursor-change area */
+	AG_CursorArea *_Nullable ca;	/* Column resize cursor-change area */
 } AG_TableCol;
 
 typedef struct ag_table {
@@ -131,7 +138,7 @@ typedef struct ag_table {
 	enum ag_table_selmode selMode;	/* Selection mode */
 	int wHint, hHint;		/* Size hint */
 
-	const char *sep;		/* Field separators */
+	const char *_Nonnull sep;	/* Field separators */
 	int hRow;			/* Row height (px) */
 	int hCol;			/* Column header height (px) */
 	int wColMin;			/* Minimum column width (px) */
@@ -141,22 +148,25 @@ typedef struct ag_table {
 	int xOffs;			/* Column display offset */
 	int mOffs;			/* Row offset (for poll function) */
 
-	AG_TableCol     *cols;		/* Column data */
-	AG_TableCell   **cells;		/* Current cell data (sorted rows) */
-	AG_TableBucket *cPrev;		/* Saved cells (value hash) */
-	Uint            nPrevBuckets;
+	AG_TableCol *_Nullable cols;		 /* Column data */
+	AG_TableCell *_Nullable *_Nonnull cells; /* Cell data (sorted rows) */
+
+	AG_TableBucket *_Nonnull cPrev;		 /* Saved (recyclable) cells */
+	Uint                     nPrevBuckets;
 	AG_TAILQ_HEAD_(ag_table_cell) cPrevList;	
 
 	int n;				/* Number of columns */
 	int m;				/* Number of rows */
 	int mVis;			/* Maximum number of visible rows */
 	int nResizing;			/* Column being resized (or -1) */
-	AG_Scrollbar *vbar;		/* Vertical scrollbar */
-	AG_Scrollbar *hbar;		/* Horizontal scrollbar */
-	AG_Event *poll_ev;		/* Poll event */
-	AG_Event *dblClickRowEv;	/* Row double click callback */
-	AG_Event *dblClickColEv;	/* Column double click callback */
-	AG_Event *dblClickCellEv;	/* Cell double click callback */
+	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
+	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */
+
+	AG_Event *_Nullable poll_ev;		/* Poll event */
+	AG_Event *_Nullable dblClickRowEv;	/* Row double click callback */
+	AG_Event *_Nullable dblClickColEv;	/* Column double click callback */
+	AG_Event *_Nullable dblClickCellEv;	/* Cell double click callback */
+
 	int dblClickedRow;		/* For SEL_ROWS */
 	int dblClickedCol;		/* For SEL_COLS */
 	int dblClickedCell;		/* For SEL_CELLS */
@@ -172,104 +182,124 @@ typedef struct ag_table {
 #define AG_TABLE_COL_SELECT	0x01	/* Select column */
 #define AG_TABLE_COL_SORT	0x02	/* Set sorting mode */
 
-	AG_Event *clickRowEv;		/* Row double click callback */
-	AG_Event *clickColEv;		/* Column double click callback */
-	AG_Event *clickCellEv;		/* Cell double click callback */
-	Uint nSorting;			/* Index of sorting column
-					   (computed from flags) */
-	AG_Timer pollTo;		/* For polled table update */
-	AG_Timer dblClickTo;		/* For double click */
+	AG_Event *_Nullable clickRowEv;		/* Row double click callback */
+	AG_Event *_Nullable clickColEv;		/* Column double click callback */
+	AG_Event *_Nullable clickCellEv;	/* Cell double click callback */
+	Uint nSorting;				/* Index of sorting column
+						   (computed from flags) */
+	AG_Timer pollTo;			/* For polled table update */
+	AG_Timer dblClickTo;			/* For double click */
 } AG_Table;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTableClass;
 
-AG_Table *AG_TableNew(void *, Uint);
-AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
- 			    const char *, ...);
-void	  AG_TableSizeHint(AG_Table *, int, int);
+AG_Table *_Nonnull AG_TableNew(void *_Nullable, Uint);
+AG_Table *_Nonnull AG_TableNewPolled(void *_Nullable, Uint,
+                                     void (*_Nonnull fn)(AG_Event *_Nonnull),
+				     const char *_Nullable, ...);
+
+void	  AG_TableSizeHint(AG_Table *_Nonnull, int, int);
 #define	  AG_TablePrescale AG_TableSizeHint
 
-void AG_TableSetPollInterval(AG_Table *, Uint);
-void AG_TableSetSeparator(AG_Table *, const char *);
-void AG_TableSetRowClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetColClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetCellClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetCellDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void AG_TableSetColHeight(AG_Table *, int);
-void AG_TableSetRowHeight(AG_Table *, int);
-void AG_TableSetColMin(AG_Table *, int);
-void AG_TableSetDefaultColWidth(AG_Table *, int);
-void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
-void AG_TableSetSelectionColor(AG_Table *, Uint8, Uint8, Uint8, Uint8);
-void AG_TableSetColumnAction(AG_Table *, Uint);
+void AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
+void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);
 
-void	  AG_TableClear(AG_Table *);
-void	  AG_TableBegin(AG_Table *);
-void	  AG_TableEnd(AG_Table *);
-void      AG_TableSort(AG_Table *);
+void AG_TableSetRowClickFn(AG_Table *_Nonnull,
+                           _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetColClickFn(AG_Table *_Nonnull,
+                           _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetCellClickFn(AG_Table *_Nonnull,
+                            _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetRowDblClickFn(AG_Table *_Nonnull,
+                              _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetColDblClickFn(AG_Table *_Nonnull,
+                              _Nonnull AG_EventFn, const char *_Nullable, ...);
+void AG_TableSetCellDblClickFn(AG_Table *_Nonnull,
+                               _Nonnull AG_EventFn, const char *_Nullable, ...);
 
-void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
-void	  AG_TablePrintCell(const AG_TableCell *, char *, size_t);
-void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
+void AG_TableSetColHeight(AG_Table *_Nonnull, int);
+void AG_TableSetRowHeight(AG_Table *_Nonnull, int);
+void AG_TableSetColMin(AG_Table *_Nonnull, int);
+void AG_TableSetDefaultColWidth(AG_Table *_Nonnull, int);
+void AG_TableSetSelectionMode(AG_Table *_Nonnull, enum ag_table_selmode);
+void AG_TableSetSelectionColor(AG_Table *_Nonnull, Uint8,Uint8,Uint8,Uint8);
+void AG_TableSetColumnAction(AG_Table *_Nonnull, Uint);
 
-int	  AG_TableAddRow(AG_Table *, const char *, ...);
-void	  AG_TableSelectRow(AG_Table *, int);
-void	  AG_TableDeselectRow(AG_Table *, int);
-void	  AG_TableSelectAllRows(AG_Table *);
-void	  AG_TableDeselectAllRows(AG_Table *);
-int	  AG_TableRowSelected(AG_Table *, int);
+void AG_TableClear(AG_Table *_Nonnull);
+void AG_TableBegin(AG_Table *_Nonnull);
+void AG_TableEnd(AG_Table *_Nonnull);
+void AG_TableSort(AG_Table *_Nonnull);
 
-int	  AG_TableAddCol(AG_Table *, const char *, const char *,
-	                 int (*)(const void *, const void *));
-void	  AG_TableSelectAllCols(AG_Table *);
-void	  AG_TableDeselectAllCols(AG_Table *);
+void AG_TableInitCell(AG_Table *_Nonnull, AG_TableCell *_Nonnull);
+void AG_TablePrintCell(const AG_TableCell *_Nonnull, char *_Nonnull, AG_Size);
+void AG_TableFreeCell(AG_Table *_Nonnull, AG_TableCell *_Nonnull);
 
-void	  AG_TableRedrawCells(AG_Table *);
-int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
+int  AG_TableAddRow(AG_Table *_Nonnull, const char *_Nonnull, ...);
+void AG_TableSelectRow(AG_Table *_Nonnull, int);
+void AG_TableDeselectRow(AG_Table *_Nonnull, int);
+void AG_TableSelectAllRows(AG_Table *_Nonnull);
+void AG_TableDeselectAllRows(AG_Table *_Nonnull);
+int  AG_TableRowSelected(AG_Table *_Nonnull, int);
 
-AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
-int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
+int  AG_TableAddCol(AG_Table *_Nonnull, const char *_Nullable,
+                    const char *_Nullable,
+		    int (*_Nullable)(const void *_Nonnull, const void *_Nonnull));
 
-/* Return cell at [m,n]. */
-static __inline__ AG_TableCell *
-AG_TableGetCell(AG_Table *t, int m, int n)
+void AG_TableSelectAllCols(AG_Table *_Nonnull);
+void AG_TableDeselectAllCols(AG_Table *_Nonnull);
+
+void AG_TableRedrawCells(AG_Table *_Nonnull);
+int  AG_TableCompareCells(const AG_TableCell *_Nonnull,
+                          const AG_TableCell *_Nonnull);
+
+AG_MenuItem *_Nonnull AG_TableSetPopup(AG_Table *_Nonnull, int,int);
+
+int AG_TableSaveASCII(AG_Table *_Nonnull, FILE *_Nonnull, char);
+
+/* Return the cell at unchecked location m,n. */
+static __inline__ AG_TableCell *_Nonnull _Pure_Attribute
+AG_TableGetCell(AG_Table *_Nonnull t, int m, int n)
 {
+#ifdef AG_DEBUG
+	if (m < 0 || m >= t->m ||
+	    n < 0 || n >= t->n)
+		AG_FatalError("Illegal cell access");
+#endif
 	return (&t->cells[m][n]);
 }
 
-/* Cell selection control */
-static __inline__ int
-AG_TableCellSelected(AG_Table *t, int m, int n)
-{
+/*
+ * Cell selection control
+ */
+static __inline__ int _Pure_Attribute
+AG_TableCellSelected(AG_Table *_Nonnull t, int m, int n) {
 	return (t->cells[m][n].selected);
 }
 static __inline__ void
-AG_TableSelectCell(AG_Table *t, int m, int n)
-{
+AG_TableSelectCell(AG_Table *_Nonnull t, int m, int n) {
 	t->cells[m][n].selected = 1;
 }
 static __inline__ void
-AG_TableDeselectCell(AG_Table *t, int m, int n)
-{
+AG_TableDeselectCell(AG_Table *_Nonnull t, int m, int n) {
 	t->cells[m][n].selected = 0;
 }
 
-/* Column selection control */
-static __inline__ int
-AG_TableColSelected(AG_Table *t, int n)
+/*
+ * Column selection control
+ */
+static __inline__ int _Pure_Attribute
+AG_TableColSelected(AG_Table *_Nonnull t, int n)
 {
 	return (t->cols[n].selected);
 }
 static __inline__ void
-AG_TableSelectCol(AG_Table *t, int n)
+AG_TableSelectCol(AG_Table *_Nonnull t, int n)
 {
 	t->cols[n].selected = 1;
 }
 static __inline__ void
-AG_TableDeselectCol(AG_Table *t, int n)
+AG_TableDeselectCol(AG_Table *_Nonnull t, int n)
 {
 	t->cols[n].selected = 0;
 }

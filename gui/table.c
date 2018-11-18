@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@ AG_TableNew(void *parent, Uint flags)
 
 /* Timer callback for polling updates. */
 static Uint32
-PollTimeout(AG_Timer *to, AG_Event *event)
+PollTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 
@@ -188,7 +188,7 @@ AG_TableSetDefaultColWidth(AG_Table *t, int w)
 
 /* Compute the effective widths of the columns. */
 static void
-SizeColumns(AG_Table *t)
+SizeColumns(AG_Table *_Nonnull t)
 {
 	AG_TableCol *tc, *tcFill = NULL;
 	AG_Rect r;
@@ -230,7 +230,7 @@ SizeColumns(AG_Table *t)
 	for (n = 0, x = 0; n < t->n; n++) {
 		tc = &t->cols[n];
 		
-		r.x = x - COLUMN_RESIZE_RANGE/2;
+		r.x = x - (COLUMN_RESIZE_RANGE >> 1);
 		r.w = COLUMN_RESIZE_RANGE;
 		AG_SetStockCursor(t, &tc->ca, r, AG_HRESIZE_CURSOR);
 		x += tc->w;
@@ -239,7 +239,7 @@ SizeColumns(AG_Table *t)
 
 /* Set the effective position of all embedded widgets in the table. */
 static void
-UpdateEmbeddedWidgets(AG_Table *t)
+UpdateEmbeddedWidgets(AG_Table *_Nonnull t)
 {
 	AG_SizeAlloc wa;
 	AG_Widget *wt;
@@ -302,7 +302,7 @@ UpdateEmbeddedWidgets(AG_Table *t)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Table *t = obj;
 	AG_SizeReq rBar;
@@ -335,7 +335,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Table *t = obj;
 	AG_SizeReq rBar;
@@ -352,7 +352,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	
 	if (t->vbar && AG_WidgetVisible(t->vbar)) {
 		AG_WidgetSizeReq(t->vbar, &rBar);
-		if (rBar.w > a->w/2) { rBar.w = a->w/2; }
+		if (rBar.w > (a->w >> 1)) { rBar.w = (a->w >> 1); }
 		aBar.x = a->w - rBar.w;
 		aBar.y = 0;
 		aBar.w = rBar.w;
@@ -366,7 +366,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 			AG_WidgetSizeAlloc(t->vbar, &aBar);
 		}
 		AG_WidgetSizeReq(t->hbar, &rBar);
-		if (rBar.h > a->h/2) { rBar.h = a->h/2; }
+		if (rBar.h > (a->h >> 1)) { rBar.h = (a->h >> 1); }
 		aBar.x = 0;
 		aBar.y = a->h - rBar.h;
 		aBar.w = a->w - vBarSz;
@@ -393,7 +393,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 void
-AG_TablePrintCell(const AG_TableCell *c, char *buf, size_t bufsz)
+AG_TablePrintCell(const AG_TableCell *c, char *buf, AG_Size bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_INT:
@@ -489,7 +489,7 @@ AG_TablePrintCell(const AG_TableCell *c, char *buf, size_t bufsz)
 }
 
 static __inline__ void
-DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
+DrawCell(AG_Table *_Nonnull t, AG_TableCell *_Nonnull c, AG_Rect rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
@@ -512,11 +512,11 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		goto blit;
 	case AG_CELL_FN_SU:
 		c->surface = AG_WidgetMapSurface(t,
-		    c->fnSu(c->data.p, rd->x, rd->y));
+		    c->fnSu(c->data.p, rd.x, rd.y));
 		goto blit;
 	case AG_CELL_FN_SU_NODUP:
 		c->surface = AG_WidgetMapSurfaceNODUP(t,
-		    c->fnSu(c->data.p, rd->x, rd->y));
+		    c->fnSu(c->data.p, rd.x, rd.y));
 		goto blit;
 	case AG_CELL_WIDGET:
 		if (WIDGET_OPS(c->data.p)->draw != NULL) {
@@ -539,12 +539,12 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
-	    rd->x,
-	    rd->y + t->hRow/2 - WSURFACE(t,c->surface)->h/2);
+	    rd.x,
+	    rd.y + (t->hRow >> 1) - (WSURFACE(t,c->surface)->h >> 1));
 }
 
 static void
-ScrollToSelection(AG_Table *t)
+ScrollToSelection(AG_Table *_Nonnull t)
 {
 	int m;
 
@@ -564,7 +564,7 @@ ScrollToSelection(AG_Table *t)
 
 #if 0
 static void
-SelectionToScroll(AG_Table *t)
+SelectionToScroll(AG_Table *_Nonnull t)
 {
 	int m, n;
 
@@ -586,7 +586,7 @@ SelectionToScroll(AG_Table *t)
 #endif
 
 static int
-SelectionVisible(AG_Table *t)
+SelectionVisible(AG_Table *_Nonnull t)
 {
 	int n, m;
 	int x, y;
@@ -616,7 +616,7 @@ SelectionVisible(AG_Table *t)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
 	AG_Rect rCol, rCell;
@@ -637,6 +637,8 @@ Draw(void *obj)
 	rCol.y = 0;
 	rCol.h = t->hCol + t->r.h - 2;
 	rCell.h = t->hRow;
+
+	AG_PushClipRect(t, AG_RECT(0,0,WIDTH(t),HEIGHT(t)));
 
 	for (n = 0, rCell.x = -t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
@@ -659,39 +661,34 @@ Draw(void *obj)
 			    rCol.h,
 			    WCOLOR(t,LINE_COLOR));
 		}
-		
 		AG_PushClipRect(t, rCol);
 
 		AG_DrawBox(t,
-		    RECT(rCol.x, 0, rCol.w, t->hCol),
+		    AG_RECT(rCol.x, 0, rCol.w+1, t->hCol),
 		    col->selected ? -1 : 1,
 		    col->selected ? WCOLOR_SEL(t,0) : WCOLOR(t,0));
 
 		/* Column header label */
 		if (col->name[0] != '\0') {
 			if (col->surface == -1) {
-				AG_Surface *s;
-				s = AG_TextRender(col->name);
-				col->surface = AG_WidgetMapSurface(t, s);
+				col->surface = AG_WidgetMapSurface(t,
+				    AG_TextRender(col->name));
 			}
-			if (col->surface != -1)
-				AG_WidgetBlitSurface(t, col->surface,
-				    rCell.x + col->w/2 - WSURFACE(t,col->surface)->w/2,
-				    t->hCol/2 - WSURFACE(t,col->surface)->h/2);
+			AG_WidgetBlitSurface(t, col->surface,
+			    rCell.x + (col->w >> 1) - (WSURFACE(t,col->surface)->w >> 1),
+			    (t->hCol >> 1) - (WSURFACE(t,col->surface)->h >> 1));
 
 			if (col->flags & AG_TABLE_SORT_ASCENDING) {
 				AG_DrawArrowUp(t,
 				    rCell.x + col->w - 10,
-				    t->hCol/2,
+				    t->hCol >> 1,
 				    10,
-				    WCOLOR(t,SHAPE_COLOR),
 				    WCOLOR(t,SHAPE_COLOR));
 			} else if (col->flags & AG_TABLE_SORT_DESCENDING) {
 				AG_DrawArrowDown(t,
 				    rCell.x + col->w - 10,
-				    t->hCol/2,
+				    t->hCol >> 1,
 				    10,
-				    WCOLOR(t,SHAPE_COLOR),
 				    WCOLOR(t,SHAPE_COLOR));
 			}
 		}
@@ -702,17 +699,14 @@ Draw(void *obj)
 		     m++) {
 			AG_TableCell *c = &t->cells[m][n];
 
-			AG_DrawLineH(t, 0, t->r.w, rCell.y, WCOLOR(t,LINE_COLOR));
-
-			DrawCell(t, c, &rCell);
+			DrawCell(t, c, rCell);
 			if (c->selected) {
 				AG_DrawRectBlended(t, rCell, t->selColor,
 				    AG_ALPHA_SRC);
 			}
 			rCell.y += t->hRow;
+			AG_DrawLineH(t, 0, t->r.w - 1, rCell.y, WCOLOR(t,LINE_COLOR));
 		}
-
-		AG_DrawLineH(t, 0, t->r.w, rCell.y, WCOLOR(t,LINE_COLOR));
 
 		/* Indicate column selection. */
 		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
@@ -724,10 +718,13 @@ Draw(void *obj)
 		AG_PopClipRect(t);
 		rCell.x += col->w;
 	}
+
+	AG_PopClipRect(t);
+
 	if (rCell.x > 0 &&
 	    rCell.x < t->r.w) {
 		AG_DrawLineV(t,
-		    rCell.x - 1,
+		    rCell.x,
 		    t->hCol - 1,
 		    rCol.h,
 		    WCOLOR(t,LINE_COLOR));
@@ -850,7 +847,7 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 }
 
 static __inline__ Uint
-HashPrevCell(AG_Table *t, const AG_TableCell *c)
+HashPrevCell(AG_Table *_Nonnull t, const AG_TableCell *_Nonnull c)
 {
 	char buf[AG_TABLE_HASHBUF_MAX];
 	Uint h;
@@ -886,9 +883,9 @@ AG_TableBegin(AG_Table *t)
 			TAILQ_INSERT_HEAD(&tbPrev->cells, cPrev, cells);
 			TAILQ_INSERT_HEAD(&t->cPrevList, cPrev, cells_list);
 		}
-		Free(t->cells[m]);
+		free(t->cells[m]);
 	}
-	Free(t->cells);
+	free(t->cells);
 	t->cells = NULL;
 	t->m = 0;
 	t->flags &= ~(AG_TABLE_WIDGETS);
@@ -896,7 +893,8 @@ AG_TableBegin(AG_Table *t)
 
 /* Compare two "%[Ft]" cells. */
 static int
-AG_TableCompareFnTxtCells(const AG_TableCell *c1, const AG_TableCell *c2)
+AG_TableCompareFnTxtCells(const AG_TableCell *_Nonnull c1,
+                          const AG_TableCell *_Nonnull c2)
 {
 	char b1[AG_TABLE_TXT_MAX];
 	char b2[AG_TABLE_TXT_MAX];
@@ -981,7 +979,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 
 /* Restore selection state on a per-row basis. */
 static void
-TableRestoreRowSelections(AG_Table *t)
+TableRestoreRowSelections(AG_Table *_Nonnull t)
 {
 	int m, n;
 	int nMatched, nCompared;
@@ -1024,7 +1022,7 @@ TableRestoreRowSelections(AG_Table *t)
  * to restore properly.
  */
 static void
-TableRestoreCellSelections(AG_Table *t)
+TableRestoreCellSelections(AG_Table *_Nonnull t)
 {
 	int m, n;
 
@@ -1055,7 +1053,7 @@ TableRestoreCellSelections(AG_Table *t)
  * Restore selection state on a per-column basis.
  */
 static void
-TableRestoreColSelections(AG_Table *t)
+TableRestoreColSelections(AG_Table *_Nonnull t)
 {
 	int m, n;
 
@@ -1125,7 +1123,7 @@ out:
 }
 
 static int
-AG_TableSortCellsAsc(const void *p1, const void *p2)
+AG_TableSortCellsAsc(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
@@ -1139,7 +1137,7 @@ AG_TableSortCellsAsc(const void *p1, const void *p2)
 }
 
 static int
-AG_TableSortCellsDsc(const void *p1, const void *p2)
+AG_TableSortCellsDsc(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const AG_TableCell *row1 = *(const AG_TableCell **)p1;
 	const AG_TableCell *row2 = *(const AG_TableCell **)p2;
@@ -1180,7 +1178,7 @@ AG_TableSort(AG_Table *t)
 
 /* Return true if multiple item selection is enabled. */
 static __inline__ int
-SelectingMultiple(AG_Table *t)
+SelectingMultiple(AG_Table *_Nonnull t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
 	        ((t->flags & AG_TABLE_MULTI) &&
@@ -1189,7 +1187,7 @@ SelectingMultiple(AG_Table *t)
 
 /* Return true if a range of items are being selected. */
 static __inline__ int
-SelectingRange(AG_Table *t)
+SelectingRange(AG_Table *_Nonnull t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
 	        (AG_GetModState(t) & AG_KEYMOD_SHIFT));
@@ -1197,7 +1195,7 @@ SelectingRange(AG_Table *t)
 
 /* Display the popup menu. */
 static void
-ShowPopup(AG_Table *t, AG_TablePopup *tp, int x, int y)
+ShowPopup(AG_Table *_Nonnull t, AG_TablePopup *_Nonnull tp, int x, int y)
 {
 	if (tp->panel != NULL) {
 		AG_MenuCollapse(tp->item);
@@ -1209,7 +1207,7 @@ ShowPopup(AG_Table *t, AG_TablePopup *tp, int x, int y)
 
 /* Right click on a column header; display the column's popup menu. */
 static void
-ColumnRightClick(AG_Table *t, int px, int py)
+ColumnRightClick(AG_Table *_Nonnull t, int px, int py)
 {
 	int n;
 	int cx;
@@ -1236,7 +1234,7 @@ ColumnRightClick(AG_Table *t, int px, int py)
 
 /* Left click on a column header; column action is sort. */
 static void
-ColumnLeftClickSort(AG_Table *t, AG_TableCol *tc)
+ColumnLeftClickSort(AG_Table *_Nonnull t, AG_TableCol *_Nonnull tc)
 {
 	int n;
 
@@ -1260,7 +1258,7 @@ ColumnLeftClickSort(AG_Table *t, AG_TableCol *tc)
 
 /* Timer callback for double click. */
 static Uint32
-DoubleClickTimeout(AG_Timer *to, AG_Event *event)
+DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	int *which = AG_PTR(1);
 
@@ -1270,7 +1268,7 @@ DoubleClickTimeout(AG_Timer *to, AG_Event *event)
 
 /* Left click on a column header; resize or execute column action. */
 static void
-ColumnLeftClick(AG_Table *t, int px)
+ColumnLeftClick(AG_Table *_Nonnull t, int px)
 {
 	int x = px - (COLUMN_RESIZE_RANGE/2), x1;
 	int multi = SelectingMultiple(t);
@@ -1333,7 +1331,7 @@ cont:
 
 /* Process left click on a cell. */
 static void
-CellLeftClick(AG_Table *t, int mc, int x)
+CellLeftClick(AG_Table *_Nonnull t, int mc, int x)
 {
 	AG_TableCell *c;
 	AG_TableCol *tc;
@@ -1506,7 +1504,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 
 /* Right click on cell; show the cell's popup menu. */
 static void
-CellRightClick(AG_Table *t, int m, int px, int py)
+CellRightClick(AG_Table *_Nonnull t, int m, int px, int py)
 {
 	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
 	int n;
@@ -1534,7 +1532,7 @@ CellRightClick(AG_Table *t, int m, int px, int py)
 
 /* Cursor is over column header? */
 static __inline__ int
-OverColumnHeader(AG_Table *t, int y)
+OverColumnHeader(AG_Table *_Nonnull t, int y)
 {
 	return (y <= t->hCol);
 }
@@ -1567,7 +1565,7 @@ OverColumnResizeControl(AG_Table *t, int px)
 
 /* Return the row at the given y-coordinate. */
 static __inline__ int
-RowAtY(AG_Table *t, int y)
+RowAtY(AG_Table *_Nonnull t, int y)
 {
 	int m = t->mOffs;
 	
@@ -1580,7 +1578,7 @@ RowAtY(AG_Table *t, int y)
 }
 
 static void
-DecrementSelection(AG_Table *t, int inc)
+DecrementSelection(AG_Table *_Nonnull t, int inc)
 {
 	int m;
 
@@ -1605,7 +1603,7 @@ DecrementSelection(AG_Table *t, int inc)
 }
 
 static void
-IncrementSelection(AG_Table *t, int inc)
+IncrementSelection(AG_Table *_Nonnull t, int inc)
 {
 	int m;
 
@@ -1630,7 +1628,7 @@ IncrementSelection(AG_Table *t, int inc)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int button = AG_INT(1);
@@ -1682,7 +1680,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int button = AG_INT(1);
@@ -1699,7 +1697,7 @@ MouseButtonUp(AG_Event *event)
 
 /* Timer callback for keyboard selection moving. */
 static Uint32
-MoveTimeout(AG_Timer *to, AG_Event *event)
+MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int incr = AG_INT(1);
@@ -1713,7 +1711,7 @@ MoveTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
@@ -1739,7 +1737,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int x = AG_INT(1);
@@ -1761,7 +1759,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
@@ -1777,7 +1775,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 	AG_Font *font = WIDGET(t)->font;
@@ -1805,7 +1803,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-LostFocus(AG_Event *event)
+LostFocus(AG_Event *_Nonnull event)
 {
 	AG_Table *t = AG_SELF();
 
@@ -2247,7 +2245,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
 	Uint i;
@@ -2264,8 +2262,8 @@ Init(void *obj)
 	t->wColMin = 16;
 	t->wColDefault = 80;
 	t->wHint = -1;				/* Use column size specs */
-	t->hHint = t->hCol + t->hRow*2;
-	t->r = RECT(0,0,0,0);
+	t->hHint = t->hCol + (t->hRow << 1);
+	t->r = AG_RECT(0,0,0,0);
 	t->selMode = AG_TABLE_SEL_ROWS;
 	t->selColor = AG_ColorRGBA(0,0,250,32);
 	t->wTot = 0;
@@ -2296,7 +2294,8 @@ Init(void *obj)
 	AG_InitTimer(&t->dblClickTo, "dblClick", 0);
 
 	/* Horizontal scrollbar */
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, AG_SCROLLBAR_EXCL|
+	                                                 AG_SCROLLBAR_NOAUTOHIDE);
 	AG_SetInt(t->hbar, "min", 0);
 	AG_BindInt(t->hbar, "max", &t->wTot);
 	AG_BindInt(t->hbar, "value", &t->xOffs);
@@ -2304,7 +2303,8 @@ Init(void *obj)
 	AG_WidgetSetFocusable(t->hbar, 0);
 
 	/* Vertical scrollbar */
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL);
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, AG_SCROLLBAR_EXCL|
+	                                                AG_SCROLLBAR_NOAUTOHIDE);
 	AG_SetInt(t->vbar, "min", 0);
 	AG_BindInt(t->vbar, "max", &t->m);
 	AG_BindInt(t->vbar, "value", &t->mOffs);
@@ -2341,7 +2341,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Table *t = obj;
 	AG_TablePopup *pop, *nPop;
