@@ -51,23 +51,23 @@ typedef struct m_plot {
 	enum m_plot_source src_type;
 	union {
 		struct {
-			void *vfs;	 /* VFS root object */
-			const char *key; /* Property path */
+			void *_Nonnull vfs;	  /* VFS root object */
+			const char *_Nonnull key; /* Property path */
 		} varVFS;
-		M_Real *real;		/* Pointer to real value */
-		int *integer;		/* Pointer to integer value */
+		M_Real *_Nonnull real;		/* Pointer to real value */
+		int *_Nonnull integer;		/* Pointer to integer value */
 		struct {
-			M_Matrix *A;	/* Matrix/vector */
-			Uint i, j;	/* Entry position */
+			M_Matrix *_Nonnull A;	/* Matrix/vector */
+			Uint i, j;		/* Entry position */
 		} com;
-		struct m_plot *plot;	/* Other plot */
+		struct m_plot *_Nonnull plot;	/* Other plot */
 	} src;
 	union {
-		M_Real	*r;		/* Real points */
-		M_Vector **v;		/* Real vectors */
+		M_Real	*_Nullable            r;	/* Real points */
+		M_Vector *_Nullable *_Nonnull v;	/* Real vectors */
 	} data;
-	struct m_plotter *plotter;	/* Back pointer to plotter */
-	Uint n;				/* Number of points */
+	struct m_plotter *_Nonnull plotter;	/* Back pointer to plotter */
+	Uint n;					/* Number of points */
 	Uint flags;
 #define M_PLOT_SELECTED	0x01
 #define M_PLOT_MOUSEOVER	0x02
@@ -102,14 +102,18 @@ typedef struct m_plotter {
 #define M_PLOTTER_SCROLL	0x04
 	int xMax;			/* Maximum X for single value plots */
 	M_Real yMin, yMax;		/* Extrema for single value plots */
-	M_Vector *vMin, *vMax;		/* Extrema for vector plots */
+	M_Vector *_Nonnull vMin;	/* Extrema for vector plots */
+	M_Vector *_Nonnull vMax;	/* Extrema for vector plots */
 	int xOffs, yOffs;		/* Display offset */
 	int wPre, hPre;			/* SizeHint dimensions */
 	M_Real xScale, yScale;		/* Scaling factors */
-	AG_Font *font;			/* Default font face (or NULL) */
+
+	AG_Font *_Nonnull font;			/* Default font */
 	AG_Color colors[M_PLOTTER_NDEFCOLORS];	/* Default plot color */
-	int curColor;				/* Current default color */
-	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
+	int   curColor;				/* Current default color */
+
+	AG_Scrollbar *_Nonnull hbar;	/* Horizontal scrollbar */
+	AG_Scrollbar *_Nonnull vbar;	/* Vertical scrollbar */
 	AG_Rect r;			/* View area */
 	AG_TAILQ_HEAD_(m_plot) plots;	/* Plots in this view */
 } M_Plotter;
@@ -117,40 +121,52 @@ typedef struct m_plotter {
 __BEGIN_DECLS
 extern AG_WidgetClass mPlotterClass;
 
-M_Plotter *M_PlotterNew(void *, Uint);
-void       M_PlotterSizeHint(M_Plotter *, Uint, Uint);
-void       M_PlotterUpdate(M_Plotter *);
-void       M_PlotterSetDefaultFont(M_Plotter *, const char *, int);
-void       M_PlotterSetDefaultColor(M_Plotter *, int, Uint8, Uint8, Uint8);
-void       M_PlotterSetDefaultScale(M_Plotter *, M_Real, M_Real);
+M_Plotter *_Nonnull M_PlotterNew(void *_Nullable, Uint);
+void M_PlotterSizeHint(M_Plotter *_Nonnull, Uint,Uint);
+void M_PlotterUpdate(M_Plotter *_Nonnull);
+void M_PlotterSetDefaultFont(M_Plotter *_Nonnull, const char *_Nullable, int);
+void M_PlotterSetDefaultColor(M_Plotter *_Nonnull, int, Uint8,Uint8,Uint8);
+void M_PlotterSetDefaultScale(M_Plotter *_Nonnull, M_Real,M_Real);
 
-M_Plot      *M_PlotNew(M_Plotter *, enum m_plot_type);
-M_PlotLabel *M_PlotLabelNew(M_Plot *, enum m_plot_label_type, Uint, Uint,
-                            const char *, ...);
-void         M_PlotLabelSetText(M_Plot *, M_PlotLabel *, const char *, ...);
-M_PlotLabel *M_PlotLabelReplace(M_Plot *, enum m_plot_label_type, Uint, Uint,
-                                const char *, ...);
+M_Plot *_Nonnull      M_PlotNew(M_Plotter *_Nonnull, enum m_plot_type);
 
-void	 M_PlotClear(M_Plot *);
-M_Plot	*M_PlotFromReal(M_Plotter *, enum m_plot_type, const char *, M_Real *);
-M_Plot	*M_PlotFromInt(M_Plotter *, enum m_plot_type, const char *, int *);
-M_Plot	*M_PlotFromDerivative(M_Plotter *, enum m_plot_type, M_Plot *);
-M_Plot	*M_PlotFromVariableVFS(M_Plotter *, enum m_plot_type, const char *,
-                               void *, const char *);
+M_PlotLabel *_Nonnull M_PlotLabelNew(M_Plot *_Nonnull, enum m_plot_label_type,
+                                     Uint,Uint, const char *_Nonnull, ...);
+void                  M_PlotLabelSetText(M_Plot *_Nonnull,
+                                         M_PlotLabel *_Nonnull,
+					 const char *_Nonnull, ...)
+                                        FORMAT_ATTRIBUTE(printf,3,4);
+M_PlotLabel *_Nonnull M_PlotLabelReplace(M_Plot *_Nonnull,
+                                         enum m_plot_label_type, Uint,Uint,
+					 const char *_Nonnull, ...)
+                                        FORMAT_ATTRIBUTE(printf,5,6);
 
-struct ag_window *M_PlotSettings(M_Plot *);
+void M_PlotClear(M_Plot *_Nonnull);
 
-void	M_PlotSetColor(M_Plot *, Uint8, Uint8, Uint8);
-void 	M_PlotSetLabel(M_Plot *, const char *, ...);
-void 	M_PlotUpdateLabel(M_Plot *);
-void	M_PlotSetScale(M_Plot *, M_Real, M_Real);
-void	M_PlotSetXoffs(M_Plot *, int);
-void	M_PlotSetYoffs(M_Plot *, int);
+M_Plot *_Nonnull M_PlotFromReal(M_Plotter *_Nonnull, enum m_plot_type,
+                                const char *_Nonnull, M_Real *_Nonnull);
+M_Plot *_Nonnull M_PlotFromInt(M_Plotter *_Nonnull, enum m_plot_type,
+                               const char *_Nonnull, int *_Nonnull);
+M_Plot *_Nonnull M_PlotFromDerivative(M_Plotter *_Nonnull, enum m_plot_type,
+                                      M_Plot *_Nonnull);
+M_Plot *_Nonnull M_PlotFromVariableVFS(M_Plotter *_Nonnull, enum m_plot_type,
+                                       const char *_Nonnull, void *_Nonnull,
+				       const char *_Nonnull);
 
-void	M_PlotReal(M_Plot *, M_Real);
-void	M_PlotRealv(M_Plot *, Uint, const M_Real *);
-void	M_PlotVector(M_Plot *, const M_Vector *);
-void	M_PlotVectorv(M_Plot *, Uint, const M_Vector **);
+struct ag_window *_Nullable M_PlotSettings(M_Plot *_Nonnull);
+
+void	M_PlotSetColor(M_Plot *_Nonnull, Uint8,Uint8,Uint8);
+void 	M_PlotSetLabel(M_Plot *_Nonnull, const char *_Nonnull, ...)
+                      FORMAT_ATTRIBUTE(printf,2,3);
+void 	M_PlotUpdateLabel(M_Plot *_Nonnull);
+void	M_PlotSetScale(M_Plot *_Nonnull, M_Real,M_Real);
+void	M_PlotSetXoffs(M_Plot *_Nonnull, int);
+void	M_PlotSetYoffs(M_Plot *_Nonnull, int);
+
+void	M_PlotReal(M_Plot *_Nonnull, M_Real);
+void	M_PlotRealv(M_Plot *_Nonnull, Uint, const M_Real *_Nonnull);
+void	M_PlotVector(M_Plot *_Nonnull, const M_Vector *_Nonnull);
+void	M_PlotVectorv(M_Plot *_Nonnull, Uint, const M_Vector *_Nonnull *_Nonnull);
 __END_DECLS
 
 #include <agar/math/close.h>

@@ -73,7 +73,7 @@ Median3(char *a, char *b, char *c, M_Real (*cmp)(const void *, const void *))
 }
 
 void
-M_QSort(void *aa, size_t n, size_t es,
+M_QSort(void *aa, AG_Size n, AG_Size es,
     M_Real (*cmp)(const void *, const void *))
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;

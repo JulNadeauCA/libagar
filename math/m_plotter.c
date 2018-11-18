@@ -64,7 +64,7 @@ M_PlotterNew(void *parent, Uint flags)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int keysym = AG_INT(1);
@@ -88,7 +88,7 @@ KeyDown(AG_Event *event)
 }
 
 static __inline__ int
-MouseOverPlotItem(M_Plotter *ptr, M_Plot *pl, int x, int y)
+MouseOverPlotItem(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, int x, int y)
 {
 	AG_Surface *lbl;
 	
@@ -99,7 +99,7 @@ MouseOverPlotItem(M_Plotter *ptr, M_Plot *pl, int x, int y)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int x = AG_INT(1);
@@ -133,7 +133,7 @@ MouseMotion(AG_Event *event)
 
 #if 0
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	M_Plotter *ptr = AG_SELF();
 	int button = AG_INT(1);
@@ -167,13 +167,13 @@ M_PlotUpdateLabel(M_Plot *pl)
 }
 
 static void
-UpdateLabel(AG_Event *event)
+UpdateLabel(AG_Event *_Nonnull event)
 {
 	M_PlotUpdateLabel(AG_PTR(1));
 }
 
 static void
-UpdatePlotTbl(AG_Event *event)
+UpdatePlotTbl(AG_Event *_Nonnull event)
 {
 	AG_Table *tbl = AG_SELF();
 	M_Plot *pl = AG_PTR(1);
@@ -246,7 +246,7 @@ M_PlotSettings(M_Plot *pl)
 }
 
 static void
-ShowPlotSettings(AG_Event *event)
+ShowPlotSettings(AG_Event *_Nonnull event)
 {
 	M_Plot *pl = AG_PTR(1);
 
@@ -254,7 +254,7 @@ ShowPlotSettings(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	M_Plotter *ptr = AG_SELF();
 	M_Plot *pl, *opl;
@@ -323,7 +323,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-UpdateXBar(AG_Event *event)
+UpdateXBar(AG_Event *_Nonnull event)
 {
 	M_Plotter *ptr = AG_PTR(1);
 	int value = AG_GetInt(ptr->hbar, "value");
@@ -336,7 +336,7 @@ UpdateXBar(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
 
@@ -353,7 +353,7 @@ Init(void *obj)
 	ptr->hPre = 64;
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
-	ptr->font = AG_FetchFont(NULL, -1, -1);
+	ptr->font = agDefaultFont;
 	ptr->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&ptr->plots);
 	
@@ -399,7 +399,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
 	M_Plot *plot, *plotNext;
@@ -439,7 +439,7 @@ M_PlotterSizeHint(M_Plotter *ptr, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	M_Plotter *ptr = obj;
 
@@ -450,7 +450,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	M_Plotter *ptr = obj;
 	AG_SizeAlloc aBar;
@@ -479,13 +479,13 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static __inline__ M_Real
-ScaleReal(M_Plotter *ptr, M_Plot *pl, M_Real r)
+ScaleReal(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl, M_Real r)
 {
-	return (r*(ptr->yScale*pl->yScale));
+	return (r*(ptr->yScale * pl->yScale));
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
 	AG_Driver *drv = WIDGET(ptr)->drv;
@@ -647,7 +647,8 @@ M_PlotRealv(M_Plot *pl, Uint n, const M_Real *vp)
 }
 
 static void
-VectorMinimum(M_Vector *c, const M_Vector *a, const M_Vector *b)
+VectorMinimum(M_Vector *_Nonnull c, const M_Vector *_Nonnull a,
+    const M_Vector *b)
 {
 	Uint i;
 	
@@ -661,7 +662,8 @@ VectorMinimum(M_Vector *c, const M_Vector *a, const M_Vector *b)
 }
 
 static void
-VectorMaximum(M_Vector *c, const M_Vector * a, const M_Vector *b)
+VectorMaximum(M_Vector *_Nonnull c, const M_Vector *_Nonnull a,
+    const M_Vector *_Nonnull b)
 {
 	Uint i;
 
@@ -675,7 +677,7 @@ VectorMaximum(M_Vector *c, const M_Vector * a, const M_Vector *b)
 }
 
 void
-M_PlotVector(M_Plot *pl, const M_Vector *v)
+M_PlotVector(M_Plot *_Nonnull pl, const M_Vector *_Nonnull v)
 {
 	M_Plotter *ptr = pl->plotter;
 	int i;
@@ -693,7 +695,7 @@ M_PlotVector(M_Plot *pl, const M_Vector *v)
 }
 
 void
-M_PlotVectorv(M_Plot *pl, Uint n, const M_Vector **vp)
+M_PlotVectorv(M_Plot *_Nonnull pl, Uint n, const M_Vector *_Nonnull *_Nonnull vp)
 {
 	M_Plotter *ptr = pl->plotter;
 	Uint i;
@@ -710,7 +712,7 @@ M_PlotVectorv(M_Plot *pl, Uint n, const M_Vector **vp)
 }
 
 static __inline__ void
-M_PlotDerivative(M_Plotter *ptr, M_Plot *dp)
+M_PlotDerivative(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull dp)
 {
 	M_Plot *p = dp->src.plot;
 
@@ -722,7 +724,7 @@ M_PlotDerivative(M_Plotter *ptr, M_Plot *dp)
 }
 
 static __inline__ M_Real
-PlotVariableVFS(M_Plotter *ptr, M_Plot *pl)
+PlotVariableVFS(M_Plotter *_Nonnull ptr, M_Plot *_Nonnull pl)
 {
 	AG_Variable *V;
 	M_Real rv;
@@ -1037,6 +1039,9 @@ M_PlotSetYoffs(M_Plot *pl, int yOffs)
 void
 M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, int size)
 {
+	if (ptr->font != agDefaultFont) {
+		AG_UnusedFont(ptr->font);
+	}
 	ptr->font = AG_FetchFont(face, size, 0);
 	AG_Redraw(ptr);
 }

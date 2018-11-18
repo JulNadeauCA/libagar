@@ -71,8 +71,9 @@ M_VectorLen3_SSE(M_Vector3 v)
 	float len;
 	
 	r1 = _mm_mul_ps(v.m128, v.m128);
-	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	r2 = _mm_add_ss(
+	    _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	    _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
 	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
 	_mm_store_ss(&len, r3);
@@ -86,8 +87,9 @@ M_VectorLen3p_SSE(const M_Vector3 *v)
 	float len;
 	
 	r1 = _mm_mul_ps(v->m128, v->m128);
-	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	r2 = _mm_add_ss(
+	    _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
+	    _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
 	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
 	_mm_store_ss(&len, r3);
@@ -133,13 +135,11 @@ M_VectorNorm3_SSE(M_Vector3 v)
 	__m128 r1, r2, r3;
 	M_Vector3 out;
 
-	/* Compute length */
 	r1 = _mm_mul_ps(v.m128, v.m128);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
 	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	                _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
-	/* Divide by length */
 	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
 	out.m128 = _mm_div_ps(v.m128, r3);
 	return (out);
@@ -150,13 +150,11 @@ M_VectorNorm3p_SSE(const M_Vector3 *v)
 	__m128 r1, r2, r3;
 	M_Vector3 out;
 
-	/* Compute length */
 	r1 = _mm_mul_ps(v->m128, v->m128);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
-	/* Divide by length */
 	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
 	out.m128 = _mm_div_ps(v->m128, r3);
 	return (out);
@@ -166,13 +164,11 @@ M_VectorNorm3v_SSE(M_Vector3 *v)
 {
 	__m128 r1, r2, r3;
 	
-	/* Compute length */
 	r1 = _mm_mul_ps(v->m128, v->m128);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
-	/* Divide by length */
 	r3 = _mm_shuffle_ps(r3,r3,_MM_SHUFFLE(0,0,0,0));
 	v->m128 = _mm_div_ps(v->m128, r3);
 }
@@ -214,7 +210,6 @@ M_VectorNormCross3_SSE(M_Vector3 a, M_Vector3 b)
 	__m128 rA, rB, r1, r2, r3;
 	M_Vector3 out;
 
-	/* Cross product */
 	rA = a.m128;
 	rB = b.m128;
 	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
@@ -222,11 +217,10 @@ M_VectorNormCross3_SSE(M_Vector3 a, M_Vector3 b)
 	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
 	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
 	r3 = _mm_sub_ps(r1, r2);
-	/* Normalize */
 	r1 = _mm_mul_ps(r3, r3);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r1 = _mm_sqrt_ss(r2);
 	r1 = _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0));
 	out.m128 = _mm_div_ps(r3, r1);
@@ -238,7 +232,6 @@ M_VectorNormCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 	__m128 rA, rB, r1, r2, r3;
 	M_Vector3 out;
 
-	/* Cross product */
 	rA = a->m128;
 	rB = b->m128;
 	r1 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,0,2,1)),
@@ -246,11 +239,10 @@ M_VectorNormCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 	r2 = _mm_mul_ps(_mm_shuffle_ps(rA,rA,_MM_SHUFFLE(3,1,0,2)),
 	                _mm_shuffle_ps(rB,rB,_MM_SHUFFLE(3,0,2,1)));
 	r3 = _mm_sub_ps(r1, r2);
-	/* Normalize */
 	r1 = _mm_mul_ps(r3, r3);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r1 = _mm_sqrt_ss(r2);
 	r1 = _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0));
 	out.m128 = _mm_div_ps(r3, r1);
@@ -326,8 +318,8 @@ M_VectorDistance3_SSE(M_Vector3 a, M_Vector3 b)
 	r1 = _mm_sub_ps(a.m128, b.m128);
 	r1 = _mm_mul_ps(r1, r1);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
 	_mm_store_ss(&dist, r3);
 	return (M_Real)dist;
@@ -342,8 +334,8 @@ M_VectorDistance3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 	r1 = _mm_sub_ps(a->m128, b->m128);
 	r1 = _mm_mul_ps(r1, r1);
 	r2 = _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(0,0,0,0)),
-	               _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
-	               _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
+	                _mm_add_ss(_mm_shuffle_ps(r1,r1,_MM_SHUFFLE(1,1,1,1)),
+	                           _mm_shuffle_ps(r1,r1,_MM_SHUFFLE(2,2,2,2))));
 	r3 = _mm_sqrt_ss(r2);
 	_mm_store_ss(&dist, r3);
 	return (M_Real)dist;

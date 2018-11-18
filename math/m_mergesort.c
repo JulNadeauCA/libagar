@@ -46,9 +46,9 @@
 /* Hybrid natural merge (default is pairwise merging) */
 #define NATURAL
 
-static void Setup(Uint8 *, Uint8 *, size_t, size_t,
+static void Setup(Uint8 *, Uint8 *, AG_Size, AG_Size,
     int (*)(const void *, const void *));
-static void InsertionSort(Uint8 *, size_t, size_t,
+static void InsertionSort(Uint8 *, AG_Size, AG_Size,
     int (*)(const void *, const void *));
 
 #define ISIZE sizeof(int)
@@ -82,7 +82,7 @@ static void InsertionSort(Uint8 *, size_t, size_t,
 	    (((Uint8 *)p + PSIZE - 1 - (Uint8 *) 0) & ~(PSIZE - 1)))
 
 int
-M_MergeSort(void *base, size_t nmemb, size_t size,
+M_MergeSort(void *base, AG_Size nmemb, AG_Size size,
     int (*cmp)(const void *, const void *))
 {
 	int i, sense;
@@ -239,7 +239,7 @@ COPY:	    			b = t;
  * NATURAL is defined.  Otherwise simple pairwise merging is used.)
  */
 void
-Setup(Uint8 *list1, Uint8 *list2, size_t n, size_t size,
+Setup(Uint8 *list1, Uint8 *list2, AG_Size n, AG_Size size,
     int (*cmp)(const void *, const void *))
 {
 	int i, length, size2, tmp, sense;
@@ -311,7 +311,7 @@ Setup(Uint8 *list1, Uint8 *list2, size_t n, size_t size,
  * last 4 elements.
  */
 static void
-InsertionSort(Uint8 *a, size_t n, size_t size,
+InsertionSort(Uint8 *a, AG_Size n, AG_Size size,
     int (*cmp)(const void *, const void *))
 {
 	Uint8 *ai, *s, *t, *u, tmp;

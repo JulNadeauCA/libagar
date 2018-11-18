@@ -394,9 +394,9 @@ M_TimeRange M_ReadTimeRange(AG_DataSource *);
 void        M_CopyTimeRange(AG_DataSource *, M_TimeRange *);
 void        M_WriteTimeRange(AG_DataSource *, M_TimeRange);
 
-int    M_HeapSort(void *, size_t, size_t, int (*)(const void *, const void *));
-void   M_QSort(void *, size_t, size_t, M_Real (*)(const void *, const void *));
-int    M_MergeSort(void *, size_t, size_t, int (*)(const void *, const void *));
+int    M_HeapSort(void *, AG_Size, AG_Size, int (*)(const void *, const void *));
+void   M_QSort(void *, AG_Size, AG_Size, M_Real (*)(const void *, const void *));
+int    M_MergeSort(void *, AG_Size, AG_Size, int (*)(const void *, const void *));
 int    M_RadixSort(const Uint8 **, int, const Uint8 *, Uint);
 int    M_RadixSortStable(const Uint8 **, int, const Uint8 *, Uint);
 __END_DECLS
