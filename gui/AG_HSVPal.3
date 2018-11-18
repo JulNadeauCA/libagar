@@ -1,4 +1,4 @@
-.\" Copyright (c) 2005-2011 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_HSVPal
-.Nd agar HSV color wheel widget
+.Nd agar HSV color picker
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -76,15 +76,15 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_HSVPAL_NOPREVIEW "
+.Bl -tag -width "AG_HSVPAL_FORCE_NOALPHA "
 .It AG_HSVPAL_NOALPHA
-Disable the alpha component editor.
-This flag is automatically set or cleared whenever
+(Read-only)
+Transparency control is disabled.
+Set (or cleared) when
 .Va pixel-format
-is bound to a pixel format with or without alpha channel.
+is bound to a pixel format with (or without) alpha.
 .It AG_HSVPAL_FORCE_NOALPHA
-Disable the alpha component editor, regardless of whether the
-pixel format includes alpha support.
+Disable the transparency control.
 .It AG_HSVPAL_NOPREVIEW
 Disable the color preview band.
 .It AG_HSVPAL_HFILL
@@ -97,6 +97,25 @@ Expand vertically in parent (equivalent to invoking
 Shorthand for
 .Dv AG_HSVPAL_HFILL|AG_HSVPAL_VFILL .
 .El
+.Sh UPDATING VALUES
+.nr nS 1
+.Ft "void"
+.Fn AG_HSVPalUpdateHue "AG_HSVPal *pal" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn AG_HSVPalUpdateSV "AG_HSVPal *pal" "int x" "int y"
+.Pp
+.nr nS 0
+.Fn AG_HSVPalUpdateHue
+sets the hue to that closest to cursor coordinates
+.Fa x ,
+.Fa y
+and triggers a refresh.
+.Fn AG_HSVPalUpdateSV
+sets the saturation and value to that at cursor coordinates
+.Fa x ,
+.Fa y
+and triggers a refresh.
 .Sh BINDINGS
 The
 .Nm
@@ -164,9 +183,9 @@ saturation, the color should be stored in HSV format.
 .Pp
 .Lk http://www.easyrgb.com/ EasyRGB
 .Pp
-.Lk https://en.wikipedia.org/wiki/HSV_color_space The HSV color model
+.Lk https://en.wikipedia.org/wiki/HSV_color_space HSV_Color_Space
 .Pp
-.Lk https://en.wikipedia.org/wiki/RGB_color_model The RGB color model
+.Lk https://en.wikipedia.org/wiki/RGB_color_model RGB_Color_Model
 .Sh HISTORY
 The
 .Nm

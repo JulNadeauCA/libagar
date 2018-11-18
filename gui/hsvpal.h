@@ -12,7 +12,7 @@
 typedef struct ag_hsvpal {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_HSVPAL_PIXEL		0x01	/* Edit the pixel binding */ 
+#define AG_HSVPAL_PIXEL		0x01	/* Bound to a pixel/pixel format */
 #define AG_HSVPAL_DIRTY		0x02	/* Redraw the palette */
 #define AG_HSVPAL_HFILL 	0x04
 #define AG_HSVPAL_VFILL 	0x08
@@ -26,13 +26,13 @@ typedef struct ag_hsvpal {
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;			/* Calculated pixel */
 	AG_Color color;			/* Calculated color */
-	AG_Rect rAlpha;			/* Alpha selector rectangle */
-	AG_Surface *surface;		/* Cached surface */
+	AG_Rect rPrev;			/* Filled color preview area */
+	AG_Surface *_Nullable surface;	/* Cached surface */
 	int surfaceId;
 	int selcircle_r;		/* Radius of selection circles */
 	struct {
 		int x, y;		/* Origin for circle of hues */
-		int rout, rin;		/* Radii of the circle of hues */
+		int rOut, rIn;		/* Radii of the circle of hues */
 		int spacing;		/* Spacing between circle and rect */
 		int width;		/* Width of circular band (rout-rin) */
 		float dh;		/* Calculated optimal hue increment */
@@ -43,20 +43,24 @@ typedef struct ag_hsvpal {
 	} triangle;
 	enum {
 		AG_HSVPAL_SEL_NONE,
-		AG_HSVPAL_SEL_H,	/* Selecting hue */
-		AG_HSVPAL_SEL_SV,	/* Selecting saturation/value */
-		AG_HSVPAL_SEL_A		/* Selecting transparency value */
+		AG_HSVPAL_SEL_H,  /* Selecting hue */
+		AG_HSVPAL_SEL_SV, /* Selecting saturation/value */
+		AG_HSVPAL_SEL_A	  /* Selecting transparency value */
 	} state;
 
-	AG_Menu *menu;
-	AG_MenuItem *menu_item;
-	AG_Window *menu_win;
-	AG_Color cTile;
+	AG_Menu     *_Nullable menu;    /* Popup menu (TODO use AG_PopupMenu) */
+	AG_MenuItem *_Nullable menu_item;
+	AG_Window   *_Nullable menu_win;
+
+	AG_Color cTile;		/* Tiling fill color (TODO use style) */
 } AG_HSVPal;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agHSVPalClass;
-AG_HSVPal *AG_HSVPalNew(void *, Uint);
+
+AG_HSVPal *_Nonnull AG_HSVPalNew(void *_Nullable, Uint);
+void                AG_HSVPal_UpdateHue(AG_HSVPal *_Nonnull, int, int);
+void                AG_HSVPal_UpdateSV(AG_HSVPal *_Nonnull, int, int);
 __END_DECLS
 
 #include <agar/gui/close.h>
