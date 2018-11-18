@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -197,7 +197,7 @@ AG_LabelNewS(void *parent, Uint flags, const char *text)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Label *lbl = obj;
 	AG_Font *font = WIDGET(lbl)->font;
@@ -221,7 +221,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Label *lbl = obj;
 	int wLbl, hLbl;
@@ -257,7 +257,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Label *lbl = AG_SELF();
 
@@ -272,7 +272,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
 
@@ -372,7 +372,8 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
 }
 
 static __inline__ void
-GetPosition(AG_Label *lbl, AG_Surface *su, int *x, int *y)
+GetPosition(AG_Label *_Nonnull lbl, AG_Surface *_Nonnull su,
+    int *_Nonnull x, int *_Nonnull y)
 {
 	*x = lbl->lPad +
 	     AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
@@ -382,9 +383,9 @@ GetPosition(AG_Label *lbl, AG_Surface *su, int *x, int *y)
 
 /* Render a polled label. */
 static void
-DrawPolled(AG_Label *lbl)
+DrawPolled(AG_Label *_Nonnull lbl)
 {
-	size_t rv;
+	AG_Size rv;
 	char *pollBufNew;
 	int x, y;
 	int su;
@@ -413,7 +414,7 @@ DrawPolled(AG_Label *lbl)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Label *lbl = obj;
 	int x, y, cw = 0;			/* make compiler happy */
@@ -479,7 +480,7 @@ Draw(void *obj)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_Label *lbl = p;
 

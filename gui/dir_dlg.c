@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -91,13 +91,13 @@ AG_DirDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 
 /* Update the directory listing */
 static void
-RefreshListing(AG_DirDlg *dd)
+RefreshListing(AG_DirDlg *_Nonnull dd)
 {
 	AG_TlistItem *it;
 	AG_FileInfo info;
 	AG_Dir *dir;
 	char **dirs;
-	size_t i, ndirs = 0;
+	Uint i, nDirs=0;
 
 	if ((dir = AG_OpenDir(dd->cwd)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", dd->cwd, AG_GetError());
@@ -128,13 +128,13 @@ RefreshListing(AG_DirDlg *dd)
 			continue;
 		}
 		/* XXX TODO: check for symlinks to directories */
-		dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
-		dirs[ndirs++] = Strdup(dir->ents[i]);
+		dirs = Realloc(dirs, (nDirs + 1) * sizeof(char *));
+		dirs[nDirs++] = Strdup(dir->ents[i]);
 	}
-	qsort(dirs, ndirs, sizeof(char *), AG_FilenameCompare);
+	qsort(dirs, nDirs, sizeof(char *), AG_FilenameCompare);
 
 	AG_TlistClear(dd->tlDirs);
-	for (i = 0; i < ndirs; i++) {
+	for (i = 0; i < nDirs; i++) {
 		it = AG_TlistAddS(dd->tlDirs, agIconDirectory.s, dirs[i]);
 		it->cat = "dir";
 		it->p1 = it;
@@ -149,7 +149,7 @@ RefreshListing(AG_DirDlg *dd)
 
 /* Update the shortcuts. */
 static void
-RefreshShortcuts(AG_DirDlg *dd, int init)
+RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
 {
 	AG_Tlist *tl = dd->comLoc->list;
 
@@ -230,7 +230,7 @@ RefreshShortcuts(AG_DirDlg *dd, int init)
 }
 
 static void
-DirSelected(AG_Event *event)
+DirSelected(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_DirDlg *dd = AG_PTR(1);
@@ -251,7 +251,7 @@ DirSelected(AG_Event *event)
 }
 
 static void
-LocSelected(AG_Event *event)
+LocSelected(AG_Event *_Nonnull event)
 {
 	AG_DirDlg *dd = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
@@ -308,7 +308,7 @@ fail:
 }
 
 static void
-ChooseDir(AG_DirDlg *dd, AG_Window *pwin)
+ChooseDir(AG_DirDlg *_Nonnull dd, AG_Window *_Nonnull pwin)
 {
 	AG_ObjectLock(dd);
 	AG_PostEvent(NULL, dd, "dir-chosen", "%s", dd->cwd);
@@ -320,7 +320,7 @@ ChooseDir(AG_DirDlg *dd, AG_Window *pwin)
 }
 
 static void
-CheckAccessAndChoose(AG_DirDlg *dd)
+CheckAccessAndChoose(AG_DirDlg *_Nonnull dd)
 {
 	AG_Window *pwin = AG_ParentWindow(dd);
 	char *s;
@@ -353,7 +353,7 @@ CheckAccessAndChoose(AG_DirDlg *dd)
 }
 
 static void
-PressedOK(AG_Event *event)
+PressedOK(AG_Event *_Nonnull event)
 {
 	AG_DirDlg *dd = AG_PTR(1);
 
@@ -367,7 +367,7 @@ PressedOK(AG_Event *event)
 }
 
 static void
-SetDirpath(AG_DirDlg *dd, const char *dir)
+SetDirpath(AG_DirDlg *_Nonnull dd, const char *_Nonnull dir)
 {
 	if (dir[0] == AG_PATHSEPCHAR) {
 		Strlcpy(dd->cwd, dir, sizeof(dd->cwd));
@@ -382,7 +382,7 @@ SetDirpath(AG_DirDlg *dd, const char *dir)
 }
 
 static void
-TextboxChanged(AG_Event *event)
+TextboxChanged(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
@@ -396,7 +396,7 @@ TextboxChanged(AG_Event *event)
 
 #ifdef HAVE_GLOB
 static void
-SelectGlobResult(AG_Event *event)
+SelectGlobResult(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
 	AG_Window *win = AG_PTR(1);
@@ -418,14 +418,15 @@ out:
 }
 
 static void
-CloseGlobResults(AG_Event *event)
+CloseGlobResults(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_ObjectDetach(win);
 }
 
 static void
-ExpandGlobResults(AG_DirDlg *dd, glob_t *gl, const char *pattern)
+ExpandGlobResults(AG_DirDlg *_Nonnull dd, glob_t *_Nonnull gl,
+    const char *_Nonnull pattern)
 {
 	AG_Window *winParent = WIDGET(dd)->window;
 	AG_Window *win;
@@ -498,7 +499,7 @@ ExpandGlobResults(AG_DirDlg *dd, glob_t *gl, const char *pattern)
 }
 
 static int
-GlobExpansion(AG_DirDlg *dd, char *path, size_t path_len)
+GlobExpansion(AG_DirDlg *_Nonnull dd, char *_Nonnull path, AG_Size path_len)
 {
 	char *pathOrig;
 	glob_t gl;
@@ -528,7 +529,7 @@ out:
 #endif /* HAVE_GLOB */
 
 static void
-TextboxReturn(AG_Event *event)
+TextboxReturn(AG_Event *_Nonnull event)
 {
 	char dir[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
@@ -567,7 +568,7 @@ out:
 }
 
 static void
-PressedCancel(AG_Event *event)
+PressedCancel(AG_Event *_Nonnull event)
 {
 	AG_DirDlg *dd = AG_PTR(1);
 	AG_Window *pwin;
@@ -585,7 +586,7 @@ PressedCancel(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_DirDlg *dd = AG_SELF();
 
@@ -711,7 +712,7 @@ AG_DirDlgSetDirectoryMRU(AG_DirDlg *dd, const char *key, const char *dflt)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DirDlg *dd = obj;
 
@@ -776,7 +777,7 @@ AG_DirDlgCancelAction(AG_DirDlg *dd, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_DirDlg *dd = obj;
 
@@ -784,7 +785,7 @@ Destroy(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Widget *chld;
 
@@ -793,7 +794,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_DirDlg *dd = obj;
 	AG_SizeReq rChld, rOk, rCancel;
@@ -811,7 +812,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_DirDlg *dd = obj;
 	AG_SizeReq r, rLoc, rInput;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #include <agar/gui/icons.h>
 
 static void
-MaximizeWindow(AG_Event *event)
+MaximizeWindow(AG_Event *_Nonnull event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 	AG_Window *win = tbar->win;
@@ -45,7 +45,7 @@ MaximizeWindow(AG_Event *event)
 }
 
 static void
-CreateMaximizeButton(AG_Titlebar *tbar)
+CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	tbar->maximize_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->maximize_btn, AG_TEXT_LEFT);
@@ -57,7 +57,7 @@ CreateMaximizeButton(AG_Titlebar *tbar)
 }
 
 static void
-MinimizeWindow(AG_Event *event)
+MinimizeWindow(AG_Event *_Nonnull event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 
@@ -65,7 +65,7 @@ MinimizeWindow(AG_Event *event)
 }
 
 static void
-CreateMinimizeButton(AG_Titlebar *tbar)
+CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 {
 	tbar->minimize_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->minimize_btn, AG_TEXT_LEFT);
@@ -77,7 +77,7 @@ CreateMinimizeButton(AG_Titlebar *tbar)
 }
 
 static void
-CloseWindow(AG_Event *event)
+CloseWindow(AG_Event *_Nonnull event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 
@@ -85,7 +85,7 @@ CloseWindow(AG_Event *event)
 }
 
 static void
-CreateCloseButton(AG_Titlebar *tbar)
+CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 {
 	tbar->close_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->close_btn, AG_TEXT_LEFT);
@@ -103,7 +103,7 @@ AG_TitlebarNew(void *parent, Uint flags)
 
 	tbar = Malloc(sizeof(AG_Titlebar));
 	AG_ObjectInit(tbar, &agTitlebarClass);
-	tbar->flags |= flags;
+	tbar->flags |= (flags & AG_TITLEBAR_SAVED_FLAGS);
 	
 	AG_ObjectAttach(parent, tbar);
 
@@ -129,29 +129,29 @@ AG_TitlebarNew(void *parent, Uint flags)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Titlebar *tbar = AG_SELF();
-	
-	tbar->pressed = 1;
+
+	tbar->flags |= AG_TITLEBAR_PRESSED;
 
 	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv))
 		AG_WM_MoveBegin(tbar->win);
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Titlebar *tbar = AG_SELF();
 	
-	tbar->pressed = 0;
+	tbar->flags &= ~(AG_TITLEBAR_PRESSED);
 	
 	if (AGDRIVER_SINGLE(WIDGET(tbar)->drv))
 		AG_WM_MoveEnd(tbar->win);
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
 	AG_Box *box = obj;
@@ -164,7 +164,6 @@ Init(void *obj)
 	AG_BoxSetSpacing(&tbar->hb, 1);
 
 	tbar->flags = 0;
-	tbar->pressed = 0;
 	tbar->win = NULL;
 	tbar->maximize_btn = NULL;
 	tbar->minimize_btn = NULL;
@@ -180,13 +179,13 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Titlebar *tbar = obj;
 
 	AG_DrawBox(tbar,
 	    AG_RECT(0, 0, WIDTH(tbar), HEIGHT(tbar)),
-	    tbar->pressed ? -1 : 1,
+	    (tbar->flags & AG_TITLEBAR_PRESSED) ? -1 : 1,
 	    AG_WindowIsFocused(tbar->win) ? WCOLOR(tbar,0) : WCOLOR_DIS(tbar,0));
 
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);

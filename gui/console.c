@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ AG_ConsoleNew(void *parent, Uint flags)
 }
 
 static __inline__ void
-ClampVisible(AG_Console *cons)
+ClampVisible(AG_Console *_Nonnull cons)
 {
 	int v = (int)cons->nLines - (int)cons->rVisible;
 
@@ -62,7 +62,7 @@ ClampVisible(AG_Console *cons)
 }
 
 static void
-ScrollUp(AG_Event *event)
+ScrollUp(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int newOffs = (int)cons->rOffs - 1;
@@ -74,7 +74,7 @@ ScrollUp(AG_Event *event)
 }
 
 static void
-ScrollDown(AG_Event *event)
+ScrollDown(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int newOffs = (int)cons->rOffs + 1;
@@ -87,7 +87,7 @@ ScrollDown(AG_Event *event)
 }
 
 static void
-PageUp(AG_Event *event)
+PageUp(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int newOffs = (int)cons->rOffs - (int)cons->rVisible;
@@ -102,7 +102,7 @@ PageUp(AG_Event *event)
 }
 
 static void
-PageDown(AG_Event *event)
+PageDown(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int newOffs;
@@ -121,7 +121,7 @@ PageDown(AG_Event *event)
 }
 
 static void
-MapLine(AG_Console *cons, int yMouse, int *nLine)
+MapLine(AG_Console *_Nonnull cons, int yMouse, int *_Nonnull nLine)
 {
 	Uint sel;
 
@@ -144,7 +144,7 @@ char *
 AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 {
 	char *s, *ps;
-	size_t sizeReq = 1;
+	AG_Size sizeReq = 1;
 	int i, dir;
 
 	if (cons->pos == -1) {
@@ -168,6 +168,7 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 	     (i >= 0 && i < cons->nLines);
 	     i += dir) {
 		AG_ConsoleLine *ln = cons->lines[i];
+
 		memcpy(ps, ln->text, ln->len);
 #ifdef _WIN32
 		if (nativeNL) {
@@ -189,7 +190,7 @@ AG_ConsoleExportText(AG_Console *cons, int nativeNL)
 }
 
 static void
-MenuCopy(AG_Event *event)
+MenuCopy(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
 	AG_EditableClipboard *cb = &agEditableClipbrd;
@@ -206,14 +207,14 @@ MenuCopy(AG_Event *event)
 	free(s);
 }
 static int
-MenuCopyActive(AG_Event *event)
+MenuCopyActive(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
 	return (cons->pos != -1) ? 1 : 0;
 }
 
 static int
-MenuExportToFileTXT(AG_Event *event)
+MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -234,7 +235,7 @@ MenuExportToFileTXT(AG_Event *event)
 	return (0);
 }
 static void
-MenuExportToFileDlg(AG_Event *event)
+MenuExportToFileDlg(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Console *cons = AG_PTR(1);
@@ -259,7 +260,7 @@ MenuExportToFileDlg(AG_Event *event)
 }
 
 static void
-MenuSelectAll(AG_Event *event)
+MenuSelectAll(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_PTR(1);
 
@@ -269,7 +270,7 @@ MenuSelectAll(AG_Event *event)
 }
 
 static void
-BeginSelect(AG_Event *event)
+BeginSelect(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int x = AG_INT(2);
@@ -293,14 +294,14 @@ BeginSelect(AG_Event *event)
 }
 
 static void
-CloseSelect(AG_Event *event)
+CloseSelect(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	cons->flags &= ~(AG_CONSOLE_SELECTING);
 }
 
 static void
-PopupMenu(AG_Event *event)
+PopupMenu(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int x = AG_INT(2);
@@ -333,7 +334,7 @@ PopupMenu(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	int x = AG_INT(1);
@@ -361,14 +362,14 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-ComputeVisible(AG_Console *cons)
+ComputeVisible(AG_Console *_Nonnull cons)
 {
 	cons->rVisible = (int)AG_Floor((float)(cons->r.h - cons->padding*2) /
 	                               (float)cons->lineskip);
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Console *cons = AG_SELF();
 	Uint i;
@@ -391,7 +392,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Console *cons = obj;
 
@@ -450,14 +451,14 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
 	r->h *= 2;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Console *cons = p;
 	AG_SizeReq rBar;
@@ -480,7 +481,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	AG_Console *cons = p;
 	AG_Surface *su;
@@ -524,9 +525,7 @@ Draw(void *p)
 			}
 		}
 		if (ln->surface[suIdx] == -1) {
-			AG_TextColor(
-			    (ln->cAlt.a != 0) ? ln->cAlt :
-			    cTxt);
+			AG_TextColor((ln->cAlt.a != 0) ? ln->cAlt : cTxt);
 			if ((su = AG_TextRender(ln->text)) == NULL) {
 				continue;
 			}
@@ -541,13 +540,13 @@ out:
 }
 
 static void
-FreeLines(AG_Console *cons)
+FreeLines(AG_Console *_Nonnull cons)
 {
 	Uint i;
 	
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = cons->lines[i];
-		Free(ln->text);
+		free(ln->text);
 		free(ln);
 	}
 	Free(cons->lines);
@@ -556,7 +555,7 @@ FreeLines(AG_Console *cons)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_Console *cons = p;
 
@@ -575,7 +574,7 @@ AG_ConsoleSetPadding(AG_Console *cons, int padding)
 	AG_ObjectUnlock(cons);
 }
 
-/* Append a line to the log */
+/* Append a line to the console; backend to AG_ConsoleMsg(). */
 AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
@@ -622,7 +621,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 {
 	AG_ConsoleLine *ln;
 	va_list args;
-	size_t len;
+	AG_Size len;
 	char *s;
 
 	if (cons == NULL) {
@@ -635,7 +634,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 		if ((len = strlen(s)) > 1 && s[len - 1] != '\n') {
 			Verbose("\n");
 		}
-		Free(s);
+		free(s);
 		return (NULL);
 	}
 
@@ -666,7 +665,7 @@ AG_ConsoleLine *
 AG_ConsoleMsgS(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
-	size_t len;
+	AG_Size len;
 	
 	if (cons == NULL) {
 		Verbose("%s", s);
@@ -694,7 +693,7 @@ AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 	int i;
 
 	AG_ObjectLock(ln->cons);
-	Free(ln->text);
+	free(ln->text);
 	ln->text = Strdup(s);
 	ln->len = strlen(s);
 	for (i = 0; i < 2; i++) {
@@ -725,10 +724,10 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 }
 
 void
-AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
+AG_ConsoleMsgColor(AG_ConsoleLine *ln, AG_Color c)
 {
 	AG_ObjectLock(ln->cons);
-	ln->cAlt = (c != NULL) ? *c : AG_ColorRGBA(0,0,0,0);
+	ln->cAlt = c;
 	AG_ObjectUnlock(ln->cons);
 }
 

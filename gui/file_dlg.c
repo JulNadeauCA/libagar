@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,7 @@ AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 
 /* Filter files by extension. */
 static int
-FilterByExtension(AG_FileDlg *fd, char *file)
+FilterByExtension(AG_FileDlg *_Nonnull fd, char *_Nonnull file)
 {
 	char *ext, *s;
 	AG_FileType *ft;
@@ -100,13 +100,13 @@ FilterByExtension(AG_FileDlg *fd, char *file)
 
 /* Update the file / directory listing */
 static void
-RefreshListing(AG_FileDlg *fd)
+RefreshListing(AG_FileDlg *_Nonnull fd)
 {
 	AG_TlistItem *it;
 	AG_FileInfo info;
 	AG_Dir *dir;
 	char **dirs, **files;
-	size_t i, ndirs = 0, nfiles = 0;
+	Uint i, nDirs=0, nFiles=0;
 
 	if ((dir = AG_OpenDir(fd->cwd)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", fd->cwd, AG_GetError());
@@ -138,8 +138,8 @@ RefreshListing(AG_FileDlg *fd)
 		}
 		/* XXX TODO: check for symlinks to directories */
 		if (info.type == AG_FILE_DIRECTORY) {
-			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
-			dirs[ndirs++] = Strdup(ent);
+			dirs = Realloc(dirs, (nDirs + 1) * sizeof(char *));
+			dirs[nDirs++] = Strdup(ent);
 		} else {
 			if (fd->flags & AG_FILEDLG_MASK_HIDDEN &&
 			    ent[0] == '.') {
@@ -149,22 +149,22 @@ RefreshListing(AG_FileDlg *fd)
 			    FilterByExtension(fd, ent)) {
 				continue;
 			}
-			files = Realloc(files, (nfiles + 1) * sizeof(char *));
-			files[nfiles++] = Strdup(ent);
+			files = Realloc(files, (nFiles + 1) * sizeof(char *));
+			files[nFiles++] = Strdup(ent);
 		}
 	}
-	qsort(dirs, ndirs, sizeof(char *), AG_FilenameCompare);
-	qsort(files, nfiles, sizeof(char *), AG_FilenameCompare);
+	qsort(dirs, nDirs, sizeof(char *), AG_FilenameCompare);
+	qsort(files, nFiles, sizeof(char *), AG_FilenameCompare);
 
 	AG_TlistClear(fd->tlDirs);
 	AG_TlistClear(fd->tlFiles);
-	for (i = 0; i < ndirs; i++) {
+	for (i = 0; i < nDirs; i++) {
 		it = AG_TlistAddS(fd->tlDirs, agIconDirectory.s, dirs[i]);
 		it->cat = "dir";
 		it->p1 = it;
 		Free(dirs[i]);
 	}
-	for (i = 0; i < nfiles; i++) {
+	for (i = 0; i < nFiles; i++) {
 		it = AG_TlistAddS(fd->tlFiles, agIconDoc.s, files[i]);
 		it->cat = "file";
 		it->p1 = it;
@@ -182,7 +182,7 @@ RefreshListing(AG_FileDlg *fd)
 
 /* Update the shortcuts. */
 static void
-RefreshShortcuts(AG_FileDlg *fd, int init)
+RefreshShortcuts(AG_FileDlg *_Nonnull fd, int init)
 {
 	AG_Tlist *tl = fd->comLoc->list;
 
@@ -270,7 +270,7 @@ AG_FileDlgRefresh(AG_FileDlg *fd)
 }
 
 static void
-DirSelected(AG_Event *event)
+DirSelected(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
@@ -291,7 +291,7 @@ DirSelected(AG_Event *event)
 }
 
 static void
-LocSelected(AG_Event *event)
+LocSelected(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
@@ -308,7 +308,7 @@ LocSelected(AG_Event *event)
 }
 
 static void
-ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
+ChooseFile(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 {
 	AG_TlistItem *it;
 	AG_FileType *ft = NULL;
@@ -345,7 +345,7 @@ ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 }
 
 static void
-ReplaceFileConfirm(AG_Event *event)
+ReplaceFileConfirm(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_Window *qwin = AG_PTR(2);
@@ -356,7 +356,7 @@ ReplaceFileConfirm(AG_Event *event)
 }
 
 static void
-ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
+ReplaceFileDlg(AG_FileDlg *_Nonnull fd, AG_Window *_Nonnull pwin)
 {
 	AG_Window *win;
 	AG_Button *btn;
@@ -417,7 +417,7 @@ fail:
 }
 
 static void
-CheckAccessAndChoose(AG_FileDlg *fd)
+CheckAccessAndChoose(AG_FileDlg *_Nonnull fd)
 {
 	AG_Window *pwin = AG_ParentWindow(fd);
 	char *s;
@@ -456,7 +456,7 @@ CheckAccessAndChoose(AG_FileDlg *fd)
 }
 
 static void
-FileSelected(AG_Event *event)
+FileSelected(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
@@ -497,7 +497,7 @@ FileSelected(AG_Event *event)
 }
 
 static void
-FileDblClicked(AG_Event *event)
+FileDblClicked(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
@@ -521,7 +521,7 @@ FileDblClicked(AG_Event *event)
 }
 
 static void
-PressedOK(AG_Event *event)
+PressedOK(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 
@@ -535,7 +535,7 @@ PressedOK(AG_Event *event)
 }
 
 static void
-SetFilename(AG_FileDlg *fd, const char *file)
+SetFilename(AG_FileDlg *_Nonnull fd, const char *_Nonnull file)
 {
 	if (file[0] == AG_PATHSEPCHAR) {
 		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
@@ -551,7 +551,7 @@ SetFilename(AG_FileDlg *fd, const char *file)
 }
 
 static void
-TextboxChanged(AG_Event *event)
+TextboxChanged(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
@@ -565,7 +565,7 @@ TextboxChanged(AG_Event *event)
 
 #ifdef HAVE_GLOB
 static void
-SelectGlobResult(AG_Event *event)
+SelectGlobResult(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
 	AG_Window *win = AG_PTR(1);
@@ -598,14 +598,15 @@ out:
 }
 
 static void
-CloseGlobResults(AG_Event *event)
+CloseGlobResults(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_ObjectDetach(win);
 }
 
 static void
-ExpandGlobResults(AG_FileDlg *fd, glob_t *gl, const char *pattern)
+ExpandGlobResults(AG_FileDlg *_Nonnull fd, glob_t *_Nonnull gl,
+    const char *_Nonnull pattern)
 {
 	AG_Window *winParent = WIDGET(fd)->window;
 	AG_Window *win;
@@ -678,7 +679,7 @@ ExpandGlobResults(AG_FileDlg *fd, glob_t *gl, const char *pattern)
 }
 
 static int
-GlobExpansion(AG_FileDlg *fd, char *path, size_t path_len)
+GlobExpansion(AG_FileDlg *_Nonnull fd, char *_Nonnull path, AG_Size pathLen)
 {
 	char *pathOrig;
 	glob_t gl;
@@ -690,7 +691,7 @@ GlobExpansion(AG_FileDlg *fd, char *path, size_t path_len)
 		goto out;
 	}
 	if (gl.gl_pathc == 1) {
-		Strlcpy(path, gl.gl_pathv[0], path_len);
+		Strlcpy(path, gl.gl_pathv[0], pathLen);
 	} else if (gl.gl_pathc > 1) {
 		ExpandGlobResults(fd, &gl, pathOrig);
 		free(pathOrig);
@@ -704,7 +705,7 @@ out:
 #endif /* HAVE_GLOB */
 
 static void
-TextboxReturn(AG_Event *event)
+TextboxReturn(AG_Event *_Nonnull event)
 {
 	char file[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
@@ -744,7 +745,7 @@ out:
 }
 
 static void
-PressedCancel(AG_Event *event)
+PressedCancel(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_Window *pwin;
@@ -762,7 +763,7 @@ PressedCancel(AG_Event *event)
 }
 
 static void
-SelectedType(AG_Event *event)
+SelectedType(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
@@ -821,7 +822,7 @@ SelectedType(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_SELF();
 	AG_TlistItem *it;
@@ -951,6 +952,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 		}
 		AG_FileDlgSetDirectoryS(fd, dflt);
 	}
+	Free(fd->dirMRU);
 	fd->dirMRU = Strdup(key);
 	
 	AG_ObjectUnlock(cfg);
@@ -987,14 +989,14 @@ AG_FileDlgSetFilenameS(AG_FileDlg *fd, const char *s)
 }
 
 static void
-MaskOptionSelected(AG_Event *event)
+MaskOptionSelected(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 
 	RefreshListing(fd);
 }
 
-AG_FileDlg *
+AG_FileDlg *_Nonnull
 AG_FileDlgNew(void *parent, Uint flags)
 {
 	AG_FileDlg *fd;
@@ -1039,7 +1041,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_FileDlg *fd = obj;
 
@@ -1125,7 +1127,7 @@ AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_FileDlg *fd = obj;
 	AG_FileType *ft, *ft2;
@@ -1141,19 +1143,22 @@ Destroy(void *obj)
 		     fo != TAILQ_END(&ft->opts);
 		     fo = fo2) {
 			fo2 = TAILQ_NEXT(fo, opts);
-			Free(fo);
+			free(fo->descr);
+			free(fo->key);
+			free(fo);
 		}
+		free(ft->descr);
 		for (i = 0; i < ft->nexts; i++) {
-			Free(ft->exts[i]);
+			free(ft->exts[i]);
 		}
-		Free(ft->exts);
-		Free(ft);
+		free(ft->exts);
+		free(ft);
 	}
 	Free(fd->dirMRU);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Widget *chld;
 
@@ -1162,7 +1167,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_FileDlg *fd = obj;
 	AG_SizeReq rChld, rOk, rCancel;
@@ -1192,7 +1197,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_FileDlg *fd = obj;
 	AG_SizeReq r;
@@ -1286,7 +1291,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 
 	ft = Malloc(sizeof(AG_FileType));
 	ft->fd = fd;
-	ft->descr = descr;
+	ft->descr = Strdup(descr);
 	ft->exts = Malloc(sizeof(char *));
 	ft->nexts = 0;
 	TAILQ_INIT(&ft->opts);
@@ -1296,7 +1301,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 		ft->exts = Realloc(ft->exts, (ft->nexts+1)*sizeof(char *));
 		ft->exts[ft->nexts++] = Strdup(ext);
 	}
-	Free(dexts);
+	free(dexts);
 	
 	AG_ObjectLock(fd);
 
@@ -1330,8 +1335,8 @@ AG_FileOptionNewBool(AG_FileType *ft, const char *descr, const char *key,
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
-	fto->descr = descr;
-	fto->key = key;
+	fto->descr = Strdup(descr);
+	fto->key = Strdup(key);
 	fto->unit = NULL;
 	fto->type = AG_FILEDLG_BOOL;
 	fto->data.i.val = dflt;
@@ -1349,8 +1354,8 @@ AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
-	fto->descr = descr;
-	fto->key = key;
+	fto->descr = Strdup(descr);
+	fto->key = Strdup(key);
 	fto->unit = NULL;
 	fto->type = AG_FILEDLG_INT;
 	fto->data.i.val = dflt;
@@ -1370,9 +1375,9 @@ AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
-	fto->descr = descr;
-	fto->key = key;
-	fto->unit = NULL;
+	fto->descr = Strdup(descr);
+	fto->key = Strdup(key);
+	fto->unit = (unit != NULL) ? Strdup(unit) : NULL;
 	fto->type = AG_FILEDLG_FLOAT;
 	fto->data.flt.val = dflt;
 	fto->data.flt.min = min;
@@ -1391,9 +1396,9 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
-	fto->descr = descr;
-	fto->key = key;
-	fto->unit = unit;
+	fto->descr = Strdup(descr);
+	fto->key = Strdup(key);
+	fto->unit = (unit != NULL) ? Strdup(unit) : NULL;
 	fto->type = AG_FILEDLG_DOUBLE;
 	fto->data.dbl.val = dflt;
 	fto->data.dbl.min = min;
@@ -1412,8 +1417,8 @@ AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
 	AG_FileOption *fto;
 
 	fto = Malloc(sizeof(AG_FileOption));
-	fto->descr = descr;
-	fto->key = key;
+	fto->descr = Strdup(descr);
+	fto->key = Strdup(key);
 	fto->unit = NULL;
 	fto->type = AG_FILEDLG_STRING;
 	Strlcpy(fto->data.s, dflt, sizeof(fto->data.s));

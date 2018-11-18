@@ -38,32 +38,34 @@ typedef struct ag_pane {
 #define AG_PANE_FORCE_DIV	0x080	/* Enforce equal division */
 #endif
 
-	AG_Box *div[2];			/* Division containers */
-	int	wMin[2], hMin[2];	/* Minimum geometry */
-	int	wReq[2], hReq[2];	/* Requisition geometry */
-	int	dmoving;		/* Divider being moved */
-	int	dx;			/* Actual divider position */
-	int	rx;			/* Requested divider position */
-	int     rxPct;			/* Requested position in % */
-	int	wDiv;			/* Divider width */
-	AG_CursorArea *ca;		/* Divider cursor-change area */
+	AG_Box *_Nonnull div[2];	/* Sub-containers */
+	int wMin[2], hMin[2];		/* Minimum geometry */
+	int wReq[2], hReq[2];		/* Requisition geometry */
+	int dmoving;			/* Divider being moved */
+	int dx;				/* Actual divider position */
+	int rx;				/* Requested divider position */
+	int rxPct;			/* Requested position in % */
+	int wDiv;			/* Divider width */
+	AG_CursorArea *_Nullable ca;	/* Divider cursor-change area */
+
 	enum ag_pane_resize_action resizeAction;	/* Resize action */
 } AG_Pane;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agPaneClass;
 
-AG_Pane	*AG_PaneNew(void *, enum ag_pane_type, Uint);
+AG_Pane	*_Nonnull AG_PaneNew(void *_Nullable, enum ag_pane_type, Uint);
 #define	 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))
 #define	 AG_PaneNewVert(p,f) AG_PaneNew((p),AG_PANE_VERT,(f))
-void	 AG_PaneAttachBox(AG_Pane *, int, AG_Box *);
-void	 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
-void	 AG_PaneSetDividerWidth(AG_Pane *, int);
-void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
-void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
-int	 AG_PaneMoveDivider(AG_Pane *, int);
-int	 AG_PaneMoveDividerPct(AG_Pane *, int);
-void	 AG_PaneResizeAction(AG_Pane *, enum ag_pane_resize_action);
+
+void AG_PaneAttachBox(AG_Pane *_Nonnull, int, AG_Box *_Nonnull);
+void AG_PaneAttachBoxes(AG_Pane *_Nonnull, AG_Box *_Nonnull, AG_Box *_Nonnull);
+void AG_PaneSetDividerWidth(AG_Pane *_Nonnull, int);
+void AG_PaneSetDivisionMin(AG_Pane *_Nonnull, int, int,int);
+void AG_PaneSetDivisionPacking(AG_Pane *_Nonnull, int, enum ag_box_type);
+int  AG_PaneMoveDivider(AG_Pane *_Nonnull, int);
+int  AG_PaneMoveDividerPct(AG_Pane *_Nonnull, int);
+void AG_PaneResizeAction(AG_Pane *_Nonnull, enum ag_pane_resize_action);
 __END_DECLS
 
 #include <agar/gui/close.h>

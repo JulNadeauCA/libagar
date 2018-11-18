@@ -21,10 +21,10 @@ typedef struct ag_file_selector {
 #define AG_FILE_SELECTOR_ANY_FILE 0x04	/* Don't check file access */
 
 	char inTxt[AG_PATHNAME_MAX];	/* Input text buffer */
-	AG_Textbox *tbox;		/* Textbox */
-	AG_Button *button;		/* "Browse" button */
-	AG_FileDlg *filedlg;		/* File selection widget */
-	AG_Window *panel;
+	AG_Textbox *_Nonnull  tbox;	/* Textbox */
+	AG_Button  *_Nonnull  button;	/* "Browse" button */
+	AG_FileDlg *_Nonnull  fileDlg;	/* File selection widget */
+	AG_Window  *_Nullable panel;	/* Expanded panel */
 	int wSaved, hSaved;		/* Saved popup geometry */
 	int wPreList, hPreList;		/* Size hints */
 } AG_FileSelector;
@@ -32,9 +32,10 @@ typedef struct ag_file_selector {
 __BEGIN_DECLS
 extern AG_WidgetClass agFileSelectorClass;
 
-AG_FileSelector *AG_FileSelectorNew(void *, Uint, const char *);
-void AG_FileSelectorSetFile(AG_FileSelector *, const char *);
-void AG_FileSelectorSetDirectory(AG_FileSelector *, const char *);
+AG_FileSelector *_Nonnull AG_FileSelectorNew(void *_Nullable, Uint,
+                                             const char *_Nullable);
+void AG_FileSelectorSetFile(AG_FileSelector *_Nonnull, const char *_Nonnull);
+void AG_FileSelectorSetDirectory(AG_FileSelector *_Nonnull, const char *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

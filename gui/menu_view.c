@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 #include <agar/gui/icons.h>
 
 static Uint32
-SubmenuTimeout(AG_Timer *to, AG_Event *event)
+SubmenuTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *item = AG_PTR(1);
@@ -47,7 +47,7 @@ SubmenuTimeout(AG_Timer *to, AG_Event *event)
  * a submenu, the submenu timer is initiated.
  */
 static void
-SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
+SelectItem(AG_MenuItem *_Nonnull mi, AG_MenuItem *_Nullable subitem)
 {
 	if (mi->sel_subitem != NULL &&
 	    mi->sel_subitem->view != NULL) {
@@ -70,7 +70,7 @@ SelectItem(AG_MenuItem *mi, AG_MenuItem *subitem)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *mi = mview->pitem, *miSub;
@@ -113,7 +113,7 @@ selnone:
 }
 
 static int
-GetItemBoolValue(AG_MenuItem *mi)
+GetItemBoolValue(AG_MenuItem *_Nonnull mi)
 {
 	int val = 0;
 
@@ -143,45 +143,39 @@ GetItemBoolValue(AG_MenuItem *mi)
 }
 
 static void
-SetItemBoolValue(AG_MenuItem *mi)
+SetItemBoolValue(AG_MenuItem *_Nonnull mi)
 {
 	switch (mi->bind_type) {
-	case AG_MENU_INT_BOOL:
-		{
-			int *boolp = (int *)mi->bind_p;
-			*boolp = !(*boolp);
-		}
+	case AG_MENU_INT_BOOL: {
+		int *boolp = (int *)mi->bind_p;
+		*boolp = !(*boolp);
 		break;
-	case AG_MENU_INT8_BOOL:
-		{
-			Uint8 *boolp = (Uint8 *) mi->bind_p;
-			*boolp = !(*boolp);
-		}
+	}
+	case AG_MENU_INT8_BOOL: {
+		Uint8 *boolp = (Uint8 *) mi->bind_p;
+		*boolp = !(*boolp);
 		break;
-	case AG_MENU_INT_FLAGS:
-		{
-			int *flags = (int *)mi->bind_p;
-			AG_INVFLAGS(*flags, mi->bind_flags);
-		}
+	}
+	case AG_MENU_INT_FLAGS: {
+		int *flags = (int *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
 		break;
-	case AG_MENU_INT8_FLAGS:
-		{
-			Uint8 *flags = (Uint8 *)mi->bind_p;
-			AG_INVFLAGS(*flags, mi->bind_flags);
-		}
+	}
+	case AG_MENU_INT8_FLAGS: {
+		Uint8 *flags = (Uint8 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
 		break;
-	case AG_MENU_INT16_FLAGS:
-		{
-			Uint16 *flags = (Uint16 *)mi->bind_p;
-			AG_INVFLAGS(*flags, mi->bind_flags);
-		}
+	}
+	case AG_MENU_INT16_FLAGS: {
+		Uint16 *flags = (Uint16 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
 		break;
-	case AG_MENU_INT32_FLAGS:
-		{
-			Uint32 *flags = (Uint32 *)mi->bind_p;
-			AG_INVFLAGS(*flags, mi->bind_flags);
-		}
+	}
+	case AG_MENU_INT32_FLAGS: {
+		Uint32 *flags = (Uint32 *)mi->bind_p;
+		AG_INVFLAGS(*flags, mi->bind_flags);
 		break;
+	}
 	case AG_MENU_NO_BINDING:
 	default:
 		break;
@@ -189,7 +183,7 @@ SetItemBoolValue(AG_MenuItem *mi)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *miRoot = mview->pitem, *mi;
@@ -207,9 +201,9 @@ MouseButtonUp(AG_Event *event)
 
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDTH(mview)) {
-			int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
-			                                mi->state;
-			if (!activeState) {
+			int fState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
+			                           mi->state;
+			if (!fState) {
 				/* Nothing to do */
 			} else if (mi->clickFn != NULL) {
 				AG_MenuCollapseAll(m);
@@ -231,7 +225,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mview = AG_SELF();
 
@@ -243,7 +237,7 @@ OnShow(AG_Event *event)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_MenuView *mv = AG_SELF();
 	AG_MenuItem *mi = mv->pitem, *miSub;
@@ -260,7 +254,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_MenuView *mview = obj;
 
@@ -286,75 +280,77 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_MenuView *mv = obj;
 	AG_MenuItem *miRoot = mv->pitem, *mi;
 	AG_Menu *m = mv->pmenu;
 	AG_Font *font = WIDGET(mv)->font;
 	AG_Rect r;
+	int itemh = m->itemh, itemh_2 = (itemh >> 1);
+	int fonth_2 = (font->height >> 1);
 
 	r.x = 0;
 	r.y = mv->tPad;
 	r.w = WIDTH(mv);
-	r.h = m->itemh;
+	r.h = itemh;
 
 	TAILQ_FOREACH(mi, &miRoot->subItems, items) {
-		int x = mv->lPad;
 		AG_Color C;
+		int x = mv->lPad;
 		int boolState;
-		int activeState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
-		                                mi->state;
+		int fState = mi->stateFn ? mi->stateFn->fn.fnInt(mi->stateFn) :
+		                           mi->state;
 
 		/* Update dynamic item if needed. */
 		AG_MenuUpdateItem(mi);
 
 		/* Indicate active item selection */
-		if (mi == miRoot->sel_subitem && activeState)
+		if (mi == miRoot->sel_subitem && fState)
 			AG_DrawRect(mv, r, WCOLOR_SEL(mv,0));
 
 		/* Render the menu item's icon */
 		if (mi->icon == -1 && mi->iconSrc != NULL) {
-			mi->icon = AG_WidgetMapSurface(mv, AG_SurfaceDup(mi->iconSrc));
+			mi->icon = AG_WidgetMapSurface(mv,
+			    AG_SurfaceDup(mi->iconSrc));
 		}
 		if (mi->icon != -1) {
 			AG_WidgetBlitSurface(mv, mi->icon,
-			    x   + (r.h/2 - mi->iconSrc->w/2),
-			    r.y + (r.h/2 - mi->iconSrc->h/2) + 1);
+			    x   + ((r.h >> 1) - (mi->iconSrc->w >> 1)),
+			    r.y + ((r.h >> 1) - (mi->iconSrc->h >> 1)) + 1);
 
 			/* Indicate boolean state */
-			boolState = (mi->value != -1) ? mi->value : GetItemBoolValue(mi);
+			boolState = (mi->value != -1) ? mi->value :
+			                                GetItemBoolValue(mi);
 			if (boolState) {
-				C = AG_ColorRGB(223,207,128);
-				AG_DrawFrame(mv,
-				    AG_RECT(x, r.y+2, r.h, r.h-2),
-				    1, C);
-				C.a = 64;
-				AG_DrawRectBlended(mv,
-				    AG_RECT(x, r.y+2, r.h, r.h-2),
-				    C, AG_ALPHA_SRC);
+				AG_Rect rFrame = AG_RECT(x, r.y+2, r.h, r.h-2);
+
+				C = AG_ColorRGB(223,207,128);	/* XXX */
+				AG_DrawFrame(mv, rFrame, 1, C);
+				C.a = AG_OPAQUE/4;
+				AG_DrawRectBlended(mv, rFrame, C, AG_ALPHA_SRC);
 			}
 		}
 
 		/* Keep columns aligned if there are icons. */
 		if (miRoot->flags & AG_MENU_ITEM_ICONS)
-			x += m->itemh + mv->spIconLbl;
+			x += itemh + mv->spIconLbl;
 
 		if (mi->flags & AG_MENU_ITEM_SEPARATOR) {
 			int x1 = mv->lPad;
 			int x2 = WIDTH(mv) - mv->rPad - 1;
 			AG_Color c[2];
 	
-			c[0] = AG_ColorShift(WCOLOR(mv,0), agLowColorShift);
-			c[1] = AG_ColorShift(WCOLOR(mv,0), agHighColorShift);
+			c[0] = AG_ColorAdd(WCOLOR(mv,0), agLowColor);
+			c[1] = AG_ColorAdd(WCOLOR(mv,0), agHighColor);
 
-			AG_DrawLineH(mv, x1, x2, (r.y + m->itemh/2 - 1), c[0]);
-			AG_DrawLineH(mv, x1, x2, (r.y + m->itemh/2), c[1]);
+			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2 - 1), c[0]);
+			AG_DrawLineH(mv, x1, x2, (r.y + itemh_2),     c[1]);
 		} else {
-			int lbl = activeState ? mi->lblView[1] : mi->lblView[0];
+			int lbl = fState ? mi->lblView[1] : mi->lblView[0];
 
 			/* Render the menu item's text string */
-			if (activeState) {
+			if (fState) {
 				if (mi->lblView[1] == -1) {
 					AG_TextColor(WCOLOR(mv,TEXT_COLOR));
 					mi->lblView[1] =
@@ -373,9 +369,8 @@ Draw(void *obj)
 				}
 				lbl = mi->lblView[0];
 			}
-			AG_WidgetBlitSurface(mv, lbl,
-			    x,
-			    r.y + m->itemh/2 - font->height/2 + 1);
+			AG_WidgetBlitSurface(mv, lbl, x,
+			    r.y + itemh_2 - fonth_2 + 1);
 			x += WSURFACE(mv,lbl)->w;
 		}
 
@@ -384,15 +379,15 @@ Draw(void *obj)
 			x += mv->spLblArrow;
 			AG_WidgetBlitSurface(mv, mv->arrowRight,
 			    x,
-			    r.y + m->itemh/2 - agIconSmallArrowRight.s->h/2 -1);
+			    r.y + itemh_2-(agIconSmallArrowRight.s->h >> 1)-1);
 		}
 
-		r.y += m->itemh;
+		r.y += itemh;
 	}
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_MenuView *mview = obj;
 	AG_MenuItem *mi = mview->pitem, *item;
@@ -427,7 +422,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	if (a->w < 4 || a->h < 4) {
 		return (-1);

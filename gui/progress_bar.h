@@ -4,7 +4,6 @@
 #define _AGAR_WIDGET_PROGRESS_BAR_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
 enum ag_progress_bar_type {
@@ -28,24 +27,28 @@ typedef struct ag_progress_bar {
 	int width;			/* Width in pixels */
 	int length;			/* Length in pixels */
 	int pad;			/* Padding in pixels */
-	struct ag_text_cache *tCache;	/* For SHOW_PCT */
+	struct ag_text_cache *_Nonnull tCache; /* For SHOW_PCT */
 } AG_ProgressBar;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agProgressBarClass;
 
-AG_ProgressBar *AG_ProgressBarNew(void *, enum ag_progress_bar_type, Uint);
-AG_ProgressBar *AG_ProgressBarNewInt(void *, enum ag_progress_bar_type, Uint,
-                                     int *, int *, int *);
+AG_ProgressBar *_Nonnull AG_ProgressBarNew(void *_Nullable,
+                                           enum ag_progress_bar_type, Uint);
 
+AG_ProgressBar *_Nonnull AG_ProgressBarNewInt(void *_Nullable,
+                                              enum ag_progress_bar_type, Uint,
+                                              int *_Nullable,
+					      int *_Nullable,
+					      int *_Nullable);
 #define AG_ProgressBarNewHoriz(p,flags) \
 	AG_ProgressBarNew((p),AG_PROGRESS_BAR_HORIZ,(flags))
 #define AG_ProgressBarNewVert(p,flags) \
 	AG_ProgressBarNew((p),AG_PROGRESS_BAR_VERT,(flags))
 
-void    AG_ProgressBarSetLength(AG_ProgressBar *, int);
-void	AG_ProgressBarSetWidth(AG_ProgressBar *, int);
-int	AG_ProgressBarPercent(AG_ProgressBar *);
+void AG_ProgressBarSetLength(AG_ProgressBar *_Nonnull, int);
+void AG_ProgressBarSetWidth(AG_ProgressBar *_Nonnull, int);
+int  AG_ProgressBarPercent(AG_ProgressBar *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

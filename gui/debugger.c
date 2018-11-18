@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
 #include <string.h>
 
 static void
-FindWidgets(AG_Widget *wid, AG_Tlist *tl, int depth)
+FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
@@ -78,7 +78,7 @@ FindWidgets(AG_Widget *wid, AG_Tlist *tl, int depth)
 }
 
 static void
-FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
+FindWindows(AG_Tlist *_Nonnull tl, AG_Window *_Nonnull win, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_Window *wSub;
@@ -101,12 +101,12 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 	it->depth = depth;
 	it->cat = "window";
 	if (!TAILQ_EMPTY(&OBJECT(win)->children) ||
-	    !TAILQ_EMPTY(&win->subwins)) {
+	    !TAILQ_EMPTY(&win->pvt.subwins)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
-		TAILQ_FOREACH(wSub, &win->subwins, swins)
+		TAILQ_FOREACH(wSub, &win->pvt.subwins, pvt.swins)
 			FindWindows(tl, wSub, depth+1);
 		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
 			FindWidgets(wChild, tl, depth+1);
@@ -114,7 +114,7 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 }
 
 static void
-PollWidgets(AG_Event *event)
+PollWidgets(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Window *win = AG_PTR(1);
@@ -136,37 +136,37 @@ PollWidgets(AG_Event *event)
 }
 
 static void
-ShowWindow(AG_Event *event)
+ShowWindow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_WindowShow(win);
 }
 
 static void
-HideWindow(AG_Event *event)
+HideWindow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_WindowHide(win);
 }
 
 static void
-PollSurfaces(AG_Event *event)
+PollSurfaces(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Widget *wid = AG_PTR(1);
 	Uint i;
 
 	AG_TlistBegin(tl);
-	for (i = 0; i < wid->nsurfaces; i++) {
+	for (i = 0; i < wid->nSurfaces; i++) {
 		AG_Surface *su = WSURFACE(wid,i);
 		AG_TlistAdd(tl, su, "Surface%u (%ux%u, %ubpp)",
-		    i, su->w, su->h, su->format->BitsPerPixel);
+		    i, su->w, su->h, su->format.BitsPerPixel);
 	}
 	AG_TlistEnd(tl);
 }
 
 static void
-PollVariables(AG_Event *event)
+PollVariables(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *obj = AG_PTR(1);
@@ -190,7 +190,7 @@ PollVariables(AG_Event *event)
 }
 
 static void
-WidgetSelected(AG_Event *event)
+WidgetSelected(AG_Event *_Nonnull event)
 {
 	AG_Box *box = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
@@ -278,7 +278,7 @@ WidgetSelected(AG_Event *event)
 }
 
 static void
-ContextualMenu(AG_Event *event)
+ContextualMenu(AG_Event *_Nonnull event)
 {
 	AG_MenuItem *mi = AG_SENDER();
 	AG_Tlist *tl = AG_PTR(1);

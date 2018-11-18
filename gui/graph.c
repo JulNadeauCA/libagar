@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ AG_GraphNew(void *parent, Uint flags)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Graph *gf = AG_SELF();
 	int keysym = AG_INT(1);
@@ -77,17 +77,17 @@ KeyDown(AG_Event *event)
 }
 
 static __inline__ int
-MouseOverVertex(AG_GraphVertex *vtx, int x, int y)
+MouseOverVertex(AG_GraphVertex *_Nonnull vtx, int x, int y)
 {
-	return (abs(x - vtx->x + vtx->graph->xOffs) <= vtx->w/2 &&
-	        abs(y - vtx->y + vtx->graph->yOffs) <= vtx->h/2);
+	return (abs(x - vtx->x + vtx->graph->xOffs) <= (vtx->w >> 1) &&
+	        abs(y - vtx->y + vtx->graph->yOffs) <= (vtx->h >> 1));
 }
 
 static __inline__ void
 GetEdgeLabelCoords(AG_GraphEdge *edge, int *x, int *y)
 {
-	*x = (edge->v1->x + edge->v2->x)/2;
-	*y = (edge->v1->y + edge->v2->y)/2;
+	*x = (edge->v1->x + edge->v2->x) >> 1;
+	*y = (edge->v1->y + edge->v2->y) >> 1;
 }
 
 static __inline__ int
@@ -101,8 +101,8 @@ MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 	}
 	GetEdgeLabelCoords(edge, &lx, &ly);
 	lbl = WSURFACE(edge->graph,edge->labelSu);
-	return (abs(x - lx + edge->graph->xOffs) <= lbl->w/2 &&
-	        abs(y - ly + edge->graph->yOffs) <= lbl->h/2);
+	return (abs(x - lx + edge->graph->xOffs) <= (lbl->w >> 1) &&
+	        abs(y - ly + edge->graph->yOffs) <= (lbl->h >> 1));
 }
 
 static void
@@ -460,31 +460,11 @@ Init(void *obj)
 	gf->pyMin = 0;
 	gf->pyMax = 0;
 	gf->r = AG_RECT(0,0,0,0);
-#if 0
-	gf->hbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_HORIZ, 0);
-	gf->vbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_VERT, 0);
-	AG_BindInt(gf->hbar, "value", &gf->xOffs);
-	AG_BindInt(gf->hbar, "min", &gf->xMin);
-	AG_BindInt(gf->hbar, "max", &gf->xMax);
-	AG_BindInt(gf->hbar, "visible", &WIDGET(gf)->w);
 
-	AG_BindInt(gf->vbar, "value", &gf->yOffs);
-	AG_BindInt(gf->vbar, "min", &gf->yMin);
-	AG_BindInt(gf->vbar, "max", &gf->yMax);
-	AG_BindInt(gf->vbar, "visible", &WIDGET(gf)->h);
-#endif
 	AG_SetEvent(gf, "key-down", KeyDown, NULL);
 	AG_SetEvent(gf, "mouse-button-down", MouseButtonDown, NULL);
 	AG_SetEvent(gf, "mouse-button-up", MouseButtonUp, NULL);
 	AG_SetEvent(gf, "mouse-motion", MouseMotion, NULL);
-#if 0
-	AG_BindInt(gf, "xOffs", &gf->xOffs);
-	AG_BindInt(gf, "yOffs", &gf->yOffs);
-	AG_BindInt(gf, "xMin", &gf->xMin);
-	AG_BindInt(gf, "yMin", &gf->yMin);
-	AG_BindInt(gf, "xMax", &gf->xMax);
-	AG_BindInt(gf, "yMax", &gf->yMax);
-#endif
 }
 
 void
@@ -553,8 +533,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (a->w < 1 || a->h < 1)
 		return (-1);
 
-	gf->xOffs = -(a->w/2);
-	gf->yOffs = -(a->h/2);
+	gf->xOffs = -(a->w >> 1);
+	gf->yOffs = -(a->h >> 1);
 	gf->r = AG_RECT(0, 0, a->w, a->h);
 
 	return (0);
@@ -882,7 +862,7 @@ void
 AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 {
 	AG_GraphVertex **vSorted, *vtx;
-	int nSorted = 0, i;
+	Uint i, nSorted=0;
 	int tx, ty;
 	
 	AG_ObjectLock(gf);
@@ -898,8 +878,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 		vtx->flags &= ~(AG_GRAPH_AUTOPLACED);
 		vSorted[nSorted++] = vtx;
 	}
-	qsort(vSorted, (size_t)nSorted, sizeof(AG_GraphVertex *),
-	    CompareVertices);
+	qsort(vSorted, nSorted, sizeof(AG_GraphVertex *), CompareVertices);
 	gf->pxMin = 0;
 	gf->pxMax = 0;
 	gf->pyMin = 0;

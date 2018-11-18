@@ -13,13 +13,15 @@ typedef Sint16 AG_FixedPlotterValue;
 struct ag_fixed_plotter;
 
 typedef struct ag_fixed_plotter_item {
-	char name[AG_LABEL_MAX];		/* Description */
-	AG_Color color;				/* Line color */
-	AG_FixedPlotterValue *vals;		/* Value array */
-	Uint32 nvals;
-	Uint32 maxvals;
-	Uint32 limit;
-	struct ag_fixed_plotter *fpl;			/* Back pointer */
+	char name[AG_LABEL_MAX];			/* Description */
+	AG_Color color;					/* Line color */
+
+	AG_FixedPlotterValue *_Nonnull vals;		/* Values array */
+	Uint32                        nvals;		/* Values total */
+	Uint32                      maxvals;		/* Values allocated */
+	Uint32                        limit;		/* Hard limit */
+
+	struct ag_fixed_plotter *_Nonnull fpl;		/* Back pointer */
 	AG_TAILQ_ENTRY(ag_fixed_plotter_item) items;
 } AG_FixedPlotterItem;
 
@@ -49,15 +51,19 @@ typedef struct ag_fixed_plotter {
 __BEGIN_DECLS
 extern AG_WidgetClass agFixedPlotterClass;
 
-AG_FixedPlotter *AG_FixedPlotterNew(void *, enum ag_fixed_plotter_type, Uint);
-AG_FixedPlotterItem *AG_FixedPlotterCurve(AG_FixedPlotter *, const char *,
-		                          Uint8, Uint8, Uint8, Uint32);
-void AG_FixedPlotterFreeItems(AG_FixedPlotter *);
-void AG_FixedPlotterSetRange(AG_FixedPlotter *, AG_FixedPlotterValue);
-void AG_FixedPlotterDatum(AG_FixedPlotterItem *, AG_FixedPlotterValue);
+AG_FixedPlotter *_Nonnull AG_FixedPlotterNew(void *_Nullable,
+                                             enum ag_fixed_plotter_type, Uint);
+
+AG_FixedPlotterItem *_Nonnull AG_FixedPlotterCurve(AG_FixedPlotter *_Nonnull,
+						   const char *_Nonnull,
+						   Uint8,Uint8,Uint8, Uint32);
+
+void AG_FixedPlotterFreeItems(AG_FixedPlotter *_Nonnull);
+void AG_FixedPlotterSetRange(AG_FixedPlotter *_Nonnull, AG_FixedPlotterValue);
+void AG_FixedPlotterDatum(AG_FixedPlotterItem *_Nonnull, AG_FixedPlotterValue);
 
 static __inline__ void
-AG_FixedPlotterScroll(AG_FixedPlotter *fpl, int i)
+AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull fpl, int i)
 {
 	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
 		fpl->xoffs += i;

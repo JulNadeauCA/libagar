@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,9 +32,9 @@
 #include <stdarg.h>
 #include <string.h>
 
-AG_Menu *agAppMenu = NULL;
+AG_Menu   *agAppMenu = NULL;
 AG_Window *agAppMenuWin = NULL;
-AG_Mutex agAppMenuLock;
+AG_Mutex   agAppMenuLock;
 
 /* Initialize global application menu data; called from AG_InitGUI(). */
 void
@@ -122,9 +122,10 @@ exists:
 }
 
 static void
-MenuCollapseAll(AG_Event *event)
+MenuCollapseAll(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_PTR(1);
+
 	AG_MenuCollapseAll(m);
 }
 
@@ -237,12 +238,12 @@ AG_MenuCollapse(AG_MenuItem *mi)
 }
 
 static void
-CollapseAll(AG_Menu *m, AG_MenuItem *mi)
+CollapseAll(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub;
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
-		CollapseAll(m, miSub);
+		CollapseAll(miSub);
 	}
 	if (mi->view != NULL)
 		AG_MenuCollapse(mi);
@@ -257,7 +258,7 @@ AG_MenuCollapseAll(AG_Menu *m)
 {
 	AG_ObjectLock(m);
 
-	CollapseAll(m, m->root);
+	CollapseAll(m->root);
 	m->itemSel = NULL;
 	m->selecting = 0;
 	
@@ -289,7 +290,7 @@ AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 }
 
 static __inline__ int
-IntersectItem(AG_MenuItem *mi, int x, int y, int *hLbl)
+IntersectItem(AG_MenuItem *_Nonnull mi, int x, int y, int *_Nonnull hLbl)
 {
 	AG_Menu *m = mi->pmenu;
 	int lbl, wLbl;
@@ -309,7 +310,7 @@ IntersectItem(AG_MenuItem *mi, int x, int y, int *hLbl)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_SELF();
 	int x = AG_INT(2);
@@ -344,7 +345,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_SELF();
 	int x = AG_INT(1);
@@ -375,7 +376,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-Attached(AG_Event *event)
+Attached(AG_Event *_Nonnull event)
 {
 	AG_Widget *pwid = AG_SENDER();
 	AG_Window *pwin;
@@ -385,8 +386,9 @@ Attached(AG_Event *event)
 }
 
 /* Generic constructor for menu items. Menu must be locked. */
-static AG_MenuItem *
-CreateItem(AG_MenuItem *miParent, const char *text, const AG_Surface *icon)
+static AG_MenuItem *_Nonnull
+CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
+    const AG_Surface *_Nullable icon)
 {
 	AG_Menu *m;
 	AG_MenuItem *mi;
@@ -455,7 +457,7 @@ CreateItem(AG_MenuItem *miParent, const char *text, const AG_Surface *icon)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Menu *m = AG_SELF();
 	AG_Font *font = WIDGET(m)->font;
@@ -474,7 +476,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Menu *m = obj;
 
@@ -534,7 +536,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *iconSrc)
 
 /* Unmap cached Menu/MenuView label surfaces for the specified item. */
 static void
-InvalidateLabelSurfaces(AG_MenuItem *mi)
+InvalidateLabelSurfaces(AG_MenuItem *_Nonnull mi)
 {
 	int i;
 
@@ -699,8 +701,9 @@ AG_MenuNode(AG_MenuItem *pitem, const char *text, const AG_Surface *icon)
 	return (node);
 }
 
-static AG_Button *
-CreateToolbarButton(AG_MenuItem *mi, const AG_Surface *icon, const char *text)
+static AG_Button *_Nonnull
+CreateToolbarButton(AG_MenuItem *_Nonnull mi, const AG_Surface *_Nullable icon,
+    const char *_Nullable text)
 {
 	AG_Menu *m = mi->pmenu;
 	AG_Button *bu;
@@ -717,9 +720,9 @@ CreateToolbarButton(AG_MenuItem *mi, const AG_Surface *icon, const char *text)
 	return (bu);
 }
 
-static __inline__ AG_Button *
-CreateToolbarButtonBool(AG_MenuItem *mi, const AG_Surface *icon, const char *text,
-    int inv)
+static __inline__ AG_Button *_Nonnull
+CreateToolbarButtonBool(AG_MenuItem *_Nonnull mi,
+    const AG_Surface *_Nullable icon, const char *_Nullable text, int inv)
 {
 	AG_Button *bu;
 
@@ -821,7 +824,11 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindIntMp(mi->tbButton, "state", pBool, lock);
+		if (lock != NULL) {
+			AG_BindIntMp(mi->tbButton, "state", pBool, lock);
+		} else {
+			AG_BindInt(mi->tbButton, "state", pBool);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -842,7 +849,11 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindUint8Mp(mi->tbButton, "state", pBool, lock);
+		if (lock != NULL) {
+			AG_BindUint8Mp(mi->tbButton, "state", pBool, lock);
+		} else {
+			AG_BindUint8(mi->tbButton, "state", pBool);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -864,8 +875,13 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindFlagMp(mi->tbButton, "state", (Uint *)pFlags,
-		    (Uint)flags, lock);
+		if (lock != NULL) {
+			AG_BindFlagMp(mi->tbButton, "state", (Uint *)pFlags,
+			    (Uint)flags, lock);
+		} else {
+			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
+			    (Uint)flags);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -887,7 +903,11 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindFlag8Mp(mi->tbButton, "state", pFlags, flags, lock);
+		if (lock != NULL) {
+			AG_BindFlag8Mp(mi->tbButton, "state", pFlags, flags, lock);
+		} else {
+			AG_BindFlag8(mi->tbButton, "state", pFlags, flags);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -909,7 +929,12 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindFlag16Mp(mi->tbButton, "state", pFlags, flags, lock);
+		if (lock != NULL) {
+			AG_BindFlag16Mp(mi->tbButton, "state", pFlags, flags,
+			    lock);
+		} else {
+			AG_BindFlag16(mi->tbButton, "state", pFlags, flags);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -931,7 +956,12 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_BindFlag32Mp(mi->tbButton, "state", pFlags, flags, lock);
+		if (lock != NULL) {
+			AG_BindFlag32Mp(mi->tbButton, "state", pFlags, flags,
+			    lock);
+		} else {
+			AG_BindFlag32(mi->tbButton, "state", pFlags, flags);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -947,7 +977,11 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
 	if (mi->tbButton != NULL) {
-		AG_BindIntMp(mi->tbButton, "state", pBool, lock);
+		if (lock != NULL) {
+			AG_BindIntMp(mi->tbButton, "state", pBool, lock);
+		} else {
+			AG_BindInt(mi->tbButton, "state", pBool);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}
@@ -965,7 +999,13 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
 	if (mi->tbButton != NULL) {
-		AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags, (Uint)flags);
+		if (lock != NULL) {
+			AG_BindFlagMp(mi->tbButton, "state", (Uint *)pFlags,
+			    (Uint)flags, lock);
+		} else {
+			AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags,
+			    (Uint)flags);
+		}
 		AG_ButtonInvertState(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}
@@ -977,7 +1017,7 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
  * The parent AG_Menu must be locked.
  */
 static void
-AG_MenuItemFreeChildren(AG_MenuItem *mi)
+AG_MenuItemFreeChildren(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub, *miSubNext;
 
@@ -1024,7 +1064,7 @@ AG_MenuDel(AG_MenuItem *mi)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_Menu *m = p;
 
@@ -1068,7 +1108,7 @@ AG_MenuToolbar(AG_MenuItem *mi, AG_Toolbar *tb)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Menu *m = obj;
 	AG_MenuItem *mi;
@@ -1119,7 +1159,7 @@ Draw(void *obj)
 }
 
 static void
-GetItemSize(AG_MenuItem *item, int *w, int *h)
+GetItemSize(AG_MenuItem *_Nonnull item, int *_Nonnull w, int *_Nonnull h)
 {
 	AG_Menu *m = item->pmenu;
 	int lbl;
@@ -1142,7 +1182,7 @@ GetItemSize(AG_MenuItem *item, int *w, int *h)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Menu *m = obj;
 	AG_Driver *drv = WIDGET(m)->drv;
@@ -1178,7 +1218,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Menu *m = obj;
 	AG_MenuItem *mi;
@@ -1226,9 +1266,6 @@ AG_PopupNew(void *obj)
 	pm->root = AG_MenuNode(pm->menu->root, NULL, NULL);
 	pm->menu->itemSel = pm->root;
 	pm->win = NULL;
-#ifdef AG_LEGACY
-	pm->item = pm->root;
-#endif
 	return (pm);
 }
 
@@ -1268,7 +1305,7 @@ AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)
 }
 
 static void
-PopupHideAll(AG_MenuItem *mi)
+PopupHideAll(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub;
 

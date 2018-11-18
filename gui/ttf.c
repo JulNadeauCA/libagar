@@ -75,7 +75,7 @@ AG_TTFDestroy(void)
 }
 
 static void
-FlushGlyph(AG_TTFGlyph *glyph)
+FlushGlyph(AG_TTFGlyph *_Nonnull glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
@@ -86,7 +86,7 @@ FlushGlyph(AG_TTFGlyph *glyph)
 
 /* Flush the entire glyph cache. */
 static void
-FlushCache(AG_TTFFont *ttf)
+FlushCache(AG_TTFFont *_Nonnull ttf)
 {
 	int i, size = sizeof(ttf->cache) / sizeof(ttf->cache[0]);
 
@@ -230,7 +230,7 @@ AG_TTFCloseFont(AG_Font *font)
 
 /* Process the bold style. */
 static void
-ProcessBold(AG_TTFFont *ttf, FT_Bitmap *dst)
+ProcessBold(AG_TTFFont *_Nonnull ttf, FT_Bitmap *_Nonnull dst)
 {
 	int row, col, offset, pixel;
 	Uint8 *pixmap;
@@ -257,7 +257,8 @@ ProcessBold(AG_TTFFont *ttf, FT_Bitmap *dst)
  * XXX is this still needed?
  */
 static void
-ProcessNonScalablePixmap(FT_Bitmap *src, FT_Bitmap *dst, int soffset, int doffset)
+ProcessNonScalablePixmap(FT_Bitmap *_Nonnull src, FT_Bitmap *_Nonnull dst,
+    int soffset, int doffset)
 {
 	unsigned char *srcp, *dstp;
 	unsigned char ch;
@@ -281,7 +282,8 @@ ProcessNonScalablePixmap(FT_Bitmap *src, FT_Bitmap *dst, int soffset, int doffse
 
 /* Render and cache the glyph corresponding to the given Unicode character. */
 static int
-LoadGlyph(AG_TTFFont *ttf, Uint32 ch, AG_TTFGlyph *cached, int want)
+LoadGlyph(AG_TTFFont *_Nonnull ttf, Uint32 ch, AG_TTFGlyph *_Nonnull cached,
+    int want)
 {
 	FT_Face face = ttf->face;
 	FT_GlyphSlot glyph;

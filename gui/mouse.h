@@ -40,16 +40,17 @@ typedef struct ag_mouse {
 __BEGIN_DECLS
 extern AG_ObjectClass agMouseClass;
 
-AG_Mouse *AG_MouseNew(void *, const char *);
-void      AG_MouseMotionUpdate(AG_Mouse *, int, int);
-void      AG_MouseCursorUpdate(struct ag_window *, int, int);
-void      AG_MouseButtonUpdate(AG_Mouse *, AG_MouseButtonAction, int);
-void      AG_ProcessMouseMotion(struct ag_window *, int, int, int, int, Uint);
-void      AG_ProcessMouseButtonUp(struct ag_window *, int, int, AG_MouseButton);
-void      AG_ProcessMouseButtonDown(struct ag_window *, int, int, AG_MouseButton);
+AG_Mouse *_Nullable AG_MouseNew(void *_Nonnull, const char *_Nonnull);
+void AG_MouseMotionUpdate(AG_Mouse *_Nonnull, int,int);
+void AG_MouseCursorUpdate(struct ag_window *_Nonnull, int,int);
+void AG_MouseButtonUpdate(AG_Mouse *_Nonnull, AG_MouseButtonAction, int);
+void AG_ProcessMouseMotion(struct ag_window *_Nonnull, int,int, int,int, Uint);
+void AG_ProcessMouseButtonUp(struct ag_window *_Nonnull, int,int, AG_MouseButton);
+void AG_ProcessMouseButtonDown(struct ag_window *_Nonnull, int,int,
+                               AG_MouseButton);
 
 static __inline__ Uint8
-AG_MouseGetState(AG_Mouse *ms, int *x, int *y)
+AG_MouseGetState(AG_Mouse *_Nonnull ms, int *_Nullable x, int *_Nullable y)
 {
 	if (x != NULL) { *x = ms->x; }
 	if (y != NULL) { *y = ms->y; }

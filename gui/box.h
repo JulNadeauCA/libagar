@@ -35,7 +35,7 @@ typedef struct ag_box {
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */
 	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
-	struct ag_label *lbl;		/* Optional text label */
+	struct ag_label *_Nonnull lbl;	/* Optional text label */
 	enum ag_box_align hAlign, vAlign; /* Widget alignment */
 } AG_Box;
 
@@ -44,31 +44,31 @@ typedef struct ag_box {
 __BEGIN_DECLS
 extern AG_WidgetClass agBoxClass;
 
-AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
+AG_Box *_Nonnull AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
 
-void     AG_BoxSetLabel(AG_Box *, const char *, ...);
-void     AG_BoxSetLabelS(AG_Box *, const char *);
-void	 AG_BoxSetHomogenous(AG_Box *, int);
-void	 AG_BoxSetPadding(AG_Box *, int);
-void	 AG_BoxSetSpacing(AG_Box *, int);
-void	 AG_BoxSetDepth(AG_Box *, int);
-void	 AG_BoxSetType(AG_Box *, enum ag_box_type);
-void     AG_BoxSetHorizAlign(AG_Box *, enum ag_box_align);
-void     AG_BoxSetVertAlign(AG_Box *, enum ag_box_align);
+void     AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
+void     AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
+void	 AG_BoxSetHomogenous(AG_Box *_Nonnull, int);
+void	 AG_BoxSetPadding(AG_Box *_Nonnull, int);
+void	 AG_BoxSetSpacing(AG_Box *_Nonnull, int);
+void	 AG_BoxSetDepth(AG_Box *_Nonnull, int);
+void	 AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
+void     AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
+void     AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 
 #define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
 #define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
 
-static __inline__ AG_Box *
-AG_BoxNewHorizNS(void *p, Uint flags)
+static __inline__ AG_Box *_Nonnull
+AG_BoxNewHorizNS(void *_Nullable p, Uint flags)
 {
 	AG_Box *hBox = AG_BoxNewHoriz(p, flags);
 	AG_BoxSetSpacing(hBox, 0);
 	AG_BoxSetPadding(hBox, 0);
 	return (hBox);
 }
-static __inline__ AG_Box *
-AG_BoxNewVertNS(void *p, Uint flags)
+static __inline__ AG_Box *_Nonnull
+AG_BoxNewVertNS(void *_Nullable p, Uint flags)
 {
 	AG_Box *vBox = AG_BoxNewVert(p, flags);
 	AG_BoxSetSpacing(vBox, 0);

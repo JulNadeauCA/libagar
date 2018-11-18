@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,7 +69,7 @@ AG_ComboNewS(void *parent, Uint flags, const char *label)
 }
 
 static void
-Collapse(AG_Combo *com)
+Collapse(AG_Combo *_Nonnull com)
 {
 	if (com->panel == NULL) {
 		return;
@@ -85,7 +85,7 @@ Collapse(AG_Combo *com)
 }
 
 static void
-ModalClose(AG_Event *event)
+ModalClose(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_PTR(1);
 
@@ -94,7 +94,7 @@ ModalClose(AG_Event *event)
 }
 
 static void
-Expand(AG_Event *event)
+Expand(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
@@ -194,7 +194,7 @@ AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 }
 
 static void
-SelectedItem(AG_Event *event)
+SelectedItem(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Combo *com = AG_PTR(1);
@@ -210,7 +210,7 @@ SelectedItem(AG_Event *event)
 }
 
 static void
-Return(AG_Event *event)
+Return(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbox = AG_SELF();
 	AG_Combo *com = AG_PTR(1);
@@ -241,7 +241,7 @@ Return(AG_Event *event)
 }
 
 static void
-OnDetach(AG_Event *event)
+OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_SELF();
 
@@ -253,7 +253,7 @@ OnDetach(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
 
@@ -316,7 +316,7 @@ AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, AG_Surface *su)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_Combo *com = p;
 
@@ -324,7 +324,7 @@ Destroy(void *p)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
 
@@ -333,7 +333,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Combo *com = obj;
 	AG_SizeReq rChld;
@@ -347,7 +347,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Combo *com = obj;
 	AG_SizeReq rBtn;

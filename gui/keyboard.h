@@ -284,35 +284,39 @@ typedef struct ag_key {
 typedef struct ag_keyboard {
 	struct ag_input_device _inherit;
 	Uint flags;
-	int *keyState;		/* Key state */
+	int *_Nonnull keyState;		/* Key state */
 	Uint keyCount;
-	Uint modState;		/* Modifiers state */
+	Uint modState;			/* Modifiers state */
 } AG_Keyboard;
 
 __BEGIN_DECLS
 extern AG_ObjectClass agKeyboardClass;
 
-AG_Keyboard *AG_KeyboardNew(void *, const char *);
+AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
-int AG_KeyboardUpdate(AG_Keyboard *, AG_KeyboardAction, AG_KeySym, Uint32);
-int AG_ProcessKey(AG_Keyboard *, struct ag_window *, AG_KeyboardAction,
-                  AG_KeySym, Uint32);
+int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym,
+                      Uint32);
 
-const char *AG_LookupKeyName(AG_KeySym);
-AG_KeySym   AG_LookupKeySym(const char *);
+int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
+                  AG_KeyboardAction, AG_KeySym, Uint32);
+
+const char *_Nullable AG_LookupKeyName(AG_KeySym)
+                                      _Pure_Attribute;
+AG_KeySym             AG_LookupKeySym(const char *_Nonnull)
+                                     _Pure_Attribute;
 
 void AG_InitGlobalKeys(void);
 void AG_DestroyGlobalKeys(void);
 void AG_BindStdGlobalKeys(void);
-void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*)(void));
-void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*)(AG_Event *));
+void AG_BindGlobalKey(AG_KeySym, AG_KeyMod, void (*_Nonnull)(void));
+void AG_BindGlobalKeyEv(AG_KeySym, AG_KeyMod, void (*_Nonnull)(AG_Event *_Nonnull));
 int  AG_UnbindGlobalKey(AG_KeySym, AG_KeyMod);
 void AG_ClearGlobalKeys(void);
 int  AG_ExecGlobalKeys(AG_KeySym, AG_KeyMod);
 
 /* Compare unsided modifier state against a string of flags. */
-static __inline__ int
-AG_CompareKeyMods(Uint modState, const char *flags)
+static __inline__ int _Pure_Attribute
+AG_CompareKeyMods(Uint modState, const char *_Nonnull flags)
 {
 	const char *c;
 

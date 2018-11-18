@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Toolbar *bar = obj;
 	
@@ -81,7 +81,7 @@ Init(void *obj)
 }
 
 static void
-StickyUpdate(AG_Event *event)
+StickyUpdate(AG_Event *_Nonnull event)
 {
 	AG_Button *selBtn = AG_SELF();
 	AG_Toolbar *bar = AG_PTR(1);
@@ -119,7 +119,7 @@ AG_ToolbarRow(AG_Toolbar *bar, int row)
 }
 
 AG_Button *
-AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
+AG_ToolbarButtonIcon(AG_Toolbar *bar, const AG_Surface *icon, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *bu;
@@ -256,7 +256,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_Toolbar *tbar = p;
 	AG_SizeReq rBar;

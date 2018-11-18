@@ -32,15 +32,15 @@ typedef struct ag_mpane {
 #define AG_MPANE_FRAMES		0x04	/* Draw pane backgrounds */
 #define AG_MPANE_FORCE_DIV	0x08	/* Always divide in two */
 #define AG_MPANE_EXPAND (AG_MPANE_HFILL|AG_MPANE_VFILL)
-	struct ag_box *panes[4];
-	Uint          npanes;
+	struct ag_box *_Nonnull panes[4];
+	Uint                   nPanes;
 } AG_MPane;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMPaneClass;
 
-AG_MPane *AG_MPaneNew(void *, enum ag_mpane_layout, Uint);
-void      AG_MPaneSetLayout(AG_MPane *, enum ag_mpane_layout);
+AG_MPane *_Nonnull AG_MPaneNew(void *_Nullable, enum ag_mpane_layout, Uint);
+void               AG_MPaneSetLayout(AG_MPane *_Nonnull, enum ag_mpane_layout);
 __END_DECLS
 
 #include <agar/gui/close.h>

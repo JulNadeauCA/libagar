@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -147,7 +147,7 @@ AG_CheckboxSetFromFlags32(void *parent, Uint flags, Uint32 *pFlags,
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Checkbox *cb = AG_SELF();
 	int button = AG_INT(1);
@@ -164,7 +164,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Checkbox *cb = AG_SELF();
 	int key = AG_INT(1);
@@ -182,7 +182,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
 
@@ -205,14 +205,16 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Checkbox *cb = obj;
 	AG_Font *font = WIDGET(cb)->font;
 	AG_Variable *stateb;
 	void *p;
 	int state;
-	
+
+	AG_PushClipRect(cb, AG_RECT(0,0,WIDTH(cb),HEIGHT(cb)));
+
 	stateb = AG_GetVariable(cb, "state", &p);
 	switch (AG_VARIABLE_TYPE(stateb)) {
 	case AG_VARIABLE_INT:
@@ -272,10 +274,12 @@ Draw(void *obj)
 		AG_WidgetDraw(cb->lbl);
 	}
 	AG_UnlockVariable(stateb);
+
+	AG_PopClipRect(cb);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Checkbox *cb = obj;
 	AG_Font *font = WIDGET(cb)->font;
@@ -292,7 +296,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Checkbox *cb = obj;
 	AG_Font *font = WIDGET(cb)->font;

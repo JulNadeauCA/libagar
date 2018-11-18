@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,11 +55,11 @@ AG_TextCacheNew(void *widget, Uint nBuckets, Uint nBucketEnts)
 }
 
 static __inline__ void
-FreeCachedText(AG_TextCache *tc, AG_CachedText *ct)
+FreeCachedText(AG_TextCache *_Nonnull tc, AG_CachedText *_Nonnull ct)
 {
 	AG_WidgetUnmapSurface(tc->widget, ct->surface);
 	Free(ct->text);
-	Free(ct);
+	free(ct);
 }
 
 void
@@ -96,7 +96,7 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 
 /* Expire some of the oldest entries from the cache. */
 static void
-ExpireEntries(AG_TextCache *tc)
+ExpireEntries(AG_TextCache *_Nonnull tc)
 {
 	AG_CachedText *ct;
 	Uint i;

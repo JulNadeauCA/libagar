@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,8 +54,8 @@ AG_EditableClipboard agEditableKillring;	/* For Emacs-style Kill/Yank */
  * Return a new working buffer. The variable is returned locked; the caller
  * should invoke ReleaseBuffer() after use.
  */
-static __inline__ AG_EditableBuffer *
-GetBuffer(AG_Editable *ed)
+static __inline__ AG_EditableBuffer *_Nullable
+GetBuffer(AG_Editable *_Nonnull ed)
 {
 	AG_EditableBuffer *buf;
 
@@ -121,7 +121,7 @@ fail:
 
 /* Clear a working buffer. */
 static __inline__ void
-ClearBuffer(AG_EditableBuffer *buf)
+ClearBuffer(AG_EditableBuffer *_Nonnull buf)
 {
 	AG_Free(buf->s);
 	buf->s = NULL;
@@ -131,12 +131,12 @@ ClearBuffer(AG_EditableBuffer *buf)
 
 /* Commit changes to the working buffer. */
 static void
-CommitBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+CommitBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
 	if (AG_Defined(ed, "text")) {			/* AG_Text binding */
 		AG_Text *txt = buf->var->data.p;
 		AG_TextEnt *te = &txt->ent[ed->lang];
-		size_t lenEnc;
+		AG_Size lenEnc;
 
 		if (AG_LengthUTF8FromUCS4(buf->s, &lenEnc) == -1) {
 			goto fail;
@@ -165,7 +165,7 @@ fail:
 
 /* Release the working buffer. */
 static __inline__ void
-ReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
+ReleaseBuffer(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
 	if (AG_Defined(ed, "text")) {
 		AG_Text *txt = buf->var->data.p;
@@ -181,12 +181,17 @@ ReleaseBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 	}
 }
 
-/* Return a working (locked) buffer handle. */
+/* Allocate and return a new buffer handle in a locked condition */
 AG_EditableBuffer *
 AG_EditableGetBuffer(AG_Editable *ed)
 {
+	AG_EditableBuffer *buf;
+
 	AG_ObjectLock(ed);
-	return GetBuffer(ed);
+	if ((buf = GetBuffer(ed)) == NULL) {
+		AG_ObjectUnlock(ed);
+	}
+	return (buf);
 }
 
 /* Clear a working buffer. */
@@ -199,16 +204,16 @@ AG_EditableClearBuffer(AG_Editable *ed, AG_EditableBuffer *buf)
 /* Increase the working buffer size to accomodate new characters. */
 int
 AG_EditableGrowBuffer(AG_Editable *ed, AG_EditableBuffer *buf, Uint32 *ins,
-    size_t nIns)
+    AG_Size nIns)
 {
-	size_t ucsSize;		/* UCS-4 buffer size in bytes */
-	size_t convLen;		/* Converted string length in bytes */
+	AG_Size ucsSize;		/* UCS-4 buffer size in bytes */
+	AG_Size convLen;		/* Converted string length in bytes */
 	Uint32 *sNew;
 
 	ucsSize = (buf->len + nIns + 1)*sizeof(Uint32);
 
 	if (Strcasecmp(ed->encoding, "UTF-8") == 0) {
-		size_t sLen, insLen;
+		AG_Size sLen, insLen;
 
 		if (AG_LengthUTF8FromUCS4(buf->s, &sLen) == -1 ||
 		    AG_LengthUTF8FromUCS4(ins, &insLen) == -1) {
@@ -272,7 +277,7 @@ AG_EditableNew(void *parent, Uint flags)
 
 /* Bind to a C string containing UTF-8 encoded text. */
 void
-AG_EditableBindUTF8(AG_Editable *ed, char *buf, size_t bufSize)
+AG_EditableBindUTF8(AG_Editable *ed, char *buf, AG_Size bufSize)
 {
 	AG_ObjectLock(ed);
 	AG_Unset(ed, "text");
@@ -283,7 +288,7 @@ AG_EditableBindUTF8(AG_Editable *ed, char *buf, size_t bufSize)
 
 /* Bind to a C string containing ASCII text. */
 void
-AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
+AG_EditableBindASCII(AG_Editable *ed, char *buf, AG_Size bufSize)
 {
 	AG_ObjectLock(ed);
 	AG_Unset(ed, "text");
@@ -295,7 +300,7 @@ AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
 /* Bind to a C string containing text in specified encoding. */
 void
 AG_EditableBindEncoded(AG_Editable *ed, const char *encoding, char *buf,
-    size_t bufSize)
+    AG_Size bufSize)
 {
 	AG_ObjectLock(ed);
 	AG_Unset(ed, "text");
@@ -420,7 +425,8 @@ CharIsFltOnly(Uint32 c)
  * be maintained, otherwise it will be cancelled.
  */
 static int
-ProcessKey(AG_Editable *ed, AG_KeySym ks, AG_KeyMod kmod, Uint32 unicode)
+ProcessKey(AG_Editable *_Nonnull ed, AG_KeySym ks, AG_KeyMod kmod,
+    Uint32 unicode)
 {
 	AG_EditableBuffer *buf;
 	int i, rv = 0;
@@ -489,7 +495,7 @@ out:
 
 /* Timer callback for handling key repeat */
 static Uint32
-KeyRepeatTimeout(AG_Timer *to, AG_Event *event)
+KeyRepeatTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
@@ -506,7 +512,7 @@ KeyRepeatTimeout(AG_Timer *to, AG_Event *event)
 
 /* Timer callback for blinking cursor */
 static Uint32
-BlinkTimeout(AG_Timer *to, AG_Event *event)
+BlinkTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -518,7 +524,7 @@ BlinkTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-OnFocusGain(AG_Event *event)
+OnFocusGain(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -532,7 +538,7 @@ OnFocusGain(AG_Event *event)
 }
 
 static void
-OnFocusLoss(AG_Event *event)
+OnFocusLoss(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -547,7 +553,7 @@ OnFocusLoss(AG_Event *event)
 }
 
 static void
-OnHide(AG_Event *event)
+OnHide(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -558,7 +564,7 @@ OnHide(AG_Event *event)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	AG_Font *font = WIDGET(ed)->font;
@@ -596,7 +602,7 @@ IsSpaceUCS4(Uint32 c)
 
 /* Evaluate word wrapping at given character. */
 static __inline__ int
-WrapAtChar(AG_Editable *ed, int x, Uint32 *s)
+WrapAtChar(AG_Editable *_Nonnull ed, int x, Uint32 *_Nonnull s)
 {
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Glyph *gl;
@@ -806,7 +812,7 @@ AG_EditableSetCursorPos(AG_Editable *ed, AG_EditableBuffer *buf, int pos)
 
 /* Do whatever we can do to make the cursor visible. */
 static void
-MoveCursorToView(AG_Editable *ed, AG_EditableBuffer *buf)
+MoveCursorToView(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf)
 {
 	if (ed->yCurs < ed->y) {
 		if (ed->flags & AG_EDITABLE_MULTILINE) {
@@ -836,7 +842,7 @@ MoveCursorToView(AG_Editable *ed, AG_EditableBuffer *buf)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 	AG_Driver *drv = WIDGET(ed)->drv;
@@ -1016,7 +1022,7 @@ AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Editable *ed = obj;
 
@@ -1025,7 +1031,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Editable *ed = obj;
 	AG_Rect r;
@@ -1043,7 +1049,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
@@ -1080,7 +1086,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int keysym = AG_INT(1);
@@ -1098,7 +1104,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-MouseDoubleClick(AG_Editable *ed)
+MouseDoubleClick(AG_Editable *_Nonnull ed)
 {
 	AG_EditableBuffer *buf;
 	Uint32 *c;
@@ -1138,7 +1144,7 @@ out:
 
 /* Ensure selection offset is positive. */
 static __inline__ void
-NormSelection(AG_Editable *ed)
+NormSelection(AG_Editable *_Nonnull ed)
 {
 	if (ed->sel < 0) {
 		ed->pos += ed->sel;
@@ -1149,7 +1155,7 @@ NormSelection(AG_Editable *ed)
 /* Copy specified range to specified clipboard. */
 void
 AG_EditableCopyChunk(AG_Editable *ed, AG_EditableClipboard *cb,
-    Uint32 *s, size_t len)
+    Uint32 *s, AG_Size len)
 {
 	Uint32 *sNew;
 
@@ -1291,7 +1297,7 @@ AG_EditableSelectAll(AG_Editable *ed, AG_EditableBuffer *buf)
  * Right-click popup menu actions.
  */
 static void
-MenuCut(AG_Event *event)
+MenuCut(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	AG_EditableBuffer *buf;
@@ -1304,14 +1310,14 @@ MenuCut(AG_Event *event)
 	}
 }
 static int
-MenuCutActive(AG_Event *event)
+MenuCutActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
 }
 
 static void
-MenuCopy(AG_Event *event)
+MenuCopy(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	AG_EditableBuffer *buf;
@@ -1322,14 +1328,14 @@ MenuCopy(AG_Event *event)
 	}
 }
 static int
-MenuCopyActive(AG_Event *event)
+MenuCopyActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	return (ed->sel != 0);
 }
 
 static void
-MenuPaste(AG_Event *event)
+MenuPaste(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	AG_EditableBuffer *buf;
@@ -1342,14 +1348,14 @@ MenuPaste(AG_Event *event)
 	}
 }
 static int
-MenuPasteActive(AG_Event *event)
+MenuPasteActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	return !AG_EditableReadOnly(ed) && agEditableClipbrd.len > 0;
 }
 
 static void
-MenuDelete(AG_Event *event)
+MenuDelete(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	AG_EditableBuffer *buf;
@@ -1362,14 +1368,14 @@ MenuDelete(AG_Event *event)
 	}
 }
 static int
-MenuDeleteActive(AG_Event *event)
+MenuDeleteActive(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	return (!AG_EditableReadOnly(ed) && ed->sel != 0);
 }
 
 static void
-MenuSelectAll(AG_Event *event)
+MenuSelectAll(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	AG_EditableBuffer *buf;
@@ -1380,15 +1386,15 @@ MenuSelectAll(AG_Event *event)
 	}
 }
 static void
-MenuSetLang(AG_Event *event)
+MenuSetLang(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_PTR(1);
 	enum ag_language lang = (enum ag_language)AG_INT(2);
 
 	AG_EditableSetLang(ed, lang);
 }
-static AG_PopupMenu *
-PopupMenu(AG_Editable *ed)
+static AG_PopupMenu *_Nullable
+PopupMenu(AG_Editable *_Nonnull ed)
 {
 	AG_PopupMenu *pm;
 	AG_MenuItem *mi;
@@ -1435,7 +1441,7 @@ PopupMenu(AG_Editable *ed)
 
 /* Timer for detecting double clicks. */
 static Uint32
-DoubleClickTimeout(AG_Timer *to, AG_Event *event)
+DoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 
@@ -1444,7 +1450,7 @@ DoubleClickTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int btn = AG_INT(1);
@@ -1506,7 +1512,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	int btn = AG_INT(1);
@@ -1521,7 +1527,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	AG_EditableBuffer *buf;
@@ -1702,11 +1708,11 @@ AG_EditableDupString(AG_Editable *ed)
 }
 
 /* Copy text to a fixed-size buffer and always NUL-terminate. */
-size_t
-AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
+AG_Size
+AG_EditableCopyString(AG_Editable *ed, char *dst, AG_Size dst_size)
 {
 	AG_Variable *var;
-	size_t rv;
+	AG_Size rv;
 	char *s;
 
 	AG_ObjectLock(ed);
@@ -1782,7 +1788,7 @@ AG_EditableDbl(AG_Editable *ed)
 }
 
 static void
-OnBindingChange(AG_Event *event)
+OnBindingChange(AG_Event *_Nonnull event)
 {
 	AG_Editable *ed = AG_SELF();
 	AG_Variable *binding = AG_PTR(1);
@@ -1795,7 +1801,7 @@ OnBindingChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
@@ -1807,9 +1813,7 @@ Init(void *obj)
 
 	ed->encoding = "UTF-8";
 
-	if ((ed->text = AG_TextNew(0)) == NULL)
-		AG_FatalError(NULL);
-
+	ed->text = AG_TextNew(0);
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
 	ed->sel = 0;
@@ -1880,7 +1884,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Editable *ed = obj;
 
@@ -1895,7 +1899,7 @@ Destroy(void *obj)
 
 /* Initialize/release the global clipboards. */
 static void
-InitClipboard(AG_EditableClipboard *cb)
+InitClipboard(AG_EditableClipboard *_Nonnull cb)
 {
 	AG_MutexInit(&cb->lock);
 	Strlcpy(cb->encoding, "UTF-8", sizeof(cb->encoding));
@@ -1903,7 +1907,7 @@ InitClipboard(AG_EditableClipboard *cb)
 	cb->len = 0;
 }
 static void
-FreeClipboard(AG_EditableClipboard *cb)
+FreeClipboard(AG_EditableClipboard *_Nonnull cb)
 {
 	Free(cb->s);
 	AG_MutexDestroy(&cb->lock);

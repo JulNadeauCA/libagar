@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,7 +94,7 @@ AG_BoxSetLabelS(AG_Box *box, const char *s)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Box *box = obj;
 
@@ -109,7 +109,7 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
@@ -124,7 +124,7 @@ Draw(void *obj)
 }
 
 static int
-CountChildWidgets(AG_Box *box, int *totFixed)
+CountChildWidgets(AG_Box *_Nonnull box, int *_Nonnull totFixed)
 {
 	AG_Widget *chld;
 	AG_SizeReq r;
@@ -154,7 +154,7 @@ CountChildWidgets(AG_Box *box, int *totFixed)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
@@ -195,7 +195,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
+SizeAllocateHomogenous(AG_Box *_Nonnull box, const AG_SizeAlloc *_Nonnull a,
+    int nWidgets)
 {
 	int wSize, totUsed = 0, avail;
 	AG_Widget *chld, *chldLast = NULL;
@@ -246,7 +247,7 @@ SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
@@ -395,14 +396,14 @@ AG_BoxSetVertAlign(AG_Box *box, enum ag_box_align align)
 
 #ifdef AG_DEBUG
 static void
-UpdateWindow(AG_Event *event)
+UpdateWindow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_WindowUpdate(win);
 }
 
 static void *
-Edit(void *obj)
+Edit(void *_Nonnull obj)
 {
 	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	AG_Box *box = obj;

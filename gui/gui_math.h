@@ -70,7 +70,7 @@
 #endif /* _AGAR_INTERNAL or _USE_AGAR_GUI_MATH */
 
 __BEGIN_DECLS
-static __inline__ int
+static __inline__ int _Const_Attribute
 AG_PowOf2i(int i)
 {
 	int val = 1;

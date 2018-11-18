@@ -36,26 +36,27 @@ extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
 extern int agIdleThresh, agScreenshotQuality, agMsgDelay;
 extern double agZoomValues[AG_ZOOM_RANGE];
 
-int        AG_InitGraphics(const char *);
-void       AG_DestroyGraphics(void);
-int        AG_InitGUI(Uint);
-void       AG_DestroyGUI(void);
-int        AG_InitGUIGlobals(void);
-void       AG_DestroyGUIGlobals(void);
-void       AG_QuitGUI(void);
-void       AG_ZoomIn(void);
-void       AG_ZoomOut(void);
-void       AG_ZoomReset(void);
+int   AG_InitGraphics(const char *_Nullable);
+void  AG_DestroyGraphics(void);
+int   AG_InitGUI(Uint);
+void  AG_DestroyGUI(void);
+int   AG_InitGUIGlobals(void);
+void  AG_DestroyGUIGlobals(void);
+void  AG_QuitGUI(void);
+void  AG_ZoomIn(void);
+void  AG_ZoomOut(void);
+void  AG_ZoomReset(void);
 #ifdef AG_DEBUG
-void      *AG_GuiDebugger(void *);
+void *_Nullable AG_GuiDebugger(void *_Nullable);
 #endif
 #ifdef HAVE_SDL
-int        AG_InitVideoSDL(void *, Uint);
-int        AG_SetVideoSurfaceSDL(void *);
+int   AG_InitVideoSDL(void *_Nonnull, Uint);
+int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 #endif
+
 #ifdef AG_LEGACY
-int        AG_InitVideo(int, int, int, Uint) DEPRECATED_ATTRIBUTE;
-void       AG_DestroyVideo(void) DEPRECATED_ATTRIBUTE;
+int  AG_InitVideo(int,int, int, Uint) DEPRECATED_ATTRIBUTE;
+void AG_DestroyVideo(void) DEPRECATED_ATTRIBUTE;
 #endif
 __END_DECLS
 

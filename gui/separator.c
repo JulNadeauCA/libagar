@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ AG_SpacerNew(void *parent, enum ag_separator_type type)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Separator *sep = obj;
 
@@ -77,7 +77,7 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Separator *sep = obj;
 
@@ -86,7 +86,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Separator *sep = obj;
 
@@ -98,7 +98,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Separator *sep = obj;
 	AG_Color c[2];
@@ -106,8 +106,8 @@ Draw(void *obj)
 	if (!sep->visible)
 		return;
 
-	c[0] = AG_ColorShift(WCOLOR(sep,0), agLowColorShift);
-	c[1] = AG_ColorShift(WCOLOR(sep,0), agHighColorShift);
+	c[0] = AG_ColorAdd(WCOLOR(sep,0), agLowColor);
+	c[1] = AG_ColorAdd(WCOLOR(sep,0), agHighColor);
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:

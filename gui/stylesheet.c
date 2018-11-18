@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	AG_Widget *tgt = obj;
 	AG_StyleSheet *css;
 	AG_DataSource *ds;
-	size_t fileSize;
+	AG_Size fileSize;
 	char *buf, *s, *line;
 	AG_StyleBlock *cssBlk = NULL;
 	int i;
@@ -201,7 +201,8 @@ fail_parse:
 
 /* Lookup a style sheet entry. */
 int
-AG_LookupStyleSheet(AG_StyleSheet *css, void *obj, const char *key, char **rv)
+AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
+    const char *_Nonnull key, char *_Nonnull *_Nonnull rv)
 {
 	AG_ObjectClass **hier;
 	AG_StyleBlock *blk;

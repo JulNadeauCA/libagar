@@ -5,7 +5,6 @@
 
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
-
 #include <agar/gui/begin.h>
 
 typedef struct ag_scrollview {
@@ -27,7 +26,8 @@ typedef struct ag_scrollview {
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
 	AG_Rect r;			/* Available space for widgets */
-	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
+	AG_Scrollbar *_Nullable hbar;	/* Horizontal scrollbar */
+	AG_Scrollbar *_Nullable vbar;	/* Vertical scrollbar */
 	int wBar, hBar;			/* Effective scrollbar sizes */
 	int incr;			/* Scrolling increment */
 } AG_Scrollview;
@@ -35,9 +35,9 @@ typedef struct ag_scrollview {
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollviewClass;
 
-AG_Scrollview *AG_ScrollviewNew(void *, Uint);
-void           AG_ScrollviewSizeHint(AG_Scrollview *, Uint, Uint);
-void           AG_ScrollviewSetIncrement(AG_Scrollview *, int);
+AG_Scrollview *_Nonnull AG_ScrollviewNew(void *_Nullable, Uint);
+void AG_ScrollviewSizeHint(AG_Scrollview *_Nonnull, Uint,Uint);
+void AG_ScrollviewSetIncrement(AG_Scrollview *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

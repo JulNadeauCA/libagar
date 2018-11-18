@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 struct ag_global_key {
 	AG_KeySym keysym;
 	AG_KeyMod keymod;
-	void (*fn)(void);
-	void (*fn_ev)(AG_Event *);
+	void (*_Nullable fn)(void);
+	void (*_Nullable fn_ev)(AG_Event *_Nonnull);
 	SLIST_ENTRY(ag_global_key) gkeys;
 };
 static SLIST_HEAD_(ag_global_key) agGlobalKeys;
@@ -165,7 +165,9 @@ AG_ExecGlobalKeys(AG_KeySym sym, AG_KeyMod mod)
 			if (gk->fn != NULL) {
 				gk->fn();
 			} else if (gk->fn_ev != NULL) {
-				gk->fn_ev(NULL);
+				AG_Event dummy;
+				AG_EventInit(&dummy);
+				gk->fn_ev(&dummy);
 			}
 			rv = 1;
 		}

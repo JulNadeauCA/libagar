@@ -9,10 +9,11 @@ struct ag_editable_buffer;
 
 struct ag_keycode {
 	AG_KeySym key;
-	const char *modFlags;
-	int (*func)(struct ag_editable *, struct ag_editable_buffer *buf,
-	            AG_KeySym ks, Uint mod, Uint32 ch);
-	const char *flags;
+	const char *_Nonnull modFlags;
+	int (*_Nonnull func)(struct ag_editable *_Nonnull,
+	                     struct ag_editable_buffer *_Nonnull,
+	                     AG_KeySym, Uint, Uint32);
+	const char *_Nonnull flags;
 };
 
 struct ag_key_composition {
@@ -28,13 +29,13 @@ struct ag_key_mapping {
 };
 
 __BEGIN_DECLS
-extern const struct ag_keycode		agKeymap[];
-extern const struct ag_key_mapping	agKeymapLATIN1[];
-extern const struct ag_key_composition  agCompositionMap[];
-extern const int                        agCompositionMapSize;
+extern const struct ag_keycode     agKeymap[];       /* AG_KeySym to Editable ops */
+extern const struct ag_key_mapping agKeymapLATIN1[]; /* Latin1 to AG_Keysym */
 
-Uint32 AG_ApplyModifiersASCII(Uint32, int);
-int    AG_KeyInputCompose(struct ag_editable *, Uint32, Uint32 *);
+extern const struct ag_key_composition agCompositionMap[]; /* Key compose map */
+extern const int                       agCompositionMapSize;
+
+int AG_KeyInputCompose(struct ag_editable *_Nonnull, Uint32, Uint32 *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

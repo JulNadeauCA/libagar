@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 static const struct {
 	AG_KeySym ks;
-	const char *name;
+	const char *_Nonnull name;
 } agKeyNameTbl[] = {
 	{ AG_KEY_NONE,		"None"		},
 	{ AG_KEY_BACKSPACE,	"BackSpace"	},
@@ -245,7 +245,7 @@ fail:
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Keyboard *kbd = obj;
 
@@ -258,11 +258,11 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Keyboard *kbd = obj;
 
-	Free(kbd->keyState);
+	free(kbd->keyState);
 }
 
 /*
@@ -337,7 +337,8 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks,
 
 /* Post a key-up event to widgets with the UNFOCUSED_KEYUP flag set. */
 static void
-PostUnfocusedKeyUp(AG_Widget *wid, AG_KeySym ks, Uint kmod, Uint32 unicode)
+PostUnfocusedKeyUp(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
+    Uint32 unicode)
 {
 	AG_Widget *cwid;
 
@@ -355,7 +356,8 @@ PostUnfocusedKeyUp(AG_Widget *wid, AG_KeySym ks, Uint kmod, Uint32 unicode)
 
 /* Post a key-down event to widgets with the UNFOCUSED_KEYDOWN flag set. */
 static void
-PostUnfocusedKeyDown(AG_Widget *wid, AG_KeySym ks, Uint kmod, Uint32 unicode)
+PostUnfocusedKeyDown(AG_Widget *_Nonnull wid, AG_KeySym ks, Uint kmod,
+    Uint32 unicode)
 {
 	AG_Widget *cwid;
 

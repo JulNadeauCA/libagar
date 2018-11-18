@@ -63,9 +63,7 @@
 #include <agar/gui/vbox.h>
 
 #include <agar/gui/load_surface.h>
-#include <agar/gui/load_color.h>
 
-/* Work around MacOS X retardation */
 #ifdef __APPLE__
 #include <agar/gui/sdl.h>
 #endif

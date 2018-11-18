@@ -4,7 +4,9 @@
 #define _AGAR_GUI_STYLESHEET_H_
 #include <agar/gui/begin.h>
 
-#define AG_STYLE_VALUE_MAX 128
+#ifndef AG_STYLE_VALUE_MAX
+#define AG_STYLE_VALUE_MAX (AG_MODEL*2)
+#endif
 
 typedef struct ag_style_entry {
 	char key[AG_VARIABLE_NAME_MAX];			/* Target parameter */
@@ -22,12 +24,12 @@ typedef struct ag_style_sheet {
 	AG_TAILQ_HEAD_(ag_style_block) blks;		/* By widget class */
 } AG_StyleSheet;
 
-/* Description of a built-in stylesheet. */
+/* Built-in Agar stylesheet */
 typedef struct ag_static_css {
-	const char *name;		/* Identifier */
-	Uint32 size;			/* Size in bytes */
-	const char **data;		/* CSS data */
-	AG_StyleSheet *css;		/* Initialized stylesheet */
+	const char *_Nonnull           name;	/* Identifier */
+	Uint32                         size;	/* Length (bytes) */
+	const char *_Nonnull *_Nonnull data;	/* Minified CSS */
+	AG_StyleSheet *_Nullable       css;	/* Initialized stylesheet */
 } AG_StaticCSS;
 
 __BEGIN_DECLS
@@ -35,10 +37,13 @@ extern AG_StyleSheet agDefaultCSS;
 
 extern AG_StaticCSS agStyleDefault;
 
-void           AG_InitStyleSheet(AG_StyleSheet *);
-void           AG_DestroyStyleSheet(AG_StyleSheet *);
-AG_StyleSheet *AG_LoadStyleSheet(void *, const char *);
-int            AG_LookupStyleSheet(AG_StyleSheet *, void *, const char *, char **);
+void                     AG_InitStyleSheet(AG_StyleSheet *_Nonnull);
+void                     AG_DestroyStyleSheet(AG_StyleSheet *_Nonnull);
+AG_StyleSheet *_Nullable AG_LoadStyleSheet(void *_Nullable, const char *_Nonnull);
+int                      AG_LookupStyleSheet(AG_StyleSheet *_Nonnull,
+                                             void *_Nonnull,
+					     const char *_Nonnull,
+					     char *_Nonnull *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

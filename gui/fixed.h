@@ -24,19 +24,14 @@ typedef struct ag_fixed {
 __BEGIN_DECLS
 extern AG_WidgetClass agFixedClass;
 
-AG_Fixed *AG_FixedNew(void *, Uint);
-void	  AG_FixedSizeHint(AG_Fixed *, int, int);
-#define	  AG_FixedPrescale AG_FixedSizeHint
+AG_Fixed *_Nonnull AG_FixedNew(void *_Nullable, Uint);
 
-void	  AG_FixedDrawBg(void *);
-void	  AG_FixedDrawBox(void *);
-void	  AG_FixedDrawInvBox(void *);
-void	  AG_FixedDrawFrame(void *);
-
-void	  AG_FixedPut(AG_Fixed *, void *, int, int);
-void	  AG_FixedDel(AG_Fixed *, void *);
-void	  AG_FixedSize(AG_Fixed *, void *, int, int);
-void	  AG_FixedMove(AG_Fixed *, void *, int, int);
+void    AG_FixedSizeHint(AG_Fixed *_Nonnull, int,int);
+#define AG_FixedPrescale(f,w,h) AG_FixedSizeHint((f),(w),(h))
+void    AG_FixedPut(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+void    AG_FixedDel(AG_Fixed *_Nonnull, void *_Nonnull);
+void    AG_FixedSize(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+void    AG_FixedMove(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
 __END_DECLS
 
 #include <agar/gui/close.h>

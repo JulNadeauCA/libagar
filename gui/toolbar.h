@@ -6,10 +6,11 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 #include <agar/gui/button.h>
-
 #include <agar/gui/begin.h>
 
-#define AG_TOOLBAR_MAX_ROWS	8
+#ifndef AG_TOOLBAR_MAX_ROWS
+#define AG_TOOLBAR_MAX_ROWS (AG_MODEL >> 3)
+#endif
 
 enum ag_toolbar_type {
 	AG_TOOLBAR_HORIZ,
@@ -17,9 +18,11 @@ enum ag_toolbar_type {
 };
 
 typedef struct ag_toolbar {
-	struct ag_box box;
-	struct ag_box *rows[AG_TOOLBAR_MAX_ROWS];
-	enum ag_toolbar_type type;
+	struct ag_box box;		/* AG_Box(3) -> AG_Toolbar */
+
+	struct ag_box *_Nonnull rows[AG_TOOLBAR_MAX_ROWS];
+
+	enum ag_toolbar_type type;	/* Horizontal or vertical */
 	int nRows;			/* Number of rows */
 	int nButtons;			/* Total number of buttons */
 	int curRow;			/* Current row index */
@@ -35,20 +38,26 @@ typedef struct ag_toolbar {
 __BEGIN_DECLS
 extern AG_WidgetClass agToolbarClass;
 
-AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, Uint);
-void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, Uint);
-void		 AG_ToolbarScale(void *, int, int);
-void	 	 AG_ToolbarRow(AG_Toolbar *, int);
-AG_Button	*AG_ToolbarButton(AG_Toolbar *, const char *, int,
-		                  void (*)(AG_Event *), const char *, ...);
-AG_Button	*AG_ToolbarButtonIcon(AG_Toolbar *, AG_Surface *, int,
-		                      void (*)(AG_Event *), const char *, ...);
-void	 	 AG_ToolbarSeparator(AG_Toolbar *);
-void		 AG_ToolbarSelect(AG_Toolbar *, AG_Button *);
-void		 AG_ToolbarDeselect(AG_Toolbar *, AG_Button *);
-void		 AG_ToolbarSelectOnly(AG_Toolbar *, AG_Button *);
-void		 AG_ToolbarSelectAll(AG_Toolbar *);
-void		 AG_ToolbarDeselectAll(AG_Toolbar *);
+AG_Toolbar *_Nonnull AG_ToolbarNew(void *_Nullable, enum ag_toolbar_type,
+                                   int, Uint);
+
+void AG_ToolbarRow(AG_Toolbar *_Nonnull, int);
+
+AG_Button *_Nonnull AG_ToolbarButton(AG_Toolbar *_Nonnull, const char *_Nullable,
+                                     int, void (*_Nonnull)(AG_Event *_Nonnull),
+			             const char *_Nullable, ...);
+
+AG_Button *_Nonnull AG_ToolbarButtonIcon(AG_Toolbar *_Nonnull,
+                                         const AG_Surface *_Nullable, int,
+					 void (*_Nonnull)(AG_Event *_Nonnull),
+					 const char *_Nullable, ...);
+
+void AG_ToolbarSeparator(AG_Toolbar *_Nonnull);
+void AG_ToolbarSelect(AG_Toolbar *_Nonnull, AG_Button *_Nonnull);
+void AG_ToolbarDeselect(AG_Toolbar *_Nonnull, AG_Button *_Nonnull);
+void AG_ToolbarSelectOnly(AG_Toolbar *_Nonnull, AG_Button *_Nonnull);
+void AG_ToolbarSelectAll(AG_Toolbar *_Nonnull);
+void AG_ToolbarDeselectAll(AG_Toolbar *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

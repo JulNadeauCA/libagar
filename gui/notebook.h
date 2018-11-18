@@ -8,7 +8,9 @@
 #include <agar/gui/text.h>
 #include <agar/gui/label.h>
 
-#define AG_NOTEBOOK_LABEL_MAX	64
+#ifndef AG_NOTEBOOK_LABEL_MAX
+#define AG_NOTEBOOK_LABEL_MAX AG_MODEL
+#endif
 
 #include <agar/gui/begin.h>
 
@@ -21,7 +23,7 @@ enum ag_notebook_tab_alignment {
 
 typedef struct ag_notebook_tab {
 	struct ag_box box;
-	AG_Label *lbl;				/* Optional text label */
+	AG_Label *_Nullable lbl;		/* Optional text label */
 	AG_TAILQ_ENTRY(ag_notebook_tab) tabs;
 } AG_NotebookTab;
 
@@ -36,9 +38,10 @@ typedef struct ag_notebook {
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int spacing, padding;		/* Spacing for tabs */
-	struct ag_notebook_tab *sel_tab;
-	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;
-	AG_Rect r;			/* View area */
+
+	struct ag_notebook_tab *_Nullable sel_tab;	/* Active tab */
+	AG_TAILQ_HEAD_(ag_notebook_tab) tabs;		/* All tabs */
+	AG_Rect r;					/* Display area */
 	Uint nTabs;
 } AG_Notebook;
 
@@ -46,17 +49,19 @@ __BEGIN_DECLS
 extern AG_WidgetClass agNotebookClass;
 extern AG_WidgetClass agNotebookTabClass;
 
-AG_Notebook *AG_NotebookNew(void *, Uint);
-void AG_NotebookSetPadding(AG_Notebook *, int);
-void AG_NotebookSetSpacing(AG_Notebook *, int);
-void AG_NotebookSetTabAlignment(AG_Notebook *, enum ag_notebook_tab_alignment);
-void AG_NotebookSetTabVisibility(AG_Notebook *, int);
+AG_Notebook *_Nonnull AG_NotebookNew(void *_Nullable, Uint);
 
-AG_NotebookTab *AG_NotebookAdd(AG_Notebook *, const char *, enum ag_box_type);
-void            AG_NotebookDel(AG_Notebook *, AG_NotebookTab *);
-void            AG_NotebookSelect(AG_Notebook *, AG_NotebookTab *);
+void AG_NotebookSetPadding(AG_Notebook *_Nonnull, int);
+void AG_NotebookSetSpacing(AG_Notebook *_Nonnull, int);
+void AG_NotebookSetTabAlignment(AG_Notebook *_Nonnull, enum ag_notebook_tab_alignment);
+void AG_NotebookSetTabVisibility(AG_Notebook *_Nonnull, int);
 
-
+AG_NotebookTab *_Nonnull AG_NotebookAdd(AG_Notebook *_Nonnull,
+                                        const char *_Nonnull, enum ag_box_type);
+void                     AG_NotebookSelect(AG_Notebook *_Nonnull,
+                                           AG_NotebookTab *_Nullable);
+void                     AG_NotebookDel(AG_Notebook *_Nonnull,
+                                        AG_NotebookTab *_Nonnull);
 #ifdef AG_LEGACY
 # define AG_NotebookSetTabFont		AG_SetFont
 # define AG_NotebookAddTab		AG_NotebookAdd

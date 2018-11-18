@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ fail:
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Mouse *ms = obj;
 
@@ -93,7 +93,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 	AG_CursorArea *ca;
 	AG_Rect r;
 
-	TAILQ_FOREACH(ca, &win->cursorAreas, cursorAreas) {
+	TAILQ_FOREACH(ca, &win->pvt.cursorAreas, cursorAreas) {
 		if (!(ca->wid->flags & AG_WIDGET_VISIBLE)) {
 			continue;
 		}
@@ -101,7 +101,7 @@ AG_MouseCursorUpdate(AG_Window *win, int x, int y)
 		r.y = ca->r.y + ca->wid->rView.y1;
 		r.w = ca->r.w;
 		r.h = ca->r.h;
-		if (AG_RectInside(&r, x,y))
+		if (AG_RectInside(r, x,y))
 			break;
 	}
 	if (ca == NULL) {
@@ -132,8 +132,10 @@ AG_MouseButtonUpdate(AG_Mouse *ms, AG_MouseButtonAction a, int which)
  * all widgets with USE_MOUSEOVER enabled.
  */
 static void
-PostMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y, int xRel,
-    int yRel, Uint state)
+PostMouseMotion(
+    AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid,
+    int x, int y, int xRel, int yRel, Uint state)
 {
 	AG_Widget *chld;
 
@@ -182,8 +184,10 @@ out:
  * either focused or have UNFOCUSED_BUTTONUP set. 
  */
 static void
-PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
-    AG_MouseButton button)
+PostMouseButtonUp(
+    AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid,
+    int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
 
@@ -211,8 +215,10 @@ PostMouseButtonUp(AG_Window *win, AG_Widget *wid, int x, int y,
  * widget which has a `mouse-button-down' handler defined).
  */
 static int
-PostMouseButtonDown(AG_Window *win, AG_Widget *wid, int x, int y,
-    AG_MouseButton button)
+PostMouseButtonDown(
+    AG_Window *_Nonnull _Restrict win,
+    AG_Widget *_Nonnull _Restrict wid,
+    int x, int y, AG_MouseButton button)
 {
 	AG_Widget *chld;
 	AG_Event *ev;

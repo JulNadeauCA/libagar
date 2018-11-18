@@ -5,7 +5,6 @@
 
 #include <agar/gui/widget.h>
 #include <agar/gui/text.h>
-
 #include <agar/gui/begin.h>
 
 struct ag_icon;
@@ -39,40 +38,46 @@ typedef struct ag_socket {
 		} circle;
 	} bgData;
 	enum ag_text_justify lblJustify; /* Label justification */
-	int lPad, rPad, tPad, bPad;	/* Padding around contained Icon */
-	struct ag_icon *icon;		/* Icon in socket or NULL */
+	int lPad, rPad, tPad, bPad;	 /* Padding around contained Icon */
+	struct ag_icon *_Nullable icon;	 /* Icon in socket if any */
 
-	/* Callbacks */
-	int (*insertFn)(struct ag_socket *, struct ag_icon *);
-	void (*removeFn)(struct ag_socket *, struct ag_icon *);
-	AG_Event *overlayFn;
+	/* Icon inserted callback */
+	int  (*_Nullable insertFn)(struct ag_socket *_Nonnull,
+	                           struct ag_icon   *_Nonnull);
+	/* Icon removed callback */
+	void (*_Nullable removeFn)(struct ag_socket *_Nonnull,
+	                           struct ag_icon   *_Nonnull);
+
+	AG_Event *_Nullable overlayFn;	/* Rendering overlay callback */
 } AG_Socket;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSocketClass;
 
-AG_Socket *AG_SocketNew(void *, Uint);
-AG_Socket *AG_SocketFromBMP(void *, Uint, const char *);
-AG_Socket *AG_SocketFromSurface(void *, Uint, AG_Surface *);
-void	   AG_SocketInsertFn(AG_Socket *,
-	                     int (*)(AG_Socket *, struct ag_icon *));
-void	   AG_SocketRemoveFn(AG_Socket *,
-	                     void (*)(AG_Socket *, struct ag_icon *));
-void       AG_SocketOverlayFn(AG_Socket *, AG_EventFn, const char *, ...);
+AG_Socket *_Nonnull AG_SocketNew(void *_Nullable, Uint);
+AG_Socket *_Nonnull AG_SocketFromBMP(void *_Nullable, Uint, const char *_Nonnull);
+AG_Socket *_Nonnull AG_SocketFromSurface(void *_Nullable, Uint,
+                                         AG_Surface *_Nullable);
+void AG_SocketInsertFn(AG_Socket *_Nonnull,
+                       int (*_Nullable)(AG_Socket *_Nonnull, struct ag_icon *_Nonnull));
+void AG_SocketRemoveFn(AG_Socket *_Nonnull,
+                       void (*_Nullable)(AG_Socket *_Nonnull, struct ag_icon *_Nonnull));
+void AG_SocketOverlayFn(AG_Socket *_Nonnull,
+                        _Nullable AG_EventFn, const char *_Nullable, ...);
 
-void	   AG_SocketSetPadding(AG_Socket *, int, int, int, int);
+void    AG_SocketSetPadding(AG_Socket *_Nonnull, int,int,int,int);
 #define	AG_SocketSetPaddingLeft(b,v)   AG_SocketSetPadding((b),(v),-1,-1,-1)
 #define	AG_SocketSetPaddingRight(b,v)  AG_SocketSetPadding((b),-1,(v),-1,-1)
 #define AG_SocketSetPaddingTop(b,v)    AG_SocketSetPadding((b),-1,-1,(v),-1)
 #define	AG_SocketSetPaddingBottom(b,v) AG_SocketSetPadding((b),-1,-1,-1,(v))
 
-void AG_SocketBgRect(AG_Socket *, Uint, Uint);
-void AG_SocketBgCircle(AG_Socket *, Uint);
-void AG_SocketBgPixmap(AG_Socket *, AG_Surface *);
-void AG_SocketBgPixmapNODUP(AG_Socket *, AG_Surface *);
+void AG_SocketBgRect(AG_Socket *_Nonnull, Uint,Uint);
+void AG_SocketBgCircle(AG_Socket *_Nonnull, Uint);
+void AG_SocketBgPixmap(AG_Socket *_Nonnull, AG_Surface *_Nullable);
+void AG_SocketBgPixmapNODUP(AG_Socket *_Nonnull, AG_Surface *_Nullable);
 
-void AG_SocketInsertIcon(AG_Socket *, struct ag_icon *);
-void AG_SocketRemoveIcon(AG_Socket *);
+void AG_SocketInsertIcon(AG_Socket *_Nonnull, struct ag_icon *_Nonnull);
+void AG_SocketRemoveIcon(AG_Socket *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

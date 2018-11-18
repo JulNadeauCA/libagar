@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,8 +50,8 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 	dst = icon->s->pixels;
 	for (y = 0; y < icon->h; y++) {
 		for (x = 0; x < icon->w; x++) {
-			AG_SurfacePutPixel(icon->s, dst, *src);
-			dst += icon->s->format->BytesPerPixel;
+			AG_SurfacePut32_At(icon->s, dst, *src);
+			dst += icon->s->format.BytesPerPixel;
 			src++;
 		}
 	}

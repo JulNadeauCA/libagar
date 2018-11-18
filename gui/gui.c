@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -86,8 +86,8 @@
 #include <agar/gui/text.h>
 
 static struct {
-	const char *key;
-	int *p;
+	const char *_Nonnull key;
+	int        *_Nonnull p;
 } agGUIOptions[] = {
 	{ "ag_kbd_delay",		&agKbdDelay		},
 	{ "ag_kbd_repeat",		&agKbdRepeat		},
@@ -180,8 +180,8 @@ int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
 int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
-int agMouseScrollDelay = 100;		/* Scrollbar increment delay */
-int agMouseScrollIval = 50;		/* Scrollbar increment interval */
+int agMouseScrollDelay = 200;		/* Scrollbar increment delay */
+int agMouseScrollIval = 1;		/* Scrollbar increment interval */
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextCache = 1;			/* Dynamic text caching */
@@ -212,8 +212,6 @@ AG_InitGUIGlobals(void)
 	if (initedGlobals++ > 0) {
 		return (0);
 	}
-	agGUI = 1;
-	
 	for (cl = &agStdClasses[0]; *cl != NULL; cl++)
 		AG_RegisterClass(*cl);
 	for (i = 0; i < agDriverListSize; i++)
@@ -222,7 +220,11 @@ AG_InitGUIGlobals(void)
 	AG_InitGlobalKeys();
 	AG_EditableInitClipboards();
 
-	agSurfaceFmt = AG_PixelFormatRGBA(32,
+	if ((agSurfaceFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
+		return (-1);
+	}
+	AG_PixelFormatRGBA(agSurfaceFmt,
+	    32,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
 #else
@@ -230,7 +232,9 @@ AG_InitGUIGlobals(void)
 #endif
 	);
 	
+	agGUI = 1;
 	agRenderingContext = 0;
+
 	AG_ObjectInitStatic(&agDrivers, &agObjectClass);
 	AG_ObjectSetName(&agDrivers, "agDrivers");
 	AG_ObjectInitStatic(&agInputDevices, &agObjectClass);
@@ -269,7 +273,10 @@ AG_DestroyGUIGlobals(void)
 	AG_ObjectDestroy(&agDrivers);
 #endif
 
-	AG_PixelFormatFree(agSurfaceFmt); agSurfaceFmt = NULL;
+	AG_PixelFormatFree(agSurfaceFmt);
+	free(agSurfaceFmt);
+	agSurfaceFmt = NULL;
+
 	AG_EditableDestroyClipboards();
 	AG_DestroyGlobalKeys();
 	
@@ -386,7 +393,6 @@ AG_InitGraphics(const char *spec)
 	AG_Driver *drv = NULL;
 	AG_DriverClass *dc = NULL;
 	int i;
-	size_t len;
 	
 	if (AG_InitGUIGlobals() == -1)
 		return (-1);
@@ -435,6 +441,8 @@ AG_InitGraphics(const char *spec)
 			 */
 			while ((tok = AG_Strsep(&s, ",;")) != NULL) {
 				for (i = 0; i < agDriverListSize; i++) {
+					size_t len;
+
 					dc = agDriverList[i];
 					len = strlen(dc->name);
 					if (strncmp(dc->name, tok, len) == 0 &&

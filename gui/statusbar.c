@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ AG_StatusbarNew(void *parent, Uint flags)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Statusbar *sbar = obj;
 	AG_Box *box = obj;
@@ -53,7 +53,7 @@ Init(void *obj)
 	AG_BoxSetPadding(box, 2);
 	AG_BoxSetSpacing(box, 1);
 	sbar->flags = 0;
-	sbar->nlabels = 0;
+	sbar->nLabels = 0;
 }
 
 AG_Label *
@@ -64,11 +64,11 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, const char *fmt, ...)
 
 	AG_ObjectLock(sbar);
 #ifdef AG_DEBUG
-	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
+	if (sbar->nLabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		AG_FatalError("AG_StatusbarAddLabel: Too many labels");
 #endif
-	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label));
-	lab = sbar->labels[sbar->nlabels];
+	sbar->labels[sbar->nLabels] = Malloc(sizeof(AG_Label));
+	lab = sbar->labels[sbar->nLabels];
 
 	AG_ObjectInit(lab, &agLabelClass);
 	lab->type = AG_LABEL_STATIC;
@@ -78,7 +78,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, const char *fmt, ...)
 	AG_ExpandHoriz(lab);
 
 	AG_ObjectAttach(&sbar->box, lab);
-	lab = sbar->labels[sbar->nlabels++];
+	lab = sbar->labels[sbar->nLabels++];
 	AG_ObjectUnlock(sbar);
 	AG_Redraw(sbar);
 	return (lab);

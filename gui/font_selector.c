@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -122,7 +122,7 @@ OnShow(AG_Event *event)
 	AG_Variable *bFont;
 	AG_Font **pFont;
 	AG_FontSelector *fs = AG_SELF();
-	char fontPath[AG_SEARCHPATH_MAX], *pFontPath = &fontPath[0];
+	char fontPath[AG_PATHNAME_MAX], *pFontPath = &fontPath[0];
 	AG_TlistItem *ti;
 	char *s;
 	int i;

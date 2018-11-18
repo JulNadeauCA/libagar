@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,9 @@
 
 #include <stdarg.h>
 
-static int  GetState(AG_Button *, AG_Variable *, void *);
-static void SetState(AG_Button *, AG_Variable *, void *, int);
+static int  GetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull);
+static void SetState(AG_Button *_Nonnull, AG_Variable *_Nonnull, void *_Nonnull,
+                     int);
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
@@ -49,7 +50,7 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 		s = NULL;
 	}
 	bu = AG_ButtonNewS(parent, flags, s);
-	Free(s);
+	free(s);
 	return (bu);
 }
 
@@ -159,7 +160,7 @@ AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
 
 /* Delay/repeat timer callbacks for AG_BUTTON_REPEAT */
 static Uint32
-ExpireRepeat(AG_Timer *to, AG_Event *event)
+ExpireRepeat(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 
@@ -167,7 +168,7 @@ ExpireRepeat(AG_Timer *to, AG_Event *event)
 	return (to->ival);
 }
 static Uint32
-ExpireDelay(AG_Timer *to, AG_Event *event)
+ExpireDelay(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	int repeatIval = AG_INT(1);
@@ -177,7 +178,7 @@ ExpireDelay(AG_Timer *to, AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
@@ -208,7 +209,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
@@ -244,7 +245,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_Variable *binding;
@@ -266,7 +267,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_Variable *binding;
@@ -296,7 +297,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_Variable *binding;
@@ -324,7 +325,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 
@@ -333,7 +334,7 @@ OnShow(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Button *bu = obj;
 
@@ -368,7 +369,7 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_Button *bu = p;
 	AG_SizeReq rLbl;
@@ -389,7 +390,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Button *bu = p;
 	AG_SizeAlloc aLbl;
@@ -408,7 +409,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static int
-GetState(AG_Button *bu, AG_Variable *binding, void *p)
+GetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
+    void *_Nonnull p)
 {
 	int v;
 
@@ -448,7 +450,8 @@ GetState(AG_Button *bu, AG_Variable *binding, void *p)
 }
 
 static void
-SetState(AG_Button *bu, AG_Variable *binding, void *p, int v)
+SetState(AG_Button *_Nonnull bu, AG_Variable *_Nonnull binding,
+    void *_Nonnull p, int v)
 {
 	switch (AG_VARIABLE_TYPE(binding)) {
 	case AG_VARIABLE_INT:
@@ -482,7 +485,7 @@ SetState(AG_Button *bu, AG_Variable *binding, void *p, int v)
 }
 
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	AG_Button *bu = p;
 	AG_Variable *binding;

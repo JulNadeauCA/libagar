@@ -9,19 +9,17 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_CONSOLE_LINE_MAX	1024
-
 struct ag_console;
 struct ag_popup_menu;
 
 typedef struct ag_console_line {
-	char *text;			/* Line text */
-	size_t len;			/* Length not including NUL */
-	int surface[2];			/* Cached surface handle (or -1) */
-	int icon;			/* Icon to display */
-	AG_Color cAlt;			/* Alternate text color */
-	void *p;			/* User pointer */
-	struct ag_console *cons;	/* Back pointer to Console */
+	char *_Nonnull text;			/* Line text */
+	AG_Size len;				/* Length not including NUL */
+	int surface[2];				/* Cached surface handle (or -1) */
+	int icon;				/* Icon to display */
+	AG_Color cAlt;				/* Alternate text color */
+	void *_Nullable p;			/* User pointer */
+	struct ag_console *_Nonnull cons;	/* Back pointer to console */
 } AG_ConsoleLine;
 
 typedef struct ag_console {
@@ -35,34 +33,40 @@ typedef struct ag_console {
 #define AG_CONSOLE_SELECTING	0x10	/* Selection in progress */
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
-	AG_ConsoleLine **lines;		/* Lines in buffer */
-	Uint nLines;			/* Line count */
+
+	AG_ConsoleLine *_Nullable *_Nonnull lines; /* Lines in buffer */
+	Uint            nLines;			   /* Line count */
+
 	Uint rOffs;			/* Row display offset */
-	AG_Scrollbar *vBar;		/* Scrollbar */
+	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */
 	AG_Rect r;			/* View area */
 	Uint rVisible;			/* Visible line count */
-	Uint *scrollTo;			/* Scrolling request */
+	Uint *_Nullable scrollTo;	/* Scrolling request */
 	int pos, sel;			/* Position and selection */
-	struct ag_popup_menu *pm;
+	struct ag_popup_menu *_Nullable pm; /* Active popup menu */
 } AG_Console;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agConsoleClass;
 
-AG_Console     *AG_ConsoleNew(void *, Uint);
-void		AG_ConsoleSetPadding(AG_Console *, int);
-void            AG_ConsoleSetFont(AG_Console *, AG_Font *);
-AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
-AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
-                              FORMAT_ATTRIBUTE(printf, 2, 3)
-                              NONNULL_ATTRIBUTE(2);
-AG_ConsoleLine *AG_ConsoleMsgS(AG_Console *, const char *);
-void            AG_ConsoleMsgEdit(AG_ConsoleLine *, const char *);
-void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
-void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
-void            AG_ConsoleMsgColor(AG_ConsoleLine *, const AG_Color *);
-void		AG_ConsoleClear(AG_Console *);
-char           *AG_ConsoleExportText(AG_Console *, int);
+AG_Console *_Nonnull AG_ConsoleNew(void *_Nullable, Uint);
+
+AG_ConsoleLine *_Nullable AG_ConsoleAppendLine(AG_Console *_Nonnull,
+                                               const char *_Nullable);
+AG_ConsoleLine *_Nullable AG_ConsoleMsgS(AG_Console *_Nullable,
+                                         const char *_Nonnull);
+AG_ConsoleLine *_Nullable AG_ConsoleMsg(AG_Console *_Nullable,
+                                        const char *_Nonnull, ...)
+                                       FORMAT_ATTRIBUTE(printf,2,3);
+
+void    AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
+void    AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
+void    AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
+void    AG_ConsoleMsgIcon(AG_ConsoleLine *_Nonnull, int);
+void    AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, AG_Color);
+void    AG_ConsoleClear(AG_Console *_Nonnull);
+
+char *_Nullable AG_ConsoleExportText(AG_Console *_Nonnull, int);
 
 #ifdef AG_LEGACY
 # define AG_ConsoleSetFont(cons,font) AG_SetFont((cons),(font))

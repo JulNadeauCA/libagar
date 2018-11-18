@@ -14,29 +14,33 @@
 
 typedef struct ag_mspinbutton {
 	struct ag_widget wid;
-	const char *sep;			/* x/y value separator */
-	int xvalue, yvalue;			/* Default x/y bindings */
+	const char *_Nonnull sep;		/* X,Y value separator */
+	int xvalue, yvalue;			/* Default X,Y bindings */
 	int min, max;				/* Default range bindings */
 	int inc;				/* Increment for buttons */
 	int writeable;				/* 0 = read-only */
 	char inTxt[64];				/* Input text buffer */
-	AG_Textbox *input;
-	AG_Button *xincbu, *xdecbu;
-	AG_Button *yincbu, *ydecbu;
+	AG_Textbox *_Nonnull input;		/* Input field */
+	AG_Button *_Nonnull xincbu;		/* X-increment button */
+	AG_Button *_Nonnull xdecbu;		/* X-decrement button */
+	AG_Button *_Nonnull yincbu;		/* Y-increment button */
+	AG_Button *_Nonnull ydecbu;		/* Y-decrement button */
 } AG_MSpinbutton;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMSpinbuttonClass;
 
-AG_MSpinbutton *AG_MSpinbuttonNew(void *, Uint, const char *, const char *);
+AG_MSpinbutton *_Nonnull AG_MSpinbuttonNew(void *_Nullable, Uint,
+                                           const char *_Nonnull,
+					   const char *_Nullable);
 
-void	AG_MSpinbuttonAddValue(AG_MSpinbutton *, const char *, int);
-void	AG_MSpinbuttonSetValue(AG_MSpinbutton *, const char *, ...);
-void	AG_MSpinbuttonSetMin(AG_MSpinbutton *, int);
-void	AG_MSpinbuttonSetMax(AG_MSpinbutton *, int);
-void	AG_MSpinbuttonSetRange(AG_MSpinbutton *, int, int);
-void	AG_MSpinbuttonSetIncrement(AG_MSpinbutton *, int);
-void	AG_MSpinbuttonSetWriteable(AG_MSpinbutton *, int);
+void AG_MSpinbuttonAddValue(AG_MSpinbutton *_Nonnull, const char *_Nonnull, int);
+void AG_MSpinbuttonSetValue(AG_MSpinbutton *_Nonnull, const char *_Nonnull, ...);
+void AG_MSpinbuttonSetMin(AG_MSpinbutton *_Nonnull, int);
+void AG_MSpinbuttonSetMax(AG_MSpinbutton *_Nonnull, int);
+void AG_MSpinbuttonSetRange(AG_MSpinbutton *_Nonnull, int,int);
+void AG_MSpinbuttonSetIncrement(AG_MSpinbutton *_Nonnull, int);
+void AG_MSpinbuttonSetWriteable(AG_MSpinbutton *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

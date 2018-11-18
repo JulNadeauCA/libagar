@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2010-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,32 +33,40 @@
 #endif
 
 /* Evaluate if path is a filesystem root. */
+#if !defined(_WIN32)
 static __inline__ int
-AG_PathIsFilesystemRoot(const char *path)
+AG_PathIsFilesystemRoot(const char *_Nonnull path)
 {
-#ifdef _WIN32
+	return (path[0] == AG_PATHSEPCHAR && path[1] == '\0');
+}
+#else
+static __inline__ int
+AG_PathIsFilesystemRoot(const char *_Nonnull path)
+{
 	return isalpha(path[0]) && path[1] == ':' &&
 	       (path[2] == '\0' || (path[2] == '\\' && path[3] == '\0'));
-#else
-	return (path[0] == AG_PATHSEPCHAR && path[1] == '\0');
-#endif
 }
+#endif /* _WIN32 */
 
 /* Evaluate if path is absolute. */
+#if !defined(_WIN32)
 static __inline__ int
-AG_PathIsAbsolute(const char *path)
+AG_PathIsAbsolute(const char *_Nonnull path)
 {
-#ifdef _WIN32
+	return (path[0] == AG_PATHSEPCHAR);
+}
+#else
+static __inline__ int
+AG_PathIsAbsolute(const char *_Nonnull path)
+{
 	return isalpha(path[0]) && path[1] == ':' &&
 	       (path[2] == '\0' || path[2] == '\\');
-#else
-	return (path[0] == AG_PATHSEPCHAR);
-#endif
-}
+} 
+#endif /* _WIN32 */
 
 /* Compare two file names. */
 static int
-AG_FilenameCompare(const void *p1, const void *p2)
+AG_FilenameCompare(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const char *s1 = *(const void **)p1;
 	const char *s2 = *(const void **)p2;
@@ -68,7 +76,7 @@ AG_FilenameCompare(const void *p1, const void *p2)
 
 /* Preprocess a user-specified path or filename. */
 static int
-ProcessFilename(char *file, size_t len)
+ProcessFilename(char *_Nonnull file, AG_Size len)
 {
 	char *end = &file[strlen(file)-1];
 	char *s;

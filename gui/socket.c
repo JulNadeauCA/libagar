@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,7 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 	AG_Surface *bmp;
 	
 	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
-		return (NULL);
+		AG_FatalError(NULL);
 	}
 	sock = AG_SocketNew(parent, flags);
 	AG_SocketBgPixmapNODUP(sock, bmp);
@@ -134,8 +134,12 @@ void
 AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sock);
-	sock->overlayFn = AG_SetVoidFn(sock, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
+	if (fn != NULL) {
+		sock->overlayFn = AG_SetVoidFn(sock, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
+	} else {
+		sock->overlayFn = NULL;
+	}
 	AG_ObjectUnlock(sock);
 }
 
@@ -516,7 +520,7 @@ void
 AG_SocketBgCircle(AG_Socket *sock, Uint r)
 {
 	AG_ObjectLock(sock);
-	sock->bgType = AG_SOCKET_RECT;
+	sock->bgType = AG_SOCKET_CIRCLE;
 	sock->bgData.circle.r = r;
 	AG_ObjectUnlock(sock);
 	AG_Redraw(sock);

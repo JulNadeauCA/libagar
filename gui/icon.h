@@ -23,8 +23,8 @@ typedef struct ag_icon {
 	char labelTxt[AG_LABEL_MAX];	/* Optional text label */
 	int  labelSurface;		/* Optional label surface */
 	int  labelPad;			/* Icon-label spacing */
-	struct ag_window *wDND;		/* For drag/drop */
-	struct ag_socket *sock;		/* Back pointer to socket */
+	struct ag_window *_Nullable wDND; /* Drag/drop window object */
+	struct ag_socket *_Nullable sock; /* Back pointer to socket */
 	int xSaved, ySaved;		/* Saved coordinates */
 	int wSaved, hSaved;		/* Saved geometry */
 	AG_Color cBackground;		/* Background fill color */
@@ -34,16 +34,16 @@ typedef struct ag_icon {
 __BEGIN_DECLS
 extern AG_WidgetClass agIconClass;
 
-AG_Icon *AG_IconNew(void *, Uint);
-AG_Icon *AG_IconFromSurface(AG_Surface *);
-AG_Icon *AG_IconFromBMP(const char *);
-void	 AG_IconSetSurface(AG_Icon *, AG_Surface *);
-void	 AG_IconSetSurfaceNODUP(AG_Icon *, AG_Surface *);
-void	 AG_IconSetText(AG_Icon *, const char *, ...)
-	     FORMAT_ATTRIBUTE(printf, 2, 3)
-	     NONNULL_ATTRIBUTE(2);
-void	 AG_IconSetTextS(AG_Icon *, const char *);
-void	 AG_IconSetBackgroundFill(AG_Icon *, int, AG_Color);
+AG_Icon *_Nonnull  AG_IconNew(void *_Nullable, Uint);
+AG_Icon *_Nonnull  AG_IconFromSurface(AG_Surface *_Nonnull);
+AG_Icon *_Nullable AG_IconFromBMP(const char *_Nonnull);
+
+void AG_IconSetSurface(AG_Icon *_Nonnull, AG_Surface *_Nullable);
+void AG_IconSetSurfaceNODUP(AG_Icon *_Nonnull, AG_Surface *_Nonnull);
+void AG_IconSetTextS(AG_Icon *_Nonnull, const char *_Nullable);
+void AG_IconSetText(AG_Icon *_Nonnull, const char *_Nonnull, ...)
+                   FORMAT_ATTRIBUTE(printf,2,3);
+void AG_IconSetBackgroundFill(AG_Icon *_Nonnull, int, AG_Color);
 __END_DECLS
 
 #include <agar/gui/close.h>

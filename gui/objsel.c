@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,6 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	os->flags |= flags;
 	os->pobj = pobj;
 	os->root = root;
-	
 
 	va_start(ap, fmt);
 	Vsnprintf(label, sizeof(label), fmt, ap);

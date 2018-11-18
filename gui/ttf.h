@@ -29,7 +29,7 @@ typedef struct ag_ttf_glyph {
 } AG_TTFGlyph;
 
 typedef struct ag_ttf_font {
-	FT_Face	face;
+	_Nonnull FT_Face face;
 	int height;
 	int ascent;
 	int descent;
@@ -40,8 +40,8 @@ typedef struct ag_ttf_font {
 	int underline_offset;
 	int underline_height;
 
-	AG_TTFGlyph *current;
-	AG_TTFGlyph cache[256];	/* Transform cache */
+	AG_TTFGlyph *_Nonnull current;
+	AG_TTFGlyph cache[256];		/* Transform cache */
 	AG_TTFGlyph scratch;
 	
 	int font_size_family;		/* For non-scalable formats */
@@ -57,9 +57,9 @@ struct ag_font;
 
 int  AG_TTFInit(void);
 void AG_TTFDestroy(void);
-int  AG_TTFOpenFont(struct ag_font *);
-void AG_TTFCloseFont(struct ag_font *);
-int  AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
+int  AG_TTFOpenFont(struct ag_font *_Nonnull);
+void AG_TTFCloseFont(struct ag_font *_Nonnull);
+int  AG_TTFFindGlyph(AG_TTFFont *_Nonnull, Uint32, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

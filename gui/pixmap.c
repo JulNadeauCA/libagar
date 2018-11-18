@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -103,7 +103,7 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 	
 	AG_ObjectAttach(parent, px);
 	if (su != NULL) {
-		if (AG_ScaleSurface(su, w, h, &suScaled) == -1) {
+		if ((suScaled = AG_SurfaceScale(su, w,h, 0)) == NULL) {
 			AG_FatalError(NULL);
 		}
 		AG_WidgetMapSurface(px, suScaled);
@@ -121,8 +121,7 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 	const char *ext;
 
 	if ((ext = strrchr(file, '.')) == NULL) {
-		AG_SetError("Invalid filename");
-		return (NULL);
+		AG_FatalError("Invalid filename");
 	}
 	if (Strcasecmp(ext, ".bmp") == 0) {
 		su = AG_SurfaceFromBMP(file);
@@ -131,9 +130,12 @@ AG_PixmapFromFile(void *parent, Uint flags, const char *file)
 	} else if (Strcasecmp(ext, ".jpg") == 0 || Strcasecmp(ext, ".jpeg") == 0) {
 		su = AG_SurfaceFromJPEG(file);
 	} else {
-		AG_SetError("Unknown image extension: %s", ext);
-		return (NULL);
+		AG_SetError("Unrecognized image extension: %s", ext);
+		su = NULL;
 	}
+	if (su == NULL)
+		AG_FatalError(NULL);
+
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
@@ -173,9 +175,7 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 #endif
 	);
 	if (su == NULL) {
-		AG_SetError("Allocating texture: %s", AG_GetError());
-		glBindTexture(GL_TEXTURE_2D, 0);
-		return (NULL);
+		AG_FatalError(NULL);
 	}
 	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE,
 	    su->pixels);
@@ -235,7 +235,7 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *suOrig,
 	AG_Surface *suScaled = NULL;
 	int name;
 	
-	if (AG_ScaleSurface(suOrig, w, h, &suScaled) == -1)
+	if ((suScaled = AG_SurfaceScale(suOrig, w,h, 0)) == NULL)
 		return (-1);
 
 	AG_ObjectLock(px);
@@ -325,19 +325,19 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 static void
 UpdateScaled(AG_Pixmap *px)
 {
-	AG_Surface *scaled = NULL;
+	AG_Surface *sOrig, *sScaled;
 
 	if (px->n < 0 || WIDTH(px) == 0 || HEIGHT(px) == 0) {
 		goto fail;
 	}
-	if (AG_ScaleSurface(WSURFACE(px,px->n), WIDTH(px), HEIGHT(px), &scaled)
-	    == -1) {
+	sOrig = WSURFACE(px, px->n);
+	if ((sScaled = AG_SurfaceScale(sOrig, WIDTH(px),HEIGHT(px), 0)) == NULL) {
 		goto fail;
 	}
 	if (px->sScaled == -1) {
-		px->sScaled = AG_WidgetMapSurface(px, scaled);
+		px->sScaled = AG_WidgetMapSurface(px, sScaled);
 	} else {
-		AG_WidgetReplaceSurface(px, px->sScaled, scaled);
+		AG_WidgetReplaceSurface(px, px->sScaled, sScaled);
 	}
 	return;
 fail:
@@ -367,19 +367,6 @@ Draw(void *obj)
 		AG_PopClipRect(px);
 	}
 }
-
-#ifdef AG_LEGACY
-AG_Pixmap *
-AG_PixmapFromBMP(void *parent, Uint flags, const char *file)
-{
-	return AG_PixmapFromFile(parent, flags, file);
-}
-int
-AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
-{
-	return AG_PixmapAddSurfaceFromFile(px, path);
-}
-#endif /* AG_LEGACY */
 
 AG_WidgetClass agPixmapClass = {
 	{

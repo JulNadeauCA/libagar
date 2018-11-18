@@ -74,58 +74,58 @@
 #define AG_WidgetHiddenRecursive	AG_WidgetHideAll
 
 __BEGIN_DECLS
-AG_Variable *AG_WidgetBind(void *, const char *, AG_VariableType, ...)
+AG_Variable *_Nullable AG_WidgetBind(void *_Nonnull, const char *_Nonnull, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;
-AG_Variable *AG_WidgetBindMp(void *, const char *, AG_Mutex *, AG_VariableType, ...)
+AG_Variable *_Nullable AG_WidgetBindMp(void *_Nonnull, const char *_Nonnull, _Nonnull AG_Mutex *_Nonnull, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;
-int AG_WidgetCopyBinding(void *, const char *, AG_Variable *)
+int AG_WidgetCopyBinding(void *_Nonnull, const char *_Nonnull, AG_Variable *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-size_t AG_WidgetCopyString(void *, const char *, char *, size_t)
+size_t AG_WidgetCopyString(void *_Nonnull, const char *_Nonnull, char *_Nonnull, size_t)
     DEPRECATED_ATTRIBUTE;
-int AG_WidgetInt(void *, const char *)
+int AG_WidgetInt(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Uint AG_WidgetUint(void *, const char *)
+Uint AG_WidgetUint(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Uint8 AG_WidgetUint8(void *, const char *)
+Uint8 AG_WidgetUint8(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Sint8 AG_WidgetSint8(void *, const char *)
+Sint8 AG_WidgetSint8(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Uint16 AG_WidgetUint16(void *, const char *)
+Uint16 AG_WidgetUint16(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Sint16 AG_WidgetSint16(void *, const char *)
+Sint16 AG_WidgetSint16(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Uint32 AG_WidgetUint32(void *, const char *)
+Uint32 AG_WidgetUint32(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-Sint32 AG_WidgetSint32(void *, const char *)
+Sint32 AG_WidgetSint32(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-float AG_WidgetFloat(void *, const char *)
+float AG_WidgetFloat(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-double AG_WidgetDouble(void *, const char *)
+double AG_WidgetDouble(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-char *AG_WidgetString(void *, const char *)
+char *_Nonnull AG_WidgetString(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-void *AG_WidgetPointer(void *, const char *)
+void *_Nullable AG_WidgetPointer(void *_Nonnull, const char *_Nonnull)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetInt(void *, const char *, int)
+void AG_WidgetSetInt(void *_Nonnull, const char *_Nonnull, int)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetUint(void *, const char *, Uint)
+void AG_WidgetSetUint(void *_Nonnull, const char *_Nonnull, Uint)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetUint8(void *, const char *, Uint8)
+void AG_WidgetSetUint8(void *_Nonnull, const char *_Nonnull, Uint8)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetSint8(void *, const char *, Sint8)
+void AG_WidgetSetSint8(void *_Nonnull, const char *_Nonnull, Sint8)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetUint16(void *, const char *, Uint16)
+void AG_WidgetSetUint16(void *_Nonnull, const char *_Nonnull, Uint16)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetSint16(void *, const char *, Sint16)
+void AG_WidgetSetSint16(void *_Nonnull, const char *_Nonnull, Sint16)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetUint32(void *, const char *, Uint32)
+void AG_WidgetSetUint32(void *_Nonnull, const char *_Nonnull, Uint32)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetSint32(void *, const char *, Sint32)
+void AG_WidgetSetSint32(void *_Nonnull, const char *_Nonnull, Sint32)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetFloat(void *, const char *, float)
+void AG_WidgetSetFloat(void *_Nonnull, const char *_Nonnull, float)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetDouble(void *, const char *, double)
+void AG_WidgetSetDouble(void *_Nonnull, const char *_Nonnull, double)
     DEPRECATED_ATTRIBUTE;
-void AG_WidgetSetPointer(void *, const char *, void *)
+void AG_WidgetSetPointer(void *_Nonnull, const char *_Nonnull, void *_Nullable)
     DEPRECATED_ATTRIBUTE;
 __END_DECLS

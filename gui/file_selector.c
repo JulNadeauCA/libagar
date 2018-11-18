@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ AG_FileSelectorNew(void *parent, Uint flags, const char *label)
 }
 
 static void
-Collapse(AG_FileSelector *fs)
+Collapse(AG_FileSelector *_Nonnull fs)
 {
 	if (fs->panel == NULL) {
 		return;
@@ -55,7 +55,7 @@ Collapse(AG_FileSelector *fs)
 	fs->hSaved = HEIGHT(fs->panel);
 
 	AG_WindowHide(fs->panel);
-	AG_ObjectDetach(fs->filedlg);
+	AG_ObjectDetach(fs->fileDlg);
 	AG_ObjectDetach(fs->panel);
 	fs->panel = NULL;
 
@@ -63,7 +63,7 @@ Collapse(AG_FileSelector *fs)
 }
 
 static void
-ModalClose(AG_Event *event)
+ModalClose(AG_Event *_Nonnull event)
 {
 	AG_FileSelector *fs = AG_PTR(1);
 
@@ -72,7 +72,7 @@ ModalClose(AG_Event *event)
 }
 
 static void
-Expand(AG_Event *event)
+Expand(AG_Event *_Nonnull event)
 {
 	AG_FileSelector *fs = AG_PTR(1);
 	AG_Driver *drv = WIDGET(fs)->drv;
@@ -84,13 +84,13 @@ Expand(AG_Event *event)
 	if (expand) {						/* Expand */
 		fs->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
 		AG_WindowSetPadding(fs->panel, 0, 0, 0, 0);
-		AG_ObjectAttach(fs->panel, fs->filedlg);
+		AG_ObjectAttach(fs->panel, fs->fileDlg);
 		
 		if (fs->wSaved > 0) {
 			w = fs->wSaved;
 			h = fs->hSaved;
 		} else {
-			AG_WidgetSizeReq(fs->filedlg, &rFileDlg);
+			AG_WidgetSizeReq(fs->fileDlg, &rFileDlg);
 			w = rFileDlg.w + fs->panel->wBorderSide*2;
 			h = rFileDlg.h + fs->panel->wBorderBot;
  		}
@@ -116,34 +116,34 @@ Expand(AG_Event *event)
 }
 
 static void
-SetDirectoryAndFile(AG_FileSelector *fs, const char *pPath)
+SetDirectoryAndFile(AG_FileSelector *_Nonnull fs, const char *_Nonnull pPath)
 {
 	char path[AG_FILENAME_MAX], *file;
 	
 	Strlcpy(path, pPath, sizeof(path));
 	if ((file = strrchr(path, AG_PATHSEPCHAR)) != NULL) {
-		AG_FileDlgSetFilenameS(fs->filedlg, file);
+		AG_FileDlgSetFilenameS(fs->fileDlg, file);
 		*file = '\0';
-		AG_FileDlgSetDirectoryS(fs->filedlg, path);
+		AG_FileDlgSetDirectoryS(fs->fileDlg, path);
 	}
 }
 
 static void
-SetDirectory(AG_FileSelector *fs, const char *pPath)
+SetDirectory(AG_FileSelector *_Nonnull fs, const char *_Nonnull pPath)
 {
 	char path[AG_FILENAME_MAX];
 	
 	Strlcpy(path, pPath, sizeof(path));
-	AG_FileDlgSetDirectoryS(fs->filedlg, path);
+	AG_FileDlgSetDirectoryS(fs->fileDlg, path);
 }
 
 void
 AG_FileSelectorSetFile(AG_FileSelector *fs, const char *path)
 {
-	AG_ObjectLock(fs->filedlg);
+	AG_ObjectLock(fs->fileDlg);
 	SetDirectoryAndFile(fs, path);
 	AG_TextboxSetString(fs->tbox, path);
-	AG_ObjectUnlock(fs->filedlg);
+	AG_ObjectUnlock(fs->fileDlg);
 }
 
 void
@@ -155,14 +155,14 @@ AG_FileSelectorSetDirectory(AG_FileSelector *fs, const char *path)
 	if (dir[0] != '\0' && dir[strlen(dir)-1] != AG_PATHSEPCHAR) {
 		dir[strlen(dir)-1] = AG_PATHSEPCHAR;
 	}
-	AG_ObjectLock(fs->filedlg);
+	AG_ObjectLock(fs->fileDlg);
 	SetDirectory(fs, dir);
 	AG_TextboxSetString(fs->tbox, dir);
-	AG_ObjectUnlock(fs->filedlg);
+	AG_ObjectUnlock(fs->fileDlg);
 }
 
 static void
-FileChosen(AG_Event *event)
+FileChosen(AG_Event *_Nonnull event)
 {
 	AG_FileSelector *fs = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -173,22 +173,22 @@ FileChosen(AG_Event *event)
 }
 
 static void
-Return(AG_Event *event)
+Return(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tbox = AG_SELF();
 	AG_FileSelector *fs = AG_PTR(1);
 	
-	AG_ObjectLock(fs->filedlg);
+	AG_ObjectLock(fs->fileDlg);
 	AG_TextboxCopyString(tbox, path, sizeof(path));
 	/* XXX TODO: Check access, AG_FILE_SELECTOR_ANY_FILE */
 	SetDirectoryAndFile(fs, path);
 	AG_PostEvent(NULL, fs, "file-chosen", "%s", path);
-	AG_ObjectUnlock(fs->filedlg);
+	AG_ObjectUnlock(fs->fileDlg);
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_FileSelector *fs = obj;
 
@@ -206,30 +206,30 @@ Init(void *obj)
 	AG_ButtonSetPadding(fs->button, 1,1,1,1);
 	AG_WidgetSetFocusable(fs->button, 0);
 
-	fs->filedlg = Malloc(sizeof(AG_FileDlg));
-	AG_ObjectInit(fs->filedlg, &agFileDlgClass);
-	AG_Expand(fs->filedlg);
+	fs->fileDlg = Malloc(sizeof(AG_FileDlg));
+	AG_ObjectInit(fs->fileDlg, &agFileDlgClass);
+	AG_Expand(fs->fileDlg);
 	
 	AG_SetEvent(fs->button, "button-pushed", Expand, "%p", fs);
-	AG_SetEvent(fs->filedlg, "file-chosen", FileChosen, "%p", fs);
+	AG_SetEvent(fs->fileDlg, "file-chosen", FileChosen, "%p", fs);
 	AG_SetEvent(fs->tbox, "textbox-return", Return, "%p", fs);
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_FileSelector *fs = p;
 
-	if (fs ->panel != NULL) {
+	if (fs->panel != NULL) {
 		AG_WindowHide(fs->panel);
-		AG_ObjectDetach(fs->filedlg);
+		AG_ObjectDetach(fs->fileDlg);
 		AG_ObjectDetach(fs->panel);
 	}
-	AG_ObjectDestroy(fs->filedlg);
+	AG_ObjectDestroy(fs->fileDlg);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Widget *chld;
 
@@ -238,7 +238,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_FileSelector *fs = obj;
 	AG_SizeReq rChld;
@@ -252,7 +252,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_FileSelector *fs = obj;
 	AG_SizeReq rBtn;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,7 +94,7 @@ Insert(AG_Editable *ed, AG_EditableBuffer *buf, AG_KeySym keysym, Uint keymod, U
 	if (ed->sel != 0) {
 		AG_EditableDelete(ed, buf);
 	}
-	if (AG_EditableGrowBuffer(ed, buf, ins, (size_t)nIns) == -1) {
+	if (AG_EditableGrowBuffer(ed, buf, ins, (AG_Size)nIns) == -1) {
 		Verbose("Insert Failed: %s\n", AG_GetError());
 		return (0);
 	}

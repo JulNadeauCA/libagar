@@ -22,15 +22,17 @@ typedef struct ag_glview {
 #define AG_GLVIEW_BGFILL	0x80	/* Fill background */
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
 
-	int	  wPre, hPre;			/* Initial geometry */
+	int wPre, hPre;			/* Initial geometry */
 
-	AG_Event *draw_ev;			/* Draw callback */
-	AG_Event *overlay_ev;			/* Graphics overlay callback */
-	AG_Event *underlay_ev;			/* Graphics underlay callback */
-	AG_Event *scale_ev;			/* Scaling/movement event */
-	AG_Event *keydown_ev, *keyup_ev;	/* Keyboard events */
-	AG_Event *btndown_ev, *btnup_ev;	/* Mouse button events */
-	AG_Event *motion_ev;			/* Mouse motion event */
+	AG_Event *_Nullable draw_ev;		/* Draw callback */
+	AG_Event *_Nullable overlay_ev;		/* Graphics overlay callback */
+	AG_Event *_Nullable underlay_ev;	/* Graphics underlay callback */
+	AG_Event *_Nullable scale_ev;		/* Scaling/movement event */
+	AG_Event *_Nullable keydown_ev;		/* Keyboard key pressed */
+	AG_Event *_Nullable keyup_ev;		/* Keyboard key released */
+	AG_Event *_Nullable btndown_ev;		/* Mouse button pressed */
+	AG_Event *_Nullable btnup_ev;		/* Mouse button released */
+	AG_Event *_Nullable motion_ev;		/* Mouse cursor moved */
 
 	float mProjection[16];			/* Projection matrix to load */
 	float mModelview[16];			/* Modelview matrix to load */
@@ -44,24 +46,25 @@ typedef struct ag_glview {
 __BEGIN_DECLS
 extern AG_WidgetClass agGLViewClass;
 
-AG_GLView *AG_GLViewNew(void *, Uint);
-void	   AG_GLViewDraw(void *);
-void	   AG_GLViewSizeRequest(void *, AG_SizeReq *);
-int	   AG_GLViewSizeAllocate(void *, const AG_SizeAlloc *);
+AG_GLView *_Nonnull AG_GLViewNew(void *_Nullable, Uint);
 
-void       AG_GLViewSetBgColor(AG_GLView *, AG_Color);
-void	   AG_GLViewSizeHint(AG_GLView *, int, int);
-#define	   AG_GLViewPrescale AG_GLViewSizeHint
-void	   AG_GLViewReshape(AG_GLView *);
-void	   AG_GLViewDrawFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewUnderlayFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewOverlayFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewScaleFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewKeydownFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewKeyupFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewButtondownFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewButtonupFn(void *, AG_EventFn, const char *, ...);
-void	   AG_GLViewMotionFn(void *, AG_EventFn, const char *, ...);
+void    AG_GLViewDraw(void *_Nonnull);
+void    AG_GLViewSizeRequest(void *_Nonnull, AG_SizeReq *_Nonnull);
+int     AG_GLViewSizeAllocate(void *_Nonnull, const AG_SizeAlloc *_Nonnull);
+
+void    AG_GLViewSetBgColor(AG_GLView *_Nonnull, AG_Color);
+void    AG_GLViewSizeHint(AG_GLView *_Nonnull, int,int);
+#define AG_GLViewPrescale AG_GLViewSizeHint
+void    AG_GLViewReshape(AG_GLView *_Nonnull);
+void    AG_GLViewDrawFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewUnderlayFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewOverlayFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewScaleFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewKeydownFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewKeyupFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewButtondownFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewButtonupFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
+void    AG_GLViewMotionFn(void *_Nonnull, _Nonnull AG_EventFn, const char *_Nullable, ...);
 __END_DECLS
 
 #include <agar/gui/close.h>

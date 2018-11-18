@@ -13,6 +13,7 @@
 
 typedef struct ag_combo {
 	struct ag_widget wid;
+
 	Uint flags;
 #define AG_COMBO_POLL	  	0x01	/* Polled list */
 #define AG_COMBO_TREE	  	0x02	/* Tree display */
@@ -22,10 +23,11 @@ typedef struct ag_combo {
 #define AG_COMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
 #define AG_COMBO_EXPAND	  (AG_COMBO_HFILL|AG_COMBO_VFILL)
 
-	AG_Textbox *tbox;		/* Text input */
-	AG_Button *button;		/* [...] button */
-	AG_Tlist *list;			/* List of items */
-	AG_Window *panel;
+	AG_Textbox *_Nonnull  tbox;	/* Text input */
+	AG_Button  *_Nonnull  button;	/* [...] button */
+	AG_Tlist   *_Nonnull  list;	/* List of items */
+	AG_Window  *_Nullable panel;	/* Expanded panel */
+
 	int wSaved, hSaved;		/* Saved popup list geometry */
 	int wPreList, hPreList;		/* Size hints */
 } AG_Combo;
@@ -38,18 +40,20 @@ typedef struct ag_combo {
 __BEGIN_DECLS
 extern AG_WidgetClass agComboClass;
 
-AG_Combo *AG_ComboNew(void *, Uint, const char *, ...)
-		      FORMAT_ATTRIBUTE(printf, 3, 4);
-AG_Combo *AG_ComboNewS(void *, Uint, const char *);
+AG_Combo *_Nonnull AG_ComboNew(void *_Nullable, Uint, const char *_Nullable, ...)
+		              FORMAT_ATTRIBUTE(printf,3,4);
+AG_Combo *_Nonnull AG_ComboNewS(void *_Nullable, Uint, const char *_Nullable);
 
-void AG_ComboSizeHint(AG_Combo *, const char *, int);
-void AG_ComboSizeHintPixels(AG_Combo *, int, int);
-void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
-AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
-AG_TlistItem *AG_ComboSelectText(AG_Combo *, const char *);
-void AG_ComboSetButtonText(AG_Combo *, const char *);
-void AG_ComboSetButtonSurface(AG_Combo *, AG_Surface *);
-void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, AG_Surface *);
+void AG_ComboSizeHint(AG_Combo *_Nonnull, const char *_Nonnull, int);
+void AG_ComboSizeHintPixels(AG_Combo *_Nonnull, int, int);
+void AG_ComboSelect(AG_Combo *_Nonnull, AG_TlistItem *_Nonnull);
+
+AG_TlistItem *_Nullable AG_ComboSelectPointer(AG_Combo *_Nonnull, void *_Nullable);
+AG_TlistItem *_Nullable AG_ComboSelectText(AG_Combo *_Nonnull, const char *_Nonnull);
+
+void AG_ComboSetButtonText(AG_Combo *_Nonnull, const char *_Nonnull);
+void AG_ComboSetButtonSurface(AG_Combo *_Nonnull, AG_Surface *_Nullable);
+void AG_ComboSetButtonSurfaceNODUP(AG_Combo *_Nonnull, AG_Surface *_Nullable);
 __END_DECLS
 
 #include <agar/gui/close.h>

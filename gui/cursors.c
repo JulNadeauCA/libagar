@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include "cursors/text.xpm"
 
 static struct {
-	char **data;
+	char *_Nullable *_Nonnull data;
 	int x, y;
 } builtins[] = {
 	{ NULL,		0,0 },
@@ -81,7 +81,7 @@ AG_CursorFree(void *obj, AG_Cursor *ac)
 	AGDRIVER_CLASS(drv)->freeCursor(drv, ac);
 }
 
-/* Create a cursor from the contents of an XPM file. */
+/* Create a cursor from XPM data. */
 AG_Cursor *
 AG_CursorFromXPM(void *drv, char *xpm[], int xHot, int yHot)
 {

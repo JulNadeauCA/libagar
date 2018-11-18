@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2011-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,22 @@
 #include <agar/gui/geometry.h>
 
 AG_Rect
-AG_ReadRect(AG_DataSource *ds)
+AG_ReadRect(AG_DataSource *_Nonnull ds)
 {
 	AG_Rect r;
 
-	r.x = (int)AG_ReadSint32(ds);
-	r.y = (int)AG_ReadSint32(ds);
-	r.w = (Uint)AG_ReadUint32(ds);
-	r.h = (Uint)AG_ReadUint32(ds);
+	r.x = AG_ReadSint16(ds);
+	r.y = AG_ReadSint16(ds);
+	r.w = AG_ReadUint16(ds);
+	r.h = AG_ReadUint16(ds);
 	return (r);
 }
 
 void
-AG_WriteRect(AG_DataSource *ds, AG_Rect r)
+AG_WriteRect(AG_DataSource *_Nonnull ds, AG_Rect r)
 {
-	AG_WriteSint32(ds, (Sint32)r.x);
-	AG_WriteSint32(ds, (Sint32)r.y);
-	AG_WriteUint32(ds, (Uint32)r.w);
-	AG_WriteUint32(ds, (Uint32)r.h);
+	AG_WriteSint16(ds, r.x);
+	AG_WriteSint16(ds, r.y);
+	AG_WriteUint16(ds, r.w);
+	AG_WriteUint16(ds, r.h);
 }

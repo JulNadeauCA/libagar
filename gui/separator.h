@@ -4,7 +4,6 @@
 #define _AGAR_WIDGET_SEPARATOR_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
 enum ag_separator_type {
@@ -22,9 +21,9 @@ typedef struct ag_separator {
 __BEGIN_DECLS
 extern AG_WidgetClass agSeparatorClass;
 
-AG_Separator *AG_SeparatorNew(void *, enum ag_separator_type);
-AG_Separator *AG_SpacerNew(void *, enum ag_separator_type);
-void          AG_SeparatorSetPadding(AG_Separator *, Uint);
+AG_Separator *_Nonnull AG_SeparatorNew(void *_Nullable, enum ag_separator_type);
+AG_Separator *_Nonnull AG_SpacerNew(void *_Nullable, enum ag_separator_type);
+void AG_SeparatorSetPadding(AG_Separator *_Nonnull, Uint);
 
 #define AG_SeparatorNewHoriz(p) AG_SeparatorNew((p),AG_SEPARATOR_HORIZ)
 #define AG_SeparatorNewVert(p) AG_SeparatorNew((p),AG_SEPARATOR_VERT)
