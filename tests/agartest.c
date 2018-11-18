@@ -588,16 +588,26 @@ main(int argc, char *argv[])
 	{
 		char drvNames[256];
 		AG_AgarVersion av;
-
+#if AG_MODEL == AG_SMALL
+		const char *memory_model = "SMALL";
+#elif AG_MODEL == AG_MEDIUM
+		const char *memory_model = "MEDIUM";
+#else
+		const char *memory_model = "LARGE";
+#endif
 		AG_GetVersion(&av);
 		AG_ConsoleMsg(console, _("Agar %d.%d.%d (\"%s\")"),
 		    av.major, av.minor, av.patch, av.release);
-		AG_ConsoleMsg(console, _("Current Agar driver: %s (%s)"),
+
+		AG_ConsoleMsg(console, _("Target: %s (%s)"), agCPU.arch,
+		    memory_model);
+		    
+		AG_ConsoleMsg(console, _("Current AG_Driver: %s (%s)"),
 		    AGWIDGET(win)->drvOps->name,
 		    (AGWIDGET(win)->drvOps->type == AG_FRAMEBUFFER) ?
 		    _("framebuffer-based") : _("vector-based"));
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
-		AG_ConsoleMsg(console, _("Available Agar drivers: %s"), drvNames);
+		AG_ConsoleMsg(console, _("Available AG_Drivers: %s"), drvNames);
 #ifdef __APPLE__
 		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));
 # ifdef AG_DEBUG

@@ -179,7 +179,7 @@ MultiLineExample(AG_Event *event)
 	AG_Textbox *textbox;
 	char *someText;
 	FILE *f;
-	size_t size, bufSize;
+	AG_Size size, bufSize;
 	unsigned int flags;
 
 	if ((win = AG_WindowNew(0)) == NULL) {

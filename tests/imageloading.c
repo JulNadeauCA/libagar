@@ -13,7 +13,7 @@ TestGUI(void *obj, AG_Window *win)
 	char path[AG_PATHNAME_MAX];
 	AG_Surface *su, *su2;
 	AG_Box *hBox, *vBox, *bppBox;
-	AG_PixelFormat *pfTest;
+	AG_PixelFormat pfTest;
 
 	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_FRAME);
 
@@ -56,14 +56,18 @@ TestGUI(void *obj, AG_Window *win)
 				int i;
 
 				for (i = 0; i < 4; i++) {
-					pfTest = AG_PixelFormatRGB(testDepths[i], 0xff000000, 0x00ff0000, 0x0000ff00);
-					if ((su2 = AG_SurfaceConvert(su, pfTest)) != NULL) {
+					AG_PixelFormatRGB(&pfTest, testDepths[i],
+					    0xff000000,
+					    0x00ff0000,
+					    0x0000ff00);
+					if ((su2 = AG_SurfaceConvert(su, &pfTest)) != NULL) {
 						AG_PixmapFromSurface(bppBox, 0, su2);
 						AG_SurfaceFree(su2);
 					} else {
-						AG_LabelNew(bppBox, 0, "Convert failed: %s", AG_GetError());
+						AG_LabelNew(bppBox, 0,
+						    "Convert failed: %s", AG_GetError());
 					}
-					AG_PixelFormatFree(pfTest);
+					AG_PixelFormatFree(&pfTest);
 				}
 			}
 			AG_LabelNewS(vBox, 0, "Exported agar-save.png:");
@@ -98,14 +102,17 @@ TestGUI(void *obj, AG_Window *win)
 				int i;
 
 				for (i = 0; i < 4; i++) {
-					pfTest = AG_PixelFormatRGB(testDepths[i], 0xff000000, 0x00ff0000, 0x0000ff00);
-					if ((su2 = AG_SurfaceConvert(su, pfTest)) != NULL) {
+					AG_PixelFormatRGB(&pfTest, testDepths[i],
+					    0xff000000,
+					    0x00ff0000,
+					    0x0000ff00);
+					if ((su2 = AG_SurfaceConvert(su, &pfTest)) != NULL) {
 						AG_PixmapFromSurface(bppBox, 0, su2);
 						AG_SurfaceFree(su2);
 					} else {
 						AG_LabelNew(bppBox, 0, "Convert failed: %s", AG_GetError());
 					}
-					AG_PixelFormatFree(pfTest);
+					AG_PixelFormatFree(&pfTest);
 				}
 			}
 
@@ -172,7 +179,7 @@ TestGUI(void *obj, AG_Window *win)
 const AG_TestCase imageLoadingTest = {
 	"imageLoading",
 	N_("Test the image loader / exporter routines"),
-	"1.5.0",
+	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
 	NULL,		/* init */

@@ -23,9 +23,7 @@ Init(void *obj)
 {
 	MyTestInstance *ti = obj;
 
-	if ((ti->myTxt = AG_TextNew(0)) == NULL) {
-		return (-1);
-	}
+	ti->myTxt = AG_TextNew(0);
 	AG_TextSetEnt(ti->myTxt, AG_LANG_FR, "(UTF8) Fran\xc3\xa7\x61is!");
 	AG_TextSetEnt(ti->myTxt, AG_LANG_EN, "(UTF8) English!");
 	AG_TextSetEnt(ti->myTxt, AG_LANG_NO, "(UTF8) Norsk!");

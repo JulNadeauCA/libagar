@@ -72,9 +72,30 @@ TestGUI(void *obj, AG_Window *win)
 		char path[AG_PATHNAME_MAX];
 		AG_Label *lbl;
 
-		/* The Pixmap widget can display an image surface. */
-		if (!AG_ConfigFile("load-path", "agar", "bmp", path, sizeof(path)))
+		/* Display agar.bmp. BMP support is built in. */
+		AG_LabelNewS(div1, 0, "agar.bmp:");
+		if (AG_ConfigFile("load-path", "agar","bmp", path,sizeof(path)) == 0) {
 			AG_PixmapFromFile(div1, 0, path);
+		} else {
+			AG_Surface *sErr = AG_TextRender(AG_GetError());
+			AG_PixmapFromSurface(div1, 0, sErr);
+			AG_SurfaceFree(sErr);
+		}
+
+		/* Display agar.png. PNG support requires libpng. */
+#include <agar/config/have_png.h>
+#ifdef HAVE_PNG
+		AG_LabelNewS(div1, 0, "agar.png:");
+		if (AG_ConfigFile("load-path", "agar","png", path,sizeof(path)) == 0) {
+			AG_PixmapFromFile(div1, 0, path);
+		} else {
+			AG_Surface *sErr = AG_TextRender(AG_GetError());
+			AG_PixmapFromSurface(div1, 0, sErr);
+			AG_SurfaceFree(sErr);
+		}
+#else
+		AG_LabelNewS(div1, 0, "No libpng");
+#endif
 	
 		/*
 		 * The Label widget provides a simple static or polled label
@@ -284,7 +305,8 @@ TestGUI(void *obj, AG_Window *win)
 			 * the table is static or needs to be repopulated
 			 * periodically.
 			 */
-			table = AG_TableNew(ntab, AG_TABLE_EXPAND);
+			table = AG_TableNew(ntab,
+			    AG_TABLE_EXPAND|AG_TABLE_MULTI);
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
@@ -301,7 +323,7 @@ TestGUI(void *obj, AG_Window *win)
 		
 		ntab = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
 		{
-			size_t size, bufSize;
+			AG_Size size, bufSize;
 			FILE *f;
 
 			/*
@@ -320,7 +342,8 @@ TestGUI(void *obj, AG_Window *win)
 			 * the buffer a bit larger so the user can try
 			 * entering text.
 			 */
-			if (!AG_ConfigFile("load-path", "loss", "txt", path, sizeof(path)) &&
+			if (AG_ConfigFile("load-path", "loss","txt",
+			                  path, sizeof(path) == 0) &&
 			    (f = fopen(path, "r")) != NULL) {
 				fseek(f, 0, SEEK_END);
 				size = ftell(f);
@@ -331,7 +354,7 @@ TestGUI(void *obj, AG_Window *win)
 				fclose(f);
 				ti->someText[size] = '\0';
 			} else {
-				ti->someText = AG_Strdup("Failed to load loss.txt");
+				ti->someText = AG_Strdup("loss.txt not found");
 				bufSize = strlen(ti->someText)+1;
 			}
 	

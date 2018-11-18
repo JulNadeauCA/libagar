@@ -37,7 +37,7 @@ TestGUI(void *obj, AG_Window *win)
 		{ "Vol", agVolumeUnits },
 		{ "Spd", agSpeedUnits },
 		{ "Time", agTimeUnits },
-		{ "Temp", agTemperatureUnits },
+		{ "Temp", AG_UNIT(agTemperatureUnits) },
 		{ "Pwr", agPowerUnits },
 		{ "Press", agPressureUnits },
 		{ "Vac", agVacuumUnits }

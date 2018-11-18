@@ -32,7 +32,7 @@ MyCustomSortFn(const void *p1, const void *p2)
 
 /* This is a custom cell function which returns text into s (Ex.1) */
 static void
-MyCustomDynamicTextFn(void *p, char *s, size_t len)
+MyCustomDynamicTextFn(void *p, char *s, AG_Size len)
 {
 /*	AG_TableCell *cell = p; */
 	

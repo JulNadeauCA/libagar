@@ -18,45 +18,49 @@ LoadImage(AG_Event *event)
 	AG_Window *winParent = AG_PTR(1);
 	char *file = AG_STRING(2);
 	AG_FileType *ft = AG_PTR(3);
-	AG_Surface *s;
+	AG_Surface *S;
 	AG_Window *win;
 	AG_Scrollview *sv;
-	Uint8 *pSrc;
-	Uint i;
 
 	if (strcmp(ft->exts[0], "*.bmp") == 0) {
-		s = AG_SurfaceFromBMP(file);
+		S = AG_SurfaceFromBMP(file);
 	} else if (strcmp(ft->exts[0], "*.jpg") == 0) {
-		s = AG_SurfaceFromJPEG(file);
+		S = AG_SurfaceFromJPEG(file);
 	} else if (strcmp(ft->exts[0], "*.png") == 0) {
-		s = AG_SurfaceFromPNG(file);
+		S = AG_SurfaceFromPNG(file);
 	} else {
 		AG_SetError("Unrecognized format: %s", ft->exts[0]);
 		return (-1);
 	}
-	if (s == NULL)
+	if (S == NULL)
 		return (-1);
 
 	if ((win = AG_WindowNew(0)) == NULL) {
-		AG_SurfaceFree(s);
+		AG_SurfaceFree(S);
 		return (-1);
 	}
 	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
 
 	/* We use AG_FileOptionFoo() to retrieve per-type options. */
-	if (AG_FileOptionBool(ft,"invert")) {
-		pSrc = (Uint8 *)s->pixels;
-		for (i = 0; i < s->w*s->h; i++) {
-			Uint8 r, g, b;
+	if (AG_FileOptionBool(ft,"invert") == 1) {
+		Uint8 *pSrc = S->pixels;
+		Uint8 *pEnd = &S->pixels[S->w * S->h];
 
-			AG_GetPixelRGB(AG_GET_PIXEL(s,pSrc), s->format,
+		while (pSrc < pEnd) {
+			Uint8 r,g,b;
+
+			AG_GetColor32_RGB8(
+			    AG_SurfaceGet32_At(S,pSrc), &S->format,
 			    &r,&g,&b);
+
 			r = 255 - r;
 			g = 255 - g;
 			b = 255 - b;
-			AG_PUT_PIXEL(s, pSrc,
-			    AG_MapPixelRGB(s->format, r,g,b));
-			pSrc += s->format->BytesPerPixel;
+
+			AG_SurfacePut32_At(S,pSrc,
+			    AG_MapPixel32_RGB8(&S->format, r,g,b));
+
+			pSrc += S->format.BytesPerPixel;
 		}
 	}
 
@@ -65,13 +69,12 @@ LoadImage(AG_Event *event)
 	 * the user can pan the view.
 	 */
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE|AG_SCROLLVIEW_EXPAND);
-	AG_PixmapFromSurfaceScaled(sv, 0, s, s->w, s->h);
-	AG_SurfaceFree(s);
+	AG_PixmapFromSurfaceScaled(sv, 0, S, S->w, S->h);
+	AG_SurfaceFree(S);
 
 	AG_WindowSetGeometry(win, -1, -1, 320, 240);
 	AG_WindowAttach(winParent, win);
 	AG_WindowShow(win);
-
 	return (0);
 }
 

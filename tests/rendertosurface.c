@@ -10,10 +10,10 @@ RenderToSurface(AG_Event *event)
 {
 	AG_Button *btn = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2), *win;
-	AG_Surface *s;
+	AG_Surface *S;
 	
 	/* Render the AG_Button to a surface. */
-	if ((s = AG_WidgetSurface(btn)) == NULL) {
+	if ((S = AG_WidgetSurface(btn)) == NULL) {
 		AG_TextMsgFromError();
 		return;
 	}
@@ -23,10 +23,12 @@ RenderToSurface(AG_Event *event)
 		AG_WindowSetCaptionS(win, "Rendered surface");
 		AG_LabelNew(win, 0, "Surface generated from %s:", AGOBJECT(btn)->name);
 		AG_SeparatorNewHoriz(win);
-		AG_PixmapFromSurface(win, 0, s);
+		AG_PixmapFromSurface(win, 0, S);
 		AG_SeparatorNewHoriz(win);
-		AG_LabelNew(win, 0, "Format: %u x %u x %d bpp", s->w, s->h,
-		    s->format->BitsPerPixel);
+		AG_LabelNew(win, 0,
+		    "Format: %u x %u x %d bpp",
+		    S->w, S->h,
+		    S->format.BitsPerPixel);
 
 		AG_WindowAttach(winParent, win);
 		AG_WindowShow(win);
