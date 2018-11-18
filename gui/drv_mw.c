@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ AG_List     *agModalWindows = NULL;	/* Modal window stack */
 int          agModalWindowsRefs = 0;
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverMw *dmw = obj;
 
@@ -49,7 +49,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	if (--agModalWindowsRefs == 0) {
 		AG_ListDestroy(agModalWindows);

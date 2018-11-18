@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -535,7 +535,7 @@ out:
 }
 
 static int
-GLX_GetNextEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
+GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	XEvent xev;
 	int x, y;
@@ -755,7 +755,7 @@ GLX_GetNextEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
 }
 
 static int
-GLX_ProcessEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
+GLX_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	AG_Driver *drv;
 	AG_SizeAlloc a;

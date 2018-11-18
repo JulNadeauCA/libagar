@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,8 +89,8 @@ static void      WGL_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonn
 static int       WGL_RaiseWindow(AG_Window *_Nonnull);
 static int       WGL_SetInputFocus(AG_Window *_Nonnull);
 static void      WGL_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
-static int       WGL_GetNextEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
-static int       WGL_ProcessEvent(void *_Nonnull, AG_DriverEvent *_Nonnull);
+static int       WGL_GetNextEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
+static int       WGL_ProcessEvent(void *_Nullable, AG_DriverEvent *_Nonnull);
 static int       WGL_GetDisplaySize(Uint *_Nonnull, Uint *_Nonnull);
 static int       WGL_PendingEvents(void *_Nonnull drvCaller);
 static int       WGL_SetCursor(void *_Nonnull, AG_Cursor *_Nonnull);
@@ -821,7 +821,7 @@ get_event:
 }
 
 static int
-WGL_ProcessEvent(void *_Nonnull drvCaller, AG_DriverEvent *_Nonnull dev)
+WGL_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 {
 	AG_Driver *drv;
 	AG_SizeAlloc a;

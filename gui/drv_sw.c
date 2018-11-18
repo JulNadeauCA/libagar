@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,10 @@
 
 AG_DriverSw *agDriverSw = NULL;		/* Root driver instance */
 
-static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
+static void (*_Nullable agVideoResizeCallback)(Uint w, Uint h) = NULL;
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_DriverSw *dsw = obj;
 
@@ -58,15 +58,13 @@ Init(void *obj)
 	dsw->windowBotOutLimit = 32;
 	dsw->windowIconWidth = 32;
 	dsw->windowIconHeight = 32;
-
-	if ((dsw->Lmodal = AG_ListNew()) == NULL)
-		AG_FatalError(NULL);
+	dsw->Lmodal = AG_ListNew();
 
 	AG_SetString(dsw, "bgColor", "rgb(0,0,0)");
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_DriverSw *dsw = obj;
 	
@@ -79,7 +77,7 @@ Destroy(void *obj)
  */
 
 static void
-UnminimizeWindow(AG_Event *event)
+UnminimizeWindow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	AG_WindowUnminimize(win);
@@ -87,7 +85,7 @@ UnminimizeWindow(AG_Event *event)
 
 #ifdef AG_DEBUG
 static void
-OpenGuiDebugger(AG_Event *event)
+OpenGuiDebugger(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 
@@ -97,7 +95,7 @@ OpenGuiDebugger(AG_Event *event)
 #endif /* AG_DEBUG */
 
 static void
-ExitApplication(AG_Event *event)
+ExitApplication(AG_Event *_Nonnull event)
 {
 	AG_Quit();
 }
@@ -221,7 +219,7 @@ AG_SetVideoResizeCallback(void (*fn)(Uint w, Uint h))
 
 /* Process a window move initiated by the WM. */
 static void
-WM_Move(AG_Window *win, int xRel, int yRel)
+WM_Move(AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	AG_DriverSw *dsw = (AG_DriverSw *)WIDGET(win)->drv;
 	AG_DriverClass *dc = AGDRIVER_CLASS(dsw);
@@ -288,7 +286,7 @@ WM_Move(AG_Window *win, int xRel, int yRel)
 
 /* Process a window resize operation initiated by the WM. */
 static void
-WM_Resize(int op, AG_Window *win, int xRel, int yRel)
+WM_Resize(int op, AG_Window *_Nonnull win, int xRel, int yRel)
 {
 	int x = WIDGET(win)->x;
 	int y = WIDGET(win)->y;
@@ -475,8 +473,10 @@ AG_WM_LimitWindowToView(AG_Window *win)
 }
 
 /* Compute default positions for AG_WINDOW_TILING windows */
+/* TODO optimize this */
 static void
-GetTilingPosition(AG_Window *win, int *xDst, int *yDst, int w, int h)
+GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
+    int *_Nonnull yDst, int w, int h)
 {
 	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
 	AG_Window *wOther;

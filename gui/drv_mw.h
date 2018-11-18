@@ -12,46 +12,50 @@ typedef struct ag_driver_mw_class {
 	struct ag_driver_class _inherit;
 
 	/* Open/close native windows */
-	int  (*openWindow)(struct ag_window *, AG_Rect r, int bpp, Uint flags);
-	void (*closeWindow)(struct ag_window *);
+	int  (*_Nonnull openWindow)(struct ag_window *_Nonnull, AG_Rect r,
+	                            int bpp, Uint flags);
+	void (*_Nonnull closeWindow)(struct ag_window *_Nonnull);
 
 	/* Show and hide window */
-	int (*mapWindow)(struct ag_window *);
-	int (*unmapWindow)(struct ag_window *);
+	int (*_Nonnull mapWindow)(struct ag_window *_Nonnull);
+	int (*_Nonnull unmapWindow)(struct ag_window *_Nonnull);
 
 	/* Configure stacking order and parenting */
-	int (*raiseWindow)(struct ag_window *);
-	int (*lowerWindow)(struct ag_window *);
-	int (*reparentWindow)(struct ag_window *, struct ag_window *, int, int);
+	int (*_Nonnull raiseWindow)(struct ag_window *_Nonnull);
+	int (*_Nonnull lowerWindow)(struct ag_window *_Nonnull);
+	int (*_Nonnull reparentWindow)(struct ag_window *_Nonnull,
+	                               struct ag_window *_Nonnull, int,int);
 
 	/* Change and query input focus state */
-	int (*getInputFocus)(struct ag_window **);
-	int (*setInputFocus)(struct ag_window *);
+	int (*_Nonnull getInputFocus)(struct ag_window *_Nonnull *_Nullable);
+	int (*_Nonnull setInputFocus)(struct ag_window *_Nonnull);
 
 	/* Move and resize windows */
-	int  (*moveWindow)(struct ag_window *, int x, int y);
-	int  (*resizeWindow)(struct ag_window *, Uint w, Uint h);
-	int  (*moveResizeWindow)(struct ag_window *, struct ag_size_alloc *a);
-	void (*preResizeCallback)(struct ag_window *);
-	void (*postResizeCallback)(struct ag_window *, struct ag_size_alloc *a);
+	int  (*_Nonnull moveWindow)(struct ag_window *_Nonnull, int, int);
+	int  (*_Nonnull resizeWindow)(struct ag_window *_Nonnull, Uint, Uint);
+	int  (*_Nonnull moveResizeWindow)(struct ag_window *_Nonnull,
+	                                  struct ag_size_alloc *_Nonnull);
+	void (*_Nonnull preResizeCallback)(struct ag_window *_Nonnull);
+	void (*_Nonnull postResizeCallback)(struct ag_window *_Nonnull,
+	                                    struct ag_size_alloc *_Nonnull);
 
-	/* Capture window framebuffer contents (unlike renderToSurface) */
-	int (*captureWindow)(struct ag_window *, AG_Surface **s);
-	
 	/* Configure window parameters */
-	int  (*setBorderWidth)(struct ag_window *, Uint w);
-	int  (*setWindowCaption)(struct ag_window *, const char *);
-	void (*setTransientFor)(struct ag_window *, struct ag_window *);
-	int  (*setOpacity)(struct ag_window *, float opacity);
-	void (*tweakAlignment)(struct ag_window *, struct ag_size_alloc *a,
-	                       Uint wMax, Uint hMax);
+	int  (*_Nullable setBorderWidth)(struct ag_window *_Nonnull, Uint);
+	int  (*_Nullable setWindowCaption)(struct ag_window *_Nonnull,
+	                                   const char *_Nonnull);
+	void (*_Nullable setTransientFor)(struct ag_window *_Nonnull,
+	                                  struct ag_window *_Nullable);
+	int  (*_Nullable setOpacity)(struct ag_window *_Nonnull, float);
+	void (*_Nullable tweakAlignment)(struct ag_window *_Nonnull,
+	                                 struct ag_size_alloc *_Nonnull,
+	                                 Uint,Uint);
 } AG_DriverMwClass;
 
 typedef struct ag_driver_mw {
 	struct ag_driver _inherit;
 	Uint flags;
 #define AG_DRIVER_MW_OPEN	0x01		/* Rendering is operational */
-	struct ag_window *win;			/* Back pointer to window */
+	struct ag_window *_Nullable win;	/* Back pointer to window */
 } AG_DriverMw;
 
 #define AGDRIVER_MW(obj) ((AG_DriverMw *)(obj))
@@ -62,8 +66,9 @@ typedef struct ag_driver_mw {
 #define AG_DRIVER_MW_ANYPOS_AVAIL	0x02	/* Autopositioning supported */
 
 __BEGIN_DECLS
-extern AG_ObjectClass  agDriverMwClass;
-extern AG_DriverMw    *agDriverMw;		/* Root driver instance */
-extern AG_List        *agModalWindows;		/* Modal window stack */
-extern int             agModalWindowsRefs;
+extern AG_ObjectClass agDriverMwClass;
+extern AG_DriverMw *_Nullable agDriverMw;	/* Root driver instance */
+
+extern AG_List *_Nullable agModalWindows;	/* Modal window stack */
+extern int                agModalWindowsRefs;
 __END_DECLS

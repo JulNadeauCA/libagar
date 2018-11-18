@@ -152,7 +152,7 @@ InitKeymaps(void)
  * (idea shamelessly lifted from GII -- thanks guys! :)
  */
 static int
-IsKeyRepeat(XEvent *xev)
+IsKeyRepeat(XEvent *_Nonnull xev)
 {
 	XEvent pev;
 	int repeated;

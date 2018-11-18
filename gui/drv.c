@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);
 
 /* Return a string with the available drivers. */
 void
-AG_ListDriverNames(char *buf, size_t buf_len)
+AG_ListDriverNames(char *buf, AG_Size buf_len)
 {
 	Uint i;
 
@@ -149,7 +149,7 @@ AG_ViewCapture(void)
 
 	AG_LockVFS(&agDrivers);
 
-	if (AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw, &s) == -1) {
+	if ((s = AGDRIVER_SW_CLASS(agDriverSw)->videoCapture(agDriverSw)) != NULL) {
 		Verbose("Capture failed: %s\n", AG_GetError());
 		goto out;
 	}
@@ -181,7 +181,7 @@ out:
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 
@@ -209,15 +209,17 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_Driver *drv = obj;
 
-	if (drv->sRef != NULL)
+	if (drv->sRef != NULL) {
 		AG_SurfaceFree(drv->sRef);
-	if (drv->videoFmt != NULL)
+	}
+	if (drv->videoFmt != NULL) {
 		AG_PixelFormatFree(drv->videoFmt);
-
+		free(drv->videoFmt);
+	}
 	AG_TextDestroyGlyphCache(drv);
 }
 
