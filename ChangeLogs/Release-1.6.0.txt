@@ -1,31 +1,39 @@
 
-Release Notes for Agar 1.5.1 (Organic Hallucination)
-----------------------------------------------------
+Release Notes for Agar 1.6.0 (Nullability Complete)
+---------------------------------------------------
 
 Here are some of the most notable changes since Agar 1.5.0, in no
 particular order.
 
-This release preserves backward compatibility with Agar 1.4.x, but it is
-recommended to compile Agar with the `--disable-legacy' configure option,
-ensuring that existing applications are not using deprecated calls.
-
+- Introduce Agar memory models: AG_SMALL, AG_MEDIUM & AG_LARGE. The memory
+  model can be set at build time using --with-memory-model. SMALL targets
+  8- and 16-bit machines with KBs of RAM and up to 4096 colors. The MEDIUM
+  and LARGE models target both 32- and 64-bit machines. MEDIUM can handle
+  24-bit "true color" (32-bit with alpha). LARGE adds support for 48-bit
+  "deep color" (64-bit with alpha).
+- GUI: Add support for 16-bit per component "deep color" under AG_LARGE.
+       48-bit display works with the glx, wgl and cocoa drivers.
+- GUI: AG_Surface(3) now handles 48- and 64-bit surfaces. PNG files with
+       16-bit per channel are now supported by the PNG loader/exporter.
+- GUI: AG_Surface(3) now handles 1-bit (monochrome), 2-bit (4-color),
+       and 4-bit (16 color) palettized modes. Add PixelsPerByte to format.
+- GUI: Add Grayscale+Alpha modes to AG_Surface(3). Supports 32-bit (16-bit
+       value + 16-bit alpha) and 64-bit (32-bit value + 32-bit alpha).
+- GUI: Pack AG_PixelFormat in AG_Surface (the `format' field is no longer
+       a pointer but the AG_PixelFormat itself).
 - CORE: Updated Ada bindings (ada/core). Overloading and class registration
-  now allows pure Ada implementations of new Agar object classes.
+        now allows pure Ada implementations of new Agar object classes.
 - CORE: Added --enable-type-safety option (implied by --enable-debug).
-- Fix some compiler warnings. Set _DEFAULT_SOURCE to accommodate glibc whims.
-- Fix build issue and warnings under Cygwin host.
-- Fix missing include for 32-bit MSYS build. Thanks varialus!
 - CORE: Introduce AG_{Copy,Write,Skip}StringPadded() for fixed-length records.
 - CORE: Introduce AG_DelTimers().
 - CORE: Introduce AG_Web(3), a multiprocess HTTP/1.1 application server. It
-  handles authentication, session/process management, push events and templates.
-  Not enabled by default (must compile with --enable-web).
+        handles authentication, session/process management, push events and
+        templates. Not enabled by default (must compile with --enable-web).
 - CORE: Add AG_SetErrorS() variant; avoid printf use by AG_FatalError().
 - CORE: Remove unnecessary locks in AG_WriteString().
-- CORE: AG_ReadStringLenv() now returns encoded length.
-- CORE: Prevent redundant AG_InitCore() or AG_Destroy() calls.
 - CORE: Document AG_Db(3) API.
 - VG: Fix invalid access under GUI-less operation.
 - VG: Fix invalid access in VG_View(3).
+- Add missing include for 32-bit MSYS build. Thanks varialus!
 - Manual page improvements (clarity, wording, added more examples).
 
