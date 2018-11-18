@@ -4,7 +4,6 @@
 #define _AGAR_GUI_SCROLLBAR_H_
 
 #include <agar/gui/widget.h>
-
 #include <agar/gui/begin.h>
 
 enum ag_scrollbar_type {
@@ -30,16 +29,18 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_NOAUTOHIDE 0x80	/* Disable autohide */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
-	enum ag_scrollbar_type type;	/* Style of scrollbar */
+	enum ag_scrollbar_type type;	/* Horizontal or vertical */
+
 	enum ag_scrollbar_button curBtn;	/* Active button */
 	enum ag_scrollbar_button mouseOverBtn;	/* Mouseover button */
+
 	int width;			/* Scrollbar width */
 	int length;			/* Length of scrolling control area */
 	int wBar;			/* Preferred control length */
 	int wBarMin;			/* Minimum control length */
 	int hArrow;			/* Arrow height */
-	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
-	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
+	AG_Event *_Nullable buttonIncFn; /* Alt. handler for increment btns */
+	AG_Event *_Nullable buttonDecFn; /* Alt. handler for decrement btns */
 	AG_Timer moveTo;		/* Timer for scrolling control */
 	AG_Timer autoHideTo;		/* Timer for autohide check */
 	int xOffs, xSeek;		/* Cursor offset for scrolling */
@@ -52,15 +53,18 @@ typedef struct ag_scrollbar {
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
 
-AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
-void          AG_ScrollbarSizeHint(AG_Scrollbar *, int);
-void          AG_ScrollbarSetIncFn(AG_Scrollbar *, AG_EventFn, const char *, ...);
-void          AG_ScrollbarSetDecFn(AG_Scrollbar *, AG_EventFn, const char *, ...);
-int           AG_ScrollbarVisible(AG_Scrollbar *);
+AG_Scrollbar *_Nonnull AG_ScrollbarNew(void *_Nullable , enum ag_scrollbar_type,
+                                       Uint);
+void AG_ScrollbarSizeHint(AG_Scrollbar *_Nonnull, int);
+void AG_ScrollbarSetIncFn(AG_Scrollbar *_Nonnull,
+                          _Nullable AG_EventFn, const char *_Nullable, ...);
+void AG_ScrollbarSetDecFn(AG_Scrollbar *_Nonnull,
+                          _Nullable AG_EventFn, const char *_Nullable, ...);
+int  AG_ScrollbarVisible(AG_Scrollbar *_Nonnull);
 
 /* Set/retrieve scrolling control length */
 static __inline__ void
-AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int bsize)
+AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull sb, int bsize)
 {
 	AG_ObjectLock(sb);
 	sb->wBar = (bsize > 10 || bsize == -1) ? bsize : 10;
@@ -72,28 +76,15 @@ AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int bsize)
 }
 /* Set/retrieve scrollbar width in pixels. */
 static __inline__ void
-AG_ScrollbarSetWidth(AG_Scrollbar *sb, int width)
+AG_ScrollbarSetWidth(AG_Scrollbar *_Nonnull sb, int width)
 {
-	AG_ObjectLock(sb);
 	sb->width = width;
-	AG_ObjectUnlock(sb);
 }
-static __inline__ int
-AG_ScrollbarWidth(AG_Scrollbar *sb)
+static __inline__ int _Pure_Attribute
+AG_ScrollbarWidth(AG_Scrollbar *_Nonnull sb)
 {
 	return (sb->width);
 }
-
-#ifdef AG_LEGACY
-# define AG_SCROLLBAR_AUTOSIZE	0x10	/* Automatically size control */
-int AG_ScrollbarControlLength(AG_Scrollbar *) DEPRECATED_ATTRIBUTE;
-void AG_ScrollbarSetIntIncrement(AG_Scrollbar *, int) DEPRECATED_ATTRIBUTE;
-void AG_ScrollbarSetRealIncrement(AG_Scrollbar *, double) DEPRECATED_ATTRIBUTE;
-# define AG_ScrollbarSetBarSize(sb,len) AG_ScrollbarSetControlLength((sb),(len))
-# define AG_ScrollbarGetBarSize(sb) AG_ScrollbarControlLength(sb)
-# define AG_ScrollbarSetButtonSize(sb,w) AG_ScrollbarSetWidth((sb),(w))
-# define AG_ScrollbarGetButtonSize(sb) AG_ScrollbarWidth(sb)
-#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

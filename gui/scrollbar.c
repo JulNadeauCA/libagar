@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@hypertriton.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,8 +65,12 @@ void
 AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_ObjectLock(sb);
-	sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(sb->buttonIncFn, fmt);
+	if (fn != NULL) {
+		sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(sb->buttonIncFn, fmt);
+	} else {
+		sb->buttonIncFn = NULL;
+	}
 	AG_ObjectUnlock(sb);
 }
 
@@ -114,7 +118,7 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	                    (sb->wBar == -1) ? sb->length : sb->wBar;	\
 }
 static __inline__ int
-GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
+GetPxCoords(AG_Scrollbar *_Nonnull sb, int *_Nonnull x, int *_Nonnull len)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
@@ -130,10 +134,12 @@ GetPxCoords(AG_Scrollbar *sb, int *x, int *len)
 	switch (AG_VARIABLE_TYPE(bVal)) {
 	case AG_VARIABLE_INT:		GET_PX_COORDS(int);	break;
 	case AG_VARIABLE_UINT:		GET_PX_COORDS(Uint);	break;
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		GET_PX_COORDS(float);	break;
 	case AG_VARIABLE_DOUBLE:	GET_PX_COORDS(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	GET_PX_COORDS(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_UINT8:		GET_PX_COORDS(Uint8);	break;
 	case AG_VARIABLE_SINT8:		GET_PX_COORDS(Sint8);	break;
@@ -185,7 +191,7 @@ fail:
 	}								\
 }
 static __inline__ void
-SeekToPxCoords(AG_Scrollbar *sb, int x)
+SeekToPxCoords(AG_Scrollbar *_Nonnull sb, int x)
 {
 	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
@@ -198,10 +204,12 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	switch (AG_VARIABLE_TYPE(bVal)) {
 	case AG_VARIABLE_INT:		MAP_PX_COORDS(int);		break;
 	case AG_VARIABLE_UINT:		MAP_PX_COORDS(Uint);		break;
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		MAP_PX_COORDS(float);		break;
 	case AG_VARIABLE_DOUBLE:	MAP_PX_COORDS(double);		break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	MAP_PX_COORDS(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_UINT8:		MAP_PX_COORDS(Uint8);		break;
 	case AG_VARIABLE_SINT8:		MAP_PX_COORDS(Sint8);		break;
@@ -252,7 +260,7 @@ SeekToPxCoords(AG_Scrollbar *sb, int x)
 	}								\
 }
 static int
-Increment(AG_Scrollbar *sb)
+Increment(AG_Scrollbar *_Nonnull sb)
 {
 	AG_Variable *bVal, *bMin, *bMax, *bInc, *bVis;
 	void *pVal, *pMin, *pMax, *pInc, *pVis;
@@ -267,10 +275,12 @@ Increment(AG_Scrollbar *sb)
 	switch (AG_VARIABLE_TYPE(bVal)) {
 	case AG_VARIABLE_INT:		INCREMENT(int);		break;
 	case AG_VARIABLE_UINT:		INCREMENT(Uint);	break;
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		INCREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	INCREMENT(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	INCREMENT(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_UINT8:		INCREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		INCREMENT(Sint8);	break;
@@ -295,7 +305,7 @@ Increment(AG_Scrollbar *sb)
 	return (rv);
 }
 static int
-Decrement(AG_Scrollbar *sb)
+Decrement(AG_Scrollbar *_Nonnull sb)
 {
 	AG_Variable *bVal, *bMin, *bMax, *bInc, *bVis;
 	void *pVal, *pMin, *pMax, *pInc, *pVis;
@@ -310,10 +320,12 @@ Decrement(AG_Scrollbar *sb)
 	switch (AG_VARIABLE_TYPE(bVal)) {
 	case AG_VARIABLE_INT:		DECREMENT(int);		break;
 	case AG_VARIABLE_UINT:		DECREMENT(Uint);	break;
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:		DECREMENT(float);	break;
 	case AG_VARIABLE_DOUBLE:	DECREMENT(double);	break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE:	DECREMENT(long double);	break;
+# endif
 #endif
 	case AG_VARIABLE_UINT8:		DECREMENT(Uint8);	break;
 	case AG_VARIABLE_SINT8:		DECREMENT(Sint8);	break;
@@ -341,7 +353,7 @@ Decrement(AG_Scrollbar *sb)
 #undef DECREMENT
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -364,7 +376,7 @@ MouseButtonUp(AG_Event *event)
 
 /* Timer for scrolling controlled by buttons (mouse spin setting). */
 static Uint32
-MoveButtonsTimeout(AG_Timer *to, AG_Event *event)
+MoveButtonsTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int dir = AG_INT(1);
@@ -381,8 +393,9 @@ MoveButtonsTimeout(AG_Timer *to, AG_Event *event)
 		if (GetPxCoords(sb, &pos, &len) == -1 ||
 		    ((dir == -1 && sb->xSeek >= pos) ||
 		     (dir == +1 && sb->xSeek <= pos+len))) {
-			sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
+			sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 			sb->xSeek = -1;
+			if (dir == +1) { sb->xOffs = len; }
 			return (0);
 		}
 	}
@@ -391,7 +404,7 @@ MoveButtonsTimeout(AG_Timer *to, AG_Event *event)
 
 /* Timer for scrolling controlled by keyboard (keyrepeat setting). */
 static Uint32
-MoveKbdTimeout(AG_Timer *to, AG_Event *event)
+MoveKbdTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int dir = AG_INT(1);
@@ -406,7 +419,7 @@ MoveKbdTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
@@ -430,7 +443,7 @@ MouseButtonDown(AG_Event *event)
 				    MoveButtonsTimeout, "%i", -1);
 			}
 		}
-	} else if (x > totsize - sb->width*2) {			/* Increment */
+	} else if (x > totsize - (sb->width << 1)) {		/* Increment */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEventByPtr(NULL, sb, sb->buttonIncFn, "%i", 1);
@@ -473,7 +486,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int mx = AG_INT(1);
@@ -486,7 +499,7 @@ MouseMotion(AG_Event *event)
 	} else if (AG_WidgetRelativeArea(sb, mx,my)) {
 		if (x < 0) {
 			mouseOverBtn = AG_SCROLLBAR_BUTTON_DEC;
-		} else if (x > SBLEN(sb) - sb->width*2) {
+		} else if (x > SBLEN(sb) - (sb->width << 1)) {
 			mouseOverBtn = AG_SCROLLBAR_BUTTON_INC;
 		} else {
 			int pos, len;
@@ -514,7 +527,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int keysym = AG_INT(1);
@@ -538,7 +551,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int keysym = AG_INT(1);
@@ -555,7 +568,7 @@ KeyUp(AG_Event *event)
 
 /* Timer for AUTOHIDE visibility test. */
 static Uint32
-AutoHideTimeout(AG_Timer *to, AG_Event *event)
+AutoHideTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int rv, x, len;
@@ -578,7 +591,7 @@ AutoHideTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-OnFocusLoss(AG_Event *event)
+OnFocusLoss(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -593,7 +606,7 @@ OnFocusLoss(AG_Event *event)
 	if (!AG_Defined(sb, "visible")) { fn(sb, "visible", 0); }	\
 }
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	AG_Variable *V;
@@ -602,10 +615,12 @@ OnShow(AG_Event *event)
 		AG_FatalError("Scrollbar \"value\" is undefined");
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
+#ifdef HAVE_FLOAT
 	case AG_VARIABLE_FLOAT:	 SET_DEF(AG_SetFloat, 0.0f, 1.0f, 0.1f); break;
 	case AG_VARIABLE_DOUBLE: SET_DEF(AG_SetDouble, 0.0, 1.0, 0.1); break;
-#ifdef HAVE_LONG_DOUBLE
+# ifdef HAVE_LONG_DOUBLE
 	case AG_VARIABLE_LONG_DOUBLE: SET_DEF(AG_SetLongDouble, 0.0l, 1.0l, 0.1l); break;
+# endif
 #endif
 	case AG_VARIABLE_INT:    SET_DEF(AG_SetInt, 0, AG_INT_MAX-1, 1); break;
 	case AG_VARIABLE_UINT:   SET_DEF(AG_SetUint, 0U, AG_UINT_MAX-1, 1U); break;
@@ -631,12 +646,12 @@ OnShow(AG_Event *event)
 		AG_RedrawOnChange(sb, 500, "visible");
 	}
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
-		AG_AddTimer(sb, &sb->autoHideTo, 1000, AutoHideTimeout, NULL);
+		AG_AddTimer(sb, &sb->autoHideTo, 250, AutoHideTimeout, NULL);
 }
 #undef SET_DEF
 
 static void
-OnHide(AG_Event *event)
+OnHide(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	
@@ -644,7 +659,7 @@ OnHide(AG_Event *event)
 }
 
 static void
-OnDetach(AG_Event *event)
+OnDetach(AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	
@@ -653,7 +668,7 @@ OnDetach(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Scrollbar *sb = obj;
 
@@ -672,10 +687,10 @@ Init(void *obj)
 	sb->length = 0;
 	sb->lenPre = 32;
 
-	sb->wBar = agTextFontHeight/2;
+	sb->wBar = agTextFontHeight >> 1;
 	sb->wBarMin = 16;
 	sb->width = agTextFontHeight;
-	sb->hArrow = sb->width*5/9;
+	sb->hArrow = sb->width >> 1;
 	
 	AG_InitTimer(&sb->moveTo, "move", 0);
 	AG_InitTimer(&sb->autoHideTo, "autoHide", 0);
@@ -698,41 +713,41 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Scrollbar *sb = obj;
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->w = sb->width*2 + sb->lenPre;
+		r->w = (sb->width << 1) + sb->lenPre;
 		r->h = sb->width;
 		break;
 	case AG_SCROLLBAR_VERT:
 		r->w = sb->width;
-		r->h = sb->width*2 + sb->lenPre;
+		r->h = (sb->width << 1) + sb->lenPre;
 		break;
 	}
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Scrollbar *sb = obj;
 
-	if (a->w < 4 || a->h < 4) {
-		return (-1);
+	sb->length = ((sb->type == AG_SCROLLBAR_VERT) ? a->h : a->w) -
+	             (sb->width << 1);
+	if (sb->length < 0) {
+		sb->length = 0;
 	}
-	sb->length = ((sb->type==AG_SCROLLBAR_VERT) ? a->h:a->w) - sb->width*2;
-	if (sb->length < 0) { sb->length = 0; }
 	return (0);
 }
 
 static void
-DrawText(AG_Scrollbar *sb)
+DrawText(AG_Scrollbar *_Nonnull sb)
 {
+	char label[32];
 	AG_Driver *drv = WIDGET(sb)->drv;
 	AG_Surface *txt;
-	char label[32];
 	AG_Rect r;
 
 	AG_PushTextState();
@@ -748,8 +763,8 @@ DrawText(AG_Scrollbar *sb)
 
 	txt = AG_TextRender(label);		/* XXX inefficient */
 	r = AG_RECT(
-	    WIDTH(sb)/2 - txt->w/2,
-	    HEIGHT(sb)/2 - txt->h/2,
+	    (WIDTH(sb)  >> 1) - (txt->w >> 1),
+	    (HEIGHT(sb) >> 1) - (txt->h >> 1),
 	    txt->w,
 	    txt->h);
 	AG_WidgetBlit(sb, txt, r.x, r.y);
@@ -764,165 +779,142 @@ DrawText(AG_Scrollbar *sb)
 }
 
 static void
-DrawVertUndersize(AG_Scrollbar *sb)
+DrawVertUndersize(AG_Scrollbar *_Nonnull sb)
 {
-	int w = WIDTH(sb)/2;
-	int size = MIN(HEIGHT(sb)/4, WIDTH(sb));
+	int w = WIDTH(sb), w_2 = w>>1;
+	int h = HEIGHT(sb);
+	int s = MIN(h>>2, w);
 
-	AG_DrawBox(sb, AG_RECT(0,0,WIDTH(sb),HEIGHT(sb)), 1, WCOLOR(sb,0));
-	AG_DrawArrowUp(sb,
-	    w,
-	    size,
-	    size,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowDown(sb,
-	    w,
-	    HEIGHT(sb)/2 + size,
-	    size,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawBox(sb, AG_RECT(0,0,w,h), 1, WCOLOR(sb,0));
+
+	AG_DrawArrowUp(sb,   w_2, s,        s, WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowDown(sb, w_2, (h>>1)+s, s, WCOLOR(sb,SHAPE_COLOR));
 }
 static void
-DrawVert(AG_Scrollbar *sb, int y, int h)
+DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 {
-	int mid = WIDTH(sb)/2;
-	int b2 = sb->width*2;
-	int hArrow = MIN(WIDTH(sb), sb->hArrow);
-	int y2;
+	int w = WIDTH(sb);
+	int h = HEIGHT(sb);
+	int mid = (w >> 1);
+	int wBar = sb->width, wBar2 = (wBar<<1), wBar_2 = (wBar>>1);
+	int hArrow = MIN(w, sb->hArrow);
 
-	if (HEIGHT(sb) < b2) {
+	if (h < wBar2) {
 		DrawVertUndersize(sb);
 		return;
 	}
 
-	/* Background */
-	AG_DrawBox(sb,
-	    AG_RECT(0, 0, WIDTH(sb), HEIGHT(sb)), -1,
-	    WCOLOR(sb,0));
-
-	/* Upper button. */
-	AG_DrawBox(sb,
-	    AG_RECT(0, 0, WIDTH(sb), sb->width),
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
-	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_DEC) ?
-	    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
-	AG_DrawArrowUp(sb,
-	    mid,
-	    sb->width/2,
-	    hArrow,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawBox(sb, AG_RECT(0,0,w,h), -1, WCOLOR(sb,0));	/* Background */
 	
-	/* Lower button. */
-	y2 = HEIGHT(sb) - sb->width;
-	AG_DrawBox(sb,
-	    AG_RECT(0, y2, WIDTH(sb), sb->width),
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
-	    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_INC) ?
-	    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
-	AG_DrawArrowDown(sb,
-	    mid,
-	    y2 + sb->width/2,
-	    hArrow,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
-
-	/* Scrollbar. */
-	if (h > 0) {
+	/* XXX overdraw */
+	
+	/* Up button */
+	{
 		AG_DrawBox(sb,
-		    AG_RECT(0,
-		            sb->width + y,
-			    WIDTH(sb),
-			    MIN(h, HEIGHT(sb)-b2)),
+		    AG_RECT(0, 0, w, wBar),
+		    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
+		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_DEC) ?
+		    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
+
+		AG_DrawArrowUp(sb, mid, wBar_2, hArrow,
+		    WCOLOR(sb,SHAPE_COLOR));
+	}
+
+	/* Down button */
+	{
+		int y2 = h - wBar;
+
+		AG_DrawBox(sb,
+		    AG_RECT(0, y2, w, wBar),
+		    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
+		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_INC) ?
+		    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
+
+		AG_DrawArrowDown(sb, mid, y2 + wBar_2, hArrow,
+		    WCOLOR(sb,SHAPE_COLOR));
+	}
+
+	/* Scrollbar */
+	if (len > 0) {
+		AG_DrawBox(sb,
+		    AG_RECT(0, wBar+y, w, MIN(len,h-wBar2)),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
 		    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
 	} else {
 		AG_DrawBox(sb,
-		    AG_RECT(0,
-		            sb->width,
-			    WIDTH(sb),
-		            HEIGHT(sb)-b2),
+		    AG_RECT(0, wBar, w, h-wBar2),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
 		    WCOLOR_HOV(sb,0) : WCOLOR(sb,0));
 	}
 }
 static void
-DrawHorizUndersize(AG_Scrollbar *sb)
+DrawHorizUndersize(AG_Scrollbar *_Nonnull sb)
 {
-	int h = HEIGHT(sb)/2;
-	int size = MIN(WIDTH(sb)/4, HEIGHT(sb));
+	int w = WIDTH(sb);
+	int h = HEIGHT(sb), h_2 = h>>1;
+	int s = MIN(w>>2, h);
 
-	AG_DrawBox(sb, AG_RECT(0,0,WIDTH(sb),HEIGHT(sb)), 1,
-	    WCOLOR(sb,0));
-	AG_DrawArrowLeft(sb,
-	    size,
-	    h,
-	    size,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
-	AG_DrawArrowRight(sb,
-	    WIDTH(sb)/2 + size,
-	    h,
-	    size,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawBox(sb, AG_RECT(0,0,w,h), 1, WCOLOR(sb,0));
+
+	AG_DrawArrowLeft(sb,  s,        h_2, s, WCOLOR(sb,SHAPE_COLOR));
+	AG_DrawArrowRight(sb, (w>>1)+s, h_2, s, WCOLOR(sb,SHAPE_COLOR));
 }
 static void
-DrawHoriz(AG_Scrollbar *sb, int x, int w)
+DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 {
-	int mid = HEIGHT(sb)/2;
-	int b2 = sb->width*2;
-	int hArrow = MIN(HEIGHT(sb), sb->hArrow);
-	int x2;
+	int w = WIDTH(sb);
+	int h = HEIGHT(sb);
+	int mid = h >> 1;
+	int wBar = sb->width, wBar2 = (wBar << 1), wBar_2 = (wBar >> 1);
+	int hArrow = MIN(h, sb->hArrow);
 	
-	if (WIDTH(sb) < b2) {
+	if (w < wBar2) {
 		DrawHorizUndersize(sb);
 		return;
 	}
 	
-	/* Background */
-	AG_DrawBox(sb,
-	    AG_RECT(0, 0, WIDTH(sb), HEIGHT(sb)), -1,
-	    WCOLOR(sb,0));
+	AG_DrawBox(sb, AG_RECT(0,0,w,h), -1, WCOLOR(sb,0));	/* Background */
+	
+	/* XXX overdraw */
 
 	/* Left button */
-	AG_DrawBox(sb,
-	    AG_RECT(0, 0, sb->width, HEIGHT(sb)),
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
-	    WCOLOR(sb,0));
-	AG_DrawArrowLeft(sb,
-	    sb->width/2, mid,
-	    hArrow,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
-	
+	{
+		AG_DrawBox(sb, AG_RECT(0,0,wBar,h),
+		    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
+		    WCOLOR(sb,0));
+		AG_DrawArrowLeft(sb, wBar_2, mid, hArrow, WCOLOR(sb,SHAPE_COLOR));
+	}
+
 	/* Right button */
-	x2 = WIDTH(sb) - sb->width;
-	AG_DrawBox(sb,
-	    AG_RECT(x2, 0, sb->width, HEIGHT(sb)),
-	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
-	    WCOLOR(sb,0));
-	AG_DrawArrowRight(sb, (x2 + sb->width/2), mid, hArrow,
-	    WCOLOR(sb,SHAPE_COLOR), WCOLOR(sb,SHAPE_COLOR));
+	{
+		int x2 = w - wBar;
+
+		AG_DrawBox(sb,
+		    AG_RECT(x2, 0, wBar, h),
+		    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
+		    WCOLOR(sb,0));
+		AG_DrawArrowRight(sb, x2 + wBar_2, mid, hArrow,
+		    WCOLOR(sb,SHAPE_COLOR));
+	}
 
 	/* Scrollbar */
-	if (w > 0) {
+	if (len > 0) {
 		AG_DrawBox(sb,
-		    AG_RECT(sb->width + x,
-		            0,
-			    MIN(w, WIDTH(sb)-b2),
-			    HEIGHT(sb)),
+		    AG_RECT(wBar+x, 0, MIN(len, w-wBar2), h),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    WCOLOR(sb,0));
 	} else {
 		AG_DrawBox(sb,
-		    AG_RECT(sb->width,
-		            0,
-			    WIDTH(sb)-b2,
-		            HEIGHT(sb)),
+		    AG_RECT(wBar, 0, w-wBar2, h),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    WCOLOR(sb,0));
 	}
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Scrollbar *sb = obj;
 	int x, len;
@@ -934,6 +926,10 @@ Draw(void *obj)
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE && len == sb->length)
 		return;
 
+	/*
+	 * TODO set the Draw() operation vector to DrawVert() or DrawHoriz()
+	 * at initialization time and merge this code into both.
+	 */
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
 		DrawVert(sb, x, len);
@@ -964,39 +960,6 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 	AG_ObjectUnlock(sb);
 	return (rv);
 }
-
-#ifdef AG_LEGACY
-int
-AG_ScrollbarControlLength(AG_Scrollbar *sb)
-{
-	int rv;
-
-	if (sb->wBar == -1) {
-		rv = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
-		                                       AGWIDGET(sb)->w;
-		rv -= sb->width*2;
-		if (rv < sb->wBarMin) { rv = sb->wBarMin; }
-	} else {
-		rv = MAX(sb->wBar, sb->wBarMin);
-	}
-	return (rv);
-}
-
-void
-AG_ScrollbarSetIntIncrement(AG_Scrollbar *sb, int inc)
-{
-	AG_ObjectLock(sb);
-	AG_SetInt(sb, "inc", inc);
-	AG_ObjectUnlock(sb);
-}
-void
-AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
-{
-	AG_ObjectLock(sb);
-	AG_SetDouble(sb, "inc", inc);
-	AG_ObjectUnlock(sb);
-}
-#endif /* AG_LEGACY */
 
 AG_WidgetClass agScrollbarClass = {
 	{
