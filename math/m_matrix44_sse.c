@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -67,6 +67,12 @@ const M_MatrixOps44 mMatOps44_SSE = {
 	M_MatrixScale44_SSE,			/* -522 clks */
 	M_MatrixUniScale44_SSE,			/* -595 clks */
 };
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wuninitialized"
+#elif defined(__GCC__)
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
 
 M_Matrix44
 M_MatrixInvert44_SSE(M_Matrix44 A)
