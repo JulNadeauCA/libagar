@@ -42,7 +42,7 @@ M_MatrixZero44_SSE(void)
 	return (out);
 }
 static __inline__ void
-M_MatrixZero44v_SSE(M_Matrix44 *M)
+M_MatrixZero44v_SSE(M_Matrix44 *_Nonnull M)
 {
 	M->m1 = _mm_setzero_ps();
 	M->m2 = _mm_setzero_ps();
