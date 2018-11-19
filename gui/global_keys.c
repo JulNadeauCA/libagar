@@ -83,23 +83,29 @@ void
 AG_BindStdGlobalKeys(void)
 {
 #ifdef __APPLE__
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_META,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_META,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_META,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_META, AG_QuitGUI);
+	AG_KeyMod mod = AG_KEYMOD_META;
 #else
-	AG_BindGlobalKey(AG_KEY_EQUALS,	AG_KEYMOD_CTRL,	AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,	AG_KEYMOD_CTRL,	AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,	AG_KEYMOD_CTRL,	AG_ZoomReset);
-	AG_BindGlobalKey(AG_KEY_Q,	AG_KEYMOD_CTRL,	AG_QuitGUI);
+	AG_KeyMod mod = AG_KEYMOD_CTRL;
 #endif
+	/* Zoom in, zoom out and reset to 1:1 */
+	AG_BindGlobalKey(AG_KEY_EQUALS,	mod,			AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_PLUS,   mod|AG_KEYMOD_SHIFT,	AG_ZoomIn);
+	AG_BindGlobalKey(AG_KEY_MINUS,	mod,			AG_ZoomOut);
+	AG_BindGlobalKey(AG_KEY_0,      mod,			AG_ZoomReset);
+
+	/* Terminate the application immediately. */
+	AG_BindGlobalKey(AG_KEY_Q,      mod,			AG_QuitGUI);
+
+	/*
+	 * Close the active window and gracefully terminate the application
+	 * when there are no more windows.
+	 */
 	AG_BindGlobalKey(AG_KEY_ESCAPE,	AG_KEYMOD_ANY, AG_CloseFocusedWindow);
 }
 
 /* Tie a global hotkey to a callback function (AG_Event style). */
 void
-AG_BindGlobalKeyEv(AG_KeySym keysym, AG_KeyMod keymod,
-    void (*fn_ev)(AG_Event *))
+AG_BindGlobalKeyEv(AG_KeySym keysym, AG_KeyMod keymod, void (*fn_ev)(AG_Event *))
 {
 	struct ag_global_key *gk;
 
