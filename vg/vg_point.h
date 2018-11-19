@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 typedef struct vg_point {
-	struct vg_node _inherit;
+	struct vg_node _inherit;	/* VG_Node(3) -> VG_Point */
 	float size;			/* Size in pixels (0.0 = invisible) */
 } VG_Point;
 
@@ -10,23 +10,6 @@ typedef struct vg_point {
 __BEGIN_DECLS
 extern VG_NodeOps vgPointOps;
 
-static __inline__ VG_Point *
-VG_PointNew(void *pNode, VG_Vector pos)
-{
-	VG_Point *vp;
-
-	vp = (VG_Point *)AG_Malloc(sizeof(VG_Point));
-	VG_NodeInit(vp, &vgPointOps);
-	VG_Translate(vp, pos);
-	VG_NodeAttach(pNode, vp);
-	return (vp);
-}
-
-static __inline__ void
-VG_PointSize(VG_Point *vp, float r)
-{
-	VG_Lock(VGNODE(vp)->vg);
-	vp->size = r;
-	VG_Unlock(VGNODE(vp)->vg);
-}
+VG_Point *_Nonnull VG_PointNew(void *_Nullable, VG_Vector);
+void               VG_PointSize(VG_Point *_Nonnull, float);
 __END_DECLS

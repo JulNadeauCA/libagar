@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,8 @@ typedef struct vg_select_tool {
 } VG_SelectTool;
 
 /* Return the entity nearest to vPos. */
-static void *
-ProximityQuery(VG_View *vv, VG_Vector vPos)
+static void *_Nullable
+ProximityQuery(VG_View *_Nonnull vv, VG_Vector vPos)
 {
 	VG *vg = vv->vg;
 	float prox, proxNearest;
@@ -103,9 +103,9 @@ ProximityQuery(VG_View *vv, VG_Vector vPos)
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector v, int b)
+MouseButtonDown(void *_Nonnull obj, VG_Vector v, int b)
 {
-	VG_SelectTool *t = p;
+	VG_SelectTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Node *vn;
 
@@ -137,9 +137,9 @@ MouseButtonDown(void *p, VG_Vector v, int b)
 }
 
 static int
-MouseButtonUp(void *p, VG_Vector v, int b)
+MouseButtonUp(void *_Nonnull obj, VG_Vector v, int b)
 {
-	VG_SelectTool *t = p;
+	VG_SelectTool *t = obj;
 
 	if (b != AG_MOUSE_LEFT) {
 		return (0);
@@ -149,10 +149,11 @@ MouseButtonUp(void *p, VG_Vector v, int b)
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int buttons)
 {
-	VG_SelectTool *t = p;
+	VG_SelectTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
+	VG *vg = vv->vg;
 	VG_Node *vn;
 	VG_Vector v;
 
@@ -179,7 +180,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 		vSnapRel.y = v.y - vLast.y;
 
 		if (vSnapRel.x != 0.0 || vSnapRel.y != 0.0) {
-			TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
+			TAILQ_FOREACH(vn, &vg->nodes, list) {
 				if (!(vn->flags & VG_NODE_SELECTED) ||
 				    vn->ops->moveNode == NULL) {
 					continue;
@@ -191,7 +192,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 			t->vLast = v;
 		}
 	} else {
-		TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
+		TAILQ_FOREACH(vn, &vg->nodes, list) {
 			if (!(vn->flags & VG_NODE_SELECTED) ||
 			    vn->ops->moveNode == NULL) {
 				continue;
@@ -205,9 +206,9 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 }
 
 static int
-KeyDown(void *p, int ksym, int kmod, Uint32 unicode)
+KeyDown(void *_Nonnull obj, int ksym, int kmod, Uint32 unicode)
 {
-	VG_SelectTool *t = p;
+	VG_SelectTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Node *vn;
 	Uint nDel = 0;
@@ -236,9 +237,9 @@ del:
 }
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_SelectTool *t = p;
+	VG_SelectTool *t = obj;
 
 	t->flags = 0;
 }

@@ -70,7 +70,7 @@ editors to be implemented quickly.
 .Fn VG_ViewSetSnapMode "VG_View *vv" "enum vg_snap_mode mode"
 .Pp
 .Ft "void"
-.Fn VG_ViewSetGrid "VG_View *vv" "int gridID" "enum vg_grid_type type" "int interval" "VG_Color color"
+.Fn VG_ViewSetGrid "VG_View *vv" "int gridID" "VG_GridType type" "int interval" "VG_Color color"
 .Pp
 .Ft "Uint"
 .Fn VG_AddEditArea "VG_View *vv" "void *widget"
@@ -187,7 +187,7 @@ argument specifies the interval of the grid (in pixels).
 .Fa color
 sets the color which will be used to display the grid.
 .Fa type
-specifies the style of rendering:
+sets the style of rendering:
 .Pp
 .Bl -tag -compact -width "VG_GRID_POINTS "
 .It VG_GRID_POINTS
@@ -353,7 +353,7 @@ typedef struct vg_tool_ops {
 	const char *name;          /* Tool name */
 	const char *desc;          /* Optional description */
 	AG_StaticIcon *icon;       /* Optional GUI icon */
-	size_t len;                /* Size of instance structure */
+	AG_Size len;               /* Size of instance structure */
 	Uint flags;                /* Options (see below) */
 
 	void (*init)(void *);

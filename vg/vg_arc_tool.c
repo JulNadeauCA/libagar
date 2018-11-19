@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,27 +37,27 @@
 
 typedef struct vg_arc_tool {
 	VG_Tool _inherit;
-	VG_Arc *vaCur;
+	VG_Arc *_Nullable vaCur;		/* Arc being edited */
 } VG_ArcTool;
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_ArcTool *t = p;
+	VG_ArcTool *t = obj;
 
 	t->vaCur = NULL;
 }
 
 static __inline__ void
-AdjustRadius(VG_Arc *va, VG_Vector vPos)
+AdjustRadius(VG_Arc *_Nonnull va, VG_Vector vPos)
 {
 	va->r = VG_Distance(vPos, VG_Pos(va->p));
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector vPos, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector vPos, int button)
 {
-	VG_ArcTool *t = p;
+	VG_ArcTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 	VG_Point *pCenter;
@@ -88,9 +88,9 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int buttons)
 {
-	VG_ArcTool *t = p;
+	VG_ArcTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Point *pEx;
 	
@@ -110,9 +110,9 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Tool *t = p;
+	VG_Tool *t = obj;
 	int x, y;
 
 	VG_GetViewCoords(vv, t->vCursor, &x,&y);

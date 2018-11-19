@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,7 @@ VG_ToolDestroy(VG_Tool *tool)
 }
 
 static void
-ToolWindowClosed(AG_Event *event)
+ToolWindowClosed(AG_Event *_Nonnull event)
 {
 	VG_Tool *tool = AG_PTR(1);
 
@@ -79,9 +79,9 @@ ToolWindowClosed(AG_Event *event)
 }
 
 AG_Window *
-VG_ToolWindow(void *p, const char *name)
+VG_ToolWindow(void *obj)
 {
-	VG_Tool *tool = p;
+	VG_Tool *tool = obj;
 	AG_Window *win;
 
 	win = tool->editWin = AG_WindowNew(0);

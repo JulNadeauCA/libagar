@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +43,65 @@
 #include <stdarg.h>
 #include <string.h>
 
-static void
-Init(void *p)
+VG_Text *
+VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
-	VG_Text *vt = p;
+	VG_Text *vt;
+
+	vt = (VG_Text *)AG_Malloc(sizeof(VG_Text));
+	VG_NodeInit(vt, &vgTextOps);
+	vt->p1 = p1;
+	vt->p2 = p2;
+	VG_AddRef(vt, p1);
+	VG_AddRef(vt, p2);
+	VG_NodeAttach(pNode, vt);
+	return (vt);
+}
+
+void
+VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	vt->align = align;
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+void
+VG_TextFontFace(VG_Text *vt, const char *face)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	AG_Strlcpy(vt->fontFace, face, sizeof(vt->fontFace));
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+void
+VG_TextFontSize(VG_Text *vt, int size)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	vt->fontSize = size;
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+void
+VG_TextFontFlags(VG_Text *vt, Uint flags)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	vt->fontFlags = flags;
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+void
+VG_TextSubstObject(VG_Text *vt, void *obj)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	vt->vsObj = obj;
+	VG_Unlock(VGNODE(vt)->vg);
+}
+
+static void
+Init(void *_Nonnull obj)
+{
+	VG_Text *vt = obj;
 
 	vt->text[0] = '\0';
 	vt->p1 = NULL;
@@ -61,9 +116,10 @@ Init(void *p)
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds,
+    const AG_Version *_Nonnull ver)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	if ((vt->p1 = VG_ReadRef(ds, vt, "Point")) == NULL ||
 	    (vt->p2 = VG_ReadRef(ds, vt, "Point")) == NULL)
@@ -78,9 +134,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static void
-Save(void *p, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	VG_WriteRef(ds, vt->p1);
 	VG_WriteRef(ds, vt->p2);
@@ -122,7 +178,7 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 }
 
 static void
-RenderText(VG_Text *vt, char *sIn, VG_View *vv)
+RenderText(VG_Text *_Nonnull vt, char *_Nonnull sIn, VG_View *_Nonnull vv)
 {
 	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
@@ -160,7 +216,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 }
 
 static void
-RenderTextPolled(VG_Text *vt, VG_View *vv)
+RenderTextPolled(VG_Text *_Nonnull vt, VG_View *_Nonnull vv)
 {
 	char val[64], s[VG_TEXT_MAX], *c;
 	int argIdx = 0;
@@ -192,9 +248,9 @@ RenderTextPolled(VG_Text *vt, VG_View *vv)
 }
 
 static void
-Draw(void *p, VG_View *vv)
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	if (vt->args != NULL) {
 		RenderTextPolled(vt, vv);
@@ -204,9 +260,10 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	float wText, hText;
 	VG_Vector v1, v2;
 	int su;
@@ -227,9 +284,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	VG_Vector v1 = VG_Pos(vt->p1);
 	VG_Vector v2 = VG_Pos(vt->p2);
 
@@ -238,9 +295,9 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Delete(void *p)
+Delete(void *_Nonnull obj)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 
 	if (VG_DelRef(vt, vt->p1) == 0)
 		VG_Delete(vt->p1);
@@ -249,7 +306,7 @@ Delete(void *p)
 }
 
 static void
-SetAlign(AG_Event *event)
+SetAlign(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
 	enum vg_alignment align = (enum vg_alignment)AG_INT(2);
@@ -258,7 +315,7 @@ SetAlign(AG_Event *event)
 }
 
 static void
-SelectFont(AG_Event *event)
+SelectFont(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
 	AG_Window *win = AG_PTR(2);
@@ -274,7 +331,7 @@ SelectFont(AG_Event *event)
 }
 
 static void
-SelectFontDlg(AG_Event *event)
+SelectFontDlg(AG_Event *_Nonnull event)
 {
 	VG_Text *vt = AG_PTR(1);
 	VG_View *vv = AG_PTR(2);
@@ -297,9 +354,9 @@ SelectFontDlg(AG_Event *event)
 }
 
 static void *
-Edit(void *p, VG_View *vv)
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Text *vt = p;
+	VG_Text *vt = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	AG_Pane *vPane;
 	AG_Textbox *tb;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,28 +36,28 @@
 #include <agar/vg/icons.h>
 
 typedef struct vg_circle_tool {
-	VG_Tool _inherit;
-	VG_Circle *vcCur;
+	VG_Tool _inherit;		/* VG_Tool(3) -> VG_CircleTool */
+	VG_Circle *_Nullable vcCur;	/* Circle being edited */
 } VG_CircleTool;
 
 static void
-Init(void *p)
+Init(void *_Nonnull obj)
 {
-	VG_CircleTool *t = p;
+	VG_CircleTool *t = obj;
 
 	t->vcCur = NULL;
 }
 
 static __inline__ void
-AdjustRadius(VG_Circle *vc, VG_Vector vPos)
+AdjustRadius(VG_Circle *_Nonnull vc, VG_Vector vPos)
 {
 	vc->r = VG_Distance(vPos, VG_Pos(vc->p));
 }
 
 static int
-MouseButtonDown(void *p, VG_Vector vPos, int button)
+MouseButtonDown(void *_Nonnull obj, VG_Vector vPos, int button)
 {
-	VG_CircleTool *t = p;
+	VG_CircleTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 	VG_Point *pCenter;
@@ -87,9 +87,9 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 }
 
 static int
-MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
+MouseMotion(void *_Nonnull obj, VG_Vector vPos, VG_Vector vRel, int buttons)
 {
-	VG_CircleTool *t = p;
+	VG_CircleTool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG_Point *pEx;
 	
@@ -109,9 +109,9 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int buttons)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *vv)
 {
-	VG_Tool *t = p;
+	VG_Tool *t = obj;
 	int x, y;
 
 	VG_GetViewCoords(vv, t->vCursor, &x,&y);

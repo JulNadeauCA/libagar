@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2015 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,8 +64,136 @@ VG_ViewNew(void *parent, VG *vg, Uint flags)
 	return (vv);
 }
 
+/* Return the Point nearest to vPos. */
+void *
+VG_NearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
+{
+	float prox, proxNearest = AG_FLT_MAX;
+	VG_Node *vn, *vnNearest = NULL;
+	VG_Vector v;
+
+	TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
+		if (vn->ops->pointProximity == NULL ||
+		    vn == ignore ||
+		    !VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < vv->grid[0].ival) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	return (vnNearest);
+}
+
+/* Return the entity nearest to vPos. */
+void *
+VG_Nearest(VG_View *vv, VG_Vector vPos)
+{
+	VG *vg = vv->vg;
+	float prox, proxNearest;
+	VG_Node *vn, *vnNearest;
+	VG_Vector v;
+
+	/* Prioritize points at a fixed distance. */
+	proxNearest = AG_FLT_MAX;
+	vnNearest = NULL;
+	TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (!VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox <= vv->pointSelRadius) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	if (vnNearest != NULL)
+		return (vnNearest);
+
+	/* Fallback to a general query. */
+	proxNearest = AG_FLT_MAX;
+	vnNearest = NULL;
+	TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (vn->ops->pointProximity == NULL) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < proxNearest) {
+			proxNearest = prox;
+			vnNearest = vn;
+		}
+	}
+	return (vnNearest);
+}
+
+/* Highlight and return the Point nearest to vPos. */
+void *
+VG_HighlightNearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
+{
+	VG *vg = vv->vg;
+	float prox, proxNearest = AG_FLT_MAX;
+	VG_Node *vn, *vnNearest = NULL;
+	VG_Vector v;
+
+	TAILQ_FOREACH(vn, &vg->nodes, list) {
+		vn->flags &= ~(VG_NODE_MOUSEOVER);
+		if (vn->ops->pointProximity == NULL ||
+		    vn == ignore ||
+		    !VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < vv->grid[0].ival) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	return (vnNearest);
+}
+
+/*
+ * Snap specified coordinates to the VG_View grid.
+ * The VG_View must be locked.
+ */
+void
+VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
+{
+	VG_Grid *grid;
+	int ival;
+	float r, ival_2;
+
+	if (vv->snap_mode != VG_GRID) {
+		return;
+	}
+	grid = &vv->grid[0];
+	ival = grid->ival;
+	ival_2 = (float)(ival >> 1);
+
+	r = VG_Mod(pos->x, ival);
+	pos->x -= r;
+	if (r > ival_2)       { pos->x += ival; }
+	else if (r < -ival_2) { pos->x -= ival; }
+	
+	r = VG_Mod(pos->y, ival);
+	pos->y -= r;
+	if (r > ival_2)       { pos->y += ival; }
+	else if (r < -ival_2) { pos->y -= ival; }
+}
+
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -110,7 +238,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -148,7 +276,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -182,7 +310,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -214,7 +342,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -235,12 +363,12 @@ KeyUp(AG_Event *event)
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 
-	vv->x = AGWIDGET(vv)->w/2.0f;
-	vv->y = AGWIDGET(vv)->h/2.0f;
+	vv->x = WIDGET(vv)->w/2.0f;
+	vv->y = WIDGET(vv)->h/2.0f;
 }
 
 static void
@@ -262,7 +390,7 @@ UpdateGridIntervals(VG_View *vv)
 }
 
 static void
-ZoomInOut(AG_Event *event)
+ZoomInOut(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	int inc = AG_INT(1);
@@ -272,7 +400,7 @@ ZoomInOut(AG_Event *event)
 }
 
 static void
-ZoomInMax(AG_Event *event)
+ZoomInMax(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 		
@@ -281,7 +409,7 @@ ZoomInMax(AG_Event *event)
 }
 
 static void
-ZoomOutMax(AG_Event *event)
+ZoomOutMax(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 		
@@ -290,7 +418,7 @@ ZoomOutMax(AG_Event *event)
 }
 
 static void
-SetScale(AG_Event *event)
+SetScale(AG_Event *_Nonnull event)
 {
 	VG_View *vv = AG_SELF();
 	int n = AG_INT(1);
@@ -300,7 +428,7 @@ SetScale(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	VG_View *vv = obj;
 
@@ -323,7 +451,6 @@ Init(void *obj)
 	vv->scaleMax = 1e6f;
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
-	vv->ortho_mode = VG_NO_ORTHO;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
@@ -377,7 +504,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	VG_View *vv = obj;
 
@@ -403,15 +530,6 @@ VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
 {
 	AG_ObjectLock(vv);
 	vv->snap_mode = mode;
-	AG_ObjectUnlock(vv);
-}
-
-/* Set the orthogonal constraint. */
-void
-VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
-{
-	AG_ObjectLock(vv);
-	vv->ortho_mode = mode;
 	AG_ObjectUnlock(vv);
 }
 
@@ -511,14 +629,14 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	r->w = 320;
 	r->h = 240;
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	VG_View *vv = obj;
 
@@ -531,9 +649,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static __inline__ void
-DrawGrid(VG_View *vv, const VG_Grid *grid)
+DrawGrid(VG_View *_Nonnull vv, const VG_Grid *_Nonnull grid)
 {
 	int x, x0, y, ival;
+	int x2, y2;
 
 	if (grid->flags & (VG_GRID_HIDE|VG_GRID_UNDERSIZE))
 		return;
@@ -541,33 +660,40 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	ival = grid->ivalView;
 #ifdef HAVE_OPENGL
 	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
-		x0 = WIDGET(vv)->rView.x1 + (int)(vv->x)%ival;
-		y = WIDGET(vv)->rView.y1 + (int)(vv->y)%ival;
+		x0 = WIDGET(vv)->rView.x1 + (int)vv->x % ival;
+		y  = WIDGET(vv)->rView.y1 + (int)vv->y % ival;
+		x2 = WIDGET(vv)->rView.x2;
+		y2 = WIDGET(vv)->rView.y2;
+
 		glBegin(GL_POINTS);
-		glColor3ub(grid->color.r, grid->color.g, grid->color.b);
-		for (; y < WIDGET(vv)->rView.y2; y += ival) {
-			for (x = x0; x < WIDGET(vv)->rView.x2; x += ival)
+		glColor3ub(grid->color.r,
+		           grid->color.g,
+			   grid->color.b);
+		for (; y < y2; y += ival) {
+			for (x = x0; x < x2; x += ival)
 				glVertex2s(x, y);
 		}
 		glEnd();
 	} else
-#endif
+#endif /* !HAVE_OPENGL */
 	{
 		AG_Color c;
 
-		x0 = (int)(vv->x)%ival;
-		y = (int)(vv->y)%ival;
+		x0 = (int)vv->x % ival;
+		y  = (int)vv->y % ival;
+		x2 = WIDGET(vv)->rView.x2;
+		y2 = WIDGET(vv)->rView.y2;
 		c = VG_MapColorRGB(grid->color);
-		for (; y < WIDGET(vv)->rView.y2; y += ival) {
-			for (x = x0; x < WIDGET(vv)->rView.x2; x += ival)
+
+		for (; y < y2; y += ival)
+			for (x = x0; x < x2; x += ival)
 				AG_PutPixel(vv, x,y, c);
-		}
 	}
 }
 
 #ifdef AG_DEBUG
 static void
-DrawNodeExtent(VG_Node *vn, VG_View *vv)
+DrawNodeExtent(VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
 {
 	AG_Rect rExt;
 	VG_Vector a, b;
@@ -585,7 +711,7 @@ DrawNodeExtent(VG_Node *vn, VG_View *vv)
 #endif /* AG_DEBUG */
 
 static void
-DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
+DrawNode(VG *_Nonnull vg, VG_Node *_Nonnull vn, VG_View *_Nonnull vv)
 {
 	VG_Node *vnChld;
 	VG_Color colorSave;
@@ -613,10 +739,11 @@ DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	VG_View *vv = obj;
 	VG *vg = vv->vg;
+	VG_Tool *curtool = vv->curtool;
 	int su, i;
 
 	if (vg == NULL)
@@ -627,23 +754,25 @@ Draw(void *obj)
 	
 	AG_PushClipRect(vv, vv->r);
 
-	if (vv->flags & VG_VIEW_GRID)
+	if (vv->flags & VG_VIEW_GRID) {
 		for (i = 0; i < vv->nGrids; i++)
 			DrawGrid(vv, &vv->grid[i]);
+	}
 
 	VG_Lock(vg);
 
-	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL) {
-		vv->curtool->ops->predraw(vv->curtool, vv);
+	if (curtool != NULL && curtool->ops->predraw != NULL) {
+		curtool->ops->predraw(curtool, vv);
 	}
 	if (vv->draw_ev != NULL) {
 		vv->draw_ev->fn.fnVoid(vv->draw_ev);
 	}
-	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL) {
-		vv->curtool->ops->postdraw(vv->curtool, vv);
+	if (curtool != NULL && curtool->ops->postdraw != NULL) {
+		curtool->ops->postdraw(curtool, vv);
 	}
 
 	DrawNode(vg, vg->root, vv);
+
 	VG_Unlock(vg);
 
 	if (vv->status[0] != '\0') {
@@ -920,8 +1049,8 @@ VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
 #ifdef HAVE_OPENGL
 	if (AGDRIVER_CLASS(WIDGET(vv)->drv)->flags & AG_DRIVER_OPENGL) {
 		glPushMatrix();
-		glTranslatef((float)(AGWIDGET(vv)->rView.x1 + x),
-		             (float)(AGWIDGET(vv)->rView.y1 + y),
+		glTranslatef((float)(WIDGET(vv)->rView.x1 + x),
+		             (float)(WIDGET(vv)->rView.y1 + y),
 			     0.0f);
 		if (degs != 0.0f) {
 			glRotatef(degs, 0.0f, 0.0f, 1.0f);

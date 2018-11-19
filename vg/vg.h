@@ -43,26 +43,33 @@ struct vg_node;
 struct ag_static_icon;
 
 #include <agar/vg/vg_snap.h>
-#include <agar/vg/vg_ortho.h>
 
 typedef struct vg_node_ops {
-	const char            *name;
-	struct ag_static_icon *icon;
-	size_t                 size;
+	const char            *_Nonnull  name;  /* Display text */
+	struct ag_static_icon *_Nullable icon;  /* Display icon */
 
-	void  (*init)(void *);
-	void  (*destroy)(void *);
-	int   (*load)(void *, AG_DataSource *, const AG_Version *);
-	void  (*save)(void *, AG_DataSource *);
-	void  (*draw)(void *, struct vg_view *);
-	void  (*extent)(void *, struct vg_view *, VG_Vector *a,
-	                VG_Vector *b);
-	float (*pointProximity)(void *, struct vg_view *, VG_Vector *p);
-	float (*lineProximity)(void *, struct vg_view *, VG_Vector *p1,
-	                       VG_Vector *p2);
-	void  (*deleteNode)(void *);
-	void  (*moveNode)(void *, VG_Vector vAbs, VG_Vector vRel);
-	void  *(*edit)(void *, struct vg_view *);
+	AG_Size size;             /* Size of instance structure */
+
+	void  (*_Nullable init)(void *_Nonnull);
+	void  (*_Nullable destroy)(void *_Nonnull);
+
+	int   (*_Nullable load)(void *_Nonnull, AG_DataSource *_Nonnull,
+	                        const AG_Version *_Nonnull);
+	void  (*_Nullable save)(void *_Nonnull, AG_DataSource *_Nonnull);
+
+	void  (*_Nonnull  draw)(void *_Nonnull, struct vg_view *_Nonnull);
+	void  (*_Nullable extent)(void *_Nonnull, struct vg_view *_Nonnull,
+	                          VG_Vector *_Nonnull, VG_Vector *_Nonnull);
+
+	float (*_Nullable pointProximity)(void *_Nonnull, struct vg_view *_Nonnull,
+					  VG_Vector *_Nonnull);
+	float (*_Nullable lineProximity)(void *_Nonnull, struct vg_view *_Nonnull,
+	                                 VG_Vector *_Nonnull, VG_Vector *_Nonnull);
+
+	void  (*_Nullable deleteNode)(void *_Nonnull);
+	void  (*_Nullable moveNode)(void *_Nonnull, VG_Vector, VG_Vector);
+
+	void *_Nullable (*_Nullable edit)(void *_Nonnull, struct vg_view *_Nonnull);
 } VG_NodeOps;
 
 typedef struct vg_layer {
@@ -77,7 +84,7 @@ typedef struct vg_matrix {
 } VG_Matrix;
 
 typedef struct vg_node {
-	VG_NodeOps *ops;		/* Node class information */
+	VG_NodeOps *_Nonnull ops;	/* Node class information */
 	Uint32 handle;			/* Instance handle */
 	char sym[VG_SYM_NAME_MAX];	/* Symbolic name */
 
@@ -87,16 +94,19 @@ typedef struct vg_node {
 #define VG_NODE_MOUSEOVER	0x04	/* Mouse overlap flag */
 #define VG_NODE_SAVED_FLAGS	0
 
-	struct vg      *vg;		/* Back pointer to VG */
-	struct vg_node *parent;		/* Back pointer to parent node */
-	struct vg_node **refs;		/* Referenced nodes */
-	Uint            nRefs;		/* Referenced node count */
-	Uint            nDeps;		/* Dependency count */
+	struct vg      *_Nullable vg;     /* Back pointer to VG */
+	struct vg_node *_Nullable parent; /* Back pointer to parent node */
+
+	struct vg_node *_Nullable *_Nonnull refs;   /* Referenced nodes */
+	Uint                               nRefs;   /* Referenced node count */
+
+	Uint nDeps;			/* Dependency count */
 
 	VG_Color  color;		/* Element color */
 	int       layer;		/* Layer index */
 	VG_Matrix T;			/* Transformation matrix */
-	void     *p;			/* User pointer */
+
+	void *_Nullable p;		/* User pointer */
 
 	AG_TAILQ_HEAD_(vg_node) cNodes;	/* Child nodes */
 	AG_TAILQ_ENTRY(vg_node) tree;	/* Entry in tree */
@@ -111,28 +121,30 @@ typedef struct vg {
 	Uint flags;
 #define VG_NO_ANTIALIAS	0x01		/* Disable anti-aliasing */
 
-	AG_Mutex lock;
+	_Nonnull AG_Mutex lock;
 
-	VG_IndexedColor *colors;	/* Global color table */
-	Uint            nColors;	/* Color count */
-	VG_Color        fillColor;	/* Background color */
-	VG_Color        selectionColor;	/* Selected item/block color */
-	VG_Color        mouseoverColor;	/* Mouse overlap item color */
+	VG_IndexedColor *_Nullable colors;	/* Global color table */
+	Uint                      nColors;	/* Color count */
 
-	VG_Layer *layers;		/* Layer information */
-	Uint	 nLayers;		/* Layer count */
+	VG_Color fillColor;		/* Background color */
+	VG_Color selectionColor;	/* Selected item/block color */
+	VG_Color mouseoverColor;	/* Mouse overlap item color */
+
+	VG_Layer *_Nullable layers;	/* Layer information */
+	Uint	           nLayers;	/* Layer count */
 	
-	VG_Matrix *T;			/* Stack of viewing matrices */
-	Uint      nT;
+	VG_Matrix *_Nonnull T;		/* Stack of view matrices */
+	Uint               nT;
 
-	VG_Node *root;			/* Tree of entities */
+	VG_Node *_Nullable root;	/* Tree of entities */
 	AG_TAILQ_HEAD_(vg_node) nodes;	/* List of entities */
 	AG_TAILQ_ENTRY(vg) user;	/* Entry in user list */
 } VG;
 
-extern VG_NodeOps **vgNodeClasses;
-extern Uint         vgNodeClassCount;
-extern int          vgGUI;
+extern VG_NodeOps *_Nullable *_Nonnull vgNodeClasses;
+extern Uint                            vgNodeClassCount;
+
+extern int vgGUI;
 
 #include <agar/vg/vg_math.h>
 
@@ -156,76 +168,90 @@ extern int          vgGUI;
 		} else
 
 __BEGIN_DECLS
-void      VG_InitSubsystem(void);
-void      VG_DestroySubsystem(void);
+void VG_InitSubsystem(void);
+void VG_DestroySubsystem(void);
 
-VG       *VG_New(Uint);
-void      VG_Init(VG *, Uint);
-void      VG_Destroy(VG *);
-void      VG_Clear(VG *);
-void      VG_ClearNodes(VG *);
-void      VG_ClearColors(VG *);
-void      VG_Save(VG *, AG_DataSource *);
-int       VG_Load(VG *, AG_DataSource *);
+VG *_Nonnull VG_New(Uint) _Warn_Unused_Result;
 
-VG_NodeOps *VG_LookupClass(const char *);
-void        VG_RegisterClass(VG_NodeOps *);
-void        VG_UnregisterClass(VG_NodeOps *);
+void VG_Init(VG *_Nonnull, Uint);
+void VG_Destroy(VG *_Nonnull);
+void VG_Clear(VG *_Nonnull);
+void VG_ClearNodes(VG *_Nonnull);
+void VG_ClearColors(VG *_Nonnull);
 
-void      VG_NodeInit(void *, VG_NodeOps *);
-void      VG_NodeAttach(void *, void *);
-void      VG_NodeDetach(void *);
-void      VG_NodeDestroy(void *);
-int       VG_Delete(void *);
-void      VG_Merge(void *, VG *);
-void      VG_AddRef(void *, void *);
-Uint      VG_DelRef(void *, void *);
-void      VG_NodeTransform(void *, VG_Matrix *);
-Uint32    VG_GenNodeName(VG *, const char *);
+void VG_Save(VG *_Nonnull, AG_DataSource *_Nonnull);
+int  VG_Load(VG *_Nonnull, AG_DataSource *_Nonnull);
 
-void      VG_SetBackgroundColor(VG *, VG_Color);
-void      VG_SetSelectionColor(VG *, VG_Color);
-void      VG_SetMouseOverColor(VG *, VG_Color);
+VG_NodeOps *_Nullable VG_LookupClass(const char *_Nonnull)
+                                    _Warn_Unused_Result;
 
-VG_Layer *VG_PushLayer(VG *, const char *);
-void      VG_PopLayer(VG *);
+void VG_RegisterClass(VG_NodeOps *_Nonnull);
+void VG_UnregisterClass(VG_NodeOps *_Nonnull);
 
-void	  VG_SetSym(void *, const char *, ...);
-void	  VG_SetLayer(void *, int);
-void	  VG_SetColorv(void *, const VG_Color *);
-void	  VG_SetColorRGB(void *, Uint8, Uint8, Uint8);
-void	  VG_SetColorRGBA(void *, Uint8, Uint8, Uint8, Uint8);
+void   VG_NodeInit(void *_Nonnull, VG_NodeOps *_Nonnull);
+void   VG_NodeAttach(void *_Nullable, void *_Nonnull);
+void   VG_NodeDetach(void *_Nonnull);
+void   VG_NodeDestroy(void *_Nonnull);
+int    VG_Delete(void *_Nonnull);
+void   VG_Merge(void *_Nonnull, VG *_Nonnull);
+void   VG_AddRef(void *_Nonnull, void *_Nonnull);
+Uint   VG_DelRef(void *_Nonnull, void *_Nonnull);
+void   VG_NodeTransform(void *_Nonnull, VG_Matrix *_Nonnull);
+Uint32 VG_GenNodeName(VG *_Nonnull, const char *_Nonnull)
+                     _Warn_Unused_Result;
 
-VG_Vector VG_ReadVector(AG_DataSource *);
-void      VG_WriteVector(AG_DataSource *, const VG_Vector *);
-VG_Color  VG_ReadColor(AG_DataSource *);
-void      VG_WriteColor(AG_DataSource *, const VG_Color *);
-void      VG_WriteRef(AG_DataSource *, void *);
-void     *VG_ReadRef(AG_DataSource *, void *, const char *);
+void VG_SetBackgroundColor(VG *_Nonnull, VG_Color);
+void VG_SetSelectionColor(VG *_Nonnull, VG_Color);
+void VG_SetMouseOverColor(VG *_Nonnull, VG_Color);
 
-void     *VG_PointProximity(struct vg_view *, const char *, const VG_Vector *,
-                            VG_Vector *, void *);
-void     *VG_PointProximityMax(struct vg_view *, const char *,
-                               const VG_Vector *, VG_Vector *, void *, float);
+VG_Layer *_Nonnull VG_PushLayer(VG *_Nonnull, const char *_Nonnull);
+void               VG_PopLayer(VG *_Nonnull);
+
+void VG_SetSym(void *_Nonnull, const char *_Nonnull, ...)
+	      FORMAT_ATTRIBUTE(printf,2,3);
+                   
+void VG_SetLayer(void *_Nonnull, int);
+void VG_SetColorv(void *_Nonnull, const VG_Color *_Nonnull);
+void VG_SetColorRGB(void *_Nonnull, Uint8, Uint8, Uint8);
+void VG_SetColorRGBA(void *_Nonnull, Uint8, Uint8, Uint8, Uint8);
+
+VG_Vector VG_ReadVector(AG_DataSource *_Nonnull);
+void      VG_WriteVector(AG_DataSource *_Nonnull, const VG_Vector *_Nonnull);
+
+VG_Color  VG_ReadColor(AG_DataSource *_Nonnull);
+void      VG_WriteColor(AG_DataSource *_Nonnull, const VG_Color *_Nonnull);
+
+void            VG_WriteRef(AG_DataSource *_Nonnull, void *_Nonnull);
+void *_Nullable VG_ReadRef(AG_DataSource *_Nonnull, void *_Nonnull,
+                           const char *_Nullable);
+
+void *_Nullable VG_PointProximity(struct vg_view *_Nonnull, const char *_Nullable,
+                                  const VG_Vector *_Nonnull, VG_Vector *_Nullable,
+                                  void *_Nullable);
+
+void *_Nullable VG_PointProximityMax(struct vg_view *_Nonnull, const char *_Nullable,
+                                     const VG_Vector *_Nonnull, VG_Vector *_Nullable,
+                                     void *_Nullable, float);
+
 VG_Matrix VG_MatrixInvert(VG_Matrix);
 
 /* Acquire the VG lock. */
 static __inline__ void
-VG_Lock(VG *vg)
+VG_Lock(VG *_Nonnull vg)
 {
 	AG_MutexLock(&vg->lock);
 }
 
 /* Release the VG lock. */
 static __inline__ void
-VG_Unlock(VG *vg)
+VG_Unlock(VG *_Nonnull vg)
 {
 	AG_MutexUnlock(&vg->lock);
 }
 
 /* Evaluate whether a node belongs to a class. */
-static __inline__ int
-VG_NodeIsClass(void *p, const char *name)
+static __inline__ int _Pure_Attribute
+VG_NodeIsClass(void *_Nonnull p, const char *_Nonnull name)
 {
 	return (strcmp(VGNODE(p)->ops->name, name) == 0);
 }
@@ -272,7 +298,7 @@ VG_MapColorRGBA(VG_Color vc)
 
 /* Alpha-blend colors cDst and cSrc and return in cDst. */
 static __inline__ void
-VG_BlendColors(VG_Color *cDst, VG_Color cSrc)
+VG_BlendColors(VG_Color *_Nonnull cDst, VG_Color cSrc)
 {
 	cDst->r = (((cSrc.r - cDst->r)*cSrc.a) >> 8) + cDst->r;
 	cDst->g = (((cSrc.g - cDst->g)*cSrc.a) >> 8) + cDst->g;
@@ -281,8 +307,8 @@ VG_BlendColors(VG_Color *cDst, VG_Color cSrc)
 }
 
 /* Search a node by symbol. */
-static __inline__ void *
-VG_FindNodeSym(VG *vg, const char *sym)
+static __inline__ void *_Nullable
+VG_FindNodeSym(VG *_Nonnull vg, const char *_Nonnull sym)
 {
 	VG_Node *vn;
 
@@ -294,8 +320,8 @@ VG_FindNodeSym(VG *vg, const char *sym)
 }
 
 /* Search a node by handle and class. Used for loading datafiles. */
-static __inline__ void *
-VG_FindNode(VG *vg, Uint32 handle, const char *type)
+static __inline__ void *_Nullable
+VG_FindNode(VG *_Nonnull vg, Uint32 handle, const char *_Nonnull type)
 {
 	VG_Node *vn;
 
@@ -309,7 +335,7 @@ VG_FindNode(VG *vg, Uint32 handle, const char *type)
 
 /* Push the transformation matrix stack. */
 static __inline__ void
-VG_PushMatrix(VG *vg)
+VG_PushMatrix(VG *_Nonnull vg)
 {
 	vg->T = (VG_Matrix *)AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
 	memcpy(&vg->T[vg->nT], &vg->T[vg->nT-1], sizeof(VG_Matrix));
@@ -318,7 +344,7 @@ VG_PushMatrix(VG *vg)
 
 /* Pop the transformation matrix stack. */
 static __inline__ void
-VG_PopMatrix(VG *vg)
+VG_PopMatrix(VG *_Nonnull vg)
 {
 #ifdef AG_DEBUG
 	if (vg->nT == 1) { AG_FatalError("VG_PopMatrix"); }
@@ -328,7 +354,7 @@ VG_PopMatrix(VG *vg)
 
 /* Load identity matrix for the given node. */
 static __inline__ void
-VG_LoadIdentity(void *pNode)
+VG_LoadIdentity(void *_Nonnull pNode)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	
@@ -339,7 +365,7 @@ VG_LoadIdentity(void *pNode)
 
 /* Set the position of the given node relative to its parent. */
 static __inline__ void
-VG_SetPositionInParent(void *pNode, VG_Vector v)
+VG_SetPositionInParent(void *_Nonnull pNode, VG_Vector v)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	
@@ -349,7 +375,7 @@ VG_SetPositionInParent(void *pNode, VG_Vector v)
 
 /* Translate the given node. */
 static __inline__ void
-VG_Translate(void *pNode, VG_Vector v)
+VG_Translate(void *_Nonnull pNode, VG_Vector v)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
@@ -363,7 +389,7 @@ VG_Translate(void *pNode, VG_Vector v)
 
 /* Apply uniform scaling to the current viewing matrix. */
 static __inline__ void
-VG_Scale(void *pNode, float s)
+VG_Scale(void *_Nonnull pNode, float s)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
@@ -377,7 +403,7 @@ VG_Scale(void *pNode, float s)
 
 /* Apply a rotation to the current viewing matrix. */
 static __inline__ void
-VG_Rotate(void *pNode, float theta)
+VG_Rotate(void *_Nonnull pNode, float theta)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
@@ -393,7 +419,7 @@ VG_Rotate(void *pNode, float theta)
 
 /* Reflection about vertical line going through the origin. */
 static __inline__ void
-VG_FlipVert(void *pNode)
+VG_FlipVert(void *_Nonnull pNode)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
@@ -407,7 +433,7 @@ VG_FlipVert(void *pNode)
 
 /* Reflection about horizontal line going through the origin. */
 static __inline__ void
-VG_FlipHoriz(void *pNode)
+VG_FlipHoriz(void *_Nonnull pNode)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Matrix T;
@@ -421,21 +447,21 @@ VG_FlipHoriz(void *pNode)
 
 /* Mark node as selected. */
 static __inline__ void
-VG_Select(void *pNode)
+VG_Select(void *_Nonnull pNode)
 {
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
 }
 
 /* Remove the selection flag from node. */
 static __inline__ void
-VG_Unselect(void *pNode)
+VG_Unselect(void *_Nonnull pNode)
 {
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
 }
 
 /* Mark all nodes selected. */
 static __inline__ void
-VG_SelectAll(VG *vg)
+VG_SelectAll(VG *_Nonnull vg)
 {
 	VG_Node *vn;
 	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
@@ -444,7 +470,7 @@ VG_SelectAll(VG *vg)
 
 /* Remove the selection flag from all nodes. */
 static __inline__ void
-VG_UnselectAll(VG *vg)
+VG_UnselectAll(VG *_Nonnull vg)
 {
 	VG_Node *vn;
 	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
@@ -453,7 +479,7 @@ VG_UnselectAll(VG *vg)
 
 /* Return the effective position of the given node relative to the VG origin. */
 static __inline__ VG_Vector
-VG_Pos(void *node)
+VG_Pos(void *_Nonnull node)
 {
 	VG_Matrix T;
 	VG_Vector v = { 0.0f, 0.0f };
@@ -465,7 +491,7 @@ VG_Pos(void *node)
 
 /* Set the position of the given node relative to the VG origin. */
 static __inline__ void
-VG_SetPosition(void *pNode, VG_Vector v)
+VG_SetPosition(void *_Nonnull pNode, VG_Vector v)
 {
 	VG_Node *vn = (VG_Node *)pNode;
 	VG_Vector vParent;

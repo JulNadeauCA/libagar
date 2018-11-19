@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,19 +36,42 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
 
-static void
-Init(void *p)
+VG_Circle *
+VG_CircleNew(void *pNode, VG_Point *pCenter, float r)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = Malloc(sizeof(VG_Circle));
+
+	VG_NodeInit(vc, &vgCircleOps);
+	vc->p = pCenter;
+	vc->r = r;
+	VG_AddRef(vc, pCenter);
+	VG_NodeAttach(pNode, vc);
+	return (vc);
+}
+
+void
+VG_CircleCenter(VG_Circle *vc, VG_Point *pCenter)
+{
+	VG_Lock(VGNODE(vc)->vg);
+	VG_DelRef(vc, vc->p);
+	VG_AddRef(vc, pCenter);
+	vc->p = pCenter;
+	VG_Unlock(VGNODE(vc)->vg);
+}
+
+static void
+Init(void *_Nonnull obj)
+{
+	VG_Circle *vc = obj;
 
 	vc->p = NULL;
 	vc->r = 0.025f;
 }
 
 static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 
 	if ((vc->p = VG_ReadRef(ds, vc, "Point")) == NULL) {
 		return (-1);
@@ -58,18 +81,18 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static void
-Save(void *p, AG_DataSource *ds)
+Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 {
-	VG_Circle *vc= p;
+	VG_Circle *vc = obj;
 
 	VG_WriteRef(ds, vc->p);
 	AG_WriteFloat(ds, vc->r);
 }
 
 static void
-Draw(void *p, VG_View *vv)
+Draw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 	VG_Vector vCenter = VG_Pos(vc->p);
 	int x, y, r;
 
@@ -79,9 +102,10 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
+Extent(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull a,
+    VG_Vector *_Nonnull b)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 	VG_Vector vCenter = VG_Pos(vc->p);
 
 	a->x = vCenter.x - vc->r;
@@ -91,9 +115,9 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 }
 
 static float
-PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
+PointProximity(void *_Nonnull obj, VG_View *_Nonnull vv, VG_Vector *_Nonnull vPt)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 	VG_Vector vCenter = VG_Pos(vc->p);
 	float theta = Atan2(vPt->y - vCenter.y,
 	                    vPt->x - vCenter.x);
@@ -108,26 +132,26 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Delete(void *p)
+Delete(void *_Nonnull obj)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 
 	if (VG_DelRef(vc, vc->p) == 0)
 		VG_Delete(vc->p);
 }
 
 static void
-Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+Move(void *_Nonnull obj, VG_Vector vCurs, VG_Vector vRel)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 
 	vc->r = VG_Distance(VG_Pos(vc->p), vCurs);
 }
 
-static void *
-Edit(void *p, VG_View *vv)
+static void *_Nonnull
+Edit(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Circle *vc = p;
+	VG_Circle *vc = obj;
 	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
 	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &vc->r);

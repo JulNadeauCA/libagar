@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -288,7 +288,7 @@ fail:
 }
 
 static void
-MoveNodesRecursively(VG *vgDst, VG_Node *vn)
+MoveNodesRecursively(VG *_Nonnull vgDst, VG_Node *_Nonnull vn)
 {
 	VG_Node *vnChld;
 
@@ -543,7 +543,7 @@ VG_PopLayer(VG *vg)
 }
 
 static void
-SaveMatrix(VG_Matrix *A, AG_DataSource *ds)
+SaveMatrix(VG_Matrix *_Nonnull A, AG_DataSource *_Nonnull ds)
 {
 	int m, n;
 
@@ -553,7 +553,7 @@ SaveMatrix(VG_Matrix *A, AG_DataSource *ds)
 }
 
 static void
-LoadMatrix(VG_Matrix *A, AG_DataSource *ds)
+LoadMatrix(VG_Matrix *_Nonnull A, AG_DataSource *_Nonnull ds)
 {
 	int m, n;
 
@@ -563,7 +563,7 @@ LoadMatrix(VG_Matrix *A, AG_DataSource *ds)
 }
 
 static void
-SaveNodeGeneric(VG *vg, VG_Node *vn, AG_DataSource *ds)
+SaveNodeGeneric(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds)
 {
 	off_t nNodesOffs;
 	Uint32 nNodes = 0;
@@ -591,7 +591,7 @@ SaveNodeGeneric(VG *vg, VG_Node *vn, AG_DataSource *ds)
 }
 
 static int
-SaveNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds)
+SaveNodeData(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds)
 {
 	VG_Node *vnChld;
 
@@ -657,7 +657,8 @@ VG_Save(VG *vg, AG_DataSource *ds)
 }
 
 static int
-LoadNodeGeneric(VG *vg, VG_Node *vnParent, AG_DataSource *ds)
+LoadNodeGeneric(VG *_Nonnull vg, VG_Node *_Nonnull vnParent,
+    AG_DataSource *_Nonnull ds)
 {
 	char type[VG_TYPE_NAME_MAX];
 	VG_Node *vn;
@@ -687,7 +688,8 @@ LoadNodeGeneric(VG *vg, VG_Node *vnParent, AG_DataSource *ds)
 }
 
 static int
-LoadNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds, const AG_Version *dsVer)
+LoadNodeData(VG *_Nonnull vg, VG_Node *_Nonnull vn, AG_DataSource *_Nonnull ds,
+    const AG_Version *_Nonnull dsVer)
 {
 	VG_Node *vnChld;
 

@@ -237,9 +237,9 @@ node class.
 All function pointers are optional and can be set to NULL.
 .Bd -literal
 typedef struct vg_node_ops {
-	const char            *name;
-	struct ag_static_icon *icon;
-	size_t                 size;
+	const char *_Nonnull name;              /* Display text */
+	struct ag_static_icon *_Nullable icon;  /* Display icon */
+	AG_Size size;
 
 	void  (*init)(VG_Node *);
 	void  (*destroy)(VG_Node *);

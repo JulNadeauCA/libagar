@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,39 @@
 #include <agar/vg/vg.h>
 #include <agar/vg/vg_view.h>
 #include <agar/vg/icons.h>
+
+VG_Arc *
+VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)
+{
+	VG_Arc *va = Malloc(sizeof(VG_Arc));
+
+	VG_NodeInit(va, &vgArcOps);
+	va->p = pCenter;
+	va->r = r;
+	va->a1 = a1;
+	va->a2 = a2;
+	VG_AddRef(va, pCenter);
+	VG_NodeAttach(pNode, va);
+	return (va);
+}
+
+void
+VG_ArcCenter(VG_Arc *va, VG_Point *pCenter)
+{
+	VG_Lock(VGNODE(va)->vg);
+	VG_DelRef(va, va->p);
+	VG_AddRef(va, pCenter);
+	va->p = pCenter;
+	VG_Unlock(VGNODE(va)->vg);
+}
+
+void
+VG_ArcRadius(VG_Arc *va, float r)
+{
+	VG_Lock(VGNODE(va)->vg);
+	va->r = r;
+	VG_Unlock(VGNODE(va)->vg);
+}
 
 static void
 Init(void *p)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,9 @@
 #include <agar/vg/icons.h>
 
 static int
-MouseButtonDown(void *p, VG_Vector v, int b)
+MouseButtonDown(void *_Nonnull obj, VG_Vector v, int b)
 {
-	VG_Tool *t = p;
+	VG_Tool *t = obj;
 	VG_View *vv = VGTOOL(t)->vgv;
 	VG *vg = vv->vg;
 
@@ -53,9 +53,9 @@ MouseButtonDown(void *p, VG_Vector v, int b)
 }
 
 static void
-PostDraw(void *p, VG_View *vv)
+PostDraw(void *_Nonnull obj, VG_View *_Nonnull vv)
 {
-	VG_Tool *t = p;
+	VG_Tool *t = obj;
 	int x, y;
 
 	VG_GetViewCoords(vv, t->vCursor, &x,&y);

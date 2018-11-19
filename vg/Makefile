@@ -19,7 +19,7 @@ LIBS=		${ENABLE_GUI_LIBS}
 CFLAGS+=	-D_AGAR_VG_INTERNAL \
 		${CORE_CFLAGS} ${GUI_CFLAGS} ${VG_CFLAGS}
 
-SRCS=	vg.c vg_circle.c vg_arc.c vg_line.c vg_ortho.c vg_point.c vg_snap.c \
+SRCS=	vg.c vg_circle.c vg_arc.c vg_line.c vg_point.c vg_snap.c \
 	vg_tables.c vg_text.c vg_polygon.c vg_view.c vg_tool.c \
 	vg_circle_tool.c vg_line_tool.c vg_point_tool.c vg_proximity_tool.c \
 	vg_text_tool.c vg_arc_tool.c vg_polygon_tool.c vg_select_tool.c

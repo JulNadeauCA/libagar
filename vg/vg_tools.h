@@ -2,7 +2,7 @@
 
 #include <agar/vg/begin.h>
 __BEGIN_DECLS
-extern VG_ToolOps *vgTools[];
+extern VG_ToolOps *_Nullable vgTools[];
 
 extern VG_ToolOps vgSelectTool;
 extern VG_ToolOps vgCircleTool;
