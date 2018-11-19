@@ -36,11 +36,8 @@
 AU_Wave *
 AU_WaveNew(void)
 {
-	AU_Wave *w;
+	AU_Wave *w = Malloc(sizeof(AU_Wave));
 
-	if ((w = AG_TryMalloc(sizeof(AU_Wave))) == NULL) {
-		return (NULL);
-	}
 	w->flags = 0;
 	w->file = NULL;
 	w->frames = NULL;
@@ -57,11 +54,8 @@ AU_WaveNew(void)
 AU_Wave *
 AU_WaveFromFile(const char *path)
 {
-	AU_Wave *w;
+	AU_Wave *w = AU_WaveNew();
 
-	if ((w = AU_WaveNew()) == NULL) {
-		return (NULL);
-	}
 	if (AU_WaveLoad(w, path) == -1) {
 		AU_WaveFree(w);
 		return (NULL);

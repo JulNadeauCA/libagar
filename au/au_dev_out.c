@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2011-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@ AU_OpenOut(const char *path, int rate, int ch)
 	AU_DevOut *dev = NULL;
 	char devName[128], devArgs[128], *c;
 	const AU_DevOutClass **pDevCls;
+	float *buf;
 	int i;
 
 	/* Parse arguments */
@@ -91,11 +92,13 @@ AU_OpenOut(const char *path, int rate, int ch)
 	Verbose("Audio out: %s: %dHz, %d-Ch, %d Bytes/Frame\n",
 	    path, rate, ch, dev->bytesPerFrame);
 
-	if ((dev->buf = TryMalloc(dev->bufMax*dev->bytesPerFrame)) == NULL) {
+	if ((buf = TryMalloc(dev->bufMax*dev->bytesPerFrame)) == NULL) {
 		goto fail;
 	}
+	dev->buf = buf;
+
 	for (i = 0; i < dev->bufMax*ch; i++)
-		dev->buf[i] = 0.0;
+		buf[i] = 0.0f;
 
 	AG_MutexInit(&dev->lock);
 	AG_CondInit(&dev->wrRdy);
@@ -142,8 +145,29 @@ AU_CloseOut(AU_DevOut *dev)
 	AG_CondDestroy(&dev->wrRdy);
 	AG_CondDestroy(&dev->rdRdy);
 	AG_MutexDestroy(&dev->lock);
-	Free(dev->buf);
-	Free(dev);
+	free(dev->buf);
+	free(dev);
+}
+
+int
+AU_WriteFloat(AU_DevOut *dev, float *data, Uint nFrames)
+{
+	AG_MutexLock(&dev->lock);
+	if (dev->bufSize+nFrames > dev->bufMax) {
+		float *bufNew;
+		if ((bufNew = AG_TryRealloc(dev->buf,
+		    (dev->bufSize + nFrames)*dev->bytesPerFrame)) == NULL) {
+			AG_MutexUnlock(&dev->lock);
+			return (-1);
+		}
+		dev->buf = bufNew;
+		dev->bufMax = dev->bufSize+nFrames;
+	}
+	memcpy(&dev->buf[dev->bufSize*dev->ch], data, nFrames*dev->bytesPerFrame);
+	dev->bufSize += nFrames;
+	AG_CondBroadcast(&dev->rdRdy);
+	AG_MutexUnlock(&dev->lock);
+	return (0);
 }
 
 /* Configure a new virtual channel. */
