@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#ifndef _USE_AGAR_TYPES
+#if !defined(_USE_AGAR_TYPES) && !defined(_AGAR_INTERNAL)
 # ifdef _AGAR_CORE_DEFINED_UINT
 #  undef Uint
 # endif
