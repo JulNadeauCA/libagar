@@ -128,15 +128,16 @@
 # if defined(_MSC_VER) || defined(__BORLANDC__) || \
      defined(__DMC__) || defined(__SC__) || \
      defined(__WATCOMC__) || defined(__LCC__) || \
-     defined(__DECC) || defined(__EABI__)
+     defined(__DECC) || defined(__CC_ARM)
+#  define AG_INLINE  __inline
 #  ifndef __inline__
-#   define __inline__	__inline
+#  define __inline__ __inline
 #  endif
 #  define _AGAR_GUI_USE_INLINE
 # else
-#  if !defined(__MRC__) && !defined(_SGI_SOURCE)
+#  if !defined(__MRC__) && !defined(_SGI_SOURCE) && !defined(HAVE_CC65)
 #   ifndef __inline__
-#    define __inline__ inline
+#   define __inline__ inline
 #   endif
 #   define _AGAR_GUI_USE_INLINE
 #  endif
