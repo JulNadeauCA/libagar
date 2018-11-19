@@ -1441,14 +1441,16 @@ echo '#ifndef HAVE_CC' > $BLD/include/agar/config/have_cc.h
 echo "#define HAVE_CC \"$HAVE_CC\"" >> $BLD/include/agar/config/have_cc.h
 echo '#endif' >> $BLD/include/agar/config/have_cc.h
 echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
+if [ "${HAVE_CC65}" = "yes" ]; then
+CC_COMPILE=""
 echo '#ifndef HAVE_CC65' > $BLD/include/agar/config/have_cc65.h
 echo "#define HAVE_CC65 \"$HAVE_CC65\"" >> $BLD/include/agar/config/have_cc65.h
 echo '#endif' >> $BLD/include/agar/config/have_cc65.h
 echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
-if [ "${HAVE_CC65}" = "yes" ]; then
-CC_COMPILE=""
 else
 CC_COMPILE="-c"
+echo '#undef HAVE_CC65' >$BLD/include/agar/config/have_cc65.h
+echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 fi;
 else
 HAVE_CC="no"
