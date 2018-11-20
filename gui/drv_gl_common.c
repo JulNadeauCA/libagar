@@ -937,7 +937,7 @@ AG_GL_FillRect(void *obj, AG_Rect r, AG_Color c)
 {
 	int x2 = r.x + r.w - 1;
 	int y2 = r.y + r.h - 1;
-
+	
 	glBegin(GL_POLYGON);
 	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2i(r.x, r.y);
@@ -971,7 +971,7 @@ AG_GL_DrawBoxRounded(void *obj, AG_Rect r, int z, int radius,
 {
 	float rad = (float)radius, rad2 = 2.0f*rad;
 	float t, i, nFull = 10.0f, nQuart = nFull/4.0f;
-
+	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
@@ -1175,9 +1175,9 @@ AG_GL_DrawRectFilled(void *obj, AG_Rect r, AG_Color c)
 {
 	int x2 = r.x + r.w - 1;
 	int y2 = r.y + r.h - 1;
-
+	
 	glBegin(GL_POLYGON);
-	glColor3us(c.r, c.g, c.b);
+	GL_Color3uH(c.r, c.g, c.b);
 	glVertex2i(r.x, r.y);
 	glVertex2i(x2, r.y);
 	glVertex2i(x2, y2);
