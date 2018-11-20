@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2013 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 #include <agar/dev/dev.h>
 
 static Uint32 
-RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
+RefreshTableTimeout(AG_Timer *_Nonnull refreshTo, AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_SELF();
 	extern struct ag_objectq agTimerObjQ;
@@ -68,7 +68,7 @@ RefreshTableTimeout(AG_Timer *refreshTo, AG_Event *event)
 }
 
 static void
-CloseWindow(AG_Event *event)
+CloseWindow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 

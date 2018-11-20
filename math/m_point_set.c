@@ -140,21 +140,21 @@ M_PointSetCopy3i(M_PointSet3i *D, const M_PointSet3i *S)
  * Point comparison routines for sort.
  */
 static M_Real
-ComparePoints2_XY(const void *p1, const void *p2)
+ComparePoints2_XY(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector2 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->x - v1->x) <= M_MACHEP) ?
 	       (v2->y - v1->y) : (v1->x - v2->x);
 }
 static M_Real
-ComparePoints2_YX(const void *p1, const void *p2)
+ComparePoints2_YX(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector2 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->y - v1->y) <= M_MACHEP) ?
 	       (v2->x - v1->x) : (v1->y - v2->y);
 }
 static M_Real
-ComparePoints3_XYZ(const void *p1, const void *p2)
+ComparePoints3_XYZ(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->x - v1->x) <= M_MACHEP) ?
@@ -164,7 +164,7 @@ ComparePoints3_XYZ(const void *p1, const void *p2)
 	       (v1->x - v2->x);
 }
 static M_Real
-ComparePoints3_XZY(const void *p1, const void *p2)
+ComparePoints3_XZY(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->x - v1->x) <= M_MACHEP) ?
@@ -174,7 +174,7 @@ ComparePoints3_XZY(const void *p1, const void *p2)
 	       (v1->x - v2->x);
 }
 static M_Real
-ComparePoints3_YXZ(const void *p1, const void *p2)
+ComparePoints3_YXZ(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->y - v1->y) <= M_MACHEP) ?
@@ -184,7 +184,7 @@ ComparePoints3_YXZ(const void *p1, const void *p2)
 	       (v1->y - v2->y);
 }
 static M_Real
-ComparePoints3_YZX(const void *p1, const void *p2)
+ComparePoints3_YZX(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->y - v1->y) <= M_MACHEP) ?
@@ -194,7 +194,7 @@ ComparePoints3_YZX(const void *p1, const void *p2)
 	       (v1->y - v2->y);
 }
 static M_Real
-ComparePoints3_ZXY(const void *p1, const void *p2)
+ComparePoints3_ZXY(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->z - v1->z) <= M_MACHEP) ?
@@ -204,7 +204,7 @@ ComparePoints3_ZXY(const void *p1, const void *p2)
 	       (v1->z - v2->z);
 }
 static M_Real
-ComparePoints3_ZYX(const void *p1, const void *p2)
+ComparePoints3_ZYX(const void *_Nonnull p1, const void *_Nonnull p2)
 {
 	const M_Vector3 *v1 = p1, *v2 = p2;
 	return (Fabs(v2->z - v1->z) <= M_MACHEP) ?

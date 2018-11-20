@@ -36,7 +36,7 @@ M_MatrixZero44_FPU(void)
 }
 
 static __inline__ void
-M_MatrixZero44v_FPU(M_Matrix44 *A)
+M_MatrixZero44v_FPU(M_Matrix44 *_Nonnull A)
 {
 	A->m[0][0] = 0.0; A->m[0][1] = 0.0; A->m[0][2] = 0.0; A->m[0][3] = 0.0;
 	A->m[1][0] = 0.0; A->m[1][1] = 0.0; A->m[1][2] = 0.0; A->m[1][3] = 0.0;
@@ -57,7 +57,7 @@ M_MatrixIdentity44_FPU(void)
 }
 
 static __inline__ void
-M_MatrixIdentity44v_FPU(M_Matrix44 *A)
+M_MatrixIdentity44v_FPU(M_Matrix44 *_Nonnull A)
 {
 	A->m[0][0] = 1.0; A->m[0][1] = 0.0; A->m[0][2] = 0.0; A->m[0][3] = 0.0;
 	A->m[1][0] = 0.0; A->m[1][1] = 1.0; A->m[1][2] = 0.0; A->m[1][3] = 0.0;
@@ -66,7 +66,7 @@ M_MatrixIdentity44v_FPU(M_Matrix44 *A)
 }
 
 static __inline__ void
-M_MatrixCopy44_FPU(M_Matrix44 *mDst, const M_Matrix44 *mSrc)
+M_MatrixCopy44_FPU(M_Matrix44 *_Nonnull mDst, const M_Matrix44 *_Nonnull mSrc)
 {
 #if defined(SINGLE_PRECISION) || defined(HAVE_SSE)
 	memcpy(mDst->m, mSrc->m, 16*sizeof(float));
@@ -76,7 +76,7 @@ M_MatrixCopy44_FPU(M_Matrix44 *mDst, const M_Matrix44 *mSrc)
 }
 
 static __inline__ void
-M_MatrixMult44v_FPU(M_Matrix44 *A, const M_Matrix44 *B)
+M_MatrixMult44v_FPU(M_Matrix44 *_Nonnull A, const M_Matrix44 *_Nonnull B)
 {
 	M_Matrix44 Atmp;
 	int m, n;
@@ -120,7 +120,7 @@ M_MatrixMultVector44_FPU(M_Matrix44 A, M_Vector4 x)
 }
 
 static __inline__ M_Vector4
-M_MatrixMultVector44p_FPU(const M_Matrix44 *A, const M_Vector4 *x)
+M_MatrixMultVector44p_FPU(const M_Matrix44 *_Nonnull A, const M_Vector4 *_Nonnull x)
 {
 	M_Vector4 Ax;
 	
@@ -136,7 +136,7 @@ M_MatrixMultVector44p_FPU(const M_Matrix44 *A, const M_Vector4 *x)
 }
 
 static __inline__ void
-M_MatrixMultVector44v_FPU(M_Vector4 *x, const M_Matrix44 *A)
+M_MatrixMultVector44v_FPU(M_Vector4 *_Nonnull x, const M_Matrix44 *_Nonnull A)
 {
 	M_Real xx = x->x;
 	M_Real xy = x->y;
@@ -150,7 +150,7 @@ M_MatrixMultVector44v_FPU(M_Vector4 *x, const M_Matrix44 *A)
 }
 
 static __inline__ void
-M_MatrixToFloats44_FPU(float *fv, const M_Matrix44 *M)
+M_MatrixToFloats44_FPU(float *_Nonnull fv, const M_Matrix44 *_Nonnull M)
 {
 	int m, n;
 
@@ -161,7 +161,7 @@ M_MatrixToFloats44_FPU(float *fv, const M_Matrix44 *M)
 }
 
 static __inline__ void
-M_MatrixToDoubles44_FPU(double *dv, const M_Matrix44 *M)
+M_MatrixToDoubles44_FPU(double *_Nonnull dv, const M_Matrix44 *_Nonnull M)
 {
 	int m, n;
 
@@ -172,7 +172,7 @@ M_MatrixToDoubles44_FPU(double *dv, const M_Matrix44 *M)
 }
 
 static __inline__ void
-M_MatrixFromFloats44_FPU(M_Matrix44 *M, const float *fv)
+M_MatrixFromFloats44_FPU(M_Matrix44 *_Nonnull M, const float *_Nonnull fv)
 {
 	int m, n;
 
@@ -189,7 +189,7 @@ M_MatrixFromFloats44_FPU(M_Matrix44 *M, const float *fv)
 }
 
 static __inline__ void
-M_MatrixFromDoubles44_FPU(M_Matrix44 *M, const double *fv)
+M_MatrixFromDoubles44_FPU(M_Matrix44 *_Nonnull M, const double *_Nonnull fv)
 {
 	int m, n;
 
@@ -222,7 +222,7 @@ M_MatrixTranspose44_FPU(M_Matrix44 M)
 }
 
 static __inline__ M_Matrix44
-M_MatrixTranspose44p_FPU(const M_Matrix44 *M)
+M_MatrixTranspose44p_FPU(const M_Matrix44 *_Nonnull M)
 {
 	M_Matrix44 T;
 
@@ -238,7 +238,7 @@ M_MatrixTranspose44p_FPU(const M_Matrix44 *M)
 }
 
 static __inline__ void
-M_MatrixTranspose44v_FPU(M_Matrix44 *M)
+M_MatrixTranspose44v_FPU(M_Matrix44 *_Nonnull M)
 {
 	M_Matrix44 T;
 
@@ -259,18 +259,19 @@ __BEGIN_DECLS
 extern const M_MatrixOps44 mMatOps44_FPU;
 
 M_Matrix44 M_MatrixInvert44_FPU(M_Matrix44);
-int        M_MatrixInvertElim44_FPU(M_Matrix44, M_Matrix44 *);
-void       M_MatrixRotateAxis44_FPU(M_Matrix44 *, M_Real, M_Vector3);
-void       M_MatrixTranslatev44_FPU(M_Matrix44 *, M_Vector3);
-void       M_MatrixTranslate44_FPU(M_Matrix44 *, M_Real, M_Real, M_Real);
-void       M_MatrixOrbitAxis44_FPU(M_Matrix44 *, M_Vector3, M_Vector3, M_Real);
-void       M_MatrixRotateEul44_FPU(M_Matrix44 *, M_Real, M_Real, M_Real);
-void       M_MatrixRotate44I_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixRotate44J_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixRotate44K_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixTranslateX44_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixTranslateY44_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixTranslateZ44_FPU(M_Matrix44 *, M_Real);
-void       M_MatrixScale44_FPU(M_Matrix44 *, M_Real, M_Real, M_Real, M_Real);
-void       M_MatrixUniScale44_FPU(M_Matrix44 *, M_Real);
+int        M_MatrixInvertElim44_FPU(M_Matrix44, M_Matrix44 *_Nonnull);
+
+void M_MatrixRotateAxis44_FPU(M_Matrix44 *_Nonnull, M_Real, M_Vector3);
+void M_MatrixTranslatev44_FPU(M_Matrix44 *_Nonnull, M_Vector3);
+void M_MatrixTranslate44_FPU(M_Matrix44 *_Nonnull, M_Real, M_Real, M_Real);
+void M_MatrixOrbitAxis44_FPU(M_Matrix44 *_Nonnull, M_Vector3, M_Vector3, M_Real);
+void M_MatrixRotateEul44_FPU(M_Matrix44 *_Nonnull, M_Real, M_Real, M_Real);
+void M_MatrixRotate44I_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixRotate44J_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixRotate44K_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixTranslateX44_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixTranslateY44_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixTranslateZ44_FPU(M_Matrix44 *_Nonnull, M_Real);
+void M_MatrixScale44_FPU(M_Matrix44 *_Nonnull, M_Real, M_Real, M_Real, M_Real);
+void M_MatrixUniScale44_FPU(M_Matrix44 *_Nonnull, M_Real);
 __END_DECLS

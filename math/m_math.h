@@ -119,16 +119,16 @@ typedef struct m_color { M_Real r, g, b, a; } M_Color;
 /* Vector in R^n. */
 typedef struct m_vector {
 	Uint m;			/* Size */
-	M_Real *v;		/* Elements */
+	M_Real *_Nullable v;	/* Elements */
 } M_Vector;
 
 struct m_matrix_ops;
 
 /* Base class for m-by-n matrices. */
 typedef struct m_matrix {
-	const struct m_matrix_ops *ops;
-	Uint m;			/* Rows */
-	Uint n;			/* Columns */
+	const struct m_matrix_ops *_Nonnull ops;
+	Uint m; /* Rows */
+	Uint n; /* Columns */
 } M_Matrix;
 
 #define MVECTOR(v) ((M_Vector *)(v))
@@ -376,27 +376,32 @@ typedef struct m_matrix {
 #endif
 
 __BEGIN_DECLS
-void   M_InitSubsystem(void);
-void   M_DestroySubsystem(void);
+void M_InitSubsystem(void);
+void M_DestroySubsystem(void);
 
-M_Real      M_ReadReal(AG_DataSource *);
-void        M_CopyReal(AG_DataSource *, M_Real *);
-void        M_WriteReal(AG_DataSource *, M_Real);
-M_Complex   M_ReadComplex(AG_DataSource *);
-void        M_CopyComplex(AG_DataSource *, M_Complex *);
-void        M_WriteComplex(AG_DataSource *, M_Complex);
-M_Range     M_ReadRange(AG_DataSource *);
-void        M_CopyRange(AG_DataSource *, M_Range *);
-void        M_WriteRange(AG_DataSource *, M_Range);
+M_Real      M_ReadReal(AG_DataSource *_Nonnull);
+void        M_CopyReal(AG_DataSource *_Nonnull, M_Real *_Nonnull);
+void        M_WriteReal(AG_DataSource *_Nonnull, M_Real);
+M_Complex   M_ReadComplex(AG_DataSource *_Nonnull);
+void        M_CopyComplex(AG_DataSource *_Nonnull, M_Complex *_Nonnull);
+void        M_WriteComplex(AG_DataSource *_Nonnull, M_Complex);
+M_Range     M_ReadRange(AG_DataSource *_Nonnull);
+void        M_CopyRange(AG_DataSource *_Nonnull, M_Range *_Nonnull);
+void        M_WriteRange(AG_DataSource *_Nonnull, M_Range);
 #define     M_ReadTime(ds) (M_Time)M_ReadReal(ds)
 #define     M_WriteTime(ds,t) M_WriteReal((ds),(M_Real)(t))
-M_TimeRange M_ReadTimeRange(AG_DataSource *);
-void        M_CopyTimeRange(AG_DataSource *, M_TimeRange *);
-void        M_WriteTimeRange(AG_DataSource *, M_TimeRange);
+M_TimeRange M_ReadTimeRange(AG_DataSource *_Nonnull);
+void        M_CopyTimeRange(AG_DataSource *_Nonnull, M_TimeRange *_Nonnull);
+void        M_WriteTimeRange(AG_DataSource *_Nonnull, M_TimeRange);
 
-int    M_HeapSort(void *, AG_Size, AG_Size, int (*)(const void *, const void *));
-void   M_QSort(void *, AG_Size, AG_Size, M_Real (*)(const void *, const void *));
-int    M_MergeSort(void *, AG_Size, AG_Size, int (*)(const void *, const void *));
-int    M_RadixSort(const Uint8 **, int, const Uint8 *, Uint);
-int    M_RadixSortStable(const Uint8 **, int, const Uint8 *, Uint);
+int    M_HeapSort(void *_Nonnull, AG_Size, AG_Size,
+                  int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+void   M_QSort(void *_Nonnull, AG_Size, AG_Size,
+               M_Real (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+int    M_MergeSort(void *_Nonnull, AG_Size, AG_Size,
+                   int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+int    M_RadixSort(const Uint8 *_Nonnull *_Nonnull, int,
+                   const Uint8 *_Nullable, Uint);
+int    M_RadixSortStable(const Uint8 *_Nonnull *_Nonnull, int,
+                         const Uint8 *_Nullable, Uint);
 __END_DECLS

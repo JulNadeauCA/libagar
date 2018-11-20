@@ -60,7 +60,7 @@ M_VectorGet3_FPU(M_Real x, M_Real y, M_Real z)
 }
 
 static __inline__ void
-M_VectorSet3_FPU(M_Vector3 *v, M_Real x, M_Real y, M_Real z)
+M_VectorSet3_FPU(M_Vector3 *_Nonnull v, M_Real x, M_Real y, M_Real z)
 {
 #ifdef HAVE_SSE
 	v->x = (float)x;
@@ -74,7 +74,7 @@ M_VectorSet3_FPU(M_Vector3 *v, M_Real x, M_Real y, M_Real z)
 }
 
 static __inline__ void
-M_VectorCopy3_FPU(M_Vector3 *vDst, const M_Vector3 *vSrc)
+M_VectorCopy3_FPU(M_Vector3 *_Nonnull vDst, const M_Vector3 *_Nonnull vSrc)
 {
 	vDst->x = vSrc->x;
 	vDst->y = vSrc->y;
@@ -93,7 +93,7 @@ M_VectorFlip3_FPU(M_Vector3 a)
 }
 
 static __inline__ M_Vector3
-M_VectorFlip3p_FPU(const M_Vector3 *a)
+M_VectorFlip3p_FPU(const M_Vector3 *_Nonnull a)
 {
 	M_Vector3 b;
 	
@@ -110,7 +110,7 @@ M_VectorLen3_FPU(M_Vector3 v)
 }
 
 static __inline__ M_Real
-M_VectorLen3p_FPU(const M_Vector3 *v)
+M_VectorLen3p_FPU(const M_Vector3 *_Nonnull v)
 {
 	return M_Sqrt(v->x*v->x + v->y*v->y + v->z*v->z);
 }
@@ -122,7 +122,7 @@ M_VectorDot3_FPU(M_Vector3 v1, M_Vector3 v2)
 }
 
 static __inline__ M_Real
-M_VectorDot3p_FPU(const M_Vector3 *v1, const M_Vector3 *v2)
+M_VectorDot3p_FPU(const M_Vector3 *_Nonnull v1, const M_Vector3 *_Nonnull v2)
 {
 	return (v1->x*v2->x + v1->y*v2->y + v1->z*v2->z);
 }
@@ -143,7 +143,7 @@ M_VectorNorm3_FPU(M_Vector3 v)
 }
 
 static __inline__ M_Vector3
-M_VectorNorm3p_FPU(const M_Vector3 *v)
+M_VectorNorm3p_FPU(const M_Vector3 *_Nonnull v)
 {
 	M_Vector3 n;
 	M_Real len;
@@ -158,7 +158,7 @@ M_VectorNorm3p_FPU(const M_Vector3 *v)
 }
 
 static __inline__ void
-M_VectorNorm3v_FPU(M_Vector3 *v)
+M_VectorNorm3v_FPU(M_Vector3 *_Nonnull v)
 {
 	M_Real len;
 
@@ -182,7 +182,7 @@ M_VectorCross3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorCross3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorCross3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 c;
 
@@ -205,7 +205,7 @@ M_VectorNormCross3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorNormCross3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorNormCross3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 c;
 
@@ -228,7 +228,7 @@ M_VectorScale3_FPU(M_Vector3 a, M_Real c)
 }
 
 static __inline__ M_Vector3
-M_VectorScale3p_FPU(const M_Vector3 *a, M_Real c)
+M_VectorScale3p_FPU(const M_Vector3 *_Nonnull a, M_Real c)
 {
 	M_Vector3 b;
 
@@ -239,7 +239,7 @@ M_VectorScale3p_FPU(const M_Vector3 *a, M_Real c)
 }
 
 static __inline__ void
-M_VectorScale3v_FPU(M_Vector3 *a, M_Real c)
+M_VectorScale3v_FPU(M_Vector3 *_Nonnull a, M_Real c)
 {
 	a->x *= c;
 	a->y *= c;
@@ -258,7 +258,7 @@ M_VectorAdd3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorAdd3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorAdd3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 c;
 
@@ -269,7 +269,7 @@ M_VectorAdd3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
 }
 
 static __inline__ void
-M_VectorAdd3v_FPU(M_Vector3 *r, const M_Vector3 *a)
+M_VectorAdd3v_FPU(M_Vector3 *_Nonnull r, const M_Vector3 *_Nonnull a)
 {
 	r->x += a->x;
 	r->y += a->y;
@@ -288,7 +288,7 @@ M_VectorSub3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorSub3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorSub3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 c;
 
@@ -299,7 +299,7 @@ M_VectorSub3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
 }
 
 static __inline__ void
-M_VectorSub3v_FPU(M_Vector3 *r, const M_Vector3 *a)
+M_VectorSub3v_FPU(M_Vector3 *_Nonnull r, const M_Vector3 *_Nonnull a)
 {
 	r->x -= a->x;
 	r->y -= a->y;
@@ -313,7 +313,7 @@ M_VectorDistance3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Real
-M_VectorDistance3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorDistance3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	return M_VectorLen3_FPU(M_VectorAdd3_FPU(*b,
 	                        M_VectorFlip3p_FPU(a)));
@@ -331,7 +331,7 @@ M_VectorAvg3_FPU(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorAvg3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorAvg3p_FPU(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 c;
 	
@@ -342,8 +342,8 @@ M_VectorAvg3p_FPU(const M_Vector3 *a, const M_Vector3 *b)
 }
 
 static __inline__ void
-M_VectorVecAngle3_FPU(M_Vector3 vOrig, M_Vector3 vOther, M_Real *theta,
-    M_Real *phi)
+M_VectorVecAngle3_FPU(M_Vector3 vOrig, M_Vector3 vOther, M_Real *_Nullable theta,
+    M_Real *_Nullable phi)
 {
 	M_Vector3 vd;
 
@@ -368,7 +368,7 @@ M_VectorLERP3_FPU(M_Vector3 v1, M_Vector3 v2, M_Real t)
 }
 
 static __inline__ M_Vector3
-M_VectorLERP3p_FPU(M_Vector3 *v1, M_Vector3 *v2, M_Real t)
+M_VectorLERP3p_FPU(M_Vector3 *_Nonnull v1, M_Vector3 *_Nonnull v2, M_Real t)
 {
 	M_Vector3 v;
 
@@ -396,7 +396,7 @@ M_VectorElemPow3_FPU(M_Vector3 v, M_Real x)
 }
 
 static __inline__ M_Vector3
-M_VectorSum3_FPU(const M_Vector3 *va, Uint count)
+M_VectorSum3_FPU(const M_Vector3 *_Nonnull va, Uint count)
 {
 	M_Vector3 v;
 	Uint i;

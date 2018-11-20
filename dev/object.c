@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ const AG_FlagDescr devObjectFlags[] = {
 };
 
 static void
-PollDeps(AG_Event *event)
+PollDeps(AG_Event *_Nonnull event)
 {
 	char path[AG_OBJECT_PATH_MAX];
 	AG_Tlist *tl = AG_SELF();
@@ -86,7 +86,7 @@ PollDeps(AG_Event *event)
 }
 
 static void
-PollVariables(AG_Event *event)
+PollVariables(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
@@ -112,7 +112,7 @@ PollVariables(AG_Event *event)
 }
 
 static void
-PollEvents(AG_Event *event)
+PollEvents(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
@@ -152,7 +152,7 @@ PollEvents(AG_Event *event)
 }
 
 static void
-RenameObject(AG_Event *event)
+RenameObject(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
 	AG_Object *ob = AG_PTR(1);

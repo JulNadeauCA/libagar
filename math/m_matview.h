@@ -17,29 +17,33 @@ enum m_matview_mode {
 struct ag_text_cache;
 
 typedef struct m_matview {
-	struct ag_widget wid;
-	M_Matrix *matrix;	   	/* Matrix to view */
+	struct ag_widget wid;		/* AG_Widget(3) -> M_Matview */
+	M_Matrix *_Nullable matrix;	/* Matrix to display */
 	Uint flags;
 	enum m_matview_mode mode;	/* Mode of display */
 	int wEnt, hEnt;			/* Size of entry in pixels */
-	const char *numFmt;		/* Numerical entry format */
+	const char *_Nonnull numFmt;	/* Numerical entry format */
 	int mPre, nPre;			/* Size hint */
 	int hSpacing, vSpacing;		/* Spacing between entries */
 	int xOffs, yOffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
-	AG_Scrollbar *hBar, *vBar;	/* Display scrollbars */
-	struct ag_text_cache *tCache;	/* For numerical display */
+
+	AG_Scrollbar *_Nonnull hBar;	/* Horizontal scrollbar */
+	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */
+
+	struct ag_text_cache *_Nonnull tCache;	/* For numerical display */
+
 	AG_Rect r;			/* View area */
 } M_Matview;
 
 __BEGIN_DECLS
 extern AG_WidgetClass mMatviewClass;
 
-M_Matview *M_MatviewNew(void *, M_Matrix *, Uint);
-void       M_MatviewSizeHint(M_Matview *, const char *, Uint, Uint);
-void       M_MatviewSetMatrix(M_Matview *, M_Matrix *);
-void       M_MatviewSetDisplayMode(M_Matview *, enum m_matview_mode);
-void       M_MatviewSetNumericalFmt(M_Matview *, const char *);
+M_Matview *_Nonnull M_MatviewNew(void *_Nullable, M_Matrix *_Nullable, Uint);
+void M_MatviewSizeHint(M_Matview *_Nonnull, const char *_Nullable, Uint,Uint);
+void M_MatviewSetMatrix(M_Matview *_Nonnull, M_Matrix *_Nonnull);
+void M_MatviewSetDisplayMode(M_Matview *_Nonnull, enum m_matview_mode);
+void M_MatviewSetNumericalFmt(M_Matview *_Nonnull, const char *_Nonnull);
 __END_DECLS
 
 #include <agar/math/close.h>

@@ -45,11 +45,13 @@ struct sort_stack {
 	int sn, si;
 };
 
-static __inline__ void InsertionSort(const Uint8 **, int, int, const Uint8 *,
-                                     Uint);
-static void RadixSortA(const Uint8 **, int, int, const Uint8 *, Uint);
-static void RadixSortB(const Uint8 **, const Uint8 **, int, int,
-                       const Uint8 *, Uint);
+static __inline__ void InsertionSort(const Uint8 *_Nonnull *_Nonnull , int, int,
+                                     const Uint8 *_Nonnull, Uint);
+static void RadixSortA(const Uint8 *_Nonnull *_Nonnull, int, int,
+                       const Uint8 *_Nonnull, Uint);
+static void RadixSortB(const Uint8 *_Nonnull *_Nonnull,
+                       const Uint8 *_Nonnull *_Nonnull, int, int,
+                       const Uint8 *_Nonnull, Uint);
 
 #define	INS_THRESHOLD	20	/* Divert to InsertionSort(). */
 #define	STACK_SIZE_INIT	512	/* Default stack size. */
@@ -118,7 +120,8 @@ M_RadixSortStable(const Uint8 **a, int n, const Uint8 *tab, Uint endch)
 
 /* Unstable, in-place sort. */
 static void
-RadixSortA(const Uint8 **a, int n, int i, const Uint8 *tr, Uint endch)
+RadixSortA(const Uint8 *_Nonnull *_Nonnull a, int n, int i,
+    const Uint8 *_Nonnull tr, Uint endch)
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -206,8 +209,8 @@ RadixSortA(const Uint8 **a, int n, int i, const Uint8 *tr, Uint endch)
 
 /* Stable sort, requiring additional memory. */
 static void
-RadixSortB(const Uint8 **a, const Uint8 **ta, int n, int i, const Uint8 *tr,
-    Uint endch)
+RadixSortB(const Uint8 *_Nonnull *_Nonnull a, const Uint8 *_Nonnull *_Nonnull ta,
+    int n, int i, const Uint8 *_Nonnull tr, Uint endch)
 {
 	static int count[256], nc, bmin;
 	int c;
@@ -275,7 +278,8 @@ RadixSortB(const Uint8 **a, const Uint8 **ta, int n, int i, const Uint8 *tr,
 }
 
 static __inline__ void
-InsertionSort(const Uint8 **a, int n, int b, const Uint8 *tr, Uint endch)
+InsertionSort(const Uint8 *_Nonnull *_Nonnull a, int n, int b,
+    const Uint8 *_Nonnull tr, Uint endch)
 {
 	Uint8 ch;
 	const Uint8 **ak, **ai, *s, *t;

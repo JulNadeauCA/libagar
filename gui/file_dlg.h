@@ -58,14 +58,14 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_SAVE		  0x0008	/* File must be writeable */
 #define AG_FILEDLG_ASYNC	  0x0010	/* Separate thread for load/save fn */
 #define AG_FILEDLG_RESET_ONSHOW	  0x0020	/* Reset listing/locations on show */
-#define AG_FILEDLG_HFILL	  0x0100
-#define AG_FILEDLG_VFILL	  0x0200
+#define AG_FILEDLG_NOBUTTONS	  0x0040	/* No OK/Cancel buttons */
+#define AG_FILEDLG_MASK_EXT	  0x0080	/* Mask files by extension */
+#define AG_FILEDLG_MASK_HIDDEN	  0x0100	/* Mask hidden files */
+#define AG_FILEDLG_NOMASKOPTS	  0x0200	/* No "Mask files" checkboxes */
+#define AG_FILEDLG_NOTYPESELECT	  0x0400	/* No "Type" dropbox */
+#define AG_FILEDLG_HFILL	  0x4000
+#define AG_FILEDLG_VFILL	  0x8000
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
-#define AG_FILEDLG_NOBUTTONS	  0x0400	/* No OK/Cancel buttons */
-#define AG_FILEDLG_MASK_EXT	  0x0800	/* Mask files by extension */
-#define AG_FILEDLG_MASK_HIDDEN	  0x1000	/* Mask hidden files */
-#define AG_FILEDLG_NOMASKOPTS	  0x2000	/* No "Mask files" checkboxes */
-#define AG_FILEDLG_NOTYPESELECT	  0x4000	/* No "Type" dropbox */
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */

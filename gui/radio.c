@@ -223,12 +223,12 @@ AG_RadioClearItems(AG_Radio *rad)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
 	int xPadding = rad->xPadding;
-	int radius = rad->radius, radius_2 = (radius >> 1);
-	int x = xPadding + (rad->radius << 1) + rad->xSpacing;
+	int radius = rad->radius;
+	int x = xPadding + (radius << 1) + rad->xSpacing;
 	int y = rad->yPadding;
 	int itemHeight = rad->itemHeight, itemHeight_2 = (itemHeight >> 1);
 	int ySpacing_2 = (rad->ySpacing >> 1);
@@ -239,6 +239,7 @@ Draw(void *obj)
 	
 	value = AG_GetInt(rad, "value");
 	AG_PushClipRect(rad, rad->r);
+
 	for (i = 0; i < rad->nItems; i++) {
 		AG_RadioItem *ri = &rad->items[i];
 		int xc, yc;
@@ -258,15 +259,15 @@ Draw(void *obj)
 		xc = xPadding + radius;
 		yc = y + itemHeight_2;
 
-		AG_DrawCircleFilled(rad, xc, yc, radius, WCOLOR(rad,SHAPE_COLOR));
-		AG_DrawCircle(rad, xc, yc, radius, WCOLOR(rad,LINE_COLOR));
+		AG_DrawCircleFilled(rad, xc,yc, radius, WCOLOR(rad,SHAPE_COLOR));
+		AG_DrawCircle(rad, xc,yc, radius, WCOLOR(rad,LINE_COLOR));
 
 		if (i == value) {
-			AG_DrawCircleFilled(rad, xc, yc, radius_2,
+			AG_DrawCircleFilled(rad, xc,yc, (radius >> 1),
 			    WCOLOR_SEL(rad,SHAPE_COLOR));
 		}
 		if (i == rad->oversel) {
-			AG_DrawCircle(rad, xc, yc, radius-2,
+			AG_DrawCircle(rad, xc,yc, radius-2,
 			    WCOLOR_HOV(rad,LINE_COLOR));
 		}
 		AG_WidgetBlitSurface(rad, ri->surface, x, y+ySpacing_2);
@@ -276,30 +277,33 @@ Draw(void *obj)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull obj)
 {
-	AG_Radio *rad = p;
+	AG_Radio *rad = obj;
 
 	Free(rad->items);
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
+	const int maxItems = 10;
 	AG_Radio *rad = obj;
 
 	if (rad->nItems == 0) {
 		r->w = 0;
 		r->h = 0;
 	} else {
-		r->w = rad->xPadding*2 + rad->radius*2 + rad->xSpacing*2 +
-		       rad->max_w;
-		r->h = rad->yPadding*2 + rad->nItems*rad->itemHeight;
+		r->w = (rad->xPadding << 1) + (rad->radius << 1) +
+		       (rad->xSpacing << 1) + rad->max_w;
+
+		r->h = (rad->yPadding << 1) +
+		       (MIN(maxItems,rad->nItems) * rad->itemHeight);
 	}
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Radio *rad = obj;
 	
@@ -314,33 +318,34 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_SELF();
 	int x = AG_INT(1);
-	int y = AG_INT(2) - rad->yPadding;
-	int ns;
+	int y = AG_INT(2);
+	int sel;
+
+	y -= rad->yPadding;
 
 	if (x < 0 || x > WIDGET(rad)->w ||
 	    y < 0 || y > WIDGET(rad)->h) {
 		rad->oversel = -1;
 		return;
 	}
-	ns = (y / rad->itemHeight);
-	if (ns != rad->oversel) {
-		rad->oversel = ns;
+	if ((sel = (y / rad->itemHeight)) != rad->oversel) {
+		rad->oversel = sel;
 		AG_Redraw(rad);
 	}
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_SELF();
-	AG_Variable *value;
 	int button = AG_INT(1);
 	int y = AG_INT(3);
 	int *sel, selNew = -1;
+	AG_Variable *value;
 
 	if (!AG_WidgetIsFocused(rad))
 		AG_WidgetFocus(rad);
@@ -365,7 +370,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_SELF();
 	AG_Variable *value;
@@ -404,14 +409,14 @@ KeyDown(AG_Event *event)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_Radio *rad = AG_SELF();
 	AG_Font *font = WIDGET(rad)->font;
 	int i, w;
 
-	rad->itemHeight = font->height + rad->ySpacing*2;
-	rad->radius = MAX(0, font->height/2 - 1);
+	rad->itemHeight = font->height + (rad->ySpacing << 1);
+	rad->radius = MAX(0, (font->height >> 1)-1);
 	rad->max_w = 0;
 
 	for (i = 0; i < rad->nItems; i++) {
@@ -424,11 +429,10 @@ OnFontChange(AG_Event *event)
 		AG_TextSize(ri->text, &w, NULL);
 		if (w > rad->max_w) { rad->max_w = w; }
 	}
-		if (w > rad->max_w) { rad->max_w = w; }
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Radio *rad = obj;
 
@@ -445,8 +449,8 @@ Init(void *obj)
 	rad->yPadding = 4;
 	rad->xSpacing = 4;
 	rad->ySpacing = 1;
-	rad->itemHeight = agTextFontHeight + rad->ySpacing*2;
-	rad->radius = MAX(0, agTextFontHeight/2 - 1);
+	rad->itemHeight = agTextFontHeight + (rad->ySpacing << 1);
+	rad->radius = MAX(0, (agTextFontHeight >> 1)-1);
 	rad->items = NULL;
 	rad->nItems = 0;
 	rad->r = AG_RECT(0,0,0,0);

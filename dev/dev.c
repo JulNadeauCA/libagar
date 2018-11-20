@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,6 @@
  * Generic dev tool initialization.
  */
 
-#include <agar/config/ag_debug.h>
-
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
@@ -36,22 +34,20 @@
 #include <agar/dev/dev.h>
 
 static const struct dev_tool_ent {
-	char *name;
-	AG_Window *(*fn)(void);
+	char *_Nonnull name;
+	AG_Window *_Nullable (*_Nonnull fn)(void);
 } devTools[] = {
 	{ N_("Registered classes"),	DEV_ClassInfo },
 	{ N_("Display Settings"),	DEV_DisplaySettings },
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
-#if defined(AG_DEBUG)
 	{ N_("CPU Information"),	DEV_CPUInfo },
-#endif
 };
 
 int devInitedSubsystem = 0;
 
 static void
-SelectTool(AG_Event *event)
+SelectTool(AG_Event *_Nonnull event)
 {
 	const struct dev_tool_ent *ent = AG_PTR(1);
 	AG_Window *win;

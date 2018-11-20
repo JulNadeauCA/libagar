@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 static const struct unicode_range {
 	Uint32 start;
-	char *name;
+	char *_Nonnull name;
 } unicodeRanges[] = {
 	{ 0x0000, "Basic Latin" },
 	{ 0x0080, "C1 Controls and Latin-1 Supplement" },
@@ -161,7 +161,7 @@ static const int unicodeRangeCount = sizeof(unicodeRanges) /
                                      sizeof(unicodeRanges[0]);
 
 static void
-SelectUnicodeRange(AG_Event *event)
+SelectUnicodeRange(AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);

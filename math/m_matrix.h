@@ -4,90 +4,87 @@
  * Operations on m*n matrices (including sparse matrices)
  */
 typedef struct m_matrix_ops {
-	const char *name;
+	const char *_Nonnull name;
 
-	M_Real *(*GetElement)(void *M, Uint i, Uint j);
-	M_Real  (*Get)(void *M, Uint i, Uint j);
-	int     (*Resize)(void *M, Uint m, Uint n);
-	void    (*FreeMatrix)(void *M);
-	void   *(*NewMatrix)(Uint m, Uint n);
-	
-	void    (*SetIdentity)(void *M);
-	void    (*SetZero)(void *M);
-	void   *(*Transpose)(const void *M);
-	int     (*Copy)(void *dst, const void *src);
-	void   *(*Dup)(const void *A);
-	void   *(*Add)(const void *A, const void *B);
-	int     (*Addv)(void *A, const void *B);
-	void   *(*DirectSum)(const void *A, const void *B);
-	void   *(*Mul)(const void *A, const void *B);
-	int     (*Mulv)(const void *A, const void *B, void *AB);
-	void   *(*EntMul)(const void *A, const void *B);
-	int     (*EntMulv)(const void *A, const void *B, void *AB);
-	int     (*Compare)(const void *A, const void *B, M_Real *d);
-	int     (*Trace)(M_Real *t, const void *A);
-
-	void   *(*Read)(AG_DataSource *ds);
-	void    (*Write)(AG_DataSource *ds, const void *M);
-	void    (*ToFloats)(float *fv, const void *M);
-	void    (*ToDoubles)(double *dv, const void *M);
-	void    (*FromFloats)(void *M, const float *fv);
-	void    (*FromDoubles)(void *M, const double *dv);
-
-	void   *(*GaussJordan)(const void *A, void *b);
-	int     (*FactorizeLU)(void *A);
-	void    (*BacksubstLU)(void *A, void *b);
-	void    (*MNAPreorder)(void *A);
-	void	(*AddToDiag)(void *A, M_Real g);
+	M_Real *_Nonnull (*_Nonnull GetElement)(void *_Nonnull, Uint,Uint);
+	M_Real           (*_Nonnull Get)(void *_Nonnull, Uint,Uint);
+	int              (*_Nonnull Resize)(void *_Nonnull, Uint,Uint);
+	void             (*_Nonnull FreeMatrix)(void *_Nonnull);
+	void *_Nullable  (*_Nonnull NewMatrix)(Uint,Uint);
+	void             (*_Nonnull SetIdentity)(void *_Nonnull);
+	void             (*_Nonnull SetZero)(void *_Nonnull);
+	void *_Nullable  (*_Nonnull Transpose)(const void *_Nonnull);
+	int              (*_Nonnull Copy)(void *_Nonnull, const void *_Nonnull);
+	void *_Nullable  (*_Nonnull Dup)(const void *_Nonnull);
+	void *_Nonnull   (*_Nonnull Add)(const void *_Nonnull, const void *_Nonnull);
+	int              (*_Nonnull Addv)(void *_Nonnull, const void *_Nonnull);
+	void *_Nonnull   (*_Nonnull DirectSum)(const void *_Nonnull, const void *_Nonnull);
+	void *_Nonnull   (*_Nonnull Mul)(const void *_Nonnull, const void *_Nonnull);
+	int              (*_Nonnull Mulv)(const void *_Nonnull, const void *_Nonnull,
+	                                  void *_Nonnull);
+	void *_Nonnull   (*_Nonnull EntMul)(const void *_Nonnull, const void *_Nonnull);
+	int              (*_Nonnull EntMulv)(const void *_Nonnull, const void *_Nonnull,
+					     void *_Nonnull);
+	int              (*_Nonnull Compare)(const void *_Nonnull, const void *_Nonnull,
+					     M_Real *_Nonnull);
+	int              (*_Nonnull Trace)(M_Real *_Nonnull, const void *_Nonnull);
+	void *_Nonnull   (*_Nonnull Read)(AG_DataSource *_Nonnull);
+	void             (*_Nonnull Write)(AG_DataSource *_Nonnull, const void *_Nonnull);
+	void             (*_Nonnull ToFloats)(float *_Nonnull, const void *_Nonnull);
+	void             (*_Nonnull ToDoubles)(double *_Nonnull, const void *_Nonnull);
+	void             (*_Nonnull FromFloats)(void *_Nonnull, const float *_Nonnull);
+	void             (*_Nonnull FromDoubles)(void *_Nonnull, const double *_Nonnull);
+	void *_Nullable  (*_Nonnull GaussJordan)(const void *_Nonnull, void *_Nonnull);
+	int              (*_Nonnull FactorizeLU)(void *_Nonnull);
+	void             (*_Nonnull BacksubstLU)(void *_Nonnull, void *_Nonnull);
+	void             (*_Nonnull MNAPreorder)(void *_Nonnull);
+	void	         (*_Nonnull AddToDiag)(void *_Nonnull, M_Real);
 } M_MatrixOps;
 
 /*
  * Operations on 4x4 matrices.
  */
 typedef struct m_matrix_ops44 {
-	const char *name;
+	const char *_Nonnull name;
 	
-	M_Matrix44 (*Zero)(void);
-	void       (*Zerov)(M_Matrix44 *A);
-	M_Matrix44 (*Identity)(void);
-	void       (*Identityv)(M_Matrix44 *A);
-	M_Matrix44 (*Transpose)(M_Matrix44 A);
-	M_Matrix44 (*Transposep)(const M_Matrix44 *A);
-	void	   (*Transposev)(M_Matrix44 *A);
+	M_Matrix44 (*_Nonnull Zero)(void);
+	void       (*_Nonnull Zerov)(M_Matrix44 *_Nonnull);
+	M_Matrix44 (*_Nonnull Identity)(void);
+	void       (*_Nonnull Identityv)(M_Matrix44 *_Nonnull);
+	M_Matrix44 (*_Nonnull Transpose)(M_Matrix44);
+	M_Matrix44 (*_Nonnull Transposep)(const M_Matrix44 *_Nonnull);
+	void	   (*_Nonnull Transposev)(M_Matrix44 *_Nonnull);
 
-	M_Matrix44 (*Invert)(M_Matrix44 A);
-	int        (*InvertElim)(M_Matrix44 A, M_Matrix44 *Ainv);
+	M_Matrix44 (*_Nonnull Invert)(M_Matrix44);
+	int        (*_Nonnull InvertElim)(M_Matrix44, M_Matrix44 *_Nonnull);
 	
-	M_Matrix44 (*Mult)(M_Matrix44 A, M_Matrix44 B);
-	void       (*Multv)(M_Matrix44 *A, const M_Matrix44 *B);
-	M_Vector4 (*MultVector)(M_Matrix44 A, M_Vector4 x);
-	M_Vector4 (*MultVectorp)(const M_Matrix44 *A, const M_Vector4 *x);
-	void      (*MultVectorv)(M_Vector4 *x, const M_Matrix44 *A);
+	M_Matrix44 (*_Nonnull Mult)(M_Matrix44, M_Matrix44);
+	void       (*_Nonnull Multv)(M_Matrix44 *_Nonnull, const M_Matrix44 *_Nonnull);
+	M_Vector4 (*_Nonnull MultVector)(M_Matrix44, M_Vector4);
+	M_Vector4 (*_Nonnull MultVectorp)(const M_Matrix44 *_Nonnull, const M_Vector4 *_Nonnull);
+	void      (*_Nonnull MultVectorv)(M_Vector4 *_Nonnull, const M_Matrix44 *_Nonnull);
 
-	void      (*Copy)(M_Matrix44 *dst, const M_Matrix44 *src);
-	void      (*ToFloats)(float *flts, const M_Matrix44 *A);
-	void      (*ToDoubles)(double *dbls, const M_Matrix44 *A);
-	void      (*FromFloats)(M_Matrix44 *A, const float *flts);
-	void      (*FromDoubles)(M_Matrix44 *A, const double *dbls);
+	void      (*_Nonnull Copy)(M_Matrix44 *_Nonnull, const M_Matrix44 *_Nonnull);
+	void      (*_Nonnull ToFloats)(float *_Nonnull, const M_Matrix44 *_Nonnull);
+	void      (*_Nonnull ToDoubles)(double *_Nonnull, const M_Matrix44 *_Nonnull);
+	void      (*_Nonnull FromFloats)(M_Matrix44 *_Nonnull, const float *_Nonnull);
+	void      (*_Nonnull FromDoubles)(M_Matrix44 *_Nonnull, const double *_Nonnull);
 
-	void      (*RotateAxis)(M_Matrix44 *A, M_Real theta, M_Vector3 axis);
-	void      (*OrbitAxis)(M_Matrix44 *A, M_Vector3 center, M_Vector3 axis,
-	                       M_Real theta);
-	void      (*RotateEul)(M_Matrix44 *A, M_Real pitch, M_Real roll,
-	                       M_Real yaw);
-	void      (*RotateI)(M_Matrix44 *A, M_Real theta);
-	void      (*RotateJ)(M_Matrix44 *A, M_Real theta);
-	void      (*RotateK)(M_Matrix44 *A, M_Real theta);
+	void      (*_Nonnull RotateAxis)(M_Matrix44 *_Nonnull, M_Real, M_Vector3);
+	void      (*_Nonnull OrbitAxis)(M_Matrix44 *_Nonnull, M_Vector3, M_Vector3, M_Real);
+	void      (*_Nonnull RotateEul)(M_Matrix44 *_Nonnull, M_Real,M_Real,M_Real);
+	void      (*_Nonnull RotateI)(M_Matrix44 *_Nonnull, M_Real);
+	void      (*_Nonnull RotateJ)(M_Matrix44 *_Nonnull, M_Real);
+	void      (*_Nonnull RotateK)(M_Matrix44 *_Nonnull, M_Real);
 
-	void      (*Translatev)(M_Matrix44 *A, M_Vector3 v);
-	void      (*Translate)(M_Matrix44 *A, M_Real x, M_Real y, M_Real z);
-	void      (*TranslateX)(M_Matrix44 *A, M_Real c);
-	void      (*TranslateY)(M_Matrix44 *A, M_Real c);
-	void      (*TranslateZ)(M_Matrix44 *A, M_Real c);
+	void      (*_Nonnull Translatev)(M_Matrix44 *_Nonnull, M_Vector3);
+	void      (*_Nonnull Translate)(M_Matrix44 *_Nonnull, M_Real,M_Real,M_Real);
+	void      (*_Nonnull TranslateX)(M_Matrix44 *_Nonnull, M_Real);
+	void      (*_Nonnull TranslateY)(M_Matrix44 *_Nonnull, M_Real);
+	void      (*_Nonnull TranslateZ)(M_Matrix44 *_Nonnull, M_Real);
 
-	void      (*Scale)(M_Matrix44 *A, M_Real x, M_Real y, M_Real z,
-	                   M_Real w);
-	void      (*UniScale)(M_Matrix44 *A, M_Real c);
+	void      (*_Nonnull Scale)(M_Matrix44 *_Nonnull, M_Real, M_Real, M_Real, M_Real);
+	void      (*_Nonnull UniScale)(M_Matrix44 *_Nonnull, M_Real);
 } M_MatrixOps44;
 
 /* Debug macros */
@@ -126,8 +123,8 @@ typedef struct m_matrix_ops44 {
 
 /* Backends */
 __BEGIN_DECLS
-extern const M_MatrixOps *mMatOps;
-extern const M_MatrixOps44 *mMatOps44;
+extern const M_MatrixOps *_Nullable mMatOps;
+extern const M_MatrixOps44 *_Nullable mMatOps44;
 __END_DECLS
 
 #include <agar/math/m_matrix_fpu.h>
@@ -209,18 +206,18 @@ __END_DECLS
 
 __BEGIN_DECLS
 void       M_MatrixInitEngine(void);
-M_Matrix44 M_ReadMatrix44(AG_DataSource *);
-void       M_ReadMatrix44v(AG_DataSource *, M_Matrix44 *);
-void       M_WriteMatrix44(AG_DataSource *, const M_Matrix44 *);
+M_Matrix44 M_ReadMatrix44(AG_DataSource *_Nonnull);
+void       M_ReadMatrix44v(AG_DataSource *_Nonnull, M_Matrix44 *_Nonnull);
+void       M_WriteMatrix44(AG_DataSource *_Nonnull, const M_Matrix44 *_Nonnull);
 
 /* Return 1 if the given matrix is square. */
 static __inline__ int
-M_IsSquare(const M_Matrix *M)
+M_IsSquare(const M_Matrix *_Nonnull M)
 {
 	return (M->m == M->n);
 }
 static __inline__ void
-M_Set(M_Matrix *M, Uint i, Uint j, M_Real val)
+M_Set(M_Matrix *_Nonnull M, Uint i, Uint j, M_Real val)
 {
 	M_Real *v = M_GetElement(M, i,j);
 	*v = val;

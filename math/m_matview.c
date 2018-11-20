@@ -73,7 +73,7 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	M_Matview *mv = AG_SELF();
 	int keysym = AG_INT(1);
@@ -99,7 +99,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Button *bu = AG_SELF();
 
@@ -107,7 +107,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	M_Matview *mv = obj;
 
@@ -141,7 +141,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	M_Matview *mv = obj;
 
@@ -177,7 +177,7 @@ M_MatviewSizeHint(M_Matview *mv, const char *text, Uint m, Uint n)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	M_Matview *mv = obj;
 
@@ -186,7 +186,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	M_Matview *mv = obj;
 	AG_SizeAlloc aBar;
@@ -212,16 +212,16 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-DrawNumerical(void *p)
+DrawNumerical(M_Matview *_Nonnull mv)
 {
 	char text[8];
-	M_Matview *mv = p;
 	M_Matrix *M = mv->matrix;
-	int m, n;
-	int x, y;
-	int xMin = 5, xMax = 0;
+	int m,n, x,y, S, xMin=5, xMax=0;
 	int xOffs = -mv->xOffs*mv->wEnt + 8;
 	int yOffs = -mv->yOffs*mv->hEnt + 8;
+	int yInc = mv->hEnt + mv->vSpacing;
+	int xInc = mv->wEnt + mv->hSpacing;
+	int xEnd = mv->r.w, yEnd = mv->r.h;
 
 	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
 	AG_PushClipRect(mv, mv->r);
@@ -229,18 +229,16 @@ DrawNumerical(void *p)
 	AG_PushTextState();
 	AG_TextColor(WCOLOR(mv,TEXT_COLOR));
 
-	for (m = 0, y = yOffs;
-	     m < MROWS(M) && y < mv->r.h;
-	     m++, y += (mv->hEnt + mv->vSpacing)) {
-		for (n = 0, x = xOffs;
-		     n < MCOLS(M) && x < mv->r.w;
-		     n++, x += (mv->wEnt + mv->hSpacing)) {
-			int su;
-
+	for (m=0, y=yOffs;
+	     m < MROWS(M) && y < yEnd;
+	     m++, y += yInc) {
+		for (n=0, x=xOffs;
+		     n < MCOLS(M) && x < xEnd;
+		     n++, x += xInc) {
 			Snprintf(text, sizeof(text), mv->numFmt, M_Get(M,m,n));
-			if ((su = AG_TextCacheGet(mv->tCache,text)) != -1) {
-				AG_WidgetBlitSurface(mv, su, x, y);
-				xMax = MAX(xMax, x+WSURFACE(mv,su)->w);
+			if ((S = AG_TextCacheGet(mv->tCache, text)) != -1) {
+				AG_WidgetBlitSurface(mv, S, x,y);
+				xMax = MAX(xMax, x+WSURFACE(mv,S)->w);
 			}
 			xMin = MIN(xMin, x);
 		}
@@ -254,15 +252,16 @@ DrawNumerical(void *p)
 }
 
 static void
-DrawGreyscale(void *p)
+DrawGreyscale(M_Matview *_Nonnull mv)
 {
-	M_Matview *mv = p;
 	M_Matrix *A = mv->matrix;
 	Uint m, n;
 	int x, y;
 	M_Real big = 0.0, small = 0.0;
-	int xOffs = -mv->xOffs*mv->scale;
-	int yOffs = -mv->yOffs*mv->scale;
+	int scale = mv->scale;
+	int xOffs = -mv->xOffs*scale;
+	int yOffs = -mv->yOffs*scale;
+	int xEnd = mv->r.w, yEnd = mv->r.h;
 
 	AG_DrawBox(mv, mv->r, -1, WCOLOR(mv,0));
 	AG_PushClipRect(mv, mv->r);
@@ -276,12 +275,12 @@ DrawGreyscale(void *p)
 	}
 	big -= small;
 
-	for (m = 0, y = yOffs;
-	     m < MROWS(A) && y < mv->r.h;
-	     m++, y += mv->scale) {
-		for (n = 0, x = xOffs;
-		     n < MCOLS(A) && x < mv->r.w;
-		     n++, x += mv->scale) {
+	for (m=0, y=yOffs;
+	     m < MROWS(A) && y < yEnd;
+	     m++, y += scale) {
+		for (n=0, x=xOffs;
+		     n < MCOLS(A) && x < xEnd;
+		     n++, x += scale) {
 		     	M_Real dv = M_Get(A,m,n);
 			AG_Color c;
 			Uint8 v;
@@ -300,24 +299,24 @@ DrawGreyscale(void *p)
 					c = AG_ColorRGB(0,0,v);
 				}
 			}
-			AG_DrawRectFilled(mv,
-			    AG_RECT(x,y,mv->scale,mv->scale),
-			    c);
+			AG_DrawRectFilled(mv, AG_RECT(x,y,scale,scale), c);
 		}
 	}
 	AG_PopClipRect(mv);
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	M_Matview *mv = obj;
-
-	if (mv->mode == M_MATVIEW_NUMERICAL) {
-		DrawNumerical(mv);
-	} else {
-		DrawGreyscale(mv);
-	}
+	static void (*pf[])(M_Matview *_Nonnull) = {
+		DrawGreyscale,			/* M_MATVIEW_GREYSCALE */
+		DrawNumerical			/* M_MATVIEW_NUMERICAL */
+	};
+#ifdef AG_DEBUG
+	if (mv->mode > 1) { AG_FatalError("Bad mode"); }
+#endif
+	pf[mv->mode](mv);
 }
 
 AG_WidgetClass mMatviewClass = {

@@ -277,7 +277,7 @@ M_ComplexCot(M_Complex z)
 }
 
 /* Subtract nearest integer multiple of pi. */ 
-static M_Real
+static M_Real /* _Const_Attribute */
 SubNearestIntMultOfPi(M_Real x)
 {
 	const M_Real dp1 = 3.14159265160560607910E0;
@@ -299,7 +299,7 @@ SubNearestIntMultOfPi(M_Real x)
 }
 
 /* Taylor series expansion for cosh(2y) - cos(2x) */
-static M_Real
+static M_Real /* _Pure_Attribute */
 Ctans(M_Complex z)
 {
 	M_Real x2 = 1.0, y2 = 1.0, f = 1.0, rn = 0.0, d = 0.0;

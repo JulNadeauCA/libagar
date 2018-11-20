@@ -53,7 +53,9 @@ M_MatrixRead_FPU(AG_DataSource *buf)
 
 	m = (Uint)AG_ReadUint32(buf);
 	n = (Uint)AG_ReadUint32(buf);
-	A = M_MatrixNew_FPU(m,n);
+	if ((A = M_MatrixNew_FPU(m,n)) == NULL) {
+		AG_FatalError(NULL);
+	}
 	for (i = 0; i < m; i++) {
 		for (j = 0; j < n; j++)
 			A->v[i][j] = M_ReadReal(buf);
@@ -319,7 +321,7 @@ M_BacksubstLU_FPU(void *pA, void *pb)
  * inverse. The solution vectors are returned in b.
  */
 static int
-M_GaussJordanv_FPU(void *pA, void *pb)
+M_GaussJordanv_FPU(void *_Nonnull pA, void *_Nonnull pb)
 {
 	M_MatrixFPU *A=pA, *b=pb;
 	M_VectorZ *iCol, *iRow, *iPivot;

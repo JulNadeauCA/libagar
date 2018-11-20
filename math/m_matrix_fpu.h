@@ -4,35 +4,34 @@
  */
 
 typedef struct m_matrix_fpu {
-	struct m_matrix _inherit;
-	M_Real **v;			/* Values */
-	struct m_matrix_fpu *LU;
-	M_VectorZ *ivec;
+	struct m_matrix _inherit;		/* M_Matrix(3) -> M_MatrixFPU */
+	M_Real *_Nullable *_Nonnull v;		/* Array of values */
+	struct m_matrix_fpu *_Nullable LU;	/* LU factorization */
+	M_VectorZ *_Nullable ivec;		/* For LU factorization */
 } M_MatrixFPU;
 
 __BEGIN_DECLS
 extern const M_MatrixOps mMatOps_FPU;
 
-int M_MatrixCompare_FPU(const void *, const void *, M_Real *);
-int M_MatrixTrace_FPU(M_Real *, const void *);
+int M_MatrixCompare_FPU(const void *_Nonnull, const void *_Nonnull,
+                        M_Real *_Nonnull);
+int M_MatrixTrace_FPU(M_Real *_Nonnull, const void *_Nonnull);
 
-void *M_MatrixRead_FPU(AG_DataSource *);
-void  M_MatrixWrite_FPU(AG_DataSource *, const void *);
+void *_Nonnull M_MatrixRead_FPU(AG_DataSource *_Nonnull);
+void           M_MatrixWrite_FPU(AG_DataSource *_Nonnull, const void *_Nonnull);
 
-void M_MatrixToFloats_FPU(float *, const void *);
-void M_MatrixToDoubles_FPU(double *, const void *);
-void M_MatrixFromFloats_FPU(void *, const float *);
-void M_MatrixFromDoubles_FPU(void *, const double *);
+void M_MatrixToFloats_FPU(float *_Nonnull, const void *_Nonnull);
+void M_MatrixToDoubles_FPU(double *_Nonnull, const void *_Nonnull);
+void M_MatrixFromFloats_FPU(void *_Nonnull, const float *_Nonnull);
+void M_MatrixFromDoubles_FPU(void *_Nonnull, const double *_Nonnull);
 
-void *M_GaussJordan_FPU(const void *, void *);
-int   M_FactorizeLU_FPU(void *);
-void  M_BacksubstLU_FPU(void *, void *);
-__END_DECLS
+void *_Nullable M_GaussJordan_FPU(const void *_Nonnull, void *_Nonnull);
+int             M_FactorizeLU_FPU(void *_Nonnull);
+void            M_BacksubstLU_FPU(void *_Nonnull, void *_Nonnull);
 
-__BEGIN_DECLS
 /* Return pointer to element at i,j */
-static __inline__ M_Real *
-M_GetElement_FPU(void *pM, Uint i, Uint j)
+static __inline__ M_Real *_Nonnull
+M_GetElement_FPU(void *_Nonnull pM, Uint i, Uint j)
 {
 	M_MatrixFPU *M = (M_MatrixFPU *)pM;
 	return &(M->v[i][j]);
@@ -40,7 +39,7 @@ M_GetElement_FPU(void *pM, Uint i, Uint j)
 
 /* Return element at i,j */
 static __inline__ M_Real 
-M_Get_FPU(void *pM, Uint i, Uint j)
+M_Get_FPU(void *_Nonnull pM, Uint i, Uint j)
 {
 	M_MatrixFPU *M = (M_MatrixFPU *)pM;
 	return (M->v[i][j]);
@@ -48,7 +47,7 @@ M_Get_FPU(void *pM, Uint i, Uint j)
 
 /* Allocate matrix entries. */
 static __inline__ int
-M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
+M_MatrixAllocEnts_FPU(void *_Nonnull pA, Uint m, Uint n)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i;
@@ -78,7 +77,7 @@ M_MatrixAllocEnts_FPU(void *pA, Uint m, Uint n)
 
 /* Free all matrix entries. */
 static __inline__ void
-M_MatrixFreeEnts_FPU(void *pA)
+M_MatrixFreeEnts_FPU(void *_Nonnull pA)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i;
@@ -94,7 +93,7 @@ M_MatrixFreeEnts_FPU(void *pA)
 
 /* Resize a matrix to m*n without initializing new elements. */
 static __inline__ int
-M_MatrixResize_FPU(void *pA, Uint m, Uint n)
+M_MatrixResize_FPU(void *_Nonnull pA, Uint m, Uint n)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	M_MatrixFreeEnts_FPU(A);
@@ -103,7 +102,7 @@ M_MatrixResize_FPU(void *pA, Uint m, Uint n)
 
 /* Free a Matrix object. */
 static __inline__ void
-M_MatrixFree_FPU(void *pA)
+M_MatrixFree_FPU(void *_Nonnull pA)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	M_MatrixFreeEnts_FPU(A);
@@ -111,7 +110,7 @@ M_MatrixFree_FPU(void *pA)
 }
 
 /* Create a new m*n matrix. */
-static __inline__ void *
+static __inline__ void *_Nullable
 M_MatrixNew_FPU(Uint m, Uint n)
 {
 	M_MatrixFPU *A;
@@ -129,7 +128,7 @@ M_MatrixNew_FPU(Uint m, Uint n)
 
 /* Initialize A as the identity matrix. */
 static __inline__ void
-M_MatrixSetIdentity_FPU(void *pA)
+M_MatrixSetIdentity_FPU(void *_Nonnull pA)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i, j;
@@ -141,7 +140,7 @@ M_MatrixSetIdentity_FPU(void *pA)
 
 /* Initialize A as the zero matrix. */
 static __inline__ void
-M_MatrixSetZero_FPU(void *pA)
+M_MatrixSetZero_FPU(void *_Nonnull pA)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	Uint i, j;
@@ -152,8 +151,8 @@ M_MatrixSetZero_FPU(void *pA)
 }
 
 /* Return the transpose of matrix A. */
-static __inline__ void *
-M_MatrixTranspose_FPU(const void *pA)
+static __inline__ void *_Nullable
+M_MatrixTranspose_FPU(const void *_Nonnull pA)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	M_MatrixFPU *At;
@@ -172,7 +171,7 @@ M_MatrixTranspose_FPU(const void *pA)
 
 /* Copy the contents of a matrix into another. */
 static __inline__ int
-M_MatrixCopy_FPU(void *pB, const void *pA)
+M_MatrixCopy_FPU(void *_Nonnull pB, const void *_Nonnull pA)
 {
 	M_MatrixFPU *B = (M_MatrixFPU *)pB;
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
@@ -188,8 +187,8 @@ M_MatrixCopy_FPU(void *pB, const void *pA)
 }
 
 /* Return the duplicate of a matrix. */
-static __inline__ void *
-M_MatrixDup_FPU(const void *pA)
+static __inline__ void *_Nullable
+M_MatrixDup_FPU(const void *_Nonnull pA)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	M_MatrixFPU *B;
@@ -202,8 +201,8 @@ M_MatrixDup_FPU(const void *pA)
 }
 
 /* Add the individual elements of two m-by-n matrices. */
-static __inline__ void *
-M_MatrixAdd_FPU(const void *pA, const void *pB)
+static __inline__ void *_Nullable
+M_MatrixAdd_FPU(const void *_Nonnull pA, const void *_Nonnull pB)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -211,7 +210,9 @@ M_MatrixAdd_FPU(const void *pA, const void *pB)
 	Uint n, m;
 
 	M_ASSERT_COMPAT_MATRICES(A,B, NULL);
-	P = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A));
+	if ((P = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A))) == NULL) {
+		AG_FatalError(NULL);
+	}
 	for (m = 0; m < MROWS(A); m++) {
 		for (n = 0; n < MCOLS(A); n++)
 			P->v[m][n] = A->v[m][n] + B->v[m][n];
@@ -221,7 +222,7 @@ M_MatrixAdd_FPU(const void *pA, const void *pB)
 
 /* Add the individual elements of A and B into A. */
 static __inline__ int
-M_MatrixAddv_FPU(void *pA, const void *pB)
+M_MatrixAddv_FPU(void *_Nonnull pA, const void *_Nonnull pB)
 {
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -236,8 +237,8 @@ M_MatrixAddv_FPU(void *pA, const void *pB)
 }
 
 /* Compute the direct sum of two matrices. */
-static __inline__ void *
-M_MatrixDirectSum_FPU(const void *pA, const void *pB)
+static __inline__ void *_Nonnull
+M_MatrixDirectSum_FPU(const void *_Nonnull pA, const void *_Nonnull pB)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -245,6 +246,9 @@ M_MatrixDirectSum_FPU(const void *pA, const void *pB)
 	Uint m, n;
 
 	P = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A)+MROWS(B), MCOLS(A)+MCOLS(B));
+	if (P == NULL) {
+		AG_FatalError(NULL);
+	}
 	for (m = 0; m < MROWS(P); m++) {
 		for (n = 0; n < MCOLS(P); n++) {
 			if (m < MROWS(A) && n < MCOLS(A)) {
@@ -260,8 +264,8 @@ M_MatrixDirectSum_FPU(const void *pA, const void *pB)
 }
 
 /* Return the product of matrices A and B. */
-static __inline__ void *
-M_MatrixMul_FPU(const void *pA, const void *pB)
+static __inline__ void *_Nullable
+M_MatrixMul_FPU(const void *_Nonnull pA, const void *_Nonnull pB)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -271,6 +275,9 @@ M_MatrixMul_FPU(const void *pA, const void *pB)
 
 	M_ASSERT_MULTIPLIABLE_MATRICES(A,B, NULL);
 	AB = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(B));
+	if (AB == NULL) {
+		AG_FatalError(NULL);
+	}
 	for (i = 0; i < MROWS(A); i++) {
 		for (j = 0; j < MCOLS(B); j++) {
 			for (sum = 0.0, k = 0; k < MCOLS(A); k++) {
@@ -284,7 +291,8 @@ M_MatrixMul_FPU(const void *pA, const void *pB)
 
 /* Return the product of matrices A and B into C. */
 static __inline__ int
-M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
+M_MatrixMulv_FPU(const void *_Nonnull pA, const void *_Nonnull pB,
+    void *_Nonnull pC)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -313,8 +321,8 @@ M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
 }
 
 /* Return the Hadamard (entrywise) product of m*n matrices A and B. */
-static __inline__ void *
-M_MatrixEntMul_FPU(const void *pA, const void *pB)
+static __inline__ void *_Nullable
+M_MatrixEntMul_FPU(const void *_Nonnull pA, const void *_Nonnull pB)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -323,6 +331,9 @@ M_MatrixEntMul_FPU(const void *pA, const void *pB)
 
 	M_ASSERT_COMPAT_MATRICES(A,B, NULL);
 	AB = (M_MatrixFPU *)M_MatrixNew_FPU(MROWS(A), MCOLS(A));
+	if (AB == NULL) {
+		AG_FatalError(NULL);
+	}
 	for (i = 0; i < MROWS(A); i++) {
 		for (j = 0; j < MCOLS(A); j++)
 			AB->v[i][j] = A->v[i][j] * B->v[i][j];
@@ -332,7 +343,8 @@ M_MatrixEntMul_FPU(const void *pA, const void *pB)
 
 /* Return the Hadamard (entrywise) product of m*n matrices A and B into AB. */
 static __inline__ int
-M_MatrixEntMulv_FPU(const void *pA, const void *pB, void *pAB)
+M_MatrixEntMulv_FPU(const void *_Nonnull pA, const void *_Nonnull pB,
+    void *_Nonnull pAB)
 {
 	const M_MatrixFPU *A = (const M_MatrixFPU *)pA;
 	const M_MatrixFPU *B = (const M_MatrixFPU *)pB;
@@ -349,19 +361,18 @@ M_MatrixEntMulv_FPU(const void *pA, const void *pB, void *pAB)
 }
 
 static __inline__ void
-M_MNAPreorder_FPU(void *A)
+M_MNAPreorder_FPU(void *_Nonnull A)
 {
 }
 
 static __inline__ void
-M_AddToDiag_FPU(void *pA, M_Real g)
+M_AddToDiag_FPU(void *_Nonnull pA, M_Real g)
 {
 	Uint i, N;
 	M_MatrixFPU *A = (M_MatrixFPU *)pA;
 
 	N = M_Min(MROWS(A), MCOLS(A));
-	for(i = 1; i < N; i++)
+	for (i = 1; i < N; i++)
 		A->v[i][i] += g;
 }
-
 __END_DECLS

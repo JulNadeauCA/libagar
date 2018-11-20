@@ -10,31 +10,30 @@
 #include <agar/math/begin.h>
 
 #define M_PLOTTER_NDEFCOLORS	16
-#define M_PLOTTER_LABEL_MAX	64
+#define M_PLOTTER_LABEL_MAX	AG_MODEL
 
 struct m_plotter;
 
 enum m_plot_label_type {
-	M_LABEL_X,				/* Refers to an x value */
-	M_LABEL_Y,				/* Refers to an y value */
-	M_LABEL_FREE,				/* Free placement in graph */
-	M_LABEL_OVERLAY,			/* Overlay on widget */
+	M_LABEL_X,			/* Refers to an x value */
+	M_LABEL_Y,			/* Refers to an y value */
+	M_LABEL_FREE,			/* Free placement in graph */
+	M_LABEL_OVERLAY,		/* Overlay on widget */
 };
 
 typedef struct m_plot_label {
-	char text[M_PLOTTER_LABEL_MAX];	/* Label text */
+	char text[M_PLOTTER_LABEL_MAX];		/* Label text */
 	int  text_surface;			/* Text surface handle */
 	enum m_plot_label_type type;		/* Packing alignment */
-	Uint x;					/* X position (or -1) */
-	Uint y;					/* Y position (or -1) */
+	Uint x, y;				/* Display position */
 	AG_TAILQ_ENTRY(m_plot_label) labels;
 } M_PlotLabel;
 
 enum m_plot_type {
-	M_PLOT_POINTS,		/* Individual points */
-	M_PLOT_LINEAR,		/* Linear interpolation */
-	M_PLOT_CUBIC_SPLINE,	/* Cubic spline interpolation */
-	M_PLOT_VECTORS		/* Vector arrows/cones */
+	M_PLOT_POINTS,			/* Individual points */
+	M_PLOT_LINEAR,			/* Linear interpolation */
+	M_PLOT_CUBIC_SPLINE,		/* Cubic spline interpolation */
+	M_PLOT_VECTORS			/* Vector arrows/cones */
 };
 
 enum m_plot_source {
@@ -51,16 +50,16 @@ typedef struct m_plot {
 	enum m_plot_source src_type;
 	union {
 		struct {
-			void *_Nonnull vfs;	  /* VFS root object */
-			const char *_Nonnull key; /* Property path */
+			void       *_Nonnull vfs;	/* VFS root object */
+			const char *_Nonnull key;	/* Property path */
 		} varVFS;
-		M_Real *_Nonnull real;		/* Pointer to real value */
-		int *_Nonnull integer;		/* Pointer to integer value */
+		M_Real *_Nonnull real;			/* Real values */
+		int    *_Nonnull integer;		/* Integer values */
 		struct {
-			M_Matrix *_Nonnull A;	/* Matrix/vector */
-			Uint i, j;		/* Entry position */
+			M_Matrix *_Nonnull A;		/* Matrix/vector */
+			Uint i, j;			/* Entry position */
 		} com;
-		struct m_plot *_Nonnull plot;	/* Other plot */
+		struct m_plot *_Nonnull plot;		/* Other plot */
 	} src;
 	union {
 		M_Real	*_Nullable            r;	/* Real points */
@@ -69,18 +68,18 @@ typedef struct m_plot {
 	struct m_plotter *_Nonnull plotter;	/* Back pointer to plotter */
 	Uint n;					/* Number of points */
 	Uint flags;
-#define M_PLOT_SELECTED	0x01
-#define M_PLOT_MOUSEOVER	0x02
-#define M_PLOT_DRAGGING	0x04
-#define M_PLOT_HIDDEN		0x08
+#define M_PLOT_SELECTED	  0x01			/* Selected by user */
+#define M_PLOT_MOUSEOVER  0x02			/* Mouse hover */
+#define M_PLOT_DRAGGING	  0x04			/* Being moved */
+#define M_PLOT_HIDDEN	  0x08			/* Hidden */
 
-	char label_txt[32];		/* Label text */
-	int label;			/* Label surface handle */
-	AG_Color color;			/* Plot color */
-	M_Real xScale, yScale;		/* Scaling factors */
-	int xOffs, yOffs;		/* Offset in display */
-	int xLabel, yLabel;		/* Item position */
-	AG_TAILQ_HEAD_(m_plot_label) labels; /* User labels */
+	char label_txt[32];			/* Label text */
+	int label;				/* Label surface handle */
+	AG_Color color;				/* Plot color */
+	M_Real xScale, yScale;			/* Scaling factors */
+	int xOffs, yOffs;			/* Offset in display */
+	int xLabel, yLabel;			/* Item position */
+	AG_TAILQ_HEAD_(m_plot_label) labels;	/* User labels */
 	AG_TAILQ_ENTRY(m_plot) plots;
 } M_Plot;
 
@@ -93,13 +92,13 @@ enum m_plotter_type {
 };
 
 typedef struct m_plotter {
-	struct ag_widget wid;
-	enum m_plotter_type type;
+	struct ag_widget wid;		/* AG_Widget(3) -> M_Plotter */
+	enum m_plotter_type type;	/* Type of plot */
 	Uint flags;
-#define M_PLOTTER_HFILL	0x01
-#define M_PLOTTER_VFILL	0x02
+#define M_PLOTTER_SCROLL	0x0001
+#define M_PLOTTER_HFILL		0x4000
+#define M_PLOTTER_VFILL		0x8000
 #define M_PLOTTER_EXPAND	(M_PLOTTER_HFILL|M_PLOTTER_VFILL)
-#define M_PLOTTER_SCROLL	0x04
 	int xMax;			/* Maximum X for single value plots */
 	M_Real yMin, yMax;		/* Extrema for single value plots */
 	M_Vector *_Nonnull vMin;	/* Extrema for vector plots */
@@ -122,6 +121,7 @@ __BEGIN_DECLS
 extern AG_WidgetClass mPlotterClass;
 
 M_Plotter *_Nonnull M_PlotterNew(void *_Nullable, Uint);
+
 void M_PlotterSizeHint(M_Plotter *_Nonnull, Uint,Uint);
 void M_PlotterUpdate(M_Plotter *_Nonnull);
 void M_PlotterSetDefaultFont(M_Plotter *_Nonnull, const char *_Nullable, int);

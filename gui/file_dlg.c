@@ -1016,19 +1016,19 @@ AG_FileDlgNew(void *parent, Uint flags)
 	}
 	/* "Mask files" checkboxes. */
 	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {
-		fd->cbMaskExt = AG_CheckboxNewFlag(fd, 0,
+		AG_Checkbox *cb;
+
+		fd->cbMaskExt = cb = AG_CheckboxNewFlag(fd, 0,
 		    _("Mask files by extension"),
 		    &fd->flags, AG_FILEDLG_MASK_EXT);
-		AG_SetEvent(fd->cbMaskExt, "checkbox-changed",
-		    MaskOptionSelected, "%p", fd);
-		AG_SetStyle(fd->cbMaskExt, "font-size", "80%");
+		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
+		AG_SetStyle(cb, "font-size", "80%");
 	
-		fd->cbMaskHidden = AG_CheckboxNewFlag(fd, 0,
+		fd->cbMaskHidden = cb = AG_CheckboxNewFlag(fd, 0,
 		    _("Mask hidden files"),
 		    &fd->flags, AG_FILEDLG_MASK_HIDDEN);
-		AG_SetEvent(fd->cbMaskHidden, "checkbox-changed",
-		    MaskOptionSelected, "%p", fd);
-		AG_SetStyle(fd->cbMaskHidden, "font-size", "80%");
+		AG_SetEvent(cb, "checkbox-changed", MaskOptionSelected,"%p",fd);
+		AG_SetStyle(cb, "font-size", "80%");
 	}
 	if (!(flags & AG_FILEDLG_NOBUTTONS)) {
 		fd->btnOk = AG_ButtonNewS(fd, 0, _("OK"));

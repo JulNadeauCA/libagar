@@ -208,6 +208,23 @@ M_PolygonAddLine(M_Polygon *P, M_Line2 L)
 	return (P->n++);
 }
 
+/*
+ * Add a vertex to a polygon.
+ * Return vertex index on success, -1 on failure.
+ */
+int
+M_PolygonAddVertex(M_Polygon *_Nonnull P, M_Vector2 v)
+{
+	M_Vector2 *vNew;
+
+	if ((vNew = TryRealloc(P->v, (P->n+1)*sizeof(M_Vector2))) == NULL) {
+		return (-1);
+	}
+	P->v = vNew;
+	P->v[P->n] = v;
+	return (P->n++);
+}
+
 /* Remove a vertex from a polygon. */
 int
 M_PolygonDelVertex(M_Polygon *P, int i)

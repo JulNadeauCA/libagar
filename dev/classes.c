@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 #include <agar/dev/dev.h>
 
 static void
-GenClassTable(AG_Table *tbl, AG_ObjectClass *C)
+GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
 {
 	AG_ObjectClass *Csub;
 	
@@ -47,7 +47,7 @@ GenClassTable(AG_Table *tbl, AG_ObjectClass *C)
 }
 
 static void
-PollClasses(AG_Event *event)
+PollClasses(AG_Event *_Nonnull event)
 {
 	AG_Table *tbl = AG_SELF();
 

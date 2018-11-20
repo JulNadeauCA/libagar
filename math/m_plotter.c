@@ -488,38 +488,43 @@ static void
 Draw(void *_Nonnull obj)
 {
 	M_Plotter *ptr = obj;
-	AG_Driver *drv = WIDGET(ptr)->drv;
 	AG_Rect rw = AG_RECT(1, 1, WIDTH(ptr)-2, HEIGHT(ptr)-2);
 	M_Plot *pl;
 	M_PlotLabel *plbl;
 	Uint i;
-	int y0 = ptr->r.h/2;
+	int h = ptr->r.h, h_2 = (h >> 1);
+	int w = ptr->r.w;
+	int y0 = h_2;
 
 	AG_DrawBox(ptr, rw, -1, WCOLOR(ptr,0));
 	
 	AG_PushClipRect(ptr, rw);
 	
-	AG_DrawLineH(ptr, 1, ptr->r.w-2, y0, ptr->colors[0]);
-	AG_DrawLineV(ptr, ptr->xMax-1, 30, ptr->r.h-30, ptr->colors[0]);
+	AG_DrawLineH(ptr, 1, w-2, y0, ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, 30, h-30, ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
-		int x = pl->xOffs - ptr->xOffs;
-		int y, py = y0+pl->yOffs+ptr->yOffs;
+		AG_Color color = pl->color;
+		int yOffs = ptr->yOffs + pl->yOffs;
+		int x = pl->xOffs - ptr->xOffs, y;
+		int py = y0 + yOffs;
 
 		if (pl->label >= 0) {
 			AG_Surface *su = WSURFACE(ptr,pl->label);
 
 			if (pl->flags & M_PLOT_SELECTED) {
 				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
-				            su->w+4, su->h+4),
-				    pl->color);
+				    AG_RECT(pl->xLabel - 2,
+				            pl->yLabel - 2,
+				            su->w + 4,
+					    su->h + 4), color);
 			} else if (pl->flags & M_PLOT_MOUSEOVER) {
 				AG_DrawRectOutline(ptr,
-				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
-				            su->w+4, su->h+4),
-				    WCOLOR(ptr,TEXT_COLOR));
+				    AG_RECT(pl->xLabel - 2,
+				            pl->yLabel - 2,
+				            su->w + 4,
+					    su->h + 4), WCOLOR(ptr,TEXT_COLOR));
 			}
 			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
 			    pl->yLabel);
@@ -528,30 +533,22 @@ Draw(void *_Nonnull obj)
 			continue;
 		}
 		switch (pl->type) {
-		case M_PLOT_POINTS:
+		case M_PLOT_POINTS: {
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				if ((AGDRIVER_CLASS(drv)->flags &
-				    AG_DRIVER_OPENGL)) {
-					/* TODO */
-				} else {
-					AG_PutPixel(ptr, x,
-					    y0 - y + pl->yOffs + ptr->yOffs,
-					    pl->color);
-				}
-				if (x > ptr->r.w) { break; }
+				AG_PutPixel(ptr, x, y0-y+yOffs, color);
+				if (x > w) { break; }
 			}
 			break;
+		}
 		case M_PLOT_LINEAR:
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				AG_DrawLine(ptr, x-1, py, x,
-				    y0 - y + pl->yOffs + ptr->yOffs,
-				    pl->color);
-				py = y0 - y + pl->yOffs + ptr->yOffs;
-				if (x > ptr->r.w) { break; }
+				AG_DrawLine(ptr, x-1, py, x, y0-y+yOffs, color);
+				py = y0-y+yOffs;
+				if (x > w) { break; }
 			}
 			break;
 		default:
@@ -560,34 +557,33 @@ Draw(void *_Nonnull obj)
 	}
 	/* Second pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		int xOffs;
+
 		if (pl->flags & M_PLOT_HIDDEN) {
 			continue;
 		}
+		xOffs = ptr->xOffs - pl->xOffs;
+
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
 			AG_Surface *su = WSURFACE(ptr,plbl->text_surface);
-			int xLbl, yLbl;
 			AG_Color colBG, colLine;
-
-			colBG = WCOLOR(ptr,0);
-			colBG.a = 200;
-			colLine = pl->color;
-			colLine.a /= 2;
+			int xLbl, yLbl;
 
 			switch (plbl->type) {
 			case M_LABEL_X:
-				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = ptr->r.h - su->h - 4 - plbl->y;
-				AG_DrawLineBlended(ptr,
-				    xLbl, 1,
-				    xLbl, ptr->r.h-2,
+				xLbl = plbl->x - xOffs;
+				yLbl = h - su->h - 4 - plbl->y;
+				colLine = pl->color;
+				colLine.a >>= 1;
+				AG_DrawLineBlended(ptr, xLbl,1, xLbl,h-2,
 				    colLine, AG_ALPHA_SRC);
 				break;
 			case M_LABEL_Y:
-				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = ptr->r.h - su->h - 4 - plbl->y;
+				xLbl = plbl->x - xOffs;
+				yLbl = h - su->h - 4 - plbl->y;
 				break;
 			case M_LABEL_FREE:
-				xLbl = 4 + plbl->x - ptr->xOffs - pl->xOffs;
+				xLbl = 4 + plbl->x - xOffs;
 				yLbl = 4 + plbl->y;
 				break;
 			default:
@@ -595,8 +591,9 @@ Draw(void *_Nonnull obj)
 				yLbl = 4 + plbl->y;
 				break;
 			}
-			AG_DrawRect(ptr,
-			    AG_RECT(xLbl+2, yLbl, su->w, su->h),
+			colBG = WCOLOR(ptr,0);
+			colBG.a = 200;
+			AG_DrawRect(ptr, AG_RECT(xLbl+2, yLbl, su->w, su->h),
 			    colBG);
 			AG_WidgetBlitSurface(ptr, plbl->text_surface,
 			    xLbl+2, yLbl);

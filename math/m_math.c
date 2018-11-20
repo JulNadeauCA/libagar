@@ -47,7 +47,7 @@ int mInitedSubsystem = 0;
  * Math library extensions to AG_Printf(3) and AG_PrintfP(3).
  */
 static AG_Size
-PrintReal(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintReal(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Real *r = AG_FMTSTRING_ARG(fs);
 
@@ -58,7 +58,7 @@ PrintReal(AG_FmtString *fs, char *dst, AG_Size dstSize)
 #endif
 }
 static AG_Size
-PrintTime(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintTime(AG_FmtString *_Nonnull fs, char *dst, AG_Size dstSize)
 {
 	M_Time *t = AG_FMTSTRING_ARG(fs);
 #ifdef ENABLE_GUI
@@ -71,34 +71,34 @@ PrintTime(AG_FmtString *fs, char *dst, AG_Size dstSize)
 	}
 }
 static AG_Size
-PrintComplex(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintComplex(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Complex *c = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f%+.03fi]", c->r, c->i);
 }
 static AG_Size
-PrintVector2(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintVector2(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector2 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f]",
 	    v->x, v->y);
 }
 static AG_Size
-PrintVector3(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintVector3(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector3 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z);
 }
 static AG_Size
-PrintVector4(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintVector4(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector4 *v = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize, "[%.03f, %.03f, %.03f, %.03f]",
 	    v->x, v->y, v->z, v->w);
 }
 static AG_Size
-PrintVector(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintVector(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Vector *v = AG_FMTSTRING_ARG(fs);
 	char *pDst, *pEnd = &dst[dstSize-1];
@@ -132,7 +132,7 @@ out:
 	return (pDst - dst);
 }
 static AG_Size
-PrintMatrix(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintMatrix(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Matrix *M = AG_FMTSTRING_ARG(fs);
 	char *pDst, *pEnd = &dst[dstSize-1];
@@ -176,7 +176,7 @@ out:
 	return (pDst - dst);
 }
 static AG_Size
-PrintMatrix44(AG_FmtString *fs, char *dst, AG_Size dstSize)
+PrintMatrix44(AG_FmtString *_Nonnull fs, char *_Nonnull dst, AG_Size dstSize)
 {
 	M_Matrix44 *M = AG_FMTSTRING_ARG(fs);
 	return Snprintf(dst, dstSize,

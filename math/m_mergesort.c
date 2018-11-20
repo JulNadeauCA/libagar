@@ -46,10 +46,10 @@
 /* Hybrid natural merge (default is pairwise merging) */
 #define NATURAL
 
-static void Setup(Uint8 *, Uint8 *, AG_Size, AG_Size,
-    int (*)(const void *, const void *));
-static void InsertionSort(Uint8 *, AG_Size, AG_Size,
-    int (*)(const void *, const void *));
+static void Setup(Uint8 *_Nonnull, Uint8 *_Nonnull, AG_Size, AG_Size,
+    int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
+static void InsertionSort(Uint8 *_Nonnull, AG_Size, AG_Size,
+    int (*_Nonnull)(const void *_Nonnull, const void *_Nonnull));
 
 #define ISIZE sizeof(int)
 #define PSIZE sizeof(Uint8 *)
@@ -311,8 +311,8 @@ Setup(Uint8 *list1, Uint8 *list2, AG_Size n, AG_Size size,
  * last 4 elements.
  */
 static void
-InsertionSort(Uint8 *a, AG_Size n, AG_Size size,
-    int (*cmp)(const void *, const void *))
+InsertionSort(Uint8 *_Nonnull a, AG_Size n, AG_Size size,
+    int (*_Nonnull cmp)(const void *_Nonnull, const void *_Nonnull))
 {
 	Uint8 *ai, *s, *t, *u, tmp;
 	int i;

@@ -5,7 +5,7 @@
 
 __BEGIN_DECLS
 
-static __inline__ M_Vector *
+static __inline__ M_Vector *_Nonnull
 M_VectorNew_FPU(Uint m)
 {
 	M_Vector *v;
@@ -16,14 +16,14 @@ M_VectorNew_FPU(Uint m)
 	return (v);
 }
 
-static __inline__ M_Real *
-M_VectorGetElement_FPU(const M_Vector *v, Uint i)
+static __inline__ M_Real *_Nonnull
+M_VectorGetElement_FPU(const M_Vector *_Nonnull v, Uint i)
 {
 	return &v->v[i];
 }
 
 static __inline__ int
-M_VectorResize_FPU(M_Vector *pv, Uint m)
+M_VectorResize_FPU(M_Vector *_Nonnull pv, Uint m)
 {
 	M_Vector *v=pv;
 	M_Real *vNew;
@@ -43,7 +43,7 @@ M_VectorResize_FPU(M_Vector *pv, Uint m)
 }
 
 static __inline__ void
-M_VectorSetZero_FPU(M_Vector *v)
+M_VectorSetZero_FPU(M_Vector *_Nonnull v)
 {
 	Uint i;
 
@@ -52,14 +52,14 @@ M_VectorSetZero_FPU(M_Vector *v)
 }
 
 static __inline__ void
-M_VectorFree_FPU(M_Vector *v)
+M_VectorFree_FPU(M_Vector *_Nonnull v)
 {
 	AG_Free(v->v);
 	AG_Free(v);
 }
 
-static __inline__ M_Vector *
-M_VectorFlip_FPU(const M_Vector *v)
+static __inline__ M_Vector *_Nonnull
+M_VectorFlip_FPU(const M_Vector *_Nonnull v)
 {
 	M_Vector *vInv;
 	Uint i;
@@ -71,8 +71,8 @@ M_VectorFlip_FPU(const M_Vector *v)
 	return (vInv);
 }
 
-static __inline__ M_Vector *
-M_VectorScale_FPU(const M_Vector *v, M_Real c)
+static __inline__ M_Vector *_Nonnull
+M_VectorScale_FPU(const M_Vector *_Nonnull v, M_Real c)
 {
 	M_Vector *w;
 	Uint i;
@@ -85,7 +85,7 @@ M_VectorScale_FPU(const M_Vector *v, M_Real c)
 }
 
 static __inline__ int
-M_VectorScalev_FPU(M_Vector *v, M_Real c)
+M_VectorScalev_FPU(M_Vector *_Nonnull v, M_Real c)
 {
 	Uint i;
 
@@ -95,8 +95,8 @@ M_VectorScalev_FPU(M_Vector *v, M_Real c)
 	return (0);
 }
 
-static __inline__ M_Vector *
-M_VectorAdd_FPU(const M_Vector *a, const M_Vector *b)
+static __inline__ M_Vector *_Nullable
+M_VectorAdd_FPU(const M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	M_Vector *c;
 	Uint i;
@@ -110,7 +110,7 @@ M_VectorAdd_FPU(const M_Vector *a, const M_Vector *b)
 }
 
 static __inline__ int
-M_VectorAddv_FPU(M_Vector *a, const M_Vector *b)
+M_VectorAddv_FPU(M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	Uint i;
 
@@ -121,8 +121,8 @@ M_VectorAddv_FPU(M_Vector *a, const M_Vector *b)
 	return (0);
 }
 
-static __inline__ M_Vector *
-M_VectorSub_FPU(const M_Vector *a, const M_Vector *b)
+static __inline__ M_Vector *_Nullable
+M_VectorSub_FPU(const M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	M_Vector *c;
 	Uint i;
@@ -136,7 +136,7 @@ M_VectorSub_FPU(const M_Vector *a, const M_Vector *b)
 }
 
 static __inline__ int
-M_VectorSubv_FPU(M_Vector *a, const M_Vector *b)
+M_VectorSubv_FPU(M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	Uint i;
 
@@ -148,7 +148,7 @@ M_VectorSubv_FPU(M_Vector *a, const M_Vector *b)
 }
 
 static __inline__ M_Real
-M_VectorLen_FPU(const M_Vector *v)
+M_VectorLen_FPU(const M_Vector *_Nonnull v)
 {
 	M_Real dot = 0.0f;
 	Uint i;
@@ -160,7 +160,7 @@ M_VectorLen_FPU(const M_Vector *v)
 }
 
 static __inline__ M_Real
-M_VectorDot_FPU(const M_Vector *a, const M_Vector *b)
+M_VectorDot_FPU(const M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	M_Real dot = 0.0f;
 	Uint i;
@@ -173,7 +173,7 @@ M_VectorDot_FPU(const M_Vector *a, const M_Vector *b)
 }
 
 static __inline__ M_Real
-M_VectorDistance_FPU(const M_Vector *a, const M_Vector *b)
+M_VectorDistance_FPU(const M_Vector *_Nonnull a, const M_Vector *_Nonnull b)
 {
 	M_Real len;
 	M_Vector *d = M_VectorSub_FPU(a,b);
@@ -182,8 +182,8 @@ M_VectorDistance_FPU(const M_Vector *a, const M_Vector *b)
 	return (len);
 }
 
-static __inline__ M_Vector *
-M_VectorNorm_FPU(const M_Vector *a)
+static __inline__ M_Vector *_Nonnull
+M_VectorNorm_FPU(const M_Vector *_Nonnull a)
 {
 	M_Vector *n;
 	M_Real len;
@@ -200,8 +200,9 @@ M_VectorNorm_FPU(const M_Vector *a)
 	return (n);
 }
 
-static __inline__ M_Vector *
-M_VectorLERP_FPU(const M_Vector *a, const M_Vector *b, M_Real c)
+static __inline__ M_Vector *_Nullable
+M_VectorLERP_FPU(const M_Vector *_Nonnull a, const M_Vector *_Nonnull b,
+    M_Real c)
 {
 	M_Vector *d;
 	Uint i;
@@ -214,8 +215,8 @@ M_VectorLERP_FPU(const M_Vector *a, const M_Vector *b, M_Real c)
 	return (d);
 }
 
-static __inline__ M_Vector *
-M_VectorElemPow_FPU(const M_Vector *a, M_Real x)
+static __inline__ M_Vector *_Nonnull
+M_VectorElemPow_FPU(const M_Vector *_Nonnull a, M_Real x)
 {
 	M_Vector *b;
 	Uint i;
@@ -228,7 +229,7 @@ M_VectorElemPow_FPU(const M_Vector *a, M_Real x)
 }
 
 static __inline__ int
-M_VectorCopy_FPU(M_Vector *x, const M_Vector *y)
+M_VectorCopy_FPU(M_Vector *_Nonnull x, const M_Vector *_Nonnull y)
 {
 	M_ASSERT_MATCHING_VECTORS(x, y, -1);
 	memcpy(x->v, y->v, MVECSIZE(x) * sizeof(M_Real));
@@ -239,12 +240,13 @@ __END_DECLS
 __BEGIN_DECLS
 extern const M_VectorOps mVecOps_FPU;
 
-M_Vector *M_ReadVector_FPU(AG_DataSource *);
-void      M_WriteVector_FPU(AG_DataSource *, const M_Vector *);
-M_Vector *M_VectorFromReals_FPU(Uint, const M_Real *);
-M_Vector *M_VectorFromFloats_FPU(Uint, const float *);
-M_Vector *M_VectorFromDoubles_FPU(Uint, const double *);
+M_Vector *_Nonnull M_ReadVector_FPU(AG_DataSource *_Nonnull);
+void               M_WriteVector_FPU(AG_DataSource *_Nonnull,
+                                     const M_Vector *_Nonnull);
+M_Vector *_Nonnull M_VectorFromReals_FPU(Uint, const M_Real *_Nonnull);
+M_Vector *_Nonnull M_VectorFromFloats_FPU(Uint, const float *_Nonnull);
+M_Vector *_Nonnull M_VectorFromDoubles_FPU(Uint, const double *_Nonnull);
 #ifdef AG_HAVE_LONG_DOUBLE
-M_Vector *M_VectorFromLongDoubles_FPU(Uint, const long double *);
+M_Vector *_Nonnull M_VectorFromLongDoubles_FPU(Uint, const long double *_Nonnull);
 #endif
 __END_DECLS

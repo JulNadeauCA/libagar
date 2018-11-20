@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,10 +48,10 @@
 
 #include <agar/dev/dev.h>
 
-static AG_Window *DEV_ConfigWindow(AG_Config *);
+static AG_Window *_Nullable DEV_ConfigWindow(AG_Config *_Nullable);
 
 static void
-SetPath(AG_Event *event)
+SetPath(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tbox = AG_SELF();
@@ -64,7 +64,7 @@ SetPath(AG_Event *event)
 
 #if 0
 static void
-WarnRestart(AG_Event *event)
+WarnRestart(AG_Event *_Nonnull event)
 {
 	char *key = AG_STRING(1);
 
@@ -74,7 +74,7 @@ WarnRestart(AG_Event *event)
 }
 
 static void
-BindSelectedColor(AG_Event *event)
+BindSelectedColor(AG_Event *_Nonnull event)
 {
 	AG_HSVPal *hsv = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
@@ -85,7 +85,7 @@ BindSelectedColor(AG_Event *event)
 
 /* Must be invoked from main event/rendering context. */
 static void
-SetColor(AG_Event *event)
+SetColor(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
@@ -114,7 +114,7 @@ DEV_ConfigShow(void)
 
 #if 0
 static int
-LoadColorSchemeFromACS(AG_Event *event)
+LoadColorSchemeFromACS(AG_Event *_Nonnull event)
 {
 	char *file = AG_STRING(1);
 
@@ -122,7 +122,7 @@ LoadColorSchemeFromACS(AG_Event *event)
 }
 
 static void
-SaveColorSchemeToACS(AG_Event *event)
+SaveColorSchemeToACS(AG_Event *_Nonnull event)
 {
 	char *file = AG_STRING(1);
 
@@ -130,7 +130,7 @@ SaveColorSchemeToACS(AG_Event *event)
 }
 
 static void
-LoadColorSchemeDlg(AG_Event *event)
+LoadColorSchemeDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 	AG_FileDlg *fd;
@@ -146,7 +146,7 @@ LoadColorSchemeDlg(AG_Event *event)
 }
 
 static void
-SaveColorSchemeDlg(AG_Event *event)
+SaveColorSchemeDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 	AG_FileDlg *fd;
@@ -162,7 +162,7 @@ SaveColorSchemeDlg(AG_Event *event)
 #endif
 
 static void
-SaveConfig(AG_Event *event)
+SaveConfig(AG_Event *_Nonnull event)
 {
 	if (AG_ObjectSave(agConfig) == -1) {
 		AG_TextMsgFromError();
@@ -173,7 +173,7 @@ SaveConfig(AG_Event *event)
 }
 
 static void
-SelectPathOK(AG_Event *event)
+SelectPathOK(AG_Event *_Nonnull event)
 {
 	char *key = AG_STRING(1);
 	AG_Textbox *tbox = AG_PTR(2);
@@ -186,7 +186,7 @@ SelectPathOK(AG_Event *event)
 }
 
 static void
-SelectPath(AG_Event *event)
+SelectPath(AG_Event *_Nonnull event)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
@@ -207,8 +207,8 @@ SelectPath(AG_Event *event)
 	AG_WindowShow(win);
 }
 
-static AG_Window *
-DEV_ConfigWindow(AG_Config *cfg)
+static AG_Window *_Nullable
+DEV_ConfigWindow(AG_Config *_Nullable cfg)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Window *win;

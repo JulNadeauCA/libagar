@@ -17,163 +17,193 @@
 
 /* Operations on vectors in R^n */
 typedef struct m_vector_ops {
-	const char *name;
+	const char *_Nonnull name;
 	
 	/* Basic access functions */
-	M_Vector *(*NewVector)(Uint m);
-	M_Real   *(*GetElement)(const M_Vector *v, Uint j);
-	void      (*SetZero)(M_Vector *v);
-	int       (*Resize)(M_Vector *v, Uint m);
-	void      (*FreeVector)(M_Vector *v);
-	M_Vector *(*Flip)(const M_Vector *v);
-	M_Vector *(*Scale)(const M_Vector *v, M_Real c);
-	int       (*Scalev)(M_Vector *v, M_Real c);
-	M_Vector *(*Add)(const M_Vector *a, const M_Vector *b);
-	int       (*Addv)(M_Vector *a, const M_Vector *b);
-	M_Vector *(*Sub)(const M_Vector *a, const M_Vector *b);
-	int       (*Subv)(M_Vector *a, const M_Vector *b);
-	M_Real    (*Len)(const M_Vector *v);
-	M_Real    (*Dot)(const M_Vector *a, const M_Vector *b);
-	M_Real    (*Distance)(const M_Vector *a, const M_Vector *b);
-	M_Vector *(*Norm)(const M_Vector *a);
-	M_Vector *(*LERP)(const M_Vector *a, const M_Vector *b, M_Real c);
-	M_Vector *(*ElemPow)(const M_Vector *a, M_Real pow);
-	int       (*Copy)(M_Vector *x, const M_Vector *y);
-	M_Vector *(*Read)(AG_DataSource *ds);
-	void      (*Write)(AG_DataSource *ds, const M_Vector *v);
-	M_Vector *(*FromReals)(Uint, const M_Real *);
-	M_Vector *(*FromFloats)(Uint, const float *);
-	M_Vector *(*FromDoubles)(Uint, const double *);
+	M_Vector *_Nonnull  (*_Nonnull NewVector)(Uint);
+	M_Real   *_Nonnull  (*_Nonnull GetElement)(const M_Vector *_Nonnull, Uint);
+	void                (*_Nonnull SetZero)(M_Vector *_Nonnull);
+	int                 (*_Nonnull Resize)(M_Vector *_Nonnull, Uint);
+	void                (*_Nonnull FreeVector)(M_Vector *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull Flip)(const M_Vector *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull Scale)(const M_Vector *_Nonnull, M_Real);
+	int                 (*_Nonnull Scalev)(M_Vector *_Nonnull, M_Real);
+	M_Vector *_Nullable (*_Nonnull Add)(const M_Vector *_Nonnull,
+	                                    const M_Vector *_Nonnull);
+	int                 (*_Nonnull Addv)(M_Vector *_Nonnull,
+	                                     const M_Vector *_Nonnull);
+	M_Vector *_Nullable (*_Nonnull Sub)(const M_Vector *_Nonnull,
+	                                    const M_Vector *_Nonnull);
+	int                 (*_Nonnull Subv)(M_Vector *_Nonnull,
+	                                     const M_Vector *_Nonnull);
+	M_Real              (*_Nonnull Len)(const M_Vector *_Nonnull);
+	M_Real              (*_Nonnull Dot)(const M_Vector *_Nonnull,
+	                                    const M_Vector *_Nonnull);
+	M_Real              (*_Nonnull Distance)(const M_Vector *_Nonnull,
+	                                         const M_Vector *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull Norm)(const M_Vector *_Nonnull);
+	M_Vector *_Nullable (*_Nonnull LERP)(const M_Vector *_Nonnull,
+	                                     const M_Vector *_Nonnull, M_Real);
+	M_Vector *_Nonnull  (*_Nonnull ElemPow)(const M_Vector *_Nonnull, M_Real);
+	int                 (*_Nonnull Copy)(M_Vector *_Nonnull,
+	                                     const M_Vector *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull Read)(AG_DataSource *_Nonnull);
+	void                (*_Nonnull Write)(AG_DataSource *_Nonnull,
+	                                      const M_Vector *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull FromReals)(Uint, const M_Real *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull FromFloats)(Uint, const float *_Nonnull);
+	M_Vector *_Nonnull  (*_Nonnull FromDoubles)(Uint, const double *_Nonnull);
 #ifdef AG_HAVE_LONG_DOUBLE
-	M_Vector *(*FromLongDoubles)(Uint, const long double *);
-#else /* Padding */
-	M_Vector *(*FromLongDoubles)(Uint, const double *);
+	M_Vector *_Nonnull  (*_Nonnull FromLongDoubles)(Uint, const long double *_Nonnull);
 #endif
 } M_VectorOps;
 
 /* Operations on vectors in R^2 */
 typedef struct m_vector_ops2 {
-	const char *name;
+	const char *_Nonnull name;
 
-	M_Vector2 (*Zero)(void);
-	M_Vector2 (*Get)(M_Real, M_Real);
-	void      (*Set)(M_Vector2 *, M_Real, M_Real);
-	void      (*Copy)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Flip)(M_Vector2);
-	M_Real    (*Len)(M_Vector2);
-	M_Real    (*Lenp)(const M_Vector2 *);
-	M_Real    (*Dot)(M_Vector2, M_Vector2);
-	M_Real    (*Dotp)(const M_Vector2 *, const M_Vector2 *);
-	M_Real    (*PerpDot)(M_Vector2, M_Vector2);
-	M_Real    (*PerpDotp)(const M_Vector2 *, const M_Vector2 *);
-	M_Real    (*Distance)(M_Vector2, M_Vector2);
-	M_Real    (*Distancep)(const M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Norm)(M_Vector2);
-	M_Vector2 (*Normp)(const M_Vector2 *);
-	void      (*Normv)(M_Vector2 *);
-	M_Vector2 (*Scale)(M_Vector2, M_Real);
-	M_Vector2 (*Scalep)(const M_Vector2 *, M_Real);
-	void      (*Scalev)(M_Vector2 *, M_Real);
-	M_Vector2 (*Add)(M_Vector2, M_Vector2);
-	M_Vector2 (*Addp)(const M_Vector2 *, const M_Vector2 *);
-	void      (*Addv)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Sum)(const M_Vector2 *, Uint);
-	M_Vector2 (*Sub)(M_Vector2, M_Vector2);
-	M_Vector2 (*Subp)(const M_Vector2 *, const M_Vector2 *);
-	void      (*Subv)(M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*Avg)(M_Vector2, M_Vector2);
-	M_Vector2 (*Avgp)(const M_Vector2 *, const M_Vector2 *);
-	M_Vector2 (*LERP)(M_Vector2, M_Vector2, M_Real);
-	M_Vector2 (*LERPp)(M_Vector2 *, M_Vector2 *, M_Real);
-	M_Vector2 (*ElemPow)(M_Vector2, M_Real);
-	M_Real    (*VecAngle)(M_Vector2, M_Vector2);
+	M_Vector2 (*_Nonnull Zero)(void);
+	M_Vector2 (*_Nonnull Get)(M_Real,M_Real);
+	void      (*_Nonnull Set)(M_Vector2 *_Nonnull, M_Real,M_Real);
+	void      (*_Nonnull Copy)(M_Vector2 *_Nonnull, const M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull Flip)(M_Vector2);
+	M_Real    (*_Nonnull Len)(M_Vector2);
+	M_Real    (*_Nonnull Lenp)(const M_Vector2 *_Nonnull);
+	M_Real    (*_Nonnull Dot)(M_Vector2, M_Vector2);
+	M_Real    (*_Nonnull Dotp)(const M_Vector2 *_Nonnull,
+	                           const M_Vector2 *_Nonnull);
+	M_Real    (*_Nonnull PerpDot)(M_Vector2, M_Vector2);
+	M_Real    (*_Nonnull PerpDotp)(const M_Vector2 *_Nonnull,
+	                               const M_Vector2 *_Nonnull);
+	M_Real    (*_Nonnull Distance)(M_Vector2, M_Vector2);
+	M_Real    (*_Nonnull Distancep)(const M_Vector2 *_Nonnull,
+	                                const M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull Norm)(M_Vector2);
+	M_Vector2 (*_Nonnull Normp)(const M_Vector2 *_Nonnull);
+	void      (*_Nonnull Normv)(M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull Scale)(M_Vector2, M_Real);
+	M_Vector2 (*_Nonnull Scalep)(const M_Vector2 *_Nonnull, M_Real);
+	void      (*_Nonnull Scalev)(M_Vector2 *_Nonnull, M_Real);
+	M_Vector2 (*_Nonnull Add)(M_Vector2, M_Vector2);
+	M_Vector2 (*_Nonnull Addp)(const M_Vector2 *_Nonnull,
+	                           const M_Vector2 *_Nonnull);
+	void      (*_Nonnull Addv)(M_Vector2 *_Nonnull, const M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull Sum)(const M_Vector2 *_Nonnull, Uint);
+	M_Vector2 (*_Nonnull Sub)(M_Vector2, M_Vector2);
+	M_Vector2 (*_Nonnull Subp)(const M_Vector2 *_Nonnull,
+	                           const M_Vector2 *_Nonnull);
+	void      (*_Nonnull Subv)(M_Vector2 *_Nonnull, const M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull Avg)(M_Vector2, M_Vector2);
+	M_Vector2 (*_Nonnull Avgp)(const M_Vector2 *_Nonnull,
+	                           const M_Vector2 *_Nonnull);
+	M_Vector2 (*_Nonnull LERP)(M_Vector2, M_Vector2, M_Real);
+	M_Vector2 (*_Nonnull LERPp)(M_Vector2 *_Nonnull, M_Vector2 *_Nonnull,
+	                            M_Real);
+	M_Vector2 (*_Nonnull ElemPow)(M_Vector2, M_Real);
+	M_Real    (*_Nonnull VecAngle)(M_Vector2, M_Vector2);
 } M_VectorOps2;
 
 /* Operations on vectors in R^3 */
 typedef struct m_vector_ops3 {
-	const char *name;
+	const char *_Nonnull name;
 
-	M_Vector3 (*Zero)(void);
-	M_Vector3 (*Get)(M_Real, M_Real, M_Real);
-	void      (*Set)(M_Vector3 *, M_Real, M_Real, M_Real);
-	void      (*Copy)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Flip)(M_Vector3);
-	M_Real	  (*Len)(M_Vector3);
-	M_Real    (*Lenp)(const M_Vector3 *);
-	M_Real    (*Dot)(M_Vector3, M_Vector3);
-	M_Real    (*Dotp)(const M_Vector3 *, const M_Vector3 *);
-	M_Real    (*Distance)(M_Vector3, M_Vector3);
-	M_Real    (*Distancep)(const M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Norm)(M_Vector3);
-	M_Vector3 (*Normp)(const M_Vector3 *);
-	void      (*Normv)(M_Vector3 *);
-	M_Vector3 (*Cross)(M_Vector3, M_Vector3);
-	M_Vector3 (*Crossp)(const M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*NormCross)(M_Vector3, M_Vector3);
-	M_Vector3 (*NormCrossp)(const M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Scale)(M_Vector3, M_Real);
-	M_Vector3 (*Scalep)(const M_Vector3 *, M_Real);
-	void      (*Scalev)(M_Vector3 *, M_Real);
-	M_Vector3 (*Add)(M_Vector3, M_Vector3);
-	M_Vector3 (*Addp)(const M_Vector3 *, const M_Vector3 *);
-	void	  (*Addv)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Sum)(const M_Vector3 *, Uint);
-	M_Vector3 (*Sub)(M_Vector3, M_Vector3);
-	M_Vector3 (*Subp)(const M_Vector3 *, const M_Vector3 *);
-	void	  (*Subv)(M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*Avg)(M_Vector3, M_Vector3);
-	M_Vector3 (*Avgp)(const M_Vector3 *, const M_Vector3 *);
-	M_Vector3 (*LERP)(M_Vector3, M_Vector3, M_Real);
-	M_Vector3 (*LERPp)(M_Vector3 *, M_Vector3 *, M_Real);
-	M_Vector3 (*ElemPow)(M_Vector3, M_Real);
-	void	  (*VecAngle)(M_Vector3, M_Vector3, M_Real *, M_Real *);
+	M_Vector3 (*_Nonnull Zero)(void);
+	M_Vector3 (*_Nonnull Get)(M_Real,M_Real,M_Real);
+	void      (*_Nonnull Set)(M_Vector3 *_Nonnull, M_Real,M_Real,M_Real);
+	void      (*_Nonnull Copy)(M_Vector3 *_Nonnull, const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Flip)(M_Vector3);
+	M_Real	  (*_Nonnull Len)(M_Vector3);
+	M_Real    (*_Nonnull Lenp)(const M_Vector3 *_Nonnull);
+	M_Real    (*_Nonnull Dot)(M_Vector3, M_Vector3);
+	M_Real    (*_Nonnull Dotp)(const M_Vector3 *_Nonnull,
+	                           const M_Vector3 *_Nonnull);
+	M_Real    (*_Nonnull Distance)(M_Vector3, M_Vector3);
+	M_Real    (*_Nonnull Distancep)(const M_Vector3 *_Nonnull,
+	                                const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Norm)(M_Vector3);
+	M_Vector3 (*_Nonnull Normp)(const M_Vector3 *_Nonnull);
+	void      (*_Nonnull Normv)(M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Cross)(M_Vector3, M_Vector3);
+	M_Vector3 (*_Nonnull Crossp)(const M_Vector3 *_Nonnull,
+	                             const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull NormCross)(M_Vector3, M_Vector3);
+	M_Vector3 (*_Nonnull NormCrossp)(const M_Vector3 *_Nonnull,
+	                                 const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Scale)(M_Vector3, M_Real);
+	M_Vector3 (*_Nonnull Scalep)(const M_Vector3 *_Nonnull, M_Real);
+	void      (*_Nonnull Scalev)(M_Vector3 *_Nonnull, M_Real);
+	M_Vector3 (*_Nonnull Add)(M_Vector3, M_Vector3);
+	M_Vector3 (*_Nonnull Addp)(const M_Vector3 *_Nonnull,
+	                           const M_Vector3 *_Nonnull);
+	void	  (*_Nonnull Addv)(M_Vector3 *_Nonnull,
+	                           const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Sum)(const M_Vector3 *_Nonnull, Uint);
+	M_Vector3 (*_Nonnull Sub)(M_Vector3, M_Vector3);
+	M_Vector3 (*_Nonnull Subp)(const M_Vector3 *_Nonnull,
+	                           const M_Vector3 *_Nonnull);
+	void	  (*_Nonnull Subv)(M_Vector3 *_Nonnull, const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull Avg)(M_Vector3, M_Vector3);
+	M_Vector3 (*_Nonnull Avgp)(const M_Vector3 *_Nonnull,
+	                           const M_Vector3 *_Nonnull);
+	M_Vector3 (*_Nonnull LERP)(M_Vector3, M_Vector3, M_Real);
+	M_Vector3 (*_Nonnull LERPp)(M_Vector3 *_Nonnull, M_Vector3 *_Nonnull,
+	                            M_Real);
+	M_Vector3 (*_Nonnull ElemPow)(M_Vector3, M_Real);
+	void	  (*_Nonnull VecAngle)(M_Vector3, M_Vector3,
+	                               M_Real *_Nullable, M_Real *_Nullable);
 } M_VectorOps3;
 
 /* Operations on vectors in R^4 */
 typedef struct m_vector_ops4 {
-	const char *name;
+	const char *_Nonnull name;
 
-	M_Vector4 (*Zero)(void);
-	M_Vector4 (*Get)(M_Real, M_Real, M_Real, M_Real);
-	void      (*Set)(M_Vector4 *, M_Real, M_Real, M_Real, M_Real);
-	void      (*Copy)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Flip)(M_Vector4);
-	M_Real    (*Len)(M_Vector4);
-	M_Real    (*Lenp)(const M_Vector4 *);
-	M_Real    (*Dot)(M_Vector4, M_Vector4);
-	M_Real    (*Dotp)(const M_Vector4 *, const M_Vector4 *);
-	M_Real    (*Distance)(M_Vector4, M_Vector4);
-	M_Real    (*Distancep)(const M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Norm)(M_Vector4);
-	M_Vector4 (*Normp)(const M_Vector4 *);
-	void      (*Normv)(M_Vector4 *);
-	M_Vector4 (*Scale)(M_Vector4, M_Real);
-	M_Vector4 (*Scalep)(const M_Vector4 *, M_Real);
-	void      (*Scalev)(M_Vector4 *, M_Real);
-	M_Vector4 (*Add)(M_Vector4, M_Vector4);
-	M_Vector4 (*Addp)(const M_Vector4 *, const M_Vector4 *);
-	void      (*Addv)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Sum)(const M_Vector4 *, Uint);
-	M_Vector4 (*Sub)(M_Vector4, M_Vector4);
-	M_Vector4 (*Subp)(const M_Vector4 *, const M_Vector4 *);
-	void      (*Subv)(M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*Avg)(M_Vector4, M_Vector4);
-	M_Vector4 (*Avgp)(const M_Vector4 *, const M_Vector4 *);
-	M_Vector4 (*LERP)(M_Vector4, M_Vector4, M_Real);
-	M_Vector4 (*LERPp)(M_Vector4 *, M_Vector4 *, M_Real);
-	M_Vector4 (*ElemPow)(M_Vector4, M_Real);
-	void      (*VecAngle)(M_Vector4, M_Vector4, M_Real *, M_Real *,
-	                      M_Real *);
+	M_Vector4 (*_Nonnull Zero)(void);
+	M_Vector4 (*_Nonnull Get)(M_Real,M_Real,M_Real,M_Real);
+	void      (*_Nonnull Set)(M_Vector4 *_Nonnull, M_Real,M_Real,M_Real,M_Real);
+	void      (*_Nonnull Copy)(M_Vector4 *_Nonnull, const M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull Flip)(M_Vector4);
+	M_Real    (*_Nonnull Len)(M_Vector4);
+	M_Real    (*_Nonnull Lenp)(const M_Vector4 *_Nonnull);
+	M_Real    (*_Nonnull Dot)(M_Vector4, M_Vector4);
+	M_Real    (*_Nonnull Dotp)(const M_Vector4 *_Nonnull,
+	                           const M_Vector4 *_Nonnull);
+	M_Real    (*_Nonnull Distance)(M_Vector4, M_Vector4);
+	M_Real    (*_Nonnull Distancep)(const M_Vector4 *_Nonnull,
+	                                const M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull Norm)(M_Vector4);
+	M_Vector4 (*_Nonnull Normp)(const M_Vector4 *_Nonnull);
+	void      (*_Nonnull Normv)(M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull Scale)(M_Vector4, M_Real);
+	M_Vector4 (*_Nonnull Scalep)(const M_Vector4 *_Nonnull, M_Real);
+	void      (*_Nonnull Scalev)(M_Vector4 *_Nonnull, M_Real);
+	M_Vector4 (*_Nonnull Add)(M_Vector4, M_Vector4);
+	M_Vector4 (*_Nonnull Addp)(const M_Vector4 *_Nonnull,
+	                           const M_Vector4 *_Nonnull);
+	void      (*_Nonnull Addv)(M_Vector4 *_Nonnull, const M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull Sum)(const M_Vector4 *_Nonnull, Uint);
+	M_Vector4 (*_Nonnull Sub)(M_Vector4, M_Vector4);
+	M_Vector4 (*_Nonnull Subp)(const M_Vector4 *_Nonnull,
+	                           const M_Vector4 *_Nonnull);
+	void      (*_Nonnull Subv)(M_Vector4 *_Nonnull, const M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull Avg)(M_Vector4, M_Vector4);
+	M_Vector4 (*_Nonnull Avgp)(const M_Vector4 *_Nonnull,
+	                           const M_Vector4 *_Nonnull);
+	M_Vector4 (*_Nonnull LERP)(M_Vector4, M_Vector4, M_Real);
+	M_Vector4 (*_Nonnull LERPp)(M_Vector4 *_Nonnull, M_Vector4 *_Nonnull,
+	                            M_Real);
+	M_Vector4 (*_Nonnull ElemPow)(M_Vector4, M_Real);
+	void      (*_Nonnull VecAngle)(M_Vector4, M_Vector4, M_Real *_Nonnull,
+	                               M_Real *_Nonnull, M_Real *_Nonnull);
 } M_VectorOps4;
 
 __BEGIN_DECLS
-extern const M_VectorOps2 *mVecOps2;
-extern const M_VectorOps3 *mVecOps3;
-extern const M_VectorOps4 *mVecOps4;
-extern const M_VectorOps *mVecOps;
+extern const M_VectorOps2 *_Nullable mVecOps2;
+extern const M_VectorOps3 *_Nullable mVecOps3;
+extern const M_VectorOps4 *_Nullable mVecOps4;
+extern const M_VectorOps  *_Nullable mVecOps;
 
 static __inline__ void
-M_VectorInit(M_Vector *v, Uint m)
+M_VectorInit(M_Vector *_Nonnull v, Uint m)
 {
 	v->m = m;
 }
@@ -233,28 +263,29 @@ __END_DECLS
 __BEGIN_DECLS
 void       M_VectorInitEngine(void);
 
-M_Vector2  M_ReadVector2(AG_DataSource *);
-M_Vector3  M_ReadVector3(AG_DataSource *);
-M_Vector4  M_ReadVector4(AG_DataSource *);
-int        M_ReadVector2v(AG_DataSource *, M_Vector2 *);
-int	   M_ReadVector3v(AG_DataSource *, M_Vector3 *);
-int	   M_ReadVector4v(AG_DataSource *, M_Vector4 *);
+M_Vector2  M_ReadVector2(AG_DataSource *_Nonnull);
+M_Vector3  M_ReadVector3(AG_DataSource *_Nonnull);
+M_Vector4  M_ReadVector4(AG_DataSource *_Nonnull);
+int        M_ReadVector2v(AG_DataSource *_Nonnull, M_Vector2 *_Nonnull);
+int	   M_ReadVector3v(AG_DataSource *_Nonnull, M_Vector3 *_Nonnull);
+int	   M_ReadVector4v(AG_DataSource *_Nonnull, M_Vector4 *_Nonnull);
 
-void	   M_WriteVector2(AG_DataSource *, const M_Vector2 *);
-void	   M_WriteVector3(AG_DataSource *, const M_Vector3 *);
-void	   M_WriteVector4(AG_DataSource *, const M_Vector4 *);
+void	   M_WriteVector2(AG_DataSource *_Nonnull, const M_Vector2 *_Nonnull);
+void	   M_WriteVector3(AG_DataSource *_Nonnull, const M_Vector3 *_Nonnull);
+void	   M_WriteVector4(AG_DataSource *_Nonnull, const M_Vector4 *_Nonnull);
 
-M_Vector2  M_RealvToVector2(const M_Real *);
-M_Vector3  M_RealvToVector3(const M_Real *);
-M_Vector4  M_RealvToVector4(const M_Real *);
-M_Vector2 *M_VectorDup2(const M_Vector2 *);
-M_Vector3 *M_VectorDup3(const M_Vector3 *);
-M_Vector4 *M_VectorDup4(const M_Vector4 *);
+M_Vector2  M_RealvToVector2(const M_Real *_Nonnull);
+M_Vector3  M_RealvToVector3(const M_Real *_Nonnull);
+M_Vector4  M_RealvToVector4(const M_Real *_Nonnull);
+
+M_Vector2 *_Nonnull M_VectorDup2(const M_Vector2 *_Nonnull);
+M_Vector3 *_Nonnull M_VectorDup3(const M_Vector3 *_Nonnull);
+M_Vector4 *_Nonnull M_VectorDup4(const M_Vector4 *_Nonnull);
 __END_DECLS
 
-#define M_VECTOR2	M_VecGet2
-#define M_VECTOR3	M_VecGet3
-#define M_VECTOR4	M_VecGet4
+#define M_VECTOR2 M_VecGet2
+#define M_VECTOR3 M_VecGet3
+#define M_VECTOR4 M_VecGet4
 
 /*
  * Operations on vectors in R^n

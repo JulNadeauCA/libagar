@@ -18,35 +18,35 @@ enum m_point_set_sort_mode3 {
 };
 
 __BEGIN_DECLS
-int  M_PointSetAlloc2(M_PointSet2 *, Uint);
-int  M_PointSetAlloc3(M_PointSet3 *, Uint);
-int  M_PointSetAlloc2i(M_PointSet2i *, Uint);
-int  M_PointSetAlloc3i(M_PointSet3i *, Uint);
-int  M_PointSetCopy2(M_PointSet2 *, const M_PointSet2 *);
-int  M_PointSetCopy3(M_PointSet3 *, const M_PointSet3 *);
-int  M_PointSetCopy2i(M_PointSet2i *, const M_PointSet2i *);
-int  M_PointSetCopy3i(M_PointSet3i *, const M_PointSet3i *);
+int  M_PointSetAlloc2(M_PointSet2 *_Nonnull, Uint);
+int  M_PointSetAlloc3(M_PointSet3 *_Nonnull, Uint);
+int  M_PointSetAlloc2i(M_PointSet2i *_Nonnull, Uint);
+int  M_PointSetAlloc3i(M_PointSet3i *_Nonnull, Uint);
+int  M_PointSetCopy2(M_PointSet2 *_Nonnull, const M_PointSet2 *_Nonnull);
+int  M_PointSetCopy3(M_PointSet3 *_Nonnull, const M_PointSet3 *_Nonnull);
+int  M_PointSetCopy2i(M_PointSet2i *_Nonnull, const M_PointSet2i *_Nonnull);
+int  M_PointSetCopy3i(M_PointSet3i *_Nonnull, const M_PointSet3i *_Nonnull);
 
-void M_PointSetSort2(M_PointSet2 *, enum m_point_set_sort_mode2);
-void M_PointSetSort3(M_PointSet3 *, enum m_point_set_sort_mode3);
+void M_PointSetSort2(M_PointSet2 *_Nonnull, enum m_point_set_sort_mode2);
+void M_PointSetSort3(M_PointSet3 *_Nonnull, enum m_point_set_sort_mode3);
 
 /* Initialize a point set. */
 static __inline__ void
-M_PointSetInit2(M_PointSet2 *S)
+M_PointSetInit2(M_PointSet2 *_Nonnull S)
 {
 	S->p = NULL;
 	S->n = 0;
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetInit3(M_PointSet3 *S)
+M_PointSetInit3(M_PointSet3 *_Nonnull S)
 {
 	S->p = NULL;
 	S->n = 0;
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetInit2i(M_PointSet2i *S, M_Real w, M_Real h)
+M_PointSetInit2i(M_PointSet2i *_Nonnull S, M_Real w, M_Real h)
 {
 	S->w = w;
 	S->h = h;
@@ -56,13 +56,13 @@ M_PointSetInit2i(M_PointSet2i *S, M_Real w, M_Real h)
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetScale2i(M_PointSet2i *S, M_Real w, M_Real h)
+M_PointSetScale2i(M_PointSet2i *_Nonnull S, M_Real w, M_Real h)
 {
 	S->w = w;
 	S->h = h;
 }
 static __inline__ void
-M_PointSetInit3i(M_PointSet3i *S)
+M_PointSetInit3i(M_PointSet3i *_Nonnull S)
 {
 	S->w = 1.0;
 	S->h = 1.0;
@@ -74,7 +74,7 @@ M_PointSetInit3i(M_PointSet3i *S)
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetScale3i(M_PointSet3i *S, M_Real w, M_Real h, M_Real d)
+M_PointSetScale3i(M_PointSet3i *_Nonnull S, M_Real w, M_Real h, M_Real d)
 {
 	S->w = w;
 	S->h = h;
@@ -83,7 +83,7 @@ M_PointSetScale3i(M_PointSet3i *S, M_Real w, M_Real h, M_Real d)
 
 /* Append a new point to a set. */
 static __inline__ int
-M_PointSetAdd2(M_PointSet2 *S, M_Vector2 v)
+M_PointSetAdd2(M_PointSet2 *_Nonnull S, M_Vector2 v)
 {
 	if (S->n+1 > S->nMax &&
 	    M_PointSetAlloc2(S, S->n+1) == -1) {
@@ -93,7 +93,7 @@ M_PointSetAdd2(M_PointSet2 *S, M_Vector2 v)
 	return (S->n++);
 }
 static __inline__ int
-M_PointSetAdd3(M_PointSet3 *S, M_Vector3 v)
+M_PointSetAdd3(M_PointSet3 *_Nonnull S, M_Vector3 v)
 {
 	if (S->n+1 > S->nMax &&
 	    M_PointSetAlloc3(S, S->n+1) == -1) {
@@ -103,7 +103,7 @@ M_PointSetAdd3(M_PointSet3 *S, M_Vector3 v)
 	return (S->n++);
 }
 static __inline__ int
-M_PointSetAdd2i(M_PointSet2i *S, int x, int y)
+M_PointSetAdd2i(M_PointSet2i *_Nonnull S, int x, int y)
 {
 	if (S->n+1 > S->nMax &&
 	    M_PointSetAlloc2i(S, S->n+1) == -1) {
@@ -114,7 +114,7 @@ M_PointSetAdd2i(M_PointSet2i *S, int x, int y)
 	return (S->n++);
 }
 static __inline__ int
-M_PointSetAdd3i(M_PointSet3i *S, int x, int y, int z)
+M_PointSetAdd3i(M_PointSet3i *_Nonnull S, int x, int y, int z)
 {
 	if (S->n+1 > S->nMax &&
 	    M_PointSetAlloc3i(S, S->n+1) == -1) {
@@ -128,7 +128,7 @@ M_PointSetAdd3i(M_PointSet3i *S, int x, int y, int z)
 
 /* Free a set. */
 static __inline__ void
-M_PointSetFree2(M_PointSet2 *S)
+M_PointSetFree2(M_PointSet2 *_Nonnull S)
 {
 	AG_Free(S->p);
 	S->p = NULL;
@@ -136,7 +136,7 @@ M_PointSetFree2(M_PointSet2 *S)
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetFree3(M_PointSet3 *S)
+M_PointSetFree3(M_PointSet3 *_Nonnull S)
 {
 	AG_Free(S->p);
 	S->p = NULL;
@@ -144,7 +144,7 @@ M_PointSetFree3(M_PointSet3 *S)
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetFree2i(M_PointSet2i *S)
+M_PointSetFree2i(M_PointSet2i *_Nonnull S)
 {
 	AG_Free(S->x);
 	AG_Free(S->y);
@@ -154,7 +154,7 @@ M_PointSetFree2i(M_PointSet2i *S)
 	S->nMax = 0;
 }
 static __inline__ void
-M_PointSetFree3i(M_PointSet3i *S)
+M_PointSetFree3i(M_PointSet3i *_Nonnull S)
 {
 	AG_Free(S->x);
 	AG_Free(S->y);

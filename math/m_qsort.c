@@ -46,7 +46,7 @@
 }
 
 static __inline__ void
-SwapFunc(char *a, char *b, int n, int swaptype)
+SwapFunc(char *_Nonnull a, char *_Nonnull b, int n, int swaptype)
 {
 	if (swaptype <= 1) 
 		SwapCode(long, a, b, n)
@@ -65,7 +65,8 @@ SwapFunc(char *a, char *b, int n, int swaptype)
 #define VecSwap(a, b, n) 	if ((n) > 0) SwapFunc(a, b, n, swaptype)
 
 static __inline__ char *
-Median3(char *a, char *b, char *c, M_Real (*cmp)(const void *, const void *))
+Median3(char *_Nonnull a, char *_Nonnull b, char *_Nonnull c,
+    M_Real (*_Nonnull cmp)(const void *_Nonnull, const void *_Nonnull))
 {
 	return (cmp(a, b) < -M_MACHEP) ?
 	       (cmp(b, c) < -M_MACHEP ? b : (cmp(a, c) < -M_MACHEP ? c : a )) :

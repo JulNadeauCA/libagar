@@ -44,13 +44,13 @@ M_VectorGet3_SSE(M_Real x, M_Real y, M_Real z)
 }
 
 static __inline__ void
-M_VectorSet3_SSE(M_Vector3 *v, M_Real x, M_Real y, M_Real z)
+M_VectorSet3_SSE(M_Vector3 *_Nonnull v, M_Real x, M_Real y, M_Real z)
 {
 	v->m128 = _mm_set_ps(0.0f, z, y, x);
 }
 
 static __inline__ void
-M_VectorCopy3_SSE(M_Vector3 *vDst, const M_Vector3 *vSrc)
+M_VectorCopy3_SSE(M_Vector3 *_Nonnull vDst, const M_Vector3 *_Nonnull vSrc)
 {
 	vDst->m128 = vSrc->m128;
 }
@@ -81,7 +81,7 @@ M_VectorLen3_SSE(M_Vector3 v)
 }
 
 static __inline__ M_Real
-M_VectorLen3p_SSE(const M_Vector3 *v)
+M_VectorLen3p_SSE(const M_Vector3 *_Nonnull v)
 {
 	__m128 r1, r2, r3;
 	float len;
@@ -113,7 +113,7 @@ M_VectorDot3_SSE(M_Vector3 a, M_Vector3 b)
 #endif
 }
 static __inline__ M_Real
-M_VectorDot3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorDot3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 #ifdef HAVE_SSE3
 	float dot;
@@ -145,7 +145,7 @@ M_VectorNorm3_SSE(M_Vector3 v)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorNorm3p_SSE(const M_Vector3 *v)
+M_VectorNorm3p_SSE(const M_Vector3 *_Nonnull v)
 {
 	__m128 r1, r2, r3;
 	M_Vector3 out;
@@ -160,7 +160,7 @@ M_VectorNorm3p_SSE(const M_Vector3 *v)
 	return (out);
 }
 static __inline__ void
-M_VectorNorm3v_SSE(M_Vector3 *v)
+M_VectorNorm3v_SSE(M_Vector3 *_Nonnull v)
 {
 	__m128 r1, r2, r3;
 	
@@ -189,7 +189,7 @@ M_VectorCross3_SSE(M_Vector3 a, M_Vector3 b)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorCross3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	__m128 rA, rB, r1, r2;
 	M_Vector3 out;
@@ -227,7 +227,7 @@ M_VectorNormCross3_SSE(M_Vector3 a, M_Vector3 b)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorNormCross3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorNormCross3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	__m128 rA, rB, r1, r2, r3;
 	M_Vector3 out;
@@ -257,14 +257,14 @@ M_VectorScale3_SSE(M_Vector3 a, M_Real c)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorScale3p_SSE(const M_Vector3 *a, M_Real c)
+M_VectorScale3p_SSE(const M_Vector3 *_Nonnull a, M_Real c)
 {
 	M_Vector3 out;
 	out.m128 = _mm_mul_ps(a->m128, _mm_set1_ps(c));
 	return (out);
 }
 static __inline__ void
-M_VectorScale3v_SSE(M_Vector3 *a, M_Real c)
+M_VectorScale3v_SSE(M_Vector3 *_Nonnull a, M_Real c)
 {
 	a->m128 = _mm_mul_ps(a->m128, _mm_set1_ps(c));
 }
@@ -277,14 +277,14 @@ M_VectorAdd3_SSE(M_Vector3 a, M_Vector3 b)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorAdd3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorAdd3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 out;
 	out.m128 = _mm_add_ps(a->m128, b->m128);
 	return (out);
 }
 static __inline__ void
-M_VectorAdd3v_SSE(M_Vector3 *r, const M_Vector3 *a)
+M_VectorAdd3v_SSE(M_Vector3 *_Nonnull r, const M_Vector3 *_Nonnull a)
 {
 	r->m128 = _mm_add_ps(r->m128, a->m128);
 }
@@ -297,14 +297,14 @@ M_VectorSub3_SSE(M_Vector3 a, M_Vector3 b)
 	return (out);
 }
 static __inline__ M_Vector3
-M_VectorSub3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorSub3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	M_Vector3 out;
 	out.m128 = _mm_sub_ps(a->m128, b->m128);
 	return (out);
 }
 static __inline__ void
-M_VectorSub3v_SSE(M_Vector3 *r, const M_Vector3 *a)
+M_VectorSub3v_SSE(M_Vector3 *_Nonnull r, const M_Vector3 *_Nonnull a)
 {
 	r->m128 = _mm_sub_ps(r->m128, a->m128);
 }
@@ -326,7 +326,7 @@ M_VectorDistance3_SSE(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Real
-M_VectorDistance3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorDistance3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	__m128 r1, r2, r3;
 	float dist;
@@ -353,7 +353,7 @@ M_VectorAvg3_SSE(M_Vector3 a, M_Vector3 b)
 }
 
 static __inline__ M_Vector3
-M_VectorAvg3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
+M_VectorAvg3p_SSE(const M_Vector3 *_Nonnull a, const M_Vector3 *_Nonnull b)
 {
 	__m128 r1;
 	M_Vector3 out;
@@ -365,8 +365,8 @@ M_VectorAvg3p_SSE(const M_Vector3 *a, const M_Vector3 *b)
 
 /* TODO */
 static __inline__ void
-M_VectorVecAngle3_SSE(M_Vector3 vOrig, M_Vector3 vOther, M_Real *theta,
-    M_Real *phi)
+M_VectorVecAngle3_SSE(M_Vector3 vOrig, M_Vector3 vOther,
+    M_Real *_Nullable theta, M_Real *_Nullable phi)
 {
 	M_Vector3 vd;
 
@@ -393,7 +393,7 @@ M_VectorLERP3_SSE(M_Vector3 v1, M_Vector3 v2, M_Real t)
 
 /* TODO */
 static __inline__ M_Vector3
-M_VectorLERP3p_SSE(M_Vector3 *v1, M_Vector3 *v2, M_Real t)
+M_VectorLERP3p_SSE(M_Vector3 *_Nonnull v1, M_Vector3 *_Nonnull v2, M_Real t)
 {
 	M_Vector3 v;
 
@@ -416,7 +416,7 @@ M_VectorElemPow3_SSE(M_Vector3 v, M_Real p)
 }
 
 static __inline__ M_Vector3
-M_VectorSum3_SSE(const M_Vector3 *va, Uint count)
+M_VectorSum3_SSE(const M_Vector3 *_Nonnull va, Uint count)
 {
 	__m128 r1;
 	M_Vector3 out;

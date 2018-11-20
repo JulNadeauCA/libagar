@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017 Julien Nadeau <vedge@hypertriton.com>.
+ * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,18 +49,19 @@
 
 #include <agar/dev/dev.h>
 
+/* Active object entry */
 struct objent {
-	AG_Object *obj;
-	AG_Window *win;
+	AG_Object *_Nonnull obj;	/* Object being edited */
+	AG_Window *_Nonnull win;	/* Edition window */
 	TAILQ_ENTRY(objent) objs;
 };
 static TAILQ_HEAD_(objent) dobjs;
 static TAILQ_HEAD_(objent) gobjs;
 static int editNowFlag = 1;
-static void *lastSelectedParent = NULL;
+static void *_Nullable lastSelectedParent = NULL;
 
 static void
-CreateObject(AG_Event *event)
+CreateObject(AG_Event *_Nonnull event)
 {
 	char name[AG_OBJECT_NAME_MAX];
 	AG_Object *vfsRoot = AG_PTR(1);
@@ -102,7 +103,7 @@ enum {
 	OBJEDIT_SAVE,
 	OBJEDIT_SAVE_ALL,		/* unused */
 	OBJEDIT_EXPORT,
-	OBJEDIT_FREE_DATASET,
+	OBJEDIT_RESET,
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
 	OBJEDIT_MOVE_DOWN,
@@ -110,7 +111,7 @@ enum {
 };
 
 static void
-CloseGenericDlg(AG_Event *event)
+CloseGenericDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	struct objent *oent = AG_PTR(1);
@@ -145,7 +146,8 @@ DEV_BrowserOpenGeneric(AG_Object *ob)
 }
 
 static void
-SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
+SaveAndCloseObject(struct objent *_Nonnull oent, AG_Window *_Nonnull win,
+    int save)
 {
 	AG_WindowHide(win);
 	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
@@ -156,7 +158,7 @@ SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 }
 
 static void
-SaveChangesReturn(AG_Event *event)
+SaveChangesReturn(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 	struct objent *oent = AG_PTR(2);
@@ -166,7 +168,7 @@ SaveChangesReturn(AG_Event *event)
 }
 
 static void
-SaveChangesDlg(AG_Event *event)
+SaveChangesDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	struct objent *oent = AG_PTR(1);
@@ -255,7 +257,7 @@ fail:
 }
 
 static int
-SaveObjectToFile(AG_Event *event)
+SaveObjectToFile(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -289,7 +291,7 @@ SaveObjectToFile(AG_Event *event)
 }
 
 static int
-ImportObject(AG_Event *event)
+ImportObject(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -368,7 +370,7 @@ DEV_BrowserLoadFromDlg(void *p, const char *name)
 }
 
 static void
-ObjectOp(AG_Event *event)
+ObjectOp(AG_Event *_Nonnull event)
 {
 	void *vfsRoot = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -438,11 +440,11 @@ ObjectOp(AG_Event *event)
 		case OBJEDIT_MOVE_DOWN:
 			AG_ObjectMoveDown(ob);
 			break;
-		case OBJEDIT_FREE_DATASET:
+		case OBJEDIT_RESET:
 			if (it->p1 == vfsRoot) {
 				continue;
 			}
-			AG_ObjectFreeDataset(ob);
+			AG_ObjectReset(ob);
 			break;
 		case OBJEDIT_DESTROY:
 			if (it->p1 == vfsRoot) {
@@ -471,7 +473,7 @@ ObjectOp(AG_Event *event)
 }
 
 static void
-DEV_BrowserGenericSave(AG_Event *event)
+DEV_BrowserGenericSave(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -485,7 +487,7 @@ DEV_BrowserGenericSave(AG_Event *event)
 }
 
 static void
-DEV_BrowserGenericLoad(AG_Event *event)
+DEV_BrowserGenericLoad(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -499,7 +501,7 @@ DEV_BrowserGenericLoad(AG_Event *event)
 }
 
 static void
-DEV_BrowserGenericSaveTo(AG_Event *event)
+DEV_BrowserGenericSaveTo(AG_Event *_Nonnull event)
 {
 	void *obj = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2), *win;
@@ -510,7 +512,7 @@ DEV_BrowserGenericSaveTo(AG_Event *event)
 }
 
 static void
-DEV_BrowserGenericLoadFrom(AG_Event *event)
+DEV_BrowserGenericLoadFrom(AG_Event *_Nonnull event)
 {
 	void *obj = AG_PTR(1);
 	AG_Window *winParent = AG_PTR(2), *win;
@@ -544,8 +546,8 @@ DEV_BrowserGenericMenu(void *menup, void *obj, AG_Window *winParent)
 	    &OBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
-static AG_TlistItem *
-PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
+static AG_TlistItem *_Nonnull
+PollObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 {
 	char label[AG_TLIST_LABEL_MAX];
 	AG_Object *cob;
@@ -573,7 +575,7 @@ PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-PollObjects(AG_Event *event)
+PollObjects(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *pob = AG_PTR(1);
@@ -597,7 +599,7 @@ PollObjects(AG_Event *event)
 }
 
 static void
-LoadObject(AG_Event *event)
+LoadObject(AG_Event *_Nonnull event)
 {
 	AG_Object *o = AG_PTR(1);
 
@@ -608,7 +610,7 @@ LoadObject(AG_Event *event)
 }
 
 static void
-SaveObject(AG_Event *event)
+SaveObject(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -621,19 +623,19 @@ SaveObject(AG_Event *event)
 }
 
 static void
-ExitProgram(AG_Event *event)
+ExitProgram(AG_Event *_Nonnull event)
 {
 	AG_QuitGUI();
 }
 
 static void
-ShowPreferences(AG_Event *event)
+ShowPreferences(AG_Event *_Nonnull event)
 {
 	DEV_ConfigShow();
 }
 
 static void
-CreateObjectDlg(AG_Event *event)
+CreateObjectDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
 	AG_Object *vfsRoot = AG_PTR(1);
@@ -693,8 +695,8 @@ CreateObjectDlg(AG_Event *event)
 }
 
 static void
-GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
-    AG_Window *winParent)
+GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
+    AG_Object *_Nonnull vfsRoot, AG_Window *_Nonnull winParent)
 {
 	AG_ObjectClass *subcls;
 	AG_MenuItem *mNode;
@@ -823,9 +825,9 @@ DEV_Browser(void *vfsRoot)
 			
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Free dataset"), NULL,
+			AG_MenuAction(mi, _("Reset"), NULL,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
-			    OBJEDIT_FREE_DATASET);
+			    OBJEDIT_RESET);
 			AG_MenuAction(mi, _("Destroy"), agIconTrash.s,
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_DESTROY);
@@ -842,7 +844,7 @@ DEV_Browser(void *vfsRoot)
  * associated with the object after the load.
  */
 static void
-DEV_PostLoadDataCallback(AG_Event *event)
+DEV_PostLoadDataCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_SENDER();	
 	struct objent *oent;
@@ -870,7 +872,7 @@ DEV_PostLoadDataCallback(AG_Event *event)
  * unless the application is terminating.
  */
 static void
-DEV_PageOutCallback(AG_Event *event)
+DEV_PageOutCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *obj = AG_SENDER();
 	
@@ -879,13 +881,13 @@ DEV_PageOutCallback(AG_Event *event)
 }
 
 static void
-ConfirmQuit(AG_Event *event)
+ConfirmQuit(AG_Event *_Nonnull event)
 {
 	AG_QuitGUI();
 }
 
 static void
-AbortQuit(AG_Event *event)
+AbortQuit(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_PTR(1);
 
@@ -899,7 +901,7 @@ AbortQuit(AG_Event *event)
  * saved and prompt the user if that's the case.
  */
 static void
-DEV_QuitCallback(AG_Event *event)
+DEV_QuitCallback(AG_Event *_Nonnull event)
 {
 	AG_Object *vfsRoot = AG_PTR(1);
 	AG_Window *win;

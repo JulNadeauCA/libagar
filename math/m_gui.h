@@ -48,8 +48,10 @@
 #define M_NumericalGetTime	 	 AG_NumericalGetSint32
 
 __BEGIN_DECLS
-void	*M_EditTranslate3(void *, const char *, M_Matrix44 *);
-void	*M_EditTranslate3Mp(void *, const char *, M_Matrix44 *, AG_Mutex *);
+void *_Nonnull M_EditTranslate3(void *_Nullable, const char *_Nullable,
+                                M_Matrix44 *_Nonnull);
+void *_Nonnull M_EditTranslate3Mp(void *_Nullable, const char *_Nullable,
+                                  M_Matrix44 *_Nonnull, _Nonnull AG_Mutex *_Nonnull);
 __END_DECLS
 
 #include <agar/math/close.h>
