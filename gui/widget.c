@@ -1529,7 +1529,9 @@ AG_WidgetShow(void *obj)
 	AG_ObjectLock(wid);
 	wid->flags &= ~(AG_WIDGET_HIDE);
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
-	AG_WindowUpdate(wid->window);
+	if (wid->window != NULL) {
+		AG_WindowUpdate(wid->window);
+	}
 	AG_ObjectUnlock(wid);
 }
 
@@ -1542,7 +1544,9 @@ AG_WidgetHide(void *obj)
 	AG_ObjectLock(wid);
 	wid->flags |= AG_WIDGET_HIDE;
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
-	AG_WindowUpdate(wid->window);
+	if (wid->window != NULL) {
+		AG_WindowUpdate(wid->window);
+	}
 	AG_ObjectUnlock(wid);
 }
 
