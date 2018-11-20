@@ -46,6 +46,7 @@ typedef struct ag_scrollbar {
 	int xOffs, xSeek;		/* Cursor offset for scrolling */
 	Uint lenPre;			/* Preferred length size hint */
 	int minOffs, maxOffs, visOffs;	/* Constants to add to binding values */
+	int value;			/* Default `value' binding */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(p) ((AG_Scrollbar *)p)

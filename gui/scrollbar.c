@@ -566,16 +566,19 @@ KeyUp(AG_Event *_Nonnull event)
 	}
 }
 
+#if 0
 /* Timer for AUTOHIDE visibility test. */
 static Uint32
 AutoHideTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Scrollbar *sb = AG_SELF();
+	AG_Window *pwin;
 	int rv, x, len;
 
-	if (WIDGET(sb)->window != NULL &&
-	    WIDGET(sb)->window->visible == 0)
+	if ((pwin = WIDGET(sb)->window) == NULL ||
+	    !pwin->visible) {
 		return (to->ival);
+	}
 
 	rv = GetPxCoords(sb, &x, &len);
 	if (rv == -1 || len == sb->length) {
@@ -589,6 +592,7 @@ AutoHideTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	}
 	return (to->ival);
 }
+#endif
 
 static void
 OnFocusLoss(AG_Event *_Nonnull event)
@@ -612,7 +616,7 @@ OnShow(AG_Event *_Nonnull event)
 	AG_Variable *V;
 
 	if ((V = AG_AccessVariable(sb, "value")) == NULL) {
-		AG_FatalError("Scrollbar \"value\" is undefined");
+		V = AG_BindInt(sb, "value", &sb->value);
 	}
 	switch (AG_VARIABLE_TYPE(V)) {
 #ifdef HAVE_FLOAT
@@ -645,8 +649,10 @@ OnShow(AG_Event *_Nonnull event)
 		AG_RedrawOnChange(sb, 500, "max");
 		AG_RedrawOnChange(sb, 500, "visible");
 	}
+#if 0
 	if (sb->flags & AG_SCROLLBAR_AUTOHIDE)
 		AG_AddTimer(sb, &sb->autoHideTo, 250, AutoHideTimeout, NULL);
+#endif
 }
 #undef SET_DEF
 
@@ -686,11 +692,11 @@ Init(void *_Nonnull obj)
 	sb->xSeek = -1;
 	sb->length = 0;
 	sb->lenPre = 32;
-
 	sb->wBar = agTextFontHeight >> 1;
 	sb->wBarMin = 16;
 	sb->width = agTextFontHeight;
 	sb->hArrow = sb->width >> 1;
+	sb->value = 0;
 	
 	AG_InitTimer(&sb->moveTo, "move", 0);
 	AG_InitTimer(&sb->autoHideTo, "autoHide", 0);
