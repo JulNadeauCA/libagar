@@ -215,14 +215,9 @@ static __inline__ void
 AG_DrawArrowUp(void *_Nonnull obj, int x0, int y0, int h, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
-	int x = wid->rView.x1+x0;
-	int y = wid->rView.y1+y0;
-	int h_2 = h >> 1;
-
-	wid->drvOps->drawTriangle(wid->drv,
-	    AG_POINT(x,       y-h_2),
-	    AG_POINT(x-h_2-1, y-h_2+h+1),
-	    AG_POINT(x+h_2-1, y-h_2+h+1), c);
+	wid->drvOps->drawArrow(wid->drv, 0,
+	    wid->rView.x1+x0,
+	    wid->rView.y1+y0, h, c);
 }
 static __inline__ void
 AG_DrawArrowRight(void *_Nonnull obj, int x0, int y0, int h, AG_Color c)
