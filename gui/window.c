@@ -262,7 +262,7 @@ Attach(AG_Event *event)
 		}
 		WIDGET(win->icon)->drv = drv;
 		WIDGET(win->icon)->drvOps = AGDRIVER_CLASS(drv);
-		AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
+		AG_IconSetSurface(win->icon, agIconWindow.s);
 		AG_IconSetBackgroundFill(win->icon, 1, AGDRIVER_SW(drv)->bgColor);
 		AG_SetStyle(win->icon, "font-size", "80%");
 		AG_WidgetCompileStyle(win->icon);
