@@ -826,53 +826,53 @@ AG_SurfaceBlit(const AG_Surface *_Nonnull Ss, const AG_Rect *srcRect,
 	if (Ss->alpha < AG_OPAQUE) {                    /* Per-surface alpha */
 		if (Ss->flags & AG_SURFACE_COLORKEY) {
 			AG_SurfaceBlit_AlCo(Ss, Sd, dr);
-		} else {                                      /* No colorkey */
-			for (y = 0; y < dr.h; y++) {
-				for (x = 0; x < dr.w; x++) {
-					AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-					AG_Color c = AG_GetColor(px, &Ss->format);
+			return;
+		}
+		for (y = 0; y < dr.h; y++) {
+			for (x = 0; x < dr.w; x++) {
+				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
+				AG_Color c = AG_GetColor(px, &Ss->format);
 
-					c.a = MIN(c.a, Ss->alpha);
-					if (c.a == AG_TRANSPARENT) {
-						continue;
-					}
-					AG_SurfaceBlend(Sd, x,y, c,
-					    AG_ALPHA_OVERLAY);
+				c.a = MIN(c.a, Ss->alpha);
+				if (c.a == AG_TRANSPARENT) {
+					continue;
 				}
+				AG_SurfaceBlend(Sd, x,y, c,
+				    AG_ALPHA_OVERLAY);
 			}
 		}
 		return;
 	}
 	if (Ss->flags & AG_SURFACE_COLORKEY) {
 		AG_SurfaceBlit_Co(Ss, Sd, dr);
-	} else {
-		if (Ss->flags & AG_SURFACE_ALPHA) {
-			for (y = 0; y < dr.h; y++) {
-				for (x = 0; x < dr.w; x++) {
-					AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-					AG_Color c = AG_GetColor(px, &Ss->format);
+		return;
+	}
+	if (Ss->flags & AG_SURFACE_ALPHA) {
+		for (y = 0; y < dr.h; y++) {
+			for (x = 0; x < dr.w; x++) {
+				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
+				AG_Color c = AG_GetColor(px, &Ss->format);
 
-					if (c.a == AG_TRANSPARENT) {
-						continue;
-					}
-					if (c.a < AG_OPAQUE) {
-						AG_SurfaceBlend(Sd, x,y, c,
-						    AG_ALPHA_OVERLAY);
-					} else {
-						AG_SurfacePut(Sd, x,y,
-						    AG_MapPixel(&Sd->format, c));
-					}
+				if (c.a == AG_TRANSPARENT) {
+					continue;
 				}
-			}
-		} else {
-			for (y = 0; y < dr.h; y++) {
-				for (x = 0; x < dr.w; x++) {
-					AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-					AG_Color c = AG_GetColor(px, &Ss->format);
-
+				if (c.a < AG_OPAQUE) {
+					AG_SurfaceBlend(Sd, x,y, c,
+					    AG_ALPHA_OVERLAY);
+				} else {
 					AG_SurfacePut(Sd, x,y,
 					    AG_MapPixel(&Sd->format, c));
 				}
+			}
+		}
+	} else {
+		for (y = 0; y < dr.h; y++) {
+			for (x = 0; x < dr.w; x++) {
+				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
+				AG_Color c = AG_GetColor(px, &Ss->format);
+
+				AG_SurfacePut(Sd, x,y,
+				    AG_MapPixel(&Sd->format, c));
 			}
 		}
 	}
@@ -1842,7 +1842,11 @@ Uint32 AG_MapPixelRGBA(const AG_PixelFormat *pf, Uint8 r, Uint8 g, Uint8 b, Uint
 	return AG_MapPixel32_RGBA8(pf, r,g,b,a);
 }
 Uint32 AG_MapColorRGB(const AG_PixelFormat *pf, AG_Color c) {
+#if AG_MODEL == AG_LARGE
 	return AG_MapPixel32_RGB16(pf, c.r, c.g, c.b);
+#else
+	return AG_MapPixel32_RGB8(pf, c.r, c.g, c.b);
+#endif
 }
 Uint32 AG_MapColorRGBA(const AG_PixelFormat *pf, AG_Color c) {
 	return AG_MapPixel32(pf, c);

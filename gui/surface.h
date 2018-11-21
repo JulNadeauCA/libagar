@@ -725,6 +725,7 @@ AG_SurfaceGet64_At(const AG_Surface *_Nonnull S, const Uint8 *_Nonnull p)
 {
 	switch (S->format.BitsPerPixel) {
 	case 64:
+	case 48:
 		return (*(Uint64 *)p);
 	case 32:
 		return (*(Uint32 *)p);
@@ -772,6 +773,7 @@ AG_SurfacePut32_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p, Uint32 px)
 	switch (S->format.BitsPerPixel) {
 #if AG_MODEL == AG_LARGE
 	case 64:                                             /* Decompressed */
+	case 48:
 		*(Uint64 *)p = AG_MapPixel64(&S->format,
 		    AG_GetColor32(px, &S->format));
 		break;
@@ -819,6 +821,7 @@ AG_SurfacePut64_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p, Uint64 px)
 {
 	switch (S->format.BitsPerPixel) {
 	case 64:
+	case 48:
 		*(Uint64 *)p = px;
 		break;
 	case 32:
