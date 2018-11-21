@@ -846,7 +846,7 @@ AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color c,
 }
 
 void
-AG_GL_DrawTriangle(void *_Nonnull obj, AG_Pt v1, AG_Pt v2, AG_Pt v3, AG_Color c)
+AG_GL_DrawTriangle(void *obj, AG_Pt v1, AG_Pt v2, AG_Pt v3, AG_Color c)
 {
 	glBegin(GL_TRIANGLES);
 	GL_Color3uH(c.r, c.g, c.b);
