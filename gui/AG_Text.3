@@ -39,12 +39,12 @@
 .\" IMAGE(http://libagar.org/widgets/AG_Textbox.png, "The AG_Textbox(3) widget")
 The
 .Nm
-interface uses an underlying font engine to render text.
+interface enables Agar applications to size and render text.
 Currently, two font engines are supported:
 .Dv AG_FONT_VECTOR
-(for rendering any font supported by FreeType) and
+(using FreeType) and
 .Dv AG_FONT_BITMAP
-(for rendering simple pixmap fonts).
+(simple built-in bitmap font renderer).
 .Sh RENDER SETTINGS
 A number of settings which affect the rendering functions (see
 .Sx RENDERING
@@ -377,14 +377,13 @@ is the size of the buffer.
 .Fn AG_TextParseFontSpec "const char *fontspec"
 .Pp
 .nr nS 0
-The
 .Fn AG_FetchFont
-function retrieves the font corresponding to the specified
+loads (or retrieves from cache) the font corresponding to the specified
 .Fa face
 and
 .Fa size
 in points.
-Acceptable
+Recognized
 .Fa flags
 include
 .Dv AG_FONT_BOLD
@@ -395,14 +394,13 @@ library is available, the font file should reside in one of the directories
 specified in the
 .Va font-path
 setting).
-If any the parameters are specified as NULL or -1, the
+If
+.Fa face
+is NULL or
+.Fa size
+is -1, the
 .Xr AG_Config 3
-defaults
-.Va font.face ,
-.Va font.size
-and
-.Va font.flags
-are used.
+defaults "font.face" and "font.size" are used.
 .Fn AG_FetchFont
 returns a pointer to the font object, incrementing its reference count.
 If the font cannot be loaded, the function returns NULL.

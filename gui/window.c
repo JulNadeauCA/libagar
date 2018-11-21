@@ -452,14 +452,11 @@ Init(void *obj)
 	AG_ObjectSetDetachFn(win, Detach, NULL);
 	
 	/* Set the inheritable style defaults. */
-	AG_SetString(win, "font-family",
-	    OBJECT(agDefaultFont)->name);
+	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
 	AG_SetString(win, "font-size",
 	    AG_Printf("%.02fpts", agDefaultFont->spec.size));
-	AG_SetString(win, "font-weight",
-	    (agDefaultFont->flags & AG_FONT_BOLD) ? "bold" : "normal");
-	AG_SetString(win, "font-style",
-	    (agDefaultFont->flags & AG_FONT_ITALIC) ? "italic" : "normal");
+	AG_SetString(win, "font-weight", "normal");
+	AG_SetString(win, "font-style", "normal");
 
 	WIDGET(win)->font = agDefaultFont;
 	WIDGET(win)->pal = agDefaultPalette;

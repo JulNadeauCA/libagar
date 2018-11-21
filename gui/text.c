@@ -285,19 +285,18 @@ OpenBitmapFont(AG_Font *_Nonnull font)
  * given specifications.
  */
 AG_Font *
-AG_FetchFont(const char *pname, int psize, Uint pflags)
+AG_FetchFont(const char *face, int psize, Uint flags)
 {
 	char name[AG_OBJECT_NAME_MAX];
 	AG_Config *cfg = AG_ConfigObject();
 	int ptsize = (psize >= 0) ? psize : AG_GetInt(cfg,"font.size");
-	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(cfg,"font.flags");
 	AG_StaticFont *builtin = NULL;
 	AG_Font *font;
 	AG_FontSpec *spec;
 	int i;
 
-	if (pname != NULL) {
-		Strlcpy(name, pname, sizeof(name));
+	if (face != NULL) {
+		Strlcpy(name, face, sizeof(name));
 	} else {
 		AG_GetString(cfg, "font.face", name, sizeof(name));
 	}
@@ -596,7 +595,7 @@ AG_InitTextSubsystem(void)
 	}
 	AG_ObjectUnlock(cfg);
 
-	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
+	if ((agDefaultFont = AG_FetchFont(NULL, -1, 0)) == NULL) {
 		goto fail;
 	}
 	agTextFontHeight = agDefaultFont->height;
@@ -928,14 +927,14 @@ static int
 TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_Surface *sym;
-	Uint64 symColorkey;
+	AG_Pixel colorkey;
 	Uint BytesPerPixel;
 	int row;
 
 	if ((sym = GetSymbolSurface(ch)) == NULL) {
 		return (0);
 	}
-	symColorkey = sym->colorkey;
+	colorkey = sym->colorkey;
 	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
 		Uint8 *dst = s->pixels + (y + row)*s->pitch + (x+2);
@@ -943,7 +942,7 @@ TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 		int col;
 
 		for (col = 0; col < sym->w; col++) {
-			if (AG_SurfaceGet64(sym,src) != symColorkey) {
+			if (AG_SurfaceGet(sym,src) != colorkey) {
 				*dst = 1;
 			}
 			src += BytesPerPixel;
@@ -957,22 +956,22 @@ static int
 TextRenderSymbol_Blended(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 {
 	AG_Surface *sym;
-	Uint64 symColorkey;
+	AG_Pixel colorkey;
 	Uint BytesPerPixel;
 	int row;
 
 	if ((sym = GetSymbolSurface(ch)) == NULL) {
 		return (0);
 	}
-	symColorkey = sym->colorkey;
+	colorkey = sym->colorkey;
 	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = s->pixels + (y + row)*(s->pitch/4) + (x+2);
-		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
+		Uint8 *dst = s->pixels + (y + row)*(s->pitch >> 2) + (x+2);
+		Uint8 *src = sym->pixels + row*sym->pitch;
 		int col;
 
 		for (col = 0; col < sym->w; col++) {
-			if (AG_SurfaceGet64(sym,src) != symColorkey) {
+			if (AG_SurfaceGet(sym,src) != colorkey) {
 				dst[0] = 0xff;
 				dst[1] = 0xff;
 				dst[2] = 0xff;
@@ -985,31 +984,38 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 }
 # endif /* SYMBOLS */
 
-/* Underline rendered text. */
-/* XXX does not handle multiline/alignment properly */
+/*
+ * Render underline style.
+ * Surface must be at least ftFont->underline_height pixels high.
+ */
 static void
 TextRenderFT_Blended_Underline(AG_TTFFont *_Nonnull ftFont,
-    AG_Surface *_Nonnull s, int nLines)
+    AG_Surface *_Nonnull S, int nLines)
 {
 	AG_Color c = agTextState->color;
-	int x, y, line;
+	AG_Pixel px = AG_MapPixel(&S->format, c);
 	Uint8 *pDst;
-	Uint32 px = AG_MapPixel32(&s->format, c);
+	const int pad = 2;
+	int w = S->w - pad;
+	int lh = ftFont->underline_height;
+	int incr = ftFont->ascent - ftFont->underline_offset - lh;
+	int line, y0, lineskip = ftFont->lineskip;
 
-	for (line = 0; line < nLines; line++) {
-		y = ftFont->ascent - ftFont->underline_offset - 1;
-		y *= (line+1);
-		if (y >= s->h) {
-			y = (s->h - 1) - ftFont->underline_height;
+	for (line=0, y0=incr; line < nLines; line++) {
+		int x, y;
+
+		if (y0 >= S->h) {
+			y0 = S->h - lh;
 		}
-		pDst = s->pixels + y*s->pitch;
-		for (y = 0; y < ftFont->underline_height; y++) {
-			for (x = 0; x < s->w; x++) {
-				AG_PACKEDPIXEL_PUT(s->format.BytesPerPixel,
-				    pDst, px);
-				pDst += s->format.BytesPerPixel;
+		pDst = S->pixels + y0*S->pitch;
+		for (y = 0; y < lh; y++) {
+			for (x = pad; x < w; x++) {
+				AG_SurfacePut_At(S, pDst, px);
+				pDst += S->format.BytesPerPixel;
 			}
+			pDst += S->padding;
 		}
+		y0 += lineskip;
 	}
 }
 
@@ -1027,7 +1033,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *G;
 	const Uint32 *ch;
-	AG_Surface *su;
+	AG_Surface *S;
 	Uint8 *src, *dst;
 	FT_UInt prev_index = 0;
 	int xStart, yStart, line, x, y;
@@ -1038,7 +1044,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
+	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
 
 	/* Load and render each character */
  	line = 0;
@@ -1046,14 +1052,14 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
  	yStart = 0;
 
 	cBg = agTextState->colorBG;
-	AG_FillRect(su, NULL, cBg);
+	AG_FillRect(S, NULL, cBg);
 	if (cBg.a == AG_ALPHA_TRANSPARENT) {
-		AG_SurfaceSetColorKey(su, AG_SURFACE_COLORKEY,
-		    AG_MapPixel(&su->format, cBg));
+		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
+		    AG_MapPixel(&S->format, cBg));
 	}
 
 	c = agTextState->color;
-	BytesPerPixel = su->format.BytesPerPixel;
+	BytesPerPixel = S->format.BytesPerPixel;
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
@@ -1068,15 +1074,15 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 #ifdef SYMBOLS
 		if (ch[0] == '$' && agTextSymbols &&
 		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
-			xStart += TextRenderSymbol_Blended(ch[2], su, xStart,
-			    yStart);
+			xStart += TextRenderSymbol_Blended(ch[2], S,
+			    xStart, yStart);
 			ch += 3;
 			continue;
 		}
 #endif
 		if (AG_TTFFindGlyph(ftFont, *ch,
 		    TTF_CACHED_METRICS|TTF_CACHED_PIXMAP)) {
-			AG_SurfaceFree(su);
+			AG_SurfaceFree(S);
 			goto empty;
 		}
 		G = ftFont->current;
@@ -1089,6 +1095,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 		if (w > G->maxx - G->minx) {
 			w = G->maxx - G->minx;
 		}
+
 		if (FT_HAS_KERNING(ftFont->face) && prev_index &&
 		    G->index) {
 			FT_Vector delta; 
@@ -1104,11 +1111,11 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 
 		for (y = 0; y < G->pixmap.rows; y++) {
 			if (y + G->yoffset < 0 ||
-			    y + G->yoffset >= su->h) {
+			    y + G->yoffset >= S->h) {
 				continue;
 			}
-			dst = su->pixels +
-			    (yStart + y + G->yoffset)*su->pitch +
+			dst = S->pixels +
+			    (yStart + y + G->yoffset)*S->pitch +
 			    (xStart + G->minx)*BytesPerPixel;
 
 			/* Adjust src for pixmaps to account for pitch. */
@@ -1119,14 +1126,14 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 			if (cBg.a == AG_ALPHA_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
-					AG_SurfacePut_At(su, dst,
-					    AG_MapPixel(&su->format, c));
+					AG_SurfacePut_At(S, dst,
+					    AG_MapPixel(&S->format, c));
 					dst += BytesPerPixel;
 				}
 			} else {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
-					AG_SurfaceBlend_At(su, dst, c,
+					AG_SurfaceBlend_At(S, dst, c,
 					    AG_ALPHA_SRC);
 					dst += BytesPerPixel;
 				}
@@ -1139,10 +1146,10 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 		prev_index = G->index;
 	}
 	if (ftFont->style & AG_TTF_STYLE_UNDERLINE) {
-		TextRenderFT_Blended_Underline(ftFont, su, tm.nLines);
+		TextRenderFT_Blended_Underline(ftFont, S, tm.nLines);
 	}
 	FreeMetrics(&tm);
-	return (su);
+	return (S);
 empty:
 	FreeMetrics(&tm);
 	return AG_SurfaceEmpty();
@@ -1758,7 +1765,7 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 		*x = lPad;
 		break;
 	case AG_TEXT_CENTER:
-		*x = (wArea + lPad + rPad)/2 - wText/2;
+		*x = ((wArea + lPad + rPad) >> 1) - (wText >> 1);
 		break;
 	case AG_TEXT_RIGHT:
 		*x = wArea - rPad - wText;
@@ -1769,7 +1776,7 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 		*y = tPad;
 		break;
 	case AG_TEXT_MIDDLE:
-		*y = (hArea + tPad + bPad)/2 - hText/2;
+		*y = ((hArea + tPad + bPad) >> 1) - (hText >> 1);
 		break;
 	case AG_TEXT_BOTTOM:
 		*y = hArea - bPad - wText;

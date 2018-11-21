@@ -1897,12 +1897,12 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		AG_Font *fontNew = NULL;
 
 		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			fontNew = AG_FetchFont(face, (int)ptSize, (int)flags);
+			fontNew = AG_FetchFont(face, (int)ptSize, flags);
 			if (fontNew != NULL)
 				break;
 		}
 		if (fontNew == NULL) {
-			fontNew = AG_FetchFont(NULL, (int)ptSize, (int)flags);
+			fontNew = AG_FetchFont(NULL, (int)ptSize, flags);
 		}
 		if (fontNew != NULL && wid->font != fontNew) {
 			if (wid->font != NULL) {
