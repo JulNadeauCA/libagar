@@ -50,8 +50,8 @@ CreateMaximizeButton(AG_Titlebar *_Nonnull tbar)
 	tbar->maximize_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->maximize_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->maximize_btn, 0);
-	AG_ButtonSurfaceNODUP(tbar->maximize_btn, agIconWinMaximize.s);
-	AG_ButtonSetPadding(tbar->maximize_btn, 0,0,0,0);
+	AG_ButtonSurface(tbar->maximize_btn, agIconWinMaximize.s);
+	AG_ButtonSetPadding(tbar->maximize_btn, 0,2,1,1);
 	AG_SetEvent(tbar->maximize_btn, "button-pushed",
 	    MaximizeWindow, "%p", tbar);
 }
@@ -70,8 +70,8 @@ CreateMinimizeButton(AG_Titlebar *_Nonnull tbar)
 	tbar->minimize_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->minimize_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->minimize_btn, 0);
-	AG_ButtonSurfaceNODUP(tbar->minimize_btn, agIconWinMinimize.s);
-	AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
+	AG_ButtonSurface(tbar->minimize_btn, agIconWinMinimize.s);
+	AG_ButtonSetPadding(tbar->minimize_btn, 0,2,1,1);
 	AG_SetEvent(tbar->minimize_btn, "button-pushed",
 	    MinimizeWindow, "%p", tbar);
 }
@@ -90,8 +90,8 @@ CreateCloseButton(AG_Titlebar *_Nonnull tbar)
 	tbar->close_btn = AG_ButtonNewS(tbar, 0, NULL);
 	AG_ButtonJustify(tbar->close_btn, AG_TEXT_LEFT);
 	AG_ButtonSetFocusable(tbar->close_btn, 0);
-	AG_ButtonSurfaceNODUP(tbar->close_btn, agIconWinClose.s);
-	AG_ButtonSetPadding(tbar->close_btn, 0,0,0,0);
+	AG_ButtonSurface(tbar->close_btn, agIconWinClose.s);
+	AG_ButtonSetPadding(tbar->close_btn, 0,2,1,1);
 	AG_SetEvent(tbar->close_btn, "button-pushed",
 	    CloseWindow, "%p", tbar);
 }
