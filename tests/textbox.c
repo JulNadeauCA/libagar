@@ -198,7 +198,7 @@ MultiLineExample(AG_Event *event)
 	 * Load the contents of this file into a buffer. Make the buffer a
 	 * bit larger so the user can try entering text.
 	 */
-	if (!AG_ConfigFile("load-path", "loss", "txt", path, sizeof(path)) &&
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "loss.txt", path, sizeof(path)) &&
 	    (f = fopen(path, "r")) != NULL) {
 		fseek(f, 0, SEEK_END);
 		size = ftell(f);

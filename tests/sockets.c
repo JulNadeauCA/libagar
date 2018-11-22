@@ -81,7 +81,7 @@ TestGUI(void *obj, AG_Window *win)
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	/* Create a pixmap */
-	if (!AG_ConfigFile("load-path", "menubg", "bmp", path, sizeof(path))) {
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "menubg.bmp", path, sizeof(path))) {
 		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
 			TestMsg(obj, "%s: %s", path, AG_GetError());
 			exit(1);
@@ -94,7 +94,12 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Load some pixmaps */
 	for (i = 0; i < LAST_IMAGE; i++) {
-		if (AG_ConfigFile("load-path", imageFiles[i], "bmp", path, sizeof(path)) != 0) {
+		char bmpFile[AG_FILENAME_MAX];
+
+		Strlcpy(bmpFile, imageFiles[i], sizeof(bmpFile));
+		Strlcat(bmpFile, ".bmp", sizeof(bmpFile));
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, bmpFile,
+		    path, sizeof(path)) != 0) {
 			continue;
 		}
 		pixmaps[i] = AG_SurfaceFromFile(path);

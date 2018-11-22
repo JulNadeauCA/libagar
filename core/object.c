@@ -818,40 +818,38 @@ AG_ObjectDestroy(void *p)
  */
 /* NOTE: Will return data into path even upon failure. */
 int
-AG_ObjectCopyFilename(void *p, char *path, AG_Size path_len)
+AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 {
-	char load_path[AG_PATHNAME_MAX], *loadpathp = &load_path[0];
-	char obj_name[AG_OBJECT_PATH_MAX];
+	char objName[AG_OBJECT_PATH_MAX];
+	AG_ConfigPathQ *pathGroup = &agConfig->paths[AG_CONFIG_PATH_DATA];
+	AG_ConfigPath *loadPath;
 	AG_Object *ob = p;
-	char *dir;
 
 	AG_ObjectLock(ob);
 	if (ob->archivePath != NULL) {
-		Strlcpy(path, ob->archivePath, path_len);
+		Strlcpy(path, ob->archivePath, pathSize);
 		goto out;
 	}
-	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
-	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
+	AG_ObjectCopyName(ob, objName, sizeof(objName));
 
-	for (dir = Strsep(&loadpathp, AG_PATHSEPMULTI);
-	     dir != NULL;
-	     dir = Strsep(&loadpathp, AG_PATHSEPMULTI)) {
-	     	Strlcpy(path, dir, path_len);
+	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	     	Strlcpy(path, loadPath->s, pathSize);
 		if (ob->save_pfx != NULL) {
-			Strlcat(path, ob->save_pfx, path_len);
+			Strlcat(path, ob->save_pfx, pathSize);
 		}
-		Strlcat(path, obj_name, path_len);
-		Strlcat(path, AG_PATHSEP, path_len);
-		Strlcat(path, ob->name, path_len);
-		Strlcat(path, ".", path_len);
-		Strlcat(path, ob->cls->name, path_len);
+		Strlcat(path, objName, pathSize);
+		Strlcat(path, AG_PATHSEP, pathSize);
+		Strlcat(path, ob->name, pathSize);
+		Strlcat(path, ".", pathSize);
+		Strlcat(path, ob->cls->name, pathSize);
 
 		if (AG_FileExists(path))
 			goto out;
 	}
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
-	    obj_name, AG_PATHSEPCHAR, ob->name, ob->cls->name);
+	    objName, AG_PATHSEPCHAR, ob->name, ob->cls->name);
+
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:
@@ -864,33 +862,29 @@ out:
  * The path is only valid as long as the VFS is locked.
  */
 int
-AG_ObjectCopyDirname(void *p, char *path, AG_Size path_len)
+AG_ObjectCopyDirname(void *p, char *path, AG_Size pathSize)
 {
-	char load_path[AG_PATHNAME_MAX], *loadpathp = &load_path[0];
-	char obj_name[AG_OBJECT_PATH_MAX];
+	char tmpPath[AG_PATHNAME_MAX];
+	char objName[AG_OBJECT_PATH_MAX];
+	AG_ConfigPathQ *pathGroup = &agConfig->paths[AG_CONFIG_PATH_DATA];
+	AG_ConfigPath *loadPath;
 	AG_Object *ob = p;
-	char *dir;
 
 	AG_ObjectLock(ob);
-	AG_GetString(agConfig, "load-path", load_path, sizeof(load_path));
-	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
+	AG_ObjectCopyName(ob, objName, sizeof(objName));
 
-	for (dir = Strsep(&loadpathp, AG_PATHSEPMULTI);
-	     dir != NULL;
-	     dir = Strsep(&loadpathp, AG_PATHSEPMULTI)) {
-		char tmp_path[AG_PATHNAME_MAX];
-
-	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));
+	SLIST_FOREACH(loadPath, pathGroup, paths) {
+	     	Strlcpy(tmpPath, loadPath->s, sizeof(tmpPath));
 		if (ob->save_pfx != NULL) {
-			Strlcat(tmp_path, ob->save_pfx, sizeof(tmp_path));
+			Strlcat(tmpPath, ob->save_pfx, sizeof(tmpPath));
 		}
-		Strlcat(tmp_path, obj_name, sizeof(tmp_path));
-		if (AG_FileExists(tmp_path)) {
-			Strlcpy(path, tmp_path, path_len);
+		Strlcat(tmpPath, objName, sizeof(tmpPath));
+		if (AG_FileExists(tmpPath)) {
+			Strlcpy(path, tmpPath, pathSize);
 			goto out;
 		}
 	}
-	AG_SetError(_("The %s directory is not in load-path."), obj_name);
+	AG_SetError(_("The %s directory is not in load-path."), objName);
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:

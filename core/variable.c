@@ -1280,7 +1280,7 @@ AG_GetString(void *pObj, const char *name, char *dst, AG_Size dstSize)
 	AG_Object *obj = pObj;
 	AG_Variable *V;
 	AG_Size rv;
-
+	
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
 		AG_SetError("<%s>: Undefined variable \"%s\"", obj->name, name);
@@ -1289,6 +1289,9 @@ AG_GetString(void *pObj, const char *name, char *dst, AG_Size dstSize)
 	if (V->fn.fnString != NULL) {
 		rv = GetStringFn(obj, V, dst, dstSize);
 	} else {
+#ifdef AG_DEBUG
+		if (V->data.s == NULL) { AG_FatalError("V->data.s=NULL"); }
+#endif
 		Strlcpy(dst, V->data.s, dstSize);
 		rv = strlen(V->data.s);
 	}
@@ -1481,7 +1484,13 @@ AG_BindString(void *obj, const char *name, char *buf, AG_Size bufSize)
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
-	Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu] (= \"%s\")\n", name, buf, (Ulong)bufSize, buf);
+#ifdef AG_DEBUG
+	if (strlen(buf) > 500) {
+		Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu]\n", name, buf, (Ulong)bufSize);
+	} else {
+		Debug(obj, "Bind \"%s\" -> (char *)%p[+%lu] (= \"%s\")\n", name, buf, (Ulong)bufSize, buf);
+	}
+#endif
 	V = AG_FetchVariableOfType(obj, name, AG_VARIABLE_P_STRING);
 	V->data.s = buf;
 	V->info.size = bufSize;

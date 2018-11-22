@@ -6,20 +6,39 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
+	AG_ConfigPath *cp;
+	AG_Label *lbl;
 
-	AG_GetString(agConfig, "home", path, sizeof(path));
-	AG_LabelNew(win, 0, "home: %s", path);
 	AG_SeparatorNewHoriz(win);
-	AG_GetString(agConfig, "load-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "load-path: %s", path);
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "save-path: %s", path);
-	AG_GetString(agConfig, "tmp-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "tmp-path: %s", path);
+	{
+		AG_LabelNewS(win, 0, "Home directory:");
+		AG_GetString(agConfig, "home", path, sizeof(path));
+		lbl = AG_LabelNewS(win, 0, path);
+		AG_SetStyle(lbl, "font-family", "Courier");
+	}
 	AG_SeparatorNewHoriz(win);
-	AG_GetString(agConfig, "font-path", path, sizeof(path));
-	AG_LabelNew(win, 0, "font-path: %s", path);
-
+	{
+		AG_LabelNewS(win, 0, "Data Search Paths:");
+		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
+			lbl = AG_LabelNewS(win, 0, cp->s);
+			AG_SetStyle(lbl, "font-family", "Courier");
+		}
+	}
+	AG_SeparatorNewHoriz(win);
+	{
+		AG_LabelNewS(win, 0, "Font Search Paths:");
+		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
+			lbl = AG_LabelNewS(win, 0, cp->s);
+			AG_SetStyle(lbl, "font-family", "Courier");
+		}
+	}
+	AG_SeparatorNewHoriz(win);
+	{
+		AG_LabelNewS(win, 0, "Temporary directory:");
+		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
+		lbl = AG_LabelNewS(win, 0, path);
+		AG_SetStyle(lbl, "font-family", "Courier");
+	}
 	return (0);
 }
 

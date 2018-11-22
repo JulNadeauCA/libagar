@@ -268,7 +268,9 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 		AG_ButtonNewFn(hb, 0, "...", SelectPath, "%s,%p", "save-path", tbox);
-	
+#if 0
+		/* XXX TODO DirDlgs */
+
 		hb = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
 		tbox = AG_TextboxNewS(hb, AG_TEXTBOX_HFILL, _("Dataset search path: "));
 		AG_GetString(agConfig, "load-path", path, sizeof(path));
@@ -280,6 +282,7 @@ DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_GetString(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxSetString(tbox, path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
+#endif
 	}
 #if 0
 	tab = AG_NotebookAdd(nb, _("Colors"), AG_BOX_VERT);

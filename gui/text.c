@@ -390,9 +390,13 @@ AG_FetchFont(const char *face, int psize, Uint flags)
 		} else
 #endif /* HAVE_FONTCONFIG */
 		{
-			if (AG_ConfigFile("font-path", name, NULL,
+			if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, name,
 			    spec->source.file, sizeof(spec->source.file)) == -1) {
-				if (AG_ConfigFile("font-path", name, "ttf",
+				char ttfFile[AG_FILENAME_MAX];
+
+				Strlcpy(ttfFile, name, sizeof(ttfFile));
+				Strlcat(ttfFile, ".ttf", sizeof(ttfFile));
+				if (AG_ConfigFind(AG_CONFIG_PATH_FONTS, ttfFile,
 				    spec->source.file, sizeof(spec->source.file)) == -1)
 					goto fail;
 			}
@@ -489,8 +493,8 @@ static void
 InitTextState(void)
 {
 	agTextState->font = agDefaultFont;
-	agTextState->color = AG_ColorRGB(255,255,255);
-	agTextState->colorBG = AG_ColorRGBA(0,0,0,0);
+	agTextState->color = AG_ColorWhite();
+	agTextState->colorBG = AG_ColorNone();
 	agTextState->justify = AG_TEXT_LEFT;
 	agTextState->valign = AG_TEXT_TOP;
 	agTextState->tabWd = agTextTabWidth;
@@ -501,6 +505,7 @@ int
 AG_InitTextSubsystem(void)
 {
 	AG_Config *cfg = AG_ConfigObject();
+	AG_User *sysUser;
 
 	if (agTextInitedSubsystem++ > 0)
 		return (0);
@@ -510,65 +515,42 @@ AG_InitTextSubsystem(void)
 
 	/* Set the default font search path. */
 	AG_ObjectLock(cfg);
-	if (!AG_Defined(cfg,"font-path")) {
-		char fontPath[AG_PATHNAME_MAX];
-		AG_User *sysUser = AG_GetRealUser();
-		size_t len;
+	sysUser = AG_GetRealUser();
 
-		fontPath[0] ='\0';
-#if !defined(_WIN32)
-		if (strcmp(TTFDIR, "NONE") != 0) {
-			Strlcat(fontPath, TTFDIR, sizeof(fontPath));
-			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-		}
-#endif
+	if (strcmp(TTFDIR, "NONE") != 0)
+		AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, TTFDIR);
+
 #if defined(__APPLE__)
-		if (sysUser != NULL && sysUser->home != NULL) {
-			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
-			Strlcat(fontPath, "/Library/Fonts", sizeof(fontPath));
-			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-		}
-		Strlcat(fontPath, "/Library/Fonts", sizeof(fontPath));
-		Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-		Strlcat(fontPath, "/System/Library/Fonts", sizeof(fontPath));
-		Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-#elif defined(_WIN32)
-		{
-			char windir[AG_PATHNAME_MAX];
-
-			if (sysUser != NULL && sysUser->home != NULL) {
-				Strlcat(fontPath, sysUser->home, sizeof(fontPath));
-				Strlcat(fontPath, "\\Fonts", sizeof(fontPath));
-				Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-			}
-			if (GetWindowsDirectoryA(windir, sizeof(windir)) > 0) {
-				Strlcat(fontPath, windir, sizeof(fontPath));
-				Strlcat(fontPath, "\\Fonts", sizeof(fontPath));
-				Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-			}
-		}
-#else /* !WIN32 & !APPLE */
-		if (sysUser != NULL && sysUser->home != NULL) {
-			Strlcat(fontPath, sysUser->home, sizeof(fontPath));
-			Strlcat(fontPath, AG_PATHSEP, sizeof(fontPath));
-			Strlcat(fontPath, ".fonts", sizeof(fontPath));
-			Strlcat(fontPath, AG_PATHSEPMULTI, sizeof(fontPath));
-		}
-#endif
-		if ((len = strlen(fontPath)) > 0) {
-			if (fontPath[len-1] == ':') {
-				fontPath[len-1] = '\0';
-			}
-			AG_SetString(cfg, "font-path", fontPath);
-		}
-
-		if (sysUser != NULL)
-			AG_UserFree(sysUser);
+	if (sysUser != NULL &&
+	    sysUser->home != NULL) {
+		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s/Library/Fonts",
+		    sysUser->home);
 	}
+	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/Library/Fonts");
+	AG_ConfigAddPathS(AG_CONFIG_PATH_FONTS, "/System/Library/Fonts");
+#elif defined(_WIN32)
+	{
+		char windir[AG_PATHNAME_MAX];
+
+		if (sysUser != NULL && sysUser->home != NULL) {
+			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
+			    sysUser->home);
+		}
+		if (GetWindowsDirectoryA(windir, sizeof(windir)) > 0)
+			AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s\\Fonts",
+			    windir);
+	}
+#else /* !WIN32 & !APPLE */
+	if (sysUser != NULL && sysUser->home != NULL) {
+		AG_ConfigAddPath(AG_CONFIG_PATH_FONTS, "%s%s.fonts",
+		    sysUser->home, AG_PATHSEP);
+	}
+#endif
+	if (sysUser != NULL)
+		AG_UserFree(sysUser);
 	
-	/* Initialize FreeType if available. */
 #ifdef HAVE_FREETYPE
-	if (AG_TTFInit() == 0) {
+	if (AG_TTFInit() == 0) {		/* Initialize FreeType */
 		agFreetypeInited = 1;
 	} else {
 		AG_Verbose("Failed to initialize FreeType (%s); falling back "
@@ -595,6 +577,7 @@ AG_InitTextSubsystem(void)
 	}
 	AG_ObjectUnlock(cfg);
 
+	/* Load the default font. */
 	if ((agDefaultFont = AG_FetchFont(NULL, -1, 0)) == NULL) {
 		goto fail;
 	}

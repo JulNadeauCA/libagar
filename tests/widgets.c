@@ -74,7 +74,8 @@ TestGUI(void *obj, AG_Window *win)
 
 		/* Display agar.bmp. BMP support is built in. */
 		AG_LabelNewS(div1, 0, "agar.bmp:");
-		if (AG_ConfigFile("load-path", "agar","bmp", path,sizeof(path)) == 0) {
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.bmp",
+		    path, sizeof(path)) == 0) {
 			AG_PixmapFromFile(div1, 0, path);
 		} else {
 			AG_Surface *sErr = AG_TextRender(AG_GetError());
@@ -86,7 +87,8 @@ TestGUI(void *obj, AG_Window *win)
 #include <agar/config/have_png.h>
 #ifdef HAVE_PNG
 		AG_LabelNewS(div1, 0, "agar.png:");
-		if (AG_ConfigFile("load-path", "agar","png", path,sizeof(path)) == 0) {
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.png",
+		    path, sizeof(path)) == 0) {
 			AG_PixmapFromFile(div1, 0, path);
 		} else {
 			AG_Surface *sErr = AG_TextRender(AG_GetError());
@@ -323,6 +325,7 @@ TestGUI(void *obj, AG_Window *win)
 		
 		ntab = AG_NotebookAdd(nb, "Some text", AG_BOX_VERT);
 		{
+			char path[AG_PATHNAME_MAX];
 			AG_Size size, bufSize;
 			FILE *f;
 
@@ -342,17 +345,21 @@ TestGUI(void *obj, AG_Window *win)
 			 * the buffer a bit larger so the user can try
 			 * entering text.
 			 */
-			if (AG_ConfigFile("load-path", "loss","txt",
-			                  path, sizeof(path) == 0) &&
-			    (f = fopen(path, "r")) != NULL) {
-				fseek(f, 0, SEEK_END);
-				size = ftell(f);
-				fseek(f, 0, SEEK_SET);
-				bufSize = size+1024;
-				ti->someText = AG_Malloc(bufSize);
-				(void)fread(ti->someText, size, 1, f);
-				fclose(f);
-				ti->someText[size] = '\0';
+			if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "loss.txt",
+			    path, sizeof(path)) == 0) {
+				if ((f = fopen(path, "r")) != NULL) {
+					fseek(f, 0, SEEK_END);
+					size = ftell(f);
+					fseek(f, 0, SEEK_SET);
+					bufSize = size+1024;
+					ti->someText = AG_Malloc(bufSize);
+					(void)fread(ti->someText, size, 1, f);
+					fclose(f);
+					ti->someText[size] = '\0';
+				} else {
+					ti->someText = Strdup(path);
+					bufSize = strlen(ti->someText)+1;
+				}
 			} else {
 				ti->someText = AG_Strdup("loss.txt not found");
 				bufSize = strlen(ti->someText)+1;

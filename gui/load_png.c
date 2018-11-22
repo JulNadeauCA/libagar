@@ -149,15 +149,25 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 
 	png_set_read_fn(png, ds, AG_PNG_ReadData);
 
+	/* Read PNG image information. */
 	png_read_info(png, info);
 	png_get_IHDR(png, info,
 	    &width, &height, &depth,
 	    &colorType, &intlaceType,
 	    NULL, NULL);
 
+	/* Strip the pixels with 16 bits/channel to 8 bits/channel. */
+	/* XXX TODO AG_LARGE */
 	png_set_strip_16(png);
+
+	/*
+	 * Always expand 1/2/4-bit images to 8-bit, and expand grayscales
+	 * images of depth <8-bit to 8-bit.
+	 */
 	png_set_packing(png);
-	png_set_expand(png);
+	if (colorType == PNG_COLOR_TYPE_GRAY) {
+		png_set_expand(png);
+	}
 	png_set_tRNS_to_alpha(png);
 
 	/* Read transparency information. */

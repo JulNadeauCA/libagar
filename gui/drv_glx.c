@@ -52,7 +52,10 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
+/* Force synchronous X events */
 /* #define DEBUG_XSYNC */
+
+/* Print low-level X events */
 /* #define DEBUG_XEVENTS */
 
 static int nDrivers = 0;		/* Drivers open */
@@ -1437,29 +1440,31 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 	if ((drv->videoFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		goto fail_ctx;
 	}
-	AG_PixelFormatRGBA(drv->videoFmt, depth,
 #if AG_MODEL == AG_LARGE
 # if AG_BYTEORDER == AG_BIG_ENDIAN
+	AG_PixelFormatRGB(drv->videoFmt, depth,
 		0xffff000000000000,
 		0x0000ffff00000000,
-		0x00000000ffff0000, 0
+		0x00000000ffff0000);
 # else
+	AG_PixelFormatRGB(drv->videoFmt, depth,
 		0x000000000000ffff,
 		0x00000000ffff0000,
-		0x0000ffff00000000, 0
+		0x0000ffff00000000);
 # endif
 #else /* MEDIUM or SMALL */
 # if AG_BYTEORDER == AG_BIG_ENDIAN
+	AG_PixelFormatRGB(drv->videoFmt, depth,
 		0xff000000,
 		0x00ff0000,
-		0x0000ff00, 0
+		0x0000ff00);
 # else
+	AG_PixelFormatRGB(drv->videoFmt, depth,
 		0x000000ff,
 		0x0000ff00,
-		0x00ff0000, 0
+		0x00ff0000);
 # endif
 #endif /* MEDIUM or SMALL */
-	);
 
 	/* Create the built-in cursors. */
 	if (InitDefaultCursor(glx) == -1 ||
@@ -1981,8 +1986,6 @@ GLX_SetTransientFor(AG_Window *_Nonnull win, AG_Window *_Nullable forParent)
 		    (glxParent = (AG_DriverGLX *)WIDGET(forParent)->drv) != NULL &&
 		    AGDRIVER_IS_GLX(glxParent) &&
 		    (AGDRIVER_MW(glxParent)->flags & AG_DRIVER_MW_OPEN)) {
-		    	fprintf(stderr, "glx->w=%d, glxParent->w=%d\n",
-			    (int)glx->w, (int)glxParent->w);
 			XSetTransientForHint(agDisplay, glx->w, glxParent->w);
 		} else {
 			XSetTransientForHint(agDisplay, glx->w, None);

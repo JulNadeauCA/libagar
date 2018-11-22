@@ -541,22 +541,14 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(AG_KEY_F8,	AG_KEYMOD_ANY,	AG_ViewCapture);
 #endif
 
-	/* Append the installed agartest datadir to load-path */
+	/* Check for data files in the agartest install directory. */
 #if !defined(_WIN32)
 	if (strcmp(DATADIR, "NONE") != 0) {
-		char path[AG_PATHNAME_MAX];
-		AG_GetString(agConfig, "load-path", path, sizeof(path));
-		AG_Strlcat(path, AG_PATHSEPMULTI, sizeof(path));
-		AG_Strlcat(path, DATADIR, sizeof(path));
-		AG_SetString(agConfig, "load-path", path);
+		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
 	}
 #else
 	{
-		char path[AG_PATHNAME_MAX];
-		AG_GetString(agConfig, "load-path", path, sizeof(path));
-		AG_Strlcat(path, AG_PATHSEPMULTI, sizeof(path));
-		AG_Strlcat(path, ".", sizeof(path));
-		AG_SetString(agConfig, "load-path", path);
+		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 	}
 #endif /* _WIN32 */
 

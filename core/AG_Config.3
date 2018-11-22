@@ -40,12 +40,11 @@ The
 object records configuration settings global to an Agar application.
 This includes user preferences which are to be preserved after the
 application has exited.
-Settings are stored as
-.Xr AG_Variable 3
-values.
 .Pp
 Library or application-specific data may also be stored in the configuration
-object.
+object as
+.Xr AG_Variable 3
+values.
 Variable names should not start with "ag_", the prefix is reserved for
 internal Agar settings.
 .Pp
@@ -65,7 +64,19 @@ a parameter value to be specified as a pointer to an external piece of data.
 .Fn AG_ConfigSave "void"
 .Pp
 .Ft "int"
-.Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "AG_Size dst_len"
+.Fn AG_ConfigFind "AG_ConfigPathGroup group" "const char *filename" "char *dst" "AG_Size dst_size"
+.Pp
+.Ft "void"
+.Fn AG_ConfigAddPath "AG_ConfigPathGroup group" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_ConfigAddPathS "AG_ConfigPathGroup group" "const char *pathname"
+.Pp
+.Ft "void"
+.Fn AG_ConfigDelPath "AG_ConfigPathGroup group" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_ConfigDelPathS "AG_ConfigPathGroup group" "const char *pathname"
 .Pp
 .nr nS 0
 The
@@ -103,38 +114,41 @@ on the
 object.
 .Pp
 The
-.Fn AG_ConfigFile
-utility routine searches a colon-separated pathname setting (i.e.,
-.Sq load-path )
-for a file with the given
-.Fa name
-and
-.Fa extension.
-If the file is found, its full pathname is copied into a target
-fixed-size buffer
+.Fn AG_ConfigFind
+function searches a list of registered paths for the given file.
+.Fa group
+may be
+.Dv AG_CONFIG_PATH_DATA
+(for object and data files), or
+.Dv AG_CONFIG_PATH_FONTS
+(for fonts).
+If
+.Fa filename
+is found and and the file is accessible, then its absolute pathname is
+copied into the fixed-size buffer
 .Fa dst_path
 (limited to
 .Fa dst_len
-bytes).
-.Fn AG_ConfigFile
-returns 0 if the file exists, or -1 if an error has occurred.
+bytes), and
+.Fn AG_ConfigFind
+returns 0.
+If the file cannot be found, it returns -1.
+.Pp
+.Fn AG_ConfigAddPath
+adds the specified directory to the list of
+.Fn AG_ConfigFind
+search paths.
+.Fn AG_ConfigDelPath
+removes the given directory from the list of registered search paths.
 .Sh CONFIGURATION PARAMETERS
 The following parameters are registered by Agar-Core:
 .Bl -tag -width "BOOL initial-run "
 .It Va BOOL initial-run
 Application is being ran for the first time (read-only).
-.It Va STRING load-path
-Directory containing data files for the
-.Xr AG_Object 3
-virtual filesystem, as well as the
-.Nm
-data itself.
-Default is platform-dependent.
 .It Va STRING save-path
 Target directory for writing the
 .Xr AG_Object 3
-virtual filesystem (usually the same as
-.Sq load-path ) .
+virtual filesystem.
 .It Va STRING tmp-path
 Directory for temporary files.
 Default is platform-dependent (on POSIX platforms, the
@@ -153,9 +167,7 @@ AG_ConfigSave();
 The following Agar-GUI code displays a checkbox controlling the value
 of "my-setting":
 .Bd -literal -offset indent
-AG_Checkbox *cb;
-
-cb = AG_CheckboxNew(win, 0, "My setting");
+AG_Checkbox *cb = AG_CheckboxNew(win, 0, "My setting");
 AG_BindVariable(cb, "state", agConfig, "my-setting");
 .Ed
 .Pp

@@ -15,8 +15,8 @@ LoadConfig(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
 
-	if (agConfig->archivePath != NULL) {
-		TestMsg(ti, "Loading from %s", agConfig->archivePath);
+	if (AGOBJECT(agConfig)->archivePath != NULL) {
+		TestMsg(ti, "Loading from %s", AGOBJECT(agConfig)->archivePath);
 	} else {
 		char path[AG_PATHNAME_MAX];
 		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
@@ -35,8 +35,8 @@ SaveConfig(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
 	
-	if (agConfig->archivePath != NULL) {
-		TestMsg(ti, "Saving to %s", agConfig->archivePath);
+	if (AGOBJECT(agConfig)->archivePath != NULL) {
+		TestMsg(ti, "Saving to %s", AGOBJECT(agConfig)->archivePath);
 	} else {
 		char path[AG_PATHNAME_MAX];
 		if (AG_ObjectCopyFilename(agConfig, path, sizeof(path)) == 0)
@@ -54,20 +54,13 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
+	AG_ConfigPath *cp;
 	AG_TestInstance *ti = obj;
 	AG_Box *box;
 	AG_Textbox *tb;
 	AG_Label *lbl;
 
 	someString[0] = '\0';
-
-	AG_GetString(agConfig, "load-path", path, sizeof(path));
-	lbl = AG_LabelNew(win, 0, "load-path: %s", path);
-	AG_SetStyle(lbl, "font-size", "80%");
-
-	AG_GetString(agConfig, "save-path", path, sizeof(path));
-	lbl = AG_LabelNew(win, 0, "save-path: %s", path);
-	AG_SetStyle(lbl, "font-size", "80%");
 
 	/* Tie some globals to the config settings */
 	AG_BindInt(agConfig, "some-int", &someInt);
@@ -80,6 +73,22 @@ TestGUI(void *obj, AG_Window *win)
 	AG_CheckboxNewInt(win, 0, "Some bool", &someBool);
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Some string: ");
 	AG_TextboxBindUTF8(tb, someString, sizeof(someString));
+
+	
+	box = AG_BoxNewVert(win, AG_BOX_EXPAND|AG_BOX_FRAME);
+	AG_BoxSetLabelS(box, "AG_ConfigFind() search paths:");
+	AG_SetStyle(box, "font-size", "90%");
+	AG_SetStyle(box, "font-weight", "bold");
+	{
+		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_DATA], paths) {
+			lbl = AG_LabelNew(box, 0, "Data: %s", cp->s);
+			AG_SetStyle(lbl, "font-family", "Courier");
+		}
+		AG_SLIST_FOREACH(cp, &agConfig->paths[AG_CONFIG_PATH_FONTS], paths) {
+			lbl = AG_LabelNew(box, 0, "Fonts: %s", cp->s);
+			AG_SetStyle(lbl, "font-family", "Courier");
+		}
+	}
 
 	box = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{

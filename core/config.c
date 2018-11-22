@@ -73,12 +73,16 @@ AG_ConfigLoad(void)
 int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
-	char path[AG_PATHNAME_MAX], *s;
+	char path[AG_FILENAME_MAX];
 	AG_User *sysUser;
+	int i;
 
 	AG_ObjectInit(cfg, &agConfigClass);
 	AG_ObjectSetName(cfg, "config");
 	OBJECT(cfg)->save_pfx = NULL;
+
+	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
+		SLIST_INIT(&cfg->paths[i]);
 
 	AG_SetInt(cfg, "initial-run", 1);
 	AG_SetInt(cfg, "no-confirm-quit", 0);
@@ -88,31 +92,35 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 		AG_SetString(cfg, "home", sysUser->home);
 		AG_SetString(cfg, "tmp-path", sysUser->tmp);
 
+		/* Add ~/.progname/ to load path. */
 		Strlcpy(path, sysUser->home, sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
 #ifndef _WIN32
 		Strlcat(path, ".", sizeof(path));
 #endif
 		Strlcat(path, agProgName, sizeof(path));
+		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, path);
+
+		/* Also use ~/.progname as the default save path. */
 		AG_SetString(cfg, "save-path", path);
-
-#ifndef _WIN32
+	
+		/*
+		 * Add static DATADIR to load path if one is defined
+		 * (./configure --datadir setting).
+		 */
 		if (strcmp(DATADIR, "NONE") != 0) {
-			AG_PrtString(cfg, "load-path", "%s%s%s",
-			    path, AG_PATHSEPMULTI, DATADIR);
-		} else
-#endif
-		{
-			AG_SetString(cfg, "load-path", path);
+			AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
 		}
-
-
 		AG_UserFree(sysUser);
 	} else {
 		AG_SetString(cfg, "home", "");
-		s = (strcmp(DATADIR,"NONE") != 0) ? DATADIR : ".";
-		AG_SetString(cfg, "load-path", s);
-		AG_SetString(cfg, "save-path", s);
+		
+		if (strcmp(DATADIR, "NONE") != 0) {
+			AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
+		} else {
+			AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
+		}
+		AG_SetString(cfg, "save-path", ".");
 		AG_SetString(cfg, "tmp-path", "tmp");
 	}
 
@@ -169,36 +177,36 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 }
 
 /*
- * Copy the full pathname of a data file to a fixed-size buffer.
- * Return 0 if the file exists, or -1 if an error has occurred.
+ * Search the load paths for the named file. If one is found and is accessible,
+ * copy its absolute path name to the fixed-size buffer path and return 0.
+ * If the file cannot be found, return -1.
  */
 int
-AG_ConfigFile(const char *path_key, const char *name, const char *ext,
-    char *path, AG_Size path_len)
+AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
+    AG_Size path_len)
 {
 	char file[AG_PATHNAME_MAX];
-	char *dir, *pathp = path;
+	AG_Config *cfg = agConfig;
+	AG_ConfigPathQ *pathGroup = &cfg->paths[group];
+	AG_ConfigPath *loadPath;
 	int rv;
 
-	AG_GetString(agConfig, path_key, path, path_len);
-
-	for (dir = Strsep(&pathp, AG_PATHSEPMULTI);
-	     dir != NULL;
-	     dir = Strsep(&pathp, AG_PATHSEPMULTI)) {
-		Strlcpy(file, dir, sizeof(file));
-
-		if (name[0] != AG_PATHSEPCHAR) {
-			Strlcat(file, AG_PATHSEP, sizeof(file));
-		}
-		Strlcat(file, name, sizeof(file));
-		if (ext != NULL) {
-			Strlcat(file, ".", sizeof(file));
-			Strlcat(file, ext, sizeof(file));
-		}
+#ifdef AG_DEBUG
+	if (path_len < AG_FILENAME_MAX) { AG_FatalError("path_len too small"); }
+#endif
+	SLIST_FOREACH(loadPath, pathGroup, paths) {
+		Strlcpy(file, loadPath->s, sizeof(file));
+		Strlcat(file, AG_PATHSEP, sizeof(file));
+		Strlcat(file, filename, sizeof(file));
 		if ((rv = AG_FileExists(file)) == 1) {
-			if (Strlcpy(path, file, path_len) >= path_len) {
-				AG_SetError(_("The search path is too big."));
-				return (-1);
+			Strlcpy(path, file, path_len);
+			if (loadPath != SLIST_FIRST(pathGroup)) {
+				/*
+				 * Sort paths by the most recently
+				 * successfully accessed first.
+				 */
+				SLIST_REMOVE(pathGroup, loadPath, ag_config_path, paths);
+				SLIST_INSERT_HEAD(pathGroup, loadPath, paths);
 			}
 			return (0);
 		} else if (rv == -1) {
@@ -206,9 +214,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 			return (-1);
 		}
 	}
-	AG_GetString(agConfig, path_key, path, path_len);
-	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
-	    (ext != NULL) ? (char *)ext : "", path_key, path);
+	AG_SetError(_("Cannot find %s in load-path."), filename);
 	return (-1);
 }
 
@@ -218,6 +224,95 @@ AG_ConfigObject(void)
 {
 	return (agConfig);
 }
+
+/* Add a directory for to the AG_ConfigFind() search path. */
+void
+AG_ConfigAddPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
+{
+	AG_ConfigPath *loadPath = Malloc(sizeof(AG_ConfigPath));
+
+	loadPath->s = Strdup(s);
+#ifdef AG_DEBUG
+	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
+#endif
+	SLIST_INSERT_HEAD(&agConfig->paths[group], loadPath, paths);
+}
+
+void
+AG_ConfigAddPath(AG_ConfigPathGroup group, const char *_Nonnull fmt, ...)
+{
+	AG_ConfigPath *loadPath = Malloc(sizeof(AG_ConfigPath));
+	va_list ap;
+	
+	va_start(ap, fmt);
+	Vasprintf(&loadPath->s, fmt, ap);
+	va_end(ap);
+#ifdef AG_DEBUG
+	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
+#endif
+	SLIST_INSERT_HEAD(&agConfig->paths[group], loadPath, paths);
+}
+
+/* Remove a directory from the AG_ConfigFind() search path. */
+void
+AG_ConfigDelPathS(AG_ConfigPathGroup group, const char *_Nonnull s)
+{
+	AG_ConfigPathQ *pathGroup;
+	AG_ConfigPath *loadPath;
+
+#ifdef AG_DEBUG
+	if (group >= AG_CONFIG_PATH_LAST) { AG_FatalError("Bad group"); }
+#endif
+	pathGroup = &agConfig->paths[group];
+	SLIST_FOREACH(loadPath, pathGroup, paths) {
+#ifdef _WIN32
+		if (Strcasecmp(loadPath->s, s) == 0)
+			break;
+#else
+		if (strcmp(loadPath->s, s) == 0)
+			break;
+#endif
+	}
+	if (loadPath != NULL)
+		SLIST_REMOVE(pathGroup, loadPath, ag_config_path, paths);
+}
+
+void
+AG_ConfigDelPath(AG_ConfigPathGroup group, const char *_Nonnull fmt, ...)
+{
+	char *s;
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	AG_ConfigDelPathS(group, s);
+	free(s);
+}
+
+#ifdef AG_LEGACY
+int
+AG_ConfigFile(const char *path_key, const char *name, const char *ext,
+    char *path, AG_Size path_len)
+{
+	char filename[AG_FILENAME_MAX];
+
+	Strlcpy(filename, name, sizeof(filename));
+	Strlcat(filename, ".", sizeof(filename));
+	Strlcat(filename, ext, sizeof(filename));
+
+	if (strcmp(path_key, "load-path") == 0) {
+		return AG_ConfigFind(AG_CONFIG_PATH_DATA, filename,
+		    path, path_len);
+	} else if (strcmp(path_key, "font-path") == 0) {
+		return AG_ConfigFind(AG_CONFIG_PATH_FONTS, filename,
+		    path, path_len);
+	} else {
+		AG_SetError("Bad path-key");
+		return (-1);
+	}
+}
+#endif /* AG_LEGACY */
 
 AG_ObjectClass agConfigClass = {
 	"Agar(Config)",

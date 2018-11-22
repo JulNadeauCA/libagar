@@ -23,10 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Agar directory browser widget.
+ */
+
 #ifdef __NetBSD__
 #define _NETBSD_SOURCE
 #endif
-
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/dir_dlg.h>
@@ -84,7 +87,7 @@ AG_DirDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_DirDlg *dd;
 
 	dd = AG_DirDlgNew(parent, flags);
-	AG_GetString(AG_ConfigObject(), "save-path", savePath, sizeof(savePath));
+	AG_GetString(agConfig, "save-path", savePath, sizeof(savePath));
 	AG_DirDlgSetDirectoryMRU(dd, mruKey, savePath);
 	return (dd);
 }
@@ -199,27 +202,28 @@ RefreshShortcuts(AG_DirDlg *_Nonnull dd, int init)
 	}
 #else /* !_WIN32 */
 	{
-		char path[AG_PATHNAME_MAX], *pPath = &path[0], *p;
+		char path[AG_PATHNAME_MAX];
+		AG_ConfigPath *loadPath;
 		AG_User *sysUser;
 	
-		/* Add the filesystem root, home and cwd. */
 		AG_TlistAddS(tl, agIconDirectory.s, "/");
+
 		if ((sysUser = AG_GetRealUser()) != NULL) {
 			AG_TlistAddS(tl, agIconDirectory.s, sysUser->home);
 			AG_UserFree(sysUser);
 		}
-		if (AG_GetCWD(path, sizeof(path)) == 0)
+		if (AG_GetCWD(path, sizeof(path)) == 0) {
 			AG_TlistAddS(tl, agIconDirectory.s, path);
-		
-		/* Add the Agar save-path or load-path */
-		AG_GetString(AG_ConfigObject(),
-		    (dd->flags & AG_DIRDLG_SAVE) ? "save-path" : "load-path",
-		    path, sizeof(path));
-		while ((p = AG_Strsep(&pPath, AG_PATHSEPMULTI)) != NULL) {
-			if (!AG_FileExists(p)) {
-				continue;
-			}
+		}
+		if (dd->flags & AG_DIRDLG_SAVE) {
+			AG_GetString(agConfig, "save-path", path, sizeof(path));
 			AG_TlistAddS(tl, agIconDirectory.s, path);
+		} else {
+			AG_ConfigPathQ *pathGroup =
+			    &agConfig->paths[AG_CONFIG_PATH_DATA];
+
+			SLIST_FOREACH(loadPath, pathGroup, paths)
+				AG_TlistAddS(tl, agIconDirectory.s, loadPath->s);
 		}
 		AG_ComboSelectText(dd->comLoc, dd->cwd);
 	}
@@ -670,7 +674,7 @@ AG_DirDlgSetDirectoryS(AG_DirDlg *dd, const char *dir)
 		goto fail;
 	}
 	if (dd->dirMRU != NULL) {
-		AG_SetString(AG_ConfigObject(), dd->dirMRU, dd->cwd);
+		AG_SetString(agConfig, dd->dirMRU, dd->cwd);
 		AG_ConfigSave();
 	}
 
@@ -689,7 +693,7 @@ fail:
 void
 AG_DirDlgSetDirectoryMRU(AG_DirDlg *dd, const char *key, const char *dflt)
 {
-	AG_Config *cfg = AG_ConfigObject();
+	AG_Config *cfg = agConfig;
 	char *s;
 
 	AG_ObjectLock(dd);

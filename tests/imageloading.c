@@ -21,7 +21,7 @@ TestGUI(void *obj, AG_Window *win)
 	
 	/* Display a PNG file with transparency */
 	AG_LabelNewS(vBox, 0, "Imported axe.png:");
-	if (!AG_ConfigFile("load-path", "axe", "png", path, sizeof(path))) {
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "axe.png", path, sizeof(path))) {
 		if ((su = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_PixmapFromSurface(vBox, 0, su);
 			AG_LabelNewS(vBox, 0, "Exported axe-save.png:");
@@ -45,7 +45,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Load, display and save a PNG file. */
 	AG_LabelNewS(vBox, 0, "Imported agar.png:");
-	if (!AG_ConfigFile("load-path", "agar", "png", path, sizeof(path))) {
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.png", path, sizeof(path))) {
 		if ((su = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_PixmapFromSurface(vBox, 0, su);
 		
@@ -91,7 +91,8 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Load/save a PNG file in indexed color format. */
 	AG_LabelNewS(vBox, 0, "Imported agar-index.png:");
-	if (!AG_ConfigFile("load-path", "agar-index", "png", path, sizeof(path))) {
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-index.png",
+	    path, sizeof(path))) {
 		if ((su = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_PixmapFromSurface(vBox, 0, su);
 
@@ -140,7 +141,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	/* Load/save a JPEG file. */
 	AG_LabelNewS(vBox, 0, "Imported pepe.jpg:");
-	if (!AG_ConfigFile("load-path", "pepe", "jpg", path, sizeof(path))) {
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "pepe.jpg", path, sizeof(path))) {
 		if ((su = AG_SurfaceFromJPEG(path)) == NULL) {
 			AG_LabelNew(vBox, 0, "Failed: %s", AG_GetError());
 		} else {
