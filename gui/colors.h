@@ -66,6 +66,7 @@ typedef struct ag_color_hsv {
 
 # define AG_ColorWhite() AG_ColorRGBA_16(0xffff,0xffff,0xffff,0xffff)
 # define AG_ColorBlack() AG_ColorRGBA_16(0x0000,0x0000,0x0000,0xffff)
+# define AG_ColorNone()  AG_ColorRGBA_16(0x0000,0x0000,0x0000,0x0000)
 # define AG_ColorHex(v)  AG_ColorHex64(v)
 
 # define AG_MapRGB_HSVf(r,g,b,h,s,v) AG_MapRGB16_HSVf((r),(g),(b),(h),(s),(v))
@@ -82,6 +83,7 @@ typedef struct ag_color_hsv {
 
 # define AG_ColorWhite() AG_ColorRGBA_8(255,255,255,255)
 # define AG_ColorBlack() AG_ColorRGBA_8(0,0,0,255)
+# define AG_ColorNone()  AG_ColorRGBA_8(0,0,0,0)
 # define AG_ColorHex(v)  AG_ColorHex32(v)
 
 # define AG_MapRGB_HSVf(r,g,b,h,s,v) AG_MapRGB8_HSVf((r),(g),(b),(h),(s),(v))
