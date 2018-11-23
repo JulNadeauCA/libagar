@@ -476,7 +476,7 @@ ConsoleWindowDetached(AG_Event *event)
 int
 main(int argc, char *argv[])
 {
-	char *driverSpec = NULL, *fontSpec = NULL, *optArg;
+	char *driverSpec = NULL, *fontSpec = NULL, *styleSheet = NULL, *optArg;
 	AG_Window *win;
 	AG_Tlist *tl;
 	const AG_TestCase **pTest;
@@ -488,7 +488,7 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "Cp:?hd:t:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "Cp:?hd:s:t:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'C':
 			noConsoleRedir = 1;
@@ -498,27 +498,31 @@ main(int argc, char *argv[])
 		case 'd':
 			driverSpec = optArg;
 			break;
+		case 's':
+			styleSheet = optArg;
+			break;
 		case 't':
 			fontSpec = optArg;
 			break;
 		case '?':
 		case 'h':
 		default:
-			printf("Usage: agartest [-C] [-d agar-driver] [-t font] [test1 test2 ...]\n");
+			printf("Usage: agartest [-C] [-d driver] [-s stylesheet] [-t font] [test1 test2 ...]\n");
 			return (1);
 		}
 	}
 	if (AG_InitCore("agartest", initFlags) == -1) {
-		printf("Agar-Core initialization failed: %s\n", AG_GetError());
-		return (1);
+		goto fail;
 	}
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}
-	if (AG_InitGraphics(driverSpec) == -1) {
-		printf("Agar-GUI initialization failed: %s\n", AG_GetError());
-		return (1);
-	}
+	if (AG_InitGraphics(driverSpec) == -1)
+		goto fail;
+
+	if (styleSheet != NULL &&
+	    AG_LoadStyleSheet(NULL, styleSheet) == NULL)
+		goto fail;
 
 	/* Redirect AG_Verbose() and AG_Debug() output to the AG_Console. */
 	consoleBuf[0] = '\0';
@@ -647,4 +651,7 @@ main(int argc, char *argv[])
 	AG_DestroyGraphics();
 	AG_Destroy();
 	return (0);
+fail:
+	printf("Agar initialization failed: %s\n", AG_GetError());
+	return (1);
 }
