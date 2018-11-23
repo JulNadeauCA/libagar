@@ -60,6 +60,7 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 void
 AG_FreeStaticIcon(AG_StaticIcon *icon)
 {
+	icon->s->flags &= ~(AG_SURFACE_MAPPED);
 	AG_SurfaceFree(icon->s);
 	icon->s = NULL;
 }
