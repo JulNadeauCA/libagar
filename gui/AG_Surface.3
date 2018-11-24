@@ -69,6 +69,9 @@ Image transfers honor a settable per-surface clipping rectangle.
 .Fn AG_SurfaceIndexed "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_SurfaceGrayscale "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_SurfaceRGB "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
 .Pp
 .Ft "AG_Surface *"
@@ -215,6 +218,13 @@ The size of this palette is determined by
 .Fa bitsPerPixel .
 Entries in the palette are initialized to black except in monochrome (1-bpp)
 mode where colors (0,1) are initialized to (white,black).
+.Pp
+.Fn AG_SurfaceGrayscale
+creates a new surface of
+.Fa w
+by
+.Fa h
+pixels in a grayscale format with alpha channel.
 .Pp
 .Fn AG_SurfaceRGB
 and

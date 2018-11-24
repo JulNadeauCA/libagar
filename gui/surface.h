@@ -137,6 +137,7 @@ typedef struct ag_surface {
 #define AG_SURFACE_STATIC	0x10	/* Don't free() in AG_SurfaceFree() */
 #define AG_SURFACE_EXT_PIXELS	0x20	/* Pixels are allocated externally */
 #define AG_SURFACE_ANIMATED	0x40	/* Is an animation */
+#define AG_SURFACE_TRACE	0x80	/* Enable debugging */
 #define AG_SAVED_SURFACE_FLAGS	(AG_SURFACE_COLORKEY|AG_SURFACE_ALPHA| \
                                  AG_SURFACE_ANIMATED)
 	Uint w, h;			/* Size in pixels */
@@ -187,7 +188,9 @@ typedef enum ag_alpha_func {
 #define AG_EXPORT_JPEG_JDCT_FLOAT 0x04	/* Floating-point method */
 
 __BEGIN_DECLS
-extern const char *_Nonnull agAlphaFuncNames[]; /* AG_AlphaFunc name strings */
+extern const char *_Nonnull agSurfaceModeNames[]; /* AG_Surface modes */
+extern const char *_Nonnull agAlphaFuncNames[];   /* AG_AlphaFunc modes */
+
 extern AG_PixelFormat *_Nullable agSurfaceFmt;  /* Standard surface format */
 extern AG_GrayscaleMode agGrayscaleMode;        /* Standard grayscale/RGB map */
 
@@ -199,9 +202,9 @@ void AG_PixelFormatRGBA(AG_PixelFormat *_Nonnull, int,
 AG_PixelFormat *_Nullable AG_PixelFormatDup(const AG_PixelFormat *_Nonnull)
                                            _Warn_Unused_Result;
 
-void AG_SurfaceInit(AG_Surface *_Nonnull, const AG_PixelFormat *_Nullable,
-                    Uint,Uint, Uint);
-
+void                 AG_SurfaceInit(AG_Surface *_Nonnull,
+                                    const AG_PixelFormat *_Nullable,
+				    Uint,Uint, Uint);
 AG_Surface *_Nonnull AG_SurfaceNew(const AG_PixelFormat *_Nonnull,
                                    Uint,Uint, Uint)
 		                  _Warn_Unused_Result;
@@ -209,12 +212,16 @@ AG_Surface *_Nonnull AG_SurfaceEmpty(void)
                                     _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_SurfaceIndexed(Uint,Uint, int, Uint)
                                       _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_SurfaceGrayscale(Uint,Uint, int, Uint)
+                                        _Warn_Unused_Result;
+
 AG_Surface *_Nonnull AG_SurfaceRGB(Uint,Uint, int, Uint,
                                    AG_Pixel,AG_Pixel,AG_Pixel)
 				  _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_SurfaceRGBA(Uint,Uint, int, Uint,
                                     AG_Pixel,AG_Pixel,AG_Pixel,AG_Pixel)
 				   _Warn_Unused_Result;
+
 AG_Surface *_Nonnull AG_SurfaceFromPixelsRGB(const void *_Nonnull,
                                              Uint,Uint, Uint,
                                              AG_Pixel,AG_Pixel,AG_Pixel)
@@ -229,7 +236,6 @@ AG_Surface *_Nonnull AG_SurfaceStdGL(Uint, Uint)
 void AG_SurfaceSetAddress(AG_Surface *_Nonnull, Uint8 *_Nonnull);
 void AG_SurfaceSetColors(AG_Surface *_Nonnull, AG_Color *_Nonnull, Uint, Uint);
 void AG_SurfaceSetPalette(AG_Surface *_Nonnull, const AG_Palette *_Nonnull);
-void AG_SurfaceSetAvailColors(AG_Surface *_Nonnull, Uint,Uint);
 void AG_SurfaceCopyPixels(AG_Surface *_Nonnull, const Uint8 *_Nonnull);
 void AG_SurfaceSetPixels(AG_Surface *_Nonnull, AG_Color);
 
@@ -352,6 +358,8 @@ void     AG_GetColor32_Gray16(Uint32, AG_GrayscaleMode,
 # define AG_SurfaceBlendRGB(S,x,y,r,g,b,a,fn) AG_SurfaceBlendRGB16((S),(x),(y),(r),(g),(b),(a),(fn))
 # define AG_GetColor_RGB8(px,pf,r,g,b)        AG_GetColor64_RGB8((px),(pf),(r),(g),(b))
 # define AG_GetColor_RGBA8(px,pf,r,g,b,a)     AG_GetColor64_RGBA8((px),(pf),(r),(g),(b),(a))
+# define AG_GetColor_RGB16(px,pf,r,g,b)       AG_GetColor64_RGB16((px),(pf),(r),(g),(b))
+# define AG_GetColor_RGBA16(px,pf,r,g,b,a)    AG_GetColor64_RGBA16((px),(pf),(r),(g),(b),(a))
 
 Uint64 AG_MapPixel64_RGB8(const AG_PixelFormat *_Nonnull, Uint8,Uint8,Uint8)
                          _Pure_Attribute;
@@ -379,6 +387,8 @@ void     AG_GetColor64_Gray16(Uint64, AG_GrayscaleMode,
 # define AG_SurfaceBlendRGB(s,x,y,r,g,b,a,fn) AG_SurfaceBlendRGB8((s),(x),(y),(r),(g),(b),(a),(fn))
 # define AG_GetColor_RGB8(px,pf,r,g,b)        AG_GetColor32_RGB8((px),(pf),(r),(g),(b))
 # define AG_GetColor_RGBA8(px,pf,r,g,b,a)     AG_GetColor32_RGBA8((px),(pf),(r),(g),(b),(a))
+# define AG_GetColor_RGB16(px,pf,r,g,b)       AG_GetColor32_RGB16((px),(pf),(r),(g),(b))
+# define AG_GetColor_RGBA16(px,pf,r,g,b,a)    AG_GetColor32_RGBA16((px),(pf),(r),(g),(b),(a))
 
 #endif /* !AG_LARGE */
 
@@ -523,11 +533,11 @@ AG_MapPixel64_RGB16(const AG_PixelFormat *_Nonnull pf,
 		return (r >> pf->Rloss) << pf->Rshift |
 		       (g >> pf->Gloss) << pf->Gshift |
 		       (b >> pf->Bloss) << pf->Bshift |
-		      ((0xffff >> pf->Aloss) << pf->Ashift & pf->Amask);
+		      ((AG_OPAQUE >> pf->Aloss) << pf->Ashift & pf->Amask);
 	case AG_SURFACE_INDEXED:
-		return AG_MapPixelIndexed(pf, r,g,b,0xffff);
+		return AG_MapPixelIndexed(pf, r,g,b, AG_OPAQUE);
 	case AG_SURFACE_GRAYSCALE:
-		return AG_MapPixelGrayscale(pf, r,g,b,0xffff);
+		return AG_MapPixelGrayscale(pf, r,g,b, AG_OPAQUE);
 	}
 }
 static __inline__ Uint64 _Pure_Attribute
@@ -610,7 +620,7 @@ AG_GetColor64_RGBA16(Uint64 px, const AG_PixelFormat *_Nonnull pf,
 	}
 }
 
-/* Extract compressed 8-bit RGB(A) components from a 64-bit pixel. */
+/* Extract (compressed) 8-bit RGB(A) components from a 64-bit pixel. */
 static __inline__ void
 AG_GetColor64_RGB8(Uint64 px, const AG_PixelFormat *_Nonnull pf,
     Uint8 *_Nonnull r, Uint8 *_Nonnull g, Uint8 *_Nonnull b)
@@ -648,7 +658,11 @@ AG_GetColor64(Uint64 px, const AG_PixelFormat *_Nonnull pf)
 		AG_EXTRACT_COMPONENT(C.r, pf->Rmask, pf->Rshift, pf->Rloss, 16);
 		AG_EXTRACT_COMPONENT(C.g, pf->Gmask, pf->Gshift, pf->Gloss, 16);
 		AG_EXTRACT_COMPONENT(C.b, pf->Bmask, pf->Bshift, pf->Bloss, 16);
-		AG_EXTRACT_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss, 16);
+		if (pf->Amask != 0) {
+			AG_EXTRACT_COMPONENT(C.a, pf->Amask, pf->Ashift, pf->Aloss, 16);
+		} else {
+			C.a = AG_OPAQUE;
+		}
 		break;
 	}
 	case AG_SURFACE_INDEXED:
@@ -969,9 +983,14 @@ AG_PixelFormatCompare(const AG_PixelFormat *_Nonnull a,
 			 a->Bmask == b->Bmask &&
 			 a->Amask == b->Amask);
 	case AG_SURFACE_INDEXED:
-		if (a->palette->nColors != b->palette->nColors) {
-			return (1);
+#ifdef AG_DEBUG
+		if (a->palette->nColors != b->palette->nColors)  {
+			AG_SetError("nColors %u != %u",
+			    a->palette->nColors,
+			    b->palette->nColors);
+			AG_FatalError(NULL);
 		}
+#endif
 		return memcmp(a->palette->colors, b->palette->colors,
 		              a->palette->nColors * sizeof(AG_Color));
 	case AG_SURFACE_GRAYSCALE:
@@ -1090,7 +1109,7 @@ void        AG_GetRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, 
 void        AG_GetPixelRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
 /*       -> AG_GetColor32_RGBA8(pf, px, r,g,b,a) */
 AG_Color    AG_GetColorRGB(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32(px, pf), c.a=0xffff */
+/*       -> AG_GetColor32(px, pf), c.a=AG_OPAQUE */
 AG_Color    AG_GetColorRGBA(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
 /*       -> AG_GetColor32(px, pf) */
 AG_Surface *_Nonnull AG_DupSurface(AG_Surface *_Nonnull) DEPRECATED_ATTRIBUTE;
