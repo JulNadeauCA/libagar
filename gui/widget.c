@@ -41,6 +41,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <agar/config/ag_debug_gui.h>
+
 const char *agWidgetPropNames[] = {
 	"font-family",
 	"font-size",
@@ -180,10 +182,10 @@ OnAttach(AG_Event *_Nonnull event)
 	    AG_OfClass(w, "AG_Widget:*")) {
 		AG_Widget *widParent = (AG_Widget *)parent;
 		Uint i;
-
+#ifdef AG_DEBUG_GUI
 		Debug(w, "Attach to %s window (\"%s\")\n",
 		    OBJECT(parent)->name, AGWINDOW(parent)->caption);
-
+#endif
 		SetParentWindow(w, AGWINDOW(widParent));
 		if (AGWINDOW(widParent)->visible) {
 			w->flags |= AG_WIDGET_UPDATE_WINDOW;
@@ -200,11 +202,11 @@ OnAttach(AG_Event *_Nonnull event)
 	} else if (AG_OfClass(parent, "AG_Widget:*") &&
 	           AG_OfClass(w, "AG_Widget:*")) {
 		AG_Widget *widParent = (AG_Widget *)parent;
-
+#ifdef AG_DEBUG_GUI
 		Debug(w, "Attach to %s in %s\n",
 		    OBJECT_CLASS(parent)->name,
 		    widParent->window ? OBJECT(widParent->window)->name : "<>");
-
+#endif
 		SetParentWindow(w, widParent->window);
 		if (widParent->window != NULL &&
 		    widParent->window->visible) {
@@ -213,10 +215,10 @@ OnAttach(AG_Event *_Nonnull event)
 	} else if (AG_OfClass(parent, "AG_Driver:*") &&
 	           AG_OfClass(w, "AG_Widget:AG_Window:*")) {
 		AG_Driver *drvParent = (AG_Driver *)parent;
-
+#ifdef AG_DEBUG_GUI
 		Debug(w, "Attach to %s (%s)\n", OBJECT_CLASS(parent)->name,
 		   OBJECT(parent)->name);
-
+#endif
 		SetParentDriver(w, drvParent);
 	} else {
 		AG_FatalError("Can only attach to AG_{Widget,Driver}");
