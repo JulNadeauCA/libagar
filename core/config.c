@@ -36,21 +36,34 @@
 
 #include <agar/config/datadir.h>
 
-/* Create the "save-path" / "tmp-path" directories, if they don't exist. */
+/* Initialize the AG_Config object. */
+int
+AG_ConfigInit(AG_Config *cfg, Uint flags)
+{
+	AG_ObjectInit(cfg, &agConfigClass);
+	AG_ObjectSetName(cfg, "config");
+
+	if ((flags & AG_CREATE_DATADIR) &&
+	    AG_CreateDataDir() == -1) {
+		return (-1);
+	}
+	return (0);
+}
+
+/* Create the save and tmp directories if they don't exist. */
 int
 AG_CreateDataDir(void)
 {
-	char dataDir[AG_PATHNAME_MAX];
-	char tmpDir[AG_PATHNAME_MAX];
+	char path[AG_PATHNAME_MAX];
 
-	AG_GetString(agConfig, "save-path", dataDir, sizeof(dataDir));
-	AG_GetString(agConfig, "tmp-path", tmpDir, sizeof(tmpDir));
-
-	if (AG_FileExists(dataDir) == 0 && AG_MkDir(dataDir) != 0)
+	AG_GetString(agConfig, "save-path", path, sizeof(path));
+	if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0) {
 		return (-1);
-	if (AG_FileExists(tmpDir) == 0 && AG_MkDir(tmpDir) != 0)
+	}
+	AG_GetString(agConfig, "tmp-path", path, sizeof(path));
+	if (AG_FileExists(path) == 0 && AG_MkDir(path) != 0) {
 		return (-1);
-	
+	}
 	return (0);
 }
 
@@ -70,15 +83,14 @@ AG_ConfigLoad(void)
 	return AG_ObjectLoad(agConfig);
 }
 
-int
-AG_ConfigInit(AG_Config *cfg, Uint flags)
+static void
+Init(void *_Nonnull obj)
 {
 	char path[AG_FILENAME_MAX];
+	AG_Config *cfg = obj;
 	AG_User *sysUser;
 	int i;
-
-	AG_ObjectInit(cfg, &agConfigClass);
-	AG_ObjectSetName(cfg, "config");
+	
 	OBJECT(cfg)->save_pfx = NULL;
 
 	for (i = 0; i < AG_CONFIG_PATH_LAST; i++)
@@ -123,16 +135,10 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 		AG_SetString(cfg, "save-path", ".");
 		AG_SetString(cfg, "tmp-path", "tmp");
 	}
-
-	if ((flags & AG_CREATE_DATADIR) &&
-	    AG_CreateDataDir() == -1) {
-		return (-1);
-	}
-	return (0);
 }
 
 static int
-Load(void *_Nonnull p, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
+Load(void *_Nonnull obj, AG_DataSource *_Nonnull ds, const AG_Version *_Nonnull ver)
 {
 #ifdef AG_DEBUG
 	agDebugLvl = AG_ReadUint8(ds);
@@ -174,6 +180,26 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	AG_WriteString(ds, "");			/* agRcsUsername */
 	AG_WriteString(ds, "");			/* agRcsPassword */
 	return (0);
+}
+
+static void
+Reset(void *_Nonnull obj)
+{
+	AG_Config *cfg = obj;
+	AG_ConfigPath *cp, *cpNext;
+	int i;
+
+	for (i = 0; i < AG_CONFIG_PATH_LAST; i++) {
+		AG_ConfigPathQ *pathq = &cfg->paths[i];
+		for (cp = SLIST_FIRST(pathq);
+		     cp != SLIST_END(pathq);
+		     cp = cpNext) {
+			cpNext = SLIST_NEXT(cp, paths);
+			Free(cp->s);
+			free(cp);
+		}
+		SLIST_INIT(pathq);
+	}
 }
 
 /*
@@ -308,7 +334,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 		return AG_ConfigFind(AG_CONFIG_PATH_FONTS, filename,
 		    path, path_len);
 	} else {
-		AG_SetError("Bad path-key");
+		AG_SetError("path_key != {load,font}-path");
 		return (-1);
 	}
 }
@@ -318,9 +344,9 @@ AG_ObjectClass agConfigClass = {
 	"Agar(Config)",
 	sizeof(AG_Config),
 	{ 9, 5 },
-	NULL,
-	NULL,
-	NULL,
+	Init,
+	Reset,
+	NULL,		/* Destroy */
 	Load,
 	Save,
 	NULL
