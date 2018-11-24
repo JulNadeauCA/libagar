@@ -27,7 +27,7 @@
 
 __BEGIN_DECLS
 /* Global configuration settings (bound to agConfig) */
-extern int agGUI, agRenderingContext, agStereo;
+extern int agGUI, agRenderingContext, agStereo, agXsync;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollDelay, agMouseScrollIval;

@@ -52,9 +52,6 @@
 #include <agar/gui/cursors.h>
 #include <agar/gui/opengl.h>
 
-/* Force synchronous X events */
-/* #define DEBUG_XSYNC */
-
 /* Print low-level X events */
 /* #define DEBUG_XEVENTS */
 
@@ -207,17 +204,16 @@ GLX_DestroyGlobals(void)
 	AG_MutexDestroy(&agDisplayLock);
 }
 
-#ifdef DEBUG_XSYNC
 static int
 HandleErrorX11(Display *disp, XErrorEvent *xev)
 {
 	char buf[128];
 
 	XGetErrorText(disp, xev->error_code, buf, sizeof(buf));
-	fprintf(stderr, "Caught X error: %s\n", buf);
+	fprintf(stderr, "Caught X error:\n");
+	fprintf(stderr, "%s\n", buf);
 	abort();
 }
-#endif /* DEBUG_XSYNC */
 
 #if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
 static int
@@ -252,14 +248,13 @@ GLX_Open(void *_Nonnull obj, const char *_Nullable spec)
 	if (agTimeOps == &agTimeOps_renderer)
 		glxEventSpinner = AG_AddEventSpinner(GLX_EventSpin, "%p", drv);
 #endif
-
-#ifdef DEBUG_XSYNC
-	XSynchronize(agDisplay, True);
-	XSetErrorHandler(HandleErrorX11);
-#endif
+	if (agXsync) {
+		Debug(glx, "Enabling synchronous X events\n");
+		XSynchronize(agDisplay, True);
+		XSetErrorHandler(HandleErrorX11);
+	}
 	AG_MutexUnlock(&agDisplayLock);
 	return (0);
-
 fail:
 	if (drv->kbd != NULL) { AG_ObjectDelete(drv->kbd); drv->kbd = NULL; }
 	if (drv->mouse != NULL) { AG_ObjectDelete(drv->mouse); drv->mouse = NULL; }
@@ -1379,7 +1374,14 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 	AG_MutexLock(&glx->lock);
 
 	if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs)) == NULL) {
+#if AG_MODEL == AG_LARGE
+		glxAttrs[2] = 1;
+		glxAttrs[4] = 1;
+		glxAttrs[6] = 1;
+		glxAttrs[8] = 8;
+#else
 		glxAttrs[i-=2] = None;
+#endif
 		if ((xvi = glXChooseVisual(agDisplay, agScreen, glxAttrs))
 		    == NULL) {
 			AG_SetError("Cannot find an acceptable GLX visual");
@@ -1405,6 +1407,9 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 
 	/* Create a new window. */
 	depth = (depthReq >= 1) ? depthReq : xvi->depth;
+	Debug(glx, "Creating %ux%ux%dbpp window at %d,%d\n",
+	    r.w, r.h, depth,
+	    r.x, r.y);
 	glx->w = XCreateWindow(agDisplay,
 	    RootWindow(agDisplay,agScreen),
 	    r.x, r.y,
@@ -1441,30 +1446,33 @@ GLX_OpenWindow(AG_Window *_Nonnull win, AG_Rect r, int depthReq, Uint mwFlags)
 		goto fail_ctx;
 	}
 #if AG_MODEL == AG_LARGE
+	if (depth == 48) {				/* Deep color */
 # if AG_BYTEORDER == AG_BIG_ENDIAN
-	AG_PixelFormatRGB(drv->videoFmt, depth,
-		0xffff000000000000,
-		0x0000ffff00000000,
-		0x00000000ffff0000);
+		AG_PixelFormatRGB(drv->videoFmt, depth,
+			0xffff000000000000,
+			0x0000ffff00000000,
+			0x00000000ffff0000);
 # else
-	AG_PixelFormatRGB(drv->videoFmt, depth,
-		0x000000000000ffff,
-		0x00000000ffff0000,
-		0x0000ffff00000000);
+		AG_PixelFormatRGB(drv->videoFmt, depth,
+			0x000000000000ffff,
+			0x00000000ffff0000,
+			0x0000ffff00000000);
 # endif
-#else /* MEDIUM or SMALL */
-# if AG_BYTEORDER == AG_BIG_ENDIAN
-	AG_PixelFormatRGB(drv->videoFmt, depth,
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00);
-# else
-	AG_PixelFormatRGB(drv->videoFmt, depth,
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000);
-# endif
-#endif /* MEDIUM or SMALL */
+	} else
+#endif /* AG_LARGE */
+	{						/* True Color */
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		AG_PixelFormatRGB(drv->videoFmt, depth,
+			0xff000000,
+			0x00ff0000,
+			0x0000ff00);
+#else
+		AG_PixelFormatRGB(drv->videoFmt, depth,
+			0x000000ff,
+			0x0000ff00,
+			0x00ff0000);
+#endif
+	}
 
 	/* Create the built-in cursors. */
 	if (InitDefaultCursor(glx) == -1 ||
@@ -1539,7 +1547,7 @@ GLX_MapWindow(AG_Window *_Nonnull win)
 
 	AG_MutexLock(&agDisplayLock);
 	AG_MutexLock(&glx->lock);
-
+	
 	/* Set the window manager hints. */
 	if (!glx->wmHintsSet) {
 		Atom wmprot[2], atom;

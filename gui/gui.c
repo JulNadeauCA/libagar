@@ -175,6 +175,7 @@ static int initedGlobals = 0;		/* GUI globals are initialized */
 int agGUI = 0;				/* GUI is initialized */
 int agRenderingContext = 0;		/* In rendering context */
 int agStereo = 0;			/* Stereoscopic display */
+int agXsync = 0;			/* Synchronous X events */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
@@ -499,6 +500,9 @@ AG_InitGraphics(const char *spec)
 			if ((key = AG_Strsep(&tok, "=")) != NULL) {
 				if (Strcasecmp(key, "stereo") == 0) {
 					agStereo = 1;
+					continue;
+				} else if (Strcasecmp(key, "xsync") == 0) {
+					agXsync = 1;
 					continue;
 				}
 				if ((val = AG_Strsep(&tok, "=")) != NULL) {

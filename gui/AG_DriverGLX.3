@@ -47,11 +47,14 @@ is usually the default driver.
 .Bd -literal -offset indent
 AG_InitGraphics("glx");
 AG_InitGraphics("glx(stereo)");
+AG_InitGraphics("glx(xsync)");
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "stereo "
 .It stereo
 Request a stereoscopic visual.
+.It xsync
+Enable synchonous X events.
 .El
 .Sh SEE ALSO
 .Xr AG_Driver 3 ,
