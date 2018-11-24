@@ -547,14 +547,10 @@ main(int argc, char *argv[])
 
 	/* Check for data files in the agartest install directory. */
 #if !defined(_WIN32)
-	if (strcmp(DATADIR, "NONE") != 0) {
+	if (strcmp(DATADIR, "NONE") != 0)
 		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, DATADIR);
-	}
-#else
-	{
-		AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
-	}
-#endif /* _WIN32 */
+#endif
+	AG_ConfigAddPathS(AG_CONFIG_PATH_DATA, ".");
 
 /*	(void)AG_ConfigLoad(); */
 
@@ -580,7 +576,7 @@ main(int argc, char *argv[])
 		AG_WidgetDisable(btnBench);
 	}
 	console = AG_ConsoleNew(pane->div[1], AG_CONSOLE_EXPAND);
-/*	AG_SetFontFamily(console, "Terminus,Terminal"); */
+	AG_SetStyle(console, "font-family", "Courier");
 	{
 		char drvNames[256];
 		AG_AgarVersion av;

@@ -70,33 +70,64 @@ TestGUI(void *obj, AG_Window *win)
 	div2 = pane->div[1];
 	{
 		char path[AG_PATHNAME_MAX];
+		const char *bmpRes[4] = {
+			"32bpp RGBA",
+			"24bpp RGB",
+			"16bpp RGBA",
+			"16bpp RGB",
+		};
+		AG_Pixmap *px;
 		AG_Label *lbl;
+		int i;
 
-		/* Display agar.bmp. BMP support is built in. */
-		AG_LabelNewS(div1, 0, "agar.bmp:");
-		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.bmp",
-		    path, sizeof(path)) == 0) {
-			AG_PixmapFromFile(div1, 0, path);
-		} else {
-			AG_Surface *sErr = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(div1, 0, sErr);
-			AG_SurfaceFree(sErr);
+		for (i = 1; i <= 4; i++) {
+			if (AG_ConfigFind(AG_CONFIG_PATH_DATA,
+			    AG_Printf("agar-%d.bmp", i),
+			    path, sizeof(path)) == 0) {
+				px = AG_PixmapFromFile(div1, 0, path);
+				AG_PrtString(px, "tooltip",
+				    "agar-%d.bmp (%s)", i, bmpRes[i-1]);
+			} else {
+				AG_Surface *sErr = AG_TextRender(AG_GetError());
+				AG_PixmapFromSurface(div1, 0, sErr);
+				AG_SurfaceFree(sErr);
+			}
 		}
 
 		/* Display agar.png. PNG support requires libpng. */
 #include <agar/config/have_png.h>
 #ifdef HAVE_PNG
-		AG_LabelNewS(div1, 0, "agar.png:");
 		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.png",
 		    path, sizeof(path)) == 0) {
-			AG_PixmapFromFile(div1, 0, path);
+			AG_Surface *S;
+			int i, x,y;
+
+			hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+			px = AG_PixmapFromFile(hBox, 0, path);
+			AG_SetString(px, "tooltip", "agar.png");
+			S = AGWIDGET_SURFACE(px,0);
+			for (i = 1; i <= 4; i++) {
+				for (y = 0; y < S->h; y++) {
+					for (x = 0; x < S->w; x++) {
+						AG_Pixel px = AG_SurfaceGet(S, x,y);
+						AG_Color c  = AG_GetColor(px, &S->format);
+
+						c.a = i*(AG_OPAQUE >> 2);
+						AG_SurfacePut(S, x,y,
+						    AG_MapPixel(&S->format, c));
+					}
+				}
+				px = AG_PixmapFromSurface(hBox, 0, S);
+				AG_PrtString(px, "tooltip",
+				    "agar.png (with %d%% alpha)", i*25);
+			}
 		} else {
 			AG_Surface *sErr = AG_TextRender(AG_GetError());
 			AG_PixmapFromSurface(div1, 0, sErr);
 			AG_SurfaceFree(sErr);
 		}
 #else
-		AG_LabelNewS(div1, 0, "No libpng");
+		AG_LabelNewS(div1, 0, "PNG support disabled");
 #endif
 	
 		/*
