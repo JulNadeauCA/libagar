@@ -64,10 +64,8 @@ Vector extensions (such as SSE and AltiVec) are used by default, if
 a runtime cpuinfo check determines that they are available (the build
 remains compatible with non-vector platforms, at the cost of extra
 function calls).
-For best performance on vector-capable platforms, all
-.Nm
-operations may be expanded inline for the target platform (using the
-Agar build options "--with-sse-inline" and "--with-altivec-inline").
+For best performance, Agar should be compiled with "--with-sse=inline",
+or "--with-altivec=inline".
 .\" END DUP
 .Sh VECTORS IN R^N
 The following routines operate on dynamically-allocated vectors in R^n.

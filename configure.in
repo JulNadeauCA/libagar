@@ -34,10 +34,8 @@ REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
 
 REGISTER_SECTION("Options specific to MATH library:")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
-REGISTER("--with-altivec",		"AltiVec-optimized routines [check]")
-REGISTER("--with-altivec-inline",	"Inline Altivec-optimized routines [no]")
-REGISTER("--with-sse",			"SSE-optimized routines [check]")
-REGISTER("--with-sse-inline",		"Inline SSE-optimized routines [no]")
+REGISTER("--with-altivec[=inline]",	"AltiVec-optimized routines [check]")
+REGISTER("--with-sse[=inline]",		"SSE-optimized routines [check]")
 REGISTER("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
 
 REGISTER_SECTION("Options specific to AU library:")
@@ -615,7 +613,7 @@ fi
 if [ "${with_altivec}" != 'no' ]; then
 	CHECK(altivec)
 	if [ "${HAVE_ALTIVEC}" != 'yes' ]; then
-		if [ "${with_altivec}" = 'yes' ]; then
+		if [ "${with_altivec}" = 'yes' -o "${with_altivec}" = 'inline' ]; then
 			echo "*"
 			echo "* --with-altivec was requested, but "
 			echo "* AltiVec is not supported by compiler"
@@ -626,7 +624,7 @@ if [ "${with_altivec}" != 'no' ]; then
 			HUNDEF(INLINE_ALTIVEC)
 		fi
 	else
-		if [ "${with_altivec_inline}" = 'yes' ]; then
+		if [ "${with_altivec}" = 'inline' ]; then
 			HDEFINE(INLINE_ALTIVEC, "yes")
 		else
 			HUNDEF(INLINE_ALTIVEC)
@@ -640,13 +638,13 @@ fi
 #
 # Enable SSE optimizations if compiler supports intrinsics. Note that the
 # library performs a CPU check, so enabling SSE will not break the build
-# on non-SSE machines (unless --with-sse-inline is used, in which case
+# on non-SSE machines (unless --with-sse=inline is used, in which case
 # the resulting build will be SSE-dependent).
 #
 if [ "${with_sse}" != 'no' ]; then
 	CHECK(sse)
 	if [ "${HAVE_SSE}" != 'yes' ]; then
-		if [ "${with_sse}" = 'yes' ]; then
+		if [ "${with_sse}" = 'yes' -o "${with_sse}" = 'inline' ]; then
 			echo "*"
 			echo "* --with-sse was requested, but SSE "
 			echo "* intrinsics not supported by compiler"
@@ -655,7 +653,7 @@ if [ "${with_sse}" != 'no' ]; then
 		fi
 		DISABLE(sse)
 	else
-		if [ "${with_sse_inline}" = 'yes' ]; then
+		if [ "${with_sse}" = 'inline' ]; then
 			HDEFINE(INLINE_SSE, "yes")
 		else
 			HUNDEF(INLINE_SSE)

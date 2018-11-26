@@ -458,10 +458,8 @@ echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo ''
 echo 'Options specific to MATH library:'
 echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
-echo '    --with-altivec              AltiVec-optimized routines [check]'
-echo '    --with-altivec-inline       Inline Altivec-optimized routines [no]'
-echo '    --with-sse                  SSE-optimized routines [check]'
-echo '    --with-sse-inline           Inline SSE-optimized routines [no]'
+echo '    --with-altivec[=inline]     AltiVec-optimized routines [check]'
+echo '    --with-sse[=inline]         SSE-optimized routines [check]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
 echo 'Options specific to AU library:'
@@ -949,64 +947,88 @@ echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
 echo ""
 $ECHO_N 'checking for a C compiler...'
 $ECHO_N 'checking for a C compiler...' >> config.log
+# BEGIN cc
 if [ "$CROSS_COMPILING" = "yes" ]; then
-	CROSSPFX="${host}-"
+CROSSPFX="${host}-"
 else
-	CROSSPFX=''
-fi
+CROSSPFX=""
+fi;
 HAVE_CC65="no"
-if [ "$CC" = '' ]; then
-	case "${host}" in
-	apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
-		bb_save_IFS=$IFS
-		IFS=$PATH_SEPARATOR
-		for i in $PATH; do
-			if [ -x "${i}/cc65" ]; then
-				if ${i}/cc65 -V | grep ^cc65; then
-					CC="${i}/cc65"
-					HAVE_CC65="yes"
-					CROSS_COMPILING="yes"
-					break
-				fi
-			elif [ -x "${i}/cc65.exe" ]; then
-				if ${i}/cc65.exe -V | grep ^cc65; then
-					CC="${i}/cc65"
-					HAVE_CC65="yes"
-					CROSS_COMPILING="yes"
-					break
-				fi
-			fi
-		done
-		IFS=$bb_save_IFS
-		;;
-	*)
-		bb_save_IFS=$IFS
-		IFS=$PATH_SEPARATOR
-		for i in $PATH; do
-			if [ -x "${i}/${CROSSPFX}cc" ]; then
-				CC="${i}/${CROSSPFX}cc"
-				break
-			elif [ -x "${i}/${CROSSPFX}clang" ]; then
-				CC="${i}/${CROSSPFX}clang"
-				break
-			elif [ -x "${i}/${CROSSPFX}gcc" ]; then
-				CC="${i}/${CROSSPFX}gcc"
-				break
-			elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
-				CC="${i}/${CROSSPFX}cc.exe"
-				break
-			elif [ -e "${i}/${CROSSPFX}clang.exe" ]; then
-				CC="${i}/${CROSSPFX}clang.exe"
-				break
-			elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
-				CC="${i}/${CROSSPFX}gcc.exe"
-				break
-			fi
-		done
-		IFS=$bb_save_IFS
-		;;
-	esac
-
+if [ "$CC" = "" ]; then
+case "${host}" in
+apple2 | apple2enh | atari | atmos | c16 | c64 | c128 | cbm510 | cbm610 | geos | lunix | lynx | nes | pet | plus4 | supervision | vic20)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/cc65" ]; then
+if ${i}/cc65 -V |grep ^cc65; then
+CC="${i}/cc65"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi;
+elif [ -x "${i}/cc65.exe" ]; then
+if ${i}/cc65.exe -V |grep ^cc65; then
+CC="${i}/cc65.exe"
+HAVE_CC65="yes"
+CROSS_COMPILING="yes"
+break
+fi;
+fi;
+done
+IFS=$bb_save_IFS
+;;
+*)
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang" ]; then
+CC="${i}/${CROSSPFX}clang"
+break
+elif [ -x "${i}/${CROSSPFX}clang70" ]; then
+CC="${i}/${CROSSPFX}clang70"
+break
+elif [ -x "${i}/${CROSSPFX}clang60" ]; then
+CC="${i}/${CROSSPFX}clang60"
+break
+elif [ -x "${i}/${CROSSPFX}cc" ]; then
+CC="${i}/${CROSSPFX}cc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+CC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+CC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+CC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+CC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+CC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+CC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+CC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+CC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+CC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+CC="${i}/${CROSSPFX}gcc.exe"
+break
+fi;
+done
+IFS=$bb_save_IFS
+;;
+esac
 	if [ "$CC" = '' ]; then
 		if [ "$HAVE_CC65" = "yes" ]; then
 			echo "*"
@@ -1016,10 +1038,13 @@ if [ "$CC" = '' ]; then
 			echo "Cannot find cc65 in PATH." >> config.log
 		else
 			echo "*"
-			echo "* Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH."
+echo "* Cannot find one of clang, clang70, clang60, cc, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+			echo "* under the current PATH, which is:"
+			echo "* $PATH"
+			echo "*"
 			echo "* You may need to set the CC environment variable."
 			echo "*"
-			echo "Cannot find ${CROSSPFX}cc or ${CROSSPFX}gcc in PATH." >> config.log
+			echo "Cannot find C compiler in PATH." >> config.log
 		fi
 		HAVE_CC="no"
 		echo "no"
@@ -1484,6 +1509,7 @@ echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
 echo '#undef HAVE_LD_STATIC_LIBGCC' >$BLD/include/agar/config/have_ld_static_libgcc.h
 echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi;
+# END cc
 if [ "${HAVE_CC}" != "yes" ]; then
 echo '* '
 echo '* ' >> config.log
@@ -1522,6 +1548,7 @@ echo 'hdefs["_MK_BIG_ENDIAN"] = nil' >>configure.lua
 *-darwin*)
 $ECHO_N 'checking for Objective-C compiler...'
 $ECHO_N 'checking for Objective-C compiler...' >> config.log
+# BEGIN objc
 if [ "$CROSS_COMPILING" = "yes" ]; then
 	CROSSPFX="${host}-"
 else
@@ -1681,6 +1708,7 @@ echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
 echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
 echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
 fi;
+# END objc
 	;;
 *)
 echo 'not enabling Objective-C compiler'
@@ -1717,6 +1745,7 @@ echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 	else
 $ECHO_N 'checking for byte order...'
 $ECHO_N 'checking for byte order...' >> config.log
+# BEGIN byte_order
 if [ "${byte_order}" != "" ]; then
 if [ "${byte_order}" = "LE" ]; then
 _MK_BYTE_ORDER="LE"
@@ -1805,6 +1834,7 @@ echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 echo '#undef _MK_LITTLE_ENDIAN' >$BLD/include/agar/config/_mk_little_endian.h
 echo 'hdefs["_MK_LITTLE_ENDIAN"] = nil' >>configure.lua
 fi;
+# END byte_order
 	fi
 	;;
 esac
@@ -1818,6 +1848,7 @@ if [ "${with_attributes}" != "no" ]
  then
 $ECHO_N 'checking for C compiler attributes...'
 $ECHO_N 'checking for C compiler attributes...' >> config.log
+# BEGIN cc_attributes
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 int main(int argc, char *argv[])
@@ -2252,6 +2283,7 @@ else
 echo '!warn_unused_result '
 echo '!warn_unused_result ' >> config.log
 fi;
+# END cc_attributes
 else
 echo 'not enabling C compiler attributes'
 echo 'not enabling C compiler attributes' >> config.log
@@ -2291,6 +2323,7 @@ echo 'hdefs["AG_USE_ATTRIBUTES"] = nil' >>configure.lua
 fi
 $ECHO_N 'checking for <sys/types.h>...'
 $ECHO_N 'checking for <sys/types.h>...' >> config.log
+# BEGIN sys_types
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -2559,8 +2592,10 @@ echo '#undef HAVE_64BIT' >$BLD/include/agar/config/have_64bit.h
 echo 'hdefs["HAVE_64BIT"] = nil' >>configure.lua
 fi;
 fi;
+# END sys_types
 $ECHO_N 'checking for <sys/stat.h>...'
 $ECHO_N 'checking for <sys/stat.h>...' >> config.log
+# BEGIN sys_stat
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -2597,8 +2632,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END sys_stat
 $ECHO_N 'checking for <stdlib.h>...'
 $ECHO_N 'checking for <stdlib.h>...' >> config.log
+# BEGIN stdlib_h
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdlib.h>
@@ -2633,8 +2670,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END stdlib_h
 $ECHO_N 'checking for <unistd.h>...'
 $ECHO_N 'checking for <unistd.h>...' >> config.log
+# BEGIN unistd_h
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -2674,8 +2713,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END unistd_h
 $ECHO_N 'checking for compatible <limits.h>...'
 $ECHO_N 'checking for compatible <limits.h>...' >> config.log
+# BEGIN limits_h
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <limits.h>
@@ -2717,8 +2758,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END limits_h
 $ECHO_N 'checking for compatible <float.h>...'
 $ECHO_N 'checking for compatible <float.h>...' >> config.log
+# BEGIN float_h
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <float.h>
@@ -2757,8 +2800,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END float_h
 $ECHO_N 'checking for the C math library...'
 $ECHO_N 'checking for the C math library...' >> config.log
+# BEGIN math
 if [ "" != "" ]; then
 MATH_CFLAGS="-I"
 MATH_LIBS="-L -lm"
@@ -2820,8 +2865,10 @@ echo '#undef MATH_LIBS' >$BLD/include/agar/config/math_libs.h
 echo 'hdefs["MATH_LIBS"] = nil' >>configure.lua
 MATH_LIBS=""
 fi;
+# END math
 $ECHO_N 'checking for the C math library (C99)...'
 $ECHO_N 'checking for the C math library (C99)...' >> config.log
+# BEGIN math_c99
 if [ "" != "" ]; then
 MATH_C99_CFLAGS="-I"
 MATH_C99_LIBS="-L -lm"
@@ -2897,8 +2944,10 @@ echo '#undef MATH_C99_LIBS' >$BLD/include/agar/config/math_c99_libs.h
 echo 'hdefs["MATH_C99_LIBS"] = nil' >>configure.lua
 MATH_C99_LIBS=""
 fi;
+# END math_c99
 $ECHO_N 'checking for a fdclose() function...'
 $ECHO_N 'checking for a fdclose() function...' >> config.log
+# BEGIN fdclose
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -2935,8 +2984,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END fdclose
 $ECHO_N 'checking for a getpwuid() function...'
 $ECHO_N 'checking for a getpwuid() function...' >> config.log
+# BEGIN getpwuid
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -2978,8 +3029,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getpwuid
 $ECHO_N 'checking for the getpwnam_r() interface...'
 $ECHO_N 'checking for the getpwnam_r() interface...' >> config.log
+# BEGIN getpwnam_r
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -3033,8 +3086,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getpwnam_r
 $ECHO_N 'checking for a getenv() function...'
 $ECHO_N 'checking for a getenv() function...' >> config.log
+# BEGIN getenv
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdlib.h>
@@ -3070,8 +3125,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getenv
 $ECHO_N 'checking for a getuid() function...'
 $ECHO_N 'checking for a getuid() function...' >> config.log
+# BEGIN getuid
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -3109,8 +3166,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getuid
 $ECHO_N 'checking for a strsep() function...'
 $ECHO_N 'checking for a strsep() function...' >> config.log
+# BEGIN strsep
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -3150,8 +3209,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END strsep
 $ECHO_N 'checking for asprintf()...'
 $ECHO_N 'checking for asprintf()...' >> config.log
+# BEGIN asprintf
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -3191,8 +3252,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END asprintf
 $ECHO_N 'checking for the snprintf() function...'
 $ECHO_N 'checking for the snprintf() function...' >> config.log
+# BEGIN snprintf
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -3230,8 +3293,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END snprintf
 $ECHO_N 'checking for the vsnprintf() function...'
 $ECHO_N 'checking for the vsnprintf() function...' >> config.log
+# BEGIN vsnprintf
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -3278,8 +3343,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END vsnprintf
 $ECHO_N 'checking for a vasprintf() function...'
 $ECHO_N 'checking for a vasprintf() function...' >> config.log
+# BEGIN vasprintf
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdio.h>
@@ -3329,8 +3396,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END vasprintf
 $ECHO_N 'checking for ANSI-style signal() facilities...'
 $ECHO_N 'checking for ANSI-style signal() facilities...' >> config.log
+# BEGIN signal
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <signal.h>
@@ -3373,8 +3442,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END signal
 $ECHO_N 'checking for setjmp() and longjmp()...'
 $ECHO_N 'checking for setjmp() and longjmp()...' >> config.log
+# BEGIN setjmp
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <setjmp.h>
@@ -3414,8 +3485,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END setjmp
 $ECHO_N 'checking for a strtoll() function...'
 $ECHO_N 'checking for a strtoll() function...' >> config.log
+# BEGIN strtoll
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <stdlib.h>
@@ -3456,8 +3529,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END strtoll
 $ECHO_N 'checking for a strtold() function...'
 $ECHO_N 'checking for a strtold() function...' >> config.log
+# BEGIN strtold
 if [ "${HAVE_LONG_DOUBLE}" = "yes" ]; then
 if [ "${HAVE_CYGWIN}" = "no" ]; then
 MK_COMPILE_STATUS='OK'
@@ -3516,8 +3591,10 @@ echo 'hdefs["_MK_HAVE_STRTOLD"] = nil' >>configure.lua
 echo 'skipping (no long double)'
 echo 'skipping (no long double)' >> config.log
 fi;
+# END strtold
 $ECHO_N 'checking for dlopen() interface...'
 $ECHO_N 'checking for dlopen() interface...' >> config.log
+# BEGIN dlopen
 DSO_CFLAGS=""
 DSO_LIBS=""
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
@@ -3651,8 +3728,10 @@ fi;
 fi;
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
+# END dlopen
 $ECHO_N 'checking for dyld interface...'
 $ECHO_N 'checking for dyld interface...' >> config.log
+# BEGIN dyld
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
 TEST_HEADERS="Yes"
 echo > conftest$$.c
@@ -3780,8 +3859,10 @@ echo 'hdefs["HAVE_DYLD_RETURN_ON_ERROR"] = nil' >>configure.lua
 fi;
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
+# END dyld
 $ECHO_N 'checking for shl_load() interface...'
 $ECHO_N 'checking for shl_load() interface...' >> config.log
+# BEGIN shl_load
 TEST_CFLAGS_ORIG="${TEST_CFLAGS}"
 TEST_HEADERS="Yes"
 echo > conftest$$.c
@@ -3875,8 +3956,10 @@ echo 'hdefs["HAVE_SHL_LOAD"] = nil' >>configure.lua
 fi;
 TEST_CFLAGS="${TEST_CFLAGS_ORIG}"
 TEST_HEADERS=""
+# END shl_load
 $ECHO_N 'checking for the gettimeofday() function...'
 $ECHO_N 'checking for the gettimeofday() function...' >> config.log
+# BEGIN gettimeofday
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/time.h>
@@ -3915,8 +3998,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END gettimeofday
 $ECHO_N 'checking for the select() interface...'
 $ECHO_N 'checking for the select() interface...' >> config.log
+# BEGIN select
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -3962,8 +4047,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END select
 $ECHO_N 'checking for the glob() function...'
 $ECHO_N 'checking for the glob() function...' >> config.log
+# BEGIN glob
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -4007,8 +4094,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END glob
 $ECHO_N 'checking for the getopt() function...'
 $ECHO_N 'checking for the getopt() function...' >> config.log
+# BEGIN getopt
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -4054,8 +4143,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getopt
 $ECHO_N 'checking for the execvp() function...'
 $ECHO_N 'checking for the execvp() function...' >> config.log
+# BEGIN execvp
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <unistd.h>
@@ -4098,8 +4189,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END execvp
 $ECHO_N 'checking for clock_gettime() interface (w/o -lrt)...'
 $ECHO_N 'checking for clock_gettime() interface (w/o -lrt)...' >> config.log
+# BEGIN clock_gettime
 CLOCK_CFLAGS=""
 CLOCK_LIBS=""
 MK_COMPILE_STATUS='OK'
@@ -4209,8 +4302,10 @@ echo '#undef HAVE_CLOCK_GETTIME' >$BLD/include/agar/config/have_clock_gettime.h
 echo 'hdefs["HAVE_CLOCK_GETTIME"] = nil' >>configure.lua
 fi;
 fi;
+# END clock_gettime
 $ECHO_N 'checking for winmm time interface...'
 $ECHO_N 'checking for winmm time interface...' >> config.log
+# BEGIN clock_win32
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #ifdef _XBOX
@@ -4276,8 +4371,10 @@ else
 echo '#undef HAVE_CLOCK_WIN32' >$BLD/include/agar/config/have_clock_win32.h
 echo 'hdefs["HAVE_CLOCK_WIN32"] = nil' >>configure.lua
 fi;
+# END clock_win32
 $ECHO_N 'checking for the nanosleep() function...'
 $ECHO_N 'checking for the nanosleep() function...' >> config.log
+# BEGIN nanosleep
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <time.h>
@@ -4319,8 +4416,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END nanosleep
 $ECHO_N 'checking for the kqueue() mechanism...'
 $ECHO_N 'checking for the kqueue() mechanism...' >> config.log
+# BEGIN kqueue
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -4372,8 +4471,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END kqueue
 $ECHO_N 'checking for the Linux timerfd interface...'
 $ECHO_N 'checking for the Linux timerfd interface...' >> config.log
+# BEGIN timerfd
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/timerfd.h>
@@ -4419,8 +4520,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END timerfd
 $ECHO_N 'checking for the Windows CSIDL system...'
 $ECHO_N 'checking for the Windows CSIDL system...' >> config.log
+# BEGIN csidl
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <shlobj.h>
@@ -4462,8 +4565,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END csidl
 $ECHO_N 'checking for the Xbox XDK...'
 $ECHO_N 'checking for the Xbox XDK...' >> config.log
+# BEGIN xbox
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <xtl.h>
@@ -4501,6 +4606,7 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END xbox
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
@@ -4592,6 +4698,7 @@ SUBDIR_gui="gui"
  then
 $ECHO_N 'checking for SDL...'
 $ECHO_N 'checking for SDL...' >> config.log
+# BEGIN sdl(1.2.0 ${prefix_sdl})
 if [ "${prefix_sdl}" != "" ]; then
 MK_EXEC_FOUND='No'
 
@@ -5264,6 +5371,7 @@ SDL_PC="sdl"
 else
 SDL_PC=""
 fi;
+# END sdl
 		if [ "${HAVE_SDL}" != 'yes' ]
  then
 			if [ "${with_sdl}" = 'yes' ]
@@ -5299,6 +5407,7 @@ echo 'hdefs["SDL_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for OpenGL...'
 $ECHO_N 'checking for OpenGL...' >> config.log
+# BEGIN opengl(0 ${prefix_gl})
 GL_CFLAGS=""
 GL_LIBS=""
 GL_FOUND=""
@@ -5577,6 +5686,7 @@ OPENGL_PC="gl"
 else
 OPENGL_PC=""
 fi;
+# END opengl
 		if [ "${HAVE_OPENGL}" = 'yes' ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
@@ -5619,6 +5729,7 @@ echo 'hdefs["OPENGL_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for the X window system...'
 $ECHO_N 'checking for the X window system...' >> config.log
+# BEGIN x11(0 ${prefix_x})
 if [ "${PKGCONFIG}" != '' -a "`${PKGCONFIG} --variable=prefix x11 2>/dev/null`" != '' ]; then
 if [ "${prefix_x}" != '' ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix x11 2>/dev/null`
@@ -6003,6 +6114,7 @@ echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
 echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
+# END x11
 		if [ "${HAVE_X11}" != 'yes' ]
  then
 			if [ "${with_x}" = 'yes' ]
@@ -6032,6 +6144,7 @@ echo 'hdefs["X11_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for the Xinerama extension...'
 $ECHO_N 'checking for the Xinerama extension...' >> config.log
+# BEGIN xinerama(0 ${prefix_xinerama})
 if [ "${PKGCONFIG}" != '' -a "`${PKGCONFIG} --variable=prefix xinerama 2>/dev/null`" != '' ]; then
 if [ "${prefix_xinerama}" != '' ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix xinerama 2>/dev/null`
@@ -6203,6 +6316,7 @@ XINERAMA_PC="xinerama"
 else
 XINERAMA_PC=""
 fi;
+# END xinerama
 			if [ "${HAVE_XINERAMA}" != 'yes' ]
  then
 				if [ "${with_xinerama}" = 'yes' ]
@@ -6269,6 +6383,7 @@ echo 'hdefs["XINERAMA_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for the Cocoa framework...'
 $ECHO_N 'checking for the Cocoa framework...' >> config.log
+# BEGIN cocoa(0)
 COCOA_CFLAGS="-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -force_cpusubtype_ALL -fpascal-strings"
 COCOA_LIBS="-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,IOKit"
 MK_COMPILE_STATUS='OK'
@@ -6319,6 +6434,7 @@ echo '#undef COCOA_LIBS' >$BLD/include/agar/config/cocoa_libs.h
 echo 'hdefs["COCOA_LIBS"] = nil' >>configure.lua
 COCOA_LIBS=""
 fi;
+# END cocoa
 		if [ "${HAVE_COCOA}" != 'yes' ]
  then
 			if [ "${with_cocoa}" = 'yes' ]
@@ -6360,6 +6476,7 @@ echo 'hdefs["COCOA_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for the GLX interface...'
 $ECHO_N 'checking for the GLX interface...' >> config.log
+# BEGIN glx(1.4 ${prefix_glx})
 GLX_CFLAGS="${OPENGL_CFLAGS} ${X11_CFLAGS}"
 GLX_LIBS="${OPENGL_LIBS} ${X11_LIBS}"
 MK_COMPILE_STATUS='OK'
@@ -6430,6 +6547,7 @@ echo '#undef GLX_LIBS' >$BLD/include/agar/config/glx_libs.h
 echo 'hdefs["GLX_LIBS"] = nil' >>configure.lua
 GLX_LIBS=""
 fi;
+# END glx
 			if [ "${HAVE_GLX}" != 'yes' ]
  then
 				if [ "${with_glx}" = 'yes' ]
@@ -6460,6 +6578,7 @@ echo 'hdefs["HAVE_GLX"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for the WGL interface...'
 $ECHO_N 'checking for the WGL interface...' >> config.log
+# BEGIN wgl(0)
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <windows.h>
@@ -6512,6 +6631,7 @@ echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> $BLD/include/agar/config/opengl_l
 echo '#endif' >> $BLD/include/agar/config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 fi;
+# END wgl
 			if [ "${HAVE_WGL}" != 'yes' ]
  then
 				if [ "${with_wgl}" = 'yes' ]
@@ -6550,6 +6670,7 @@ echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for FreeType...'
 $ECHO_N 'checking for FreeType...' >> config.log
+# BEGIN freetype(7.0.1 ${prefix_freetype})
 if [ "${PKGCONFIG}" != '' -a "`${PKGCONFIG} --variable=prefix freetype2 2>/dev/null`" != '' ]; then
 if [ "${prefix_freetype}" != '' ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix freetype2 2>/dev/null`
@@ -6823,6 +6944,7 @@ FREETYPE_PC="freetype2"
 else
 FREETYPE_PC=""
 fi;
+# END freetype
 		if [ "${HAVE_FREETYPE}" != 'yes' ]
  then
 			echo "*"
@@ -6855,6 +6977,7 @@ echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for fontconfig...'
 $ECHO_N 'checking for fontconfig...' >> config.log
+# BEGIN fontconfig(2.6.0 ${prefix_fontconfig})
 if [ "${prefix_fontconfig}" != '' ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix fontconfig 2>/dev/null`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_fontconfig}" ]; then
@@ -7045,6 +7168,7 @@ echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
 echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
+# END fontconfig
 	else
 echo 'not enabling fontconfig'
 echo 'not enabling fontconfig' >> config.log
@@ -7062,6 +7186,7 @@ echo 'hdefs["FONTCONFIG_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for libjpeg...'
 $ECHO_N 'checking for libjpeg...' >> config.log
+# BEGIN jpeg(0 ${prefix_jpeg})
 JPEG_CFLAGS=""
 if [ "${prefix_jpeg}" != "" ]; then
 if [ -e  "${prefix_jpeg}/include/jpeglib.h" ]; then
@@ -7188,6 +7313,7 @@ JPEG_PC="libjpeg"
 else
 JPEG_PC=""
 fi;
+# END jpeg
 		if [ "${HAVE_JPEG}" != 'yes' ]
  then
 			if [ "${with_jpeg}" = 'yes' ]
@@ -7228,6 +7354,7 @@ echo 'hdefs["JPEG_LIBS"] = nil' >>configure.lua
  then
 $ECHO_N 'checking for libpng...'
 $ECHO_N 'checking for libpng...' >> config.log
+# BEGIN png(1.2.49 ${prefix_png})
 MK_EXEC_FOUND='No'
 
 if [ "${prefix_png}" != '' ]; then
@@ -7498,6 +7625,7 @@ PNG_PC="libpng"
 else
 PNG_PC=""
 fi;
+# END png
 		if [ "${HAVE_PNG}" != 'yes' ]
  then
 			if [ "${with_png}" = 'yes' ]
@@ -7663,6 +7791,7 @@ if [ "${enable_network}" != 'no' ]
  then
 $ECHO_N 'checking for getaddrinfo()...'
 $ECHO_N 'checking for getaddrinfo()...' >> config.log
+# BEGIN getaddrinfo
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <string.h>
@@ -7711,8 +7840,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END getaddrinfo
 $ECHO_N 'checking for the SIOCGIFCONF interface...'
 $ECHO_N 'checking for the SIOCGIFCONF interface...' >> config.log
+# BEGIN siocgifconf
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -7777,8 +7908,10 @@ fi;
 if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
+# END siocgifconf
 $ECHO_N 'checking for the setsockopt() interface...'
 $ECHO_N 'checking for the setsockopt() interface...' >> config.log
+# BEGIN sockopts
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
 #include <sys/types.h>
@@ -8087,8 +8220,10 @@ echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
 echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
+# END sockopts
 $ECHO_N 'checking for the WinSock interface...'
 $ECHO_N 'checking for the WinSock interface...' >> config.log
+# BEGIN winsock
 echo 'not checking'
 echo 'not checking' >> config.log
 HAVE_WINSOCK1="no"
@@ -8097,6 +8232,7 @@ echo '#undef HAVE_WINSOCK1' >$BLD/include/agar/config/have_winsock1.h
 echo 'hdefs["HAVE_WINSOCK1"] = nil' >>configure.lua
 echo '#undef HAVE_WINSOCK2' >$BLD/include/agar/config/have_winsock2.h
 echo 'hdefs["HAVE_WINSOCK2"] = nil' >>configure.lua
+# END winsock
 HAVE_NETWORK="yes"
 AG_NETWORK="yes"
 echo '#ifndef AG_NETWORK' > $BLD/include/agar/config/ag_network.h
@@ -8153,6 +8289,7 @@ if [ "${enable_web}" = 'yes' ]
  then
 $ECHO_N 'checking for zlib...'
 $ECHO_N 'checking for zlib...' >> config.log
+# BEGIN zlib(0 ${prefix_z})
 ZLIB_CFLAGS=""
 ZLIB_LIBS=""
 if [ "${prefix_z}" != "" ]; then
@@ -8245,6 +8382,7 @@ echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 echo 'no'
 echo 'no' >> config.log
 fi;
+# END zlib
 $ECHO_N 'checking for <sys/uio.h> (HAVE_SYS_UIO_H)...'
 $ECHO_N 'checking for <sys/uio.h> (HAVE_SYS_UIO_H)...' >> config.log
 MK_COMPILE_STATUS='OK'
@@ -8339,6 +8477,7 @@ if [ "${with_db4}" = 'yes' ]
  then
 $ECHO_N 'checking for Berkeley DB 4.x...'
 $ECHO_N 'checking for Berkeley DB 4.x...' >> config.log
+# BEGIN db4(0 ${prefix_db4})
 DB4_CFLAGS=''
 DB4_LIBS=''
 DB4_VERSION=''
@@ -8543,6 +8682,7 @@ echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
 echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
+# END db4
 	if [ "${HAVE_DB4}" != 'yes' ]
  then
 		if [ "${with_db4}" = 'yes' ]
@@ -8574,6 +8714,7 @@ if [ "${with_mysql}" = 'yes' ]
  then
 $ECHO_N 'checking for MySQL...'
 $ECHO_N 'checking for MySQL...' >> config.log
+# BEGIN mysql(5.5.8 ${prefix_mysql})
 MK_EXEC_FOUND='No'
 MK_CACHED='No'
 MK_EXEC_UNIQUE='No'
@@ -8772,6 +8913,7 @@ echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
 echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
 fi;
+# END mysql
 	if [ "${HAVE_MYSQL}" != 'yes' ]
  then
 		if [ "${with_mysql}" = 'yes' ]
@@ -8811,6 +8953,7 @@ if [ "${enable_threads}" != 'no' ]
  then
 $ECHO_N 'checking for POSIX threads...'
 $ECHO_N 'checking for POSIX threads...' >> config.log
+# BEGIN pthreads(0 ${prefix_pthreads})
 if [ "${prefix_pthreads}" != "" ]; then
 PTHREADS_CFLAGS="-I${prefix_pthreads}/include"
 PTHREADS_LIBS="-L${prefix_pthreads}/lib -lpthread"
@@ -9356,6 +9499,7 @@ else
 echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$BLD/include/agar/config/have_pthread_mutex_recursive_np.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi;
+# END pthreads
 	if [ "${HAVE_PTHREADS}" = 'yes' ]
  then
 		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]
@@ -9434,6 +9578,7 @@ if [ "${enable_nls}" = 'yes' ]
  then
 $ECHO_N 'checking for iconv()...'
 $ECHO_N 'checking for iconv()...' >> config.log
+# BEGIN iconv(0 ${prefix_iconv})
 ICONV_CFLAGS=""
 ICONV_LIBS=""
 if [ "${prefix_iconv}" != "" ]; then
@@ -9526,8 +9671,10 @@ echo '#undef ICONV_LIBS' >$BLD/include/agar/config/iconv_libs.h
 echo 'hdefs["ICONV_LIBS"] = nil' >>configure.lua
 ICONV_LIBS=""
 fi;
+# END iconv
 $ECHO_N 'checking for a gettext library in libc...'
 $ECHO_N 'checking for a gettext library in libc...' >> config.log
+# BEGIN gettext(0 ${prefix_gettext})
 GETTEXT_CFLAGS=""
 GETTEXT_LIBS=""
 MK_COMPILE_STATUS='OK'
@@ -9745,6 +9892,7 @@ echo 'hdefs["GETTEXT_CFLAGS"] = nil' >>configure.lua
 echo '#undef GETTEXT_LIBS' >$BLD/include/agar/config/gettext_libs.h
 echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
 fi;
+# END gettext
 	if [ "${HAVE_GETTEXT}" != 'yes' ]
  then
 		echo "*"
@@ -9793,6 +9941,7 @@ if [ "${with_altivec}" != 'no' ]
  then
 $ECHO_N 'checking for AltiVec (with <altivec.h>)...'
 $ECHO_N 'checking for AltiVec (with <altivec.h>)...' >> config.log
+# BEGIN altivec
 case "$host" in
 powerpc-*-darwin*)
 	ALTIVEC_CFLAGS='-faltivec -maltivec'
@@ -9916,9 +10065,10 @@ fi;
 echo '#undef HAVE_ALTIVEC_H' >$BLD/include/agar/config/have_altivec_h.h
 echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
 fi;
+# END altivec
 	if [ "${HAVE_ALTIVEC}" != 'yes' ]
  then
-		if [ "${with_altivec}" = 'yes' ]
+		if [ "${with_altivec}" = 'yes' -o "${with_altivec}" = 'inline' ]
  then
 			echo "*"
 			echo "* --with-altivec was requested, but "
@@ -9941,7 +10091,7 @@ echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
 	else
-		if [ "${with_altivec_inline}" = 'yes' ]
+		if [ "${with_altivec}" = 'inline' ]
  then
 INLINE_ALTIVEC="yes"
 echo '#ifndef INLINE_ALTIVEC' > $BLD/include/agar/config/inline_altivec.h
@@ -9972,6 +10122,7 @@ if [ "${with_sse}" != 'no' ]
  then
 $ECHO_N 'checking for SSE extensions...'
 $ECHO_N 'checking for SSE extensions...' >> config.log
+# BEGIN sse
 SSE_CFLAGS="-msse"
 MK_COMPILE_STATUS='OK'
 MK_RUN_STATUS='OK'
@@ -10189,9 +10340,10 @@ echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 SSE3_CFLAGS=""
 fi;
+# END sse
 	if [ "${HAVE_SSE}" != 'yes' ]
  then
-		if [ "${with_sse}" = 'yes' ]
+		if [ "${with_sse}" = 'yes' -o "${with_sse}" = 'inline' ]
  then
 			echo "*"
 			echo "* --with-sse was requested, but SSE "
@@ -10223,7 +10375,7 @@ echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
 echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 	else
-		if [ "${with_sse_inline}" = 'yes' ]
+		if [ "${with_sse}" = 'inline' ]
  then
 INLINE_SSE="yes"
 echo '#ifndef INLINE_SSE' > $BLD/include/agar/config/inline_sse.h
@@ -10357,6 +10509,7 @@ if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]
  then
 $ECHO_N 'checking for libsndfile...'
 $ECHO_N 'checking for libsndfile...' >> config.log
+# BEGIN sndfile(1.0.21 ${prefix_sndfile})
 if [ "${prefix_sndfile}" != '' ]; then
 	MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix sndfile 2>/dev/null`
 	if [ "$MK_EXEC_PKGPREFIX" != "${prefix_sndfile}" ]; then
@@ -10529,6 +10682,7 @@ SNDFILE_PC="sndfile"
 else
 SNDFILE_PC=""
 fi;
+# END sndfile
 	if [ "${HAVE_SNDFILE}" = 'yes' ]
  then
 ENABLE_AU="yes"
@@ -10539,6 +10693,7 @@ echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
 SUBDIR_au="au"
 $ECHO_N 'checking for PortAudio2...'
 $ECHO_N 'checking for PortAudio2...' >> config.log
+# BEGIN portaudio(19.0 ${prefix_portaudio})
 PORTAUDIO_VERSION=""
 if [ "${PKGCONFIG}" != '' -a "`${PKGCONFIG} --variable=prefix portaudio-2.0 2>/dev/null`" != '' ]; then
 if [ "${prefix_portaudio}" != '' ]; then
@@ -10770,6 +10925,7 @@ PORTAUDIO_PC="portaudio-2.0"
 else
 PORTAUDIO_PC=""
 fi;
+# END portaudio
 	else
 		if [ "${enable_au}" = 'yes' -o "${enable_audio}" = 'yes' ]
  then

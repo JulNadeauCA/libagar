@@ -46,7 +46,7 @@ M_MatrixInitEngine(void)
 # ifdef INLINE_SSE
 	else {
 		AG_FatalError("Compiled for SSE, but no SSE support in CPU! "
-		              "(recompile Agar without: --with-sse-inline)");
+		              "(must recompile Agar without: --with-sse=inline)");
 	}
 # endif
 # ifdef HAVE_SSE2

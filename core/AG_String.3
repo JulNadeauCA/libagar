@@ -424,19 +424,19 @@ buffer.
 .Ft "int"
 .Fn AG_ExportUnicode "const char *encoding" "char *dst" "const Uint32 *src" "AG_Size dstSize"
 .Pp
-.Ft "int"
-.Fn AG_LengthUTF8 "const char *s" "AG_Size *rv"
+.Ft "inline AG_Size"
+.Fn AG_LengthUTF8 "const char *s"
 .Pp
-.Ft "int"
+.Ft "inline int"
 .Fn AG_CharLengthUTF8 "unsigned char byte"
 .Pp
-.Ft "AG_Size"
+.Ft "inline AG_Size"
 .Fn AG_LengthUCS4 "const Uint32 *ucs"
 .Pp
-.Ft "int"
+.Ft "inline int"
 .Fn AG_LengthUTF8FromUCS4 "const Uint32 *ucs" "AG_Size *rv"
 .Pp
-.Ft "AG_Size"
+.Ft "inline AG_Size"
 .Fn AG_CharLengthUTF8FromUCS4 "Uint32 ch"
 .Pp
 .nr nS 0
@@ -474,45 +474,39 @@ which should be of the specified size
 in bytes.
 The written string is always NUL-terminated.
 .Pp
-The
 .Fn AG_LengthUTF8
-function counts the number of characters in the given UTF-8 string.
-On success, the function returns 0 the character count is written to
+counts the number of characters in the given UTF-8 string.
+On success, it returns 0 the character count is written to
 .Fa rv .
 If the string is not a valid UTF-8 string, the function returns -1.
 .Pp
 .Fn AG_CharLengthUTF8
 evaluates whether the given byte is the start of an UTF-8 character
-sequence.
-Returns the sequence length in bytes (or 1 if there is none).
+sequence and returns the sequence length in bytes (or 1 if there is none).
 .Pp
-The
 .Fn AG_LengthUCS4
-function returns the number of characters in the given UCS-4 text buffer
-(similarly to
+returns the number of characters in the given UCS-4 text buffer (analogous to
 .Xr strlen 3 ) .
-The terminating NUL is not included in the count.
+The terminating NUL is not included in the returned count.
 .Pp
-The
 .Fn AG_LengthUTF8FromUCS4
-function returns the number of bytes that would be needed to encode
-the given UCS-4 string in UTF-8 encoding.
-On success, the function returns 0 and writes the count to
+returns the number of bytes that would be needed to encode the given
+UCS-4 string in UTF-8 encoding.
+On success, it returns 0 and writes the count to
 .Fa rv .
 If
 .Fa ucs
-contains an invalid Unicode character, the function fails and returns -1.
+contains an invalid Unicode character, it fails and returns -1.
 .Pp
-The
 .Fn AG_CharLengthUTF8FromUCS4
-function returns the number of bytes that would be needed to encode the
-given UCS-4 character as an UTF-8 character sequence.
+returns the number of bytes that would be needed to encode the given
+UCS-4 character as an UTF-8 character sequence.
 .Sh STRING OPERATIONS
 .nr nS 1
-.Ft "int"
+.Ft "inline int"
 .Fn AG_Strcasecmp "const char *s1" "const char *s2"
 .Pp
-.Ft "int"
+.Ft "inline int"
 .Fn AG_Strncasecmp "const char *s1" "const char *s2" "AG_Size n"
 .Pp
 .Ft "const char *"
