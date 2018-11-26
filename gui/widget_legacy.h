@@ -76,7 +76,7 @@
 __BEGIN_DECLS
 AG_Variable *_Nullable AG_WidgetBind(void *_Nonnull, const char *_Nonnull, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;
-AG_Variable *_Nullable AG_WidgetBindMp(void *_Nonnull, const char *_Nonnull, _Nonnull AG_Mutex *_Nonnull, AG_VariableType, ...)
+AG_Variable *_Nullable AG_WidgetBindMp(void *_Nonnull, const char *_Nonnull, _Nonnull_Mutex AG_Mutex *_Nonnull, AG_VariableType, ...)
     DEPRECATED_ATTRIBUTE;
 int AG_WidgetCopyBinding(void *_Nonnull, const char *_Nonnull, AG_Variable *_Nonnull)
     DEPRECATED_ATTRIBUTE;

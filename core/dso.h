@@ -28,7 +28,7 @@ AG_TAILQ_HEAD(ag_dsoq, ag_dso);
 
 __BEGIN_DECLS
 extern struct ag_dsoq agLoadedDSOs;
-extern _Nonnull AG_Mutex agDSOLock;
+extern _Nonnull_Mutex AG_Mutex agDSOLock;
 
 AG_DSO *_Nullable AG_LookupDSO(const char *_Nonnull)
                               _Pure_Attribute_If_Unthreaded;

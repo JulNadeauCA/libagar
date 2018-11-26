@@ -142,8 +142,8 @@ extern int agTextFontLineSkip;
 extern int agFreetypeInited;
 extern int agRTL;
 
-extern AG_TextState *_Nonnull agTextState;
-extern _Nonnull AG_Mutex      agTextLock;
+extern AG_TextState *_Nonnull  agTextState;
+extern _Nonnull_Mutex AG_Mutex agTextLock;
 
 extern AG_StaticFont *_Nonnull agBuiltinFonts[];
 extern const int               agBuiltinFontCount;

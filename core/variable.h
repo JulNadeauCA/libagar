@@ -173,9 +173,9 @@ union ag_variable_data {
 };
 
 typedef struct ag_variable {
-	char name[AG_VARIABLE_NAME_MAX];/* Variable name */
-	AG_VariableType type;	 	/* Variable type */
-	_Nullable AG_Mutex *_Nullable mutex; /* Lock protecting the data */
+	char name[AG_VARIABLE_NAME_MAX];		/* Variable name */
+	AG_VariableType type;	 			/* Variable type */
+	_Nullable_Mutex AG_Mutex *_Nullable mutex; 	/* Lock on data */
 	union {
 		Uint32 bitmask;		 /* Bitmask (for P_FLAG_*) */
 		AG_Size size;		 /* Length / Buffer size (for STRING_*) */
@@ -220,7 +220,8 @@ AG_Variable *_Nonnull AG_BindUintFn(void *_Nonnull, const char *_Nonnull,
                                     _Nonnull AG_UintFn,
 				    const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindUintMp(void *_Nonnull, const char *_Nonnull,
-				    Uint *_Nonnull, _Nonnull AG_Mutex *_Nonnull);
+				    Uint *_Nonnull,
+				    _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* int */
 int                   AG_GetInt(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetInt(void *_Nonnull, const char *_Nonnull, int);
@@ -232,7 +233,7 @@ AG_Variable *_Nonnull AG_BindIntFn(void *_Nonnull, const char *_Nonnull,
 				   const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindIntMp(void *_Nonnull, const char *_Nonnull,
                                    int *_Nonnull,
-				   _Nonnull AG_Mutex *_Nonnull);
+				   _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Boolean */
 #define AG_GetBool    AG_GetInt
 #define AG_SetBool    AG_SetInt
@@ -251,7 +252,7 @@ AG_Variable *_Nonnull AG_BindUlongFn(void *_Nonnull, const char *_Nonnull,
                                      const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindUlongMp(void *_Nonnull, const char *_Nonnull,
                                      Ulong *_Nonnull,
-				     _Nonnull AG_Mutex *_Nonnull);
+				     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* long */
 long                  AG_GetLong(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetLong(void *_Nonnull, const char *_Nonnull, long);
@@ -263,7 +264,7 @@ AG_Variable *_Nonnull AG_BindLongFn(void *_Nonnull, const char *_Nonnull,
                                     const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindLongMp(void *_Nonnull, const char *_Nonnull,
                                     long *_Nonnull,
-                                    _Nonnull AG_Mutex *_Nonnull);
+                                    _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Uint8 */
 Uint8                 AG_GetUint8(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetUint8(void *_Nonnull, const char *_Nonnull, Uint8);
@@ -275,7 +276,7 @@ AG_Variable *_Nonnull AG_BindUint8Fn(void *_Nonnull, const char *_Nonnull,
                                      const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindUint8Mp(void *_Nonnull, const char *_Nonnull,
                                      Uint8 *_Nonnull,
-                                    _Nonnull AG_Mutex *_Nonnull);
+                                    _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Sint8 */
 Sint8                 AG_GetSint8(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetSint8(void *_Nonnull, const char *_Nonnull, Sint8);
@@ -287,7 +288,7 @@ AG_Variable *_Nonnull AG_BindSint8Fn(void *_Nonnull, const char *_Nonnull,
                                      const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindSint8Mp(void *_Nonnull, const char *_Nonnull,
                                      Sint8 *_Nonnull,
-                                    _Nonnull AG_Mutex *_Nonnull);
+                                    _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Uint16 */
 Uint16                AG_GetUint16(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetUint16(void *_Nonnull, const char *_Nonnull, Uint16);
@@ -299,7 +300,7 @@ AG_Variable *_Nonnull AG_BindUint16Fn(void *_Nonnull, const char *_Nonnull,
                                       const char *_Nullable , ...);
 AG_Variable *_Nonnull AG_BindUint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint16 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Sint16 */
 Sint16                AG_GetSint16(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetSint16(void *_Nonnull, const char *_Nonnull, Sint16);
@@ -311,7 +312,7 @@ AG_Variable *_Nonnull AG_BindSint16Fn(void *_Nonnull, const char *_Nonnull,
                                       const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindSint16Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint16 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Uint32 */
 Uint32                AG_GetUint32(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetUint32(void *_Nonnull, const char *_Nonnull, Uint32);
@@ -323,7 +324,7 @@ AG_Variable *_Nonnull AG_BindUint32Fn(void *_Nonnull, const char *_Nonnull,
                                       const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindUint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint32 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Sint32 */
 Sint32                AG_GetSint32(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetSint32(void *_Nonnull, const char *_Nonnull, Sint32);
@@ -335,7 +336,7 @@ AG_Variable *_Nonnull AG_BindSint32Fn(void *_Nonnull, const char *_Nonnull,
                                       const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindSint32Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint32 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 
 #ifdef AG_HAVE_64BIT
 /* Uint64 */
@@ -349,7 +350,7 @@ AG_Variable *_Nonnull AG_BindUint64Fn(void *_Nonnull, const char *_Nonnull,
                                        const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindUint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint64 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* Sint64 */
 Sint64                AG_GetSint64(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetSint64(void *_Nonnull, const char *_Nonnull, Sint64);
@@ -361,7 +362,7 @@ AG_Variable *_Nonnull AG_BindSint64Fn(void *_Nonnull, const char *_Nonnull,
                                       const char *_Nullable , ...);
 AG_Variable *_Nonnull AG_BindSint64Mp(void *_Nonnull, const char *_Nonnull,
                                       Sint64 *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 #endif /* HAVE_64BIT */
 
 #ifdef AG_HAVE_FLOAT
@@ -376,7 +377,7 @@ AG_Variable *_Nonnull AG_BindFloatFn(void *_Nonnull , const char *_Nonnull ,
                                      const char *_Nullable , ...);
 AG_Variable *_Nonnull AG_BindFloatMp(void *_Nonnull, const char *_Nonnull,
                                      float *_Nonnull,
-                                    _Nonnull AG_Mutex *_Nonnull);
+                                    _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* double */
 double                AG_GetDouble(void *_Nonnull, const char *_Nonnull);
 AG_Variable *_Nonnull AG_SetDouble(void *_Nonnull, const char *_Nonnull, double);
@@ -388,7 +389,7 @@ AG_Variable *_Nonnull AG_BindDoubleFn(void *_Nonnull, const char *_Nonnull ,
                                       const char *_Nullable , ...);
 AG_Variable *_Nonnull AG_BindDoubleMp(void *_Nonnull, const char *_Nonnull,
                                       double *_Nonnull,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 /* long double */
 # ifdef AG_HAVE_LONG_DOUBLE
 long double           AG_GetLongDouble(void *_Nonnull, const char *_Nonnull);
@@ -402,7 +403,7 @@ AG_Variable *_Nonnull AG_BindLongDoubleFn(void *_Nonnull, const char *_Nonnull,
                                           const char *_Nullable , ...);
 AG_Variable *_Nonnull AG_BindLongDoubleMp(void *_Nonnull, const char *_Nonnull,
                                           long double *_Nonnull,
-                                          _Nonnull AG_Mutex *_Nonnull);
+                                          _Nonnull_Mutex AG_Mutex *_Nonnull);
 # endif /* HAVE_LONG_DOUBLE */
 
 #endif /* HAVE_FLOAT */
@@ -436,7 +437,7 @@ AG_Variable *_Nonnull AG_BindStringFn(void *_Nonnull, const char *_Nonnull,
 
 AG_Variable *_Nonnull AG_BindStringMp(void *_Nonnull, const char *_Nonnull,
                                       char *_Nonnull, AG_Size,
-                                     _Nonnull AG_Mutex *_Nonnull);
+                                     _Nonnull_Mutex AG_Mutex *_Nonnull);
 
 /* Pointers */
 void *_Nullable       AG_GetPointer(void *_Nonnull, const char *_Nonnull);
@@ -450,29 +451,29 @@ AG_Variable *_Nonnull AG_BindPointerFn(void *_Nonnull, const char *_Nonnull,
 				       const char *_Nullable, ...);
 AG_Variable *_Nonnull AG_BindPointerMp(void *_Nonnull, const char *_Nonnull,
                                        void *_Nonnull *_Nullable,
-				       _Nonnull AG_Mutex *_Nonnull);
+				       _Nonnull_Mutex AG_Mutex *_Nonnull);
 
 /* Bits */
 AG_Variable *_Nonnull AG_BindFlag(void *_Nonnull, const char *_Nonnull,
                                   Uint *_Nonnull, Uint);
 AG_Variable *_Nonnull AG_BindFlagMp(void *_Nonnull, const char *_Nonnull,
 				    Uint *_Nonnull, Uint,
-				    _Nonnull AG_Mutex *_Nonnull);
+				    _Nonnull_Mutex AG_Mutex *_Nonnull);
 AG_Variable *_Nonnull AG_BindFlag8(void *_Nonnull, const char *_Nonnull,
 				   Uint8 *_Nonnull, Uint8);
 AG_Variable *_Nonnull AG_BindFlag8Mp(void *_Nonnull, const char *_Nonnull,
 				     Uint8 *_Nonnull, Uint8,
-				     _Nonnull AG_Mutex *_Nonnull);
+				     _Nonnull_Mutex AG_Mutex *_Nonnull);
 AG_Variable *_Nonnull AG_BindFlag16(void *_Nonnull, const char *_Nonnull,
 				    Uint16 *_Nonnull, Uint16);
 AG_Variable *_Nonnull AG_BindFlag16Mp(void *_Nonnull, const char *_Nonnull,
                                       Uint16 *_Nonnull, Uint16,
-                                      _Nonnull AG_Mutex *_Nonnull);
+                                      _Nonnull_Mutex AG_Mutex *_Nonnull);
 AG_Variable *_Nonnull AG_BindFlag32(void *_Nonnull, const char *_Nonnull,
 				    Uint32 *_Nonnull, Uint32);
 AG_Variable *_Nonnull AG_BindFlag32Mp(void *_Nonnull, const char *_Nonnull,
 				      Uint32 *_Nonnull, Uint32,
-				      _Nonnull AG_Mutex *_Nonnull);
+				      _Nonnull_Mutex AG_Mutex *_Nonnull);
 
 AG_Variable *_Nonnull AG_BindObject(void *_Nonnull, const char *_Nonnull,
 				    void *_Nonnull);

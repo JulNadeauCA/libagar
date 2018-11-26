@@ -152,7 +152,7 @@ typedef struct ag_surface {
 
 /* Animation playback context */
 typedef struct ag_anim_state {
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	AG_Surface *_Nonnull s;		/* Animated surface */
 	Uint flags;
 #define AG_ANIM_LOOP	 0x01		/* Loop playback */
@@ -160,7 +160,7 @@ typedef struct ag_anim_state {
 #define AG_ANIM_REVERSE	 0x04		/* Playback in reverse */
 	int play;			/* Animation is playing */
 	int f;				/* Current frame# */
-	_Nullable AG_Thread th;		/* Animation thread */
+	_Nullable_Thread AG_Thread th;	/* Animation thread */
 } AG_AnimState;
 
 typedef enum ag_alpha_func {

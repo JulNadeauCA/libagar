@@ -51,7 +51,8 @@ __BEGIN_DECLS
 void *_Nonnull M_EditTranslate3(void *_Nullable, const char *_Nullable,
                                 M_Matrix44 *_Nonnull);
 void *_Nonnull M_EditTranslate3Mp(void *_Nullable, const char *_Nullable,
-                                  M_Matrix44 *_Nonnull, _Nonnull AG_Mutex *_Nonnull);
+                                  M_Matrix44 *_Nonnull,
+				  _Nonnull_Mutex AG_Mutex *_Nonnull);
 __END_DECLS
 
 #include <agar/math/close.h>

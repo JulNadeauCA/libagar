@@ -21,7 +21,7 @@ typedef struct ag_editable_buffer {
 
 /* Internal clipboard for copy/paste and kill/yank */
 typedef struct ag_editable_clipboard {
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	char encoding[32];		/* Character set encoding */
 	Uint32 *_Nullable s;		/* UCS-4 buffer */
 	AG_Size len;			/* Length in characters */

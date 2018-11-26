@@ -81,7 +81,7 @@ static AG_ThreadKey agPrintBufKey[AG_STRING_BUFFERS_MAX];
 static AG_FmtStringExt *_Nullable agFmtExtensions = NULL;
 static Uint agFmtExtensionCount = 0;
 #ifdef AG_THREADS
-static _Nullable AG_Mutex agFmtExtensionsLock;
+static _Nullable_Mutex AG_Mutex agFmtExtensionsLock;
 #endif
 
 #include "string_strcasecmp.h"

@@ -59,7 +59,7 @@ AG_Label *_Nonnull AG_LabelNew(void *_Nullable, Uint, const char *_Nullable, ...
 AG_Label *_Nonnull AG_LabelNewPolled(void *_Nullable, Uint,
                                      const char *_Nonnull, ...);
 AG_Label *_Nonnull AG_LabelNewPolledMT(void *_Nullable, Uint,
-                                       _Nonnull AG_Mutex *_Nonnull,
+                                       _Nonnull_Mutex AG_Mutex *_Nonnull,
 				       const char *_Nonnull, ...);
 
 void AG_LabelTextS(AG_Label *_Nonnull, const char *_Nonnull);

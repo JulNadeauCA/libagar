@@ -78,7 +78,7 @@ extern int                     agNamespaceCount;
 extern char *_Nullable *_Nonnull agModuleDirs;      /* Module search dirs */
 extern int                       agModuleDirCount;
 
-extern _Nonnull AG_Mutex agClassLock;	           /* Lock on class table */
+extern _Nonnull_Mutex AG_Mutex agClassLock;           /* Lock on class table */
 
 void AG_InitClassTbl(void);
 void AG_DestroyClassTbl(void);

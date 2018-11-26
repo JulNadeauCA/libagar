@@ -215,8 +215,8 @@ extern Uint           agDriverListSize;
 #include <agar/config/have_clock_gettime.h>
 #include <agar/config/have_pthreads.h>
 #if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-extern _Nonnull AG_Cond agCondBeginRender;	/* For agTimeOps_render */
-extern _Nonnull AG_Cond agCondEndRender;
+extern _Nonnull_Cond AG_Cond agCondBeginRender;	/* For agTimeOps_render */
+extern _Nonnull_Cond AG_Cond agCondEndRender;
 #endif
 
 void AG_ListDriverNames(char *_Nonnull, AG_Size);

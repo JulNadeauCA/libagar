@@ -52,10 +52,10 @@ typedef AG_Timer AG_Timeout;
 #endif
 
 __BEGIN_DECLS
-extern struct ag_objectq agTimerObjQ;
-extern Uint              agTimerCount;
-extern struct ag_object  agTimerMgr;
-extern _Nonnull AG_Mutex agTimerLock;
+extern struct ag_objectq       agTimerObjQ;
+extern Uint                    agTimerCount;
+extern struct ag_object        agTimerMgr;
+extern _Nonnull_Mutex AG_Mutex agTimerLock;
 
 extern const AG_TimeOps *_Nullable agTimeOps;
 extern const AG_TimeOps  agTimeOps_dummy;

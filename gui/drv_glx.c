@@ -61,8 +61,8 @@ static int agScreen = 0;		/* Default X screen (shared) */
 static char           xkbBuf[64];	/* For Unicode key translation */
 static XComposeStatus xkbCompStatus;	/* For Unicode key translation */
 
-static _Nonnull AG_Mutex   agDisplayLock;	/* Lock on agDisplay */
-static Display  *_Nullable agDisplay = NULL;	/* X display handle */
+static _Nonnull_Mutex AG_Mutex agDisplayLock;	 /* Lock on agDisplay */
+static Display  *_Nullable     agDisplay = NULL; /* X display handle */
 
 AG_EventSink *_Nullable glxEventSink = NULL;	 /* Process X events */
 AG_EventSink *_Nullable glxEventEpilogue = NULL; /* Event sink epilogue */

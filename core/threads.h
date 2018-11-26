@@ -27,6 +27,68 @@ typedef pthread_key_t AG_ThreadKey;
 #define AG_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #endif
 
+/*
+ * Use a specific nullability attribute for pthread_mutex_t since
+ * it may or may not be a pointer depending on the platform.
+ */
+#ifdef __CC65__
+# define _Nonnull_Mutex
+# define _Nonnull_Cond
+# define _Nonnull_Thread
+# define _Nullable_Mutex
+# define _Nullable_Cond
+# define _Nullable_Thread
+# define _Null_unspecified_Mutex
+# define _Null_unspecified_Cond
+# define _Null_unspecified_Thread
+#else
+# ifndef __has_attribute
+# define __has_attribute(x) 0
+# endif
+# ifndef __has_extension
+# define __has_extension __has_feature
+# endif
+# ifndef __has_feature
+# define __has_feature(x) 0
+# endif
+# include <agar/config/have_pthread_mutex_t_pointer.h>
+# ifdef HAVE_PTHREAD_MUTEX_T_POINTER
+#  if (defined(__clang__) && __has_feature(nullability))
+#   define _Nonnull_Mutex _Nonnull
+#   define _Nullable_Mutex _Nullable
+#   define _Null_unspecified_Mutex _Null_unspecified
+#  endif
+# else
+#  define _Nonnull_Mutex
+#  define _Nullable_Mutex
+#  define _Null_unspecified_Mutex
+# endif
+# include <agar/config/have_pthread_cond_t_pointer.h>
+# ifdef HAVE_PTHREAD_COND_T_POINTER
+#  if (defined(__clang__) && __has_feature(nullability))
+#   define _Nonnull_Cond _Nonnull
+#   define _Nullable_Cond _Nullable
+#   define _Null_unspecified_Cond _Null_unspecified
+#  endif
+# else
+#  define _Nonnull_Cond
+#  define _Nullable_Cond
+#  define _Null_unspecified_Cond
+# endif
+# include <agar/config/have_pthread_t_pointer.h>
+# ifdef HAVE_PTHREAD_T_POINTER
+#  if (defined(__clang__) && __has_feature(nullability))
+#   define _Nonnull_Thread _Nonnull
+#   define _Nullable_Thread _Nullable
+#   define _Null_unspecified_Thread _Null_unspecified
+#  endif
+# else
+#  define _Nonnull_Thread
+#  define _Nullable_Thread
+#  define _Null_unspecified_Thread
+# endif
+#endif /* !__CC65__ */
+
 #include <agar/core/begin.h>
 __BEGIN_DECLS
 extern pthread_mutexattr_t agRecursiveMutexAttr;

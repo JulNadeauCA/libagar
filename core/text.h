@@ -158,7 +158,7 @@ typedef struct ag_text_ent {
 
 /* Text object */
 typedef struct ag_text {
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	AG_TextEnt ent[AG_LANG_LAST];	/* Language entries */
 	AG_Language lang;		/* Selected language */
 	AG_Size maxLen;			/* Maximum string length (bytes) */

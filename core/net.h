@@ -96,7 +96,7 @@ typedef struct ag_net_socket {
 	enum ag_net_addr_family family;		/* Address family */
 	enum ag_net_socket_type type;		/* Socket type */
 	int proto;				/* Socket protocol number */
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 	Uint flags;
 #define AG_NET_SOCKET_BOUND	0x01		/* Bound to a local address */
 #define AG_NET_SOCKET_CONNECTED	0x02		/* Connection established */

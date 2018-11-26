@@ -121,7 +121,7 @@ typedef struct vg {
 	Uint flags;
 #define VG_NO_ANTIALIAS	0x01		/* Disable anti-aliasing */
 
-	_Nonnull AG_Mutex lock;
+	_Nonnull_Mutex AG_Mutex lock;
 
 	VG_IndexedColor *_Nullable colors;	/* Global color table */
 	Uint                      nColors;	/* Color count */

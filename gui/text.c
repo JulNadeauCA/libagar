@@ -128,7 +128,7 @@ static const char *agTextMsgTitles[] = {
 	N_("Information")
 };
 
-_Nonnull AG_Mutex agTextLock;
+_Nonnull_Mutex AG_Mutex agTextLock;
 static TAILQ_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *_Nullable agDefaultFont = NULL;
 

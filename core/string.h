@@ -41,7 +41,7 @@
 typedef struct ag_fmt_string {
 	char *_Nonnull  s;			       /* Format string */
 	void *_Nullable p[AG_STRING_POINTERS_MAX];     /* Variable references */
-	_Nullable AG_Mutex *_Nullable mu[AG_STRING_POINTERS_MAX];
+	_Nullable_Mutex AG_Mutex *_Nullable mu[AG_STRING_POINTERS_MAX];
 	Uint n;
 	int curArg;				/* For internal parser use */
 } AG_FmtString;

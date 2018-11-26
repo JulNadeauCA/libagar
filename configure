@@ -458,8 +458,10 @@ echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo ''
 echo 'Options specific to MATH library:'
 echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
-echo '    --with-altivec[=inline]     AltiVec-optimized routines [check]'
-echo '    --with-sse[=inline]         SSE-optimized routines [check]'
+echo '    --with-altivec              AltiVec-optimized routines [check]'
+echo '    --with-altivec-inline       Inline Altivec-optimized routines [no]'
+echo '    --with-sse                  SSE-optimized routines [check]'
+echo '    --with-sse-inline           Inline SSE-optimized routines [no]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
 echo 'Options specific to AU library:'
@@ -7155,23 +7157,21 @@ echo 'hdefs["FONTCONFIG_LIBS"] = nil' >>configure.lua
 FONTCONFIG_LIBS=""
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_FONTCONFIG="no"
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
+echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
+echo 'hdefs["HAVE_FONTCONFIG"] = nil' >>configure.lua
+echo '#undef FONTCONFIG_CFLAGS' >$BLD/include/agar/config/fontconfig_cflags.h
+echo 'hdefs["FONTCONFIG_CFLAGS"] = nil' >>configure.lua
+echo '#undef FONTCONFIG_LIBS' >$BLD/include/agar/config/fontconfig_libs.h
+echo 'hdefs["FONTCONFIG_LIBS"] = nil' >>configure.lua
 fi;
 # END fontconfig
 	else
 echo 'not enabling fontconfig'
 echo 'not enabling fontconfig' >> config.log
+HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
 FONTCONFIG_LIBS=""
 echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
@@ -7752,6 +7752,7 @@ echo '#undef FREETYPE_LIBS' >$BLD/include/agar/config/freetype_libs.h
 echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 echo 'not enabling fontconfig'
 echo 'not enabling fontconfig' >> config.log
+HAVE_FONTCONFIG="no"
 FONTCONFIG_CFLAGS=""
 FONTCONFIG_LIBS=""
 echo '#undef HAVE_FONTCONFIG' >$BLD/include/agar/config/have_fontconfig.h
@@ -9499,6 +9500,119 @@ else
 echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$BLD/include/agar/config/have_pthread_mutex_recursive_np.h
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 fi;
+$ECHO_N 'checking whether pthread_mutex_t is a pointer...'
+$ECHO_N 'checking whether pthread_mutex_t is a pointer...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <pthread.h>
+
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex = NULL;
+	pthread_mutex_init(&mutex, NULL);
+	return (mutex != NULL);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_PTHREAD_MUTEX_T_POINTER='yes'
+echo '#ifndef HAVE_PTHREAD_MUTEX_T_POINTER' > $BLD/include/agar/config/have_pthread_mutex_t_pointer.h
+echo "#define HAVE_PTHREAD_MUTEX_T_POINTER \"$HAVE_PTHREAD_MUTEX_T_POINTER\"" >> $BLD/include/agar/config/have_pthread_mutex_t_pointer.h
+echo '#endif' >> $BLD/include/agar/config/have_pthread_mutex_t_pointer.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_T_POINTER\"] = \"$HAVE_PTHREAD_MUTEX_T_POINTER\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_PTHREAD_MUTEX_T_POINTER='no'
+echo '#undef HAVE_PTHREAD_MUTEX_T_POINTER' >$BLD/include/agar/config/have_pthread_mutex_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'checking whether pthread_cond_t is a pointer...'
+$ECHO_N 'checking whether pthread_cond_t is a pointer...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <pthread.h>
+
+int main(int argc, char *argv[])
+{
+	pthread_cond_t cond = NULL;
+	pthread_cond_init(&cond, NULL);
+	return (cond != NULL);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_PTHREAD_COND_T_POINTER='yes'
+echo '#ifndef HAVE_PTHREAD_COND_T_POINTER' > $BLD/include/agar/config/have_pthread_cond_t_pointer.h
+echo "#define HAVE_PTHREAD_COND_T_POINTER \"$HAVE_PTHREAD_COND_T_POINTER\"" >> $BLD/include/agar/config/have_pthread_cond_t_pointer.h
+echo '#endif' >> $BLD/include/agar/config/have_pthread_cond_t_pointer.h
+echo "hdefs[\"HAVE_PTHREAD_COND_T_POINTER\"] = \"$HAVE_PTHREAD_COND_T_POINTER\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_PTHREAD_COND_T_POINTER='no'
+echo '#undef HAVE_PTHREAD_COND_T_POINTER' >$BLD/include/agar/config/have_pthread_cond_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_COND_T_POINTER"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+$ECHO_N 'checking whether pthread_t is a pointer...'
+$ECHO_N 'checking whether pthread_t is a pointer...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.c
+#include <pthread.h>
+static void *start_routine(void *arg) { return (NULL); }
+int main(int argc, char *argv[])
+{
+	pthread_t th = NULL;
+	return pthread_create(&th, NULL, start_routine, NULL);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_PTHREAD_T_POINTER='yes'
+echo '#ifndef HAVE_PTHREAD_T_POINTER' > $BLD/include/agar/config/have_pthread_t_pointer.h
+echo "#define HAVE_PTHREAD_T_POINTER \"$HAVE_PTHREAD_T_POINTER\"" >> $BLD/include/agar/config/have_pthread_t_pointer.h
+echo '#endif' >> $BLD/include/agar/config/have_pthread_t_pointer.h
+echo "hdefs[\"HAVE_PTHREAD_T_POINTER\"] = \"$HAVE_PTHREAD_T_POINTER\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_PTHREAD_T_POINTER='no'
+echo '#undef HAVE_PTHREAD_T_POINTER' >$BLD/include/agar/config/have_pthread_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_T_POINTER"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 # END pthreads
 	if [ "${HAVE_PTHREADS}" = 'yes' ]
  then
@@ -9558,6 +9672,12 @@ echo '#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP' >$BLD/include/agar/config/have_pth
 echo 'hdefs["HAVE_PTHREAD_MUTEX_RECURSIVE_NP"] = nil' >>configure.lua
 echo '#undef HAVE_PTHREADS_XOPEN' >$BLD/include/agar/config/have_pthreads_xopen.h
 echo 'hdefs["HAVE_PTHREADS_XOPEN"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_MUTEX_T_POINTER' >$BLD/include/agar/config/have_pthread_mutex_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_MUTEX_T_POINTER"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_COND_T_POINTER' >$BLD/include/agar/config/have_pthread_cond_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_COND_T_POINTER"] = nil' >>configure.lua
+echo '#undef HAVE_PTHREAD_T_POINTER' >$BLD/include/agar/config/have_pthread_t_pointer.h
+echo 'hdefs["HAVE_PTHREAD_T_POINTER"] = nil' >>configure.lua
 echo '#undef PTHREADS_CFLAGS' >$BLD/include/agar/config/pthreads_cflags.h
 echo 'hdefs["PTHREADS_CFLAGS"] = nil' >>configure.lua
 echo '#undef PTHREADS_LIBS' >$BLD/include/agar/config/pthreads_libs.h
@@ -10068,7 +10188,7 @@ fi;
 # END altivec
 	if [ "${HAVE_ALTIVEC}" != 'yes' ]
  then
-		if [ "${with_altivec}" = 'yes' -o "${with_altivec}" = 'inline' ]
+		if [ "${with_altivec}" = 'yes' ]
  then
 			echo "*"
 			echo "* --with-altivec was requested, but "
@@ -10091,7 +10211,7 @@ echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
 	else
-		if [ "${with_altivec}" = 'inline' ]
+		if [ "${with_altivec_inline}" = 'yes' ]
  then
 INLINE_ALTIVEC="yes"
 echo '#ifndef INLINE_ALTIVEC' > $BLD/include/agar/config/inline_altivec.h
@@ -10343,7 +10463,7 @@ fi;
 # END sse
 	if [ "${HAVE_SSE}" != 'yes' ]
  then
-		if [ "${with_sse}" = 'yes' -o "${with_sse}" = 'inline' ]
+		if [ "${with_sse}" = 'yes' ]
  then
 			echo "*"
 			echo "* --with-sse was requested, but SSE "
@@ -10375,7 +10495,7 @@ echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
 echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 	else
-		if [ "${with_sse}" = 'inline' ]
+		if [ "${with_sse_inline}" = 'yes' ]
  then
 INLINE_SSE="yes"
 echo '#ifndef INLINE_SSE' > $BLD/include/agar/config/inline_sse.h
@@ -11854,10 +11974,16 @@ echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "HAVE_PTHREAD_COND_T_POINTER=$HAVE_PTHREAD_COND_T_POINTER" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_COND_T_POINTER\"] = \"$HAVE_PTHREAD_COND_T_POINTER\"" >>configure.lua
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
+echo "HAVE_PTHREAD_MUTEX_T_POINTER=$HAVE_PTHREAD_MUTEX_T_POINTER" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_T_POINTER\"] = \"$HAVE_PTHREAD_MUTEX_T_POINTER\"" >>configure.lua
+echo "HAVE_PTHREAD_T_POINTER=$HAVE_PTHREAD_T_POINTER" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_T_POINTER\"] = \"$HAVE_PTHREAD_T_POINTER\"" >>configure.lua
 echo "HAVE_PURE_ATTRIBUTE=$HAVE_PURE_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_PURE_ATTRIBUTE\"] = \"$HAVE_PURE_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config

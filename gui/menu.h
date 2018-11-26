@@ -46,10 +46,10 @@ typedef struct ag_menu_item {
 		AG_MENU_INT16_FLAGS,
 		AG_MENU_INT32_FLAGS
 	} bind_type;
-	void *_Nullable bind_p;			    /* Pointer to data */
-	Uint32 bind_flags;			    /* Bitmask (for FLAGS) */
-	int bind_invert;			    /* Inverted value */
-	_Nullable AG_Mutex *_Nullable bind_lock;    /* Lock protecting data */
+	void *_Nullable bind_p;			       /* Pointer to data */
+	Uint32 bind_flags;			       /* Bitmask (for FLAGS) */
+	int bind_invert;			       /* Inverted value */
+	_Nullable_Mutex AG_Mutex *_Nullable bind_lock; /* Lock on data */
 
 	struct ag_menu_view *_Nullable view;        /* Back pointer to view (subitems) */
 	struct ag_menu *_Nullable      pmenu;       /* Parent menu */
@@ -113,9 +113,9 @@ __BEGIN_DECLS
 extern AG_WidgetClass agMenuClass;
 extern AG_WidgetClass agMenuViewClass;
 
-extern AG_Menu   *_Nullable agAppMenu;
-extern AG_Window *_Nullable agAppMenuWin;
-extern _Nonnull AG_Mutex    agAppMenuLock;
+extern AG_Menu   *_Nullable    agAppMenu;
+extern AG_Window *_Nullable    agAppMenuWin;
+extern _Nonnull_Mutex AG_Mutex agAppMenuLock;
 
 void               AG_InitAppMenu(void);
 void               AG_DestroyAppMenu(void);
@@ -208,36 +208,36 @@ AG_MenuItem *_Nonnull AG_MenuIntBoolMp(AG_MenuItem *_Nonnull,
                                        const char *_Nullable,
                                        const AG_Surface *_Nullable,
                                        int *_Nonnull, int,
-				       _Nonnull AG_Mutex *_Nullable);
+				       _Nonnull_Mutex AG_Mutex *_Nullable);
 AG_MenuItem *_Nonnull AG_MenuInt8BoolMp(AG_MenuItem *_Nonnull,
                                         const char *_Nullable,
                                         const AG_Surface *_Nullable,
                                         Uint8 *_Nonnull, int,
-					_Nonnull AG_Mutex *_Nullable);
+					_Nonnull_Mutex AG_Mutex *_Nullable);
 
 AG_MenuItem *_Nonnull AG_MenuIntFlagsMp(AG_MenuItem *_Nonnull,
 					const char *_Nullable,
 					const AG_Surface *_Nullable,
 					int *_Nonnull, int, int,
-					_Nonnull AG_Mutex *_Nullable);
+					_Nonnull_Mutex AG_Mutex *_Nullable);
 
 AG_MenuItem *_Nonnull AG_MenuInt8FlagsMp(AG_MenuItem *_Nonnull,
 					 const char *_Nullable,
 					 const AG_Surface *_Nullable,
 					 Uint8 *_Nonnull, Uint8, int,
-					 _Nonnull AG_Mutex *_Nullable);
+					 _Nonnull_Mutex AG_Mutex *_Nullable);
 
 AG_MenuItem *_Nonnull AG_MenuInt16FlagsMp(AG_MenuItem *_Nonnull,
 					 const char *_Nullable,
 					 const AG_Surface *_Nullable,
 					 Uint16 *_Nonnull, Uint16, int,
-					 _Nonnull AG_Mutex *_Nullable);
+					 _Nonnull_Mutex AG_Mutex *_Nullable);
 
 AG_MenuItem *_Nonnull AG_MenuInt32FlagsMp(AG_MenuItem *_Nonnull,
 					  const char *_Nullable,
 					  const AG_Surface *_Nullable,
 					  Uint32 *_Nonnull, Uint32, int,
-					  _Nonnull AG_Mutex *_Nullable);
+					  _Nonnull_Mutex AG_Mutex *_Nullable);
 #define	AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)
 #define AG_MenuInt8Bool(mi,t,i,p,inv) \
@@ -268,12 +268,12 @@ AG_MenuItem *_Nonnull AG_MenuInt32FlagsMp(AG_MenuItem *_Nonnull,
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
 
 void    AG_MenuSetIntBoolMp(AG_MenuItem *_Nonnull, int *_Nonnull, int,
-                            _Nonnull AG_Mutex *_Nonnull);
+                            _Nonnull_Mutex AG_Mutex *_Nonnull);
 #define AG_MenuSetIntBool(mi,p,fl,inv,mtx) \
         AG_MenuSetIntBoolMp((mi),(p),(fl),(inv),(mtx))
 
 void AG_MenuSetIntFlagsMp(AG_MenuItem *_Nonnull, int *_Nonnull, int, int,
-                          _Nonnull AG_Mutex *_Nonnull);
+                          _Nonnull_Mutex AG_Mutex *_Nonnull);
 #ifdef AG_LEGACY
 # define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 #endif /* AG_LEGACY */

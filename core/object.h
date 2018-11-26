@@ -81,7 +81,7 @@ typedef struct ag_object_pvt {
 	/* TODO 1.6: store these as AG_Variables */
 	AG_Event *_Nullable attachFn;		/* Attach hook */
 	AG_Event *_Nullable detachFn;		/* Detach hook */
-	_Nonnull AG_Mutex lock;			/* General object lock */
+	_Nonnull_Mutex AG_Mutex lock;		/* General object lock */
 } AG_ObjectPvt;
 
 /* Object instance */

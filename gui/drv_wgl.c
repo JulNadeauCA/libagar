@@ -46,8 +46,8 @@ static int  nDrivers = 0;			/* Drivers open */
 static int  wndClassCount = 1;			/* Window class counter */
 static AG_DriverEventQ wglEventQ;		/* Event queue */
 #ifdef AG_THREADS
-static _Nonnull AG_Mutex wglClassLock;			/* Lock on wndClassCount */
-static _Nonnull AG_Mutex wglEventLock;			/* Lock on wglEventQ */
+static _Nonnull_Mutex AG_Mutex wglClassLock;		/* Lock on wndClassCount */
+static _Nonnull_Mutex AG_Mutex wglEventLock;		/* Lock on wglEventQ */
 #endif
 static _Nullable HKL wglKbdLayout = NULL;		/* Keyboard layout */
 static AG_EventSink *_Nullable wglEventSpinner = NULL;	/* Standard event sink */
