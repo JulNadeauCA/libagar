@@ -1042,7 +1042,6 @@ AG_SurfaceSetColorKey(AG_Surface *_Nonnull S, Uint flags, AG_Pixel colorkey)
 	    agSurfaceFmt->Amask)
 /* -> AG_SurfaceNew(agSurfaceFmt, ...) */
 
-typedef AG_Surface AG_Anim;
 # define AG_AnimNew		AG_SurfaceNew
 # define AG_AnimEmpty		AG_SurfaceEmpty
 # define AG_AnimIndexed		AG_SurfaceIndexed
@@ -1058,7 +1057,7 @@ typedef AG_Surface AG_Anim;
 # define AG_AnimSetFPS(ast,f)
 /* -> (now handled in AG_Surface) */
 
-typedef AG_AlphaFn AG_BlendFn;	/* less confusing */
+#define AG_BlendFn AG_AlphaFn			/* less confusing */
 
 /* Flags renamed for readability */
 # define AG_SRCCOLORKEY		AG_SURFACE_COLORKEY
