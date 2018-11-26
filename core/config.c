@@ -217,9 +217,6 @@ AG_ConfigFind(AG_ConfigPathGroup group, const char *filename, char *path,
 	AG_ConfigPath *loadPath;
 	int rv;
 
-#ifdef AG_DEBUG
-	if (path_len < AG_FILENAME_MAX) { AG_FatalError("path_len too small"); }
-#endif
 	SLIST_FOREACH(loadPath, pathGroup, paths) {
 		Strlcpy(file, loadPath->s, sizeof(file));
 		Strlcat(file, AG_PATHSEP, sizeof(file));
