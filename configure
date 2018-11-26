@@ -458,10 +458,8 @@ echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo ''
 echo 'Options specific to MATH library:'
 echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
-echo '    --with-altivec              AltiVec-optimized routines [check]'
-echo '    --with-altivec-inline       Inline Altivec-optimized routines [no]'
-echo '    --with-sse                  SSE-optimized routines [check]'
-echo '    --with-sse-inline           Inline SSE-optimized routines [no]'
+echo '    --with-altivec[=inline]     AltiVec-optimized routines [check]'
+echo '    --with-sse[=inline]         SSE-optimized routines [check]'
 echo '    --with-sse[234]             SSE2 SSE3 SSE4 routines [check]'
 echo ''
 echo 'Options specific to AU library:'
@@ -10188,7 +10186,7 @@ fi;
 # END altivec
 	if [ "${HAVE_ALTIVEC}" != 'yes' ]
  then
-		if [ "${with_altivec}" = 'yes' ]
+		if [ "${with_altivec}" = 'yes' -o "${with_altivec}" = 'inline' ]
  then
 			echo "*"
 			echo "* --with-altivec was requested, but "
@@ -10211,7 +10209,7 @@ echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
 	else
-		if [ "${with_altivec_inline}" = 'yes' ]
+		if [ "${with_altivec}" = 'inline' ]
  then
 INLINE_ALTIVEC="yes"
 echo '#ifndef INLINE_ALTIVEC' > $BLD/include/agar/config/inline_altivec.h
@@ -10463,7 +10461,7 @@ fi;
 # END sse
 	if [ "${HAVE_SSE}" != 'yes' ]
  then
-		if [ "${with_sse}" = 'yes' ]
+		if [ "${with_sse}" = 'yes' -o "${with_sse}" = 'inline' ]
  then
 			echo "*"
 			echo "* --with-sse was requested, but SSE "
@@ -10495,7 +10493,7 @@ echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
 echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 	else
-		if [ "${with_sse_inline}" = 'yes' ]
+		if [ "${with_sse}" = 'inline' ]
  then
 INLINE_SSE="yes"
 echo '#ifndef INLINE_SSE' > $BLD/include/agar/config/inline_sse.h
