@@ -1520,6 +1520,188 @@ echo '* ' >> config.log
 echo "configure failed!"
 exit 1
 fi;
+$ECHO_N 'checking for Objective-C compiler...'
+$ECHO_N 'checking for Objective-C compiler...' >> config.log
+# BEGIN objc
+if [ "$CROSS_COMPILING" = "yes" ]; then
+CROSSPFX="${host}-"
+else
+CROSSPFX=""
+fi;
+if [ "$OBJC" = "" ]; then
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang++" ]; then
+OBJC="${i}/${CROSSPFX}clang++"
+break
+elif [ -x "${i}/${CROSSPFX}clang++70" ]; then
+OBJC="${i}/${CROSSPFX}clang++70"
+break
+elif [ -x "${i}/${CROSSPFX}clang++60" ]; then
+OBJC="${i}/${CROSSPFX}clang++60"
+break
+elif [ -x "${i}/${CROSSPFX}c++" ]; then
+OBJC="${i}/${CROSSPFX}c++"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+OBJC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+OBJC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+OBJC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+OBJC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+OBJC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+OBJC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+OBJC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+OBJC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+OBJC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+OBJC="${i}/${CROSSPFX}gcc.exe"
+break
+fi;
+done
+IFS=$bb_save_IFS
+	if [ "$OBJC" = '' ]; then
+	    echo "*"
+echo "* Cannot find one of clang++, clang++70, clang++60, c++, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+	    echo "* You may need to set the OBJC environment variable."
+	    echo "*"
+	    echo "Cannot find Objective C compiler in PATH." >> config.log
+		HAVE_OBJC="no"
+		echo "no"
+	else
+		HAVE_OBJC="yes"
+		echo "yes, ${OBJC}"
+		echo "yes, ${OBJC}" >> config.log
+	fi
+else
+	HAVE_OBJC="yes"
+	echo "using ${OBJC}"
+fi
+
+if [ "${HAVE_OBJC}" = "yes" ]; then
+	$ECHO_N 'checking whether the Objective-C compiler works...'
+	$ECHO_N 'checking whether the Objective-C compiler works...' >> config.log
+	cat << 'EOT' > conftest.m
+#import <stdio.h>
+int main(int argc, char *argv[]) { return (0); }
+EOT
+	$OBJC -x objective-c -o conftest conftest.m 2>>config.log
+	if [ $? != 0 ]; then
+	    echo "no"
+	    echo "no, compile failed" >> config.log
+		HAVE_OBJC="no"
+	else
+		HAVE_OBJC="yes"
+	fi
+	
+	if [ "${HAVE_OBJC}" = "yes" ]; then
+		if [ "${EXECSUFFIX}" = '' ]; then
+			EXECSUFFIX=''
+			for OUTFILE in conftest.exe conftest conftest.*; do
+				if [ -f $OUTFILE ]; then
+					case $OUTFILE in
+					*.c | *.cc | *.m | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+						;;
+					*.* )
+						EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+						break ;;
+					* )
+						break ;;
+					esac;
+			    fi
+			done
+			if [ "$EXECSUFFIX" != '' ]; then
+				echo "yes, it outputs $EXECSUFFIX files"
+				echo "yes, it outputs $EXECSUFFIX files" >> config.log
+			else
+				echo "yes"
+				echo "yes" >> config.log
+			fi
+echo '#ifndef EXECSUFFIX' > $BLD/include/agar/config/execsuffix.h
+echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >> $BLD/include/agar/config/execsuffix.h
+echo '#endif' >> $BLD/include/agar/config/execsuffix.h
+echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
+		else
+			echo "yes"
+			echo "yes" >> config.log
+		fi
+	fi
+	if [ "${keep_conftest}" != "yes" ]; then
+		rm -f conftest.m conftest$EXECSUFFIX
+	fi
+	TEST_OBJCFLAGS=''
+fi
+if [ "${HAVE_OBJC}" = "yes" ]; then
+$ECHO_N 'objc: checking for compiler warning options...'
+$ECHO_N 'objc: checking for compiler warning options...' >> config.log
+MK_COMPILE_STATUS='OK'
+cat << EOT > conftest$$.m
+int main(int argc, char *argv[]) { return (0); }
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest conftest.m " >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -x objective-c -o $testdir/conftest$$ conftest$$.m  2>>config.log
+if [ $? != 0 ]; then
+	echo ": failed, code $?" >> config.log
+	MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = 'OK' ]; then
+echo 'yes'
+echo 'yes' >> config.log
+HAVE_OBJC_WARNINGS='yes'
+echo '#ifndef HAVE_OBJC_WARNINGS' > $BLD/include/agar/config/have_objc_warnings.h
+echo "#define HAVE_OBJC_WARNINGS \"$HAVE_OBJC_WARNINGS\"" >> $BLD/include/agar/config/have_objc_warnings.h
+echo '#endif' >> $BLD/include/agar/config/have_objc_warnings.h
+echo "hdefs[\"HAVE_OBJC_WARNINGS\"] = \"$HAVE_OBJC_WARNINGS\"" >>configure.lua
+else
+echo 'no'
+echo 'no' >> config.log
+HAVE_OBJC_WARNINGS='no'
+echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
+echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
+fi;
+if [ "${keep_conftest}" != "yes" ]; then
+	rm -f conftest$$.m $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_OBJC_WARNINGS}" = "yes" ]; then
+TEST_OBJCFLAGS="-Wall -Werror"
+fi;
+echo '#ifndef HAVE_OBJC' > $BLD/include/agar/config/have_objc.h
+echo "#define HAVE_OBJC \"$HAVE_OBJC\"" >> $BLD/include/agar/config/have_objc.h
+echo '#endif' >> $BLD/include/agar/config/have_objc.h
+echo "hdefs[\"HAVE_OBJC\"] = \"$HAVE_OBJC\"" >>configure.lua
+rm -f conftest.m $testdir/conftest$EXECSUFFIX
+else
+HAVE_OBJC="no"
+HAVE_OBJC_WARNINGS="no"
+OBJC=""
+OBJCFLAGS=""
+echo '#undef HAVE_OBJC' >$BLD/include/agar/config/have_objc.h
+echo 'hdefs["HAVE_OBJC"] = nil' >>configure.lua
+echo '#undef HAVE_OBJC_WARNINGS' >$BLD/include/agar/config/have_objc_warnings.h
+echo 'hdefs["HAVE_OBJC_WARNINGS"] = nil' >>configure.lua
+fi;
+# END objc
 case "${host}" in
 c64 | c128 | geos | nes)
 echo 'not enabling Objective-C compiler'
@@ -1550,55 +1732,74 @@ $ECHO_N 'checking for Objective-C compiler...'
 $ECHO_N 'checking for Objective-C compiler...' >> config.log
 # BEGIN objc
 if [ "$CROSS_COMPILING" = "yes" ]; then
-	CROSSPFX="${host}-"
+CROSSPFX="${host}-"
 else
-	CROSSPFX=''
-fi
-if [ "$OBJC" = '' ]; then
-	if [ "$CC" != '' ]; then
-		OBJC="$CC"
-		HAVE_OBJC="yes"
-		echo "using CC, ${OBJC}"
+CROSSPFX=""
+fi;
+if [ "$OBJC" = "" ]; then
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for i in $PATH; do
+if [ -x "${i}/${CROSSPFX}clang++" ]; then
+OBJC="${i}/${CROSSPFX}clang++"
+break
+elif [ -x "${i}/${CROSSPFX}clang++70" ]; then
+OBJC="${i}/${CROSSPFX}clang++70"
+break
+elif [ -x "${i}/${CROSSPFX}clang++60" ]; then
+OBJC="${i}/${CROSSPFX}clang++60"
+break
+elif [ -x "${i}/${CROSSPFX}c++" ]; then
+OBJC="${i}/${CROSSPFX}c++"
+break
+elif [ -x "${i}/${CROSSPFX}gcc" ]; then
+OBJC="${i}/${CROSSPFX}gcc"
+break
+elif [ -x "${i}/${CROSSPFX}gcc-6" ]; then
+OBJC="${i}/${CROSSPFX}gcc-6"
+break
+elif [ -x "${i}/${CROSSPFX}gcc7" ]; then
+OBJC="${i}/${CROSSPFX}gcc7"
+break
+elif [ -x "${i}/${CROSSPFX}gcc8" ]; then
+OBJC="${i}/${CROSSPFX}gcc8"
+break
+elif [ -x "${i}/${CROSSPFX}gcc5" ]; then
+OBJC="${i}/${CROSSPFX}gcc5"
+break
+elif [ -x "${i}/${CROSSPFX}gcc49" ]; then
+OBJC="${i}/${CROSSPFX}gcc49"
+break
+elif [ -x "${i}/${CROSSPFX}gcc48" ]; then
+OBJC="${i}/${CROSSPFX}gcc48"
+break
+elif [ -x "${i}/${CROSSPFX}clang.exe" ]; then
+OBJC="${i}/${CROSSPFX}clang.exe"
+break
+elif [ -x "${i}/${CROSSPFX}cc.exe" ]; then
+OBJC="${i}/${CROSSPFX}cc.exe"
+break
+elif [ -x "${i}/${CROSSPFX}gcc.exe" ]; then
+OBJC="${i}/${CROSSPFX}gcc.exe"
+break
+fi;
+done
+IFS=$bb_save_IFS
+	if [ "$OBJC" = '' ]; then
+	    echo "*"
+echo "* Cannot find one of clang++, clang++70, clang++60, c++, gcc, gcc-6, gcc7, gcc8, gcc5, gcc49, gcc48, clang.exe, cc.exe, gcc.exe"
+		echo "* under the current PATH, which is:"
+		echo "* $PATH"
+		echo "*"
+	    echo "* You may need to set the OBJC environment variable."
+	    echo "*"
+	    echo "Cannot find Objective C compiler in PATH." >> config.log
+		HAVE_OBJC="no"
+		echo "no"
 	else
-		bb_save_IFS=$IFS
-		IFS=$PATH_SEPARATOR
-		for i in $PATH; do
-			if [ -x "${i}/${CROSSPFX}cc" ]; then
-				if [ -f "${i}/${CROSSPFX}cc" ]; then
-					OBJC="${i}/${CROSSPFX}cc"
-					break
-				fi
-			elif [ -x "${i}/${CROSSPFX}gcc" ]; then
-				if [ -f "${i}/${CROSSPFX}gcc" ]; then
-					OBJC="${i}/${CROSSPFX}gcc"
-					break
-				fi
-			elif [ -e "${i}/${CROSSPFX}cc.exe" ]; then
-				if [ -f "${i}/${CROSSPFX}cc.exe" ]; then
-					OBJC="${i}/${CROSSPFX}cc.exe"
-					break
-				fi
-			elif [ -e "${i}/${CROSSPFX}gcc.exe" ]; then
-				if [ -f "${i}/${CROSSPFX}gcc.exe" ]; then
-					OBJC="${i}/${CROSSPFX}gcc.exe"
-					break
-				fi
-			fi
-		done
-		IFS=$bb_save_IFS
-		if [ "$OBJC" = '' ]; then
-		    echo "*"
-		    echo "* Cannot find ${CROSSPFX}objc or ${CROSSPFX}gcc in default PATH."
-		    echo "* You may need to set the OBJC environment variable."
-		    echo "*"
-		    echo "Cannot find ${CROSSPFX}objc or ${CROSSPFX}gcc in PATH." >> config.log
-			HAVE_OBJC="no"
-			echo "no"
-		else
-			HAVE_OBJC="yes"
-			echo "yes, ${OBJC}"
-			echo "yes, ${OBJC}" >> config.log
-		fi
+		HAVE_OBJC="yes"
+		echo "yes, ${OBJC}"
+		echo "yes, ${OBJC}" >> config.log
 	fi
 else
 	HAVE_OBJC="yes"
@@ -5353,18 +5554,27 @@ SDL_LIBS=""
 fi;
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_SDL}" = "yes" ]; then
 SDL_PC="sdl"
@@ -6101,18 +6311,27 @@ if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 # END x11
 		if [ "${HAVE_X11}" != 'yes' ]
@@ -6926,18 +7145,27 @@ echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 FREETYPE_LIBS=""
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 FREETYPE_PC="freetype2"
@@ -7293,18 +7521,27 @@ fi;
 else
 echo 'no'
 echo 'no' >> config.log
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_JPEG}" = "yes" ]; then
 JPEG_PC="libjpeg"
@@ -7605,18 +7842,27 @@ echo '#undef HAVE_LIBPNG14' >$BLD/include/agar/config/have_libpng14.h
 echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_PNG}" = "yes" ]; then
 PNG_PC="libpng"
@@ -8206,18 +8452,27 @@ if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 # END sockopts
 $ECHO_N 'checking for the WinSock interface...'
@@ -8366,18 +8621,27 @@ echo 'hdefs["ZLIB_LIBS"] = nil' >>configure.lua
 ZLIB_LIBS=""
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 echo 'no'
 echo 'no' >> config.log
 fi;
@@ -8668,18 +8932,27 @@ echo 'hdefs["DB4_LIBS"] = nil' >>configure.lua
 DB4_LIBS=""
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 # END db4
 	if [ "${HAVE_DB4}" != 'yes' ]
@@ -8899,18 +9172,27 @@ echo 'hdefs["MYSQL_LIBS"] = nil' >>configure.lua
 MYSQL_LIBS=""
 fi;
 else
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
+HAVE_SSE="no"
+HAVE_SSE2="no"
+HAVE_SSE3="no"
+INLINE_SSE="no"
+SSE_CFLAGS=""
+SSE2_CFLAGS=""
+SSE3_CFLAGS=""
+echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
+echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
+echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
+echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
+echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
+echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
+echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
+echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
+echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
+echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
+echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
+echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
+echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 # END mysql
 	if [ "${HAVE_MYSQL}" != 'yes' ]
@@ -10196,15 +10478,15 @@ fi;
 		else
 echo 'not enabling AltiVec (with <altivec.h>)'
 echo 'not enabling AltiVec (with <altivec.h>)' >> config.log
-HAVE_GETTEXT="no"
-GETTEXT_CFLAGS=""
-GETTEXT_LIBS=""
-echo '#undef HAVE_GETTEXT' >$BLD/include/agar/config/have_gettext.h
-echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
-echo '#undef GETTEXT_CFLAGS' >$BLD/include/agar/config/gettext_cflags.h
-echo 'hdefs["GETTEXT_CFLAGS"] = nil' >>configure.lua
-echo '#undef GETTEXT_LIBS' >$BLD/include/agar/config/gettext_libs.h
-echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
+HAVE_ALTIVEC="no"
+HAVE_ALTIVEC_H="no"
+ALTIVEC_CFLAGS=""
+echo '#undef HAVE_ALTIVEC' >$BLD/include/agar/config/have_altivec.h
+echo 'hdefs["HAVE_ALTIVEC"] = nil' >>configure.lua
+echo '#undef HAVE_ALTIVEC_H' >$BLD/include/agar/config/have_altivec_h.h
+echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
+echo '#undef ALTIVEC_CFLAGS' >$BLD/include/agar/config/altivec_cflags.h
+echo 'hdefs["ALTIVEC_CFLAGS"] = nil' >>configure.lua
 echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
@@ -10224,15 +10506,15 @@ echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 else
 echo 'not enabling AltiVec (with <altivec.h>)'
 echo 'not enabling AltiVec (with <altivec.h>)' >> config.log
-HAVE_GETTEXT="no"
-GETTEXT_CFLAGS=""
-GETTEXT_LIBS=""
-echo '#undef HAVE_GETTEXT' >$BLD/include/agar/config/have_gettext.h
-echo 'hdefs["HAVE_GETTEXT"] = nil' >>configure.lua
-echo '#undef GETTEXT_CFLAGS' >$BLD/include/agar/config/gettext_cflags.h
-echo 'hdefs["GETTEXT_CFLAGS"] = nil' >>configure.lua
-echo '#undef GETTEXT_LIBS' >$BLD/include/agar/config/gettext_libs.h
-echo 'hdefs["GETTEXT_LIBS"] = nil' >>configure.lua
+HAVE_ALTIVEC="no"
+HAVE_ALTIVEC_H="no"
+ALTIVEC_CFLAGS=""
+echo '#undef HAVE_ALTIVEC' >$BLD/include/agar/config/have_altivec.h
+echo 'hdefs["HAVE_ALTIVEC"] = nil' >>configure.lua
+echo '#undef HAVE_ALTIVEC_H' >$BLD/include/agar/config/have_altivec_h.h
+echo 'hdefs["HAVE_ALTIVEC_H"] = nil' >>configure.lua
+echo '#undef ALTIVEC_CFLAGS' >$BLD/include/agar/config/altivec_cflags.h
+echo 'hdefs["ALTIVEC_CFLAGS"] = nil' >>configure.lua
 echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 fi
@@ -10625,6 +10907,12 @@ SUBDIR_dev=""
 fi
 if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]
  then
+ENABLE_AU="yes"
+echo '#ifndef ENABLE_AU' > $BLD/include/agar/config/enable_au.h
+echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
+echo '#endif' >> $BLD/include/agar/config/enable_au.h
+echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
+SUBDIR_au="au"
 $ECHO_N 'checking for libsndfile...'
 $ECHO_N 'checking for libsndfile...' >> config.log
 # BEGIN sndfile(1.0.21 ${prefix_sndfile})
@@ -10801,14 +11089,6 @@ else
 SNDFILE_PC=""
 fi;
 # END sndfile
-	if [ "${HAVE_SNDFILE}" = 'yes' ]
- then
-ENABLE_AU="yes"
-echo '#ifndef ENABLE_AU' > $BLD/include/agar/config/enable_au.h
-echo "#define ENABLE_AU \"$ENABLE_AU\"" >> $BLD/include/agar/config/enable_au.h
-echo '#endif' >> $BLD/include/agar/config/enable_au.h
-echo "hdefs[\"ENABLE_AU\"] = \"$ENABLE_AU\"" >>configure.lua
-SUBDIR_au="au"
 $ECHO_N 'checking for PortAudio2...'
 $ECHO_N 'checking for PortAudio2...' >> config.log
 # BEGIN portaudio(19.0 ${prefix_portaudio})
@@ -11044,45 +11324,10 @@ else
 PORTAUDIO_PC=""
 fi;
 # END portaudio
-	else
-		if [ "${enable_au}" = 'yes' -o "${enable_audio}" = 'yes' ]
- then
-			echo "*"
-			echo "* --enable-au was requested, but the sndfile library"
-			echo "* (required) is not installed."
-			echo "*"
-			exit 1
-		fi
-echo 'not enabling libsndfile'
-echo 'not enabling libsndfile' >> config.log
-HAVE_SNDFILE="no"
-SNDFILE_CFLAGS=""
-SNDFILE_LIBS=""
-echo '#undef HAVE_SNDFILE' >$BLD/include/agar/config/have_sndfile.h
-echo 'hdefs["HAVE_SNDFILE"] = nil' >>configure.lua
-echo '#undef SNDFILE_CFLAGS' >$BLD/include/agar/config/sndfile_cflags.h
-echo 'hdefs["SNDFILE_CFLAGS"] = nil' >>configure.lua
-echo '#undef SNDFILE_LIBS' >$BLD/include/agar/config/sndfile_libs.h
-echo 'hdefs["SNDFILE_LIBS"] = nil' >>configure.lua
-echo 'not enabling PortAudio2'
-echo 'not enabling PortAudio2' >> config.log
-HAVE_PORTAUDIO="no"
-PORTAUDIO_CFLAGS=""
-PORTAUDIO_LIBS=""
-PORTAUDIO_PC=""
-echo '#undef HAVE_PORTAUDIO' >$BLD/include/agar/config/have_portaudio.h
-echo 'hdefs["HAVE_PORTAUDIO"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
-echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
-echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
-SUBDIR_au=""
-echo '#undef ENABLE_AU' >$BLD/include/agar/config/enable_au.h
-echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
-	fi
 else
+echo '#undef ENABLE_AU' >$BLD/include/agar/config/enable_au.h
+echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
+SUBDIR_au=""
 echo 'not enabling libsndfile'
 echo 'not enabling libsndfile' >> config.log
 HAVE_SNDFILE="no"
@@ -11106,11 +11351,6 @@ echo '#undef PORTAUDIO_CFLAGS' >$BLD/include/agar/config/portaudio_cflags.h
 echo 'hdefs["PORTAUDIO_CFLAGS"] = nil' >>configure.lua
 echo '#undef PORTAUDIO_LIBS' >$BLD/include/agar/config/portaudio_libs.h
 echo 'hdefs["PORTAUDIO_LIBS"] = nil' >>configure.lua
-echo '#undef PORTAUDIO_PC' >$BLD/include/agar/config/portaudio_pc.h
-echo 'hdefs["PORTAUDIO_PC"] = nil' >>configure.lua
-SUBDIR_au=""
-echo '#undef ENABLE_AU' >$BLD/include/agar/config/enable_au.h
-echo 'hdefs["ENABLE_AU"] = nil' >>configure.lua
 fi
 SRCS_CORE=""
 if [ "${HAVE_SNPRINTF}" != 'yes' ]

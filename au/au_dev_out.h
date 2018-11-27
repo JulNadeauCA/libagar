@@ -29,7 +29,7 @@ typedef struct au_link {
 	Uint bytesPerFrame;		/* Bytes per frame */
 	struct au_dev_out *outDev;	/* Output device */
 	Uint               outCh;	/* Output virtual channel */
-	AG_Mutex lock;			/* Lock protecting data */
+	_Nullable_Mutex AG_Mutex lock;	/* Lock protecting data */
 	union {
 		struct {
 			Uint rate;	/* Sampling rate (Hz) */
@@ -56,7 +56,7 @@ typedef struct au_channel {
 } AU_Channel;
 
 typedef struct au_dev_out {
-	_Nonnull AG_Mutex lock;			/* Lock protecting access */
+	_Nonnull_Mutex AG_Mutex lock;		/* Lock protecting access */
 	const AU_DevOutClass *_Nonnull cls;	/* Class description */
 	Uint flags;
 #define AU_DEV_OUT_THREADED	0x01	/* Device uses separate threads */

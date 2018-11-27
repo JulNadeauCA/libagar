@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2011-2018 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
 /*
  * PortAudio output driver.
  */
+
+#include <agar/config/have_portaudio.h>
+#ifdef HAVE_PORTAUDIO
 
 #include <agar/core/core.h>
 #include <agar/au/au_init.h>
@@ -174,3 +177,4 @@ const AU_DevOutClass auDevOut_pa = {
 	Open,
 	Close
 };
+#endif /* HAVE_PORTAUDIO */

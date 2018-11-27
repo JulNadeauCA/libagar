@@ -27,6 +27,8 @@
  * Audio clip structure.
  */
 
+#include <agar/config/have_sndfile.h>
+
 #include <agar/core/core.h>
 #include <agar/au/au_wave.h>
 
@@ -39,14 +41,16 @@ AU_WaveNew(void)
 	AU_Wave *w = Malloc(sizeof(AU_Wave));
 
 	w->flags = 0;
-	w->file = NULL;
 	w->frames = NULL;
 	w->nFrames = 0;
 	w->ch = 0;
+	w->peak = 0.0;
+#ifdef HAVE_SNDFILE
 	w->vizFrames = NULL;
 	w->nVizFrames = 0;
-	w->peak = 0.0;
+	w->file = NULL;
 	memset(&w->info, 0, sizeof(w->info));
+#endif
 	AG_MutexInitRecursive(&w->lock);
 	return (w);
 }
@@ -69,19 +73,22 @@ AU_WaveFreeData(AU_Wave *w)
 	Free(w->frames);
 	w->frames = NULL;
 	w->nFrames = 0;
+	w->peak = 0.0;
+	w->ch = 0;
+#ifdef HAVE_SNDFILE
 	Free(w->vizFrames);
 	w->vizFrames = NULL;
 	w->nVizFrames = 0;
-	w->peak = 0.0;
-	w->ch = 0;
+#endif
 }
 
 void
 AU_WaveFree(AU_Wave *w)
 {
-	if (w->file != NULL) {
+#ifdef HAVE_SNDFILE
+	if (w->file != NULL)
 		sf_close(w->file);
-	}
+#endif
 	AU_WaveFreeData(w);
 	AG_MutexDestroy(&w->lock);
 	Free(w);
@@ -91,13 +98,13 @@ AU_WaveFree(AU_Wave *w)
 int
 AU_WaveLoad(AU_Wave *w, const char *path)
 {
+#ifdef HAVE_SNDFILE
 	sf_count_t nReadFrames = 0;
 
 	if (w->file != NULL) {
 		sf_close(w->file);
 		AU_WaveFreeData(w);
 	}
-
 	/*
 	 * Read the raw audio data.
 	 */
@@ -127,12 +134,17 @@ AU_WaveLoad(AU_Wave *w, const char *path)
 fail:
 	AU_WaveFreeData(w);
 	return (-1);
+#else
+	AG_SetErrorS("AU_WaveLoad() requires libsndfile (--with-sndfile)");
+	return (-1);
+#endif /* !HAVE_SNDFILE */
 }
 
 /* Generate a reduced waveform for visualization purposes. */
 int
 AU_WaveGenVisual(AU_Wave *w, int reduce)
 {
+#ifdef HAVE_SNDFILE
 	int i, j, ch;
 	float *pIn, *pViz;
 
@@ -170,4 +182,8 @@ AU_WaveGenVisual(AU_Wave *w, int reduce)
 			*pViz++ /= reduce;
 	}
 	return (0);
+#else
+	AG_SetErrorS("AU_WaveGenVisual() requires libsndfile (--with-sndfile)");
+	return (-1);
+#endif /* !HAVE_SNDFILE */
 }

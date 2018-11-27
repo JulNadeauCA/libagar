@@ -27,8 +27,8 @@
  * Generic audio output interface.
  */
 
-#include <agar/config/have_sndfile.h>
 #include <agar/config/have_portaudio.h>
+#include <agar/config/have_sndfile.h>
 
 #include <agar/core/core.h>
 #include <agar/au/au_init.h>
