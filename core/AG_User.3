@@ -1,4 +1,4 @@
-.\" Copyright (c) 2013 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2013-2018 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,7 @@
 .Ed
 .Sh DESCRIPTION
 .Nm
-provides a cross-platform method for accessing information about
-user accounts.
+provides a cross-platform method for accessing information about user accounts.
 Different backends may be implemented (see
 .Sx INTERNAL API
 below).
@@ -46,10 +45,28 @@ Agar provides the following backends:
 .Bl -tag -compact -width "agUserOps_posix "
 .It agUserOps_dummy
 No-op, returns no useful information.
+.It agUserOps_getenv
+Use the
+.Va USER ,
+.Va UID ,
+.Va EUID ,
+.Va HOME
+and (optional)
+.Va TMPDIR
+environment variables.
+Only
+.Va USER
+can be queried.
 .It agUserOps_posix
-On Unix, use the system
+On Unix, use
 .Xr getpwent 3
-interface.
+or
+.Xr getpwnam_r 3 .
+Since accessing the password database incurs startup overhead, "getenv" is
+the actual default unless the
+.Dv AG_POSIX_USERS
+flag is passed to
+.Xr AG_InitCore 3 .
 .It agUserOps_win32
 On Windows, use CSIDL to locate a preferred
 .Pa AppData
@@ -174,4 +191,5 @@ On error, they should return -1.
 .Sh HISTORY
 The
 .Nm
-interface first appeared in Agar 1.5.0
+interface first appeared in Agar 1.5.0.
+The "getenv" module was added in Agar 1.6.0.

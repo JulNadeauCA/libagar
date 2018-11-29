@@ -24,7 +24,7 @@
  */
 
 /*
- * User information on POSIX-like platforms.
+ * Obtain user information from getpwnam() or getpwnam_r().
  */
 
 #include <agar/core/core.h>

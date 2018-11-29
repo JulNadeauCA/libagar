@@ -27,9 +27,8 @@
  * Berkeley DB database access.
  */
 
+#include <db5/db.h>
 #include <agar/core/core.h>
-
-#include <db.h>
 
 typedef struct ag_db_hash_bt {
 	struct ag_db _inherit;

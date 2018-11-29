@@ -38,6 +38,7 @@
 #include <agar/config/have_gettimeofday.h>
 #include <agar/config/have_select.h>
 #include <agar/config/have_db4.h>
+#include <agar/config/have_db5.h>
 #include <agar/config/have_getpwuid.h>
 #include <agar/config/have_getuid.h>
 #include <agar/config/have_getaddrinfo.h>
@@ -126,7 +127,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
 	AG_RegisterClass(&agDbClass);
-#ifdef HAVE_DB4
+#if defined(HAVE_DB4) || defined(HAVE_DB5)
 	AG_RegisterClass(&agDbHashClass);
 	AG_RegisterClass(&agDbBtreeClass);
 #endif
@@ -165,8 +166,20 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetUserOps(&agUserOps_xbox);
 #elif defined(_WIN32) && defined(HAVE_CSIDL)
 	AG_SetUserOps(&agUserOps_win32);
-#elif defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	AG_SetUserOps(&agUserOps_posix);
+#elif defined(HAVE_GETENV) || (defined(HAVE_GETPWUID) && defined(HAVE_GETUID))
+	if (flags & AG_POSIX_USERS) {			/* Prefer posix */
+# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		AG_SetUserOps(&agUserOps_posix);
+# else
+		AG_SetUserOps(&agUserOps_getenv);
+# endif
+	} else {					/* Prefer getenv */
+# if defined(HAVE_GETENV)
+		AG_SetUserOps(&agUserOps_getenv);
+# else
+		AG_SetUserOps(&agUserOps_posix);
+# endif
+	}
 #else
 	AG_SetUserOps(&agUserOps_dummy);
 #endif

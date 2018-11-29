@@ -24,6 +24,7 @@
  */
 
 #include <agar/config/have_db4.h>
+#include <agar/config/have_db5.h>
 #include <agar/core/core.h>
 
 /* Create a new database handle for the given database backend. */
@@ -33,8 +34,7 @@ AG_DbNew(const char *_Nonnull backend)
 	AG_Db *db;
 	AG_DbClass *dbc = NULL;
 
-#ifdef HAVE_DB4
-	/* XXX */
+#if defined(HAVE_DB4) || defined(HAVE_DB5)
 	if (strcmp(backend, "hash")) {
 		dbc = &agDbHashClass;
 	} else if (strcmp(backend, "btree")) {

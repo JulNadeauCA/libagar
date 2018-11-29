@@ -27,7 +27,7 @@ REGISTER_SECTION("Options specific to CORE library:")
 REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
 REGISTER("--enable-network",		"Network interface [check]")
 REGISTER("--enable-web",		"Web application server [no]")
-REGISTER("--with-db4[=PREFIX]",		"AG_Db: Berkeley DB backend [no]")
+REGISTER("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
 REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
@@ -504,13 +504,14 @@ else
 	HUNDEF(AG_WEB)
 fi
 
-# Enable Berkeley DB backend for AG_Db if available.
+# Enable Berkeley DB 4.x module for AG_Db if requested
 if [ "${with_db4}" = 'yes' ]; then
 	CHECK(db4, 0, ${prefix_db4})
 	if [ "${HAVE_DB4}" != 'yes' ]; then
 		if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
-			echo "* --with-db4 was requested, but DB4 missing"
+			echo "* --with-db4 requested and DB4 was not found"
+			echo "* (did you mean --with-db5?)"
 			echo "*"
 			exit 1
 		else
@@ -521,7 +522,25 @@ else
 	DISABLE(db4)
 fi
 
-# Enable MySQL backend for AG_Db if requested.
+# Enable Berkeley DB 5.x module for AG_Db if requested
+if [ "${with_db5}" = 'yes' ]; then
+	CHECK(db5, 0, ${prefix_db5})
+	if [ "${HAVE_DB5}" != 'yes' ]; then
+		if [ "${with_db5}" = 'yes' ]; then
+			echo "*"
+			echo "* --with-db5 requested and DB5 was not found"
+			echo "* (did you mean --with-db4?)"
+			echo "*"
+			exit 1
+		else
+			DISABLE(db5)
+		fi
+	fi
+else
+	DISABLE(db5)
+fi
+
+# Enable MySQL module for AG_Db if requested.
 if [ "${with_mysql}" = 'yes' ]; then
 	CHECK(mysql, 5.5.8, ${prefix_mysql})
 	if [ "${HAVE_MYSQL}" != 'yes' ]; then
@@ -769,7 +788,7 @@ if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]; then
 		MAPPEND(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
-if [ "${HAVE_DB4}" = 'yes' ]; then
+if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = "yes" ]; then
 	MAPPEND(SRCS_CORE, "db_bdb.c")
 fi
 if [ "${HAVE_MYSQL}" = 'yes' ]; then
@@ -848,39 +867,40 @@ CONFIG_SCRIPT(agar-config,\
 	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
-	 ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
-	 ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
+	 ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
+	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS} \
+	 ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
 	 ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
 	 ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
-	 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
-	 ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 
 PKGCONFIG_MODULE(agar, "Agar cross-platform GUI toolkit", \
 	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
 	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 	"", \
 	"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
-	 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} \
-	 ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
+	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
 	"-L\${libdir} -lag_gui -lag_core", \
 	"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
-	 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
-	 ${ICONV_LIBS} ${ZLIB_LIBS}")
+	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 
 CONFIG_SCRIPT(agar-core-config,\
 	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
-	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} \
-	 ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS} \
-	 ${ZLIB_LIBS}")
+	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
+	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 PKGCONFIG_MODULE(agar-core, "Agar object system and base library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
-	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} \
-	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
+	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
+	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
 	"-L\${libdir} -lag_core", \
 	"-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${DB4_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
+	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
 	 ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
 
 CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")

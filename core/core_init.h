@@ -5,11 +5,12 @@
 #include <agar/core/begin.h>
 
 /* Flags for AG_InitCore() */
-#define AG_VERBOSE         0x01 /* Allow errors/warning output on console */
-#define AG_CREATE_DATADIR  0x02 /* Auto-create data directory on init */
-#define AG_SOFT_TIMERS	   0x04	/* Do not use hardware timers. A custom event
-				   loop will call AG_ProcessTimeouts(). */
-
+#define AG_VERBOSE        0x01 /* Allow errors and warnings on the console */
+#define AG_CREATE_DATADIR 0x02 /* Check for and create app. data directory */
+#define AG_SOFT_TIMERS	  0x04 /* Use a software timing wheel instead of
+				  OS-provided timer facilities */
+#define AG_POSIX_USERS    0x08 /* Use the AG_User(3) module "posix" instead
+				  of "getenv" if both are supported */
 __BEGIN_DECLS
 struct ag_event;
 
@@ -18,17 +19,10 @@ extern int agVerbose;			/* Verbose console output */
 extern int agSoftTimers;		/* Disable hardware timers */
 
 int  AG_InitCore(const char *_Nullable, Uint);
-
 void AG_AtExitFunc(void (*_Nullable)(void));
 void AG_AtExitFuncEv(void (*_Nullable)(struct ag_event *_Nonnull));
-
-void AG_Quit(void) _Noreturn_Attribute;
 void AG_Destroy(void);
-
-#ifdef AG_LEGACY
-# define AG_InitInput(flags)
-# define AG_CORE_VERBOSE AG_VERBOSE
-#endif /* AG_LEGACY */
+void AG_Quit(void) _Noreturn_Attribute;
 __END_DECLS
 
 /* Utility macros */
