@@ -1,12 +1,11 @@
 /*	Public domain	*/
 
-/*
- * Primitive integer data types used by Agar.
- *
- * Defines public AG_HAVE_64BIT, AG_HAVE_FLOAT and AG_HAVE_LONG_DOUBLE.
- */
+#ifndef _AGAR_CORE_TYPES_H_
+#define _AGAR_CORE_TYPES_H_
 
-/* Agar memory model */
+/*
+ * Agar memory model
+ */
 #define AG_SMALL  16  /* 8- and 16-bit CPU with KBs of RAM, 4- or 8-bit color */
 #define AG_MEDIUM 32  /* 32- or 64-bit CPU with MBs of RAM, 8-bit color */
 #define AG_LARGE  64  /* 32- or 64-bit CPU with GBs of RAM, 16-bit color */
@@ -209,3 +208,4 @@
 # error "Invalid AG_MODEL"
 #endif
 
+#endif /* _AGAR_CORE_TYPES_H_ */

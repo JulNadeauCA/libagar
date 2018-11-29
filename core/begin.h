@@ -8,7 +8,7 @@
 #include <agar/core/types.h>
 #include <agar/core/attributes.h>
 
-/* Define internationalization macros if NLS is enabled. */
+/* NLS */
 #if !defined(_)
 # include <agar/config/enable_nls.h>
 # ifdef ENABLE_NLS
@@ -31,7 +31,7 @@
 # endif
 #endif /* defined(_) */
 
-/* Define __BEGIN_DECLS and __END_DECLS if needed. */
+/* Declarations */
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
 # define _AGAR_CORE_DEFINED_CDECLS
 # if defined(__cplusplus)
@@ -42,13 +42,6 @@
 #  define __END_DECLS
 # endif
 #endif
-
-/*
- * Expand "DECLSPEC" to any compiler-specific keywords, as required for proper
- * visibility of symbols in shared libraries.
- * See: http://gcc.gnu.org/wiki/Visibility
- */
-#undef DECLSPEC
 #ifndef DECLSPEC
 # if defined(__BEOS__) || defined(__HAIKU__)
 #  if defined(__GNUC__)
@@ -118,10 +111,7 @@
 # pragma enumsalwaysint on
 #endif
 
-/*
- * Expand "__inline__" to any compiler-specific keyword needed for defining
- * an inline function, if supported.
- */
+/* Inlining */
 #ifdef __GNUC__
 # define _AGAR_CORE_USE_INLINE
 #else
@@ -147,7 +137,7 @@
 # define __inline__
 #endif
 
-/* Define NULL if needed. */
+/* Nullability */
 #if !defined(NULL) && !defined(__MACH__)
 # ifdef __cplusplus
 #  define NULL 0
@@ -155,5 +145,33 @@
 # else
 #  define NULL ((void *)0)
 #  define _AGAR_CORE_DEFINED_NULL
+# endif
+#endif
+#if defined(__GNUC__) || defined(__CC65__)
+# define _Nonnull
+# define _Nullable
+# define _Null_unspecified
+# define _AGAR_CORE_DEFINED_NULLABILITY
+#else
+# ifndef __has_feature
+# define __has_feature(x) 0
+# endif
+# if !(defined(__clang__) && __has_feature(nullability))
+#  define _Nonnull
+#  define _Nullable
+#  define _Null_unspecified
+#  define _AGAR_CORE_DEFINED_NULLABILITY
+# endif
+#endif
+
+/* Restrict */
+#if !defined(_Restrict)
+# if !(__GNUC__ == 2 && __GNUC_MINOR__ == 95)
+#  if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901 || defined(lint)
+#   define _Restrict
+#  else
+#   define _Restrict restrict
+#  endif
+#  define _AGAR_CORE_DEFINED_RESTRICT
 # endif
 #endif

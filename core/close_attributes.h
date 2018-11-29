@@ -1,5 +1,10 @@
 /*	Public domain	*/
 
+/*
+ * Undo compiler-specific attributes and annotations
+ * (included by <core/close.h>, <gui/close.h>, etc.)
+ */
+
 #undef HAVE_ALIGNED_ATTRIBUTE
 #undef HAVE_CONST_ATTRIBUTE
 #undef HAVE_DEPRECATED_ATTRIBUTE
@@ -11,7 +16,7 @@
 #undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE
 #undef HAVE_UNUSED_VARIABLE_ATTRIBUTE
 
-#if !defined(_AGAR_CORE_INTERNAL) && !defined(_USE_AGAR_ATTRIBUTES)
+#if !defined(_USE_AGAR_ATTRIBUTES) && !defined(_AGAR_INTERNAL)
 
 # undef _Aligned_Attribute
 # undef _Alloc_Align_Attribute
@@ -31,10 +36,4 @@
 # undef _Warn_Unused_Result
 # undef _Weak_Attribute
 
-# ifdef _AGAR_CORE_DEFINED_NULLABILITY
-#  undef _Nonnull
-#  undef _Nullable
-#  undef _Null_unspecified
-# endif
-
-#endif /* !_AGAR_CORE_INTERNAL and !_USE_AGAR_ATTRIBUTES */
+#endif /* !_USE_AGAR_ATTRIBUTES and !_AGAR_INTERNAL */
