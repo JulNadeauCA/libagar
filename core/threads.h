@@ -2,36 +2,32 @@
 
 #ifndef _AGAR_CORE_THREADS_H_
 #define _AGAR_CORE_THREADS_H_
-
 #ifdef AG_THREADS
 
 #include <agar/config/have_pthreads.h>
 #ifdef HAVE_PTHREADS
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
+# include <pthread.h>
 #else
 # error "AG_THREADS option requires POSIX threads"
 #endif
 
-typedef pthread_mutex_t AG_Mutex;
-typedef pthread_mutexattr_t AG_MutexAttr;
-typedef pthread_t AG_Thread;
-typedef pthread_cond_t AG_Cond;
-typedef pthread_key_t AG_ThreadKey;
+#define AG_Mutex	pthread_mutex_t
+#define AG_MutexAttr	pthread_mutexattr_t
+#define AG_Thread	pthread_t
+#define AG_Cond		pthread_cond_t
+#define AG_ThreadKey	pthread_key_t
 
 #ifdef _SGI_SOURCE
-#define AG_MUTEX_INITIALIZER {{0}}
+# define AG_MUTEX_INITIALIZER {{0}}
 #else
-#define AG_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+# define AG_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #endif
 
 /*
  * Use a specific nullability attribute for pthread_mutex_t since
  * it may or may not be a pointer depending on the platform.
  */
-#ifdef __CC65__
+#if defined(__GNUC__) || defined(__CC65__)
 # define _Nonnull_Mutex
 # define _Nonnull_Cond
 # define _Nonnull_Thread
@@ -42,52 +38,52 @@ typedef pthread_key_t AG_ThreadKey;
 # define _Null_unspecified_Cond
 # define _Null_unspecified_Thread
 #else
-# ifndef __has_attribute
-# define __has_attribute(x) 0
-# endif
-# ifndef __has_extension
-# define __has_extension __has_feature
-# endif
 # ifndef __has_feature
 # define __has_feature(x) 0
 # endif
-# include <agar/config/have_pthread_mutex_t_pointer.h>
-# ifdef HAVE_PTHREAD_MUTEX_T_POINTER
-#  if (defined(__clang__) && __has_feature(nullability))
-#   define _Nonnull_Mutex _Nonnull
-#   define _Nullable_Mutex _Nullable
-#   define _Null_unspecified_Mutex _Null_unspecified
+# if (defined(__clang__) && __has_feature(nullability))
+#  include <agar/config/have_pthread_mutex_t_pointer.h>
+#  ifdef HAVE_PTHREAD_MUTEX_T_POINTER
+#    define _Nonnull_Mutex          _Nonnull
+#    define _Nullable_Mutex         _Nullable
+#    define _Null_unspecified_Mutex _Null_unspecified
+#  else
+#   define _Nonnull_Mutex
+#   define _Nullable_Mutex
+#   define _Null_unspecified_Mutex
 #  endif
-# else
-#  define _Nonnull_Mutex
-#  define _Nullable_Mutex
-#  define _Null_unspecified_Mutex
-# endif
-# include <agar/config/have_pthread_cond_t_pointer.h>
-# ifdef HAVE_PTHREAD_COND_T_POINTER
-#  if (defined(__clang__) && __has_feature(nullability))
-#   define _Nonnull_Cond _Nonnull
-#   define _Nullable_Cond _Nullable
+#  include <agar/config/have_pthread_cond_t_pointer.h>
+#  ifdef HAVE_PTHREAD_COND_T_POINTER
+#   define _Nonnull_Cond          _Nonnull
+#   define _Nullable_Cond         _Nullable
 #   define _Null_unspecified_Cond _Null_unspecified
+#  else
+#   define _Nonnull_Cond
+#   define _Nullable_Cond
+#   define _Null_unspecified_Cond
 #  endif
-# else
-#  define _Nonnull_Cond
-#  define _Nullable_Cond
-#  define _Null_unspecified_Cond
-# endif
-# include <agar/config/have_pthread_t_pointer.h>
-# ifdef HAVE_PTHREAD_T_POINTER
-#  if (defined(__clang__) && __has_feature(nullability))
-#   define _Nonnull_Thread _Nonnull
-#   define _Nullable_Thread _Nullable
+#  include <agar/config/have_pthread_t_pointer.h>
+#  ifdef HAVE_PTHREAD_T_POINTER
+#   define _Nonnull_Thread          _Nonnull
+#   define _Nullable_Thread         _Nullable
 #   define _Null_unspecified_Thread _Null_unspecified
+#  else
+#   define _Nonnull_Thread
+#   define _Nullable_Thread
+#   define _Null_unspecified_Thread
 #  endif
-# else
+# else /* !(__clang__ with nullability) */
+#  define _Nonnull_Mutex
+#  define _Nonnull_Cond
 #  define _Nonnull_Thread
+#  define _Nullable_Mutex
+#  define _Nullable_Cond
 #  define _Nullable_Thread
+#  define _Null_unspecified_Mutex
+#  define _Null_unspecified_Cond
 #  define _Null_unspecified_Thread
 # endif
-#endif /* !__CC65__ */
+#endif /* !(__GNUC__ || __CC65__) */
 
 #include <agar/core/begin.h>
 __BEGIN_DECLS
@@ -305,47 +301,55 @@ AG_ThreadKeyTrySet(AG_ThreadKey k, const void *p)
 
 #else /* !AG_THREADS */
 
-typedef void *AG_Mutex;
-typedef void *AG_Thread;
-typedef void *AG_Cond;
-typedef void *AG_MutexAttr;
-typedef int   AG_ThreadKey;
+# define _Nonnull_Mutex
+# define _Nonnull_Cond
+# define _Nonnull_Thread
+# define _Nullable_Mutex
+# define _Nullable_Cond
+# define _Nullable_Thread
+# define _Null_unspecified_Mutex
+# define _Null_unspecified_Cond
+# define _Null_unspecified_Thread
 
-#define AG_MUTEX_INITIALIZER 0
-#define AG_COND_INITIALIZER 0
+# define AG_MUTEX_INITIALIZER 0
+# define AG_COND_INITIALIZER 0
 
-#define AG_MutexInit(m)
-#define AG_MutexInitRecursive(m)
-#define AG_MutexDestroy(m)
-#define AG_MutexLock(m)
-#define AG_MutexUnlock(m)
-#define AG_CondInit(cd)
-#define AG_CondDestroy(cd)
-#define AG_CondBroadcast(cd)
-#define AG_CondSignal(cd)
-#define AG_CondWait(cd,m)
-#define AG_CondTimedWait(cd,m,t)
+# define AG_Mutex     void *
+# define AG_Thread    void *
+# define AG_Cond      void *
+# define AG_MutexAttr void *
+# define AG_ThreadKey int
+
+# define AG_MutexInit(m)
+# define AG_MutexInitRecursive(m)
+# define AG_MutexDestroy(m)
+# define AG_MutexLock(m)
+# define AG_MutexUnlock(m)
+# define AG_CondInit(cd)
+# define AG_CondDestroy(cd)
+# define AG_CondBroadcast(cd)
+# define AG_CondSignal(cd)
+# define AG_CondWait(cd,m)
+# define AG_CondTimedWait(cd,m,t)
 
 static __inline__ int AG_MutexTryInit(AG_Mutex *mu) {
-#ifdef __CC65__
+# ifdef __CC65__
 	if (mu != NULL) { /* Unused */ }
-#endif
+# endif
 	return (0);
 }
 static __inline__ int AG_MutexTryInitRecursive(AG_Mutex *mu) {
-#ifdef __CC65__
+# ifdef __CC65__
 	if (mu != NULL) { /* Unused */ }
-#endif
+# endif
 	return (0);
 }
 static __inline__ int AG_MutexTryLock(AG_Mutex *mu) {
-#ifdef __CC65__
+# ifdef __CC65__
 	if (mu != NULL) { /* Unused */ }
-#endif
+# endif
 	return (0);
 }
-
-#undef HAVE_PTHREADS
 #endif /* AG_THREADS */
 
 #endif /* _AGAR_CORE_THREADS_H_ */
