@@ -530,6 +530,7 @@ AG_MapPixel64_RGB16(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (r >> pf->Rloss) << pf->Rshift |
 		       (g >> pf->Gloss) << pf->Gshift |
 		       (b >> pf->Bloss) << pf->Bshift |
@@ -546,6 +547,7 @@ AG_MapPixel64_RGBA16(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (r >> pf->Rloss) << pf->Rshift |
 		       (g >> pf->Gloss) << pf->Gshift |
 		       (b >> pf->Bloss) << pf->Bshift |
@@ -978,6 +980,7 @@ AG_PixelFormatCompare(const AG_PixelFormat *_Nonnull a,
 	}
 	switch (a->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return !(a->Rmask == b->Rmask &&
 			 a->Gmask == b->Gmask &&
 			 a->Bmask == b->Bmask &&

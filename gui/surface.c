@@ -837,7 +837,6 @@ void
 AG_SurfaceBlit(const AG_Surface *_Nonnull Ss, const AG_Rect *srcRect,
     AG_Surface *_Nonnull Sd, int xDst, int yDst)
 {
-	Uint srcBytesPerPixel, dstBytesPerPixel;
 	AG_Rect sr, dr;
 	Uint x, y;
 	int diff;
@@ -892,9 +891,6 @@ AG_SurfaceBlit(const AG_Surface *_Nonnull Ss, const AG_Rect *srcRect,
 		}
 		sr.h -= diff;
 	}
-
-	srcBytesPerPixel = Ss->format.BytesPerPixel;
-	dstBytesPerPixel = Sd->format.BytesPerPixel;
 
 	if (Ss->alpha < AG_OPAQUE) {                    /* Per-surface alpha */
 		if (Ss->flags & AG_SURFACE_COLORKEY) {
@@ -1165,6 +1161,7 @@ AG_MapPixel32_RGB8(const AG_PixelFormat *_Nonnull pf, Uint8 r, Uint8 g, Uint8 b)
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (r    >> pf->Rloss) << pf->Rshift |
 		       (g    >> pf->Gloss) << pf->Gshift |
 		       (b    >> pf->Bloss) << pf->Bshift |
@@ -1189,6 +1186,7 @@ AG_MapPixel32_RGBA8(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (r >> pf->Rloss) << pf->Rshift |
 		       (g >> pf->Gloss) << pf->Gshift |
 		       (b >> pf->Bloss) << pf->Bshift |
@@ -1215,6 +1213,7 @@ AG_MapPixel32_RGB16(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (AG_16to8(r) >> pf->Rloss) << pf->Rshift |
 		       (AG_16to8(g) >> pf->Gloss) << pf->Gshift |
 		       (AG_16to8(b) >> pf->Bloss) << pf->Bshift |
@@ -1241,6 +1240,7 @@ AG_MapPixel32_RGBA16(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (AG_16to8(r) >> pf->Rloss) << pf->Rshift |
 		       (AG_16to8(g) >> pf->Gloss) << pf->Gshift |
 		       (AG_16to8(b) >> pf->Bloss) << pf->Bshift |
@@ -1261,6 +1261,7 @@ AG_MapPixel64_RGB8(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (AG_8to16(r) >> pf->Rloss) << pf->Rshift |
 		       (AG_8to16(g) >> pf->Gloss) << pf->Gshift |
 		       (AG_8to16(b) >> pf->Bloss) << pf->Bshift |
@@ -1287,6 +1288,7 @@ AG_MapPixel64_RGBA8(const AG_PixelFormat *_Nonnull pf,
 {
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
+	default:
 		return (AG_8to16(r) >> pf->Rloss) << pf->Rshift |
 		       (AG_8to16(g) >> pf->Gloss) << pf->Gshift |
 		       (AG_8to16(b) >> pf->Bloss) << pf->Bshift |
