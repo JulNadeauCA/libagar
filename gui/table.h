@@ -255,7 +255,7 @@ int  AG_TableCompareCells(const AG_TableCell *_Nonnull,
 
 AG_MenuItem *_Nonnull AG_TableSetPopup(AG_Table *_Nonnull, int,int);
 
-int AG_TableSaveASCII(AG_Table *_Nonnull, FILE *_Nonnull, char);
+int AG_TableSaveASCII(AG_Table *_Nonnull, void *_Nonnull, char);
 
 /* Return the cell at unchecked location m,n. */
 static __inline__ AG_TableCell *_Nonnull _Pure_Attribute

@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include <agar/core/types.h>
 
@@ -50,7 +51,6 @@ static int
 TestGUI(void *obj, AG_Window *win)
 {
 	MyTestInstance *ti = obj;
-	char path[AG_PATHNAME_MAX];
 	AG_Box *hBox, *vBox;
 	AG_Pane *pane;
 	AG_Combo *com;

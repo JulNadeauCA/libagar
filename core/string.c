@@ -86,8 +86,8 @@ static _Nullable_Mutex AG_Mutex agFmtExtensionsLock;
 
 #include "string_strcasecmp.h"
 
-/* Import inlines into the library */
-#define ag_inline
+/* Import inlinables */
+#undef AG_INLINE_HEADER
 #include "inline_string.h"
 
 /*

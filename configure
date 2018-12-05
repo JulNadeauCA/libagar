@@ -455,6 +455,9 @@ echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
 echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
 echo '    --with-z[=PREFIX]           zlib compression library [check]'
+echo '    --with-inline-string        Inline some string functions [yes]'
+echo '    --with-inline-object        Inline some AG_Object functions [yes]'
+echo '    --with-inline-variable      Inline some AG_Variable functions [yes]'
 echo ''
 echo 'Options specific to MATH library:'
 echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
@@ -479,6 +482,8 @@ echo '    --with-glx[=PREFIX]         Enable accelerated X driver [check]'
 echo '    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]'
 echo '    --with-wgl                  Enable MS Windows driver [check]'
 echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
+echo '    --with-inline-surface       Inline pixel access routines [yes]'
+echo '    --with-inline-widget        Inline some AG_Widget functions [yes]'
 echo ''
 echo 'Some influential environment variables:'
 echo '    CC           C compiler command'
@@ -2326,8 +2331,7 @@ echo 'hdefs["HAVE_UNUSED_VARIABLE_ATTRIBUTE"] = nil' >>configure.lua
 echo '#undef HAVE_WARN_UNUSED_RESULT_ATTRIBUTE' >$BLD/include/agar/config/have_warn_unused_result_attribute.h
 echo 'hdefs["HAVE_WARN_UNUSED_RESULT_ATTRIBUTE"] = nil' >>configure.lua
 fi
-if [ "${with_attributes}" != 'no' ]
- then
+if [ "${with_attributes}" != 'no' ]; then
 AG_USE_ATTRIBUTES="yes"
 echo '#ifndef AG_USE_ATTRIBUTES' > $BLD/include/agar/config/ag_use_attributes.h
 echo "#define AG_USE_ATTRIBUTES \"$AG_USE_ATTRIBUTES\"" >> $BLD/include/agar/config/ag_use_attributes.h
@@ -2336,7 +2340,65 @@ echo "hdefs[\"AG_USE_ATTRIBUTES\"] = \"$AG_USE_ATTRIBUTES\"" >>configure.lua
 else
 echo '#undef AG_USE_ATTRIBUTES' >$BLD/include/agar/config/ag_use_attributes.h
 echo 'hdefs["AG_USE_ATTRIBUTES"] = nil' >>configure.lua
+fi;
+if [ "${with_inline}" = "no" ]
+ then
+	with_inline_string="no"
+	with_inline_object="no"
+	with_inline_variable="no"
+	with_inline_surface="no"
+	with_inline_widget="no"
 fi
+if [ "${with_inline_string}" != "no" ]; then
+AG_INLINE_STRING="yes"
+echo '#ifndef AG_INLINE_STRING' > $BLD/include/agar/config/ag_inline_string.h
+echo "#define AG_INLINE_STRING \"$AG_INLINE_STRING\"" >> $BLD/include/agar/config/ag_inline_string.h
+echo '#endif' >> $BLD/include/agar/config/ag_inline_string.h
+echo "hdefs[\"AG_INLINE_STRING\"] = \"$AG_INLINE_STRING\"" >>configure.lua
+else
+echo '#undef AG_INLINE_STRING' >$BLD/include/agar/config/ag_inline_string.h
+echo 'hdefs["AG_INLINE_STRING"] = nil' >>configure.lua
+fi;
+if [ "${with_inline_object}" != "no" ]; then
+AG_INLINE_OBJECT="yes"
+echo '#ifndef AG_INLINE_OBJECT' > $BLD/include/agar/config/ag_inline_object.h
+echo "#define AG_INLINE_OBJECT \"$AG_INLINE_OBJECT\"" >> $BLD/include/agar/config/ag_inline_object.h
+echo '#endif' >> $BLD/include/agar/config/ag_inline_object.h
+echo "hdefs[\"AG_INLINE_OBJECT\"] = \"$AG_INLINE_OBJECT\"" >>configure.lua
+else
+echo '#undef AG_INLINE_OBJECT' >$BLD/include/agar/config/ag_inline_object.h
+echo 'hdefs["AG_INLINE_OBJECT"] = nil' >>configure.lua
+fi;
+if [ "${with_inline_variable}" != "no" ]; then
+AG_INLINE_VARIABLE="yes"
+echo '#ifndef AG_INLINE_VARIABLE' > $BLD/include/agar/config/ag_inline_variable.h
+echo "#define AG_INLINE_VARIABLE \"$AG_INLINE_VARIABLE\"" >> $BLD/include/agar/config/ag_inline_variable.h
+echo '#endif' >> $BLD/include/agar/config/ag_inline_variable.h
+echo "hdefs[\"AG_INLINE_VARIABLE\"] = \"$AG_INLINE_VARIABLE\"" >>configure.lua
+else
+echo '#undef AG_INLINE_VARIABLE' >$BLD/include/agar/config/ag_inline_variable.h
+echo 'hdefs["AG_INLINE_VARIABLE"] = nil' >>configure.lua
+fi;
+if [ "${with_inline_surface}" != "no" ]; then
+AG_INLINE_SURFACE="yes"
+echo '#ifndef AG_INLINE_SURFACE' > $BLD/include/agar/config/ag_inline_surface.h
+echo "#define AG_INLINE_SURFACE \"$AG_INLINE_SURFACE\"" >> $BLD/include/agar/config/ag_inline_surface.h
+echo '#endif' >> $BLD/include/agar/config/ag_inline_surface.h
+echo "hdefs[\"AG_INLINE_SURFACE\"] = \"$AG_INLINE_SURFACE\"" >>configure.lua
+else
+echo '#undef AG_INLINE_SURFACE' >$BLD/include/agar/config/ag_inline_surface.h
+echo 'hdefs["AG_INLINE_SURFACE"] = nil' >>configure.lua
+fi;
+if [ "${with_inline_widget}" != "no" ]; then
+AG_INLINE_WIDGET="yes"
+echo '#ifndef AG_INLINE_WIDGET' > $BLD/include/agar/config/ag_inline_widget.h
+echo "#define AG_INLINE_WIDGET \"$AG_INLINE_WIDGET\"" >> $BLD/include/agar/config/ag_inline_widget.h
+echo '#endif' >> $BLD/include/agar/config/ag_inline_widget.h
+echo "hdefs[\"AG_INLINE_WIDGET\"] = \"$AG_INLINE_WIDGET\"" >>configure.lua
+else
+echo '#undef AG_INLINE_WIDGET' >$BLD/include/agar/config/ag_inline_widget.h
+echo 'hdefs["AG_INLINE_WIDGET"] = nil' >>configure.lua
+fi;
 $ECHO_N 'checking for <sys/types.h>...'
 $ECHO_N 'checking for <sys/types.h>...' >> config.log
 # BEGIN sys_types
@@ -4656,20 +4718,18 @@ CFLAGS="${CFLAGS} -g"
 else
 echo '#undef AG_DEBUG' >$BLD/include/agar/config/ag_debug.h
 echo 'hdefs["AG_DEBUG"] = nil' >>configure.lua
-	if [ "${enable_type_safety}" = 'yes' ]
- then
+if [ "${enable_type_safety}" = 'yes' ]; then
 AG_TYPE_SAFETY="yes"
 echo '#ifndef AG_TYPE_SAFETY' > $BLD/include/agar/config/ag_type_safety.h
 echo "#define AG_TYPE_SAFETY \"$AG_TYPE_SAFETY\"" >> $BLD/include/agar/config/ag_type_safety.h
 echo '#endif' >> $BLD/include/agar/config/ag_type_safety.h
 echo "hdefs[\"AG_TYPE_SAFETY\"] = \"$AG_TYPE_SAFETY\"" >>configure.lua
-	else
+else
 echo '#undef AG_TYPE_SAFETY' >$BLD/include/agar/config/ag_type_safety.h
 echo 'hdefs["AG_TYPE_SAFETY"] = nil' >>configure.lua
-	fi
+fi;
 fi
-if [ "${enable_debug_core}" = 'yes' ]
- then
+if [ "${enable_debug_core}" = 'yes' ]; then
 AG_DEBUG_CORE="yes"
 echo '#ifndef AG_DEBUG_CORE' > $BLD/include/agar/config/ag_debug_core.h
 echo "#define AG_DEBUG_CORE \"$AG_DEBUG_CORE\"" >> $BLD/include/agar/config/ag_debug_core.h
@@ -4678,9 +4738,8 @@ echo "hdefs[\"AG_DEBUG_CORE\"] = \"$AG_DEBUG_CORE\"" >>configure.lua
 else
 echo '#undef AG_DEBUG_CORE' >$BLD/include/agar/config/ag_debug_core.h
 echo 'hdefs["AG_DEBUG_CORE"] = nil' >>configure.lua
-fi
-if [ "${enable_debug_gui}" = 'yes' ]
- then
+fi;
+if [ "${enable_debug_gui}" = 'yes' ]; then
 AG_DEBUG_GUI="yes"
 echo '#ifndef AG_DEBUG_GUI' > $BLD/include/agar/config/ag_debug_gui.h
 echo "#define AG_DEBUG_GUI \"$AG_DEBUG_GUI\"" >> $BLD/include/agar/config/ag_debug_gui.h
@@ -4689,9 +4748,8 @@ echo "hdefs[\"AG_DEBUG_GUI\"] = \"$AG_DEBUG_GUI\"" >>configure.lua
 else
 echo '#undef AG_DEBUG_GUI' >$BLD/include/agar/config/ag_debug_gui.h
 echo 'hdefs["AG_DEBUG_GUI"] = nil' >>configure.lua
-fi
-if [ "${enable_legacy}" != 'no' ]
- then
+fi;
+if [ "${enable_legacy}" = 'yes' ]; then
 AG_LEGACY="yes"
 echo '#ifndef AG_LEGACY' > $BLD/include/agar/config/ag_legacy.h
 echo "#define AG_LEGACY \"$AG_LEGACY\"" >> $BLD/include/agar/config/ag_legacy.h
@@ -4700,7 +4758,7 @@ echo "hdefs[\"AG_LEGACY\"] = \"$AG_LEGACY\"" >>configure.lua
 else
 echo '#undef AG_LEGACY' >$BLD/include/agar/config/ag_legacy.h
 echo 'hdefs["AG_LEGACY"] = nil' >>configure.lua
-fi
+fi;
 if [ "${enable_gui}" != 'no' ]
  then
 ENABLE_GUI="yes"
@@ -10378,17 +10436,16 @@ echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
 		fi
 	else
-		if [ "${with_altivec}" = 'inline' ]
- then
+if [ "${with_altivec}" = 'inline' ]; then
 INLINE_ALTIVEC="yes"
 echo '#ifndef INLINE_ALTIVEC' > $BLD/include/agar/config/inline_altivec.h
 echo "#define INLINE_ALTIVEC \"$INLINE_ALTIVEC\"" >> $BLD/include/agar/config/inline_altivec.h
 echo '#endif' >> $BLD/include/agar/config/inline_altivec.h
 echo "hdefs[\"INLINE_ALTIVEC\"] = \"$INLINE_ALTIVEC\"" >>configure.lua
-		else
+else
 echo '#undef INLINE_ALTIVEC' >$BLD/include/agar/config/inline_altivec.h
 echo 'hdefs["INLINE_ALTIVEC"] = nil' >>configure.lua
-		fi
+fi;
 	fi
 else
 echo 'not enabling AltiVec (with <altivec.h>)'
@@ -10662,27 +10719,24 @@ echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
 echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 	else
-		if [ "${with_sse}" = 'inline' ]
- then
+if [ "${with_sse}" = 'inline' ]; then
 INLINE_SSE="yes"
 echo '#ifndef INLINE_SSE' > $BLD/include/agar/config/inline_sse.h
 echo "#define INLINE_SSE \"$INLINE_SSE\"" >> $BLD/include/agar/config/inline_sse.h
 echo '#endif' >> $BLD/include/agar/config/inline_sse.h
 echo "hdefs[\"INLINE_SSE\"] = \"$INLINE_SSE\"" >>configure.lua
-		else
+else
 echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
 echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
-		fi
-		if [ "${with_sse2}" = 'no' ]
- then
+fi;
+if [ "${with_sse2}" = 'no' ]; then
 echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
 echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
-		fi
-		if [ "${with_sse3}" = 'no' ]
- then
+fi;
+if [ "${with_sse3}" = 'no' ]; then
 echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
 echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
-		fi
+fi;
 	fi
 else
 echo 'not enabling SSE extensions'
@@ -10728,8 +10782,7 @@ else
 echo '#undef SINGLE_PRECISION' >$BLD/include/agar/config/single_precision.h
 echo 'hdefs["SINGLE_PRECISION"] = nil' >>configure.lua
 fi
-if [ "${with_double_fp}" != 'no' ]
- then
+if [ "${with_double_fp}" != 'no' ]; then
 DOUBLE_PRECISION="yes"
 echo '#ifndef DOUBLE_PRECISION' > $BLD/include/agar/config/double_precision.h
 echo "#define DOUBLE_PRECISION \"$DOUBLE_PRECISION\"" >> $BLD/include/agar/config/double_precision.h
@@ -10738,7 +10791,7 @@ echo "hdefs[\"DOUBLE_PRECISION\"] = \"$DOUBLE_PRECISION\"" >>configure.lua
 else
 echo '#undef DOUBLE_PRECISION' >$BLD/include/agar/config/double_precision.h
 echo 'hdefs["DOUBLE_PRECISION"] = nil' >>configure.lua
-fi
+fi;
 if [ "${with_quad_fp}" = 'yes' ]
  then
 	if [ "${HAVE_LONG_DOUBLE}" != 'yes' ]

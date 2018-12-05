@@ -74,7 +74,7 @@ typedef struct ag_data_source {
 typedef struct ag_file_source {
 	struct ag_data_source ds;
 	char *_Nullable path;		/* Open file path */
-	FILE *_Nonnull file;		/* Opened file */
+	void *_Nonnull file;		/* Opened FILE */
 } AG_FileSource;
 
 /* Memory region */
@@ -121,7 +121,7 @@ int          AG_SetSourceDebug(AG_DataSource *_Nonnull, int);
 
 AG_DataSource *_Nullable AG_OpenFile(const char *_Nonnull, const char *_Nonnull)
                                      _Warn_Unused_Result;
-AG_DataSource *_Nullable AG_OpenFileHandle(FILE *_Nonnull) _Warn_Unused_Result;
+AG_DataSource *_Nullable AG_OpenFileHandle(void *_Nonnull) _Warn_Unused_Result;
 AG_DataSource *_Nullable AG_OpenCore(void *_Nonnull, AG_Size) _Warn_Unused_Result;
 AG_DataSource *_Nullable AG_OpenConstCore(const void *_Nonnull, AG_Size) _Warn_Unused_Result;
 AG_DataSource *_Nullable AG_OpenAutoCore(void) _Warn_Unused_Result;

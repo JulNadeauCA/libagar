@@ -31,6 +31,9 @@ REGISTER("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
 REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
 REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
+REGISTER("--with-inline-string",	"Inline some string functions [yes]")
+REGISTER("--with-inline-object",	"Inline some AG_Object functions [yes]")
+REGISTER("--with-inline-variable",	"Inline some AG_Variable functions [yes]")
 
 REGISTER_SECTION("Options specific to MATH library:")
 REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
@@ -55,6 +58,8 @@ REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
 REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
 REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
+REGISTER("--with-inline-surface",	"Inline pixel access routines [yes]")
+REGISTER("--with-inline-widget",	"Inline some AG_Widget functions [yes]")
 
 DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
 DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
@@ -168,11 +173,24 @@ if [ "${with_attributes}" != "no" ]; then
 else
 	DISABLE(cc_attributes)
 fi
-if [ "${with_attributes}" != 'no' ]; then
-	HDEFINE(AG_USE_ATTRIBUTES, "yes")
-else
-	HUNDEF(AG_USE_ATTRIBUTES)
+HDEFINE_IF("${with_attributes}" != 'no', AG_USE_ATTRIBUTES)
+
+#
+# Inline some critical functions by default. We keep a dlsymmable copy of
+# the functions with names in lowercase form.
+#
+if [ "${with_inline}" = "no" ]; then
+	with_inline_string="no"
+	with_inline_object="no"
+	with_inline_variable="no"
+	with_inline_surface="no"
+	with_inline_widget="no"
 fi
+HDEFINE_IF("${with_inline_string}" != "no",   AG_INLINE_STRING)
+HDEFINE_IF("${with_inline_object}" != "no",   AG_INLINE_OBJECT)
+HDEFINE_IF("${with_inline_variable}" != "no", AG_INLINE_VARIABLE)
+HDEFINE_IF("${with_inline_surface}" != "no",  AG_INLINE_SURFACE)
+HDEFINE_IF("${with_inline_widget}" != "no",   AG_INLINE_WIDGET)
 
 CHECK(sys_types)
 CHECK(sys_stat)
@@ -231,29 +249,12 @@ if [ "${enable_debug}" = 'yes' ]; then
 	MDEFINE(CFLAGS, "${CFLAGS} -g")
 else
 	HUNDEF(AG_DEBUG)
-	if [ "${enable_type_safety}" = 'yes' ]; then
-		HDEFINE(AG_TYPE_SAFETY, "yes")
-	else
-		HUNDEF(AG_TYPE_SAFETY)
-	fi
+	HDEFINE_IF("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
 
-if [ "${enable_debug_core}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG_CORE, "yes")
-else
-	HUNDEF(AG_DEBUG_CORE)
-fi
-if [ "${enable_debug_gui}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG_GUI, "yes")
-else
-	HUNDEF(AG_DEBUG_GUI)
-fi
-if [ "${enable_legacy}" != 'no' ]; then
-	HDEFINE(AG_LEGACY, "yes")
-else
-	HUNDEF(AG_LEGACY)
-fi
-
+HDEFINE_IF("${enable_debug_core}" = 'yes', AG_DEBUG_CORE)
+HDEFINE_IF("${enable_debug_gui}" = 'yes', AG_DEBUG_GUI)
+HDEFINE_IF("${enable_legacy}" = 'yes', AG_LEGACY)
 
 #
 # Options specific to the Agar-GUI library.
@@ -643,11 +644,7 @@ if [ "${with_altivec}" != 'no' ]; then
 			HUNDEF(INLINE_ALTIVEC)
 		fi
 	else
-		if [ "${with_altivec}" = 'inline' ]; then
-			HDEFINE(INLINE_ALTIVEC, "yes")
-		else
-			HUNDEF(INLINE_ALTIVEC)
-		fi
+		HDEFINE_IF("${with_altivec}" = 'inline', INLINE_ALTIVEC)
 	fi
 else
 	DISABLE(altivec)
@@ -658,7 +655,7 @@ fi
 # Enable SSE optimizations if compiler supports intrinsics. Note that the
 # library performs a CPU check, so enabling SSE will not break the build
 # on non-SSE machines (unless --with-sse=inline is used, in which case
-# the resulting build will be SSE-dependent).
+# the resulting ag_math library will be SSE-dependent).
 #
 if [ "${with_sse}" != 'no' ]; then
 	CHECK(sse)
@@ -672,23 +669,14 @@ if [ "${with_sse}" != 'no' ]; then
 		fi
 		DISABLE(sse)
 	else
-		if [ "${with_sse}" = 'inline' ]; then
-			HDEFINE(INLINE_SSE, "yes")
-		else
-			HUNDEF(INLINE_SSE)
-		fi
-		if [ "${with_sse2}" = 'no' ]; then
-			HUNDEF(HAVE_SSE2)
-		fi
-		if [ "${with_sse3}" = 'no' ]; then
-			HUNDEF(HAVE_SSE3)
-		fi
+		HDEFINE_IF("${with_sse}" = 'inline', INLINE_SSE)
+		HUNDEF_IF("${with_sse2}" = 'no', HAVE_SSE2)
+		HUNDEF_IF("${with_sse3}" = 'no', HAVE_SSE3)
 	fi
 else
 	DISABLE(sse)
 fi
 
-# Specify floating-point precision to use.
 if [ "${with_single_fp}" = 'yes' ]; then
 	if [ "${HAVE_MATH_C99}" != 'yes' ]; then
 		echo "*"
@@ -701,11 +689,9 @@ if [ "${with_single_fp}" = 'yes' ]; then
 else
 	HUNDEF(SINGLE_PRECISION)
 fi
-if [ "${with_double_fp}" != 'no' ]; then
-	HDEFINE(DOUBLE_PRECISION, "yes")
-else
-	HUNDEF(DOUBLE_PRECISION)
-fi
+
+HDEFINE_IF("${with_double_fp}" != 'no', DOUBLE_PRECISION)
+
 if [ "${with_quad_fp}" = 'yes' ]; then
 	if [ "${HAVE_LONG_DOUBLE}" != 'yes' ]; then
 		echo "*"

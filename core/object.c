@@ -53,6 +53,10 @@ int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_object.h"
+
 /* Initialize an AG_Object instance. */
 void
 AG_ObjectInit(void *p, void *cl)

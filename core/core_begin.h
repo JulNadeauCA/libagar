@@ -8,18 +8,8 @@
 #include <agar/core/error.h>
 #include <agar/core/threads.h>
 
-#include <agar/config/_mk_have_stdlib_h.h>
-#ifdef _MK_HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-
-#include <agar/config/_mk_have_unistd_h.h>
-#ifdef _MK_HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#include <string.h>
-#include <stdio.h>
+#include <agar/core/types.h>
+#include <agar/core/attributes.h>
 
 #include <agar/core/limits.h>
 #include <agar/core/queue.h>

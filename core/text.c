@@ -370,3 +370,94 @@ AG_TextSave(AG_DataSource *ds, AG_Text *txt)
 	AG_WriteUint32(ds, (Uint32)txt->flags & AG_TEXT_SAVED_FLAGS);
 	AG_MutexUnlock(&txt->lock);
 }
+
+/* Set the text of an element (in its active language) */
+int
+AG_TextSetS(AG_Text *txt, const char *s)
+{
+	int rv;
+
+	AG_MutexLock(&txt->lock);
+	rv = AG_TextSetEntS(txt, txt->lang, s);
+	AG_MutexUnlock(&txt->lock);
+	return (rv);
+}
+
+/* Set a dynamically-enforced size limit on a text element */
+void
+AG_TextSetLimit(AG_Text *txt, AG_Size maxLen)
+{
+	AG_MutexLock(&txt->lock);
+	txt->maxLen = maxLen;
+	AG_MutexUnlock(&txt->lock);
+}
+
+/* Select the active language of a text element. */
+void
+AG_TextSetLang(AG_Text *_Nonnull txt, AG_Language lang)
+{
+	AG_MutexLock(&txt->lock);
+	txt->lang = lang;
+	AG_MutexUnlock(&txt->lock);
+}
+
+/* Get the active language of a text element. */
+AG_Language
+AG_TextGetLang(AG_Text *txt)
+{
+	enum ag_language lang;
+
+	AG_MutexLock(&txt->lock);
+	lang = txt->lang;
+	AG_MutexUnlock(&txt->lock);
+	return (lang);
+}
+
+/* Resize the buffer associated with a text element. */
+int
+AG_TextRealloc(AG_TextEnt *_Nonnull te, AG_Size maxLenNew)
+{
+	if (maxLenNew >= te->maxLen) {
+		char *bufNew;
+
+		bufNew = (char *)AG_TryRealloc(te->buf, maxLenNew);
+		if (bufNew == NULL) {
+			return (-1);
+		}
+		te->buf = bufNew;
+		te->maxLen = maxLenNew;
+	}
+	return (0);
+}
+
+/* Concatenate the contents of the active text element against s. */
+int
+AG_TextCatS(AG_Text *_Nonnull txt, const char *_Nonnull s)
+{
+	AG_TextEnt *te;
+	AG_Size len;
+	
+	len = strlen(s);
+
+	AG_MutexLock(&txt->lock);
+	te = &txt->ent[txt->lang];
+	if (AG_TextRealloc(te, te->len + len + 1) == -1) {
+		AG_MutexUnlock(&txt->lock);
+		return (-1);
+	}
+	memcpy(&te->buf[te->len], s, len+1);
+	te->len += len;
+	AG_MutexUnlock(&txt->lock);
+	return (0);
+}
+
+/* Release an autoallocated AG_Text element. */
+void
+AG_TextFree(AG_Text *_Nullable txt)
+{
+	if (txt == NULL) {
+		return;
+	}
+	AG_TextDestroy(txt);
+	AG_Free(txt);
+}

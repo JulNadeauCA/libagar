@@ -1036,7 +1036,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 
 	cBg = agTextState->colorBG;
 	AG_FillRect(S, NULL, cBg);
-	if (cBg.a == AG_ALPHA_TRANSPARENT) {
+	if (cBg.a == AG_TRANSPARENT) {
 		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 		    AG_MapPixel(&S->format, cBg));
 	}
@@ -1106,7 +1106,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 			                G->pixmap.pitch*y);
 
 			/* XXX TODO separate routine to avoid branch */
-			if (cBg.a == AG_ALPHA_TRANSPARENT) {
+			if (cBg.a == AG_TRANSPARENT) {
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
 					AG_SurfacePut_At(S, dst,

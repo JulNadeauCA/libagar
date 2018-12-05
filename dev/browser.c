@@ -285,7 +285,7 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 	Verbose("OK\n");
 
 	if (loadedTmp) {
-		AG_ObjectFreeDataset(ob);
+		AG_ObjectReset(ob);
 	}
 	return (rv);
 }
@@ -316,7 +316,7 @@ ImportObject(AG_Event *_Nonnull event)
 	Verbose("OK\n");
 
 	if (loadedTmp) {
-		AG_ObjectFreeDataset(ob);
+		AG_ObjectReset(ob);
 	}
 	return (0);
 }

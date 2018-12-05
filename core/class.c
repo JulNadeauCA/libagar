@@ -43,6 +43,10 @@ char           **agModuleDirs = NULL;		/* Module search directories */
 int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;			/* Lock on class table */
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_class.h"
+
 static void
 InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier,
     const char *_Nonnull libs)

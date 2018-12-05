@@ -14,7 +14,7 @@ LIBS=		${CORE_LIBS}
 CFLAGS+=	-D_AGAR_CORE_INTERNAL ${CORE_CFLAGS}
 
 SRCS=	${SRCS_CORE} variable.c config.c core.c error.c event.c object.c \
-	prop.c timeout.c class.c cpuinfo.c data_source.c \
+	prop.c timeout.c class.c cpuinfo.c data_source.c list.c \
 	load_string.c load_version.c vsnprintf.c vasprintf.c asprintf.c \
 	dir.c file.c string.c dso.c tree.c time.c time_dummy.c db.c tbl.c \
 	getopt.c exec.c text.c user.c user_dummy.c user_getenv.c

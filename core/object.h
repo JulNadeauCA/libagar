@@ -319,178 +319,56 @@ void AG_ObjectGenNamePfx(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
 
-/*
- * Detach and destroy an object.
- */
-static __inline__ void
-AG_ObjectDelete(void *_Nonnull pObj)
-{
-	AG_Object *obj = AGOBJECT(pObj);
+#ifdef AG_INLINE_OBJECT
 
-	if (obj->parent != NULL) {
-		AG_ObjectDetach(obj);
-	}
-	AG_ObjectDestroy(obj);
-}
+# define AG_INLINE_HEADER
+# include <agar/core/inline_object.h>
 
-/*
- * Return a child object by name.
- * Result is valid as long as parent object's VFS is locked.
- */
-static __inline__ void *_Nullable _Pure_Attribute_If_Unthreaded
-AG_ObjectFindChild( void *_Nonnull pParent, const char *_Nonnull name)
-{
-	AG_Object *pObj = AGOBJECT(pParent);
-	AG_Object *cObj;
+#else /* !AG_INLINE_OBJECT */
 
-	AG_LockVFS(pObj);
-	AGOBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
-		if (strcmp(cObj->name, name) == 0)
-			break;
-	}
-	AG_UnlockVFS(pObj);
-	return (cObj);
-}
+void ag_object_delete(void *_Nonnull);
 
-/* Return a pointer to the description of the superclass an object. */
-static __inline__ AG_ObjectClass *_Nullable _Pure_Attribute
-AG_ObjectSuperclass(const void *_Nonnull p)
-{
-	return AGOBJECT(p)->cls->super;
-}
+void *_Nullable ag_object_find_child(void *_Nonnull, const char *_Nonnull)
+                                    _Pure_Attribute_If_Unthreaded;
 
-/* Lock/unlock the timer queue and all timers associated with an object. */
-static __inline__ void
-AG_LockTimers(void *_Nullable p)
-{
-#ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
-	AG_ObjectLock(ob);
-	AG_LockTiming();
-#else
-# ifdef __CC65__
-	if (p != NULL) { /* Unused */ }
-# endif
-#endif
-}
-static __inline__ void
-AG_UnlockTimers(void *_Nullable p)
-{
-#ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimerMgr;
-	AG_UnlockTiming();
-	AG_ObjectUnlock(ob);
-#else
-# ifdef __CC65__
-	if (p != NULL) { /* Unused */ }
-# endif
-#endif
-}
+AG_ObjectClass *_Nullable ag_object_superclass(void *_Nonnull)
+                                              _Pure_Attribute;
 
-/*
- * Evaluate whether the named object variable exists.
- * The object must be locked.
- */
-static __inline__ int _Pure_Attribute
-AG_Defined(void *_Nonnull pObj, const char *_Nonnull name)
-{
-	AG_Object *obj = AGOBJECT(pObj);
-	AG_Variable *V;
+void ag_lock_timers(void *_Nullable);
+void ag_unlock_timers(void *_Nullable);
 
-	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
-		if (strcmp(name, V->name) == 0)
-			return (1);
-	}
-	return (0);
-}
+int  ag_defined(void *_Nonnull, const char *_Nonnull)
+               _Pure_Attribute
+	       _Warn_Unused_Result;
 
-/*
- * If the named variable exists, return a pointer to it.
- * If not, allocate a new one. The Object must be locked.
- */
-static __inline__ AG_Variable *_Nonnull
-AG_FetchVariable(void *_Nonnull pObj, const char *_Nonnull name,
-    enum ag_variable_type type)
-{
-	AG_Object *obj = (AG_Object *)pObj;
-	AG_Variable *V;
+AG_Variable *_Nonnull ag_fetch_variable(void *_Nonnull, const char *_Nonnull,
+                                        enum ag_variable_type)
+                                       _Warn_Unused_Result;
 
-	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
-		if (strcmp(V->name, name) == 0)
-			break;
-	}
-	if (V == NULL) {
-		V = AG_Malloc(sizeof(AG_Variable));
-		AG_InitVariable(V, type, name);
-		AG_TAILQ_INSERT_TAIL(&obj->vars, V, vars);
-	}
-	return (V);
-}
+AG_Variable *_Nonnull ag_fetch_variable_of_type(void *_Nonnull, const char *_Nonnull,
+                                                enum ag_variable_type)
+                                               _Warn_Unused_Result;
 
-/*
- * Mutating variant of AG_FetchVariable(). If the named variable exists,
- * reinitialize it as a variable of the specified type.
- */
-static __inline__ AG_Variable *_Nonnull
-AG_FetchVariableOfType(void *_Nonnull obj, const char *_Nonnull name,
-    enum ag_variable_type type)
-{
-	AG_Variable *V = AG_FetchVariable(obj, name, type);
+AG_Variable *_Nullable ag_access_variable(void *_Nonnull, const char *_Nonnull)
+                                         _Warn_Unused_Result;
 
-	if (V->type != type) {
-		AG_Debug(obj, "Mutating \"%s\": From (%s) to (%s)\n", name,
-		    agVariableTypes[V->type].name,
-		    agVariableTypes[type].name);
-		AG_FreeVariable(V);
-		AG_InitVariable(V, type, name);
-	}
-	return (V);
-}
+void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
+                                   const char *_Nonnull)
+				  _Pure_Attribute
+				  _Warn_Unused_Result;
 
-/*
- * Lookup an object variable by name and return a locked AG_Variable.
- * The object must be locked.
- */
-static __inline__ AG_Variable *_Nullable _Pure_Attribute_If_Unthreaded
-AG_AccessVariable(void *_Nonnull pObj, const char *_Nonnull name)
-{
-	AG_Object *obj = AGOBJECT(pObj);
-	AG_Variable *V, *Vtgt;
+# define AG_ObjectDelete(o)            ag_object_delete(o)
+# define AG_ObjectFindChild(o,n)       ag_object_find_child((o),(n))
+# define AG_ObjectSuperclass(o)        ag_object_superclass(o)
+# define AG_LockTimers(o)              ag_lock_timers(o)
+# define AG_UnlockTimers(o)            ag_unlock_timers(o)
+# define AG_Defined(o,n)               ag_defined((o),(n))
+# define AG_FetchVariable(o,n,t)       ag_fetch_variable((o),(n),(t))
+# define AG_FetchVariableOfType(o,n,t) ag_fetch_variable_of_type((o),(n),(t))
+# define AG_AccessVariable(o,n)        ag_access_variable((o),(n))
+# define AG_GetNamedObject(e,k,s)      ag_get_named_object((e),(k),(s))
 
-	AG_TAILQ_FOREACH(V, &obj->vars, vars) {
-		if (strcmp(name, V->name) == 0)
-			break;
-	}
-	if (V == NULL) {
-		return (NULL);
-	}
-	AG_LockVariable(V);
-	if (V->type == AG_VARIABLE_P_VARIABLE) {
-#if 0
-		AG_Debug(obj, "Aliasing \"%s\" -> %s<%s>:\"%s\"", name,
-		    AGOBJECT(V->data.p)->name,
-		    AGOBJECT_CLASS(V->data.p)->name,
-		    V->info.varName);
-#endif
-		Vtgt = AG_AccessVariable(AGOBJECT(V->data.p), V->info.varName);
-		AG_UnlockVariable(V);
-		return (Vtgt);
-	}
-	return (V);
-}
-
-/* Accessor routine for AG_OBJECT_NAMED() macro in AG_Event(3). */
-static __inline__ void *_Nonnull _Pure_Attribute
-AG_GetNamedObject(AG_Event *_Nonnull event, const char *_Nonnull key,
-    const char *_Nonnull classSpec)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, key);
-
-	if (!AG_OfClass((struct ag_object *)V->data.p, classSpec)) {
-		AG_FatalError("Illegal AG_OBJECT_NAMED() access");
-	}
-	return (V->data.p);
-}
+#endif /* !AG_INLINE_OBJECT */
 
 #ifdef AG_LEGACY
 # define AG_ObjectFreeDataset(ob) AG_ObjectReset(ob)
@@ -524,7 +402,6 @@ AG_Prop	*_Nullable AG_SetProp(void *_Nonnull, const char *_Nonnull, enum ag_prop
 AG_Prop	*_Nullable AG_GetProp(void *_Nonnull, const char *_Nonnull, int, void *_Nonnull) DEPRECATED_ATTRIBUTE;
 AG_Variable *_Nullable AG_GetVariableLocked(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
-
 __END_DECLS
 
 #include <agar/core/close.h>

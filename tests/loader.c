@@ -41,25 +41,21 @@ LoadImage(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, "Image <%s>", AG_ShortFilename(file));
 
-	/* We use AG_FileOptionFoo() to retrieve per-type options. */
-	if (AG_FileOptionBool(ft,"invert") == 1) {
+	/*
+	 * Process type-specific options.
+	 */
+	if (AG_FileOptionBool(ft,"invert") == 1) {	/* Invert all pixels */
 		Uint8 *pSrc = S->pixels;
-		Uint8 *pEnd = &S->pixels[S->w * S->h];
+		Uint8 *pEnd = &S->pixels[S->h*S->pitch];
 
 		while (pSrc < pEnd) {
-			Uint8 r,g,b;
-
-			AG_GetColor32_RGB8(
-			    AG_SurfaceGet32_At(S,pSrc), &S->format,
-			    &r,&g,&b);
-
-			r = 255 - r;
-			g = 255 - g;
-			b = 255 - b;
-
-			AG_SurfacePut32_At(S,pSrc,
-			    AG_MapPixel32_RGB8(&S->format, r,g,b));
-
+			AG_Color c = AG_GetColor(AG_SurfaceGet_At(S,pSrc),
+			                         &S->format);
+			c.r = AG_COLOR_LAST - c.r;
+			c.g = AG_COLOR_LAST - c.g;
+			c.b = AG_COLOR_LAST - c.b;
+			AG_SurfacePut_At(S,pSrc,
+			    AG_MapPixel_RGBA(&S->format, c.r, c.g, c.b, c.a));
 			pSrc += S->format.BytesPerPixel;
 		}
 	}
@@ -106,13 +102,15 @@ TestGUI(void *obj, AG_Window *win)
 		AG_FileDlgSetFilenameS(fd, "agar.bmp");
 
 		/*
-		 * Register the loader functions. We can assign a set of user
-		 * specified options to specific types as well.
+		 * Register the loader functions.
 		 */
 		ft[0] = AG_FileDlgAddType(fd, "Windows Bitmap", "*.bmp",		LoadImage, "%p", win);
 		ft[1] = AG_FileDlgAddType(fd, "JPEG image", "*.jpg,*.jpeg",		LoadImage, "%p", win);
 		ft[2] = AG_FileDlgAddType(fd, "Portable Network Graphics", "*.png",	LoadImage, "%p", win);
 
+		/*
+		 * Register a boolean option called "invert" on all types.
+		 */
 		for (i = 0; i < 3; i++)
 			AG_FileOptionNewBool(ft[i], "Inverted", "invert", 0);
 	

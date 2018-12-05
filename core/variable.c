@@ -96,6 +96,10 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	{ AG_VARIABLE_P_VARIABLE,	1,	"Variable *",	AG_VARIABLE_P_VARIABLE,		17,	sizeof(void *) },
 };
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_variable.h"
+
 /*
  * Duplicate a Variable. Preserve pointers, but duplicate allocated strings
  * and P_VARIABLE references.

@@ -472,8 +472,9 @@ AG_DataSourceInit(AG_DataSource *_Nonnull ds)
 }
 
 AG_DataSource *
-AG_OpenFileHandle(FILE *_Nonnull f)
+AG_OpenFileHandle(void *_Nonnull pf)
 {
+	FILE *f = pf;
 	AG_FileSource *fs;
 
 	fs = Malloc(sizeof(AG_FileSource));

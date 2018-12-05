@@ -76,6 +76,67 @@ const AG_Unit *agUnitGroups[] = {
 };
 const int agnUnitGroups = sizeof(agUnitGroups) / sizeof(agUnitGroups[0]);
 
+/* Test whether the given unit is a non-linear unit. */
+int
+AG_UnitIsNonlinear(const char *key)
+{
+	return (strcmp(key, "degC") == 0 ||
+	        strcmp(key, "degF") == 0);
+}
+
+/* Convert n (in specified units) to its value in base units. */
+double
+AG_Unit2Base(double n, const AG_Unit *unit)
+{
+	if (AG_UnitIsNonlinear(unit->key)) {
+		return AG_UNIT_NL(unit)->func(n, 1);
+	}
+	return (n * unit->divider);
+}
+
+/* Convert n (in base units) to specified units. */
+double
+AG_Base2Unit(double n, const AG_Unit *unit)
+{
+	if (AG_UnitIsNonlinear(unit->key)) {
+		return AG_UNIT_NL(unit)->func(n, 0);
+	}
+	return (n / unit->divider);
+}
+
+#ifdef AG_HAVE_LONG_DOUBLE
+long double
+AG_Unit2BaseLDBL(long double n, const AG_Unit *unit)
+{
+	if (AG_UnitIsNonlinear(unit->key)) {
+		return (long double)AG_UNIT_NL(unit)->func(n, 1);
+	}
+	return (n * (long double)unit->divider);
+}
+long double
+AG_Base2UnitLDBL(long double n, const AG_Unit *unit)
+{
+	if (AG_UnitIsNonlinear(unit->key)) {
+		return (long double)AG_UNIT_NL(unit)->func(n, 0);
+	}
+	return (n / (long double)unit->divider);
+}
+#endif /* AG_HAVE_LONG_DOUBLE */
+
+/* Convert n (in fromUnit units) to its value in toUnit units. */
+double
+AG_Unit2Unit(double n, const AG_Unit *fromUnit, const AG_Unit *toUnit)
+{
+	return (AG_Base2Unit(AG_Unit2Base(n, fromUnit), toUnit));
+}
+
+/* Return the abbreviation string for a given unit. */
+const char *
+AG_UnitAbbr(const AG_Unit *unit)
+{
+	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
+}
+
 /*
  * Return the unit in the given group with a matching key.
  * If key=NULL, return the base unit.

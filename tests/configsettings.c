@@ -53,7 +53,6 @@ SaveConfig(AG_Event *event)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	char path[AG_PATHNAME_MAX];
 	AG_ConfigPath *cp;
 	AG_TestInstance *ti = obj;
 	AG_Box *box;

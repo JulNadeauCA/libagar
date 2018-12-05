@@ -832,7 +832,7 @@ void
 AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color c,
     AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
 {
-	if (c.a < AG_ALPHA_OPAQUE)
+	if (c.a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_LINES);
@@ -841,7 +841,7 @@ AG_GL_DrawLineBlended(void *obj, int x1, int y1, int x2, int y2, AG_Color c,
 	glVertex2s(x2, y2);
 	glEnd();
 	
-	if (c.a < AG_ALPHA_OPAQUE)
+	if (c.a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 
@@ -1195,7 +1195,7 @@ AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_AlphaFn fnSrc,
 	int x2 = x1+r.w;
 	int y2 = y1+r.h;
 
-	if (c.a < AG_ALPHA_OPAQUE)
+	if (c.a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->pushBlendingMode(obj, fnSrc, fnDst);
 
 	glBegin(GL_POLYGON);
@@ -1206,7 +1206,7 @@ AG_GL_DrawRectBlended(void *obj, AG_Rect r, AG_Color c, AG_AlphaFn fnSrc,
 	glVertex2i(x1, y2);
 	glEnd();
 	
-	if (c.a < AG_ALPHA_OPAQUE)
+	if (c.a < AG_OPAQUE)
 		AGDRIVER_CLASS(obj)->popBlendingMode(obj);
 }
 

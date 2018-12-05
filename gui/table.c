@@ -2215,8 +2215,9 @@ fail:
 }
 
 int
-AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
+AG_TableSaveASCII(AG_Table *t, void *pf, char sep)
 {
+	FILE *f = (FILE *)pf;
 	char txt[AG_TABLE_TXT_MAX];
 	int m, n;
 

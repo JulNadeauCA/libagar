@@ -4,9 +4,6 @@
  * (included by <core/begin.h>, <gui/begin.h>, etc.)
  */
 
-#ifndef _AGAR_CORE_ATTRIBUTES_H_
-#define _AGAR_CORE_ATTRIBUTES_H_
-
 #undef _Aligned_Attribute
 #undef _Alloc_Align_Attribute
 #undef _Alloc_Size_Attribute
@@ -160,5 +157,3 @@
 #if defined(__CC65__) && !defined(__inline__)
 # define __inline__
 #endif
-
-#endif /* _AGAR_CORE_ATTRIBUTES_H_ */

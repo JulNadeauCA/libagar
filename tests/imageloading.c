@@ -33,7 +33,6 @@ TestGUI(void *obj, AG_Window *win)
 /*	AG_Scrollview *sv; */
 	AG_Box *hBox, *vBox, *bppBox;
 	AG_PixelFormat pfTest;
-	AG_Label *lbl;
 	int i;
 
 /*	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND); */

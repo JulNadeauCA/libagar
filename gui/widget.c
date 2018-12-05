@@ -105,6 +105,10 @@ AG_WidgetPalette agDefaultPalette = {{
 #endif
 }};
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_widget.h"
+
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
 SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)

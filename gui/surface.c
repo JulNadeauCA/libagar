@@ -49,6 +49,10 @@ const char *agAlphaFuncNames[] = {
 AG_PixelFormat *agSurfaceFmt = NULL;  /* Recommended format for GUI surfaces */
 enum ag_grayscale_mode agGrayscaleMode = AG_GRAYSCALE_BT709;
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_surface.h"
+
 /*
  * Compute right shifts to extract RGBA components, as well as the
  * number of bits lost by packing components into our native fields.

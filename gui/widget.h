@@ -3,7 +3,6 @@
 #ifndef _AGAR_GUI_WIDGET_H_
 #define _AGAR_GUI_WIDGET_H_
 
-#include <agar/config/have_sdl.h>
 #include <agar/config/have_opengl.h>
 
 #include <agar/gui/gui.h>
@@ -149,8 +148,10 @@ enum ag_widget_color {
 	AG_BORDER_COLOR			/* Decorative borders ("border-color") */
 };
 typedef struct {
-	AG_Color c[AG_WIDGET_NSTATES][AG_WIDGET_NCOLORS];
+	AG_Color c[AG_WIDGET_NSTATES]
+	          [AG_WIDGET_NCOLORS];
 } AG_WidgetPalette;
+
 #define AG_WCOLOR(wid,which)	 AGWIDGET(wid)->pal.c[AGWIDGET(wid)->cState][which]
 #define AG_WCOLOR_DEF(wid,which) AGWIDGET(wid)->pal.c[AG_DEFAULT_STATE][which]
 #define AG_WCOLOR_DIS(wid,which) AGWIDGET(wid)->pal.c[AG_DISABLED_STATE][which]
@@ -358,80 +359,6 @@ void AG_WidgetFreeStyle(void *_Nonnull);
 void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
 void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);
 
-/* Return the widget state. The Widget object must be locked. */
-static __inline__ int _Pure_Attribute
-AG_WidgetEnabled(void *_Nonnull p)
-{
-	return !(AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
-}
-static __inline__ int _Pure_Attribute
-AG_WidgetDisabled(void *_Nonnull p)
-{
-	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
-}
-
-/* Return the widget's visibility state. The Widget object must be locked. */
-static __inline__ int _Pure_Attribute
-AG_WidgetVisible(void *_Nonnull p)
-{
-	return (AGWIDGET(p)->flags & AG_WIDGET_VISIBLE);
-}
-
-/*
- * Return the focus state of the widget inside of its parent window (not
- * necessarily the effective focus). The Widget object must be locked.
- */
-static __inline__ int _Pure_Attribute
-AG_WidgetIsFocusedInWindow(void *_Nonnull p)
-{
-	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
-}
-
-/* Test whether view coordinates x,y lie in widget's allocated space. */
-static __inline__ int _Pure_Attribute
-AG_WidgetArea(void *_Nonnull p, int x, int y)
-{
-	AG_Widget *wid = AGWIDGET(p);
-
-	return (x > wid->rView.x1 && y > wid->rView.y1 &&
-	        x < wid->rView.x2 && y < wid->rView.y2);
-}
-
-/* Test whether widget coordinates x,y lie in widget's allocated space. */
-static __inline__ int _Pure_Attribute
-AG_WidgetRelativeArea(void *_Nonnull p, int x, int y)
-{
-	AG_Widget *wid = AGWIDGET(p);
-
-	return (x >= 0 &&
-	        y >= 0 &&
-	        x < wid->w &&
-		y < wid->h);
-}
-
-/* Expand widget to fill available space in parent container. */
-static __inline__ void
-AG_Expand(void *_Nonnull wid)
-{
-	AG_ObjectLock(wid);
-	AGWIDGET(wid)->flags |= AG_WIDGET_EXPAND;
-	AG_ObjectUnlock(wid);
-}
-static __inline__ void
-AG_ExpandHoriz(void *_Nonnull wid)
-{
-	AG_ObjectLock(wid);
-	AGWIDGET(wid)->flags |= AG_WIDGET_HFILL;
-	AG_ObjectUnlock(wid);
-}
-static __inline__ void
-AG_ExpandVert(void *_Nonnull wid)
-{
-	AG_ObjectLock(wid);
-	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
-	AG_ObjectUnlock(wid);
-}
-
 /* Signal a change in a widget surface. */
 #ifdef HAVE_OPENGL
 # define AG_WidgetUpdateSurface(wid,name) do { \
@@ -441,182 +368,60 @@ AG_ExpandVert(void *_Nonnull wid)
 # define AG_WidgetUpdateSurface(wid,name)
 #endif
 
-/*
- * Request that all computed widget coordinates and geometries in the widget's
- * current window be updated as soon as possible. The widget may or may not
- * be currently attached to a window at the time the call is made.
- */
-static __inline__ void
-AG_WidgetUpdate(void *_Nonnull obj)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
+#ifdef AG_INLINE_WIDGET
+# define AG_INLINE_HEADER
+# include <agar/gui/inline_widget.h>
+#else /* !AG_INLINE_WIDGET */
 
-	AG_ObjectLock(wid);
-	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
-	AG_ObjectUnlock(wid);
-}
+int  ag_widget_enabled(void *_Nonnull) _Pure_Attribute;
+int  ag_widget_disabled(void *_Nonnull) _Pure_Attribute;
+int  ag_widget_visible(void *_Nonnull) _Pure_Attribute;
+int  ag_widget_is_focused_in_window(void *_Nonnull) _Pure_Attribute;
+int  ag_widget_area(void *_Nonnull, int,int) _Pure_Attribute;
+int  ag_widget_relative_area(void *_Nonnull, int,int) _Pure_Attribute;
+void ag_expand(void *_Nonnull);
+void ag_expand_horiz(void *_Nonnull);
+void ag_expand_vert(void *_Nonnull);
+void ag_widget_update(void *_Nonnull);
+void ag_push_clip_rect(void *_Nonnull, AG_Rect);
+void ag_pop_clip_rect(void *_Nonnull);
+void ag_push_blending_mode(void *_Nonnull, AG_AlphaFn, AG_AlphaFn);
+void ag_pop_blending_mode(void *_Nonnull);
+int  ag_widget_map_surface_nodup(void *_Nonnull, AG_Surface *_Nonnull);
+void ag_widget_replace_surface_nodup(void *_Nonnull, int, AG_Surface *_Nullable);
+void ag_widget_blit(void *_Nonnull, AG_Surface *_Nonnull, int,int);
+void ag_widget_blit_from(void *_Nonnull, int, AG_Rect *_Nullable, int,int);
 
-/*
- * Push a clipping rectangle onto the stack, by widget-relative coordinates.
- * Must be invoked from GUI rendering context.
- */
-static __inline__ void
-AG_PushClipRect(void *_Nonnull obj, AG_Rect pr)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	AG_Rect r;
+void          ag_set_key_state(void *_Nonnull, int *_Nonnull);
+int *_Nonnull ag_get_key_state(void *_Nonnull) _Pure_Attribute;
+int           ag_get_key_count(void *_Nonnull) _Pure_Attribute;
+Uint          ag_get_mod_state(void *_Nonnull) _Pure_Attribute;
+void          ag_set_mod_state(void *_Nonnull, Uint);
 
-	r.x = wid->rView.x1 + pr.x;
-	r.y = wid->rView.y1 + pr.y;
-	r.w = pr.w;
-	r.h = pr.h;
-	wid->drvOps->pushClipRect(wid->drv, r);
-}
-
-/*
- * Pop a clipping rectangle off the clipping rectangle stack.
- * Must be invoked from GUI rendering context.
- */
-static __inline__ void
-AG_PopClipRect(void *_Nonnull obj)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->popClipRect(wid->drv);
-}
-
-/* Set the blending mode, pushing the current mode on a stack. */
-static __inline__ void
-AG_PushBlendingMode(void *_Nonnull obj, AG_AlphaFn fnSrc, AG_AlphaFn fnDst)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->pushBlendingMode(wid->drv, fnSrc, fnDst);
-}
-
-/* Restore the last blending mode. */
-static __inline__ void
-AG_PopBlendingMode(void *_Nonnull obj)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	wid->drvOps->popBlendingMode(wid->drv);
-}
-
-/* Offset the coordinates of an AG_Rect per widget coordinates. */
-static __inline__ void
-AG_WidgetOffsetRect(void *_Nonnull obj,
-    AG_Rect *_Nonnull r)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	r->x += wid->rView.x1;
-	r->y += wid->rView.y1;
-}
-
-/*
- * Variant of AG_WidgetMapSurface() that sets the NODUP flag such that
- * the surface is not freed by the widget.
- */
-static __inline__ int
-AG_WidgetMapSurfaceNODUP(void *_Nonnull obj,
-    AG_Surface *_Nonnull su)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	int name;
-
-	AG_ObjectLock(wid);
-	if ((name = AG_WidgetMapSurface(wid, su)) != -1) {
-		wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
-	}
-	AG_ObjectUnlock(wid);
-	return (name);
-}
-
-/* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
-static __inline__ void
-AG_WidgetReplaceSurfaceNODUP(void *_Nonnull obj, int name,
-    AG_Surface *_Nullable su)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	AG_ObjectLock(wid);
-#ifdef AG_DEBUG
-	if (name < 0 || name >= (int)wid->nSurfaces)
-		AG_FatalError("Bad surface handle");
-#endif
-	AG_WidgetReplaceSurface(wid, name, su);
-	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
-	AG_ObjectUnlock(wid);
-}
-
-/*
- * Draw an unmapped surface at given coordinates in the widget's coordinate
- * system. With hardware-accelerated drivers, this operation is slow compared
- * to drawing of mapped surfaces, since a software->hardware copy is done.
- */
-static __inline__ void
-AG_WidgetBlit(void *_Nonnull obj, AG_Surface *_Nonnull s, int x, int y)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-
-	wid->drvOps->blitSurface(wid->drv, wid, s,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y);
-}
-
-/*
- * Perform a hardware or software blit from a mapped surface to the display
- * at coordinates relative to the widget, using clipping.
- */
-static __inline__ void
-AG_WidgetBlitFrom(void *_Nonnull obj, int s, AG_Rect *_Nullable r,
-    int x, int y)
-{
-	AG_Widget *wid = (AG_Widget *)obj;
-	
-	if (s == -1 || wid->surfaces[s] == NULL)
-		return;
-
-	wid->drvOps->blitSurfaceFrom(wid->drv, wid, s, r,
-	    wid->rView.x1 + x,
-	    wid->rView.y1 + y);
-}
-
-/*
- * Routines for direct access to keyboard key and modifier state
- * from widget code.
- */
-static __inline__ int *_Nonnull _Pure_Attribute
-AG_GetKeyState(void *_Nonnull obj)
-{
-	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
-	return (kbd->keyState);
-}
-static __inline__ void
-AG_SetKeyState(void *_Nonnull obj, int *_Nonnull ks)
-{
-	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
-	memcpy(kbd->keyState, ks, kbd->keyCount*sizeof(int));
-}
-static __inline__ int _Pure_Attribute
-AG_GetKeyCount(void *_Nonnull obj)
-{
-	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
-	return (kbd->keyCount);
-}
-static __inline__ Uint _Pure_Attribute
-AG_GetModState(void *_Nonnull obj)
-{
-	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
-	return (kbd->modState);
-}
-static __inline__ void
-AG_SetModState(void *_Nonnull obj, Uint ms)
-{
-	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
-	kbd->modState = ms;
-}
+# define AG_WidgetEnabled(o)                 ag_widget_enabled(o)
+# define AG_WidgetDisabled(o)                ag_widget_disabled(o)
+# define AG_WidgetVisible(o)                 ag_widget_visible(o)
+# define AG_WidgetIsFocusedInWindow(o)       ag_widget_is_focused_in_window(o)
+# define AG_WidgetArea(o,x,y)                ag_widget_area((o),(x),(y))
+# define AG_WidgetRelativeArea(o,x,y)        ag_widget_relative_area((o),(x),(y))
+# define AG_Expand(o)                        ag_expand(o)
+# define AG_ExpandHoriz(o)                   ag_expand_horiz(o)
+# define AG_ExpandVert(o)                    ag_expand_vert(o)
+# define AG_WidgetUpdate(o)                  ag_widget_update(o)
+# define AG_PushClipRect(o,r)                ag_push_clip_rect((o),(r))
+# define AG_PopClipRect(o)                   ag_pop_clip_rect(o)
+# define AG_PushBlendingMode(o,fs,fd)        ag_push_blending_mode((o),(fs),(fd))
+# define AG_PopBlendingMode(o)               ag_pop_blending_mode(o)
+# define AG_WidgetMapSurfaceNODUP(o,S)       ag_widget_map_surface_nodup((o),(S))
+# define AG_WidgetReplaceSurfaceNODUP(o,n,S) ag_widget_replace_surface_nodup((o),(n),(S))
+# define AG_WidgetBlit(o,S,x,y)              ag_widget_blit((o),(S),(x),(y))
+# define AG_WidgetBlitFrom(o,n,r,x,y)        ag_widget_blit_from((o),(n),(r),(x),(y))
+# define AG_GetKeyState(o)                   ag_get_key_state(o)
+# define AG_SetKeyState(o,ks)                ag_set_key_state((o),(ks))
+# define AG_GetKeyCount(o)                   ag_get_key_count(o)
+# define AG_GetModState(o)                   ag_get_mod_state(o)
+# define AG_SetModState(o)                   ag_set_mod_state((o),(ms))
+#endif /* AG_INLINE_WIDGET */
 __END_DECLS
 
 #ifdef AG_LEGACY

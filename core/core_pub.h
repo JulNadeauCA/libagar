@@ -4,7 +4,6 @@
 #define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
-#include <agar/core/types.h>
 #include <agar/core/core_init.h>
 #include <agar/core/string.h>
 

@@ -98,6 +98,7 @@ int  AG_InitStringSubsystem(void);
 void AG_DestroyStringSubsystem(void);
 
 #ifdef AG_INLINE_STRING
+# define AG_INLINE_HEADER
 # include <agar/core/inline_string.h>
 #else
 AG_Size _Pure_Attribute ag_length_ucs4(const Uint32 *_Nonnull);

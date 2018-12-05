@@ -336,8 +336,7 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 				continue;
 			}
 			c = AG_GetColor(px, &ss->format);
-			if ((c.a < AG_ALPHA_OPAQUE) &&
-			    (ss->flags & AG_SURFACE_ALPHA)) {
+			if ((c.a < AG_OPAQUE) && (ss->flags & AG_SURFACE_ALPHA)) {
 				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_OVERLAY);
 			} else {
 				AG_SDL_PutPixel(ds, pDst,

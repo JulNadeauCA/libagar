@@ -33,8 +33,8 @@
 #include "perl_agar.h"
 
 static const AP_FlagNames flagNames[] = {
-	{ "srcColorKey", AG_SRCCOLORKEY },
-	{ "srcAlpha",    AG_SRCALPHA },
+	{ "srcColorKey", AG_SURFACE_COLORKEY },
+	{ "srcAlpha",    AG_SURFACE_ALPHA },
 	{ NULL,          0 }
 };
 

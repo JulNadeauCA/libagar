@@ -251,7 +251,8 @@ AG_DrawBoxRounded(void *_Nonnull obj, AG_Rect r, int z, int rad, AG_Color cBg)
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c[3];
 	
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	c[0] = AG_ColorAdd(cBg,  (z<0) ? agSunkColor : agRaisedColor);
 	c[1] = AG_ColorAdd(c[0], (z<0) ? agLowColor  : agHighColor);
 	c[2] = AG_ColorAdd(c[0], (z<0) ? agHighColor : agLowColor);
@@ -265,7 +266,8 @@ AG_DrawBoxRoundedTop(void *_Nonnull obj, AG_Rect r, int z, int rad, AG_Color cBg
 	AG_Widget *wid = (AG_Widget *)obj;
 	AG_Color c[3];
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	c[0] = cBg;
 	c[1] = AG_ColorAdd(c[0], (z<0) ? agLowColor  : agHighColor);
 	c[2] = AG_ColorAdd(c[0], (z<0) ? agHighColor : agLowColor);
@@ -302,8 +304,9 @@ AG_DrawRect(void *_Nonnull obj, AG_Rect r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	
-	AG_WidgetOffsetRect(wid, &r);
-	if (c.a < AG_ALPHA_OPAQUE) {
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
+	if (c.a < AG_OPAQUE) {
 		wid->drvOps->drawRectBlended(wid->drv, r, c,
 		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	} else {
@@ -317,7 +320,8 @@ AG_DrawRectFilled(void *_Nonnull obj, AG_Rect r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	wid->drvOps->drawRectFilled(wid->drv, r, c);
 }
 
@@ -327,7 +331,8 @@ AG_DrawRectBlended(void *_Nonnull obj, AG_Rect r, AG_Color c, AG_AlphaFn fnSrc)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	wid->drvOps->drawRectBlended(wid->drv, r, c,
 	    fnSrc, AG_ALPHA_ONE_MINUS_SRC);
 }
@@ -338,7 +343,8 @@ AG_DrawRectDithered(void *_Nonnull obj, AG_Rect r, AG_Color c)
 {
 	AG_Widget *wid = (AG_Widget *)obj;
 	
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	wid->drvOps->drawRectDithered(wid->drv, r, c);
 }
 
@@ -352,20 +358,21 @@ AG_DrawFrame(void *_Nonnull obj, AG_Rect r, int z, AG_Color cBase)
 	AG_Color c[2];
 	int y2, x2;
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	c[0] = AG_ColorAdd(cBase, (z<0) ? agLowColor  : agHighColor);
 	c[1] = AG_ColorAdd(cBase, (z<0) ? agHighColor : agLowColor);
 	x2 = r.x+r.w - 1;
 	y2 = r.y+r.h - 1;
 
-	if (c[0].a < AG_ALPHA_OPAQUE) {
+	if (c[0].a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c[0], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
 		drvOps->drawLineH(drv, r.x, x2,  r.y, c[0]);
 		drvOps->drawLineV(drv, r.x, r.y, y2,  c[0]);
 	}
-	if (c[1].a < AG_ALPHA_OPAQUE) {
+	if (c[1].a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, r.x, y2,  x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, x2,  r.y, x2, y2, c[1], AG_ALPHA_SRC, AG_ALPHA_ZERO);
 	} else {
@@ -388,8 +395,9 @@ AG_DrawBox(void *_Nonnull obj, AG_Rect r, int z, AG_Color c)
 
 	c = AG_ColorAdd(c, (z < 0) ? agSunkColor : agRaisedColor);
 	rOffs = r;
-	AG_WidgetOffsetRect(wid, &rOffs);
-	if (c.a < AG_ALPHA_OPAQUE) {
+	rOffs.x += wid->rView.x1;
+	rOffs.y += wid->rView.y1;
+	if (c.a < AG_OPAQUE) {
 		wid->drvOps->drawRectBlended(drv, rOffs, c,
 		    AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 	} else {
@@ -408,7 +416,8 @@ AG_DrawBoxDisabled(void *_Nonnull obj, AG_Rect r, int z, AG_Color cBox,
 
 	cDither = AG_ColorAdd(cDither, (z<0) ? agSunkColor : agRaisedColor);
 	rOffs = r;
-	AG_WidgetOffsetRect(wid, &rOffs);
+	rOffs.x += wid->rView.x1;
+	rOffs.y += wid->rView.y1;
 	wid->drvOps->drawRectFilled(wid->drv, rOffs, cBox);
 	AG_DrawFrame(wid, r, z, cBox);
 	wid->drvOps->drawRectDithered(wid->drv, rOffs, cDither);
@@ -423,7 +432,8 @@ AG_DrawFrameBlended(void *_Nonnull obj, AG_Rect r, AG_Color C, AG_AlphaFn fnSrc)
 	AG_DriverClass *drvOps = wid->drvOps;
 	int x2, y2;
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	x2 = r.x+r.w - 1;
 	y2 = r.y+r.h - 1;
 	drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, C, fnSrc, AG_ALPHA_ZERO);
@@ -441,10 +451,11 @@ AG_DrawRectOutline(void *_Nonnull obj, AG_Rect r, AG_Color c)
 	AG_DriverClass *drvOps = wid->drvOps;
 	int x2, y2;
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 	x2 = r.x+r.w - 1;
 	y2 = r.y+r.h - 1;
-	if (c.a < AG_ALPHA_OPAQUE) {
+	if (c.a < AG_OPAQUE) {
 		drvOps->drawLineBlended(drv, r.x, r.y, x2,  r.y, c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, r.x, r.y, x2,  y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
 		drvOps->drawLineBlended(drv, r.x, r.y, r.x, y2,  c, AG_ALPHA_SRC, AG_ALPHA_ZERO);
@@ -465,9 +476,10 @@ AG_DrawPlus(void *_Nonnull obj, AG_Rect r, AG_Color C, AG_AlphaFn fnSrc)
 	AG_Driver *drv = wid->drv;
 	int x1, y1;
 
-	AG_WidgetOffsetRect(wid, &r);
-	x1 = r.x + r.w/2;
-	y1 = r.y + r.h/2;
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
+	x1 = r.x + (r.w >> 1);
+	y1 = r.y + (r.h >> 1);
 	wid->drvOps->drawLineBlended(drv, x1,  r.y, x1,      r.y+r.h, C, fnSrc, AG_ALPHA_ZERO);
 	wid->drvOps->drawLineBlended(drv, r.x, y1,  r.x+r.w, y1,      C, fnSrc, AG_ALPHA_ZERO);
 }
@@ -479,9 +491,10 @@ AG_DrawMinus(void *_Nonnull obj, AG_Rect r, AG_Color C, AG_AlphaFn fnSrc)
 	AG_Widget *wid = (AG_Widget *)obj;
 	int x, y;
 
-	AG_WidgetOffsetRect(wid, &r);
-	x = r.x + r.w/2;
-	y = r.y + r.h/2;
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
+	x = r.x + (r.w >> 1);
+	y = r.y + (r.h >> 1);
 	wid->drvOps->drawLineBlended(wid->drv, x,y, r.x+r.w, y, C, fnSrc, AG_ALPHA_ZERO);
 }
 
@@ -511,7 +524,8 @@ AG_DrawTiling(void *_Nonnull obj, AG_Rect r, int tsz, int offs,
 	int alt1 = 0, alt2 = 0;
 	AG_Rect rt;
 
-	AG_WidgetOffsetRect(wid, &r);
+	r.x += wid->rView.x1;
+	r.y += wid->rView.y1;
 
 	rt.w = tsz;
 	rt.h = tsz;

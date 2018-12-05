@@ -551,7 +551,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 		AG_SurfaceSetAlpha(su, 0, 0);
 		AG_SurfaceSetColorKey(su, 0, 0);
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT))
-			AG_SurfaceSetAlpha(su, AG_SRCALPHA, oldalpha);
+			AG_SurfaceSetAlpha(su, AG_SURFACE_ALPHA, oldalpha);
 	}
 	return (su);
 }

@@ -21,11 +21,6 @@ typedef struct ag_unit_nl {
 #define AG_UNIT_NL(unit) ((AG_UnitNL *)(unit))
 
 __BEGIN_DECLS
-const AG_Unit *_Nullable AG_FindUnit(const char *_Nonnull);
-const AG_Unit *_Nonnull  AG_BestUnit(const AG_Unit[_Nonnull], double);
-
-int AG_UnitFormat(double, const AG_Unit[_Nonnull],
-                  char *_Nonnull, AG_Size);
 
 /* Nonlinear units */
 double AG_UnitFahrenheit(double, int);
@@ -66,60 +61,29 @@ extern const AG_Unit agThermalConductivityUnits[];
 extern const AG_Unit agThermalExpansionUnits[];
 extern const AG_Unit agDensityUnits[];
 
-static __inline__ int _Const_Attribute
-AG_UnitIsNonlinear(const char *_Nonnull key)
-{
-	return (strcmp(key, "degC") == 0 ||
-	        strcmp(key, "degF") == 0);
-}
-
-static __inline__ double _Pure_Attribute
-AG_Unit2Base(double n, const AG_Unit *_Nonnull unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return AG_UNIT_NL(unit)->func(n, 1);
-	}
-	return (n * unit->divider);
-}
-static __inline__ double _Pure_Attribute
-AG_Base2Unit(double n, const AG_Unit *_Nonnull unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return AG_UNIT_NL(unit)->func(n, 0);
-	}
-	return (n / unit->divider);
-}
-
+int AG_UnitIsNonlinear(const char *_Nonnull)
+                      _Const_Attribute;
+double AG_Unit2Base(double, const AG_Unit *_Nonnull)
+                   _Pure_Attribute;
+double AG_Base2Unit(double, const AG_Unit *_Nonnull)
+                   _Pure_Attribute;
 #ifdef AG_HAVE_LONG_DOUBLE
-static __inline__ long double _Pure_Attribute
-AG_Unit2BaseLDBL(long double n, const AG_Unit *_Nonnull unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return (long double)AG_UNIT_NL(unit)->func(n, 1);
-	}
-	return (n * (long double)unit->divider);
-}
-static __inline__ long double _Pure_Attribute
-AG_Base2UnitLDBL(long double n, const AG_Unit *_Nonnull unit)
-{
-	if (AG_UnitIsNonlinear(unit->key)) {
-		return (long double)AG_UNIT_NL(unit)->func(n, 0);
-	}
-	return (n / (long double)unit->divider);
-}
-#endif /* AG_HAVE_LONG_DOUBLE */
+long double AG_Unit2BaseLDBL(long double, const AG_Unit *_Nonnull)
+                            _Pure_Attribute;
+long double AG_Base2UnitLDBL(long double, const AG_Unit *_Nonnull)
+                            _Pure_Attribute;
+#endif
 
-static __inline__ double _Pure_Attribute
-AG_Unit2Unit(double n, const AG_Unit *_Nonnull fromUnit,
-    const AG_Unit *_Nonnull toUnit)
-{
-	return (AG_Base2Unit(AG_Unit2Base(n, fromUnit), toUnit));
-}
-static __inline__ const char *_Nonnull
-AG_UnitAbbr(const AG_Unit *_Nonnull unit)
-{
-	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
-}
+double AG_Unit2Unit(double, const AG_Unit *_Nonnull, const AG_Unit *_Nonnull)
+                   _Pure_Attribute;
+
+const char *_Nonnull AG_UnitAbbr(const AG_Unit *_Nonnull)
+                                _Pure_Attribute;
+
+const AG_Unit *_Nullable AG_FindUnit(const char *_Nonnull);
+const AG_Unit *_Nonnull  AG_BestUnit(const AG_Unit[_Nonnull], double);
+int                      AG_UnitFormat(double, const AG_Unit[_Nonnull],
+                                       char *_Nonnull, AG_Size);
 
 #define	AG_Unit2Basef(n, u) ((float)AG_Unit2Base((float)(n), (u)))
 #define	AG_Base2Unitf(n, u) ((float)AG_Base2Unit((float)(n), (u)))

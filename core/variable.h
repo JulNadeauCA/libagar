@@ -480,70 +480,21 @@ AG_Variable *_Nonnull AG_BindObject(void *_Nonnull, const char *_Nonnull,
 AG_Variable *_Nonnull AG_BindVariable(void *_Nonnull, const char *_Nonnull,
 				      void *_Nonnull, const char *_Nonnull);
 
-/* Initialize an AG_Variable structure. */
-static __inline__ void
-AG_InitVariable(AG_Variable *_Nonnull V, AG_VariableType type,
-    const char *_Nonnull name)
-{
-#ifdef AG_DEBUG
-	memset(V->name, '\0', sizeof(V->name));
-#endif
-	if (name[0] != '\0') {
-		AG_Strlcpy(V->name, name, sizeof(V->name));
-	} else {
-		V->name[0] = '\0';
-	}
-	V->type = type;
-	V->mutex = NULL;
-	V->fn.fnVoid = NULL;
-	V->info.size = 0;
-	V->info.varName = NULL;
-	V->data.s = NULL;
-}
-
-/* Acquire any locking device associated with a variable. */
-static __inline__ void
-AG_LockVariable(AG_Variable *_Nonnull V)
-{
-#ifdef AG_THREADS
-	if (V->mutex != NULL) { AG_MutexLock(V->mutex); }
+#ifdef AG_INLINE_VARIABLE
+# define AG_INLINE_HEADER
+# include <agar/core/inline_variable.h>
 #else
-# ifdef __CC65__
-	if (V != NULL) { /* Unused */ }
-# endif
-#endif
-}
+void ag_init_variable(AG_Variable *_Nonnull, AG_VariableType,
+                      const char *_Nonnull);
+void ag_lock_variable(AG_Variable *_Nonnull);
+void ag_unlock_variable(AG_Variable *_Nonnull);
+void ag_free_variable(AG_Variable *_Nonnull);
 
-/* Release any locking device associated with a variable. */
-static __inline__ void
-AG_UnlockVariable(AG_Variable *_Nonnull V)
-{
-#ifdef AG_THREADS
-	if (V->mutex != NULL) { AG_MutexUnlock(V->mutex); }
-#else
-# ifdef __CC65__
-	if (V != NULL) { /* Unused */ }
-# endif
-#endif
-}
-
-/* Release all resources associated with a variable. */
-static __inline__ void
-AG_FreeVariable(AG_Variable *_Nonnull V)
-{
-	switch (V->type) {
-	case AG_VARIABLE_STRING:
-		if (V->info.size == 0) {
-			AG_Free(V->data.s);
-		}
-		break;
-	case AG_VARIABLE_P_VARIABLE:
-		AG_Free(V->info.varName);
-		break;
-	default:
-		break;
-	}
-}
+# define AG_InitVariable(V,t,n) ag_init_variable((V),(t),(n))
+# define AG_LockVariable(V)     ag_lock_variable(V)
+# define AG_UnlockVariable(V)   ag_unlock_variable(V)
+# define AG_FreeVariable(V)     ag_free_variable(V)
+#endif /* AG_INLINE_VARIABLE */
 
 #define AG_VARIABLE_TYPE(V) (agVariableTypes[(V)->type].typeTgt)
 #define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
