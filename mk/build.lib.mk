@@ -100,7 +100,7 @@ SHOBJS?=
 WINRES?=
 
 all: all-subdir lib${LIB}.a lib${LIB}.so lib${LIB}.la
-install: all install-lib install-subdir
+install: install-lib install-subdir
 deinstall: deinstall-lib deinstall-subdir
 clean: clean-lib clean-subdir
 cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir

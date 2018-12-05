@@ -106,7 +106,7 @@ PROG_REQUIRED_CAPABILITIES?=
 # opengles-3 peer-peer sms still-camera telephony video-camera wifi
 
 all: all-subdir ${PROG}
-install: all install-prog install-subdir
+install: install-prog install-subdir
 deinstall: deinstall-prog deinstall-subdir
 clean: clean-prog clean-subdir
 cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir

@@ -2837,8 +2837,8 @@ if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 # END limits_h
-$ECHO_N 'checking for compatible <float.h>...'
-$ECHO_N 'checking for compatible <float.h>...' >> config.log
+$ECHO_N 'checking for <float.h>...'
+$ECHO_N 'checking for <float.h>...' >> config.log
 # BEGIN float_h
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
@@ -3165,8 +3165,8 @@ if [ "${keep_conftest}" != "yes" ]; then
 	rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 # END getpwnam_r
-$ECHO_N 'checking for a getenv() function...'
-$ECHO_N 'checking for a getenv() function...' >> config.log
+$ECHO_N 'checking for getenv()...'
+$ECHO_N 'checking for getenv()...' >> config.log
 # BEGIN getenv
 MK_COMPILE_STATUS='OK'
 cat << EOT > conftest$$.c
@@ -4232,11 +4232,8 @@ cat << EOT > conftest$$.c
 int
 main(int argc, char *argv[])
 {
-	char *args[3];
+	char *args[3] = { "foo", NULL, NULL };
 	int rv;
-
-	args[0] = "foo";
-	args[2] = NULL;
 
 	rv = execvp(args[0], args);
 	return (rv);
@@ -7018,27 +7015,16 @@ echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 FREETYPE_LIBS=""
 fi;
 else
-HAVE_SSE="no"
-HAVE_SSE2="no"
-HAVE_SSE3="no"
-INLINE_SSE="no"
-SSE_CFLAGS=""
-SSE2_CFLAGS=""
-SSE3_CFLAGS=""
-echo '#undef HAVE_SSE' >$BLD/include/agar/config/have_sse.h
-echo 'hdefs["HAVE_SSE"] = nil' >>configure.lua
-echo '#undef HAVE_SSE2' >$BLD/include/agar/config/have_sse2.h
-echo 'hdefs["HAVE_SSE2"] = nil' >>configure.lua
-echo '#undef HAVE_SSE3' >$BLD/include/agar/config/have_sse3.h
-echo 'hdefs["HAVE_SSE3"] = nil' >>configure.lua
-echo '#undef INLINE_SSE' >$BLD/include/agar/config/inline_sse.h
-echo 'hdefs["INLINE_SSE"] = nil' >>configure.lua
-echo '#undef SSE_CFLAGS' >$BLD/include/agar/config/sse_cflags.h
-echo 'hdefs["SSE_CFLAGS"] = nil' >>configure.lua
-echo '#undef SSE2_CFLAGS' >$BLD/include/agar/config/sse2_cflags.h
-echo 'hdefs["SSE2_CFLAGS"] = nil' >>configure.lua
-echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
-echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
+HAVE_FREETYPE="no"
+FREETYPE_CFLAGS=""
+FREETYPE_LIBS=""
+FREETYPE_PC=""
+echo '#undef HAVE_FREETYPE' >$BLD/include/agar/config/have_freetype.h
+echo 'hdefs["HAVE_FREETYPE"] = nil' >>configure.lua
+echo '#undef FREETYPE_CFFLAGS' >$BLD/include/agar/config/freetype_cfflags.h
+echo 'hdefs["FREETYPE_CFFLAGS"] = nil' >>configure.lua
+echo '#undef FREETYPE_LIBS' >$BLD/include/agar/config/freetype_libs.h
+echo 'hdefs["FREETYPE_LIBS"] = nil' >>configure.lua
 fi;
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 FREETYPE_PC="freetype2"
@@ -7063,6 +7049,7 @@ fi;
 	else
 echo 'not enabling FreeType'
 echo 'not enabling FreeType' >> config.log
+HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
 FREETYPE_PC=""
@@ -7858,6 +7845,7 @@ echo '#undef HAVE_WGL' >$BLD/include/agar/config/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 echo 'not enabling FreeType'
 echo 'not enabling FreeType' >> config.log
+HAVE_FREETYPE="no"
 FREETYPE_CFLAGS=""
 FREETYPE_LIBS=""
 FREETYPE_PC=""
@@ -8348,8 +8336,8 @@ echo '#undef SSE3_CFLAGS' >$BLD/include/agar/config/sse3_cflags.h
 echo 'hdefs["SSE3_CFLAGS"] = nil' >>configure.lua
 fi;
 # END sockopts
-$ECHO_N 'checking for the WinSock interface...'
-$ECHO_N 'checking for the WinSock interface...' >> config.log
+$ECHO_N 'checking for WinSock...'
+$ECHO_N 'checking for WinSock...' >> config.log
 # BEGIN winsock
 echo 'not checking'
 echo 'not checking' >> config.log
@@ -8400,8 +8388,8 @@ echo '#undef HAVE_SO_LINGER' >$BLD/include/agar/config/have_so_linger.h
 echo 'hdefs["HAVE_SO_LINGER"] = nil' >>configure.lua
 echo '#undef HAVE_SO_ACCEPTFILTER' >$BLD/include/agar/config/have_so_acceptfilter.h
 echo 'hdefs["HAVE_SO_ACCEPTFILTER"] = nil' >>configure.lua
-echo 'not enabling the WinSock interface'
-echo 'not enabling the WinSock interface' >> config.log
+echo 'not enabling WinSock'
+echo 'not enabling WinSock' >> config.log
 HAVE_WINSOCK1="no"
 HAVE_WINSOCK2="no"
 echo '#undef HAVE_WINSOCK1' >$BLD/include/agar/config/have_winsock1.h
