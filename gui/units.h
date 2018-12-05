@@ -14,7 +14,7 @@ typedef struct ag_unit {
 
 typedef struct ag_unit_nl {
 	AG_Unit unit;						/* Inherit */
-	double _Pure_Attribute (*_Nonnull func)(double, int);
+	double (*_Nonnull func)(double, int);
 } AG_UnitNL;
 
 #define AG_UNIT(unit)    ((AG_Unit *)(unit))
