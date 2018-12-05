@@ -138,7 +138,7 @@ AG_ViewCapture(void)
 	AG_Config *cfg;
 	char *pname;
 	char dir[AG_PATHNAME_MAX];
-	char file[AG_PATHNAME_MAX];
+	char file[AG_PATHNAME_MAX+8];
 	Uint seq;
 
 	if (agDriverSw == NULL) {
