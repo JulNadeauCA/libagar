@@ -45,7 +45,7 @@
 #  undef _AGAR_DEV_DEFINED_NULL
 #  undef NULL
 # endif
-# ifdef _AGAR_DEV_DEFINED_NULLABILITY
+# if defined(_AGAR_DEV_DEFINED_NULLABILITY) && !defined(_USE_AGAR_NULLABILITY)
 #  undef _Nonnull
 #  undef _Nullable
 #  undef _Null_unspecified
