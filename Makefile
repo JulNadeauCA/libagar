@@ -18,7 +18,7 @@ SUBDIR=		core \
 all: all-subdir
 clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
-install: all install-subdir install-includes install-config
+install: install-subdir install-includes install-config
 deinstall: deinstall-subdir deinstall-includes deinstall-config
 depend: depend-subdir
 regress: regress-subdir
