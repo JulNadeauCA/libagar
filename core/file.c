@@ -34,7 +34,10 @@
 # include <agar/core/queue.h>
 #else
 # include <sys/types.h>
-# include <sys/stat.h>
+# include <agar/config/_mk_have_sys_stat_h.h>
+# ifdef _MK_HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+# endif
 # include <unistd.h>
 # include <string.h>
 # include <errno.h>
@@ -112,6 +115,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
+# ifdef _MK_HAVE_SYS_STAT_H
 	struct stat sb;
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
@@ -155,6 +159,10 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 		i->perms |= (sb.st_mode & S_IXOTH) ? AG_FILE_EXECUTABLE : 0;
 	}
 	return (0);
+# else
+	AG_SetErrorS("No stat()");
+	return (-1);
+# endif
 }
 
 #endif /* _WIN32 */
@@ -210,7 +218,7 @@ AG_FileExists(const char *path)
 	} else {
 		return (1);
 	}
-#else
+#elif defined(_MK_HAVE_SYS_STAT_H)
 	struct stat sb;
 
 	if (stat(path, &sb) == -1) {
@@ -223,7 +231,10 @@ AG_FileExists(const char *path)
 	} else {
 		return (1);
 	}
-#endif /* _WIN32 */
+#else
+	AG_SetErrorS("No stat()");
+	return (-1);
+#endif
 }
 
 int

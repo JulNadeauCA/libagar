@@ -322,7 +322,7 @@ AG_Kill(AG_ProcessID pid)
 	CloseHandle(psHandle);
 
 	return (0);
-#elif defined(_MK_HAVE_SIGNAL)
+#elif defined(_MK_HAVE_SIGNAL) && !defined(__CC65__)
 	if (kill(pid, SIGKILL) == -1) {
 		AG_SetError(_("Failed to kill process (%s)"), AG_Strerror(errno));
 		return (-1);
