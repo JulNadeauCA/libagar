@@ -344,45 +344,48 @@ AG_LoadDSO(const char *name, Uint flags)
 
 #if !defined(__AMIGAOS4__) && !defined(HPUX) && \
     !defined(_WIN32) && !defined(OS2)
-		/* Look for a versioned library file. */
-		AG_Dir *dir;
-		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
-			char latestFile[AG_FILENAME_MAX];
-			int latestVer, j;
+		/*
+		 * Look for a versioned library file.
+		 */
+    		{
+			AG_Dir *dir;
 
-			latestFile[0] = '\0';
-			latestVer = 0;
+			if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
+				char latestFile[AG_FILENAME_MAX];
+				int latestVer, j;
+	
+				latestFile[0] = '\0';
+				latestVer = 0;
+	
+				for (j = 0; j < dir->nents; j++) {
+					char *file = dir->ents[j];
+					char pat[AG_FILENAME_MAX];
+					int noffs;
+					int verMin, verMaj;
 
-			for (j = 0; j < dir->nents; j++) {
-				char *file = dir->ents[j];
-				char pat[AG_FILENAME_MAX];
-				int noffs;
-				int verMin, verMaj;
-
-				Strlcpy(pat, "lib", sizeof(pat));
-				Strlcat(pat, name, sizeof(pat));
-				Strlcat(pat, ".so.", sizeof(pat));
-				noffs = (int)strlen(pat);
-				if (strncmp(file, pat, noffs) != 0) {
-					continue;
+					Strlcpy(pat, "lib", sizeof(pat));
+					Strlcat(pat, name, sizeof(pat));
+					Strlcat(pat, ".so.", sizeof(pat));
+					noffs = (int)strlen(pat);
+					if (strncmp(file, pat, noffs) != 0) {
+						continue;
+					}
+					if (sscanf(&file[noffs], "%d.%d",
+					    &verMin, &verMaj) != 2) {
+						continue;
+					}
+					if ((verMaj*10000 + verMin) > latestVer) {
+						latestVer = verMaj*10000 + verMin;
+						Strlcpy(latestFile, file, sizeof(latestFile));
+					}
 				}
-				if (sscanf(&file[noffs], "%d.%d",
-				    &verMin, &verMaj) != 2) {
-					continue;
+				AG_CloseDir(dir);
+				if (latestFile[0] != '\0') {
+					Strlcpy(path, agModuleDirs[i], sizeof(path));
+					Strlcat(path, AG_PATHSEP, sizeof(path));
+					Strlcat(path, latestFile, sizeof(path));
+					break;
 				}
-				if ((verMaj*10000 + verMin) > latestVer) {
-					latestVer = verMaj*10000 + verMin;
-					Strlcpy(latestFile, file,
-					    sizeof(latestFile));
-				}
-			}
-			AG_CloseDir(dir);
-
-			if (latestFile[0] != '\0') {
-				Strlcpy(path, agModuleDirs[i], sizeof(path));
-				Strlcat(path, AG_PATHSEP, sizeof(path));
-				Strlcat(path, latestFile, sizeof(path));
-				break;
 			}
 		}
 #endif /* UNIX */

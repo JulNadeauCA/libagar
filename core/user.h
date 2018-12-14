@@ -2,7 +2,11 @@
 
 #include <agar/core/begin.h>
 
-#define AG_USER_NAME_MAX 73
+#if AG_MODEL == AG_SMALL
+# define AG_USER_NAME_MAX 16
+#else
+# define AG_USER_NAME_MAX 73
+#endif
 
 /* User account (POSIX-style, or otherwise) */
 typedef struct ag_user {
@@ -45,65 +49,11 @@ extern const AG_UserOps agUserOps_xbox;
 
 AG_User *_Nullable AG_UserNew(void); /* _Malloc_Like_Attribute; */
 void               AG_UserFree(AG_User *_Nonnull);
-
-void AG_SetUserOps(const AG_UserOps *_Nonnull);
-
-static __inline__ AG_User *_Nullable
-AG_GetUserByName(const char *_Nonnull name)
-{
-	AG_User *u;
-
-	if ((u = AG_UserNew()) == NULL) {
-		return (NULL);
-	}
-	if (agUserOps->getUserByName(u, name) == -1) {
-		AG_UserFree(u);
-		return (NULL);
-	}
-	return (u);
-}
-static __inline__ AG_User *_Nullable
-AG_GetUserByUID(Uint32 uid)
-{
-	AG_User *u;
-
-	if ((u = AG_UserNew()) == NULL) {
-		return (NULL);
-	}
-	if (agUserOps->getUserByUID(u, uid) == -1) {
-		AG_UserFree(u);
-		return (NULL);
-	}
-	return (u);
-}
-static __inline__ AG_User *_Nullable
-AG_GetRealUser(void)
-{
-	AG_User *u;
-
-	if ((u = AG_UserNew()) == NULL) {
-		return (NULL);
-	}
-	if (agUserOps->getRealUser(u) == -1) {
-		AG_UserFree(u);
-		return (NULL);
-	}
-	return (u);
-}
-static __inline__ AG_User *_Nullable
-AG_GetEffectiveUser(void)
-{
-	AG_User *u;
-
-	if ((u = AG_UserNew()) == NULL) {
-		return (NULL);
-	}
-	if (agUserOps->getEffectiveUser(u) == -1) {
-		AG_UserFree(u);
-		return (NULL);
-	}
-	return (u);
-}
+void               AG_SetUserOps(const AG_UserOps *_Nonnull);
+AG_User *_Nullable AG_GetUserByName(const char *_Nonnull);
+AG_User *_Nullable AG_GetUserByUID(Uint32);
+AG_User *_Nullable AG_GetRealUser(void);
+AG_User *_Nullable AG_GetEffectiveUser(void);
 __END_DECLS
 
 #include <agar/core/close.h>

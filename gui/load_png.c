@@ -74,7 +74,7 @@ AG_Surface *
 AG_SurfaceFromPNGs(const char *pattern, int first, int last,
     AG_AnimDispose afDispose, Uint afDelay, Uint afFlags)
 {
-	AG_Surface *Sanim;
+	AG_Surface *Sanim = NULL;
 	char path[AG_PATHNAME_MAX];
 	int i;
 

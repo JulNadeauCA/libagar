@@ -64,72 +64,11 @@ int              AG_DbOpen(AG_Db *_Nonnull, const char *_Nonnull, Uint);
 void             AG_DbClose(AG_Db *_Nonnull);
 int              AG_DbSync(AG_Db *_Nonnull);
 
-/* Test for existence of a key. */
-static __inline__ int
-AG_DbExists(AG_Db *_Nonnull db, AG_Dbt *_Nonnull key)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->exists(db, key);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Retrieve a database entry. */
-static __inline__ int
-AG_DbGet(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->get(db, key, val);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Write a database entry. */
-static __inline__ int
-AG_DbPut(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key,
-    const AG_Dbt *_Nonnull val)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->put(db, key, val);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Delete a database entry. */
-static __inline__ int
-AG_DbDel(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->del(db, key);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
-
-/* Iterate over all entries. */
-static __inline__ int
-AG_DbIterate(AG_Db *_Nonnull db, _Nonnull AG_DbIterateFn fn,
-    void *_Nullable arg)
-{
-	AG_DbClass *dbc = AGDB_CLASS(db);
-	int rv;
-
-	AG_ObjectLock(db);
-	rv = dbc->iterate(db, fn, arg);
-	AG_ObjectUnlock(db);
-	return (rv);
-}
+int AG_DbExists(AG_Db *_Nonnull, AG_Dbt *_Nonnull);
+int AG_DbGet(AG_Db *_Nonnull, const AG_Dbt *_Nonnull, AG_Dbt *_Nonnull);
+int AG_DbPut(AG_Db *_Nonnull, const AG_Dbt *_Nonnull, const AG_Dbt *_Nonnull);
+int AG_DbDel(AG_Db *_Nonnull, const AG_Dbt *_Nonnull);
+int AG_DbIterate(AG_Db *_Nonnull, _Nonnull AG_DbIterateFn, void *_Nullable);
 __END_DECLS
 
 #include <agar/core/close.h>

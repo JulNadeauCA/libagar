@@ -45,7 +45,7 @@ AG_Mutex	 agClassLock;			/* Lock on class table */
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
-#include "inline_class.h"
+#include <agar/core/inline_class.h>
 
 static void
 InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier,

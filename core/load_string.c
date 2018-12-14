@@ -29,6 +29,22 @@
 
 #include <agar/core/core.h>
 
+static __inline__ int
+ReadLength(AG_DataSource *ds, Uint32 *len)
+{
+	Uint32 i;
+#ifdef AG_DEBUG
+	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_UINT32) == -1)
+		return (-1);
+#endif
+	if (AG_Read(ds, &i, sizeof(i)) != 0) {
+		return (-1);
+	}
+	*len = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(i) :
+	                                             AG_SwapLE32(i);
+	return (0);
+}
+
 /* Allocate and read a length-encoded string. */
 char *
 AG_ReadStringLen(AG_DataSource *ds, AG_Size maxlen)
@@ -41,13 +57,11 @@ AG_ReadStringLen(AG_DataSource *ds, AG_Size maxlen)
 	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1)
 		goto fail;
 #endif
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
+	if (ReadLength(ds, &len) == -1) {
 		goto fail;
 	}
 	if (len > (Uint32)maxlen) {
-		AG_SetError("String (%luB): Exceeds %luB limit", (Ulong)len,
-		    (Ulong)maxlen);
+		AG_SetError("String (%luB): Exceeds %luB limit", (Ulong)len, (Ulong)maxlen);
 		goto fail;
 	}
 	if ((s = TryMalloc((AG_Size)len+1)) == NULL) {
@@ -55,8 +69,7 @@ AG_ReadStringLen(AG_DataSource *ds, AG_Size maxlen)
 	}
 	if (len > 0) {
 	  	if (AG_Read(ds, s, len) != 0) {
-			AG_SetError("String (%luB): %s", (Ulong)len,
-			    AG_GetError());
+			AG_SetError("String (%luB): %s", (Ulong)len, AG_GetError());
 			Free(s);
 			goto fail;
 		}
@@ -71,6 +84,13 @@ fail:
 	return (NULL);
 }
 
+/* Read a length-encoded string of up to AG_LOAD_STRING_MAX characters. */
+char *
+AG_ReadString(AG_DataSource *ds)
+{
+	return AG_ReadStringLen(ds, AG_LOAD_STRING_MAX);
+}
+
 /*
  * Allocate and read a length-encoded string with NUL-termination.
  * Type checking is never done; this function is useful when reading
@@ -83,13 +103,11 @@ AG_ReadNulStringLen(AG_DataSource *ds, AG_Size maxlen)
 	char *s;
 
 	AG_LockDataSource(ds);
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
+	if (ReadLength(ds, &len) == -1) {
 		goto fail;
 	}
 	if (len > (Uint32)maxlen) {
-		AG_SetError("String (%luB): Exceeds %luB limit", (Ulong)len,
-		    (Ulong)maxlen);
+		AG_SetError("String (%luB): Exceeds %luB limit", (Ulong)len, (Ulong)maxlen);
 		goto fail;
 	}
 	if ((s = TryMalloc((AG_Size)len)) == NULL) {
@@ -107,6 +125,16 @@ fail:
 	AG_UnlockDataSource(ds);
 	AG_DataSourceError(ds, NULL);
 	return (NULL);
+}
+
+/*
+ * Read a length-encoded and NUL-terminated string of up to AG_LOAD_STRING_MAX
+ * characters. No type checking is done.
+ */
+char *
+AG_ReadNulString(AG_DataSource *ds)
+{
+	return AG_ReadNulStringLen(ds, AG_LOAD_STRING_MAX);
 }
 
 /* Write a variable-length string. */
@@ -260,7 +288,7 @@ AG_CopyString(char *dst, AG_DataSource *ds, AG_Size dst_size)
 		}
 		ds->rdTotal += ds->rdLast;
 		if (ds->rdLast < len) {
-			AG_SetError("Reading string");
+			AG_SetErrorS("Reading string");
 			goto fail;
 		}
 		dst[ds->rdLast] = '\0';
@@ -292,7 +320,7 @@ AG_CopyStringPadded(char *dst, AG_DataSource *ds, AG_Size dst_size)
 		goto fail;
 	}
 	if (ds->rdLast < sizeof(encLen)) {
-		AG_SetError("Padded string header");
+		AG_SetErrorS("Padded string header");
 		goto fail;
 	}
 	ds->rdTotal += ds->rdLast;
@@ -323,7 +351,7 @@ AG_CopyStringPadded(char *dst, AG_DataSource *ds, AG_Size dst_size)
 		}
 		ds->rdTotal += ds->rdLast;
 		if (ds->rdLast < len) {
-			AG_SetError("Padded string");
+			AG_SetErrorS("Padded string");
 			goto fail;
 		}
 		dst[ds->rdLast] = '\0';
@@ -370,8 +398,7 @@ AG_SkipString(AG_DataSource *ds)
 	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING) == -1)
 		goto fail;
 #endif
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
+	if (ReadLength(ds, &len) == -1) {
 		goto fail;
 	}
 	if (AG_Seek(ds, (AG_Size)len, AG_SEEK_CUR) == -1) {
@@ -395,9 +422,8 @@ AG_SkipStringPadded(AG_DataSource *ds)
 	if (ds->debug && AG_CheckTypeCode(ds, AG_SOURCE_STRING_PAD) == -1)
 		goto fail;
 #endif
-	if (AG_ReadUint32v(ds, &len) == -1 ||
-	    AG_ReadUint32v(ds, &lenPadded) == -1) {
-		AG_SetError("Padded length: %s", AG_GetError());
+	if (ReadLength(ds, &len) == -1 ||
+	    ReadLength(ds, &lenPadded) == -1) {
 		goto fail;
 	}
 	if (AG_Seek(ds, (AG_Size)lenPadded, AG_SEEK_CUR) == -1) {
@@ -423,8 +449,7 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, AG_Size dst_size)
 
 	AG_LockDataSource(ds);
 
-	if (AG_ReadUint32v(ds, &len) == -1) {
-		AG_SetError("String length: %s", AG_GetError());
+	if (ReadLength(ds, &len) == -1) {
 		goto fail;
 	}
 	if (len > (Uint32)dst_size) {

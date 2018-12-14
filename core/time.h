@@ -1,6 +1,8 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
+#ifndef _AGAR_CORE_OBJECT_H_
+# error "Must be included by object.h"
+#endif
 
 #define AG_TIMER_NAME_MAX 16
 
@@ -87,33 +89,4 @@ int  AG_TimerIsRunning(void *_Nullable, AG_Timer *_Nonnull)
 
 int  AG_TimerWait(void *_Nullable, AG_Timer *_Nonnull, Uint32);
 void AG_ProcessTimeouts(Uint32);
-
-/* Execute a timer's associated callback routine. */
-static __inline__ Uint32
-AG_ExecTimerFn(AG_Timer *_Nonnull to)
-{
-	Uint32 rv;
-
-	to->flags |= AG_TIMER_EXECD;
-	rv = to->fn(to, &to->fnEvent);
-	to->flags &= ~(AG_TIMER_EXECD);
-	return (rv);
-}
-
-#ifdef AG_LEGACY
-void AG_SetTimeout(AG_Timeout *_Nonnull, Uint32 (*_Nonnull)(void *_Nonnull, Uint32, void *_Nullable), void *_Nullable, Uint) DEPRECATED_ATTRIBUTE;
-void AG_ScheduleTimeout(void *_Nullable, AG_Timeout *_Nonnull, Uint32) DEPRECATED_ATTRIBUTE;
-# define AG_TIMEOUT_INITIALIZER { -1, NULL, 0, 0, 0, NULL }
-# define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimerObjQ))
-# define AG_CANCEL_ONDETACH	0x10	/* Don't cancel on ObjectDetach() */
-# define AG_CANCEL_ONLOAD	0x20	/* In queue for execution */
-# define AG_TimeoutWait(obj,to,d) AG_TimerWait((obj),(to),(d))
-# define AG_TimeoutIsScheduled(obj,to) AG_TimerIsRunning((obj),(to))
-# define AG_DelTimeout(obj,to) AG_DelTimer((obj),(to))
-# define AG_ProcessTimeout(x) AG_ProcessTimeouts(x)
-# define AG_AddTimeout(p,to,dt) AG_ScheduleTimeout((p),(to),(dt))
-# define AG_ReplaceTimeout(p,to,dt) AG_ScheduleTimeout((p),(to),(dt))
-#endif /* AG_LEGACY */
 __END_DECLS
-
-#include <agar/core/close.h>

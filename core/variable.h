@@ -1,6 +1,8 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
+#ifndef _AGAR_CORE_OBJECT_H_
+# error "Must be included by object.h"
+#endif
 
 #ifndef AG_VARIABLE_NAME_MAX
 # if AG_MODEL == AG_SMALL
@@ -60,23 +62,6 @@ typedef enum ag_variable_type {
 					   Object Variable (by name) */
 	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
-
-#ifdef AG_LEGACY
-#define AG_VARIABLE_CONST_STRING	AG_VARIABLE_STRING
-#define AG_VARIABLE_P_CONST_STRING	AG_VARIABLE_P_STRING
-#define AG_VARIABLE_CONST_POINTER	AG_VARIABLE_POINTER
-#define AG_VARIABLE_P_CONST_POINTER	AG_VARIABLE_P_POINTER
-#define AG_SetConstString(o,n,v)	AG_SetString((o),(n),(char *)(v))
-#define AG_BindConstString		AG_BindString
-#define AG_BindConstStringMp		AG_BindStringMp
-#define AG_BindConstStringFn		AG_BindStringFn
-#define AG_GetConstPointer(o,x)		((const void *)AG_GetPointer((o),(x)))
-#define AG_SetConstPointer(o,n,v)	AG_SetPointer((o),(n),(void *)(v))
-#define AG_InitConstPointer(var,v)	AG_InitPointer((var),(void *)(v))
-#define AG_BindConstPointer		AG_BindPointer
-#define AG_BindConstPointerFn		AG_BindPointerFn
-#define AG_BindConstPointerMp		AG_BindPointerMp
-#endif /* AG_LEGACY */
 
 #define AG_VARIABLE_BOOL AG_VARIABLE_INT
 
@@ -186,6 +171,9 @@ typedef struct ag_variable {
 	union ag_variable_data data;	/* Variable-stored data */
 	AG_TAILQ_ENTRY(ag_variable) vars;
 } AG_Variable;
+
+#define AG_VARIABLE_TYPE(V)      (agVariableTypes[(V)->type].typeTgt)
+#define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
 
 __BEGIN_DECLS
 extern const AG_VariableTypeInfo agVariableTypes[];
@@ -479,25 +467,21 @@ AG_Variable *_Nonnull AG_BindObject(void *_Nonnull, const char *_Nonnull,
 				    void *_Nonnull);
 AG_Variable *_Nonnull AG_BindVariable(void *_Nonnull, const char *_Nonnull,
 				      void *_Nonnull, const char *_Nonnull);
+/*
+ * Inlinables
+ */
+void ag_init_variable(AG_Variable *_Nonnull, AG_VariableType, const char *_Nonnull);
+void ag_lock_variable(AG_Variable *_Nonnull);
+void ag_unlock_variable(AG_Variable *_Nonnull);
+void ag_free_variable(AG_Variable *_Nonnull);
 
 #ifdef AG_INLINE_VARIABLE
 # define AG_INLINE_HEADER
 # include <agar/core/inline_variable.h>
 #else
-void ag_init_variable(AG_Variable *_Nonnull, AG_VariableType,
-                      const char *_Nonnull);
-void ag_lock_variable(AG_Variable *_Nonnull);
-void ag_unlock_variable(AG_Variable *_Nonnull);
-void ag_free_variable(AG_Variable *_Nonnull);
-
 # define AG_InitVariable(V,t,n) ag_init_variable((V),(t),(n))
 # define AG_LockVariable(V)     ag_lock_variable(V)
 # define AG_UnlockVariable(V)   ag_unlock_variable(V)
 # define AG_FreeVariable(V)     ag_free_variable(V)
-#endif /* AG_INLINE_VARIABLE */
-
-#define AG_VARIABLE_TYPE(V) (agVariableTypes[(V)->type].typeTgt)
-#define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
+#endif
 __END_DECLS
-
-#include <agar/core/close.h>

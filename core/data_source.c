@@ -135,6 +135,58 @@ AG_CheckTypeCode(AG_DataSource *ds, Uint32 type)
 	return (i == type) ? 0 : -1;
 }
 
+/* Reallocate the buffer of a dynamically-allocated memory source. */
+int
+AG_DataSourceRealloc(void *obj, AG_Size size)
+{
+	AG_CoreSource *cs = (AG_CoreSource *)obj;
+	Uint8 *dataNew;
+		
+	if ((dataNew = (Uint8 *)AG_TryRealloc(cs->data, size)) == NULL) {
+		return (-1);
+	}
+	cs->data = dataNew;
+	cs->size = size;
+	return (0);
+}
+
+/* Return current position in the data stream. */
+AG_Offset
+AG_Tell(AG_DataSource *ds)
+{
+	AG_Offset pos;
+	AG_MutexLock(&ds->lock);
+	pos = (ds->tell != NULL) ? ds->tell(ds) : 0;
+	AG_MutexUnlock(&ds->lock);
+	return (pos);
+}
+
+/* Seek to position. */
+int
+AG_Seek(AG_DataSource *ds, AG_Offset pos, enum ag_seek_mode mode)
+{
+	int rv;
+	AG_MutexLock(&ds->lock);
+	rv = ds->seek(ds, pos, mode);
+	AG_MutexUnlock(&ds->lock);
+	return (rv);
+}
+
+/* Close a datasource of any type. */
+void
+AG_CloseDataSource(AG_DataSource *ds)
+{
+	ds->close(ds);
+}
+
+/* Free all resources allocated by a data source. */
+void
+AG_DataSourceDestroy(AG_DataSource *ds)
+{
+	AG_MutexDestroy(&ds->lock);
+	AG_Free(ds);
+}
+
 /*
  * No-ops
  */

@@ -98,7 +98,7 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
-#include "inline_variable.h"
+#include <agar/core/inline_variable.h>
 
 /*
  * Duplicate a Variable. Preserve pointers, but duplicate allocated strings

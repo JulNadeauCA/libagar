@@ -1,6 +1,8 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
+#ifndef _AGAR_CORE_OBJECT_H_
+# error "Must be included by object.h"
+#endif
 
 struct ag_tbl;
 struct ag_object;
@@ -113,18 +115,17 @@ int  AG_ClassIsNamedGeneral(const AG_ObjectClass *_Nonnull, const char *_Nonnull
 int  AG_ObjectGetInheritHier(void *_Nonnull,
                              AG_ObjectClass *_Nonnull *_Nonnull *_Nullable,
 			     int *_Nonnull);
-#ifdef AG_INLINE_OBJECT
-# define AG_INLINE_HEADER
-# include <agar/core/inline_class.h>
-#else
+
 AG_Namespace *_Nullable ag_get_namespace(const char *_Nonnull)
                                         _Warn_Unused_Result;
 int ag_class_is_named(void *_Nonnull, const char *_Nonnull)
                      _Warn_Unused_Result;
 
+#ifdef AG_INLINE_OBJECT
+# define AG_INLINE_HEADER
+# include <agar/core/inline_class.h>
+#else
 # define AG_GetNamespace(s)   ag_get_namespace(s)
 # define AG_ClassIsNamed(C,s) ag_class_is_named((C),(s))
 #endif
 __END_DECLS
-
-#include <agar/core/close.h>

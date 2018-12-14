@@ -94,18 +94,21 @@
 /* Data source interface (serialization, files and streams) */
 #include <agar/core/data_source.h>
 
-/* AG_Swap*() endianness swap macros */
+/* Byte swapping functions */
 #include <agar/core/byteswap.h>
 
 /* Serialization of primitive types */
 #include <agar/core/load_integral.h>
+#ifdef AG_HAVE_FLOAT
 #include <agar/core/load_real.h>
+#endif
 #include <agar/core/load_string.h>
 #include <agar/core/load_version.h>
 
 /* Agar-Core */
 #include <agar/core/version.h>
 #include <agar/core/object.h>
+#include <agar/core/text.h>
 #include <agar/core/list.h>
 #include <agar/core/tree.h>
 #include <agar/core/tbl.h>

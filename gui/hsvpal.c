@@ -864,9 +864,9 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	pal->rPrev.w = a->w;
 	pal->rPrev.h = 32;
 
-	pal->circle.rOut = MIN3(a->w - padding,
-	                        a->h - padding,
-	                       (a->h - pal->rPrev.h)) >> 1;
+	pal->circle.rOut = MIN(a->w - padding, a->h - padding);
+	pal->circle.rOut = MIN(pal->circle.rOut, (a->h - pal->rPrev.h));
+	pal->circle.rOut >>= 1;
 	pal->circle.rIn = pal->circle.rOut - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rOut*AG_PI));
 	pal->circle.x = a->w >> 1;

@@ -49,8 +49,8 @@ typedef struct ag_data_source {
 	AG_ByteOrder byte_order;		/* Effective byte order */
 	AG_Size wrLast;				/* Last write count (bytes) */
 	AG_Size rdLast;				/* Last read count (bytes) */
-	AG_Size wrTotal;				/* Total write count (bytes) */
-	AG_Size rdTotal;				/* Total read count (bytes) */
+	AG_Size wrTotal;			/* Total write count (bytes) */
+	AG_Size rdTotal;			/* Total read count (bytes) */
 
 	int   (*_Nullable read)(struct ag_data_source *_Nonnull,
 	                        void *_Nonnull, AG_Size,
@@ -82,15 +82,15 @@ typedef struct ag_core_source {
 	struct ag_data_source ds;
 	Uint8 *_Nonnull data;		/* Pointer to data */
 	AG_Size size;			/* Current size */
-	AG_Offset  offs;			/* Current position */
+	AG_Offset offs;			/* Current position */
 } AG_CoreSource;
 
-/* Memory region (const) */
+/* Read-only memory region */
 typedef struct ag_const_core_source {
 	struct ag_data_source ds;
 	const Uint8 *_Nonnull data;	/* Pointer to data */
 	AG_Size size;			/* Current size */
-	AG_Offset  offs;			/* Current position */
+	AG_Offset offs;			/* Current position */
 } AG_ConstCoreSource;
 
 /* Network socket */
@@ -104,6 +104,13 @@ typedef struct ag_net_socket_source {
 #define AG_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
 #define AG_CONST_CORE_SOURCE(ds) ((AG_ConstCoreSource *)(ds))
 #define AG_NET_SOCKET_SOURCE(ds) ((AG_NetSocketSource *)(ds))
+
+/* For AG_Write<Type>At() */
+#ifdef AG_DEBUG
+# define AG_WRITEAT_OFFSET(ds,pos) ((ds)->debug ? (pos)+sizeof(Uint32) : (pos))
+#else
+# define AG_WRITEAT_OFFSET(ds,pos) (pos)
+#endif
 
 __BEGIN_DECLS
 void AG_DataSourceInitSubsystem(void);
@@ -154,59 +161,11 @@ int     AG_CheckTypeCode(AG_DataSource *_Nonnull, Uint32);
 #define AG_LockDataSource(ds) AG_MutexLock(&(ds)->lock);
 #define AG_UnlockDataSource(ds) AG_MutexUnlock(&(ds)->lock);
 
-/* For AG_WriteFooAt() */
-#define AG_WRITEAT_DEBUGOFFS(ds,pos) ((ds)->debug ? (pos)+sizeof(Uint32) : (pos))
-
-/* Reallocate the buffer of a dynamically-allocated memory source. */
-static __inline__ int
-AG_DataSourceRealloc(void *_Nonnull obj, AG_Size size)
-{
-	AG_CoreSource *cs = (AG_CoreSource *)obj;
-	Uint8 *dataNew;
-		
-	if ((dataNew = (Uint8 *)AG_TryRealloc(cs->data, size)) == NULL) {
-		return (-1);
-	}
-	cs->data = dataNew;
-	cs->size = size;
-	return (0);
-}
-
-/* Return current position. */
-static __inline__ AG_Offset
-AG_Tell(AG_DataSource *_Nonnull ds)
-{
-	AG_Offset pos;
-	AG_MutexLock(&ds->lock);
-	pos = (ds->tell != NULL) ? ds->tell(ds) : 0;
-	AG_MutexUnlock(&ds->lock);
-	return (pos);
-}
-
-/* Seek to position. */
-static __inline__ int
-AG_Seek(AG_DataSource *_Nonnull ds, AG_Offset pos, enum ag_seek_mode mode)
-{
-	int rv;
-	AG_MutexLock(&ds->lock);
-	rv = ds->seek(ds, pos, mode);
-	AG_MutexUnlock(&ds->lock);
-	return (rv);
-}
-
-/* Close a datasource of any type. */
-static __inline__ void
-AG_CloseDataSource(AG_DataSource *_Nonnull ds)
-{
-	ds->close(ds);
-}
-
-static __inline__ void
-AG_DataSourceDestroy(AG_DataSource *_Nonnull ds)
-{
-	AG_MutexDestroy(&ds->lock);
-	AG_Free(ds);
-}
+int       AG_DataSourceRealloc(void *_Nonnull, AG_Size);
+AG_Offset AG_Tell(AG_DataSource *_Nonnull);
+int       AG_Seek(AG_DataSource *_Nonnull, AG_Offset, enum ag_seek_mode);
+void      AG_CloseDataSource(AG_DataSource *_Nonnull);
+void      AG_DataSourceDestroy(AG_DataSource *_Nonnull);
 __END_DECLS
 
 #include <agar/core/close.h>

@@ -55,7 +55,7 @@ int agObjectBackups = 1;	   /* Backup object save files. */
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
-#include "inline_object.h"
+#include <agar/core/inline_object.h>
 
 /* Initialize an AG_Object instance. */
 void
@@ -1577,7 +1577,6 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 #ifdef AG_DEBUG
 	int debugSave;
 #endif
-
 	AG_ObjectLock(ob);
 	
 	/* Header */
@@ -1631,8 +1630,11 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_WriteVersion(ds, ob->cls->name, &ob->cls->ver);
 
 #ifdef AG_DEBUG
-	if (ob->flags & AG_OBJECT_DEBUG_DATA)
-		debugSave = AG_SetSourceDebug(ds, 1);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		debugSave = AG_SetSourceDebug(ds, 1); 
+	} else {
+		debugSave = 0;
+	}
 #endif
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
 		goto fail;
@@ -1710,6 +1712,8 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		AG_SetErrorS("Can't read without AG_DEBUG");
 		goto fail;
 #endif
+	} else {
+		debugSave = 0;
 	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
 		goto fail_dbg;

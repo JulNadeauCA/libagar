@@ -88,6 +88,10 @@ typedef struct ag_event_source_kqueue {
 # define AG_EV_SET(kevp,a,b,c,d,e,f) EV_SET((kevp),(a),(b),(c),(d),(e),(f))
 #endif
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_event.h>
+
 /* Initialize a pointer argument. */
 static __inline__ void
 InitPointerArg(AG_Variable *_Nonnull V, void *_Nullable p)

@@ -43,6 +43,9 @@
 # define _Noreturn_Attribute
 
 /* Absence of noreturn may break compilation so make an exception for it */
+# ifdef __CC65__
+#  define __GNUC_PREREQ__(x,y) 0
+# endif
 # if defined(__cplusplus) && __cplusplus >= 201103L
 #  undef  _Noreturn_Attribute
 #  define _Noreturn_Attribute [[noreturn]]

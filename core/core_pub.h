@@ -17,12 +17,15 @@
 #include <agar/core/data_source.h>
 #include <agar/core/byteswap.h>
 #include <agar/core/load_integral.h>
+#ifdef AG_HAVE_FLOAT
 #include <agar/core/load_real.h>
+#endif
 #include <agar/core/load_string.h>
 #include <agar/core/load_version.h>
 
 #include <agar/core/version.h>
 #include <agar/core/object.h>
+#include <agar/core/text.h>
 #include <agar/core/list.h>
 #include <agar/core/tree.h>
 #include <agar/core/tbl.h>

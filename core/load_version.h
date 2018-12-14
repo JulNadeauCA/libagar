@@ -5,7 +5,7 @@
 #include <agar/core/begin.h>
 
 typedef struct ag_version {
-	Uint32 major;
+	Uint32 major;		/* TODO 2.0: 16-bit */
 	Uint32 minor;
 } AG_Version;
 

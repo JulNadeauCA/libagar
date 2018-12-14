@@ -66,6 +66,7 @@ AG_UserFree(AG_User *u)
 	free(u);
 }
 
+/* Set the user database access backend. */
 void
 AG_SetUserOps(const AG_UserOps *ops)
 {
@@ -77,4 +78,68 @@ AG_SetUserOps(const AG_UserOps *ops)
 	agUserOps = ops;
 	if (ops->init != NULL)
 		ops->init();
+}
+
+/* Lookup a user account by name. */
+AG_User *
+AG_GetUserByName(const char *_Nonnull name)
+{
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getUserByName(u, name) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
+}
+
+/* Lookup a user account by numerical UID. */
+AG_User *
+AG_GetUserByUID(Uint32 uid)
+{
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getUserByUID(u, uid) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
+}
+
+/* Return the account corresponding to the real UID of the process. */
+AG_User *
+AG_GetRealUser(void)
+{
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getRealUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
+}
+
+/* Return the account corresponding to the effective UID of the process. */
+AG_User *
+AG_GetEffectiveUser(void)
+{
+	AG_User *u;
+
+	if ((u = AG_UserNew()) == NULL) {
+		return (NULL);
+	}
+	if (agUserOps->getEffectiveUser(u) == -1) {
+		AG_UserFree(u);
+		return (NULL);
+	}
+	return (u);
 }

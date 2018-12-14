@@ -688,3 +688,10 @@ AG_TryVsnprintf(char *str, AG_Size count, const char *fmt, va_list ap)
 }
 
 #endif /* HAVE_VSNPRINTF */
+
+void
+AG_Vsnprintf(char *s, AG_Size len, const char *fmt, va_list args)
+{
+	if (AG_TryVsnprintf(s, len, fmt, args) == -1)
+		AG_FatalError(NULL);
+}

@@ -29,6 +29,10 @@
 
 #include <agar/core/core.h>
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_tbl.h>
+
 /* Allocate and initialize a table. */
 AG_Tbl *
 AG_TblNew(Uint nBuckets, Uint flags)

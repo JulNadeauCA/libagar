@@ -2,12 +2,6 @@
 
 #ifndef	_AGAR_CORE_ERROR_H_
 #define	_AGAR_CORE_ERROR_H_
-
-#include <agar/config/_mk_have_stdlib_h.h>
-#ifdef _MK_HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
 #include <agar/core/begin.h>
 
 /* Standard error code */
@@ -31,12 +25,12 @@ typedef enum ag_error_code {
 } AG_ErrorCode;
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
-# define Malloc(len) AG_Malloc(len)
-# define TryMalloc(len) AG_TryMalloc(len)
-# define Free(p) AG_Free(p)
-# define Realloc(p,len) AG_Realloc((p),(len))
+# define Malloc(len)       AG_Malloc(len)
+# define TryMalloc(len)    AG_TryMalloc(len)
+# define Free(p)           AG_Free(p)
+# define Realloc(p,len)    AG_Realloc((p),(len))
 # define TryRealloc(p,len) AG_TryRealloc((p),(len))
-# define Verbose AG_Verbose
+# define Verbose           AG_Verbose
 # ifdef AG_DEBUG
 #  define Debug AG_Debug
 # else
@@ -80,68 +74,37 @@ void AG_Verbose(const char *_Nonnull, ...)
 
 #ifdef AG_TYPE_SAFETY
 void *_Nullable AG_PtrMismatch(void)    _Noreturn_Attribute;
-char *_Nonnull AG_StringMismatch(void)  _Noreturn_Attribute;
+char *_Nonnull  AG_StringMismatch(void) _Noreturn_Attribute;
 void *_Nullable AG_ObjectMismatch(void) _Noreturn_Attribute;
-int    AG_IntMismatch(void)             _Noreturn_Attribute;
-long   AG_LongMismatch(void)            _Noreturn_Attribute;
+int             AG_IntMismatch(void)    _Noreturn_Attribute;
+long            AG_LongMismatch(void)   _Noreturn_Attribute;
 # ifdef AG_HAVE_FLOAT
-float  AG_FloatMismatch(void)           _Noreturn_Attribute;
-double AG_DoubleMismatch(void)          _Noreturn_Attribute;
+float           AG_FloatMismatch(void)  _Noreturn_Attribute;
+double          AG_DoubleMismatch(void) _Noreturn_Attribute;
 #  ifdef AG_HAVE_LONG_DOUBLE
-long double AG_LongDoubleMismatch(void) _Noreturn_Attribute;
+long double     AG_LongDoubleMismatch(void) _Noreturn_Attribute;
 #  endif
 # endif
 #endif /* AG_TYPE_SAFETY */
 
-/* Malloc wrapper which raise an exception on failure. */
-static __inline__ void *_Nonnull _Malloc_Like_Attribute
-AG_Malloc(AG_Size len)
-{
-	void *p;
-
-	if ((p = malloc(len)) == NULL) {
-		AG_FatalError("malloc");
-	}
-	return (p);
-}
-
-/* Malloc wrapper which returns NULL on failure. */
-static __inline__ void *_Nullable _Malloc_Like_Attribute
-AG_TryMalloc(AG_Size len)
-{
-	void *p;
-	if ((p = malloc(len)) == NULL) {
-		AG_SetErrorS("Out of memory");
-		return (NULL);
-	}
-	return (p);
-}
-
-/* Realloc wrapper which raise an exception on failure. */
-static __inline__ void *_Nonnull
-AG_Realloc(void *_Nullable pOld, AG_Size len)
-{
-	void *p;
-	if ((p = realloc(pOld, len)) == NULL) {
-		AG_FatalError("realloc");
-	}
-	return (p);
-}
-
-/* Realloc wrapper which returns NULL on failure. */
-static __inline__ void *_Nullable
-AG_TryRealloc(void *_Nullable pOld, AG_Size len)
-{
-	void *p;
-	
-	if ((p = realloc(pOld, len)) == NULL) {
-		AG_SetErrorS("Out of memory");
-	}
-	return (p);
-}
-
-/* Free wrapper for symmetry */
-#define AG_Free(p) free(p)
+/*
+ * Inlinables
+ */
+void *_Nonnull  ag_malloc(AG_Size) _Malloc_Like_Attribute;
+void *_Nonnull  ag_try_malloc(AG_Size) _Malloc_Like_Attribute;
+void *_Nonnull  ag_realloc(void *_Nullable, AG_Size);
+void *_Nullable ag_try_realloc(void *_Nullable, AG_Size);
+void            ag_free(void *_Nullable);
+#ifdef AG_INLINE_ERROR
+# define AG_INLINE_HEADER
+# include <agar/core/inline_error.h>
+#else
+# define AG_Malloc(s)       ag_malloc(s)
+# define AG_TryMalloc(s)    ag_try_malloc(s)
+# define AG_Realloc(p,s)    ag_realloc((p),(s))
+# define AG_TryRealloc(p,s) ag_try_realloc((p),(s))
+# define AG_Free(p)         ag_free(p)
+#endif /* !AG_INLINE_ERROR */
 __END_DECLS
 
 #include <agar/core/close.h>

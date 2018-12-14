@@ -105,6 +105,71 @@ AG_DbSync(AG_Db *db)
 	return (rv);
 }
 
+/* Test for existence of a key. */
+int
+AG_DbExists(AG_Db *db, AG_Dbt *key)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->exists(db, key);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Retrieve a database entry. */
+int
+AG_DbGet(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key, AG_Dbt *_Nonnull val)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->get(db, key, val);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Write a database entry. */
+int
+AG_DbPut(AG_Db *db, const AG_Dbt *key, const AG_Dbt *val)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->put(db, key, val);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Delete a database entry. */
+int
+AG_DbDel(AG_Db *_Nonnull db, const AG_Dbt *_Nonnull key)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->del(db, key);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
+/* Iterate over all entries. */
+int
+AG_DbIterate(AG_Db *db, AG_DbIterateFn fn, void *arg)
+{
+	AG_DbClass *dbc = AGDB_CLASS(db);
+	int rv;
+
+	AG_ObjectLock(db);
+	rv = dbc->iterate(db, fn, arg);
+	AG_ObjectUnlock(db);
+	return (rv);
+}
+
 static void
 Init(void *_Nonnull obj)
 {

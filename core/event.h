@@ -1,37 +1,31 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
+#ifndef _AGAR_CORE_OBJECT_H_
+# error "Must be included by object.h"
+#endif
 
 #ifndef AG_EVENT_ARGS_MAX
 #define AG_EVENT_ARGS_MAX 8
 #endif
-
 #ifndef AG_EVENT_NAME_MAX
 #define AG_EVENT_NAME_MAX 24
 #endif
 
+/* Argument accessor macros */
 #ifdef AG_TYPE_SAFETY
-
 # define AG_OBJECT(v,t)   ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER \
                            && AG_OfClass(event->argv[v].data.p, (t))) ? \
 			   event->argv[v].data.p : AG_ObjectMismatch())
-# define AG_PTR(v)        ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER) ? event->argv[v].data.p   : AG_PtrMismatch())
-# define AG_STRING(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING)  ? event->argv[v].data.s   : AG_StringMismatch())
-# define AG_INT(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT)     ? event->argv[v].data.i   : AG_IntMismatch())
-# define AG_UINT(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT)    ? event->argv[v].data.u   : (Uint)AG_IntMismatch())
-# define AG_LONG(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG)    ? event->argv[v].data.li  : AG_LongMismatch())
-# define AG_ULONG(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_ULONG)   ? event->argv[v].data.uli : (Ulong)AG_LongMismatch())
-
-# ifdef AG_HAVE_FLOAT
-#  define AG_FLOAT(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_FLOAT)   ? event->argv[v].data.flt : AG_FloatMismatch())
-#  define AG_DOUBLE(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_DOUBLE)  ? event->argv[v].data.dbl : AG_DoubleMismatch())
-#  ifdef AG_HAVE_LONG_DOUBLE
-#  define AG_LONG_DOUBLE(v) ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG_DOUBLE) ? event->argv[v].data.ldbl : AG_LongDoubleMismatch())
-#  endif
-# endif
-
+# define AG_PTR(v)        ((v <= event->argc && event->argv[v].type==AG_VARIABLE_POINTER) ? event->argv[v].data.p : AG_PtrMismatch())
+# define AG_STRING(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_STRING) ? event->argv[v].data.s : AG_StringMismatch())
+# define AG_INT(v)         ((v < event->argc && event->argv[v].type==AG_VARIABLE_INT) ? event->argv[v].data.i : AG_IntMismatch())
+# define AG_UINT(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_UINT) ? event->argv[v].data.u : (Uint)AG_IntMismatch())
+# define AG_LONG(v)        ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG) ? event->argv[v].data.li : AG_LongMismatch())
+# define AG_ULONG(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_ULONG) ? event->argv[v].data.uli : (Ulong)AG_LongMismatch())
+# define AG_FLOAT(v)       ((v < event->argc && event->argv[v].type==AG_VARIABLE_FLOAT) ? event->argv[v].data.flt : AG_FloatMismatch())
+# define AG_DOUBLE(v)      ((v < event->argc && event->argv[v].type==AG_VARIABLE_DOUBLE) ? event->argv[v].data.dbl : AG_DoubleMismatch())
+# define AG_LONG_DOUBLE(v) ((v < event->argc && event->argv[v].type==AG_VARIABLE_LONG_DOUBLE) ? event->argv[v].data.ldbl : AG_LongDoubleMismatch())
 #else /* !AG_TYPE_SAFETY */
-
 # define AG_PTR(v)         (event->argv[v].data.p)
 # define AG_OBJECT(v, t)   (event->argv[v].data.p)
 # define AG_STRING(v)      (event->argv[v].data.s)
@@ -39,16 +33,10 @@
 # define AG_UINT(v)        (event->argv[v].data.u)
 # define AG_LONG(v)        (event->argv[v].data.li)
 # define AG_ULONG(v)       (event->argv[v].data.uli)
-
-# ifdef AG_HAVE_FLOAT
-#  define AG_FLOAT(v)       (event->argv[v].data.flt)
-#  define AG_DOUBLE(v)      (event->argv[v].data.dbl)
-#  ifdef AG_HAVE_LONG_DOUBLE
-#   define AG_LONG_DOUBLE(v) (event->argv[v].data.ldbl)
-#  endif
-# endif
-
-#endif /* AG_TYPE_SAFETY */
+# define AG_FLOAT(v)       (event->argv[v].data.flt)
+# define AG_DOUBLE(v)      (event->argv[v].data.dbl)
+# define AG_LONG_DOUBLE(v) (event->argv[v].data.ldbl)
+#endif /* !AG_TYPE_SAFETY */
 
 #define AG_SELF()	AG_PTR(0)
 #define AG_SENDER()	AG_PTR(event->argc)
@@ -60,14 +48,9 @@
 #define AG_UINT_NAMED(k)	AG_GetNamedUint(event,(k))
 #define AG_LONG_NAMED(k)	AG_GetNamedLong(event,(k))
 #define AG_ULONG_NAMED(k)	AG_GetNamedUlong(event,(k))
-
-#ifdef AG_HAVE_FLOAT
-# define AG_FLOAT_NAMED(k)        AG_GetNamedFlt(event,(k))
-# define AG_DOUBLE_NAMED(k)       AG_GetNamedDbl(event,(k))
-# ifdef AG_HAVE_LONG_DOUBLE
-#  define AG_LONG_DOUBLE_NAMED(k) AG_GetNamedLongDbl(event,(k))
-# endif
-#endif
+#define AG_FLOAT_NAMED(k)       AG_GetNamedFlt(event,(k))
+#define AG_DOUBLE_NAMED(k)      AG_GetNamedDbl(event,(k))
+#define AG_LONG_DOUBLE_NAMED(k) AG_GetNamedLongDbl(event,(k))
 
 struct ag_timer;
 struct ag_event_sink;
@@ -375,177 +358,81 @@ int  AG_EventSinkTIMEDSELECT(void);
 int  AG_EventSinkSELECT(void);
 int  AG_EventSinkSPINNER(void);
 
-static __inline__ void
-AG_EventPushPointer(AG_Event *_Nonnull ev, const char *_Nullable name,
-    void *_Nullable val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_POINTER, name, p, val);
-}
-static __inline__ void
-AG_EventPushString(AG_Event *_Nonnull ev, const char *_Nullable name,
-    char *_Nonnull val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_STRING, name, s, AG_Strdup(val));
-}
-static __inline__ void
-AG_EventPushInt(AG_Event *_Nonnull ev, const char *_Nullable name,
-    int val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_INT, name, i, val);
-}
-static __inline__ void
-AG_EventPushUint(AG_Event *_Nonnull ev, const char *_Nullable name, Uint val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_UINT, name, i, val);
-}
-static __inline__ void
-AG_EventPushLong(AG_Event *_Nonnull ev, const char *_Nullable name, long val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_LONG, name, li, val);
-}
-static __inline__ void
-AG_EventPushUlong(AG_Event *_Nonnull ev, const char *_Nullable name, Ulong val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_ULONG, name, uli, val);
-}
-
-#ifdef AG_HAVE_FLOAT
-static __inline__ void
-AG_EventPushFloat(AG_Event *_Nonnull ev, const char *_Nullable name, float val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_FLOAT, name, flt, val);
-}
-static __inline__ void
-AG_EventPushDouble(AG_Event *_Nonnull ev, const char *_Nullable name, double val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_DOUBLE, name, dbl, val);
-}
-# ifdef AG_HAVE_LONG_DOUBLE
-static __inline__ void
-AG_EventPushLongDouble(AG_Event *_Nonnull ev, const char *_Nullable name,
-    long double val) {
-	AG_EVENT_PUSH_FN(ev, AG_VARIABLE_LONG_DOUBLE, name, ldbl, val);
-}
-# endif
-#endif /* AG_HAVE_FLOAT */
-
-static __inline__ void *_Nullable AG_EventPopPointer(AG_Event *_Nonnull ev) { AG_EVENT_POP_FN(AG_VARIABLE_POINTER, p); }
-static __inline__ char *_Nonnull  AG_EventPopString(AG_Event *_Nonnull ev)  { AG_EVENT_POP_FN(AG_VARIABLE_STRING, s); }
-
-static __inline__ int     AG_EventPopInt(AG_Event *_Nonnull ev)    { AG_EVENT_POP_FN(AG_VARIABLE_INT, i); }
-static __inline__ Uint    AG_EventPopUint(AG_Event *_Nonnull ev)   { AG_EVENT_POP_FN(AG_VARIABLE_UINT, u); }
-static __inline__ long    AG_EventPopLong(AG_Event *_Nonnull ev)   { AG_EVENT_POP_FN(AG_VARIABLE_LONG, li); }
-static __inline__ Ulong   AG_EventPopUlong(AG_Event *_Nonnull ev)  { AG_EVENT_POP_FN(AG_VARIABLE_ULONG, uli); }
-#ifdef AG_HAVE_FLOAT
-static __inline__ float        AG_EventPopFloat(AG_Event *_Nonnull ev)      { AG_EVENT_POP_FN(AG_VARIABLE_FLOAT, flt); }
-static __inline__ double       AG_EventPopDouble(AG_Event *_Nonnull ev)     { AG_EVENT_POP_FN(AG_VARIABLE_DOUBLE, dbl); }
-# ifdef AG_HAVE_LONG_DOUBLE
-static __inline__ long double  AG_EventPopLongDouble(AG_Event *_Nonnull ev) { AG_EVENT_POP_FN(AG_VARIABLE_LONG_DOUBLE, ldbl); }
-# endif
-#endif
-
-#undef AG_EVENT_PUSH_FN
-#undef AG_EVENT_POP_FN
-
 /*
- * Extract Event argument by name (case-insensitive).
+ * Inlinables
  */
-static __inline__ AG_Variable *_Nonnull _Pure_Attribute
-AG_GetNamedEventArg(AG_Event *_Nonnull ev, const char *_Nonnull name)
-{
-	int i;
-
-	for (i = 0; i < ev->argc; i++) {
-		if (AG_Strcasecmp(ev->argv[i].name, name) == 0)
-			return (&ev->argv[i]);
-	}
-	AG_SetError("Illegal AG_*_NAMED() access: No \"%s\"", name);
-	AG_FatalError(NULL);
-	return (&ev->argv[0]);
-}
-static __inline__ void *_Nullable _Pure_Attribute
-AG_GetNamedPtr(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_POINTER)
-		AG_FatalError("Illegal AG_PTR_NAMED() access");
-#endif
-	return (V->data.p);
-}
-static __inline__ char *_Nonnull _Pure_Attribute
-AG_GetNamedString(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_STRING)
-		AG_FatalError("Illegal AG_STRING_NAMED() access");
-#endif
-	return (V->data.s);
-}
-static __inline__ int _Pure_Attribute
-AG_GetNamedInt(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_INT) { AG_FatalError("Illegal AG_INT_NAMED() access"); }
-#endif
-	return (V->data.i);
-}
-static __inline__ Uint _Pure_Attribute
-AG_GetNamedUint(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_UINT) { AG_FatalError("Illegal AG_UINT_NAMED() access"); }
-#endif
-	return (V->data.u);
-}
-static __inline__ long _Pure_Attribute
-AG_GetNamedLong(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_LONG) { AG_FatalError("Illegal AG_LONG_NAMED() access"); }
-#endif
-	return (V->data.li);
-}
-static __inline__ Ulong _Pure_Attribute
-AG_GetNamedUlong(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-#ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_ULONG) { AG_FatalError("Illegal AG_ULONG_NAMED() access"); }
-#endif
-	return (V->data.uli);
-}
-
+void ag_event_push_pointer(AG_Event *_Nonnull, const char *_Nullable, void *_Nullable);
+void ag_event_push_string(AG_Event *_Nonnull, const char *_Nullable, char *_Nonnull);
+void ag_event_push_int(AG_Event *_Nonnull, const char *_Nullable, int);
+void ag_event_push_uint(AG_Event *_Nonnull, const char *_Nullable, Uint);
+void ag_event_push_long(AG_Event *_Nonnull, const char *_Nullable, long);
+void ag_event_push_ulong(AG_Event *_Nonnull, const char *_Nullable, Ulong);
 #ifdef AG_HAVE_FLOAT
-
-static __inline__ float _Pure_Attribute
-AG_GetNamedFlt(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-# ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_FLOAT) { AG_FatalError("Illegal AG_FLOAT_NAMED() access"); }
-# endif
-	return (V->data.flt);
-}
-static __inline__ double _Pure_Attribute
-AG_GetNamedDbl(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-# ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_DOUBLE) { AG_FatalError("Illegal AG_DOUBLE_NAMED() access"); }
-# endif
-	return (V->data.dbl);
-}
+void ag_event_push_float(AG_Event *_Nonnull, const char *_Nullable, float);
+void ag_event_push_double(AG_Event *_Nonnull, const char *_Nullable, double);
 # ifdef AG_HAVE_LONG_DOUBLE
-static __inline__ long double _Pure_Attribute
-AG_GetNamedLongDbl(AG_Event *_Nonnull event, const char *_Nonnull name)
-{
-	AG_Variable *V = AG_GetNamedEventArg(event, name);
-# ifdef AG_TYPE_SAFETY
-	if (V->type != AG_VARIABLE_LONG_DOUBLE) { AG_FatalError("Illegal AG_LONG_DOUBLE_NAMED() access"); }
+void ag_event_push_long_double(AG_Event *_Nonnull, const char *_Nullable, long double);
 # endif
-	return (V->data.ldbl);
-}
-# endif /* AG_HAVE_LONG_DOUBLE */
-
-#endif /* AG_HAVE_FLOAT */
-
+#endif
+void *_Nullable ag_event_pop_pointer(AG_Event *_Nonnull);
+char *_Nonnull  ag_event_pop_string(AG_Event *_Nonnull);
+int             ag_event_pop_int(AG_Event *_Nonnull);
+Uint            ag_event_pop_uint(AG_Event *_Nonnull);
+long            ag_event_pop_long(AG_Event *_Nonnull);
+Ulong           ag_event_pop_ulong(AG_Event *_Nonnull);
+#ifdef AG_HAVE_FLOAT
+float           ag_event_pop_float(AG_Event *_Nonnull);
+double          ag_event_pop_double(AG_Event *_Nonnull);
+# ifdef AG_HAVE_LONG_DOUBLE
+long double     ag_event_pop_long_double(AG_Event *_Nonnull);
+# endif
+#endif
+AG_Variable *_Nonnull ag_get_named_event_arg(AG_Event *_Nonnull, const char *_Nonnull)
+                                            _Pure_Attribute;
+void *_Nullable ag_get_named_ptr(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
+char *_Nonnull  ag_get_named_string(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+int             ag_get_named_int(AG_Event *_Nonnull, const char *_Nonnull)    _Pure_Attribute;
+Uint            ag_get_named_uint(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
+long            ag_get_named_long(AG_Event *_Nonnull, const char *_Nonnull)   _Pure_Attribute;
+Ulong           ag_get_named_ulong(AG_Event *_Nonnull, const char *_Nonnull)  _Pure_Attribute;
+#ifdef AG_HAVE_FLOAT
+float           ag_get_named_flt(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+double          ag_get_named_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+# ifdef AG_HAVE_LONG_DOUBLE
+long double     ag_get_named_long_dbl(AG_Event *_Nonnull, const char *_Nonnull) _Pure_Attribute;
+# endif
+#endif
+#ifdef AG_INLINE_EVENT
+# define AG_INLINE_HEADER
+# include <agar/core/inline_event.h>
+#else
+# define AG_EventPushPointer(e,n,v)    ag_event_push_pointer((e),(n),(v))
+# define AG_EventPushString(e,n,v)     ag_event_push_string((e),(n),(v))
+# define AG_EventPushInt(e,n,v)        ag_event_push_int((e),(n),(v))
+# define AG_EventPushUint(e,n,v)       ag_event_push_uint((e),(n),(v))
+# define AG_EventPushLong(e,n,v)       ag_event_push_long((e),(n),(v))
+# define AG_EventPushUlong(e,n,v)      ag_event_push_ulong((e),(n),(v))
+# define AG_EventPushFloat(e,n,v)      ag_event_push_float((e),(n),(v))
+# define AG_EventPushDouble(e,n,v)     ag_event_push_double((e),(n),(v))
+# define AG_EventPushLongDouble(e,n,v) ag_event_push_long_double((e),(n),(v))
+# define AG_EventPopPointer(e)         ag_event_pop_pointer(e)
+# define AG_EventPopString(e)          ag_event_pop_string(e)
+# define AG_EventPopInt(e)             ag_event_pop_int(e)
+# define AG_EventPopUint(e)            ag_event_pop_uint(e)
+# define AG_EventPopLong(e)            ag_event_pop_long(e)
+# define AG_EventPopUlong(e)           ag_event_pop_ulong(e)
+# define AG_EventPopFloat(e)           ag_event_pop_float(e)
+# define AG_EventPopDouble(e)          ag_event_pop_double(e)
+# define AG_EventPopLongDouble(e)      ag_event_pop_long_double(e)
+# define AG_GetNamedEventArg(e,n)      ag_get_named_event_arg((e),(n))
+# define AG_GetNamedPtr(e,n)           ag_get_named_ptr((e),(n))
+# define AG_GetNamedString(e,n)        ag_get_named_string((e),(n))
+# define AG_GetNamedInt(e,n)           ag_get_named_int((e),(n))
+# define AG_GetNamedUint(e,n)          ag_get_named_uint((e),(n))
+# define AG_GetNamedLong(e,n)          ag_get_named_long((e),(n))
+# define AG_GetNamedUlong(e,n)         ag_get_named_ulong((e),(n))
+# define AG_GetNamedFlt(e,n)           ag_get_named_flt((e),(n))
+# define AG_GetNamedDbl(e,n)           ag_get_named_dbl((e),(n))
+# define AG_GetNamedLongDbl(e,n)       ag_get_named_long_dbl((e),(n))
+#endif /* AG_INLINE_EVENT */
 __END_DECLS
-
-#include <agar/core/close.h>

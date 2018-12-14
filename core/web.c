@@ -2128,16 +2128,19 @@ WEB_QueryLoad(WEB_Query *q, const void *data, AG_Size dataLen)
 	}
 	for (i = 0; i < count; i++) {
 		WEB_Cookie *ck;
+		Uint32 ckfl;
 		
 		if ((ck = TryMalloc(sizeof(WEB_Cookie))) == NULL) {
 			goto fail;
 		}
 		if (AG_CopyString(ck->name, ds, sizeof(ck->name)) == -1 ||
 		    AG_CopyString(ck->value, ds, sizeof(ck->value)) == -1 ||
-		    AG_ReadUint32v(ds, &ck->flags) == -1) {
+		    AG_Read(ds, &ckfl, sizeof(ckfl)) == -1) {
 			free(ck);
 			goto fail;
 		}
+		ck->flags = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(ckfl) :
+	                                                          AG_SwapLE32(ckfl);
 		ck->expires[0] = '\0';
 		ck->domain[0] = '\0';
 		ck->path[0] = '\0';
@@ -4466,7 +4469,7 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 	socklen_t sunLen;
 	fd_set httpSockFDs;
 	int maxFd = 0;
-	int i, rv, val, sock;
+	int i, rv, val, sock = -1;
 	ssize_t rvLen;
 	char *c, *cEnd, *uriEnd;
 	struct stat sb;

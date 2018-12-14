@@ -28,7 +28,6 @@
  */
 
 #include <agar/core/core.h>
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -59,6 +58,10 @@ int agDebugLvl = 1;			/* Default debug level */
 static void (*_Nullable agErrorCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agVerboseCallback)(const char *_Nonnull) = NULL;
 static int  (*_Nullable agDebugCallback)(const char *_Nonnull) = NULL;
+
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_error.h>
 
 #ifdef AG_THREADS
 static void

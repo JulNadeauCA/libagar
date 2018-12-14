@@ -23,55 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_vasprintf.h>
-#include <agar/config/_mk_have_sys_types_h.h>
-
-#if (defined(__APPLE__) && !defined(_DARWIN_C_SOURCE))
-#define _DARWIN_C_SOURCE
-#endif
-#ifdef __NetBSD__
-#define _NETBSD_SOURCE
-#endif
-#define _GNU_SOURCE
-
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+/*
+ * Threads API
+ */
 
 #include <agar/core/core.h>
 
-int
-AG_TryVasprintf(char **ret, const char *fmt, va_list ap)
-{
-#ifndef HAVE_VASPRINTF
-	int size;
-
-	size = vsnprintf(NULL, 0, fmt, ap);
-	if ((*ret = TryMalloc(size+1)) == NULL) {
-		return (-1);
-	}
-	if (size == 0) {
-		(*ret)[0] = '\0';
-		return (0);
-	} else {
-		return vsprintf(*ret, fmt, ap);
-	}
-#else /* !HAVE_VASPRINTF */
-	if (vasprintf(ret, fmt, ap) == -1) {
-		AG_SetError("Out of memory");
-		return (-1);
-	}
-	return (0);
-#endif /* HAVE_VASPRINTF */
-}
-
-void
-AG_Vasprintf(char **s, const char *fmt, va_list args)
-{
-	if (AG_TryVasprintf(s, fmt, args) == -1) 
-		AG_FatalError(NULL);
-}
+/*
+ * Import inlinables (or no-ops if threads are disabled).
+ */
+#undef AG_INLINE_HEADER
+#include <agar/core/inline_threads.h>

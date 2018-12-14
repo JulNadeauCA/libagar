@@ -1516,6 +1516,7 @@ AG_MapPixelGrayscale(const AG_PixelFormat *_Nonnull pf,
 
 	switch (pf->graymode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		lum = ( 0.21f*R +  0.72f*G +  0.07f*B);
 		break;
 	case AG_GRAYSCALE_RMY:
@@ -1542,6 +1543,7 @@ AG_GetColor32_Gray(Uint32 G, AG_GrayscaleMode mode)
 
 	switch (mode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		c.r = (Uint16)(lum / 0.21f);
 		c.g = (Uint16)(lum / 0.72f);
 		c.b = (Uint16)(lum / 0.07f);
@@ -1571,6 +1573,7 @@ AG_GetColor32_Gray8(Uint32 G, AG_GrayscaleMode grayMode,
 
 	switch (grayMode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		*r = (Uint8)(lum / 0.21f);
 		*g = (Uint8)(lum / 0.72f);
 		*b = (Uint8)(lum / 0.07f);
@@ -1600,6 +1603,7 @@ AG_GetColor32_Gray16(Uint32 px, AG_GrayscaleMode grayMode,
 
 	switch (grayMode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		*r = (Uint16)(lum / 0.21f);
 		*g = (Uint16)(lum / 0.72f);
 		*b = (Uint16)(lum / 0.07f);
@@ -1633,6 +1637,7 @@ AG_GetColor64_Gray16(Uint64 G, AG_GrayscaleMode grayMode,
 
 	switch (grayMode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		*r = (Uint16)(lum / 0.21f);
 		*g = (Uint16)(lum / 0.72f);
 		*b = (Uint16)(lum / 0.07f);
@@ -1664,6 +1669,7 @@ AG_GetColor64_Gray(Uint64 G, AG_GrayscaleMode mode)
 
 	switch (mode) {
 	case AG_GRAYSCALE_BT709:
+	default:
 		c.r = (Uint16)(lum / 0.21);
 		c.g = (Uint16)(lum / 0.72);
 		c.b = (Uint16)(lum / 0.07);

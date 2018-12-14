@@ -31,7 +31,6 @@
 #  define AG_OBJECT_PATH_MAX 196
 # endif
 #endif
-
 #ifndef AG_OBJECT_LIBS_MAX
 # if AG_MODEL == AG_SMALL
 #  define AG_OBJECT_LIBS_MAX 16
@@ -39,30 +38,25 @@
 #  define AG_OBJECT_LIBS_MAX 32
 # endif
 #endif
-
 #ifndef AG_OBJECT_DEP_MAX
-#define AG_OBJECT_DEP_MAX (0xffffffff-2)
+# define AG_OBJECT_DEP_MAX (0xffffffff-2)
 #endif
-
 #ifndef AG_OBJECT_MAX_VARIABLES
-#define AG_OBJECT_MAX_VARIABLES 0xffff
+# define AG_OBJECT_MAX_VARIABLES 0xffff
 #endif
 
-#define AGOBJECT(ob) ((struct ag_object *)(ob))
+#define AGOBJECT(ob)        ((struct ag_object *)(ob))
+#define AGCLASS(obj)        ((struct ag_object_class *)(obj))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
-#define AGCLASS(obj) ((struct ag_object_class *)(obj))
 
 struct ag_object;
-struct ag_db;
-struct ag_dbt;
 
-#include <agar/core/text.h>
+#include <agar/core/begin.h>
+
 #include <agar/core/variable.h>
 #include <agar/core/event.h>
 #include <agar/core/time.h>
 #include <agar/core/class.h>
-
-#include <agar/core/begin.h>
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
@@ -191,6 +185,9 @@ typedef struct ag_object_header {
 # define OBJECT_LAST_CHILD(var,t)                AGOBJECT_LAST_CHILD((var),t)
 #endif /* _AGAR_INTERNAL or _USE_AGAR_CORE */
 
+struct ag_db;
+struct ag_dbt;
+
 __BEGIN_DECLS
 extern AG_ObjectClass agObjectClass;		/* Generic Object class */
 
@@ -218,9 +215,6 @@ int AG_ObjectCopyFilename(void *_Nonnull, char *_Nonnull, AG_Size);
 
 int AG_ObjectChanged(void *_Nonnull);
 int AG_ObjectChangedAll(void *_Nonnull);
-
-#define AG_ObjectRoot(ob) (AGOBJECT(ob)->root)
-#define AG_ObjectParent(ob) (AGOBJECT(ob)->parent)
 
 void *_Nullable AG_ObjectFindS(void *_Nonnull, const char *_Nonnull)
                               _Pure_Attribute_If_Unthreaded;
@@ -287,9 +281,7 @@ int AG_ObjectLoadData(void *_Nonnull, int *_Nonnull);
 int AG_ObjectLoadDataFromFile(void *_Nonnull, int *_Nonnull, const char *_Nullable);
 int AG_ObjectLoadGeneric(void *_Nonnull);
 int AG_ObjectLoadGenericFromFile(void *_Nonnull, const char *_Nullable);
-
 int AG_ObjectResolveDeps(void *_Nonnull);
-
 int AG_ObjectReadHeader(AG_DataSource *_Nonnull, AG_ObjectHeader *_Nonnull);
 int AG_ObjectLoadVariables(void *_Nonnull, AG_DataSource *_Nonnull);
 
@@ -306,12 +298,14 @@ void AG_ObjectGenNamePfx(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
                          AG_Size);
 
 #define AG_OfClass(obj,cspec) AG_ClassIsNamed(AGOBJECT(obj)->cls,(cspec))
+#define AG_ObjectRoot(ob)   (AGOBJECT(ob)->root)
+#define AG_ObjectParent(ob) (AGOBJECT(ob)->parent)
 
 #ifdef AG_THREADS
-# define AG_ObjectLock(ob) AG_MutexLock(&AGOBJECT(ob)->pvt.lock)
+# define AG_ObjectLock(ob)   AG_MutexLock(&AGOBJECT(ob)->pvt.lock)
 # define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->pvt.lock)
-# define AG_LockVFS(ob) AG_ObjectLock(AGOBJECT(ob)->root)
-# define AG_UnlockVFS(ob) AG_ObjectUnlock(AGOBJECT(ob)->root)
+# define AG_LockVFS(ob)      AG_ObjectLock(AGOBJECT(ob)->root)
+# define AG_UnlockVFS(ob)    AG_ObjectUnlock(AGOBJECT(ob)->root)
 #else /* !AG_THREADS */
 # define AG_ObjectLock(ob)
 # define AG_ObjectUnlock(ob)
@@ -319,44 +313,37 @@ void AG_ObjectGenNamePfx(void *_Nonnull, const char *_Nonnull, char *_Nonnull,
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
 
-#ifdef AG_INLINE_OBJECT
-
-# define AG_INLINE_HEADER
-# include <agar/core/inline_object.h>
-
-#else /* !AG_INLINE_OBJECT */
-
-void ag_object_delete(void *_Nonnull);
-
-void *_Nullable ag_object_find_child(void *_Nonnull, const char *_Nonnull)
-                                    _Pure_Attribute_If_Unthreaded;
-
+/*
+ * Inlinables
+ */
+void                      ag_object_delete(void *_Nonnull);
+void *_Nullable           ag_object_find_child(void *_Nonnull, const char *_Nonnull)
+                                              _Pure_Attribute_If_Unthreaded;
 AG_ObjectClass *_Nullable ag_object_superclass(void *_Nonnull)
                                               _Pure_Attribute;
-
-void ag_lock_timers(void *_Nullable);
-void ag_unlock_timers(void *_Nullable);
-
-int  ag_defined(void *_Nonnull, const char *_Nonnull)
-               _Pure_Attribute
-	       _Warn_Unused_Result;
-
-AG_Variable *_Nonnull ag_fetch_variable(void *_Nonnull, const char *_Nonnull,
-                                        enum ag_variable_type)
-                                       _Warn_Unused_Result;
-
-AG_Variable *_Nonnull ag_fetch_variable_of_type(void *_Nonnull, const char *_Nonnull,
-                                                enum ag_variable_type)
-                                               _Warn_Unused_Result;
-
-AG_Variable *_Nullable ag_access_variable(void *_Nonnull, const char *_Nonnull)
-                                         _Warn_Unused_Result;
-
-void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
-                                   const char *_Nonnull)
-				  _Pure_Attribute
-				  _Warn_Unused_Result;
-
+void                      ag_lock_timers(void *_Nullable);
+void                      ag_unlock_timers(void *_Nullable);
+int                       ag_defined(void *_Nonnull, const char *_Nonnull)
+                                    _Pure_Attribute
+                                    _Warn_Unused_Result;
+AG_Variable *_Nonnull     ag_fetch_variable(void *_Nonnull, const char *_Nonnull,
+                                            enum ag_variable_type)
+                                           _Warn_Unused_Result;
+AG_Variable *_Nonnull     ag_fetch_variable_of_type(void *_Nonnull,
+                                                    const char *_Nonnull,
+                                                    enum ag_variable_type)
+                                                   _Warn_Unused_Result;
+AG_Variable *_Nullable    ag_access_variable(void *_Nonnull, const char *_Nonnull)
+                                            _Warn_Unused_Result;
+void *_Nonnull            ag_get_named_object(AG_Event *_Nonnull,
+                                              const char *_Nonnull,
+                                              const char *_Nonnull)
+				             _Pure_Attribute
+				             _Warn_Unused_Result;
+#ifdef AG_INLINE_OBJECT
+# define AG_INLINE_HEADER
+# include <agar/core/inline_object.h>
+#else
 # define AG_ObjectDelete(o)            ag_object_delete(o)
 # define AG_ObjectFindChild(o,n)       ag_object_find_child((o),(n))
 # define AG_ObjectSuperclass(o)        ag_object_superclass(o)
@@ -367,43 +354,10 @@ void *_Nonnull ag_get_named_object(AG_Event *_Nonnull, const char *_Nonnull,
 # define AG_FetchVariableOfType(o,n,t) ag_fetch_variable_of_type((o),(n),(t))
 # define AG_AccessVariable(o,n)        ag_access_variable((o),(n))
 # define AG_GetNamedObject(e,k,s)      ag_get_named_object((e),(k),(s))
-
 #endif /* !AG_INLINE_OBJECT */
-
-#ifdef AG_LEGACY
-# define AG_ObjectFreeDataset(ob) AG_ObjectReset(ob)
-# define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
-# define AG_LockTimeouts(ob) AG_LockTimers(ob)
-# define AG_UnlockTimeouts(ob) AG_UnlockTimers(ob)
-# define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
-# define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
-# define AG_ObjectFindF AG_ObjectFind
-# define AG_PropLoad AG_ObjectLoadVariables
-# define AG_PropSave AG_ObjectSaveVariables
-# define AG_PropDefined AG_Defined
-# define AG_GetStringCopy AG_GetString
-# define AG_Prop AG_Variable
-# define ag_prop ag_variable
-# define ag_prop_type ag_variable_type
-# define AG_PROP_UINT AG_VARIABLE_UINT
-# define AG_PROP_INT AG_VARIABLE_INT
-# define AG_PROP_UINT8 AG_VARIABLE_UINT8
-# define AG_PROP_SINT8 AG_VARIABLE_SINT8
-# define AG_PROP_UINT16	AG_VARIABLE_UINT16
-# define AG_PROP_SINT16	AG_VARIABLE_SINT16
-# define AG_PROP_UINT32	AG_VARIABLE_UINT32
-# define AG_PROP_SINT32	AG_VARIABLE_SINT32
-# define AG_PROP_FLOAT AG_VARIABLE_FLOAT
-# define AG_PROP_DOUBLE	AG_VARIABLE_DOUBLE
-# define AG_PROP_STRING	AG_VARIABLE_STRING
-# define AG_PROP_POINTER AG_VARIABLE_POINTER
-# define AG_PROP_BOOL AG_VARIABLE_INT
-AG_Prop	*_Nullable AG_SetProp(void *_Nonnull, const char *_Nonnull, enum ag_prop_type, ...) DEPRECATED_ATTRIBUTE;
-AG_Prop	*_Nullable AG_GetProp(void *_Nonnull, const char *_Nonnull, int, void *_Nonnull) DEPRECATED_ATTRIBUTE;
-AG_Variable *_Nullable AG_GetVariableLocked(void *_Nonnull, const char *_Nonnull) DEPRECATED_ATTRIBUTE;
-#endif /* AG_LEGACY */
 __END_DECLS
-
+#ifdef AG_LEGACY
+#include <agar/core/legacy_object.h>
+#endif
 #include <agar/core/close.h>
-
 #endif /* _AGAR_CORE_OBJECT_H_ */

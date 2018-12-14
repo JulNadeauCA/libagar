@@ -84,11 +84,11 @@ static Uint agFmtExtensionCount = 0;
 static _Nullable_Mutex AG_Mutex agFmtExtensionsLock;
 #endif
 
-#include "string_strcasecmp.h"
+#include <agar/core/string_strcasecmp.h>
 
 /* Import inlinables */
 #undef AG_INLINE_HEADER
-#include "inline_string.h"
+#include <agar/core/inline_string.h>
 
 /*
  * Built-in extended format specifiers.
@@ -284,8 +284,10 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 				break;
 			}
 			break;
+#if defined(HAVE_FLOAT) || defined(HAVE_64BIT)
 		case 'l':
 			switch (f[2]) {
+# ifdef HAVE_FLOAT
 			case 'f':
 				rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,double));
 				f++;
@@ -294,14 +296,16 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 				rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,double));
 				f++;
 				break;
-#ifdef HAVE_64BIT
+# endif
+# ifdef HAVE_64BIT
 			case 'l':
 				rv = ProcessFmtString64(fs, &f[3], pDst, (pEnd-pDst));
 				f+=2;
 				break;
-#endif
+# endif
 			}
 			break;
+#endif /* HAVE_FLOAT or HAVE_64BIT */
 		case 'd':
 		case 'i':
 			rv = StrlcpyInt(pDst, FSARG(fs,int), (pEnd-pDst));
@@ -309,12 +313,14 @@ AG_ProcessFmtString(AG_FmtString *fs, char *dst, AG_Size dstSize)
 		case 'u':
 			rv = StrlcpyUint(pDst, FSARG(fs,Uint), (pEnd-pDst));
 			break;
+#ifdef HAVE_FLOAT
 		case 'f':
 			rv = Snprintf(pDst, (pEnd-pDst), "%.2f", FSARG(fs,float));
 			break;
 		case 'g':
 			rv = Snprintf(pDst, (pEnd-pDst), "%g", FSARG(fs,float));
 			break;
+#endif
 		case 's':
 			rv = Strlcpy(pDst, &FSARG(fs,char), (pEnd-pDst));
 			break;
@@ -455,11 +461,13 @@ next_char:
 				    (char)va_arg(ap,int));
 			}
 			break;
+#ifdef HAVE_FLOAT
 		case 'f':
 		case 'g':
 			CAT_SPEC(f[1]);
 			rv = Snprintf(pDst, (pEnd-pDst), spec, va_arg(ap,double));
 			break;
+#endif
 		case 's':
 			CAT_SPEC(f[1]);
 			if (pSpec == &spec[2]) {	/* Optimized (%s) */
@@ -486,17 +494,19 @@ next_char:
 				rv = Snprintf(pDst, (pEnd-pDst), spec,
 				    va_arg(ap,Ulong));
 				break;
+#ifdef HAVE_FLOAT
 			case 'f':
 			case 'g':
 				CAT_SPEC(f[2]);
 				rv = Snprintf(pDst, (pEnd-pDst), spec,
 				    va_arg(ap,double));
 				break;
+#endif
 #ifdef HAVE_64BIT
 			case 'l':
 				CAT_SPEC(f[2]);
 				switch (f[3]) {
-# ifdef HAVE_LONG_DOUBLE
+# if defined(HAVE_FLOAT) && defined(HAVE_LONG_DOUBLE)
 				case 'f':
 				case 'g':
 					CAT_SPEC(f[3]);
@@ -1007,7 +1017,7 @@ AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,
 #ifdef HAVE_ICONV
 		ucs = ImportUnicodeICONV(encoding, s, sLen, pOutLen, pOutSize);
 #else
-		AG_SetError("Unknown encoding: %s (no iconv support)", encoding);
+		AG_SetError("No such encoding: \"%s\"", encoding);
 		return (NULL);
 #endif
 	}
@@ -1060,7 +1070,7 @@ ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
 		outSize = wrPtr - dst;
 		dst[outSize] = '\0';
 	} else {
-		AG_SetError("iconv: Out of space for NUL");
+		AG_SetErrorS("iconv: No space for NUL");
 		return (-1);
 	}
 	return (0);
@@ -1103,11 +1113,11 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 				chlen = 6;
 				ch1 = 0xfc;
 			} else {
-				AG_SetError("Bad UTF-8 sequence");
+				AG_SetErrorS("Bad UTF-8 sequence");
 				return (-1);
 			}
 			if (len+chlen+1 > dstSize) {
-				AG_SetError("Out of space");
+				AG_SetErrorS("Out of space");
 				return (-1);
 			}
 			for (i = chlen - 1; i > 0; i--) {
@@ -1122,8 +1132,8 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 		return (0);
 	} else if (strcmp(encoding, "US-ASCII") == 0) {
 		for (len = 0; *ucs != '\0' && len < dstSize; ucs++) {
-			if (!isascii((int)*ucs)) {
-				AG_SetError("Bad ASCII character");
+			if ((*ucs) & ~0x7f) {
+				AG_SetErrorS("Non-ASCII character");
 				return (-1);
 			}
 			*dst = (char)*ucs;
@@ -1136,7 +1146,7 @@ AG_ExportUnicode(const char *encoding, char *dst, const Uint32 *ucs,
 #ifdef HAVE_ICONV
 		return ExportUnicodeICONV(encoding, dst, ucs, dstSize);
 #else
-		AG_SetError("Unknown encoding: %s (no iconv support)", encoding);
+		AG_SetError("No such encoding: \"%s\"", encoding);
 		return (-1);
 #endif
 	}
