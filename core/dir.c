@@ -64,7 +64,10 @@
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
 #else
-# include <sys/stat.h>
+# include <agar/config/_mk_have_sys_stat_h.h>
+# ifdef _MK_HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+# endif
 # include <dirent.h>
 # include <unistd.h>
 #endif
