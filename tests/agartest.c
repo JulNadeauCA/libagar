@@ -5,6 +5,7 @@
 
 #include "agartest.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <agar/config/have_opengl.h>

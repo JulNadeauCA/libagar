@@ -84,7 +84,7 @@ TestGUI(void *obj, AG_Window *win)
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "menubg.bmp", path, sizeof(path))) {
 		if ((px = AG_PixmapFromFile(fx, 0, path)) == NULL) {
 			TestMsg(obj, "%s: %s", path, AG_GetError());
-			exit(1);
+			return (-1);
 		}
 		AG_FixedMove(fx, px, 0, 0);
 	}

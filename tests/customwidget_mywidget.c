@@ -8,6 +8,8 @@
  * inheritance, see demos/objsystem.
  */
 
+#include <stdlib.h>
+
 #include "agartest.h"
 #include "customwidget_mywidget.h"
 

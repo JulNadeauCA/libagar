@@ -1,76 +1,83 @@
 # Public domain
-# ex:syn=sh
+# ex:syn=bsdbuild
 #
 # This is a BSDBuild configure script source. The final configure script is
 # generated using BSDBuild's mkconfigure(1) utility. BSDBuild is freely
 # available from: http://bsdbuild.hypertriton.com/.
 #
 
-PACKAGE("Agar")
-VERSION("1.6.0")
-RELEASE("Nullability Complete")
+package("Agar")
+version("1.6.0")
+release("Nullability Complete")
 
-REGISTER_SECTION("Global Agar options:")
-REGISTER("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
-REGISTER("--with-float",		"Floating-point support [auto]")
-REGISTER("--enable-<library>",		"Build libraries (gui|vg|math|dev|au) [all]")
-REGISTER("--enable-shared",		"Build shared libraries [check]")
-REGISTER("--enable-type-safety",	"Run-time type safety checks [no]")
-REGISTER("--enable-debug",		"Debug build (implies type-safety) [no]")
-REGISTER("--enable-legacy",		"Deprecated interfaces [yes]")
-REGISTER("--enable-threads",		"Thread safety [check]")
-REGISTER("--enable-warnings",		"Suggested compiler warnings [no]")
-REGISTER("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
-REGISTER("--with-attributes",		"Compiler attributes and annotations [yes]")
+register_section("Global Agar options:")
+register("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
+register("--with-float",		"Floating-point support [auto]")
+register("--enable-<library>",		"Build libraries (gui|vg|math|dev|au) [all]")
+register("--enable-shared",		"Build shared libraries [check]")
+register("--enable-type-safety",	"Run-time type safety checks [no]")
+register("--enable-debug",		"Debug build (implies type-safety) [no]")
+register("--enable-legacy",		"Deprecated interfaces [yes]")
+register("--enable-threads",		"Thread safety [check]")
+register("--enable-warnings",		"Suggested compiler warnings [no]")
+register("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
+register("--with-attributes",		"Compiler attributes and annotations [yes]")
+register("--with-inline",		"Inline functions [yes]")
 
-REGISTER_SECTION("Options specific to CORE library:")
-REGISTER("--enable-debug-core",		"Expensive AG_Object debugging [no]")
-REGISTER("--enable-network",		"Network interface [check]")
-REGISTER("--enable-web",		"Web application server [no]")
-REGISTER("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
-REGISTER("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
-REGISTER("--with-iconv[=PREFIX]",	"Character set conversion [check]")
-REGISTER("--with-z[=PREFIX]",		"zlib compression library [check]")
-REGISTER("--with-inline-string",	"Inline some string functions [yes]")
-REGISTER("--with-inline-object",	"Inline some AG_Object functions [yes]")
-REGISTER("--with-inline-variable",	"Inline some AG_Variable functions [yes]")
+register_section("Options specific to CORE library:")
+register("--enable-debug-core",		"Expensive AG_Object debugging [no]")
+register("--enable-network",		"Network interface [check]")
+register("--enable-web",		"Web application server [no]")
+register("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
+register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
+register("--with-iconv[=PREFIX]",	"Character set conversion [check]")
+register("--with-z[=PREFIX]",		"zlib compression library [check]")
+register("--with-inline-byteswap",	"Inline endianness swaps [yes]")
+register("--with-inline-error",		"Inline malloc() wrappers [yes]")
+register("--with-inline-event",		"Inline event argument accessors [yes]")
+register("--with-inline-io",		"Inline serialization routines [yes]")
+register("--with-inline-object",	"Inline some AG_Object calls [yes]")
+register("--with-inline-string",	"Inline some string functions [yes]")
+register("--with-inline-tbl",		"Inline some AG_Tbl functions [yes]")
+register("--with-inline-threads",	"Inline AG_Threads functions [yes]")
+register("--with-inline-variable",	"Inline some AG_Variable calls [yes]")
 
-REGISTER_SECTION("Options specific to MATH library:")
-REGISTER("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
-REGISTER("--with-altivec[=inline]",	"AltiVec-optimized routines [check]")
-REGISTER("--with-sse[=inline]",		"SSE-optimized routines [check]")
-REGISTER("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
+register_section("Options specific to MATH library:")
+register("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
+register("--with-altivec[=inline]",	"AltiVec-optimized routines [check]")
+register("--with-sse[=inline]",		"SSE-optimized routines [check]")
+register("--with-sse[234]",		"SSE2 SSE3 SSE4 routines [check]")
 
-REGISTER_SECTION("Options specific to AU library:")
-REGISTER("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
-REGISTER("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
+register_section("Options specific to AU library:")
+register("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
+register("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
 
-REGISTER_SECTION("Options specific to GUI library:")
-REGISTER("--enable-debug-gui",		"Expensive GUI debugging [no]")
-REGISTER("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
-REGISTER("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
-REGISTER("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
-REGISTER("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
-REGISTER("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
-REGISTER("--with-x[=PREFIX]",		"Build with X windows support [check]")
-REGISTER("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
-REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
-REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
-REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
-REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
-REGISTER("--with-inline-surface",	"Inline pixel access routines [yes]")
-REGISTER("--with-inline-widget",	"Inline some AG_Widget functions [yes]")
+register_section("Options specific to GUI library:")
+register("--enable-debug-gui",		"Expensive GUI debugging [no]")
+register("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
+register("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
+register("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
+register("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
+register("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
+register("--with-x[=PREFIX]",		"Build with X windows support [check]")
+register("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
+register("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
+register("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
+register("--with-wgl",			"Enable MS Windows driver [check]")
+register("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
+register("--with-inline-surface",	"Inline pixel access routines [yes]")
+register("--with-inline-widget",	"Inline some AG_Widget functions [yes]")
 
-DEFAULT_DIR(DATADIR, "${PREFIX}/share/agar")
-DEFAULT_DIR(LOCALEDIR, "${DATADIR}/locale")
-DEFAULT_DIR(TTFDIR, "${DATADIR}/fonts")
-DEFAULT_DIR(INCLDIR, "${PREFIX}/include/agar")
+default_dir(DATADIR, "${PREFIX}/share/agar")
+default_dir(LOCALEDIR, "${DATADIR}/locale")
+default_dir(TTFDIR, "${DATADIR}/fonts")
+default_dir(INCLDIR, "${PREFIX}/include/agar")
 
 if [ "${DATADIR}" = "NONE" ]; then
-	HDEFINE(LOCALEDIR, "NONE")
-	MDEFINE(LOCALEDIR, "NONE")
-	HDEFINE(TTFDIR, "NONE")
-	MDEFINE(TTFDIR, "NONE")
+	hdefine(LOCALEDIR, "NONE")
+	mdefine(LOCALEDIR, "NONE")
+	hdefine(TTFDIR, "NONE")
+	mdefine(TTFDIR, "NONE")
 fi
 
 echo '    _       _       _     ___'
@@ -94,16 +101,16 @@ if [ "${with_memory_model}" = '' ]; then
 fi
 case "${with_memory_model}" in
 S* | s*)
-	HDEFINE_UNQUOTED(AG_MODEL, "AG_SMALL")
-	MDEFINE(MEMORY_MODEL, "SMALL")
+	hdefine_unquoted(AG_MODEL, "AG_SMALL")
+	mdefine(MEMORY_MODEL, "SMALL")
 	;;
 M* | m*)
-	HDEFINE_UNQUOTED(AG_MODEL, "AG_MEDIUM")
-	MDEFINE(MEMORY_MODEL, "MEDIUM")
+	hdefine_unquoted(AG_MODEL, "AG_MEDIUM")
+	mdefine(MEMORY_MODEL, "MEDIUM")
 	;;
 L* | l*)
-	HDEFINE_UNQUOTED(AG_MODEL, "AG_LARGE")
-	MDEFINE(MEMORY_MODEL, "LARGE")
+	hdefine_unquoted(AG_MODEL, "AG_LARGE")
+	mdefine(MEMORY_MODEL, "LARGE")
 	;;
 *)
 	echo "No such memory model: ${with_memory_model} (use: SMALL, MEDIUM or LARGE)"
@@ -112,33 +119,32 @@ esac
 echo "                 v$VERSION for $host_machine ($MEMORY_MODEL)"
 echo ""
 
-# Require a C compiler.
-REQUIRE(cc)
+require(cc)
 
 case "${host}" in
 c64 | c128 | geos | nes)
 	# Static, integer-only build using CC65.
-	DISABLE(objc)
+	disable(objc)
 	with_attributes="no"
 	enable_shared="no"
 	with_float="no"
 	echo "checking for byte order...little-endian (${host})"
-	MDEFINE(_MK_BYTE_ORDER, "LE")
-	HDEFINE(_MK_LITTLE_ENDIAN, "yes")
-	HUNDEF(_MK_BIG_ENDIAN)
+	mdefine(_MK_BYTE_ORDER, "LE")
+	hdefine(_MK_LITTLE_ENDIAN, "yes")
+	hundef(_MK_BIG_ENDIAN)
 	;;
 *-darwin*)
 	# The native Cocoa driver requires Objective C.
-	CHECK(objc)
+	check(objc)
 	;;
 *)
-	DISABLE(objc)
+	disable(objc)
 	if [ "${HAVE_FLOAT}" = "yes" -a "${with_float}" = "no" ]; then
 		echo "disabling floating-point support"
-		MDEFINE(HAVE_FLOAT, "no")
-		MDEFINE(HAVE_LONG_DOUBLE, "no")
-		HUNDEF(HAVE_FLOAT)
-		HUNDEF(HAVE_LONG_DOUBLE)
+		mdefine(HAVE_FLOAT, "no")
+		mdefine(HAVE_LONG_DOUBLE, "no")
+		hundef(HAVE_FLOAT)
+		hundef(HAVE_LONG_DOUBLE)
 	fi
 	if [ "${CROSS_COMPILING}" = "yes" ]; then
 		if [ "${byte_order}" = "" ]; then
@@ -150,16 +156,16 @@ c64 | c128 | geos | nes)
 		fi
 		echo "checking for byte order...${byte_order} (given)"
 	else
-		CHECK(byte_order)
+		check(byte_order)
 	fi
 	;;
 esac
 
 # Force a static build if requested.
 if [ "${enable_shared}" != "no" ]; then
-	MDEFINE(LIB_SHARED, "Yes")
+	mdefine(LIB_SHARED, "Yes")
 else
-	MDEFINE(LIB_SHARED, "No")
+	mdefine(LIB_SHARED, "No")
 fi
 
 #
@@ -169,104 +175,114 @@ fi
 # Agar library itself. If not, --without-attributes should be used.
 #
 if [ "${with_attributes}" != "no" ]; then
-	CHECK(cc_attributes)
+	check(cc_attributes)
 else
-	DISABLE(cc_attributes)
+	disable(cc_attributes)
 fi
-HDEFINE_IF("${with_attributes}" != 'no', AG_USE_ATTRIBUTES)
+hdefine_if("${with_attributes}" != 'no', AG_USE_ATTRIBUTES)
 
 #
-# Inline some critical functions by default. We keep a dlsymmable copy of
-# the functions with names in lowercase form.
+# Expand inlinables by default. Keep a dlsymmable copy of all
+# functions available (with names in lowercase form).
 #
 if [ "${with_inline}" = "no" ]; then
-	with_inline_string="no"
+	with_inline_byteswap="no"
+	with_inline_error="no"
+	with_inline_io="no"
 	with_inline_object="no"
+	with_inline_string="no"
+	with_inline_tbl="no"
+	with_inline_threads="no"
 	with_inline_variable="no"
 	with_inline_surface="no"
 	with_inline_widget="no"
 fi
-HDEFINE_IF("${with_inline_string}" != "no",   AG_INLINE_STRING)
-HDEFINE_IF("${with_inline_object}" != "no",   AG_INLINE_OBJECT)
-HDEFINE_IF("${with_inline_variable}" != "no", AG_INLINE_VARIABLE)
-HDEFINE_IF("${with_inline_surface}" != "no",  AG_INLINE_SURFACE)
-HDEFINE_IF("${with_inline_widget}" != "no",   AG_INLINE_WIDGET)
+hdefine_if("${with_inline_byteswap}" != "no", AG_INLINE_BYTESWAP)
+hdefine_if("${with_inline_error}" != "no",    AG_INLINE_ERROR)
+hdefine_if("${with_inline_io}" != "no",       AG_INLINE_IO)
+hdefine_if("${with_inline_object}" != "no",   AG_INLINE_OBJECT)
+hdefine_if("${with_inline_string}" != "no",   AG_INLINE_STRING)
+hdefine_if("${with_inline_tbl}" != "no",      AG_INLINE_TBL)
+hdefine_if("${with_inline_threads}" != "no",  AG_INLINE_THREADS)
+hdefine_if("${with_inline_variable}" != "no", AG_INLINE_VARIABLE)
+hdefine_if("${with_inline_surface}" != "no",  AG_INLINE_SURFACE)
+hdefine_if("${with_inline_widget}" != "no",   AG_INLINE_WIDGET)
 
-CHECK(sys_types)
-CHECK(sys_stat)
-CHECK(stdlib_h)
-CHECK(unistd_h)
-CHECK(limits_h)
-CHECK(float_h)
-CHECK(math)
-CHECK(math_c99)
-CHECK(fdclose)
-CHECK(getpwuid)
-CHECK(getpwnam_r)
-CHECK(getenv)
-CHECK(getuid)
-CHECK(strsep)
-CHECK(asprintf)
-CHECK(snprintf)
-CHECK(vsnprintf)
-CHECK(vasprintf)
-CHECK(signal)
-CHECK(setjmp)
-CHECK(strtoll)
-CHECK(strtold)
-CHECK(dlopen)
-CHECK(dyld)
-CHECK(shl_load)
-CHECK(gettimeofday)
-CHECK(select)
-CHECK(glob)
-CHECK(getopt)
-CHECK(execvp)
-CHECK(clock_gettime)
-CHECK(clock_win32)
-CHECK(nanosleep)
-CHECK(kqueue)
-CHECK(timerfd)
-CHECK(csidl)
-CHECK(xbox)
+check(sys_types)
+check(sys_stat)
+check(stdlib_h)
+check(unistd_h)
+check(limits_h)
+check(float_h)
+check(math)
+check(math_c99)
+check(fdclose)
+check(getpwuid)
+check(getpwnam_r)
+check(getenv)
+check(getuid)
+check(strsep)
+check(asprintf)
+check(snprintf)
+check(vsnprintf)
+check(vasprintf)
+check(signal)
+check(setjmp)
+check(strtoll)
+check(strtold)
+check(dlopen)
+check(dyld)
+check(shl_load)
+check(gettimeofday)
+check(select)
+check(glob)
+check(getopt)
+check(execvp)
+check(clock_gettime)
+check(clock_win32)
+check(nanosleep)
+check(kqueue)
+check(timerfd)
+check(csidl)
+check(xbox)
 
 # C compiler options
-C_DEFINE(_AGAR_INTERNAL)
-C_DEFINE(_DEFAULT_SOURCE)
-C_DEFINE(_BSD_SOURCE)
-C_NO_SECURE_WARNINGS()
+c_define(_AGAR_INTERNAL)
+c_define(_DEFAULT_SOURCE)
+c_define(_BSD_SOURCE)
+c_no_secure_warnings()
 
 if [ "${enable_warnings}" = 'yes' ]; then
-	C_OPTION(-Wall)
-	C_OPTION(-Werror)
-	C_OPTION(-Wmissing-prototypes)
-	C_OPTION(-Wno-switch)
+	c_option(-Wall)
+	c_option(-Werror)
+	c_option(-Wmissing-prototypes)
+	c_option(-Wno-switch)
 fi
 
 if [ "${enable_debug}" = 'yes' ]; then
-	HDEFINE(AG_DEBUG, "yes")
-	HDEFINE(AG_TYPE_SAFETY, "yes")
-	MDEFINE(CFLAGS, "${CFLAGS} -g")
+	hdefine(AG_DEBUG, "yes")
+	hdefine(AG_TYPE_SAFETY, "yes")
+	mdefine(CFLAGS, "${CFLAGS} -g")
 else
-	HUNDEF(AG_DEBUG)
-	HDEFINE_IF("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
+	hundef(AG_DEBUG)
+	hdefine_if("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
 
-HDEFINE_IF("${enable_debug_core}" = 'yes', AG_DEBUG_CORE)
-HDEFINE_IF("${enable_debug_gui}" = 'yes', AG_DEBUG_GUI)
-HDEFINE_IF("${enable_legacy}" = 'yes', AG_LEGACY)
+hdefine_if("${enable_debug_core}" = 'yes', AG_DEBUG_CORE)
+hdefine_if("${enable_debug_gui}" = 'yes', AG_DEBUG_GUI)
+hdefine_if("${enable_legacy}" = 'yes', AG_LEGACY)
 
 #
 # Options specific to the Agar-GUI library.
 #
 if [ "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_GUI, "yes")
-	MDEFINE(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
-	MDEFINE(SUBDIR_gui, "gui")
+	hdefine(ENABLE_GUI, "yes")
+	mdefine(ENABLE_GUI_LIBS, "-L../gui -lag_gui")
+	mdefine(SUBDIR_gui, "gui")
 
 	# Enable SDL support if the SDL library is found.
 	if [ "${with_sdl}" != 'no' ]; then
-		CHECK(sdl, 1.2.0, ${prefix_sdl})
+		check(sdl, 1.2.0, ${prefix_sdl})
 		if [ "${HAVE_SDL}" != 'yes' ]; then
 			if [ "${with_sdl}" = 'yes' ]; then
 				echo "*"
@@ -275,17 +291,17 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			DISABLE(sdl)
+			disable(sdl)
 		fi
 	else
-		DISABLE(sdl)
+		disable(sdl)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
 	if [ "${with_gl}" != 'no' ]; then
-		CHECK(opengl, 0, ${prefix_gl})
+		check(opengl, 0, ${prefix_gl})
 		if [ "${HAVE_OPENGL}" = 'yes' ]; then
-			MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
+			mdefine(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
 		else
 			if [ "${with_gl}" = 'yes' ]; then
 				echo "*"
@@ -294,15 +310,15 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			DISABLE(opengl)
+			disable(opengl)
 		fi
 	else
-		DISABLE(opengl)
+		disable(opengl)
 	fi
 	
 	# Enable X Windows support if Xlib is found.
 	if [ "${with_x}" != 'no' ]; then
-		CHECK(x11, 0, ${prefix_x})
+		check(x11, 0, ${prefix_x})
 		if [ "${HAVE_X11}" != 'yes' ]; then
 			if [ "${with_x}" = 'yes' ]; then
 				echo "*"
@@ -311,11 +327,11 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			else
-				DISABLE(x11)
+				disable(x11)
 			fi
 		fi
 		if [ "${with_xinerama}" != 'no' ]; then
-			CHECK(xinerama, 0, ${prefix_xinerama})
+			check(xinerama, 0, ${prefix_xinerama})
 			if [ "${HAVE_XINERAMA}" != 'yes' ]; then
 				if [ "${with_xinerama}" = 'yes' ]; then
 					echo "*"
@@ -324,19 +340,19 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "*"
 					exit 1
 				fi
-				DISABLE(xinerama)
+				disable(xinerama)
 			fi
 		else
-			DISABLE(xinerama)
+			disable(xinerama)
 		fi
 	else
-		DISABLE(x11)
-		DISABLE(xinerama)
+		disable(x11)
+		disable(xinerama)
 	fi
 	
 	# Enable MacOS X / Cocoa support if Cocoa is found.
 	if [ "${with_cocoa}" != 'no' ]; then
-		CHECK(cocoa, 0)
+		check(cocoa, 0)
 		if [ "${HAVE_COCOA}" != 'yes' ]; then
 			if [ "${with_cocoa}" = 'yes' ]; then
 				echo "*"
@@ -345,10 +361,10 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			DISABLE(cocoa)
+			disable(cocoa)
 		fi
 	else
-		DISABLE(cocoa)
+		disable(cocoa)
 	fi
 
 	#
@@ -357,7 +373,7 @@ if [ "${enable_gui}" != 'no' ]; then
 	if [ "${HAVE_OPENGL}" = 'yes' ]; then
 		# Enable GLX support if the GLX library is found.
 		if [ "${with_glx}" != 'no' ]; then
-			CHECK(glx, 1.4, ${prefix_glx})
+			check(glx, 1.4, ${prefix_glx})
 			if [ "${HAVE_GLX}" != 'yes' ]; then
 				if [ "${with_glx}" = 'yes' ]; then
 					echo "*"
@@ -366,15 +382,15 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "*"
 					exit 1
 				fi
-				DISABLE(glx)
+				disable(glx)
 			fi
 		else
-			DISABLE(glx)
+			disable(glx)
 		fi
 		
 		# Enable WGL support on Windows.
 		if [ "${with_wgl}" != 'no' ]; then
-			CHECK(wgl, 0)
+			check(wgl, 0)
 			if [ "${HAVE_WGL}" != 'yes' ]; then
 				if [ "${with_wgl}" = 'yes' ]; then
 					echo "*"
@@ -383,20 +399,20 @@ if [ "${enable_gui}" != 'no' ]; then
 					echo "*"
 					exit 1
 				fi
-				DISABLE(wgl)
+				disable(wgl)
 			fi
 		else
-			DISABLE(wgl)
+			disable(wgl)
 		fi
 	else
-		DISABLE(glx)
-		DISABLE(wgl)
+		disable(glx)
+		disable(wgl)
 	fi
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
 	if [ "${with_freetype}" != 'no' ]; then
-		CHECK(freetype, 7.0.1, ${prefix_freetype})
+		check(freetype, 7.0.1, ${prefix_freetype})
 		if [ "${HAVE_FREETYPE}" != 'yes' ]; then
 			echo "*"
 			echo "* The FreeType library was not found, aborting!"
@@ -411,19 +427,19 @@ if [ "${enable_gui}" != 'no' ]; then
 			exit 1
 		fi
 	else
-		DISABLE(freetype)
+		disable(freetype)
 	fi
 	
 	# Use fontconfig if available.
 	if [ "${with_fontconfig}" != 'no' ]; then
-		CHECK(fontconfig, 2.6.0, ${prefix_fontconfig})
+		check(fontconfig, 2.6.0, ${prefix_fontconfig})
 	else
-		DISABLE(fontconfig)
+		disable(fontconfig)
 	fi
 	
 	# Enable JPEG format support if libjpeg is found.
 	if [ "${with_jpeg}" != 'no' ]; then
-		CHECK(jpeg, 0, ${prefix_jpeg})
+		check(jpeg, 0, ${prefix_jpeg})
 		if [ "${HAVE_JPEG}" != 'yes' ]; then
 			if [ "${with_jpeg}" = 'yes' ]; then
 				echo "*"
@@ -432,15 +448,15 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			DISABLE(jpeg)
+			disable(jpeg)
 		fi
 	else
-		DISABLE(jpeg)
+		disable(jpeg)
 	fi
 	
 	# Enable PNG format support if libpng is found.
 	if [ "${with_png}" != 'no' ]; then
-		CHECK(png, 1.2.49, ${prefix_png})
+		check(png, 1.2.49, ${prefix_png})
 		if [ "${HAVE_PNG}" != 'yes' ]; then
 			if [ "${with_png}" = 'yes' ]; then
 				echo "*"
@@ -449,65 +465,65 @@ if [ "${enable_gui}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			DISABLE(png)
+			disable(png)
 		fi
 	else
-		DISABLE(png)
+		disable(png)
 	fi
 
 else
-	HUNDEF(ENABLE_GUI)
-	MDEFINE(ENABLE_GUI_LIBS, "")
-	MDEFINE(SUBDIR_gui, "")
+	hundef(ENABLE_GUI)
+	mdefine(ENABLE_GUI_LIBS, "")
+	mdefine(SUBDIR_gui, "")
 
-	DISABLE(sdl)
-	DISABLE(x11)
-	DISABLE(xinerama)
-	DISABLE(cocoa)
-	DISABLE(opengl)
-	DISABLE(glx)
-	DISABLE(wgl)
-	DISABLE(freetype)
-	DISABLE(fontconfig)
-	DISABLE(jpeg)
-	DISABLE(png)
+	disable(sdl)
+	disable(x11)
+	disable(xinerama)
+	disable(cocoa)
+	disable(opengl)
+	disable(glx)
+	disable(wgl)
+	disable(freetype)
+	disable(fontconfig)
+	disable(jpeg)
+	disable(png)
 fi
 
 # Enable network interface unless requested otherwise.
 if [ "${enable_network}" != 'no' ]; then
-	CHECK(getaddrinfo)
-	CHECK(siocgifconf)
-	CHECK(sockopts)
-	CHECK(winsock)
-	MDEFINE(HAVE_NETWORK, "yes")
-	HDEFINE(AG_NETWORK, "yes")
+	check(getaddrinfo)
+	check(siocgifconf)
+	check(sockopts)
+	check(winsock)
+	mdefine(HAVE_NETWORK, "yes")
+	hdefine(AG_NETWORK, "yes")
 else
-	DISABLE(getaddrinfo)
-	DISABLE(siocgifconf)
-	DISABLE(sockopts)
-	DISABLE(winsock)
-	MDEFINE(HAVE_NETWORK, "no")
-	HUNDEF(AG_NETWORK)
+	disable(getaddrinfo)
+	disable(siocgifconf)
+	disable(sockopts)
+	disable(winsock)
+	mdefine(HAVE_NETWORK, "no")
+	hundef(AG_NETWORK)
 fi
 
 # Enable web application server if requested
 if [ "${enable_web}" = 'yes' ]; then
-	CHECK(zlib, 0, ${prefix_z})
-	CHECK_HEADER(sys/uio.h)
-	CHECK_HEADER(sys/param.h)
-	MDEFINE(HAVE_WEB, "yes")
-	HDEFINE(AG_WEB, "yes")
+	check(zlib, 0, ${prefix_z})
+	Check_header(sys/uio.h)
+	Check_header(sys/param.h)
+	mdefine(HAVE_WEB, "yes")
+	hdefine(AG_WEB, "yes")
 else
-	DISABLE(zlib);
-	HUNDEF(HAVE_SYS_UIO_H)
-	HUNDEF(HAVE_SYS_PARAM_H)
-	MDEFINE(HAVE_WEB, "no")
-	HUNDEF(AG_WEB)
+	disable(zlib);
+	hundef(HAVE_SYS_UIO_H)
+	hundef(HAVE_SYS_PARAM_H)
+	mdefine(HAVE_WEB, "no")
+	hundef(AG_WEB)
 fi
 
 # Enable Berkeley DB 4.x module for AG_Db if requested
 if [ "${with_db4}" = 'yes' ]; then
-	CHECK(db4, 0, ${prefix_db4})
+	check(db4, 0, ${prefix_db4})
 	if [ "${HAVE_DB4}" != 'yes' ]; then
 		if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
@@ -516,16 +532,16 @@ if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
 			exit 1
 		else
-			DISABLE(db4)
+			disable(db4)
 		fi
 	fi
 else
-	DISABLE(db4)
+	disable(db4)
 fi
 
 # Enable Berkeley DB 5.x module for AG_Db if requested
 if [ "${with_db5}" = 'yes' ]; then
-	CHECK(db5, 0, ${prefix_db5})
+	check(db5, 0, ${prefix_db5})
 	if [ "${HAVE_DB5}" != 'yes' ]; then
 		if [ "${with_db5}" = 'yes' ]; then
 			echo "*"
@@ -534,16 +550,16 @@ if [ "${with_db5}" = 'yes' ]; then
 			echo "*"
 			exit 1
 		else
-			DISABLE(db5)
+			disable(db5)
 		fi
 	fi
 else
-	DISABLE(db5)
+	disable(db5)
 fi
 
 # Enable MySQL module for AG_Db if requested.
 if [ "${with_mysql}" = 'yes' ]; then
-	CHECK(mysql, 5.5.8, ${prefix_mysql})
+	check(mysql, 5.5.8, ${prefix_mysql})
 	if [ "${HAVE_MYSQL}" != 'yes' ]; then
 		if [ "${with_mysql}" = 'yes' ]; then
 			echo "*"
@@ -552,15 +568,15 @@ if [ "${with_mysql}" = 'yes' ]; then
 			echo "*"
 			exit 1
 		fi
-		DISABLE(mysql)
+		disable(mysql)
 	fi
 else
-	DISABLE(mysql)
+	disable(mysql)
 fi
 
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != 'no' ]; then
-	CHECK(pthreads, 0, ${prefix_pthreads})
+	check(pthreads, 0, ${prefix_pthreads})
 
 	if [ "${HAVE_PTHREADS}" = 'yes' ]; then
 		if [ "${HAVE_PTHREADS_XOPEN}" = 'no' ]; then
@@ -574,11 +590,11 @@ if [ "${enable_threads}" != 'no' ]; then
 				echo "*"
 				exit 1
 			fi
-			HUNDEF(AG_THREADS)
+			hundef(AG_THREADS)
 		fi
 		fi
 		fi
-		HDEFINE(AG_THREADS, "yes")
+		hdefine(AG_THREADS, "yes")
 	else
 		if [ "${enable_threads}" = 'yes' ]; then
 			echo "*"
@@ -587,26 +603,25 @@ if [ "${enable_threads}" != 'no' ]; then
 			echo "*"
 			exit 1
 		fi
-		HUNDEF(AG_THREADS)
+		hundef(AG_THREADS)
 	fi
 else
-	DISABLE(pthreads)
-
-	HUNDEF(AG_THREADS)
+	disable(pthreads)
+	hundef(AG_THREADS)
 
 	if [ "${enable_warnings}" = 'yes' ]; then
 		#
 		# Lock macros expand to no-ops when compiled !AG_THREADS,
 		# which may result in unused variables.
 		#
-		C_OPTION(-Wno-unused)
+		c_option(-Wno-unused)
 	fi
 fi
 
 # Enable NLS if requested explicitely.
 if [ "${enable_nls}" = 'yes' ]; then
-	CHECK(iconv, 0, ${prefix_iconv})
-	CHECK(gettext, 0, ${prefix_gettext})
+	check(iconv, 0, ${prefix_iconv})
+	check(gettext, 0, ${prefix_gettext})
 	if [ "${HAVE_GETTEXT}" != 'yes' ]; then
 		echo "*"
 		echo "* --enable-nls was given but gettext was not found."
@@ -614,24 +629,24 @@ if [ "${enable_nls}" = 'yes' ]; then
 		exit 1
 	fi
 else
-	DISABLE(iconv)
-	DISABLE(gettext)
+	disable(iconv)
+	disable(gettext)
 fi
 
 #
 # Options specific to the Agar-Math library
 #
 if [ "${enable_math}" != 'no' ]; then
-	HDEFINE(ENABLE_MATH, "yes")
-	MDEFINE(SUBDIR_math, "math")
+	hdefine(ENABLE_MATH, "yes")
+	mdefine(SUBDIR_math, "math")
 else
-	HUNDEF(ENABLE_MATH)
-	MDEFINE(SUBDIR_math, "")
+	hundef(ENABLE_MATH)
+	mdefine(SUBDIR_math, "")
 fi
 
 # Enable AltiVec optimizations if compiler supports AltiVec.
 if [ "${with_altivec}" != 'no' ]; then
-	CHECK(altivec)
+	check(altivec)
 	if [ "${HAVE_ALTIVEC}" != 'yes' ]; then
 		if [ "${with_altivec}" = 'yes' -o "${with_altivec}" = 'inline' ]; then
 			echo "*"
@@ -640,15 +655,15 @@ if [ "${with_altivec}" != 'no' ]; then
 			echo "*"
 			exit 1
 		else
-			DISABLE(altivec)
-			HUNDEF(INLINE_ALTIVEC)
+			disable(altivec)
+			hundef(INLINE_ALTIVEC)
 		fi
 	else
-		HDEFINE_IF("${with_altivec}" = 'inline', INLINE_ALTIVEC)
+		hdefine_if("${with_altivec}" = 'inline', INLINE_ALTIVEC)
 	fi
 else
-	DISABLE(altivec)
-	HUNDEF(INLINE_ALTIVEC)
+	disable(altivec)
+	hundef(INLINE_ALTIVEC)
 fi
 
 #
@@ -658,7 +673,7 @@ fi
 # the resulting ag_math library will be SSE-dependent).
 #
 if [ "${with_sse}" != 'no' ]; then
-	CHECK(sse)
+	check(sse)
 	if [ "${HAVE_SSE}" != 'yes' ]; then
 		if [ "${with_sse}" = 'yes' -o "${with_sse}" = 'inline' ]; then
 			echo "*"
@@ -667,14 +682,14 @@ if [ "${with_sse}" != 'no' ]; then
 			echo "*"
 			exit 1
 		fi
-		DISABLE(sse)
+		disable(sse)
 	else
-		HDEFINE_IF("${with_sse}" = 'inline', INLINE_SSE)
-		HUNDEF_IF("${with_sse2}" = 'no', HAVE_SSE2)
-		HUNDEF_IF("${with_sse3}" = 'no', HAVE_SSE3)
+		hdefine_if("${with_sse}" = 'inline', INLINE_SSE)
+		Hundef_if("${with_sse2}" = 'no', HAVE_SSE2)
+		Hundef_if("${with_sse3}" = 'no', HAVE_SSE3)
 	fi
 else
-	DISABLE(sse)
+	disable(sse)
 fi
 
 if [ "${with_single_fp}" = 'yes' ]; then
@@ -685,12 +700,12 @@ if [ "${with_single_fp}" = 'yes' ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(SINGLE_PRECISION, "yes")
+	hdefine(SINGLE_PRECISION, "yes")
 else
-	HUNDEF(SINGLE_PRECISION)
+	hundef(SINGLE_PRECISION)
 fi
 
-HDEFINE_IF("${with_double_fp}" != 'no', DOUBLE_PRECISION)
+hdefine_if("${with_double_fp}" != 'no', DOUBLE_PRECISION)
 
 if [ "${with_quad_fp}" = 'yes' ]; then
 	if [ "${HAVE_LONG_DOUBLE}" != 'yes' ]; then
@@ -707,149 +722,149 @@ if [ "${with_quad_fp}" = 'yes' ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(QUAD_PRECISION, "yes")
+	hdefine(QUAD_PRECISION, "yes")
 else
-	HUNDEF(QUAD_PRECISION)
+	hundef(QUAD_PRECISION)
 fi
 
 #
 # Options specific to the Agar-VG library
 #
 if [ "${enable_vg}" != 'no' -a "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_VG, "yes")
-	MDEFINE(SUBDIR_vg, "vg")
+	hdefine(ENABLE_VG, "yes")
+	mdefine(SUBDIR_vg, "vg")
 else
-	HUNDEF(ENABLE_VG)
-	MDEFINE(SUBDIR_vg, "")
+	hundef(ENABLE_VG)
+	mdefine(SUBDIR_vg, "")
 fi
 
 #
 # Options specific to the Agar-DEV library
 #
 if [ "${enable_dev}" != 'no' -a "${enable_gui}" != 'no' ]; then
-	HDEFINE(ENABLE_DEV, "yes")
-	MDEFINE(SUBDIR_dev, "dev")
+	hdefine(ENABLE_DEV, "yes")
+	mdefine(SUBDIR_dev, "dev")
 else
-	HUNDEF(ENABLE_DEV)
-	MDEFINE(SUBDIR_dev, "")
+	hundef(ENABLE_DEV)
+	mdefine(SUBDIR_dev, "")
 fi
 
 #
 # Options specific to the Agar-AU library
 #
 if [ "${enable_au}" != 'no' -a "${enable_audio}" != 'no' ]; then
-	HDEFINE(ENABLE_AU, "yes")
-	MDEFINE(SUBDIR_au, "au")
+	hdefine(ENABLE_AU, "yes")
+	mdefine(SUBDIR_au, "au")
 
-	CHECK(sndfile, 1.0.21, ${prefix_sndfile})
-	CHECK(portaudio, 19.0, ${prefix_portaudio})
+	check(sndfile, 1.0.21, ${prefix_sndfile})
+	check(portaudio, 19.0, ${prefix_portaudio})
 else
-	HUNDEF(ENABLE_AU)
-	MDEFINE(SUBDIR_au, "")
+	hundef(ENABLE_AU)
+	mdefine(SUBDIR_au, "")
 
-	DISABLE(sndfile)
-	DISABLE(portaudio)
+	disable(sndfile)
+	disable(portaudio)
 fi
 
 #
 # Conditionally compiled sources in Agar-Core
 #
-MDEFINE(SRCS_CORE, "")
+mdefine(SRCS_CORE, "")
 if [ "${HAVE_SNPRINTF}" != 'yes' ]; then
-	MAPPEND(SRCS_CORE, "snprintf.c")
+	mappend(SRCS_CORE, "snprintf.c")
 fi
 if [ "${HAVE_CLOCK_WIN32}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "time_win32.c")
+	mappend(SRCS_CORE, "time_win32.c")
 fi
 if [ "${HAVE_CLOCK_GETTIME}" = 'yes' ]; then
 	if [ "${HAVE_NANOSLEEP}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "time_posix.c")
+		mappend(SRCS_CORE, "time_posix.c")
 	fi
 	if [ "${HAVE_PTHREADS}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "time_renderer.c")
+		mappend(SRCS_CORE, "time_renderer.c")
 	fi
 fi
 if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]; then
 	if [ "${HAVE_SELECT}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "time_gettimeofday.c")
+		mappend(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
 if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = "yes" ]; then
-	MAPPEND(SRCS_CORE, "db_bdb.c")
+	mappend(SRCS_CORE, "db_bdb.c")
 fi
 if [ "${HAVE_MYSQL}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "db_mysql.c")
+	mappend(SRCS_CORE, "db_mysql.c")
 fi
 if [ "${HAVE_NETWORK}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "net.c net_dummy.c")
+	mappend(SRCS_CORE, "net.c net_dummy.c")
 	if [ "${HAVE_WINSOCK1}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "net_winsock1.c")
+		mappend(SRCS_CORE, "net_winsock1.c")
 	fi
 	if [ "${HAVE_WINSOCK2}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "net_winsock2.c")
+		mappend(SRCS_CORE, "net_winsock2.c")
 	fi
 	if [ "${HAVE_GETADDRINFO}" = 'yes' ]; then
-		MAPPEND(SRCS_CORE, "net_bsd.c")
+		mappend(SRCS_CORE, "net_bsd.c")
 	fi
 fi
 if [ "${HAVE_GETPWUID}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "user_posix.c")
+	mappend(SRCS_CORE, "user_posix.c")
 fi
 if [ "${HAVE_XBOX}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "user_xbox.c xbox.c")
+	mappend(SRCS_CORE, "user_xbox.c xbox.c")
 fi
 if [ "${HAVE_CSIDL}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "user_win32.c")
+	mappend(SRCS_CORE, "user_win32.c")
 fi
 if [ "${HAVE_WEB}" = 'yes' ]; then
-	MAPPEND(SRCS_CORE, "web.c web_auth.c web_var.c")
+	mappend(SRCS_CORE, "web.c web_auth.c web_var.c")
 fi
 
 #
 # Conditionally compiled sources in Agar-GUI
 #
-MDEFINE(SRCS_GUI, "")
+mdefine(SRCS_GUI, "")
 if [ "${HAVE_SDL}" = 'yes' ]; then
-	MAPPEND(SRCS_GUI, "drv_sdl_common.c drv_sdlfb.c")
+	mappend(SRCS_GUI, "drv_sdl_common.c drv_sdlfb.c")
 	if [ "${HAVE_OPENGL}" = 'yes' ]; then
-		MAPPEND(SRCS_GUI, "drv_sdlgl.c")
+		mappend(SRCS_GUI, "drv_sdlgl.c")
 	fi
 fi
 if [ "${HAVE_OPENGL}" = 'yes' ]; then
-	MAPPEND(SRCS_GUI, "drv_gl_common.c")
+	mappend(SRCS_GUI, "drv_gl_common.c")
 	if [ "${HAVE_GLX}" = 'yes' ]; then
-		MAPPEND(SRCS_GUI, "drv_glx.c")
+		mappend(SRCS_GUI, "drv_glx.c")
 	fi
 	if [ "${HAVE_WGL}" = 'yes' ]; then
-		MAPPEND(SRCS_GUI, "drv_wgl.c")
+		mappend(SRCS_GUI, "drv_wgl.c")
 	fi
 fi
 if [ "${HAVE_COCOA}" = 'yes' ]; then
-	MAPPEND(SRCS_GUI, "drv_cocoa.m")
+	mappend(SRCS_GUI, "drv_cocoa.m")
 fi
 
 #
 # Conditionally compiled sources in Agar-AU
 #
-MDEFINE(SRCS_AU, "")
+mdefine(SRCS_AU, "")
 if [ "${AG_THREADS}" = 'yes' ]; then
 	if [ "${HAVE_SNDFILE}" = 'yes' ]; then
-		MAPPEND(SRCS_AU, "au_dev_file.c")
+		mappend(SRCS_AU, "au_dev_file.c")
 	fi
 	if [ "${HAVE_PORTAUDIO}" = 'yes' ]; then
-		MAPPEND(SRCS_AU, "au_dev_pa.c")
+		mappend(SRCS_AU, "au_dev_pa.c")
 	fi
 fi
 
 # Set up configure script output
-C_INCPREP($BLD/include/agar)
-C_INCDIR($BLD/include)
-C_INCDIR_CONFIG($BLD/include/agar/config)
+c_incprep($BLD/include/agar)
+c_incdir($BLD/include)
+c_incdir_config($BLD/include/agar/config)
 
 #
 # Generate the "agar-config" scripts and pkg-config pc(5) modules.
 #
-CONFIG_SCRIPT(agar-config,\
+config_script(agar-config,\
 	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	 ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	 ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
@@ -862,7 +877,7 @@ CONFIG_SCRIPT(agar-config,\
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 
-PKGCONFIG_MODULE(agar, "Agar cross-platform GUI toolkit", \
+pkgconfig_module(agar, "Agar cross-platform GUI toolkit", \
 	"${X11_PC} ${SDL_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} \
 	 ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 	"", \
@@ -874,13 +889,13 @@ PKGCONFIG_MODULE(agar, "Agar cross-platform GUI toolkit", \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
 
-CONFIG_SCRIPT(agar-core-config,\
+config_script(agar-core-config,\
 	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	 ${CLOCK_CFLAGS} ${ZLIB_CFLAGS} ${ICONV_CFLAGS} ${ZLIB_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS} ${ZLIB_LIBS}")
-PKGCONFIG_MODULE(agar-core, "Agar object system and base library", "", "", \
+pkgconfig_module(agar-core, "Agar object system and base library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
 	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
 	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS} ${ZLIB_CFLAGS}", \
@@ -889,12 +904,12 @@ PKGCONFIG_MODULE(agar-core, "Agar object system and base library", "", "", \
 	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
 	 ${WINSOCK2_LIBS} ${ZLIB_LIBS}")
 
-CONFIG_SCRIPT(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
-PKGCONFIG_MODULE(agar-dev, "Agar interface builder and developer tools", \
+config_script(agar-dev-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_dev")
+pkgconfig_module(agar-dev, "Agar interface builder and developer tools", \
 	"agar", "", \
 	"-I\${includedir}/agar", "-L\${libdir} -lag_dev", "-lag_dev")
 
-CONFIG_SCRIPT(agar-math-config,\
+config_script(agar-math-config,\
 	"-I${INCLDIR} ${MATH_CFLAGS} ${ALTIVEC_CFLAGS} \
 	${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
 	"-L${LIBDIR} -lag_math ${MATH_LIBS}")
@@ -904,24 +919,23 @@ if [ "${enable_gui}" != 'no' ]; then
 else
 	AGAR_MATH_REQUIRES="agar-core"
 fi
-PKGCONFIG_MODULE(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
+pkgconfig_module(agar-math, "Agar math library", "${AGAR_MATH_REQUIRES}",\
 	"", \
 	"-I\${includedir}/agar ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} \
 	 ${SSE3_CFLAGS} ${MATH_CFLAGS}", \
 	"-L\${libdir} -lag_math ${MATH_LIBS}", \
 	"-lag_math ${MATH_LIBS}")
 
-CONFIG_SCRIPT(agar-vg-config,\
-	"-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
-PKGCONFIG_MODULE(agar-vg, "Agar vector graphics library", "agar", "", \
+config_script(agar-vg-config, "-I${INCLDIR}", "-L${LIBDIR} -lag_vg")
+pkgconfig_module(agar-vg, "Agar vector graphics library", "agar", "", \
 	"-I\${includedir}/agar ${MATH_CFLAGS}", \
 	"-L\${libdir} -lag_vg ${MATH_LIBS}", \
 	"-lag_vg ${MATH_LIBS}")
 
-CONFIG_SCRIPT(agar-au-config,\
+config_script(agar-au-config,\
 	"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
 	"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-PKGCONFIG_MODULE(agar-au, "Agar audio library", \
+pkgconfig_module(agar-au, "Agar audio library", \
 	"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
 	"-I\${includedir}/agar", \
 	"-L\${libdir} -lag_au", \

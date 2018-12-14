@@ -6,6 +6,7 @@
  * by widgets such as AG_Window, AG_Box, AG_Pane, etc.).
  */
 
+#include <stdlib.h>
 #include "agartest.h"
 
 static int
