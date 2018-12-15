@@ -3743,7 +3743,9 @@ if [ "$?" != "0" ]; then
 echo "failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 fi
-rm -f conftest31899.c /conftest
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DLFCN_H=yes
 bb_o=$bb_incdir/have_dlfcn_h.h
@@ -3878,7 +3880,9 @@ if [ "$?" != "0" ]; then
 echo "failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 fi
-rm -f conftest31899.c /conftest
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_MACH_O_DYLD_H=yes
 bb_o=$bb_incdir/have_mach_o_dyld_h.h
@@ -4007,7 +4011,9 @@ if [ "$?" != "0" ]; then
 echo "failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
 fi
-rm -f conftest31899.c /conftest
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DL_H=yes
 bb_o=$bb_incdir/have_dl_h.h
@@ -4909,7 +4915,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_VERSION=`${path}/sdl-config.exe --version`
 MK_EXEC_FOUND=Yes
 break
@@ -4925,7 +4931,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_PREFIX=`${path}/sdl-config.exe --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -4940,7 +4946,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -4955,7 +4961,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_LIBS=`${path}/sdl-config.exe --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -4979,7 +4985,7 @@ if [ -e "${path}/sdl11-config" ]; then
 SDL_VERSION=`${path}/sdl11-config --version`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl11-config.exe ]; then
+elif [ -e "${path}/sdl11-config.exe" ]; then
 SDL_VERSION=`${path}/sdl11-config.exe --version`
 MK_EXEC_FOUND=Yes
 break
@@ -4995,7 +5001,7 @@ if [ -e "${path}/sdl11-config" ]; then
 SDL_PREFIX=`${path}/sdl11-config --prefix`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl11-config.exe ]; then
+elif [ -e "${path}/sdl11-config.exe" ]; then
 SDL_PREFIX=`${path}/sdl11-config.exe --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -5010,7 +5016,7 @@ if [ -e "${path}/sdl11-config" ]; then
 SDL_CFLAGS=`${path}/sdl11-config --cflags`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl11-config.exe ]; then
+elif [ -e "${path}/sdl11-config.exe" ]; then
 SDL_CFLAGS=`${path}/sdl11-config.exe --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -5025,7 +5031,7 @@ if [ -e "${path}/sdl11-config" ]; then
 SDL_LIBS=`${path}/sdl11-config --libs`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl11-config.exe ]; then
+elif [ -e "${path}/sdl11-config.exe" ]; then
 SDL_LIBS=`${path}/sdl11-config.exe --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -5041,7 +5047,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_PREFIX=`${path}/sdl-config.exe --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -5056,7 +5062,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_VERSION=`${path}/sdl-config.exe --version`
 MK_EXEC_FOUND=Yes
 break
@@ -5071,7 +5077,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -5086,7 +5092,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_LIBS=`${path}/sdl-config.exe --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -5104,7 +5110,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_PREFIX=`${path}/sdl-config --prefix`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_PREFIX=`${path}/sdl-config.exe --prefix`
 MK_EXEC_FOUND=Yes
 break
@@ -5119,7 +5125,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_VERSION=`${path}/sdl-config --version`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_VERSION=`${path}/sdl-config.exe --version`
 MK_EXEC_FOUND=Yes
 break
@@ -5134,7 +5140,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_CFLAGS=`${path}/sdl-config --cflags`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_CFLAGS=`${path}/sdl-config.exe --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -5149,7 +5155,7 @@ if [ -e "${path}/sdl-config" ]; then
 SDL_LIBS=`${path}/sdl-config --libs`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/sdl-config.exe ]; then
+elif [ -e "${path}/sdl-config.exe" ]; then
 SDL_LIBS=`${path}/sdl-config.exe --libs`
 MK_EXEC_FOUND=Yes
 break
@@ -8822,7 +8828,7 @@ fi
 MYSQL_VERSION=`${path}/mysql_config --version`
 MK_EXEC_FOUND=Yes
 MK_EXEC_FOUND_PATH=${path}/mysql_config
-elif [ -e ${path}/mysql_config.exe ]; then
+elif [ -e "${path}/mysql_config.exe" ]; then
 if [ "${MK_EXEC_FOUND}" = "Yes" ]; then
 echo "yes."
 echo "yes." >>config.log
@@ -8898,7 +8904,7 @@ if [ -e "${path}/mysql_config" ]; then
 MYSQL_CFLAGS=`${path}/mysql_config --cflags`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/mysql_config.exe ]; then
+elif [ -e "${path}/mysql_config.exe" ]; then
 MYSQL_CFLAGS=`${path}/mysql_config.exe --cflags`
 MK_EXEC_FOUND=Yes
 break
@@ -8913,7 +8919,7 @@ if [ -e "${path}/mysql_config" ]; then
 MYSQL_LIBS=`${path}/mysql_config --libs`
 MK_EXEC_FOUND=Yes
 break
-elif [ -e ${path}/mysql_config.exe ]; then
+elif [ -e "${path}/mysql_config.exe" ]; then
 MYSQL_LIBS=`${path}/mysql_config.exe --libs`
 MK_EXEC_FOUND=Yes
 break
