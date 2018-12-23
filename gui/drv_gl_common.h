@@ -25,7 +25,7 @@ typedef struct ag_gl_context {
 	Uint           nTextureGC;
 	Uint *_Nullable listGC;           /* Display lists queued for deletion */
 	Uint           nListGC;
-	Uint8 dither[128];		  /* 32x32 stipple pattern */
+	Uint32 dither[32];		  /* 32x32 stipple pattern */
 } AG_GL_Context;
 
 __BEGIN_DECLS

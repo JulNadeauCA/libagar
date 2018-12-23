@@ -55,13 +55,15 @@ AG_GL_InitContext(void *obj, AG_GL_Context *gl)
 {
 	AG_Driver *drv = obj;
 	AG_ClipRect *cr;
+	int y;
 	
 	gl->textureGC = NULL;
 	gl->nTextureGC = 0;
 	gl->listGC = NULL;
 	gl->nListGC = 0;
-	memset(&gl->bs, sizeof(AG_GL_BlendState), sizeof(AG_GL_BlendState));
-	memset(gl->dither, 0xaa, sizeof(gl->dither));
+
+	for (y = 0; y < 32; y++)
+		gl->dither[y] = ((y % 2)==0) ? 0x55555555 : 0xaaaaaaaa;
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
