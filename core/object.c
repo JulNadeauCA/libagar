@@ -1713,7 +1713,9 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		goto fail;
 #endif
 	} else {
+#ifdef AG_DEBUG
 		debugSave = 0;
+#endif
 	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
 		goto fail_dbg;
