@@ -77,7 +77,6 @@ DEV_CPUInfo(void)
 	}
 	AG_WindowSetCaptionS(win, _("CPU Information"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 30);
 
 	AG_LabelNew(win, 0, _("Architecture: %s"),
 	    agCPU.arch[0] != '\0' ? agCPU.arch : "unknown");
@@ -89,6 +88,7 @@ DEV_CPUInfo(void)
 
 	AG_LabelNew(win, 0, _("Architecture Extensions:"));
 	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
+	AG_TlistSizeHint(tl, "MONITOR/MWAIT Instructions  ", 10);
 	for (fd = &archExtns[0]; fd->bitmask != 0; fd++) {
 		if (agCPU.ext & fd->bitmask)
 			AG_TlistAddS(tl, NULL, fd->descr);
