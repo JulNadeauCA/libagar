@@ -13,13 +13,12 @@ struct ag_console;
 struct ag_popup_menu;
 
 typedef struct ag_console_line {
-	char *_Nonnull text;			/* Line text */
-	AG_Size len;				/* Length not including NUL */
-	int surface[2];				/* Cached surface handle (or -1) */
-	int icon;				/* Icon to display */
-	AG_Color cAlt;				/* Alternate text color */
-	void *_Nullable p;			/* User pointer */
-	struct ag_console *_Nonnull cons;	/* Back pointer to console */
+	char *_Nonnull text;		  /* Line text */
+	AG_Size len;			  /* Size in bytes excluding NUL */
+	int surface[2];			  /* Cached surfaces (0=not selected; 1=selected) */
+	AG_Color c;			  /* Alternate text color */
+	void *_Nullable p;		  /* User pointer */
+	struct ag_console *_Nonnull cons; /* Back pointer to console */
 } AG_ConsoleLine;
 
 typedef struct ag_console {
@@ -35,10 +34,14 @@ typedef struct ag_console {
 	int lineskip;			/* Space between lines */
 
 	AG_ConsoleLine *_Nullable *_Nonnull lines; /* Lines in buffer */
-	Uint            nLines;			   /* Line count */
+	Uint                               nLines; /* Line count */
+
+	int xOffs;			/* Horizontal display offset (px) */
+	int wMax;			/* Width of widest line seen (px) */
 
 	Uint rOffs;			/* Row display offset */
 	AG_Scrollbar *_Nonnull vBar;	/* Vertical scrollbar */
+	AG_Scrollbar *_Nonnull hBar;	/* Horizontal scrollbar */
 	AG_Rect r;			/* View area */
 	Uint rVisible;			/* Visible line count */
 	Uint *_Nullable scrollTo;	/* Scrolling request */
@@ -51,18 +54,15 @@ extern AG_WidgetClass agConsoleClass;
 
 AG_Console *_Nonnull AG_ConsoleNew(void *_Nullable, Uint);
 
-AG_ConsoleLine *_Nullable AG_ConsoleAppendLine(AG_Console *_Nonnull,
-                                               const char *_Nullable);
-AG_ConsoleLine *_Nullable AG_ConsoleMsgS(AG_Console *_Nullable,
-                                         const char *_Nonnull);
-AG_ConsoleLine *_Nullable AG_ConsoleMsg(AG_Console *_Nullable,
-                                        const char *_Nonnull, ...)
-                                       FORMAT_ATTRIBUTE(printf,2,3);
+AG_ConsoleLine *_Nonnull AG_ConsoleAppendLine(AG_Console *_Nonnull,
+                                              const char *_Nullable);
+AG_ConsoleLine *_Nonnull AG_ConsoleMsgS(AG_Console *_Nonnull, const char *_Nonnull);
+AG_ConsoleLine *_Nonnull AG_ConsoleMsg(AG_Console *_Nonnull, const char *_Nonnull, ...)
+                                      FORMAT_ATTRIBUTE(printf,2,3);
 
 void    AG_ConsoleSetPadding(AG_Console *_Nonnull, int);
 void    AG_ConsoleMsgEdit(AG_ConsoleLine *_Nonnull, const char *_Nonnull);
 void    AG_ConsoleMsgPtr(AG_ConsoleLine *_Nonnull, void *_Nullable);
-void    AG_ConsoleMsgIcon(AG_ConsoleLine *_Nonnull, int);
 void    AG_ConsoleMsgColor(AG_ConsoleLine *_Nonnull, AG_Color);
 void    AG_ConsoleClear(AG_Console *_Nonnull);
 

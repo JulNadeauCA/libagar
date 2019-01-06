@@ -54,6 +54,33 @@ AG_ConsoleNew(void *parent, Uint flags)
 }
 
 static __inline__ void
+AdjustXoffs(AG_Console *_Nonnull cons)
+{
+	Uint i;
+	int wCons = WIDTH(cons);
+	int wBar = WIDTH(cons->vBar) + cons->padding;
+
+	for (i = 0, cons->wMax = 0;
+	     i < cons->nLines;
+	     i++) {
+		AG_ConsoleLine *ln = cons->lines[i];
+		int w;
+
+		if (ln->surface[0] != -1) {
+			w = WSURFACE(cons,ln->surface[0])->w;
+		} else if (ln->surface[1] != -1) {
+			w = WSURFACE(cons,ln->surface[1])->w;
+		} else {
+			AG_TextSize(ln->text, &w, NULL);
+		}
+		if (w+wBar > cons->wMax)
+			cons->wMax = w+wBar;
+	}
+	if ((cons->wMax - wCons - cons->xOffs) < 0)
+		cons->xOffs = MAX(0, cons->wMax - wCons);
+}
+
+static __inline__ void
 ClampVisible(AG_Console *_Nonnull cons)
 {
 	int v = (int)cons->nLines - (int)cons->rVisible;
@@ -364,8 +391,10 @@ MouseMotion(AG_Event *_Nonnull event)
 static void
 ComputeVisible(AG_Console *_Nonnull cons)
 {
-	cons->rVisible = (int)AG_Floor((float)(cons->r.h - cons->padding*2) /
+	cons->rVisible = (int)AG_Floor((float)(cons->r.h - (cons->padding << 1)) /
 	                               (float)cons->lineskip);
+	if (cons->rVisible > 0)
+		cons->rVisible--;
 }
 
 static void
@@ -403,6 +432,8 @@ Init(void *_Nonnull obj)
 	cons->lines = NULL;
 	cons->lineskip = 0;
 	cons->nLines = 0;
+	cons->xOffs = 0;
+	cons->wMax = 0;
 	cons->rOffs = 0;
 	cons->rVisible = 0;
 	cons->pm = NULL;
@@ -418,6 +449,14 @@ Init(void *_Nonnull obj)
 	AG_BindUint(cons->vBar, "max", &cons->nLines);
 	AG_BindUint(cons->vBar, "visible", &cons->rVisible);
 	AG_BindUint(cons->vBar, "value", &cons->rOffs);
+
+	cons->hBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_HORIZ,
+	    AG_SCROLLBAR_NOAUTOHIDE|AG_SCROLLBAR_EXCL);
+	AG_WidgetSetFocusable(cons->hBar, 0);
+	AG_SetInt(cons->hBar, "min", 0);
+	AG_BindInt(cons->hBar, "max", &cons->wMax);
+	AG_BindInt(cons->hBar, "visible", &WIDGET(cons)->w);
+	AG_BindInt(cons->hBar, "value", &cons->xOffs);
 
 	AG_ActionFn(cons, "BeginSelect", BeginSelect, NULL);
 	AG_ActionFn(cons, "CloseSelect", CloseSelect, NULL);
@@ -475,8 +514,17 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
+	
+	AG_WidgetSizeReq(cons->hBar, &rBar);
+	aBar.x = 0;
+	aBar.y = a->h - rBar.h;
+	aBar.w = a->w - rBar.h;
+	aBar.h = rBar.h;
+	AG_WidgetSizeAlloc(cons->hBar, &aBar);
+	
 	ComputeVisible(cons);
 	ClampVisible(cons);
+	AdjustXoffs(cons);
 	return (0);
 }
 
@@ -487,6 +535,7 @@ Draw(void *_Nonnull p)
 	AG_Surface *su;
 	AG_Rect rDst;
 	Uint lnIdx;
+	int pos, sel;
 
 	AG_DrawRect(cons,
 	    AG_RECT(0, 0, WIDTH(cons), HEIGHT(cons)),
@@ -501,9 +550,13 @@ Draw(void *_Nonnull p)
 		ClampVisible(cons);
 	}
 	AG_PushClipRect(cons, cons->r);
-	rDst = cons->r;
-	rDst.x = cons->padding;
+	rDst.x = cons->padding - cons->xOffs;
 	rDst.y = cons->padding;
+	rDst.w = WIDGET(cons)->w - (cons->padding << 1);
+	rDst.h = cons->lineskip + 1;
+	pos = cons->pos;
+	sel = cons->sel;
+
 	for (lnIdx = cons->rOffs;
 	     lnIdx < cons->nLines && rDst.y < WIDGET(cons)->h;
 	     lnIdx++) {
@@ -511,21 +564,18 @@ Draw(void *_Nonnull p)
 		AG_Color cTxt = WCOLOR(cons,AG_TEXT_COLOR);
 		int suIdx = 0;
 
-		if (cons->pos != -1) {
-			if ((lnIdx == cons->pos) ||
-			    ((cons->sel > 0 && lnIdx > cons->pos && lnIdx < cons->pos + cons->sel + 1) ||
-			     (cons->sel < 0 && lnIdx < cons->pos && lnIdx > cons->pos + cons->sel - 1))) {
-				AG_DrawRectFilled(cons,
-				    AG_RECT(rDst.x, rDst.y,
-				            WIDGET(cons)->w - cons->padding*2,
-				            cons->lineskip+1),
+		if (pos != -1) {
+			if ((lnIdx == pos) ||
+			    ((sel > 0 && lnIdx > pos && lnIdx < pos+sel+1) ||
+			     (sel < 0 && lnIdx < pos && lnIdx > pos+sel-1))) {
+				AG_DrawRectFilled(cons, rDst,
 				    WCOLOR_SEL(cons,AG_COLOR));
 				cTxt = WCOLOR_SEL(cons,AG_TEXT_COLOR);
 				suIdx = 1;
 			}
 		}
 		if (ln->surface[suIdx] == -1) {
-			AG_TextColor((ln->cAlt.a != 0) ? ln->cAlt : cTxt);
+			AG_TextColor((ln->c.a != 0) ? ln->c : cTxt);
 			if ((su = AG_TextRender(ln->text)) == NULL) {
 				continue;
 			}
@@ -537,6 +587,7 @@ Draw(void *_Nonnull p)
 	AG_PopClipRect(cons);
 out:
 	AG_WidgetDraw(cons->vBar);
+	AG_WidgetDraw(cons->hBar);
 }
 
 static void
@@ -579,21 +630,15 @@ AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
-	AG_ConsoleLine **linesNew;
 	
-	if ((ln = TryMalloc(sizeof(AG_ConsoleLine))) == NULL)
-		return (NULL);
+	ln = Malloc(sizeof(AG_ConsoleLine));
 
 	AG_ObjectLock(cons);
 
-	if ((linesNew = TryRealloc(cons->lines,
-	    (cons->nLines+1)*sizeof(AG_ConsoleLine *))) == NULL) {
-		AG_ObjectUnlock(cons);
-		free(ln);
-		return (NULL);
-	}
-	cons->lines = linesNew;
+	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
+	                                   sizeof(AG_ConsoleLine *));
 	cons->lines[cons->nLines++] = ln;
+
 	if (s != NULL) {
 		ln->text = Strdup(s);
 		ln->len = strlen(s);
@@ -605,7 +650,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->p = NULL;
 	ln->surface[0] = -1;
 	ln->surface[1] = -1;
-	ln->cAlt = AG_ColorRGBA(0,0,0,0);
+	ln->c = AG_ColorNone();		/* Inherit default */
 
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0) {
 		cons->scrollTo = &cons->nLines;
@@ -621,33 +666,11 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 {
 	AG_ConsoleLine *ln;
 	va_list args;
-	AG_Size len;
-	char *s;
-
-	if (cons == NULL) {
-		va_start(args, fmt);
-		if (TryVasprintf(&s, fmt, args) == -1) {
-			return (NULL);
-		}
-		va_end(args);
-		Verbose("%s", s);
-		if ((len = strlen(s)) > 1 && s[len - 1] != '\n') {
-			Verbose("\n");
-		}
-		free(s);
-		return (NULL);
-	}
 
 	AG_ObjectLock(cons);
-
 	if ((ln = AG_ConsoleAppendLine(cons, NULL)) != NULL) {
 		va_start(args, fmt);
-		if (TryVasprintf(&ln->text, fmt, args) == -1) {
-			va_end(args);
-			FreeLines(cons);
-			ln = NULL;
-			goto out;
-		}
+		AG_Vasprintf(&ln->text, fmt, args);
 		va_end(args);
 		ln->len = strlen(ln->text);
 		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
@@ -655,7 +678,6 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 			ln->len--;
 		}
 	}
-out:
 	AG_ObjectUnlock(cons);
 	return (ln);
 }
@@ -665,16 +687,7 @@ AG_ConsoleLine *
 AG_ConsoleMsgS(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
-	AG_Size len;
 	
-	if (cons == NULL) {
-		Verbose("%s", s);
-		if ((len = strlen(s)) > 1 && s[len - 1] != '\n') {
-			Verbose("\n");
-		}
-		return (NULL);
-	}
-
 	AG_ObjectLock(cons);
 	if ((ln = AG_ConsoleAppendLine(cons, s)) != NULL) {
 		if (ln->len > 1 && ln->text[ln->len - 1] == '\n') {
@@ -690,20 +703,21 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 void
 AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 {
+	AG_Console *cons = ln->cons;
 	int i;
 
-	AG_ObjectLock(ln->cons);
+	AG_ObjectLock(cons);
 	free(ln->text);
 	ln->text = Strdup(s);
 	ln->len = strlen(s);
 	for (i = 0; i < 2; i++) {
 		if (ln->surface[i] != -1) {
-			AG_WidgetUnmapSurface(ln->cons, ln->surface[i]);
+			AG_WidgetUnmapSurface(cons, ln->surface[i]);
 			ln->surface[i] = -1;
 		}
 	}
-	AG_Redraw(ln->cons);
-	AG_ObjectUnlock(ln->cons);
+	AG_Redraw(cons);
+	AG_ObjectUnlock(cons);
 }
 
 void
@@ -715,19 +729,10 @@ AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 }
 
 void
-AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
-{
-	AG_ObjectLock(ln->cons);
-	ln->icon = icon;
-	AG_Redraw(ln->cons);
-	AG_ObjectUnlock(ln->cons);
-}
-
-void
 AG_ConsoleMsgColor(AG_ConsoleLine *ln, AG_Color c)
 {
 	AG_ObjectLock(ln->cons);
-	ln->cAlt = c;
+	ln->c = c;
 	AG_ObjectUnlock(ln->cons);
 }
 
