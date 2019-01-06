@@ -390,8 +390,12 @@ AG_WindowSetGeometryMax(AG_Window *_Nonnull win)
 static __inline__ void
 AG_Redraw(void *_Nonnull obj)
 {
-	if (AGWIDGET(obj)->window != NULL)
-		AGWIDGET(obj)->window->dirty = 1;
+	AG_Window *win;
+
+	if ((win = AGWIDGET(obj)->window) != NULL) {
+		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		win->dirty = 1;
+	}
 }
 
 /*
