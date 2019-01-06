@@ -1543,11 +1543,11 @@ fi
 if [ "${HAVE_CC}" != "yes" ]; then
 echo '* '
 echo '* ' >>config.log
-echo '* This software requires cc installed on your system.'
-echo '* This software requires cc installed on your system.' >>config.log
+echo '* This software requires a C compiler'
+echo '* This software requires a C compiler' >>config.log
 echo '* '
 echo '* ' >>config.log
-echo "configure failed!"
+echo "Required dependency cc not found"
 exit 1
 fi
 case "${host}" in
