@@ -182,10 +182,9 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 	return (0);
 }
 
-static void
-Reset(void *_Nonnull obj)
+void
+AG_ConfigClearPaths(AG_Config *cfg)
 {
-	AG_Config *cfg = obj;
 	AG_ConfigPath *cp, *cpNext;
 	int i;
 
@@ -342,9 +341,9 @@ AG_ObjectClass agConfigClass = {
 	sizeof(AG_Config),
 	{ 9, 5 },
 	Init,
-	Reset,
-	NULL,		/* Destroy */
+	NULL,		/* reset */
+	NULL,		/* destroy */
 	Load,
 	Save,
-	NULL
+	NULL		/* edit */
 };

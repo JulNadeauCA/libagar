@@ -36,6 +36,7 @@ void AG_ConfigAddPath(AG_ConfigPathGroup, const char *_Nonnull, ...)
 void AG_ConfigDelPathS(AG_ConfigPathGroup, const char *_Nonnull);
 void AG_ConfigDelPath(AG_ConfigPathGroup, const char *_Nonnull, ...)
                      FORMAT_ATTRIBUTE(printf,2,3);
+void AG_ConfigClearPaths(AG_Config *_Nonnull);
 
 int AG_ConfigInit(AG_Config *_Nonnull, Uint);
 
