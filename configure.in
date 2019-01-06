@@ -269,8 +269,8 @@ else
 fi
 
 hdefine_if("${enable_debug_core}" = 'yes', AG_DEBUG_CORE)
-hdefine_if("${enable_debug_gui}" = 'yes', AG_DEBUG_GUI)
-hdefine_if("${enable_legacy}" = 'yes', AG_LEGACY)
+hdefine_if("${enable_debug_gui}" = 'yes',  AG_DEBUG_GUI)
+hdefine_if("${enable_legacy}" = 'yes',     AG_LEGACY)
 
 #
 # Options specific to the Agar-GUI library.
@@ -685,8 +685,8 @@ if [ "${with_sse}" != 'no' ]; then
 		disable(sse)
 	else
 		hdefine_if("${with_sse}" = 'inline', INLINE_SSE)
-		Hundef_if("${with_sse2}" = 'no', HAVE_SSE2)
-		Hundef_if("${with_sse3}" = 'no', HAVE_SSE3)
+		hundef_if("${with_sse2}" = 'no',     HAVE_SSE2)
+		hundef_if("${with_sse3}" = 'no',     HAVE_SSE3)
 	fi
 else
 	disable(sse)
