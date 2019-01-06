@@ -101,9 +101,7 @@ static struct {
 	{ "ag_text_blink_rate",		&agTextBlinkRate	},
 	{ "ag_text_symbols",		&agTextSymbols		},
 	{ "ag_page_increment",		&agPageIncrement	},
-	{ "ag_idle_threshold",		&agIdleThresh		},
 	{ "ag_screenshot_quality",	&agScreenshotQuality	},
-	{ "ag_msg_delay",		&agMsgDelay		}
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -190,9 +188,7 @@ int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
-int agIdleThresh = 20;			/* Idling threshold */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
-int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 double agZoomValues[AG_ZOOM_RANGE] = {	/* Scale values for zoom */
 	30.00, 50.00, 67.00, 80.00, 90.00,
 	100.00,

@@ -32,7 +32,7 @@ extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollDelay, agMouseScrollIval;
 extern int agTextComposition, agTextBidi, agTextCache, agTextTabWidth,
            agTextBlinkRate, agTextSymbols, agPageIncrement;
-extern int agIdleThresh, agScreenshotQuality, agMsgDelay;
+extern int agScreenshotQuality;
 extern double agZoomValues[AG_ZOOM_RANGE];
 
 int   AG_InitGraphics(const char *_Nullable);
