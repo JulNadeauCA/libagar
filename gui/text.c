@@ -55,7 +55,7 @@
  * Rendering/sizing of UCS-4 or UTF-8 text using FreeType (if available) or
  * an internal bitmap font engine.
  *
- * TextSizeFT() and TextRenderFT_Blended() are based on code from SDL_ttf
+ * TextSizeFT() and TextRenderFT() were originally based on code from SDL_ttf
  * (http://libsdl.org/projects/SDL_ttf/), placed under BSD license with
  * kind permission from Sam Lantinga.
  */
@@ -858,6 +858,7 @@ TextSizeFT(const Uint32 *_Nonnull ucs, AG_TextMetrics *_Nonnull tm, int extended
 	x = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
+			/* XXX TODO separate loop */
 			if (extended) {
 				tm->wLines = Realloc(tm->wLines,
 				    (tm->nLines+2)*sizeof(Uint));
@@ -920,35 +921,6 @@ TextRenderSymbol(Uint ch, AG_Surface *_Nonnull s, int x, int y)
 	colorkey = sym->colorkey;
 	BytesPerPixel = sym->format.BytesPerPixel;
 	for (row = 0; row < sym->h; row++) {
-		Uint8 *dst = s->pixels + (y + row)*s->pitch + (x+2);
-		Uint8 *src = sym->pixels + row*sym->pitch;
-		int col;
-
-		for (col = 0; col < sym->w; col++) {
-			if (AG_SurfaceGet(sym,src) != colorkey) {
-				*dst = 1;
-			}
-			src += BytesPerPixel;
-			dst++;
-		}
-	}
-	return (sym->w + 4);
-}
-
-static int
-TextRenderSymbol_Blended(Uint ch, AG_Surface *_Nonnull s, int x, int y)
-{
-	AG_Surface *sym;
-	AG_Pixel colorkey;
-	Uint BytesPerPixel;
-	int row;
-
-	if ((sym = GetSymbolSurface(ch)) == NULL) {
-		return (0);
-	}
-	colorkey = sym->colorkey;
-	BytesPerPixel = sym->format.BytesPerPixel;
-	for (row = 0; row < sym->h; row++) {
 		Uint8 *dst = s->pixels + (y + row)*(s->pitch >> 2) + (x+2);
 		Uint8 *src = sym->pixels + row*sym->pitch;
 		int col;
@@ -972,8 +944,8 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *_Nonnull s, int x, int y)
  * Surface must be at least ftFont->underline_height pixels high.
  */
 static void
-TextRenderFT_Blended_Underline(AG_TTFFont *_Nonnull ftFont,
-    AG_Surface *_Nonnull S, int nLines)
+TextRenderFT_Underline(AG_TTFFont *_Nonnull ftFont, AG_Surface *_Nonnull S,
+    int nLines)
 {
 	AG_Color c = agTextState->color;
 	AG_Pixel px = AG_MapPixel(&S->format, c);
@@ -1008,7 +980,7 @@ TextRenderFT_Blended_Underline(AG_TTFFont *_Nonnull ftFont,
  * agTextState->colorBG.
  */
 static AG_Surface *_Nonnull
-TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
+TextRenderFT(const Uint32 *_Nonnull ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
@@ -1022,28 +994,29 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 	int xStart, yStart, line, x, y;
 	int w, BytesPerPixel;
 
+	/* Calculate the bounding box and allocate a surface its size. */
 	InitMetrics(&tm);
 	TextSizeFT(ucs, &tm, 1);
-	if (tm.w <= 0 || tm.h <= 0)
+	if (tm.w <= 0 || tm.h <= 0) {
 		goto empty;
-
+	}
 	S = AG_SurfaceNew(agSurfaceFmt, tm.w, tm.h, 0);
-
-	/* Load and render each character */
- 	line = 0;
- 	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
- 	yStart = 0;
-
 	cBg = agTextState->colorBG;
 	AG_FillRect(S, NULL, cBg);
 	if (cBg.a == AG_TRANSPARENT) {
+		/*
+		 * Set a colorkey to avoid some unnecessary blending (and also
+		 * provide transparency in case agSurfaceFmt lacks alpha).
+		 */
 		AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY,
 		    AG_MapPixel(&S->format, cBg));
 	}
 
 	c = agTextState->color;
 	BytesPerPixel = S->format.BytesPerPixel;
-
+ 	line = 0;
+ 	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
+ 	yStart = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
 			yStart += font->lineskip;
@@ -1057,8 +1030,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 #ifdef SYMBOLS
 		if (ch[0] == '$' && agTextSymbols &&
 		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
-			xStart += TextRenderSymbol_Blended(ch[2], S,
-			    xStart, yStart);
+			xStart += TextRenderSymbol(ch[2], S, xStart, yStart);
 			ch += 3;
 			continue;
 		}
@@ -1072,17 +1044,13 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 		/*
 		 * Ensure the width of the pixmap is correct. On some cases,
 		 * freetype may report a larger pixmap than possible.
-		 * XXX is this test necessary?
+		 * XXX is this test always necessary?
 		 */
 		w = G->pixmap.width;
-		if (w > G->maxx - G->minx) {
-			w = G->maxx - G->minx;
-		}
+		if (w > G->maxx - G->minx) { w = G->maxx - G->minx; }
 
-		if (FT_HAS_KERNING(ftFont->face) && prev_index &&
-		    G->index) {
+		if (FT_HAS_KERNING(ftFont->face) && prev_index && G->index) {
 			FT_Vector delta; 
-
 			FT_Get_Kerning(ftFont->face, prev_index, G->index,
 			    ft_kerning_default, &delta); 
 			xStart += delta.x >> 6;
@@ -1117,7 +1085,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 				for (x = 0; x < w; x++) {
 					c.a = AG_8toH(*src++);
 					AG_SurfaceBlend_At(S, dst, c,
-					    AG_ALPHA_SRC);
+					    AG_ALPHA_DST);
 					dst += BytesPerPixel;
 				}
 			}
@@ -1129,7 +1097,7 @@ TextRenderFT_Blended(const Uint32 *_Nonnull ucs)
 		prev_index = G->index;
 	}
 	if (ftFont->style & AG_TTF_STYLE_UNDERLINE) {
-		TextRenderFT_Blended_Underline(ftFont, S, tm.nLines);
+		TextRenderFT_Underline(ftFont, S, tm.nLines);
 	}
 	FreeMetrics(&tm);
 	return (S);
@@ -1247,7 +1215,7 @@ AG_TextRenderUCS4(const Uint32 *text)
 	switch (agTextState->font->spec.type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		return TextRenderFT_Blended(text);
+		return TextRenderFT(text);
 #endif
 	case AG_FONT_BITMAP:
 		return TextRenderBitmap(text);
