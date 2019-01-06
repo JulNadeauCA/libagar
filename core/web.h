@@ -11,6 +11,7 @@
 #include <agar/core/begin.h>
 
 #include <sys/socket.h>
+#include <string.h>
 #include <time.h>
 #include <errno.h>
 
@@ -116,7 +117,7 @@ typedef struct web_variable {
 	char key[WEB_VAR_NAME_MAX];		/* Name */
 	char *_Nullable value;			/* Value */
 	AG_Size len;				/* Content length (characters) */
-	AG_Size bufSize;				/* Buffer size */
+	AG_Size bufSize;			/* Buffer size */
 	int    global;				/* 1 = Persist across queries */
 	AG_TAILQ_ENTRY(web_variable) vars;
 } WEB_Variable;
@@ -139,10 +140,10 @@ typedef struct web_argument {
 
 /* HTTP cookie */
 typedef struct web_cookie {
-	/* (Read from client) */
+	/* Read from client */
 	char name[WEB_COOKIE_NAME_MAX];		/* Name of cookie */
 	char value[WEB_COOKIE_VALUE_MAX];	/* Value of cookie */
-	/* (For Set-Cookie output */
+	/* For Set-Cookie output */
 	char expires[WEB_COOKIE_EXPIRE_MAX];	/* Expiration date or \0 */
 	char domain[WEB_COOKIE_DOMAIN_MAX];	/* Domain match or \0 */
 	char path[WEB_COOKIE_PATH_MAX];		/* Path attribute or \0 */
@@ -153,8 +154,8 @@ typedef struct web_cookie {
 
 /* Computed, satisfiable Range request */
 typedef struct web_range_req {
-	AG_Size first[WEB_RANGE_MAXRANGES];		/* First byte pos */
-	AG_Size last[WEB_RANGE_MAXRANGES];		/* Last byte pos */
+	AG_Size first[WEB_RANGE_MAXRANGES];	/* First byte pos */
+	AG_Size last[WEB_RANGE_MAXRANGES];	/* Last byte pos */
 	Uint nRanges;
 } WEB_RangeReq;
 
@@ -174,31 +175,33 @@ typedef struct web_query {
 	                 [WEB_LANG_CODE_MAX];
 	Uint  nAcceptLangs;
 	AG_TAILQ_HEAD_(web_argument) args;	/* Call arguments */
-	Uint nArgs;
+	Uint                        nArgs;
 	AG_TAILQ_HEAD_(web_cookie) cookies;	/* HTTP cookies */
-	Uint nCookies;
+	Uint                      nCookies;
 
-	char   contentType[128];		/* Client Content-Type (+attrs) */
+	char contentType[128];			/* Client Content-Type (+attrs) */
 	AG_Size contentLength;			/* Client Content-Length */
-	int    rangeFrom, rangeTo;		/* Range request */
+	int rangeFrom, rangeTo;			/* Range request */
 
 	char userIP[64];			/* Client IP address */
 	char userHost[256];			/* Client hostname */
 	char userAgent[WEB_USERAGENT_MAX];	/* Client User-Agent */
 
 	char code[64];			  	/* HTTP/1.0 code */
-	char   head[WEB_HTTP_HEADER_MAX];	/* HTTP response headers */
-	Uint   headLine[WEB_HTTP_MAXHEADERS];	/* Line start offsets */
-	Uint   headLineCount;
+
+	char    head[WEB_HTTP_HEADER_MAX];	/* HTTP response headers */
+	Uint    headLine[WEB_HTTP_MAXHEADERS];	/* Line start offsets */
+	Uint    headLineCount;
 	AG_Size headLen;
+
 	Uchar *_Nullable data;			/* Raw response entity-body */
 	AG_Size dataSize, dataLen;
 
-	char lang[4];		/* Negotiated language */
-	void *_Nullable sess;	/* Session object */
-	void *_Nullable mod;	/* WEB_Module executing op */
-	int sock;		/* Client socket (or -1) */
-	char date[32];		/* HTTP time */
+	char lang[4];				/* Negotiated language */
+	void *_Nullable sess;			/* Session object */
+	void *_Nullable mod;			/* WEB_Module executing op */
+	int sock;				/* Client socket (or -1) */
+	char date[32];				/* HTTP time */
 } WEB_Query;
 
 /* Control command sent to running Frontend process. */
@@ -383,18 +386,21 @@ typedef int (*WEB_EventFilterFn)(char *_Nonnull, char *_Nonnull, char *_Nonnull,
                                  const void *_Nullable);
 
 __BEGIN_DECLS
-extern AG_ObjectClass                  webModuleClass;
-extern WEB_Module *_Nullable *_Nonnull webModules;
+extern WEB_ModuleClass                 webModuleClass;   /* Web(Module) class */
+extern WEB_Module *_Nullable *_Nonnull webModules;       /* Registered modules */
 extern Uint                            webModuleCount;
 
-extern char *_Nullable *_Nullable webLangs;
+extern char *_Nullable *_Nullable webLangs;              /* Handled languages */
 extern Uint                       webLangCount;
 
-extern char webWorkerUser[WEB_USERNAME_MAX];
-extern char webHomeOp[WEB_OPNAME_MAX];
+extern char webWorkerUser[WEB_USERNAME_MAX];  /* Username (in Worker) */
+extern char webHomeOp[WEB_OPNAME_MAX];        /* Default (home) operation */
 
-extern const WEB_MethodOps webMethods[];
-extern struct web_variableq webVars;
+extern const WEB_MethodOps  webMethods[];  /* HTTP methods handled */
+extern struct web_variableq webVars;       /* Variables for template substitution */
+extern Uint                 webQueryCount; /* Query counter (per process) */
+
+extern struct web_session_socketq webWorkSockets; /* Frontend->Worker sockets */
 
 /*
  * Initialization
@@ -409,6 +415,7 @@ void  WEB_Exit(int, const char *_Nullable, ...);
 void  WEB_SetLanguageFn(_Nullable WEB_LanguageFn, void *_Nullable);
 void  WEB_SetMenuFn(_Nullable WEB_MenuFn, void *_Nullable);
 void  WEB_SetDestroyFn(_Nullable WEB_DestroyFn);
+void  WEB_AddLanguage(const char *_Nonnull);
 
 /*
  * Query processing
@@ -588,17 +595,10 @@ WEB_SetHomeOp(const char *_Nonnull op)
 }
 
 static __inline__ void
-WEB_AddLanguage(const char *_Nonnull lang)
-{
-	webLangs = Realloc(webLangs, (webLangCount+1)*sizeof(char *));
-	webLangs[webLangCount++] = Strdup(lang);
-}
-
-static __inline__ void
 WEB_SessionFree(WEB_Session *_Nonnull S)
 {
 	WEB_SessionDestroy(S);
-	free(S);
+	AG_Free(S);
 }
 
 static __inline__ WEB_Variable *_Nonnull
@@ -659,7 +659,7 @@ WEB_VAR_CatS_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 	WEB_VAR_Grow(V, len+1);
 	memcpy(&V->value[V->len], s, len+1);
 	V->len += len;
-	free(s);
+	AG_Free(s);
 }
 
 static __inline__ void
@@ -681,7 +681,7 @@ static __inline__ void
 WEB_VAR_CatJS_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 {
 	WEB_VAR_CatJS(V, s);
-	free(s);
+	AG_Free(s);
 }
 
 static __inline__ void
@@ -705,7 +705,7 @@ static __inline__ void
 WEB_VAR_CatJS_NoHTML_NODUP(WEB_Variable *_Nonnull V, char *_Nonnull s)
 {
 	WEB_VAR_CatJS_NoHTML(V, s);
-	free(s);
+	AG_Free(s);
 }
 
 static __inline__ void

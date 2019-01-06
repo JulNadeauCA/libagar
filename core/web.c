@@ -122,17 +122,17 @@ WEB_DestroyFn  webDestroyFn = NULL;
 char webWorkerSess[WEB_SESSID_MAX];		/* Session ID (in Worker) */
 char webWorkerUser[WEB_USERNAME_MAX];		/* Username (in Worker) */
 struct web_variableq webVars;			/* Template variables */
+Uint webQueryCount;				/* Query counter */
+struct web_session_socketq webWorkSockets;	/* Frontend->Worker sockets */
 
 static volatile sig_atomic_t termFlag=0, chldFlag=0, pipeFlag=0;
 
-static Uint webQueryCount;			   /* Query counter */
 static int  webEventSource;			   /* Is an event source */
 static Uint webClusterID;			   /* Server instance no */
 static int  webFrontSockets[WEB_MAXWORKERSOCKETS]; /* Worker->Frontend */
 static Uint webFrontSocketCount;
 static int  webCtrlSock;			   /* Local control socket */
 static char webPeerAddress[256];		   /* Peer address */
-static struct web_session_socketq webWorkSockets;  /* Frontend->Worker sockets */
 
 static const int   webLogLvlNameLength = 6;
 static const char *webLogLvlNames[] = {
@@ -621,13 +621,15 @@ const WEB_MethodOps webMethods[] = {
 };
 
 void
-WEB_RegisterModule(WEB_ModuleClass *modC)
+WEB_RegisterModule(WEB_ModuleClass *Cmod)
 {
-	AG_ObjectClass *objC = (AG_ObjectClass *)modC;
+	AG_ObjectClass *Cobj = (AG_ObjectClass *)Cmod;
 	WEB_Module *mod;
 
-	mod = Malloc(objC->size);
-	AG_ObjectInit(mod, objC);
+	AG_RegisterClass(Cmod);
+
+	mod = Malloc(Cobj->size);
+	AG_ObjectInit(mod, Cobj);
 	webModules = Realloc(webModules, (webModuleCount+1)*sizeof(WEB_Module *));
 	webModules[webModuleCount++] = mod;
 }
@@ -1103,36 +1105,36 @@ WEB_BeginWorkerQuery(WEB_Query *q)
 	}
 	for (i = 0; i < webModuleCount; i++) {
 		WEB_Module *mod = webModules[i];
-		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+		WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
 		WEB_MenuSection *sec;
 
-		if (modC->menu != NULL) {
-			modC->menu(mod, q, v);
-		} else if (modC->menuSections == NULL) {
+		if (Cmod->menu != NULL) {
+			Cmod->menu(mod, q, v);
+		} else if (Cmod->menuSections == NULL) {
 #ifdef ENABLE_NLS
 			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
-			    modC->name, modC->icon, gettext(modC->lname));
+			    Cmod->name, Cmod->icon, gettext(Cmod->lname));
 #else
 			Cat(v, "<li><a href='/%s'>%s%s</a></li>",
-			    modC->name, modC->icon, modC->lname);
+			    Cmod->name, Cmod->icon, Cmod->lname);
 #endif
 		} else {
-			if (modC->menuSections[0].name != NULL) {
+			if (Cmod->menuSections[0].name != NULL) {
 				CatS(v,
 				    "<li class='dropdown'>"
 				      "<a href='#' class='dropdown-toggle' "
 				       "data-toggle='dropdown' role='button' "
 				       "aria-haspopup='true' aria-expanded='false'>");
-				CatS(v, modC->icon);
+				CatS(v, Cmod->icon);
 #ifdef ENABLE_NLS
-				CatS(v, gettext(modC->lname));
+				CatS(v, gettext(Cmod->lname));
 #else
-				CatS(v, modC->lname);
+				CatS(v, Cmod->lname);
 #endif
 
 				CatS(v, "<span class='caret'></span></a>"
 				        "<ul class='dropdown-menu'>");
-				for (sec = &modC->menuSections[0];
+				for (sec = &Cmod->menuSections[0];
 				     sec->name != NULL;
 				     sec++) {
 					Cat(v,
@@ -1323,13 +1325,75 @@ WEB_FlushQuery(WEB_Query *q)
 	WEB_ClearQuery(q);
 }
 
+/*
+ * Standard execution routine for module commands.
+ * Handle special types [json] and [json-status].
+ */
+static void
+WEB_CommandExec(WEB_Query *q, const char *op, WEB_Command *cmd)
+{
+	WEB_SetHeaderS(q, "Accept-Ranges", "bytes");
+	WEB_SetHeaderS(q, "Vary", "Accept-Language,"
+	                          "Accept-Encoding,"
+	                          "User-Agent");
+	WEB_SetHeaderS(q, "Last-Modified", q->date);
+	WEB_SetHeaderS(q, "Content-Language", q->lang);
+	WEB_SetHeaderS(q, "Cache-Control", "no-cache, no-store, "
+	                                   "must-revalidate");
+	WEB_SetHeaderS(q, "Expires", "0");
+
+	if (cmd->type != NULL && strcmp(cmd->type, "[json-status]")==0) {
+		WEB_SetHeaderS(q, "Content-Type", "application/json; "
+		                                  "charset=utf8");
+		if (cmd->fn(q) == 0) {
+			WEB_PutS(q, "{\"code\": 0}\r\n");
+		} else {
+			WEB_PutS(q, "{\"code\": -1,");
+			WEB_PutJSON_NoHTML_S(q, "error", AG_GetError());
+			WEB_PutS(q, "\"backend_version\": \"" VERSION "\"}\r\n");
+			WEB_LogErr("/%s: %s", op, AG_GetError());
+		}
+	} else if (cmd->type != NULL && strcmp(cmd->type, "[json]")==0) {
+		WEB_SetHeaderS(q, "Content-Type", "application/json; "
+		                                  "charset=utf8");
+		WEB_PutS(q, "{\"lang\": \"");
+		WEB_PutS(q, q->lang);
+		WEB_PutS(q, "\",");
+
+		if (cmd->fn(q) == 0) {
+			WEB_PutS(q, "\"code\": 0}\r\n");
+		} else {
+			WEB_PutS(q, "\"code\": -1,");
+			WEB_PutJSON_NoHTML_S(q, "error", AG_GetError());
+			WEB_PutS(q, "\"backend_version\": \"" VERSION "\"}\r\n");
+			WEB_LogErr("/%s: %s", op, AG_GetError());
+		}
+	} else {
+		if (cmd->type != NULL) {
+			if (strcmp(cmd->type, "text/html")==0) {
+				WEB_SetHeaderS(q, "Content-Type", "text/html; "
+				                                  "charset=utf8");
+				if (cmd->fn(q) != 0)
+					WEB_OutputError(q, AG_GetError());
+			} else {
+				WEB_SetHeaderS(q, "Content-Type", cmd->type);
+				if (cmd->fn(q) != 0)
+					WEB_LogErr("/%s: %s", op, AG_GetError());
+			}
+		} else {
+			if (cmd->fn(q) != 0)
+				WEB_LogErr("/%s: %s", op, AG_GetError());
+		}
+	}
+}
+
 /* Execute a module query (in Worker process). */
 int
 WEB_ExecWorkerQuery(WEB_Query *q)
 {
 	const char *op, *c;
 	const WEB_Argument *opArg;
-	WEB_ModuleClass *modC = NULL;
+	WEB_ModuleClass *Cmod = NULL;
 	WEB_Command *cmd;
 	int i;
 
@@ -1355,8 +1419,8 @@ WEB_ExecWorkerQuery(WEB_Query *q)
 	}
 	for (i = 0; i < webModuleCount; i++) {
 		q->mod = webModules[i];
-		modC = (void *)AGOBJECT(q->mod)->cls;
-		if (strncmp(modC->name, op, strlen(modC->name)) == 0)
+		Cmod = (WEB_ModuleClass *)OBJECT(q->mod)->cls;
+		if (strncmp(Cmod->name, op, strlen(Cmod->name)) == 0)
 			break;
 	}
 	if (i == webModuleCount) {
@@ -1365,65 +1429,9 @@ WEB_ExecWorkerQuery(WEB_Query *q)
 	}
 	AG_SetErrorS("Missing argument");	/* Fallback error message */
 
-	for (cmd = modC->commands; cmd->name != NULL; cmd++) {
-		if (strcmp(cmd->name, op) != 0) {
-			continue;
-		}
-		WEB_SetHeaderS(q, "Accept-Ranges", "bytes");
-		WEB_SetHeaderS(q, "Vary", "Accept-Language,Accept-Encoding,"
-		                          "User-Agent");
-		WEB_SetHeaderS(q, "Last-Modified", q->date);
-		WEB_SetHeaderS(q, "Content-Language", q->lang);
-		WEB_SetHeaderS(q, "Cache-Control", "no-cache, no-store, "
-		                                   "must-revalidate");
-		WEB_SetHeaderS(q, "Expires", "0");
-
-		if (cmd->type != NULL && strcmp(cmd->type, "[json-status]")==0) {
-			WEB_SetHeaderS(q, "Content-Type", "application/json; "
-			                                  "charset=utf8");
-			if (cmd->fn(q) == 0) {
-				WEB_PutS(q, "{\"code\": 0}\r\n");
-			} else {
-				WEB_PutS(q, "{\"code\": -1,");
-				WEB_PutJSON_NoHTML_S(q, "error", AG_GetError());
-				WEB_PutS(q, "\"backend_version\": \"" VERSION "\"}\r\n");
-				WEB_LogErr("/%s: %s", op, AG_GetError());
-			}
-			break;
-		} else if (cmd->type != NULL && strcmp(cmd->type, "[json]")==0) {
-			WEB_SetHeaderS(q, "Content-Type", "application/json; "
-			                                  "charset=utf8");
-			WEB_PutS(q, "{\"lang\": \"");
-			WEB_PutS(q, q->lang);
-			WEB_PutS(q, "\",");
-
-			if (cmd->fn(q) == 0) {
-				WEB_PutS(q, "\"code\": 0}\r\n");
-			} else {
-				WEB_PutS(q, "\"code\": -1,");
-				WEB_PutJSON_NoHTML_S(q, "error", AG_GetError());
-				WEB_PutS(q, "\"backend_version\": \"" VERSION "\"}\r\n");
-				WEB_LogErr("/%s: %s", op, AG_GetError());
-			}
-			break;
-		} else {
-			if (cmd->type != NULL) {
-				if (strcmp(cmd->type, "text/html")==0) {
-					WEB_SetHeaderS(q, "Content-Type",
-					    "text/html; charset=utf8");
-					if (cmd->fn(q) != 0)
-						WEB_OutputError(q, AG_GetError());
-				} else {
-					WEB_SetHeaderS(q, "Content-Type",
-					    cmd->type);
-					if (cmd->fn(q) != 0)
-						WEB_LogErr("/%s: %s", op,
-						    AG_GetError());
-				}
-			} else {
-				if (cmd->fn(q) != 0)
-					WEB_LogErr("/%s: %s", op, AG_GetError());
-			}
+	for (cmd = Cmod->commands; cmd->name != NULL; cmd++) {
+		if (strcmp(cmd->name, op) == 0) {
+			WEB_CommandExec(q, op, cmd);
 			break;
 		}
 	}
@@ -3527,15 +3535,15 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 		if (!(op = WEB_Get(q, "op", WEB_OPNAME_MAX)))
 			op = "";
 
-		/* Pre-auth (sessionless) command */
 		for (cp = &Sops->preAuthCmds[0]; cp->name != NULL; cp++) {
 			if (strcmp(cp->name, op) == 0)
 				break;
 		}
-		if (cp->name != NULL) {
+		if (cp->name != NULL) {                      /* Pre-auth cmd */
 			WEB_BeginFrontQuery(q, op, Sops);
 			WEB_SetHeaderS(q, "Accept-Ranges", "none");
-			WEB_SetHeaderS(q, "Vary", "Accept-Language,Accept-Encoding,"
+			WEB_SetHeaderS(q, "Vary", "Accept-Language,"
+			                          "Accept-Encoding,"
 			                          "User-Agent");
 			WEB_SetHeaderS(q, "Last-Modified", q->date);
 			WEB_SetHeaderS(q, "Cache-Control", "no-cache, no-store, "
@@ -3545,10 +3553,47 @@ WEB_ProcessQuery(WEB_Query *q, const WEB_SessionOps *Sops, void *rdBuf,
 				WEB_SetHeaderS(q, "Content-Type", cp->type);
 			}
 			WEB_SetHeaderS(q, "Content-Language", q->lang);
-
 			cp->fn(q);
 			WEB_FlushQuery(q);
 			return WEB_KeepAlive(q);
+		} else {                                /* Public module cmd */
+			WEB_Module *mod = NULL;
+			WEB_ModuleClass *Cmod = NULL;
+			WEB_Command *cmd;
+			int i;
+
+			for (i = 0; i < webModuleCount; i++) {
+				mod = webModules[i];
+				Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
+				if (strncmp(Cmod->name, op, strlen(Cmod->name)) == 0)
+					break;
+			}
+			if (i < webModuleCount) {
+				for (cmd = Cmod->commands; cmd->name != NULL;
+				     cmd++) {
+					if (strcmp(cmd->name, op) != 0) {
+						continue;
+					}
+					if (strchr(cmd->flags, 'P') != NULL) {
+						WEB_BeginFrontQuery(q, op, Sops);
+						q->mod = mod;
+						WEB_CommandExec(q, op, cmd);
+						WEB_FlushQuery(q);
+						return WEB_KeepAlive(q);
+					}
+#if 1
+					else {
+						WEB_SetCode(q, "403 Forbidden");
+						WEB_SetHeaderS(q, "Content-Language", "en");
+						WEB_SetHeaderS(q, "Cache-Control", "no-cache");
+						WEB_SetHeaderS(q, "Expires", "0");
+						WEB_OutputError(q, "Access denied");
+						WEB_FlushQuery(q);
+						return WEB_KeepAlive(q);
+					}
+#endif
+				}
+			}
 		}
 	}
 
@@ -4008,17 +4053,20 @@ WEB_WorkerMain(const WEB_SessionOps *Sops, WEB_Query *qFront,
     const char *user, const char *pass, const char *sessID,
     int pp[2], int nRestoreAttempts)
 {
-	const char *lang = webLangs[0];
 	char sessPath[FILENAME_MAX];
 	WEB_Session *S;
 	struct sigaction sa;
 	struct sockaddr_un sun;
 	socklen_t sunLen;
-	int fd, rv = 0, i;
-	const char *s;
+	const char *s, *lang;
 	time_t tLastQuery = time(NULL);
+	int fd, sockUn = -1, rv = 0, i;
 	Uint nQueries = 0;
-	int   sockUn = -1;
+
+#ifdef AG_DEBUG
+	if (webLangCount < 1) { AG_FatalError("webLangs < 1"); }
+#endif
+	lang = webLangs[0];
 
 	Strlcpy(webWorkerSess, sessID, sizeof(webWorkerSess));
 	Strlcpy(webWorkerUser, user, sizeof(webWorkerUser));
@@ -4045,7 +4093,7 @@ WEB_WorkerMain(const WEB_SessionOps *Sops, WEB_Query *qFront,
 	}
 	AG_SetErrorS("No error");
 
-	if (*sessID != '\0') {				/* Reuse ID */
+	if (*sessID != '\0') {					/* Reuse ID */
 		if (WEB_SessionLoad(S, sessID) == -1) {
 			rv = EX_OSFILE;
 			goto fail;
@@ -4057,14 +4105,16 @@ WEB_WorkerMain(const WEB_SessionOps *Sops, WEB_Query *qFront,
 		}
 		for (i = 0; i < webModuleCount; i++) {
 			WEB_Module *mod = webModules[i];
-			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+			WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
 
-			if (modC->workerInit &&
-			    modC->workerInit(mod, S) != 0) {
+			if (Cmod->workerInit &&
+			    Cmod->workerInit(mod, S) != 0) {
 				for (i--; i >= 0; i--) {
 					WEB_Module *mod = webModules[i];
-					WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
-					if (modC->workerDestroy) { modC->workerDestroy(mod); }
+					WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
+
+					if (Cmod->workerDestroy != NULL)
+						Cmod->workerDestroy(mod);
 				}
 				rv = EX_SOFTWARE;
 				goto fail;
@@ -4107,14 +4157,15 @@ regen_id:
 		}
 		for (i = 0; i < webModuleCount; i++) {
 			WEB_Module *mod = webModules[i];
-			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+			WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
 
-			if (modC->workerInit &&
-			    modC->workerInit(mod, S) != 0) {
+			if (Cmod->workerInit &&
+			    Cmod->workerInit(mod, S) != 0) {
 				for (i--; i >= 0; i--) {
 					WEB_Module *mod = webModules[i];
-					WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
-					if (modC->workerDestroy) { modC->workerDestroy(mod); }
+					WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
+					if (Cmod->workerDestroy != NULL)
+						Cmod->workerDestroy(mod);
 				}
 				webModuleCount = 0;
 				close(fd);
@@ -4123,10 +4174,10 @@ regen_id:
 		}
 		for (i = 0; i < webModuleCount; i++) {
 			WEB_Module *mod = webModules[i];
-			WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
+			WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
 
-			if (modC->sessOpen &&
-			    modC->sessOpen(mod, S) != 0) {
+			if (Cmod->sessOpen &&
+			    Cmod->sessOpen(mod, S) != 0) {
 				WEB_LogWorker("%s: %s; aborting session", S->id,
 				    AG_GetError());
 				close(fd);
@@ -4342,8 +4393,10 @@ regen_id:
 
 	for (i = 0; i < webModuleCount; i++) {
 		WEB_Module *mod = webModules[i];
-		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
-		if (modC->workerDestroy) { modC->workerDestroy(mod); }
+		WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
+
+		if (Cmod->workerDestroy != NULL)
+			Cmod->workerDestroy(mod);
 	}
 	if (sockUn != -1) { close(sockUn); }
 	for (i = 0; i < webFrontSocketCount; i++) {
@@ -4355,8 +4408,9 @@ regen_id:
 fail_close:
 	for (i = 0; i < webModuleCount; i++) {
 		WEB_Module *mod = webModules[i];
-		WEB_ModuleClass *modC = (void *)AGOBJECT(mod)->cls;
-		if (modC->workerDestroy) { modC->workerDestroy(mod); }
+		WEB_ModuleClass *Cmod = (WEB_ModuleClass *)OBJECT(mod)->cls;
+		if (Cmod->workerDestroy)
+			Cmod->workerDestroy(mod);
 	}
 	rv = EX_SOFTWARE;
 	if (sockUn != -1) { close(sockUn); }
@@ -4457,6 +4511,19 @@ WEB_ControlCommandS(Uint clusterID, const char *s)
 	return WEB_ControlCommand(clusterID, &cmd);
 }
 
+void
+WEB_AddLanguage(const char *_Nonnull lang)
+{
+	if (webLangs == NULL) {
+		webLangs = Malloc(2*sizeof(char *));
+	} else {
+		webLangs = Realloc(webLangs, (webLangCount+2)*sizeof(char *));
+	}
+	webLangs[webLangCount] = Strdup(lang);
+	WEB_LogInfo("Registered language #%d: %s", webLangCount, webLangs[webLangCount]);
+	webLangs[++webLangCount] = NULL;
+}
+
 /* Standard loop for a web application server. */
 void
 WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops)
@@ -4474,8 +4541,13 @@ WEB_QueryLoop(const char *hostname, const char *port, const WEB_SessionOps *Sops
 	char *c, *cEnd, *uriEnd;
 	struct stat sb;
 
-	if (webLangCount == 0)
-		WEB_AddLanguage("en");		/* Needs at least 1 */
+	if (webLangCount == 0) {
+		WEB_LogWarn("No languages specified, defaulting to en");
+		WEB_AddLanguage("en");
+	} else {
+		for (i = 0; i < webLangCount; i++)
+			WEB_LogInfo("Accepted language: %s", webLangs[i]);
+	}
 
 	WEB_LogNotice("Starting %s #%u%s (%s; agar %s) on %s:%s", agProgName,
 	    webClusterID,
@@ -4703,14 +4775,32 @@ fail:
 	WEB_LogErr("WEB_QueryLoop: %s; exiting", AG_GetError());
 }
 
-AG_ObjectClass webModuleClass = {
-	"Web(Module)",
-	sizeof(WEB_Module),
-	{ 0, 0 },
-	NULL,	/* init */
-	NULL,	/* reset */
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL,	/* save */
-	NULL	/* edit */
+WEB_Command webModuleCommands[] = {
+	/* name     fn        type         flags */
+/*	{ "index",  myIndex, "text/html", "Pi" } */
+	{ NULL,     NULL,   NULL,        NULL }
+};
+WEB_ModuleClass webModuleClass = {
+	{
+		"Web(Module)",
+		sizeof(WEB_Module),
+		{ 0, 0 },
+		NULL,		/* init */
+		NULL,		/* reset */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	"myModule",		/* name */
+	"x",			/* icon */
+	"My Module",		/* lname */
+	"Module description",	/* desc */
+	NULL,			/* workerInit */
+	NULL,			/* workerDestroy */
+	NULL,			/* sessOpen */
+	NULL,			/* sessClose */
+	NULL,			/* menu */
+	NULL,			/* menuSections */
+	&webModuleCommands[0]
 };
