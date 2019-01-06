@@ -1,4 +1,4 @@
-/*	Public domain	*/
+
 /*
  * Execute the Agar test suite.
  */
@@ -19,7 +19,7 @@ extern const AG_TestCase consoleTest;
 extern const AG_TestCase customWidgetTest;
 extern const AG_TestCase fixedResTest;
 extern const AG_TestCase focusingTest;
-extern const AG_TestCase fontSelectorTest;
+extern const AG_TestCase fontsTest;
 extern const AG_TestCase fsPathsTest;
 extern const AG_TestCase glviewTest;
 extern const AG_TestCase imageLoadingTest;
@@ -58,7 +58,7 @@ const AG_TestCase *testCases[] = {
 	&customWidgetTest,
 	&fixedResTest,
 	&focusingTest,
-	&fontSelectorTest,
+	&fontsTest,
 	&fsPathsTest,
 #ifdef HAVE_OPENGL
 	&glviewTest,
@@ -309,28 +309,29 @@ TestWindowClose(AG_Event *event)
 }
 
 /* Write a message to the test console (format string). */
-void
+AG_ConsoleLine *
 TestMsg(void *obj, const char *fmt, ...)
 {
 	AG_TestInstance *ti = obj;
+	AG_ConsoleLine *ln;
 	va_list args;
 	char *s;
 
 	va_start(args, fmt);
-	if (TryVasprintf(&s, fmt, args) == -1) {
-		return;
-	}
+	AG_Vasprintf(&s, fmt, args);
+	ln = AG_ConsoleMsgS(ti->console, s);
 	va_end(args);
-	AG_ConsoleMsgS(ti->console, s);
 	free(s);
+	return (ln);
 }
 
 /* Write a message to the test console (C string). */
-void
+AG_ConsoleLine *
 TestMsgS(void *obj, const char *s)
 {
 	AG_TestInstance *ti = obj;
-	AG_ConsoleMsgS(ti->console, s);
+
+	return AG_ConsoleMsgS(ti->console, s);
 }
 
 #if (defined(i386) || defined(__i386__) || defined(__x86_64__))
@@ -588,19 +589,26 @@ main(int argc, char *argv[])
 #else
 		const char *memory_model = "LARGE";
 #endif
-		AG_GetVersion(&av);
-		AG_ConsoleMsg(console, _("Agar %d.%d.%d (\"%s\")"),
-		    av.major, av.minor, av.patch, av.release);
+		AG_ConsoleLine *ln;
 
-		AG_ConsoleMsg(console, _("Target: %s (%s)"), agCPU.arch,
+		AG_GetVersion(&av);
+		ln = AG_ConsoleMsg(console, _("Agar %d.%d.%d (\"%s\")"),
+		    av.major, av.minor, av.patch, av.release);
+		AG_ConsoleMsgColor(ln, AG_ColorRGB(0,255,120));
+
+		ln = AG_ConsoleMsg(console, _("Target: %s (%s)"), agCPU.arch,
 		    memory_model);
+		AG_ConsoleMsgColor(ln, AG_ColorRGB(0,255,120));
 		    
-		AG_ConsoleMsg(console, _("Current AG_Driver: %s (%s)"),
+		ln = AG_ConsoleMsg(console, _("Current AG_Driver: %s (%s)"),
 		    AGWIDGET(win)->drvOps->name,
 		    (AGWIDGET(win)->drvOps->type == AG_FRAMEBUFFER) ?
 		    _("framebuffer-based") : _("vector-based"));
+		AG_ConsoleMsgColor(ln, AG_ColorRGB(255,255,0));
 		AG_ListDriverNames(drvNames, sizeof(drvNames));
-		AG_ConsoleMsg(console, _("Available AG_Drivers: %s"), drvNames);
+		ln = AG_ConsoleMsg(console, _("Compiled AG_Drivers: %s"), drvNames);
+		AG_ConsoleMsgColor(ln, AG_ColorRGB(255,255,0));
+
 #ifdef __APPLE__
 		AG_ConsoleMsg(console, _("Press Command-[-] and Command-[=] to zoom"));
 # ifdef AG_DEBUG

@@ -64,7 +64,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_FixedSize(fx, btn, 32, 32);
 
 	AG_WindowSetPadding(win, 0,0,0,0);
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 640, 128);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 640, 155);
 	return (0);
 }
 

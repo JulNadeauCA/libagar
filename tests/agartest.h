@@ -66,10 +66,11 @@ typedef struct ag_benchmark {
 					   preemption and retry (0=disable) */
 } AG_Benchmark;
 
-void TestWindowClose(AG_Event *_Nonnull);
-void TestMsg(void *_Nonnull, const char *_Nonnull, ...);
-void TestMsgS(void *_Nonnull, const char *_Nonnull);
+AG_ConsoleLine *_Nonnull TestMsg(void *_Nonnull, const char *_Nonnull, ...);
+AG_ConsoleLine *_Nonnull TestMsgS(void *_Nonnull, const char *_Nonnull);
+
 void TestExecBenchmark(void *_Nonnull, AG_Benchmark *_Nonnull);
+void TestWindowClose(AG_Event *_Nonnull);
 
 #include "config/enable_nls.h"
 #ifdef ENABLE_NLS

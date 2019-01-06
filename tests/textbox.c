@@ -67,38 +67,53 @@ CopyString(AG_Event *event)
 	AG_Textbox *textbox = AG_PTR(1);
 
 	AG_TextboxCopyString(textbox, tinybuf, sizeof(tinybuf));
-	AG_TextMsg(AG_MSG_INFO, "Copied string (to %d-byte buffer):\n\"%s\"\n",
-	    (int)sizeof(tinybuf), tinybuf);
+	AG_TextMsg(AG_MSG_INFO, "String truncated to fit %d-byte buffer:\n"
+	                        "\"%s\"\n", (int)sizeof(tinybuf), tinybuf);
 }
 
 static void
 DebugStuff(AG_Box *win, AG_Textbox *textbox)
 {
 	AG_Box *hBox;
+	AG_Editable *ed = textbox->ed;
 
 	AG_SeparatorNewHoriz(win);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "Cursor at: %i", &textbox->ed->pos);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "Selection: %i", &textbox->ed->sel);
-	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(textbox->ed)->pvt.lock, "x: %i", &textbox->ed->x);
+
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
+	    "Cursor at: %i", &ed->pos);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
+	    "Selection: %i", &ed->sel);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &AGOBJECT(ed)->pvt.lock,
+	    "x: %i", &ed->x);
+
 	AG_SeparatorNewHoriz(win);
+
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
-	AG_CheckboxNewFlag(win, 0, "Read-only", &textbox->ed->flags, AG_EDITABLE_READONLY);
-	AG_CheckboxNewFlag(win, 0, "Password input", &textbox->ed->flags, AG_EDITABLE_PASSWORD);
-	AG_CheckboxNewFlag(win, 0, "Force integer input", &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Force float input", &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
-	AG_CheckboxNewFlag(win, 0, "Maintain visible cursor", &textbox->ed->flags, AG_EDITABLE_KEEPVISCURSOR);
-	AG_CheckboxNewFlag(win, 0, "Disable emacs", &textbox->ed->flags, AG_EDITABLE_NOEMACS);
-	AG_CheckboxNewFlag(win, 0, "Disable latin1", &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
+
+	AG_CheckboxNewFlag(win, 0, "Multiline",           &ed->flags, AG_EDITABLE_MULTILINE);
+	AG_CheckboxNewFlag(win, 0, "Blink",               &ed->flags, AG_EDITABLE_BLINK_ON);
+	AG_CheckboxNewFlag(win, 0, "Read-only",	          &ed->flags, AG_EDITABLE_READONLY);
+	AG_CheckboxNewFlag(win, 0, "Password input",      &ed->flags, AG_EDITABLE_PASSWORD);
+	AG_CheckboxNewFlag(win, 0, "Force integer input", &ed->flags, AG_EDITABLE_INT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Force float input",   &ed->flags, AG_EDITABLE_FLT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Keep cursor visible", &ed->flags, AG_EDITABLE_KEEPVISCURSOR);
+	AG_CheckboxNewFlag(win, 0, "No emacs keys",       &ed->flags, AG_EDITABLE_NOEMACS);
+	AG_CheckboxNewFlag(win, 0, "No latin1 keys",      &ed->flags, AG_EDITABLE_NOLATIN1);
+
 	AG_SeparatorNewHoriz(win);
+
 	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
-	AG_ButtonNewFn(hBox, 0, "Set string", SetString, "%p", textbox);
-	AG_ButtonNewFn(hBox, 0, "Dup string", DupString, "%p", textbox);
-	AG_ButtonNewFn(hBox, 0, "Copy string", CopyString, "%p", textbox);
+	{
+		AG_ButtonNewFn(hBox, 0, "Set string", SetString, "%p", textbox);
+		AG_ButtonNewFn(hBox, 0, "Dup string", DupString, "%p", textbox);
+		AG_ButtonNewFn(hBox, 0, "Copy string", CopyString, "%p", textbox);
+	}
 }
 
 static void
 SingleLineExample(AG_Event *event)
 {
+	const char *text = "The Quick Brown Fox Jumps Over The Lazy Dog";
 	AG_Window *winParent = AG_PTR(1);
 	AG_Text *txt;
 	AG_Window *win;
@@ -109,7 +124,7 @@ SingleLineExample(AG_Event *event)
 		return;
 	}
 	AG_WindowSetCaptionS(win, "textbox: Single-line Example");
-	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_HOMOGENOUS);
+	hBox = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 
 	/*
 	 * Create two single-line Textbox widgets bound to the same
@@ -117,7 +132,7 @@ SingleLineExample(AG_Event *event)
 	 */
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	{
-		AG_Strlcpy(bufferShd, "Foo bar baz bezo fou", sizeof(bufferShd));
+		AG_Strlcpy(bufferShd, text, sizeof(bufferShd));
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL,
 		    "Fixed C buffer (shared): ");
@@ -132,14 +147,17 @@ SingleLineExample(AG_Event *event)
 		AG_TextboxBindUTF8(textbox, bufferShd, sizeof(bufferShd));
 		DebugStuff(vBox, textbox);
 	}
-	
+
+	AG_SeparatorNewVert(hBox);
+
 	/*
 	 * Create a single-line Textbox widget using a fixed-size buffer
 	 * in exclusive mode.
 	 */
+	 
 	vBox = AG_BoxNewVert(hBox, AG_BOX_VFILL);
 	{
-		AG_Strlcpy(bufferExcl, "Foo bar baz bezo fou", sizeof(bufferExcl));
+		AG_Strlcpy(bufferExcl, text, sizeof(bufferExcl));
 
 		textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_EXCL,
 		    "Fixed C buffer (excl): ");
@@ -161,7 +179,7 @@ SingleLineExample(AG_Event *event)
 	textbox = AG_TextboxNew(vBox, AG_TEXTBOX_HFILL|AG_TEXTBOX_MULTILINGUAL,
 	    "AG_Text element: ");
 	AG_TextboxBindText(textbox, txt);
-	AG_TextboxSetLang(textbox, AG_LANG_EN);
+	AG_TextboxSetLang(textbox, AG_LANG_FR);
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXXXXXXXXXXXX");
 	AG_TextboxSetCursorPos(textbox, -1);	/* To end of string */
 	DebugStuff(vBox, textbox);
