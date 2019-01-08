@@ -329,6 +329,7 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 		    dr.x * ds->format->BytesPerPixel;
 		for (x = 0; x < dr.w; x++) {
 			px = AG_SurfaceGet_At(ss,pSrc);
+
 			if ((ss->flags & AG_SURFACE_COLORKEY) &&
 			    (ss->colorkey == px)) {
 				pSrc += ss->format.BytesPerPixel;
@@ -336,8 +337,8 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 				continue;
 			}
 			c = AG_GetColor(px, &ss->format);
-			if ((c.a < AG_OPAQUE) && (ss->flags & AG_SURFACE_ALPHA)) {
-				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_OVERLAY);
+			if (c.a < AG_OPAQUE) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
 			} else {
 				AG_SDL_PutPixel(ds, pDst,
 				    SDL_MapRGB(ds->format,

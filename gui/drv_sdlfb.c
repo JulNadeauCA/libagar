@@ -472,12 +472,12 @@ SDLFB_BlendPixel(void *_Nonnull obj, int x, int y, AG_Color C, AG_AlphaFn fnSrc,
 {
 	AG_DriverSDLFB *sfb = obj;
 	SDL_Surface *s = sfb->s;
-	Uint32 pxDst, pxNew;
-	Uint8 dR, dG, dB, dA, Ca;
-	int alpha8;
 	Uint8 *pDst = (Uint8 *)s->pixels +
 	    y*s->pitch +
 	    x*s->format->BytesPerPixel;
+	int a;
+	Uint32 pxDst, pxNew;
+	Uint8 dR, dG, dB, dA, Ca;
 
 	if (ClippedPixel(s, x,y))
 		return;
@@ -498,21 +498,21 @@ SDLFB_BlendPixel(void *_Nonnull obj, int x, int y, AG_Color C, AG_AlphaFn fnSrc,
 	/* Blend the components and write the computed pixel value. */
 	SDL_GetRGBA(pxDst, s->format, &dR, &dG, &dB, &dA);
 	switch (fnSrc) {
-	case AG_ALPHA_OVERLAY:		alpha8 = dA+Ca;			break;
-	case AG_ALPHA_SRC:		alpha8 = Ca;			break;
-	case AG_ALPHA_DST:		alpha8 = dA;			break;
-	case AG_ALPHA_ONE_MINUS_DST:	alpha8 = 1 - dA;			break;
-	case AG_ALPHA_ONE_MINUS_SRC:	alpha8 = 1 - Ca;			break;
-	case AG_ALPHA_ZERO:		alpha8 = 0;			break;
+	case AG_ALPHA_OVERLAY:		a = dA+Ca;			break;
+	case AG_ALPHA_SRC:		a = Ca;				break;
+	case AG_ALPHA_DST:		a = dA;				break;
+	case AG_ALPHA_ONE_MINUS_DST:	a = 1 - dA;			break;
+	case AG_ALPHA_ONE_MINUS_SRC:	a = 1 - Ca;			break;
+	case AG_ALPHA_ZERO:		a = 0;				break;
 	default:
-	case AG_ALPHA_ONE:		alpha8 = 255;			break;
+	case AG_ALPHA_ONE:		a = 255;			break;
 	}
 
 	pxNew = SDL_MapRGBA(s->format,
 	    dR + (((AG_Hto8(C.r) - dR)*Ca) >> 8),
 	    dG + (((AG_Hto8(C.g) - dG)*Ca) >> 8),
 	    dB + (((AG_Hto8(C.b) - dB)*Ca) >> 8),
-	    (alpha8 < 0) ? 0 : (alpha8 > 255) ? 255 : alpha8);
+	    (a < 0) ? 0 : (a > 255) ? 255 : a);
 
 	AG_PACKEDPIXEL_PUT(s->format->BytesPerPixel, pDst, pxNew);
 }
