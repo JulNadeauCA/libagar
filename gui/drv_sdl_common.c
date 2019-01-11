@@ -272,14 +272,105 @@ static __inline__ SDL_Rect
 AG_SDL_RectIntersect(const SDL_Rect *_Nonnull a, const SDL_Rect *_Nonnull b)
 {
 	SDL_Rect x;
+	int aMin, aMax, bMin, bMax;
 
-	x.x = AG_MAX(a->x, b->x);
-	x.y = AG_MAX(a->y, b->y);
-	x.w = AG_MIN((a->x + a->w), (b->x + b->w)) - x.x;
-	x.h = AG_MIN((a->y + a->h), (b->y + b->h)) - x.y;
-	if (x.w < 0) { x.w = 0; }
-	if (x.h < 0) { x.h = 0; }
+	aMin = a->x;
+	aMax = aMin + a->w;
+	bMin = b->x;
+	bMax = bMin + b->w;
+	if (bMin > aMin) { aMin = bMin; }
+	x.x = aMin;
+	if (bMax < aMax) { aMax = bMax; }
+	x.w = aMax - aMin > 0 ? aMax-aMin : 0;
+
+	aMin = a->y;
+	aMax = aMin + a->h;
+	bMin = b->y;
+	bMax = bMin + b->h;
+	if (bMin > aMin) { aMin = bMin; }
+	x.y = aMin;
+	if (bMax < aMax) { aMax = bMax; }
+	x.h = aMax - aMin > 0 ? aMax-aMin : 0;
+
 	return (x);
+}
+
+static void
+AG_SDL_SoftBlit_Colorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
+    SDL_Surface *_Nonnull ds, SDL_Rect dr)
+{
+	const Uint8 *pSrc = ss->pixels + sr.y*ss->pitch +
+	                                 sr.x*ss->format.BytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch +
+	                                    dr.x*ss->format.BytesPerPixel;
+	int dsBytesPerPixel = ds->format->BytesPerPixel;
+	int size = dr.w*dsBytesPerPixel;
+	int ssPadding = ss->pitch - size;
+	int dsPadding = ds->pitch - size;
+	int x, y;
+	
+	for (y = 0; y < dr.h; y++) {
+		for (x = 0; x < dr.w; x++) {
+			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
+			AG_Color c;
+
+			if (ss->colorkey == px) {
+				pSrc += ss->format.BytesPerPixel;
+				pDst += dsBytesPerPixel;
+				continue;
+			}
+			c = AG_GetColor(px, &ss->format);
+			if (c.a < AG_OPAQUE) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
+			} else {
+				AG_SDL_PutPixel(ds, pDst,
+				    SDL_MapRGB(ds->format,
+				        AG_Hto8(c.r),
+				        AG_Hto8(c.g),
+				        AG_Hto8(c.b)));
+			}
+			pSrc += ss->format.BytesPerPixel;
+			pDst += dsBytesPerPixel;
+		}
+		pSrc += ssPadding;
+		pDst += dsPadding;
+	}
+}
+
+static void
+AG_SDL_SoftBlit_NoColorkey(const AG_Surface *_Nonnull ss, AG_Rect sr,
+    SDL_Surface *_Nonnull ds, SDL_Rect dr)
+{
+	const Uint8 *pSrc = ss->pixels + sr.y*ss->pitch +
+	                                 sr.x*ss->format.BytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch +
+	                                    dr.x*ss->format.BytesPerPixel;
+	int dsBytesPerPixel = ds->format->BytesPerPixel;
+	int size = dr.w*dsBytesPerPixel;
+	int ssPadding = ss->pitch - size;
+	int dsPadding = ds->pitch - size;
+	int x, y;
+
+	for (y = 0; y < dr.h; y++) {
+		for (x = 0; x < dr.w; x++) {
+			AG_Pixel px = AG_SurfaceGet_At(ss,pSrc);
+			AG_Color c = AG_GetColor(px, &ss->format);
+
+			if (c.a < AG_OPAQUE) {
+				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
+			} else {
+				AG_SDL_PutPixel(ds, pDst,
+				    SDL_MapRGB(ds->format,
+				        AG_Hto8(c.r),
+				        AG_Hto8(c.g),
+				        AG_Hto8(c.b)));
+			}
+			pSrc += ss->format.BytesPerPixel;
+			pDst += dsBytesPerPixel;
+		}
+		pSrc += ssPadding;
+		pDst += dsPadding;
+	}
 }
 
 /*
@@ -287,17 +378,13 @@ AG_SDL_RectIntersect(const SDL_Rect *_Nonnull a, const SDL_Rect *_Nonnull b)
  * If the formats of the two surfaces may differ, convert implicitely.
  * The source surface must be locked. Locks the target SDL surface if needed.
  */
-/* XXX TODO optimized cases, indexed, grayscale, per-surface alpha */
+/* XXX TODO optimized cases, per-surface alpha */
 void
 AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
     SDL_Surface *ds, int xDst, int yDst)
 {
 	AG_Rect sr;
 	SDL_Rect dr;
-	AG_Color c;
-	AG_Pixel px;
-	int x, y;
-	Uint8 *pSrc, *pDst;
 
 	if (srcRect != NULL) {
 		sr = *srcRect;
@@ -316,39 +403,16 @@ AG_SDL_BlitSurface(const AG_Surface *ss, const AG_Rect *srcRect,
 	dr.w = (Uint16)sr.w;
 	dr.h = (Uint16)sr.h;
 	dr = AG_SDL_RectIntersect(&dr, &ds->clip_rect);
+	if (dr.w == 0 || dr.h == 0)
+		return;
 
 	if (SDL_MUSTLOCK(ds)) {
 		SDL_LockSurface(ds);
 	}
-	for (y = 0; y < dr.h; y++) {
-		pSrc = ss->pixels +
-		   (sr.y + y)*ss->pitch +
-		    sr.x * ss->format.BytesPerPixel;
-		pDst = (Uint8 *)ds->pixels +
-		   (dr.y + y)*ds->pitch +
-		    dr.x * ds->format->BytesPerPixel;
-		for (x = 0; x < dr.w; x++) {
-			px = AG_SurfaceGet_At(ss,pSrc);
-
-			if ((ss->flags & AG_SURFACE_COLORKEY) &&
-			    (ss->colorkey == px)) {
-				pSrc += ss->format.BytesPerPixel;
-				pDst += ds->format->BytesPerPixel;
-				continue;
-			}
-			c = AG_GetColor(px, &ss->format);
-			if (c.a < AG_OPAQUE) {
-				AG_SDL_SurfaceBlend(ds, pDst, c, AG_ALPHA_SRC);
-			} else {
-				AG_SDL_PutPixel(ds, pDst,
-				    SDL_MapRGB(ds->format,
-				        AG_Hto8(c.r),
-				        AG_Hto8(c.g),
-				        AG_Hto8(c.b)));
-			}
-			pSrc += ss->format.BytesPerPixel;
-			pDst += ds->format->BytesPerPixel;
-		}
+	if (ss->flags & AG_SURFACE_COLORKEY) {
+		AG_SDL_SoftBlit_Colorkey(ss,sr, ds,dr);
+	} else {
+		AG_SDL_SoftBlit_NoColorkey(ss,sr, ds,dr);
 	}
 	if (SDL_MUSTLOCK(ds))
 		SDL_UnlockSurface(ds);
