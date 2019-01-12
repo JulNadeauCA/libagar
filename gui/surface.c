@@ -687,73 +687,73 @@ AG_SurfaceConvert(const AG_Surface *_Nonnull a, const AG_PixelFormat *_Nonnull p
 }
 
 /*
- * Copy pixel data from a source surface Ss to a destination surface Sd.
+ * Copy pixel data from a source surface S to a destination surface D.
  * Convert if pixel format differs. Clip coordinates if dimensions differ.
  *
  * Unlike the blit operation, coordinates are fixed (0,0), clipping rectangle
  * is ignored and alpha/colorkey settings of the target surface are ignored.
  */
 void
-AG_SurfaceCopy(AG_Surface *_Nonnull Sd, const AG_Surface *_Nonnull Ss)
+AG_SurfaceCopy(AG_Surface *_Nonnull D, const AG_Surface *_Nonnull S)
 {
-	Uint w = MIN(Ss->w, Sd->w);
-	Uint h = MIN(Ss->h, Sd->h);
+	Uint w = MIN(S->w, D->w);
+	Uint h = MIN(S->h, D->h);
 	int x, y;
 
 #ifdef AG_DEBUG
-	if (Ss->flags & AG_SURFACE_TRACE)
+	if (S->flags & AG_SURFACE_TRACE) {
 		Debug(NULL, "Surface <%p>: Copy([%dx%dx%d %s]->%p[%dx%dx%d %s])\n",
-		    Ss, Ss->w, Ss->h, Ss->format.BitsPerPixel,
-		    agSurfaceModeNames[Ss->format.mode],
-		    Sd, Sd->w, Sd->h, Sd->format.BitsPerPixel,
-		    agSurfaceModeNames[Sd->format.mode]);
+		    S, S->w, S->h, S->format.BitsPerPixel, agSurfaceModeNames[S->format.mode],
+		    D, D->w, D->h, D->format.BitsPerPixel, agSurfaceModeNames[D->format.mode]);
+		D->flags |= AG_SURFACE_TRACE;
+	}
 #endif
-	if (AG_PixelFormatCompare(&Ss->format, &Sd->format) == 0) {  /* Block */
-		Uint8 *pSrc = Ss->pixels, *pDst = Sd->pixels;
-		Uint SsPadding = Ss->padding;
-		Uint SdPadding = Sd->padding;
-		Uint pitch = (Sd->format.BitsPerPixel < 8) ?
-		     w / Sd->format.PixelsPerByte :
-		     w * Sd->format.BytesPerPixel;
+	if (AG_PixelFormatCompare(&S->format, &D->format) == 0) {  /* Block */
+		Uint8 *pSrc = S->pixels, *pDst = D->pixels;
+		Uint Spadding = S->padding;
+		Uint Dpadding = D->padding;
+		Uint pitch = (D->format.BitsPerPixel < 8) ?
+		     w / D->format.PixelsPerByte :
+		     w * D->format.BytesPerPixel;
 #ifdef AG_DEBUG
-		if (Ss->flags & AG_SURFACE_TRACE)
+		if (S->flags & AG_SURFACE_TRACE)
 			Debug(NULL,
 			    "Surface <%p>: Block Copy (padding=%u->%u, pitch=%u)\n",
-			    Ss, SsPadding, SdPadding, pitch);
+			    S, Spadding, Dpadding, pitch);
 #endif
-		if (Sd->w > Ss->w) {
-			SdPadding += (Sd->format.BitsPerPixel < 8) ?
-			             (Sd->w - Ss->w) / Sd->format.PixelsPerByte :
-			             (Sd->w - Ss->w) * Sd->format.BytesPerPixel;
-		} else if (Sd->w < Ss->w) {
-			SsPadding += (Ss->format.BitsPerPixel < 8) ?
-			             (Ss->w - Sd->w) / Ss->format.PixelsPerByte :
-			             (Ss->w - Sd->w) * Ss->format.BytesPerPixel;
+		if (D->w > S->w) {
+			Dpadding += (D->format.BitsPerPixel < 8) ?
+			             (D->w - S->w) / D->format.PixelsPerByte :
+			             (D->w - S->w) * D->format.BytesPerPixel;
+		} else if (D->w < S->w) {
+			Spadding += (S->format.BitsPerPixel < 8) ?
+			             (S->w - D->w) / S->format.PixelsPerByte :
+			             (S->w - D->w) * S->format.BytesPerPixel;
 		}
 		for (y = 0; y < h; y++) {
 			memcpy(pDst, pSrc, pitch);
-			pSrc += pitch + SsPadding;
-			pDst += pitch + SdPadding;
+			pSrc += pitch + Spadding;
+			pDst += pitch + Dpadding;
 		}
 	} else {                                                 /* Pixelwise */
-#ifdef AG_DEBUG
-		if (Ss->flags & AG_SURFACE_TRACE)
-			Debug(NULL, "Surface <%p>: Pixelwise Copy\n", Ss);
+#ifdef AG_DEBUDG
+		if (S->flags & AG_SURFACE_TRACE)
+			Debug(NULL, "Surface <%p>: Pixelwise Copy\n", S);
 #endif
 		/* TODO optimized cases */
 		for (y = 0; y < h; y++) {
 			for (x = 0; x < w; x++) {
-				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-				AG_Color c  = AG_GetColor(px, &Ss->format);
+				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Color c  = AG_GetColor(px, &S->format);
 				
-				AG_SurfacePut(Sd, x,y,
-				    AG_MapPixel(&Sd->format, c));
+				AG_SurfacePut(D, x,y,
+				    AG_MapPixel(&D->format, c));
 			}
 		}
 	}
-	if (Ss->format.mode == AG_SURFACE_INDEXED &&
-	    Sd->format.mode == AG_SURFACE_INDEXED)
-		AG_SurfaceSetPalette(Sd, Ss->format.palette);
+	if (S->format.mode == AG_SURFACE_INDEXED &&
+	    D->format.mode == AG_SURFACE_INDEXED)
+		AG_SurfaceSetPalette(D, S->format.palette);
 }
 
 /*
@@ -761,30 +761,30 @@ AG_SurfaceCopy(AG_Surface *_Nonnull Sd, const AG_Surface *_Nonnull Ss)
  * No opaque pixels are possible.
  */
 static void
-AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull Ss, AG_Surface *_Nonnull Sd,
+AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
     AG_Rect dr)
 {
-	AG_Pixel srcColorkey = Ss->colorkey;
+	AG_Pixel srcColorkey = S->colorkey;
 	int x, y;
 
 #ifdef AG_DEBUG
-	if (Ss->flags & AG_SURFACE_TRACE)
-		Debug(NULL, "Surface <%p>: Blit with Alpha & Colorkey\n", Ss);
+	if (S->flags & AG_SURFACE_TRACE)
+		Debug(NULL, "Surface <%p>: Blit with Alpha & Colorkey\n", S);
 #endif
 	for (y = 0; y < dr.h; y++) {
 		for (x = 0; x < dr.w; x++) {
-			AG_Pixel px = AG_SurfaceGet(Ss, x,y);
+			AG_Pixel px = AG_SurfaceGet(S, x,y);
 			AG_Color c;
 
 			if (px == srcColorkey) {
 				continue;
 			}
-			c = AG_GetColor(px, &Ss->format);
-			c.a = MIN(c.a, Ss->alpha);
+			c = AG_GetColor(px, &S->format);
+			c.a = MIN(c.a, S->alpha);
 			if (c.a == AG_TRANSPARENT) {
 				continue;
 			}
-			AG_SurfaceBlend(Sd, x,y, c, AG_ALPHA_OVERLAY);
+			AG_SurfaceBlend(D, x,y, c, AG_ALPHA_OVERLAY);
 		}
 	}
 }
@@ -794,32 +794,32 @@ AG_SurfaceBlit_AlCo(const AG_Surface *_Nonnull Ss, AG_Surface *_Nonnull Sd,
  * Possibly some opaque pixels.
  */
 static void
-AG_SurfaceBlit_Co(const AG_Surface *_Nonnull Ss, AG_Surface *_Nonnull Sd,
+AG_SurfaceBlit_Co(const AG_Surface *_Nonnull S, AG_Surface *_Nonnull D,
     AG_Rect dr)
 {
-	AG_Pixel srcColorkey = Ss->colorkey;
+	AG_Pixel srcColorkey = S->colorkey;
 	int x, y;
 
 #ifdef AG_DEBUG
-	if (Ss->flags & AG_SURFACE_TRACE)
-		Debug(NULL, "Surface <%p>: Blit with Colorkey only\n", Ss);
+	if (S->flags & AG_SURFACE_TRACE)
+		Debug(NULL, "Surface <%p>: Blit with Colorkey only\n", S);
 #endif
 	for (y = 0; y < dr.h; y++) {
 		for (x = 0; x < dr.w; x++) {
-			AG_Pixel px = AG_SurfaceGet(Ss, x,y);
+			AG_Pixel px = AG_SurfaceGet(S, x,y);
 			AG_Color c;
 
 			if (px == srcColorkey) {
 				continue;
 			}
-			c = AG_GetColor(px, &Ss->format);
+			c = AG_GetColor(px, &S->format);
 			if (c.a == AG_TRANSPARENT) {
 				continue;
 			} else if (c.a == AG_OPAQUE) {
-				AG_SurfacePut(Sd, x,y,
-				    AG_MapPixel(&Sd->format,c));
+				AG_SurfacePut(D, x,y,
+				    AG_MapPixel(&D->format,c));
 			} else {
-				AG_SurfaceBlend(Sd, x,y, c, AG_ALPHA_OVERLAY);
+				AG_SurfaceBlend(D, x,y, c, AG_ALPHA_OVERLAY);
 			}
 		}
 	}
@@ -830,122 +830,120 @@ AG_SurfaceBlit_Co(const AG_Surface *_Nonnull Ss, AG_Surface *_Nonnull Sd,
  * surface at coordinates xDst,yDst. Coordinates are checked and clipped.
  * The source and destination surfaces cannot be the same.
  *
- * Perform alpha blending if Ss has AG_SURFACE_ALPHA flag. Honor component
- * alpha if Ss defines an alpha channel. Also honor per-surface alpha.
+ * Perform alpha blending if S has AG_SURFACE_ALPHA flag. Honor component
+ * alpha if S defines an alpha channel. Also honor per-surface alpha.
  *
- * Perform colorkey tests if Ss has AG_SURFACE_COLORKEY flag.
+ * Perform colorkey tests if S has AG_SURFACE_COLORKEY flag.
  *
  * If srcRect is NULL, the entire surface is copied.
  */
 void
-AG_SurfaceBlit(const AG_Surface *_Nonnull Ss, const AG_Rect *srcRect,
-    AG_Surface *_Nonnull Sd, int xDst, int yDst)
+AG_SurfaceBlit(const AG_Surface *_Nonnull S, const AG_Rect *srcRect,
+    AG_Surface *_Nonnull D, int xDst, int yDst)
 {
 	AG_Rect sr, dr;
 	Uint x, y;
 	int diff;
 
 #ifdef AG_DEBUG
-	if (Ss->flags & AG_SURFACE_TRACE) {
+	if (S->flags & AG_SURFACE_TRACE) {
 		if (srcRect != NULL) {
 			Debug(NULL, "Surface <%p>: Blit ([%ux%u@%d,%d]->"
-			            "%p:[%d,%d])\n", Ss,
+			            "%p:[%d,%d])\n", S,
 			    srcRect->w, srcRect->h,
-			    srcRect->x, srcRect->y, Sd, xDst, yDst);
+			    srcRect->x, srcRect->y, D, xDst, yDst);
 		} else {
 			Debug(NULL, "Surface <%p>: Blit (->%p:[%d,%d])\n",
-			    Ss, Sd, xDst, yDst);
+			    S, D, xDst, yDst);
 		}
 	}
 #endif
-	if (Ss->alpha == AG_TRANSPARENT) {           /* Is fully transparent */
+	if (S->alpha == AG_TRANSPARENT) {           /* Is fully transparent */
 		return;
 	}
 	if (srcRect != NULL) {
 		sr = *srcRect;
 		if (sr.x < 0) { sr.x = 0; }
 		if (sr.y < 0) { sr.y = 0; }
-		if (sr.x+sr.w >= Ss->w) { sr.w = Ss->w - sr.x; }
-		if (sr.y+sr.h >= Ss->h) { sr.h = Ss->h - sr.y; }
+		if (sr.x+sr.w >= S->w) { sr.w = S->w - sr.x; }
+		if (sr.y+sr.h >= S->h) { sr.h = S->h - sr.y; }
 	} else {
 		sr.x = 0;
 		sr.y = 0;
-		sr.w = Ss->w;
-		sr.h = Ss->h;
+		sr.w = S->w;
+		sr.h = S->h;
 	}
 	dr.x = xDst;
 	dr.y = yDst;
 	dr.w = sr.w;
 	dr.h = sr.h;
-	dr = AG_RectIntersect(dr, Sd->clipRect);
+	dr = AG_RectIntersect(dr, D->clipRect);
 	if (dr.w <= 0 || dr.h <= 0) {				/* Outside */
 		return;
 	}
 	if (dr.w < sr.w) {					/* Partial */
 		diff = (sr.w - dr.w);
-		if (xDst+sr.w < Sd->clipRect.x + Sd->clipRect.w) {
+		if (xDst+sr.w < D->clipRect.x + D->clipRect.w) {
 			sr.x += diff;
 		}
 		sr.w -= diff;
 	}
 	if (dr.h < sr.h) {
 		diff = (sr.h - dr.h);
-		if (yDst+sr.h < Sd->clipRect.y + Sd->clipRect.h) {
+		if (yDst+sr.h < D->clipRect.y + D->clipRect.h) {
 			sr.y += diff;
 		}
 		sr.h -= diff;
 	}
 
-	if (Ss->alpha < AG_OPAQUE) {                    /* Per-surface alpha */
-		if (Ss->flags & AG_SURFACE_COLORKEY) {
-			AG_SurfaceBlit_AlCo(Ss, Sd, dr);
+	if (S->alpha < AG_OPAQUE) {
+		if (S->flags & AG_SURFACE_COLORKEY) {
+			AG_SurfaceBlit_AlCo(S, D, dr);
 			return;
 		}
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-				AG_Color c = AG_GetColor(px, &Ss->format);
+				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Color c = AG_GetColor(px, &S->format);
 
-				c.a = MIN(c.a, Ss->alpha);
+				c.a = MIN(c.a, S->alpha);
 				if (c.a == AG_TRANSPARENT) {
 					continue;
 				}
-				AG_SurfaceBlend(Sd, x,y, c,
-				    AG_ALPHA_OVERLAY);
+				AG_SurfaceBlend(D, x,y, c, AG_ALPHA_OVERLAY);
 			}
 		}
 		return;
 	}
-	if (Ss->flags & AG_SURFACE_COLORKEY) {
-		AG_SurfaceBlit_Co(Ss, Sd, dr);
+	if (S->flags & AG_SURFACE_COLORKEY) {
+		AG_SurfaceBlit_Co(S, D, dr);
 		return;
 	}
-	if (Ss->flags & AG_SURFACE_ALPHA) {
+	if (S->format.Amask != 0) {
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-				AG_Color c = AG_GetColor(px, &Ss->format);
+				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Color c = AG_GetColor(px, &S->format);
 
 				if (c.a == AG_TRANSPARENT) {
 					continue;
 				}
 				if (c.a < AG_OPAQUE) {
-					AG_SurfaceBlend(Sd, x,y, c,
-					    AG_ALPHA_OVERLAY);
+					AG_SurfaceBlend(D, x,y, c, AG_ALPHA_OVERLAY);
 				} else {
-					AG_SurfacePut(Sd, x,y,
-					    AG_MapPixel(&Sd->format, c));
+					AG_SurfacePut(D, x,y,
+					    AG_MapPixel(&D->format, c));
 				}
 			}
 		}
 	} else {
 		for (y = 0; y < dr.h; y++) {
 			for (x = 0; x < dr.w; x++) {
-				AG_Pixel px = AG_SurfaceGet(Ss, x,y);
-				AG_Color c = AG_GetColor(px, &Ss->format);
+				AG_Pixel px = AG_SurfaceGet(S, x,y);
+				AG_Color c = AG_GetColor(px, &S->format);
 
-				AG_SurfacePut(Sd, x,y,
-				    AG_MapPixel(&Sd->format, c));
+				AG_SurfacePut(D, x,y,
+				    AG_MapPixel(&D->format, c));
 			}
 		}
 	}
@@ -1039,42 +1037,42 @@ AG_SurfaceFree(AG_Surface *_Nonnull S)
  * TODO integer-only version
  */
 AG_Surface *
-AG_SurfaceScale(const AG_Surface *_Nonnull Ss, Uint w, Uint h, Uint flags)
+AG_SurfaceScale(const AG_Surface *_Nonnull S, Uint w, Uint h, Uint flags)
 {
-	AG_Surface *ds;
+	AG_Surface *D;
 	float xf, yf;
 	int x,y;
 
 #ifdef AG_DEBUG
-	if (Ss->flags & AG_SURFACE_TRACE)
+	if (S->flags & AG_SURFACE_TRACE)
 		Debug(NULL, "Surface <%p>: Resize(%ux%u->%ux%u, 0x%x)\n",
-		    Ss, Ss->w, Ss->h, w,h, flags);
+		    S, S->w, S->h, w,h, flags);
 #endif
-	if (Ss->format.mode == AG_SURFACE_INDEXED &&
-	    Ss->format.BitsPerPixel < 8 &&
-	    Ss->w < Ss->format.BitsPerPixel)
+	if (S->format.mode == AG_SURFACE_INDEXED &&
+	    S->format.BitsPerPixel < 8 &&
+	    S->w < S->format.BitsPerPixel)
 		AG_FatalError("(1,2,4)bpp surfaces must be >=(8,4,2) pixels wide");
 
-	ds = AG_SurfaceNew(&Ss->format, w,h, Ss->flags & AG_SAVED_SURFACE_FLAGS);
-	ds->colorkey = Ss->colorkey;
-	ds->alpha = Ss->alpha;
+	D = AG_SurfaceNew(&S->format, w,h, S->flags & AG_SAVED_SURFACE_FLAGS);
+	D->colorkey = S->colorkey;
+	D->alpha = S->alpha;
 
-	if (Ss->w == w && Ss->h == h) {			/* Simple copy */
-		AG_SurfaceCopy(ds, Ss);
-		return (ds);
+	if (S->w == w && S->h == h) {			/* Simple copy */
+		AG_SurfaceCopy(D, S);
+		return (D);
 	}
 
-	xf = (float)(Ss->w - 1) / (float)(ds->w - 1);
-	yf = (float)(Ss->h - 1) / (float)(ds->h - 1);
-	for (y = 0; y < ds->h; y++) {
-		for (x = 0; x < ds->w; x++) {
-			AG_SurfacePut(ds, x,y,
-			    AG_SurfaceGet(Ss, 
+	xf = (float)(S->w - 1) / (float)(D->w - 1);
+	yf = (float)(S->h - 1) / (float)(D->h - 1);
+	for (y = 0; y < D->h; y++) {
+		for (x = 0; x < D->w; x++) {
+			AG_SurfacePut(D, x,y,
+			    AG_SurfaceGet(S, 
 			        (int)((float)x * xf),
 				(int)((float)y * yf)));
 		}
 	}
-	return (ds);
+	return (D);
 }
 
 /* Fill a rectangle with pixels of the specified color. */
