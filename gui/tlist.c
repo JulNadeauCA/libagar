@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,7 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	return (tl);
 }
 
+/* In AG_TLIST_POLL mode, invoke `tlist-poll' if refresh timer has expired. */
 static __inline__ void
 UpdatePolled(AG_Tlist *_Nonnull tl)
 {
@@ -76,41 +77,45 @@ UpdatePolled(AG_Tlist *_Nonnull tl)
 	}
 }
 
+/* Return 1 if at least one selected item is visible */
 static int
 SelectionVisible(AG_Tlist *_Nonnull tl)
 {
 	AG_TlistItem *it;
-	int y = 0, i = 0;
+	int y=0, i=0, rOffs, yLast, item_h;
 
 	UpdatePolled(tl);
 
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (i++ < tl->rOffs)
-			continue;
-		if (y > HEIGHT(tl) - tl->item_h)
-			break;
+	item_h = tl->item_h;
+	yLast = HEIGHT(tl)-item_h;
+	rOffs = tl->rOffs;
 
-		if (it->selected) {
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (i++ < rOffs)
+			continue;
+		if (y > yLast)
+			break;
+		if (it->selected)
 			return (1);
-		}
-		y += tl->item_h;
+
+		y += item_h;
 	}
 	return (0);
 }
 
+/* Scroll to the first visible item. */
 static void
 ScrollToSelection(AG_Tlist *_Nonnull tl)
 {
 	AG_TlistItem *it;
-	int m = 0;
+	int m=0;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
 			m++;
 			continue;
 		}
-		tl->rOffs = (tl->rOffs > m) ? m :
-		    MAX(0, m - tl->nvisitems + 1);
+		tl->rOffs = (tl->rOffs > m) ? m : MAX(0, m - tl->nvisitems+1);
 		AG_Redraw(tl);
 		return;
 	}
@@ -317,7 +322,7 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 		AG_TextSize(it->text, &w, NULL);
 		if (w > tl->wHint) { tl->wHint = w; }
 	}
-	tl->wHint += tl->icon_w*4;
+	tl->wHint += (tl->icon_w << 2);
 	tl->hHint = (tl->item_h+2)*nitems;
 	AG_ObjectUnlock(tl);
 }
@@ -325,15 +330,13 @@ AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 static void
 FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
-	if (it->label != -1) {
-		AG_WidgetUnmapSurface(tl, it->label);
-	}
-	if (it->flags & AG_TLIST_DYNICON && it->iconsrc != NULL) {
+	if (it->iconsrc != NULL)
 		AG_SurfaceFree(it->iconsrc);
-	}
-	if (it->icon != -1) {
+	if (it->icon != -1)
 		AG_WidgetUnmapSurface(tl, it->icon);
-	}
+	if (it->label != -1)
+		AG_WidgetUnmapSurface(tl, it->label);
+
 	free(it);
 }
 
@@ -361,7 +364,7 @@ Destroy(void *_Nonnull p)
 	     tp = ntp) {
 		ntp = TAILQ_NEXT(tp, popups);
 		AG_ObjectDestroy(tp->menu);
-		Free(tp);
+		free(tp);
 	}
 }
 
@@ -372,7 +375,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_SizeReq rBar;
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
-	r->w = tl->icon_w + tl->wSpace*2 + tl->wHint + rBar.w;
+	r->w = tl->icon_w + (tl->wSpace << 1) + tl->wHint + rBar.w;
 	r->h = tl->hHint;
 }
 
@@ -384,8 +387,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_SizeAlloc aBar;
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
-	if (a->w < rBar.w*2) {
-		rBar.w = MAX(0, a->w/2);
+	if (a->w < (rBar.w << 1)) {
+		rBar.w = MAX(0, (a->w >> 1));
 	}
 	aBar.w = rBar.w;
 	aBar.h = a->h;
@@ -432,71 +435,87 @@ Draw(void *_Nonnull obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
-	int y = 0, i = 0, selSeen = 0, selPos = 1;
+	AG_Color cSel;
+	int x, y=0, i=0, selSeen=0, selPos=1, h=HEIGHT(tl);
+	int hItem, wIcon, wSpace, yLast, wRow, rOffs;
+	
+	UpdatePolled(tl);
 
 	AG_DrawBox(tl, tl->r, -1, WCOLOR(tl,AG_COLOR));
+	cSel = WCOLOR_SEL(tl,AG_COLOR);
 	AG_WidgetDraw(tl->sbar);
 	AG_PushClipRect(tl, tl->r);
 
-	UpdatePolled(tl);
+	wSpace = tl->wSpace;
+	hItem = tl->item_h;
+	wIcon = tl->icon_w;
+	wRow = tl->wRow;
+	rOffs = tl->rOffs;
+	yLast = h;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		int x = 2 + it->depth*tl->icon_w;
-
-		if (i++ < tl->rOffs) {
+		if (i++ < rOffs) {
 			if (it->selected) {
 				selPos = -1;
 			}
 			continue;
 		}
-		if (y > HEIGHT(tl) - tl->item_h)
+		if (y > yLast)
 			break;
+
+		x = wIcon * it->depth;
 
 		if (it->selected) {
 		    	AG_Rect rSel;
-			rSel.x = x + tl->icon_w + 2;
-			rSel.y = y;
-			rSel.w = tl->wRow - x - tl->icon_w - 3;
-			rSel.h = tl->item_h + 1;
-			AG_DrawRect(tl, rSel, WCOLOR_SEL(tl,AG_COLOR));
+
+			rSel.x = x + wIcon;
+			rSel.y = y + 1;
+			rSel.w = wRow - x - wIcon - 1;
+			rSel.h = hItem;
+			AG_DrawRect(tl, rSel, cSel);
 			selSeen = 1;
 		}
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
-				AG_Surface *sScaled;
+				AG_Surface *S;
 
-				if ((sScaled = AG_SurfaceScale(it->iconsrc,
-				    tl->icon_w, tl->item_h, 0)) == NULL) {
+				if ((S = AG_SurfaceScale(it->iconsrc,
+				    wIcon, hItem, 0)) == NULL) {
 					AG_FatalError(NULL);
 				}
-				it->icon = AG_WidgetMapSurface(tl, sScaled);
+				it->icon = AG_WidgetMapSurface(tl, S);
 			}
-			AG_WidgetBlitSurface(tl, it->icon, x, y);
+			AG_WidgetBlitSurface(tl, it->icon, x,y);
+
+			if (it->selected) {
+				cSel.a >>= 1;
+				AG_DrawRectBlended(tl,
+				    AG_RECT(x, y, wIcon, hItem), cSel,
+				    AG_ALPHA_SRC);
+				cSel.a <<= 1;
+			}
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			DrawSubnodeIndicator(tl,
-			    AG_RECT(x,
-			            y,
-				    tl->icon_w,
-				    tl->item_h),
+			DrawSubnodeIndicator(tl, AG_RECT(x,y, wIcon, hItem),
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
 			AG_TextColor(it->selected ?
 			             WCOLOR_SEL(tl,AG_TEXT_COLOR) :
 				     WCOLOR(tl,AG_TEXT_COLOR));
+
 			it->label = AG_WidgetMapSurface(tl,
 			    AG_TextRender(it->text));
 		}
 
-		if ((y + tl->item_h) < HEIGHT(tl)-1)
-			AG_DrawLineH(tl, 1, tl->wRow-2, (y + tl->item_h),
-			    WCOLOR(tl,AG_LINE_COLOR));
-
 		AG_WidgetBlitSurface(tl, it->label,
-		    x + tl->icon_w + tl->wSpace,
+		    x + wIcon + wSpace,
 		    y + AG_TLIST_PADDING);
-		y += tl->item_h;
+		
+		y += hItem;
+		
+		if (y < h)
+			AG_DrawLineH(tl, 0, wRow-2, y, WCOLOR(tl,AG_LINE_COLOR));
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
 		if (selPos == -1) {
@@ -651,47 +670,22 @@ AG_TlistRestore(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
-/* Update the icon associated with an item. The Tlist must be locked. */
-static void
-UpdateItemIcon(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it,
-    AG_Surface *_Nullable iconsrc)
-{
-	if (it->flags & AG_TLIST_DYNICON) {
-		if (it->iconsrc != NULL) {
-			AG_SurfaceFree(it->iconsrc);
-		}
-		if (iconsrc != NULL) {
-			it->iconsrc = AG_SurfaceDup(iconsrc);
-		} else {
-			it->iconsrc = NULL;
-		}
-	} else {
-		it->iconsrc = iconsrc;
-	}
-
-	if (it->icon != -1) {
-		AG_WidgetUnmapSurface(tl, it->icon);
-		it->icon = -1;
-	}
-}
-
-/*
- * Allocate a new tlist item.
- * XXX allocate from a pool, especially for polled items.
- */
-static __inline__ AG_TlistItem *_Nonnull
-AllocItem(AG_Tlist *_Nonnull tl, AG_Surface *_Nullable iconsrc)
+/* Return a newly allocated and initialized AG_TlistItem */
+AG_TlistItem *
+AG_TlistItemNew(AG_Tlist *_Nonnull tl, const AG_Surface *icon)
 {
 	AG_TlistItem *it;
 
 	it = Malloc(sizeof(AG_TlistItem));
 	it->selected = 0;
+	it->iconsrc = (icon != NULL) ? AG_SurfaceDup(icon) : NULL;
+	it->icon = -1;
+	it->p1 = NULL;
 	it->cat = "";
+	it->label = -1;
 	it->depth = 0;
 	it->flags = 0;
-	it->icon = -1;
-	it->label = -1;
-	UpdateItemIcon(tl, it, iconsrc);
+	it->text[0] = '\0';
 	return (it);
 }
 
@@ -711,13 +705,13 @@ InsertItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it, int ins_head)
 
 /* Add an item to the tail of the list (user pointer) */
 AG_TlistItem *
-AG_TlistAddPtr(AG_Tlist *tl, AG_Surface *iconsrc, const char *text,
+AG_TlistAddPtr(AG_Tlist *tl, const AG_Surface *icon, const char *text,
     void *p1)
 {
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, iconsrc);
+	it = AG_TlistItemNew(tl, icon);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 0);
@@ -727,14 +721,13 @@ AG_TlistAddPtr(AG_Tlist *tl, AG_Surface *iconsrc, const char *text,
 
 /* Add an item to the tail of the list (format string) */
 AG_TlistItem *_Nonnull
-AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
+AG_TlistAdd(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 {
 	AG_TlistItem *it;
 	va_list args;
 	
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, iconsrc);
-	it->p1 = NULL;
+	it = AG_TlistItemNew(tl, icon);
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
@@ -745,13 +738,12 @@ AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 
 /* Add an item to the tail of the list (plain string) */
 AG_TlistItem *
-AG_TlistAddS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
+AG_TlistAddS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 {
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, iconsrc);
-	it->p1 = NULL;
+	it = AG_TlistItemNew(tl, icon);
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 0);
 	AG_ObjectUnlock(tl);
@@ -760,14 +752,13 @@ AG_TlistAddS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
 
 /* Add an item to the head of the list (format string) */
 AG_TlistItem *
-AG_TlistAddHead(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
+AG_TlistAddHead(AG_Tlist *tl, const AG_Surface *icon, const char *fmt, ...)
 {
 	AG_TlistItem *it;
 	va_list args;
 	
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, iconsrc);
-	it->p1 = NULL;
+	it = AG_TlistItemNew(tl, icon);
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
@@ -778,13 +769,12 @@ AG_TlistAddHead(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 
 /* Add an item to the head of the list (plain string) */
 AG_TlistItem *
-AG_TlistAddHeadS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
+AG_TlistAddHeadS(AG_Tlist *tl, const AG_Surface *icon, const char *text)
 {
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, iconsrc);
-	it->p1 = NULL;
+	it = AG_TlistItemNew(tl, icon);
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 1);
 	AG_ObjectUnlock(tl);
@@ -793,13 +783,13 @@ AG_TlistAddHeadS(AG_Tlist *tl, AG_Surface *iconsrc, const char *text)
 
 /* Add an item to the head of the list (user pointer) */
 AG_TlistItem *
-AG_TlistAddPtrHead(AG_Tlist *tl, AG_Surface *icon, const char *text,
+AG_TlistAddPtrHead(AG_Tlist *tl, const AG_Surface *icon, const char *text,
     void *p1)
 {
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	it = AllocItem(tl, icon);
+	it = AG_TlistItemNew(tl, icon);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
 	InsertItem(tl, it, 1);
@@ -1356,11 +1346,17 @@ AG_TlistSetIconWidth(AG_Tlist *tl, int iw)
 }
 
 void
-AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
+AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, const AG_Surface *S)
 {
 	AG_ObjectLock(tl);
-	it->flags |= AG_TLIST_DYNICON;
-	UpdateItemIcon(tl, it, iconsrc);
+	if (it->iconsrc != NULL) {
+		AG_SurfaceFree(it->iconsrc);
+	}
+	it->iconsrc = (S != NULL) ? AG_SurfaceDup(S) : NULL;
+	if (it->icon != -1) {
+		AG_WidgetUnmapSurface(tl, it->icon);
+		it->icon = -1;
+	}
 	AG_ObjectUnlock(tl);
 	AG_Redraw(tl);
 }

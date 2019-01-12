@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2018 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,7 @@ widgets are more efficient alternatives to
 .Fn AG_TlistSetIconWidth "AG_Tlist *tl" "int icon_width"
 .Pp
 .Ft void
-.Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "AG_Surface *icon"
+.Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Surface *icon"
 .Pp
 .Ft void
 .Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nitems"
@@ -174,13 +174,8 @@ sets the width of icons in pixels.
 .Pp
 The
 .Fn AG_TlistSetIcon
-function updates the icon shown with
-.Fa item ,
-scaled to
-.Fa w
-by
-.Fa h
-pixels.
+function sets the icon surface associated with
+.Fa item .
 .Pp
 .Fn AG_TlistSizeHint
 requests sufficient height to display
@@ -226,22 +221,22 @@ are provided.
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAdd "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *format" "..."
+.Fn AG_TlistAdd "AG_Tlist *tl" "const AG_Surface *icon" "const char *format" "..."
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddS "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *text"
+.Fn AG_TlistAddS "AG_Tlist *tl" "const AG_Surface *icon" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddHead "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *format" "..."
+.Fn AG_TlistAddHead "AG_Tlist *tl" "const AG_Surface *icon" "const char *format" "..."
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddHeadS "AG_Tlist *tl" "AG_Surface *iconsrc" "const char *text"
+.Fn AG_TlistAddHeadS "AG_Tlist *tl" "const AG_Surface *icon" "const char *text"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtr "AG_Tlist *tlist" "AG_Surface *iconsrc" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtr "AG_Tlist *tlist" "const AG_Surface *icon" "const char *text" "const void *p1"
 .Pp
 .Ft "AG_TlistItem *"
-.Fn AG_TlistAddPtrHead "AG_Tlist *tlist" "AG_Surface *iconsrc" "const char *text" "const void *p1"
+.Fn AG_TlistAddPtrHead "AG_Tlist *tlist" "const AG_Surface *icon" "const char *text" "const void *p1"
 .Pp
 .Ft "void"
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
@@ -315,10 +310,10 @@ The
 function inserts a new item into the list.
 The
 .Fa icon
-argument specifies an optional
+argument, if not NULL, specifies a graphical
 .Xr AG_Surface 3
-to display next to the label.
-Both the icon and the text arguments can be set to NULL.
+to display with the label.
+A scaled copy of the given surface will be used.
 .Fn AG_TlistAddHead
 places the item at the head of the list, as opposed to the tail.
 .Pp

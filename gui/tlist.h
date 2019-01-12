@@ -22,24 +22,25 @@ typedef struct ag_tlist_popup {
 
 typedef struct ag_tlist_item {
 	int selected;			/* Effective selection flag */
+
 	AG_Surface *_Nullable iconsrc;	/* Source icon */
 	int                   icon;	/* Cached icon surface */
-	void       *_Nullable p1;	/* User-supplied pointer */
-	const char *_Nullable cat;	/* User-supplied category */
+	void       *_Nullable p1;	/* User pointer */
+	const char *_Nullable cat;	/* Category for filter */
 
-	char text[AG_TLIST_LABEL_MAX];	/* Label text */
 	int label;			/* Cached label surface */
 	Uint depth;			/* Indent in tree display */
 	Uint flags;
 #define AG_TLIST_EXPANDED     0x01	/* Child items visible (tree) */
 #define AG_TLIST_HAS_CHILDREN 0x02	/* Child items exist (tree) */
-#define AG_TLIST_DYNICON      0x04	/* Use a copy of iconsrc */
 #define AG_TLIST_NO_SELECT    0x08	/* Item is not selectable */
 #define AG_TLIST_NO_POPUP     0x10	/* Disable popups for item */
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_EXPANDED
 
 	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
 	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
+	
+	char text[AG_TLIST_LABEL_MAX];	/* Label text */
 } AG_TlistItem;
 
 typedef AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item) AG_TlistItemQ;
@@ -60,9 +61,12 @@ typedef struct ag_tlist {
 
 	void *_Nullable selected;	/* Default `selected' binding */
 	int wHint, hHint;		/* Size hint */
+	AG_Rect r;			/* Clipping rectangle */
 	int wSpace;			/* Icon/text spacing */
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
+	int wRow;			/* Row width */
+	int rOffs;			/* Row display offset */
 	void *_Nullable dblClicked;	/* For double click test */
 	AG_TlistItemQ items;		/* Current Items */
 	AG_TlistItemQ selitems;		/* Saved item state */
@@ -79,10 +83,7 @@ typedef struct ag_tlist {
 	AG_Event *_Nullable dblClickEv;	/* Double click hook */
 	AG_Timer moveTo;		/* Timer for keyboard motion */
 	Uint32 wheelTicks;		/* For wheel acceleration */
-	int wRow;			/* Row width */
-	AG_Rect r;			/* View area */
 	AG_Timer refreshTo;		/* Timer for polled mode updates */
-	int rOffs;			/* Row display offset */
 	AG_Timer dblClickTo;		/* Timer for detecting double clicks */
 	int lastKeyDown;		/* For key repeat */
 } AG_Tlist;
@@ -114,7 +115,7 @@ void AG_TlistSizeHintLargest(AG_Tlist *_Nonnull, int);
 void AG_TlistSetItemHeight(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIconWidth(AG_Tlist *_Nonnull, int);
 void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
-                     AG_Surface *_Nullable);
+                     const AG_Surface *_Nullable);
 void AG_TlistSetRefresh(AG_Tlist *_Nonnull, int);
 
 void AG_TlistDel(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
@@ -122,21 +123,23 @@ void AG_TlistUniq(AG_Tlist *_Nonnull);
 void AG_TlistClear(AG_Tlist *_Nonnull);
 void AG_TlistRestore(AG_Tlist *_Nonnull);
 
-AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistItemNew(AG_Tlist *_Nonnull, const AG_Surface *_Nullable);
+
+AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                     const char *_Nonnull);
-AG_TlistItem *_Nonnull AG_TlistAdd(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAdd(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                    const char *_Nonnull, ...)
 				  FORMAT_ATTRIBUTE(printf,3,4);
 
-AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                         const char *_Nonnull);
-AG_TlistItem *_Nonnull AG_TlistAddHead(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddHead(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                        const char *_Nonnull, ...)
 				      FORMAT_ATTRIBUTE(printf,3,4);
 
-AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                       const char *_Nonnull, void *_Nullable);
-AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull, AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
                                           const char *_Nonnull, void *_Nullable);
 
 void AG_TlistSelect(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
@@ -185,6 +188,7 @@ int AG_TlistSort(AG_Tlist *_Nonnull);
 #define AG_TlistEnd(tl)   AG_TlistRestore(tl)
 
 #ifdef AG_LEGACY
+#define AG_TLIST_DYNICON 0x04 /* Use a copy of iconsrc */
 #define AG_TlistPrescale(tl,text,nitems) AG_TlistSizeHint((tl),(text),(nitems))
 #endif
 
