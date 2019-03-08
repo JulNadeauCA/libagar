@@ -3,6 +3,8 @@
 #ifndef _AGAR_VG_MATH_H_
 #define _AGAR_VG_MATH_H_
 
+#include <string.h>
+
 #include <agar/config/have_math.h>
 #include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
