@@ -8,35 +8,34 @@
 #include "config/datadir.h"
 
 static void
-LabelLoaded(void *_Nullable parent, const char *_Nonnull path)
+Test_Format(const AG_Surface *_Nonnull S, AG_PixelFormat *_Nonnull pf,
+    AG_Box *parent)
 {
-	AG_Label *lbl;
+	AG_Surface *D;
 
-	lbl = AG_LabelNew(parent, 0, "Loaded from %s:", path);
-	AG_SetStyle(lbl, "font-size", "80%");
-}
-
-static void
-LabelSaved(void *_Nullable parent, const char *_Nonnull path)
-{
-	AG_Label *lbl;
-	
-	lbl = AG_LabelNew(parent, 0, "Exported to %s:", path);
-	AG_SetStyle(lbl, "font-size", "80%");
+	if ((D = AG_SurfaceConvert(S, pf)) != NULL) {
+		AG_PixmapFromSurface(parent, 0, D);
+		AG_SurfaceFree(D);
+	} else {
+		AG_LabelNew(parent, 0, "Convert failed: %s", AG_GetError());
+	}
+	AG_PixelFormatFree(pf);
 }
 
 static int
 TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
-	AG_Surface *S, *Ssave;
-/*	AG_Scrollview *sv; */
-	AG_Box *hBox, *vBox, *bppBox;
+	AG_Surface *S, *D;
+	AG_Scrollview *sv;
+	AG_Box *hBox, *vBox, *box;
 	AG_PixelFormat pfTest;
 	int i;
 
-/*	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND); */
-	hBox = AG_BoxNewHoriz(win, AG_BOX_FRAME);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND|
+	                           AG_SCROLLVIEW_BY_MOUSE|
+	                           AG_SCROLLVIEW_PAN_RIGHT);
+	hBox = AG_BoxNewHoriz(sv, AG_BOX_FRAME);
 	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
 	
 	/*
@@ -45,7 +44,7 @@ TestGUI(void *obj, AG_Window *win)
 	for (i = 1; i <= 4; i++) {
 		if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, AG_Printf("agar-%d.bmp",i),
 		    path, sizeof(path))) {
-			LabelLoaded(vBox, path);
+			AG_LabelNew(vBox, 0, "Here is %s:", path);
 			if ((S = AG_SurfaceFromBMP(path)) != NULL) {
 				AG_PixmapFromSurface(vBox, 0, S);
 				AG_SurfaceFree(S);
@@ -62,14 +61,21 @@ TestGUI(void *obj, AG_Window *win)
 	 * Export it and load it again.
 	 */
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "axe.png", path, sizeof(path))) {
-		LabelLoaded(vBox, path);
+		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
+			AG_Surface *Sx;
+
 			AG_PixmapFromSurface(vBox, 0, S);
-			LabelSaved(vBox, "axe-save.png");
-			if (AG_SurfaceExportPNG(S, "axe-save.png", 0) == 0) {
-				if ((Ssave = AG_SurfaceFromPNG("axe-save.png")) != NULL) {
-					AG_PixmapFromSurface(vBox, 0, Ssave);
-					AG_SurfaceFree(Ssave);
+
+			AG_LabelNew(vBox, 0, "Scaled to 64x64:");
+			Sx = AG_SurfaceScale(S, 64,64, 0);
+			AG_PixmapFromSurface(vBox, 0, Sx);
+
+			AG_LabelNew(vBox, 0, "Exported to ave-save.png:");
+			if (AG_SurfaceExportPNG(Sx, "axe-save.png", 0) == 0) {
+				if ((D = AG_SurfaceFromPNG("axe-save.png")) != NULL) {
+					AG_PixmapFromSurface(vBox, 0, D);
+					AG_SurfaceFree(D);
 				} else {
 					AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
 				}
@@ -77,6 +83,7 @@ TestGUI(void *obj, AG_Window *win)
 				AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
 			}
 			AG_SurfaceFree(S);
+			AG_SurfaceFree(Sx);
 		} else {
 			AG_LabelNew(vBox, 0, "%s: %s", path, AG_GetError());
 		}
@@ -88,39 +95,62 @@ TestGUI(void *obj, AG_Window *win)
 	 * Test conversion to different bit resolutions.
 	 */
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.png", path, sizeof(path))) {
-		LabelLoaded(vBox, path);
+		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
 			AG_PixmapFromSurface(vBox, 0, S);
 		
-			AG_LabelNewS(vBox, 0, "Converted to {8,16,24,32}bpp:");
-			bppBox = AG_BoxNewHoriz(vBox, 0 );
+			AG_LabelNewS(vBox, 0, "Converted to {16,24,32}bpp:");
+			box = AG_BoxNewHoriz(vBox, 0 );
 			{
-				const int testDepths[4] = { 8,16,24,32 };
-				int i;
+				AG_PixelFormatRGB(&pfTest, 16,
+				    0xf000, 0x0f00, 0x00f0);
+				Test_Format(S, &pfTest, box);
+				
+				AG_PixelFormatRGB(&pfTest, 24,
+				    0x00ff0000, 0x0000ff00, 0x000000ff);
+				Test_Format(S, &pfTest, box);
 
-				for (i = 0; i < 4; i++) {
-					AG_PixelFormatRGB(&pfTest, testDepths[i],
-					    0xff000000,
-					    0x00ff0000,
-					    0x0000ff00);
-					if ((Ssave = AG_SurfaceConvert(S, &pfTest)) != NULL) {
-						AG_PixmapFromSurface(bppBox, 0, Ssave);
-						AG_SurfaceFree(Ssave);
-					} else {
-						AG_LabelNew(bppBox, 0,
-						    "Convert failed: %s", AG_GetError());
-					}
-					AG_PixelFormatFree(&pfTest);
-				}
+				AG_PixelFormatRGB(&pfTest, 32,
+				    0xff000000, 0x00ff0000, 0x0000ff00);
+				Test_Format(S, &pfTest, box);
 			}
 
-			LabelSaved(vBox, "axe-save.png");
+#if AG_MODEL == AG_LARGE
+			AG_LabelNewS(vBox, 0, "Converted to {48,64}bpp:");
+			box = AG_BoxNewHoriz(vBox, 0);
+			{
+				AG_PixelFormatRGB(&pfTest, 48,
+				    0xffff000000000000,
+				    0x0000ffff00000000,
+				    0x00000000ffff0000);
+				Test_Format(S, &pfTest, box);
+				
+				AG_PixelFormatRGBA(&pfTest, 64,
+				    0xffff000000000000,
+				    0x0000ffff00000000,
+				    0x00000000ffff0000,
+				    0x000000000000ffff);
+				Test_Format(S, &pfTest, box);
+			}
+#endif
+			AG_LabelNewS(vBox, 0, "Converted to Grayscale:");
+			box = AG_BoxNewHoriz(vBox, 0);
+			{
+				AG_PixelFormatGrayscale(&pfTest, 32);
+				Test_Format(S, &pfTest, box);
+#if AG_MODEL == AG_LARGE
+				AG_PixelFormatGrayscale(&pfTest, 64);
+				Test_Format(S, &pfTest, box);
+#endif
+			}
+
+			AG_LabelNew(vBox, 0, "Exported to ave-save.png:");
 			if (AG_SurfaceExportPNG(S, "agar-save.png", 0) == -1) {
 				AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
 			} else {
-				if ((Ssave = AG_SurfaceFromPNG("agar-save.png")) != NULL) {
-					AG_PixmapFromSurface(vBox, 0, Ssave);
-					AG_SurfaceFree(Ssave);
+				if ((D = AG_SurfaceFromPNG("agar-save.png")) != NULL) {
+					AG_PixmapFromSurface(vBox, 0, D);
+					AG_SurfaceFree(D);
 				} else {
 					AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
 				}
@@ -132,25 +162,26 @@ TestGUI(void *obj, AG_Window *win)
 	} else {
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
+	
+	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
 
 	/*
 	 * Load/save a PNG file in palettized mode.
 	 */
-	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-index.png",
-	    path, sizeof(path))) {
-		LabelLoaded(vBox, path);
+	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-index.png", path, sizeof(path))) {
+		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
 			S->flags |= AG_SURFACE_TRACE;
 			AG_PixmapFromSurface(vBox, 0, S);
-			LabelSaved(vBox, "axe-index-save.png");
+			AG_LabelNew(vBox, 0, "Exported to agar-index-save.png:");
 			if (AG_SurfaceExportPNG(S, "agar-index-save.png", 0) == -1) {
 				AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
 			} else {
-				if ((Ssave = AG_SurfaceFromPNG("agar-index-save.png")) == NULL) {
+				if ((D = AG_SurfaceFromPNG("agar-index-save.png")) == NULL) {
 					AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
 				} else {
-					AG_PixmapFromSurface(vBox, 0, Ssave);
-					AG_SurfaceFree(Ssave);
+					AG_PixmapFromSurface(vBox, 0, D);
+					AG_SurfaceFree(D);
 				}
 			}
 			AG_SurfaceFree(S);
@@ -161,37 +192,37 @@ TestGUI(void *obj, AG_Window *win)
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
 
-	vBox = AG_BoxNewVert(hBox, AG_BOX_FRAME);
-
 	/* Load/save a JPEG file. */
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "pepe.jpg", path, sizeof(path))) {
-		LabelLoaded(vBox, path);
+		AG_LabelNew(vBox, 0, "Here is %s:", path);
 		if ((S = AG_SurfaceFromJPEG(path)) == NULL) {
 			AG_LabelNew(vBox, 0, "Failed: %s", AG_GetError());
 		} else {
 			AG_PixmapFromSurface(vBox, 0, S);
 
-			LabelSaved(vBox, "pepe.jpg (10% quality)");
+			AG_LabelNewS(vBox, 0, "Exported to pepe.jpg\n"
+			                      "(at 10% quality):");
 			if (AG_SurfaceExportJPEG(S, "pepe-save.jpg", 10, 0) == -1) {
 				AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
 			} else {
-				if ((Ssave = AG_SurfaceFromJPEG("pepe-save.jpg")) == NULL) {
+				if ((D = AG_SurfaceFromJPEG("pepe-save.jpg")) == NULL) {
 					AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
 				} else {
-					AG_PixmapFromSurface(vBox, 0, Ssave);
-					AG_SurfaceFree(Ssave);
+					AG_PixmapFromSurface(vBox, 0, D);
+					AG_SurfaceFree(D);
 				}
 			}
 			
-			LabelSaved(vBox, "pepe.jpg (100% quality)");
+			AG_LabelNewS(vBox, 0, "Exported to pepe-save.jpg\n"
+			                      "(at 100% quality):");
 			if (AG_SurfaceExportJPEG(S, "pepe-save.jpg", 100, 0) == -1) {
 				AG_LabelNew(vBox, 0, "Save failed: %s", AG_GetError());
 			} else {
-				if ((Ssave = AG_SurfaceFromJPEG("pepe-save.jpg")) == NULL) {
+				if ((D = AG_SurfaceFromJPEG("pepe-save.jpg")) == NULL) {
 					AG_LabelNew(vBox, 0, "Load failed: %s", AG_GetError());
 				} else {
-					AG_PixmapFromSurface(vBox, 0, Ssave);
-					AG_SurfaceFree(Ssave);
+					AG_PixmapFromSurface(vBox, 0, D);
+					AG_SurfaceFree(D);
 				}
 			}
 			AG_SurfaceFree(S);
@@ -199,12 +230,14 @@ TestGUI(void *obj, AG_Window *win)
 	} else {
 		AG_LabelNewS(vBox, 0, AG_GetError());
 	}
+	
+	AG_WindowSetGeometry(win, -1, -1, 500, 480);
 	return (0);
 }
 
 const AG_TestCase imageLoadingTest = {
 	"imageLoading",
-	N_("Test the image loader / exporter routines"),
+	N_("Test image loader / exporter routines"),
 	"1.6.0",
 	0,
 	sizeof(AG_TestInstance),
