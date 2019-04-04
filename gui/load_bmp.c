@@ -55,7 +55,7 @@
 
 /*
  * Scan a 32bpp RGB surface for a pixel with non-zero alpha.
- * If all pixels have alpha=0, then set their alpha to 0xffff (fully opaque).
+ * If all pixels have alpha=0 then set every alpha component fully opaque.
  */
 static void
 CorrectAlphaChannel_32RGB(AG_Surface *S)
@@ -66,7 +66,7 @@ CorrectAlphaChannel_32RGB(AG_Surface *S)
 #else
 	const int alphaChannelOffset = 3;
 #endif
-	Uint8 *alpha = ((Uint8 *)S->pixels) + alphaChannelOffset;
+	Uint8 *alpha = S->pixels + alphaChannelOffset;
 	Uint8 *end = alpha + (S->h * S->pitch);
 
 	while (alpha < end) {
@@ -77,7 +77,7 @@ CorrectAlphaChannel_32RGB(AG_Surface *S)
 		alpha += 4;
 	}
 	if (!hasAlpha) {
-		alpha = ((Uint8 *)S->pixels) + alphaChannelOffset;
+		alpha = S->pixels + alphaChannelOffset;
 		while (alpha < end) {
  			*alpha = 0xff;		/* Opaque */
 			alpha += 4;
@@ -218,6 +218,8 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 		/* biPlanes = */ AG_ReadUint16(ds);
 		biBitCount = AG_ReadUint16(ds);
 		biCompression = BI_RGB;
+		Debug(NULL, "BMP: Old BITMAPCOREHEADER (%ux%ux%u; RGB)\n",
+		    biWidth, biHeight, biBitCount);
 	} else if (biSize >= 40) {        /* some version of BITMAPINFOHEADER */
 		Uint32 headerSize;
 
@@ -231,6 +233,13 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 		/* biYPelsPerMeter = */ AG_ReadUint32(ds);
 		biClrUsed = AG_ReadUint32(ds);
  		/* biClrImportant = */ AG_ReadUint32(ds);
+		
+		Debug(NULL, "BMP: %d-byte BITMAPINFOHEADER (%ux%ux%u; %s)\n",
+		    biSize, biWidth, biHeight, biBitCount,
+		    (biCompression==0) ? "RGB" :
+		    (biCompression==1) ? "RLE8" :
+		    (biCompression==2) ? "RLE4" :
+		    (biCompression==3) ? "BITFIELDS" : "");
 
 		/*
 		 * 64 == BITMAPCOREHEADER2, an incompatible OS/2 2.x extension.
@@ -290,7 +299,7 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 			 * parse up to v3 correctly (hopefully!).
 			 */
 		}
-
+		
 		/* Skip any header bytes we didn't handle... */
 		headerSize = (Uint32) (AG_Tell(ds) - (bmpHeaderOffset + 14));
 		if (biSize > headerSize)
@@ -368,10 +377,15 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 	case 4:
 	case 8:
 		S = AG_SurfaceIndexed(biWidth, biHeight, biBitCount, 0);
+		Debug(NULL, "Reading BMP (%ux%ux%u; INDEXED)\n",
+		    biWidth, biHeight, biBitCount);
 		break;
 	default:
 		S = AG_SurfaceRGBA(biWidth, biHeight, biBitCount, 0,
-		                   Rmask, Gmask, Bmask, Amask);
+		    Rmask, Gmask, Bmask, Amask);
+		Debug(NULL, "Reading BMP (%ux%ux%u; RGBA %08x,%08x,%08x,%08x)\n",
+		    biWidth, biHeight, biBitCount,
+		    Rmask, Gmask, Bmask, Amask);
 		break;
 	}
 	if (S == NULL)
