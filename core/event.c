@@ -1646,7 +1646,7 @@ int
 AG_EventLoop(void)
 {
 	AG_EventSource *src = AG_GetEventSource();
-	AG_EventSink *es;
+	AG_EventSink *es, *esNext;
 	
 	TAILQ_FOREACH(es, &src->prologues, sinks) {
 		es->fn(es, &es->fnArgs);
@@ -1658,7 +1658,10 @@ AG_EventLoop(void)
 		if (src->sinkFn() == -1) {
 			return (1);
 		}
-		TAILQ_FOREACH(es, &src->epilogues, sinks) {
+		for (es = TAILQ_FIRST(&src->epilogues);
+		     es != TAILQ_END(&src->epilogues);
+		     es = esNext) {
+			esNext = TAILQ_NEXT(es, sinks);
 			es->fn(es, &es->fnArgs);
 		}
 		if (src->breakReq)
