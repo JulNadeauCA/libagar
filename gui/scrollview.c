@@ -153,6 +153,11 @@ MouseButtonUp(AG_Event *event)
 	case AG_MOUSE_MIDDLE:
 		sv->flags &= ~(AG_SCROLLVIEW_PANNING);
 		break;
+	case AG_MOUSE_RIGHT:
+		if (sv->flags & AG_SCROLLVIEW_PAN_RIGHT) {
+			sv->flags &= ~(AG_SCROLLVIEW_PANNING);
+		}
+		break;
 	}
 }
 
@@ -161,6 +166,7 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollview *sv = AG_SELF();
 	int button = AG_INT(1);
+	int update = 0;
 
 	switch (button) {
 	case AG_MOUSE_MIDDLE:
@@ -169,6 +175,38 @@ MouseButtonDown(AG_Event *event)
 			AG_WidgetFocus(sv);
 		}
 		break;
+	case AG_MOUSE_RIGHT:
+		if (sv->flags & AG_SCROLLVIEW_PAN_RIGHT) {
+			sv->flags |= AG_SCROLLVIEW_PANNING;
+			if (!AG_WidgetIsFocused(sv)) {
+				AG_WidgetFocus(sv);
+			}
+		}
+		break;
+	case AG_MOUSE_WHEELUP:
+		if ((sv->yOffs -= 10) < 0) { sv->yOffs = 0; }
+		update = 1;
+		break;
+	case AG_MOUSE_WHEELDOWN:
+		if ((sv->yOffs += 10) > sv->xMax) { sv->yOffs = sv->xMax; }
+		update = 1;
+		break;
+	case AG_MOUSE_X1:
+		if ((sv->xOffs -= 10) < 0) { sv->xOffs = 0; }
+		update = 1;
+		break;
+	case AG_MOUSE_X2:
+		if ((sv->xOffs += 10) > sv->xMax) { sv->xOffs = sv->xMax; }
+		update = 1;
+		break;
+	}
+
+	if (update) {
+		AG_Event ev;
+
+		AG_EventInit(&ev);
+		AG_EventPushPointer(&ev, NULL, sv);
+		PanView(&ev);
 	}
 }
 

@@ -11,15 +11,16 @@ typedef struct ag_scrollview {
 	struct ag_widget wid;
 
 	Uint flags;
-#define AG_SCROLLVIEW_HFILL	0x01
-#define AG_SCROLLVIEW_VFILL	0x02
-#define AG_SCROLLVIEW_NOPAN_X	0x04 /* X is not pannable */ 
-#define AG_SCROLLVIEW_NOPAN_Y	0x08 /* Y is not pannable */
-#define AG_SCROLLVIEW_PANNING	0x10 /* Panning in progress */
-#define AG_SCROLLVIEW_BY_MOUSE	0x20 /* Panning with mouse allowed */
-#define AG_SCROLLVIEW_FRAME	0x80 /* Draw background and frame */
-#define AG_SCROLLVIEW_EXPAND	(AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
-#define AG_SCROLLVIEW_NOPAN_XY	(AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
+#define AG_SCROLLVIEW_HFILL        0x001
+#define AG_SCROLLVIEW_VFILL        0x002
+#define AG_SCROLLVIEW_NOPAN_X      0x004 /* X is not pannable */ 
+#define AG_SCROLLVIEW_NOPAN_Y      0x008 /* Y is not pannable */
+#define AG_SCROLLVIEW_PANNING      0x010 /* Panning in progress */
+#define AG_SCROLLVIEW_BY_MOUSE     0x020 /* Panning with mouse allowed */
+#define AG_SCROLLVIEW_FRAME        0x080 /* Draw background and frame */
+#define AG_SCROLLVIEW_PAN_RIGHT    0x100 /* Right button triggers panning */
+#define AG_SCROLLVIEW_EXPAND       (AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
+#define AG_SCROLLVIEW_NOPAN_XY     (AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
 
 	enum ag_widget_packing pack;	/* Packing mode */
 	int wPre, hPre;			/* Requested geometry */
