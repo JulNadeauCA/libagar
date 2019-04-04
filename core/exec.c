@@ -1,5 +1,29 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
+ * Copyright (c) 2010 Michael J. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,7 +82,7 @@ AG_Execute(const char *file, char **argv)
 	int i = 0;
 
 	if(!file) {
-		AG_SetError("No file provided for execution.");
+		AG_SetErrorS(_("No file provided for execution"));
 		return (-1);
 	}
 
@@ -75,15 +99,15 @@ AG_Execute(const char *file, char **argv)
 	if(argv) {
 		while(argv[i] != NULL) {
 			if( (AG_ARG_MAX - strlen(argstr) < strlen(argv[i]) + 1) ) {
-				AG_SetError(_("%s: Supplied command arguments exceed AG_ARG_MAX (%d)"), 
-					p, AG_ARG_MAX);
+				AG_SetError(_("%s: Arguments exceed AG_ARG_MAX (%d)"),
+				    p, AG_ARG_MAX);
 				return (-1);
 			}
-			Strlcat(argstr, argv[i], AG_ARG_MAX);
-			Strlcat(argstr, " ", AG_ARG_MAX);
+			Strlcat(argstr, argv[i], sizeof(argstr));
+			Strlcat(argstr, " ", sizeof(argstr));
 			i++;
 		}
-		Strlcpy(launchData.szCmdLine, argstr, AG_ARG_MAX);
+		Strlcpy(launchData.szCmdLine, argstr, sizeof(argstr));
 	}
 
 	/* Resolve the full xbe path */
@@ -103,8 +127,8 @@ AG_Execute(const char *file, char **argv)
 			Strlcpy(drive, "D:", sizeof(drive));
 		}
 		if((dev = AG_XBOX_GetDeviceFromLogicalDrive(drive)) == NULL) {
-			AG_SetError("Invalid or unsupported drive letter."
-				" Please provide a valid drive letter or the full device path.");
+			AG_SetErrorS(_("Invalid or unsupported drive letter. "
+				       "Please provide a valid drive letter or the full device path"));
 			return (-1);
 		}
 		Strlcpy(xbePath, dev, sizeof(xbePath));
@@ -117,7 +141,7 @@ AG_Execute(const char *file, char **argv)
 	/* Isolate the xbe name */
 	p = strrchr(xbePath, '\\') + 1;
 	if(!p) {
-		AG_SetError("No XBE Name included with path");
+		AG_SetErrorS(_("No XBE Name included with path"));
 		return (-1);
 	}
 	Strlcpy(xbeName, p, AG_FILENAME_MAX);
@@ -128,7 +152,7 @@ AG_Execute(const char *file, char **argv)
 
 	/* Get the xbe ID */
 	if((xbeID = AG_XBOX_GetXbeTitleId(xbePath)) == -1) {
-		AG_SetError("XBE is invalid or currupted");
+		AG_SetErrorS(_("XBE is invalid or corrupted"));
 		return (-1);
 	}
 
@@ -146,7 +170,7 @@ AG_Execute(const char *file, char **argv)
 	XWriteTitleInfoAndRebootA(xbeName, mntDev, LDT_TITLE, xbeID, &launchData);
 
 	/* If we are here an error occurred */
-	AG_SetError("XWriteTitleInfoAndRebootA failed.");
+	AG_SetError("XWriteTitleInfoAndRebootA failed");
 	return (-1);
 
 #elif defined(_WIN32)
@@ -156,7 +180,7 @@ AG_Execute(const char *file, char **argv)
 	int  i = 0;
 
 	if(!file) {
-		AG_SetError("No file provided for execution.");
+		AG_SetErrorS(_("No file provided for execution"));
 		return (-1);
 	}
 
@@ -165,29 +189,30 @@ AG_Execute(const char *file, char **argv)
 	ZeroMemory(&pi, sizeof(pi));
 
 	if(file && strncmp(file, argv[0], strlen(file))) {
-		strcpy(argstr, file);
-		strcat(argstr, " ");
+		Strlcpy(argstr, file, sizeof(argstr));
+		Strlcat(argstr, " ", sizeof(argstr));
 	} else {
-		strcpy(argstr, argv[0]);
-		strcat(argstr, " ");
+		Strlcpy(argstr, argv[0], sizeof(argstr));
+		Strlcat(argstr, " ", sizeof(argstr));
 		i++;
 	}
 
 	// Add the command-line parameters
 	while(argv[i] != NULL) {
 		if( (AG_ARG_MAX - strlen(argstr) < strlen(argv[i]) + 1) ) {
-			AG_SetError(_("%s: Supplied command arguments exceed AG_ARG_MAX (%d)"), 
-				file, AG_ARG_MAX);
+			AG_SetError(_("%s: Arguments exceed AG_ARG_MAX (%d)"), 
+			    file, AG_ARG_MAX);
 			return (-1);
 		}
-		strcat(argstr, argv[i]);
-		strcat(argstr, " ");
+		Strlcat(argstr, argv[i], sizeof(argstr));
+		Strlcat(argstr, " ", sizeof(argstr));
 		i++;
 	}
 
-	if(CreateProcessA(NULL, argstr, NULL, NULL, FALSE, 
-						0, NULL, NULL, &si, &pi) == 0) {
-		AG_SetError(_("Failed to execute (%s)"), AG_Strerror(GetLastError()));
+	if(CreateProcessA(NULL, argstr, NULL, NULL, FALSE, 0, NULL, NULL,
+	   &si, &pi) == 0) {
+		AG_SetError(_("Failed to execute (%s)"),
+		    AG_Strerror(GetLastError()));
 		return (-1);
 	}
 	CloseHandle(pi.hThread);
@@ -199,7 +224,7 @@ AG_Execute(const char *file, char **argv)
 	AG_ProcessID pid;
 
 	if(!file) {
-		AG_SetError("No file provided for execution.");
+		AG_SetErrorS(_("No file provided for execution"));
 		return (-1);
 	}
 
@@ -216,7 +241,7 @@ AG_Execute(const char *file, char **argv)
 	}
 
 #endif
-	AG_SetError("AG_Execute() is not supported on this platform");
+	AG_SetErrorS(_("AG_Execute() is not supported on this platform"));
 	return (-1);
 }
 
@@ -283,14 +308,14 @@ AG_WaitOnProcess(AG_ProcessID pid, enum ag_exec_wait_type wait_t)
 		} else if(WIFSIGNALED(status)) {
 			AG_SetError(_("Process terminated by signal (%d)"), WTERMSIG(status));
 		} else {
-			AG_SetError("Process exited for unknown reason");
+			AG_SetErrorS(_("Process exited for unknown reason"));
 		}
 		return (-1);
 	}
 	return (res);
 
 #endif
-	AG_SetError("AG_WaitOnProcess() is not supported on this platform");
+	AG_SetErrorS(_("AG_WaitOnProcess() is not supported on this platform"));
 	return (-1);
 }
 
@@ -301,7 +326,7 @@ AG_Kill(AG_ProcessID pid)
 	HANDLE psHandle;
 #endif
 	if(pid <= 0) {
-		AG_SetError("Invalid process id");
+		AG_SetErrorS(_("Invalid process id"));
 		return (-1);
 	}
 
@@ -329,6 +354,6 @@ AG_Kill(AG_ProcessID pid)
 	}
 	return (0);
 #endif
-	AG_SetError("AG_Kill() is not supported on this platform");
+	AG_SetErrorS(_("AG_Kill() is not supported on this platform"));
 	return (-1);
 }
