@@ -20,16 +20,14 @@ AppendLine(AG_Event *event)
 }
 
 static void
-EnterJunk(AG_Event *event)
+Enter100Lines(AG_Event *event)
 {
+	const char *text = "The Quick Brown Fox Jumps Over The Lazy Dog";
 	AG_Console *cons = AG_PTR(1);
 	int i;
 
-	for (i = 0; i <= 100; i++) {
-		AG_ConsoleMsg(cons, "%d/%d foo bar baz bezo foo bar baz "
-		                    "bezo foo bar baz bezo foo bar baz bezo",
-		    i, 100);
-	}
+	for (i = 0; i <= 100; i++)
+		AG_ConsoleMsg(cons, "%d) %s", i, text);
 }
 
 static void
@@ -49,6 +47,7 @@ TestGUI(void *obj, AG_Window *win)
 
 	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+	AG_SetStyle(box, "font-size", "200%");
 	{
 		textbox = AG_TextboxNew(box, AG_TEXTBOX_EXCL|AG_TEXTBOX_HFILL,
 		    "Input: ");
@@ -58,12 +57,11 @@ TestGUI(void *obj, AG_Window *win)
 		btn = AG_ButtonNewFn(box, 0, "OK", AppendLine, "%p", cons);
 		AG_WidgetSetFocusable(btn, 0);
 	}
+
 	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, "Junk", EnterJunk, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);
-		AG_ButtonNewFlag(box, AG_BUTTON_STICKY, "Debug",
-		    &cons->vBar->flags, AG_SCROLLBAR_TEXT);
+		AG_ButtonNewFn(box, 0, "Enter 100 lines", Enter100Lines, "%p", cons);
 	}
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 30, 30);
 	return (0);

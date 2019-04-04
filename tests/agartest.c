@@ -567,7 +567,19 @@ main(int argc, char *argv[])
 	tl = AG_TlistNew(pane->div[0], AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXX", 5);
 	for (pTest = &testCases[0]; *pTest != NULL; pTest++) {
-		AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name, (void *)*pTest);
+		char path[AG_FILENAME_MAX];
+		AG_Surface *S;
+
+		Strlcpy(path, (*pTest)->name, sizeof(path));
+		Strlcat(path, ".png", sizeof(path));
+		if ((S = AG_SurfaceFromPNG(path)) != NULL) {
+			AG_TlistAddPtr(tl, S, (*pTest)->name,
+			    (void *)*pTest);
+			AG_SurfaceFree(S);
+		} else {
+			AG_TlistAddPtr(tl, agIconDoc.s, (*pTest)->name,
+			    (void *)*pTest);
+		}
 	}
 
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL);

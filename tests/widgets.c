@@ -77,6 +77,7 @@ TestGUI(void *obj, AG_Window *win)
 			"16bpp RGB",
 		};
 		AG_Pixmap *px;
+		AG_Surface *S;
 		AG_Label *lbl;
 		int i;
 
@@ -84,13 +85,20 @@ TestGUI(void *obj, AG_Window *win)
 			if (AG_ConfigFind(AG_CONFIG_PATH_DATA,
 			    AG_Printf("agar-%d.bmp", i),
 			    path, sizeof(path)) == 0) {
-				px = AG_PixmapFromFile(div1, 0, path);
-				AG_PrtString(px, "tooltip",
-				    "agar-%d.bmp (%s)", i, bmpRes[i-1]);
+				if ((S = AG_SurfaceFromBMP(path)) != NULL) {
+					S->flags |= AG_SURFACE_TRACE;
+					px = AG_PixmapFromSurface(div1, 0, S);
+					AG_PrtString(px, "tooltip",
+					    "agar-%d.bmp (%s)", i, bmpRes[i-1]);
+				} else {
+					S = AG_TextRender(AG_GetError());
+					AG_PixmapFromSurface(div1, 0, S);
+					AG_SurfaceFree(S);
+				}
 			} else {
-				AG_Surface *sErr = AG_TextRender(AG_GetError());
-				AG_PixmapFromSurface(div1, 0, sErr);
-				AG_SurfaceFree(sErr);
+				S = AG_TextRender(AG_GetError());
+				AG_PixmapFromSurface(div1, 0, S);
+				AG_SurfaceFree(S);
 			}
 		}
 
@@ -122,9 +130,9 @@ TestGUI(void *obj, AG_Window *win)
 				    "agar.png (with %d%% alpha)", i*25);
 			}
 		} else {
-			AG_Surface *sErr = AG_TextRender(AG_GetError());
-			AG_PixmapFromSurface(div1, 0, sErr);
-			AG_SurfaceFree(sErr);
+			S = AG_TextRender(AG_GetError());
+			AG_PixmapFromSurface(div1, 0, S);
+			AG_SurfaceFree(S);
 		}
 #else
 		AG_LabelNewS(div1, 0, "PNG support disabled");

@@ -41,22 +41,23 @@ TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
 	AG_Slider *sl;
+	AG_Button *btn;
 	AG_Box *hb;
 
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	if (!AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar.bmp", path, sizeof(path))) {
 		AG_PixmapFromFile(hb, 0, path);
 		AG_PixmapFromFile(hb, 0, path);
-		AG_PixmapFromFile(hb, 0, path);
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
-		AG_LabelNew(hb, 0, "Window Opacity: ");
+		AG_LabelNew(hb, 0, "Opacity: ");
 		sl = AG_SliderNewFlt(hb, AG_SLIDER_HORIZ, AG_SLIDER_HFILL,
 		    &opval, &opmin, &opmax);
 		AG_SetEvent(sl, "slider-changed", Changed, "%p", win);
 	}
-	AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test AG_WINDOW_FADEIN", Fadein, NULL);
+	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, "Test AG_WINDOW_FADEIN", Fadein, NULL);
+	AG_SetStyle(btn, "font-size", "80%");
 	return (0);
 }
 
