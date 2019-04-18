@@ -1888,10 +1888,14 @@ AG_ObjectSetNameS(void *p, const char *name)
 	char *c;
 
 	AG_ObjectLock(ob);
-	Strlcpy(ob->name, name, sizeof(ob->name));
-	for (c = &ob->name[0]; *c != '\0'; c++) {
-		if (*c == '/' || *c == '\\')		/* Pathname separator */
-			*c = '_';
+	if (name == NULL) {
+		ob->name[0] = '\0';
+	} else {
+		Strlcpy(ob->name, name, sizeof(ob->name));
+		for (c = &ob->name[0]; *c != '\0'; c++) {
+			if (*c == '/' || *c == '\\')		/* Pathname separator */
+				*c = '_';
+		}
 	}
 	AG_ObjectUnlock(ob);
 }

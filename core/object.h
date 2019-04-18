@@ -228,7 +228,7 @@ void *_Nullable AG_ObjectFindParent(void *_Nonnull, const char *_Nonnull,
 
 int AG_ObjectInUse(void *_Nonnull) _Pure_Attribute_If_Unthreaded;
 
-void AG_ObjectSetNameS(void *_Nonnull, const char *_Nonnull);
+void AG_ObjectSetNameS(void *_Nonnull, const char *_Nullable);
 void AG_ObjectSetName(void *_Nonnull, const char *_Nullable, ...)
                      FORMAT_ATTRIBUTE(printf,2,3);
 
