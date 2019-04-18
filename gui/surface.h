@@ -565,10 +565,10 @@ Uint32      AG_MapColorRGBA(const AG_PixelFormat *_Nonnull, AG_Color) DEPRECATED
 /*       -> AG_MapPixel32(pf, c) */
 void        AG_GetRGB(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_GetPixelRGB(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32_RGB8(pf, px, r,g,b) */
+/*       -> AG_GetColor32_RGB8(px, pf, r,g,b) */
 void        AG_GetRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
 void        AG_GetPixelRGBA(Uint32, const AG_PixelFormat *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull, Uint8 *_Nonnull) DEPRECATED_ATTRIBUTE;
-/*       -> AG_GetColor32_RGBA8(pf, px, r,g,b,a) */
+/*       -> AG_GetColor32_RGBA8(px, pf, r,g,b,a) */
 AG_Color    AG_GetColorRGB(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
 /*       -> AG_GetColor32(px, pf), c.a=AG_OPAQUE */
 AG_Color    AG_GetColorRGBA(Uint32, const AG_PixelFormat *_Nonnull) DEPRECATED_ATTRIBUTE;
