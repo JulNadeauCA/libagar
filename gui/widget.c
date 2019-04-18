@@ -359,6 +359,7 @@ Init(void *_Nonnull obj)
 	wid->cState = AG_DEFAULT_STATE;
 	wid->font = agDefaultFont;
 	wid->pal = agDefaultPalette;
+	wid->gl = NULL;
 
 	AG_SetEvent(wid, "attached", OnAttach, NULL);
 	AG_SetEvent(wid, "detached", OnDetach, NULL);
