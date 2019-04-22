@@ -54,38 +54,22 @@ typedef struct ag_scrollbar {
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
 
-AG_Scrollbar *_Nonnull AG_ScrollbarNew(void *_Nullable , enum ag_scrollbar_type,
+AG_Scrollbar *_Nonnull AG_ScrollbarNew(void *_Nullable, enum ag_scrollbar_type,
                                        Uint);
-void AG_ScrollbarSizeHint(AG_Scrollbar *_Nonnull, int);
-void AG_ScrollbarSetIncFn(AG_Scrollbar *_Nonnull,
-                          _Nullable AG_EventFn, const char *_Nullable, ...);
-void AG_ScrollbarSetDecFn(AG_Scrollbar *_Nonnull,
-                          _Nullable AG_EventFn, const char *_Nullable, ...);
-int  AG_ScrollbarVisible(AG_Scrollbar *_Nonnull);
+AG_Scrollbar *_Nonnull AG_ScrollbarNewHoriz(void *_Nullable, Uint);
+AG_Scrollbar *_Nonnull AG_ScrollbarNewVert(void *_Nullable, Uint);
 
-/* Set/retrieve scrolling control length */
-static __inline__ void
-AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull sb, int bsize)
-{
-	AG_ObjectLock(sb);
-	sb->wBar = (bsize > 10 || bsize == -1) ? bsize : 10;
-	sb->length = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
-	                                               AGWIDGET(sb)->w;
-	sb->length -= sb->width*2;
-	sb->length -= sb->wBar;
-	AG_ObjectUnlock(sb);
-}
-/* Set/retrieve scrollbar width in pixels. */
-static __inline__ void
-AG_ScrollbarSetWidth(AG_Scrollbar *_Nonnull sb, int width)
-{
-	sb->width = width;
-}
-static __inline__ int _Pure_Attribute
-AG_ScrollbarWidth(AG_Scrollbar *_Nonnull sb)
-{
-	return (sb->width);
-}
+void AG_ScrollbarSizeHint(AG_Scrollbar *_Nonnull, int);
+void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull, int);
+void AG_ScrollbarSetWidth(AG_Scrollbar *_Nonnull, int);
+
+void AG_ScrollbarSetIncFn(AG_Scrollbar *_Nonnull,
+                         _Nullable AG_EventFn, const char *_Nullable, ...);
+void AG_ScrollbarSetDecFn(AG_Scrollbar *_Nonnull,
+                         _Nullable AG_EventFn, const char *_Nullable, ...);
+
+int AG_ScrollbarVisible(AG_Scrollbar *_Nonnull);
+int AG_ScrollbarWidth(AG_Scrollbar *_Nonnull) _Pure_Attribute_If_Unthreaded;
 __END_DECLS
 
 #include <agar/gui/close.h>

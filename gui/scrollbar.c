@@ -51,6 +51,18 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 	return (sb);
 }
 
+AG_Scrollbar *
+AG_ScrollbarNewHoriz(void *parent, Uint flags)
+{
+	return AG_ScrollbarNew(parent, AG_SCROLLBAR_HORIZ, flags);
+}
+
+AG_Scrollbar *
+AG_ScrollbarNewVert(void *parent, Uint flags)
+{
+	return AG_ScrollbarNew(parent, AG_SCROLLBAR_VERT, flags);
+}
+
 /* Configure an initial length for the size requisition. */
 void
 AG_ScrollbarSizeHint(AG_Scrollbar *sb, int len)
@@ -58,6 +70,40 @@ AG_ScrollbarSizeHint(AG_Scrollbar *sb, int len)
 	AG_ObjectLock(sb);
 	sb->lenPre = len;
 	AG_ObjectUnlock(sb);
+}
+
+/* Set/retrieve scrolling control length */
+void
+AG_ScrollbarSetControlLength(AG_Scrollbar *sb, int bsize)
+{
+	AG_ObjectLock(sb);
+	sb->wBar = (bsize > 10 || bsize == -1) ? bsize : 10;
+	sb->length = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
+	                                               AGWIDGET(sb)->w;
+	sb->length -= sb->width*2;
+	sb->length -= sb->wBar;
+	AG_ObjectUnlock(sb);
+}
+
+/* Set scrollbar width in pixels. */
+void
+AG_ScrollbarSetWidth(AG_Scrollbar *sb, int width)
+{
+	AG_ObjectLock(sb);
+	sb->width = width;
+	AG_ObjectUnlock(sb);
+}
+
+/* Return the current width of a scrollbar in pixels. */
+int
+AG_ScrollbarWidth(AG_Scrollbar *sb)
+{
+	int w;
+
+	AG_ObjectLock(sb);
+	w = sb->width;
+	AG_ObjectUnlock(sb);
+	return (w);
 }
 
 /* Set an alternate handler for UP/LEFT button click. */
