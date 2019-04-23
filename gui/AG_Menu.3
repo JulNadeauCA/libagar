@@ -472,10 +472,8 @@ of the menu icon, or NULL (read-only, set by
 .It Ft int value
 The boolean state of the item, used by default.
 If the boolean state was bound to another variable (e.g., using
-.Fn AG_MenuBool
-or
-.Fn AG_MenuSetIntBool ) ,
-this value is ignored.
+.Fn AG_MenuBool )
+then this value will be ignored.
 .It Ft int state
 Make item clickable (1) or disabled (0).
 .It Ft int (*stateFn)(AG_Event *)
