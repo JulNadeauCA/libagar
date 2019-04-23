@@ -51,6 +51,9 @@ running at fixed resolutions.
 .Ft "AG_Fixed *"
 .Fn AG_FixedNew "AG_Widget *parent" "Uint flags"
 .Pp
+.Ft void
+.Fn AG_FixedSizeHint "AG_Fixed *fixed" "int w" "int h"
+.Pp
 .nr nS 0
 The
 .Fn AG_FixedNew
@@ -86,6 +89,13 @@ Expand vertically in parent (equivalent to invoking
 Shorthand for
 .Dv AG_FIXED_HFILL|AG_FIXED_VFILL .
 .El
+.Pp
+.Fn AG_FixedSizeHint
+requests an initial geometry of
+.Fa w
+by
+.Fa h
+pixels.
 .Sh CHILD WIDGETS
 .nr nS 1
 .Ft "void"
