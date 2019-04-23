@@ -29,7 +29,6 @@
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/glview.h>
 #include <agar/gui/graph.h>
-#include <agar/gui/hbox.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/icon.h>
 #include <agar/gui/keymap.h>
@@ -60,7 +59,6 @@
 #include <agar/gui/toolbar.h>
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
-#include <agar/gui/vbox.h>
 
 #include <agar/gui/load_surface.h>
 

@@ -29,7 +29,6 @@
 
 #include <agar/core/core.h>
 #include <agar/gui/window.h>
-#include <agar/gui/vbox.h>
 #include <agar/gui/button.h>
 #include <agar/gui/tlist.h>
 #include <agar/gui/label.h>

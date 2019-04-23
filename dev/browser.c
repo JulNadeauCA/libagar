@@ -32,7 +32,6 @@
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
 #include <agar/gui/box.h>
-#include <agar/gui/vbox.h>
 #include <agar/gui/button.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/checkbox.h>
@@ -921,7 +920,7 @@ DEV_QuitCallback(AG_Event *_Nonnull event)
 	AG_WindowSetSpacing(win, 8);
 	AG_LabelNewS(win, 0, _("Unsaved objects have been modified. "
 	                       "Exit application?"));
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);
 	AG_ButtonNewFn(bo, 0, _("Quit"), ConfirmQuit, NULL);

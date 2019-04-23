@@ -36,45 +36,56 @@ typedef struct ag_box {
 	int spacing;			/* Spacing between widgets */
 	int depth;			/* Depth of frame (for AG_BOX_FRAME) */
 	struct ag_label *_Nonnull lbl;	/* Optional text label */
-	enum ag_box_align hAlign, vAlign; /* Widget alignment */
-} AG_Box;
+	enum ag_box_align hAlign;	/* Horizontal alignment */
+	enum ag_box_align vAlign;	/* Vertical alignment */
+} AG_Box, AG_HBox, AG_VBox;
+
+#define AG_HBOX_HOMOGENOUS AG_BOX_HOMOGENOUS
+#define AG_HBOX_HFILL      AG_BOX_HFILL
+#define AG_HBOX_VFILL      AG_BOX_VFILL
+#define AG_HBOX_EXPAND    (AG_BOX_HFILL|AG_BOX_VFILL)
+
+#define AG_VBOX_HOMOGENOUS AG_BOX_HOMOGENOUS
+#define AG_VBOX_HFILL      AG_BOX_HFILL
+#define AG_VBOX_VFILL      AG_BOX_VFILL
+#define AG_VBOX_EXPAND    (AG_BOX_HFILL | AG_BOX_VFILL)
 
 #define AGBOX(p) ((AG_Box *)(p))
 
 __BEGIN_DECLS
 extern AG_WidgetClass agBoxClass;
 
-AG_Box *_Nonnull AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
+AG_Box *_Nonnull  AG_BoxNew(void *_Nullable, enum ag_box_type, Uint);
 
-void     AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
-void     AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
-void	 AG_BoxSetHomogenous(AG_Box *_Nonnull, int);
-void	 AG_BoxSetPadding(AG_Box *_Nonnull, int);
-void	 AG_BoxSetSpacing(AG_Box *_Nonnull, int);
-void	 AG_BoxSetDepth(AG_Box *_Nonnull, int);
-void	 AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
-void     AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
-void     AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
+AG_Box *_Nonnull  AG_BoxNewHoriz(void *_Nullable, Uint);
+AG_Box *_Nonnull  AG_BoxNewHorizNS(void *_Nullable, Uint);
+AG_Box *_Nonnull  AG_BoxNewVert(void *_Nullable, Uint);
+AG_Box *_Nonnull  AG_BoxNewVertNS(void *_Nullable, Uint);
+AG_HBox *_Nonnull AG_HBoxNew(void *_Nullable, Uint);
+AG_HBox *_Nonnull AG_HBoxNewNS(void *_Nullable, Uint);
+AG_VBox *_Nonnull AG_VBoxNew(void *_Nullable, Uint);
+AG_VBox *_Nonnull AG_VBoxNewNS(void *_Nullable, Uint);
 
-#define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
-#define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
+void AG_BoxSetLabel(AG_Box *_Nonnull, const char *_Nullable, ...);
+void AG_BoxSetLabelS(AG_Box *_Nonnull, const char *_Nullable);
+void AG_BoxSetHomogenous(AG_Box *_Nonnull, int);
+void AG_BoxSetPadding(AG_Box *_Nonnull, int);
+void AG_BoxSetSpacing(AG_Box *_Nonnull, int);
+void AG_BoxSetDepth(AG_Box *_Nonnull, int);
+void AG_BoxSetType(AG_Box *_Nonnull, enum ag_box_type);
+void AG_BoxSetHorizAlign(AG_Box *_Nonnull, enum ag_box_align);
+void AG_BoxSetVertAlign(AG_Box *_Nonnull, enum ag_box_align);
 
-static __inline__ AG_Box *_Nonnull
-AG_BoxNewHorizNS(void *_Nullable p, Uint flags)
-{
-	AG_Box *hBox = AG_BoxNewHoriz(p, flags);
-	AG_BoxSetSpacing(hBox, 0);
-	AG_BoxSetPadding(hBox, 0);
-	return (hBox);
-}
-static __inline__ AG_Box *_Nonnull
-AG_BoxNewVertNS(void *_Nullable p, Uint flags)
-{
-	AG_Box *vBox = AG_BoxNewVert(p, flags);
-	AG_BoxSetSpacing(vBox, 0);
-	AG_BoxSetPadding(vBox, 0);
-	return (vBox);
-}
+#ifdef AG_LEGACY
+#define AG_HBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_HORIZ,(fl))
+#define AG_HBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
+#define AG_HBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
+#define AG_HBoxSetSpacing(b,sp)    AG_BoxSetSpacing((b),(sp))
+#define AG_VBoxInit(b,fl)          AG_BoxInit((b),AG_BOX_VERT,(fl))
+#define AG_VBoxSetHomogenous(b,fl) AG_BoxSetHomogenous((b),(fl))
+#define AG_VBoxSetPadding(b,pad)   AG_BoxSetPadding((b),(pad))
+#define AG_VBoxSetSpacing(b,sp)    AG_BoxSetSpacing((b),(sp))
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

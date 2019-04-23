@@ -31,7 +31,7 @@
 #include <agar/core/config.h>
 
 #include <agar/gui/window.h>
-#include <agar/gui/hbox.h>
+#include <agar/gui/box.h>
 #include <agar/gui/label.h>
 #include <agar/gui/button.h>
 #include <agar/gui/checkbox.h>

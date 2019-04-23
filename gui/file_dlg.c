@@ -31,7 +31,7 @@
 #include <agar/core/config.h>
 
 #include <agar/gui/file_dlg.h>
-#include <agar/gui/hbox.h>
+#include <agar/gui/box.h>
 #include <agar/gui/numerical.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/separator.h>
@@ -1458,6 +1458,12 @@ AG_FileOptionInt(AG_FileType *ft, const char *key)
 	rv = (fo != NULL) ? fo->data.i.val : -1;
 	AG_ObjectUnlock(ft->fd);
 	return (rv);
+}
+
+int
+AG_FileOptionBool(AG_FileType *ft, const char *key)
+{
+	return AG_FileOptionInt(ft, key);
 }
 
 float
