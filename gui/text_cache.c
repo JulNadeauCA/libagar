@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2008-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,18 @@
 #include <agar/gui/widget.h>
 
 /* #define TEXTCACHE_DEBUG */
+
+static __inline__ Uint _Pure_Attribute
+Hash_Text(AG_TextCache *_Nonnull tc, const char *_Nonnull s)
+{
+	Uint h;
+	Uchar *p;
+
+	for (h = 0, p = (Uchar *)s; *p != '\0'; p++) {
+		h = 31*h + *p;
+	}
+	return (h % tc->nBuckets);
+}
 
 AG_TextCache *
 AG_TextCacheNew(void *widget, Uint nBuckets, Uint nBucketEnts)
@@ -119,6 +131,21 @@ ExpireEntries(AG_TextCache *_Nonnull tc)
 	}
 }
 
+/* Compare two text states. */
+static __inline__ int
+CompareTextStates(const AG_TextState *_Nonnull a, const AG_TextState *_Nonnull b)
+{
+	if (a->font == b->font &&
+	    AG_ColorCompare(a->color,b->color) == 0 &&
+	    AG_ColorCompare(a->colorBG,b->colorBG) == 0 &&
+	    a->justify == b->justify &&
+	    a->valign == b->valign &&
+	    a->tabWd == b->tabWd) {
+		return (0);
+	}
+	return (1);
+}
+
 int
 AG_TextCacheGet(AG_TextCache *tc, const char *text)
 {
@@ -126,14 +153,14 @@ AG_TextCacheGet(AG_TextCache *tc, const char *text)
 	AG_CachedText *ct;
 	Uint h;
 
-	h = AG_TextCacheHash(tc, text);
+	h = Hash_Text(tc, text);
 #ifdef TEXTCACHE_DEBUG
 	Debug(NULL, "TextCacheLookup: string \"%s\" = %u...", text, h);
 #endif
 	buck = &tc->buckets[h];
 	TAILQ_FOREACH(ct, &buck->ents, ents) {
 		if (strcmp(ct->text, text) == 0 &&
-		    AG_TextStateCompare(&ct->state, agTextState) == 0)
+		    CompareTextStates(&ct->state, agTextState) == 0)
 			break;
 	}
 	if (ct == NULL) {

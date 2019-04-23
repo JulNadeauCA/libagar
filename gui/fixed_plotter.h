@@ -61,13 +61,7 @@ AG_FixedPlotterItem *_Nonnull AG_FixedPlotterCurve(AG_FixedPlotter *_Nonnull,
 void AG_FixedPlotterFreeItems(AG_FixedPlotter *_Nonnull);
 void AG_FixedPlotterSetRange(AG_FixedPlotter *_Nonnull, AG_FixedPlotterValue);
 void AG_FixedPlotterDatum(AG_FixedPlotterItem *_Nonnull, AG_FixedPlotterValue);
-
-static __inline__ void
-AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull fpl, int i)
-{
-	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
-		fpl->xoffs += i;
-}
+void AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

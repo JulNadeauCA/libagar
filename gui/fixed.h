@@ -26,12 +26,15 @@ extern AG_WidgetClass agFixedClass;
 
 AG_Fixed *_Nonnull AG_FixedNew(void *_Nullable, Uint);
 
-void    AG_FixedSizeHint(AG_Fixed *_Nonnull, int,int);
+void AG_FixedSizeHint(AG_Fixed *_Nonnull, int,int);
+void AG_FixedPut(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+void AG_FixedDel(AG_Fixed *_Nonnull, void *_Nonnull);
+void AG_FixedSize(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+void AG_FixedMove(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+
+#ifdef AG_LEGACY
 #define AG_FixedPrescale(f,w,h) AG_FixedSizeHint((f),(w),(h))
-void    AG_FixedPut(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
-void    AG_FixedDel(AG_Fixed *_Nonnull, void *_Nonnull);
-void    AG_FixedSize(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
-void    AG_FixedMove(AG_Fixed *_Nonnull, void *_Nonnull, int,int);
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

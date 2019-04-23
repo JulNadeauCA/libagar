@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,6 @@
 
 #include <string.h>
 #include <stdarg.h>
-
-static void OnShow(AG_Event *);
-static void OnHide(AG_Event *);
-static void OnFocusGain(AG_Event *);
-static void OnFocusLoss(AG_Event *);
 
 int agWindowSideBorderDefault = 0;
 int agWindowBotBorderDefault = 8;
@@ -87,27 +82,6 @@ AG_DestroyWindowSystem(void)
 {
 }
 
-static void
-InitWindow(AG_Window *win, Uint flags)
-{
-	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetNameS(win, "generic");
-
-	/* We use a specific naming system. */
-	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
-
-	WIDGET(win)->window = win;
-	win->flags |= flags;
-
-	if (win->flags & AG_WINDOW_MODAL)
-		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
-	if (win->flags & AG_WINDOW_NORESIZE)
-		win->flags |= AG_WINDOW_NOMAXIMIZE;
-
-	/* Default window "close" action should be detach/free. */
-	AG_SetEvent(win, "window-close", AGWINDETACH(win));
-}
-
 /*
  * Create a generic window under a specific single-window driver. Return
  * a pointer to the newly-allocated window, or NULL on failure.
@@ -125,7 +99,7 @@ AG_WindowNewSw(void *pDrv, Uint flags)
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
 		return (NULL);
 	}
-	InitWindow(win, flags);
+	AG_WindowInit(win, flags);
 	AG_ObjectAttach(drv, win);
 	
 	if (!(win->flags & AG_WINDOW_NOTITLE)) {
@@ -151,7 +125,7 @@ AG_WindowNew(Uint flags)
 	if ((win = TryMalloc(sizeof(AG_Window))) == NULL) {
 		return (NULL);
 	}
-	InitWindow(win, flags);
+	AG_WindowInit(win, flags);
 
 	switch (agDriverOps->wm) {
 	case AG_WM_SINGLE:
@@ -176,6 +150,31 @@ AG_WindowNew(Uint flags)
 		break;
 	}
 	return (win);
+}
+
+/*
+ * Initialize a new window.
+ * Called internally by AG_WindowNew*().
+ */
+void
+AG_WindowInit(AG_Window *win, Uint flags)
+{
+	AG_ObjectInit(win, &agWindowClass);
+	AG_ObjectSetNameS(win, "generic");
+
+	/* We use a specific naming system. */
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+
+	WIDGET(win)->window = win;
+	win->flags |= flags;
+
+	if (win->flags & AG_WINDOW_MODAL)
+		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+
+	/* Default window "close" action should be detach/free. */
+	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 }
 
 /*
@@ -222,7 +221,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 
 /* Special implementation of AG_ObjectAttach() for AG_Window. */
 static void
-Attach(AG_Event *event)
+Attach(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = OBJECT(win)->parent;
@@ -274,7 +273,7 @@ Attach(AG_Event *event)
 
 /* Special implementation of AG_ObjectDetach() for AG_Window. */
 static void
-Detach(AG_Event *event)
+Detach(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv;
@@ -352,7 +351,7 @@ Detach(AG_Event *event)
 
 /* Timer callback for fade-in/fade-out */
 static Uint32
-FadeTimeout(AG_Timer *to, AG_Event *event)
+FadeTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	int dir = AG_INT(1);
@@ -380,100 +379,6 @@ FadeTimeout(AG_Timer *to, AG_Event *event)
 			return (0);
 		}
 	}
-}
-
-static void
-Init(void *obj)
-{
-	AG_Window *win = obj;
-	AG_Event *ev;
-	int i;
-
-	win->wmType = AG_WINDOW_WM_NORMAL;
-	win->flags = AG_WINDOW_NOCURSORCHG;
-	win->visible = 0;
-	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
-	win->spacing = 3;
-	win->lPad = 2;
-	win->rPad = 2;
-	win->tPad = 2;
-	win->bPad = 2;
-	win->wReq = 0;
-	win->hReq = 0;
-	win->wMin = win->lPad + win->rPad + 16;
-	win->hMin = win->tPad + win->bPad + 16;
-	win->minPct = 50;
-	win->wBorderBot = agWindowBotBorderDefault;
-	win->wBorderSide = agWindowSideBorderDefault;
-	win->wResizeCtrl = 16;
-	win->rSaved = AG_RECT(-1,-1,-1,-1);
-	win->r = AG_RECT(0,0,0,0);
-#ifdef AG_DEBUG
-	memset(win->caption, 0, sizeof(win->caption));
-#else
-	win->caption[0] = '\0';
-#endif
-	win->tbar = NULL;
-	win->icon = NULL;
-	win->nFocused = 0;
-	win->parent = NULL;
-	win->transientFor = NULL;
-	win->pinnedTo = NULL;
-	win->widExclMotion = NULL;
-	win->pvt.fadeInTime = 0.06f;
-	win->pvt.fadeInIncr = 0.2f;
-	win->pvt.fadeOutTime = 0.06f;
-	win->pvt.fadeOutIncr = 0.2f;
-	win->pvt.fadeOpacity = 1.0f;
-	win->zoom = AG_ZOOM_DEFAULT;
-	TAILQ_INIT(&win->pvt.subwins);
-	TAILQ_INIT(&win->pvt.cursorAreas);
-	for (i = 0; i < 5; i++)
-		win->pvt.caResize[i] = NULL;
-
-	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
-
-	AG_SetEvent(win, "window-gainfocus", OnFocusGain, NULL);
-	AG_SetEvent(win, "window-lostfocus", OnFocusLoss, NULL);
-
-	/*
-	 * We wish to forward incoming `widget-shown', `widget-hidden' and
-	 * `detached' events to all attached child widgets.
-	 */
-	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
-	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "widget-hidden", OnHide, NULL);
-	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "detached", NULL, NULL);
-	ev->flags |= AG_EVENT_PROPAGATE;
-
-	/* Custom attach/detach hooks are needed by the window stack. */
-	AG_ObjectSetAttachFn(win, Attach, NULL);
-	AG_ObjectSetDetachFn(win, Detach, NULL);
-	
-	/* Set the inheritable style defaults. */
-	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
-	AG_SetString(win, "font-size",
-	    AG_Printf("%.02fpts", agDefaultFont->spec.size));
-	AG_SetString(win, "font-weight", "normal");
-	AG_SetString(win, "font-style", "normal");
-
-	WIDGET(win)->font = agDefaultFont;
-	WIDGET(win)->pal = agDefaultPalette;
-#if 0
-	AG_BindUint(win, "flags", &win->flags);
-	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
-	AG_BindInt(win, "visible", &win->visible);
-	AG_BindInt(win, "spacing", &win->spacing);
-	AG_BindInt(win, "wReq", &win->wReq);
-	AG_BindInt(win, "hReq", &win->hReq);
-	AG_BindInt(win, "wMin", &win->wMin);
-	AG_BindInt(win, "hMin", &win->hMin);
-	AG_BindInt(win, "r.x", &win->r.x);
-	AG_BindInt(win, "r.y", &win->r.y);
-	AG_BindInt(win, "r.w", &win->r.w);
-	AG_BindInt(win, "r.h", &win->r.h);
-#endif
 }
 
 /*
@@ -583,7 +488,8 @@ AG_WindowUnpin(AG_Window *win)
 }
 
 static void
-MovePinnedRecursive(AG_Window *win, AG_Window *winParent, int xRel, int yRel)
+MovePinnedRecursive(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
+    int xRel, int yRel)
 {
 	AG_Rect r;
 	AG_Window *winOther;
@@ -621,7 +527,7 @@ AG_WindowMovePinned(AG_Window *winParent, int xRel, int yRel)
 
 /* Evaluate whether a widget is requesting geometry update. */
 static int
-UpdateNeeded(AG_Widget *wid)
+UpdateNeeded(AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
 
@@ -635,72 +541,96 @@ UpdateNeeded(AG_Widget *wid)
 	return (0);
 }
 
+/*
+ * Test whether a window is currently selected for a given WM operation.
+ * The agDrivers VFS must be locked.
+ */
+static __inline__ int _Pure_Attribute
+Selected_WM_Op(AG_Window *_Nonnull win, enum ag_wm_operation op)
+{
+	AG_Driver *drv = AGWIDGET(win)->drv;
+
+	return (AGDRIVER_SINGLE(drv) &&
+	        AGDRIVER_SW(drv)->winSelected == win &&
+	        AGDRIVER_SW(drv)->winop == op);
+}
+
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
 	AG_Rect r;
+	AG_Color Cborder;
+	int flags = win->flags;
+	int w = WIDTH(win);
+	int h = HEIGHT(win);
 	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
+	int wBorderBot = win->wBorderBot, wBorderSide;
 
 	if (UpdateNeeded(WIDGET(win)))
 		AG_WindowUpdate(win);
 
 	/* Render window background. */
-	if (!(win->flags & AG_WINDOW_NOBACKGROUND) &&
-	    !(WIDGET(win)->drv->flags & AG_DRIVER_WINDOW_BG)) {
-		AG_DrawRect(win,
-		    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
+	if ((flags & AG_WINDOW_NOBACKGROUND) == 0 &&
+	    (WIDGET(win)->drv->flags & AG_DRIVER_WINDOW_BG) == 0) {
+		AG_DrawRect(win, AG_RECT(0, hBar-1, w, h-hBar),
 		    WCOLOR(win,0));
 	}
 
 	/* Render decorative borders. */
-	if (win->wBorderBot > 0) {
+	Cborder = WCOLOR(win,BORDER_COLOR);
+	if (wBorderBot > 0) {
+		int wResizeCtrl = win->wResizeCtrl;
+		int wResizeCtrl2 = (wResizeCtrl << 1);
+
 		r.x = 0;
-		r.y = HEIGHT(win) - win->wBorderBot;
-		r.h = win->wBorderBot;
-		if (!(win->flags & AG_WINDOW_NORESIZE) &&
-		    WIDTH(win) > win->wResizeCtrl*2) {
-			r.w = win->wResizeCtrl;
+		r.y = h - wBorderBot;
+		r.h = wBorderBot;
+		if ((flags & AG_WINDOW_NORESIZE) == 0 &&
+		    w > wResizeCtrl2) {
+			r.w = wResizeCtrl;
 			AG_DrawBox(win, r,
-			    AG_WindowSelectedWM(win,AG_WINOP_LRESIZE) ? -1 : 1,
-			    WCOLOR(win,BORDER_COLOR));
-			r.x = WIDTH(win) - win->wResizeCtrl;
+			    Selected_WM_Op(win,AG_WINOP_LRESIZE) ? -1 : 1,
+			    Cborder);
+
+			r.x = w - wResizeCtrl;
 			AG_DrawBox(win, r,
-			    AG_WindowSelectedWM(win,AG_WINOP_RRESIZE) ? -1 : 1,
-			    WCOLOR(win,BORDER_COLOR));
-			r.x = win->wResizeCtrl;
-			r.w = WIDTH(win) - win->wResizeCtrl*2;
+			    Selected_WM_Op(win,AG_WINOP_RRESIZE) ? -1 : 1,
+			    Cborder);
+
+			r.x = wResizeCtrl;
+			r.w = w - wResizeCtrl2;
 			AG_DrawBox(win, r,
-			    AG_WindowSelectedWM(win,AG_WINOP_HRESIZE) ? -1 : 1,
-			    WCOLOR(win,BORDER_COLOR));
+			    Selected_WM_Op(win,AG_WINOP_HRESIZE) ? -1 : 1,
+			    Cborder);
 		} else {
-			r.w = WIDTH(win);
-			AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
+			r.w = w;
+			AG_DrawBox(win, r, 1, Cborder);
 		}
 	}
-	if (win->wBorderSide > 0) {
+	if ((wBorderSide = win->wBorderSide) > 0) {
 		r.x = 0;
 		r.y = hBar;
-		r.w = win->wBorderSide;
-		r.h = HEIGHT(win) - win->wBorderBot - hBar;
-		AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
-		r.x = WIDTH(win) - win->wBorderSide;
-		AG_DrawBox(win, r, 1, WCOLOR(win,BORDER_COLOR));
+		r.w = wBorderSide;
+		r.h = h - wBorderBot - hBar;
+		AG_DrawBox(win, r, 1, Cborder);
+		r.x = w - wBorderSide;
+		AG_DrawBox(win, r, 1, Cborder);
 	}
 
-	if (!(win->flags & AG_WINDOW_NOCLIPPING)) {
+	if ((flags & AG_WINDOW_NOCLIPPING) == 0) {
 		AG_PushClipRect(win, win->r);
 	}
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_WidgetDraw(chld);
 	}
-	if (!(win->flags & AG_WINDOW_NOCLIPPING))
+	if ((flags & AG_WINDOW_NOCLIPPING) == 0)
 		AG_PopClipRect(win);
 }
 
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -812,7 +742,7 @@ OnShow(AG_Event *event)
 }
 
 static void
-OnHide(AG_Event *event)
+OnHide(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -892,7 +822,7 @@ OnHide(AG_Event *event)
 }
 
 static void
-WidgetGainFocus(AG_Widget *wid)
+WidgetGainFocus(AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
 
@@ -906,7 +836,7 @@ WidgetGainFocus(AG_Widget *wid)
 }
 
 static void
-WidgetLostFocus(AG_Widget *wid)
+WidgetLostFocus(AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
 
@@ -920,7 +850,7 @@ WidgetLostFocus(AG_Widget *wid)
 }
 
 static void
-OnFocusGain(AG_Event *event)
+OnGainFocus(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 
@@ -929,7 +859,7 @@ OnFocusGain(AG_Event *event)
 }
 
 static void
-OnFocusLoss(AG_Event *event)
+OnLostFocus(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_SELF();
 
@@ -1057,7 +987,7 @@ out:
 
 /* Build an ordered list of the focusable widgets in a window. */
 static void
-ListFocusableWidgets(AG_List *L, AG_Widget *wid)
+ListFocusableWidgets(AG_List *_Nonnull L, AG_Widget *_Nonnull wid)
 {
 	AG_Widget *chld;
 	AG_Variable V;
@@ -1132,6 +1062,26 @@ out:
 	AG_ListDestroy(Lfoc);
 	AG_ListDestroy(Luniq);
 	win->dirty = 1;
+}
+
+/*
+ * Return a pointer to the currently focused window.
+ * The agDrivers VFS must be locked.
+ */
+AG_Window *
+AG_WindowFindFocused(void)
+{
+	return (agWindowFocused);
+}
+
+/*
+ * Test whether the given window is focused.
+ * The agDrivers VFS must be locked.
+ */
+int
+AG_WindowIsFocused(AG_Window *_Nullable win)
+{
+	return (agWindowFocused == win);
 }
 
 /*
@@ -1234,7 +1184,7 @@ AG_WindowFocusAtPos(AG_DriverSw *dsw, int x, int y)
 /* Update window background after geometry change in single-display mode. */
 /* XXX TODO Avoid drawing over KEEPABOVE windows */
 static void
-UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
+UpdateWindowBG(AG_Window *_Nonnull win, AG_Rect rPrev)
 {
 	AG_Driver *drv = WIDGET(win)->drv;
 	AG_Rect r;
@@ -1268,6 +1218,24 @@ UpdateWindowBG(AG_Window *win, AG_Rect rPrev)
 		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, r);
 	}
+}
+
+/* Set window position and size (no bounds) */
+int
+AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
+{
+	AG_Rect r = AG_RECT(x,y, w,h);
+
+	return AG_WindowSetGeometryRect(win, r, 0);
+}
+
+/* Set window position and size (bounded to total display size) */
+int
+AG_WindowSetGeometryBounded(AG_Window *win, int x, int y, int w, int h)
+{
+	AG_Rect r = AG_RECT(x,y, w,h);
+
+	return AG_WindowSetGeometryRect(win, r, 1);
 }
 
 /* Set the coordinates and geometry of a window. */
@@ -1524,7 +1492,7 @@ AG_WindowUnmaximize(AG_Window *win)
 }
 
 static void
-IconMotion(AG_Event *event)
+IconMotion(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_SELF();
 	AG_Driver *drv = WIDGET(icon)->drv;
@@ -1560,7 +1528,7 @@ IconMotion(AG_Event *event)
 
 /* Timer for double click on minimized icon. */
 static Uint32
-IconDoubleClickTimeout(AG_Timer *to, AG_Event *event)
+IconDoubleClickTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_SELF();
 
@@ -1569,7 +1537,7 @@ IconDoubleClickTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-IconButtonDown(AG_Event *event)
+IconButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_SELF();
 	AG_Window *win = AG_PTR(1);
@@ -1591,7 +1559,7 @@ IconButtonDown(AG_Event *event)
 }
 
 static void
-IconButtonUp(AG_Event *event)
+IconButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Icon *icon = AG_SELF();
 	
@@ -1691,7 +1659,7 @@ AG_CloseFocusedWindow(void)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Window *win = obj;
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -1730,7 +1698,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Window *win = obj;
 	AG_Driver *drv = WIDGET(win)->drv;
@@ -1926,7 +1894,7 @@ AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 
 /* Update Agar's built-in titlebar from window caption. */
 static void
-UpdateTitlebar(AG_Window *win)
+UpdateTitlebar(AG_Window *_Nonnull win)
 {
 	AG_Titlebar *tbar = win->tbar;
 
@@ -1937,7 +1905,7 @@ UpdateTitlebar(AG_Window *win)
 
 /* Update the window's minimized icon caption. */
 static void
-UpdateIconCaption(AG_Window *win)
+UpdateIconCaption(AG_Window *_Nonnull win)
 {
 	AG_Icon *icon = win->icon;
 	char s[20], *c;
@@ -1988,6 +1956,20 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	va_end(ap);
 
 	AG_WindowSetCaptionS(win, s);
+}
+
+/* Set the icon of a window from the contents of a surface. */
+void
+AG_WindowSetIcon(AG_Window *win, const AG_Surface *S)
+{
+	AG_IconSetSurface(win->icon, S);
+}
+
+/* Set the icon of a window from the contents of a surface. */
+void
+AG_WindowSetIconNODUP(AG_Window *win, AG_Surface *S)
+{
+	AG_IconSetSurfaceNODUP(win->icon, S);
 }
 
 /* Commit any pending focus change. The agDrivers VFS must be locked. */
@@ -2344,6 +2326,184 @@ AG_WindowSetZoom(AG_Window *win, int zoom)
 	AG_ObjectUnlock(win);
 }
 
+/*
+ * Render a window to the display (must be enclosed between calls to
+ * AG_BeginRendering() and AG_EndRendering()).
+ * The agDrivers VFS and Window object must be locked.
+ */
+void
+AG_WindowDraw(AG_Window *_Nonnull win)
+{
+	AG_Driver *drv = AGWIDGET(win)->drv;
+
+	if (!win->visible) {
+		return;
+	}
+	AGDRIVER_CLASS(drv)->renderWindow(win);
+	win->dirty = 0;
+}
+
+/*
+ * Recompute the coordinates and geometries of all widgets attached to the
+ * window. This is used following AG_ObjectAttach() and AG_ObjectDetach()
+ * calls made in event context, or direct modifications to the x,y,w,h
+ * fields of the Widget structure.
+ *
+ * The agDrivers VFS and Window must be locked.
+ */
+void
+AG_WindowUpdate(AG_Window *_Nonnull win)
+{
+	AG_SizeAlloc a;
+	
+	if (AGWIDGET(win)->x != -1 && AGWIDGET(win)->y != -1) {
+		a.x = AGWIDGET(win)->x;
+		a.y = AGWIDGET(win)->y;
+		a.w = AGWIDGET(win)->w;
+		a.h = AGWIDGET(win)->h;
+		AG_WidgetSizeAlloc(win, &a);
+	}
+	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+}
+
+/*
+ * Return visibility status of window.
+ * The agDrivers VFS and Window object must be locked.
+ */
+int
+AG_WindowIsVisible(AG_Window *_Nonnull win)
+{
+	return (win->visible);
+}
+
+/*
+ * Return a pointer to a widget's parent window.
+ * The agDrivers VFS must be locked.
+ */
+AG_Window *
+AG_ParentWindow(void *_Nonnull obj)
+{
+	return (AGWIDGET(obj)->window);
+}
+
+/*
+ * Return the effective focus state of a widget.
+ * The Widget and agDrivers VFS must be locked.
+ */
+int
+AG_WidgetIsFocused(void *_Nonnull obj)
+{
+	AG_Widget *wid = (AG_Widget *)obj;
+
+	return ((wid->flags & AG_WIDGET_FOCUSED) &&
+                (wid->window == NULL || AG_WindowIsFocused(wid->window)));
+}
+
+/* Set an explicit widget position in pixels. */
+void
+AG_WidgetSetPosition(void *_Nonnull obj, int x, int y)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	wid->x = x;
+	wid->y = y;
+	AG_WidgetUpdate(wid);
+	AG_ObjectUnlock(wid);
+}
+
+/* Set an explicit widget geometry in pixels. */
+void
+AG_WidgetSetSize(void *_Nonnull obj, int w, int h)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	wid->w = w;
+	wid->h = h;
+	AG_WidgetUpdate(wid);
+	AG_ObjectUnlock(wid);
+}
+
+/* Set an explicit widget geometry from an AG_Rect argument. */
+void
+AG_WidgetSetGeometry(void *obj, AG_Rect r)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	wid->x = r.x;
+	wid->y = r.y;
+	wid->w = r.w;
+	wid->h = r.h;
+	AG_WidgetUpdate(wid);
+	AG_ObjectUnlock(wid);
+}
+
+/* Set the largest allowable window size. */
+void
+AG_WindowSetGeometryMax(AG_Window *_Nonnull win)
+{
+	Uint wMax, hMax;
+
+	AG_GetDisplaySize((void *)AGWIDGET(win)->drv, &wMax, &hMax);
+	AG_WindowSetGeometry(win, 0, 0, wMax, hMax);
+}
+
+/* Request widget redraw. */
+void
+AG_Redraw(void *_Nonnull obj)
+{
+	AG_Window *win;
+
+	if ((win = AGWIDGET(obj)->window) != NULL) {
+		AG_ASSERT_CLASS(win, "AG_Widget:AG_Window:*");
+		win->dirty = 1;
+	}
+}
+
+/*
+ * Alternate interface to AG_MapCursor(). Create a new mapping or
+ * update the rectangle of an existing one.
+ */
+void
+AG_SetCursor(void *obj, AG_CursorArea ** ca, AG_Rect r, struct ag_cursor *c)
+{
+	if (*ca == NULL) {
+		*ca = AG_MapCursor(obj, r, c);
+	} else {
+		(*ca)->r = r;
+	}
+}
+
+/* Select one of the standard cursors. */
+void
+AG_SetStockCursor(void *_Nonnull obj, AG_CursorArea *_Nonnull *_Nullable ca,
+    AG_Rect r, int cName)
+{
+	if (*ca == NULL) {
+		*ca = AG_MapStockCursor(obj, r, cName);
+	} else {
+		(*ca)->r = r;
+	}
+}
+
+/*
+ * Process synchronous window operations. This includes focus changes,
+ * visibility changes and the detach operation. Called from custom event
+ * loops or driver code, after all queued events have been processed.
+ */
+void
+AG_WindowProcessQueued(void)
+{
+	AG_LockVFS(&agDrivers);
+	if (agWindowToFocus != NULL) { AG_WindowProcessFocusChange(); }
+	if (!AG_TAILQ_EMPTY(&agWindowShowQ)) { AG_WindowProcessShowQueue(); }
+	if (!AG_TAILQ_EMPTY(&agWindowHideQ)) { AG_WindowProcessHideQueue(); }
+	if (!AG_TAILQ_EMPTY(&agWindowDetachQ)) { AG_WindowProcessDetachQueue(); }
+	AG_UnlockVFS(&agDrivers);
+}
+
 #ifdef AG_LEGACY
 /* Pre-1.4 */
 AG_Window *
@@ -2393,6 +2553,100 @@ AG_WindowIntersect(AG_DriverSw *drv, int x, int y)
 	return (rv);
 }
 #endif /* AG_LEGACY */
+
+static void
+Init(void *_Nonnull obj)
+{
+	AG_Window *win = obj;
+	AG_Event *ev;
+	int i;
+
+	win->wmType = AG_WINDOW_WM_NORMAL;
+	win->flags = AG_WINDOW_NOCURSORCHG;
+	win->visible = 0;
+	win->alignment = AG_WINDOW_ALIGNMENT_NONE;
+	win->spacing = 3;
+	win->lPad = 2;
+	win->rPad = 2;
+	win->tPad = 2;
+	win->bPad = 2;
+	win->wReq = 0;
+	win->hReq = 0;
+	win->wMin = win->lPad + win->rPad + 16;
+	win->hMin = win->tPad + win->bPad + 16;
+	win->minPct = 50;
+	win->wBorderBot = agWindowBotBorderDefault;
+	win->wBorderSide = agWindowSideBorderDefault;
+	win->wResizeCtrl = 16;
+	win->rSaved = AG_RECT(-1,-1,-1,-1);
+	win->r = AG_RECT(0,0,0,0);
+#ifdef AG_DEBUG
+	memset(win->caption, 0, sizeof(win->caption));
+#else
+	win->caption[0] = '\0';
+#endif
+	win->tbar = NULL;
+	win->icon = NULL;
+	win->nFocused = 0;
+	win->parent = NULL;
+	win->transientFor = NULL;
+	win->pinnedTo = NULL;
+	win->widExclMotion = NULL;
+	win->pvt.fadeInTime = 0.06f;
+	win->pvt.fadeInIncr = 0.2f;
+	win->pvt.fadeOutTime = 0.06f;
+	win->pvt.fadeOutIncr = 0.2f;
+	win->pvt.fadeOpacity = 1.0f;
+	win->zoom = AG_ZOOM_DEFAULT;
+	TAILQ_INIT(&win->pvt.subwins);
+	TAILQ_INIT(&win->pvt.cursorAreas);
+	for (i = 0; i < 5; i++)
+		win->pvt.caResize[i] = NULL;
+
+	AG_InitTimer(&win->pvt.fadeTo, "fade", 0);
+
+	AG_SetEvent(win, "window-gainfocus", OnGainFocus, NULL);
+	AG_SetEvent(win, "window-lostfocus", OnLostFocus, NULL);
+
+	/*
+	 * We wish to forward incoming `widget-shown', `widget-hidden' and
+	 * `detached' events to all attached child widgets.
+	 */
+	ev = AG_SetEvent(win, "widget-shown", OnShow, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
+	ev = AG_SetEvent(win, "widget-hidden", OnHide, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
+	ev = AG_SetEvent(win, "detached", NULL, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
+
+	/* Custom attach/detach hooks are needed by the window stack. */
+	AG_ObjectSetAttachFn(win, Attach, NULL);
+	AG_ObjectSetDetachFn(win, Detach, NULL);
+	
+	/* Set the inheritable style defaults. */
+	AG_SetString(win, "font-family", OBJECT(agDefaultFont)->name);
+	AG_SetString(win, "font-size",
+	    AG_Printf("%.02fpts", agDefaultFont->spec.size));
+	AG_SetString(win, "font-weight", "normal");
+	AG_SetString(win, "font-style", "normal");
+
+	WIDGET(win)->font = agDefaultFont;
+	WIDGET(win)->pal = agDefaultPalette;
+#if 0
+	AG_BindUint(win, "flags", &win->flags);
+	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
+	AG_BindInt(win, "visible", &win->visible);
+	AG_BindInt(win, "spacing", &win->spacing);
+	AG_BindInt(win, "wReq", &win->wReq);
+	AG_BindInt(win, "hReq", &win->hReq);
+	AG_BindInt(win, "wMin", &win->wMin);
+	AG_BindInt(win, "hMin", &win->hMin);
+	AG_BindInt(win, "r.x", &win->r.x);
+	AG_BindInt(win, "r.y", &win->r.y);
+	AG_BindInt(win, "r.w", &win->r.w);
+	AG_BindInt(win, "r.h", &win->r.h);
+#endif
+}
 
 AG_WidgetClass agWindowClass = {
 	{

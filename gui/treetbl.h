@@ -143,6 +143,8 @@ AG_TreetblRow *_Nullable AG_TreetblAddRow(AG_Treetbl *_Nonnull,
 void AG_TreetblDelRow(AG_Treetbl *_Nonnull, AG_TreetblRow *_Nonnull);
 void AG_TreetblClearRows(AG_Treetbl *_Nonnull);
 void AG_TreetblRestoreRows(AG_Treetbl *_Nonnull);
+void AG_TreetblBegin(AG_Treetbl *_Nonnull);
+void AG_TreetblEnd(AG_Treetbl *_Nonnull);
 void AG_TreetblSelectRow(AG_Treetbl *_Nonnull, AG_TreetblRow *_Nonnull);
 void AG_TreetblDeselectRow(AG_Treetbl *_Nonnull, AG_TreetblRow *_Nullable);
 void AG_TreetblSelectAll(AG_Treetbl *_Nonnull, AG_TreetblRow *_Nullable);
@@ -162,95 +164,17 @@ void AG_TreetblCollapseRow(AG_Treetbl *_Nonnull, AG_TreetblRow *_Nonnull);
 			AG_TreetblExpandRow(TV, (ROW));		\
 	} while (0)
 
-#define AG_TreetblBegin	AG_TreetblClearRows
-#define AG_TreetblEnd	AG_TreetblRestoreRows
+AG_TreetblRow *_Nullable AG_TreetblLookupRowRecurse(AG_TreetblRowQ *_Nonnull,
+                                                    int)
+                                                   _Pure_Attribute; 
+AG_TreetblRow *_Nullable AG_TreetblLookupRow(AG_Treetbl *_Nonnull, int)
+                                            _Pure_Attribute_If_Unthreaded;
 
-/*
- * Return a pointer if the row with the given identifer exists in or in a
- * descendant of the rowq. If it does not exist, return NULL.
- */
-static __inline__ AG_TreetblRow *_Nullable _Pure_Attribute
-AG_TreetblLookupRowRecurse(AG_TreetblRowQ *_Nonnull searchIn, int rid)
-{
-	AG_TreetblRow *row, *row2;
-
-	AG_TAILQ_FOREACH(row, searchIn, siblings) {
-		if (row->rid == rid)
-			return (row);
-
-		if (!AG_TAILQ_EMPTY(&row->children)) {
-			row2 = AG_TreetblLookupRowRecurse(&row->children, rid);
-			if (row2 != NULL)
-				return (row2);
-		}
-	}
-	return (NULL);
-}
-
-/*
- * Lookup a row by ID.
- * Return value is valid as long as Treetbl is locked.
- */
-static __inline__ AG_TreetblRow *_Nullable _Pure_Attribute_If_Unthreaded
-AG_TreetblLookupRow(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-
-	AG_ObjectLock(tt);
-	row = AG_TreetblLookupRowRecurse(&tt->children, rowID);
-	AG_ObjectUnlock(tt);
-	return (row);
-}
-
-/* Delete a row by ID */
-static __inline__ int
-AG_TreetblDelRowID(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
-	AG_TreetblDelRow(tt, row);
-	return (0);
-}
-
-/* Select a row by ID */
-static __inline__ int
-AG_TreetblSelectRowID(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
-	AG_TreetblSelectRow(tt, row);
-	return (0);
-}
-
-/* Deselect a row by ID */
-static __inline__ int
-AG_TreetblDeselectRowID(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
-	AG_TreetblDeselectRow(tt, row);
-	return (0);
-}
-
-/* Expand a row by ID */
-static __inline__ int
-AG_TreetblExpandRowID(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
-	AG_TreetblExpandRow(tt, row);
-	return (0);
-}
-
-/* Collapse a row by ID */
-static __inline__ int
-AG_TreetblCollapseRowID(AG_Treetbl *_Nonnull tt, int rowID)
-{
-	AG_TreetblRow *row;
-	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
-	AG_TreetblCollapseRow(tt, row);
-	return (0);
-}
+int AG_TreetblDelRowID(AG_Treetbl *_Nonnull, int);
+int AG_TreetblSelectRowID(AG_Treetbl *_Nonnull, int);
+int AG_TreetblDeselectRowID(AG_Treetbl *_Nonnull, int);
+int AG_TreetblExpandRowID(AG_Treetbl *_Nonnull, int);
+int AG_TreetblCollapseRowID(AG_Treetbl *_Nonnull, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

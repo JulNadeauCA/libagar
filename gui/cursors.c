@@ -152,3 +152,62 @@ AG_FreeCursors(AG_Driver *drv)
 	TAILQ_INIT(&drv->cursors);
 	drv->nCursors = 0;
 }
+
+/* Initialize an AG_Cursor structure. */
+void
+AG_CursorInit(AG_Cursor *ac)
+{
+	ac->data = NULL;
+	ac->mask = NULL;
+	ac->w = 0;
+	ac->h = 0;
+	ac->xHot = 0;
+	ac->yHot = 0;
+	ac->p = NULL;
+}
+
+/* Return a pointer to a built-in cursor. */
+AG_Cursor *
+AG_GetStockCursor(void *obj, int name)
+{
+	AG_Driver *drv = AGDRIVER(obj);
+	AG_Cursor *ac;
+	int i = 0;
+
+	AG_TAILQ_FOREACH(ac, &drv->cursors, cursors) {
+		if (i++ == name)
+			break;
+	}
+	if (ac == NULL) {
+		AG_FatalError("AG_GetStockCursor");
+	}
+	return (ac);
+}
+
+/* Return a pointer to the active cursor. */
+AG_Cursor *
+AG_GetActiveCursor(void *drv)
+{
+	return (AGDRIVER(drv)->activeCursor);
+}
+
+/* Test if cursor is visible */
+int
+AG_CursorIsVisible(void *drv)
+{
+	return AGDRIVER_CLASS(drv)->getCursorVisibility(drv);
+}
+
+/* Display the cursor */
+void
+AG_ShowCursor(void *drv)
+{
+	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 1);
+}
+
+/* Hide the cursor */
+void
+AG_HideCursor(void *drv)
+{
+	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 0);
+}

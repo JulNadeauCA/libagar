@@ -629,6 +629,60 @@ AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 	}
 }
 
+/* Blank the display background. */
+void
+AG_ClearBackground(void)
+{
+	if (agDriverSw != NULL) {
+		AG_Color c = { 0,0,0,0 };
+		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw, c);
+	}
+}
+
+/* Configure the display refresh rate (driver-dependent). */
+int
+AG_SetRefreshRate(int fps)
+{
+	if (agDriverOps->setRefreshRate == NULL) {
+		AG_SetError("Refresh rate not applicable to graphics driver");
+		return (-1);
+	}
+	return agDriverOps->setRefreshRate(agDriverSw, fps);
+}
+
+/* Evaluate whether there are pending events to be processed. */
+int
+AG_PendingEvents(AG_Driver *drv)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->pendingEvents(drv);
+	} else {
+		return agDriverOps->pendingEvents(agDriverSw);
+	}
+}
+
+/* Retrieve the next pending event, translated to generic AG_DriverEvent form. */
+int
+AG_GetNextEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->getNextEvent(drv, dev);
+	} else {
+		return agDriverOps->getNextEvent(agDriverSw, dev);
+	}
+}
+
+/* Process the next pending event in generic manner. */
+int
+AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
+{
+	if (drv != NULL) {
+		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
+	} else {
+		return agDriverOps->processEvent(agDriverSw, dev);
+	}
+}
+
 AG_ObjectClass agDriverSwClass = {
 	"AG_Driver:AG_DriverSw",
 	sizeof(AG_DriverSw),

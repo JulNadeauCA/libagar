@@ -38,19 +38,21 @@ AG_FSpinbutton *_Nonnull AG_FSpinbuttonNew(void *_Nullable, Uint,
                                            const char *_Nullable,
 					   const char *_Nullable);
 
-void    AG_FSpinbuttonSizeHint(AG_FSpinbutton *_Nonnull, const char *_Nonnull);
-#define AG_FSpinbuttonPrescale AG_FSpinbuttonSizeHint
+void AG_FSpinbuttonSizeHint(AG_FSpinbutton *_Nonnull, const char *_Nonnull);
+void AG_FSpinbuttonSetValue(AG_FSpinbutton *_Nonnull, double);
+void AG_FSpinbuttonAddValue(AG_FSpinbutton *_Nonnull, double);
+void AG_FSpinbuttonSetMin(AG_FSpinbutton *_Nonnull, double);
+void AG_FSpinbuttonSetMax(AG_FSpinbutton *_Nonnull, double);
+void AG_FSpinbuttonSetRange(AG_FSpinbutton *_Nonnull, double,double);
+void AG_FSpinbuttonSetIncrement(AG_FSpinbutton *_Nonnull, double);
+void AG_FSpinbuttonSelectUnit(AG_FSpinbutton *_Nonnull, const char *_Nonnull);
+void AG_FSpinbuttonSetPrecision(AG_FSpinbutton *_Nonnull, const char *_Nonnull,
+                                int);
+void AG_FSpinbuttonSetWriteable(AG_FSpinbutton *_Nonnull, int);
 
-void	AG_FSpinbuttonSetValue(AG_FSpinbutton *_Nonnull, double);
-void	AG_FSpinbuttonAddValue(AG_FSpinbutton *_Nonnull, double);
-void	AG_FSpinbuttonSetMin(AG_FSpinbutton *_Nonnull, double);
-void	AG_FSpinbuttonSetMax(AG_FSpinbutton *_Nonnull, double);
-void	AG_FSpinbuttonSetRange(AG_FSpinbutton *_Nonnull, double,double);
-void	AG_FSpinbuttonSetIncrement(AG_FSpinbutton *_Nonnull, double);
-void	AG_FSpinbuttonSelectUnit(AG_FSpinbutton *_Nonnull, const char *_Nonnull);
-void	AG_FSpinbuttonSetPrecision(AG_FSpinbutton *_Nonnull,
-                                   const char *_Nonnull, int);
-void	AG_FSpinbuttonSetWriteable(AG_FSpinbutton *_Nonnull, int);
+#ifndef AG_LEGACY
+#define AG_FSpinbuttonPrescale(fsb,s) AG_FSpinbuttonSizeHint((fsb),(s))
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

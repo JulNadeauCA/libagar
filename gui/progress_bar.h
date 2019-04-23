@@ -35,16 +35,13 @@ extern AG_WidgetClass agProgressBarClass;
 
 AG_ProgressBar *_Nonnull AG_ProgressBarNew(void *_Nullable,
                                            enum ag_progress_bar_type, Uint);
+AG_ProgressBar *_Nonnull AG_ProgressBarNewHoriz(void *_Nullable, Uint);
+AG_ProgressBar *_Nonnull AG_ProgressBarNewVert(void *_Nullable, Uint);
 
 AG_ProgressBar *_Nonnull AG_ProgressBarNewInt(void *_Nullable,
                                               enum ag_progress_bar_type, Uint,
                                               int *_Nullable,
-					      int *_Nullable,
-					      int *_Nullable);
-#define AG_ProgressBarNewHoriz(p,flags) \
-	AG_ProgressBarNew((p),AG_PROGRESS_BAR_HORIZ,(flags))
-#define AG_ProgressBarNewVert(p,flags) \
-	AG_ProgressBarNew((p),AG_PROGRESS_BAR_VERT,(flags))
+					      int *_Nullable, int *_Nullable);
 
 void AG_ProgressBarSetLength(AG_ProgressBar *_Nonnull, int);
 void AG_ProgressBarSetWidth(AG_ProgressBar *_Nonnull, int);

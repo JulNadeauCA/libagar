@@ -81,6 +81,61 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	return (t);
 }
 
+/*
+ * Return the cell at unchecked location m,n.
+ * The table must be locked.
+ */
+AG_TableCell *
+AG_TableGetCell(AG_Table *t, int m, int n)
+{
+#ifdef AG_DEBUG
+	if (m < 0 || m >= t->m ||
+	    n < 0 || n >= t->n)
+		AG_FatalError("Illegal cell access");
+#endif
+	return (&t->cells[m][n]);
+}
+
+/*
+ * Cell selection control
+ * The table must be locked.
+ */
+int
+AG_TableCellSelected(AG_Table *t, int m, int n)
+{
+	return (t->cells[m][n].selected);
+}
+void
+AG_TableSelectCell(AG_Table *t, int m, int n)
+{
+	t->cells[m][n].selected = 1;
+}
+void
+AG_TableDeselectCell(AG_Table *t, int m, int n)
+{
+	t->cells[m][n].selected = 0;
+}
+
+/*
+ * Column selection control
+ * The table must be locked.
+ */
+int
+AG_TableColSelected(AG_Table *t, int n)
+{
+	return (t->cols[n].selected);
+}
+void
+AG_TableSelectCol(AG_Table *t, int n)
+{
+	t->cols[n].selected = 1;
+}
+void
+AG_TableDeselectCol(AG_Table *t, int n)
+{
+	t->cols[n].selected = 0;
+}
+
 void
 AG_TableSetPollInterval(AG_Table *t, Uint ival)
 {

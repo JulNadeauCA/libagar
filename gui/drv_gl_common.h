@@ -19,12 +19,16 @@ typedef struct ag_gl_blending_state {
 typedef struct ag_gl_context {
 	AG_ClipRect *_Nullable clipRects; /* Clipping rectangle coords */
 	Uint                  nClipRects;
+
 	int clipStates[4];		  /* Clipping states */
 	AG_GL_BlendState bs[1];		  /* Alpha blending states */
+
 	Uint *_Nullable textureGC;	  /* Textures queued for deletion */
 	Uint           nTextureGC;
+
 	Uint *_Nullable listGC;           /* Display lists queued for deletion */
 	Uint           nListGC;
+
 	Uint32 dither[32];		  /* 32x32 stipple pattern */
 } AG_GL_Context;
 
@@ -87,70 +91,13 @@ void AG_GL_DrawRectBlended(void *_Nonnull, AG_Rect, AG_Color, AG_AlphaFn, AG_Alp
 void AG_GL_UpdateGlyph(void *_Nonnull, struct ag_glyph *_Nonnull);
 void AG_GL_DrawGlyph(void *_Nonnull, const struct ag_glyph *_Nonnull, int,int);
 
-/* Upload a texture. */
-static __inline__ void
-AG_GL_UploadTexture(void *_Nonnull obj, Uint *_Nonnull name,
-    AG_Surface *_Nonnull su, AG_TexCoord *_Nullable tc)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	dc->uploadTexture(drv, name, su, tc);
-}
-
-/* Update the contents of an existing GL texture. */
-static __inline__ int
-AG_GL_UpdateTexture(void *_Nonnull obj, Uint name, AG_Surface *_Nonnull su,
-    AG_TexCoord *_Nullable tc)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	return dc->updateTexture(drv, name, su, tc);
-}
-
-/*
- * Make sure that the named texture is available for hardware rendering.
- * Upload or update hardware textures if needed.
- */
-static __inline__ void
-AG_GL_PrepareTexture(void *_Nonnull obj, int name)
-{
-	AG_Widget *wid = obj;
-	AG_Driver *drv = wid->drv;
-
-	if (wid->textures[name] == 0) {
-		AG_GL_UploadTexture(drv, &wid->textures[name],
-		                          wid->surfaces[name],
-		                         &wid->texcoords[name]);
-	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
-		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(drv, wid->textures[name],
-		                         wid->surfaces[name],
-					&wid->texcoords[name]);
-	}
-}
-
-/* Queue a GL texture for deletion. */
-static __inline__ void
-AG_GL_DeleteTexture(void *_Nonnull obj, Uint name)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	dc->deleteTexture(drv, name);
-}
-
-/* Queue a GL display list for deletion. */
-static __inline__ void
-AG_GL_DeleteList(void *_Nonnull obj, Uint name)
-{
-	AG_Driver *drv = obj;
-	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
-
-	if (dc->deleteList != NULL)
-		dc->deleteList(drv, name);
-}
+void AG_GL_UploadTexture(void *_Nonnull, Uint *_Nonnull, AG_Surface *_Nonnull,
+                         AG_TexCoord *_Nullable);
+int  AG_GL_UpdateTexture(void *_Nonnull, Uint, AG_Surface *_Nonnull,
+                         AG_TexCoord *_Nullable);
+void AG_GL_PrepareTexture(void *_Nonnull, int);
+void AG_GL_DeleteTexture(void *_Nonnull, Uint);
+void AG_GL_DeleteList(void *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/gui/close.h>

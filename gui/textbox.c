@@ -112,6 +112,62 @@ AG_TextboxNewS(void *parent, Uint flags, const char *label)
 	return (tb);
 }
 
+/* Pre-size the textbox to accomodate given text. */
+void
+AG_TextboxSizeHint(AG_Textbox *tb, const char *text)
+{
+	AG_EditableSizeHint(tb->ed, text);
+}
+
+/* Pre-size the textbox to given size in pixels. */
+void
+AG_TextboxSizeHintPixels(AG_Textbox *tb, Uint w, Uint h)
+{
+	AG_EditableSizeHintPixels(tb->ed, w,h);
+}
+
+/* Pre-size the textbox to accomodate a given number of lines of text. */
+void
+AG_TextboxSizeHintLines(AG_Textbox *tb, Uint nLines)
+{
+	AG_EditableSizeHintLines(tb->ed, nLines);
+}
+
+/* Clear or set the PASSWORD mode. */
+void
+AG_TextboxSetPassword(AG_Textbox *tb, int flag)
+{
+	AG_EditableSetPassword(tb->ed, flag);
+}
+
+/* Clear or set the EXCL flag. */
+void
+AG_TextboxSetExcl(AG_Textbox *tb, int flag)
+{
+	AG_EditableSetExcl(tb->ed, flag);
+}
+
+/* Clear or set the FLT_ONLY option. */
+void
+AG_TextboxSetFltOnly(AG_Textbox *tb, int flag)
+{
+	AG_EditableSetFltOnly(tb->ed, flag);
+}
+
+/* Clear or set the INT_ONLY option. */
+void
+AG_TextboxSetIntOnly(AG_Textbox *tb, int flag)
+{
+	AG_EditableSetIntOnly(tb->ed, flag);
+}
+
+/* Set the active language (when bound to an AG_Text(3) element) */
+void
+AG_TextboxSetLang(AG_Textbox *tb, enum ag_language lang)
+{
+	AG_EditableSetLang(tb->ed, lang);
+}
+
 /* Toggle word wrapping */
 void
 AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
@@ -136,8 +192,81 @@ AG_TextboxSetWordWrap(AG_Textbox *tb, int flag)
 	}
 }
 
+int
+AG_TextboxGetCursorPos(AG_Textbox *tb)
+{
+	return AG_EditableGetCursorPos(tb->ed);
+}
+
+void
+AG_TextboxBindUTF8(AG_Textbox *tb, char *buf, AG_Size bufSize)
+{
+	AG_EditableBindUTF8(tb->ed, buf, bufSize);
+}
+
+void
+AG_TextboxBindASCII(AG_Textbox *tb, char *buf, AG_Size bufSize)
+{
+	AG_EditableBindASCII(tb->ed, buf, bufSize);
+}
+
+void
+AG_TextboxBindEncoded(AG_Textbox *tb, const char *encoding, char *buf,
+    AG_Size bufSize)
+{
+	AG_EditableBindEncoded(tb->ed, encoding, buf, bufSize);
+}
+
+void
+AG_TextboxBindText(AG_Textbox *tb, AG_Text *txt)
+{
+	AG_EditableBindText(tb->ed, txt);
+}
+
+void
+AG_TextboxSetString(AG_Textbox *tb, const char *text)
+{
+	AG_EditableSetString(tb->ed, text);
+}
+
+void
+AG_TextboxClearString(AG_Textbox *tb)
+{
+	AG_EditableSetString(tb->ed, NULL);
+}
+
+char *
+AG_TextboxDupString(AG_Textbox *tb)
+{
+	return AG_EditableDupString(tb->ed);
+}
+
+AG_Size
+AG_TextboxCopyString(AG_Textbox *tb, char *dst, AG_Size dst_size)
+{
+	return AG_EditableCopyString(tb->ed, dst, dst_size);
+}
+
+int
+AG_TextboxInt(AG_Textbox *tb)
+{
+	return AG_EditableInt(tb->ed);
+}
+
+float
+AG_TextboxFloat(AG_Textbox *tb)
+{
+	return AG_EditableFlt(tb->ed);
+}
+
+double
+AG_TextboxDouble(AG_Textbox *tb)
+{
+	return AG_EditableDbl(tb->ed);
+}
+
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
 	
@@ -186,7 +315,7 @@ Draw(void *p)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Textbox *tb = obj;
 	AG_SizeReq rEd, rLbl;
@@ -205,7 +334,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
 	int boxPadW = tb->boxPadX*2;
@@ -366,7 +495,7 @@ AG_TextboxSetCursorPos(AG_Textbox *tb, int pos)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
 	AG_WidgetFocus(tb);
@@ -374,39 +503,39 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-Disabled(AG_Event *event)
+Disabled(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
 	AG_WidgetDisable(tb->ed);
 }
 
 static void
-Enabled(AG_Event *event)
+Enabled(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_SELF();
 	AG_WidgetEnable(tb->ed);
 }
 
 static void
-EditablePreChg(AG_Event *event)
+EditablePreChg(AG_Event *_Nonnull event)
 {
 	AG_PostEvent(NULL, AG_PTR(1), "textbox-prechg", NULL);
 }
 
 static void
-EditablePostChg(AG_Event *event)
+EditablePostChg(AG_Event *_Nonnull event)
 {
 	AG_PostEvent(NULL, AG_PTR(1), "textbox-postchg", NULL);
 }
 
 static void
-EditableReturn(AG_Event *event)
+EditableReturn(AG_Event *_Nonnull event)
 {
 	AG_PostEvent(NULL, AG_PTR(1), "textbox-return", NULL);
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Textbox *tb = obj;
 	

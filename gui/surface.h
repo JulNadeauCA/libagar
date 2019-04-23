@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -526,11 +526,7 @@ void   ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_SRCALPHA		AG_SURFACE_ALPHA
 # define AG_SURFACE_GLTEXTURE   AG_SURFACE_GL_TEXTURE
 
-/*
- * Pixel access routines before Agar 1.6 (which added support for 16-bit
- * component precision and 1-, 2- and 4-bpp palettized modes (which are x,y
- * addressable only).
- */
+/* Pre-1.6 pixel access routines. */
 # define AG_CLIPPED_PIXEL(s, x,y) AG_SurfaceClipped((s), (x),(y))
 # define AG_GET_PIXEL(s, p)       AG_SurfaceGet32_At((s), (p))
 # define AG_GET_PIXEL2(s, x,y)    AG_SurfaceGet32((s), (x),(y))
@@ -546,6 +542,8 @@ void   ag_surface_set_colorkey(AG_Surface *_Nonnull, Uint, AG_Pixel);
 # define AG_BLEND_RGBA2_CLIPPED(s, x,y, r,g,b,a, fn)			\
 	if (!AG_SurfaceClipped((s), (x),(y))) 				\
 		AG_SurfaceBlendRGB8((s), (x),(y), (r),(g),(b),(a), (fn))
+
+/* AG_ALPHA_x renamed in 1.6 */
 # define AG_ALPHA_TRANSPARENT AG_TRANSPARENT
 # define AG_ALPHA_OPAQUE      AG_OPAQUE
 

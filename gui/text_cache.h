@@ -34,18 +34,6 @@ AG_TextCache *_Nonnull AG_TextCacheNew(void *_Nonnull, Uint, Uint);
 void AG_TextCacheClear(AG_TextCache *_Nonnull);
 void AG_TextCacheDestroy(AG_TextCache *_Nonnull);
 int  AG_TextCacheGet(AG_TextCache *_Nonnull, const char *_Nonnull);
-
-static __inline__ Uint _Pure_Attribute
-AG_TextCacheHash(AG_TextCache *_Nonnull tc, const char *_Nonnull s)
-{
-	Uint h;
-	Uchar *p;
-
-	for (h = 0, p = (Uchar *)s; *p != '\0'; p++) {
-		h = 31*h + *p;
-	}
-	return (h % tc->nBuckets);
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

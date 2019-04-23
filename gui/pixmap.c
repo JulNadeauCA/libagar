@@ -272,8 +272,45 @@ AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
 	return (name);
 }
 
+void
+AG_PixmapReplaceSurface(AG_Pixmap *px, int name, AG_Surface *s)
+{
+	AG_WidgetReplaceSurface(px, name, s);
+	AG_Redraw(px);
+}
+
+void
+AG_PixmapUpdateSurface(AG_Pixmap *px, int name)
+{
+	AG_WidgetUpdateSurface(px, name);
+	AG_Redraw(px);
+}
+
+int
+AG_PixmapSetSurface(AG_Pixmap *px, int name)
+{
+	AG_ObjectLock(px);
+	if (name < 0 || name >= (int)AGWIDGET(px)->nSurfaces) {
+		AG_ObjectUnlock(px);
+		return (-1);
+	}
+	px->n = name;
+	px->flags |= AG_PIXMAP_UPDATE;
+	AG_ObjectUnlock(px);
+	return (0);
+}
+
+void
+AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
+{
+	AG_ObjectLock(px);
+	px->s = s;
+	px->t = t;
+	AG_ObjectUnlock(px);
+}
+
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Pixmap *px = obj;
 	
@@ -295,7 +332,7 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Pixmap *px = obj;
 
@@ -309,7 +346,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Pixmap *px = obj;
 	
@@ -323,7 +360,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-UpdateScaled(AG_Pixmap *px)
+UpdateScaled(AG_Pixmap *_Nonnull px)
 {
 	AG_Surface *sOrig, *sScaled;
 
@@ -348,7 +385,7 @@ fail:
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Pixmap *px = obj;
 

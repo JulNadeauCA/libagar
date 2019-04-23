@@ -37,7 +37,7 @@
  * and adjust the sensitivity rectangle of partially hidden widgets.
  */
 static void
-ClipWidgets(AG_Scrollview *sv, AG_Widget *wt)
+ClipWidgets(AG_Scrollview *_Nonnull sv, AG_Widget *_Nonnull wt)
 {
 	AG_Widget *chld;
 	AG_Rect2 rView = WIDGET(sv)->rView;
@@ -63,7 +63,8 @@ ClipWidgets(AG_Scrollview *sv, AG_Widget *wt)
 
 /* Place child widgets at the current offset in the Scrollview. */
 static void
-PlaceWidgets(AG_Scrollview *sv, int *wTot, int *hTot)
+PlaceWidgets(AG_Scrollview *_Nonnull sv, int *_Nullable wTot,
+    int *_Nullable hTot)
 {
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
@@ -107,7 +108,7 @@ PlaceWidgets(AG_Scrollview *sv, int *wTot, int *hTot)
 }
 
 static void
-PanView(AG_Event *event)
+PanView(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_PTR(1);
 
@@ -118,7 +119,7 @@ PanView(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SELF();
 	int dx = AG_INT(3);
@@ -144,7 +145,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SELF();
 	int button = AG_INT(1);
@@ -162,7 +163,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Scrollview *sv = AG_SELF();
 	int button = AG_INT(1);
@@ -263,7 +264,7 @@ AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Scrollview *sv = obj;
 
@@ -303,7 +304,7 @@ AG_ScrollviewSizeHint(AG_Scrollview *sv, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
 	AG_Scrollview *sv = p;
 	AG_SizeReq rBar, rChld;
@@ -343,7 +344,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Scrollview *sv = p;
 	AG_SizeReq rBar;
@@ -406,7 +407,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *_Nonnull p)
 {
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;

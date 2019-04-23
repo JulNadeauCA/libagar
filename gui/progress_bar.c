@@ -46,10 +46,24 @@ AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)
 }
 
 AG_ProgressBar *
+AG_ProgressBarNewHoriz(void *parent, Uint flags)
+{
+	return AG_ProgressBarNew(parent, AG_PROGRESS_BAR_HORIZ, flags);
+}
+
+AG_ProgressBar *
+AG_ProgressBarNewVert(void *parent, Uint flags)
+{
+	return AG_ProgressBarNew(parent, AG_PROGRESS_BAR_VERT, flags);
+}
+
+AG_ProgressBar *
 AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
     int *val, int *min, int *max)
 {
-	AG_ProgressBar *pb = AG_ProgressBarNew(parent, type, flags);
+	AG_ProgressBar *pb;
+	
+	pb = AG_ProgressBarNew(parent, type, flags);
 	if (val != NULL) { AG_BindInt(pb, "value", val); }
 	if (min != NULL) { AG_BindInt(pb, "min", min); }
 	if (max != NULL) { AG_BindInt(pb, "max", max); }
@@ -57,7 +71,7 @@ AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
 }
 	
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_ProgressBar *pb = AG_SELF();
 
@@ -69,7 +83,7 @@ OnShow(AG_Event *event)
 }
 
 static void
-OnFontChange(AG_Event *event)
+OnFontChange(AG_Event *_Nonnull event)
 {
 	AG_ProgressBar *pb = AG_SELF();
 
@@ -77,7 +91,7 @@ OnFontChange(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 
@@ -107,7 +121,7 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *obj)
+Destroy(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 
@@ -133,7 +147,7 @@ AG_ProgressBarSetLength(AG_ProgressBar *pb, int length)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_ProgressBar *pb = obj;
 
@@ -150,7 +164,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_ProgressBar *pb = obj;
 
@@ -178,7 +192,7 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 }
 
 static void
-DrawPercentText(AG_ProgressBar *pb)
+DrawPercentText(AG_ProgressBar *_Nonnull pb)
 {
 	char s[32];
 	int su;
@@ -198,7 +212,7 @@ DrawPercentText(AG_ProgressBar *pb)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_ProgressBar *pb = obj;
 	AG_Rect rd;

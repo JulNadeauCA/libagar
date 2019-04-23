@@ -55,8 +55,8 @@ __BEGIN_DECLS
 extern AG_WidgetClass agPaneClass;
 
 AG_Pane	*_Nonnull AG_PaneNew(void *_Nullable, enum ag_pane_type, Uint);
-#define	 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))
-#define	 AG_PaneNewVert(p,f) AG_PaneNew((p),AG_PANE_VERT,(f))
+AG_Pane	*_Nonnull AG_PaneNewHoriz(void *_Nullable, Uint);
+AG_Pane	*_Nonnull AG_PaneNewVert(void *_Nullable, Uint);
 
 void AG_PaneAttachBox(AG_Pane *_Nonnull, int, AG_Box *_Nonnull);
 void AG_PaneAttachBoxes(AG_Pane *_Nonnull, AG_Box *_Nonnull, AG_Box *_Nonnull);

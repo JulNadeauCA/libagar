@@ -30,6 +30,7 @@ typedef struct ag_titlebar {
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTitlebarClass;
+
 AG_Titlebar *_Nonnull AG_TitlebarNew(void *_Nonnull, Uint);
 __END_DECLS
 

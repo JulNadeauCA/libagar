@@ -64,7 +64,7 @@ AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Fixed *fx = obj;
 
@@ -73,7 +73,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
@@ -94,7 +94,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Fixed *fx = obj;
 	AG_Widget *chld;
@@ -115,7 +115,7 @@ Draw(void *obj)
 }
 
 static __inline__ void
-UpdateWindow(AG_Fixed *fx)
+UpdateWindow(AG_Fixed *_Nonnull fx)
 {
 	if (!(fx->flags & AG_FIXED_NO_UPDATE))
 		AG_WidgetUpdate(fx);

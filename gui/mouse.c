@@ -55,6 +55,14 @@ fail:
 	return (NULL);
 }
 
+Uint8
+AG_MouseGetState(AG_Mouse *ms, int *x, int *y)
+{
+	if (x != NULL) { *x = ms->x; }
+	if (y != NULL) { *y = ms->y; }
+	return (ms->btnState);
+}
+
 static void
 Init(void *_Nonnull obj)
 {

@@ -41,6 +41,9 @@ __BEGIN_DECLS
 extern AG_ObjectClass agMouseClass;
 
 AG_Mouse *_Nullable AG_MouseNew(void *_Nonnull, const char *_Nonnull);
+
+Uint8 AG_MouseGetState(AG_Mouse *_Nonnull, int *_Nullable, int *_Nullable);
+
 void AG_MouseMotionUpdate(AG_Mouse *_Nonnull, int,int);
 void AG_MouseCursorUpdate(struct ag_window *_Nonnull, int,int);
 void AG_MouseButtonUpdate(AG_Mouse *_Nonnull, AG_MouseButtonAction, int);
@@ -48,14 +51,6 @@ void AG_ProcessMouseMotion(struct ag_window *_Nonnull, int,int, int,int, Uint);
 void AG_ProcessMouseButtonUp(struct ag_window *_Nonnull, int,int, AG_MouseButton);
 void AG_ProcessMouseButtonDown(struct ag_window *_Nonnull, int,int,
                                AG_MouseButton);
-
-static __inline__ Uint8
-AG_MouseGetState(AG_Mouse *_Nonnull ms, int *_Nullable x, int *_Nullable y)
-{
-	if (x != NULL) { *x = ms->x; }
-	if (y != NULL) { *y = ms->y; }
-	return (ms->btnState);
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

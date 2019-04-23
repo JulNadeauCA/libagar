@@ -104,57 +104,9 @@ void AG_WM_MoveEnd(struct ag_window *_Nonnull);
 void AG_WM_MouseMotion(AG_DriverSw *_Nonnull, struct ag_window *_Nonnull,
                        int,int);
 
-/* Blank the display background. */
-static __inline__ void
-AG_ClearBackground(void)
-{
-	if (agDriverSw != NULL) {
-		AG_Color c = { 0,0,0,0 };
-		AGDRIVER_SW_CLASS(agDriverSw)->videoClear(agDriverSw, c);
-	}
-}
-
-/* Configure the display refresh rate (driver-dependent). */
-static __inline__ int
-AG_SetRefreshRate(int fps)
-{
-	if (agDriverOps->setRefreshRate == NULL) {
-		AG_SetError("Refresh rate not applicable to graphics driver");
-		return (-1);
-	}
-	return agDriverOps->setRefreshRate(agDriverSw, fps);
-}
-
-/* Evaluate whether there are pending events to be processed. */
-static __inline__ int
-AG_PendingEvents(AG_Driver *_Nullable drv)
-{
-	if (drv != NULL) {
-		return AGDRIVER_CLASS(drv)->pendingEvents(drv);
-	} else {
-		return agDriverOps->pendingEvents(agDriverSw);
-	}
-}
-
-/* Retrieve the next pending event, translated to generic AG_DriverEvent form. */
-static __inline__ int
-AG_GetNextEvent(AG_Driver *_Nullable drv, AG_DriverEvent *_Nonnull dev)
-{
-	if (drv != NULL) {
-		return AGDRIVER_CLASS(drv)->getNextEvent(drv, dev);
-	} else {
-		return agDriverOps->getNextEvent(agDriverSw, dev);
-	}
-}
-
-/* Process the next pending event in generic manner. */
-static __inline__ int
-AG_ProcessEvent(AG_Driver *_Nullable drv, AG_DriverEvent *_Nonnull dev)
-{
-	if (drv != NULL) {
-		return AGDRIVER_CLASS(drv)->processEvent(drv, dev);
-	} else {
-		return agDriverOps->processEvent(agDriverSw, dev);
-	}
-}
+void AG_ClearBackground(void);
+int  AG_SetRefreshRate(int);
+int  AG_PendingEvents(AG_Driver *_Nullable);
+int  AG_GetNextEvent(AG_Driver *_Nullable, AG_DriverEvent *_Nonnull);
+int  AG_ProcessEvent(AG_Driver *_Nullable, AG_DriverEvent *_Nonnull);
 __END_DECLS

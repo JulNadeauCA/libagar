@@ -206,10 +206,11 @@ typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
 #define AGDRIVER_BOUNDED_HEIGHT(win,y) (((y) < 0) ? 0 : \
                                        ((y) > AGWIDGET(win)->h) ? (AGWIDGET(win)->h - 1) : (y))
 __BEGIN_DECLS
-extern AG_ObjectClass agDriverClass;          /* Base AG_Driver class */
-extern AG_Object agDrivers;                   /* Drivers VFS Root */
-extern AG_DriverClass *_Nullable agDriverOps; /* Current driver class */
-extern void *_Nonnull agDriverList[];         /* Available AG_DriverClass'es */
+extern AG_ObjectClass            agDriverClass;	/* Base AG_Driver class */
+extern AG_Object                 agDrivers;	/* Drivers VFS Root */
+extern AG_DriverClass *_Nullable agDriverOps;	/* Current driver class */
+
+extern void *_Nonnull agDriverList[];		/* Available driver classes */
 extern Uint           agDriverListSize;
 
 #include <agar/config/have_clock_gettime.h>
@@ -223,91 +224,19 @@ void AG_ListDriverNames(char *_Nonnull, AG_Size);
 
 AG_Driver *_Nullable AG_DriverOpen(AG_DriverClass *_Nonnull);
 void                 AG_DriverClose(AG_Driver *_Nonnull);
+AG_Driver *_Nullable AG_GetDriverByID(Uint) _Pure_Attribute;
 
+void AG_BeginRendering(void *_Nonnull);
+void AG_EndRendering(void *_Nonnull);
 void AG_ViewCapture(void);
 
-/*
- * Lookup a driver instance by ID.
- * The agDrivers VFS must be locked.
- */
-static __inline__ AG_Driver *_Nullable _Pure_Attribute
-AG_GetDriverByID(Uint id)
-{
-	AG_Driver *drv;
-
-	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if (drv->id == id)
-			return (drv);
-	}
-	return (NULL);
-}
-
-/* Enter GUI rendering context. */
-static __inline__ void
-AG_BeginRendering(void *_Nonnull drv)
-{
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
-		AG_CondBroadcast(&agCondBeginRender);
-#endif
-	agRenderingContext = 1;
-	AGDRIVER_CLASS(drv)->beginRendering(drv);
-}
-
-/* Leave GUI rendering context. */
-static __inline__ void
-AG_EndRendering(void *_Nonnull drv)
-{
-	AGDRIVER_CLASS(drv)->endRendering(drv);
-	agRenderingContext = 0;
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
-	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
-		AG_CondBroadcast(&agCondEndRender);
-#endif
-}
+int AG_UsingGL(void *_Nullable) _Pure_Attribute;
+int AG_UsingSDL(void *_Nullable) _Pure_Attribute;
+int AG_GetDisplaySize(void *_Nullable, Uint *_Nonnull,Uint *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/drv_mw.h>
 #include <agar/gui/drv_sw.h>
-
-__BEGIN_DECLS
-/* Return whether Agar is using OpenGL. */
-static __inline__ int _Pure_Attribute
-AG_UsingGL(void *_Nullable drv)
-{
-	if (drv != NULL) {
-		return (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL);
-	} else {
-		return (agDriverOps->flags & AG_DRIVER_OPENGL);
-	}
-}
-
-/* Return whether Agar is using SDL. */
-static __inline__ int _Pure_Attribute
-AG_UsingSDL(void *_Nullable drv)
-{
-	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
-	return (dc->flags & AG_DRIVER_SDL);
-}
-
-/* Query a driver for available display area in pixels. */
-static __inline__ int
-AG_GetDisplaySize(void *_Nullable drv, Uint *_Nonnull w, Uint *_Nonnull h)
-{
-	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
-	AG_DriverSw *dsw = (drv != NULL) ? (AG_DriverSw *)drv : agDriverSw;
-
-	switch (dc->wm) {
-	case AG_WM_SINGLE:
-		*w = dsw->w;
-		*h = dsw->h;
-		return (0);
-	case AG_WM_MULTIPLE:
-		return dc->getDisplaySize(w, h);
-	}
-	return (-1);
-}
-__END_DECLS
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_DRV_H_ */

@@ -164,12 +164,9 @@ AG_Font *_Nullable AG_TextFontPts(int);
 AG_Font *_Nullable AG_TextFontPct(int);
 
 void AG_TextSize(const char *_Nullable, int *_Nullable, int *_Nullable);
-
 void AG_TextSizeMulti(const char *_Nonnull, int *_Nonnull, int *_Nonnull,
                       Uint *_Nullable *_Nonnull, Uint *_Nullable);
-
 void AG_TextSizeUCS4(const Uint32 *_Nonnull, int *_Nullable, int *_Nullable);
-
 void AG_TextSizeMultiUCS4(const Uint32 *_Nonnull, int *_Nullable,
                           int *_Nullable, Uint *_Nullable *_Nonnull,
 			  Uint *_Nonnull);
@@ -180,6 +177,7 @@ AG_Surface *_Nonnull AG_TextRenderUCS4(const Uint32 *_Nonnull) _Warn_Unused_Resu
 void AG_TextMsgS(enum ag_text_msg_title, const char *_Nonnull);
 void AG_TextMsg(enum ag_text_msg_title, const char *_Nonnull, ...)
                FORMAT_ATTRIBUTE(printf,2,3);
+void AG_TextMsgFromError(void);
 
 void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *_Nonnull);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *_Nonnull, ...)
@@ -215,196 +213,27 @@ AG_Glyph *_Nonnull AG_TextRenderGlyphMiss(AG_Driver *_Nonnull, Uint32);
 void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
                   int,int,int, int, enum ag_text_justify, enum ag_text_valign);
 
-#define AG_TextMsgFromError() \
-	AG_TextMsgS(AG_MSG_ERROR, AG_GetError())
+int AG_TextJustifyOffset(int, int) _Pure_Attribute;
+int AG_TextValignOffset(int, int) _Pure_Attribute;
 
-/* Compare two text states. */
-static __inline__ int _Pure_Attribute
-AG_TextStateCompare(const AG_TextState *_Nonnull a,
-                    const AG_TextState *_Nonnull b)
-{
-	if (a->font == b->font &&
-	    AG_ColorCompare(a->color,b->color) == 0 &&
-	    AG_ColorCompare(a->colorBG,b->colorBG) == 0 &&
-	    a->justify == b->justify &&
-	    a->valign == b->valign &&
-	    a->tabWd == b->tabWd) {
-		return (0);
-	}
-	return (1);
-}
+AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull)
+                                  _Warn_Unused_Result;
 
-/*
- * Return the offset in pixels needed to align text based on the current
- * justification mode.
- */
-static __inline__ int _Pure_Attribute
-AG_TextJustifyOffset(int w, int wLine)
-{
-	switch (agTextState->justify) {
-	case AG_TEXT_LEFT:	return (0);
-	case AG_TEXT_CENTER:	return (w/2 - wLine/2);
-	case AG_TEXT_RIGHT:	return (w - wLine);
-	}
-	return (0);
-}
+AG_Glyph *_Nonnull AG_TextRenderGlyph(AG_Driver *_Nonnull, Uint32)
+                                     _Warn_Unused_Result;
 
-/*
- * Return the offset in pixels needed to align text based on the current
- * vertical alignment mode.
- */
-static __inline__ int _Pure_Attribute
-AG_TextValignOffset(int h, int hLine)
-{
-	switch (agTextState->valign) {
-	case AG_TEXT_TOP:	return (0);
-	case AG_TEXT_MIDDLE:	return (h/2 - hLine/2);
-	case AG_TEXT_BOTTOM:	return (h - hLine);
-	}
-	return (0);
-}
-
-/*
- * Allocate a transparent surface and render text from a C string.
- * The string may contain UTF-8 sequences.
- */
-static __inline__ AG_Surface *_Nonnull _Warn_Unused_Result
-AG_TextRender(const char *_Nonnull text)
-{
-	Uint32 *ucs;
-	AG_Surface *su;
-	
-	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
-		AG_FatalError(NULL);
-	}
-	su = AG_TextRenderUCS4(ucs);
-	AG_Free(ucs);
-	return (su);
-}
-
-/*
- * Lookup/insert a glyph in the glyph cache.
- * Must be called from GUI rendering context.
- */
-static __inline__ AG_Glyph *_Nonnull _Warn_Unused_Result
-AG_TextRenderGlyph(AG_Driver *_Nonnull drv, Uint32 ch)
-{
-	AG_Glyph *gl;
-	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
-
-	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
-		if (ch == gl->ch &&
-		    agTextState->font == gl->font &&
-		    AG_ColorCompare(agTextState->color,gl->color) == 0)
-			break;
-	}
-	if (gl == NULL) {
-		gl = AG_TextRenderGlyphMiss(drv, ch);
-		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
-	}
-	return (gl);
-}
-
-
-/* Set active text color. */
-static __inline__ void
-AG_TextColor(AG_Color c)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->color = c;
-	AG_MutexUnlock(&agTextLock);
-}
-static __inline__ void
-AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorRGB_8(r,g,b);
-	AG_MutexUnlock(&agTextLock);
-}
-static __inline__ void
-AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorRGBA_8(r,g,b,a);
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Set text color from 0xRRGGBBAA format. */
-static __inline__ void
-AG_TextColorHex(Uint32 c)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->color = AG_ColorHex32(c);
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Set active text background color. */
-static __inline__ void
-AG_TextBGColor(AG_Color C)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = C;
-	AG_MutexUnlock(&agTextLock);
-}
-static __inline__ void
-AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorRGB_8(r,g,b);
-	AG_MutexUnlock(&agTextLock);
-}
-static __inline__ void
-AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorRGBA_8(r,g,b,a);
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Set text BG color from 0xRRGGBBAA format. */
-static __inline__ void
-AG_TextBGColorHex(Uint32 c)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = AG_ColorHex(c);
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Select a specific font face to use in rendering text. */
-static __inline__ void
-AG_TextFont(AG_Font *_Nonnull font)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->font = font;
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Select the justification mode to use in rendering text. */
-static __inline__ void
-AG_TextJustify(enum ag_text_justify mode)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->justify = mode;
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Select the vertical alignment mode to use in rendering text. */
-static __inline__ void
-AG_TextValign(enum ag_text_valign mode)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->valign = mode;
-	AG_MutexUnlock(&agTextLock);
-}
-
-/* Select the tab width in pixels for rendering text. */
-static __inline__ void
-AG_TextTabWidth(int px)
-{
-	AG_MutexLock(&agTextLock);
-	agTextState->tabWd = px;
-	AG_MutexUnlock(&agTextLock);
-}
+void AG_TextColor(AG_Color);
+void AG_TextColorRGB(Uint8, Uint8, Uint8);
+void AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);
+void AG_TextColorHex(Uint32);
+void AG_TextBGColor(AG_Color);
+void AG_TextBGColorRGB(Uint8, Uint8, Uint8);
+void AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
+void AG_TextBGColorHex(Uint32);
+void AG_TextFont(AG_Font *_Nonnull);
+void AG_TextJustify(enum ag_text_justify);
+void AG_TextValign(enum ag_text_valign);
+void AG_TextTabWidth(int);
 __END_DECLS
 
 #include <agar/gui/close.h>

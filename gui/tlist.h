@@ -118,29 +118,44 @@ void AG_TlistSetIcon(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull,
                      const AG_Surface *_Nullable);
 void AG_TlistSetRefresh(AG_Tlist *_Nonnull, int);
 
-void AG_TlistDel(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistUniq(AG_Tlist *_Nonnull);
+
 void AG_TlistClear(AG_Tlist *_Nonnull);
 void AG_TlistRestore(AG_Tlist *_Nonnull);
 
-AG_TlistItem *_Nonnull AG_TlistItemNew(AG_Tlist *_Nonnull, const AG_Surface *_Nullable);
+void AG_TlistBegin(AG_Tlist *_Nonnull);
+void AG_TlistEnd(AG_Tlist *_Nonnull);
 
-AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistItemNew(AG_Tlist *_Nonnull,
+                                       const AG_Surface *_Nullable);
+
+AG_TlistItem *_Nonnull AG_TlistAddS(AG_Tlist *_Nonnull,
+                                    const AG_Surface *_Nullable,
                                     const char *_Nonnull);
-AG_TlistItem *_Nonnull AG_TlistAdd(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+
+AG_TlistItem *_Nonnull AG_TlistAdd(AG_Tlist *_Nonnull,
+                                   const AG_Surface *_Nullable,
                                    const char *_Nonnull, ...)
 				  FORMAT_ATTRIBUTE(printf,3,4);
 
-AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddHeadS(AG_Tlist *_Nonnull,
+                                        const AG_Surface *_Nullable,
                                         const char *_Nonnull);
-AG_TlistItem *_Nonnull AG_TlistAddHead(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+
+AG_TlistItem *_Nonnull AG_TlistAddHead(AG_Tlist *_Nonnull,
+                                       const AG_Surface *_Nullable,
                                        const char *_Nonnull, ...)
 				      FORMAT_ATTRIBUTE(printf,3,4);
 
-AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+AG_TlistItem *_Nonnull AG_TlistAddPtr(AG_Tlist *_Nonnull,
+                                      const AG_Surface *_Nullable,
                                       const char *_Nonnull, void *_Nullable);
-AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull, const AG_Surface *_Nullable,
+
+AG_TlistItem *_Nonnull AG_TlistAddPtrHead(AG_Tlist *_Nonnull,
+                                          const AG_Surface *_Nullable,
                                           const char *_Nonnull, void *_Nullable);
+
+void AG_TlistDel(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 
 void AG_TlistSelect(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
 void AG_TlistDeselect(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
@@ -172,48 +187,25 @@ void AG_TlistSetChangedFn(AG_Tlist *_Nonnull, _Nonnull AG_EventFn,
                           const char *_Nullable, ...);
 
 void AG_TlistSetCompareFn(AG_Tlist *_Nonnull,
-                          int (*_Nonnull)(const AG_TlistItem *_Nonnull, const AG_TlistItem *_Nonnull));
-int AG_TlistCompareStrings(const AG_TlistItem *_Nonnull,
-                           const AG_TlistItem *_Nonnull)
-                          _Pure_Attribute;
-int AG_TlistComparePtrs(const AG_TlistItem *_Nonnull,
-                        const AG_TlistItem *_Nonnull)
-                       _Pure_Attribute;
-int AG_TlistComparePtrsAndClasses(const AG_TlistItem *_Nonnull,
-                                  const AG_TlistItem *_Nonnull)
-                                 _Pure_Attribute;
-int AG_TlistSort(AG_Tlist *_Nonnull);
+                          int (*_Nonnull)(const AG_TlistItem *_Nonnull,
+			                  const AG_TlistItem *_Nonnull));
+int  AG_TlistCompareStrings(const AG_TlistItem *_Nonnull,
+                            const AG_TlistItem *_Nonnull)
+                           _Pure_Attribute;
+int  AG_TlistComparePtrs(const AG_TlistItem *_Nonnull,
+                         const AG_TlistItem *_Nonnull)
+                        _Pure_Attribute;
+int  AG_TlistComparePtrsAndClasses(const AG_TlistItem *_Nonnull,
+                                   const AG_TlistItem *_Nonnull)
+                                  _Pure_Attribute;
 
-#define AG_TlistBegin(tl) AG_TlistClear(tl)
-#define AG_TlistEnd(tl)   AG_TlistRestore(tl)
+int  AG_TlistSort(AG_Tlist *_Nonnull);
+int  AG_TlistVisibleChildren(AG_Tlist *_Nonnull, AG_TlistItem *_Nonnull);
+void AG_TlistRefresh(AG_Tlist *_Nonnull);
 
 #ifdef AG_LEGACY
-#define AG_TLIST_DYNICON 0x04 /* Use a copy of iconsrc */
-#define AG_TlistPrescale(tl,text,nitems) AG_TlistSizeHint((tl),(text),(nitems))
+#define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))
 #endif
-
-static __inline__ int
-AG_TlistVisibleChildren(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull cit)
-{
-	AG_TlistItem *sit;
-
-	AG_TAILQ_FOREACH(sit, &tl->selitems, selitems) {
-		if (tl->compare_fn(sit, cit))
-			break;
-	}
-	if (sit == NULL) { 
-		return (0);			/* TODO default setting */
-	}
-	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
-}
-
-static __inline__ void
-AG_TlistRefresh(AG_Tlist *_Nonnull tl)
-{
-	AG_ObjectLock(tl);
-	tl->flags |= AG_TLIST_REFRESH;
-	AG_ObjectUnlock(tl);
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

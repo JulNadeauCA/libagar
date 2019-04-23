@@ -10,7 +10,7 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_textbox {
-	struct ag_widget _inherit;        /* Agar(Object:Widget:Textbox) */
+	struct ag_widget _inherit;        /* AG_Widget -> AG_Textbox */
 
 	struct ag_editable *_Nonnull ed;  /* Input field */
 	AG_Label *_Nullable lbl;          /* Optional text label */
@@ -44,9 +44,6 @@ typedef struct ag_textbox {
 } AG_Textbox;
 
 #define AGTEXTBOX(p) ((AG_Textbox *)(p))
-#ifdef _AGAR_INTERNAL
-#define TEXTBOX(p) AGTEXTBOX(p)
-#endif
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTextboxClass;
@@ -55,41 +52,42 @@ AG_Textbox *_Nonnull AG_TextboxNewS(void *_Nullable, Uint, const char *_Nullable
 AG_Textbox *_Nonnull AG_TextboxNew(void *_Nullable, Uint, const char *_Nullable, ...)
                                   FORMAT_ATTRIBUTE(printf,3,4);
 
-#define AG_TextboxSizeHint(tb,text)      AG_EditableSizeHint((tb)->ed,(text))
-#define AG_TextboxSizeHintPixels(tb,w,h) AG_EditableSizeHintPixels((tb)->ed,(w),(h))
-#define AG_TextboxSizeHintLines(tb,l)    AG_EditableSizeHintLines((tb)->ed,(l))
+void AG_TextboxSizeHint(AG_Textbox *_Nonnull, const char *_Nonnull);
+void AG_TextboxSizeHintPixels(AG_Textbox *_Nonnull, Uint,Uint);
+void AG_TextboxSizeHintLines(AG_Textbox *_Nonnull, Uint);
 
-void    AG_TextboxSetLabelS(AG_Textbox *_Nonnull, const char *_Nonnull);
-void    AG_TextboxSetLabel(AG_Textbox *_Nonnull, const char *_Nonnull, ...)
-                          FORMAT_ATTRIBUTE(printf,2,3);
+void AG_TextboxSetLabelS(AG_Textbox *_Nonnull, const char *_Nonnull);
+void AG_TextboxSetLabel(AG_Textbox *_Nonnull, const char *_Nonnull, ...)
+                       FORMAT_ATTRIBUTE(printf,2,3);
 
-void    AG_TextboxSetWordWrap(AG_Textbox *_Nonnull, int);
-void    AG_TextboxPrintf(AG_Textbox *_Nonnull, const char *_Nonnull, ...);
+void AG_TextboxSetWordWrap(AG_Textbox *_Nonnull, int);
+void AG_TextboxPrintf(AG_Textbox *_Nonnull, const char *_Nonnull, ...);
 
-#define AG_TextboxSetPassword(tb,flag) AG_EditableSetPassword((tb)->ed,(flag))
-#define AG_TextboxSetExcl(tb,flag)     AG_EditableSetExcl((tb)->ed,(flag))
-#define AG_TextboxSetFltOnly(tb,flag)  AG_EditableSetFltOnly((tb)->ed,(flag))
-#define AG_TextboxSetIntOnly(tb,flag)  AG_EditableSetIntOnly((tb)->ed,(flag))
-#define AG_TextboxSetLang(tb,lang)     AG_EditableSetLang((tb)->ed,(lang))
+void AG_TextboxSetPassword(AG_Textbox *, int);
+void AG_TextboxSetExcl(AG_Textbox *, int);
+void AG_TextboxSetFltOnly(AG_Textbox *, int);
+void AG_TextboxSetIntOnly(AG_Textbox *, int);
+void AG_TextboxSetLang(AG_Textbox *, enum ag_language);
 
-int     AG_TextboxMapPosition(AG_Textbox *_Nonnull, int,int, int *_Nonnull);
-void    AG_TextboxMoveCursor(AG_Textbox *_Nonnull, int,int);
-void    AG_TextboxSetCursorPos(AG_Textbox *_Nonnull, int);
-#define AG_TextboxGetCursorPos(tb) AG_EditableGetCursorPos((tb)->ed)
+int  AG_TextboxMapPosition(AG_Textbox *_Nonnull, int,int, int *_Nonnull);
+void AG_TextboxMoveCursor(AG_Textbox *_Nonnull, int,int);
+void AG_TextboxSetCursorPos(AG_Textbox *_Nonnull, int);
+int  AG_TextboxGetCursorPos(AG_Textbox *_Nonnull);
 
-#define AG_TextboxBindUTF8(tb,p,sz)        AG_EditableBindUTF8((tb)->ed,(p),(sz))
-#define AG_TextboxBindASCII(tb,p,sz)       AG_EditableBindASCII((tb)->ed,(p),(sz))
-#define AG_TextboxBindEncoded(tb,enc,p,sz) AG_EditableBindEncoded((tb)->ed,(enc),(p),(sz))
-#define AG_TextboxBindText(tb,txt)         AG_EditableBindText((tb)->ed,(txt))
+void AG_TextboxBindUTF8(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
+void AG_TextboxBindASCII(AG_Textbox *_Nonnull, char *_Nonnull, AG_Size);
+void AG_TextboxBindEncoded(AG_Textbox *_Nonnull, const char *_Nonnull,
+                           char *_Nonnull, AG_Size);
+void AG_TextboxBindText(AG_Textbox *_Nonnull, AG_Text *_Nonnull);
 
-#define AG_TextboxSetString(tb,s)      AG_EditableSetString((tb)->ed,(s))
-#define	AG_TextboxClearString(tb)      AG_EditableSetString((tb)->ed,NULL)
-#define AG_TextboxDupString(tb)        AG_EditableDupString((tb)->ed)
-#define AG_TextboxCopyString(tb,p,len) AG_EditableCopyString((tb)->ed,(p),(len))
-
-#define AG_TextboxInt(tb) AG_EditableInt((tb)->ed)
-#define AG_TextboxFlt(tb) AG_EditableFlt((tb)->ed)
-#define AG_TextboxDbl(tb) AG_EditableDbl((tb)->ed)
+void           AG_TextboxSetString(AG_Textbox *_Nonnull, const char *_Nonnull);
+void           AG_TextboxClearString(AG_Textbox *_Nonnull);
+char *_Nonnull AG_TextboxDupString(AG_Textbox *_Nonnull);
+AG_Size        AG_TextboxCopyString(AG_Textbox *_Nonnull, char *_Nonnull,
+                                    AG_Size);
+int            AG_TextboxInt(AG_Textbox *_Nonnull);
+float          AG_TextboxFloat(AG_Textbox *_Nonnull);
+double         AG_TextboxDouble(AG_Textbox *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

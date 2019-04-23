@@ -61,29 +61,24 @@ extern const AG_Unit agThermalConductivityUnits[];
 extern const AG_Unit agThermalExpansionUnits[];
 extern const AG_Unit agDensityUnits[];
 
-int AG_UnitIsNonlinear(const char *_Nonnull)
-                      _Const_Attribute;
-double AG_Unit2Base(double, const AG_Unit *_Nonnull)
-                   _Pure_Attribute;
-double AG_Base2Unit(double, const AG_Unit *_Nonnull)
-                   _Pure_Attribute;
+int AG_UnitIsNonlinear(const char *_Nonnull) _Const_Attribute;
+double AG_Unit2Base(double, const AG_Unit *_Nonnull) _Pure_Attribute;
+double AG_Base2Unit(double, const AG_Unit *_Nonnull) _Pure_Attribute;
 #ifdef AG_HAVE_LONG_DOUBLE
-long double AG_Unit2BaseLDBL(long double, const AG_Unit *_Nonnull)
-                            _Pure_Attribute;
-long double AG_Base2UnitLDBL(long double, const AG_Unit *_Nonnull)
-                            _Pure_Attribute;
+long double AG_Unit2BaseLDBL(long double, const AG_Unit *_Nonnull) _Pure_Attribute;
+long double AG_Base2UnitLDBL(long double, const AG_Unit *_Nonnull) _Pure_Attribute;
 #endif
 
 double AG_Unit2Unit(double, const AG_Unit *_Nonnull, const AG_Unit *_Nonnull)
                    _Pure_Attribute;
 
-const char *_Nonnull AG_UnitAbbr(const AG_Unit *_Nonnull)
-                                _Pure_Attribute;
+const char *_Nonnull AG_UnitAbbr(const AG_Unit *_Nonnull) _Pure_Attribute;
 
 const AG_Unit *_Nullable AG_FindUnit(const char *_Nonnull);
 const AG_Unit *_Nonnull  AG_BestUnit(const AG_Unit[_Nonnull], double);
-int                      AG_UnitFormat(double, const AG_Unit[_Nonnull],
-                                       char *_Nonnull, AG_Size);
+
+int AG_UnitFormat(double, const AG_Unit[_Nonnull],
+                  char *_Nonnull, AG_Size);
 
 #define	AG_Unit2Basef(n, u) ((float)AG_Unit2Base((float)(n), (u)))
 #define	AG_Base2Unitf(n, u) ((float)AG_Base2Unit((float)(n), (u)))

@@ -50,6 +50,10 @@ AG_ColorOffset agLowColor    = { -20, -20, -10 };
 AG_ColorOffset agHighColor   = {  40,  40,  40 };
 #endif
 
+/* Import inlinables */
+#undef AG_INLINE_HEADER
+#include "inline_colors.h"
+
 #ifdef HAVE_FLOAT
 
 static __inline__ AG_Component

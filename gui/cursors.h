@@ -46,62 +46,15 @@ AG_Cursor *_Nullable AG_CursorNew(void *_Nonnull, Uint,Uint,
 AG_Cursor *_Nullable AG_CursorFromXPM(void *_Nonnull, char *_Nonnull [_Nonnull],
                                       int,int);
 
-void                 AG_CursorFree(void *_Nonnull, AG_Cursor *_Nonnull);
+void AG_CursorInit(AG_Cursor *_Nonnull);
+void AG_CursorFree(void *_Nonnull, AG_Cursor *_Nonnull);
 
-/* Initialize an AG_Cursor structure. */
-static __inline__ void
-AG_CursorInit(AG_Cursor *_Nonnull ac)
-{
-	ac->data = NULL;
-	ac->mask = NULL;
-	ac->w = 0;
-	ac->h = 0;
-	ac->xHot = 0;
-	ac->yHot = 0;
-	ac->p = NULL;
-}
+AG_Cursor *_Nonnull  AG_GetStockCursor(void *_Nonnull, int);
+AG_Cursor *_Nullable AG_GetActiveCursor(void *_Nonnull);
 
-/* Return a pointer to a built-in cursor. */
-static __inline__ AG_Cursor *_Nonnull
-AG_GetStockCursor(void *_Nonnull obj, int name)
-{
-	AG_Driver *drv = AGDRIVER(obj);
-	AG_Cursor *ac;
-	int i = 0;
-
-	AG_TAILQ_FOREACH(ac, &drv->cursors, cursors) {
-		if (i++ == name)
-			break;
-	}
-	if (ac == NULL) {
-		AG_FatalError("AG_GetStockCursor");
-	}
-	return (ac);
-}
-
-/* Return a pointer to the active cursor. */
-static __inline__ AG_Cursor *_Nullable
-AG_GetActiveCursor(void *_Nonnull drv)
-{
-	return (AGDRIVER(drv)->activeCursor);
-}
-
-/* Show/hide the active cursor. */
-static __inline__ int
-AG_CursorIsVisible(void *_Nonnull drv)
-{
-	return AGDRIVER_CLASS(drv)->getCursorVisibility(drv);
-}
-static __inline__ void
-AG_ShowCursor(void *_Nonnull drv)
-{
-	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 1);
-}
-static __inline__ void
-AG_HideCursor(void *_Nonnull drv)
-{
-	AGDRIVER_CLASS(drv)->setCursorVisibility(drv, 0);
-}
+int  AG_CursorIsVisible(void *_Nonnull);
+void AG_ShowCursor(void *_Nonnull);
+void AG_HideCursor(void *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>

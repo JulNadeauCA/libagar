@@ -91,8 +91,7 @@ __BEGIN_DECLS
 extern AG_WidgetClass agFileDlgClass;
 
 AG_FileDlg *_Nonnull AG_FileDlgNew(void *_Nullable, Uint);
-AG_FileDlg *_Nonnull AG_FileDlgNewMRU(void *_Nullable, const char *_Nonnull,
-                                      Uint);
+AG_FileDlg *_Nonnull AG_FileDlgNewMRU(void *_Nullable, const char *_Nonnull, Uint);
 
 void AG_FileDlgSetOptionContainer(AG_FileDlg *_Nonnull, void *_Nullable);
 
@@ -116,26 +115,24 @@ int  AG_FileDlgCheckReadAccess(AG_FileDlg *_Nonnull);
 int  AG_FileDlgCheckWriteAccess(AG_FileDlg *_Nonnull);
 void AG_FileDlgRefresh(AG_FileDlg *_Nonnull);
 
-AG_FileType *_Nonnull AG_FileDlgAddType(AG_FileDlg *_Nonnull,
-                                        const char *_Nonnull,
-					const char *_Nonnull,
-                                        _Nullable AG_IntFn,
+AG_FileType *_Nonnull AG_FileDlgAddType(AG_FileDlg *_Nonnull, const char *_Nonnull,
+					const char *_Nonnull, _Nullable AG_IntFn,
 					const char *_Nullable, ...);
 			       
 AG_FileOption *_Nonnull AG_FileOptionNewBool(AG_FileType *_Nonnull,
-                                             const char  *_Nonnull,
-					     const char  *_Nonnull, int);
+                                             const char *_Nonnull,
+					     const char *_Nonnull, int);
 
 AG_FileOption *_Nonnull AG_FileOptionNewInt(AG_FileType *_Nonnull,
-                                            const char  *_Nonnull,
-					    const char  *_Nonnull,
+                                            const char *_Nonnull,
+					    const char *_Nonnull,
 					    int, int,int);
 
 AG_FileOption *_Nonnull AG_FileOptionNewFlt(AG_FileType *_Nonnull,
-                                            const char  *_Nonnull,
-					    const char  *_Nonnull,
+                                            const char *_Nonnull,
+					    const char *_Nonnull,
 					    float, float,float,
-					    const char  *_Nullable);
+					    const char *_Nullable);
 
 AG_FileOption *_Nonnull AG_FileOptionNewDbl(AG_FileType *_Nonnull,
                                             const char *_Nonnull,
@@ -152,16 +149,15 @@ AG_FileOption *_Nullable AG_FileOptionGet(AG_FileType *_Nonnull,
                                           const char *_Nonnull)
                                          _Pure_Attribute;
 
-int     AG_FileOptionInt(AG_FileType *_Nonnull, const char *_Nonnull)
-                        _Pure_Attribute_If_Unthreaded;
+int AG_FileOptionInt(AG_FileType *_Nonnull, const char *_Nonnull)
+                    _Pure_Attribute_If_Unthreaded;
+int AG_FileOptionBool(AG_FileType *_Nonnull, const char *_Nonnull)
+                     _Pure_Attribute_If_Unthreaded;
 
-#define AG_FileOptionBool(ft,key) AG_FileOptionInt((ft),(key))
-
-float   AG_FileOptionFlt(AG_FileType *_Nonnull, const char *_Nonnull)
-                        _Pure_Attribute_If_Unthreaded;
-
-double  AG_FileOptionDbl(AG_FileType *_Nonnull, const char *_Nonnull)
-                        _Pure_Attribute_If_Unthreaded;
+float  AG_FileOptionFlt(AG_FileType *_Nonnull, const char *_Nonnull)
+                       _Pure_Attribute_If_Unthreaded;
+double AG_FileOptionDbl(AG_FileType *_Nonnull, const char *_Nonnull)
+                       _Pure_Attribute_If_Unthreaded;
 
 char *_Nonnull AG_FileOptionString(AG_FileType *_Nonnull, const char *_Nonnull);
                                   _Pure_Attribute_If_Unthreaded;

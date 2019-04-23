@@ -48,6 +48,18 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 }
 
 AG_Separator *
+AG_SeparatorNewHoriz(void *parent)
+{
+	return AG_SeparatorNew(parent, AG_SEPARATOR_HORIZ);
+}
+
+AG_Separator *
+AG_SeparatorNewVert(void *parent)
+{
+	return AG_SeparatorNew(parent, AG_SEPARATOR_VERT);
+}
+
+AG_Separator *
 AG_SpacerNew(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
@@ -64,6 +76,18 @@ AG_SpacerNew(void *parent, enum ag_separator_type type)
 	}
 	AG_ObjectAttach(parent, sep);
 	return (sep);
+}
+
+AG_Separator *
+AG_SpacerNewHoriz(void *parent)
+{
+	return AG_SpacerNew(parent, AG_SEPARATOR_HORIZ);
+}
+
+AG_Separator *
+AG_SpacerNewVert(void *parent)
+{
+	return AG_SpacerNew(parent, AG_SEPARATOR_VERT);
 }
 
 static void

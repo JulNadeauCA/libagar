@@ -64,7 +64,7 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 
 /* The UCombo must be locked. */
 static void
-Collapse(AG_UCombo *com)
+Collapse(AG_UCombo *_Nonnull com)
 {
 	if (com->panel == NULL) {
 		return;
@@ -80,7 +80,7 @@ Collapse(AG_UCombo *com)
 }
 
 static void
-ModalClose(AG_Event *event)
+ModalClose(AG_Event *_Nonnull event)
 {
 	AG_UCombo *com = AG_PTR(1);
 
@@ -89,7 +89,7 @@ ModalClose(AG_Event *event)
 }
 
 static void
-Expand(AG_Event *event)
+Expand(AG_Event *_Nonnull event)
 {
 	AG_UCombo *com = AG_PTR(1);
 	AG_Driver *drv = WIDGET(com)->drv;
@@ -154,7 +154,7 @@ Expand(AG_Event *event)
 }
 
 static void
-SelectedItem(AG_Event *event)
+SelectedItem(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_UCombo *com = AG_PTR(1);
@@ -173,7 +173,7 @@ SelectedItem(AG_Event *event)
 }
 
 static void
-OnDetach(AG_Event *event)
+OnDetach(AG_Event *_Nonnull event)
 {
 	AG_UCombo *com = AG_SELF();
 
@@ -185,7 +185,7 @@ OnDetach(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_UCombo *com = obj;
 
@@ -233,7 +233,7 @@ AG_UComboSizeHintPixels(AG_UCombo *com, int w, int h)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *_Nonnull p)
 {
 	AG_UCombo *com = p;
 
@@ -241,7 +241,7 @@ Destroy(void *p)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_UCombo *com = obj;
 
@@ -249,7 +249,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_UCombo *com = obj;
 	AG_SizeReq rButton;
@@ -260,7 +260,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_UCombo *com = obj;
 	AG_SizeAlloc aButton;

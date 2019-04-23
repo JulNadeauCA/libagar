@@ -57,6 +57,18 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 	return (pa);
 }
 
+AG_Pane	*
+AG_PaneNewHoriz(void *parent, Uint flags)
+{
+	return AG_PaneNew(parent, AG_PANE_HORIZ, flags);
+}
+
+AG_Pane	*
+AG_PaneNewVert(void *parent, Uint flags)
+{
+	return AG_PaneNew(parent, AG_PANE_VERT, flags);
+}
+
 static __inline__ int
 OverDivControl(AG_Pane *pa, int pos)
 {

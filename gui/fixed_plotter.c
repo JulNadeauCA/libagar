@@ -302,6 +302,13 @@ Destroy(void *obj)
 	}
 }
 
+void
+AG_FixedPlotterScroll(AG_FixedPlotter *_Nonnull fpl, int i)
+{
+	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
+		fpl->xoffs += i;
+}
+
 AG_WidgetClass agFixedPlotterClass = {
 	{
 		"Agar(Widget:FixedPlotter)",

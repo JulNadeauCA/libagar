@@ -54,7 +54,7 @@ AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 }
 
 static void
-Bound(AG_Event *event)
+Bound(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_SELF();
 	AG_Variable *binding = AG_PTR(1);
@@ -101,7 +101,7 @@ Bound(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_SELF();
 	int keysym = AG_INT(1);
@@ -119,7 +119,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-PostChange(AG_Event *event)
+PostChange(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
@@ -130,7 +130,7 @@ PostChange(AG_Event *event)
 }
 
 static void
-Return(AG_Event *event)
+Return(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
@@ -141,7 +141,7 @@ Return(AG_Event *event)
 }
 
 static void
-Increment(AG_Event *event)
+Increment(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
@@ -152,7 +152,7 @@ Increment(AG_Event *event)
 }
 
 static void
-Decrement(AG_Event *event)
+Decrement(AG_Event *_Nonnull event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 	
@@ -163,7 +163,7 @@ Decrement(AG_Event *event)
 }
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Spinbutton *sbu = obj;
 	
@@ -206,7 +206,7 @@ Init(void *obj)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Spinbutton *sbu = obj;
 	AG_Variable *value;
@@ -254,7 +254,7 @@ Draw(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Spinbutton *num = obj;
 	AG_SizeReq rChld, rInc, rDec;
@@ -268,7 +268,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Spinbutton *num = obj;
 	AG_SizeAlloc aChld;

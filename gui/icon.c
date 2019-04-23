@@ -167,7 +167,7 @@ AG_IconSetBackgroundFill(AG_Icon *icon, int enable, AG_Color C)
 }
 
 void
-AG_IconSetSurface(AG_Icon *icon, AG_Surface *su)
+AG_IconSetSurface(AG_Icon *icon, const AG_Surface *su)
 {
 	AG_Surface *suDup = (su != NULL) ? AG_SurfaceDup(su) : NULL;
 

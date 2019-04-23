@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -283,7 +283,9 @@ ag_widget_map_surface_nodup(void *obj, AG_Surface *S)
 	return (name);
 }
 
-/* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
+/*
+ * Variant of WidgetReplaceSurface() that sets the NODUP flag.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_WidgetReplaceSurfaceNODUP(void *_Nonnull obj, int name, AG_Surface *_Nullable S)
@@ -347,8 +349,7 @@ ag_widget_blit_from(void *obj, int s, AG_Rect *r, int x, int y)
 }
 
 /*
- * Routines for direct access to keyboard key and modifier state
- * from widget code.
+ * Get a pointer to the keyboard state.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ int *_Nonnull _Pure_Attribute
@@ -359,9 +360,13 @@ ag_get_key_state(void *obj)
 #endif
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+
 	return (kbd->keyState);
 }
 
+/*
+ * Set the keyboard state.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SetKeyState(void *_Nonnull obj, int *_Nonnull ks)
@@ -371,9 +376,13 @@ ag_set_key_state(void *obj, int *ks)
 #endif
 {
 	AG_Keyboard *kbd = AGWIDGET_KEYBOARD(obj);
+
 	memcpy(kbd->keyState, ks, kbd->keyCount*sizeof(int));
 }
 
+/*
+ * Return the number of entries in the keyboard state.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ int _Pure_Attribute
 AG_GetKeyCount(void *_Nonnull obj)
@@ -386,6 +395,9 @@ ag_get_key_count(void *obj)
 	return (kbd->keyCount);
 }
 
+/*
+ * Return the current modifier key state.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ Uint _Pure_Attribute
 AG_GetModState(void *_Nonnull obj)
@@ -398,6 +410,9 @@ ag_get_mod_state(void *obj)
 	return (kbd->modState);
 }
 
+/*
+ * Set the modifier key state.
+ */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SetModState(void *_Nonnull obj, Uint ms)

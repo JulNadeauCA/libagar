@@ -199,12 +199,9 @@ AG_Table *_Nonnull AG_TableNewPolled(void *_Nullable, Uint,
                                      void (*_Nonnull fn)(AG_Event *_Nonnull),
 				     const char *_Nullable, ...);
 
-void	  AG_TableSizeHint(AG_Table *_Nonnull, int, int);
-#define	  AG_TablePrescale AG_TableSizeHint
-
+void AG_TableSizeHint(AG_Table *_Nonnull, int, int);
 void AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
 void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);
-
 void AG_TableSetRowClickFn(AG_Table *_Nonnull,
                            _Nonnull AG_EventFn, const char *_Nullable, ...);
 void AG_TableSetColClickFn(AG_Table *_Nonnull,
@@ -217,7 +214,6 @@ void AG_TableSetColDblClickFn(AG_Table *_Nonnull,
                               _Nonnull AG_EventFn, const char *_Nullable, ...);
 void AG_TableSetCellDblClickFn(AG_Table *_Nonnull,
                                _Nonnull AG_EventFn, const char *_Nullable, ...);
-
 void AG_TableSetColHeight(AG_Table *_Nonnull, int);
 void AG_TableSetRowHeight(AG_Table *_Nonnull, int);
 void AG_TableSetColMin(AG_Table *_Nonnull, int);
@@ -253,56 +249,21 @@ void AG_TableRedrawCells(AG_Table *_Nonnull);
 int  AG_TableCompareCells(const AG_TableCell *_Nonnull,
                           const AG_TableCell *_Nonnull);
 
+AG_TableCell *_Nonnull AG_TableGetCell(AG_Table *_Nonnull, int,int)
+                                      _Pure_Attribute;
+int  AG_TableCellSelected(AG_Table *_Nonnull, int,int) _Pure_Attribute;
+void AG_TableSelectCell(AG_Table *_Nonnull, int,int);
+void AG_TableDeselectCell(AG_Table *_Nonnull, int,int);
+int  AG_TableColSelected(AG_Table *_Nonnull, int) _Pure_Attribute;
+void AG_TableSelectCol(AG_Table *_Nonnull, int);
+void AG_TableDeselectCol(AG_Table *_Nonnull, int);
+int  AG_TableSaveASCII(AG_Table *_Nonnull, void *_Nonnull, char);
+
 AG_MenuItem *_Nonnull AG_TableSetPopup(AG_Table *_Nonnull, int,int);
 
-int AG_TableSaveASCII(AG_Table *_Nonnull, void *_Nonnull, char);
-
-/* Return the cell at unchecked location m,n. */
-static __inline__ AG_TableCell *_Nonnull _Pure_Attribute
-AG_TableGetCell(AG_Table *_Nonnull t, int m, int n)
-{
-#ifdef AG_DEBUG
-	if (m < 0 || m >= t->m ||
-	    n < 0 || n >= t->n)
-		AG_FatalError("Illegal cell access");
+#ifdef AG_LEGACY
+#define AG_TablePrescale(c,r) AG_TableSizeHint((c),(r))
 #endif
-	return (&t->cells[m][n]);
-}
-
-/*
- * Cell selection control
- */
-static __inline__ int _Pure_Attribute
-AG_TableCellSelected(AG_Table *_Nonnull t, int m, int n) {
-	return (t->cells[m][n].selected);
-}
-static __inline__ void
-AG_TableSelectCell(AG_Table *_Nonnull t, int m, int n) {
-	t->cells[m][n].selected = 1;
-}
-static __inline__ void
-AG_TableDeselectCell(AG_Table *_Nonnull t, int m, int n) {
-	t->cells[m][n].selected = 0;
-}
-
-/*
- * Column selection control
- */
-static __inline__ int _Pure_Attribute
-AG_TableColSelected(AG_Table *_Nonnull t, int n)
-{
-	return (t->cols[n].selected);
-}
-static __inline__ void
-AG_TableSelectCol(AG_Table *_Nonnull t, int n)
-{
-	t->cols[n].selected = 1;
-}
-static __inline__ void
-AG_TableDeselectCol(AG_Table *_Nonnull t, int n)
-{
-	t->cols[n].selected = 0;
-}
 __END_DECLS
 
 #include <agar/gui/close.h>

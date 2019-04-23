@@ -1240,3 +1240,66 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+/* Upload a texture. */
+void
+AG_GL_UploadTexture(void *obj, Uint *name, AG_Surface *su, AG_TexCoord *tc)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->uploadTexture(drv, name, su, tc);
+}
+
+/* Update the contents of an existing GL texture. */
+int
+AG_GL_UpdateTexture(void *obj, Uint name, AG_Surface *su, AG_TexCoord *tc)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	return dc->updateTexture(drv, name, su, tc);
+}
+
+/*
+ * Make sure that the named texture is available for hardware rendering.
+ * Upload or update hardware textures if needed.
+ */
+void
+AG_GL_PrepareTexture(void *_Nonnull obj, int name)
+{
+	AG_Widget *wid = obj;
+	AG_Driver *drv = wid->drv;
+
+	if (wid->textures[name] == 0) {
+		AG_GL_UploadTexture(drv, &wid->textures[name],
+		                          wid->surfaces[name],
+		                         &wid->texcoords[name]);
+	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
+		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
+		AG_GL_UpdateTexture(drv, wid->textures[name],
+		                         wid->surfaces[name],
+					&wid->texcoords[name]);
+	}
+}
+
+/* Queue a GL texture for deletion. */
+void
+AG_GL_DeleteTexture(void *_Nonnull obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	dc->deleteTexture(drv, name);
+}
+
+/* Queue a GL display list for deletion. */
+void
+AG_GL_DeleteList(void *_Nonnull obj, Uint name)
+{
+	AG_Driver *drv = obj;
+	AG_DriverClass *dc = AGDRIVER_CLASS(drv);
+
+	if (dc->deleteList != NULL)
+		dc->deleteList(drv, name);
+}

@@ -43,42 +43,10 @@ int AG_PixmapAddSurfaceScaled(AG_Pixmap *_Nonnull, const AG_Surface *_Nonnull,
                               Uint,Uint);
 int AG_PixmapAddSurfaceFromFile(AG_Pixmap *_Nonnull, const char *_Nonnull);
 
-static __inline__ void
-AG_PixmapReplaceSurface(AG_Pixmap *_Nonnull px, int name, AG_Surface *_Nonnull s)
-{
-	AG_WidgetReplaceSurface(px, name, s);
-	AG_Redraw(px);
-}
-
-static __inline__ void
-AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull px, int name)
-{
-	AG_WidgetUpdateSurface(px, name);
-	AG_Redraw(px);
-}
-
-static __inline__ int
-AG_PixmapSetSurface(AG_Pixmap *_Nonnull px, int name)
-{
-	AG_ObjectLock(px);
-	if (name < 0 || name >= (int)AGWIDGET(px)->nSurfaces) {
-		AG_ObjectUnlock(px);
-		return (-1);
-	}
-	px->n = name;
-	px->flags |= AG_PIXMAP_UPDATE;
-	AG_ObjectUnlock(px);
-	return (0);
-}
-
-static __inline__ void
-AG_PixmapSetCoords(AG_Pixmap *_Nonnull px, int s, int t)
-{
-	AG_ObjectLock(px);
-	px->s = s;
-	px->t = t;
-	AG_ObjectUnlock(px);
-}
+void AG_PixmapReplaceSurface(AG_Pixmap *_Nonnull, int, AG_Surface *_Nonnull);
+void AG_PixmapUpdateSurface(AG_Pixmap *_Nonnull, int);
+int  AG_PixmapSetSurface(AG_Pixmap *_Nonnull, int);
+void AG_PixmapSetCoords(AG_Pixmap *_Nonnull, int,int);
 __END_DECLS
 
 #include <agar/gui/close.h>

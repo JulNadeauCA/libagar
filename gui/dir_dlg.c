@@ -33,7 +33,7 @@
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/dir_dlg.h>
-#include <agar/gui/hbox.h>
+#include <agar/gui/box.h>
 #include <agar/gui/numerical.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/separator.h>

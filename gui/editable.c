@@ -320,7 +320,7 @@ AG_EditableBindText(AG_Editable *ed, AG_Text *txt)
 	AG_ObjectUnlock(ed);
 }
 
-/* Set the current language (for AG_Text bindings). */
+/* Set the active language (when bound to an AG_Text(3) element) */
 void
 AG_EditableSetLang(AG_Editable *ed, enum ag_language lang)
 {
@@ -403,20 +403,56 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 }
 
 /* Evaluate if a character is acceptable in integer-only mode. */
-static __inline__ int
+static __inline__ _Const_Attribute int
 CharIsIntOnly(Uint32 c)
 {
-	return (c == '-' || c == '+' || isdigit((int)c));
+	switch (c) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	case '-':
+	case '+':
+		return (1);
+	default:
+		return (0);
+	}
 }
 
 /* Evaluate if a character is acceptable in float-only mode. */
 static __inline__ int
 CharIsFltOnly(Uint32 c)
 {
-	return (c == '+' || c == '-' || c == '.' || c == 'e' ||
-	        c == 'i' || c == 'n' || c == 'f' || c == 'a' ||
-	        c == 0x221e ||		/* Infinity */
-	        isdigit((int)c));
+	switch (c) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	case '.':
+	case '-':
+	case '+':
+	case 'e':
+	case 'i':
+	case 'n':
+	case 'f':
+	case 'a':
+	case 0x221e:		/* inf */
+		return (1);
+	default:
+		return (0);
+	}
 }
 
 /*
@@ -1633,6 +1669,12 @@ out:
 	AG_Redraw(ed);
 }
 
+void
+AG_EditableClearString(AG_Editable *ed)
+{
+	AG_EditableSetString(ed, NULL);
+}
+
 /*
  * Overwrite the contents of the text buffer with the given formatted
  * C string (in UTF-8 encoding).
@@ -1924,6 +1966,53 @@ AG_EditableDestroyClipboards(void)
 	FreeClipboard(&agEditableClipbrd);
 	FreeClipboard(&agEditableKillring);
 }
+
+/* Return current cursor position in text. */
+int
+AG_EditableGetCursorPos(AG_Editable *ed)
+{
+	int rv;
+
+	AG_ObjectLock(ed);
+	rv = ed->pos;
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+/* Return 1 if the Editable is effectively read-only. */
+int 
+AG_EditableReadOnly(AG_Editable *_Nonnull ed)
+{
+	int flag;
+
+	AG_ObjectLock(ed);
+	flag = (ed->flags & AG_EDITABLE_READONLY) || AG_WidgetDisabled(ed);
+	AG_ObjectUnlock(ed);
+	return (flag);
+}
+
+/*
+ * Ensure that the selection range is valid. The Editable and buffer
+ * must both be locked.
+ */
+void
+AG_EditableValidateSelection(AG_Editable *ed, AG_EditableBuffer *buf)
+{
+	if ((Uint)ed->pos > buf->len) {
+		ed->pos = (int)buf->len;
+		ed->sel = 0;
+	}
+	if (ed->sel != 0) {
+		int ep = ed->pos + ed->sel;
+		if (ep < 0) {
+			ed->pos = 0;
+			ed->sel = 0;
+		} else if ((Uint)ep > buf->len) {
+			ed->pos = (int)buf->len;
+			ed->sel = 0;
+		}
+	}
+}	
 
 AG_WidgetClass agEditableClass = {
 	{

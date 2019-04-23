@@ -28,7 +28,7 @@ typedef struct ag_editable_clipboard {
 } AG_EditableClipboard;
 
 typedef struct ag_editable {
-	struct ag_widget wid;
+	struct ag_widget wid;		/* AG_Widget -> AG_Editable */
 	
 	Uint flags;
 #define AG_EDITABLE_HFILL         0x000001
@@ -86,9 +86,6 @@ typedef struct ag_editable {
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))
-#ifdef _AGAR_INTERNAL
-#define EDITABLE(p) AGEDITABLE(p)
-#endif
 
 __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;
@@ -120,26 +117,26 @@ int  AG_EditablePaste(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
 int  AG_EditableDelete(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 void AG_EditableSelectAll(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 
-void    AG_EditableSizeHint(AG_Editable *_Nonnull, const char *_Nonnull);
-void    AG_EditableSizeHintPixels(AG_Editable *_Nonnull, Uint,Uint);
-void    AG_EditableSizeHintLines(AG_Editable *_Nonnull, Uint);
-#define AG_EditablePrescale AG_EditableSizeHint
-void    AG_EditableSetPassword(AG_Editable *_Nonnull, int);
-void    AG_EditableSetWordWrap(AG_Editable *_Nonnull, int);
-void    AG_EditableSetExcl(AG_Editable *_Nonnull, int);
-void    AG_EditableSetFltOnly(AG_Editable *_Nonnull, int);
-void    AG_EditableSetIntOnly(AG_Editable *_Nonnull, int);
+void AG_EditableSizeHint(AG_Editable *_Nonnull, const char *_Nonnull);
+void AG_EditableSizeHintPixels(AG_Editable *_Nonnull, Uint,Uint);
+void AG_EditableSizeHintLines(AG_Editable *_Nonnull, Uint);
+void AG_EditableSetPassword(AG_Editable *_Nonnull, int);
+void AG_EditableSetWordWrap(AG_Editable *_Nonnull, int);
+void AG_EditableSetExcl(AG_Editable *_Nonnull, int);
+void AG_EditableSetFltOnly(AG_Editable *_Nonnull, int);
+void AG_EditableSetIntOnly(AG_Editable *_Nonnull, int);
 
-void    AG_EditableSetString(AG_Editable *_Nonnull, const char *_Nullable);
-#define AG_EditableClearString(tb) AG_EditableSetString((tb),NULL)
-void    AG_EditablePrintf(void *_Nonnull, const char *_Nullable, ...);
+void AG_EditableSetString(AG_Editable *_Nonnull, const char *_Nullable);
+void AG_EditableClearString(AG_Editable *_Nonnull);
+void AG_EditablePrintf(void *_Nonnull, const char *_Nullable, ...);
 
 char *_Nonnull AG_EditableDupString(AG_Editable *_Nonnull);
-AG_Size        AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull, AG_Size);
+AG_Size        AG_EditableCopyString(AG_Editable *_Nonnull, char *_Nonnull,
+                                     AG_Size);
 
-int     AG_EditableInt(AG_Editable *_Nonnull);
-float   AG_EditableFlt(AG_Editable *_Nonnull);
-double  AG_EditableDbl(AG_Editable *_Nonnull);
+int    AG_EditableInt(AG_Editable *_Nonnull);
+float  AG_EditableFlt(AG_Editable *_Nonnull);
+double AG_EditableDbl(AG_Editable *_Nonnull);
 
 void AG_EditableInitClipboards(void);
 void AG_EditableDestroyClipboards(void);
@@ -148,51 +145,18 @@ int  AG_EditableMapPosition(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                             int,int, int *_Nonnull);
 void AG_EditableMoveCursor(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                            int,int);
+int  AG_EditableGetCursorPos(AG_Editable *_Nonnull)
+                            _Pure_Attribute_If_Unthreaded;
 int  AG_EditableSetCursorPos(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull,
                              int);
+int  AG_EditableReadOnly(AG_Editable *_Nonnull)
+                        _Pure_Attribute_If_Unthreaded;
 
-/* Return current cursor position in text. */
-static __inline__ int _Pure_Attribute_If_Unthreaded
-AG_EditableGetCursorPos(AG_Editable *_Nonnull ed)
-{
-	int rv;
-	AG_ObjectLock(ed);
-	rv = ed->pos;
-	AG_ObjectUnlock(ed);
-	return (rv);
-}
+void AG_EditableValidateSelection(AG_Editable *_Nonnull, AG_EditableBuffer *_Nonnull);
 
-/* Return 1 if the Editable is effectively read-only. */
-static __inline__ int _Pure_Attribute
-AG_EditableReadOnly(AG_Editable *_Nonnull ed)
-{
-	return (ed->flags & AG_EDITABLE_READONLY) || AG_WidgetDisabled(ed);
-}
-
-/*
- * Ensure that the selection range is valid. The Editable and buffer
- * must both be locked.
- */
-static __inline__ void
-AG_EditableValidateSelection(AG_Editable *_Nonnull ed,
-    AG_EditableBuffer *_Nonnull buf)
-{
-	if ((Uint)ed->pos > buf->len) {
-		ed->pos = (int)buf->len;
-		ed->sel = 0;
-	}
-	if (ed->sel != 0) {
-		int ep = ed->pos + ed->sel;
-		if (ep < 0) {
-			ed->pos = 0;
-			ed->sel = 0;
-		} else if ((Uint)ep > buf->len) {
-			ed->pos = (int)buf->len;
-			ed->sel = 0;
-		}
-	}
-}	
-
+#ifdef AG_LEGACY
+#define AG_EditablePrescale(ed,s) AG_EditableSizeHint((ed),(s))
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

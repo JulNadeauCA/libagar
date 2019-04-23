@@ -94,7 +94,7 @@
 } while (0)
 
 __BEGIN_DECLS
-int AG_PackedPixelFlip(Uint8 *, Uint, int);
+int AG_PackedPixelFlip(Uint8 *_Nonnull, Uint, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -167,7 +167,7 @@ AG_SliderSetControlSize(AG_Slider *sl, int size)
 	*x = (int)(((*(TYPE *)pVal - min) * sl->extent) / (max - min));	\
 }
 static __inline__ int
-GetPosition(AG_Slider *sl, int *x)
+GetPosition(AG_Slider *_Nonnull sl, int *_Nonnull x)
 {
 	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
@@ -223,7 +223,7 @@ fail:
 	}								\
 }
 static __inline__ void
-SeekToPosition(AG_Slider *sl, int x)
+SeekToPosition(AG_Slider *_Nonnull sl, int x)
 {
 	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
@@ -276,8 +276,9 @@ SeekToPosition(AG_Slider *sl, int x)
 	else 								\
 		*(TYPE *)pVal -= *(TYPE *)pInc;				\
 }
+
 static void
-Increment(AG_Slider *sl)
+Increment(AG_Slider *_Nonnull sl)
 {
 	AG_Variable *bVal, *bMin, *bMax, *bInc;
 	void *pVal, *pMin, *pMax, *pInc;
@@ -315,8 +316,9 @@ Increment(AG_Slider *sl)
 	AG_UnlockVariable(bInc);
 	AG_Redraw(sl);
 }
+
 static void
-Decrement(AG_Slider *sl)
+Decrement(AG_Slider *_Nonnull sl)
 {
 	AG_Variable *bVal, *bMin, *bMax, *bInc;
 	void *pVal, *pMin, *pMax, *pInc;
@@ -358,7 +360,7 @@ Decrement(AG_Slider *sl)
 #undef DECREMENT
 
 static void
-MouseButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 
@@ -371,7 +373,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 	int button = AG_INT(1);
@@ -410,7 +412,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+MouseMotion(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 
@@ -423,7 +425,7 @@ MouseMotion(AG_Event *event)
 
 /* Timer callback for keyboard motion. */
 static Uint32
-MoveTimeout(AG_Timer *to, AG_Event *event)
+MoveTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 	int dir = AG_INT(1);
@@ -437,7 +439,7 @@ MoveTimeout(AG_Timer *to, AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+KeyDown(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -457,7 +459,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+KeyUp(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -473,7 +475,7 @@ KeyUp(AG_Event *event)
 }
 
 static void
-OnFocusLoss(AG_Event *event)
+OnFocusLoss(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 
@@ -487,7 +489,7 @@ OnFocusLoss(AG_Event *event)
 	if (!AG_Defined(sl, "inc")) { fn(sl, "inc", dinc); }		\
 }
 static void
-OnShow(AG_Event *event)
+OnShow(AG_Event *_Nonnull event)
 {
 	AG_Slider *sl = AG_SELF();
 	AG_Variable *V;
@@ -527,7 +529,7 @@ OnShow(AG_Event *event)
 #undef SET_DEF
 
 static void
-Init(void *obj)
+Init(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
 
@@ -560,7 +562,7 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Slider *sl = obj;
 	
@@ -569,7 +571,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Slider *sl = obj;
 
@@ -591,7 +593,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *obj)
+Draw(void *_Nonnull obj)
 {
 	AG_Slider *sl = obj;
 	int x;

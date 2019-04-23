@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,6 +128,46 @@ AG_DriverClose(AG_Driver *drv)
 }
 
 /*
+ * Lookup a driver instance by ID.
+ * The agDrivers VFS must be locked.
+ */
+AG_Driver *
+AG_GetDriverByID(Uint id)
+{
+	AG_Driver *drv;
+
+	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
+		if (drv->id == id)
+			return (drv);
+	}
+	return (NULL);
+}
+
+/* Enter GUI rendering context. */
+void
+AG_BeginRendering(void *drv)
+{
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondBeginRender);
+#endif
+	agRenderingContext = 1;
+	AGDRIVER_CLASS(drv)->beginRendering(drv);
+}
+
+/* Leave GUI rendering context. */
+void
+AG_EndRendering(void *drv)
+{
+	AGDRIVER_CLASS(drv)->endRendering(drv);
+	agRenderingContext = 0;
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_PTHREADS)
+	if (agTimeOps == &agTimeOps_renderer)		/* Renderer-aware ops */
+		AG_CondBroadcast(&agCondEndRender);
+#endif
+}
+
+/*
  * Dump the display surface(s) to a jpeg in ~/.appname/screenshot/.
  * It is customary to assign a AG_GlobalKeys(3) shortcut for this function.
  */
@@ -180,6 +220,43 @@ out:
 	AG_UnlockVFS(&agDrivers);
 }
 
+/* Return whether Agar is using OpenGL. */
+int
+AG_UsingGL(void *drv)
+{
+	if (drv != NULL) {
+		return (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL);
+	} else {
+		return (agDriverOps->flags & AG_DRIVER_OPENGL);
+	}
+}
+
+/* Return whether Agar is using SDL. */
+int
+AG_UsingSDL(void *drv)
+{
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+	return (dc->flags & AG_DRIVER_SDL);
+}
+
+/* Return the resolution (px) of the parent display device, if applicable. */
+int
+AG_GetDisplaySize(void *drv, Uint *w, Uint *h)
+{
+	AG_DriverClass *dc = (drv != NULL) ? AGDRIVER_CLASS(drv) : agDriverOps;
+	AG_DriverSw *dsw = (drv != NULL) ? (AG_DriverSw *)drv : agDriverSw;
+
+	switch (dc->wm) {
+	case AG_WM_SINGLE:
+		*w = dsw->w;
+		*h = dsw->h;
+		return (0);
+	case AG_WM_MULTIPLE:
+		return dc->getDisplaySize(w, h);
+	}
+	return (-1);
+}
+
 static void
 Init(void *_Nonnull obj)
 {
@@ -226,7 +303,7 @@ Destroy(void *_Nonnull obj)
 AG_ObjectClass agDriverClass = {
 	"AG_Driver",
 	sizeof(AG_Driver),
-	{ 1,4 },
+	{ 1,6 },
 	Init,
 	NULL,		/* reset */
 	Destroy,

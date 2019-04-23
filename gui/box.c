@@ -52,6 +52,74 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	return (box);
 }
 
+AG_Box *
+AG_BoxNewHoriz(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_HORIZ, flags);
+}
+
+AG_HBox *
+AG_HBoxNew(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_HORIZ, flags);
+}
+
+AG_Box *
+AG_BoxNewHorizNS(void *p, Uint flags)
+{
+	AG_Box *hBox;
+	
+	hBox = AG_BoxNew(p, AG_BOX_HORIZ, flags);
+	AG_BoxSetSpacing(hBox, 0);
+	AG_BoxSetPadding(hBox, 0);
+	return (hBox);
+}
+
+AG_HBox *
+AG_HBoxNewNS(void *p, Uint flags)
+{
+	AG_Box *hBox;
+	
+	hBox = AG_BoxNew(p, AG_BOX_HORIZ, flags);
+	AG_BoxSetSpacing(hBox, 0);
+	AG_BoxSetPadding(hBox, 0);
+	return (hBox);
+}
+
+AG_Box *
+AG_BoxNewVert(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_VERT, flags);
+}
+
+AG_VBox *
+AG_VBoxNew(void *p, Uint flags)
+{
+	return AG_BoxNew(p, AG_BOX_VERT, flags);
+}
+
+AG_Box *
+AG_BoxNewVertNS(void *p, Uint flags)
+{
+	AG_Box *vBox;
+	
+	vBox = AG_BoxNew(p, AG_BOX_VERT, flags);
+	AG_BoxSetSpacing(vBox, 0);
+	AG_BoxSetPadding(vBox, 0);
+	return (vBox);
+}
+
+AG_VBox *
+AG_VBoxNewNS(void *p, Uint flags)
+{
+	AG_Box *vBox;
+	
+	vBox = AG_BoxNew(p, AG_BOX_VERT, flags);
+	AG_BoxSetSpacing(vBox, 0);
+	AG_BoxSetPadding(vBox, 0);
+	return (vBox);
+}
+
 /* Set the label text (format string). */
 void
 AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)

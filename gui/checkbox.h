@@ -20,6 +20,8 @@ typedef struct ag_checkbox {
 	AG_Label *_Nullable lbl; /* Text label */
 } AG_Checkbox;
 
+#define AGCHECKBOX(p) ((AG_Checkbox *)(p))
+
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 

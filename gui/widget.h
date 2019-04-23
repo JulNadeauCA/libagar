@@ -290,9 +290,9 @@ void      *_Nullable AG_WidgetFindRect(const char *_Nonnull, int,int, int,int);
 void AG_WidgetUpdateCoords(void *_Nonnull, int,int);
 int  AG_WidgetMapSurface(void *_Nonnull, AG_Surface *_Nullable);
 void AG_WidgetReplaceSurface(void *_Nonnull, int, AG_Surface *_Nullable);
-
-#define AG_WidgetUnmapSurface(w, n)   AG_WidgetReplaceSurface((w),(n),NULL)
-#define AG_WidgetBlitSurface(p,n,x,y) AG_WidgetBlitFrom((p),(n),NULL,(x),(y))
+void AG_WidgetUpdateSurface(void *_Nonnull, int);
+void AG_WidgetUnmapSurface(void *_Nonnull, int);
+void AG_WidgetBlitSurface(void *_Nonnull, int, int,int);
 
 void AG_WidgetBlitGL(void *_Nonnull, AG_Surface *_Nonnull, float,float);
 void AG_WidgetBlitSurfaceGL(void *_Nonnull, int, float,float);
@@ -338,9 +338,8 @@ AG_Action *_Nonnull AG_ActionToggleFlag(void *_Nonnull, const char *_Nonnull,
 					Uint *_Nonnull, Uint);
 
 void AG_ActionOnButtonDown(void  *_Nonnull, int, const char *_Nonnull);
+void AG_ActionOnButton(void *_Nonnull, int, const char *_Nonnull);
 void AG_ActionOnButtonUp(void *_Nonnull, int, const char *_Nonnull);
-#define AG_ActionOnButton(w,b,a) AG_ActionOnButtonDown((w),(b),(a))
-
 void AG_ActionOnKey(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
 void AG_ActionOnKeyDown(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
 void AG_ActionOnKeyUp(void *_Nonnull, AG_KeySym, AG_KeyMod, const char *_Nonnull);
@@ -358,15 +357,6 @@ void AG_WidgetFreeStyle(void *_Nonnull);
 
 void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
 void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);
-
-/* Signal a change in a widget surface. */
-#ifdef HAVE_OPENGL
-# define AG_WidgetUpdateSurface(wid,name) do { \
-	 AGWIDGET(wid)->surfaceFlags[(name)] |= AG_WIDGET_SURFACE_REGEN; \
-} while (0)
-#else
-# define AG_WidgetUpdateSurface(wid,name)
-#endif
 
 #ifdef AG_INLINE_WIDGET
 # define AG_INLINE_HEADER
@@ -391,12 +381,11 @@ int  ag_widget_map_surface_nodup(void *_Nonnull, AG_Surface *_Nonnull);
 void ag_widget_replace_surface_nodup(void *_Nonnull, int, AG_Surface *_Nullable);
 void ag_widget_blit(void *_Nonnull, AG_Surface *_Nonnull, int,int);
 void ag_widget_blit_from(void *_Nonnull, int, AG_Rect *_Nullable, int,int);
-
-void          ag_set_key_state(void *_Nonnull, int *_Nonnull);
+void ag_set_key_state(void *_Nonnull, int *_Nonnull);
 int *_Nonnull ag_get_key_state(void *_Nonnull) _Pure_Attribute;
-int           ag_get_key_count(void *_Nonnull) _Pure_Attribute;
-Uint          ag_get_mod_state(void *_Nonnull) _Pure_Attribute;
-void          ag_set_mod_state(void *_Nonnull, Uint);
+int  ag_get_key_count(void *_Nonnull) _Pure_Attribute;
+Uint ag_get_mod_state(void *_Nonnull) _Pure_Attribute;
+void ag_set_mod_state(void *_Nonnull, Uint);
 
 # define AG_WidgetEnabled(o)                 ag_widget_enabled(o)
 # define AG_WidgetDisabled(o)                ag_widget_disabled(o)

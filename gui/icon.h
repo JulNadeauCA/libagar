@@ -38,7 +38,7 @@ AG_Icon *_Nonnull  AG_IconNew(void *_Nullable, Uint);
 AG_Icon *_Nonnull  AG_IconFromSurface(AG_Surface *_Nonnull);
 AG_Icon *_Nullable AG_IconFromBMP(const char *_Nonnull);
 
-void AG_IconSetSurface(AG_Icon *_Nonnull, AG_Surface *_Nullable);
+void AG_IconSetSurface(AG_Icon *_Nonnull, const AG_Surface *_Nullable);
 void AG_IconSetSurfaceNODUP(AG_Icon *_Nonnull, AG_Surface *_Nonnull);
 void AG_IconSetTextS(AG_Icon *_Nonnull, const char *_Nullable);
 void AG_IconSetText(AG_Icon *_Nonnull, const char *_Nonnull, ...)

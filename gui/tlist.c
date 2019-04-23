@@ -568,7 +568,7 @@ restart:							/* XXX */
 
 /* Clear the items on the list, save the selections if polling. */
 void
-AG_TlistClear(AG_Tlist *tl)
+AG_TlistBegin(AG_Tlist *tl)
 {
 	AG_TlistItem *it, *nit;
 	
@@ -640,7 +640,7 @@ AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 
 /* Restore previous item selection state. */
 void
-AG_TlistRestore(AG_Tlist *tl)
+AG_TlistEnd(AG_Tlist *tl)
 {
 	AG_TlistItem *sit, *cit, *nsit;
 
@@ -667,6 +667,41 @@ AG_TlistRestore(AG_Tlist *tl)
 	}
 	TAILQ_INIT(&tl->selitems);
 
+	AG_ObjectUnlock(tl);
+}
+
+void
+AG_TlistRestore(AG_Tlist *tl)
+{
+	AG_TlistEnd(tl);
+}
+
+void
+AG_TlistClear(AG_Tlist *tl)
+{
+	AG_TlistBegin(tl);
+}
+
+int
+AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
+{
+	AG_TlistItem *sit;
+
+	AG_TAILQ_FOREACH(sit, &tl->selitems, selitems) {
+		if (tl->compare_fn(sit, cit))
+			break;
+	}
+	if (sit == NULL) { 
+		return (0);			/* TODO default setting */
+	}
+	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
+}
+
+void
+AG_TlistRefresh(AG_Tlist *_Nonnull tl)
+{
+	AG_ObjectLock(tl);
+	tl->flags |= AG_TLIST_REFRESH;
 	AG_ObjectUnlock(tl);
 }
 

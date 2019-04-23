@@ -76,7 +76,6 @@
 #endif
 
 #include <agar/gui/window.h>
-#include <agar/gui/vbox.h>
 #include <agar/gui/box.h>
 #include <agar/gui/label.h>
 #include <agar/gui/textbox.h>
@@ -1403,6 +1402,13 @@ AG_TextMsgS(enum ag_text_msg_title title, const char *s)
 	AG_WindowShow(win);
 }
 
+/* Display the last error message from AG_GetError(). */
+void
+AG_TextMsgFromError(void)
+{
+	AG_TextMsgS(AG_MSG_ERROR, AG_GetError());
+}
+
 /* Display a message for a given period of time (format string). */
 void
 AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *fmt, ...)
@@ -1733,6 +1739,177 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 		*y = hArea - bPad - wText;
 		break;
 	}
+}
+
+/*
+ * Return the offset in pixels needed to align text based on the current
+ * justification mode.
+ */
+int
+AG_TextJustifyOffset(int w, int wLine)
+{
+	switch (agTextState->justify) {
+	case AG_TEXT_LEFT:	return (0);
+	case AG_TEXT_CENTER:	return ((w >> 1) - (wLine >> 1));
+	case AG_TEXT_RIGHT:	return (w - wLine);
+	}
+	return (0);
+}
+
+/*
+ * Return the offset in pixels needed to align text based on the current
+ * vertical alignment mode.
+ */
+int
+AG_TextValignOffset(int h, int hLine)
+{
+	switch (agTextState->valign) {
+	case AG_TEXT_TOP:	return (0);
+	case AG_TEXT_MIDDLE:	return ((h >> 1) - (hLine >> 1));
+	case AG_TEXT_BOTTOM:	return (h - hLine);
+	}
+	return (0);
+}
+
+/*
+ * Allocate a transparent surface and render text from a C string.
+ * The string may contain UTF-8 sequences.
+ */
+AG_Surface *
+AG_TextRender(const char *text)
+{
+	Uint32 *ucs;
+	AG_Surface *su;
+	
+	if ((ucs = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	su = AG_TextRenderUCS4(ucs);
+	AG_Free(ucs);
+	return (su);
+}
+
+/*
+ * Lookup/insert a glyph in the glyph cache.
+ * Must be called from GUI rendering context.
+ */
+AG_Glyph *
+AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
+{
+	AG_Glyph *gl;
+	Uint h = (Uint)(ch % AG_GLYPH_NBUCKETS);
+
+	AG_SLIST_FOREACH(gl, &drv->glyphCache[h].glyphs, glyphs) {
+		if (ch == gl->ch &&
+		    agTextState->font == gl->font &&
+		    AG_ColorCompare(agTextState->color,gl->color) == 0)
+			break;
+	}
+	if (gl == NULL) {
+		gl = AG_TextRenderGlyphMiss(drv, ch);
+		AG_SLIST_INSERT_HEAD(&drv->glyphCache[h].glyphs, gl, glyphs);
+	}
+	return (gl);
+}
+
+/* Set active text color. */
+void
+AG_TextColor(AG_Color c)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = c;
+	AG_MutexUnlock(&agTextLock);
+}
+void
+AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_ColorRGB_8(r,g,b);
+	AG_MutexUnlock(&agTextLock);
+}
+void
+AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_ColorRGBA_8(r,g,b,a);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from 0xRRGGBBAA format. */
+void
+AG_TextColorHex(Uint32 c)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_ColorHex32(c);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set active text background color. */
+void
+AG_TextBGColor(AG_Color C)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = C;
+	AG_MutexUnlock(&agTextLock);
+}
+void
+AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_ColorRGB_8(r,g,b);
+	AG_MutexUnlock(&agTextLock);
+}
+void
+AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_ColorRGBA_8(r,g,b,a);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from 0xRRGGBBAA format. */
+void
+AG_TextBGColorHex(Uint32 c)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_ColorHex(c);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select a specific font face to use in rendering text. */
+void
+AG_TextFont(AG_Font *font)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->font = font;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the justification mode to use in rendering text. */
+void
+AG_TextJustify(enum ag_text_justify mode)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->justify = mode;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the vertical alignment mode to use in rendering text. */
+void
+AG_TextValign(enum ag_text_valign mode)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->valign = mode;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the tab width in pixels for rendering text. */
+void
+AG_TextTabWidth(int px)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->tabWd = px;
+	AG_MutexUnlock(&agTextLock);
 }
 
 AG_ObjectClass agFontClass = {

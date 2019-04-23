@@ -22,13 +22,13 @@ __BEGIN_DECLS
 extern AG_WidgetClass agSeparatorClass;
 
 AG_Separator *_Nonnull AG_SeparatorNew(void *_Nullable, enum ag_separator_type);
+AG_Separator *_Nonnull AG_SeparatorNewHoriz(void *_Nullable);
+AG_Separator *_Nonnull AG_SeparatorNewVert(void *_Nullable);
 AG_Separator *_Nonnull AG_SpacerNew(void *_Nullable, enum ag_separator_type);
-void AG_SeparatorSetPadding(AG_Separator *_Nonnull, Uint);
+AG_Separator *_Nonnull AG_SpacerNewHoriz(void *_Nullable);
+AG_Separator *_Nonnull AG_SpacerNewVert(void *_Nullable);
 
-#define AG_SeparatorNewHoriz(p) AG_SeparatorNew((p),AG_SEPARATOR_HORIZ)
-#define AG_SeparatorNewVert(p) AG_SeparatorNew((p),AG_SEPARATOR_VERT)
-#define AG_SpacerNewHoriz(p) AG_SpacerNew((p),AG_SEPARATOR_HORIZ)
-#define AG_SpacerNewVert(p) AG_SpacerNew((p),AG_SEPARATOR_VERT)
+void AG_SeparatorSetPadding(AG_Separator *_Nonnull, Uint);
 __END_DECLS
 
 #include <agar/gui/close.h>

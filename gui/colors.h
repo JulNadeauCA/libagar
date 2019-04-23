@@ -91,9 +91,8 @@ typedef struct ag_color_hsv {
 
 #endif /* MEDIUM or SMALL */
 
-#define AG_ColorRGB(r,g,b)    AG_ColorRGB_8((r),(g),(b))
-#define AG_ColorRGBA(r,g,b,a) AG_ColorRGBA_8((r),(g),(b),(a))
-
+#define AG_ColorRGB(r,g,b)       AG_ColorRGB_8((r),(g),(b))
+#define AG_ColorRGBA(r,g,b,a)    AG_ColorRGBA_8((r),(g),(b),(a))
 #define AG_RGB2HSV(r,g,b, h,s,v) AG_MapRGB8_HSVf((r),(g),(b),(h),(s),(v))
 #define AG_HSV2RGB(h,s,v, r,g,b) AG_MapHSVf_RGB8((h),(s),(v),(r),(g),(b))
 
@@ -115,204 +114,44 @@ void  AG_MapHSVf_RGB16(float,float,float,
                        Uint16 *_Nonnull, Uint16 *_Nonnull, Uint16 *_Nonnull);
 #endif
 
-static __inline__ AG_Grayscale _Const_Attribute
-AG_Grayscale_8(Uint8 v, Uint8 a)
-{
-	AG_Grayscale G;
-#if AG_MODEL == AG_LARGE
-	G.v = AG_8to32(v);
-	G.a = AG_8to32(a);
-#else
-	G.v = AG_8to16(v);
-	G.a = AG_8to16(a);
-#endif
-	return (G);
-}
-static __inline__ AG_Grayscale _Const_Attribute
-AG_Grayscale_16(Uint16 v, Uint16 a)
-{
-	AG_Grayscale G;
-#if AG_MODEL == AG_LARGE
-	G.v = AG_16to32(v);
-	G.a = AG_16to32(a);
-#else
-	G.v = v;
-	G.a = a;
-#endif
-	return (G);
-}
-static __inline__ AG_Grayscale _Const_Attribute
-AG_Grayscale_32(Uint32 v, Uint32 a)
-{
-	AG_Grayscale G;
-#if AG_MODEL == AG_LARGE
-	G.v = v;
-	G.a = a;
-#else
-	G.v = AG_32to16(v);
-	G.a = AG_32to16(a);
-#endif
-	return (G);
-}
+#ifdef AG_INLINE_SURFACE
+# define AG_INLINE_HEADER
+# include <agar/gui/inline_colors.h>
+#else /* !AG_INLINE_SURFACE */
 
-/* Return AG_Color from 8- or 16-bit RGB (or RGB + alpha) components. */
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGB_8(Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16(r);
-	c.g = AG_8to16(g);
-	c.b = AG_8to16(b);
-#else
-	c.r = r;
-	c.g = g;
-	c.b = b;
-#endif
-	c.a = AG_OPAQUE;
-	return (c);
-}
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGBA_8(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16(r);
-	c.g = AG_8to16(g);
-	c.b = AG_8to16(b);
-	c.a = AG_8to16(a);
-#else
-	c.r = r;
-	c.g = g;
-	c.b = b;
-	c.a = a;
-#endif
-	return (c);
-}
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGB_16(Uint16 r, Uint16 g, Uint16 b)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = r;
-	c.g = g;
-	c.b = b;
-#else
-	c.r = AG_16to8(r);
-	c.g = AG_16to8(g);
-	c.b = AG_16to8(b);
-#endif
-	c.a = AG_OPAQUE;
-	return (c);
-}
-static __inline__ AG_Color _Const_Attribute
-AG_ColorRGBA_16(Uint16 r, Uint16 g, Uint16 b, Uint16 a)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = r;
-	c.g = g;
-	c.b = b;
-	c.a = a;
-#else
-	c.r = AG_16to8(r);
-	c.g = AG_16to8(g);
-	c.b = AG_16to8(b);
-	c.a = AG_16to8(a);
-#endif
-	return (c);
-}
-
-/* Return AG_Color from 4-bit components packed as 0xRGBA. */
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex16(Uint16 h)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = AG_4to16((h & 0xf000) >> 3);
-	c.g = AG_4to16((h & 0x0f00) >> 2);
-	c.b = AG_4to16((h & 0x00f0) >> 1);
-	c.a = AG_4to16((h & 0x000f));
-#else
-	c.r = AG_4to8((h & 0xf000) >> 3);
-	c.g = AG_4to8((h & 0x0f00) >> 2);
-	c.b = AG_4to8((h & 0x00f0) >> 1);
-	c.a = AG_4to8((h & 0x000f));
-#endif
-	return (c);
-}
-
-/* Return AG_Color from 8-bit components packed as 0xRRGGBBAA. */
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex32(Uint32 h)
-{
-	AG_Color c;
-#if (AG_MODEL == AG_LARGE)
-	c.r = AG_8to16((h & 0xff000000) >> 24);
-	c.g = AG_8to16((h & 0x00ff0000) >> 16);
-	c.b = AG_8to16((h & 0x0000ff00) >> 8);
-	c.a = AG_8to16((h & 0x000000ff));
-#else
-	c.r = (h & 0xff000000) >> 24;
-	c.g = (h & 0x00ff0000) >> 16;
-	c.b = (h & 0x0000ff00) >> 8;
-	c.a = (h & 0x000000ff);
-#endif
-	return (c);
-}
-
-#if AG_MODEL == AG_LARGE
-/* Return AG_Color from 16-bit components packed as 0xRRRRGGGGBBBBAAAA. */
-static __inline__ AG_Color _Const_Attribute
-AG_ColorHex64(Uint64 h)
-{
-	AG_Color c;
-	c.r = (h & 0xffff000000000000) >> 48;
-	c.g = (h & 0x0000ffff00000000) >> 32;
-	c.b = (h & 0x00000000ffff0000) >> 16;
-	c.a = (h & 0x000000000000ffff);
-	return (c);
-}
-#endif /* AG_LARGE */
-
-/* Component-wise clamped addition */
-static __inline__ AG_Color _Const_Attribute
-AG_ColorAdd(AG_Color c, AG_ColorOffset offs)
-{
-	AG_Color out;
-	out.r = AG_MIN(AG_COLOR_LAST, c.r + offs.r);
-	out.g = AG_MIN(AG_COLOR_LAST, c.g + offs.g);
-	out.b = AG_MIN(AG_COLOR_LAST, c.b + offs.b);
-	out.a = AG_MIN(AG_COLOR_LAST, c.a + offs.a);
-	return (out);
-}
-
-/* Compare two colors. */
-static __inline__ int _Const_Attribute
-AG_ColorCompare(AG_Color A, AG_Color B)
-{
-	return !(A.r == B.r &&
-	         A.g == B.g &&
-	         A.b == B.b &&
-	         A.a == B.a);
-}
-
+AG_Grayscale ag_grayscale_8(Uint8, Uint8);
+AG_Grayscale ag_grayscale_16(Uint16, Uint16);
+AG_Grayscale ag_grayscale_32(Uint32, Uint32);
+AG_Color     ag_color_rgb_8(Uint8, Uint8, Uint8);
+AG_Color     ag_color_rgba_8(Uint8,Uint8,Uint8, Uint8);
+AG_Color     ag_color_rgb_16(Uint16, Uint16, Uint16);
+AG_Color     ag_color_rgba_16(Uint16,Uint16,Uint16, Uint16);
+AG_Color     ag_color_hex_16(Uint16);
+AG_Color     ag_color_hex_32(Uint32);
+AG_Color     ag_color_hex_64(Uint64);
+AG_Color     ag_color_add(AG_Color, AG_ColorOffset);
+int          ag_color_compare(AG_Color, AG_Color);
 #ifdef AG_HAVE_FLOAT
-/*
- * Convert between RGB and HSV color representations.
- * TODO make this a _Const_Attribute function returning an AG_ColorHSV.
- */
-static __inline__ void
-AG_Color2HSV(AG_Color c, float *_Nonnull h, float *_Nonnull s, float *_Nonnull v) {
-	AG_MapRGB_HSVf(c.r, c.g, c.b, h,s,v);
-}
-static __inline__ void
-AG_HSV2Color(float h, float s, float v, AG_Color *_Nonnull c) {
-	AG_MapHSVf_RGB(h,s,v, &c->r, &c->g, &c->b);
-}
-#endif /* HAVE_FLOAT */
-__END_DECLS
+void         ag_color_2_hsv(AG_Color, float *_Nonnull, float *_Nonnull, float *_Nonnull);
+void         ag_hsv_2_color(float, float, float, AG_Color *_Nonnull);
+#endif
 
+#define AG_Grayscale8(v,a)       ag_grayscale_8((v),(a))
+#define AG_Grayscale16(v,a)      ag_grayscale_16((v),(a))
+#define AG_Grayscale32(v,a)      ag_grayscale_32((v),(a))
+#define AG_ColorRGB_8(r,g,b)     ag_color_rgb_8((r),(g),(b))
+#define AG_ColorRGBA_8(r,g,b,a)  ag_color_rgba_8((r),(g),(b),(a))
+#define AG_ColorRGB_16(r,g,b)    ag_color_rgb_16((r),(g),(b))
+#define AG_ColorRGBA_16(r,g,b,a) ag_color_rgba_16((r),(g),(b),(a))
+#define AG_ColorHex16(h)         ag_color_hex_16(h)
+#define AG_ColorHex32(h)         ag_color_hex_32(h)
+#define AG_ColorHex64(h)         ag_color_hex_64(h)
+#define AG_ColorAdd(c,offs)      ag_color_add((c),(offs))
+#define AG_ColorCompare(A,B)     ag_color_compare((A),(B))
+#define AG_Color2HSV(c,h,s,v)    ag_color_2_hsv((c),(h),(s),(v))
+#define AG_HSV2Color(h,s,v,c)    ag_hsv_2_color((h),(s),(v),(c))
+#endif /* !AG_INLINE_SURFACE */
+__END_DECLS
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_COLORS_H_ */

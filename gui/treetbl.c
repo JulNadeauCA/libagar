@@ -889,6 +889,98 @@ fail:
 	return (NULL);
 }
 
+/*
+ * Return a pointer if the row with the given identifer exists in or in a
+ * descendant of the rowq. If it does not exist, return NULL.
+ */
+AG_TreetblRow *
+AG_TreetblLookupRowRecurse(AG_TreetblRowQ *searchIn, int rid)
+{
+	AG_TreetblRow *row, *row2;
+
+	AG_TAILQ_FOREACH(row, searchIn, siblings) {
+		if (row->rid == rid)
+			return (row);
+
+		if (!AG_TAILQ_EMPTY(&row->children)) {
+			row2 = AG_TreetblLookupRowRecurse(&row->children, rid);
+			if (row2 != NULL)
+				return (row2);
+		}
+	}
+	return (NULL);
+}
+
+/*
+ * Lookup a row by ID.
+ * Return value is valid as long as Treetbl is locked.
+ */
+AG_TreetblRow *_Nullable
+AG_TreetblLookupRow(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	AG_ObjectLock(tt);
+	row = AG_TreetblLookupRowRecurse(&tt->children, rowID);
+	AG_ObjectUnlock(tt);
+	return (row);
+}
+
+/* Delete a row by ID */
+int
+AG_TreetblDelRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblDelRow(tt, row);
+	return (0);
+}
+
+/* Select a row by ID */
+int
+AG_TreetblSelectRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblSelectRow(tt, row);
+	return (0);
+}
+
+/* Deselect a row by ID */
+int
+AG_TreetblDeselectRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblDeselectRow(tt, row);
+	return (0);
+}
+
+/* Expand a row by ID */
+int
+AG_TreetblExpandRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblExpandRow(tt, row);
+	return (0);
+}
+
+/* Collapse a row by ID */
+int
+AG_TreetblCollapseRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblCollapseRow(tt, row);
+	return (0);
+}
+
 static void
 DestroyRow(AG_Treetbl *_Nonnull tt, AG_TreetblRow *_Nonnull row)
 {
@@ -998,6 +1090,18 @@ AG_TreetblRestoreRows(AG_Treetbl *tt)
 
 	AG_ObjectUnlock(tt);
 	AG_Redraw(tt);
+}
+
+void
+AG_TreetblBegin(AG_Treetbl *tt)
+{
+	AG_TreetblClearRows(tt);
+}
+
+void
+AG_TreetblEnd(AG_Treetbl *tt)
+{
+	AG_TreetblRestoreRows(tt);
 }
 
 /* Select the given row. */

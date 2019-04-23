@@ -508,6 +508,12 @@ AG_ActionOnButtonDown(void *obj, int button, const char *action)
 		AG_SetEvent(wid, "mouse-button-down", AG_WidgetStdMouseButtonDown, NULL);
 }
 
+void
+AG_ActionOnButton(void *obj, int button, const char *action)
+{
+	AG_ActionOnButtonDown(obj, button, action);
+}
+
 /* Tie an action to a mouse-button-up event. */
 void
 AG_ActionOnButtonUp(void *obj, int button, const char *action)
@@ -1759,6 +1765,32 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 	}
 	AG_ObjectUnlock(wid);
 	return (s);
+}
+
+void
+AG_WidgetUpdateSurface(void *obj, int name)
+{
+#ifdef HAVE_OPENGL
+	AG_Widget *wid = obj;
+
+# ifdef AG_DEBUG
+	if (name < 0 || name >= wid->nSurfaces)
+		AG_FatalError("Bad surface");
+# endif
+	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_REGEN;
+#endif
+}
+
+void
+AG_WidgetUnmapSurface(void *obj, int name)
+{
+	AG_WidgetReplaceSurface(obj, name, NULL);
+}
+
+void
+AG_WidgetBlitSurface(void *obj, int name, int x, int y)
+{
+	AG_WidgetBlitFrom(obj, name, NULL, x,y);
 }
 
 /*

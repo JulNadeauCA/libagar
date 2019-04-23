@@ -33,7 +33,7 @@ typedef struct ag_font_selector {
 	AG_Rect rPreview;			/* Preview area */
 	int     sPreview;			/* Preview surface */
 
-	AG_Font *_Nullable font;			/* Default `font' binding */
+	AG_Font *_Nullable font;		/* Default `font' binding */
 } AG_FontSelector;
 
 __BEGIN_DECLS

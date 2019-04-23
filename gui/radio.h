@@ -40,6 +40,8 @@ typedef struct ag_radio {
 	AG_Rect r;			/* Display area */
 } AG_Radio;
 
+#define AGRADIO(p) ((AG_Radio *)(p))
+
 __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;
 
@@ -47,26 +49,24 @@ AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint,
                                const char *_Nullable [_Nullable]);
 AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint,
                                  const char *_Nullable *_Nullable,
-				 _Nonnull AG_EventFn, const char *_Nullable, ...);
+                                 _Nonnull AG_EventFn, const char *_Nullable, ...);
 AG_Radio *_Nonnull AG_RadioNewInt(void *_Nullable, Uint,
-				  const char *_Nullable *_Nullable,
-				  int *_Nonnull);
+                                  const char *_Nullable *_Nullable,
+                                  int *_Nonnull);
 AG_Radio *_Nonnull AG_RadioNewUint(void *_Nullable, Uint,
-				   const char *_Nullable *_Nullable,
-				   Uint *_Nonnull);
+                                   const char *_Nullable *_Nullable,
+                                   Uint *_Nonnull);
 
-void    AG_RadioItemsFromArray(AG_Radio *_Nonnull,
-			       const char *_Nonnull *_Nullable);
+void AG_RadioItemsFromArray(AG_Radio *_Nonnull, const char *_Nonnull *_Nullable);
 
-int     AG_RadioAddItemS(AG_Radio *_Nonnull, const char *_Nonnull);
-int     AG_RadioAddItem(AG_Radio *_Nonnull, const char *_Nonnull, ...)
-                          FORMAT_ATTRIBUTE(printf,2,3);
-int     AG_RadioAddItemHKS(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull);
-int     AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym,
-			  const char *_Nonnull, ...)
-                         FORMAT_ATTRIBUTE(printf,3,4);
+int AG_RadioAddItemS(AG_Radio *_Nonnull, const char *_Nonnull);
+int AG_RadioAddItem(AG_Radio *_Nonnull, const char *_Nonnull, ...)
+                   FORMAT_ATTRIBUTE(printf,2,3);
+int AG_RadioAddItemHKS(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull);
+int AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull, ...)
+                     FORMAT_ATTRIBUTE(printf,3,4);
 
-void    AG_RadioClearItems(AG_Radio *_Nonnull);
+void AG_RadioClearItems(AG_Radio *_Nonnull);
 __END_DECLS
 
 #include <agar/gui/close.h>
