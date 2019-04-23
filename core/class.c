@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2003-2019 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,10 +42,6 @@ int              agNamespaceCount = 0;
 char           **agModuleDirs = NULL;		/* Module search directories */
 int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;			/* Lock on class table */
-
-/* Import inlinables */
-#undef AG_INLINE_HEADER
-#include <agar/core/inline_class.h>
 
 static void
 InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier,

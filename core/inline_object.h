@@ -1,6 +1,119 @@
 /*	Public domain	*/
 
 /*
+ * Lookup a registered namespace by name.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ AG_Namespace *_Nullable
+AG_GetNamespace(const char *_Nonnull ns)
+#else
+AG_Namespace *
+ag_get_namespace(const char *ns)
+#endif
+{
+	int i;
+
+	for (i = 0; i < agNamespaceCount; i++) {
+		if (strcmp(agNamespaceTbl[i].name, ns) == 0)
+			return (&agNamespaceTbl[i]);
+	}
+	AG_SetError("No such namespace: %s", ns);
+	return (NULL);
+}
+
+/*
+ * Compare the inheritance hierarchy of a class against a given pattern.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ int
+AG_ClassIsNamed(const void *_Nonnull pClass, const char *_Nonnull pat)
+#else
+int
+ag_class_is_named(const void *pClass, const char *pat)
+#endif
+{
+	AG_ObjectClass *cls = (AG_ObjectClass *)pClass;
+	const char *c;
+	int nwild = 0;
+	AG_Size patSize;
+
+	for (c = &pat[0]; *c != '\0'; c++) {
+		if (*c == '*')
+			nwild++;
+	}
+	if (nwild == 0) {
+		return (strcmp(cls->hier, pat) == 0);
+	} else if (nwild == 1) {			/* Optimized case */
+		if (pat[strlen(pat)-1] == '*') {
+			for (c = &pat[0]; *c != '\0'; c++) {
+				if (c[0] != ':' || c[1] != '*' || c[2] != '\0')
+					continue;
+			
+				patSize = c - &pat[0];
+				if (c == &pat[0]) {
+					return (1);
+				}
+				if (!strncmp(cls->hier, pat, patSize) &&
+				    (cls->hier[patSize] == ':' ||
+				     cls->hier[patSize] == '\0')) {
+					return (1);
+				}
+			}
+		} else if (pat[0] == '*') {
+			return (1);
+		} else {
+			return AG_ClassIsNamedGeneral(cls, pat);
+		}
+		return (0);
+	}
+	return AG_ClassIsNamedGeneral(cls, pat);	/* General case */
+}
+
+/*
+ * Test whether an object's class matches a given pattern.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ int
+AG_OfClass(const void *_Nonnull obj, const char *_Nonnull spec)
+#else
+int
+ag_of_class(const void *obj, const char *spec)
+#endif
+{
+	return AG_ClassIsNamed(AGOBJECT(obj)->cls, spec);
+}
+
+/*
+ * Return a pointer to the root of the given object's VFS.
+ * The result is valid as long as the VFS is locked.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ AG_Object *_Nonnull _Pure_Attribute
+AG_ObjectRoot(const void *_Nonnull obj)
+#else
+AG_Object *
+ag_object_root(const void *obj)
+#endif
+{
+	return AGOBJECT(obj)->root;
+}
+
+/*
+ * Return a pointer to the parent of the given object, if any.
+ * The result is valid as long as the VFS is locked.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ AG_Object *_Nullable
+AG_ObjectParent(const void *_Nonnull obj)
+#else
+AG_Object *
+ag_object_parent(const void *obj)
+#endif
+{
+	return AGOBJECT(obj)->parent;
+}
+
+/*
  * Detach and destroy an object.
  */
 #ifdef AG_INLINE_HEADER
