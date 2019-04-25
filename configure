@@ -933,7 +933,7 @@ echo '  / _ \   / _ \   / _ \  |  _ \'
 echo ' | |_| | | (_| | | |_| | | |_) |'
 echo ' |_| |_|  \__, | |_| |_| |_| |_|'
 echo '          |___/                 '
-	
+require_freetype="yes"
 if [ "${with_memory_model}" = '' ]
  then
 	case "${host}" in
@@ -942,6 +942,7 @@ if [ "${with_memory_model}" = '' ]
 	    ;;
 	c64 | c128 | geos | nes)
 	    with_memory_model="S"
+	    require_freetype="no"
 	    ;;
 	*)
 	    with_memory_model="M"
@@ -6716,7 +6717,7 @@ echo '#undef HAVE_WGL' >$bb_incdir/have_wgl.h
 echo 'hdefs["HAVE_WGL"] = nil' >>configure.lua
 	fi
 	
-	if [ "${with_freetype}" != 'no' ]
+	if [ "${with_freetype}" != 'no' -a "${require_freetype}" = "yes" ]
  then
 $ECHO_N 'checking for FreeType...'
 $ECHO_N 'checking for FreeType...' >>config.log

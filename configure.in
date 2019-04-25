@@ -85,7 +85,8 @@ echo '  / _ \   / _ \   / _ \  |  _ \'
 echo ' | |_| | | (_| | | |_| | | |_) |'
 echo ' |_| |_|  \__, | |_| |_| |_| |_|'
 echo '          |___/                 '
-	
+
+require_freetype="yes"
 if [ "${with_memory_model}" = '' ]; then
 	case "${host}" in
 	amd64-* | hppa64-* | ia64-* | mips64-* | ppc64*-* | sh64-* | sparc64-* | x86_64-*)
@@ -93,6 +94,7 @@ if [ "${with_memory_model}" = '' ]; then
 	    ;;
 	c64 | c128 | geos | nes)
 	    with_memory_model="S"
+	    require_freetype="no"
 	    ;;
 	*)
 	    with_memory_model="M"
@@ -411,7 +413,7 @@ if [ "${enable_gui}" != 'no' ]; then
 	
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
-	if [ "${with_freetype}" != 'no' ]; then
+	if [ "${with_freetype}" != 'no' -a "${require_freetype}" = "yes" ]; then
 		check(freetype, 7.0.1, ${prefix_freetype})
 		if [ "${HAVE_FREETYPE}" != 'yes' ]; then
 			echo "*"
